@@ -64,7 +64,7 @@ try
 	<?php
 	utils::js( array(
 		'php2js.js',
-		'jquery-2.0.3.min.js',
+		'jquery-2.1.0.min.js',
 		'jquery-sortable.js',
 		'bootstrap.js',
 		'bootstrap-datepicker.js',

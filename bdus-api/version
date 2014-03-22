@@ -1,3 +1,4 @@
+3.1.20[] = "Twitter Bootstrap update to v. 3.1.1"
 3.1.19[] = "Compatibility fixes: multiupload template files have now .twig extension"
 3.1.19[] = "Minor code layout fixes"
 3.1.19[] = "Bug fixed with show saved query results triggered by hash data"

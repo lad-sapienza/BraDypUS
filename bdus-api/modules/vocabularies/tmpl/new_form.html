@@ -1,0 +1,22 @@
+<div style="width:200px; margin: 50px auto">
+	
+	<label>{{ tr.get('voc') }}</label>
+	<input type="text" {% if voc %} readonly="true" value="{{ voc }}" {% endif %} id="voc" />
+	{% if all_vocs %}
+		<datalist for="voc">
+		{% for voc in all_vocs %}
+			<option>{{ voc }}</option>
+		{% endfor %}
+		</datalist>
+	{% endif %}
+	
+	<hr />
+	<label>{{ tr.get('def') }}</label>
+	<input type="text" id="def" />
+</div>
+
+<script>
+{% if all_vocs %}
+	enhance.combobox($('#voc'));
+{% endif %}
+</script>

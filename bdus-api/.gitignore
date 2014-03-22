@@ -1,0 +1,9 @@
+/dev/
+/sessions/
+/vendor/**/.git
+/projects/
+/logs/
+/cache/
+/modules/[a-z0-9_-]*/[a-z0-9_-]*.mini.js
+/css/mini.css
+/js/mini.js

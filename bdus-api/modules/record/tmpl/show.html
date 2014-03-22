@@ -1,0 +1,242 @@
+<div id="{{ uid }}">
+  {# PAGE MAIN CONTAINER #}
+  <div class="clearfix record-container" style="margin:0 0 30px 0;" id="container{{ uid }}">
+
+
+  {# ACTION BUTTON CONTAINER #}
+  <div class="navbar clearfix menu">
+
+    {% if multiple_id == false and action != 'add_new' %}
+      <button class="reload btn btn-success navbar-btn" data-id="{{ id }}"><i class="glyphicon glyphicon-white glyphicon-repeat"></i> {{ tr.get('reload') }}</button>
+    {% endif %}
+
+    {% if action == 'read' or action == 'preview' %}
+
+      {% if can_edit %}
+      <button class="open-edit btn btn-success navbar-btn" data-id="{{ id }}"><i class="glyphicon glyphicon-white glyphicon-pencil"></i> {{ tr.get('edit') }}</button>
+      {% endif %}
+
+      {% if totalRecords > 1 %}
+        <button class="print-all btn btn-info navbar-btn" data-id="{{ uid }}"><i class="glyphicon glyphicon-white glyphicon-print"></i> {{ tr.get('print_all') }}</button>
+      {% endif %}
+
+      <button class="print btn btn-info navbar-btn" data-id="{{ uid }}"><i class="glyphicon glyphicon-white glyphicon-print"></i> {{ tr.get('print_record') }}</button>
+
+    {% endif %}
+    {% if action == 'edit' or action == 'add_new' %}
+      <button class="save-edit btn btn-success navbar-btn" data-id="{{ uid }}" ><i class="glyphicon glyphicon-white glyphicon-pencil"></i> {{ tr.get('save') }}</button>
+      {% if action == 'edit' %}
+        <button class="save-as-new btn btn-success navbar-btn" data-id="{{ uid }}" ><i class="glyphicon glyphicon-white glyphicon-retweet"></i> {{ tr.get('save_as_new') }}</button>
+      {% endif %}
+    {% endif %}
+    {% if can_erase and action != 'add_new' %}
+      <button class="erase btn btn-danger navbar-btn"><i class="glyphicon glyphicon-white glyphicon-trash"></i> {{ tr.get('erase') }}</button>
+    {% endif %}
+
+  </div> {# END OF ACTION BUTTON CONTAINER #}
+
+
+  {# RECORD BODY #}
+  <div class="record-body" id="rb-{{ uid }}">
+
+  {# READ / PREVIEW #}
+  {% if action == 'read' or action == 'preview' %}
+    {{ html }}
+
+  {# EDIT / ADD NEW #}
+  {% elseif action == 'edit' or action == 'add_new' %}
+
+    {% if multiple_id %}
+    <div class="alert alert-error">
+      <h4>{{ multiple_id }}</h4>
+      </div>
+    {% endif %}
+
+    <form class="edit" id="form{{ uid }}">
+      <button type="submit" style="visibility:hidden;"></button>
+      {{ html }}
+    </form>
+  {% endif %}
+
+  </div> {# END OF RECORD BODY #}
+
+</div>
+<!-- SCRIPTS -->
+
+{# EDIT / ADD NEW SCRIPTS #}
+{% if action == 'edit' or action == 'add_new' %}
+	<script>
+	
+		{# MULTIPLE RECORD EDITING: NO REAL-TIME CHECKS SUPPORTED! #}
+		{% if multiple_id %}
+			$('#form{{ uid }}').find(':input[check]').removeAttr('check');
+		{% endif %}
+		
+		{# FORM SUBMISSION AND CHECKS #}
+		var myForm{{ uid }} =  new formControl('#form{{ uid }}', {
+			ajaxURL:'controller.php?force_array=1&obj=record_ctrl&method=check_duplicates',
+			submitURL: 'controller.php?obj=record_ctrl&method=save_data&tb={{ tb }}&{% if id_url %}{{ id_url }}{% else %}a=add_new{% endif %}',
+			success: function(data){
+				layout.tabs.closeActive();
+				api.record.edit('{{ tb }}', (data.inserted_id ? [data.inserted_id] : {{ show_next }}));
+			}
+		});
+		myForm{{ uid }}.observe();
+		
+		$('#form{{ uid }}').on('submit', function(event){
+			event.preventDefault();
+			myForm{{ uid }}.check().send();
+		});
+		
+		{# ENHACE FORM ELEMENTS #}
+		enhance.form($('#form{{ uid }}'));
+		
+		{# ADD POPOVER HELP SUPPORT #}
+		$('#form{{ uid }}').find('span.help').popover();
+		
+		{# ADD SUBMIT CAPABILTY TO SAVE BUTTON #}
+		$('#container{{ uid }}').find('.save-edit').on('click', function(){
+			
+			$('#form{{ uid }}').submit();
+		});
+		
+		{# ADD SAVE AS NEW CAPABILTY #}
+		$('#container{{ uid }}').find('.save-as-new').on('click', function(){
+			if (confirm(core.tr('confirm_save_as_new'))){
+				myForm{{ uid }}
+					.option('submitURL', 'controller.php?obj=record_ctrl&method=save_data&tb={{ tb }}&a=add_new')
+					.send(true);
+			}
+		});
+		
+		{# DELETE PLUGIN BUTTON #}
+		$('#container{{ uid }}').find('button.deleteplg').click(function(){
+			if($(this).prev('div.pluginrow').is(':visible')){
+				//hide
+				$(this)
+					.text(core.tr('undelete'))
+					.prev('div.pluginrow')
+					.hide()
+					.find(':input')
+					.attr('changed', 'auto');
+				
+				var el = $(this).prev('div.pluginrow').find(':input[name*="[id]"]');
+				var name = el.attr('name').replace('[id]', '[id_delete]');
+				el.attr('name', name);
+			} else {
+				$(this)
+					.text(core.tr('delete'))
+					.prev('div.pluginrow')
+					.show();
+				
+				var el = $(this).prev('div.pluginrow').find('input[name*="[id_delete]"]');
+				var name = el.attr('name').replace('[id:delete]', '[id]');
+				el.attr('name', name);
+			}
+		});
+	
+		{# ADD PLUGIN BUTTON #}
+		$('#container{{ uid }}').find('button.addplg').click(function(){
+			utils.myClone(
+					$(this).prevAll('div.pluginrow').first(),
+					{
+						where:$(this).prevAll('div.plg_container').first(),
+						baseName:'id:',
+						cloneEvents: true
+					});
+		});
+	
+		{# VIRTUAL KEYBOARD INITIALIZAION #}
+		$('#form{{ uid }}').find(':input').dblclick( function(){
+			utils.myKeyboard(this);
+		});
+	
+	</script>
+{% endif %}
+
+</div> {# END OF PAGE MAIN CONTAINER #}
+<hr />
+
+{% if continue_url %}
+
+	{% if continue_url == 'end' %}
+	
+		{# PAGE IS FINALLY LOADED: RUN ONE-TIME-SCRIPTS #}
+	
+		<script>
+			{% if action == 'read' or action == 'edit' %}
+				$('#container{{ uid }} button.reload').on('click', function(){
+					layout.tabs.closeActive();
+					api.record.{{ action }}('{{ tb }}', [{{ id }}]);
+				});
+			{% endif %}
+			
+			{# READ / PREVIEW / EDIT / ADD NEW SCRIPTS #}
+			
+			{# OPEN RECORD IN EDIT MODE FUNCTIONALITY #}
+			{% if can_edit %}
+				$('.tab-pane.active button.open-edit').on('click', function(){
+					var edit_id = $(this).data('id');
+					api.record.edit('{{ tb }}', [edit_id]);
+				});
+			{% endif %}
+	
+			{% if can_erase and action != 'add_new' %}
+				$('#container{{ uid }} button.erase').on('click', function(){
+					api.record.erase('{{ tb }}', [{{ id }}]);
+				});
+			{% endif %}
+		
+			$.each($('div.showUserLinks'), function(i, el){
+				api.link.show_userlinks($(el));
+			});
+		
+			if ($('div.showRS').length > 0){
+				core.runMod('rs');
+			}
+		
+			{# PRINT BUTTON #}
+			$('#{{ uid }} button.print').on('click', function(){
+				var print_id = $(this).data('id');
+				$('#rb-' + print_id).printElement({
+					  printMode:'popup',
+					  leaveOpen:true,
+					  pageTitle: 'BraDypUS > {{ tb}}',
+					  printBodyOptions:{
+						  styleToAdd:'background: #fff;color:#000;padding:10px;margin:10px;'
+					  }
+				  });
+			});
+			
+			$('#form{{ uid }}').find(':input[data-changeonchange]').change(function(el){
+				$(':input[name="' + $(this).data('changeonchange') + '"]').attr('changed', 'auto');
+			});
+			
+      
+      $('.tab-pane.active .print-all').on('click', function(){
+
+        var el = $(this).parents('div.tab-pane').clone();
+        el.find('div.menu').remove();
+        el.printElement({
+            printMode:'popup',
+            leaveOpen:true,
+            pageTitle: 'BraDypUS > {{ tb }}',
+            printBodyOptions:{
+              styleToAdd:'background: #fff;color:#000;padding:10px;margin:10px;'
+            }
+          });
+        el.remove();
+      });
+		</script>
+	
+	{% else %}
+		<div id="div{{ uid }}">{{ continue_url }}</div>
+    
+		<script>
+			$.post('controller.php?obj=record_ctrl&method=show&tb={{ tb }}&a=read', '{{ continue_url }}', function(data){
+				$('#div{{ uid }}').html(data);
+			});
+		</script>
+	{% endif %}
+	
+{% endif %}

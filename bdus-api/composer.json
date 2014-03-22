@@ -1,0 +1,15 @@
+{
+  "name": "bradypus/BraDypUS",
+  "description": "BraDypUS web database system",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "jbogdani",
+      "email": "jbogdani@gmail.com"
+    }
+  ],
+  "require": {
+    "twig/twig": "1.*",
+    "rjkip/ftp-php": "1.*"
+  }
+}

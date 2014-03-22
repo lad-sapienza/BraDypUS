@@ -1,0 +1,62 @@
+<h3>{{ title }}</h3>
+<ul class="gallery{% if can_edit %} sortable{% endif %} thumbnails">
+	{% for file in all_files %}
+	
+	<li data-id="{{ file.linkid }}">
+		{{ images.getThumbHtml(file)|raw }}
+		<div style="position: relative;">
+			<div class="opts btn-group" style="display: none; position:absolute; top:-40px;">
+				<button class="btn btn-default btn-sm read" data-table="{{ prefix }}__files" data-id="{{ file.id }}"><i class="glyphicon glyphicon-eye-open"></i></button>
+				{% if can_edit %}
+				<button class="btn btn-default btn-sm edit" data-table="{{ prefix }}__files" data-id="{{ file.id }}"><i class="glyphicon glyphicon-pencil"></i></button>
+				{% endif %}
+				<button class="btn btn-default btn-sm download" data-path="{{ path }}{{ file.id }}.{{ file.ext}}"><i class="glyphicon glyphicon-download-alt"></i></button>
+			</div>
+		</div>
+	</li>
+	{% endfor %}
+</ul>
+
+<script>
+$('ul.gallery button.read')
+	.click(function(){
+		api.record.read($(this).data('table'), [$(this).data('id')]);
+	});
+
+$('ul.gallery button.edit')
+	.click(function(){
+		api.record.edit($(this).data('table'), [$(this).data('id')]);
+	});
+
+
+$('ul.gallery button.download')
+	.click(function(){
+		window.open($(this).data('path'));
+	});
+
+$('ul.gallery li').hover(
+		function(){
+			$(this).find('div.opts').fadeIn().css('display', 'inline-block');
+			},
+		function(){
+			$(this).find('div.opts').fadeOut();
+			}
+	);
+	
+var ulSort = $('ul.sortable').sortable({
+	nested: false,
+	onDrop: function(item, container, _super){
+		console.log('fired OnDrop');
+		var string = ulSort.sortable('serialize').get();
+		core.getJSON('file_ctrl', 'sort', false, {'filegallery': string}, function(data){
+			core.message(data.text, data.status);
+		}, 'json');
+		
+		_super(item, container);
+	},
+	serialize: function (parent, children, isContainer) {
+		return isContainer ? children : parent.data('id');
+	},
+});
+
+</script>

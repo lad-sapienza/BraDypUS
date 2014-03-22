@@ -1,0 +1,93 @@
+<script type="text/javascript" src="{{ selfPath }}d3.v3.min.js"></script>
+<script type="text/javascript" src="{{ selfPath }}dagre.min.js"></script>
+<script type="text/javascript" src="{{ selfPath }}dagre-script.js"></script>
+<style>
+rect {
+  fill: #ebebeb;
+}
+
+.node > rect {
+  stroke-width: 3px;
+  stroke: #333;
+  fill: none;
+}
+
+.node:hover {
+  cursor: pointer;
+  opacity: 0.4;
+}
+
+.edge rect {
+  fill: #fff
+}
+
+.edge path {
+  fill: none;
+  stroke: #666;
+  stroke-width: 1px;
+}
+
+.edge:hover {
+  cursor: pointer;
+	stroke: #666;
+  opacity: 0.4;
+}
+
+.cp {
+  opacity: 0;
+}
+
+.cp:hover {
+  cursor:pointer;
+  opacity: 1;
+}
+
+svg{
+	box-shadow: 0 0 10px #ccc;
+	padding: 10px;
+	position: relative;
+}
+.svg_container{
+	width: 100%;
+	padding: 20px;
+}
+</style>
+
+<div id="{{ uid }}">
+	<div class="svg_container">
+			<div class="clearfix">
+				<button class="btn btn-info pull-right download">{{ tr.get('download') }}</button>
+			</div>
+		<svg id="svg{{ uid }}" width=100%></svg>
+	</div>
+</div>
+
+
+<script>
+	$('#{{ uid }} svg').height($(window).height()-150);
+	
+	renderDotToD3('{{ dotText|raw }}', '#svg{{ uid }}');
+	
+	$('g.node').on('click', function(){
+		
+		var id = $(this).attr('id').replace('node-', '');
+		
+		if (id.indexOf('dont') > -1)
+		{
+			return;
+		}
+		
+		api.record.read('{{ tb }}', [id]);
+	});
+	
+	$('#{{ uid }} .download').on('click', function(){
+		core.getJSON('matrix_ctrl', 'getStaticImage', {tb: '{{ tb }}', query: '{{ query_arrived }}'}, function(data){
+			if (data.status == 'success'){
+				window.open(data.text, "_blank");
+			} else {
+				core.message(data.text, data.status);
+			}
+		});
+	});
+	
+</script>

@@ -1,0 +1,440 @@
+@import 'bootstrap/bootstrap.less';
+@import 'slider.less';
+@import 'datepicker.less';
+@import 'jquery.pnotify.default.less';
+@import 'fineuploader-3.4.0.less';
+@import 'keyboard.less';
+@import 'jquery.jqplot.less';
+@import 'select2.less';
+@import 'font-awesome.less';
+
+
+
+input:not([type="checkbox"]):not([type="radio"]), select, textarea{
+	.form-control;
+}
+
+textarea{
+	height:auto;
+}
+
+.btn{
+	white-space: normal;
+}
+
+
+/* LOGIN */
+body.login{
+	padding-top: 40px;
+	background-color: #f5f5f5;
+	
+	#select_apps{
+		
+		.btn-container{
+			a.app{
+				font-weight: 400;
+				margin: 5px 0;
+				width:100%;
+			}
+		}
+	}
+	
+	.footer{
+		margin-top:50px;
+		padding-top:20px;
+		border-top: 1px dashed #ccc;
+		text-align: center;
+	}
+}
+
+a, span.a{
+	color: #333;
+	cursor: pointer;
+}
+
+.field_content, .rsEl{
+	a, span.a{
+		text-decoration: underline;
+		
+		&:hover{
+			text-decoration: none;
+		}
+	}
+	
+}
+
+ul#tabs{
+	background:#ebebeb;
+}
+
+div.tab-content{
+	padding: 0 15px !important;
+}
+
+ul.home{
+	margin: 0;
+	padding: 0;
+	list-style: none outside none;
+	
+	>li{
+		clear:both;
+		
+		h2{
+			border-bottom: 1px dashed #5a5a5a;
+			color: #5a5a5a;
+		}
+	}
+	
+	ul{
+		margin: 0;
+		padding: 0;
+		list-style: none outside none;
+		
+		>li{
+			padding: 0;
+			margin: 5px;
+			float:left;
+			width: 80px;
+			height: 110px;
+			text-align: center;
+			color:#5a5a5a;
+			font-size:.9em;
+			cursor: pointer;
+			
+			i{
+				font-size:3em;
+			}
+		}
+		>li:hover i{
+			color: #8e60b2;
+			font-size:4em;
+		}
+		
+		>li.clear:hover{
+			background-color:#fff;
+			border: 1px solid #fff;
+		}
+	}
+}
+/* end of home page style */
+
+
+fieldset{
+    margin: 10px;
+    border:1px dashed #c4c4c4;
+    border-radius: 0 10px 10px;
+    background: #f4f5f6;
+    padding: 10px 10px 10px 10px;
+    
+    legend{
+		background: #d6d6d6;
+		border-radius: 0.3em;
+		color: #262626;
+		font-size: 1.2em;
+		line-height: 1em;
+		padding: 0.5em;
+	}
+    
+    fieldset{
+    	margin: 10px 0 0 0;
+    	padding: 5px;
+    	border:1px dotted #c4c4c4;
+    	border-radius: 0;
+    	
+    	legend{
+			background: #f4f5f6;
+			border:1px dotted #c4c4c4;
+			border-radius: none;
+			color: #262626;
+			font-size: 1.1em;
+			line-height: 1em;
+			padding: 0.5em;
+		}
+    }
+}
+
+label{
+	cursor: default;
+}
+
+.help{
+	cursor:pointer;
+}
+img.styled{
+	border-radius: 5px;
+	box-shadow: 0 0 10px #999;
+}
+
+span.notValid{
+	padding: 10px;
+	color:#ff0000;
+	display:block;
+	width:200px;
+	z-index: 9999;
+	position: absolute;
+	background: #fff;
+}
+input.notValid, textarea.notValid, select.notValid{
+	border: 1px solid #ff0000 !important;
+}
+
+div#waiting_main{
+	z-index: 99999;
+	position: fixed;
+	bottom: 0;
+	right: 0;
+	background:url(../img/arrows-loader.gif) no-repeat center center #fff;
+	padding:15px;
+	border:1px solid grey;
+	margin:5px;
+	box-shadow: 0 0 5px red;
+	border-radius:5px;
+	width:14px;
+	height:14px;	
+}
+
+.checklabel{
+	label{
+		text-shadow:none;
+		cursor:pointer;
+		color: #ccc;
+		font-size: 3em;
+		font-weight: normal;
+		display: inline-block;
+	}
+	label.selected{
+		color: #006DCC;
+	}
+}
+
+.cell, .firstcell{
+	float:left;
+}
+.firstcell{
+	clear: left;
+}
+.clear{
+	clear:both;
+}
+
+ul.plain li{
+	list-style: none;
+}
+
+#map{
+	img{
+		max-width:none;
+	}
+}
+
+#map_bar{
+	label{
+		display: inline;
+	}
+}
+
+label.labelSpan{
+	display: inline-block;
+}
+
+.form_el{
+	margin-top: 10px;
+	>label{
+		font-weight: bold;
+	}
+}
+
+/* File thumbnails bar */
+div.file_thumbnails{
+	max-height: 220px;
+	
+	.service{
+		max-width:150px;
+		float:left;
+		
+		.gal_button{
+			margin: 20px 0;
+		}
+	}
+	
+	.img_container{
+		width: 220px;
+		float: left;
+		//height:100px;
+		
+		img{
+			max-width: 200px;
+		}
+	}
+}
+
+
+
+/* DataTables Bootstrap */
+div.dataTables_length {
+	text-align:right;
+	select {
+		width: 75px;
+		display: inline-block;
+	}
+}
+
+div.dataTables_filter {
+	label{
+		input {
+			width: 200px !important;
+			display: inline-block !important;
+		}
+	}
+	
+}
+
+div.dataTables_info {
+	padding-top: 8px;
+}
+
+div.dataTables_paginate {
+	float: right;
+	margin: 0;
+}
+
+table {
+	margin: 1em 0;
+	clear: both;
+}
+
+.dataTables_scrollHead{
+	table{
+		margin:1em 0 0 0;
+	}
+}
+
+.dataTables_scrollBody{
+	table{
+		margin:0;
+	}
+}
+
+table.dataTable{
+	th:active{
+		outline: none;
+	}
+}
+
+/* end of DataTables Bootstrap */
+
+
+.table-striped{
+	tbody{
+		tr.row_selected{
+			td{
+				background-color: #F2DEDE !important; 
+				}
+		}
+	}
+}
+
+form.big {
+	input, select, textarea{
+		font-size: 16px; height: auto;
+	} 
+}
+
+div.tab-content{
+	margin: 50px 0 0 0;
+	padding: 0 10px;
+}
+
+.ui-draggable > .modal-header{
+	cursor: move;
+}
+
+ul.nav-tabs li button.close{
+	margin: 0 0 0 10px;
+	float:none;
+}
+
+div.rsEl{
+	margin: 0 10px 0 0;
+	display:inline-block;
+}
+
+/* Fine Uploader -------------------------------------------------- */
+.qq-upload-list {
+	text-align: left;
+}
+
+/* For the bootstrapped demos */
+li.alert-success {
+	background-color: #DFF0D8;
+}
+
+li.alert-error {
+	background-color: #F2DEDE;
+}
+
+.alert-error .qq-upload-failed-text {
+	display: inline;
+}
+
+/* SORTABLE styles */
+body.dragging, body.dragging * {
+  cursor: move !important;
+}
+
+.dragged {
+  position: absolute;
+  opacity: 0.5;
+  z-index: 2000;
+}
+
+ul.sortable li.placeholder {
+  position: relative;
+  padding:20px;
+  border: 1px dashed #999;
+  border-radius: 0.2em;
+  background: #ebebeb;
+  /** More li styles **/
+  
+  &:before{
+  	position: absolute;
+  }
+}
+
+/* GALLERY styles */
+
+ul.gallery{
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	
+	li{
+		display: inline-block;
+	} 
+}
+
+/* VOCABULARIES */
+
+.voc_definition{
+	background:#ebebeb;
+	padding:10px;
+	margin: 0 0 5px 0;
+	li:not(:last-child){
+		padding:5px 0 5px 10px;
+		border-bottom: 1px dashed #ccc;
+	}
+}
+
+.state-disabled{
+	background-image: none;
+	opacity: 0.35;
+	cursor: default !important;
+}
+
+
+
+@media print {
+  fieldset.links, div.permalink, div.showUserLinks, fieldset.geodata{
+    .responsive-invisibility();
+  }
+}

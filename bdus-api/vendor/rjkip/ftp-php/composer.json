@@ -1,0 +1,21 @@
+{
+    "name": "rjkip/ftp-php",
+    "description": "A small, easy-to-use library for accessing FTP servers.",
+    "authors": [
+        {
+            "name": "David Grudl"
+        },
+        {
+            "name": "Reinier Kip",
+            "email": "github@reinierkip.nl"
+        }
+    ],
+    "autoload": {
+        "psr-0": {
+            "FtpPhp\\": "src"
+        }
+    },
+    "require": {
+        "php": ">=5.3"
+    }
+}

@@ -1,0 +1,14 @@
+<div class="tbs_container btn-group" id="{{ uid }}">
+{% for tb, label in tbs_data %}
+	<button class="fld_ed_tb btn btn-default" data-tb="{{ tb }}" class="tables">{{ label }}</button> 
+{% endfor %}
+</div>
+
+<div class="form_container" id="con{{ uid }}"></div>
+
+<script>
+
+$('#{{ uid }} .fld_ed_tb').on('click', function(){
+	flds_editor.loadFldList($('#con{{ uid }}'), $(this).data('tb'));
+});
+</script>

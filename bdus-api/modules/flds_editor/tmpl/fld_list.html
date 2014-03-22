@@ -1,0 +1,14 @@
+<h2>{{ label }}</h2>
+
+<button type="button" class="add_new_fld btn btn-success" data-table="{{ tb }}"><i class="glyphicon glyphicon-plus"></i> {{ tr.get('add') }}</button>
+
+<div class="row">
+{% for fld in all_fields %}
+	<button data-table="{{ tb }}" data-field="{{ fld.name }}" class="btn btn-primary col-sm-1 edit_fld" style="height:100px; overflow: hidden; margin:5px;">{{ fld.label}}<br />({{ fld.name }})</button> 
+{% endfor %}
+</div>
+<script>
+$('button.edit_fld').on('click', function(){
+	
+});
+</script>

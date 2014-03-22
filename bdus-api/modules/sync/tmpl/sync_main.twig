@@ -1,0 +1,78 @@
+<div id="{{ uid }}">
+	<h2>{{ tr.get('app_sync') }}</h2>
+	
+	<div class="row step1">
+		<div class="col-sm-6 col-sm-offset-2">
+			<div class="alert alert-danger" style="font-size:1.5em;"><i class="glyphicon glyphicon-exclamation-sign"></i> {{ tr.get('sync_warning_message') }}</div>
+			
+			<div class="clearfix">
+				<button class="btn btn-success col-sm-12 btn-block btn-lg cancel">{{ tr.get('close') }}</button>
+			</div>
+			
+			
+			
+			<div class="input-group" style="margin-top: 40px;">
+				<span class="input-group-addon">{{ tr.get('write_continue_to_continue') }}</span>
+				<input type="text" class="form-control continue_text">
+				<span class="input-group-btn"><button class="btn btn-danger continue">{{ tr.get('continue') }}</button></span>
+			</div>
+			
+			
+		</div>
+	</div>
+
+		
+	<div class="row step2" style="display:none;">
+			<div class="col-sm-3 col-sm-offset-1">
+				<button class="btn btn-danger btn-lg btn-block list" data-direction="toServer"><i class="glyphicon glyphicon-cloud-upload"></i> {{ tr.get('upload_to_server') }}
+			</div>
+
+			<div class="col-sm-3">
+				<button class="btn btn-danger btn-lg btn-block list" data-direction="fromServer"><i class="glyphicon glyphicon-cloud-download"></i> {{ tr.get('download_from_server') }}
+			</div>
+			
+			<div class="col-sm-3">
+				<button class="btn btn-danger btn-lg btn-block checkstatus" data-direction="fromServer"><i class="glyphicon glyphicon-question-sign"></i> {{ tr.get('check_online_status') }}
+			</div>
+
+	</div>
+
+	<hr />
+	
+	<div class="body" style="margin-top: 20px;"></div>
+	
+</div>
+<script>
+	
+	$('#{{ uid }} .continue').on('click', function(){
+		
+		if($('#{{ uid }} .continue_text').val() !== 'CONTINUE'){
+			core.message(core.tr('continue_text_does_not_match'), 'error');
+		} else {
+			$('#{{ uid }} .step1').fadeOut();
+			$('#{{ uid }} .step2').fadeIn();
+		}
+	
+	});
+	
+	$('#{{ uid }} .cancel').on('click', function(){
+		layout.tabs.closeActive();
+	});
+	
+	$('#{{ uid }} .list').on('click', function(){
+		
+		core.open({
+			html: '<p><img src="img/loader.gif" alt="loading" /></p><div class="alert alert-info">{{ tr.get('loading_file_list', true) }}</div>',
+			title: core.tr('attention')
+		}, 'modal');
+		
+		$('#{{ uid }} .body').load('controller.php?obj=sync_ctrl&method=getRemoteList&direction=' + $(this).data('direction'), function(){
+			$('#modal').modal('hide');
+		});
+	});
+	
+	$('#{{ uid }} .checkstatus').on('click', function(){
+		sync.getStatus($(this));
+	});
+	
+</script>

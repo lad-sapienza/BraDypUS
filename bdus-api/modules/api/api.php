@@ -95,8 +95,10 @@ class api_ctrl extends Controller
 	
 	private function getOne($tb, $id)
 	{
-		$rec = new Record($tb, $this->get['id'], new DB);
+		$rec = new Record($tb, $id, new DB);
 		
+    $data['fields'] = cfg::fldEl($tb, 'all', 'label');
+    
 		$data['core'] = $rec->getCore();
 		
 		$data['coreLinks'] = $rec->getCoreLinks();
@@ -107,7 +109,10 @@ class api_ctrl extends Controller
 		
 		$data['geodata'] = $rec->getGeodata();
 		
-		$data['rs'] = $rec->getRS();
+    if (cfg::tbEl($tb, 'rs'))
+    {
+      $data['rs'] = $rec->getRS();
+    }
 		
 		$data['userLinks'] = $rec->getUserLinks();
 		

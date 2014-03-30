@@ -226,7 +226,7 @@ class record_ctrl extends Controller
 				$record->setIdField($id);
 			}
 			
-			if ($this->request[a] == 'edit' && 
+			if ($this->request['a'] == 'edit' && 
 					(!utils::canUser('edit', $record->getCore('creator')) || ( count($this->request['id']) > 1 && !utils::canUser('multiple_edit') ) ) )
 			{
 				echo '<h2>' . tr::get('not_enough_privilege') . '</h2>';

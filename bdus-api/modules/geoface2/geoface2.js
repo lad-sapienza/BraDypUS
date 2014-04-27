@@ -264,7 +264,6 @@ var geoface2 = G = {
                     html += key + ': <strong>' + val + '</strong><br />';
                   }
                 });
-                html += '<span class="btn btn-info btn-xs" onclick="api.record.read(\'' + G.metadata.tb_id + '\', [' + feature.properties.id + '])">' + core.tr('read') + '</span>';
                 layer.bindPopup(html);
               }
             });

@@ -1,3 +1,4 @@
+3.1.23[] = "Minor bug solved on login module: app name was not correctly transmitted"
 3.1.22[] = "Geojson layers in Geoface 2 module show now popup infowindows on click"
 3.1.21[] = "Bug fixed with API module and RS plugin"
 3.1.20[] = "jQuery updated to v.2.1.0"

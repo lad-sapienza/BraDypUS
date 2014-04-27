@@ -11,7 +11,7 @@ class login_ctrl extends Controller
 	
 	public function loginForm()
 	{
-		$app_data = json_decode(file_get_contents(PROJS_DIR . $this->post['app'] . '/cfg/app_data.json'), true);
+		$app_data = json_decode(file_get_contents(PROJS_DIR . $this->request['app'] . '/cfg/app_data.json'), true);
 		
 		$this->render('login', 'login', array(
 				'tr' => new tr(),

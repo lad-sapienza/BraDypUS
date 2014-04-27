@@ -183,12 +183,35 @@ class Query
 		{
 			if (is_array($result))
 			{
-				foreach ($result as &$row)
+        $fullResult = array();
+        
+				foreach ($result as $id => $row)
 				{
-					$rec = new Record($this->tb, $row['id'], $this->db);
-					$row['files'] = $rec->getFullFiles();
+          $rec = new Record($this->tb, $row['id'], $this->db);
+          
+          $rowResult = array();
+          
+          $rowResult['core'] = $rec->getCore();
+          
+          $rowResult['coreLinks'] = $rec->getCoreLinks();
+
+          $rowResult['allPlugins'] = $rec->getAllPlugins(true);
+
+          $rowResult['fullFiles'] = $rec->getFullFiles();
+
+          $rowResult['geodata'] = $rec->getGeodata();
+
+          if (cfg::tbEl($tb, 'rs'))
+          {
+            $rowResult['rs'] = $rec->getRS();
+          }
+
+          $rowResult['userLinks'] = $rec->getUserLinks();
+          
+          $fullResult[] = $rowResult;
+    
 				}
-				return $result;
+				return $fullResult;
 			}
 			else 
 			{

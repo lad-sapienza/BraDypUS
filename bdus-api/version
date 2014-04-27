@@ -1,3 +1,4 @@
+3.1.24[] = "Query::getResults returns more complete results about records"
 3.1.23[] = "Minor bug solved on login module: app name was not correctly transmitted"
 3.1.22[] = "Geojson layers in Geoface 2 module show now popup infowindows on click"
 3.1.21[] = "Bug fixed with API module and RS plugin"

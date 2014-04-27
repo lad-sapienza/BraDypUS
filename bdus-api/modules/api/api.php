@@ -75,7 +75,7 @@ class api_ctrl extends Controller
 				$header['query_executed'] = $query->getQuery();
 				
 				$header['fields'] = cfg::fldEl($tb, 'all', 'label');
-				
+        
 				$this->array2jsonp(
 						'jsonCallback',
 						array(

@@ -124,7 +124,17 @@
         },
         "fnRowCallback": function (nRow, aData, iDisplayIndex) {
             $(nRow).on("click", function (event) {
-            	$(this).toggleClass('row_selected');
+              {% if select_one %}
+                if($(this).hasClass('row_selectd')){
+                  $('#list_{{ tb }}{{ uid }} tr').removeClass('row_selected');
+                } else {
+                  $('#list_{{ tb }}{{ uid }} tr').removeClass('row_selected');
+                  $(this).addClass('row_selected');
+                }
+                
+              {% else %}
+                $(this).toggleClass('row_selected');
+              {% endif %}
             });
 
             {% if noDblClick == false %}

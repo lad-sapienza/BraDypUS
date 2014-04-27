@@ -300,7 +300,8 @@ class record_ctrl extends Controller
 				'iTotalRecords' => $count,
 				'lang' => pref::getLang(),
 				//TODO: user panel controle for user preferences
-				'infinte_scroll' => pref::get('infinite_scroll')
+				'infinte_scroll' => pref::get('infinite_scroll'),
+        'select_one' => $this->request['select_one']
 		));
 		
 		

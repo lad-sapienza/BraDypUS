@@ -1,3 +1,4 @@
+3.1.26[] = "Bug fixed with record::showResults method, ignoring select_one parameter"
 3.1.25[] = "Minor bug fixed with Geoface 2 onclick popups: no link is showed in the popup window"
 3.1.24[] = "Query::getResults returns more complete results about records"
 3.1.23[] = "Minor bug solved on login module: app name was not correctly transmitted"

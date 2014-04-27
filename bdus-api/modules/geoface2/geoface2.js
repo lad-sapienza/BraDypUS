@@ -256,7 +256,18 @@ var geoface2 = G = {
 				$.each(G.otherLayers, function (i, lay){
 					if (lay.id.match(/\.geojson/)){
 						
-						overlay[lay.name] = L.geoJson(lay.data);
+						overlay[lay.name] = L.geoJson(lay.data, {
+              onEachFeature: function (feature, layer) {
+                var html = '';
+                $.each(feature.properties, function(key, val){
+                  if (key !== 'id' && key !== 'geo_id'){
+                    html += key + ': <strong>' + val + '</strong><br />';
+                  }
+                });
+                html += '<span class="btn btn-info btn-xs" onclick="api.record.read(\'' + G.metadata.tb_id + '\', [' + feature.properties.id + '])">' + core.tr('read') + '</span>';
+                layer.bindPopup(html);
+              }
+            });
 						
 					} else if (lay.id.match(/\.kml/)){
 						overlay[lay.name] = new L.KML(lay.id, {async: true});

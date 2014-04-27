@@ -1,3 +1,4 @@
+3.1.22[] = "Geojson layers in Geoface 2 module show now popup infowindows on click"
 3.1.21[] = "Bug fixed with API module and RS plugin"
 3.1.20[] = "jQuery updated to v.2.1.0"
 3.1.20[] = "Twitter Bootstrap updated to v.3.1.1"

@@ -58,6 +58,10 @@ class User
 		{
 			if (cookieAuth::get())
 			{
+        $this->userLog();
+			
+        utils::packLog();
+        
 				return true;
 			}
 		}

@@ -196,7 +196,8 @@ class DB
 
 	public function doQuery($sql)
 	{
-		try{
+		try
+    {
 			$this->db->exec($sql);
 		}
 		catch (PDOException $e)
@@ -214,7 +215,7 @@ class DB
 	 * Uses prepare and execute statement.
 	 * @param string $query			query string
 	 * @param array $values			values to use with query string
-	 * @param string $type			one of read | id | boolean | affected, integer, or false
+	 * @param string $type			one of read (default value) | id | boolean | affected, integer, or false
 	 * @param boolean $fetch_style	if false an associative array will be returned else a numeric array
 	 */
 	public function query($query, $values = false, $type = false, $fetch_style = false )

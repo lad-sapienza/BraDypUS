@@ -1,3 +1,7 @@
+3.1.27[] = "Code inline documentation"
+3.1.27[] = "utils::recursiveFilter accepts now a second, optional, argument to use as filter function"
+3.1.27[] = "Log compression is performed also on cookie authentication"
+3.1.27[] = "User information is now logged also on cookie authentication"
 3.1.26[] = "Bug fixed with record::showResults method, ignoring select_one parameter"
 3.1.25[] = "Minor bug fixed with Geoface 2 onclick popups: no link is showed in the popup window"
 3.1.24[] = "Query::getResults returns more complete results about records"

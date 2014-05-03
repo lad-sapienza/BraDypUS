@@ -8,6 +8,10 @@
 
 class utils
 {
+  /**
+   * If error or users log files is grown bigger than 5MB (5242880B) these
+   * files will be packed and compressed
+   */
 	public static function packLog()
 	{
 		try{
@@ -41,10 +45,16 @@ class utils
 		}
 	}
 	
+  /**
+   * Checks if current installation is the official online installation or a 
+   * local one. The check is performed on host name
+   * @return boolean
+   */
 	public static function is_online()
 	{
 		return preg_match('/bradypus.net/', $_SERVER['HTTP_HOST']);
 	}
+  
 	/**
 	 * Logs $data to error log, for debuggin purposes
 	 * @param mixed $data
@@ -57,6 +67,7 @@ class utils
 		}
 		error_log($data);
 	}
+  
 	/**
 	 * 
 	 * Echoes reference to js files .
@@ -537,6 +548,15 @@ class utils
 		echo json_encode($response);
 	}
 	
+  /**
+   * Returns or echoes (depending on $echo parameter) a well formatted HTML
+   * string with .text-error CSS class and message
+   * @param string $text  Text to be displayed/returned
+   * @param boolean $echo If true the text will be echoed, otherwize it will be returned
+   * @param boolean $dont_translate If false (default) the text will translated,
+   *      if true the text will be showed as is
+   * @return string Well formatted HTML string
+   */
 	public static function alert_div($text, $echo = false, $dont_translate = false)
 	{
 		$str = '<div class="text-error">'
@@ -548,6 +568,11 @@ class utils
 		return $str;
 	}
 	
+  /**
+   * Minifies all module javascript files. Return true on success or false on error.
+   * @return boolean
+   * @throws myException
+   */
 	public static function compressModScripts()
 	{
 		$modules = self::dirContent(MOD_DIR);
@@ -592,17 +617,24 @@ class utils
 	
 		return $error ? false : true;
 	}
-	
-	
-	public static function recursiveFilter($arr)
+
+  /**
+   * Recursively filters array using an optional callback function
+   *  If no callback function is defined the resulting array will contain only
+   *  not null/empty values of the original array. Key-value association is mantained
+   * @param array $arr  Original array to filter
+   * @param mixed $callback Callback function, default false. Can be a function or a function name
+   * @return array  Filtered array
+   */
+	public static function recursiveFilter($arr, $callback = false)
 	{
 		foreach ($arr as &$a)
 		{
 			if (is_array($a))
 			{
-				$a = self::recursiveFilter($a);
+				$a = self::recursiveFilter($a, $callback);
 			}
 		}
-		return array_filter($arr);
+		return array_filter($arr, $callback);
 	}
 }

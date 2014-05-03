@@ -1,0 +1,29 @@
+<p class="lead">4. {{ tr.sget('confirm_import_geodata', [tb_label, id_label, id_field]) }}</p>
+<div class="form-group" id="buttons_{{ uid }}">
+  <div class="col-sm-6">
+    <button class="btn btn-block btn-danger" data-erase="yes"  type="button">
+      <i class="glyphicon glyphicon-trash"></i> {{ tr.get('import_erase_previous_data') }}
+    </button>
+  </div>
+    
+  <div class="col-sm-6">
+    <button class="btn btn-block btn-warning" data-erase="no" type="button">
+      <i class="glyphicon glyphicon-plus"></i> {{ tr.get('import_dont_erase_previous_data') }}
+    </button>
+  </div>
+    
+</div>
+
+    
+<div id="result_{{ uid }}" style="margin-top: 60px;"></div>
+
+<script>
+  $('#buttons_{{ uid }} button').on('click', function(){
+    $('#result_{{ uid }}').load('controller.php?obj=import_geodata_ctrl&method=process&'
+      + 'param[]={{ tb }}&'
+      + 'param[]={{ file }}&'
+      + 'param[]={{ id_field }}&'
+      + 'param[]=' + ($(this).data('erase'))
+      );
+  });
+</script>

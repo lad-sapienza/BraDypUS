@@ -456,3 +456,13 @@ $lang['error_get_status'] = "Error. Can not recevive the online application stat
 $lang['check_online_status'] = "Check on line application status";
 $lang['app_locked_click_to_unlock'] = "Online application is frozen. Click to activate";
 $lang['app_unlocked_click_to_lock'] = "Online application is active. Click to freeze";
+
+$lang['import_geodata'] = "Import geodata";
+$lang['empty_or_wrong_geojson'] = "Error. The uploaded geojson file is empty or not well formatted";
+$lang['upload_file'] = "Upload file";
+$lang['set_matching_fields'] = "Set matching id fields";
+$lang['confirm_import_geodata'] = "Please confirm you want to import geodata for table <code>%s</code> merging in database field <code>%s</code>external field <code>%s</code>";
+$lang['import_erase_previous_data'] = "Import and erase previously inserted geodata";
+$lang['import_dont_erase_previous_data'] = "Import and don't erase previously inserted geodata";
+$lang['geodata_ok_uploaded'] = "No error in import process. %s features were correctly uploaded";
+$lang['geodata_error_uploaded'] = "Some error occourred in geodata uploading. No feature was uploaded";

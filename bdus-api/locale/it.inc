@@ -520,6 +520,17 @@ $lang['check_online_status'] = "Controlla lo stato dell'applicazione online";
 $lang['app_locked_click_to_unlock'] = "L'applicazione online è congelata. Clicca per attivarla";
 $lang['app_unlocked_click_to_lock'] = "L'applicazione online è attiva. Clicca per congelarla";
 
+
+$lang['import_geodata'] = "Importa dati geografici";
+$lang['empty_or_wrong_geojson'] = "Errore. Il file geojson caricato è vuoto o non ben formattato";
+$lang['upload_file'] = "Carica file";
+$lang['set_matching_fields'] = "Definisci i campi identificativi corrispondenti";
+$lang['confirm_import_geodata'] = "Si prega di confirmare l'importazione di dati geografici per la tabella <code>%s</code> unendo nel database il campo <code>%s</code>con il campo esterno <code>%s</code>";
+$lang['import_erase_previous_data'] = "Importa e cancella i dati geografici preesistenti";
+$lang['import_dont_erase_previous_data'] = "Importa senza cancellare i dati geografici preesistenti";
+$lang['geodata_ok_uploaded'] = "Nessun errore nel processo di importazione. %s geometrie sono state caricate";
+$lang['geodata_error_uploaded'] = "C'è stato qualche errore nel caricare i dati geografici. Nessuna geometria è stata caricata";
+
 $lang[''] = "";
 $lang[''] = "";
 

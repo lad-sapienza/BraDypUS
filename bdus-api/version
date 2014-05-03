@@ -1,3 +1,4 @@
+3.2.0[] = "New feature: added the possibility to upload and link to existing records external geoJSON files"
 3.2.0[] = "Font Awesome updated to v. 4.0.3"
 3.1.27[] = "Code inline documentation"
 3.1.27[] = "utils::recursiveFilter accepts now a second, optional, argument to use as filter function"

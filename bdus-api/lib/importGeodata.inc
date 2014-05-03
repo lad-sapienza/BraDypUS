@@ -45,18 +45,19 @@ class importGeodata
    * Loads and parses geojson and returns properties of first feature or throws
    *  myException on error.
    * 
+   * @param string $geojson GeoJSON string to check
    * @return type
    * @throws myException
    */
-  public function checkGeojson()
+  public function checkGeojson($geojson)
   {
     //decode geojson to array
-    $geo_array = json_decode($this->geojson, 1);
+    $geo_array = is_string($geojson) ? json_decode($geojson, 1) : $geojson;
     
     // stop if geojson is empty or not valid
     if (!$geo_array || !is_array($geo_array) || !$geo_array['features'] || empty($geo_array['features']))
     {
-      throw new myException('empty_or_wrong_geojson');
+      throw new myException('GeoJSON string is empty, not well formatted or contains no geometries');
     }
     
     return $geo_array['features'][0]['properties'];
@@ -71,10 +72,23 @@ class importGeodata
    */
   public function runImport()
   {
-    if (!$this->db || !$this->tb || !$this->geojson || !$this->idfield)
+    if (!$this->db)
     {
-      throw new myException('settings_missing');
+      throw new myException('Database object is missings');
     }
+    if (!$this->tb)
+    {
+      throw new myException('Destination table is missing');
+    }
+    if (!$this->geojson)
+    {
+      throw new myException('Geojson string is missing');
+    }
+    if (!$this->idfield)
+    {
+      throw new myException('ID field is missing');
+    }
+    
     
     try
     {
@@ -90,10 +104,7 @@ class importGeodata
       $geo_array = json_decode($this->geojson, 1);
       
       // stop if geojson is empty or not valid
-      if (!$geo_array || !is_array($geo_array) || !$geo_array['features'] || empty($geo_array['features']))
-      {
-        throw new Exception('empty_or_wrong_geojson');
-      }
+      $this->checkGeojson($geo_array);
       
       $count = 0;
       
@@ -107,7 +118,6 @@ class importGeodata
         {
          continue;
         }
-        
         
         $res = $this->db->query(
           "SELECT `id` FROM `" . $this->tb . "` "
@@ -136,10 +146,9 @@ class importGeodata
        );
        
        
-       
        if (!$this->db->query($sql, $values, 'boolean'))
        {
-         throw new Exception('error_on_insering_row');
+         throw new myException('Error in executing SQL: ' . $sql);
        }
        
        $count++;
@@ -149,7 +158,7 @@ class importGeodata
      
      return $count;
     }
-    catch (Exception $e)
+    catch (myException $e)
     {
       $this->db->rollBack();
       
@@ -172,7 +181,7 @@ class importGeodata
     
     if (!$this->db->query($sql, false, 'boolean'))
     {
-      throw new Exception('can_not_delete_previous_geodata');
+      throw new Exception('Error in deleting previous inserted geodata');
     }
   }
   

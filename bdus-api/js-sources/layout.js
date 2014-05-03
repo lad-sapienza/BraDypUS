@@ -109,28 +109,27 @@ var layout = {
 					body.html(opts.html);
 		        	
 					if (opts.loaded){
-		        		opts.loaded(body);
-		        	}
+            opts.loaded(body);
+          }
 		        	
-		        	
-	        	} else if (opts.obj && opts.method){
-	        		
-	        		URLstring += 'obj=' + opts.obj + '&method=' + opts.method;
-	        		
-	        		if (opts.param){
-			        	if (typeof opts.param === 'string'){
-							URLstring += '&' + opts.param;
-						} else if($.isPlainObject(opts.param))  {
-							URLstring += '&' + $.param(opts.param);
-						} else if ($.isArray(opts.param)){
-							URLstring += '&param[]=' + opts.param.join('&param[]=');
-						}
-	        		}
-		        	body.load(URLstring, opts.post, opts.loaded);
-		        	
-		        } else {
-		        	return false;
-		        }
+        } else if (opts.obj && opts.method){
+
+          URLstring += 'obj=' + opts.obj + '&method=' + opts.method;
+
+          if (opts.param){
+            if (typeof opts.param === 'string'){
+              URLstring += '&' + opts.param;
+            } else if($.isPlainObject(opts.param))  {
+              URLstring += '&' + $.param(opts.param);
+            } else if ($.isArray(opts.param)){
+              URLstring += '&param[]=' + opts.param.join('&param[]=');
+            }
+          }
+          body.load(URLstring, opts.post, opts.loaded);
+
+        } else {
+          return false;
+        }
 			
 				if (opts.buttons && typeof opts.buttons == 'object'){
 					

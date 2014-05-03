@@ -1,18 +1,17 @@
 var info = {
 		init: function(what){
-			
-			switch(what){
-			case 'getIP':
-				info.getIP();
-				break;
-			case 'copyright':
-				info.copyright();
-				break;
-			case 'faq':
-				info.faq();
-				break;
-				
-			}
+      
+      switch(what){
+        case 'getIP':
+          info.getIP();
+          break;
+        case 'copyright':
+          info.copyright();
+          break;
+        case 'faq':
+          info.faq();
+          break;
+      }
 		},
 		
 		getIP: function(){

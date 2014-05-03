@@ -559,7 +559,7 @@ class utils
    */
 	public static function alert_div($text, $echo = false, $dont_translate = false)
 	{
-		$str = '<div class="text-error">'
+		$str = '<div class="text-danger">'
 				. '<strong>' . tr::get('attention') . ':</strong> ' . ($dont_translate ? $text : tr::get($text)) . '</p>'
 			. '</div>';
 		

@@ -83,6 +83,11 @@ if (!utils::canUser('enter'))
 						<?php tr::show('multiupload'); ?>
 					</li>
           
+          <li <?php echo utils::canUser('edit') ? 'onclick="core.runMod(\'import_geodata\');"' : 'class="state-disabled"'; ?>>
+						<i class="fa fa-cloud-upload"></i><br />
+						<?php tr::show('import_geodata'); ?>
+					</li>
+					
 					<li <?php echo utils::canUser('admin') ? 'onclick="core.runMod(\'vocabularies\')"' : 'class="state-disabled"'; ?>>
 						<i class="fa fa-quote-left"></i><br />
 						<?php tr::show('vocabulary_mng'); ?>

@@ -104,6 +104,7 @@ class info_ctrl
 				array('name' => "JSMin - PHP implementation of Douglas Crockford's JSMin", 'by' => "Ryan Grove", "web"=>"http://code.google.com/p/jsmin-php/", "lic"=>"MIT"),
 				array('name' => "Minify_CSS_Compressor", 'by' => "Stephen Clay", "web"=>"http://code.google.com/p/minify/", "lic"=>"New BSD"),
 				array('name' => "php-tail", 'by' => "Peeter Tomberg", "web"=>"http://code.google.com/p/php-tail/", "lic"=>"GNU GPL v3"),
+        array('name' => "Gisconverter", 'by' => "symm", "web"=>"https://github.com/symm/gisconverter", "lic"=>"BSD License"),
 				
 			//other
 				array('name' => "Twitter Bootstrap", 'by' => "@mdo & @fat, copyright: Twitter", "web"=>"http://twitter.github.com/bootstrap", "lic"=>"Apache License v2.0")

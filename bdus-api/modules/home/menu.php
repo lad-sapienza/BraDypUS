@@ -44,37 +44,37 @@ if (!utils::canUser('enter'))
 				<ul>
 				
 					<li <?php echo utils::canUser('read') ? 'onclick="core.runMod(\'saved_queries\');"' : 'class="state-disabled"'; ?>>
-						<i class="icon-bookmark-empty"></i><br />
+						<i class="fa fa-bookmark-o"></i><br />
 						<?php tr::show('saved_queries'); ?>
 					</li>
 			
 					<li <?php echo utils::canUser('read') ? 'onclick="core.runMod(\'preferences\')"' : 'class="state-disabled"'; ?>>
-						<i class="icon-lightbulb"></i><br />
+						<i class="fa fa-lightbulb-o"></i><br />
 						<?php tr::show('user_preferences'); ?>
 					</li>
 					
 					<li <?php echo utils::canUser('read') ? 'onclick="core.runMod(\'user\');"' : 'class="state-disabled"'; ?>>
-						<i class="icon-group"></i><br />
+						<i class="fa fa-group"></i><br />
 						<?php tr::show('user_mng'); ?>
 					</li>
 					
 					<li <?php echo utils::canUser('read') ? 'onclick="core.runMod(\'myExport\');"' : 'class="state-disabled"'; ?>>
-						<i class="icon-random"></i><br />
+						<i class="fa fa-random"></i><br />
 						<?php tr::show('available_exports'); ?>
 					</li>
 					
 					<li <?php echo utils::canUser('read') ? 'onclick="core.runMod(\'chart\')"' : 'class="state-disabled"'; ?>>
-						<i class="icon-bar-chart"></i><br />
+						<i class="fa fa-bar-chart-o"></i><br />
 						<?php tr::show('saved_charts'); ?>
 					</li>
 					
 					<li <?php echo utils::canUser('edit') ? 'onclick="core.runMod(\'backup\');"' : 'class="state-disabled"'; ?>>
-						<i class="icon-suitcase"></i><br />
+						<i class="fa fa-suitcase"></i><br />
 						<?php tr::show('backup'); ?>
 					</li>
 					
 					<li <?php echo utils::canUser('edit') ? 'onclick="core.runMod(\'search_replace\');"' : 'class="state-disabled"'; ?>>
-						<i class="icon-exchange"></i><br />
+						<i class="fa fa-exchange"></i><br />
 						<?php tr::show('find_replace'); ?>
 					</li>
 		
@@ -82,61 +82,61 @@ if (!utils::canUser('enter'))
 						<i class="glyphicon glyphicon-upload"></i><br />
 						<?php tr::show('multiupload'); ?>
 					</li>
-					
+          
 					<li <?php echo utils::canUser('admin') ? 'onclick="core.runMod(\'vocabularies\')"' : 'class="state-disabled"'; ?>>
-						<i class="icon-quote-left"></i><br />
+						<i class="fa fa-quote-left"></i><br />
 						<?php tr::show('vocabulary_mng'); ?>
 					</li>
 		
 					<li <?php echo utils::canUser('admin') ? 'onclick="core.runMod(\'frontpage_editor\')"' : 'class="state-disabled"'; ?>>
-						<i class="icon-edit"></i><br />
+						<i class="fa fa-edit"></i><br />
 						<?php tr::show('front_page_editor'); ?>
 					</li>
 					
 					<li <?php echo utils::canUser('admin') ? 'onclick="core.runMod(\'sys_mail\')"' : 'class="state-disabled"'; ?>>
-						<i class="icon-envelope-alt"></i><br />
+						<i class="fa fa-envelope-o"></i><br />
 						<?php tr::show('system_email'); ?>
 					</li>
 					
 					<li <?php echo utils::canUser('super_admin') ? 'onclick="core.runMod(\'myHistory\');"' : 'class="state-disabled"'; ?>>
-						<i class="icon-book"></i><br />
+						<i class="fa fa-book"></i><br />
 						<?php tr::show('history'); ?>
 					</li>
 					
 					<li <?php echo utils::canUser('super_admin') ? 'onclick="core.runMod(\'myImport\');"' : 'class="state-disabled"'; ?>>
-						<i class=" icon-cloud-upload"></i><br />
+						<i class=" fa fa-cloud-upload"></i><br />
 						<?php tr::show('import'); ?>
 					</li>
 					
 					<li <?php echo utils::canUser('super_admin') ? 'onclick="core.runMod(\'translate\');"' : 'class="state-disabled"'; ?>>
-						<i class="icon-comment"></i><br />
+						<i class="fa fa-comment"></i><br />
 						<?php tr::show('system_translate'); ?>
 					</li>
 					
 					<li <?php echo utils::canUser('super_admin') ? 'onclick="core.runMod(\'app_data_editor\');"' : 'class="state-disabled"'; ?>>
-						<i class="icon-wrench"></i><br />
+						<i class="fa fa-wrench"></i><br />
 						<?php tr::show('app_data_editor'); ?>
 					</li>
 		
 					<li <?php echo utils::canUser('super_admin') ? 'onclick="core.runMod(\'tbs_editor\');"' : 'class="state-disabled"'; ?>>
-						<i class="icon-cog"></i><br />
+						<i class="fa fa-cog"></i><br />
 						<?php tr::show('edit_tbs_data'); ?>
 					</li>
 					
 					<li <?php echo utils::canUser('super_admin') ? 'onclick="core.runMod(\'flds_editor\');"' : 'class="state-disabled"'; ?>>
-						<i class="icon-cogs"></i><br />
+						<i class="fa fa-cogs"></i><br />
 						<?php tr::show('edit_flds_data'); ?>
 					</li>
 					
 		<?php if(!utils::is_online()) :?>
 					<li <?php echo utils::canUser('read') ? 'onclick="core.runMod(\'info\', \'getIP\')"' : 'class="state-disabled"'; ?>>
-						<i class="icon-code"></i><br />
+						<i class="fa fa-code"></i><br />
 						<?php tr::show('ip'); ?>
 					</li>
 		<?php endif; ?>
 					
 					<li <?php echo utils::canUser('super_admin') ? 'onclick="core.runMod(\'free_sql\');"' : 'class="state-disabled"'; ?>>
-						<i class="icon-terminal"></i><br />
+						<i class="fa fa-terminal"></i><br />
 						<?php tr::show('run_free_sql'); ?>
 					</li>
 					
@@ -152,14 +152,14 @@ if (!utils::canUser('enter'))
 					
 					<?php if (utils::canUser('super_admin')): ?>
 					<li <?php echo utils::canUser('super_admin') ? 'onclick="core.open({obj: \'test_ctrl\', method: \'test\', title: \'test\'});"' : 'class="state-disabled"'; ?>>
-						<i class="icon-beaker"></i><br />
+						<i class="fa fa-flask"></i><br />
 						TEST
 					</li>
 					<?php endif; ?>
 					
 		
 					<li <?php echo utils::canUser('read') ? 'onclick="core.runMod(\'debug\');"' : 'class="state-disabled"'; ?>>
-						<i class="icon-exclamation-sign"></i><br />
+						<i class="fa fa-exclamation-circle"></i><br />
 						<?php tr::show('error_log'); ?>
 					</li>
 		
@@ -169,21 +169,21 @@ if (!utils::canUser('enter'))
 			<li><h2><?php tr::show('other'); ?></h2>
 				<ul>
 					<li onclick="window.open('http://bradypus.net');">
-						<i class="icon-globe"></i><br />
+						<i class="fa fa-globe"></i><br />
 						<?php tr::show('bdus_web'); ?>
 					</li>
 					
 					<li onclick="core.runMod('info', 'copyright');">
-						<i class="icon-info-sign"></i><br />
+						<i class="fa fa-info-circle"></i><br />
 						<?php tr::show('info'); ?>
 					</li>
 					
 					<li onclick="api.reloadApp(1);">
-						<i class="icon-refresh"></i><br />
+						<i class="fa fa-refresh"></i><br />
 						<?php tr::show('restart'); ?>
 					</li>
 					<li onclick="api.logOut();">
-						<i class="icon-off"></i><br />
+						<i class="fa fa-power-off"></i><br />
 						<?php tr::show('close_application'); ?>
 					</li>
 				</ul>

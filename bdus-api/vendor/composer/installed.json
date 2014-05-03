@@ -96,5 +96,101 @@
             }
         ],
         "description": "A small, easy-to-use library for accessing FTP servers."
+    },
+    {
+        "name": "symm/gisconverter",
+        "version": "v1.0.2",
+        "version_normalized": "1.0.2.0",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/symm/gisconverter.git",
+            "reference": "649d62d4598d69f3a2935de3f6020ec7376fa830"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/symm/gisconverter/zipball/649d62d4598d69f3a2935de3f6020ec7376fa830",
+            "reference": "649d62d4598d69f3a2935de3f6020ec7376fa830",
+            "shasum": ""
+        },
+        "require": {
+            "php": ">=5.3.0"
+        },
+        "require-dev": {
+            "phpunit/phpunit": "3.7.*"
+        },
+        "time": "2014-02-27 17:12:29",
+        "type": "library",
+        "installation-source": "dist",
+        "autoload": {
+            "psr-0": {
+                "Symm": "src"
+            }
+        },
+        "notification-url": "https://packagist.org/downloads/",
+        "license": [
+            "BSD"
+        ],
+        "description": "A php library to convert vector geometries between different formats"
+    },
+    {
+        "name": "oyejorge/less.php",
+        "version": "v1.7.0.1",
+        "version_normalized": "1.7.0.1",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/oyejorge/less.php.git",
+            "reference": "958476be9e47a13db0579397f0164af1776bdbee"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/oyejorge/less.php/zipball/958476be9e47a13db0579397f0164af1776bdbee",
+            "reference": "958476be9e47a13db0579397f0164af1776bdbee",
+            "shasum": ""
+        },
+        "require": {
+            "php": ">=5.2"
+        },
+        "time": "2014-03-17 04:51:51",
+        "bin": [
+            "bin/lessc"
+        ],
+        "type": "library",
+        "installation-source": "dist",
+        "autoload": {
+            "psr-0": {
+                "Less": "lib/"
+            },
+            "classmap": [
+                "lessc.inc.php"
+            ]
+        },
+        "notification-url": "https://packagist.org/downloads/",
+        "license": [
+            "Apache-2.0"
+        ],
+        "authors": [
+            {
+                "name": "Matt Agar",
+                "homepage": "https://github.com/agar"
+            },
+            {
+                "name": "Martin Jantošovič",
+                "homepage": "https://github.com/Mordred"
+            },
+            {
+                "name": "Josh Schmidt",
+                "homepage": "https://github.com/oyejorge"
+            }
+        ],
+        "description": "PHP port of the Javascript version of LESS http://lesscss.org",
+        "homepage": "http://lessphp.gpeasy.com",
+        "keywords": [
+            "css",
+            "less",
+            "less.js",
+            "lesscss",
+            "php",
+            "stylesheet"
+        ]
     }
 ]

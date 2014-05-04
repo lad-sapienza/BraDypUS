@@ -135,19 +135,26 @@ class utils
 		{
 			$str = "/*\n * BraDypUS css minified archive includes different sources and licenses"
 			. "\n * For details on external libraries (copyrights and licenses) please consult the Credits information"
-			. "\n * Created: " . microtime(1) . "\n*/";
-			
-			foreach ( $files as $file )
-			{
-				$file = ltrim($file);
-				
-				if ( file_exists('./css-less/' . $file ) )
-				{
-					$str .= "\n". Minify_CSS_Compressor::process(file_get_contents ( './css-less/' . $file ) );
-				}
-			}
-			
-			self::write_in_file('./css/mini.css', $str);
+			. "\n * Created: " . microtime(1) . "\n*/\n";
+      
+      
+      try
+      {
+        $opts = array(
+          'compress'=>true
+        );
+        $parser = new Less_Parser($opts);
+        $parser->parseFile( "./css-less/main.less");
+        $css = $parser->getCss();
+        file_put_contents("./css/mini.css", $str . $css);
+
+        $ret['status'] = 'success';
+        $ret['text'] = tr::get('ok_compiling_less');
+      }
+      catch (Exception $e)
+      {
+        error_log($e->getTraceAsString());
+      }
 	
 			echo "\n\t" . '<link type="text/css" media="all" rel="stylesheet" href="./css/mini.css?_' . str_replace('.', null, microtime(1)). '" />';
 	

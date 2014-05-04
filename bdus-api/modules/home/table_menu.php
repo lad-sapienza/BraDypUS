@@ -15,7 +15,7 @@ if (!$_GET['tb'])
 <ul>
 
 	<li <?php echo utils::canUser('add_new') ? 'onclick="api.record.add(\'' . $_GET['tb'] . '\');"' : 'class="state-disabled"'; ?>>
-		<i class="fa fa-file-text"></i><br />
+		<i class="fa fa-file-o"></i><br />
 		<?php tr::show('new'); ?>
 	</li>
 	<li <?php echo utils::canUser('add_new') ? 'onclick="api.record.add(\'' . PREFIX . '__files\');"' : 'class="state-disabled"'; ?>>

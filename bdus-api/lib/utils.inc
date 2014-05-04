@@ -147,34 +147,16 @@ class utils
         $parser->parseFile( "./css-less/main.less");
         $css = $parser->getCss();
         file_put_contents("./css/mini.css", $str . $css);
-
-        $ret['status'] = 'success';
-        $ret['text'] = tr::get('ok_compiling_less');
       }
       catch (Exception $e)
       {
         error_log($e->getTraceAsString());
       }
-	
-			echo "\n\t" . '<link type="text/css" media="all" rel="stylesheet" href="./css/mini.css?_' . str_replace('.', null, microtime(1)). '" />';
-	
 		}
-		else if ( $type['debug'] )
-		{
-			foreach($files as $file)
-			{
-				$file = ltrim($file);
-				if ( file_exists('./css-less/' . $file) )
-				{
-					echo "\n\t".'<link type="text/css" media="all" rel="stylesheet" href="./css-less/' .  $file .'?_' . str_replace('.', null, microtime(1)). '" />';
-				}
-			}
-		}
-		else
-		{
-			echo "\n\t".'<link type="text/css" media="all" rel="stylesheet" href="./css/mini.css?_' . str_replace('.', null, microtime(1)). '" />';
-		}
-		
+    echo "\n\t".'<link type="text/css" media="all" rel="stylesheet" href="./css/mini.css'
+      . ($type['debug'] ? '?_' . str_replace('.', null, microtime(1)) : '')
+      . '" />';
+    
 		echo "\n\t".'<link rel="shortcut icon" href="./img/favicon.ico">';
 	}
 	

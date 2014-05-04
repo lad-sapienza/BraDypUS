@@ -135,7 +135,7 @@ if (!utils::canUser('enter'))
 					
 		<?php if(!utils::is_online()) :?>
 					<li <?php echo utils::canUser('read') ? 'onclick="core.runMod(\'info\', \'getIP\')"' : 'class="state-disabled"'; ?>>
-						<i class="fa fa-code"></i><br />
+            <i class="fa fa-code"></i><br />
 						<?php tr::show('ip'); ?>
 					</li>
 		<?php endif; ?>

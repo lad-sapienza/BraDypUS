@@ -80,8 +80,11 @@ class utils
 	 */
 	public static function js( $files, $type = false )
 	{
-		if ( $type['mini'] )
+    $js_name = md5(implode('', $files));
+    
+		if ( $type['mini'] || !file_exists('./js/' . $js_name . '.js'))
 		{
+      utils::emptyDir('js');
 			$str = "/*\n * BraDypUS javascripts minified archive includes different sources and licenses"
 			. "\n * For details on external libraries (copyrights and licenses) please consult the Credits information"
 			. "\n * Created: " . microtime(1) . "\n*/";
@@ -95,9 +98,9 @@ class utils
 					$str .= "\n". JSMin::minify ( file_get_contents ( './js-sources/' . $file ) );
 				}
 			}
-			self::write_in_file ( './js/mini.js', $str);
+			self::write_in_file ( './js/' . $js_name . '.js', $str);
 	
-			echo "\n\t".'<script language="JavaScript" type="text/JavaScript" src="./js/mini.js?_' . str_replace('.', null, microtime(1)). '"></script>';
+			echo '<script language="JavaScript" type="text/JavaScript" src="./js/' . $js_name . '.js"></script>';
 	
 		}
 		else if ( $type['debug'] )
@@ -108,13 +111,13 @@ class utils
 				
 				if ( file_exists( './js-sources/' . $file ) )
 				{
-					echo "\n\t".'<script language="JavaScript" type="text/JavaScript" src="./js-sources/' . $file .'?_' . str_replace('.', null, microtime(1)). '"></script>';
+					echo "\n  ".'<script language="JavaScript" type="text/JavaScript" src="./js-sources/' . $file .'?_' . str_replace('.', null, microtime(1)). '"></script>';
 				}
 			}
 		}
 		else
 		{
-			echo "\n\t".'<script language="JavaScript" type="text/JavaScript" src="./js/mini.js?_' . str_replace('.', null, microtime(1)). '"></script>';
+			echo '<script language="JavaScript" type="text/JavaScript" src="./js/' . $js_name . '.js"></script>' . "\n";
 		}
 	}
 	
@@ -131,7 +134,7 @@ class utils
 	
 	public static function css ( $files, $type )
 	{
-		if ( $type['mini'] )
+		if ( $type['mini'])
 		{
 			$str = "/*\n * BraDypUS css minified archive includes different sources and licenses"
 			. "\n * For details on external libraries (copyrights and licenses) please consult the Credits information"
@@ -153,11 +156,11 @@ class utils
         error_log($e->getTraceAsString());
       }
 		}
-    echo "\n\t".'<link type="text/css" media="all" rel="stylesheet" href="./css/mini.css'
+    echo '<link type="text/css" media="all" rel="stylesheet" href="./css/mini.css'
       . ($type['debug'] ? '?_' . str_replace('.', null, microtime(1)) : '')
       . '" />';
     
-		echo "\n\t".'<link rel="shortcut icon" href="./img/favicon.ico">';
+		echo "\n  ".'<link rel="shortcut icon" href="./img/favicon.ico">';
 	}
 	
 	/**

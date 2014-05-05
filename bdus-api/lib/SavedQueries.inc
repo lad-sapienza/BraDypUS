@@ -3,7 +3,7 @@
  * Manages sharing/unsharing/insertion and deletion to queries table
  * @author			Julian Bogdani <jbogdani@gmail.com>
  * @copyright		BraDypUS 2007-2012
- * @license			All rights reserved
+ * @license			See file LICENSE distributed with this code
  * @since			Aug 9, 2012
  * @uses			tr
  */

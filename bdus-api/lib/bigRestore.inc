@@ -2,7 +2,7 @@
 /**
  * @author			Julian Bogdani <jbogdani@gmail.com>
  * @copyright		BraDypUS 2007-2013
- * @license			All rights reserved
+ * @license			See file LICENSE distributed with this code
  * @since			08/jan/2013
  * @example
  *  $bigRestore = new bigRestore(new DB());

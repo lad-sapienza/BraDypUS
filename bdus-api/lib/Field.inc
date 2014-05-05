@@ -3,7 +3,7 @@
  * @author			Julian Bogdani <jbogdani@gmail.com>
  * @copyright		BraDypUS 2007-2012
  * @license			All rights reserved
- * @since			Apr 22, 2012
+ * @since			See file LICENSE distributed with this code
  * @uses			cfg
  */
 

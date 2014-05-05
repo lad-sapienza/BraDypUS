@@ -3,7 +3,7 @@
  * Class used to create a new Project from scratch or to migrate projects from v2.7
  * @author			Julian Bogdani <jbogdani@gmail.com>
  * @copyright		BraDypUS 2007-2012
- * @license			All rights reserved
+ * @license			See file LICENSE distributed with this code
  * @since			Aug 13, 2012
  */
 

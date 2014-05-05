@@ -4,7 +4,7 @@
  * 
  * @author			Julian Bogdani <jbogdani@gmail.com>
  * @copyright		BraDypUS 2007-2011
- * @license			All rights reserved
+ * @license			See file LICENSE distributed with this code
  * @since			31/mar/2011
  * @uses			connect.ini
  */

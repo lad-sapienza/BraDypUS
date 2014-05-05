@@ -2,7 +2,7 @@
 /**
  * @author			Julian Bogdani <jbogdani@gmail.com>
  * @copyright		BraDyUS. Communicating Cultural Heritage, http://bradypus.net 2007-2013 
- * @license			All rights reserved
+ * @license			See file LICENSE distributed with this code
  * @since				Sep 5, 2013
  * @uses FTPClien Description
  */

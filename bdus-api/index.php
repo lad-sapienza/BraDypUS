@@ -47,7 +47,7 @@ try
   /*
    * Styles loader
    */
-  utils::css( array (
+  Compress::css( array (
     'main.css'
   ), $_GET);
 
@@ -56,7 +56,7 @@ try
   <script src="./controller.php?obj=tr&method=lang2json&param=true"></script>
   <script> var debugMode = <?php echo  ($_GET['debug'] ? 'true' : 'false');?></script>
   <?php
-  utils::js( array(
+  Compress::js( array(
     'php2js.js',
     'jquery-2.1.1.min.js',
     'jquery-sortable.js',

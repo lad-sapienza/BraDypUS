@@ -1,7 +1,7 @@
 <?php
 /**
  * @author			Julian Bogdani <jbogdani@gmail.com>
- * @copyright		BraDypUS 2007-2012
+ * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
  * @license			See file LICENSE distributed with this code
  * @since			Apr 17, 2012
  */
@@ -102,7 +102,6 @@ class info_ctrl
 				array('name' => "Twig", 'by' => "Fabien Potencier", "web"=>"http://twig.sensiolabs.org/", "lic"=>"new BSD license"),
 				array('name' => 'BigDump', 'by' => 'Alexey Ozerov, modified by Julian Bogdani', 'web' => 'http://www.ozerov.de/bigdump/', 'lic' => 'GNU General Public License v2 or any later version'),
 				array('name' => "JSMin - PHP implementation of Douglas Crockford's JSMin", 'by' => "Ryan Grove", "web"=>"http://code.google.com/p/jsmin-php/", "lic"=>"MIT"),
-				array('name' => "Minify_CSS_Compressor", 'by' => "Stephen Clay", "web"=>"http://code.google.com/p/minify/", "lic"=>"New BSD"),
 				array('name' => "php-tail", 'by' => "Peeter Tomberg", "web"=>"http://code.google.com/p/php-tail/", "lic"=>"GNU GPL v3"),
         array('name' => "Gisconverter", 'by' => "symm", "web"=>"https://github.com/symm/gisconverter", "lic"=>"BSD License"),
 				

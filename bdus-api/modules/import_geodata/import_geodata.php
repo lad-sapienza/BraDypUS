@@ -1,7 +1,7 @@
 <?php
 /**
  * @author			Julian Bogdani <jbogdani@gmail.com>
- * @copyright		BraDyUS. Communicating Cultural Heritage, http://bradypus.net 2007-2014 
+ * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
  * @license			See file LICENSE distributed with this code
  * @since				May 3, 2014
  */

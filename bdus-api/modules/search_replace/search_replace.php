@@ -2,7 +2,7 @@
 /**
  * Search and replace controller class
  * @author			Julian Bogdani <jbogdani@gmail.com>
- * @copyright		BraDypUS 2007-2012
+ * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
  * @license			See file LICENSE distributed with this code
  * @since			Aug 10, 2012
  */

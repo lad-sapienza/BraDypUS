@@ -4,6 +4,8 @@
 3.2.0[] = "Leaflet updated to v 0.7.2"
 3.2.0[] = "Leaflet.Draw updated to v. 0.2.0-dev"
 3.2.0[] = "Font Awesome updated to v. 4.0.3"
+3.2.0[] = "Changed all .html extensions in modules template files to .twig"
+3.2.0[] = "Updated all code headers with new license file"
 3.1.27[] = "Code inline documentation"
 3.1.27[] = "utils::recursiveFilter accepts now a second, optional, argument to use as filter function"
 3.1.27[] = "Log compression is performed also on cookie authentication"

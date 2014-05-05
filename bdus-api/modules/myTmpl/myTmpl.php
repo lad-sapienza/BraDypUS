@@ -6,9 +6,9 @@
  * @since			Aug 11, 2012
  */
 
-class myTmpl_ctrl
+class myTmpl_ctrl extends Controller
 {
-	public static function show()
+	public function show()
 	{
 		$tbs = cfg::getNonPlg();
 		
@@ -37,13 +37,11 @@ class myTmpl_ctrl
 			$data[$tb]['user_edit'] = pref::getTmpl($tb, 'edit');
 		}
 		
-		$twig = new Twig_Environment(new Twig_Loader_Filesystem(MOD_DIR . 'myTmpl/tmpl'), unserialize(CACHE));
-		
-		echo $twig->render('user_tmpl.html', array(
-				'tr' => new tr(),
-				'tabs' => $tbs,
-				'data' => $data,
-				'uid' => uniqid('tmpl')
+    $this->render('myTmpl', 'user_tmpl', array(
+      'tr' => new tr(),
+      'tabs' => $tbs,
+      'data' => $data,
+      'uid' => uniqid('tmpl')
 		));
 		
 	}

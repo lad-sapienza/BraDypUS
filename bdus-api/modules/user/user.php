@@ -6,9 +6,9 @@
  * @since			Aug 10, 2012
  */
 
-class user_ctrl
+class user_ctrl extends Controller
 {
-	public static function showList()
+	public function showList()
 	{
 		$data = array(
 				'tr_name' => tr::get('name'),
@@ -47,9 +47,8 @@ class user_ctrl
 			}
 		}
 		
-		$twig = new Twig_Environment(new Twig_Loader_Filesystem(MOD_DIR . 'user/tmpl'), unserialize(CACHE));
-		
-		echo $twig->render('users_list.html', $data);
+    
+    $this->render('user', 'users_list', $data);
 	}
 	
 	public static function erase($id)
@@ -81,8 +80,11 @@ class user_ctrl
 		echo json_encode($res);
 	}
 	
-	public function editUI($id = false)
+	public function editUI()
 	{
+    
+    $id = $this->request['param'][0];
+    
 		if ($id != $_SESSION['user']['id'] && !utils::canUser('admin'))
 		{
 			echo tr::get('not_enough_privilege');
@@ -126,9 +128,7 @@ class user_ctrl
 			}
 		}
 		
-		$twig = new Twig_Environment(new Twig_Loader_Filesystem(MOD_DIR . 'user/tmpl'), unserialize(CACHE));
-		
-		echo $twig->render('user_form.html', $data);
+    $this->render('user', 'user_form', $data);
 		
 	}
 	

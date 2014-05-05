@@ -6,10 +6,12 @@
  * @since			Aug 12, 2012
  */
 
-class translate_ctrl
+class translate_ctrl extends Controller
 {
-	public static function showList($opened_lang=false)
+	public function showList()
 	{
+    $opened_lang = $this->request['param'][0];
+    
 		$langs = utils::dirContent(LOCALE_DIR);
 		
 		$uid = uniqid('transl');
@@ -45,8 +47,10 @@ class translate_ctrl
 		
 	}
 	
-	public static function showForm($lng)
+	public function showForm()
 	{
+    
+    $lng = $this->request['param'][0];
 
 		require LOCALE_DIR . 'it.inc';
 		$it = $lang;
@@ -56,19 +60,19 @@ class translate_ctrl
 		$edit_lang = $lang;
 		unset($lang);
 		
-		$twig = new Twig_Environment(new Twig_Loader_Filesystem(MOD_DIR . 'translate/tmpl'), unserialize(CACHE));
-		
-		echo $twig->render('form.html', array(
-				'uid' => uniqid('translate'),
-				'lng' => $lng,
-				'it' => $it,
-				'edit_lang' => $edit_lang,
-				'tr' => new tr()
+    
+    $this->render('translate', 'form', array(
+      'lng' => $lng,
+      'it' => $it,
+      'edit_lang' => $edit_lang
 		));
 	}
 	
-	public static function newLang($lang)
+	public function newLang()
 	{
+    
+    $lang = $this->request['param'][0];
+    
 		if (!file_exists(LOCALE_DIR . $lang . '.inc') && utils::write_in_file(LOCALE_DIR . $lang . '.inc', ''))
 		{
 			echo utils::response('ok_lang_create');
@@ -79,9 +83,12 @@ class translate_ctrl
 		}
 	}
 	
-	public static function save($post)
+	public function save()
 	{
+    $post = $this->post;
+    
 		$lang = $post['edit_lang'];
+    
 		unset($post['edit_lang']);
 
 		foreach ($post as $k => $v)

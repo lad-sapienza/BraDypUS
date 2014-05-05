@@ -6,19 +6,19 @@
  * @since			Apr 17, 2012
  */
 
-class info_ctrl
+class info_ctrl extends Controller
 {
-	public static function faq()
+	public function faq()
 	{
-		$twig = new Twig_Environment(new Twig_Loader_Filesystem(MOD_DIR . 'info/tmpl'), unserialize(CACHE));
-		echo $twig->render('faq.html', array(
+    
+    $this->render('info', 'faq', array(
 				'date' => date('Y'),
 				'libs' => $libs,
 				'version' => version::current()
 		));
 	}
 	
-	public static function getIP()
+	public function getIP()
 	{
 		$ipRegEx="[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}";
 		
@@ -77,7 +77,7 @@ class info_ctrl
 	}
 	
 	
-	public static function copyright()
+	public function copyright()
 	{
 		// js
 		$libs = array(
@@ -118,15 +118,11 @@ class info_ctrl
 		
 		
 		
-		$loader = new Twig_Loader_Filesystem(MOD_DIR . 'info/tmpl');
-		
-		$twig = new Twig_Environment($loader, unserialize(CACHE));
-		
-		echo $twig->render('main.html', array(
-				'date' => date('Y'),
-				'libs' => $libs,
-				'version' => version::current()
-				));
+    $this->render('info', 'main', array(
+      'date' => date('Y'),
+      'libs' => $libs,
+      'version' => version::current()
+      ));
 		
 	}
 }

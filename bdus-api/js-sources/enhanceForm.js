@@ -6,7 +6,7 @@
  * 
  * @author			Julian Bogdani <jbogdani@gmail.com>
  * @copyright		BraDypUS 2007-2011
- * @license			All rights reserved
+ * @license			See file LICENSE distributed with this code
  * @since			23/oct/2011
  */
 

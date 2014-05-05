@@ -1,7 +1,7 @@
 /**
  * @author			Julian Bogdani <jbogdani@gmail.com>
  * @copyright		BraDypUS 2007-2012
- * @license			All rights reserved
+ * @license			See file LICENSE distributed with this code
  * @since			15/apr/2012
  */
 

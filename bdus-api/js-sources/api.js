@@ -1,5 +1,7 @@
-
 /**
+ * @author			Julian Bogdani <jbogdani@gmail.com>
+ * @copyright		BraDypUS 2007-2014
+ * @license			See file LICENSE distributed with this code
  * Main Javascript API
  * @type object
  */

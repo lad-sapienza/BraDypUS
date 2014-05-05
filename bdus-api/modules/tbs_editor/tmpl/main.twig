@@ -1,0 +1,20 @@
+{#
+ * @author			Julian Bogdani <jbogdani@gmail.com>
+ * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
+ * @license			See file LICENSE distributed with this code
+ #}
+
+<div id="{{ uid }}">
+	<div class="tbs_container btn-group">
+		{% for tb, label in tbs_data %}
+			<button class="tables btn btn-default" data-tb="{{ tb }}" class="tables">{{ label }}</button> 
+		{% endfor %}
+	</div>
+	<div class="form_container container" style="margin:20px 0;"></div>
+</div>
+
+<script>
+$('#{{ uid }} button.tables').on('click', function(){
+	tbs_editor.loadTbForm($('#{{ uid }} div.form_container'), $(this).data('tb'));
+});
+</script>

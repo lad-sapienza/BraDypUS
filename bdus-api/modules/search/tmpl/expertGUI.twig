@@ -1,0 +1,65 @@
+{#
+ * @author			Julian Bogdani <jbogdani@gmail.com>
+ * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
+ * @license			See file LICENSE distributed with this code
+ #}
+
+<div id="{{ uid }}">
+	
+	<form action="javascript:void(0)">
+	
+		<div class="row" style="padding-top:20px;">
+		
+			<div class="col-sm-3">
+				<strong>{{ tr.get('available_fields') }}</strong>
+				<hr />
+				<div style="max-height:400px; overflow: auto;">
+						<ul class="nav nav-pills nav-stacked">
+					{% for fld in fields %}
+						<li><a href="javascript:void(0)" style="margin:2px;" class="insert" data-value="`{{ fld }}`">{{ fld }}</a></li>
+					{% endfor %}
+						</ul>
+					</div>
+			</div>
+			
+			<div class="col-sm-4">
+				<strong>{{ tr.get('query') }}</strong>
+				<hr />
+				<pre>SELECT * FROM `{{ tb }}` WHERE </pre>
+				<textarea style="width:100%; height:350px; font-family: Monaco,Menlo,Consolas,'Courier New',monospace;" name="querytext"></textarea>
+			</div>
+			
+			<div class="col-sm-3">
+				<strong>{{ tr.get('utilities') }}</strong>
+				<hr />
+				{% for op in operators %}
+					<button style="margin:2px;" class="insert btn btn-info" data-value="{{ op }}">{{ op }}</button>
+				{% endfor %}
+			</div>
+		</div>
+		
+		
+	</form>
+	
+	<div>
+		<button class="btn btn-success send">{{ tr.get('send') }}</button>
+		<button class="btn btn-info test">{{ tr.get('test_sql') }}</button>
+	</div>
+	
+</div>
+
+<script>
+	$('#{{ uid }} .insert').click(function(){
+		$(this).parents('form').find('textarea').insertAtCaret($(this).data('value'));
+	});
+	
+	$('#{{ uid }} button.send').on('click', function(){
+		 var form_data = $('#{{ uid }} form').serialize();
+		 api.showResults('{{ tb }}', 'type=sqlExpert', core.tr('sql_expert_search') + ' ({{ tb }})', form_data);
+	});
+	
+	$('#{{ uid }} button.test').on('click', function(){
+		var form_data = $('#{{ uid }} form').serialize();
+		search.test('sqlExpert', '{{ tb }}', form_data);
+	});
+</script>

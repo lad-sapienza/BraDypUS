@@ -1,0 +1,99 @@
+{#
+ * @author			Julian Bogdani <jbogdani@gmail.com>
+ * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
+ * @license			See file LICENSE distributed with this code
+ #}
+
+<div class="row">
+	<div class="col-sm-4">
+		<div class="panel panel-default">
+			<div class="panel-heading">
+				<h3>BraDypUS v. {{ version }} </h3>
+			</div>
+			<div class="panel-body">
+				<p>&copy; All rights reserved / 2007 - {{ date }}</p>
+				<p><strong>BraDypUS</strong> Studio associato di Bogdani Julian e Vecchietti Erika <br />
+				sede legale: via Fioravanti, 72. 40129 Bologna Italia<br />
+				CF / PI: 02864631201</p>
+			</div>
+			<div class="panel-footer">
+				BraDypUS version numering follows the <a href="http://semver.org/" target="_blank">semver guidelines</a>
+			</div>
+		</div>
+		
+		
+		<div class="panel panel-default">
+			<div class="panel-heading">
+				<h3>Julian Bogdani <small>(development)</small></h3>
+			</div>
+			<div class="panel-body">
+				<p>web: <a href="http://bradypus.net" target="_blank">bradypus.net</a><br />
+					e-mail: <a href="mailto:jbogdani@gmail.com">jbogdani@gmail.com</a><br />
+					skype: <a href="callto:jbogdani">jbogdani</a></p>
+			</div>
+		</div>
+		
+		<div class="panel panel-default">
+			<div class="panel-heading">
+				<h3>Erika Vecchietti <small>(communications)</small></h3>
+			</div>
+			
+			<div class="panel-body">
+				<p>e-mail: <a href="mailto:erika.vecchietti2@unibo.it">erika.vecchietti2@unibo.it</a><br />
+				skype: <a href="callto:e-vecchietti">e-vecchietti</a></p>
+			</div>
+		</div>
+		
+	</div>
+	
+	<div class="col-sm-4">
+		<h3>External code</h3>
+		<dl>
+		{% for l in libs %}
+			<dt style="font-size:1.2em; margin-top:7px;">{{ l.name }}</dt>
+			<dd>{% if l.by %}by {{ l.by }}<br />{% endif %}
+			Web: <a href="{{ l.web }}" target="_blank"><i class="glyphicon glyphicon-globe"></i> {{ l.web }}</a><br />
+			License: {{ l.lic }}</dd>
+		{% endfor %}
+		</dl>
+		
+		<hr />
+		<h4>Licenses texts</h4>
+		<dl>
+			<dt>Apache version 2.0</dt>
+			<dd><a href="http://www.apache.org/licenses/LICENSE-2.0.txt" target="_blank">http://www.apache.org/licenses/LICENSE-2.0.txt</a></dd>
+			
+			<dt>BSD 3-Clause License ('modified' or 'new')</dt>
+			<dd><a href="http://opensource.org/licenses/BSD-3-Clause" target="_blank">http://opensource.org/licenses/BSD-3-Clause</a></dd>
+			
+			<dt>BSD 2-Clause License ('simplified' or FreeBSD)</dt>
+			<dd><a href="http://opensource.org/licenses/BSD-2-Clause" target="_blank">http://opensource.org/licenses/BSD-2-Clause</a></dd>
+			
+			<!--
+			<dt></dt>
+			<dd><a href="" target="_blank"></a></dd> 
+			 -->
+			
+			<dt>GNU General Public License (GPL) v.3</dt>
+			<dd><a href="http://www.gnu.org/licenses/gpl-2.0.html" target="_blank">http://www.gnu.org/licenses/gpl-2.0.html</a></dd>
+			
+			<dt>GNU General Public License (GPL) v.3</dt>
+			<dd><a href="http://www.gnu.org/licenses/gpl.html" target="_blank">http://www.gnu.org/licenses/gpl.html</a></dd>
+			
+			<dt>GNU Lesser General Public License (LGPL)</dt>
+			<dd><a href="http://www.gnu.org/licenses/lgpl.html" target="_blank">http://www.gnu.org/licenses/lgpl.html</a></dd>
+			
+			<dt>MIT</dt>
+			<dd><a href="http://opensource.org/licenses/MIT" target="_blank">http://opensource.org/licenses/MIT</a></dd>
+			
+			<dt>Mozilla Public License v1.1</dt>
+			<dd><a href="http://www.mozilla.org/MPL/1.1/" target="_blank">http://www.mozilla.org/MPL/1.1/</a></dd>
+			
+			<dt>Mozilla Public License v2.0</dt>
+			<dd><a href="http://www.mozilla.org/MPL/2.0/" target="_blank">http://www.mozilla.org/MPL/2.0/</a></dd>
+			
+			
+		</dl>
+	</div>
+</div>
+

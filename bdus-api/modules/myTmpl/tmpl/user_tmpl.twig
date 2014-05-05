@@ -1,0 +1,62 @@
+{#
+ * @author			Julian Bogdani <jbogdani@gmail.com>
+ * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
+ * @license			See file LICENSE distributed with this code
+ #}
+
+<table class="table table-bordered table-striped table-hover" id="{{ uid }}">
+	<tr>
+		<th>&nbsp;</th>
+		<th>{{ tr.get('read') }}</th>
+		<th>{{ tr.get('edit') }}</th>
+	</tr>
+	
+	{% for tb, tb_label in tabs %}
+	<tr>
+		<th>{{ tb_label }}</th>
+		
+		<td>
+			{% if data is not empty %}
+			<select data-tb="{{ tb }}" data-context="read">
+				<option value=""> - </option>
+				{% for tmpl in data[tb]['list'] %}
+				{% if tmpl == data[tb]['default_read'] %}
+				<option value="" {% if data[tb]['user_read'] is empty %} selected="selected" {% endif %}>{{ tr.get('default') }} ({{ tmpl }})</option>
+				{% else %}
+				<option value="{{ tmpl }}" {% if tmpl == data[tb]['user_read'] %} selected="selected" {% endif %}>{{ tmpl }}</option>
+				{% endif %}
+				{% endfor %}
+			</select>
+			{% endif %}
+		</td>
+		
+		<td>
+			{% if data is not empty %}
+			<select data-tb="{{ tb }}" data-context="edit">
+				<option value=""> - </option>
+				{% for tmpl in data[tb]['list'] %}
+				{% if tmpl == data[tb]['default_edit'] %}
+				<option value="" {% if data[tb]['user_edit'] is empty %} selected="selected" {% endif %}>{{ tr.get('default') }} ({{ tmpl }})</option>
+				{% else %}
+				<option value="{{ tmpl }}" {% if tmpl == data[tb]['user_edit'] %} selected="selected" {% endif %}>{{ tmpl }}</option>
+				{% endif %}
+				{% endfor %}
+			</select>
+			{% endif %}
+		</td>
+			
+	</tr>
+	{% endfor %}
+</table>
+
+<script>
+$('#{{ uid }} select').change(function(){
+	$.get('controller.php?obj=myTmpl_ctrl&method=change&param[]=' + $(this).data('tb') + '&param[]=' + $(this).data('context') + '&param[]=' + $(this).val(), function(data){
+		if (!data || data == ''){
+			core.message(core.tr('ok_tmpl_set'), 'success');
+		} else {
+			core.message(core.tr('error_tmpl_set'), 'error');
+		}
+	});
+});
+</script>

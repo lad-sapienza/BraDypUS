@@ -1,0 +1,60 @@
+{#
+ * @author			Julian Bogdani <jbogdani@gmail.com>
+ * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
+ * @license			See file LICENSE distributed with this code
+ #}
+
+<div class="container" id="select_apps">
+
+	<div class="clearfix">
+		<div class="pull-left">
+			<h2>BraDypUS web.Databases</h2>
+		</div>
+		<div class="pull-right">
+			<a title="BraDypUS COMMUNICATING CULTURAL HERITAGE" target="_blank" href="http://bradypus.net" class="pull-right">
+				<img alt="BraDypUS COMMUNICATING CULTURAL HERITAGE" src="./img/bradypus.png" />
+			</a>
+		</div>
+	</div>
+	
+	<div class="btn-container">
+	
+		<div class="buttons clearfix">
+	
+			
+			<h3>{{ choose_db }}</h3>
+			
+			{% for dataApp in data %}
+				<div class="col-sm-3 col-xs-5">
+					<a class="btn btn-default btn-lg app" href="javascript:void(0)" data-db="{{ dataApp.db }}">
+						{{ dataApp.name }}
+						<span class="pull-right" style="right:3px; color:#759bbc; position:relative;"><i class="icon-play-sign hidden-xs"></i></span>
+					</a>
+				</div>
+				{% if app and app == dataApp.db %}
+					<script>login.loadLoginForm('{{ dataApp.db }}');</script>
+				{% endif %}
+			{% endfor %}
+		</div>
+		
+		<div class="login"></div>
+		
+	</div>
+	
+	
+</div>
+
+<div class="footer">
+	<a title="BraDypUS COMMUNICATING CULTURAL HERITAGE" target="_blank" href="http://bradypus.net">
+		BraDypUS. <small>COMMUNICATING CULTURAL HERITAGE</small><br />
+		http://bradypus.net
+	</a>
+	<br />
+	<code>{{ version }}</code>
+</div>
+
+<script>
+	$('.app').on('click', function(){
+		login.loadLoginForm($(this).data('db'));
+	});
+</script>

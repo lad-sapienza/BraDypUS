@@ -1,0 +1,59 @@
+{#
+ * @author			Julian Bogdani <jbogdani@gmail.com>
+ * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
+ * @license			See file LICENSE distributed with this code
+ #}
+
+<div id="{{ uid }}">
+	
+	<h4>{{ tr.get('select_tb_search') }}</h4>
+	
+	
+	<div class="tb">
+		<select name="tb" class="tb">
+			<option></option>
+			{% for id, name in tbs %}
+				<option value="{{ id }}">{{ name }}</option>
+			{% endfor %}
+		</select>
+	</div>
+	
+	<div class="fld" style="padding: 20px 0; display: none;">
+		{{ tr.get('select_fld_search') }}
+		<br />
+		<select class="fld">
+			
+		</select>
+	</div>
+	
+											
+	<div style="padding: 20px 0; display:none;" class="val">
+			{{ tr.get('search_term') }}
+			<br />
+			<input class="search" type="text" />
+			<br /><br />
+			{{ tr.get('replace_term') }}
+			<br />
+			<input class="replace" type="text" />
+	</div>
+
+</div>
+
+<script>
+	$('#{{ uid }} select.tb').on('change', function(){
+		if ($(this).val() != ''){
+			search_replace.setFld('{{ uid }}', $(this).val());
+		}else{
+			$('#{{ uid }} div.fld').hide();
+		}
+	});
+	
+	
+	$('#{{ uid }} select.fld').on('change', function(){
+		if ($(this).val() != ''){
+			$('#{{ uid }} div.val').show();
+		}else{
+			$('#{{ uid }} div.val').hide();
+		}
+	});
+</script>

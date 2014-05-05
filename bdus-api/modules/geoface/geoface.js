@@ -1,4 +1,8 @@
 /**
+ * @author			Julian Bogdani <jbogdani@gmail.com>
+ * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
+ * @license			See file LICENSE distributed with this code
+
  * steps:
  * 	1) load data
  * 		a) load main

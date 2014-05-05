@@ -1,3 +1,9 @@
+/**
+ * @author			Julian Bogdani <jbogdani@gmail.com>
+ * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
+ * @license			See file LICENSE distributed with this code
+ */
+
 var frontpage_editor = {
 		init: function(){
 			$.get('controller.php?obj=frontpage_editor_ctrl&method=getContent', function(data){

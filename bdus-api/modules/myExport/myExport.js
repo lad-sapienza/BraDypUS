@@ -1,3 +1,9 @@
+/**
+ * @author			Julian Bogdani <jbogdani@gmail.com>
+ * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
+ * @license			See file LICENSE distributed with this code
+ */
+
 var myExport= {
 		init: function(){
 						$.get('controller.php?obj=myExport_ctrl&method=getContent', function(data){

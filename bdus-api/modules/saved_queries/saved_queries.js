@@ -1,3 +1,9 @@
+/**
+ * @author			Julian Bogdani <jbogdani@gmail.com>
+ * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
+ * @license			See file LICENSE distributed with this code
+ */
+
 var saved_queries = {
 		init: function(id){
 			if (!id){

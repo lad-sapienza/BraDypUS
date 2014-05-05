@@ -1,3 +1,9 @@
+/**
+ * @author			Julian Bogdani <jbogdani@gmail.com>
+ * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
+ * @license			See file LICENSE distributed with this code
+ */
+
 var rs = {
 		init: function(){
 			$.each($('div.showRS'), function(i, el){

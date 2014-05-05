@@ -3,7 +3,7 @@
  * Trasforms database rows to geojson (http://www.geojson.org/geojson-spec.html)
  * 
  * @author			Julian Bogdani <jbogdani@gmail.com>
- * @copyright		BraDypUS 2007-2012
+ * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
  * @license			See file LICENSE distributed with this code
  * @since			Aug 20, 2012
  */

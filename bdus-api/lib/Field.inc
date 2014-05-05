@@ -1,7 +1,7 @@
 <?php
 /**
  * @author			Julian Bogdani <jbogdani@gmail.com>
- * @copyright		BraDypUS 2007-2012
+ * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
  * @license			All rights reserved
  * @since			See file LICENSE distributed with this code
  * @uses			cfg

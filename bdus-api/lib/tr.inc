@@ -2,7 +2,7 @@
 /**
  * Translation class
  * @author			Julian Bogdani <jbogdani@gmail.com>
- * @copyright		BraDypUS 2007-2011
+ * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
  * @license			See file LICENSE distributed with this code
  * @since			Apr 7, 2012
  * @uses			cfg

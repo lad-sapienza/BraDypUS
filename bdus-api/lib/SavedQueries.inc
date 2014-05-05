@@ -2,7 +2,7 @@
 /**
  * Manages sharing/unsharing/insertion and deletion to queries table
  * @author			Julian Bogdani <jbogdani@gmail.com>
- * @copyright		BraDypUS 2007-2012
+ * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
  * @license			See file LICENSE distributed with this code
  * @since			Aug 9, 2012
  * @uses			tr

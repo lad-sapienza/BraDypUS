@@ -3,7 +3,7 @@
  * 
  * Parses a template (XML) file and shows read and/or edit content
  * @author			Julian Bogdani <jbogdani@gmail.com>
- * @copyright		BraDypUS 2007-2012
+ * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
  * @license			See file LICENSE distributed with this code
  * @since 2011-08-11
  */

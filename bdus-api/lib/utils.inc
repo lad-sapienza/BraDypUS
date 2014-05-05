@@ -84,7 +84,8 @@ class utils
     
 		if ( $type['mini'] || !file_exists('./js/' . $js_name . '.js'))
 		{
-      utils::emptyDir('js');
+      utils::emptyDir('js', false, true);
+      
 			$str = "/*\n * BraDypUS javascripts minified archive includes different sources and licenses"
 			. "\n * For details on external libraries (copyrights and licenses) please consult the Credits information"
 			. "\n * Created: " . microtime(1) . "\n*/";
@@ -392,7 +393,7 @@ class utils
 	 * @param string $delete	if true directory will be deleted
 	 * @throws myException
 	 */
-	public static function emptyDir( $dir = false, $delete = false )
+	public static function emptyDir( $dir = false, $delete = false, $limit2current = false )
 	{
 		!$dir ? $dir = PROJ_TMP_DIR : ''; 
 		
@@ -404,7 +405,10 @@ class utils
 			{
 				if ( is_dir ( $dir . '/' . $file ) )
 				{
-					self::emptyDir( $dir . '/' . $file, true );
+          if( !$limit2current )
+          {
+            self::emptyDir( $dir . '/' . $file, true );
+          }
 				}
 				else
 				{
@@ -416,7 +420,7 @@ class utils
 			}
 		}
 		
-		if ( $dir != PROJ_TMP_DIR && $delete)
+		if ( $dir !== PROJ_TMP_DIR && $delete)
 		{
 			if ( !@rmdir( $dir ) )
 			{

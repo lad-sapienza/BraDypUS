@@ -24,7 +24,6 @@ class Compress
 	{
 		if ( ($type['mini'] || !file_exists('./js/bdus.mini.js')) && is_dir('./js-sources'))
 		{
-      error_log('minifyiung js');
       @unlink('./js/bdus.mini.js');
       
 			$str = "/*\n * BraDypUS javascripts minified archive includes different sources and licenses"

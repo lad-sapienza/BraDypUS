@@ -106,7 +106,7 @@ class Field implements iTemplate
 		{
 			return '<div class="permalink">' .
         '<a href="' . "./#/" . PREFIX . '/' . str_replace(PREFIX . '__', null, $this->tb) . '/' . $this->record->getCore('id')  . '">PERMALINK</a>' .
-      '';
+      '</div>';
 		}
 	}
 	

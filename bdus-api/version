@@ -1,3 +1,7 @@
+3.2.1[] = "Bug fixed with advaced search templates, still looking for .html templates"
+3.2.1[] = "Bug fixed with result UI component: Harris' Matrix icon was not showing"
+3.2.1[] = "Bug fixed with Field::permalink. Main div element was not closed"
+3.2.1[] = "Bug fixed with utils::recursiveFilter"
 3.2.0[] = "New feature: added the possibility to upload and link to existing records external geoJSON files"
 3.2.0[] = "Minify_CSS_Compressor deprecated. oyejorge/less.php is now used for LESS compilation and CSS minification"
 3.2.0[] = "jQuery updated to v 2.1.1"

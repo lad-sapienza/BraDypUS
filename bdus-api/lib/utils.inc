@@ -537,6 +537,6 @@ class utils
 				$a = self::recursiveFilter($a, $callback);
 			}
 		}
-		return array_filter($arr, $callback);
+    return $callback ? array_filter($arr, $callback ) : array_filter($arr);
 	}
 }

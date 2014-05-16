@@ -69,7 +69,6 @@ class search_ctrl extends Controller
 	public function advancedGUI()
 	{
 		$this->render('search', 'advanced', array(
-				'tr'		=> new tr(),
 				'fields'	=> $this->opt_all_flds($this->request['tb']),
 				'operators'	=> $this->opt_operators(),
 				'connector'	=> $this->opt_connector($this->request['tb']),

@@ -688,7 +688,7 @@ class Field implements iTemplate
 		}
 		
 		// DATA
-		if ( $setting['def_value'] AND $this->context == 'add_new' )
+		if ( $setting['def_value'] && $this->context === 'add_new' )
 		{
 			/*
 			 * ie. I'm entering e new record and the field has a def_value
@@ -960,11 +960,13 @@ class Field implements iTemplate
 			
 			' autocomplete="on" '
 			
-			. ( $setting['onchange'] ? 'onchange="'. $setting['onchange']. '" ' : '') 
+			. ( $setting['onchange'] ? 'onchange="' . $setting['onchange']. '" ' : '') 
 			
 			. ( $setting['pattern'] ? ' mypattern="' . $setting['pattern']. '"' : '')
 			
-			. $setting['disabled']
+			. ( ($setting['def_value'] && $this->context === 'add_new') ? ' changed="auto"' : '')
+
+      . $setting['disabled']
 			
 			. $setting['readonly'];
 

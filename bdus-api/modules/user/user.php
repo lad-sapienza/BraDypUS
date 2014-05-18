@@ -132,8 +132,9 @@ class user_ctrl extends Controller
 		
 	}
 	
-	public function edit($data)
+	public function edit()
 	{
+    $data = $this->post;
 		try
 		{
 			$user = new User(new DB());

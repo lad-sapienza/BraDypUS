@@ -1,3 +1,4 @@
+3.2.2[] = "Bug fixed with reset password module"
 3.2.1[] = "Bug fixed with user data editing module"
 3.2.1[] = "Bug fixed with default value field setting not saving properly in the database"
 3.2.1[] = "Bug fixed with advanced search templates, still looking for .html templates"

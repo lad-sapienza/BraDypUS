@@ -66,11 +66,11 @@ try
     'datatables-bootstrap.js',
     'jquery.keyboard.js',
     'utils.js',
-    'core.js',
     'jquery.pnotify.js',
+    'jquery.fineuploader-3.4.0.js',
+    'core.js',
     'api.js',
     'layout.js',
-    'jquery.fineuploader-3.4.0.js',
     'formControls.js',
     'select2.js',
     'enhanceForm.js',
@@ -93,9 +93,9 @@ try
       layout.loadHome();
       layout.hashActions();
 <?php elseif ($_REQUEST['address'] && $_REQUEST['token']): ?>
-      core.runMod('login', false, function(){
+    
+      core.runMod('login', ['loadResetPwd', '<?php echo $_REQUEST['app']; ?>', '<?php echo $_REQUEST['address']; ?>', '<?php echo $_REQUEST['token']; ?>'], function(){
         login.loadLogin();
-        login.loadResetPwd('<?php echo $_REQUEST['app'] . "', '" . $_REQUEST['address'] . "', '" . $_REQUEST['token'];?>');
       });
 <?php else : ?>
       core.runMod('login', false, function(){

@@ -1,5 +1,5 @@
 RewriteEngine on
-RewriteBase /bdus/v3
+RewriteBase /
 
 RewriteRule ^(mini|debug|logout)/?$ ./?$1=1 
 

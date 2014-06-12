@@ -34,17 +34,16 @@ class login_ctrl extends Controller
 	public function resetPwd()
 	{
 		$user = new User(new DB($this->get['app']));
-	
-		$res = $user->getUser(array('email'=>$this->get['email']));
-	
+    
+		$res = $user->getUser(array('email'=>$this->get['address']));
+    
 		if ($res[0])
 		{
 			if ($this->get['token'] == $user->getToken($res[0]))
 			{
 				$this->render('login', 'reset_pwd', array(
-						'tr' => new tr(),
 						'user' => $res[0],
-						'app' => $this->get['app']
+						'app' => $this->request['app']
 				));
 			}
 		}
@@ -246,7 +245,7 @@ class login_ctrl extends Controller
 			
 			$to = $this->get['email'];
 			$subject = tr::get('lost_password_email_subject');
-			$message = tr::sget('lost_password_email_text', 'http://db3.bradypus.net/?loginapp=' . $this->get['app'] . '&address=' . $this->get['email'] . '&token=' . $token)
+			$message = tr::sget('lost_password_email_text', 'http://db.bradypus.net/?app=' . $this->get['app'] . '&address=' . $this->get['email'] . '&token=' . $token)
 				. tr::get('email_signature');
 			$headers = 'From: ' . $this->get['app'] . '@bradypus.net' . "\r\n" . 'Reply-To: ' . $this->get['app'] . '@bradypus.net' . "\r\n";
 			

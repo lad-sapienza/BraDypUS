@@ -17,28 +17,32 @@
 <input type="hidden" value="{{ user.id }}" id="reset-id">
 <input type="hidden" value="{{ app }}" id="reset-app">
 
-<button class="btn btn-primary" id="reset-send">{{ tr.get('send') }}</button> 
-<button class="btn btn-primary" id="reset-cancel">{{ tr.get('cancel') }}</button> 
+<button class="btn btn-primary" id="reset-send-{{ uid }}">{{ tr.get('send') }}</button> 
+<button class="btn btn-primary" id="reset-cancel-{{ uid }}">{{ tr.get('cancel') }}</button> 
 
 
 
 <script>
-	$('#reset-send').click(function(){
+	$('#reset-send-{{ uid }}').on('click', function(){
 		 var pwd1 = $('#reset-passw1').val(),
 		 	pwd2 = $('#reset-passw2').val()
 		 	id = $('#reset-id').val()
 		 	app = $('#reset-app').val();
 		 	
-		 if (!pwd1 || !pwd2 || (pwd1 != pwd2 )){
+		 if (!pwd1 || !pwd2 || (pwd1 !== pwd2 )){
 			 core.message("{{ tr.get('pass_empty_or_not_match') }}", 'error');
 		 } else {
-			 core.getJSON('login_ctrl','changePwd',false,{app:app, id:id, pwd:pwd1},function(data){
-				 core.message(data.text, data.status);
+       core.getJSON('login_ctrl','changePwd',false,{app:app, id:id, pwd:pwd1},function(data){
+         core.message(data.text, data.status);
+         
+         if (data.status === 'success'){
+           window.location = './#/' + app;
+         }
 			 });
 		 }
 	 });
 	
-	$('#reset-cancel').click(function(){
+	$('#reset-cancel-{{ uid }}').on('click', function(){
 		window.location = './';
 	});
 </script>

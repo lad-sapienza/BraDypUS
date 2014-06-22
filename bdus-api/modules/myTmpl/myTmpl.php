@@ -52,8 +52,8 @@ class myTmpl_ctrl extends Controller
 	 * @param string $context
 	 * @param string $tmpl template name with extension
 	 */
-	public static function change($tb, $context, $tmpl = false)
+	public function change()
 	{
-		pref::setTmpl($tb, $context, $tmpl);
+    pref::setTmpl($this->get['param'][0], $this->get['param'][1], $this->get['param'][2]);
 	}
 }

@@ -531,7 +531,7 @@ $lang['import_dont_erase_previous_data'] = "Importa senza cancellare i dati geog
 $lang['geodata_ok_uploaded'] = "Nessun errore nel processo di importazione. %s geometrie sono state caricate";
 $lang['geodata_error_uploaded'] = "C'è stato qualche errore nel caricare i dati geografici. Nessuna geometria è stata caricata";
 
-$lang[''] = "";
+$lang['app_is_frozen'] = "Attenzione. Questa applicazione è stata congelata. È possibile leggere tutte le schede ed eseguire ricerche ma non è possibile modificare i dati";
 $lang[''] = "";
 
 $lang[''] = "";

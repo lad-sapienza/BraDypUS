@@ -208,13 +208,16 @@ class utils
 	 */
 	public static function canUser($privilege = false, $creator = false)
 	{
-		error_log(cfg::main('status'));
+		$app_status = cfg::main('status');
+    
+    $user_priv = $_SESSION['user']['privilege'];
+    
 		if (!$privilege)
 		{
 			$privilege = 'edit';
 		}
 		
-		if ($_SESSION['user']['privilege'] === 0)
+		if ($user_priv === 0)
 		{
 			return false;
 		}
@@ -222,34 +225,34 @@ class utils
 		switch($privilege)
 		{
 			case 'enter':
-				return ($_SESSION['user']['privilege'] < 39);
+				return ($app_status !== 'off' && $user_priv < 39);
 				break;
 				
 			case 'read':
 			case 'preview':
 				// read & preview can be global or table oriented
-				return ($_SESSION['user']['privilege'] < 31);
+				return ($app_status !== 'off' && $user_priv < 31);
 				break;
 				
 				
 			case 'add_new':
-				return ($_SESSION['user']['privilege'] < 26);
+				return ($app_status !== 'frozen' && $user_priv < 26);
 				break;
 				
 			case 'edit':
-				return ($_SESSION['user']['privilege'] < 21 || ($creator  && $creator == $_SESSION['user']['id'] && $_SESSION['user']['privilege'] < 26));
+				return $app_status !== 'frozen' && ($user_priv < 21 || ($creator  && $creator == $_SESSION['user']['id'] && $user_priv < 26));
 				break;
 				
 			case 'multiple_edit':
-				return ($_SESSION['user']['privilege'] < 21);
+				return ($app_status !== 'frozen' && $user_priv < 21);
 				break;
 				
 			case 'admin':
-				return ($_SESSION['user']['privilege'] < 11);
+				return ($app_status !== 'frozen' && $user_priv < 11);
 				break;
 				
 			case 'super_admin':
-				return ( ($_SESSION['user']['privilege'] < 11 && !self::is_online()) || $_SESSION['user']['privilege'] < 2);
+				return ( ($user_priv < 11 && !self::is_online()) || $user_priv < 2);
 				break;
 				
 			default:

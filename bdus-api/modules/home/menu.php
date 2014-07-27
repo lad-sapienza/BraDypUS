@@ -18,11 +18,14 @@ if (!utils::canUser('enter'))
 		<p><?php echo cfg::main('definition')?></p>
 	</div>
 </div>
+<?php if (cfg::main('status') === 'frozen'): ?>
+  <div class="bg-danger lead text-danger" style="padding: 10px;"><i class="fa fa-info-circle"></i> <?= tr::get('app_is_frozen'); ?></div>
+      <?php endif; ?>
 <div class="row">
 	<div class="col-md-9">
 		<ul class="home clearfix">
 			<li><h2><?php tr::show('data_mng')?></h2></li>
-			<li style="" class="tb">
+			<li class="tb">
 				<select class="tb" style="font-size: 20px; height:38px; margin: 20px 0; width:250px;">
 				<?php
 					$all_tb = cfg::getNonPlg();
@@ -37,7 +40,7 @@ if (!utils::canUser('enter'))
 				?>	
 				</select>
 			</li>
-			
+      
 			<li class="tb_opt"></li>
 			
 			<li><h2><?php tr::show('options'); ?></h2>
@@ -88,7 +91,7 @@ if (!utils::canUser('enter'))
 						<?php tr::show('import_geodata'); ?>
 					</li>
 					
-					<li <?php echo utils::canUser('admin') ? 'onclick="core.runMod(\'vocabularies\')"' : 'class="state-disabled"'; ?>>
+					<li <?php utils::canUser('admin') ? 'onclick="core.runMod(\'vocabularies\')"' : 'class="state-disabled"'; ?>>
 						<i class="fa fa-quote-left"></i><br />
 						<?php tr::show('vocabulary_mng'); ?>
 					</li>

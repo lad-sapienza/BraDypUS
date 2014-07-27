@@ -1,3 +1,4 @@
+3.2.5[] = "Bug fixed with offline and frozen apps"
 3.2.4[] = "Removed offline status option"
 3.2.3[] = "Bug fixed with user template setting"
 3.2.2[] = "Bug fixed with reset password module"

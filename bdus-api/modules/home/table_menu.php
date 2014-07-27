@@ -10,6 +10,8 @@ if (!$_GET['tb'])
 {
 	return;
 }
+
+
 ?>
 
 <ul>

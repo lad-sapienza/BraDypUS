@@ -465,3 +465,4 @@ $lang['import_erase_previous_data'] = "Import and erase previously inserted geod
 $lang['import_dont_erase_previous_data'] = "Import and don't erase previously inserted geodata";
 $lang['geodata_ok_uploaded'] = "No error in import process. %s features were correctly uploaded";
 $lang['geodata_error_uploaded'] = "Some error occourred in geodata uploading. No feature was uploaded";
+$lang['app_is_frozen'] = "Attention! This application is frozen, You can read all records and run queries, but you will not be able to edit the data.";

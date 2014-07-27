@@ -208,16 +208,22 @@ class utils
 	 */
 	public static function canUser($privilege = false, $creator = false)
 	{
-		$app_status = cfg::main('status');
+    if (defined('PROJ_DIR'))
+    {
+      $app_status = cfg::main('status');
+    } else {
+      $app_status = 'on';
+    }
     
     $user_priv = $_SESSION['user']['privilege'];
+    
     
 		if (!$privilege)
 		{
 			$privilege = 'edit';
 		}
 		
-		if ($user_priv === 0)
+		if (!$user_priv || $user_priv === 0)
 		{
 			return false;
 		}

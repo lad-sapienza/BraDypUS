@@ -208,13 +208,13 @@ class utils
 	 */
 	public static function canUser($privilege = false, $creator = false)
 	{
-		
+		error_log(cfg::main('status'));
 		if (!$privilege)
 		{
 			$privilege = 'edit';
 		}
 		
-		if ($_SESSION['user']['privilege'] == 0)
+		if ($_SESSION['user']['privilege'] === 0)
 		{
 			return false;
 		}

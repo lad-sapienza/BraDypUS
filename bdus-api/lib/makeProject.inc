@@ -961,7 +961,7 @@ class makeProject
 		return array(
 				array('name' =>$proj_dir . '/error.log'),
 				array('name'=>$proj_dir . '/welcome.html', 'content'=>'<h1>' . strtoupper($this->app) . '</h1><h3>A BraDypUS database</h3><hr />'),
-				array('name'=>$proj_dir . '/cfg/app_data.json', 'content'=>'{"lang": "it","name": "' . $this->app . '","definition": "A BraDypUS database","status": "on","offline": "0","dot_path": "\/usr\/local\/bin\/"}'),
+				array('name'=>$proj_dir . '/cfg/app_data.json', 'content'=>'{"lang": "it","name": "' . $this->app . '","definition": "A BraDypUS database","status": "on","dot_path": "\/usr\/local\/bin\/"}'),
 				array('name'=>$proj_dir . '/cfg/tables.json', 'content' => '{"tables": [{"name": "' . $this->app . '__files","label": "Files","order": "id","preview": ["id","filename","ext","keywords"],"tmpl_edit": "files","tmpl_read": "files","id_field": "id"}]}'),
 				array('name'=>$proj_dir . '/cfg/files.json', 'content'=>'[ { "name": "id", "label": "ID", "type": "text", "readonly": true }, { "name": "ext", "label": "Extension", "type": "text", "check": ["not_empty"], "readonly": true }, { "name": "filename", "label": "Filename", "type": "text", "check": ["not_empty"], "readonly": true }, { "name": "keywords", "label": "Keywords", "type": "text" }, { "name": "description", "label": "Description", "type": "long_text" }, { "name": "printable", "label": "Printable", "type": "boolean" }]'),
 				array('name'=>$proj_dir . '/db/bdus.sqlite'),

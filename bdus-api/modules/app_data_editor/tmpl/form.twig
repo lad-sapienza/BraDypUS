@@ -39,19 +39,6 @@
 		</tr>
 		
 		<tr>
-			<th>OFFLINE</th>
-			<td>
-				<select type="text" name="offline">
-					
-					{% for o in offline %}
-						<option{% if o == info.offline %} selected="true" {% endif %}>{{ o }}</option>
-					{% endfor %}
-		
-				</select>
-			</td>
-		</tr>
-		
-		<tr>
 			<th>SEARCH_CODE: </th>
 			<td><input type="text" name="search_code" value="{{ info.search_code }}" /></td>
 		</tr>

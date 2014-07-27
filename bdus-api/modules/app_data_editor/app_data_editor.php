@@ -22,7 +22,6 @@ class app_data_editor_ctrl extends Controller
 				'available_langs' => utils::dirContent(LOCALE_DIR),
 				'info' => cfg::main(),
 				'status' => array('on', 'frozen', 'off'),
-				'offline' => array(0, 1),
 				'tr_disabled' => tr::get('disabled'),
 				'users' => $users
 				));

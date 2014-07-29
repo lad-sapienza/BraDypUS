@@ -53,6 +53,7 @@ class Compress
 					echo "\n  ".'<script language="JavaScript" type="text/JavaScript" src="./js-sources/' . $file .'?_' . str_replace('.', null, microtime(1)). '"></script>';
 				}
 			}
+      return;
 		}
     
     echo '<script language="JavaScript" type="text/JavaScript" src="./js/bdus.mini.js"></script>' . "\n";

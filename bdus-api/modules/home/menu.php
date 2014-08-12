@@ -91,12 +91,12 @@ if (!utils::canUser('enter'))
 						<?php tr::show('import_geodata'); ?>
 					</li>
 					
-					<li <?php utils::canUser('admin') ? 'onclick="core.runMod(\'vocabularies\')"' : 'class="state-disabled"'; ?>>
+					<li <?php echo utils::canUser('admin') ? 'onclick="core.runMod(\'vocabularies\');"' : 'class="state-disabled"'; ?>>
 						<i class="fa fa-quote-left"></i><br />
 						<?php tr::show('vocabulary_mng'); ?>
 					</li>
 		
-					<li <?php echo utils::canUser('admin') ? 'onclick="core.runMod(\'frontpage_editor\')"' : 'class="state-disabled"'; ?>>
+          <li <?php echo utils::canUser('admin') ? 'onclick="core.runMod(\'frontpage_editor\')"' : 'class="state-disabled"'; ?>>
 						<i class="fa fa-edit"></i><br />
 						<?php tr::show('front_page_editor'); ?>
 					</li>

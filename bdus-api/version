@@ -1,3 +1,4 @@
+3.2.10[] = "API accepts new optional GET parameter: records_per_page (default value: 30)"
 3.2.9[] = "Bug fixed with javascript compressing tool"
 3.2.8[] = "Bug fixed with user privilege management in login module"
 3.2.7[] = "Font Awesome updated to version 4.1.0"

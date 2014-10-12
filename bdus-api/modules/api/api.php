@@ -4,6 +4,20 @@
  * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
  * @license			See file LICENSE distributed with this code
  * @since			Apr 21, 2013
+ * 
+ * 
+ * API is reacheable at {app_base_url}/api/{app_name}/{no_prefix_tb_name}
+ *  eg.: http://db.bradypus.net/sitarc/siti
+ * 
+ * Available parameters:
+ * GET:
+ *  app:  string,  required, application name (eg: sitarc)
+ *  tb:   string, required, no-prefix table name (eg: siti)
+ *  records_per_page: int, optional, default: 30 number of records to show in each page.
+ * 
+ *  id:   int, (database) ID for single record. Only one record will be returned
+ *  
+ * 
  */
 
 class api_ctrl extends Controller
@@ -46,7 +60,7 @@ class api_ctrl extends Controller
 			}
 			else
 			{
-				$records_per_page = 30;
+				$records_per_page = $this->get['records_per_page'] ? $this->get['records_per_page'] : 30;
 				
 				$this->request['tb'] = $tb;
 				

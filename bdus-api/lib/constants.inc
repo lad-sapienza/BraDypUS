@@ -111,5 +111,4 @@ new autoLoader();
 require_once $root . 'lib/vendor/Twig/Autoloader.php';
 Twig_Autoloader::register();
 
-require $root . 'vendor/autoload.php';
 tr::load_file();

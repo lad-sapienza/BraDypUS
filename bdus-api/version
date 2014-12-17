@@ -1,3 +1,4 @@
+3.3.0[] = "Removed ojejorge/less.php from composer"
 3.3.0[] = "Removed Twig from composer"
 3.3.0[] = "Upgraded Twig to v. 1.16.2"
 3.3.0[] = "Upgraded oyejorge/less.php to v1.7.0.2"

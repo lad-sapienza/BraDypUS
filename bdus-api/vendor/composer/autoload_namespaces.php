@@ -7,6 +7,5 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'Symm' => array($vendorDir . '/symm/gisconverter/src'),
-    'Less' => array($vendorDir . '/oyejorge/less.php/lib'),
     'FtpPhp\\' => array($vendorDir . '/rjkip/ftp-php/src'),
 );

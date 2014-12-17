@@ -10,7 +10,6 @@
   ],
   "require": {
     "rjkip/ftp-php": "1.*",
-    "oyejorge/less.php": "1.*",
     "symm/gisconverter": "v1.0.2"
   }
 }

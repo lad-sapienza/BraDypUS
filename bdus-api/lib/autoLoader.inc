@@ -19,6 +19,14 @@ class autoloader
 		{
 			return true;
 		}
+    // Manually installed external libraries
+    switch($className)
+    {
+      case 'Less_Parser':
+        require_once LIB_DIR . 'vendor/lessphp/Less.php';
+        return true;
+        break;
+    }
 		
 		if (preg_match('/_ctrl/', $className))
 		{

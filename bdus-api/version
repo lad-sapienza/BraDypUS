@@ -1,3 +1,5 @@
+3.3.0[] = "Removed composer"
+3.3.0[] = "Removed rjkip/ftp-php from composer"
 3.3.0[] = "Removed symm/gisconverter from composer"
 3.3.0[] = "Removed ojejorge/less.php from composer"
 3.3.0[] = "Removed Twig from composer"

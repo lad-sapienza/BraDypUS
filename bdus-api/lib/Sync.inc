@@ -7,9 +7,6 @@
  * @uses FTPClien Description
  */
 
-use FtpPhp\FtpClient;
-use FtpPhp\FtpException;
-
 
 class Sync
 {
@@ -39,7 +36,7 @@ class Sync
 	 */
 	public function __construct($ftp_string, $direction)
 	{
-		$this->ftp =  new FtpClient($ftp_string);
+		$this->ftp =  new FtpPhp\FtpClient($ftp_string);
 		
 		if ($direction != 'fromServer' && $direction != 'toServer')
 		{
@@ -74,11 +71,11 @@ class Sync
 		
 		try
 		{
-			$this->ftp->put('cfg/app_data.json', $tmpfile, FtpClient::BINARY);
+			$this->ftp->put('cfg/app_data.json', $tmpfile, FtpPhp\FtpClient::BINARY);
 			
 			return array('file' => $tmpfile, 'app_status' => $data['status']);
 		}
-		catch (FtpException $e)
+		catch (FtpPhp\FtpException $e)
 		{
 			throw new myException($e);
 		}
@@ -103,11 +100,11 @@ class Sync
 			try
 			{
 				$file = PROJ_TMP_DIR . uniqid() . '.json';
-				$sync = $this->ftp->get($file, '/cfg/app_data.json', FtpClient::BINARY);
+				$sync = $this->ftp->get($file, '/cfg/app_data.json', FtpPhp\FtpClient::BINARY);
 				
 				return $this->getOnlineStatus($file);
 			}
-			catch (FtpException $e)
+			catch (FtpPhp\FtpException $e)
 			{
 				throw new myException($e);
 			}
@@ -165,7 +162,7 @@ class Sync
 					throw new myException('Can not create local directory:' . PROJ_DIR . dirname($file));
 				}
 			}
-			return $this->ftp->get(PROJ_DIR . '/' . $file, $file, FtpClient::BINARY);
+			return $this->ftp->get(PROJ_DIR . '/' . $file, $file, FtpPhp\FtpClient::BINARY);
 		}
 		
 		// 2. Upload TO server. $file contains project path
@@ -179,7 +176,7 @@ class Sync
 					throw new myException('Can not create remote directory: ' . dirname(str_replace(PROJ_DIR, null, $file)));
 				}
 			}
-			return $this->ftp->put(str_replace(PROJ_DIR, null, $file), $file, FtpClient::BINARY);
+			return $this->ftp->put(str_replace(PROJ_DIR, null, $file), $file, FtpPhp\FtpClient::BINARY);
 		}
 	}
 
@@ -213,7 +210,7 @@ class Sync
 				return $this->changeList;
 
 			}
-			catch (FtpException $e)
+			catch (FtpPhp\FtpException $e)
 			{
 				throw new myException($e);
 			}

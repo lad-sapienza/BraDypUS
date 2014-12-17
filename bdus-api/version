@@ -1,3 +1,6 @@
+3.3.0[] = "Removed Twig from composer"
+3.3.0[] = "Upgraded Twig to v. 1.16.2"
+3.3.0[] = "Upgraded oyejorge/less.php to v1.7.0.2"
 3.2.11[] = "Bug fixed with Matrix error report"
 3.2.10[] = "API accepts new optional GET parameter: records_per_page (default value: 30)"
 3.2.9[] = "Bug fixed with javascript compressing tool"

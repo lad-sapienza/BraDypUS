@@ -6,7 +6,6 @@ $vendorDir = dirname(dirname(__FILE__));
 $baseDir = dirname($vendorDir);
 
 return array(
-    'Twig_' => array($vendorDir . '/twig/twig/lib'),
     'Symm' => array($vendorDir . '/symm/gisconverter/src'),
     'Less' => array($vendorDir . '/oyejorge/less.php/lib'),
     'FtpPhp\\' => array($vendorDir . '/rjkip/ftp-php/src'),

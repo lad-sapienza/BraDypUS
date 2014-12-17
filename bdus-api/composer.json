@@ -9,7 +9,6 @@
     }
   ],
   "require": {
-    "rjkip/ftp-php": "1.*",
-    "symm/gisconverter": "v1.0.2"
+    "rjkip/ftp-php": "1.*"
   }
 }

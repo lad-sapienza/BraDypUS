@@ -1,3 +1,4 @@
+3.3.0[] = "Removed symm/gisconverter from composer"
 3.3.0[] = "Removed ojejorge/less.php from composer"
 3.3.0[] = "Removed Twig from composer"
 3.3.0[] = "Upgraded Twig to v. 1.16.2"

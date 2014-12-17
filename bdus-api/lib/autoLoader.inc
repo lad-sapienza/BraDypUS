@@ -27,6 +27,11 @@ class autoloader
         return true;
         break;
     }
+    
+    if (is_file(LIB_DIR . 'vendor/' . str_replace('\\', '/', $className) . '.php'))
+    {
+      require_once LIB_DIR . 'vendor/' . str_replace('\\', '/', $className) . '.php';
+    }
 		
 		if (preg_match('/_ctrl/', $className))
 		{

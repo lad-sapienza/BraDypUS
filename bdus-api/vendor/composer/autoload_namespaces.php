@@ -6,6 +6,5 @@ $vendorDir = dirname(dirname(__FILE__));
 $baseDir = dirname($vendorDir);
 
 return array(
-    'Symm' => array($vendorDir . '/symm/gisconverter/src'),
     'FtpPhp\\' => array($vendorDir . '/rjkip/ftp-php/src'),
 );

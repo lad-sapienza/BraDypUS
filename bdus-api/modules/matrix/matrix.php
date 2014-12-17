@@ -68,7 +68,7 @@ class matrix_ctrl extends Controller
 		catch (myException $e)
 		{
 			$e->log();
-			utils::response($$e->getMessage(), 'error', true);
+			utils::response($e->getMessage(), 'error', true);
 		}
 	}
 }

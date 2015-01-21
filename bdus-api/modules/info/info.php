@@ -20,15 +20,20 @@ class info_ctrl extends Controller
 	
 	public function getIP()
 	{
+        
 		$ipRegEx="[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}";
 		
 		if (preg_match("/^win/i", PHP_OS ))
 		{
-			//windows systems
+      //windows systems
 			$cmd = "ipconfig/all";
 			exec($cmd, $msg);
 			$msg = implode("\n", $msg);
 			preg_match("/(.+)ipv4 address[\. ]+ : ({$ipRegEx})\(Preferred\)/i", $msg, $ip);
+      if (empty($ip))
+      {
+        preg_match("/(.+)indirizzo ip[\. ]+ : ({$ipRegEx})/i", $msg, $ip);
+      }
 			$my_ip = $ip[2];
 		}
 		else if ( preg_match ( "/linux/i", PHP_OS ) )
@@ -43,7 +48,7 @@ class info_ctrl extends Controller
 		else if ( strtolower( PHP_OS) == 'darwin' )
 		{
 			//http://blogostuff.blogspot.com/2005/08/fun-with-ifconfig-on-mac-os-x.html
-			$cmd = "ifconfig | grep inet";
+			$cmd = 'ifconfig | grep "inet "';
 			exec($cmd, $msg);
 
 			$tmp_msg = $msg;

@@ -23,9 +23,14 @@
 			
 			{% for x, d in data %}
 				<tr data-x="{{ x }}">
-					<td><input name="f[{{ x }}][path]" type="hidden" readonly="true" value="{{ d.path }}"/>
-						<input name="f[{{ x }}][filename]" type="text" value="{{ d.file }}" /></td>
-					<td><input name="f[{{ x }}][ext]" type="text" readonly="true" value="{{ d.fData.ext }}" style="width:50px;" /></td>
+					<td>
+            <input name="f[{{ x }}][path]" type="hidden" readonly="true" value="{{ d.path }}" />
+            <input name="f[{{ x }}][filename]" type="text" value="{{ d.file }}" />
+          </td>
+          
+					<td style="width:50px;">
+            <input name="f[{{ x }}][ext]" type="text" readonly="true" value="{{ d.fData.ext }}" />
+          </td>
 					
 					<td class="link tb-link">
 						{% if d.fData.tb %}
@@ -35,7 +40,7 @@
 					
 					<td class="link id-link">
 						{% for id in d.fData.id %}
-						<input type="text" name="f[{{ x }}][id][]" value="{{ id }}" style="width:25px;" />
+						<input type="text" name="f[{{ x }}][id][]" value="{{ id }}"  class="form-control" />
 						{% endfor %}
 						{% if d.fData.id|length == 0 %}
 						
@@ -43,9 +48,9 @@
 					</td>
 					
 					<td>
-						<button type="button" class="erase_link btn"><i class="glyphicon glyphicon-trash"></i> {{ tr.get('erase_link') }}</button>
-						<button class="btn add_link" type="button" data-x="{{ x }}"><i class="glyphicon glyphicon-plus"></i> {{ tr.get('add_link') }}</button>
-						<button type="button" class="dont_import btn"><i class="glyphicon glyphicon-flag"></i> {{ tr.get('dont_import') }}</button>
+						<button type="button" class="erase_link btn btn-default"><i class="glyphicon glyphicon-trash"></i> {{ tr.get('erase_link') }}</button>
+						<button class="btn  btn-default add_link" type="button" data-x="{{ x }}"><i class="glyphicon glyphicon-plus"></i> {{ tr.get('add_link') }}</button>
+						<button type="button" class="dont_import btn  btn-default"><i class="glyphicon glyphicon-flag"></i> {{ tr.get('dont_import') }}</button>
 					</td>
 				</tr>
 			{% endfor %}

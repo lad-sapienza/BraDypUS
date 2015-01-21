@@ -17,9 +17,6 @@ var multiupload = {
 							{
 								'complete':
 							function(id, fileName, resp){
-									console.log(id);
-									console.log(fileName);
-									console.log(resp);
 								el.find('input.dir').val(resp.uploadDir);
 							}
 							});

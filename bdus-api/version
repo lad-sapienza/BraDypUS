@@ -1,3 +1,4 @@
+3.3.0[] = "Minor style fixes in multiupload modeule"
 3.3.0[] = "Removed composer"
 3.3.0[] = "Removed rjkip/ftp-php from composer"
 3.3.0[] = "Removed symm/gisconverter from composer"

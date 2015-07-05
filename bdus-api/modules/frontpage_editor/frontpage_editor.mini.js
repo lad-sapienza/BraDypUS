@@ -1,6 +1,6 @@
 /*
  * copyright BraDypUS 
- * Created: 1436095206.6205
+ * Created: 1436102710.2371
 */
 var frontpage_editor={init:function(){$.get('controller.php?obj=frontpage_editor_ctrl&method=getContent',function(data){var html='<p class="text-error">'
 +'<i class="glyphicon glyphicon-warning-sign"></i> <strong>'+core.tr('attention')+':</strong> '+core.tr('no_php_allowed')+'</p>'

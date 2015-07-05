@@ -1,3 +1,4 @@
+3.3.1[] = "Bug fixed with icon path"
 3.3.1[] = "Added to git production ready css file"
 3.3.0[] = "Added new utility class for project structure check"
 3.3.0[] = "Added support for Italian in getIP module (windows only)"

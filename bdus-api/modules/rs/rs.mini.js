@@ -1,6 +1,6 @@
 /*
  * copyright BraDypUS 
- * Created: 1436102710.3877
+ * Created: 1436103229.3756
 */
 var rs={init:function(){$.each($('div.showRS'),function(i,el){rs.show($(el));});},show:function(el){if(el.length==0){return;}
 var tb=el.data('table'),id=el.data('id'),context=el.data('context');if(!tb||!id||!context){return false;}

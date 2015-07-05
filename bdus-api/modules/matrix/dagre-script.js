@@ -197,7 +197,7 @@ function renderDagreObjsToD3(graphData, svgSelector) {
           return e.y;
         })
         .interpolate("linear")
-        .tension(.8)
+        .tension(0.8)
         (points);
     });
 
@@ -247,5 +247,5 @@ function addLabels(selection) {
     .filter(function (d) {
       return d.label && d.label[0] !== "<";
     })
-    .append("text")
+    .append("text");
 }

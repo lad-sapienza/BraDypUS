@@ -535,7 +535,10 @@ class makeProject
 	/**
 	 * Creates table and cfg data
 	 * @param string $tb
-	 * @param array $fields 0 => fld_id, 1 => fld_label, 2 => fld_type (optional, default: text)
+	 * @param array $fields Array of field data:
+   *          fld_id: text, required, field id: no spaces, underscores or special chars
+   *          fld_label: text, required, field label
+   *          fld_type: text, optional, default: TEXT. Can be: INTEGER, REAL, DATETIME
 	 * @param boolean $isplugin
 	 * @return makeProject
 	 */
@@ -551,9 +554,11 @@ class makeProject
 			$arr['label']	= $fld[1];
 			$arr['type']	= ($fld[2] == 'DATETIME' ? 'date' : 'text');
 			($fld[2] == 'INTEGER' || $fld[2] == 'REAL') ? $arr['check'] = array('int') : '';
+      $fld[0] == 'creator' ? $arr['hide'] = true : '';
+      
 			$tb_obj[] = $arr;
 			
-			$fld[0] == 'creator' ? $arr['hide'] = true : '';
+			
 			unset($arr);
 		}
 	

@@ -14,11 +14,13 @@ var sync = {
 	},
 		
 	getStatus: function(button){
+    var origText = button.html();
 		button.html(core.tr('<img src="img/loading.gif" alt="loading..." />'));
 		
 		core.getJSON('sync_ctrl', 'getStatus', false, false, function(data){
 			if (data.status == 'error'){
 				core.message(data.text, data.status);
+        button.html(origText);
 			} else {
 				if (data.app_status == 'frozen'){
 					button.html('<i class="icon-lock"></i> ' + core.tr('app_locked_click_to_unlock'));

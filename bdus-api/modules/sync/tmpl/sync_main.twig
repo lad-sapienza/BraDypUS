@@ -24,15 +24,25 @@
 		
 	<div class="row step2" style="display:none;">
 			<div class="col-sm-3 col-sm-offset-1">
-				<button class="btn btn-danger btn-lg btn-block list" data-direction="toServer"><i class="glyphicon glyphicon-cloud-upload"></i> {{ tr.get('upload_to_server') }}
+				<button class="btn btn-danger btn-lg btn-block list" data-direction="toServer">
+          <i class="glyphicon glyphicon-cloud-upload"></i> 
+          {{ tr.get('upload_to_server') }}
+        </button>
 			</div>
 
 			<div class="col-sm-3">
-				<button class="btn btn-danger btn-lg btn-block list" data-direction="fromServer"><i class="glyphicon glyphicon-cloud-download"></i> {{ tr.get('download_from_server') }}
+				<button class="btn btn-danger btn-lg btn-block list" data-direction="fromServer">
+          <i class="glyphicon glyphicon-cloud-download"></i> 
+          {{ tr.get('download_from_server') }}
+        </button>
 			</div>
 			
 			<div class="col-sm-3">
-				<button class="btn btn-danger btn-lg btn-block checkstatus" data-direction="fromServer"><i class="glyphicon glyphicon-question-sign"></i> {{ tr.get('check_online_status') }}
+				<button class="btn btn-danger btn-lg btn-block checkstatus" 
+                data-direction="fromServer">
+          <i class="glyphicon glyphicon-question-sign"></i> 
+          {{ tr.get('check_online_status') }}
+        </button>
 			</div>
 
 	</div>
@@ -43,7 +53,16 @@
 	
 </div>
 <script>
-	
+  $('#{{ uid }} .continue').prop('disabled', true);
+  
+	$('#{{ uid }} .continue_text').on('keyup', function(){
+    if ($(this).val() == 'CONTINUE'){
+      $('#{{ uid }} .continue').prop('disabled', false);
+    } else {
+      $('#{{ uid }} .continue').prop('disabled', true);
+    }
+  });
+  
 	$('#{{ uid }} .continue').on('click', function(){
 		
 		if($('#{{ uid }} .continue_text').val() !== 'CONTINUE'){

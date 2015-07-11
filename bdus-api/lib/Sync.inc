@@ -36,13 +36,20 @@ class Sync
 	 */
 	public function __construct($ftp_string, $direction)
 	{
-		$this->ftp =  new FtpPhp\FtpClient($ftp_string);
-		
-		if ($direction != 'fromServer' && $direction != 'toServer')
-		{
-			throw new myException('Unknown direction: [' . $direction . ']. Only toServer or fromServer allowed');
-		}
-		$this->direction = $direction;
+    try
+    {
+      $this->ftp =  new FtpPhp\FtpClient($ftp_string);
+
+      if ($direction != 'fromServer' && $direction != 'toServer')
+      {
+        throw new myException('Unknown direction: [' . $direction . ']. Only toServer or fromServer allowed');
+      }
+      $this->direction = $direction;
+    }
+    catch (FtpPhp\FtpException $e)
+    {
+      throw new myException($e->getMessage());
+    }
 	}
 	
 	

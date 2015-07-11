@@ -9,12 +9,30 @@
 class sync_ctrl extends Controller
 {
 	
+  private function startSync($direction = 'fromServer')
+  {
+    try
+    {
+      return new Sync(cfg::main('ftp_string'), $direction);
+    }
+    catch (myException $e)
+    {
+      utils::response($e->getMessage(), 'error');
+    }
+  }
+  
 	public function getStatus()
 	{
-		//$this->get['tmpfile']
+		
+    $sync = $this->startSync();
+    
+    if (!isset($sync) || !$sync)
+    {
+      return;
+    }
+    
 		try
 		{
-			$sync = new Sync(cfg::main('ftp_string'), 'fromServer');
 			$response = $sync->getOnlineStatus();
 			utils::response('ok_get_status', 'success', false, $response);
 		}
@@ -22,16 +40,20 @@ class sync_ctrl extends Controller
 		{
 			$e->log();
 			utils::response('error_status_changed', 'error');
-			
 		}
 	}
 	
 	public function toggleStatus()
 	{
-		//$this->get['tmpfile']
+		$sync = $this->startSync();
+    
+    if (!isset($sync) || !$sync)
+    {
+      return;
+    }
+    
 		try
 		{
-			$sync = new Sync(cfg::main('ftp_string'), 'fromServer');
 			$response = $sync->toogleOnlineStatus($this->get['tmpfile']);
 			utils::response('ok_status_changed', 'success', false, $response);
 		}
@@ -68,15 +90,20 @@ class sync_ctrl extends Controller
 			return;
 		}
 		
-		try
+    $sync = $this->startSync($this->get['direction']);
+    
+    if (!isset($sync) || !$sync)
+    {
+      return;
+    }
+    
+    try
 		{
-			$sync = new Sync(cfg::main('ftp_string'), $this->get['direction']);
 			$list = $sync->getChangeList();
 
 			$this->render('sync', 'previewList', array(
 				'files'=> $list,
-				'direction' => $sync->getDirection(),
-				'session' => $sync->getSession()
+				'direction' => $sync->getDirection()
 			));
 		}
 		catch (myException $e)
@@ -90,15 +117,21 @@ class sync_ctrl extends Controller
 	
 	public function sync()
 	{
+    if (!cfg::main('ftp_string') || cfg::main('ftp_string') == '')
+    {
+      echo '<div class="alert alert-danger"><i class="glyphicon glyphicon-exclamation-sign"></i> ' . tr::get('ftp_not_available') . '</div>';
+      return;
+    }
+      
+    $sync = $this->startSync($this->get['direction']);
+    
+    if (!isset($sync) || !$sync)
+    {
+      return;
+    }
+    
 		try
 		{
-			if (!cfg::main('ftp_string') || cfg::main('ftp_string') == '')
-			{
-				echo '<div class="alert alert-danger"><i class="glyphicon glyphicon-exclamation-sign"></i> ' . tr::get('ftp_not_available') . '</div>';
-				return;
-			}
-			$sync = new Sync(cfg::main('ftp_string'), $this->get['direction']);
-
 			$sync->processFile($this->get['file']);
 		}
 		catch (myException $e)

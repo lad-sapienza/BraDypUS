@@ -1,7 +1,7 @@
 /*
  * BraDypUS javascripts minified archive includes different sources and licenses
  * For details on external libraries (copyrights and licenses) please consult the Credits information
- * Created: 1436103232.619
+ * Created: 1436635810.6027
 */
 
 function sprintf(){var regex=/%%|%(\d+\$)?([-+\'#0 ]*)(\*\d+\$|\*|\d+)?(\.(\*\d+\$|\*|\d+))?([scboxXuidfegEG])/g;var a=arguments,i=0,format=a[i++];var pad=function(str,len,chr,leftJustify){if(!chr){chr=' ';}

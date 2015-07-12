@@ -144,7 +144,7 @@ if (!utils::canUser('enter'))
 		<?php endif; ?>
 					
 					<li <?php echo utils::canUser('super_admin') ? 'onclick="core.runMod(\'free_sql\');"' : 'class="state-disabled"'; ?>>
-						<i class="fa fa-terminal"></i><br />
+						<i class="glyphicon glyphicon-console"></i><br />
 						<?php tr::show('run_free_sql'); ?>
 					</li>
 					

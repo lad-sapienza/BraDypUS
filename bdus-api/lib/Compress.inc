@@ -22,13 +22,15 @@ class Compress
 	 */
 	public static function js( $files, $type = false )
 	{
+    $microtime = str_replace('.', null, microtime(1));
+    
 		if ( ($type['mini'] || !file_exists('./js/bdus.mini.js')) && is_dir('./js-sources'))
 		{
       @unlink('./js/bdus.mini.js');
       
-			$str = "/*\n * BraDypUS javascripts minified archive includes different sources and licenses"
-			. "\n * For details on external libraries (copyrights and licenses) please consult the Credits information"
-			. "\n * Created: " . microtime(1) . "\n*/";
+			$str = "/*\n * BraDypUS javascripts minified archive includes different sources and licenses" .
+        "\n * For details on external libraries (copyrights and licenses) please consult the Credits information" .
+        "\n*/";
 	
 			foreach ($files as $file) {
 				
@@ -40,7 +42,8 @@ class Compress
 				}
 			}
 			utils::write_in_file ( './js/bdus.mini.js', $str);
-      echo '<script language="JavaScript" type="text/JavaScript" src="./js/bdus.mini.js?' . microtime(true) . '"></script>' . "\n";
+      echo '<script language="JavaScript" type="text/JavaScript" ' .
+        'src="./js/bdus.mini.js?' . $microtime . '"></script>' . "\n";
 		}
 		else if ( $type['debug'] && is_dir('./js-sources'))
 		{
@@ -50,13 +53,17 @@ class Compress
 				
 				if ( file_exists( './js-sources/' . $file ) )
 				{
-					echo "\n  ".'<script language="JavaScript" type="text/JavaScript" src="./js-sources/' . $file .'?_' . str_replace('.', null, microtime(1)). '"></script>';
+					echo "\n  " .
+            '<script language="JavaScript" type="text/JavaScript" ' .
+              ' src="./js-sources/' . $file .'?_' . $microtime . '"></script>';
 				}
 			}
       return;
 		}
-    
-    echo '<script language="JavaScript" type="text/JavaScript" src="./js/bdus.mini.js"></script>' . "\n";
+    else
+    {
+      echo '<script language="JavaScript" type="text/JavaScript" src="./js/bdus.mini.js"></script>' . "\n";
+    }
 	}
 	
 	/**
@@ -74,10 +81,9 @@ class Compress
 	{
 		if ( $type['mini'] && file_exists('./css-less/main.less'))
 		{
-			$str = "/*\n * BraDypUS css minified archive includes different sources and licenses"
-			. "\n * For details on external libraries (copyrights and licenses) please consult the Credits information"
-			. "\n * Created: " . microtime(1) . "\n*/\n";
-      
+			$str = "/*\n * BraDypUS css minified archive includes different sources and licenses" .
+        "\n * For details on external libraries (copyrights and licenses) please consult the Credits information" .
+        "\n*/\n";
       
       try
       {

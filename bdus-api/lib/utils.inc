@@ -500,7 +500,7 @@ class utils
 						
 					if (file_exists($js_file))
 					{
-						$str = "/*\n * copyright BraDypUS \n * Created: " . microtime(1) . "\n*/";
+						$str = "/*\n * copyright BraDypUS \n */";
 						$str .= JSMin::minify ( file_get_contents ( $js_file ) );
 	
 						if (!self::write_in_file($compress_file, $str))

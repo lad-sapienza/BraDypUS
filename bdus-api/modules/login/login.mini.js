@@ -1,7 +1,6 @@
 /*
  * copyright BraDypUS 
- * Created: 1436103229.3429
-*/
+ */
 var login={init:function(){switch(arguments[0]){case'autologin':login.autologin(arguments[1]);break;case'loadResetPwd':login.loadResetPwd(arguments[1],arguments[2],arguments[3]);break;case'lost_pwd':login.lost_pwd_form();break;case'new_user_form':login.new_user_form();break;}},loadLogin:function(app){if(!app){app=core.getHash('app');}
 $('#wrapper').html(core.loading).load('controller.php?obj=login_ctrl&method=select_app'+(app?'&app='+app:''));},loadLoginForm:function(db){$('#select_apps .buttons').slideUp();$('#select_apps .login').load('controller.php?obj=login_ctrl&method=loginForm',{'app':db}).slideDown();},autologin:function(app){if(!app){app=core.getHash('app');}
 core.getJSON('login_ctrl','autolog',{'app':app},false,function(data){if(data.status=='success'){window.location.reload();}});},loadResetPwd:function(app,address,token){core.open({obj:'login_ctrl',method:'resetPwd',param:{'app':app,'address':address,'token':token},title:core.tr('reset_password'),buttons:[{text:core.tr('close'),action:'close'}]},'modal');},new_user_form:function(app){core.open({obj:'login_ctrl',method:'newUserForm',param:{'app':app},title:core.tr('register_new_user')},'modal');},lost_pwd:function(app){core.open({html:'<p class="lead">'+core.tr('enter_email_to_get_password')+'</p>'

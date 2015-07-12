@@ -39,10 +39,10 @@ class Sync
     try
     {
       $this->ftp =  new FtpPhp\FtpClient($ftp_string);
-
-      if ($direction != 'fromServer' && $direction != 'toServer')
+      
+      if (!in_array($direction, ['fromServer', 'toServer']))
       {
-        throw new myException('Unknown direction: [' . $direction . ']. Only toServer or fromServer allowed');
+        throw new myException('Unknown sync direction: [' . $direction . ']. Only toServer or fromServer allowed');
       }
       $this->direction = $direction;
     }
@@ -106,9 +106,13 @@ class Sync
 		{
 			try
 			{
+        // Set tmp file path & name
 				$file = PROJ_TMP_DIR . uniqid() . '.json';
-				$sync = $this->ftp->get($file, '/cfg/app_data.json', FtpPhp\FtpClient::BINARY);
+        
+        // Download from server to tmp file
+				$this->ftp->get($file, '/cfg/app_data.json', FtpPhp\FtpClient::BINARY);
 				
+        // Parses and returns tmp file data
 				return $this->getOnlineStatus($file);
 			}
 			catch (FtpPhp\FtpException $e)
@@ -197,38 +201,42 @@ class Sync
 	{
 		set_time_limit(0);
 		// If list is not available, it will be created
-		if (!$this->changeList)
-		{
-			try{
-				
-				if ($this->direction == 'fromServer')
-				{
-					$this->recursiveServerFileList();
-				}
-				else if ($this->direction == 'toServer')
-				{
-					$this->recursiveLocalFileList();
-				}
-				else
-				{
-					throw new myException('Unknown sync direction');
-				}
+    
+    if ($this->changeList)
+    {
+      return $this->changeList;
+    }
+    
+    try
+    {
+      switch ($this->direction)
+      {
+        case 'fromServer':
+          $this->recursiveServerFileList();
+          break;
 
-				return $this->changeList;
+        case 'toServer':
+          $this->recursiveLocalFileList();
+          break;
 
-			}
-			catch (FtpPhp\FtpException $e)
-			{
-				throw new myException($e);
-			}
-		}
-		
-		return $this->changeList;
+        default:
+          throw new myException('Unknown sync direction');
+          break;
+      }
+
+      return $this->changeList;
+
+    }
+    catch (FtpPhp\FtpException $e)
+    {
+      throw new myException($e);
+    }
 	}
 	
 	
 	/**
-	 * Sets, recursively, array of $changedFiles getting list from local server. All files will be listed. Only files inside the FILES dir will be checked
+	 * Sets, recursively, array of $changedFiles getting list from local server.
+   * All files will be listed. Only files inside the FILES dir will be checked
 	 * @param string $dir directory to look in
 	 * @return
 	 */

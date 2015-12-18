@@ -8,7 +8,7 @@
 
 class test_ctrl extends Controller
 {
-	
+
 	public function test()
 	{
 		echo '<hr />end of test_ctrl::test()';

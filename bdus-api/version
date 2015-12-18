@@ -1,3 +1,4 @@
+3.3.3[] = "ID columns are hidden from result tables if id column is not used as user column (is hidden in cfg file)"
 3.3.2[] = "FTP sync enhancement"
 3.3.1[] = "Twig upgraded to v. 1.18.2"
 3.3.1[] = "Font Awesome updated to version 4.3.0"

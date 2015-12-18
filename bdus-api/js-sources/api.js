@@ -7,10 +7,10 @@
  */
 var api = {
 		requireRestart: function(message){
-			var html =  (message ? '<h3>' + message + '</h3>' : '')
-					+ '<p class="lead text-warning"><i class="glyphicon glyphicon-warning-sign"></i> '
-					+ '<strong>' + core.tr('attention') + '</strong><br />' + core.tr('reload_sys_required') + '</p>';
-			
+			var html =  (message ? '<h3>' + message + '</h3>' : '') +
+					'<p class="lead text-warning"><i class="glyphicon glyphicon-warning-sign"></i> ' +
+					'<strong>' + core.tr('attention') + '</strong><br />' + core.tr('reload_sys_required') + '</p>';
+
 			core.open({
 				html: html,
 				title: core.tr('attention'),
@@ -27,13 +27,17 @@ var api = {
 						}
 						]
 			}, 'modal');
-			
+
 		},
-		
+
 		reloadApp: function(clean){
-			clean ? window.location = './' : window.location.reload();
+			if (clean){
+				window.location = './';
+			} else{
+				window.location.reload();
+			}
 		},
-		
+
 		/**
 		 * Shows logout dialog with logout confirmation text
 		 */
@@ -57,9 +61,9 @@ var api = {
 							}
 							]
 			}, 'modal');
-			
+
 		},
-		
+
 		/**
 		 * Opens tab and displays resutls of query
 		 * @param string tb				reference table
@@ -77,17 +81,17 @@ var api = {
 				title: title
 			});
 		},
-			
-			
+
+
 			/**
 			 * Collects all function for record handling
 			 * @type object
 			 */
 		record : {
-			
+
 			/**
 			 * Open matrix in new tab
-			 * 
+			 *
 			 * @param string tb		full table name
 			 * @param istring query		sql query
 			 * @returns {undefined}
@@ -100,14 +104,14 @@ var api = {
 					param: {tb: tb, query: query},
 				});
 			},
-			
+
 			formatId: function(id_arr, is_idField){
 				return is_idField ? 'id_field[]=' + id_arr.join('&id_field[]=') : 'id[]=' + id_arr.join('&id[]=');
 			},
-				
+
 				/**
 				 * Alias for api.record.read
-				 * 
+				 *
 				 * @param string tb table name
 				 * @param array id_arr array of ids ro show
 				 * @returns {undefined}
@@ -115,17 +119,17 @@ var api = {
 			preview: function (tb, id_arr){
 				api.record.read(tb, id_arr);
 			},
-				
+
 				/**
 				 * Opens record in new tab in read mode
-				 * 
+				 *
 				 * @param string tb		full table name
 				 * @param array id_arr	array of ids or of id_fields to show
 				 * @param boolean is_idField if true id_arr are not id, but id_fields
 				 * @returns {undefined}
 				 */
 			read: function (tb, id_arr, is_idField){
-				
+
 				core.open({
 					obj: 'record_ctrl',
 					method: 'show',
@@ -134,7 +138,7 @@ var api = {
 					title: core.tr('read') + ' (' + tb.split('__')[1] + ' > ' + (is_idField ? '' : '*') + id_arr[0] + ')'
 				});
 			},
-				
+
 				/**
 				 * Opens records in new tab in edit mode
 				 * @param string tb	full table name
@@ -149,7 +153,7 @@ var api = {
 					title: core.tr('edit') + ' (' + tb.split('__')[1] + ')'
 				});
 			},
-				
+
 				/**
 				 * Asks confirmation and deletes record/s
 				 * @param string tb	full table name
@@ -169,7 +173,7 @@ var api = {
 					}, 'json');
 				}
 			},
-				
+
 				/**
 				 * Opens tab with new record form
 				 * @param string tb	full table name
@@ -195,7 +199,7 @@ var api = {
 					$('#' + tableId + ' tbody tr').addClass('row_selected');
 				}
 			},
-				
+
 				/**
 				 * Method used n record/results to handle action on selected row in result table
 				 * @param string action Action to perform: preview|read|edit|erase|add
@@ -204,50 +208,50 @@ var api = {
 				 * @returns {Boolean}
 				 */
 			actOn: function(action, tb, table_results){
-				
+
+				var id_arr;
+
 				if (action != 'add'){
 					// get selected rows
-					var aTrs = table_results.fnGetNodes(),
-					id_arr = [];
+					var aTrs = table_results.fnGetNodes();
 					for ( var i=0 ; i<aTrs.length ; i++ )
 					{
 						if ( $(aTrs[i]).hasClass('row_selected') )
 						{
-							id_arr.push( $(aTrs[i]).find('td:first').html() );
+							console.log($(aTrs[i]).attr('id'));
+							id_arr.push( $(aTrs[i]).attr('id') );
 						}
+					}
+
+					if (!id_arr[0]){
+						core.message(core.tr('select_row_to_continue'), 'error');
+						return;
 					}
 				}
 
-				
-				
-				if ( action != 'add' && !id_arr[0]){
-					core.message(core.tr('select_row_to_continue'), 'error');
-				} else {
-					switch (action){
-						case 'preview':
-							this.preview(tb, id_arr);
-							break;
-							
-						case 'read':
-							this.read(tb, id_arr);
-							break;
-							
-						case 'edit':
-							this.edit(tb, id_arr);
-							break;
-							
-						case 'erase':
-							this.erase(tb, id_arr, table_results);
-							break;
-							
-						case 'add':
-							this.add(tb);
-							break;
-							
-						default:
-							return false;
-							break;
-					}	
+				switch (action){
+					case 'preview':
+						this.preview(tb, id_arr);
+						break;
+
+					case 'read':
+						this.read(tb, id_arr);
+						break;
+
+					case 'edit':
+						this.edit(tb, id_arr);
+						break;
+
+					case 'erase':
+						this.erase(tb, id_arr, table_results);
+						break;
+
+					case 'add':
+						this.add(tb);
+						break;
+
+					default:
+						return false;
 				}
 			}
 		}, //end of api.record
@@ -260,7 +264,7 @@ var api = {
 		H = (imgH > winH ? winH : imgH) -20;
 		Img.height = (H-30);
 		Img.title = $(img).attr('title');
-		
+
 		$(Img).addClass('img-responsive');
 		core.open({
 			html: $('<a />').attr('href', Img.src).attr('target', '_blank').append(Img),
@@ -269,7 +273,7 @@ var api = {
 			}
 		}, 'modal');
 	},
-	
+
 	query:{
 		show: function(query_text){
 			core.open({
@@ -281,17 +285,17 @@ var api = {
 				}]
 			}, 'modal');
 		},
-		
+
 		Export: function(query_text, tb){
-			var html = '<select class="export_format input-lg">'
-				+ '<option value="JSON">JSON</option>'
-				+ '<option value="XLS">XLS</option>'
-				+ '<option value="SQL">SQL (INSERT)</option>'
-				+ '<option value="CSV">CSV</option>'
-				+ '<option value="HTML">HTML</option>'
-				+ '<option value="XML">XML</option>'
-			+ '</select>';
-			
+			var html = '<select class="export_format input-lg">' +
+				'<option value="JSON">JSON</option>' +
+				'<option value="XLS">XLS</option>' +
+				'<option value="SQL">SQL (INSERT)</option>' +
+				'<option value="CSV">CSV</option>' +
+				'<option value="HTML">HTML</option>' +
+				'<option value="XML">XML</option>' +
+			'</select>';
+
 			core.open({
 				html: html,
 				title: core.tr('export_select_format'),
@@ -301,9 +305,9 @@ var api = {
 				        	  click: function(div){
 				        		  layout.dialog.close(div);
 				        		  $.post('controller.php?obj=myExport_ctrl&method=doExport&param[]=' + tb + '&param[]=' + $(div).find('select.export_format').val() + '&param[]=' + query_text, function(data){
-				        			  
+
 				        			  core.message(data.text, data.status);
-				        			  
+
 				        			  core.runMod('myExport');
 				        		  }, 'json');
 				        	  }
@@ -312,18 +316,18 @@ var api = {
 				        	  text: core.tr('cancel'),
 				        	  action: 'close'
 				          }
-				          ] 
+				          ]
 			},'modal');
 
 		},
-		
+
 		save: function(query_text, tb){
-			
+
 			var input =  $('<input />')
 				.attr('type', 'text')
 				.val('query_' + new Date().getTime())
 				.css('width', '90%');
-			
+
 			core.open({
 				html: input,
 				title: core.tr('name_for_query_to_save'),
@@ -331,7 +335,7 @@ var api = {
 				         {
 				        	 text: core.tr('save'),
 				        	 click: function(dia){
-				        		 if (input.val() == ''){
+				        		 if (input.val() === ''){
 				        			 core.message(core.tr('query_name_is_required'), 'error');
 				        			 input.focus();
 				        		 } else {
@@ -352,11 +356,11 @@ var api = {
 				        		 layout.dialog.close(dia);
 				        	 }
 				         }
-				         
+
 				         ]
 			}, 'modal');
 		}
-		
+
 	},
 	file: {
 		show_gallery: function(tb, id){
@@ -368,7 +372,7 @@ var api = {
 			});
 		}
 	},
-	
+
 	/**
 	 * Manages all linking (GUI) functions
 	 * @type object
@@ -376,14 +380,14 @@ var api = {
 	link: {
 		/**
 		 * Shows a modal dialog for selecting and adding links
-		 * 
+		 *
 		 * @param function successFunction callback function to execute on successfull action
 		 * @param function closeFunction	callback function to execute on errors
 		 * @param boolean select_one if true the select_one option will be added to the results table (only one link can be defined)
 		 * @param string def_tb	optional, if present the window will open the default table
 		 */
 		add_ui: function(successFunction, closeFunction, select_one, def_tb){
-			
+
 			var div = $('<div />').append(
 					$('<div />').addClass('btn-group'),
 					$('<div />').addClass('fl_content'),
@@ -392,7 +396,7 @@ var api = {
 
 			$.get('controller.php?obj=userlinks_ctrl&method=get_all_tables',function(data){
 				if (data.status == 'success'){
-					
+
 					if (!def_tb){
 						$.each(data.info, function(tb, label){
 							$('<a />')
@@ -404,14 +408,14 @@ var api = {
 								})
 								.appendTo(div.find('.btn-group'));
 						});
-						
+
 					} else {
 						div.find('.fl_content')
 							.load('controller.php?obj=record_ctrl&method=showResults&force_array=1&tb=' + def_tb + '&type=all&noOpts=1' + (select_one ? '&select_one=true' : ''));
 						div.find('input.curr_tb').val(def_tb);
 					}
-						
-					
+
+
 					core.open({
 								html: div,
 								title:core.tr('new_link'),
@@ -419,16 +423,17 @@ var api = {
 								          {
 								        	  text:'<i class="glyphicon glyphicon-resize-small"></i> ' + core.tr('save_links'),
 								        	  click: function(){
-								        		  var $this = $(this);
-								        		  var aTrs = $('#list_' + div.find('div.id-holder').data('id')).dataTable().fnGetNodes(),
-								        		  id_arr = new Array();
-								        		  
+								        		  var $this = $(this),
+																aTrs = $('#list_' + div.find('div.id-holder').data('id')).dataTable().fnGetNodes(),
+																id_arr = [],
+																tb;
+
 								        		  for ( var i=0 ; i<aTrs.length ; i++ ){
 								        			  if ( $(aTrs[i]).hasClass('row_selected') ){
 								        				  id_arr.push( $(aTrs[i]).find('td:first').html() );
 								        			  }
 								        		  }
-								        		  
+
 								        		  if (select_one){
 									        		  if (div.find('table.results').length < 1){
 									        			  core.message(core.tr('select_tb_to_continue'), 'error');
@@ -436,7 +441,7 @@ var api = {
 									        		  else if ( !id_arr){
 									        			  core.message(core.tr('select_row_to_continue'), 'error');
 									        		  } else {
-									        			  var tb = div.find('input.curr_tb').val();
+									        			  tb = div.find('input.curr_tb').val();
 									        			  successFunction(tb, id_arr, $(this));
 									        		  }
 								        		  } else {
@@ -446,7 +451,7 @@ var api = {
 									        		  else if ( !id_arr[0]){
 									        			  core.message(core.tr('select_row_to_continue'), 'error');
 									        		  } else {
-									        			  var tb = div.find('input.curr_tb').val();
+									        			  tb = div.find('input.curr_tb').val();
 									        			  successFunction(tb, id_arr, $(this));
 									        		  }
 								        		  }
@@ -457,17 +462,17 @@ var api = {
 								        	  action: 'close'
 								          }
 								          ]
-								
+
 							}, 'modal');
 				}
 				},
 				'json'
 			);
 		},
-		
+
 		/**
 		 * Deletes a userlink, shows system message and eventually runs callback function
-		 * 
+		 *
 		 * @param int linkId	id of the link to delete
 		 * @param function successFunction callback function to call if deletion was successfull
 		 * @returns {undefined}
@@ -480,7 +485,7 @@ var api = {
 				core.message(data.text, data.status);
 			});
 		},
-			
+
 			/**
 			 * Shows usar links
 			 * @param object l_el jQuery object where to show links
@@ -490,35 +495,35 @@ var api = {
 			var l_context = l_el.data('context'),
 				l_tb = l_el.data('tb'),
 				l_id = l_el.data('id');
-			
+
 			l_el.html('')
 				.load('controller.php?obj=userlinks_ctrl&method=show&param[]=' + l_tb + '&param[]=' + l_id + '&param[]=' + l_context, function(){
-					
+
 					//READ
 					$('span.userlink_read').click(function(){
 						api.record.read($(this).data('tb'), [$(this).data('id')]);
 					});
-				
+
 					//DELETE
 					$('span.userlink_delete').click(function(){
 						var $this = $(this),
 							delId = $this.data('id');
-						
+
 						api.link.delete_userlink(delId, function(){
 							$this.parent('li').remove();
 						});
 					});
-					
+
 					//RELOAD
 					$('span.userlink_reload')
 						.click( function(){	api.link.show_userlinks(l_el);	});
-				
+
 					//ADD
 					$('span.userlink_add')
 						.click(function(){
 							var thisid = $(this).data('id'),
 								thistb = $(this).data('table');
-							
+
 							api.link.add_ui(function(tb, arr_id){
 								core.getJSON('userlinks_ctrl', 'link', false, {thistb:thistb, thisid:thisid, tb:tb, id:arr_id}, function(data){
 									if (data.status == 'success'){
@@ -531,9 +536,9 @@ var api = {
 			});
 		}
 	},
-	
+
 	/**
-	 * 
+	 *
 	 * @param el object jQuery element to transform in button
 	 * @param url string url to use for file processing
 	 * @param opts	plain object dith options
@@ -546,11 +551,9 @@ var api = {
 	 * @returns {Boolean}
 	 */
 	fileUpload: function(el, url, opts){
-		
-		if (!opts){
-			var opts = {};
-		}
-		
+
+		opts = opts || {};
+
 		if (!el || !url){
 			return false;
 		}
@@ -578,12 +581,12 @@ var api = {
 					limitSize: (opts.limitSize ? opts.limitSize : '')
 				}
 		};
-		
+
 		d.multiple = !opts.limit2one;
-		
-		
-		
-		
+
+
+
+
 		el.fineUploader(d)
 			.on('complete', function(event, id, name, responseJSON){
 				if (opts.complete){
@@ -595,8 +598,8 @@ var api = {
 					opts.error(id, name, reason);
 				}
 			});
-		
-	      
-		
+
+
+
 	}
 };

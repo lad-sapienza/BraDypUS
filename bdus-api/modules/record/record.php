@@ -8,7 +8,7 @@
 
 class record_ctrl extends Controller
 {
-	
+
 	public function save_data()
 	{
 		try
@@ -21,8 +21,8 @@ class record_ctrl extends Controller
 			{
 				$this->request['id'] = (array)$this->request['id'];
 			}
-		
-		
+
+
 			if (is_array($this->request['id']))
 			{
 				foreach ($this->request['id'] as $id)
@@ -30,12 +30,12 @@ class record_ctrl extends Controller
 					try
 					{
 						$record = new Record($this->get['tb'], $id, new DB);
-		
+
 						if (is_array($this->post['core']))
 						{
 							$record->setCore($this->post['core']);
 						}
-		
+
 						if (is_array($this->post['plg']))
 						{
 							foreach ($this->post['plg'] as $plg_name=>$plg_data)
@@ -43,14 +43,14 @@ class record_ctrl extends Controller
 								$record->setPlugin($plg_name, $plg_data);
 							}
 						}
-		
+
 						$a = $record->persist();
-						
+
 						if (!$id)
 						{
 							$inserted_id = $record->getId();
 						}
-		
+
 						if ($a)
 						{
 							$ok[$id] = true;
@@ -67,7 +67,7 @@ class record_ctrl extends Controller
 					}
 				}
 			}
-		
+
 			if (count($ok) == count($this->request['id']))
 			{
 				$data['status'] = 'success';
@@ -90,12 +90,12 @@ class record_ctrl extends Controller
 			$data['verbose'] = tr::get('error_saved');
 			$e->log($e);
 		}
-		
+
 		echo json_encode($data);
 	}
-	
-	
-	
+
+
+
 	public function erase()
 	{
 		if (!utils::canUser('edit'))
@@ -111,9 +111,9 @@ class record_ctrl extends Controller
 				try
 				{
 					$record = new Record($this->get['tb'], $id, new DB);
-		
+
 					$record->delete();
-						
+
 					$ok[] = true;
 				}
 				catch (myException $e)
@@ -121,7 +121,7 @@ class record_ctrl extends Controller
 					$error[] = true;
 				}
 			}
-		
+
 			if (count($this->request['id']) == count($error))
 			{
 				$data = array('status' => 'error', 'text' => tr::get('no_record_deleted'));
@@ -139,18 +139,18 @@ class record_ctrl extends Controller
 		{
 			$data = array('status' => 'error', 'text' => tr::get('no_id_provided') );
 		}
-		
+
 		echo json_encode($data);
 	}
-	
-	
+
+
 	public function show()
 	{
 		if ( !$this->request['tb'] )
 		{
 			throw new myException(tr::get('tb_missing'));
 		}
-		
+
 		// user must have enough privileges
 		if (!utils::canUser('read') )
 		{
@@ -162,7 +162,7 @@ class record_ctrl extends Controller
 		{
 			throw new myException(tr::get('no_id_to_view'));
 		}
-		
+
 		// $show_next is the id to show in edit mode, after edit is completed
 		if ($this->request['a'] == 'add_new')
 		{
@@ -176,7 +176,7 @@ class record_ctrl extends Controller
 		{
 			$show_next = "['" . implode($this->request['id_field']) . "']";
 		}
-		
+
 		// no data are retrieved if context is add_new or multiple edit!
 		if ($this->request['a'] == 'add_new' OR ($this->request['a'] == 'edit' AND count($this->request['id']) > 1))
 		{
@@ -191,12 +191,12 @@ class record_ctrl extends Controller
 		{
 			$id_arr = $this->request['id'];
 		}
-		
+
 		//Can not display more than 500 records!
 		if (count($id_arr) > 500)
 		{
 			echo '<div class="alert">' . tr::sget('too_much_records', array(count($id_arr), '500')) . '</div>';
-			return;	
+			return;
 		}
 		$step = 10;
 		foreach ($id_arr as $index=>$id)
@@ -213,34 +213,34 @@ class record_ctrl extends Controller
 			{
 				$continue_url = 'end';
 			}
-			
+
 			if ($id == 'new')
 			{
 				$id = false;
 			}
-		
+
 			$record = new Record($this->request['tb'], ($flag_idfield ? false : $id), new DB);
-		
+
 			if ($flag_idfield)
 			{
 				$record->setIdField($id);
 			}
-			
-			if ($this->request['a'] == 'edit' && 
+
+			if ($this->request['a'] == 'edit' &&
 					(!utils::canUser('edit', $record->getCore('creator')) || ( count($this->request['id']) > 1 && !utils::canUser('multiple_edit') ) ) )
 			{
 				echo '<h2>' . tr::get('not_enough_privilege') . '</h2>';
 				continue;
 			}
-			
+
 			if ($this->request['a'] == 'add_new' && !utils::canUser('add_new'))
 			{
 				echo '<h2>' . tr::get('not_enough_privilege') . '</h2>';
 				continue;
 			}
-			
+
 			$tmpl = new ParseTmpl($this->request['a'], $record);
-		
+
      	$this->render('record', 'show', array(
 					'form_id' => uniqid('editadd') . rand(10,999),
 					'action' => $this->request['a'],
@@ -256,10 +256,10 @@ class record_ctrl extends Controller
 					'continue_url' => $continue_url
 			));
 		}
-		
-		
+
+
 	}
-	
+
 	public function showResults()
 	{
 		if (!utils::canUser('read'))
@@ -267,21 +267,21 @@ class record_ctrl extends Controller
 			echo utils::message(tr::get('not_enough_privilege'), 'error', 1);
 			return;
 		}
-		
+
 		if ( !$this->request['tb'] )
 		{
 			throw new myException(tr::get('tb_missing'));
 		}
-		
+
 		$queryObj = new Query(new DB(), $this->request, true);
-		
+
 		$count = $this->request['total'] ?: $queryObj->getTotal();
-		
+
 		if ($count == 0)
 		{
 			$noResult = true;
 		}
-		
+
 		$this->render('record', 'result', array(
 				'tb' => $this->request['tb'],
 				'records_found' => ($noResult ? tr::get('no_record_found') : tr::sget('x_record_found', $count)),
@@ -301,12 +301,13 @@ class record_ctrl extends Controller
 				'lang' => pref::getLang(),
 				//TODO: user panel controle for user preferences
 				'infinte_scroll' => pref::get('infinite_scroll'),
-        'select_one' => $this->request['select_one']
+        'select_one' => $this->request['select_one'],
+				'hideId' => (cfg::fldEl($this->request['tb'], 'id', 'hide') == 1)
 		));
-		
-		
+
+
 	}
-	
+
 	/**
 	 * http://datatables.net/usage/server-side
 	 * 	REQUEST
@@ -323,40 +324,44 @@ class record_ctrl extends Controller
 	public function sql2json()
 	{
 		$this->request['type'] = 'encoded';
-		
+
 		$qObj = new Query(new DB(), $this->request, true);
-		
+
 		$response['sEcho'] = intval($this->request['sEcho']);
 		$response['query_arrived'] = $qObj->getQuery();
-		
-		$response['iTotalRecords'] = $response['iTotalDisplayRecords'] = isset($this->request['iTotalRecords']) ? $this->request['iTotalRecords'] : $qObj->getTotal(); 
-		
+
+		$response['iTotalRecords'] = $response['iTotalDisplayRecords'] = isset($this->request['iTotalRecords']) ? $this->request['iTotalRecords'] : $qObj->getTotal();
+
 		if (isset($this->request['iDisplayStart']) && $this->request['iDisplayLength'] != '-1')
 		{
 			$qObj->setLimit(intval( $this->request['iDisplayStart'] ), $this->request['iDisplayLength']);
 		}
-		
+
 		if (isset($this->request['iSortCol_0']))
 		{
 			$fields = array_keys($qObj->getFields());
 			$qObj->setOrder($fields[$this->request['iSortCol_0']], ($this->request['sSortDir_0']==='asc' ? 'asc' : 'desc'));
 		}
-		
+
 		if ($this->request['sSearch'])
 		{
 			$qObj->setSubQuery($this->request['sSearch']);
 			$response['iTotalDisplayRecords'] = $qObj->getTotal();
 		}
-		
+
 		$response['query_executed'] = $qObj->getQuery();
-		
+
 		$response['aaData'] = $qObj->getResults();
-		
+
+		foreach($response['aaData'] as $id => &$row){
+			$response['aaData'][$id]['DT_RowId'] = $row['id'];
+		}
+
 		echo json_encode($response);
 	}
-	
-	
-	
+
+
+
 	public function check_duplicates()
 	{
 		try
@@ -368,11 +373,11 @@ class record_ctrl extends Controller
 			if (preg_match('/core\[/', $this->request['fld']))
 			{
 				$arr = explode('][', preg_replace('/core\[(.+)\]/', '$1', $this->request['fld']));
-		
+
 				$query = 'SELECT count(*) as `tot` FROM `' . $arr[0] . '` WHERE `' . $arr[1] . '`=:' . $arr[1];
-		
+
 				$res = DB::start()->query($query, array(':' . $arr[1] => $this->request['val']), 'read');
-		
+
 				if ($res[0]['tot'] > 0)
 				{
 					echo 'error';
@@ -384,6 +389,6 @@ class record_ctrl extends Controller
 			echo 'error';
 			$e->log();
 		}
-		
+
 	}
 }

@@ -209,7 +209,7 @@ var api = {
 				 */
 			actOn: function(action, tb, table_results){
 
-				var id_arr;
+				var id_arr = [];
 
 				if (action != 'add'){
 					// get selected rows
@@ -218,7 +218,6 @@ var api = {
 					{
 						if ( $(aTrs[i]).hasClass('row_selected') )
 						{
-							console.log($(aTrs[i]).attr('id'));
 							id_arr.push( $(aTrs[i]).attr('id') );
 						}
 					}

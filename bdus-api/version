@@ -1,3 +1,4 @@
+3.3.4[] = "Minor graphical improvements in Geodata Import Module"
 3.3.3[] = "ID columns are hidden from result tables if id column is not used as user column (is hidden in cfg file)"
 3.3.2[] = "FTP sync enhancement"
 3.3.1[] = "Twig upgraded to v. 1.18.2"

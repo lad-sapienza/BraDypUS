@@ -6,9 +6,11 @@
 
 <form class="form-horizontal" role="form" action="javascript: void(0)">
   
-  <p class="lead">1. {{ tr.get('select_tb') }}</p>
   <div class="form-group">
-    <div class="col-sm-9 col-sm-offset-3">
+    <label for="tb_{{ uid }}" class="col-sm-3 control-label">
+      1. {{ tr.get('select_tb') }}
+    </label>
+    <div class="col-sm-9">
       <select id="tb_{{ uid }}">
         <option></option>
         {% for tb, label in tables if '__files' not in tb %}

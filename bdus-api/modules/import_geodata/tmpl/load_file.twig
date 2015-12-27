@@ -4,11 +4,13 @@
  * @license			See file LICENSE distributed with this code
  #}
 
-<p class="lead">2. {{ tr.get('upload_file') }}</p>
 <div class="form-group">
-    <div class="col-sm-9 col-sm-offset-3">
-      <div id="upload-{{ uid }}">ciao</div>
-    </div>
+  <label for="upload-{{ uid }}" class="col-sm-3 control-label">
+    2. {{ tr.get('upload_file') }}
+  </label>
+  <div class="col-sm-9">
+    <div id="upload-{{ uid }}"></div>
+  </div>
 </div>
     
 <div id="fields_{{ uid }}" style="margin-top: 60px;"></div>

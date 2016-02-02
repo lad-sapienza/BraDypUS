@@ -51,8 +51,11 @@ class user_ctrl extends Controller
     $this->render('user', 'users_list', $data);
 	}
 	
-	public static function erase($id)
+	public function erase($id = false)
 	{
+		if (!$id){
+			$id = $this->get['param'][0];
+		}
 		try
 		{
 			$user = new User(new DB());

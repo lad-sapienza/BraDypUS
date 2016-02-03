@@ -1,3 +1,4 @@
+3.3.6[] = "Session files older than 24h will be deleted on logout"
 3.3.5[] = "Bug fixed with error in deleting user"
 3.3.4[] = "Minor graphical improvements in Geodata Import Module"
 3.3.3[] = "ID columns are hidden from result tables if id column is not used as user column (is hidden in cfg file)"

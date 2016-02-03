@@ -131,6 +131,9 @@ class User
 			
 			// write logout text in log file
 			self::userLog(true);
+      
+      // delete old session files
+      self::deleteOldSessions();
 		}
 		catch (myException $e)
 		{
@@ -139,6 +142,27 @@ class User
 		
 		self::forceLogOut();
 	}
+  
+  /**
+   * Deletes session files older than 24h
+   */
+  private static function deleteOldSessions()
+  {
+    $maxlife = 24*60*60; // 24h
+    $sessions = utils::dirContent(MAIN_DIR . 'sessions');
+    if ( $sessions && is_array($sessions))
+    {
+      foreach ($sessions as $s)
+      {
+        $filetime = filectime(MAIN_DIR . 'sessions/' . $s);
+
+        if ($filetime && $filetime < time() - $maxlife)
+        {
+          @unlink(MAIN_DIR . 'sessions/' . $s);
+        }
+      }
+    }
+  }
 	
 	public static function forceLogOut()
 	{

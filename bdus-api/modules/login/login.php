@@ -122,15 +122,8 @@ class login_ctrl extends Controller
 	
 	public function out()
 	{
-		try
-		{
-			$user = new User(new DB());
-			$user->logout();
-		}
-		catch (myException $e)
-		{
-			User::forceLogOut();
-		}
+		$user = new User(new DB());
+    $user->logout();
 	}
 	
 	

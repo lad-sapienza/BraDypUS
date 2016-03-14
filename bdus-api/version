@@ -1,3 +1,4 @@
+3.3.7[] = "Bug fixed: date-picker on cloned inputs was not being destroyed and reinitialized"
 3.3.6[] = "Session files older than 24h will be deleted on logout"
 3.3.5[] = "Bug fixed with error in deleting user"
 3.3.4[] = "Minor graphical improvements in Geodata Import Module"

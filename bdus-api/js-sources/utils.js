@@ -8,7 +8,7 @@ var utils = {
 
 	/**
 	 * clones jquery element {what} and appends to DOM following options
-	 * 
+	 *
 	 * @param object what	jquery object element to clone from
 	 * @param object opt	object with options:
 	 * 		where (default:false) jquery object to clone in
@@ -19,14 +19,12 @@ var utils = {
 	 * 		loaded (default: false) function to run on added dive, after clone is complete
 	 * 		preserveEnhance (default: true) if false form elements will not be enhanced!
 	 */
-	
+
 	myClone: function(what, opt){
-		
-		if (what.length == 0) return false;
-		 
-		if ( !opt ) {
-			var opt = {};
-		}
+
+		if (what.length === 0) return false;
+
+		opt = opt || {};
 
 		//set settings
 		var settings = $.extend({
@@ -38,7 +36,7 @@ var utils = {
 			loaded: false,
 			preserveEnhance: true
 		}, opt);
-		
+
 		// Private method
 		var changeName = function(el){
 			var name = el.attr('name');
@@ -46,50 +44,50 @@ var utils = {
 				name = name.replace(new RegExp(settings.baseName, 'g'), settings.baseName + 's' +  rand + 'e');
 				el.attr('name', name);
 			}
-		}
+		};
 
 		// set rand value
 		var rand = (new Date()).getTime();
-		
+
 		if (settings.preserveEnhance){
-			what.find(':input.multiselect, select, :input.combobox').each(function(i, el){
+			what.find(':input.multiselect, select, :input.combobox, :input.date').each(function(i, el){
 				enhance.pimpEl(el, 'destroy');
 			});
 		}
-		
+
 		what.each(function(i, el){
-			
+
 			el = $(el);
-			
+
 			if (!el.hasClass('cloned') ){
-				
+
 				var cloned = el.clone(settings.cloneEvents);
-				
+
 				cloned.addClass('cloned');
-				
+
 				if ( !cloned.is(':visible') ) {
 					cloned.show();
 				}
-				
+
 				if (settings.empty || settings.changeName){
-					
+
 					if(cloned.is(':input')){
-						
+
 						if ( settings.empty ){
 							cloned.val('');
 						}
-						
+
 						if ( settings.changeName ){
 							changeName(cloned);
 						}
 					} else {
-						
+
 						cloned.find(':input').each(function(i, cl_el){
-							
+
 							if ( settings.empty ){
 								$(cl_el).val('');
 							}
-					
+
 							if ( settings.changeName ){
 								changeName($(cl_el));
 							}
@@ -105,46 +103,46 @@ var utils = {
 					.click(function(){
 						$(this).parent('div.clonedContainer').remove();
 						});
-				
+
 				// create cloned element container and put inside content
 				var div = $('<div />')
 					.attr('class', 'clonedContainer')
 					.html(cloned)
 					.append(removeButton);
-		
-				// place cloned content in DOM, depending on settings.where 
+
+				// place cloned content in DOM, depending on settings.where
 				if ( !settings.where ){
 					el.after(div);
 				}else{
 					settings.where.append(div);
 				}
-				
+
 				if (settings.preserveEnhance){
-					cloned.find(':input.multiselect, select, :input.combobox').each(function(i, el){
+					cloned.find(':input.multiselect, select, :input.combobox, :input.date').each(function(i, el){
 						enhance.pimpEl(el);
 					});
 				}
-				
+
 				if (settings.loaded){
 					settings.loaded(div);
 				}
 			}
 		});
 		if (settings.preserveEnhance){
-			what.find(':input.multiselect, select, :input.combobox').each(function(i, el){
+			what.find(':input.multiselect, select, :input.combobox, :input.date').each(function(i, el){
 				enhance.pimpEl(el);
 			});
 		}
-		
+
 
 	}, // end of myClone
-	
+
 	/**
-	 * 
+	 *
 	 * @param el
 	 */
 	myKeyboard: function(el){
-		
+
 		var customLayouts = {
 				'default':	[
 				          	 	'{meta1} {meta2} {meta3} {meta4} {meta5}',
@@ -166,7 +164,7 @@ var utils = {
 								'',
 								'{a} {c}'
 								],
-								
+
 							// greek
 							'meta1':	[
 								'{meta1} {meta2} {meta3} {meta4} {meta5}',
@@ -176,20 +174,20 @@ var utils = {
 								//n-omega maiuscole
 								'\u039D \u039E \u039F \u03A0 \u03A1 \u03A3 \u03A4 \u03A5 \u03A6 \u03A7 \u03A8 \u03A9',
 								'',
-								
+
 								//a-m minuscole
 								'\u03B1 \u03B2 \u03B3 \u03B4 \u03B5 \u03B6 \u03B7 \u03B8 \u03B9 \u03BA \u03BB \u03BC',
 								//n-omema minuscole
 								'\u03BD \u03BE \u03BF \u03C0 \u03C1 \u03C2 \u03C3 \u03C4 \u03C5 \u03C6 \u03C7 \u03C8 \u03C9',
 								'',
-								
+
 								//dieresi + acuto + circomflesso
 								'\u03AA \u03CA \u03AC \u03AD \u03AE \u03AF \u03CC \u03CD \u03CE \u03B0',
 								'',
 								'{a} {c}'
 								],
-							
-							// coptic: 
+
+							// coptic:
 							'meta2': [
 								'{meta1} {meta2} {meta3} {meta4} {meta5}',
 								'',
@@ -200,7 +198,7 @@ var utils = {
 								'',
 								'{a} {c}'
 								],
-							
+
 							//arabic
 							'meta3': [
 								'{meta1} {meta2} {meta3} {meta4} {meta5}',
@@ -211,7 +209,7 @@ var utils = {
 								'',
 								'{a} {c}'
 								],
-							
+
 							//phonetic
 							'meta4':[
 								'{meta1} {meta2} {meta3} {meta4} {meta5}',
@@ -225,7 +223,7 @@ var utils = {
 								'',
 								'{a} {c}'
 								],
-							
+
 							//diacritics
 							'meta5':[
 								'{meta1} {meta2} {meta3} {meta4} {meta5}',
@@ -243,29 +241,29 @@ var utils = {
 								]
 
 							};
-		
-		
+
+
 		$(el).keyboard({
-			
+
 			initialized: function(e, keyboard, el){
 				keyboard.reveal();
 				},
-			
+
 			accepted: function(e, keyboard, el){
 				keyboard.destroy();
 				$(el).attr('changed', 'auto');
 				},
-					
+
 			canceled: function(e, keyboard, el){
 				keyboard.destroy();
 				},
-				
+
 			hidden: function(e, keyboard, el){
 				keyboard.destroy();
 				},
-				
+
 			layout: 'custom',
-			
+
 			display: {
 				'meta1': 'Greek',
 				'meta2': 'Coptic',
@@ -277,9 +275,9 @@ var utils = {
 			//http://unicode.coeurlumiere.com/
 			//https://github.com/Mottie/Keyboard/wiki/Layout
 			customLayout: customLayouts
-				
+
 			}); //end of keyboard
 	} // end of myKeyboard
-		
-	
+
+
 };

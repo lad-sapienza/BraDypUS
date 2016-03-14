@@ -72,12 +72,12 @@
 {# EDIT / ADD NEW SCRIPTS #}
 {% if action == 'edit' or action == 'add_new' %}
 	<script>
-	
+
 		{# MULTIPLE RECORD EDITING: NO REAL-TIME CHECKS SUPPORTED! #}
 		{% if multiple_id %}
 			$('#form{{ uid }}').find(':input[check]').removeAttr('check');
 		{% endif %}
-		
+
 		{# FORM SUBMISSION AND CHECKS #}
 		var myForm{{ uid }} =  new formControl('#form{{ uid }}', {
 			ajaxURL:'controller.php?force_array=1&obj=record_ctrl&method=check_duplicates',
@@ -88,24 +88,24 @@
 			}
 		});
 		myForm{{ uid }}.observe();
-		
+
 		$('#form{{ uid }}').on('submit', function(event){
 			event.preventDefault();
 			myForm{{ uid }}.check().send();
 		});
-		
+
 		{# ENHACE FORM ELEMENTS #}
 		enhance.form($('#form{{ uid }}'));
-		
+
 		{# ADD POPOVER HELP SUPPORT #}
 		$('#form{{ uid }}').find('span.help').popover();
-		
+
 		{# ADD SUBMIT CAPABILTY TO SAVE BUTTON #}
 		$('#container{{ uid }}').find('.save-edit').on('click', function(){
-			
+
 			$('#form{{ uid }}').submit();
 		});
-		
+
 		{# ADD SAVE AS NEW CAPABILTY #}
 		$('#container{{ uid }}').find('.save-as-new').on('click', function(){
 			if (confirm(core.tr('confirm_save_as_new'))){
@@ -114,7 +114,7 @@
 					.send(true);
 			}
 		});
-		
+
 		{# DELETE PLUGIN BUTTON #}
 		$('#container{{ uid }}').find('button.deleteplg').click(function(){
 			if($(this).prev('div.pluginrow').is(':visible')){
@@ -125,7 +125,7 @@
 					.hide()
 					.find(':input')
 					.attr('changed', 'auto');
-				
+
 				var el = $(this).prev('div.pluginrow').find(':input[name*="[id]"]');
 				var name = el.attr('name').replace('[id]', '[id_delete]');
 				el.attr('name', name);
@@ -134,16 +134,16 @@
 					.text(core.tr('delete'))
 					.prev('div.pluginrow')
 					.show();
-				
+
 				var el = $(this).prev('div.pluginrow').find('input[name*="[id_delete]"]');
 				var name = el.attr('name').replace('[id:delete]', '[id]');
 				el.attr('name', name);
 			}
 		});
-	
+
 		{# ADD PLUGIN BUTTON #}
 		$('#container{{ uid }}').find('button.addplg').click(function(){
-			utils.myClone(
+      utils.myClone(
 					$(this).prevAll('div.pluginrow').first(),
 					{
 						where:$(this).prevAll('div.plg_container').first(),
@@ -151,12 +151,12 @@
 						cloneEvents: true
 					});
 		});
-	
+
 		{# VIRTUAL KEYBOARD INITIALIZAION #}
 		$('#form{{ uid }}').find(':input').dblclick( function(){
 			utils.myKeyboard(this);
 		});
-	
+
 	</script>
 {% endif %}
 
@@ -166,9 +166,9 @@
 {% if continue_url %}
 
 	{% if continue_url == 'end' %}
-	
+
 		{# PAGE IS FINALLY LOADED: RUN ONE-TIME-SCRIPTS #}
-	
+
 		<script>
 			{% if action == 'read' or action == 'edit' %}
 				$('#container{{ uid }} button.reload').on('click', function(){
@@ -176,9 +176,9 @@
 					api.record.{{ action }}('{{ tb }}', [{{ id }}]);
 				});
 			{% endif %}
-			
+
 			{# READ / PREVIEW / EDIT / ADD NEW SCRIPTS #}
-			
+
 			{# OPEN RECORD IN EDIT MODE FUNCTIONALITY #}
 			{% if can_edit %}
 				$('.tab-pane.active button.open-edit').on('click', function(){
@@ -186,21 +186,21 @@
 					api.record.edit('{{ tb }}', [edit_id]);
 				});
 			{% endif %}
-	
+
 			{% if can_erase and action != 'add_new' %}
 				$('#container{{ uid }} button.erase').on('click', function(){
 					api.record.erase('{{ tb }}', [{{ id }}]);
 				});
 			{% endif %}
-		
+
 			$.each($('div.showUserLinks'), function(i, el){
 				api.link.show_userlinks($(el));
 			});
-		
+
 			if ($('div.showRS').length > 0){
 				core.runMod('rs');
 			}
-		
+
 			{# PRINT BUTTON #}
 			$('#{{ uid }} button.print').on('click', function(){
 				var print_id = $(this).data('id');
@@ -213,12 +213,12 @@
 					  }
 				  });
 			});
-			
+
 			$('#form{{ uid }}').find(':input[data-changeonchange]').change(function(el){
 				$(':input[name="' + $(this).data('changeonchange') + '"]').attr('changed', 'auto');
 			});
-			
-      
+
+
       $('.tab-pane.active .print-all').on('click', function(){
 
         var el = $(this).parents('div.tab-pane').clone();
@@ -234,15 +234,15 @@
         el.remove();
       });
 		</script>
-	
+
 	{% else %}
 		<div id="div{{ uid }}">{{ continue_url }}</div>
-    
+
 		<script>
 			$.post('controller.php?obj=record_ctrl&method=show&tb={{ tb }}&a=read', '{{ continue_url }}', function(data){
 				$('#div{{ uid }}').html(data);
 			});
 		</script>
 	{% endif %}
-	
+
 {% endif %}

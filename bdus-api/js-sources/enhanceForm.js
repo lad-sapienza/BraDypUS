@@ -3,7 +3,7 @@
  * Actually the following widgets are supported:
  * 	combobox
  * 	multiselect
- * 
+ *
  * @author			Julian Bogdani <jbogdani@gmail.com>
  * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
  * @license			See file LICENSE distributed with this code
@@ -20,7 +20,7 @@
 var enhance = {
 	//predefinied date format
 	dateFormat : 'yyyy-mm-dd',
-	
+
 	getData: function(el){
 		var datalist = $('datalist[for="' + el.attr('id') + '"]').first(),
 		data = [];
@@ -28,12 +28,12 @@ var enhance = {
 		datalist.children( "option" ).map(function() {
 			var text = $(this).text(),
 			value = $(this).val() ? $(this).val(): text;
-			
+
 			data.push({id: value, text: text});
 		});
 		return data;
 	},
-	
+
 	multiselect: function(el, destroy)
 	{
 		if (destroy){
@@ -49,7 +49,7 @@ var enhance = {
 			});
 		}
 	},
-	
+
 	combobox: function(el, destroy){
 		if(destroy){
 			$(el).select2('destroy');
@@ -68,9 +68,9 @@ var enhance = {
 				$(this).attr('changed', 'auto');
 			});
 		}
-		
+
 	},
-	
+
 	select: function(el, destroy){
 		if(destroy){
 			$(el).select2('destroy');
@@ -82,7 +82,7 @@ var enhance = {
 			});
 		}
 	},
-	
+
 	slider: function(el, destroy){
 		if (destroy){
 			$(el).slider('destroy');
@@ -99,7 +99,7 @@ var enhance = {
 			});
 		}
 	},
-	
+
 	pimpEl: function(el, destroy){
 		if($(el).hasClass('combobox'))
 		{
@@ -116,7 +116,7 @@ var enhance = {
 		else if ($(el).hasClass('date'))
 		{
 			if (destroy){
-				$(el).datepicker('destory');
+				$(el).datepicker('remove');
 			} else {
 				$(el).datepicker({ format: enhance.dateFormat });
 			}

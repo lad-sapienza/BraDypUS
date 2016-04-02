@@ -1,3 +1,4 @@
+3.3.8[] = "Fixed minor graphical issue: image thumbnails without proper margin"
 3.3.7[] = "Minified js and css are refer to main version number when loaded"
 3.3.7[] = "Bug fixed: date-picker on cloned inputs was not being destroyed and reinitialized"
 3.3.6[] = "Session files older than 24h will be deleted on logout"

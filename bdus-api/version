@@ -1,3 +1,4 @@
+3.3.9[] = "Fixed bug with spaces and other special chars used in fields which content is used in RS module"
 3.3.8[] = "Fixed minor graphical issue: image thumbnails without proper margin"
 3.3.7[] = "Minified js and css are refer to main version number when loaded"
 3.3.7[] = "Bug fixed: date-picker on cloned inputs was not being destroyed and reinitialized"

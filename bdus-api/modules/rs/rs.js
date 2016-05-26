@@ -9,45 +9,46 @@ var rs = {
 			$.each($('div.showRS'), function(i, el){
 				rs.show($(el));
 			});
-	
+
 		},
-		
+
 		show: function(el){
-			
-			if (el.length == 0) {
+
+			if (el.length === 0) {
 				return;
 			}
 
 			var tb = el.data('table'),
-			id = el.data('id'),
-			context = el.data('context');
-		
+				// ID value is encoded for URL usage, to escape spaces or other special chars
+				id = encodeURI(el.data('id')),
+				context = el.data('context');
+
 			if (!tb || !id || !context){
 				return false;
 			}
-			
+
 			el.load('controller.php?obj=rs_ctrl&method=getAll&param[]=' + tb + '&param[]=' + id + '&param[]=' + context, function(){
-				
+
 				if (context == 'read'){
 					el.find('div.rsEl').on('click', function(){
 							api.record.read(tb, [$(this).text()], true	);
 						});
-				
+
 				}
 				//add action
 				else if (context == 'edit'){
 					el.find('button.save').click(function(){
 						var relation = el.find('select.rel').val(),
 						second = el.find('input.second').val();
-						
+
 						if (!second){
 							core.message(core.tr('rs_all_fields_required'), 'error');
 						} else {
 							core.getJSON('rs_ctrl', 'saveNew', [tb, id, relation, second], false, function(data){
 								core.message(data.text, data.status);
-								
+
 								if (data.status == 'success'){
-									el.find('input.second').val('')
+									el.find('input.second').val('');
 									el.find('td.r' + relation).append(
 											$('<div />').append(
 													second,
@@ -74,7 +75,7 @@ var rs = {
 						}
 					});
 				}
-				
+
 				//delete action
 				el.find('a.delete').click(function(){
 					$this = $(this);
@@ -85,7 +86,7 @@ var rs = {
 						}
 					});
 				});
-				
+
 			});
 		}
 };

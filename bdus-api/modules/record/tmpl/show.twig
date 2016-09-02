@@ -153,9 +153,11 @@
 		});
 
 		{# VIRTUAL KEYBOARD INITIALIZAION #}
-		$('#form{{ uid }}').find(':input').dblclick( function(){
-			utils.myKeyboard(this);
-		});
+    {% if virtual_keyboard %}
+  		$('#form{{ uid }}').find(':input').dblclick( function(){
+  			utils.myKeyboard(this);
+  		});
+    {% endif %}
 
 	</script>
 {% endif %}

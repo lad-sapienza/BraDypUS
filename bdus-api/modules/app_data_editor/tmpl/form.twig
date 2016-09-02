@@ -15,17 +15,17 @@
 				</select>
 			</td>
 		</tr>
-		
+
 		<tr>
 			<th>NAME: </th>
 			<td><input type="text" name="name" readonly="true" value="{{ info.name }}" /></td>
 		</tr>
-		
+
 		<tr>
 			<th>DEFINITION: </th>
 			<td><textarea name="definition">{{ info.definition }}</textarea></td>
 		</tr>
-		
+
 		<tr>
 			<th>STATUS</th>
 			<td>
@@ -33,21 +33,31 @@
 					{% for s in status %}
 						<option{% if s == info.status %} selected="true" {% endif %}>{{ s }}</option>
 					{% endfor %}
-						
+
 				</select>
 			</td>
 		</tr>
-		
+
 		<tr>
-			<th>SEARCH_CODE: </th>
+			<th>VIRTUAL KEYBOARD</th>
+			<td>
+				<select type="text" name="virtual_keyboard">
+					<option value="" {% if info.virtual_keyboard == false or info.virtual_keyboard == '0' %} selected="true" {% endif %}>0</option>
+					<option value="1" {% if info.virtual_keyboard %} selected="true" {% endif %}>1</option>
+				</select>
+			</td>
+		</tr>
+
+		<tr>
+			<th>SEARCH CODE: </th>
 			<td><input type="text" name="search_code" value="{{ info.search_code }}" /></td>
 		</tr>
-		
+
 		<tr>
 			<th>DOT_PATH: </th>
 			<td><input type="text" name="dot_path" value="{{ info.dot_path }}" /></td>
 		</tr>
-		
+
 		<tr>
 			<th>API login as user: </th>
 			<td>
@@ -59,7 +69,7 @@
 				</select>
 			</td>
 		</tr>
-		
+
 		<tr>
 			<th>Authomatic login as user: </th>
 			<td>
@@ -71,11 +81,11 @@
 				</select>
 			</td>
 		</tr>
-		
+
 		<tr>
 			<th>FTP connection string</th>
 			<td><input type="text" name="ftp_string" value="{{ info.ftp_string }}" /></td>
 		</tr>
-			
+
 	</table>
 </form>

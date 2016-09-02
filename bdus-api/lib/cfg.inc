@@ -8,11 +8,20 @@
 
 class cfg
 {
+	/**
+	 * Main configuration container
+	 * @var array
+	 */
 	private static $data;
-	
+
+	/**
+	 * Loads data in self::$data
+	 * @param  string|false $app          application id
+	 * @param  boolean $force_reload if true the configuration data will be forced to load from config files
+	 */
 	public static function load($app = false, $force_reload = false)
 	{
-		if (!$_SESSION['cfg_data'] || $force_reload)
+		if (!self::$data['tables'] || $force_reload || DEBUG_ON)
 		{
 			if ($app)
 			{
@@ -22,42 +31,42 @@ class cfg
 			{
 				$app_data = PROJ_CFG_APPDATA;
 			}
-			
+
 			if (!file_exists($app_data))
 			{
 				throw new myException(tr::sget('file_doesnt_exist', $app_data));
 			}
 			self::$data['main'] = json_decode(file_get_contents($app_data), true);
-			
+
 			if($app)
 			{
 				return;
 			}
-				
+
 			//table.xml
 			if (!defined('PROJ_CFG_TB'))
 			{
 				throw new myException('tb_config_missing');
 			}
 			$tablesJSON = json_decode(file_get_contents(PROJ_CFG_TB), true);
-			
+
 			if (!$tablesJSON || empty($tablesJSON))
 			{
 				throw new myException('Invalid json: ' . PROJ_CFG_TB);
 			}
-			
+
 			self::$data['table'] = $tablesJSON['tables'];
 
 			// single tables
 			$tables_array = self::tbEl('all', 'label');
 			//single plugins
-			
+
 			$all_fields = $tables_array;
-				
+
 			foreach ($all_fields as $tb=>$tb_name)
 			{
 				$cfgfile = PROJ_CFG_DIR . str_replace(PREFIX . '__', null, $tb) . '.json';
-					
+
 				if ( !file_exists( $cfgfile) )
 				{
 					if (file_exists( PROJ_CFG_DIR . $tb . '.json' ))
@@ -69,20 +78,14 @@ class cfg
 						throw new myException(tr::sget('config_file_missing', $cfgfile));
 					}
 				}
-	
-				self::$data['tables'][$tb] = json_decode(file_get_contents($cfgfile), true); 
-	
-				$_SESSION['cfg_data'] = self::$data;
+
+				self::$data['tables'][$tb] = json_decode(file_get_contents($cfgfile), true);
 			}
 		}
-		else
-		{
-			self::$data = $_SESSION['cfg_data'];
-		}
 	}
-	
+
 	/**
-	 * Writes SESSION data to cfg files
+	 * Writes data to cfg files
 	 * @param string $what	main, table, of a valid table name
 	 * @throws myException
 	 */
@@ -91,41 +94,41 @@ class cfg
 		switch($what)
 		{
 			case 'main':
-				if (!utils::write_formatted_json(PROJ_CFG_APPDATA, $_SESSION['cfg_data']['main']))
+				if (!utils::write_formatted_json(PROJ_CFG_APPDATA, self::$data['main']))
 				{
 					throw new myException('Can not write in ' . PROJ_CFG_APPDATA);
 				}
 				break;
-				
+
 			case 'table':
-				$arr['tables'] = $_SESSION['cfg_data']['table'];
-				
+				$arr['tables'] = seld::$data['table'];
+
 				if (!utils::write_formatted_json(PROJ_CFG_TB, $arr))
 				{
 					throw new myException('Can not write in ' . PROJ_CFG_TB);
 				}
 				break;
-				
+
 			default:
 				$file = PROJ_CFG_DIR . str_replace(PREFIX . '__', null, $what) . '.json';
-				
-				if (!is_array($_SESSION['cfg_data']['tables'][$what]) || !file_exists($file))
+
+				if (!is_array(self::$data['tables'][$what]) || !file_exists($file))
 				{
 					throw new myException('Table ' . $what . ' does not exist');
 				}
-				
-				if (!utils::write_formatted_json($file, $_SESSION['cfg_data']['tables'][$what]))
+
+				if (!utils::write_formatted_json($file, self::$data['tables'][$what]))
 				{
 					throw new myException('Can not write in ' . $file);
 				}
-				
+
 				break;
 		}
 	}
-	
-	
+
+
 	/**
-	 * 
+	 *
 	 * Returns information about main.xml If file does not exist an exception will be thrown
 	 * @param string $el	element (tag) to be returned. If false an array of all elements will be returned
 	 * @throws myException
@@ -145,25 +148,25 @@ class cfg
 			return self::$data['main'];
 		}
 	}
-	
+
 	public static function setMain($data)
 	{
-		$_SESSION['cfg_data']['main'] = $data;
+		self::$data['main'] = $data;
 		self::toFile('main');
 	}
-	
-	
+
+
 	public static function setTb($post_data)
 	{
 		$changed = false;
 		if(!in_array($post_data['name'], self::tbEl('all', 'name')))
 		{
-			array_push($_SESSION['cfg_data']['table'], $post);
+			array_push(self::$data['table'], $post);
 			$changed = true;
 		}
 		else
 		{
-			foreach ($_SESSION['cfg_data']['table'] as &$tb_data)
+			foreach (self::$data['table'] as &$tb_data)
 			{
 				if ($tb_data['name'] == $post_data['name'])
 				{
@@ -172,47 +175,47 @@ class cfg
 				}
 			}
 		}
-		
+
 		if ($changed)
 		{
 			self::toFile('table');
 		}
 	}
-	
-	
-	
+
+
+
 	public static function setFld($tb, $fld_name = false, $post_data)
 	{
 		$changed = false;
-		
+
 		if (!$fld_name)
 		{
-			array_push($_SESSION['cfg_data']['tables'][$tb], $post_data);
+			array_push(self::$data['tables'][$tb], $post_data);
 			$changed = true;
 		}
 		else
 		{
-			foreach($_SESSION['cfg_data']['tables'] as $sess_tb=>$data_arr)
+			foreach(self::$data['tables'] as $sess_tb=>$data_arr)
 			{
 				foreach ($data_arr as $index=>$data)
 				{
 					if ($sess_tb == $tb && $data['name'] == $fld_name)
 					{
-						$_SESSION['cfg_data']['tables'][$sess_tb][$index] = $post_data;
+						self::$data['tables'][$sess_tb][$index] = $post_data;
 						$changed = true;
 					}
 				}
 			}
 		}
-		
+
 		if ($changed)
 		{
 			self::toFile($tb);
 		}
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * Returns configuration information about the field
 	 * Four different scenarios:
 	 * 	a) fld  = all and el  = all	: looking fo all elements in all fields. An array is returned
@@ -230,11 +233,11 @@ class cfg
 			self::load();
 		}
 		$xml = self::$data['tables'][$tb];
-		
+
 		if ( $fld == 'all' AND $el == 'all' )
 		{
 			return $xml;
-			
+
 		}
 		else if (!is_array($xml))
 		{
@@ -246,7 +249,7 @@ class cfg
 			{
 				$res[$v['name']] =  $v[$el];
 			}
-			
+
 			return $res;
 		}
 		else if ( $fld != 'all' AND $el == 'all' )
@@ -270,14 +273,14 @@ class cfg
 			}
 		}
 	}
-	
+
 	/**
 	 * Returns array of plugin tables
 	 */
 	public static function getPlg()
 	{
 		$all = self::tbEl('all', 'label');
-		
+
 		foreach($all as $name=>$label)
 		{
 			if (self::tbEl($name, 'is_plugin'))
@@ -285,17 +288,17 @@ class cfg
 				$ret[$name] = $label;
 			}
 		}
-		
+
 		return $ret;
 	}
-	
+
 	/**
 	 * Returns array of plugin tables
 	 */
 	public static function getNonPlg()
 	{
 		$all = self::tbEl('all', 'label');
-		
+
 		foreach($all as $name=>$label)
 		{
 			if (!self::tbEl($name, 'is_plugin'))
@@ -303,15 +306,15 @@ class cfg
 				$ret[$name] = $label;
 			}
 		}
-		
+
 		return $ret;
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * Returns configuration information about the field
 	 * Four different scenarios:
-	 * 	a) tb  = all AND el != all : looking for an element in all tables. An array is returned  
+	 * 	a) tb  = all AND el != all : looking for an element in all tables. An array is returned
 	 *  b) tb != all AND el  = all : looking for all elements of a table. An array is returned
 	 *  c) tb != all and el != all : looking for an element of a table. An array or string is returned
 	 * @param string $tb table name
@@ -325,15 +328,15 @@ class cfg
 			self::load();
 		}
 		$xml = self::$data['table'];
-		
+
 		if ( $tb == 'all' AND $el != 'all')
 		{
 			foreach ( $xml as $arr )
 			{
-				$res[$arr['name']] = $arr[$el]; 
+				$res[$arr['name']] = $arr[$el];
 			}
 			return $res;
-		
+
 		}
 		else if ( $tb != 'all' AND $el == 'all')
 		{
@@ -360,11 +363,11 @@ class cfg
 			return $xml;
 		}
 	}
-	
+
 	public static function getPreviewFlds($tb)
 	{
 		$pref_preview = pref::get('preview');
-		
+
 		if (is_array($pref_preview) && is_array($pref_preview[$tb]))
 		{
 			return $pref_preview[$tb];
@@ -374,5 +377,5 @@ class cfg
 			return self::tbEl($tb, 'preview');
 		}
 	}
-	
+
 }

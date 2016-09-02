@@ -62,13 +62,13 @@ if ( defined('PROJ_DIR'))
 	define ('PROJ_DB', 			PROJ_DIR . 'db/');
 	define ('PROJ_HISTORY', 	PROJ_DIR . 'history.log');
 	$error_log 				= 	PROJ_DIR . 'error.log';
-	
+
 
 	/*
 	 * Create directories that MUST exist
 	 */
 	$must_exist_dirs = array(PROJ_FILES_DIR, PROJ_TMP_DIR, PROJ_BUP_DIR, PROJ_EXP_DIR, PROJ_DB);
-	
+
 	foreach($must_exist_dirs as $dir)
 	{
 		if (!is_dir($dir))
@@ -86,15 +86,22 @@ ini_set('error_log', ERROR_LOG);
 
 // DEBUG OPTIONS
 if ($__go_debug)
-{
-	$_SESSION['debug'] = true;
-}
+	$_SESSION['debug_mode'] = true;
+
 if ($__stop_debug)
+	$_SESSION['debug_mode'] = false;
+
+
+if ($_SESSION['debug_mode'])
 {
-	unset($_SESSION['debug']);
+	define('DEBUG_ON', true);
+}
+else
+{
+	define('DEBUG_ON', false);
 }
 
-if ($_SESSION['debug'])
+if (DEBUG_ON)
 {
 	define('CACHE', serialize(array('debug' => true)));
 }
@@ -112,3 +119,8 @@ require_once $root . 'lib/vendor/Twig/Autoloader.php';
 Twig_Autoloader::register();
 
 tr::load_file();
+
+if (defined('PROJ_CFG_APPDATA'))
+{
+	cfg::load(false, true);
+}

@@ -24,6 +24,7 @@ $lang['no_app_error'] = "Error.  Can not continue without the application name";
 $lang['tb_config_missing'] = "The configuration file of the tables is missing";
 $lang['config_file_missing'] = "Missing configuration file %s";
 $lang['attention'] = "Pay attention";
+$lang['search-fn'] = "Search function";
 $lang['data_mng'] = "Data management";
 $lang['options'] = "Options";
 $lang['other'] = "Other";

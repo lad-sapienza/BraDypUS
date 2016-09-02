@@ -11,8 +11,11 @@
 
 class tr
 {
+
+	private static $language_strings;
+
 	/**
-	 * 
+	 *
 	 * Returns lang variable using:
 	 * 1) $_SESSION['pref']['lang']
 	 * 2) system default language
@@ -35,9 +38,9 @@ class tr
 			{
 				// do nothing
 			}
-			
+
 			$computer_lang = substr($_SERVER["HTTP_ACCEPT_LANGUAGE"], 0, 2);
-			
+
 			if ($def_lang)
 			{
 				pref::setLang($def_lang);
@@ -50,15 +53,15 @@ class tr
 			{
 				pref::setLang('en');
 			}
-			
+
 		}
 		require_once LOCALE_DIR . pref::getLang() . '.inc';
-		
-		$_SESSION['language_strings'] = $lang;
+
+		self::$language_strings = $lang;
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * Returns formatted string
 	 * @param string $string	input string
 	 * @param mixed $args		array of arguments for formatting
@@ -71,34 +74,34 @@ class tr
 			$args = array($args);
 		}
 		$ret = vsprintf(self::get($string), $args);
-		
+
 		return $escape ? str_replace("'", "\'", $ret) : $ret;
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * Translates $string
 	 * @param string $string string to translate
 	 * @param boolean $escape boolean controle if string mus be escaped or not
 	 */
 	public static function get($string, $escape = false)
 	{
-		$lang = $_SESSION['language_strings'];
-	
+		$lang = self::$language_strings;
+
 		$ret = $lang[$string] ? $lang[$string] : $string;
-	
+
 		return $escape ? str_replace("'", "\'", $ret) : $ret;
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * Returns current language as json (is_string is false) or as javascript variable (is_string = true)
 	 * @param boolean $is_string
 	 */
 	public static function lang2json($is_string = false)
 	{
-		$lang = $_SESSION['language_strings'];
-		
+		$lang = self::$language_strings;
+
 		if ($is_string)
 		{
 			echo 'var lang = ' . json_encode($lang) . ';';
@@ -106,11 +109,11 @@ class tr
 		else
 		{
 			return json_encode($lang);
-		} 
+		}
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * Uses self::get and echoes translated string
 	 * @param string $string
 	 * @param boolean $escape boolean controle if string mus be escaped or not
@@ -119,5 +122,5 @@ class tr
 	{
 		echo self::get($string, $escape);
 	}
-	
+
 }

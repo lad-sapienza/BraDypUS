@@ -14,7 +14,7 @@ if (!$_GET['tb'])
 
 ?>
 
-<ul>
+<ul class="searcheable-list">
 
 	<li <?php echo utils::canUser('add_new') ? 'onclick="api.record.add(\'' . $_GET['tb'] . '\');"' : 'class="state-disabled"'; ?>>
 		<i class="fa fa-file-o"></i><br />
@@ -34,7 +34,7 @@ if (!$_GET['tb'])
 		<i class="fa fa-table"></i><br />
 		<?php tr::show('show_all'); ?>
 	</li>
-	
+
 	<li <?php echo utils::canUser('read') ? 'onclick="core.runMod(\'search\', [\'advanced\', \'' . $_GET['tb'] . '\']);"' : 'class="state-disabled"'; ?>>
 		<i class="fa fa-search"></i><br />
 		<?php tr::show('advanced_search'); ?>
@@ -49,12 +49,12 @@ if (!$_GET['tb'])
 		<?php tr::show('fast_search');?><br />
 		<input type="text" style="width: 90%;" placeholder="<?php tr::show('fast_search');?>" class="fast_search" data-table="<?php echo $_GET['tb']; ?>" />
 	</li>
-	
+
 	<li <?php echo utils::canUser('edit') ? 'onclick="api.query.Export(\'1\', \'' . $_GET['tb'] . '\');"' : 'class="state-disabled"'; ?>>
 		 <i class="fa fa-external-link"></i><br />
 		<?php tr::show('export'); ?>
 	</li>
-	
+
 	<li <?php echo utils::canUser('read') ? 'onclick="core.runMod(\'geoface\', \'' . $_GET['tb'] . '\');"' : 'class="state-disabled"'; ?>>
 		<i class="fa fa-map-marker"></i><br />
 		<?php tr::show('GeoFace'); ?>
@@ -63,5 +63,5 @@ if (!$_GET['tb'])
 		<i class="fa fa-map-marker"></i><br />
 		<?php tr::show('GeoFace'); ?>2
 	</li>
-	
+
 </ul>

@@ -28,6 +28,7 @@ $lang['config_file_missing'] = "Manca il file di configurazione [%s]";
 
 $lang['attention'] = "Attenzione";
 
+$lang['search-fn'] = "Cerca funzione";
 $lang['data_mng'] = "Gestione dati";
 $lang['options'] = "Opzioni";
 $lang['other'] = "Altro";

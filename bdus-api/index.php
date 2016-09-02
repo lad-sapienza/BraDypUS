@@ -12,9 +12,9 @@ try
 {
 	$basePath = './';
 	@$_REQUEST['debug'] ? $__go_debug = true : $__stop_debug = true;
-	
+
 	require_once './lib/constants.inc';
-	
+
 	if ($_GET['logout'])
 	{
 		try
@@ -27,11 +27,7 @@ try
 			User::forceLogOut();
 		}
 	}
-	
-	if (defined('PROJ_CFG_APPDATA'))
-	{
-		cfg::load(false, true);
-	}
+
 	if ($_GET['mini'])
 	{
 		utils::compressModScripts();
@@ -93,7 +89,7 @@ try
       layout.loadHome();
       layout.hashActions();
 <?php elseif ($_REQUEST['address'] && $_REQUEST['token']): ?>
-    
+
       core.runMod('login', ['loadResetPwd', '<?php echo $_REQUEST['app']; ?>', '<?php echo $_REQUEST['address']; ?>', '<?php echo $_REQUEST['token']; ?>'], function(){
         login.loadLogin();
       });
@@ -106,12 +102,12 @@ try
     });
 <?php if(utils::is_online()) : ?>
 		var _gaq = _gaq || [];_gaq.push(['_setAccount', 'UA-10461068-18']);_gaq.push(['_trackPageview']);(function() { var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);})();
-<?php endif;?>  
+<?php endif;?>
   </script>
 </head>
 
 <body<?php echo !utils::canUser('enter') ? ' class="login"' : '' ?>></body>
-	
+
 </html>
 
 <?php
@@ -119,18 +115,18 @@ try
 catch (myException $e)
 {
 	$e->log();
-	
+
 	if ($_GET['debug'])
 	{
 		$text = $e->getMessage() . '<br />' . $e->getCode() . '<br />in file:' . $e->getFile() . '<br />in line: ' . $e->getLine() . '<br />' . $e->getTrace();
-		
+
 		echo $e->__toString(), 'error', true;
 	}
 	else
 	{
 		echo "<h2>Errore.</h2><p>Dettaglio: " . $e->getMessage() . '</p>';
 		var_dump($e);
-	}  
+	}
 }
 catch (Exception $e)
 {
@@ -138,5 +134,5 @@ catch (Exception $e)
 }
 
 
-ob_end_flush(); 
+ob_end_flush();
 ?>

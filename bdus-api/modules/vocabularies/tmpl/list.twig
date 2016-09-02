@@ -4,18 +4,28 @@
  * @license			See file LICENSE distributed with this code
  #}
 
+
+
 {% if vocs|length == 0 %}
 	<h2 class="text-error">{{ tr.get('no_voc_available') }}</h2>
-	
 {% else %}
-	<p><button class="btn btn-primary add_voc"><i class="glyphicon glyphicon-plus"></i> {{ tr.get('new_voc') }}</button></p>
-	
 	<h4>{{ tr.get('available_vocs') }}</h4>
-	
+{% endif %}
+
+<div style="margin: 20px 0;">
+	<button class="btn btn-primary add_voc">
+		<i class="glyphicon glyphicon-plus"></i> {{ tr.get('new_voc') }}
+	</button>
+</div>
+
+{% if vocs|length > 0 %}
+
+
+
 	<ul class="list-group" style="width:300px;">
-	
+
 	{% for voc, voc_arr in vocs %}
-	
+
 		<li class="list-unstyled">
 			<a class="voc list-group-item" href="javascript:void(0)">{{ voc }}</a>
 			<ul class="sortable list-unstyled voc_definition" style="display:none;" data-voc="{{ voc }}">
@@ -34,12 +44,12 @@
 					<li style="padding: 5px;"><button class="btn btn-default btn-sm add_voc" data-voc="{{ voc }}"><i class="glyphicon glyphicon-plus"></i></button></li>
 			</ul>
 		</li>
-		
+
 	{% endfor %}
 	</ul>
-	
+
 	<script>
-		
+
 		$.each($('ul.sortable'), function(i, el){
 			var ulSort = $(el).sortable({
 				nested: false,
@@ -48,12 +58,12 @@
 					var string = ulSort.sortable('serialize').get();
 					var new_string = {};
 					new_string[$(el).data('voc')] = string;
-					
+
 
 					$.post('controller.php?obj=vocabularies_ctrl&method=sort', new_string, function(data){
 						core.message(data.text, data.status);
 					}, 'json');
-					
+
 					_super(item, container);
 				},
 				serialize: function (parent, children, isContainer) {
@@ -62,13 +72,13 @@
 			});
 		});
 
-		
-		
+
+
 		$('a.voc').on('click', function(){
 			$(this).parents('li').find('a').toggleClass('active');
 			$(this).next('ul').toggle();
 		});
-		
+
 		$('.edit_def').on('click', function(){
 			var li = $(this).parents('li:eq(0)');
 			vocabularies.edit(li.data('id'), li.data('text'), function(val){
@@ -87,7 +97,7 @@
 			})
 		});
 	</script>
-	
+
 {% endif  %}
 
 	<script>

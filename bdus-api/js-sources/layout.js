@@ -48,7 +48,7 @@ var layout = {
 			}, 'html');
 
 			$(document).delegate('select.tb', 'change', function(e){
-				$(this).parent('li.tb').next('li.tb_opt').hide().load('./controller.php?module=home/table_menu&tb=' + $(this).val()).fadeIn('slow');
+				$(this).parents('li.tb').next('li.tb_opt').hide().load('./controller.php?module=home/table_menu&tb=' + $(this).val()).fadeIn('slow');
 			});
 
 			$(document).delegate('input.fast_search', 'keyup', function(e){

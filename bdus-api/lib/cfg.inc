@@ -101,7 +101,7 @@ class cfg
 				break;
 
 			case 'table':
-				$arr['tables'] = seld::$data['table'];
+				$arr['tables'] = self::$data['table'];
 
 				if (!utils::write_formatted_json(PROJ_CFG_TB, $arr))
 				{

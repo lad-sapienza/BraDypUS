@@ -1,3 +1,4 @@
+3.4.1[] = "Fixed translation error in Vocabularies module"
 3.4.1[] = "Bug fixed with Record::loadAllPlugins"
 3.4.1[] = "A more detailed error report in class Query"
 3.4.1[] = "API uses Access-Control-Allow-Origin: *instead of jsonp"

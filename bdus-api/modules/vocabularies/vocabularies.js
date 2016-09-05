@@ -6,14 +6,14 @@
 
 var vocabularies = {
 		init: function(){
-			
+
 			core.open({
 				obj: 'vocabularies_ctrl',
 				method: 'show',
 				title: core.tr('vocabulary_mng')
 			});
 		},
-		
+
 		edit: function(id, text, success){
 			var html = $('<input />').val(text).attr('type', 'text');
 			core.open({
@@ -31,7 +31,7 @@ var vocabularies = {
 							        		 success(val);
 							        	 }
 								     }
-								         
+
 				        		 }, 'json');
 				        		 $('#modal').modal('hide');
 				        	 }
@@ -43,7 +43,7 @@ var vocabularies = {
 				         ]
 			}, 'modal');
 		},
-		
+
 		erase: function(id, success){
 			core.open({
 				title: core.tr('attention'),
@@ -60,7 +60,7 @@ var vocabularies = {
 							        	 }
 								     }
 					        	 }, 'json');
-				        		 
+
 				        		 $('#modal').modal('hide');
 				        	}
 				        },
@@ -71,9 +71,9 @@ var vocabularies = {
 				        ]
 			}, 'modal');
 		},
-		
+
 		/**
-		 * Adds a new voc, closes dialog and reopens it (updated) 
+		 * Adds a new voc, closes dialog and reopens it (updated)
 		 * @param dialog
 		 */
 		add_new: function(voc, success){
@@ -88,7 +88,7 @@ var vocabularies = {
 				        	click: function(){
 				        		var myvoc = $('#voc').val(), mydef = $('#def').val();
 				        		 if (!myvoc || !mydef){
-				        			 core.message('voc_def_required', 'error');
+				        			 core.message(core.tr('voc_def_required'), 'error');
 				        		 }
 				        		 else
 				        		 {

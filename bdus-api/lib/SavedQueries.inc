@@ -10,10 +10,10 @@
 
 class SavedQueries
 {
-	
+
 	private $db;
   private $msg;
-	
+
 	/**
 	 * Stars class and sets db object
 	 * @param DB $db
@@ -22,19 +22,19 @@ class SavedQueries
 	{
 		$this->db = $db;
 	}
-	
+
 	public function getById($id)
 	{
 		return $this->db->query('SELECT * FROM `' . PREFIX . '__queries` WHERE `id` = ' . $id, false, 'read');
 	}
-	
+
 	public function getAll()
 	{
 		$query = 'SELECT * FROM `' . PREFIX . '__queries` WHERE `user_id` = ' . $_SESSION['user']['id'] . ' OR `is_global` = 1';
-		
+
 		return $this->db->query($query, false, 'read');
 	}
-	
+
 	/**
 	 * Erases record from queries table. Sets $this->message
 	 * @param int $id	record id to erase
@@ -44,7 +44,7 @@ class SavedQueries
 	{
 		return $this->db->query('DELETE FROM `' . PREFIX . '__queries`  WHERE `id`=' . $id, false, 'boolean');
 	}
-	
+
 	/**
 	 * Makes record shared. Sets $this->message
 	 * @param int $id	record id to share
@@ -53,9 +53,9 @@ class SavedQueries
 	public function share($id)
 	{
 		return $this->db->query('UPDATE `' . PREFIX . '__queries` SET `is_global` = 1  WHERE `id`=' . $id, false, 'boolean');
-		
+
 	}
-	
+
 	/**
 	 * Makes record private. Sets $this->message
 	 * @param int $id record id to unshare
@@ -65,7 +65,7 @@ class SavedQueries
 	{
 		return $this->db->query('UPDATE `' . PREFIX . '__queries` SET `is_global` = 0 WHERE `id`=' . $id, false, 'boolean');
 	}
-	
+
 	/**
 	 * Saves new query. Sets $this->message
 	 * @param string $name	query name
@@ -79,7 +79,7 @@ class SavedQueries
 		. '(`user_id`, `date`, `name`, `text`, `table`, `is_global`)'
 		. ' VALUES '
 		. '(:user_id, :date, :name, :text, :table, 0)';
-		
+
 		$values = array(
 				':user_id'=> $_SESSION['user']['id'],
 				':date'=> date('Y-m-d G:i:s'),
@@ -87,8 +87,8 @@ class SavedQueries
 				':text'=> base64_decode($text),
 				':table'=> $tb
 		);
-		
+
 		return $this->db->query($query, $values, 'boolean');
-		
+
 	}
 }

@@ -22,13 +22,9 @@ class Compress
 	 */
 	public static function js( $files, $type = false )
 	{
-    $microtime = str_replace('.', null, microtime(1));
-
 		if ( ($type['mini'] || !file_exists('./js/bdus.mini.js')) && is_dir('./js-sources'))
 		{
-      @unlink('./js/bdus.mini.js');
-
-			$str = "/*\n * BraDypUS javascripts minified archive includes different sources and licenses" .
+      $str = "/*\n * BraDypUS javascripts minified archive includes different sources and licenses" .
         "\n * For details on external libraries (copyrights and licenses) please consult the Credits information" .
         "\n*/";
 
@@ -41,9 +37,14 @@ class Compress
 					$str .= "\n". JSMin::minify ( file_get_contents ( './js-sources/' . $file ) );
 				}
 			}
-			utils::write_in_file ( './js/bdus.mini.js', $str);
+      if (file_exists('./js/bdus.mini.js') && hash_file('sha256', './js/bdus.mini.js') !== hash('sha256', $str))
+      {
+        @unlink('./js/bdus.mini.js');
+  			utils::write_in_file ( './js/bdus.mini.js', $str);
+      }
+
       echo '<script language="JavaScript" type="text/JavaScript" ' .
-        'src="./js/bdus.mini.js?' . $microtime . '"></script>' . "\n";
+        'src="./js/bdus.mini.js?sha256=' . hash_file('sha256', './js/bdus.mini.js') . '"></script>' . "\n";
 		}
 		else if ( $type['debug'] && is_dir('./js-sources'))
 		{
@@ -55,14 +56,14 @@ class Compress
 				{
 					echo "\n  " .
             '<script language="JavaScript" type="text/JavaScript" ' .
-              ' src="./js-sources/' . $file .'?_' . $microtime . '"></script>';
+              ' src="./js-sources/' . $file .'?sha256=?_' . hash_file('sha256', './js-sources/' . $file) . '"></script>';
 				}
 			}
       return;
 		}
     else
     {
-      echo '<script language="JavaScript" type="text/JavaScript" src="./js/bdus.mini.js?v' . version::current() . '"></script>' . "\n";
+      echo '<script language="JavaScript" type="text/JavaScript" src="./js/bdus.mini.js?sha256' . hash_file('sha256', './js/bdus.mini.js') . '"></script>' . "\n";
     }
 	}
 
@@ -93,16 +94,17 @@ class Compress
         $parser = new Less_Parser($opts);
         $parser->parseFile( "./css-less/main.less");
         $css = $parser->getCss();
-        file_put_contents("./css/mini.css", $str . $css);
+        if (hash_file('sha256', "./css/mini.css") !== hash('sha256', $css))
+        {
+          file_put_contents("./css/mini.css", $str . $css);
+        }
       }
       catch (Exception $e)
       {
         error_log($e->getTraceAsString());
       }
 		}
-    echo '<link type="text/css" media="all" rel="stylesheet" href="./css/mini.css?v' . version::current()
-      . ($type['debug'] ? '?_' . str_replace('.', null, microtime(1)) : '')
-      . '" />';
+    echo '<link type="text/css" media="all" rel="stylesheet" href="./css/mini.css?sha256' . hash_file('sha256', './css/mini.css') . '" />';
 
 		echo "\n  ".'<link rel="shortcut icon" href="./img/favicon.ico">';
 	}

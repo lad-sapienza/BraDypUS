@@ -1,3 +1,4 @@
+3.4.3[] = "Plugin fields in Advanced query UI bear the name pf the plugin"
 3.4.2[] = "Minor bug fix in main CSS file"
 3.4.2[] = "JS & CSS compressors and outputers use sha256 algorithm to check changes in files"
 3.4.1[] = "Fixed translation error in Vocabularies module"

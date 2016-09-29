@@ -8,7 +8,7 @@
 
 class search_ctrl extends Controller
 {
-	
+
 	/**
 	 * @param $this->request['tb']
 	 * @param $this->request['fld']
@@ -40,12 +40,12 @@ class search_ctrl extends Controller
 			$resp['status'] = 'error';
 			$resp['verbose'] = tr::get('test_error');
 		}
-		
+
 		echo json_encode($resp);
 	}
-	
-	
-	
+
+
+
 	/**
 	 * @param $this->request['tb']
 	 */
@@ -59,11 +59,11 @@ class search_ctrl extends Controller
 				'uid'		=> uniqid('uid')
 		));
 	}
-	
-	
-	
+
+
+
 	/**
-	 * 
+	 *
 	 * @param $this->request['tb']
 	 */
 	public function advancedGUI()
@@ -77,25 +77,25 @@ class search_ctrl extends Controller
 				'uid'		=> uniqid('uid')
 				));
 	}
-	
+
 
 	private function opt_connector()
 	{
-		
+
 		$connectors = array(
 			'AND'	=>	'AND',
 			'OR' 	=>	'OR',
-			'XOR'	=>	'XOR'	
+			'XOR'	=>	'XOR'
 		);
-		
+
 		foreach ($connectors as $connector => $label)
 		{
 			$opt[] = '<option value="' . $connector . '">' . $label . '</option>';
 		}
 		return implode("\n", $opt);
 	}
-	
-	
+
+
 	private function opt_operators()
 	{
 		$operators = array(
@@ -109,34 +109,34 @@ class search_ctrl extends Controller
 				'>'			=>	tr::get('bigger'),
 				'<'			=>	tr::get('smaller')
 		);
-		
+
 		foreach ($operators as $operator => $label)
 		{
 			$opt[] = '<option value="' . $operator . '">' . $label . '</option>';
 		}
 		return implode("\n", $opt);
 	}
-	
-	
+
+
 	private function opt_all_flds($tb)
 	{
 		$fields = cfg::fldEl($tb, 'all', 'label');
-		
+
 		foreach ($fields as $name=>$label)
 		{
 			$opt[] = '<option value="' . $tb . ':' . $name .'">' . $label . '</option>';
 		}
 		$plg = cfg::tbEl($tb, 'plugin');
-		
+
 		if (is_array($plg))
 		{
 			foreach ($plg as $p)
 			{
 				$fields = cfg::fldEl($p, 'all', 'label');
-				
+
 				foreach ($fields as $name=>$label)
 				{
-					$opt[] = '<option value="' . $p . ':' . $name .'"># ' . $label . '</option>';
+					$opt[] = '<option value="' . $p . ':' . $name .'">' . cfg::tbEl($p, 'label') . " > " . $label . '</option>';
 				}
 			}
 		}

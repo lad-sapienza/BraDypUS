@@ -824,7 +824,7 @@ class Field implements iTemplate
 		if ($label AND $label != '.')
 		{
 			return '<label> '
-					. ( $help ? '<span class="help" title="' . str_replace('"', '\"', $help). '">' : '')
+					. ( $help ? '<span class="help" data-content="' . str_replace('"', '\"', $help). '">' : '')
 					. $label
 					. ($help ? ' <i class="glyphicon glyphicon-info-sign"></i>' : '')
 				. ' </label>';

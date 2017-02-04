@@ -455,7 +455,8 @@ class Field implements iTemplate
 			$html .= $twig->render(str_replace(PREFIX . '__', null, $plg) . '.twig', array(
 					'print' => $this,
 					'plg'=> $plg,
-					'index' => $index
+					'index' => $index,
+					'uid' => uniqid()
 			));
 		}
 		else
@@ -876,7 +877,7 @@ class Field implements iTemplate
 						'</span>';
 				}
 			}
-			else if ($setting['id_from_tb'])
+			else if ($setting['id_from_tb'] && $setting['data'])
 			{
 				$query = 'SELECT `' . cfg::tbEl($setting['id_from_tb'], 'id_field') . '` FROM `' . $setting['id_from_tb'] . '` WHERE `id` = ' . $setting['data'];
 				$res = $this->db->query($query, false, 'read', true);

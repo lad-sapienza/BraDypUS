@@ -1,3 +1,4 @@
+3.4.5[] = "Plugin templates have automatic unique id template variable"
 3.4.4[] = "Text linkify function considers also https protocol"
 3.4.3[] = "Plugin fields in Advanced query UI bear the name pf the plugin"
 3.4.2[] = "Minor bug fix in main CSS file"

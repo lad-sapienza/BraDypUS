@@ -429,7 +429,7 @@ var api = {
 
 								        		  for ( var i=0 ; i<aTrs.length ; i++ ){
 								        			  if ( $(aTrs[i]).hasClass('row_selected') ){
-								        				  id_arr.push( $(aTrs[i]).find('td:first').html() );
+																	id_arr.push( $(aTrs[i]).attr('id') );
 								        			  }
 								        		  }
 

@@ -1,3 +1,4 @@
+3.4.6[] = "Bug fixed with userlinks using first cell of row for row id. The tr#id is used now"
 3.4.6[] = "Userlink actions linked to buttons in UI are now namespaced: multiple actions were attached to same button"
 3.4.5[] = "Field help is now tooltip content not title"
 3.4.5[] = "Plugin templates have automatic unique id template variable"

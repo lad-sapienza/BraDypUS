@@ -497,14 +497,14 @@ var api = {
 
 			l_el.html('')
 				.load('controller.php?obj=userlinks_ctrl&method=show&param[]=' + l_tb + '&param[]=' + l_id + '&param[]=' + l_context, function(){
-
 					//READ
-					$('span.userlink_read').click(function(){
+					$(l_el).find('span.userlink_read').on('click', function(){
 						api.record.read($(this).data('tb'), [$(this).data('id')]);
 					});
 
+
 					//DELETE
-					$('span.userlink_delete').click(function(){
+					$(l_el).find('span.userlink_delete').click(function(){
 						var $this = $(this),
 							delId = $this.data('id');
 
@@ -514,11 +514,11 @@ var api = {
 					});
 
 					//RELOAD
-					$('span.userlink_reload')
+					$(l_el).find('span.userlink_reload')
 						.click( function(){	api.link.show_userlinks(l_el);	});
 
 					//ADD
-					$('span.userlink_add')
+					$(l_el).find('span.userlink_add')
 						.click(function(){
 							var thisid = $(this).data('id'),
 								thistb = $(this).data('table');

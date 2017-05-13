@@ -255,9 +255,9 @@ class Record implements iRecord
 
 		// USERLINKS
 		$q[] = 'DELETE FROM `' . PREFIX . '__userlinks` WHERE '
-			." ( `tb_one` = '" . $this->tb . "' AND `id_one` = " . $id . ")"
+			." ( `tb_one` = '" . $this->tb . "' AND `id_one` = '" . $id . "')"
 			. ' OR '
-			. "( `tb_two` = '" . $this->tb . "' AND `id_two` = " . $id . ")";
+			. "( `tb_two` = '" . $this->tb . "' AND `id_two` = '" . $id . "')";
 
 		//GEODATA
 		$q[] = "DELETE FROM `" . PREFIX . "__geodata` WHERE  `table_link` = '" . $this->tb . "' AND `id_link` = " . $id;
@@ -627,9 +627,9 @@ class Record implements iRecord
 							. "(`" . PREFIX . "__userlinks`.`tb_two` = '" . PREFIX . "__files' AND  `" . PREFIX . "__userlinks`.`id_two` = `" . PREFIX . "__files`.`id`)"
 						. ')'
 						. ' WHERE '
-							. "(`" . PREFIX . "__userlinks`.`tb_one` = '" . $this->tb . "' AND  `" . PREFIX . "__userlinks`.`id_one` = " . $this->id . ")"
+							. "(`" . PREFIX . "__userlinks`.`tb_one` = '" . $this->tb . "' AND  `" . PREFIX . "__userlinks`.`id_one` = '" . $this->id . "')"
 							. ' OR '
-							. "(`" . PREFIX . "__userlinks`.`tb_two` = '" . $this->tb . "' AND  `" . PREFIX . "__userlinks`.`id_two` = " . $this->id . ")"
+							. "(`" . PREFIX . "__userlinks`.`tb_two` = '" . $this->tb . "' AND  `" . PREFIX . "__userlinks`.`id_two` = '" . $this->id . "')"
 						. ' ORDER BY `' . PREFIX . '__userlinks`.`sort`, `' . PREFIX . '__userlinks`.`id`';
 				$this->data['fullfiles'] = $this->db->query($query, false, 'read');
 			}

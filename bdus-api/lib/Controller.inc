@@ -17,6 +17,12 @@ class Controller
 		$this->request = $request ? $request : $_REQUEST;
 	}
 
+	public function json($data)
+	{
+		header("Content-type:application/json");
+		echo json_encode($data);
+	}
+
 	public function render($module, $template, $data = false)
 	{
 		if (file_exists(MOD_DIR . $module . '/tmpl/' . $template . '.html'))

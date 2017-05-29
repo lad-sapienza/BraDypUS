@@ -1,3 +1,4 @@
+3.4.8[] = "Added Controller::json method to echo json data with correct header"
 3.4.7[] = "First draft of API markdown docs"
 3.4.7[] = "Addedd AWMS and Imperium basemaps to GeoFace"
 3.4.6[] = "Bug fixed with userlinks using first cell of row for row id. The tr#id is used now"

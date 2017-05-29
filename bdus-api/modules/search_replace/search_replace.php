@@ -15,17 +15,17 @@ class search_replace_ctrl extends Controller
 				'tbs' => cfg::getNonPlg()
 				));
 	}
-	
+
 	/**
 	 * Echoes json encoded array of available fields for $table
 	 */
 	public function getFld()
 	{
 		$tb = $this->get['tb'];
-		
+
 		echo json_encode(cfg::fldEl($tb, 'all', 'label'));
 	}
-	
+
 	/**
 	 * Executes search & replace query and returns no of affected rows
 	 */
@@ -39,13 +39,13 @@ class search_replace_ctrl extends Controller
 		try
 		{
 			$db = new DB();
-			
+
 			$query = "UPDATE `" . $tb . "` SET `" . $fld . "` = REPLACE (`" . $fld . "`, '" . str_replace("'", "\'", $search) . "', '" . str_replace("'", "\'", $replace ) . "')";
-			
+
 			$values = false;
-			
+
 			$no = $db->query($query, $values, 'affected');
-			
+
 			echo $no;
 		}
 		catch(myException $e)

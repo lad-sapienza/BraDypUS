@@ -1,3 +1,4 @@
+3.4.8[] = "Added new QueryBuilder class"
 3.4.8[] = "Added Controller::json method to echo json data with correct header"
 3.4.7[] = "First draft of API markdown docs"
 3.4.7[] = "Addedd AWMS and Imperium basemaps to GeoFace"

@@ -1,3 +1,4 @@
+3.5.0[] = "New backlinks functionality, for records referred by 1-n plugins"
 3.5.0[] = "All dropdown menus are handled via AJAX"
 3.5.0[] = "Select2 updated to version 4.0.3"
 3.5.0[] = "Added new QueryBuilder class"

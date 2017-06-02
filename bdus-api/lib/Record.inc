@@ -363,12 +363,17 @@ class Record implements iRecord
 		if (!is_array($this->data['core']))
 		{
 			// it means that no id was found => it's a new record
-			$this->data['core'] = array();
+			$this->data['core'] = [];
 		}
 
-		$this->data['core'] = array_merge($this->data['core'], $core_data[$this->tb]);
-
-		$this->changed['core'] = array_keys($core_data[$this->tb]);
+		if (is_array($core_data[$this->tb]))
+		{
+			foreach ($core_data[$this->tb] as $key => $value)
+			{
+				$this->data['core'][$key] = is_array($value) ? implode('; ', $value) : $value;
+				$this->changed['core'][] = $key;
+			}
+		}
 
 		$this->loaded['core'] = true;
 	}
@@ -574,6 +579,68 @@ class Record implements iRecord
 
 		}
 		$detail ?  ($this->loaded['corelinks_details'] = true) : ($this->loaded['corelinks'] = true);
+	}
+
+	/**
+	 * (non-PHPdoc)
+	 * @see iRecord::getBackLinks()
+	 */
+	public function getBackLinks()
+	{
+		if ($this->data['backLink'])
+		{
+			return $this->data['backLink'];
+		}
+
+		$ret = false;
+
+		$bl_array = cfg::tbEl($this->tb, 'backlinks');
+		if (!$bl_array)
+		{
+			return $ret;
+		}
+
+		foreach($bl_array as $bl_string)
+		{
+			list($tb, $plg, $plg_fld) = utils::csv_explode($bl_string, ':');
+			if (!$tb || !$plg || !$plg_fld)
+			{
+				error_log('Syntax error in configuration of ' . $this->tb . ' segment backlink');
+				continue;
+			}
+
+			$this_id_fld_val = $this->getCore(cfg::tbEl($this->tb, 'id_field'));
+			if (!$this_id_fld_val)
+			{
+				continue;
+			}
+
+			$dest_id_fld = cfg::tbEl($tb, 'id_field');
+
+			if ($dest_id_fld !== 'id')
+			{
+				$sql = <<<EOD
+SELECT `id`, `{$dest_id_fld}` as label
+	FROM `{$tb}`
+	WHERE `id` IN
+		(SELECT `id_link`
+			FROM `{$plg}`
+			WHERE
+				`table_link` = '{$tb}'
+				AND
+				`{$plg_fld}` = '$this_id_fld_val'
+				)
+EOD;
+			} else {
+				$sql = "SELECT `id_link` as id FROM `{$plg}` WHERE `table_link` = '{$tb}' AND `{$plg_fld}` = '$this_id_fld_val'";
+			}
+
+			$ret[$tb] = $this->db->query($sql, false, 'read');
+		}
+
+		$this->data['backLink'] = $ret;
+
+		return $this->data['backLink'];
 	}
 
 	/**

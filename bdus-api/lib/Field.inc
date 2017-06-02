@@ -116,7 +116,7 @@ class Field implements iTemplate
 	 */
 	public function links()
 	{
-		if($this->context == 'add_new')
+		if($this->context === 'add_new')
 		{
 			return;
 		}
@@ -124,11 +124,38 @@ class Field implements iTemplate
 		$html = '<fieldset class="links">'
 			. '<legend>' . tr::get('links_avaliable') . '</legend>';
 
+		// Back-link table is a plugin table that servers as 1-n pivot.
+		// Given two tables, prefix__aa and prefix__bb
+		// and a plugin table prefix__m_bb, referred from prefix_aa
+		// and prefix_m_bb has a field named with the singular form of bb
+		// populated withthe same value of id_field field of aa, eg.
+		// 		table a__teachers
+		// 		has plugin table plugin a__m_classes
+		// 		that has fields a__m_classes.class and a__m_classes.hour
+		// 		table classes has id_field name with same content as a__m_classes.class
+
+		$backlinks = $this->record->getBackLinks();
+
 		// GET CORE LINKS
 		$corelinks = $this->record->getCoreLinks();
 
 		// SHOW CORELINKS
 		$html .= '<i class="glyphicon glyphicon-link"></i> <strong>' . tr::get('core_links'). '</strong><br />';
+
+		if (is_array($backlinks))
+		{
+			foreach($backlinks as $dest_tb => $l_arr)
+			{
+				foreach ($l_arr as $v)
+				{
+					$html .= '<li><span class="btn-link" onclick="' .
+	         "api.record.read('{$dest_tb}', ['{$v['id']}'], true);" .
+	          '" href="javascript:void(0)">' .
+						cfg::tbEl($dest_tb, 'label') . '::' . ($v['label'] ?: $v['id']) .
+	          '</span>';
+				}
+			}
+		}
 
 		if (is_array($corelinks))
 		{
@@ -154,7 +181,7 @@ class Field implements iTemplate
 		}
 
 		// SHOW USER LINKS
-		$html .= '<div class="showUserLinks" data-context="' . $this->context . '" data-tb="' . $this->tb . '" data-id="' . $this->record->getCore('id') . '"></div>';
+		$html .= $this->userLinks();
 		$html .= '</fieldset>';
 
 		return $html;
@@ -162,7 +189,7 @@ class Field implements iTemplate
 
 	public function userlinks()
 	{
-		if ($this->context != 'add_new')
+		if ($this->context !== 'add_new')
 		{
 			return '<div class="showUserLinks" data-context="' . $this->context . '" data-tb="' . $this->tb . '" data-id="' . $this->record->getCore('id') . '"></div>';
 		}
@@ -174,7 +201,7 @@ class Field implements iTemplate
 	 */
 	public function geodata()
 	{
-		if($this->context == 'add_new')
+		if($this->context === 'add_new')
 		{
 			return;
 		}
@@ -279,16 +306,10 @@ class Field implements iTemplate
 	 * (non-PHPdoc)
 	 * @see iTemplate::image_thumbs()
 	 */
-	public function image_thumbs($max = false)
+	public function image_thumbs($max = 2)
 	{
 		// get file data
 		$data_arr = $this->record->getFullFiles();
-
-		// set default maximum no of images to show
-		if (!$max)
-		{
-			$max = 2;
-		}
 
 		// max can not be bigger than the no of images found in the DB
 		if ($max == 'all' || $max > count($data_arr))
@@ -296,12 +317,8 @@ class Field implements iTemplate
 			$max = count($data_arr);
 		}
 
-
 		// start writing main container. Styles are handled via CSS
 		$html = '<div class="file_thumbnails clearfix">';
-
-
-
 
 		// 1. Some images are found in the database
 		if (is_array($data_arr) AND !empty($data_arr[0]))
@@ -414,21 +431,21 @@ class Field implements iTemplate
 		// get settings
 		$setting = $this->setParam($fieldname, $formatting, $plg_name, $plg_index);
 
-		if ($this->context == 'read' || $this->context == 'preview')
-		{
+		$html = $this->HtmlStartDiv($setting);
 
-			$html = $this->HtmlStartDiv($setting)
-			. $this->HtmlLabel($setting['label'])
-			. $this->HtmlContentRead($setting)
-			. $this->HtmlEndDiv();
+		if ($this->context === 'read' || $this->context === 'preview')
+		{
+			$html .=$this->HtmlLabel($setting['label'])
+			. $this->HtmlContentRead($setting);
 		}
 		else
 		{
-			$html = $this->HtmlStartDiv($setting)
-			. $this->HtmlLabel($setting['label'], $setting['help'])
-			. $this->HtmlContentEdit($setting)
-			. $this->HtmlEndDiv();
+			$html .= $this->HtmlLabel($setting['label'], $setting['help'])
+			. $this->HtmlContentEdit($setting);
 		}
+
+		$html .= $this->HtmlEndDiv($setting);
+
 		return $html;
 	}
 
@@ -592,18 +609,17 @@ class Field implements iTemplate
 
 
 		// get $config data from cfg object (file config)
-		if ($plg_name)
-		{
-			$config = cfg::fldEl ($plg_name, $fld, 'all');
-		}
-		else
-		{
-			$config = cfg::fldEl ($this->tb, $fld, 'all');
-		}
+		$config = cfg::fldEl ($plg_name ?: $this->tb, $fld, 'all');
+
 		//merge check array to string
 		if (is_array($config['check']))
 		{
 			$config['check'] = implode(' ', $config['check']);
+		}
+
+		if (!is_array($config))
+		{
+			$config = [];
 		}
 
 
@@ -620,72 +636,24 @@ class Field implements iTemplate
 		}
 
 		// merge template settings to core settings
-		if (!is_array($config))
-		{
-			$config = array();
-		}
-
-		if ($tmpl_info)
-		{
-			$setting = array_merge($config, $tmpl_info);
-		}
-		else
-		{
-			$setting = $config;
-		}
-
+		$setting = $tmpl_info ? array_merge($config, $tmpl_info) : $config;
 
 		// add html utility settings
 		$setting['fieldname'] = $fld;
 
-		if ($plg_name)
+		$setting['name'] = $plg_name ?
+					'plg[' . $plg_name . '][id:' . $plg_index . '][' . $fld. ']':
+					'core[' . $this->tb . '][' . $fld. ']';
+
+		$setting['name'] .= $setting['type'] == 'multi_select' ? '[]' : '';
+
+		$setting['id'] = str_replace(['_', '.'], null, uniqid($this->tb . $fld, true));
+
+
+		// menu_values are not set in read/preview contexts
+		if ($this->context !== 'read' AND $this->context !== 'preview')
 		{
-				$setting['name'] = 'plg[' . $plg_name . '][id:' . $plg_index . '][' . $fld. ']';
-		}
-		else
-		{
-			$setting['name'] = 'core[' . $this->tb . '][' . $fld. ']';
-		}
-
-		$setting['id'] = str_replace(array('_', '.'), null, $this->tb . $fld . microtime(1) . rand(1, 9999));
-
-
-		// menu_values are no set in read/preview contexts
-		if ($this->context != 'read' AND $this->context != 'preview')
-		{
-			// vocabulary_set
-			if ($setting['vocabulary_set'])
-			{
-        $final_query = "SELECT `def` FROM `" . PREFIX . "__vocabularies` WHERE `voc`='" . $setting['vocabulary_set'] . "' ORDER BY `sort`";
-			}
-			//get_values_from_tb
-			else if ($setting['get_values_from_tb'])
-			{
-				$from_table_arr = utils::csv_explode ($setting['get_values_from_tb'], ':');
-
-				$final_query = "SELECT `" . $from_table_arr[1] . "` FROM `" . $from_table_arr[0] . "` GROUP BY `" . $from_table_arr[1] . "` ORDER BY `" . $from_table_arr[1] . "` ASC";
-			}
-			else if ($setting['id_from_tb'])
-			{
-				$id_field = cfg::tbEl($setting['id_from_tb'], 'id_field');
-
-				$fields  = ($id_field != 'id') ? 'id`, `' . $id_field : '';
-
-				$final_query = 'SELECT `' . $fields . '` FROM `' . $setting['id_from_tb'] . '` WHERE 1 ORDER BY `' . $id_field . '`';
-			}
-
-			if ($final_query)
-			{
-				$res = $this->db->query($final_query, false, 'read', true);
-
-				if (is_array($res))
-				{
-					foreach ($res as $key=>$val)
-					{
-						$setting['menu_values'][$val[0]] = $val[1] ? $val[1] : $val[0];
-					}
-				}
-			}
+			$setting['menu_values'] = [];
 		}
 
 		// DATA
@@ -726,19 +694,16 @@ class Field implements iTemplate
 		}
 
 		// ADD DATA TO MENU VALUES, IF NOT PRESENT
-    if ($setting['type'] == 'multi_select')
+    if ($setting['type'] == 'multi_select' && $setting['data'])
     {
-      if ($setting['data'])
+      $data_arr = utils::csv_explode($setting['data'], ';');
+      if (is_array($data_arr))
       {
-        $data_arr = utils::csv_explode($setting['data'], ';');
-        if (is_array($data_arr))
+        foreach ($data_arr as $v)
         {
-          foreach ($data_arr as $v)
+          if (is_array($setting['menu_values']) && !in_array($v, $setting['menu_values']))
           {
-            if (is_array($setting['menu_values']) && !in_array($v, $setting['menu_values']))
-            {
-              array_push($setting['menu_values'], $v);
-            }
+						$setting['menu_values'][$v] = $v;
           }
         }
       }
@@ -747,12 +712,12 @@ class Field implements iTemplate
     {
       if ($setting['data'] && is_array($setting['menu_values']) && !in_array($setting['data'], $setting['menu_values']))
       {
-        array_push($setting['menu_values'], $setting['data']);
+				$setting['menu_values'][$setting['data']] = $setting['data'];
       }
     }
 
 		//HTML_DATA
-		$setting['html_data']	=	($setting['data'] AND $setting['data'] != '') ? @htmlentities($setting['data'], ENT_QUOTES, 'UTF-8') : '';
+		$setting['html_data']	=	($setting['data'] AND $setting['data'] !== '') ? @htmlentities($setting['data'], ENT_QUOTES, 'UTF-8') : '';
 
 
 		// DISPLAY
@@ -820,15 +785,17 @@ class Field implements iTemplate
 
 	protected function HtmlLabel($label = false, $help = false)
 	{
-
-		if ($label AND $label != '.')
+		if (!$label || $label === '.')
 		{
-			return '<label> '
-					. ( $help ? '<span class="help" data-content="' . str_replace('"', '\"', $help). '">' : '')
-					. $label
-					. ($help ? ' <i class="glyphicon glyphicon-info-sign"></i>' : '')
-				. ' </label>';
+			return;
 		}
+
+
+		return '<label> '
+				. ( $help ? '<span class="help" data-content="' . str_replace('"', '\"', $help). '">' : '')
+				. $label
+				. ($help ? ' <i class="glyphicon glyphicon-info-sign"></i>' : '')
+			. ' </label>';
 	}
 
 
@@ -836,26 +803,35 @@ class Field implements iTemplate
 	{
 		$html = '<div class="field_content" data-name="' . $setting['name'] . '">';
 
-		if ($setting['type'] == 'boolean')
+		// Val is always an array, for easy parsing: exploded values for multi_select od single value array
+		$val = ($setting['type'] == 'multi_select') ? utils::csv_explode($setting['data'], ';') : [$setting['data']];
+
+		// 1. Boolean values: convert 1|0/false to yes|no
+		if ($setting['type'] === 'boolean')
 		{
 			$html .=  ( (!$setting['data'] || $setting['data'] === 0)	? tr::get('no') : tr::get('yes') );
 		}
-		else if ($setting['data']!=='' OR (is_numeric($setting['data']) AND $setting['data']> 0 ))
-		{
-			$from_table_arr = $setting['get_values_from_tb']  ? utils::csv_explode ($setting['get_values_from_tb'], ':') : false;
+		// 2. Return false if data is empty
+		else if ($setting['data'] === false || $setting['data'] === null || $setting['data'] === ''){
+			return false;
+		}
 
-			// da qui
+		// 3. All other data types
+		else
+		{
+			// 3.1 Field is populated with values get by another table.field
 			if ($setting['get_values_from_tb'])
 			{
+
+				$from_table_arr = utils::csv_explode ($setting['get_values_from_tb'], ':');
 
 				$otherTb = $from_table_arr[0];
 				$otherFld = $from_table_arr[1];
 
 				/*
-				 * if otherTb == thisTb most probably it's a reference used for indexing (comobox field)
+				 * if otherTb = thisTb most probably it's a reference used for auto-populating menus (combobox field)
 				 *	No difference if otherFld is the same or different from thisFld.
 				 *	In both cases a link to a query result will be shown.
-				 *	Usually if otherFlf == thisFld the feature is used in combobox fields, in order to autoindex fields
 				 *	The case of otherFld != thisField should be very rare if never used
 				 *
 				 * If otherTb != thisTb most probably it's not only a index link, but also a logic (data structure) link
@@ -863,87 +839,71 @@ class Field implements iTemplate
 				 *	Anyway otherFld value is unique, so it's useless showing a query result. Just show the record!
 				 *	Otherwise otherFld most probably is not unique, so query result will be shown;
 				 */
-				if ($otherTb == $this->tb || ($otherTb != $this->tb && $otherFld != cfg::tbEl($otherTb, 'id_field')))
+
+				// 3.1.1 otherTb = thisTb  or otherTb != thisTb and otherFld is not other table's id field
+				if ($otherTb === $this->tb || ($otherTb !== $this->tb && $otherFld !== cfg::tbEl($otherTb, 'id_field')))
 				{
-					$html .= "<span class=\"a\" " .
-						" onclick=\"api.showResults('" . $otherTb. "', 'type=encoded', '" . tr::sget('contextual_search_in', cfg::tbEl($otherTb, 'label')) . "', {q_encoded: '" . base64_encode("`" . $otherFld . "` = '" . $setting['data'] . "'"). "'})\">" .
-						utils::format_text($setting['data']) .
-						'</span>';
+					foreach ($val as $v)
+					{
+						$html .= "<span class=\"a\" " .
+							" onclick=\"api.showResults('" . $otherTb. "', 'type=encoded', '" . tr::sget('contextual_search_in', cfg::tbEl($otherTb, 'label')) . "', {q_encoded: '" . base64_encode("`" . $otherFld . "` = '" . $v . "'"). "'})\">" .
+							utils::format_text($v) .
+							'</span>' . (next( $val ) === false ? ' ' : ';');
+					}
 				}
+				// 3.1.2 otherTb != thisTb  or otherTb = thisTb and otherFld is other table's id field
 				else
 				{
-					$html .= '<span class="a" onclick="api.record.read(\'' . $otherTb . '\', [\'' . $setting['data'] . '\'], true)">' .
-						utils::format_text($setting['data']) .
-						'</span>';
+					foreach ($val as $v)
+					{
+						$html .= '<span class="a" onclick="api.record.read(\'' . $otherTb . '\', [\'' . $v . '\'], true)">' .
+							utils::format_text($v) .
+							'</span>' . (next( $val ) === false ? ' ' : ';');
+					}
 				}
 			}
-			else if ($setting['id_from_tb'] && $setting['data'])
+			// 3.2 Field is populated with ID values get by another table. Other table's id field will be used as a label
+			else if ($setting['id_from_tb'])
 			{
-				$query = 'SELECT `' . cfg::tbEl($setting['id_from_tb'], 'id_field') . '` FROM `' . $setting['id_from_tb'] . '` WHERE `id` = ' . $setting['data'];
-				$res = $this->db->query($query, false, 'read', true);
-				if ($res[0][0])
+				foreach ($val as $v)
 				{
-					$html .= '<span class="a" onclick="api.record.read(\'' . $setting['id_from_tb'] . '\', [' . $setting['data'] . '])">'
-							. utils::format_text($res[0][0])
-						. '</span>';
+					$query = 'SELECT `' .
+					 		cfg::tbEl($setting['id_from_tb'], 'id_field') . '` '.
+							'FROM `' . $setting['id_from_tb'] . '` ' .
+							'WHERE `id` = ' . $v;
+
+					$res = $this->db->query($query, false, 'read', true);
+
+					if ($res[0][0])
+					{
+						$html .= '<span class="a" onclick="api.record.read(\'' . $setting['id_from_tb'] . '\', [' . $v . '])">'
+								. utils::format_text($res[0][0])
+							. '</span>' . (next( $val ) === false ? ' ' : ';');
+					}
 				}
 			}
-      else if ($setting['type'] == 'multi_select')
+			// 3.3 All other field types
+      else
       {
-        $data_arr = utils::csv_explode($setting['data'], ';');
-
-        if (is_array($data_arr))
-        {
-          foreach ($data_arr as $v)
-          {
-            if ($setting['active_link'])
-            {
-              $tmp_html[] = "<span class=\"a\" " .
-                " onclick=\"api.showResults('" . $this->tb. "', 'type=encoded', '" . tr::sget('contextual_search_in', cfg::tbEl($this->tb, 'label')) . "', {q_encoded: '" . base64_encode(
-                    "`" . $setting['fieldname'] . "` LIKE '%;" . $v . "' " .
-                    "OR `" . $setting['fieldname'] . "` LIKE '" . $v . ";%' " .
-                    "OR `" . $setting['fieldname'] . "` = '" . $v . "' "
-                  ). "'})\">" .
-                utils::format_text($v) .
-                '</span>';
-            }
-            else
-            {
-              $tmp_html[] =  utils::format_text($v);
-            }
-          }
-        }
-
-        if ($tmp_html)
-        {
-          $html .= implode($tmp_html, ', ');
-        }
-        else
-        {
-          $html .= utils::format_text($setting['data']);
-        }
+				foreach ($val as $v)
+				{
+					if ($setting['active_link'])
+					{
+						$html .= "<span class=\"a\" " .
+							" onclick=\"api.showResults('" . $this->tb. "', 'type=encoded', '" . tr::sget('contextual_search_in', cfg::tbEl($this->tb, 'label')) . "', {q_encoded: '" . base64_encode(
+									"`" . $setting['fieldname'] . "` LIKE '%;" . $v . "' " .
+									"OR `" . $setting['fieldname'] . "` LIKE '" . $v . ";%' " .
+									"OR `" . $setting['fieldname'] . "` = '" . $v . "' "
+								). "'})\">" .
+							utils::format_text($v) .
+							'</span>' . (next( $val ) === false ? ' ' : ';');
+					}
+					else
+					{
+						$html .=  utils::format_text($v) . ($v !== end($val) ? '; ' : '');
+					}
+				}
       }
-			else
-			{
-				/*
-				 * If cfg active_link, show link
-				 */
-				if ($setting['active_link'])
-				{
-					$html .= "<span class=\"a\" " .
-						" onclick=\"api.showResults('" . $this->tb. "', 'type=encoded', '" . tr::sget('contextual_search_in', cfg::tbEl($this->tb, 'label')) . "', {q_encoded: '" . base64_encode("`" . $setting['fieldname'] . "` = '" . $setting['data'] . "'"). "'})\">" .
-						utils::format_text($setting['data']) .
-						'</span>';
-				}
-				else
-				{
-					$html .=  utils::format_text($setting['data']);
-				}
-			}
-		}
-		else
-		{
-			return false;
 		}
 
 		return $html . '</div>';
@@ -952,7 +912,7 @@ class Field implements iTemplate
 	protected function HtmlContentEdit($setting)
 	{
 		//div containing field
-		$html='<div class="field_content">';
+		$html = '<div class="field_content">';
 
 		//core info (HTML), to use
 		$core  = ' name="'. $setting['name'] .'" '
@@ -1019,47 +979,58 @@ class Field implements iTemplate
 		return $html;
 	}
 
+
+
+
 	/*
 	 * html piccoli: casi vari di tipi di campo
 	 */
 	protected function htmlInput($core, $setting) {
 
-		return '<input ' . $core . $setting['maxlength'] . ' type="text"  value="' . $setting['html_data'] . '"  style="width:95%"  />';
+		return '<input ' . $core .
+				$setting['maxlength'] .
+				' type="text" ' .
+				'value="' . $setting['html_data'] . '" ' .
+				'class="form-control">';
 	}
 
 	protected function htmlDate($core, $setting) {
 
-		return '<input type="text" class="date" ' . $core . $setting['maxlength'] . 'value="' . $setting['html_data'] . '" style="width:95%" />';
+		return '<input type="text" ' .
+				'class="form-control date" ' .
+				$core .
+				$setting['maxlength'] .
+				'value="' . $setting['html_data'] . '">';
 	}
 
 	protected function htmlTextarea($core, $setting) {
 
 		return '<textarea ' .
-			$core .
-			$setting['maxlength'] .
-			( $setting['height'] ? 'rows="' . $setting['height'] . '"': '') .
-			' style="width:95%">' .
-
-			 	$setting['data'] .
+				$core .
+				$setting['maxlength'] .
+				( $setting['height'] ? 'rows="' . $setting['height'] . '"': '') .
+				' class="form-control">' .
+			 		$setting['data'] .
 			 '</textarea>';
 	}
 
-	protected function htmlSelect($core, $setting) {
+	protected function htmlSelect($core, $setting, $is_multi = false, $is_combo = false) {
 
-		$html = '<select ' . $core . '>'
-			. '<option value=""></option>';
+		$html = '<select ' . $core .
+				($is_multi ? ' multiple="multiple" ' : '') .
+				($is_combo ? ' data-tags="true" ' : '') .
+			($setting['vocabulary_set'] ? ' data-context="vocabulary_set" data-att="' . $setting['vocabulary_set'] . '"' : '') .
+			($setting['get_values_from_tb'] ? ' data-context="get_values_from_tb" data-att="' . $setting['get_values_from_tb'] . '"' : '') .
+			($setting['id_from_tb'] ? ' data-context="get_values_from_tb" data-att="' . $setting['id_from_tb'] . '"' : '') .
+			'>' .
+
+			'<option value=""></option>';
 
 		if (is_array($setting['menu_values']))
 		{
 			foreach ($setting['menu_values'] as $k => $v)
 			{
-				$html .= '<option value="' . $k . '"';
-
-				if ($setting['data'] !== NULL && $setting['data'] == $k )
-				{
-					$html .= ' selected="selected" ';
-				}
-				$html .= '>' . $v . '</option>';
+				$html .= '<option value="' . $k . '" selected="selected" >' . $v . '</option>';
 			}
 		}
 
@@ -1070,48 +1041,20 @@ class Field implements iTemplate
 
 	protected function htmlComboSelect($core, $setting) {
 
-		$html = '<input type="text" class="combobox" style="width:95%;" ' .  $core . $setting['maxlength'] . ' value="' . $setting['data'] . '"/>';
+		return $this->htmlSelect($core, $setting, false, true);
 
-		$html .= '<datalist for="' . $setting['id'] . '">';
-
-		if (is_array($setting['menu_values']) && !empty($setting['menu_values']))
-		{
-			foreach ( $setting['menu_values'] as $v )
-			{
-				$html .= '<option>' . $v . '</option>';
-			}
-		}
-
-		$html .= '</datalist>';
-
-		return $html;
 	}
 
 	protected function htmlMultiSelect($core, $setting){
 
-		$html = '<input type="text" class="multiselect" style="width:95%" ' . $core . $setting['maxlength'] . ' value="' . $setting['html_data'] . '" />';
+		return $this->htmlSelect($core, $setting, true, true);
 
-		$html .= '<datalist for="' . $setting['id'] . '">';
-
-		if (is_array($setting['menu_values']) && !empty($setting['menu_values']))
-		{
-
-			foreach ( $setting['menu_values'] as $v )
-			{
-				$html .= '<option>' . $v . '</option>';
-			}
-		}
-
-		$html .= '</datalist>';
-
-		return $html;
-
-	}// fine htmlMultiSelect
+	} // fine htmlMultiSelect
 
 
 	protected function htmlBoolean($core, $setting) {
 
-		return '<select ' . $core . '>'
+		return '<select ' . $core . ' class="form-control">'
 			. '<option value="1"' . ( ($setting['data'] === 1) ? ' selected ': '' ) . '>' . tr::get('yes') . '</option>'
 			. '<option value="0"' . ( (!$setting['data'] === 0 OR $setting['data']==0) ? ' selected ': '' ) . '>' . tr::get('no') . '</option>'
 		. '</select>';
@@ -1125,7 +1068,7 @@ class Field implements iTemplate
 	 */
 	protected function htmlSlider($core, $setting){
 
-		return '<input type="text" class="slider" style="width:95%" ' . $core . ' value="' . $setting['html_data'] . '"'
+		return '<input type="text" class="slider form-control" ' . $core . ' value="' . $setting['data'] . '"'
 			.  ($setting['min'] ? 'min="' . $setting['min']. '"' : '')
 			.  ($setting['max'] ? 'max="' . $setting['max']. '"' : '')
 			. ' />';

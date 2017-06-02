@@ -5,12 +5,12 @@
  #}
 
 <form id="form{{ uid }}" class="form-horizontal" action="javascript:void(0);">
-	
+
 	<div class="row">
 		<div class="col-sm-5">
 			<fieldset>
 				<legend>General data</legend>
-				
+
 				<!-- NAME -->
 				<div class="form-group">
 					<label class="col-sm-3 control-label">Name *</label>
@@ -18,7 +18,7 @@
 						<input type="text" name="name" value="{{ data.name }}">
 					</div>
 				</div>
-				
+
 				<!-- LABEL -->
 				<div class="form-group">
 					<label class="col-sm-3 control-label">Label *</label>
@@ -26,7 +26,7 @@
 						<input type="text" name="label" value="{{ data.label }}">
 					</div>
 				</div>
-				
+
 				<!-- IS PLUGIN -->
 				<div class="form-group">
 					<label class="col-sm-3 control-label">Is plugin?</label>
@@ -37,7 +37,7 @@
 						</select>
 					</div>
 				</div>
-				
+
 				<!-- ORDER -->
 				<div class="form-group">
 					<label class="col-sm-3 control-label">Order *</label>
@@ -50,7 +50,7 @@
 						</select>
 					</div>
 				</div>
-				
+
 				<!-- ID FIELD -->
 				<div class="form-group">
 					<label class="col-sm-3 control-label">ID field *</label>
@@ -63,7 +63,7 @@
 						</select>
 					</div>
 				</div>
-				
+
 				<!-- EDIT TEMPLATE -->
 				<div class="form-group">
 					<label class="col-sm-3 control-label">Edit template</label>
@@ -76,7 +76,7 @@
 						</select>
 					</div>
 				</div>
-				
+
 				<!-- READ TEMPLATE -->
 				<div class="form-group">
 					<label class="col-sm-3 control-label">Read template</label>
@@ -89,7 +89,7 @@
 						</select>
 					</div>
 				</div>
-				
+
 				<!-- RS -->
 				<div class="form-group">
 					<label class="col-sm-3 control-label">RS</label>
@@ -102,7 +102,7 @@
 						</select>
 					</div>
 				</div>
-				
+
 				<!-- PREVIEW -->
 				<div class="form-group">
 					<label class="col-sm-3 control-label">Preview</label>
@@ -118,13 +118,13 @@
 						<button type="button" class="btn btn-default clone-action" data-baseName="aaa">+</button>
 					</div>
 				</div>
-				
+
 				<!-- PLUGINS -->
 				<div class="form-group">
 					<label class="col-sm-3 control-label">Plugins</label>
 					<div class="col-sm-7">
 						{% for plugin in data.plugin %}
-							<select name="plugin[]"{% if loop.index0 == 0 %} class="cloneable"{% endif %}>
+							<select name="plugin[]"{% if loop.first %} class="cloneable"{% endif %}>
 								<option></option>
 								{% for id, plg in available_plugins %}
 									<option value="{{ id }}"{% if id == plugin %} selected="selected" {% endif %}>{{ plg }}</option>
@@ -134,12 +134,24 @@
 						<button type="button" class="btn btn-default clone-action"  data-baseName="aaa">+</button>
 					</div>
 				</div>
-			</fieldset>	
+
+				<!-- BACKLINKS -->
+				<div class="form-group">
+					<label class="col-sm-3 control-label">Backlinks</label>
+					<div class="col-sm-7">
+						{% for backlink in data.backlinks %}
+							<input type="text" name="backlinks[]"{% if loop.first %} class="cloneable"{% endif %} value="{{ backlink }}">
+							<span id="helpBlock" class="help-block">Destination full table name : plugin full table name : plugin field name</span>
+						{% endfor %}
+						<button type="button" class="btn btn-default clone-action"  data-baseName="aaa">+</button>
+					</div>
+				</div>
+
+			</fieldset>
 		</div>
-			
-			
+
+
 		<div class="col-sm-7">
-			
 			<!-- LINKS -->
 			<fieldset>
 				<legend>Links</legend>
@@ -156,7 +168,7 @@
 										{% endfor %}
 									</select>
 								</div>
-								
+
 								<div class="col-sm-8">
 									{% for fld_arr in link_arr.fld %}
 										<div class="row cloneable">
@@ -177,19 +189,19 @@
 										<button type="button" class="btn btn-default clone-action"  data-baseName="bbb">+</button>
 									{% endfor %}
 								</div>
-								
+
 							</div>
 						</fieldset>
 					{% endfor %}
 					<button type="button" class="btn btn-default clone-action"  data-baseName="aaa">+</button>
-				
+
 			</fieldset>
-			
-			
+
+
 			<!-- GEOFACE -->
 			<fieldset>
 				<legend>Geoface</legend>
-				
+
 				<div class="row">
 					<div class="col-sm-6">
 						<label>Map EPSG</label>
@@ -200,7 +212,7 @@
 							{% endfor %}
 						</select>
 					</div>
-					
+
 					<div class="col-sm-6">
 						<label>Exclude web basemaps</label>
 						{% for excl in data.geoface.layers.excludeWeb %}
@@ -208,14 +220,14 @@
 								<option></option>
 								<option value="google"{% if data.geoface.excludeWeb == 'google' %} selected="selected" {% endif %}>Google</option>
 								<option value="osm"{% if data.geoface.excludeWeb == 'osm' %} selected="selected" {% endif %}>Open Street Map</option>
-								
+
 							</select>
 						{% endfor %}
 						<button type="button" class="btn btn-default clone-action" data-baseName="aaa">+</button>
 					</div>
 				</div>
-					
-				
+
+
 				<label>Locally provided layers</label>
 				{% for layer in data.geoface.layers.local %}
 					<fieldset{% if loop.index0 == 0 %} class="cloneable"{% endif %} style="margin:30px 0;">
@@ -223,7 +235,7 @@
 							<div class="col-sm-6 col-sm-offset-1">
 								<label>Name</label>
 								<input name="geoface[layers][local][aaa{{ loop.index0 }}][name]" value="{{ layer.name }}" />
-								
+
 								<label>ID</label>
 								<select name="geoface[layers][local][aaa{{ loop.index0 }}][id]">
 									<option></option>
@@ -231,7 +243,7 @@
 										<option value="{{ id }}"{% if id == layer.id %} selected="selected" {% endif %}>{{ id }}</option>
 									{% endfor %}
 								</select>
-								
+
 								<label>EPSG</label>
 								<select name="geoface[layers][local][aaa{{ loop.index0 }}][epsg]">
 									<option></option>
@@ -239,24 +251,24 @@
 										<option value="{{ id }}"{% if id == layer.epsg %} selected="selected" {% endif %}>{{ label }}</option>
 									{% endfor %}
 								</select>
-								
+
 								<label>pointRadius</label>
 								<input name="geoface[layers][local][aaa{{ loop.index0 }}][style][pointRadius]" value="{{ layer.style.pointRadius }}" />
-								
+
 								<label>fillColor</label>
 								<input name="geoface[layers][local][aaa{{ loop.index0 }}][style][fillColor]" value="{{ layer.style.fillColor }}" />
-								
+
 								<label>strokeColor</label>
 								<input name="geoface[layers][local][aaa{{ loop.index0 }}][style][strokeColor]" value="{{ layer.style.strokeColor }}" />
-								
+
 								<label>label</label>
 								<input name="geoface[layers][local][aaa{{ loop.index0 }}][style][label]" value="{{ layer.style.label }}" />
-								
-								
+
+
 							</div>
-							
+
 							<div class="col-sm-5">
-							
+
 								<label>labelAlign</label>
 								<select name="geoface[layers][local][aaa{{ loop.index0 }}][style][labelAlign]">
 									<option></option>
@@ -265,48 +277,48 @@
 									<option{% if layer.style.labelAlign == 'rb' %} selected="selected" {% endif %}>rb</option>
 									<option{% if layer.style.labelAlign == 'rt' %} selected="selected" {% endif %}>rt</option>
 								</select>
-								
-								
+
+
 								<label>labelXOffset</label>
 								<input name="geoface[layers][local][aaa{{ loop.index0 }}][style][labelXOffset]" value="{{ layer.style.labelXOffset }}" />
-								
+
 								<label>fontSize</label>
 								<input name="geoface[layers][local][aaa{{ loop.index0 }}][style][fontSize]" value="{{ layer.style.fontSize }}" />
-								
+
 								<label>fontFamily</label>
 								<input name="geoface[layers][local][aaa{{ loop.index0 }}][style][fontFamily]" value="{{ layer.style.fontFamily }}" />
-								
+
 								<label>fontColor</label>
 								<input name="geoface[layers][local][aaa{{ loop.index0 }}][style][fontColor]" value="{{ layer.style.fontColor }}" />
-								
+
 								<label>labelOutlineColor</label>
 								<input name="geoface[layers][local][aaa{{ loop.index0 }}][style][labelOutlineColor]" value="{{ layer.style.labelOutlineColor }}" />
-								
+
 								<label>labelOutlineWidth</label>
 								<input name="geoface[layers][local][aaa{{ loop.index0 }}][style][labelOutlineWidth]" value="{{ layer.style.labelOutlineWidth }}" />
-								
+
 							</div>
 						</div>
 					</fieldset>
 				{% endfor %}
 				<button type="button" class="btn btn-default clone-action" data-baseName="aaa">+</button>
-				
-				
+
+
 				</fieldset>
 			</div>
 		</div>
-		
-	
+
+
 	<button type="submit" class="btn btn-success"><i class="glyphicon glyphicon-floppy-disk"></i> {{ tr.get('save') }}</button>
 </form>
 
-	 
+
 <script>
-	
+
 	$('#form{{ uid }} button.clone-action').on('click', function(){
-		
+
 		var baseName = $(this).data('basename')
-		
+
 		if ($(this).prev('div.where').length < 1){
 			var where = $('<div />').addClass('where').insertBefore($(this));
 		} else {
@@ -319,13 +331,12 @@
 			cloneEvents: true
 		});
 	});
-	
+
 	$('#form{{uid}} button.toggleFieldset').on('click', function(){
 		$(this).next('fieldset').toggle();
 	});
-	
+
 	$('#form{{ uid }}').on('submit', function(){
 		tbs_editor.saveData($(this), '{{ tb }}');
 	});
-</script>	 
-	
+</script>

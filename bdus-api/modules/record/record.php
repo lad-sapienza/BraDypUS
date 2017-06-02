@@ -15,7 +15,7 @@ class record_ctrl extends Controller
 		{
 			if (!$this->request['id'])
 			{
-				$this->request['id'] = array(false);
+				$this->request['id'] = [false];
 			}
 			else if (!is_array($this->request['id']))
 			{

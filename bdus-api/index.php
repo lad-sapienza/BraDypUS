@@ -68,7 +68,7 @@ try
     'api.js',
     'layout.js',
     'formControls.js',
-    'select2.js',
+    'select2.full.js',
     'enhanceForm.js',
     'jquery.checklabel.js',
     'jquery.printElement.js',
@@ -81,7 +81,7 @@ try
     'bootstrap-slider.js'
 
   ), $_GET );
-  ?>
+	?>
   <script>
     $(document).ready(function(){
       layout.init();

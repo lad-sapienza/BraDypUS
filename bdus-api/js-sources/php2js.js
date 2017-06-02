@@ -59,7 +59,7 @@ function sprintf () {
 
     // formatString()
     var formatString = function (value, leftJustify, minWidth, precision, zeroPad, customPadChar) {
-        if (precision != null) {
+        if (precision !== null) {
             value = value.slice(0, precision);
         }
         return justify(value, '', leftJustify, minWidth, zeroPad, customPadChar);

@@ -34,17 +34,67 @@ var enhance = {
 		return data;
 	},
 
+	getAjaxData: function(el){
+		var datalist = $('datalist[for="' + el.attr('id') + '"]').first(),
+			context = el.data('context'),
+			att = el.data('att'),
+			tags = el.data('tags');
+
+		// Return empty object if no data attribute are found
+		if(typeof context === 'undefined' || typeof att === 'undefined'){
+			return {};
+		}
+
+		return {
+			debug: true,
+			tags: (typeof tags !== 'undefined'),
+			createTag: function (params) {
+		    return {
+		      id: params.term,
+		      val: params.term,
+		      newOption: true
+		    }
+		  },
+			ajax: {
+				url: 'controller.php?obj=menuValues_ctrl&method=getValuesUrl&context=' + context + '&att=' + att,
+				dataType: 'json',
+		    delay: 250,
+				tokenSeparators: [';'],
+				data: function (p) {
+					return {
+						q: p.term,
+						p: p.page
+					};
+				},
+				processResults: function(data, p){
+					p.page = p.page || 1;
+					return {
+						results: data.data,
+						pagination: {
+							more: (p.page * 30) < data.tot
+						}
+					};
+				},
+				cache: true
+			},
+
+			escapeMarkup:				function (markup) { return markup; },
+			templateResult:			function (a) { return a.val; },
+			templateSelection:	function (a) { return a.hasOwnProperty('val') ? a.val : a.text; },
+			minimumInputLength:	0
+		};
+	},
+
 	multiselect: function(el, destroy)
 	{
 		if (destroy){
 			$(el).select2('destroy');
 		} else {
-			$(el).select2({
-				tags: enhance.getData($(el)),
+			$(el).select2($.extend({}, {
+				tags: enhance.getData($(el), true),
 				separator: ';',
-				tokenSeparators: [';'],
-				width: '100%'
-			}).on('change', function(){
+				tokenSeparators: [';']
+			}, enhance.getAjaxData($(el)))).on('change', function(){
 				$(this).attr('changed', 'auto');
 			});
 		}
@@ -54,17 +104,11 @@ var enhance = {
 		if(destroy){
 			$(el).select2('destroy');
 		} else {
-			$(el).select2({
-				data: enhance.getData($(el)),
-				width: '100%',
-				createSearchChoice: function(term){
-					return {id:term, text:term};
-				},
-				initSelection:function(el, callback){
-					var value = $(el).val();
-					callback({id: value, text:value});
-				}
-			}).on('change', function(){
+			$(el).select2(
+				$.extend({}, {
+					data: enhance.getData($(el), true)
+				}, enhance.getAjaxData($(el)))
+			).on('change', function(){
 				$(this).attr('changed', 'auto');
 			});
 		}
@@ -75,9 +119,9 @@ var enhance = {
 		if(destroy){
 			$(el).select2('destroy');
 		} else {
-			$(el).select2({
-				width: '100%'
-			}).on('change', function(){
+			$(el).select2(
+				enhance.getAjaxData($(el))
+			).on('change', function(){
 				$(this).attr('changed', 'auto');
 			});
 		}

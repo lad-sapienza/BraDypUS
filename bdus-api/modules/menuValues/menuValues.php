@@ -76,7 +76,7 @@ class menuValues_ctrl extends Controller
       case 'get_values_from_tb':
         list($tb, $fld) = utils::csv_explode ($att, ':');
         $query->table($tb)
-          ->fields('id')
+          ->fields($fld . ' as id')
           ->fields($fld . ' as val')
           ->limit(self::$res_x_page, $offset)
           ->order($fld);
@@ -96,7 +96,7 @@ class menuValues_ctrl extends Controller
         $id_field = cfg::tbEl($att, 'id_field');
 
         $query->table($att)
-          ->fields($id_field . ' as id')
+          ->fields('id  as id')
           ->fields($id_field . ' as val')
           ->limit(self::$res_x_page, $offset)
           ->order($id_field);

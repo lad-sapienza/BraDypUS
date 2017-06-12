@@ -15,12 +15,28 @@ class search_ctrl extends Controller
 	 */
 	public function getUsedValues()
 	{
-		$q = "SELECT `{$this->request['fld']}` FROM `{$this->request['tb']}` WHERE 1 GROUP BY `{$this->request['fld']}`";
+		$tb = $this->request['tb'];
+		$fld = $this->request['fld'];
+
+		// check if query field ia a id_from_tb field
+		$second_table = cfg::fldEl($tb, $fld, 'id_from_tb');
+
+		if ($second_table) {
+
+			$second_field = cfg::tbEl($second_table, 'id_field');
+			$q = "SELECT `{$second_field}` as {$fld} FROM {$second_table} WHERE 1 GROUP BY `{$second_field}`";
+
+		} else {
+
+			$q = "SELECT `{$fld}` FROM `{$tb}` WHERE 1 GROUP BY `{$fld}`";
+		}
+
+
 		$db = new DB();
 		$res = $db->query($q);
 		foreach ($res as $r)
 		{
-			$arr[] = $r[$this->request['fld']];
+			$arr[] = $r[$fld];
 		}
 		echo json_encode($arr);
 	}

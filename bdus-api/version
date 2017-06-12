@@ -1,3 +1,4 @@
+3.5.2[] = "New feature: advanced query ui supports auto-population for fields id_from_tb"
 3.5.2[] = "New feature: advance query works now also for fields populated by id form other tables"
 3.5.2[] = "Fields marked as id_from_tb show now correct values instead of ids in read/edit mode"
 3.5.2[] = "All select input have a blank option as first value"

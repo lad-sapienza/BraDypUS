@@ -9,27 +9,27 @@
 		<input type="checkbox" name="adv[aa][(]" />
 		<label>(</label>
 	</span>
-	
+
 	<div class="form-group" style="width:300px;">
-		<select class="fld" name="adv[aa][fld]" onchange="search.getValues($(this).parents('fieldset'), 'destroy')">
+		<select class="fld" name="adv[aa][fld]" onchange="/*search.getValues($(this).parents('fieldset'), 'destroy')*/">
 			{% autoescape false %}{{ fields }}{% endautoescape %}
 		</select>
 	</div>
-	
+
 	<div class="form-group" style="width:200px;">
 		<select class="operator" name="adv[aa][operator]">{% autoescape false %}{{ operators }}{% endautoescape %}</select>
 	</div>
-	
+
 	<div class="form-group" style="width:300px;">
 		<input class="value combobox" type="text" name="adv[aa][value]" />
 	</div>
-	
+
 	<div class="form-group">
 		<button type="button" class="btn btn-default btn-sm get-values" onclick="search.getValues($(this).parents('fieldset'))">
 			<i class="glyphicon glyphicon glyphicon-fire"></i>
 		</button>
 	</div>
-	
+
 	<span class="checklabel form-group">
 		<input type="checkbox" name="adv[aa][)]" />
 		<label>)</label>

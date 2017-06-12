@@ -330,41 +330,66 @@ class Query
 			$fld_arr = utils::csv_explode($row['fld'], ':');
 
 			// field name
-			//$where .= '`' . $fld_arr[1] . '`';
 			$tb = $fld_arr[0];
+			$fld = $fld_arr[1];
 
-			$format = ($tb == $this->tb ) ? "%s" : " `id` IN (SELECT `id_link` FROM `{$tb}` WHERE `table_link` = '{$this->tb}' AND %s)";
+
+			// case 1: tb and this->tb are the same: checking native fields of current table
+			if ($tb === $this->tb) {
+
+				$format = "%s";
+
+			// case 2: queried table is not current table, it s a plugin table
+			} else {
+				// case 2.1: queried field id populated by id_from_tb
+				$third_table = cfg::fldEl($tb, $fld, 'id_from_tb');
+
+				if ($third_table) {
+					$format = " `id` IN (SELECT `id_link` FROM `{$tb}` " .
+						" WHERE " .
+							"`table_link` = '{$this->tb}' " .
+							" AND `{$fld}` IN ( " .
+								"SELECT `id` FROM `{$third_table}` WHERE %s".
+								") " .
+							") ";
+					$fld = cfg::tbEl($third_table, 'id_field');
+
+				// case 2.2: queried field is a normal field
+				} else {
+					$format = " `id` IN (SELECT `id_link` FROM `{$tb}` WHERE `table_link` = '{$this->tb}' AND %s)";
+				}
+			}
 
 			// operator
 			switch($row['operator'])
 			{
 				case 'LIKE':
-					$where .= sprintf($format, "`{$fld_arr[1]}` LIKE '%{$row['value']}%'");
-					//"`{$fld_arr[1]}` LIKE '%{$row['value']}%'";
+					$where .= sprintf($format, "`{$fld}` LIKE '%{$row['value']}%'");
+					//"`{$fld}` LIKE '%{$row['value']}%'";
 					break;
 
 				case 'NOT LIKE':
-					$where .= sprintf($format, '`' . $fld_arr[1] . "` NOT LIKE '%". $row['value'] ."%'");
+					$where .= sprintf($format, '`' . $fld . "` NOT LIKE '%". $row['value'] ."%'");
 					break;
 
 				case 'starts_with':
-					$where .= sprintf($format, '`' . $fld_arr[1] . "` LIKE '". $row['value'] ."%'");
+					$where .= sprintf($format, '`' . $fld . "` LIKE '". $row['value'] ."%'");
 					break;
 
 				case 'ends_with':
-					$where .= sprintf($format, '`' . $fld_arr[1] . "` LIKE '%". $row['value'] ."'");
+					$where .= sprintf($format, '`' . $fld . "` LIKE '%". $row['value'] ."'");
 					break;
 
 				case 'is_empty':
-					$where .= sprintf($format, '(`' . $fld_arr[1] . "` = '' OR `" . $fld_arr[1] . "` IS NULL) ");
+					$where .= sprintf($format, '(`' . $fld . "` = '' OR `" . $fld . "` IS NULL) ");
 					break;
 
 				case 'is_not_empty':
-					$where .= sprintf($format, '(`' . $fld_arr[1] . "` != '' AND `" . $fld_arr[1] . "` IS NOT NULL) ");
+					$where .= sprintf($format, '(`' . $fld . "` != '' AND `" . $fld . "` IS NOT NULL) ");
 					break;
 
 				default:
-					$where .= sprintf($format, '`' . $fld_arr[1] . '`' . $row['operator'] . "'" . $row['value'] . "'");
+					$where .= sprintf($format, '`' . $fld . '`' . $row['operator'] . "'" . $row['value'] . "'");
 					break;
 			}
 

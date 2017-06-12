@@ -4,21 +4,31 @@
  * @license			See file LICENSE distributed with this code
  #}
 
-<div style="width:200px; margin: 50px auto">
-	
-	<label>{{ tr.get('voc') }}</label>
-	<input type="text" {% if voc %} readonly="true" value="{{ voc }}" {% endif %} id="voc" />
-	{% if all_vocs %}
-		<datalist for="voc">
-		{% for voc in all_vocs %}
-			<option>{{ voc }}</option>
-		{% endfor %}
-		</datalist>
-	{% endif %}
-	
-	<hr />
-	<label>{{ tr.get('def') }}</label>
-	<input type="text" id="def" />
+<div class="row">
+
+	<div class="col-sm-6 col-sm-offset-3">
+
+		<div class="form-group">
+
+			<label>{{ tr.get('voc') }}</label><br>
+
+			{% if voc %}
+				<input type="text" readonly="true" value="{{ voc }}" id="voc" class="form-control">
+			{% else %}
+			<select id="voc" class="form-control"  style="width:100%;">
+				{% for voc in all_vocs %}
+					<option>{{ voc }}</option>
+				{% endfor %}
+			</select>
+			{% endif %}
+		</div>
+
+		<div class="form-group">
+			<label>{{ tr.get('def') }}</label>
+			<input type="text" id="def" class="form-control">
+		</div>
+	</div>
+
 </div>
 
 <script>

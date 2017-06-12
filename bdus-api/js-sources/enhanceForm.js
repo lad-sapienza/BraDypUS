@@ -46,7 +46,6 @@ var enhance = {
 		}
 
 		return {
-			debug: true,
 			tags: (typeof tags !== 'undefined'),
 			createTag: function (params) {
 		    return {
@@ -67,6 +66,7 @@ var enhance = {
 					};
 				},
 				processResults: function(data, p){
+					data.data.unshift({"id": '', "val": ''}),
 					p.page = p.page || 1;
 					return {
 						results: data.data,
@@ -82,7 +82,7 @@ var enhance = {
 			templateResult:			function (a) { return a.val; },
 			templateSelection:	function (a) { return a.hasOwnProperty('val') ? a.val : a.text; },
 			minimumInputLength:	0
-		};
+		}
 	},
 
 	multiselect: function(el, destroy)
@@ -106,6 +106,7 @@ var enhance = {
 		} else {
 			$(el).select2(
 				$.extend({}, {
+					tags: true,
 					data: enhance.getData($(el), true)
 				}, enhance.getAjaxData($(el)))
 			).on('change', function(){

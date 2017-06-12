@@ -1,3 +1,5 @@
+3.5.2[] = "All select input have a blank option as first value"
+3.5.2[] = "Bug fixed with combobox not accepting user custom values"
 3.5.1[] = "Bug fixed with menuValues not setting the ids correctly"
 3.5.0[] = "New backlinks functionality, for records referred by 1-n plugins"
 3.5.0[] = "All dropdown menus are handled via AJAX"

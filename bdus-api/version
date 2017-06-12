@@ -1,3 +1,4 @@
+3.5.2[] = "Fields marked as id_from_tb show now correct values instead of ids in read/edit mode"
 3.5.2[] = "All select input have a blank option as first value"
 3.5.2[] = "Bug fixed with combobox not accepting user custom values"
 3.5.1[] = "Bug fixed with menuValues not setting the ids correctly"

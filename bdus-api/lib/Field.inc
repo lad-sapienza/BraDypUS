@@ -707,7 +707,18 @@ class Field implements iTemplate
           }
         }
       }
-    }
+			
+    } elseif ($setting['id_from_tb'] && $setting['data']) {
+
+			$sql = "SELECT `id`, `" . cfg::tbEl($setting['id_from_tb'], 'id_field') . "` as val " .
+				"FROM `" . $setting['id_from_tb'] . "` " .
+				"WHERE `id` = ?";
+			$res = $this->db->query($sql, [$setting['data']]);
+
+			if($res[0]){
+				$setting['menu_values'][$res[0]['id']] = $res[0]['val'];
+			}
+		}
     else
     {
       if ($setting['data'] && is_array($setting['menu_values']) && !in_array($setting['data'], $setting['menu_values']))
@@ -1021,10 +1032,10 @@ class Field implements iTemplate
 				($is_combo ? ' data-tags="true" ' : '') .
 			($setting['vocabulary_set'] ? ' data-context="vocabulary_set" data-att="' . $setting['vocabulary_set'] . '"' : '') .
 			($setting['get_values_from_tb'] ? ' data-context="get_values_from_tb" data-att="' . $setting['get_values_from_tb'] . '"' : '') .
-			($setting['id_from_tb'] ? ' data-context="get_values_from_tb" data-att="' . $setting['id_from_tb'] . '"' : '') .
+			($setting['id_from_tb'] ? ' data-context="id_from_tb" data-att="' . $setting['id_from_tb'] . '"' : '') .
 			'>' .
 
-			'<option value=""></option>';
+			'<option></option>';
 
 		if (is_array($setting['menu_values']))
 		{

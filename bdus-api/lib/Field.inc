@@ -707,7 +707,7 @@ class Field implements iTemplate
           }
         }
       }
-			
+
     } elseif ($setting['id_from_tb'] && $setting['data']) {
 
 			$sql = "SELECT `id`, `" . cfg::tbEl($setting['id_from_tb'], 'id_field') . "` as val " .
@@ -1033,7 +1033,7 @@ class Field implements iTemplate
 			($setting['vocabulary_set'] ? ' data-context="vocabulary_set" data-att="' . $setting['vocabulary_set'] . '"' : '') .
 			($setting['get_values_from_tb'] ? ' data-context="get_values_from_tb" data-att="' . $setting['get_values_from_tb'] . '"' : '') .
 			($setting['id_from_tb'] ? ' data-context="id_from_tb" data-att="' . $setting['id_from_tb'] . '"' : '') .
-			'>' .
+			' class="form-control">' .
 
 			'<option></option>';
 

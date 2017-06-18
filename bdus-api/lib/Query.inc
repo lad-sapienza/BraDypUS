@@ -44,7 +44,7 @@
 
 class Query
 {
-	private $tb, $fields, $where, $order, $limit, $db;
+	private $tb, $join, $fields, $where, $order, $limit, $db;
 
 	/**
 	 *
@@ -158,7 +158,13 @@ class Query
 		{
 			throw new myException(tr::sget('parameter_missing', array('where')));
 		}
-		return "SELECT " . $this->formatFields() . " FROM `" . $this->tb . "` WHERE " . $this->getWhere() . $this->getOrder() . $this->getLimit();
+		return "SELECT " .
+			$this->formatFields() .
+			" FROM `" . $this->tb . "` " .
+			$this->join .
+			" WHERE " . $this->getWhere() .
+			$this->getOrder() .
+			$this->getLimit();
 	}
 
 
@@ -262,6 +268,7 @@ class Query
 				break;
 
 			case 'sqlExpert':
+				$this->join = $this->makeSafeStatement(urldecode($request['join']));
 				return '(' . $this->makeSafeStatement( urldecode ($request['querytext']) ) . ')';
 				break;
 
@@ -274,7 +281,12 @@ class Query
 				break;
 
 			case 'encoded':
-				return preg_replace('/^SELECT(.+?)WHERE/i', '', base64_decode($request['q_encoded']));
+				// Decode query parameter
+				$encoded = base64_decode($request['q_encoded']);
+				// Remove new lines
+				// https://stackoverflow.com/a/3760830/586449
+				$encoded = trim(preg_replace('/\s+/', ' ', $encoded));
+				return preg_replace('/^SELECT(.+?)WHERE/i', '', $encoded);
 				break;
 
 			default:
@@ -455,8 +467,12 @@ class Query
 		{
 			throw new myException(tr::sget('parameter_missing', 'fields'));
 		}
+		$ret = [];
+		foreach (array_keys($this->fields) as $f) {
+			$ret[] = '`' . $this->tb . '`.`' . $f . '`';
+		}
 
-		return '`' . implode('`, `', array_keys($this->fields) ). '` ';
+		return implode(', ', $ret);
 	}
 
 	/**

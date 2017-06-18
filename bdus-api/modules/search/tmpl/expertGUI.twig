@@ -5,12 +5,12 @@
  #}
 
 <div id="{{ uid }}">
-	
+
 	<form action="javascript:void(0)">
-	
+
 		<div class="row" style="padding-top:20px;">
-		
-			<div class="col-sm-3">
+
+			<div class="col-sm-2">
 				<strong>{{ tr.get('available_fields') }}</strong>
 				<hr />
 				<div style="max-height:400px; overflow: auto;">
@@ -21,14 +21,24 @@
 						</ul>
 					</div>
 			</div>
-			
-			<div class="col-sm-4">
+
+			<div class="col-sm-5">
 				<strong>{{ tr.get('query') }}</strong>
 				<hr />
-				<pre>SELECT * FROM `{{ tb }}` WHERE </pre>
+				<pre>SELECT * FROM `{{ tb }}` </pre>
+
+				<div class="">
+					<textarea style="width:100%; font-family: Monaco,Menlo,Consolas,'Courier New',monospace;"
+							class="form-control"
+							placeholder="JOIN STATEMENT"
+							name="join"></textarea>
+
+				</div>
+
+				<pre>WHERE </pre>
 				<textarea style="width:100%; height:350px; font-family: Monaco,Menlo,Consolas,'Courier New',monospace;" name="querytext"></textarea>
 			</div>
-			
+
 			<div class="col-sm-3">
 				<strong>{{ tr.get('utilities') }}</strong>
 				<hr />
@@ -37,29 +47,30 @@
 				{% endfor %}
 			</div>
 		</div>
-		
-		
+
+
 	</form>
-	
+
 	<div>
 		<button class="btn btn-success send">{{ tr.get('send') }}</button>
 		<button class="btn btn-info test">{{ tr.get('test_sql') }}</button>
 	</div>
-	
+
 </div>
 
 <script>
 	$('#{{ uid }} .insert').click(function(){
 		$(this).parents('form').find('textarea').insertAtCaret($(this).data('value'));
 	});
-	
+
 	$('#{{ uid }} button.send').on('click', function(){
 		 var form_data = $('#{{ uid }} form').serialize();
 		 api.showResults('{{ tb }}', 'type=sqlExpert', core.tr('sql_expert_search') + ' ({{ tb }})', form_data);
 	});
-	
+
 	$('#{{ uid }} button.test').on('click', function(){
 		var form_data = $('#{{ uid }} form').serialize();
+		console.log(form_data);
 		search.test('sqlExpert', '{{ tb }}', form_data);
 	});
 </script>

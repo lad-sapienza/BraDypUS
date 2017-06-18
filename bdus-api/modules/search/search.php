@@ -71,8 +71,7 @@ class search_ctrl extends Controller
 				'tr'		=> new tr(),
 				'tb'		=> $this->request['tb'],
 				'fields'	=> cfg::fldEl($this->request['tb'], 'all', 'name'),
-				'operators'	=> array ('=', '!=', 'LIKE', '>', '<', '>=', '<=', 'IS NULL', 'IS NOT NULL', '(', ')', '%', "'", 'AND', 'OR', 'NOT'),
-				'uid'		=> uniqid('uid')
+				'operators'	=> array ('=', '!=', 'LIKE', '>', '<', '>=', '<=', 'IS NULL', 'IS NOT NULL', '(', ')', '%', "'", 'AND', 'OR', 'NOT')
 		));
 	}
 

@@ -354,7 +354,7 @@ class record_ctrl extends Controller
 
 		$response['aaData'] = $qObj->getResults();
 
-		foreach($response['aaData'] as $id => &$row){
+		foreach($response['aaData'] as $id => &$row) {
 			$response['aaData'][$id]['DT_RowId'] = $row['id'];
 		}
 

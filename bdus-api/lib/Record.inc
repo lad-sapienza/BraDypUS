@@ -506,7 +506,7 @@ class Record implements iRecord
 	{
 		$this->getCore();
 
-		if ($load AND !$this->loaded['allPlugins'])
+		if ($load || !$this->loaded['allPlugins'])
 		{
 			$this->loadAllPlugins();
 		}

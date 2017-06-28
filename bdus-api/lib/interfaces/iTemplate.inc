@@ -13,7 +13,7 @@ interface iTemplate
 	 * @param unknown $nr
 	 */
 	public function cell($nr);
-	
+
 	/**
 	 * Retuns sums of fields from other tables using filter
 	 * @param string $tb	other table name, without prefix
@@ -22,34 +22,34 @@ interface iTemplate
 	 * @example <sqlSum table="test"  field="fldTest" where="campoAltro1=thisTableField1; campoAltro2=thisTableField2" />
 	 */
 	public function sqlSum($tb, $fld, $filter = false);
-	
+
 	/**
 	 * Returns sum of values of the given fields for the current record in the current table
 	 * @param string $fields comma separated list of fields to sum up.
 	 * @example <simpleSum fields="field1, field2, etc" />
 	 */
 	public function simpleSum($fields);
-	
+
 	/**
 	 * Shows record permalink
 	 */
 	public function permalink();
-	
+
 	/**
 	 * Shows fieldset with links to record, both system and user
 	 */
 	public function links();
-	
+
 	/**
 	 * Shows list of available geodata + form to enter some more (WKT)
 	 */
 	public function geodata();
-	
+
 	/**
 	 * Shows Stratigraphic relations module
 	 */
 	public function rs();
-	
+
 	/**
 	 *
 	 * Writes out single field
@@ -60,11 +60,11 @@ interface iTemplate
 	 * @example template <fld name="id_sito" style="width:200" />
 	 * @example template <fld name="id_sito" />
 	 */
-	
+
 	public function fld($fieldname, $formatting = false);
-	
+
 	/**
-	 * 
+	 *
 	 * Writes out single field
 	 * @param string $fieldname		field name to show
 	 * @param string $formatting	formatting information
@@ -72,26 +72,35 @@ interface iTemplate
 	 * @example template {{ print.plg_fld('abbreviazione') }}
 	 */
 	public function plg_fld($fieldname, $formatting = false);
-	
+
+	/**
+	 *
+	 * Returns nude value of a field
+	 * @param string $fieldname		field name to show
+	 * @param boolean $plg	true if field is from a plugin
+	 */
+
+	public function value($fieldname, $plg = false);
+
 	/**
 	 *
 	 * Writes out all rows and all fields of $plg plugin
 	 * @param string $plg plugin name
 	 */
-	
+
 	public function plg($plg);
-		
+
 	/**
-	 * 
+	 *
 	 * Shows all fields of a given table
 	 */
 	public function showall();
-	
+
 	/**
-	 * 
+	 *
 	 * Returns html containing linked files info
-	 * @param mixed $max maximum no of files to show, default: 2. Any number can be used. 'all' will show up all available images. 
+	 * @param mixed $max maximum no of files to show, default: 2. Any number can be used. 'all' will show up all available images.
 	 */
 	public function image_thumbs($max = false);
-	
+
 }

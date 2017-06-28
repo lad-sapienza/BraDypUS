@@ -556,6 +556,13 @@ class Field implements iTemplate
 		return $html;
 	}
 
+	/**
+	 * (non-PHPdoc)
+	 * @see iTemplate::value()
+	 */
+	public function value($fld, $plg = false) {
+		return  $plg ? $this->record->getPlugin($this->current_plugin, $this->current_plugin_index, $fld) : $this->record->getCore($fld);
+	}
 
 	/**
 	 * set parameters for $fld, given the context ($type = core | plugin) and formating data (opt).

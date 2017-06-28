@@ -1,15 +1,14 @@
 /**
- * This files collects diferente jquery widges to enhance form elements, and a function to enhance a given form
- * Actually the following widgets are supported:
- * 	combobox
- * 	multiselect
- *
- * @author			Julian Bogdani <jbogdani@gmail.com>
- * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
- * @license			See file LICENSE distributed with this code
- * @since			23/oct/2011
+* This files collects diferente jquery widges to enhance form elements, and a function to enhance a given form
+* Actually the following widgets are supported:
+* 	combobox
+* 	multiselect
+*
+* @author			Julian Bogdani <jbogdani@gmail.com>
+* @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
+* @license			See file LICENSE distributed with this code
+* @since			23/oct/2011
  */
-
 
 
 /**
@@ -87,7 +86,7 @@ var enhance = {
 
 	multiselect: function(el, destroy)
 	{
-		if (destroy){
+		if ($(el).data('select2') && destroy){
 			$(el).select2('destroy');
 		} else {
 			$(el).select2($.extend({}, {
@@ -101,7 +100,7 @@ var enhance = {
 	},
 
 	combobox: function(el, destroy){
-		if(destroy){
+		if($(el).data('select2') && destroy){
 			$(el).select2('destroy');
 		} else {
 			$(el).select2(
@@ -117,7 +116,7 @@ var enhance = {
 	},
 
 	select: function(el, destroy){
-		if(destroy){
+		if($(el).data('select2') && destroy){
 			$(el).select2('destroy');
 		} else {
 			$(el).select2(
@@ -129,7 +128,7 @@ var enhance = {
 	},
 
 	slider: function(el, destroy){
-		if (destroy){
+		if ($(el).data('select2') && destroy){
 			$(el).slider('destroy');
 		} else {
 			var min = $(el).attr('min') ? parseInt($(el).attr('min')) : 0,
@@ -160,7 +159,7 @@ var enhance = {
 		}
 		else if ($(el).hasClass('date'))
 		{
-			if (destroy){
+			if ($(el).data('select2') && destroy){
 				$(el).datepicker('remove');
 			} else {
 				$(el).datepicker({ format: enhance.dateFormat });

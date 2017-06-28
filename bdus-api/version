@@ -1,4 +1,5 @@
-3.5.4[] = "New template function Fieled::value to get nude value of a field"
+3.5.6[] = "Bug fixed with advanced search (select2 inputs) interface"
+3.5.5[] = "New template function Fieled::value to get nude value of a field"
 3.5.4[] = "Bug fixes: Record::getAllPlugins was not loading plugins due to a comparison error"
 3.5.3[] = "Bug fixes: select inputs have now Bootstrap's class form-control"
 3.5.2[] = "New feature: advanced query ui supports auto-population for fields id_from_tb"

@@ -39,7 +39,7 @@ The available types are: **all**, **recent**, **fast**, **id_array**, **encoded*
   - Search for word **Figurine**: http://db.bradypus.net/api/ghazni/finds?verb=search&type=fast&string=Figurine
   - Search for word **Figurine** and get the second page: http://db.bradypus.net/api/ghazni/finds?verb=search&type=fast&string=Figurine&page=2
 - Get a list of records by listing their ids: http://db.bradypus.net/api/ghazni/finds?verb=search&type=id_array&id[]=1&id[]=2
-- Execute a custom defined SQL query on the server (all edit actions will be rejected), eg. get records with inventory number  bigger than 10 > SQL: ```inv_no` > 10`` > base64_encode'd: `YGludl9ub2A+MTA=` > Url encoded: `YGludl9ub2A%2BMTA%3D` > URl: http://db.bradypus.net/api/ghazni/finds?verb=search&type=encoded&q_encoded=YGludl9ub2A%2BMTA%3D
+- Execute a custom defined SQL query on the server (all edit actions will be rejected), eg. get records with inventory number  bigger than 10 > SQL: `` `inv_no` > 10 `` > base64_encode'd: `YGludl9ub2A+MTA=` > Url encoded: `YGludl9ub2A%2BMTA%3D` > URl: http://db.bradypus.net/api/ghazni/finds?verb=search&type=encoded&q_encoded=YGludl9ub2A%2BMTA%3D
 
 
 ## Response JSON data structure

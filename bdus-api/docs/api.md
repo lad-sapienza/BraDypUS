@@ -1,123 +1,94 @@
 # BraDypUS API
 
-BraDypUS has a JSON API that permits users to remotely query the database, extract data or get information about the database structure.
+BraDypUS has a JSON API that permits users to remotely query the database,
+extract data or get information about the database structure.
 
 The API endpoint is available at the `api/` relative URL, eg.:
 `http://db.bradypus.net/api/`.
 
 ### The API function must be activated in the main app configuration file in order for the API to work. The API should run as a specific user of the database
 
-Foreach API call an **application** and a **reference table**  and a set of **parameters** should be provided in the URL in the form: `http://{base-url}/api/{app-name}/{table-name}/parameters`, eg.: `http://db.bradypus.net/api/ghazni/finds/test`
+Foreach API call an **application** and a **reference table**  and a set of **parameters** should be provided in the URL in the form: `http://{base-url}/api/{app-name}/{table-name}?parameters`, eg.: `http://db.bradypus.net/api/ghazni/finds?parameters`
 
 ### Available parameters:
-- id
-
-- records_per_page (default: 30)
-- total_rows
-- page (default: 1)
-
-- type (all, recent, fast, sqlExpert, id_array)
-- limit
-- string
-- querytext
-- id
-  - encoded
-    - q_encoded
-  - advanced
-    - adv
+- `verb` (GET, string, required): the action the API should run.
+At present the following values are available: **read**: will return full structured data for a record,
+ and **search**: will return a search result. Each `verb` value requires one or more additional parameters.
+- `id` (GET, int, required for `verb` **read**): the database id of the record to be rendered.
+- `type` (GET, string, required for `verb` **search**): type of search to perform.
+The available types are: **all**, **recent**, **fast**, **id_array**, **encoded**.
+- `limit`(GET, int, optional for `type` **recent**, default: 20): number of total most recent records to return
+- `string` (GET, string, required for `type` **fast**): string to search in the database
+- `records_per_page` (GET, int, optional for `type` **search**, default: 30): maximum number of records per page
+- `page` (GET, int, optional for all values of `type`)
 
 
-## Search
-Several types of search are available, all controlled by `type` parameter
 
-### Get all records
-To retrieve all records `all` value should be used for `type` parameter, eg.:
-`http://db.bradypus.net/api/ghazni/finds/type=all`
+## Examples
 
-### Get recently added records
-To retrieve recently added (not edited) records `recent` value should be used for `type` parameter. Also the `limit` parameter, holding the number of records to retrieve, is required.
-
-`http://db.bradypus.net/api/ghazni/finds/type=recent&limit=10`
-
-### Get records by string
-To filter records by a string (search a string in all fields using SQL `LIKE` operator) `fast` value should be used for `type` parameter. Also the `string` parameter, holding the string to search, is required.
-
-`http://db.bradypus.net/api/ghazni/finds/type=fast&string=panel`
-
-### Get records by executing a SQL query
-To run a SQL query on the database the `sqlExpert` value should be used for `type` parameter. Also the `querytext` parameter, holding the SQL string to execute, is required.
-
-**Warning: string containing on of the following statements will be rejected: update, delete, truncate, ;, insert, insert, update, create, drop, file, index, alter, alter routine, create routine, execute!**
-
-**Only the value following the `WHERE` part of the query should be provided**
-
-`http://db.bradypus.net/api/ghazni/finds/type=sqlExpert&querytext=1`
-
-### Get records by a list of ids
-To get a list of record from a list of ids `id_array` value should be used for `type` parameter. Also the `id` parameter as an arra, is required.
-
-`http://db.bradypus.net/api/ghazni/finds/type=id_array&id[]=1&id[]=2`
-
-## Get full record by id
-To get full information for a record the **id** parameter should be used, eg:
-`http://db.bradypus.net/api/ghazni/finds/id=1` will return a JSON object containing all information about record `#1` in table `finds` of app `ghazni`.
+- Show record with id #1: http://db.bradypus.net/api/ghazni/finds?verb=read&id=1
+- Get all records from database:
+  - first page (no page parameter): http://db.bradypus.net/api/ghazni/finds?verb=search&type=all
+  - first page (with page parameter): http://db.bradypus.net/api/ghazni/finds?verb=search&type=all&page=1
+  - third page: http://db.bradypus.net/api/ghazni/finds?verb=search&type=all&page=3
+- Get most recently entered records:
+  - default number (20) of records: http://db.bradypus.net/api/ghazni/finds?verb=search&type=recent
+  - custom number (eg. 30) of records: http://db.bradypus.net/api/ghazni/finds?verb=search&type=recent&limit=30
+  - custom number (eg. 30) of records, page 2: http://db.bradypus.net/api/ghazni/finds?verb=search&type=recent&limit=30&page=2
+- Search a string in anywhere:
+  - Search for word **Figurine**: http://db.bradypus.net/api/ghazni/finds?verb=search&type=fast&string=Figurine
+  - Search for word **Figurine** and get the second page: http://db.bradypus.net/api/ghazni/finds?verb=search&type=fast&string=Figurine&page=2
+- Get a list of records by listing their ids: http://db.bradypus.net/api/ghazni/finds?verb=search&type=id_array&id[]=1&id[]=2
+- Execute a custom defined SQL query on the server (all edit actions will be rejected), eg. get records with inventory number  bigger than 10 > SQL: `inv_no`>10 > base64_encode'd: `YGludl9ub2A+MTA=` > Url encoded: `YGludl9ub2A%2BMTA%3D` > URl: http://db.bradypus.net/api/ghazni/finds?verb=search&type=encoded&q_encoded=YGludl9ub2A%2BMTA%3D
 
 
 ## Response JSON data structure
 
-### List of results structure
+### JSON structure of for `verb` **search**
+```
+javascript
+
+
+{
+    "head": { // head part of the document containig metadata
+        "query_arrived": "", // (string) Full SQL text of the built query
+        "query_encoded": "", // (string) base64_ecìncoded version of the executed query for further use
+        "total_rows": "", // (int) total number of records found
+        "page": "", // (int) current page number
+        "total_pages": "", // (int) Total number of pages found
+        "table": "", // (string) Full form of the queried table
+        "stripped_table": "", // (string) Cleaned form (no app name and prefix) of queried table
+        "no_records_shown": "", // (int) Number of records shown in the current page
+        "query_executed": "", // (string) Full SQL text of the executed query (with pagination limits and sorting)
+        "fields": {} // (object) associative object list of fields with field id as key and field label as value
+        }
+    },
+    "records": [ // array of objects records
+        {
+            "core": { }, // (object) associative object list with fieldname as key and field value as value
+            "coreLinks": [], // (array of objects) array with associative object list with coreLinks
+            "allPlugins": [], // (array of objects) array with associative object list with plugin data
+            "fullFiles": [], // (array of objects) array with associative object list with file data
+            "geodata": [], // (array of objects) array with associative object list with geo data
+            "userLinks": [] // (array of objects) array with associative object list with user defined links
+        },
+        {...}
+    ]
+}
+
+```
 
 ### Single record structure
-    {
-      "fields": {
-        // a json object with full list of fields: field name will be used as key and field label as value
+```
+javascript
 
-        "field_id": "field_label",
-        ...
-      },
-      {
-        "core": {
-          // a json object with full list/values of core table: field names will be used as key and cell values as value
-
-          "field_id": "field_value"
-        },
-
-        "coreLinks": [
-          // an array of JSON objects with automatic (system) links to other tables
-
-
-        ],
-
-        "fullFiles":[
-          // array with JSON object for each linked file
-          {
-            "id": "file_record_id",
-            "creator": "file_record_creator_id",
-            "ext": "file_extension",
-            "keywords": "file_keywords",
-            "description": "file_description",
-            "printable": "boolean: is file printable?",
-            "filename": "file_name",
-            "linkid": "id_of_link"
-          },
-          {
-            ...
-          }
-        ],
-        "geodata": [
-          // Array of geodata
-        ],
-        "userLinks": [
-          {
-            // Array of links to other tables manually added by users
-
-            "id": "link_record_id",
-            "tb": "linked_table_name",
-            "ref_id": "linked_record_id"
-          },
-          {
-            ...
-          },
-        ]
-      }
-    }
+{
+  "fields": {}, // (object) associative object list of fields with field id as key and field label as value
+  "core": { }, // (object) associative object list with fieldname as key and field value as value
+  "coreLinks": [], // (array of objects) array with associative object list with coreLinks
+  "allPlugins": [], // (array of objects) array with associative object list with plugin data
+  "fullFiles": [], // (array of objects) array with associative object list with file data
+  "geodata": [], // (array of objects) array with associative object list with geo data
+  "userLinks": [] // (array of objects) array with associative object list with user defined links
+}
+```

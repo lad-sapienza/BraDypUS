@@ -96,7 +96,7 @@ class api_ctrl extends Controller
 
 
 
-				$valid_types = ['all', 'recent', 'advanced', 'sqlExpert', 'fast', 'id_array', 'encoded'];
+				$valid_types = ['all', 'recent', /*'advanced', 'sqlExpert', */'fast', 'id_array', 'encoded'];
 
 				$request['type'] = $type;
 
@@ -108,20 +108,20 @@ class api_ctrl extends Controller
 						$request['limit'] = $this->get['limit'] ? $this->get['limit'] : 20;
 						break;
 
-					case 'advanced':
-						$request['adv'] = $this->post['adv'];
-						if (!$request['adv'] || !is_array($request['adv']) ) {
-							throw new Exception("Parameter adv (POST, array) is required for type advanced");
-						}
-						break;
+					// case 'advanced':
+					// 	$request['adv'] = $this->post['adv'];
+					// 	if (!$request['adv'] || !is_array($request['adv']) ) {
+					// 		throw new Exception("Parameter adv (POST, array) is required for type advanced");
+					// 	}
+					// 	break;
 
-					case 'sqlExpert':
-						$request['join'] = $this->get['join'];
-						$request['querytext'] = $this->get['querytext'];
-						if (!$request['querytext']) {
-							throw new Exception("Parameter querytext is required for type sqlExpert");
-						}
-						break;
+					// case 'sqlExpert':
+					// 	$request['join'] = $this->get['join'];
+					// 	$request['querytext'] = $this->get['querytext'];
+					// 	if (!$request['querytext']) {
+					// 		throw new Exception("Parameter querytext is required for type sqlExpert");
+					// 	}
+					// 	break;
 
 					case 'fast':
 						$request['string'] = $this->get['string'];

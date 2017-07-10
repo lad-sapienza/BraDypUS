@@ -160,8 +160,8 @@ class api_ctrl extends Controller
 			$header['total_rows'] = $this->get['total_rows'] ? $this->get['total_rows'] : (int) $query->getTotal();
 			$header['page'] = $this->get['page'] ? $this->get['page'] : 1;
 			$header['total_pages'] = ceil($header['total_rows']/$records_per_page);
-			$header['table'] = $tb;
-			$header['stripped_table'] = str_replace($_SESSION['app'] . '__', null, $tb);
+			$header['table'] = $request['tb'];
+			$header['stripped_table'] = str_replace($_SESSION['app'] . '__', null, $request['tb']);
 
 			if ($header['page'] > $header['total_pages']) {
 				$header['page'] = $header['total_pages'];
@@ -171,7 +171,7 @@ class api_ctrl extends Controller
 				$query->setLimit(($header['page'] -1) * $records_per_page, $records_per_page);
 			}
 
-			$header['no_records_shown'] = $query->getTotal();
+			$header['no_records_shown'] = (int) $query->getTotal();
 
 			$header['query_executed'] = $query->getQuery();
 

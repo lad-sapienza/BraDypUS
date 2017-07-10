@@ -45,10 +45,7 @@ The available types are: **all**, **recent**, **fast**, **id_array**, **encoded*
 ## Response JSON data structure
 
 ### JSON structure of for `verb` **search**
-```
-javascript
-
-
+```javascript
 {
     "head": { // head part of the document containig metadata
         "query_arrived": "", // (string) Full SQL text of the built query
@@ -75,13 +72,10 @@ javascript
         {...}
     ]
 }
-
 ```
 
 ### Single record structure
-```
-javascript
-
+```javascript
 {
   "fields": {}, // (object) associative object list of fields with field id as key and field label as value
   "core": { }, // (object) associative object list with fieldname as key and field value as value

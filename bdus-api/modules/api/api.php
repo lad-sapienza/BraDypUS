@@ -35,72 +35,157 @@ class api_ctrl extends Controller
 		return $header;
 	}
 
-
+	/**
+	 * [run_v2 description]
+	 * 		api/app/tb?
+	 * 			verb:  Required. One of: read | edit
+	 * 			id: required for verb read and for verb search, type id_array
+	 *
+	 * 			type: required for verb search. One of: all | recent | advanced | sqlExpert | fast | id_array | encoded
+	 *
+	 * 			limit: optional for type recent, default: 20
+	 * 			adv (post): required for type advanced
+	 * 			join: optional, for type sqlExpert
+	 * 			querytext: required for type sqlExpert
+	 * 			string: required for type fast
+	 *
+	 * 			records_per_page: optional for type search, used for pagination, default: 30
+	 *
+	 * @return [type] [description]
+	 */
 	public function run()
 	{
-		/**
-		 * 	GET:
-		 * 		page?
-		 * 		total_rows?
-		 *
-		 */
-		try
-		{
-			if (!utils::canUser('read'))
-			{
-				$this->log();
+
+		try {
+
+			$request = [];
+
+			// Get params
+			$app = $this->get['app'];
+			$request['tb'] = $this->get['app'] . '__' . $this->get['tb'];
+			$verb = $this->get['verb'];
+
+			$id = $this->get['id']; // required for verb read
+
+			$type = $this->get['type']; // required for verb search
+
+
+			// Validate verb
+			$valid_verbs = ['read', 'search'];
+			if (!$verb || !in_array($verb, $valid_verbs)) {
+				throw new Exception("Invalid verb {$verb}. Verb must be one of " . implode(', ', $valid_verbs));
 			}
-			$tb = $this->get['tb'] ? $_SESSION['app'] . '__' . $this->get['tb'] : '';
-
-			if($tb && $this->get['id'] && is_string($this->get['id']))
-			{
-				$data = $this->getOne($tb, $this->get['id']);
-
-				$this->array2json($data);
+			// Validate app
+			$valid_apps = utils::dirContent(PROJS_DIR);
+			if (!$app || !in_array($app, $valid_apps)) {
+				throw new Exception("Invalid app {$app}. App must be one of " . implode(', ', $valid_apps));
 			}
-			else
-			{
-				$records_per_page = $this->get['records_per_page'] ? $this->get['records_per_page'] : 30;
 
-				$this->request['tb'] = $tb;
+			// READ
+			if ($verb === 'read') {
+				if (!$id) {
+					throw new Exception("Parameter id is required with verb read");
+				}
+				return $this->array2json(
+					$this->getOne($request['tb'], $id)
+				);
+			}
 
-				$query = new Query(new DB, $this->request);
+			// SEARCH
+			if ($verb === 'search') {
 
-				$header['query_arrived'] = $query->getQuery();
-				$header['query_encoded'] = base64_encode($query->getQuery());
-				$header['total_rows'] = $this->get['total_rows'] ? $this->get['total_rows'] : (int) $query->getTotal();
-				$header['page'] = $this->get['page'] ? $this->get['page'] : 1;
-				$header['total_pages'] = ceil($header['total_rows']/$records_per_page);
-				$header['table'] = $tb;
-				$header['stripped_table'] = str_replace($_SESSION['app'] . '__', null, $tb);
 
-				if ($header['page'] > $header['total_pages'])
-				{
-					$header['page'] = $header['total_pages'];
+
+				$valid_types = ['all', 'recent', 'advanced', 'sqlExpert', 'fast', 'id_array', 'encoded'];
+
+				$request['type'] = $type;
+
+				switch ($request['type']) {
+					case 'all':
+						break;
+
+					case 'recent':
+						$request['limit'] = $this->get['limit'] ? $this->get['limit'] : 20;
+						break;
+
+					case 'advanced':
+						$request['adv'] = $this->post['adv'];
+						if (!$request['adv'] || !is_array($request['adv']) ) {
+							throw new Exception("Parameter adv (POST, array) is required for type advanced");
+						}
+						break;
+
+					case 'sqlExpert':
+						$request['join'] = $this->get['join'];
+						$request['querytext'] = $this->get['querytext'];
+						if (!$request['querytext']) {
+							throw new Exception("Parameter querytext is required for type sqlExpert");
+						}
+						break;
+
+					case 'fast':
+						$request['string'] = $this->get['string'];
+						if (!$request['string']) {
+							throw new Exception("Parameter string is required for type fast");
+						}
+						break;
+
+					case 'id_array':
+						$request['id'] = $this->get['id'];
+						if (!$request['id']) {
+							throw new Exception("Parameter id is required for type id_array");
+						}
+						break;
+
+					case 'encoded':
+						$request['q_encoded'] = $this->get['q_encoded'];
+						if (!$this->get['q_encoded']) {
+							throw new Exception("Parameter q_encoded is required for type encoded");
+						}
+						break;
+
+					default:
+						throw new Exception("Invalid search type {$type}. Type must be one of " . implode(', ', $valid_types));
+						break;
 				}
 
-				if ($header['total_rows'] > 0)
-				{
-					$query->setLimit(($header['page'] -1) * $records_per_page, $records_per_page);
-				}
-
-				$header['no_records_shown'] = $query->getTotal();
-
-				$header['query_executed'] = $query->getQuery();
-
-				$header['fields'] = cfg::fldEl($tb, 'all', 'label');
-
-				$this->array2json(array(
-							'head' => $header,
-							'records' => $query->getResults(true)
-							)
-						);
 			}
 
-		}
-		catch (myException $e)
-		{
+			$records_per_page = $this->get['records_per_page'] ? $this->get['records_per_page'] : 30;
+
+			$query = new Query(new DB, $request);
+
+			$header['query_arrived'] = $query->getQuery();
+			$header['query_encoded'] = base64_encode($query->getQuery());
+			$header['total_rows'] = $this->get['total_rows'] ? $this->get['total_rows'] : (int) $query->getTotal();
+			$header['page'] = $this->get['page'] ? $this->get['page'] : 1;
+			$header['total_pages'] = ceil($header['total_rows']/$records_per_page);
+			$header['table'] = $tb;
+			$header['stripped_table'] = str_replace($_SESSION['app'] . '__', null, $tb);
+
+			if ($header['page'] > $header['total_pages']) {
+				$header['page'] = $header['total_pages'];
+			}
+
+			if ($header['total_rows'] > 0) {
+				$query->setLimit(($header['page'] -1) * $records_per_page, $records_per_page);
+			}
+
+			$header['no_records_shown'] = $query->getTotal();
+
+			$header['query_executed'] = $query->getQuery();
+
+			$header['fields'] = cfg::fldEl($request['tb'], 'all', 'label');
+
+			$this->array2json([
+				'head' => $header,
+				'records' => $query->getResults(true)
+			]);
+
+		} catch (Exception $e) {
+
 			$this->array2json(array('type' => 'error', 'text' => $e->getMessage()));
+
 		}
 	}
 

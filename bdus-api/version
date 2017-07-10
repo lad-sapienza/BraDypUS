@@ -1,3 +1,4 @@
+3.5.7[] = "A cleaner e more (inline) documented version of the API is available"
 3.5.7[] = "Removed php_value upload_max_filesize and php_value post_max_size 16M from .htaccess file"
 3.5.6[] = "Bug fixed with advanced search (select2 inputs) interface"
 3.5.5[] = "New template function Fieled::value to get nude value of a field"

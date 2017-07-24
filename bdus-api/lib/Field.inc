@@ -201,29 +201,45 @@ class Field implements iTemplate
 	 */
 	public function geodata()
 	{
-		if($this->context === 'add_new')
-		{
+		if($this->context === 'add_new') {
 			return;
 		}
 
 		$gdata = $this->record->getGeodata();
 
-		$html = '<fieldset class="geodata">'
-			. '<legend>' . tr::get('geodata') . '</legend>';
-
-		if (is_array($gdata))
-		{
-			$html .= '<p>' . tr::sget('x_geodata_available', '<strong>' . count($gdata) . '</strong>')
+		if ($gdata) {
+			$view_this = '<p>' . tr::sget('x_geodata_available', '<strong>' . count($gdata) . '</strong>')
 			. ' <span class="btn btn-link" onclick="core.runMod(\'geoface2\', [\'' . $this->tb . '\', \'' . base64_encode(' `id`= ' . $this->record->getCore('id') . ' ') . '\']);">' . tr::get('view_on_map') . '</span></p>';
 		}
-		else
-		{
-			$html .= '<p>' . tr::get('no_geodata_available') . '</p>';
+
+		$view_all = '<p><span class="btn btn-link" onclick="core.runMod(\'geoface2\', \'' . $this->tb . '\');">' . tr::get('view_all_records_on_map') . '</span></p>';
+
+
+		if (cfg::tbEl(PREFIX . '__geodata', 'is_plugin')) {
+
+			$html = $this->plg('geodata');
+			$html .= '<p><span class="btn btn-link" onclick="core.runMod(\'geoface2\', \'' . $this->tb . '\');">' . tr::get('view_all_records_on_map') . '</span></p>';
+
+			// https://stackoverflow.com/a/5139071/586449
+			$html = substr_replace($html, $view_this . $view_all . '</fieldset>', strrpos($html, '</fieldset>'), strlen('</fieldset>'));
+
+		} else {
+			$html = '<fieldset class="geodata">'
+				. '<legend>' . tr::get('geodata') . '</legend>';
+
+			if (is_array($gdata)) {
+				$html .= $this->plg('geodata') . $view_this;
+
+
+			} else {
+
+				$html .= '<p>' . tr::get('no_geodata_available') . '</p>';
+			}
+
+			$html .= $view_all . '</fieldset>';
 		}
 
-		$html .= '<p><span class="btn btn-link" onclick="core.runMod(\'geoface2\', \'' . $this->tb . '\');">' . tr::get('view_all_records_on_map') . '</span></p>';
 
-		$html .= '</fieldset>';
 
 		return $html;
 	}

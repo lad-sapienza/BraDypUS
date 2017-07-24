@@ -11,81 +11,71 @@ class record_ctrl extends Controller
 
 	public function save_data()
 	{
-		try
-		{
-			if (!$this->request['id'])
-			{
+		try {
+
+			if (!$this->request['id']) {
+
 				$this->request['id'] = [false];
-			}
-			else if (!is_array($this->request['id']))
-			{
+
+			} else if (!is_array($this->request['id'])) {
+
 				$this->request['id'] = (array)$this->request['id'];
+
 			}
 
+			if (is_array($this->request['id'])) {
 
-			if (is_array($this->request['id']))
-			{
-				foreach ($this->request['id'] as $id)
-				{
-					try
-					{
+				foreach ($this->request['id'] as $id) {
+
+					try {
+
 						$record = new Record($this->get['tb'], $id, new DB);
 
-						if (is_array($this->post['core']))
-						{
+						if (is_array($this->post['core'])) {
 							$record->setCore($this->post['core']);
 						}
 
-						if (is_array($this->post['plg']))
-						{
-							foreach ($this->post['plg'] as $plg_name=>$plg_data)
-							{
+						if (is_array($this->post['plg'])) {
+							foreach ($this->post['plg'] as $plg_name=>$plg_data) {
 								$record->setPlugin($plg_name, $plg_data);
 							}
 						}
 
 						$a = $record->persist();
 
-						if (!$id)
-						{
+						if (!$id) {
 							$inserted_id = $record->getId();
 						}
 
-						if ($a)
-						{
+						if ($a) {
 							$ok[$id] = true;
-						}
-						else
-						{
+						} else {
 							$error[$id] = true;
 						}
-					}
-					catch (myException $e)
-					{
+					} catch (myException $e) {
 						$error[$id] = true;
-						$e->log();
+						$e->log($e);
 					}
 				}
 			}
 
-			if (count($ok) == count($this->request['id']))
-			{
+			if (count($ok) == count($this->request['id'])) {
+
 				$data['status'] = 'success';
 				$data['verbose'] = tr::get('success_saved');
 				$inserted_id ? $data['inserted_id'] = $inserted_id : '';
-			}
-			else if (count($error) == count($this->request['id']))
-			{
+
+			} else if (count($error) == count($this->request['id'])) {
+
 				$data['status'] = 'error';
 				$data['verbose'] = tr::get('error_saved');
-			}
-			else
-			{
+
+			} else {
+
 				$data['status'] = 'warning';
 				$data['verbose'] = tr::sget('partial_success_saved', array(implode(', ', $ok), imaplode(', ', $error)));
 			}
-		}
-		catch (myException $e){
+		} catch (myException $e) {
 			$data['status'] = 'error';
 			$data['verbose'] = tr::get('error_saved');
 			$e->log($e);

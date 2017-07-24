@@ -819,7 +819,9 @@ class Field implements iTemplate
 
 	protected function HtmlContentRead($setting)
 	{
-		$html = '<div class="field_content" data-name="' . $setting['name'] . '">';
+		$html = '<div class="field_content" data-name="' . $setting['name'] . '"' .
+			($setting['direction']  === 'rtl' ? ' style="direction: rtl;" ' : '') .
+		'>';
 
 		// Val is always an array, for easy parsing: exploded values for multi_select od single value array
 		$val = ($setting['type'] == 'multi_select') ? utils::csv_explode($setting['data'], ';') : [$setting['data']];
@@ -1009,7 +1011,9 @@ class Field implements iTemplate
 				$setting['maxlength'] .
 				' type="text" ' .
 				'value="' . $setting['html_data'] . '" ' .
-				'class="form-control">';
+				'class="form-control"' .
+				($setting['direction'] === 'rtl' ? ' style="direction: rtl;" ' : '') .
+				'>';
 	}
 
 	protected function htmlDate($core, $setting) {
@@ -1018,6 +1022,7 @@ class Field implements iTemplate
 				'class="form-control date" ' .
 				$core .
 				$setting['maxlength'] .
+				($setting['direction'] === 'rtl' ? ' style="direction: rtl;" ' : '') .
 				'value="' . $setting['html_data'] . '">';
 	}
 
@@ -1025,6 +1030,7 @@ class Field implements iTemplate
 
 		return '<textarea ' .
 				$core .
+				($setting['direction']  === 'rtl' ? ' style="direction: rtl;" ' : '') .
 				$setting['maxlength'] .
 				( $setting['height'] ? 'rows="' . $setting['height'] . '"': '') .
 				' class="form-control">' .
@@ -1035,8 +1041,9 @@ class Field implements iTemplate
 	protected function htmlSelect($core, $setting, $is_multi = false, $is_combo = false) {
 
 		$html = '<select ' . $core .
-				($is_multi ? ' multiple="multiple" ' : '') .
-				($is_combo ? ' data-tags="true" ' : '') .
+			($setting['direction']  === 'rtl' ? ' style="direction: rtl;" ' : '') .
+			($is_multi ? ' multiple="multiple" ' : '') .
+			($is_combo ? ' data-tags="true" ' : '') .
 			($setting['vocabulary_set'] ? ' data-context="vocabulary_set" data-att="' . $setting['vocabulary_set'] . '"' : '') .
 			($setting['get_values_from_tb'] ? ' data-context="get_values_from_tb" data-att="' . $setting['get_values_from_tb'] . '"' : '') .
 			($setting['id_from_tb'] ? ' data-context="id_from_tb" data-att="' . $setting['id_from_tb'] . '"' : '') .

@@ -218,30 +218,22 @@ class Field implements iTemplate
 		if (cfg::tbEl(PREFIX . '__geodata', 'is_plugin')) {
 
 			$html = $this->plg('geodata');
-			$html .= '<p><span class="btn btn-link" onclick="core.runMod(\'geoface2\', \'' . $this->tb . '\');">' . tr::get('view_all_records_on_map') . '</span></p>';
 
 			// https://stackoverflow.com/a/5139071/586449
-			$html = substr_replace($html, $view_this . $view_all . '</fieldset>', strrpos($html, '</fieldset>'), strlen('</fieldset>'));
+			return substr_replace(
+				$html,
+				$view_this . $view_all . '</fieldset>',
+				strrpos($html, '</fieldset>'),
+				strlen('</fieldset>')
+			);
 
 		} else {
-			$html = '<fieldset class="geodata">'
-				. '<legend>' . tr::get('geodata') . '</legend>';
 
-			if (is_array($gdata)) {
-				$html .= $this->plg('geodata') . $view_this;
-
-
-			} else {
-
-				$html .= '<p>' . tr::get('no_geodata_available') . '</p>';
-			}
-
-			$html .= $view_all . '</fieldset>';
+			return '<fieldset class="geodata">' .
+				'<legend>' . tr::get('geodata') . '</legend>' .
+				(is_array($gdata) ? $this->plg('geodata') . $view_this : '<p>' . tr::get('no_geodata_available') . '</p>' ) .
+				$view_all . '</fieldset>';
 		}
-
-
-
-		return $html;
 	}
 
 	/**

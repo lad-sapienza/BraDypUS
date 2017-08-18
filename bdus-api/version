@@ -1,3 +1,4 @@
+3.5.9[] = "Aborted XHR calls do not throw errors anymore"
 3.5.8[] = "Geodata can be entered as plugin data"
 3.5.8[] = "Added direction: rtl option for html.fld for right-to-left scripts"
 3.5.7[] = "A cleaner e more (inline) documented version of the API is available"

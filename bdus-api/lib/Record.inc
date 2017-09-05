@@ -449,7 +449,7 @@ class Record implements iRecord
 		}
 		$this->data['plugins'][$plugin] = array_merge($this->data['plugins'][$plugin], $plugin_data);
 
-		$this->changed['plugins'][plugin] = true;
+		$this->changed['plugins'][$plugin] = true;
 
 		$this->loaded['plugins'][$plugin] = true;
 	}

@@ -475,6 +475,8 @@ class Field implements iTemplate
 
       $html .= $this->fld('id', false, $plg, $index);
 
+			$this->current_plugin_index = $index;
+
 			$twig = new Twig_Environment(new Twig_Loader_Filesystem(PROJ_TMPL_DIR), $settings);
 
 			$html .= $twig->render(str_replace(PREFIX . '__', null, $plg) . '.twig', array(

@@ -78,6 +78,7 @@ class menuValues_ctrl extends Controller
         $query->table($tb)
           ->fields($fld . ' as id')
           ->fields($fld . ' as val')
+          ->group($fld)
           ->limit(self::$res_x_page, $offset)
           ->order($fld);
 

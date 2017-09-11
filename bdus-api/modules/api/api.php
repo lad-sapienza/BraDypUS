@@ -175,7 +175,7 @@ class api_ctrl extends Controller
 
 			$header['query_executed'] = $query->getQuery();
 
-			$header['fields'] = cfg::fldEl($request['tb'], 'all', 'label');
+			$header['fields'] = $query->getFields();
 
 			$this->array2json([
 				'head' => $header,

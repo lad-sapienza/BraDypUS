@@ -180,7 +180,7 @@ class api_ctrl extends Controller
 
 			$this->array2json([
 				'head' => $header,
-				'records' => $query->getResults(true)
+				'records' => $query->getResults(empty($this->request['fields']))
 			]);
 
 		} catch (Exception $e) {
@@ -188,6 +188,25 @@ class api_ctrl extends Controller
 			$this->array2json(array('type' => 'error', 'text' => $e->getMessage()));
 
 		}
+	}
+
+	private function getCustom($tb, $fields = "*", $join = false, $where = false, $order = false, $limit = false, $group = false)
+	{
+		$sql = 'SELECT ';
+		if (is_array($fields)) {
+			foreach ($fields as $key => $value) {
+				$f[] = $value . ( is_string($key) ? ' as ' . $key : '');
+			}
+			$sql .= implode(', ', $f) . ' ';
+		} else {
+			$sql .= $fields . ' ';
+		}
+
+		$sql = 'FROM ' . $tb . ' '
+			. ($join ? $join . ' ': '')
+			. 'WHERE ' . ($where ? $where : '1') . ' ';
+
+
 	}
 
 

@@ -63,7 +63,7 @@ class Query
 
 		$this->db = $db;
 
-		$this->fields = $this->setFields($use_preview);
+		$this->setFields($use_preview, $request['fields']);
 
 		$this->where = $this->setWhere($request);
 	}
@@ -128,13 +128,13 @@ class Query
 		return $encoded ? base64_encode($this->where) : $this->where;
 	}
 
-	public function getOrder()
+	private function getOrder()
 	{
 		$this->order ?:  $this->setOrder();
 		return $this->order;
 	}
 
-	public function getLimit()
+	private function getLimit()
 	{
 		$this->limit	?: $this->setOrder();
 		return $this->limit;
@@ -146,18 +146,18 @@ class Query
 	 */
 	public function getQuery()
 	{
-		if (!$this->fields)
-		{
+		if (!$this->fields) {
 			throw new myException(tr::sget('parameter_missing', array('fields')));
 		}
-		if (!$this->tb)
-		{
+
+		if (!$this->tb) {
 			throw new myException(tr::sget('parameter_missing', array('tb')));
 		}
-		if (!$this->where)
-		{
+
+		if (!$this->where) {
 			throw new myException(tr::sget('parameter_missing', array('where')));
 		}
+
 		return "SELECT " .
 			$this->formatFields() .
 			" FROM `" . $this->tb . "` " .
@@ -189,49 +189,41 @@ class Query
 	{
 		$result = $this->db->query($this->getQuery(), false, 'read');
 
-		if (!$full)
-		{
+		if (!$full || !is_array($results)){
 			return $result;
 		}
-		else
-		{
-			if (is_array($result))
-			{
-        $fullResult = array();
 
-				foreach ($result as $id => $row)
-				{
-          $rec = new Record($this->tb, $row['id'], $this->db);
+		if (is_array($result)) {
+      $fullResult = [];
 
-          $rowResult = array();
+			foreach ($result as $id => $row) {
 
-          $rowResult['core'] = $rec->getCore();
+        $rec = new Record($this->tb, $row['id'], $this->db);
 
-          $rowResult['coreLinks'] = $rec->getCoreLinks();
+        $rowResult = array();
 
-          $rowResult['allPlugins'] = $rec->getAllPlugins(true);
+        $rowResult['core'] = $rec->getCore();
 
-          $rowResult['fullFiles'] = $rec->getFullFiles();
+        $rowResult['coreLinks'] = $rec->getCoreLinks();
 
-          $rowResult['geodata'] = $rec->getGeodata();
+        $rowResult['allPlugins'] = $rec->getAllPlugins(true);
 
-          if (cfg::tbEl($tb, 'rs'))
-          {
-            $rowResult['rs'] = $rec->getRS();
-          }
+        $rowResult['fullFiles'] = $rec->getFullFiles();
 
-          $rowResult['userLinks'] = $rec->getUserLinks();
+        $rowResult['geodata'] = $rec->getGeodata();
 
-          $fullResult[] = $rowResult;
+        if (cfg::tbEl($tb, 'rs')) {
+          $rowResult['rs'] = $rec->getRS();
+        }
 
-				}
-				return $fullResult;
+        $rowResult['userLinks'] = $rec->getUserLinks();
+
+        $fullResult[] = $rowResult;
 			}
-			else
-			{
-				return $result;
-			}
+
+			return $fullResult;
 		}
+
 	}
 
 	/**
@@ -431,29 +423,33 @@ class Query
 	 *
 	 * Sets requested (preview) fields
 	 * @param boolean $use_preview	if false all fields will be returned
+	 * @param array|false custom list of fields
 	 * @throws myException
 	 */
-	private function setFields($use_preview = false)
+	public function setFields($use_preview = false, $fields = false)
 	{
-		if ($use_preview)
-		{
+		if (is_array($fields)) {
+			$this->fields = $fields;
+			return $this;
+		}
+
+		if ($use_preview) {
 			$preview_array = cfg::getPreviewFlds($this->tb);
 
-			if(!in_array('id', $preview_array))
-			{
+			if(!in_array('id', $preview_array)) {
 				$preview_array = array_merge(array('id'), $preview_array);
 			}
 
-			foreach ($preview_array as $fld)
-			{
+			foreach ($preview_array as $fld) {
 				$col_names[$fld] = cfg::fldEl($this->tb, $fld, 'label');
 			}
-		}
-		else
-		{
+
+		} else {
 			$col_names = cfg::fldEl($this->tb, 'all', 'label');
 		}
-		return $col_names;
+
+		$this->fields = $col_names;
+		return $this;
 	}
 
 	/**
@@ -463,15 +459,17 @@ class Query
 	 */
 	private function formatFields()
 	{
-		if (!$this->fields)
-		{
+		if (!$this->fields) {
 			throw new myException(tr::sget('parameter_missing', 'fields'));
 		}
 		$ret = [];
 		foreach (array_keys($this->fields) as $f) {
-			$ret[] = '`' . $this->tb . '`.`' . $f . '`';
+			if (!preg_match('/\./', $f)) {
+				$ret[] = '`' . $this->tb . '`.`' . $f . '`';
+			} else {
+				$ret[] = $f;
+			}
 		}
-
 		return implode(', ', $ret);
 	}
 

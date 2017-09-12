@@ -1,4 +1,5 @@
-3.5.11[] = "Added sqlExpert method to API"
+3.5.12[] = "API: added the possibility to list output fields in url"
+3.5.12[] = "Added sqlExpert method to API"
 3.5.11[] = "Fixed bug with enhanced inputs not extending to 100% width"
 3.5.11[] = "menuValues::getValues groups values for get_values_from_tb"
 3.5.10[] = "Bug fixed with plugins having custom template file (index was not spread to the whole template)"

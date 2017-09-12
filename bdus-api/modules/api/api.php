@@ -96,7 +96,7 @@ class api_ctrl extends Controller
 
 
 
-				$valid_types = ['all', 'recent', /*'advanced', 'sqlExpert', */'fast', 'id_array', 'encoded'];
+				$valid_types = ['all', 'recent', /*'advanced', */'sqlExpert', 'fast', 'id_array', 'encoded'];
 
 				$request['type'] = $type;
 
@@ -115,13 +115,14 @@ class api_ctrl extends Controller
 					// 	}
 					// 	break;
 
-					// case 'sqlExpert':
-					// 	$request['join'] = $this->get['join'];
-					// 	$request['querytext'] = $this->get['querytext'];
-					// 	if (!$request['querytext']) {
-					// 		throw new Exception("Parameter querytext is required for type sqlExpert");
-					// 	}
-					// 	break;
+					case 'sqlExpert':
+						$request['join'] = $this->get['join'];
+						$request['querytext'] = $this->get['querytext'];
+						$request['fields'] = $this->request['fields'];
+						if (!$request['querytext']) {
+							throw new Exception("Parameter querytext is required for type sqlExpert");
+						}
+						break;
 
 					case 'fast':
 						$request['string'] = $this->get['string'];

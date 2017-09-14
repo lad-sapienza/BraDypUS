@@ -140,6 +140,8 @@ class api_ctrl extends Controller
 
 					case 'encoded':
 						$request['q_encoded'] = $this->get['q_encoded'];
+						$request['join'] = $this->get['join'];
+						$request['fields'] = $this->get['fields'];
 						if (!$this->get['q_encoded']) {
 							throw new Exception("Parameter q_encoded is required for type encoded");
 						}

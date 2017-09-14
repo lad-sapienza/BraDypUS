@@ -86,21 +86,17 @@ class Query
 
 	public function setOrder($fld = false, $type = false)
 	{
-		if (!preg_match('/(LIMIT)/', $this->where))
-		{
+		if (!preg_match('/(LIMIT)/', $this->where)) {
 			!$type ? $type = 'asc' : '';
-			if (!$fld)
-			{
-				if (preg_match('/ORDER/', $this->where))
-				{
+			if (!$fld) {
+				if (preg_match('/ORDER/', $this->where)) {
 					return;
 				}
 				$fld = cfg::tbEl($this->tb, 'order');
 			}
-			$this->order = " ORDER BY `$fld` $type ";
+			$this->order = $fld ? " ORDER BY `$fld` $type " : '';
 
-			if (preg_match('/ORDER/', $this->where))
-			{
+			if (preg_match('/ORDER/', $this->where)) {
 				$this->where = preg_replace('/order\sby\s([`a-z_]+)\s?(?:asc|desc)?/i', null, $this->where);
 			}
 		}
@@ -273,6 +269,7 @@ class Query
 				break;
 
 			case 'encoded':
+				$this->join = $this->makeSafeStatement(urldecode($request['join']));
 				// Decode query parameter
 				$encoded = base64_decode($request['q_encoded']);
 				// Remove new lines

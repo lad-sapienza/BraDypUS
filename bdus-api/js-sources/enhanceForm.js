@@ -90,23 +90,24 @@ var enhance = {
     if ($(el).data('select2') && destroy){
       $(el).select2('destroy');
     } else {
-      $(el).select2($.extend({}, {
-        tags: enhance.getData($(el), true),
-        separator: ';',
-        tokenSeparators: [';']
-      }, enhance.getAjaxData($(el)))).on('change', function(){
+      $(el).select2(
+        $.extend({}, {
+          separator: ';',
+          tokenSeparators: [';']
+        }, enhance.getAjaxData($(el)) )
+      ).on('change', function(){
         $(this).attr('changed', 'auto');
       });
     }
   },
 
   combobox: function(el, destroy){
+
     if($(el).data('select2') && destroy){
       $(el).select2('destroy');
     } else {
       $(el).select2(
         $.extend({}, {
-          tags: true,
           data: enhance.getData($(el), true)
         }, enhance.getAjaxData($(el)))
       ).on('change', function(){

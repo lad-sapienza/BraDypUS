@@ -70,7 +70,6 @@
 
 	$('#{{ uid }} button.test').on('click', function(){
 		var form_data = $('#{{ uid }} form').serialize();
-		console.log(form_data);
 		search.test('sqlExpert', '{{ tb }}', form_data);
 	});
 </script>

@@ -34,8 +34,7 @@ class search_ctrl extends Controller
 
 		$db = new DB();
 		$res = $db->query($q);
-		foreach ($res as $r)
-		{
+		foreach ($res as $r){
 			$arr[] = $r[$fld];
 		}
 		echo json_encode($arr);

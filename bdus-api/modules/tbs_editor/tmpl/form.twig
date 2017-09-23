@@ -203,22 +203,13 @@
 				<legend>Geoface</legend>
 
 				<div class="row">
-					<div class="col-sm-4">
-						<label>Map EPSG</label>
-						<select name="geoface[epsg]">
-							<option></option>
-							{% for id, label in available_epsgs %}
-								<option value="{{ id }}"{% if id == data.geoface.epsg %} selected="selected" {% endif %}>{{ label }}</option>
-							{% endfor %}
-						</select>
-					</div>
 
-					<div class="col-sm-4">
+					<div class="col-sm-6">
 						<label>Google Maps key</label>
 						<input type="text" name="geoface[googleKey]" value="{{ data.geoface.googleKey }}">
 					</div>
 
-					<div class="col-sm-4">
+					<div class="col-sm-6">
 						<label>Exclude web basemaps</label>
 						{% for excl in data.geoface.layers.excludeWeb %}
 							<select name="geoface[layers][excludeWeb][]" {% if loop.index0 == 0 %} class="cloneable"{% endif %}>
@@ -246,14 +237,6 @@
 									<option></option>
 									{% for id in available_geoface_layers %}
 										<option value="{{ id }}"{% if id == layer.id %} selected="selected" {% endif %}>{{ id }}</option>
-									{% endfor %}
-								</select>
-
-								<label>EPSG</label>
-								<select name="geoface[layers][local][aaa{{ loop.index0 }}][epsg]">
-									<option></option>
-									{% for id, label in available_epsgs %}
-										<option value="{{ id }}"{% if id == layer.epsg %} selected="selected" {% endif %}>{{ label }}</option>
 									{% endfor %}
 								</select>
 

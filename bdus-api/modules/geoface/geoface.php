@@ -127,10 +127,6 @@ class geoface_ctrl extends Controller
 
 			$geoface = cfg::tbEl($tb, 'geoface');
 
-			if (!$geoface['epsg']) {
-				$geoface['epsg'] = '4326';
-			}
-
 			if (!is_array($geoface['layers']['web'])) {
 				$geoface['layers']['web'] = array();
 			}

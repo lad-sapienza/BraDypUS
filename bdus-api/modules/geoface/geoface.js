@@ -258,7 +258,6 @@ var geoface  = {
             console.log('Unknown extension: ' + ext);
             break;
         }
-        console.log(ext);
       });
 
     }

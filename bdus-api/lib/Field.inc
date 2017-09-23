@@ -209,10 +209,10 @@ class Field implements iTemplate
 
 		if ($gdata) {
 			$view_this = '<p>' . tr::sget('x_geodata_available', '<strong>' . count($gdata) . '</strong>')
-			. ' <span class="btn btn-link" onclick="core.runMod(\'geoface2\', [\'' . $this->tb . '\', \'' . base64_encode(' `id`= ' . $this->record->getCore('id') . ' ') . '\']);">' . tr::get('view_on_map') . '</span></p>';
+			. ' <span class="btn btn-link" onclick="core.runMod(\'geoface\', [\'' . $this->tb . '\', \'' . base64_encode(' `id`= ' . $this->record->getCore('id') . ' ') . '\']);">' . tr::get('view_on_map') . '</span></p>';
 		}
 
-		$view_all = '<p><span class="btn btn-link" onclick="core.runMod(\'geoface2\', \'' . $this->tb . '\');">' . tr::get('view_all_records_on_map') . '</span></p>';
+		$view_all = '<p><span class="btn btn-link" onclick="core.runMod(\'geoface\', \'' . $this->tb . '\');">' . tr::get('view_all_records_on_map') . '</span></p>';
 
 
 		if (cfg::tbEl(PREFIX . '__geodata', 'is_plugin')) {

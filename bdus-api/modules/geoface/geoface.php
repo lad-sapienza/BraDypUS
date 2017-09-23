@@ -6,7 +6,7 @@
  * @since			Aug 22, 2012
  */
 
-class geoface2_ctrl extends Controller
+class geoface_ctrl extends Controller
 {
 	/**
 	 * Saves new geometry data to geodata table, linked to table, id

@@ -4,7 +4,7 @@
  * @license      See file LICENSE distributed with this code
  */
 
-var geoface2  = {
+var geoface  = {
 
   geoJSON: {},
   metadata: {},
@@ -29,9 +29,9 @@ var geoface2  = {
 			'getData',
 			'loadLeaflet',
 			'loadLDraw',
-			/*'loadLOmnivore',
-			'loadGoogleRemote',
-			'loadGoogleLocal',*/
+			// 'loadLOmnivore',
+			'loadGoogle',
+			'loadGoogleMutant',
 			'buildMap'];
     G.param.tb = tb;
     G.param.where = sql;
@@ -56,7 +56,7 @@ var geoface2  = {
 	 */
 	getData: function(){
 
-    core.getJSON('geoface2_ctrl', 'getGeoJson', {tb: G.param.tb, where: G.param.where}, false, function(data){
+    core.getJSON('geoface_ctrl', 'getGeoJson', {tb: G.param.tb, where: G.param.where}, false, function(data){
 
       if (data.status === 'error'){
         core.message(data.text, 'error', true);
@@ -113,26 +113,27 @@ var geoface2  = {
 	/**
 	 * Loads GoogleMaps APi
 	 */
-  loadGoogleRemote: function(){
+  loadGoogle: function(){
     if ($.inArray('google', G.metadata.layers.excludeWeb) === -1 && typeof(google) == 'undefined'){
-      $.getScript('http://maps.google.com/maps/api/js?v=3.2&sensor=false&callback=G.runQueue')
-				.fail(function(jqxhr, settings, exception) {
-            console.log('googleRemote', exception);
-          });
+      $.getScript('https://maps.googleapis.com/maps/api/js?key='+ G.metadata.googleKey, function(){
+				G.runQueue();
+			}).fail(function(jqxhr, settings, exception) {
+				console.log('google', exception);
+			});
     } else {
       G.runQueue();
     }
   },
 
 	/**
-	 * Loads Leaglet.Google plugin
+	 * Loads Leaflet.GoogleMutant plugin
 	 */
-  loadGoogleLocal: function(){
-    if (typeof google !== 'undefined' && typeof L.Google == 'undefined'){
-      $.getScript('./modules/geoface2/leaflet/Google.js', function(){
+  loadGoogleMutant: function(){
+    if (typeof google !== 'undefined' && typeof L.GridLayer.GoogleMutant == 'undefined'){
+      $.getScript('./modules/geoface/leaflet-googleMutant/Leaflet.GoogleMutant.js', function(){
         G.runQueue();
       }).fail(function(jqxhr, settings, exception) {
-					console.log('googleLocal', exception);
+					console.log('googleMutant', exception);
         }
       );
     } else {
@@ -145,13 +146,13 @@ var geoface2  = {
 	 */
   loadLeaflet: function(){
 
-    if($('head').find('link[href="./modules/geoface2/leaflet/leaflet.css"]').length < 1){
-      $('head').append( $('<link />').attr({'type':'text/css', 'rel':'stylesheet', 'href':'./modules/geoface2/leaflet/leaflet.css'}) );
+    if($('head').find('link[href="./modules/geoface/leaflet/leaflet.css"]').length < 1){
+      $('head').append( $('<link />').attr({'type':'text/css', 'rel':'stylesheet', 'href':'./modules/geoface/leaflet/leaflet.css'}) );
     }
 
     if (typeof L == 'undefined'){
-      $.getScript('./modules/geoface2/leaflet/leaflet.js', function(){
-        L.Icon.Default.imagePath = './modules/geoface2/leaflet/images/';
+      $.getScript('./modules/geoface/leaflet/leaflet.js', function(){
+        L.Icon.Default.imagePath = './modules/geoface/leaflet/images/';
         G.runQueue();
       }).fail(function(jqxhr, settings, exception) {
 				console.log('L', exception);
@@ -167,12 +168,12 @@ var geoface2  = {
 	 */
   loadLDraw: function(){
 
-    if($('head').find('link[href="./modules/geoface2/leaflet-draw/leaflet.draw.css"]').length < 1){
-      $('head').append( $('<link />').attr({'type':'text/css', 'rel':'stylesheet', 'href':'./modules/geoface2/leaflet-draw/leaflet.draw.css'}) );
+    if($('head').find('link[href="./modules/geoface/leaflet-draw/leaflet.draw.css"]').length < 1){
+      $('head').append( $('<link />').attr({'type':'text/css', 'rel':'stylesheet', 'href':'./modules/geoface/leaflet-draw/leaflet.draw.css'}) );
     }
 
     if (typeof L.drawVersion === 'undefined'){
-      $.getScript('./modules/geoface2/leaflet-draw/leaflet.draw.js', function(){
+      $.getScript('./modules/geoface/leaflet-draw/leaflet.draw.js', function(){
         G.runQueue();
       }).fail(function(jqxhr, settings, exception) {
 				console.log('L.Draw', exception);
@@ -188,7 +189,7 @@ var geoface2  = {
   loadLOmnivore: function(){
 
     if (typeof omnivore === 'undefined'){
-      $.getScript('./modules/geoface2/leaflet-omnivore/leaflet-omnivore.min.js', function(){
+      $.getScript('./modules/geoface/leaflet-omnivore/leaflet-omnivore.min.js', function(){
         G.runQueue();
       }).fail(function(jqxhr, settings, exception) {
 				console.log('Omnivore', exception);
@@ -220,20 +221,19 @@ var geoface2  = {
 		G.map = new L.map('map');
 
     // baseMap object contains all basemaps
-    var baseMaps = {};
-
-    // Start OSM
-    baseMaps.OSM = new L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png')
-      .addTo(G.map);
-
+    var baseMaps = {
+			// Start OSM
+			"OSM": new L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png').addTo(G.map)
+		};
 
     // Start Google
-    if ($.inArray('google', G.metadata.layers.excludeWeb) === -1 && typeof L.Google !== 'undefined'){
-      baseMaps['Google Satellite'] = new L.Google();
-      baseMaps['Google Roadmap'] = new L.Google('ROADMAP');
-      baseMaps['Google Terrain'] = new L.Google('TERRAIN');
-      baseMaps['Google Hybrid'] = new L.Google('HYBRID');
+    if ($.inArray('google', G.metadata.layers.excludeWeb) === -1 && typeof L.gridLayer.googleMutant !== 'undefined'){
+      baseMaps['Google Satellite'] =	L.gridLayer.googleMutant({ type:'satellite'});
+      baseMaps['Google Roadmap'] =		L.gridLayer.googleMutant({ type:'roadmap'});
+      baseMaps['Google Terrain'] =		L.gridLayer.googleMutant({ type:'terrain' });
+      baseMaps['Google Hybrid'] =			L.gridLayer.googleMutant({ type:'hybrid'});
     }
+
 
     // Main, database, overlay vector layer
 		G.overlay[G.metadata.tb] = L.geoJson(G.geoJSON, {
@@ -290,7 +290,10 @@ var geoface2  = {
     if (G.metadata.canUserEdit && typeof L.Control.Draw !== 'undefined'){
       // Create draw control
       var drawControl = new L.Control.Draw({
-        edit: {
+				draw: {
+             marker: false
+         },
+				edit: {
           featureGroup: G.overlay[G.metadata.tb]
         }
       });
@@ -318,7 +321,7 @@ var geoface2  = {
       api.link.add_ui(
             //success function
             function(tb, id, dia){
-              core.getJSON('geoface2_ctrl', 'saveNew', false, {tb: tb, id: id, coords: G.toWKT(e.layer)}, function(data){
+              core.getJSON('geoface_ctrl', 'saveNew', false, {tb: tb, id: id, coords: G.toWKT(e.layer)}, function(data){
                 core.message(data.text, data.value);
                 e.layer.feature = {properties: {geo_id: data.id}};
 
@@ -327,7 +330,6 @@ var geoface2  = {
 
               vector_layer.addLayer(e.layer);
             },
-
             false,
             true,
             G.metadata.tb_id);
@@ -339,13 +341,12 @@ var geoface2  = {
     G.map.on('draw:edited', function(e){
       var post_data = [];
       e.layers.eachLayer(function (layer) {
-
-        post_data.push({
+				post_data.push({
           id: layer.feature.properties.geo_id,
           coords: G.toWKT(layer)
         });
       });
-      core.getJSON('geoface2_ctrl', 'update', false, {geodata: post_data}, function(data){
+      core.getJSON('geoface_ctrl', 'update', false, {geodata: post_data}, function(data){
         core.message(data.text, data.status);
       });
     });
@@ -368,7 +369,7 @@ var geoface2  = {
                  {
                    text: core.tr('erase'),
                    click: function(){
-                     core.getJSON('geoface2_ctrl', 'erase', false, {ids: id_arr}, function(data){
+                     core.getJSON('geoface_ctrl', 'erase', false, {ids: id_arr}, function(data){
                        core.message(data.text, data.status);
                    layout.dialog.close();
                  });
@@ -406,7 +407,7 @@ var geoface2  = {
      * https://groups.google.com/forum/#!msg/leaflet-js/ZAOs2TyKLwI/YqhadbsfL8gJ
      */
     toWKT: function (layer) {
-      var lng, lat, coords = [];
+			var lng, lat, coords = [];
       if (layer instanceof L.Polygon || layer instanceof L.Polyline) {
         var latlngs = layer.getLatLngs();
         for (var i = 0; i < latlngs.length; i++) {
@@ -416,16 +417,15 @@ var geoface2  = {
             lat = latlngs[i].lat;
           }
         }
-
         if (layer instanceof L.Polygon) {
           return "POLYGON((" + coords.join(",") + "," + lng + " " + lat + "))";
         } else if (layer instanceof L.Polyline) {
           return "LINESTRING(" + coords.join(",") + ")";
         }
-        } else if (layer instanceof L.Marker) {
-          return "POINT(" + layer.getLatLng().lng + " " + layer.getLatLng().lat + ")";
-        }
+      } else if (layer instanceof L.Marker || layer instanceof L.CircleMarker) {
+        return "POINT(" + layer.getLatLng().lng + " " + layer.getLatLng().lat + ")";
+      }
     }
 };
 
-var G = geoface2;
+var G = geoface;

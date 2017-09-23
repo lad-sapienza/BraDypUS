@@ -1,3 +1,4 @@
+3.7.0[] = "Removed support for EPSG other then 4326"
 3.7.0[] = "Removed support for openLayers geoface and updated leaflet geoface with support for googlemaps key"
 3.6.2[] = "Bug fixed with Advanced search inputs"
 3.6.1[] = "API: q_encoded accepts fields and join parameters"

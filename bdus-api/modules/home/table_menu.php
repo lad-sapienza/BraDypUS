@@ -55,13 +55,9 @@ if (!$_GET['tb'])
 		<?php tr::show('export'); ?>
 	</li>
 
-	<li <?php echo utils::canUser('read') ? 'onclick="core.runMod(\'geoface\', \'' . $_GET['tb'] . '\');"' : 'class="state-disabled"'; ?>>
-		<i class="fa fa-map-marker"></i><br />
-		<?php tr::show('GeoFace'); ?>
-	</li>
 	<li <?php echo utils::canUser('read') ? 'onclick="core.runMod(\'geoface2\', \'' . $_GET['tb'] . '\');"' : 'class="state-disabled"'; ?>>
 		<i class="fa fa-map-marker"></i><br />
-		<?php tr::show('GeoFace'); ?>2
+		<?php tr::show('GeoFace'); ?>
 	</li>
 
 </ul>

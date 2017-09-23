@@ -203,7 +203,7 @@
 				<legend>Geoface</legend>
 
 				<div class="row">
-					<div class="col-sm-6">
+					<div class="col-sm-4">
 						<label>Map EPSG</label>
 						<select name="geoface[epsg]">
 							<option></option>
@@ -213,7 +213,12 @@
 						</select>
 					</div>
 
-					<div class="col-sm-6">
+					<div class="col-sm-4">
+						<label>Google Maps key</label>
+						<input type="text" name="geoface[googleKey]" value="{{ data.geoface.googleKey }}">
+					</div>
+
+					<div class="col-sm-4">
 						<label>Exclude web basemaps</label>
 						{% for excl in data.geoface.layers.excludeWeb %}
 							<select name="geoface[layers][excludeWeb][]" {% if loop.index0 == 0 %} class="cloneable"{% endif %}>

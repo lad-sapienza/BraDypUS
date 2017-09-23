@@ -8,7 +8,6 @@ var geoface  = {
 
   geoJSON: {},
   metadata: {},
-  otherLayers: [],
   map: {},
   param: {},
 	overlay: {},
@@ -29,7 +28,7 @@ var geoface  = {
 			'getData',
 			'loadLeaflet',
 			'loadLDraw',
-			// 'loadLOmnivore',
+			'loadLOmnivore',
 			'loadGoogle',
 			'loadGoogleMutant',
 			'buildMap'];
@@ -73,40 +72,8 @@ var geoface  = {
       // set metadata
       G.metadata = data.metadata;
 
-      // If no local layer is defined: go ahead with queue
-      if (typeof(G.metadata.layers.local) !== 'object'){
-				G.runQueue();
-				return;
-			}
+      G.runQueue();
 
-			// Local layer is defined: Load them in G.otherLayers
-      $.each(G.metadata.layers.local, function(index, vec){
-        if (vec.id.match(/\.geojson/)){
-          $.getJSON(vec.id, function(data2){
-              G.otherLayers.push({
-                'name'  : vec.name,
-                'id'    : vec.id,
-                'epsg'  : vec.epsg,
-                'data'  : data2,
-                'style'  : vec.style
-              });
-              if (index == (G.metadata.layers.local.length-1)){
-                G.runQueue();
-              }
-            }).fail(function(jqxhr, settings, exception) {
-							console.log(vec.id, exception);
-            });
-        } else {
-          G.otherLayers.push({
-						'name'  : vec.name,
-            'id'    : vec.id
-          });
-
-          if (index == (G.metadata.layers.local.length-1)){
-            G.runQueue();
-          }
-        }
-      });
     });
   },
 
@@ -260,26 +227,40 @@ var geoface  = {
 		})
 		.addTo(G.map);
 
-    if (G.otherLayers.length > 0 ){
-      $.each(G.otherLayers, function (i, lay){
-        if (lay.id.match(/\.geojson/)){
+    if (G.metadata.layers.local.length > 0 && typeof omnivore !== 'undefined'){
+      $.each(G.metadata.layers.local, function (i, lay){
+        var ext = lay.id.split('.').pop().toLowerCase();
 
-          G.overlay[lay.name] = L.geoJson(lay.data, {
-            onEachFeature: function (feature, layer) {
-              var html = '';
-              $.each(feature.properties, function(key, val){
-                if (key !== 'id' && key !== 'geo_id'){
-                  html += key + ': <strong>' + val + '</strong><br />';
-                }
-              });
-              layer.bindPopup(html);
-            }
-          });
-
-        } else if (lay.id.match(/\.kml/)){
-          G.overlay[lay.name] = new L.KML(lay.id, {async: true});
+        switch (ext) {
+          case 'csv':
+          case 'gpx':
+          case 'kml':
+          case 'wkt':
+          case 'topojson':
+          case 'geojson':
+            G.overlay[lay.name] = omnivore[ext](lay.id, null, L.geoJson(null, {
+              style: function(feature) {
+                return lay.style;
+              },
+              onEachFeature: function (feature, layer) {
+                var html = '';
+        			  $.each(feature.properties, function(key, val){
+        				  if (val){
+        					  html += key + ': <strong>' + val + '</strong><br />';
+        				  }
+        			  });
+        			  layer.bindPopup(html);
+              }
+            }))
+            .addTo(G.map);
+            break;
+          default:
+            console.log('Unknown extension: ' + ext);
+            break;
         }
+        console.log(ext);
       });
+
     }
 
     //Add other layers, both basemaps and overlays to map

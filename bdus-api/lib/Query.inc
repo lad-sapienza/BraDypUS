@@ -185,7 +185,7 @@ class Query
 	{
 		$result = $this->db->query($this->getQuery(), false, 'read');
 
-		if (!$full || !is_array($results)){
+		if (!$full || !is_array($result)){
 			return $result;
 		}
 

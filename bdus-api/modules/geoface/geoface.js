@@ -81,7 +81,13 @@ var geoface  = {
 	 * Loads GoogleMaps APi
 	 */
   loadGoogle: function(){
+    if (typeof G.metadata.googleKey === 'undefined') {
+      console.log('*** GoogleMaps key missing: if you want to use google layers please enter the key for table ' + G.metadata.tb);
+      G.runQueue();
+      return;
+    }
     if ($.inArray('google', G.metadata.layers.excludeWeb) === -1 && typeof(google) == 'undefined'){
+      console.log('Google load');
       $.getScript('https://maps.googleapis.com/maps/api/js?key='+ G.metadata.googleKey, function(){
 				G.runQueue();
 			}).fail(function(jqxhr, settings, exception) {
@@ -201,7 +207,6 @@ var geoface  = {
       baseMaps['Google Hybrid'] =			L.gridLayer.googleMutant({ type:'hybrid'});
     }
 
-
     // Main, database, overlay vector layer
 		G.overlay[G.metadata.tb] = L.geoJson(G.geoJSON, {
 			pointToLayer: function(feature, latlng){
@@ -227,7 +232,7 @@ var geoface  = {
 		})
 		.addTo(G.map);
 
-    if (G.metadata.layers.local.length > 0 && typeof omnivore !== 'undefined'){
+    if (typeof G.metadata.layers.local !== 'undefined' && typeof omnivore !== 'undefined'){
       $.each(G.metadata.layers.local, function (i, lay){
         var ext = lay.id.split('.').pop().toLowerCase();
 
@@ -270,12 +275,8 @@ var geoface  = {
     if (G.metadata.canUserEdit && typeof L.Control.Draw !== 'undefined'){
       // Create draw control
       var drawControl = new L.Control.Draw({
-				draw: {
-             marker: false
-         },
-				edit: {
-          featureGroup: G.overlay[G.metadata.tb]
-        }
+				draw: { marker: false },
+				edit: { featureGroup: G.overlay[G.metadata.tb] }
       });
       // Add draw control to map
       G.map.addControl(drawControl);
@@ -299,20 +300,20 @@ var geoface  = {
     G.map.on('draw:created', function(e){
 
       api.link.add_ui(
-            //success function
-            function(tb, id, dia){
-              core.getJSON('geoface_ctrl', 'saveNew', false, {tb: tb, id: id, coords: G.toWKT(e.layer)}, function(data){
-                core.message(data.text, data.value);
-                e.layer.feature = {properties: {geo_id: data.id}};
+        //success function
+        function(tb, id, dia){
+          core.getJSON('geoface_ctrl', 'saveNew', false, {tb: tb, id: id, coords: G.toWKT(e.layer)}, function(data){
+            core.message(data.text, data.value);
+            e.layer.feature = {properties: {geo_id: data.id}};
+          });
+          $('#modal').modal('hide');
 
-              });
-              $('#modal').modal('hide');
-
-              vector_layer.addLayer(e.layer);
-            },
-            false,
-            true,
-            G.metadata.tb_id);
+          vector_layer.addLayer(e.layer);
+        },
+        false,
+        true,
+        G.metadata.tb_id
+      );
     });
 
 
@@ -332,7 +333,6 @@ var geoface  = {
     });
 
 
-
     // DELETED
     G.map.on('draw:deleted', function(e){
 
@@ -341,31 +341,27 @@ var geoface  = {
         id_arr.push(layer.feature.properties.geo_id);
       });
 
-
       core.open({
         html: '<h2>' + core.tr('confirm_erase_feature') + '</h2>',
         title: core.tr('attention'),
         buttons:[
-                 {
-                   text: core.tr('erase'),
-                   click: function(){
-                     core.getJSON('geoface_ctrl', 'erase', false, {ids: id_arr}, function(data){
-                       core.message(data.text, data.status);
-                   layout.dialog.close();
-                 });
-                   }
-                 },
-                 {
-                   text: core.tr('cancel'),
-                   action: 'close'
-                 }
+          {
+           text: core.tr('erase'),
+           click: function(){
+             core.getJSON('geoface_ctrl', 'erase', false, {ids: id_arr}, function(data){
+               core.message(data.text, data.status);
+               layout.dialog.close();
+             });
+           }
+         },
+         {
+           text: core.tr('cancel'),
+           action: 'close'
+         }
         ]
       }, 'modal');
-
     });
-
   },
-
 
     /**
      * Resizes map container to fit window

@@ -7,7 +7,7 @@
  *
  *
  * API is reacheable at {app_base_url}/api/{app_name}/{no_prefix_tb_name}
- *  eg.: http://db.bradypus.net/sitarc/siti
+ *  eg.: https://db.bradypus.net/sitarc/siti
  *
  * Available parameters:
  * GET:
@@ -22,18 +22,7 @@
 
 class api_ctrl extends Controller
 {
-	private function buildHeader(Query $query, $tb)
-	{
-		$header = array();
 
-		$header['query_arrived'] = $query->getQuery();
-		$header['query_encoded'] = base64_encode($query->getQuery());
-		$header['status'] = 'success';
-		$header['total_rows'] = (int) $query->getTotal();
-		$header['fields'] = cfg::fldEl($tb, 'all', 'label');
-
-		return $header;
-	}
 
 	/**
 	 * [run_v2 description]
@@ -58,50 +47,59 @@ class api_ctrl extends Controller
 
 		try {
 
+			// Initialize array of request data
 			$request = [];
 
-			// Get params
-			$app = $this->get['app'];
-			$request['tb'] = $this->get['app'] . '__' . $this->get['tb'];
-			$verb = $this->get['verb'];
+			// Check all input data
 
-			$id = $this->get['id']; // required for verb read
-
-			$type = $this->get['type']; // required for verb search
-
-
-			// Validate verb
-			$valid_verbs = ['read', 'search'];
-			if (!$verb || !in_array($verb, $valid_verbs)) {
-				throw new Exception("Invalid verb {$verb}. Verb must be one of " . implode(', ', $valid_verbs));
-			}
-			// Validate app
+			// $_GET['app']: mandatory
 			$valid_apps = utils::dirContent(PROJS_DIR);
-			if (!$app || !in_array($app, $valid_apps)) {
-				throw new Exception("Invalid app {$app}. App must be one of " . implode(', ', $valid_apps));
+			if (!$this->get['app'] || !in_array($this->get['app'], $valid_apps)) {
+				throw new Exception("Invalid app {$this->get['app']}. App must be one of " . implode(', ', $valid_apps));
+			}
+			$app = $this->get['app'];
+
+
+			// $_GET['tb']: mandatory
+			if (!$this->get['tb']) {
+				throw new Exception("Tb parameter is mandatory");
+			}
+			$request['tb'] = $app . '__' . $this->get['tb'];
+
+
+			// $_GET['verb']: mandatory, one of read, search
+			$valid_verbs = ['read', 'search'];
+			if (!$this->get['verb'] || !in_array($this->get['verb'], $valid_verbs)) {
+				throw new Exception("Invalid verb {$this->get['verb']}. Verb must be one of " . implode(', ', $valid_verbs));
 			}
 
-			// READ
-			if ($verb === 'read') {
-				if (!$id) {
+
+			// READ verb
+			if ($this->get['verb'] === 'read') {
+				if (!$this->get['id']) {
 					throw new Exception("Parameter id is required with verb read");
 				}
 				return $this->array2json(
-					$this->getOne($request['tb'], $id)
+					$this->getOne($request['tb'], $this->get['id'])
 				);
 			}
 
-			// SEARCH
-			if ($verb === 'search') {
 
-
+			// SEARCH verb
+			if ($this->get['verb'] === 'search') {
 
 				$valid_types = ['all', 'recent', /*'advanced', */'sqlExpert', 'fast', 'id_array', 'encoded'];
 
-				$request['type'] = $type;
+				if( !in_array($this->get['type'], $valid_types)) {
+					throw new Exception("Invalid search type {$this->get['type']}. Type must be one of " . implode(', ', $valid_types));
+				}
+				$request['type'] = $this->get['type'];
+
+				// Set query parameters
 
 				switch ($request['type']) {
 					case 'all':
+						// No params set
 						break;
 
 					case 'recent':
@@ -116,12 +114,12 @@ class api_ctrl extends Controller
 					// 	break;
 
 					case 'sqlExpert':
-						$request['join'] = $this->get['join'];
-						$request['querytext'] = $this->get['querytext'];
-						$request['fields'] = $this->request['fields'];
-						if (!$request['querytext']) {
+						if (!$this->get['querytext']) {
 							throw new Exception("Parameter querytext is required for type sqlExpert");
 						}
+						$request['querytext'] = $this->get['querytext'];
+						$request['join'] = $this->get['join'];
+						$request['fields'] = $this->request['fields'];
 						break;
 
 					case 'fast':
@@ -132,160 +130,94 @@ class api_ctrl extends Controller
 						break;
 
 					case 'id_array':
-						$request['id'] = $this->get['id'];
-						if (!$request['id']) {
+						if (!$this->get['id']) {
 							throw new Exception("Parameter id is required for type id_array");
 						}
+						$request['id'] = $this->get['id'];
 						break;
 
 					case 'encoded':
-						$request['q_encoded'] = $this->get['q_encoded'];
-						$request['join'] = $this->get['join'];
-						$request['fields'] = $this->get['fields'];
 						if (!$this->get['q_encoded']) {
 							throw new Exception("Parameter q_encoded is required for type encoded");
 						}
-						break;
-
-					default:
-						throw new Exception("Invalid search type {$type}. Type must be one of " . implode(', ', $valid_types));
+						$request['q_encoded'] = $this->get['q_encoded'];
+						$request['join'] = $this->get['join'];
+						$request['fields'] = $this->get['fields'];
 						break;
 				}
-
 			}
-
-			$records_per_page = $this->get['records_per_page'] ? $this->get['records_per_page'] : 30;
 
 			$query = new Query(new DB, $request);
 
+			// Set Header
 			$header['query_arrived'] = $query->getQuery();
 			$header['query_encoded'] = base64_encode($query->getQuery());
 			$header['total_rows'] = $this->get['total_rows'] ? $this->get['total_rows'] : (int) $query->getTotal();
 			$header['page'] = $this->get['page'] ? $this->get['page'] : 1;
+
+			$records_per_page = $this->get['records_per_page'] ? $this->get['records_per_page'] : 30;
 			$header['total_pages'] = ceil($header['total_rows']/$records_per_page);
 			$header['table'] = $request['tb'];
-			$header['stripped_table'] = str_replace($_SESSION['app'] . '__', null, $request['tb']);
-
-			if ($header['page'] > $header['total_pages']) {
-				$header['page'] = $header['total_pages'];
-			}
+			$header['stripped_table'] = str_replace($app . '__', null, $request['tb']);
+			$header['page'] = ($header['page'] > $header['total_pages']) ? $header['total_pages'] : $header['page'];
 
 			if ($header['total_rows'] > 0) {
 				$query->setLimit(($header['page'] -1) * $records_per_page, $records_per_page);
 			}
 
 			$header['no_records_shown'] = (int) $query->getTotal();
-
 			$header['query_executed'] = $query->getQuery();
-
 			$header['fields'] = $query->getFields();
 
 			$this->array2json([
 				'head' => $header,
-				'records' => $query->getResults(empty($this->request['fields']))
+				'records' => $query->getResults( ($this->get['fullRecords'] && $this->get['fullRecords'] !== 'false') )
 			]);
 
 		} catch (Exception $e) {
-
 			$this->array2json(array('type' => 'error', 'text' => $e->getMessage()));
-
 		}
 	}
 
-	private function getCustom($tb, $fields = "*", $join = false, $where = false, $order = false, $limit = false, $group = false)
-	{
-		$sql = 'SELECT ';
-		if (is_array($fields)) {
-			foreach ($fields as $key => $value) {
-				$f[] = $value . ( is_string($key) ? ' as ' . $key : '');
-			}
-			$sql .= implode(', ', $f) . ' ';
-		} else {
-			$sql .= $fields . ' ';
-		}
-
-		$sql = 'FROM ' . $tb . ' '
-			. ($join ? $join . ' ': '')
-			. 'WHERE ' . ($where ? $where : '1') . ' ';
-
-
-	}
-
-
+	/**
+	 * Return full array with record data
+	 * @param  string $tb table name
+	 * @param  int $id record id
+	 * @return array     array with all data
+	 */
 	private function getOne($tb, $id)
 	{
 		$rec = new Record($tb, $id, new DB);
-
     $data['fields'] = cfg::fldEl($tb, 'all', 'label');
-
 		$data['core'] = $rec->getCore();
-
 		$data['coreLinks'] = $rec->getCoreLinks();
-
 		$data['allPlugins'] = $rec->getAllPlugins();
-
 		$data['fullFiles'] = $rec->getFullFiles();
-
 		$data['geodata'] = $rec->getGeodata();
-
-    if (cfg::tbEl($tb, 'rs'))
-    {
+    if (cfg::tbEl($tb, 'rs')){
       $data['rs'] = $rec->getRS();
     }
-
 		$data['userLinks'] = $rec->getUserLinks();
-
 		return $data;
 	}
 
+	/**
+	 * Formats array data as pretty-printed JSON and returns or echoes (with Cross-domain alloe policy) it
+	 * @param  array  $data       array of input data
+	 * @param  boolean $dont_print if true JSON will be returned, otherwize it will be printed
+	 * @return string
+	 */
 	private function array2json($data, $dont_print = false)
 	{
 		$json = json_encode($data, (version_compare(PHP_VERSION, '5.4.0') >=0 ? JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE : false));
 
-		if ($dont_print)
-		{
+		if ($dont_print) {
 			return $json;
-		}
-		else
-		{
+		} else {
 			header('Access-Control-Allow-Origin: *');
 			header('Content-type: application/json; charset=utf-8');
 			echo $json;
 		}
 	}
 
-	private function log()
-	{
-		if (!$this->get['app'])
-		{
-			throw new myException('No application defined');
-		}
-
-		if (!file_exists(PROJS_DIR . $this->get['app'] . '/cfg/app_data.json'))
-		{
-			throw new myException('No app_data config file found!');
-		}
-
-		$app_data = json_decode(file_get_contents(PROJS_DIR . $this->get['app'] . '/cfg/app_data.json'), true);
-
-		if (!$app_data['api_login_as_user'])
-		{
-			throw new myException('API login disabled for app: ' . $this->get['app']);
-		}
-
-		$user = new User(new DB($this->get['app']));
-
-		$logged = $user->login(false, false, false, $app_data['api_login_as_user']);
-
-		if (!$logged)
-		{
-			throw new myException('Error loging in as user id:' . $app_data['api_login_as_user']);
-		}
-
-		if (!utils::canUser('read'))
-		{
-			throw new myException('User logged, but don\'t have read privilege');
-		}
-
-	}
 }

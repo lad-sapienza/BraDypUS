@@ -9,7 +9,7 @@
 class utils
 {
   /**
-   * If error or users log files is grown bigger than 5MB (5242880B) these
+   * If error or users log files is grown bigger than 3MB (3145728) these
    * files will be packed and compressed
    */
 	public static function packLog()
@@ -19,28 +19,22 @@ class utils
 			$files['main_error'] = MAIN_DIR . 'logs/error.log';
 			$files['users'] = MAIN_DIR . 'logs/users.log';
 
-			if (defined('PROJ_DIR'))
-			{
+			if (defined('PROJ_DIR')) {
 				$files[$_SESSION['app'] . '-error'] = PROJ_DIR . 'error.log';
 				$files[$_SESSION['app'] . '-history'] = PROJ_DIR . 'history.log';
 			}
 
-			foreach ($files as $name => $path)
-			{
-				if (!file_exists($path))
-				{
+			foreach ($files as $name => $path) {
+				if (!file_exists($path)) {
 					continue;
 				}
 
-				if (filesize($path) > 5242880 /* 5 MB */)
-				{
+				if (filesize($path) > 3*1048576 ) {
 					utils::write_in_file(MAIN_DIR . 'logs/'. $name . '-' . microtime(1) . '.log', file_get_contents($path), true);
 					utils::write_in_file($path, '');
 				}
 			}
-		}
-		catch (myException $e)
-		{
+		} catch (myException $e) {
 			$e->log();
 		}
 	}

@@ -216,7 +216,7 @@
 				  });
 			});
 
-			$('#form{{ uid }}').find(':input[data-changeonchange]').change(function(el){
+			$('#form{{ uid }}').find(':input[data-changeonchange]').on('change', function(el){
 				$(':input[name="' + $(this).data('changeonchange') + '"]').attr('changed', 'auto');
 			});
 

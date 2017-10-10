@@ -44,7 +44,7 @@ function formControl(el, options){
 
 	// add changed attribute to form inputs on change event
 	if ( settings.addChange ) {
-		$this.find (':input').change(function(){
+		$this.find (':input').on('change', function(){
 			$(this).attr('changed', 'auto');
 		});
 	}
@@ -55,7 +55,7 @@ function formControl(el, options){
 		// reset wrongEl array
 		wrongEl = [];
 
-		$this.find(':input[check]').change(function(){
+		$this.find(':input[check]').on('change', function(){
 			removeError(this);
 			var el = $(this);
 

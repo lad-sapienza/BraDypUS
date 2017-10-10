@@ -965,9 +965,8 @@ class Field implements iTemplate
 
 		$core .= $setting['check'] ? ' check="'. $setting['check'] .'"' : '';
 
-		if (preg_match('/plg/', $setting['name']))
-		{
-			$core .= 'data-changeonchange ="' . str_replace($setting['fieldname'], 'id', $setting['name']). '"';
+		if (preg_match('/plg/', $setting['name'])) {
+			$core .= 'data-changeonchange ="' . str_replace('[' . $setting['fieldname']. ']', '[id]', $setting['name']). '"';
 		}
 
 		switch($setting['type'])

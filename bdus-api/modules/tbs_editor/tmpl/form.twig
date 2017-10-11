@@ -214,8 +214,14 @@
 						{% for excl in data.geoface.layers.excludeWeb %}
 							<select name="geoface[layers][excludeWeb][]" {% if loop.index0 == 0 %} class="cloneable"{% endif %}>
 								<option></option>
-								<option value="google"{% if data.geoface.excludeWeb == 'google' %} selected="selected" {% endif %}>Google</option>
-								<option value="osm"{% if data.geoface.excludeWeb == 'osm' %} selected="selected" {% endif %}>Open Street Map</option>
+								<option value="OSM"{% if excl == 'OSM' %} selected="selected" {% endif %}>OSM</option>
+								<option value="AWMC"{% if excl == 'AWMC' %} selected="selected" {% endif %}>AWMC</option>
+								<option value="Imperium/Pelagios"{% if excl == 'Imperium/Pelagios' %} selected="selected" {% endif %}>Imperium/Pelagios</option>
+								<option value="Imperium/DARE"{% if excl == 'Imperium/DARE' %} selected="Imperium/DARE" {% endif %}>AWMC</option>
+								<option value="ImperGoogle Satellite"{% if excl == 'Google Satellite' %} selected="selected" {% endif %}>Google Satellite</option>
+								<option value="ImperGoogle Roadmap"{% if excl == 'Google Roadmap' %} selected="selected" {% endif %}>Google Roadmap</option>
+								<option value="ImperGoogle Terrain"{% if excl == 'Google Terrain' %} selected="selected" {% endif %}>Google Terrain</option>
+								<option value="ImperGoogle Hybrid"{% if excl == 'Google Hybrid' %} selected="selected" {% endif %}>Google Hybrid</option>
 
 							</select>
 						{% endfor %}

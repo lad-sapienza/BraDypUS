@@ -193,19 +193,43 @@ var geoface  = {
 		// Start map object
 		G.map = new L.map('map');
 
+    var availableBaseMaps = {
+      "OSM": new L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png').addTo(G.map),
+      "AWMC" : L.tileLayer('http://{s}.tiles.mapbox.com/v3/isawnyu.map-knmctlkh/{z}/{x}/{y}.png'),
+      // http://commons.pelagios.org/2012/09/a-digital-map-of-the-roman-empire/
+      "Imperium\/Pelagios" : L.tileLayer('http://pelagios.org/tilesets/imperium/{z}/{x}/{y}.png'),
+      "Imperium\/DARE" : L.tileLayer('http://dare.ht.lu.se/tiles/imperium/{z}/{x}/{y}.png')
+    };
+
+    if (typeof L.gridLayer.googleMutant !== 'undefined') {
+      availableBaseMaps['Google Satellite'] =	L.gridLayer.googleMutant({ type:'satellite'});
+      availableBaseMaps['Google Roadmap'] =		L.gridLayer.googleMutant({ type:'roadmap'});
+      availableBaseMaps['Google Terrain'] =		L.gridLayer.googleMutant({ type:'terrain' });
+      availableBaseMaps['Google Hybrid'] =			L.gridLayer.googleMutant({ type:'hybrid'});
+    }
+
     // baseMap object contains all basemaps
-    var baseMaps = {
-			// Start OSM
-			"OSM": new L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png').addTo(G.map)
-		};
+    var baseMaps = {};
+
+    for (var k in availableBaseMaps) {
+      if (
+        availableBaseMaps.hasOwnProperty(k) &&
+        (
+          typeof G.metadata.layers.excludeWeb === 'undefined' ||
+          G.metadata.layers.excludeWeb.indexOf(k) < 0
+        )
+      ) {
+        baseMaps[k] = availableBaseMaps[k];
+      }
+    }
 
     // Start Google
-    if ($.inArray('google', G.metadata.layers.excludeWeb) === -1 && typeof L.gridLayer.googleMutant !== 'undefined'){
-      baseMaps['Google Satellite'] =	L.gridLayer.googleMutant({ type:'satellite'});
-      baseMaps['Google Roadmap'] =		L.gridLayer.googleMutant({ type:'roadmap'});
-      baseMaps['Google Terrain'] =		L.gridLayer.googleMutant({ type:'terrain' });
-      baseMaps['Google Hybrid'] =			L.gridLayer.googleMutant({ type:'hybrid'});
-    }
+    // if ($.inArray('google', G.metadata.layers.excludeWeb) === -1 && typeof L.gridLayer.googleMutant !== 'undefined'){
+    //   baseMaps['Google Satellite'] =	L.gridLayer.googleMutant({ type:'satellite'});
+    //   baseMaps['Google Roadmap'] =		L.gridLayer.googleMutant({ type:'roadmap'});
+    //   baseMaps['Google Terrain'] =		L.gridLayer.googleMutant({ type:'terrain' });
+    //   baseMaps['Google Hybrid'] =			L.gridLayer.googleMutant({ type:'hybrid'});
+    // }
 
     // Main, database, overlay vector layer
 		G.overlay[G.metadata.tb] = L.geoJson(G.geoJSON, {

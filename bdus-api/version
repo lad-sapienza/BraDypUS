@@ -1,3 +1,4 @@
+3.8.1[] = "Google maps key moved to main application data"
 3.8.1[] = "New Imperium (Pelagios & DARE) and AWMC basemaps to Geoface"
 3.7.3[] = "jQuery change observer replaced with on('change'"
 3.7.3[] = "Fixed bug with ambiguous plugin field names"

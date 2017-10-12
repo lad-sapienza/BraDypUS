@@ -187,6 +187,7 @@ class geoface_ctrl extends Controller
 			$response['metadata'] = array_merge($geoface, [
 				'tb_id'=>$tb,
 				'tb'=>cfg::tbEl($tb, 'label'),
+				'gmapskey' => cfg::main('gmapskey'),
 				'canUserEdit' => utils::canUser('edit')
 			]);
 

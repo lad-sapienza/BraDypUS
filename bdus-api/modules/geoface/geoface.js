@@ -81,14 +81,14 @@ var geoface  = {
 	 * Loads GoogleMaps APi
 	 */
   loadGoogle: function(){
-    if (typeof G.metadata.googleKey === 'undefined') {
+    if (typeof G.metadata.gmapskey === 'undefined') {
       console.log('*** GoogleMaps key missing: if you want to use google layers please enter the key for table ' + G.metadata.tb);
       G.runQueue();
       return;
     }
     if ($.inArray('google', G.metadata.layers.excludeWeb) === -1 && typeof(google) == 'undefined'){
       console.log('Google load');
-      $.getScript('https://maps.googleapis.com/maps/api/js?key='+ G.metadata.googleKey, function(){
+      $.getScript('https://maps.googleapis.com/maps/api/js?key='+ G.metadata.gmapskey, function(){
 				G.runQueue();
 			}).fail(function(jqxhr, settings, exception) {
 				console.log('google', exception);

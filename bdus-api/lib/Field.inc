@@ -142,42 +142,46 @@ class Field implements iTemplate
 		// SHOW CORELINKS
 		$html .= '<i class="glyphicon glyphicon-link"></i> <strong>' . tr::get('core_links'). '</strong><br />';
 
-		if (is_array($backlinks))
-		{
-			foreach($backlinks as $dest_tb => $l_arr)
-			{
-				foreach ($l_arr as $v)
-				{
-					$html .= '<li><span class="btn-link" onclick="' .
-	         "api.record.read('{$dest_tb}', ['{$v['id']}'], true);" .
-	          '" href="javascript:void(0)">' .
-						cfg::tbEl($dest_tb, 'label') . '::' . ($v['label'] ?: $v['id']) .
-	          '</span>';
-				}
-			}
+		if (!is_array($corelinks) && !is_array($backlinks)) {
+			$html .= '<p>' . tr::get('no_core_links') . '</p>';
 		}
 
-		if (is_array($corelinks))
-		{
+		if (is_array($backlinks)) {
+
 			$html .= '<ul>';
-			foreach($corelinks as $dest_tb=>$l_arr)
-			{
+
+			foreach($backlinks as $dest_tb => $l_arr) {
+
+				foreach ($l_arr as $v) {
+					$html .= '<li><span class="btn-link" onclick="' .
+	         "api.record.read('{$dest_tb}', ['{$v['id']}'], " . ( $c['label'] ? 'true' : ''). ");" .
+	          '" href="javascript:void(0)">' .
+						cfg::tbEl($dest_tb, 'label') . ':' . ($v['label'] ?: $v['id']) .
+	          '</span></li>';
+				}
+			}
+			$html .= '</ul>';
+		}
+
+		if (is_array($corelinks)) {
+
+			$html .= '<ul>';
+			foreach($corelinks as $dest_tb=>$l_arr) {
+
 				$html .= '<li><span class="btn-link" onclick="' .
          "api.showResults('" . $dest_tb . "', 'type=encoded&q_encoded=" . base64_encode($l_arr['query']) . "', '" . tr::get('saved_queries') . " (". cfg::tbEl($dest_tb, 'label') . ")');" .
           '" href="javascript:void(0)">' .
           tr::sget('links_in_table', array('<strong>' . $l_arr['tot'] . '</strong>', '<strong>' . cfg::tbEl($dest_tb, 'label') . '</strong>')) .
           '</span>';
-        if (cfg::tbEl($dest_tb, 'rs'))
-        {
+
+        if (cfg::tbEl($dest_tb, 'rs')) {
+
           $html .= ' (<span class="btn-link" onclick="api.record.showMatrix(\'' . $dest_tb . '\', \'' . base64_encode($l_arr['query']) . '\')">' . tr::get('harris_matrix'). '</span>)';
         }
-         $html .= '</li>';
+
+        $html .= '</li>';
 			}
 			$html .= '</ul>';
-		}
-		else
-		{
-			$html .= '<p>' . tr::get('no_core_links') . '</p>';
 		}
 
 		// SHOW USER LINKS

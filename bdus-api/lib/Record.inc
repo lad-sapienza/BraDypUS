@@ -578,21 +578,21 @@ class Record implements iRecord
 
 			$dest_id_fld = cfg::tbEl($tb, 'id_field');
 
-			if ($dest_id_fld !== 'id') {
-				$sql = <<<EOD
-SELECT `id`, `{$dest_id_fld}` as label
-	FROM `{$tb}`
-	WHERE `id` IN
-		(SELECT `id_link`
-			FROM `{$plg}`
-			WHERE
-				`table_link` = '{$tb}'
-				AND
-				`{$plg_fld}` = '$this_id_fld_val'
-				)
-EOD;
+			if ($dest_id_fld === 'id') {
+				// If id_field of the destrination table is id field, the query is simple
+				$sql = "SELECT `id_link` as id FROM `{$plg}` WHERE `table_link` = '{$this->tb}' AND `{$plg_fld}` = '$this_id_fld_val'";
+
 			} else {
-				$sql = "SELECT `id_link` as id FROM `{$plg}` WHERE `table_link` = '{$tb}' AND `{$plg_fld}` = '$this_id_fld_val'";
+        // SQl query is more complicated and is run on the destination table
+				$sql = <<<EOD
+SELECT `id`, `{$dest_id_fld}` as label FROM `{$tb}`
+	WHERE `id` IN (
+		SELECT `{$plg_fld}` FROM `{$plg}` WHERE
+			`table_link` = '{$this->tb}'
+			AND
+			`id_link` = '$this_id_fld_val'
+		)
+EOD;
 			}
 
 			$ret[$tb] = $this->db->query($sql, false, 'read');
@@ -725,7 +725,7 @@ EOD;
 	/**
 	 * Executes all queries of a query array (q=> query text, values=>array with values to bind)
 	 * and returns array with result count flag (array(success => array(), error=>array())
-	 * @param unknown_type $query_arr
+	 * @param array $query_arr
 	 */
 	private function query2db($q_arr)
 	{
@@ -755,7 +755,7 @@ EOD;
 
 	private function loadUserLinks()
 	{
-		$sql = 'SELECT * FROM `' . PREFIX . '__userlinks` WHERE (`tb_one` = :thistb AND `id_one` = :thisid) OR (`tb_two` = :thistb AND `id_two` = :thisid)';
+		$sql = 'SELECT * FROM `' . PREFIX . '__userlinks` WHERE (`tb_one` = :thistb AND `id_one` = :thisid) OR (`tb_two` = :thistb AND `id_two` = :thisid) ORDERED BY `sort`, `id`';
 
 		$userlinks = $this->db->query($sql, array(':thistb' =>$this->tb, ':thisid' =>$this->id), 'read');
 

@@ -141,8 +141,10 @@
 					<div class="col-sm-7">
 						{% for backlink in data.backlinks %}
 							<input type="text" name="backlinks[]"{% if loop.first %} class="cloneable"{% endif %} value="{{ backlink }}">
-							<span id="helpBlock" class="help-block">Destination full table name : plugin full table name : plugin field name</span>
+						{% else %}
+							<input type="text" name="backlinks[]" class="cloneable">
 						{% endfor %}
+						<span id="helpBlock" class="help-block">Destination full table name : plugin full table name : plugin field name</span>
 						<button type="button" class="btn btn-default clone-action"  data-baseName="aaa">+</button>
 					</div>
 				</div>

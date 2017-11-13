@@ -580,17 +580,17 @@ class Record implements iRecord
 
 			if ($dest_id_fld === 'id') {
 				// If id_field of the destrination table is id field, the query is simple
-				$sql = "SELECT `id_link` as id FROM `{$plg}` WHERE `table_link` = '{$this->tb}' AND `{$plg_fld}` = '$this_id_fld_val'";
+				$sql = "SELECT `id_link` as id FROM `{$plg}` WHERE `table_link` = '{$tb}' AND `{$plg_fld}` = '" . $this->getCore('id') . "'";
 
 			} else {
         // SQl query is more complicated and is run on the destination table
 				$sql = <<<EOD
 SELECT `id`, `{$dest_id_fld}` as label FROM `{$tb}`
 	WHERE `id` IN (
-		SELECT `{$plg_fld}` FROM `{$plg}` WHERE
-			`table_link` = '{$this->tb}'
+		SELECT `id_link` FROM `{$plg}` WHERE
+			`table_link` = '{$tb}'
 			AND
-			`id_link` = '$this_id_fld_val'
+			`{$plg_fld}` = '{$this->getCore('id')}'
 		)
 EOD;
 			}
@@ -755,7 +755,7 @@ EOD;
 
 	private function loadUserLinks()
 	{
-		$sql = 'SELECT * FROM `' . PREFIX . '__userlinks` WHERE (`tb_one` = :thistb AND `id_one` = :thisid) OR (`tb_two` = :thistb AND `id_two` = :thisid) ORDERED BY `sort`, `id`';
+		$sql = 'SELECT * FROM `' . PREFIX . '__userlinks` WHERE (`tb_one` = :thistb AND `id_one` = :thisid) OR (`tb_two` = :thistb AND `id_two` = :thisid) ORDER BY `sort`, `id`';
 
 		$userlinks = $this->db->query($sql, array(':thistb' =>$this->tb, ':thisid' =>$this->id), 'read');
 

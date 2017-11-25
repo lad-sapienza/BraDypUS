@@ -159,6 +159,7 @@ class api_ctrl extends Controller
 			$header['total_pages'] = ceil($header['total_rows']/$records_per_page);
 			$header['table'] = $request['tb'];
 			$header['stripped_table'] = str_replace($app . '__', null, $request['tb']);
+			$header['table_label'] = cfg::tbEl($request['tb'], 'label');
 			$header['page'] = ($header['page'] > $header['total_pages']) ? $header['total_pages'] : $header['page'];
 
 			if ($header['total_rows'] > 0) {

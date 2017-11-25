@@ -67,7 +67,7 @@ The available types are: **all**, **recent**, **sqlExpert**, **fast**, **id_arra
 ### JSON structure of for `verb` **search**
 ```javascript
 {
-    "head": { // head part of the document containig metadata
+    "head": { // head part of the document containing metadata
         "query_arrived": "", // (string) Full SQL text of the built query
         "query_encoded": "", // (string) base64_econcoded version of the executed query for further use
         "total_rows": "", // (int) total number of records found
@@ -75,6 +75,7 @@ The available types are: **all**, **recent**, **sqlExpert**, **fast**, **id_arra
         "total_pages": "", // (int) Total number of pages found
         "table": "", // (string) Full form of the queried table
         "stripped_table": "", // (string) Cleaned form (no app name and prefix) of queried table
+        "table_label": "", // (string) Label of the table name
         "no_records_shown": "", // (int) Number of records shown in the current page
         "query_executed": "", // (string) Full SQL text of the executed query (with pagination limits and sorting)
         "fields": {} // (object) associative object list of fields with field id as key and field label as value
@@ -82,7 +83,7 @@ The available types are: **all**, **recent**, **sqlExpert**, **fast**, **id_arra
     },
     "records": [ // array of objects records
         {
-            "core": { }, // (object) associative object list with fieldname as key and field value as value
+            "core": { }, // (object) associative object list with field name as key and field value as value
             "coreLinks": [], // (array of objects) array with associative object list with coreLinks
             "allPlugins": [], // (array of objects) array with associative object list with plugin data
             "fullFiles": [], // (array of objects) array with associative object list with file data

@@ -1,3 +1,4 @@
+3.8.4[] = "Added table_label in Api"
 3.8.4[] = "Integers in app name in api call"
 3.8.3[] = "Added backlinks support"
 3.8.2[] = "Google maps key moved to main application data"

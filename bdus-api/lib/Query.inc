@@ -67,6 +67,8 @@ class Query
 
 		$this->setGroup($request['group']);
 
+		$this->setLimit($request['limit_start'], $request['limit_end']);
+
 		$this->where = $this->setWhere($request);
 	}
 
@@ -117,9 +119,8 @@ class Query
 
 	public function setLimit($start = false, $limit = false)
 	{
-		if (!preg_match('/(LIMIT)/', $this->where))
-		{
-			$this->limit = $limit ? " LIMIT $start , $limit " : '';
+		if (!$limit && !preg_match('/LIMIT/', $this->where)) {
+			$this->limit = $limit ? " LIMIT $start , $limit " : false;
 		}
 
 		return $this;

@@ -143,6 +143,8 @@ class api_ctrl extends Controller
 						$request['q_encoded'] = $this->get['q_encoded'];
 						$request['join'] = $this->get['join'];
 						$request['fields'] = $this->get['fields'];
+						$request['limit_start'] = $this->get['limit_start'];
+						$request['limit_end'] = $this->get['limit_end'];
 						$request['group'] = $this->get['group'];
 						break;
 				}

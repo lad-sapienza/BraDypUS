@@ -44,7 +44,7 @@
 
 class Query
 {
-	private $tb, $join, $fields, $where, $order, $limit, $db;
+	private $tb, $join, $fields, $where, $group, $order, $limit, $db;
 
 	/**
 	 *
@@ -65,6 +65,8 @@ class Query
 
 		$this->setFields($use_preview, $request['fields']);
 
+		$this->setGroup($request['group']);
+
 		$this->where = $this->setWhere($request);
 	}
 
@@ -83,6 +85,15 @@ class Query
 			}
 		}
 	}
+
+	public function setGroup($fld = false)
+	{
+		if ($fld) {
+			$this->group = ' GROUP BY ' .
+				(is_array($fld) ? implode(', ', $$fld) : $fld);
+		}
+	}
+
 
 	public function setOrder($fld = false, $type = false)
 	{
@@ -124,6 +135,11 @@ class Query
 		return $encoded ? base64_encode($this->where) : $this->where;
 	}
 
+	private function getGroup()
+	{
+		return $this->group;
+	}
+
 	private function getOrder()
 	{
 		$this->order ?:  $this->setOrder();
@@ -132,7 +148,7 @@ class Query
 
 	private function getLimit()
 	{
-		$this->limit	?: $this->setOrder();
+		$this->limit	?: $this->setLimit();
 		return $this->limit;
 	}
 	/**
@@ -159,6 +175,7 @@ class Query
 			" FROM `" . $this->tb . "` " .
 			$this->join .
 			" WHERE " . $this->getWhere() .
+			$this->getGroup() .
 			$this->getOrder() .
 			$this->getLimit();
 	}
@@ -461,7 +478,7 @@ class Query
 		}
 		$ret = [];
 		foreach (array_keys($this->fields) as $f) {
-			if (!preg_match('/\./', $f)) {
+			if (!preg_match('/\./', $f) && !preg_match('/count\(/', $f)) {
 				$ret[] = '`' . $this->tb . '`.`' . $f . '`';
 			} else {
 				$ret[] = $f;

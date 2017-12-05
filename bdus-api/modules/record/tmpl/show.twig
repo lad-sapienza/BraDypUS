@@ -243,6 +243,10 @@
 		<script>
 			$.post('controller.php?obj=record_ctrl&method=show&tb={{ tb }}&a=read', '{{ continue_url }}', function(data){
 				$('#div{{ uid }}').html(data);
+
+        if ($('div.showRS').length > 0){
+  				core.runMod('rs');
+  			}
 			});
 		</script>
 	{% endif %}

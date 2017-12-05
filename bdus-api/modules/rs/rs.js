@@ -26,6 +26,9 @@ var rs = {
 			if (!tb || !id || !context){
 				return false;
 			}
+			if ( el.children().length > 0 ) {
+     		return false;
+	 		}
 
 			el.load('controller.php?obj=rs_ctrl&method=getAll&param[]=' + tb + '&param[]=' + id + '&param[]=' + context, function(){
 

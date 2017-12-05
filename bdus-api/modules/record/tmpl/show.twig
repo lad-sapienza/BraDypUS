@@ -243,24 +243,6 @@
 		<script>
 			$.post('controller.php?obj=record_ctrl&method=show&tb={{ tb }}&a=read', '{{ continue_url }}', function(data){
 				$('#div{{ uid }}').html(data);
-
-        if ($('div.showRS').length > 0){
-  				core.runMod('rs');
-  			}
-
-        $('.tab-pane.active .print-all').on('click', function(){
-          var el = $(this).parents('div.tab-pane').clone();
-          el.find('div.menu').remove();
-          el.printElement({
-              printMode:'popup',
-              leaveOpen:true,
-              pageTitle: 'BraDypUS > {{ tb }}',
-              printBodyOptions:{
-                styleToAdd:'background: #fff;color:#000;padding:10px;margin:10px;'
-              }
-            });
-          el.remove();
-        });
 			});
 
 		</script>

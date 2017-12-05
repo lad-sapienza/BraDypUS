@@ -136,95 +136,93 @@ class record_ctrl extends Controller
 
 	public function show()
 	{
-		if ( !$this->request['tb'] )
-		{
+		if ( !$this->request['tb'] ) {
 			throw new myException(tr::get('tb_missing'));
 		}
 
 		// user must have enough privileges
-		if (!utils::canUser('read') )
-		{
+		if (!utils::canUser('read') ) {
 			utils::alert_div('not_enough_privilege', true);
 			return;
 		}
 		// a record id must be provided in edit & read & preview mode
-		if ( $this->request['a'] !== 'add_new' && !$this->request['id'] && !$this->request['id_field'] )
-		{
+		if ( $this->request['a'] !== 'add_new' && !$this->request['id'] && !$this->request['id_field'] ) {
 			throw new myException(tr::get('no_id_to_view'));
 		}
 
 		// $show_next is the id to show in edit mode, after edit is completed
-		if ($this->request['a'] == 'add_new')
-		{
+		if ($this->request['a'] == 'add_new') {
+
 			$show_next = "['last_added']";
-		}
-		else if (is_array($this->request['id']))
-		{
+
+		} else if (is_array($this->request['id'])) {
+
 			$show_next = "['" . implode($this->request['id']) . "']";
-		}
-		else if (is_array($this->request['id_field']))
-		{
+
+		} else if (is_array($this->request['id_field'])) {
+
 			$show_next = "['" . implode($this->request['id_field']) . "']";
+
 		}
 
 		// no data are retrieved if context is add_new or multiple edit!
-		if ($this->request['a'] == 'add_new' OR ($this->request['a'] == 'edit' AND count($this->request['id']) > 1))
-		{
+		if ($this->request['a'] == 'add_new' OR ($this->request['a'] == 'edit' AND count($this->request['id']) > 1)) {
+
 			$id_arr = array('new');
-		}
-		else if ($this->request['id_field'])
-		{
+
+		} else if ($this->request['id_field']) {
+
 			$id_arr = $this->request['id_field'];
 			$flag_idfield = true;
-		}
-		else
-		{
+
+		} else {
+
 			$id_arr = $this->request['id'];
+
 		}
 
 		//Can not display more than 500 records!
-		if (count($id_arr) > 500)
-		{
-			echo '<div class="alert">' . tr::sget('too_much_records', array(count($id_arr), '500')) . '</div>';
+		$total_records = count($id_arr);
+
+		if ($total_records > 500) {
+			echo '<div class="alert">' . tr::sget('too_much_records', array($total_records, '500')) . '</div>';
 			return;
 		}
+
 		$step = 10;
-		foreach ($id_arr as $index=>$id)
-		{
-			if ($index > ($step))
-			{
+
+		foreach ($id_arr as $index => $id) {
+			$index = $index+1;
+
+			if ($index > ($step)) {
 				return;
 			}
-			if ($index == ($step-1) && $id_arr[($index + $step)])
-			{
-				$continue_url = 'id[]=' . implode('&id[]=', array_slice($id_arr, ($index + $step)));
+			if (($key = array_search($id, $id_arr)) !== false) {
+				unset($id_arr[$key]);
 			}
-			else if ($index == (count($id_arr) -1))
-			{
+			if ($index === $total_records) {
 				$continue_url = 'end';
+			} elseif ($index === $step) {
+				echo $continue_url = 'id[]=' . implode('&id[]=', $id_arr);
 			}
 
-			if ($id == 'new')
-			{
+			if ($id == 'new') {
 				$id = false;
 			}
 
 			$record = new Record($this->request['tb'], ($flag_idfield ? false : $id), new DB);
 
-			if ($flag_idfield)
-			{
+			if ($flag_idfield) {
 				$record->setIdField($id);
 			}
 
 			if ($this->request['a'] == 'edit' &&
-					(!utils::canUser('edit', $record->getCore('creator')) || ( count($this->request['id']) > 1 && !utils::canUser('multiple_edit') ) ) )
-			{
+					(!utils::canUser('edit', $record->getCore('creator')) || ( count($this->request['id']) > 1 && !utils::canUser('multiple_edit') ) ) ) {
 				echo '<h2>' . tr::get('not_enough_privilege') . '</h2>';
 				continue;
 			}
 
-			if ($this->request['a'] == 'add_new' && !utils::canUser('add_new'))
-			{
+			if ($this->request['a'] == 'add_new' && !utils::canUser('add_new')) {
 				echo '<h2>' . tr::get('not_enough_privilege') . '</h2>';
 				continue;
 			}
@@ -238,7 +236,7 @@ class record_ctrl extends Controller
 					'multiple_id' => (count($this->request['id']) > 1) ? tr::sget('multiple_edit_alert', array(count($this->request['id']), implode('; id: ', $this->request['id']))) : false,
 					'tb' => $this->request['tb'],
 					'id_url' => is_array($this->request['id']) ? 'id[]=' . implode('&id[]=', $this->request['id']) : false,
-					'totalRecords' => count($id_arr),
+					'totalRecords' => $total_records,
 					'id' => $flag_idfield ? $record->getCore('id') : $id,
 					'show_next' => $show_next,
 					'can_edit' => (utils::canUser('edit', $record->getCore('creator')) || ( count($this->request['id']) > 1 && utils::canUser('multiple_edit') ) ),

@@ -9,7 +9,6 @@ var rs = {
 			$.each($('div.showRS'), function(i, el){
 				rs.show($(el));
 			});
-
 		},
 
 		show: function(el){
@@ -26,16 +25,26 @@ var rs = {
 			if (!tb || !id || !context){
 				return false;
 			}
+
 			if ( el.children().length > 0 ) {
      		return false;
 	 		}
 
+			if (el.data('pending') === true || el.data('done') === true) {
+				return false;
+			}
+
+			el.data('pending', true);
+
 			el.load('controller.php?obj=rs_ctrl&method=getAll&param[]=' + tb + '&param[]=' + id + '&param[]=' + context, function(){
+
+				el.data('done', true);
+				el.data('pending', false);
 
 				if (context == 'read'){
 					el.find('div.rsEl').on('click', function(){
-							api.record.read(tb, [$(this).text()], true	);
-						});
+						api.record.read(tb, [$(this).text()], true	);
+					});
 
 				}
 				//add action

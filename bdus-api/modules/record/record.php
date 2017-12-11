@@ -321,19 +321,16 @@ class record_ctrl extends Controller
 
 		$response['iTotalRecords'] = $response['iTotalDisplayRecords'] = isset($this->request['iTotalRecords']) ? $this->request['iTotalRecords'] : $qObj->getTotal();
 
-		if (isset($this->request['iDisplayStart']) && $this->request['iDisplayLength'] != '-1')
-		{
+		if (isset($this->request['iDisplayStart']) && $this->request['iDisplayLength'] != '-1') {
 			$qObj->setLimit(intval( $this->request['iDisplayStart'] ), $this->request['iDisplayLength']);
 		}
 
-		if (isset($this->request['iSortCol_0']))
-		{
+		if (isset($this->request['iSortCol_0'])) {
 			$fields = array_keys($qObj->getFields());
 			$qObj->setOrder($fields[$this->request['iSortCol_0']], ($this->request['sSortDir_0']==='asc' ? 'asc' : 'desc'));
 		}
 
-		if ($this->request['sSearch'])
-		{
+		if ($this->request['sSearch']) {
 			$qObj->setSubQuery($this->request['sSearch']);
 			$response['iTotalDisplayRecords'] = $qObj->getTotal();
 		}

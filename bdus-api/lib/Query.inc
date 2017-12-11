@@ -119,7 +119,7 @@ class Query
 
 	public function setLimit($start = false, $limit = false)
 	{
-		if (!$limit && !preg_match('/LIMIT/', $this->where)) {
+		if (!preg_match('/LIMIT/', $this->where)) {
 			$this->limit = $limit ? " LIMIT $start , $limit " : false;
 		}
 

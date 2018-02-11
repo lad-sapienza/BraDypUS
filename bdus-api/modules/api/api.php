@@ -165,7 +165,9 @@ class api_ctrl extends Controller
 			$header['table_label'] = cfg::tbEl($request['tb'], 'label');
 			$header['page'] = ($header['page'] > $header['total_pages']) ? $header['total_pages'] : $header['page'];
 
-			if ($header['total_rows'] > 0) {
+			if ($request['limit_end']) {
+				$query->setLimit($request['limit_start'], $request['limit_end']);
+			} else if ($header['total_rows'] > 0) {
 				$query->setLimit(($header['page'] -1) * $records_per_page, $records_per_page);
 			}
 

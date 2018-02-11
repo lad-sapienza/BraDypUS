@@ -1,3 +1,4 @@
+3.8.9[] = "API supports limit_start and limit_end parameters"
 3.8.9[] = "Per table options show after data is loaded"
 3.8.8[] = "Fixed bug with vocabulary lit not being editable"
 3.8.7[] = "Added foreign keys constraint for sqlite"

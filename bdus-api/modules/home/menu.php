@@ -6,9 +6,9 @@
  * @since			01/apr/2011
  */
 
-if (!utils::canUser('enter'))
-{
-	echo '<h2>' . tr::get('not_enough_privilege') . '</h2>'; return;
+if (!utils::canUser('enter')) {
+	echo '<h2>' . tr::get('not_enough_privilege') . '</h2>';
+	return;
 }
 ?>
 
@@ -32,10 +32,9 @@ if (!utils::canUser('enter'))
 						<?php
 							$all_tb = cfg::getNonPlg();
 
-							foreach ( $all_tb as $tb_id => $tb_label )
-							{
-								if (!cfg::tbEl($tb_id, 'is_plugin'))
-								{
+							foreach ( $all_tb as $tb_id => $tb_label ) {
+
+								if (!cfg::tbEl($tb_id, 'is_plugin')) {
 									echo  '<option value="' . $tb_id . '">' . $tb_label . '</option>';
 								}
 							}
@@ -208,8 +207,7 @@ if (!utils::canUser('enter'))
 
 	<div class="col-md-3 hidden-xs" style="padding:10px; text-align:right;">
 		<?php
-		if (file_exists(PROJ_DIR . 'welcome.html'))
-		{
+		if (file_exists(PROJ_DIR . 'welcome.html')) {
 			require_once PROJ_DIR . 'welcome.html';
 		}
 		?>

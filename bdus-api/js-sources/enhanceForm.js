@@ -154,7 +154,7 @@ var enhance = {
     } else if ($(el).hasClass('slider')) {
       enhance.slider(el, destroy);
     } else if ($(el).hasClass('date')) {
-      if ($(el).data('select2') && destroy){
+      if (destroy){
         $(el).datepicker('remove');
       } else {
         $(el).datepicker({ format: enhance.dateFormat });

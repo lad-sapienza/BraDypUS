@@ -108,6 +108,7 @@ class record_ctrl extends Controller
 				}
 				catch (myException $e)
 				{
+					error_log($e->log());
 					$error[] = true;
 				}
 			}

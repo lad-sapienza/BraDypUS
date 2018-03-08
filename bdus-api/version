@@ -1,3 +1,4 @@
+3.8.11[] = "All delete errors are logged"
 3.8.10[] = "Fixed bug with js clone method"
 3.8.9[] = "API supports limit_start and limit_end parameters"
 3.8.9[] = "Per table options show after data is loaded"

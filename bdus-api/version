@@ -1,3 +1,4 @@
+3.8.13[] = "Fixed bug with multi select fields in plugins"
 3.8.12[] = "New SQL query for matrixes"
 3.8.11[] = "All delete errors are logged"
 3.8.10[] = "Fixed bug with js clone method"

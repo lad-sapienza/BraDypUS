@@ -424,6 +424,14 @@ class Record implements iRecord
 			$this->data['plugins'][$plugin] = array();
 		}
 
+		foreach ($plugin_data as $key => &$data_arr) {
+			foreach ($data_arr as $k => &$v) {
+				if (is_array($v)) {
+					$v = implode(';', $v);
+				}
+			}
+		}
+
 		$this->data['plugins'][$plugin] = array_merge($this->data['plugins'][$plugin], $plugin_data);
 
 		$this->changed['plugins'][$plugin] = true;

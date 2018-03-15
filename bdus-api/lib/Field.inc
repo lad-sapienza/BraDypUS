@@ -622,6 +622,10 @@ class Field implements iTemplate
 
         $setting['name'] .= $setting['type'] == 'multi_select' ? '[]' : '';
 
+        $setting['changeonchange'] = $plg_name ?
+                    'plg[' . $plg_name . '][id:' . $plg_index . '][id]':
+                    'core[' . $this->tb . '][' . $fld. ']';
+
         $setting['id'] = str_replace(['_', '.'], null, uniqid($this->tb . $fld, true));
 
 
@@ -893,7 +897,7 @@ class Field implements iTemplate
         $core .= $setting['check'] ? ' check="'. $setting['check'] .'"' : '';
 
         if (preg_match('/plg/', $setting['name'])) {
-            $core .= 'data-changeonchange ="' . str_replace('[' . $setting['fieldname']. ']', '[id]', $setting['name']). '"';
+            $core .= 'data-changeonchange ="' . $setting['changeonchange'] . '"';
         }
 
         switch ($setting['type']) {

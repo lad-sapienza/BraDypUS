@@ -401,6 +401,15 @@ class Record implements iRecord
 		$this->loaded['plugins'][$plugin] = true;
 
 		if (count($res) > 0) {
+			// Sort plugins using sort field, if available
+			if (in_array('sort', array_keys($res[0]))) {
+				usort($res, function($a, $b){
+					if ($a['sort'] == $b['sort']) {
+							return 0;
+					}
+					return ($a['sort'] > $b['sort']) ? 1 : -1;
+				});
+			}
 			$this->data['plugins'][$plugin] = $res;
 		}
 	}

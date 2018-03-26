@@ -247,7 +247,7 @@ class record_ctrl extends Controller
                 'lang' => pref::getLang(),
                 //TODO: user panel controle for user preferences
                 'infinte_scroll' => pref::get('infinite_scroll'),
-        'select_one' => $this->request['select_one'],
+                'select_one' => $this->request['select_one'],
                 'hideId' => (cfg::fldEl($this->request['tb'], 'id', 'hide') == 1)
         ));
     }

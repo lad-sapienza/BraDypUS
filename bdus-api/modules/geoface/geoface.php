@@ -165,14 +165,8 @@ class geoface_ctrl extends Controller
 
 			if($res) {
 
-				$geo = new sql2geoJSON();
-
-				foreach($res as $row) {
-					$geo->addFeature($row);
-				}
-
 				$response['status'] = 'success';
-				$response['data'] = $geo->getObject();
+				$response['data'] = toGeoJson::fromMultiArray($res, true);
 
 			} else if (!$res AND (trim($where) == '1' || !$where) && utils::canUser('add_new')) {
 

@@ -39,7 +39,8 @@ The available types are: **all**, **recent**, **sqlExpert**, **fast**, **id_arra
 - `records_per_page` (GET, int, optional for `type` **search**, default: 30): maximum number of records per page
 - `total_rows` (GET, int, optional): Total number of results for query; if not given will be calculated (used to limit database access)
 - `page` (GET, int, optional for `type` **search**, default: 1): Number of page to require
-- `fullRecords` (GET, boolean, optional): id true returned records will be complete with all information
+- `fullRecords` (GET, boolean, optional, default false): if true returned records will be complete with all information
+- `geojson` (GET, boolean, optional, default false): if true valid geojson (without header) will be returned. It is mandatory that a field named geometry exists, containing WKT data.
 
 
 

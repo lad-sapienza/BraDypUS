@@ -175,10 +175,18 @@ class api_ctrl extends Controller
 			$header['query_executed'] = $query->getQuery();
 			$header['fields'] = $query->getFields();
 
-			$this->array2json([
-				'head' => $header,
-				'records' => $query->getResults( ($this->get['fullRecords'] && $this->get['fullRecords'] !== 'false') )
-			]);
+			if ($this->get['geojson']) {
+				$this->array2json(
+					toGeoJson::fromMultiArray(
+						$query->getResults( ($this->get['fullRecords'] && $this->get['fullRecords'] !== 'false') ), true
+					)
+				);
+			} else {
+				$this->array2json([
+					'head' => $header,
+					'records' => $query->getResults( ($this->get['fullRecords'] && $this->get['fullRecords'] !== 'false') )
+				]);
+			}
 
 		} catch (Exception $e) {
 			$this->array2json(array('type' => 'error', 'text' => $e->getMessage()));

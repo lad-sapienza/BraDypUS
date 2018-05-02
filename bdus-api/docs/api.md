@@ -13,9 +13,10 @@ Foreach API call an **application** and a **reference table**  and a set of **pa
 ### Available parameters:
 - `app` (GET, string, required): a valid app
 - `table-name` (GET, string, required): referenced table id
-- `verb` (GET, string, required, one of: read, search): the action the API should run.
+- `verb` (GET, string, required, one of: read, search, inspect): the action the API should run.
 At present the following values are available: **read**: will return full structured data for a record,
- and **search**: will return a search result. Each `verb` value requires one or more additional parameters.
+ **search**: will return a search result. Each `verb` value requires one or more additional parameters
+ and **inspect**: will return the list of fields of the referenced table and that of relative plugins
 
 - `id` (GET, int, required for `verb` **read**): the database id of the record to be rendered.
 

@@ -1,3 +1,4 @@
+3.8.16[] = "Implemented verb inspect in API"
 3.8.15[] = "Simplified geoJSON creation"
 3.8.14[] = "Added support for sorting plugins items using the `sort` field"
 3.8.13[] = "Fixed bug with multi select fields in plugins"

@@ -27,7 +27,7 @@ class api_ctrl extends Controller
 	/**
 	 * [run_v2 description]
 	 * 		api/app/tb?
-	 * 			verb:  Required. One of: read | edit
+	 * 			verb:  Required. One of: read | edit | inspect
 	 * 			id: required for verb read and for verb search, type id_array
 	 *
 	 * 			type: required for verb search. One of: all | recent | advanced | sqlExpert | fast | id_array | encoded
@@ -64,11 +64,15 @@ class api_ctrl extends Controller
 			if (!$this->get['tb']) {
 				throw new Exception("Tb parameter is mandatory");
 			}
-			$request['tb'] = $app . '__' . $this->get['tb'];
+			if (strpos($this->get['tb'], $app . '__') === false) {
+		    $request['tb'] = $app . '__' . $this->get['tb'];
+			} else {
+				$request['tb'] = $this->get['tb'];
+			}
 
 
 			// $_GET['verb']: mandatory, one of read, search
-			$valid_verbs = ['read', 'search'];
+			$valid_verbs = ['read', 'search', 'inspect'];
 			if (!$this->get['verb'] || !in_array($this->get['verb'], $valid_verbs)) {
 				throw new Exception("Invalid verb {$this->get['verb']}. Verb must be one of " . implode(', ', $valid_verbs));
 			}
@@ -84,11 +88,31 @@ class api_ctrl extends Controller
 				);
 			}
 
+			// INSPECT verb
+			if ($this->get['verb'] === 'inspect') {
+				$ret = [];
+				$flds = cfg::fldEl($request['tb']);
+
+				foreach ($flds as $f) {
+					$f['fullname'] = $request['tb'] . ':' . $f['name'];
+					array_push($ret, $f);
+				}
+				foreach (cfg::tbEl($request['tb'], 'plugin') as $plg) {
+					foreach (cfg::fldEl($plg) as $f) {
+						$f['fullname'] = $plg . ':' . $f['name'];
+						$f['label'] = cfg::tbEl($plg, 'label') . ': ' . $f['label'];
+						array_push($ret, $f);
+					}
+				}
+
+				return $this->array2json( $ret );
+			}
+
 
 			// SEARCH verb
 			if ($this->get['verb'] === 'search') {
 
-				$valid_types = ['all', 'recent', /*'advanced', */'sqlExpert', 'fast', 'id_array', 'encoded'];
+				$valid_types = ['all', 'recent', 'advanced', 'sqlExpert', 'fast', 'id_array', 'encoded'];
 
 				if( !in_array($this->get['type'], $valid_types)) {
 					throw new Exception("Invalid search type {$this->get['type']}. Type must be one of " . implode(', ', $valid_types));
@@ -106,12 +130,15 @@ class api_ctrl extends Controller
 						$request['limit'] = $this->get['limit'] ? $this->get['limit'] : 20;
 						break;
 
-					// case 'advanced':
-					// 	$request['adv'] = $this->post['adv'];
-					// 	if (!$request['adv'] || !is_array($request['adv']) ) {
-					// 		throw new Exception("Parameter adv (POST, array) is required for type advanced");
-					// 	}
-					// 	break;
+					case 'advanced':
+						$request['adv'] = $this->get['adv'];
+						if (is_string($request['adv'])) {
+							parse_str($request['adv'], $request['adv']);
+						}
+						if (!$request['adv'] || !is_array($request['adv']) ) {
+							throw new Exception("Parameter adv (POST, array) is required for type advanced");
+						}
+						break;
 
 					case 'sqlExpert':
 						if (!$this->get['querytext']) {

@@ -83,7 +83,7 @@ class api_ctrl extends Controller
 				if (!$this->get['id']) {
 					throw new Exception("Parameter id is required with verb read");
 				}
-				return $this->array2json(
+				return $this->array2response(
 					$this->getOne($request['tb'], $this->get['id'])
 				);
 			}
@@ -105,7 +105,7 @@ class api_ctrl extends Controller
 					}
 				}
 
-				return $this->array2json( $ret );
+				return $this->array2response( $ret );
 			}
 
 
@@ -203,20 +203,23 @@ class api_ctrl extends Controller
 			$header['fields'] = $query->getFields();
 
 			if ($this->get['geojson']) {
-				$this->array2json(
+				return $this->array2response(
 					toGeoJson::fromMultiArray(
 						$query->getResults( ($this->get['fullRecords'] && $this->get['fullRecords'] !== 'false') ), true
 					)
 				);
 			} else {
-				$this->array2json([
+				return $this->array2response([
 					'head' => $header,
 					'records' => $query->getResults( ($this->get['fullRecords'] && $this->get['fullRecords'] !== 'false') )
 				]);
 			}
 
 		} catch (Exception $e) {
-			$this->array2json(array('type' => 'error', 'text' => $e->getMessage()));
+			return $this->array2response([
+				'type' => 'error',
+				'text' => $e->getMessage()
+				]);
 		}
 	}
 
@@ -245,20 +248,31 @@ class api_ctrl extends Controller
 	/**
 	 * Formats array data as pretty-printed JSON and returns or echoes (with Cross-domain alloe policy) it
 	 * @param  array  $data       array of input data
-	 * @param  boolean $dont_print if true JSON will be returned, otherwize it will be printed
 	 * @return string
 	 */
-	private function array2json($data, $dont_print = false)
+	private function array2response($data)
 	{
-		$json = json_encode($data, (version_compare(PHP_VERSION, '5.4.0') >=0 ? JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE : false));
+		$mime = 'application/json';
 
-		if ($dont_print) {
-			return $json;
-		} else {
-			header('Access-Control-Allow-Origin: *');
-			header('Content-type: application/json; charset=utf-8');
-			echo $json;
+		if ( $data['type'] !== 'error' && $data['records'] && file_exists("projects/{$this->get['app']}/mods/api/PostProcess.php")) {
+			require_once("projects/{$this->get['app']}/mods/api/PostProcess.php");
+			$postProcess = new PostProcess();
+
+			$resp = $postProcess->run($data, $this->get, $this->post);
+
+			$data = $resp['data'];
+			$mime ?: $resp['mime'];
 		}
+		
+		if (is_array($data)) {
+			$data = json_encode($data, (version_compare(PHP_VERSION, '5.4.0') >=0 ? JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE : false));
+		}
+
+		header('Access-Control-Allow-Origin: *');
+		header('Content-type: ' . $mime . '; charset=utf-8');
+		echo $data;
+
+
 	}
 
 }

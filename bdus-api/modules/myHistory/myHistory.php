@@ -32,8 +32,8 @@ class myHistory_ctrl
 			$size = (int)filesize(PROJ_HISTORY);
 
 			// Process only if filesize is bigger then 1mb
-			if ($size > 1024) {
-				retun;
+			if ($size < 1024) {
+				return;
 			}
 
 			// check PROJ_BUP_DIR is defined

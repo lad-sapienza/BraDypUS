@@ -32,7 +32,7 @@ class myHistory_ctrl
 			$size = (int)filesize(PROJ_HISTORY);
 
 			// Process only if filesize is bigger then 1mb
-			if ($size <= 1024) {
+			if ($size > 1024) {
 				retun;
 			}
 

@@ -1,5 +1,6 @@
+3.10.1[] = "Added support for a more granulated error & history log"
 3.9.2[] = "History log files are gzipped and backed up if bigger then 1Mb"
-3.9.1[] = "Added support for data postprocess & manupulation in API"
+3.9.1[] = "Added support for data post-process & manipulation in API"
 3.8.17[] = "Autoloader supports both php & inc extensions"
 3.8.16[] = "Implemented verb inspect in API"
 3.8.15[] = "Simplified geoJSON creation"

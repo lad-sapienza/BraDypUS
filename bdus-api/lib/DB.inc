@@ -161,24 +161,18 @@ class DB
 		$q = 'SELECT ' . ($field ? '`' . $field . '`' : ' * ') . ' FROM `' . $tb . '` WHERE `id` = ' . $id;
 		$res = $this->query($q, false, 'read');
 
-		if ($res)
-		{
+		if ($res) {
 			return ($field ? $res[0][$field] : $res[0]);
-		}
-		else
-		{
+		} else {
 			return false;
 		}
 	}
 
 	public function doQuery($sql)
 	{
-		try
-    {
+		try {
 			$this->db->exec($sql);
-		}
-		catch (PDOException $e)
-		{
+		} catch (PDOException $e) {
 			throw new myException($e);
 		}
 	}
@@ -197,34 +191,26 @@ class DB
 	 */
 	public function query($query, $values = false, $type = false, $fetch_style = false )
 	{
-		try
-		{
+		try {
+
 			$sql = $this->db->prepare($query);
 
-			if ( !$values ) $values = array();
+			if ( !$values ) $values = [];
 
 			$flag = $sql->execute($values);
 
-			if(defined('PROJ_HISTORY') AND !preg_match("/SELECT/i", $query) AND !preg_match("/SHOW TABLES/i", $query))
-			{
-				$message = date('c') . ' ' . $_SESSION['user']['name'] . ', '
-					. 'query_text:[' . $query. '], '
-					. 'values:[' . (json_encode($values)) . '], '
-					. 'type:[' . $type . ']' . "\n";
-				error_log($message, 3, PROJ_HISTORY);
+			if(!preg_match("/^SELECT/i", $query) AND !preg_match("/^SHOW TABLES/i", $query)) {
+				Meta::addVersion($_SESSION['user']['id'], null, $query, $values);
 			}
 
-			if (is_int($type))
-			{
+			if (is_int($type)) {
 				return $sql->fetchColumn($type);
 			}
 
-			switch ($type)
-			{
+			switch ($type) {
 				case 'boolean':
 					return $flag;
 					break;
-
 
 				case 'read':
 				case false:
@@ -241,13 +227,8 @@ class DB
 					return $sql->rowCount();
 					break;
 			}
-		}
-		catch (PDOException $e)
-		{
-			$err_txt = 'q:[' . $query. '], '
-				. 'v:[' . (json_encode($values)) . '], '
-				. 't:[' . $type . ']';
-			error_log($err_txt);
+		} catch (PDOException $e) {
+			Meta::addErrorLog($_SESSION['user']['id'], $e);
 			throw new myException($e);
 		}
 	}
@@ -285,13 +266,10 @@ class DB
 	 */
 	public function columns($tb)
 	{
-		if ($this->db_engine == 'mysql')
-		{
+		if ($this->db_engine == 'mysql') {
 			$tmp = $this->db->query("DESCRIBE `$tb`");
 			return $tmp;
-		}
-		else
-		{
+		} else {
 			return false;
 		}
 	}

@@ -28,8 +28,23 @@ class Meta
       R::addDatabase( 'meta', 'sqlite:' . self::$db );
       R::selectDatabase( 'meta' );
     }
-
   }
+
+  private static function guessTable($editQuery) {
+		if (preg_match("/^INSERT\s+INTO\s+`?([a-zA-Z_]+)`?/i", $editQuery, $m)) {
+			$table = $m[1];
+		}
+		// 2. Update query
+		elseif (preg_match("/^UPDATE\s+`?([a-zA-Z_]+)`?/i", $editQuery, $m)) {
+			$table = $m[1];
+		}
+		// 3. Delete query
+		elseif (preg_match("/^DELETE\s+FROM\s+`?([a-zA-Z_]+)`?/i", $editQuery, $m)) {
+			$table = $m[1];
+		}
+
+		return $table;
+	}
 
   /**
    * Adds a record in history table.
@@ -95,7 +110,7 @@ class Meta
    * @param string $editQuery       Sql used for editing
    * @param array  $editQueryValues [description]
    */
-  public function addVersion(int $user, string $table, string $editQuery, array $editQueryValues = [])
+  public function addVersion(int $user, string $table = null, string $editQuery, array $editQueryValues = [])
   {
     self::check();
 
@@ -104,6 +119,16 @@ class Meta
     // preg_match("/WHERE\s+`*id`*\s*=\s*'?([0-9]){1,4}'?/", $editQuery, $matches);
     preg_match_all("/WHERE(.+)/i", $editQuery, $matches, PREG_SET_ORDER);
     $where = end($matches)[1];
+
+    // if $table is false, try to guess
+    if (!$table) {
+      $table = self::guessTable($editQuery);
+
+      if (!$table) {
+        throw new \Exception("Cannot guess table from query");
+      }
+
+    }
 
     $rows = $db->query('SELECT * FROM ' . $table . ' WHERE ' . $where);
 
@@ -186,7 +211,7 @@ class Meta
   /**
    * Returns well formatted HTML to display results using TabeTop
    * @param  string $table Table nale
-   * @return string        Hormatted HTML
+   * @return string        Well formatted HTML
    */
   public function tableTop(string $table)
   {

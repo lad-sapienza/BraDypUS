@@ -10,27 +10,7 @@ var myHistory = {
 				if(data && data !== '<pre></pre>'){
 					core.open({
 						html: data,
-						title: core.tr('history'),
-						buttons:[
-						         {
-						        	 text: core.tr('erase'),
-						        	 click: function(){
-						        		 $this = $(this);
-						        		 core.getJSON('myHistory_ctrl', 'erase', false, false, function(data){
-						        			 core.message(data.text, data.status);
-
-						        			 if (data.status == 'success'){
-						        				 layout.dialog.close();
-						        			 }
-						        		 });
-						        	 }
-						         },
-						         {
-						        	 text: core.tr('close'),
-						        	 click: 'close'
-						         }
-						         ]
-
+						title: core.tr('history')
 					});
 				} else {
 					core.message(core.tr('history_is_empty'));

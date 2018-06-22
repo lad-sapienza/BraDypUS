@@ -161,8 +161,6 @@ class login_ctrl extends Controller
 			$user = new User(new DB($this->post['loginapp']));
 			$user->login($this->post['email'], $this->post['password'], $this->post['remember']);
 			$obj['status'] = 'ok';
-
-			myHistory_ctrl::autoPack();
 		}
 		catch (myException $e)
 		{

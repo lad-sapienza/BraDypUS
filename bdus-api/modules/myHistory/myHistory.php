@@ -7,11 +7,16 @@
  */
 
 
-class myHistory_ctrl
+class myHistory_ctrl extends Controller
 {
+
+	public function sql2json() {
+		return Meta::getData($this->get['tb'], $this->post);
+	}
+
 	public static function show_all()
 	{
-		echo '<pre>' . file_get_contents(PROJ_HISTORY) . '</pre>';
+		echo Meta::tableTop('version', "./controller.php?&obj=myHistory_ctrl&method=sql2json&tb=version");
 	}
 
 	public function erase()

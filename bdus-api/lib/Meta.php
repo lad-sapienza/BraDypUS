@@ -159,6 +159,7 @@ class Meta
    */
   public function getData(string $table, array $get = [])
   {
+
     self::check();
 
     $fields = array_keys( R::inspect( $table ) );
@@ -209,11 +210,12 @@ class Meta
   }
 
   /**
-   * Returns well formatted HTML to display results using TabeTop
-   * @param  string $table Table nale
+   * Returns well formatted HTML to display results using TabelTop
+   * @param  string $table Table name
+   * @param  string $ajaxSource Ajax Source where to get data
    * @return string        Well formatted HTML
    */
-  public function tableTop(string $table)
+  public function tableTop(string $table, string $ajaxSource)
   {
     self::check();
     $uid = uniqid();
@@ -237,7 +239,7 @@ class Meta
     		"iDisplayLength": 30,
     		"bProcessing": true,
             "bServerSide": true,
-            "sAjaxSource": "./controller.php?&obj=test_ctrl&method=testMeta2&tb=$table",
+            "sAjaxSource": "$ajaxSource",
             "sServerMethod": "POST",
             "aoColumns": [
                           $m_data

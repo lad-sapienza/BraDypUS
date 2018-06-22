@@ -18,7 +18,7 @@ var myHistory = {
 						        		 $this = $(this);
 						        		 core.getJSON('myHistory_ctrl', 'erase', false, false, function(data){
 						        			 core.message(data.text, data.status);
-						        			 
+
 						        			 if (data.status == 'success'){
 						        				 layout.dialog.close();
 						        			 }
@@ -30,12 +30,12 @@ var myHistory = {
 						        	 click: 'close'
 						         }
 						         ]
-							
-					}, 'modal');
+
+					});
 				} else {
 					core.message(core.tr('history_is_empty'));
 				}
 			});
-			
+
 		}
 };

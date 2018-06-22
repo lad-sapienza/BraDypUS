@@ -75,13 +75,7 @@ if ( defined('PROJ_DIR'))
 			mkdir($dir, 0777, true);
 		}
 	}
-
 }
-
-// LOG PHP ERRORS TO APPLICATION ERROR.LOG FILE
-define ('ERROR_LOG', $error_log);
-ini_set('error_log', ERROR_LOG);
-
 
 // DEBUG OPTIONS
 if ($__go_debug)

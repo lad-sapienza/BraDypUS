@@ -192,6 +192,8 @@ class Meta
 
     if (isset($get['iSortCol_0'])) {
         $q .= ' ORDER BY ' . $fields[$get['iSortCol_0']] . ' ' . ($get['sSortDir_0']==='asc' ? 'asc' : 'desc');
+    } else {
+        $q .= ' ORDER BY id DESC';  
     }
 
     if (isset($get['iDisplayStart']) && $get['iDisplayLength'] != '-1') {

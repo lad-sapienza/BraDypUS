@@ -276,7 +276,6 @@ EOD;
 
         if (is_array($msg)) {
             if ($msg[(count($msg)-2)]=="warning: G has cycle(s), transitive reduction not unique") {
-                error_log(preg_replace("/cycle involves edge /", null, $msg[(count($msg)-1)]));
                 throw new myException('cicle_problem');
             }
         }

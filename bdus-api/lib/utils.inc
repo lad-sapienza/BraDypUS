@@ -19,20 +19,6 @@ class utils
 		return preg_match('/bradypus.net/', $_SERVER['HTTP_HOST']);
 	}
 
-	/**
-	 * Logs $data to error log, for debuggin purposes
-	 * @param mixed $data
-	 */
-	public static function log($data)
-	{
-		if (!is_string($data))
-		{
-			$data = var_export($data, true);
-		}
-		error_log($data);
-	}
-
-
 
 	/**
 	 * Converts array or object to json and writes it to file

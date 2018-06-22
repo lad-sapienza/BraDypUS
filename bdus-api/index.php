@@ -111,26 +111,19 @@ try
 </html>
 
 <?php
-}
-catch (myException $e)
-{
+} catch (myException $e) {
 	$e->log();
 
-	if ($_GET['debug'])
-	{
+	if ($_GET['debug']) {
 		$text = $e->getMessage() . '<br />' . $e->getCode() . '<br />in file:' . $e->getFile() . '<br />in line: ' . $e->getLine() . '<br />' . $e->getTrace();
 
 		echo $e->__toString(), 'error', true;
-	}
-	else
-	{
+	} else {
 		echo "<h2>Errore.</h2><p>Dettaglio: " . $e->getMessage() . '</p>';
 		var_dump($e);
 	}
-}
-catch (Exception $e)
-{
-	error_log($e->__toString(), 3, ERROR_LOG);
+} catch (Exception $e) {
+	Meta::addErrorLog($e);
 }
 
 

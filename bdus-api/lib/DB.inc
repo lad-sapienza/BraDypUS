@@ -228,7 +228,7 @@ class DB
 					break;
 			}
 		} catch (PDOException $e) {
-			Meta::addErrorLog($_SESSION['user']['id'], $e);
+			Meta::addErrorLog($e);
 			throw new myException($e);
 		}
 	}

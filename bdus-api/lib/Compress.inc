@@ -80,28 +80,24 @@ class Compress
 
 	public static function css ( $files, $type )
 	{
-		if ( $type['mini'] && file_exists('./css-less/main.less'))
-		{
+		if ( $type['mini'] && file_exists('./css-less/main.less')) {
 			$str = "/*\n * BraDypUS css minified archive includes different sources and licenses" .
         "\n * For details on external libraries (copyrights and licenses) please consult the Credits information" .
         "\n*/\n";
 
-      try
-      {
+      try {
         $opts = array(
           'compress'=>true
         );
         $parser = new Less_Parser($opts);
         $parser->parseFile( "./css-less/main.less");
         $css = $parser->getCss();
-        if (hash_file('sha256', "./css/mini.css") !== hash('sha256', $css))
-        {
+
+        if (hash_file('sha256', "./css/mini.css") !== hash('sha256', $css)) {
           file_put_contents("./css/mini.css", $str . $css);
         }
-      }
-      catch (Exception $e)
-      {
-        error_log($e->getTraceAsString());
+      } catch (Exception $e) {
+				Meta::addErrorLog($e);
       }
 		}
     echo '<link type="text/css" media="all" rel="stylesheet" href="./css/mini.css?sha256' . hash_file('sha256', './css/mini.css') . '" />';

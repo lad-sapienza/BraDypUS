@@ -8,8 +8,8 @@
 
 ob_start();
 
-try
-{
+try {
+
 	$basePath = './';
 	require_once './lib/constants.inc';
 
@@ -17,25 +17,20 @@ try
 
 	$controller->route();
 
-}
-catch (myException $e)
-{
+} catch (myException $e) {
+
 	$e->log();
 	echo utils::message( $e->getMessage(), 'error', true);
 
-	if (DEBUG_ON)
-	{
+	if (DEBUG_ON) {
 		var_dump($e);
 	}
-}
-catch (Exception $e)
-{
-	error_log($e->__toString(), 3, ERROR_LOG);
+} catch (Exception $e) {
+	Meta::addErrorLog($e);
 
 	echo utils::message( tr::get('generic_error'), 'error', true);
 
-	if (DEBUG_ON)
-	{
+	if (DEBUG_ON) {
 		var_dump($e);
 	}
 }

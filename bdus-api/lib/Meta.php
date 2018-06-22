@@ -86,11 +86,14 @@ class Meta
 
   /**
    * Writes an error log
-   * @param int    $user User id who triggered the Exception
    * @param Exception $e    Exception object
+   * @param int    $user User id who triggered the Exception
    */
-  public function addErrorLog(int $user, Exception $e)
+  public function addErrorLog(Exception $e, int $user = null)
   {
+    if (!$user) {
+      $user = $_SESSION['user']['id'];
+    }
     self::check();
     $dt = new DateTime();
     $errorlog = R::dispense( 'errorlog' );
@@ -188,7 +191,6 @@ class Meta
     $response['iTotalDisplayRecords'] = $response['iTotalRecords'];
 
     if (isset($get['iSortCol_0'])) {
-      error_log($get['iSortCol_0']);
         $q .= ' ORDER BY ' . $fields[$get['iSortCol_0']] . ' ' . ($get['sSortDir_0']==='asc' ? 'asc' : 'desc');
     }
 

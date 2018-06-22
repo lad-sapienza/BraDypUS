@@ -88,7 +88,7 @@ class record_ctrl extends Controller
 
                     $ok[] = true;
                 } catch (myException $e) {
-                    error_log($e->log());
+                    $e->log();
                     $error[] = true;
                 }
             }

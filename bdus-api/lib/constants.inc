@@ -60,7 +60,6 @@ if ( defined('PROJ_DIR'))
 	define ('PROJ_CFG_APPDATA',	PROJ_DIR . 'cfg/app_data.json');
 	define ('PROJ_CFG_TB',		PROJ_DIR . 'cfg/tables.json');
 	define ('PROJ_DB', 			PROJ_DIR . 'db/');
-	define ('PROJ_HISTORY', 	PROJ_DIR . 'history.log');
 	$error_log 				= 	PROJ_DIR . 'error.log';
 
 

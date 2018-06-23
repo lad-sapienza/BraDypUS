@@ -171,10 +171,9 @@ if (!utils::canUser('enter')) {
 					</li>
 					<?php endif; ?>
 
-
 					<li <?php echo utils::canUser('read') ? 'onclick="core.runMod(\'debug\');"' : 'class="state-disabled"'; ?>>
-						<i class="fa fa-exclamation-circle"></i><br />
-						<?php tr::show('error_log'); ?>
+						<i class="fa fa-bug"></i><br />
+						<?php tr::show('debug'); ?>
 					</li>
 
 				</ul>

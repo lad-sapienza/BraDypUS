@@ -30,7 +30,13 @@ class Meta
     }
   }
 
-  private static function guessTable($editQuery) {
+  /**
+   * Guesses and returns table name from SQL statement.
+   * Returns false if in case of failure
+   * @param  string $editQuery Query text
+   * @return string            table name
+   */
+  private static function guessTable(string $editQuery) {
 		if (preg_match("/^INSERT\s+INTO\s+`?([a-zA-Z_]+)`?/i", $editQuery, $m)) {
 			$table = $m[1];
 		}
@@ -46,25 +52,6 @@ class Meta
 		return $table;
 	}
 
-  /**
-   * Adds a record in history table.
-   * Deprecated in favor of versioning!
-   * @param int $user   user id who triggered the history log
-   * @param string $sql    Sql query performed
-   * @param array  $values Array with sql binded parameters
-   */
-  public function addHistory(int $user, string $sql, array $values = [])
-  {
-    self::check();
-    $dt = new DateTime();
-    $hist = R::dispense( 'history' );
-    $hist->user = $user;
-    $hist->unixtime = $dt->format('U');
-    $hist->datetime = $dt->format('Y-m-d H:i:s');
-    $hist->sql = $sql;
-    $hist->values = json_encode($values);
-    $id = R::store( $hist );
-  }
 
   /**
    * Writes user log

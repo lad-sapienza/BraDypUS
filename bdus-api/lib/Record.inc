@@ -326,7 +326,9 @@ class Record implements iRecord
 			$values = array(':id_field' => $this->idField);
 		}
 
-		$res = $this->db->query($query, $values, 'read');
+		if ($query && $values) {
+			$res = $this->db->query($query, $values, 'read');
+		}
 
 		$this->loaded['core'] = true;
 

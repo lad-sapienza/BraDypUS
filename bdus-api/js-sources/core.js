@@ -21,11 +21,11 @@ var core = {
 
 			if (!args){
 				args = [];
-			} else if (typeof args == 'string'){
+			} else if (typeof args === 'string'){
 				args = [args];
 			}
 
-			if (typeof window[mod] == 'object' && !debugMode){
+			if (typeof window[mod] === 'object' && !debugMode){
 				window[mod].init.apply(null, args);
 			} else {
 				var script;
@@ -34,16 +34,24 @@ var core = {
 				} else {
 					script = './modules/' + mod + '/' + mod + '.mini.js';
 				}
-				$.getScript(script, function(data){
 
-					window[mod].init.apply(null, args);
-
-					if (loaded){
-						loaded();
+				$.ajax({
+				  url: script,
+				  dataType: "script",
+					suppressErrors: true,
+				  success: function(data){
+						window[mod].init.apply(null, args);
+						if (loaded){
+							loaded();
+						}
+					},
+					error: function(jqxhr, settings, exception) {
+						core.open({
+							obj: mod,
+							method: 'read',
+							title: core.tr(mod)
+						});
 					}
-
-				}).fail(function(jqxhr, settings, exception) {
-					console.log(exception);
 				});
 			}
 		},
@@ -97,7 +105,7 @@ var core = {
  		 * opt.opts		?	object		[dialog only]
 		 */
 		open: function(opt, type){
-			if (type == 'modal'){
+			if (type === 'modal'){
 				layout.dialog.add(opt);
 			} else {
 				layout.tabs.add(opt);

@@ -99,10 +99,11 @@ var layout = {
 			});
 
 			$(document).ajaxError(function(event, request, settings){
-				if (request.statusText !== 'abort'){
-					$('#waiting_main').hide();
-					core.message(core.tr('error_in_module', [settings.url]), 'error', true);
+				if (request.statusText === 'abort' || settings.suppressErrors){
+					return;
 				}
+				$('#waiting_main').hide();
+				core.message(core.tr('error_in_module', [settings.url]), 'error', true);
 			});
 
 			layout.setSize();

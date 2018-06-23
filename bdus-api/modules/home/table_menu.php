@@ -6,12 +6,9 @@
  * @since			Apr 14, 2012
  */
 
-if (!$_GET['tb'])
-{
+if (!$_GET['tb']) {
 	return;
 }
-
-
 ?>
 
 <ul class="searcheable-list">

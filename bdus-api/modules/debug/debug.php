@@ -6,15 +6,16 @@
  * @since			Aug 11, 2012
  */
 
-class debug_ctrl extends Controller
+class debug extends Controller
 {
 
-	public function sql2json() {
+	public function sql2json()
+	{
 		return Meta::getData($this->get['tb'], $this->post);
 	}
 
 	public function read()
 	{
-		echo Meta::tableTop('errorlog', "./controller.php?&obj=debug_ctrl&method=sql2json&tb=errorlog");
+		echo Meta::tableTop('errorlog', "./controller.php?&obj=debug&method=sql2json&tb=errorlog");
 	}
 }

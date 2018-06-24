@@ -72,11 +72,11 @@ class Meta
   }
 
   /**
-   * Writes an error log
+   * Writes in database Exception
    * @param Exception $e    Exception object
    * @param int    $user User id who triggered the Exception
    */
-  public function addErrorLog(Exception $e, int $user = null)
+  public function logException(Exception $e, int $user = null)
   {
     if (!$user) {
       $user = $_SESSION['user']['id'];
@@ -89,6 +89,28 @@ class Meta
     $errorlog->datetime = $dt->format('Y-m-d H:i:s');
     $errorlog->message = $e->getMessage();
     $errorlog->trace = $e->getTraceAsString();
+    $id = R::store( $errorlog );
+  }
+
+  /**
+   * Writes in database error log
+   * @param  int    $errno   Error number
+   * @param  string $errstr  Error text
+   * @param  string $errfile Error file
+   * @param  string $errline Error line
+   */
+  public function logError(int $errno, string $errstr, string $errfile, string $errline)
+  {
+    $user = $_SESSION['user']['id'];
+
+    self::check();
+    $dt = new DateTime();
+    $errorlog = R::dispense( 'errorlog' );
+    $errorlog->user = $user;
+    $errorlog->unixtime = $dt->format('U');
+    $errorlog->datetime = $dt->format('Y-m-d H:i:s');
+    $errorlog->message = $errstr;
+    $errorlog->trace = '#' . $errno . '. ' . $errstr . '. In ' . $errfile . ', ' . $errline;
     $id = R::store( $errorlog );
   }
 
@@ -158,6 +180,9 @@ class Meta
 
     $response['sEcho'] = intval($get['sEcho']);
     $response['query_arrived'] = $q;
+
+    $v = [];
+    $w = [];
 
     if ($get['sSearch']) {
       foreach ($fields as $f) {

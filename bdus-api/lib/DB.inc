@@ -228,7 +228,7 @@ class DB
 					break;
 			}
 		} catch (PDOException $e) {
-			Meta::addErrorLog($e);
+			Meta::logException($e);
 			throw new myException($e);
 		}
 	}

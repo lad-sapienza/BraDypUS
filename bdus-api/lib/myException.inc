@@ -15,6 +15,6 @@ class myException extends Exception
 	 */
 	public function log ($file = NULL)
 	{
-    Meta::addErrorLog($this);
+    Meta::logException($this);
 	}
 }

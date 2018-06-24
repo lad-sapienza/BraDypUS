@@ -97,7 +97,7 @@ class Compress
           file_put_contents("./css/mini.css", $str . $css);
         }
       } catch (Exception $e) {
-				Meta::addErrorLog($e);
+				Meta::logException($e);
       }
 		}
     echo '<link type="text/css" media="all" rel="stylesheet" href="./css/mini.css?sha256' . hash_file('sha256', './css/mini.css') . '" />';

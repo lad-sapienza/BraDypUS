@@ -39,8 +39,7 @@ session_start();
  */
 ($_REQUEST['app'] && is_dir('./projects/' . $_REQUEST['app'])) ? $_SESSION['app'] = $_REQUEST['app'] : '';
 
-if($_SESSION['app'])
-{
+if($_SESSION['app']) {
 	define ( 'PROJ_DIR', PROJS_DIR . $_SESSION['app']."/");
 	define ( 'PREFIX', $_SESSION['app']);
 }
@@ -48,8 +47,7 @@ if($_SESSION['app'])
 /*
  * PROJect CONSTANTS
  */
-if ( defined('PROJ_DIR'))
-{
+if ( defined('PROJ_DIR')) {
 	define ('PROJ_CFG_DIR',		PROJ_DIR . 'cfg/');
 	define ('PROJ_FILES_DIR',	PROJ_DIR . 'files/');
 	define ('PROJ_TMPL_DIR',	PROJ_DIR . 'templates/');
@@ -68,39 +66,37 @@ if ( defined('PROJ_DIR'))
 	 */
 	$must_exist_dirs = array(PROJ_FILES_DIR, PROJ_TMP_DIR, PROJ_BUP_DIR, PROJ_EXP_DIR, PROJ_DB);
 
-	foreach($must_exist_dirs as $dir)
-	{
-		if (!is_dir($dir))
-		{
+	foreach($must_exist_dirs as $dir) {
+		if (!is_dir($dir)) {
 			mkdir($dir, 0777, true);
 		}
 	}
 }
 
+// LOG PHP ERRORS TO APPLICATION ERROR.LOG FILE
+define ('ERROR_LOG', $error_log);
+ini_set('error_log', ERROR_LOG);
+
+
 // DEBUG OPTIONS
-if ($__go_debug)
+if ($__go_debug){
 	$_SESSION['debug_mode'] = true;
-
-if ($__stop_debug)
-	$_SESSION['debug_mode'] = false;
-
-
-if ($_SESSION['debug_mode'])
-{
-	define('DEBUG_ON', true);
 }
-else
-{
+
+if ($__stop_debug){
+	$_SESSION['debug_mode'] = false;
+}
+
+if ($_SESSION['debug_mode']){
+	define('DEBUG_ON', true);
+} else {
 	define('DEBUG_ON', false);
 }
 
-if (DEBUG_ON)
-{
-	define('CACHE', serialize(array('debug' => true)));
-}
-else
-{
-	define('CACHE', serialize(array('cache'=>'cache')));
+if (DEBUG_ON) {
+	define('CACHE', serialize( ['debug' => true] ));
+} else {
+	define('CACHE', serialize( ['cache'=>'cache'] ));
 }
 
 
@@ -111,9 +107,10 @@ new autoLoader();
 require_once $root . 'lib/vendor/Twig/Autoloader.php';
 Twig_Autoloader::register();
 
+set_error_handler('Meta::logError', 6135);
+
 tr::load_file();
 
-if (defined('PROJ_CFG_APPDATA'))
-{
+if (defined('PROJ_CFG_APPDATA')) {
 	cfg::load(false, true);
 }

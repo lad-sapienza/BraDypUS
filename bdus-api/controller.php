@@ -26,7 +26,7 @@ try {
 		var_dump($e);
 	}
 } catch (Exception $e) {
-	Meta::addErrorLog($e);
+	Meta::logException($e);
 
 	echo utils::message( tr::get('generic_error'), 'error', true);
 

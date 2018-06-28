@@ -183,7 +183,7 @@ class api_ctrl extends Controller
 			$header['query_arrived'] = $query->getQuery();
 			$header['query_encoded'] = base64_encode($query->getQuery());
 			$header['total_rows'] = $this->get['total_rows'] ? $this->get['total_rows'] : (int) $query->getTotal();
-			$header['page'] = $this->get['page'] ? $this->get['page'] : 1;
+			$header['page'] = ($this->get['page'] && (int)$this->get['page'] > 0) ? (int)$this->get['page'] : 1;
 
 			$records_per_page = $this->get['records_per_page'] ? $this->get['records_per_page'] : 30;
 			$header['total_pages'] = ceil($header['total_rows']/$records_per_page);

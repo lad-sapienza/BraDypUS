@@ -17,18 +17,28 @@ try {
 
 	$controller->route();
 
-} catch (myException $e) {
+} catch (Error $e) {
+	Meta::logException($e);
 
-	$e->log();
-	echo utils::message( $e->getMessage(), 'error', true);
+	echo utils::message( tr::get('generic_error'), 'error', true);
 
 	if (DEBUG_ON) {
 		var_dump($e);
 	}
+
 } catch (Exception $e) {
 	Meta::logException($e);
 
 	echo utils::message( tr::get('generic_error'), 'error', true);
+
+	if (DEBUG_ON) {
+		var_dump($e);
+	}
+
+} catch (myException $e) {
+
+	$e->log();
+	echo utils::message( $e->getMessage(), 'error', true);
 
 	if (DEBUG_ON) {
 		var_dump($e);

@@ -15,21 +15,17 @@ try
 
 	require_once './lib/constants.inc';
 
-	if ($_GET['logout'])
-	{
-		try
-		{
+	if ($_GET['logout']) {
+		try {
 			$user = new User(new DB());
 			$user->logout();
-		}
-		catch (myException $e)
-		{
+
+		} catch (myException $e) {
 			User::forceLogOut();
 		}
 	}
 
-	if ($_GET['mini'])
-	{
+	if ($_GET['mini']) {
 		utils::compressModScripts();
 	}
 ?>
@@ -111,21 +107,38 @@ try
 </html>
 
 <?php
+
+} catch (Error $e) {
+
+	if ($_GET['debug']) {
+		echo $e->__toString();
+	} else {
+		echo "<h2>Errore.</h2><p>Dettaglio: " . $e->getMessage() . '</p>';
+	}
+
+	Meta::logException($e);
+
+} catch (Exception $e) {
+
+	if ($_GET['debug']) {
+		echo $e->__toString();
+	} else {
+		echo "<h2>Errore.</h2><p>Dettaglio: " . $e->getMessage() . '</p>';
+	}
+
+	Meta::logException($e);
+
 } catch (myException $e) {
+
 	$e->log();
 
 	if ($_GET['debug']) {
-		$text = $e->getMessage() . '<br />' . $e->getCode() . '<br />in file:' . $e->getFile() . '<br />in line: ' . $e->getLine() . '<br />' . $e->getTrace();
-
-		echo $e->__toString(), 'error', true;
+		echo $e->__toString();
 	} else {
 		echo "<h2>Errore.</h2><p>Dettaglio: " . $e->getMessage() . '</p>';
-		var_dump($e);
 	}
-} catch (Exception $e) {
-	Meta::logException($e);
-}
 
+}
 
 ob_end_flush();
 ?>

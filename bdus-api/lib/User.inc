@@ -64,7 +64,7 @@ class User
 
 		if ($user_id) {
 			$res = $this->getUser( array ('id'=> $user_id ) );
-		} else if ( filter_val($email, FILTER_VALIDATE_EMAIL) && filter_val($password, FILTER_VALIDATE_STRING) ) {
+		} else if ( filter_var($email, FILTER_VALIDATE_EMAIL) && !empty($password) ) {
 			// get user data
 			$res = $this->getUser( array ('id'=> $user_id, 'email' => $email, 'password' => $this->encodePwd( $password ) ) );
 		} else {
@@ -158,7 +158,7 @@ class User
 	 * Registers user login/out activity
 	 * @param  boolean $out if true, user just logged out
 	 */
-	private function userLog(boolval $out = false)
+	private function userLog(bool $out = false)
 	{
 		Meta::addUserLog($_SESSION['user']['id'], $out);
 	}

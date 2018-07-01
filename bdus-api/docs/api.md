@@ -110,6 +110,7 @@ The available types are: **all**, **recent**, **sqlExpert**, **fast**, **id_arra
   "fields": {}, // (object) associative object list of fields with field id as key and field label as value
   "core": { }, // (object) associative object list with fieldname as key and field value as value
   "coreLinks": [], // (array of objects) array with associative object list with coreLinks
+  "backLinks": [], // (array of objects) array with associative object list with backLinks
   "allPlugins": [], // (array of objects) array with associative object list with plugin data
   "fullFiles": [], // (array of objects) array with associative object list with file data
   "geodata": [], // (array of objects) array with associative object list with geo data

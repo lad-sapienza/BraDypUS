@@ -253,6 +253,7 @@ class api_ctrl extends Controller
     $data['fields'] = cfg::fldEl($tb, 'all', 'label');
 		$data['core'] = $rec->getCore();
 		$data['coreLinks'] = $rec->getCoreLinks();
+		$data['backLinks'] = $rec->getBackLinks();
 		$data['allPlugins'] = $rec->getAllPlugins();
 		$data['fullFiles'] = $rec->getFullFiles();
 		$data['geodata'] = $rec->getGeodata();
@@ -281,7 +282,7 @@ class api_ctrl extends Controller
 			$data = $resp['data'];
 			$mime ?: $resp['mime'];
 		}
-		
+
 		if (is_array($data)) {
 			$data = json_encode($data, (version_compare(PHP_VERSION, '5.4.0') >=0 ? JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE : false));
 		}

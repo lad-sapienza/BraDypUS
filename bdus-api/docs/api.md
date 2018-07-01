@@ -48,6 +48,8 @@ The available types are: **all**, **recent**, **sqlExpert**, **fast**, **id_arra
 
 ## Examples
 
+- Show metadata (field list) for table finds: https://db.bradypus.net/api/ghazni/finds?verb=inspect
+- Show metadata (full configuration) for all application: https://db.bradypus.net/api/ghazni/all?verb=inspect
 - Show record with id #1: https://db.bradypus.net/api/ghazni/finds?verb=read&id=1
 - Get all records from database:
   - first page (no page parameter): https://db.bradypus.net/api/ghazni/finds?verb=search&type=all

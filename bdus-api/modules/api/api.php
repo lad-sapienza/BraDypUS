@@ -90,6 +90,19 @@ class api_ctrl extends Controller
 
 			// INSPECT verb
 			if ($this->get['verb'] === 'inspect') {
+
+				if ($request['tb'] === PREFIX . '__all') {
+					$ret = [];
+
+					foreach (cfg::tbEl('all', 'all') as $t) {
+						$stripped_name = str_replace(PREFIX . '__', null, $t['name']);
+						foreach (cfg::fldEl($t['name']) as $f){
+							$t['fields'][$f['name']] = $f;
+						}
+						$ret[$stripped_name] = $t;
+					}
+					return $this->array2response( $ret );
+				}
 				$ret = [];
 				$flds = cfg::fldEl($request['tb']);
 

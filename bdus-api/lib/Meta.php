@@ -39,13 +39,11 @@ class Meta
   private static function guessTable(string $editQuery) {
 		if (preg_match("/^INSERT\s+INTO\s+`?([a-zA-Z_]+)`?/i", $editQuery, $m)) {
 			$table = $m[1];
-		}
-		// 2. Update query
-		elseif (preg_match("/^UPDATE\s+`?([a-zA-Z_]+)`?/i", $editQuery, $m)) {
-			$table = $m[1];
-		}
-		// 3. Delete query
-		elseif (preg_match("/^DELETE\s+FROM\s+`?([a-zA-Z_]+)`?/i", $editQuery, $m)) {
+		} elseif (preg_match("/^UPDATE\s+`?([a-zA-Z_]+)`?/i", $editQuery, $m)) {
+      // 2. Update query
+  		$table = $m[1];
+		} elseif (preg_match("/^DELETE\s+FROM\s+`?([a-zA-Z_]+)`?/i", $editQuery, $m)) {
+      // 3. Delete query
 			$table = $m[1];
 		}
 

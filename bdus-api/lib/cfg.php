@@ -21,37 +21,30 @@ class cfg
 	 */
 	public static function load($app = false, $force_reload = false)
 	{
-		if (!self::$data['tables'] || $force_reload || DEBUG_ON)
-		{
-			if ($app)
-			{
+		if (!self::$data['tables'] || $force_reload || DEBUG_ON) {
+
+			if ($app) {
 				$app_data = PROJS_DIR . $app . '/cfg/app_data.json';
-			}
-			else if (defined('PROJ_CFG_APPDATA'))
-			{
+			} else if (defined('PROJ_CFG_APPDATA')) {
 				$app_data = PROJ_CFG_APPDATA;
 			}
 
-			if (!file_exists($app_data))
-			{
+			if (!file_exists($app_data)) {
 				throw new myException(tr::sget('file_doesnt_exist', $app_data));
 			}
+
 			self::$data['main'] = json_decode(file_get_contents($app_data), true);
 
-			if($app)
-			{
+			if($app) {
 				return;
 			}
 
-			//table.xml
-			if (!defined('PROJ_CFG_TB'))
-			{
+			if (!defined('PROJ_CFG_TB')) {
 				throw new myException('tb_config_missing');
 			}
 			$tablesJSON = json_decode(file_get_contents(PROJ_CFG_TB), true);
 
-			if (!$tablesJSON || empty($tablesJSON))
-			{
+			if (!$tablesJSON || empty($tablesJSON)) {
 				throw new myException('Invalid json: ' . PROJ_CFG_TB);
 			}
 
@@ -63,18 +56,15 @@ class cfg
 
 			$all_fields = $tables_array;
 
-			foreach ($all_fields as $tb=>$tb_name)
-			{
+			foreach ($all_fields as $tb=>$tb_name) {
+
 				$cfgfile = PROJ_CFG_DIR . str_replace(PREFIX . '__', null, $tb) . '.json';
 
-				if ( !file_exists( $cfgfile) )
-				{
-					if (file_exists( PROJ_CFG_DIR . $tb . '.json' ))
-					{
+				if ( !file_exists( $cfgfile) ) {
+
+					if (file_exists( PROJ_CFG_DIR . $tb . '.json' )) {
 						$cfgfile = PROJ_CFG_DIR . $tb . '.json';
-					}
-					else
-					{
+					} else {
 						throw new myException(tr::sget('config_file_missing', $cfgfile));
 					}
 				}
@@ -91,11 +81,10 @@ class cfg
 	 */
 	public static function toFile($what)
 	{
-		switch($what)
-		{
+		switch($what) {
+
 			case 'main':
-				if (!utils::write_formatted_json(PROJ_CFG_APPDATA, self::$data['main']))
-				{
+				if (!utils::write_formatted_json(PROJ_CFG_APPDATA, self::$data['main'])) {
 					throw new myException('Can not write in ' . PROJ_CFG_APPDATA);
 				}
 				break;
@@ -103,8 +92,7 @@ class cfg
 			case 'table':
 				$arr['tables'] = self::$data['table'];
 
-				if (!utils::write_formatted_json(PROJ_CFG_TB, $arr))
-				{
+				if (!utils::write_formatted_json(PROJ_CFG_TB, $arr)) {
 					throw new myException('Can not write in ' . PROJ_CFG_TB);
 				}
 				break;
@@ -112,13 +100,11 @@ class cfg
 			default:
 				$file = PROJ_CFG_DIR . str_replace(PREFIX . '__', null, $what) . '.json';
 
-				if (!is_array(self::$data['tables'][$what]) || !file_exists($file))
-				{
+				if (!is_array(self::$data['tables'][$what]) || !file_exists($file)) {
 					throw new myException('Table ' . $what . ' does not exist');
 				}
 
-				if (!utils::write_formatted_json($file, self::$data['tables'][$what]))
-				{
+				if (!utils::write_formatted_json($file, self::$data['tables'][$what])) {
 					throw new myException('Can not write in ' . $file);
 				}
 
@@ -135,16 +121,13 @@ class cfg
 	 */
 	public static function main($el = false)
 	{
-		if (!self::$data)
-		{
+		if (!self::$data) {
 			self::load();
 		}
-		if ($el)
-		{
+
+		if ($el) {
 			return self::$data['main'][$el];
-		}
-		else
-		{
+		} else {
 			return self::$data['main'];
 		}
 	}
@@ -159,25 +142,20 @@ class cfg
 	public static function setTb($post_data)
 	{
 		$changed = false;
-		if(!in_array($post_data['name'], self::tbEl('all', 'name')))
-		{
+
+		if(!in_array($post_data['name'], self::tbEl('all', 'name'))) {
 			array_push(self::$data['table'], $post);
 			$changed = true;
-		}
-		else
-		{
-			foreach (self::$data['table'] as &$tb_data)
-			{
-				if ($tb_data['name'] == $post_data['name'])
-				{
+		} else {
+			foreach (self::$data['table'] as &$tb_data) {
+				if ($tb_data['name'] === $post_data['name']) {
 					$tb_data = $post_data;
 					$changed = true;
 				}
 			}
 		}
 
-		if ($changed)
-		{
+		if ($changed) {
 			self::toFile('table');
 		}
 	}
@@ -188,19 +166,13 @@ class cfg
 	{
 		$changed = false;
 
-		if (!$fld_name)
-		{
+		if (!$fld_name) {
 			array_push(self::$data['tables'][$tb], $post_data);
 			$changed = true;
-		}
-		else
-		{
-			foreach(self::$data['tables'] as $sess_tb=>$data_arr)
-			{
-				foreach ($data_arr as $index=>$data)
-				{
-					if ($sess_tb == $tb && $data['name'] == $fld_name)
-					{
+		} else {
+			foreach(self::$data['tables'] as $sess_tb=>$data_arr) {
+				foreach ($data_arr as $index=>$data) {
+					if ($sess_tb === $tb && $data['name'] === $fld_name) {
 						self::$data['tables'][$sess_tb][$index] = $post_data;
 						$changed = true;
 					}
@@ -208,8 +180,7 @@ class cfg
 			}
 		}
 
-		if ($changed)
-		{
+		if ($changed) {
 			self::toFile($tb);
 		}
 	}
@@ -219,55 +190,42 @@ class cfg
 	 * Returns configuration information about the field
 	 * Four different scenarios:
 	 * 	a) fld  = all and el  = all	: looking fo all elements in all fields. An array is returned
-	 *  b) fld  = all and el != all	: looking for an element in all fields. An (associative) array is returned.
-	 *  c) fld != all and el  = all : looking for all elements of a field. An associative array is returned.
-	 *  d) fdl != all and el != all : looking for one element in one field. A string is returned.
+	 *  b) fld  = all and el !== all	: looking for an element in all fields. An (associative) array is returned.
+	 *  c) fld !== all and el  = all : looking for all elements of a field. An associative array is returned.
+	 *  d) fdl !== all and el !== all : looking for one element in one field. A string is returned.
 	 * @param string $tb	table to search in
 	 * @param string $fld	field to search in or 'all'
 	 * @param string $el	element to retrieve or 'all'
 	 */
 	public static function fldEl ( $tb, $fld = 'all', $el = 'all' )
 	{
-		if (!self::$data)
-		{
+		if (!self::$data) {
 			self::load();
 		}
+
 		$xml = self::$data['tables'][$tb];
 
-		if ( $fld == 'all' AND $el == 'all' )
-		{
+		if ( $fld === 'all' AND $el === 'all' ) {
 			return $xml;
-
-		}
-		else if (!is_array($xml))
-		{
+		} else if (!is_array($xml)) {
 			return false;
-		}
-		else if ( $fld == 'all' AND $el != 'all' )
-		{
-			foreach ($xml as $v)
-			{
+		} else if ( $fld === 'all' AND $el !== 'all' ) {
+
+			foreach ($xml as $v) {
 				$res[$v['name']] =  $v[$el];
 			}
-
 			return $res;
-		}
-		else if ( $fld != 'all' AND $el == 'all' )
-		{
-			foreach ( $xml as $arr )
-			{
-				if ($arr['name'] == $fld )
-				{
+		} else if ( $fld !== 'all' AND $el === 'all' ) {
+
+			foreach ( $xml as $arr ) {
+				if ($arr['name'] === $fld ) {
 					return $arr;
 				}
 			}
-		}
-		else if ( $fld != 'all' AND $el != 'all' )
-		{
-			foreach ( $xml as $arr )
-			{
-				if ($arr['name'] == $fld )
-				{
+		} else if ( $fld !== 'all' AND $el !== 'all' ) {
+
+			foreach ( $xml as $arr ) {
+				if ($arr['name'] === $fld ) {
 					return $arr[$el];
 				}
 			}
@@ -281,10 +239,8 @@ class cfg
 	{
 		$all = self::tbEl('all', 'label');
 
-		foreach($all as $name=>$label)
-		{
-			if (self::tbEl($name, 'is_plugin'))
-			{
+		foreach($all as $name=>$label) {
+			if (self::tbEl($name, 'is_plugin')) {
 				$ret[$name] = $label;
 			}
 		}
@@ -299,10 +255,8 @@ class cfg
 	{
 		$all = self::tbEl('all', 'label');
 
-		foreach($all as $name=>$label)
-		{
-			if (!self::tbEl($name, 'is_plugin'))
-			{
+		foreach($all as $name=>$label) {
+			if (!self::tbEl($name, 'is_plugin')) {
 				$ret[$name] = $label;
 			}
 		}
@@ -314,52 +268,41 @@ class cfg
 	 *
 	 * Returns configuration information about the field
 	 * Four different scenarios:
-	 * 	a) tb  = all AND el != all : looking for an element in all tables. An array is returned
-	 *  b) tb != all AND el  = all : looking for all elements of a table. An array is returned
-	 *  c) tb != all and el != all : looking for an element of a table. An array or string is returned
+	 * 	a) tb  = all AND el !== all : looking for an element in all tables. An array is returned
+	 *  b) tb !== all AND el  = all : looking for all elements of a table. An array is returned
+	 *  c) tb !== all and el !== all : looking for an element of a table. An array or string is returned
 	 * @param string $tb table name
 	 * @param string $el element name
 	 * @param string $type_filter	filter on field type to use in getting tables if $tb = all
 	 */
 	public static function tbEl ( $tb, $el )
 	{
-		if (!self::$data)
-		{
+		if (!self::$data) {
 			self::load();
 		}
+
 		$xml = self::$data['table'];
 
-		if ( $tb == 'all' AND $el != 'all')
-		{
-			foreach ( $xml as $arr )
-			{
+		if ( $tb === 'all' AND $el !== 'all') {
+			foreach ( $xml as $arr ) {
 				$res[$arr['name']] = $arr[$el];
 			}
 			return $res;
 
-		}
-		else if ( $tb != 'all' AND $el == 'all')
-		{
-			foreach ( $xml as $arr )
-			{
-				if ( $arr['name'] == $tb )
-				{
+		} else if ( $tb !== 'all' AND $el === 'all') {
+			foreach ( $xml as $arr ) {
+				if ( $arr['name'] === $tb ) {
 					return $arr;
 				}
 			}
-		}
-		else if ( $tb != 'all' AND $el != 'all')
-		{
-			foreach ( $xml as $arr )
-			{
-				if ( $arr['name'] == $tb )
-				{
+		} else if ( $tb !== 'all' AND $el !== 'all') {
+			foreach ( $xml as $arr ) {
+				if ( $arr['name'] === $tb ) {
 					return $arr[$el];
 				}
 			}
 		}
-		else
-		{
+		else {
 			return $xml;
 		}
 	}
@@ -368,12 +311,9 @@ class cfg
 	{
 		$pref_preview = pref::get('preview');
 
-		if (is_array($pref_preview) && is_array($pref_preview[$tb]))
-		{
+		if (is_array($pref_preview) && is_array($pref_preview[$tb])) {
 			return $pref_preview[$tb];
-		}
-		else
-		{
+		} else {
 			return self::tbEl($tb, 'preview');
 		}
 	}

@@ -11,7 +11,7 @@ ob_start();
 try {
 
 	$basePath = './';
-	require_once './lib/constants.inc';
+	require_once './lib/constants.php';
 
 	$controller = new Controller($_GET, $_POST, $_REQUEST);
 

@@ -100,8 +100,8 @@ if (DEBUG_ON) {
 }
 
 
-require_once LIB_DIR . 'myException.inc';
-require_once LIB_DIR . 'autoLoader.inc';
+require_once LIB_DIR . 'myException.php';
+require_once LIB_DIR . 'autoLoader.php';
 new autoLoader();
 
 require_once $root . 'lib/vendor/Twig/Autoloader.php';

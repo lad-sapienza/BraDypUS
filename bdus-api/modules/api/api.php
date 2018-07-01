@@ -261,6 +261,10 @@ class api_ctrl extends Controller
       $data['rs'] = $rec->getRS();
     }
 		$data['userLinks'] = $rec->getUserLinks();
+
+		foreach ($data['coreLinks'] as $tb => &$cl) {
+			$cl['tb_label'] = cfg::tbEl($tb, 'label');
+		}
 		return $data;
 	}
 

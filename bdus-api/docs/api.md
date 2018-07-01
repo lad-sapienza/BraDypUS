@@ -102,6 +102,11 @@ The available types are: **all**, **recent**, **sqlExpert**, **fast**, **id_arra
 ### Single record structure
 ```javascript
 {
+  "metadata": {
+    "table": "", // referenced table name, complete with prefix
+    "stripped_table": "" // referenced table name, without with prefix
+    "table_label": "" // referenced table label
+  }
   "fields": {}, // (object) associative object list of fields with field id as key and field label as value
   "core": { }, // (object) associative object list with fieldname as key and field value as value
   "coreLinks": [], // (array of objects) array with associative object list with coreLinks

@@ -245,6 +245,11 @@ class api_ctrl extends Controller
 	private function getOne($tb, $id)
 	{
 		$rec = new Record($tb, $id, new DB);
+		$data['metadata'] = [
+			'table' => $tb,
+			'stripped_table' => str_replace($this->get['app'] . '__', null, $tb),
+			'table_label' => cfg::tbEl($tb, 'label')
+		];
     $data['fields'] = cfg::fldEl($tb, 'all', 'label');
 		$data['core'] = $rec->getCore();
 		$data['coreLinks'] = $rec->getCoreLinks();

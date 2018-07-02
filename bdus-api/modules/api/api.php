@@ -269,7 +269,7 @@ class api_ctrl extends Controller
 	}
 
 	/**
-	 * Formats array data as pretty-printed JSON and returns or echoes (with Cross-domain alloe policy) it
+	 * Formats array data as pretty-printed JSON and returns or echoes (with Cross-domain allow policy) it
 	 * @param  array  $data       array of input data
 	 * @return string
 	 */

@@ -521,8 +521,7 @@ class Record implements iRecord
 			$this->loadCore();
 		}
 
-		foreach ($links as $link)
-		{
+		foreach ($links as $link) {
 			/*
 			 * $link = array('other_tb' => string, 'fld'=>array( 0 => array('other': string, 'my'=>string))
 			 * if !is_array(fld)	:	error
@@ -572,7 +571,7 @@ class Record implements iRecord
 			return $this->data['backLink'];
 		}
 
-		$ret = false;
+		$ret = [];
 
 		$bl_array = cfg::tbEl($this->tb, 'backlinks');
 

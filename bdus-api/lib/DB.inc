@@ -30,7 +30,7 @@ class DB
 	{
 		$this->app = $app ? $app : $_SESSION['app'];
 
-		$this->parseStart($app, $custom_connection);
+		$this->parseStart($this->app, $custom_connection);
 	}
 
 	/**
@@ -228,7 +228,6 @@ class DB
 					break;
 			}
 		} catch (PDOException $e) {
-			Meta::logException($e);
 			throw new myException($e);
 		}
 	}

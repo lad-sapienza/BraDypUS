@@ -86,7 +86,7 @@ class Meta
     $errorlog->unixtime = $dt->format('U');
     $errorlog->datetime = $dt->format('Y-m-d H:i:s');
     $errorlog->message = $e->getMessage();
-    $errorlog->trace = $e->getTraceAsString();
+    $errorlog->trace = json_encode($e->getTrace(), JSON_PRETTY_PRINT);
     $id = R::store( $errorlog );
   }
 

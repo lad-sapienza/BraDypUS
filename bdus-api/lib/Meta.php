@@ -122,6 +122,10 @@ class Meta
    */
   public function addVersion(int $user, string $table = null, string $editQuery = null, array $editQueryValues = [])
   {
+    // Insert queries are ignored
+    if (preg_match('/^INSERT INTO(.+)/', $editQuery) ) {
+      return false;
+    }
     self::check();
 
     $db = new DB();

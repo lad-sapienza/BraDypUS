@@ -613,7 +613,10 @@ SELECT `id`, `{$dest_id_fld}` as label FROM `{$tb}`
 EOD;
 			}
 
-			$ret[$tb] = $this->db->query($sql, false, 'read');
+			$r = $this->db->query($sql, false, 'read');
+			if ($r[0]['id']) {
+				$ret[$tb] = $r;
+			}
 		}
 
 		$this->data['backLink'] = $ret;

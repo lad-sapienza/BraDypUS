@@ -88,6 +88,10 @@ class ReadRecord
 
 				}
 
+        if ($mlt === $app . '__files' ){
+          continue;
+        }
+
         $id_fld = cfg::tbEl($mlt, 'id_field');
 
         if ( $id_fld === 'id' ) {

@@ -134,7 +134,7 @@ class Field implements iTemplate
         // SHOW CORELINKS
         $html .= '<i class="glyphicon glyphicon-link"></i> <strong>' . tr::get('core_links'). '</strong><br />';
 
-        if (!is_array($corelinks) && !is_array($backlinks)) {
+        if (!empty($corelinks) && !empty($backlinks)) {
             $html .= '<p>' . tr::get('no_core_links') . '</p>';
         }
 

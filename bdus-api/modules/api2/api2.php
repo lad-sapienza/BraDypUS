@@ -5,8 +5,9 @@
  * @license			See file LICENSE distributed with this code
  * @since				Jul 02, 2018
  *
- * pretty
- * verb
+ *  /api/v2/{app}?verb=read&tb={tb-name-no-prefix}&id={record-id}(&pretty=1)
+ *  /api/v2/{app}?verb=inspect(&pretty=1)
+ *  /api/v2/{app}?verb=inspect&tb={tb-name-no-prefix}(&pretty=1)
  */
 
 class api2 extends Controller
@@ -46,7 +47,7 @@ class api2 extends Controller
 		}
 
 		// Tb must have prefix
-		if (strpos($this->get['tb'], $this_>app . '__') === false) {
+		if ($this->get['tb'] && strpos($this->get['tb'], $this->app . '__') === false) {
 			$this->get['tb'] = $this->app . '__' . $this->get['tb'];
 		}
 	}
@@ -59,7 +60,38 @@ class api2 extends Controller
 			$this->setOrDie();
 
 			if ($this->verb === 'read') {
+
+				// Read one record
 				$resp = $this->getOne($this->app, $this->get['tb'], $this->get['id']);
+
+			} elseif ($this->verb === 'inspect') {
+
+				// Inspect
+				if ($this->get['tb']) {
+
+					// Inspect table
+					$stripped_name = str_replace($this->app . '__', null, $this->get['tb']);
+
+					foreach (cfg::fldEl($this->get['tb']) as $f){
+						$resp[$f['name']] = $f;
+						$resp[$f['name']]['fullname'] = $stripped_name . ':' . $f['name'];
+					}
+
+				} else {
+
+					// Inspect all
+					foreach (cfg::tbEl('all', 'all') as $t) {
+
+						$stripped_name = str_replace($this->app . '__', null, $t['name']);
+
+						foreach (cfg::fldEl($t['name']) as $f){
+							$t['fields'][$f['name']] = $f;
+							$t['fields']['fullname'] = $stripped_name . ':' . $t['name'];
+						}
+
+						$resp[$stripped_name] = $t;
+					}
+				}
 			}
 
 			return $this->array2response($resp);

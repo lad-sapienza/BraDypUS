@@ -71,10 +71,10 @@ class Meta
 
   /**
    * Writes in database Exception
-   * @param Exception $e    Exception object
+   * @param Exception|Error $e    Exception object
    * @param int    $user User id who triggered the Exception
    */
-  public function logException(Exception $e, int $user = null)
+  public function logException($e, int $user = null)
   {
     if (!$user) {
       $user = $_SESSION['user']['id'];

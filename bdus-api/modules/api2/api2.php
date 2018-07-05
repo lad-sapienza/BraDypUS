@@ -32,6 +32,7 @@ class api2 extends Controller
 		// Validate verb
 		$this->verb = $this->get['verb'];
 		$valid_verbs = ['read', 'search', 'inspect'];
+
 		if (!$this->verb || !in_array($this->verb, $valid_verbs)) {
 			throw new Exception("Invalid verb {$this->verb}. Verb must be one of " . implode(', ', $valid_verbs));
 		}
@@ -72,9 +73,12 @@ class api2 extends Controller
 					// Inspect table
 					$stripped_name = str_replace($this->app . '__', null, $this->get['tb']);
 
+					$resp = cfg::tbEl($this->get['tb'], 'all');
+					$resp['stripped_name'] = $stripped_name;
+
 					foreach (cfg::fldEl($this->get['tb']) as $f){
-						$resp[$f['name']] = $f;
-						$resp[$f['name']]['fullname'] = $stripped_name . ':' . $f['name'];
+						$f['fullname'] = $this->get['tb'] . ':' . $f['name'];
+						$resp['fields'][$f['name']] = $f;
 					}
 
 				} else {
@@ -83,11 +87,13 @@ class api2 extends Controller
 					foreach (cfg::tbEl('all', 'all') as $t) {
 
 						$stripped_name = str_replace($this->app . '__', null, $t['name']);
+						$t['stripped_name'] = $stripped_name;
 
 						foreach (cfg::fldEl($t['name']) as $f){
+							$f['fullname'] = $t['name'] . ':' . $t['name'];
 							$t['fields'][$f['name']] = $f;
-							$t['fields']['fullname'] = $stripped_name . ':' . $t['name'];
 						}
+
 
 						$resp[$stripped_name] = $t;
 					}
@@ -99,7 +105,8 @@ class api2 extends Controller
 		} catch (Exception $e) {
 			return $this->array2response([
 				'type' => 'error',
-				'text' => $e->getMessage()
+				'text' => $e->getMessage(),
+				'trace' => json_encode($e->getTrace(), JSON_PRETTY_PRINT)
 				]);
 		}
 	}

@@ -153,13 +153,20 @@ class ReadRecord
    *    "geometry": (string, wkt),
    *    "geo_el_elips": (int),
    *    "geo_el_asl": (int)
+   *    "geojson": (string, geojson)
    * }
    */
   public static function getGeodata(string $app, string $tb, int $id)
   {
-    return DB::start()->query(
+    $r = DB::start()->query(
       "SELECT `id`, `geometry`, `geo_el_elips`, `geo_el_asl` FROM `{$app}__geodata` WHERE `table_link` = ? AND `id_link`= ?",
 			[$tb, $id]);
+    if (is_array($r)) {
+      foreach ($r as &$row) {
+        $row['geojson'] = \Symm\Gisconverter\Gisconverter::wktToGeojson($row['geometry']);
+      }
+    }
+    return $r;
   }
 
   /**

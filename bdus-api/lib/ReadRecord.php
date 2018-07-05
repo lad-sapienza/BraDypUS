@@ -268,8 +268,11 @@ class ReadRecord
     $links = [];
 
 		$links_data = cfg::tbEl($tb, 'link');
+
 		if (is_array($links_data)) {
+
 			foreach ($links_data as $ld) {
+        $where = [];
 				foreach ($ld['fld'] as $c) {
 					$where[] = " `{$c['other']}` = '{$core[$c['my']]['val']}'";
 				}

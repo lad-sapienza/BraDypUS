@@ -224,26 +224,23 @@ class ReadRecord
 				list($ref_tb, $via_plg, $via_plg_fld) = utils::csv_explode($bl, ':');
         $ref_tb_id = cfg::tbEl($ref_tb, 'id_field');
 
-        // Simple case: id_field of referenced table IS id
-        if ($ref_tb_id === 'id'){
+        $where = " `id` IN (SELECT `id_link` FROM `{$via_plg}` WHERE `table_link` = '{$ref_tb}' AND `{$via_plg_fld}` = {$id})";
 
-          $sql = "SELECT `id_link` as `id`, `id_link` as `label` FROM `{$via_plg}` WHERE `table_link` = '{$ref_tb}' AND `{$via_plg_fld}` = ?";
-          $sql_val = [$id];
+        $sql = "SELECT count(`id_link`) as `tot` FROM `{$via_plg}` WHERE `table_link` = '{$ref_tb}' AND `{$via_plg_fld}` = ?";
 
-        } else {
-
-          // id_field of referenced table IS NOT id: a join is necessary
-          $sql = "SELECT `id`, `{$ref_tb_id}` as label FROM `{$ref_tb}` WHERE `id` IN ( SELECT `id_link` FROM `{$via_plg}` WHERE `table_link` = ? AND `{$via_plg_fld}` = ? )";
-          $sql_val = [ $ref_tb, $id];
-
-        }
+        $sql_val = [$id];
 
         $r = DB::start()->query($sql, $sql_val);
+        if ($r[0]['tot'] == 0){
+          continue;
+        }
+
         $backlinks[$ref_tb] = [
           'tb_id' => $ref_tb,
           'tb_stripped' => str_replace($app . '__', null, $ref_tb),
 					"tb_label" => cfg::tbEl($ref_tb, 'label'),
-					'tot' => count($r),
+					'tot' => $r[0]['tot'],
+          'where' => $where,
 					'data' => $r
         ];
 			}
@@ -327,6 +324,9 @@ class ReadRecord
 		if ($plg_names && is_array($plg_names)){
 			foreach ($plg_names as $p) {
 				$plg_data = self::getTbRecord($p, "`table_link`= ? AND `id_link` = ?", [$tb, $id]) ?: [];
+        if (empty($plg_data)){
+          continue;
+        }
 				$plugins[$p] = [
 					"metadata" => [
 						"tb_id" => $p,
@@ -366,10 +366,15 @@ class ReadRecord
 		$join = [];
 
 		foreach ($cfg as $arr) {
-			if ($arr['id_from_tb']) {
+
+      if ($arr['id_from_tb']) {
 
 				$ref_tb = $arr['id_from_tb'];
 				$ref_tb_fld = cfg::tbEl($arr['id_from_tb'], 'id_field');
+
+        if ($tb === $ref_tb) {
+          continue;
+        }
 
 				array_push(
 					$fields,

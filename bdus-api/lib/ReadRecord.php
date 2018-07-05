@@ -382,7 +382,7 @@ class ReadRecord
 
 				array_push(
 					$join,
-					" JOIN `{$ref_tb}` " . ($tb === $ref_tb ? " AS {$ref_tb}bis" : '') . " ON `{$ref_tb}`.`id` = `{$tb}`.`{$arr['name']}` ");
+					" JOIN `{$ref_tb}` ON `{$ref_tb}`.`id` = `{$tb}`.`{$arr['name']}` ");
 			}
 		}
 

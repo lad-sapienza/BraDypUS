@@ -231,7 +231,8 @@ class api_ctrl extends Controller
 		} catch (Exception $e) {
 			return $this->array2response([
 				'type' => 'error',
-				'text' => $e->getMessage()
+				'text' => $e->getMessage(),
+				'trace' => json_encode($e->getTrace(), JSON_PRETTY_PRINT)
 				]);
 		}
 	}

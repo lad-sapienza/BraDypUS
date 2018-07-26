@@ -177,15 +177,15 @@ class api_ctrl extends Controller
 						break;
 
 					case 'encoded':
-						if (!$this->get['q_encoded']) {
+						if (!$this->request['q_encoded']) {
 							throw new Exception("Parameter q_encoded is required for type encoded");
 						}
-						$request['q_encoded'] = $this->get['q_encoded'];
-						$request['join'] = $this->get['join'];
-						$request['fields'] = $this->get['fields'];
-						$request['limit_start'] = $this->get['limit_start'];
-						$request['limit_end'] = $this->get['limit_end'];
-						$request['group'] = $this->get['group'];
+						$request['q_encoded'] = $this->request['q_encoded'];
+						$request['join'] = $this->request['join'];
+						$request['fields'] = $this->request['fields'];
+						$request['limit_start'] = $this->request['limit_start'];
+						$request['limit_end'] = $this->request['limit_end'];
+						$request['group'] = $this->request['group'];
 						break;
 				}
 			}

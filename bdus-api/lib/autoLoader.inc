@@ -27,23 +27,25 @@ class autoloader
 		    }
 
         if (is_file(LIB_DIR . 'vendor/' . str_replace('\\', '/', $className) . '.php')) {
-            require_once LIB_DIR . 'vendor/' . str_replace('\\', '/', $className) . '.php';
-        }
 
-        if (preg_match('/_ctrl/', $className)) {
+            require_once LIB_DIR . 'vendor/' . str_replace('\\', '/', $className) . '.php';
+
+        } elseif (preg_match('/_ctrl/', $className)) {
+
             $mod = str_replace('_ctrl', null, $className);
 
             if (file_exists(MOD_DIR . $mod . '/' . $mod . '.php')) {
                 require_once MOD_DIR . $mod . '/' . $mod . '.php';
-            } else {
-                return false;
-                //throw new myException('Error: Can not load class `' . $className . '` (file: ' . MOD_DIR . mod . '/' . $mod . '.php)');
             }
+
         } else {
+
             if (file_exists(LIB_DIR . $className . '.inc')) {
                 require_once LIB_DIR . $className . '.inc';
             } elseif (file_exists(LIB_DIR . $className . '.php')) {
                 require_once LIB_DIR . $className . '.php';
+            } elseif (file_exists(MOD_DIR . '/' . $className . '/' . $className . '.php')) {
+                require_once MOD_DIR . '/' . $className . '/' . $className . '.php';
             } elseif (file_exists(LIB_DIR . 'interfaces/' . $className . '.inc')) {
                 require_once LIB_DIR . 'interfaces/' . $className . '.inc';
             } elseif (file_exists(LIB_DIR . 'interfaces/' . $className . '.php')) {

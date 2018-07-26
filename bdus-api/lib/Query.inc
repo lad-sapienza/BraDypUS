@@ -55,8 +55,7 @@ class Query
 	 */
 	public function __construct(DB $db, $request, $use_preview = false)
 	{
-		if (!$request['tb'])
-		{
+		if (!$request['tb']){
 			throw new myException(tr::sget('parameter_missing', 'tb'));
 		}
 		$this->tb = $request['tb'];

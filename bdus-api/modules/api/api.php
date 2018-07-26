@@ -215,7 +215,7 @@ class api_ctrl extends Controller
 			$header['query_executed'] = $query->getQuery();
 			$header['fields'] = $query->getFields();
 
-			if ($this->get['geojson']) {
+			if ($this->request['geojson']) {
 				return $this->array2response(
 					toGeoJson::fromMultiArray(
 						$query->getResults( ($this->get['fullRecords'] && $this->get['fullRecords'] !== 'false') ), true

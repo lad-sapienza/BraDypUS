@@ -60,6 +60,26 @@ class api2 extends Controller
 
 			$this->setOrDie();
 
+			if ( file_exists("projects/{$this->get['app']}/mods/api/PreProcess.php")) {
+				require_once("projects/{$this->get['app']}/mods/api/PreProcess.php");
+				$preProcess = new PreProcess();
+
+				$pp = $preProcess->run($this->get, $this->post);
+
+				if ($pp['headers'] && is_array($pp['headers'])) {
+					foreach ($pp['headers'] as $k => $v) {
+						header("$k: $v");
+					}
+				}
+				if ($pp['echo']) {
+					echo $pp['echo'];
+				}
+
+				if ($pp['halt']) {
+					return;
+				}
+			}
+
 			if ($this->verb === 'read') {
 
 				// Read one record

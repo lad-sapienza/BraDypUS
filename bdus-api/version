@@ -1,6 +1,7 @@
 3.10.2[] = "New API method inspect all, and more information returned in view record method"
 3.10.1[] = "Added support for a more granulated error & history log"
 
+3.9.4[] = "Fixed bug with history file size being compressed"
 3.9.3[] = "Added support for data preprocess & manipulation in API"
 3.9.2[] = "History log files are gzipped and backed up if bigger then 1Mb"
 3.9.1[] = "Added support for data postprocess & manipulation in API"

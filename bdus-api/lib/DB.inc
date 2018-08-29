@@ -193,6 +193,8 @@ class DB
 	{
 		try {
 
+			$query = trim($query);
+
 			$sql = $this->db->prepare($query);
 
 			if ( !$values ) $values = [];

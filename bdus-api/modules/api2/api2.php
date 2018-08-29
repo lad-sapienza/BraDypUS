@@ -5,6 +5,9 @@
  * @license			See file LICENSE distributed with this code
  * @since				Jul 02, 2018
  *
+ *  Charts:
+ *  /api/v2/{app}?verb=getChart(&id={chart-id})(&pretty=1)
+ *
  *  /api/v2/{app}?verb=read&tb={tb-name-no-prefix}&id={record-id}(&pretty=1)
  *  /api/v2/{app}?verb=inspect(&pretty=1)
  *  /api/v2/{app}?verb=inspect&tb={tb-name-no-prefix}(&pretty=1)
@@ -31,7 +34,7 @@ class api2 extends Controller
 
 		// Validate verb
 		$this->verb = $this->get['verb'];
-		$valid_verbs = ['read', 'search', 'inspect'];
+		$valid_verbs = ['read', 'search', 'inspect', 'getChart'];
 
 		if (!$this->verb || !in_array($this->verb, $valid_verbs)) {
 			throw new Exception("Invalid verb {$this->verb}. Verb must be one of " . implode(', ', $valid_verbs));
@@ -51,6 +54,11 @@ class api2 extends Controller
 		if ($this->get['tb'] && strpos($this->get['tb'], $this->app . '__') === false) {
 			$this->get['tb'] = $this->app . '__' . $this->get['tb'];
 		}
+		// Validate table
+		if (in_array($this->get['tb'], ["{$this->app}__queries", "{$this->app}__rs", "{$this->app}__userlinks", "{$this->app}__users"], "{$this->app}__charts"])){
+			throw new Exception("System tables cannot be queried");
+		}
+
 	}
 
 	public function run()
@@ -80,7 +88,28 @@ class api2 extends Controller
 				}
 			}
 
-			if ($this->verb === 'read') {
+			if ($this->verb === 'getChart') {
+
+				if ($this->get['id'] && $this->get['id'] !== 'all'){
+					$sql = "SELECT * FROM `{$this->app}__charts` WHERE `id` = ?";
+					$vals = [ $this->get['id'] ];
+					$ch = DB::start()->query($sql, $vals);
+
+					if (!$ch || !is_array($ch) || !is_array($ch[0])){
+						throw new \Exception("Chart #{$this->get['id']} not found");
+					}
+
+					$resp['name'] = $ch[0]['name'];
+					$resp['id'] = $ch[0]['id'];
+
+					$resp['data'] = DB::start()->query($ch[0]['query']);
+				} elseif ($this->get['id'] === 'all') {
+					$sql = "SELECT `id`, `name` FROM `{$this->app}__charts` WHERE  1";
+					$resp = DB::start()->query($sql, $vals);
+				}
+
+
+			} else if ($this->verb === 'read') {
 
 				// Read one record
 				$resp = $this->getOne($this->app, $this->get['tb'], $this->get['id']);

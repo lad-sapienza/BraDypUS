@@ -1,3 +1,4 @@
+3.9.5[] = "Fixed bug with chart deletion"
 3.9.4[] = "Fixed bug with history file size being compressed"
 3.9.3[] = "Added support for data preprocess & manipulation in API"
 3.9.2[] = "History log files are gzipped and backed up if bigger then 1Mb"

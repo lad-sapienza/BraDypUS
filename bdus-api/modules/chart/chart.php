@@ -9,7 +9,7 @@
 class chart_ctrl extends Controller
 {
 	/**
-	 * 
+	 *
 	 * @param string $this->get['tb']
 	 * @param string $this->get['query']
 	 */
@@ -23,9 +23,9 @@ class chart_ctrl extends Controller
 				'uid' =>uniqid('chart_builder')
 		));
 	}
-	 
+
 	/**
-	 * 
+	 *
 	 * @param string $this->get['tb']
 	 * @param string $this->get['remove']
 	 */
@@ -38,32 +38,32 @@ class chart_ctrl extends Controller
 				'tr' => new tr()
 		));
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @param array $this->post
 	 */
 	public function processdata()
 	{
 		$post = $this->post;
-		
+
 		if (!empty($post['series']))
 		{
 			$group_by = ' GROUP BY `' . $post['series'] . '` ';
 		}
-		
+
 		foreach ($post['bar_fld'] as $bar_id=>$bar_arr)
 		{
 			$bar[] = ' ' . $post['bar_function'][$bar_id] . '(`' . implode('`) + ' . $post['bar_function'][$bar_id] . '(`', $bar_arr) . '`) '
 				. ( $post['bar_name'][$bar_id] ? ' AS `' . $post['bar_name'][$bar_id] . '`' : '');
 		}
-		
+
 		$sql = 'SELECT ' .
 			( $post['series'] ? ' `' . $post['series'] . '` AS `series_name`, ' : '')  .
 			implode(', ', $bar) .
 			' FROM `' . $post['tb'] . '` WHERE ' .
 			($post['query'] ? ' ' . base64_decode($post['query']). ' ' : '' . ' 1 ');
-		
+
 		if ($group_by && preg_match('/ORDER BY/', $sql))
 		{
 			$sql = preg_replace('/(.+)ORDER BY(.+)/', '$1 ' . $group_by . ' ORDER BY $2', $sql);
@@ -74,19 +74,19 @@ class chart_ctrl extends Controller
 		}
 
 		$ch = new Charts(new DB());
-		
+
 		$ch->formatResult(false, $sql);
-		
+
 		$this->render('chart', 'display', array(
 				'uid'	=> uniqid('chart'),
 				'tr'	=> new tr(),
 				'data'	=> $ch->getData()
 		));
-		
+
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @param array $this->post
 	 * @throws myException
 	 */
@@ -103,9 +103,9 @@ class chart_ctrl extends Controller
 			{
 				$post['name'] = uniqid('chart_');
 			}
-			
+
 			$chart = new Charts(new DB());
-			
+
 			if ($chart->save($post['name'], $post['query_text']))
 			{
 				utils::response('ok_save_chart');
@@ -121,76 +121,73 @@ class chart_ctrl extends Controller
 			utils::response('error_save_chart', 'error');
 		}
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @param int $this->get['id']
 	 */
 	public function erase()
 	{
 		$chart = new Charts(new DB());
-		
-		if ($chart->erase($this->get['id']))
-		{
+
+		if ($chart->erase($this->get['param'][0])) {
 			utils::response('ok_chart_erase');
-		}
-		else
-		{
+		} else {
 			utils::response('error_chart_erase', 'error');
 		}
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @param int $this->get['id']
 	 */
 	public function display_chart()
 	{
 		$chart = new Charts(new DB());
-		
+
 		$chart->formatResult($this->get['id']);
-		
+
 		$this->render('chart', 'display', array(
 				'uid'	=> uniqid('chart'),
 				'tr'	=> new tr(),
 				'data'	=> $chart->getData()
 				));
 	}
-	
-	
+
+
 	public function show_all()
 	{
 		$charts = new Charts(new DB());
-		
+
 		$this->render('chart', 'list', array(
 				'all_charts' => $charts->getCharts(),
 				'can_admin' => utils::canUser('admin'),
 				'tr' => new tr()
 		));
-		
+
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @param int $this->get['id']
 	 */
 	public function edit_form()
 	{
 		$chart = new Charts(new DB());
-		
+
 		$mych = $chart->getCharts($this->get['id']);
-		
+
 		$mych = $mych[0];
-		
+
 		$this->render('chart', 'edit', array(
 				'uid'	=> uniqid('editchart'),
 				'tr'	=> new tr(),
 				'chart'	=> $mych
 				));
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @param array $this->post
 	 * @throws myException
 	 */
@@ -199,7 +196,7 @@ class chart_ctrl extends Controller
 		try
 		{
 			$chart = new Charts(new DB());
-			
+
 			if ($chart->update($this->post['id'], $this->post['name'], $this->post['text']))
 			{
 				utils::response('ok_update_chart');

@@ -197,8 +197,10 @@ class DB
 	 */
 	public function query($query, $values = false, $type = false, $fetch_style = false )
 	{
-		try
-		{
+		try {
+
+			$query = trim($query);
+
 			$sql = $this->db->prepare($query);
 
 			if ( !$values ) $values = array();

@@ -213,6 +213,7 @@ class api_ctrl extends Controller
 			$query = new Query(new DB, $request);
 
 			// Set Header
+			$header['query_where'] = $query->getWhere();
 			$header['query_arrived'] = $query->getQuery();
 			$header['query_encoded'] = base64_encode($query->getQuery());
 			$header['total_rows'] = $this->get['total_rows'] ? $this->get['total_rows'] : (int) $query->getTotal();

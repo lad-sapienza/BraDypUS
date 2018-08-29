@@ -72,6 +72,7 @@ The available types are: **all**, **recent**, **sqlExpert**, **fast**, **id_arra
 ```javascript
 {
     "head": { // head part of the document containing metadata
+        "query_where": "", // (string) Where statement, plain
         "query_arrived": "", // (string) Full SQL text of the built query
         "query_encoded": "", // (string) base64_econcoded version of the executed query for further use
         "total_rows": "", // (int) total number of records found

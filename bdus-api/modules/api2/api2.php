@@ -55,7 +55,13 @@ class api2 extends Controller
 			$this->get['tb'] = $this->app . '__' . $this->get['tb'];
 		}
 		// Validate table
-		if (in_array($this->get['tb'], ["{$this->app}__queries", "{$this->app}__rs", "{$this->app}__userlinks", "{$this->app}__users"], "{$this->app}__charts"])){
+		if (in_array( $this->get['tb'], [
+			"{$this->app}__queries",
+			"{$this->app}__rs",
+			"{$this->app}__userlinks",
+			"{$this->app}__users",
+			"{$this->app}__charts"
+			])){
 			throw new Exception("System tables cannot be queried");
 		}
 

@@ -224,11 +224,13 @@ class ReadRecord
 				list($ref_tb, $via_plg, $via_plg_fld) = utils::csv_explode($bl, ':');
         $ref_tb_id = cfg::tbEl($ref_tb, 'id_field');
 
-        $where = " `id` IN (SELECT `id_link` FROM `{$via_plg}` WHERE `table_link` = '{$ref_tb}' AND `{$via_plg_fld}` = {$id})";
+        $where = " `id` IN (SELECT DISTINCT `id_link` FROM `{$via_plg}` WHERE `table_link` = '{$ref_tb}' AND `{$via_plg_fld}` = {$id})";
 
-        $sql = "SELECT count(`id_link`) as `tot` FROM `{$via_plg}` WHERE `table_link` = '{$ref_tb}' AND `{$via_plg_fld}` = ?";
+        // $sql = "SELECT count(`id`) as `tot` FROM `{$via_plg}` WHERE `table_link` = '{$ref_tb}' AND `{$via_plg_fld}` = ?";
+        $sql = "SELECT count(`id`) as `tot` FROM `{$ref_tb}` WHERE `id` IN (SELECT DISTINCT `id_link` FROM `{$via_plg}` WHERE `table_link` = '{$ref_tb}' AND `{$via_plg_fld}` = ?)";
 
         $sql_val = [$id];
+
 
         $r = DB::start()->query($sql, $sql_val);
         if ($r[0]['tot'] == 0){

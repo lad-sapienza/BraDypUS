@@ -331,15 +331,19 @@ class Query
 	{
 		$where = '';
 
-		foreach($dati as $nr=>$row)
-		{
-			// if index is order, we-re not dealing with where text, continue
-			if ($nr == 'order')
-			{
+		foreach($dati as $nr=>$row) {
+
+			//Do not consider empty values:
+			if ( !in_array($row['operator'], ['is_empty', 'is_not_empty']) && $row['value'] === ''){
 				continue;
 			}
+			// if index is order, we are not dealing with where text, continue
+			if ($nr == 'order') {
+				continue;
+			}
+
 			// connector
-			$where .= $row['connector'] ? ' ' . $row['connector'] . ' ' : ' ';
+			$where .= $row['connector'] && $where !== '' ? " {$row['connector']} " : " ";
 
 			// bracket
 			$where .= ($row['('] ? ' ( ' : '');
@@ -415,18 +419,15 @@ class Query
 			$where .= $row[')'] ? ' ) ' : '';
 		}
 
-		if (is_array($dati['order']))
-		{
-			foreach ($dati['order'] as $o)
-			{
+		if (is_array($dati['order'])) {
+			foreach ($dati['order'] as $o) {
 				$order_arr = utils::csv_explode($o, ':');
 				$order[] = $order_arr[1];
 			}
 		}
 
 
-		if (count($order) > 0)
-		{
+		if (count($order) > 0) {
 			$where .= ' ORDER BY ' . implode(', ', $order);
 		}
 

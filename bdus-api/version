@@ -1,3 +1,4 @@
+3.9.5[] = "Empty rows are excluded in advanced search"
 3.10.2[] = "Added support for getUniqueVal API method"
 3.10.2[] = "Backlinks return DISTINCT values"
 3.10.2[] = "New API method getChart"

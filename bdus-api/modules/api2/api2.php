@@ -8,6 +8,9 @@
  *  Charts:
  *  /api/v2/{app}?verb=getChart(&id={chart-id})(&pretty=1)
  *
+ * 	Unique Values (null and empty values excluded!)
+ * 	/api/v2/{app}?verb=getUniqueVal&tb={tb-name-no-prefix}&fld={fld-name})(&pretty=1)
+ *
  *  /api/v2/{app}?verb=read&tb={tb-name-no-prefix}&id={record-id}(&pretty=1)
  *  /api/v2/{app}?verb=inspect(&pretty=1)
  *  /api/v2/{app}?verb=inspect&tb={tb-name-no-prefix}(&pretty=1)
@@ -34,7 +37,7 @@ class api2 extends Controller
 
 		// Validate verb
 		$this->verb = $this->get['verb'];
-		$valid_verbs = ['read', 'search', 'inspect', 'getChart'];
+		$valid_verbs = ['read', 'search', 'inspect', 'getChart', 'getUniqueVal'];
 
 		if (!$this->verb || !in_array($this->verb, $valid_verbs)) {
 			throw new Exception("Invalid verb {$this->verb}. Verb must be one of " . implode(', ', $valid_verbs));
@@ -47,6 +50,16 @@ class api2 extends Controller
 			}
 			if (!$this->get['id']) {
 				throw new Exception("Record id is required with verb read");
+			}
+		}
+
+		// getUniqueVal
+		if ($this->verb === 'getUniqueVal') {
+			if (!$this->get['tb']) {
+				throw new Exception("Table name is required with verb getUniqueVal");
+			}
+			if (!$this->get['fld']) {
+				throw new Exception("Field name is required with verb getUniqueVal");
 			}
 		}
 
@@ -113,6 +126,31 @@ class api2 extends Controller
 					$sql = "SELECT `id`, `name` FROM `{$this->app}__charts` WHERE  1";
 					$resp = DB::start()->query($sql, $vals);
 				}
+
+
+			} else if ($this->verb === 'getUniqueVal') {
+
+				$fld_type = cfg::fldEl($this->get['tb'], $this->get['fld'], 'type');
+				$sql = "SELECT DISTINCT `{$this->get['fld']}` as `f` FROM `{$this->get['tb']}` WHERE 1";
+				$res = DB::start()->query($sql);
+
+				$resp = [];
+				foreach ($res as $v) {
+					if ($v['f'] === null || trim($v['f']) === ''){
+						continue;
+					}
+					if ( $fld_type === 'multi_select' && strpos($v['f'], ';')){
+						$v_a = utils::csv_explode($v['f'], ';');
+						foreach ($v_a as $i) {
+							if (!in_array($i, $resp)){
+								array_push($resp, $i);
+							}
+						}
+					} else {
+						array_push($resp, $v['f']);
+					}
+				}
+
 
 
 			} else if ($this->verb === 'read') {

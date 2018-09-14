@@ -1,3 +1,4 @@
+3.10.2[] = "Added support for getUniqueVal API method"
 3.10.2[] = "Backlinks return DISTINCT values"
 3.10.2[] = "New API method getChart"
 3.10.2[] = "New API method inspect all, and more information returned in view record method"

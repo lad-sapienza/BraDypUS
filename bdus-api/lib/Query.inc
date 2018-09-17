@@ -419,10 +419,11 @@ class Query
 			$where .= $row[')'] ? ' ) ' : '';
 		}
 
+		$order = [];
 		if (is_array($dati['order'])) {
 			foreach ($dati['order'] as $o) {
 				$order_arr = utils::csv_explode($o, ':');
-				$order[] = $order_arr[1];
+				array_push($order, $order_arr[1]);
 			}
 		}
 

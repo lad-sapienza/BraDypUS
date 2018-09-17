@@ -180,9 +180,6 @@ class Meta
 
     $q = 'SELECT * FROM ' . $table . ' WHERE';
 
-    $response['sEcho'] = intval($get['sEcho']);
-    $response['query_arrived'] = $q;
-
     $v = [];
     $w = [];
 
@@ -193,8 +190,11 @@ class Meta
       }
       $q .= implode(' OR ', $w);
     } else {
-      $q .= '1';
+      $q .= ' 1';
     }
+
+    $response['sEcho'] = intval($get['sEcho']);
+    $response['query_arrived'] = $q;
 
     if ( isset($get['iTotalRecords']) ) {
         $response['iTotalRecords'] = $get['iTotalRecords'];

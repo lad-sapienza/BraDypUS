@@ -1,10 +1,11 @@
-3.9.5[] = "Empty rows are excluded in advanced search"
+3.10.3[] = "API inspect outputs also plugin fields"
 3.10.2[] = "Added support for getUniqueVal API method"
 3.10.2[] = "Backlinks return DISTINCT values"
 3.10.2[] = "New API method getChart"
 3.10.2[] = "New API method inspect all, and more information returned in view record method"
 3.10.1[] = "Added support for a more granulated error & history log"
 
+3.9.5[] = "Empty rows are excluded in advanced search"
 3.9.5[] = "Fixed bug with chart deletion"
 3.9.4[] = "Fixed bug with history file size being compressed"
 3.9.3[] = "Added support for data preprocess & manipulation in API"

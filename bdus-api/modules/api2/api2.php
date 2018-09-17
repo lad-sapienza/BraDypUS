@@ -171,7 +171,16 @@ class api2 extends Controller
 
 					foreach (cfg::fldEl($this->get['tb']) as $f){
 						$f['fullname'] = $this->get['tb'] . ':' . $f['name'];
-						$resp['fields'][$f['name']] = $f;
+						$resp['fields'][$f['fullname']] = $f;
+					}
+
+					// Plugins
+					foreach (cfg::tbEl($this->get['tb'], 'plugin') as $p) {
+						foreach (cfg::fldEl($p) as $f){
+							$f['fullname'] = $p . ':' . $f['name'];
+							$f['label'] = cfg::tbEl($p, 'label') . ': ' . $f['label'];
+							$resp['fields'][$f['fullname']] = $f;
+						}
 					}
 
 				} else {

@@ -199,11 +199,12 @@ class DB
 
 			if ( !$values ) $values = [];
 
-			$flag = $sql->execute($values);
-
 			if(!preg_match("/^SELECT/i", $query) AND !preg_match("/^SHOW TABLES/i", $query)) {
 				Meta::addVersion($_SESSION['user']['id'], null, $query, $values);
 			}
+
+			$flag = $sql->execute($values);
+
 
 			if (is_int($type)) {
 				return $sql->fetchColumn($type);

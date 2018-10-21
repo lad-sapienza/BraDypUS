@@ -332,6 +332,16 @@ class ReadRecord
         if (empty($plg_data)){
           continue;
         }
+        // sort records using sort field, if available
+  			if (in_array('sort', array_keys($plg_data[0]))) {
+  				usort($plg_data, function($a, $b){
+  					if ($a['sort'] == $b['sort']) {
+  							return 0;
+  					}
+  					return ($a['sort'] > $b['sort']) ? 1 : -1;
+  				});
+  			}
+      
 				$plugins[$p] = [
 					"metadata" => [
 						"tb_id" => $p,

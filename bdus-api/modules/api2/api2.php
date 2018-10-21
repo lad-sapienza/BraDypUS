@@ -131,8 +131,21 @@ class api2 extends Controller
 			} else if ($this->verb === 'getUniqueVal') {
 
 				$fld_type = cfg::fldEl($this->get['tb'], $this->get['fld'], 'type');
-				$sql = "SELECT DISTINCT `{$this->get['fld']}` as `f` FROM `{$this->get['tb']}` WHERE 1";
-				$res = DB::start()->query($sql);
+				$id_from_tb = cfg::fldEl($this->get['tb'], $this->get['fld'], 'id_from_tb');
+				if ($id_from_tb){
+					$f = cfg::tbEl($id_from_tb, 'id_field');
+					$sql = "SELECT DISTINCT `{$f}` as `f` FROM `{$id_from_tb}` WHERE ";
+				} else {
+					$sql = "SELECT DISTINCT `{$this->get['fld']}` as `f` FROM `{$this->get['tb']}` WHERE ";
+					$f = $this->get['fld'];
+				}
+				if ($this->get['s']){
+					$sql .= " {$f} LIKE ? LIMIT 0, 30";
+					$res = DB::start()->query($sql, ["%{$this->get['s']}%"]);
+				} else {
+					$sql .= ' 1';
+					$res = DB::start()->query($sql);
+				}
 
 				$resp = [];
 				foreach ($res as $v) {

@@ -8,3 +8,6 @@
 * [bradypus.net/bdus_system](http://bradypus.net/bdus_system)
 * [db.bradypus.net](http://db.bradypus.net)
 
+---
+
+[![DOI](https://zenodo.org/badge/18011343.svg)](https://zenodo.org/badge/latestdoi/18011343)

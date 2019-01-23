@@ -1,3 +1,4 @@
+3.10.6[] = "Fixed bug with getFiles in API"
 3.10.5[] = "Bug fixed with getUniqueVal in id_from_tb fields"
 3.10.5[] = "Plugin records are orderd using sort, if available"
 3.10.4[] = "Meta::addVersion is run before edit query is executed"

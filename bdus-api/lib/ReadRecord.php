@@ -188,8 +188,18 @@ class ReadRecord
    */
   public static function getFiles(string $app, string $tb, int $id)
   {
-    $sql = "SELECT * FROM `{$app}__files` WHERE `id` IN (SELECT `id_one` FROM `{$app}__userlinks` WHERE `tb_one` = ? AND `tb_two` = ? AND `id_two` = ?)";
-		$sql_val = ["{$app}__files", $tb, $id];
+    $sql = <<<EOD
+SELECT * FROM `{$app}__files` WHERE `id` IN (
+  SELECT `id_one` FROM `{$app}__userlinks` WHERE `tb_one` = :files AND `tb_two` = :tb AND `id_two` = :id
+  UNION
+  SELECT `id_two` FROM `{$app}__userlinks` WHERE `tb_two` = :files AND `tb_one` = :tb AND `id_one` = :id
+)
+EOD;
+		$sql_val = [
+      'files' => "{$app}__files",
+      'tb' => $tb,
+      'id' => $id
+    ];
 		return DB::start()->query($sql, $sql_val);
   }
 
@@ -335,13 +345,13 @@ class ReadRecord
         // sort records using sort field, if available
   			if (in_array('sort', array_keys($plg_data[0]))) {
   				usort($plg_data, function($a, $b){
-  					if ($a['sort'] == $b['sort']) {
+  					if ($a['sort'] === $b['sort']) {
   							return 0;
   					}
   					return ($a['sort'] > $b['sort']) ? 1 : -1;
   				});
   			}
-      
+
 				$plugins[$p] = [
 					"metadata" => [
 						"tb_id" => $p,

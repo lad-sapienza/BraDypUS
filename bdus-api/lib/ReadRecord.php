@@ -200,7 +200,15 @@ EOD;
       'tb' => $tb,
       'id' => $id
     ];
-		return DB::start()->query($sql, $sql_val);
+		$files =  DB::start()->query($sql, $sql_val);
+
+    usort($files, function($a, $b){
+      if ($a['sort'] === $b['sort']) {
+          return 0;
+      }
+      return ($a['sort'] > $b['sort']) ? 1 : -1;
+    });
+    return $files;
   }
 
   /**

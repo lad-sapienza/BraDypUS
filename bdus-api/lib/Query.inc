@@ -106,11 +106,14 @@ class Query
 					return;
 				}
 				$fld = $this->tb . '`.`' . cfg::tbEl($this->tb, 'order');
+			} else {
+				$fld = $this->tb . '`.`' . $fld;
 			}
+
 			$this->order = $fld ? " ORDER BY `$fld` $type " : '';
 
 			if (preg_match('/ORDER/', $this->where)) {
-				$this->where = preg_replace('/order\sby\s([`a-z_]+)\s?(?:asc|desc)?/i', null, $this->where);
+				$this->where = preg_replace('/order\sby\s([`a-z_\.]+)\s?(?:asc|desc)?/i', null, $this->where);
 			}
 		}
 

@@ -1,7 +1,7 @@
 3.10.7[] = "Files are sorted in ReadRecords"
 3.10.6[] = "Fixed bug with getFiles in API"
 3.10.5[] = "Bug fixed with getUniqueVal in id_from_tb fields"
-3.10.5[] = "Plugin records are orderd using sort, if available"
+3.10.5[] = "Plugin records are ordered using sort, if available"
 3.10.4[] = "Meta::addVersion is run before edit query is executed"
 3.10.3[] = "API inspect outputs also plugin fields"
 3.10.2[] = "Added support for getUniqueVal API method"
@@ -10,6 +10,7 @@
 3.10.2[] = "New API method inspect all, and more information returned in view record method"
 3.10.1[] = "Added support for a more granulated error & history log"
 
+3.9.6[] = "Fixed bug with ambiguous field name in Query::setOrder"
 3.9.5[] = "Empty rows are excluded in advanced search"
 3.9.5[] = "Fixed bug with chart deletion"
 3.9.4[] = "Fixed bug with history file size being compressed"

@@ -26,7 +26,7 @@ class Vocabulary
 	 */
 	public function update($id, $def)
 	{
-		return $this->db->query('UPDATE `' . PREFIX . '__vocabularies` SET `def` = :def WHERE `id` = :id', array(':def'=>$def, ':id'=>$id), 'boolean');
+		return $this->db->query('UPDATE `' . PREFIX . 'vocabularies` SET `def` = :def WHERE `id` = :id', array(':def'=>$def, ':id'=>$id), 'boolean');
 	}
 
 	/**
@@ -35,7 +35,7 @@ class Vocabulary
 	 */
 	public function erase($id)
 	{
-		return $this->db->query('DELETE FROM `' . PREFIX . '__vocabularies` WHERE `id` = ' . $id, false, 'boolean');
+		return $this->db->query('DELETE FROM `' . PREFIX . 'vocabularies` WHERE `id` = ' . $id, false, 'boolean');
 	}
 
 	/**
@@ -45,7 +45,7 @@ class Vocabulary
 	 */
 	public function add($voc, $def)
 	{
-		return $this->db->query('INSERT INTO `' . PREFIX . '__vocabularies` (voc, def) VALUES (:voc, :def)', array(':voc'=>$voc, ':def'=>$def), 'boolean');
+		return $this->db->query('INSERT INTO `' . PREFIX . 'vocabularies` (voc, def) VALUES (:voc, :def)', array(':voc'=>$voc, ':def'=>$def), 'boolean');
 	}
 
 	/**
@@ -57,7 +57,7 @@ class Vocabulary
 		foreach($data as $sort=>$id) {
 
 			try {
-				$res = $this->db->query('UPDATE `' . PREFIX . '__vocabularies` SET `sort` = ' . $sort . ' WHERE `id` = ' . $id, false, 'boolean');
+				$res = $this->db->query('UPDATE `' . PREFIX . 'vocabularies` SET `sort` = ' . $sort . ' WHERE `id` = ' . $id, false, 'boolean');
 				if (!$res) {
 					$flag_error = true;
 				}
@@ -78,7 +78,7 @@ class Vocabulary
 	 */
 	public function getAll()
 	{
-		$res = $this->db->query('SELECT * FROM `' . PREFIX . '__vocabularies` WHERE 1 ORDER BY voc, sort', false, 'read');
+		$res = $this->db->query('SELECT * FROM `' . PREFIX . 'vocabularies` WHERE 1 ORDER BY voc, sort', false, 'read');
 
 		if(!is_array($res) OR empty($res[0])) {
 			return false;
@@ -97,7 +97,7 @@ class Vocabulary
 	 */
 	public function getAllVoc()
 	{
-		$query = 'SELECT voc FROM `' . PREFIX . '__vocabularies` WHERE 1 GROUP BY voc';
+		$query = 'SELECT voc FROM `' . PREFIX . 'vocabularies` WHERE 1 GROUP BY voc';
 
 		$res = $this->db->query($query, false, 'read');
 

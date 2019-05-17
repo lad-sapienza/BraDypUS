@@ -52,14 +52,14 @@ class menuValues_ctrl extends Controller
     switch($context)
     {
       case 'vocabulary_set':
-        $query->table(PREFIX . '__vocabularies')
+        $query->table(PREFIX . 'vocabularies')
           ->fields('def as id')
           ->fields('def as val')
           ->where('voc', $att)
           ->limit(self::$res_x_page, $offset)
           ->order('sort');
 
-        $tot->table(PREFIX . '__vocabularies')
+        $tot->table(PREFIX . 'vocabularies')
           ->fields('count(id) as tot')
           ->where('voc', $att)
           ->order('sort');

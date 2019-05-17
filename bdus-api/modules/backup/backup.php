@@ -19,7 +19,7 @@ class backup_ctrl
 		try
 		{
 			$a = @unlink(PROJ_BUP_DIR . $file);
-	
+
 			if (!$a)
 			{
 				throw new myException(tr::sget('error_erasing_file', $file));
@@ -32,14 +32,14 @@ class backup_ctrl
 			$resp['text'] = $e->getMessage();
 			$resp['status'] = 'error';
 		}
-	
+
 		echo json_encode($resp);
 	}
-	
+
 	public static function getSavedBups()
 	{
 		$content = utils::dirContent(PROJ_BUP_DIR);
-		
+
 		if (is_array($content))
 		{
 			$html = '<table class="table table-hover table-bordered table-striped">';
@@ -52,45 +52,45 @@ class backup_ctrl
 					. '<div class="btn-group">'
 						.'<button class="download btn btn-info" onclick="backup.download(\'' . PROJ_BUP_DIR . $file . '\')"><i class="glyphicon glyphicon-download-alt"></i> ' . tr::get('download') . '</button>'
 						. (utils::canUser('edit') ? ' <button type="button" class="btn btn-danger" onclick="backup.erase(\'' . $file . '\', this)"><i class="glyphicon glyphicon-trash"></i> ' . tr::get('erase') . '</button>' :  '')
-					. '</div>' 
+					. '</div>'
 				. '</td>'
 				.'</tr>';
 			}
 			$html .= '</table>';
-				
+
 			echo $html;
 		}
-		else 
+		else
 		{
 			echo '<h2>' . tr::get('no_bup_present') . '</h2>';
 		}
 	}
-	
-	
+
+
 	public static function doBackup()
 	{
 		try
 		{
-			$file = PROJ_BUP_DIR . PREFIX . '_' . date('Y-m-d_H-i-s');
-			
+			$file = PROJ_BUP_DIR . APP . '_' . date('Y-m-d_H-i-s');
+
 			$db = new DB();
-		
+
 			switch($db->getEngine())
 			{
 				case 'mysql':
 					$bupMysql = new BackupMySQL(new DB(), $file . '.sql');
 					$bupMysql->exportAll();
 					break;
-			
+
 				case 'sqlite':
 					copy(PROJ_DB . 'bdus.sqlite', $file . '.db');
 					break;
-			
+
 				default:
 					throw new myException('Unknown or unsupported database driver');
 					break;
 			}
-		
+
 		}
 		catch(myException $e)
 		{

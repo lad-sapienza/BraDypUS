@@ -11,22 +11,22 @@ class myTmpl_ctrl extends Controller
 	public function show()
 	{
 		$tbs = cfg::getNonPlg();
-		
+
 		$tmpls = utils::dirContent(PROJ_TMPL_DIR);
-		
+
 		if(!is_array($tmpls))
 		{
 			echo json_encode(array('status'=>'error', 'text'=>tr::get('no_tmpl_available')));
 			return;
 		}
-		
+
 		$data = array();
-		
+
 		foreach ($tbs as $tb=>$label)
 		{
 			foreach ($tmpls as $tmpl)
 			{
-				if (preg_match('/' . str_replace(PREFIX . '__', null, $tb) . '/', $tmpl))
+				if (preg_match('/' . str_replace(PREFIX, null, $tb) . '/', $tmpl))
 				{
 					$data[$tb]['list'][] = $tmpl;
 				}
@@ -36,16 +36,16 @@ class myTmpl_ctrl extends Controller
 			$data[$tb]['user_read'] = pref::getTmpl($tb, 'read');
 			$data[$tb]['user_edit'] = pref::getTmpl($tb, 'edit');
 		}
-		
+
     $this->render('myTmpl', 'user_tmpl', array(
       'tr' => new tr(),
       'tabs' => $tbs,
       'data' => $data,
       'uid' => uniqid('tmpl')
 		));
-		
+
 	}
-	
+
 	/**
 	 * Saves user preferences to session (pref)
 	 * @param string $tb

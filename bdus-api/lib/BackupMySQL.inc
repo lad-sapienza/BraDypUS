@@ -11,16 +11,16 @@
 class BackupMySQL
 {
 	protected $filename, $db, $sql;
-	
-	
+
+
 	public function __construct(DB $db, $filename)
 	{
 		ini_set('memory_limit','1560M');
-	
+
 		$this->filename = $filename;
 		$this->db = $db;
 	}
-	
+
 	/**
 	 * exports wholle database (PREFIX)
 	 */
@@ -28,19 +28,19 @@ class BackupMySQL
 	{
 		$this->sql = '';
 		$tables = $this->db->query('SHOW TABLES', false, 'read', true);
-		
+
 		foreach($tables as $index=>$tb)
 		{
-			if (preg_match('/^' . PREFIX . '__/', $tb[0]))
+			if (preg_match('/^' . PREFIX . '/', $tb[0]))
 			{
 				$tbs[] = $tb[0];
-		
+
 				$this->export($tb[0]);
 			}
 		}
 		$this->sql2gzip($this->sql);
 	}
-	
+
 	/**
 	 * Exports single tb
 	 * @param string $tb table to export
@@ -51,11 +51,11 @@ class BackupMySQL
 		$this->export($tb);
 		$this->sql2gzip($this->sql);
 	}
-	
-	
-	
+
+
+
 	/**
-	 * 
+	 *
 	 * Saves data to file
 	 * @param $tb	table name
 	 */
@@ -63,10 +63,10 @@ class BackupMySQL
 	{
 		// get table structure
 		$sql = $this->getColumns($tb);
-		
+
 		/*
 		$fields = cfg::fldEl($tb, 'all', 'name');
-		
+
 		foreach($fields as &$f)
 		{
 			if ($f == 'geometry')
@@ -77,7 +77,7 @@ class BackupMySQL
 		$q = $this->db->query('SELECT ' . implode(', ', $fields). ' FROM `' . $tb . '` WHERE 1');
 		*/
 		$q = $this->db->query('SELECT * FROM `' . $tb . '` WHERE 1');
-		
+
 		foreach($q as $row)
 		{
 			foreach ($row as $k=>&$f)
@@ -85,7 +85,7 @@ class BackupMySQL
 				/*
 				if ($k == 'geometry')
 				{
-					$f = "'" . $f . "'";	
+					$f = "'" . $f . "'";
 				}
 				else
 				{
@@ -93,7 +93,7 @@ class BackupMySQL
 					$f = "'" . htmlentities(addslashes($f)) . "'";
 				//}
 			}
-			
+
 			$sql .= "INSERT INTO `{$tb}` "
 				. '(`' . implode('`, `', array_keys($row)). '`)'
 				. " VALUES "
@@ -103,7 +103,7 @@ class BackupMySQL
 	}
 
 	/**
-	 * 
+	 *
 	 * Saves SQL test to a gziped file
 	 * @param string $sql	sql text
 	 * @throws myException
@@ -111,22 +111,22 @@ class BackupMySQL
 	private function sql2gzip($sql)
 	{
 		$this->filename .= '.gz';
-		
+
 		$gzh = @gzopen($this->filename,'w9');
-		
+
 		if ( !gzh )
 		{
 			throw new myException('Can not open file ' . $this->filename);
-		} 
-			
+		}
+
 		if ( !gzwrite($gzh, $sql) )
 		{
 			throw new myException('Can not write in file ' . $this->filename);
 		}
-		
+
 		gzclose($gzh);
 	}
-	
+
 	/**
 	 *
 	 * Get the list of Columns
@@ -135,14 +135,14 @@ class BackupMySQL
 	private function getColumns($tb)
 	{
 		$q = $this->db->query('SHOW CREATE TABLE ' . $tb, false, 'read', true);
-		
+
 		$q[0][1] = preg_replace("/AUTO_INCREMENT=[\w]*./", '', $q[0][1]);
 		return "\n\n" . $q[0][1] . "; \n\n";
 	}
-	
-	
+
+
 	/**
-	 * 
+	 *
 	 * Formats $table_data array in a SQL string
 	 * @param array $table_data array with data
 	 * @param string $table table name
@@ -154,7 +154,7 @@ class BackupMySQL
 			. $sql . "\n\n"
 			. '-- THE END'."\n"
 		. 'SET FOREIGN_KEY_CHECKS = 1;' . "\n\n";
-		
+
 		return $f_sql;
 	}
 }

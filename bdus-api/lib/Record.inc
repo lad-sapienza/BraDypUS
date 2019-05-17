@@ -87,7 +87,7 @@ class Record implements iRecord
 				$flag['core'] = $this->db->query($query, $values, 'boolean');
 
 				// moves updaded file
-				if ($this->tb == PREFIX . '__files') {
+				if ($this->tb == PREFIX . 'files') {
 
 					if (file_exists($this->tmp_dir . $this->data['core']['filename'] . '.' . $this->data['core']['ext'])) {
 
@@ -111,7 +111,7 @@ class Record implements iRecord
 				$last_id = $this->db->query($query, $values, 'id');
 
 				// moves updaded file
-				if ($this->tb == PREFIX . '__files') {
+				if ($this->tb == PREFIX . 'files') {
 
 					if (file_exists($this->tmp_dir . $this->data['core']['filename'] . '.' . $this->data['core']['ext'])) {
 
@@ -138,7 +138,7 @@ class Record implements iRecord
 				if (!$rel['id']) {
 
 					array_push($q_arr, array(
-							'q' => 'INSERT INTO `' . PREFIX . '__rs` (`tb`, `first`, `second`, `relation`) VALUES (:tb, :first, :second, :relation)',
+							'q' => 'INSERT INTO `' . PREFIX . 'rs` (`tb`, `first`, `second`, `relation`) VALUES (:tb, :first, :second, :relation)',
 							'values'=>array(':tb'=>$tb, ':first'=>$rel['first'], ':second'=>$re['second'], ':relation'=>$rel['relation'])
 							));
 				}
@@ -248,16 +248,16 @@ class Record implements iRecord
 		}
 
 		// USERLINKS
-		$q[] = 'DELETE FROM `' . PREFIX . '__userlinks` WHERE '
+		$q[] = 'DELETE FROM `' . PREFIX . 'userlinks` WHERE '
 			." ( `tb_one` = '" . $this->tb . "' AND `id_one` = '" . $id . "')"
 			. ' OR '
 			. "( `tb_two` = '" . $this->tb . "' AND `id_two` = '" . $id . "')";
 
 		//GEODATA
-		$q[] = "DELETE FROM `" . PREFIX . "__geodata` WHERE  `table_link` = '" . $this->tb . "' AND `id_link` = " . $id;
+		$q[] = "DELETE FROM `" . PREFIX . "geodata` WHERE  `table_link` = '" . $this->tb . "' AND `id_link` = " . $id;
 
 		//DELETE FILE (deleted only if all db erases are OK)
-		if ($this->tb == PREFIX . '__files') {
+		if ($this->tb == PREFIX . 'files') {
 			$file_to_delete = PROJ_FILES_DIR . $id . '.' . $this->getCore('ext');
 		}
 
@@ -269,7 +269,7 @@ class Record implements iRecord
 				$this->getCore();
 			}
 
-			$q[] = 'DELETE FROM `' . PREFIX . '__rs` WHERE ' . "`tb` = '" . $this->tb . "' AND ( "
+			$q[] = 'DELETE FROM `' . PREFIX . 'rs` WHERE ' . "`tb` = '" . $this->tb . "' AND ( "
 						. " `first` =  '" . $this->data['core'][$rs_fld] . "' "
 						. ' OR '
 						. " `second` =  '" . $this->data['core'][$rs_fld] . "' "
@@ -650,7 +650,7 @@ EOD;
 	private function loadFullFiles()
 	{
 
-		if ($this->tb == PREFIX . '__files') {
+		if ($this->tb == PREFIX . 'files') {
 
 			if (!$this->loaded['core']) {
 				$this->loadCore();
@@ -660,18 +660,18 @@ EOD;
 		} else {
 
 			if ($this->id) {
-				$query = 'SELECT `' . PREFIX . '__files`.*, `' . PREFIX . '__userlinks`.`id` as linkid'
-						. ' FROM `' . PREFIX . '__files` JOIN `' . PREFIX . '__userlinks`'
+				$query = 'SELECT `' . PREFIX . 'files`.*, `' . PREFIX . 'userlinks`.`id` as linkid'
+						. ' FROM `' . PREFIX . 'files` JOIN `' . PREFIX . 'userlinks`'
 						. ' ON ( '
-							. "(`" . PREFIX . "__userlinks`.`tb_one` = '" . PREFIX . "__files' AND  `" . PREFIX . "__userlinks`.`id_one` = `" . PREFIX . "__files`.`id`)"
+							. "(`" . PREFIX . "userlinks`.`tb_one` = '" . PREFIX . "files' AND  `" . PREFIX . "userlinks`.`id_one` = `" . PREFIX . "files`.`id`)"
 							. ' OR '
-							. "(`" . PREFIX . "__userlinks`.`tb_two` = '" . PREFIX . "__files' AND  `" . PREFIX . "__userlinks`.`id_two` = `" . PREFIX . "__files`.`id`)"
+							. "(`" . PREFIX . "userlinks`.`tb_two` = '" . PREFIX . "files' AND  `" . PREFIX . "userlinks`.`id_two` = `" . PREFIX . "files`.`id`)"
 						. ')'
 						. ' WHERE '
-							. "(`" . PREFIX . "__userlinks`.`tb_one` = '" . $this->tb . "' AND  `" . PREFIX . "__userlinks`.`id_one` = '" . $this->id . "')"
+							. "(`" . PREFIX . "userlinks`.`tb_one` = '" . $this->tb . "' AND  `" . PREFIX . "userlinks`.`id_one` = '" . $this->id . "')"
 							. ' OR '
-							. "(`" . PREFIX . "__userlinks`.`tb_two` = '" . $this->tb . "' AND  `" . PREFIX . "__userlinks`.`id_two` = '" . $this->id . "')"
-						. ' ORDER BY `' . PREFIX . '__userlinks`.`sort`, `' . PREFIX . '__userlinks`.`id`';
+							. "(`" . PREFIX . "userlinks`.`tb_two` = '" . $this->tb . "' AND  `" . PREFIX . "userlinks`.`id_two` = '" . $this->id . "')"
+						. ' ORDER BY `' . PREFIX . 'userlinks`.`sort`, `' . PREFIX . 'userlinks`.`id`';
 				$this->data['fullfiles'] = $this->db->query($query, false, 'read');
 			}
 		}
@@ -693,7 +693,7 @@ EOD;
 
 	private function loadRS()
 	{
-		$query = 'SELECT * FROM `' . PREFIX . '__rs` WHERE `tb`=:table AND (`first`=:id OR `second` = :id)';
+		$query = 'SELECT * FROM `' . PREFIX . 'rs` WHERE `tb`=:table AND (`first`=:id OR `second` = :id)';
 
 		$this->data['rs'] = $this->db->query($query, array(':table'=>$this->tb, ':id'=>$this->id), 'read');
 
@@ -721,7 +721,7 @@ EOD;
 		$first = trim($first);
 		$second = trim($second);
 		$res = $this->db->query(
-				'SELECT * FROM `' . PREFIX . '__rs` WHERE `tb` = :tb AND ( (`first` = :first AND `second` =:second) OR (`first`=:second AND `second` = :first) )',
+				'SELECT * FROM `' . PREFIX . 'rs` WHERE `tb` = :tb AND ( (`first` = :first AND `second` =:second) OR (`first`=:second AND `second` = :first) )',
 				array(':tb'=>$this->tb, ':first'=>$first, ':second'=>$second),
 				'read'
 		);
@@ -730,7 +730,7 @@ EOD;
 			return false;
 		} else {
 			return $this->db->query(
-					'INSERT INTO `' . PREFIX . '__rs` (`tb`, `first`, `second`, `relation`) VALUES (:tb, :first, :second, :relation)',
+					'INSERT INTO `' . PREFIX . 'rs` (`tb`, `first`, `second`, `relation`) VALUES (:tb, :first, :second, :relation)',
 					array(':tb'=>$this->tb, ':first'=>$first, ':second'=>$second, ':relation'=>$relation),
 					'id'
 			);
@@ -740,7 +740,7 @@ EOD;
 
 	public function deleteRS($id)
 	{
-		return $this->db->query('DELETE FROM `' . PREFIX . '__rs` WHERE `id`=' . $id, false, 'boolean');
+		return $this->db->query('DELETE FROM `' . PREFIX . 'rs` WHERE `id`=' . $id, false, 'boolean');
 	}
 
 	/**
@@ -776,7 +776,7 @@ EOD;
 
 	private function loadUserLinks()
 	{
-		$sql = 'SELECT * FROM `' . PREFIX . '__userlinks` WHERE (`tb_one` = :thistb AND `id_one` = :thisid) OR (`tb_two` = :thistb AND `id_two` = :thisid) ORDER BY `sort`, `id`';
+		$sql = 'SELECT * FROM `' . PREFIX . 'userlinks` WHERE (`tb_one` = :thistb AND `id_one` = :thisid) OR (`tb_two` = :thistb AND `id_two` = :thisid) ORDER BY `sort`, `id`';
 
 		$userlinks = $this->db->query($sql, array(':thistb' =>$this->tb, ':thisid' =>$this->id), 'read');
 
@@ -797,13 +797,13 @@ EOD;
 
 	public function deleteUserLink($id)
 	{
-		return $this->db->query('DELETE FROM `' . PREFIX . '__userlinks` WHERE `id`=' . $id, false, 'boolean');
+		return $this->db->query('DELETE FROM `' . PREFIX . 'userlinks` WHERE `id`=' . $id, false, 'boolean');
 	}
 
 	public function addUserLink($tb, $id)
 	{
 		return $this->db->query(
-				'INSERT INTO `' . PREFIX . '__userlinks` (`tb_one`, `id_one`, `tb_two`, `id_two`) VALUES (:thistb, :thisid, :tb, :id)',
+				'INSERT INTO `' . PREFIX . 'userlinks` (`tb_one`, `id_one`, `tb_two`, `id_two`) VALUES (:thistb, :thisid, :tb, :id)',
 				array(':thistb'=>$this->tb, ':thisid'=>$this->id, ':tb' => $tb, ':id' => $id),
 				'boolean'
 				);
@@ -821,7 +821,7 @@ EOD;
 	private function loadGeodata()
 	{
 		$this->data['geodata'] = $this->db->query(
-				'SELECT * FROM `' . PREFIX . '__geodata` WHERE `table_link` = :tb AND `id_link`= :id',
+				'SELECT * FROM `' . PREFIX . 'geodata` WHERE `table_link` = :tb AND `id_link`= :id',
 				array(':tb'=>$this->tb, ':id'=>$this->id),
 				'read');
 		$this->loaded['geodata'] = true;
@@ -830,7 +830,7 @@ EOD;
 	public function addGeodata($geometry)
 	{
 		return  $this->db->query(
-				'INSERT INTO `' . PREFIX . '__geodata` (`table_link`, `id_link`, `geometry`) VALUES(:table_link, :id_link, :geometry)',
+				'INSERT INTO `' . PREFIX . 'geodata` (`table_link`, `id_link`, `geometry`) VALUES(:table_link, :id_link, :geometry)',
 				array(':table_link'=>$this->tb, ':id_link'=>$this->id, ':geometry' => $geometry),
 				'id'
 		);
@@ -838,7 +838,7 @@ EOD;
 
 	public function deleteGeodata($id)
 	{
-		return $this->db->query('DELETE FROM `' . PREFIX . '__geodata` WHERE `id`= ' . $id, false, 'boolean');
+		return $this->db->query('DELETE FROM `' . PREFIX . 'geodata` WHERE `id`= ' . $id, false, 'boolean');
 	}
 
 }

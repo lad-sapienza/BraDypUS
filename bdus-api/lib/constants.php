@@ -41,7 +41,8 @@ session_start();
 
 if($_SESSION['app']) {
 	define ( 'PROJ_DIR', PROJS_DIR . $_SESSION['app']."/");
-	define ( 'PREFIX', $_SESSION['app']);
+	define ( 'APP', $_SESSION['app']);
+	define ( 'PREFIX', $_SESSION['app'] . '__');
 }
 
 /*

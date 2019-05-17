@@ -27,15 +27,15 @@ class parseFilename
 
 		if ($parts[1] && $parts[2])
 		{
-			self::$file['tb'] = PREFIX . '__' . $parts[1];
-			
+			self::$file['tb'] = PREFIX . $parts[1];
+
 			self::commas($parts[2]);
 		}
-		
+
 		return self::$file;
 	}
-	
-	
+
+
 	private static function commas($str)
 	{
 		if (preg_match('/,/', $str))
@@ -57,7 +57,7 @@ class parseFilename
 		if (preg_match('/-/', $str))
 		{
 			$parts = explode('-', $str);
-				
+
 			$start = (int)$parts[0];
 			$end = (int)$parts[1];
 

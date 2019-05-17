@@ -61,7 +61,7 @@ class Field implements iTemplate
             }
 
 
-            $sql = "SELECT SUM(`$fld`) AS `total` FROM `" . PREFIX . "__$tb` WHERE $final_where";
+            $sql = "SELECT SUM(`$fld`) AS `total` FROM `" . PREFIX . "$tb` WHERE $final_where";
 
             $res = $this->db->query($sql);
 
@@ -98,7 +98,7 @@ class Field implements iTemplate
     {
         if ($this->context != 'add_new') {
             return '<div class="permalink">' .
-        '<a href="' . "./#/" . PREFIX . '/' . str_replace(PREFIX . '__', null, $this->tb) . '/' . $this->record->getCore('id')  . '">PERMALINK</a>' .
+        '<a href="' . "./#/" . APP . '/' . str_replace(PREFIX, null, $this->tb) . '/' . $this->record->getCore('id')  . '">PERMALINK</a>' .
       '</div>';
         }
     }
@@ -205,7 +205,7 @@ class Field implements iTemplate
         $view_all = '<p><span class="btn btn-link" onclick="core.runMod(\'geoface\', \'' . $this->tb . '\');">' . tr::get('view_all_records_on_map') . '</span></p>';
 
 
-        if (cfg::tbEl(PREFIX . '__geodata', 'is_plugin')) {
+        if (cfg::tbEl(PREFIX . 'geodata', 'is_plugin')) {
             $html = $this->plg('geodata');
 
             // https://stackoverflow.com/a/5139071/586449
@@ -322,7 +322,7 @@ class Field implements iTemplate
 
 
         // 2. If some images are found in DB and current table is not FILES the "Show Gallery Button" will be displayed in th lower div
-        if (is_array($data_arr) && !empty($data_arr[0]) && $this->tb != PREFIX . '__files') {
+        if (is_array($data_arr) && !empty($data_arr[0]) && $this->tb != PREFIX . 'files') {
             $html .= '<div class="clearfix gal_button">' .
                     '<button type="button" class="btn btn-sm btn-info service" onclick="api.file.show_gallery(\'' . $this->tb . '\', \'' . $this->record->getCore('id') . '\');"><i class="glyphicon glyphicon-white glyphicon-file"></i> ' .
                         tr::sget('x_files_linked', count($data_arr)) .
@@ -331,7 +331,7 @@ class Field implements iTemplate
         }
 
         // 3. Show image replace button if context is EDIT and current table is FILES (no need to check if there are any files found in DB. One file is allways present)
-        if ($this->tb == PREFIX . '__files' && $this->context == 'edit') {
+        if ($this->tb == PREFIX . 'files' && $this->context == 'edit') {
             $uid = uniqid('newfile');
 
             $html .= '<div id="' . $uid . '" class="load_img_placeholder">sostituisci l\'immagine</div>' .
@@ -348,7 +348,7 @@ class Field implements iTemplate
         }
 
         // 4. Show "upload new file" button if context is ADD_NEW and current table is FILES
-        if ($this->tb == PREFIX . '__files' && $this->context == 'add_new') {
+        if ($this->tb == PREFIX . 'files' && $this->context == 'add_new') {
             $uid = uniqid('newfile');
 
             $html .= '<div id="' . $uid . '" class="load_img_placeholder"></div>' .
@@ -368,7 +368,7 @@ class Field implements iTemplate
 
 
         // 5. Attach file to record if current table is not FILES, context is EDIT and user can edit
-        if ($this->tb != PREFIX . '__files' && $this->context == 'edit' && utils::canUser('edit', $this->record->getCore('creator'))) {
+        if ($this->tb != PREFIX . 'files' && $this->context == 'edit' && utils::canUser('edit', $this->record->getCore('creator'))) {
             $uid = uniqid('newfile');
 
             $html .= '<div id="' . $uid . '" class="load_img_placeholder"></div>' .
@@ -440,7 +440,7 @@ class Field implements iTemplate
         $html = '<div class="pluginrow">' .
                     '<fieldset>';
 
-        if (file_exists(PROJ_TMPL_DIR . str_replace(PREFIX . '__', null, $plg) . '.twig')) {
+        if (file_exists(PROJ_TMPL_DIR . str_replace(PREFIX, null, $plg) . '.twig')) {
             $settings = unserialize(CACHE);
             $settings['autoescape'] = false;
 
@@ -450,7 +450,7 @@ class Field implements iTemplate
 
             $twig = new Twig_Environment(new Twig_Loader_Filesystem(PROJ_TMPL_DIR), $settings);
 
-            $html .= $twig->render(str_replace(PREFIX . '__', null, $plg) . '.twig', array(
+            $html .= $twig->render(str_replace(PREFIX, null, $plg) . '.twig', array(
                     'print' => $this,
                     'plg'=> $plg,
                     'index' => $index,
@@ -480,8 +480,8 @@ class Field implements iTemplate
      */
     public function plg($plg)
     {
-        if (!preg_match('/' . PREFIX . '__/', $plg)) {
-            $plg = PREFIX . '__' . $plg;
+        if (!preg_match('/' . PREFIX . '/', $plg)) {
+            $plg = PREFIX . $plg;
         }
 
         $this->current_plugin = $plg;

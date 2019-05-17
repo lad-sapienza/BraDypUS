@@ -92,7 +92,7 @@ class geoface_ctrl extends Controller
 			$db = new DB();
 
 			foreach ($post as $row){
-				$ret = $db->query('UPDATE `' . PREFIX . '__geodata` SET ' .
+				$ret = $db->query('UPDATE `' . PREFIX . 'geodata` SET ' .
 						  '`geometry` = :geometry ' .
 						  'WHERE `id` = ' . $row['id'],
 						  array(':geometry'=>$row['coords']), 'boolean');
@@ -153,9 +153,9 @@ class geoface_ctrl extends Controller
 				$where = str_replace('`id`', '`' . $tb . '`.`id`', $where);
 			}
 
-			$sql = 'SELECT `' . $tb . '`.`id`  AS `id`, ' . implode(', ', $part) . ', `' . PREFIX . '__geodata`.`id` AS `geo_id`,  `geometry` '
-			. ' FROM `' . $tb . '` LEFT JOIN `' . PREFIX . '__geodata` '
-			. " ON `" . $tb . "`.`id` = `" . PREFIX . "__geodata`.`id_link` AND `" . PREFIX . "__geodata`.`table_link` = '" . $tb . "' "
+			$sql = 'SELECT `' . $tb . '`.`id`  AS `id`, ' . implode(', ', $part) . ', `' . PREFIX . 'geodata`.`id` AS `geo_id`,  `geometry` '
+			. ' FROM `' . $tb . '` LEFT JOIN `' . PREFIX . 'geodata` '
+			. " ON `" . $tb . "`.`id` = `" . PREFIX . "geodata`.`id_link` AND `" . PREFIX . "geodata`.`table_link` = '" . $tb . "' "
 			. ' WHERE `geometry` IS NOT NULL '
 			. ($where ? ' AND ' . $where : '');
 

@@ -14,7 +14,7 @@ if (!utils::canUser('enter')) {
 
 <div class="visible-xs">
 	<div class="jumbotron">
-		<h2><?php echo strtoupper(PREFIX) ?></h2>
+		<h2><?php echo strtoupper(APP) ?></h2>
 		<p><?php echo cfg::main('definition')?></p>
 	</div>
 </div>

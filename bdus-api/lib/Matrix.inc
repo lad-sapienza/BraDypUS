@@ -15,7 +15,7 @@ class Matrix
 
     public function __construct($tb, $where_q = false, DB $db)
     {
-        $query = "SELECT * FROM `" . PREFIX . "__rs` WHERE `tb` = '" . $tb . "'";
+        $query = "SELECT * FROM `" . PREFIX . "rs` WHERE `tb` = '" . $tb . "'";
 
         $where = $where_q ? base64_decode($where_q) : '1';
 
@@ -97,7 +97,7 @@ EOD;
     private function createDotContent($tb, $where = false, DB $db)
     {
         // Formulate query
-        $query = "SELECT * FROM `" . PREFIX . "__rs` WHERE `tb` = '" . $tb . "'";
+        $query = "SELECT * FROM `" . PREFIX . "rs` WHERE `tb` = '" . $tb . "'";
 
         if ($where) {
             $query .=  ' AND ('

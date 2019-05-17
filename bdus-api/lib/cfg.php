@@ -58,7 +58,7 @@ class cfg
 
 			foreach ($all_fields as $tb=>$tb_name) {
 
-				$cfgfile = PROJ_CFG_DIR . str_replace(PREFIX . '__', null, $tb) . '.json';
+				$cfgfile = PROJ_CFG_DIR . str_replace(PREFIX, null, $tb) . '.json';
 
 				if ( !file_exists( $cfgfile) ) {
 
@@ -98,7 +98,7 @@ class cfg
 				break;
 
 			default:
-				$file = PROJ_CFG_DIR . str_replace(PREFIX . '__', null, $what) . '.json';
+				$file = PROJ_CFG_DIR . str_replace(PREFIX, null, $what) . '.json';
 
 				if (!is_array(self::$data['tables'][$what]) || !file_exists($file)) {
 					throw new myException('Table ' . $what . ' does not exist');

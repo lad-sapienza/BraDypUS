@@ -39,10 +39,12 @@ session_start();
  */
 ($_REQUEST['app'] && is_dir('./projects/' . $_REQUEST['app'])) ? $_SESSION['app'] = $_REQUEST['app'] : '';
 
+define ( 'PREFIX_DELIMITER', '__');
+
 if($_SESSION['app']) {
 	define ( 'PROJ_DIR', PROJS_DIR . $_SESSION['app']."/");
 	define ( 'APP', $_SESSION['app']);
-	define ( 'PREFIX', $_SESSION['app'] . '__');
+	define ( 'PREFIX', APP . PREFIX_DELIMITER);
 }
 
 /*

@@ -35,7 +35,7 @@ class ReadRecord
 		return [
 			'metadata' => [
 				'tb_id' => $tb,
-				'tb_stripped' => str_replace($app . '__', null, $tb),
+				'tb_stripped' => str_replace(PREFIX, null, $tb),
 				'tb_label' => cfg::tbEl($tb, 'label')
 			],
 			'core'       => $core,
@@ -68,7 +68,7 @@ class ReadRecord
   {
     $manualLinks = [];
 		$res = DB::start()->query(
-      "SELECT * FROM `{$app}__userlinks` WHERE (`tb_one` = ? AND `id_one` = ?) OR (`tb_two` = ? AND `id_two` = ?) ORDER BY `sort`, `id`",
+      "SELECT * FROM `" . PREEFIX . "userlinks` WHERE (`tb_one` = ? AND `id_one` = ?) OR (`tb_two` = ? AND `id_two` = ?) ORDER BY `sort`, `id`",
       [ $tb, $id, $tb, $id ],
       'read'
     );
@@ -88,7 +88,7 @@ class ReadRecord
 
 				}
 
-        if ($mlt === $app . '__files' ){
+        if ($mlt === PREFIX . 'files' ){
           continue;
         }
 
@@ -108,7 +108,7 @@ class ReadRecord
         array_push($manualLinks, [
           "key"         => $r['id'],
           "tb_id"       => $mlt,
-          "tb_stripped" => str_replace($app . '__', null, $mlt),
+          "tb_stripped" => str_replace(PREFIX, null, $mlt),
           "tb_label"    => cfg::tbEl($mlt, 'label'),
           "ref_id"      => $mli,
           "ref_label"   => $ref_val_label
@@ -136,7 +136,7 @@ class ReadRecord
   public static function getRs(string $app, string $tb, int $id)
   {
     return DB::start()->query(
-      "SELECT `id`, `first`, `second`, `relation` FROM `{$app}__rs` WHERE `tb`= ? AND (`first`= ? OR `second` = ?)",
+      "SELECT `id`, `first`, `second`, `relation` FROM `" . PREFIX . "rs` WHERE `tb`= ? AND (`first`= ? OR `second` = ?)",
       [$tb, $id, $id],
       'read'
     );
@@ -159,7 +159,7 @@ class ReadRecord
   public static function getGeodata(string $app, string $tb, int $id)
   {
     $r = DB::start()->query(
-      "SELECT `id`, `geometry`, `geo_el_elips`, `geo_el_asl` FROM `{$app}__geodata` WHERE `table_link` = ? AND `id_link`= ?",
+      "SELECT `id`, `geometry`, `geo_el_elips`, `geo_el_asl` FROM `" . PREFIX . "geodata` WHERE `table_link` = ? AND `id_link`= ?",
 			[$tb, $id]);
     if (is_array($r)) {
       foreach ($r as &$row) {
@@ -188,15 +188,16 @@ class ReadRecord
    */
   public static function getFiles(string $app, string $tb, int $id)
   {
+    $prefix = PREFIX;
     $sql = <<<EOD
-SELECT * FROM `{$app}__files` WHERE `id` IN (
-  SELECT `id_one` FROM `{$app}__userlinks` WHERE `tb_one` = :files AND `tb_two` = :tb AND `id_two` = :id
+SELECT * FROM `{$prefix}files` WHERE `id` IN (
+  SELECT `id_one` FROM `{$prefix}userlinks` WHERE `tb_one` = :files AND `tb_two` = :tb AND `id_two` = :id
   UNION
-  SELECT `id_two` FROM `{$app}__userlinks` WHERE `tb_two` = :files AND `tb_one` = :tb AND `id_one` = :id
+  SELECT `id_two` FROM `{$prefix}userlinks` WHERE `tb_two` = :files AND `tb_one` = :tb AND `id_one` = :id
 )
 EOD;
 		$sql_val = [
-      'files' => "{$app}__files",
+      'files' => "{$prefix}files",
       'tb' => $tb,
       'id' => $id
     ];
@@ -257,7 +258,7 @@ EOD;
 
         $backlinks[$ref_tb] = [
           'tb_id' => $ref_tb,
-          'tb_stripped' => str_replace($app . '__', null, $ref_tb),
+          'tb_stripped' => str_replace(PREFIX, null, $ref_tb),
 					"tb_label" => cfg::tbEl($ref_tb, 'label'),
 					'tot' => $r[0]['tot'],
           'where' => $where,
@@ -302,7 +303,7 @@ EOD;
 
 				$links[$ld['other_tb']] = [
 					'tb_id' => $ld['other_tb'],
-					'tb_stripped' => str_replace($app . '__', null, $ld['other_tb']),
+					'tb_stripped' => str_replace(PREFIX, null, $ld['other_tb']),
 					"tb_label" => cfg::tbEl($ld['other_tb'], 'label'),
 					'tot' => $r[0]['tot'],
 					'where' => implode($where, ' AND ')
@@ -363,7 +364,7 @@ EOD;
 				$plugins[$p] = [
 					"metadata" => [
 						"tb_id" => $p,
-						"tb_stripped" => str_replace($app . '__', null, $p),
+						"tb_stripped" => str_replace(PREFIX, null, $p),
 						"tb_label" => cfg::tbEl($p, 'label'),
 						"tot" => count($plg_data)
 					],

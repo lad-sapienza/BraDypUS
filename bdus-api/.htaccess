@@ -14,7 +14,3 @@ RewriteRule ^api/v2/([a-z0-9_]+) ./controller.php?obj=api2&method=run&app=$1 [QS
 
 #/api/app-name/tb-name-without-prefix/data
 RewriteRule ^api/([a-z0-9_]+)/([a-z_]+) ./controller.php?obj=api_ctrl&method=run&app=$1&tb=$2 [QSA,L]
-
-# app:tb:id =?=> app=app&tb=tb&id=id
-#RewriteRule ^([a-z_]+):([a-z_]+):([0-9]+)/?$ ./?app=$1&tb=$1__$2&id=$3
-#RewriteRule ^([a-z_]+):([a-z_]+):([0-9]+)/controller(.+)$ ./controller$4

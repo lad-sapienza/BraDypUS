@@ -64,16 +64,16 @@ class api2 extends Controller
 		}
 
 		// Tb must have prefix
-		if ($this->get['tb'] && strpos($this->get['tb'], $this->app . '__') === false) {
-			$this->get['tb'] = $this->app . '__' . $this->get['tb'];
+		if ($this->get['tb'] && strpos($this->get['tb'], PREFIX) === false) {
+			$this->get['tb'] = PREFIX . $this->get['tb'];
 		}
 		// Validate table
 		if (in_array( $this->get['tb'], [
-			"{$this->app}__queries",
-			"{$this->app}__rs",
-			"{$this->app}__userlinks",
-			"{$this->app}__users",
-			"{$this->app}__charts"
+			PREFIX . "queries",
+			PREFIX . "rs",
+			PREFIX . "userlinks",
+			PREFIX . "users",
+			PREFIX . "charts"
 			])){
 			throw new Exception("System tables cannot be queried");
 		}
@@ -110,7 +110,7 @@ class api2 extends Controller
 			if ($this->verb === 'getChart') {
 
 				if ($this->get['id'] && $this->get['id'] !== 'all'){
-					$sql = "SELECT * FROM `{$this->app}__charts` WHERE `id` = ?";
+					$sql = "SELECT * FROM `" . PREFIX . "charts` WHERE `id` = ?";
 					$vals = [ $this->get['id'] ];
 					$ch = DB::start()->query($sql, $vals);
 
@@ -123,7 +123,7 @@ class api2 extends Controller
 
 					$resp['data'] = DB::start()->query($ch[0]['query']);
 				} elseif ($this->get['id'] === 'all') {
-					$sql = "SELECT `id`, `name` FROM `{$this->app}__charts` WHERE  1";
+					$sql = "SELECT `id`, `name` FROM `" . PREFIX . "charts` WHERE  1";
 					$resp = DB::start()->query($sql, $vals);
 				}
 
@@ -177,7 +177,7 @@ class api2 extends Controller
 				if ($this->get['tb']) {
 
 					// Inspect table
-					$stripped_name = str_replace($this->app . '__', null, $this->get['tb']);
+					$stripped_name = str_replace(PREFIX, null, $this->get['tb']);
 
 					$resp = cfg::tbEl($this->get['tb'], 'all');
 					$resp['stripped_name'] = $stripped_name;
@@ -201,7 +201,7 @@ class api2 extends Controller
 					// Inspect all
 					foreach (cfg::tbEl('all', 'all') as $t) {
 
-						$stripped_name = str_replace($this->app . '__', null, $t['name']);
+						$stripped_name = str_replace(PREFIX, null, $t['name']);
 						$t['stripped_name'] = $stripped_name;
 
 						foreach (cfg::fldEl($t['name']) as $f){

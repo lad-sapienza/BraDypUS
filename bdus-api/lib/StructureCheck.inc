@@ -46,7 +46,7 @@ class StructureCheck
   /**
    * Returns list (array) of vocabularies:
    * a) present in the database but never used in cfg files (missing) and
-   * b) prsent in db and in cfg files (present)
+   * b) present in db and in cfg files (present)
    * @return array
    */
   public static function vocabularies()

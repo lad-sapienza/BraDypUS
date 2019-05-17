@@ -5,7 +5,7 @@
  #}
 
 <form class="form-horizontal" role="form" action="javascript: void(0)">
-  
+
   <div class="form-group">
     <label for="tb_{{ uid }}" class="col-sm-3 control-label">
       1. {{ tr.get('select_tb') }}
@@ -13,17 +13,17 @@
     <div class="col-sm-9">
       <select id="tb_{{ uid }}">
         <option></option>
-        {% for tb, label in tables if '__files' not in tb %}
+        {% for tb, label in tables if 'files' not in tb %}
           <option value="{{ tb }}">{{ label }}</option>
         {% endfor %}
       </select>
     </div>
-      
+
   <div id="tb_dest_{{ uid }}" style="margin-top: 60px;"></div>
-  
+
 </form>
-  
-  
+
+
 <script>
   $('#tb_{{ uid }}').on('change', function(){
     if (!$(this).val()){

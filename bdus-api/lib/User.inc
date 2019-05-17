@@ -9,7 +9,7 @@
 
 class User
 {
-	private $db, $prefix;
+	private $db, $prefix, $app;
 
 	/**
 	 *
@@ -20,7 +20,8 @@ class User
 	{
 		$this->db = $db;
 
-		$this->prefix = $this->db->getApp();
+		$this->app = $this->db->getApp();
+		$this->prefix = $this->app . PREFIX_DELIMITER;
 	}
 
 	/**
@@ -29,7 +30,7 @@ class User
 	 */
 	public function getToken($user_array)
 	{
-		$string = $this->prefix
+		$string = $this->app
 				. $user_array['id']
 				. $user_array['name']
 				. $user_array['email']
@@ -50,7 +51,7 @@ class User
 	 */
 	public function login( $email = false, $password = false, $remember = false, $user_id = false )
 	{
-		if (!$this->prefix) {
+		if (!$this->app) {
 			throw new myException(tr::get('no_app_error'));
 		}
 
@@ -81,12 +82,12 @@ class User
 			// assign user data to session variable
 			$_SESSION['user'] = $res[0];
 
-			$_SESSION['app'] = $this->prefix;
+			$_SESSION['app'] = $this->app;
 
 			$this->userLog();
 
 			// load preferences from db
-			pref::getFromDB($this->prefix);
+			pref::getFromDB($this->app);
 
 			if ($remember && $remember !== 'false') {
 				cookieAuth::set();
@@ -188,7 +189,7 @@ class User
 			throw new myException(tr::sget('email_not_valid', '<strong>' . $email . '</strong>'));
 		}
 
-		$statement = "INSERT INTO `" . $this->prefix . "__users` "
+		$statement = "INSERT INTO `" . $this->prefix . "users` "
 		. "(`id`, `name`, `email`, `password`, `privilege`) "
 		. "VALUES "
 		. "(NULL, :name, :email, :password, :privilege);";
@@ -256,7 +257,7 @@ class User
 				$val[':settings'] = $settings;
 			}
 
-			$statement = 'UPDATE `' . $this->prefix . '__users` SET ' . implode(', ', $partial_arr ). ' WHERE `id` = :id';
+			$statement = 'UPDATE `' . $this->prefix . 'users` SET ' . implode(', ', $partial_arr ). ' WHERE `id` = :id';
 
 			$val[':id'] = $id;
 
@@ -282,7 +283,7 @@ class User
 	 */
 	public function delete ( $id )
 	{
-		$statement = "DELETE FROM `" . $this->prefix . "__users` WHERE `id` = {$id}";
+		$statement = "DELETE FROM `" . $this->prefix . "users` WHERE `id` = {$id}";
 
 		return $this->db->query ( $statement, false, 'boolean' );
 
@@ -304,7 +305,7 @@ class User
 				break;
 		}
 
-		$query = 'SELECT * FROM `' . $this->prefix . '__users` WHERE `privilege` ' . $comparison . ' ' . utils::privilege($priv);
+		$query = 'SELECT * FROM `' . $this->prefix . 'users` WHERE `privilege` ' . $comparison . ' ' . utils::privilege($priv);
 
 		return $this->db->query($query, false, 'read');
 	}
@@ -316,7 +317,7 @@ class User
 	 */
 	public function getUser( $arr )
 	{
-		$query = "SELECT * FROM `" . $this->prefix . "__users` WHERE ";
+		$query = "SELECT * FROM `" . $this->prefix . "users` WHERE ";
 
 		if ( $arr === 'all' ) {
 			$query .= '1';
@@ -352,7 +353,7 @@ class User
 	 */
 	public function isDuplicate( $email, $id = false )
 	{
-		$query = "SELECT count(*) as `tot` FROM `" . $this->prefix . "__users` WHERE `email` = '{$email}' " . ( $id ? " AND `id` != $id " : '' ) . " LIMIT 1";
+		$query = "SELECT count(*) as `tot` FROM `" . $this->prefix . "users` WHERE `email` = '{$email}' " . ( $id ? " AND `id` != $id " : '' ) . " LIMIT 1";
 
 		$res = $this->db->query( $query );
 

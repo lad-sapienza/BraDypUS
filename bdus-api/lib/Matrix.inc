@@ -36,7 +36,7 @@ SELECT
 `rs`.`relation` as `rel`
 
 FROM
-`{$const['PREFIX']}__rs` as rs
+`{$const['PREFIX']}rs` as rs
 
 LEFT JOIN {$tb} ON  rs.tb = '{$tb}' AND `rs`.`first` = `{$tb}`.`{$rsfld}`
 LEFT JOIN {$tb} as {$tbbis} ON  rs.tb = '{$tb}' AND `rs`.`second` = `{$tbbis}`.`{$rsfld}`

@@ -370,7 +370,7 @@ var layout = {
 
 			} else if (core.getHash('readId')){
 				var hash_data = core.getHash('readId');
-        api.record.read(hash_data.app + '__' + hash_data.table, [hash_data.id], hash_data.isIdField);
+        api.record.read(prefix + hash_data.table, [hash_data.id], hash_data.isIdField);
 
 			}
 		}

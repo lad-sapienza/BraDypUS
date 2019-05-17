@@ -25,7 +25,7 @@ class makeProject
 	}
 
 	/**
-	 * Migrates old app to new app: everything will be migrated: tables, plugins, files, RS, etc.
+	 * Migrates old app (2.7) to new app (3.x): everything will be migrated: tables, plugins, files, RS, etc.
 	 *
 	 * @param string $basepath relative path to old project files
 	 * @param array $tables array with full tables name (prefix + __ + table name)

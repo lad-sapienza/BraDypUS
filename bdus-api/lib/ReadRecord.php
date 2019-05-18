@@ -68,7 +68,7 @@ class ReadRecord
   {
     $manualLinks = [];
 		$res = DB::start()->query(
-      "SELECT * FROM `" . PREEFIX . "userlinks` WHERE (`tb_one` = ? AND `id_one` = ?) OR (`tb_two` = ? AND `id_two` = ?) ORDER BY `sort`, `id`",
+      "SELECT * FROM `" . PREFIX . "userlinks` WHERE (`tb_one` = ? AND `id_one` = ?) OR (`tb_two` = ? AND `id_two` = ?) ORDER BY `sort`, `id`",
       [ $tb, $id, $tb, $id ],
       'read'
     );

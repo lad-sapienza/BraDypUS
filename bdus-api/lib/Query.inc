@@ -104,7 +104,11 @@ class Query
 				if (preg_match('/ORDER/', $this->where)) {
 					return;
 				}
-				$fld = $this->tb . '`.`' . cfg::tbEl($this->tb, 'order');
+				if(cfg::tbEl($this->tb, 'order')){
+					$fld = $this->tb . '`.`' . cfg::tbEl($this->tb, 'order');
+				} else {
+					$fld = $this->tb . '`.`id';
+				}
 			} else {
 				$fld = $this->tb . '`.`' . $fld;
 			}

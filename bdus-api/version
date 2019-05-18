@@ -1,3 +1,4 @@
+3.9.7[] = "Set default field order (id) for tables with order not set"
 3.9.6[] = "Fixed bug with ambiguous field name in Query::setOrder"
 3.9.5[] = "Empty rows are excluded in advanced search"
 3.9.5[] = "Fixed bug with chart deletion"

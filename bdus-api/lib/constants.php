@@ -22,6 +22,13 @@ date_default_timezone_set('Europe/Rome');
 // SETS ERROR REPORTING
 ( ini_get('error_reporting') <> 6135 )	?	ini_set('error_reporting', 6135) : '';
 
+if (!is_dir(MAIN_DIR . 'sessions')){
+	@mkdir(MAIN_DIR . 'sessions');
+	if (!is_dir(MAIN_DIR . 'sessions')){
+		throw new Exception('Cano not create sessions folder');
+	}
+}
+
 //SETS SESSION SAVE PATH
 ini_set ( 'session.save_path', MAIN_DIR . 'sessions' );
 

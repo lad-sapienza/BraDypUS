@@ -1,3 +1,4 @@
+3.10.8[] = "Removed hardcoded prefix divider (__)"
 3.10.7[] = "Files are sorted in ReadRecords"
 3.10.6[] = "Fixed bug with getFiles in API"
 3.10.5[] = "Bug fixed with getUniqueVal in id_from_tb fields"

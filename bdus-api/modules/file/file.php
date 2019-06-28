@@ -112,6 +112,11 @@ class file_ctrl extends Controller
 			$result['uploadDir'] = $upload_dir;
 
 			$result['thumbnail'] = images::getThumbHtml(array('id' => $result['filename'], 'ext' => $result['ext']), $upload_dir);
+
+			$maxImageSize = cfg::main('maxImageSize') ? cfg::main('maxImageSize') : 1500;
+
+			images::resizeIfImg($result['uploadDir'] . $result['filename'] . '.' . $result['ext'], $maxImageSize);
+
 		}
 
 		if ($this->request['dont_echo'])

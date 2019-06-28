@@ -92,5 +92,10 @@
 			<td><input type="text" name="gmapskey" value="{{ info.gmapskey }}" /></td>
 		</tr>
 
+		<tr>
+			<th>Limit uploaded images to size:</th>
+			<td><input type="text" name="maxImageSize" value="{% if info.maxImageSize %}{{ info.maxImageSize }}{% else %} 1500 {% endif %}" /></td>
+		</tr>
+
 	</table>
 </form>

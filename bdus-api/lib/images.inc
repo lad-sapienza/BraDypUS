@@ -67,6 +67,21 @@ class images
 		return $availableTypes;
 	}
 
+	public static function resizeIfImg($file, $maxImageSize)
+	{
+		$fileTypeInfo = self::checkExt(pathinfo($file, PATHINFO_EXTENSION));
+		if ($fileTypeInfo['type'] !== 'image'){
+			return true;
+		}
+
+		$im = new Intervention\Image\ImageManager();
+		$img = $im->make($file)->resize($maxImageSize, $maxImageSize, function ($constraint) {
+				$constraint->aspectRatio();
+					$constraint->upsize();
+			})->save();
+		return true;
+	}
+
 	/**
 	 *
 	 * Returns ordered and associative array containing verbose file type and icon

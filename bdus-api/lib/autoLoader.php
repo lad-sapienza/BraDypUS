@@ -24,13 +24,6 @@ class autoloader
 			        require_once LIB_DIR . 'vendor/lessphp/Less.php';
 			        return true;
 		    }
-        if (strpos($className, "Intervention\\Image\\") !== false) {
-            $f = LIB_DIR . 'vendor/' . str_replace("\\", "/", $className) . '.php';
-            if (file_exists($f)) {
-                require_once $f;
-                return true;
-            }
-        }
 
         if (is_file(LIB_DIR . 'vendor/' . str_replace('\\', '/', $className) . '.php')) {
 

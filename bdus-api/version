@@ -11,6 +11,7 @@
 3.11.2[] = "New API method inspect all, and more information returned in view record method"
 3.11.1[] = "Added support for a more granulated error & history log"
 
+3.10.1[] = "Fixed bug with version::current"
 3.10.0[] = "Images are down-sized to 1500px by default. The value can be changed in app data"
 3.9.8[] = "Added control for sessions folder, created on the fly, if not available"
 3.9.7[] = "Set default field order (id) for tables with order not set"

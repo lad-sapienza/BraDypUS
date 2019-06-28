@@ -28,8 +28,10 @@ class version
 
 	public static function current()
 	{
-		$va = self::parse();
-		return max(array_keys($va));
+		$va = array_keys(self::parse());
+		// https://stackoverflow.com/a/35599573/586449
+		usort($va, 'version_compare');
+		return end($va);
 	}
 
 }

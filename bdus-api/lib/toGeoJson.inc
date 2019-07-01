@@ -30,7 +30,10 @@ class toGeoJson
 			}
 
 			if (!$r['geometry']) {
-				throw new myException('No geoemtry column found in row: ' . var_export($r, true));
+				// single row error does not block entire process
+				// throw new myException('No geometry column found in row: ' . var_export($r, true));
+				error_log('No valid geometry column found in row: ' . var_export($r, true));
+				continue;
 			}
 
 			$arr['type']		= 'Feature';

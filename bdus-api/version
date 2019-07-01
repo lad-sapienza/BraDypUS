@@ -1,3 +1,4 @@
+3.10.1[] = "In GeoJSON export process single row error does not block entire process"
 3.10.1[] = "Fixed bug with version::current"
 3.10.0[] = "Images are down-sized to 1500px by default. The value can be changed in app data"
 3.9.8[] = "Added control for sessions folder, created on the fly, if not available"

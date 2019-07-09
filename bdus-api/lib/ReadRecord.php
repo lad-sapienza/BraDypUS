@@ -396,7 +396,7 @@ EOD;
 	{
 		$cfg = cfg::fldEl($tb, 'all', 'all');
 
-		$fields = ['*'];
+		$fields = ["{$tb}.*"];
 		$join = [];
 
 		foreach ($cfg as $arr) {

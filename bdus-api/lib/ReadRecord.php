@@ -347,7 +347,7 @@ EOD;
 		$plg_names = cfg::tbEl($tb, 'plugin');
 		if ($plg_names && is_array($plg_names)){
 			foreach ($plg_names as $p) {
-				$plg_data = self::getTbRecord($p, "`table_link`= ? AND `id_link` = ?", [$tb, $id]) ?: [];
+				$plg_data = self::getTbRecord($p, "`table_link`= ? AND `id_link` = ?", [$tb, $id], false, true) ?: [];
         if (empty($plg_data)){
           continue;
         }
@@ -381,6 +381,7 @@ EOD;
    * @param  string  $sql          Where SQl statement
    * @param  array   $sql_val      binding data
    * @param  boolean $return_first If true only the first row of the results will be returned
+   * @param  boolean $return_all_fields If true All fields, in case of JOIN, will be returned, otherwize table namespace will be used
    * @return array                array of table data
    *
    * "core": {
@@ -392,11 +393,11 @@ EOD;
    *    },
    *    {...}
    */
-  private static function getTbRecord(string $tb, string $sql, array $sql_val = [], bool $return_first = false)
+  private static function getTbRecord(string $tb, string $sql, array $sql_val = [], bool $return_first = false, bool $return_all_fields = false)
 	{
 		$cfg = cfg::fldEl($tb, 'all', 'all');
 
-		$fields = ["{$tb}.*"];
+		$fields = $return_all_fields ? ["*"] : ["{$tb}.*"];
 		$join = [];
 
 		foreach ($cfg as $arr) {

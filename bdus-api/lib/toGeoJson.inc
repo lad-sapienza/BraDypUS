@@ -11,8 +11,14 @@
 
 class toGeoJson
 {
-
-	public static function fromMultiArray($rows, $returnObject = false)
+	/**
+	 * [fromMultiArray description]
+	 * @param  array  $rows         Array of data
+	 * @param  boolean $returnObject If true an object will be returned, by defaula JSON is returned
+	 * @param  string  $tb           Table name to use as geometry field prefix
+	 * @return array|string          JSON or array of data with geojson geometry
+	 */
+	public static function fromMultiArray($rows, $returnObject = false, $tb)
 	{
 		$geo = [
 			'type' => 'FeatureCollection',
@@ -29,7 +35,7 @@ class toGeoJson
 				throw new Exception('Input data is not a multidimensional array');
 			}
 
-			if (!$r['geometry']) {
+			if (!$r['geometry'] && !$r[$tb . '.geometry']) {
 				// single row error does not block entire process
 				// throw new myException('No geometry column found in row: ' . var_export($r, true));
 				error_log('No valid geometry column found in row: ' . var_export($r, true));
@@ -37,7 +43,7 @@ class toGeoJson
 			}
 
 			$arr['type']		= 'Feature';
-			$arr['geometry']	= json_decode(\Symm\Gisconverter\Gisconverter::wktToGeojson($r['geometry']), true);
+			$arr['geometry']	= json_decode(\Symm\Gisconverter\Gisconverter::wktToGeojson($r['geometry'] ? $r['geometry'] : $r[$tb . '.geometry']), true);
 
 			unset($r['geometry']);
 			if ($r) {

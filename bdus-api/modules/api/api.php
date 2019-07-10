@@ -239,7 +239,7 @@ class api_ctrl extends Controller
 			if ($this->request['geojson']) {
 				return $this->array2response(
 					toGeoJson::fromMultiArray(
-						$query->getResults( ($this->get['fullRecords'] && $this->get['fullRecords'] !== 'false') ), true
+						$query->getResults( ($this->get['fullRecords'] && $this->get['fullRecords'] !== 'false') ), true, $request['tb']
 					)
 				);
 			} else {

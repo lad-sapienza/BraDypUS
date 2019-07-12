@@ -327,20 +327,28 @@ class utils
 	 */
 	public static function format_text($text, $html = false, $decode = false)
 	{
-		if ($decode)
-		{
+		if ($decode) {
 			$text = base64_decode($text);
 		}
-		if (!$html)
-		{
-			if ($text != '')
-			{
-				$text = @htmlentities($text, ENT_QUOTES, 'UTF-8');
-			}
+		if (!$html && $text !== '') {
+			$text = @htmlentities($text, ENT_QUOTES, 'UTF-8');
 		}
 		$text = self::linkify($text);
 
-		return nl2br($text);
+		$text = self::add_db_links($text);
+
+		$text = nl2br($text);
+
+		return $text;
+	}
+
+	/**
+	 * Replaces in text patterns like @{table-name}.{id-field-value} with direct links to the relative view record page
+	 * @param string $text [description]
+	 * @since 2019-07-12
+	 */
+	private static function add_db_links($text){
+		return preg_replace('/@([a-z]+)\.([a-z0-9\/]+)/', '<span class="btn-link" onclick="api.record.read(\'' . PREFIX . '${1}\', [\'${2}\'], true)">${1}.${2}</span>', $text);
 	}
 
 	/**
@@ -351,13 +359,10 @@ class utils
 	 */
 	public static function linkify($text, $escape = false)
 	{
-		if ($escape)
-		{
+		if ($escape) {
 			$text = preg_replace("/(https?:\/\/)([^ \t\r\n$\)]+)/i", "<a href=\\\"\\0\\\" target=\\\"_blank\\\">\\0</a>", $text);
 			$text = preg_replace("/([a-z0-9\._-]+)(@[a-z0-9\.-_]+)(\.{1}[a-z]{2,6})/i", "<a href=\\\"mailto:\\1\\2\\3\\\">\\1\\2\\3</a>", $text);
-		}
-		else
-		{
+		} else {
 			$text = preg_replace("/(https?:\/\/)([^ \t\r\n$\)]+)/i", "<a href=\"\\0\" target=\"_blank\">\\0</a>", $text);
 			$text = preg_replace("/([a-z0-9\._-]+)(@[a-z0-9\.-_]+)(\.{1}[a-z]{2,6})/i", "<a href=\"mailto:\\1\\2\\3\">\\1\\2\\3</a>", $text);
 		}

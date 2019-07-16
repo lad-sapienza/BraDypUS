@@ -417,7 +417,7 @@ EOD;
 
 				array_push(
 					$join,
-					" JOIN `{$ref_tb}` ON `{$ref_tb}`.`id` = `{$tb}`.`{$arr['name']}` ");
+					" LEFT JOIN `{$ref_tb}` ON `{$ref_tb}`.`id` = `{$tb}`.`{$arr['name']}` ");
 			}
 		}
 

@@ -343,12 +343,22 @@ class utils
 	}
 
 	/**
-	 * Replaces in text patterns like @{table-name}.{id-field-value} with direct links to the relative view record page
+	 * Replaces in text patterns like @{table-name}.{id-value} with direct links to the relative view record page
 	 * @param string $text [description]
 	 * @since 2019-07-12
 	 */
 	private static function add_db_links($text){
-		return preg_replace('/@([a-z]+)\.([a-z0-9\/]+)/', '<span class="btn-link" onclick="api.record.read(\'' . PREFIX . '${1}\', [\'${2}\'], true)">${1}.${2}</span>', $text);
+		return preg_replace_callback(
+			'/@([a-z]+)\.([0-9]+)(\[([^\]]+)\])?/',
+	    function($m){
+	      $p = PREFIX;
+	      if ($m[3] && $m[4]){
+	        return "<span class=\"btn-link\" onclick=\"api.record.read('{$p}{$m[1]}', ['{$m[2]}'], true)\">{$m[4]}</span>";
+	      } else {
+	        return "<span class=\"btn-link\" onclick=\"api.record.read('{$p}{$m[1]}', ['{$m[2]}'], true)\">{$m[1]}.{$m[2]}</span>";
+	      }
+	    },
+			$text);
 	}
 
 	/**

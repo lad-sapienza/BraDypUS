@@ -1,3 +1,4 @@
+3.11.2[] = "Fixed minor bug in support for automated internal links in the form of @tb.id or @tb.id[label]"
 3.11.1[] = "Fixed bug with JOIN statement in read record, api version 2"
 3.11.0[] = "It is possible to add reference to internal elements via @{table-name}.{record-id} syntax"
 3.10.3[] = "Fixed bug with toGeoJson accepting now complex geometry field name"

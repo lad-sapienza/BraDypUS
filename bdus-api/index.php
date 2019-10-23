@@ -48,7 +48,7 @@ try
   <script src="./controller.php?obj=tr&method=lang2json&param=true"></script>
   <script>
 		var debugMode = <?php echo  ($_GET['debug'] ? 'true' : 'false'); ?>;
-		var prefix = '<?php echo PREFIX; ?>';
+		var prefix = '<?php echo defined('PREFIX') ? PREFIX : ''; ?>';
 	</script>
   <?php
   Compress::js( array(

@@ -1,3 +1,4 @@
+3.11.3[] = "Inline docs enhanced & minors fixes in User class"
 3.11.3[] = "Fixed issue with incorect initialization of Meta DB"
 3.11.3[] = "Fixed minor undefined Constat issue"
 3.11.2[] = "Fixed minor bug in support for automated internal links in the form of @tb.id or @tb.id[label]"

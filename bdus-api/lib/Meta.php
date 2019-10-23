@@ -8,24 +8,28 @@ require_once LIB_DIR . 'vendor/redbean/rb-sqlite.php';
 class Meta
 {
 
-  private static $db = PROJ_DB . 'meta.sqlite';
-
-
   /**
    * Private method that checks general settings and initializes R
    * throws Exception in case of errors
    */
   private static function check()
   {
-    if (!file_exists(self::$db)){
-      @touch(self::$db);
-      if (!file_exists(self::$db)){
-        throw new Exception('Can not create databse file ' . self::$db);
+    if (!defined('PROJ_DB')){
+      return false;
+    }
+    
+    $metaDbPath = PROJ_DB . 'meta.sqlite';
+    error_log('CIAO: ' . $metaDbPath);
+
+    if (!file_exists($metaDbPath)){
+      @touch($metaDbPath);
+      if (!file_exists($metaDbPath)){
+        throw new Exception('Can not create databse file ' . $metaDbPath);
       }
     }
 
     if(!R::testConnection()){
-      R::addDatabase( 'meta', 'sqlite:' . self::$db );
+      R::addDatabase( 'meta', 'sqlite:' . $metaDbPath );
       R::selectDatabase( 'meta' );
     }
   }
@@ -79,7 +83,9 @@ class Meta
     if (!$user) {
       $user = $_SESSION['user']['id'];
     }
-    self::check();
+    if (!self::check()){
+      return false;
+    }
     $dt = new DateTime();
     $errorlog = R::dispense( 'errorlog' );
     $errorlog->user = $user;
@@ -101,7 +107,9 @@ class Meta
   {
     $user = $_SESSION['user']['id'];
 
-    self::check();
+    if (!self::check()){
+      return false;
+    }
     $dt = new DateTime();
     $errorlog = R::dispense( 'errorlog' );
     $errorlog->user = $user;
@@ -126,7 +134,9 @@ class Meta
     if (preg_match('/^INSERT INTO(.+)/', $editQuery) ) {
       return false;
     }
-    self::check();
+    if (!self::check()){
+      return false;
+    }
 
     $db = new DB();
 
@@ -174,7 +184,9 @@ class Meta
   public function getData(string $table, array $get = [])
   {
 
-    self::check();
+    if (!self::check()){
+      return false;
+    }
 
     $fields = array_keys( R::inspect( $table ) );
 
@@ -235,7 +247,9 @@ class Meta
    */
   public function tableTop(string $table, string $ajaxSource)
   {
-    self::check();
+    if (!self::check()){
+      return false;
+    }
     $uid = uniqid();
     $fields = array_keys( R::inspect( $table ) );
     $th_fields = '<th>' . implode('</th><th>', $fields) . '</th>';

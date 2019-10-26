@@ -19,7 +19,6 @@ class Meta
     }
     
     $metaDbPath = PROJ_DB . 'meta.sqlite';
-    error_log('CIAO: ' . $metaDbPath);
 
     if (!file_exists($metaDbPath)){
       @touch($metaDbPath);

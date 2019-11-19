@@ -14,6 +14,7 @@
  *  /api/v2/{app}?verb=read&tb={tb-name-no-prefix}&id={record-id}(&pretty=1)
  *  /api/v2/{app}?verb=inspect(&pretty=1)
  *  /api/v2/{app}?verb=inspect&tb={tb-name-no-prefix}(&pretty=1)
+ *  /api/v2/{app}?verb=getVocabulary&voc={vocabulary-name}(&pretty=1)
  */
 
 class api2 extends Controller
@@ -37,7 +38,7 @@ class api2 extends Controller
 
 		// Validate verb
 		$this->verb = $this->get['verb'];
-		$valid_verbs = ['read', 'search', 'inspect', 'getChart', 'getUniqueVal'];
+		$valid_verbs = ['read', 'search', 'inspect', 'getChart', 'getUniqueVal', 'getVocabulary'];
 
 		if (!$this->verb || !in_array($this->verb, $valid_verbs)) {
 			throw new Exception("Invalid verb {$this->verb}. Verb must be one of " . implode(', ', $valid_verbs));
@@ -164,8 +165,16 @@ class api2 extends Controller
 					}
 				}
 
-
-
+			} else if ($this->verb === 'getVocabulary') {
+				$voc = $this->get['voc'];
+				$sql = "SELECT `def` FROM `paths__vocabularies` WHERE `voc` = ?";
+				$res = DB::start()->query($sql, [$voc]);
+				$resp = [];
+				if (is_array($res)) {
+					foreach($res as $r){
+						array_push($resp, $r['def']);
+					}
+				}
 			} else if ($this->verb === 'read') {
 
 				// Read one record

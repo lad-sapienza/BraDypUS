@@ -1,3 +1,4 @@
+3.11.3[] = "New API method getVocabulary"
 3.11.3[] = "Inline docs enhanced & minors fixes in User class"
 3.11.3[] = "Fixed issue with incorect initialization of Meta DB"
 3.11.3[] = "Fixed minor undefined Constat issue"

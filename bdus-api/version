@@ -1,3 +1,4 @@
+3.10.3[] = "Added field setting force_default"
 3.10.2[] = "Def_value is now available also in editing mode"
 3.10.1[] = "In GeoJSON export process single row error does not block entire process"
 3.10.1[] = "Fixed bug with version::current"

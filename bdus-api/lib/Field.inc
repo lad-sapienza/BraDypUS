@@ -527,6 +527,18 @@ class Field implements iTemplate
         return $html;
     }
 
+    private function setDefault($def_value){
+        switch ($def_value) {
+            case '%today%':
+                return date('Y-m-d');
+            case '%current_user%':
+                return $_SESSION['user']['name'];
+            default:
+                return $def_value;
+
+        }
+    }
+
     /**
      * (non-PHPdoc)
      * @see iTemplate::value()
@@ -635,30 +647,23 @@ class Field implements iTemplate
         }
 
         // DATA
-        if ($setting['def_value'] && $this->context === 'add_new') {
+        if ( $setting['def_value'] && $this->context === 'add_new' ) {
             /*
              * ie. I'm entering e new record and the field has a def_value
              * new I'm entering e new plugin and the field has a def_vale
              */
-            switch ($setting['def_value']) {
-                case '%today%':
-                    $setting['data'] = date('Y-m-d');
-                    break;
+            $setting['data'] = $this->setDefault($setting['def_value']);
 
-                case '%current_user%':
-                    $setting['data'] = $_SESSION['user']['name'];
-                    break;
-
-                default:
-                    $setting['data'] = $setting['def_value'];
-                    break;
-
-            }
         } else {
             if ($plg_index !== false and $plg_name) {
                 $setting['data']	=	$this->record->getPlugin($plg_name, $plg_index, $fld);
             } else {
                 $setting['data']	=	$this->record->getCore($fld);
+            }
+
+            if ($setting['def_value'] && $this->context === 'edit' && empty($setting['data'])){
+                // def_value is set, no value has been entered previously and context is edit
+                $setting['data'] = $this->setDefault($setting['def_value']);
             }
         }
 

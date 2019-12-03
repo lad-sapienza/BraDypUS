@@ -193,6 +193,11 @@ class flds_editor_ctrl extends Controller
 				'type'=>'input',
 				'help'=>'Default value. The following variables can be used: %today%, %current_user%',
 				'required'=>false),
+			'force_default' => array(
+				'type'=>'select',
+				'values' => array(true),
+				'help'=>'If true the default value will overwrite in edit mode the database value.',
+				'required'=>false),
 			'max_length' => array(
 				'type'=>'input',
 				'help'=>'Maximum fields length. An integer should be entered',

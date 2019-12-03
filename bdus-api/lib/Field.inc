@@ -647,7 +647,14 @@ class Field implements iTemplate
         }
 
         // DATA
-        if ( $setting['def_value'] && $this->context === 'add_new' ) {
+        if (
+            ($this->context === 'edit' || $this->context === 'add_new')
+            &&
+            !empty($setting['def_value']) && $setting['force_default']) {
+
+            $setting['data'] = $this->setDefault($setting['def_value']);
+
+        } else if ( $setting['def_value'] && $this->context === 'add_new' ) {
             /*
              * ie. I'm entering e new record and the field has a def_value
              * new I'm entering e new plugin and the field has a def_vale

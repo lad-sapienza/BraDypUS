@@ -1,3 +1,4 @@
+3.13.5[] = "Fixed bug with id_from_tb referencing same tables multiple times for same record"
 3.13.4[] = "New API method getVocabulary"
 3.13.3[] = "Inline docs enhanced & minors fixes in User class"
 3.13.3[] = "Fixed issue with incorect initialization of Meta DB"

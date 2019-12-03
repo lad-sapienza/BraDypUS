@@ -405,6 +405,7 @@ EOD;
       if ($arr['id_from_tb']) {
 
 				$ref_tb = $arr['id_from_tb'];
+				$ref_alias = uniqid('al');
 				$ref_tb_fld = cfg::tbEl($arr['id_from_tb'], 'id_field');
 
         if ($tb === $ref_tb) {
@@ -413,11 +414,11 @@ EOD;
 
 				array_push(
 					$fields,
-					"`{$ref_tb}`.`{$ref_tb_fld}` AS `@{$arr['name']}`");
+					"`{$ref_alias}`.`{$ref_tb_fld}` AS `@{$arr['name']}`");
 
 				array_push(
 					$join,
-					" LEFT JOIN `{$ref_tb}` ON `{$ref_tb}`.`id` = `{$tb}`.`{$arr['name']}` ");
+					" LEFT JOIN `{$ref_tb}` AS `{$ref_alias}` ON `{$ref_alias}`.`id` = `{$tb}`.`{$arr['name']}` ");
 			}
 		}
 

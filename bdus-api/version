@@ -1,3 +1,4 @@
+3.13.6[] = "Api::getVocabulary return max 500 records, sorted by `sort`"
 3.13.5[] = "Fixed bug with id_from_tb referencing same tables multiple times for same record"
 3.13.4[] = "New API method getVocabulary"
 3.13.3[] = "Inline docs enhanced & minors fixes in User class"

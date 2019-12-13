@@ -167,7 +167,7 @@ class api2 extends Controller
 
 			} else if ($this->verb === 'getVocabulary') {
 				$voc = $this->get['voc'];
-				$sql = "SELECT `def` FROM `" . PREFIX . "vocabularies` WHERE `voc` = ?";
+				$sql = "SELECT `def` FROM `" . PREFIX . "vocabularies` WHERE `voc` = ? ORDER BY `sort` ASC LIMIT 0, 500";
 				$res = DB::start()->query($sql, [$voc]);
 				$resp = [];
 				if (is_array($res)) {

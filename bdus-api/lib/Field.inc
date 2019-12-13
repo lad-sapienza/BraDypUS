@@ -648,10 +648,10 @@ class Field implements iTemplate
 
         // DATA
         if (
-            ($this->context === 'edit' || $this->context === 'add_new')
-            &&
-            !empty($setting['def_value']) && $setting['force_default']) {
-
+            $this->context === 'edit'       &&
+            !empty($setting['def_value'])   && 
+            $setting['force_default']
+        ) {
             $setting['data'] = $this->setDefault($setting['def_value']);
 
         } else if ( $setting['def_value'] && $this->context === 'add_new' ) {
@@ -900,13 +900,15 @@ class Field implements iTemplate
 
             . (($setting['def_value'] && $this->context === 'add_new') ? ' changed="auto"' : '')
 
-      . $setting['disabled']
+            . ( $setting['def_value'] && $this->context === 'edit' && $setting['force_default'] ? ' changed="auto"' : '')
 
-            . $setting['readonly'];
+            . $setting['disabled']
 
-        $core .= $setting['ondblclick'] ? ' ondblclick="'. $setting['ondblclick'] .'"' : '';
+            . $setting['readonly']
 
-        $core .= $setting['check'] ? ' check="'. $setting['check'] .'"' : '';
+            . ($setting['ondblclick'] ? ' ondblclick="'. $setting['ondblclick'] .'"' : '')
+
+            . ($setting['check'] ? ' check="'. $setting['check'] .'"' : '');
 
         if (preg_match('/plg/', $setting['name'])) {
             $core .= 'data-changeonchange ="' . $setting['changeonchange'] . '"';

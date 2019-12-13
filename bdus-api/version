@@ -22,6 +22,7 @@
 3.11.2[] = "New API method getChart"
 3.11.2[] = "New API method inspect all, and more information returned in view record method"
 3.11.1[] = "Added support for a more granulated error & history log"
+3.10.5[] = "Fixed bug with force update"
 3.10.4[] = "Updated info"
 3.10.3[] = "Added field setting force_default"
 3.10.2[] = "Def_value is now available also in editing mode"

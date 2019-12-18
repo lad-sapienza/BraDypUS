@@ -1,3 +1,4 @@
+3.14.0[] = "Api::getUniqueVal extracted as new class"
 3.14.0[] = "Api::getVocabulary uses Vocabulary class"
 3.13.6[] = "Api::getVocabulary return max 500 records, sorted by `sort`"
 3.13.5[] = "Fixed bug with id_from_tb referencing same tables multiple times for same record"

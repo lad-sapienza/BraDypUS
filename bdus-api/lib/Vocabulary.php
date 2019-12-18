@@ -112,4 +112,28 @@ class Vocabulary
 		}
 
 	}
+
+	/**
+	 * Return array of definitions for vocabulary value
+	 *
+	 * @param [type] $voc
+	 * @param boolean $where
+	 * @param array $values
+	 * @return void
+	 */
+	public function getValues ($voc)
+	{
+		$sql = "SELECT `def` FROM `" . PREFIX . "vocabularies` WHERE " .
+			" `voc` = ? " .
+			" ORDER BY `sort` ASC LIMIT 0, 500";
+		$res = $this->db->query($sql, [$voc]);
+        $resp = [];
+        if (is_array($res)) {
+            foreach ($res as $r) {
+                array_push($resp, $r['def']);
+            }
+        }
+        return $resp;
+	}
+	
 }

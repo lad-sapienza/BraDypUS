@@ -148,33 +148,10 @@ class api2 extends Controller
 					$res = DB::start()->query($sql);
 				}
 
-				$resp = [];
-				foreach ($res as $v) {
-					if ($v['f'] === null || trim($v['f']) === ''){
-						continue;
-					}
-					if ( $fld_type === 'multi_select' && strpos($v['f'], ';')){
-						$v_a = utils::csv_explode($v['f'], ';');
-						foreach ($v_a as $i) {
-							if (!in_array($i, $resp)){
-								array_push($resp, $i);
-							}
-						}
-					} else {
-						array_push($resp, $v['f']);
-					}
-				}
-
 			} else if ($this->verb === 'getVocabulary') {
-				$voc = $this->get['voc'];
-				$sql = "SELECT `def` FROM `" . PREFIX . "vocabularies` WHERE `voc` = ? ORDER BY `sort` ASC LIMIT 0, 500";
-				$res = DB::start()->query($sql, [$voc]);
-				$resp = [];
-				if (is_array($res)) {
-					foreach($res as $r){
-						array_push($resp, $r['def']);
-					}
-				}
+				$VocClass = new Vocabulary(new DB());
+				$resp = $VocClass->getValues($this->get['voc']);
+
 			} else if ($this->verb === 'read') {
 
 				// Read one record

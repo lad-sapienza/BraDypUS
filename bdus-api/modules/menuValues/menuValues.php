@@ -52,22 +52,22 @@ class menuValues_ctrl extends Controller
     switch($context)
     {
       case 'vocabulary_set':
-        $query->table(PREFIX . 'vocabularies')
-          ->fields('def as id')
-          ->fields('def as val')
-          ->where('voc', $att)
-          ->limit(self::$res_x_page, $offset)
-          ->order('sort');
+        $query->setTable(PREFIX . 'vocabularies')
+          ->setFields('def', 'id')
+          ->setFields('def', 'val')
+          ->setWhere('voc', $att)
+          ->setLimit(self::$res_x_page, $offset)
+          ->setOrder('sort');
 
-        $tot->table(PREFIX . 'vocabularies')
-          ->fields('count(id) as tot')
-          ->where('voc', $att)
-          ->order('sort');
+        $tot->setTable(PREFIX . 'vocabularies')
+          ->setFields('count(id)', 'tot')
+          ->setWhere('voc', $att)
+          ->setOrder('sort');
 
         if ($q && !empty($q))
         {
-          $query->where('def', "%{$q}%", 'LIKE');
-          $tot->where('def', "%{$q}%", 'LIKE');
+          $query->setWhere('def', "%{$q}%", 'LIKE');
+          $tot->setWhere('def', "%{$q}%", 'LIKE');
         }
 
 
@@ -75,41 +75,41 @@ class menuValues_ctrl extends Controller
 
       case 'get_values_from_tb':
         list($tb, $fld) = utils::csv_explode ($att, ':');
-        $query->table($tb)
-          ->fields($fld . ' as id')
-          ->fields($fld . ' as val')
-          ->group($fld)
-          ->limit(self::$res_x_page, $offset)
-          ->order($fld);
+        $query->setTable($tb)
+          ->setFields($fld, 'id')
+          ->setFields($fld, 'val')
+          ->setGroup($fld)
+          ->setLimit(self::$res_x_page, $offset)
+          ->setOrder($fld);
 
-        $tot->table($tb)
-          ->fields('count(id) as tot')
-          ->order($fld);
+        $tot->setTable($tb)
+          ->setFields('count(id)', 'tot')
+          ->setOrder($fld);
 
           if ($q && !empty($q))
           {
-            $query->where($fld, "%{$q}%", 'LIKE');
-            $tot->where($fld, "%{$q}%", 'LIKE');
+            $query->setWhere($fld, "%{$q}%", 'LIKE');
+            $tot->setWhere($fld, "%{$q}%", 'LIKE');
           }
       break;
 
       case 'id_from_tb':
         $id_field = cfg::tbEl($att, 'id_field');
 
-        $query->table($att)
-          ->fields('id  as id')
-          ->fields($id_field . ' as val')
-          ->limit(self::$res_x_page, $offset)
-          ->order($id_field);
+        $query->setTable($att)
+          ->setFields('id', 'id')
+          ->setFields($id_field, 'val')
+          ->setLimit(self::$res_x_page, $offset)
+          ->setOrder($id_field);
 
-        $tot->table($att)
-          ->fields('count(id) as tot')
-          ->order($id_field);
+        $tot->setTable($att)
+          ->setFields('count(id)', 'tot')
+          ->setOrder($id_field);
 
         if ($q && !empty($q))
         {
-          $query->where($id_field, "%{$q}%", 'LIKE');
-          $tot->where($id_field, "%{$q}%", 'LIKE');
+          $query->setWhere($id_field, "%{$q}%", 'LIKE');
+          $tot->setWhere($id_field, "%{$q}%", 'LIKE');
         }
       break;
     }

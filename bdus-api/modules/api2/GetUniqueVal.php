@@ -32,7 +32,7 @@ class GetUniqueVal
         if(!$str && !$where || ($str === 'false' && $where === 'false')){
             array_push($sql_part, " 1 ");
         }
-        $sql .= implode(' AND ', $sql_part) . ' LIMIT 0, 30';
+        $sql .= implode(' AND ', $sql_part);
 
         $res = DB::start()->query($sql, $values);
 

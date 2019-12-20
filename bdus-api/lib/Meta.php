@@ -31,6 +31,7 @@ class Meta
       R::addDatabase( 'meta', 'sqlite:' . $metaDbPath );
       R::selectDatabase( 'meta' );
     }
+    return true;
   }
 
   /**

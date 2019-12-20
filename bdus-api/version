@@ -1,3 +1,4 @@
+3.14.0[] = "Fixed bug with debug module"
 3.14.0[] = "Refactor QueryBuilder and added JOIN support"
 3.14.0[] = "Api::getUniqueVal extracted as new class"
 3.14.0[] = "Api::getVocabulary uses Vocabulary class"

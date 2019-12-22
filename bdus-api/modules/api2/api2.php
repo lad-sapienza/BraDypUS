@@ -22,6 +22,21 @@ class api2 extends Controller
 	private $app;
 	private $verb;
 	private $pretty = false;
+	private $valid_verbs = [
+		'read', 
+		'search', 
+		'inspect', 
+		'getChart', 
+		'getUniqueVal', 
+		'getVocabulary'
+	];
+	private $not_valid_tables = [
+		PREFIX . "queries",
+		PREFIX . "rs",
+		PREFIX . "userlinks",
+		PREFIX . "users",
+		PREFIX . "charts"
+	];
 
 	/**
 	 * Main validation & variable setting
@@ -38,10 +53,9 @@ class api2 extends Controller
 
 		// Validate verb
 		$this->verb = $this->get['verb'];
-		$valid_verbs = ['read', 'search', 'inspect', 'getChart', 'getUniqueVal', 'getVocabulary'];
 
-		if (!$this->verb || !in_array($this->verb, $valid_verbs)) {
-			throw new Exception("Invalid verb {$this->verb}. Verb must be one of " . implode(', ', $valid_verbs));
+		if (!$this->verb || !in_array($this->verb, $this->valid_verbs)) {
+			throw new Exception("Invalid verb {$this->verb}. Verb must be one of " . implode(', ', $this->valid_verbs));
 		}
 
 		// getOne
@@ -69,13 +83,7 @@ class api2 extends Controller
 			$this->get['tb'] = PREFIX . $this->get['tb'];
 		}
 		// Validate table
-		if (in_array( $this->get['tb'], [
-			PREFIX . "queries",
-			PREFIX . "rs",
-			PREFIX . "userlinks",
-			PREFIX . "users",
-			PREFIX . "charts"
-			])){
+		if (in_array( $this->get['tb'], $this->not_valid_tables)){
 			throw new Exception("System tables cannot be queried");
 		}
 
@@ -110,24 +118,10 @@ class api2 extends Controller
 
 			if ($this->verb === 'getChart') {
 
-				if ($this->get['id'] && $this->get['id'] !== 'all'){
-					$sql = "SELECT * FROM `" . PREFIX . "charts` WHERE `id` = ?";
-					$vals = [ $this->get['id'] ];
-					$ch = DB::start()->query($sql, $vals);
-
-					if (!$ch || !is_array($ch) || !is_array($ch[0])){
-						throw new \Exception("Chart #{$this->get['id']} not found");
-					}
-
-					$resp['name'] = $ch[0]['name'];
-					$resp['id'] = $ch[0]['id'];
-
-					$resp['data'] = DB::start()->query($ch[0]['query']);
-				} elseif ($this->get['id'] === 'all') {
-					$sql = "SELECT `id`, `name` FROM `" . PREFIX . "charts` WHERE  1";
-					$resp = DB::start()->query($sql, $vals);
-				}
-
+				require_once __DIR__ . '/GetChart.php';
+				$resp = GetChart::run(
+					$this->get['id']
+				);
 
 			} else if ($this->verb === 'getUniqueVal') {
 				require_once __DIR__ . '/GetUniqueVal.php';
@@ -146,50 +140,14 @@ class api2 extends Controller
 			} else if ($this->verb === 'read') {
 
 				// Read one record
-				$resp = $this->getOne($this->app, $this->get['tb'], $this->get['id']);
+				$resp = ReadRecord::getFull($this->app, $this->get['tb'], $this->get['id']);
 
 			} elseif ($this->verb === 'inspect') {
 
-				// Inspect
-				if ($this->get['tb']) {
-
-					// Inspect table
-					$stripped_name = str_replace(PREFIX, null, $this->get['tb']);
-
-					$resp = cfg::tbEl($this->get['tb'], 'all');
-					$resp['stripped_name'] = $stripped_name;
-
-					foreach (cfg::fldEl($this->get['tb']) as $f){
-						$f['fullname'] = $this->get['tb'] . ':' . $f['name'];
-						$resp['fields'][$f['fullname']] = $f;
-					}
-
-					// Plugins
-					foreach (cfg::tbEl($this->get['tb'], 'plugin') as $p) {
-						foreach (cfg::fldEl($p) as $f){
-							$f['fullname'] = $p . ':' . $f['name'];
-							$f['label'] = cfg::tbEl($p, 'label') . ': ' . $f['label'];
-							$resp['fields'][$f['fullname']] = $f;
-						}
-					}
-
-				} else {
-
-					// Inspect all
-					foreach (cfg::tbEl('all', 'all') as $t) {
-
-						$stripped_name = str_replace(PREFIX, null, $t['name']);
-						$t['stripped_name'] = $stripped_name;
-
-						foreach (cfg::fldEl($t['name']) as $f){
-							$f['fullname'] = $t['name'] . ':' . $t['name'];
-							$t['fields'][$f['name']] = $f;
-						}
-
-
-						$resp[$stripped_name] = $t;
-					}
-				}
+				require_once __DIR__ . '/Inspect.php';
+				$resp = Inspect::run(
+					$this->get['tb']
+				);
 			}
 
 			return $this->array2response($resp);
@@ -203,18 +161,6 @@ class api2 extends Controller
 		}
 	}
 
-	/**
-	 * Return complete array of data for single record
-	 * @param  string  $app        Application name
-	 * @param  string  $tb         Table name
-	 * @param  int     $id         Record id
-	 * @param  boolean $first_only if true only the first record will be returned
-	 * @return array              Array of data
-	 */
-	private function getOne(string $app, string $tb, int $id, bool $first_only = false)
-	{
-		return ReadRecord::getFull($app, $tb, $id);
-	}
 
 	/**
 	 * Formats array data as pretty-printed JSON and returns or echoes (with Cross-domain allow policy) it

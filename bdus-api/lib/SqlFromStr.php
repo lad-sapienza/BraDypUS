@@ -25,6 +25,8 @@
  *                                      Second element, optional, is the offset
  *      - *field1,fieldn             => Optional. Group statement. Comma separated list of fields to use for grouping
  *                                      Each field shoul be a valid field and may be provided as table.field or field.
+ * uses cfg
+ * uses PREFIX
  */
 class SqlFromStr
 {
@@ -84,7 +86,7 @@ class SqlFromStr
      */
     public function getWhere($where_str, $tb = false)
     {
-        return parseWhereStr($where_str, $tb);
+        return self::parseWhereStr($where_str, $tb);
     }
 
     private static function parseFullString($str)

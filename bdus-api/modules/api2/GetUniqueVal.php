@@ -27,7 +27,9 @@ class GetUniqueVal
             array_push($values, "%{$str}%");
         }
         if ($where && $where !== 'false') {
-            array_push($sql_part, " {$where}");
+            list($where_sql, $where_values) = SqlFromStr::getWhere($where, $tb);
+            array_push($sql_part, $where_sql);
+            $values = array_merge($values, $where_values);
         }
         if(!$str && !$where || ($str === 'false' && $where === 'false')){
             array_push($sql_part, " 1 ");

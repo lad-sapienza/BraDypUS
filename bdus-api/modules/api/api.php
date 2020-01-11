@@ -98,7 +98,7 @@ class api_ctrl extends Controller
 			}
 
 
-			// READ verb
+			// READ verb => Migrated in v2
 			if ($this->get['verb'] === 'read') {
 				if (!$this->get['id']) {
 					throw new Exception("Parameter id is required with verb read");
@@ -108,7 +108,7 @@ class api_ctrl extends Controller
 				);
 			}
 
-			// INSPECT verb
+			// INSPECT verb => Migrated in v2
 			if ($this->get['verb'] === 'inspect') {
 
 				if ($request['tb'] === PREFIX . 'all') {

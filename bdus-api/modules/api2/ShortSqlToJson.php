@@ -103,7 +103,7 @@ class ShortSqlToJson
 
         foreach ($result as $id => $row) {
             $rec = new Record($tb, $row['id'], $db);
-			$rowResult = $rec->readFullRecord();
+			$rowResult = $rec->readFull();
 			array_push($fullResult, $rowResult);
         }
 

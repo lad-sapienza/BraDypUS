@@ -45,6 +45,41 @@ class Record implements iRecord
 	}
 
 	/**
+	 * Returns multi-dimensional array with all available data for record:
+	 * 		core
+	 * 		coreLinks
+	 * 		allPlugins
+	 * 		fullFiles
+	 * 		geodata
+	 * 		rs
+	 * 		userLinks
+	 *
+	 * @return array
+	 */
+	public function readFull()
+	{
+		$rec = [];
+
+		$rec['core'] 		= $this->getCore();
+
+		$rec['coreLinks']	= $this->getCoreLinks();
+
+		$rec['allPlugins']	= $this->getAllPlugins(true);
+
+		$rec['fullFiles']	= $this->getFullFiles();
+
+		$rec['geodata'] 	= $this->getGeodata();
+
+		if (cfg::tbEl($tb, 'rs')) {
+			$rec['rs'] 		= $this->getRS();
+		}
+
+		$rec['userLinks'] 	= $this->getUserLinks();
+
+		return $rec;
+	}
+
+	/**
 	 * (non-PHPdoc)
 	 * @see iRecord::getTb()
 	 */

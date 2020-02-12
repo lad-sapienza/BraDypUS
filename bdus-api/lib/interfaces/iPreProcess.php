@@ -12,7 +12,7 @@ interface iPreProcess
 	 * Runs middlevare
 	 * @param  array $get  array of GET data
 	 * @param  array $post  array of POST data
-	 * @return array 				halt: boolean echo: string: headers: array
+	 * @return array 		[halt: boolean, echo: string, headers: array]
 	 */
 	public function run($get = false, $post = false);
 

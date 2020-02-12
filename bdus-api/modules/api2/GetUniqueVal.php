@@ -27,7 +27,7 @@ class GetUniqueVal
             array_push($values, "%{$str}%");
         }
         if ($where && $where !== 'false') {
-            list($where_sql, $where_values) = SqlFromStr::getWhere($where, $tb);
+            list($where_sql, $where_values) = ShortSql::getWhere($where, $tb);
             array_push($sql_part, $where_sql);
             $values = array_merge($values, $where_values);
         }
@@ -35,21 +35,26 @@ class GetUniqueVal
             array_push($sql_part, " 1 ");
         }
         $sql .= implode(' AND ', $sql_part);
-
         $res = DB::start()->query($sql, $values);
-
 
         $resp = [];
         foreach ($res as $v) {
+            // Ignore empty values
             if ($v['f'] === null || trim($v['f']) === '') {
                 continue;
             }
             if ($fld_type === 'multi_select' && strpos($v['f'], ';')) {
                 $v_a = utils::csv_explode($v['f'], ';');
                 foreach ($v_a as $i) {
-                    if (!in_array($i, $resp)) {
-                        array_push($resp, $i);
+                    // Ignore duplicate values
+                    if (in_array($i, $resp)) {
+                        continue;
                     }
+                    // Returned values must contains $str, if $str is provided
+                    if ($str && strpos(strtolower($i), strtolower($str)) === false) {
+                        continue;
+                    }
+                    array_push($resp, $i);
                 }
             } else {
                 array_push($resp, $v['f']);

@@ -7,7 +7,7 @@
  *      - @table:alias               => Required. Alias is not supported yet (22.12.2019)
  *      - [field:Alias,fieldn:AliasN => Optional, default: *. List of fields to fetch, separated by commas. 
  *                                      Alias is optional. 
- *      - +tbname:Alias|onStatement  => Optional. Multiple. Join statement
+ *      - +tbname:Alias||onStatement => Optional. Multiple. Join statement
  *                                      Each statement if made of two parts separated by a double pipe ||. 
  *                                      The first element is the table name and optionally the alias. Alias is not supported yet (22.12.2019)
  *                                      The second part is the On statement expressed as Where statement
@@ -16,7 +16,7 @@
  *                                      Where elements are separate by single pipes, |
  *                                      Each where statement contains a field, an operator and a value
  *                                      Field may be provided as field, field:alias, table.field or table.field:alias
- *                                      If value startst with ^, the value will not binded nor treated as string: it is a table field
+ *                                      If value starts with ^, the value will not binded nor escaped by quotes as string: it is assumed to be a table field
  *      - >field:order               => Optional. Multiple. Sorting options separated by colon
  *                                      First element is field name. it should be e valid field name
  *                                      Second element is optional, Default: ASC. The sorting direction: ASC od DESC (case insensitive)
@@ -28,7 +28,7 @@
  * uses cfg
  * uses PREFIX
  */
-class SqlFromStr
+class ShortSql
 {
     /**
      * Parses string and returns array of data:
@@ -41,24 +41,27 @@ class SqlFromStr
      *  'rows'      => $rows,
      *  'offset'    => $offset,
      *  'values'    => $values
+     * If $pagination_limit is provided and NO Limit statement is given, the first one will be appended to the query
      *
      * @param String $str
+     * @param String $pagination_limit
      * @return array
      */
-    public static function getData($str)
+    public static function getData($str, $pagination_limit = false)
     {
-        return self::parseFullString($str);
+        return self::parseFullString($str, $pagination_limit);
     }
 
     /**
-     * Parses string and returns array containing full SQL statement and value bindings
+     * Parses string and returns array containing full SQL statement and value bindings.
+     * If $pagination_limit is provided and NO Limit statement is given, the first one will be appended to the query
      *
      * @param String $str
      * @return Array
      */
-    public static function getSQLAndValues($str)
+    public static function getSQLAndValues($str, $pagination_limit = false)
     {
-        $data = self::parseFullString($str);
+        $data = self::parseFullString($str, $pagination_limit);
 
         return [
             join(' ', [
@@ -69,11 +72,12 @@ class SqlFromStr
                 join(' ', $data['join']),
                 "WHERE",
                 $data['where'],
-                $data['group'] ? ' GROUP BY ' . implode(', ', $data['group']) : false,
-                $data['sort'] ? 'ORDER BY ' . implode(', ', $data['sort']) : false,
-                $data['rows'] ? 'LIMIT ' . $data['rows'] . ($data['offset'] ? ', ' . $data['offset'] : '') : false
+                $data['group']  ? ' GROUP BY ' . implode(', ', $data['group']) : false,
+                $data['sort']   ? ' ORDER BY ' . implode(', ', $data['sort']) : false,
+                !is_null($data['rows'])   ? ' LIMIT ' . $data['rows'] . ($data['offset'] ? ', ' . $data['offset'] : '') : false
             ]),
-            $data['values']
+            $data['values'],
+            $data['tb']
         ];
     }
 
@@ -89,7 +93,7 @@ class SqlFromStr
         return self::parseWhereStr($where_str, $tb);
     }
 
-    private static function parseFullString($str)
+    private static function parseFullString($str, $pagination_limit = false)
     {
         $parts = explode('~', $str);
 
@@ -123,6 +127,11 @@ class SqlFromStr
             } elseif ($part[0] === '*') {
                 $group_str = substr($part, 1);
             }
+        }
+
+        // If no limit is defined && pagination limit is provided, add the limit from pagination
+        if (!$limit_str && $pagination_limit) {
+            $limit_str = $pagination_limit;
         }
 
         // validate $tb

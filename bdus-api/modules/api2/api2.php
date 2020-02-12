@@ -68,6 +68,13 @@ class api2 extends Controller
 			}
 		}
 
+		// Search
+		if ($this->verb === 'search') {
+			if (!$this->get['shortsql']) {
+				throw new Exception("ShortSQL text is required with verb search");
+			}
+		}
+
 		// getUniqueVal
 		if ($this->verb === 'getUniqueVal') {
 			if (!$this->get['tb']) {
@@ -116,13 +123,26 @@ class api2 extends Controller
 				}
 			}
 
-			if ($this->verb === 'getChart') {
-
-				require_once __DIR__ . '/GetChart.php';
-				$resp = GetChart::run(
-					$this->get['id']
+            if ($this->verb === 'getChart') {
+                require_once __DIR__ . '/GetChart.php';
+                $resp = GetChart::run(
+                    $this->get['id']
+                );
+            } elseif ($this->verb === 'search') {
+				require_once __DIR__ . '/ShortSqlToJson.php';
+				$resp = ShortSqlToJson::run(
+					$this->app,
+					$this->get['shortsql'],
+					[
+						'total_rows' 		=> $this->get['total_rows'],
+						'page'				=> $this->get['page'],
+						'geojson'			=> $this->get['geojson'],
+						'records_per_page'	=> $this->get['records_per_page'],
+						'full_records'		=> $this->get['full_records']
+					],
+					false // TODO: remove debugging on production
+					
 				);
-
 			} else if ($this->verb === 'getUniqueVal') {
 				require_once __DIR__ . '/GetUniqueVal.php';
 				$resp = GetUniqueVal::run(

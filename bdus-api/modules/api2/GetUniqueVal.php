@@ -9,6 +9,12 @@ class GetUniqueVal
 {
     public static function run($tb, $fld, $str = false, $where = false)
     {
+        if ($str === 'false'){
+            $str = false;
+        }
+        if ($where === 'false'){
+            $where = false;
+        }
         $fld_type = cfg::fldEl($tb, $fld, 'type');
         $id_from_tb = cfg::fldEl($tb, $fld, 'id_from_tb');
         if ($id_from_tb) {
@@ -22,21 +28,21 @@ class GetUniqueVal
         $sql_part = [];
         $values = [];
 
-        if ($str && $str !== 'false') {
+        if ($str) {
             array_push($sql_part, " {$f} LIKE ? ");
             array_push($values, "%{$str}%");
         }
-        if ($where && $where !== 'false') {
+        if ($where) {
             list($where_sql, $where_values) = ShortSql::getWhere($where, $tb);
             array_push($sql_part, $where_sql);
             $values = array_merge($values, $where_values);
         }
-        if(!$str && !$where || ($str === 'false' && $where === 'false')){
+        if(!$str && !$where){
             array_push($sql_part, " 1 ");
         }
         $sql .= implode(' AND ', $sql_part);
         $res = DB::start()->query($sql, $values);
-
+        
         $resp = [];
         foreach ($res as $v) {
             // Ignore empty values
@@ -54,7 +60,10 @@ class GetUniqueVal
                     if ($str && strpos(strtolower($i), strtolower($str)) === false) {
                         continue;
                     }
-                    array_push($resp, $i);
+                    $i = trim($i);
+                    if ($i !== ""){
+                        array_push($resp, $i);
+                    }
                 }
             } else {
                 array_push($resp, $v['f']);

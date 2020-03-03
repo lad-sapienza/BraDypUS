@@ -166,7 +166,7 @@ class geoface_ctrl extends Controller
 			if($res) {
 
 				$response['status'] = 'success';
-				$response['data'] = toGeoJson::fromMultiArray($res, true);
+				$response['data'] = toGeoJson::fromMultiArray($res, true, $tb);
 
 			} else if (!$res AND (trim($where) == '1' || !$where) && utils::canUser('add_new')) {
 

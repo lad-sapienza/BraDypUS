@@ -36,7 +36,7 @@ ShortSql is based on blocks, separated by tildes (~). The order of the blocks is
 
 - `-tot:offset`  
     **Optional**
-    Limit statemnt, colon separated.  
+    Limit statement, colon separated.  
     - First element is the total numer of rows to fetch. Must be a numeral
     - Second element, optional, is the offset
  - `*field1,fieldn`  

@@ -30,7 +30,6 @@ class ShortSqlToJson
         $records_per_page	= $opts['records_per_page']	?: 30;
 		$full_records 		= $opts['full_records'] 	?: false;
 		
-
         try {
 			list($sql, $values, $tb) = ShortSql::getSQLAndValues($shortSql);
 			$debug['shortSql'] 		= $shortSql;
@@ -58,7 +57,7 @@ class ShortSqlToJson
 			$records = $full_records ? self::getFullData($sql, $values, $tb) : self::getData($sql, $values);
 
 			if ($geojson) {
-				return toGeoJson::fromMultiArray( $records, false, $tb );
+				return toGeoJson::fromMultiArray( $records, true, $tb );
 			} else {
 				return [
 					'head' => $header,

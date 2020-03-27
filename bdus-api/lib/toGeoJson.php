@@ -32,6 +32,7 @@ class toGeoJson
         }
 
         foreach ($rows as $r) {
+            $arr = [];
             if (!is_array($r)) {
                 throw new Exception('Input data is not a multidimensional array');
             }

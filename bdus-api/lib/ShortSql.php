@@ -250,8 +250,8 @@ class ShortSql
         $fld = "`$tb`.`$fld`";
 
         if ($value[0] === '^'){
-            list($tb, $fld, $alias) = self::parseAndValidateFld(substr($value, 1));
-            $binded = "`$tb`.`$fld`";
+            list($binded_tb, $binded_fld, $binded_alias) = self::parseAndValidateFld(substr($value, 1));
+            $binded = "`$binded_tb`.`$binded_fld`";
         } else if ($noValues) {
             $binded = "'" . str_replace("'", "\'", $value) . "'";
         } else {
@@ -404,7 +404,7 @@ class ShortSql
     private static function parseJoinArr($join_arr){
         $join_ret = [];
         if (!$join_arr || empty($join_arr)){
-            return $$join_ret;
+            return $join_ret;
         }
         foreach ($join_arr as $join) {
             $j_parts = explode('||', $join);

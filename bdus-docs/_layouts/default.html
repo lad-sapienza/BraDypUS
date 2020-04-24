@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="it" class="h-100">
+  <head>
+    <title>{{ site.title }}</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="{{ site.description }}">
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.0/styles/atom-one-dark.min.css" integrity="sha256-91Q4dP2FrFQCLpK/8fPlQyatehNmhUOXKRFM1CtE7Sw=" crossorigin="anonymous" />
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.0/highlight.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/highlightjs-line-numbers.js@2.6.0/dist/highlightjs-line-numbers.min.js"></script>
+
+
+    <link rel="stylesheet" href={{ "css/style.css" | relative_url }}>
+
+
+  </head>
+  <body class="d-flex flex-column h-100">
+
+    <div class="flex-shrink-0">
+
+      <header>
+        <div class="collapse bg-dark" id="navbarHeader">
+          <div class="container">
+            <div class="row">
+              <div class="col-sm-8 col-md-7 py-4">
+                <h4 class="text-white">About</h4>
+                <p class="text-muted">Add some information about the album below, the author, or any other background context. Make it a few sentences long so folks can pick up some informative tidbits. Then, link them off to some social networking sites or contact information.</p>
+              </div>
+              <div class="col-sm-4 offset-md-1 py-4">
+                <h4 class="text-white">Contact</h4>
+                <ul class="list-unstyled">
+                  <li><a href="#" class="text-white">Follow on Twitter</a></li>
+                  <li><a href="#" class="text-white">Like on Facebook</a></li>
+                  <li><a href="#" class="text-white">Email me</a></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="navbar navbar-dark bg-dark shadow-sm">
+          <div class="container d-flex justify-content-between">
+            <a href="#" class="navbar-brand d-flex align-items-center">
+              <strong>BraDypUS: una guida completa</strong>
+            </a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarHeader" aria-controls="navbarHeader" aria-expanded="false" aria-label="Toggle navigation">
+              <span class="navbar-toggler-icon"></span>
+            </button>
+          </div>
+        </div>
+      </header>
+    
+
+      <main role="main" class="container-fluid">
+
+        <div class="row">
+          <div class="col-4 col-md-3 bg-light py-5">
+            <div class="form-group border-bottom pb-4">
+              <input type="search" id="search-arg" class="form-control" placeholder="Cerca argomento"/>
+            </div>
+            <ol class="searcheable list-unstyled">
+              {% assign curr_url = page.url | replace: '.html', '' %}
+              {% for item in site.data.menu %}
+              <li>
+                <a href="{{ item.url | relative_url }}" title="{{ item.title }}" {% if curr_url == item.url %} class="text-warning"{% endif %}>
+                  {{ item.title }}
+                </a>
+                {% if item.sub %}
+                <ol class="list-unstyled ml-3">
+                  {% for i in item.sub %}
+                  <li>
+                    <a href="{{ i.url | relative_url }}" title="{{ i.title }}" {% if curr_url == i.url %} class="text-warning"{% endif %}>
+                      {{ i.title }}
+                    </a>
+                    {% if item.sub %}
+                    
+                    {% endif %}
+                  </li>
+                  {% endfor %}
+                </ol>
+                {% endif %}
+              </li>
+              {% endfor %}
+            </ol>
+          </div>
+
+          <div class="col-4 col-md-7 py-5">
+            <h1>{{ page.title }}</h1>
+            <div class="mt-3">
+              {{ content }}
+            </div>
+          </div>
+        </div>
+
+      </main>
+    </div>
+
+    <footer class="text-muted border-top shadow mt-auto py-5">
+      <div class="container">
+        <p class="float-right">
+          <a href="#">Inizio pagina</a>
+        </p>
+        <p>Questa documentazione è rilasciata con licenza CC-BY.</p>
+      </div>
+    </footer>
+
+  
+  <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+  <script src={{ "js/main.js" | relative_url }}></script>
+
+  {% if page.custom_js %}
+    {% for js in page.custom_js %}
+      {% if js contains "http" %}
+      <script src="{{ js }}"></script>
+      {% else %}
+      <script src={{ "js/" | append: js | append: ".js" | relative_url }}></script>
+      {% endif %}
+
+    {% endfor %}
+  {% endif %}
+
+  </body>
+</html>

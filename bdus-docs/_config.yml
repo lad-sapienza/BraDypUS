@@ -1,0 +1,17 @@
+title: BDUS Guide
+description: >
+  Una guida completa per installare ed eseguire Bradypus
+logo: bdus.svg
+
+exclude:
+  - site
+  - __*
+  - Gemfile
+  - Gemfile.lock
+
+sass:
+    sass_dir: _sass
+
+collections:
+  generale:
+    output: true

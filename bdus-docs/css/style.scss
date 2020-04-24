@@ -1,0 +1,26 @@
+---
+---
+
+img[alt=Bradypus] { width: 200px; }
+
+
+.hljs-ln-numbers {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+
+    text-align: center;
+    border-right: 1px solid #999;
+    vertical-align: top;
+    padding-right: 1rem !important;
+
+    /* your custom style here */
+}
+
+/* for block of code */
+.hljs-ln-code {
+    padding-left: 1rem !important;
+}

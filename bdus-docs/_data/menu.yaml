@@ -1,0 +1,48 @@
+- title: 1. Presentazione
+  url: /
+
+- title: 2. Requisiti del sistema
+  url: /environment/system-requirements
+  sub:
+    - title: 2.1. Preparare l'ambiente Windows
+      url: /environment/setup-windows
+    - title: 2.2. Preparare l'ambiente MacOS / Linux / Unix
+      url: /environment/setup-nix
+    - title: 2.3. Conoscenze di base
+      url: /environment/knowledge-base
+
+- title: 3. Struttura della banca dati
+  url: /design/intro
+  sub:
+    - title: 3.1. Qualche convenzione
+      url: /design/conventions
+    - title: 3.2. Schema DB
+      url: /design/schema
+
+- title: 4. Configurazione
+  url: /config/index
+  sub:
+    - title: 4.1. Albero di cartelle e file
+      url: /config/tree-structure
+    - title: 4.2. app_data.json
+      url: /config/app_data
+    - title: 4.3. tables.json
+      url: /config/tables
+    - title: 4.4. files.json
+      url: /config/files
+    - title: 4.5. geodata.json
+      url: /config/geodata
+    - title: 4.6. Tabelle di dati
+      url: /config/data-tables
+    - title: 4.7. Sintassi per le tabelle di dati
+      url: /config/data-tables-syntax
+- title: 5. Creazione della struttura DB
+  url: /db/intro
+  sub:
+    - title: 5.1.Qualche convenzione
+      url: /db/conventions
+    - title: 5.2. Schema DB
+      url: /db/schema
+
+- title: Vocabolario
+  url: /voc

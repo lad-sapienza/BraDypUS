@@ -1,6 +1,4 @@
----
-title: "Requisiti del sistema"
----
+# Requisiti del sistema
 
 
 - [PHP](https://www.php.net/) (>=5.x) con [PDO](https://www.php.net/manual/en/book.pdo.php)

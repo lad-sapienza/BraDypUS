@@ -1,6 +1,4 @@
----
-title: "Progettazione del database"
----
+# Progettazione del database
 
 La definizione della struttura della banca dati è di gran lunga il passaggio più importante e delicato
 dell'intero processo.

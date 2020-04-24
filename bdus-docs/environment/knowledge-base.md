@@ -1,6 +1,4 @@
----
-title: "Conoscenze di base"
----
+# Conoscenze di base
 
 Per la crazione di questa banca dati di esempio non sono necessarie conoscenze di base particolari,
 anche se aiuta avere una conoscenza di base di [JSON](https://www.json.org/) un formato semplice

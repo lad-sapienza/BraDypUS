@@ -1,7 +1,4 @@
----
-title: Vocabolario
----
-
+# Vocabolario
 
 ### Geoface
 **TODO**

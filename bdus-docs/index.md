@@ -1,8 +1,6 @@
----
-title: "Home page"
----
+# Home page
 
-![Bradypus](/images/bdus.svg "Bradypus")
+![Bradypus](images/bdus.svg "Bradypus")
 
 Questa è una guida completa all'istallazione di una banca dati BraDypUS.
 

@@ -1,6 +1,4 @@
----
-title: File di configurazione delle tabelle di dati
----
+# File di configurazione delle tabelle di dati
 
 
 Come nel caso della compilazione del [file di configurazione generale delle tabelle](/config/tables) 

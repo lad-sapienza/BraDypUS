@@ -1,6 +1,4 @@
----
-title: File di elenco e configurazione delle tabelle
----
+# File di elenco e configurazione delle tabelle
 
 
 - Posizione: `projecs/test/cfg/tables.json`

@@ -1,6 +1,4 @@
----
-title: "Preparare l'ambiente MacOS / Linux / Unix"
----
+# Preparare l'ambiente MacOS / Linux / Unix
 
 Di norma, i sistemi operativi MacOS / Linux / Unix comprendono di default una installazione PHP, che è possibile 
 usare per questa guida.

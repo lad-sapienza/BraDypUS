@@ -1,6 +1,4 @@
----
-title: Sintassi dei file di configurazione della tabella
----
+# Sintassi dei file di configurazione della tabella
 
 
 - Posizione: `projecs/test/cfg/*.json`

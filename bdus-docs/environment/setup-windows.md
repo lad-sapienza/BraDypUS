@@ -1,6 +1,5 @@
----
-title: "Preparare l'ambiente Windows"
----
+# Preparare l'ambiente Windows
+
 
 Windows di norma non ha una installazione PHP di default e per questo motivo è necessario
 installare del software aggiuntivo.

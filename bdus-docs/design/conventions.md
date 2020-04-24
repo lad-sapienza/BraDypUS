@@ -1,6 +1,5 @@
----
-title: "Qualche convenzione"
----
+# Qualche convenzione
+
 
 Bradypus è un [sistema relazionale](https://en.wikipedia.org/wiki/Relational_database) perciò la base della
 sua costruzione solole tabelle.

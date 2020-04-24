@@ -1,6 +1,4 @@
----
-title: File di configurazione della tabella files
----
+# File di configurazione della tabella files
 
 
 - Posizione: `projecs/test/cfg/geodata.json`

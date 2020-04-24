@@ -20,7 +20,7 @@
       url: /design/schema
 
 - title: 4. Configurazione
-  url: /config/index
+  url: /config/intro
   sub:
     - title: 4.1. Albero di cartelle e file
       url: /config/tree-structure

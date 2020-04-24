@@ -1,6 +1,4 @@
----
-title: File generale di configurazione dell'applicazione
----
+# File generale di configurazione dell'applicazione
 
 
 - Posizione: `projecs/test/cfg/app_data.json`

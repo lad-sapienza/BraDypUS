@@ -1,6 +1,4 @@
----
-title: Schema della anca dei dati
----
+# Schema della anca dei dati
 
 L'elenco delle tabelle e dei campi per ciascuno tabella che a definire sarà:
 

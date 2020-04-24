@@ -1,39 +1,44 @@
-# Schema della anca dei dati
+# Schema della banca dei dati
 
-L'elenco delle tabelle e dei campi per ciascuno tabella che a definire sarà:
+L'elenco delle tabelle e dei campi per ciascuno tabella che si andraà a definite in questa installazione
+di test sarà dunque:
 
-## test__siti
+## Siti
 - nome
 - tipologia
 - cronologia
 - descrizione
+- [bibliografia]
+    - breve
+    - pagine
+    - nota
 
-## test__us
+
+## US
 - sito
 - nome
 - tipo
 - descrizione
+- [rs]
+- [campionamenti]
+    - camponione
+    - analisi
+     -descrizione
+- [bibliografia]
+    - breve
+    - pagine
+    - nota
 
-## test__bibliografia
+## Bibliografia
 - breve
 - autori
 - anno
 - descrizione
 
-## test__m_campioni
-- dataprelievo
-- tipoanalisi
-- note
-
-## test__m_biblio
-- breve
-- pp
-
-
-## Nota
-La tabella `test__m_biblio` è la tabella intermedia di appoggio utile per la creazione della relazione molti-a-molti
-tra la tabella bibliografia e la tabella siti (e us).
 
 ---
 
-Questi dati sono tutto quanto ci serve per costruire il nostro database. Da questi dati dobbiamo estrarre le informazioni pr creare le tabelle e le informazioni necessarie per gestire in maniere corretta l'interfaccia di **immissione** dei dati e la loro **validazione**.
+Questi dati sono tutto quanto ci serve per costruire il nostro database. 
+Da questi dati dobbiamo estrarre le informazioni per creare le 
+tabelle e le informazioni necessarie per gestire in maniere 
+corretta l'interfaccia di **immissione** dei dati e la loro **validazione**.

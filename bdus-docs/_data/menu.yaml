@@ -36,13 +36,15 @@
       url: /config/data-tables
     - title: 4.7. Sintassi per le tabelle di dati
       url: /config/data-tables-syntax
-- title: 5. Creazione della struttura DB
-  url: /db/intro
+- title: 5. Installazione
+  url: /install/intro
   sub:
-    - title: 5.1.Qualche convenzione
-      url: /db/conventions
-    - title: 5.2. Schema DB
-      url: /db/schema
+    - title: 5.1. Installazione da riga di commando
+      url: /install/cli-pro
+    - title: 5.2. Installazione con uso minimo della riga di commando
+      url: /install/cli-minimal
+    - title: 5.3. Inatallazione manuale
+      url: /install/manual
 
 - title: Vocabolario
   url: /voc

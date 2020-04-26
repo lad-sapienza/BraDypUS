@@ -46,5 +46,15 @@
     - title: 5.3. Inatallazione manuale
       url: /install/manual
 
+- title: 6. Pubblicare online
+  url: /deploy/intro
+  sub:
+    - title: 6.1. Creazione dell'account
+      url: /deploy/infinityfree/make-account
+    - title: 6.2. Creazione del servizio
+      url: /deploy/infinityfree/make-service
+    - title: 6.3. Caricamento file
+      url: /deploy/infinityfree/upload-files
+    
 - title: Vocabolario
   url: /voc

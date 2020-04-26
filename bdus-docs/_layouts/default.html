@@ -96,6 +96,59 @@
             <div class="mt-2">
               {{ content }}
             </div>
+
+            <div class="border-top mt-5 py-3">
+              <div class="row">
+                <div class="col">
+                  {% for item in site.data.menu %}
+
+                    {% if curr_url == item.url and lastItem %}
+                    <a href="{{ lastItem.url | relative_url }}" title="{{ lastItem.title }}" class="text-secondary">
+                      &larr; {{ lastItem.title }}
+                    </a>
+                    {% endif %}
+                    {% assign lastItem = item %}
+
+                    {% if item.sub %}
+                      {% for i in item.sub %}
+                        {% if curr_url == i.url and lastItem %}
+                          <a href="{{ lastItem.url | relative_url }}" title="{{ lastItem.title }}" class="text-secondary">
+                            &larr; {{ lastItem.title }}
+                          </a>
+                        {% endif %}
+                        {% assign lastItem = i %}
+                      {% endfor %}
+                    {% endif %}
+                    
+                  {% endfor %}
+                </div>
+
+                <div class="col text-right">
+                  {% for item in site.data.menu %}
+
+                    {% if curr_url ==  prevItem.url %}
+                    <a href="{{ item.url | relative_url }}" title="{{ item.title }}" class="text-secondary">
+                      {{ item.title }} &rarr; 
+                    </a>
+                    {% endif %}
+                    {% assign prevItem = item %}
+                    
+                    {% if item.sub %}
+                      {% for i in item.sub %}
+                        {% if curr_url == prevItem.url %}
+                          <a href="{{ i.url | relative_url }}" title="{{ i.title }}" class="text-secondary">
+                            {{ i.title }} &rarr;
+                          </a>
+                        {% endif %}
+                        {% assign prevItem = i %}
+                      {% endfor %}
+                    {% endif %}
+                    
+                  {% endfor %}
+                </div>
+
+              </div>
+            </div>
           </div>
         </div>
 

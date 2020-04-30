@@ -24,4 +24,25 @@ $(document).ready(function(){
             $('.searcheable li').removeClass('d-none');
         }
     }
+
+    $('#search-dic').on('search', function() {
+        doSearchDic($(this).val());
+    });
+    $('#search-dic').on('keyup', function(){
+        doSearchDic($(this).val());
+    });
+
+    function doSearchDic(filter) {
+        $('#content h3').each( function(){
+            var h3Text = $(this).text().toLowerCase();
+            var pEls = $(this).nextUntil('h3');
+            if ( !filter ||  h3Text.indexOf(filter.toLowerCase()) > -1 ){
+                $(this).removeClass('d-none');
+                pEls.removeClass('d-none');
+            } else if( h3Text.indexOf(filter.toLowerCase()) < 0 ) {
+                $(this).addClass('d-none');
+                pEls.addClass('d-none');
+            }
+        });
+    }
 });

@@ -90,10 +90,16 @@
               </li>
               {% endfor %}
             </ol>
+
+            <div class="text-center mt-5">
+              <a href="https://github.com/jbogdani/bdus-guide/blob/master/_data/menu.yaml" target="_blank" class="btn btn-info">
+                Modifica il menu su GitHub
+              </a>
+            </div>
           </div>
 
           <div class="col-4 col-md-7 py-5">
-            <div class="mt-2">
+            <div class="mt-2" id="content">
               {{ content }}
             </div>
 
@@ -146,7 +152,11 @@
                     
                   {% endfor %}
                 </div>
-
+              </div>
+              <div class="text-center mt-5">
+                <a href="https://github.com/jbogdani/bdus-guide/blob/master/{{ page.path }}" target="_blank" class="btn btn-info">
+                  Modifica questo contenuto su GitHub
+                </a>
               </div>
             </div>
           </div>
@@ -154,7 +164,7 @@
 
       </main>
     </div>
-
+    
     <footer class="text-muted border-top shadow mt-auto py-5">
       <div class="container">
         <p class="float-right">

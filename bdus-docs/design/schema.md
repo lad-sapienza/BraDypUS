@@ -42,3 +42,5 @@ Questi dati sono tutto quanto ci serve per costruire il nostro database.
 Da questi dati dobbiamo estrarre le informazioni per creare le 
 tabelle e le informazioni necessarie per gestire in maniere 
 corretta l'interfaccia di **immissione** dei dati e la loro **validazione**.
+
+![screenshot](../../images/design/schema.png "Visual schema")

@@ -19,3 +19,5 @@ attraverso l'utilizzo di una tabella intermedia di appoggio.
 Inoltre prevederemo la possibilità di schedare anche possibili campionamenti delle unità stratigrafiche. Dal momento che per
 ogni `us` è possibile avere nessuno, uno o più campioni, `us` e `campioni` si trovano in relazione `uno-a-molti`, ma a
 differenza di quanto visto fino a qui i campioni non saranno un'entità separata, ma una appendice delle us.
+
+![screenshot](../../images/design/schema.png "Visual schema")

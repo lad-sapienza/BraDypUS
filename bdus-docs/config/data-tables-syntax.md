@@ -15,7 +15,9 @@ Questo campo è fondamentale per garantire il corretto funzionamento dell'utenza
 overo utenti che possono inserire dati, ma che possono modificare solamente i record da loro stessi inseriti.
 
 ## Campi speciali delle tabelle di plugin
-[**TODO**: da fare]
+- `id`: la chiave primaria di ogni tabella plugin
+- `table_link`: contiene il nome della tabella di riferimento (tabella madre)
+- `id_link`: contiene l'id della tabella di riferimento (tabella madre)
 
 ## Struttura della descrizione di ogni campo
 

@@ -1,31 +1,46 @@
 # Introduzione al processo di installazione
 
-Per la creazione della cartella di progetto seguiremo
-in questa guida due strade diverse.
+Per la creazione della cartella di progetto è possibile
+seguire strade diverse, che in parte si incrociano.
 
-## 1. La via brevissima
-La prima e più veloce in assolute presuppone:
+## 1. Interfaccia web BDUS Factory 
+Per questa via piuttosto semplice è necessario disporre:
+- Un browser web
+- Una connessione internet
+
+Internamente questo strumento fa uso di [bdus-cli](#bdus-cli).
+
+[Vai alla guida](bdus-factory)
+
+## 2. Percorso pro: terminale
+Si tratta del modo più veloce in assolute e presuppone:
 - Una connesione internet
-- Git disponibile nel sistema operativo
+- [Git](https://git-scm.com/)
 - Terminale / Riga di commando
-- Ambiente Unix (e quindi anche MacOS) o Linux
+- Ambiente *nix (Unix, MacOS o Linux)
 
 Verrà fatto uso di una applicazione appositamente creata 
-per avviare il sistema Bradypus
+([bdus-cli](#bdus-cli)) per avviare il sistema Bradypus.
+
+[Vai alla guida](cli-pro)
 
 
-## 2. La via media
-La seconda via è più lunga in quanto prevede lo scarcamento manuale 
+## 3. La via intermedia
+La terza via prevede lo scarcamento manuale (non più attraverso git)
 delle varie risorse.
 
 Verrà fatto uso di una applicazione appositamente creata 
-per avviare il sistema Bradypus
+([bdus-cli](#bdus-cli)) per avviare il sistema Bradypus
 
-## 3. La via lunga
+[Vai alla guida](cli-minimal)
+
+## 4. La via lunga
 La creazione del tutto manuale di file, cartelle e database.
 
+[Vai alla guida](manual)
+
 ## bdus-cli
-Per la via _brevissima_ e quella _media_ si farà uso di uno strumento
+Per le opzioni 1, 2 e 3 si farà uso di uno strumento
 open source, abbastanza semplice da usare, liberamente disponibile
 all'indirizzo [https://github.com/jbogdani/bdus-cli](https://github.com/jbogdani/bdus-cli)
 e chiamato `bdus-cli`, dove cli sta per _command line interface_ e rimarcare

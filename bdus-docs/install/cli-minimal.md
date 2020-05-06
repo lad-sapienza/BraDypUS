@@ -54,7 +54,7 @@ Siamo pronti per cominciare
 2. Ci spostiamo al suo interno
 3. Recupero il software bradypus dalla repository ufficiale:
     - andando all'indirizzo
-    [https://github.com/jbogdani/BraDypUS](https://github.com/jbogdani/BraDypUS)
+    [https://github.com/bdus-db/BraDypUS](https://github.com/bdus-db/BraDypUS)
     - cliccando sul bottone verde **Clone or download**
     - Selezionando l'opzione **Download ZIP**
     - Salvarlo nella cartella testdb

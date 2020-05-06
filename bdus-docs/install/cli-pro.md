@@ -72,7 +72,7 @@ Siamo pronti per cominciare
 
 3. Recupero il software bradypus dalla repository ufficiale usando git
     ```bash
-    git clone git@github.com:jbogdani/BraDypUS.git
+    git clone git@github.com:bdus-db/BraDypUS.git
     ```
     Git creera la cartella `BraDypUS` e ci metterà dentro i file scaricati dalla repository ufficiale
 
@@ -149,7 +149,7 @@ A questo punto possiamo aprire il browser all'indirizzo
 ```bash
 mkdir testdb
 cd testdb
-git clone git@github.com:jbogdani/BraDypUS.git
+git clone git@github.com:bdus-db/BraDypUS.git
 git clone https://github.com/jbogdani/bdus-cli.git
 mkdir BraDypUS/projects
 cd bdus-cli

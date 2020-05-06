@@ -39,9 +39,7 @@
       url: /install/bdus-factory
     - title: 5.2. Installazione da riga di commando
       url: /install/cli-pro
-    - title: 5.3. Installazione con uso minimo della riga di commando
-      url: /install/cli-minimal
-    - title: 5.4. Installazione manuale
+    - title: 5.3. Installazione manuale
       url: /install/manual
 
 - title: 6. Pubblicare online

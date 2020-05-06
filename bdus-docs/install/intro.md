@@ -25,16 +25,7 @@ Verrà fatto uso di una applicazione appositamente creata
 [Vai alla guida](cli-pro)
 
 
-## 3. La via intermedia
-La terza via prevede lo scarcamento manuale (non più attraverso git)
-delle varie risorse.
-
-Verrà fatto uso di una applicazione appositamente creata 
-([bdus-cli](#bdus-cli)) per avviare il sistema Bradypus
-
-[Vai alla guida](cli-minimal)
-
-## 4. La via lunga
+## 3. La via lunga
 La creazione del tutto manuale di file, cartelle e database.
 
 [Vai alla guida](manual)

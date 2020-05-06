@@ -159,3 +159,14 @@ cd ../BraDypUS
 rm -rf ../bdus-cli ../test-cfg
 php -S localhost:8000
 ```
+
+Oppure in un solo passaggio (copia, incolla sul terminale e poi apri il browser all'indirizzo http://localhost:8080)
+
+```bash
+mkdir testdb && cd testdb && git clone git@github.com:bdus-db/BraDypUS.git && git clone https://github.com/bdus-db/bdus-cli.git && mkdir BraDypUS/projects && cd bdus-cli && php bdus.php validate https://raw.githubusercontent.com/bdus-db/test-cfg/master && php bdus.php create https://raw.githubusercontent.com/bdus-db/test-cfg/master ../BraDypUS/projects && cd ../BraDypUS && rm -rf ../bdus-cli ../test-cfg && php -S localhost:8000
+```
+Nota: la versione in un unico passaggio concatena gli unidici passi di cui sopra in un unico commando usando `&&`.
+L'installazine potrebbe richidere da pochi secondi a un minuto a seconda della qualità della rete.
+Per terminare il server web digitare sul terminale aperto `CTRL+c`.
+La cancellazione della cartella **testdb** rimuove tutti i pacchetti installati e non lascia alcuna traccia
+sul sistema locale.

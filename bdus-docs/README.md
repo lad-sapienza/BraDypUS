@@ -1,3 +1,2 @@
-ArcheoFOSS
-
-The website
+BraDypUS web databases
+An (to be) complete guide

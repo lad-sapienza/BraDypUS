@@ -12,7 +12,7 @@ Come anticipato per questa opzione velocissima si ha bisogno di:
 
 Per facilità usero come file di configurazione i file
 dell'applicazione test che sono stati pubblicati a questo indirizzo:
-[https://github.com/jbogdani/bdus-test-cfg](https://github.com/jbogdani/bdus-test-cfg).
+[https://github.com/bdus-db/test-cfg](https://github.com/bdus-db/test-cfg).
 Si tratta degli stessi file descritti finora.
 
 ## Installazione
@@ -32,7 +32,7 @@ Siamo pronti per cominciare
 4. Creo la cartella `projects` dentrola cartella Bradypus
 5. Recupero i file di configurazione di test
     - andando all'indirizzo
-    [https://github.com/jbogdani/bdus-test-cfg](https://github.com/jbogdani/bdus-test-cfg)
+    [https://github.com/bdus-db/test-cfg](https://github.com/bdus-db/test-cfg)
     - cliccando sul bottone verde **Clone or download**
     - Selezionando l'opzione **Download ZIP**
     - Salvarlo nella cartella testdb
@@ -174,7 +174,7 @@ Siamo pronti per cominciare
     PRAGMA foreign_keys = on;
     ```
 
-17. Rimuovo le cartelle che non servono più, ovvero bdus-test-cfg
+17. Rimuovo le cartelle che non servono più, ovvero test-cfg
 
 A questo punto possiamo aprire il browser all'indirizzo 
 [http://localhost/testdb/BraDypUS/](http://localhost/testdb/BraDypUS/) ed entrare nell'applicazione con:

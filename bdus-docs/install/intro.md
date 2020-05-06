@@ -42,7 +42,7 @@ La creazione del tutto manuale di file, cartelle e database.
 ## bdus-cli
 Per le opzioni 1, 2 e 3 si farà uso di uno strumento
 open source, abbastanza semplice da usare, liberamente disponibile
-all'indirizzo [https://github.com/jbogdani/bdus-cli](https://github.com/jbogdani/bdus-cli)
+all'indirizzo [https://github.com/bdus-db/bdus-cli](https://github.com/bdus-db/bdus-cli)
 e chiamato `bdus-cli`, dove cli sta per _command line interface_ e rimarcare
 subito che si tratta di un programma da eseguire da linea di commando.
 

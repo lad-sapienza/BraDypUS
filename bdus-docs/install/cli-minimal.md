@@ -16,7 +16,7 @@ Come anticipato per questa opzione velocissima si ha bisogno di:
 
 Per facilità usero come file di configurazione i file
 dell'applicazione test che sono stati pubblicati a questo indirizzo:
-[https://github.com/jbogdani/bdus-test-cfg](https://github.com/jbogdani/bdus-test-cfg).
+[https://github.com/bdus-db/test-cfg](https://github.com/bdus-db/test-cfg).
 Si tratta degli stessi file descritti finora.
 
 ## Verifica dell'ambiente di lavoro
@@ -62,7 +62,7 @@ Siamo pronti per cominciare
     - Cancellare il file zip non più necessario
 4. Recupero il software bdus-cli dalla repository ufficiale usando git
     - andando all'indirizzo
-    [https://github.com/jbogdani/bdus-cli](https://github.com/jbogdani/bdus-cli)
+    [https://github.com/bdus-db/bdus-cli](https://github.com/bdus-db/bdus-cli)
     - cliccando sul bottone verde **Clone or download**
     - Selezionando l'opzione **Download ZIP**
     - Salvarlo nella cartella testdb
@@ -70,7 +70,7 @@ Siamo pronti per cominciare
     - Cancellare il file zip non più necessario
 5. Recupero i file di configurazione di test
     - andando all'indirizzo
-    [https://github.com/jbogdani/bdus-test-cfg](https://github.com/jbogdani/bdus-test-cfg)
+    [https://github.com/bdus-db/test-cfg](https://github.com/bdus-db/test-cfg)
     - cliccando sul bottone verde **Clone or download**
     - Selezionando l'opzione **Download ZIP**
     - Salvarlo nella cartella testdb
@@ -83,29 +83,29 @@ Siamo pronti per cominciare
 8. Valido i file di config e mi assicuro che non ci siano errori.  
 Per fare questo ho bisogno del terminale
     ```bash
-    php bdus.php validate ../bdus-test-cfg
+    php bdus.php validate ../test-cfg
     ```
     Per l'utilizzo di bdus-cli si prega di fare riferimento alla guida
-    [https://github.com/jbogdani/bdus-cli](https://github.com/jbogdani/bdus-cli)
+    [https://github.com/bdus-db/bdus-cli](https://github.com/bdus-db/bdus-cli)
 
     Nel caso in cui nel passaggio 5 si fosse optati per non scaricare i file sul sistema locale
     il commando per la validazione dei file sarebbe stato:
     ```bash
-    php bdus.php validate https://raw.githubusercontent.com/jbogdani/bdus-test-cfg/master
+    php bdus.php validate https://raw.githubusercontent.com/bdus-db/test-cfg/master
     ```
 
 9. Se tutto è andato bene con la validazione, creo finalmente il progetto
     ```bash
-    php bdus.php create ../bdus-test-cfg ../BraDypUS/projects
+    php bdus.php create ../test-cfg ../BraDypUS/projects
     ```
 
     Nel caso in cui nel passaggio 5 si fosse optati per non scaricare i file sul sistema locale
     il commando perla creazione del progetto sarebbe stato:
     ```bash
-    php bdus.php create https://raw.githubusercontent.com/jbogdani/bdus-test-cfg/master ../BraDypUS/projects
+    php bdus.php create https://raw.githubusercontent.com/bdus-db/test-cfg/master ../BraDypUS/projects
     ```
 
-10. Rimuovo le cartelle che non servono più, ovvero bdus-cli e bdus-test-cfg
+10. Rimuovo le cartelle che non servono più, ovvero bdus-cli e test-cfg
 
 10. Vado dentro la cartella del progetto
     ```bash

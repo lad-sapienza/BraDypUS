@@ -1,11 +1,11 @@
 # Installazione usando BDUS Factory
 
-BDUS Factory è un'applicazione [web open source](https://github.com/jbogdani/bdus-factory)
+BDUS Factory è un'applicazione [web open source](https://github.com/bdus-db/bdus-factory)
 raggiungibile all'indirizzo [bdus-factory.bradypus.net](https://bdus-factory.bradypus.net/)
 che permette di creare in maniera del tutto automatica una applicazione
 Bradypus a partira dai file principali di configurazione.
 
-Si può pensare a BDUS Factory come una interfaccia a [bdus-cli](https://github.com/jbogdani/bdus-cli).
+Si può pensare a BDUS Factory come una interfaccia a [bdus-cli](https://github.com/bdus-db/bdus-cli).
 
 Come anticipato per questa opzione velocissima si ha bisogno di:
 - Una connesione internet
@@ -14,7 +14,7 @@ Come anticipato per questa opzione velocissima si ha bisogno di:
 
 Per facilità usero come file di configurazione i file
 dell'applicazione test che sono stati pubblicati a questo indirizzo:
-[https://github.com/jbogdani/bdus-test-cfg](https://github.com/jbogdani/bdus-test-cfg).
+[https://github.com/bdus-db/test-cfg](https://github.com/bdus-db/test-cfg).
 Si tratta degli stessi file descritti finora.
 
 ## Installazione

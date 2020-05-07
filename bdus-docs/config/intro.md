@@ -4,12 +4,12 @@ Il sistema Bradypus è gestito da un insieme di file di configurazione in format
 [JSON](https://www.json.org/) un formato molto semplice di registrazione di dati,
 facile da leggere e da scrivere sia da umani che da macchine.
 
-Il sistema Bradypus prevede la creazione di un quattro file di configuazione fissi
+Il sistema Bradypus prevede la creazione di quattro file di configurazione fissi
 e di un file di configurazione per ogni tabella di dati, sia che si tratti 
 di un tabella principale che una tabella `plugin`.
 
 I file  di configurazioni di sistema sono:
-- `app_data.json`: continete le informazioni gerenali del sistema
+- `app_data.json`: contiene le informazioni generali del sistema
 - `tables.json`: contiene l'elenco delle tabelle del sistema, alcune configurazioni generali 
 per ogni tabella e soprattutto la rete delle relazioni che collega insieme le varie tabelle
 

@@ -19,7 +19,7 @@ php -v
 ```
 
 In caso non sia disponibile una versione PHPo in caso si vogliano usare soluzione grafiche, che non comprendano
-l'uso del terminale allora è possibile, come per Windows, optare per una soluzione comppleta, es.:
+l'uso del terminale allora è possibile, come per Windows, optare per una soluzione completa, es.:
 
 Alcune delle possibili scelte sono
 - [XAMPP](https://www.apachefriends.org/)

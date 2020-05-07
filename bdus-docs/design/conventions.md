@@ -2,15 +2,15 @@
 
 
 Bradypus è un [sistema relazionale](https://en.wikipedia.org/wiki/Relational_database) perciò la base della
-sua costruzione solole tabelle.
+sua costruzione sono le tabelle.
 
 Ogni tabella è composta da un numero specifico di campi, ognuno dei quali presenta regole precise di compilazione.
 
 Bradypus è composta da alcune tabelle `di sistema`, la cui struttura non è possibile modificare e che servono
-al funzinamento generale del sistema e da altre tabelle `di dati`, la cui struttura dipende da quanto si sta schedando.
+al funzionamento generale del sistema e da altre tabelle `di dati`, la cui struttura dipende da quanto si sta schedando.
 
 Tra le tabelle di dati alcune sono di secondo ordine e vengono chiamate `plugin` e contengono dati aggiuntivi
-relativamente ad una tabelle di dati principale.
+relativamente a una tabella di dati principale.
 
 Nel nostro caso, la tabella dei campioni è una tabella `plugin`.
 
@@ -25,7 +25,7 @@ Nel caso concreto potremmo definire `test` il nome dell'applicazione che stiamo 
 Il nome dell'applicazione, per convenzione, viene prefisso al nome di ciascuna tabella; prefisso e nome della tabella
 vengono divisi da due linee basse: `___`.
 
-Nel caso concreto le tabella che creremo si chiameranno
+Nel caso concreto le tabella che creeremo si chiameranno
 - `test__siti`
 - `test__us`
 - `test__bibliografia`

@@ -2,7 +2,7 @@
 
 ![Bradypus](images/bdus.svg "Bradypus")
 
-Questa è una guida completa all'istallazione di una banca dati BraDypUS.
+Questa è una guida completa all'installazione di una banca dati BraDypUS.
 
 La guida parte da un livello di conoscenza informatico basso o nullo e permetterà di avere un database
 configurato e funzionante, pubblicato sul web.

@@ -1,6 +1,6 @@
 # Schema della banca dei dati
 
-L'elenco delle tabelle e dei campi per ciascuno tabella che si andraà a definite in questa installazione
+L'elenco delle tabelle e dei campi per ciascuna tabella che si andrà a definire in questa installazione
 di test sarà dunque:
 
 ## Siti
@@ -21,7 +21,7 @@ di test sarà dunque:
 - descrizione
 - [rs]
 - [campionamenti]
-    - camponione
+    - campione
     - analisi
      -descrizione
 - [bibliografia]

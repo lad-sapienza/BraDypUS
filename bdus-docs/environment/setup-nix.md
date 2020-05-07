@@ -8,7 +8,7 @@ e digitare il commando:
 ```bash
 which php
 ``` 
-seguito da Invio. La risposta dobrebbe essere qualcosa come 
+seguito da Invio. La risposta dovrebbe essere qualcosa come 
 ```bash
 /usr/bin/php
 ```

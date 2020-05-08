@@ -153,7 +153,7 @@ class api2 extends Controller
 					if ($v['f'] === null || trim($v['f']) === ''){
 						continue;
 					}
-					if ( $fld_type === 'multi_select' && strpos($v['f'], ';')){
+					if ( $fld_type === 'multi_select'){
 						$v_a = utils::csv_explode($v['f'], ';');
 						foreach ($v_a as $i) {
 							if (!in_array($i, $resp)){
@@ -161,7 +161,9 @@ class api2 extends Controller
 							}
 						}
 					} else {
-						array_push($resp, $v['f']);
+                        if (!in_array($i, $resp)) {
+                            array_push($resp, $v['f']);
+                        }
 					}
 				}
 

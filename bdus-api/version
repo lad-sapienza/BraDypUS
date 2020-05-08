@@ -1,3 +1,4 @@
+3.13.10[] = "Fixed bug dith duplicate values in api2::getUniqueVal"
 3.13.9[] = "Fixed bug not allowing new vocabularies to be defined if no vocabularies are available"
 3.13.8[] = "Removed app_data.search_code"
 3.13.7[] = "Fixed bug with geoface not pasing table variable"

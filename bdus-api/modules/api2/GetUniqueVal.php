@@ -49,7 +49,7 @@ class GetUniqueVal
             if ($v['f'] === null || trim($v['f']) === '') {
                 continue;
             }
-            if ($fld_type === 'multi_select' && strpos($v['f'], ';')) {
+            if ($fld_type === 'multi_select') {
                 $v_a = utils::csv_explode($v['f'], ';');
                 foreach ($v_a as $i) {
                     // Ignore duplicate values
@@ -66,7 +66,9 @@ class GetUniqueVal
                     }
                 }
             } else {
-                array_push($resp, $v['f']);
+                if(!in_array($v['f'], $resp)){
+                    array_push($resp, $v['f']);
+                }
             }
         }
         return $resp;

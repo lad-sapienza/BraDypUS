@@ -47,8 +47,8 @@ e diamo per scontato che si trovi in una posizione del filesystem accessibile al
 │   │   ├── export          : in questa cartella verranno salvati eventuali esportazioni in vari formati che faremo attraverso Bradypus
 │   │   ├── files           : in questa cartella verranno salvati tutti i file (immagini e documenti) che vengono caricati e collegati ai record
 │   │   ├── geodata         : in questa cartella possono essere salvati dati geografici da usare con l'interfaccia geografica integrata (geoface)
-│   │   ├── history.log     : vecchio file di log della stria delle modifiche. Nelle nuove versioni non viene più creata e la storia delle modifiche viene in db/meta.sqlite
-│   │   ├── templates       : per ogni tabella di sistema è possibile definire delle maschere personalizateper l'inserimenti dei dati. Queste machere, chiamate template, vengono salvate in questa cartella
+│   │   ├── history.log     : vecchio file di log della storia delle modifiche. Nelle nuove versioni non viene più creata e la storia delle modifiche viene in db/meta.sqlite
+│   │   ├── templates       : per ogni tabella di sistema è possibile definire delle maschere personalizzate per l'inserimento dei dati. Queste maschere, chiamate template, vengono salvate in questa cartella
 │   │   ├── tmp             : cartella che contiene file temporanei e che può essere svuotata senza problemi
 │   │   └── welcome.html    : si tratta di un file HTML che può essere modificato in maniera libera per includere descrizioni, immagini, ecc. per personalizzare la pagina principale dell'installazione. Può esere modificata anche dall'interno del sistema.
 ├── sessions/               : cartella di sistema

@@ -2,7 +2,7 @@
 
 
 - Posizione: `projecs/test/cfg/app_data.json`
-- Descrizione: Questo file JSON contiene poche, semplici ed essezioni informazioni dull'applicazione / progetto che sta sta definendo.
+- Descrizione: Questo file JSON contiene poche, semplici ed esseziali informazioni sull'applicazione / progetto che si sta definendo.
 - Contenuto
 ```json
 {

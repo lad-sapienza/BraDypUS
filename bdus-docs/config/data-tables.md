@@ -1,12 +1,12 @@
 # Sintassi dei file di configurazione della tabella
 
 
-- Posizione: `projecs/test/cfg/*.json`
+- Posizione: `projects/test/cfg/*.json`
 - Descrizione: Configurazione delle singole tabelle di dati, comprese le tabelle [plugin](/voc#plugin).
 Per ogni tabella elencata in `tables.json` deve essere presente un file di configurazione che  
 segue la [sintassi della descrizione delle singole tabelle di dati](/config/data-tables-syntax).
 
-Per convenzione è scluso dal nome del file il prefisso dell'applicazione, nel caso corrente `test__`.
+Per convenzione è escluso dal nome del file il prefisso dell'applicazione, nel caso corrente `test__`.
 
 Di seguito vengono riportati i contenuti delle tabelle di dati dell'applicazione di test,
 in ordine alfabetico.

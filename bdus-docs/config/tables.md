@@ -1,7 +1,7 @@
 # File di elenco e configurazione delle tabelle
 
 
-- Posizione: `projecs/test/cfg/tables.json`
+- Posizione: `projects/test/cfg/tables.json`
 - Descrizione: Questo file JSON contiene la lista completa di tutte le tabelle dell'applicazione, 
 con informazioni dettagliate sulla loro descrizone rete di collegamenti
 - Contenuto

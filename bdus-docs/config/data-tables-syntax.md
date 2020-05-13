@@ -7,12 +7,12 @@ ma si consiglia di compilare manualmente solo lo stretto necessario e usare la f
 interna a Bradypus, corredata da interfaccia grafica, per una più puntuale e corretta configurazione.
 
 ## Struttura: campi obbligatori
-La struttura delle tabelle è libera, ma perogni tabella è importante fornire i seguenti campi obbligatori
+La struttura delle tabelle è libera, ma per ogni tabella è importante fornire i seguenti campi obbligatori
 che permetto un corretto funzionamento dell'intero sistema:
 - `id`: la chiave primaria di ogni tabella.
 - `creator`: una campo che il sistema riempirà in automatico con l'identificativo del creatore del record.
 Questo campo è fondamentale per garantire il corretto funzionamento dell'utenza di data-entry, 
-overo utenti che possono inserire dati, ma che possono modificare solamente i record da loro stessi inseriti.
+ovvero utenti che possono inserire dati, ma che possono modificare solamente i record da loro stessi inseriti.
 
 ## Campi speciali delle tabelle di plugin
 - `id`: la chiave primaria di ogni tabella plugin

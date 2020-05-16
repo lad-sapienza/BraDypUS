@@ -650,17 +650,17 @@ EOD;
 	 */
 	private function loadFullFiles()
 	{
-
+		if (!$this->loaded['core']) {
+			$this->loadCore();
+		}
+		
 		if ($this->tb == PREFIX . 'files') {
 
-			if (!$this->loaded['core']) {
-				$this->loadCore();
-			}
 			$this->data['fullfiles'][0] = $this->data['core'];
 
 		} else {
 
-			if ($this->id) {
+			if ($this->data['core']['id']) {
 				$query = 'SELECT `' . PREFIX . 'files`.*, `' . PREFIX . 'userlinks`.`id` as linkid'
 						. ' FROM `' . PREFIX . 'files` JOIN `' . PREFIX . 'userlinks`'
 						. ' ON ( '
@@ -669,9 +669,9 @@ EOD;
 							. "(`" . PREFIX . "userlinks`.`tb_two` = '" . PREFIX . "files' AND  `" . PREFIX . "userlinks`.`id_two` = `" . PREFIX . "files`.`id`)"
 						. ')'
 						. ' WHERE '
-							. "(`" . PREFIX . "userlinks`.`tb_one` = '" . $this->tb . "' AND  `" . PREFIX . "userlinks`.`id_one` = '" . $this->id . "')"
+							. "(`" . PREFIX . "userlinks`.`tb_one` = '" . $this->tb . "' AND  `" . PREFIX . "userlinks`.`id_one` = '" . $this->data['core']['id'] . "')"
 							. ' OR '
-							. "(`" . PREFIX . "userlinks`.`tb_two` = '" . $this->tb . "' AND  `" . PREFIX . "userlinks`.`id_two` = '" . $this->id . "')"
+							. "(`" . PREFIX . "userlinks`.`tb_two` = '" . $this->tb . "' AND  `" . PREFIX . "userlinks`.`id_two` = '" . $this->data['core']['id'] . "')"
 						. ' ORDER BY `' . PREFIX . 'userlinks`.`sort`, `' . PREFIX . 'userlinks`.`id`';
 				$this->data['fullfiles'] = $this->db->query($query, false, 'read');
 			}

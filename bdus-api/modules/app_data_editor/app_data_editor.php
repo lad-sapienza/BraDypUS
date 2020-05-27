@@ -23,7 +23,8 @@ class app_data_editor_ctrl extends Controller
 				'info' => cfg::main(),
 				'status' => array('on', 'frozen', 'off'),
 				'tr_disabled' => tr::get('disabled'),
-				'users' => $users
+				'users' => $users,
+				'db_engines' => ['sqlite', 'mysql', 'pgsql']
 				));
 		
 	}

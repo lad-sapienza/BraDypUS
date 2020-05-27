@@ -78,6 +78,43 @@
 		</tr>
 
 		<tr>
+			<th>Database engine</th>
+			<td>
+				<select type="text" name="db_engine">
+					{% for engine in db_engines %}
+					<option {% if engine == info.db_engine %}selected="true"{% endif %}>{{ engine }}</option>
+					{% endfor %}
+				</select>
+			</td>
+		</tr>
+
+		<tr>
+			<th>Database host</th>
+			<td><input type="text" name="db_host" value="{{ info.db_host }}" /></td>
+		</tr>
+		
+		<tr>
+			<th>Database port</th>
+			<td><input type="text" name="db_port" value="{{ info.db_port }}" /></td>
+		</tr>
+		
+		<tr>
+			<th>Database name</th>
+			<td><input type="text" name="db_name" value="{{ info.db_name }}" /></td>
+		</tr>
+
+		<tr>
+			<th>Database username</th>
+			<td><input type="text" name="db_username" value="{{ info.db_username }}" /></td>
+		</tr>
+		
+		<tr>
+			<th>Database password</th>
+			<td><input type="text" name="db_password" value="{{ info.db_password }}" /></td>
+		</tr>
+
+		
+		<tr>
 			<th>FTP connection string</th>
 			<td><input type="text" name="ftp_string" value="{{ info.ftp_string }}" /></td>
 		</tr>

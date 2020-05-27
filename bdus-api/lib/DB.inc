@@ -41,82 +41,28 @@ class DB
 	 */
 	private function parseStart($app = false, $custom_connection = false)
 	{
-		/*
-		 * check for connection data
-		* 1) proj data
-		* 2) system data
-		* 3) proj sqlite db
-		*/
-		if ($custom_connection AND file_exists($custom_connection)) {
-			$connection_file = $custom_connection;
-		} else if (file_exists(PROJ_DB . 'connect.ini')) {
-			$connection_file = PROJ_DB . 'connect.ini';
-		} else if (file_exists(MAIN_DIR . 'connect.ini')) {
-			$connection_file = MAIN_DIR . 'connect.ini';
-		} else if (!$app AND defined('PROJ_DB') AND file_exists(PROJ_DB . 'bdus.sqlite')) {
-			$connection_string = 'sqlite:' . PROJ_DB . 'bdus.sqlite';
-			$this->db_engine = 'sqlite';
-		} elseif ($app AND file_exists(PROJS_DIR . $app . '/db/bdus.sqlite')) {
-			$connection_string = 'sqlite:' . PROJS_DIR . $app . '/db/bdus.sqlite';
-			$this->db_engine = 'sqlite';
-		} else {
-			throw new myException(tr::get('no_connect_data'));
-		}
-
-		/*
-		 * write connection string
-		*/
-		if ($connection_file) {
-			$connection_arr = parse_ini_file( $connection_file , true);
-
-			if (in_array($_SERVER['HTTP_HOST'], array_keys($connection_arr))) {
-				$connection_arr = $connection_arr[$_SERVER['HTTP_HOST']];
-			} else if (is_array($connection_arr['%'])) {
-				$connection_arr = $connection_arr['%'];
-			} else {
-				throw new myException(tr::sget('no_connect_data_for_host', $_SERVER['HTTP_HOST']));
-			}
-
-
-			if ( !$connection_arr['host'] ) {
-				$connection_arr['host'] = 'localhost';
-			}
-
-			$this->db_engine = $connection_arr['driver'];
-
-			switch($connection_arr['driver']) {
-				case 'mysql':
-				case false:
-					$connection_string = 'mysql:host=' . $connection_arr['host'] . ';dbname=' . $connection_arr['db'] . ';charset=UTF-8';
-					break;
-
-				default:
-					throw new myException(tr::sget('driver_not_supported', $connection_arr['driver']));
-					break;
-			}
-		}
-
-		if (!$connection_string) {
-			throw new myException('no_connect_data');
-		}
-
-		/*
-		 * start PDO
-		*/
 		try {
+
+			$d = DB_connection::getConnectionString($app, $custom_connection);
+			$driver = $d['driver'];
+			$dsn = $d['dsn'];
+			$user = $d['username'];
+			$password = $d['password'];
+
+			$this->db_engine = $driver;
+
 			/**
 			 *  Check if MYSQL_ATTR_INIT_COMMAND method exists (for systems without MySQL)
 			 *  http://stackoverflow.com/questions/2424343/undefined-class-constant-mysql-attr-init-command-with-pdo
 			 */
 
-			$dbOptions = method_exists('PDO', 'MYSQL_ATTR_INIT_COMMAND') ? array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8") : array(1002 => 'SET NAMES utf8');
+			$dbOptions = [];
 
-			$this->db = new PDO(
-					$connection_string,
-					$connection_arr['user'],
-					$connection_arr['password'],
-					$dbOptions
-					);
+			if ($this->db_engine === 'mysql' ) {
+				$dbOptions = method_exists('PDO', 'MYSQL_ATTR_INIT_COMMAND') ? array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8") : array(1002 => 'SET NAMES utf8');
+			}
+
+			$this->db = new PDO( $dsn, $user, $password, $dbOptions );
 
 			$this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
@@ -125,8 +71,15 @@ class DB
 				$this->db->query('PRAGMA foreign_keys = ON;');
 			}
 			return $this;
-		} catch (PDOException $e) {
+
+		} catch( myException $e ) {
+
 			throw new myException($e);
+			
+		} catch (PDOException $e) {
+
+			throw new myException($e);
+
 		}
 	}
 

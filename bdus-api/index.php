@@ -111,7 +111,7 @@ try
 
 <?php
 
-} catch (Error $e) {
+} catch (Throwable $e) {
 
 	if ($_GET['debug']) {
 		echo $e->__toString();
@@ -120,26 +120,6 @@ try
 	}
 
 	Meta::logException($e);
-
-} catch (Exception $e) {
-
-	if ($_GET['debug']) {
-		echo $e->__toString();
-	} else {
-		echo "<h2>Errore.</h2><p>Dettaglio: " . $e->getMessage() . '</p>';
-	}
-
-	Meta::logException($e);
-
-} catch (myException $e) {
-
-	$e->log();
-
-	if ($_GET['debug']) {
-		echo $e->__toString();
-	} else {
-		echo "<h2>Errore.</h2><p>Dettaglio: " . $e->getMessage() . '</p>';
-	}
 
 }
 

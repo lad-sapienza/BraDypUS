@@ -25,22 +25,22 @@ class Controller
 
 	public function render($module, $template, $data = false)
 	{
-		if (file_exists(MOD_DIR . $module . '/tmpl/' . $template . '.html'))
-		{
+		if (file_exists(MOD_DIR . $module . '/tmpl/' . $template . '.html')) {
+			
 			$ext = '.html';
-		}
-		else if (file_exists(MOD_DIR . $module . '/tmpl/' . $template . '.twig'))
-		{
+
+		} else if (file_exists(MOD_DIR . $module . '/tmpl/' . $template . '.twig')) {
+			
 			$ext = '.twig';
-		}
-		else
-		{
+
+		} else {
+
 			throw new myException('Template not found');
+
 		}
 
-		if (!$data)
-		{
-      $data = array();
+		if (!$data) {
+			$data = [];
 		}
 
     $data['uid'] = uniqid('uid');
@@ -51,8 +51,7 @@ class Controller
     $settings['autoescape'] = false;
 		$twig = new Twig_Environment(new Twig_Loader_Filesystem(MOD_DIR . $module . '/tmpl'), $settings);
 
-		if (DEBUG_ON)
-		{
+		if (DEBUG_ON) {
 			$twig->addExtension(new Twig_Extension_Debug());
 		}
 

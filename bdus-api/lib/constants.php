@@ -25,7 +25,7 @@ date_default_timezone_set('Europe/Rome');
 if (!is_dir(MAIN_DIR . 'sessions')){
 	@mkdir(MAIN_DIR . 'sessions');
 	if (!is_dir(MAIN_DIR . 'sessions')){
-		throw new Exception('Cano not create sessions folder');
+		throw new Exception('Cannot create sessions folder');
 	}
 }
 
@@ -67,14 +67,19 @@ if ( defined('PROJ_DIR')) {
 	define ('PROJ_GEO_DIR',		PROJ_DIR . 'geodata/');
 	define ('PROJ_CFG_APPDATA',	PROJ_DIR . 'cfg/app_data.json');
 	define ('PROJ_CFG_TB',		PROJ_DIR . 'cfg/tables.json');
-	define ('PROJ_DB', 			PROJ_DIR . 'db/');
 	$error_log 				= 	PROJ_DIR . 'error.log';
 
 
 	/*
 	 * Create directories that MUST exist
 	 */
-	$must_exist_dirs = array(PROJ_FILES_DIR, PROJ_TMP_DIR, PROJ_BUP_DIR, PROJ_EXP_DIR, PROJ_DB);
+	$must_exist_dirs = [
+		PROJ_FILES_DIR, 
+		PROJ_TMP_DIR, 
+		PROJ_BUP_DIR, 
+		PROJ_EXP_DIR, 
+		PROJ_DIR . 'db'
+	];
 
 	foreach($must_exist_dirs as $dir) {
 		if (!is_dir($dir)) {

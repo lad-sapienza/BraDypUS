@@ -14,11 +14,11 @@ class Meta
    */
   private static function check()
   {
-    if (!defined('PROJ_DB')){
+    if (!defined('PROJ_DIR')){
       return false;
     }
     
-    $metaDbPath = PROJ_DB . 'meta.sqlite';
+    $metaDbPath = PROJ_DIR . 'db/meta.sqlite';
 
     if (!file_exists($metaDbPath)){
       @touch($metaDbPath);

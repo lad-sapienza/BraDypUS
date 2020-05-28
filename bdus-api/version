@@ -1,3 +1,4 @@
+3.15.0[] = "Removed support for constant PROJ_DB"
 3.15.0[] = "Throwable catched in index and controller"
 3.15.0[] = "DB connection information foe engined other than sqlite are located in app_data.json"
 

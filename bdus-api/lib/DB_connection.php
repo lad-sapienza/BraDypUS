@@ -56,7 +56,7 @@ class DB_connection
 	/**
 	 * Connection options priority:
 	 * 1. custom_connection_file
-	 * 2a. PROJ_DB . 'bdus.sqlite'
+	 * 2a. PROJ_DIR . 'db/bdus.sqlite'
 	 * 2b. PROJS_DIR . $app . '/db/bdus.sqlite'
 	 * 3a. PROJ_CFG_APPDATA
 	 * 3b. PROJS_DIR . $app . 'cfg/app_data.json'
@@ -71,9 +71,9 @@ class DB_connection
 
 			$connection_file = $custom_connection_file;
 			
-        } else if (!$app AND defined('PROJ_DB') AND file_exists(PROJ_DB . 'bdus.sqlite')) {
+        } else if (!$app AND defined('PROJ_DIR') AND file_exists(PROJ_DIR . 'db/bdus.sqlite')) {
 
-			$db_path = PROJ_DB . 'bdus.sqlite';
+			$db_path = PROJ_DIR . 'db/bdus.sqlite';
 
 			$driver = 'sqlite';
 

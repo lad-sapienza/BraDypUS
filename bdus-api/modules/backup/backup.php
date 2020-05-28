@@ -83,7 +83,7 @@ class backup_ctrl
 					break;
 
 				case 'sqlite':
-					copy(PROJ_DB . 'bdus.sqlite', $file . '.db');
+					copy(PROJ_DIR . 'db/bdus.sqlite', $file . '.db');
 					break;
 
 				default:

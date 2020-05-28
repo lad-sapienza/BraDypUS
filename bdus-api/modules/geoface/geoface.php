@@ -133,7 +133,7 @@ class geoface_ctrl extends Controller
 
 			if (is_array($geoface['layers']['local'])) {
 				foreach ($geoface['layers']['local'] as &$vec) {
-					$vec['id'] = PROJ_GEO_DIR. $vec['id'];
+					$vec['id'] = PROJ_DIR . "geodata/" . $vec['id'];
 				}
 			}
 

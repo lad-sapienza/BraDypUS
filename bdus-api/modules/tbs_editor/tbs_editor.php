@@ -91,7 +91,7 @@ class tbs_editor_ctrl extends Controller
 				'available_plugins' => is_array(cfg::getPlg()) ? cfg::getPlg() : array(),
 				'available_tables' => cfg::tbEl('all', 'label'),
 				'available_epsgs' => array('4326'=>'WGS84 (EPSG:4326)', '900913' => 'Google Mercator (EPSG:900913)'),
-				'available_geoface_layers' => is_array(utils::dirContent(PROJ_GEO_DIR)) ? utils::dirContent(PROJ_GEO_DIR) : array()
+				'available_geoface_layers' => is_array(utils::dirContent(PROJ_DIR . 'geodata')) ? utils::dirContent(PROJ_DIR . 'geodata') : array()
 				)
 				);
 	}

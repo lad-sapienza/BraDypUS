@@ -59,7 +59,6 @@ if($_SESSION['app']) {
  */
 if ( defined('PROJ_DIR')) {
 	define ('PROJ_CFG_DIR',		PROJ_DIR . 'cfg/');
-	define ('PROJ_FILES_DIR',	PROJ_DIR . 'files/');
 	define ('PROJ_TMPL_DIR',	PROJ_DIR . 'templates/');
 	define ('PROJ_TMP_DIR',		PROJ_DIR . 'tmp/' . $_SESSION['user']['id'] . '/');
 	define ('PROJ_BUP_DIR',		PROJ_DIR . 'backups/');
@@ -73,7 +72,7 @@ if ( defined('PROJ_DIR')) {
 	 * Create directories that MUST exist
 	 */
 	$must_exist_dirs = [
-		PROJ_FILES_DIR, 
+		PROJ_DIR . 'files', 
 		PROJ_TMP_DIR, 
 		PROJ_BUP_DIR, 
 		PROJ_EXP_DIR, 

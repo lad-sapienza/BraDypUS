@@ -1,3 +1,4 @@
+3.15.0[] = "Removed support for constant PROJ_FILES_DIR"
 3.15.0[] = "Removed support for constant PROJ_GEO_DIR"
 3.15.0[] = "Removed support for constant PROJ_DB"
 3.15.0[] = "Throwable catched in index and controller"

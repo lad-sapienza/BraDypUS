@@ -112,11 +112,11 @@ class images
 	 * 			id: required
 	 * 			ext: required
 	 * 			description: optional
-	 * @param string $path, if null defult file path (PROJ_FILES_DIR) will be used
+	 * @param string $path, if null defult file path (PROJ_DIR . 'files') will be used
 	 */
 	public static function getThumbHtml($file_array, $path = false)
 	{
-		$path = $path ? $path : PROJ_FILES_DIR;
+		$path = $path ? $path : PROJ_DIR . 'files';
 
 		$data = self::checkExt($file_array['ext']);
 

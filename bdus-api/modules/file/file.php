@@ -189,7 +189,7 @@ class file_ctrl extends Controller
 				'all_files' => $record->getFullFiles(),
 				'images' => new images(),
 				'prefix' => PREFIX,
-				'path' => PROJ_FILES_DIR
+				'path' => PROJ_DIR . 'files'
 		));
 	}
 }

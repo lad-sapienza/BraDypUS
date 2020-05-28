@@ -128,7 +128,7 @@ class Record implements iRecord
 
 						@copy(
 							$this->tmp_dir . $this->data['core']['filename'] . '.' . $this->data['core']['ext'],
-							PROJ_FILES_DIR . $this->data['core']['id'] . '.' . $this->data['core']['ext']
+							PROJ_DIR . 'files/' . $this->data['core']['id'] . '.' . $this->data['core']['ext']
 						);
 					}
 				}
@@ -151,7 +151,7 @@ class Record implements iRecord
 
 					if (file_exists($this->tmp_dir . $this->data['core']['filename'] . '.' . $this->data['core']['ext'])) {
 
-						@copy($this->tmp_dir . $this->data['core']['filename'] . '.' . $this->data['core']['ext'], PROJ_FILES_DIR . $last_id . '.' . $this->data['core']['ext']);
+						@copy($this->tmp_dir . $this->data['core']['filename'] . '.' . $this->data['core']['ext'], PROJ_DIR . 'files/' . $last_id . '.' . $this->data['core']['ext']);
 					}
 				}
 
@@ -294,7 +294,7 @@ class Record implements iRecord
 
 		//DELETE FILE (deleted only if all db erases are OK)
 		if ($this->tb == PREFIX . 'files') {
-			$file_to_delete = PROJ_FILES_DIR . $id . '.' . $this->getCore('ext');
+			$file_to_delete = PROJ_DIR . 'files/' . $id . '.' . $this->getCore('ext');
 		}
 
 		// RS

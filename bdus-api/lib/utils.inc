@@ -387,7 +387,7 @@ class utils
 	 */
 	public function get_file_path($file_id, $file_ext)
 	{
-		return PROJ_FILES_DIR . $file_id . '.' . $file_ext;
+		return PROJ_DIR . 'files/' . $file_id . '.' . $file_ext;
 	}
 
 	/**

@@ -18,7 +18,7 @@ class backup_ctrl
 	{
 		try
 		{
-			$a = @unlink(PROJ_BUP_DIR . $file);
+			$a = @unlink(PROJ_DIR . 'backups/' . $file);
 
 			if (!$a)
 			{
@@ -38,7 +38,7 @@ class backup_ctrl
 
 	public static function getSavedBups()
 	{
-		$content = utils::dirContent(PROJ_BUP_DIR);
+		$content = utils::dirContent(PROJ_DIR . 'backups');
 
 		if (is_array($content))
 		{
@@ -47,10 +47,10 @@ class backup_ctrl
 			{
 				$html .= '<tr>'
 				. '<td>' . $file . '</td>'
-				. '<td>' . round ( filesize( PROJ_BUP_DIR . $file )/1024/1024, 3 ) . ' MB</td>'
+				. '<td>' . round ( filesize( PROJ_DIR . 'backups/' . $file )/1024/1024, 3 ) . ' MB</td>'
 				. '<td>'
 					. '<div class="btn-group">'
-						.'<button class="download btn btn-info" onclick="backup.download(\'' . PROJ_BUP_DIR . $file . '\')"><i class="glyphicon glyphicon-download-alt"></i> ' . tr::get('download') . '</button>'
+						.'<button class="download btn btn-info" onclick="backup.download(\'' . PROJ_DIR . 'backups/' . $file . '\')"><i class="glyphicon glyphicon-download-alt"></i> ' . tr::get('download') . '</button>'
 						. (utils::canUser('edit') ? ' <button type="button" class="btn btn-danger" onclick="backup.erase(\'' . $file . '\', this)"><i class="glyphicon glyphicon-trash"></i> ' . tr::get('erase') . '</button>' :  '')
 					. '</div>'
 				. '</td>'
@@ -71,7 +71,7 @@ class backup_ctrl
 	{
 		try
 		{
-			$file = PROJ_BUP_DIR . APP . '_' . date('Y-m-d_H-i-s');
+			$file = PROJ_DIR . 'backups/' . APP . '_' . date('Y-m-d_H-i-s');
 
 			$db = new DB();
 

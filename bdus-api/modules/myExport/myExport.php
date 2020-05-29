@@ -13,7 +13,7 @@ class myExport_ctrl
 	 */
 	public static function getContent()
 	{
-		$content = utils::dirContent(PROJ_EXP_DIR);
+		$content = utils::dirContent(PROJ_DIR . 'export/');
 		
 		if (is_array($content))
 		{
@@ -22,8 +22,8 @@ class myExport_ctrl
 			{
 				$html .= '<tr>'
 				. '<td>' . $file . '</td>'
-				. '<td>' . round ( filesize( PROJ_EXP_DIR . $file )/1024/1024, 3 ) . ' MB</td>'
-				. '<td><button class="download btn btn-primary" data-file="' . PROJ_EXP_DIR . $file . '"><i class="glyphicon glyphicon-download-alt"></i> ' . tr::get('download') . '</button> '
+				. '<td>' . round ( filesize( PROJ_DIR . 'export/' . $file )/1024/1024, 3 ) . ' MB</td>'
+				. '<td><button class="download btn btn-primary" data-file="' . PROJ_DIR . 'export/' . $file . '"><i class="glyphicon glyphicon-download-alt"></i> ' . tr::get('download') . '</button> '
 				. (utils::canUser('edit') ? '<button type="button" class="erase btn btn-danger" data-file="' . $file . '"><i class="glyphicon glyphicon-trash"></i> ' . tr::get('erase') . '</button>' :  '') . '</td>'
 				.'</tr>';
 			}
@@ -45,7 +45,7 @@ class myExport_ctrl
 		{
 			$where = $sql ? base64_decode($sql) : '1';
 		
-			$file = PROJ_EXP_DIR . $tb . '.' . date('U');
+			$file = PROJ_DIR . 'export/' . $tb . '.' . date('U');
 		
 			$export_handle = new Export(new DB(), $file, $tb, $where);
 		
@@ -73,7 +73,7 @@ class myExport_ctrl
 	{
 		try
 		{
-			$a = @unlink(PROJ_EXP_DIR . $file);
+			$a = @unlink(PROJ_DIR . 'export/' . $file);
 		
 			if (!$a)
 			{

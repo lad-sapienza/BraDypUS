@@ -68,7 +68,7 @@ class myImport_ctrl extends Controller
 				
 			if ($result['success'])
 			{
-				if (!copy(PROJ_DIR . 'db/bdus.sqlite', PROJ_EXP_DIR . $new_file))
+				if (!copy(PROJ_DIR . 'db/bdus.sqlite', PROJ_DIR . 'export/' . $new_file))
 				{
 					throw new myException('Can not make backup of existing database');
 				}

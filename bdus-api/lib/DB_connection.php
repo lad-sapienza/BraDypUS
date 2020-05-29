@@ -58,7 +58,7 @@ class DB_connection
 	 * 1. custom_connection_file
 	 * 2a. PROJ_DIR . 'db/bdus.sqlite'
 	 * 2b. PROJS_DIR . $app . '/db/bdus.sqlite'
-	 * 3a. PROJ_CFG_APPDATA
+	 * 3a. PROJ_DIR . 'cfg/app_data.json'
 	 * 3b. PROJS_DIR . $app . 'cfg/app_data.json'
 	 *
 	 * @param boolean $app
@@ -83,9 +83,9 @@ class DB_connection
 
 			$driver = 'sqlite';
 
-		} else if (defined('PROJ_CFG_APPDATA')){
+		} else if ( file_exists(PROJ_DIR . 'cfg/app_data.json' ) ){
 
-			$connection_file = PROJ_CFG_APPDATA;
+			$connection_file = PROJ_DIR . 'cfg/app_data.json';
 
 		} else if (defined('PROJS_DIR') && $app ) {
 

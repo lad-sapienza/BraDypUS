@@ -25,8 +25,8 @@ class cfg
 
 			if ($app) {
 				$app_data = PROJS_DIR . $app . '/cfg/app_data.json';
-			} else if (defined('PROJ_CFG_APPDATA')) {
-				$app_data = PROJ_CFG_APPDATA;
+			} else if (defined('PROJ_DIR')) {
+				$app_data = PROJ_DIR . 'cfg/app_data.json';
 			}
 
 			if (!file_exists($app_data)) {
@@ -84,8 +84,8 @@ class cfg
 		switch($what) {
 
 			case 'main':
-				if (!utils::write_formatted_json(PROJ_CFG_APPDATA, self::$data['main'])) {
-					throw new myException('Can not write in ' . PROJ_CFG_APPDATA);
+				if (!utils::write_formatted_json(PROJ_DIR . 'cfg/app_data.json', self::$data['main'])) {
+					throw new myException('Can not write in ' . PROJ_DIR . 'cfg/app_data.json');
 				}
 				break;
 

@@ -1,3 +1,4 @@
+3.15.0[] = "Removed support for constant PROJ_CFG_APPDATA"
 3.15.0[] = "Removed support for constant PROJ_CFG_DIR"
 3.15.0[] = "Removed support for constant PROJ_TMPL_DIR"
 3.15.0[] = "Removed support for constant PROJ_EXP_DIR"

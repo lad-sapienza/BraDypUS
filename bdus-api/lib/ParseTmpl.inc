@@ -27,9 +27,9 @@ class ParseTmpl extends Field
 		$settings = unserialize(CACHE);
 		$settings['autoescape'] = false;
 
-		$twig = new Twig_Environment(new Twig_Loader_Filesystem(PROJ_TMPL_DIR), $settings);
+		$twig = new Twig_Environment(new Twig_Loader_Filesystem(PROJ_DIR . 'templates/'), $settings);
 
-		return $twig->render(str_replace(PROJ_TMPL_DIR, null, $template_file), array(
+		return $twig->render(str_replace(PROJ_DIR . 'templates/', null, $template_file), array(
       'uid' => uniqid(),
       'print' => $this
 		));
@@ -48,34 +48,34 @@ class ParseTmpl extends Field
 
 		$context = $this->context == 'add_new' ? 'edit' : $this->context;
 
-		// given template
-		if ($template AND file_exists(PROJ_TMPL_DIR . $template . '.twig'))
-		{
-			return PROJ_TMPL_DIR . $template . '.twig';
-		}
-		// preference saved template
-		else if (pref::getTmpl($this->tb, $context) && file_exists(PROJ_TMPL_DIR . pref::getTmpl($this->tb, $context)))
-		{
-			return PROJ_TMPL_DIR . pref::getTmpl($this->tb, $context);
-		}
-		// config, context bound, template
-		else if (cfg::tbEl($this->tb, 'tmpl_' . $context) && file_exists(PROJ_TMPL_DIR . cfg::tbEl($this->tb, 'tmpl_' . $context)))
-		{
-			return PROJ_TMPL_DIR . cfg::tbEl($this->tb, 'tmpl_' . $context);
-		}
-		// default, context bound template: {tb_name}_{context}.twig eg. sitarc__siti_edit.twig
-		else if (file_exists(PROJ_TMPL_DIR . $tb . '_' . $context . '.twig'))
-		{
-			return PROJ_TMPL_DIR . $tb . '_' . $context . '.twig';
-		}
-		// default, context indipendent template
-		else if (file_exists(PROJ_TMPL_DIR . $tb . '.twig'))
-		{
-			return PROJ_TMPL_DIR . $tb . '.twig';
-		}
-		// default, no template (field::showall will be used!)
-		else
-		{
+		if ($template AND file_exists(PROJ_DIR . 'templates/' . $template . '.twig')) {
+		
+			// given template
+			return PROJ_DIR . 'templates/' . $template . '.twig';
+
+		} else if (pref::getTmpl($this->tb, $context) && file_exists(PROJ_DIR . 'templates/' . pref::getTmpl($this->tb, $context))) {
+
+			// preference saved template
+			return PROJ_DIR . 'templates/' . pref::getTmpl($this->tb, $context);
+
+		} else if (cfg::tbEl($this->tb, 'tmpl_' . $context) && file_exists(PROJ_DIR . 'templates/' . cfg::tbEl($this->tb, 'tmpl_' . $context))) {
+
+			// config, context bound, template
+			return PROJ_DIR . 'templates/' . cfg::tbEl($this->tb, 'tmpl_' . $context);
+
+		} else if (file_exists(PROJ_DIR . 'templates/' . $tb . '_' . $context . '.twig')) {
+
+			// default, context bound template: {tb_name}_{context}.twig eg. sitarc__siti_edit.twig
+			return PROJ_DIR . 'templates/' . $tb . '_' . $context . '.twig';
+
+		} else if (file_exists(PROJ_DIR . 'templates/' . $tb . '.twig')) {
+
+			// default, context indipendent template
+			return PROJ_DIR . 'templates/' . $tb . '.twig';
+
+		} else {
+
+			// default, no template (field::showall will be used!)
 			return 'default';
 		}
 	}

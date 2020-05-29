@@ -440,7 +440,7 @@ class Field implements iTemplate
         $html = '<div class="pluginrow">' .
                     '<fieldset>';
 
-        if (file_exists(PROJ_TMPL_DIR . str_replace(PREFIX, null, $plg) . '.twig')) {
+        if (file_exists(PROJ_DIR . 'templates/' . str_replace(PREFIX, null, $plg) . '.twig')) {
             $settings = unserialize(CACHE);
             $settings['autoescape'] = false;
 
@@ -448,7 +448,7 @@ class Field implements iTemplate
 
             $this->current_plugin_index = $index;
 
-            $twig = new Twig_Environment(new Twig_Loader_Filesystem(PROJ_TMPL_DIR), $settings);
+            $twig = new Twig_Environment(new Twig_Loader_Filesystem(PROJ_DIR . 'templates/'), $settings);
 
             $html .= $twig->render(str_replace(PREFIX, null, $plg) . '.twig', array(
                     'print' => $this,

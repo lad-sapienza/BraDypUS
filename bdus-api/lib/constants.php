@@ -59,7 +59,6 @@ if($_SESSION['app']) {
  */
 if ( defined('PROJ_DIR')) {
 	define ('PROJ_CFG_DIR',		PROJ_DIR . 'cfg/');
-	define ('PROJ_TMPL_DIR',	PROJ_DIR . 'templates/');
 	define ('PROJ_TMP_DIR',		PROJ_DIR . 'tmp/' . $_SESSION['user']['id'] . '/');
 	define ('PROJ_CFG_APPDATA',	PROJ_DIR . 'cfg/app_data.json');
 	define ('PROJ_CFG_TB',		PROJ_DIR . 'cfg/tables.json');

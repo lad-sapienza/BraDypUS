@@ -12,7 +12,7 @@ class myTmpl_ctrl extends Controller
 	{
 		$tbs = cfg::getNonPlg();
 
-		$tmpls = utils::dirContent(PROJ_TMPL_DIR);
+		$tmpls = utils::dirContent(PROJ_DIR . 'templates/');
 
 		if(!is_array($tmpls))
 		{

@@ -87,7 +87,7 @@ class tbs_editor_ctrl extends Controller
 				'data' => $data,
 				'tb' => $this->get['tb'],
 				'fields' => cfg::fldEl($this->request['tb'], 'all', 'label'),
-				'templates' => utils::dirContent(PROJ_TMPL_DIR),
+				'templates' => utils::dirContent(PROJ_DIR . 'templates/'),
 				'available_plugins' => is_array(cfg::getPlg()) ? cfg::getPlg() : array(),
 				'available_tables' => cfg::tbEl('all', 'label'),
 				'available_epsgs' => array('4326'=>'WGS84 (EPSG:4326)', '900913' => 'Google Mercator (EPSG:900913)'),

@@ -184,7 +184,9 @@ class DB
 					break;
 			}
 		} catch (PDOException $e) {
-			throw new myException($e);
+			Meta::logException($e);
+			// TODO: translate
+			throw new myException('Database error');
 		}
 	}
 

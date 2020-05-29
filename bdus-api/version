@@ -1,3 +1,4 @@
+3.15.0[] = "Enhanced error reporting"
 3.15.0[] = "Removed support for constant PROJ_CFG_TB"
 3.15.0[] = "Removed support for constant PROJ_CFG_APPDATA"
 3.15.0[] = "Removed support for constant PROJ_CFG_DIR"

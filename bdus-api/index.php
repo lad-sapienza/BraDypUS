@@ -116,7 +116,8 @@ try
 	if ($_GET['debug']) {
 		echo $e->__toString();
 	} else {
-		echo "<h2>Errore.</h2><p>Dettaglio: " . $e->getMessage() . '</p>';
+    echo "<h2>Errore.</h2><p>" . $e->getMessage() . '</p>';
+    session_destroy();
 	}
 
 	Meta::logException($e);

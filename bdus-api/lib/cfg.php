@@ -39,13 +39,13 @@ class cfg
 				return;
 			}
 
-			if (!defined('PROJ_CFG_TB')) {
+			if (!file_exists(PROJ_DIR . 'cfg/tables.json')) {
 				throw new myException('tb_config_missing');
 			}
-			$tablesJSON = json_decode(file_get_contents(PROJ_CFG_TB), true);
+			$tablesJSON = json_decode(file_get_contents(PROJ_DIR . 'cfg/tables.json'), true);
 
 			if (!$tablesJSON || empty($tablesJSON)) {
-				throw new myException('Invalid json: ' . PROJ_CFG_TB);
+				throw new myException('Invalid json: ' . PROJ_DIR . 'cfg/tables.json');
 			}
 
 			self::$data['table'] = $tablesJSON['tables'];
@@ -92,8 +92,8 @@ class cfg
 			case 'table':
 				$arr['tables'] = self::$data['table'];
 
-				if (!utils::write_formatted_json(PROJ_CFG_TB, $arr)) {
-					throw new myException('Can not write in ' . PROJ_CFG_TB);
+				if (!utils::write_formatted_json(PROJ_DIR . 'cfg/tables.json', $arr)) {
+					throw new myException('Can not write in ' . PROJ_DIR . 'cfg/tables.json');
 				}
 				break;
 

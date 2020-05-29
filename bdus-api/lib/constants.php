@@ -59,7 +59,6 @@ if($_SESSION['app']) {
  */
 if ( defined('PROJ_DIR')) {
 	define ('PROJ_TMP_DIR',		PROJ_DIR . 'tmp/' . $_SESSION['user']['id'] . '/');
-	define ('PROJ_CFG_TB',		PROJ_DIR . 'cfg/tables.json');
 	$error_log 				= 	PROJ_DIR . 'error.log';
 
 

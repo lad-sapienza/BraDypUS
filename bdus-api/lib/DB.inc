@@ -152,7 +152,7 @@ class DB
 
 			if ( !$values ) $values = [];
 
-			if(!preg_match("/^SELECT/i", $query) AND !preg_match("/^SHOW TABLES/i", $query)) {
+			if(!preg_match("/^SELECT/i", $query) AND !preg_match("/^SHOW TABLES/i", $query) AND $_SESSION['user']['id']) {
 				Meta::addVersion($_SESSION['user']['id'], null, $query, $values);
 			}
 

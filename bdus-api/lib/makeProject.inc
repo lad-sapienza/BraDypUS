@@ -944,14 +944,14 @@ class makeProject
 
 		return array(
 				$proj_dir,
-				$proj_dir . '/backups',
-				$proj_dir . '/cfg',
-				$proj_dir . '/db',
-				$proj_dir . '/export',
-				$proj_dir . '/files',
-				$proj_dir . '/templates',
-				$proj_dir . '/tmp',
-				$proj_dir . '/geodata'
+				$proj_dir . "/backups/",
+				$proj_dir . "/cfg/",
+				$proj_dir . "/db/",
+				$proj_dir . "/export/",
+				$proj_dir . "/files/",
+				$proj_dir . "/templates/",
+				$proj_dir . "/tmp/",
+				$proj_dir . "/geodata/"
 		);
 	}
 

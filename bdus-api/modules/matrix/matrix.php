@@ -36,39 +36,4 @@ class matrix_ctrl extends Controller
 				. '</div>';
 		}
 	}
-	
-	
-	public function getStaticImage()
-	{
-		$tb = $this->get['tb'];
-		$where = $this->get['query'];
-			
-		try
-		{
-			$dotfile = PROJ_TMP_DIR . uniqid('dot_') . '.dot';
-		
-			$matrix = new Matrix($tb, $where, new DB());
-		
-			switch($_SERVER['HTTP_HOST'])
-			{
-				case 'db.bradypus.net':
-				case 'db3.bradypus.net':
-				case 'db-dev.bradypus.net':
-					$img_src = $matrix->write_dot($dotfile)->getFromWeb();
-					break;
-		
-				default:
-					$img_src = $matrix->write_dot($dotfile)->renderDotFile('png');
-					break;
-			}
-		
-			utils::response($img_src, 'success', true);
-		
-		}
-		catch (myException $e)
-		{
-			$e->log();
-			utils::response($e->getMessage(), 'error', true);
-		}
-	}
 }

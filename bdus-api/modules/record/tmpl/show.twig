@@ -83,8 +83,13 @@
 			ajaxURL:'controller.php?force_array=1&obj=record_ctrl&method=check_duplicates',
 			submitURL: 'controller.php?obj=record_ctrl&method=save_data&tb={{ tb }}&{% if id_url %}{{ id_url }}{% else %}a=add_new{% endif %}',
 			success: function(data){
-				layout.tabs.closeActive();
-				api.record.edit('{{ tb }}', (data.inserted_id ? [data.inserted_id] : {{ show_next }}));
+				if (data.inserted_id){
+					layout.tabs.closeActive();
+					api.record.edit('{{ tb }}', [data.inserted_id] );
+				} else {
+					layout.tabs.reloadActive();
+				}
+				
 			}
 		});
 		myForm{{ uid }}.observe();
@@ -174,8 +179,7 @@
 		<script>
 			{% if action == 'read' or action == 'edit' %}
 				$('#container{{ uid }} button.reload').on('click', function(){
-					layout.tabs.closeActive();
-					api.record.{{ action }}('{{ tb }}', [{{ id }}]);
+					layout.tabs.reloadActive();
 				});
 			{% endif %}
 

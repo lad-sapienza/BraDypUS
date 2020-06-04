@@ -124,15 +124,6 @@ class record_ctrl extends Controller
             throw new myException(tr::get('no_id_to_view'));
         }
 
-        // $show_next is the id to show in edit mode, after edit is completed
-        if ($this->request['a'] == 'add_new') {
-            $show_next = "['last_added']";
-        } elseif (is_array($this->request['id'])) {
-            $show_next = "['" . implode($this->request['id']) . "']";
-        } elseif (is_array($this->request['id_field'])) {
-            $show_next = "['" . implode($this->request['id_field']) . "']";
-        }
-
         // no data are retrieved if context is add_new or multiple edit!
         if ($this->request['a'] == 'add_new' or ($this->request['a'] == 'edit' and count($this->request['id']) > 1)) {
             $id_arr = array('new');
@@ -200,7 +191,6 @@ class record_ctrl extends Controller
                     'id_url' => is_array($this->request['id']) ? 'id[]=' . implode('&id[]=', $this->request['id']) : false,
                     'totalRecords' => $total_records,
                     'id' => $flag_idfield ? $record->getCore('id') : $id,
-                    'show_next' => $show_next,
                     'can_edit' => (utils::canUser('edit', $record->getCore('creator')) || (count($this->request['id']) > 1 && utils::canUser('multiple_edit'))),
                     'can_erase' => utils::canUser('edit', $record->getCore('creator')),
                     'continue_url' => $continue_url,

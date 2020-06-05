@@ -1,3 +1,4 @@
+3.15.3[] = "Code cleaning"
 3.15.2[] = "Record page uses layout.tabs.reloadActive when possible"
 3.15.1[] = "Removed support for download Harris Matrix"
 3.15.0[] = "Fixed bug with password recover"

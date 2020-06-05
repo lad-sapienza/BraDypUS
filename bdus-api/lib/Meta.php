@@ -270,12 +270,10 @@ class Meta
     		"aaSorting": [],
     		"iDisplayLength": 30,
     		"bProcessing": true,
-            "bServerSide": true,
-            "sAjaxSource": "$ajaxSource",
-            "sServerMethod": "POST",
-            "aoColumns": [
-                          $m_data
-                      ]
+        "bServerSide": true,
+        "sAjaxSource": "$ajaxSource",
+        "sServerMethod": "POST",
+        "aoColumns": [ $m_data ]
     	});
     </script>
 EOD;

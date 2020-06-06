@@ -448,7 +448,7 @@ class Field implements iTemplate
 
             $this->current_plugin_index = $index;
 
-            $twig = new Twig_Environment(new Twig_Loader_Filesystem(PROJ_DIR . 'templates/'), $settings);
+            $twig = new \Twig\Environment( new \Twig\Loader\FilesystemLoader(PROJ_DIR . 'templates/'), $settings );
 
             $html .= $twig->render(str_replace(PREFIX, null, $plg) . '.twig', array(
                     'print' => $this,

@@ -29,9 +29,6 @@ class ParseTmpl extends Field
 
 		$twig = new \Twig\Environment( new \Twig\Loader\FilesystemLoader(PROJ_DIR . 'templates/'), $settings );
 
-
-		// $twig = new Twig_Environment(new Twig_Loader_Filesystem(PROJ_DIR . 'templates/'), $settings);
-
 		return $twig->render(str_replace(PROJ_DIR . 'templates/', null, $template_file), [
 			'uid' => uniqid(),
 			'print' => $this

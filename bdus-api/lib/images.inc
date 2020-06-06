@@ -73,12 +73,11 @@ class images
 		if ($fileTypeInfo['type'] !== 'image'){
 			return true;
 		}
-
 		$im = new Intervention\Image\ImageManager();
 		$img = $im->make($file)->resize($maxImageSize, $maxImageSize, function ($constraint) {
 				$constraint->aspectRatio();
-					$constraint->upsize();
-			})->save();
+				$constraint->upsize();
+			})->save()->destroy();
 		return true;
 	}
 

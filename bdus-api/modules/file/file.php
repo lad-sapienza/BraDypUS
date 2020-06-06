@@ -25,13 +25,8 @@ class file_ctrl extends Controller
 	 */
 	public function uploadLink()
 	{
-		try
-		{
-			if (
-					!$this->request['dest_table'] ||
-					!$this->request['dest_id']
-					)
-			{
+		try {
+			if ( !$this->request['dest_table'] || !$this->request['dest_id'] ) {
 				throw new myException('file_data_missing');
 			}
 
@@ -39,32 +34,27 @@ class file_ctrl extends Controller
 
 			$result = $this->upload();
 
-			if (!$result['success'])
-			{
+			if (!$result['success']) {
 				throw new myException('error_uploading_file');
 			}
 
 			$record = new Record(PREFIX . 'files', false, new DB());
 
-			$record->setCore(
-					array(
-							PREFIX . 'files' => array(
-									'ext' => $result['ext'],
-									'filename' => $result['filename']
-									)
-							)
-					);
+			$record->setCore([
+				PREFIX . 'files' => [
+					'ext' => $result['ext'],
+					'filename' => $result['filename']
+				]
+			]);
 			$pers = $record->persist();
 
-			if (!$pers)
-			{
+			if (!$pers) {
 				throw new myException('error_saving_file');
 			}
 
 			$link = $record->addUserLink($this->request['dest_table'], $this->request['dest_id']);
 
-			if (!$link)
-			{
+			if (!$link) {
 				$record->delete();
 				throw new myException('error_adding_link');
 			}
@@ -74,17 +64,13 @@ class file_ctrl extends Controller
 
 			echo json_encode($result);
 
-		}
-		catch (myException $e)
-		{
+		} catch (myException $e) {
 			$e->log();
 
-			echo json_encode(
-					array(
-							'status'=>'error',
-							'text' => tr::get($e->getMessage())
-							)
-					);
+			echo json_encode([
+				'status'=>'error',
+				'text' => tr::get($e->getMessage())
+			]);
 		}
 	}
 
@@ -113,7 +99,7 @@ class file_ctrl extends Controller
 
 			$result['thumbnail'] = images::getThumbHtml(array('id' => $result['filename'], 'ext' => $result['ext']), $upload_dir);
 
-			$maxImageSize = cfg::main('maxImageSize') ? cfg::main('maxImageSize') : 1500;
+			$maxImageSize = cfg::main('maxImageSize') ? (int)cfg::main('maxImageSize') : 1500;
 
 			images::resizeIfImg($result['uploadDir'] . $result['filename'] . '.' . $result['ext'], $maxImageSize);
 

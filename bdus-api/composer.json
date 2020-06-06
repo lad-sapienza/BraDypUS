@@ -1,5 +1,6 @@
 {
     "require": {
-        "twig/twig": "^3.0"
+        "twig/twig": "^3.0",
+        "intervention/image": "^2.5"
     }
 }

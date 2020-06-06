@@ -64,11 +64,27 @@ class ComposerStaticInit63dffac3da0006282de7c3f45bc18505
         ),
     );
 
+    public static $prefixesPsr0 = array (
+        'L' => 
+        array (
+            'Less' => 
+            array (
+                0 => __DIR__ . '/..' . '/wikimedia/less.php/lib',
+            ),
+        ),
+    );
+
+    public static $classMap = array (
+        'lessc' => __DIR__ . '/..' . '/wikimedia/less.php/lessc.inc.php',
+    );
+
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
             $loader->prefixLengthsPsr4 = ComposerStaticInit63dffac3da0006282de7c3f45bc18505::$prefixLengthsPsr4;
             $loader->prefixDirsPsr4 = ComposerStaticInit63dffac3da0006282de7c3f45bc18505::$prefixDirsPsr4;
+            $loader->prefixesPsr0 = ComposerStaticInit63dffac3da0006282de7c3f45bc18505::$prefixesPsr0;
+            $loader->classMap = ComposerStaticInit63dffac3da0006282de7c3f45bc18505::$classMap;
 
         }, null, ClassLoader::class);
     }

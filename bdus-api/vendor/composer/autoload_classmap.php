@@ -6,4 +6,5 @@ $vendorDir = dirname(dirname(__FILE__));
 $baseDir = dirname($vendorDir);
 
 return array(
+    'lessc' => $vendorDir . '/wikimedia/less.php/lessc.inc.php',
 );

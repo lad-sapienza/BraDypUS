@@ -1,3 +1,5 @@
+3.16.3[] = "Added support for composer and Twig is loaded by composer"
+
 3.15.3[] = "Code cleaning"
 3.15.2[] = "Record page uses layout.tabs.reloadActive when possible"
 3.15.1[] = "Removed support for download Harris Matrix"

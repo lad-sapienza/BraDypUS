@@ -46,13 +46,17 @@ class Controller
     $data['uid'] = uniqid('uid');
     $data['tr'] = new tr();
 
-    $settings = unserialize(CACHE);
+	$settings = unserialize(CACHE);
+	
+	if (DEBUG_ON) {
+		$settings['debug'] = true;
+	}
 
     $settings['autoescape'] = false;
-		$twig = new Twig_Environment(new Twig_Loader_Filesystem(MOD_DIR . $module . '/tmpl'), $settings);
+		$twig = new \Twig\Environment( new \Twig\Loader\FilesystemLoader(MOD_DIR . $module . '/tmpl'), $settings );
 
 		if (DEBUG_ON) {
-			$twig->addExtension(new Twig_Extension_Debug());
+			$twig->addExtension(new \Twig\Extension\DebugExtension());
 		}
 
 		echo $twig->render($template . $ext, $data);

@@ -109,10 +109,11 @@ if (DEBUG_ON) {
 
 require_once LIB_DIR . 'myException.php';
 require_once LIB_DIR . 'autoLoader.php';
+require_once $root . 'vendor/autoload.php';
 new autoLoader();
 
-require_once $root . 'lib/vendor/Twig/Autoloader.php';
-Twig_Autoloader::register();
+// require_once $root . 'lib/vendor/Twig/Autoloader.php';
+// Twig_Autoloader::register();
 
 set_error_handler('Meta::logError', 6135);
 

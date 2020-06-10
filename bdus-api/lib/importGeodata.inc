@@ -55,8 +55,7 @@ class importGeodata
     $geo_array = is_string($geojson) ? json_decode($geojson, 1) : $geojson;
 
     // stop if geojson is empty or not valid
-    if (!$geo_array || !is_array($geo_array) || !$geo_array['features'] || empty($geo_array['features']))
-    {
+    if (!$geo_array || !is_array($geo_array) || !$geo_array['features'] || empty($geo_array['features'])) {
       throw new myException('GeoJSON string is empty, not well formatted or contains no geometries');
     }
 
@@ -72,20 +71,16 @@ class importGeodata
    */
   public function runImport()
   {
-    if (!$this->db)
-    {
+    if (!$this->db) {
       throw new myException('Database object is missings');
     }
-    if (!$this->tb)
-    {
+    if (!$this->tb) {
       throw new myException('Destination table is missing');
     }
-    if (!$this->geojson)
-    {
+    if (!$this->geojson) {
       throw new myException('Geojson string is missing');
     }
-    if (!$this->idfield)
-    {
+    if (!$this->idfield) {
       throw new myException('ID field is missing');
     }
 
@@ -95,8 +90,7 @@ class importGeodata
       $this->db->beginTransaction();
 
       // Remove existing data
-      if ($this->deleteOld)
-      {
+      if ($this->deleteOld) {
         $this->deletePreviousData();
       }
 
@@ -109,13 +103,11 @@ class importGeodata
       $count = 0;
 
       // Loop in records and write to DB
-      foreach ($geo_array['features'] as $row)
-      {
+      foreach ($geo_array['features'] as $row) {
         $id_value = $row['properties'][$this->idfield];
 
 
-        if (!$id_value || empty($id_value))
-        {
+        if (!$id_value || empty($id_value)) {
          continue;
         }
 
@@ -127,27 +119,25 @@ class importGeodata
 
        $row_id = $res[0]['id'];
 
-       if (!$row_id || empty($row_id))
-       {
+       if (!$row_id || empty($row_id)) {
          continue;
        }
 
        $wkt_geometry = \Symm\Gisconverter\Gisconverter::geojsonToWkt(json_encode($row['geometry']));
 
-       $sql = " INSERT INTO `" . PREFIX . 'geodata` '
+       $sql = " INSERT INTO `" . PREFIX . "geodata` "
          . "(`table_link`, `id_link`, `geometry`) "
          . " VALUES "
          . "(:table_link, :id_link, :geometry) "
          ;
-       $values = array(
+       $values = [
          ':table_link' => $this->tb,
          ':id_link' => $row_id,
          ':geometry' => $wkt_geometry
-       );
+       ];
 
 
-       if (!$this->db->query($sql, $values, 'boolean'))
-       {
+       if (!$this->db->query($sql, $values, 'boolean')) {
          throw new myException('Error in executing SQL: ' . $sql);
        }
 
@@ -157,9 +147,9 @@ class importGeodata
      $this->db->commit();
 
      return $count;
-    }
-    catch (myException $e)
-    {
+    
+    } catch (myException $e) {
+
       $this->db->rollBack();
 
       throw new myException($e);
@@ -179,8 +169,7 @@ class importGeodata
   {
     $sql = "DELETE FROM " . PREFIX . "geodata WHERE `table_link` = '" . $this->tb . "'";
 
-    if (!$this->db->query($sql, false, 'boolean'))
-    {
+    if (!$this->db->query($sql, false, 'boolean')) {
       throw new Exception('Error in deleting previous inserted geodata');
     }
   }

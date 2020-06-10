@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b65b04df932d2dc108423c2b5b351e5b",
+    "content-hash": "acc4a915d9faa6a927b335b66df00cf4",
     "packages": [
         {
             "name": "guzzlehttp/psr7",
@@ -353,6 +353,45 @@
                 "shim"
             ],
             "time": "2020-05-12T16:47:27+00:00"
+        },
+        {
+            "name": "symm/gisconverter",
+            "version": "v1.0.5",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symm/gisconverter.git",
+                "reference": "21ab697b7692b891dac37c64d10c9d83d4433f80"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symm/gisconverter/zipball/21ab697b7692b891dac37c64d10c9d83d4433f80",
+                "reference": "21ab697b7692b891dac37c64d10c9d83d4433f80",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "3.7.*"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.0.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-0": {
+                    "Symm\\Gisconverter": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD"
+            ],
+            "description": "A php library to convert vector geometries between different formats",
+            "abandoned": true,
+            "time": "2014-08-07T13:50:52+00:00"
         },
         {
             "name": "twig/twig",

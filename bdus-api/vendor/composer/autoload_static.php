@@ -65,6 +65,13 @@ class ComposerStaticInit63dffac3da0006282de7c3f45bc18505
     );
 
     public static $prefixesPsr0 = array (
+        'S' => 
+        array (
+            'Symm\\Gisconverter' => 
+            array (
+                0 => __DIR__ . '/..' . '/symm/gisconverter/src',
+            ),
+        ),
         'L' => 
         array (
             'Less' => 

@@ -2,6 +2,7 @@
     "require": {
         "twig/twig": "^3.0",
         "intervention/image": "^2.5",
-        "wikimedia/less.php": "^3.0"
+        "wikimedia/less.php": "^3.0",
+        "symm/gisconverter": "^1.0"
     }
 }

@@ -159,11 +159,6 @@ if (!utils::canUser('enter')) {
 						<?php tr::show('empty_cache'); ?>
 					</li>
 
-					<li <?php echo (utils::canUser('super_admin') && !utils::is_online()) ? 'onclick="core.runMod(\'sync\');"' : 'class="state-disabled"'; ?>>
-						<i class="glyphicon glyphicon-transfer"></i><br />
-						<?php tr::show('sync'); ?>
-					</li>
-
 					<?php if (utils::canUser('super_admin')): ?>
 					<li <?php echo utils::canUser('super_admin') ? 'onclick="core.open({obj: \'test_ctrl\', method: \'test\', title: \'test\'});"' : 'class="state-disabled"'; ?>>
 						<i class="fa fa-flask"></i><br />

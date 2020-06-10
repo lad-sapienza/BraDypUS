@@ -500,27 +500,6 @@ $lang['error_cache_not_emptied'] = "Errore. Non è stato possibile svuotare la c
 $lang['confirm_empty_cache'] = "Sei sicuro di volere svuotare la cache dell'applicazione? La cache aiuta a rendere più veloce il database, ma va eleminata se sono state affettuate modifiche nella struttura del layout";
 $lang['empty_cache_waiting'] = "Attenzione. È in corso lo svuotamento della cache";
 
-// SYNC
-$lang['upload_to_server'] = "Carica la versione locale sul server";
-$lang['download_from_server'] = "Scarica dal server la versione più recente";
-$lang['sync_warning_message'] = "Attenzione. L'azione di sincronizzazione è molto delicata e irreversibile. Eseguita senza la debita attenzione potrebbe provocare la perdita permanente di dati. Proseguire solo se si è sicuri di quello che si sta facendo! Per proseguire è necessario essere collegati alla rete internet";
-$lang['loading_file_list'] = "Attendere. Sto creando la lista dei file da aggiornare. Questa azione potrebbe durare qualche minuto e la durata dipende dal numero dei file e dalla velocità della connessione.";
-$lang['files_to_sync'] = "Lista dei file che verranno sincronizzati";
-$lang['sync'] = "Sincronizza";
-$lang['file_synced'] = "File sincronizzato";
-$lang['app_sync'] = "Sincronizzazione applicazione";
-$lang['write_continue_to_continue'] = "Scrivere CONTINUE e confermare per procedere";
-$lang['continue_text_does_not_match'] = "Attenzione, il testo di controllo inserito non è esatto. Si prega di controllare e riprovare";
-$lang['ftp_not_available'] = "Questa applicazione non sembra disporre di una connessione FTP valida";
-$lang['sync_error'] = "Errore nella procedure di sincronizzazione. Per maggiori dettagli si veda il log degli errori";
-$lang['ok_status_changed'] = "Lo stato dell'applicazione online è stato cambiato";
-$lang['error_status_changed'] = "Errore. Non è stato possibile cambiare lo stato dell'applicazione online";
-$lang['ok_get_status'] = "Lo stato dell'applicazione online è stato recuperato";
-$lang['error_get_status'] = "Errore. Non è possibile recuperare lo stato dell'applicazione online";
-$lang['check_online_status'] = "Controlla lo stato dell'applicazione online";
-$lang['app_locked_click_to_unlock'] = "L'applicazione online è congelata. Clicca per attivarla";
-$lang['app_unlocked_click_to_lock'] = "L'applicazione online è attiva. Clicca per congelarla";
-
 
 $lang['import_geodata'] = "Importa dati geografici";
 $lang['empty_or_wrong_geojson'] = "Errore. Il file geojson caricato è vuoto o non ben formattato";

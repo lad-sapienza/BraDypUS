@@ -27,7 +27,7 @@
 				<hr />
 				<pre>SELECT * FROM `{{ tb }}` </pre>
 
-				<div class="">
+				<div style="margin-bottom:2rem;">
 					<textarea style="width:100%; font-family: Monaco,Menlo,Consolas,'Courier New',monospace;"
 							class="form-control"
 							placeholder="JOIN STATEMENT"
@@ -60,7 +60,7 @@
 
 <script>
 	$('#{{ uid }} .insert').click(function(){
-		$(this).parents('form').find('textarea').insertAtCaret($(this).data('value'));
+		$(this).parents('form').find('textarea[name="querytext"]').insertAtCaret($(this).data('value'));
 	});
 
 	$('#{{ uid }} button.send').on('click', function(){

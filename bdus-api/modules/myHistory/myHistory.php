@@ -16,7 +16,7 @@ class myHistory_ctrl extends Controller
 
 	public static function show_all()
 	{
-		echo Meta::tableTop('errorlog', "./controller.php?&obj=myHistory_ctrl&method=sql2json&tb=errorlog");
+		echo Meta::tableTop('version', "./controller.php?&obj=myHistory_ctrl&method=sql2json&tb=version");
 	}
 
 }

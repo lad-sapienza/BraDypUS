@@ -92,7 +92,7 @@ with values:
 In order to use the string in a query string it must be url-encoded, es:
 ```js
 // javascript
-const urisafe = encodeURI(shortSql);
+const urisafe = encodeURIComponent(shortSql);
 ```
 or
 ```php

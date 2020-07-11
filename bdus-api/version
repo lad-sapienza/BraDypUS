@@ -1,3 +1,4 @@
+3.16.9[] = "MySQL compatibility issues fixed"
 3.16.8[] = "Dropped support for FTP sync"
 3.16.7[] = "symm/gisconverter updated, via composer"
 3.16.6[] = "wikimedia/less.php updated, via composer"

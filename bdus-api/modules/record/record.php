@@ -304,7 +304,7 @@ class record_ctrl extends Controller
 
                 $query = 'SELECT count(*) as `tot` FROM `' . $arr[0] . '` WHERE `' . $arr[1] . '`=:' . $arr[1];
 
-                $res = DB::start()->query($query, array(':' . $arr[1] => $this->request['val']), 'read');
+                $res = DB::start()->query($query, [":{$arr[1]}" => $this->request['val']], 'read');
 
                 if ($res[0]['tot'] > 0) {
                     echo 'error';

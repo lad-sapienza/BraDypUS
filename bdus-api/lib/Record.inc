@@ -112,8 +112,8 @@ class Record implements iRecord
 
 					if ($key !== 'id' AND in_array($key, $this->changed['core'])) {
 
-						$tmp[] = "'" . $key . "' = :" . $key;
-						$values[':' . $key] = $val;
+						$tmp[] = "`{$key}` = :{$key}";
+						$values[":$key"] = $val;
 					}
 				}
 
@@ -137,7 +137,7 @@ class Record implements iRecord
 
 				// CORE.insert
 				foreach ($this->data['core'] as $key => $val) {
-					$values[':' . $key] = $val;
+					$values[":{$key}"] = $val;
 				}
 
 				$values[':creator'] = $_SESSION['user']['id'];
@@ -205,8 +205,8 @@ class Record implements iRecord
 
 						if ($key != 'id') {
 
-							$tmp[] = "'" . $key . "' = :" . $key;
-							$values[':' . $key] = $val;
+							$tmp[] = "`{$key}` = ':{$key}'";
+							$values[":{$key}"] = $val;
 						}
 					}
 
@@ -812,9 +812,9 @@ EOD;
 
 	private function loadUserLinks()
 	{
-		$sql = 'SELECT * FROM `' . PREFIX . 'userlinks` WHERE (`tb_one` = :thistb AND `id_one` = :thisid) OR (`tb_two` = :thistb AND `id_two` = :thisid) ORDER BY `sort`, `id`';
+		$sql = 'SELECT * FROM `' . PREFIX . 'userlinks` WHERE (`tb_one` = ? AND `id_one` = ?) OR (`tb_two` = ? AND `id_two` = ?) ORDER BY `sort`, `id`';
 
-		$userlinks = $this->db->query($sql, array(':thistb' =>$this->tb, ':thisid' =>$this->id), 'read');
+		$userlinks = $this->db->query($sql, [$this->tb, $this->id, $this->tb, $this->id], 'read');
 
 		if ($userlinks) {
 

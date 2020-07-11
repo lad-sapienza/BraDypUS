@@ -53,9 +53,11 @@
 3.13.2[] = "Fixed minor bug in support for automated internal links in the form of @tb.id or @tb.id[label]"
 3.13.1[] = "Fixed bug with JOIN statement in read record, api version 2"
 3.13.0[] = "It is possible to add reference to internal elements via @{table-name}.{record-id} syntax"
+
 3.12.3[] = "Fixed bug with toGeoJson accepting now complex geometry field name"
 3.12.2[] = "Fixed bug with ReadRecord::getTbRecord"
 3.12.1[] = "In GeoJSON export process single row error does not block entire process"
+
 3.11.8[] = "Removed hardcoded prefix divider (__)"
 3.11.7[] = "Files are sorted in ReadRecords"
 3.11.6[] = "Fixed bug with getFiles in API"
@@ -68,6 +70,7 @@
 3.11.2[] = "New API method getChart"
 3.11.2[] = "New API method inspect all, and more information returned in view record method"
 3.11.1[] = "Added support for a more granulated error & history log"
+
 3.10.5[] = "Fixed bug with force update"
 3.10.4[] = "Updated info"
 3.10.3[] = "Added field setting force_default"
@@ -75,6 +78,7 @@
 3.10.1[] = "In GeoJSON export process single row error does not block entire process"
 3.10.1[] = "Fixed bug with version::current"
 3.10.0[] = "Images are down-sized to 1500px by default. The value can be changed in app data"
+
 3.9.8[] = "Added control for sessions folder, created on the fly, if not available"
 3.9.7[] = "Set default field order (id) for tables with order not set"
 3.9.6[] = "Fixed bug with ambiguous field name in Query::setOrder"
@@ -84,6 +88,7 @@
 3.9.3[] = "Added support for data preprocess & manipulation in API"
 3.9.2[] = "History log files are gzipped and backed up if bigger then 1Mb"
 3.9.1[] = "Added support for data postprocess & manipulation in API"
+
 3.8.17[] = "Autoloader supports both php & inc extensions"
 3.8.16[] = "Implemented verb inspect in API"
 3.8.15[] = "Simplified geoJSON creation"
@@ -107,16 +112,19 @@
 3.8.3[] = "Added backlinks support"
 3.8.2[] = "Google maps key moved to main application data"
 3.8.1[] = "New Imperium (Pelagios & DARE) and AWMC basemaps to Geoface"
+
 3.7.3[] = "jQuery change observer replaced with on('change'"
 3.7.3[] = "Fixed bug with ambiguous plugin field names"
 3.7.2[] = "Log file's max size lowered to 3 mb"
 3.7.1[] = "Added new fullrecords parameter in API"
 3.7.0[] = "Removed support for EPSG other then 4326"
 3.7.0[] = "Removed support for openLayers geoface and updated leaflet geoface with support for googlemaps key"
+
 3.6.2[] = "Bug fixed with Advanced search inputs"
 3.6.1[] = "API: q_encoded accepts fields and join parameters"
 3.6.1[] = "API: added the possibility to list output fields in url"
 3.6.1[] = "Added sqlExpert method to API"
+
 3.5.11[] = "Fixed bug with enhanced inputs not extending to 100% width"
 3.5.11[] = "menuValues::getValues groups values for get_values_from_tb"
 3.5.10[] = "Bug fixed with plugins having custom template file (index was not spread to the whole template)"
@@ -140,6 +148,7 @@
 3.5.0[] = "Select2 updated to version 4.0.3"
 3.5.0[] = "Added new QueryBuilder class"
 3.5.0[] = "Added Controller::json method to echo json data with correct header"
+
 3.4.7[] = "First draft of API markdown docs"
 3.4.7[] = "Addedd AWMS and Imperium basemaps to GeoFace"
 3.4.6[] = "Bug fixed with userlinks using first cell of row for row id. The tr#id is used now"
@@ -161,6 +170,7 @@
 3.4.0[] = "Translation strings are not stored in SESSION variable anymore"
 3.4.0[] = "Configuration data are not stored in SESSION variable anymore"
 3.4.0[] = "Added docx, xlsx and pptx to known file extensions"
+
 3.3.9[] = "Fixed bug with spaces and other special chars used in fields which content is used in RS module"
 3.3.8[] = "Fixed minor graphical issue: image thumbnails without proper margin"
 3.3.7[] = "Minified js and css are refer to main version number when loaded"
@@ -186,6 +196,7 @@
 3.3.0[] = "Removed Twig from composer"
 3.3.0[] = "Upgraded Twig to v. 1.16.2"
 3.3.0[] = "Upgraded oyejorge/less.php to v1.7.0.2"
+
 3.2.11[] = "Bug fixed with Matrix error report"
 3.2.10[] = "API accepts new optional GET parameter: records_per_page (default value: 30)"
 3.2.9[] = "Bug fixed with javascript compressing tool"
@@ -211,6 +222,7 @@
 3.2.0[] = "Font Awesome updated to v. 4.0.3"
 3.2.0[] = "Changed all .html extensions in modules template files to .twig"
 3.2.0[] = "Updated all code headers with new license file"
+
 3.1.27[] = "Code inline documentation"
 3.1.27[] = "utils::recursiveFilter accepts now a second, optional, argument to use as filter function"
 3.1.27[] = "Log compression is performed also on cookie authentication"
@@ -362,6 +374,7 @@
 3.1.0[] = "Many instances of button.btn fixed"
 3.1.0[] = "All instances of .icon fixed"
 3.1.0[] = "Deleted referenced to jQuery-UI, css, js and images"
+
 3.0.56[] = "Minor bug fixing"
 3.0.56[] = "New (superAdmin) function: empty application cache"
 3.0.55[] = "Removed deprecated core.myDia()"

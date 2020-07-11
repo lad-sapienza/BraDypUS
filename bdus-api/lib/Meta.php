@@ -149,6 +149,7 @@ class Meta
       $table = self::guessTable($editQuery);
 
       if (!$table) {
+        // TODO: translate
         throw new \Exception("Cannot guess table from query");
       }
 

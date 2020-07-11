@@ -46,8 +46,8 @@ class DB_connection
 		return [
 			'driver' => $data['driver'],
 			'dsn' => $data['dsn'],
-			'username' => $data['db_username'],
-			'password' => $data['db_password']
+			'username' => $data['username'],
+			'password' => $data['password']
 		];
 
         		
@@ -97,7 +97,7 @@ class DB_connection
 
 		}
 
-		$cfg = $connection_file ? json_decode(file_get_contents($connection_file, true)) : ['db_engine' => $driver, 'db_path' => $db_path];
+		$cfg = $connection_file ? json_decode(file_get_contents($connection_file), true) : ['db_engine' => $driver, 'db_path' => $db_path];
 
 		return self::validateData($cfg);
 
@@ -111,7 +111,7 @@ class DB_connection
 			throw new myException("Missing DB Engine");
 		}
 		if( !in_array($cfg['db_engine'], ['sqlite', 'mysql', 'pgsql'])) {
-			throw new myException(tr::sget('driver_not_supported', $cfg_data_arr['driver_not_supported']));
+			throw new myException(tr::sget('driver_not_supported', $cfg['driver_not_supported']));
 		}
 
 		if ($cfg['db_engine'] === 'sqlite' && $cfg['db_path']) {
@@ -139,12 +139,11 @@ class DB_connection
 				$cfg['db_host'] = 'localhost';
 			}
 
-			$dsn = "{$cfg_data_arr['db_engine']}:host={$cfg_data_arr['db_host']};dbname={$cfg_data_arr['db_name']};" .
+			$dsn = "{$cfg['db_engine']}:host={$cfg['db_host']};dbname={$cfg['db_name']};" .
 				($cfg['db_port'] ?  "port={$cfg['db_port']};" : '') .
-				"charset=UTF-8";
+				"charset=utf8";
 
 		}
-		
 		
 		return [
 			'driver' => $cfg['db_engine'],

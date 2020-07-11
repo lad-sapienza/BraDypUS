@@ -1,3 +1,4 @@
+3.16.12[] = "Rewrite of DB_connection"
 3.16.11[] = "BackupMySQL disables versioning"
 3.16.10[] = "Versioning can be turned off and on in DB"
 3.16.9[] = "MySQL compatibility issues fixed"

@@ -17,7 +17,10 @@ class DB
 	 * Database instance
 	 * @var object
 	 */
-	private $db, $db_engine, $app;
+	private $db;
+	private $db_engine;
+	private $app;
+	private $stop_versioning = false;
 
 	/**
 	 *
@@ -31,6 +34,26 @@ class DB
 		$this->app = $app ? $app : $_SESSION['app'];
 
 		$this->parseStart($this->app, $custom_connection);
+	}
+
+	/**
+	 * Sets $stop_versioning to true and prevents versioning of the recprds
+	 *
+	 * @return void
+	 */
+	public function dont_version()
+	{
+		$this->stop_versioning = true;
+	}
+	
+	/**
+	 * Sets $stop_versioning to false and permits versioning of the recprds
+	 *
+	 * @return void
+	 */
+	public function do_version()
+	{
+		$this->stop_versioning = false;
 	}
 
 	/**
@@ -151,8 +174,10 @@ class DB
 
 			if ( !$values ) $values = [];
 
-			if(!preg_match("/^SELECT/i", $query) AND !preg_match("/^SHOW TABLES/i", $query) AND $_SESSION['user']['id']) {
-				Meta::addVersion($_SESSION['user']['id'], null, $query, $values);
+			if (!$this->stop_versioning){
+				if(!preg_match("/^SELECT/i", $query) AND !preg_match("/^SHOW TABLES/i", $query) AND $_SESSION['user']['id']) {
+					Meta::addVersion($_SESSION['user']['id'], null, $query, $values);
+				}
 			}
 
 			$flag = $sql->execute($values);

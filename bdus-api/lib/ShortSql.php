@@ -213,20 +213,26 @@ class ShortSql
      * @param String $part      string to parse
      * @param Integer $index    0 based index of part in the context of the entire query; default: 0
      * @param String $tb        Reference table name, used to validate field
-     * @param Boolean $noValues If true no data bindin array will be provied and values will be put in SQL     * @return Array            SQL string and array of binded values
+     * @param Boolean $noValues If true no data binding array will be provied and values will be put in SQL
+     * @return Array            SQL string and array of binded values
      */
     private static function parseWherePart($part, $index = 0, $tb = false, $noValues = false)
     {
+        // Explode string in parts
         $mini_parts = explode('|', $part);
         if (!is_array($mini_parts) || empty($mini_parts)){
             throw new Exception("Invalid part");
         }
+        // First block of the where statement must contain 3 parts
         if ($index === 0 && count($mini_parts) !== 3) {
             throw new Exception("First block must contain 3 parts");
         }
+        // Block other than forst of the where statement must contain 4 parts, the first being the connector
         if ($index > 0 && count($mini_parts) !== 4) {
             throw new Exception("Block other than first must contain 4 parts");
         }
+
+        // Set $fld, $operator, $value and possibly $connector
         if ($index > 0){
             list($connector, $fld, $operator, $value) = $mini_parts;
             
@@ -234,6 +240,8 @@ class ShortSql
             if (!in_array(strtolower($connector), ['and', 'or'])) {
                 throw new Exception("Connector `$connector` non valid");
             }
+            // Connectors, as operators, are uppercase
+            $connector = strtoupper($connector);
         } else {
             list($fld, $operator, $value) = $mini_parts;
             $connector = false;
@@ -244,11 +252,17 @@ class ShortSql
         if (!in_array(strtolower($operator), $validOperators)) {
             throw new Exception("Operator `$operator` non valid");
         }
+        // Operators, as connectors, are uppercase
+        $operator = strtoupper($operator); // Always upper case
 
+        // Set $tb, $fls and possibly $alias
         list($tb, $fld, $alias) = self::parseAndValidateFld($fld, $tb);
 
+        // $fld must always contain table name as prefix
         $fld = "`$tb`.`$fld`";
 
+        // Set value
+        // If the caret is the forst char, the value is not a string: it is a field name
         if ($value[0] === '^'){
             list($binded_tb, $binded_fld, $binded_alias) = self::parseAndValidateFld(substr($value, 1));
             $binded = "`$binded_tb`.`$binded_fld`";
@@ -281,25 +295,33 @@ class ShortSql
      * @return String
      */
     private static function parseAndValidateFld($fld, $tb = false){
+        // Remove backticks
         $fld = str_replace('`', '', $fld);
+        // if table name is provided as dot-separated prefix, get it
         if (strpos($fld, '.') !== false){
             list($tb, $fld) = explode('.', $fld);
         } else {
             $fld = $fld;
         }
+        // If alias is provided as colon-separated postfix, get it
         list($fld, $alias) = explode(':', $fld);
 
+        // Table name is provided as parameter or as a dot-separated prefix in the field name
+        // If not found an exceptionis thrown
         if (!$tb){
             throw new Exception("Table name is required");
         }
+        // Add PREFIX to table name, if not available
         if(strpos($tb, PREFIX) === false){
             $tb = PREFIX . $tb;
         }
 
+        // Get list of fields frm configuration files
         $flds = array_keys(cfg::fldEl($tb, 'all', 'name'));
         // Add system fields, not available usually on cfg files
         array_push($flds, 'table_link');
         array_push($flds, 'id_link');
+        // proved field must be in fields array; no alien fields are supported
         if (!in_array($fld, $flds)){
             throw new Exception("The field $fld is not available for table $tb");
         }

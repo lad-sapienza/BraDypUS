@@ -1,3 +1,4 @@
+3.15.4[] = "Inline docs for ShortSQL"
 3.15.3[] = "Fixed typo in ShortSQL docs"
 3.15.2[] = "Fixed minor GUI bug in SqlExpert module"
 3.15.1[] = "Fixed bug History showing error log"

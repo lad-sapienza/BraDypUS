@@ -74,12 +74,12 @@ SELECT
 FROM `paths__places` 
     JOIN `paths__geodata` ON  
         id_link = `paths__geodata`.`id_link`
-        and 
+        AND 
         `paths__geodata`.`table_link` = 'paths__places' 
 WHERE  
-    `paths__places`.`name` like ? 
-    and 
-    `paths__places`.`name` like ?  
+    `paths__places`.`name` LIKE ? 
+    AND 
+    `paths__places`.`name` LIKE ?  
 GROUP BY `paths__places`.`id`, `paths__places`.`name`  
 ORDER BY `paths__places`.`id`  DESC
 ```

@@ -42,7 +42,7 @@ class multiupload_ctrl extends Controller
 
 		if (!$dirContent)
 		{
-			echo '<h2>' . tr::sget('no_files_found', $dir) . '</h2>';
+			echo '<h2>' . tr::get('no_files_found', [$dir]) . '</h2>';
 			return;
 		}
 

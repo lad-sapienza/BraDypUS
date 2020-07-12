@@ -170,7 +170,7 @@ class file_ctrl extends Controller
 		$record = new Record($this->request['tb'], $this->request['id'], new DB);
 
 		$this->render('file', 'gallery', array(
-				'title' => tr::sget('file_gallery', cfg::tbEl($this->request['tb'], 'label') . ', id. ' . $this->request['id']),
+				'title' => tr::get('file_gallery', [cfg::tbEl($this->request['tb'], 'label') . ', id. ' . $this->request['id']]),
 				'can_edit' => utils::canUser('edit'),
 				'all_files' => $record->getFullFiles(),
 				'images' => new images(),

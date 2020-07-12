@@ -82,7 +82,7 @@ class import_geodata_ctrl extends Controller
       $totalImports = $import->runImport();
       
       echo '<div class="text-success lead"><i class="glyphicon glyphicon-ok"></i> ' 
-        . tr::sget('geodata_ok_uploaded', array($totalImports)) . '</div>';
+        . tr::get('geodata_ok_uploaded', [$totalImports] ) . '</div>';
       
     }
     catch (myException $e)

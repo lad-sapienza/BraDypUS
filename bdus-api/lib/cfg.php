@@ -30,7 +30,7 @@ class cfg
 			}
 
 			if (!file_exists($app_data)) {
-				throw new myException(tr::sget('file_doesnt_exist', $app_data));
+				throw new myException(tr::get('file_doesnt_exist', [$app_data]));
 			}
 
 			self::$data['main'] = json_decode(file_get_contents($app_data), true);
@@ -65,7 +65,7 @@ class cfg
 					if (file_exists( PROJ_DIR . 'cfg/' . $tb . '.json' )) {
 						$cfgfile = PROJ_DIR . 'cfg/' . $tb . '.json';
 					} else {
-						throw new myException(tr::sget('config_file_missing', $cfgfile));
+						throw new myException(tr::get('config_file_missing', [$cfgfile]));
 					}
 				}
 

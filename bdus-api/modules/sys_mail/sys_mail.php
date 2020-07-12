@@ -13,7 +13,7 @@ class sys_mail_ctrl extends Controller
 	{
 		$to = '';
 		$subject = $this->post['subject'];
-		$body = $this->post['body'] . tr::sget('automatic_email_signature', strtoupper(APP));
+		$body = $this->post['body'] . tr::get('automatic_email_signature', [strtoupper(APP)]);
 
 		$headers = 'From: ' . $this->post['from']  . "\r\n" . 'Reply-To: ' . $this->post['from'] . "\r\n";
 
@@ -36,11 +36,11 @@ class sys_mail_ctrl extends Controller
 
 		if (count($ok) > 0)
 		{
-			$ret_text = '<p>' . tr::sget('ok_mail_sent_to_users', '<ol><li>' . implode('</li><li>', $ok) . '</li></ol>') . '</p>';
+			$ret_text = '<p>' . tr::get('ok_mail_sent_to_users', ['<ol><li>' . implode('</li><li>', $ok) . '</li></ol>']) . '</p>';
 		}
 		if (count($no) > 0)
 		{
-			$ret_text = '<p>' . tr::sget('error_mail_sent_to_users', '<ol><li>' . implode('</li><li>', $no) . '</li></ol>') . '</p>';
+			$ret_text = '<p>' . tr::get('error_mail_sent_to_users', ['<ol><li>' . implode('</li><li>', $no) . '</li></ol>']) . '</p>';
 		}
 
 		echo $ret_text;

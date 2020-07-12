@@ -88,14 +88,14 @@ class BigDump
 			
 			if (!$file)
 			{
-				throw new myException(tr::sget('cannot_open_imported_file', $filename));
+				throw new myException(tr::get('cannot_open_imported_file', [$filename]));
 			}
 			
 	
 			// Set file pointer to $offset
 			if ( (!$isgzip && fseek($file, $offset)!=0) OR ($isgzip  && gzseek($file, $offset)!=0) )
 			{
-				throw new myException(tr::sget('cannot_point_to_offset', $offset));
+				throw new myException(tr::get('cannot_point_to_offset', [$offset]));
 			}
 	
 			

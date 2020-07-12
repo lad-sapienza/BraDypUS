@@ -63,7 +63,7 @@ class Query
     public function __construct(DB $db, $request, $use_preview = false)
     {
         if (!$request['tb']) {
-            throw new myException(tr::sget('parameter_missing', 'tb'));
+            throw new myException(tr::get('parameter_missing', ['tb']));
         }
         $this->tb = $request['tb'];
 
@@ -168,15 +168,15 @@ class Query
     public function getQuery()
     {
         if (!$this->fields) {
-            throw new myException(tr::sget('parameter_missing', array('fields')));
+            throw new myException(tr::get('parameter_missing', ['fields']));
         }
 
         if (!$this->tb) {
-            throw new myException(tr::sget('parameter_missing', array('tb')));
+            throw new myException(tr::get('parameter_missing', ['tb']));
         }
 
         if (!$this->where) {
-            throw new myException(tr::sget('parameter_missing', array('where')));
+            throw new myException(tr::get('parameter_missing', ['where']));
         }
 
         return "SELECT " .
@@ -284,7 +284,7 @@ class Query
                 break;
 
             default:
-                throw new myException(tr::sget('parameter_missing', 'type'));
+                throw new myException(tr::get('parameter_missing', ['type']));
                 break;
         }
         return false;
@@ -459,7 +459,7 @@ class Query
     private function formatFields()
     {
         if (!$this->fields) {
-            throw new myException(tr::sget('parameter_missing', 'fields'));
+            throw new myException(tr::get('parameter_missing', ['fields']));
         }
         $ret = [];
         foreach (array_keys($this->fields) as $f) {

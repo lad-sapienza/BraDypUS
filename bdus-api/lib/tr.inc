@@ -54,34 +54,26 @@ class tr
 
 	/**
 	 *
-	 * Returns formatted string
-	 * @param string $string	input string
-	 * @param mixed $args		array of arguments for formatting
-	 * @param boolean $escape	boolean escape
-	 */
-	public static function sget($string, $args, $escape = false)
-	{
-		if (!is_array($args)) {
-			$args = array($args);
-		}
-		$ret = vsprintf(self::get($string), $args);
-
-		return $escape ? str_replace("'", "\'", $ret) : $ret;
-	}
-
-	/**
-	 *
 	 * Translates $string
 	 * @param string $string string to translate
-	 * @param boolean $escape boolean controle if string mus be escaped or not
+	 * @param mixed $args	single argument (string) or array of arguments for formatting
+	 * @return string	translated string
 	 */
-	public static function get($string, $escape = false)
+	public static function get($string, $args = [])
 	{
 		$lang = self::$language_strings;
 
-		$ret = $lang[$string] ? $lang[$string] : $string;
+		$translated = $lang[$string] ? $lang[$string] : $string;
 
-		return $escape ? str_replace("'", "\'", $ret) : $ret;
+		if (is_string($args)){
+			$args = [$args];
+		}
+
+		if (is_array($args) && count($args) > 0) {
+			return vsprintf(self::get($translated), $args);
+		}
+
+		return $translated;
 	}
 
 	/**

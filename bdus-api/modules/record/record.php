@@ -59,7 +59,7 @@ class record_ctrl extends Controller
                 $data['verbose'] = tr::get('error_saved');
             } else {
                 $data['status'] = 'warning';
-                $data['verbose'] = tr::sget('partial_success_saved', array(implode(', ', $ok), imaplode(', ', $error)));
+                $data['verbose'] = tr::get('partial_success_saved', [ implode(', ', $ok), implode(', ', $error) ]);
             }
         } catch (myException $e) {
             $data['status'] = 'error';
@@ -98,7 +98,7 @@ class record_ctrl extends Controller
             } elseif (count($this->request['id']) == count($ok)) {
                 $data = array('status' => 'success', 'text' => tr::get('all_record_deleted'));
             } else {
-                $data = array('status' => 'warning', 'text' => tr::sget('partially_deleted_with_count', array(count($ok), $count($error) )) );
+                $data = array('status' => 'warning', 'text' => tr::get('partially_deleted_with_count', [ count($ok), $count($error) ] ) );
             }
         } else {
             $data = array('status' => 'error', 'text' => tr::get('no_id_provided') );
@@ -138,7 +138,7 @@ class record_ctrl extends Controller
         $total_records = count($id_arr);
 
         if ($total_records > 500) {
-            echo '<div class="alert">' . tr::sget('too_much_records', array($total_records, '500')) . '</div>';
+            echo '<div class="alert">' . tr::get('too_much_records', [ $total_records, '500'] ) . '</div>';
             return;
         }
 
@@ -186,7 +186,7 @@ class record_ctrl extends Controller
                     'form_id' => uniqid('editadd') . rand(10, 999),
                     'action' => $this->request['a'],
                     'html' => $tmpl->parseAll(),
-                    'multiple_id' => (count($this->request['id']) > 1) ? tr::sget('multiple_edit_alert', array(count($this->request['id']), implode('; id: ', $this->request['id']))) : false,
+                    'multiple_id' => (count($this->request['id']) > 1) ? tr::get('multiple_edit_alert', [ count($this->request['id']), implode('; id: ', $this->request['id']) ] ) : false,
                     'tb' => $this->request['tb'],
                     'id_url' => is_array($this->request['id']) ? 'id[]=' . implode('&id[]=', $this->request['id']) : false,
                     'totalRecords' => $total_records,
@@ -220,7 +220,7 @@ class record_ctrl extends Controller
 
         $this->render('record', 'result', array(
                 'tb' => $this->request['tb'],
-                'records_found' => ($noResult ? tr::get('no_record_found') : tr::sget('x_record_found', $count)),
+                'records_found' => ($noResult ? tr::get('no_record_found') : tr::get('x_record_found', [$count])),
                 'can_user_add' => utils::canUser('add_new'),
                 'can_user_read' => utils::canUser('read'),
                 'can_user_edit' => utils::canUser('edit'),

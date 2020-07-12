@@ -16,13 +16,13 @@ class myImport_ctrl extends Controller
 		{
 			case 'sqlite':
 			case 'mysql':
-				echo '<h3>' . tr::sget('importing_for_driver' , $db->getEngine() ) . '</h3>'
+				echo '<h3>' . tr::get('importing_for_driver', [ $db->getEngine() ] ) . '</h3>'
 					. '<a class="import" href="javascript:void(0)" data-driver="' . $db->getEngine() . '">Import</a>';
 				break;
 				
 			default:
 				echo '<div class="text-error">'
-					. '<strong>' . tr::get('attention') . ':</strong> ' . tr::sget('not_valid_import_driver', strtoupper($db->getEngine()))
+					. '<strong>' . tr::get('attention') . ':</strong> ' . tr::get('not_valid_import_driver', [ strtoupper($db->getEngine()) ])
 					. '</div>';
 				break;
 		}
@@ -77,7 +77,7 @@ class myImport_ctrl extends Controller
 				{
 					throw new myException('Can not move new file to db folder.');
 				}
-				echo json_encode(array('success'=>true, 'status'=>'success', 'text'=>tr::sget('ok_import_file_backup', $new_file)));
+				echo json_encode(array('success'=>true, 'status'=>'success', 'text'=>tr::get('ok_import_file_backup', [ $new_file ])));
 			}
 			else
 			{

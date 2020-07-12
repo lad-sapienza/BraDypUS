@@ -279,7 +279,7 @@ class utils
 				{
 					if ( !@unlink ( $dir . '/' . $file ) )
 					{
-						throw new myException(tr::sget('cannot_delete_file', $file));
+						throw new myException(tr::get('cannot_delete_file', [$file]));
 					}
 				}
 			}
@@ -289,7 +289,7 @@ class utils
 		{
 			if ( !@rmdir( $dir ) )
 			{
-				throw new myException(tr::sget('cannot_delete_dir', $dir));
+				throw new myException(tr::get('cannot_delete_dir', [$dir]));
 			}
 		}
 

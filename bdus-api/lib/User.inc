@@ -180,11 +180,11 @@ class User
         }
 
         if ($this->isDuplicate($email)) {
-            throw new myException(tr::sget('email_present', '<strong>' . $email . '</strong>'));
+            throw new myException(tr::get('email_present', ['<strong>' . $email . '</strong>']));
         }
 
         if (!$this->isValid($email)) {
-            throw new myException(tr::sget('email_not_valid', '<strong>' . $email . '</strong>'));
+            throw new myException(tr::get('email_not_valid', ['<strong>' . $email . '</strong>']));
         }
 
         $statement = "INSERT INTO `" . $this->prefix . "users` "
@@ -219,9 +219,9 @@ class User
         if (!$name && !$email && !$password && !$privilege && !$settings) {
             throw new myException(tr::get('not_enough_data'));
         } elseif ($email and $this->isDuplicate($email, $id)) {
-            throw new myException(tr::sget('email_present', '<strong>' . $email . '</strong>'));
+            throw new myException(tr::get('email_present', ['<strong>' . $email . '</strong>']));
         } elseif ($email && !$this->isValid($email)) {
-            throw new myException(tr::sget('email_not_valid', '<strong>' . $email . '</strong>'));
+            throw new myException(tr::get('email_not_valid', ['<strong>' . $email . '</strong>']));
         } else {
             $partial_arr =  array();
 

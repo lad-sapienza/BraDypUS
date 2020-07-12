@@ -159,7 +159,7 @@ class Field implements iTemplate
                 $html .= '<li><span class="btn-link" onclick="' .
          "api.showResults('" . $dest_tb . "', 'type=encoded&q_encoded=" . base64_encode($l_arr['query']) . "', '" . tr::get('saved_queries') . " (". cfg::tbEl($dest_tb, 'label') . ")');" .
           '" href="javascript:void(0)">' .
-          tr::sget('links_in_table', array('<strong>' . $l_arr['tot'] . '</strong>', '<strong>' . cfg::tbEl($dest_tb, 'label') . '</strong>')) .
+          tr::get('links_in_table', ['<strong>' . $l_arr['tot'] . '</strong>', '<strong>' . cfg::tbEl($dest_tb, 'label') . '</strong>']) .
           '</span>';
 
                 if (cfg::tbEl($dest_tb, 'rs')) {
@@ -198,7 +198,7 @@ class Field implements iTemplate
         $gdata = $this->record->getGeodata();
 
         if ($gdata) {
-            $view_this = '<p>' . tr::sget('x_geodata_available', '<strong>' . count($gdata) . '</strong>')
+            $view_this = '<p>' . tr::get('x_geodata_available', ['<strong>' . count($gdata) . '</strong>'])
             . ' <span class="btn btn-link" onclick="core.runMod(\'geoface\', [\'' . $this->tb . '\', \'' . base64_encode(' `id`= ' . $this->record->getCore('id') . ' ') . '\']);">' . tr::get('view_on_map') . '</span></p>';
         }
 
@@ -325,7 +325,7 @@ class Field implements iTemplate
         if (is_array($data_arr) && !empty($data_arr[0]) && $this->tb != PREFIX . 'files') {
             $html .= '<div class="clearfix gal_button">' .
                     '<button type="button" class="btn btn-sm btn-info service" onclick="api.file.show_gallery(\'' . $this->tb . '\', \'' . $this->record->getCore('id') . '\');"><i class="glyphicon glyphicon-white glyphicon-file"></i> ' .
-                        tr::sget('x_files_linked', count($data_arr)) .
+                        tr::get('x_files_linked', [count($data_arr)]) .
                     '</button>' .
                     '</div>';
         }
@@ -337,7 +337,7 @@ class Field implements iTemplate
             $html .= '<div id="' . $uid . '" class="load_img_placeholder">sostituisci l\'immagine</div>' .
                     '<script>' .
                         "api.fileUpload($('#" . $uid . "'), 'controller.php?obj=file_ctrl&method=upload', {" .
-                            "'button_text': '" . tr::get('replace_file', true). "'," .
+                            "'button_text': '" . str_replace("'", "\'", tr::get('replace_file') ). "'," .
                             "'complete': function(id, fileName, resp){" .
                                 "$('#{$uid}').parents('form').find('input[name*=filename]').val(resp.filename).attr('changed', 'auto');" .
                                 "$('#{$uid}').parents('form').find('input[name*=ext]').val(resp.ext).attr('changed', 'auto');" .
@@ -374,7 +374,7 @@ class Field implements iTemplate
             $html .= '<div id="' . $uid . '" class="load_img_placeholder"></div>' .
                     '<script>' .
                         "api.fileUpload($('#" . $uid . "'), 'controller.php?obj=file_ctrl&method=uploadLink&dest_table=" . $this->tb . "&dest_id=" . $this->record->getId() . "', {" .
-                            "'button_text' : '" . tr::get('click_drag_link_file', true) . "'," .
+                            "'button_text' : '" . str_replace("'", "\'", tr::get('click_drag_link_file')) . "'," .
                             "'limit2one': true," .
                             "'complete': function(id, fileName, resp){" .
                                 "if(resp.status == 'success'){" .
@@ -829,7 +829,7 @@ class Field implements iTemplate
                 if ($otherTb === $this->tb || ($otherTb !== $this->tb && $otherFld !== cfg::tbEl($otherTb, 'id_field'))) {
                     foreach ($val as $v) {
                         $html .= "<span class=\"a\" " .
-                            " onclick=\"api.showResults('" . $otherTb. "', 'type=encoded', '" . tr::sget('contextual_search_in', cfg::tbEl($otherTb, 'label')) . "', {q_encoded: '" . base64_encode("`" . $otherFld . "` = '" . $v . "'"). "'})\">" .
+                            " onclick=\"api.showResults('" . $otherTb. "', 'type=encoded', '" . tr::get('contextual_search_in', [cfg::tbEl($otherTb, 'label')]) . "', {q_encoded: '" . base64_encode("`" . $otherFld . "` = '" . $v . "'"). "'})\">" .
                             utils::format_text($v) .
                             '</span>' . (next($val) === false ? ' ' : ';');
                     }
@@ -865,7 +865,7 @@ class Field implements iTemplate
                 foreach ($val as $v) {
                     if ($setting['active_link']) {
                         $html .= "<span class=\"a\" " .
-                            " onclick=\"api.showResults('" . $this->tb. "', 'type=encoded', '" . tr::sget('contextual_search_in', cfg::tbEl($this->tb, 'label')) . "', {q_encoded: '" . base64_encode(
+                            " onclick=\"api.showResults('" . $this->tb. "', 'type=encoded', '" . tr::get('contextual_search_in', [cfg::tbEl($this->tb, 'label')] ) . "', {q_encoded: '" . base64_encode(
                                     "`" . $setting['fieldname'] . "` LIKE '%;" . $v . "' " .
                                     "OR `" . $setting['fieldname'] . "` LIKE '" . $v . ";%' " .
                                     "OR `" . $setting['fieldname'] . "` = '" . $v . "' "

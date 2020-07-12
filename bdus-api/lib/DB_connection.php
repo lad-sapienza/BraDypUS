@@ -97,7 +97,7 @@ class DB_connection
             $cfg_arr = json_decode(file_get_contents($connection_file), true);
             
             if (!is_array($cfg_arr)){
-                throw new myException(tr::sget("invalid_configuration_file", $connection_file) );
+                throw new myException(tr::get("invalid_configuration_file", [$connection_file]) );
             }
             
             
@@ -121,7 +121,7 @@ class DB_connection
         }
         
         if( !in_array($cfg['db_engine'], ['sqlite', 'mysql', 'pgsql'])) {
-            throw new myException(tr::sget('driver_not_supported', $cfg['db_engine']));
+            throw new myException(tr::get('driver_not_supported', [$cfg['db_engine']]));
         }
         
         // Set DSN for sqlite

@@ -82,7 +82,7 @@ class login_ctrl extends Controller
 					// email to user
 					$to = $post['email'];
 					$subject = tr::get('new_user_email_subject');
-					$message = tr::sget('new_user_email_text', $post['loginapp'])
+					$message = tr::get('new_user_email_text', [$post['loginapp']])
 							. tr::get('email_signature');
 					$headers = 'From: ' . $post['loginapp'] . '@bradypus.net' . "\r\n" . 'Reply-To: ' . $post['loginapp'] . '_db@bradypus.net' . "\r\n";
 
@@ -95,13 +95,13 @@ class login_ctrl extends Controller
 					foreach($admins as $adm)
 					{
 						$to = $adm['email'];
-						$message = tr::sget('new_user_adm_email_text', array($post['loginapp'], $post['loginapp'], $post['name'], $post['email']))
+						$message = tr::get('new_user_adm_email_text', [ $post['loginapp'], $post['loginapp'], $post['name'], $post['email'] ])
 							. tr::get('email_signature');
 
 						@mail($to, $subject, $message, $headers);
 					}
 
-					echo json_encode(array('text'=>tr::sget('ok_user_add', $post['email']), 'status'=>'success'));
+					echo json_encode(array('text'=>tr::get('ok_user_add', [ $post['email'] ]), 'status'=>'success'));
 					return;
 				}
 				else
@@ -238,7 +238,7 @@ class login_ctrl extends Controller
 
 			$to = $this->get['email'];
 			$subject = tr::get('lost_password_email_subject');
-			$message = tr::sget('lost_password_email_text', 'http://db.bradypus.net/?app=' . $this->get['app'] . '&address=' . $this->get['email'] . '&token=' . $token)
+			$message = tr::get('lost_password_email_text', [ 'http://db.bradypus.net/?app=' . $this->get['app'] . '&address=' . $this->get['email'] . '&token=' . $token ])
 				. tr::get('email_signature');
 			$headers = 'From: ' . $this->get['app'] . '@bradypus.net' . "\r\n" . 'Reply-To: ' . $this->get['app'] . '@bradypus.net' . "\r\n";
 

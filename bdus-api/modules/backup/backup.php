@@ -22,9 +22,9 @@ class backup_ctrl
 
 			if (!$a)
 			{
-				throw new myException(tr::sget('error_erasing_file', $file));
+				throw new myException(tr::get('error_erasing_file', [$file]));
 			}
-			$resp['text'] = tr::sget('success_erasing_file', $file);;
+			$resp['text'] = tr::get('success_erasing_file', [$file]);
 			$resp['status'] = 'success';
 		}
 		catch(myException $e)

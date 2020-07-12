@@ -24,7 +24,7 @@ if (!utils::canUser('enter')) {
 <div class="row">
 	<div class="col-md-9">
 		<ul class="home clearfix">
-			<li><h2><?php tr::show('data_mng')?></h2></li>
+			<li><h2><?php echo tr::get('data_mng')?></h2></li>
 			<li class="tb">
 				<div class="clearfix">
 					<div class="pull-left">
@@ -49,114 +49,114 @@ if (!utils::canUser('enter')) {
 
 			<li class="tb_opt"></li>
 
-			<li><h2><?php tr::show('options'); ?></h2>
+			<li><h2><?php echo tr::get('options'); ?></h2>
 				<ul class="searcheable-list">
 
 					<li <?php echo utils::canUser('read') ? 'onclick="core.runMod(\'saved_queries\');"' : 'class="state-disabled"'; ?>>
 						<i class="fa fa-bookmark-o"></i><br />
-						<?php tr::show('saved_queries'); ?>
+						<?php echo tr::get('saved_queries'); ?>
 					</li>
 
 					<li <?php echo utils::canUser('read') ? 'onclick="core.runMod(\'preferences\')"' : 'class="state-disabled"'; ?>>
 						<i class="fa fa-lightbulb-o"></i><br />
-						<?php tr::show('user_preferences'); ?>
+						<?php echo tr::get('user_preferences'); ?>
 					</li>
 
 					<li <?php echo utils::canUser('read') ? 'onclick="core.runMod(\'user\');"' : 'class="state-disabled"'; ?>>
 						<i class="fa fa-group"></i><br />
-						<?php tr::show('user_mng'); ?>
+						<?php echo tr::get('user_mng'); ?>
 					</li>
 
 					<li <?php echo utils::canUser('read') ? 'onclick="core.runMod(\'myExport\');"' : 'class="state-disabled"'; ?>>
 						<i class="fa fa-random"></i><br />
-						<?php tr::show('available_exports'); ?>
+						<?php echo tr::get('available_exports'); ?>
 					</li>
 
 					<li <?php echo utils::canUser('read') ? 'onclick="core.runMod(\'chart\')"' : 'class="state-disabled"'; ?>>
 						<i class="fa fa-bar-chart-o"></i><br />
-						<?php tr::show('saved_charts'); ?>
+						<?php echo tr::get('saved_charts'); ?>
 					</li>
 
 					<li <?php echo utils::canUser('edit') ? 'onclick="core.runMod(\'backup\');"' : 'class="state-disabled"'; ?>>
 						<i class="fa fa-suitcase"></i><br />
-						<?php tr::show('backup'); ?>
+						<?php echo tr::get('backup'); ?>
 					</li>
 
 					<li <?php echo utils::canUser('edit') ? 'onclick="core.runMod(\'search_replace\');"' : 'class="state-disabled"'; ?>>
 						<i class="fa fa-exchange"></i><br />
-						<?php tr::show('find_replace'); ?>
+						<?php echo tr::get('find_replace'); ?>
 					</li>
 
 					<li <?php echo utils::canUser('edit') ? 'onclick="core.runMod(\'multiupload\');"' : 'class="state-disabled"'; ?>>
 						<i class="glyphicon glyphicon-upload"></i><br />
-						<?php tr::show('multiupload'); ?>
+						<?php echo tr::get('multiupload'); ?>
 					</li>
 
           <li <?php echo utils::canUser('edit') ? 'onclick="core.runMod(\'import_geodata\');"' : 'class="state-disabled"'; ?>>
 						<i class="fa fa-cloud-upload"></i><br />
-						<?php tr::show('import_geodata'); ?>
+						<?php echo tr::get('import_geodata'); ?>
 					</li>
 
 					<li <?php echo utils::canUser('admin') ? 'onclick="core.runMod(\'vocabularies\');"' : 'class="state-disabled"'; ?>>
 						<i class="fa fa-quote-left"></i><br />
-						<?php tr::show('vocabulary_mng'); ?>
+						<?php echo tr::get('vocabulary_mng'); ?>
 					</li>
 
           <li <?php echo utils::canUser('admin') ? 'onclick="core.runMod(\'frontpage_editor\')"' : 'class="state-disabled"'; ?>>
 						<i class="fa fa-edit"></i><br />
-						<?php tr::show('front_page_editor'); ?>
+						<?php echo tr::get('front_page_editor'); ?>
 					</li>
 
 					<li <?php echo utils::canUser('admin') ? 'onclick="core.runMod(\'sys_mail\')"' : 'class="state-disabled"'; ?>>
 						<i class="fa fa-envelope-o"></i><br />
-						<?php tr::show('system_email'); ?>
+						<?php echo tr::get('system_email'); ?>
 					</li>
 
 					<li <?php echo utils::canUser('super_admin') ? 'onclick="core.runMod(\'myHistory\');"' : 'class="state-disabled"'; ?>>
 						<i class="fa fa-book"></i><br />
-						<?php tr::show('history'); ?>
+						<?php echo tr::get('history'); ?>
 					</li>
 
 					<li <?php echo utils::canUser('super_admin') ? 'onclick="core.runMod(\'myImport\');"' : 'class="state-disabled"'; ?>>
 						<i class=" fa fa-cloud-upload"></i><br />
-						<?php tr::show('import'); ?>
+						<?php echo tr::get('import'); ?>
 					</li>
 
 					<li <?php echo utils::canUser('super_admin') ? 'onclick="core.runMod(\'translate\');"' : 'class="state-disabled"'; ?>>
 						<i class="fa fa-comment"></i><br />
-						<?php tr::show('system_translate'); ?>
+						<?php echo tr::get('system_translate'); ?>
 					</li>
 
 					<li <?php echo utils::canUser('super_admin') ? 'onclick="core.runMod(\'app_data_editor\');"' : 'class="state-disabled"'; ?>>
 						<i class="fa fa-wrench"></i><br />
-						<?php tr::show('app_data_editor'); ?>
+						<?php echo tr::get('app_data_editor'); ?>
 					</li>
 
 					<li <?php echo utils::canUser('super_admin') ? 'onclick="core.runMod(\'tbs_editor\');"' : 'class="state-disabled"'; ?>>
 						<i class="fa fa-cog"></i><br />
-						<?php tr::show('edit_tbs_data'); ?>
+						<?php echo tr::get('edit_tbs_data'); ?>
 					</li>
 
 					<li <?php echo utils::canUser('super_admin') ? 'onclick="core.runMod(\'flds_editor\');"' : 'class="state-disabled"'; ?>>
 						<i class="fa fa-cogs"></i><br />
-						<?php tr::show('edit_flds_data'); ?>
+						<?php echo tr::get('edit_flds_data'); ?>
 					</li>
 
 		<?php if(!utils::is_online()) :?>
 					<li <?php echo utils::canUser('read') ? 'onclick="core.runMod(\'info\', \'getIP\')"' : 'class="state-disabled"'; ?>>
             <i class="fa fa-code"></i><br />
-						<?php tr::show('ip'); ?>
+						<?php echo tr::get('ip'); ?>
 					</li>
 		<?php endif; ?>
 
 					<li <?php echo utils::canUser('super_admin') ? 'onclick="core.runMod(\'free_sql\');"' : 'class="state-disabled"'; ?>>
 						<i class="glyphicon glyphicon-console"></i><br />
-						<?php tr::show('run_free_sql'); ?>
+						<?php echo tr::get('run_free_sql'); ?>
 					</li>
 
 					<li <?php echo utils::canUser('super_admin') ? 'onclick="core.runMod(\'empty_cache\');"' : 'class="state-disabled"'; ?>>
 						<i class="glyphicon glyphicon-trash"></i><br />
-						<?php tr::show('empty_cache'); ?>
+						<?php echo tr::get('empty_cache'); ?>
 					</li>
 
 					<?php if (utils::canUser('super_admin')): ?>
@@ -168,31 +168,31 @@ if (!utils::canUser('enter')) {
 
 					<li <?php echo utils::canUser('read') ? 'onclick="core.runMod(\'debug\');"' : 'class="state-disabled"'; ?>>
 						<i class="fa fa-bug"></i><br />
-						<?php tr::show('debug'); ?>
+						<?php echo tr::get('debug'); ?>
 					</li>
 
 				</ul>
 			</li>
 
-			<li><h2><?php tr::show('other'); ?></h2>
+			<li><h2><?php echo tr::get('other'); ?></h2>
 				<ul class="searcheable-list">
 					<li onclick="window.open('http://bradypus.net');">
 						<i class="fa fa-globe"></i><br />
-						<?php tr::show('bdus_web'); ?>
+						<?php echo tr::get('bdus_web'); ?>
 					</li>
 
 					<li onclick="core.runMod('info', 'copyright');">
 						<i class="fa fa-info-circle"></i><br />
-						<?php tr::show('info'); ?>
+						<?php echo tr::get('info'); ?>
 					</li>
 
 					<li onclick="api.reloadApp(1);">
 						<i class="fa fa-refresh"></i><br />
-						<?php tr::show('restart'); ?>
+						<?php echo tr::get('restart'); ?>
 					</li>
 					<li onclick="api.logOut();">
 						<i class="fa fa-power-off"></i><br />
-						<?php tr::show('close_application'); ?>
+						<?php echo tr::get('close_application'); ?>
 					</li>
 				</ul>
 			</li>

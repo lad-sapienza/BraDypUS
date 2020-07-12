@@ -30,27 +30,19 @@ class tr
 		// language may be
 		if ( !pref::getLang() )
 		{
-			try
-			{
+			try {
 				$def_lang = cfg::main('lang');
-			}
-			catch(myException $e)
-			{
+			} catch(myException $e) {
 				// do nothing
 			}
 
 			$computer_lang = substr($_SERVER["HTTP_ACCEPT_LANGUAGE"], 0, 2);
 
-			if ($def_lang)
-			{
+			if ($def_lang) {
 				pref::setLang($def_lang);
-			}
-			else if ($computer_lang AND file_exists (LOCALE_DIR . $computer_lang . '.inc') )
-			{
+			} else if ($computer_lang AND file_exists (LOCALE_DIR . $computer_lang . '.inc') ) {
 				pref::setLang($computer_lang);
-			}
-			else
-			{
+			} else {
 				pref::setLang('en');
 			}
 
@@ -69,8 +61,7 @@ class tr
 	 */
 	public static function sget($string, $args, $escape = false)
 	{
-		if (!is_array($args))
-		{
+		if (!is_array($args)) {
 			$args = array($args);
 		}
 		$ret = vsprintf(self::get($string), $args);
@@ -102,25 +93,10 @@ class tr
 	{
 		$lang = self::$language_strings;
 
-		if ($is_string)
-		{
+		if ($is_string) {
 			echo 'var lang = ' . json_encode($lang) . ';';
-		}
-		else
-		{
+		} else {
 			return json_encode($lang);
 		}
 	}
-
-	/**
-	 *
-	 * Uses self::get and echoes translated string
-	 * @param string $string
-	 * @param boolean $escape boolean controle if string mus be escaped or not
-	 */
-	public static function show($string, $escape = false)
-	{
-		echo self::get($string, $escape);
-	}
-
 }

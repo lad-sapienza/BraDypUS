@@ -209,7 +209,7 @@ class DB
 			}
 		} catch (PDOException $e) {
 			Meta::logException($e);
-			throw new myException( tr::get("db_generic_error") );
+			throw new myException( tr::get('db_generic_error') );
 		}
 	}
 

@@ -117,7 +117,7 @@ class DB_connection
         }
         
         if (!$cfg['db_engine']){
-            throw new myException(tr::get("missing_db_engine"));
+            throw new myException(tr::get('missing_db_engine'));
         }
         
         if( !in_array($cfg['db_engine'], ['sqlite', 'mysql', 'pgsql'])) {
@@ -127,7 +127,7 @@ class DB_connection
         // Set DSN for sqlite
         if ( $cfg['db_engine'] === 'sqlite') {
             if (!$cfg['db_path']){
-                throw new myException( tr::get("missing_sqlite_file"));
+                throw new myException( tr::get('missing_sqlite_file'));
             }
             $dsn = "{$cfg['db_engine']}:{$cfg['db_path']}";
         }
@@ -135,15 +135,15 @@ class DB_connection
         if (!$dsn) {
             
             if (!$cfg['db_name']){
-                throw new myException( tr::get("missing_db_name") );
+                throw new myException( tr::get('missing_db_name') );
             }
             
             if (!$cfg['db_username']){
-                throw new myException( tr::get("missing_db_username") );
+                throw new myException( tr::get('missing_db_username') );
             }
             
             if (!$cfg['db_password']){
-                throw new myException(tr::get("missing_db_password"));
+                throw new myException(tr::get('missing_db_password'));
             }
             
             if (!$cfg['db_host']){

@@ -149,7 +149,7 @@ class Meta
       $table = self::guessTable($editQuery);
 
       if (!$table) {
-        throw new \Exception( tr::get("meta_cannot_guess_table") );
+        throw new \Exception( tr::get('meta_cannot_guess_table') );
       }
 
     }

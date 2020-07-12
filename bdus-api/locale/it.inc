@@ -13,6 +13,13 @@ $lang['remember_me'] = "Resta connesso";
 $lang['no_connect_data'] = "Errore. Nessun dato disponibile per la connessione";
 $lang['no_connect_data_for_host'] = "Errore. Nessun dato disponibile per la connessione all'host %s";
 $lang['driver_not_supported'] = "Il driver database %s non è attualmente supportato";
+$lang['invalid_configuration_file'] = "Il file di configurazione %s presenta errori";
+$lang['missing_db_engine'] = "Manca l'indicazione del motore DB nel file di configurazione";
+$lang['missing_db_name'] = "Manca l'indicazione del nome del database nel file di configurazione";
+$lang['missing_db_username'] = "Manca l'indicazione del nome utente del database nel file di configurazione";
+$lang['missing_db_password'] = "Manca l'indicazione della password dell'utente del database nel file di configurazione";
+$lang['missing_sqlite_file'] = "Manca il file di database SQLite";
+$lang['db_generic_error'] = "Errore generico del database. Controlloare il log degli errori per maggiorni informazioni";
 
 $lang['send'] = "Invia";
 $lang['back'] = "Indietro";
@@ -512,7 +519,8 @@ $lang['geodata_ok_uploaded'] = "Nessun errore nel processo di importazione. %s g
 $lang['geodata_error_uploaded'] = "C'è stato qualche errore nel caricare i dati geografici. Nessuna geometria è stata caricata";
 
 $lang['app_is_frozen'] = "Attenzione. Questa applicazione è stata congelata. È possibile leggere tutte le schede ed eseguire ricerche ma non è possibile modificare i dati";
-$lang[''] = "";
+
+$lang['meta_cannot_guess_table'] = "Errore. Non è stato possibile recuperare il nome della tabella di riferimento per salvare una copia del record modificato";
 
 $lang[''] = "";
 $lang[''] = "";

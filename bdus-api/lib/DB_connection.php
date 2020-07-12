@@ -97,8 +97,7 @@ class DB_connection
             $cfg_arr = json_decode(file_get_contents($connection_file), true);
             
             if (!is_array($cfg_arr)){
-                // TODO: translate
-                throw new myException("Invalid configuration file: ${connection_file}");
+                throw new myException(tr::sget("invalid_configuration_file", $connection_file) );
             }
             
             
@@ -118,8 +117,7 @@ class DB_connection
         }
         
         if (!$cfg['db_engine']){
-            // TODO: translate
-            throw new myException("Missing DB Engine");
+            throw new myException(tr::get("missing_db_engine"));
         }
         
         if( !in_array($cfg['db_engine'], ['sqlite', 'mysql', 'pgsql'])) {
@@ -129,8 +127,7 @@ class DB_connection
         // Set DSN for sqlite
         if ( $cfg['db_engine'] === 'sqlite') {
             if (!$cfg['db_path']){
-                // TODO: translate
-                throw new myException("SQLite database file is missing");
+                throw new myException( tr::get("missing_sqlite_file"));
             }
             $dsn = "{$cfg['db_engine']}:{$cfg['db_path']}";
         }
@@ -138,18 +135,15 @@ class DB_connection
         if (!$dsn) {
             
             if (!$cfg['db_name']){
-                // TODO: translate
-                throw new myException("Missing DB Name");
+                throw new myException( tr::get("missing_db_name") );
             }
             
             if (!$cfg['db_username']){
-                // TODO: translate
-                throw new myException("Missing DB Username");
+                throw new myException( tr::get("missing_db_username") );
             }
             
             if (!$cfg['db_password']){
-                // TODO: translate
-                throw new myException("Missing DB Password");
+                throw new myException(tr::get("missing_db_password"));
             }
             
             if (!$cfg['db_host']){

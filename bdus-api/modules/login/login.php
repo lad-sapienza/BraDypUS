@@ -123,7 +123,7 @@ class login_ctrl extends Controller
 	public function out()
 	{
 		$user = new User(new DB());
-    $user->logout();
+    	$user->logout();
 	}
 
 

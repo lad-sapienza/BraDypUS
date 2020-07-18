@@ -250,7 +250,7 @@ class User
                 $val[':settings'] = $settings;
             }
 
-            $statement = 'UPDATE `' . $this->prefix . 'users` SET ' . implode(', ', $partial_arr). ' WHERE `id` = :id';
+            $statement = "UPDATE `{$this->prefix}users` SET " . implode(', ', $partial_arr) . " WHERE `id` = :id";
 
             $val[':id'] = $id;
 

@@ -10,14 +10,18 @@ class app_data_editor_ctrl extends Controller
 {
 	public function getInfo()
 	{
-		$user = new User(new DB());
+		try{
+			$user = new User(new DB());
 		
-		$users = $user->getUser('all');
+			$users = $user->getUser('all');
 		
-		foreach ($users as &$u)
-		{
-			$u['verbose_privilege'] = utils::privilege($u['privilege'], 1);
+			foreach ($users as &$u){
+				$u['verbose_privilege'] = utils::privilege($u['privilege'], 1);
+			}
+		} catch (myException $e){
+			$users = [];
 		}
+		
 		echo $this->render('app_data_editor', 'form', array(
 				'available_langs' => utils::dirContent(LOCALE_DIR),
 				'info' => cfg::main(),

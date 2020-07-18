@@ -45,7 +45,7 @@ class ReadRecord
       'manualLinks'=> self::getManualLinks($app, $tb, $id),
 			'files'      => self::getFiles($app, $tb, $id),
       'geodata'    => self::getGeodata($app, $tb, $id),
-      'rs'         => self::getRs($app, $tb, $id)
+      'rs'         => cfg::tbEl($tb, 'rs') ? self::getRs($app, $tb, $id): false
 		];
   }
 

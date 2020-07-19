@@ -54,7 +54,7 @@ class ShortSqlToJson
 
 			$header['no_records_shown'] = (int) self::getTotal($sql, $values);
 
-			$records = $full_records ? self::getFullData($sql, $values, $tb) : self::getData($sql, $values);
+			$records = $full_records ? self::getFullData($sql, $values, $app, $tb) : self::getData($sql, $values);
 
 			if ($geojson) {
 				return toGeoJson::fromMultiArray( $records, true, $tb );
@@ -88,9 +88,9 @@ class ShortSqlToJson
         return DB::start()->query($sql, $values, 'read');
 	}
 	
-	private static function getFullData($sql, $values = [], $tb)
+	private static function getFullData($sql, $values = [], $app, $tb)
     {
-        $result = self::getData($sql, $values);
+		$result = self::getData($sql, $values);
 
         if (!is_array($result)) {
             return false;
@@ -98,14 +98,11 @@ class ShortSqlToJson
 
 		$fullResult = [];
 
-		$db = DB::start();
-
-        foreach ($result as $id => $row) {
-            $rec = new Record($tb, $row['id'], $db);
-			$rowResult = $rec->readFull();
+		foreach ($result as $id => $row) {
+			$rowResult = ReadRecord::getFull($app, $tb, $row['id']);
 			array_push($fullResult, $rowResult);
-        }
-
+		}
+		
         return $fullResult;
     }
 }

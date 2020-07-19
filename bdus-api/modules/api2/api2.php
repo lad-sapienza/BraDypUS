@@ -92,7 +92,7 @@ class api2 extends Controller
             }
 
             $resp = $this->{$this->verb}();
-
+            
             return $this->array2response($resp);
 
         } catch (Exception $e) {
@@ -120,6 +120,8 @@ class api2 extends Controller
                 'data' => $resp['data'],
                 'mime' => $resp['mime']
             ];
+        } else {
+            return ["data" => $data];
         }
     }
 
@@ -147,6 +149,8 @@ class api2 extends Controller
             if ($pp['halt']) {
                 return 'halt';
             }
+        } else {
+            return $data;
         }
     }
 

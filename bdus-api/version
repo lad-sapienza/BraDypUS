@@ -1,3 +1,4 @@
+3.16.18[] = "Cleaner api2 trace and debug controlled"
 3.16.17[] = "Added support for manespaced libraries in lib folder"
 3.16.16[] = "User class minor bug fixes"
 3.16.15[] = "Removed support for tr::sget replaced by tr::get with second optional argument"
@@ -47,7 +48,7 @@
 3.14.0[] = "Introduced class SqlFromStr in Api::getVocabulary and Api::Search"
 
 3.13.11[] = "Fixed bug with getFullFiles method"
-3.13.10[] = "Fixed bug dith duplicate values in api2::getUniqueVal"
+3.13.10[] = "Fixed bug with duplicate values in api2::getUniqueVal"
 3.13.10[] = "Fixed bug with duplicate values in api2::getUniqueVal"
 3.13.9[] = "Fixed bug not allowing new vocabularies to be defined if no vocabularies are available"
 3.13.8[] = "Removed app_data.search_code"

@@ -99,7 +99,7 @@ class api2 extends Controller
             return $this->array2response([
                 'type' => 'error',
                 'text' => $e->getMessage(),
-                'trace' => json_encode($e->getTrace(), JSON_PRETTY_PRINT)
+                'trace' => $this->debug ? $e->getTrace() : "Turn on API2 debug to read trace"
                 ]);
         }
     }

@@ -1,3 +1,4 @@
+3.16.18[] = "Re-organised and versioned API docs"
 3.16.18[] = "Cleaner api2 trace and debug controlled"
 3.16.17[] = "Added support for manespaced libraries in lib folder"
 3.16.16[] = "User class minor bug fixes"

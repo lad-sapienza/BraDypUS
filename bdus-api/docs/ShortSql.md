@@ -1,8 +1,8 @@
 # ShortSql
 
-ShortSql is an easy to use syntax to compile plain to complez SQL staments that can be safely sent as a query parameter and safely parse and validated on the server.
+ShortSql is a conventional encoding system that compiles to plain to plain SQL and that can be safely sent as a query parameter. The parsing library implements a detialed validation of the input data, which makes it very safe.
 
-ShortSql is based on blocks, separated by tildes (~). The order of the blocks is not important. The first character of a block marks the block type.
+ShortSql is based on indipendent blocks, separated by tildes (~). The order of the blocks is not important, and except for the table block, all other are optional.
 
 
 ## Syntax
@@ -85,7 +85,7 @@ ORDER BY `paths__places`.`id`  DESC
 ```
 with values:
 ```js
-[ '%Magna%', 'H%']
+[ "%Magna%", "H%"]
 ```
 
 ## Caveat
@@ -98,4 +98,27 @@ or
 ```php
 // php
 $urisafe = urlencode($shortSql);
+```
+
+
+### Search in plugin tables (auto JOIN)
+
+```
+@places~?m_toponyms.toponym|=|Dayr%20Katreh
+```
+
+is parsed as 
+
+```SQL
+SELECT *
+  FROM paths__places
+       JOIN
+       `paths__m_toponyms` ON `paths__m_toponyms`.`table_link` = 'paths__places' AND 
+                              `paths__m_toponyms`.`id_link` = `paths__places`.`id`
+ WHERE `paths__m_toponyms`.`toponym` = ?;
+```
+
+with values:
+```js
+[ "Dayr Katreh" ]
 ```

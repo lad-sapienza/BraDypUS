@@ -36,6 +36,8 @@ class autoloader
                 require_once LIB_DIR . $className . '.inc';
             } elseif (file_exists(LIB_DIR . $className . '.php')) {
                 require_once LIB_DIR . $className . '.php';
+            } elseif (file_exists(LIB_DIR . str_replace('\\', DIRECTORY_SEPARATOR, $className) . '.php')) {
+                require_once LIB_DIR . str_replace('\\', DIRECTORY_SEPARATOR, $className) . '.php';
             } elseif (file_exists(MOD_DIR . '/' . $className . '/' . $className . '.php')) {
                 require_once MOD_DIR . '/' . $className . '/' . $className . '.php';
             } elseif (file_exists(LIB_DIR . 'interfaces/' . $className . '.inc')) {

@@ -33,7 +33,7 @@ class GetUniqueVal
             array_push($values, "%{$str}%");
         }
         if ($where) {
-            list($where_sql, $where_values) = ShortSql::getWhere($where, $tb);
+            list($where_sql, $where_values) = \ShortSql\ShortSql::getWhere($where, $tb);
             array_push($sql_part, $where_sql);
             $values = array_merge($values, $where_values);
         }

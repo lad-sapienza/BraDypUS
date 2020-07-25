@@ -1,11 +1,12 @@
 <?php
-
+namespace ShortSql;
 /**
  * Gets Unique values from database
  * @requires ShortSql
  * @requires DB
+ * @requires ReadRecord
  */
-class ShortSqlToJson
+class ToJson
 {	
 	/**
 	 * Runs a query from a shortSQl string and returns results
@@ -41,7 +42,7 @@ class ShortSqlToJson
 			$header['total_rows'] 	= $total_rows ?: (int) self::getTotal($sql, $values);
 			$header['total_pages'] 	= ceil($header['total_rows']/$records_per_page);
 			$header['stripped_table'] = str_replace($app . PREFIX_DELIMITER, null, $tb);
-			$header['table_label'] 	= cfg::tbEl($tb, 'label');
+			$header['table_label'] 	= \cfg::tbEl($tb, 'label');
 			$header['page'] 		= ($page > $header['total_pages']) ? $header['total_pages'] : $page;
 
 			if ($header['total_rows'] > $records_per_page ) {
@@ -79,13 +80,13 @@ class ShortSqlToJson
 	private static function getTotal($sql, $values = [])
     {
         $count_sql = 'SELECT count(*) AS `tot` FROM ( ' . $sql .' ) AS `' . uniqid('a') . '`';
-        $res = DB::start()->query($count_sql, $values);
+        $res = \DB::start()->query($count_sql, $values);
         return $res[0]['tot'];
 	}
 	
 	private static function getData($sql, $values = [])
     {   
-        return DB::start()->query($sql, $values, 'read');
+        return \DB::start()->query($sql, $values, 'read');
 	}
 	
 	private static function getFullData($sql, $values = [], $app, $tb)
@@ -99,7 +100,7 @@ class ShortSqlToJson
 		$fullResult = [];
 
 		foreach ($result as $id => $row) {
-			$rowResult = ReadRecord::getFull($app, $tb, $row['id']);
+			$rowResult = \ReadRecord::getFull($app, $tb, $row['id']);
 			array_push($fullResult, $rowResult);
 		}
 		

@@ -1,7 +1,7 @@
 3.16.20[] = "ShortSql refactored"
 3.16.19[] = "Re-organised and versioned API docs"
 3.16.18[] = "Cleaner api2 trace and debug controlled"
-3.16.17[] = "Added support for manespaced libraries in lib folder"
+3.16.17[] = "Added support for namespaced libraries in lib folder"
 3.16.16[] = "User class minor bug fixes"
 3.16.15[] = "Removed support for tr::sget replaced by tr::get with second optional argument"
 3.16.14[] = "Removed support for tr::show and replaced with echo tr::get"

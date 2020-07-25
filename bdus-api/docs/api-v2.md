@@ -32,8 +32,8 @@ If **all** is provided as id value, the list of the available charts will
 be returned.
 
 Eg.
-- http://db.localhost/api/v2/paths?pretty=1&verb=getChart&id=all
-- http://db.localhost/api/v2/paths?pretty=1&verb=getChart&id=1
+- https://db.bradypus.net/api/v2/paths?pretty=1&verb=getChart&id=all
+- https://db.bradypus.net/api/v2/paths?pretty=1&verb=getChart&id=1
 
 ---
 
@@ -48,13 +48,13 @@ Returns list of unique values used in a specific field of a specific table
 
 
 eg.
-- http://db.localhost/api/v2/paths?pretty=1&verb=getUniqueVal&tb=places&fld=nomos
-- http://db.localhost/api/v2/paths?pretty=1&verb=getUniqueVal&tb=places&fld=nomos&s=polit
-- http://db.localhost/api/v2/paths?pretty=1&verb=getUniqueVal&tb=places&fld=nomos&w=id|>|100
+- https://db.bradypus.net/api/v2/paths?pretty=1&verb=getUniqueVal&tb=places&fld=nomos
+- https://db.bradypus.net/api/v2/paths?pretty=1&verb=getUniqueVal&tb=places&fld=nomos&s=polit
+- https://db.bradypus.net/api/v2/paths?pretty=1&verb=getUniqueVal&tb=places&fld=nomos&w=id|>|100
 
 Please note that the following two examples are equivalent, the first being a shorthand of the second
-- http://db.localhost/api/v2/paths?pretty=1&verb=getUniqueVal&tb=places&fld=nomos&s=polit
-- http://db.localhost/api/v2/paths?pretty=1&verb=getUniqueVal&tb=places&fld=nomos&w=nomos|like|%polit%
+- https://db.bradypus.net/api/v2/paths?pretty=1&verb=getUniqueVal&tb=places&fld=nomos&s=polit
+- https://db.bradypus.net/api/v2/paths?pretty=1&verb=getUniqueVal&tb=places&fld=nomos&w=nomos|like|%polit%
 
 ---
 
@@ -66,7 +66,7 @@ Returns list (first 500 records) of items of a vocabulary
 
 
 Eg.
-- http://db.localhost/api/v2/paths?pretty=1&verb=getVocabulary&voc=place_types
+- https://db.bradypus.net/api/v2/paths?pretty=1&verb=getVocabulary&voc=place_types
 
 ---
 
@@ -78,8 +78,8 @@ Returns full configuration options for a specific table or for all database
 
 
 Eg.
-- http://db.localhost/api/v2/paths?pretty=1&verb=inspect
-- http://db.localhost/api/v2/paths?pretty=1&verb=inspect&tb=places
+- https://db.bradypus.net/api/v2/paths?pretty=1&verb=inspect
+- https://db.bradypus.net/api/v2/paths?pretty=1&verb=inspect&tb=places
 
 ---
 
@@ -91,7 +91,7 @@ Returns full information about the record
 - `id` (GET, integer, **required**): Id (PK) of the record to read
 
 Eg.
-- http://db.localhost/api/v2/paths?pretty=1&verb=read&tb=places&id=1
+- https://db.bradypus.net/api/v2/paths?pretty=1&verb=read&tb=places&id=1
 
 The response structure is similar to the following simplified example:
 

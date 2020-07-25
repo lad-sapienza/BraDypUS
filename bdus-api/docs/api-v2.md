@@ -199,7 +199,7 @@ The response structure is similar to the following simplified example:
 
 Performs a searche in thedatabase using ShortSql and return results
 
-- `shortsql` (GET, string, **required**): ShortSql text of the query to perform. For more information, see [the ShortSql guide](ShortSql) and [some working examples](ShortSQL-Examples).
+- `shortsql` (GET, string, **required**): ShortSql text of the query to perform. For more information, see [the ShortSql guide](ShortSql.md) and [some working examples](ShortSQL-Examples.md).
 - `total_rows` (GET, int, optional, default: false): Used in navigation, if not provided will be calculated
 - `page` (GET, int, optional, default: false): Current page, for paginated results
 - `records_per_page`  (GET, int, optional, default: false): Number of records per page, for paginated results

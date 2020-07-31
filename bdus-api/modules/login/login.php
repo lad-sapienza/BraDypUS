@@ -11,7 +11,7 @@ class login_ctrl extends Controller
 
 	public function loginForm()
 	{
-		$app_data = json_decode(file_get_contents(PROJS_DIR . $this->request['app'] . '/cfg/app_data.json'), true);
+		$app_data = json_decode(file_get_contents(MAIN_DIR . "projects/{$this->request['app']}/cfg/app_data.json"), true);
 
 		$this->render('login', 'login', array(
 				'tr' => new tr(),
@@ -137,9 +137,9 @@ class login_ctrl extends Controller
 
 		try
 		{
-			if (file_exists(PROJS_DIR . $this->get['app'] . '/cfg/app_data.json'))
-			{
-				$app_data = json_decode(file_get_contents(PROJS_DIR . $this->get['app'] . '/cfg/app_data.json'), true);
+			if (file_exists(MAIN_DIR . "projects/{$this->get['app']}/cfg/app_data.json")) {
+
+				$app_data = json_decode(file_get_contents(MAIN_DIR . "projects/{$this->get['app']}/cfg/app_data.json"), true);
 
 				$user = new User(new DB($this->get['app']));
 
@@ -175,7 +175,7 @@ class login_ctrl extends Controller
 	{
 		try
 		{
-			$availables_DB = utils::dirContent(PROJS_DIR);
+			$availables_DB = utils::dirContent(MAIN_DIR . "projects");
 
 			if (!$availables_DB OR !is_array($availables_DB))
 			{
@@ -187,7 +187,7 @@ class login_ctrl extends Controller
 
 			foreach ($availables_DB as $db)
 			{
-				$appl = json_decode(file_get_contents(PROJS_DIR . $db . '/cfg/app_data.json'), true);
+				$appl = json_decode(file_get_contents(MAIN_DIR . "projects/$db/cfg/app_data.json"), true);
 
 				$data[] = array(
 						'db' => $db,

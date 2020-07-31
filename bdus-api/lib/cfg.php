@@ -24,7 +24,7 @@ class cfg
 		if (!self::$data['tables'] || $force_reload || DEBUG_ON) {
 
 			if ($app) {
-				$app_data = PROJS_DIR . $app . '/cfg/app_data.json';
+				$app_data = MAIN_DIR . "projects{$app}/cfg/app_data.json";
 			} else if (defined('PROJ_DIR')) {
 				$app_data = PROJ_DIR . 'cfg/app_data.json';
 			}

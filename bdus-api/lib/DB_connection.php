@@ -56,9 +56,9 @@ class DB_connection
     * Connection options priority:
     * 1. custom_connection_file
     * 2a. PROJ_DIR . 'db/bdus.sqlite'
-    * 2b. PROJS_DIR . $app . '/db/bdus.sqlite'
+    * 2b. MAIN_DIR . "$app/db/bdus.sqlite"
     * 3a. PROJ_DIR . 'cfg/app_data.json'
-    * 3b. PROJS_DIR . $app . 'cfg/app_data.json'
+    * 3b. MAIN_DIR . "projects/$app/cfg/app_data.json"
     *
     * @param boolean $app
     * @param boolean $custom_connection
@@ -76,15 +76,15 @@ class DB_connection
             
             $connection_file = PROJ_DIR . 'cfg/app_data.json';
             
-        } else if (defined('PROJS_DIR') && $app ) {
+        } else if ($app && file_exists(MAIN_DIR. "projects/{$app}cfg/app_data.json") ) {
             
-            $connection_file = PROJS_DIR . $app . 'cfg/app_data.json';
+            $connection_file = MAIN_DIR. "projects/{$app}cfg/app_data.json";
             
         }
         
-        if ($app AND file_exists(PROJS_DIR . $app . '/db/bdus.sqlite')) {
+        if ($app AND file_exists(MAIN_DIR . "projects/{$app}/db/bdus.sqlite")) {
             
-            $cfg['db_path'] = PROJS_DIR . $app . '/db/bdus.sqlite';
+            $cfg['db_path'] = MAIN_DIR . "projects/{$app}/db/bdus.sqlite";
 
         } elseif (defined('PROJ_DIR') AND file_exists(PROJ_DIR . 'db/bdus.sqlite')) {
             

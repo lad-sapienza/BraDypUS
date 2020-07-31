@@ -94,21 +94,18 @@ class makeProject
 
 		foreach($files as $f)
 		{
-			$orig = ($orig_path ? $orig_path : PROJS_DIR . $this->app . '/files') . '/' . $f['filename'] . '_' . $f['id'] . '.' . $f['ext'];
-			$new = PROJS_DIR . $this->app . '/files/' . $f['id'] . '.' . $f['ext'];
+			$orig = ($orig_path ?: MAIN_DIR . "projects/{$this->app}/files") . "/{$f['filename']}_{$f['id']}.{$f['ext']}";
+			$new = MAIN_DIR . "projects/{$this->app}/files/{$f['id']}.{$f['ext']}";
 
-			if (!file_exists($orig))
-			{
+			if (!file_exists($orig)) {
 				error_log('File ' . $orig . ' does not exist');
 				$error[] = true;
 				continue;
 			}
-			if ($orig_path)
-			{
+
+			if ($orig_path) {
 				copy($orig, $new) ? $ok[] = true : $error[] = true;
-			}
-			else
-			{
+			} else {
 				rename($orig, $new) ? $ok[] = true : $error[] = true;
 			}
 		}
@@ -324,17 +321,9 @@ class makeProject
 
 		$new = array('tables' => $new);
 
-		/*
-		echo PROJS_DIR . $this->app . '/cfg/tables.json';
-		echo '<pre>' . json_encode($new, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) . '</pre>';
-		*/
-
-		if (utils::write_formatted_json(PROJS_DIR . $this->app . '/cfg/tables.json', $new))
-		{
+		if (utils::write_formatted_json(MAIN_DIR . "projects/{$this->app}/cfg/tables.json", $new)) {
 			$this->setMsg('Config tables.json updated!', 'success');
-		}
-		else
-		{
+		} else {
 			$this->setMsg('ERROR: config tables.json NOT updated', 'error');
 		}
 
@@ -348,28 +337,22 @@ class makeProject
 
 		require $orig_path . '/' . $tb . '.inc';
 
-		if (!is_array($config['table_fields']))
-		{
+		if (!is_array($config['table_fields'])) {
 			error_log($orig_path . '/' . $tb . '.inc');
 			error_log(var_export($config, true));
-
 		}
-		foreach($config['table_fields'] as $fld_id => $data)
-		{
+
+		foreach($config['table_fields'] as $fld_id => $data) {
 			array_push($new, $this->migrateFld($fld_id, $data));
 		}
 
-		if (file_exists(PROJS_DIR . $this->app . '/cfg/' . $tb . '.json'))
-		{
-			rename(PROJS_DIR . $this->app . '/cfg/' . $tb . '.json', PROJS_DIR . $this->app . '/cfg/' . $tb . '.json.txt');
+		if (file_exists(MAIN_DIR . "projects/{$this->app}/cfg/{$tb}.json")) {
+			rename(MAIN_DIR . "projects/{$this->app}/cfg/{$tb}.json", MAIN_DIR . "projects/{$this->app}/cfg/{$tb}.json.txt");
 		}
 
-		if (utils::write_formatted_json(PROJS_DIR . $this->app . '/cfg/' . $tb . '.json', $new))
-		{
+		if (utils::write_formatted_json(MAIN_DIR . "projects/{$this->app}/cfg/{$tb}.json", $new)) {
 			$this->setMsg('Config file for table ' . $tb . ' created!', 'success');
-		}
-		else
-		{
+		} else {
 			$this->setMsg('ERROR: Config file for table ' . $tb . ' NOT created!', 'error');
 		}
 	}
@@ -379,24 +362,22 @@ class makeProject
 	{
 		require $orig_path . '/' . $tb . '.inc';
 
-		$new = array();
+		$new = [];
 
-		foreach($field as $fld_id => $data)
-		{
+		foreach($field as $fld_id => $data) {
 			array_push($new, $this->migrateFld($fld_id, $data));
 		}
 
 
-		if (file_exists(PROJS_DIR . $this->app . '/cfg/' . str_replace($this->app . '__', null, $tb) . '.json'))
-		{
-			rename(PROJS_DIR . $this->app . '/cfg/' . str_replace($this->app . '__', null, $tb) . '.json', PROJS_DIR . $this->app . '/cfg/' . str_replace($this->app . '__', null, $tb) . '.json.txt');
+		if (file_exists(MAIN_DIR . "projects/{$this->app}/cfg/" . str_replace($this->app . '__', null, $tb) . '.json')) {
+			rename(
+				MAIN_DIR . "projects/{$this->app}/cfg/" . str_replace($this->app . '__', null, $tb) . '.json', 
+				MAIN_DIR . "projects/{$this->app}/cfg/" . str_replace($this->app . '__', null, $tb) . '.json.txt'
+			);
 		}
-		if (utils::write_formatted_json(PROJS_DIR . $this->app . '/cfg/' . str_replace($this->app . '__', null, $tb) . '.json', $new))
-		{
+		if (utils::write_formatted_json(MAIN_DIR . "projects/{$this->app}/cfg/" . str_replace($this->app . '__', null, $tb) . '.json', $new)) {
 			$this->setMsg('Config file for table ' . str_replace($this->app . '__', null, $tb) . ' created!', 'success');
-		}
-		else
-		{
+		} else {
 			$this->setMsg('ERROR: Config file for table ' . str_replace($this->app . '__', null, $tb) . ' NOT created!', 'error');
 
 		}
@@ -562,14 +543,11 @@ class makeProject
 			unset($arr);
 		}
 
-		$file = PROJS_DIR . $this->app . '/cfg/' . str_replace($this->app . '__', null, $tb) . '.json';
+		$file = MAIN_DIR . "projects/{$this->app}/cfg/" . str_replace($this->app . '__', null, $tb) . '.json';
 
-		if (utils::write_formatted_json($file, $tb_obj))
-		{
+		if (utils::write_formatted_json($file, $tb_obj)) {
 			$this->setMsg('File ' . $file . ' created', 'success');
-		}
-		else
-		{
+		} else {
 			$this->setMsg('Error! File ' . $file . ' NOT created', 'error');
 		}
 
@@ -589,7 +567,7 @@ class makeProject
 			$this->setMsg('Error! Table ' . $tb . ' NOT created', 'error');
 		}
 
-		$json = json_decode(file_get_contents(PROJS_DIR . $this->app . '/cfg/tables.json'), true);
+		$json = json_decode(file_get_contents(MAIN_DIR . "projects/{$this->app}/cfg/tables.json"), true);
 
 		if ($isplugin)
 		{
@@ -616,30 +594,25 @@ class makeProject
 		{
 			$array = array('name'=>$tb, 'label'=>$tb, 'order'=>'id', 'id_field'=>'id', 'preview' => 'id');
 
-			if (!is_array($json['tables']))
-			{
-				$json['tables'] = array();
+			if (!is_array($json['tables'])) {
+				$json['tables'] = [];
 			}
-			foreach ($json['tables'] as &$tbdata)
-			{
-				if ($tbdata['name'] == $tb)
-				{
+
+			foreach ($json['tables'] as &$tbdata) {
+				if ($tbdata['name'] == $tb) {
 					$tbdata = $array;
 					$found = true;
 				}
 			}
-			if (!$found)
-			{
+
+			if (!$found) {
 				array_push($json['tables'], $array);
 			}
 		}
 
-		if (utils::write_formatted_json(PROJS_DIR . $this->app . '/cfg/tables.json', $json) )
-		{
+		if (utils::write_formatted_json(MAIN_DIR . "projects/{$this->app}/cfg/tables.json", $json) ) {
 			$this->setMsg('Config file TABLES updated for ' . $tb, 'success');
-		}
-		else
-		{
+		} else {
 			$this->setMsg('Error! Config file TABLES NOT created for ' . $tb, 'error');
 		}
 
@@ -671,13 +644,10 @@ class makeProject
 
 		$tmpl_name = 'auto_' . str_replace($this->app . '__', null, $tb);
 
-		if (utils::write_in_file( PROJS_DIR . $this->app . '/templates/' . $tmpl_name . '.twig', $html) )
-		{
-			$this->setMsg('Created: ' . PROJS_DIR . $this->app . '/templates/' . $tmpl_name . '.twig', 'success');
-		}
-		else
-		{
-			$this->setMsg('Error! Not created: ' . PROJS_DIR . $this->app . '/templates/' . $tmpl_name . '.twig'. 'error');
+		if (utils::write_in_file( MAIN_DIR . "projects/{$this->app}/templates/{$tmpl_name}.twig", $html) ) {
+			$this->setMsg('Created: ' . MAIN_DIR . "projects/{$this->app}/templates/{$tmpl_name}.twig", 'success');
+		} else {
+			$this->setMsg('Error! Not created: ' . MAIN_DIR . "projects/{$this->app}/templates/{$tmpl_name}.twig", 'error');
 		}
 
 		return $this;
@@ -940,7 +910,7 @@ class makeProject
 	 */
 	private function getDirs()
 	{
-		$proj_dir = PROJS_DIR . $this->app;
+		$proj_dir = MAIN_DIR . "projects/{$this->app}";
 
 		return array(
 				$proj_dir,
@@ -961,7 +931,7 @@ class makeProject
 	 */
 	private function getFiles()
 	{
-		$proj_dir = PROJS_DIR . $this->app;
+		$proj_dir = MAIN_DIR . "projects/{$this->app}";
 
 		return array(
 				array('name' =>$proj_dir . '/error.log'),

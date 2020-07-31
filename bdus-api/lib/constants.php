@@ -10,7 +10,6 @@
  */
 
 define ( 'MAIN_DIR',	$basePath);
-define ( 'PROJS_DIR',	MAIN_DIR . 'projects/' );
 define ( 'LIB_DIR',		MAIN_DIR . 'lib/' );
 define ( 'MOD_DIR',		MAIN_DIR . 'modules/' );
 define ( 'LOCALE_DIR',	MAIN_DIR . 'locale/');
@@ -49,7 +48,7 @@ session_start();
 define ( 'PREFIX_DELIMITER', '__');
 
 if($_SESSION['app']) {
-	define ( 'PROJ_DIR', PROJS_DIR . $_SESSION['app']."/");
+	define ( 'PROJ_DIR', MAIN_DIR . "projects/{$_SESSION['app']}/");
 	define ( 'APP', $_SESSION['app']);
 	define ( 'PREFIX', APP . PREFIX_DELIMITER);
 }
@@ -112,8 +111,6 @@ require_once $root . 'vendor/autoload.php';
 new autoLoader();
 
 set_error_handler('Meta::logError', 6135);
-
-tr::load_file();
 
 if (defined('PROJ_DIR')) {
 	cfg::load(false, true);

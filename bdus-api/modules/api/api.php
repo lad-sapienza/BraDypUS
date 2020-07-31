@@ -73,7 +73,7 @@ class api_ctrl extends Controller
 			// Check all input data
 
 			// $_GET['app']: mandatory
-			$valid_apps = utils::dirContent(PROJS_DIR);
+			$valid_apps = utils::dirContent(MAIN_DIR . "projects");
 			if (!$this->get['app'] || !in_array($this->get['app'], $valid_apps)) {
 				throw new Exception("Invalid app {$this->get['app']}. App must be one of " . implode(', ', $valid_apps));
 			}

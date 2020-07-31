@@ -39,7 +39,7 @@
       {% endif %}
     });
 
-{% if is_online %}
+{% if ga_id %}
     var _gaq = _gaq || [];
     _gaq.push(['_setAccount', '{{ ga_id }}']);
     _gaq.push(['_trackPageview']);

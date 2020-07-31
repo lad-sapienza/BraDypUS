@@ -174,7 +174,9 @@ class Charts
 	 */
 	public function getCharts($id = false)
 	{
-		return $this->db->query('SELECT * FROM `' . PREFIX . 'charts` WHERE ' . ( $id ? ' `id`=' . $id : ' 1 ') , false, 'read');
+		$where = $id ? "`id` = ?" :  "1";
+		$val = $id ? [$id] : [];
+		return $this->db->query("SELECT * FROM `" . PREFIX . "charts` WHERE {$where}", $val, 'read');
 	}
 
 	public function update($id, $name = false, $query = false)

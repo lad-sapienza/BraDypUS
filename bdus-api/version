@@ -1,4 +1,5 @@
-3.16.24[] = "Table options are statically loaded"
+3.16.26[] = "Better error management with chart module"
+3.16.25[] = "Table options are statically loaded"
 3.16.24[] = "Hash Actions moved to separate file"
 3.16.23[] = "Fixed bug with DEBUG_ON setting"
 3.16.23[] = "home renamed to home_ctrl"

@@ -363,6 +363,7 @@ $lang['error_update_chart'] = "Error. The chart was not updated";
 $lang['sql_not_allowed'] = "The following SQL functions are not allowed for security reasons, and will be aumatically removed from the query";
 $lang['text'] = "Text";
 $lang['edit_chart'] = "Edit chart";
+$lang['chart_id_missing'] = "The chart with id %s was not found in the database";
 $lang['reload_sys_required'] = "To apply the changes a system restart is required";
 $lang['error_getting_geodata'] = "Error in getting the geographic data. More details in error log";
 $lang['view_on_map'] = "View on map";

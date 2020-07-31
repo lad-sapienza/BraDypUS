@@ -405,6 +405,7 @@ $lang['error_update_chart'] = "Errore. Il grafico non è stato aggiornato. Maggi
 $lang['sql_not_allowed'] = "Le seguenti funzioni SQL non sono ammessi per motivi di sicurezza e verranno automaticamente rimossi dal testo della query";
 $lang['text'] = "Testo";
 $lang['edit_chart'] = "Modifica grafico";
+$lang['chart_id_missing'] = "Il grafico con id %s non è stato trovato nel database";
 
 $lang['reload_sys_required'] = "Per rendere effettiva la scelta è necessario riavviare il sistema";
 

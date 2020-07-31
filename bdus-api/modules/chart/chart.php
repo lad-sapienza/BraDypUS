@@ -143,15 +143,22 @@ class chart_ctrl extends Controller
 	 */
 	public function display_chart()
 	{
-		$chart = new Charts(new DB());
+		try {
+			$chart = new Charts(new DB());
 
-		$chart->formatResult($this->get['id']);
+			$chart->formatResult($this->get['id']);
 
-		$this->render('chart', 'display', array(
+			$this->render('chart', 'display', array(
 				'uid'	=> uniqid('chart'),
 				'tr'	=> new tr(),
 				'data'	=> $chart->getData()
 				));
+
+		} catch (\Throwable $th) {
+			echo utils::message(tr::get("chart_id_missing", [$this->get['id']]), 'error', true);
+		}
+		
+		
 	}
 
 

@@ -40,8 +40,8 @@ var layout = {
             $('#tabs').toggle();
         });
         
-        $.get('./?obj=home&method=main_home', function(data){
-            $.get('./?obj=home&method=table_menu&tb=' + $($.parseHTML(data)).find('select.tb').val(), function(data2){
+        $.get('./?obj=home_ctrl&method=main_home', function(data){
+            $.get('./?obj=home_ctrl&method=table_menu&tb=' + $($.parseHTML(data)).find('select.tb').val(), function(data2){
                 $('#home').html(data);
                 $('#home').find('li.tb_opt').html(data2);
             });
@@ -51,7 +51,7 @@ var layout = {
             $(this)
             .parents('li.tb').next('li.tb_opt')
             .hide()
-            .load('./?obj=home&method=table_menu&tb=' + $(this).val(), function(){
+            .load('./?obj=home_ctrl&method=table_menu&tb=' + $(this).val(), function(){
                 $(this).fadeIn('slow');
             });
         });

@@ -10,7 +10,7 @@
  */
 
 
-class home extends Controller 
+class home_ctrl extends Controller 
 {
     public function showAll()
     {

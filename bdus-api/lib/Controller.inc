@@ -100,7 +100,7 @@ class Controller
 			}
 
 		} else {
-			$home = new home($this->get, $this->post, $this->request);
+			$home = new home_ctrl($this->get, $this->post, $this->request);
 			$home->showAll();
 		}
 	}

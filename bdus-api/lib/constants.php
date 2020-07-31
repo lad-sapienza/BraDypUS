@@ -85,35 +85,25 @@ define ('ERROR_LOG', $error_log);
 ini_set('error_log', ERROR_LOG);
 
 
-// DEBUG OPTIONS
-if ($__go_debug){
+/**
+ * If debug=1 or debug=1 has previously set, debug is turned
+ * If debug=0, debug is turned off
+ */ 
+
+if ( @$_REQUEST['debug'] === '1' || $_SESSION['debug_mode'] ) {
 	$_SESSION['debug_mode'] = true;
-}
-
-if ($__stop_debug){
-	$_SESSION['debug_mode'] = false;
-}
-
-if ($_SESSION['debug_mode']){
 	define('DEBUG_ON', true);
+	define('CACHE', serialize( [ "autoescape" => false, "debug" => true ] ));
 } else {
+	$_SESSION['debug_mode'] = false;
 	define('DEBUG_ON', false);
+	define('CACHE', serialize( [ "autoescape" => false, "cache" => "cache"] ));
 }
-
-if (DEBUG_ON) {
-	define('CACHE', serialize( ['debug' => true, "cache" => false] ));
-} else {
-	define('CACHE', serialize( ['cache'=>'cache'] ));
-}
-
 
 require_once LIB_DIR . 'myException.php';
 require_once LIB_DIR . 'autoLoader.php';
 require_once $root . 'vendor/autoload.php';
 new autoLoader();
-
-// require_once $root . 'lib/vendor/Twig/Autoloader.php';
-// Twig_Autoloader::register();
 
 set_error_handler('Meta::logError', 6135);
 

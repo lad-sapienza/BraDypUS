@@ -40,8 +40,7 @@ class Controller
 		}
 
 		$settings = unserialize(CACHE);
-		$settings['autoescape'] = false;
-
+		
 		$twig = new \Twig\Environment( new \Twig\Loader\FilesystemLoader(MOD_DIR . $module . '/tmpl'), $settings );
 		if ($settings['debug']) {
 			$twig->addExtension(new \Twig\Extension\DebugExtension());

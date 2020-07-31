@@ -11,7 +11,6 @@ ob_start();
 try {
 
 	$basePath = './';
-	@$_REQUEST['debug'] ? $__go_debug = true : $__stop_debug = true;
 
 	require_once './lib/constants.php';
 

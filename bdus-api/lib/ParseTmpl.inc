@@ -24,10 +24,7 @@ class ParseTmpl extends Field
 			return $this->showall();
 		}
 
-		$settings = unserialize(CACHE);
-		$settings['autoescape'] = false;
-
-		$twig = new \Twig\Environment( new \Twig\Loader\FilesystemLoader(PROJ_DIR . 'templates/'), $settings );
+		$twig = new \Twig\Environment( new \Twig\Loader\FilesystemLoader(PROJ_DIR . 'templates/'), unserialize(CACHE) );
 
 		return $twig->render(str_replace(PROJ_DIR . 'templates/', null, $template_file), [
 			'uid' => uniqid(),

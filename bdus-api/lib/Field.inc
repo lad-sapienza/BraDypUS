@@ -441,14 +441,12 @@ class Field implements iTemplate
                     '<fieldset>';
 
         if (file_exists(PROJ_DIR . 'templates/' . str_replace(PREFIX, null, $plg) . '.twig')) {
-            $settings = unserialize(CACHE);
-            $settings['autoescape'] = false;
-
+            
             $html .= $this->fld('id', false, $plg, $index);
 
             $this->current_plugin_index = $index;
 
-            $twig = new \Twig\Environment( new \Twig\Loader\FilesystemLoader(PROJ_DIR . 'templates/'), $settings );
+            $twig = new \Twig\Environment( new \Twig\Loader\FilesystemLoader(PROJ_DIR . 'templates/'), unserialize(CACHE) );
 
             $html .= $twig->render(str_replace(PREFIX, null, $plg) . '.twig', array(
                     'print' => $this,

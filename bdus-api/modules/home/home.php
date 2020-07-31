@@ -14,102 +14,48 @@ class home_ctrl extends Controller
 {
     public function showAll()
     {
+        $js_libs = [
+            'php2js.js',
+            'jquery-2.1.1.min.js',
+            'jquery-sortable.js',
+            'bootstrap.js',
+            'bootstrap-datepicker.js',
+            'jquery.dataTables.js',
+            'datatables-bootstrap.js',
+            'jquery.keyboard.js',
+            'utils.js',
+            'jquery.pnotify.js',
+            'jquery.fineuploader-3.4.0.js',
+            'core.js',
+            'api.js',
+            'layout.js',
+            'formControls.js',
+            'select2.full.js',
+            'enhanceForm.js',
+            'jquery.checklabel.js',
+            'jquery.printElement.js',
+            'jquery.jqplot.js',
+            'jqplot.barRenderer.min.js',
+            'jqplot.categoryAxisRenderer.min.js',
+            'jqplot.pointLabels.js',
+            'export-jqplot-to-png.js',
+            'jquery.insertAtCaret.js',
+            'bootstrap-slider.js',
+            'hashActions.js'
+        ]; 
+
         $this->render('home', 'main', [
             "version" => version::current(),
             "app_label" => $_SESSION['app'] ?  strtoupper(cfg::main('name')) : false,
             "css" => Compress::css( ['main.css'], $this->get['mini']),
             "debugMode" => $this->get['debug'] ? "true" : "false",
             "prefix" => defined('PREFIX') ? PREFIX : '',
-            "js_libs" => Compress::js( [
-                'php2js.js',
-                'jquery-2.1.1.min.js',
-                'jquery-sortable.js',
-                'bootstrap.js',
-                'bootstrap-datepicker.js',
-                'jquery.dataTables.js',
-                'datatables-bootstrap.js',
-                'jquery.keyboard.js',
-                'utils.js',
-                'jquery.pnotify.js',
-                'jquery.fineuploader-3.4.0.js',
-                'core.js',
-                'api.js',
-                'layout.js',
-                'formControls.js',
-                'select2.full.js',
-                'enhanceForm.js',
-                'jquery.checklabel.js',
-                'jquery.printElement.js',
-                'jquery.jqplot.js',
-                'jqplot.barRenderer.min.js',
-                'jqplot.categoryAxisRenderer.min.js',
-                'jqplot.pointLabels.js',
-                'export-jqplot-to-png.js',
-                'jquery.insertAtCaret.js',
-                'bootstrap-slider.js'
-            ], $this->get['mini'], $_SESSION['debug_mode']),
+            "js_libs" => Compress::js( $js_libs, $this->get['mini'], $_SESSION['debug_mode']),
             "can_user_enter" => utils::canUser('enter') ? true : false,
             "address" => $this->request['address'],
             "token" => $this->request['token'],
             "request_app" => $this->request['app'],
-            "is_online" => utils::is_online(),
-            "ga_id" => "UA-10461068-18"
-        ]);
-    }
-
-    public function table_menu ()
-    {
-        $tb = $this->get['tb'];
-
-        $this->render('home', 'tb_menu', [
-            "items" => [
-                [ 
-                    "fa-file-o", 
-                    'new', 
-                    utils::canUser('add_new') ? "api.record.add('{$tb}')" :  false 
-                ],
-                [ 
-                    "fa-picture-o", 
-                    'new_file', 
-                    utils::canUser('add_new') ? "api.record.add('" . PREFIX . "files')" :  false 
-                ],
-                [ 
-                    "fa-list-alt", 
-                    'most_recent_records', 
-                    utils::canUser('read') ? "core.runMod('search', ['mostRecent', '{$tb}', " . ( pref::get('most_recent_no') ? pref::get('most_recent_no') : 10) . "] );" :  false 
-                ],
-                [ 
-                    "fa-table", 
-                    'show_all', 
-                    utils::canUser('read') ? "core.runMod('search', ['all', '{$tb}'] );" :  false 
-                ],
-                [ 
-                    "fa-search", 
-                    'advanced_search', 
-                    utils::canUser('read') ? "core.runMod('search', ['advanced', '{$tb}'] );" :  false 
-                ],
-                [ 
-                    "fa-search-plus", 
-                    'sql_expert_search', 
-                    utils::canUser('read') ? "core.runMod('search', ['sqlExpert', '{$tb}'] );" :  false 
-                ],
-                [ 
-                    false, 
-                    'fast_search', 
-                    'javascript:void(0)" style="width:200px',
-                    utils::canUser('read') ? '<input type="text" style="width: 90%;" placeholder="' . tr::get('fast_search') . '" class="fast_search" data-table="' . $tb. '" />' : false
-                ],
-                [ 
-                    "fa-external-link", 
-                    'fast_search', 
-                    utils::canUser('edit') ? "api.query.Export('1', '{$tb}' );" :  false
-                ],
-                [ 
-                    "fa-map-marker", 
-                    'GeoFace', 
-                    utils::canUser('read') ? "core.runMod('geoface', '{$tb}');" :  false 
-                ],
-            ]
+            "ga_id" => utils::is_online() ? "UA-10461068-18" : false
         ]);
     }
 
@@ -127,6 +73,55 @@ class home_ctrl extends Controller
             "all_tb" => cfg::getNonPlg(),
             
             "welcome" => file_exists(PROJ_DIR . 'welcome.html') ? file_get_contents(PROJ_DIR . 'welcome.html') : false,
+
+            "tb_options" => [
+                [ 
+                    "fa-file-o", 
+                    'new', 
+                    utils::canUser('add_new') ? "api.record.add($('#ref_tb').val())" :  false 
+                ],
+                [ 
+                    "fa-picture-o", 
+                    'new_file', 
+                    utils::canUser('add_new') ? "api.record.add('" . PREFIX . "files')" :  false 
+                ],
+                [ 
+                    "fa-list-alt", 
+                    'most_recent_records', 
+                    utils::canUser('read') ? "core.runMod('search', ['mostRecent', $('#ref_tb').val(), " . ( pref::get('most_recent_no') ? pref::get('most_recent_no') : 10) . "] );" :  false 
+                ],
+                [ 
+                    "fa-table", 
+                    'show_all', 
+                    utils::canUser('read') ? "core.runMod('search', [ 'all', $('#ref_tb').val() ] );" :  false 
+                ],
+                [ 
+                    "fa-search", 
+                    'advanced_search', 
+                    utils::canUser('read') ? "core.runMod('search', ['advanced', $('#ref_tb').val() ] );" :  false 
+                ],
+                [ 
+                    "fa-search-plus", 
+                    'sql_expert_search', 
+                    utils::canUser('read') ? "core.runMod('search', ['sqlExpert', $('#ref_tb').val() ] );" :  false 
+                ],
+                [ 
+                    false, 
+                    'fast_search', 
+                    'javascript:void(0)" style="width:200px',
+                    utils::canUser('read') ? '<input type="text" style="width: 90%;" placeholder="' . tr::get('fast_search') . '" class="fast_search" />' : false
+                ],
+                [ 
+                    "fa-external-link", 
+                    'export', 
+                    utils::canUser('edit') ? "api.query.Export('1', $('#ref_tb').val() );" :  false
+                ],
+                [ 
+                    "fa-map-marker", 
+                    'GeoFace', 
+                    utils::canUser('read') ? "core.runMod('geoface', $('#ref_tb').val());" :  false 
+                ],
+            ],
 
             "option_list" => [
                 [ 

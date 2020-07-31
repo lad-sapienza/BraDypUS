@@ -20,7 +20,7 @@
 			<li class="tb">
 				<div class="clearfix">
 					<div class="pull-left">
-						<select class="tb" style="font-size: 20px; height:38px; margin: 20px 0; width:250px;">
+						<select id="ref_tb" class="tb" style="font-size: 20px; height:38px; margin: 20px 0; width:250px;">
 						{% for tb_id, tb_label in all_tb %}
                             <option value="{{ tb_id }}">{{ tb_label }}</option>
                         {% endfor %}
@@ -32,7 +32,17 @@
 				</div>
 			</li>
 
-			<li class="tb_opt"></li>
+			<li class="tb_opt">
+				<ul class="searcheable-list">
+				{% for i in tb_options %}
+					<li {% if i[2] %}onclick="{{ i[2] }}"{% else %}class="state-disabled"{% endif %}>
+						{% if i[0]%}<i class="fa {{ i[0] }}"></i><br />{% endif %}
+						{{ tr.get(i[1]) }}
+						{% if i[3]%}{{ i[3] }}{% endif %}
+					</li>
+				{% endfor %}
+				</ul>
+			</li>
 
 			<li>
                 <h2>{{ tr.get('options') }}</h2>

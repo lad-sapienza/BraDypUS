@@ -41,25 +41,13 @@ var layout = {
         });
         
         $.get('./?obj=home_ctrl&method=main_home', function(data){
-            $.get('./?obj=home_ctrl&method=table_menu&tb=' + $($.parseHTML(data)).find('select.tb').val(), function(data2){
-                $('#home').html(data);
-                $('#home').find('li.tb_opt').html(data2);
-            });
+            $('#home').html(data);
         }, 'html');
-        
-        $(document).delegate('select.tb', 'change', function(e){
-            $(this)
-            .parents('li.tb').next('li.tb_opt')
-            .hide()
-            .load('./?obj=home_ctrl&method=table_menu&tb=' + $(this).val(), function(){
-                $(this).fadeIn('slow');
-            });
-        });
         
         $(document).on('keyup', 'input.fast_search', function(e){
             var code = (e.keyCode ? e.keyCode : e.which);
             if (code == 13){
-                core.runMod('search', ['fast', $(this).data('table'), $(this).val()]);
+                core.runMod('search', ['fast', $('#ref_tb').val(), $(this).val()]);
             }
         });
         
@@ -347,33 +335,6 @@ var layout = {
         } else {
             $('#tabs').show();
             $('#tabs_toggle').hide();
-        }
-    },
-        
-    hashActions: function(){
-        if (core.getHash('mapId')){
-            core.getJSON('saved_queries_ctrl', 'getById', [core.getHash('mapId')], false, function(data){
-                if(data.status == 'success'){
-                    core.runMod('geoface', [data.tb, data.text]);
-                }
-            });
-            
-        } else if (core.getHash('queryId')){
-            core.getJSON('saved_queries_ctrl', 'getById', [core.getHash('queryId')], false, function(data){
-                if(data.status === 'success'){
-                    api.showResults(data.tb, 'type=encoded&q_encoded=' + data.text, core.tr('saved_queries') + ' (' + data.tb + ')');
-                } else {
-                    core.message(core.tr('saved_query_does_not_exist', [core.getHash('queryId')]), 'error', true);
-                }
-            });
-            
-        } else if (core.getHash('chartId')){
-            core.runMod('chart', ['showChart', core.getHash('chartId')]);
-            
-        } else if (core.getHash('readId')){
-            var hash_data = core.getHash('readId');
-            api.record.read(prefix + hash_data.table, [hash_data.id], hash_data.isIdField);
-            
         }
     }
 };

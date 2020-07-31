@@ -163,8 +163,7 @@ class api2 extends Controller
     {
         $tb = $this->get['tb'];
 
-        require_once __DIR__ . '/Inspect.php';
-        $resp = Inspect::run($tb);
+        $resp = Inspect::cfg($tb);
         
         return $resp;
     }

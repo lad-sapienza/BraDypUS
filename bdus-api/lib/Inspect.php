@@ -7,7 +7,7 @@
  */
 class Inspect
 {
-    public static function run($tb = false)
+    public static function cfg($tb = false)
     {
         if ($tb) {
 

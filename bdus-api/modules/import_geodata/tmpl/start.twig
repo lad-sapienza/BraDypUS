@@ -29,7 +29,7 @@
     if (!$(this).val()){
       $('#tb_dest_{{ uid }}').html('');
     } else {
-      $('#tb_dest_{{ uid }}').load('controller.php?obj=import_geodata_ctrl&method=load_file&param[]=' + $(this).val());
+      $('#tb_dest_{{ uid }}').load('./?obj=import_geodata_ctrl&method=load_file&param[]=' + $(this).val());
     }
   });
 </script>

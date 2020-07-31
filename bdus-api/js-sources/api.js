@@ -54,7 +54,7 @@ var api = {
                   text: core.tr('close_application'),
                   addclass: 'btn-primary',
                   click: function() {
-                    $.get('controller.php?obj=login_ctrl&method=out', function(data){
+                    $.get('./?obj=login_ctrl&method=out', function(data){
                       window.location = './';
                     });
                   }
@@ -163,7 +163,7 @@ var api = {
          */
       erase: function (tb, id_arr, table_results){
         if ( confirm ( core.tr('confirm_delete') ) ) {
-          $.get('./controller.php?obj=record_ctrl&method=erase&' + this.formatId(id_arr) + '&tb=' + tb, function(data){
+          $.get('./?obj=record_ctrl&method=erase&' + this.formatId(id_arr) + '&tb=' + tb, function(data){
             core.message(data.text, data.status);
             if (table_results){
               table_results.fnDraw();
@@ -303,7 +303,7 @@ var api = {
                     text: core.tr('continue'),
                     click: function(div){
                       layout.dialog.close(div);
-                      $.post('controller.php?obj=myExport_ctrl&method=doExport&param[]=' + tb + '&param[]=' + $(div).find('select.export_format').val() + '&param[]=' + query_text, function(data){
+                      $.post('./?obj=myExport_ctrl&method=doExport&param[]=' + tb + '&param[]=' + $(div).find('select.export_format').val() + '&param[]=' + query_text, function(data){
 
                         core.message(data.text, data.status);
 
@@ -339,7 +339,7 @@ var api = {
                        input.focus();
                      } else {
                        $.post(
-                           'controller.php?obj=saved_queries_ctrl&method=actions&param[]=save&param[]=' + tb + '&param[]=' + input.val() + '&param[]=' + query_text,
+                           './?obj=saved_queries_ctrl&method=actions&param[]=save&param[]=' + tb + '&param[]=' + input.val() + '&param[]=' + query_text,
                            function(data){
                              core.message(data.text, data.status);
                            },
@@ -393,7 +393,7 @@ var api = {
           $('<input />').addClass('curr_tb').attr('type', 'hidden')
           );
 
-      $.get('controller.php?obj=userlinks_ctrl&method=get_all_tables',function(data){
+      $.get('./?obj=userlinks_ctrl&method=get_all_tables',function(data){
         if (data.status == 'success'){
 
           if (!def_tb){
@@ -402,7 +402,7 @@ var api = {
                 .html(label)
                 .addClass('btn btn-default')
                 .click(function(){
-                  div.find('.fl_content').load('controller.php?obj=record_ctrl&method=showResults&noDblClick=1&force_array=1&tb=' + tb + '&type=all&noOpts=1' + (select_one ? '&select_one=true' : ''));
+                  div.find('.fl_content').load('./?obj=record_ctrl&method=showResults&noDblClick=1&force_array=1&tb=' + tb + '&type=all&noOpts=1' + (select_one ? '&select_one=true' : ''));
                   div.find('input.curr_tb').val(tb);
                 })
                 .appendTo(div.find('.btn-group'));
@@ -410,7 +410,7 @@ var api = {
 
           } else {
             div.find('.fl_content')
-              .load('controller.php?obj=record_ctrl&method=showResults&force_array=1&tb=' + def_tb + '&type=all&noOpts=1' + (select_one ? '&select_one=true' : ''));
+              .load('./?obj=record_ctrl&method=showResults&force_array=1&tb=' + def_tb + '&type=all&noOpts=1' + (select_one ? '&select_one=true' : ''));
             div.find('input.curr_tb').val(def_tb);
           }
 
@@ -496,7 +496,7 @@ var api = {
         l_id = l_el.data('id');
 
       l_el.html('')
-        .load('controller.php?obj=userlinks_ctrl&method=show&param[]=' + l_tb + '&param[]=' + l_id + '&param[]=' + l_context, function(){
+        .load('./?obj=userlinks_ctrl&method=show&param[]=' + l_tb + '&param[]=' + l_id + '&param[]=' + l_context, function(){
           //READ
           $(l_el).find('span.userlink_read').on('click', function(){
             api.record.read($(this).data('tb'), [$(this).data('id')]);

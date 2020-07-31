@@ -31,12 +31,12 @@ var login = {
 				app = core.getHash('app');
 			}
 			
-			$('#wrapper').html(core.loading).load('controller.php?obj=login_ctrl&method=select_app' + (app ? '&app=' + app : ''));
+			$('#wrapper').html(core.loading).load('./?obj=login_ctrl&method=select_app' + (app ? '&app=' + app : ''));
 		},
 		
 		loadLoginForm: function(db){
 			$('#select_apps .buttons').slideUp();
-			$('#select_apps .login').load('controller.php?obj=login_ctrl&method=loginForm', {'app': db}).slideDown();
+			$('#select_apps .login').load('./?obj=login_ctrl&method=loginForm', {'app': db}).slideDown();
 		},
 		
 		autologin: function(app){

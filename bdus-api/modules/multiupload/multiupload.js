@@ -13,7 +13,7 @@ var multiupload = {
 				loaded: function(el){
 					api.fileUpload(
 							el.find('a.elUpload'),
-							'./controller.php?obj=multiupload_ctrl&method=saveUploads&upload_dir=' + new Date().getTime(), 
+							'./?obj=multiupload_ctrl&method=saveUploads&upload_dir=' + new Date().getTime(), 
 							{
 								'complete':
 							function(id, fileName, resp){
@@ -29,12 +29,12 @@ var multiupload = {
 			if ( !tmpDir ){
 				 core.message(core.tr('load_file_to_proceed'), 'error');
 			 } else {
-				 div.load('controller.php?obj=multiupload_ctrl&method=showPreview&dir=' + tmpDir);
+				 div.load('./?obj=multiupload_ctrl&method=showPreview&dir=' + tmpDir);
 			 }
 		},
 		
 		saveFiles: function(form){
-			$.post('./controller.php?obj=multiupload_ctrl&method=save', form.serialize(), function(data){
+			$.post('./?obj=multiupload_ctrl&method=save', form.serialize(), function(data){
 				core.message(data.text, data.status);
 				if (data.status == 'success'){
 					layout.tabs.closeActive();

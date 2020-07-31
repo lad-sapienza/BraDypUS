@@ -33,7 +33,7 @@
 	});
 	
 	$('form.preview_flds').on('submit', function(event){
-		$.post('controller.php?obj=preview_flds_ctrl&method=save', $(this).serialize(), function(){
+		$.post('./?obj=preview_flds_ctrl&method=save', $(this).serialize(), function(){
 			core.message(core.tr('ok_preview_set'), 'success');
 		});
 		

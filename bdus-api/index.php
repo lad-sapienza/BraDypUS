@@ -3,13 +3,13 @@
  * @author			Julian Bogdani <jbogdani@gmail.com>
  * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
  * @license			See file LICENSE distributed with this code
- * @since			Apr 6, 2012
+ * @since			Apr 8, 2012
  */
 
 ob_start();
 
-try
-{
+try {
+
 	$basePath = './';
 	@$_REQUEST['debug'] ? $__go_debug = true : $__stop_debug = true;
 
@@ -24,105 +24,21 @@ try
 			User::forceLogOut();
 		}
 	}
-
 	if ($_GET['mini']) {
 		utils::compressModScripts();
 	}
-?>
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>BraDypUS <?php echo version::current() . ($_SESSION['app'] ?  ' :: ' . strtoupper(cfg::main('name')) : '' ); ?></title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <?php
-  /*
-   * Styles loader
-   */
-  Compress::css( array (
-    'main.css'
-  ), $_GET);
 
-  ?>
+	$controller = new Controller($_GET, $_POST, $_REQUEST);
 
-  <script src="./controller.php?obj=tr&method=lang2json&param=true"></script>
-  <script>
-		var debugMode = <?php echo  ($_GET['debug'] ? 'true' : 'false'); ?>;
-		var prefix = '<?php echo defined('PREFIX') ? PREFIX : ''; ?>';
-	</script>
-  <?php
-  Compress::js( array(
-    'php2js.js',
-    'jquery-2.1.1.min.js',
-    'jquery-sortable.js',
-    'bootstrap.js',
-    'bootstrap-datepicker.js',
-    'jquery.dataTables.js',
-    'datatables-bootstrap.js',
-    'jquery.keyboard.js',
-    'utils.js',
-    'jquery.pnotify.js',
-    'jquery.fineuploader-3.4.0.js',
-    'core.js',
-    'api.js',
-    'layout.js',
-    'formControls.js',
-    'select2.full.js',
-    'enhanceForm.js',
-    'jquery.checklabel.js',
-    'jquery.printElement.js',
-    'jquery.jqplot.js',
-    'jqplot.barRenderer.min.js',
-    'jqplot.categoryAxisRenderer.min.js',
-    'jqplot.pointLabels.js',
-    'export-jqplot-to-png.js',
-    'jquery.insertAtCaret.js',
-    'bootstrap-slider.js'
-
-  ), $_GET );
-	?>
-  <script>
-    $(document).ready(function(){
-      layout.init();
-<?php if ( utils::canUser('enter') ): ?>
-      layout.loadHome();
-      layout.hashActions();
-<?php elseif ($_REQUEST['address'] && $_REQUEST['token']): ?>
-
-      core.runMod('login', ['loadResetPwd', '<?php echo $_REQUEST['app']; ?>', '<?php echo $_REQUEST['address']; ?>', '<?php echo $_REQUEST['token']; ?>'], function(){
-        login.loadLogin();
-      });
-<?php else : ?>
-      core.runMod('login', false, function(){
-        login.autologin(<?php echo $_REQUEST['app'] ? "'" . $_REQUEST['app'] . "'" : ''; ?>);
-        login.loadLogin('<?php echo $_REQUEST['app']; ?>');
-      });
-<?php endif; ?>
-    });
-<?php if(utils::is_online()) : ?>
-		var _gaq = _gaq || [];_gaq.push(['_setAccount', 'UA-10461068-18']);_gaq.push(['_trackPageview']);(function() { var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);})();
-<?php endif;?>
-  </script>
-</head>
-
-<body<?php echo !utils::canUser('enter') ? ' class="login"' : '' ?>></body>
-
-</html>
-
-<?php
+	$controller->route();
 
 } catch (Throwable $e) {
-
-	if ($_GET['debug']) {
-		echo $e->__toString();
-	} else {
-    echo "<h2>Errore.</h2><p>" . $e->getMessage() . '</p>';
-    session_destroy();
-	}
-
 	Meta::logException($e);
 
-}
+	echo utils::message( tr::get('generic_error'), 'error', true);
 
+	if (DEBUG_ON) {
+		var_dump($e);
+	}
+}
 ob_end_flush();
-?>

@@ -80,8 +80,8 @@
 
 		{# FORM SUBMISSION AND CHECKS #}
 		var myForm{{ uid }} =  new formControl('#form{{ uid }}', {
-			ajaxURL:'controller.php?force_array=1&obj=record_ctrl&method=check_duplicates',
-			submitURL: 'controller.php?obj=record_ctrl&method=save_data&tb={{ tb }}&{% if id_url %}{{ id_url }}{% else %}a=add_new{% endif %}',
+			ajaxURL:'./?force_array=1&obj=record_ctrl&method=check_duplicates',
+			submitURL: './?obj=record_ctrl&method=save_data&tb={{ tb }}&{% if id_url %}{{ id_url }}{% else %}a=add_new{% endif %}',
 			success: function(data){
 				if (data.inserted_id){
 					layout.tabs.closeActive();
@@ -115,7 +115,7 @@
 		$('#container{{ uid }}').find('.save-as-new').on('click', function(){
 			if (confirm(core.tr('confirm_save_as_new'))){
 				myForm{{ uid }}
-					.option('submitURL', 'controller.php?obj=record_ctrl&method=save_data&tb={{ tb }}&a=add_new')
+					.option('submitURL', './?obj=record_ctrl&method=save_data&tb={{ tb }}&a=add_new')
 					.send(true);
 			}
 		});
@@ -245,7 +245,7 @@
 		<div id="div{{ uid }}">{{ continue_url }}</div>
 
 		<script>
-			$.post('controller.php?obj=record_ctrl&method=show&tb={{ tb }}&a=read', '{{ continue_url }}', function(data){
+			$.post('./?obj=record_ctrl&method=show&tb={{ tb }}&a=read', '{{ continue_url }}', function(data){
 				$('#div{{ uid }}').html(data);
 			});
 

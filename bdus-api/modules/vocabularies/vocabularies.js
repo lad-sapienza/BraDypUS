@@ -24,7 +24,7 @@ var vocabularies = {
 				        	 text: core.tr('save'),
 				        	 click: function(){
 				        		 var val = $('#modal input').val();
-				        		 $.get('controller.php?obj=vocabularies_ctrl&method=edit&id=' + id + '&val=' + val, function(data){
+				        		 $.get('./?obj=vocabularies_ctrl&method=edit&id=' + id + '&val=' + val, function(data){
 							         core.message(data.text, data.status);
 							         if (data.status == 'success'){
 							        	 if (success){
@@ -52,7 +52,7 @@ var vocabularies = {
 				        {
 				        	text: core.tr('erase'),
 				        	click: function(){
-				        		 $.get('controller.php?obj=vocabularies_ctrl&method=erase&id=' + id, function(data){
+				        		 $.get('./?obj=vocabularies_ctrl&method=erase&id=' + id, function(data){
 							         core.message(data.text, data.status);
 							         if (data.status == 'success'){
 							        	 if (success){
@@ -92,7 +92,7 @@ var vocabularies = {
 				        		 }
 				        		 else
 				        		 {
-				        			 $.get('controller.php?obj=vocabularies_ctrl&method=add&voc=' + myvoc + '&def=' + mydef, function(data){
+				        			 $.get('./?obj=vocabularies_ctrl&method=add&voc=' + myvoc + '&def=' + mydef, function(data){
 				        				 if (data.status == 'success'){
 				        					 $('#def').val('');
 				        					 if (success){

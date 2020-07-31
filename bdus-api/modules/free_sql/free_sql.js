@@ -16,7 +16,7 @@ var free_sql = {
 			method: 'input',
 			title: 'Run free SQL query',
 			loaded: function(){
-				api.fileUpload($('#modal .upload'), 'controller.php?obj=file_ctrl&method=upload', {
+				api.fileUpload($('#modal .upload'), './?obj=file_ctrl&method=upload', {
 					limit2one: true,
 					limitExtensions: ['sql', 'gz'],
 					complete: function(id, name, resp){

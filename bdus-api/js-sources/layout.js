@@ -40,8 +40,8 @@ var layout = {
             $('#tabs').toggle();
         });
         
-        $.get('controller.php?module=home/menu', function(data){
-            $.get('./controller.php?module=home/table_menu&tb=' + $($.parseHTML(data)).find('select.tb').val(), function(data2){
+        $.get('./?obj=home&method=main_home', function(data){
+            $.get('./?obj=home&method=table_menu&tb=' + $($.parseHTML(data)).find('select.tb').val(), function(data2){
                 $('#home').html(data);
                 $('#home').find('li.tb_opt').html(data2);
             });
@@ -51,7 +51,7 @@ var layout = {
             $(this)
             .parents('li.tb').next('li.tb_opt')
             .hide()
-            .load('./controller.php?module=home/table_menu&tb=' + $(this).val(), function(){
+            .load('./?obj=home&method=table_menu&tb=' + $(this).val(), function(){
                 $(this).fadeIn('slow');
             });
         });
@@ -139,7 +139,7 @@ var layout = {
             }
                 
             var body = $('<div />').addClass('modal-body').appendTo(dialog.find('div.modal-content')),
-            URLstring = 'controller.php?';
+            URLstring = './?';
             
             
             if (opts.html){
@@ -258,7 +258,7 @@ var layout = {
             var title = opts.title ? opts.title : '',
             tab = this.tab,
             id = Math.floor(Math.random()*1000) + '' + tab.find('li').length,
-            URLstring = 'controller.php?';
+            URLstring = './?';
             
             this.tab.append('<li><a href="#added' + id + '">' + title + ' <button class="close" type="button">×</button></a></li>');
             this.tab.next('div.tab-content').append('<div class="tab-pane" id="added' + id + '">' + core.loading + '</div>');
@@ -296,7 +296,7 @@ var layout = {
         optsToTabContent: function(opts, element){
             element.html('<img src="./img/arrows-loader.gif" alt="loading..." />');
             
-            var URLstring = 'controller.php?';
+            var URLstring = './?';
             
             if (opts.html){
                 element.html(opts.html);

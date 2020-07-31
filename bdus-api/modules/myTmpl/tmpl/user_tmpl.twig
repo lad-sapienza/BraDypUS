@@ -51,7 +51,7 @@
 
 <script>
 $('#{{ uid }} select').on('change', function(){
-	$.get('controller.php?obj=myTmpl_ctrl&method=change&param[]=' + $(this).data('tb') + '&param[]=' + $(this).data('context') + '&param[]=' + $(this).val(), function(data){
+	$.get('./?obj=myTmpl_ctrl&method=change&param[]=' + $(this).data('tb') + '&param[]=' + $(this).data('context') + '&param[]=' + $(this).val(), function(data){
 		if (!data || data == ''){
 			core.message(core.tr('ok_tmpl_set'), 'success');
 		} else {

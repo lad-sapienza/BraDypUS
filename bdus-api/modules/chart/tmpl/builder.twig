@@ -40,11 +40,11 @@
 </div>
 <script>
 
-$('#{{ uid }} div.bar').load('controller.php?obj=chart_ctrl&method=showRow&tb={{ tb }}');
+$('#{{ uid }} div.bar').load('./?obj=chart_ctrl&method=showRow&tb={{ tb }}');
 
 $('#{{ uid }} button.add_bar').click(function(){
 	$(this).parent('div').before(
-		$('<div />').addClass('col-sm-3 added_bar').load('controller.php?obj=chart_ctrl&method=showRow&tb={{ tb }}&remove=true')
+		$('<div />').addClass('col-sm-3 added_bar').load('./?obj=chart_ctrl&method=showRow&tb={{ tb }}&remove=true')
 	);
 });
 

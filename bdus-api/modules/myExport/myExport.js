@@ -6,7 +6,7 @@
 
 var myExport= {
 		init: function(){
-						$.get('controller.php?obj=myExport_ctrl&method=getContent', function(data){
+						$.get('./?obj=myExport_ctrl&method=getContent', function(data){
 				
 				if (data == ''){
 					core.message(core.tr('export_dir_empty'), 'error');
@@ -30,7 +30,7 @@ var myExport= {
 			
 					$('#modal .erase').click(function(){
 						var $this = $(this);
-						$.get('controller.php?obj=myExport_ctrl&method=erase&param[]=' + $this.data('file'),function(data){
+						$.get('./?obj=myExport_ctrl&method=erase&param[]=' + $this.data('file'),function(data){
 							core.message(data.text, data.status);
 							if (data.status == 'success'){
 								$this.parents('tr').remove();

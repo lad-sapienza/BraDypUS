@@ -25,7 +25,7 @@
 
 <script>
   $('#buttons_{{ uid }} button').on('click', function(){
-    $('#result_{{ uid }}').load('controller.php?obj=import_geodata_ctrl&method=process&'
+    $('#result_{{ uid }}').load('./?obj=import_geodata_ctrl&method=process&'
       + 'param[]={{ tb }}&'
       + 'param[]={{ file }}&'
       + 'param[]={{ id_field }}&'

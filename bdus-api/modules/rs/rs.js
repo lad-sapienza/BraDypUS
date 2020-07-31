@@ -36,7 +36,7 @@ var rs = {
 
 			el.data('pending', true);
 
-			el.load('controller.php?obj=rs_ctrl&method=getAll&param[]=' + tb + '&param[]=' + id + '&param[]=' + context, function(){
+			el.load('./?obj=rs_ctrl&method=getAll&param[]=' + tb + '&param[]=' + id + '&param[]=' + context, function(){
 
 				el.data('done', true);
 				el.data('pending', false);

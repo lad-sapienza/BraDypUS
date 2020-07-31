@@ -72,7 +72,7 @@ var core = {
 		 */
 		getJSON: function(obj,method,get,post,loaded){
 
-			var URLstring = './controller.php?obj=' + obj + '&method=' + method;
+			var URLstring = './?obj=' + obj + '&method=' + method;
 
     		if (get){
 	        	if (typeof get === 'string'){

@@ -36,12 +36,12 @@ class translate_ctrl extends Controller
 				. '<div id="cont_' . $uid . '" class="transl-content"></div>'
 				. '<script>'
 						. "$('#but_{$uid} button.lang').on('click', function(){"
-								. "$('#cont_{$uid}').html(core.loading).load('controller.php?obj=translate_ctrl&method=showForm&param[]=' + $(this).data('lang'));"
+								. "$('#cont_{$uid}').html(core.loading).load('./?obj=translate_ctrl&method=showForm&param[]=' + $(this).data('lang'));"
 						."});"
 						. "$('#but_{$uid} button.add').on('click', function(){"
 								. "translate.addLang('{$uid}'); "
 						."});"
-						. ($opened_lang ? "$('#cont_{$uid}').html(core.loading).load('controller.php?obj=translate_ctrl&method=showForm&param[]={$opened_lang}')" : '')
+						. ($opened_lang ? "$('#cont_{$uid}').html(core.loading).load('./?obj=translate_ctrl&method=showForm&param[]={$opened_lang}')" : '')
 				. '</script>';
 		echo $html;
 		

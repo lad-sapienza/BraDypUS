@@ -15,7 +15,7 @@ var flds_editor = {
 		},
 
 		loadFldList: function(form_container, tb){
-			form_container.html(core.loading).load('controller.php?obj=flds_editor_ctrl&method=show_list&tb=' + tb, function(){
+			form_container.html(core.loading).load('./?obj=flds_editor_ctrl&method=show_list&tb=' + tb, function(){
 
 				$(this).find('button.add_new_fld').click(function(){
 					flds_editor.loadform($(this).data('table'), false, form_container);

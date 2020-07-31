@@ -72,7 +72,7 @@ var user = {
 				         {
 				        	 text: core.tr('confirm'),
 							 click: function(){
-								 $.get('controller.php?obj=user_ctrl&method=erase&param[]=' + id, function(data){
+								 $.get('./?obj=user_ctrl&method=erase&param[]=' + id, function(data){
 									 core.message(data.message, data.type);
 									 $('#modal').modal('hide');
 									 layout.tabs.reloadActive(); 

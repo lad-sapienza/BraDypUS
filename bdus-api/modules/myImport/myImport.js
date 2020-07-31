@@ -15,7 +15,7 @@ var myImport = {
 						
 						var driver = $('#modal a.import').data('driver');
 						
-						api.fileUpload($('#modal a.import'), './controller.php?obj=myImport_ctrl&method=upload&driver=' + driver, {
+						api.fileUpload($('#modal a.import'), './?obj=myImport_ctrl&method=upload&driver=' + driver, {
 							'complete': function(id, fileName, resp){
 						
 								if (driver == 'mysql') {

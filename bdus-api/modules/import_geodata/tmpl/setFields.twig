@@ -24,7 +24,7 @@
 
 <script>
   $('#continue-{{ uid }}').on('click', function(){
-    $('#confirm_{{ uid }}').load('controller.php?obj=import_geodata_ctrl&method=confirm&'
+    $('#confirm_{{ uid }}').load('./?obj=import_geodata_ctrl&method=confirm&'
       + 'param[]={{ tb }}&'
       + 'param[]={{ file }}&'
       + 'param[]=' + $('#flds_{{ uid }}').val()

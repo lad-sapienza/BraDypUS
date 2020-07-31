@@ -24,7 +24,7 @@ var tbs_editor = {
 		},
 		
 		loadTbForm: function(form_container, tb){
-			form_container.html(core.loading).load('controller.php?obj=tbs_editor_ctrl&method=show_form&tb=' + tb, function(){
+			form_container.html(core.loading).load('./?obj=tbs_editor_ctrl&method=show_form&tb=' + tb, function(){
 				
 				$(this).find('button.add_new_fld').click(function(){
 					flds_editor.loadform($(this).data('table'), false, form_container);

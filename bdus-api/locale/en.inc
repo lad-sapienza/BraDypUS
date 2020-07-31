@@ -1,7 +1,6 @@
 <?php
 $lang['choose_db'] = "Select a database to continue";
 $lang['error_in_method'] = "Something went wrong in %s";
-$lang['module_doesnot_exist'] = "Error. Module %s does not exist";
 $lang['error_in_module'] = "Error. Something went wrong in loading module %s";
 $lang['generic_error'] = "Error. Please check the error log for more details";
 $lang['no_app'] = "Errore. No application available. It is not possible to continue";

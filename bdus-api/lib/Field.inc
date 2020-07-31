@@ -336,7 +336,7 @@ class Field implements iTemplate
 
             $html .= '<div id="' . $uid . '" class="load_img_placeholder">sostituisci l\'immagine</div>' .
                     '<script>' .
-                        "api.fileUpload($('#" . $uid . "'), 'controller.php?obj=file_ctrl&method=upload', {" .
+                        "api.fileUpload($('#" . $uid . "'), './?obj=file_ctrl&method=upload', {" .
                             "'button_text': '" . str_replace("'", "\'", tr::get('replace_file') ). "'," .
                             "'complete': function(id, fileName, resp){" .
                                 "$('#{$uid}').parents('form').find('input[name*=filename]').val(resp.filename).attr('changed', 'auto');" .
@@ -353,7 +353,7 @@ class Field implements iTemplate
 
             $html .= '<div id="' . $uid . '" class="load_img_placeholder"></div>' .
                         '<script>' .
-                            "api.fileUpload($('#" . $uid . "'), 'controller.php?obj=file_ctrl&method=upload', {" .
+                            "api.fileUpload($('#" . $uid . "'), './?obj=file_ctrl&method=upload', {" .
                                 "'limit2one': true," .
                                 "'complete': function(id, fileName, resp){" .
                                     "$('#{$uid}').parents('form').find('input[name*=filename]').val(resp.filename).attr('changed', 'auto');" .
@@ -373,7 +373,7 @@ class Field implements iTemplate
 
             $html .= '<div id="' . $uid . '" class="load_img_placeholder"></div>' .
                     '<script>' .
-                        "api.fileUpload($('#" . $uid . "'), 'controller.php?obj=file_ctrl&method=uploadLink&dest_table=" . $this->tb . "&dest_id=" . $this->record->getId() . "', {" .
+                        "api.fileUpload($('#" . $uid . "'), './?obj=file_ctrl&method=uploadLink&dest_table=" . $this->tb . "&dest_id=" . $this->record->getId() . "', {" .
                             "'button_text' : '" . str_replace("'", "\'", tr::get('click_drag_link_file')) . "'," .
                             "'limit2one': true," .
                             "'complete': function(id, fileName, resp){" .

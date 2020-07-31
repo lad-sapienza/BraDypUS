@@ -1,7 +1,6 @@
 <?php
 $lang['choose_db'] = "Selezione una banca dati per proseguire";
 $lang['error_in_method'] = "Qualcosa è andato storto nell'eseguire il %s";
-$lang['module_doesnot_exist'] = "Errore. Il modulo %s non esiste";
 $lang['error_in_module'] = "Errore. Qualcosa è andato storto nel caricare il modulo %s";
 $lang['generic_error'] = "Errore. Si prega di consultare il log degli errori per maggiori informazioni!";
 $lang['no_app'] = "Errore. Nessuna applicazione disponibile. Impossibile continuare";

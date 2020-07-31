@@ -118,7 +118,7 @@
 $('#pag-but-{{ uid }}').click(function(){
 	var val = $('#pag-{{ uid }}').val();
 	
-	$.get('controller.php?obj=preferences_ctrl&method=save&key=infinite_scroll' + (val == 0 ? '' : '&val=' + val), function(){
+	$.get('./?obj=preferences_ctrl&method=save&key=infinite_scroll' + (val == 0 ? '' : '&val=' + val), function(){
 		core.message("{{ tr.get('pref_set') }}", 'success');
 		$('#reload-{{ uid }}').show();
 	});
@@ -128,7 +128,7 @@ $('#pag-but-{{ uid }}').click(function(){
 $('#lang-but-{{ uid }}').click(function(){
 	var val = $('#lang-{{ uid }}').val();
 	
-	$.get('controller.php?obj=preferences_ctrl&method=save&key=lang&val=' + val, function(){
+	$.get('./?obj=preferences_ctrl&method=save&key=lang&val=' + val, function(){
 		core.message("{{ tr.get('pref_set') }}", 'success');
 		$('#reload-{{ uid }}').show();
 	});
@@ -141,7 +141,7 @@ $('#most_recent-but-{{ uid }}').on('click', function(){
 	if(val!= '' && val > 0 && !isNaN(val)){
 		val = parseInt(val);
 		
-		$.get('controller.php?obj=preferences_ctrl&method=save&key=most_recent_no&val=' + val, function(){
+		$.get('./?obj=preferences_ctrl&method=save&key=most_recent_no&val=' + val, function(){
 			core.message("{{ tr.get('pref_set') }}", 'success');
 			$('#reload-{{ uid }}').show();
 		});

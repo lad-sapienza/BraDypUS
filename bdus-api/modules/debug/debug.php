@@ -16,6 +16,6 @@ class debug extends Controller
 
 	public function read()
 	{
-		echo Meta::tableTop('errorlog', "./controller.php?&obj=debug&method=sql2json&tb=errorlog");
+		echo Meta::tableTop('errorlog', "./?&obj=debug&method=sql2json&tb=errorlog");
 	}
 }

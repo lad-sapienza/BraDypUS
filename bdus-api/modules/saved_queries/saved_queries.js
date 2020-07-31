@@ -20,7 +20,7 @@ var saved_queries = {
 		},
 		show_all: function(){
 		
-			$.get('controller.php?obj=saved_queries_ctrl&method=showAll', function(data){
+			$.get('./?obj=saved_queries_ctrl&method=showAll', function(data){
 				
 				if (!data || data == ''){
 					core.message(core.tr('no_saved_queries'));
@@ -39,7 +39,7 @@ var saved_queries = {
 					switch($this.data('action')){
 					
 						case 'share':
-							$.get('controller.php?obj=saved_queries_ctrl&method=actions&param[]=share&param[]=' + $this.data('id'), function(data){
+							$.get('./?obj=saved_queries_ctrl&method=actions&param[]=share&param[]=' + $this.data('id'), function(data){
 								core.message(data.text, data.status);
 								if (data.status == 'success'){
 									$this
@@ -50,7 +50,7 @@ var saved_queries = {
 							break;
 			
 						case 'unshare':
-							$.get('controller.php?obj=saved_queries_ctrl&method=actions&param[]=unshare&param[]=' + $this.data('id'), function(data){
+							$.get('./?obj=saved_queries_ctrl&method=actions&param[]=unshare&param[]=' + $this.data('id'), function(data){
 								if (data.status == 'success'){
 									$this
 										.data('action', 'share')
@@ -62,7 +62,7 @@ var saved_queries = {
 							break;
 			
 						case 'erase':
-							$.get('controller.php?obj=saved_queries_ctrl&method=actions&param[]=erase&param[]=' + $this.data('id'), function(data){
+							$.get('./?obj=saved_queries_ctrl&method=actions&param[]=erase&param[]=' + $this.data('id'), function(data){
 								core.message(data.text, data.status);
 								if (data.status == 'success'){
 									$this

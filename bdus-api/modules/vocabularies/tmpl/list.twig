@@ -60,7 +60,7 @@
 					new_string[$(el).data('voc')] = string;
 
 
-					$.post('controller.php?obj=vocabularies_ctrl&method=sort', new_string, function(data){
+					$.post('./?obj=vocabularies_ctrl&method=sort', new_string, function(data){
 						core.message(data.text, data.status);
 					}, 'json');
 

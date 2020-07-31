@@ -47,7 +47,7 @@ var search_replace = {
 					         {
 					        	 text: core.tr('confirm'),
 			 		        	 click: function(){
-			 		        		 $.get('controller.php?&obj=search_replace_ctrl&method=replace&tb=' + tb + '&fld=' + fld + '&search=' + search + '&replace=' + replace, function(data){
+			 		        		 $.get('./?&obj=search_replace_ctrl&method=replace&tb=' + tb + '&fld=' + fld + '&search=' + search + '&replace=' + replace, function(data){
 			 		        			 if (data == 'error'){
 			 		        				 core.message(core.tr('error_search_replace'), 'error');
 			 		        			 } else {
@@ -77,7 +77,7 @@ var search_replace = {
 			$('#' + uid).find('select.fld').html($('<option />'));
 			
 			//get field names
-			$.get('controller.php?obj=search_replace_ctrl&method=getFld&tb=' + tb, function(data){
+			$.get('./?obj=search_replace_ctrl&method=getFld&tb=' + tb, function(data){
 				$.each(data, function(index, el){
 					$('<option />')
 						.attr('value', index)

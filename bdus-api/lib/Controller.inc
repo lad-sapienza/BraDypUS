@@ -23,7 +23,7 @@ class Controller
 		echo json_encode($data);
 	}
 
-	public function render($module, $template, $data = false)
+	public function render($module, $template, $data = [])
 	{
 		if (file_exists(MOD_DIR . $module . '/tmpl/' . $template . '.html')) {
 			
@@ -39,25 +39,16 @@ class Controller
 
 		}
 
-		if (!$data) {
-			$data = [];
-		}
+		$settings = unserialize(CACHE);
+		$settings['autoescape'] = false;
 
-    $data['uid'] = uniqid('uid');
-    $data['tr'] = new tr();
-
-	$settings = unserialize(CACHE);
-	
-	if (DEBUG_ON) {
-		$settings['debug'] = true;
-	}
-
-    $settings['autoescape'] = false;
 		$twig = new \Twig\Environment( new \Twig\Loader\FilesystemLoader(MOD_DIR . $module . '/tmpl'), $settings );
-
-		if (DEBUG_ON) {
+		if ($settings['debug']) {
 			$twig->addExtension(new \Twig\Extension\DebugExtension());
 		}
+
+    	$data['uid'] = uniqid('uid');
+    	$data['tr'] = new tr();
 
 		echo $twig->render($template . $ext, $data);
 	}
@@ -76,19 +67,19 @@ class Controller
 					unset($this->request['obj']);
 					unset($this->request['method']);
 					unset($this->request['force_array']);
-					$param = array($this->request);
+					$param = [ $this->request ];
 
 				} else if ($this->request['param'] AND is_string($this->request['param'])) {
 					// get or post single (string) param
-					$param = array($this->request);
+					$param = [ $this->request ];
 
 				} else if (!$this->request['param'] AND empty($this->post)) {
 					// no post and no no post/get param
-					$param = array();
+					$param = [];
 
 				} else if (!$this->request['param'] AND !empty($this->post)) {
 					// no post/get param, but post data
-					$param = array($this->post);
+					$param = [ $this->post ];
 
 				} else if ($this->request['param'] && !empty($this->post)) {
 					$param = array( array_merge($this->post, $this->request['param']));
@@ -96,11 +87,11 @@ class Controller
 					$param = $this->request['param'];
 				}
 
-				if (get_parent_class($obj) == 'Controller') {
+				if (get_parent_class($obj) === 'Controller') {
 					$_aa = new $obj($this->get, $this->post, $this->request);
 					$_aa->$method();
 				} else {
-					call_user_func_array(array($obj, $method), $param);
+					call_user_func_array( [$obj, $method], $param);
 				}
 
 			} catch(myException $e) {
@@ -108,19 +99,9 @@ class Controller
 				throw new myException(sprintf(tr::get('error_in_method'), $this->request['obj'] . '::' . $this->request['method']));
 			}
 
-		} else if($this->request['module']) {
-
-			if ( file_exists( MOD_DIR . $this->request['module'] . '.php' ) ) {
-
-				try {
-					require_once MOD_DIR . $this->request['module'] . '.php';
-				} catch (myException $e) {
-					$e->log();
-					throw new myException(sprintf(tr::get('error_in_module'), $this->request['module']));
-				}
-			} else {
-				throw new myException(sprintf(tr::get('module_doesnot_exist'), $this->request['module']));
-			}
+		} else {
+			$home = new home($this->get, $this->post, $this->request);
+			$home->showAll();
 		}
 	}
 }

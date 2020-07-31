@@ -55,7 +55,7 @@ var enhance = {
         };
       },
       ajax: {
-        url: 'controller.php?obj=menuValues_ctrl&method=getValuesUrl&context=' + context + '&att=' + att,
+        url: './?obj=menuValues_ctrl&method=getValuesUrl&context=' + context + '&att=' + att,
         dataType: 'json',
         delay: 250,
         tokenSeparators: [';'],

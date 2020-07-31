@@ -1,0 +1,10 @@
+<ul class="searcheable-list">
+{% for i in items %}
+    <li {% if i[2] %}onclick="{{ i[2] }}"{% else %}class="state-disabled"{% endif %}>
+		{% if i[0]%}<i class="fa {{ i[0] }}"></i><br />{% endif %}
+		{{ tr.get(i[1]) }}
+        {% if i[3]%}{{ i[3] }}{% endif %}
+	</li>
+{% endfor %}
+</ul>
+

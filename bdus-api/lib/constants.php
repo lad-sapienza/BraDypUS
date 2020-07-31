@@ -101,7 +101,7 @@ if ($_SESSION['debug_mode']){
 }
 
 if (DEBUG_ON) {
-	define('CACHE', serialize( ['debug' => true] ));
+	define('CACHE', serialize( ['debug' => true, "cache" => false] ));
 } else {
 	define('CACHE', serialize( ['cache'=>'cache'] ));
 }

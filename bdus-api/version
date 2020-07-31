@@ -1,4 +1,5 @@
-3.16.28[] = "Inspect becomes a system library"
+3.16.30[] = "Debug issue solved, Api uses system debug"
+3.16.29[] = "Inspect becomes a system library"
 3.16.28[] = "API2 getCharts uses Chart object"
 3.16.27[] = "utils::compressModScripts renamed to Compress::modScripts"
 3.16.26[] = "Better error management with chart module"

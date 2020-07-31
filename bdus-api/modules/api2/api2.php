@@ -29,7 +29,7 @@ class api2 extends Controller
     private $app;
     private $verb;
     private $pretty = false;
-    private $debug = true;
+    private $debug = false;
     private $valid_verbs = [
         'read',
         'search',
@@ -78,6 +78,7 @@ class api2 extends Controller
 
     public function run()
     {
+        $this->debug = DEBUG_ON;
         try {
             $this->validateInput();
             

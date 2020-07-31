@@ -90,14 +90,20 @@ ini_set('error_log', ERROR_LOG);
  * If debug=0, debug is turned off
  */ 
 
-if ( @$_REQUEST['debug'] === '1' || $_SESSION['debug_mode'] ) {
+if (@$_REQUEST['debug'] === '0') {
+    $_SESSION['debug_mode'] = false;
+    define('DEBUG_ON', false);
+    define('CACHE', serialize([ "autoescape" => false, "cache" => "cache"]));
+} else if ( @$_REQUEST['debug'] === '1') {
 	$_SESSION['debug_mode'] = true;
 	define('DEBUG_ON', true);
 	define('CACHE', serialize( [ "autoescape" => false, "debug" => true ] ));
+} else if ($_SESSION['debug_mode']) {
+	define('DEBUG_ON', true);
+	define('CACHE', serialize( [ "autoescape" => false, "debug" => true ] ));
 } else {
-	$_SESSION['debug_mode'] = false;
 	define('DEBUG_ON', false);
-	define('CACHE', serialize( [ "autoescape" => false, "cache" => "cache"] ));
+    define('CACHE', serialize([ "autoescape" => false, "cache" => "cache"]));
 }
 
 require_once LIB_DIR . 'myException.php';

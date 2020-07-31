@@ -29,7 +29,7 @@ class api2 extends Controller
     private $app;
     private $verb;
     private $pretty = false;
-    private $debug = false;
+    private $debug = true;
     private $valid_verbs = [
         'read',
         'search',
@@ -258,8 +258,7 @@ class api2 extends Controller
         $records_per_page	= $this->get['records_per_page'] 	? (int)$this->get['records_per_page']	: false;
         $full_records		= (bool) $this->get['full_records'];
 
-        require_once __DIR__ . '/ShortSqlToJson.php';
-        $resp = ShortSqlToJson::run(
+        $resp = \ShortSql\ToJson::run(
             $this->app,
             $shortsql,
             [

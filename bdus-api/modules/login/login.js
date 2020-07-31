@@ -28,7 +28,7 @@ var login = {
 		
 		loadLogin : function(app){
 			if (!app){
-				app = core.getHash('app');
+				app = hashActions.getHash('app');
 			}
 			
 			$('#wrapper').html(core.loading).load('./?obj=login_ctrl&method=select_app' + (app ? '&app=' + app : ''));
@@ -41,7 +41,7 @@ var login = {
 		
 		autologin: function(app){
 			if (!app){
-				app = core.getHash('app');
+				app = hashActions.getHash('app');
 			}
 			// try autologin (cookie authentication or application free autologin)
 			core.getJSON('login_ctrl', 'autolog', {'app': app}, false, function(data){

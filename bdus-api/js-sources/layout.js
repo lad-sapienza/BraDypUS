@@ -15,7 +15,7 @@ var layout = {
         });
         
         $(window).on( 'hashchange', function(e) {
-            layout.hashActions();
+            hashActions.map2action();
         });
     },
     

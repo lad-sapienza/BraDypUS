@@ -111,61 +111,6 @@ var core = {
 				layout.tabs.add(opt);
 			}
 		},
-		getHash: function(what){
-
-			var hash = location.hash;
-
-		    if(hash.length !== 0){
-		        // removes first 2 chars, ie. #/ and splits result in array
-		    	hash = hash.substring(2).split('/');
-
-		    	switch(what){
-
-		    		case 'app':
-		    			// #/app => app
-		    			return hash[0];
-
-		    		case 'mapId':
-		    			// #/app/map/mapId
-		    			if (hash[0] && hash[1] == 'map' && hash[2]){
-		    				return hash[2];
-		    			} else {
-		    				return false;
-		    			}
-		    			break;
-
-		    		case 'queryId':
-		    			// #/app/query/queryId
-		    			if (hash[0] && hash[1] == 'query' && hash[2]){
-		    				return hash[2];
-		    			} else {
-		    				return false;
-		    			}
-		    			break;
-
-		    		case 'chartId':
-		    			// #/app/chart/chartId
-		    			if (hash[0] && hash[1] == 'chart' && hash[2]){
-		    				return hash[2];
-		    			} else {
-		    				return false;
-		    			}
-		    			break;
-
-		    		case 'readId':
-		    			// #/app/table/id
-		    			if (hash[0] && hash[1] && hash[2]){
-		    				return {app:hash[0], table: hash[1], id: hash[2], isIdField: hash[3]};
-		    			}
-		    			break;
-
-	    			default:
-	    				return hash;
-		    	}
-        } else {
-        	return false;
-        }
-		},
 		tr: function (string, args) {
 
 			if (!lang[string]) {

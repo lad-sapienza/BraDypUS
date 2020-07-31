@@ -1,3 +1,4 @@
+3.16.27[] = "utils::compressModScripts renamed to Compress::modScripts"
 3.16.26[] = "Better error management with chart module"
 3.16.25[] = "Table options are statically loaded"
 3.16.24[] = "Hash Actions moved to separate file"

@@ -104,6 +104,40 @@ class Compress
 			'<link rel="shortcut icon" href="./img/favicon.ico">'
 		]);
 	}
+
+	/**
+   * Minifies all module javascript files. Return true on success or false on error.
+   * @return boolean
+   * @throws myException
+   */
+  public static function modScripts()
+  {
+	  $modules = utils::dirContent(MOD_DIR);
+
+	  foreach ($modules as $mod) {
+		  try {
+			  if (is_dir(MOD_DIR . $mod)) {
+				  $js_file = MOD_DIR . $mod . '/' . $mod. '.js';
+
+				  $compress_file = MOD_DIR . $mod . '/' . $mod . '.mini.js';
+
+				  if (file_exists($js_file)) {
+					  $str = "/*\n * copyright BraDypUS \n */";
+					  $str .= JSMin::minify ( file_get_contents ( $js_file ) );
+
+					  if (!utils::write_in_file($compress_file, $str)){
+						  throw new myException('Can not write compressed file ' . $compress_file);
+					  }
+				  }
+			  }
+		  } catch (myException $e) {
+			  $e->log();
+			  $error = true;
+		  }
+	  }
+
+	  return $error ? false : true;
+  }
 }
 
 ?>

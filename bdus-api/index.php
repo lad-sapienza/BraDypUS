@@ -24,7 +24,8 @@ try {
 		}
 	}
 	if ($_GET['mini']) {
-		utils::compressModScripts();
+		Compress::modScripts();
+		utils::emptyDir(MAIN_DIR . 'cache', false);
 	}
 
 	$controller = new Controller($_GET, $_POST, $_REQUEST);

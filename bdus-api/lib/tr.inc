@@ -12,7 +12,7 @@
 class tr
 {
 
-	private static $language_strings;
+	private static $language_strings = false;
 
 	/**
 	 *
@@ -22,14 +22,14 @@ class tr
 	 * 3) browser default language
 	 * 4) en
 	 */
-	public static function load_file()
+	private static function load_file()
 	{
 		/*
 		 * Set $_SESSION['pref']['lang']
 		 */
 		// language may be
-		if ( !pref::getLang() )
-		{
+		if ( !pref::getLang() ) {
+
 			try {
 				$def_lang = cfg::main('lang');
 			} catch(myException $e) {
@@ -45,11 +45,12 @@ class tr
 			} else {
 				pref::setLang('en');
 			}
-
 		}
 		require_once LOCALE_DIR . pref::getLang() . '.inc';
 
 		self::$language_strings = $lang;
+
+		return self::$language_strings;
 	}
 
 	/**
@@ -61,7 +62,7 @@ class tr
 	 */
 	public static function get($string, $args = [])
 	{
-		$lang = self::$language_strings;
+		$lang = self::$language_strings ?: self::load_file();
 
 		$translated = $lang[$string] ? $lang[$string] : $string;
 
@@ -78,17 +79,14 @@ class tr
 
 	/**
 	 *
-	 * Returns current language as json (is_string is false) or as javascript variable (is_string = true)
-	 * @param boolean $is_string
+	 * Returns current language as json
+	 * @return string JSON encoded
 	 */
-	public static function lang2json($is_string = false)
+	public static function lang2json()
 	{
-		$lang = self::$language_strings;
-
-		if ($is_string) {
-			echo 'var lang = ' . json_encode($lang) . ';';
-		} else {
-			return json_encode($lang);
+		if(!self::$language_strings){
+			return json_encode(self::load_file());
 		}
+		return json_encode(self::$language_strings);
 	}
 }

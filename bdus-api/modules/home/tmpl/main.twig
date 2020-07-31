@@ -7,7 +7,9 @@
 
   {{ css }}
 
-  <script src="./?obj=tr&method=lang2json&param=true"></script>
+  <script>
+  const lang = {{ tr_json }};
+  </script>
   <script>
     var debugMode = {{ debugMode }};
     var prefix = "{{ prefix }}";

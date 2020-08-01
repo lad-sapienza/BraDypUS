@@ -4,7 +4,9 @@
  * @uses cfg
  * @uses DB
  */
-class ReadRecord
+namespace Record;
+
+class Read
 {
 
   /**
@@ -30,13 +32,14 @@ class ReadRecord
    */
   public static function getFull(string $app, string $tb, int $id)
   {
-    $core = self::getTbRecord($tb, "`{$tb}`.`id` = ?", [$id], true) ?: [];
+    $core = self::getCore($tb, $id) ?: [];
 
 		return [
 			'metadata' => [
 				'tb_id' => $tb,
+				'rec_id' => $id,
 				'tb_stripped' => str_replace(PREFIX, null, $tb),
-				'tb_label' => cfg::tbEl($tb, 'label')
+				'tb_label' => \cfg::tbEl($tb, 'label')
 			],
 			'core'       => $core,
 			'plugins'    => self::getPlugins($app, $tb, $id),
@@ -45,8 +48,27 @@ class ReadRecord
       'manualLinks'=> self::getManualLinks($app, $tb, $id),
 			'files'      => self::getFiles($app, $tb, $id),
       'geodata'    => self::getGeodata($app, $tb, $id),
-      'rs'         => cfg::tbEl($tb, 'rs') ? self::getRs($app, $tb, $id): false
+      'rs'         => \cfg::tbEl($tb, 'rs') ? self::getRs($app, $tb, $id): false
 		];
+  }
+
+    /**
+   * Returns array with core data
+   * @param  string  $tb   name
+   * @param  int    $id   Record ID
+   * @return array        Array of table data
+   *
+   *    "id": {
+   *        "name": (field id),
+   *        "label": (field label),
+   *        "val": (value),
+   *        "val_label": (if available — id_from_table fields — value label)
+   *    },
+   *    {...}
+   */
+  public static function getCore($tb, $id)
+  {
+    return self::getTbRecord($tb, "`{$tb}`.`id` = ?", [$id], true);
   }
 
   /**
@@ -67,7 +89,7 @@ class ReadRecord
   public static function getManualLinks(string $app, string $tb, int $id)
   {
     $manualLinks = [];
-		$res = DB::start()->query(
+		$res = \DB::start()->query(
       "SELECT * FROM `" . PREFIX . "userlinks` WHERE (`tb_one` = ? AND `id_one` = ?) OR (`tb_two` = ? AND `id_two` = ?) ORDER BY `sort`, `id`",
       [ $tb, $id, $tb, $id ],
       'read'
@@ -92,12 +114,12 @@ class ReadRecord
           continue;
         }
 
-        $id_fld = cfg::tbEl($mlt, 'id_field');
+        $id_fld = \cfg::tbEl($mlt, 'id_field');
 
         if ( $id_fld === 'id' ) {
           $ref_val_label = $mli;
         } else {
-          $lres= DB::start()->query(
+          $lres= \DB::start()->query(
             "SELECT {$id_fld} as `label` FROM {$mlt} WHERE `id` = ?",
             [$mli],
             'read'
@@ -109,9 +131,10 @@ class ReadRecord
           "key"         => $r['id'],
           "tb_id"       => $mlt,
           "tb_stripped" => str_replace(PREFIX, null, $mlt),
-          "tb_label"    => cfg::tbEl($mlt, 'label'),
+          "tb_label"    => \cfg::tbEl($mlt, 'label'),
           "ref_id"      => $mli,
-          "ref_label"   => $ref_val_label
+          "ref_label"   => $ref_val_label,
+          "sort"   => $r['sort']
         ]);
 
 			}
@@ -135,7 +158,7 @@ class ReadRecord
    */
   public static function getRs(string $app, string $tb, int $id)
   {
-    return DB::start()->query(
+    return \DB::start()->query(
       "SELECT `id`, `first`, `second`, `relation` FROM `" . PREFIX . "rs` WHERE `tb`= ? AND (`first`= ? OR `second` = ?)",
       [$tb, $id, $id],
       'read'
@@ -158,7 +181,7 @@ class ReadRecord
    */
   public static function getGeodata(string $app, string $tb, int $id)
   {
-    $r = DB::start()->query(
+    $r = \DB::start()->query(
       "SELECT `id`, `geometry`, `geo_el_elips`, `geo_el_asl` FROM `" . PREFIX . "geodata` WHERE `table_link` = ? AND `id_link`= ?",
 			[$tb, $id]);
     if (is_array($r)) {
@@ -201,7 +224,7 @@ EOD;
       'tb' => $tb,
       'id' => $id
     ];
-		$files =  DB::start()->query($sql, $sql_val);
+		$files =  \DB::start()->query($sql, $sql_val);
 
     usort($files, function($a, $b){
       if ($a['sort'] === $b['sort']) {
@@ -234,14 +257,14 @@ EOD;
   public static function getBackLinks(string $app, string $tb, int $id)
   {
     $backlinks = [];
-		$bl_data = cfg::tbEl($tb, 'backlinks');
+		$bl_data = \cfg::tbEl($tb, 'backlinks');
 
     if (is_array($bl_data)) {
 
 			foreach ($bl_data as $bl) {
 
 				list($ref_tb, $via_plg, $via_plg_fld) = utils::csv_explode($bl, ':');
-        $ref_tb_id = cfg::tbEl($ref_tb, 'id_field');
+        $ref_tb_id = \cfg::tbEl($ref_tb, 'id_field');
 
         $where = " `id` IN (SELECT DISTINCT `id_link` FROM `{$via_plg}` WHERE `table_link` = '{$ref_tb}' AND `{$via_plg_fld}` = {$id})";
 
@@ -251,7 +274,7 @@ EOD;
         $sql_val = [$id];
 
 
-        $r = DB::start()->query($sql, $sql_val);
+        $r = \DB::start()->query($sql, $sql_val);
         if ($r[0]['tot'] == 0){
           continue;
         }
@@ -259,7 +282,7 @@ EOD;
         $backlinks[$ref_tb] = [
           'tb_id' => $ref_tb,
           'tb_stripped' => str_replace(PREFIX, null, $ref_tb),
-					"tb_label" => cfg::tbEl($ref_tb, 'label'),
+					"tb_label" => \cfg::tbEl($ref_tb, 'label'),
 					'tot' => $r[0]['tot'],
           'where' => $where,
 					'data' => $r
@@ -288,7 +311,7 @@ EOD;
   {
     $links = [];
 
-		$links_data = cfg::tbEl($tb, 'link');
+		$links_data = \cfg::tbEl($tb, 'link');
 
 		if (is_array($links_data)) {
 
@@ -299,12 +322,12 @@ EOD;
 				}
 				$sql = "SELECT count(id) as tot FROM `{$ld['other_tb']}` WHERE " . implode($where, ' AND ');
 
-				$r = DB::start()->query($sql);
+				$r = \DB::start()->query($sql);
 
 				$links[$ld['other_tb']] = [
 					'tb_id' => $ld['other_tb'],
 					'tb_stripped' => str_replace(PREFIX, null, $ld['other_tb']),
-					"tb_label" => cfg::tbEl($ld['other_tb'], 'label'),
+					"tb_label" => \cfg::tbEl($ld['other_tb'], 'label'),
 					'tot' => $r[0]['tot'],
 					'where' => implode($where, ' AND ')
 				];
@@ -344,15 +367,19 @@ EOD;
   {
     $plugins = [];
 
-		$plg_names = cfg::tbEl($tb, 'plugin');
+		$plg_names = \cfg::tbEl($tb, 'plugin');
 		if ($plg_names && is_array($plg_names)){
 			foreach ($plg_names as $p) {
 				$plg_data = self::getTbRecord($p, "`table_link`= ? AND `id_link` = ?", [$tb, $id], false, true) ?: [];
         if (empty($plg_data)){
           continue;
         }
+        $indexed_plg_data = [];
+        foreach ($plg_data as $key => $row) {
+          $indexed_plg_data[$row['id']['val']];
+        }
         // sort records using sort field, if available
-  			if (in_array('sort', array_keys($plg_data[0]))) {
+  			if (in_array('sort', array_keys(reset($plg_data)))) {
   				usort($plg_data, function($a, $b){
   					if ($a['sort'] === $b['sort']) {
   							return 0;
@@ -365,7 +392,7 @@ EOD;
 					"metadata" => [
 						"tb_id" => $p,
 						"tb_stripped" => str_replace(PREFIX, null, $p),
-						"tb_label" => cfg::tbEl($p, 'label'),
+						"tb_label" => \cfg::tbEl($p, 'label'),
 						"tot" => count($plg_data)
 					],
 					"data" => $plg_data
@@ -395,7 +422,7 @@ EOD;
    */
   private static function getTbRecord(string $tb, string $sql, array $sql_val = [], bool $return_first = false, bool $return_all_fields = false)
 	{
-		$cfg = cfg::fldEl($tb, 'all', 'all');
+		$cfg = \cfg::fldEl($tb, 'all', 'all');
 
 		$fields = $return_all_fields ? ["*"] : ["{$tb}.*"];
 		$join = [];
@@ -406,7 +433,7 @@ EOD;
 
 				$ref_tb = $arr['id_from_tb'];
 				$ref_alias = uniqid('al');
-				$ref_tb_fld = cfg::tbEl($arr['id_from_tb'], 'id_field');
+				$ref_tb_fld = \cfg::tbEl($arr['id_from_tb'], 'id_field');
 
         if ($tb === $ref_tb) {
           continue;
@@ -427,7 +454,7 @@ EOD;
 		 	implode(' ', $join) .
 		 	" WHERE {$sql}";
 
-		$r = DB::start()->query($full_sql, $sql_val, 'read');
+		$r = \DB::start()->query($full_sql, $sql_val, 'read');
 
 		if (!$r){
 			return false;
@@ -441,17 +468,17 @@ EOD;
 				if (strpos($k, '@') === false){
 					$ret[$k] = [
 						'name' => $k,
-						'label' => cfg::fldEl($tb, $k, 'label'),
+						'label' => \cfg::fldEl($tb, $k, 'label'),
 						'val' => $v
 					];
 				} else {
 					$ret[str_replace('@', '', $k)]['val_label'] = $v;
 				}
 			}
-			array_push($return_arr, $ret);
+			$return_arr[(int)$res['id']] = $ret;
 		}
 
-		return $return_first ? $return_arr[0] : $return_arr;
+		return $return_first ? reset($return_arr) : $return_arr;
 	}
 }
 

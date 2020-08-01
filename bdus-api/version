@@ -1,3 +1,4 @@
+3.16.34[] = "ReadRecord renamed to \Read\Record"
 3.16.33[] = "Better error reporting"
 3.16.32[] = "JSON tr loaded on bootstrap"
 3.16.31[] = "Removed support for PROJS_DIR"

@@ -4,7 +4,7 @@ namespace ShortSql;
  * Gets Unique values from database
  * @requires ShortSql
  * @requires DB
- * @requires ReadRecord
+ * @requires \Read\Record
  */
 class ToJson
 {	
@@ -100,7 +100,7 @@ class ToJson
 		$fullResult = [];
 
 		foreach ($result as $id => $row) {
-			$rowResult = \ReadRecord::getFull($app, $tb, $row['id']);
+			$rowResult = \Record\Read::getFull($app, $tb, $row['id']);
 			array_push($fullResult, $rowResult);
 		}
 		

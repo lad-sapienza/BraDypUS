@@ -213,7 +213,7 @@ class home_ctrl extends Controller
                 [ 
                     "fa-code", 
                     tr::get('ip'), 
-                    !utils::is_online() && utils::canUser('read') ? "core.runMod('flds_editor');" :  false 
+                    !utils::is_online() && utils::canUser('read') ? "core.runMod('info', 'getIP');" :  false 
                 ],
                 [ 
                     "fa-terminal", 

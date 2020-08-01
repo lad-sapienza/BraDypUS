@@ -7,12 +7,34 @@
  * @uses			cfg
  *
  * $data['core'] = array of core data [field_id=>value]
- * $data['plugins'] = array of arrays od plugin data [plugin_name=>[fld_id=>value]]
+ * $data['plugins'] = array of arrays of plugin data [plugin_name=>[fld_id=>value]]
  * $data['corelinks_details'] = array of arrays links id and id_field: [table_name => [ [id=int, id_field=string], [...]], [...] ]
  * $data['corelinks'] = array with sum-up info about corelinks [table_name => [tot:int, query:string, values:array], [...]]
  * $data['userlinks'] =
  * $data['files'] =
  * $data['geodata']
+ * 
+ * $data	=>	[
+ * 		"core"		=> [
+ * 				fieldid => fieldvalue,
+ * 				fieldid => fieldvalue,
+ * 				...
+ * 		],
+ * 		"plugins"	=> [
+ * 				plugin1_name => [
+ * 					fieldid => fieldvalue,
+ * 					fieldid => fieldvalue,
+ * 					...
+* 				],
+ * 				plugin2_name => [
+ * 					...
+* 				],
+				...
+ * 		],
+ * 		"corelinks_details": [
+ * 				
+ * 		],
+ * ]
  */
 
 class Record implements iRecord

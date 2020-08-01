@@ -272,16 +272,17 @@ class api_ctrl extends Controller
 			'stripped_table' => str_replace(PREFIX, null, $tb),
 			'table_label' => cfg::tbEl($tb, 'label')
 		];
-    $data['fields'] = cfg::fldEl($tb, 'all', 'label');
+    	$data['fields'] = cfg::fldEl($tb, 'all', 'label');
 		$data['core'] = $rec->getCore();
 		$data['coreLinks'] = $rec->getCoreLinks();
 		$data['backLinks'] = $rec->getBackLinks();
 		$data['allPlugins'] = $rec->getAllPlugins();
 		$data['fullFiles'] = $rec->getFullFiles();
 		$data['geodata'] = $rec->getGeodata();
-    if (cfg::tbEl($tb, 'rs')){
-      $data['rs'] = $rec->getRS();
-    }
+
+		if (cfg::tbEl($tb, 'rs')){
+			$data['rs'] = $rec->getRS();
+		}
 		$data['userLinks'] = $rec->getUserLinks();
 
 		foreach ($data['coreLinks'] as $tb => &$cl) {

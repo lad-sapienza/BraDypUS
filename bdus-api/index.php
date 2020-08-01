@@ -38,7 +38,13 @@ try {
 	echo utils::message( tr::get('generic_error'), 'error', true);
 
 	if (DEBUG_ON) {
+		echo "<strong>" . $e->getMessage() . "</strong>";
+		echo "<hr>";
+		echo nl2br($e->getTraceAsString());
+		echo "<hr>";
+		echo "<pre>";
 		var_dump($e);
+		echo "</pre>";
 	}
 }
 ob_end_flush();

@@ -1,3 +1,4 @@
+3.16.33[] = "Better error reporting"
 3.16.32[] = "JSON tr loaded on bootstrap"
 3.16.31[] = "Removed support for PROJS_DIR"
 3.16.30[] = "Debug issue solved, Api uses system debug"

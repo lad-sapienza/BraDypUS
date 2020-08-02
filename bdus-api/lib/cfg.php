@@ -4,6 +4,11 @@
  * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
  * @license			See file LICENSE distributed with this code
  * @since			Apr 21, 2012
+ * @uses 			DEBUG_ON
+ * @uses 			MAIN_DIR
+ * @uses 			PROJ_DIR
+ * @uses 			PREFIX
+ * @uses 			myException
  */
 
 class cfg
@@ -27,6 +32,8 @@ class cfg
 				$app_data = MAIN_DIR . "projects{$app}/cfg/app_data.json";
 			} else if (defined('PROJ_DIR')) {
 				$app_data = PROJ_DIR . 'cfg/app_data.json';
+			} else {
+				throw new myException("Cannot define app_data.");
 			}
 
 			if (!file_exists($app_data)) {
@@ -52,8 +59,8 @@ class cfg
 
 			// single tables
 			$tables_array = self::tbEl('all', 'label');
-			//single plugins
 
+			//single plugins
 			$all_fields = $tables_array;
 
 			foreach ($all_fields as $tb=>$tb_name) {

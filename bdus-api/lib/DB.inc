@@ -6,7 +6,7 @@
  * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
  * @license			See file LICENSE distributed with this code
  * @since			31/mar/2011
- * @uses			connect.ini
+ * @uses			DB_connection
  */
 
 class DB
@@ -31,7 +31,7 @@ class DB
 	 */
 	public function __construct($app = false, $custom_connection = false)
 	{
-		$this->app = $app ? $app : $_SESSION['app'];
+		$this->app = $app ? $app : APP;
 
 		$this->parseStart($this->app, $custom_connection);
 	}

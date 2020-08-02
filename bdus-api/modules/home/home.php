@@ -46,7 +46,7 @@ class home_ctrl extends Controller
 
         $this->render('home', 'main', [
             "version" => version::current(),
-            "app_label" => $_SESSION['app'] ?  strtoupper(cfg::main('name')) : false,
+            "app_label" => defined('APP') ?  strtoupper(cfg::main('name')) : false,
             "css" => Compress::css( ['main.css'], $this->get['mini']),
             "tr_json" => tr::lang2json(),
             "debugMode" => DEBUG_ON ? "true" : "false",

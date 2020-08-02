@@ -47,7 +47,7 @@ class QueryBuilder
 
     public function setJoin($tb, $onStatement, $joinType = 'JOIN')
     {
-        array_push($this->join, "$joinType $tb ON $onStatement");
+        array_push($this->joins, "$joinType $tb ON $onStatement");
         return $this;
     }
 
@@ -140,7 +140,7 @@ class QueryBuilder
           'SELECT',
           implode(', ', $this->fields),
           'FROM ' . $this->tb,
-          implode(' ', $this->join),
+          implode(' ', $this->joins),
           'WHERE ' . implode(' ', $this->where),
           ($this->group ? 'GROUP BY ' . implode(' ', $this->group) : false),
           ($this->order ? 'ORDER BY ' . implode(' ', $this->order) : false),

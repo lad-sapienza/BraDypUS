@@ -1,3 +1,4 @@
+3.16.35[] = "Fixed bug with Query builder (join => joins)"
 3.16.34[] = "ReadRecord renamed to \Read\Record"
 3.16.33[] = "Better error reporting"
 3.16.32[] = "JSON tr loaded on bootstrap"

@@ -56,7 +56,7 @@ if ( isset($_REQUEST['app']) && is_dir('./projects/' . $_REQUEST['app'] ) ) {
 /**
  * Define PROJ_DIR and PREFIX: APP dependent
  */
-if(defined('APP') && isset($_SESSION['user']['id']) ) {
+if( defined('APP') ) {
 
 	$_SESSION['app'] = APP;
 	define ( 'PREFIX', APP . PREFIX_DELIMITER);

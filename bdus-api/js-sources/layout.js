@@ -21,14 +21,14 @@ var layout = {
     
     loadHome: function(){
         
-        var html = '<div class="tabbable">' +
-        '<ul class="nav nav-tabs navbar-fixed-top" id="tabs" data-tabs="tabs">' +
-        '<li class="active"><a href="#home">BraDypUS v3</a></li>' +
-        '</ul>' +
-        '<div class="tab-content">' +
-        '<div class="tab-pane active" id="home"></div>' +
-        '</div>' +
-        '</div>';
+        var html = `<div class="tabbable">
+            <ul class="nav nav-tabs navbar-fixed-top" id="tabs" data-tabs="tabs">
+                <li class="active"><a href="#home">BraDypUS v3</a></li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="home"></div>
+            </div>
+        </div>`;
         
         $('#wrapper').html(html);
         
@@ -245,8 +245,8 @@ var layout = {
             
             var title = opts.title ? opts.title : '',
             tab = this.tab,
-            id = Math.floor(Math.random()*1000) + '' + tab.find('li').length,
-            URLstring = './?';
+            // https://gist.github.com/6174/6062387
+            id = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
             
             this.tab.append('<li><a href="#added' + id + '">' + title + ' <button class="close" type="button">×</button></a></li>');
             this.tab.next('div.tab-content').append('<div class="tab-pane" id="added' + id + '">' + core.loading + '</div>');

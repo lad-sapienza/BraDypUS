@@ -111,24 +111,22 @@ var core = {
 				layout.tabs.add(opt);
 			}
 		},
+		/**
+		 * Returns translates string, if translation is available
+		 * @param string string String to be translated
+		 * @param array|false args Array of argument to use for vsprintf
+		 */
 		tr: function (string, args) {
 
 			if (!lang[string]) {
-
 				return string;
-
 			} else {
 				if (!args) {
-
 					return lang[string];
-
 				} else {
-
 					return vsprintf(lang[string], args);
-
 				}
 			}
-			return lang[string] ? lang[string] : string;
 		},
 
 

@@ -87,7 +87,6 @@ $lang['backup_2_drive']  = "Backup su drive";
 $lang['restore_from_drive'] = "Ripristina da drive";
 $lang['chat'] = "Chat";
 $lang['ip'] = "IP";
-$lang['most_recent_records'] = "Record più recenti";
 $lang['fast_search'] = "Ricerca veloce";
 
 $lang['not_enough_privilege'] = "Siamo spiacenti, ma non disponi dei privilegi sufficienti per accedere a questa funzione";
@@ -480,7 +479,6 @@ $lang['user_data'] = "Dati utente";
 $lang['save_pref_in_db'] = "Salva le tue preferenze nel database per ricaricarle automaticamente nella prossima sessione";
 $lang['pref_saved_in_db'] = "Le preferenze sono state salvate nel database";
 $lang['pref_not_saved_in_db'] = "Errore. Le preferenze non sono state salvate nel database";
-$lang['most_recent_no'] = "Numero dei record più recenti da visualizzare";
 $lang['only_positive_integers_allowed'] = "Sono permesso solo numeri interi positivi!";
 $lang['preview_flds'] = "Campi anteprima";
 $lang['ok_preview_set'] = "La lista dei campi di anteprima è stata salvata";

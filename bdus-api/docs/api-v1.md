@@ -21,9 +21,7 @@ At present the following values are available: **read**: will return full struct
 - `id` (GET, int, required for `verb` **read**): the database id of the record to be rendered.
 
 - `type` (GET, string, required for `verb` **search**): type of search to perform.
-The available types are: **all**, **recent**, **sqlExpert**, **fast**, **id_array**, **encoded**.
-
-- `limit`(GET, int, optional for `type` **recent**, default: 20): number of total most recent records to return
+The available types are: **all**, **sqlExpert**, **fast**, **id_array**, **encoded**.
 
 - `querytext` (GET, string, required for `type` **sqlExpert**): Query (Where statement) to execute
 - `join` (GET, string, optional for `type` **sqlExpert**): JOIN statement, if needed
@@ -55,10 +53,6 @@ The available types are: **all**, **recent**, **sqlExpert**, **fast**, **id_arra
   - first page (no page parameter): https://db.bradypus.net/api/ghazni/finds?verb=search&type=all
   - first page (with page parameter): https://db.bradypus.net/api/ghazni/finds?verb=search&type=all&page=1
   - third page: https://db.bradypus.net/api/ghazni/finds?verb=search&type=all&page=3
-- Get most recently entered records:
-  - default number (20) of records: https://db.bradypus.net/api/ghazni/finds?verb=search&type=recent
-  - custom number (eg. 30) of records: https://db.bradypus.net/api/ghazni/finds?verb=search&type=recent&limit=30
-  - custom number (eg. 30) of records, page 2: https://db.bradypus.net/api/ghazni/finds?verb=search&type=recent&limit=30&page=2
 - Search a string in anywhere:
   - Search for word **Figurine**: https://db.bradypus.net/api/ghazni/finds?verb=search&type=fast&string=Figurine
   - Search for word **Figurine** and get the second page: https://db.bradypus.net/api/ghazni/finds?verb=search&type=fast&string=Figurine&page=2

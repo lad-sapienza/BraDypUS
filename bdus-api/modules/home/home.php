@@ -87,11 +87,6 @@ class home_ctrl extends Controller
                     utils::canUser('add_new') ? "api.record.add('" . PREFIX . "files')" :  false 
                 ],
                 [ 
-                    "fa-list-alt", 
-                    'most_recent_records', 
-                    utils::canUser('read') ? "core.runMod('search', ['mostRecent', $('#ref_tb').val(), " . ( pref::get('most_recent_no') ? pref::get('most_recent_no') : 10) . "] );" :  false 
-                ],
-                [ 
                     "fa-table", 
                     'show_all', 
                     utils::canUser('read') ? "core.runMod('search', [ 'all', $('#ref_tb').val() ] );" :  false 

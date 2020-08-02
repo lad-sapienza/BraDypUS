@@ -30,9 +30,8 @@ class api_ctrl extends Controller
 	 * 			verb:  Required. One of: read | edit | inspect
 	 * 			id: required for verb read and for verb search, type id_array
 	 *
-	 * 			type: required for verb search. One of: all | recent | advanced | sqlExpert | fast | id_array | encoded
+	 * 			type: required for verb search. One of: all | advanced | sqlExpert | fast | id_array | encoded
 	 *
-	 * 			limit: optional for type recent, default: 20
 	 * 			adv (post): required for type advanced
 	 * 			join: optional, for type sqlExpert
 	 * 			querytext: required for type sqlExpert
@@ -145,7 +144,7 @@ class api_ctrl extends Controller
 			// SEARCH verb
 			if ($this->get['verb'] === 'search') {
 
-				$valid_types = ['all', 'recent', 'advanced', 'sqlExpert', 'fast', 'id_array', 'encoded'];
+				$valid_types = ['all', 'advanced', 'sqlExpert', 'fast', 'id_array', 'encoded'];
 
 				if( !in_array($this->get['type'], $valid_types)) {
 					throw new Exception("Invalid search type {$this->get['type']}. Type must be one of " . implode(', ', $valid_types));
@@ -157,10 +156,6 @@ class api_ctrl extends Controller
 				switch ($request['type']) {
 					case 'all':
 						// No params set
-						break;
-
-					case 'recent':
-						$request['limit'] = $this->get['limit'] ? $this->get['limit'] : 20;
 						break;
 
 					case 'advanced':

@@ -5,7 +5,7 @@
  */
 
 var search = {
-		init: function(method, tb, fast_string_or_recent_limit){
+		init: function(method, tb, fast_string){
 
 			switch(method){
 				case 'advanced':
@@ -16,16 +16,12 @@ var search = {
 					search.sqlExpert(tb);
 					break;
 
-				case 'mostRecent':
-					search.mostRecent((fast_string_or_recent_limit ? fast_string_or_recent_limit : 10), tb);
-					break;
-
 				case 'all':
 					search.all(tb);
 					break;
 
 				case 'fast':
-					search.fast(fast_string_or_recent_limit, tb);
+					search.fast(fast_string, tb);
 					break;
 			}
 		},
@@ -39,12 +35,6 @@ var search = {
 
 			api.showResults(tb, 'type=all', core.tr('show_all') + ' (' + tb + ')');
 		},
-
-		mostRecent: function(nr, tb){
-
-			api.showResults(tb, 'type=recent&limit=' + nr, core.tr('most_recent_records') + ' (' + tb + ')');
-		},
-
 
 		advanced: function(tb){
 			core.open({

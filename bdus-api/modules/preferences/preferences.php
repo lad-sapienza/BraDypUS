@@ -20,8 +20,7 @@ class preferences_ctrl extends Controller
 				'infinite_scroll'=> pref::get('infinite_scroll'),
 				'all_langs' => $langs,
 				'current_lang' => pref::get('lang'),
-				'user_id' => $_SESSION['user']['id'],
-				'most_recent' => pref::get('most_recent_no') ? pref::get('most_recent_no') : 10 
+				'user_id' => $_SESSION['user']['id']
 				));
 	}
 	

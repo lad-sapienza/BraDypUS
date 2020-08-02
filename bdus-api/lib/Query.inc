@@ -10,8 +10,6 @@
  * 	tb		string, required
  * type
  * 		'all'
- * 		'recent'
- * 			'limit'		int, required
  *
  * 		'advanced'
  * 			'adv'		array of arrays:
@@ -250,10 +248,6 @@ class Query
         switch ($request['type']) {
             case 'all':
                 return ' 1 ';
-                break;
-
-            case 'recent':
-                return ' 1  ORDER BY `id` DESC LIMIT 0, ' . $request['limit'];
                 break;
 
             case 'advanced':

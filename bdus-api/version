@@ -1,3 +1,4 @@
+3.16.40[] = "Removed support for most recent query"
 3.16.40[] = "Home_ctrl uses constant APP instead of $_SESSION['app']"
 3.16.39[] = "Inline docs and better error control for tr"
 3.16.38[] = "DB uses constant APP instead of $_SESSION['app']"

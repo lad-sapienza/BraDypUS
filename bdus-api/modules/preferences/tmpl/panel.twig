@@ -61,19 +61,6 @@
 		</div>
 	</div>
 	
-	<!-- MOST RECENT NO -->
-	<div class="col-md-2">
-		<div class="panel panel-default">
-			<div class="panel-heading">{{ tr.get('most_recent_no') }}</div>
-			<div class="panel-body">
-				<input type="number" step="1" id="most_recent-{{ uid }}" value="{{ most_recent }}" />
-			</div>
-			<div class="panel-footer">
-				<button class="btn btn-default" id="most_recent-but-{{ uid }}"><i class="glyphicon glyphicon-ok"></i> {{ tr.get('save') }}</button>
-			</div>
-		</div>
-	</div>
-	
 	<div class="col-md-2">
 		<div class="panel panel-default" >
 			<div class="panel-heading">{{ tr.get('template_mng') }}</div>
@@ -132,23 +119,6 @@ $('#lang-but-{{ uid }}').click(function(){
 		core.message("{{ tr.get('pref_set') }}", 'success');
 		$('#reload-{{ uid }}').show();
 	});
-});
-
-// MOST RECENT NO
-$('#most_recent-but-{{ uid }}').on('click', function(){
-	var val = $('#most_recent-{{ uid }}').val();
-	
-	if(val!= '' && val > 0 && !isNaN(val)){
-		val = parseInt(val);
-		
-		$.get('./?obj=preferences_ctrl&method=save&key=most_recent_no&val=' + val, function(){
-			core.message("{{ tr.get('pref_set') }}", 'success');
-			$('#reload-{{ uid }}').show();
-		});
-	} else {
-		$('#most_recent-{{ uid }}').focus();
-		core.message(core.tr('only_positive_integers_allowed'), 'error');
-	}
 });
 
 // SAVE TO DB

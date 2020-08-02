@@ -160,13 +160,19 @@ class ParseParts
 
         // Set value
         // If the caret is the forst char, the value is not a string: it is a field name
-        if ($value[0] === '^'){
+        if ($value[0] === '^') {
             list($binded_tb, $binded_fld, $binded_alias) = self::Fld(substr($value, 1));
             $binded = "`$binded_tb`.`$binded_fld`";
+        } else if (in_array($operator, ['IS NULL', 'IS NOT NULL'])) {
+            $binded = '';
         } else if ($noValues) {
             $binded = "'" . str_replace("'", "\'", $value) . "'";
         } else {
             $binded = '?';
+        }
+        // Value is not passed if value starts with ^ or if operator is IS NULL or IS NOT NULL
+        if ($value[0] === '^' || in_array($operator, ['IS NULL', 'IS NOT NULL']) ){
+            unset($value);
         }
 
         $sql = implode(' ', [

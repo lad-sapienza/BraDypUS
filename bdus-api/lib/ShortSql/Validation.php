@@ -18,7 +18,7 @@ class Validation
      */
     public static function isValidOperator($operator)
     {
-        $valid_operators = [ '=', '!=', 'like', 'not like', '<', '<=', '>', '>=' ];
+        $valid_operators = [ '=', '!=', 'like', 'not like', '<', '<=', '>', '>=', 'is null', 'is not null'];
         // Validate connector
         if (!in_array(strtolower($operator), $valid_operators)) {
             throw new \Exception("Operator `{$operator}` non valid. Only " . implode(", ", $valid_operators) . " are allowed");

@@ -78,7 +78,7 @@ class ShortSql
                 $data['sort']   ? ' ORDER BY ' . implode(', ', $data['sort']) : false,
                 !is_null($data['rows'])   ? ' LIMIT ' . $data['rows'] . ($data['offset'] ? ', ' . $data['offset'] : '') : false
             ])),
-            $data['values'],
+            array_filter($data['values']),
             $data['tb']
         ];
     }

@@ -1,3 +1,4 @@
+3.16.42[] = "Added support for IS NULL and IS NOT NULL in ShortSQL"
 3.16.41[] = "Removed support for most recent query"
 3.16.40[] = "Home_ctrl uses constant APP instead of $_SESSION['app']"
 3.16.39[] = "Inline docs and better error control for tr"

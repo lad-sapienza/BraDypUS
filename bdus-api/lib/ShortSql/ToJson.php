@@ -5,6 +5,7 @@ namespace ShortSql;
  * @requires ShortSql
  * @requires DB
  * @requires \Read\Record
+ * @requires \toGeoJson
  */
 class ToJson
 {	
@@ -58,7 +59,7 @@ class ToJson
 			$records = $full_records ? self::getFullData($sql, $values, $app, $tb) : self::getData($sql, $values);
 
 			if ($geojson) {
-				return toGeoJson::fromMultiArray( $records, true, $tb );
+				return \toGeoJson::fromMultiArray( $records, true, $tb );
 			} else {
 				return [
 					'head' => $header,

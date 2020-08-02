@@ -1,3 +1,4 @@
+3.16.36[] = "Refactored constants"
 3.16.36[] = "Inline docs and better error handling for cfg"
 3.16.35[] = "Fixed bug with Query builder (join => joins)"
 3.16.34[] = "ReadRecord renamed to \Read\Record"

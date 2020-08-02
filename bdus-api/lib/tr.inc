@@ -6,6 +6,7 @@
  * @license			See file LICENSE distributed with this code
  * @since			Apr 7, 2012
  * @uses			cfg
+ * @uses			pref
  */
 
 
@@ -33,14 +34,15 @@ class tr
 			try {
 				$def_lang = cfg::main('lang');
 			} catch(myException $e) {
-				// do nothing
+				// cfg throws myException on error, eg.: app is not set yet
+				// if def_lang cannot be set, do nothing
 			}
 
 			$computer_lang = substr($_SERVER["HTTP_ACCEPT_LANGUAGE"], 0, 2);
 
-			if ($def_lang) {
+			if ($def_lang && file_exists (LOCALE_DIR . $def_lang . '.inc')) {
 				pref::setLang($def_lang);
-			} else if ($computer_lang AND file_exists (LOCALE_DIR . $computer_lang . '.inc') ) {
+			} else if ($computer_lang && file_exists (LOCALE_DIR . $computer_lang . '.inc') ) {
 				pref::setLang($computer_lang);
 			} else {
 				pref::setLang('en');

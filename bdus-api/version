@@ -1,3 +1,4 @@
+3.16.44[] = "Added missing edit_tbs_data in home"
 3.16.43[] = "Cleaned Matrix"
 3.16.42[] = "Added support for IS NULL and IS NOT NULL in ShortSQL"
 3.16.41[] = "Removed support for most recent query"

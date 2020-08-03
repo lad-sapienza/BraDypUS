@@ -202,6 +202,11 @@ class home_ctrl extends Controller
                 ],
                 [ 
                     "fa-cog", 
+                    'edit_tbs_data', 
+                    utils::canUser('super_admin') ? "core.runMod('tbs_editor');" :  false 
+                ],
+                [ 
+                    "fa-cogs", 
                     'edit_flds_data', 
                     utils::canUser('super_admin') ? "core.runMod('flds_editor');" :  false 
                 ],

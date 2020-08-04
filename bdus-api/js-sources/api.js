@@ -402,7 +402,7 @@ var api = {
                 .html(label)
                 .addClass('btn btn-default')
                 .click(function(){
-                  div.find('.fl_content').load('./?obj=record_ctrl&method=showResults&noDblClick=1&force_array=1&tb=' + tb + '&type=all&noOpts=1' + (select_one ? '&select_one=true' : ''));
+                  div.find('.fl_content').load('./?obj=record_ctrl&method=showResults&noDblClick=1&tb=' + tb + '&type=all&noOpts=1' + (select_one ? '&select_one=true' : ''));
                   div.find('input.curr_tb').val(tb);
                 })
                 .appendTo(div.find('.btn-group'));
@@ -410,7 +410,7 @@ var api = {
 
           } else {
             div.find('.fl_content')
-              .load('./?obj=record_ctrl&method=showResults&force_array=1&tb=' + def_tb + '&type=all&noOpts=1' + (select_one ? '&select_one=true' : ''));
+              .load('./?obj=record_ctrl&method=showResults&tb=' + def_tb + '&type=all&noOpts=1' + (select_one ? '&select_one=true' : ''));
             div.find('input.curr_tb').val(def_tb);
           }
 

@@ -53,54 +53,43 @@ class Controller
 	}
 
 	public function route()
-	{
-		if ($this->request['obj']) {
+	{	
+		// Set object
+		$obj = $this->request['obj'] ?: 'home_ctrl';
+		
+		// Set method
+		$method = $this->request['method'] ?: 'showAll';
 
-			$obj = $this->request['obj'];
-			$method = $this->request['method'];
+		// Set param
+		if (isset($this->request['param']) && is_string($this->request['param'])) {
+			// get or post single (string) param
+			$param = [ $this->request ];
 
-			try {
+		} else if (!isset($this->request['param']) && empty($this->post)) {
+			// no post and no no post/get param
+			$param = [];
 
-				if($this->request['force_array']) {
+		} else if (!isset($this->request['param']) && !empty($this->post)) {
+			// no post/get param, but post data
+			$param = [ $this->post ];
 
-					unset($this->request['obj']);
-					unset($this->request['method']);
-					unset($this->request['force_array']);
-					$param = [ $this->request ];
+		} else if (isset($this->request['param']) && !empty($this->post)) {
+			$param = array( array_merge($this->post, $this->request['param']));
+		} else {
+			$param = $this->request['param'];
+		}
 
-				} else if ($this->request['param'] AND is_string($this->request['param'])) {
-					// get or post single (string) param
-					$param = [ $this->request ];
-
-				} else if (!$this->request['param'] AND empty($this->post)) {
-					// no post and no no post/get param
-					$param = [];
-
-				} else if (!$this->request['param'] AND !empty($this->post)) {
-					// no post/get param, but post data
-					$param = [ $this->post ];
-
-				} else if ($this->request['param'] && !empty($this->post)) {
-					$param = array( array_merge($this->post, $this->request['param']));
-				} else {
-					$param = $this->request['param'];
-				}
-
-				if (get_parent_class($obj) === 'Controller') {
-					$_aa = new $obj($this->get, $this->post, $this->request);
-					$_aa->$method();
-				} else {
-					call_user_func_array( [$obj, $method], $param);
-				}
-
-			} catch(myException $e) {
-				$e->log();
-				throw new myException(sprintf(tr::get('error_in_method'), $this->request['obj'] . '::' . $this->request['method']));
+		try {
+			if (get_parent_class($obj) === 'Controller') {
+				$_aa = new $obj();
+				$_aa->$method();
+			} else {
+				call_user_func_array( [$obj, $method], $param);
 			}
 
-		} else {
-			$home = new home_ctrl($this->get, $this->post, $this->request);
-			$home->showAll();
+		} catch(myException $e) {
+			$e->log();
+			throw new myException(sprintf(tr::get('error_in_method'), $this->request['obj'] . '::' . $this->request['method']));
 		}
 	}
 }

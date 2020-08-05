@@ -17,7 +17,7 @@ class Controller
 		$this->request = $request ? $request : $_REQUEST;
 	}
 
-	public function json($data)
+	public function returnJson($data)
 	{
 		header("Content-type:application/json");
 		echo json_encode($data);

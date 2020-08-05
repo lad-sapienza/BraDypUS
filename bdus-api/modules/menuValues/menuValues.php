@@ -29,7 +29,7 @@ class menuValues_ctrl extends Controller
     $p = $this->get['p'];
 
     $data = self::getValues($context, $att, $q, $p);
-    $this->json($data);
+    $this->returnJson($data);
   }
 
   /**

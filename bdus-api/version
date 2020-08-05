@@ -1,3 +1,4 @@
+3.16.49[] = "Controller->json renamed to Controller->returnJson"
 3.16.48[] = "Debug option can only be passed as GET paramater (not also as POST)"
 3.16.47[] = "Removed support for GET/POST/REQUEST access in modules"
 3.16.46[] = "Simplified Controller code"

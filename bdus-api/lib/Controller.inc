@@ -25,18 +25,8 @@ class Controller
 
 	public function render($module, $template, $data = [])
 	{
-		if (file_exists(MOD_DIR . $module . '/tmpl/' . $template . '.html')) {
-			
-			$ext = '.html';
-
-		} else if (file_exists(MOD_DIR . $module . '/tmpl/' . $template . '.twig')) {
-			
-			$ext = '.twig';
-
-		} else {
-
+		if (!file_exists(MOD_DIR . $module . '/tmpl/' . $template . '.twig')) {
 			throw new myException('Template not found');
-
 		}
 
 		$settings = unserialize(CACHE);
@@ -49,7 +39,7 @@ class Controller
     	$data['uid'] = uniqid('uid');
     	$data['tr'] = new tr();
 
-		echo $twig->render($template . $ext, $data);
+		echo $twig->render("{$template}.twig", $data);
 	}
 
 	public function route()

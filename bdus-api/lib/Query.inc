@@ -238,7 +238,7 @@ class Query
 
     /**
      *
-     * Formats WHERE statement depending on $_REQUEST parameters
+     * Formats WHERE statement depending on $request parameters
      * 		type: query type [all |]
      * @param array $request
      * @throws myException

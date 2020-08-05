@@ -4,10 +4,6 @@
  * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
  * @license			See file LICENSE distributed with this code
  * @since			08/jan/2013
- * @example
- *  $bigRestore = new bigRestore(new DB());
- *  $bigRestore->parseFile($_GET['filename'], $_GET['start'], $_GET['offset'], $_GET['totalqueries']);
- *  $bigRestore->getResponse();
  *  
  * $resp
  * 	filename	filename

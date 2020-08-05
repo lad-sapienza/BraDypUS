@@ -46,7 +46,7 @@ class myImport_ctrl extends Controller
 				break;
 		}
 		
-		$file_ctrl = new file_ctrl($_GET, $_POST, $_REQUEST);
+		$file_ctrl = new file_ctrl($this->get, $this->post, $this->request);
 		$result = $file_ctrl->upload_args(false, true);
 		
 		if ($driver == 'sqlite')

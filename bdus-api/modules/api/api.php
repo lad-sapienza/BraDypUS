@@ -71,7 +71,7 @@ class api_ctrl extends Controller
 
 			// Check all input data
 
-			// $_GET['app']: mandatory
+			// $this->get['app']: mandatory
 			$valid_apps = utils::dirContent(MAIN_DIR . "projects");
 			if (!$this->get['app'] || !in_array($this->get['app'], $valid_apps)) {
 				throw new Exception("Invalid app {$this->get['app']}. App must be one of " . implode(', ', $valid_apps));
@@ -79,7 +79,7 @@ class api_ctrl extends Controller
 			$app = $this->get['app'];
 
 
-			// $_GET['tb']: mandatory
+			// $this->get['tb']: mandatory
 			if (!$this->get['tb']) {
 				throw new Exception("Tb parameter is mandatory");
 			}
@@ -90,7 +90,7 @@ class api_ctrl extends Controller
 			}
 
 
-			// $_GET['verb']: mandatory, one of read, search
+			// $this->get['verb']: mandatory, one of read, search
 			$valid_verbs = ['read', 'search', 'inspect'];
 			if (!$this->get['verb'] || !in_array($this->get['verb'], $valid_verbs)) {
 				throw new Exception("Invalid verb {$this->get['verb']}. Verb must be one of " . implode(', ', $valid_verbs));

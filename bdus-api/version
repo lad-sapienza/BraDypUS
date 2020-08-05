@@ -1,4 +1,5 @@
-3.16.46[] = "Removed support for GET/POST/REQUEST access in modules"
+3.16.48[] = "Debug option can only be passed as GET paramater (not also as POST)"
+3.16.47[] = "Removed support for GET/POST/REQUEST access in modules"
 3.16.46[] = "Simplified Controller code"
 3.16.45[] = "Removed support for force_array query parameter"
 3.16.44[] = "Added missing edit_tbs_data in home"

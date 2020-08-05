@@ -92,11 +92,11 @@ define ('ERROR_LOG', $error_log);
  * If debug=0, debug is turned off
  */ 
 
-if (@$_REQUEST['debug'] === '0') {
+if (@$_GET['debug'] === '0') {
     $_SESSION['debug_mode'] = false;
     define('DEBUG_ON', false);
     define('CACHE', serialize([ "autoescape" => false, "cache" => "cache"]));
-} else if ( @$_REQUEST['debug'] === '1') {
+} else if ( @$_GET['debug'] === '1') {
 	$_SESSION['debug_mode'] = true;
 	define('DEBUG_ON', true);
 	define('CACHE', serialize( [ "autoescape" => false, "debug" => true ] ));

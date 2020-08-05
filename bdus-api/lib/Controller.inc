@@ -72,16 +72,18 @@ class Controller
 		}
 
 		try {
+			if (!method_exists($obj, $method)){
+				throw new myException("Object {$obj} does not have method {$method}");
+			}
 			if (get_parent_class($obj) === 'Controller') {
-				$_aa = new $obj();
+				$_aa = new $obj($this->get, $this->post, $this->request);
 				$_aa->$method();
 			} else {
 				call_user_func_array( [$obj, $method], $param);
 			}
 
-		} catch(myException $e) {
-			$e->log();
-			throw new myException(sprintf(tr::get('error_in_method'), $this->request['obj'] . '::' . $this->request['method']));
+		} catch(Throwable $e) {
+			throw new myException($e);
 		}
 	}
 }

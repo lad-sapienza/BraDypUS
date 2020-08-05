@@ -8,13 +8,15 @@
 
 class Controller
 {
-	protected $get, $post, $request;
+	protected $get;
+	protected $post;
+	protected $request;
 
-	public function __construct($get = false, $post = false, $request = false)
+	public function __construct($get, $post, $request)
 	{
-		$this->get = $get ? $get : $_GET;
-		$this->post = $post ? $post : $_POST;
-		$this->request = $request ? $request : $_REQUEST;
+		$this->get = $get;
+		$this->post = $post;
+		$this->request = $request;
 	}
 
 	public function returnJson($data)

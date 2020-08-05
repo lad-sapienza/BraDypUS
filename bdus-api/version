@@ -1,3 +1,4 @@
+3.16.51[] = "Controller has not direct access to GET / POST / REQUEST"
 3.16.50[] = "Removed support for .html templates. Only .twig extension is supported"
 3.16.49[] = "Controller->json renamed to Controller->returnJson"
 3.16.48[] = "Debug option can only be passed as GET paramater (not also as POST)"

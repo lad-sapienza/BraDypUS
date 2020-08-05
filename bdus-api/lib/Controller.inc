@@ -4,6 +4,13 @@
  * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
  * @license			See file LICENSE distributed with this code
  * @since			Jan 12, 2013
+ * 
+ * @uses myException
+ * @uses cfg
+ * @uses tr
+ * @uses \Twig\Environment
+ * @uses \Twig\Loader\FilesystemLoader
+ * @uses \Twig\Extension\DebugExtension
  */
 
 class Controller

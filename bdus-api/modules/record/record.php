@@ -214,32 +214,48 @@ class record_ctrl extends Controller
 
         $count = $this->request['total'] ?: $queryObj->getTotal();
 
-        if ($count == 0) {
+        if ($count === 0) {
             $noResult = true;
         }
 
-        $this->render('record', 'result', array(
-                'tb' => $this->request['tb'],
-                'records_found' => ($noResult ? tr::get('no_record_found') : tr::get('x_record_found', [$count])),
-                'can_user_add' => utils::canUser('add_new'),
-                'can_user_read' => utils::canUser('read'),
-                'can_user_edit' => utils::canUser('edit'),
-                'urlencoded_query' => urlencode($queryObj->getQuery()),
-                'encoded_query' => base64_encode($queryObj->getQuery()),
-                'encoded_where' => $queryObj->getWhere(true),
-                'uid' => uniqid(),
-                'noResult' => $noResult,
-                'noDblClick' => $this->request['noDblClick'],
-                'hasRS' => cfg::tbEl($this->request['tb'], 'rs'),
-                'noOpts' => $this->request['noOpts'],
-                'col_names' => $queryObj->getFields(),
-                'iTotalRecords' => $count,
-                'lang' => pref::getLang(),
-                //TODO: user panel controle for user preferences
-                'infinte_scroll' => pref::get('infinite_scroll'),
-                'select_one' => $this->request['select_one'],
-                'hideId' => (cfg::fldEl($this->request['tb'], 'id', 'hide') == 1)
-        ));
+        $this->render('record', 'result', [
+            // string, table name
+            'tb' => $this->request['tb'],
+            // string, total of records found
+            'records_found' => ($noResult ? tr::get('no_record_found') : tr::get('x_record_found', [$count])),
+            // boolean, can current user add new records?
+            'can_user_add' => utils::canUser('add_new'),
+            // boolean, can current user read this record?
+            'can_user_read' => utils::canUser('read'),
+            // boolean, can current user edit this records?
+            'can_user_edit' => utils::canUser('edit'),
+            // string, urlencoded plain query
+            'urlencoded_query' => urlencode($queryObj->getQuery()),
+            // string, base64 encoded query, for pagination
+            'encoded_query' => base64_encode($queryObj->getQuery()),
+            // string, base64 encoded where parte of the query, to be used for bookmarking, export, matrix, charts, geoface
+            'encoded_where' => $queryObj->getWhere(true),
+            // boolean, if no records are found, set to true: no table of results will be output in template
+            'noResult' => $noResult,
+            // boolean, if true double click on records is not allowed
+            'noDblClick' => $this->request['noDblClick'],
+            // boolean, if table has or not activated RS plugin
+            'hasRS' => cfg::tbEl($this->request['tb'], 'rs'),
+            // boolean, if true option buttons will not be shown in template
+            'noOpts' => $this->request['noOpts'],
+            // array, list of preview columns, to be used for datatable
+            'col_names' => $queryObj->getFields(),
+            // int, Total numer of records found, to be used for datatable
+            'iTotalRecords' => $count,
+            // string, current system language, to be used for datatable
+            'lang' => pref::getLang(),
+            // boolean: if true infinite scroll of databatables will be activated
+            'infinte_scroll' => pref::get('infinite_scroll'),
+            // boolean: if true only one records can be selected
+            'select_one' => $this->request['select_one'],
+            // boolean, if true id field will be available in datatables, but hidden
+            'hideId' => (cfg::fldEl($this->request['tb'], 'id', 'hide') == 1)
+        ]);
     }
 
     /**

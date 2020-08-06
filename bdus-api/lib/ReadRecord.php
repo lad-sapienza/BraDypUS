@@ -190,26 +190,29 @@ class ReadRecord
   {
     $prefix = PREFIX;
     $sql = <<<EOD
-SELECT * FROM `{$prefix}files` WHERE `id` IN (
-  SELECT `id_one` FROM `{$prefix}userlinks` WHERE `tb_one` = :files AND `tb_two` = :tb AND `id_two` = :id
-  UNION
-  SELECT `id_two` FROM `{$prefix}userlinks` WHERE `tb_two` = :files AND `tb_one` = :tb AND `id_one` = :id
+SELECT `{$prefix}files`.*
+FROM `{$prefix}files`
+      INNER JOIN
+      `{$prefix}userlinks` AS `ul` ON (`ul`.`tb_one` = '{$prefix}files' AND 
+                                  `ul`.`id_one` = `{$prefix}files`.`id` AND 
+                                  `ul`.`tb_two` = ? AND 
+                                  `ul`.`id_two` = ?) OR 
+                                (`ul`.`tb_two` = '{$prefix}files' AND 
+                                  `ul`.`id_two` = `{$prefix}files`.`id` AND 
+                                  `ul`.`tb_one` = ? AND 
+                                  `ul`.`id_one` = ?) 
+WHERE 1
+ORDER BY `ul`.`sort`;
+  
 )
 EOD;
 		$sql_val = [
-      'files' => "{$prefix}files",
-      'tb' => $tb,
-      'id' => $id
+      $tb,
+      $id,
+      $tb,
+      $id
     ];
-		$files =  DB::start()->query($sql, $sql_val);
-
-    usort($files, function($a, $b){
-      if ($a['sort'] === $b['sort']) {
-          return 0;
-      }
-      return ($a['sort'] > $b['sort']) ? 1 : -1;
-    });
-    return $files;
+    return DB::start()->query($sql, $sql_val);
   }
 
   /**

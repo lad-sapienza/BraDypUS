@@ -1,3 +1,4 @@
+3.15.10[] = "readRecord::getFiles uses JOIN and solves issue with sorting"
 3.15.9[] = "ShortSqlToJson uses ReadRecord::getFull instead of Record::readFull"
 3.15.8[] = "Fixed bug with API v2 post processing data"
 3.15.7[] = "RS element of ReadRecord::getFull (api2::read)depends on system cfg"

@@ -48,7 +48,7 @@ class Read
       'manualLinks'=> self::getManualLinks($app, $tb, $id),
 			'files'      => self::getFiles($app, $tb, $id),
       'geodata'    => self::getGeodata($app, $tb, $id),
-      'rs'         => \cfg::tbEl($tb, 'rs') ? self::getRs($app, $tb, $id): false
+      'rs'         => \cfg::tbEl($tb, 'rs') ? self::getRs($app, $tb, $id): []
 		];
   }
 
@@ -77,7 +77,7 @@ class Read
    * @param  string $tb  Table name
    * @param  int    $id  Record ID
    * @return array      Array of manually entered links
-   * {
+   * link_id: {
    *    "key": (int),
    *    "tb_id": (referenced table full name),
    *    "tb_stripped": (referenced table name without prefix),
@@ -127,7 +127,7 @@ class Read
           $ref_val_label = $lres[0]['label'];
         }
 
-        array_push($manualLinks, [
+        $manualLinks[$r['id']] = [
           "key"         => $r['id'],
           "tb_id"       => $mlt,
           "tb_stripped" => str_replace(PREFIX, null, $mlt),
@@ -135,7 +135,7 @@ class Read
           "ref_id"      => $mli,
           "ref_label"   => $ref_val_label,
           "sort"   => $r['sort']
-        ]);
+        ];
 
 			}
 		}
@@ -158,11 +158,21 @@ class Read
    */
   public static function getRs(string $app, string $tb, int $id)
   {
-    return \DB::start()->query(
+    $res = \DB::start()->query(
       "SELECT `id`, `first`, `second`, `relation` FROM `" . PREFIX . "rs` WHERE `tb`= ? AND (`first`= ? OR `second` = ?)",
       [$tb, $id, $id],
       'read'
     );
+
+    $ret = [];
+
+    if ($res && !\is_array($res)){
+      foreach ($res as $key => $value) {
+        $ret[$value['id']] = $value;
+      } 
+    }
+
+    return $ret;
   }
 
   /**
@@ -183,13 +193,16 @@ class Read
   {
     $r = \DB::start()->query(
       "SELECT `id`, `geometry`, `geo_el_elips`, `geo_el_asl` FROM `" . PREFIX . "geodata` WHERE `table_link` = ? AND `id_link`= ?",
-			[$tb, $id]);
+      [$tb, $id]);
+    
+    $ret = [];
     if (is_array($r)) {
-      foreach ($r as &$row) {
+      foreach ($r as $row) {        
         $row['geojson'] = \Symm\Gisconverter\Gisconverter::wktToGeojson($row['geometry']);
+        $ret[$row['id']] = $row;
       }
     }
-    return $r;
+    return $ret;
   }
 
   /**
@@ -224,15 +237,23 @@ EOD;
       'tb' => $tb,
       'id' => $id
     ];
-		$files =  \DB::start()->query($sql, $sql_val);
-
-    usort($files, function($a, $b){
-      if ($a['sort'] === $b['sort']) {
-          return 0;
+    $files =  \DB::start()->query($sql, $sql_val);
+    
+    $ret = [];
+    if ($files && !empty($files)) {
+      
+      usort($files, function($a, $b){
+        if ($a['sort'] === $b['sort']) {
+            return 0;
+        }
+        return ($a['sort'] > $b['sort']) ? 1 : -1;
+      });
+      foreach ($files as $key => $value) {
+        $ret[$value['id']] = $value;
       }
-      return ($a['sort'] > $b['sort']) ? 1 : -1;
-    });
-    return $files;
+    }
+
+    return $ret;
   }
 
   /**

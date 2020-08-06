@@ -1,3 +1,4 @@
+3.16.54[] = "\Record::Read::getFiles uses JOIN and solves sorting issue"
 3.16.53[] = "Added methos Controller::compileTmpl"
 3.16.52[] = "Controller checks if method exist, before running"
 3.16.51[] = "Controller has not direct access to GET / POST / REQUEST"

@@ -31,8 +31,9 @@ class Controller
 		header("Content-type:application/json");
 		echo json_encode($data);
 	}
-
-	public function render($module, $template, $data = [])
+	
+	
+	public function compileTmpl($module, $template, $data = [])
 	{
 		if (!file_exists(MOD_DIR . $module . '/tmpl/' . $template . '.twig')) {
 			throw new myException('Template not found');
@@ -48,7 +49,12 @@ class Controller
     	$data['uid'] = uniqid('uid');
     	$data['tr'] = new tr();
 
-		echo $twig->render("{$template}.twig", $data);
+		return $twig->render("{$template}.twig", $data);
+	}
+	
+	public function render($module, $template, $data = [])
+	{
+		echo $this->compileTmpl($module, $template, $data);
 	}
 
 	public function route()

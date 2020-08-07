@@ -88,12 +88,31 @@ class Read
    */
   public static function getManualLinks(string $app, string $tb, int $id)
   {
+
     $manualLinks = [];
-		$res = \DB::start()->query(
-      "SELECT * FROM `" . PREFIX . "userlinks` WHERE (`tb_one` = ? AND `id_one` = ?) OR (`tb_two` = ? AND `id_two` = ?) ORDER BY `sort`, `id`",
-      [ $tb, $id, $tb, $id ],
-      'read'
-    );
+    $prefix = PREFIX;
+    $sql = <<<EOD
+SELECT {$prefix}userlinks.*
+  FROM {$prefix}userlinks
+ WHERE (`tb_one` = ? AND 
+        `id_one` = ? AND
+        `tb_two` != '{$prefix}files') OR 
+       (`tb_two` = ? AND 
+        `id_two` = ? AND
+        `tb_one` != '{$prefix}files')
+ ORDER BY `sort`,
+          `id`;
+)
+EOD;
+
+    $values = [
+      $tb, 
+      $id, 
+      $tb, 
+      $id 
+    ];
+
+		$res = \DB::start()->query( $sql, $values, 'read');
 
 		if (is_array($res) && !empty($res)) {
 
@@ -109,10 +128,6 @@ class Read
           $mli = $r['id_one'];
 
 				}
-
-        if ($mlt === PREFIX . 'files' ){
-          continue;
-        }
 
         $id_fld = \cfg::tbEl($mlt, 'id_field');
 
@@ -235,7 +250,7 @@ EOD;
       $tb,
       $id
     ];
-    return DB::start()->query($sql, $sql_val);
+    return \DB::start()->query($sql, $sql_val);
   }
 
   /**

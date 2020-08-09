@@ -26,7 +26,7 @@
             "tot": (total number of items found)
         },
         "data": [
-            id_row: {
+            "id_row": {
                 "id": {
                     "name": (field id),
                     "label": (field label),
@@ -37,7 +37,7 @@
                 },
                 "other_fld_name": { ... },
             },
-            id: {...}
+            "id_row": {...}
         ]
     },
     "plugin_n__full_name": { ... }
@@ -71,7 +71,7 @@
 },
 
 "manualLinks": {
-    link_id => {
+    "link_id" => {
         "key": (int),
         "tb_id": (referenced table full name),
         "tb_stripped": (referenced table name without prefix),
@@ -102,7 +102,7 @@
 ],
 
 "geodata": {
-    geodata_id => {
+    "geodata_id" => {
         "id": (int),
         "geometry": (string, wkt),
         "geo_el_elips": (int),

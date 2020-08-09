@@ -45,6 +45,7 @@ class Field implements iTemplate
      */
     public function sqlSum($tb, $fld, $filter = false)
     {
+        $sql_values = [];
         try {
             if ($filter) {
                 $wh_arr = utils::csv_explode($filter, ';');
@@ -52,18 +53,19 @@ class Field implements iTemplate
                     foreach ($wh_arr as $w) {
                         $w_arr = utils::csv_explode($w, '=');
 
-                        $tmp_where[] = "`{$w_arr[0]}` = '" . $this->record->getCore($w_arr[1]) . "'";
+                        array_push($tmp_where,  "{$w_arr[0]} = ?");
+                        array_push($sql_values, $this->record->getCore($w_arr[1]));
                     }
                 }
                 $final_where = implode(' AND ', $tmp_where);
             } else {
-                $final_where = '1';
+                $final_where = '1=1';
             }
 
 
-            $sql = "SELECT SUM(`$fld`) AS `total` FROM `" . PREFIX . "$tb` WHERE $final_where";
+            $sql = "SELECT SUM($fld) AS total FROM " . PREFIX . "$tb WHERE $final_where";
 
-            $res = $this->db->query($sql);
+            $res = $this->db->query($sql, $sql_values);
 
             if (is_array($res) && !empty($res)) {
                 return $res[0]['total'];
@@ -199,7 +201,7 @@ class Field implements iTemplate
 
         if ($gdata) {
             $view_this = '<p>' . tr::get('x_geodata_available', ['<strong>' . count($gdata) . '</strong>'])
-            . ' <span class="btn btn-link" onclick="core.runMod(\'geoface\', [\'' . $this->tb . '\', \'' . base64_encode(' `id`= ' . $this->record->getCore('id') . ' ') . '\']);">' . tr::get('view_on_map') . '</span></p>';
+            . ' <span class="btn btn-link" onclick="core.runMod(\'geoface\', [\'' . $this->tb . '\', \'' . base64_encode(' id= ' . $this->record->getCore('id') . ' ') . '\']);">' . tr::get('view_on_map') . '</span></p>';
         }
 
         $view_all = '<p><span class="btn btn-link" onclick="core.runMod(\'geoface\', \'' . $this->tb . '\');">' . tr::get('view_all_records_on_map') . '</span></p>';
@@ -683,9 +685,9 @@ class Field implements iTemplate
                 }
             }
         } elseif ($setting['id_from_tb'] && $setting['data']) {
-            $sql = "SELECT `id`, `" . cfg::tbEl($setting['id_from_tb'], 'id_field') . "` as val " .
-                "FROM `" . $setting['id_from_tb'] . "` " .
-                "WHERE `id` = ?";
+            $sql = "SELECT id, " . cfg::tbEl($setting['id_from_tb'], 'id_field') . " as val " .
+                "FROM " . $setting['id_from_tb'] . " " .
+                "WHERE id = ?";
             $res = $this->db->query($sql, [$setting['data']]);
 
             if ($res[0]) {
@@ -827,7 +829,7 @@ class Field implements iTemplate
                 if ($otherTb === $this->tb || ($otherTb !== $this->tb && $otherFld !== cfg::tbEl($otherTb, 'id_field'))) {
                     foreach ($val as $v) {
                         $html .= "<span class=\"a\" " .
-                            " onclick=\"api.showResults('" . $otherTb. "', 'type=encoded', '" . tr::get('contextual_search_in', [cfg::tbEl($otherTb, 'label')]) . "', {q_encoded: '" . base64_encode("`" . $otherFld . "` = '" . $v . "'"). "'})\">" .
+                            " onclick=\"api.showResults('" . $otherTb. "', 'type=encoded', '" . tr::get('contextual_search_in', [cfg::tbEl($otherTb, 'label')]) . "', {q_encoded: '" . base64_encode( $otherFld . " = '" . $v . "'"). "'})\">" .
                             utils::format_text($v) .
                             '</span>' . (next($val) === false ? ' ' : ';');
                     }
@@ -844,12 +846,11 @@ class Field implements iTemplate
             // 3.2 Field is populated with ID values get by another table. Other table's id field will be used as a label
             elseif ($setting['id_from_tb']) {
                 foreach ($val as $v) {
-                    $query = 'SELECT `' .
-                            cfg::tbEl($setting['id_from_tb'], 'id_field') . '` '.
-                            'FROM `' . $setting['id_from_tb'] . '` ' .
-                            'WHERE `id` = ' . $v;
+                    $query = 'SELECT ' . cfg::tbEl($setting['id_from_tb'], 'id_field') . ' '.
+                            'FROM ' . $setting['id_from_tb'] . ' ' .
+                            'WHERE id = ?';
 
-                    $res = $this->db->query($query, false, 'read', true);
+                    $res = $this->db->query($query, [ $v ], 'read', true);
 
                     if ($res[0][0]) {
                         $html .= '<span class="a" onclick="api.record.read(\'' . $setting['id_from_tb'] . '\', [' . $v . '])">'
@@ -864,9 +865,9 @@ class Field implements iTemplate
                     if ($setting['active_link']) {
                         $html .= "<span class=\"a\" " .
                             " onclick=\"api.showResults('" . $this->tb. "', 'type=encoded', '" . tr::get('contextual_search_in', [cfg::tbEl($this->tb, 'label')] ) . "', {q_encoded: '" . base64_encode(
-                                    "`" . $setting['fieldname'] . "` LIKE '%;" . $v . "' " .
-                                    "OR `" . $setting['fieldname'] . "` LIKE '" . $v . ";%' " .
-                                    "OR `" . $setting['fieldname'] . "` = '" . $v . "' "
+                                    "" . $setting['fieldname'] . " LIKE '%;" . $v . "' " .
+                                    "OR " . $setting['fieldname'] . " LIKE '" . $v . ";%' " .
+                                    "OR " . $setting['fieldname'] . " = '" . $v . "' "
                                 ). "'})\">" .
                             utils::format_text($v) .
                             '</span>' . (next($val) === false ? ' ' : ';');

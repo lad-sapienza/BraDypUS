@@ -19,9 +19,9 @@ class GetUniqueVal
         $id_from_tb = cfg::fldEl($tb, $fld, 'id_from_tb');
         if ($id_from_tb) {
             $f = cfg::tbEl($id_from_tb, 'id_field');
-            $sql = "SELECT DISTINCT `{$f}` as `f` FROM `{$id_from_tb}` WHERE ";
+            $sql = "SELECT DISTINCT {$f} as f FROM {$id_from_tb} WHERE ";
         } else {
-            $sql = "SELECT DISTINCT `{$fld}` as `f` FROM `{$tb}` WHERE ";
+            $sql = "SELECT DISTINCT {$fld} as f FROM {$tb} WHERE ";
             $f = $fld;
         }
 
@@ -38,7 +38,7 @@ class GetUniqueVal
             $values = array_merge($values, $where_values);
         }
         if(!$str && !$where){
-            array_push($sql_part, " 1 ");
+            array_push($sql_part, " 1=1 ");
         }
         $sql .= implode(' AND ', $sql_part);
         $res = DB::start()->query($sql, $values);

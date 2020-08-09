@@ -80,7 +80,7 @@ class ToJson
 	
 	private static function getTotal($sql, $values = [])
     {
-        $count_sql = 'SELECT count(*) AS `tot` FROM ( ' . $sql .' ) AS `' . uniqid('a') . '`';
+        $count_sql = 'SELECT count(*) AS tot FROM ( ' . $sql .' ) AS ' . uniqid('a');
         $res = \DB::start()->query($count_sql, $values);
         return $res[0]['tot'];
 	}

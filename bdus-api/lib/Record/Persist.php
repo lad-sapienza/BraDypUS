@@ -62,8 +62,8 @@ class Persist
                  isset($l['_tb_id']) &&
                  isset($l['_ref_id'])
             ){
-                $sql = "INSERT INTO `" . PREFIX . "userlinks` "
-                    . "(`tb_one`, `id_one`, `tb_two`, `id_two`, `sort`) "
+                $sql = "INSERT INTO " . PREFIX . "userlinks "
+                    . "(tb_one, id_one, tb_two, id_two, sort) "
                     . "VALUES (?, ?, ?, ?, ?)";
                 $values = [
                     $this->tb,
@@ -75,14 +75,14 @@ class Persist
 
             // UPDATE sort
             } else if ( isset($l['key']) && isset($l['_sort']) ) {
-                $sql = "UPDATE `" . PREFIX . "userlinks` SET `sort` = ? WHERE id = ?";
+                $sql = "UPDATE " . PREFIX . "userlinks SET sort = ? WHERE id = ?";
                 $values = [
                     $l['_sort'], $l['key']
                 ];
 
             // DELETE
             } else if ( isset($l['key']) && isset($l['_deleted'])){
-                $sql = "DELETE FROM `" . PREFIX . "userlinks` WHERE `id` = ?";
+                $sql = "DELETE FROM " . PREFIX . "userlinks WHERE id = ?";
                 $values = [ $l['key'] ];
             }
 
@@ -102,9 +102,9 @@ class Persist
             // Add new link
             if ( !isset($gd['id']) && isset($gd['_geometry']) ){
                 $fields = [
-                    "`table_link`",
-                    "`id_link`",
-                    "`geometry`"
+                    "table_link",
+                    "id_link",
+                    "geometry"
                 ];
                 $values = [
                     $this->tb,
@@ -121,7 +121,7 @@ class Persist
                     array_push($values, $gd['_geo_el_asl']);
                 }
 
-                $sql = "INSERT INTO `" . PREFIX . "geodata` "
+                $sql = "INSERT INTO " . PREFIX . "geodata "
                     . "(" . implode(", ", $fields) . ") "
                     . "VALUES (". implode(',', array_fill(0, count($values), '?')) .")";
                 
@@ -136,24 +136,24 @@ class Persist
                 $fields = [];
                 $values = [];
                 if ( isset($gd['_geometry']) ){
-                    array_push($fields, "`geometry` = ?");
+                    array_push($fields, "geometry = ?");
                     array_push($values, $gd['_geometry']);
                 }
                 if ( isset($gd['_geo_el_elips']) ){
-                    array_push($fields, "`geo_el_elips` = ?");
+                    array_push($fields, "geo_el_elips = ?");
                     array_push($values, $gd['_geo_el_elips']);
                 }
                 if ( isset($gd['_geo_el_asl']) ){
-                    array_push($fields, "`geo_el_asl` = ?");
+                    array_push($fields, "geo_el_asl = ?");
                     array_push($values, $gd['_geo_el_asl']);
                 }
-                $sql = "UPDATE `" . PREFIX . "geodata` SET " . implode(", ", $fields). " WHERE id = ?";
+                $sql = "UPDATE " . PREFIX . "geodata SET " . implode(", ", $fields). " WHERE id = ?";
                 array_push($values, $gd['id']);
                 
 
             // DELETE
             } else if ( isset($gd['id']) && isset($gd['id']['_deleted'])){
-                $sql = "DELETE FROM `" . PREFIX . "geodata` WHERE `id` = ?";
+                $sql = "DELETE FROM " . PREFIX . "geodata WHERE id = ?";
                 $values = [ $gd['id'] ];
             }
 
@@ -175,10 +175,10 @@ class Persist
                 isset($rs['_relation'])
             ){
                 $fields = [
-                    "`tb`",
-                    "`first`",
-                    "`second`",
-                    "`relation`"
+                    "tb",
+                    "first",
+                    "second",
+                    "relation"
                 ];
                 $values = [
                     $this->tb,
@@ -187,7 +187,7 @@ class Persist
                     $rs['_relation']
                 ];
 
-                $sql = "INSERT INTO `" . PREFIX . "rs` "
+                $sql = "INSERT INTO " . PREFIX . "rs "
                     . "(" . implode(", ", $fields) . ") "
                     . "VALUES (". implode(',', array_fill(0, count($values), '?')) .")";
                 
@@ -200,10 +200,10 @@ class Persist
                 isset($rs['_relation'])
             ) {
                 $fields = [
-                    "`tb`",
-                    "`first`",
-                    "`second`",
-                    "`relation`"
+                    "tb",
+                    "first",
+                    "second",
+                    "relation"
                 ];
                 $values = [
                     $this->tb,
@@ -211,13 +211,13 @@ class Persist
                     $rs['_second'],
                     $rs['_relation']
                 ];
-                $sql = "UPDATE `" . PREFIX . "rs` SET " . implode(", ", $fields). " WHERE id = ?";
+                $sql = "UPDATE " . PREFIX . "rs SET " . implode(", ", $fields). " WHERE id = ?";
                 array_push($values, $rs['id']);
                 
 
             // DELETE
             } else if ( isset($rs['id']) && isset($rs['id']['_deleted'])){
-                $sql = "DELETE FROM `" . PREFIX . "rs` WHERE `id` = ?";
+                $sql = "DELETE FROM " . PREFIX . "rs WHERE id = ?";
                 $values = [ $rs['id'] ];
             }
 
@@ -241,7 +241,7 @@ class Persist
                     isset($plg_row['id']['_delete'])
                 ){
                     // delete row
-                    $sql = "DELETE FROM `{$plugin_name}` WHERE id = ?";
+                    $sql = "DELETE FROM {$plugin_name} WHERE id = ?";
                     $values = [$plg_row['id']['val']];
 
                 // New row
@@ -264,9 +264,9 @@ class Persist
                     }
 
                     if ( !empty($plg_fld_to_write)){
-                        $sql = "INSERT INTO `{$plugin_name}` (`"
-                            . implode("`, ", array_keys($plg_fld_to_write)) 
-                            . "`) VALUES ( " 
+                        $sql = "INSERT INTO {$plugin_name} ("
+                            . implode(", ", array_keys($plg_fld_to_write)) 
+                            . ") VALUES ( " 
                             // https://www.php.net/manual/en/function.str-repeat.php
                             . implode(',', array_fill(0, count($plg_fld_to_write), '?'))
                             . ")";
@@ -286,9 +286,9 @@ class Persist
                     }
 
                     if(!empty($plg_fld_to_write)){
-                        $sql = "UPDATE `{$plugin_name}` SET "
-                            . implode("` = ? ", array_keys($plg_fld_to_write)) 
-                            . "` WHERE `id` = ?";
+                        $sql = "UPDATE {$plugin_name} SET "
+                            . implode(" = ? ", array_keys($plg_fld_to_write)) 
+                            . " WHERE id = ?";
                         $values = array_values($plg_fld_to_write);
                         $values = array_push($values, $plg_row['id']['val']);
                     }
@@ -323,19 +323,19 @@ class Persist
 
         // Update
         if ($this->id){
-            $sql = "UPDATE `$this->tb` SET "
+            $sql = "UPDATE $this->tb SET "
                 . implode(", ", array_map(function($v){
-                    return "`{$v}` = ? ";
+                    return "{$v} = ? ";
                 }, array_keys($core_el_updated)))
-                . " WHERE `id` = ?";
+                . " WHERE id = ?";
             $values = array_values($core_el_updated);
             array_push($values, $this->id);
             
         } else {
         // Add
-            $sql = "INSERT INTO `{$this->tb}`, (`" 
-                . implode( "`, ", array_keys($core_el_updated) )
-                . "`) VALUES ("
+            $sql = "INSERT INTO {$this->tb}, (" 
+                . implode( ", ", array_keys($core_el_updated) )
+                . ") VALUES ("
                 . implode(", ", array_map(function($v){
                     return "?";
                 }, array_values($core_el_updated)))
@@ -355,7 +355,7 @@ class Persist
 
         // DELETE FROM TABLE
         $this->runInDb(
-            "DELETE FROM {$this->tb} WHERE `id` = ? ",
+            "DELETE FROM {$this->tb} WHERE id = ? ",
             [ $this->id ]
         );
 
@@ -363,7 +363,7 @@ class Persist
         foreach ($this->model['plugins'] as $plugin_name => $plugin_data) {
             foreach ($plugin_data['data'] as $row_id => $plg_row) {
                 $this->runInDb(
-                    "DELETE FROM $plugin_name WHERE `id` = ? ",
+                    "DELETE FROM $plugin_name WHERE id = ? ",
                     [ $row_id ]
                 );
             }
@@ -372,21 +372,21 @@ class Persist
         // Delete manual links
         foreach( $this->model['manualLinks'] as $l ){
             $this->runInDb(
-                "DELETE FROM `" . PREFIX . "userlinks` WHERE `id` = ?",
+                "DELETE FROM " . PREFIX . "userlinks WHERE id = ?",
                 [ $l['key'] ]
             );
         }
 
         // Delete geodata
         $this->runInDb(
-            "DELETE FROM `" . PREFIX . "geodata` WHERE `table_link` = ? AND `id_link` = ?",
+            "DELETE FROM " . PREFIX . "geodata WHERE table_link = ? AND id_link = ?",
             [ $this->tb, $this->id ]
         );
 
         // DELETE RS
         foreach( $this->model['rs'] as $rs ){
             $this->runInDb(
-                "DELETE FROM `" . PREFIX . "rs` WHERE `id` = ?",
+                "DELETE FROM " . PREFIX . "rs WHERE id = ?",
                 [ $rs['id'] ]
             );
         }
@@ -394,15 +394,15 @@ class Persist
         // Delete and remove files
         foreach( $this->model['files'] as $file ){
             $this->runInDb(
-                "DELETE FROM `" . PREFIX . "files` WHERE `id` = ?",
+                "DELETE FROM " . PREFIX . "files WHERE id = ?",
                 [ $file['id'] ]
             );
             // TODO
             echo "@unlink(". PROJ_DIR . "files/{$file['id']}.{$file['ext']})";
         }
         $this->runInDb(
-            "DELETE FROM `" . PREFIX . "paths__userlinks` WHERE "
-                . "(`tb_one` = ? AND id_one = ?) OR (`tb_two` = ? AND id_two = ?)",
+            "DELETE FROM " . PREFIX . "paths__userlinks WHERE "
+                . "(tb_one = ? AND id_one = ?) OR (tb_two = ? AND id_two = ?)",
             [ $this->tb, $this->id, $this->tb, $this->id ]
         );
         

@@ -16,7 +16,7 @@
 				<div style="max-height:400px; overflow: auto;">
 						<ul class="nav nav-pills nav-stacked">
 					{% for fld in fields %}
-						<li><a href="javascript:void(0)" style="margin:2px;" class="insert" data-value="`{{ fld }}`">{{ fld }}</a></li>
+						<li><a href="javascript:void(0)" style="margin:2px;" class="insert" data-value="{{ fld }}">{{ fld }}</a></li>
 					{% endfor %}
 						</ul>
 					</div>
@@ -25,7 +25,7 @@
 			<div class="col-sm-5">
 				<strong>{{ tr.get('query') }}</strong>
 				<hr />
-				<pre>SELECT * FROM `{{ tb }}` </pre>
+				<pre>SELECT * FROM {{ tb }} </pre>
 
 				<div style="margin-bottom:2rem;">
 					<textarea style="width:100%; font-family: Monaco,Menlo,Consolas,'Courier New',monospace;"

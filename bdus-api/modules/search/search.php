@@ -24,11 +24,11 @@ class search_ctrl extends Controller
 		if ($second_table) {
 
 			$second_field = cfg::tbEl($second_table, 'id_field');
-			$q = "SELECT `{$second_field}` as {$fld} FROM {$second_table} WHERE 1 GROUP BY `{$second_field}`";
+			$q = "SELECT {$second_field} as {$fld} FROM {$second_table} WHERE 1 GROUP BY {$second_field}";
 
 		} else {
 
-			$q = "SELECT `{$fld}` FROM `{$tb}` WHERE 1 GROUP BY `{$fld}`";
+			$q = "SELECT {$fld} FROM {$tb} WHERE 1=1 GROUP BY {$fld}";
 		}
 
 
@@ -118,7 +118,7 @@ class search_ctrl extends Controller
 				'NOT LIKE'	=>	tr::get('doesnt_contain'),
 				'starts_with'=>	tr::get('starts_with'),
 				'ends_with'	=>	tr::get('ends_with'),
-				'is_empty'	=> 	tr::get('is_empty'),		// SQL: `field`='' OR `field` IS NULL
+				'is_empty'	=> 	tr::get('is_empty'),		// SQL: field='' OR field IS NULL
 				'is_not_empty'=>tr::get('is_not_empty'),
 				'>'			=>	tr::get('bigger'),
 				'<'			=>	tr::get('smaller')

@@ -25,14 +25,16 @@ class SavedQueries
 
 	public function getById($id)
 	{
-		return $this->db->query('SELECT * FROM `' . PREFIX . 'queries` WHERE `id` = ' . $id, false, 'read');
+		return $this->db->query('SELECT * FROM ' . PREFIX . 'queries WHERE id = ?' , [ $id ], 'read');
 	}
 
 	public function getAll()
 	{
-		$query = 'SELECT * FROM `' . PREFIX . 'queries` WHERE `user_id` = ' . $_SESSION['user']['id'] . ' OR `is_global` = 1';
-
-		return $this->db->query($query, false, 'read');
+		return $this->db->query(
+			'SELECT * FROM ' . PREFIX . 'queries WHERE user_id = ? OR is_global = ?', 
+			[ $_SESSION['user']['id'], 1 ], 
+			'read'
+		);
 	}
 
 	/**
@@ -42,7 +44,11 @@ class SavedQueries
 	 */
 	public function erase($id)
 	{
-		return $this->db->query('DELETE FROM `' . PREFIX . 'queries`  WHERE `id`=' . $id, false, 'boolean');
+		return $this->db->query(
+			'DELETE FROM ' . PREFIX . 'queries  WHERE id = ?', 
+			[ $id ], 
+			'boolean'
+		);
 	}
 
 	/**
@@ -52,7 +58,11 @@ class SavedQueries
 	 */
 	public function share($id)
 	{
-		return $this->db->query('UPDATE `' . PREFIX . 'queries` SET `is_global` = 1  WHERE `id`=' . $id, false, 'boolean');
+		return $this->db->query(
+			'UPDATE ' . PREFIX . 'queries SET is_global = ?  WHERE id = ?',
+			['1', $id ], 
+			'boolean'
+		);
 
 	}
 
@@ -63,7 +73,11 @@ class SavedQueries
 	 */
 	public function unshare($id)
 	{
-		return $this->db->query('UPDATE `' . PREFIX . 'queries` SET `is_global` = 0 WHERE `id`=' . $id, false, 'boolean');
+		return $this->db->query(
+			'UPDATE ' . PREFIX . 'queries SET is_global = ? WHERE id = ?',
+			['0', $id ], 
+			'boolean'
+		);
 	}
 
 	/**
@@ -75,8 +89,8 @@ class SavedQueries
 	 */
 	public function save($name, $text, $tb)
 	{
-		$query = 'INSERT INTO `' . PREFIX . 'queries`'
-		. '(`user_id`, `date`, `name`, `text`, `table`, `is_global`)'
+		$query = 'INSERT INTO ' . PREFIX . 'queries'
+		. '(user_id, date, name, text, "table", is_global)'
 		. ' VALUES '
 		. '(:user_id, :date, :name, :text, :table, 0)';
 

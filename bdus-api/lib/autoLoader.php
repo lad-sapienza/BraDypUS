@@ -46,7 +46,6 @@ class autoloader
                 require_once LIB_DIR . 'interfaces/' . $className . '.php';
             } else {
                 return false;
-                //throw new myException('Error: Can not load class `' . $className . '`');
             }
         }
     }

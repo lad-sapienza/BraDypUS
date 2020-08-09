@@ -131,9 +131,9 @@ class DB
 		return $this->db_engine;
 	}
 
-	public function getById($tb, $id, $field = false)
+	public function getById($tb, $id, $field = "*")
 	{
-		$q = 'SELECT ' . ($field ? '`' . $field . '`' : ' * ') . ' FROM `' . $tb . '` WHERE `id` = ' . $id;
+		$q = 'SELECT ' . $field . ' FROM ' . $tb . ' WHERE id = ' . $id;
 		$res = $this->query($q, false, 'read');
 
 		if ($res) {
@@ -247,9 +247,11 @@ class DB
 	public function columns($tb)
 	{
 		if ($this->db_engine == 'mysql') {
-			$tmp = $this->db->query("DESCRIBE `$tb`");
+			$tmp = $this->db->query("DESCRIBE {$tb}");
 			return $tmp;
 		} else {
+			// pgsql: SELECT * FROM information_schema.columns WHERE table_name = '$tb';
+			// sqlite: PRAGMA table_info('$tb')
 			return false;
 		}
 	}

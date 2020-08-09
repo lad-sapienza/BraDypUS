@@ -68,7 +68,7 @@ class Read
    */
   public static function getCore($tb, $id)
   {
-    return self::getTbRecord($tb, "`{$tb}`.`id` = ?", [$id], true);
+    return self::getTbRecord($tb, "{$tb}.id = ?", [$id], true);
   }
 
   /**
@@ -94,14 +94,14 @@ class Read
     $sql = <<<EOD
 SELECT {$prefix}userlinks.*
   FROM {$prefix}userlinks
- WHERE (`tb_one` = ? AND 
-        `id_one` = ? AND
-        `tb_two` != '{$prefix}files') OR 
-       (`tb_two` = ? AND 
-        `id_two` = ? AND
-        `tb_one` != '{$prefix}files')
- ORDER BY `sort`,
-          `id`;
+ WHERE (tb_one = ? AND 
+        id_one = ? AND
+        tb_two != '{$prefix}files') OR 
+       (tb_two = ? AND 
+        id_two = ? AND
+        tb_one != '{$prefix}files')
+ ORDER BY sort,
+          id;
 )
 EOD;
 
@@ -135,7 +135,7 @@ EOD;
           $ref_val_label = $mli;
         } else {
           $lres= \DB::start()->query(
-            "SELECT {$id_fld} as `label` FROM {$mlt} WHERE `id` = ?",
+            "SELECT {$id_fld} as label FROM {$mlt} WHERE id = ?",
             [$mli],
             'read'
           );
@@ -174,7 +174,7 @@ EOD;
   public static function getRs(string $app, string $tb, int $id)
   {
     $res = \DB::start()->query(
-      "SELECT `id`, `first`, `second`, `relation` FROM `" . PREFIX . "rs` WHERE `tb`= ? AND (`first`= ? OR `second` = ?)",
+      "SELECT id, first, second, relation FROM " . PREFIX . "rs WHERE tb = ? AND (first= ? OR second = ?)",
       [$tb, $id, $id],
       'read'
     );
@@ -207,7 +207,7 @@ EOD;
   public static function getGeodata(string $app, string $tb, int $id)
   {
     $r = \DB::start()->query(
-      "SELECT `id`, `geometry`, `geo_el_elips`, `geo_el_asl` FROM `" . PREFIX . "geodata` WHERE `table_link` = ? AND `id_link`= ?",
+      "SELECT id, geometry, geo_el_elips, geo_el_asl FROM " . PREFIX . "geodata WHERE table_link = ? AND id_link = ?",
       [$tb, $id]);
     
     $ret = [];
@@ -241,19 +241,19 @@ EOD;
   {
     $prefix = PREFIX;
     $sql = <<<EOD
-SELECT `{$prefix}files`.*
-FROM `{$prefix}files`
+SELECT {$prefix}files.*
+FROM {$prefix}files
       INNER JOIN
-      `{$prefix}userlinks` AS `ul` ON (`ul`.`tb_one` = '{$prefix}files' AND 
-                                  `ul`.`id_one` = `{$prefix}files`.`id` AND 
-                                  `ul`.`tb_two` = ? AND 
-                                  `ul`.`id_two` = ?) OR 
-                                (`ul`.`tb_two` = '{$prefix}files' AND 
-                                  `ul`.`id_two` = `{$prefix}files`.`id` AND 
-                                  `ul`.`tb_one` = ? AND 
-                                  `ul`.`id_one` = ?) 
+      {$prefix}userlinks AS ul ON (ul.tb_one = '{$prefix}files' AND 
+                                   ul.id_one = {$prefix}files.id AND 
+                                   ul.tb_two = ? AND 
+                                   ul.id_two = ?) OR 
+                                  (ul.tb_two = '{$prefix}files' AND 
+                                   ul.id_two = {$prefix}files.id AND 
+                                   ul.tb_one = ? AND 
+                                   ul.id_one = ?) 
 WHERE 1
-ORDER BY `ul`.`sort`;
+ORDER BY ul.sort;
   
 )
 EOD;
@@ -297,10 +297,9 @@ EOD;
 				list($ref_tb, $via_plg, $via_plg_fld) = utils::csv_explode($bl, ':');
         $ref_tb_id = \cfg::tbEl($ref_tb, 'id_field');
 
-        $where = " `id` IN (SELECT DISTINCT `id_link` FROM `{$via_plg}` WHERE `table_link` = '{$ref_tb}' AND `{$via_plg_fld}` = {$id})";
+        $where = " id IN (SELECT DISTINCT id_link FROM {$via_plg} WHERE table_link = '{$ref_tb}' AND {$via_plg_fld} = {$id})";
 
-        // $sql = "SELECT count(`id`) as `tot` FROM `{$via_plg}` WHERE `table_link` = '{$ref_tb}' AND `{$via_plg_fld}` = ?";
-        $sql = "SELECT count(`id`) as `tot` FROM `{$ref_tb}` WHERE `id` IN (SELECT DISTINCT `id_link` FROM `{$via_plg}` WHERE `table_link` = '{$ref_tb}' AND `{$via_plg_fld}` = ?)";
+        $sql = "SELECT count(id) as tot FROM {$ref_tb} WHERE id IN (SELECT DISTINCT id_link FROM {$via_plg} WHERE table_link = '{$ref_tb}' AND {$via_plg_fld} = ?)";
 
         $sql_val = [$id];
 
@@ -348,12 +347,16 @@ EOD;
 
 			foreach ($links_data as $ld) {
         $where = [];
+        $values = [];
 				foreach ($ld['fld'] as $c) {
-					$where[] = " `{$c['other']}` = '{$core[$c['my']]['val']}'";
+          $where[] = " {$c['other']} = ? ";
+          $values[] = $core[$c['my']]['val'];
 				}
-				$sql = "SELECT count(id) as tot FROM `{$ld['other_tb']}` WHERE " . implode($where, ' AND ');
 
-				$r = \DB::start()->query($sql);
+				$r = \DB::start()->query(
+          "SELECT count(id) as tot FROM {$ld['other_tb']} WHERE " . implode($where, ' AND '), 
+          $values
+        );
 
 				$links[$ld['other_tb']] = [
 					'tb_id' => $ld['other_tb'],
@@ -401,7 +404,7 @@ EOD;
 		$plg_names = \cfg::tbEl($tb, 'plugin');
 		if ($plg_names && is_array($plg_names)){
 			foreach ($plg_names as $p) {
-				$plg_data = self::getTbRecord($p, "`table_link`= ? AND `id_link` = ?", [$tb, $id], false, true) ?: [];
+				$plg_data = self::getTbRecord($p, "table_link = ? AND id_link = ?", [$tb, $id], false, true) ?: [];
         if (empty($plg_data)){
           continue;
         }
@@ -472,16 +475,17 @@ EOD;
 
 				array_push(
 					$fields,
-					"`{$ref_alias}`.`{$ref_tb_fld}` AS `@{$arr['name']}`");
+          $ref_alias .'.' . $ref_tb_fld .' AS "@' . $arr['name'] . '"'
+        );
 
 				array_push(
 					$join,
-					" LEFT JOIN `{$ref_tb}` AS `{$ref_alias}` ON `{$ref_alias}`.`id` = `{$tb}`.`{$arr['name']}` ");
+					" LEFT JOIN {$ref_tb} AS {$ref_alias} ON {$ref_alias}.id = {$tb}.{$arr['name']} ");
 			}
 		}
 
 		$full_sql = 'SELECT ' . implode(', ', $fields) .
-			" FROM `{$tb}` " .
+			" FROM {$tb} " .
 		 	implode(' ', $join) .
 		 	" WHERE {$sql}";
 

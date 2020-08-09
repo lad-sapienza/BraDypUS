@@ -92,10 +92,9 @@ class geoface_ctrl extends Controller
 			$db = new DB();
 
 			foreach ($post as $row){
-				$ret = $db->query('UPDATE `' . PREFIX . 'geodata` SET ' .
-						  '`geometry` = :geometry ' .
-						  'WHERE `id` = ' . $row['id'],
-						  array(':geometry'=>$row['coords']), 'boolean');
+				$ret = $db->query('UPDATE ' . PREFIX . 'geodata SET geometry = ? WHERE id = ?' ,
+						  [ $row['coords'], $row['id'] ],
+						  'boolean');
 				if (!$ret) {
 					$error = true;
 				}
@@ -143,20 +142,20 @@ class geoface_ctrl extends Controller
 
 			foreach ($preview as $fldid) {
 				if ($fldid != 'id') {
-					array_push($part, '`' . $tb . '`.`' . $fldid . '` AS `' . cfg::fldEl($tb, $fldid, 'label') . '`');
+					array_push($part, $tb . '.' . $fldid . ' AS ' . cfg::fldEl($tb, $fldid, 'label') . '');
 				}
 			}
 
 			$where ? $where = base64_decode($where) : '';
 
-			if (!preg_match('/`' . $tb . '`\.`id`/', $where) && $where) {
-				$where = str_replace('`id`', '`' . $tb . '`.`id`', $where);
+			if (!preg_match('/' . $tb . '\.id/', $where) && $where) {
+				$where = str_replace('id', $tb . '.id', $where);
 			}
 
-			$sql = 'SELECT `' . $tb . '`.`id`  AS `id`, ' . implode(', ', $part) . ', `' . PREFIX . 'geodata`.`id` AS `geo_id`,  `geometry` '
-			. ' FROM `' . $tb . '` LEFT JOIN `' . PREFIX . 'geodata` '
-			. " ON `" . $tb . "`.`id` = `" . PREFIX . "geodata`.`id_link` AND `" . PREFIX . "geodata`.`table_link` = '" . $tb . "' "
-			. ' WHERE `geometry` IS NOT NULL '
+			$sql = 'SELECT ' . $tb . '.id  AS id, ' . implode(', ', $part) . ', ' . PREFIX . 'geodata.id AS geo_id,  geometry '
+			. ' FROM ' . $tb . ' LEFT JOIN ' . PREFIX . 'geodata '
+			. " ON {$tb}.id = " . PREFIX . "geodata.id_link AND " . PREFIX . "geodata.table_link = '{$tb}' "
+			. ' WHERE geometry IS NOT NULL '
 			. ($where ? ' AND ' . $where : '');
 
 			$db = new DB();

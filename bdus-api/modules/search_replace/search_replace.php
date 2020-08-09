@@ -31,22 +31,26 @@ class search_replace_ctrl extends Controller
 	 */
 	public function replace()
 	{
-		$tb = $this->get['tb'];
-		$fld = $this->get['fld'];
-		$search = $this->get['search'];
-		$replace = $this->get['replace'];
+		$tb 		= $this->get['tb'];
+		$fld 		= $this->get['fld'];
+		$search 	= $this->get['search'];
+		$replace 	= $this->get['replace'];
 		
 		try
 		{
+			if (!$tb || !$fld || !$search || !$replace){
+				throw new myException('All fields are required');
+			}
+
 			$db = new DB();
-
-			$query = "UPDATE `" . $tb . "` SET `" . $fld . "` = REPLACE (`" . $fld . "`, '" . str_replace("'", "\'", $search) . "', '" . str_replace("'", "\'", $replace ) . "')";
-
+			
 			$values = false;
 
-			$no = $db->query($query, $values, 'affected');
-
-			echo $no;
+			echo $db->query(
+				"UPDATE {$tb} SET {$fld} = REPLACE ({$fld} , ?, ?)", 
+				[ $search, $replace], 
+				'affected'
+			);
 		}
 		catch(myException $e)
 		{

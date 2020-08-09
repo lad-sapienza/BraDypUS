@@ -78,7 +78,7 @@ class QueryBuilder
         if (empty($this->where)) {
             $conn = false;
         }
-        $this->where[] = " {$conn} {$pre} `{$fld}` {$op} ? {$post} ";
+        $this->where[] = " {$conn} {$pre} {$fld} {$op} ? {$post} ";
         array_push($this->val, $val);
 
         return $this;
@@ -107,7 +107,7 @@ class QueryBuilder
         if (!in_array(strtolower($sort), ['asc', 'desc'])) {
             $sort = 'ASC';
         }
-        $this->order[] = " `{$column}` {$sort} ";
+        $this->order[] = " {$column} {$sort} ";
         return $this;
     }
 
@@ -118,7 +118,7 @@ class QueryBuilder
      */
     public function setGroup($column)
     {
-        $this->group[] .= " `{$column}` ";
+        $this->group[] .= " {$column} ";
         return $this;
     }
 

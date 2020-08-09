@@ -1,3 +1,5 @@
+3.17.00[] = "Removed backtick syntax from SQL"
+
 3.16.54[] = "\Record::Read::getFiles uses JOIN and solves sorting issue"
 3.16.53[] = "Added methos Controller::compileTmpl"
 3.16.52[] = "Controller checks if method exist, before running"

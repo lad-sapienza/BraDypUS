@@ -41,12 +41,12 @@ class Meta
    * @return string            table name
    */
   private static function guessTable(string $editQuery) {
-		if (preg_match("/^INSERT\s+INTO\s+`?([a-zA-Z_]+)`?/i", $editQuery, $m)) {
+		if (preg_match("/^INSERT\s+INTO\s+([a-zA-Z_]+)/i", $editQuery, $m)) {
 			$table = $m[1];
-		} elseif (preg_match("/^UPDATE\s+`?([a-zA-Z_]+)`?/i", $editQuery, $m)) {
+		} elseif (preg_match("/^UPDATE\s+([a-zA-Z_]+)/i", $editQuery, $m)) {
       // 2. Update query
   		$table = $m[1];
-		} elseif (preg_match("/^DELETE\s+FROM\s+`?([a-zA-Z_]+)`?/i", $editQuery, $m)) {
+		} elseif (preg_match("/^DELETE\s+FROM\s+([a-zA-Z_]+)/i", $editQuery, $m)) {
       // 3. Delete query
 			$table = $m[1];
 		}
@@ -140,7 +140,6 @@ class Meta
 
     $db = new DB();
 
-    // preg_match("/WHERE\s+`*id`*\s*=\s*'?([0-9]){1,4}'?/", $editQuery, $matches);
     preg_match_all("/WHERE(.+)/i", $editQuery, $matches, PREG_SET_ORDER);
     $where = end($matches)[1];
 
@@ -197,7 +196,7 @@ class Meta
 
     if ($get['sSearch']) {
       foreach ($fields as $f) {
-        $w[] = "`$f` LIKE ?";
+        $w[] = "$f LIKE ?";
         $v[] = "%{$get['sSearch']}%";
       }
       $q .= implode(' OR ', $w);

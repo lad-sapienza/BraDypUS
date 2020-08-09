@@ -70,7 +70,7 @@ class ShortSql
                 "SELECT",
                 join(', ', $data['fields']),
                 "FROM",
-                "`{$data['tb']}`", // . ($data['tbAlias'] ? " AS `{$data['tbAlias']}`" : ''),
+                $data['tb'], // . ($data['tbAlias'] ? " AS {$data['tbAlias']}" : ''),
                 join(' ', $data['join']),
                 "WHERE",
                 $data['where'],

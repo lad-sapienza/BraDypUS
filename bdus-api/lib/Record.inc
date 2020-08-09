@@ -47,7 +47,7 @@ class Record implements iRecord
 
 		if ($id === 'last_added') {
 
-			$t = $db->query('SELECT `id` FROM `' . $tb . '` WHERE 1 ORDER BY `id` DESC LIMIT 0,1', false, 'read');
+			$t = $db->query('SELECT id FROM ' . $tb . ' WHERE 1=1 ORDER BY id DESC LIMIT 0,1', false, 'read');
 			$id = $t[0]['id'];
 		}
 
@@ -134,12 +134,14 @@ class Record implements iRecord
 
 					if ($key !== 'id' AND in_array($key, $this->changed['core'])) {
 
-						$tmp[] = "`{$key}` = :{$key}";
-						$values[":$key"] = $val;
+						$tmp[] = "{$key} = ?";
+						$values[] = $val;
 					}
 				}
 
-				$query = 'UPDATE `' . $this->tb . '` SET ' . implode(', ', $tmp) . ' WHERE `id` = ' . $this->id;
+				$query = 'UPDATE ' . $this->tb . ' SET ' . implode(', ', $tmp) . ' WHERE id = ? ';
+				$values[] = $this->id;
+
 
 				$flag['core'] = $this->db->query($query, $values, 'boolean');
 
@@ -163,7 +165,7 @@ class Record implements iRecord
 				}
 
 				$values[':creator'] = $_SESSION['user']['id'];
-				$query = "INSERT INTO `{$this->tb}` (`creator`, '" . 
+				$query = "INSERT INTO {$this->tb} (creator, '" . 
 					implode("', '", array_keys($this->data['core'])) . "') VALUES (:creator, :" . implode(', :', array_keys($this->data['core'])). ")";
 
 				$last_id = $this->db->query($query, $values, 'id');
@@ -196,7 +198,7 @@ class Record implements iRecord
 				if (!$rel['id']) {
 
 					array_push($q_arr, array(
-							'q' => 'INSERT INTO `' . PREFIX . 'rs` (`tb`, `first`, `second`, `relation`) VALUES (:tb, :first, :second, :relation)',
+							'q' => 'INSERT INTO ' . PREFIX . 'rs (tb, first, second, relation) VALUES (:tb, :first, :second, :relation)',
 							'values'=>array(':tb'=>$tb, ':first'=>$rel['first'], ':second'=>$re['second'], ':relation'=>$rel['relation'])
 							));
 				}
@@ -227,7 +229,7 @@ class Record implements iRecord
 
 						if ($key != 'id') {
 
-							$tmp[] = "`{$key}` = ':{$key}'";
+							$tmp[] = "{$key} = ':{$key}'";
 							$values[":{$key}"] = $val;
 						}
 					}
@@ -235,14 +237,14 @@ class Record implements iRecord
 					// plg.row.DELETE
 					if($plg_row['id_delete'] AND !empty($plg_row['id_delete'])) {
 						array_push($query, array(
-								'q' => 'DELETE FROM `' . $plg_name . '` WHERE `id` = ' . $plg_row['id_delete'],
+								'q' => 'DELETE FROM ' . $plg_name . ' WHERE id = ' . $plg_row['id_delete'],
 								'values' => false
 						));
 
 					} else if($plg_row['id'] AND !empty($plg_row['id'])) {
 						// plg.row.UPDATE
 						array_push($query, array(
-								'q' => 'UPDATE `' . $plg_name . '` SET ' . implode(', ', $tmp) . ' WHERE `id` = ' . $plg_row['id'],
+								'q' => 'UPDATE ' . $plg_name . ' SET ' . implode(', ', $tmp) . ' WHERE id = ' . $plg_row['id'],
 								'values' => $values
 						));
 
@@ -255,7 +257,7 @@ class Record implements iRecord
 								$values[':id_link'] = $this->data['core']['id'];
 							}
 							array_push($query, array(
-									'q' => 'INSERT INTO `' . $plg_name . "` ('" . implode("', '", array_keys($plg_row)) . "') VALUES (:" . implode(', :', array_keys($plg_row)). ")",
+									'q' => 'INSERT INTO ' . $plg_name . " ('" . implode("', '", array_keys($plg_row)) . "') VALUES (:" . implode(', :', array_keys($plg_row)). ")",
 									'values' => $values
 							));
 						}
@@ -293,7 +295,7 @@ class Record implements iRecord
 		}
 
 		// CORE
-		$q[] = 'DELETE FROM `' . $this->tb . '` WHERE `id` = ' . $id;
+		$q[] = 'DELETE FROM ' . $this->tb . ' WHERE id = ' . $id;
 
 		// PLUGINS
 		$plugins = cfg::tbEl($this->tb, 'plugin');
@@ -301,18 +303,18 @@ class Record implements iRecord
 		if (is_array($plugins)) {
 
 			foreach ($plugins as $plg) {
-				$q[] = 'DELETE FROM `' . $plg . '` WHERE `table_link` = \'' . $this->tb. '\' AND `id_link` = ' . $id;
+				$q[] = 'DELETE FROM ' . $plg . ' WHERE table_link = \'' . $this->tb. '\' AND id_link = ' . $id;
 			}
 		}
 
 		// USERLINKS
-		$q[] = 'DELETE FROM `' . PREFIX . 'userlinks` WHERE '
-			." ( `tb_one` = '" . $this->tb . "' AND `id_one` = '" . $id . "')"
+		$q[] = 'DELETE FROM ' . PREFIX . 'userlinks WHERE '
+			." ( tb_one = '" . $this->tb . "' AND id_one = '" . $id . "')"
 			. ' OR '
-			. "( `tb_two` = '" . $this->tb . "' AND `id_two` = '" . $id . "')";
+			. "( tb_two = '" . $this->tb . "' AND id_two = '" . $id . "')";
 
 		//GEODATA
-		$q[] = "DELETE FROM `" . PREFIX . "geodata` WHERE  `table_link` = '" . $this->tb . "' AND `id_link` = " . $id;
+		$q[] = "DELETE FROM " . PREFIX . "geodata WHERE  table_link = '" . $this->tb . "' AND id_link = " . $id;
 
 		//DELETE FILE (deleted only if all db erases are OK)
 		if ($this->tb == PREFIX . 'files') {
@@ -327,10 +329,10 @@ class Record implements iRecord
 				$this->getCore();
 			}
 
-			$q[] = 'DELETE FROM `' . PREFIX . 'rs` WHERE ' . "`tb` = '" . $this->tb . "' AND ( "
-						. " `first` =  '" . $this->data['core'][$rs_fld] . "' "
+			$q[] = 'DELETE FROM ' . PREFIX . 'rs WHERE ' . "tb = '" . $this->tb . "' AND ( "
+						. " first =  '" . $this->data['core'][$rs_fld] . "' "
 						. ' OR '
-						. " `second` =  '" . $this->data['core'][$rs_fld] . "' "
+						. " second =  '" . $this->data['core'][$rs_fld] . "' "
 					. ' )';
 
 		}
@@ -375,12 +377,12 @@ class Record implements iRecord
 	{
 		if ($this->id) {
 
-			$query = "SELECT * FROM `" . $this->tb . "` WHERE `id` = :id";
+			$query = "SELECT * FROM " . $this->tb . " WHERE id = :id";
 			$values = array(':id' => $this->id);
 
 		} else if ($this->idField) {
 
-			$query = "SELECT * FROM `" . $this->tb . "` WHERE `" . cfg::tbEl($this->tb, 'id_field'). "` = :id_field LIMIT 0, 1";
+			$query = "SELECT * FROM " . $this->tb . " WHERE " . cfg::tbEl($this->tb, 'id_field'). " = :id_field LIMIT 0, 1";
 			$values = array(':id_field' => $this->idField);
 		}
 
@@ -454,7 +456,7 @@ class Record implements iRecord
 			return;
 		}
 
-		$query = "SELECT * FROM `" . $plugin . "` WHERE `table_link` = :table_link AND `id_link` = :id_link";
+		$query = "SELECT * FROM " . $plugin . " WHERE table_link = :table_link AND id_link = :id_link";
 
 		$res = $this->db->query($query, array(':table_link'=>$this->tb, ':id_link' => $core_id));
 
@@ -587,21 +589,22 @@ class Record implements iRecord
 			 */
 
 			if ( !is_array($link['fld']) || !is_array($link['fld'][0]) ) {
-				error_log('Configuration problem. Tables > `' . $this->tb . '` > links > `' . $link['other_tb'] . '` NOT well formatted and will be ignored');
+				error_log('Configuration problem. Tables > ' . $this->tb . ' > links > ' . $link['other_tb'] . ' NOT well formatted and will be ignored');
 				continue;
 			}
 
-			$tmp = array();
+			$tmp = [];
+			$tmp_values = [];
 
 			foreach ($link['fld'] as $fld_arr) {
-				$tmp[] = ' `' . $fld_arr['other'] . "` ='" . $this->data['core'][$fld_arr['my']] . "' ";
+				$tmp[] = ' ' . $fld_arr['other'] . " = ? ";
+				$tmp_values[] = $this->data['core'][$fld_arr['my']] ?? '';
 			}
 
 			$id_fld = cfg::tbEl($link['other_tb'], 'id_field');
 
-			$query = "SELECT `id` " . ( ($id_fld == 'id') ? '' : ', `' . $id_fld . '`') . " FROM `" . $link['other_tb'] . "` WHERE " . implode(' AND ', $tmp);
-
-			$res = $this->db->query($query, false, 'read');
+			$query = "SELECT id " . ( ($id_fld === 'id') ? '' : ', ' . $id_fld . '') . " FROM " . $link['other_tb'] . " WHERE " . implode(' AND ', $tmp);
+			$res = $this->db->query($query, $tmp_values, 'read');
 
 			if ($res) {
 
@@ -656,17 +659,17 @@ class Record implements iRecord
 
 			if ($dest_id_fld === 'id') {
 				// If id_field of the destrination table is id field, the query is simple
-				$sql = "SELECT `id_link` as id FROM `{$plg}` WHERE `table_link` = '{$tb}' AND `{$plg_fld}` = '" . $this->getCore('id') . "'";
+				$sql = "SELECT id_link as id FROM {$plg} WHERE table_link = '{$tb}' AND {$plg_fld} = '" . $this->getCore('id') . "'";
 
 			} else {
         // SQl query is more complicated and is run on the destination table
 				$sql = <<<EOD
-SELECT `id`, `{$dest_id_fld}` as label FROM `{$tb}`
-	WHERE `id` IN (
-		SELECT `id_link` FROM `{$plg}` WHERE
-			`table_link` = '{$tb}'
+SELECT id, {$dest_id_fld} as label FROM {$tb}
+	WHERE id IN (
+		SELECT id_link FROM {$plg} WHERE
+			table_link = '{$tb}'
 			AND
-			`{$plg_fld}` = '{$this->getCore('id')}'
+			{$plg_fld} = '{$this->getCore('id')}'
 		)
 EOD;
 			}
@@ -718,18 +721,18 @@ EOD;
 		} else {
 
 			if ($this->data['core']['id']) {
-				$query = 'SELECT `' . PREFIX . 'files`.*, `' . PREFIX . 'userlinks`.`id` as linkid'
-						. ' FROM `' . PREFIX . 'files` JOIN `' . PREFIX . 'userlinks`'
+				$query = 'SELECT ' . PREFIX . 'files.*, ' . PREFIX . 'userlinks.id as linkid'
+						. ' FROM ' . PREFIX . 'files JOIN ' . PREFIX . 'userlinks'
 						. ' ON ( '
-							. "(`" . PREFIX . "userlinks`.`tb_one` = '" . PREFIX . "files' AND  `" . PREFIX . "userlinks`.`id_one` = `" . PREFIX . "files`.`id`)"
+							. "(" . PREFIX . "userlinks.tb_one = '" . PREFIX . "files' AND  " . PREFIX . "userlinks.id_one = " . PREFIX . "files.id)"
 							. ' OR '
-							. "(`" . PREFIX . "userlinks`.`tb_two` = '" . PREFIX . "files' AND  `" . PREFIX . "userlinks`.`id_two` = `" . PREFIX . "files`.`id`)"
+							. "(" . PREFIX . "userlinks.tb_two = '" . PREFIX . "files' AND  " . PREFIX . "userlinks.id_two = " . PREFIX . "files.id)"
 						. ')'
 						. ' WHERE '
-							. "(`" . PREFIX . "userlinks`.`tb_one` = '" . $this->tb . "' AND  `" . PREFIX . "userlinks`.`id_one` = '" . $this->data['core']['id'] . "')"
+							. "(" . PREFIX . "userlinks.tb_one = '" . $this->tb . "' AND  " . PREFIX . "userlinks.id_one = '" . $this->data['core']['id'] . "')"
 							. ' OR '
-							. "(`" . PREFIX . "userlinks`.`tb_two` = '" . $this->tb . "' AND  `" . PREFIX . "userlinks`.`id_two` = '" . $this->data['core']['id'] . "')"
-						. ' ORDER BY `' . PREFIX . 'userlinks`.`sort`, `' . PREFIX . 'userlinks`.`id`';
+							. "(" . PREFIX . "userlinks.tb_two = '" . $this->tb . "' AND  " . PREFIX . "userlinks.id_two = '" . $this->data['core']['id'] . "')"
+						. ' ORDER BY ' . PREFIX . 'userlinks.sort, ' . PREFIX . 'userlinks.id';
 				$this->data['fullfiles'] = $this->db->query($query, false, 'read');
 			}
 		}
@@ -751,9 +754,12 @@ EOD;
 
 	private function loadRS()
 	{
-		$query = 'SELECT * FROM `' . PREFIX . 'rs` WHERE `tb`=:table AND (`first`=:id OR `second` = :id)';
 
-		$this->data['rs'] = $this->db->query($query, array(':table'=>$this->tb, ':id'=>$this->id), 'read');
+		$this->data['rs'] = $this->db->query(
+			'SELECT * FROM ' . PREFIX . 'rs WHERE tb = ? AND (first = ? OR second = ?)', 
+			[ $this->tb, $this->id, $this->id], 
+			'read'
+		);
 
 		$this->loaded['rs'] = true;
 	}
@@ -779,7 +785,7 @@ EOD;
 		$first = trim($first);
 		$second = trim($second);
 		$res = $this->db->query(
-				'SELECT * FROM `' . PREFIX . 'rs` WHERE `tb` = :tb AND ( (`first` = :first AND `second` =:second) OR (`first`=:second AND `second` = :first) )',
+				'SELECT * FROM ' . PREFIX . 'rs WHERE tb = :tb AND ( (first = :first AND second =:second) OR (first=:second AND second = :first) )',
 				array(':tb'=>$this->tb, ':first'=>$first, ':second'=>$second),
 				'read'
 		);
@@ -788,7 +794,7 @@ EOD;
 			return false;
 		} else {
 			return $this->db->query(
-					'INSERT INTO `' . PREFIX . 'rs` (`tb`, `first`, `second`, `relation`) VALUES (:tb, :first, :second, :relation)',
+					'INSERT INTO ' . PREFIX . 'rs (tb, first, second, relation) VALUES (:tb, :first, :second, :relation)',
 					array(':tb'=>$this->tb, ':first'=>$first, ':second'=>$second, ':relation'=>$relation),
 					'id'
 			);
@@ -798,7 +804,7 @@ EOD;
 
 	public function deleteRS($id)
 	{
-		return $this->db->query('DELETE FROM `' . PREFIX . 'rs` WHERE `id`=' . $id, false, 'boolean');
+		return $this->db->query('DELETE FROM ' . PREFIX . 'rs WHERE id = ', [ $id ], 'boolean');
 	}
 
 	/**
@@ -834,9 +840,16 @@ EOD;
 
 	private function loadUserLinks()
 	{
-		$sql = 'SELECT * FROM `' . PREFIX . 'userlinks` WHERE (`tb_one` = ? AND `id_one` = ?) OR (`tb_two` = ? AND `id_two` = ?) ORDER BY `sort`, `id`';
-
-		$userlinks = $this->db->query($sql, [$this->tb, $this->id, $this->tb, $this->id], 'read');
+		$userlinks = $this->db->query(
+			'SELECT * FROM ' . PREFIX . 'userlinks WHERE (tb_one = ? AND id_one = ?) OR (tb_two = ? AND id_two = ?) ORDER BY sort, id',
+			[ 
+				$this->tb, 
+				$this->id, 
+				$this->tb, 
+				$this->id 
+			],
+			'read'
+		);
 
 		if ($userlinks) {
 
@@ -855,14 +868,14 @@ EOD;
 
 	public function deleteUserLink($id)
 	{
-		return $this->db->query('DELETE FROM `' . PREFIX . 'userlinks` WHERE `id`=' . $id, false, 'boolean');
+		return $this->db->query('DELETE FROM ' . PREFIX . 'userlinks WHERE id = ?', [ $id ], 'boolean');
 	}
 
 	public function addUserLink($tb, $id)
 	{
 		return $this->db->query(
-				'INSERT INTO `' . PREFIX . 'userlinks` (`tb_one`, `id_one`, `tb_two`, `id_two`) VALUES (:thistb, :thisid, :tb, :id)',
-				array(':thistb'=>$this->tb, ':thisid'=>$this->id, ':tb' => $tb, ':id' => $id),
+				'INSERT INTO ' . PREFIX . 'userlinks (tb_one, id_one, tb_two, id_two) VALUES (:thistb, :thisid, :tb, :id)',
+				[ ':thistb'=>$this->tb, ':thisid'=>$this->id, ':tb' => $tb, ':id' => $id ],
 				'boolean'
 				);
 	}
@@ -879,7 +892,7 @@ EOD;
 	private function loadGeodata()
 	{
 		$this->data['geodata'] = $this->db->query(
-				'SELECT * FROM `' . PREFIX . 'geodata` WHERE `table_link` = :tb AND `id_link`= :id',
+				'SELECT * FROM ' . PREFIX . 'geodata WHERE table_link = :tb AND id_link= :id',
 				array(':tb'=>$this->tb, ':id'=>$this->id),
 				'read');
 		$this->loaded['geodata'] = true;
@@ -888,7 +901,7 @@ EOD;
 	public function addGeodata($geometry)
 	{
 		return  $this->db->query(
-				'INSERT INTO `' . PREFIX . 'geodata` (`table_link`, `id_link`, `geometry`) VALUES(:table_link, :id_link, :geometry)',
+				'INSERT INTO ' . PREFIX . 'geodata (table_link, id_link, geometry) VALUES(:table_link, :id_link, :geometry)',
 				array(':table_link'=>$this->tb, ':id_link'=>$this->id, ':geometry' => $geometry),
 				'id'
 		);
@@ -896,7 +909,7 @@ EOD;
 
 	public function deleteGeodata($id)
 	{
-		return $this->db->query('DELETE FROM `' . PREFIX . 'geodata` WHERE `id`= ' . $id, false, 'boolean');
+		return $this->db->query('DELETE FROM ' . PREFIX . 'geodata WHERE id = ?', [ $id ], 'boolean');
 	}
 
 }

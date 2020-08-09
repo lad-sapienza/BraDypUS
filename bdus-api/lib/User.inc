@@ -187,8 +187,8 @@ class User
             throw new myException(tr::get('email_not_valid', ['<strong>' . $email . '</strong>']));
         }
 
-        $statement = "INSERT INTO `" . $this->prefix . "users` "
-        . "(`id`, `name`, `email`, `password`, `privilege`) "
+        $statement = "INSERT INTO " . $this->prefix . "users "
+        . "(id, name, email, password, privilege) "
         . "VALUES "
         . "(NULL, :name, :email, :password, :privilege);";
 
@@ -226,31 +226,31 @@ class User
             $partial_arr =  array();
 
             if ($name && $name !== '') {
-                $partial_arr[] = '`name` = :name';
+                $partial_arr[] = 'name = :name';
                 $val[':name'] = $name;
             }
 
             if ($email && $email !== '') {
-                $partial_arr[] = '`email` = :email';
+                $partial_arr[] = 'email = :email';
                 $val[':email'] = $email;
             }
 
             if ($password && $password !== '') {
-                $partial_arr[] = '`password` = :password';
+                $partial_arr[] = 'password = :password';
                 $val[':password'] = $this->encodePwd($password);
             }
 
             if ($privilege && $privilege !== '') {
-                $partial_arr[] = '`privilege` = :privilege';
+                $partial_arr[] = 'privilege = :privilege';
                 $val[':privilege'] = $privilege;
             }
 
             if ($settings && $settings !== '') {
-                $partial_arr[] = '`settings` = :settings';
+                $partial_arr[] = 'settings = :settings';
                 $val[':settings'] = $settings;
             }
 
-            $statement = "UPDATE `{$this->prefix}users` SET " . implode(', ', $partial_arr) . " WHERE `id` = :id";
+            $statement = "UPDATE {$this->prefix}users SET " . implode(', ', $partial_arr) . " WHERE id = :id";
 
             $val[':id'] = $id;
 
@@ -276,9 +276,11 @@ class User
      */
     public function delete($id)
     {
-        $statement = "DELETE FROM `" . $this->prefix . "users` WHERE `id` = {$id}";
-
-        return $this->db->query($statement, false, 'boolean');
+        return $this->db->query(
+            "DELETE FROM " . $this->prefix . "users WHERE id = ?", 
+            [ $id ], 
+            'boolean'
+        );
     } // end of delete
 
 	/**
@@ -297,9 +299,11 @@ class User
             $comparison = '=';
         }
 
-        $query = "SELECT * FROM `{$this->prefix}users` WHERE `privilege` {$comparison} " . utils::privilege($priv);
-
-        return $this->db->query($query, false, 'read');
+        return $this->db->query(
+            "SELECT * FROM {$this->prefix}users WHERE privilege {$comparison} ?", 
+            [ utils::privilege($priv) ], 
+            'read'
+        );
     }
     /**
      *
@@ -309,28 +313,24 @@ class User
      */
     public function getUser($arr)
     {
-        $query = "SELECT * FROM `{$this->prefix}users` WHERE ";
+        $query = "SELECT * FROM {$this->prefix}users WHERE ";
+        $values_arr = [];
 
         if ($arr === 'all') {
-            $query .= '1';
+            $query .= '1=1';
         } else {
-            $partial_arr = array();
+            $partial_arr = [];
 
-            ($arr['id'] && $arr['id'] !== '') ? array_push($partial_arr, "`id` = '{$arr['id']}'") : '';
-
-            ($arr['name'] && $arr['name'] !== '') ? array_push($partial_arr, "`name` = '{$arr['name']}'") : '';
-
-            ($arr['email'] && $arr['email'] !== '') ? array_push($partial_arr, "`email` = '{$arr['email']}'") : '';
-
-            ($arr['password'] && $arr['password'] !== '') ? array_push($partial_arr, "`password` = '{$arr['password']}'") : '';
-
-            ($arr['privilege'] && $arr['privilege'] !== '') ? array_push($partial_arr, "`privilege` = '{$arr['privilege']}'") : '';
-
+            foreach ([ 'id', 'name', 'email', 'password', 'privilege'] as $field) {
+                if( !empty($arr[$field]) ) {
+                    array_push($partial_arr, "$field = :$field");
+                    array_push($partial_arr, ":field = {$arr[$field]}");
+                }
+            }
             $query .= implode(' AND ', $partial_arr);
         }
 
-
-        return $this->db->query($query);
+        return $this->db->query($query, $values_arr);
     }// end of getUser
 
     /**
@@ -342,9 +342,19 @@ class User
      */
     public function isDuplicate($email, $id = false)
     {
-        $query = "SELECT count(*) as `tot` FROM `" . $this->prefix . "users` WHERE `email` = '{$email}' " . ($id ? " AND `id` != $id " : '') . " LIMIT 1";
+        $values = [];
+        $partial = [];
 
-        $res = $this->db->query($query);
+        array_push($partial, "email = ? ");
+        $values = $email;
+        if ($id) {
+            array_push($partial, "id != ? ");
+            $values = $id;
+        }
+        $res = $this->db->query(
+            'SELECT count(*) as tot FROM ' . $this->prefix . 'users WHERE ' . implode(" AND ", $partial) . ' LIMIT 1', 
+            $values
+        );
 
         return ($res[0]['tot'] > 0);
     } // end of isDuplicate

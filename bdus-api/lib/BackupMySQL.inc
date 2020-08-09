@@ -67,38 +67,15 @@ class BackupMySQL
 		// get table structure
 		$sql = $this->getColumns($tb);
 
-		/*
-		$fields = cfg::fldEl($tb, 'all', 'name');
+		$q = $this->db->query('SELECT * FROM ' . $tb . ' WHERE 1=1');
 
-		foreach($fields as &$f)
-		{
-			if ($f == 'geometry')
-			{
-				$f = 'astext(geometry) as geometry';
-			}
-		}
-		$q = $this->db->query('SELECT ' . implode(', ', $fields). ' FROM `' . $tb . '` WHERE 1');
-		*/
-		$q = $this->db->query('SELECT * FROM `' . $tb . '` WHERE 1');
-
-		foreach($q as $row)
-		{
-			foreach ($row as $k=>&$f)
-			{
-				/*
-				if ($k == 'geometry')
-				{
-					$f = "'" . $f . "'";
-				}
-				else
-				{
-				*/
-					$f = "'" . htmlentities(addslashes($f)) . "'";
-				//}
+		foreach($q as $row){
+			foreach ($row as $k=>&$f) {
+				$f = "'" . htmlentities(addslashes($f)) . "'";
 			}
 
-			$sql .= "INSERT INTO `{$tb}` "
-				. '(`' . implode('`, `', array_keys($row)). '`)'
+			$sql .= "INSERT INTO {$tb} "
+				. '(' . implode(', ', array_keys($row)). ')'
 				. " VALUES "
 				. "(" . implode(", ", $row). "); \n";
 		}
@@ -153,7 +130,7 @@ class BackupMySQL
 	private function formatSQLstring( $sql, $tb )
 	{
 		$f_sql = 'SET FOREIGN_KEY_CHECKS = 0;' . "\n\n"
-			. 'DROP TABLE IF EXISTS `'. $tb .'`;'."\n"
+			. 'DROP TABLE IF EXISTS '. $tb .';'."\n"
 			. $sql . "\n\n"
 			. '-- THE END'."\n"
 		. 'SET FOREIGN_KEY_CHECKS = 1;' . "\n\n";

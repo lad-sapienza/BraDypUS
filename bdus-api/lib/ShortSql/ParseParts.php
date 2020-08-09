@@ -24,7 +24,7 @@ class ParseParts
         }
         $formatted_flds = array_map(function($f) use ($tb){
             list($tb, $fld, $alias) = self::Fld($f, $tb);
-            return "`$tb`.`$fld`";
+            return "$tb.$fld";
         }, explode(',', $group_str));
         
         return $formatted_flds;
@@ -75,7 +75,7 @@ class ParseParts
                 $order = 'ASC';
             }
             list($tb, $fld, $alias) = self::Fld($fld, $tb);
-            $sort[] = "`$tb`.`$fld` " . strtoupper($order);
+            $sort[] = "$tb.$fld " . strtoupper($order);
         }
         return $sort;
     }
@@ -135,7 +135,7 @@ class ParseParts
             // Add PREFIX to table name, if not available
             $auto_join[] = [
                 'tb' => $fld_tb,
-                'string' => "JOIN `{$fld_tb}` ON `{$fld_tb}`.`table_link` = '{$tb}' AND `{$fld_tb}`.`id_link` = `{$tb}`.`id`"
+                'string' => "JOIN {$fld_tb} ON {$fld_tb}.table_link = '{$tb}' AND {$fld_tb}.id_link = {$tb}.id"
             ];
         }
 
@@ -149,20 +149,20 @@ class ParseParts
             // Set join
             $auto_join[] = [
                 'tb' => $id_from_tb,
-                'string' => "JOIN `{$id_from_tb}` AS `{$alias}` ON `{$fld_tb}`.`{$fld}` = `{$alias}`.`id`"
+                'string' => "JOIN {$id_from_tb} AS {$alias} ON {$fld_tb}.{$fld} = {$alias}.id"
             ];
             // Change field
-            $fld = "`$alias`.`$id_from_tb_id_fld`";
+            $fld = "$alias.$id_from_tb_id_fld";
         } else {
             // $fld must always contain table name as prefix
-            $fld = "`$fld_tb`.`$fld`";
+            $fld = "$fld_tb.$fld";
         }
 
         // Set value
         // If the caret is the forst char, the value is not a string: it is a field name
         if ($value[0] === '^') {
             list($binded_tb, $binded_fld, $binded_alias) = self::Fld(substr($value, 1));
-            $binded = "`$binded_tb`.`$binded_fld`";
+            $binded = "$binded_tb.$binded_fld";
         } else if (in_array($operator, ['IS NULL', 'IS NOT NULL'])) {
             $binded = '';
         } else if ($noValues) {
@@ -262,7 +262,7 @@ class ParseParts
             list($on, $values) = self::Where(implode('||', $j_parts), $tb, true);
 
             // Add values to return list
-            $join_ret[$tb] = "JOIN `{$tb}` " . ($tbAlias ? " AS `{$tbAlias}` " : '') . "ON {$on}";
+            $join_ret[$tb] = "JOIN {$tb} " . ($tbAlias ? " AS {$tbAlias} " : '') . "ON {$on}";
         }
 
         // Return array of JOIN statements
@@ -281,8 +281,6 @@ class ParseParts
      * @return Array            [table name, field name, alias]
      */
     private static function Fld($fld, $tb = false){
-        // Remove backticks
-        $fld = str_replace('`', '', $fld);
         
         // if table name is provided as dot-separated prefix, get it
         if (strpos($fld, '.') !== false){
@@ -319,11 +317,11 @@ class ParseParts
     public static function FieldList ( $fields_arr = [], $tb )
     {
         if (empty($fields_arr)){
-            return ["`{$tb}`.*"];
+            return ["{$tb}.*"];
         } else {
             $formatted_flds = array_map(function($f) use ($tb){
                 list($tb, $fld, $alias) = self::Fld($f, $tb);
-                return "`$tb`.`$fld`" . ($alias ? " AS `$alias`" : '');
+                return "$tb.$fld" . ($alias ? " AS $alias" : '');
             }, $fields_arr);
             return $formatted_flds;
         }

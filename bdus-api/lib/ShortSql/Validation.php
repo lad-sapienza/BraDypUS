@@ -21,7 +21,7 @@ class Validation
         $valid_operators = [ '=', '!=', 'like', 'not like', '<', '<=', '>', '>=', 'is null', 'is not null'];
         // Validate connector
         if (!in_array(strtolower($operator), $valid_operators)) {
-            throw new \Exception("Operator `{$operator}` non valid. Only " . implode(", ", $valid_operators) . " are allowed");
+            throw new \Exception("Operator '{$operator}' non valid. Only " . implode(", ", $valid_operators) . " are allowed");
         }
         return true;
     }
@@ -39,7 +39,7 @@ class Validation
         $valid_connectors = ['and', 'or'];
         // Validate connector
         if (!in_array(strtolower($connector), $valid_connectors)) {
-            throw new \Exception("Connector `{$connector}` non valid. Only " . implode(", ", $valid_connectors) . " are allowed");
+            throw new \Exception("Connector '{$connector}' non valid. Only " . implode(", ", $valid_connectors) . " are allowed");
         }
         return true;
     }

@@ -84,7 +84,7 @@ class makeProject
 	{
 		$db = new DB($this->app);
 
-		$files = $db->query('SELECT * FROM `' . $this->app . '__files` WHERE 1');
+		$files = $db->query('SELECT * FROM ' . $this->app . '__files WHERE 1=1');
 
 		if (!$files)
 		{
@@ -127,7 +127,7 @@ class makeProject
 		}
 		$odb = new DB($this->app, $this->ini);
 
-		$tb_str = $odb->query('SHOW COLUMNS FROM `' . $tb . '`');
+		$tb_str = $odb->query('SHOW COLUMNS FROM ' . $tb);
 
 		$fields_data = array();
 
@@ -169,7 +169,7 @@ class makeProject
 
 		$this->createTmpl($tb, $fields_data);
 
-		$old_content = $odb->query('SELECT * FROM `' . $tb . '` WHERE 1', false, 'read', true);
+		$old_content = $odb->query('SELECT * FROM ' . $tb . ' WHERE 1', false, 'read', true);
 
 		if (!$old_content)
 		{
@@ -186,7 +186,7 @@ class makeProject
 
 		foreach ($old_content as $r)
 		{
-			$ndb->query('INSERT INTO `' . $tb . '` VALUES (' . implode(', ', $col) .')', $r, 'boolean') ? $ok[] = true : $error[] = true;
+			$ndb->query('INSERT INTO ' . $tb . ' VALUES (' . implode(', ', $col) .')', $r, 'boolean') ? $ok[] = true : $error[] = true;
 		}
 
 		$this->setMsg('Table ' . $tb . ': ' . count($ok) . ' records migrated; ' . count($error) . ' records NOT migrated', 'info');
@@ -552,7 +552,7 @@ class makeProject
 		}
 
 		$sql = 'CREATE TABLE "' . $tb . '" ("id" INTEGER PRIMARY KEY,'
-			. ($isplugin ? ' `table_link` TEXT, `id_link` INTEGER, ' : '')
+			. ($isplugin ? ' table_link TEXT, id_link INTEGER, ' : '')
 			. implode(', ', $sql_part)
 			. ' )';
 
@@ -661,9 +661,9 @@ class makeProject
 	 */
 	private function vocabularies(DB $odb, DB $ndb)
 	{
-		$ndb->query('DELETE FROM `' . $this->app . '__vocabularies`');
+		$ndb->query('DELETE FROM ' . $this->app . '__vocabularies');
 
-		$voc_res = $odb->query('SELECT * FROM `' . $this->app . '__dic` WHERE 1');
+		$voc_res = $odb->query('SELECT * FROM ' . $this->app . '__dic WHERE 1=1');
 
 		if (!$voc_res)
 		{
@@ -673,16 +673,16 @@ class makeProject
 
 		foreach ($voc_res as $r)
 		{
-			$q = 'INSERT INTO `' . $this->app. '__vocabularies` '
-			. '(`voc`, `def`, `sort`)'
+			$q = 'INSERT INTO ' . $this->app. '__vocabularies '
+			. '(voc, def, sort)'
 			. ' VALUES '
 			. '(:voc, :def, :sort)';
 
-			$values = array(
+			$values = [
 					':voc' 	=>$r['dic'],
 					':def'	=>$r['def'],
 					':sort'	=>$r['order']
-			);
+			];
 
 			$ndb->query($q, $values, 'boolean') ? $ok[] = true : $error[] = true;
 		}
@@ -697,9 +697,9 @@ class makeProject
 	 */
 	private function users(DB $odb, DB $ndb)
 	{
-		$ndb->query('DELETE FROM `' . $this->app . '__users` WHERE `id` > 1');
+		$ndb->query('DELETE FROM ' . $this->app . '__users WHERE id > 1');
 
-		$users_res = $odb->query('SELECT * FROM `' . $this->app . '__users` WHERE `email` != \'jbogdani@gmail.com\'');
+		$users_res = $odb->query('SELECT * FROM ' . $this->app . '__users WHERE email != ?', [ 'jbogdani@gmail.com' ]);
 
 		if (!$users_res)
 		{
@@ -709,8 +709,8 @@ class makeProject
 
 		foreach ($users_res as $r)
 		{
-			$q = 'INSERT INTO `' . $this->app. '__users` '
-			. '(`name`, `email`, `password`, `privilege`)'
+			$q = 'INSERT INTO ' . $this->app. '__users '
+			. '(name, email, password, privilege)'
 			. ' VALUES '
 			. '(:name, :email, :password, :privilege)';
 
@@ -735,9 +735,9 @@ class makeProject
 	 */
 	private function rs(DB $odb, DB $ndb, $rs_table)
 	{
-		$ndb->query('DELETE FROM `' . $this->app . '__rs`');
+		$ndb->query('DELETE FROM ' . $this->app . '__rs');
 
-		$rs_res = $odb->query('SELECT * FROM `' . $this->app . '__rs` WHERE 1');
+		$rs_res = $odb->query('SELECT * FROM ' . $this->app . '__rs WHERE 1=1');
 
 		if (!$rs_res)
 		{
@@ -749,8 +749,8 @@ class makeProject
 
 		foreach ($rs_res as $r)
 		{
-			$q = 'INSERT INTO `' . $this->app. '__rs` '
-				. '(`id`, `tb`, `first`, `second`, `relation`)'
+			$q = 'INSERT INTO ' . $this->app. '__rs '
+				. '(id, tb, first, second, relation)'
 				. ' VALUES '
 				. '(:id, :tb, :first, :second, :relation)';
 
@@ -779,9 +779,9 @@ class makeProject
 	 */
 	private function userlinks(DB $odb, DB $ndb, $id_fields)
 	{
-		$ndb->query('DELETE FROM `' . $this->app . '__userlinks`');
+		$ndb->query('DELETE FROM ' . $this->app . '__userlinks');
 
-		$links_res = $odb->query('SELECT * FROM `' . $this->app . '__links` WHERE 1');
+		$links_res = $odb->query('SELECT * FROM ' . $this->app . '__links WHERE 1=1');
 
 		if (!$links_res)
 		{
@@ -791,16 +791,18 @@ class makeProject
 
 		foreach ($links_res as $r)
 		{
-			$key = $odb->query('SELECT `key` FROM `' . $r['nome_tabella'] . '` WHERE `' . $id_fields[$r['nome_tabella']] . '` = :id_dest' , array(':id_dest'=> $r['id_dest']));
+			$key = $odb->query(
+				'SELECT "key" FROM ' . $r['nome_tabella'] . ' WHERE ' . $id_fields[$r['nome_tabella']] . ' = :id_dest' , 
+				array(':id_dest'=> $r['id_dest'])
+			);
 
-			$q = 'INSERT INTO `' . $this->app. '__userlinks` '
-				. '(`tb_one`, `id_one`, `tb_two`, `id_two`)'
+			$q = 'INSERT INTO ' . $this->app. '__userlinks '
+				. '(tb_one, id_one, tb_two, id_two)'
 				. ' VALUES '
 				. '(:tb_one, :id_one, :tb_two, :id_two)';
 
-			if (is_null($key[0]['key']))
-			{
-				error_log('ORPHAN: SELECT `key` FROM `' . $r['nome_tabella'] . '` WHERE `' . $id_fields[$r['nome_tabella']] . '` = \'' . $r['id_dest'] . "'");
+			if (is_null($key[0]['key'])) {
+				error_log('ORPHAN: SELECT key FROM ' . $r['nome_tabella'] . ' WHERE ' . $id_fields[$r['nome_tabella']] . ' = \'' . $r['id_dest'] . "'");
 				continue;
 			}
 
@@ -825,10 +827,12 @@ class makeProject
 	 */
 	private function geodata(DB $odb, DB $ndb)
 	{
-		$ndb->query('DELETE FROM `' . $this->app . '__geodata`');
+		$ndb->query('DELETE FROM ' . $this->app . '__geodata');
 		try
 		{
-			$geodata_res = $odb->query('SELECT `key`, `table_link`, `key_link`, asText(`geometry`) as geometry, `geo_el_elips`, `geo_el_asl` FROM `' . $this->app . '__geodata` WHERE 1');
+			$geodata_res = $odb->query(
+				'SELECT "key", table_link, key_link asText(geometry) as geometry, geo_el_elips, geo_el_asl FROM ' . $this->app . '__geodata WHERE 1=1'
+			);
 
 			if(!$geodata_res)
 			{
@@ -843,8 +847,8 @@ class makeProject
 
 		foreach($geodata_res as $r)
 		{
-			$q = 'INSERT INTO `' . $this->app. '__geodata` '
-			. '(`id`, `table_link`, `id_link`, `geometry`, `geo_el_elips`, `geo_el_asl`)'
+			$q = 'INSERT INTO ' . $this->app. '__geodata '
+			. '(id, table_link, id_link, geometry, geo_el_elips, geo_el_asl)'
 			. ' VALUES '
 			. '(:id, :table_link, :id_link, :geometry, :geo_el_elips, :geo_el_asl)';
 
@@ -870,10 +874,10 @@ class makeProject
 	 */
 	private function links(DB $odb, DB $ndb)
 	{
-		$ndb->query('DELETE FROM `' . $this->app . '__files`');
+		$ndb->query('DELETE FROM ' . $this->app . '__files');
 
 
-		$allegati_res = $odb->query('SELECT * FROM `' . $this->app . '__allegati` WHERE 1');
+		$allegati_res = $odb->query('SELECT * FROM ' . $this->app . '__allegati WHERE 1=1');
 
 		if (!$allegati_res)
 		{
@@ -883,8 +887,8 @@ class makeProject
 
 		foreach ($allegati_res as $r)
 		{
-			$q = 'INSERT INTO `' . $this->app. '__files` '
-				. '(`id`, `creator`, `ext`, `keywords`, `description`, `printable`, `filename`)'
+			$q = 'INSERT INTO ' . $this->app. '__files '
+				. '(id, creator, ext, keywords, description, printable, filename)'
 				. ' VALUES '
 				. '(:id, :creator, :ext, :keywords, :description, :printable, :filename)';
 

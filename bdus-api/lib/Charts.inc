@@ -21,7 +21,7 @@ class Charts
 	 */
 	public function erase($id)
 	{
-		return $this->db->query('DELETE FROM `' . PREFIX . 'charts` WHERE `id` = :id', array(':id'=>$id), 'boolean');
+		return $this->db->query('DELETE FROM ' . PREFIX . 'charts WHERE id = ?', [ $id ], 'boolean');
 	}
 
 	/**
@@ -31,17 +31,17 @@ class Charts
 	 */
 	public function save($name, $query_text)
 	{
-		$query = 'INSERT INTO `' . PREFIX . 'charts`'
-		. '(`user_id`, `name`, `query`, `date`)'
+		$query = 'INSERT INTO ' . PREFIX . 'charts'
+		. '(user_id, name, query, date)'
 		. ' VALUES '
 		. '(:user_id, :name, :query, :date)';
 
-		$values = array(
+		$values = [
 				':user_id'=> $_SESSION['user']['id'],
 				':name'=> $name,
 				':query'=> base64_decode($query_text),
 				':date'=> date('Y-m-d G:i:s')
-		);
+		];
 
 		return $this->db->query($query, $values, 'boolean');
 	}
@@ -54,24 +54,20 @@ class Charts
 	 */
 	public function formatResult($id = false, $query_text = false)
 	{
-		if (!$id AND !$query_text)
-		{
+		if (!$id AND !$query_text) {
 			throw new myException('Chart ID or Query text are required');
 		}
 
-		if ($id)
-		{
-			$res = $this->db->query('SELECT * FROM `' . PREFIX . 'charts` WHERE `id` = ' . $id, false, 'read');
+		if ($id) {
+			$res = $this->db->query('SELECT * FROM ' . PREFIX . 'charts WHERE id = ?', [ $id ], 'read');
 
-			if (!$res)
-			{
+			if (!$res) {
 				throw new myException('Chart ID ' . $id . ' does not exist');
 			}
 			$query_text = $res[0]['query'];
 		}
 
-		if (!$query_text)
-		{
+		if (!$query_text) {
 			throw new myException('No query text!');
 		}
 
@@ -79,8 +75,7 @@ class Charts
 
 		$data = $this->db->query($query_text, false, 'read');
 
-		if (!$data)
-		{
+		if (!$data) {
 			throw new myException('Chart query text produced no result (' . $query_text . ')');
 		}
 
@@ -174,29 +169,28 @@ class Charts
 	 */
 	public function getCharts($id = false)
 	{
-		$where = $id ? "`id` = ?" :  "1";
+		$where = $id ? "id = ?" :  "1=1";
 		$val = $id ? [$id] : [];
-		return $this->db->query("SELECT * FROM `" . PREFIX . "charts` WHERE {$where}", $val, 'read');
+		return $this->db->query("SELECT * FROM " . PREFIX . "charts WHERE {$where}", $val, 'read');
 	}
 
 	public function update($id, $name = false, $query = false)
 	{
-		if (!$name && $query)
-		{
+		if (!$name && $query) {
 			throw new myException('Nothing to update');
 		}
-		if ($name)
-		{
-			$part[] = ' `name`=:name ';
+		if ($name) {
+			$part[] = ' name = :name ';
 			$val[':name'] = $name;
 		}
 
-		if($query)
-		{
-			$part[] = ' `query`=:query ';
+		if($query) {
+			$part[] = ' query = :query ';
 			$val[':query'] = Query::makeSafeStatement($query);
 		}
 
-		return $this->db->query('UPDATE `' . PREFIX . 'charts` SET ' . implode(', ', $part) . ' WHERE `id` = ' . $id, $val, 'boolean');
+		$val[':id'] = $id;
+
+		return $this->db->query('UPDATE ' . PREFIX . 'charts SET ' . implode(', ', $part) . ' WHERE id = :id', $val, 'boolean');
 	}
 }

@@ -21,7 +21,7 @@ class Export
 		$this->tb = $tb;
 		$this->db = $db;
 
-		$this->data = $db->query('SELECT * FROM `' . $this->tb . '` WHERE ' . ($where_sql ? $where_sql : '1'));
+		$this->data = $db->query('SELECT * FROM ' . $this->tb . ' WHERE ' . ($where_sql ? $where_sql : '1=1'));
 
 		if (!is_array($this->data) OR count($this->data) == 0)
 		{
@@ -296,21 +296,18 @@ class Export
 
 		$q = $this->data;
 
-		for ($x = 0; $x < count($this->data); $x++)
-		{
-			foreach($this->data[$x] as &$value)
-			{
+		for ($x = 0; $x < count($this->data); $x++) {
+			foreach($this->data[$x] as &$value) {
 				$value = htmlentities(addslashes($value));
 			}
 
-			$sql .= "INSERT INTO `{$this->tb}` VALUES " . "('" . implode("','", $this->data[$x]) . "');\n";
+			$sql .= "INSERT INTO {$this->tb} VALUES " . "('" . implode("','", $this->data[$x]) . "');\n";
 		}
 
 
 		$w = utils::write_in_file($this->filename, $sql);
 
-		if (!$w)
-		{
+		if (!$w) {
 			throw new myException('Can not write in file ' . $this->filename);
 		}
 	}

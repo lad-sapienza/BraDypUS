@@ -47,29 +47,24 @@ class chart_ctrl extends Controller
 	{
 		$post = $this->post;
 
-		if (!empty($post['series']))
-		{
-			$group_by = ' GROUP BY `' . $post['series'] . '` ';
+		if (!empty($post['series'])) {
+			$group_by = ' GROUP BY ' . $post['series'] . ' ';
 		}
 
-		foreach ($post['bar_fld'] as $bar_id=>$bar_arr)
-		{
-			$bar[] = ' ' . $post['bar_function'][$bar_id] . '(`' . implode('`) + ' . $post['bar_function'][$bar_id] . '(`', $bar_arr) . '`) '
-				. ( $post['bar_name'][$bar_id] ? ' AS `' . $post['bar_name'][$bar_id] . '`' : '');
+		foreach ($post['bar_fld'] as $bar_id=>$bar_arr) {
+			$bar[] = ' ' . $post['bar_function'][$bar_id] . '(' . implode(') + ' . $post['bar_function'][$bar_id] . '(', $bar_arr) . ') '
+				. ( $post['bar_name'][$bar_id] ? ' AS ' . $post['bar_name'][$bar_id] . '' : '');
 		}
 
 		$sql = 'SELECT ' .
-			( $post['series'] ? ' `' . $post['series'] . '` AS `series_name`, ' : '')  .
+			( $post['series'] ?: '')  .
 			implode(', ', $bar) .
-			' FROM `' . $post['tb'] . '` WHERE ' .
-			($post['query'] ? ' ' . base64_decode($post['query']). ' ' : '' . ' 1 ');
+			' FROM ' . $post['tb'] . ' WHERE ' .
+			($post['query'] ? ' ' . base64_decode($post['query']). ' ' : '' . ' 1=1 ');
 
-		if ($group_by && preg_match('/ORDER BY/', $sql))
-		{
+		if ($group_by && preg_match('/ORDER BY/', $sql)) {
 			$sql = preg_replace('/(.+)ORDER BY(.+)/', '$1 ' . $group_by . ' ORDER BY $2', $sql);
-		}
-		else if($group_by)
-		{
+		} else if($group_by) {
 			$sql .= ' ' . $group_by;
 		}
 

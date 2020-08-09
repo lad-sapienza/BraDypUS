@@ -105,18 +105,18 @@ class Query
                     return;
                 }
                 if (cfg::tbEl($this->tb, 'order')) {
-                    $fld = $this->tb . '`.`' . cfg::tbEl($this->tb, 'order');
+                    $fld = $this->tb . '.' . cfg::tbEl($this->tb, 'order');
                 } else {
-                    $fld = $this->tb . '`.`id';
+                    $fld = $this->tb . '.id';
                 }
             } else {
-                $fld = $this->tb . '`.`' . $fld;
+                $fld = $this->tb . '.' . $fld;
             }
 
-            $this->order = $fld ? " ORDER BY `$fld` $type " : '';
+            $this->order = $fld ? " ORDER BY $fld $type " : '';
 
             if (preg_match('/ORDER/', $this->where)) {
-                $this->where = preg_replace('/order\sby\s([`a-z_\.]+)\s?(?:asc|desc)?/i', null, $this->where);
+                $this->where = preg_replace('/order\sby\s([a-z_\.]+)\s?(?:asc|desc)?/i', null, $this->where);
             }
         }
 
@@ -179,7 +179,7 @@ class Query
 
         return "SELECT " .
             $this->formatFields() .
-            " FROM `" . $this->tb . "` " .
+            " FROM " . $this->tb . " " .
             $this->join .
             " WHERE " . $this->getWhere() .
             $this->getGroup() .
@@ -194,7 +194,7 @@ class Query
      */
     public function getTotal()
     {
-        $q = "SELECT count(*) as `tot` FROM (" . $this->getQuery() . ") as `a" . rand(0, 999) . "`";
+        $q = 'SELECT count(*) as tot FROM (' . $this->getQuery() . ') as ' . uniqid('a');
         $res = $this->db->query($q);
         return $res[0]['tot'];
     }
@@ -264,7 +264,7 @@ class Query
                 break;
 
             case 'id_array':
-                return " ( `id` IN ('" . implode("', '", $request['id']) . "') ) ";
+                return " ( id IN ('" . implode("', '", $request['id']) . "') ) ";
                 break;
 
             case 'encoded':
@@ -295,7 +295,7 @@ class Query
         $fields_to_search_in = $limit2preview ? cfg::getPreviewFlds($this->tb) : cfg::fldEl($this->tb, 'all', 'label');
 
         foreach ($fields_to_search_in as $field=>$label) {
-            $array_query_core[] = '`' . $this->tb . '`.`' . $field . "` LIKE '%" . str_replace("'", "\'", urldecode($string)) . "%'";
+            $array_query_core[] = $this->tb . '.' . $field . " LIKE '%" . str_replace("'", "\'", urldecode($string)) . "%'";
         }
         // join partial statements
         return implode(' OR ', $array_query_core);
@@ -346,50 +346,49 @@ class Query
                 $third_table = cfg::fldEl($tb, $fld, 'id_from_tb');
 
                 if ($third_table) {
-                    $format = " `id` IN (SELECT `id_link` FROM `{$tb}` " .
+                    $format = " id IN (SELECT id_link FROM {$tb} " .
                         " WHERE " .
-                            "`table_link` = '{$this->tb}' " .
-                            " AND `{$fld}` IN ( " .
-                                "SELECT `id` FROM `{$third_table}` WHERE %s".
+                            "table_link = '{$this->tb}' " .
+                            " AND {$fld} IN ( " .
+                                "SELECT id FROM {$third_table} WHERE %s".
                                 ") " .
                             ") ";
                     $fld = cfg::tbEl($third_table, 'id_field');
 
                 // case 2.2: queried field is a normal field
                 } else {
-                    $format = " `id` IN (SELECT `id_link` FROM `{$tb}` WHERE `table_link` = '{$this->tb}' AND %s)";
+                    $format = " id IN (SELECT id_link FROM {$tb} WHERE table_link = '{$this->tb}' AND %s)";
                 }
             }
 
             // operator
             switch ($row['operator']) {
                 case 'LIKE':
-                    $where .= sprintf($format, "`{$fld}` LIKE '%{$row['value']}%'");
-                    //"`{$fld}` LIKE '%{$row['value']}%'";
+                    $where .= sprintf($format, "{$fld} LIKE '%{$row['value']}%'");
                     break;
 
                 case 'NOT LIKE':
-                    $where .= sprintf($format, '`' . $fld . "` NOT LIKE '%". $row['value'] ."%'");
+                    $where .= sprintf($format, $fld . " NOT LIKE '%". $row['value'] ."%'");
                     break;
 
                 case 'starts_with':
-                    $where .= sprintf($format, '`' . $fld . "` LIKE '". $row['value'] ."%'");
+                    $where .= sprintf($format, $fld . " LIKE '". $row['value'] ."%'");
                     break;
 
                 case 'ends_with':
-                    $where .= sprintf($format, '`' . $fld . "` LIKE '%". $row['value'] ."'");
+                    $where .= sprintf($format, $fld . " LIKE '%". $row['value'] ."'");
                     break;
 
                 case 'is_empty':
-                    $where .= sprintf($format, '(`' . $fld . "` = '' OR `" . $fld . "` IS NULL) ");
+                    $where .= sprintf($format, $fld . " = '' OR " . $fld . " IS NULL) ");
                     break;
 
                 case 'is_not_empty':
-                    $where .= sprintf($format, '(`' . $fld . "` != '' AND `" . $fld . "` IS NOT NULL) ");
+                    $where .= sprintf($format, $fld . " != '' AND " . $fld . " IS NOT NULL) ");
                     break;
 
                 default:
-                    $where .= sprintf($format, '`' . $fld . '`' . $row['operator'] . "'" . $row['value'] . "'");
+                    $where .= sprintf($format, $fld . ' ' . $row['operator'] . "'" . $row['value'] . "'");
                     break;
             }
 
@@ -458,7 +457,7 @@ class Query
         $ret = [];
         foreach (array_keys($this->fields) as $f) {
             if (!preg_match('/\./', $f) && !preg_match('/count\(/', $f)) {
-                $ret[] = '`' . $this->tb . '`.`' . $f . '`';
+                $ret[] = $this->tb . '.' . $f;
             } else {
                 $ret[] = $f;
             }

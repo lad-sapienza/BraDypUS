@@ -124,36 +124,33 @@ class file_ctrl extends Controller
 	{
 		$data = $this->post;
 
-		if (is_array($data['filegallery']))
-		{
-			foreach($data['filegallery'] as $sort => $id)
-			{
-				$sql[] = 'UPDATE `' . PREFIX .'userlinks` SET `sort` = ' . $sort . ' WHERE `id` = ' . $id;
+		if (is_array($data['filegallery'])) {
+
+			foreach($data['filegallery'] as $sort => $id) {
+				$sql[] = [
+					'UPDATE ' . PREFIX .'userlinks SET sort = ? WHERE id = ?',
+					[$sort, $id]
+				];
 			}
 
 			$db = new DB();
 
 			$db->beginTransaction();
 
-			try
-			{
-				foreach ($sql as $s)
-				{
-					$db->query($s);
+			try {
+				foreach ($sql as $s) {
+					$db->query($s[0], $s[1]);
 				}
 
 				$db->commit();
 
 				$resp = array('status' => 'success', 'text'=> tr::get('ok_file_sorting_update'));
-			}
-			catch (myException $e)
-			{
+			
+			} catch (myException $e) {
 				$db->rollBack();
 				$resp = array('status' => 'error', 'text'=> tr::get('error_file_sorting_update'));
 			}
-		}
-		else
-		{
+		} else {
 			$resp = array('status' => 'error', 'text'=> tr::get('error_file_sorting_update'));
 		}
 

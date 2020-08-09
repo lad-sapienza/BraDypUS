@@ -15,9 +15,7 @@ class Matrix
 
     public function __construct($tb, $where_q = false, DB $db)
     {
-        $query = "SELECT * FROM `" . PREFIX . "rs` WHERE `tb` = '" . $tb . "'";
-
-        $where = $where_q ? base64_decode($where_q) : '1';
+        $where = $where_q ? base64_decode($where_q) : '1=1';
 
         $this->dotcontent = $this->createDotContentNew($tb, $where, $db);
     }
@@ -29,20 +27,19 @@ class Matrix
         $rsfld = cfg::tbEl($tb, 'rs');
         $q = <<<EOD
 SELECT
-`{$tb}`.`id` as `firstid`,
-`rs`.`first` as `firstlabel`,
-`{$tbbis}`.id as `secondid`,
-`rs`.`second` as `secondlabel`,
-`rs`.`relation` as `rel`
-
+    {$tb}.id as firstid,
+    rs.first as firstlabel,
+    {$tbbis}.id as secondid,
+    rs.second as secondlabel,
+    rs.relation as rel
 FROM
-`{$const['PREFIX']}rs` as rs
+{$const['PREFIX']}rs as rs
 
-LEFT JOIN {$tb} ON  rs.tb = '{$tb}' AND `rs`.`first` = `{$tb}`.`{$rsfld}`
-LEFT JOIN {$tb} as {$tbbis} ON  rs.tb = '{$tb}' AND `rs`.`second` = `{$tbbis}`.`{$rsfld}`
+LEFT JOIN {$tb} ON  rs.tb = '{$tb}' AND rs.first = {$tb}.{$rsfld}
+LEFT JOIN {$tb} as {$tbbis} ON  rs.tb = '{$tb}' AND rs.second = {$tbbis}.{$rsfld}
 
-WHERE `{$tb}`.`id` IN
-(SELECT `id` FROM {$tb} WHERE {$where})
+WHERE {$tb}.id IN
+(SELECT id FROM {$tb} WHERE {$where})
 EOD;
         $res = $db->query($q);
 

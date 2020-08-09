@@ -112,9 +112,9 @@ class importGeodata
         }
 
         $res = $this->db->query(
-          "SELECT `id` FROM `" . $this->tb . "` "
-            . "WHERE `" . cfg::tbEl($this->tb, 'id_field') . "` = :id_field",
-          array(':id_field' => $row['properties'][$this->idfield]),
+          "SELECT id FROM " . $this->tb . " "
+            . "WHERE " . cfg::tbEl($this->tb, 'id_field') . " = ?",
+            [ $row['properties'][$this->idfield] ],
           'read');
 
        $row_id = $res[0]['id'];
@@ -125,16 +125,12 @@ class importGeodata
 
        $wkt_geometry = \Symm\Gisconverter\Gisconverter::geojsonToWkt(json_encode($row['geometry']));
 
-       $sql = " INSERT INTO `" . PREFIX . "geodata` "
-         . "(`table_link`, `id_link`, `geometry`) "
+       $sql = " INSERT INTO " . PREFIX . "geodata "
+         . "(table_link, id_link, geometry) "
          . " VALUES "
-         . "(:table_link, :id_link, :geometry) "
+         . "(?, ?, ?) "
          ;
-       $values = [
-         ':table_link' => $this->tb,
-         ':id_link' => $row_id,
-         ':geometry' => $wkt_geometry
-       ];
+       $values = [ $this->tb, $row_id, $wkt_geometry ];
 
 
        if (!$this->db->query($sql, $values, 'boolean')) {
@@ -167,9 +163,9 @@ class importGeodata
 
   private function deletePreviousData()
   {
-    $sql = "DELETE FROM " . PREFIX . "geodata WHERE `table_link` = '" . $this->tb . "'";
+    $sql = "DELETE FROM " . PREFIX . "geodata WHERE table_link = ?";
 
-    if (!$this->db->query($sql, false, 'boolean')) {
+    if (!$this->db->query($sql, [ $this->tb ], 'boolean')) {
       throw new Exception('Error in deleting previous inserted geodata');
     }
   }

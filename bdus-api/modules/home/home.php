@@ -56,7 +56,7 @@ class home_ctrl extends Controller
             "address" => $this->request['address'],
             "token" => $this->request['token'],
             "request_app" => $this->request['app'],
-            "ga_id" => utils::is_online() ? "UA-10461068-18" : false
+            "googleanaytics" => utils::is_online() ? cfg::main('googleanaytics') ?: false : false
         ]);
     }
 

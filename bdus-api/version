@@ -1,3 +1,4 @@
+3.16.56[] = "Google Analytics id is now an application level option"
 3.16.55[] = "Removed backtick syntax from SQL"
 3.16.54[] = "\Record::Read::getFiles uses JOIN and solves sorting issue"
 3.16.53[] = "Added methos Controller::compileTmpl"

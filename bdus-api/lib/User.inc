@@ -322,14 +322,13 @@ class User
             $partial_arr = [];
 
             foreach ([ 'id', 'name', 'email', 'password', 'privilege'] as $field) {
-                if( !empty($arr[$field]) ) {
-                    array_push($partial_arr, "$field = :$field");
-                    array_push($partial_arr, ":field = {$arr[$field]}");
+                if( $arr[$field] && !empty($arr[$field]) ) {
+                    array_push($partial_arr, "{$field} = ?");
+                    array_push($values_arr, $arr[$field]);
                 }
             }
             $query .= implode(' AND ', $partial_arr);
         }
-
         return $this->db->query($query, $values_arr);
     }// end of getUser
 

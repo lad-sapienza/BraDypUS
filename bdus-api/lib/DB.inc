@@ -140,6 +140,17 @@ class DB
 		}
 	}
 
+	public function backupBeforeEdit (string $table, int $id, $query, array $values = [])
+	{
+		try {
+			if (!$this->stop_versioning){
+				Meta::addVersion($_SESSION['user']['id'], $table, $id, $query, $values);
+			}
+		} catch (\Throwable $th) {
+			error_log(json_encode($th, JSON_PRETTY_PRINT));
+		}
+	}
+
 	/**
 	 *
 	 * Prepares and runs a query statement and returns, dependin on $type:
@@ -161,12 +172,6 @@ class DB
 			$sql = $this->db->prepare($query);
 
 			if ( !$values ) $values = [];
-
-			if (!$this->stop_versioning){
-				if(!preg_match("/^SELECT/i", $query) AND !preg_match("/^SHOW TABLES/i", $query) AND $_SESSION['user']['id']) {
-					Meta::addVersion($_SESSION['user']['id'], null, $query, $values);
-				}
-			}
 
 			$flag = $sql->execute($values);
 

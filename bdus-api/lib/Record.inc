@@ -142,7 +142,8 @@ class Record implements iRecord
 				$query = 'UPDATE ' . $this->tb . ' SET ' . implode(', ', $tmp) . ' WHERE id = ? ';
 				$values[] = $this->id;
 
-
+				// Backup record:
+				$this->db->backupBeforeEdit($this->tb, $this->id, $query, $values);
 				$flag['core'] = $this->db->query($query, $values, 'boolean');
 
 				// moves updaded file
@@ -216,8 +217,8 @@ class Record implements iRecord
 
 				foreach ($plg_all_rows as $plg_row) {
 
-					$tmp = array();
-					$values = array();
+					$tmp = [];
+					$values = [];
 
 					$has_value_flag = false;
 
@@ -229,22 +230,35 @@ class Record implements iRecord
 
 						if ($key != 'id') {
 
-							$tmp[] = "{$key} = ':{$key}'";
-							$values[":{$key}"] = $val;
+							$tmp[] = "{$key} = ?";
+							$values[] = $val;
 						}
 					}
 
 					// plg.row.DELETE
 					if($plg_row['id_delete'] AND !empty($plg_row['id_delete'])) {
+
+						$delete_plg_query = 'DELETE FROM ' . $plg_name . ' WHERE id = ?';
+						$delete_plg_values = [ $plg_row['id_delete'] ];
+						
+						// Backup before delete
+						$this->db->backupBeforeEdit($plg_name, $plg_row['id_delete'], $delete_plg_query, $delete_plg_values);
 						array_push($query, array(
-								'q' => 'DELETE FROM ' . $plg_name . ' WHERE id = ' . $plg_row['id_delete'],
-								'values' => false
+								'q' => $delete_plg_query,
+								'values' => $delete_plg_values
 						));
 
 					} else if($plg_row['id'] AND !empty($plg_row['id'])) {
 						// plg.row.UPDATE
+
+						$update_plg_query = 'UPDATE ' . $plg_name . ' SET ' . implode(', ', $tmp) . ' WHERE id = ?';
+						array_push($values, $plg_row['id'] );
+						
+						// Backup before update
+						$this->db->backupBeforeEdit($plg_name, $plg_row['id'], $update_plg_query, $values);
+
 						array_push($query, array(
-								'q' => 'UPDATE ' . $plg_name . ' SET ' . implode(', ', $tmp) . ' WHERE id = ' . $plg_row['id'],
+								'q' => $update_plg_query,
 								'values' => $values
 						));
 
@@ -254,7 +268,7 @@ class Record implements iRecord
 							// if context is add new must re-set the value of core_id manually!
 							if (empty($plg_row['id_link']) AND $this->data['core']['id']) {
 								$plg_row['id_link'] = $this->data['core']['id'];
-								$values[':id_link'] = $this->data['core']['id'];
+								array_push($values, $this->data['core']['id'] );
 							}
 							array_push($query, array(
 									'q' => 'INSERT INTO ' . $plg_name . " ('" . implode("', '", array_keys($plg_row)) . "') VALUES (:" . implode(', :', array_keys($plg_row)). ")",
@@ -296,6 +310,8 @@ class Record implements iRecord
 
 		// CORE
 		$q[] = 'DELETE FROM ' . $this->tb . ' WHERE id = ' . $id;
+		// Backup before delete
+		$this->db->backupBeforeEdit($this->tb, $id, 'DELETE FROM ' . $this->tb . ' WHERE id = ' . $id);
 
 		// PLUGINS
 		$plugins = cfg::tbEl($this->tb, 'plugin');
@@ -303,25 +319,30 @@ class Record implements iRecord
 		if (is_array($plugins)) {
 
 			foreach ($plugins as $plg) {
+				// TODO: NO BACKUP HERE
 				$q[] = 'DELETE FROM ' . $plg . ' WHERE table_link = \'' . $this->tb. '\' AND id_link = ' . $id;
 			}
 		}
 
 		// USERLINKS
+		// TODO: NO BACKUP HERE
 		$q[] = 'DELETE FROM ' . PREFIX . 'userlinks WHERE '
 			." ( tb_one = '" . $this->tb . "' AND id_one = '" . $id . "')"
 			. ' OR '
 			. "( tb_two = '" . $this->tb . "' AND id_two = '" . $id . "')";
 
 		//GEODATA
+		// TODO: NO BACKUP HERE
 		$q[] = "DELETE FROM " . PREFIX . "geodata WHERE  table_link = '" . $this->tb . "' AND id_link = " . $id;
 
 		//DELETE FILE (deleted only if all db erases are OK)
+		// TODO: NO BACKUP HERE
 		if ($this->tb == PREFIX . 'files') {
 			$file_to_delete = PROJ_DIR . 'files/' . $id . '.' . $this->getCore('ext');
 		}
 
 		// RS
+		// TODO: NO BACKUP HERE
 		$rs_fld = cfg::tbEl($this->tb, 'rs');
 		if ($rs_fld) {
 

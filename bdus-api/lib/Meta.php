@@ -34,26 +34,6 @@ class Meta
     return true;
   }
 
-  /**
-   * Guesses and returns table name from SQL statement.
-   * Returns false if in case of failure
-   * @param  string $editQuery Query text
-   * @return string            table name
-   */
-  private static function guessTable(string $editQuery) {
-		if (preg_match("/^INSERT\s+INTO\s+([a-zA-Z_]+)/i", $editQuery, $m)) {
-			$table = $m[1];
-		} elseif (preg_match("/^UPDATE\s+([a-zA-Z_]+)/i", $editQuery, $m)) {
-      // 2. Update query
-  		$table = $m[1];
-		} elseif (preg_match("/^DELETE\s+FROM\s+([a-zA-Z_]+)/i", $editQuery, $m)) {
-      // 3. Delete query
-			$table = $m[1];
-		}
-
-		return $table;
-	}
-
 
   /**
    * Writes user log
@@ -125,36 +105,20 @@ class Meta
    * Adds a line to the version table
    * @param int $user            User if who triggered the edit action
    * @param string $table           Edited table
+   * @param string $id              Edited id
    * @param string $editQuery       Sql used for editing
    * @param array  $editQueryValues [description]
    */
-  public function addVersion(int $user, string $table = null, string $editQuery = null, array $editQueryValues = [])
+  public function addVersion(int $user, string $table, int $id, string $editQuery, array $editQueryValues = [])
   {
-    // Insert queries are ignored
-    if (preg_match('/^INSERT INTO(.+)/', $editQuery) ) {
-      return false;
-    }
     if (!self::check()){
       return false;
     }
 
     $db = new DB();
 
-    preg_match_all("/WHERE(.+)/i", $editQuery, $matches, PREG_SET_ORDER);
-    $where = end($matches)[1];
-
-    // if $table is false, try to guess
-    if (!$table) {
-      $table = self::guessTable($editQuery);
-
-      if (!$table) {
-        throw new \Exception( tr::get('meta_cannot_guess_table') );
-      }
-
-    }
-
     try {
-      $rows = $db->query('SELECT * FROM ' . $table . ' WHERE ' . $where, $editQueryValues);
+      $rows = $db->query( 'SELECT * FROM ' . $table . ' WHERE id = ?', [ $id ] );
 
       if(!is_array($rows)) {
         $rows = [];

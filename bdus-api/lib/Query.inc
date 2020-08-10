@@ -123,10 +123,14 @@ class Query
         return $this;
     }
 
-    public function setLimit($start = false, $limit = false)
+    public function setLimit($offset = false, $limit = false)
     {
+        if (!$limit) {
+            $this->limit = false;
+            return $this;
+        }
         if (!preg_match('/LIMIT/', $this->where)) {
-            $this->limit = $limit ? " LIMIT $start , $limit " : false;
+            $this->limit = " LIMIT $limit " . ($offset ? " OFFSET $offset " : '');
         }
 
         return $this;

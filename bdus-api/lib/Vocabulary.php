@@ -146,7 +146,7 @@ class Vocabulary
 	public function getValues ($voc)
 	{
 		$res = $this->db->query(
-			'SELECT def FROM ' . PREFIX . 'vocabularies WHERE  voc = ?  ORDER BY sort ASC LIMIT 0, 500',
+			'SELECT def FROM ' . PREFIX . 'vocabularies WHERE  voc = ?  ORDER BY sort ASC LIMIT 500 OFFSET 0',
 			[ $voc ]
 		);
         $resp = [];

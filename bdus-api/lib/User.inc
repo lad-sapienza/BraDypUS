@@ -351,7 +351,7 @@ class User
             $values = $id;
         }
         $res = $this->db->query(
-            'SELECT count(*) as tot FROM ' . $this->prefix . 'users WHERE ' . implode(" AND ", $partial) . ' LIMIT 1', 
+            'SELECT count(*) as tot FROM ' . $this->prefix . 'users WHERE ' . implode(" AND ", $partial) . ' LIMIT 1 OFFSET 0', 
             $values
         );
 

@@ -86,13 +86,13 @@ class QueryBuilder
 
     /**
      * Sets limit statement
-     * @param  int  $nr     number of rows to return
-     * @param  int|false $offset Offset to start at (default false)
+     * @param  int  $limit          number of rows to return
+     * @param  int|false $offset    Offset to start at (default false)
      * @return object        Main object
      */
-    public function setLimit($nr, $offset = false)
+    public function setLimit($limit, $offset = false)
     {
-        $this->limit = " LIMIT " . ($offset ? " {$offset}, " : " ") . $nr;
+        $this->limit = " LIMIT $limit" . ($offset ? " OFFSET {$offset}" : " ");
         return $this;
     }
 

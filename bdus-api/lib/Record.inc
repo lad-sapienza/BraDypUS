@@ -47,7 +47,7 @@ class Record implements iRecord
 
 		if ($id === 'last_added') {
 
-			$t = $db->query('SELECT id FROM ' . $tb . ' WHERE 1=1 ORDER BY id DESC LIMIT 0,1', false, 'read');
+			$t = $db->query('SELECT id FROM ' . $tb . ' WHERE 1=1 ORDER BY id DESC LIMIT 1 OFFSET 0', false, 'read');
 			$id = $t[0]['id'];
 		}
 
@@ -382,7 +382,7 @@ class Record implements iRecord
 
 		} else if ($this->idField) {
 
-			$query = "SELECT * FROM " . $this->tb . " WHERE " . cfg::tbEl($this->tb, 'id_field'). " = :id_field LIMIT 0, 1";
+			$query = "SELECT * FROM " . $this->tb . " WHERE " . cfg::tbEl($this->tb, 'id_field'). " = :id_field LIMIT 1 OFFSET 0";
 			$values = array(':id_field' => $this->idField);
 		}
 

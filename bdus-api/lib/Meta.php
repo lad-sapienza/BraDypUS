@@ -222,9 +222,9 @@ class Meta
     }
 
     if (isset($get['iDisplayStart']) && $get['iDisplayLength'] != '-1') {
-        $q .= ' LIMIT ' . $get['iDisplayStart'] . ', ' . $get['iDisplayLength'];
+        $q .= ' LIMIT ' . $get['iDisplayLength'] . ' OFFSET ' . $get['iDisplayStart'];
     } else {
-      $q .= ' LIMIT 0, 30 ';
+      $q .= ' LIMIT 30 OFFSET 0 ';
     }
 
     $response['query_executed'] = $q;

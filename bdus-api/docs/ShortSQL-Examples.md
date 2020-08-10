@@ -12,7 +12,7 @@ SELECT
     `paths__places`.* 
 FROM 
     `paths__places`  
-WHERE 1
+WHERE 1=1
 ```
 
 ---
@@ -34,7 +34,7 @@ SELECT
     `paths__places`.`pleiades` 
 FROM 
     `paths__places`  
-WHERE 1
+WHERE 1=1
 ```
 
 # Table with field list with aliases
@@ -54,7 +54,7 @@ SELECT
     `paths__places`.`pleiades` 
 FROM 
     `paths__places`
-WHERE 1
+WHERE 1=1
 ```
 
 # Sorting
@@ -75,7 +75,7 @@ SELECT
     `paths__places`.`pleiades` 
 FROM 
     `paths__places`  
-WHERE 1   
+WHERE 1=1
 ORDER BY `paths__places`.`tmgeo` ASC
 ```
 
@@ -98,7 +98,7 @@ SELECT
     `paths__places`.`pleiades` 
 FROM 
     `paths__places`  
-WHERE 1   
+WHERE 1=1
 ORDER BY 
     `paths__places`.`tmgeo` ASC,
     `paths__places`.`pleiades` ASC
@@ -110,10 +110,10 @@ ORDER BY
 @places~
 [id:PAThs Place Id,name,tmgeo,pleiades~
 >tmgeo:asc~
--0:10
+-10:0
 ```
 
-https://db.bradypus.net/api/v2/paths?pretty=1&verb=search&shortsql=@places~[id:PAThs%20Place%20Id,name,tmgeo,pleiades~>tmgeo:asc~-0:10
+https://db.bradypus.net/api/v2/paths?pretty=1&verb=search&shortsql=@places~[id:PAThs%20Place%20Id,name,tmgeo,pleiades~>tmgeo:asc~-10:0
 
 ```SQL
 SELECT 
@@ -123,9 +123,9 @@ SELECT
     `paths__places`.`pleiades` 
 FROM 
     `paths__places`  
-WHERE 1   
+WHERE 1=1
 ORDER BY `paths__places`.`tmgeo` ASC
-LIMIT 0, 10
+LIMIT 10 OFFSET 0
 ```
 
 # Grouping
@@ -146,7 +146,7 @@ SELECT
     `paths__places`.`pleiades` 
 FROM 
     `paths__places`  
-WHERE 1  
+WHERE 1=1
 GROUP BY `paths__places`.`tmgeo`
 ```
 
@@ -168,7 +168,7 @@ SELECT
     `paths__places`.`pleiades` 
 FROM 
     `paths__places`  
-WHERE 1  
+WHERE 1=1
 GROUP BY
     `paths__places`.`tmgeo`,
     `paths__places`.`pleiades`
@@ -197,8 +197,8 @@ FROM
     JOIN 
     `paths__geodata`  ON  `paths__places`.`id` = `paths__geodata`.`id_link`  AND 
                           `paths__geodata`.`table_link` = 'paths__places' 
-WHERE 1
-LIMIT 0, 30
+WHERE 1=1
+LIMIT 30 OFFSET 0
 ```
 
 

@@ -252,7 +252,7 @@ FROM {$prefix}files
                                    ul.id_two = {$prefix}files.id AND 
                                    ul.tb_one = ? AND 
                                    ul.id_one = ?) 
-WHERE 1
+WHERE 1=1
 ORDER BY ul.sort;
   
 )

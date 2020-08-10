@@ -247,7 +247,7 @@ class Query
     {
         switch ($request['type']) {
             case 'all':
-                return ' 1 ';
+                return ' 1=1 ';
                 break;
 
             case 'advanced':

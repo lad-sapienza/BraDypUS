@@ -24,7 +24,7 @@ class search_ctrl extends Controller
 		if ($second_table) {
 
 			$second_field = cfg::tbEl($second_table, 'id_field');
-			$q = "SELECT {$second_field} as {$fld} FROM {$second_table} WHERE 1 GROUP BY {$second_field}";
+			$q = "SELECT {$second_field} as {$fld} FROM {$second_table} WHERE 1=1 GROUP BY {$second_field}";
 
 		} else {
 

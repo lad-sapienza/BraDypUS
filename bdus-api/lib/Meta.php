@@ -210,7 +210,7 @@ class Meta
     if ( isset($get['iTotalRecords']) ) {
         $response['iTotalRecords'] = $get['iTotalRecords'];
     } else {
-        $response['iTotalRecords'] = R::getCell( 'SELECT count(id) as tot FROM ' . $table . ' WHERE 1');
+        $response['iTotalRecords'] = R::getCell( 'SELECT count(id) as tot FROM ' . $table . ' WHERE 1=1');
     }
 
     $response['iTotalDisplayRecords'] = $response['iTotalRecords'];

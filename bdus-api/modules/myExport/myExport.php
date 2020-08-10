@@ -6,7 +6,7 @@
  * @since			Aug 10, 2012
  */
 
-class myExport_ctrl
+class myExport_ctrl extends Controller
 {
 	/**
 	 * Returns HTML with folder content
@@ -15,8 +15,7 @@ class myExport_ctrl
 	{
 		$content = utils::dirContent(PROJ_DIR . 'export/');
 		
-		if (is_array($content))
-		{
+		if (is_array($content)) {
 			$html = '<table class="table table-striped table-bordered">';
 			foreach($content as $file)
 			{
@@ -39,8 +38,12 @@ class myExport_ctrl
 	 * @param string $format	exporting format
 	 * @param string $sql	sql query to export
 	 */
-	public static function doExport($tb, $format, $sql = false)
+	public function doExport()
 	{
+		$tb = $this->get['tb'];
+		$format = $this->get['format'];
+		$sql = $this->get['sql'];
+		
 		try
 		{
 			$where = $sql ? base64_decode($sql) : '1';
@@ -69,21 +72,19 @@ class myExport_ctrl
 	 * @param unknown_type $file
 	 * @throws myException
 	 */
-	public static function erase($file)
+	public function erase()
 	{
+		$file = $this->get['file'];
 		try
 		{
 			$a = @unlink(PROJ_DIR . 'export/' . $file);
 		
-			if (!$a)
-			{
+			if (!$a){
 				throw new myException(tr::get('error_erasing_file', [$file]));
 			}
 			$resp['text'] = tr::get('success_erasing_file', [$file]);
 			$resp['status'] = 'success';
-		}
-		catch(myException $e)
-		{
+		} catch(myException $e) {
 			$resp['text'] = $e->getMessage();
 			$resp['status'] = 'error';
 		}

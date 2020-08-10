@@ -303,7 +303,7 @@ var api = {
                     text: core.tr('continue'),
                     click: function(div){
                       layout.dialog.close(div);
-                      $.post('./?obj=myExport_ctrl&method=doExport&param[]=' + tb + '&param[]=' + $(div).find('select.export_format').val() + '&param[]=' + query_text, function(data){
+                      $.post('./?obj=myExport_ctrl&method=doExport&tb=' + tb + '&format=' + $(div).find('select.export_format').val() + '&sql=' + query_text, function(data){
 
                         core.message(data.text, data.status);
 

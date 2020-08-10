@@ -1,3 +1,4 @@
+3.16.57[] = "Removed unused methods from DB"
 3.16.56[] = "Google Analytics id is now an application level option"
 3.16.55[] = "Removed backtick syntax from SQL"
 3.16.54[] = "\Record::Read::getFiles uses JOIN and solves sorting issue"

@@ -131,18 +131,6 @@ class DB
 		return $this->db_engine;
 	}
 
-	public function getById($tb, $id, $field = "*")
-	{
-		$q = 'SELECT ' . $field . ' FROM ' . $tb . ' WHERE id = ' . $id;
-		$res = $this->query($q, false, 'read');
-
-		if ($res) {
-			return ($field ? $res[0][$field] : $res[0]);
-		} else {
-			return false;
-		}
-	}
-
 	public function doQuery($sql)
 	{
 		try {
@@ -237,23 +225,6 @@ class DB
 	public function rollBack()
 	{
 		$this->db->rollBack();
-	}
-
-	/**
-	 *
-	 * returns table structure (only for mysql database)
-	 * @param string $tb	table name
-	 */
-	public function columns($tb)
-	{
-		if ($this->db_engine == 'mysql') {
-			$tmp = $this->db->query("DESCRIBE {$tb}");
-			return $tmp;
-		} else {
-			// pgsql: SELECT * FROM information_schema.columns WHERE table_name = '$tb';
-			// sqlite: PRAGMA table_info('$tb')
-			return false;
-		}
 	}
 
 }

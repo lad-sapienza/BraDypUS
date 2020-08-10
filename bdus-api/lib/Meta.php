@@ -153,25 +153,32 @@ class Meta
 
     }
 
-    $rows = $db->query('SELECT * FROM ' . $table . ' WHERE ' . $where);
+    try {
+      $rows = $db->query('SELECT * FROM ' . $table . ' WHERE ' . $where, $editQueryValues);
 
-    if(!is_array($rows)) {
-      $rows = [];
+      if(!is_array($rows)) {
+        $rows = [];
+      }
+
+      foreach ($rows as $r) {
+        $dt = new DateTime();
+        $version = R::dispense( 'version' );
+        $version->user = $user;
+        $version->unixtime = $dt->format('U');
+        $version->datetime = $dt->format('Y-m-d H:i:s');
+        $version->table = $table;
+        $version->rowid = $r['id'] ?: '';
+        $version->content = json_encode($r);
+        $version->editsql = $editQuery;
+        $version->editvalues = json_encode($editQueryValues);
+        $id = R::store( $version );
+      }
+    } catch (\Throwable $th) {
+      // almost silently dies....
+      error_log(json_encode($th, JSON_PRETTY_PRINT));
     }
 
-    foreach ($rows as $r) {
-      $dt = new DateTime();
-      $version = R::dispense( 'version' );
-      $version->user = $user;
-      $version->unixtime = $dt->format('U');
-      $version->datetime = $dt->format('Y-m-d H:i:s');
-      $version->table = $table;
-      $version->rowid = $r['id'] ?: '';
-      $version->content = json_encode($r);
-      $version->editsql = $editQuery;
-      $version->editvalues = json_encode($editQueryValues);
-      $id = R::store( $version );
-    }
+    
   }
 
   /**

@@ -62,6 +62,8 @@
 3.16.2[] = "Record page uses layout.tabs.reloadActive when possible"
 3.16.1[] = "Removed support for download Harris Matrix"
 
+3.15.11[] = "Fixed issue with countable not initialized"
+3.15.10[] = "readRecord::getFiles uses JOIN and solves issue with sorting"
 3.15.9[] = "ShortSqlToJson uses ReadRecord::getFull instead of Record::readFull"
 3.15.8[] = "Fixed bug with API v2 post processing data"
 3.15.7[] = "RS element of ReadRecord::getFull (api2::read)depends on system cfg"

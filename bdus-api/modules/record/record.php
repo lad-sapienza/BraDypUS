@@ -17,6 +17,8 @@ class record_ctrl extends Controller
                 $this->request['id'] = (array)$this->request['id'];
             }
 
+            $ok = [];
+            $error = [];
             if (is_array($this->request['id'])) {
                 foreach ($this->request['id'] as $id) {
                     try {

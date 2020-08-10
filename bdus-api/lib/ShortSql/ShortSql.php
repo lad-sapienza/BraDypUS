@@ -76,7 +76,7 @@ class ShortSql
                 $data['where'],
                 $data['group']  ? ' GROUP BY ' . implode(', ', $data['group']) : false,
                 $data['sort']   ? ' ORDER BY ' . implode(', ', $data['sort']) : false,
-                !is_null($data['rows'])   ? ' LIMIT ' . $data['rows'] . ($data['offset'] ? ', ' . $data['offset'] : '') : false
+                !is_null($data['rows'])   ? ' LIMIT ' . $data['rows'] . ($data['offset'] ? ' OFFSET ' . $data['offset'] : '') : false
             ])),
             array_filter($data['values']),
             $data['tb']

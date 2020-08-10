@@ -1,3 +1,4 @@
+3.16.63[] = "Added \Bdus\App::route that replaces Controller::route"
 3.16.62[] = "Removing param[] in object calls"
 3.16.61[] = "Refactored meta::addVersion accessible and explicity called via db::backupBeforeEdit"
 3.16.60[] = "Fixed LIMIT/OFFSET compatibility issue with pgsql"

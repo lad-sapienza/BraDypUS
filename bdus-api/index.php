@@ -40,9 +40,11 @@ try {
 		utils::emptyDir(MAIN_DIR . 'cache', false);
 	}
 
-	$controller = new Controller($_GET, $_POST, $_REQUEST);
+	$app = new \Bdus\App($_GET, $_POST, $_REQUEST);
+	$app->route();
 
-	$controller->route();
+	// $controller = new Controller($_GET, $_POST, $_REQUEST);
+	// $controller->route();
 
 } catch (Throwable $e) {
 	Meta::logException($e);

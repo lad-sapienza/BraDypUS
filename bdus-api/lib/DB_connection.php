@@ -152,7 +152,8 @@ class DB_connection
             
             $dsn = "{$cfg['db_engine']}:host={$cfg['db_host']};dbname={$cfg['db_name']};" .
                 ($cfg['db_port'] ?  "port={$cfg['db_port']};" : '') .
-                "charset=utf8";
+                "options='--client_encoding=UTF8'";
+                // "charset=utf8";
         }
         return [
             'driver' => $cfg['db_engine'],

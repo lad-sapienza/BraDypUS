@@ -1,3 +1,4 @@
+3.16.69[] = "cfg::load returns silenty false if app_data cannot be determined"
 3.16.68[] = "Cleaned GeoFace: load valid local layers automatically: no table settings"
 3.16.67[] = "Cleaned translations"
 3.16.66[] = "Removed supporto for Pelagios Imperium (not available anymore) and updated DARE Imperium Url"

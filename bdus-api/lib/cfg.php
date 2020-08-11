@@ -33,7 +33,7 @@ class cfg
 			} else if (defined('PROJ_DIR')) {
 				$app_data = PROJ_DIR . 'cfg/app_data.json';
 			} else {
-				throw new myException("Cannot define app_data.");
+				return false;
 			}
 
 			if (!file_exists($app_data)) {

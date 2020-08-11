@@ -1,16 +1,12 @@
 <?php
 $lang['choose_db'] = "Selezione una banca dati per proseguire";
-$lang['error_in_method'] = "Qualcosa è andato storto nell'eseguire il %s";
 $lang['error_in_module'] = "Errore. Qualcosa è andato storto nel caricare il modulo %s";
 $lang['generic_error'] = "Errore. Si prega di consultare il log degli errori per maggiori informazioni!";
 $lang['no_app'] = "Errore. Nessuna applicazione disponibile. Impossibile continuare";
 $lang['file_doesnt_exist'] = "Errore. Il file %s non esiste!";
-$lang['login'] = "Autenticazione";
 $lang['email_password_needed'] = "Entrambi i campi (e-mail e password) sono obbligatori per proseguire";
 $lang['remember_me'] = "Resta connesso";
 
-$lang['no_connect_data'] = "Errore. Nessun dato disponibile per la connessione";
-$lang['no_connect_data_for_host'] = "Errore. Nessun dato disponibile per la connessione all'host %s";
 $lang['driver_not_supported'] = "Il driver database %s non è attualmente supportato";
 $lang['invalid_configuration_file'] = "Il file di configurazione %s presenta errori";
 $lang['missing_db_engine'] = "Manca l'indicazione del motore DB nel file di configurazione";
@@ -18,10 +14,9 @@ $lang['missing_db_name'] = "Manca l'indicazione del nome del database nel file d
 $lang['missing_db_username'] = "Manca l'indicazione del nome utente del database nel file di configurazione";
 $lang['missing_db_password'] = "Manca l'indicazione della password dell'utente del database nel file di configurazione";
 $lang['missing_sqlite_file'] = "Manca il file di database SQLite";
-$lang['db_generic_error'] = "Errore generico del database. Controllare il log degli errori per maggiorni informazioni";
+$lang['db_generic_error'] = "Errore generico del database. Controlloare il log degli errori per maggiorni informazioni";
 
 $lang['send'] = "Invia";
-$lang['back'] = "Indietro";
 $lang['email_present'] = "Errore. L'indirizzo %s è già presente nel database. Non è possibile proseguire";
 $lang['email_not_valid'] = "Errore. L'indirizzo %s non sembra un indirizzo email valido. Non è possibile proseguire";
 $lang['not_enough_data'] = "Non ci sono abbastanza dati per continuare";
@@ -29,7 +24,6 @@ $lang['login_data_not_valid'] = "Errore. E-mail e/o password non validi!";
 $lang['cannot_delete_file'] = "Errore. Non è stato possibile cancellare il file %s";
 $lang['cannot_delete_dir'] = "Errore. Non è stato possibile cancellare la cartella %s";
 $lang['no_app_error'] = "Errore. Impossibile continuare senza specificare l'applicazione";
-$lang['tb_config_missing'] = "Manca il file di configurazione delle tabelle";
 $lang['config_file_missing'] = "Manca il file di configurazione [%s]";
 
 $lang['attention'] = "Attenzione";
@@ -69,23 +63,14 @@ $lang['drop_to_upload'] = "Rilascia qui i file per caricarli";
 
 
 $lang['bdus_web'] = "Sito web di BraDypUS";
-$lang['user_guide'] = "Guida all'utilizzo";
-$lang['changelog'] = "Lista dei cambiamenti";
-$lang['copyright'] = "Copyright";
 $lang['template_mng'] = "Gestione maschere";
-$lang['install_patch'] = "Installa correzione";
 $lang['system_translate'] = "Traduzione sistema";
 $lang['front_page_editor'] = "Prima pagina";
 
 $lang['app_data_editor'] = "Info applicazione";
 $lang['disabled'] = "Disabilitato";
 
-$lang['edit_tbs_data'] = "Tabelle applicazione";
-$lang['edit_flds_data'] = "Campi tabelle";
 $lang['free_sql'] = "esegui SQL";
-$lang['backup_2_drive']  = "Backup su drive";
-$lang['restore_from_drive'] = "Ripristina da drive";
-$lang['chat'] = "Chat";
 $lang['ip'] = "IP";
 $lang['fast_search'] = "Ricerca veloce";
 
@@ -111,7 +96,6 @@ $lang['query'] = "Query";
 $lang['utilities'] = "Utilità";
 $lang['test_error'] = "Errore nella query!";
 $lang['close'] = "Chiudi";
-$lang['show_query'] = "Mostra query";
 $lang['read'] = "Leggi";
 $lang['edit'] = "Modifica";
 $lang['erase'] = "Cancella";
@@ -119,28 +103,20 @@ $lang['display'] = "Mostra";
 $lang['add'] = "Aggiungi";
 $lang['toggle_select_all'] = "Seleziona/Deseleziona tutto";
 $lang['reload'] = "Ricarica";
-$lang['confirm_erase'] = "Sei sicuro di volere cancellare questa/e scheda/e? Questa azione sarà defintiva e non sarà possibile tornare indietro";
 $lang['logout_confirm_title'] = "Sei sicuro di volere chiudere l'applicazione?";
 $lang['logout_confirm_body'] = "La cartella temporanea dell'utente verrà svuotata e le impostazioni dell'utente verrano salvate nella banca dati</p>";
-$lang['pay_attention'] = "Attenzione prego";
 $lang['cancel'] = "Annulla";
 $lang['continue'] = "Continua";
 $lang['save'] = "Salva";
 $lang['save_as_new'] = "Salva come nuova";
 $lang['confirm_save_as_new'] = "Sei sicuro di volere salvare questa scheda come nuova? Attenzione: i dati dei plugin e i link manuali non verranno duplicati!";
 $lang['cannot_get_ip_for_system'] = "Impossibile recuperare l'IP per il sistema operativo %s";
-$lang['debug'] = "Log degli errori";
-$lang['log_delete'] = "Il log degli errori è stato cancellato";
-$lang['log_not_deleted'] = "Errore. Non è stato possibile cancellare il log degli errori";
 $lang['invert_log'] = "Inverti grep";
 $lang['info'] = "Informazioni";
 $lang['no_id_to_view'] = "Errore. Non è stato specificato alcun record da modificare";
-$lang['close_all'] = "Chiudi tutto";
 $lang['select_row_to_continue'] = "Seleziona almeno un record per continuare";
 $lang['x_files_linked'] = "%s file collegati alla presente scheda";
 $lang['download'] = "Scarica";
-$lang['unlink'] = "Scollega";
-$lang['image_preview'] = "Anteprima imagine";
 //user
 $lang['user_mng'] = "Gestione utenti";
 $lang['name'] = "Nome";
@@ -153,7 +129,6 @@ $lang['writer'] = "Lettura & Scrittura";
 $lang['self_writer'] = "Lettura & Scrittura propri record";
 $lang['reader'] = "Lettura";
 $lang['waiting'] = "Attesa";
-$lang['edit_user'] = "Modifica l'utente";
 $lang['user_data_saved'] = "I dati dell'utente sono stati salvati con successo";
 $lang['user_data_not_saved'] = "Errore. Non è stato possibile salvare i dati dell'utente";
 $lang['confirm_erase_user'] = "Sei sicuro di volere cancellare definitivamente l'utente?";
@@ -205,8 +180,6 @@ $lang['query_name_is_required'] = "Il nome della query è obbligatorio";
 $lang['saved_query_does_not_exist'] = "La query salvata con id %s non esiste";
 
 $lang['no_voc_available'] = "Nessun vocabolario disponibile";
-$lang['no_action_defined'] = "Nessuna azione da eseguire";
-$lang['no_def_available_for_voc'] = "Nessuna voce disponibile per il vocabolario %s";
 $lang['vocs'] = "Vocabolari";
 $lang['available_vocs'] = "Vocabolari disponibili";
 $lang['defs'] = "Definizioni";
@@ -253,7 +226,6 @@ $lang['live_track'] = "Osserva il log in tempo reale";
 
 $lang['no_tmpl_available'] = "Nessuna maschera disponibile per questa tabella";
 $lang['tb'] = "Nome tabella";
-$lang['context'] = "Contesto di utilizzo";
 $lang['ok_tmpl_set'] = "La preferenza della maschera è stata salvata";
 $lang['error_tmpl_set'] = "Errore, la preferenza della maschera non è stata salvata";
 $lang['default'] = "Predefinito";
@@ -349,10 +321,6 @@ $lang['new_user_adm_email_text'] = "Gentile amministratore del database %s di Br
 
 $lang['harris_matrix'] = "Matrix di Harris";
 $lang['query_produced_no_result'] = "La query non ha prodotto nessun risultato";
-$lang['cannot_write_in_tmp_file'] = "Impossibile scrivere nel file temporaneo";
-$lang['dotfile_doesnot_exist'] = "Il file DOT non è stato trovato";
-$lang['cicle_problem'] = "Problema di ciclicità. Si prega di controllare meglio le relazioni stratigrafiche";
-$lang['error_dot_cmd'] = "Il commando DOT ha restituito un errore";
 
 
 $lang['links_avaliable'] = "Collegamenti con questa scheda:";
@@ -368,7 +336,6 @@ $lang['some_links_saved'] = "Alcuni link sono stati salvati, altri no. Maggiori 
 $lang['no_link_saved'] = "Errore. Nessun link è stato salvato";
 $lang['no_user_links'] = "Nessun collegamento disponibile per questo record";
 
-$lang['delete_link'] = "Cancella collegamento";
 $lang['new_link'] = "Aggiungi un nuovo collegamento";
 $lang['select_tb_to_continue'] = "Seleziona una tabella per continuare";
 $lang['save_links'] = "Collega file ai record selezionati";
@@ -413,23 +380,13 @@ $lang['view_on_map'] = "Visualizza sulla mappa";
 $lang['view_all_records_on_map'] = "Visualizza tutta la tabella sulla mappa";
 $lang['x_geodata_available'] = "%s geometrie riferite a questa scheda";
 $lang['no_geodata_available'] = "Nessun dato geografico disponibile per i risultati di questa ricerca";
-$lang['syntax_example'] = "Esempio di sintassi";
-$lang['not_valid_syntax'] = "Il valore %s non segue la sintassi necessaria";
-$lang['point'] = "Punto";
-$lang['line'] = "(Poli) Linea";
-$lang['polygon'] = "Poligono";
 $lang['ok_insert_geodata'] = "Il dato geografico è stato salvato nella banca dati";
 $lang['error_insert_geodata'] = "Errore. Il dato geografico non è stato salvato nella banca dati";
 $lang['ok_delete_geodata'] = "Il dato geografico è stato cancellato";
 $lang['error_delete_geodata'] = "Error. Il dato geografico non è stato cancellato";
 $lang['geodata'] = "Dati geografici";
-$lang['draw_point'] = "Disegna punto";
-$lang['draw_line'] = "Disegna (poli)linea";
-$lang['draw_polygon'] = "Disegna poligono";
 $lang['ok_update_geometry'] = "La geoemtria è stata aggiornata";
 $lang['error_update_geometry'] = "Errore. La geoemtria non è stata aggiornata";
-$lang['navigate'] = "Naviga";
-$lang['identify'] = "Identifica";
 $lang['confirm_erase_feature'] = "Sei sicuro di volere cancellare definitivamente questo elemento?";
 $lang['no_geodata_present_create'] = "Non ci sono dati geografici per questa tabella, ma è possibile crearli";
 $lang['map_already_opened'] = "La mappa è già stata aperta in un tab. Non è possibile aprire una seconda istanza!";
@@ -441,7 +398,6 @@ $lang['ok_save_tb_data'] = "I dati della tabella sono stati salvati";
 $lang['error_save_tb_data'] = "Errore. I dati della tabella non sono stati salvati";
 
 $lang['system_email'] = "Email di sistema";
-$lang['send_email'] = "Invia messaggio email";
 $lang['recipients'] = "Destinatari";
 $lang['sender'] = "Mittente";
 $lang['content'] = "Contenuto";
@@ -454,8 +410,6 @@ $lang['ok_mail_sent_to_users'] = "Il messaggio è stato inviato senza problemi a
 $lang['error_mail_sent_to_users'] = "Non è stato possibile inviare il messaggio ai seguenti utenti: %s";
 
 $lang['history'] = "Storico";
-$lang['ok_history_erased'] = "Lo storico delle modifiche è stato cancellato";
-$lang['error_history_erased'] = "Errore. Lo storico delle modifiche non è stato cancellato";
 $lang['history_is_empty'] = "Lo storico delle modifiche è vuoto";
 
 $lang['ok_file_sorting_update'] = "L'ordine dei file allegati è stato cambiato";
@@ -479,15 +433,10 @@ $lang['user_data'] = "Dati utente";
 $lang['save_pref_in_db'] = "Salva le tue preferenze nel database per ricaricarle automaticamente nella prossima sessione";
 $lang['pref_saved_in_db'] = "Le preferenze sono state salvate nel database";
 $lang['pref_not_saved_in_db'] = "Errore. Le preferenze non sono state salvate nel database";
-$lang['only_positive_integers_allowed'] = "Sono permesso solo numeri interi positivi!";
 $lang['preview_flds'] = "Campi anteprima";
 $lang['ok_preview_set'] = "La lista dei campi di anteprima è stata salvata";
 $lang['default_values'] = "Valori predefiniti";
 
-//GEOFACE
-$lang['crs'] = "Sistema di coordinate di riferimento";
-$lang['x_y_required'] = "Sia il valore x che quello y sono obbligatori";
-$lang['add_coordinates'] = "Aggiungi coordinate";
 
 // Attach file to record
 $lang['file_data_missing'] = "Mancano i dati necessari per il caricamento del file";
@@ -514,11 +463,9 @@ $lang['confirm_import_geodata'] = "Si prega di confirmare l'importazione di dati
 $lang['import_erase_previous_data'] = "Importa e cancella i dati geografici preesistenti";
 $lang['import_dont_erase_previous_data'] = "Importa senza cancellare i dati geografici preesistenti";
 $lang['geodata_ok_uploaded'] = "Nessun errore nel processo di importazione. %s geometrie sono state caricate";
-$lang['geodata_error_uploaded'] = "C'è stato qualche errore nel caricare i dati geografici. Nessuna geometria è stata caricata";
 
 $lang['app_is_frozen'] = "Attenzione. Questa applicazione è stata congelata. È possibile leggere tutte le schede ed eseguire ricerche ma non è possibile modificare i dati";
 
-$lang['meta_cannot_guess_table'] = "Errore. Non è stato possibile recuperare il nome della tabella di riferimento per salvare una copia del record modificato";
 
 $lang[''] = "";
 $lang[''] = "";

@@ -47,7 +47,7 @@ class cfg
 			}
 
 			if (!file_exists(PROJ_DIR . 'cfg/tables.json')) {
-				throw new myException('tb_config_missing');
+				throw new myException('Configuration file tables.json is missing');
 			}
 			$tablesJSON = json_decode(file_get_contents(PROJ_DIR . 'cfg/tables.json'), true);
 

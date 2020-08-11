@@ -1,3 +1,5 @@
+3.16.67[] = "Cleaned translations"
+3.16.66[] = "Removed supporto for Pelagios Imperium (not available anymore) and updated DARE Imperium Url"
 3.16.65[] = "config replaces single app configuration modules"
 3.16.65[] = "Dropped support for app_cfg dot_path"
 3.16.64[] = "Added DB::execInTransaction"

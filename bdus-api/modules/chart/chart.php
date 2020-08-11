@@ -148,7 +148,7 @@ class chart_ctrl extends Controller
 				));
 
 		} catch (\Throwable $th) {
-			echo utils::message(tr::get("chart_id_missing", [$this->get['id']]), 'error', true);
+			echo utils::message(tr::get('chart_id_missing', [$this->get['id']]), 'error', true);
 		}
 		
 		

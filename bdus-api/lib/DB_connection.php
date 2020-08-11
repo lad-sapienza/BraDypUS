@@ -39,7 +39,7 @@ class DB_connection
         $data = self::getData($app, $custom_connection);
         
         if (!$data['driver'] || !$data['dsn']){
-            throw new myException('no_connect_data');
+            throw new myException('Not found any connection data');
         }
         
         return [
@@ -97,7 +97,7 @@ class DB_connection
             $cfg_arr = json_decode(file_get_contents($connection_file), true);
             
             if (!is_array($cfg_arr)){
-                throw new myException(tr::get("invalid_configuration_file", [$connection_file]) );
+                throw new myException(tr::get('invalid_configuration_file', [$connection_file]) );
             }
             
             

@@ -1,0 +1,144 @@
+{
+    "name": {
+        "type": "input",
+        "help": "Database name of the column. Please follow the pattern: ^[a-z]{3,15}$",
+        "required": true,
+        "readonly": true
+    },
+    "label": {
+        "type": "input",
+        "help": "The label will be shown to the users. Please stick as possible to the field name, but make this string easy to understand. No limitations on spaces, uppercase or other special charactes are defined.",
+        "required": false
+    },
+    "type": {
+        "type": "select",
+        "values": [
+            "text",
+            "date",
+            "long_text",
+            "select",
+            "combo_select",
+            "multi_select",
+            "boolean",
+            "slider"
+        ],
+        "help": "Field type. For `select`, `combo_select` and `multi_select` a source for the available values must be supplied. Fill one of the following `vocabulary_set`, `get_values_from_tb` or `get_values_from_tb`.",
+        "required": true
+    },
+    "vocabulary_set": {
+        "type": "select",
+        "values": [
+            "list-of-system-defined-vocabularies-here"
+        ],
+        "help": "Select from the list the vocabulary that will be used to compile the suggested values if field type is `select`, `combo_select` or `multi_select`",
+        "required": false
+    },
+    "get_values_from_tb": {
+        "type": "input",
+        "help": "Insert here the table and field name, whose unique values will be used to compile the suggested values if field type is `select`, `combo_select` or `multi_select`. Syntax: {prefix}__{tablename}:{fieldid}, eg.: sitarc__siti:id_sito",
+        "required": false
+    },
+    "id_from_tb": {
+        "type": "select",
+        "help": "Select here the table, whose unique id values will be used to compile the suggested values if field type is `select`, `combo_select` or `multi_select`. In the database the id will be filed, but users will see the id_field",
+        "values": [
+            "list-of-available-tables-here"
+        ],
+        "required": false
+    },
+    "check": {
+        "type": "multi_select",
+        "values": [
+            "int",
+            "email",
+            "no_dupl",
+            "not_empty",
+            "range",
+            "regex"
+        ],
+        "help": "Real time (on value change & on form submission) data validation to perform on the enterd field value",
+        "required": false
+    },
+    "active_link": {
+        "type": "select",
+        "values": [
+            true
+        ],
+        "help": "If true the field value will have in read mode a link to a query showing all similar records",
+        "required": false
+    },
+    "readonly": {
+        "type": "select",
+        "values": [
+            true
+        ],
+        "help": "If true the field value will be visible, it cannot be edited by users, and its value will be sent to the server",
+        "required": false
+    },
+    "disabled": {
+        "type": "select",
+        "values": [
+            true
+        ],
+        "help": "If true the field value will be visible (like `readonly`), it cannot be edited by users (like `readonly`), but its value will not be sen to the server (unlike `readonly`)",
+        "required": false
+    },
+    "hide": {
+        "type": "select",
+        "values": [
+            true
+        ],
+        "help": "If true the field value will not be visible to the users (unlike `readonly` and `disabled`), it cannot be edited by users (like `readonly` and `disabled`), and its value will be sent to the server (like `readonly`)",
+        "required": false
+    },
+    "def_value": {
+        "type": "input",
+        "help": "Default value to use on new record insertion. May be changed from te user (if `readonly` or `hide` are nor defined). The following variables can be used: %today%: current date, %current_user%: current user id",
+        "required": false
+    },
+    "force_default": {
+        "type": "select",
+        "values": [
+            true
+        ],
+        "help": "If true the default value will overwrite in edit mode the database value. Can be used in comination with `readonly` and `def_value` to save last edited timestamps, of last user id who edited the record",
+        "required": false
+    },
+    "max_length": {
+        "type": "input",
+        "help": "Maximum fields length measured in characters (included white spaces). An integer should be entered.",
+        "required": false
+    },
+    "db_type": {
+        "type": "select",
+        "values": [
+            "TEXT",
+            "INTEGER",
+            "DATETIME",
+            "TIMESTAMP"
+        ],
+        "help": "Database field type. Caveat: DATETIME is MySQL (and SQLite) specific; TIMESTAMP is the equivalent in PostgreSQL",
+        "required": false,
+        "readonly": true
+    },
+    "min": {
+        "type": "input",
+        "help": "Minimum allowed value, for field type `slider` or `check` value range. An integer should be entered",
+        "required": false
+    },
+    "max": {
+        "type": "input",
+        "help": "Maximum allowed value, for field type `slider` or `check` value range. An integer should be entered",
+        "required": false
+    },
+    "pattern": {
+        "type": "input",
+        "help": "Regex pattern to use for field value validation when `check` is set to regex",
+        "required": false
+    },
+    "help": {
+        "type": "input",
+        "help": "The help text will be shown to the users, explaining them how to compile the field",
+        "required": false
+    }
+}

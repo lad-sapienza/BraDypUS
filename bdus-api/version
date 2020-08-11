@@ -1,3 +1,5 @@
+3.16.65[] = "config replaces single app configuration modules"
+3.16.65[] = "Dropped support for app_cfg dot_path"
 3.16.64[] = "Added DB::execInTransaction"
 3.16.63[] = "Added \Bdus\App::route that replaces Controller::route"
 3.16.62[] = "Removing param[] in object calls"

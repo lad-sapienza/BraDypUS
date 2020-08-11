@@ -1,0 +1,23 @@
+<h4 class="text-center">Available fields for {{ tb_label }}</h4>
+
+<button 
+	type="button" 
+	class="add_new_fld btn btn-success btn-block" 
+	data-table="{{ tb }}">
+	<i class="glyphicon glyphicon-plus"></i> {{ tr.get('add') }}
+</button>
+
+<hr>
+
+<div class="list-group">
+{% for fld in all_fields %}
+	<button 
+		data-table="{{ tb }}" 
+		data-field="{{ fld.name }}" 
+		class="list-group-item edit_fld"
+		onclick="config.viewFldPropertied('{{ tb }}', '{{ fld.name }}', this)"
+	>
+		{{ fld.label}} / {{ fld.name }}
+	</button> 
+{% endfor %}
+</ul>

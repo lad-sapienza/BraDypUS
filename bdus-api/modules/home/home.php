@@ -196,19 +196,9 @@ class home_ctrl extends Controller
                     utils::canUser('super_admin') ? "core.runMod('translate');" :  false 
                 ],
                 [ 
-                    "fa-wrench", 
-                    'app_data_editor', 
-                    utils::canUser('super_admin') ? "core.runMod('app_data_editor');" :  false 
-                ],
-                [ 
-                    "fa-cog", 
-                    'edit_tbs_data', 
-                    utils::canUser('super_admin') ? "core.runMod('tbs_editor');" :  false 
-                ],
-                [ 
                     "fa-cogs", 
-                    'edit_flds_data', 
-                    utils::canUser('super_admin') ? "core.runMod('flds_editor');" :  false 
+                    'config', 
+                    utils::canUser('super_admin') ? "core.runMod('config');" :  false 
                 ],
                 [ 
                     "fa-code", 

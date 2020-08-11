@@ -1,0 +1,43 @@
+<div id="{{ uid }}">
+<h2>BDUS unified configuration interface</h2>
+
+  <div class="row main">
+
+    <div class="col-sm-3 col-first">
+
+      <h4 class="text-center">Main application</h4>
+
+      <div style="margin: 2rem 0;">
+        <button class="btn btn-default btn-block" onclick="config.viewAppProperties('{{ uid }}')">
+        {{ tr.get('app_data_editor') }}
+        </button>
+      </div>
+        
+      <h4 class="text-center">Available tables</h4>
+
+      {% for tbid, tbname in table_list %}
+        <nav class="navbar navbar-default">
+          <div class="container-fluid">
+            <div class="navbar-header">
+              <span class="navbar-brand">{{ tbname }}</span>
+            </div>
+
+            <div>
+              <ul class="nav navbar-nav navbar-right">
+                <li><a href="javascript:void(0)" onclick="config.viewTbproperties('{{ tbid }}', '{{ uid }}')">Main »</a></li>
+                <li><a href="javascript:void(0)" onclick="config.viewFldList('{{ tbid }}', '{{ uid }}')">Fields »</a></li>
+              </ul>
+            </div>
+          </div>
+        </nav>
+      {% endfor %}
+    </div>
+
+    <div class="field-list-column">
+    </div>
+
+    <div class="col-sm-6 edit-column">
+    </div>
+
+  </div>
+</div>

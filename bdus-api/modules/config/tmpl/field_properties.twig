@@ -1,0 +1,79 @@
+<h4 class="text-center">Available properties for {{ tb }}.{{ fld }}</h4>
+
+
+<form action="javascript:void(0)" class="form-horizontal" id="{{ uid }}">
+  <button type="submit" style="display:none;"></button>
+
+	<input type="hidden" name="tb_name" value="{{ tb }}">
+  {% if fld %}
+  <input type="hidden" name="fld_name" value="{{ fld }}">
+  {% endif %}
+
+<fieldset>
+{% for id, arr in fld_structure %}
+  <div class="form-group cont_{{ data[id] }}">
+    <label class="col-sm-3 control-label">{{ id }}{% if arr.required %} *{% endif %}</label>
+    <div class="col-sm-7">
+
+      {% if arr.type == 'input' %}
+        <input  class="input_{{ id }}" name="{{ id }}" 
+                type="text" 
+                {% if arr.readonly and data[id] %}readonly="true"{% endif %}
+                value="{{ data[id] }}">
+      
+      {% elseif arr.type == 'select' %}
+        <select class="input_{{ id }}" 
+                name="{{ id }}" 
+                {% if arr.readonly and data[id] %}readonly="true"{% endif %}
+                >
+          <option></option>
+            {% for val in arr.values %}
+            <option{% if val == data[id] %} selected="true"{% endif %}>
+              {{ val }}
+            </option>
+            {% endfor %}
+				</select>
+
+      {% elseif arr.type == 'multi_select' %}
+      
+        {% for v in data[id]%}
+        <select class="input_{{ id }}" 
+                name="{{ id }}[]"
+                {% if arr.readonly and data[id] %}readonly="true"{% endif %}
+                >
+          <option></option>
+          {% for val in arr.values %}
+          <option{% if val == v %} selected="true" {% endif %}>
+            {{ val }}
+          </option>
+          {% endfor %}
+        </select>
+        <br />
+        {% endfor %}
+        <select class="input_{{ id }}" 
+                name="{{ id }}[]"
+                {% if arr.readonly and data[id] %}readonly="true"{% endif %}
+                >
+          <option></option>
+          {% for val in arr.values %}
+          <option>{{ val }}</option>
+          {% endfor %}
+        </select>
+      {% endif %}
+      <span id="helpBlock" class="help-block">{{ arr.help }}</span>
+
+    </div>
+  </div>
+{% endfor %}
+<button type="submit" class="btn btn-success btn-block"><i class="glyphicon glyphicon-floppy-disk"></i> {{ tr.get('save') }}</button>
+</fieldset>
+</form>
+
+
+<script>
+$('form#{{ uid }}').on('submit', function(event){
+  event.preventDefault();
+  config.saveFldProperties($(this), '{{ tb }}', '{{ fld }}' );
+});
+
+</script>

@@ -18,7 +18,7 @@ $lang['missing_db_name'] = "Manca l'indicazione del nome del database nel file d
 $lang['missing_db_username'] = "Manca l'indicazione del nome utente del database nel file di configurazione";
 $lang['missing_db_password'] = "Manca l'indicazione della password dell'utente del database nel file di configurazione";
 $lang['missing_sqlite_file'] = "Manca il file di database SQLite";
-$lang['db_generic_error'] = "Errore generico del database. Controlloare il log degli errori per maggiorni informazioni";
+$lang['db_generic_error'] = "Errore generico del database. Controllare il log degli errori per maggiorni informazioni";
 
 $lang['send'] = "Invia";
 $lang['back'] = "Indietro";

@@ -24,17 +24,18 @@ var geoface  = {
       core.message(core.tr('map_already_opened'));
       return;
     }
-    G.queue = [
+    geoface.queue = [
 			'getData',
 			'loadLeaflet',
 			'loadLDraw',
 			'loadLOmnivore',
 			'loadGoogle',
 			'loadGoogleMutant',
-			'buildMap'];
-    G.param.tb = tb;
-    G.param.where = sql;
-    G.runQueue();
+      'buildMap'
+    ];
+    geoface.param.tb = tb;
+    geoface.param.where = sql;
+    geoface.runQueue();
 		return this;
   },
 
@@ -42,20 +43,20 @@ var geoface  = {
 	 * Calls first function in queue array and removes it from array
 	 */
   runQueue: function(){
-    var fn = G.queue[0];
-    G.queue.splice(0, 1);
-		if(typeof G[fn] !== 'undefined'){
-			G[fn]();
+    var fn = geoface.queue[0];
+    geoface.queue.splice(0, 1);
+		if(typeof geoface[fn] !== 'undefined'){
+			geoface[fn]();
 		}
   },
 
 
 	/**
-	 * Gets data from database, sets G.geoJSON, G.metadata, G.otherLayers and runs next function in queue
+	 * Gets data from database, sets geoface.geoJSON, geoface.metadata, geoface.otherLayers and runs next function in queue
 	 */
 	getData: function(){
 
-    core.getJSON('geoface_ctrl', 'getGeoJson', {tb: G.param.tb, where: G.param.where}, false, function(data){
+    core.getJSON('geoface_ctrl', 'getGeoJson', {tb: geoface.param.tb, where: geoface.param.where}, false, function(data){
 
       if (data.status === 'error'){
         core.message(data.text, 'error', true);
@@ -67,12 +68,12 @@ var geoface  = {
       }
 
       // set geoJSON
-      G.geoJSON = data.data;
+      geoface.geoJSON = data.data;
 
       // set metadata
-      G.metadata = data.metadata;
+      geoface.metadata = data.metadata;
 
-      G.runQueue();
+      geoface.runQueue();
 
     });
   },
@@ -81,20 +82,20 @@ var geoface  = {
 	 * Loads GoogleMaps APi
 	 */
   loadGoogle: function(){
-    if (typeof G.metadata.gmapskey === 'undefined') {
-      console.log('*** GoogleMaps key missing: if you want to use google layers please enter the key for table ' + G.metadata.tb);
-      G.runQueue();
+    if (typeof geoface.metadata.gmapskey === 'undefined') {
+      console.log('*** GoogleMaps key missing: if you want to use google layers please enter the key for table ' + geoface.metadata.tb);
+      geoface.runQueue();
       return;
     }
-    if ($.inArray('google', G.metadata.layers.excludeWeb) === -1 && typeof(google) == 'undefined'){
+    if (typeof(google) == 'undefined'){
       console.log('Google load');
-      $.getScript('https://maps.googleapis.com/maps/api/js?key='+ G.metadata.gmapskey, function(){
-				G.runQueue();
+      $.getScript('https://maps.googleapis.com/maps/api/js?key='+ geoface.metadata.gmapskey, function(){
+				geoface.runQueue();
 			}).fail(function(jqxhr, settings, exception) {
 				console.log('google', exception);
 			});
     } else {
-      G.runQueue();
+      geoface.runQueue();
     }
   },
 
@@ -104,13 +105,13 @@ var geoface  = {
   loadGoogleMutant: function(){
     if (typeof google !== 'undefined' && typeof L.GridLayer.GoogleMutant == 'undefined'){
       $.getScript('./modules/geoface/leaflet-googleMutant/Leaflet.GoogleMutant.js', function(){
-        G.runQueue();
+        geoface.runQueue();
       }).fail(function(jqxhr, settings, exception) {
 					console.log('googleMutant', exception);
         }
       );
     } else {
-      G.runQueue();
+      geoface.runQueue();
     }
   },
 
@@ -126,12 +127,12 @@ var geoface  = {
     if (typeof L == 'undefined'){
       $.getScript('./modules/geoface/leaflet/leaflet.js', function(){
         L.Icon.Default.imagePath = './modules/geoface/leaflet/images/';
-        G.runQueue();
+        geoface.runQueue();
       }).fail(function(jqxhr, settings, exception) {
 				console.log('L', exception);
       });
     } else {
-      G.runQueue();
+      geoface.runQueue();
     }
 
   },
@@ -147,12 +148,12 @@ var geoface  = {
 
     if (typeof L.drawVersion === 'undefined'){
       $.getScript('./modules/geoface/leaflet-draw/leaflet.draw.js', function(){
-        G.runQueue();
+        geoface.runQueue();
       }).fail(function(jqxhr, settings, exception) {
 				console.log('L.Draw', exception);
       });
     } else {
-      G.runQueue();
+      geoface.runQueue();
     }
   },
 
@@ -163,12 +164,12 @@ var geoface  = {
 
     if (typeof omnivore === 'undefined'){
       $.getScript('./modules/geoface/leaflet-omnivore/leaflet-omnivore.min.js', function(){
-        G.runQueue();
+        geoface.runQueue();
       }).fail(function(jqxhr, settings, exception) {
 				console.log('Omnivore', exception);
 			});
     } else {
-      G.runQueue();
+      geoface.runQueue();
     }
   },
 
@@ -179,10 +180,10 @@ var geoface  = {
       title: core.tr('GeoFace'),
       loaded: function(){
         //starts map
-        G.startL();
+        geoface.startL();
         // dynamic resize
         $(window).on('resize', function(){
-          G.resize();
+          geoface.resize();
         });
       }
     });
@@ -191,12 +192,11 @@ var geoface  = {
   startL: function(){
 
 		// Start map object
-		G.map = new L.map('map');
+		geoface.map = new L.map('map');
 
     var availableBaseMaps = {
-      "OSM": new L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png').addTo(G.map),
+      "OSM": new L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png').addTo(geoface.map),
       "AWMC" : L.tileLayer('http://{s}.tiles.mapbox.com/v3/isawnyu.map-knmctlkh/{z}/{x}/{y}.png'),
-      // http://commons.pelagios.org/2012/09/a-digital-map-of-the-roman-empire/
       "Imperium\/DARE" : L.tileLayer('https://dh.gu.se/tiles/imperium/{z}/{x}/{y}.png')
     };
 
@@ -212,26 +212,13 @@ var geoface  = {
 
     for (var k in availableBaseMaps) {
       if (
-        availableBaseMaps.hasOwnProperty(k) &&
-        (
-          typeof G.metadata.layers.excludeWeb === 'undefined' ||
-          G.metadata.layers.excludeWeb.indexOf(k) < 0
-        )
-      ) {
+        availableBaseMaps.hasOwnProperty(k) ) {
         baseMaps[k] = availableBaseMaps[k];
       }
     }
 
-    // Start Google
-    // if ($.inArray('google', G.metadata.layers.excludeWeb) === -1 && typeof L.gridLayer.googleMutant !== 'undefined'){
-    //   baseMaps['Google Satellite'] =	L.gridLayer.googleMutant({ type:'satellite'});
-    //   baseMaps['Google Roadmap'] =		L.gridLayer.googleMutant({ type:'roadmap'});
-    //   baseMaps['Google Terrain'] =		L.gridLayer.googleMutant({ type:'terrain' });
-    //   baseMaps['Google Hybrid'] =			L.gridLayer.googleMutant({ type:'hybrid'});
-    // }
-
     // Main, database, overlay vector layer
-		G.overlay[G.metadata.tb] = L.geoJson(G.geoJSON, {
+		geoface.overlay[geoface.metadata.tb] = L.geoJson(geoface.geoJSON, {
 			pointToLayer: function(feature, latlng){
 				return new L.CircleMarker(latlng, {
 					color: '#f00',
@@ -248,28 +235,27 @@ var geoface  = {
 					  html += key + ': <strong>' + val + '</strong><br />';
 				  }
 			  });
-			  html += '<span class="btn btn-info btn-xs" onclick="api.record.read(\'' + G.metadata.tb_id + '\', [' + feature.properties.id + '])">' + core.tr('read') + '</span>';
+			  html += '<span class="btn btn-info btn-xs" onclick="api.record.read(\'' + geoface.metadata.tb_id + '\', [' + feature.properties.id + '])">' + core.tr('read') + '</span>';
 			  layer.bindPopup(html);
 		  }
 
 		})
-		.addTo(G.map);
+		.addTo(geoface.map);
 
-    if (typeof G.metadata.layers.local !== 'undefined' && typeof omnivore !== 'undefined'){
-      $.each(G.metadata.layers.local, function (i, lay){
-        var ext = lay.id.split('.').pop().toLowerCase();
+    if (typeof geoface.metadata.local_layers !== 'undefined' && typeof omnivore !== 'undefined'){
+      $.each(geoface.metadata.local_layers, function (i, lay){
+        const ext = lay.ext;
+        const name = lay.name;
+        const full_path = lay.full_path;
 
-        switch (ext) {
+        switch (lay.ext) {
           case 'csv':
           case 'gpx':
           case 'kml':
           case 'wkt':
           case 'topojson':
           case 'geojson':
-            G.overlay[lay.name] = omnivore[ext](lay.id, null, L.geoJson(null, {
-              style: function(feature) {
-                return lay.style;
-              },
+            geoface.overlay[name] = omnivore[ext](full_path, null, L.geoJson(null, {
               onEachFeature: function (feature, layer) {
                 var html = '';
         			  $.each(feature.properties, function(key, val){
@@ -280,7 +266,7 @@ var geoface  = {
         			  layer.bindPopup(html);
               }
             }))
-            .addTo(G.map);
+            .addTo(geoface.map);
             break;
           default:
             console.log('Unknown extension: ' + ext);
@@ -291,41 +277,41 @@ var geoface  = {
     }
 
     //Add other layers, both basemaps and overlays to map
-    G.map.addControl(new L.Control.Layers( baseMaps, G.overlay, {}));
+    geoface.map.addControl(new L.Control.Layers( baseMaps, geoface.overlay, {}));
 
 
     // Edit controls
-    if (G.metadata.canUserEdit && typeof L.Control.Draw !== 'undefined'){
+    if (geoface.metadata.canUserEdit && typeof L.Control.Draw !== 'undefined'){
       // Create draw control
       var drawControl = new L.Control.Draw({
 				draw: { marker: false },
-				edit: { featureGroup: G.overlay[G.metadata.tb] }
+				edit: { featureGroup: geoface.overlay[geoface.metadata.tb] }
       });
       // Add draw control to map
-      G.map.addControl(drawControl);
-      G.editListeners(G.overlay[G.metadata.tb]);
+      geoface.map.addControl(drawControl);
+      geoface.editListeners(geoface.overlay[geoface.metadata.tb]);
     }
 
     // Fit map to window size
-    G.resize();
+    geoface.resize();
 
     // Zoom and pan map to max extent of vector layer
-    if(typeof G.overlay[G.metadata.tb] === 'undefined' || $.isEmptyObject(G.overlay[G.metadata.tb]._layers)){
-      G.map.setView([38.82259, -2.8125], 3);
+    if(typeof geoface.overlay[geoface.metadata.tb] === 'undefined' || $.isEmptyObject(geoface.overlay[geoface.metadata.tb]._layers)){
+      geoface.map.setView([38.82259, -2.8125], 3);
     } else {
-      G.map.fitBounds(G.overlay[G.metadata.tb].getBounds());
+      geoface.map.fitBounds(geoface.overlay[geoface.metadata.tb].getBounds());
     }
   },
 
   editListeners: function(vector_layer){
 
     // CREATED
-    G.map.on('draw:created', function(e){
+    geoface.map.on('draw:created', function(e){
 
       api.link.add_ui(
         //success function
         function(tb, id, dia){
-          core.getJSON('geoface_ctrl', 'saveNew', false, {tb: tb, id: id, coords: G.toWKT(e.layer)}, function(data){
+          core.getJSON('geoface_ctrl', 'saveNew', false, {tb: tb, id: id, coords: geoface.toWKT(e.layer)}, function(data){
             core.message(data.text, data.value);
             e.layer.feature = {properties: {geo_id: data.id}};
           });
@@ -335,19 +321,19 @@ var geoface  = {
         },
         false,
         true,
-        G.metadata.tb_id
+        geoface.metadata.tb_id
       );
     });
 
 
 
     // EDITED
-    G.map.on('draw:edited', function(e){
+    geoface.map.on('draw:edited', function(e){
       var post_data = [];
       e.layers.eachLayer(function (layer) {
 				post_data.push({
           id: layer.feature.properties.geo_id,
-          coords: G.toWKT(layer)
+          coords: geoface.toWKT(layer)
         });
       });
       core.getJSON('geoface_ctrl', 'update', false, {geodata: post_data}, function(data){
@@ -357,7 +343,7 @@ var geoface  = {
 
 
     // DELETED
-    G.map.on('draw:deleted', function(e){
+    geoface.map.on('draw:deleted', function(e){
 
       var id_arr = [];
       e.layers.eachLayer(function (layer) {
@@ -397,7 +383,7 @@ var geoface  = {
       $('#map').css({
         'height': '100%'
         });
-      G.map.invalidateSize();
+      geoface.map.invalidateSize();
     },
 
     /**
@@ -426,5 +412,3 @@ var geoface  = {
       }
     }
 };
-
-var G = geoface;

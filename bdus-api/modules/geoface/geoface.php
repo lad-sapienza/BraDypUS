@@ -124,18 +124,6 @@ class geoface_ctrl extends Controller
 
 		try {
 
-			$geoface = cfg::tbEl($tb, 'geoface');
-
-			if (!is_array($geoface['layers']['web'])) {
-				$geoface['layers']['web'] = array();
-			}
-
-			if (is_array($geoface['layers']['local'])) {
-				foreach ($geoface['layers']['local'] as &$vec) {
-					$vec['id'] = PROJ_DIR . "geodata/" . $vec['id'];
-				}
-			}
-
 			$preview = cfg::getPreviewFlds($tb);
 
 			$part = [];
@@ -177,14 +165,32 @@ class geoface_ctrl extends Controller
 				return;
 			}
 
-			$response['metadata'] = array_merge($geoface, [
-				'tb_id'=>$tb,
-				'tb'=>cfg::tbEl($tb, 'label'),
-				'gmapskey' => cfg::main('gmapskey'),
-				'canUserEdit' => utils::canUser('edit')
-			]);
+			$local_geodata = utils::dirContent(PROJ_DIR . 'geodata');
+			$local_layers = [];
+			if ($local_geodata){
+                foreach ($local_geodata as $vec) {
+					$parts = pathinfo($vec);
+					if ( in_array( strtolower($parts['extension']), [ 'csv', 'gpx', 'kml', 'wkt', 'topojson', 'geojson']) ){
+						$local_layers[] = [
+							'full_path' => PROJ_DIR . 'geodata' . DIRECTORY_SEPARATOR . $vec,
+							'name' => $parts['filename'],
+							'ext' => $parts['extension']
+						];
+					}
+                }
+			}
 
-			echo json_encode($response);
+			
+
+			$response['metadata'] = [
+				'tb_id'			=>	$tb,
+				'tb'			=>	cfg::tbEl($tb, 'label'),
+				'gmapskey'		=>	cfg::main('gmapskey'),
+				'canUserEdit' 	=> utils::canUser('edit'),
+				'local_layers'	=> $local_layers
+			];
+
+			echo $this->returnJson($response);
 
 		} catch (myException $e) {
 			$e->log();

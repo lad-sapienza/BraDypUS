@@ -197,8 +197,7 @@ var geoface  = {
       "OSM": new L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png').addTo(G.map),
       "AWMC" : L.tileLayer('http://{s}.tiles.mapbox.com/v3/isawnyu.map-knmctlkh/{z}/{x}/{y}.png'),
       // http://commons.pelagios.org/2012/09/a-digital-map-of-the-roman-empire/
-      "Imperium\/Pelagios" : L.tileLayer('http://pelagios.org/tilesets/imperium/{z}/{x}/{y}.png'),
-      "Imperium\/DARE" : L.tileLayer('http://dare.ht.lu.se/tiles/imperium/{z}/{x}/{y}.png')
+      "Imperium\/DARE" : L.tileLayer('https://dh.gu.se/tiles/imperium/{z}/{x}/{y}.png')
     };
 
     if (typeof L.gridLayer.googleMutant !== 'undefined') {

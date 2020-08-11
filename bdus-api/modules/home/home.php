@@ -168,7 +168,7 @@ class home_ctrl extends Controller
                 [ 
                     "fa-cloud-upload", 
                     'vocabularies', 
-                    utils::canUser('admin') ? "core.runMod('vocabulary_mng');" :  false 
+                    utils::canUser('admin') ? "core.runMod('vocabularies');" :  false 
                 ],
                 [ 
                     "fa-edit", 

@@ -18,9 +18,7 @@ class chart_ctrl extends Controller
 		$this->render('chart', 'builder', array(
 				'tb' => $this->get['tb'],
 				'query' => $this->get['query'],
-				'fields' => cfg::fldEl($this->get['tb'], 'all', 'label'),
-				'tr' => new tr(),
-				'uid' =>uniqid('chart_builder')
+				'fields' => cfg::fldEl($this->get['tb'], 'all', 'label')
 		));
 	}
 

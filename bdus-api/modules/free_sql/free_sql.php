@@ -55,7 +55,7 @@ class free_sql_ctrl
 			
 			$db->beginTransaction();
 			
-			$ret = $db->doQuery($post['sql']);
+			$ret = $db->exec($post['sql']);
 			
 			$db->commit();
 			

@@ -44,7 +44,7 @@ class App
 		
 		try {
 			if (!method_exists($obj, $method)){
-				throw new Exception("Object {$obj} does not have method {$method}");
+				throw new \Exception("Object {$obj} does not have method {$method}");
 			}
             if (get_parent_class($obj) === 'Controller') {
                 $_aa = new $obj($this->get, $this->post, $this->request);
@@ -57,7 +57,7 @@ class App
             
 
 		} catch(Throwable $e) {
-			throw new Exception($e);
+			throw new \Exception($e);
         }
 	}
 }

@@ -131,10 +131,24 @@ class DB
 		return $this->db_engine;
 	}
 
-	public function doQuery($sql)
+	public function execInTransaction($sql)
+	{
+		$ret = false;
+		try {
+			$this->db->beginTransaction();
+			$ret = $this->db->exec($sql);
+			$this->db->commit();
+		} catch (\Throwable $th) {
+			$this->db->rollBack();
+			Meta::logException($th);
+		}
+		return ($ret !== false);
+	}
+
+	public function exec($sql)
 	{
 		try {
-			$this->db->exec($sql);
+			return $this->db->exec($sql);
 		} catch (PDOException $e) {
 			throw new myException($e);
 		}

@@ -186,11 +186,6 @@ class home_ctrl extends Controller
                     utils::canUser('super_admin') ? "core.runMod('myHistory');" :  false 
                 ],
                 [ 
-                    "fa-cloud-upload", 
-                    'import', 
-                    utils::canUser('super_admin') ? "core.runMod('myImport');" :  false 
-                ],
-                [ 
                     "fa-comment", 
                     'system_translate', 
                     utils::canUser('super_admin') ? "core.runMod('translate');" :  false 

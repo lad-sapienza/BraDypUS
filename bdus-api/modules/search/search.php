@@ -66,12 +66,11 @@ class search_ctrl extends Controller
 	 */
 	public function expertGUI()
 	{
-		$this->render('search', 'expertGUI', array(
-				'tr'		=> new tr(),
-				'tb'		=> $this->request['tb'],
-				'fields'	=> cfg::fldEl($this->request['tb'], 'all', 'name'),
-				'operators'	=> array ('=', '!=', 'LIKE', '>', '<', '>=', '<=', 'IS NULL', 'IS NOT NULL', '(', ')', '%', "'", 'AND', 'OR', 'NOT')
-		));
+		$this->render('search', 'expertGUI', [
+			'tb'		=> $this->request['tb'],
+			'fields'	=> cfg::fldEl($this->request['tb'], 'all', 'name'),
+			'operators'	=> array ('=', '!=', 'LIKE', '>', '<', '>=', '<=', 'IS NULL', 'IS NOT NULL', '(', ')', '%', "'", 'AND', 'OR', 'NOT')
+		]);
 	}
 
 

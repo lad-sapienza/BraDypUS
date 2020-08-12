@@ -11,10 +11,7 @@ class multiupload_ctrl extends Controller
 
 	public function loadFiles()
 	{
-		$this->render('multiupload', 'loadFiles', array(
-				'tr'	=> new tr(),
-				'uid'	=> uniqid('multiupload')
-				));
+		$this->render('multiupload', 'loadFiles', []);
 	}
 
 	public function saveUploads()
@@ -59,11 +56,9 @@ class multiupload_ctrl extends Controller
 				$data[$x]['fData']['id'] = (array)$data[$x]['fData']['id'];
 			}
 		}
-		$this->render('multiupload', 'previewUploaded', array(
-				'tr'	=> new tr(),
-				'uid'	=> uniqid('preview_uploaded'),
-				'data'	=> $data
-				));
+		$this->render('multiupload', 'previewUploaded', [
+			'data'	=> $data
+		]);
 
 	}
 

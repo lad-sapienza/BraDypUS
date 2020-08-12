@@ -94,13 +94,11 @@ class BackupMySQL
 
 		$gzh = @gzopen($this->filename,'w9');
 
-		if ( !gzh )
-		{
+		if ( !gzh ) {
 			throw new myException('Can not open file ' . $this->filename);
 		}
 
-		if ( !gzwrite($gzh, $sql) )
-		{
+		if ( !gzwrite($gzh, $sql) ) {
 			throw new myException('Can not write in file ' . $this->filename);
 		}
 

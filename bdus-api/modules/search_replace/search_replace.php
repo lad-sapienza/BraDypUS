@@ -11,7 +11,7 @@ class search_replace_ctrl extends Controller
 {
 	public function main_page()
 	{
-		echo $this->render('search_replace', 'main_page', array(
+		$this->render('search_replace', 'main_page', array(
 				'tbs' => cfg::getNonPlg()
 				));
 	}

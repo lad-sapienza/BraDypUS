@@ -51,11 +51,10 @@ class sys_mail_ctrl extends Controller
 	public function showForm()
 	{
 
-		echo $this->render('sys_mail', 'form', array(
-				'tr' => new tr(),
-				'adm_email' => APP . '_admin@bradypus.net',
-				'user_email' => $_SESSION['user']['email'],
-				'privileges' => utils::privilege('all', true)
-				));
+		$this->render('sys_mail', 'form', [
+			'adm_email' => APP . '_admin@bradypus.net',
+			'user_email' => $_SESSION['user']['email'],
+			'privileges' => utils::privilege('all', true)
+		]);
 	}
 }

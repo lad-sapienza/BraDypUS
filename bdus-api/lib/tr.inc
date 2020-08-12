@@ -110,13 +110,22 @@ class tr
 		return $arr;
 	}
 
-	public function arrayToFile(string $lang, array $data): bool
+	public static function arrayToFile(string $lang, array $data): bool
 	{
 		return file_put_contents(LOCALE_DIR . $lang . '.json', json_encode($data, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE));
 	}
 
-	public function langExists(string $lang): bool
+	public static function langExists(string $lang): bool
 	{
 		return file_exists(LOCALE_DIR . $lang . '.json');
+	}
+
+	public static function getAvailable()
+	{
+		$langs = utils::dirContent(LOCALE_DIR);
+		
+		array_walk($langs, function(&$el){ $el =  str_replace('.json', null, $el); });
+
+		return $langs;
 	}
 }

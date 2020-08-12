@@ -6,7 +6,7 @@ class config_ctrl extends Controller
     {
         $table_list = cfg::tbEl('all', 'label');
 
-        echo $this->render('config', 'home', [
+        $this->render('config', 'home', [
             "table_list" => $table_list
         ]);
     }
@@ -25,7 +25,7 @@ class config_ctrl extends Controller
 			$users = [];
 		}
 		
-		echo $this->render('config', 'app_properties', [
+		$this->render('config', 'app_properties', [
             'available_langs' => utils::dirContent(LOCALE_DIR),
             'info' => cfg::main(),
             'status' => [ 'on', 'frozen', 'off' ],
@@ -39,7 +39,7 @@ class config_ctrl extends Controller
     {
         $tb = $this->get['tb'];
 
-		echo $this->render('config', 'fld_list', [
+		$this->render('config', 'fld_list', [
             'tb' => $tb,
             'tb_label' => cfg::tbEl($tb, 'label'),
             'all_fields' => cfg::fldEl($tb, 'all', 'all')
@@ -72,7 +72,7 @@ class config_ctrl extends Controller
         );
         $fld_structure = json_decode($fld_structure, TRUE);
 
-        echo $this->render('config', 'field_properties', [
+        $this->render('config', 'field_properties', [
             'tb'    => $tb,
             'fld'   => $fld,
             'data'  => $data,
@@ -91,7 +91,7 @@ class config_ctrl extends Controller
 		if (!$table_properties['plugin'])   $table_properties['plugin'] = array(0=>'');
 		if (!$table_properties['link'])     $table_properties['link'] = array(0=>array('fld'=>array(0=>'')));
 
-        echo $this->render('config', 'table_properties', [
+        $this->render('config', 'table_properties', [
             'data'  => $table_properties,
             'tb'    => $tb,
             'field_list' => cfg::fldEl($tb, 'all', 'label'),

@@ -10,18 +10,12 @@ class preferences_ctrl extends Controller
 {
 	public function open()
 	{
-		$langs = utils::dirContent(LOCALE_DIR);
-		
-		array_walk($langs, function(&$el){ $el =  str_replace('.inc', null, $el); });
-		
-		$this->render('preferences', 'panel', array(
-				'tr' => new tr(),
-				'uid' => uniqid('pref'),
-				'infinite_scroll'=> pref::get('infinite_scroll'),
-				'all_langs' => $langs,
-				'current_lang' => pref::get('lang'),
-				'user_id' => $_SESSION['user']['id']
-				));
+		$this->render('preferences', 'panel', [
+			'infinite_scroll'=> pref::get('infinite_scroll'),
+			'all_langs' => tr::getAvailable(),
+			'current_lang' => pref::get('lang'),
+			'user_id' => $_SESSION['user']['id']
+		]);
 	}
 	
 	public function save()

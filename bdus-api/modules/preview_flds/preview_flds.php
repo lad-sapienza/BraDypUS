@@ -19,11 +19,10 @@ class preview_flds_ctrl extends Controller
 					);
 		}
 		
-		$this->render('preview_flds', 'form', array(
-				'tb_data' => $tb,
-				'pref_data' => pref::get('preview'),
-				'tr' => new tr()
-				));
+		$this->render('preview_flds', 'form', [
+			'tb_data' => $tb,
+			'pref_data' => pref::get('preview'),
+		]);
 	}
 	
 	

@@ -11,10 +11,9 @@ class vocabularies_ctrl extends Controller
 	{
 		$vocs = new Vocabulary(new DB());
 		
-		$this->render('vocabularies', 'list', array(
-				'vocs' => $vocs->getAll(),
-				'tr' => new tr()
-				));
+		$this->render('vocabularies', 'list', [
+			'vocs' => $vocs->getAll(),
+		]);
 	}
 	
 	public function add_new_form()
@@ -25,11 +24,10 @@ class vocabularies_ctrl extends Controller
 			$all_vocs = $vocs->getAllVoc();
 		}
 		
-		$this->render('vocabularies', 'new_form', array(
-				'voc' => $this->get['param'][0],
-				'all_vocs' => $all_vocs,
-				'tr' => new tr()
-				));
+		$this->render('vocabularies', 'new_form', [
+			'voc' => $this->get['param'][0],
+			'all_vocs' => $all_vocs,
+		]);
 	}
 	
 	
@@ -72,12 +70,9 @@ class vocabularies_ctrl extends Controller
 		//necessary parameters: id, def
 		$voc = new Vocabulary(new DB());
 
-		if ($voc->update($this->get['id'], $this->get['val']))
-		{
+		if ($voc->update($this->get['id'], $this->get['val'])) {
 			$resp = array('status'=>'success', 'text'=>tr::get('ok_def_update'));
-		}
-		else
-		{
+		} else {
 			$resp = array('status'=>'error', 'text'=>tr::get('error_def_update'));
 		}
 			

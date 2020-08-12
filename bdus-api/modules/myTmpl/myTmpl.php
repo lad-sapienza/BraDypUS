@@ -37,12 +37,10 @@ class myTmpl_ctrl extends Controller
 			$data[$tb]['user_edit'] = pref::getTmpl($tb, 'edit');
 		}
 
-    $this->render('myTmpl', 'user_tmpl', array(
-      'tr' => new tr(),
-      'tabs' => $tbs,
-      'data' => $data,
-      'uid' => uniqid('tmpl')
-		));
+		$this->render('myTmpl', 'user_tmpl', [
+			'tabs' => $tbs,
+			'data' => $data,
+		]);
 
 	}
 

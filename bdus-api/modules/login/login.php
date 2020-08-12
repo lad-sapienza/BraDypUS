@@ -13,22 +13,18 @@ class login_ctrl extends Controller
 	{
 		$app_data = json_decode(file_get_contents(MAIN_DIR . "projects/{$this->request['app']}/cfg/app_data.json"), true);
 
-		$this->render('login', 'login', array(
-				'tr' => new tr(),
-				'appdata' => $app_data,
-				'uid' => uniqid('login')
-		));
+		$this->render('login', 'login', [
+			'appdata' => $app_data,
+		]);
 	}
 
 
 
 	public function newUserForm()
 	{
-		$this->render('login', 'new_user', array(
-				'tr' => new tr(),
-				'app' => $this->get['app'],
-				'uid' => uniqid('new_user')
-		));
+		$this->render('login', 'new_user', [
+			'app' => $this->get['app'],
+		]);
 	}
 
 	public function resetPwd()

@@ -6,6 +6,10 @@
  * @since			Aug 12, 2012
  */
 
+use \cfg;
+use \tr;
+use \utils;
+
 class translate_ctrl extends Controller
 {
 	public function showList()
@@ -18,7 +22,7 @@ class translate_ctrl extends Controller
                 $available_lang[] = str_replace('.json', null, $file);
             }
 		}
-		echo $this->render('translate', 'showList', [
+		$this->render('translate', 'showList', [
 			'available_lang' => $available_lang
 		]);
 	}
@@ -29,7 +33,7 @@ class translate_ctrl extends Controller
 
 		$edit_lang 	= tr::getAll($lang_to_edit);
 
-		echo $this->render('translate', 'showForm', [
+		$this->render('translate', 'showForm', [
 			'lng' => $lang_to_edit,
 			'main_lng' => 'en',
 			'main_lng_data' => tr::getAll('en'),

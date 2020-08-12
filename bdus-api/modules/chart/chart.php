@@ -29,12 +29,10 @@ class chart_ctrl extends Controller
 	 */
 	public function showRow()
 	{
-		$this->render('chart', 'bar', array(
-				'remove' => $this->get['remove'],
-				'uid' =>uniqid('br'),
-				'flds' => cfg::fldEl($this->get['tb'], 'all', 'label'),
-				'tr' => new tr()
-		));
+		$this->render('chart', 'bar', [
+			'remove' => $this->get['remove'],
+			'flds' => cfg::fldEl($this->get['tb'], 'all', 'label'),
+		]);
 	}
 
 	/**
@@ -70,11 +68,9 @@ class chart_ctrl extends Controller
 
 		$ch->formatResult(false, $sql);
 
-		$this->render('chart', 'display', array(
-				'uid'	=> uniqid('chart'),
-				'tr'	=> new tr(),
-				'data'	=> $ch->getData()
-		));
+		$this->render('chart', 'display', [
+			'data'	=> $ch->getData()
+		]);
 
 	}
 
@@ -141,11 +137,9 @@ class chart_ctrl extends Controller
 
 			$chart->formatResult($this->get['id']);
 
-			$this->render('chart', 'display', array(
-				'uid'	=> uniqid('chart'),
-				'tr'	=> new tr(),
+			$this->render('chart', 'display', [
 				'data'	=> $chart->getData()
-				));
+			]);
 
 		} catch (\Throwable $th) {
 			echo utils::message(tr::get('chart_id_missing', [$this->get['id']]), 'error', true);
@@ -159,11 +153,10 @@ class chart_ctrl extends Controller
 	{
 		$charts = new Charts(new DB());
 
-		$this->render('chart', 'list', array(
-				'all_charts' => $charts->getCharts(),
-				'can_admin' => utils::canUser('admin'),
-				'tr' => new tr()
-		));
+		$this->render('chart', 'list', [
+			'all_charts' => $charts->getCharts(),
+			'can_admin' => utils::canUser('admin'),
+		]);
 
 	}
 
@@ -179,11 +172,9 @@ class chart_ctrl extends Controller
 
 		$mych = $mych[0];
 
-		$this->render('chart', 'edit', array(
-				'uid'	=> uniqid('editchart'),
-				'tr'	=> new tr(),
-				'chart'	=> $mych
-				));
+		$this->render('chart', 'edit', [
+			'chart'	=> $mych
+		]);
 	}
 
 	/**

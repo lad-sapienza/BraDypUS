@@ -19,7 +19,6 @@ class BackupMySQL
 
 		$this->filename = $filename;
 		$this->db = $db;
-		$this->db->dont_version();
 	}
 
 	/**
@@ -40,7 +39,6 @@ class BackupMySQL
 			}
 		}
 		$this->sql2gzip($this->sql);
-		$this->db->do_version();
 	}
 
 	/**
@@ -52,7 +50,6 @@ class BackupMySQL
 		$this->sql = '';
 		$this->export($tb);
 		$this->sql2gzip($this->sql);
-		$this->db->do_version();
 	}
 
 

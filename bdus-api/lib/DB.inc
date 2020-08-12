@@ -9,7 +9,7 @@
  * @uses			DB_connection
  */
 
-class DB
+class DB implements \DB\DB\DBInterface
 {
 
 	/**
@@ -20,7 +20,6 @@ class DB
 	private $db;
 	private $db_engine;
 	private $app;
-	private $stop_versioning = false;
 
 	/**
 	 *
@@ -34,26 +33,6 @@ class DB
 		$this->app = $app ? $app : APP;
 
 		$this->parseStart($this->app, $custom_connection);
-	}
-
-	/**
-	 * Sets $stop_versioning to true and prevents versioning of the recprds
-	 *
-	 * @return void
-	 */
-	public function dont_version()
-	{
-		$this->stop_versioning = true;
-	}
-	
-	/**
-	 * Sets $stop_versioning to false and permits versioning of the recprds
-	 *
-	 * @return void
-	 */
-	public function do_version()
-	{
-		$this->stop_versioning = false;
 	}
 
 	/**
@@ -108,7 +87,7 @@ class DB
 	/**
 	 * returns current app name
 	 */
-	public function getApp()
+	public function getApp(): string
 	{
 		return $this->app;
 	}
@@ -126,12 +105,12 @@ class DB
 	 *
 	 * Returns current database engine
 	 */
-	public function getEngine()
+	public function getEngine(): string
 	{
 		return $this->db_engine;
 	}
 
-	public function execInTransaction($sql)
+	public function execInTransaction($sql): bool
 	{
 		$ret = false;
 		try {
@@ -145,7 +124,7 @@ class DB
 		return ($ret !== false);
 	}
 
-	public function exec($sql)
+	public function exec($sql): bool
 	{
 		try {
 			return $this->db->exec($sql);
@@ -157,9 +136,7 @@ class DB
 	public function backupBeforeEdit (string $table, int $id, $query, array $values = [])
 	{
 		try {
-			if (!$this->stop_versioning){
-				Meta::addVersion($_SESSION['user']['id'], $table, $id, $query, $values);
-			}
+			Meta::addVersion($_SESSION['user']['id'], $table, $id, $query, $values);
 		} catch (\Throwable $th) {
 			error_log(json_encode($th, JSON_PRETTY_PRINT));
 		}
@@ -177,7 +154,7 @@ class DB
 	 * @param string $type			one of read (default value) | id | boolean | affected, integer, or false
 	 * @param boolean $fetch_style	if false an associative array will be returned else a numeric array
 	 */
-	public function query($query, $values = false, $type = false, $fetch_style = false )
+	public function query($query, $values = null, $type = null, $fetch_style = false )
 	{
 		try {
 

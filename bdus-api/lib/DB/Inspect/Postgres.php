@@ -16,12 +16,10 @@ class Postgres implements InspectInterface
 
     public function tableExists(string $tb): bool
     {
-        $this->db->dont_version();
         $res = $this->db->query(
             "SELECT COUNT(*) as tot FROM information_schema.tables WHERE table_name = ?"
             [ $tb ]
         );
-        $this->db->do_version();
         
         return $res && !empty($res) && $res[0]['tot'] > 0;
     }
@@ -30,7 +28,6 @@ class Postgres implements InspectInterface
     {
         $ret = [];
 
-        $this->db->dont_version();
         $res = $this->db->query("SELECT * FROM information_schema.columns WHERE table_name = ?", [ $tb ]);
         if (!$res || empty($res)){
             throw new \Exception("Error on getting column list for table {$tb}");
@@ -42,7 +39,6 @@ class Postgres implements InspectInterface
                 'type' => $row['data_type']
             ];
         }
-        $this->db->do_version();
 
         return $ret;
     }

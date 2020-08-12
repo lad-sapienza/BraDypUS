@@ -16,12 +16,10 @@ class Mysql implements InspectInterface
 
     public function tableExists(string $tb): bool
     {
-        $this->db->dont_version();
         $res = $this->db->query(
             "SELECT COUNT(*) as tot FROM information_schema.TABLES WHERE TABLE_NAME = ?",
             [ $tb ]
         );
-        $this->db->do_version();
         
         return $res && !empty($res) && $res[0]['tot'] > 0;
     }
@@ -30,7 +28,6 @@ class Mysql implements InspectInterface
     {
         $ret = [];
 
-        $this->db->dont_version();
         $res = $this->db->query("DESCRIBE {$tb}");
         if (!$res || empty($res)){
             throw new \Exception("Error on getting column list for table {$tb}");
@@ -42,7 +39,6 @@ class Mysql implements InspectInterface
                 'type' => $row['Type']
             ];
         }
-        $this->db->do_version();
 
         return $ret;
     }

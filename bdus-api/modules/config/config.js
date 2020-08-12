@@ -16,21 +16,21 @@ var config = {
 	},
 	viewAppProperties: (uid) => {
 		$.get(`./?obj=config_ctrl&method=app_properties`, html => {
-			$(`#${uid} .edit-column`).html(html);
-			$(`#${uid} .field-list-column`).html('').removeClass('col-sm-3');
+			$('#' + uid + ' .edit-column').html(html);
+			$('#' + uid +' .field-list-column').html('').removeClass('col-sm-3');
 		})
 	},
 	viewTbproperties: function(tb, uid){
 		$.get(`./?obj=config_ctrl&method=table_properties&tb=${tb}`, html => {
-			$(`#${uid} .edit-column`).html(html);
-			$(`#${uid} .field-list-column`).html('').removeClass('col-sm-3');
+			$('#' + uid + ' .edit-column').html(html);
+			$('#' + uid + ' .field-list-column').html('').removeClass('col-sm-3');
 		})
 	},
 	viewFldList: function(tb, uid){
 		$.get(`./?obj=config_ctrl&method=fld_list&tb=${tb}`, html => {
-			$(`#${uid} .field-list-column`).html(html);
-			$(`#${uid} .field-list-column`).addClass('col-sm-3');
-			$(`#${uid} .edit-column`).html('');
+			$('#' + uid + ' .field-list-column').html(html);
+			$('#' + uid + ' .field-list-column').addClass('col-sm-3');
+			$('#' + uid + ' .edit-column').html('');
 		})
 	},
 	viewFldPropertied: function(tb, fld, thisel){

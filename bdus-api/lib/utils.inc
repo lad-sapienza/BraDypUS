@@ -39,35 +39,29 @@ class utils
 	 */
 	public static function write_in_file ( $file, $text = false, $gz = false )
 	{
-		if ( !$gz )
-		{
-			$f = @fopen($file, 'w');
+		try {
 
-			if (!$f) return false;
+			if ( !$text )	$text = '';
 
-			if ($text)
-			{
-				if ( !@fwrite ( $f, $text ) ) return false;
-			}
+			if ( $gz )		$file .= '.gz';
 
-			@fclose($f);
+			$f = $gz ? @gzopen($file,'w9') : @fopen($file, 'w');
+			if ( !$f )		throw new Exception("Cannot open $file");
 
-			return true;
-		}
-		else
-		{
-			$file .= '.gz';
+			$write = $gz ? @gzwrite ( $gzh, $text ) : @fwrite ( $f, $text );
+			if ( !$write )	throw new Exception("Cannot write on file $file");
 
-			$gzh = @gzopen($file,'w9');
+            if ($gz) @gzclose($gzh);
+            else @fclose($f);
 
-			if ( !$gzh ) return false;
-
-			if ( !@gzwrite($gzh, $text) ) return false;
-
-			@gzclose($gzh);
+			if ( !file_exists($file) ) throw new Exception("File $file still does not exist");
 
 			return true;
+
+		} catch (\Throwable $th) {
+			return false;
 		}
+		
 	}
 
 	/**

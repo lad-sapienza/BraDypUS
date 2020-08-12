@@ -1,3 +1,4 @@
+3.16.73[] = "refactored utils::write_in_file and fixed bug with compiled config.js"
 3.16.72[] = "Traslated config module"
 3.16.71[] = "Refactored translation system, using json"
 3.16.70[] = "Fixed bug with vocabularies launcher in home"

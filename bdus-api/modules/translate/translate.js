@@ -5,15 +5,17 @@
  */
 
 var translate = {
-		init: function(lang){
+		init: function(){
 			
 			core.open({
 				obj: 'translate_ctrl',
 				method: 'showList',
-				param:[lang],
-				title: core.tr('system_translate'),
-				unique:true
+				title: core.tr('system_translate')
 			});
+		},
+
+		showForm: (lang, where) => {
+			$(where).html(core.loading).load(`./?obj=translate_ctrl&method=showForm&lang=${lang}`)
 		},
 		
 		addLang: function(id){
@@ -28,10 +30,10 @@ var translate = {
 							core.message(core.tr('lang_lenth_must_be_two'), 'error');
 						} else {
 							$('#modal').modal('hide');
-							core.getJSON('translate_ctrl', 'newLang', [lang], false, function(data){
+							core.getJSON('translate_ctrl', 'newLang', {"lang": lang}, false, function(data){
 								core.message(data.text, data.status);
 								if (data.status == 'success'){
-									translate.init();
+									layout.tabs.reloadActive();
 								}
 							});
 						}
@@ -42,6 +44,12 @@ var translate = {
 					action: 'close'
 				}]
 			}, 'modal');
+		},
+		saveData: (lang, formData, loaded) => {
+			core.getJSON('translate_ctrl', 'saveData', {'lang':lang}, formData, function(resp){
+				core.message(resp.text, resp.status);
+				loaded();
+			});
 		}
 };
 

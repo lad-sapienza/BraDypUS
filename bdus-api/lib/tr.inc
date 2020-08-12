@@ -40,17 +40,18 @@ class tr
 
 			$computer_lang = substr($_SERVER["HTTP_ACCEPT_LANGUAGE"], 0, 2);
 
-			if ($def_lang && file_exists (LOCALE_DIR . $def_lang . '.inc')) {
+			if ($def_lang && file_exists (LOCALE_DIR . $def_lang . '.json')) {
 				pref::setLang($def_lang);
-			} else if ($computer_lang && file_exists (LOCALE_DIR . $computer_lang . '.inc') ) {
+			} else if ($computer_lang && file_exists (LOCALE_DIR . $computer_lang . '.json') ) {
 				pref::setLang($computer_lang);
 			} else {
 				pref::setLang('en');
 			}
 		}
-		require_once LOCALE_DIR . pref::getLang() . '.inc';
-
-		self::$language_strings = $lang;
+		self::$language_strings = json_decode(
+			file_get_contents(LOCALE_DIR . pref::getLang() . '.json'),
+			true
+		);
 
 		return self::$language_strings;
 	}
@@ -90,5 +91,32 @@ class tr
 			return json_encode(self::load_file());
 		}
 		return json_encode(self::$language_strings);
+	}
+
+
+	public function getAll(string $lang): array
+	{
+		if (!file_exists(LOCALE_DIR . $lang . '.json')){
+			throw new Exception("Language file {$lang}.json not found");
+		}
+
+		$arr = json_decode(
+			file_get_contents(LOCALE_DIR . $lang . '.json'),
+			true
+		);
+		if (!is_array($arr)){
+			throw new Exception("Syntax error in anguage file {$lang}.json");
+		}
+		return $arr;
+	}
+
+	public function arrayToFile(string $lang, array $data): bool
+	{
+		return file_put_contents(LOCALE_DIR . $lang . '.json', json_encode($data, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE));
+	}
+
+	public function langExists(string $lang): bool
+	{
+		return file_exists(LOCALE_DIR . $lang . '.json');
 	}
 }

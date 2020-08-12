@@ -413,8 +413,7 @@ class utils
 	 */
 	public static function response($text, $status = false, $dont_translate = false, $other_args = false)
 	{
-		if (!$status)
-		{
+		if (!$status) {
 			$status = 'success';
 		}
 		$response['status'] = $status;

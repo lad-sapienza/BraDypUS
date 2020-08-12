@@ -1,0 +1,72 @@
+<div id="{{ uid }}">
+	<div class="navbar">
+		<button class="btn btn-default navbar-btn toggleTranslations">
+			{{ tr.get('show_incomplete_translations') }}
+		</button>
+	</div>
+
+	<form action="javascript:void(0)">
+		
+		<table style="width:80%;" class="table table-striped table-hover" id="tbl-{{ uid }}">
+			<thead>
+				<tr>
+					<th style="width:100px;">ID</th>
+					<th style="width:250px;">{{ main_lng|upper }}</th>
+					<th>{{ lng|upper }}</th>
+					<th style="width:20px;"></th>
+				</tr>
+			</thead>
+			<tbody>
+			
+		{% for k, v in main_lng_data %}
+		{% if k %}
+			<tr>
+				<td>{{ k }}</td>
+				<td>{{ v|nl2br }}</td>
+				<td>
+					<textarea class="form-control" name="{{ k }}" >{{ edit_lang[k] }}</textarea>
+				</td>
+				<td>
+					<button type="submit" class="btn btn-default">
+						<i class="glyphicon glyphicon-floppy-disk"></i>
+					</button>
+				</td>
+			</tr>
+		{% endif %}
+		{% endfor %}
+			</tbody>
+		</table>
+		<button type="submit" class="btn btn-success">{{ tr.get('save') }}</button>
+	</form>
+</div>
+
+<script>
+	$('#{{ uid }} form').submit(function(){
+		translate.saveData('{{ lng }}', $(this).serialize(), ()=>{
+			toogleError($('#{{ uid }} table'));
+		});
+	});
+	
+	$('#{{ uid }} button.toggleTranslations').on('click', function(){
+		$(this).toggleClass('btn-danger');
+		if ($(this).hasClass('btn-danger')){
+			$('#tbl-{{ uid }} tbody tr.error').fadeIn();
+			$('#tbl-{{ uid }} tbody tr:not(.error)').fadeOut();
+			$(this).text("{{ tr.get('show_all_translations') }}")
+		} else {
+			$('#tbl-{{ uid }} tbody tr').fadeIn();
+			$(this).text("{{ tr.get('show_incomplete_translations') }}")
+		}
+	});
+
+	function toogleError(table){
+		table.find('textarea').each( function(index, el){
+			if ($(el).val().trim() === ''){
+				$(el).parents('tr').addClass('has-error');
+			} else {
+				$(el).parents('tr').removeClass('has-error');
+			}
+		});
+	}	
+	toogleError($('#{{ uid }} table'));
+</script>

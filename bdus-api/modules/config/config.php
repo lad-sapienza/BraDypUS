@@ -29,7 +29,6 @@ class config_ctrl extends Controller
             'available_langs' => utils::dirContent(LOCALE_DIR),
             'info' => cfg::main(),
             'status' => [ 'on', 'frozen', 'off' ],
-            'tr_disabled' => tr::get('disabled'),
             'users' => $users,
             'db_engines' => ['sqlite', 'mysql', 'pgsql']
         ]);
@@ -137,12 +136,12 @@ class config_ctrl extends Controller
 
 			cfg::setTb($post);
 
-			utils::response('ok_save_tb_data');
+			utils::response('ok_cfg_data_updated');
 
 		} catch(myException $e) {
 			
 			$e->log();
-			utils::response('error_save_tb_data', 'error');
+			utils::response('error_cfg_data_updated', 'error');
 		}
     }
     
@@ -150,8 +149,7 @@ class config_ctrl extends Controller
     public function save_fld_properties()
 	{
 		$post = $this->post;
-		try
-		{
+		try {
 			$post = utils::recursiveFilter($post);
 
 			$tb = $post['tb_name'];
@@ -165,12 +163,12 @@ class config_ctrl extends Controller
 
 			cfg::setFld($tb, $fld, $post);
 
-			utils::response('ok_save_fld_data');
-		}
-		catch(myException $e)
-		{
+			utils::response('ok_cfg_data_updated');
+        
+        } catch(myException $e) {
+
 			$e->log();
-			utils::response('error_save_fld_data', 'error');
+			utils::response('error_cfg_data_updated', 'error');
 		}
 
     }
@@ -179,14 +177,14 @@ class config_ctrl extends Controller
     {
         $data = $this->post;
 		
-		try
-		{
+		try {
+
 			cfg::setMain($data);
-			utils::response('ok_file_updated');
-		}
-		catch (myException $e)
-		{
-			utils::response('error_file_updated', 'error');
+            utils::response('ok_cfg_data_updated');
+            
+		} catch (myException $e) {
+
+			utils::response('error_cfg_data_updated', 'error');
 		}
     }
 

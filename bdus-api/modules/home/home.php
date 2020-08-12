@@ -196,8 +196,8 @@ class home_ctrl extends Controller
                     utils::canUser('super_admin') ? "core.runMod('translate');" :  false 
                 ],
                 [ 
-                    "fa-cogs", 
-                    'config', 
+                    "fa-cog", 
+                    'sys_config', 
                     utils::canUser('super_admin') ? "core.runMod('config');" :  false 
                 ],
                 [ 

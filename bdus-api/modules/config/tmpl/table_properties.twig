@@ -1,9 +1,9 @@
-<h4 class="text-center">Available properties for {{ data.label }}</h4>
+<h4 class="text-center">{{ tr.get('cfg_available_for', data.label) }}</h4>
 
 <form id="form{{ uid }}" class="form-horizontal" action="javascript:void(0);">
 
   <fieldset>
-    <legend>General data</legend>
+    <legend>{{ tr.get('cfg_genaral_info') }}</legend>
 
     <!-- NAME -->
     <div class="form-group">
@@ -147,7 +147,7 @@
 
 			<!-- LINKS -->
 			<fieldset>
-				<legend>Links</legend>
+				<legend>{{ tr.get('cfg_links') }}</legend>
 					{% for link_arr in data.link %}
 						{% set index = loop.index0 %}
 						<fieldset{% if index == 0 %} class="cloneable"{% endif %} style="margin:20px 0;">

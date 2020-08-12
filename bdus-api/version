@@ -1,3 +1,4 @@
+3.16.72[] = "Traslated config module"
 3.16.71[] = "Refactored translation system, using json"
 3.16.70[] = "Fixed bug with vocabularies launcher in home"
 3.16.69[] = "cfg::load returns silenty false if app_data cannot be determined"

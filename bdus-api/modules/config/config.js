@@ -9,7 +9,7 @@ var config = {
 	init: function(){
 		
 		core.open({
-			title: core.tr('@config'),
+			title: core.tr('sys_config'),
 			obj: 'config_ctrl',
 			method: 'home',
 		});

@@ -1,4 +1,6 @@
-<h4 class="text-center">Available properties for {{ tb }}.{{ fld }}</h4>
+<h4 class="text-center">
+  {{ tr.get('cfg_available_for', [ tb ~'.'~ fld ] ) }}
+</h4>
 
 
 <form action="javascript:void(0)" class="form-horizontal" id="{{ uid }}">

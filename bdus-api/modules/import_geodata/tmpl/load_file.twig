@@ -25,9 +25,8 @@
       complete: function(id, name, resp){
         if (resp.success){
           $('#fields_{{ uid }}')
-            .load('./?obj=import_geodata_ctrl&method=setFields&'
-              + 'param[]={{ tb }}&'
-              + 'param[]=' + resp.uploadDir + '/' + resp.filename + '.' + resp.ext
+            .load('./?obj=import_geodata_ctrl&method=setFields&tb={{ tb }}&file='
+              + encodeURIComponent(resp.uploadDir + '/' + resp.filename + '.' + resp.ext)
               );
         }
       }

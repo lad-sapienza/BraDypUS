@@ -24,10 +24,8 @@
 
 <script>
   $('#continue-{{ uid }}').on('click', function(){
-    $('#confirm_{{ uid }}').load('./?obj=import_geodata_ctrl&method=confirm&'
-      + 'param[]={{ tb }}&'
-      + 'param[]={{ file }}&'
-      + 'param[]=' + $('#flds_{{ uid }}').val()
+    $('#confirm_{{ uid }}').load('./?obj=import_geodata_ctrl&method=confirm&tb={{ tb }}&file='
+      + encodeURIComponent('{{ file }}') + '&id_field=' + $('#flds_{{ uid }}').val()
       );
   });
 </script>

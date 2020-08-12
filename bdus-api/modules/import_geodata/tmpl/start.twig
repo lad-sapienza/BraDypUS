@@ -13,8 +13,10 @@
     <div class="col-sm-9">
       <select id="tb_{{ uid }}">
         <option></option>
-        {% for tb, label in tables if 'files' not in tb %}
+        {% for tb, label in tables %}
+        {% if 'files' != tb %}
           <option value="{{ tb }}">{{ label }}</option>
+        {% endif %}
         {% endfor %}
       </select>
     </div>

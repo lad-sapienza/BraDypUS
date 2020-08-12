@@ -1,3 +1,4 @@
+3.16.75[] = "Removed param[] arguments from import_geodata"
 3.16.74[] = "Dropped support for Database import"
 3.16.73[] = "refactored utils::write_in_file and fixed bug with compiled config.js"
 3.16.72[] = "Traslated config module"

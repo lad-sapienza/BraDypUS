@@ -26,10 +26,10 @@
 <script>
   $('#buttons_{{ uid }} button').on('click', function(){
     $('#result_{{ uid }}').load('./?obj=import_geodata_ctrl&method=process&'
-      + 'param[]={{ tb }}&'
-      + 'param[]={{ file }}&'
-      + 'param[]={{ id_field }}&'
-      + 'param[]=' + ($(this).data('erase'))
+      + 'tb={{ tb }}&'
+      + 'file={{ file }}&'
+      + 'id_field={{ id_field }}&'
+      + 'delete=' + ($(this).data('erase'))
       );
   });
 </script>

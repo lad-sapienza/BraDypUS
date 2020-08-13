@@ -8,20 +8,20 @@
 	<input type="hidden" value="{{ id }}" name="id" />
 	<table class="table table-striped">
 		<tr>
-			<th>{{ tr_name }}</th>
+			<th>{{ tr.get('name') }}</th>
 			<td><input type="text" value="{{ name }}" name="name" /></td>
 			<td rowspan="4" style="vertical-align:top;"><img src="http://www.gravatar.com/avatar/{{ avatar }}.png?s=80&amp;d=identicon" alt="avatar"></td>
 		</tr>
 		<tr>
-			<th>{{ tr_email }}</th>
+			<th>{{ tr.get('email') }}</th>
 			<td><input type="email" value="{{ email }}" name="email" /></td>
 		</tr>
 		<tr>
-		<th>{{ tr_password }}</th>
+		<th>{{ tr.get('password') }}</th>
 			<td><input type="password" name="password" /></td>
 		</tr>
 		<tr>
-			<th>{{ tr_privilege }}</th>
+			<th>{{ tr.get('privilege') }}</th>
 			<td>
 				<select name="privilege">
 				{% for priv in privileges %}

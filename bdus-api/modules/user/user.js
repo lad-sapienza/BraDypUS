@@ -8,7 +8,7 @@ var user = {
 		
 		init: function(id, dontreload){
 			if (id){
-				user.editUI(id, dontreload);
+				user.showUserForm(id, dontreload);
 			} else {
 				user.mng();
 			}
@@ -24,11 +24,11 @@ var user = {
 			});
 		},
 		
-		editUI: function(id, dontreload){
+		showUserForm: function(id, dontreload){
 			core.open({
 				obj:'user_ctrl',
-				method:'editUI',
-				param: [id],
+				method:'showUserForm',
+				param: { "id": id },
 				buttons:[
 				         {
 				        	 text: core.tr('save'),
@@ -46,7 +46,7 @@ var user = {
 									}
 								 }
 								 
-								 core.getJSON('user_ctrl', 'edit', false, post_data, function(data){
+								 core.getJSON('user_ctrl', 'saveUserData', false, post_data, function(data){
 									 core.message(data.text, data.status);
 									 if (data.status == 'success'){
 										 $('#modal').modal('hide');
@@ -65,14 +65,14 @@ var user = {
 				         ]
 			}, 'modal');
 		},
-		erase: function(id){
+		deleteOne: function(id){
 			core.open({
 				html: core.tr('confirm_erase_user'),
 				buttons:[
 				         {
 				        	 text: core.tr('confirm'),
 							 click: function(){
-								 $.get('./?obj=user_ctrl&method=erase&param[]=' + id, function(data){
+								 $.get('./?obj=user_ctrl&method=deleteOne&id=' + id, function(data){
 									 core.message(data.message, data.type);
 									 $('#modal').modal('hide');
 									 layout.tabs.reloadActive(); 

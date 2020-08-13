@@ -1,3 +1,4 @@
+3.16.77[] = "Removed param[] arguments from user saved_queries"
 3.16.76[] = "Removed param[] arguments from user module"
 3.16.75[] = "Removed param[] arguments from import_geodata"
 3.16.74[] = "Dropped support for Database import"

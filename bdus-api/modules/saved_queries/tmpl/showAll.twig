@@ -1,0 +1,50 @@
+<h2> {{ tr.get('saved_queries') }} </h2>
+
+<table class="saved_q table table-bordered table-striped">
+{% for q in saved_queries %}
+  <tr>
+    <th>{{ q.id }}</th>
+    <td>{{ q.name }}</td>
+    <td>{{ q.tb_label }}</td>
+    <td>{{ q.date }}</td>
+    <td class="buttons">
+      <div class="btn-group">
+        <a  data-action="execute" data-tb="{{ q.tb }}"
+            data-text="{{ q.encoded }}"
+            class="btn btn-success"
+        ><i class="glyphicon glyphicon-play"></i>
+          {{ tr.get('execute_query') }}
+        </a>
+        {% if q.is_global == false %}
+        <a  data-action="share" 
+            data-id="{{ q.id }}"
+            class="btn btn-info"
+        ><i class="glyphicon glyphicon-star"></i>
+          {{ tr.get('share') }}
+        </a>
+        {% endif %}
+        {% if q.is_global and q.owned_by_me %}
+        <a  data-action="unshare" 
+            data-id="{{ q.id }}"
+            class="btn btn-warning"
+        ><i class="glyphicon glyphicon-star-empty"></i>
+          {{ tr.get('unshare') }}
+        </a>
+        {% endif %}
+        {% if q.owned_by_me %}
+        <a  data-action="erase" 
+            data-id="{{ q.id }}"
+            class="btn btn-danger"
+        ><i class="glyphicon glyphicon-trash"></i>
+          {{ tr.get('erase') }}
+        </a>
+        {% endif %}
+      </div>
+    </td>
+  </tr>
+  {% else %}
+  <tr>
+    <td>{{ tr.get('no_saved_query_available') }}</td>
+  </tr>
+  {% endfor %}
+</table>

@@ -50,8 +50,8 @@
 	$('#{{ uid }} button.toggleTranslations').on('click', function(){
 		$(this).toggleClass('btn-danger');
 		if ($(this).hasClass('btn-danger')){
-			$('#tbl-{{ uid }} tbody tr.error').fadeIn();
-			$('#tbl-{{ uid }} tbody tr:not(.error)').fadeOut();
+			$('#tbl-{{ uid }} tbody tr.has-error').fadeIn();
+			$('#tbl-{{ uid }} tbody tr:not(.has-error)').fadeOut();
 			$(this).text("{{ tr.get('show_all_translations') }}")
 		} else {
 			$('#tbl-{{ uid }} tbody tr').fadeIn();

@@ -7,9 +7,9 @@
 var saved_queries = {
 		init: function(id){
 			if (!id){
-				saved_queries.show_all();
+				saved_queries.showAll();
 			} else {
-				core.getJSON('saved_queries_ctrl', 'getById', [id], false, function(data){
+				core.getJSON('saved_queries_ctrl', 'getById', {"id": id}, false, function(data){
 					if (data.status == 'success'){
 						api.showResults(data.tb, 'type=encoded&q_encoded=' + data.text, core.tr('saved_queries') + ' (' + data.tb + ')');
 					} else {
@@ -18,7 +18,7 @@ var saved_queries = {
 				});
 			}
 		},
-		show_all: function(){
+		showAll: function(){
 		
 			$.get('./?obj=saved_queries_ctrl&method=showAll', function(data){
 				
@@ -39,9 +39,9 @@ var saved_queries = {
 					switch($this.data('action')){
 					
 						case 'share':
-							$.get('./?obj=saved_queries_ctrl&method=actions&param[]=share&param[]=' + $this.data('id'), function(data){
+							$.get('./?obj=saved_queries_ctrl&method=shareQuery&id=' + $this.data('id'), function(data){
 								core.message(data.text, data.status);
-								if (data.status == 'success'){
+								if (data.status === 'success'){
 									$this
 										.data('action', 'unshare')
 										.html(core.tr('unshare'));
@@ -50,7 +50,7 @@ var saved_queries = {
 							break;
 			
 						case 'unshare':
-							$.get('./?obj=saved_queries_ctrl&method=actions&param[]=unshare&param[]=' + $this.data('id'), function(data){
+							$.get('./?obj=saved_queries_ctrl&method=unShareQuery&id=' + $this.data('id'), function(data){
 								if (data.status == 'success'){
 									$this
 										.data('action', 'share')
@@ -62,7 +62,7 @@ var saved_queries = {
 							break;
 			
 						case 'erase':
-							$.get('./?obj=saved_queries_ctrl&method=actions&param[]=erase&param[]=' + $this.data('id'), function(data){
+							$.get('./?obj=saved_queries_ctrl&method=deleteQuery&id=' + $this.data('id'), function(data){
 								core.message(data.text, data.status);
 								if (data.status == 'success'){
 									$this

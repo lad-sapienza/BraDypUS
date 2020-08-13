@@ -338,13 +338,14 @@ var api = {
                        core.message(core.tr('query_name_is_required'), 'error');
                        input.focus();
                      } else {
-                       $.post(
-                           './?obj=saved_queries_ctrl&method=actions&param[]=save&param[]=' + tb + '&param[]=' + input.val() + '&param[]=' + query_text,
-                           function(data){
-                             core.message(data.text, data.status);
-                           },
-                           'json'
-                           );
+                       core.getJSON(
+                         'saved_queries_ctrl', 
+                         'saveQuery', 
+                         'tb=' + tb + '&name=' + input.val(),
+                         {"query_text": query_text},
+                         function(data){
+                           core.message(data.text, data.status);
+                         });
                        layout.dialog.close(dia);
                      }
                    }

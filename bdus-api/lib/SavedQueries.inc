@@ -31,7 +31,7 @@ class SavedQueries
 	public function getAll()
 	{
 		return $this->db->query(
-			'SELECT * FROM ' . PREFIX . 'queries WHERE user_id = ? OR is_global = ?', 
+			'SELECT id, user_id, date, name, text, "table" AS tb, is_global FROM ' . PREFIX . 'queries WHERE user_id = ? OR is_global = ?', 
 			[ $_SESSION['user']['id'], 1 ], 
 			'read'
 		);
@@ -92,14 +92,14 @@ class SavedQueries
 		$query = 'INSERT INTO ' . PREFIX . 'queries'
 		. '(user_id, date, name, text, "table", is_global)'
 		. ' VALUES '
-		. '(:user_id, :date, :name, :text, :table, 0)';
+		. '(:user_id, :date, :name, :text, :tb, 0)';
 
 		$values = array(
 				':user_id'=> $_SESSION['user']['id'],
 				':date'=> date('Y-m-d G:i:s'),
 				':name'=> $name,
 				':text'=> base64_decode($text),
-				':table'=> $tb
+				':tb'=> $tb
 		);
 
 		return $this->db->query($query, $values, 'boolean');

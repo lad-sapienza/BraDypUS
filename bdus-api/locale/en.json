@@ -160,6 +160,7 @@
     "name_for_query_to_save": "Enter the query name",
     "query_name_is_required": "The query name is required",
     "saved_query_does_not_exist": "Saved query with id %s does not exist",
+    "no_saved_query_available": "No saved queries available",
     "no_voc_available": "No vocabulary available",
     "vocs": "Vocabularies",
     "available_vocs": "Available vocabularies",

@@ -57,14 +57,14 @@ const hashActions = {
 
     map2action(){
         if (this.getHash('mapId')){
-            core.getJSON('saved_queries_ctrl', 'getById', [this.getHash('mapId')], false, function(data){
+            core.getJSON('saved_queries_ctrl', 'getById', {"id": this.getHash('mapId') }, false, function(data){
                 if(data.status == 'success'){
                     core.runMod('geoface', [data.tb, data.text]);
                 }
             });
             
         } else if (this.getHash('queryId')){
-            core.getJSON('saved_queries_ctrl', 'getById', [this.getHash('queryId')], false, function(data){
+            core.getJSON('saved_queries_ctrl', 'getById', { "id": this.getHash('queryId') }, false, function(data){
                 if(data.status === 'success'){
                     api.showResults(data.tb, 'type=encoded&q_encoded=' + data.text, core.tr('saved_queries') + ' (' + data.tb + ')');
                 } else {

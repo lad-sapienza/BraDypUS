@@ -13,13 +13,16 @@ class chart_ctrl extends Controller
 	 * @param string $this->get['tb']
 	 * @param string $this->get['query']
 	 */
-	public function showBuilder()
+	public function show_chart_builder()
 	{
-		$this->render('chart', 'builder', array(
-				'tb' => $this->get['tb'],
-				'query' => $this->get['query'],
-				'fields' => cfg::fldEl($this->get['tb'], 'all', 'label')
-		));
+		$tb = $this->get['tb'];
+		$query = $this->get['query'];
+
+		$this->render('chart', 'show_chart_builder', [
+			'tb' => $tb,
+			'query' => $query,
+			'fields' => cfg::fldEl($this->get['tb'], 'all', 'label')
+		]);
 	}
 
 	/**
@@ -27,9 +30,9 @@ class chart_ctrl extends Controller
 	 * @param string $this->get['tb']
 	 * @param string $this->get['remove']
 	 */
-	public function showRow()
+	public function show_row()
 	{
-		$this->render('chart', 'bar', [
+		$this->render('chart', 'show_row', [
 			'remove' => $this->get['remove'],
 			'flds' => cfg::fldEl($this->get['tb'], 'all', 'label'),
 		]);
@@ -39,7 +42,7 @@ class chart_ctrl extends Controller
 	 *
 	 * @param array $this->post
 	 */
-	public function processdata()
+	public function process_chart_data()
 	{
 		$post = $this->post;
 
@@ -68,7 +71,7 @@ class chart_ctrl extends Controller
 
 		$ch->formatResult(false, $sql);
 
-		$this->render('chart', 'display', [
+		$this->render('chart', 'display_chart', [
 			'data'	=> $ch->getData()
 		]);
 
@@ -79,33 +82,26 @@ class chart_ctrl extends Controller
 	 * @param array $this->post
 	 * @throws myException
 	 */
-	public function saveAs()
+	public function save_chart_as()
 	{
 		$post = $this->post;
-		try
-		{
-			if (!$post['query_text'])
-			{
+		
+		try {
+			if (!$post['query_text']) {
 				throw new myException('No query text to save!');
 			}
-			if (!$post['name'])
-			{
+			if (!$post['name']) {
 				$post['name'] = uniqid('chart_');
 			}
 
 			$chart = new Charts(new DB());
 
-			if ($chart->save($post['name'], $post['query_text']))
-			{
+			if ($chart->save($post['name'], $post['query_text'])) {
 				utils::response('ok_save_chart');
-			}
-			else
-			{
+			} else {
 				throw myException('Save chart query returned false');
 			}
-		}
-		catch(myException $e)
-		{
+		} catch(myException $e) {
 			$e->log();
 			utils::response('error_save_chart', 'error');
 		}
@@ -115,11 +111,13 @@ class chart_ctrl extends Controller
 	 *
 	 * @param int $this->get['id']
 	 */
-	public function erase()
+	public function delete_chart()
 	{
+		$id = $this->get['id'];
+
 		$chart = new Charts(new DB());
 
-		if ($chart->erase($this->get['param'][0])) {
+		if ( $chart->erase($id) ) {
 			utils::response('ok_chart_erase');
 		} else {
 			utils::response('error_chart_erase', 'error');
@@ -137,7 +135,7 @@ class chart_ctrl extends Controller
 
 			$chart->formatResult($this->get['id']);
 
-			$this->render('chart', 'display', [
+			$this->render('chart', 'display_chart', [
 				'data'	=> $chart->getData()
 			]);
 
@@ -149,11 +147,11 @@ class chart_ctrl extends Controller
 	}
 
 
-	public function show_all()
+	public function show_all_charts()
 	{
 		$charts = new Charts(new DB());
 
-		$this->render('chart', 'list', [
+		$this->render('chart', 'show_all_charts', [
 			'all_charts' => $charts->getCharts(),
 			'can_admin' => utils::canUser('admin'),
 		]);
@@ -172,7 +170,7 @@ class chart_ctrl extends Controller
 
 		$mych = $mych[0];
 
-		$this->render('chart', 'edit', [
+		$this->render('chart', 'edit_form', [
 			'chart'	=> $mych
 		]);
 	}
@@ -182,23 +180,21 @@ class chart_ctrl extends Controller
 	 * @param array $this->post
 	 * @throws myException
 	 */
-	public function update()
+	public function update_chart()
 	{
-		try
-		{
+		$id = $this->post['id'];
+		$name = $this->post['name'];
+		$text = $this->post['text'];
+
+		try {
 			$chart = new Charts(new DB());
 
-			if ($chart->update($this->post['id'], $this->post['name'], $this->post['text']))
-			{
+			if ($chart->update($id, $name, $text)) {
 				utils::response('ok_update_chart');
-			}
-			else
-			{
+			} else {
 				throw new myException('Update query returned false');
 			}
-		}
-		catch (myException $e)
-		{
+		} catch (myException $e) {
 			$e->log();
 			utils::response('error_update_chart', 'error');
 		}

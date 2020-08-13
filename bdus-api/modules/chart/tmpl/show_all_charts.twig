@@ -32,7 +32,7 @@ $('span.display_chart').click(function(){
 
 $('span.erase_chart').click(function(){
 	$this = $(this);
-	core.getJSON('chart_ctrl', 'erase', [$(this).data('id')], false, function(data){
+	core.getJSON('chart_ctrl', 'delete_chart', { id: $(this).data('id') }, false, function(data){
 		core.message(data.text, data.status);
 		if (data.status == 'success'){
 			$this.parents('tr').remove();

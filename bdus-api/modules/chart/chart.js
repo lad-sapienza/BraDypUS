@@ -27,7 +27,7 @@ var chart = {
 		},
 		
 		editChart: function(id, name, text){
-			core.getJSON('chart_ctrl', 'update', false, {'id':id, 'name':name, 'text':text}, function(data){
+			core.getJSON('chart_ctrl', 'update_chart', false, {'id':id, 'name':name, 'text':text}, function(data){
 				core.message(data.text, data.status);
 			});
 		},
@@ -35,7 +35,7 @@ var chart = {
 		buildFromParams: function(form_data){
 			core.open({
 				 obj: 'chart_ctrl',
-				 method: 'processdata',
+				 method: 'process_chart_data',
 				 title: core.tr('chart'),
 				 post: form_data
 			 });
@@ -47,7 +47,7 @@ var chart = {
 		showSaved: function(){
 			core.open({
 				obj: 'chart_ctrl',
-				method: 'show_all',
+				method: 'show_all_charts',
 				title: core.tr('saved_charts')
 			});
 		},
@@ -75,7 +75,7 @@ var chart = {
 				         {
 				        	 text: core.tr('save'),
 				        	 click: function(){
-				        		 core.getJSON('chart_ctrl', 'saveAs', false, {query_text:query_text, name:$('#modal input.chart_name').val()}, function(data){
+				        		 core.getJSON('chart_ctrl', 'save_chart_as', false, {query_text:query_text, name:$('#modal input.chart_name').val()}, function(data){
 				        			 core.message(data.text, data.status);
 				        			 if (data.status == 'success'){
 				        				 $('#modal').modal('close');
@@ -95,7 +95,7 @@ var chart = {
 			core.open({
 				title: core.tr('build_chart'),
 				obj: 'chart_ctrl',
-				method: 'showBuilder',
+				method: 'show_chart_builder',
 				param: {tb: tb, query: query}
 			});
 			

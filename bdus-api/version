@@ -1,3 +1,4 @@
+3.16.86[] = "Removed param[] arguments from module charts"
 3.16.85[] = "Removed param[] arguments from module backup"
 3.16.84[] = "Removed param[] arguments from module free_sql"
 3.16.83[] = "Removed param[] arguments from module userlinks"

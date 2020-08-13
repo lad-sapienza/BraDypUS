@@ -59,6 +59,8 @@
     "app_data_editor": "App info",
     "disabled": "Disabled",
     "free_sql": "Run SQL",
+    "ok_free_sql_run_affected": "SQL query was successfully executed. %s rows affected",
+    "error_free_sql_run_msg": "SQL query returned error and was not executed. Error message %s",
     "ip": "IP",
     "fast_search": "Fast search",
     "not_enough_privilege": "Sorry, you do not have sufficient privileges to access this function",

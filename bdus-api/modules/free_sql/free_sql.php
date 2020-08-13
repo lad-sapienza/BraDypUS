@@ -6,29 +6,34 @@
  * @since			Jan 8, 2013
  */
 
-class free_sql_ctrl
+class free_sql_ctrl extends Controller
 {
-	public static function import($filename, $start = false, $offset = false, $totalqueries = false)
+	public function import()
 	{
-		try
-		{
+		$filename = $this->get['filename']; 
+		$start = $this->get['start']; 
+		$offset = $this->get['offset']; 
+		$totalqueries = $this->get['totalqueries']; 
+
+		try {
 			$bigRestore = new bigRestore(new DB());
 			
 			$bigRestore->runImport($filename, $start, $offset, $totalqueries);
 			
 			echo $bigRestore->getResponse(true);
-		}
-		catch (Exception $e)
-		{
-			echo json_encode(array('status'=>'error', 'text'=>$e->getMessage()));
+
+		} catch (Exception $e) {
+			$this->returnJson([
+				'status'=>'error', 
+				'text'=>$e->getMessage()
+			]);
 		}
 	}
 
 	
-	public static function input()
+	public function input()
 	{
-		if (utils::canUser('super_admin'))
-		{
+		if (utils::canUser('super_admin')) {
 			$uid = uniqid('upload');
 			
 			echo '<div class="upload"></div>' .
@@ -37,39 +42,36 @@ class free_sql_ctrl
 						'<div class="progress progress-success">' .
 							'<div class="bar" style="width: 0%"></div>' .
 						'</div>' .
-						'<div class="lead verbose"></div>' .
+						'<div class="verbose"></div>' .
 					'</div>'
 			;
-		}
-		else
-		{
+		} else {
 			echo tr::get('not_enough_privilege');
 		}
 	}
 	
-	public static function run($post)
+	public function run()
 	{
-		try
-		{
+		$sql = $this->post['sql'];
+		
+		try {
 			$db = new DB();
-			
 			$db->beginTransaction();
-			
-			$ret = $db->exec($post['sql']);
-			
+			$ret = $db->exec($sql);
 			$db->commit();
 			
-			if ($ret === false)
-			{
-				throw new myException();
-			}
-			
-			utils::response('Query executed!');
-		}
-		catch (myException $e)
-		{
+			utils::response(tr::get('ok_free_sql_run_affected', [$ret ?: 0], 'success', true));
+		} catch (myException $e) {
+			$e->log();
 			$db->rollBack();
-			utils::response('Error. No query executed! <pre><strong>DEBUG:</strong><br />' . $e->getMessage() . '</pre>', 'error');
+			utils::response(
+				tr::get(
+					'error_free_sql_run_msg',
+					[$e->getMessage()]
+				), 
+				'error', 
+				true
+			);
 		}
 	}
 }

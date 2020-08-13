@@ -81,7 +81,10 @@ var search = {
 			var datalist = $('<datalist />'),
 			uid = 'uid' + Date.now();
 			if (fld.val()){
-				core.getJSON('search_ctrl', 'getUsedValues', {tb: fld.val().split(':')[0], fld:fld.val().split(':')[1]}, false, function(data){
+				core.getJSON('search_ctrl', 'getUsedValues', {
+					tb: fld.val().split(':')[0], 
+					fld:fld.val().split(':')[1]
+				}, false, function(data){
 					$.each(data, function(i, val){
 						datalist.append('<option>' + val + '</option>');
 					});

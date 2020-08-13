@@ -57,7 +57,18 @@ var free_sql = {
 	},
 	
 	restoreSQL: function(status, filename, start, offset, totalqueries){
-		core.getJSON('free_sql_ctrl','import',[filename, start, offset, totalqueries],false,function(data){
+		// TODO:brackets
+		core.getJSON(
+			'free_sql_ctrl',
+			'import',
+			{
+				filename:filename, 
+				start:start, 
+				offset:offset, 
+				totalqueries:totalqueries
+			},
+			false,
+			function(data){
 			if(data.status == 'loading'){
 				
 				status.find('.bar').width(data.percent_done + '%');

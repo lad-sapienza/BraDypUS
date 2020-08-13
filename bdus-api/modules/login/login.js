@@ -93,7 +93,7 @@ var login = {
 				        		 if (!email || email ==''){
 				        			 core.message(core.tr('all_fields_required'), 'error');
 				        		 }else{
-				        			 core.getJSON('login_ctrl', 'sendToken',{ 'app': app, 'email': email }, false,function(data){
+				        			 core.getJSON('login_ctrl', 'sendToken', { 'app': app, 'email': email }, false,function(data){
 				        				 if (data.status == 'success'){
 				        					 $('#modal .modal-body').html('<h3>' + core.tr('forgot_text', ['<u>' + email + '</u>']) + '</h3>');
 				        				 } else {

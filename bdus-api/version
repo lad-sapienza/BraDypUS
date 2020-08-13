@@ -1,3 +1,4 @@
+3.16.79[] = "Application dies if project folders are not writtable"
 3.16.78[] = "Fixed bug with record::deleteRS"
 3.16.78[] = "Removed param[] arguments from module RS"
 3.16.77[] = "Removed param[] arguments from module saved_queries"

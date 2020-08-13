@@ -82,6 +82,14 @@ if( defined('APP') ) {
 			@mkdir($dir, 0777, true);
 		}
 	}
+
+	$must_be_writtable = $must_exist_dirs;
+
+	foreach ($must_be_writtable as $file) {
+		if (!is_writable($file)){
+			die("Directory $dir is not writable. Application cannot start!");
+		}
+	}
 }
 
 define ('ERROR_LOG', $error_log);

@@ -825,7 +825,7 @@ EOD;
 
 	public function deleteRS($id)
 	{
-		return $this->db->query('DELETE FROM ' . PREFIX . 'rs WHERE id = ', [ $id ], 'boolean');
+		return $this->db->query('DELETE FROM ' . PREFIX . 'rs WHERE id = ?', [ $id ], 'boolean');
 	}
 
 	/**

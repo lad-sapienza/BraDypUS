@@ -6,9 +6,9 @@
  * @since			Aug 14, 2012
  */
 
-class rs_ctrl
+class rs_ctrl extends Controller
 {
-    public static function rels($translate = false)
+    private static function rels($translate = false)
     {
         $rels = [
           1 => 'is_covered_by',
@@ -34,7 +34,7 @@ class rs_ctrl
         }
     }
 
-    public function pagination($data, $self, $context)
+    private function pagination($data, $self, $context)
     {
         $html = '<fieldset>'
             . '<legend>' . tr::get('rs') . '</legend>'
@@ -66,7 +66,7 @@ class rs_ctrl
                         '<div class="form-group">' .
                             ' <select class="rel">';
 
-            foreach (self::rels(true) as $id=>$rel) {
+            foreach ($this->rels(true) as $id=>$rel) {
                 $html .= '<option value="' . $id . '">' . $rel . '</option>';
             }
 
@@ -86,8 +86,10 @@ class rs_ctrl
         return $html;
     }
 
-    public static function delete($id)
+    public function deleteRS()
     {
+        $id = $this->get['id'];
+        
         $record = new Record('no importance', false, new DB());
 
         if ($record->deleteRS($id)) {
@@ -98,9 +100,13 @@ class rs_ctrl
     }
 
 
-    public static function getAll($table, $id, $context)
+    public function getAllRS()
     {
-        $record = new Record($table, $id, new DB);
+        $tb = $this->get['tb'];
+        $id = $this->get['id'];
+        $context = $this->get['context'];
+
+        $record = new Record($tb, $id, new DB);
 
         $res = $record->getRS();
 
@@ -120,12 +126,22 @@ class rs_ctrl
             }
         }
 
-        echo self::pagination($data, $id, $context);
+        echo $this->pagination($data, $id, $context);
     }
 
 
-    public static function saveNew($tb, $first, $relation, $second)
+    public function saveNewRS()
     {
+        $tb = $this->get['tb'];
+        $first = $this->get['first'];
+        $relation = $this->get['relation'];
+        $second = $this->get['second'];
+
+        if (!$tb ) throw new Exception("Missing tb");
+        if (!$first ) throw new Exception("Missing first");
+        if (!$second ) throw new Exception("Missing second");
+        if (!$relation ) throw new Exception("Missing relation");
+
         $record = new Record($tb, false, new DB());
 
         $id = $record->addRS($first, $relation, $second);
@@ -133,7 +149,7 @@ class rs_ctrl
         if (!$id) {
             utils::response('relation_already_exist', 'error');
         } else {
-            echo json_encode(array('text'=>tr::get('ok_relation_add'), 'status'=>'success', 'id'=>$id));
+            utils::response('ok_relation_add', 'success', false, [ 'id' => $id ]);
         }
     }
 }

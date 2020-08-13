@@ -1,4 +1,6 @@
-3.16.77[] = "Removed param[] arguments from user saved_queries"
+3.16.78[] = "Fixed bug with record::deleteRS"
+3.16.78[] = "Removed param[] arguments from module RS"
+3.16.77[] = "Removed param[] arguments from module saved_queries"
 3.16.76[] = "Removed param[] arguments from user module"
 3.16.75[] = "Removed param[] arguments from import_geodata"
 3.16.74[] = "Dropped support for Database import"

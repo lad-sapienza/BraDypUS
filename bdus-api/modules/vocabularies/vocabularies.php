@@ -18,14 +18,15 @@ class vocabularies_ctrl extends Controller
 	
 	public function add_new_form()
 	{
-		if (!$this->get['param'][0])
-		{
+		$voc = $this->get['voc'] ?: false ;
+
+		if (!$voc) {
 			$vocs = new Vocabulary(new DB());
 			$all_vocs = $vocs->getAllVoc();
 		}
 		
 		$this->render('vocabularies', 'new_form', [
-			'voc' => $this->get['param'][0],
+			'voc' => $voc,
 			'all_vocs' => $all_vocs,
 		]);
 	}

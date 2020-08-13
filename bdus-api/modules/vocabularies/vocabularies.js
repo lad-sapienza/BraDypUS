@@ -81,7 +81,7 @@ var vocabularies = {
 				title: core.tr( voc ? 'new_def' : 'new_voc'),
 				obj: 'vocabularies_ctrl',
 				method: 'add_new_form',
-				param: [voc],
+				param: {voc: voc},
 				buttons:[
 				         {
 				        	text: core.tr('add'),

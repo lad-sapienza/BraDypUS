@@ -166,8 +166,8 @@ class home_ctrl extends Controller
                     utils::canUser('edit') ? "core.runMod('import_geodata');" :  false 
                 ],
                 [ 
-                    "fa-cloud-upload", 
-                    'vocabularies', 
+                    "fa-quote-left", 
+                    'vocs', 
                     utils::canUser('admin') ? "core.runMod('vocabularies');" :  false 
                 ],
                 [ 

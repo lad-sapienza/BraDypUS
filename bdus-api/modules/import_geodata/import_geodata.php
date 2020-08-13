@@ -17,7 +17,7 @@ class import_geodata_ctrl extends Controller
   
   public function load_file()
   {
-    $tb = $this->request['param'][0];
+    $tb = $this->request['tb'];
     
     $this->render('import_geodata', 'load_file', [
       'tb' => $tb

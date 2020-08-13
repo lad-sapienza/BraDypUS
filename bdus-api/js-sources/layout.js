@@ -138,19 +138,13 @@ var layout = {
                 }
                 
             } else if (opts.obj && opts.method){
+
+                core.getHTML(opts.obj, opts.method, opts.param, opts.post, data => {
+                    body.html(data);
+                    typeof opts.loaded !== 'undefined' && opts.loaded();
+                })
                 
-                URLstring += 'obj=' + opts.obj + '&method=' + opts.method;
                 
-                if (opts.param){
-                    if (typeof opts.param === 'string'){
-                        URLstring += '&' + opts.param;
-                    } else if($.isPlainObject(opts.param))  {
-                        URLstring += '&' + $.param(opts.param);
-                    } else if ($.isArray(opts.param)){
-                        URLstring += '&param[]=' + opts.param.join('&param[]=');
-                    }
-                }
-                body.load(URLstring, opts.post, opts.loaded);
                 
             } else {
                 return false;
@@ -293,31 +287,11 @@ var layout = {
                 }
                 
             } else if (opts.obj && opts.method){
-                
-                URLstring += 'obj=' + opts.obj + '&method=' + opts.method;
-                
-                if (opts.param){
-                    if (typeof opts.param === 'string'){
-                        URLstring += '&' + opts.param;
-                    } else if($.isPlainObject(opts.param))  {
-                        URLstring += '&' + $.param(opts.param);
-                    } else if ($.isArray){
-                        URLstring += '&param[]=' + opts.param.join('&param[]=');
-                    }
-                }
-                
-                $.ajax({
-                    'type': opts.post ? 'POST' : 'GET',
-                    'url': URLstring,
-                    'data': opts.post
-                })
-                .done(function(data){
+
+                core.getHTML(opts.obj, opts.method, opts.param, opts.post, data => {
                     element.html(data);
-                    if (opts.loaded){
-                        opts.loaded(element);
-                    }
+                    typeof opts.loaded !== 'undefined' && opts.loaded(element);
                 });
-                
                 this.tab.find('li.active').data('state', opts);
                 
             } else {

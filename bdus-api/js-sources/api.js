@@ -478,7 +478,7 @@ var api = {
      * @returns {undefined}
      */
     delete_userlink: function(linkId, successFunction){
-      core.getJSON('userlinks_ctrl', 'delete', [linkId], false, function(data){
+      core.getJSON('userlinks_ctrl', 'deleteUserLink', { "id": linkId }, false, function(data){
         if (data.status == 'success' && successFunction){
           successFunction(data);
         }
@@ -492,12 +492,18 @@ var api = {
        * @returns {undefined}
        */
     show_userlinks: function(l_el){
-      var l_context = l_el.data('context'),
-        l_tb = l_el.data('tb'),
-        l_id = l_el.data('id');
+      var l_context = l_el.data('context');
+      var l_tb = l_el.data('tb');
+      var l_id = l_el.data('id');
 
-      l_el.html('')
-        .load('./?obj=userlinks_ctrl&method=show&param[]=' + l_tb + '&param[]=' + l_id + '&param[]=' + l_context, function(){
+      l_el.html('');
+
+      core.getHTML('userlinks_ctrl', 'showUserLinks', {
+        "tb": l_tb,
+        "id": l_id,
+        "context": l_context
+      }, function(returned_html){
+        l_el.html(returned_html);
           //READ
           $(l_el).find('span.userlink_read').on('click', function(){
             api.record.read($(this).data('tb'), [$(this).data('id')]);
@@ -521,12 +527,12 @@ var api = {
           //ADD
           $(l_el).find('span.userlink_add')
             .click(function(){
-              var thisid = $(this).data('id'),
-                thistb = $(this).data('table');
+              var thisid = $(this).data('id')
+              var thistb = $(this).data('table');
 
               api.link.add_ui(function(tb, arr_id){
-                core.getJSON('userlinks_ctrl', 'link', false, {thistb:thistb, thisid:thisid, tb:tb, id:arr_id}, function(data){
-                  if (data.status == 'success'){
+                core.getJSON('userlinks_ctrl', 'addUserLink', { thistb: thistb, thisid: thisid, tb: tb, id: arr_id }, false, function(data){
+                  if (data.status === 'success'){
                     api.link.show_userlinks(l_el);
                   }
                   core.message(data.text, data.status);

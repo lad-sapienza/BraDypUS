@@ -61,6 +61,38 @@ var core = {
 		 */
 		loading : '<img src="./img/loader.gif"  alt="loading..." />',
 
+		_get2url: function(get){
+			if (typeof get === 'string'){
+				return get;
+			} else if($.isPlainObject(get))  {
+				return $.param(get);
+			} else if ($.isArray(get)){
+				return 'param[]=' + get.join('&param[]=');
+			}
+			return false;
+		},
+
+		/**
+		 * Performs an Ajax call and gets JSON from object::method
+		 * @param {string} obj object to call (with _ctrl part)
+		 * @param {string} method method to call
+		 * @param {string|array|object} get get data
+		 * @param {string|array|object} post post data
+		 * @param {function|false} loaded callback function
+		 * @returns {undefined}
+		 */
+		getHTML: function(obj,method,get,post,loaded){
+
+			var URLstring = './?obj=' + obj + '&method=' + method
+				+ ( get ? '&' + this._get2url(get) : '');
+			
+			if (!post){
+				$.get(URLstring, loaded);
+			} else {
+				$.post(URLstring, post, loaded);
+			}
+		},
+
 		/**
 		 * Performs an Ajax call and gets JSON from object::method
 		 * @param {string} obj object to call (with _ctrl part)
@@ -71,18 +103,8 @@ var core = {
 		 * @returns {undefined}
 		 */
 		getJSON: function(obj,method,get,post,loaded){
-
-			var URLstring = './?obj=' + obj + '&method=' + method;
-
-    		if (get){
-	        	if (typeof get === 'string'){
-					URLstring += '&' + get;
-				} else if($.isPlainObject(get))  {
-					URLstring += '&' + $.param(get);
-				} else if ($.isArray(get)){
-					URLstring += '&param[]=' + get.join('&param[]=');
-				}
-    		}
+    		var URLstring = './?obj=' + obj + '&method=' + method
+				+ ( get ? '&' + this._get2url(get) : '');
 
 			if (!post){
 				$.get(URLstring, loaded, 'json');
@@ -96,23 +118,11 @@ var core = {
 		 * Automatically runs core.message on response
 		 * @param {string} obj 		Controller object to call
 		 * @param {string} method 	Method of controller object to call
-		 * @param {string|object} get url string of key=value parameters of objectwith key:values
+		 * @param {string|object|false} get url string of key=value parameters of objectwith key:values
 		 * @param {string|array|object|false} post post data 
 		 */
 		runAndRespond(obj, method, get, post) {
-			let getStr = false;
-			if (typeof get === 'object'){
-				let get_part= [];
-				for (const [key, value] of Object.entries(get)) {
-					if (value){
-						get_part.push(`${key}=${encodeURIComponent(value)}`);
-					}
-				}
-				getStr = get_part.join('&');
-			} else if ( typeof get === 'string' ){
-				getStr = get;
-			}
-			core.getJSON ( obj, method, getStr, post, data=> {
+			core.getJSON ( obj, method, get, post, data=> {
 				core.message(data.text, data.status);
 			});
 		},

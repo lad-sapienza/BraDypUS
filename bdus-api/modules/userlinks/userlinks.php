@@ -6,92 +6,87 @@
  * @since			Aug 17, 2012
  */
 
-class userlinks_ctrl
+class userlinks_ctrl extends Controller
 {
 
-	public static function get_all_tables()
+	public function get_all_tables()
 	{
-		try
-		{
+		try {
 			$ret['status'] = 'success';
 			$ret['info'] = cfg::getNonPlg();
-		}
-		catch (myException $e)
-		{
+		} catch (myException $e) {
 			$e->log();
 			$ret['status'] = 'error';
 			$ret['info'] = $e->getMessage();
 		}
-
-		echo json_encode($ret);
+		$this->returnJson($ret);
 
 	}
 
 
-	public static function link($post)
+	public function addUserLink()
 	{
+		$thistb = $this->get['thistb'];
+		$thisid = $this->get['thisid'];
+		$tb = $this->get['tb'];
+		$id = $this->get['id'];
+
 		try
 		{
-			$record = new Record($post['thistb'], $post['thisid'], new DB());
-			foreach($post['id'] as $id)
-			{
-				if ($record->addUserLink($post['tb'], $id))
-				{
+			if (!$thistb) throw new myException("Missing required parameter thistb");
+			if (!$thisid) throw new myException("Missing required parameter thisid");
+			if (!$tb) throw new myException("Missing required parameter tb");
+			if (!$id) throw new myException("Missing required parameter id");
+			
+			$record = new Record($thistb, $thisid, new DB());
+			foreach($id as $id) {
+				if ($record->addUserLink($tb, $id)) {
 					$ok[] = true;
-				}
-				else
-				{
+				} else {
 					$no[] = true;
 				}
 			}
 
-			if (!$no)
-			{
+			if (!$no) {
 				utils::response('all_links_saved');
-			}
-			else if ($no && $ok)
-			{
+			} else if ($no && $ok) {
 				error_log(cont($ok) . ' links were saved, ' . count($no) . ' links were not!');
 				utils::response('some_links_saved', 'error');
-			}
-			else
-			{
+			} else {
 				utils::response('no_link_saved', 'error');
 			}
-		}
-		catch(myException $e)
-		{
+		} catch(myException $e) {
 			$e->log();
 			utils::response('no_link_saved', 'error');
 		}
 	}
 
-	public static function delete($id)
+	public function deleteUserLink()
 	{
+		$id = $this->get['id'];
 		$record = new Record('no importance', false, new DB());
 
-		if ($record->deleteUserLink($id))
-		{
+		if ($record->deleteUserLink($id)) {
 			utils::response('ok_userlink_erased');
-		}
-		else
-		{
+		} else {
 			utils::response('error_userlink_erased');
 		}
 	}
 
-	public static function show($tb, $id, $context)
+	public function showUserLinks()
 	{
+		$tb = $this->get['tb'];
+		$id = $this->get['id'];
+		$context = $this->get['context'];
+
 		$record = new Record($tb, $id, new DB());
 
 		$links = $record->getUserLinks();
 
-		if ($links)
-		{
+		if ($links) {
 			$tmp = array();
 
-			foreach ($links as $link)
-			{
+			foreach ($links as $link) {
 				$tmp[] = '<li>' .
 						'<span class="btn-link userlink_read" data-tb="' . $link['tb'] . '" data-id="' . $link['ref_id'] . '">' .
 							cfg::tbEl($link['tb'], 'label') . ', id:' . $link['ref_id'] .

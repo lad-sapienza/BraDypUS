@@ -34,7 +34,8 @@ var backup = {
 		},
 		
 		erase: function(file, button){
-			core.getJSON('backup_ctrl', 'erase', [file], false, function(data){
+			// TODO:brackets
+			core.getJSON('backup_ctrl', 'deleteBackup', {file: file}, false, function(data){
 				core.message(data.text, data.status);
 				$('#modal .modal-body').load('./?obj=backup_ctrl&method=getSavedBups');
 			});

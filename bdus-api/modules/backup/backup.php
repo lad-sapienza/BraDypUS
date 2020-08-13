@@ -7,67 +7,64 @@
  */
 
 
-class backup_ctrl
+class backup_ctrl extends Controller
 {
 	/**
 	 * Erases backup files and return json
 	 * @param string $file	filename to erase
 	 * @throws myException
 	 */
-	public static function erase($file)
+	public function deleteBackup()
 	{
 		try
 		{
+			$file = $this->get['file'];
+			if (!$file){
+				throw new Exception("Missing parameter file");
+			}
 			$a = @unlink(PROJ_DIR . 'backups/' . $file);
 
-			if (!$a)
-			{
+			if (!$a){
 				throw new myException(tr::get('error_erasing_file', [$file]));
 			}
 			$resp['text'] = tr::get('success_erasing_file', [$file]);
 			$resp['status'] = 'success';
-		}
-		catch(myException $e)
-		{
+		} catch(myException $e) {
 			$resp['text'] = $e->getMessage();
 			$resp['status'] = 'error';
 		}
-
-		echo json_encode($resp);
+		$this->returnJson($resp);
 	}
 
-	public static function getSavedBups()
+	public function getSavedBups()
 	{
 		$content = utils::dirContent(PROJ_DIR . 'backups');
 
-		if (is_array($content))
-		{
-			$html = '<table class="table table-hover table-bordered table-striped">';
-			foreach($content as $file)
-			{
-				$html .= '<tr>'
-				. '<td>' . $file . '</td>'
-				. '<td>' . round ( filesize( PROJ_DIR . 'backups/' . $file )/1024/1024, 3 ) . ' MB</td>'
-				. '<td>'
-					. '<div class="btn-group">'
-						.'<button class="download btn btn-info" onclick="backup.download(\'' . PROJ_DIR . 'backups/' . $file . '\')"><i class="glyphicon glyphicon-download-alt"></i> ' . tr::get('download') . '</button>'
-						. (utils::canUser('edit') ? ' <button type="button" class="btn btn-danger" onclick="backup.erase(\'' . $file . '\', this)"><i class="glyphicon glyphicon-trash"></i> ' . tr::get('erase') . '</button>' :  '')
-					. '</div>'
-				. '</td>'
-				.'</tr>';
-			}
-			$html .= '</table>';
-
-			echo $html;
-		}
-		else
-		{
+        if (!is_array($content)) {
 			echo '<h2>' . tr::get('no_bup_present') . '</h2>';
+			return;
+        }
+
+		$html = '<table class="table table-hover table-bordered table-striped">';
+		foreach($content as $file) {
+			$html .= '<tr>'
+			. '<td>' . $file . '</td>'
+			. '<td>' . round ( filesize( PROJ_DIR . 'backups/' . $file )/1024/1024, 3 ) . ' MB</td>'
+			. '<td>'
+				. '<div class="btn-group">'
+					.'<button class="download btn btn-info" onclick="backup.download(\'' . PROJ_DIR . 'backups/' . $file . '\')"><i class="glyphicon glyphicon-download-alt"></i> ' . tr::get('download') . '</button>'
+					. (utils::canUser('edit') ? ' <button type="button" class="btn btn-danger" onclick="backup.erase(\'' . $file . '\', this)"><i class="glyphicon glyphicon-trash"></i> ' . tr::get('erase') . '</button>' :  '')
+				. '</div>'
+			. '</td>'
+			.'</tr>';
 		}
+		$html .= '</table>';
+
+		echo $html;
 	}
 
 
-	public static function doBackup()
+	public function doBackup()
 	{
 		try
 		{
@@ -75,8 +72,7 @@ class backup_ctrl
 
 			$db = new DB();
 
-			switch($db->getEngine())
-			{
+			switch($db->getEngine()) {
 				case 'mysql':
 					$bupMysql = new BackupMySQL(new DB(), $file . '.sql');
 					$bupMysql->exportAll();
@@ -91,9 +87,7 @@ class backup_ctrl
 					break;
 			}
 
-		}
-		catch(myException $e)
-		{
+		} catch(myException $e) {
 			echo 'error';
 			$e->log();
 		}

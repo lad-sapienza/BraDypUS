@@ -1,0 +1,45 @@
+<fieldset>
+  <legend>{{ tr.get('rs') }}</legend>
+  <table cellpadding="5" cellspacing="5" class="table-responsive">
+    <tr>
+      <td class="r1" style="width:25%"><strong>{{ tr.get('is_covered_by') }}</strong><br /> {{ data[1] | join }}</td>
+      <td class="r2" style="width:25%"><strong>{{ tr.get('is_cut_by') }}</strong><br /> {{ data[2] | join }}</td>
+      <td class="r3" style="width:25%"><strong>{{ tr.get('carries') }}</strong><br /> {{ data[3] | join }}</td>
+      <td class="r4" style="width:25%"><strong>{{ tr.get('is_filled_by') }}</strong><br /> {{ data[4] | join }}</td>
+    </tr>
+
+    <tr>
+      <td class="r9"><strong>{{ tr.get('is_the_same_as') }}</strong><br /> {{ data[9] | join }}</td>
+      <td colspan="2" style="text-align:center; font-size:1.5em;"><strong><br /> {{ self }} </td>
+      <td class="r10"><strong>{{ tr.get('is_bound_to') }}</strong><br /> {{ data[10] | join }}</td>
+    </tr>
+
+    <tr>
+      <td class="r5"><strong>{{ tr.get('covers') }}</strong><br /> {{ data[5] | join }}</td>
+      <td class="r6"><strong>{{ tr.get('cuts') }}</strong><br /> {{ data[6] | join }}</td>
+      <td class="r7"><strong>{{ tr.get('leans_against') }}</strong><br /> {{ data[7] | join }}</td>
+      <td class="r8"><strong>{{ tr.get('fills') }}</strong><br /> {{ data[8] | join }}</td>
+    </tr>
+
+    {% if (context == 'edit') %}
+    <tr>
+      <td colspan="4" class="new_rel" style="padding:20px 0 0 0;">
+        <div class="form-inline">
+          <div class="form-group">
+            <select class="rel">
+              {% for id, rel in rels %}
+              <option value="{{ id }}">{{ rel }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <input type="text" class="second" />
+          </div>
+
+          <button type="button" class="btn btn-default save">{{ tr.get('save') }}</button>
+        </div>
+      </td>
+    </tr>
+    {% endif %}
+  </table>
+</fieldset>

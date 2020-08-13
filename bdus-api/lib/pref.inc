@@ -28,23 +28,17 @@ class pref
 	 */
 	public static function setTmpl($tb, $context, $tmpl = false)
 	{
-		if ($tmpl)
-		{
+		if ($tmpl) {
 			$_SESSION['pref']['tmpl'][$tb][$context] = $tmpl;
-		}
-		else
-		{
+		} else {
 			unset($_SESSION['pref']['tmpl'][$tb][$context]);
-			if (empty($_SESSION['pref']['tmpl'][$tb]))
-			{
+			if (empty($_SESSION['pref']['tmpl'][$tb])) {
 				unset($_SESSION['pref']['tmpl'][$tb]);
 			}
-			if (empty($_SESSION['pref']['tmpl']))
-			{
+			if (empty($_SESSION['pref']['tmpl'])) {
 				unset($_SESSION['pref']['tmpl']);
 			}
 		}
-		
 	}
 	
 	/**
@@ -74,12 +68,9 @@ class pref
 	 */
 	public static function set($el, $val = false)
 	{
-		if ($val)
-		{
+		if ($val) {
 			$_SESSION['pref'][$el] = $val;
-		}
-		else
-		{
+		} else {
 			unset($_SESSION['pref']);
 		}
 	}
@@ -125,8 +116,7 @@ class pref
 		$uData = $user->getUser(array('id'=>$_SESSION['user']['id']));
 		
 		unset($_SESSION['pref']);
-		if ($uData[0]['settings'])
-		{
+		if ($uData[0]['settings']) {
 			$_SESSION['pref'] = unserialize($uData[0]['settings']);
 		}
 	}

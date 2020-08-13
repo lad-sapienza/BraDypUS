@@ -20,14 +20,11 @@ class myTmpl_ctrl extends Controller
 			return;
 		}
 
-		$data = array();
+		$data = [];
 
-		foreach ($tbs as $tb=>$label)
-		{
-			foreach ($tmpls as $tmpl)
-			{
-				if (preg_match('/' . str_replace(PREFIX, null, $tb) . '/', $tmpl))
-				{
+		foreach ($tbs as $tb=>$label) {
+			foreach ($tmpls as $tmpl) {
+				if (preg_match('/' . str_replace(PREFIX, null, $tb) . '/', $tmpl)) {
 					$data[$tb]['list'][] = $tmpl;
 				}
 			}
@@ -50,8 +47,15 @@ class myTmpl_ctrl extends Controller
 	 * @param string $context
 	 * @param string $tmpl template name with extension
 	 */
-	public function change()
+	public function changeTmpl()
 	{
-    pref::setTmpl($this->get['param'][0], $this->get['param'][1], $this->get['param'][2]);
+		$tb = $this->get['tb'];
+		$context = $this->get['context'];
+		$tmpl = $this->get['tmpl'];
+
+		pref::setTmpl($tb, $context, $tmpl);
+		
+		utils::response('ok_tmpl_set', 'success');
+		// utils::response('error_tmpl_set', 'error');
 	}
 }

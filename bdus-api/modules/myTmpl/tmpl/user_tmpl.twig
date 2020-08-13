@@ -51,12 +51,13 @@
 
 <script>
 $('#{{ uid }} select').on('change', function(){
-	$.get('./?obj=myTmpl_ctrl&method=change&param[]=' + $(this).data('tb') + '&param[]=' + $(this).data('context') + '&param[]=' + $(this).val(), function(data){
-		if (!data || data == ''){
-			core.message(core.tr('ok_tmpl_set'), 'success');
-		} else {
-			core.message(core.tr('error_tmpl_set'), 'error');
-		}
+	core.runAndRespond('myTmpl_ctrl', 'changeTmpl', {
+		"tb": $(this).data('tb'),
+		"context": $(this).data('context'),
+		"tmpl": $(this).val() ? $(this).val() : false
 	});
+	{# $.get('./?obj=myTmpl_ctrl&method=changeTmpl&tb=' + $(this).data('tb') + '&context=' + $(this).data('context') + '&tmpl=' + $(this).val(), function(data){
+		core.message(data.text, data.status);
+	}); #}
 });
 </script>

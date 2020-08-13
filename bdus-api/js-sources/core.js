@@ -13,9 +13,9 @@ var core = {
 		 * Runs the init method of module using args as function arguments
 		 * If loaded() function is present it will be run after init function is called. [added in v. 3.0.3]
 		 *
-		 * @param mod string module name to load
-		 * @param args array array of arguments for modules init function
-		 * @param loaded function|false		the function to run once the module is loaded and init method has run.
+		 * @param {string} mod  module name to load
+		 * @param {array} args array of arguments for modules init function
+		 * @param {function|false} loaded 		the function to run once the module is loaded and init method has run.
 		 */
 		runMod: function(mod, args, loaded){
 
@@ -63,11 +63,11 @@ var core = {
 
 		/**
 		 * Performs an Ajax call and gets JSON from object::method
-		 * @param string obj object to call (with _ctrl part)
-		 * @param string method method to call
-		 * @param string|array|object get get data
-		 * @param string|array|object post post data
-		 * @param function|false loaded callback function
+		 * @param {string} obj object to call (with _ctrl part)
+		 * @param {string} method method to call
+		 * @param {string|array|object} get get data
+		 * @param {string|array|object} post post data
+		 * @param {function|false} loaded callback function
 		 * @returns {undefined}
 		 */
 		getJSON: function(obj,method,get,post,loaded){
@@ -89,6 +89,32 @@ var core = {
 			} else {
 				$.post(URLstring, post, loaded, 'json');
 			}
+		},
+
+		/**
+		 * Utility wrapper of getJSON
+		 * Automatically runs core.message on response
+		 * @param {string} obj 		Controller object to call
+		 * @param {string} method 	Method of controller object to call
+		 * @param {string|object} get url string of key=value parameters of objectwith key:values
+		 * @param {string|array|object|false} post post data 
+		 */
+		runAndRespond(obj, method, get, post) {
+			let getStr = false;
+			if (typeof get === 'object'){
+				let get_part= [];
+				for (const [key, value] of Object.entries(get)) {
+					if (value){
+						get_part.push(`${key}=${encodeURIComponent(value)}`);
+					}
+				}
+				getStr = get_part.join('&');
+			} else if ( typeof get === 'string' ){
+				getStr = get;
+			}
+			core.getJSON ( obj, method, getStr, post, data=> {
+				core.message(data.text, data.status);
+			});
 		},
 
 		/**

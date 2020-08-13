@@ -1,3 +1,4 @@
+3.16.81[] = "Added utility method core.runAndRespond"
 3.16.80[] = "RS uses template"
 3.16.79[] = "Application dies if project folders are not writtable"
 3.16.78[] = "Fixed bug with record::deleteRS"

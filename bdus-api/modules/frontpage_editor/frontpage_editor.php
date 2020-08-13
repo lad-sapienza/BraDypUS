@@ -6,34 +6,22 @@
  * @since			Aug 11, 2012
  */
 
-class frontpage_editor_ctrl
+class frontpage_editor_ctrl extends Controller
 {
 	/**
 	 * returns filepath
 	 */
-	private static function getFile(){
+	private function getFile(){
 		return PROJ_DIR . 'welcome.html';
 	}
 	
 	/**
 	 * Reads content from files and echoes it
 	 */
-	public static function getContent()
+	public function get_content()
 	{
-		$file = self::getFile();
-		
-		if (file_exists($file))
-		{
-			$start = fopen($file, "r");
-		}
-		else
-		{
-			$start=fopen($file, "w+");
-		}
-		
-		$text=fread($start, filesize($file));
-		
-		echo $text;
+		$file = $this->getFile();
+		echo file_get_contents($file);
 		
 	}
 	
@@ -41,18 +29,12 @@ class frontpage_editor_ctrl
 	 * Saves content to file, stripslashed and with no php tags
 	 * @param array $content array(text=>content)
 	 */
-	public static function saveContent($content)
+	public function save_content()
 	{
-		$file = self::getFile();
-		
-		$content = utils::clean_text_from_php($content['text']);
-		
-		$dest = fopen($file, "w");
-		
-		if(!fwrite($dest, $content))
-		{
-			fclose($dest);
-			echo 'error';
-		}
+		$text = $this->post['text'];
+		$file = $this->getFile();
+		$text = utils::clean_text_from_php($text);
+		file_put_contents($file, $text);
+
 	}
 }

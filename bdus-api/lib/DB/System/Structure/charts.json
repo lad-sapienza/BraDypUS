@@ -1,0 +1,28 @@
+[
+    {
+        "name"      : "id",
+        "type"      : "INTEGER",
+        "pk"        : true,
+        "notnull"   : false
+    },
+    {
+        "name"      : "user_id",
+        "type"      : "INTEGER",
+        "notnull"   : true
+    },
+    {
+        "name"      : "name",
+        "type"      : "TEXT",
+        "notnull"   : true
+    },
+    {
+        "name"      : "query",
+        "type"      : "TEXT",
+        "notnull"   : true
+    },
+    {
+        "name"      : "date",
+        "type"      : "TIMESTAMP",
+        "notnull"   : true
+    }
+]

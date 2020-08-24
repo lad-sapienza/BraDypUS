@@ -37,7 +37,7 @@ class Manage
     private $driver;
     private $structure;
     private $spatial;
-    private $available_tables = [
+    public $available_tables = [
         'charts',
         'files',
         'geodata',
@@ -79,7 +79,7 @@ class Manage
      * @param string $table     Table name (without prefix)
      * @return array            Table stricture
      */
-    private function getStructure(string $table): array
+    public function getStructure(string $table): array
     {
         if ( isset($this->structure[$table] ) ){
             return $this->structure[$table];

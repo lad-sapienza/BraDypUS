@@ -1,0 +1,91 @@
+<?php
+namespace DB\Validate;
+
+class DbCfgAlign
+{
+    private $db;
+    private $resp;
+    private $inspect;
+
+    public function __construct(Resp $resp, \DB $db)
+    {
+        $this->resp = $resp;
+        $this->db = $db;
+
+        $db_engine = $db->getEngine();
+        if ($db_engine === 'sqlite'){
+            $driver = new \DB\Inspect\Sqlite($db);
+        } else if ($db_engine === 'mysql'){
+            $driver = new \DB\Inspect\Mysql($db);
+        } else if ($db_engine === 'pgsql'){
+            $driver = new \DB\Inspect\Postgres($db);
+        }
+        $this->inspect = new \DB\Inspect($driver);
+    }
+
+    public function cfgHasDb(): void
+    {
+        $cfg_tbs = \cfg::tbEl('all', 'name');
+
+        foreach ($cfg_tbs as $cfg_tb) {
+            if ($this->inspect->tableExists($cfg_tb)){
+                $this->resp->set(
+                    'success',
+                    "Configuration table $cfg_tb exists in database"
+                );
+            } else {
+                $this->resp->set(
+                    'danger',
+                    "Configuration table $cfg_tb does not exist in database"
+                );
+            }
+        }
+    }
+
+    public function cfgColsHasDb()
+    {
+        $cfg_tbs = \cfg::tbEl('all', 'name');
+
+        foreach ($cfg_tbs as $tb) {
+
+            $cfg_cols = \cfg::fldEl($tb, 'all', 'name');
+            $db_cols = array_map(function($el){
+                return $el['fld'];
+            }, $this->inspect->tableColumns($tb));
+
+            $this->resp->set('head', "Checking $tb from configuration to database");
+
+            foreach ($cfg_cols as $col) {
+                if (!in_array($col, $db_cols)){
+                    $this->resp->set(
+                        'danger',
+                        "Configuration field {$tb}.{$col} is not available in database table",
+                        "Manually add {$tb}.{$col} to the database or delete it from the configuration files"
+                    );
+                } else {
+                    $this->resp->set(
+                        'success',
+                        "Configuration field {$tb}.{$col} is available in database table"
+                    );
+                }
+            }
+
+            $this->resp->set('head', "Checking $tb from database to configuration");
+
+            foreach ($db_cols as $col) {
+                if (!in_array($col, array_values($cfg_cols))){
+                    $this->resp->set(
+                        'danger',
+                        "Database column {$tb}.{$col} is not available in configuration files",
+                        "Manually remove {$tb}.{$col} from the database or add it to the configuration files"
+                    );
+                } else {
+                    $this->resp->set(
+                        'success',
+                        "Database column {$tb}.{$col} is available in the configuration files"
+                    );
+                }
+            }
+        }
+    }
+}

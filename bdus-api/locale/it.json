@@ -376,6 +376,8 @@
     "warning_delete_column": "Attenzione prego. Cancellando la colonna verranno cancellati tutte le configurazioni ed anche i dati nella banca dati. Non sarà più possibile recuperare i dati perduti.",
     "ok_cfg_column_delete": "La colonna è stata cancellata con successo",
     "error_cfg_clumn_delete": "C'è stato un problema e non è stato possibile cancellare la colonna",
+    "cfg_validate_app": "Valida l'applicazione",
+    "show_only_errors": "Mostra solo gli errori",
     "ok_cfg_data_updated": "I dati di configurazione sono stati aggiornati",
     "error_cfg_data_updated": "Errore. Non è stato possibile aggiornare i dati di configurazione",
     "system_email": "Email di sistema",

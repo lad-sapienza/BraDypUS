@@ -382,6 +382,9 @@
     "warning_delete_column": "Pay attention please. Deleting the column will definitely delete all the configuration and also the database data. It will not be possible to recover the lost data.",
     "ok_cfg_column_delete": "Column was successully deleted",
     "error_cfg_clumn_delete": "Error on deleting column",
+    
+    "cfg_validate_app": "Validate application",
+    "show_only_errors": "Show only errors",
 
     "ok_cfg_data_updated": "The configuration data were saved",
     "error_cfg_data_updated": "Error. The configuration data were not saved",

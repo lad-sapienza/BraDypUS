@@ -1,6 +1,6 @@
 <div id="{{ uid }}">
 	<div class="navbar">
-		<button class="btn btn-default navbar-btn toggleTranslations">
+		<button class="btn btn-success navbar-btn toggleTranslations">
 			{{ tr.get('show_incomplete_translations') }}
 		</button>
 	</div>
@@ -49,6 +49,7 @@
 	
 	$('#{{ uid }} button.toggleTranslations').on('click', function(){
 		$(this).toggleClass('btn-danger');
+		$(this).toggleClass('btn-success');
 		if ($(this).hasClass('btn-danger')){
 			$('#tbl-{{ uid }} tbody tr.has-error').fadeIn();
 			$('#tbl-{{ uid }} tbody tr:not(.has-error)').fadeOut();

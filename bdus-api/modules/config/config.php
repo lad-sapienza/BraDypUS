@@ -35,23 +35,6 @@ class config_ctrl extends Controller
         ]);
     }
 
-    public function validate_app()
-    {
-        echo <<<TO
-<pre>
-TODO
-1. each cfg-table must have db-table
-2. each db-table must have cfg-table
-3. foreach table:
-    3.1 each cfg-field must have db-column
-    3.2 each db-column must have cfg-field
-4. system tables exist
-5. system tables have latest structure
-</pre>
-TO;
-    }
-
-
     public function fld_list()
     {
         $tb = $this->get['tb'];
@@ -456,5 +439,28 @@ TO;
             $e->log();
             utils::response('error_renaming_column', 'error');
         }
+    }
+
+
+    public function validate_app()
+    {
+        $validate = new \DB\Validate\Validate(new DB(), PREFIX);
+        $report = $validate->all();
+
+        $html = '<button type="button" class="btn btn-info pull-right" onclick="$(this).parent().find(\'.alert-info, .alert-success\').toggle();">' . tr::get('show_only_errors') . '</button>';
+
+        foreach ($report as $item) {
+            if ($item['status'] === 'head'){
+                $html .= '<h3>' . $item['text']. '</h3>';
+            } else {
+                $html .= '<div class="alert alert-' . $item['status'] . '"> ' 
+                    . $item['text'] 
+                    . ( $item['suggest'] ? '<div>' . $item['suggest'] . '</div>' : '' )
+                . '</div>';
+            }
+        }
+
+        echo $html;
+
     }
 }

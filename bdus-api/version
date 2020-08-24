@@ -1,3 +1,4 @@
+3.16.89[] = "Add and remove table (config and db) from GUI"
 3.16.88[] = "Removed param[] arguments from module vocabularies"
 3.16.87[] = "Removed param[] arguments from module front_page"
 3.16.86[] = "Removed param[] arguments from module charts"

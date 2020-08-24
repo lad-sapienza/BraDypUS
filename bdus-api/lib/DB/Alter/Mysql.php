@@ -35,4 +35,17 @@ class Mysql implements AlterInterface
         $sql = "ALTER TABLE `{$tb}` DROP COLUMN `{$fld_name}`";
         return  $this->db->execInTransaction($sql);
     }
+
+    public function createMinimalTable( string $tb): bool
+    {
+        $sql = "CREATE TABLE IF NOT EXISTS {$tb} (id INTEGER PRIMARY KEY AUTO_INCREMENT, creator INTEGER NOT NULL)";
+        return $this->db->execInTransaction($sql);
+    }
+
+    public function dropTable( string $tb): bool
+    {
+        $sql = "DROP TABLE IF EXISTS {$tb}";
+        return $this->db->execInTransaction($sql);
+    }
+
 }

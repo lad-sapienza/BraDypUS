@@ -14,6 +14,12 @@ var config = {
 			method: 'home',
 		});
 	},
+	validateApp: (uid) => {
+		core.getHTML('config_ctrl', 'validate_app', false, false, html => {
+			$('#' + uid + ' .edit-column').html(html);
+			$('#' + uid +' .field-list-column').html('').removeClass('col-sm-3');
+		})
+	},
 	viewAppProperties: (uid) => {
 		$.get(`./?obj=config_ctrl&method=app_properties`, html => {
 			$('#' + uid + ' .edit-column').html(html);
@@ -21,7 +27,7 @@ var config = {
 		})
 	},
 	viewTbproperties: function(tb, uid){
-		$.get(`./?obj=config_ctrl&method=table_properties&tb=${tb}`, html => {
+		core.getHTML('config_ctrl', 'table_properties', tb ? {tb:tb} : false, false, html => {
 			$('#' + uid + ' .edit-column').html(html);
 			$('#' + uid + ' .field-list-column').html('').removeClass('col-sm-3');
 		})
@@ -42,8 +48,19 @@ var config = {
 	saveTbData: function(form, tb){
 		core.getJSON('config_ctrl', 'save_tb_data', false, form.serializeArray(), function(data){
 			  core.message(data.text, data.status);
-			  if (data.status == 'success'){
-				  config.viewTbproperties(form.parent('.edit-column'), tb);
+			  if (data.status === 'success'){
+				config.viewTbproperties(tb, $('div.active .config_container').attr('id') );
+			  }
+		  });
+	},
+	addNewTb: function(form){
+		core.getJSON('config_ctrl', 'add_new_tb', false, form.serializeArray(), function(data){
+			  core.message(data.text, data.status);
+			  if (data.status === 'success'){
+				layout.tabs.reloadActive();
+				setTimeout(()=> {
+					config.viewTbproperties(data.tb, $('div.active .config_container').attr('id') );
+				}, 500);
 			  }
 		  });
 	},
@@ -59,6 +76,12 @@ var config = {
 		core.getJSON('config_ctrl', 'save_app_properties', false, form.serializeArray(), function(data){
 			core.message(data.text, data.status);
 		});
+	},
+	deleteTb: tb => {
+		core.getJSON('config_ctrl', 'delete_tb', { tb: tb }, false, data => {
+			core.message(data.text, data.status);
+			layout.tabs.reloadActive();
+		})
 	}
 
 };

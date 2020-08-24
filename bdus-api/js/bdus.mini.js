@@ -3071,8 +3071,8 @@ $('ul.searcheable-list li').each(function(i,el){var txt=$(el).text().toLowerCase
 $('#waiting_main').hide();core.message(core.tr('error_in_module',[settings.url]),'error',true);});layout.setSize();},dialog:{add:function(opts){if($('#modal').length>0){layout.dialog.close($('#modal'));}
 var dialog=$('<div />').attr('id','modal').addClass('modal fade').append('<div class="modal-dialog">'+'<div class="modal-content">'+
 (opts.title?'<div class="modal-header"><h4>'+opts.title+'</h4></div>':'')+'</div>'+'</div>').appendTo('body');if(opts.width){dialog.css({width:opts.width,'margin-left':'-'+(opts.width/2)+'px'});}
-var body=$('<div />').addClass('modal-body').appendTo(dialog.find('div.modal-content')),URLstring='./?';if(opts.html){body.html(opts.html);if(opts.loaded){opts.loaded(body);}}else if(opts.obj&&opts.method){core.getHTML(opts.obj,opts.method,opts.param,opts.post,data=>{body.html(data);typeof opts.loaded!=='undefined'&&opts.loaded();})}else{return false;}
-if(opts.buttons&&typeof opts.buttons=='object'){var footer=$('<div />').addClass('modal-footer').appendTo(dialog.find('div.modal-content'));$.each(opts.buttons,function(index,but){var a=$('<a />').addClass('btn'+(but.addclass?' '+but.addclass:' btn-primary')).html(but.text);if(but.href){a.attr('href',but.href);}
+var body=$('<div />').addClass('modal-body').appendTo(dialog.find('div.modal-content'));if(opts.html){body.html(opts.html);if(opts.loaded){opts.loaded(body);}}else if(opts.obj&&opts.method){core.getHTML(opts.obj,opts.method,opts.param,opts.post,data=>{body.html(data);typeof opts.loaded!=='undefined'&&opts.loaded();})}else{return false;}
+if(opts.buttons&&typeof opts.buttons==='object'){var footer=$('<div />').addClass('modal-footer').appendTo(dialog.find('div.modal-content'));$.each(opts.buttons,function(index,but){var a=$('<a />').addClass('btn'+(but.addclass?' '+but.addclass:' btn-primary')).html(but.text);if(but.href){a.attr('href',but.href);}
 if(but.click){if(but.click=='close'){a.attr('data-dismiss','modal');}else{a.click(function(){but.click(dialog);});}}
 if(but.action=='close'){a.attr('data-dismiss','modal');}
 a.appendTo(footer);});}

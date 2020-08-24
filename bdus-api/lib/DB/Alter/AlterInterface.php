@@ -45,4 +45,20 @@ interface AlterInterface
      * @return bool true is success, farlse if error
     */
     public function dropFld(string $tb, string $fld_name): bool;
+    
+    /**
+     * Creates new table
+     *
+     * @param string $tb        table name
+     * @return boolean
+     */
+    public function createMinimalTable(string $tb): bool;
+    
+    /**
+     * Drops table from database
+     *
+     * @param string $tb    Table nome to drop
+     * @return boolean
+     */
+    public function dropTable(string $tb): bool;
 }

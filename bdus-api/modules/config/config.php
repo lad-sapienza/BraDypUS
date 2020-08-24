@@ -1,4 +1,5 @@
 <?php 
+use \DB\Engines\AvailableEngines;
 
 class config_ctrl extends Controller
 {
@@ -30,8 +31,24 @@ class config_ctrl extends Controller
             'info' => cfg::main(),
             'status' => [ 'on', 'frozen', 'off' ],
             'users' => $users,
-            'db_engines' => ['sqlite', 'mysql', 'pgsql']
+            'db_engines' => \DB\Engines\AvailableEngines::getList()
         ]);
+    }
+
+    public function validate_app()
+    {
+        echo <<<TO
+<pre>
+TODO
+1. each cfg-table must have db-table
+2. each db-table must have cfg-table
+3. foreach table:
+    3.1 each cfg-field must have db-column
+    3.2 each db-column must have cfg-field
+4. system tables exist
+5. system tables have latest structure
+</pre>
+TO;
     }
 
 
@@ -83,9 +100,10 @@ class config_ctrl extends Controller
 
     public function table_properties()
     {
-        $tb = $this->get['tb'];
+        $tb = $this->get['tb'] ?: false;
 
-        $table_properties = cfg::tbEl($tb, 'all');
+        $table_properties = $tb ? cfg::tbEl($tb, 'all') : [];
+
         // default values
 		if (!$table_properties['preview'])  $table_properties['preview'] = array(0=>'');
 		if (!$table_properties['plugin'])   $table_properties['plugin'] = array(0=>'');
@@ -94,9 +112,9 @@ class config_ctrl extends Controller
         $this->render('config', 'table_properties', [
             'data'  => $table_properties,
             'tb'    => $tb,
-            'field_list' => cfg::fldEl($tb, 'all', 'label'),
+            'field_list' => $tb && cfg::fldEl($tb, 'all', 'label') ? cfg::fldEl($tb, 'all', 'label') : ['id' => 'id'],
             'template_list' => utils::dirContent(PROJ_DIR . 'templates/'),
-            'available_plugins' => is_array(cfg::getPlg()) ? cfg::getPlg() : array(),
+            'available_plugins' => is_array(cfg::getPlg()) ? cfg::getPlg() : [],
             'available_tables' => cfg::tbEl('all', 'label'),
         ]);
 
@@ -132,11 +150,73 @@ class config_ctrl extends Controller
 			} else if ( (!$post['is_plugin'] || $post['is_plugin'] == 0) && ( !$post['name'] || !$post['label'] || !$post['order'] && !$post['id_field'] || !$post['preview'] ) ) {
 
 				throw new myException('2. Required fields are missing');
-			}
+            }
 
 			cfg::setTb($post);
 
 			utils::response('ok_cfg_data_updated');
+
+		} catch(myException $e) {
+			
+			$e->log();
+			utils::response('error_cfg_data_updated', 'error');
+		}
+    }
+
+
+    public function add_new_tb()
+	{
+		$post = $this->post;
+
+		try {
+
+			$post = utils::recursiveFilter($post);
+
+			if ($post['is_plugin'] == 1 && (!$post['name'] || !$post['label'] )) {
+
+				throw new myException('1. Required fields are missing');
+
+			} else if ( (!$post['is_plugin'] || $post['is_plugin'] == 0) && ( !$post['name'] || !$post['label'] || !$post['order'] && !$post['id_field'] || !$post['preview'] ) ) {
+
+				throw new myException('2. Required fields are missing');
+            }
+
+            // Write table columns file
+            $new_tb_name = $post['name'];
+            cfg::setFld( str_replace(PREFIX, null, $new_tb_name), false, [
+				[
+					"name" => "id",
+					"label" => "Id",
+					"type" => "text"
+				],
+				[
+					"name" => "creator",
+					"label" => "Creator",
+					"type" => "text"
+				],
+            ]);
+            
+            // Write table data file
+            cfg::setTb($post);
+            
+            // Add table to database
+            $db = new DB();
+            $engine = $db->getEngine();
+            if ($engine = 'sqlite'){
+                $driver = new \DB\Alter\Sqlite($db);
+            } elseif($engine = 'mysql'){
+                $driver = new \DB\Alter\Mysql($db);
+            } elseif($engine = 'pgsql'){
+                $driver = new \DB\Alter\Postgres($db);
+            } else {
+                throw new \Exception("Unknown database engine: `$engine`");
+            }
+            $alter = new \DB\Alter($driver);
+            $alter->createMinimalTable($new_tb_name);
+
+			utils::response('ok_cfg_data_updated', 'success', false, [
+                'tb' => $new_tb_name
+            ]);
 
 		} catch(myException $e) {
 			
@@ -189,4 +269,28 @@ class config_ctrl extends Controller
     }
 
     
+    public function delete_tb()
+    {
+        $tb = $this->get['tb'];
+        try {
+            cfg::deleteTb($tb);
+            // Drop table from database
+            $db = new DB();
+            $engine = $db->getEngine();
+            if ($engine = 'sqlite'){
+                $driver = new \DB\Alter\Sqlite($db);
+            } elseif($engine = 'mysql'){
+                $driver = new \DB\Alter\Mysql($db);
+            } elseif($engine = 'pgsql'){
+                $driver = new \DB\Alter\Postgres($db);
+            } else {
+                throw new \Exception("Unknown database engine: `$engine`");
+            }
+            $alter = new \DB\Alter($driver);
+            $alter->dropTable($tb);
+            utils::response('ok_cfg_tb_delete', 'success');
+        } catch (\Throwable $th) {
+            utils::response('error_cfg_tb_delete', 'error');
+        }
+    }
 }

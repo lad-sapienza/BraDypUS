@@ -348,8 +348,16 @@
     "cfg_available_tables": "Available tables",
     "cfg_available_fields": "Available fields for %s",
     "cfg_available_for": "Available settings for %s",
-    "cfg_genaral_info": "Main setting",
+    "cfg_genaral_info": "Main settings",
     "cfg_links": "Links",
+
+    "cfg_add_table": "Add new table",
+    "delete_table": "Delete table",
+    "ok_cfg_tb_delete": "Table was successully deleted",
+    "error_cfg_tb_delete": "Error on deleting table",
+    
+    "cfg_add_column": "Add new field",
+
     "ok_cfg_data_updated": "The configuration data were saved",
     "error_cfg_data_updated": "Error. The configuration data were not saved",
     "system_email": "System email",

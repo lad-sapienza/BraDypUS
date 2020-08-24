@@ -103,7 +103,24 @@ var layout = {
     
     
     dialog: {
-        
+        /**
+         * 
+         * @param {object} opts :
+         *                      title
+         *                      width
+         *                      html
+         *                      obj
+         *                      method
+         *                      param
+         *                      post
+         *                      loaded
+         *                      buttons
+         *                          addclass
+         *                          text
+         *                          href
+         *                          click
+         *                          action
+         */
         add: function(opts){
             if ($('#modal').length > 0){
                 layout.dialog.close($('#modal'));
@@ -114,7 +131,7 @@ var layout = {
                 .addClass('modal fade')
                 .append('<div class="modal-dialog">' +
                     '<div class="modal-content">' +
-                    (opts.title ? '<div class="modal-header"><h4>' + opts. title + '</h4></div>' : '') +
+                    (opts.title ? '<div class="modal-header"><h4>' + opts.title + '</h4></div>' : '') +
                     '</div>' +
                     '</div>'
                 ).appendTo('body');
@@ -126,8 +143,7 @@ var layout = {
                 });
             }
                 
-            var body = $('<div />').addClass('modal-body').appendTo(dialog.find('div.modal-content')),
-            URLstring = './?';
+            var body = $('<div />').addClass('modal-body').appendTo(dialog.find('div.modal-content'));
             
             
             if (opts.html){
@@ -150,7 +166,7 @@ var layout = {
                 return false;
             }
             
-            if (opts.buttons && typeof opts.buttons == 'object'){
+            if (opts.buttons && typeof opts.buttons === 'object'){
                 
                 var footer = $('<div />').addClass('modal-footer').appendTo(dialog.find('div.modal-content'));
                 

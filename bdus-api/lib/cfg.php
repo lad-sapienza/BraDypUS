@@ -107,8 +107,8 @@ class cfg
 			default:
 				$file = PROJ_DIR . 'cfg/' . str_replace(PREFIX, null, $what) . '.json';
 
-				if (!is_array(self::$data['tables'][$what]) || !file_exists($file)) {
-					throw new myException('Table ' . $what . ' does not exist');
+				if (!is_array(self::$data['tables'][$what]) ) {
+					throw new myException('Empty array of data for table ' . $what);
 				}
 
 				if (!utils::write_formatted_json($file, self::$data['tables'][$what])) {
@@ -149,12 +149,13 @@ class cfg
 	public static function setTb($post_data)
 	{
 		$changed = false;
-
+		// Table is not in list. Add it
 		if(!in_array($post_data['name'], self::tbEl('all', 'name'))) {
-			array_push(self::$data['table'], $post);
+			array_push(self::$data['table'], $post_data);
 			$changed = true;
 		} else {
 			foreach (self::$data['table'] as &$tb_data) {
+				// Updates available table config
 				if ($tb_data['name'] === $post_data['name']) {
 					$tb_data = $post_data;
 					$changed = true;
@@ -174,7 +175,7 @@ class cfg
 		$changed = false;
 
 		if (!$fld_name) {
-			array_push(self::$data['tables'][$tb], $post_data);
+			self::$data['tables'][$tb] = $post_data;
 			$changed = true;
 		} else {
 			foreach(self::$data['tables'] as $sess_tb=>$data_arr) {
@@ -323,6 +324,22 @@ class cfg
 		} else {
 			return self::tbEl($tb, 'preview');
 		}
+	}
+
+	public static function deleteTb($tb)
+	{
+		unset(self::$data['tables'][$tb]);
+		$index = false;
+		foreach (self::$data['table'] as $tmp_index => $tb_data) {
+			if ($tb_data['name'] === $tb) {
+				$index = $tmp_index;
+			}
+		}
+		if ($index) {
+			unset(self::$data['table'][$index]);
+			self::toFile('table');
+		}
+		unlink(PROJ_DIR . 'cfg/' . str_replace(PREFIX, null, $tb) . '.json');
 	}
 
 }

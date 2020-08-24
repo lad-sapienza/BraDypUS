@@ -364,6 +364,11 @@
     "ok_cfg_tb_delete": "Table was successully deleted",
     "error_cfg_tb_delete": "Error on deleting table",
     
+    "rename_table": "Rename table",
+    "warning_rename_table": "Pay attention. By renaming the table cross references in configuration files to this table will be lost and these should be fixed manually. Also the database table will be renamed.",
+    "error_renaming_table": "Error on renaming table",
+    "ok_renaming_table": "The table was successfully renamed",
+    
     "cfg_add_column": "Add new field",
     "cfg_new_column_setting": "New field configuration",
     "fld_already_available": "Field %s is already available and cannot be added",

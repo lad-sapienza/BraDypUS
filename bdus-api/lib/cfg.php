@@ -347,6 +347,23 @@ class cfg
 		unlink(PROJ_DIR . 'cfg/' . str_replace(PREFIX, null, $tb) . '.json');
 	}
 
+	public static function renameTb(string $old_name, string $new_name)
+	{
+		self::$data['tables'][$new_name] = self::$data['tables'][$old_name];
+		unset(self::$data['tables'][$old_name]);
+
+		foreach (self::$data['table'] as $tmp_index => &$tb_data) {
+			if ($tb_data['name'] === $old_name) {
+				$tb_data['name'] = $new_name;
+				self::toFile('table');
+			}
+		}
+		rename(
+			PROJ_DIR . 'cfg/' . str_replace(PREFIX, null, $old_name) . '.json',
+			PROJ_DIR . 'cfg/' . str_replace(PREFIX, null, $new_name) . '.json'
+		);
+	}
+
 	public static function deleteFld($tb, $fld)
 	{
 		if ( !isset(self::$data['tables'][$tb]) || !is_array(self::$data['tables'][$tb])) {

@@ -170,22 +170,27 @@ class cfg
 
 
 
-	public static function setFld($tb, $fld_name = false, $post_data)
+	public static function setFld(string $tb, string $fld_name, array $post_data)
 	{
 		$changed = false;
-
-		if (!$fld_name) {
-			self::$data['tables'][$tb] = $post_data;
-			$changed = true;
-		} else {
-			foreach(self::$data['tables'] as $sess_tb=>$data_arr) {
-				foreach ($data_arr as $index=>$data) {
-					if ($sess_tb === $tb && $data['name'] === $fld_name) {
-						self::$data['tables'][$sess_tb][$index] = $post_data;
-						$changed = true;
-					}
-				}
+		
+		// New table
+		if (!isset(self::$data['tables'][$tb]) || !is_array(self::$data['tables'][$tb])) {
+			self::$data['tables'][$tb] = [];
+		}
+		
+		$found = false;
+		foreach (self::$data['tables'][$tb] as $index => $column_data) {
+			if( $column_data['name'] === $fld_name ){
+				self::$data['tables'][$tb][$index] = $post_data;
+				$changed = true;
+				$found = true;
 			}
+		}
+		// New column
+		if (!$found){
+			array_push(self::$data['tables'][$tb], $post_data);
+			$changed = true;
 		}
 
 		if ($changed) {
@@ -340,6 +345,25 @@ class cfg
 			self::toFile('table');
 		}
 		unlink(PROJ_DIR . 'cfg/' . str_replace(PREFIX, null, $tb) . '.json');
+	}
+
+	public static function deleteFld($tb, $fld)
+	{
+		if ( !isset(self::$data['tables'][$tb]) || !is_array(self::$data['tables'][$tb])) {
+			throw new myException("Invalid table $tb");
+		}
+		$index = false;
+		foreach (self::$data['tables'][$tb] as $index_arr => $column_data) {
+			if ( $column_data['name'] === $fld ) {
+				$index = $index_arr;
+			}
+		};
+		if (!$index){
+			throw new myException("Invalid field $fld in table $tb");
+		}
+		unset(self::$data['tables'][$tb][$index]);
+		self::toFile($tb);
+		
 	}
 
 }

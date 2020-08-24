@@ -211,7 +211,7 @@
     <p class="text-danger">
     {{ tr.get('warning_delete_table') }}
     </p>
-    <button type="submit" class="btn btn-danger btn-block delete-table">
+    <button type="button" class="btn btn-danger btn-block delete-table">
       {{ tr.get('delete_table') }}
     </button>
   </div>
@@ -249,7 +249,9 @@
     {% endif %}
 	});
 
+  {% if tb %}
   $('#{{ uid }} button.delete-table').on('click', ()=>{
     config.deleteTb('{{ tb }}');
   })
+  {% endif %}
 </script>

@@ -5,7 +5,7 @@
 <button 
 	type="button" 
 	class="add_new_fld btn btn-success btn-block" 
-	data-table="{{ tb }}">
+	onclick="config.viewFldProperties('{{ tb }}', false, this)"
 	<i class="glyphicon glyphicon-plus"></i> {{ tr.get('cfg_add_column') }}
 </button>
 
@@ -17,7 +17,7 @@
 		data-table="{{ tb }}" 
 		data-field="{{ fld.name }}" 
 		class="list-group-item edit_fld"
-		onclick="config.viewFldPropertied('{{ tb }}', '{{ fld.name }}', this)"
+		onclick="config.viewFldProperties('{{ tb }}', '{{ fld.name }}', this)"
 	>
 		{{ fld.label}} / {{ fld.name }}
 	</button> 

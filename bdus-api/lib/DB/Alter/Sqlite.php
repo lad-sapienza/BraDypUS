@@ -90,7 +90,7 @@ class Sqlite implements AlterInterface
 
             foreach ($sql as $k => $s) {
                 if ( $this->db->exec($s) === false ){
-                    throw new \Exception("Error in query $sql_exec");
+                    throw new \Exception("Error in query $s");
                 }
             }
 

@@ -356,8 +356,15 @@
     "warning_delete_table": "Pay attention please. Deleting the table will definitely delete all the configuration files for the table and the database data. It will not be possible to recover the lost data.",
     "ok_cfg_tb_delete": "Table was successully deleted",
     "error_cfg_tb_delete": "Error on deleting table",
-
+    
     "cfg_add_column": "Add new field",
+    "cfg_new_column_setting": "New field configuration",
+    "fld_already_available": "Field %s is already available and cannot be added",
+    
+    "delete_column": "Delete column",
+    "warning_delete_column": "Pay attention please. Deleting the column will definitely delete all the configuration and also the database data. It will not be possible to recover the lost data.",
+    "ok_cfg_column_delete": "Column was successully deleted",
+    "error_cfg_clumn_delete": "Error on deleting column",
 
     "ok_cfg_data_updated": "The configuration data were saved",
     "error_cfg_data_updated": "Error. The configuration data were not saved",

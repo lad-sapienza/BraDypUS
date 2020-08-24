@@ -25,6 +25,17 @@
         "help": "Field type. For `select`, `combo_select` and `multi_select` a source for the available values must be supplied. Fill one of the following `vocabulary_set`, `get_values_from_tb` or `get_values_from_tb`.",
         "required": true
     },
+    "db_type": {
+        "type": "select",
+        "values": [
+            "TEXT",
+            "INTEGER",
+            "TIMESTAMP"
+        ],
+        "help": "Database field type. Caveat: DATETIME is MySQL (and SQLite) specific; TIMESTAMP is the equivalent in PostgreSQL",
+        "required": true,
+        "readonly": false
+    },
     "vocabulary_set": {
         "type": "select",
         "values": [
@@ -108,18 +119,6 @@
         "type": "input",
         "help": "Maximum fields length measured in characters (included white spaces). An integer should be entered.",
         "required": false
-    },
-    "db_type": {
-        "type": "select",
-        "values": [
-            "TEXT",
-            "INTEGER",
-            "DATETIME",
-            "TIMESTAMP"
-        ],
-        "help": "Database field type. Caveat: DATETIME is MySQL (and SQLite) specific; TIMESTAMP is the equivalent in PostgreSQL",
-        "required": false,
-        "readonly": true
     },
     "min": {
         "type": "input",

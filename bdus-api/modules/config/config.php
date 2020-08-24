@@ -67,7 +67,7 @@ TO;
     public function field_properties()
     {
         $tb = $this->get['tb'];
-        $fld = $this->get['fld'];
+        $fld = $this->get['fld'] ?: false;
 
         $data = $fld ? cfg::fldEl($tb, $fld, 'all') : [];
 
@@ -78,7 +78,7 @@ TO;
 
         $fld_structure = str_replace(
             [
-                'list-of-system-defined-vocabularie-here', 
+                'list-of-system-defined-vocabularies-here', 
                 'list-of-available-tables-here'
             ],
             [
@@ -183,17 +183,15 @@ TO;
 
             // Write table columns file
             $new_tb_name = $post['name'];
-            cfg::setFld( str_replace(PREFIX, null, $new_tb_name), false, [
-				[
-					"name" => "id",
-					"label" => "Id",
-					"type" => "text"
-				],
-				[
-					"name" => "creator",
-					"label" => "Creator",
-					"type" => "text"
-				],
+            cfg::setFld( str_replace(PREFIX, null, $new_tb_name), 'id', [
+                "name" => "id",
+                "label" => "Id",
+                "type" => "text"
+            ]);
+            cfg::setFld( str_replace(PREFIX, null, $new_tb_name), 'creator', [
+                "name" => "creator",
+                "label" => "Creator",
+                "type" => "text"
             ]);
             
             // Write table data file
@@ -233,14 +231,14 @@ TO;
 			$post = utils::recursiveFilter($post);
 
 			$tb = $post['tb_name'];
-			$fld = $post['fld_name'];
+			$fld = $post['fld_orig_name'];
 			unset($post['tb_name']);
-			unset($post['fld_name']);
+			unset($post['fld_orig_name']);
 
 			if (!$post['name'] || !$post['type']){
 				throw new myException('Both field name and field type are required');
-			}
-
+            }
+            
 			cfg::setFld($tb, $fld, $post);
 
 			utils::response('ok_cfg_data_updated');
@@ -250,7 +248,50 @@ TO;
 			$e->log();
 			utils::response('error_cfg_data_updated', 'error');
 		}
+    }
 
+    public function add_new_fld()
+	{
+		$post = $this->post;
+		try {
+			$post = utils::recursiveFilter($post);
+
+			$tb = $post['tb_name'];
+			$fld = $post['name'];
+			unset($post['tb_name']);
+
+			if (!$post['name'] || !$post['type']){
+				throw new myException('Both field name and field type are required');
+            }
+            $available_flds = array_values(cfg::fldEl($tb, 'all', 'name'));
+            if (in_array($fld, $available_flds)){
+                utils::response(tr::get('fld_already_available', [$fld]), 'error', true);
+                return;
+            }
+            
+            cfg::setFld($tb, $fld, $post);
+            
+            $db = new DB();
+            $engine = $db->getEngine();
+            if ($engine = 'sqlite'){
+                $driver = new \DB\Alter\Sqlite($db);
+            } elseif($engine = 'mysql'){
+                $driver = new \DB\Alter\Mysql($db);
+            } elseif($engine = 'pgsql'){
+                $driver = new \DB\Alter\Postgres($db);
+            } else {
+                throw new \Exception("Unknown database engine: `$engine`");
+            }
+            $alter = new \DB\Alter($driver);
+            $alter->addFld($tb, $fld, $post['db_type']);
+
+			utils::response('ok_cfg_data_updated', 'success', false, ["fld" => $fld]);
+        
+        } catch(myException $e) {
+
+			$e->log();
+			utils::response('error_cfg_data_updated', 'error');
+		}
     }
     
     public function save_app_properties()
@@ -291,6 +332,35 @@ TO;
             utils::response('ok_cfg_tb_delete', 'success');
         } catch (\Throwable $th) {
             utils::response('error_cfg_tb_delete', 'error');
+        }
+    }
+
+
+    public function delete_column()
+    {
+        $tb = $this->get['tb'];
+        $fld = $this->get['fld'];
+
+        try {
+            cfg::deleteFld($tb, $fld);
+            
+            $db = new DB();
+            $engine = $db->getEngine();
+            if ($engine = 'sqlite'){
+                $driver = new \DB\Alter\Sqlite($db);
+            } elseif($engine = 'mysql'){
+                $driver = new \DB\Alter\Mysql($db);
+            } elseif($engine = 'pgsql'){
+                $driver = new \DB\Alter\Postgres($db);
+            } else {
+                throw new \Exception("Unknown database engine: `$engine`");
+            }
+            $alter = new \DB\Alter($driver);
+            $alter->dropFld($tb, $fld);
+
+            utils::response('ok_cfg_column_delete', 'success');
+        } catch (\Throwable $th) {
+            utils::response('error_cfg_clumn_delete', 'error');
         }
     }
 }

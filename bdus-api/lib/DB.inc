@@ -127,7 +127,7 @@ class DB implements \DB\DB\DBInterface
 	public function exec($sql): bool
 	{
 		try {
-			return $this->db->exec($sql);
+			return $this->db->exec($sql) !== false;
 		} catch (PDOException $e) {
 			throw new myException($e);
 		}

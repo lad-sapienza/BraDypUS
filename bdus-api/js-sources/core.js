@@ -122,7 +122,7 @@ var core = {
 		 * @param {string|array|object|false} post post data 
 		 */
 		runAndRespond(obj, method, get, post) {
-			core.getJSON ( obj, method, get, post, data=> {
+			core.getJSON ( obj, method, get, post, data => {
 				core.message(data.text, data.status);
 			});
 		},

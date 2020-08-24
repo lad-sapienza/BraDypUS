@@ -1,3 +1,4 @@
+3.16.92[] = "Add and remove column (config and db) from GUI"
 3.16.91[] = "Added alert on table delete"
 3.16.90[] = "Added centralized class to manage creation and amangement of system tables"
 3.16.89[] = "Add and remove table (config and db) from GUI"

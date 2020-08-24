@@ -351,6 +351,13 @@
     "cfg_genaral_info": "Main settings",
     "cfg_links": "Links",
 
+    "cfg_security_check": "Security check",
+    "cfg_security_check_text": "To continue please enter your password. Rememeber that you need super-admin privileges to access system & database configuration",
+    "validate_password": "Validate password",
+    "invalid_pasword": "Invalid password",
+    "valid_pasword": "Valid password! Welcome super admin, and be careful.",
+    "not_a_super_admin_user": "You are not a super admin user. Sorry you cannot edit system configuration",
+
     "cfg_add_table": "Add new table",
     "delete_table": "Delete table",
     "warning_delete_table": "Pay attention please. Deleting the table will definitely delete all the configuration files for the table and the database data. It will not be possible to recover the lost data.",

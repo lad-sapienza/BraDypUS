@@ -343,7 +343,7 @@ TO;
 
         try {
             cfg::deleteFld($tb, $fld);
-            
+
             $db = new DB();
             $engine = $db->getEngine();
             if ($engine = 'sqlite'){
@@ -362,5 +362,33 @@ TO;
         } catch (\Throwable $th) {
             utils::response('error_cfg_clumn_delete', 'error');
         }
+    }
+
+    public function security_check_pwd()
+    {
+        if (!utils::canUser('super_admin')){
+            utils::response('not_a_super_admin_user', 'error');
+            return;
+        }
+        // Logged used is super admin. Let's check the password
+        $pwd = $this->post['pwd'];
+        $current_user_id = $_SESSION['user']['id'];
+
+        $user = new User(new DB());
+        
+        $me = $user->getUser([
+            "id" => $current_user_id,
+            "password" => $user->encodePwd($pwd)
+        ]);
+
+        if(!$me || !is_array($me)){
+            utils::response('invalid_pasword', 'error');
+            return;
+        } else {
+            utils::response('valid_pasword', 'success');
+            return;
+        }
+        
+        
     }
 }

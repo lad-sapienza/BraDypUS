@@ -6,10 +6,6 @@
  * @since			Aug 12, 2012
  */
 
-use \cfg;
-use \tr;
-use \utils;
-
 class translate_ctrl extends Controller
 {
 	public function showList()

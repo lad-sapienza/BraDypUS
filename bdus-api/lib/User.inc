@@ -373,7 +373,7 @@ class User
      * Returnes encoded password
      * @param string $password	original password
      */
-    private function encodePwd($password)
+    public function encodePwd($password)
     {
         return sha1($password);
     }

@@ -7,12 +7,35 @@
 var config = {
 
 	init: function(){
-		
+
 		core.open({
-			title: core.tr('sys_config'),
-			obj: 'config_ctrl',
-			method: 'home',
-		});
+			title: core.tr('cfg_security_check'),
+			html: `<p class="lead text-danger">${core.tr('cfg_security_check_text')}</p><hr><input type="password" class="adm_pwd form-control" placeholder="password">`,
+			buttons: [
+				{
+					text: core.tr('close'),
+					action: 'close'
+				},
+				{
+					addclass: 'btn-danger',
+					text: core.tr('validate_password'),
+					click: () => {
+						const pwd = $('#modal .adm_pwd').val();
+						core.getJSON('config_ctrl', 'security_check_pwd', false, {pwd: pwd}, data =>{
+							core.message(data.text, data.status)
+							if (data.status === 'success'){
+								$('#modal').modal('hide');
+								core.open({
+									title: core.tr('sys_config'),
+									obj: 'config_ctrl',
+									method: 'home',
+								});
+							}
+						});
+					}
+				}
+			]
+		}, 'modal');
 	},
 
 	validateApp: (uid) => {

@@ -364,7 +364,7 @@ class cfg
 		);
 	}
 
-	public static function deleteFld($tb, $fld)
+	public static function deleteFld(string $tb, string $fld)
 	{
 		if ( !isset(self::$data['tables'][$tb]) || !is_array(self::$data['tables'][$tb])) {
 			throw new myException("Invalid table $tb");
@@ -381,6 +381,17 @@ class cfg
 		unset(self::$data['tables'][$tb][$index]);
 		self::toFile($tb);
 		
+	}
+
+
+	public static function renameFld(string $tb, string $old_name, string $new_name)
+	{
+		foreach (self::$data['tables'][$tb] as $index_arr => &$column_data) {
+			if ( $column_data['name'] === $old_name ) {
+				$column_data['name'] = $new_name;
+				self::toFile($tb);
+			}
+		};
 	}
 
 }

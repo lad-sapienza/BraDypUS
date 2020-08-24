@@ -26,8 +26,14 @@
           <input  class="input_{{ id }}" name="{{ id }}" 
                   type="text" 
                   {% if arr.required %} required="required" {% endif %}
+                  {% if arr.pattern %} pattern="{{ arr.pattern }}" {% endif %}
                   {% if arr.readonly and data[id] %}readonly="true"{% endif %}
                   value="{{ data[id] }}">
+          {% if id == 'name' and fld %}
+          <button type="button" class="btn btn-block btn-danger" onclick="config.renameFld('{{ tb }}', '{{ data[id] }}', this)">
+            {{ tr.get('rename_column') }}
+          </button>
+          {% endif %}
         
         {% elseif arr.type == 'select' %}
           <select class="input_{{ id }}" 

@@ -416,12 +416,45 @@ TO;
             $alter = new \DB\Alter($driver);
             $alter->renameTable($old_name, $new_name);
 
-
-
             utils::response('ok_renaming_table', 'success');
         } catch (myException $e) {
             $e->log();
             utils::response('error_renaming_table', 'error');
+        }
+    }
+
+    public function rename_column()
+    {   
+        $tb = $this->get['tb'];
+        $old_name = $this->get['old_name'];
+        $new_name = $this->get['new_name'];
+
+        try {
+            $available_flds = array_values(cfg::fldEl($tb, 'all', 'name'));
+            if (in_array($new_name, $available_flds)){
+                throw new myException("Field name $new_name has already been used");
+            }
+
+            cfg::renameFld($tb, $old_name, $new_name);
+
+            $db = new DB();
+            $engine = $db->getEngine();
+            if ($engine = 'sqlite'){
+                $driver = new \DB\Alter\Sqlite($db);
+            } elseif($engine = 'mysql'){
+                $driver = new \DB\Alter\Mysql($db);
+            } elseif($engine = 'pgsql'){
+                $driver = new \DB\Alter\Postgres($db);
+            } else {
+                throw new \Exception("Unknown database engine: `$engine`");
+            }
+            $alter = new \DB\Alter($driver);
+            $alter->renameFld($tb, $old_name, $new_name);
+
+            utils::response('ok_renaming_column', 'success');
+        } catch (myException $e) {
+            $e->log();
+            utils::response('error_renaming_column', 'error');
         }
     }
 }

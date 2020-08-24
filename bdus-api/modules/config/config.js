@@ -169,7 +169,8 @@ var config = {
 			]
 		}, 'modal');
 	},
-	renameTb: (oldName, clickedButton) => {
+	
+	renameTb: (oldName) => {
 		core.open({
 			title: core.tr('rename_table'),
 			html: `<p class="lead text-danger">${core.tr('warning_rename_table')}</p><hr><input type="text" class="form-control new-tb-name" value="${oldName}">`,
@@ -188,6 +189,35 @@ var config = {
 							core.message(data.text, data.status);
 							if (data.status === 'success'){
 								layout.tabs.reloadActive();
+							}
+						})
+					}
+				}
+			]
+		}, 'modal');
+	},
+
+	renameFld: (tb, oldName, clickedButton) => {
+		core.open({
+			title: core.tr('rename_column'),
+			html: `<p class="lead text-danger">${core.tr('warning_rename_column')}</p><hr><input type="text" class="form-control new-column-name" value="${oldName}">`,
+			buttons: [
+				{
+					text: core.tr('close'),
+					action: 'close'
+				},
+				{
+					addclass: 'btn-danger',
+					text: core.tr('rename_column'),
+					click: function(){
+						const newName = $('#modal input.new-column-name').val();
+						core.getJSON('config_ctrl', 'rename_column', { tb: tb, old_name: oldName, new_name: newName }, false, data => {
+							$('#modal').modal('hide');
+							core.message(data.text, data.status);
+							if (data.status === 'success'){
+								$('#modal').modal('hide');
+								core.message(data.text, data.status);
+								config.viewFldList(tb, $(clickedButton).parents('.config_container').attr('id'));
 							}
 						})
 					}

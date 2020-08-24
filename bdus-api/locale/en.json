@@ -368,6 +368,11 @@
     "warning_rename_table": "Pay attention. By renaming the table cross references in configuration files to this table will be lost and these should be fixed manually. Also the database table will be renamed.",
     "error_renaming_table": "Error on renaming table",
     "ok_renaming_table": "The table was successfully renamed",
+
+    "rename_column": "Rename field",
+    "warning_rename_column": "Pay attention. By renaming the field cross references in configuration files to this field will be lost and these should be fixed manually. Also the database column will be renamed",
+    "error_renaming_column": "Error on renaming column",
+    "ok_renaming_column": "The column was successfully renamed",
     
     "cfg_add_column": "Add new field",
     "cfg_new_column_setting": "New field configuration",

@@ -178,14 +178,14 @@ var layout = {
                     }
                     
                     if (but.click){
-                        if (but.click == 'close'){
+                        if (but.click === 'close'){
                             a.attr('data-dismiss', 'modal');
                         } else{
                             a.click(function(){ but.click(dialog); });
                         }
                     }
                     
-                    if (but.action == 'close'){
+                    if (but.action === 'close'){
                         a.attr('data-dismiss', 'modal');
                     }
                     

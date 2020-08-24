@@ -353,9 +353,10 @@
 
     "cfg_add_table": "Add new table",
     "delete_table": "Delete table",
+    "warning_delete_table": "Pay attention please. Deleting the table will definitely delete all the configuration files for the table and the database data. It will not be possible to recover the lost data.",
     "ok_cfg_tb_delete": "Table was successully deleted",
     "error_cfg_tb_delete": "Error on deleting table",
-    
+
     "cfg_add_column": "Add new field",
 
     "ok_cfg_data_updated": "The configuration data were saved",

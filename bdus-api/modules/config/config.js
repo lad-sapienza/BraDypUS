@@ -78,10 +78,28 @@ var config = {
 		});
 	},
 	deleteTb: tb => {
-		core.getJSON('config_ctrl', 'delete_tb', { tb: tb }, false, data => {
-			core.message(data.text, data.status);
-			layout.tabs.reloadActive();
-		})
+		core.open({
+			title: core.tr('delete_table'),
+			html: '<p class="lead">' + core.tr('warning_delete_table') + '</p>',
+			buttons: [
+				{
+					text: core.tr('close'),
+					action: 'close'
+				},
+				{
+					addclass: 'btn-danger',
+					text: core.tr('delete_table'),
+					click: function(){
+						core.getJSON('config_ctrl', 'delete_tb', { tb: tb }, false, data => {
+							$('#modal').modal('hide');
+							core.message(data.text, data.status);
+							layout.tabs.reloadActive();
+						})
+					}
+				}
+			]
+		}, 'modal');
+		
 	}
 
 };

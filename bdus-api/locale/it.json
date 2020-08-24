@@ -352,6 +352,7 @@
     "cfg_links": "Collegamenti",
     "cfg_add_table": "Aggiungi una nuova tabella",
     "delete_table": "Cancella tabella",
+    "warning_delete_table": "Attenzione prego. Se viene cancellata la tabella, verranno cancellati tutte le configurazione relative e anche i dati nella banca dati. Non sarà più possibile recuperare i dati perduti.",
     "ok_cfg_tb_delete": "La tabella è stata cancellata senza errori",
     "error_cfg_tb_delete": "C'è stato qualche errore nel cancellare la tabella",
     "cfg_add_column": "Aggiungi un nuovo campo",

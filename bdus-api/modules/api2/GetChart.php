@@ -7,7 +7,7 @@
  */
 class GetChart
 {
-    public static function run($id)
+    public static function run($id, \DB $db)
     {
         if ( is_numeric($id) ) {
             $chartid = (int) $id;
@@ -15,7 +15,7 @@ class GetChart
             $chartid = false;
         }
 
-        $ChartObj = new Charts(new DB());
+        $ChartObj = new Charts($db);
         $charts = $ChartObj->getCharts($chartid);
         
         if (!$chartid) {
@@ -28,7 +28,7 @@ class GetChart
 
         $resp['name'] = $charts[0]['name'];
         $resp['id'] = $charts[0]['id'];
-        $resp['data'] = DB::start()->query($charts[0]['query']);
+        $resp['data'] = $db->query($charts[0]['query']);
 
         return $resp;
     }

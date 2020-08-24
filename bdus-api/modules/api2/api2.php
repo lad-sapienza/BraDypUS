@@ -202,7 +202,7 @@ class api2 extends Controller
         if (!$voc) {
             throw new Exception("Vocabulary name is required with verb getVocabulary");
         }
-        $VocClass = new Vocabulary(new DB());
+        $VocClass = new Vocabulary($this->db);
         $resp = $VocClass->getValues($voc);
         
         return $resp;
@@ -231,7 +231,7 @@ class api2 extends Controller
         }
 
         require_once __DIR__ . '/GetUniqueVal.php';
-        $resp = GetUniqueVal::run($tb, $fld, $substring, $where);
+        $resp = GetUniqueVal::run($tb, $fld, $substring, $where, $this->db);
 
         return $resp;
     }
@@ -288,7 +288,7 @@ class api2 extends Controller
             throw new Exception("Chart id is required");
         }
         require_once __DIR__ . '/GetChart.php';
-        $resp = GetChart::run($chartId);
+        $resp = GetChart::run($chartId, $this->db);
         return $resp;
     }
 

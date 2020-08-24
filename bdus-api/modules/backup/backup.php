@@ -66,15 +66,12 @@ class backup_ctrl extends Controller
 
 	public function doBackup()
 	{
-		try
-		{
+		try {
 			$file = PROJ_DIR . 'backups/' . APP . '_' . date('Y-m-d_H-i-s');
 
-			$db = new DB();
-
-			switch($db->getEngine()) {
+			switch($this->db->getEngine()) {
 				case 'mysql':
-					$bupMysql = new BackupMySQL(new DB(), $file . '.sql');
+					$bupMysql = new BackupMySQL($this->db, $file . '.sql');
 					$bupMysql->exportAll();
 					break;
 
@@ -89,7 +86,7 @@ class backup_ctrl extends Controller
 
 		} catch(myException $e) {
 			echo 'error';
-			$e->log();
+			$this->log->error($e);
 		}
 	}
 }

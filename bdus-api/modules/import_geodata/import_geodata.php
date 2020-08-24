@@ -43,7 +43,7 @@ class import_geodata_ctrl extends Controller
       ]);
       
     } catch (myException $e) {
-      $e->log();
+      $this->log->error($e);
       utils::alert_div('empty_or_wrong_geojson', true);
     }
   }
@@ -74,7 +74,7 @@ class import_geodata_ctrl extends Controller
     try {
       $import = new importGeodata();
       
-      $import->settings(new DB(), $tb, file_get_contents($file), $id_field, $delete);
+      $import->settings($this->db, $tb, file_get_contents($file), $id_field, $delete);
       
       $totalImports = $import->runImport();
       
@@ -82,7 +82,7 @@ class import_geodata_ctrl extends Controller
         . tr::get('geodata_ok_uploaded', [$totalImports] ) . '</div>';
       
     } catch (myException $e) {
-      $e->log();
+      $this->log->error($e);
       utils::alert_div('geodata_ok_uploaded', true);
     }
   }

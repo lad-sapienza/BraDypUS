@@ -50,7 +50,7 @@ class myExport_ctrl extends Controller
 		
 			$file = PROJ_DIR . 'export/' . $tb . '.' . date('U');
 		
-			$export_handle = new Export(new DB(), $file, $tb, $where);
+			$export_handle = new Export($this->db, $file, $tb, $where);
 		
 			$export_handle->doExport($format);
 		
@@ -59,7 +59,7 @@ class myExport_ctrl extends Controller
 		}
 		catch(myException $e)
 		{
-			$e->log();
+			$this->log->error($e);
 			$resp['text'] = tr::get('export_error') . tr::get('details_in_log');
 			$resp['status'] = 'error';
 		}

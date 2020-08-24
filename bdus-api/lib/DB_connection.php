@@ -72,7 +72,7 @@ class DB_connection
             
             $connection_file = $custom_connection_file;
             
-        } else if ( file_exists(PROJ_DIR . 'cfg/app_data.json' ) ){
+        } else if ( defined('PROJ_DIR') && file_exists(PROJ_DIR . 'cfg/app_data.json' ) ){
             
             $connection_file = PROJ_DIR . 'cfg/app_data.json';
             

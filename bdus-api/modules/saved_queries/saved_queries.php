@@ -12,7 +12,7 @@ class saved_queries_ctrl extends Controller
     {
         $id = $this->get['id'];
 
-        $savedQ = new SavedQueries(new DB());
+        $savedQ = new SavedQueries($this->db);
         $res = $savedQ->getById($id);
 
         if ($res[0]) {
@@ -28,7 +28,7 @@ class saved_queries_ctrl extends Controller
 
     public function showAll()
     {
-        $savedQ = new SavedQueries(new DB());
+        $savedQ = new SavedQueries($this->db);
         $res = $savedQ->getAll();
 
         foreach ($res as &$q) {
@@ -47,7 +47,7 @@ class saved_queries_ctrl extends Controller
     {
         try {
             $id = $this->get['id'];
-            $savedQ = new SavedQueries(new DB());
+            $savedQ = new SavedQueries($this->db);
 
             $msg = [
                 'status'=>'error', 
@@ -62,7 +62,7 @@ class saved_queries_ctrl extends Controller
             }
             
         } catch (myException $e) {
-            $e->log();
+            $this->log->error($e);
         }
 
         $this->returnJson($msg);
@@ -72,7 +72,7 @@ class saved_queries_ctrl extends Controller
     {
         try {
             $id = $this->get['id'];
-            $savedQ = new SavedQueries(new DB());
+            $savedQ = new SavedQueries($this->db);
 
             $msg = [
                 'status'=>'error', 
@@ -87,7 +87,7 @@ class saved_queries_ctrl extends Controller
             }
             
         } catch (myException $e) {
-            $e->log();
+            $this->log->error($e);
         }
 
         $this->returnJson($msg);
@@ -97,7 +97,7 @@ class saved_queries_ctrl extends Controller
     {
         try {
             $id = $this->get['id'];
-            $savedQ = new SavedQueries(new DB());
+            $savedQ = new SavedQueries($this->db);
 
             $msg = [
                 'status'=>'error', 
@@ -112,7 +112,7 @@ class saved_queries_ctrl extends Controller
             }
             
         } catch (myException $e) {
-            $e->log();
+            $this->log->error($e);
         }
 
         $this->returnJson($msg);
@@ -125,7 +125,7 @@ class saved_queries_ctrl extends Controller
             $name = $this->get['name'];
             $query_text = $this->post['query_text'];
 
-            $savedQ = new SavedQueries(new DB());
+            $savedQ = new SavedQueries($this->db);
 
             $msg = [
                 'status'=>'error', 
@@ -140,7 +140,7 @@ class saved_queries_ctrl extends Controller
             }
             
         } catch (myException $e) {
-            $e->log();
+            $this->log->error($e);
         }
 
         $this->returnJson($msg);

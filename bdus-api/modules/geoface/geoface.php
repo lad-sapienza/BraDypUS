@@ -24,7 +24,7 @@ class geoface_ctrl extends Controller
 				throw new myException('User has not enough privilege to add a new record');
 			}
 
-			$record = new Record($tb, $id, new DB());
+			$record = new Record($tb, $id, $this->db);
 
 			$new_id = $record->addGeodata($geometry);
 
@@ -35,7 +35,7 @@ class geoface_ctrl extends Controller
 			}
 
 		} catch (myException $e) {
-			$e->log();
+			$this->log->error($e);
 			utils::response('error_insert_geodata', 'error');
 		}
 
@@ -56,7 +56,7 @@ class geoface_ctrl extends Controller
 				throw new myException('User has not enough privilege to edit records');
 			}
 
-			$record = new Record('novalue', false, new DB());
+			$record = new Record('novalue', false, $this->db);
 
 			foreach ($id_arr as $id) {
 				if (!$record->deleteGeodata($id)) {
@@ -71,7 +71,7 @@ class geoface_ctrl extends Controller
 			}
 
 		} catch (myException $e) {
-			$e->log();
+			$this->log->error($e);
 			utils::response('error_delete_geodata', 'error');
 		}
 	}
@@ -89,10 +89,8 @@ class geoface_ctrl extends Controller
 				throw new myException('User has not enough privilege to edit records');
 			}
 
-			$db = new DB();
-
 			foreach ($post as $row){
-				$ret = $db->query('UPDATE ' . PREFIX . 'geodata SET geometry = ? WHERE id = ?' ,
+				$ret = $this->db->query('UPDATE ' . PREFIX . 'geodata SET geometry = ? WHERE id = ?' ,
 						  [ $row['coords'], $row['id'] ],
 						  'boolean');
 				if (!$ret) {
@@ -107,7 +105,7 @@ class geoface_ctrl extends Controller
 			}
 
 		} catch (myException $e) {
-			$e->log();
+			$this->log->error($e);
 			utils::response('error_update_geometry', 'error');
 		}
 	}
@@ -146,9 +144,7 @@ class geoface_ctrl extends Controller
 			. ' WHERE geometry IS NOT NULL '
 			. ($where ? ' AND ' . $where : '');
 
-			$db = new DB();
-
-			$res = $db->query($sql, false);
+			$res = $this->db->query($sql, false);
 
 			if($res) {
 
@@ -193,7 +189,7 @@ class geoface_ctrl extends Controller
 			echo $this->returnJson($response);
 
 		} catch (myException $e) {
-			$e->log();
+			$this->log->error($e);
 			utils::response('error_getting_geodata', 'error');
 		}
 	}

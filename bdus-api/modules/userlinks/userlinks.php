@@ -15,7 +15,7 @@ class userlinks_ctrl extends Controller
 			$ret['status'] = 'success';
 			$ret['info'] = cfg::getNonPlg();
 		} catch (myException $e) {
-			$e->log();
+			$this->log->error($e);
 			$ret['status'] = 'error';
 			$ret['info'] = $e->getMessage();
 		}
@@ -38,7 +38,7 @@ class userlinks_ctrl extends Controller
 			if (!$tb) throw new myException("Missing required parameter tb");
 			if (!$id) throw new myException("Missing required parameter id");
 			
-			$record = new Record($thistb, $thisid, new DB());
+			$record = new Record($thistb, $thisid, $this->db);
 			foreach($id as $id) {
 				if ($record->addUserLink($tb, $id)) {
 					$ok[] = true;
@@ -56,7 +56,7 @@ class userlinks_ctrl extends Controller
 				utils::response('no_link_saved', 'error');
 			}
 		} catch(myException $e) {
-			$e->log();
+			$this->log->error($e);
 			utils::response('no_link_saved', 'error');
 		}
 	}
@@ -64,7 +64,7 @@ class userlinks_ctrl extends Controller
 	public function deleteUserLink()
 	{
 		$id = $this->get['id'];
-		$record = new Record('no importance', false, new DB());
+		$record = new Record('no importance', false, $this->db);
 
 		if ($record->deleteUserLink($id)) {
 			utils::response('ok_userlink_erased');
@@ -79,7 +79,7 @@ class userlinks_ctrl extends Controller
 		$id = $this->get['id'];
 		$context = $this->get['context'];
 
-		$record = new Record($tb, $id, new DB());
+		$record = new Record($tb, $id, $this->db);
 
 		$links = $record->getUserLinks();
 

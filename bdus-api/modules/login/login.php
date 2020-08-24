@@ -99,15 +99,11 @@ class login_ctrl extends Controller
 
 					echo json_encode(array('text'=>tr::get('ok_user_add', [ $post['email'] ]), 'status'=>'success'));
 					return;
-				}
-				else
-				{
+				} else {
 					utils::response('error_user_add', 'error');
 					return;
 				}
-			}
-			catch(myException $e)
-			{
+			} catch(myException $e) {
 				utils::response($e->getMessage(), 'error');
 				return;
 			}
@@ -118,7 +114,7 @@ class login_ctrl extends Controller
 
 	public function out()
 	{
-		$user = new User(new DB());
+		$user = new User($this->db);
     	$user->logout();
 	}
 
@@ -169,20 +165,17 @@ class login_ctrl extends Controller
 
 	public function select_app()
 	{
-		try
-		{
+		try {
 			$availables_DB = utils::dirContent(MAIN_DIR . "projects");
 
-			if (!$availables_DB OR !is_array($availables_DB))
-			{
+			if (!$availables_DB OR !is_array($availables_DB)) {
 				throw new myException(tr::get('no_app'));
 				return;
 			}
 
 			asort($availables_DB);
 
-			foreach ($availables_DB as $db)
-			{
+			foreach ($availables_DB as $db) {
 				$appl = json_decode(file_get_contents(MAIN_DIR . "projects/$db/cfg/app_data.json"), true);
 
 				$data[] = array(
@@ -199,10 +192,8 @@ class login_ctrl extends Controller
 					'version' => version::current()
 					));
 
-		}
-		catch (myException $e)
-		{
-			$e->log();
+		} catch (myException $e) {
+			$this->log->error($e);
 		}
 	}
 

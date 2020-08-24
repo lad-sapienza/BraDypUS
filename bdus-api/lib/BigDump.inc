@@ -167,14 +167,10 @@ class BigDump
 	
 	
 				// Execute query if end of query detected (; as last character) AND NOT in parents
-				if ( preg_match('/;$/', trim($dumpline)) && !$inparents )
-				{
-					try
-					{
+				if ( preg_match('/;$/', trim($dumpline)) && !$inparents ) {
+					try {
 						$db->query($query, false, 'boolean');
-					}
-					catch (myException $e)
-					{
+					} catch (myException $e) {
 						$e->log();
 						throw new myException(tr::get('error_in_query'));
 					}

@@ -17,7 +17,7 @@ class sys_mail_ctrl extends Controller
 
 		$headers = 'From: ' . $this->post['from']  . "\r\n" . 'Reply-To: ' . $this->post['from'] . "\r\n";
 
-		$users_email = DB::start()->query('SELECT * FROM ' . PREFIX . 'users WHERE privilege IN (' . implode(', ', $this->post['to']) . ')');
+		$users_email = $this->db->query('SELECT * FROM ' . PREFIX . 'users WHERE privilege IN (' . implode(', ', $this->post['to']) . ')');
 
 		if ($users_email)
 		{

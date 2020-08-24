@@ -7,7 +7,7 @@
  */
 class GetUniqueVal
 {
-    public static function run($tb, $fld, $str = false, $where = false)
+    public static function run($tb, $fld, $str = false, $where = false, \DB $db)
     {
         if ($str === 'false'){
             $str = false;
@@ -41,7 +41,7 @@ class GetUniqueVal
             array_push($sql_part, " 1=1 ");
         }
         $sql .= implode(' AND ', $sql_part);
-        $res = DB::start()->query($sql, $values);
+        $res = $db->query($sql, $values);
         
         $resp = [];
         foreach ($res as $v) {

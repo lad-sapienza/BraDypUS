@@ -13,7 +13,7 @@ class user_ctrl extends Controller
 		$data = [ 'admin' => utils::canUser('admin') ];
 
 		if (utils::canUser('admin')) {
-			$user_obj = new User(new DB());
+			$user_obj = new User($this->db);
 			
 			$all_users = $user_obj->getUser('all');
 			
@@ -46,7 +46,7 @@ class user_ctrl extends Controller
 			$id = $this->get['id'];
 		}
 		try {
-			$user = new User(new DB());
+			$user = new User($this->db);
 		
 			$ret = $user->delete($id);
 		
@@ -60,7 +60,7 @@ class user_ctrl extends Controller
 			$res['message'] = tr::get('user_not_deleted');
 			$res['status'] = 'error';
 		
-			$e->log();
+			$this->log->error($e);
 		}
 		
 		echo json_encode($res);
@@ -76,7 +76,7 @@ class user_ctrl extends Controller
 		}
 		
 		if ($id) {
-			$user = new User(new DB());
+			$user = new User($this->db);
 			$one_user = $user->getUser( [ 'id' => $id ] );
 			$one_user = $one_user[0];
 		} else {
@@ -110,7 +110,7 @@ class user_ctrl extends Controller
 	{
     	$data = $this->post;
 		try {
-			$user = new User(new DB());
+			$user = new User($this->db);
 		
 			if ($data['id'] && !empty($data['id'])) {
 				$ret = $user->update($data['id'], $data['name'], $data['email'], $data['password'], $data['privilege']);
@@ -127,7 +127,7 @@ class user_ctrl extends Controller
 		catch (myException $e)
 		{
 			utils::response('user_data_not_saved', 'error');
-			$e->log();
+			$this->log->error($e);
 		}
 	}
 }

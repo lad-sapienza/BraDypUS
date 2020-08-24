@@ -9,7 +9,7 @@ class vocabularies_ctrl extends Controller
 {
 	public function show()
 	{
-		$vocs = new Vocabulary(new DB());
+		$vocs = new Vocabulary($this->db);
 		
 		$this->render('vocabularies', 'list', [
 			'vocs' => $vocs->getAll(),
@@ -21,7 +21,7 @@ class vocabularies_ctrl extends Controller
 		$voc = $this->get['voc'] ?: false ;
 
 		if (!$voc) {
-			$vocs = new Vocabulary(new DB());
+			$vocs = new Vocabulary($this->db);
 			$all_vocs = $vocs->getAllVoc();
 		}
 		
@@ -34,7 +34,7 @@ class vocabularies_ctrl extends Controller
 	
 	public function getAllVoc()
 	{
-		$voc = new Vocabulary(new DB());
+		$voc = new Vocabulary($this->db);
 		
 		$all_vocs = $voc->getAllVoc();
 	
@@ -51,7 +51,7 @@ class vocabularies_ctrl extends Controller
 
 	public function getAll()
 	{
-		$voc = new Vocabulary(new DB());
+		$voc = new Vocabulary($this->db);
 		
 		$all_vocs = $voc->getAll();
 	
@@ -69,7 +69,7 @@ class vocabularies_ctrl extends Controller
 	public function edit()
 	{
 		//necessary parameters: id, def
-		$voc = new Vocabulary(new DB());
+		$voc = new Vocabulary($this->db);
 
 		if ($voc->update($this->get['id'], $this->get['val'])) {
 			$resp = array('status'=>'success', 'text'=>tr::get('ok_def_update'));
@@ -83,7 +83,7 @@ class vocabularies_ctrl extends Controller
 	
 	public function erase()
 	{
-		$voc = new Vocabulary(new DB());
+		$voc = new Vocabulary($this->db);
 		
 		if ($voc->erase($this->get['id']))
 		{
@@ -102,7 +102,7 @@ class vocabularies_ctrl extends Controller
 	{
 		// necessary parameters: voc, def
 		
-		$voc = new Vocabulary(new DB());
+		$voc = new Vocabulary($this->db);
 		
 		if ($voc->add($this->get['voc'], $this->get['def']))
 		{
@@ -117,7 +117,7 @@ class vocabularies_ctrl extends Controller
 	
 	public function sort()
 	{
-		$voc = new Vocabulary(new DB());
+		$voc = new Vocabulary($this->db);
 		
 		foreach($this->post as $arr)
 		{

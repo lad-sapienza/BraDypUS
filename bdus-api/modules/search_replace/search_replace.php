@@ -36,25 +36,20 @@ class search_replace_ctrl extends Controller
 		$search 	= $this->get['search'];
 		$replace 	= $this->get['replace'];
 		
-		try
-		{
-			if (!$tb || !$fld || !$search || !$replace){
+		try {
+			if (!$tb || !$fld || !$search || !$replace) {
 				throw new myException('All fields are required');
 			}
 
-			$db = new DB();
-			
 			$values = false;
 
-			echo $db->query(
+			echo $this->db->query(
 				"UPDATE {$tb} SET {$fld} = REPLACE ({$fld} , ?, ?)", 
 				[ $search, $replace], 
 				'affected'
 			);
-		}
-		catch(myException $e)
-		{
-			$e->log();
+		} catch(myException $e) {
+			$this->log->error($e);
 			echo 'error';
 		}
 	}

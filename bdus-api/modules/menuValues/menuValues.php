@@ -11,7 +11,7 @@ class menuValues_ctrl extends Controller
    * Max number of results per page
    * @var integer
    */
-  private static $res_x_page = 30;
+  private $res_x_page = 30;
 
   /**
    * Wrapper function for getValues to be used with query parameters:
@@ -28,7 +28,7 @@ class menuValues_ctrl extends Controller
     $q = $this->get['q'];
     $p = $this->get['p'];
 
-    $data = self::getValues($context, $att, $q, $p);
+    $data = $this->getValues($context, $att, $q, $p);
     echo $this->returnJson($data);
   }
 
@@ -40,9 +40,9 @@ class menuValues_ctrl extends Controller
    * @param  string $p       Page nuber to return
    * @return array           Array with query results (tot: totale number of results, data: array of data)
    */
-  public static function getValues($context, $att, $q = false, $p = 1)
+  private function getValues($context, $att, $q = false, $p = 1)
   {
-    $offset = self::$res_x_page * ($p - 1);
+    $offset = $this->res_x_page * ($p - 1);
 
 
     $query = new QueryBuilder();
@@ -56,7 +56,7 @@ class menuValues_ctrl extends Controller
           ->setFields('def', 'id')
           ->setFields('def', 'val')
           ->setWhere('voc', $att)
-          ->setLimit(self::$res_x_page, $offset)
+          ->setLimit($this->res_x_page, $offset)
           ->setOrder('sort');
 
         $tot->setTable(PREFIX . 'vocabularies')
@@ -79,7 +79,7 @@ class menuValues_ctrl extends Controller
           ->setFields($fld, 'id')
           ->setFields($fld, 'val')
           ->setGroup($fld)
-          ->setLimit(self::$res_x_page, $offset)
+          ->setLimit($this->res_x_page, $offset)
           ->setOrder($fld);
 
         $tot->setTable($tb)
@@ -99,7 +99,7 @@ class menuValues_ctrl extends Controller
         $query->setTable($att)
           ->setFields('id', 'id')
           ->setFields($id_field, 'val')
-          ->setLimit(self::$res_x_page, $offset)
+          ->setLimit($this->res_x_page, $offset)
           ->setOrder($id_field);
 
         $tot->setTable($att)
@@ -117,11 +117,9 @@ class menuValues_ctrl extends Controller
     list($sql, $val) = $query->getSql();
     list($tot_sql, $tot_val) = $tot->getSql();
 
-    $db = new DB();
-
     return [
-      "tot" => $db->query($tot_sql, $tot_val)[0]['tot'],
-      "data" => $db->query($sql, $val),
+      "tot" => $this->db->query($tot_sql, $tot_val)[0]['tot'],
+      "data" => $this->db->query($sql, $val),
     ];
   }
 

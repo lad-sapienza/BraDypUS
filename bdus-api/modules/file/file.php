@@ -38,7 +38,7 @@ class file_ctrl extends Controller
 				throw new myException('error_uploading_file');
 			}
 
-			$record = new Record(PREFIX . 'files', false, new DB());
+			$record = new Record(PREFIX . 'files', false, $this->db);
 
 			$record->setCore([
 				PREFIX . 'files' => [
@@ -65,7 +65,7 @@ class file_ctrl extends Controller
 			echo json_encode($result);
 
 		} catch (myException $e) {
-			$e->log();
+			$this->log->error($e);
 
 			echo json_encode([
 				'status'=>'error',
@@ -133,21 +133,19 @@ class file_ctrl extends Controller
 				];
 			}
 
-			$db = new DB();
-
-			$db->beginTransaction();
+			$this->db->beginTransaction();
 
 			try {
 				foreach ($sql as $s) {
-					$db->query($s[0], $s[1]);
+					$this->db->query($s[0], $s[1]);
 				}
 
-				$db->commit();
+				$this->db->commit();
 
 				$resp = array('status' => 'success', 'text'=> tr::get('ok_file_sorting_update'));
 			
 			} catch (myException $e) {
-				$db->rollBack();
+				$this->db->rollBack();
 				$resp = array('status' => 'error', 'text'=> tr::get('error_file_sorting_update'));
 			}
 		} else {
@@ -164,7 +162,7 @@ class file_ctrl extends Controller
 	 */
 	public function gallery()
 	{
-		$record = new Record($this->request['tb'], $this->request['id'], new DB);
+		$record = new Record($this->request['tb'], $this->request['id'], $this->db);
 
 		$this->render('file', 'gallery', array(
 				'title' => tr::get('file_gallery', [cfg::tbEl($this->request['tb'], 'label') . ', id. ' . $this->request['id']]),

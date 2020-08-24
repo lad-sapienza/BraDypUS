@@ -43,10 +43,7 @@ try {
 	$app = new \Bdus\App($_GET, $_POST, $_REQUEST);
 	$app->route();
 
-	// $controller = new Controller($_GET, $_POST, $_REQUEST);
-	// $controller->route();
-
-} catch (Throwable $e) {
+} catch (\Throwable $e) {
 	Meta::logException($e);
 
 	echo utils::message( tr::get('generic_error'), 'error', true);

@@ -205,7 +205,7 @@ class api_ctrl extends Controller
 				}
 			}
 
-			$query = new Query(new DB, $request);
+			$query = new Query($this->db, $request);
 
 			// Set Header
 			$header['query_where'] = $query->getWhere();
@@ -261,7 +261,7 @@ class api_ctrl extends Controller
 	 */
 	private function getOne($tb, $id)
 	{
-		$rec = new Record($tb, $id, new DB);
+		$rec = new Record($tb, $id, $this->db);
 		$data['metadata'] = [
 			'table' => $tb,
 			'stripped_table' => str_replace(PREFIX, null, $tb),

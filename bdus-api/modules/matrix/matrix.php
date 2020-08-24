@@ -15,7 +15,7 @@ class matrix_ctrl extends Controller
 		
 		try
 		{
-			$matrix = new Matrix($tb, $where, new DB());
+			$matrix = new Matrix($tb, $where, $this->db);
 			
 			$dotText = $matrix->getDotContent();
 			
@@ -30,7 +30,7 @@ class matrix_ctrl extends Controller
 		}
 		catch (myException $e)
 		{
-			$e->log();
+			$this->log->error($e);
 			echo '<div class="alert alert-danger"> '
 					. '<strong>' . tr::get('attention') . ':</strong> ' . tr::get($e->getMessage()) . '</p>'
 				. '</div>';

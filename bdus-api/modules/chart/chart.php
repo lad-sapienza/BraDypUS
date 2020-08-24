@@ -67,7 +67,7 @@ class chart_ctrl extends Controller
 			$sql .= ' ' . $group_by;
 		}
 
-		$ch = new Charts(new DB());
+		$ch = new Charts($this->db);
 
 		$ch->formatResult(false, $sql);
 
@@ -94,7 +94,7 @@ class chart_ctrl extends Controller
 				$post['name'] = uniqid('chart_');
 			}
 
-			$chart = new Charts(new DB());
+			$chart = new Charts($this->db);
 
 			if ($chart->save($post['name'], $post['query_text'])) {
 				utils::response('ok_save_chart');
@@ -102,7 +102,7 @@ class chart_ctrl extends Controller
 				throw myException('Save chart query returned false');
 			}
 		} catch(myException $e) {
-			$e->log();
+			$this->log->error($e);
 			utils::response('error_save_chart', 'error');
 		}
 	}
@@ -115,7 +115,7 @@ class chart_ctrl extends Controller
 	{
 		$id = $this->get['id'];
 
-		$chart = new Charts(new DB());
+		$chart = new Charts($this->db);
 
 		if ( $chart->erase($id) ) {
 			utils::response('ok_chart_erase');
@@ -131,7 +131,7 @@ class chart_ctrl extends Controller
 	public function display_chart()
 	{
 		try {
-			$chart = new Charts(new DB());
+			$chart = new Charts($this->db);
 
 			$chart->formatResult($this->get['id']);
 
@@ -149,7 +149,7 @@ class chart_ctrl extends Controller
 
 	public function show_all_charts()
 	{
-		$charts = new Charts(new DB());
+		$charts = new Charts($this->db);
 
 		$this->render('chart', 'show_all_charts', [
 			'all_charts' => $charts->getCharts(),
@@ -164,7 +164,7 @@ class chart_ctrl extends Controller
 	 */
 	public function edit_form()
 	{
-		$chart = new Charts(new DB());
+		$chart = new Charts($this->db);
 
 		$mych = $chart->getCharts($this->get['id']);
 
@@ -187,7 +187,7 @@ class chart_ctrl extends Controller
 		$text = $this->post['text'];
 
 		try {
-			$chart = new Charts(new DB());
+			$chart = new Charts($this->db);
 
 			if ($chart->update($id, $name, $text)) {
 				utils::response('ok_update_chart');
@@ -195,7 +195,7 @@ class chart_ctrl extends Controller
 				throw new myException('Update query returned false');
 			}
 		} catch (myException $e) {
-			$e->log();
+			$this->log->error($e);
 			utils::response('error_update_chart', 'error');
 		}
 	}

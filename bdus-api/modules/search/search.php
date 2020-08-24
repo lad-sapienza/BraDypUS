@@ -32,8 +32,7 @@ class search_ctrl extends Controller
 		}
 
 
-		$db = new DB();
-		$res = $db->query($q);
+		$res = $this->db->query($q);
 		foreach ($res as $r){
 			$arr[] = $r[$fld];
 		}
@@ -46,7 +45,7 @@ class search_ctrl extends Controller
 	{
 		try
 		{
-			$queryObj = new Query(new DB(), $this->request, true);
+			$queryObj = new Query($this->db, $this->request, true);
 			$resp['status'] = 'success';
 			$resp['verbose'] = tr::get('test_ok_x_found', [$queryObj->getTotal()]);
 		}

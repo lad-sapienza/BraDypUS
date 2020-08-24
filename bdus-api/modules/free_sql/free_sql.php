@@ -16,7 +16,7 @@ class free_sql_ctrl extends Controller
 		$totalqueries = $this->get['totalqueries']; 
 
 		try {
-			$bigRestore = new bigRestore(new DB());
+			$bigRestore = new bigRestore($this->db);
 			
 			$bigRestore->runImport($filename, $start, $offset, $totalqueries);
 			
@@ -55,15 +55,14 @@ class free_sql_ctrl extends Controller
 		$sql = $this->post['sql'];
 		
 		try {
-			$db = new DB();
-			$db->beginTransaction();
-			$ret = $db->exec($sql);
-			$db->commit();
+			$this->db->beginTransaction();
+			$ret = $this->db->exec($sql);
+			$this->db->commit();
 			
 			utils::response(tr::get('ok_free_sql_run_affected', [$ret ?: 0], 'success', true));
 		} catch (myException $e) {
-			$e->log();
-			$db->rollBack();
+			$this->log->error($e);
+			$this->db->rollBack();
 			utils::response(
 				tr::get(
 					'error_free_sql_run_msg',

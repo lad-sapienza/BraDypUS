@@ -73,7 +73,7 @@ class multiupload_ctrl extends Controller
 		{
 			try
 			{
-				$record = new Record(PREFIX . 'files', false, new DB());
+				$record = new Record(PREFIX . 'files', false, $this->db);
 
 				$record->setTmpFolder($row['path']);
 
@@ -104,7 +104,7 @@ class multiupload_ctrl extends Controller
 			}
 			catch (myException $e)
 			{
-				$e->log();
+				$this->log->error($e);
 				$error[] = true;
 			}
 

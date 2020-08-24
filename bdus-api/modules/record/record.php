@@ -22,7 +22,7 @@ class record_ctrl extends Controller
             if (is_array($this->request['id'])) {
                 foreach ($this->request['id'] as $id) {
                     try {
-                        $record = new Record($this->get['tb'], $id, new DB);
+                        $record = new Record($this->get['tb'], $id, $this->db);
 
                         if (is_array($this->post['core'])) {
                             $record->setCore($this->post['core']);
@@ -47,7 +47,7 @@ class record_ctrl extends Controller
                         }
                     } catch (myException $e) {
                         $error[$id] = true;
-                        $e->log($e);
+                        $this->log->error($e);
                     }
                 }
             }
@@ -66,7 +66,7 @@ class record_ctrl extends Controller
         } catch (myException $e) {
             $data['status'] = 'error';
             $data['verbose'] = tr::get('error_saved');
-            $e->log($e);
+            $this->log->error($e);
         }
 
         echo json_encode($data);
@@ -84,13 +84,13 @@ class record_ctrl extends Controller
         if (is_array($this->request['id'])) {
             foreach ($this->request['id'] as $id) {
                 try {
-                    $record = new Record($this->get['tb'], $id, new DB);
+                    $record = new Record($this->get['tb'], $id, $this->db);
 
                     $record->delete();
 
                     $ok[] = true;
                 } catch (myException $e) {
-                    $e->log();
+                    $this->log->error($e);
                     $error[] = true;
                 }
             }
@@ -127,7 +127,7 @@ class record_ctrl extends Controller
         }
 
         // no data are retrieved if context is add_new or multiple edit!
-        if ($this->request['a'] == 'add_new' or ($this->request['a'] == 'edit' and count($this->request['id']) > 1)) {
+        if ($this->request['a'] === 'add_new' or ($this->request['a'] === 'edit' and count($this->request['id']) > 1)) {
             $id_arr = array('new');
         } elseif ($this->request['id_field']) {
             $id_arr = $this->request['id_field'];
@@ -138,7 +138,6 @@ class record_ctrl extends Controller
 
         //Can not display more than 500 records!
         $total_records = count($id_arr);
-
         if ($total_records > 500) {
             echo '<div class="alert">' . tr::get('too_much_records', [ $total_records, '500'] ) . '</div>';
             return;
@@ -165,7 +164,7 @@ class record_ctrl extends Controller
                 $id = false;
             }
 
-            $record = new Record($this->request['tb'], ($flag_idfield ? false : $id), new DB);
+            $record = new Record($this->request['tb'], ($flag_idfield ? false : $id), $this->db);
 
             if ($flag_idfield) {
                 $record->setIdField($id);
@@ -185,7 +184,6 @@ class record_ctrl extends Controller
             $tmpl = new ParseTmpl($this->request['a'], $record);
 
             $this->render('record', 'show', array(
-                    'form_id' => uniqid('editadd') . rand(10, 999),
                     'action' => $this->request['a'],
                     'html' => $tmpl->parseAll(),
                     'multiple_id' => (count($this->request['id']) > 1) ? tr::get('multiple_edit_alert', [ count($this->request['id']), implode('; id: ', $this->request['id']) ] ) : false,
@@ -212,7 +210,7 @@ class record_ctrl extends Controller
             throw new myException(tr::get('tb_missing'));
         }
 
-        $queryObj = new Query(new DB(), $this->request, true);
+        $queryObj = new Query($this->db, $this->request, true);
 
         $count = $this->request['total'] ?: $queryObj->getTotal();
 
@@ -277,7 +275,7 @@ class record_ctrl extends Controller
     {
         $this->request['type'] = 'encoded';
 
-        $qObj = new Query(new DB(), $this->request, true);
+        $qObj = new Query($this->db, $this->request, true);
 
         $response['sEcho'] = intval($this->request['sEcho']);
         $response['query_arrived'] = $qObj->getQuery();
@@ -322,7 +320,7 @@ class record_ctrl extends Controller
 
                 $query = 'SELECT count(*) as tot FROM ' . $arr[0] . ' WHERE ' . $arr[1] . ' = :' . $arr[1];
 
-                $res = DB::start()->query($query, [":{$arr[1]}" => $this->request['val']], 'read');
+                $res = $this->db->query($query, [":{$arr[1]}" => $this->request['val']], 'read');
 
                 if ($res[0]['tot'] > 0) {
                     echo 'error';
@@ -330,7 +328,7 @@ class record_ctrl extends Controller
             }
         } catch (myException $e) {
             echo 'error';
-            $e->log();
+            $this->log->error($e);
         }
     }
 }

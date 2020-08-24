@@ -30,7 +30,7 @@ class DB implements \DB\DB\DBInterface
 	 */
 	public function __construct($app = false, $custom_connection = false)
 	{
-		$this->app = $app ? $app : APP;
+		$this->app = $app ? $app : defined('APP') ? APP : false;
 
 		$this->parseStart($this->app, $custom_connection);
 	}

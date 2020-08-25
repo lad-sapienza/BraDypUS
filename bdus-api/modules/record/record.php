@@ -181,7 +181,7 @@ class record_ctrl extends Controller
                 continue;
             }
 
-            $tmpl = new ParseTmpl($this->request['a'], $record);
+            $tmpl = new ParseTmpl($this->request['a'], $record, $this->log);
 
             $this->render('record', 'show', array(
                     'action' => $this->request['a'],

@@ -64,9 +64,10 @@ class Vocabulary
 	 * Changes definition sort
 	 * @param array $data array with keys containing the sort order and values the record ids
 	 */
-	public function sort($data)
+	public function sort(array $data): bool
 	{
-		foreach($data as $sort=>$id) {
+		$error = [];
+		foreach($data as $sort => $id) {
 
 			try {
 				$res = $this->db->query(
@@ -77,15 +78,11 @@ class Vocabulary
 				if (!$res) {
 					$flag_error = true;
 				}
-
 			} catch(myException $e) {
-				$e->log();
-				$flag_error = true;
+				array_push($error, $e);
 			}
-
 		}
-
-		return ($flag_error ? false : true);
+		return count($error) === 0;
 	}
 
 	/**

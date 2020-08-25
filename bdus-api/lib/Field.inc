@@ -19,7 +19,7 @@ class Field implements iTemplate
     // old: $db_data > $record
 
 
-    public function __construct($context, Record $record)
+    public function __construct(string $context, Record $record, Monolog\Logger $log)
     {
         $this->tb = $record->getTb();
 
@@ -28,6 +28,8 @@ class Field implements iTemplate
         $this->record = $record;
 
         $this->db = $record->getDB();
+        
+        $this->log = $log;
     }
 
     /**
@@ -71,7 +73,7 @@ class Field implements iTemplate
                 return $res[0]['total'];
             }
         } catch (myException $e) {
-            $e->log();
+            $this->log->error($e);
         }
     }
 

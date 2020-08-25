@@ -19,8 +19,7 @@ class ParseTmpl extends Field
 	{
 		$template_file = $this->setTemplate($template);
 
-		if ($template_file == 'default')
-		{
+		if ($template_file == 'default') {
 			return $this->showall();
 		}
 

@@ -30,8 +30,6 @@ try {
 	$app->route();
 
 } catch (\Throwable $e) {
-	Meta::logException($e);
-
 	echo utils::message( tr::get('generic_error'), 'error', true);
 
 	if (DEBUG_ON) {

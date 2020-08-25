@@ -79,7 +79,7 @@ class App
             }
 		} catch(\Throwable $e) {
 			$this->log->info($e);
-			throw new \Exception($e);
+			echo "A fatal error occurred and the application could not be started. More information are filed in the log file";
         }
 	}
 }

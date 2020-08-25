@@ -7,7 +7,7 @@
  */
 class GetUniqueVal
 {
-    public static function run($tb, $fld, $str = false, $where = false, \DB $db)
+    public static function run($tb, $fld, $str = false, $where = false, \DB\DB\DBInterface $db)
     {
         if ($str === 'false'){
             $str = false;

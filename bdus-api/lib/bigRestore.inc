@@ -33,7 +33,7 @@ class bigRestore
 		$data_chunk_length = 16384;
 	
 	
-	public function __construct(DB $db)
+	public function __construct(\DB\DB\DBInterface $db)
 	{
 		$this->db = $db;
 		sleep(1);

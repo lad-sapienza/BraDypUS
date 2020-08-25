@@ -7,7 +7,7 @@ class DbCfgAlign
     private $resp;
     private $inspect;
 
-    public function __construct(Resp $resp, \DB $db)
+    public function __construct(Resp $resp, \DB\DB\DBInterface $db)
     {
         $this->resp = $resp;
         $this->db = $db;

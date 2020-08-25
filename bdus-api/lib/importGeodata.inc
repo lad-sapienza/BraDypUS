@@ -23,14 +23,14 @@ class importGeodata
 
   /**
    *
-   * @param DB $db    Instance of database object
+   * @param \DB\DB\DBInterface $db    Instance of database object
    * @param string $tb  target table name
    * @param string $geojson geojson file content
    * @param string $idfield field name in geojson file containing  idfield value
    * @param boolean $deleteOld  Delete existing records flag. If true
    *  all existing records linked to $tb will be deleted
    */
-  public function settings(DB $db, $tb, $geojson, $idfield, $deleteOld = false)
+  public function settings(\DB\DB\DBInterface $db, $tb, $geojson, $idfield, $deleteOld = false)
   {
     $this->db = $db;
     $this->tb = $tb;

@@ -1,3 +1,4 @@
+3.16.109[] = "Databese class dependency is set to \DB\DB\DBInterface instead of \DB"
 3.16.108[] = "toGeoJson::fromMultiArray replaced by utils::mutliArray2GeoJSON"
 3.16.107[] = "\Record\Read is not static and expects database dependency"
 3.16.106[] = "JSMin replaced by tedivm/jshrink"

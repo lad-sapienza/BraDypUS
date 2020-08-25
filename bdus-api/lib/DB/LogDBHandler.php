@@ -10,7 +10,7 @@ class LogDBHandler extends AbstractProcessingHandler
     private $db;
     private $prefix;
 
-    public function __construct(\DB $db, string $prefix = null, $level = Logger::DEBUG, bool $bubble = true)
+    public function __construct(\DB\DB\DBInterface $db, string $prefix = null, $level = Logger::DEBUG, bool $bubble = true)
     {
         $this->db = $db;
         $this->prefix = $prefix;

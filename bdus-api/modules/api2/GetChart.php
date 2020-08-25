@@ -7,7 +7,7 @@
  */
 class GetChart
 {
-    public static function run($id, \DB $db)
+    public static function run($id, \DB\DB\DBInterface $db)
     {
         if ( is_numeric($id) ) {
             $chartid = (int) $id;

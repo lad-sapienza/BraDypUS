@@ -28,7 +28,7 @@ class Controller
 		$this->request = $request;
 	}
 
-	public function setDB(\DB $db): void
+	public function setDB(\DB\DB\DBInterface $db): void
 	{
 		$this->db = $db;
 	}

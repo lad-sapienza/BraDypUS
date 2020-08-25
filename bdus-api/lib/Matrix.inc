@@ -13,14 +13,14 @@ class Matrix
 
     private $dotcontent;
 
-    public function __construct($tb, $where_q = false, DB $db)
+    public function __construct($tb, $where_q = false, \DB\DB\DBInterface $db)
     {
         $where = $where_q ? base64_decode($where_q) : '1=1';
 
         $this->dotcontent = $this->createDotContentNew($tb, $where, $db);
     }
 
-    private function createDotContentNew($tb, $where = false, DB $db)
+    private function createDotContentNew($tb, $where = false, \DB\DB\DBInterface $db)
     {
         $tbbis = $tb . 'bis';
         $const = get_defined_constants();

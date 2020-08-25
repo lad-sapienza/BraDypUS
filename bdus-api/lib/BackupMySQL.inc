@@ -13,7 +13,7 @@ class BackupMySQL
 	protected $filename, $db, $sql;
 
 
-	public function __construct(DB $db, $filename)
+	public function __construct(\DB\DB\DBInterface $db, $filename)
 	{
 		ini_set('memory_limit','1560M');
 

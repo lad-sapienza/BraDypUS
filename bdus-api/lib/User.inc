@@ -16,9 +16,9 @@ class User
     /**
      *
      * Starts database object
-     * @param DB $db
+     * @param \DB\DB\DBInterface $db
      */
-    public function __construct(DB $db)
+    public function __construct(\DB\DB\DBInterface $db)
     {
         $this->db = $db;
 

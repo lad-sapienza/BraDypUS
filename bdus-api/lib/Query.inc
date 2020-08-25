@@ -58,7 +58,7 @@ class Query
      * @param boolean $use_preview	use preview fields or all fields
      * @throws myException
      */
-    public function __construct(DB $db, $request, $use_preview = false)
+    public function __construct(\DB\DB\DBInterface $db, $request, $use_preview = false)
     {
         if (!$request['tb']) {
             throw new myException(tr::get('parameter_missing', ['tb']));

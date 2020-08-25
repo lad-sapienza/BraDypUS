@@ -51,11 +51,11 @@ class Manage
     /**
      * Initializes class
      *
-     * @param \DB $db           DB class
+     * @param \DB\DB\DBInterface $db           DB class
      * @param string $prefix    Application prefix, if available
      * @param string $driver    DB driver: throws error if it is not a valid driver
      */
-    public function __construct(\DB $db, string $prefix = null)
+    public function __construct(\DB\DB\DBInterface $db, string $prefix = null)
     {
         $this->db = $db;
         $this->prefix = $prefix;

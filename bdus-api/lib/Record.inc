@@ -41,7 +41,7 @@ class Record implements iRecord
 {
 	protected $tb, $id, $db, $data, $loaded, $changed, $idField, $tmp_dir;
 
-	public function __construct($tb, $id = false, DB $db)
+	public function __construct($tb, $id = false, \DB\DB\DBInterface $db)
 	{
 		$this->tb = $tb;
 

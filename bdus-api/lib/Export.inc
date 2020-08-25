@@ -12,7 +12,7 @@ class Export
 	protected $filename, $db, $data, $tb, $sql, $xls;
 
 
-	public function __construct(DB $db, $filename, $tb, $where_sql = false)
+	public function __construct(\DB\DB\DBInterface $db, $filename, $tb, $where_sql = false)
 	{
 
 		ini_set('memory_limit','1560M');

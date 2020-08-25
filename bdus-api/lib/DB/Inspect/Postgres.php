@@ -9,7 +9,7 @@ class Postgres implements InspectInterface
 {   
     private $db;
 
-    public function __construct(\DB $db)
+    public function __construct(\DB\DB\DBInterface $db)
     {
         $this->db = $db;
     }

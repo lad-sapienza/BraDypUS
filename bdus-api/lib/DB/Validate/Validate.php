@@ -7,7 +7,7 @@ class Validate
     private $resp;
     private $prefix;
     
-    public function __construct(\DB $db, string $prefix = null)
+    public function __construct(\DB\DB\DBInterface $db, string $prefix = null)
     {
         $this->db = $db;
         $this->resp = new Resp();

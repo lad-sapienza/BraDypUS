@@ -10,7 +10,7 @@ class SystemTables
     private $system;
 
 
-    public function __construct(Resp $resp, \DB $db, string $prefix = null)
+    public function __construct(Resp $resp, \DB\DB\DBInterface $db, string $prefix = null)
     {
         $this->resp = $resp;
         $this->db = $db;

@@ -16,9 +16,9 @@ class SavedQueries
 
 	/**
 	 * Stars class and sets db object
-	 * @param DB $db
+	 * @param \DB\DB\DBInterface $db
 	 */
-	public function __construct(DB $db)
+	public function __construct(\DB\DB\DBInterface $db)
 	{
 		$this->db = $db;
 	}

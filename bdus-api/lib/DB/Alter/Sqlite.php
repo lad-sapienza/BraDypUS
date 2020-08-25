@@ -8,7 +8,7 @@ class Sqlite implements AlterInterface
     private $sqlite_version;
     private $db;
 
-    public function __construct(\DB $db)
+    public function __construct(\DB\DB\DBInterface $db)
     {
         $sqlite_version_arr = \SQLite3::version();
         $this->sqlite_version = $sqlite_version_arr['versionString'];

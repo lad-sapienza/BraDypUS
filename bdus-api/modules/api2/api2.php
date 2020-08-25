@@ -186,7 +186,8 @@ class api2 extends Controller
         if (!$id) {
             throw new Exception("Record id is required with verb read");
         }
-        $resp = \Record\Read::getFull($this->app, $tb, $id);
+        $read_record = new \Record\Read($this->db);
+        $resp = $read_record->getFull($tb, $id);
         
         return $resp;
     }

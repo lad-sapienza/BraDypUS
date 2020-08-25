@@ -9,9 +9,21 @@ namespace Record;
 class Read
 {
 
+  protected $db;
+
+  /**
+   * Initializes class
+   * Sets $app and $db
+   *
+   * @param \DB\DB\DBInterface $db       DB object
+   */
+  public function __construct(\DB\DB\DBInterface $db)
+  {
+    $this->db = $db;
+  }
+
   /**
    * Return a complete array of record data
-   * @param  string $app Application name
    * @param  string $tb  Table name
    * @param  int    $id  Record ID
    * @return array      Complete array of record data
@@ -21,18 +33,18 @@ class Read
    *    "tb_stripped": (referenced table name without prefix),
    *    "tb_label": (referenced table label),
    * },
-   * "core":        { see self::getTbRecord for docs    },
-   * "plugins":     { see self::getPlugins for docs     },
-   * "links":       { see self::getLinks for docs       },
-   * "backlinks":   { see self::getBackLinks for docs   },
-   * "manualLinks": { see self::getManualLinks for docs },
-   * "files":       { see self::getFiles for docs       },
-   * "geodata":     { see self::getGeodata for docs     },
-   * "rs":          { see self::getRs for docs          }
+   * "core":        { see $this->getTbRecord for docs    },
+   * "plugins":     { see $this->getPlugins for docs     },
+   * "links":       { see $this->getLinks for docs       },
+   * "backlinks":   { see $this->getBackLinks for docs   },
+   * "manualLinks": { see $this->getManualLinks for docs },
+   * "files":       { see $this->getFiles for docs       },
+   * "geodata":     { see $this->getGeodata for docs     },
+   * "rs":          { see $this->getRs for docs          }
    */
-  public static function getFull(string $app, string $tb, int $id)
+  public function getFull(string $tb, int $id): array
   {
-    $core = self::getCore($tb, $id) ?: [];
+    $core = $this->getCore($tb, $id) ?: [];
 
 		return [
 			'metadata' => [
@@ -42,13 +54,13 @@ class Read
 				'tb_label' => \cfg::tbEl($tb, 'label')
 			],
 			'core'       => $core,
-			'plugins'    => self::getPlugins($app, $tb, $id),
-			'links'      => self::getLinks($app, $tb, $core),
-			'backlinks'  => self::getBackLinks($app, $tb, $id),
-      'manualLinks'=> self::getManualLinks($app, $tb, $id),
-			'files'      => self::getFiles($app, $tb, $id),
-      'geodata'    => self::getGeodata($app, $tb, $id),
-      'rs'         => \cfg::tbEl($tb, 'rs') ? self::getRs($app, $tb, $id): []
+			'plugins'    => $this->getPlugins($tb, $id),
+			'links'      => $this->getLinks($tb, $core),
+			'backlinks'  => $this->getBackLinks($tb, $id),
+      'manualLinks'=> $this->getManualLinks($tb, $id),
+			'files'      => $this->getFiles($tb, $id),
+      'geodata'    => $this->getGeodata($tb, $id),
+      'rs'         => \cfg::tbEl($tb, 'rs') ? $this->getRs($tb, $id): []
 		];
   }
 
@@ -66,14 +78,13 @@ class Read
    *    },
    *    {...}
    */
-  public static function getCore($tb, $id)
+  public function getCore(string $tb, int $id): array
   {
-    return self::getTbRecord($tb, "{$tb}.id = ?", [$id], true);
+    return $this->getTbRecord($tb, "{$tb}.id = ?", [$id], true);
   }
 
   /**
    * Return array of manually entered links
-   * @param  string $app Application name
    * @param  string $tb  Table name
    * @param  int    $id  Record ID
    * @return array      Array of manually entered links
@@ -86,7 +97,7 @@ class Read
    *    "ref_label": (string|int)
    * }
    */
-  public static function getManualLinks(string $app, string $tb, int $id)
+  public function getManualLinks(string $tb, int $id): array
   {
 
     $manualLinks = [];
@@ -112,7 +123,7 @@ EOD;
       $id 
     ];
 
-		$res = \DB::start()->query( $sql, $values, 'read');
+		$res = $this->db->query( $sql, $values, 'read');
 
 		if (is_array($res) && !empty($res)) {
 
@@ -134,7 +145,7 @@ EOD;
         if ( $id_fld === 'id' ) {
           $ref_val_label = $mli;
         } else {
-          $lres= \DB::start()->query(
+          $lres= $this->db->query(
             "SELECT {$id_fld} as label FROM {$mlt} WHERE id = ?",
             [$mli],
             'read'
@@ -160,7 +171,6 @@ EOD;
 
   /**
    * Returns array of RS data, if available
-   * @param  string $app Application name
    * @param  string $tb  Table name
    * @param  int    $id  Record ID
    * @return array      array of RS data or empty array
@@ -171,9 +181,9 @@ EOD;
    *    "relation": (int)
    * }
    */
-  public static function getRs(string $app, string $tb, int $id)
+  public function getRs(string $tb, int $id)
   {
-    $res = \DB::start()->query(
+    $res = $this->db->query(
       "SELECT id, first, second, relation FROM " . PREFIX . "rs WHERE tb = ? AND (first= ? OR second = ?)",
       [$tb, $id, $id],
       'read'
@@ -192,7 +202,6 @@ EOD;
 
   /**
    * [getGeodata description]
-   * @param  string $app Application name
    * @param  string $tb  Table name
    * @param  int    $id  Record ID
    * @return [type]      [description]
@@ -204,9 +213,9 @@ EOD;
    *    "geojson": (string, geojson)
    * }
    */
-  public static function getGeodata(string $app, string $tb, int $id)
+  public function getGeodata(string $tb, int $id)
   {
-    $r = \DB::start()->query(
+    $r = $this->db->query(
       "SELECT id, geometry, geo_el_elips, geo_el_asl FROM " . PREFIX . "geodata WHERE table_link = ? AND id_link = ?",
       [$tb, $id]);
     
@@ -222,7 +231,6 @@ EOD;
 
   /**
    * Returns list of files linked to the record
-   * @param  string $app Application name
    * @param  string $tb  Table name
    * @param  int    $id  Record ID
    * @return [type]      [description]
@@ -237,7 +245,7 @@ EOD;
    * }
 
    */
-  public static function getFiles(string $app, string $tb, int $id)
+  public function getFiles(string $tb, int $id)
   {
     $prefix = PREFIX;
     $sql = <<<EOD
@@ -263,12 +271,11 @@ EOD;
       $tb,
       $id
     ];
-    return \DB::start()->query($sql, $sql_val);
+    return $this->db->query($sql, $sql_val);
   }
 
   /**
    * Returns array of backlinks data
-   * @param  string $app Application name
    * @param  string $tb  Table name
    * @param  int    $id  Record ID
    * @return array      Array with backlink data
@@ -285,7 +292,7 @@ EOD;
    *            "label": (string)
    *          },
    */
-  public static function getBackLinks(string $app, string $tb, int $id)
+  public function getBackLinks(string $tb, int $id)
   {
     $backlinks = [];
 		$bl_data = \cfg::tbEl($tb, 'backlinks');
@@ -304,7 +311,7 @@ EOD;
         $sql_val = [$id];
 
 
-        $r = \DB::start()->query($sql, $sql_val);
+        $r = $this->db->query($sql, $sql_val);
         if ($r[0]['tot'] == 0){
           continue;
         }
@@ -324,7 +331,6 @@ EOD;
 
   /**
    * Returns array with (system) links data
-   * @param  string $app Application name
    * @param  string $tb  Table name
    * @param  int    $id  Record ID
    * @return array       Array of links data, or empty array
@@ -337,7 +343,7 @@ EOD;
    *    "where": (SQL where statement to fetch records)
  *    },
    */
-  public static function getLinks(string $app, string $tb, array $core)
+  public function getLinks(string $tb, array $core)
   {
     $links = [];
 
@@ -353,7 +359,7 @@ EOD;
           $values[] = $core[$c['my']]['val'];
 				}
 
-				$r = \DB::start()->query(
+				$r = $this->db->query(
           "SELECT count(id) as tot FROM {$ld['other_tb']} WHERE " . implode($where, ' AND '), 
           $values
         );
@@ -372,7 +378,6 @@ EOD;
 
   /**
    * Returns array with plugins data
-   * @param  string $app Application name
    * @param  string $tb  Table name
    * @param  int    $id  Record ID
    * @return array      Array of plugins data, or empty array
@@ -397,14 +402,14 @@ EOD;
    *    ]
    * }
    */
-  public static function getPlugins(string $app, string $tb, int $id)
+  public function getPlugins(string $tb, int $id)
   {
     $plugins = [];
 
 		$plg_names = \cfg::tbEl($tb, 'plugin');
 		if ($plg_names && is_array($plg_names)){
 			foreach ($plg_names as $p) {
-				$plg_data = self::getTbRecord($p, "table_link = ? AND id_link = ?", [$tb, $id], false, true) ?: [];
+				$plg_data = $this->getTbRecord($p, "table_link = ? AND id_link = ?", [$tb, $id], false, true) ?: [];
         if (empty($plg_data)){
           continue;
         }
@@ -454,7 +459,7 @@ EOD;
    *    },
    *    {...}
    */
-  private static function getTbRecord(string $tb, string $sql, array $sql_val = [], bool $return_first = false, bool $return_all_fields = false)
+  private function getTbRecord(string $tb, string $sql, array $sql_val = [], bool $return_first = false, bool $return_all_fields = false)
 	{
 		$cfg = \cfg::fldEl($tb, 'all', 'all');
 
@@ -489,7 +494,7 @@ EOD;
 		 	implode(' ', $join) .
 		 	" WHERE {$sql}";
 
-		$r = \DB::start()->query($full_sql, $sql_val, 'read');
+		$r = $this->db->query($full_sql, $sql_val, 'read');
 
 		if (!$r){
 			return false;

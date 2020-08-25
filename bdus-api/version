@@ -1,3 +1,4 @@
+3.16.107[] = "\Record\Read is not static and expects database dependency"
 3.16.106[] = "JSMin replaced by tedivm/jshrink"
 3.16.105[] = "Enhanced use of central logger"
 3.16.104[] = "Removed unused class BigDump"

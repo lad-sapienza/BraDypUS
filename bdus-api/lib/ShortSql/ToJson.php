@@ -101,7 +101,8 @@ class ToJson
 		$fullResult = [];
 
 		foreach ($result as $id => $row) {
-			$rowResult = \Record\Read::getFull($app, $tb, $row['id']);
+			$record = new \Record\Read(new DB());
+			$rowResult = $record->getFull($tb, $row['id']);
 			array_push($fullResult, $rowResult);
 		}
 		

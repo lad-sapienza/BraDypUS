@@ -1,3 +1,4 @@
+3.16.121[] = "Debug does not depend on Meta"
 3.16.120[] = "Better error handling in index and BDUS\App"
 3.16.119[] = "cfg uses Exceptions instead of myExceprions"
 3.16.118[] = "Removed system constants from DB_connection"

@@ -435,5 +435,7 @@
     "import_erase_previous_data": "Import and erase previously inserted geodata",
     "import_dont_erase_previous_data": "Import and don't erase previously inserted geodata",
     "geodata_ok_uploaded": "No error in import process. %s features were correctly uploaded",
-    "app_is_frozen": "Attention! This application is frozen, You can read all records and run queries, but you will not be able to edit the data."
+    "app_is_frozen": "Attention! This application is frozen, You can read all records and run queries, but you will not be able to edit the data.",
+
+    "debug": "Debug"
 }

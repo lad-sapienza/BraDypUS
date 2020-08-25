@@ -1,0 +1,25 @@
+<h2>{{ tr.get('debug') }}</h2>
+
+<button type="button" class="btn btn-success" onclick="layout.tabs.reloadActive()">{{ tr.get('reload') }}</button>
+<hr>
+
+<table id="list_{{ uid }}" class="results  table table-striped table-bordered table-condensed" style="width:100%">
+	<thead>
+		<tr>
+		{{ th_fields }}
+		</tr>
+	</thead>
+	<tbody></tbody>
+</table>
+<script>
+
+	var dt{{ uid }} = $('#list_{{ uid }}').dataTable({
+		"aaSorting": [],
+		"iDisplayLength": 30,
+		"bProcessing": true,
+	    "bServerSide": true,
+	    "sAjaxSource": "{{ ajaxSource }}",
+	    "sServerMethod": "POST",
+	    "aoColumns": [ {{ m_data }} ]
+	});
+</script>

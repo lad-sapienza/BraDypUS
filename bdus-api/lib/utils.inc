@@ -478,7 +478,7 @@ class utils
                      
                     if (file_exists($js_file)) {
                         $str = "/*\n * copyright BraDypUS \n */";
-                        $str .= JSMin::minify(file_get_contents($js_file));
+                        $str .= \JShrink\Minifier::minify(file_get_contents($js_file));
                         
                         if (!utils::write_in_file($compress_file, $str)) {
                             throw new \Exception('Can not write compressed file ' . $compress_file);

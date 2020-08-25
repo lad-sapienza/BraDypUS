@@ -92,6 +92,13 @@ class ComposerStaticInit63dffac3da0006282de7c3f45bc18505
                 0 => __DIR__ . '/..' . '/wikimedia/less.php/lib',
             ),
         ),
+        'J' => 
+        array (
+            'JShrink' => 
+            array (
+                0 => __DIR__ . '/..' . '/tedivm/jshrink/src',
+            ),
+        ),
     );
 
     public static $classMap = array (

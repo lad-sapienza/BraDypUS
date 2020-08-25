@@ -1,7 +1,6 @@
 /*
  * copyright BraDypUS 
- */
-var geoface={geoJSON:{},metadata:{},map:{},param:{},overlay:{},init:function(tb,sql){if($('#map').length>0){core.message(core.tr('map_already_opened'));return;}
+ */var geoface={geoJSON:{},metadata:{},map:{},param:{},overlay:{},init:function(tb,sql){if($('#map').length>0){core.message(core.tr('map_already_opened'));return;}
 geoface.queue=['getData','loadLeaflet','loadLDraw','loadLOmnivore','loadGoogle','loadGoogleMutant','buildMap'];geoface.param.tb=tb;geoface.param.where=sql;geoface.runQueue();return this;},runQueue:function(){var fn=geoface.queue[0];geoface.queue.splice(0,1);if(typeof geoface[fn]!=='undefined'){geoface[fn]();}},getData:function(){core.getJSON('geoface_ctrl','getGeoJson',{tb:geoface.param.tb,where:geoface.param.where},false,function(data){if(data.status==='error'){core.message(data.text,'error',true);return;}
 if(data.status==='warning'){core.message(core.tr('no_geodata_present_create'),'warning',true);}
 geoface.geoJSON=data.data;geoface.metadata=data.metadata;geoface.runQueue();});},loadGoogle:function(){if(typeof geoface.metadata.gmapskey==='undefined'){console.log('*** GoogleMaps key missing: if you want to use google layers please enter the key for table '+geoface.metadata.tb);geoface.runQueue();return;}

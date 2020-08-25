@@ -4,6 +4,7 @@
         "intervention/image": "^2.5",
         "wikimedia/less.php": "^3.0",
         "symm/gisconverter": "^1.0",
-        "monolog/monolog": "^2.1"
+        "monolog/monolog": "^2.1",
+        "tedivm/jshrink": "^1.3"
     }
 }

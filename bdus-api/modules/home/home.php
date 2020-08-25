@@ -101,7 +101,7 @@ class home_ctrl extends Controller
 				$file = ltrim($file);
 
 				if ( file_exists( './js-sources/' . $file ) ) {
-					$str_to_write[] = JSMin::minify ( file_get_contents ( './js-sources/' . $file ) );
+					$str_to_write[] = \JShrink\Minifier::minify( file_get_contents ( './js-sources/' . $file ) );
 				}
 			}
 

@@ -1,4 +1,3 @@
 /*
  * copyright BraDypUS 
- */
-var myTmpl={init:function(){core.open({obj:'myTmpl_ctrl',method:'show',title:core.tr('template_mng'),unique:true});}};
+ */var myTmpl={init:function(){core.open({obj:'myTmpl_ctrl',method:'show',title:core.tr('template_mng'),unique:true});}};

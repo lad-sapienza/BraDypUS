@@ -8,4 +8,5 @@ $baseDir = dirname($vendorDir);
 return array(
     'Symm\\Gisconverter' => array($vendorDir . '/symm/gisconverter/src'),
     'Less' => array($vendorDir . '/wikimedia/less.php/lib'),
+    'JShrink' => array($vendorDir . '/tedivm/jshrink/src'),
 );

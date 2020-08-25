@@ -261,7 +261,7 @@ class api2 extends Controller
         $full_records		= (bool) $this->get['full_records'];
 
         $resp = \ShortSql\ToJson::run(
-            $this->app,
+            $this->db,
             $shortsql,
             [
                 'total_rows' 		=> $total_rows,

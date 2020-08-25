@@ -12,18 +12,18 @@ class ToJson
 	/**
 	 * Runs a query from a shortSQl string and returns results
 	 *
-	 * @param String $app		Application name
-	 * @param String $shortSql	ShortSQL string
-	 * @param Array $opts		Options array, all values are optional:
+	 * @param \DB\DB\DBInterface $db	Database object
+	 * @param string $shortSql			ShortSQL string
+	 * @param array $opts				Options array, all values are optional:
 	 * 				totale_rows:	Total number of rows, if not provided will be calculated
 	 * 				page:			page number, if not provided will be assumed as 1
 	 * 				geojson:		if true, geojson string will be returned, instead of array of results
 	 * 				records_per_page:	To be used for pagination. default value: 30
 	 * 				full_records:	if true full records will be returned (with plugins, files, etc), otherwise only core information will be returned
-	 * @param boolean $debugging:	if true, some debugging information will be returned
-	 * @return Array|String
+	 * @param bool	$debugging:	if true, some debugging information will be returned
+	 * @return array
 	 */
-    public static function run($app, $shortSql, $opts = [], $debugging = false)
+    public static function run(\DB\DB\DBInterface $db, string $shortSql, array $opts = [], bool $debugging = false): array
     {	
 		// Set default opts
         $total_rows 		= $opts['total_rows']   	?: false;
@@ -42,7 +42,7 @@ class ToJson
 
 			$header['total_rows'] 	= $total_rows ?: (int) self::getTotal($sql, $values);
 			$header['total_pages'] 	= ceil($header['total_rows']/$records_per_page);
-			$header['stripped_table'] = str_replace($app . PREFIX_DELIMITER, null, $tb);
+			$header['stripped_table'] = str_replace(PREFIX, null, $tb);
 			$header['table_label'] 	= \cfg::tbEl($tb, 'label');
 			$header['page'] 		= ($page > $header['total_pages']) ? $header['total_pages'] : $page;
 
@@ -54,9 +54,9 @@ class ToJson
 				$debug['paginated_values'] = $values;
 			}
 
-			$header['no_records_shown'] = (int) self::getTotal($sql, $values);
+			$header['no_records_shown'] = (int) self::getTotal($db, $sql, $values);
 
-			$records = $full_records ? self::getFullData($sql, $values, $app, $tb) : self::getData($sql, $values);
+			$records = $full_records ? self::getFullData($db, $sql, $values, $tb) : self::getData($db, $sql, $values);
 
 			if ($geojson) {
 				return \utils::mutliArray2GeoJSON ( $tb, $records );
@@ -78,24 +78,24 @@ class ToJson
 
 	}
 	
-	private static function getTotal($sql, $values = [])
+	private static function getTotal(\DB\DB\DBInterface $db, string $sql, array $values = []): int
     {
         $count_sql = 'SELECT count(*) AS tot FROM ( ' . $sql .' ) AS ' . uniqid('a');
-        $res = \DB::start()->query($count_sql, $values);
+        $res = $db->query($count_sql, $values);
         return $res[0]['tot'];
 	}
 	
-	private static function getData($sql, $values = [])
+	private static function getData(\DB\DB\DBInterface $db, string $sql, array $values = []): array
     {   
-        return \DB::start()->query($sql, $values, 'read');
+        return $db->query($sql, $values, 'read');
 	}
 	
-	private static function getFullData($sql, $values = [], $app, $tb)
+	private static function getFullData(\DB\DB\DBInterface $db, string $sql, array $values = [], string $tb): array
     {
-		$result = self::getData($sql, $values);
+		$result = self::getData($db, $sql, $values);
 
         if (!is_array($result)) {
-            return false;
+            return [];
         }
 
 		$fullResult = [];

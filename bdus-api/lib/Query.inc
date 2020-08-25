@@ -211,7 +211,7 @@ class Query
      */
     public function getResults($full = false)
     {
-        $result = $this->db->query($this->getQuery(), false, 'read');
+        $result = $this->db->query($this->getQuery(), null, 'read');
 
         if (!$full || !is_array($result)) {
             return $result;

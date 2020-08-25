@@ -73,7 +73,7 @@ class Charts
 
 		$out['query_text'] = $query_text;
 
-		$data = $this->db->query($query_text, false, 'read');
+		$data = $this->db->query($query_text, null, 'read');
 
 		if (!$data) {
 			throw new myException('Chart query text produced no result (' . $query_text . ')');
@@ -170,7 +170,7 @@ class Charts
 	public function getCharts($id = false)
 	{
 		$where = $id ? "id = ?" :  "1=1";
-		$val = $id ? [$id] : [];
+		$val = $id ? [$id] : null;
 		return $this->db->query("SELECT * FROM " . PREFIX . "charts WHERE {$where}", $val, 'read');
 	}
 

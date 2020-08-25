@@ -17,11 +17,11 @@ class DB_connection
     *   user: database username
     *   password: database password
     *
-    * @param string|false $app		Application name, if missing session data will be used
-    * @param string|false $custom_connection Path to custom configuration file
+    * @param string $app		Application name, if missing session data will be used
+    * @param string $custom_connection Path to custom configuration file
     * @return array Array with connection data: driver and dns are always supplied; user and password are supplied for mysql and pgsql
     */
-    public static function getConnectionString($app = false, $custom_connection = false)
+    public static function getConnectionString(string $app, string $custom_connection = null)
     {
         /*
         * check for connection data
@@ -39,7 +39,7 @@ class DB_connection
         $data = self::getData($app, $custom_connection);
         
         if (!$data['driver'] || !$data['dsn']){
-            throw new myException('Not found any connection data');
+            throw new \Exception('Not found any connection data');
         }
         
         return [
@@ -60,11 +60,11 @@ class DB_connection
     * 3a. PROJ_DIR . 'cfg/app_data.json'
     * 3b. MAIN_DIR . "projects/$app/cfg/app_data.json"
     *
-    * @param boolean $app
-    * @param boolean $custom_connection
-    * @return Array
+    * @param string $app
+    * @param string $custom_connection
+    * @return array
     */
-    private static function getData($app = false, $custom_connection_file = false)
+    private static function getData(string $app, string $custom_connection_file = null): array
     {	
         $cfg = [];
         
@@ -72,24 +72,14 @@ class DB_connection
             
             $connection_file = $custom_connection_file;
             
-        } else if ( defined('PROJ_DIR') && file_exists(PROJ_DIR . 'cfg/app_data.json' ) ){
-            
-            $connection_file = PROJ_DIR . 'cfg/app_data.json';
-            
-        } else if ($app && file_exists(MAIN_DIR. "projects/{$app}cfg/app_data.json") ) {
+        } else if ($app && file_exists(MAIN_DIR . "projects/{$app}cfg/app_data.json") ) {
             
             $connection_file = MAIN_DIR. "projects/{$app}cfg/app_data.json";
-            
         }
         
         if ($app AND file_exists(MAIN_DIR . "projects/{$app}/db/bdus.sqlite")) {
             
             $cfg['db_path'] = MAIN_DIR . "projects/{$app}/db/bdus.sqlite";
-
-        } elseif (defined('PROJ_DIR') AND file_exists(PROJ_DIR . 'db/bdus.sqlite')) {
-            
-            $cfg['db_path'] = PROJ_DIR . 'db/bdus.sqlite';
-            
         }
         
         if ($connection_file){
@@ -97,12 +87,10 @@ class DB_connection
             $cfg_arr = json_decode(file_get_contents($connection_file), true);
             
             if (!is_array($cfg_arr)){
-                throw new myException(tr::get('invalid_configuration_file', [$connection_file]) );
+                throw new \Exception(tr::get('invalid_configuration_file', [$connection_file]) );
             }
             
-            
             $cfg = array_merge($cfg, $cfg_arr);
-            
         }
         
         return self::validateData($cfg);
@@ -117,17 +105,17 @@ class DB_connection
         }
         
         if (!$cfg['db_engine']){
-            throw new myException(tr::get('missing_db_engine'));
+            throw new \Exception(tr::get('missing_db_engine'));
         }
         
         if( !in_array($cfg['db_engine'], ['sqlite', 'mysql', 'pgsql'])) {
-            throw new myException(tr::get('driver_not_supported', [$cfg['db_engine']]));
+            throw new \Exception(tr::get('driver_not_supported', [$cfg['db_engine']]));
         }
         
         // Set DSN for sqlite
         if ( $cfg['db_engine'] === 'sqlite') {
             if (!$cfg['db_path']){
-                throw new myException( tr::get('missing_sqlite_file'));
+                throw new \Exception( tr::get('missing_sqlite_file'));
             }
             $dsn = "{$cfg['db_engine']}:{$cfg['db_path']}";
         }
@@ -135,15 +123,15 @@ class DB_connection
         if (!$dsn) {
             
             if (!$cfg['db_name']){
-                throw new myException( tr::get('missing_db_name') );
+                throw new \Exception( tr::get('missing_db_name') );
             }
             
             if (!$cfg['db_username']){
-                throw new myException( tr::get('missing_db_username') );
+                throw new \Exception( tr::get('missing_db_username') );
             }
             
             if (!$cfg['db_password']){
-                throw new myException(tr::get('missing_db_password'));
+                throw new \Exception(tr::get('missing_db_password'));
             }
             
             if (!$cfg['db_host']){

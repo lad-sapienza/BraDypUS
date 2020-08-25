@@ -50,7 +50,7 @@ class home_ctrl extends Controller
             "tr_json" => tr::lang2json(),
             "debugMode" => DEBUG_ON ? "true" : "false",
             "prefix" => defined('PREFIX') ? PREFIX : '',
-            "js_libs" => $this->compressJs( $js_libs, $this->get['mini'] === 1, $_SESSION['debug_mode']),
+            "js_libs" => $this->compressJs( $js_libs, $this->get['mini'] === 1, $_SESSION['debug_mode'] === true),
             "can_user_enter" => utils::canUser('enter') ? true : false,
             "address" => $this->request['address'],
             "token" => $this->request['token'],

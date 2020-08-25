@@ -27,7 +27,7 @@ class BackupMySQL
 	public function exportAll()
 	{
 		$this->sql = '';
-		$tables = $this->db->query('SHOW TABLES', false, 'read', true);
+		$tables = $this->db->query('SHOW TABLES', null, 'read', true);
 
 		foreach($tables as $index=>$tb)
 		{
@@ -109,7 +109,7 @@ class BackupMySQL
 	 */
 	private function getColumns($tb)
 	{
-		$q = $this->db->query('SHOW CREATE TABLE ' . $tb, false, 'read', true);
+		$q = $this->db->query('SHOW CREATE TABLE ' . $tb, null, 'read', true);
 
 		$q[0][1] = preg_replace("/AUTO_INCREMENT=[\w]*./", '', $q[0][1]);
 		return "\n\n" . $q[0][1] . "; \n\n";

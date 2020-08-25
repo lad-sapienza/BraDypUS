@@ -149,7 +149,7 @@ class bigRestore
 			// Execute query if end of query detected (; as last character) AND NOT in parents
 			if (preg_match("/;$/",trim($dumpline)) && !$inparents)
 			{
-				if(!$this->db->query($query, false, 'boolean'))
+				if(!$this->db->query($query, null, 'boolean'))
 				{
 					//$error[] = $query;
 					throw new Exception("Error in query " . $query);

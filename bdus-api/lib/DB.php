@@ -26,11 +26,15 @@ class DB implements \DB\DB\DBInterface
 	 * Load connection info and starts PDO object
 	 * @param string $app	application to work with
 	 * @param string $custom_connection
-	 * @throws myException
+	 * @throws \myException
 	 */
-	public function __construct($app = false, $custom_connection = false)
+	public function __construct(string $app = null, string $custom_connection = null)
 	{
-		$this->app = $app ? $app : defined('APP') ? APP : false;
+		$this->app = $app ?: defined('APP') ? APP : false;
+
+		if (!$this->app){
+			throw new \Exception("No valid app provided: cannot start database object");
+		}
 
 		$this->parseStart($this->app, $custom_connection);
 	}
@@ -39,9 +43,9 @@ class DB implements \DB\DB\DBInterface
 	 * Parses conncetion data and starts PDO
 	 * @param string $app
 	 * @param string $custom_connection
-	 * @throws myException
+	 * @throws \myException
 	 */
-	private function parseStart($app = false, $custom_connection = false)
+	private function parseStart(string $app, string $custom_connection = null)
 	{
 		try {
 
@@ -73,13 +77,13 @@ class DB implements \DB\DB\DBInterface
 			}
 			return $this;
 
-		} catch( myException $e ) {
+		} catch( \Exception $e ) {
 
-			throw new myException($e);
+			throw new \myException($e);
 			
-		} catch (PDOException $e) {
+		} catch (\PDOException $e) {
 
-			throw new myException($e);
+			throw new \myException($e);
 
 		}
 	}
@@ -101,7 +105,7 @@ class DB implements \DB\DB\DBInterface
 		return $this->db_engine;
 	}
 
-	public function execInTransaction($sql): bool
+	public function execInTransaction(string $sql): bool
 	{
 		$ret = false;
 		try {
@@ -115,16 +119,16 @@ class DB implements \DB\DB\DBInterface
 		return ($ret !== false);
 	}
 
-	public function exec($sql): bool
+	public function exec(string $sql): bool
 	{
 		try {
 			return $this->db->exec($sql) !== false;
-		} catch (PDOException $e) {
-			throw new myException($e);
+		} catch (\PDOException $e) {
+			throw new \myException($e);
 		}
 	}
 
-	public function backupBeforeEdit (string $table, int $id, $query, array $values = [])
+	public function backupBeforeEdit (string $table, int $id, string $query, array $values = []): void
 	{
 		try {
 			Meta::addVersion($_SESSION['user']['id'], $table, $id, $query, $values);
@@ -145,7 +149,7 @@ class DB implements \DB\DB\DBInterface
 	 * @param string $type			one of read (default value) | id | boolean | affected, integer, or false
 	 * @param boolean $fetch_style	if false an associative array will be returned else a numeric array
 	 */
-	public function query($query, $values = null, $type = null, $fetch_style = false )
+	public function query(string $query, array $values = null, string $type = null, bool $fetch_style = false )
 	{
 		try {
 
@@ -182,9 +186,9 @@ class DB implements \DB\DB\DBInterface
 					return $sql->rowCount();
 					break;
 			}
-		} catch (PDOException $e) {
+		} catch (\PDOException $e) {
 			Meta::logException($e);
-			throw new myException( tr::get('db_generic_error') );
+			throw new \myException( tr::get('db_generic_error') );
 		}
 	}
 

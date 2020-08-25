@@ -47,7 +47,7 @@ class Record implements iRecord
 
 		if ($id === 'last_added') {
 
-			$t = $db->query('SELECT id FROM ' . $tb . ' WHERE 1=1 ORDER BY id DESC LIMIT 1 OFFSET 0', false, 'read');
+			$t = $db->query('SELECT id FROM ' . $tb . ' WHERE 1=1 ORDER BY id DESC LIMIT 1 OFFSET 0', null, 'read');
 			$id = $t[0]['id'];
 		}
 
@@ -695,7 +695,7 @@ SELECT id, {$dest_id_fld} as label FROM {$tb}
 EOD;
 			}
 
-			$r = $this->db->query($sql, false, 'read');
+			$r = $this->db->query($sql, null, 'read');
 			if ($r[0]['id']) {
 				$ret[$tb] = $r;
 			}
@@ -754,7 +754,7 @@ EOD;
 							. ' OR '
 							. "(" . PREFIX . "userlinks.tb_two = '" . $this->tb . "' AND  " . PREFIX . "userlinks.id_two = '" . $this->data['core']['id'] . "')"
 						. ' ORDER BY ' . PREFIX . 'userlinks.sort, ' . PREFIX . 'userlinks.id';
-				$this->data['fullfiles'] = $this->db->query($query, false, 'read');
+				$this->data['fullfiles'] = $this->db->query($query, null, 'read');
 			}
 		}
 

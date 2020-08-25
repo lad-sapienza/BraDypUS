@@ -144,7 +144,7 @@ class geoface_ctrl extends Controller
 			. ' WHERE geometry IS NOT NULL '
 			. ($where ? ' AND ' . $where : '');
 
-			$res = $this->db->query($sql, false);
+			$res = $this->db->query($sql);
 
 			if($res) {
 

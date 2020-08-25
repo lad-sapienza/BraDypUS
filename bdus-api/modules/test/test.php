@@ -26,7 +26,7 @@ class test_ctrl extends Controller
 		// $alter->dropFld('sitarc__charts', 'ciao');
 
 
-		// $inspect = new \DB\Inspect( new \DB\Inspect\Mysql( new DB() ) );
+		// $inspect = new \DB\Inspect( new \DB\Inspect\Mysql( $this->db ) );
 		// var_dump($inspect->tableExists('sitarc__geodata'));
 		// var_dump($inspect->tableColumns('sitarc__geodata'));
 

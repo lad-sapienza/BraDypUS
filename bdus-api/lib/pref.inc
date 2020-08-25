@@ -94,30 +94,16 @@ class pref
 	
 	/**
 	 * Saves pref data to db
+	 *
+	 * @param \DB\DB\DBInterface $db
+	 * @return void
 	 */
-	public static function save2DB()
+	public static function save2DB(\DB\DB\DBInterface $db)
 	{
-		$user = new User(new DB());
+		$user = new User($db);
 		
 		cookieAuth::update();
 
 		return $user->update($_SESSION['user']['id'], false, false, false, false, serialize($_SESSION['pref']));
-	}
-	
-	/**
-	 * Loads ref data from db
-	 * @param string $app
-	 */
-	public static function getFromDB($app = false)
-	{
-		
-		$user = new User(new DB($app));
-		
-		$uData = $user->getUser(array('id'=>$_SESSION['user']['id']));
-		
-		unset($_SESSION['pref']);
-		if ($uData[0]['settings']) {
-			$_SESSION['pref'] = unserialize($uData[0]['settings']);
-		}
 	}
 }

@@ -77,6 +77,16 @@ class User
             // remove password from array
             unset($res[0]['password']);
 
+            // Set user preferences
+            if ( isset($res[0]['settings']) ) {
+                $sett_arr = unserialize($res[0]['settings']);
+                if (is_array($sett_arr) && !empty($sett_arr)){
+                    foreach ($sett_arr as $key => $value) {
+                        pref::set($key, $value);
+                    }
+                }
+            }
+
             // remove settings from array
             unset($res[0]['settings']);
 
@@ -86,9 +96,6 @@ class User
             $_SESSION['app'] = $this->app;
 
             $this->userLog();
-
-            // load preferences from db
-            pref::getFromDB($this->app);
 
             if ($remember && $remember !== 'false') {
                 cookieAuth::set();
@@ -108,7 +115,7 @@ class User
     {
         try {
             //save preferences to db
-            pref::save2DB();
+            pref::save2DB($this->db);
 
             // emtpy user tmp dir
             utils::emptyDir();

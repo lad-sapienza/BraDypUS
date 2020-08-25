@@ -33,18 +33,14 @@ class login_ctrl extends Controller
 
 		$res = $user->getUser(array('email'=>$this->get['address']));
 
-		if ($res[0])
-		{
-			if ($this->get['token'] == $user->getToken($res[0]))
-			{
+		if ($res[0]) {
+			if ($this->get['token'] == $user->getToken($res[0])) {
 				$this->render('login', 'reset_pwd', array(
 						'user' => $res[0],
 						'app' => $this->request['app']
 				));
 			}
-		}
-		else
-		{
+		} else {
 			echo '<h3 class="text-error">' . tr::get('email_not_found') . '</h3>';
 		}
 	}
@@ -55,26 +51,19 @@ class login_ctrl extends Controller
 	{
 		$post = $this->post;
 
-		if (!$post['loginapp'] || !$post['name'] || !$post['email'] || !$post['password'] || !$post['password2'])
-		{
+		if (!$post['loginapp'] || !$post['name'] || !$post['email'] || !$post['password'] || !$post['password2']) {
 			utils::response('all_fields_required', 'error');
 			return;
-		}
-		else if ($post['password'] != $post['password2'])
-		{
+		} else if ($post['password'] != $post['password2']) {
 			utils::response('pass_empty_or_not_match', 'error');
 			return;
-		}
-		else
-		{
-			try
-			{
+		} else {
+			try {
 				$user = new User(new DB($post['loginapp']));
 
 				$res = $user->insert($post['name'], $post['email'], $post['password']);
 
-				if ($res)
-				{
+				if ($res) {
 					// email to user
 					$to = $post['email'];
 					$subject = tr::get('new_user_email_subject');
@@ -121,14 +110,12 @@ class login_ctrl extends Controller
 
 	public function autolog()
 	{
-		if (cookieAuth::get())
-		{
+		if (cookieAuth::get()) {
 			utils::response('Authenticated');
 			return;
 		}
 
-		try
-		{
+		try {
 			if (file_exists(MAIN_DIR . "projects/{$this->get['app']}/cfg/app_data.json")) {
 
 				$app_data = json_decode(file_get_contents(MAIN_DIR . "projects/{$this->get['app']}/cfg/app_data.json"), true);
@@ -139,23 +126,18 @@ class login_ctrl extends Controller
 
 				utils::response('Authenticated');
 			}
-		}
-		catch(myException $e)
-		{
+		} catch(myException $e) {
 			utils::response($e->getMessage(), 'error');
 		}
 	}
 
 	public function auth()
 	{
-		try
-		{
+		try {
 			$user = new User(new DB($this->post['loginapp']));
 			$user->login($this->post['email'], $this->post['password'], $this->post['remember']);
 			$obj['status'] = 'ok';
-		}
-		catch (myException $e)
-		{
+		} catch (myException $e) {
 			$obj['status'] = 'no';
 			$obj['verbose'] = $e->getMessage();
 		}
@@ -201,12 +183,9 @@ class login_ctrl extends Controller
 	{
 		$user = new User(new DB($this->post['app']));
 
-		if ($user->update($this->post['id'], false, false, $this->post['pwd']))
-		{
+		if ($user->update($this->post['id'], false, false, $this->post['pwd'])) {
 			utils::response('ok_password_update');
-		}
-		else
-		{
+		} else {
 			utils::response('error_password_update', true);
 		}
 
@@ -219,30 +198,24 @@ class login_ctrl extends Controller
 
 		$res = $user->getUser(array('email'=>$this->get['email']));
 
-		if ($res[0])
-		{
+		if ($res[0]) {
 			$token = $user->getToken($res[0]);
 
 			$to = $this->get['email'];
 			$subject = tr::get('lost_password_email_subject');
-			$message = tr::get('lost_password_email_text', [ 'http://db.bradypus.net/?app=' . $this->get['app'] . '&address=' . $this->get['email'] . '&token=' . $token ])
+			$message = tr::get('lost_password_email_text', [ 'https://db.bradypus.net/?app=' . $this->get['app'] . '&address=' . $this->get['email'] . '&token=' . $token ])
 				. tr::get('email_signature');
 			$headers = 'From: ' . $this->get['app'] . '@bradypus.net' . "\r\n" . 'Reply-To: ' . $this->get['app'] . '@bradypus.net' . "\r\n";
 
 
 			$resp = mail($to, $subject, $message, $headers);
 
-			if ($resp)
-			{
+			if ($resp) {
 				utils::response('anything');
-			}
-			else
-			{
+			} else {
 				utils::response('error_sending_email', true);
 			}
-		}
-		else
-		{
+		} else {
 			utils::response('email_not_found', true);
 		}
 	}

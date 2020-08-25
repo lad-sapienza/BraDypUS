@@ -27,7 +27,7 @@ class preferences_ctrl extends Controller
 	{
 		try
 		{
-			pref::save2DB();
+			pref::save2DB($this->db);
 			utils::response('pref_saved_in_db');
 		}
 		catch(myException $e)

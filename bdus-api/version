@@ -1,3 +1,4 @@
+3.16.113[] = "\DB\DB\DBInterface is injected to pref"
 3.16.112[] = "Removed deprecated MaekProject"
 3.16.111[] = "Dropped support for DB::start"
 3.16.110[] = "\DB\DB\DBInterface is injected to \ShortSql\ToJson"

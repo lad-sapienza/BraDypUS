@@ -94,15 +94,6 @@ class DB implements \DB\DB\DBInterface
 
 	/**
 	 *
-	 * static method to initialize the database object
-	 */
-	public static function start()
-	{
-		return new self();
-	}
-
-	/**
-	 *
 	 * Returns current database engine
 	 */
 	public function getEngine(): string

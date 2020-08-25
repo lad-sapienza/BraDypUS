@@ -7,8 +7,6 @@ namespace DB\DB;
  */
 interface DBInterface
 {
-    public static function start();
-
     public function getApp(): string;
 
     public function getEngine(): string;

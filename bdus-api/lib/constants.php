@@ -48,7 +48,7 @@ session_start();
  * Set APP from REQUEST['app']
  * APP dir must exist!
  */
-if ( isset($_REQUEST['app']) && is_dir('./projects/' . $_REQUEST['app'] ) ) {
+if ( isset($_REQUEST['app']) && is_dir(__DIR__ . '/../projects/' . $_REQUEST['app'] ) ) {
 	define ( 'APP', $_REQUEST['app']);
 } elseif (isset($_SESSION['app'])) {
 	define ( 'APP', $_SESSION['app']);
@@ -116,13 +116,12 @@ if (@$_GET['debug'] === '0') {
     define('CACHE', serialize([ "autoescape" => false, "cache" => "cache"]));
 }
 
-require_once LIB_DIR . 'myException.php';
 require_once LIB_DIR . 'autoLoader.php';
 require_once $root . 'vendor/autoload.php';
-new autoLoader();
+new autoLoader(LIB_DIR, MOD_DIR);
 
 set_error_handler('Meta::logError', 6135);
 
 if (defined('PROJ_DIR')) {
-	cfg::load(false, true);
+	cfg::load(APP, true);
 }

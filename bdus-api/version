@@ -1,3 +1,4 @@
+3.16.117[] = "Removed system constants from autoLoader"
 3.16.116[] = "Cleaner login ui"
 3.16.115[] = "Strict typing in DB class"
 3.16.114[] = "Updated links"

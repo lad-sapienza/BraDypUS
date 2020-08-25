@@ -3,7 +3,6 @@
     "error_in_module": "Error. Something went wrong in loading module %s",
     "generic_error": "Error. Please check the error log for more details",
     "no_app": "Errore. No application available. It is not possible to continue",
-    "file_doesnt_exist": "Error. The file %s does not exist",
     "email_password_needed": "Both fields (email and password) are required",
     "remember_me": "Remain connected",
     "driver_not_supported": "Database driver %s is not yet supported",

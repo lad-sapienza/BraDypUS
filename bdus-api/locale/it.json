@@ -3,7 +3,6 @@
     "error_in_module": "Errore. Qualcosa è andato storto nel caricare il modulo %s",
     "generic_error": "Errore. Si prega di consultare il log degli errori per maggiori informazioni!",
     "no_app": "Errore. Nessuna applicazione disponibile. Impossibile continuare",
-    "file_doesnt_exist": "Errore. Il file %s non esiste!",
     "email_password_needed": "Entrambi i campi (e-mail e password) sono obbligatori per proseguire",
     "remember_me": "Resta connesso",
     "driver_not_supported": "Il driver database %s non è attualmente supportato",

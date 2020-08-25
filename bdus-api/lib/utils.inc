@@ -492,5 +492,52 @@ class utils
         }
         
         return $error ? false : true;
-  }
+	}
+	
+
+	/**
+	 * Converts a multidimensional array to GeoJSON
+	 *
+	 * @param string $tb	Table name
+	 * @param array $rows	Array or database data
+	 * @return array		Valid geoJSON as array
+	 */
+	public static function mutliArray2GeoJSON(string $tb, array $rows): array
+    {
+        $geo = [
+            'type' => 'FeatureCollection',
+            'features' => []
+        ];
+
+
+        if (!is_array($rows)) {
+            throw new Exception('Input data is not an array');
+        }
+
+        foreach ($rows as $r) {
+            $arr = [];
+            if (!is_array($r)) {
+                throw new Exception('Input data is not a multidimensional array');
+            }
+
+            if (!$r['geometry'] && !$r[$tb . '.geometry']) {
+                // single row error does not block entire process
+                // throw new myException('No geometry column found in row: ' . var_export($r, true));
+                error_log('No valid geometry column found in row: ' . var_export($r, true));
+                continue;
+            }
+
+            $arr['type']		= 'Feature';
+            $arr['geometry']	= json_decode(\Symm\Gisconverter\Gisconverter::wktToGeojson($r['geometry'] ? $r['geometry'] : $r[$tb . '.geometry']), true);
+
+            unset($r['geometry']);
+            if ($r) {
+                $arr['properties']	= $r;
+            }
+
+            array_push($geo['features'], $arr);
+		}
+		
+		return $geo;
+    }
 }

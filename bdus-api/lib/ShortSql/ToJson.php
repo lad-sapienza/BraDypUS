@@ -59,7 +59,7 @@ class ToJson
 			$records = $full_records ? self::getFullData($sql, $values, $app, $tb) : self::getData($sql, $values);
 
 			if ($geojson) {
-				return \toGeoJson::fromMultiArray( $records, true, $tb );
+				return \utils::mutliArray2GeoJSON ( $tb, $records );
 			} else {
 				return [
 					'head' => $header,

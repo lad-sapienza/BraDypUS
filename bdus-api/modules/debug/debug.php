@@ -56,9 +56,6 @@ class debug extends Controller
 
 		$response['query_executed'] = $q;
 
-		error_log($q);
-		error_log(json_encode($v));
-
 		$response['aaData'] = $this->db->query($q, $v);
 
 		foreach ($response['aaData'] as $id => &$row) {

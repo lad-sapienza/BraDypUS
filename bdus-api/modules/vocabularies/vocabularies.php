@@ -121,12 +121,9 @@ class vocabularies_ctrl extends Controller
 		
 		foreach($this->post as $arr)
 		{
-			if ($voc->sort($arr))
-			{
+			if ($voc->sort($arr)) {
 				$resp = array('status'=>'success', 'text'=>tr::get('ok_sort_update'));
-			}
-			else
-			{
+			} else {
 				$resp = array('status'=>'error', 'text'=>tr::get('error_sort_update'));
 			}
 		}

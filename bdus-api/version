@@ -1,3 +1,4 @@
+3.16.103[] = "Cleaned index"
 3.16.102[] = "Dropped support for controllers not extending Controller"
 3.16.101[] = "Limited use of DB initialization, use of Monolog"
 3.16.100[] = "Updated twig, installed monolog"

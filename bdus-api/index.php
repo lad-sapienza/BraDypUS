@@ -26,20 +26,6 @@ try {
 
 	require_once './lib/constants.php';
 
-	if ($_GET['logout']) {
-		try {
-			$user = new User(new DB());
-			$user->logout();
-
-		} catch (myException $e) {
-			User::forceLogOut();
-		}
-	}
-	if ($_GET['mini']) {
-		Compress::modScripts();
-		utils::emptyDir(MAIN_DIR . 'cache', false);
-	}
-
 	$app = new \Bdus\App($_GET, $_POST, $_REQUEST);
 	$app->route();
 

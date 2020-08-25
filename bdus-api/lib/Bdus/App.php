@@ -4,6 +4,8 @@ namespace Bdus;
 
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
+use Monolog\ErrorHandler;
+
 use DB\LogDBHandler;
 
 
@@ -21,14 +23,35 @@ class App
         $this->get = $get;
 		$this->post = $post;
 		$this->request = $request;
-		$this->log = new Logger('bdus');
 
 		try {
+			$this->log = new Logger('bdus');
 			$this->db = new \DB();
 			$this->log->pushHandler( new LogDBHandler($this->db, PREFIX) );
 		} catch (\Throwable $th) {
 			$this->log->pushHandler(new StreamHandler(__DIR__ . '/../../logs/error.log', Logger::DEBUG));
 		}
+		$handler = new ErrorHandler($this->log);
+		$handler->registerErrorHandler([], false);
+		$handler->registerExceptionHandler();
+		$handler->registerFatalHandler();
+
+
+		if ($get['mini']) {
+			\utils::modScripts($this->log);
+			\utils::emptyDir(MAIN_DIR . 'cache', false);
+		}
+
+		if ($get['logout']) {
+			try {
+				$user = new User($this->db);
+				$user->logout();
+			} catch (\Throwable $e) {
+				$this->log->error($e);
+				User::forceLogOut();
+			}
+		}
+	
     }
 
     public function route()

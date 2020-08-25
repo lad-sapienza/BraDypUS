@@ -457,4 +457,40 @@ class utils
 		}
     return $callback ? array_filter($arr, $callback ) : array_filter($arr);
 	}
+
+	
+   /**
+    * Minifies all module javascript files. Return true on success or false on error.
+    *
+    * @param Monolog\Logger $log
+    * @return boolean
+    */ 
+    public static function modScripts(Monolog\Logger $log): bool
+    {
+        $modules = utils::dirContent(MOD_DIR);
+
+        foreach ($modules as $mod) {
+            try {
+                if (is_dir(MOD_DIR . $mod)) {
+                    $js_file = MOD_DIR . $mod . '/' . $mod. '.js';
+
+                    $compress_file = MOD_DIR . $mod . '/' . $mod . '.mini.js';
+                     
+                    if (file_exists($js_file)) {
+                        $str = "/*\n * copyright BraDypUS \n */";
+                        $str .= JSMin::minify(file_get_contents($js_file));
+                        
+                        if (!utils::write_in_file($compress_file, $str)) {
+                            throw new \Exception('Can not write compressed file ' . $compress_file);
+                        }
+                    }
+                }
+            } catch (\Throwable $e) {
+                $log->error($e);
+                $error = true;
+            }
+        }
+        
+        return $error ? false : true;
+  }
 }

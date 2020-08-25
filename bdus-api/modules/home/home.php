@@ -2,7 +2,6 @@
 /**
  * @uses PREFIX
  * @uses pref
- * @uses Compress
  * @uses $_SESSION
  * @uses cfg
  * @uses utils
@@ -47,11 +46,11 @@ class home_ctrl extends Controller
         $this->render('home', 'main', [
             "version" => version::current(),
             "app_label" => defined('APP') ?  strtoupper(cfg::main('name')) : false,
-            "css" => Compress::css( ['main.css'], $this->get['mini']),
+            "css" => $this->compressCss( ['main.css'], $this->get['mini'] === 1 ),
             "tr_json" => tr::lang2json(),
             "debugMode" => DEBUG_ON ? "true" : "false",
             "prefix" => defined('PREFIX') ? PREFIX : '',
-            "js_libs" => Compress::js( $js_libs, $this->get['mini'], $_SESSION['debug_mode']),
+            "js_libs" => $this->compressJs( $js_libs, $this->get['mini'] === 1, $_SESSION['debug_mode']),
             "can_user_enter" => utils::canUser('enter') ? true : false,
             "address" => $this->request['address'],
             "token" => $this->request['token'],
@@ -59,6 +58,81 @@ class home_ctrl extends Controller
             "googleanaytics" => utils::is_online() ? cfg::main('googleanaytics') ?: false : false
         ]);
     }
+
+    private function compressCss ( array $files, bool $mini = false): string
+	{
+		if ( $mini && file_exists('./css-less/main.less')) {
+			$str = "/*\n * BraDypUS css minified archive includes different sources and licenses" .
+			        "\n * For details on external libraries (copyrights and licenses) please consult the Credits information" .
+        			"\n*/\n";
+
+	    	try {
+				$opts = [ 'compress' => true ];
+				
+				$parser = new Less_Parser($opts);
+				$parser->parseFile( "./css-less/main.less");
+				$css = $parser->getCss();
+
+				if (hash_file('sha256', "./css/mini.css") !== hash('sha256', $css)) {
+					file_put_contents("./css/mini.css", $str . $css);
+				}
+			} catch (Exception $e) {
+				$this->log->error($e);
+      		}
+		}
+		return implode("\n", [
+			'<link type="text/css" media="all" rel="stylesheet" href="./css/mini.css?sha256' . hash_file('sha256', './css/mini.css') . '" />',
+			'<link rel="shortcut icon" href="./img/favicon.ico">'
+		]);
+    }
+    
+    private function compressJs( array $files, bool $mini = false, bool $debug = false ): string
+	{
+		$str = [];
+
+		if ( ($mini || !file_exists('./js/bdus.mini.js')) && is_dir('./js-sources')) {
+
+			$str_to_write[] = "/*\n * BraDypUS javascripts minified archive includes different sources and licenses";
+			$str_to_write[] =  "\n * For details on external libraries (copyrights and licenses) please consult the Credits information";
+			$str_to_write[] =  "\n */";
+
+			foreach ($files as $file) {
+
+				$file = ltrim($file);
+
+				if ( file_exists( './js-sources/' . $file ) ) {
+					$str_to_write[] = JSMin::minify ( file_get_contents ( './js-sources/' . $file ) );
+				}
+			}
+
+			if ( !file_exists('./js/bdus.mini.js') ||
+				(file_exists('./js/bdus.mini.js') && hash_file('sha256', './js/bdus.mini.js') !== hash('sha256', implode("\n", $str_to_write)))
+				) {
+				@unlink('./js/bdus.mini.js');
+  				utils::write_in_file ( './js/bdus.mini.js', implode("\n", $str_to_write));
+			}
+			  
+			return '<script language="JavaScript" type="text/JavaScript" ' .
+						'src="./js/bdus.mini.js?sha256=' . hash_file('sha256', './js/bdus.mini.js') . '"></script>';
+			
+		} else if ( $debug && is_dir('./js-sources')) {
+			
+			foreach ( $files as $file ) {
+				$file = ltrim($file);
+
+				if ( file_exists( './js-sources/' . $file ) ) {
+					$str[] = '<script language="JavaScript" type="text/JavaScript" ' .
+				              ' src="./js-sources/' . $file .'?sha256=?_' . hash_file('sha256', './js-sources/' . $file) . '"></script>';
+				}
+			}
+
+			return implode("\n", $str);
+		
+		} else {
+			
+			return '<script language="JavaScript" type="text/JavaScript" src="./js/bdus.mini.js?sha256' . hash_file('sha256', './js/bdus.mini.js') . '"></script>' . "\n";
+    	}
+	}
 
 
     public function main_home() {

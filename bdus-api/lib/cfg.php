@@ -8,7 +8,7 @@
  * @uses 			MAIN_DIR
  * @uses 			PROJ_DIR
  * @uses 			PREFIX
- * @uses 			myException
+ * @uses 			\Exception
  */
 
 class cfg
@@ -24,35 +24,31 @@ class cfg
 	 * @param  string|false $app          application id
 	 * @param  boolean $force_reload if true the configuration data will be forced to load from config files
 	 */
-	public static function load($app = false, $force_reload = false)
+	public static function load(string $app = null, bool $force_reload = false)
 	{
 		if (!self::$data['tables'] || $force_reload || DEBUG_ON) {
 
 			if ($app) {
-				$app_data = MAIN_DIR . "projects{$app}/cfg/app_data.json";
+				$app_data = MAIN_DIR . "projects/{$app}/cfg/app_data.json";
 			} else if (defined('PROJ_DIR')) {
 				$app_data = PROJ_DIR . 'cfg/app_data.json';
 			} else {
-				return false;
+				throw new \Exception("Cannot find path to app_data");
 			}
 
 			if (!file_exists($app_data)) {
-				throw new myException(tr::get('file_doesnt_exist', [$app_data]));
+				throw new \Exception("The app data file $app_data was not found");
 			}
 
 			self::$data['main'] = json_decode(file_get_contents($app_data), true);
 
-			if($app) {
-				return;
-			}
-
 			if (!file_exists(PROJ_DIR . 'cfg/tables.json')) {
-				throw new myException('Configuration file tables.json is missing');
+				throw new \Exception('Configuration file tables.json is missing');
 			}
 			$tablesJSON = json_decode(file_get_contents(PROJ_DIR . 'cfg/tables.json'), true);
 
 			if (!$tablesJSON || empty($tablesJSON)) {
-				throw new myException('Invalid json: ' . PROJ_DIR . 'cfg/tables.json');
+				throw new \Exception('Invalid json: ' . PROJ_DIR . 'cfg/tables.json');
 			}
 
 			self::$data['table'] = $tablesJSON['tables'];
@@ -72,7 +68,7 @@ class cfg
 					if (file_exists( PROJ_DIR . 'cfg/' . $tb . '.json' )) {
 						$cfgfile = PROJ_DIR . 'cfg/' . $tb . '.json';
 					} else {
-						throw new myException(tr::get('config_file_missing', [$cfgfile]));
+						throw new \Exception(tr::get('config_file_missing', [$cfgfile]));
 					}
 				}
 
@@ -84,7 +80,7 @@ class cfg
 	/**
 	 * Writes data to cfg files
 	 * @param string $what	main, table, of a valid table name
-	 * @throws myException
+	 * @throws \Exception
 	 */
 	public static function toFile($what)
 	{
@@ -92,7 +88,7 @@ class cfg
 
 			case 'main':
 				if (!utils::write_formatted_json(PROJ_DIR . 'cfg/app_data.json', self::$data['main'])) {
-					throw new myException('Can not write in ' . PROJ_DIR . 'cfg/app_data.json');
+					throw new \Exception('Can not write in ' . PROJ_DIR . 'cfg/app_data.json');
 				}
 				break;
 
@@ -100,7 +96,7 @@ class cfg
 				$arr['tables'] = self::$data['table'];
 
 				if (!utils::write_formatted_json(PROJ_DIR . 'cfg/tables.json', $arr)) {
-					throw new myException('Can not write in ' . PROJ_DIR . 'cfg/tables.json');
+					throw new \Exception('Can not write in ' . PROJ_DIR . 'cfg/tables.json');
 				}
 				break;
 
@@ -108,11 +104,11 @@ class cfg
 				$file = PROJ_DIR . 'cfg/' . str_replace(PREFIX, null, $what) . '.json';
 
 				if (!is_array(self::$data['tables'][$what]) ) {
-					throw new myException('Empty array of data for table ' . $what);
+					throw new \Exception('Empty array of data for table ' . $what);
 				}
 
 				if (!utils::write_formatted_json($file, self::$data['tables'][$what])) {
-					throw new myException('Can not write in ' . $file);
+					throw new \Exception('Can not write in ' . $file);
 				}
 
 				break;
@@ -124,7 +120,7 @@ class cfg
 	 *
 	 * Returns information about main.xml If file does not exist an exception will be thrown
 	 * @param string $el	element (tag) to be returned. If false an array of all elements will be returned
-	 * @throws myException
+	 * @throws \Exception
 	 */
 	public static function main($el = false)
 	{
@@ -367,7 +363,7 @@ class cfg
 	public static function deleteFld(string $tb, string $fld)
 	{
 		if ( !isset(self::$data['tables'][$tb]) || !is_array(self::$data['tables'][$tb])) {
-			throw new myException("Invalid table $tb");
+			throw new \Exception("Invalid table $tb");
 		}
 		$index = false;
 		foreach (self::$data['tables'][$tb] as $index_arr => $column_data) {
@@ -376,7 +372,7 @@ class cfg
 			}
 		};
 		if (!$index){
-			throw new myException("Invalid field $fld in table $tb");
+			throw new \Exception("Invalid field $fld in table $tb");
 		}
 		unset(self::$data['tables'][$tb][$index]);
 		self::toFile($tb);

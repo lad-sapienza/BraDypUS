@@ -33,7 +33,7 @@ class tr
 
 			try {
 				$def_lang = cfg::main('lang');
-			} catch(myException $e) {
+			} catch(\Throwable $e) {
 				// cfg throws myException on error, eg.: app is not set yet
 				// if def_lang cannot be set, do nothing
 			}

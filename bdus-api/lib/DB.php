@@ -7,6 +7,11 @@
  * @license			See file LICENSE distributed with this code
  * @since			31/mar/2011
  * @uses			DB_connection
+ * @uses			Meta::logException
+ * @uses			Meta::addVersion
+ * @uses			\myException
+ * @uses			\PDOException
+ * @uses			APP
  */
 
 class DB implements \DB\DB\DBInterface

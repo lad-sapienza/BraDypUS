@@ -1,13 +1,11 @@
 <?php
 /**
-* Main database connection class
-*
-* @author			Julian Bogdani <jbogdani@gmail.com>
-* @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
-* @license			See file LICENSE distributed with this code
-* @since			31/mar/2011
-*/
-
+ * Utility database connection
+ * @author			Julian Bogdani <jbogdani@gmail.com>
+ * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
+ * @license			See file LICENSE distributed with this code
+ * @uses            \Exception
+ */
 class DB_connection
 {
     /**
@@ -55,10 +53,8 @@ class DB_connection
     /**
     * Connection options priority:
     * 1. custom_connection_file
-    * 2a. PROJ_DIR . 'db/bdus.sqlite'
-    * 2b. MAIN_DIR . "$app/db/bdus.sqlite"
-    * 3a. PROJ_DIR . 'cfg/app_data.json'
-    * 3b. MAIN_DIR . "projects/$app/cfg/app_data.json"
+    * 2. MAIN_DIR . "$app/db/bdus.sqlite"
+    * 3. MAIN_DIR . "projects/$app/cfg/app_data.json"
     *
     * @param string $app
     * @param string $custom_connection
@@ -72,14 +68,14 @@ class DB_connection
             
             $connection_file = $custom_connection_file;
             
-        } else if ($app && file_exists(MAIN_DIR . "projects/{$app}cfg/app_data.json") ) {
+        } else if ($app && file_exists(__DIR__ . "/../projects/{$app}cfg/app_data.json") ) {
             
-            $connection_file = MAIN_DIR. "projects/{$app}cfg/app_data.json";
+            $connection_file = __DIR__ . "/../projects/{$app}cfg/app_data.json";
         }
         
-        if ($app AND file_exists(MAIN_DIR . "projects/{$app}/db/bdus.sqlite")) {
+        if ($app AND file_exists(__DIR__ . "/../projects/{$app}/db/bdus.sqlite")) {
             
-            $cfg['db_path'] = MAIN_DIR . "projects/{$app}/db/bdus.sqlite";
+            $cfg['db_path'] = __DIR__ . "/../projects/{$app}/db/bdus.sqlite";
         }
         
         if ($connection_file){
@@ -151,4 +147,3 @@ class DB_connection
         ];
     }
 }
-?>

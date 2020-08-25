@@ -15,7 +15,7 @@ class debug extends Controller
 
 		$fields = ['id', 'channel', 'level', 'message', 'time'];
 
-		$q = 'SELECT * FROM ' . PREFIX . 'log WHERE';
+		$q = 'SELECT * FROM ' . PREFIX . 'log WHERE ';
 
 		$v = [];
 		$w = [];
@@ -55,6 +55,9 @@ class debug extends Controller
 		}
 
 		$response['query_executed'] = $q;
+
+		error_log($q);
+		error_log(json_encode($v));
 
 		$response['aaData'] = $this->db->query($q, $v);
 

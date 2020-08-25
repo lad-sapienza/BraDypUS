@@ -1,3 +1,4 @@
+3.16.112[] = "Removed deprecated MaekProject"
 3.16.111[] = "Dropped support for DB::start"
 3.16.110[] = "\DB\DB\DBInterface is injected to \ShortSql\ToJson"
 3.16.109[] = "Database class dependency is set to \DB\DB\DBInterface instead of \DB"

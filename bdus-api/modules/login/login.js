@@ -36,7 +36,7 @@ var login = {
 		
 		loadLoginForm: function(db){
 			$('#select_apps .buttons').slideUp();
-			$('#select_apps .login').load('./?obj=login_ctrl&method=loginForm', {'app': db}).slideDown();
+			$('#select_apps .login').load('./?obj=login_ctrl&method=loginForm&app='+ db).slideDown();
 		},
 		
 		autologin: function(app){

@@ -12,8 +12,7 @@ class test_ctrl extends Controller
 	public function test()
 	{	
 
-		// $db = new \DB();
-		// $driver = new \DB\Alter\Sqlite($db);
+		// $driver = new \DB\Alter\Sqlite($this->db);
 		// $alter = new \DB\Alter($driver);
 
 		// $alter->renameTable('sitarc__queries', 'sitarc__queries2');

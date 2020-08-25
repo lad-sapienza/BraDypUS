@@ -29,7 +29,7 @@ class login_ctrl extends Controller
 
 	public function resetPwd()
 	{
-		$user = new User(new DB($this->get['app']));
+		$user = new User($this->db);
 
 		$res = $user->getUser(array('email'=>$this->get['address']));
 
@@ -51,7 +51,7 @@ class login_ctrl extends Controller
 	{
 		$post = $this->post;
 
-		if (!$post['loginapp'] || !$post['name'] || !$post['email'] || !$post['password'] || !$post['password2']) {
+		if (!$post['app'] || !$post['name'] || !$post['email'] || !$post['password'] || !$post['password2']) {
 			utils::response('all_fields_required', 'error');
 			return;
 		} else if ($post['password'] != $post['password2']) {
@@ -59,7 +59,7 @@ class login_ctrl extends Controller
 			return;
 		} else {
 			try {
-				$user = new User(new DB($post['loginapp']));
+				$user = new User($this->db);
 
 				$res = $user->insert($post['name'], $post['email'], $post['password']);
 
@@ -67,9 +67,9 @@ class login_ctrl extends Controller
 					// email to user
 					$to = $post['email'];
 					$subject = tr::get('new_user_email_subject');
-					$message = tr::get('new_user_email_text', [$post['loginapp']])
-							. tr::get('email_signature');
-					$headers = 'From: ' . $post['loginapp'] . '@bradypus.net' . "\r\n" . 'Reply-To: ' . $post['loginapp'] . '_db@bradypus.net' . "\r\n";
+					$message = tr::get('new_user_email_text', [$post['app']])
+							. "\n" . tr::get('email_signature');
+					$headers = 'From: ' . $post['app'] . '@bradypus.net' . "\r\n" . 'Reply-To: ' . $post['app'] . '_db@bradypus.net' . "\r\n";
 
 					@mail($to, $subject, $message, $headers);
 
@@ -80,8 +80,8 @@ class login_ctrl extends Controller
 					foreach($admins as $adm)
 					{
 						$to = $adm['email'];
-						$message = tr::get('new_user_adm_email_text', [ $post['loginapp'], $post['loginapp'], $post['name'], $post['email'] ])
-							. tr::get('email_signature');
+						$message = tr::get('new_user_adm_email_text', [ $post['app'], $post['app'], $post['name'], $post['email'] ])
+							. "\n" . tr::get('email_signature');
 
 						@mail($to, $subject, $message, $headers);
 					}
@@ -120,7 +120,7 @@ class login_ctrl extends Controller
 
 				$app_data = json_decode(file_get_contents(MAIN_DIR . "projects/{$this->get['app']}/cfg/app_data.json"), true);
 
-				$user = new User(new DB($this->get['app']));
+				$user = new User($this->db);
 
 				$user->login(false, false, false, $app_data['auth_login_as_user']);
 
@@ -134,7 +134,7 @@ class login_ctrl extends Controller
 	public function auth()
 	{
 		try {
-			$user = new User(new DB($this->post['loginapp']));
+			$user = new User($this->db);
 			$user->login($this->post['email'], $this->post['password'], $this->post['remember']);
 			$obj['status'] = 'ok';
 		} catch (myException $e) {
@@ -181,7 +181,7 @@ class login_ctrl extends Controller
 
 	public function changePwd()
 	{
-		$user = new User(new DB($this->post['app']));
+		$user = new User($this->db);
 
 		if ($user->update($this->post['id'], false, false, $this->post['pwd'])) {
 			utils::response('ok_password_update');
@@ -194,7 +194,7 @@ class login_ctrl extends Controller
 
 	public  function sendToken()
 	{
-		$user = new User(new DB($this->get['app']));
+		$user = new User($this->db);
 
 		$res = $user->getUser(array('email'=>$this->get['email']));
 
@@ -204,7 +204,7 @@ class login_ctrl extends Controller
 			$to = $this->get['email'];
 			$subject = tr::get('lost_password_email_subject');
 			$message = tr::get('lost_password_email_text', [ 'https://db.bradypus.net/?app=' . $this->get['app'] . '&address=' . $this->get['email'] . '&token=' . $token ])
-				. tr::get('email_signature');
+				. "\n" . tr::get('email_signature');
 			$headers = 'From: ' . $this->get['app'] . '@bradypus.net' . "\r\n" . 'Reply-To: ' . $this->get['app'] . '@bradypus.net' . "\r\n";
 
 

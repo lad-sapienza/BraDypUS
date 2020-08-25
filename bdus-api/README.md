@@ -4,9 +4,9 @@
 
 ## More information:
 
-* [bradypus.net/webdb](http://bradypus.net/webdb)
-* [bradypus.net/bdus_system](http://bradypus.net/bdus_system)
-* [db.bradypus.net](http://db.bradypus.net)
+* [bradypus.net/webdb](https://bradypus.net/webdb)
+* [bradypus.net/bdus_system](https://bradypus.net/bdus_system)
+* [db.bradypus.net](https://db.bradypus.net)
 
 ---
 

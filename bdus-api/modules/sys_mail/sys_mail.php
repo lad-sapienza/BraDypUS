@@ -13,7 +13,7 @@ class sys_mail_ctrl extends Controller
 	{
 		$to = '';
 		$subject = $this->post['subject'];
-		$body = $this->post['body'] . tr::get('automatic_email_signature', [strtoupper(APP)]);
+		$body = $this->post['body'] . "\n" .tr::get('automatic_email_signature', [strtoupper(APP)]);
 
 		$headers = 'From: ' . $this->post['from']  . "\r\n" . 'Reply-To: ' . $this->post['from'] . "\r\n";
 

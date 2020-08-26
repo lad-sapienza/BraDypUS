@@ -8,7 +8,6 @@
  * @since			31/mar/2011
  * @uses			DB_connection
  * @uses			Meta::logException
- * @uses			Meta::addVersion
  * @uses			\myException
  * @uses			\PDOException
  * @uses			APP
@@ -142,7 +141,28 @@ class DB implements \DB\DB\DBInterface
 	public function backupBeforeEdit (string $table, int $id, string $query, array $values = []): void
 	{
 		try {
-			Meta::addVersion($_SESSION['user']['id'], $table, $id, $query, $values);
+			// Get record from database
+			$rows = $this->query( 'SELECT * FROM ' . $table . ' WHERE id = ?', [ $id ] );
+		  
+			if(!is_array($rows)) {
+				$rows = [];
+			}
+		
+			foreach ($rows as $r) {
+				$dt = new DateTime();
+
+				$insertSQL = "INSERT INTO " . PREFIX . "versions ( user, time, tb, rowid, content, editsql, editvalues ) VALUES (?, ?, ?, ?, ?, ? ,?)";
+				$insertValues = [
+					$_SESSION['user']['id'],
+					$dt->format('U'),
+					$table,
+					($r['id'] ?: ''),
+					json_encode($r),
+					$query,
+					json_encode($values)
+				];
+				$this->query($insertSQL, $insertValues);
+			}
 		} catch (\Throwable $th) {
 			$this->log->error($th);
 		}

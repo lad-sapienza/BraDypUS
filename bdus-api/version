@@ -1,3 +1,4 @@
+3.16.124[] = "Dropped support for Mets::addVersion"
 3.16.123[] = "DB uses Monolog"
 3.16.122[] = "Log added to system tables"
 3.16.121[] = "Debug does not depend on Meta"

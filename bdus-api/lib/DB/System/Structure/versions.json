@@ -1,0 +1,43 @@
+[
+    {
+        "name"      : "id",
+        "type"      : "INTEGER",
+        "pk"        : true,
+        "notnull"   : false
+    },
+    {
+        "name"      : "user",
+        "type"      : "INTEGER",
+        "notnull"   : true
+    },
+    {
+        "name"      : "time",
+        "type"      : "INTEGER",
+        "notnull"   : true
+    },
+    {
+        "name"      : "tb",
+        "type"      : "TEXT",
+        "notnull"   : true
+    },
+    {
+        "name"      : "rowid",
+        "type"      : "INTEGER",
+        "notnull"   : true
+    },
+    {
+        "name"      : "content",
+        "type"      : "TEXT",
+        "notnull"   : true
+    },
+    {
+        "name"      : "editsql",
+        "type"      : "TEXT",
+        "notnull"   : true
+    },
+    {
+        "name"      : "editvalues",
+        "type"      : "TEXT",
+        "notnull"   : false
+    }
+]

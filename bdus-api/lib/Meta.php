@@ -101,51 +101,6 @@ class Meta
   }
 
   /**
-   * Support for versioning.
-   * Adds a line to the version table
-   * @param int $user            User if who triggered the edit action
-   * @param string $table           Edited table
-   * @param string $id              Edited id
-   * @param string $editQuery       Sql used for editing
-   * @param array  $editQueryValues [description]
-   */
-  public function addVersion(int $user, string $table, int $id, string $editQuery, array $editQueryValues = [])
-  {
-    if (!self::check()){
-      return false;
-    }
-
-    $db = new DB();
-
-    try {
-      $rows = $db->query( 'SELECT * FROM ' . $table . ' WHERE id = ?', [ $id ] );
-
-      if(!is_array($rows)) {
-        $rows = [];
-      }
-
-      foreach ($rows as $r) {
-        $dt = new DateTime();
-        $version = R::dispense( 'version' );
-        $version->user = $user;
-        $version->unixtime = $dt->format('U');
-        $version->datetime = $dt->format('Y-m-d H:i:s');
-        $version->table = $table;
-        $version->rowid = $r['id'] ?: '';
-        $version->content = json_encode($r);
-        $version->editsql = $editQuery;
-        $version->editvalues = json_encode($editQueryValues);
-        $id = R::store( $version );
-      }
-    } catch (\Throwable $th) {
-      // almost silently dies....
-      error_log(json_encode($th, JSON_PRETTY_PRINT));
-    }
-
-    
-  }
-
-  /**
    * Gets data from a table and returns json econded result to be used with datatables
    * @param  string $table table name
    * @param  array  $get   array of get data (datatables)

@@ -120,8 +120,6 @@ require_once LIB_DIR . 'autoLoader.php';
 require_once $root . 'vendor/autoload.php';
 new autoLoader(LIB_DIR, MOD_DIR);
 
-set_error_handler('Meta::logError', 6135);
-
 if (defined('PROJ_DIR')) {
 	cfg::load(APP, true);
 }

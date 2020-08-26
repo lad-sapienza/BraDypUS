@@ -46,6 +46,7 @@ class Manage
         'rs',
         'userlinks',
         'users',
+        'versions',
         'vocabularies',
     ];
 

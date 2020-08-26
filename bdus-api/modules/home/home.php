@@ -292,7 +292,7 @@ class home_ctrl extends Controller
                 [ 
                     "fa-bug", 
                     'debug', 
-                    utils::canUser('read') ? "core.runMod('debug');" :  false 
+                    utils::canUser('read') ? "core.runMod('debug_ctrl');" :  false 
                 ]
             ]
 

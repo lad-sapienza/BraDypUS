@@ -6,7 +6,6 @@ use Monolog\Handler\AbstractProcessingHandler;
 
 class LogDBHandler extends AbstractProcessingHandler
 {
-    private $initialized = false;
     private $db;
     private $prefix;
 
@@ -19,10 +18,6 @@ class LogDBHandler extends AbstractProcessingHandler
 
     protected function write(array $record): void
     {
-        if (!$this->initialized) {
-            $this->initialize();
-        }
-
         $this->db->query(
             'INSERT INTO ' . $this->prefix . 'log (channel, level, message, time) VALUES (:channel, :level, :message, :time)',
             [
@@ -33,15 +28,5 @@ class LogDBHandler extends AbstractProcessingHandler
             ],
             'boolean'
         );
-    }
-
-    private function initialize()
-    {
-        $this->db->exec(
-            'CREATE TABLE IF NOT EXISTS ' . $this->prefix . 'log '
-            .'(channel TEXT, level INTEGER, message TEXT, time INTEGER UNSIGNED)'
-        );
-        
-        $this->initialized = true;
     }
 }

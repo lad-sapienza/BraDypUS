@@ -41,6 +41,7 @@ class Manage
         'charts',
         'files',
         'geodata',
+        'log',
         'queries',
         'rs',
         'userlinks',
@@ -338,27 +339,6 @@ class Manage
 
     private function run (string $sql, array $values = [], string $return = null)
     {
-        echo '<pre>' . 
-            $sql . 
-            "\n---\n" . 
-            json_encode( $values, JSON_PRETTY_PRINT ) .
-            "\n---\n" . 
-            $return .
-            '</pre>';
-
-        switch ($return) {
-            case 'id':
-                return 1;
-            case 'read':
-                return [];
-            case 'boolean':
-                return true;
-            case 'affected':
-                return 1;
-            default:
-                return true;
-                break;
-        }
         if (is_null($return)){
             return $this->db->exec($sql);
         } else if (\in_array($return, ['id', 'read', 'boolean', 'affected'])){

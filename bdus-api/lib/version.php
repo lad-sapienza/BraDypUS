@@ -11,12 +11,9 @@ class version
 	private static function parse()
 	{
 		$va = parse_ini_file('version', 1);
-		if (!$va)
-		{
+		if (!$va) {
 			throw new Exception('File `version` can not be parsed ' . __FILE__ . ', ' . __LINE__);
-		}
-		else
-		{
+		} else {
 			return $va;
 		}
 	}

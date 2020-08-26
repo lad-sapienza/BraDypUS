@@ -78,7 +78,7 @@ class App
                 throw new \Exception("Called object {$obj} *must* extend Controller. No direct access is available");
             }
 		} catch(\Throwable $e) {
-			$this->log->info($e);
+			$this->log->error($e);
 			echo "A fatal error occurred and the application could not be started. More information are filed in the log file";
         }
 	}

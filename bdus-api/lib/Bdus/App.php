@@ -28,6 +28,7 @@ class App
 			$this->log = new Logger('bdus');
 			$this->db = new \DB();
 			$this->log->pushHandler( new LogDBHandler($this->db, PREFIX) );
+			$this->db->setLog($this->log);
 		} catch (\Throwable $th) {
 			$this->log->pushHandler(new StreamHandler(__DIR__ . '/../../logs/error.log', Logger::DEBUG));
 		}

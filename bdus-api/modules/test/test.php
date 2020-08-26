@@ -11,7 +11,10 @@ class test_ctrl extends Controller
 
 	public function test()
 	{	
-
+		
+		// $firephp = new Monolog\Handler\FirePHPHandler();
+		// $this->log->pushHandler($firephp);
+		// $this->log->error('Error PHP', ["hello" => "world"]);
 		// $driver = new \DB\Alter\Sqlite($this->db);
 		// $alter = new \DB\Alter($driver);
 

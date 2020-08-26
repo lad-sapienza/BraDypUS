@@ -25,6 +25,7 @@ class DB implements \DB\DB\DBInterface
 	private $db;
 	private $db_engine;
 	private $app;
+	private $log;
 
 	/**
 	 *
@@ -42,6 +43,11 @@ class DB implements \DB\DB\DBInterface
 		}
 
 		$this->parseStart($this->app, $custom_connection);
+	}
+
+	public function setLog(Monolog\Logger $log)
+	{
+		$this->log = $log;
 	}
 
 	/**
@@ -119,7 +125,7 @@ class DB implements \DB\DB\DBInterface
 			$this->db->commit();
 		} catch (\Throwable $th) {
 			$this->db->rollBack();
-			Meta::logException($th);
+			$this->log->error($th);
 		}
 		return ($ret !== false);
 	}
@@ -138,7 +144,7 @@ class DB implements \DB\DB\DBInterface
 		try {
 			Meta::addVersion($_SESSION['user']['id'], $table, $id, $query, $values);
 		} catch (\Throwable $th) {
-			error_log(json_encode($th, JSON_PRETTY_PRINT));
+			$this->log->error($th);
 		}
 	}
 
@@ -192,7 +198,7 @@ class DB implements \DB\DB\DBInterface
 					break;
 			}
 		} catch (\PDOException $e) {
-			Meta::logException($e);
+			$this->log->error($e);
 			throw new \myException( tr::get('db_generic_error') );
 		}
 	}

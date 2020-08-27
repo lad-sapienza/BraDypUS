@@ -45,8 +45,11 @@ class App
 
 		if ($get['logout']) {
 			try {
+				$user_id = $_SESSION['user']['id'];
 				$user = new User($this->db);
 				$user->logout();
+				$this->log->info("User {$user_id} logged out");
+				
 			} catch (\Throwable $e) {
 				$this->log->error($e);
 				User::forceLogOut();

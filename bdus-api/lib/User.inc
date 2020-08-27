@@ -51,7 +51,7 @@ class User
      * @param int $user_id
      * @throws myException
      */
-    public function login($email = false, $password = false, $remember = false, $user_id = false)
+    public function login(string $email = null, string $password = null, string $remember = null, int $user_id = null): bool
     {
         if (!$this->app) {
             throw new myException(tr::get('no_app_error'));
@@ -59,7 +59,6 @@ class User
 
         if (!$email && !$password && $remember) {
             if (cookieAuth::get()) {
-                $this->userLog();
                 return true;
             }
         }
@@ -95,8 +94,6 @@ class User
 
             $_SESSION['app'] = $this->app;
 
-            $this->userLog();
-
             if ($remember && $remember !== 'false') {
                 cookieAuth::set();
             }
@@ -119,9 +116,6 @@ class User
 
             // emtpy user tmp dir
             utils::emptyDir();
-
-            // write logout text in log file
-            self::userLog(true);
 
             // delete old session files
             self::deleteOldSessions();
@@ -159,16 +153,6 @@ class User
 
         session_destroy();
     }
-
-    /**
-     * Registers user login/out activity
-     * @param  boolean $out if true, user just logged out
-     */
-    private function userLog(bool $out = false)
-    {
-        Meta::addUserLog($_SESSION['user']['id'], $out);
-    }
-
 
     /**
      *

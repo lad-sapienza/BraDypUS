@@ -103,8 +103,10 @@ class login_ctrl extends Controller
 
 	public function out()
 	{
+		$user_id = $_SESSION['user']['id'];
 		$user = new User($this->db);
-    	$user->logout();
+		$user->logout();
+		$this->log->info("User {$user_id} logged out");
 	}
 
 
@@ -122,7 +124,8 @@ class login_ctrl extends Controller
 
 				$user = new User($this->db);
 
-				$user->login(false, false, false, $app_data['auth_login_as_user']);
+				$user->login(null, null, null, $app_data['auth_login_as_user']);
+				$this->log->info("User {$_SESSION['user']['id']} logged in");
 
 				utils::response('Authenticated');
 			}
@@ -136,6 +139,7 @@ class login_ctrl extends Controller
 		try {
 			$user = new User($this->db);
 			$user->login($this->post['email'], $this->post['password'], $this->post['remember']);
+			$this->log->info("User {$_SESSION['user']['id']} logged in");
 			$obj['status'] = 'ok';
 		} catch (myException $e) {
 			$obj['status'] = 'no';

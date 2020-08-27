@@ -7,7 +7,6 @@
  * @license			See file LICENSE distributed with this code
  * @since			31/mar/2011
  * @uses			DB_connection
- * @uses			Meta::logException
  * @uses			\myException
  * @uses			\PDOException
  * @uses			APP

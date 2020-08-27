@@ -539,5 +539,62 @@ class utils
 		}
 		
 		return $geo;
-    }
+	}
+	
+	public static function jsonForTabletop(\DB\DB\DBInterface $db, string $tb, array $params): string
+	{
+		$fields = ['id', 'channel', 'level', 'message', 'time'];
+
+		$q = 'SELECT * FROM ' . $tb . ' WHERE ';
+
+		$v = [];
+		$w = [];
+
+		if ($params['sSearch']) {
+			foreach ($fields as $f) {
+				$w[] = "$f LIKE ?";
+				$v[] = "%{$params['sSearch']}%";
+			}
+			$q .= implode(' OR ', $w);
+		} else {
+			$q .= ' 1=1';
+		}
+
+		$response['sEcho'] = intval($params['sEcho']);
+		$response['query_arrived'] = $q;
+
+		if ( isset($params['iTotalRecords']) ) {
+			$response['iTotalRecords'] = $params['iTotalRecords'];
+		} else {
+			$res_tot = $db->query('SELECT count(id) as tot FROM ' . $tb . ' WHERE 1=1');
+			$response['iTotalRecords'] = $res_tot[0]['tot'];
+		}
+
+		$response['iTotalDisplayRecords'] = $response['iTotalRecords'];
+
+		if (isset($params['iSortCol_0'])) {
+			$q .= ' ORDER BY ' . $fields[$params['iSortCol_0']] . ' ' . ($params['sSortDir_0']==='asc' ? 'asc' : 'desc');
+		} else {
+			$q .= ' ORDER BY id DESC';
+		}
+
+		if (isset($params['iDisplayStart']) && $params['iDisplayLength'] !== '-1') {
+			$q .= ' LIMIT ' . $params['iDisplayLength'] . ' OFFSET ' . $params['iDisplayStart'];
+		} else {
+			$q .= ' LIMIT 30 OFFSET 0 ';
+		}
+
+		$response['query_executed'] = $q;
+
+		$response['aaData'] = $db->query($q, $v);
+
+		foreach ($response['aaData'] as $id => &$row) {
+			$date = new DateTime();
+			$date->setTimestamp($row['time']);
+			$row['time'] = $date->format('Y-m-d H:i:s');
+			$response['aaData'][$id]['DT_RowId'] = $row['id'];
+		}
+
+		return json_encode($response);
+	}
 }

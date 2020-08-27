@@ -11,12 +11,20 @@ class myHistory_ctrl extends Controller
 {
 
 	public function sql2json() {
-		return Meta::getData($this->get['tb'], $this->post);
+		$params = $this->post;
+
+		echo \utils::jsonForTabletop($this->db, PREFIX . 'versions', $params);
 	}
 
-	public static function show_all()
+	public function show_all()
 	{
-		echo Meta::tableTop('version', "./?&obj=myHistory_ctrl&method=sql2json&tb=version");
+		$fields = ['id', 'user', 'time', 'tb', 'rowid', 'content', 'editsql', 'editvalues'];
+		
+		$this->render('myHistory', 'read', [
+			'th_fields' => '<th>' . implode('</th><th>', $fields) . '</th>',
+			'm_data' => '{"mData":"' . implode('"},{"mData":"', $fields) . '"}',
+			'ajaxSource' => "./?obj=myHistory_ctrl&method=sql2json"
+		]);
 	}
 
 }

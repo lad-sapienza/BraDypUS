@@ -10,14 +10,11 @@ class empty_cache_ctrl extends Controller
 {
 	public function doEmpty()
 	{
-		try
-		{
+		try {
 			utils::emptyDir(MAIN_DIR . 'cache', false);
 			
 			$response = array('status'=> 'success', 'text'=>tr::get('ok_cache_emptied'));
-		}
-		catch (myException $e)
-		{
+		} catch (\Exception $e) {
 			$response = array('status'=> 'error', 'text'=>tr::get('error_cache_not_emptied'));
 		}
 		

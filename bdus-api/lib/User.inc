@@ -49,12 +49,12 @@ class User
      * @param string $email
      * @param string $password
      * @param int $user_id
-     * @throws myException
+     * @throws \Exception
      */
     public function login(string $email = null, string $password = null, string $remember = null, int $user_id = null): bool
     {
         if (!$this->app) {
-            throw new myException(tr::get('no_app_error'));
+            throw new \Exception(tr::get('no_app_error'));
         }
 
         if (!$email && !$password && $remember) {
@@ -69,7 +69,7 @@ class User
             // get user data
             $res = $this->getUser(array('id'=> $user_id, 'email' => $email, 'password' => $this->encodePwd($password) ));
         } else {
-            throw new myException(tr::get('email_password_needed'));
+            throw new \Exception(tr::get('email_password_needed'));
         }
 
         if ($res[0]) {
@@ -100,7 +100,7 @@ class User
 
             return true;
         } else {
-            throw new myException(tr::get('login_data_not_valid'));
+            throw new \Exception(tr::get('login_data_not_valid'));
         }
     } // end of login
 
@@ -167,11 +167,11 @@ class User
         }
 
         if ($this->isDuplicate($email)) {
-            throw new myException(tr::get('email_present', ['<strong>' . $email . '</strong>']));
+            throw new \Exception(tr::get('email_present', ['<strong>' . $email . '</strong>']));
         }
 
         if (!$this->isValid($email)) {
-            throw new myException(tr::get('email_not_valid', ['<strong>' . $email . '</strong>']));
+            throw new \Exception(tr::get('email_not_valid', ['<strong>' . $email . '</strong>']));
         }
 
         $statement = "INSERT INTO " . $this->prefix . "users "
@@ -199,16 +199,16 @@ class User
      * @param string $password	new user password (not encoded!)
      * @param array $privilege	new user privilege
      * @param string $settings	user settings
-     * @throws myException
+     * @throws \Exception
      */
     public function update($id, $name = false, $email = false, $password = false, $privilege = false, $settings = false)
     {
         if (!$name && !$email && !$password && !$privilege && !$settings) {
-            throw new myException(tr::get('not_enough_data'));
+            throw new \Exception(tr::get('not_enough_data'));
         } elseif ($email and $this->isDuplicate($email, $id)) {
-            throw new myException(tr::get('email_present', ['<strong>' . $email . '</strong>']));
+            throw new \Exception(tr::get('email_present', ['<strong>' . $email . '</strong>']));
         } elseif ($email && !$this->isValid($email)) {
-            throw new myException(tr::get('email_not_valid', ['<strong>' . $email . '</strong>']));
+            throw new \Exception(tr::get('email_not_valid', ['<strong>' . $email . '</strong>']));
         } else {
             $partial_arr =  array();
 

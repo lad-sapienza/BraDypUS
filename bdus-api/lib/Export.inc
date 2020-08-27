@@ -23,9 +23,8 @@ class Export
 
 		$this->data = $db->query('SELECT * FROM ' . $this->tb . ' WHERE ' . ($where_sql ? $where_sql : '1=1'));
 
-		if (!is_array($this->data) OR count($this->data) == 0)
-		{
-			throw new myException('Table ' . $this->tb . ' is empty!');
+		if (!is_array($this->data) OR count($this->data) == 0) {
+			throw new \Exception('Table ' . $this->tb . ' is empty!');
 		}
 	}
 
@@ -58,7 +57,7 @@ class Export
 				break;
 
 			default:
-				throw new myException('Unknown export format');
+				throw new \Exception('Unknown export format');
 				break;
 
 		}
@@ -117,7 +116,7 @@ class Export
 
 			if (!$w)
 			{
-				throw new myException('Can not write in file ' . $this->filename);
+				throw new \Exception('Can not write in file ' . $this->filename);
 			}
 
 
@@ -171,7 +170,7 @@ class Export
 
 		if (!$w)
 		{
-			throw new myException('Can not write in file ' . $this->filename);
+			throw new \Exception('Can not write in file ' . $this->filename);
 		}
 
 	}
@@ -249,17 +248,17 @@ class Export
 
 		if(!$hndl = fopen($this->filename, "w+"))
 		{
-			throw new myException("Can not open " . $this->filename);
+			throw new \Exception("Can not open " . $this->filename);
 		}
 
 		if(!fwrite($hndl,$content))
 		{
-			throw new myException("Can not write in ".$this->filename);
+			throw new \Exception("Can not write in ".$this->filename);
 		}
 
 		if(!fclose($hndl))
 		{
-			throw new myException("Can not close ".$this->filename);
+			throw new \Exception("Can not close ".$this->filename);
 		}
 	}
 
@@ -272,7 +271,7 @@ class Export
 	{
 		if(!is_array($arr))
 		{
-			throw new myException("Error : Argument is not valid. Supply an valid Array.");
+			throw new \Exception("Error : Argument is not valid. Supply an valid Array.");
 		}
 
 		foreach($arr as $data)
@@ -286,7 +285,7 @@ class Export
 	/**
 	 *
 	 * Exports sql INSERT statement
-	 * @throws myException
+	 * @throws \Exception
 	 */
 	private function exportSQL()
 	{
@@ -308,14 +307,14 @@ class Export
 		$w = utils::write_in_file($this->filename, $sql);
 
 		if (!$w) {
-			throw new myException('Can not write in file ' . $this->filename);
+			throw new \Exception('Can not write in file ' . $this->filename);
 		}
 	}
 
 	/**
 	 *
 	 * Exports data in csv format
-	 * @throws myException
+	 * @throws \Exception
 	 */
 	private function exportCSV()
 	{
@@ -327,30 +326,23 @@ class Export
 		//open file
 		$fh = @fopen($this->filename, 'w+');
 
-		if (!$fh)
-		{
-				throw new myException('Can not open file ' . $this->filename . ' in write mode!');
+		if (!$fh) {
+				throw new \Exception('Can not open file ' . $this->filename . ' in write mode!');
 		}
 
-		if (is_array($this->data))
-		{
-			if (!fputcsv($fh, array_keys($this->data[0]), $delimiter, $enclosure))
-			{
-				throw new myException('Can not write in file ' . $this->filename . '(1)');
+		if (is_array($this->data)) {
+			if (!fputcsv($fh, array_keys($this->data[0]), $delimiter, $enclosure)) {
+				throw new \Exception('Can not write in file ' . $this->filename . '(1)');
 			}
 
-			foreach ( $this->data as $line )
-			{
-				if (!fputcsv($fh, $line, $delimiter, $enclosure))
-				{
-					throw new myException('Can not write in file ' . $this->filename . ' (2)');
+			foreach ( $this->data as $line ) {
+				if (!fputcsv($fh, $line, $delimiter, $enclosure)) {
+					throw new \Exception('Can not write in file ' . $this->filename . ' (2)');
 				}
 			}
 			@fclose($fh);
-		}
-		else
-		{
-			throw new myException('Can not export data from ' . $this->tb);
+		} else {
+			throw new \Exception('Can not export data from ' . $this->tb);
 		}
 	}
 

@@ -78,7 +78,7 @@ class Vocabulary
 				if (!$res) {
 					$flag_error = true;
 				}
-			} catch(myException $e) {
+			} catch(\Exception $e) {
 				array_push($error, $e);
 			}
 		}

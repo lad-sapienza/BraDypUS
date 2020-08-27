@@ -7,7 +7,7 @@
  * @license			See file LICENSE distributed with this code
  * @since			31/mar/2011
  * @uses			DB_connection
- * @uses			\myException
+ * @uses			\Exception
  * @uses			\PDOException
  * @uses			APP
  */
@@ -30,7 +30,7 @@ class DB implements \DB\DB\DBInterface
 	 * Load connection info and starts PDO object
 	 * @param string $app	application to work with
 	 * @param string $custom_connection
-	 * @throws \myException
+	 * @throws \Exception
 	 */
 	public function __construct(string $app = null, string $custom_connection = null)
 	{
@@ -52,7 +52,7 @@ class DB implements \DB\DB\DBInterface
 	 * Parses conncetion data and starts PDO
 	 * @param string $app
 	 * @param string $custom_connection
-	 * @throws \myException
+	 * @throws \Exception
 	 */
 	private function parseStart(string $app, string $custom_connection = null)
 	{
@@ -86,13 +86,9 @@ class DB implements \DB\DB\DBInterface
 			}
 			return $this;
 
-		} catch( \Exception $e ) {
-
-			throw new \myException($e);
-			
 		} catch (\PDOException $e) {
 
-			throw new \myException($e);
+			throw new \Exception($e);
 
 		}
 	}
@@ -133,7 +129,7 @@ class DB implements \DB\DB\DBInterface
 		try {
 			return $this->db->exec($sql) !== false;
 		} catch (\PDOException $e) {
-			throw new \myException($e);
+			throw new \Exception($e);
 		}
 	}
 
@@ -218,7 +214,7 @@ class DB implements \DB\DB\DBInterface
 			}
 		} catch (\PDOException $e) {
 			$this->log->error($e);
-			throw new \myException( tr::get('db_generic_error') );
+			throw new \Exception( tr::get('db_generic_error') );
 		}
 	}
 

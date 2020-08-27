@@ -38,7 +38,7 @@ class search_replace_ctrl extends Controller
 		
 		try {
 			if (!$tb || !$fld || !$search || !$replace) {
-				throw new myException('All fields are required');
+				throw new \Exception('All fields are required');
 			}
 
 			$values = false;
@@ -48,7 +48,7 @@ class search_replace_ctrl extends Controller
 				[ $search, $replace], 
 				'affected'
 			);
-		} catch(myException $e) {
+		} catch(\Exception $e) {
 			$this->log->error($e);
 			echo 'error';
 		}

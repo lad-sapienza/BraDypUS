@@ -61,7 +61,7 @@ class saved_queries_ctrl extends Controller
                 ];
             }
             
-        } catch (myException $e) {
+        } catch (\Exception $e) {
             $this->log->error($e);
         }
 
@@ -86,7 +86,7 @@ class saved_queries_ctrl extends Controller
                 ];
             }
             
-        } catch (myException $e) {
+        } catch (\Exception $e) {
             $this->log->error($e);
         }
 
@@ -111,7 +111,7 @@ class saved_queries_ctrl extends Controller
                 ];
             }
             
-        } catch (myException $e) {
+        } catch (\Exception $e) {
             $this->log->error($e);
         }
 
@@ -139,7 +139,7 @@ class saved_queries_ctrl extends Controller
                 ];
             }
             
-        } catch (myException $e) {
+        } catch (\Exception $e) {
             $this->log->error($e);
         }
 

@@ -54,9 +54,9 @@ class user_ctrl extends Controller
 				$res['message'] = tr::get('user_deleted');
 				$res['status'] = 'success';
 			} else {
-				throw new myException('User deletion query returned false');
+				throw new \Exception('User deletion query returned false');
 			}
-		} catch (myException $e) {
+		} catch (\Exception $e) {
 			$res['message'] = tr::get('user_not_deleted');
 			$res['status'] = 'error';
 		
@@ -121,10 +121,10 @@ class user_ctrl extends Controller
 			if ($ret) {
 				utils::response('user_data_saved');
 			} else {
-				throw new myException('Quesry returned false');
+				throw new \Exception('Quesry returned false');
 			}
 		}
-		catch (myException $e)
+		catch (\Exception $e)
 		{
 			utils::response('user_data_not_saved', 'error');
 			$this->log->error($e);

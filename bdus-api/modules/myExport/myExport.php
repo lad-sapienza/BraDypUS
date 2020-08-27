@@ -44,8 +44,7 @@ class myExport_ctrl extends Controller
 		$format = $this->get['format'];
 		$sql = $this->get['sql'];
 		
-		try
-		{
+		try {
 			$where = $sql ? base64_decode($sql) : '1';
 		
 			$file = PROJ_DIR . 'export/' . $tb . '.' . date('U');
@@ -56,9 +55,7 @@ class myExport_ctrl extends Controller
 		
 			$resp['text'] = tr::get('export_success');
 			$resp['status'] = 'success';
-		}
-		catch(myException $e)
-		{
+		} catch(Exception $e) {
 			$this->log->error($e);
 			$resp['text'] = tr::get('export_error') . tr::get('details_in_log');
 			$resp['status'] = 'error';
@@ -69,8 +66,7 @@ class myExport_ctrl extends Controller
 	
 	/**
 	 * Erases exported file and return json
-	 * @param unknown_type $file
-	 * @throws myException
+	 * @throws Exception
 	 */
 	public function erase()
 	{
@@ -80,11 +76,11 @@ class myExport_ctrl extends Controller
 			$a = @unlink(PROJ_DIR . 'export/' . $file);
 		
 			if (!$a){
-				throw new myException(tr::get('error_erasing_file', [$file]));
+				throw new \Exception(tr::get('error_erasing_file', [$file]));
 			}
 			$resp['text'] = tr::get('success_erasing_file', [$file]);
 			$resp['status'] = 'success';
-		} catch(myException $e) {
+		} catch(\Exception $e) {
 			$resp['text'] = $e->getMessage();
 			$resp['status'] = 'error';
 		}

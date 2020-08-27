@@ -10,7 +10,7 @@ class geoface_ctrl extends Controller
 {
 	/**
 	 * Saves new geometry data to geodata table, linked to table, id
-	 * @throws myException
+	 * @throws \Exception
 	 */
 	public function saveNew()
 	{
@@ -21,7 +21,7 @@ class geoface_ctrl extends Controller
 		try {
 
 			if (!utils::canUser('add_new')) {
-				throw new myException('User has not enough privilege to add a new record');
+				throw new \Exception('User has not enough privilege to add a new record');
 			}
 
 			$record = new Record($tb, $id, $this->db);
@@ -31,10 +31,10 @@ class geoface_ctrl extends Controller
 			if ($new_id) {
 				utils::response('ok_insert_geodata', false, false, array('id'=>$new_id));
 			} else {
-				throw new myException('Insert geodata query returned false');
+				throw new \Exception('Insert geodata query returned false');
 			}
 
-		} catch (myException $e) {
+		} catch (\Exception $e) {
 			$this->log->error($e);
 			utils::response('error_insert_geodata', 'error');
 		}
@@ -44,7 +44,7 @@ class geoface_ctrl extends Controller
 
 	/**
 	 * Erases geoemtry from geodatada table
-	 * @throws myException
+	 * @throws \Exception
 	 */
 	public function erase()
 	{
@@ -53,7 +53,7 @@ class geoface_ctrl extends Controller
 		try {
 
 			if (!utils::canUser('edit')) {
-				throw new myException('User has not enough privilege to edit records');
+				throw new \Exception('User has not enough privilege to edit records');
 			}
 
 			$record = new Record('novalue', false, $this->db);
@@ -67,10 +67,10 @@ class geoface_ctrl extends Controller
 			if (!$error) {
 				utils::response('ok_delete_geodata');
 			} else {
-				throw new myException('Delete geodata query returned false');
+				throw new \Exception('Delete geodata query returned false');
 			}
 
-		} catch (myException $e) {
+		} catch (\Exception $e) {
 			$this->log->error($e);
 			utils::response('error_delete_geodata', 'error');
 		}
@@ -78,7 +78,7 @@ class geoface_ctrl extends Controller
 
 	/**
 	 * Updates geometri info in geodata table
-	 * @throws myException
+	 * @throws \Exception
 	 */
 	public function update()
 	{
@@ -86,7 +86,7 @@ class geoface_ctrl extends Controller
 
 		try {
 			if (!utils::canUser('edit')) {
-				throw new myException('User has not enough privilege to edit records');
+				throw new \Exception('User has not enough privilege to edit records');
 			}
 
 			foreach ($post as $row){
@@ -101,10 +101,10 @@ class geoface_ctrl extends Controller
 			if (!$error) {
 				utils::response('ok_update_geometry');
 			} else {
-				throw new myException('Update geometry query returned false');
+				throw new \Exception('Update geometry query returned false');
 			}
 
-		} catch (myException $e) {
+		} catch (\Exception $e) {
 			$this->log->error($e);
 			utils::response('error_update_geometry', 'error');
 		}
@@ -188,7 +188,7 @@ class geoface_ctrl extends Controller
 
 			echo $this->returnJson($response);
 
-		} catch (myException $e) {
+		} catch (\Exception $e) {
 			$this->log->error($e);
 			utils::response('error_getting_geodata', 'error');
 		}

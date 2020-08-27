@@ -42,7 +42,7 @@ class import_geodata_ctrl extends Controller
         'resp' => $resp
       ]);
       
-    } catch (myException $e) {
+    } catch (\Exception $e) {
       $this->log->error($e);
       utils::alert_div('empty_or_wrong_geojson', true);
     }
@@ -81,7 +81,7 @@ class import_geodata_ctrl extends Controller
       echo '<div class="text-success lead"><i class="glyphicon glyphicon-ok"></i> ' 
         . tr::get('geodata_ok_uploaded', [$totalImports] ) . '</div>';
       
-    } catch (myException $e) {
+    } catch (\Exception $e) {
       $this->log->error($e);
       utils::alert_div('geodata_ok_uploaded', true);
     }

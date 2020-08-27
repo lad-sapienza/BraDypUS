@@ -60,7 +60,7 @@ class free_sql_ctrl extends Controller
 			$this->db->commit();
 			
 			utils::response(tr::get('ok_free_sql_run_affected', [$ret ?: 0], 'success', true));
-		} catch (myException $e) {
+		} catch (\Exception $e) {
 			$this->log->error($e);
 			$this->db->rollBack();
 			utils::response(

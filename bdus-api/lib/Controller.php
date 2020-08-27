@@ -5,7 +5,7 @@
  * @license			See file LICENSE distributed with this code
  * @since			Jan 12, 2013
  * 
- * @uses myException
+ * @uses Exception
  * @uses cfg
  * @uses tr
  * @uses \Twig\Environment
@@ -48,7 +48,7 @@ class Controller
 	public function compileTmpl($module, $template, $data = [])
 	{
 		if (!file_exists(MOD_DIR . $module . '/tmpl/' . $template . '.twig')) {
-			throw new myException('Template not found');
+			throw new \Exception('Template not found');
 		}
 
 		$settings = unserialize(CACHE);

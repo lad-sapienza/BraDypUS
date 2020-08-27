@@ -72,7 +72,7 @@ class Field implements iTemplate
             if (is_array($res) && !empty($res)) {
                 return $res[0]['total'];
             }
-        } catch (myException $e) {
+        } catch (\Exception $e) {
             $this->log->error($e);
         }
     }

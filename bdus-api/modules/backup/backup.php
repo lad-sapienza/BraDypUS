@@ -12,7 +12,7 @@ class backup_ctrl extends Controller
 	/**
 	 * Erases backup files and return json
 	 * @param string $file	filename to erase
-	 * @throws myException
+	 * @throws \Exception
 	 */
 	public function deleteBackup()
 	{
@@ -25,11 +25,11 @@ class backup_ctrl extends Controller
 			$a = @unlink(PROJ_DIR . 'backups/' . $file);
 
 			if (!$a){
-				throw new myException(tr::get('error_erasing_file', [$file]));
+				throw new \Exception(tr::get('error_erasing_file', [$file]));
 			}
 			$resp['text'] = tr::get('success_erasing_file', [$file]);
 			$resp['status'] = 'success';
-		} catch(myException $e) {
+		} catch(\Exception $e) {
 			$resp['text'] = $e->getMessage();
 			$resp['status'] = 'error';
 		}
@@ -80,11 +80,11 @@ class backup_ctrl extends Controller
 					break;
 
 				default:
-					throw new myException('Unknown or unsupported database driver');
+					throw new \Exception('Unknown or unsupported database driver');
 					break;
 			}
 
-		} catch(myException $e) {
+		} catch(\Exception $e) {
 			echo 'error';
 			$this->log->error($e);
 		}

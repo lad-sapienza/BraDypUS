@@ -40,7 +40,7 @@ class SavedQueries
 	/**
 	 * Erases record from queries table. Sets $this->message
 	 * @param int $id	record id to erase
-	 * @throws myException
+	 * @throws \Exception
 	 */
 	public function erase($id)
 	{
@@ -54,7 +54,7 @@ class SavedQueries
 	/**
 	 * Makes record shared. Sets $this->message
 	 * @param int $id	record id to share
-	 * @throws myException
+	 * @throws \Exception
 	 */
 	public function share($id)
 	{
@@ -69,7 +69,7 @@ class SavedQueries
 	/**
 	 * Makes record private. Sets $this->message
 	 * @param int $id record id to unshare
-	 * @throws myException
+	 * @throws \Exception
 	 */
 	public function unshare($id)
 	{
@@ -85,7 +85,7 @@ class SavedQueries
 	 * @param string $name	query name
 	 * @param string $text	query base64 encoded text
 	 * @param string $tb	reference tb
-	 * @throws myException
+	 * @throws \Exception
 	 */
 	public function save($name, $text, $tb)
 	{

@@ -43,11 +43,11 @@ class importGeodata
 
   /**
    * Loads and parses geojson and returns properties of first feature or throws
-   *  myException on error.
+   *  \Exception on error.
    *
    * @param string $geojson GeoJSON string to check
    * @return type
-   * @throws myException
+   * @throws \Exception
    */
   public function checkGeojson($geojson)
   {
@@ -56,7 +56,7 @@ class importGeodata
 
     // stop if geojson is empty or not valid
     if (!$geo_array || !is_array($geo_array) || !$geo_array['features'] || empty($geo_array['features'])) {
-      throw new myException('GeoJSON string is empty, not well formatted or contains no geometries');
+      throw new \Exception('GeoJSON string is empty, not well formatted or contains no geometries');
     }
 
     return $geo_array['features'][0]['properties'];
@@ -64,24 +64,23 @@ class importGeodata
 
   /**
    * Starts importing process and returns number of successfully processed records
-   * or throws myException and rolls back all queries.
+   * or throws \Exception and rolls back all queries.
    * @return int  If successful the number of processed rows will be returned
-   * @throws myException
-   * @throws Exception
+   * @throws \Exception
    */
   public function runImport()
   {
     if (!$this->db) {
-      throw new myException('Database object is missings');
+      throw new \Exception('Database object is missings');
     }
     if (!$this->tb) {
-      throw new myException('Destination table is missing');
+      throw new \Exception('Destination table is missing');
     }
     if (!$this->geojson) {
-      throw new myException('Geojson string is missing');
+      throw new \Exception('Geojson string is missing');
     }
     if (!$this->idfield) {
-      throw new myException('ID field is missing');
+      throw new \Exception('ID field is missing');
     }
 
 
@@ -134,7 +133,7 @@ class importGeodata
 
 
        if (!$this->db->query($sql, $values, 'boolean')) {
-         throw new myException('Error in executing SQL: ' . $sql);
+         throw new \Exception('Error in executing SQL: ' . $sql);
        }
 
        $count++;
@@ -144,11 +143,11 @@ class importGeodata
 
      return $count;
     
-    } catch (myException $e) {
+    } catch (\Exception $e) {
 
       $this->db->rollBack();
 
-      throw new myException($e);
+      throw new \Exception($e);
     }
 
   }

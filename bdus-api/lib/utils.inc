@@ -250,7 +250,7 @@ class utils
 	 * By default (no dir specified) the user temporary folder will be emptied!
 	 * @param string $dir	directory to empty
 	 * @param string $delete	if true directory will be deleted
-	 * @throws myException
+	 * @throws \Exception
 	 */
 	public static function emptyDir( $dir = false, $delete = false, $limit2current = false )
 	{
@@ -258,32 +258,23 @@ class utils
 
 		$files_in_tmp = self::dirContent( $dir );
 
-		if ( $files_in_tmp[0] )
-		{
-			foreach ( $files_in_tmp as $file )
-			{
-				if ( is_dir ( $dir . '/' . $file ) )
-				{
-          if( !$limit2current )
-          {
-            self::emptyDir( $dir . '/' . $file, true );
-          }
-				}
-				else
-				{
-					if ( !@unlink ( $dir . '/' . $file ) )
-					{
-						throw new myException(tr::get('cannot_delete_file', [$file]));
+		if ( $files_in_tmp[0] ) {
+			foreach ( $files_in_tmp as $file ) {
+				if ( is_dir ( $dir . '/' . $file ) ) {
+					if( !$limit2current ) {
+						self::emptyDir( $dir . '/' . $file, true );
+					}
+				} else {
+					if ( !@unlink ( $dir . '/' . $file ) ) {
+						throw new \Exception(tr::get('cannot_delete_file', [$file]));
 					}
 				}
 			}
 		}
 
-		if ( $dir !== PROJ_TMP_DIR && $delete)
-		{
-			if ( !@rmdir( $dir ) )
-			{
-				throw new myException(tr::get('cannot_delete_dir', [$dir]));
+		if ( $dir !== PROJ_TMP_DIR && $delete) {
+			if ( !@rmdir( $dir ) ) {
+				throw new \Exception(tr::get('cannot_delete_dir', [$dir]));
 			}
 		}
 
@@ -522,7 +513,6 @@ class utils
 
             if (!$r['geometry'] && !$r[$tb . '.geometry']) {
                 // single row error does not block entire process
-                // throw new myException('No geometry column found in row: ' . var_export($r, true));
                 error_log('No valid geometry column found in row: ' . var_export($r, true));
                 continue;
             }

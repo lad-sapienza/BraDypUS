@@ -375,9 +375,9 @@ class Record implements iRecord
 
 			return true;
 
-		} catch (myException $e) {
+		} catch (\Exception $e) {
 			$this->db->rollBack();
-			throw new myException($e);
+			throw new \Exception($e);
 		}
 	}
 

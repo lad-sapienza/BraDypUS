@@ -83,7 +83,7 @@ class BackupMySQL
 	 *
 	 * Saves SQL test to a gziped file
 	 * @param string $sql	sql text
-	 * @throws myException
+	 * @throws Exception
 	 */
 	private function sql2gzip($sql)
 	{
@@ -92,11 +92,11 @@ class BackupMySQL
 		$gzh = @gzopen($this->filename,'w9');
 
 		if ( !gzh ) {
-			throw new myException('Can not open file ' . $this->filename);
+			throw new \Exception('Can not open file ' . $this->filename);
 		}
 
 		if ( !gzwrite($gzh, $sql) ) {
-			throw new myException('Can not write in file ' . $this->filename);
+			throw new \Exception('Can not write in file ' . $this->filename);
 		}
 
 		gzclose($gzh);

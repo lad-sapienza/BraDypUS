@@ -22,7 +22,7 @@ class config_ctrl extends Controller
 			foreach ($users as &$u){
 				$u['verbose_privilege'] = utils::privilege($u['privilege'], 1);
 			}
-		} catch (myException $e){
+		} catch (\Exception $e){
 			$users = [];
 		}
 		
@@ -128,18 +128,18 @@ class config_ctrl extends Controller
 
 			if ($post['is_plugin'] == 1 && (!$post['name'] || !$post['label'] )) {
 
-				throw new myException('1. Required fields are missing');
+				throw new \Exception('1. Required fields are missing');
 
 			} else if ( (!$post['is_plugin'] || $post['is_plugin'] == 0) && ( !$post['name'] || !$post['label'] || !$post['order'] && !$post['id_field'] || !$post['preview'] ) ) {
 
-				throw new myException('2. Required fields are missing');
+				throw new \Exception('2. Required fields are missing');
             }
 
 			cfg::setTb($post);
 
 			utils::response('ok_cfg_data_updated');
 
-		} catch(myException $e) {
+		} catch(\Exception $e) {
 			$this->log->error($e);
 			utils::response('error_cfg_data_updated', 'error');
 		}
@@ -156,11 +156,11 @@ class config_ctrl extends Controller
 
 			if ($post['is_plugin'] == 1 && (!$post['name'] || !$post['label'] )) {
 
-				throw new myException('1. Required fields are missing');
+				throw new \Exception('1. Required fields are missing');
 
 			} else if ( (!$post['is_plugin'] || $post['is_plugin'] == 0) && ( !$post['name'] || !$post['label'] || !$post['order'] && !$post['id_field'] || !$post['preview'] ) ) {
 
-				throw new myException('2. Required fields are missing');
+				throw new \Exception('2. Required fields are missing');
             }
 
             // Write table columns file
@@ -197,7 +197,7 @@ class config_ctrl extends Controller
                 'tb' => $new_tb_name
             ]);
 
-		} catch(myException $e) {
+		} catch(\Exception $e) {
 			$this->log->error($e);
 			utils::response('error_cfg_data_updated', 'error');
 		}
@@ -216,14 +216,14 @@ class config_ctrl extends Controller
 			unset($post['fld_orig_name']);
 
 			if (!$post['name'] || !$post['type']){
-				throw new myException('Both field name and field type are required');
+				throw new \Exception('Both field name and field type are required');
             }
             
 			cfg::setFld($tb, $fld, $post);
 
 			utils::response('ok_cfg_data_updated');
         
-        } catch(myException $e) {
+        } catch(\Exception $e) {
             $this->log->error($e);
 			utils::response('error_cfg_data_updated', 'error');
 		}
@@ -240,7 +240,7 @@ class config_ctrl extends Controller
 			unset($post['tb_name']);
 
 			if (!$post['name'] || !$post['type']){
-				throw new myException('Both field name and field type are required');
+				throw new \Exception('Both field name and field type are required');
             }
             $available_flds = array_values(cfg::fldEl($tb, 'all', 'name'));
             if (in_array($fld, $available_flds)){
@@ -265,7 +265,7 @@ class config_ctrl extends Controller
 
 			utils::response('ok_cfg_data_updated', 'success', false, ["fld" => $fld]);
         
-        } catch(myException $e) {
+        } catch(\Exception $e) {
             $this->log->error($e);
 			utils::response('error_cfg_data_updated', 'error');
 		}
@@ -280,7 +280,7 @@ class config_ctrl extends Controller
 			cfg::setMain($data);
             utils::response('ok_cfg_data_updated');
             
-		} catch (myException $e) {
+		} catch (\Exception $e) {
 
 			utils::response('error_cfg_data_updated', 'error');
 		}
@@ -372,7 +372,7 @@ class config_ctrl extends Controller
         try {
             $available_tbs = array_values(cfg::tbEl('all', 'name'));
             if (in_array($new_name, $available_tbs)){
-                throw new myException("Table name $new_name has already been used");
+                throw new \Exception("Table name $new_name has already been used");
             }
 
             cfg::renameTb($old_name, $new_name);
@@ -391,7 +391,7 @@ class config_ctrl extends Controller
             $alter->renameTable($old_name, $new_name);
 
             utils::response('ok_renaming_table', 'success');
-        } catch (myException $e) {
+        } catch (\Exception $e) {
             $this->log->error($e);
             utils::response('error_renaming_table', 'error');
         }
@@ -406,7 +406,7 @@ class config_ctrl extends Controller
         try {
             $available_flds = array_values(cfg::fldEl($tb, 'all', 'name'));
             if (in_array($new_name, $available_flds)){
-                throw new myException("Field name $new_name has already been used");
+                throw new \Exception("Field name $new_name has already been used");
             }
 
             cfg::renameFld($tb, $old_name, $new_name);
@@ -425,7 +425,7 @@ class config_ctrl extends Controller
             $alter->renameFld($tb, $old_name, $new_name);
 
             utils::response('ok_renaming_column', 'success');
-        } catch (myException $e) {
+        } catch (\Exception $e) {
             $this->log->error($e);
             utils::response('error_renaming_column', 'error');
         }

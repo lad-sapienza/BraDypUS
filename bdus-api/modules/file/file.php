@@ -27,7 +27,7 @@ class file_ctrl extends Controller
 	{
 		try {
 			if ( !$this->request['dest_table'] || !$this->request['dest_id'] ) {
-				throw new myException('file_data_missing');
+				throw new \Exception('file_data_missing');
 			}
 
 			$this->request['dont_echo'] = true;
@@ -35,7 +35,7 @@ class file_ctrl extends Controller
 			$result = $this->upload();
 
 			if (!$result['success']) {
-				throw new myException('error_uploading_file');
+				throw new \Exception('error_uploading_file');
 			}
 
 			$record = new Record(PREFIX . 'files', false, $this->db);
@@ -49,14 +49,14 @@ class file_ctrl extends Controller
 			$pers = $record->persist();
 
 			if (!$pers) {
-				throw new myException('error_saving_file');
+				throw new \Exception('error_saving_file');
 			}
 
 			$link = $record->addUserLink($this->request['dest_table'], $this->request['dest_id']);
 
 			if (!$link) {
 				$record->delete();
-				throw new myException('error_adding_link');
+				throw new \Exception('error_adding_link');
 			}
 
 			$result['status'] = 'success';
@@ -64,7 +64,7 @@ class file_ctrl extends Controller
 
 			echo json_encode($result);
 
-		} catch (myException $e) {
+		} catch (\Exception $e) {
 			$this->log->error($e);
 
 			echo json_encode([
@@ -144,7 +144,7 @@ class file_ctrl extends Controller
 
 				$resp = array('status' => 'success', 'text'=> tr::get('ok_file_sorting_update'));
 			
-			} catch (myException $e) {
+			} catch (\Exception $e) {
 				$this->db->rollBack();
 				$resp = array('status' => 'error', 'text'=> tr::get('error_file_sorting_update'));
 			}

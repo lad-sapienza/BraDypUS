@@ -14,7 +14,7 @@ class userlinks_ctrl extends Controller
 		try {
 			$ret['status'] = 'success';
 			$ret['info'] = cfg::getNonPlg();
-		} catch (myException $e) {
+		} catch (\Exception $e) {
 			$this->log->error($e);
 			$ret['status'] = 'error';
 			$ret['info'] = $e->getMessage();
@@ -33,10 +33,10 @@ class userlinks_ctrl extends Controller
 
 		try
 		{
-			if (!$thistb) throw new myException("Missing required parameter thistb");
-			if (!$thisid) throw new myException("Missing required parameter thisid");
-			if (!$tb) throw new myException("Missing required parameter tb");
-			if (!$id) throw new myException("Missing required parameter id");
+			if (!$thistb)	throw new \Exception("Missing required parameter thistb");
+			if (!$thisid)	throw new \Exception("Missing required parameter thisid");
+			if (!$tb) 		throw new \Exception("Missing required parameter tb");
+			if (!$id) 		throw new \Exception("Missing required parameter id");
 			
 			$record = new Record($thistb, $thisid, $this->db);
 			foreach($id as $id) {
@@ -55,7 +55,7 @@ class userlinks_ctrl extends Controller
 			} else {
 				utils::response('no_link_saved', 'error');
 			}
-		} catch(myException $e) {
+		} catch(\Exception $e) {
 			$this->log->error($e);
 			utils::response('no_link_saved', 'error');
 		}

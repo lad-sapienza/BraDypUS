@@ -45,7 +45,7 @@ class record_ctrl extends Controller
                         } else {
                             $error[$id] = true;
                         }
-                    } catch (myException $e) {
+                    } catch (\Exception $e) {
                         $error[$id] = true;
                         $this->log->error($e);
                     }
@@ -63,7 +63,7 @@ class record_ctrl extends Controller
                 $data['status'] = 'warning';
                 $data['verbose'] = tr::get('partial_success_saved', [ implode(', ', $ok), implode(', ', $error) ]);
             }
-        } catch (myException $e) {
+        } catch (\Exception $e) {
             $data['status'] = 'error';
             $data['verbose'] = tr::get('error_saved');
             $this->log->error($e);
@@ -89,7 +89,7 @@ class record_ctrl extends Controller
                     $record->delete();
 
                     $ok[] = true;
-                } catch (myException $e) {
+                } catch (\Exception $e) {
                     $this->log->error($e);
                     $error[] = true;
                 }
@@ -113,7 +113,7 @@ class record_ctrl extends Controller
     public function show()
     {
         if (!$this->request['tb']) {
-            throw new myException(tr::get('tb_missing'));
+            throw new \Exception(tr::get('tb_missing'));
         }
 
         // user must have enough privileges
@@ -123,7 +123,7 @@ class record_ctrl extends Controller
         }
         // a record id must be provided in edit & read & preview mode
         if ($this->request['a'] !== 'add_new' && !$this->request['id'] && !$this->request['id_field']) {
-            throw new myException(tr::get('no_id_to_view'));
+            throw new \Exception(tr::get('no_id_to_view'));
         }
 
         // no data are retrieved if context is add_new or multiple edit!
@@ -207,7 +207,7 @@ class record_ctrl extends Controller
         }
 
         if (!$this->request['tb']) {
-            throw new myException(tr::get('tb_missing'));
+            throw new \Exception(tr::get('tb_missing'));
         }
 
         $queryObj = new Query($this->db, $this->request, true);
@@ -313,7 +313,7 @@ class record_ctrl extends Controller
     {
         try {
             if (!$this->request['fld'] or !$this->request['val']) {
-                throw new myException('Field name and value are required');
+                throw new \Exception('Field name and value are required');
             }
             if (preg_match('/core\[/', $this->request['fld'])) {
                 $arr = explode('][', preg_replace('/core\[(.+)\]/', '$1', $this->request['fld']));
@@ -326,7 +326,7 @@ class record_ctrl extends Controller
                     echo 'error';
                 }
             }
-        } catch (myException $e) {
+        } catch (\Exception $e) {
             echo 'error';
             $this->log->error($e);
         }

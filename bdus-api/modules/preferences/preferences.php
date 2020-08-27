@@ -30,7 +30,7 @@ class preferences_ctrl extends Controller
 			pref::save2DB($this->db);
 			utils::response('pref_saved_in_db');
 		}
-		catch(myException $e)
+		catch(\Exception $e)
 		{
 			utils::response('pref_not_saved_in_db', 'error');
 		}

@@ -28,7 +28,7 @@ class matrix_ctrl extends Controller
 				'query_arrived' => $where
 			));
 		}
-		catch (myException $e)
+		catch (\Exception $e)
 		{
 			$this->log->error($e);
 			echo '<div class="alert alert-danger"> '

@@ -50,25 +50,25 @@ class Charts
 	 * Returns JSON results using query ID or queru text
 	 * @param int $id
 	 * @param string $query_text
-	 * @throws myException
+	 * @throws Exception
 	 */
 	public function formatResult($id = false, $query_text = false)
 	{
 		if (!$id AND !$query_text) {
-			throw new myException('Chart ID or Query text are required');
+			throw new \Exception('Chart ID or Query text are required');
 		}
 
 		if ($id) {
 			$res = $this->db->query('SELECT * FROM ' . PREFIX . 'charts WHERE id = ?', [ $id ], 'read');
 
 			if (!$res) {
-				throw new myException('Chart ID ' . $id . ' does not exist');
+				throw new \Exception('Chart ID ' . $id . ' does not exist');
 			}
 			$query_text = $res[0]['query'];
 		}
 
 		if (!$query_text) {
-			throw new myException('No query text!');
+			throw new \Exception('No query text!');
 		}
 
 		$out['query_text'] = $query_text;
@@ -76,7 +76,7 @@ class Charts
 		$data = $this->db->query($query_text, null, 'read');
 
 		if (!$data) {
-			throw new myException('Chart query text produced no result (' . $query_text . ')');
+			throw new \Exception('Chart query text produced no result (' . $query_text . ')');
 		}
 
 		$row = 0;
@@ -124,9 +124,8 @@ class Charts
 
 	public function showChart()
 	{
-		if (!$this->out)
-		{
-			throw new myException('Database info not formatted.');
+		if (!$this->out) {
+			throw new \Exception('Database info not formatted.');
 		}
 
 		$uid = uniqid('rand');
@@ -177,7 +176,7 @@ class Charts
 	public function update($id, $name = false, $query = false)
 	{
 		if (!$name && $query) {
-			throw new myException('Nothing to update');
+			throw new \Exception('Nothing to update');
 		}
 		if ($name) {
 			$part[] = ' name = :name ';

@@ -92,7 +92,7 @@ class login_ctrl extends Controller
 					utils::response('error_user_add', 'error');
 					return;
 				}
-			} catch(myException $e) {
+			} catch(\Exception $e) {
 				utils::response($e->getMessage(), 'error');
 				return;
 			}
@@ -134,7 +134,7 @@ class login_ctrl extends Controller
 
 				utils::response('Authenticated');
 			}
-		} catch(myException $e) {
+		} catch(\Exception $e) {
 			utils::response($e->getMessage(), 'error');
 		}
 	}
@@ -146,7 +146,7 @@ class login_ctrl extends Controller
 			$user->login($this->post['email'], $this->post['password'], $this->post['remember']);
 			$this->log->info("User {$_SESSION['user']['id']} logged in");
 			$obj['status'] = 'ok';
-		} catch (myException $e) {
+		} catch (\Exception $e) {
 			$obj['status'] = 'no';
 			$obj['verbose'] = $e->getMessage();
 		}
@@ -160,7 +160,7 @@ class login_ctrl extends Controller
 			$availables_DB = utils::dirContent(MAIN_DIR . "projects");
 
 			if (!$availables_DB OR !is_array($availables_DB)) {
-				throw new myException(tr::get('no_app'));
+				throw new \Exception(tr::get('no_app'));
 				return;
 			}
 
@@ -183,7 +183,7 @@ class login_ctrl extends Controller
 					'version' => version::current()
 					));
 
-		} catch (myException $e) {
+		} catch (\Exception $e) {
 			$this->log->error($e);
 		}
 	}

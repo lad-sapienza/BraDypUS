@@ -80,7 +80,7 @@ class chart_ctrl extends Controller
 	/**
 	 *
 	 * @param array $this->post
-	 * @throws myException
+	 * @throws \Exception
 	 */
 	public function save_chart_as()
 	{
@@ -88,7 +88,7 @@ class chart_ctrl extends Controller
 		
 		try {
 			if (!$post['query_text']) {
-				throw new myException('No query text to save!');
+				throw new \Exception('No query text to save!');
 			}
 			if (!$post['name']) {
 				$post['name'] = uniqid('chart_');
@@ -99,9 +99,9 @@ class chart_ctrl extends Controller
 			if ($chart->save($post['name'], $post['query_text'])) {
 				utils::response('ok_save_chart');
 			} else {
-				throw myException('Save chart query returned false');
+				throw new \Exception('Save chart query returned false');
 			}
-		} catch(myException $e) {
+		} catch(\Exception $e) {
 			$this->log->error($e);
 			utils::response('error_save_chart', 'error');
 		}
@@ -178,7 +178,7 @@ class chart_ctrl extends Controller
 	/**
 	 *
 	 * @param array $this->post
-	 * @throws myException
+	 * @throws \Exception
 	 */
 	public function update_chart()
 	{
@@ -192,9 +192,9 @@ class chart_ctrl extends Controller
 			if ($chart->update($id, $name, $text)) {
 				utils::response('ok_update_chart');
 			} else {
-				throw new myException('Update query returned false');
+				throw new \Exception('Update query returned false');
 			}
-		} catch (myException $e) {
+		} catch (\Exception $e) {
 			$this->log->error($e);
 			utils::response('error_update_chart', 'error');
 		}

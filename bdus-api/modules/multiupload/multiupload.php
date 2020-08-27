@@ -65,14 +65,12 @@ class multiupload_ctrl extends Controller
 	/**
 	 *
 	 * @param array $this->post
-	 * @throws myException
+	 * @throws \Exception
 	 */
 	public function save()
 	{
-		foreach($this->post['f'] as $row)
-		{
-			try
-			{
+		foreach($this->post['f'] as $row) {
+			try {
 				$record = new Record(PREFIX . 'files', false, $this->db);
 
 				$record->setTmpFolder($row['path']);
@@ -85,41 +83,30 @@ class multiupload_ctrl extends Controller
 						);
 				$record->setCore($core_data);
 
-				if (!$record->persist())
-				{
-					throw new myException($row['filename'] . '.' . $row['ext'] . ' could not be saved in database');
+				if (!$record->persist()) {
+					throw new \Exception($row['filename'] . '.' . $row['ext'] . ' could not be saved in database');
 				}
 
-				if ($row['tb'] && is_array($row['id']))
-				{
-					foreach($row['id'] as $id_dest)
-					{
+				if ($row['tb'] && is_array($row['id'])) {
+					foreach($row['id'] as $id_dest) {
 						$userlinks_id[] = $record->addUserLink($row['tb'], $id_dest);
 					}
-					if (count($userlinks_id) < count($row['id']))
-					{
-						throw new myException($row['filename'] . '.' . $row['ext'] . ' was saved in database and file was copied, but not all links were saved (only ' . count($userlinks_id) . ' of ' . count($row['id']) . ')');
+					if (count($userlinks_id) < count($row['id'])) {
+						throw new \Exception($row['filename'] . '.' . $row['ext'] . ' was saved in database and file was copied, but not all links were saved (only ' . count($userlinks_id) . ' of ' . count($row['id']) . ')');
 					}
 				}
-			}
-			catch (myException $e)
-			{
+			} catch (\Exception $e) {
 				$this->log->error($e);
 				$error[] = true;
 			}
 
 		}
 
-		if (is_array($error) && count($error) == count($this->post['f']))
-		{
+		if (is_array($error) && count($error) == count($this->post['f'])) {
 			echo json_encode(array('status'=>'error', 'text'=>tr::get('error_data_save')));
-		}
-		else if (is_array($error) && count($error) > 0)
-		{
+		} else if (is_array($error) && count($error) > 0) {
 			echo json_encode(array('status'=>'error', 'text'=>tr::get('partial_data_save')));
-		}
-		else
-		{
+		} else {
 			echo json_encode(array('status'=>'success', 'text'=>tr::get('ok_data_save')));
 		}
 	}

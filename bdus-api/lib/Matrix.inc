@@ -44,7 +44,7 @@ EOD;
         $res = $db->query($q);
 
         if (!is_array($res)) {
-            throw new myException('query_produced_no_result');
+            throw new \Exception('query_produced_no_result');
         }
 
         $dotrows = [];

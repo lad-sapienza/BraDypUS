@@ -103,10 +103,15 @@ class login_ctrl extends Controller
 
 	public function out()
 	{
-		$user_id = $_SESSION['user']['id'];
-		$user = new User($this->db);
-		$user->logout();
-		$this->log->info("User {$user_id} logged out");
+		try {
+			$user_id = $_SESSION['user']['id'];
+			$user = new User($this->db);
+			$user->logout();
+			$this->log->info("User {$user_id} logged out");
+		} catch (\Throwable $th) {
+			$this->log->error($th);
+		}
+		
 	}
 
 

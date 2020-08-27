@@ -13,8 +13,8 @@ class myException extends Exception
 	 * adds new method to Exception to log error in file
 	 * @param string $file	file path to log to
 	 */
-	public function log ()
+	public function log (\Monolog\Logger $log)
 	{
-    	Meta::logException($this);
+		$log->error($e);
 	}
 }

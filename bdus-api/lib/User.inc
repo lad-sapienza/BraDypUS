@@ -110,19 +110,15 @@ class User
      */
     public function logout()
     {
-        try {
-            //save preferences to db
-            pref::save2DB($this->db);
+        //save preferences to db
+        pref::save2DB($this->db);
 
-            // emtpy user tmp dir
-            utils::emptyDir();
+        // emtpy user tmp dir
+        utils::emptyDir();
 
-            // delete old session files
-            self::deleteOldSessions();
-        } catch (myException $e) {
-            $e->log();
-        }
-
+        // delete old session files
+        self::deleteOldSessions();
+        
         self::forceLogOut();
     }
 

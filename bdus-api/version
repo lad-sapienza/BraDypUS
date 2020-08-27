@@ -1,3 +1,4 @@
+3.16.127[] = "Dropped use of Meta in myException"
 3.16.126[] = "Dropped use of Meta in myHistory"
 3.16.125[] = "Log activity is registered outside User object (nomore Meta dependency)"
 3.16.124[] = "Dropped support for Meta::addVersion"

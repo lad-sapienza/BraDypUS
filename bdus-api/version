@@ -1,4 +1,5 @@
-3.16.130[] = "Bug fixing"
+3.16.129[] = "Removed support for AppAgnosticDB"
+3.16.129[] = "Bug fixing"
 3.16.129[] = "Added new function: create application"
 3.16.129[] = "Force logout is now brutal & prefix is available in Controller"
 3.16.129[] = "Fixed warning in cfg"

@@ -33,7 +33,14 @@ class CreateApp
         if (!$this->createDir("projects/$name/db")){
             throw new \Exception("Cannot create directory projects/$name/db");
         }
-        $this->db = new \DB\DB\AppAgnosticDB($db_engine, "projects/$name/db/bdus.sqlite", $db_host, $db_port, $db_name, $db_username, $db_password);
+        $this->db = new \DB($name, [
+            "db_engine" => $db_engine, 
+            "db_path" => "projects/$name/db/bdus.sqlite", 
+            "db_host" => $db_host, 
+            "db_port" => $db_port, 
+            "db_name" => $db_name, 
+            "db_username" => $db_username, 
+            "db_password" => $db_password]);
         
         $this->sys_manager = new Manage($this->db, $this->app . '__');
 
@@ -81,22 +88,24 @@ class CreateApp
                 "maxImageSize" => "1500",
             ],
             "tables" => [
-                [
-                    "name" => "{$this->app}__files",
-                    "label" => "Files",
-                    "order" => "id",
-                    "preview" => [
-                        "id",
-                        "filename",
-                        "ext",
-                        "keywords"
+                "tables" => [
+                    [
+                        "name" => "{$this->app}__files",
+                        "label" => "Files",
+                        "order" => "id",
+                        "preview" => [
+                            "id",
+                            "filename",
+                            "ext",
+                            "keywords"
+                        ],
+                        "id_field" => "id"
                     ],
-                    "id_field" => "id"
-                ],
-                [
-                    "name" => "{$this->app}__geodata",
-                    "label" => "Geografical coordinates",
-                    "is_plugin" => "1"
+                    [
+                        "name" => "{$this->app}__geodata",
+                        "label" => "Geografical coordinates",
+                        "is_plugin" => "1"
+                    ]
                 ]
             ],
             "geodata" => [

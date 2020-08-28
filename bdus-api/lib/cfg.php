@@ -291,6 +291,9 @@ class cfg
 		}
 
 		$xml = self::$data['table'];
+		if (!is_array($xml)){
+			return [];
+		}
 
 		if ( $tb === 'all' AND $el !== 'all') {
 			foreach ( $xml as $arr ) {

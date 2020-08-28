@@ -6,7 +6,6 @@
  * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
  * @license			See file LICENSE distributed with this code
  * @since			31/mar/2011
- * @uses			DB_connection
  * @uses			\Exception
  * @uses			\PDOException
  * @uses			APP
@@ -29,18 +28,34 @@ class DB implements \DB\DB\DBInterface
 	 *
 	 * Load connection info and starts PDO object
 	 * @param string $app	application to work with
-	 * @param string $custom_connection
+	 * @param array $custom_connection
+	 * 		db_engine
+	 * 		db_path, for sqlite
+	 * 		db_name, for mysql and pgsql
+	 * 		db_username, for mysql and pgsql
+	 * 		db_password, for mysql and pgsql
+	 * 		db_host, for mysql and pgsql
+	 * 		db_port, for mysql and pgsql, optional
 	 * @throws \Exception
 	 */
-	public function __construct(string $app = null, string $custom_connection = null)
+	public function __construct(string $app = null, array $custom_connection = null)
 	{
-		$this->app = $app ?: defined('APP') ? APP : false;
+		$this->app = $app;
 
 		if (!$this->app){
 			throw new \Exception("No valid app provided: cannot start database object");
 		}
+		if ($custom_connection){
+			$cfg = $custom_connection;
+		} else if ($app){
+			$cfg = $this->getConnectionDataFromCfg($app);
+		} else {
+			throw new \Exception("Cannot resolve DB connection information");
+		}
 
-		$this->parseStart($this->app, $custom_connection);
+		list ($db_engine, $dsn, $username, $password) = $this->validateParseConnectionData($cfg);
+
+		$this->initializePDO($db_engine, $dsn, $username, $password);
 	}
 
 	public function setLog(Monolog\Logger $log)
@@ -48,23 +63,91 @@ class DB implements \DB\DB\DBInterface
 		$this->log = $log;
 	}
 
+	private function validateParseConnectionData(array $cfg): array
+	{        
+        if (!$cfg['db_engine']){
+            throw new \Exception(tr::get('missing_db_engine'));
+        }
+        
+        if( !in_array($cfg['db_engine'], ['sqlite', 'mysql', 'pgsql'])) {
+            throw new \Exception(tr::get('db_engine_not_supported', [$cfg['db_engine']]));
+        }
+        
+        // Set DSN for sqlite
+        if ( $cfg['db_engine'] === 'sqlite') {
+            if (!$cfg['db_path']){
+                throw new \Exception( tr::get('missing_sqlite_file'));
+            }
+            $dsn = "{$cfg['db_engine']}:{$cfg['db_path']}";
+        }
+        
+        if (!$dsn) {
+            
+            if (!$cfg['db_name']){
+                throw new \Exception( tr::get('missing_db_name') );
+            }
+            
+            if (!$cfg['db_username']){
+                throw new \Exception( tr::get('missing_db_username') );
+            }
+            
+            if (!$cfg['db_password']){
+                throw new \Exception(tr::get('missing_db_password'));
+            }
+            
+            if (!$cfg['db_host']){
+                $cfg['db_host'] = '127.0.0.1';
+            }
+            
+            $dsn = "{$cfg['db_engine']}:host={$cfg['db_host']};dbname={$cfg['db_name']};" .
+                ($cfg['db_port'] ?  "port={$cfg['db_port']};" : '') .
+                "options='--client_encoding=UTF8'";
+                // "charset=utf8";
+		}
+
+		if (!$cfg['db_engine'] || !$dsn){
+			throw new \Exception('Not found any connection data');
+		}
+
+        return [
+            $cfg['db_engine'],
+            $dsn,
+            $cfg['db_username'],
+            $cfg['db_password']
+        ];
+	}
+
+	private function getConnectionDataFromCfg(string $app): array
+	{
+		$cfg = [];
+		$file = __DIR__ . "/../projects/{$app}/cfg/app_data.json";
+        
+        if (!file_exists($file) ) {
+			throw new \Exception("Missing configuration file $file");
+		}
+
+		$cfg = json_decode(file_get_contents(__DIR__ . "/../projects/{$app}/cfg/app_data.json"), true);
+		
+		if (!is_array($cfg)){
+			throw new \Exception(tr::get('invalid_configuration_file', [$connection_file]) );
+		}
+
+        if (file_exists(__DIR__ . "/../projects/{$app}/db/bdus.sqlite")) {
+            $cfg['db_path'] = __DIR__ . "/../projects/{$app}/db/bdus.sqlite";
+        }
+        
+        return $cfg;
+	}
+
 	/**
 	 * Parses conncetion data and starts PDO
-	 * @param string $app
-	 * @param string $custom_connection
+	 * @param array $connection_data
 	 * @throws \Exception
 	 */
-	private function parseStart(string $app, string $custom_connection = null)
+	private function initializePDO(string $db_engine, string $dsn, string $user = null, string $password = null)
 	{
 		try {
-
-			$d = DB_connection::getConnectionString($app, $custom_connection);
-			$driver = $d['driver'];
-			$dsn = $d['dsn'];
-			$user = $d['username'];
-			$password = $d['password'];
-
-			$this->db_engine = $driver;
+			$this->db_engine = $db_engine;
 
 			/**
 			 *  Check if MYSQL_ATTR_INIT_COMMAND method exists (for systems without MySQL)
@@ -72,12 +155,12 @@ class DB implements \DB\DB\DBInterface
 			 */
 
 			$dbOptions = [
-				PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-				PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-				PDO::ATTR_EMULATE_PREPARES   => false
+				\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
+				\PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
+				\PDO::ATTR_EMULATE_PREPARES   => false
 			];
 
-			$this->db = new PDO( $dsn, $user, $password, $dbOptions );
+			$this->db = new \PDO( $dsn, $user, $password, $dbOptions );
 
 			
 			if ($this->db_engine == 'sqlite') {

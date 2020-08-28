@@ -28,6 +28,6 @@
     {
         "name"      : "settings",
         "type"      : "TEXT",
-        "notnull"   : true
+        "notnull"   : false
     }
 ]

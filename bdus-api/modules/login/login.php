@@ -147,8 +147,13 @@ class login_ctrl extends Controller
 			$this->log->info("User {$_SESSION['user']['id']} logged in");
 			$obj['status'] = 'ok';
 		} catch (\Exception $e) {
+			$this->log->error($e);
 			$obj['status'] = 'no';
 			$obj['verbose'] = $e->getMessage();
+		} catch (\Throwable $e) {
+			$this->log->error($e);
+			$obj['status'] = 'no';
+			$obj['verbose'] = tr::get('generic_error');
 		}
 
 		echo json_encode($obj);
@@ -158,30 +163,30 @@ class login_ctrl extends Controller
 	{
 		try {
 			$availables_DB = utils::dirContent(MAIN_DIR . "projects");
+			
+			$data = [];
 
-			if (!$availables_DB OR !is_array($availables_DB)) {
-				throw new \Exception(tr::get('no_app'));
-				return;
+			if ($availables_DB && is_array($availables_DB)) {
+				asort($availables_DB);
+
+				foreach ($availables_DB as $db) {
+					$appl = json_decode(file_get_contents(MAIN_DIR . "projects/$db/cfg/app_data.json"), true);
+
+					$data[] = array(
+							'db' => $db,
+							'definition' => $appl['definition'],
+							'name' => strtoupper($appl['name'])
+					);
+				}
 			}
 
-			asort($availables_DB);
-
-			foreach ($availables_DB as $db) {
-				$appl = json_decode(file_get_contents(MAIN_DIR . "projects/$db/cfg/app_data.json"), true);
-
-				$data[] = array(
-						'db' => $db,
-						'definition' => $appl['definition'],
-						'name' => strtoupper($appl['name'])
-				);
-			}
-
-			$this->render('login', 'select_app', array(
-					'data' => $data,
-					'app' => $this->get['app'],
-					'choose_db' => tr::get('choose_db'),
-					'version' => version::current()
-					));
+			$this->render('login', 'select_app', [
+				'data' => $data,
+				'app' => $this->get['app'],
+				'choose_db' => tr::get('choose_db'),
+				'version' => version::current(),
+				'create_app' => file_exists('./UNSAFE_permit_app_creation') || !$availables_DB
+			]);
 
 		} catch (\Exception $e) {
 			$this->log->error($e);

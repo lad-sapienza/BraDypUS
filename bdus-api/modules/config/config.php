@@ -27,7 +27,7 @@ class config_ctrl extends Controller
 		}
 		
 		$this->render('config', 'app_properties', [
-            'available_langs' => utils::dirContent(LOCALE_DIR),
+            'available_langs' => array_map(function($e){ return str_replace('.json', null, $e); }, utils::dirContent(LOCALE_DIR)),
             'info' => cfg::main(),
             'status' => [ 'on', 'frozen', 'off' ],
             'users' => $users,

@@ -38,6 +38,11 @@ var login = {
 			$('#select_apps .buttons').slideUp();
 			$('#select_apps .login').load('./?obj=login_ctrl&method=loginForm&app='+ db).slideDown();
 		},
+
+		loadCreateApp: function(db){
+			$('#select_apps .buttons').slideUp();
+			$('#select_apps .login').load('./?obj=new_app_ctrl&method=new_app_form').slideDown();
+		},
 		
 		autologin: function(app){
 			if (!app){

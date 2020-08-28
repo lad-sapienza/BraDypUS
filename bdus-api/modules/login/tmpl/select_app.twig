@@ -21,8 +21,10 @@
 	
 		<div class="buttons clearfix">
 	
-			
+			{% if dataApp %}
 			<h3>{{ choose_db }}</h3>
+			{% endif %}
+			<div class="row">
 			
 			{% for dataApp in data %}
 				<div class="col-sm-3 col-xs-6">
@@ -36,6 +38,16 @@
 				{% endif %}
 			{% endfor %}
 		</div>
+		
+		{% if create_app %}
+		<div class="text-center">
+			<hr>
+			<button class="btn btn-lg btn-danger app_create">{{ tr.get('app_create') }}</button>
+		</div>
+		{% endif %}
+		</div>
+
+		
 		
 		<div class="login"></div>
 		
@@ -69,4 +81,8 @@
 	$('.app').on('click', function(){
 		login.loadLoginForm($(this).data('db'));
 	});
+	$('.app_create').on('click', function(){
+		login.loadCreateApp();
+	});
+	
 </script>

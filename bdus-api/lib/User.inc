@@ -332,10 +332,11 @@ class User
         $partial = [];
 
         array_push($partial, "email = ? ");
-        $values = $email;
+        array_push($values, $email);
+        
         if ($id) {
             array_push($partial, "id != ? ");
-            $values = $id;
+            array_push($values, $id);
         }
         $res = $this->db->query(
             'SELECT count(*) as tot FROM ' . $this->prefix . 'users WHERE ' . implode(" AND ", $partial) . ' LIMIT 1 OFFSET 0', 

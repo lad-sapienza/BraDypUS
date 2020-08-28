@@ -396,7 +396,7 @@ class utils
 	 * @param boolean $dont_translate if true text will not be translated
 	 * @param array $other_args some other arguments to return
 	 */
-	public static function response($text, $status = false, $dont_translate = false, $other_args = false)
+	public static function response(string $text, $status = false, bool $dont_translate = false, array $other_args = []): void
 	{
 		if (!$status) {
 			$status = 'success';

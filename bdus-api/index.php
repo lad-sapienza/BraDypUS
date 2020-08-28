@@ -21,7 +21,6 @@
 ob_start();
 
 try {
-
 	$basePath = './';
 
 	require_once './lib/constants.php';
@@ -30,6 +29,7 @@ try {
 	$app->route();
 
 } catch (\Throwable $e) {
+
 	echo utils::message( tr::get('generic_error'), 'error', true);
 
 	if (DEBUG_ON) {

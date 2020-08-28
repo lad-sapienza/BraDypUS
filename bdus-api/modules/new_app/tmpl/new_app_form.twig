@@ -1,0 +1,119 @@
+<div id="{{ uid }}">
+    <form class="form-horizontal">
+        <div class="form-group">
+            <label class="col-sm-2 control-label">{{ tr.get('app_name') }}</label>
+            <div class="col-sm-10">
+                <input type="text" class="form-control" name="name" pattern="^[a-z]{3,7}$" required>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label class="col-sm-2 control-label">{{ tr.get('definition') }}</label>
+            <div class="col-sm-10">
+                <input type="text" class="form-control" name="definition" required>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="col-sm-2 control-label">{{ tr.get('your_email') }}</label>
+            <div class="col-sm-10">
+                <input type="text" class="form-control" name="your_email" required>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="col-sm-2 control-label">{{ tr.get('your_password') }}</label>
+            <div class="col-sm-10">
+                <input type="password" class="form-control" name="your_password" required>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="col-sm-2 control-label">{{ tr.get('db_engine') }}</label>
+            <div class="col-sm-10">
+                <select class="form-control" name="db_engine">
+                {% for db in db_engines %}
+                <option>{{ db }}</option>
+                {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group db_host">
+            <label class="col-sm-2 control-label">{{ tr.get('db_host') }}</label>
+            <div class="col-sm-10">
+                <input type="text" class="form-control" name="db_host" value="">
+            </div>
+        </div>
+
+        <div class="form-group db_port">
+            <label class="col-sm-2 control-label">{{ tr.get('db_port') }}</label>
+            <div class="col-sm-10">
+                <input type="text" class="form-control" name="db_port">
+            </div>
+        </div>
+
+        <div class="form-group db_name">
+            <label class="col-sm-2 control-label">{{ tr.get('db_name') }}</label>
+            <div class="col-sm-10">
+                <input type="text" class="form-control" name="db_name">
+            </div>
+        </div>
+
+        <div class="form-group db_username">
+            <label class="col-sm-2 control-label">{{ tr.get('db_username') }}</label>
+            <div class="col-sm-10">
+                <input type="text" class="form-control" name="db_username">
+            </div>
+        </div>
+
+        <div class="form-group db_password">
+            <label class="col-sm-2 control-label">{{ tr.get('db_password') }}</label>
+            <div class="col-sm-10">
+                <input type="text" class="form-control" name="db_password">
+            </div>
+        </div>
+
+        <div class="report"></div>
+
+        <div class="form-group">
+            <div class="col-sm-offset-2 col-sm-10">
+                <button type="submit" class="btn btn-danger">{{ tr.get('app_create') }}</button>
+                <button type="button" class="btn btn-success closeForm">{{ tr.get('close') }}</button>
+            </div>
+        </div>
+    </form>
+</div>
+<script>
+$('#{{ uid }} button.closeForm').click(function(){
+    window.location.reload(true);
+});
+const toggleDBOpt = () => {
+    if ($(':input[name="db_engine"]').val() === 'sqlite'){
+        $('.db_host, .db_port, .db_name, .db_username, .db_password').hide();
+    } else {
+        $('.db_host, .db_port, .db_name, .db_username, .db_password').show();
+    }
+}
+
+toggleDBOpt();
+
+$(':input[name="db_engine"]').on('change', ()=>{
+    toggleDBOpt();
+});
+
+$('#{{ uid }} form').on('submit', (e) => {
+
+    e.preventDefault();
+
+    const formData = $('#{{ uid }} form').serializeArray();
+
+    core.getJSON('new_app_ctrl', 'add_app', false, formData, resp => {
+        core.message(resp.text, resp.status, resp.status === 'error');
+        if (resp.status === 'success'){
+            $('#{{ uid }} .report').html(`<h2>Report</h2><hr>${resp.log.map( i => `<li>${i}</li>`).join('')}`);
+        }
+    })
+    
+});
+</script>

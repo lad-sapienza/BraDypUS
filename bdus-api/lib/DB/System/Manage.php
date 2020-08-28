@@ -201,7 +201,7 @@ class Manage
         foreach ($columns_str as $column) {
             // Columns set as not null in structure must not be empty on record add
             if($column['notnull'] && !isset($data[$column['name']])){
-                throw new \Exception("Missing required key {$column['name']} from input data");
+                throw new \Exception("Missing required key `{$column['name']}` from input data");
             }
             if (isset($data[$column['name']])) {
                 array_push($columns, $column['name']);
@@ -340,9 +340,10 @@ class Manage
 
     private function run (string $sql, array $values = [], string $return = null)
     {
+
         if (is_null($return)){
             return $this->db->exec($sql);
-        } else if (\in_array($return, ['id', 'read', 'boolean', 'affected'])){
+        } else if (\in_array($return, ['id', 'read', 'boolean', 'affected'])){    
             return $this->db->query($sql, $values, $return);
         }
     }

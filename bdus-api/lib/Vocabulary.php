@@ -116,7 +116,7 @@ class Vocabulary
 	{
 		$res = $this->db->query(
 			'SELECT voc FROM ' . PREFIX . 'vocabularies WHERE 1=1 GROUP BY voc', 
-			false, 
+			null, 
 			'read'
 		);
 

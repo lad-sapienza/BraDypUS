@@ -44,6 +44,12 @@ ini_set('display_errors', 'off');
 //START SESSION
 session_start();
 
+if ($_GET['logout']){
+	$_SESSION = array();
+	session_destroy();
+	header("Location: ./");
+}
+
 /*
  * Set APP from REQUEST['app']
  * APP dir must exist!

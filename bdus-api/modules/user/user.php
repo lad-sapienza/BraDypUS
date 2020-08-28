@@ -110,18 +110,30 @@ class user_ctrl extends Controller
 	{
     	$data = $this->post;
 		try {
-			$user = new User($this->db);
-		
+			$sys_manager = new \Db\System\Manage($this->db, $this->prefix);
+
+			foreach ($data as $key => &$value) {
+				if ($key === 'password'){
+                    if ($value && $value !== '') {
+                        $value = sha1($value);
+                    } else {
+						unset($data[$key]);
+					}
+				}
+			}
+
 			if ($data['id'] && !empty($data['id'])) {
-				$ret = $user->update($data['id'], $data['name'], $data['email'], $data['password'], $data['privilege']);
+				// Edit existing user
+				$ret = $sys_manager->editRow('users', $data['id'], $data);
 			} else {
-				$ret = $user->insert($data['name'], $data['email'], $data['password'], $data['privilege']);
+				// Add new user
+				$ret = $sys_manager->addRow('users', $data);
 			}
 		
 			if ($ret) {
 				utils::response('user_data_saved');
 			} else {
-				throw new \Exception('Quesry returned false');
+				throw new \Exception('Query returned false');
 			}
 		}
 		catch (\Exception $e)

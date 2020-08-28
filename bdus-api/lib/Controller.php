@@ -20,6 +20,7 @@ class Controller
 	protected $request;
 	protected $db;
 	protected $log;
+	protected $prefix;
 
 	public function __construct($get, $post, $request)
 	{
@@ -31,6 +32,11 @@ class Controller
 	public function setDB(\DB\DB\DBInterface $db): void
 	{
 		$this->db = $db;
+	
+	}
+	public function setPrefix(string $prefix = null): void
+	{
+		$this->prefix = $prefix;
 	}
 
 	public function setLog(Monolog\Logger $log): void

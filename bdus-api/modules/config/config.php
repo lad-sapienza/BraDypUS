@@ -1,5 +1,6 @@
 <?php 
 use \DB\Engines\AvailableEngines;
+use  \DB\System\Manage;
 
 class config_ctrl extends Controller
 {
@@ -54,8 +55,13 @@ class config_ctrl extends Controller
 
         $data = $fld ? cfg::fldEl($tb, $fld, 'all') : [];
 
-        $voc = new Vocabulary($this->db);
-		$all_voc = $voc->getAllVoc();
+        $sys_manage = new Manage($this->db, $this->prefix);
+
+        $res = $sys_manage->getBySQL('vocabularies', '1=1 GROUP BY voc');
+        $all_voc = [];
+        foreach ($res as $row) {
+            array_push($all_voc, $row['voc']);
+        }
 
         $fld_structure = file_get_contents(__DIR__ . '/fld_structure.json');
 

@@ -1,4 +1,5 @@
-3.16.129[] = "Api v2 dies not use Vocabularies class"
+3.16.129[] = "Config module does not use Vocabularies class"
+3.16.129[] = "Api v2 does not use Vocabularies class"
 3.16.129[] = "Charts uses DB System Manager"
 3.16.129[] = "Saved queries uses DB System Manager"
 3.16.129[] = "PREFIX contstant replaced by $this->prefix in controllers"

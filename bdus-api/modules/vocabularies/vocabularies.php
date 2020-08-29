@@ -5,14 +5,36 @@
  * @license			See file LICENSE distributed with this code
  * @since			Aug 10, 2012
  */
+
+ use \DB\System\Manage;
+
 class vocabularies_ctrl extends Controller
 {
+	private $sys_manager = false;
+
+	private function getSysMng()
+	{
+		if (!$this->sys_manager){
+			$this->sys_manager = new Manage($this->db, $this->prefix);
+		}
+		return $this->sys_manager;
+	}
+
+	private function getFullVocabularies()
+	{
+		$res = $this->getSysMng()->getBySQL('vocabularies', '1=1 ORDER BY voc, sort');
+		$vocs = [];
+
+		foreach($res as $arr) {
+			$vocs[$arr['voc']][$arr['id']] = $arr['def'];
+		}
+		return $vocs;
+	}
+
 	public function show()
 	{
-		$vocs = new Vocabulary($this->db);
-		
 		$this->render('vocabularies', 'list', [
-			'vocs' => $vocs->getAll(),
+			'vocs' => $this->getFullVocabularies(),
 		]);
 	}
 	
@@ -21,8 +43,7 @@ class vocabularies_ctrl extends Controller
 		$voc = $this->get['voc'] ?: false ;
 
 		if (!$voc) {
-			$vocs = new Vocabulary($this->db);
-			$all_vocs = $vocs->getAllVoc();
+			$all_vocs = array_keys($this->getFullVocabularies());
 		}
 		
 		$this->render('vocabularies', 'new_form', [
@@ -31,102 +52,70 @@ class vocabularies_ctrl extends Controller
 		]);
 	}
 	
-	
-	public function getAllVoc()
-	{
-		$voc = new Vocabulary($this->db);
-		
-		$all_vocs = $voc->getAllVoc();
-	
-		if (!$all_vocs)
-		{
-			$resp = array('status'=>'error', 'text'=>tr::get('no_voc_available'));
-		}
-		else
-		{
-			$resp = array('status'=>'success', 'data'=>$all_vocs);
-		}
-		echo json_encode($resp);
-	}
-
-	public function getAll()
-	{
-		$voc = new Vocabulary($this->db);
-		
-		$all_vocs = $voc->getAll();
-	
-		if (!$all_vocs)
-		{
-			$resp = array('status'=>'error', 'text'=>tr::get('no_voc_available'));
-		}
-		else
-		{
-			$resp = array('status'=>'success', 'data'=>$all_vocs);
-		}
-		echo json_encode($resp);
-	}
-	
 	public function edit()
 	{
-		//necessary parameters: id, def
-		$voc = new Vocabulary($this->db);
+		$id = $this->get['id'];
+		$val = $this->get['val'];
 
-		if ($voc->update($this->get['id'], $this->get['val'])) {
-			$resp = array('status'=>'success', 'text'=>tr::get('ok_def_update'));
+		$res = $this->getSysMng()->editRow('vocabularies', $id, [
+			'def' => $val
+		]);
+		
+		if ( $res ) {
+			utils::response('ok_def_update', 'success');
 		} else {
-			$resp = array('status'=>'error', 'text'=>tr::get('error_def_update'));
+			utils::response('error_def_update', 'error');
 		}
-			
-		echo json_encode($resp);
-				
 	}
 	
 	public function erase()
 	{
-		$voc = new Vocabulary($this->db);
-		
-		if ($voc->erase($this->get['id']))
-		{
-			$resp = array('status'=>'success', 'text'=>tr::get('ok_def_erase'));
+		$id = $this->get['id'];
+
+		$res = $this->getSysMng()->deleteRow('vocabularies', $id );
+
+		if ( $res ) {
+			utils::response('ok_def_erase', 'success');
+		} else {
+			utils::response('error_def_erase', 'error');
 		}
-		else
-		{
-			$resp = array('status'=>'error', 'text'=>tr::get('error_def_erase'));
-		}
-		
-		echo json_encode($resp);
-				
 	}
 	
 	public function add()
 	{
-		// necessary parameters: voc, def
-		
-		$voc = new Vocabulary($this->db);
-		
-		if ($voc->add($this->get['voc'], $this->get['def']))
-		{
-			$resp = array('status'=>'success', 'text'=>tr::get('ok_def_added'));
+		$voc = $this->get['voc'];
+		$def = $this->get['def'];
+
+		$res = $this->getSysMng()->addRow('vocabularies', [
+			'voc' => $voc,
+			'def' => $def
+		]);
+
+		if ( $res ) {
+			utils::response('ok_def_added', 'success');
+		} else {
+			utils::response('error_def_added', 'error');
 		}
-		else
-		{
-			$resp = array('status'=>'error', 'text'=>tr::get('error_def_added'));
-		}
-		echo json_encode($resp);
 	}
 	
 	public function sort()
 	{
-		$voc = new Vocabulary($this->db);
-		
-		foreach($this->post as $arr)
-		{
-			if ($voc->sort($arr)) {
-				$resp = array('status'=>'success', 'text'=>tr::get('ok_sort_update'));
-			} else {
-				$resp = array('status'=>'error', 'text'=>tr::get('error_sort_update'));
+		$error = false;
+		foreach($this->post as $voc => $sort_data) {
+			foreach ($sort_data as $sort => $id) {
+				$res = $this->getSysMng()->editRow('vocabularies', (int)$id, [
+					'sort' => $sort
+				]);
+				if (!$res){
+					$error = true;
+				}
 			}
 		}
-		echo json_encode($resp);
+
+		if ($error){
+			utils::response('error_sort_update', 'error');
+		} else {
+			utils::response('ok_sort_update', 'success');
+		}
 	}
 }

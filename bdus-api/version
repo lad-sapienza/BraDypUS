@@ -1,3 +1,4 @@
+3.16.131[] = "Dropped support for Matrix class"
 3.16.130[] = "Cleaned .gitignore"
 3.16.129[] = "Dropped support for Vocabulary class"
 3.16.129[] = "Config module does not use Vocabularies class"

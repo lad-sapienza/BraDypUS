@@ -24,6 +24,8 @@
  *      curl --location --request GET '/api/v2/paths?verb=search&shortsql=@places(&total_rows=&page=&geojson=&records_per_page&full_records&pretty=1)'
  */
 
+ use \DB\System\Manage;
+
 class api2 extends Controller
 {
     private $app;
@@ -203,8 +205,16 @@ class api2 extends Controller
         if (!$voc) {
             throw new \Exception("Vocabulary name is required with verb getVocabulary");
         }
-        $VocClass = new Vocabulary($this->db);
-        $resp = $VocClass->getValues($voc);
+        
+        $sys_manage = new Manage($this->db, $this->prefix);
+        $res = $sys_manage->getBySQL('vocabularies', 'voc = ?  ORDER BY sort ASC LIMIT 500 OFFSET 0', [$voc]);
+        
+        $resp = [];
+        if (is_array($res)) {
+            foreach ($res as $r) {
+                array_push($resp, $r['def']);
+            }
+        }
         
         return $resp;
     }

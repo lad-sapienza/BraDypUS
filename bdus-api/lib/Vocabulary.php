@@ -93,7 +93,7 @@ class Vocabulary
 	{
 		$res = $this->db->query(
 			'SELECT * FROM ' . PREFIX . 'vocabularies WHERE 1=1 ORDER BY voc, sort', 
-			false, 
+			null, 
 			'read'
 		);
 

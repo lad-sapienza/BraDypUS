@@ -21,7 +21,7 @@ class saved_queries_ctrl extends Controller
             echo json_encode([
                 'status' => 'success', 
                 'tb'=>$res['tb'], 
-                'text'=>urlencode(base64_encode($res['text']))
+                'obj_encoded'=> SafeQuery::encode($res['text'], json_decode($res['vals'], true))
             ]);
         } else {
             echo json_encode( [ 'status'=>'error' ] );

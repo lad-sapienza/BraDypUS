@@ -160,8 +160,8 @@ class Field implements iTemplate
         if (is_array($corelinks)) {
             $html .= '<ul>';
             foreach ($corelinks as $dest_tb=>$l_arr) {
-                $html .= json_encode($l_arr, JSON_PRETTY_PRINT) . '<li><span class="btn-link" onclick="' .
-         "api.showResults('" . $dest_tb . "', 'type=encoded&q_encoded=" . base64_encode($l_arr['query']) . "', '" . tr::get('saved_queries') . " (". cfg::tbEl($dest_tb, 'label') . ")');" .
+                $html .= '<li><span class="btn-link" onclick="' .
+         "api.showResults('{$dest_tb}', 'type=obj_encoded&obj_encoded=" . SafeQuery::encode($l_arr['query'], $l_arr['values']) . "&total={$l_arr['tot']}', '" . tr::get('saved_queries') . " (". cfg::tbEl($dest_tb, 'label') . ")');" .
           '" href="javascript:void(0)">' .
           tr::get('links_in_table', ['<strong>' . $l_arr['tot'] . '</strong>', '<strong>' . cfg::tbEl($dest_tb, 'label') . '</strong>']) .
           '</span>';
@@ -831,7 +831,7 @@ class Field implements iTemplate
                 if ($otherTb === $this->tb || ($otherTb !== $this->tb && $otherFld !== cfg::tbEl($otherTb, 'id_field'))) {
                     foreach ($val as $v) {
                         $html .= "<span class=\"a\" " .
-                            " onclick=\"api.showResults('" . $otherTb. "', 'type=encoded', '" . tr::get('contextual_search_in', [cfg::tbEl($otherTb, 'label')]) . "', {q_encoded: '" . base64_encode( $otherFld . " = '" . $v . "'"). "'})\">" .
+                            " onclick=\"api.showResults('" . $otherTb. "', 'type=obj_encoded', '" . tr::get('contextual_search_in', [cfg::tbEl($otherTb, 'label')]) . "', {obj_encoded: '" . SafeQuery::encode( $otherFld . " = ?", [$v]). "'})\">" .
                             utils::format_text($v) .
                             '</span>' . (next($val) === false ? ' ' : ';');
                     }
@@ -866,7 +866,7 @@ class Field implements iTemplate
                 foreach ($val as $v) {
                     if ($setting['active_link']) {
                         $html .= "<span class=\"a\" " .
-                            " onclick=\"api.showResults('" . $this->tb. "', 'type=encoded', '" . tr::get('contextual_search_in', [cfg::tbEl($this->tb, 'label')] ) . "', {q_encoded: '" . base64_encode(
+                            " onclick=\"api.showResults('" . $this->tb. "', 'type=obj_encoded', '" . tr::get('contextual_search_in', [cfg::tbEl($this->tb, 'label')] ) . "', {obj_encoded: '" . SafeQuery::encode(
                                     "" . $setting['fieldname'] . " LIKE '%;" . $v . "' " .
                                     "OR " . $setting['fieldname'] . " LIKE '" . $v . ";%' " .
                                     "OR " . $setting['fieldname'] . " = '" . $v . "' "

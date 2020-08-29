@@ -218,8 +218,8 @@ class record_ctrl extends Controller
             $noResult = true;
         }
 
-        $encoded_query_obj_arr = $queryObj->getQuery(true);
-        $encoded_query_obj = SafeQuery::encode($encoded_query_obj_arr['q'], $encoded_query_obj_arr['v']);
+        list($qq, $vv) = $queryObj->getQuery(true);
+        $encoded_query_obj = SafeQuery::encode($qq, $vv);
 
         $this->render('record', 'result', [
             // string, table name
@@ -262,7 +262,7 @@ class record_ctrl extends Controller
     /**
      * http://datatables.net/usage/server-side
      * 	REQUEST
-     * 		q_encoded
+     * 		obj_encoded
      * 		sEcho: (int)
      * 		iTotalRecords: (int)
      * 		iDisplayStart

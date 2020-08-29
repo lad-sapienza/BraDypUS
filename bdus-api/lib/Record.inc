@@ -632,6 +632,7 @@ class Record implements iRecord
 				if (!$detail) {
 					$this->data['corelinks'][$link['other_tb']]['tot'] = count($res);
 					$this->data['corelinks'][$link['other_tb']]['query'] = implode(' AND ', $tmp);
+					$this->data['corelinks'][$link['other_tb']]['values'] = $tmp_values;
 
 				} else {
 					foreach ($res as $row) {

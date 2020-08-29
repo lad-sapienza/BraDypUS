@@ -66,7 +66,7 @@ const hashActions = {
         } else if (this.getHash('queryId')){
             core.getJSON('saved_queries_ctrl', 'getById', { "id": this.getHash('queryId') }, false, function(data){
                 if(data.status === 'success'){
-                    api.showResults(data.tb, 'type=encoded&q_encoded=' + data.text, core.tr('saved_queries') + ' (' + data.tb + ')');
+                    api.showResults(data.tb, 'type=obj_encoded&obj_encoded=' + data.obj_encoded, core.tr('saved_queries') + ' (' + data.tb + ')');
                 } else {
                     core.message(core.tr('saved_query_does_not_exist', [this.getHash('queryId')]), 'error', true);
                 }

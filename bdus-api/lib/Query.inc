@@ -40,7 +40,7 @@
  * 			'q_encoded'		string, required, base64_encoded query string
  *
  * 		'obj_encoded'
- * 			'obj'		    string, required, SafeQuery encoded query string
+ * 			'obj_encoded'		    string, required, SafeQuery encoded query string
  */
 
 class Query
@@ -206,8 +206,8 @@ class Query
         
         if ($with_values){
             return [
-                'q' => $sql,
-                'v' => $this->getValues()
+                $sql,
+                $this->getValues()
             ];
         } else {
             return $sql;
@@ -221,8 +221,9 @@ class Query
      */
     public function getTotal()
     {
-        $q = 'SELECT count(*) as tot FROM (' . $this->getQuery() . ') as ' . uniqid('a');
-        $res = $this->db->query($q);
+        list ($query, $values) = $this->getQuery(true);
+        $q = 'SELECT count(*) as tot FROM (' . $query . ') as ' . uniqid('a');
+        $res = $this->db->query($q, $values);
         return $res[0]['tot'];
     }
 

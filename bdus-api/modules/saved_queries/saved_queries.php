@@ -31,11 +31,11 @@ class saved_queries_ctrl extends Controller
     public function showAll()
     {
         $sys_manager = new Manage($this->db, $this->prefix);
-        $res = $sys_manager->getBySQL('queries', "1=1");
+        $res = $sys_manager->getBySQL('queries', "user_id = ? OR is_global = ?", [$_SESSION['user']['id'], 1]);
 
         foreach ($res as &$q) {
             $q['tb_label'] = cfg::tbEl($q['tb'], 'label');
-            $q['encoded'] = urlencode(base64_encode($q['text']));
+            $q['obj_encoded'] = SafeQuery::encode($q['text'], json_decode($q['vals']));
             $q['owned_by_me'] = $_SESSION['user']['id'] === $q['user_id'];
         }
 
@@ -128,7 +128,7 @@ class saved_queries_ctrl extends Controller
     {
         $tb = $this->get['tb'];
         $name = $this->get['name'];
-        $query_text = $this->post['query_text'];
+        $query_object = $this->post['query_object'];
         $msg = [
             'status'=>'error', 
             'text'=>tr::get('error_saving_query')
@@ -136,11 +136,13 @@ class saved_queries_ctrl extends Controller
         
         try {
             $sys_manager = new Manage($this->db, $this->prefix);
+            list($text, $values) = SafeQuery::decode($query_object);
             $res = $sys_manager->addRow('queries', [
                 'user_id' => $_SESSION['user']['id'],
                 'date'  => (new \DateTime())->format('Y-m-d H:i:s'),
                 'name'  => $name,
-                'text'  => $query_text,
+                'text'  => $text,
+                'values'=> $values,
                 'tb'    => $tb,
                 'is_global'=> 0
             ]);

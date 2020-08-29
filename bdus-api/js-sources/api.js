@@ -96,12 +96,12 @@ var api = {
        * @param istring query    sql query
        * @returns {undefined}
        */
-      showMatrix: function(tb, query){
+      showMatrix: function(tb, obj_encoded){
         core.open({
           title: core.tr('harris_matrix'),
           obj: 'matrix_ctrl',
           method: 'show',
-          param: {tb: tb, query: query},
+          param: {tb: tb, obj_encoded: obj_encoded},
         });
       },
 
@@ -285,7 +285,7 @@ var api = {
       }, 'modal');
     },
 
-    Export: function(query_text, tb){
+    Export: function(obj_encoded, tb){
       var html = '<select class="export_format input-lg">' +
         '<option value="JSON">JSON</option>' +
         '<option value="XLS">XLS</option>' +
@@ -303,7 +303,7 @@ var api = {
                     text: core.tr('continue'),
                     click: function(div){
                       layout.dialog.close(div);
-                      $.post('./?obj=myExport_ctrl&method=doExport&tb=' + tb + '&format=' + $(div).find('select.export_format').val() + '&sql=' + query_text, function(data){
+                      $.post('./?obj=myExport_ctrl&method=doExport&tb=' + tb + '&format=' + $(div).find('select.export_format').val() + '&obj_encoded=' + obj_encoded, function(data){
 
                         core.message(data.text, data.status);
 
@@ -342,7 +342,7 @@ var api = {
                          'saved_queries_ctrl', 
                          'saveQuery', 
                          'tb=' + tb + '&name=' + input.val(),
-                         {"query_text": query_text},
+                         {"query_object": query_text},
                          function(data){
                            core.message(data.text, data.status);
                          });

@@ -42,23 +42,24 @@ class myExport_ctrl extends Controller
 	{
 		$tb = $this->get['tb'];
 		$format = $this->get['format'];
-		$sql = $this->get['sql'];
-		
+		$obj_encoded = $this->get['obj_encoded'];
+
 		try {
-			$where = $sql ? base64_decode($sql) : '1';
+			list($where, $values) = SafeQuery::decode($obj_encoded);
+
+			$where = $where ?: '1=1';
 		
 			$file = PROJ_DIR . 'export/' . $tb . '.' . date('U');
 		
-			$export_handle = new Export($this->db, $file, $tb, $where);
+			$export_handle = new Export($this->db, $file, $tb, $where, $values);
 		
 			$export_handle->doExport($format);
+
+			utils::message('export_success', 'success');
 		
-			$resp['text'] = tr::get('export_success');
-			$resp['status'] = 'success';
 		} catch(Exception $e) {
 			$this->log->error($e);
-			$resp['text'] = tr::get('export_error') . tr::get('details_in_log');
-			$resp['status'] = 'error';
+			utils::message('export_error', 'error');
 		}
 		
 		echo json_encode($resp);

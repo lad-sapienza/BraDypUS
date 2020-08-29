@@ -136,10 +136,10 @@ class Field implements iTemplate
         $corelinks = $this->record->getCoreLinks();
 
         // SHOW CORELINKS
-        $html .= '<i class="glyphicon glyphicon-link"></i> <strong>' . tr::get('core_links'). '</strong><br />';
+        $html .= '<i class="glyphicon glyphicon-link"></i> <strong>' . tr::get('system_links'). '</strong><br />';
 
         if (!empty($corelinks) && !empty($backlinks)) {
-            $html .= '<p>' . tr::get('no_core_links') . '</p>';
+            $html .= '<p>' . tr::get('no_system_links') . '</p>';
         }
 
         if (is_array($backlinks)) {
@@ -160,7 +160,7 @@ class Field implements iTemplate
         if (is_array($corelinks)) {
             $html .= '<ul>';
             foreach ($corelinks as $dest_tb=>$l_arr) {
-                $html .= '<li><span class="btn-link" onclick="' .
+                $html .= json_encode($l_arr, JSON_PRETTY_PRINT) . '<li><span class="btn-link" onclick="' .
          "api.showResults('" . $dest_tb . "', 'type=encoded&q_encoded=" . base64_encode($l_arr['query']) . "', '" . tr::get('saved_queries') . " (". cfg::tbEl($dest_tb, 'label') . ")');" .
           '" href="javascript:void(0)">' .
           tr::get('links_in_table', ['<strong>' . $l_arr['tot'] . '</strong>', '<strong>' . cfg::tbEl($dest_tb, 'label') . '</strong>']) .

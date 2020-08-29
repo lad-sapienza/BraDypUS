@@ -19,7 +19,7 @@ var geoface  = {
 	 * @param  {String} sql Query string
 	 * @return {Object}     Self object
 	 */
-  init: function(tb, sql){
+  init: function(tb, obj_encoded){
 		if ($('#map').length > 0){
       core.message(core.tr('map_already_opened'));
       return;
@@ -34,7 +34,7 @@ var geoface  = {
       'buildMap'
     ];
     geoface.param.tb = tb;
-    geoface.param.where = sql;
+    geoface.param.obj_encoded = obj_encoded;
     geoface.runQueue();
 		return this;
   },
@@ -56,7 +56,7 @@ var geoface  = {
 	 */
 	getData: function(){
 
-    core.getJSON('geoface_ctrl', 'getGeoJson', {tb: geoface.param.tb, where: geoface.param.where}, false, function(data){
+    core.getJSON('geoface_ctrl', 'getGeoJson', {tb: geoface.param.tb, obj_encoded: geoface.param.obj_encoded}, false, function(data){
 
       if (data.status === 'error'){
         core.message(data.text, 'error', true);

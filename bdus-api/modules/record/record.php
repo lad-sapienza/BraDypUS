@@ -218,6 +218,9 @@ class record_ctrl extends Controller
             $noResult = true;
         }
 
+        $encoded_query_obj_arr = $queryObj->getQuery(true);
+        $encoded_query_obj = SafeQuery::encode($encoded_query_obj_arr['q'], $encoded_query_obj_arr['v']);
+
         $this->render('record', 'result', [
             // string, table name
             'tb' => $this->request['tb'],
@@ -229,12 +232,10 @@ class record_ctrl extends Controller
             'can_user_read' => utils::canUser('read'),
             // boolean, can current user edit this records?
             'can_user_edit' => utils::canUser('edit'),
-            // string, urlencoded plain query
-            'urlencoded_query' => urlencode($queryObj->getQuery()),
-            // string, base64 encoded query, for pagination
-            'encoded_query' => base64_encode($queryObj->getQuery()),
-            // string, base64 encoded where parte of the query, to be used for bookmarking, export, matrix, charts, geoface
-            'encoded_where' => $queryObj->getWhere(true),
+            
+            'encoded_query_obj' => $encoded_query_obj,
+            // string, SafeQuery encoded query & values, to be used for bookmarking, export, matrix, charts, geoface
+            'encoded_where_obj' => $queryObj->getWhereAndValues(),
             // boolean, if no records are found, set to true: no table of results will be output in template
             'noResult' => $noResult,
             // boolean, if true double click on records is not allowed
@@ -273,35 +274,41 @@ class record_ctrl extends Controller
      */
     public function sql2json()
     {
-        $this->request['type'] = 'encoded';
+        try {
+            $this->request['type'] = 'obj_encoded';
 
-        $qObj = new Query($this->db, $this->request, true);
+            $qObj = new Query($this->db, $this->request, true);
 
-        $response['sEcho'] = intval($this->request['sEcho']);
-        $response['query_arrived'] = $qObj->getQuery();
+            $response['sEcho'] = intval($this->request['sEcho']);
+            $response['query_arrived'] = $qObj->getQuery();
 
-        $response['iTotalRecords'] = $response['iTotalDisplayRecords'] = isset($this->request['iTotalRecords']) ? $this->request['iTotalRecords'] : $qObj->getTotal();
+            $response['iTotalRecords'] = $response['iTotalDisplayRecords'] = isset($this->request['iTotalRecords']) ? $this->request['iTotalRecords'] : $qObj->getTotal();
 
-        if (isset($this->request['iDisplayStart']) && $this->request['iDisplayLength'] != '-1') {
-            $qObj->setLimit(intval($this->request['iDisplayStart']), $this->request['iDisplayLength']);
-        }
+            if (isset($this->request['iDisplayStart']) && $this->request['iDisplayLength'] != '-1') {
+                $qObj->setLimit(intval($this->request['iDisplayStart']), $this->request['iDisplayLength']);
+            }
 
-        if (isset($this->request['iSortCol_0'])) {
-            $fields = array_keys($qObj->getFields());
-            $qObj->setOrder($fields[$this->request['iSortCol_0']], ($this->request['sSortDir_0']==='asc' ? 'asc' : 'desc'));
-        }
+            if (isset($this->request['iSortCol_0'])) {
+                $fields = array_keys($qObj->getFields());
+                $qObj->setOrder($fields[$this->request['iSortCol_0']], ($this->request['sSortDir_0']==='asc' ? 'asc' : 'desc'));
+            }
 
-        if ($this->request['sSearch']) {
-            $qObj->setSubQuery($this->request['sSearch']);
-            $response['iTotalDisplayRecords'] = $qObj->getTotal();
-        }
+            if ($this->request['sSearch']) {
+                $qObj->setSubQuery($this->request['sSearch']);
+                $response['iTotalDisplayRecords'] = $qObj->getTotal();
+            }
 
-        $response['query_executed'] = $qObj->getQuery();
+            $response['query_executed'] = $qObj->getQuery();
 
-        $response['aaData'] = $qObj->getResults();
+            $response['aaData'] = $qObj->getResults();
 
-        foreach ($response['aaData'] as $id => &$row) {
-            $response['aaData'][$id]['DT_RowId'] = $row['id'];
+            foreach ($response['aaData'] as $id => &$row) {
+                $response['aaData'][$id]['DT_RowId'] = $row['id'];
+            }
+
+        } catch (\Throwable $th) {
+            $this->log->error($th);
+            $response = [];
         }
 
         echo json_encode($response);

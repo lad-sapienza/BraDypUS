@@ -41,13 +41,8 @@
 	</a>
 	{% endif %}
 
-	<!-- SHOW QUERY -->
-	<a onclick="api.query.show('{{ urlencoded_query }}');" title="{{ tr.get('show_query_text') }}" class="btn btn-default">
-		<i class="glyphicon glyphicon-info-sign"></i>
-	</a>
-
 	<!-- SAVE QUERY -->
-	<a onclick="api.query.save('{{ encoded_where }}', '{{ tb }}');" title="{{ tr.get('save_query_as') }}" class="btn btn-default">
+	<a onclick="api.query.save('{{ encoded_where_obj }}', '{{ tb }}');" title="{{ tr.get('save_query_as') }}" class="btn btn-default">
 		<i class="glyphicon glyphicon-bookmark"></i>
 	</a>
 
@@ -59,24 +54,24 @@
 	{% if noResult == false %}
 
 	<!-- EXPORT QUERY BUTTON  -->
-	<a onclick="api.query.Export('{{ encoded_where }}', '{{ tb }}');" title="{{ tr.get('export_query') }}" class="btn btn-default">
+	<a onclick="api.query.Export('{{ encoded_where_obj }}', '{{ tb }}');" title="{{ tr.get('export_query') }}" class="btn btn-default">
 		<i class="glyphicon glyphicon-random"></i>
 	</a>
 
 	<!-- MATRIX -->
 	{% if hasRS %}
-	<a onclick="api.record.showMatrix('{{ tb }}', '{{ encoded_where }}');" title="{{ tr.get('harris_matrix') }}" class="btn btn-default">
+	<a onclick="api.record.showMatrix('{{ tb }}', '{{ encoded_where_obj }}');" title="{{ tr.get('harris_matrix') }}" class="btn btn-default">
 		<i class="fa fa-sitemap"></i>
 	</a>
 	{% endif %}
 
 	<!-- BUILD CHART -->
-	<a onclick="core.runMod('chart', ['{{ tb }}', '{{ encoded_where }}']);" title="{{ tr.get('build_chart') }}" class="btn btn-default">
+	<a onclick="core.runMod('chart', ['{{ tb }}', '{{ encoded_where_obj }}']);" title="{{ tr.get('build_chart') }}" class="btn btn-default">
 		<i class="glyphicon glyphicon-align-left"></i>
 	</a>
 
 	<!-- MAP -->
-	<a onclick="core.runMod('geoface', ['{{ tb }}', '{{ encoded_where }}']);" title="{{ tr.get('view_on_map') }}" class="btn btn-default">
+	<a onclick="core.runMod('geoface', ['{{ tb }}', '{{ encoded_where_obj }}']);" title="{{ tr.get('view_on_map') }}" class="btn btn-default">
 		<i class="glyphicon glyphicon-map-marker"></i>
 	</a>
 
@@ -120,12 +115,11 @@
 		"bProcessing": true,
         "bServerSide": true,
         "sAjaxSource": "./?test=1&obj=record_ctrl&method=sql2json&tb={{ tb }}&iTotalRecords={{ iTotalRecords }}",
-        		{# &q_encoded='{{ encoded_query }}', #}
         "sServerMethod": "POST",
         "fnServerParams": function ( aoData ) {
             aoData.push({
-            	name: "q_encoded",
-            	value:"{{ encoded_query }}"
+            	name: "obj_encoded",
+            	value:"{{ encoded_query_obj }}"
             });
         },
         "fnRowCallback": function (nRow, aData, iDisplayIndex) {

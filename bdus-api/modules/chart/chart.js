@@ -5,12 +5,12 @@
  */
 
 var chart = {
-		init: function(tb, query){
+		init: function(tb, obj_encoded){
 			
-			if (tb == 'showChart' && query){
-				chart.showChartById(query);
+			if (tb === 'showChart' && obj_encoded){
+				chart.showChartById(obj_encoded);
 			} else if (tb){
-				chart.showBuilder(tb, query);
+				chart.showBuilder(tb, obj_encoded);
 			} else {
 				chart.showSaved();
 			}
@@ -91,12 +91,12 @@ var chart = {
 			}, 'modal');
 		},
 		
-		showBuilder: function(tb, query){
+		showBuilder: function(tb, obj_encoded){
 			core.open({
 				title: core.tr('build_chart'),
 				obj: 'chart_ctrl',
 				method: 'show_chart_builder',
-				param: {tb: tb, query: query}
+				param: {tb: tb, obj_encoded: obj_encoded}
 			});
 			
 		}

@@ -9,10 +9,15 @@
 
 class Export
 {
-	protected $filename, $db, $data, $tb, $sql, $xls;
+	protected $filename;
+	protected $db;
+	protected $data;
+	protected $tb;
+	protected $sql;
+	protected $xls;
 
 
-	public function __construct(\DB\DB\DBInterface $db, $filename, $tb, $where_sql = false)
+	public function __construct(\DB\DB\DBInterface $db, string $filename, string $tb, string $where_sql = null, array $values = null)
 	{
 
 		ini_set('memory_limit','1560M');
@@ -21,7 +26,7 @@ class Export
 		$this->tb = $tb;
 		$this->db = $db;
 
-		$this->data = $db->query('SELECT * FROM ' . $this->tb . ' WHERE ' . ($where_sql ? $where_sql : '1=1'));
+		$this->data = $db->query('SELECT * FROM ' . $this->tb . ' WHERE ' . ($where_sql ? $where_sql : '1=1'), $values);
 
 		if (!is_array($this->data) OR count($this->data) == 0) {
 			throw new \Exception('Table ' . $this->tb . ' is empty!');

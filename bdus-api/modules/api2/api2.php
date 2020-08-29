@@ -40,14 +40,6 @@ class api2 extends Controller
         'getUniqueVal',
         'getVocabulary'
     ];
-    private $system_tables = [
-        PREFIX . "queries",
-        PREFIX . "rs",
-        PREFIX . "userlinks",
-        PREFIX . "users",
-        PREFIX . "charts"
-    ];
-
     /**
      * Main validation & variable setting
      */
@@ -73,7 +65,8 @@ class api2 extends Controller
             $this->get['tb'] = $this->prefix . $this->get['tb'];
         }
         // Validate table
-        if (in_array($this->get['tb'], $this->system_tables)) {
+        $sys_manage = new Manage($this->db, $this->prefix);
+        if (in_array($this->get['tb'], $sys_manage->available_tables)) {
             throw new \Exception("System tables cannot be queried");
         }
     }

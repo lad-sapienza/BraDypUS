@@ -74,7 +74,7 @@ var saved_queries = {
 							break;
 			
 						case 'execute':
-							api.showResults($this.data('tb'), 'type=encoded&q_encoded=' + $this.data('text'), core.tr('saved_queries') + ' (' + $this.data('tb') + ')');
+							api.showResults($this.data('tb'), 'type=obj_encoded&obj_encoded=' + $this.data('text'), core.tr('saved_queries') + ' (' + $this.data('tb') + ')');
 							break;
 					}
 					return false;

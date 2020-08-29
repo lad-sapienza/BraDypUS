@@ -118,9 +118,11 @@ class geoface_ctrl extends Controller
 	public function getGeoJson()
 	{
 		$tb = $this->request['tb'];
-		$where = $this->request['where'];
+		$obj_encoded = $this->request['obj_encoded'];
 
 		try {
+
+			list($where, $values) = $obj_encoded ? SafeQuery::decode($obj_encoded) : ['1=1', []];
 
 			$preview = cfg::getPreviewFlds($tb);
 
@@ -132,8 +134,6 @@ class geoface_ctrl extends Controller
 				}
 			}
 
-			$where ? $where = base64_decode($where) : '';
-
 			if (!preg_match('/' . $tb . '\.id/', $where) && $where) {
 				$where = str_replace('id', $tb . '.id', $where);
 			}
@@ -144,7 +144,7 @@ class geoface_ctrl extends Controller
 			. ' WHERE geometry IS NOT NULL '
 			. ($where ? ' AND ' . $where : '');
 
-			$res = $this->db->query($sql);
+			$res = $this->db->query($sql, $values);
 
 			if($res) {
 

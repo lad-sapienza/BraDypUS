@@ -18,11 +18,11 @@ class chart_ctrl extends Controller
 	public function show_chart_builder()
 	{
 		$tb = $this->get['tb'];
-		$query = $this->get['query'];
+		$obj_encoded = $this->get['obj_encoded'];
 
 		$this->render('chart', 'show_chart_builder', [
 			'tb' => $tb,
-			'query' => $query,
+			'obj_encoded' => $obj_encoded,
 			'fields' => cfg::fldEl($this->get['tb'], 'all', 'label')
 		]);
 	}

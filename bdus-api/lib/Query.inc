@@ -38,6 +38,9 @@
  *
  * 		'encoded'
  * 			'q_encoded'		string, required, base64_encoded query string
+ *
+ * 		'obj_encoded'
+ * 			'obj'		    string, required, SafeQuery encoded query string
  */
 
 class Query
@@ -46,6 +49,7 @@ class Query
     private $join;
     private $fields;
     private $where;
+    private $values = [];
     private $group;
     private $order;
     private $limit;
@@ -73,7 +77,7 @@ class Query
 
         $this->setLimit($request['limit_start'], $request['limit_end']);
 
-        $this->where = $this->setWhere($request);
+        $this->setWhere($request);
     }
 
     public function setSubQuery($string, $limit2preview = false)
@@ -146,6 +150,16 @@ class Query
         return $encoded ? base64_encode($this->where) : $this->where;
     }
 
+    public function getWhereAndValues()
+    {
+        return SafeQuery::encode($this->where, $this->values);
+    }
+    
+    public function getValues(): array
+    {
+        return $this->values;
+    }
+
     private function getGroup()
     {
         return $this->group;
@@ -167,7 +181,7 @@ class Query
      * Returns ready-to-use query string
      * @throws \Exception
      */
-    public function getQuery()
+    public function getQuery(bool $with_values = false )
     {
         if (!$this->fields) {
             throw new \Exception(tr::get('parameter_missing', ['fields']));
@@ -181,7 +195,7 @@ class Query
             throw new \Exception(tr::get('parameter_missing', ['where']));
         }
 
-        return "SELECT " .
+        $sql = "SELECT " .
             $this->formatFields() .
             " FROM " . $this->tb . " " .
             $this->join .
@@ -189,6 +203,15 @@ class Query
             $this->getGroup() .
             $this->getOrder() .
             $this->getLimit();
+        
+        if ($with_values){
+            return [
+                'q' => $sql,
+                'v' => $this->getValues()
+            ];
+        } else {
+            return $sql;
+        }
     }
 
 
@@ -211,7 +234,7 @@ class Query
      */
     public function getResults($full = false)
     {
-        $result = $this->db->query($this->getQuery(), null, 'read');
+        $result = $this->db->query($this->getQuery(), $this->getValues(), 'read');
 
         if (!$full || !is_array($result)) {
             return $result;
@@ -251,24 +274,24 @@ class Query
     {
         switch ($request['type']) {
             case 'all':
-                return ' 1=1 ';
+                $this->where = ' 1=1 ';
                 break;
 
             case 'advanced':
-                return $this->advSearch($request['adv']);
+                $this->where = $this->advSearch($request['adv']);
                 break;
 
             case 'sqlExpert':
                 $this->join = $this->makeSafeStatement(urldecode($request['join']));
-                return '(' . $this->makeSafeStatement(urldecode($request['querytext'])) . ')';
+                $this->where = '(' . $this->makeSafeStatement(urldecode($request['querytext'])) . ')';
                 break;
 
             case 'fast':
-                return '(' . $this->fast($request['string']) . ')';
+                $this->where = '(' . $this->fast($request['string']) . ')';
                 break;
 
             case 'id_array':
-                return " ( id IN ('" . implode("', '", $request['id']) . "') ) ";
+                $this->where = " ( id IN ('" . implode("', '", $request['id']) . "') ) ";
                 break;
 
             case 'encoded':
@@ -278,14 +301,24 @@ class Query
                 // Remove new lines
                 // https://stackoverflow.com/a/3760830/586449
                 $encoded = trim(preg_replace('/\s+/', ' ', $encoded));
-                return preg_replace('/^SELECT(.+?)WHERE/i', '', $encoded);
+                $this->where = preg_replace('/^SELECT(.+?)WHERE/i', '', $encoded);
                 break;
 
+            case 'obj_encoded':
+                $this->join = $this->makeSafeStatement(urldecode($request['join']));
+                // Decode query parameter
+                list($q, $v) = SafeQuery::decode($request['obj_encoded']);
+                // Remove new lines
+                $encoded = trim(preg_replace('/\s+/', ' ', $q));
+                $this->where = preg_replace('/^SELECT(.+?)WHERE/i', '', $encoded);
+                $this->values = $v;
+                break;
+                
             default:
                 throw new \Exception(tr::get('parameter_missing', ['type']));
                 break;
         }
-        return false;
+        return;
     }
 
     /**

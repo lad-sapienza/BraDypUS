@@ -26,6 +26,11 @@
         "notnull"   : true
     },
     {
+        "name"      : "vals",
+        "type"      : "TEXT",
+        "notnull"   : true
+    },
+    {
         "name"      : "tb",
         "type"      : "TEXT",
         "notnull"   : true

@@ -11,13 +11,13 @@ class matrix_ctrl extends Controller
 	public function show()
 	{
 		$tb = $this->get['tb'];
-		$where = $this->get['query'];
-		
+        $obj_encoded = $this->get['obj_encoded'];
+    		
 		try
 		{
-			$where = $where ? base64_decode($where) : '1=1';
-			
-			$dotText = $this->createDotContentNew($tb, $where);
+            list($where, $values) = $obj_encoded ? SafeQuery::decode($obj_encoded) : ['1=1', []];
+
+			$dotText = $this->createDotContentNew($tb, $where, $values);
 			
 			$safeDotTex = str_replace(
 				[ "'", "concentrate=true;", "\n" ],
@@ -28,8 +28,7 @@ class matrix_ctrl extends Controller
 			$this->render('matrix', 'matrix', array(
 				'dotText' => $safeDotTex,
 				'selfPath' => MOD_DIR . 'matrix/',
-				'tb' => $tb,
-				'query_arrived' => $where
+				'tb' => $tb
 			));
 		}
 		catch (\Exception $e)
@@ -41,7 +40,7 @@ class matrix_ctrl extends Controller
 		}
 	}
 
-	private function createDotContentNew(string $tb, string $where = null): string
+	private function createDotContentNew(string $tb, string $where = null, array $values = null): string
     {
         $tbbis = $tb . 'bis';
         $const = get_defined_constants();
@@ -62,7 +61,7 @@ LEFT JOIN {$tb} as {$tbbis} ON  rs.tb = '{$tb}' AND rs.second = {$tbbis}.{$rsfld
 WHERE {$tb}.id IN
 (SELECT id FROM {$tb} WHERE {$where})
 EOD;
-        $res = $this->db->query($q);
+        $res = $this->db->query($q, $values);
 
         if (!is_array($res)) {
             throw new \Exception('query_produced_no_result');

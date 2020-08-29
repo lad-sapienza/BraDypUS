@@ -303,8 +303,13 @@ class Manage
 
         $sql = "SELECT " . implode(", ", $columns). " FROM {$tb} WHERE id = ?";
         $values = [$id];
-        
-        return $this->run($sql, $values, 'read');
+
+        $res = $this->run($sql, $values, 'read');
+        if (\is_array($res)) {
+            return $res[0];
+        } else {
+            return [];
+        }
     }
 
     /**

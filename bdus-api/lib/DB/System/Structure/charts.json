@@ -16,7 +16,7 @@
         "notnull"   : true
     },
     {
-        "name"      : "query",
+        "name"      : "sql",
         "type"      : "TEXT",
         "notnull"   : true
     },

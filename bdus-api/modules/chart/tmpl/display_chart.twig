@@ -5,7 +5,7 @@
  #}
 
 <div id="{{ uid }}">
-	<input type="hidden" name="query_text" value="{{ data.encoded_query }}" class="query_text" />
+	<input type="hidden" name="query_text" value="{{ encoded_query }}" class="query_text" />
  
 	<div class="chart" style="max-width:1000px;"></div>
 	
@@ -28,7 +28,7 @@
 		chart.saveAs($('#{{ uid }} input.query_text').val());
 	});
 	
-	var plot = $.jqplot('{{ uid }} div.chart', {{ data.json_data|raw }}, {
+	var plot = $.jqplot('{{ uid }} div.chart', {{ data|json_encode() }}, {
 		seriesDefaults:{
 			renderer:$.jqplot.BarRenderer,
 			pointLabels: { show: true },
@@ -40,11 +40,11 @@
 			//xoffset: -115,
 			placement: 'outsideGrid'
 		},
-		series: {{ data.json_series|raw }},
+		series: {{ series|json_encode() }},
 		axes: {
 			xaxis: {
 				renderer: $.jqplot.CategoryAxisRenderer,
-				ticks: {{ data.json_ticks|raw }}
+				ticks: {{ ticks|json_encode() }}
 			},
 			yaxis: {
 				pad: 1.05

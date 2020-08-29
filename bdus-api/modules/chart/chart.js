@@ -77,8 +77,8 @@ var chart = {
 				        	 click: function(){
 				        		 core.getJSON('chart_ctrl', 'save_chart_as', false, {query_text:query_text, name:$('#modal input.chart_name').val()}, function(data){
 				        			 core.message(data.text, data.status);
-				        			 if (data.status == 'success'){
-				        				 $('#modal').modal('close');
+				        			 if (data.status === 'success'){
+				        				 $('#modal').modal('hide');
 				        			 }
 				        		 });
 				        	 }

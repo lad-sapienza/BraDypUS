@@ -296,7 +296,7 @@ class DB implements \DB\DB\DBInterface
 					break;
 			}
 		} catch (\PDOException $e) {
-			$this->log->error($e);
+			$this->log->info($e, [$query, $values, $type, $fetch_style]);
 			throw new \Exception( tr::get('db_generic_error') );
 		}
 	}

@@ -17,11 +17,11 @@ class saved_queries_ctrl extends Controller
         $sys_manager = new Manage($this->db, $this->prefix);
         $res = $sys_manager->getById('queries', $id);
 
-        if ($res[0]) {
+        if (!empty($res)) {
             echo json_encode([
                 'status' => 'success', 
-                'tb'=>$res[0]['tb'], 
-                'text'=>urlencode(base64_encode($res[0]['text']))
+                'tb'=>$res['tb'], 
+                'text'=>urlencode(base64_encode($res['text']))
             ]);
         } else {
             echo json_encode( [ 'status'=>'error' ] );

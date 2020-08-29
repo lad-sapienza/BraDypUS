@@ -57,13 +57,13 @@ class api2 extends Controller
         $this->app = $this->get['app'];
         $valid_apps = utils::dirContent(MAIN_DIR . "projects");
         if (!$this->app || !in_array($this->app, $valid_apps)) {
-            throw new Exception("Invalid app {$this->app}. App must be one of " . implode(', ', $valid_apps));
+            throw new \Exception("Invalid app {$this->app}. App must be one of " . implode(', ', $valid_apps));
         }
 
         // Validate verb
         $this->verb = $this->get['verb'];
         if (!$this->verb || !in_array($this->verb, $this->valid_verbs)) {
-            throw new Exception("Invalid verb {$this->verb}. Verb must be one of " . implode(', ', $this->valid_verbs));
+            throw new \Exception("Invalid verb {$this->verb}. Verb must be one of " . implode(', ', $this->valid_verbs));
         }
 
         // Tb must have prefix
@@ -72,7 +72,7 @@ class api2 extends Controller
         }
         // Validate table
         if (in_array($this->get['tb'], $this->system_tables)) {
-            throw new Exception("System tables cannot be queried");
+            throw new \Exception("System tables cannot be queried");
         }
     }
 
@@ -89,7 +89,7 @@ class api2 extends Controller
             }
 
             if (!method_exists($this, $this->verb)) {
-                throw new Exception("Verb {$this->verb} has not been implemented yet");
+                throw new \Exception("Verb {$this->verb} has not been implemented yet");
             }
 
             $resp = $this->{$this->verb}();
@@ -181,10 +181,10 @@ class api2 extends Controller
         $id = $this->get['id'];
 
         if (!$tb) {
-            throw new Exception("Table name is required with verb read");
+            throw new \Exception("Table name is required with verb read");
         }
         if (!$id) {
-            throw new Exception("Record id is required with verb read");
+            throw new \Exception("Record id is required with verb read");
         }
         $read_record = new \Record\Read($this->db);
         $resp = $read_record->getFull($tb, $id);
@@ -201,7 +201,7 @@ class api2 extends Controller
     {
         $voc = $this->get['voc'];
         if (!$voc) {
-            throw new Exception("Vocabulary name is required with verb getVocabulary");
+            throw new \Exception("Vocabulary name is required with verb getVocabulary");
         }
         $VocClass = new Vocabulary($this->db);
         $resp = $VocClass->getValues($voc);
@@ -225,10 +225,10 @@ class api2 extends Controller
         $where		= $this->get['w'];
 
         if (!$tb) {
-            throw new Exception("Table name is required with verb getUniqueVal");
+            throw new \Exception("Table name is required with verb getUniqueVal");
         }
         if (!$fld) {
-            throw new Exception("Field name is required with verb getUniqueVal");
+            throw new \Exception("Field name is required with verb getUniqueVal");
         }
 
         require_once __DIR__ . '/GetUniqueVal.php';
@@ -251,7 +251,7 @@ class api2 extends Controller
     {
         $shortsql = $this->get['shortsql'];
         if (!$shortsql) {
-            throw new Exception("ShortSQL text is required with verb search");
+            throw new \Exception("ShortSQL text is required with verb search");
         }
 
         $total_rows 		= $this->get['total_rows']			? (int)$this->get['total_rows']			: false;
@@ -284,12 +284,12 @@ class api2 extends Controller
      */
     private function getChart()
     {
-        $chartId = $this->get['id'];
+        $chartId = (int) $this->get['id'];
         if (!$chartId) {
-            throw new Exception("Chart id is required");
+            throw new \Exception("Chart id is required");
         }
         require_once __DIR__ . '/GetChart.php';
-        $resp = GetChart::run($chartId, $this->db);
+        $resp = GetChart::run($chartId, $this->db, $this->prefix);
         return $resp;
     }
 

@@ -5,31 +5,24 @@
  * @requires cfg
  * @requires DB
  */
+use \DB\System\Manage;
+
 class GetChart
 {
-    public static function run($id, \DB\DB\DBInterface $db)
+    public static function run(int $id, \DB\DB\DBInterface $db, string $prefix)
     {
-        if ( is_numeric($id) ) {
-            $chartid = (int) $id;
-        } else {
-            $chartid = false;
-        }
+        $sys_manage = new Manage($db, $prefix);
 
-        $ChartObj = new Charts($db);
-        $charts = $ChartObj->getCharts($chartid);
-        
-        if (!$chartid) {
-            return $charts;
-        }
+        $chart = $sys_manage->getById('charts', $id);
 
-        if (!$charts || !is_array($charts) || !is_array($charts[0])) {
+        if (!$chart || !empty($chart) ) {
             throw new \Exception("Chart #{$id} not found");
         }
 
-        $resp['name'] = $charts[0]['name'];
-        $resp['id'] = $charts[0]['id'];
-        $resp['data'] = $db->query($charts[0]['query']);
-
-        return $resp;
+        return [
+            'name' => $chart['name'],
+            'id' => $chart['id'],
+            'data' => $db->query($chart['sql'])
+        ];
     }
 }

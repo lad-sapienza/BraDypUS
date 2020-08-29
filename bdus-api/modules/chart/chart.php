@@ -6,6 +6,8 @@
  * @since			Aug 18, 2012
  */
 
+ use \DB\System\Manage;
+
 class chart_ctrl extends Controller
 {
 	/**
@@ -56,10 +58,10 @@ class chart_ctrl extends Controller
 		}
 
 		$sql = 'SELECT ' .
-			( $post['series'] ?: '')  .
+			( $post['series'] ? $post['series'] . ' as series_name, ' : '')  .
 			implode(', ', $bar) .
 			' FROM ' . $post['tb'] . ' WHERE ' .
-			($post['query'] ? ' ' . base64_decode($post['query']). ' ' : '' . ' 1=1 ');
+			($post['query'] ? ' ' . base64_decode($post['query']). ' ' : ' 1=1 ');
 
 		if ($group_by && preg_match('/ORDER BY/', $sql)) {
 			$sql = preg_replace('/(.+)ORDER BY(.+)/', '$1 ' . $group_by . ' ORDER BY $2', $sql);
@@ -67,12 +69,13 @@ class chart_ctrl extends Controller
 			$sql .= ' ' . $group_by;
 		}
 
-		$ch = new Charts($this->db);
-
-		$ch->formatResult(false, $sql);
+		$formatted_data = $this->formatResult( $this->db->query($sql) );
 
 		$this->render('chart', 'display_chart', [
-			'data'	=> $ch->getData()
+			'encoded_query'	=> base64_encode( $sql ),
+			'data'			=> $formatted_data['data'],
+			'series'		=> $formatted_data['series'],
+			'ticks'			=> $formatted_data['ticks']
 		]);
 
 	}
@@ -94,9 +97,15 @@ class chart_ctrl extends Controller
 				$post['name'] = uniqid('chart_');
 			}
 
-			$chart = new Charts($this->db);
+			$sys_manager = new Manage($this->db, $this->prefix);
+			$res = $sys_manager->addRow('charts', [
+				'user_id'	=> $_SESSION['user']['id'],
+				'name'		=> $post['name'],
+				'sql'		=> Query::makeSafeStatement( base64_decode( $post['query_text'] ) ),
+				'date'		=> (new \DateTime())->format('Y-m-d H:i:s'),
+			]);
 
-			if ($chart->save($post['name'], $post['query_text'])) {
+			if ( $res ) {
 				utils::response('ok_save_chart');
 			} else {
 				throw new \Exception('Save chart query returned false');
@@ -115,9 +124,10 @@ class chart_ctrl extends Controller
 	{
 		$id = $this->get['id'];
 
-		$chart = new Charts($this->db);
+		$sys_manager = new Manage($this->db, $this->prefix);
+		$res = $sys_manager->deleteRow('charts', $id);
 
-		if ( $chart->erase($id) ) {
+		if ( $res ) {
 			utils::response('ok_chart_erase');
 		} else {
 			utils::response('error_chart_erase', 'error');
@@ -131,12 +141,20 @@ class chart_ctrl extends Controller
 	public function display_chart()
 	{
 		try {
-			$chart = new Charts($this->db);
+			$id = $this->get['id'];
 
-			$chart->formatResult($this->get['id']);
+			$sys_manager = new Manage($this->db, $this->prefix);
+			$chart = $sys_manager->getById('charts', $id);
+
+			$data = $this->db->query($chart['sql']);
+
+			$formatted_data = $this->formatResult($data);
 
 			$this->render('chart', 'display_chart', [
-				'data'	=> $chart->getData()
+				'encoded_query' => base64_encode( $chart['sql'] ),
+				'data' 			=> $formatted_data['data'],
+				'series'		=> $formatted_data['series'],
+				'ticks'			=> $formatted_data['ticks']
 			]);
 
 		} catch (\Throwable $th) {
@@ -149,37 +167,28 @@ class chart_ctrl extends Controller
 
 	public function show_all_charts()
 	{
-		$charts = new Charts($this->db);
+		$sys_manager = new Manage($this->db, $this->prefix);
+		$all_charts = $sys_manager->getBySQL('charts', '1=1');
 
 		$this->render('chart', 'show_all_charts', [
-			'all_charts' => $charts->getCharts(),
+			'all_charts' => $all_charts,
 			'can_admin' => utils::canUser('admin'),
 		]);
 
 	}
 
-	/**
-	 *
-	 * @param int $this->get['id']
-	 */
 	public function edit_form()
 	{
-		$chart = new Charts($this->db);
+		$id = $this->get['id'];
 
-		$mych = $chart->getCharts($this->get['id']);
-
-		$mych = $mych[0];
+		$sys_manager = new Manage($this->db, $this->prefix);
+		$chart = $sys_manager->getById('charts', $id);
 
 		$this->render('chart', 'edit_form', [
-			'chart'	=> $mych
+			'chart'	=> $chart
 		]);
 	}
 
-	/**
-	 *
-	 * @param array $this->post
-	 * @throws \Exception
-	 */
 	public function update_chart()
 	{
 		$id = $this->post['id'];
@@ -187,9 +196,13 @@ class chart_ctrl extends Controller
 		$text = $this->post['text'];
 
 		try {
-			$chart = new Charts($this->db);
-
-			if ($chart->update($id, $name, $text)) {
+			$sys_manager = new Manage($this->db, $this->prefix);
+			$res = $sys_manager->editRow('charts', $id, [
+				'name' => $name,
+				'sql' => Query::makeSafeStatement($text)
+			] );
+			
+			if ( $res ) {
 				utils::response('ok_update_chart');
 			} else {
 				throw new \Exception('Update query returned false');
@@ -198,6 +211,48 @@ class chart_ctrl extends Controller
 			$this->log->error($e);
 			utils::response('error_update_chart', 'error');
 		}
+	}
+
+	/**
+	 * Gets array of data from chart SQL
+	 * and returns array with formatted data:
+	 * 		series: indexed array of series names ("label" => $series_label)
+	 * 		data: array of arrayes with numeric data
+	 * 		ticks: Array with ticks (x label)
+	 *
+	 * @param array $data	array of data of chart SQL
+	 * @return array
+	 */
+	private function formatResult( array $data): array
+	{
+		
+		$row = 0;
+		$out = [];
+		foreach($data as $id => $one_series) {
+
+			if ($one_series['series_name'] === '') {
+				$one_series['series_name'] = tr::get('no_value');
+			}
+
+			$out['series'][$row] = [ 'label' => $one_series['series_name'] ];
+
+			unset($one_series['series_name']);
+
+			$column = 0;
+
+			foreach ($one_series as $label=>$value){
+
+				$out['data'][$row][$column] = (int)$value;
+
+				$out['ticks'][$column] = $label;
+
+				$column++;
+			}
+
+			$row++;
+		}
+
+		return $out;
 	}
 
 }

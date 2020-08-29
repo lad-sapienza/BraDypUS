@@ -6,14 +6,16 @@
  * @since			Aug 10, 2012
  */
 
+use \DB\System\Manage;
+
 class saved_queries_ctrl extends Controller
 {
     public function getById()
     {
         $id = $this->get['id'];
 
-        $savedQ = new SavedQueries($this->db);
-        $res = $savedQ->getById($id);
+        $sys_manager = new Manage($this->db, $this->prefix);
+        $res = $sys_manager->getById('queries', $id);
 
         if ($res[0]) {
             echo json_encode([
@@ -28,8 +30,8 @@ class saved_queries_ctrl extends Controller
 
     public function showAll()
     {
-        $savedQ = new SavedQueries($this->db);
-        $res = $savedQ->getAll();
+        $sys_manager = new Manage($this->db, $this->prefix);
+        $res = $sys_manager->getBySQL('queries', "1=1");
 
         foreach ($res as &$q) {
             $q['tb_label'] = cfg::tbEl($q['tb'], 'label');
@@ -45,16 +47,18 @@ class saved_queries_ctrl extends Controller
 
     public function shareQuery()
     {
+        $id = $this->get['id'];
+
+        $msg = [
+            'status'=>'error', 
+            'text'=>tr::get('error_sharing_query')
+        ];
+
         try {
-            $id = $this->get['id'];
-            $savedQ = new SavedQueries($this->db);
+            $sys_manager = new Manage($this->db, $this->prefix);
+            $res = $sys_manager->editRow('queries', $id, ['is_global' => 1]);
 
-            $msg = [
-                'status'=>'error', 
-                'text'=>tr::get('error_sharing_query')
-            ];
-
-            if ($savedQ->share($id)) {
+            if ($res) {
                 $msg = [
                     'status'=>'success', 
                     'text'=>tr::get('ok_sharing_query')
@@ -70,16 +74,17 @@ class saved_queries_ctrl extends Controller
 
     public function unShareQuery()
     {
+        $id = $this->get['id'];
+        $msg = [
+            'status'=>'error', 
+            'text'=>tr::get('error_unsharing_query')
+        ];
+
         try {
-            $id = $this->get['id'];
-            $savedQ = new SavedQueries($this->db);
+            $sys_manager = new Manage($this->db, $this->prefix);
+            $res = $sys_manager->editRow('queries', $id, ['is_global' => 0]);
 
-            $msg = [
-                'status'=>'error', 
-                'text'=>tr::get('error_unsharing_query')
-            ];
-
-            if ($savedQ->unshare($id)) {
+            if ($res) {
                 $msg = [
                     'status'=>'success', 
                     'text'=>tr::get('ok_unsharing_query')
@@ -95,16 +100,17 @@ class saved_queries_ctrl extends Controller
 
     public function deleteQuery()
     {
+        $id = $this->get['id'];
+        $msg = [
+            'status'=>'error', 
+            'text'=>tr::get('error_erasing_query')
+        ];
+
         try {
-            $id = $this->get['id'];
-            $savedQ = new SavedQueries($this->db);
+            $sys_manager = new Manage($this->db, $this->prefix);
+            $res = $sys_manager->deleteRow('queries', $id);
 
-            $msg = [
-                'status'=>'error', 
-                'text'=>tr::get('error_erasing_query')
-            ];
-
-            if ($savedQ->erase($id)) {
+            if ($res) {
                 $msg = [
                     'status'=>'success', 
                     'text'=>tr::get('ok_erasing_query')
@@ -120,19 +126,26 @@ class saved_queries_ctrl extends Controller
 
     public function saveQuery()
     {
+        $tb = $this->get['tb'];
+        $name = $this->get['name'];
+        $query_text = $this->post['query_text'];
+        $msg = [
+            'status'=>'error', 
+            'text'=>tr::get('error_saving_query')
+        ];
+        
         try {
-            $tb = $this->get['tb'];
-            $name = $this->get['name'];
-            $query_text = $this->post['query_text'];
+            $sys_manager = new Manage($this->db, $this->prefix);
+            $res = $sys_manager->addRow('queries', [
+                'user_id' => $_SESSION['user']['id'],
+                'date'  => (new \DateTime())->format('Y-m-d H:i:s'),
+                'name'  => $name,
+                'text'  => $query_text,
+                'tb'    => $tb,
+                'is_global'=> 0
+            ]);
 
-            $savedQ = new SavedQueries($this->db);
-
-            $msg = [
-                'status'=>'error', 
-                'text'=>tr::get('error_saving_query')
-            ];
-
-            if ($savedQ->save($name, $query_text, $tb)) {
+            if ($res) {
                 $msg = [
                     'status'=>'success', 
                     'text'=>tr::get('ok_saving_query')

@@ -214,6 +214,7 @@
     "live_track": "Osserva il log in tempo reale",
     "no_tmpl_available": "Nessuna maschera disponibile per questa tabella",
     "tb": "Nome tabella",
+    "date": "Data",
     "ok_tmpl_set": "La preferenza della maschera è stata salvata",
     "error_tmpl_set": "Errore, la preferenza della maschera non è stata salvata",
     "default": "Predefinito",

@@ -26,7 +26,7 @@
         "notnull"   : true
     },
     {
-        "name"      : "table",
+        "name"      : "tb",
         "type"      : "TEXT",
         "notnull"   : true
     },

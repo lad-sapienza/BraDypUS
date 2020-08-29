@@ -159,6 +159,7 @@
     "export_success": "Exportation completed successfully",
     "export_error": "Error in export process",
     "export_dir_empty": "No exported file available",
+
     "saved_queries": "Saved queries",
     "no_saved_queries": "No saved queries available",
     "share": "Share",
@@ -176,6 +177,7 @@
     "query_name_is_required": "The query name is required",
     "saved_query_does_not_exist": "Saved query with id %s does not exist",
     "no_saved_query_available": "No saved queries available",
+    
     "no_voc_available": "No vocabulary available",
     "vocs": "Vocabularies",
     "available_vocs": "Available vocabularies",
@@ -216,6 +218,7 @@
     "live_track": "Observe log in real-time",
     "no_tmpl_available": "No template available for this table",
     "tb": "Table name",
+    "date": "Date",
     "ok_tmpl_set": "Template option was saved",
     "error_tmpl_set": "Error, template option was not saved",
     "default": "Default",

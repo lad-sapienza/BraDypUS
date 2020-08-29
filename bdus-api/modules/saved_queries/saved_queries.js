@@ -51,7 +51,8 @@ var saved_queries = {
 			
 						case 'unshare':
 							$.get('./?obj=saved_queries_ctrl&method=unShareQuery&id=' + $this.data('id'), function(data){
-								if (data.status == 'success'){
+								core.message(data.text, data.status);
+								if (data.status === 'success'){
 									$this
 										.data('action', 'share')
 										.html(core.tr('share'));

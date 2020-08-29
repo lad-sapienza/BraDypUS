@@ -1,7 +1,6 @@
 <?php
 /**
  * @uses \cfg
- * @uses PREFIX
  */
 namespace ShortSql;
 

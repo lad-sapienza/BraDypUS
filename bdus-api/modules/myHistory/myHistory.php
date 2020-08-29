@@ -13,7 +13,7 @@ class myHistory_ctrl extends Controller
 	public function sql2json() {
 		$params = $this->post;
 
-		echo \utils::jsonForTabletop($this->db, PREFIX . 'versions', $params);
+		echo \utils::jsonForTabletop($this->db, $this->prefix . 'versions', $params);
 	}
 
 	public function show_all()

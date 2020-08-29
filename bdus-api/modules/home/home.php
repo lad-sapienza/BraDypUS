@@ -1,6 +1,5 @@
 <?php
 /**
- * @uses PREFIX
  * @uses pref
  * @uses $_SESSION
  * @uses cfg
@@ -49,7 +48,7 @@ class home_ctrl extends Controller
             "css" => $this->compressCss( ['main.css'], $this->get['mini'] === 1 ),
             "tr_json" => tr::lang2json(),
             "debugMode" => DEBUG_ON ? "true" : "false",
-            "prefix" => defined('PREFIX') ? PREFIX : '',
+            "prefix" => $this->prefix ?: '',
             "js_libs" => $this->compressJs( $js_libs, $this->get['mini'] === 1, $_SESSION['debug_mode'] === true),
             "can_user_enter" => utils::canUser('enter') ? true : false,
             "address" => $this->request['address'],
@@ -158,7 +157,7 @@ class home_ctrl extends Controller
                 [ 
                     "fa-picture-o", 
                     'new_file', 
-                    utils::canUser('add_new') ? "api.record.add('" . PREFIX . "files')" :  false 
+                    utils::canUser('add_new') ? "api.record.add('" . $this->prefix . "files')" :  false 
                 ],
                 [ 
                     "fa-table", 

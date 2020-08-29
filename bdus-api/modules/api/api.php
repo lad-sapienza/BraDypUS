@@ -110,11 +110,11 @@ class api_ctrl extends Controller
 			// INSPECT verb => Migrated in v2
 			if ($this->get['verb'] === 'inspect') {
 
-				if ($request['tb'] === PREFIX . 'all') {
+				if ($request['tb'] === $this->prefix . 'all') {
 					$ret = [];
 
 					foreach (cfg::tbEl('all', 'all') as $t) {
-						$stripped_name = str_replace(PREFIX, null, $t['name']);
+						$stripped_name = str_replace($this->prefix, null, $t['name']);
 						foreach (cfg::fldEl($t['name']) as $f){
 							$t['fields'][$f['name']] = $f;
 						}
@@ -265,7 +265,7 @@ class api_ctrl extends Controller
 		$rec = new Record($tb, $id, $this->db);
 		$data['metadata'] = [
 			'table' => $tb,
-			'stripped_table' => str_replace(PREFIX, null, $tb),
+			'stripped_table' => str_replace($this->prefix, null, $tb),
 			'table_label' => cfg::tbEl($tb, 'label')
 		];
     	$data['fields'] = cfg::fldEl($tb, 'all', 'label');

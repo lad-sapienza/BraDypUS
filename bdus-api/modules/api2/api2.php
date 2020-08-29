@@ -67,8 +67,8 @@ class api2 extends Controller
         }
 
         // Tb must have prefix
-        if ($this->get['tb'] && strpos($this->get['tb'], PREFIX) === false) {
-            $this->get['tb'] = PREFIX . $this->get['tb'];
+        if ($this->get['tb'] && strpos($this->get['tb'], $this->prefix) === false) {
+            $this->get['tb'] = $this->prefix . $this->get['tb'];
         }
         // Validate table
         if (in_array($this->get['tb'], $this->system_tables)) {

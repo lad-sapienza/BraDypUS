@@ -38,10 +38,10 @@ class file_ctrl extends Controller
 				throw new \Exception('error_uploading_file');
 			}
 
-			$record = new Record(PREFIX . 'files', false, $this->db);
+			$record = new Record($this->prefix . 'files', false, $this->db);
 
 			$record->setCore([
-				PREFIX . 'files' => [
+				$this->prefix . 'files' => [
 					'ext' => $result['ext'],
 					'filename' => $result['filename']
 				]
@@ -128,7 +128,7 @@ class file_ctrl extends Controller
 
 			foreach($data['filegallery'] as $sort => $id) {
 				$sql[] = [
-					'UPDATE ' . PREFIX .'userlinks SET sort = ? WHERE id = ?',
+					'UPDATE ' . $this->prefix .'userlinks SET sort = ? WHERE id = ?',
 					[$sort, $id]
 				];
 			}
@@ -169,7 +169,7 @@ class file_ctrl extends Controller
 				'can_edit' => utils::canUser('edit'),
 				'all_files' => $record->getFullFiles(),
 				'images' => new images(),
-				'prefix' => PREFIX,
+				'prefix' => $this->prefix,
 				'path' => PROJ_DIR . 'files'
 		));
 	}

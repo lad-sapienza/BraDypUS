@@ -13,7 +13,7 @@ class debug_ctrl extends Controller
 	{
 		$params = $this->post;
 
-		echo \utils::jsonForTabletop($this->db, PREFIX . 'log', $params);
+		echo \utils::jsonForTabletop($this->db, $this->prefix . 'log', $params);
 	}
 
 	public function read()

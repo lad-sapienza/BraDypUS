@@ -90,7 +90,7 @@ class geoface_ctrl extends Controller
 			}
 
 			foreach ($post as $row){
-				$ret = $this->db->query('UPDATE ' . PREFIX . 'geodata SET geometry = ? WHERE id = ?' ,
+				$ret = $this->db->query('UPDATE ' . $this->prefix . 'geodata SET geometry = ? WHERE id = ?' ,
 						  [ $row['coords'], $row['id'] ],
 						  'boolean');
 				if (!$ret) {
@@ -138,9 +138,9 @@ class geoface_ctrl extends Controller
 				$where = str_replace('id', $tb . '.id', $where);
 			}
 
-			$sql = "SELECT {$tb}.id  AS id, " . implode(', ', $part) . ', ' . PREFIX . 'geodata.id AS geo_id,  geometry '
-			. " FROM  $tb LEFT JOIN " . PREFIX . 'geodata '
-			. " ON {$tb}.id = " . PREFIX . 'geodata.id_link AND ' . PREFIX . "geodata.table_link = '{$tb}' "
+			$sql = "SELECT {$tb}.id  AS id, " . implode(', ', $part) . ', ' . $this->prefix . 'geodata.id AS geo_id,  geometry '
+			. " FROM  $tb LEFT JOIN " . $this->prefix . 'geodata '
+			. " ON {$tb}.id = " . $this->prefix . 'geodata.id_link AND ' . $this->prefix . "geodata.table_link = '{$tb}' "
 			. ' WHERE geometry IS NOT NULL '
 			. ($where ? ' AND ' . $where : '');
 

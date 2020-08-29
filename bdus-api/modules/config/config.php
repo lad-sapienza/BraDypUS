@@ -166,12 +166,12 @@ class config_ctrl extends Controller
             // Write table columns file
             $new_tb_name = $post['name'];
             
-            cfg::setFld( str_replace(PREFIX, null, $new_tb_name), 'id', [
+            cfg::setFld( str_replace($this->prefix, null, $new_tb_name), 'id', [
                 "name" => "id",
                 "label" => "Id",
                 "type" => "text"
             ]);
-            cfg::setFld( str_replace(PREFIX, null, $new_tb_name), 'creator', [
+            cfg::setFld( str_replace($this->prefix, null, $new_tb_name), 'creator', [
                 "name" => "creator",
                 "label" => "Creator",
                 "type" => "text"
@@ -435,7 +435,7 @@ class config_ctrl extends Controller
 
     public function validate_app()
     {
-        $validate = new \DB\Validate\Validate($this->db, PREFIX);
+        $validate = new \DB\Validate\Validate($this->db, $this->prefix);
         $report = $validate->all();
 
         $html = '<button type="button" class="btn btn-info pull-right" onclick="$(this).parent().find(\'.alert-info, .alert-success\').toggle();">' . tr::get('show_only_errors') . '</button>';

@@ -1,3 +1,4 @@
+3.16.129[] = "PREFIX contstant replaced by $this->prefix in controllers"
 3.16.129[] = "Removed support for AppAgnosticDB"
 3.16.129[] = "Bug fixing"
 3.16.129[] = "Added new function: create application"

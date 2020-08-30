@@ -4,6 +4,7 @@ namespace Bdus;
 
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
+use Monolog\Handler\FirePHPHandler;
 use Monolog\ErrorHandler;
 
 use DB\LogDBHandler;
@@ -31,13 +32,22 @@ class App
 		try {
 			$this->log = new Logger('bdus');
 
+			$log_file = __DIR__ . '/../../logs/error.log';
+
 			if (\defined('APP')){
 				$this->db = new \DB(APP);
-				$this->log->pushHandler( new LogDBHandler($this->db, $this->prefix) );
+
+				// On debug only file and firePHP are available
+				if (\defined('DEBUG_ON') && \DEBUG_ON === true) {
+					$this->log->pushHandler(new StreamHandler($log_file, Logger::DEBUG));
+					$this->log->pushHandler(new FirePHPHandler());
+				} else {
+					$this->log->pushHandler( new LogDBHandler($this->db, $this->prefix) );
+				}
 				$this->db->setLog($this->log);
 			}
 		} catch (\Throwable $th) {
-			$this->log->pushHandler(new StreamHandler(__DIR__ . '/../../logs/error.log', Logger::DEBUG));
+			$this->log->pushHandler(new StreamHandler($log_file, Logger::DEBUG));
 			$this->log->error($th);
 		}
 		$handler = new ErrorHandler($this->log);

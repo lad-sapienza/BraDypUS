@@ -13,7 +13,7 @@
  * @uses \Twig\Extension\DebugExtension
  */
 
-class Controller
+abstract class Controller
 {
 	protected $get;
 	protected $post;
@@ -32,8 +32,8 @@ class Controller
 	public function setDB(\DB\DB\DBInterface $db): void
 	{
 		$this->db = $db;
-	
 	}
+	
 	public function setPrefix(string $prefix = null): void
 	{
 		$this->prefix = $prefix;

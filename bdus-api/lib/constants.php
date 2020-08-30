@@ -69,8 +69,6 @@ if( defined('APP') ) {
 
 	define ( 'PROJ_DIR', 		MAIN_DIR . 'projects/' . APP . '/');
 	define ( 'PROJ_TMP_DIR',	MAIN_DIR . 'projects/' . APP . '/tmp/' . $_SESSION['user']['id'] . '/');
-	$error_log 				= 	MAIN_DIR . 'projects/' . APP . '/error.log';
-	ini_set('error_log', $error_log);
 
 	/*
 	 * Create directories that MUST exist
@@ -97,9 +95,6 @@ if( defined('APP') ) {
 		}
 	}
 }
-
-define ('ERROR_LOG', $error_log);
-
 
 /**
  * If debug=1 or debug=1 has previously set, debug is turned

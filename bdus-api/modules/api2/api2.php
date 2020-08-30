@@ -181,7 +181,7 @@ class api2 extends Controller
         if (!$id) {
             throw new \Exception("Record id is required with verb read");
         }
-        $read_record = new \Record\Read($this->db);
+        $read_record = new \Record\Read($this->db, $this->cfg);
         $resp = $read_record->getFull($tb, $id);
         
         return $resp;
@@ -273,7 +273,8 @@ class api2 extends Controller
                 'records_per_page'	=> $records_per_page,
                 'full_records'		=> $full_records
             ],
-            $this->debug
+            $this->debug,
+            $this->cfg
         );
         return $resp;
     }

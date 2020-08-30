@@ -9,6 +9,8 @@ namespace ShortSql;
  */
 class ToJson
 {	
+	private static $db;
+	private static $cfg;
 	/**
 	 * Runs a query from a shortSQl string and returns results
 	 *
@@ -23,8 +25,11 @@ class ToJson
 	 * @param bool	$debugging:	if true, some debugging information will be returned
 	 * @return array
 	 */
-    public static function run(\DB\DB\DBInterface $db, string $shortSql, array $opts = [], bool $debugging = false): array
+    public static function run(\DB\DB\DBInterface $db, string $shortSql, array $opts = [], bool $debugging = false, \Config\Congig $cfg): array
     {	
+		self::$db = $db;
+		self::$cfg = $cfg;
+
 		// Set default opts
         $total_rows 		= $opts['total_rows']   	?: false;
         $page      		 	= $opts['page']         	?: 1;
@@ -54,9 +59,9 @@ class ToJson
 				$debug['paginated_values'] = $values;
 			}
 
-			$header['no_records_shown'] = (int) self::getTotal($db, $sql, $values);
+			$header['no_records_shown'] = (int) self::getTotal($sql, $values);
 
-			$records = $full_records ? self::getFullData($db, $sql, $values, $tb) : self::getData($db, $sql, $values);
+			$records = $full_records ? self::getFullData($sql, $values, $tb) : self::getData($sql, $values);
 
 			if ($geojson) {
 				return \utils::mutliArray2GeoJSON ( $tb, $records );
@@ -78,21 +83,21 @@ class ToJson
 
 	}
 	
-	private static function getTotal(\DB\DB\DBInterface $db, string $sql, array $values = []): int
+	private static function getTotal(string $sql, array $values = []): int
     {
         $count_sql = 'SELECT count(*) AS tot FROM ( ' . $sql .' ) AS ' . uniqid('a');
-        $res = $db->query($count_sql, $values);
+        $res = self::$db->query($count_sql, $values);
         return $res[0]['tot'];
 	}
 	
-	private static function getData(\DB\DB\DBInterface $db, string $sql, array $values = []): array
+	private static function getData(string $sql, array $values = []): array
     {   
-        return $db->query($sql, $values, 'read');
+        return self::$db->query($sql, $values, 'read');
 	}
 	
-	private static function getFullData(\DB\DB\DBInterface $db, string $sql, array $values = [], string $tb): array
+	private static function getFullData(string $sql, array $values = [], string $tb): array
     {
-		$result = self::getData($db, $sql, $values);
+		$result = self::getData($sql, $values);
 
         if (!is_array($result)) {
             return [];
@@ -101,7 +106,7 @@ class ToJson
 		$fullResult = [];
 
 		foreach ($result as $id => $row) {
-			$record = new \Record\Read($db);
+			$record = new \Record\Read($db, $cfg);
 			$rowResult = $record->getFull($tb, $row['id']);
 			array_push($fullResult, $rowResult);
 		}

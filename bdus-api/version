@@ -1,4 +1,5 @@
-3.16.133[] = "DB\Validate\Info does not use anymore cfg"
+3.16.133[] = "\Record\Read does not use anymore cfg"
+3.16.133[] = "\DB\Validate\Info does not use anymore cfg"
 3.16.133[] = "ImportGeodata does not use anymore cfg"
 3.16.133[] = "Export does not use anymore cfg"
 3.16.133[] = "\DB\Validate uses Config\Config"

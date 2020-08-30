@@ -10,6 +10,7 @@ class Read
 {
 
   protected $db;
+  protected $cfg;
 
   /**
    * Initializes class
@@ -17,9 +18,10 @@ class Read
    *
    * @param \DB\DB\DBInterface $db       DB object
    */
-  public function __construct(\DB\DB\DBInterface $db)
+  public function __construct(\DB\DB\DBInterface $db, \Config\Config $cfg)
   {
     $this->db = $db;
+    $this->cfg = $cfg;
   }
 
   /**
@@ -51,7 +53,7 @@ class Read
 				'tb_id' => $tb,
 				'rec_id' => $id,
 				'tb_stripped' => str_replace(PREFIX, null, $tb),
-				'tb_label' => \cfg::tbEl($tb, 'label')
+				'tb_label' => $this->cfg->get("tables.$tb.label")
 			],
 			'core'       => $core,
 			'plugins'    => $this->getPlugins($tb, $id),
@@ -60,7 +62,7 @@ class Read
       'manualLinks'=> $this->getManualLinks($tb, $id),
 			'files'      => $this->getFiles($tb, $id),
       'geodata'    => $this->getGeodata($tb, $id),
-      'rs'         => \cfg::tbEl($tb, 'rs') ? $this->getRs($tb, $id): []
+      'rs'         => $this->cfg->get("tables.$tb.rs") ? $this->getRs($tb, $id): []
 		];
   }
 
@@ -140,7 +142,7 @@ EOD;
 
 				}
 
-        $id_fld = \cfg::tbEl($mlt, 'id_field');
+        $id_fld = $this->cfg->get("tables.$mlt.id_field");
 
         if ( $id_fld === 'id' ) {
           $ref_val_label = $mli;
@@ -157,7 +159,7 @@ EOD;
           "key"         => $r['id'],
           "tb_id"       => $mlt,
           "tb_stripped" => str_replace(PREFIX, null, $mlt),
-          "tb_label"    => \cfg::tbEl($mlt, 'label'),
+          "tb_label"    => $this->cfg->get("tables.$mlt.label"),
           "ref_id"      => $mli,
           "ref_label"   => $ref_val_label,
           "sort"   => $r['sort']
@@ -295,14 +297,14 @@ EOD;
   public function getBackLinks(string $tb, int $id)
   {
     $backlinks = [];
-		$bl_data = \cfg::tbEl($tb, 'backlinks');
+		$bl_data = $this->cfg->get("tables.$tb.backlinks");
 
     if (is_array($bl_data)) {
 
 			foreach ($bl_data as $bl) {
 
 				list($ref_tb, $via_plg, $via_plg_fld) = utils::csv_explode($bl, ':');
-        $ref_tb_id = \cfg::tbEl($ref_tb, 'id_field');
+        $ref_tb_id = $this->cfg->get("tables.$ref_tb.id_field");
 
         $where = " id IN (SELECT DISTINCT id_link FROM {$via_plg} WHERE table_link = '{$ref_tb}' AND {$via_plg_fld} = {$id})";
 
@@ -319,7 +321,7 @@ EOD;
         $backlinks[$ref_tb] = [
           'tb_id' => $ref_tb,
           'tb_stripped' => str_replace(PREFIX, null, $ref_tb),
-					"tb_label" => \cfg::tbEl($ref_tb, 'label'),
+					"tb_label" => $this->cfg->get("tables.$ref_tb.label"),
 					'tot' => $r[0]['tot'],
           'where' => $where,
 					'data' => $r
@@ -347,7 +349,7 @@ EOD;
   {
     $links = [];
 
-		$links_data = \cfg::tbEl($tb, 'link');
+		$links_data = $this->cfg->get("tables.$tb.link");
 
 		if (is_array($links_data)) {
 
@@ -367,7 +369,7 @@ EOD;
 				$links[$ld['other_tb']] = [
 					'tb_id' => $ld['other_tb'],
 					'tb_stripped' => str_replace(PREFIX, null, $ld['other_tb']),
-					"tb_label" => \cfg::tbEl($ld['other_tb'], 'label'),
+					"tb_label" => $this->cfg->get("tables.{$ld['other_tb']}.label"),
 					'tot' => $r[0]['tot'],
 					'where' => implode($where, ' AND ')
 				];
@@ -406,7 +408,7 @@ EOD;
   {
     $plugins = [];
 
-		$plg_names = \cfg::tbEl($tb, 'plugin');
+		$plg_names = $this->cfg->get("tables.$tb.plugin");
 		if ($plg_names && is_array($plg_names)){
 			foreach ($plg_names as $p) {
 				$plg_data = $this->getTbRecord($p, "table_link = ? AND id_link = ?", [$tb, $id], false, true) ?: [];
@@ -431,7 +433,7 @@ EOD;
 					"metadata" => [
 						"tb_id" => $p,
 						"tb_stripped" => str_replace(PREFIX, null, $p),
-						"tb_label" => \cfg::tbEl($p, 'label'),
+						"tb_label" => $this->cfg->get("tables.$p.label"),
 						"tot" => count($plg_data)
 					],
 					"data" => $plg_data
@@ -461,7 +463,7 @@ EOD;
    */
   private function getTbRecord(string $tb, string $sql, array $sql_val = [], bool $return_first = false, bool $return_all_fields = false)
 	{
-		$cfg = \cfg::fldEl($tb, 'all', 'all');
+		$cfg = $this->cfg->get("tables.$tb.fields");
 
 		$fields = $return_all_fields ? ["*"] : ["{$tb}.*"];
 		$join = [];
@@ -472,7 +474,7 @@ EOD;
 
 				$ref_tb = $arr['id_from_tb'];
 				$ref_alias = uniqid('al');
-				$ref_tb_fld = \cfg::tbEl($arr['id_from_tb'], 'id_field');
+				$ref_tb_fld = $this->cfg->get("tables.{$arr['id_from_tb']}.id_field");
 
         if ($tb === $ref_tb) {
           continue;
@@ -508,7 +510,7 @@ EOD;
 				if (strpos($k, '@') === false){
 					$ret[$k] = [
 						'name' => $k,
-						'label' => \cfg::fldEl($tb, $k, 'label'),
+						'label' => $this->cfg->get("tables.$tb.fields.$k.label"),
 						'val' => $v
 					];
 				} else {

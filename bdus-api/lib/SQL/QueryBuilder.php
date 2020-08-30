@@ -1,4 +1,8 @@
 <?php
+declare(strict_types=1);
+
+namespace SQL;
+
 /**
  * Utility to easily build sql queries using a OO pattern
  * @author			Julian Bogdani <jbogdani@gmail.com>
@@ -19,33 +23,28 @@ class QueryBuilder
 
     /**
      * Initializated object and sets table name
-     * @param string $tb table name, default false
-     * @param string $fld field name, dafult false
+     * @param string $tb table name, default null
      */
-    public function __construct($tb = false, $fld = false)
+    public function __construct(string $tb = null)
     {
         if ($tb) {
             $this->table($tb);
         }
-
-        if ($fld) {
-            $this->fields($fld);
-        }
-        return $this;
     }
 
     /**
      * Sets table name
      * @param  string $tb table name
+     * @param  string $alias table alias
      * @return object     Main object
      */
-    public function setTable($tb)
+    public function setTable(string $tb, string $alias = null) : self
     {
-        $this->tb = $tb;
+        $this->tb = $tb . ($alias ? "AS $alias" : '');
         return $this;
     }
 
-    public function setJoin($tb, $onStatement, $joinType = 'JOIN')
+    public function setJoin(string $tb, string $onStatement, string $joinType = 'JOIN') : self
     {
         array_push($this->joins, "$joinType $tb ON $onStatement");
         return $this;
@@ -57,7 +56,7 @@ class QueryBuilder
      * @param string $alias field alias
      * @return object     Main object
      */
-    public function setFields($fld, $alias = false)
+    public function setFields(string $fld, string $alias = null) : self
     {
         $this->fields[] = $fld . ($alias ? ' AS ' . $alias : '');
         return $this;
@@ -73,7 +72,7 @@ class QueryBuilder
      * @param  string|false $post Close one or more brackets
      * @return object        Main object
      */
-    public function setWhere($fld, $val, $op = '=', $conn = 'AND', $pre = false, $post = false)
+    public function setWhere(string $fld, string $val, $op = '=', string $conn = 'AND', string $pre = null, string $post = null) : self
     {
         if (empty($this->where)) {
             $conn = false;
@@ -90,9 +89,9 @@ class QueryBuilder
      * @param  int|false $offset    Offset to start at (default false)
      * @return object        Main object
      */
-    public function setLimit($limit, $offset = false)
+    public function setLimit(int $limit, int $offset = 0) : self
     {
-        $this->limit = " LIMIT $limit" . ($offset ? " OFFSET {$offset}" : " ");
+        $this->limit = " LIMIT $limit  OFFSET {$offset} ";
         return $this;
     }
 
@@ -102,7 +101,7 @@ class QueryBuilder
      * @param  string $sort   Sorting type; can be ASC or DESC, default ASC
      * @return object        Main object
      */
-    public function setOrder($column, $sort = 'ASC')
+    public function setOrder(string $column, string $sort = 'ASC') : self
     {
         if (!in_array(strtolower($sort), ['asc', 'desc'])) {
             $sort = 'ASC';
@@ -116,7 +115,7 @@ class QueryBuilder
      * @param  string $column Column to use for grouping
      * @return object        Main object
      */
-    public function setGroup($column)
+    public function setGroup(string $column) : self
     {
         $this->group[] .= " {$column} ";
         return $this;
@@ -126,10 +125,10 @@ class QueryBuilder
      * Returns formatted SQL statement
      * @return string Formatted SQL statement
      */
-    public function getSql()
+    public function getSql() : array
     {
         if (empty($this->where)) {
-            $this->where[] = '1';
+            $this->where[] = '1=1';
         }
 
         if (empty($this->fields)) {
@@ -142,8 +141,8 @@ class QueryBuilder
           'FROM ' . $this->tb,
           implode(' ', $this->joins),
           'WHERE ' . implode(' ', $this->where),
-          ($this->group ? 'GROUP BY ' . implode(' ', $this->group) : false),
-          ($this->order ? 'ORDER BY ' . implode(' ', $this->order) : false),
+          ($this->group ? 'GROUP BY ' . implode(' ', $this->group) : ''),
+          ($this->order ? 'ORDER BY ' . implode(' ', $this->order) : ''),
           $this->limit
         ];
 

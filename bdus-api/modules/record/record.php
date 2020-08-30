@@ -186,7 +186,7 @@ class record_ctrl extends Controller
             $this->render('record', 'show', array(
                     'action' => $this->request['a'],
                     'html' => $tmpl->parseAll(),
-                    'multiple_id' => (count($this->request['id']) > 1) ? tr::get('multiple_edit_alert', [ count($this->request['id']), implode('; id: ', $this->request['id']) ] ) : false,
+                    'multiple_id' => (count((array)$this->request['id']) > 1) ? tr::get('multiple_edit_alert', [ count($this->request['id']), implode('; id: ', $this->request['id']) ] ) : false,
                     'tb' => $this->request['tb'],
                     'id_url' => is_array($this->request['id']) ? 'id[]=' . implode('&id[]=', $this->request['id']) : false,
                     'totalRecords' => $total_records,
@@ -210,7 +210,7 @@ class record_ctrl extends Controller
             throw new \Exception(tr::get('tb_missing'));
         }
 
-        $queryObj = new Query($this->db, $this->request, true);
+        $queryObj = new QueryFromRequest($this->db, $this->request, true);
 
         $count = $this->request['total'] ?: $queryObj->getTotal();
 
@@ -241,7 +241,7 @@ class record_ctrl extends Controller
             // boolean, if true double click on records is not allowed
             'noDblClick' => $this->request['noDblClick'],
             // boolean, if table has or not activated RS plugin
-            'hasRS' => cfg::tbEl($this->request['tb'], 'rs'),
+            'hasRS' => $this->cfg->get("tables.{$this->request['tb']}.rs"),
             // boolean, if true option buttons will not be shown in template
             'noOpts' => $this->request['noOpts'],
             // array, list of preview columns, to be used for datatable
@@ -255,7 +255,7 @@ class record_ctrl extends Controller
             // boolean: if true only one records can be selected
             'select_one' => $this->request['select_one'],
             // boolean, if true id field will be available in datatables, but hidden
-            'hideId' => (cfg::fldEl($this->request['tb'], 'id', 'hide') == 1)
+            'hideId' => ($this->cfg->get("tables.{$this->request['tb']}.fields.id.hide") == 1)
         ]);
     }
 

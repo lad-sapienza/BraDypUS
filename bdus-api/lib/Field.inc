@@ -303,10 +303,10 @@ class Field implements TemplateInterface
     public function image_thumbs($max = 2)
     {
         // get file data
-        $data_arr = $this->record->getFullFiles();
+        $data_arr = (array)$this->record->getFullFiles();
 
         // max can not be bigger than the no of images found in the DB
-        if ($max == 'all' || $max > count($data_arr)) {
+        if ($max === 'all' || $max > count($data_arr)) {
             $max = count($data_arr);
         }
 

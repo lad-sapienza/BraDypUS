@@ -17,29 +17,6 @@ class importGeodata
 {
   private $db;
   private $tb;
-  private $geojson;
-  private $idfield;
-  private $deleteOld;
-
-  /**
-   *
-   * @param \DB\DB\DBInterface $db    Instance of database object
-   * @param string $tb  target table name
-   * @param string $geojson geojson file content
-   * @param string $idfield field name in geojson file containing  idfield value
-   * @param boolean $deleteOld  Delete existing records flag. If true
-   *  all existing records linked to $tb will be deleted
-   */
-  public function settings(\DB\DB\DBInterface $db, $tb, $geojson, $idfield, $deleteOld = false)
-  {
-    $this->db = $db;
-    $this->tb = $tb;
-    $this->geojson = $geojson;
-    $this->idfield = $idfield;
-    $this->deleteOld = $deleteOld;
-
-    return $this;
-  }
 
   /**
    * Loads and parses geojson and returns properties of first feature or throws
@@ -65,22 +42,25 @@ class importGeodata
   /**
    * Starts importing process and returns number of successfully processed records
    * or throws \Exception and rolls back all queries.
+   * @param \DB\DB\DBInterface $db    Instance of database object
+   * @param string $tb  target table name
+   * @param string $geojson geojson file content
+   * @param string $idfield field name in geojson file containing  idfield value
+   * @param boolean $deleteOld  Delete existing records flag. If true
+   *  all existing records linked to $tb will be deleted
    * @return int  If successful the number of processed rows will be returned
    * @throws \Exception
    */
-  public function runImport()
+  public function runImport(\DB\DB\DBInterface $db, string $tb, string $geojson, string $idfield, bool $deleteOld = false, string $table_id_fld): int
   {
+    $this->db = $db;
+    $this->tb = $tb;
+
     if (!$this->db) {
       throw new \Exception('Database object is missings');
     }
     if (!$this->tb) {
       throw new \Exception('Destination table is missing');
-    }
-    if (!$this->geojson) {
-      throw new \Exception('Geojson string is missing');
-    }
-    if (!$this->idfield) {
-      throw new \Exception('ID field is missing');
     }
 
 
@@ -89,12 +69,12 @@ class importGeodata
       $this->db->beginTransaction();
 
       // Remove existing data
-      if ($this->deleteOld) {
+      if ($deleteOld) {
         $this->deletePreviousData();
       }
 
       //decode geojson to array
-      $geo_array = json_decode($this->geojson, 1);
+      $geo_array = json_decode($geojson, true);
 
       // stop if geojson is empty or not valid
       $this->checkGeojson($geo_array);
@@ -103,7 +83,7 @@ class importGeodata
 
       // Loop in records and write to DB
       foreach ($geo_array['features'] as $row) {
-        $id_value = $row['properties'][$this->idfield];
+        $id_value = $row['properties'][$idfield];
 
 
         if (!$id_value || empty($id_value)) {
@@ -112,8 +92,8 @@ class importGeodata
 
         $res = $this->db->query(
           "SELECT id FROM " . $this->tb . " "
-            . "WHERE " . cfg::tbEl($this->tb, 'id_field') . " = ?",
-            [ $row['properties'][$this->idfield] ],
+            . "WHERE " . $table_id_fld . " = ?",
+            [ $row['properties'][$idfield] ],
           'read');
 
        $row_id = $res[0]['id'];
@@ -165,7 +145,7 @@ class importGeodata
     $sql = "DELETE FROM " . PREFIX . "geodata WHERE table_link = ?";
 
     if (!$this->db->query($sql, [ $this->tb ], 'boolean')) {
-      throw new Exception('Error in deleting previous inserted geodata');
+      throw new \Exception('Error in deleting previous inserted geodata');
     }
   }
 

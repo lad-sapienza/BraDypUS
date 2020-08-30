@@ -74,9 +74,14 @@ class import_geodata_ctrl extends Controller
     try {
       $import = new importGeodata();
       
-      $import->settings($this->db, $tb, file_get_contents($file), $id_field, $delete);
-      
-      $totalImports = $import->runImport();
+      $totalImports = $import->runImport(
+        $this->db, 
+        $tb, 
+        file_get_contents($file), 
+        $id_field, 
+        $delete,
+        $this->cfg->get("tables.$tb.id_field")
+      );
       
       echo '<div class="text-success lead"><i class="glyphicon glyphicon-ok"></i> ' 
         . tr::get('geodata_ok_uploaded', [$totalImports] ) . '</div>';

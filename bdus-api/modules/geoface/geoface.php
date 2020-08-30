@@ -124,13 +124,14 @@ class geoface_ctrl extends Controller
 
 			list($where, $values) = $obj_encoded ? \SQL\SafeQuery::decode($obj_encoded) : ['1=1', []];
 
-			$preview = cfg::getPreviewFlds($tb);
+			$pref_preview_flds = pref::get('preview');
+			$preview = $pref_preview_flds[$tb] ?? $this->cfg->get("tables.$tb.preview");
 
 			$part = [];
 
 			foreach ($preview as $fldid) {
 				if ($fldid != 'id') {
-					array_push($part, $tb . '.' . $fldid . ' AS "' . cfg::fldEl($tb, $fldid, 'label') . '"');
+					array_push($part, $tb . '.' . $fldid . ' AS "' . $this->cfg->get("tables.$tb.flds.$fldid.label") . '"');
 				}
 			}
 
@@ -180,8 +181,8 @@ class geoface_ctrl extends Controller
 
 			$response['metadata'] = [
 				'tb_id'			=>	$tb,
-				'tb'			=>	cfg::tbEl($tb, 'label'),
-				'gmapskey'		=>	cfg::main('gmapskey'),
+				'tb'			=>	$this->cfg->get("tables.$tb.label"),
+				'gmapskey'		=>	$this->cfg->get("main.gmapskey"),
 				'canUserEdit' 	=> utils::canUser('edit'),
 				'local_layers'	=> $local_layers
 			];

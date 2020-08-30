@@ -96,7 +96,7 @@ class menuValues_ctrl extends Controller
       break;
 
       case 'id_from_tb':
-        $id_field = cfg::tbEl($att, 'id_field');
+        $id_field = $this->cfg->get("tables.{$att}.id_field");
 
         $query->setTable($att)
           ->setFields('id', 'id')

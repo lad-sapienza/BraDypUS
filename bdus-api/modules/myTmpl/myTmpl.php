@@ -28,8 +28,8 @@ class myTmpl_ctrl extends Controller
 					$data[$tb]['list'][] = $tmpl;
 				}
 			}
-			$data[$tb]['default_read'] = cfg::tbEl($tb, 'tmpl_read');
-			$data[$tb]['default_edit'] = cfg::tbEl($tb, 'tmpl_edit');
+			$data[$tb]['default_read'] = $this->cfg->get("tables.$tb.tmpl_read");
+			$data[$tb]['default_edit'] = $this->cfg->get("tables.$tb.tmpl_edit");
 			$data[$tb]['user_read'] = pref::getTmpl($tb, 'read');
 			$data[$tb]['user_edit'] = pref::getTmpl($tb, 'edit');
 		}

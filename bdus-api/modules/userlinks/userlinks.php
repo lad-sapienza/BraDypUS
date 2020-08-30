@@ -89,7 +89,7 @@ class userlinks_ctrl extends Controller
 			foreach ($links as $link) {
 				$tmp[] = '<li>' .
 						'<span class="btn-link userlink_read" data-tb="' . $link['tb'] . '" data-id="' . $link['ref_id'] . '">' .
-							cfg::tbEl($link['tb'], 'label') . ', id:' . $link['ref_id'] .
+							$this->cfg->get("tables.{$link['tb']}.label") . ', id:' . $link['ref_id'] .
 						'</span>'
 					. ( ($context == 'edit') ? ' [<span class="btn-link userlink_delete" data-id="' . $link['id'] . '">' . tr::get('erase') . '</span>]' : '')
 					. '</li>';

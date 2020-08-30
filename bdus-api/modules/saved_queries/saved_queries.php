@@ -34,7 +34,7 @@ class saved_queries_ctrl extends Controller
         $res = $sys_manager->getBySQL('queries', "user_id = ? OR is_global = ?", [$_SESSION['user']['id'], 1]);
 
         foreach ($res as &$q) {
-            $q['tb_label'] = cfg::tbEl($q['tb'], 'label');
+            $q['tb_label'] = $this->cfg->get("tables.{$q['tb']}.label");
             $q['obj_encoded'] = \SQL\SafeQuery::encode($q['text'], json_decode($q['vals']));
             $q['owned_by_me'] = $_SESSION['user']['id'] === $q['user_id'];
         }

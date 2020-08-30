@@ -10,13 +10,14 @@ class preview_flds_ctrl extends Controller
 {
 	public function showForm()
 	{
-		foreach(cfg::tbEl('all', 'label') as $tb_id => $tb_name)
-		{
-			$tb[] = array(
-					'id' => $tb_id,
-					'name' => $tb_name,
-					'flds' => cfg::fldEl($tb_id, 'all', 'label')
-					);
+		$tb_list = $this->cfg->get('tables.*.label');
+		
+		foreach($tb_list as $tb_id => $tb_name) {
+			$tb[] = [
+				'id' => $tb_id,
+				'name' => $tb_name,
+				'flds' => $this->cfg->get("tables.{$tb_id}.flds.*.label")
+			];
 		}
 		
 		$this->render('preview_flds', 'form', [

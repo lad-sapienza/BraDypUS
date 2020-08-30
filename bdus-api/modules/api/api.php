@@ -132,7 +132,7 @@ class api_ctrl extends Controller
 				foreach (cfg::tbEl($request['tb'], 'plugin') as $plg) {
 					foreach (cfg::fldEl($plg) as $f) {
 						$f['fullname'] = $plg . ':' . $f['name'];
-						$f['label'] = cfg::tbEl($plg, 'label') . ': ' . $f['label'];
+						$f['label'] = $this->cfg->get("tables.{$plg}.label") . ': ' . $f['label'];
 						array_push($ret, $f);
 					}
 				}
@@ -218,7 +218,7 @@ class api_ctrl extends Controller
 			$header['total_pages'] = ceil($header['total_rows']/$records_per_page);
 			$header['table'] = $request['tb'];
 			$header['stripped_table'] = str_replace($app . PREFIX_DELIMITER, null, $request['tb']);
-			$header['table_label'] = cfg::tbEl($request['tb'], 'label');
+			$header['table_label'] = $this->cfg->get("tables.{$request['tb']}.label");
 			$header['page'] = ($header['page'] > $header['total_pages']) ? $header['total_pages'] : $header['page'];
 
 			if ($request['limit_end']) {
@@ -266,9 +266,9 @@ class api_ctrl extends Controller
 		$data['metadata'] = [
 			'table' => $tb,
 			'stripped_table' => str_replace($this->prefix, null, $tb),
-			'table_label' => cfg::tbEl($tb, 'label')
+			'table_label' => $this->cfg->get("tables.$tb.label")
 		];
-    	$data['fields'] = cfg::fldEl($tb, 'all', 'label');
+    	$data['fields'] = $this->cfg->get("tables.$tb.flds.*.label");
 		$data['core'] = $rec->getCore();
 		$data['coreLinks'] = $rec->getCoreLinks();
 		$data['backLinks'] = $rec->getBackLinks();
@@ -276,13 +276,13 @@ class api_ctrl extends Controller
 		$data['fullFiles'] = $rec->getFullFiles();
 		$data['geodata'] = $rec->getGeodata();
 
-		if (cfg::tbEl($tb, 'rs')){
+		if ($this->cfg->get("tables.$tb.rs")){
 			$data['rs'] = $rec->getRS();
 		}
 		$data['userLinks'] = $rec->getUserLinks();
 
 		foreach ($data['coreLinks'] as $tb => &$cl) {
-			$cl['tb_label'] = cfg::tbEl($tb, 'label');
+			$cl['tb_label'] = $this->cfg->get("tables.$tb.label");
 		}
 		return $data;
 	}

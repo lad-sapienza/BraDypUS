@@ -44,7 +44,7 @@ class matrix_ctrl extends Controller
     {
         $tbbis = $tb . 'bis';
         $const = get_defined_constants();
-        $rsfld = cfg::tbEl($tb, 'rs');
+        $rsfld = $this->cfg->get("tables.{$tb}.rs");
         $q = <<<EOD
 SELECT
     {$tb}.id as firstid,

@@ -15,8 +15,8 @@
 				<hr />
 				<div style="max-height:400px; overflow: auto;">
 						<ul class="nav nav-pills nav-stacked">
-					{% for fld in fields %}
-						<li><a href="javascript:void(0)" style="margin:2px;" class="insert" data-value="{{ fld }}">{{ fld }}</a></li>
+					{% for fld, label in fields %}
+						<li><a href="javascript:void(0)" style="margin:2px;" class="insert" data-value="{{ fld }}">{{ label }} [{{ fld }}]</a></li>
 					{% endfor %}
 						</ul>
 					</div>

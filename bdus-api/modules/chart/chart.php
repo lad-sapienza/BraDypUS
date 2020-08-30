@@ -23,7 +23,7 @@ class chart_ctrl extends Controller
 		$this->render('chart', 'show_chart_builder', [
 			'tb' => $tb,
 			'obj_encoded' => $obj_encoded,
-			'fields' => cfg::fldEl($this->get['tb'], 'all', 'label')
+			'fields' => $this->cfg->get("tables.$tb.flds.*.label")
 		]);
 	}
 
@@ -36,7 +36,7 @@ class chart_ctrl extends Controller
 	{
 		$this->render('chart', 'show_row', [
 			'remove' => $this->get['remove'],
-			'flds' => cfg::fldEl($this->get['tb'], 'all', 'label'),
+			'flds' => $this->cfg->get("tables.{$this->get['tb']}.flds.*.label"),
 		]);
 	}
 

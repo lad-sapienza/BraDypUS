@@ -44,7 +44,7 @@ class home_ctrl extends Controller
 
         $this->render('home', 'main', [
             "version" => version::current(),
-            "app_label" => defined('APP') ?  strtoupper(cfg::main('name')) : false,
+            "app_label" => strtoupper($this->cfg->get('main.name') ),
             "css" => $this->compressCss( ['main.css'], $this->get['mini'] === 1 ),
             "tr_json" => tr::lang2json(),
             "debugMode" => DEBUG_ON ? "true" : "false",
@@ -54,7 +54,7 @@ class home_ctrl extends Controller
             "address" => $this->request['address'],
             "token" => $this->request['token'],
             "request_app" => $this->request['app'],
-            "googleanaytics" => utils::is_online() ? cfg::main('googleanaytics') ?: false : false
+            "googleanaytics" => utils::is_online() ? ($this->cfg->get('main.googleanaytics') ?? false) : false
         ]);
     }
 
@@ -142,8 +142,8 @@ class home_ctrl extends Controller
 
         $this->render('home', 'home', [
             "app" => strtoupper(APP),
-            "app_definition" => cfg::main('definition'),
-            "is_frozen_text" => cfg::main('status') === 'frozen' ? tr::get('app_is_frozen') :  false,
+            "app_definition" => $this->cfg->get('main.definition'),
+            "is_frozen_text" => $this->cfg->get('main.status') === 'frozen' ? tr::get('app_is_frozen') :  false,
             "all_tb" => cfg::getNonPlg(),
             
             "welcome" => file_exists(PROJ_DIR . 'welcome.html') ? file_get_contents(PROJ_DIR . 'welcome.html') : false,

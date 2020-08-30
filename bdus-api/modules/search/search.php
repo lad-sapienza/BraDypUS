@@ -19,18 +19,16 @@ class search_ctrl extends Controller
 		$fld = $this->request['fld'];
 
 		// check if query field ia a id_from_tb field
-		$second_table = cfg::fldEl($tb, $fld, 'id_from_tb');
+		$second_table = $this->cfg->get("tables.$tb.flds.$fld.id_from_tb");
 
 		if ($second_table) {
-
-			$second_field = cfg::tbEl($second_table, 'id_field');
+			$second_field = $this->cfg->get("tables.{$second_table}.id_field");
 			$q = "SELECT {$second_field} as {$fld} FROM {$second_table} WHERE 1=1 GROUP BY {$second_field}";
 
 		} else {
 
 			$q = "SELECT {$fld} FROM {$tb} WHERE 1=1 GROUP BY {$fld}";
 		}
-
 
 		$res = $this->db->query($q);
 		foreach ($res as $r){
@@ -62,9 +60,11 @@ class search_ctrl extends Controller
 	 */
 	public function expertGUI()
 	{
+		$tb = $this->request['tb'];
+		
 		$this->render('search', 'expertGUI', [
-			'tb'		=> $this->request['tb'],
-			'fields'	=> cfg::fldEl($this->request['tb'], 'all', 'name'),
+			'tb'		=> $tb,
+			'fields'	=> $this->cfg->get("tables.{$tb}.flds.*.label"),
 			'operators'	=> array ('=', '!=', 'LIKE', '>', '<', '>=', '<=', 'IS NULL', 'IS NOT NULL', '(', ')', '%', "'", 'AND', 'OR', 'NOT')
 		]);
 	}
@@ -77,14 +77,14 @@ class search_ctrl extends Controller
 	 */
 	public function advancedGUI()
 	{
-		$this->render('search', 'advanced', array(
-				'fields'	=> $this->opt_all_flds($this->request['tb']),
-				'operators'	=> $this->opt_operators(),
-				'connector'	=> $this->opt_connector($this->request['tb']),
-				'order'		=> $this->opt_all_flds($this->request['tb']),
-				'tb'		=> $this->request['tb'],
-				'uid'		=> uniqid('uid')
-				));
+		$tb = $this->request['tb'];
+		$this->render('search', 'advanced', [
+			'fields'	=> $this->opt_all_flds($tb),
+			'operators'	=> $this->opt_operators(),
+			'connector'	=> $this->opt_connector($tb),
+			'order'		=> $this->opt_all_flds($tb),
+			'tb'		=> $tb,
+		]);
 	}
 
 
@@ -129,23 +129,21 @@ class search_ctrl extends Controller
 
 	private function opt_all_flds($tb)
 	{
-		$fields = cfg::fldEl($tb, 'all', 'label');
+		$fields = $this->cfg->get("tables.$tb.flds.*.label");
 
-		foreach ($fields as $name=>$label)
-		{
+		foreach ($fields as $name => $label) {
 			$opt[] = '<option value="' . $tb . ':' . $name .'">' . $label . '</option>';
 		}
-		$plg = cfg::tbEl($tb, 'plugin');
 
-		if (is_array($plg))
-		{
-			foreach ($plg as $p)
-			{
-				$fields = cfg::fldEl($p, 'all', 'label');
+		$plg = $this->cfg->get("tables.{$tb}.plugin");
 
-				foreach ($fields as $name=>$label)
-				{
-					$opt[] = '<option value="' . $p . ':' . $name .'">' . cfg::tbEl($p, 'label') . " > " . $label . '</option>';
+		if (is_array($plg)) {
+			foreach ($plg as $p) {
+
+				$fields = $this->cfg->get("tables.{$p}.flds.*.label");
+
+				foreach ($fields as $name => $label) {
+					$opt[] = '<option value="' . $p . ':' . $name .'">' . $this->cfg->get("tables.$p.label") . " > " . $label . '</option>';
 				}
 			}
 		}

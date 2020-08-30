@@ -99,7 +99,7 @@ class file_ctrl extends Controller
 
 			$result['thumbnail'] = images::getThumbHtml(array('id' => $result['filename'], 'ext' => $result['ext']), $upload_dir);
 
-			$maxImageSize = cfg::main('maxImageSize') ? (int)cfg::main('maxImageSize') : 1500;
+			$maxImageSize = $this->cfg->get('main.maxImageSize') ?: 1500;
 
 			images::resizeIfImg($result['uploadDir'] . $result['filename'] . '.' . $result['ext'], $maxImageSize);
 
@@ -164,13 +164,13 @@ class file_ctrl extends Controller
 	{
 		$record = new Record($this->request['tb'], $this->request['id'], $this->db);
 
-		$this->render('file', 'gallery', array(
-				'title' => tr::get('file_gallery', [cfg::tbEl($this->request['tb'], 'label') . ', id. ' . $this->request['id']]),
-				'can_edit' => utils::canUser('edit'),
-				'all_files' => $record->getFullFiles(),
-				'images' => new images(),
-				'prefix' => $this->prefix,
-				'path' => PROJ_DIR . 'files'
-		));
+		$this->render('file', 'gallery', [
+			'title' => tr::get('file_gallery', [$this->cfg->get("tables.{$this->request['tb']}.label") . ', id. ' . $this->request['id']]),
+			'can_edit' => utils::canUser('edit'),
+			'all_files' => $record->getFullFiles(),
+			'images' => new images(),
+			'prefix' => $this->prefix,
+			'path' => PROJ_DIR . 'files'
+		]);
 	}
 }

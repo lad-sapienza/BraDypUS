@@ -38,7 +38,7 @@ class import_geodata_ctrl extends Controller
       $this->render('import_geodata', 'setFields', [
         'tb' => $tb,
         'file' => $file,
-        'id_label' => cfg::fldEl($tb, cfg::tbEl($tb, 'id_field'), 'label'),
+        'id_label' => $this->cfg->get("tables.{$tb}.flds." . $this->cfg->get("tables.{$tb}.id_field") . ".label"),
         'resp' => $resp
       ]);
       
@@ -56,9 +56,9 @@ class import_geodata_ctrl extends Controller
     
     $this->render('import_geodata', 'confirm', array(
       'tb' => $tb,
-      'tb_label' => cfg::tbEl($tb, 'label'),
+      'tb_label' => $this->cfg->get("tables.{$tb}.label"),
       'file' => $file,
-      'id_label' => cfg::fldEl($tb, cfg::tbEl($tb, 'id_field'), 'label'),
+      'id_label' => $this->cfg->get("tables.$tb.flds." . $this->cfg->get("tables.$tb.id_field"). ".label"),
       'id_field' => $id_field
       ));
   }

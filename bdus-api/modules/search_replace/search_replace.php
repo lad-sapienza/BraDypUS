@@ -23,7 +23,7 @@ class search_replace_ctrl extends Controller
 	{
 		$tb = $this->get['tb'];
 
-		echo json_encode(cfg::fldEl($tb, 'all', 'label'));
+		echo json_encode($this->cfg->get("tables.$tb.flds.*.label"));
 	}
 
 	/**

@@ -15,7 +15,7 @@ class matrix_ctrl extends Controller
     		
 		try
 		{
-            list($where, $values) = $obj_encoded ? SafeQuery::decode($obj_encoded) : ['1=1', []];
+            list($where, $values) = $obj_encoded ? \SQL\SafeQuery::decode($obj_encoded) : ['1=1', []];
 
 			$dotText = $this->createDotContentNew($tb, $where, $values);
 			

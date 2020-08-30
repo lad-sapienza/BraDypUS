@@ -2,8 +2,10 @@
 /**
  * Returns list of values to use as select2 ajax source
  * @uses DB
- * @uses  QueryBuilder
+ * @uses  \SQL\QueryBuilder
  */
+
+use \SQL\QueryBuilder;
 
 class menuValues_ctrl extends Controller
 {

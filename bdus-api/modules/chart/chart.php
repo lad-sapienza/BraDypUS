@@ -101,7 +101,7 @@ class chart_ctrl extends Controller
 			$res = $sys_manager->addRow('charts', [
 				'user_id'	=> $_SESSION['user']['id'],
 				'name'		=> $post['name'],
-				'sql'		=> Query::makeSafeStatement( base64_decode( $post['query_text'] ) ),
+				'sql'		=> QueryFromRequest::makeSafeStatement( base64_decode( $post['query_text'] ) ),
 				'date'		=> (new \DateTime())->format('Y-m-d H:i:s'),
 			]);
 
@@ -199,7 +199,7 @@ class chart_ctrl extends Controller
 			$sys_manager = new Manage($this->db, $this->prefix);
 			$res = $sys_manager->editRow('charts', $id, [
 				'name' => $name,
-				'sql' => Query::makeSafeStatement($text)
+				'sql' => QueryFromRequest::makeSafeStatement($text)
 			] );
 			
 			if ( $res ) {

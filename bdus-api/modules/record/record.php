@@ -219,7 +219,7 @@ class record_ctrl extends Controller
         }
 
         list($qq, $vv) = $queryObj->getQuery(true);
-        $encoded_query_obj = SafeQuery::encode($qq, $vv);
+        $encoded_query_obj = \SQL\SafeQuery::encode($qq, $vv);
 
         $this->render('record', 'result', [
             // string, table name
@@ -234,7 +234,7 @@ class record_ctrl extends Controller
             'can_user_edit' => utils::canUser('edit'),
             
             'encoded_query_obj' => $encoded_query_obj,
-            // string, SafeQuery encoded query & values, to be used for bookmarking, export, matrix, charts, geoface
+            // string, \SQL\SafeQuery encoded query & values, to be used for bookmarking, export, matrix, charts, geoface
             'encoded_where_obj' => $queryObj->getWhereAndValues(),
             // boolean, if no records are found, set to true: no table of results will be output in template
             'noResult' => $noResult,
@@ -277,7 +277,7 @@ class record_ctrl extends Controller
         try {
             $this->request['type'] = 'obj_encoded';
 
-            $qObj = new Query($this->db, $this->request, true);
+            $qObj = new QueryFromRequest($this->db, $this->request, true);
 
             $response['sEcho'] = intval($this->request['sEcho']);
             $response['query_arrived'] = $qObj->getQuery();

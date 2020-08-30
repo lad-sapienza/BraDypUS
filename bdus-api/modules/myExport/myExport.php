@@ -45,7 +45,7 @@ class myExport_ctrl extends Controller
 		$obj_encoded = $this->get['obj_encoded'];
 
 		try {
-			list($where, $values) = SafeQuery::decode($obj_encoded);
+			list($where, $values) = \SQL\SafeQuery::decode($obj_encoded);
 
 			$where = $where ?: '1=1';
 		

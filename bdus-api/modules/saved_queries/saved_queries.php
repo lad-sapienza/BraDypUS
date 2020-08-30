@@ -21,7 +21,7 @@ class saved_queries_ctrl extends Controller
             echo json_encode([
                 'status' => 'success', 
                 'tb'=>$res['tb'], 
-                'obj_encoded'=> SafeQuery::encode($res['text'], json_decode($res['vals'], true))
+                'obj_encoded'=> \SQL\SafeQuery::encode($res['text'], json_decode($res['vals'], true))
             ]);
         } else {
             echo json_encode( [ 'status'=>'error' ] );
@@ -35,7 +35,7 @@ class saved_queries_ctrl extends Controller
 
         foreach ($res as &$q) {
             $q['tb_label'] = cfg::tbEl($q['tb'], 'label');
-            $q['obj_encoded'] = SafeQuery::encode($q['text'], json_decode($q['vals']));
+            $q['obj_encoded'] = \SQL\SafeQuery::encode($q['text'], json_decode($q['vals']));
             $q['owned_by_me'] = $_SESSION['user']['id'] === $q['user_id'];
         }
 
@@ -136,7 +136,7 @@ class saved_queries_ctrl extends Controller
         
         try {
             $sys_manager = new Manage($this->db, $this->prefix);
-            list($text, $values) = SafeQuery::decode($query_object);
+            list($text, $values) = \SQL\SafeQuery::decode($query_object);
             $res = $sys_manager->addRow('queries', [
                 'user_id' => $_SESSION['user']['id'],
                 'date'  => (new \DateTime())->format('Y-m-d H:i:s'),

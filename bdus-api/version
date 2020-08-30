@@ -1,3 +1,4 @@
+3.16.133[] = "Added \Config\Config"
 3.16.133[] = "Dropped support for application error.log; on debug no database log will be written"
 3.16.132[] = "Dropped use of q_encoded everywhere except api v1"
 3.16.132[] = "Dropped use of q_encoded in records_ctrl, replaced by obj_encoded"

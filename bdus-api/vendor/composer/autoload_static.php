@@ -11,6 +11,7 @@ class ComposerStaticInit63dffac3da0006282de7c3f45bc18505
         'a0edc8309cc5e1d60e3047b5df6b7052' => __DIR__ . '/..' . '/guzzlehttp/psr7/src/functions_include.php',
         '320cde22f66dd4f5d3fd621d3e88b98f' => __DIR__ . '/..' . '/symfony/polyfill-ctype/bootstrap.php',
         '0e6d7bf4a5811bfa5cf40c5ccd6fae6a' => __DIR__ . '/..' . '/symfony/polyfill-mbstring/bootstrap.php',
+        'd767e4fc2dc52fe66584ab8c6684783e' => __DIR__ . '/..' . '/adbario/php-dot-notation/src/helpers.php',
     );
 
     public static $prefixLengthsPsr4 = array (
@@ -39,6 +40,10 @@ class ComposerStaticInit63dffac3da0006282de7c3f45bc18505
         'G' => 
         array (
             'GuzzleHttp\\Psr7\\' => 16,
+        ),
+        'A' => 
+        array (
+            'Adbar\\' => 6,
         ),
     );
 
@@ -74,6 +79,10 @@ class ComposerStaticInit63dffac3da0006282de7c3f45bc18505
         'GuzzleHttp\\Psr7\\' => 
         array (
             0 => __DIR__ . '/..' . '/guzzlehttp/psr7/src',
+        ),
+        'Adbar\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/adbario/php-dot-notation/src',
         ),
     );
 

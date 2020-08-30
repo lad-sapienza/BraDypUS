@@ -8,7 +8,8 @@ use Monolog\Handler\FirePHPHandler;
 use Monolog\ErrorHandler;
 
 use DB\LogDBHandler;
-
+use Config\Config;
+use \Adbar\Dot;
 
 class App
 {
@@ -82,6 +83,9 @@ class App
                 }
 				$_aa->setLog($this->log);
 				$_aa->setPrefix($this->prefix);
+                if (defined('APP')) {
+                    $_aa->setCfg(new Config(new Dot(), __DIR__ . '/../../projects/' . APP . '/cfg/', $this->prefix));
+                }
                 $_aa->$method();
             } else {
                 throw new \Exception("Called object {$obj} *must* extend Controller. No direct access is available");

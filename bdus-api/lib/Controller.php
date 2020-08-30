@@ -21,6 +21,7 @@ abstract class Controller
 	protected $db;
 	protected $log;
 	protected $prefix;
+	protected $cfg;
 
 	public function __construct($get, $post, $request)
 	{
@@ -32,6 +33,11 @@ abstract class Controller
 	public function setDB(\DB\DB\DBInterface $db): void
 	{
 		$this->db = $db;
+	}
+
+	public function setCfg(\Config\Config $cfg): void
+	{
+		$this->cfg = $cfg;
 	}
 	
 	public function setPrefix(string $prefix = null): void

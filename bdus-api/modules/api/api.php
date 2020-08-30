@@ -111,26 +111,24 @@ class api_ctrl extends Controller
 			if ($this->get['verb'] === 'inspect') {
 
 				if ($request['tb'] === $this->prefix . 'all') {
-					$ret = [];
-
-					foreach (cfg::tbEl('all', 'all') as $t) {
-						$stripped_name = str_replace($this->prefix, null, $t['name']);
-						foreach (cfg::fldEl($t['name']) as $f){
-							$t['fields'][$f['name']] = $f;
-						}
-						$ret[$stripped_name] = $t;
+					
+					$full_tables_cfg = $this->cfg->get('tables');
+					foreach ($full_tables_cfg as $key => $value) {
+						$full_tables_cfg[str_replace($this->prefix, null, $key)] = $value;
+						unset($full_tables_cfg[$key]);
 					}
-					return $this->array2response( $ret );
+					return $this->array2response( $full_tables_cfg );
 				}
+
 				$ret = [];
-				$flds = cfg::fldEl($request['tb']);
+				$flds = $this->cfg->get("tables.{$request['tb']}.fields");
 
 				foreach ($flds as $f) {
 					$f['fullname'] = $request['tb'] . ':' . $f['name'];
 					array_push($ret, $f);
 				}
-				foreach (cfg::tbEl($request['tb'], 'plugin') as $plg) {
-					foreach (cfg::fldEl($plg) as $f) {
+				foreach ($this->cfg->get("tables.{$request['tb']}.plugin") as $plg) {
+					foreach ($this->cfg->get("tables.$plg.fields") as $f) {
 						$f['fullname'] = $plg . ':' . $f['name'];
 						$f['label'] = $this->cfg->get("tables.{$plg}.label") . ': ' . $f['label'];
 						array_push($ret, $f);
@@ -268,7 +266,7 @@ class api_ctrl extends Controller
 			'stripped_table' => str_replace($this->prefix, null, $tb),
 			'table_label' => $this->cfg->get("tables.$tb.label")
 		];
-    	$data['fields'] = $this->cfg->get("tables.$tb.flds.*.label");
+    	$data['fields'] = $this->cfg->get("tables.$tb.fields.*.label");
 		$data['core'] = $rec->getCore();
 		$data['coreLinks'] = $rec->getCoreLinks();
 		$data['backLinks'] = $rec->getBackLinks();

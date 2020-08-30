@@ -19,7 +19,7 @@ class search_ctrl extends Controller
 		$fld = $this->request['fld'];
 
 		// check if query field ia a id_from_tb field
-		$second_table = $this->cfg->get("tables.$tb.flds.$fld.id_from_tb");
+		$second_table = $this->cfg->get("tables.$tb.fields.$fld.id_from_tb");
 
 		if ($second_table) {
 			$second_field = $this->cfg->get("tables.{$second_table}.id_field");
@@ -64,7 +64,7 @@ class search_ctrl extends Controller
 		
 		$this->render('search', 'expertGUI', [
 			'tb'		=> $tb,
-			'fields'	=> $this->cfg->get("tables.{$tb}.flds.*.label"),
+			'fields'	=> $this->cfg->get("tables.{$tb}.fields.*.label"),
 			'operators'	=> array ('=', '!=', 'LIKE', '>', '<', '>=', '<=', 'IS NULL', 'IS NOT NULL', '(', ')', '%', "'", 'AND', 'OR', 'NOT')
 		]);
 	}
@@ -129,7 +129,7 @@ class search_ctrl extends Controller
 
 	private function opt_all_flds($tb)
 	{
-		$fields = $this->cfg->get("tables.$tb.flds.*.label");
+		$fields = $this->cfg->get("tables.$tb.fields.*.label");
 
 		foreach ($fields as $name => $label) {
 			$opt[] = '<option value="' . $tb . ':' . $name .'">' . $label . '</option>';
@@ -140,7 +140,7 @@ class search_ctrl extends Controller
 		if (is_array($plg)) {
 			foreach ($plg as $p) {
 
-				$fields = $this->cfg->get("tables.{$p}.flds.*.label");
+				$fields = $this->cfg->get("tables.{$p}.fields.*.label");
 
 				foreach ($fields as $name => $label) {
 					$opt[] = '<option value="' . $p . ':' . $name .'">' . $this->cfg->get("tables.$p.label") . " > " . $label . '</option>';

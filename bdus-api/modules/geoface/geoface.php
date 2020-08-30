@@ -131,7 +131,7 @@ class geoface_ctrl extends Controller
 
 			foreach ($preview as $fldid) {
 				if ($fldid != 'id') {
-					array_push($part, $tb . '.' . $fldid . ' AS "' . $this->cfg->get("tables.$tb.flds.$fldid.label") . '"');
+					array_push($part, $tb . '.' . $fldid . ' AS "' . $this->cfg->get("tables.$tb.fields.$fldid.label") . '"');
 				}
 			}
 

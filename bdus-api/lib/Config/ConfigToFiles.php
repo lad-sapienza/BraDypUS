@@ -12,7 +12,7 @@ class ConfigToFiles
         self::write_in_file($path2cfg . \DIRECTORY_SEPARATOR . 'app_data.json', $cfg['main']);
         self::writeTables($path2cfg . \DIRECTORY_SEPARATOR . 'tables.json', $cfg['tables']);
         foreach ($cfg['tables'] as $tb => $tb_data) {
-            self::writeFields($path2cfg . \DIRECTORY_SEPARATOR . \str_replace($prefix, null, $tb) . '.json', $cfg['tables'][$tb]['flds']);
+            self::writeFields($path2cfg . \DIRECTORY_SEPARATOR . \str_replace($prefix, null, $tb) . '.json', $cfg['tables'][$tb]['fields']);
         }
     }
 
@@ -31,7 +31,7 @@ class ConfigToFiles
         $ret = [];
 
         foreach ($data as $tb => $tb_data) {
-            unset($tb_data['flds']);
+            unset($tb_data['fields']);
             $ret[] = $tb_data;
         }
         self::write_in_file($path, ["tables" => $ret]);

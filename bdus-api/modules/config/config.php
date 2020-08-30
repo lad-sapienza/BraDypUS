@@ -6,7 +6,7 @@ class config_ctrl extends Controller
 {
     public function home()
     {
-        $table_list = cfg::tbEl('all', 'label');
+        $table_list = $this->cfg->get('tables.*.label');
 
         $this->render('config', 'home', [
             "table_list" => $table_list
@@ -29,7 +29,7 @@ class config_ctrl extends Controller
 		
 		$this->render('config', 'app_properties', [
             'available_langs' => array_map(function($e){ return str_replace('.json', null, $e); }, utils::dirContent(LOCALE_DIR)),
-            'info' => cfg::main(),
+            'info' => $this->cfg->get('main'),
             'status' => [ 'on', 'frozen', 'off' ],
             'users' => $users,
             'db_engines' => \DB\Engines\AvailableEngines::getList()
@@ -42,8 +42,8 @@ class config_ctrl extends Controller
 
 		$this->render('config', 'fld_list', [
             'tb' => $tb,
-            'tb_label' => cfg::tbEl($tb, 'label'),
-            'all_fields' => cfg::fldEl($tb, 'all', 'all')
+            'tb_label' => $this->cfg->get("tables.$tb.label"),
+            'all_fields' => $this->cfg->get("tables.$tb.fields.*")
         ]);
     }
 
@@ -53,7 +53,7 @@ class config_ctrl extends Controller
         $tb = $this->get['tb'];
         $fld = $this->get['fld'] ?: false;
 
-        $data = $fld ? cfg::fldEl($tb, $fld, 'all') : [];
+        $data = $fld ? $this->cfg->get("tables.$tb.fields.$fld.*") : [];
 
         $sys_manage = new Manage($this->db, $this->prefix);
 
@@ -72,7 +72,7 @@ class config_ctrl extends Controller
             ],
             [
                 implode('","', $all_voc), 
-                implode('","', array_values(cfg::tbEl('all','name')))
+                implode('","', array_values($this->cfg->get('tables.*.name')))
             ],
             $fld_structure
         );
@@ -91,7 +91,7 @@ class config_ctrl extends Controller
     {
         $tb = $this->get['tb'] ?: false;
 
-        $table_properties = $tb ? cfg::tbEl($tb, 'all') : [];
+        $table_properties = $tb ? $this->cfg->get("tables.$tb.*") : [];
 
         // default values
 		if (!$table_properties['preview'])  $table_properties['preview'] = array(0=>'');
@@ -101,10 +101,10 @@ class config_ctrl extends Controller
         $this->render('config', 'table_properties', [
             'data'  => $table_properties,
             'tb'    => $tb,
-            'field_list' => $tb && cfg::fldEl($tb, 'all', 'label') ? cfg::fldEl($tb, 'all', 'label') : ['id' => 'id'],
+            'field_list' => $tb && $this->cfg->get("tables.$tb.fields.*.label") ? $this->cfg->get("tables.$tb.fields.*.label") : ['id' => 'id'],
             'template_list' => utils::dirContent(PROJ_DIR . 'templates/'),
             'available_plugins' => is_array(cfg::getPlg()) ? cfg::getPlg() : [],
-            'available_tables' => cfg::tbEl('all', 'label'),
+            'available_tables' => $this->cfg->get('tables.*.label'),
         ]);
 
     }
@@ -249,7 +249,7 @@ class config_ctrl extends Controller
 			if (!$post['name'] || !$post['type']){
 				throw new \Exception('Both field name and field type are required');
             }
-            $available_flds = array_values(cfg::fldEl($tb, 'all', 'name'));
+            $available_flds = array_values($this->cfg->get("tables.$tb.fields.*.name"));
             if (in_array($fld, $available_flds)){
                 utils::response(tr::get('fld_already_available', [$fld]), 'error', true);
                 return;
@@ -377,7 +377,7 @@ class config_ctrl extends Controller
         $old_name = $this->get['old_name'];
         $new_name = $this->get['new_name'];
         try {
-            $available_tbs = array_values(cfg::tbEl('all', 'name'));
+            $available_tbs = array_values($this->cfg->get('tables.*.name'));
             if (in_array($new_name, $available_tbs)){
                 throw new \Exception("Table name $new_name has already been used");
             }
@@ -411,7 +411,7 @@ class config_ctrl extends Controller
         $new_name = $this->get['new_name'];
 
         try {
-            $available_flds = array_values(cfg::fldEl($tb, 'all', 'name'));
+            $available_flds = array_values($this->cfg->get("tables.$tb.fields.*.name"));
             if (in_array($new_name, $available_flds)){
                 throw new \Exception("Field name $new_name has already been used");
             }

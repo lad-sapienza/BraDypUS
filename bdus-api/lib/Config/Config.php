@@ -38,8 +38,8 @@ class Config
      * tables.*
      * tables.*.sth
      * 
-     * tables.tb.flds.*, 
-     * tables.tb.flds.*.sth, 
+     * tables.tb.fields.*, 
+     * tables.tb.fields.*.sth, 
      *
      * @param string $key
      * @param string $filter_key
@@ -71,8 +71,8 @@ class Config
                 return $cfg['main'];
             }
 
-        } elseif ($part[0] === 'tables' && $part[2] === 'flds' ) {
-            // tables.tb.flds.*, tables.tb.flds.*.sth
+        } elseif ($part[0] === 'tables' && $part[2] === 'fields' ) {
+            // tables.tb.fields.*, tables.tb.fields.*.sth
             return $this->mngFields($part, $cfg);
 
         } elseif ($part[0] === 'tables') {
@@ -87,14 +87,14 @@ class Config
 
     private function mngFields(array $part, array $cfg)
     {
-        $data = $cfg['tables'][$part[1]]['flds'];
+        $data = $cfg['tables'][$part[1]]['fields'];
 
-        // tables.tb.flds.*, 
+        // tables.tb.fields.*, 
         if (!isset($part[4])){
             return $data;
         }
 
-        // tables.tb.flds.*.sth, 
+        // tables.tb.fields.*.sth, 
         $ret = [];
         foreach ($data as $fld => $fld_arr) {
             if (array_key_exists( $part[4], $data[$fld] ) ) {

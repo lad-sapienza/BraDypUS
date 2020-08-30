@@ -12,7 +12,7 @@ class ConfigLoad
         $cfg['main'] = self::path2array($path2cfg . \DIRECTORY_SEPARATOR . 'app_data.json');
         $cfg['tables'] = self::getTables($path2cfg . \DIRECTORY_SEPARATOR . 'tables.json');
         foreach ($cfg['tables'] as $tb => $tb_data) {
-            $cfg['tables'][$tb]['flds'] = self::getFields($path2cfg . \DIRECTORY_SEPARATOR . \str_replace($prefix, null, $tb) . '.json');
+            $cfg['tables'][$tb]['fields'] = self::getFields($path2cfg . \DIRECTORY_SEPARATOR . \str_replace($prefix, null, $tb) . '.json');
         }
         return $cfg;
     }

@@ -194,7 +194,7 @@ class record_ctrl extends Controller
                     'can_edit' => (utils::canUser('edit', $record->getCore('creator')) || (count($this->request['id']) > 1 && utils::canUser('multiple_edit'))),
                     'can_erase' => utils::canUser('edit', $record->getCore('creator')),
                     'continue_url' => $continue_url,
-                    'virtual_keyboard' => cfg::main('virtual_keyboard')
+                    'virtual_keyboard' => $this->cfg->get('main.virtual_keyboard')
             ));
         }
     }

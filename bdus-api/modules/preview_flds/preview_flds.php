@@ -16,7 +16,7 @@ class preview_flds_ctrl extends Controller
 			$tb[] = [
 				'id' => $tb_id,
 				'name' => $tb_name,
-				'flds' => $this->cfg->get("tables.{$tb_id}.flds.*.label")
+				'flds' => $this->cfg->get("tables.{$tb_id}.fields.*.label")
 			];
 		}
 		

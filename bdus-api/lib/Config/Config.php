@@ -116,9 +116,14 @@ class Config
         // tables.*
         if ($part[1] === '*' && count($part) <= 2 ) {
             $ret = $cfg['tables'];
-            if (is_array($ret) && $filter_key && $filter_val) {
+            if (is_array($ret) && $filter_key) {
+
                 foreach ($ret as $key => $value) {
-                    if ( $value[$filter_key] !== $filter_val) {
+                    // if filter_valis is set, remove elements that do not have filter_val
+                    if($filter_val && $value[$filter_key] !== $filter_val) {
+                        unset($ret[$key]);
+                    } else if (!$filter_val && isset($value[$filter_key])) {
+                        // if filter_valis is not set, remove elements that do have filter_val
                         unset($ret[$key]);
                     }
                 }
@@ -132,10 +137,15 @@ class Config
             if ($part[1] === '*') {
                 foreach ($cfg['tables'] as $tb => $tb_data) {
                     if (array_key_exists($part[2], $cfg['tables'][$tb] )) {
-                        if ($filter_key && $filter_val) {
-                            if ($cfg['tables'][$tb][$filter_key] === $filter_val){
+                        if ($filter_key) {
+                            if ($filter_val && $cfg['tables'][$tb][$filter_key] === $filter_val){
+                                // filter_val is set: record must match
+                                $ret[$tb] = $cfg['tables'][$tb][$part[2]];
+                            } else if ( !$filter_val  && !isset($cfg['tables'][$tb][$filter_key])) {
+                                // filter_val is not set: record must not match
                                 $ret[$tb] = $cfg['tables'][$tb][$part[2]];
                             }
+                            
                         } else {
                             $ret[$tb] = $cfg['tables'][$tb][$part[2]];
                         }

@@ -10,17 +10,13 @@ var config = {
 
 		core.open({
 			title: core.tr('cfg_security_check'),
-			html: `<p class="lead text-danger">${core.tr('cfg_security_check_text')}</p><hr><input type="password" class="adm_pwd form-control" placeholder="password">`,
-			buttons: [
-				{
-					text: core.tr('close'),
-					action: 'close'
-				},
-				{
-					addclass: 'btn-danger',
-					text: core.tr('validate_password'),
-					click: () => {
-						const pwd = $('#modal .adm_pwd').val();
+			html: `<p class="lead text-danger">${core.tr('cfg_security_check_text')}</p><hr><form action="javascript:void(0)"><input type="password" class="adm_pwd form-control" placeholder="password"><button type="submit" style="display: none"></button></form>`,
+			loaded: () => {
+				setTimeout( () => { 
+					$('#modal input.adm_pwd').focus();
+				}, 500 );
+				$('#modal form').on('submit', ()=>{
+					const pwd = $('#modal .adm_pwd').val();
 						core.getJSON('config_ctrl', 'security_check_pwd', false, {pwd: pwd}, data =>{
 							core.message(data.text, data.status)
 							if (data.status === 'success'){
@@ -32,6 +28,18 @@ var config = {
 								});
 							}
 						});
+				});
+			},
+			buttons: [
+				{
+					text: core.tr('close'),
+					action: 'close'
+				},
+				{
+					addclass: 'btn-danger',
+					text: core.tr('validate_password'),
+					click: () => {
+						$('#modal form').submit();
 					}
 				}
 			]

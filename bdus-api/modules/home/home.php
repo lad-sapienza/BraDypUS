@@ -144,7 +144,7 @@ class home_ctrl extends Controller
             "app" => strtoupper(APP),
             "app_definition" => $this->cfg->get('main.definition'),
             "is_frozen_text" => $this->cfg->get('main.status') === 'frozen' ? tr::get('app_is_frozen') :  false,
-            "all_tb" => cfg::getNonPlg(),
+            "all_tb" => $this->cfg->get('tables.*.label', 'is_plugin', null),
             
             "welcome" => file_exists(PROJ_DIR . 'welcome.html') ? file_get_contents(PROJ_DIR . 'welcome.html') : false,
 

@@ -10,12 +10,11 @@ class myTmpl_ctrl extends Controller
 {
 	public function show()
 	{
-		$tbs = cfg::getNonPlg();
+		$tbs = $this->cfg->get('tables.*.label', 'is_plugin', null);
 
 		$tmpls = utils::dirContent(PROJ_DIR . 'templates/');
 
-		if(!is_array($tmpls))
-		{
+		if(!is_array($tmpls)) {
 			echo json_encode(array('status'=>'error', 'text'=>tr::get('no_tmpl_available')));
 			return;
 		}

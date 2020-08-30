@@ -6,12 +6,14 @@ class Validate
     private $db;
     private $resp;
     private $prefix;
+    private $cfg;
     
-    public function __construct(\DB\DB\DBInterface $db, string $prefix = null)
+    public function __construct(\DB\DB\DBInterface $db, string $prefix = null, \Config\Config $cfg)
     {
         $this->db = $db;
         $this->resp = new Resp();
         $this->prefix = $prefix;
+        $this->cfg = $cfg;
         /**
          * 1. each cfg-table must have db-table: OK
          * 2. each db-table must have cfg-table
@@ -29,7 +31,7 @@ class Validate
         $this->resp->set('head', 'Main system information');
         Info::getInfo($this->resp);
 
-        $db_cfg = new DbCfgAlign($this->resp, $this->db);
+        $db_cfg = new DbCfgAlign($this->resp, $this->db, $this->cfg);
         $this->resp->set('head', 'Configuration and database tables alignement');
         $db_cfg->cfgHasDb();
         $this->resp->set('head', 'Configuration and database fields alignement');

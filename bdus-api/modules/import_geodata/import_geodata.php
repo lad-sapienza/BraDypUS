@@ -11,7 +11,7 @@ class import_geodata_ctrl extends Controller
   public function start()
   {
     $this->render('import_geodata', 'start', [
-      'tables' => cfg::getNonPlg()
+      'tables' => $this->cfg->get('tables.*.label', 'is_plugin', null)
     ]);
   }
   

@@ -103,7 +103,7 @@ class config_ctrl extends Controller
             'tb'    => $tb,
             'field_list' => $tb && $this->cfg->get("tables.$tb.fields.*.label") ? $this->cfg->get("tables.$tb.fields.*.label") : ['id' => 'id'],
             'template_list' => utils::dirContent(PROJ_DIR . 'templates/'),
-            'available_plugins' => is_array(cfg::getPlg()) ? cfg::getPlg() : [],
+            'available_plugins' => is_array($this->cfg->get('tables.*.label', 'is_plugin', '1')) ? $this->cfg->get('tables.*.label', 'is_plugin', '1') : [],
             'available_tables' => $this->cfg->get('tables.*.label'),
         ]);
 
@@ -441,7 +441,7 @@ class config_ctrl extends Controller
 
     public function validate_app()
     {
-        $validate = new \DB\Validate\Validate($this->db, $this->prefix);
+        $validate = new \DB\Validate\Validate($this->db, $this->prefix, $this->cfg);
         $report = $validate->all();
 
         $html = '<button type="button" class="btn btn-info pull-right" onclick="$(this).parent().find(\'.alert-info, .alert-success\').toggle();">' . tr::get('show_only_errors') . '</button>';

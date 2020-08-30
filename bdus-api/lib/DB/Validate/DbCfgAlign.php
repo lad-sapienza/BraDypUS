@@ -6,11 +6,13 @@ class DbCfgAlign
     private $db;
     private $resp;
     private $inspect;
+    private $cfg;
 
-    public function __construct(Resp $resp, \DB\DB\DBInterface $db)
+    public function __construct(Resp $resp, \DB\DB\DBInterface $db, \Config\Config $cfg)
     {
         $this->resp = $resp;
         $this->db = $db;
+        $this->cfg = $cfg;
 
         $db_engine = $db->getEngine();
         if ($db_engine === 'sqlite'){
@@ -25,7 +27,7 @@ class DbCfgAlign
 
     public function cfgHasDb(): void
     {
-        $cfg_tbs = \cfg::tbEl('all', 'name');
+        $cfg_tbs = $this->cfg->get('tables.*.name');
 
         foreach ($cfg_tbs as $cfg_tb) {
             if ($this->inspect->tableExists($cfg_tb)){
@@ -44,11 +46,11 @@ class DbCfgAlign
 
     public function cfgColsHasDb()
     {
-        $cfg_tbs = \cfg::tbEl('all', 'name');
+        $cfg = $this->cfg->get('tables.*');
 
-        foreach ($cfg_tbs as $tb) {
-
-            $cfg_cols = \cfg::fldEl($tb, 'all', 'name');
+        foreach ($cfg as $tb => $tb_data) {
+            
+            $cfg_cols = array_keys($tb_data['fields']);
             $db_cols = array_map(function($el){
                 return $el['fld'];
             }, $this->inspect->tableColumns($tb));
@@ -70,6 +72,7 @@ class DbCfgAlign
                 }
             }
 
+
             $this->resp->set('head', "Checking $tb from database to configuration");
 
             foreach ($db_cols as $col) {
@@ -86,6 +89,8 @@ class DbCfgAlign
                     );
                 }
             }
+            
         }
+
     }
 }

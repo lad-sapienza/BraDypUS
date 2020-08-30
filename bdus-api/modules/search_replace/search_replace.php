@@ -11,9 +11,9 @@ class search_replace_ctrl extends Controller
 {
 	public function main_page()
 	{
-		$this->render('search_replace', 'main_page', array(
-				'tbs' => cfg::getNonPlg()
-				));
+		$this->render('search_replace', 'main_page', [
+			'tbs' => $this->cfg->get('tables.*.label', 'is_plugin', null)
+		]);
 	}
 
 	/**

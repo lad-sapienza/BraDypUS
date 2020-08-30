@@ -13,7 +13,7 @@ class userlinks_ctrl extends Controller
 	{
 		try {
 			$ret['status'] = 'success';
-			$ret['info'] = cfg::getNonPlg();
+			$ret['info'] = $this->cfg->get('tables.*.label', 'is_plugin', null);
 		} catch (\Exception $e) {
 			$this->log->error($e);
 			$ret['status'] = 'error';

@@ -1,3 +1,5 @@
+3.16.133[] = "Renamed and moved Interfaces"
+3.16.133[] = "QueryBuilder namespaced"
 3.16.133[] = "SafeQuery namespaced"
 3.16.133[] = "Query renamed to QueryFromRequest and namespaced"
 3.16.133[] = "Added \Config\Config"

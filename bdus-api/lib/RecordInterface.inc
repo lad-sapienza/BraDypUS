@@ -6,7 +6,7 @@
  * @since			Apr 24, 2012
  */
 
-interface iRecord
+interface RecordInterface
 {
 	/**
 	 *

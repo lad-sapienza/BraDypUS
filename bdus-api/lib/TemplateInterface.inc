@@ -6,7 +6,7 @@
  * @since			Apr 21, 2012
  */
 
-interface iTemplate
+interface TemplateInterface
 {
 	/**
 	 * Returns "col-sm-$nr" for use in templates. Also used by HtmlStartDiv to replace span-* syntax

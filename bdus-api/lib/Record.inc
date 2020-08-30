@@ -37,7 +37,7 @@
  * ]
  */
 
-class Record implements iRecord
+class Record implements RecordInterface
 {
 	protected $tb, $id, $db, $data, $loaded, $changed, $idField, $tmp_dir;
 
@@ -103,7 +103,7 @@ class Record implements iRecord
 
 	/**
 	 * (non-PHPdoc)
-	 * @see iRecord::getTb()
+	 * @see RecordInterface::getTb()
 	 */
 	public function getTb()
 	{
@@ -112,7 +112,7 @@ class Record implements iRecord
 
 	/**
 	 * (non-PHPdoc)
-	 * @see iRecord::getDB()
+	 * @see RecordInterface::getDB()
 	 */
 	public function getDB()
 	{
@@ -121,7 +121,7 @@ class Record implements iRecord
 
 	/**
 	 * (non-PHPdoc)
-	 * @see iRecord::persist()
+	 * @see RecordInterface::persist()
 	 */
 	public function persist()
 	{
@@ -298,7 +298,7 @@ class Record implements iRecord
 
 	/**
 	 * (non-PHPdoc)
-	 * @see iRecord::delete()
+	 * @see RecordInterface::delete()
 	 */
 	public function delete()
 	{
@@ -420,7 +420,7 @@ class Record implements iRecord
 
 	/**
 	 * (non-PHPdoc)
-	 * @see iRecord::setCore()
+	 * @see RecordInterface::setCore()
 	 */
 	public function setCore($core_data)
 	{
@@ -447,7 +447,7 @@ class Record implements iRecord
 
 	/**
 	 * (non-PHPdoc)
-	 * @see iRecord::getCore()
+	 * @see RecordInterface::getCore()
 	 */
 	public function getCore($fieldname = false)
 	{
@@ -499,7 +499,7 @@ class Record implements iRecord
 
 	/**
 	 * (non-PHPdoc)
-	 * @see iRecord::setPlugin()
+	 * @see RecordInterface::setPlugin()
 	 */
 	public function setPlugin($plugin, $plugin_data)
 	{
@@ -533,7 +533,7 @@ class Record implements iRecord
 
 	/**
 	 * (non-PHPdoc)
-	 * @see iRecord::getPlugin()
+	 * @see RecordInterface::getPlugin()
 	 */
 	public function getPlugin($plugin, $index = false, $fieldname = false)
 	{
@@ -572,7 +572,7 @@ class Record implements iRecord
 
 	/**
 	 * (non-PHPdoc)
-	 * @see iRecord::getAllPlugins()
+	 * @see RecordInterface::getAllPlugins()
 	 */
 	public function getAllPlugins($load = false)
 	{
@@ -646,7 +646,7 @@ class Record implements iRecord
 
 	/**
 	 * (non-PHPdoc)
-	 * @see iRecord::getBackLinks()
+	 * @see RecordInterface::getBackLinks()
 	 */
 	public function getBackLinks()
 	{
@@ -709,7 +709,7 @@ EOD;
 
 	/**
 	 * (non-PHPdoc)
-	 * @see iRecord::getCoreLinks()
+	 * @see RecordInterface::getCoreLinks()
 	 */
 	public function getCoreLinks($details = false)
 	{
@@ -764,7 +764,7 @@ EOD;
 
 	/**
 	 * (non-PHPdoc)
-	 * @see iRecord::getFullFiles()
+	 * @see RecordInterface::getFullFiles()
 	 */
 	public function getFullFiles()
 	{
@@ -788,7 +788,7 @@ EOD;
 
 	/**
 	 * (non-PHPdoc)
-	 * @see iRecord::getRS()
+	 * @see RecordInterface::getRS()
 	 */
 	public function getRS()
 	{
@@ -800,7 +800,7 @@ EOD;
 
 	/**
 	 * (non-PHPdoc)
-	 * @see iRecord::setRS()
+	 * @see RecordInterface::setRS()
 	 */
 	public function addRS($first, $relation, $second)
 	{

@@ -7,7 +7,7 @@
  * @uses			cfg
  */
 
-class Field implements iTemplate
+class Field implements TemplateInterface
 {
     protected $tb;
     protected $context;
@@ -34,7 +34,7 @@ class Field implements iTemplate
 
     /**
      * (non-PHPdoc)
-     * @see iTemplate::cell()
+     * @see TemplateInterface::cell()
      */
     public function cell($nr)
     {
@@ -43,7 +43,7 @@ class Field implements iTemplate
 
     /**
      * (non-PHPdoc)
-     * @see iTemplate::sqlSum()
+     * @see TemplateInterface::sqlSum()
      */
     public function sqlSum($tb, $fld, $filter = false)
     {
@@ -79,7 +79,7 @@ class Field implements iTemplate
 
     /**
      * (non-PHPdoc)
-     * @see iTemplate::simpleSum()
+     * @see TemplateInterface::simpleSum()
      */
     public function simpleSum($fields)
     {
@@ -96,7 +96,7 @@ class Field implements iTemplate
 
     /**
      * (non-PHPdoc)
-     * @see iTemplate::permalink()
+     * @see TemplateInterface::permalink()
      */
     public function permalink()
     {
@@ -109,7 +109,7 @@ class Field implements iTemplate
 
     /**
      * (non-PHPdoc)
-     * @see iTemplate::links()
+     * @see TemplateInterface::links()
      */
     public function links()
     {
@@ -161,7 +161,7 @@ class Field implements iTemplate
             $html .= '<ul>';
             foreach ($corelinks as $dest_tb=>$l_arr) {
                 $html .= '<li><span class="btn-link" onclick="' .
-         "api.showResults('{$dest_tb}', 'type=obj_encoded&obj_encoded=" . SafeQuery::encode($l_arr['query'], $l_arr['values']) . "&total={$l_arr['tot']}', '" . tr::get('saved_queries') . " (". cfg::tbEl($dest_tb, 'label') . ")');" .
+         "api.showResults('{$dest_tb}', 'type=obj_encoded&obj_encoded=" . \SQL\SafeQuery::encode($l_arr['query'], $l_arr['values']) . "&total={$l_arr['tot']}', '" . tr::get('saved_queries') . " (". cfg::tbEl($dest_tb, 'label') . ")');" .
           '" href="javascript:void(0)">' .
           tr::get('links_in_table', ['<strong>' . $l_arr['tot'] . '</strong>', '<strong>' . cfg::tbEl($dest_tb, 'label') . '</strong>']) .
           '</span>';
@@ -191,7 +191,7 @@ class Field implements iTemplate
 
     /**
      * (non-PHPdoc)
-     * @see iTemplate::geodata()
+     * @see TemplateInterface::geodata()
      */
     public function geodata()
     {
@@ -229,7 +229,7 @@ class Field implements iTemplate
 
     /**
      * (non-PHPdoc)
-     * @see iTemplate::showall()
+     * @see TemplateInterface::showall()
      */
     public function showall()
     {
@@ -282,7 +282,7 @@ class Field implements iTemplate
 
     /**
      * (non-PHPdoc)
-     * @see iTemplate::rs()
+     * @see TemplateInterface::rs()
      */
     public function rs()
     {
@@ -298,7 +298,7 @@ class Field implements iTemplate
 
     /**
      * (non-PHPdoc)
-     * @see iTemplate::image_thumbs()
+     * @see TemplateInterface::image_thumbs()
      */
     public function image_thumbs($max = 2)
     {
@@ -402,7 +402,7 @@ class Field implements iTemplate
 
     /**
      * (non-PHPdoc)
-     * @see iTemplate::plg_fld()
+     * @see TemplateInterface::plg_fld()
      */
     public function plg_fld($fieldname, $formatting = false)
     {
@@ -411,7 +411,7 @@ class Field implements iTemplate
 
     /**
      * (non-PHPdoc)
-     * @see iTemplate::fld()
+     * @see TemplateInterface::fld()
      */
     public function fld($fieldname, $formatting = false, $plg_name = false, $plg_index = false)
     {
@@ -478,7 +478,7 @@ class Field implements iTemplate
 
     /**
      * (non-PHPdoc)
-     * @see iTemplate::plg()
+     * @see iTemTemplateInterfaceplate::plg()
      */
     public function plg($plg)
     {
@@ -543,7 +543,7 @@ class Field implements iTemplate
 
     /**
      * (non-PHPdoc)
-     * @see iTemplate::value()
+     * @see TemplateInterface::value()
      */
     public function value($fld, $plg = false)
     {
@@ -831,7 +831,7 @@ class Field implements iTemplate
                 if ($otherTb === $this->tb || ($otherTb !== $this->tb && $otherFld !== cfg::tbEl($otherTb, 'id_field'))) {
                     foreach ($val as $v) {
                         $html .= "<span class=\"a\" " .
-                            " onclick=\"api.showResults('" . $otherTb. "', 'type=obj_encoded', '" . tr::get('contextual_search_in', [cfg::tbEl($otherTb, 'label')]) . "', {obj_encoded: '" . SafeQuery::encode( $otherFld . " = ?", [$v]). "'})\">" .
+                            " onclick=\"api.showResults('" . $otherTb. "', 'type=obj_encoded', '" . tr::get('contextual_search_in', [cfg::tbEl($otherTb, 'label')]) . "', {obj_encoded: '" . \SQL\SafeQuery::encode( $otherFld . " = ?", [$v]). "'})\">" .
                             utils::format_text($v) .
                             '</span>' . (next($val) === false ? ' ' : ';');
                     }
@@ -866,7 +866,7 @@ class Field implements iTemplate
                 foreach ($val as $v) {
                     if ($setting['active_link']) {
                         $html .= "<span class=\"a\" " .
-                            " onclick=\"api.showResults('" . $this->tb. "', 'type=obj_encoded', '" . tr::get('contextual_search_in', [cfg::tbEl($this->tb, 'label')] ) . "', {obj_encoded: '" . SafeQuery::encode(
+                            " onclick=\"api.showResults('" . $this->tb. "', 'type=obj_encoded', '" . tr::get('contextual_search_in', [cfg::tbEl($this->tb, 'label')] ) . "', {obj_encoded: '" . \SQL\SafeQuery::encode(
                                     "" . $setting['fieldname'] . " LIKE '%;" . $v . "' " .
                                     "OR " . $setting['fieldname'] . " LIKE '" . $v . ";%' " .
                                     "OR " . $setting['fieldname'] . " = '" . $v . "' "

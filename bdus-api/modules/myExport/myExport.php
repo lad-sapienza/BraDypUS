@@ -51,7 +51,15 @@ class myExport_ctrl extends Controller
 		
 			$file = PROJ_DIR . 'export/' . $tb . '.' . date('U');
 		
-			$export_handle = new Export($this->db, $file, $tb, $where, $values);
+			$export_handle = new Export(
+				$this->db, 
+				$file, 
+				$tb, 
+				$where, 
+				$values, 
+				$this->cfg->get("tables.$tb.label"), 
+				$this->cfg->get("tables.$tb.fields.*.label")
+			);
 		
 			$export_handle->doExport($format);
 

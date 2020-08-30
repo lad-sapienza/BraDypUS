@@ -13,11 +13,21 @@ class Export
 	protected $db;
 	protected $data;
 	protected $tb;
+	protected $tb_label;
+	protected $field_labels;
 	protected $sql;
 	protected $xls;
 
 
-	public function __construct(\DB\DB\DBInterface $db, string $filename, string $tb, string $where_sql = null, array $values = null)
+	public function __construct(
+		\DB\DB\DBInterface $db, 
+		string $filename, 
+		string $tb, 
+		string $where_sql = null, 
+		array $values = null,
+		string $tb_label,
+		array $field_labels
+	)
 	{
 
 		ini_set('memory_limit','1560M');
@@ -25,6 +35,8 @@ class Export
 		$this->filename = $filename;
 		$this->tb = $tb;
 		$this->db = $db;
+		$this->tb_label = $tb_label;
+		$this->field_labels = $field_labels;
 
 		$this->data = $db->query('SELECT * FROM ' . $this->tb . ' WHERE ' . ($where_sql ? $where_sql : '1=1'), $values);
 
@@ -35,8 +47,7 @@ class Export
 
 	public function doExport($format)
 	{
-		switch($format)
-		{
+		switch($format) {
 			case 'XLS':
 				$this->exportXLS();
 				break;
@@ -72,15 +83,14 @@ class Export
 	{
 		$this->filename .= '.json';
 
-		foreach (array_keys($this->data[0]) as $fld_id)
-		{
-			$labels[] = cfg::fldEl($this->tb, $fld_id, 'label');
+		foreach (array_keys($this->data[0]) as $fld_id) {
+			$labels[] = $this->field_labels[$fld_id];
 		}
 
 		$data = array(
 				'meta' => array(
 						'table' => $this->tb,
-						'table_label' => cfg::tbEl($this->tb, 'label'),
+						'table_label' => $this->tb_label,
 						'labels' => $labels,
 						'fields' => array_keys($this->data[0]),
 						),
@@ -91,24 +101,22 @@ class Export
 	}
 
 
-	private function exportXML()
+	private function exportXML() 
 	{
 		$this->filename .= '.xml';
 
 		$xml = "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n"
 			. "<!--\r"
-			. "\tExport from " . strtoupper(APP) . ", table: " . cfg::tbEl($this->tb, 'label') . " (" . $this->tb . ")\n"
+			. "\tExport from " . strtoupper(APP) . ", table: " . $this->tb_label . " (" . $this->tb . ")\n"
 			. "\ton " . date('Y-m-d G:i') . "\n"
 			. "-->\n"
 			. "<root>\n"
-				. "\t<table id=\"" . $this->tb . "\" name=\"" . cfg::tbEl($this->tb, 'label') . "\">\n";
+				. "\t<table id=\"" . $this->tb . "\" name=\"" . $this->tb_label . "\">\n";
 
-				foreach ($this->data as $row)
-				{
+				foreach ($this->data as $row) {
 					$xml .= "\t\t<row>\n";
 
-					foreach($row as $fld=>$val)
-					{
+					foreach($row as $fld=>$val) {
 						$xml .= "\t\t\t<fld name=\"" . $fld . "\">" . htmlspecialchars($val) . "</fld>\n";
 					}
 					$xml .= "\t\t</row>\n";
@@ -119,8 +127,7 @@ class Export
 
 			$w = utils::write_in_file($this->filename, $xml);
 
-			if (!$w)
-			{
+			if (!$w) {
 				throw new \Exception('Can not write in file ' . $this->filename);
 			}
 
@@ -131,9 +138,8 @@ class Export
 	{
 		$this->filename .= '.html';
 
-		foreach (array_keys($this->data[0]) as $fld_id)
-		{
-			$labels[] = cfg::fldEl($this->tb, $fld_id, 'label');
+		foreach (array_keys($this->data[0]) as $fld_id) {
+			$labels[] = $this->field_labels[$fld_id];
 		}
 
 		$html = "<!DOCTYPE html >\n"
@@ -144,10 +150,10 @@ class Export
 			. "</head>\n"
 			. "<body>\n"
 
-			. "<h2>Export from " . strtoupper(APP) . ", table: " . cfg::tbEl($this->tb, 'label'). " (" . $this->tb . "), on " . date('Y-m-d G:i') . "</h2>\n"
+			. "<h2>Export from " . strtoupper(APP) . ", table: " . $this->tb_label . " (" . $this->tb . "), on " . date('Y-m-d G:i') . "</h2>\n"
 
 			. "<table width=\"100%\" border=\"1\">\n"
-			. "\t<caption>" . cfg::tbEl($this->tb, 'label'). " (" . $this->tb . ")</caption>\n"
+			. "\t<caption>" . $this->tb_label . " (" . $this->tb . ")</caption>\n"
 			. "\t<thead>\n"
 			. "\t<tr>\n"
 				. "\t\t<th>"
@@ -158,8 +164,7 @@ class Export
 			. "\t<tbody>\n";
 
 
-		foreach ($this->data as $row)
-		{
+		foreach ($this->data as $row) {
 			$html .= "\t<tr>\n"
 				. "\t\t<td>" . implode("</td>\n\t\t<td>", $row) . "</td>\n"
 			."\t</tr>\n";
@@ -173,8 +178,7 @@ class Export
 
 		$w = utils::write_in_file($this->filename, $html);
 
-		if (!$w)
-		{
+		if (!$w) {
 			throw new \Exception('Can not write in file ' . $this->filename);
 		}
 
@@ -186,16 +190,14 @@ class Export
 		$this->filename .= '.xls';
 
 
-		foreach (array_keys($this->data[0]) as $fld_id)
-		{
-			$labels[] = cfg::fldEl($this->tb, $fld_id, 'label');
+		foreach (array_keys($this->data[0]) as $fld_id) {
+			$labels[] = $this->field_labels[$fld_id];
 		}
 
 		$this->xls_writeLine($labels);
 
 
-		foreach ( $this->data as $row )
-		{
+		foreach ( $this->data as $row ) {
 			$this->xls_writeLine($row);
 		}
 
@@ -221,14 +223,11 @@ class Export
 	{
 		$value = utf8_decode($value);
 
-		if (is_numeric($value))
-		{
+		if (is_numeric($value)) {
 			$this->xls['string'] .= pack("sssss", 0x203, 14, $this->xls['row'], $this->xls['col'], 0x0);
 
 			$value = pack("d", $value);
-		}
-		else
-		{
+		} else {
 			$l = strlen($value);
 
 			$this->xls['string'] .= pack("ssssss", 0x204, 8 + $l, $this->xls['row'], $this->xls['col'], 0x0, $l);
@@ -251,18 +250,15 @@ class Export
 
 		$content .= pack("ss", 0x0A, 0x00);
 
-		if(!$hndl = fopen($this->filename, "w+"))
-		{
+		if(!$hndl = fopen($this->filename, "w+")) {
 			throw new \Exception("Can not open " . $this->filename);
 		}
 
-		if(!fwrite($hndl,$content))
-		{
+		if(!fwrite($hndl,$content)) {
 			throw new \Exception("Can not write in ".$this->filename);
 		}
 
-		if(!fclose($hndl))
-		{
+		if(!fclose($hndl)) {
 			throw new \Exception("Can not close ".$this->filename);
 		}
 	}
@@ -274,13 +270,11 @@ class Export
 	 */
 	private function xls_writeLine($arr)
 	{
-		if(!is_array($arr))
-		{
+		if(!is_array($arr)) {
 			throw new \Exception("Error : Argument is not valid. Supply an valid Array.");
 		}
 
-		foreach($arr as $data)
-		{
+		foreach($arr as $data) {
 			$this->xls_cell($data);
 		}
 

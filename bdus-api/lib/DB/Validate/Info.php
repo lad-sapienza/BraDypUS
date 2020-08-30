@@ -3,19 +3,19 @@ namespace DB\Validate;
 
 class Info
 {
-    public static function getInfo(Resp $resp): void
+    public static function getInfo(Resp $resp, \Config\Config $cfg): void
     {
         $resp->set('info',
-            'App name: ' . \cfg::main('name')
+            'App name: ' . $cfg->get('main.name')
         );
         $resp->set('info',
-            'App default language: ' . \cfg::main('lang')
+            'App default language: ' . $cfg->get('main.lang')
         );
         $resp->set('info',
-            'App status: ' . \cfg::main('status')
+            'App status: ' . $cfg->get('main.status')
         );
         $resp->set('info',
-            'App database engine: ' . \cfg::main('db_engine')
+            'App database engine: ' . $cfg->get('main.db_engine')
         );
     }
 

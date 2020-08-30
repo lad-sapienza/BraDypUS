@@ -29,7 +29,7 @@ class Validate
     public function all(): array
     {   
         $this->resp->set('head', 'Main system information');
-        Info::getInfo($this->resp);
+        Info::getInfo($this->resp, $this->cfg);
 
         $db_cfg = new DbCfgAlign($this->resp, $this->db, $this->cfg);
         $this->resp->set('head', 'Configuration and database tables alignement');

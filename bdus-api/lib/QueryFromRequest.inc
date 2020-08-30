@@ -40,10 +40,10 @@
  * 			'q_encoded'		string, required, base64_encoded query string
  *
  * 		'obj_encoded'
- * 			'obj_encoded'		    string, required, SafeQuery encoded query string
+ * 			'obj_encoded'		    string, required, \SQL\SafeQuery encoded query string
  */
 
-class Query
+class QueryFromRequest
 {
     private $tb;
     private $join;
@@ -152,7 +152,7 @@ class Query
 
     public function getWhereAndValues()
     {
-        return SafeQuery::encode($this->where, $this->values);
+        return \SQL\SafeQuery::encode($this->where, $this->values);
     }
     
     public function getValues(): array
@@ -308,7 +308,7 @@ class Query
             case 'obj_encoded':
                 $this->join = $this->makeSafeStatement(urldecode($request['join']));
                 // Decode query parameter
-                list($q, $v) = SafeQuery::decode($request['obj_encoded']);
+                list($q, $v) = \SQL\SafeQuery::decode($request['obj_encoded']);
                 // Remove new lines
                 $encoded = trim(preg_replace('/\s+/', ' ', $q));
                 $this->where = preg_replace('/^SELECT(.+?)WHERE/i', '', $encoded);

@@ -205,7 +205,7 @@ class api_ctrl extends Controller
 				}
 			}
 
-			$query = new Query($this->db, $request);
+			$query = new QueryFromRequest($this->db, $request);
 
 			// Set Header
 			$header['query_where'] = $query->getWhere();

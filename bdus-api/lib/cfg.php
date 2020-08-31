@@ -319,17 +319,6 @@ class cfg
 		}
 	}
 
-	public static function getPreviewFlds($tb)
-	{
-		$pref_preview = pref::get('preview');
-
-		if (is_array($pref_preview) && is_array($pref_preview[$tb])) {
-			return $pref_preview[$tb];
-		} else {
-			return self::tbEl($tb, 'preview');
-		}
-	}
-
 	public static function deleteTb($tb)
 	{
 		unset(self::$data['tables'][$tb]);

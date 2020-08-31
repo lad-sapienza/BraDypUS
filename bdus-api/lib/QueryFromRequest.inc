@@ -43,6 +43,9 @@
  * 			'obj_encoded'		    string, required, \SQL\SafeQuery encoded query string
  */
 
+use \DB\DB\DBInterface;
+use \Config\Config;
+
 class QueryFromRequest
 {
     private $tb;
@@ -54,6 +57,7 @@ class QueryFromRequest
     private $order;
     private $limit;
     private $db;
+    private $cfg;
 
     /**
      *
@@ -62,7 +66,7 @@ class QueryFromRequest
      * @param boolean $use_preview	use preview fields or all fields
      * @throws \Exception
      */
-    public function __construct(\DB\DB\DBInterface $db, $request, $use_preview = false)
+    public function __construct(DBInterface $db, Config $cfg, array $request, bool $use_preview = false)
     {
         if (!$request['tb']) {
             throw new \Exception(tr::get('parameter_missing', ['tb']));
@@ -70,6 +74,8 @@ class QueryFromRequest
         $this->tb = $request['tb'];
 
         $this->db = $db;
+        
+        $this->cfg = $cfg;
 
         $this->setFields($use_preview, $request['fields']);
 
@@ -108,8 +114,8 @@ class QueryFromRequest
                 if (preg_match('/ORDER/', $this->where)) {
                     return;
                 }
-                if (cfg::tbEl($this->tb, 'order')) {
-                    $fld = $this->tb . '.' . cfg::tbEl($this->tb, 'order');
+                if ($this->cfg->get("tables.{$this->tb}.order")) {
+                    $fld = $this->tb . '.' . $this->cfg->get("tables.{$this->tb}.order");
                 } else {
                     $fld = $this->tb . '.id';
                 }
@@ -330,9 +336,9 @@ class QueryFromRequest
      */
     private function fast($string, $limit2preview = false)
     {
-        $fields_to_search_in = $limit2preview ? cfg::getPreviewFlds($this->tb) : cfg::fldEl($this->tb, 'all', 'label');
+        $fields_to_search_in = $limit2preview ? $this->getPreviewFields($this->tb) : $this->cfg->get("tables.{$this->tb}.fields.*.label");
 
-        foreach ($fields_to_search_in as $field=>$label) {
+        foreach ($fields_to_search_in as $field => $label) {
             $array_query_core[] = $this->tb . '.' . $field . " LIKE '%" . str_replace("'", "\'", urldecode($string)) . "%'";
         }
         // join partial statements
@@ -381,7 +387,7 @@ class QueryFromRequest
             // case 2: queried table is not current table, it s a plugin table
             } else {
                 // case 2.1: queried field id populated by id_from_tb
-                $third_table = cfg::fldEl($tb, $fld, 'id_from_tb');
+                $third_table = $this->cfg->get("tables.$tb.fields.$fld.id_from_tb");
 
                 if ($third_table) {
                     $format = " id IN (SELECT id_link FROM {$tb} " .
@@ -391,7 +397,7 @@ class QueryFromRequest
                                 "SELECT id FROM {$third_table} WHERE %s".
                                 ") " .
                             ") ";
-                    $fld = cfg::tbEl($third_table, 'id_field');
+                    $fld = $this->cfg->get("tables.$third_table.id_field");
 
                 // case 2.2: queried field is a normal field
                 } else {
@@ -465,17 +471,17 @@ class QueryFromRequest
         }
 
         if ($use_preview) {
-            $preview_array = cfg::getPreviewFlds($this->tb);
+            $preview_array = $this->getPreviewFields($this->tb);
 
             if (!in_array('id', $preview_array)) {
                 $preview_array = array_merge(array('id'), $preview_array);
             }
 
             foreach ($preview_array as $fld) {
-                $col_names[$fld] = cfg::fldEl($this->tb, $fld, 'label');
+                $col_names[$fld] = $this->cfg->get("tables.{$this->tb}.fields.$fld.label");
             }
         } else {
-            $col_names = cfg::fldEl($this->tb, 'all', 'label');
+            $col_names = $this->cfg->get("tables.{$this->tb}.fields.*.label");
         }
 
         $this->fields = $col_names;
@@ -501,6 +507,17 @@ class QueryFromRequest
             }
         }
         return implode(', ', $ret);
+    }
+
+    private function getPreviewFields( string $tb )
+    {
+        $pref_preview = pref::get('preview');
+
+		if (is_array($pref_preview) && is_array($pref_preview[$tb])) {
+			return $pref_preview[$tb];
+		} else {
+			return $this->cfg->get("tables.{$tb}.preview");
+		}
     }
 
     /**

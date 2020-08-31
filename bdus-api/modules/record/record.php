@@ -254,7 +254,7 @@ class record_ctrl extends Controller
             throw new \Exception(tr::get('tb_missing'));
         }
 
-        $queryObj = new QueryFromRequest($this->db, $this->request, true);
+        $queryObj = new QueryFromRequest($this->db, $this->cfg, $this->request, true);
 
         $count = $this->request['total'] ?: $queryObj->getTotal();
 
@@ -321,7 +321,7 @@ class record_ctrl extends Controller
         try {
             $this->request['type'] = 'obj_encoded';
 
-            $qObj = new QueryFromRequest($this->db, $this->request, true);
+            $qObj = new QueryFromRequest($this->db, $this->cfg, $this->request, true);
 
             $response['sEcho'] = intval($this->request['sEcho']);
             $response['query_arrived'] = $qObj->getQuery();

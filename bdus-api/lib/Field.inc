@@ -19,7 +19,7 @@ class Field implements TemplateInterface
     // old: $db_data > $record
 
 
-    public function __construct(string $context, Record $record, Monolog\Logger $log)
+    public function __construct(string $context, Record $record, Monolog\Logger $log, \Config\Config $cfg)
     {
         $this->tb = $record->getTb();
 
@@ -30,6 +30,8 @@ class Field implements TemplateInterface
         $this->db = $record->getDB();
         
         $this->log = $log;
+
+        $this->cfg = $cfg;
     }
 
     /**

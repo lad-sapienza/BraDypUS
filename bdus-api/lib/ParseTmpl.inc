@@ -8,7 +8,7 @@
  * @since 2011-08-11
  */
 
-class ParseTmpl extends Field
+class ParseTmpl extends Field implements TemplateInterface
 {
 
 	/**
@@ -53,10 +53,10 @@ class ParseTmpl extends Field
 			// preference saved template
 			return PROJ_DIR . 'templates/' . pref::getTmpl($this->tb, $context);
 
-		} else if (cfg::tbEl($this->tb, 'tmpl_' . $context) && file_exists(PROJ_DIR . 'templates/' . cfg::tbEl($this->tb, 'tmpl_' . $context))) {
+		} else if ($this->cfg->get("tables.{$this->tb}.tmpl_{$context}") && file_exists(PROJ_DIR . 'templates/' . $this->cfg->get("tables.{$this->tb}.tmpl_{$context}"))) {
 
 			// config, context bound, template
-			return PROJ_DIR . 'templates/' . cfg::tbEl($this->tb, 'tmpl_' . $context);
+			return PROJ_DIR . 'templates/' . $this->cfg->get("tables.{$this->tb}.tmpl_{$context}");
 
 		} else if (file_exists(PROJ_DIR . 'templates/' . $tb . '_' . $context . '.twig')) {
 

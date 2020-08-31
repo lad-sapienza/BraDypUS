@@ -30,6 +30,9 @@ use DB\Engines\AvailableEngines;
  * $mng->getBySQL('geodata', 'table_link = ?', ['sitarc__siti']);
  *
  */
+
+use DB\DB\DBInterface;
+
 class Manage
 {
     private $db;
@@ -57,7 +60,7 @@ class Manage
      * @param string $prefix    Application prefix, if available
      * @param string $driver    DB driver: throws error if it is not a valid driver
      */
-    public function __construct(\DB\DB\DBInterface $db, string $prefix = null)
+    public function __construct(DBInterface $db, string $prefix = null)
     {
         $this->db = $db;
         $this->prefix = $prefix;

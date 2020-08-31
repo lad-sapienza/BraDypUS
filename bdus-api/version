@@ -1,3 +1,4 @@
+3.16.134[] = "Dropped support for cfg in \API2\Inspect"
 3.16.133[] = "Dropped support for \Record"
 3.16.133[] = "Dropped support for QueryFromRequest"
 3.16.133[] = "Dropped support for ParseTmpl"

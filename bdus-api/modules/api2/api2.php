@@ -25,6 +25,7 @@
  */
 
  use \DB\System\Manage;
+ use \API2\Inspect;
 
 class api2 extends Controller
 {
@@ -64,11 +65,16 @@ class api2 extends Controller
         if ($this->get['tb'] && strpos($this->get['tb'], $this->prefix) === false) {
             $this->get['tb'] = $this->prefix . $this->get['tb'];
         }
-        // Validate table
-        $sys_manage = new Manage($this->db, $this->prefix);
-        if (in_array($this->get['tb'], $sys_manage->available_tables)) {
-            throw new \Exception("System tables cannot be queried");
+
+        if ($this->get['tb']) {
+            // Validate table
+            $sys_manage = new Manage($this->db, $this->prefix);
+            if (in_array($this->get['tb'], $sys_manage->available_tables)) {
+                throw new \Exception("System tables cannot be queried");
+            }
         }
+
+        
     }
 
     public function run()
@@ -91,12 +97,12 @@ class api2 extends Controller
             
             return $this->array2response($resp);
 
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             return $this->array2response([
                 'type' => 'error',
                 'text' => $e->getMessage(),
                 'trace' => $this->debug ? $e->getTrace() : "Turn on API2 debug to read trace"
-                ]);
+            ]);
         }
     }
 
@@ -159,7 +165,7 @@ class api2 extends Controller
     {
         $tb = $this->get['tb'];
 
-        $resp = Inspect::cfg($tb);
+        $resp = Inspect::Configuration($this->cfg, $tb);
         
         return $resp;
     }

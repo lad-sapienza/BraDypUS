@@ -26,6 +26,7 @@
 
  use \DB\System\Manage;
  use \API2\Inspect;
+ use \API2\GetUniqueVal;
 
 class api2 extends Controller
 {
@@ -240,8 +241,7 @@ class api2 extends Controller
             throw new \Exception("Field name is required with verb getUniqueVal");
         }
 
-        require_once __DIR__ . '/GetUniqueVal.php';
-        $resp = GetUniqueVal::run($tb, $fld, $substring, $where, $this->db);
+        $resp = GetUniqueVal::run($tb, $fld, $substring, $where, $this->db, $this->cfg);
 
         return $resp;
     }

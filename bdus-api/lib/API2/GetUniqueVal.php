@@ -1,13 +1,18 @@
 <?php
+namespace API2;
+use Config\Config;
+use \DB\DB\DBInterface;
 
 /**
  * Gets Unique values from database
  * @requires cfg
  * @requires DB
  */
+
+
 class GetUniqueVal
 {
-    public static function run($tb, $fld, $str = false, $where = false, \DB\DB\DBInterface $db)
+    public static function run($tb, $fld, $str = false, $where = false, DBInterface $db, Config $cfg)
     {
         if ($str === 'false'){
             $str = false;
@@ -15,10 +20,10 @@ class GetUniqueVal
         if ($where === 'false'){
             $where = false;
         }
-        $fld_type = cfg::fldEl($tb, $fld, 'type');
-        $id_from_tb = cfg::fldEl($tb, $fld, 'id_from_tb');
+        $fld_type = $cfg->get("tables.$tb.fields.$fld.type");
+        $id_from_tb = $cfg->get("tables.$tb.fields.$fld.id_from_tb");
         if ($id_from_tb) {
-            $f = cfg::tbEl($id_from_tb, 'id_field');
+            $f = $cfg->get("tables.$id_from_tb.id_field");
             $sql = "SELECT DISTINCT {$f} as f FROM {$id_from_tb} WHERE ";
         } else {
             $sql = "SELECT DISTINCT {$fld} as f FROM {$tb} WHERE ";

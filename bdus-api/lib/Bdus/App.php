@@ -43,7 +43,7 @@ class App
 					$this->log->pushHandler(new StreamHandler($log_file, Logger::DEBUG));
 					$this->log->pushHandler(new FirePHPHandler());
 				} else {
-					$this->log->pushHandler( new LogDBHandler($this->db, $this->prefix) );
+					$this->log->pushHandler( new LogDBHandler($this->db) );
 				}
 				$this->db->setLog($this->log);
 			}

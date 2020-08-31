@@ -44,7 +44,7 @@ class home_ctrl extends Controller
 
         $this->render('home', 'main', [
             "version" => version::current(),
-            "app_label" => strtoupper($this->cfg->get('main.name') ),
+            "app_label" => strtoupper($this->cfg ? $this->cfg->get('main.name') : ''),
             "css" => $this->compressCss( ['main.css'], $this->get['mini'] === 1 ),
             "tr_json" => tr::lang2json(),
             "debugMode" => DEBUG_ON ? "true" : "false",

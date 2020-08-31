@@ -301,6 +301,22 @@ class DB implements \DB\DB\DBInterface
 		}
 	}
 
+	public function logError(string $channel, int $level, string $message, int $time ): bool
+	{
+		try {
+			$query = 'INSERT INTO ' . PREFIX . 'log (channel, level, message, time) VALUES (:channel, :level, :message, :time)';
+			$sql = $this->db->prepare($query);
+			return $sql->execute([
+				'channel' => $channel,
+                'level' => $level,
+                'message' => $message,
+                'time' => $time
+			]);
+		} catch (\PDOException $e) {
+			// silece....
+		}
+	}
+
 	/**
 	 *
 	 * Starts a transaction

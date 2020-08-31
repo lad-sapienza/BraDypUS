@@ -39,7 +39,7 @@ class rs_ctrl extends Controller
     {
         $id = $this->get['id'];
 
-        $record = new Record('no importance', false, $this->db);
+        $record = new Record('no importance', false, $this->db, $this->cfg);
 
         if ($record->deleteRS($id)) {
             utils::response('ok_relation_erased');
@@ -55,7 +55,7 @@ class rs_ctrl extends Controller
         $id = $this->get['id'];
         $context = $this->get['context'];
 
-        $record = new Record($tb, $id, $this->db);
+        $record = new Record($tb, $id, $this->db, $this->cfg);
 
         $res = $record->getRS();
 
@@ -96,7 +96,7 @@ class rs_ctrl extends Controller
         if (!$second ) throw new Exception("Missing second");
         if (!$relation ) throw new Exception("Missing relation");
 
-        $record = new Record($tb, false, $this->db);
+        $record = new Record($tb, false, $this->db, $this->cfg);
 
         $id = $record->addRS($first, $relation, $second);
 

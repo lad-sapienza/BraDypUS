@@ -260,7 +260,7 @@ class api_ctrl extends Controller
 	 */
 	private function getOne($tb, $id)
 	{
-		$rec = new Record($tb, $id, $this->db);
+		$rec = new Record($tb, $id, $this->db, $this->cfg);
 		$data['metadata'] = [
 			'table' => $tb,
 			'stripped_table' => str_replace($this->prefix, null, $tb),

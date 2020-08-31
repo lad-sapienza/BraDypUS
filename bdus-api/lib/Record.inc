@@ -37,23 +37,33 @@
  * ]
  */
 
+use \DB\DB\DBInterface;
+use \Config\Config;
+
 class Record implements RecordInterface
 {
-	protected $tb, $id, $db, $data, $loaded, $changed, $idField, $tmp_dir;
+	protected $tb;
+	protected $id;
+	protected $db;
+	protected $cfg;
+	protected $data;
+	protected $loaded;
+	protected $changed;
+	protected $idField;
+	protected $tmp_dir;
 
-	public function __construct($tb, $id = false, \DB\DB\DBInterface $db)
+	public function __construct($tb, $id = false, DBInterface $db, Config $cfg)
 	{
 		$this->tb = $tb;
+		$this->db = $db;
+		$this->cfg = $cfg;
+		$this->tmp_dir = PROJ_TMP_DIR;
 
 		if ($id === 'last_added') {
-
 			$t = $db->query('SELECT id FROM ' . $tb . ' WHERE 1=1 ORDER BY id DESC LIMIT 1 OFFSET 0', null, 'read');
 			$id = $t[0]['id'];
 		}
-
 		$this->id = $id;
-		$this->db = $db;
-		$this->tmp_dir = PROJ_TMP_DIR;
 	}
 
 	public function getId()
@@ -92,7 +102,7 @@ class Record implements RecordInterface
 
 		$rec['geodata'] 	= $this->getGeodata();
 
-		if (cfg::tbEl($tb, 'rs')) {
+		if ($this->cfg->get("tables.$tb.rs")) {
 			$rec['rs'] 		= $this->getRS();
 		}
 
@@ -314,7 +324,7 @@ class Record implements RecordInterface
 		$this->db->backupBeforeEdit($this->tb, $id, 'DELETE FROM ' . $this->tb . ' WHERE id = ' . $id);
 
 		// PLUGINS
-		$plugins = cfg::tbEl($this->tb, 'plugin');
+		$plugins = $this->cfg->get("tables.{$this->tb}.plugin");
 
 		if (is_array($plugins)) {
 
@@ -343,7 +353,7 @@ class Record implements RecordInterface
 
 		// RS
 		// TODO: NO BACKUP HERE
-		$rs_fld = cfg::tbEl($this->tb, 'rs');
+		$rs_fld = $this->cfg->get("tables.{$this->tb}.rs");
 		if ($rs_fld) {
 
 			if (!$this->loaded['core']) {
@@ -403,7 +413,7 @@ class Record implements RecordInterface
 
 		} else if ($this->idField) {
 
-			$query = "SELECT * FROM " . $this->tb . " WHERE " . cfg::tbEl($this->tb, 'id_field'). " = :id_field LIMIT 1 OFFSET 0";
+			$query = "SELECT * FROM " . $this->tb . " WHERE " . $this->cfg->get("tables.{$this->tb}.id_field"). " = :id_field LIMIT 1 OFFSET 0";
 			$values = array(':id_field' => $this->idField);
 		}
 
@@ -557,7 +567,7 @@ class Record implements RecordInterface
 	 */
 	private function loadAllPlugins()
 	{
-		$plugins = cfg::tbEl($this->tb, 'plugin');
+		$plugins = $this->cfg->get("tables.{$this->tb}.plugin");
 
 		if (!$plugins) {
 			$this->loaded['allPlugins'] = true;
@@ -591,7 +601,7 @@ class Record implements RecordInterface
 	 */
 	private function loadCoreLinks($detail = false)
 	{
-		$links = cfg::tbEl($this->tb, 'link');
+		$links = $this->cfg->get("tables.{$this->tb}.link");
 
 		if (!$links) {
 			$this->loaded['corelinks'] = true;
@@ -622,7 +632,7 @@ class Record implements RecordInterface
 				$tmp_values[] = $this->data['core'][$fld_arr['my']] ?? '';
 			}
 
-			$id_fld = cfg::tbEl($link['other_tb'], 'id_field');
+			$id_fld = $this->cfg->get("tables.{$link['other_tb']}.id_field");
 
 			$query = "SELECT id " . ( ($id_fld === 'id') ? '' : ', ' . $id_fld . '') . " FROM " . $link['other_tb'] . " WHERE " . implode(' AND ', $tmp);
 			$res = $this->db->query($query, $tmp_values, 'read');
@@ -656,7 +666,7 @@ class Record implements RecordInterface
 
 		$ret = [];
 
-		$bl_array = cfg::tbEl($this->tb, 'backlinks');
+		$bl_array = $this->cfg->get("tables.{$this->tb}.backlinks");
 
 		if (!$bl_array) {
 			return $ret;
@@ -671,13 +681,13 @@ class Record implements RecordInterface
 				continue;
 			}
 
-			$this_id_fld_val = $this->getCore(cfg::tbEl($this->tb, 'id_field'));
+			$this_id_fld_val = $this->getCore($this->cfg->get("tables.{$this->tb}.id_field"));
 
 			if (!$this_id_fld_val) {
 				continue;
 			}
 
-			$dest_id_fld = cfg::tbEl($tb, 'id_field');
+			$dest_id_fld = $this->cfg->get("tables.$tb.id_field");
 
 			if ($dest_id_fld === 'id') {
 				// If id_field of the destrination table is id field, the query is simple

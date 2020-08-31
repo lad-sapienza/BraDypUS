@@ -24,7 +24,7 @@ class geoface_ctrl extends Controller
 				throw new \Exception('User has not enough privilege to add a new record');
 			}
 
-			$record = new Record($tb, $id, $this->db);
+			$record = new Record($tb, $id, $this->db, $this->cfg);
 
 			$new_id = $record->addGeodata($geometry);
 
@@ -56,7 +56,7 @@ class geoface_ctrl extends Controller
 				throw new \Exception('User has not enough privilege to edit records');
 			}
 
-			$record = new Record('novalue', false, $this->db);
+			$record = new Record('novalue', false, $this->db, $this->cfg);
 
 			foreach ($id_arr as $id) {
 				if (!$record->deleteGeodata($id)) {

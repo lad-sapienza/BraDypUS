@@ -251,7 +251,7 @@ class QueryFromRequest
             $fullResult = [];
 
             foreach ($result as $id => $row) {
-                $rec = new Record($this->tb, $row['id'], $this->db);
+                $rec = new Record($this->tb, $row['id'], $this->db, $this->cfg);
     			$rowResult = $rec->readFull();
 			    array_push($fullResult, $rowResult);
             }

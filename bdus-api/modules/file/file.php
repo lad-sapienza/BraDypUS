@@ -38,7 +38,7 @@ class file_ctrl extends Controller
 				throw new \Exception('error_uploading_file');
 			}
 
-			$record = new Record($this->prefix . 'files', false, $this->db);
+			$record = new Record($this->prefix . 'files', false, $this->db, $this->cfg);
 
 			$record->setCore([
 				$this->prefix . 'files' => [
@@ -162,7 +162,7 @@ class file_ctrl extends Controller
 	 */
 	public function gallery()
 	{
-		$record = new Record($this->request['tb'], $this->request['id'], $this->db);
+		$record = new Record($this->request['tb'], $this->request['id'], $this->db, $this->cfg);
 
 		$this->render('file', 'gallery', [
 			'title' => tr::get('file_gallery', [$this->cfg->get("tables.{$this->request['tb']}.label") . ', id. ' . $this->request['id']]),

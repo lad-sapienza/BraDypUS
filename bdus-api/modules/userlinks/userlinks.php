@@ -38,7 +38,7 @@ class userlinks_ctrl extends Controller
 			if (!$tb) 		throw new \Exception("Missing required parameter tb");
 			if (!$id) 		throw new \Exception("Missing required parameter id");
 			
-			$record = new Record($thistb, $thisid, $this->db);
+			$record = new Record($thistb, $thisid, $this->db, $this->cfg);
 			foreach($id as $id) {
 				if ($record->addUserLink($tb, $id)) {
 					$ok[] = true;
@@ -64,7 +64,7 @@ class userlinks_ctrl extends Controller
 	public function deleteUserLink()
 	{
 		$id = $this->get['id'];
-		$record = new Record('no importance', false, $this->db);
+		$record = new Record('no importance', false, $this->db, $this->cfg);
 
 		if ($record->deleteUserLink($id)) {
 			utils::response('ok_userlink_erased');
@@ -79,7 +79,7 @@ class userlinks_ctrl extends Controller
 		$id = $this->get['id'];
 		$context = $this->get['context'];
 
-		$record = new Record($tb, $id, $this->db);
+		$record = new Record($tb, $id, $this->db, $this->cfg);
 
 		$links = $record->getUserLinks();
 

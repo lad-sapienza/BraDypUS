@@ -1,3 +1,4 @@
+3.16.133[] = "Dropped support for \Record"
 3.16.133[] = "Dropped support for QueryFromRequest"
 3.16.133[] = "Dropped support for ParseTmpl"
 3.16.133[] = "ParseTmpl and Field use \Config\Config"

@@ -71,7 +71,7 @@ class multiupload_ctrl extends Controller
 	{
 		foreach($this->post['f'] as $row) {
 			try {
-				$record = new Record($this->prefix . 'files', false, $this->db);
+				$record = new Record($this->prefix . 'files', false, $this->db, $this->cfg);
 
 				$record->setTmpFolder($row['path']);
 

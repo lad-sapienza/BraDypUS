@@ -22,7 +22,7 @@ class record_ctrl extends Controller
             if (is_array($this->request['id'])) {
                 foreach ($this->request['id'] as $id) {
                     try {
-                        $record = new Record($this->get['tb'], $id, $this->db);
+                        $record = new Record($this->get['tb'], $id, $this->db, $this->cfg);
 
                         if (is_array($this->post['core'])) {
                             $record->setCore($this->post['core']);
@@ -84,7 +84,7 @@ class record_ctrl extends Controller
         if (is_array($this->request['id'])) {
             foreach ($this->request['id'] as $id) {
                 try {
-                    $record = new Record($this->get['tb'], $id, $this->db);
+                    $record = new Record($this->get['tb'], $id, $this->db, $this->cfg);
 
                     $record->delete();
 
@@ -164,7 +164,7 @@ class record_ctrl extends Controller
                 $id = false;
             }
 
-            $record = new Record($this->request['tb'], ($flag_idfield ? false : $id), $this->db);
+            $record = new Record($this->request['tb'], ($flag_idfield ? false : $id), $this->db, $this->cfg);
 
             if ($flag_idfield) {
                 $record->setIdField($id);

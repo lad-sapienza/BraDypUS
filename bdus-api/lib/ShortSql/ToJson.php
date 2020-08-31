@@ -48,7 +48,7 @@ class ToJson
 			$header['total_rows'] 	= $total_rows ?: (int) self::getTotal($sql, $values);
 			$header['total_pages'] 	= ceil($header['total_rows']/$records_per_page);
 			$header['stripped_table'] = str_replace(PREFIX, null, $tb);
-			$header['table_label'] 	= \cfg::tbEl($tb, 'label');
+			$header['table_label'] 	= self::$cfg->get("tables.$tb.label");
 			$header['page'] 		= ($page > $header['total_pages']) ? $header['total_pages'] : $page;
 
 			if ($header['total_rows'] > $records_per_page ) {

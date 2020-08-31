@@ -236,8 +236,8 @@ class Field implements TemplateInterface
         $html = $this->image_thumbs();
 
         $html .= '<div class="row">' .
-                '<div class="col-sm-6">'
-        . '<fieldset>';
+                '<div class="col-sm-6">' .
+            '<fieldset>';
 
         // CORE
         $flds_arr = cfg::fldEl($this->tb, 'all', 'name');
@@ -245,12 +245,12 @@ class Field implements TemplateInterface
         foreach ($flds_arr as $fld) {
             $html .= $this->fld($fld);
         }
-        $html .= '</fieldset>'
+        $html .= '</fieldset>';
 
         // RS
-        . $this->rs()
+        $html .= $this->rs();
 
-        . '</div>';
+        $html .= '</div>'; // end of .col-sm-6
 
         $html .= '<div class="col-sm-4">';
 
@@ -272,9 +272,9 @@ class Field implements TemplateInterface
         //PERMALINK
         $html .= $this->permalink();
 
-        $html .= '</div>';
+        $html .= '</div>';// end of .col-sm-4
 
-        $html .= '</div>';
+        $html .= '</div>';// end of .row
 
 
         return $html;

@@ -19,14 +19,13 @@ class ParseTmpl extends Field
 	{
 		$template_file = $this->setTemplate($template);
 
-		if ($template_file == 'default') {
+		if ($template_file === 'default') {
 			return $this->showall();
 		}
 
 		$twig = new \Twig\Environment( new \Twig\Loader\FilesystemLoader(PROJ_DIR . 'templates/'), unserialize(CACHE) );
 
 		return $twig->render(str_replace(PROJ_DIR . 'templates/', null, $template_file), [
-			'uid' => uniqid(),
 			'print' => $this
 		]);
 	}

@@ -15,7 +15,7 @@ class QueryBuilder
     private $limit;
     private $order = [];
     private $val = [];
-    private $joins = [];
+    private $join = [];
 
     /**
      * Initializated object and sets table name

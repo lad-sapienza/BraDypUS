@@ -1,3 +1,4 @@
+3.15.16[] = "Fixed bug with QueryBuilder"
 3.15.11[] = "Fixed issue with countable not initialized"
 3.15.10[] = "readRecord::getFiles uses JOIN and solves issue with sorting"
 3.15.9[] = "ShortSqlToJson uses ReadRecord::getFull instead of Record::readFull"

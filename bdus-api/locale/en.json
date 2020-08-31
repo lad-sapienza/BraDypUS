@@ -230,6 +230,7 @@
     "ok_data_save": "The data was saved",
     "error_data_save": "Error, the data was not saved",
     "partial_data_save": "Error, not all data was saved",
+    
     "select_lang_to_edit": "Select the language to edit",
     "new_lang_code_two_digits": "New language code (two digits)",
     "lang_lenth_must_be_two": "The code of the new language must be two digits long",
@@ -238,6 +239,7 @@
     "ok_language_update": "Language file was updated",
     "error_language_update": "Error, language file was not updated",
     "error_lang_exists": "Error. File language %s already exists",
+    
     "show_incomplete_translations": "Show incomplete translations",
     "show_all_translations": "Show all translations",
     "wrong_filetype": "Wrong filetype. Only *.sql or *.gz files can be imported",

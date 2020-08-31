@@ -27,12 +27,12 @@ class translate_ctrl extends Controller
 	{
 		$lang_to_edit = $this->get['lang'];
 
-		$edit_lang 	= tr::getAll($lang_to_edit);
+		$edit_lang 	= $this->getAllString($lang_to_edit);
 
 		$this->render('translate', 'showForm', [
 			'lng' => $lang_to_edit,
 			'main_lng' => 'en',
-			'main_lng_data' => tr::getAll('en'),
+			'main_lng_data' => $this->getAllString('en'),
 			'edit_lang' => $edit_lang
 		]);
 	}
@@ -41,7 +41,7 @@ class translate_ctrl extends Controller
 	{
 		$lang = $this->get['lang'];
 		
-		if (tr::langExists($lang)){
+		if ( file_exists(LOCALE_DIR . $lang . '.json') ){
 			utils::response(
 				tr::get('error_lang_exists', [$lang]),
 				'error',
@@ -50,7 +50,7 @@ class translate_ctrl extends Controller
 			return;
 		}
     
-		if (tr::arrayToFile($lang, [])) {
+		if ($this->arrayToFile($lang, [])) {
 			echo utils::response('ok_lang_create');
 		} else {
 			echo utils::response('error_lang_create', 'error');
@@ -62,12 +62,33 @@ class translate_ctrl extends Controller
 		$lang = $this->get['lang'];
 		$data = $this->post;
 		
-		if(tr::arrayToFile($lang, $data)) {
+		if($this->arrayToFile($lang, $data)) {
 			utils::response('ok_language_update');
 		} else {
 			utils::response('error_language_update', 'error');
 		}
 		
+	}
+
+	private function arrayToFile(string $lang, array $data): bool
+	{
+		return file_put_contents(LOCALE_DIR . $lang . '.json', json_encode($data, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE));
+	}
+
+	private function getAllString(string $lang): array
+	{
+		if (!file_exists(LOCALE_DIR . $lang . '.json')){
+			throw new Exception("Language file {$lang}.json not found");
+		}
+
+		$arr = json_decode(
+			file_get_contents(LOCALE_DIR . $lang . '.json'),
+			true
+		);
+		if (!is_array($arr)){
+			throw new Exception("Syntax error in anguage file {$lang}.json");
+		}
+		return $arr;
 	}
 		
 }

@@ -93,36 +93,9 @@ class tr
 		return json_encode(self::$language_strings);
 	}
 
-
-	public function getAll(string $lang): array
+	public static function getAvailable(): array
 	{
-		if (!file_exists(LOCALE_DIR . $lang . '.json')){
-			throw new Exception("Language file {$lang}.json not found");
-		}
-
-		$arr = json_decode(
-			file_get_contents(LOCALE_DIR . $lang . '.json'),
-			true
-		);
-		if (!is_array($arr)){
-			throw new Exception("Syntax error in anguage file {$lang}.json");
-		}
-		return $arr;
-	}
-
-	public static function arrayToFile(string $lang, array $data): bool
-	{
-		return file_put_contents(LOCALE_DIR . $lang . '.json', json_encode($data, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE));
-	}
-
-	public static function langExists(string $lang): bool
-	{
-		return file_exists(LOCALE_DIR . $lang . '.json');
-	}
-
-	public static function getAvailable()
-	{
-		$langs = utils::dirContent(LOCALE_DIR);
+		$langs = utils::dirContent(LOCALE_DIR) ?? [];
 		
 		array_walk($langs, function(&$el){ $el =  str_replace('.json', null, $el); });
 

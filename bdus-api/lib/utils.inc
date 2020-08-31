@@ -223,12 +223,10 @@ class utils
 		);
 		$handle = @opendir($dir);
 
-		if ( $handle )
-		{
-			while ( false !== ( $file = readdir ( $handle ) ) )
-			{
-				if (!in_array($file, $dont_consider))
-				{
+		if ( $handle ) {
+
+			while ( false !== ( $file = readdir ( $handle ) ) ) {
+				if (!in_array($file, $dont_consider)) {
 					$dir_content[] = $file;
 				}
 			}
@@ -236,9 +234,7 @@ class utils
 			closedir($handle);
 
 			return $dir_content;
-		}
-		else
-		{
+		} else {
 			return false;
 		}
 	} // end of dirContent

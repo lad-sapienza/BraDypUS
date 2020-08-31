@@ -181,11 +181,24 @@ class record_ctrl extends Controller
                 continue;
             }
 
-            $tmpl = new ParseTmpl($this->request['a'], $record, $this->log, $this->cfg);
+            // Initialize Field
+            $fieldObj = new Field($this->request['a'], $record, $this->log, $this->cfg);
+            
+            // get template
+            $template_file = $this->getTemplate($this->request['tb'], $this->request['a']);
+
+            if ($template_file){
+                $twig = new \Twig\Environment( new \Twig\Loader\FilesystemLoader(PROJ_DIR . 'templates/'), unserialize(CACHE) );
+                $html = $twig->render($template_file, [
+                    'print' => $fieldObj
+                ]);
+            } else {
+                $thml = $fields->showall();
+            }
 
             $this->render('record', 'show', array(
                     'action' => $this->request['a'],
-                    'html' => $tmpl->parseAll(),
+                    'html' => $html,
                     'multiple_id' => (count((array)$this->request['id']) > 1) ? tr::get('multiple_edit_alert', [ count($this->request['id']), implode('; id: ', $this->request['id']) ] ) : false,
                     'tb' => $this->request['tb'],
                     'id_url' => is_array($this->request['id']) ? 'id[]=' . implode('&id[]=', $this->request['id']) : false,
@@ -197,6 +210,37 @@ class record_ctrl extends Controller
                     'virtual_keyboard' => $this->cfg->get('main.virtual_keyboard')
             ));
         }
+    }
+
+    private function getTemplate(string $tb, string $context)
+    {
+        $stripped_tb = str_replace(PREFIX, null, $tb);
+
+        if ( $context === 'add_new'){
+            $context = 'edit';
+        }
+        $paths = [
+            // preference saved template
+            pref::getTmpl($tb, $context),
+
+            // config, context-bound, template
+            $this->cfg->get("tables.{$tb}.tmpl_{$context}"),
+            
+            // default, context-bound template: {tb_name}_{context}.twig eg. siti_edit.twig
+            $stripped_tb . '_' . $context . '.twig',
+
+            // default, context indipendent template
+			$stripped_tb . '.twig'
+        ];
+
+        $tmpl = false;
+
+        foreach ($paths as $path) {
+            if ($path && file_exists( PROJ_DIR . 'templates/' . $path ) && !$tmpl){
+                $tmpl = $path;
+            }
+        }
+        return $tmpl;
     }
 
     public function showResults()

@@ -13,6 +13,8 @@ class Field implements TemplateInterface
     protected $context;
     protected $record;
     protected $db;
+    protected $log;
+    protected $cfg;
     protected $settings;
     protected $current_plugin;
     protected $current_plugin_index;
@@ -152,7 +154,7 @@ class Field implements TemplateInterface
                     $html .= '<li><span class="btn-link" onclick="' .
              "api.record.read('{$dest_tb}', ['{$v['id']}'], " . ($c['label'] ? 'true' : ''). ");" .
               '" href="javascript:void(0)">' .
-                        cfg::tbEl($dest_tb, 'label') . ':' . ($v['label'] ?: $v['id']) .
+                $this->cfg->get( "tables.{$dest_tb}.label") . ':' . ($v['label'] ?: $v['id']) .
               '</span></li>';
                 }
             }
@@ -163,12 +165,12 @@ class Field implements TemplateInterface
             $html .= '<ul>';
             foreach ($corelinks as $dest_tb=>$l_arr) {
                 $html .= '<li><span class="btn-link" onclick="' .
-         "api.showResults('{$dest_tb}', 'type=obj_encoded&obj_encoded=" . \SQL\SafeQuery::encode($l_arr['query'], $l_arr['values']) . "&total={$l_arr['tot']}', '" . tr::get('saved_queries') . " (". cfg::tbEl($dest_tb, 'label') . ")');" .
+         "api.showResults('{$dest_tb}', 'type=obj_encoded&obj_encoded=" . \SQL\SafeQuery::encode($l_arr['query'], $l_arr['values']) . "&total={$l_arr['tot']}', '" . tr::get('saved_queries') . " (". $this->cfg->get("tables.{$dest_tb}.label") . ")');" .
           '" href="javascript:void(0)">' .
-          tr::get('links_in_table', ['<strong>' . $l_arr['tot'] . '</strong>', '<strong>' . cfg::tbEl($dest_tb, 'label') . '</strong>']) .
+          tr::get('links_in_table', ['<strong>' . $l_arr['tot'] . '</strong>', '<strong>' . $this->cfg->get("tables.$dest_tb.label") . '</strong>']) .
           '</span>';
 
-                if (cfg::tbEl($dest_tb, 'rs')) {
+                if ($this->cfg->get("tables.$dest_tb.rs")) {
                     $html .= ' (<span class="btn-link" onclick="api.record.showMatrix(\'' . $dest_tb . '\', \'' . base64_encode($l_arr['query']) . '\')">' . tr::get('harris_matrix'). '</span>)';
                 }
 
@@ -211,7 +213,7 @@ class Field implements TemplateInterface
         $view_all = '<p><span class="btn btn-link" onclick="core.runMod(\'geoface\', \'' . $this->tb . '\');">' . tr::get('view_all_records_on_map') . '</span></p>';
 
 
-        if (cfg::tbEl(PREFIX . 'geodata', 'is_plugin')) {
+        if ($this->cfg->get('tables.' . PREFIX . 'geodata.is_plugin')) {
             $html = $this->plg('geodata');
 
             // https://stackoverflow.com/a/5139071/586449
@@ -242,7 +244,7 @@ class Field implements TemplateInterface
             '<fieldset>';
 
         // CORE
-        $flds_arr = cfg::fldEl($this->tb, 'all', 'name');
+        $flds_arr = $this->cfg->get("tables.{$this->tb}.fields.*.name");
 
         foreach ($flds_arr as $fld) {
             $html .= $this->fld($fld);
@@ -263,7 +265,7 @@ class Field implements TemplateInterface
         $html .= $this->geodata();
 
         // PLUGINS
-        $plg_arr = cfg::tbEl($this->tb, 'plugin');
+        $plg_arr = $this->cfg->get("tables.{$this->tb}.plugin");
 
         if (is_array($plg_arr)) {
             foreach ($plg_arr as $plg) {
@@ -291,7 +293,7 @@ class Field implements TemplateInterface
         if ($this->context == 'add_new') {
             return;
         }
-        $rs_fld = cfg::tbEl($this->tb, 'rs');
+        $rs_fld = $this->cfg->get("tables.{$this->tb}.rs");
 
         if ($rs_fld) {
             return '<div class="showRS" data-context="' . $this->context. '" data-table="' . $this->tb . '" data-id="' . $this->record->getCore($rs_fld) . '"></div>';
@@ -461,7 +463,7 @@ class Field implements TemplateInterface
                     'uid' => uniqid()
             ));
         } else {
-            $plg_fields = cfg::fldEl($plg, 'all', 'label');
+            $plg_fields = $this->cfg->get("tables.$plg.fields.*.label");
 
             if (!is_array($plg_fields) || empty($plg_fields)) {
                 return;
@@ -492,7 +494,7 @@ class Field implements TemplateInterface
 
         // Start writing plugin container
         $html = '<fieldset class="plugin ' . $plg . '">' .
-                '<legend>' . cfg::tbEl($plg, 'label'). '</legend>';
+                '<legend>' . $this->cfg->get("tables.$plg.label"). '</legend>';
 
         // Get records from database
         $plg_array = $this->record->getPlugin($plg);
@@ -604,7 +606,7 @@ class Field implements TemplateInterface
 
 
         // get $config data from cfg object (file config)
-        $config = cfg::fldEl($plg_name ?: $this->tb, $fld, 'all');
+        $config = $this->cfg->get("tables." . ($plg_name ?: $this->tb) . ".fields.$fld");
 
         //merge check array to string
         if (is_array($config['check'])) {
@@ -689,7 +691,7 @@ class Field implements TemplateInterface
                 }
             }
         } elseif ($setting['id_from_tb'] && $setting['data']) {
-            $sql = "SELECT id, " . cfg::tbEl($setting['id_from_tb'], 'id_field') . " as val " .
+            $sql = "SELECT id, " . $this->cfg->get("tables.{$setting['id_from_tb']}.id_field") . " as val " .
                 "FROM " . $setting['id_from_tb'] . " " .
                 "WHERE id = ?";
             $res = $this->db->query($sql, [$setting['data']]);
@@ -830,10 +832,10 @@ class Field implements TemplateInterface
                  */
 
                 // 3.1.1 otherTb = thisTb  or otherTb != thisTb and otherFld is not other table's id field
-                if ($otherTb === $this->tb || ($otherTb !== $this->tb && $otherFld !== cfg::tbEl($otherTb, 'id_field'))) {
+                if ($otherTb === $this->tb || ($otherTb !== $this->tb && $otherFld !== $this->cfg->get("tables.{$otherTb}.id_field"))) {
                     foreach ($val as $v) {
                         $html .= "<span class=\"a\" " .
-                            " onclick=\"api.showResults('" . $otherTb. "', 'type=obj_encoded', '" . tr::get('contextual_search_in', [cfg::tbEl($otherTb, 'label')]) . "', {obj_encoded: '" . \SQL\SafeQuery::encode( $otherFld . " = ?", [$v]). "'})\">" .
+                            " onclick=\"api.showResults('" . $otherTb. "', 'type=obj_encoded', '" . tr::get('contextual_search_in', [$this->cfg->get("tables.$otherTb.label")]) . "', {obj_encoded: '" . \SQL\SafeQuery::encode( $otherFld . " = ?", [$v]). "'})\">" .
                             utils::format_text($v) .
                             '</span>' . (next($val) === false ? ' ' : ';');
                     }
@@ -850,7 +852,7 @@ class Field implements TemplateInterface
             // 3.2 Field is populated with ID values get by another table. Other table's id field will be used as a label
             elseif ($setting['id_from_tb']) {
                 foreach ($val as $v) {
-                    $query = 'SELECT ' . cfg::tbEl($setting['id_from_tb'], 'id_field') . ' '.
+                    $query = 'SELECT ' . $this->cfg->get("tables.{$setting['id_from_tb']}.id_field") . ' '.
                             'FROM ' . $setting['id_from_tb'] . ' ' .
                             'WHERE id = ?';
 
@@ -868,7 +870,7 @@ class Field implements TemplateInterface
                 foreach ($val as $v) {
                     if ($setting['active_link']) {
                         $html .= "<span class=\"a\" " .
-                            " onclick=\"api.showResults('" . $this->tb. "', 'type=obj_encoded', '" . tr::get('contextual_search_in', [cfg::tbEl($this->tb, 'label')] ) . "', {obj_encoded: '" . \SQL\SafeQuery::encode(
+                            " onclick=\"api.showResults('" . $this->tb. "', 'type=obj_encoded', '" . tr::get('contextual_search_in', [$this->cfg->get("tables.{$this->tb}.label")] ) . "', {obj_encoded: '" . \SQL\SafeQuery::encode(
                                     "" . $setting['fieldname'] . " LIKE '%;" . $v . "' " .
                                     "OR " . $setting['fieldname'] . " LIKE '" . $v . ";%' " .
                                     "OR " . $setting['fieldname'] . " = '" . $v . "' "

@@ -53,7 +53,7 @@ class config_ctrl extends Controller
         $tb = $this->get['tb'];
         $fld = $this->get['fld'] ?: false;
 
-        $data = $fld ? $this->cfg->get("tables.$tb.fields.$fld.*") : [];
+        $data = $fld ? $this->cfg->get("tables.$tb.fields.$fld") : [];
 
         $sys_manage = new Manage($this->db, $this->prefix);
 
@@ -91,7 +91,7 @@ class config_ctrl extends Controller
     {
         $tb = $this->get['tb'] ?: false;
 
-        $table_properties = $tb ? $this->cfg->get("tables.$tb.*") : [];
+        $table_properties = $tb ? $this->cfg->get("tables.$tb") : [];
 
         // default values
 		if (!$table_properties['preview'])  $table_properties['preview'] = array(0=>'');

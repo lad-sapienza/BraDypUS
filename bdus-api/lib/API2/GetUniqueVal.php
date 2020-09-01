@@ -1,8 +1,10 @@
 <?php
 namespace API2;
+
 use Config\Config;
 use \DB\DB\DBInterface;
-
+use \ShortSql\ShortSql;
+use SQL\ShortSql\ParseShortSql;
 /**
  * Gets Unique values from database
  * @requires cfg
@@ -12,7 +14,7 @@ use \DB\DB\DBInterface;
 
 class GetUniqueVal
 {
-    public static function run($tb, $fld, $str = false, $where = false, DBInterface $db, Config $cfg)
+    public static function run(string $tb, string $fld, string $str = null, string $where = null, DBInterface $db, Config $cfg)
     {
         if ($str === 'false'){
             $str = false;
@@ -37,11 +39,17 @@ class GetUniqueVal
             array_push($sql_part, " {$f} LIKE ? ");
             array_push($values, "%{$str}%");
         }
+
         if ($where) {
-            list($where_sql, $where_values) = \ShortSql\ShortSql::getWhere($where, $tb);
-            array_push($sql_part, $where_sql);
+            list($where_arr, $where_values) = (new ParseShortSql())->parseWhere($where, $tb);
+            $where_sql = '';
+            // https://stackoverflow.com/a/15939539/586449
+            array_walk_recursive($where_arr,function($v) use (&$where_sql){ $where_sql .= " $v "; });
+            array_push($sql_part, trim($where_sql));
+            
             $values = array_merge($values, $where_values);
         }
+
         if(!$str && !$where){
             array_push($sql_part, " 1=1 ");
         }

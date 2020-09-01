@@ -27,6 +27,7 @@
  use \DB\System\Manage;
  use \API2\Inspect;
  use \API2\GetUniqueVal;
+ use \API2\Search;
 
 class api2 extends Controller
 {
@@ -269,8 +270,9 @@ class api2 extends Controller
         $records_per_page	= $this->get['records_per_page'] 	? (int)$this->get['records_per_page']	: false;
         $full_records		= (bool) $this->get['full_records'];
 
-        $resp = \ShortSql\ToJson::run(
+        $resp = Search::run(
             $this->db,
+            $this->prefix,
             $shortsql,
             [
                 'total_rows' 		=> $total_rows,

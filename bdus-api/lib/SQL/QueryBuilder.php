@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 
+use SQL\ShortSql\Validator;
+use SQL\ShortSql\ParseShortSql;
+
 namespace SQL;
 
 /**
@@ -9,27 +12,51 @@ namespace SQL;
  * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
  * @license			See file LICENSE distributed with this code
  * @since			May 29, 2017
-
  */
+
+use SQL\QueryObject;
+use SQL\ShortSql\Validator;
+use SQL\ShortSql\ParseShortSql;
+use Config\Config;
+
 class QueryBuilder
 {
-    private $tb;
-    private $fields = [];
-    private $where = [];
-    private $limit;
-    private $order = [];
-    private $val = [];
-    private $joins = [];
+    private $qo;
 
     /**
      * Initializated object and sets table name
-     * @param string $tb table name, default null
+     *
+     * @param QueryObject $qo
      */
-    public function __construct(string $tb = null)
+    public function __construct(QueryObject $qo = null)
     {
         if ($tb) {
             $this->table($tb);
         }
+        $this->qo = $qo ?? new QueryObject();
+    }
+
+    public function loadShortSQL( string $prefix, Config $cfg, string $short, int $pagination_limit = null )
+    {
+        $validator = new Validator($cfg);
+        $ss = new ParseShortSql($prefix, $cfg, $validator);
+        $this->qo = $ss->parseAll($short, $pagination_limit)->getQueryObject();
+    }
+
+    public function getQueryObject()
+    {
+        return $this->qo;
+    }
+
+    /**
+     * Shorthand method to serach in underlying QueryObject
+     *
+     * @param string $index
+     * @return void
+     */
+    public function get( string $index = null )
+    {
+        return $this->qo->get( $index );
     }
 
     /**
@@ -40,13 +67,13 @@ class QueryBuilder
      */
     public function setTable(string $tb, string $alias = null) : self
     {
-        $this->tb = $tb . ($alias ? "AS $alias" : '');
+        $this->qo->setTb($tb, $alias);
         return $this;
     }
 
     public function setJoin(string $tb, string $onStatement, string $joinType = 'JOIN') : self
     {
-        array_push($this->joins, "$joinType $tb ON $onStatement");
+        $this->qo->setJoin( $tb, null, $onStatement);
         return $this;
     }
 
@@ -56,9 +83,10 @@ class QueryBuilder
      * @param string $alias field alias
      * @return object     Main object
      */
-    public function setFields(string $fld, string $alias = null) : self
+    public function setField(string $fld, string $alias = null, string $tb = null) : self
     {
-        $this->fields[] = $fld . ($alias ? ' AS ' . $alias : '');
+        $this->qo->setField( $tb, $fld, $alias);
+
         return $this;
     }
 
@@ -68,18 +96,12 @@ class QueryBuilder
      * @param  string  $val  Value to set
      * @param  string  $op   Operator, default =
      * @param  string  $conn Connection between statements, default AND
-     * @param  string|false $pre  Open one or more brackets
-     * @param  string|false $post Close one or more brackets
      * @return object        Main object
      */
-    public function setWhere(string $fld, string $val, $op = '=', string $conn = 'AND', string $pre = null, string $post = null) : self
+    public function setWhere(string $fld, string $val, string $op = '=', string $conn = 'AND') : self
     {
-        if (empty($this->where)) {
-            $conn = false;
-        }
-        $this->where[] = " {$conn} {$pre} {$fld} {$op} ? {$post} ";
-        array_push($this->val, $val);
-
+        $this->qo->setWherePart($conn, $fld, $op, '?');
+        $this->qo->setWhereValues( [$val] );
         return $this;
     }
 
@@ -91,22 +113,19 @@ class QueryBuilder
      */
     public function setLimit(int $limit, int $offset = 0) : self
     {
-        $this->limit = " LIMIT $limit  OFFSET {$offset} ";
+        $this->qo->setLimit ( $limit, $offset );
         return $this;
     }
 
     /**
      * Sets order by statement
      * @param  string $column Field name to use for sorting
-     * @param  string $sort   Sorting type; can be ASC or DESC, default ASC
+     * @param  string $dir   Direction; can be ASC or DESC, default ASC
      * @return object        Main object
      */
-    public function setOrder(string $column, string $sort = 'ASC') : self
+    public function setOrder(string $column, string $dir = 'ASC') : self
     {
-        if (!in_array(strtolower($sort), ['asc', 'desc'])) {
-            $sort = 'ASC';
-        }
-        $this->order[] = " {$column} {$sort} ";
+        $this->qo->setOrderFld($column, $dir);
         return $this;
     }
 
@@ -117,8 +136,24 @@ class QueryBuilder
      */
     public function setGroup(string $column) : self
     {
-        $this->group[] .= " {$column} ";
+        $this->qo->setGroupFld($column);
         return $this;
+    }
+
+    private function whereToStr(array $where = null)
+    {
+        if (!$where || empty($where)) {
+            return '1=1';
+        }
+        $str = '';
+
+        foreach ($where as $i => $w) {
+            if ($i !== 0){
+                $str .= "{$w[0]} ";
+            }
+            $str .= "{$w[1]} {$w[2]} {$w[3]} ";
+        }
+        return $str;
     }
 
     /**
@@ -127,28 +162,60 @@ class QueryBuilder
      */
     public function getSql() : array
     {
-        if (empty($this->where)) {
-            $this->where[] = '1=1';
-        }
-
-        if (empty($this->fields)) {
-            $this->fields[] = '*';
-        }
-
         $sql = [
-          'SELECT',
-          implode(', ', $this->fields),
-          'FROM ' . $this->tb,
-          implode(' ', $this->joins),
-          'WHERE ' . implode(' ', $this->where),
-          ($this->group ? 'GROUP BY ' . implode(' ', $this->group) : ''),
-          ($this->order ? 'ORDER BY ' . implode(' ', $this->order) : ''),
-          $this->limit
+            'SELECT'
         ];
+
+        $fld_arr = [];
+        foreach ($this->qo->get('fields') as $f) {
+            if (is_array($f)) {
+                
+                array_push(
+                    $fld_arr,
+                    ( $f[0] ? $f[0] . '.' : '') . $f[1] . ( $f[2] ? ' AS "' . $f[2] . '"' : '')
+                );
+            } else {
+                array_push($fld_arr, $this->qo->get('tb')[0] . '.*');
+            }
+        }
+
+        array_push($sql, implode(', ', $fld_arr ));
+
+        array_push($sql, 'FROM ' . $this->qo->get('tb')[0] . ($this->qo->get('tb')[1] ? ' AS "' . $this->qo->get('tb')[1] . '"' : ''));
+
+        $joins = $this->qo->get('joins');
+        foreach ($joins as $j) {
+            array_push(
+                $sql,
+                "JOIN {$j[0]} " . ( isset($j[1]) ? ' AS "' . $j[1]. '"' : '') . " ON " . $this->whereToStr($j[2])
+            );
+        }
+
+        array_push(
+            $sql, 
+            'WHERE ' . $this->whereToStr( $this->qo->get('where') )
+        );
+
+        $group = $this->qo->get('group');
+        if ($group){
+            array_push($sql, 'GROUP BY ' . implode(', ', $group));
+        }
+        
+        $order = $this->qo->get('order');
+        if ($order){
+            array_push($sql, 'ORDER BY ' . implode(', ', array_map( function($el){
+                return implode(' ', $el);
+            }, $order)));
+        }
+        
+        $limit = $this->qo->get('limit');
+        if($limit){
+            array_push($sql, "LIMIT {$limit['tot']} OFFSET {$limit['offset']}");
+        }
 
         return [
           implode(' ', $sql), 
-          $this->val
+          $this->qo->get('values')
         ];
     }
 }

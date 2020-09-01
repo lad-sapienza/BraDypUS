@@ -1,5 +1,5 @@
 <?php
-namespace ShortSql;
+namespace API2;
 /**
  * Gets Unique values from database
  * @requires ShortSql
@@ -7,10 +7,15 @@ namespace ShortSql;
  * @requires \Read\Record
  * @requires \toGeoJson
  */
-class ToJson
+use \DB\DB\DBInterface;
+use \SQL\QueryBuilder;
+use \Config\Config;
+
+class Search
 {	
 	private static $db;
 	private static $cfg;
+	private static $prefix;
 	/**
 	 * Runs a query from a shortSQl string and returns results
 	 *
@@ -25,10 +30,11 @@ class ToJson
 	 * @param bool	$debugging:	if true, some debugging information will be returned
 	 * @return array
 	 */
-    public static function run(\DB\DB\DBInterface $db, string $shortSql, array $opts = [], bool $debugging = false, \Config\Congig $cfg): array
+    public static function run(DBInterface $db, string $prefix, string $shortSql, array $opts = [], bool $debugging = false, Config $cfg): array
     {	
 		self::$db = $db;
 		self::$cfg = $cfg;
+		self::$prefix = $prefix;
 
 		// Set default opts
         $total_rows 		= $opts['total_rows']   	?: false;
@@ -38,7 +44,9 @@ class ToJson
 		$full_records 		= $opts['full_records'] 	?: false;
 		
         try {
-			list($sql, $values, $tb) = ShortSql::getSQLAndValues($shortSql);
+			$qb = new QueryBuilder();
+			$qb->loadShortSQL(self::$prefix, self::$cfg, $shortSql);
+			list($sql, $values, $tb) = $qb->getSql();
 			$debug['shortSql'] 		= $shortSql;
 			$debug['urlencodedShortSql'] = urlencode($shortSql);
 			$debug['table'] 		= $tb;
@@ -52,8 +60,10 @@ class ToJson
 			$header['page'] 		= ($page > $header['total_pages']) ? $header['total_pages'] : $page;
 
 			if ($header['total_rows'] > $records_per_page ) {
-				$paginated_limit = ($page-1) * $records_per_page . ":" . $records_per_page;
-				list($sql, $values, $tb) = ShortSql::getSQLAndValues($shortSql, $paginated_limit);
+				if (!$qb->get('limit') ) {
+					$qb->setLimit($records_per_page, ($page-1) * $records_per_page);
+				}
+				list($sql, $values, $tb) = $qb->getSql();
 
 				$debug['paginated_sql'] = $sql;
 				$debug['paginated_values'] = $values;

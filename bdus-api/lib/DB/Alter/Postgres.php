@@ -2,13 +2,14 @@
 
 namespace DB\Alter;
 
+use DB\DBInterface;
 
 class Postgres implements AlterInterface
 {
 
     private $db;
 
-    public function __construct(\DB\DB\DBInterface $db)
+    public function __construct(DBInterface $db)
     {
         $this->db = $db;
     }

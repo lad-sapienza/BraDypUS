@@ -56,7 +56,7 @@ class user_ctrl extends Controller
 			} else {
 				throw new \Exception('User deletion query returned false');
 			}
-		} catch (\Exception $e) {
+		} catch (\Throwable $e) {
 			$res['message'] = tr::get('user_not_deleted');
 			$res['status'] = 'error';
 		
@@ -135,9 +135,9 @@ class user_ctrl extends Controller
 			} else {
 				throw new \Exception('Query returned false');
 			}
-		}
-		catch (\Exception $e)
-		{
+		} catch (\DB\DBException $e){
+            utils::response('user_data_not_saved', 'error');
+        } catch (\Throwable $e){
 			utils::response('user_data_not_saved', 'error');
 			$this->log->error($e);
 		}

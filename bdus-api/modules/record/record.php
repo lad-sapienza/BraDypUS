@@ -45,7 +45,7 @@ class record_ctrl extends Controller
                         } else {
                             $error[$id] = true;
                         }
-                    } catch (\Exception $e) {
+                    } catch (\Throwable $e) {
                         $error[$id] = true;
                         $this->log->error($e);
                     }
@@ -63,7 +63,7 @@ class record_ctrl extends Controller
                 $data['status'] = 'warning';
                 $data['verbose'] = tr::get('partial_success_saved', [ implode(', ', $ok), implode(', ', $error) ]);
             }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $data['status'] = 'error';
             $data['verbose'] = tr::get('error_saved');
             $this->log->error($e);
@@ -89,7 +89,7 @@ class record_ctrl extends Controller
                     $record->delete();
 
                     $ok[] = true;
-                } catch (\Exception $e) {
+                } catch (\Throwable $e) {
                     $this->log->error($e);
                     $error[] = true;
                 }
@@ -377,9 +377,8 @@ class record_ctrl extends Controller
                     echo 'error';
                 }
             }
-        } catch (\Exception $e) {
+        } catch (\DB\DBException $e) {
             echo 'error';
-            $this->log->error($e);
         }
     }
 }

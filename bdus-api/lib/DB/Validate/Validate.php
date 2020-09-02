@@ -1,6 +1,13 @@
 <?php
 namespace DB\Validate;
 
+use DB\Validate\Info;
+use DB\Validate\Resp;
+use DB\Validate\DbCfgAlign;
+
+use DB\DBInterface;
+use Config\Config;
+
 class Validate
 {
     private $db;
@@ -8,7 +15,7 @@ class Validate
     private $prefix;
     private $cfg;
     
-    public function __construct(\DB\DB\DBInterface $db, string $prefix = null, \Config\Config $cfg)
+    public function __construct(DBInterface $db, string $prefix = null, Config $cfg)
     {
         $this->db = $db;
         $this->resp = new Resp();
@@ -31,17 +38,17 @@ class Validate
         $this->resp->set('head', 'Main system information');
         Info::getInfo($this->resp, $this->cfg);
 
-        $db_cfg = new DbCfgAlign($this->resp, $this->db, $this->cfg);
-        $this->resp->set('head', 'Configuration and database tables alignement');
-        $db_cfg->cfgHasDb();
-        $this->resp->set('head', 'Configuration and database fields alignement');
-        $db_cfg->cfgColsHasDb();
-
         $sys = new SystemTables($this->resp, $this->db, $this->prefix);
         $this->resp->set('head', 'Check if system tables are available');
         $sys->checkExist();
         $this->resp->set('head', 'Check if system tables structure is up-to-date');
         $sys->latestStructure();
+        
+        $db_cfg = new DbCfgAlign($this->resp, $this->db, $this->cfg);
+        $this->resp->set('head', 'Configuration and database tables alignement');
+        $db_cfg->cfgHasDb();
+        $this->resp->set('head', 'Configuration and database fields alignement');
+        $db_cfg->cfgColsHasDb();
 
         return $this->resp->get();
     }

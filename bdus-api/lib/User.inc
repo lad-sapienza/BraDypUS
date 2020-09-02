@@ -7,6 +7,8 @@
  * @uses			class.db.inc
  */
 
+use DB\DBInterface;
+
 class User
 {
     private $db;
@@ -16,9 +18,9 @@ class User
     /**
      *
      * Starts database object
-     * @param \DB\DB\DBInterface $db
+     * @param DBInterface $db
      */
-    public function __construct(\DB\DB\DBInterface $db)
+    public function __construct(DBInterface $db)
     {
         $this->db = $db;
 

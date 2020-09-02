@@ -30,9 +30,7 @@ class matrix_ctrl extends Controller
 				'selfPath' => MOD_DIR . 'matrix/',
 				'tb' => $tb
 			));
-		}
-		catch (\Exception $e)
-		{
+		} catch (\Exception $e) {
 			$this->log->error($e);
 			echo '<div class="alert alert-danger"> '
 					. '<strong>' . tr::get('attention') . ':</strong> ' . tr::get($e->getMessage()) . '</p>'

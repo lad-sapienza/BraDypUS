@@ -13,6 +13,8 @@
  *  error_on_insering_row
  */
 
+use DB\DBInterface;
+
 class importGeodata
 {
   private $db;
@@ -42,7 +44,7 @@ class importGeodata
   /**
    * Starts importing process and returns number of successfully processed records
    * or throws \Exception and rolls back all queries.
-   * @param \DB\DB\DBInterface $db    Instance of database object
+   * @param DBInterface $db    Instance of database object
    * @param string $tb  target table name
    * @param string $geojson geojson file content
    * @param string $idfield field name in geojson file containing  idfield value
@@ -51,7 +53,7 @@ class importGeodata
    * @return int  If successful the number of processed rows will be returned
    * @throws \Exception
    */
-  public function runImport(\DB\DB\DBInterface $db, string $tb, string $geojson, string $idfield, bool $deleteOld = false, string $table_id_fld): int
+  public function runImport(DBInterface $db, string $tb, string $geojson, string $idfield, bool $deleteOld = false, string $table_id_fld): int
   {
     $this->db = $db;
     $this->tb = $tb;
@@ -123,7 +125,7 @@ class importGeodata
 
      return $count;
     
-    } catch (\Exception $e) {
+    } catch (\DB\DBException $e) {
 
       $this->db->rollBack();
 

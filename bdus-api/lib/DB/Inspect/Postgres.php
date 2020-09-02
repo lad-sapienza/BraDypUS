@@ -2,6 +2,7 @@
 
 namespace DB\Inspect;
 
+use DB\DBInterface;
 /**
  * Interface to interact with database structure
  */
@@ -9,7 +10,7 @@ class Postgres implements InspectInterface
 {   
     private $db;
 
-    public function __construct(\DB\DB\DBInterface $db)
+    public function __construct(DBInterface $db)
     {
         $this->db = $db;
     }

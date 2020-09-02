@@ -14,7 +14,7 @@ class userlinks_ctrl extends Controller
 		try {
 			$ret['status'] = 'success';
 			$ret['info'] = $this->cfg->get('tables.*.label', 'is_plugin', null);
-		} catch (\Exception $e) {
+		} catch (\Throwable $e) {
 			$this->log->error($e);
 			$ret['status'] = 'error';
 			$ret['info'] = $e->getMessage();
@@ -55,7 +55,10 @@ class userlinks_ctrl extends Controller
 			} else {
 				utils::response('no_link_saved', 'error');
 			}
-		} catch(\Exception $e) {
+		} catch(\DB\DBException $e) {
+			// No log, already logged
+			utils::response('no_link_saved', 'error');
+		} catch(\Throwable $e) {
 			$this->log->error($e);
 			utils::response('no_link_saved', 'error');
 		}

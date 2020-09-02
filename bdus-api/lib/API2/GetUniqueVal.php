@@ -2,7 +2,7 @@
 namespace API2;
 
 use Config\Config;
-use \DB\DB\DBInterface;
+use DB\DBInterface;
 use \ShortSql\ShortSql;
 use SQL\ShortSql\ParseShortSql;
 /**

@@ -6,6 +6,8 @@
  * @since			Apr 7, 2012
  */
 
+use DB\DBInterface;
+
 class utils
 {
 
@@ -527,7 +529,7 @@ class utils
 		return $geo;
 	}
 	
-	public static function jsonForTabletop(\DB\DB\DBInterface $db, string $tb, array $params): string
+	public static function jsonForTabletop(DBInterface $db, string $tb, array $params): string
 	{
 		$fields = ['id', 'channel', 'level', 'message', 'time'];
 

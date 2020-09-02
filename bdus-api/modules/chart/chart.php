@@ -110,7 +110,7 @@ class chart_ctrl extends Controller
 			} else {
 				throw new \Exception('Save chart query returned false');
 			}
-		} catch(\Exception $e) {
+		} catch(\Throwable $e) {
 			$this->log->error($e);
 			utils::response('error_save_chart', 'error');
 		}
@@ -207,7 +207,7 @@ class chart_ctrl extends Controller
 			} else {
 				throw new \Exception('Update query returned false');
 			}
-		} catch (\Exception $e) {
+		} catch (\Throwable $e) {
 			$this->log->error($e);
 			utils::response('error_update_chart', 'error');
 		}

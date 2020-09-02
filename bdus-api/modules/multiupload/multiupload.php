@@ -95,7 +95,7 @@ class multiupload_ctrl extends Controller
 						throw new \Exception($row['filename'] . '.' . $row['ext'] . ' was saved in database and file was copied, but not all links were saved (only ' . count($userlinks_id) . ' of ' . count($row['id']) . ')');
 					}
 				}
-			} catch (\Exception $e) {
+			} catch (\Throwable $e) {
 				$this->log->error($e);
 				$error[] = true;
 			}

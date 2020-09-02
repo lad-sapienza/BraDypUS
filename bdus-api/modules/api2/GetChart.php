@@ -6,10 +6,11 @@
  * @requires DB
  */
 use \DB\System\Manage;
+use DB\DBInterface;
 
 class GetChart
 {
-    public static function run(int $id, \DB\DB\DBInterface $db, string $prefix)
+    public static function run(int $id, DBInterface $db, string $prefix)
     {
         $sys_manage = new Manage($db, $prefix);
 

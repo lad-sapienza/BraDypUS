@@ -7,6 +7,8 @@
  * @uses			cfg
  */
 
+use DB\DBInterface;
+
 class Export
 {
 	protected $filename;
@@ -20,7 +22,7 @@ class Export
 
 
 	public function __construct(
-		\DB\DB\DBInterface $db, 
+		DBInterface $db, 
 		string $filename, 
 		string $tb, 
 		string $where_sql = null, 

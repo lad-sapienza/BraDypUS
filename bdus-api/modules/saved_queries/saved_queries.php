@@ -65,7 +65,9 @@ class saved_queries_ctrl extends Controller
                 ];
             }
             
-        } catch (\Exception $e) {
+        } catch (\DB\DBException $e) {
+            // Already logged
+        } catch (\Throwable $e) {
             $this->log->error($e);
         }
 
@@ -91,7 +93,9 @@ class saved_queries_ctrl extends Controller
                 ];
             }
             
-        } catch (\Exception $e) {
+        } catch (\DB\DBException $e) {
+            // do nothing
+        } catch (\Throwable $e) {
             $this->log->error($e);
         }
 
@@ -117,7 +121,8 @@ class saved_queries_ctrl extends Controller
                 ];
             }
             
-        } catch (\Exception $e) {
+        } catch (\DB\DBException $e) {
+        } catch (\Throwable $e) {
             $this->log->error($e);
         }
 
@@ -154,7 +159,9 @@ class saved_queries_ctrl extends Controller
                 ];
             }
             
-        } catch (\Exception $e) {
+        } catch (\DB\DBException $e) {
+            // already logged
+        } catch (\Throwable $e) {
             $this->log->error($e);
         }
 

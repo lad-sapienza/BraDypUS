@@ -37,7 +37,7 @@
  * ]
  */
 
-use \DB\DB\DBInterface;
+use DB\DBInterface;
 use \Config\Config;
 
 class Record implements RecordInterface
@@ -385,7 +385,7 @@ class Record implements RecordInterface
 
 			return true;
 
-		} catch (\Exception $e) {
+		} catch (\DB\DBException $e) {
 			$this->db->rollBack();
 			throw new \Exception($e);
 		}

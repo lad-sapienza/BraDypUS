@@ -3,7 +3,7 @@ namespace DB;
 
 use Monolog\Logger;
 use Monolog\Handler\AbstractProcessingHandler;
-use \DB\DB\DBInterface;
+use DB\DBInterface;
 
 class LogDBHandler extends AbstractProcessingHandler
 {

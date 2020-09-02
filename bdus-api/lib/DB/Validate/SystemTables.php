@@ -1,6 +1,13 @@
 <?php
 namespace DB\Validate;
 
+use DB\DBInterface;
+use DB\Inspect;
+use DB\Inspect\Sqlite;
+use DB\Inspect\Mysql;
+use DB\Inspect\Postgres;
+use DB\System\Manage;
+
 class SystemTables
 {
     private $db;
@@ -10,7 +17,7 @@ class SystemTables
     private $system;
 
 
-    public function __construct(Resp $resp, \DB\DB\DBInterface $db, string $prefix = null)
+    public function __construct(Resp $resp, DBInterface $db, string $prefix = null)
     {
         $this->resp = $resp;
         $this->db = $db;
@@ -18,15 +25,15 @@ class SystemTables
 
         $db_engine = $db->getEngine();
         if ($db_engine === 'sqlite'){
-            $driver = new \DB\Inspect\Sqlite($db);
+            $driver = new Sqlite($db);
         } else if ($db_engine === 'mysql'){
-            $driver = new \DB\Inspect\Mysql($db);
+            $driver = new Mysql($db);
         } else if ($db_engine === 'pgsql'){
-            $driver = new \DB\Inspect\Postgres($db);
+            $driver = new Postgres($db);
         }
-        $this->inspect = new \DB\Inspect($driver);
+        $this->inspect = new Inspect($driver);
 
-        $this->system = new \DB\System\Manage($this->db, $this->prefix);
+        $this->system = new Manage($this->db, $this->prefix);
     }
 
     public function checkExist(): void
@@ -44,7 +51,7 @@ class SystemTables
             } else {
                 $this->resp->set(
                     'danger',
-                    "System table $tb does not exist in database"
+                    "System table $tb does not exist in database."
                 );
             }
         }
@@ -53,11 +60,12 @@ class SystemTables
     public function latestStructure()
     {
         $short_sys_tables = $this->system->available_tables;
-        $full_sys_tables = array_map( function($el){
-            return $this->prefix . $el;
-        }, $short_sys_tables);
-
+        
         foreach ($short_sys_tables as $tb) {
+            
+            if (!$this->inspect->tableExists($this->prefix . $tb)){
+                continue;
+            }
             $model_cols = array_map(function($el){
                 return $el['name'];
             }, $this->system->getStructure($tb));
@@ -65,7 +73,7 @@ class SystemTables
             $db_cols = array_map(function($el){
                 return $el['fld'];
             }, $this->inspect->tableColumns($this->prefix.$tb));
-
+            
             $this->resp->set('head', "Checking $tb from model to database");
 
             foreach ($model_cols as $col) {

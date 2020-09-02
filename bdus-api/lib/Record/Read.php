@@ -1,10 +1,8 @@
 <?php
-/**
- *
- * @uses cfg
- * @uses DB
- */
 namespace Record;
+
+use DB\DBInterface;
+use Config\Config;
 
 class Read
 {
@@ -16,9 +14,9 @@ class Read
    * Initializes class
    * Sets $app and $db
    *
-   * @param \DB\DB\DBInterface $db       DB object
+   * @param DBInterface $db       DB object
    */
-  public function __construct(\DB\DB\DBInterface $db, \Config\Config $cfg)
+  public function __construct(DBInterface $db, Config $cfg)
   {
     $this->db = $db;
     $this->cfg = $cfg;

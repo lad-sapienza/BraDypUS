@@ -6,6 +6,8 @@
  * @since			See file LICENSE distributed with this code
  * @uses			cfg
  */
+use Config\Config;
+use Monolog\Logger;
 
 class Field implements TemplateInterface
 {
@@ -21,7 +23,7 @@ class Field implements TemplateInterface
     // old: $db_data > $record
 
 
-    public function __construct(string $context, Record $record, Monolog\Logger $log, \Config\Config $cfg)
+    public function __construct(string $context, \Record $record, Logger $log, Config $cfg)
     {
         $this->tb = $record->getTb();
 
@@ -76,7 +78,7 @@ class Field implements TemplateInterface
             if (is_array($res) && !empty($res)) {
                 return $res[0]['total'];
             }
-        } catch (\Exception $e) {
+        } catch (\DB\DBException $e) {
             $this->log->error($e);
         }
     }

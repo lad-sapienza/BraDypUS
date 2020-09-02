@@ -8,6 +8,7 @@ use Monolog\Handler\FirePHPHandler;
 use Monolog\ErrorHandler;
 
 use DB\LogDBHandler;
+use DB\DB;
 use Config\Config;
 use \Adbar\Dot;
 
@@ -36,7 +37,7 @@ class App
 			$log_file = __DIR__ . '/../../logs/error.log';
 
 			if (\defined('APP')){
-				$this->db = new \DB(APP);
+				$this->db = new DB(APP);
 
 				// On debug only file and firePHP are available
 				if (\defined('DEBUG_ON') && \DEBUG_ON === true) {
@@ -92,7 +93,7 @@ class App
             }
 		} catch(\Throwable $e) {
 			$this->log->error($e);
-			echo "A fatal error occurred and the application could not be started. More information are filed in the log file";
+			echo "A blocking error occurred. More information are filed in the log file";
         }
 	}
 }

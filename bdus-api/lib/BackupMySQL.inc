@@ -7,13 +7,14 @@
  * @copyright No one. You can copy, edit, do anything you want. If you change anything to better, please let me know.
  *
  */
+use DB\DBInterface;
 
 class BackupMySQL
 {
 	protected $filename, $db, $sql;
 
 
-	public function __construct(\DB\DB\DBInterface $db, $filename)
+	public function __construct(DBInterface $db, $filename)
 	{
 		ini_set('memory_limit','1560M');
 

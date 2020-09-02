@@ -1,6 +1,7 @@
 <?php 
-use \DB\Engines\AvailableEngines;
-use  \DB\System\Manage;
+use DB\Engines\AvailableEngines;
+use DB\Validate\Validate;
+use DB\System\Manage;
 
 class config_ctrl extends Controller
 {
@@ -23,7 +24,7 @@ class config_ctrl extends Controller
 			foreach ($users as &$u){
 				$u['verbose_privilege'] = utils::privilege($u['privilege'], 1);
 			}
-		} catch (\Exception $e){
+		} catch (\Throwable $e){
 			$users = [];
 		}
 		
@@ -145,7 +146,7 @@ class config_ctrl extends Controller
 
 			utils::response('ok_cfg_data_updated');
 
-		} catch(\Exception $e) {
+		} catch(\Throwable $e) {
 			$this->log->error($e);
 			utils::response('error_cfg_data_updated', 'error');
 		}
@@ -204,7 +205,7 @@ class config_ctrl extends Controller
                 'tb' => $new_tb_name
             ]);
 
-		} catch(\Exception $e) {
+		} catch(\Throwable $e) {
 			$this->log->error($e);
 			utils::response('error_cfg_data_updated', 'error');
 		}
@@ -230,7 +231,7 @@ class config_ctrl extends Controller
 
 			utils::response('ok_cfg_data_updated');
         
-        } catch(\Exception $e) {
+        } catch(\Throwable $e) {
             $this->log->error($e);
 			utils::response('error_cfg_data_updated', 'error');
 		}
@@ -272,7 +273,7 @@ class config_ctrl extends Controller
 
 			utils::response('ok_cfg_data_updated', 'success', false, ["fld" => $fld]);
         
-        } catch(\Exception $e) {
+        } catch(\Throwable $e) {
             $this->log->error($e);
 			utils::response('error_cfg_data_updated', 'error');
 		}
@@ -287,7 +288,7 @@ class config_ctrl extends Controller
 			cfg::setMain($data);
             utils::response('ok_cfg_data_updated');
             
-		} catch (\Exception $e) {
+		} catch (\Throwable $e) {
 
 			utils::response('error_cfg_data_updated', 'error');
 		}
@@ -398,7 +399,7 @@ class config_ctrl extends Controller
             $alter->renameTable($old_name, $new_name);
 
             utils::response('ok_renaming_table', 'success');
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->log->error($e);
             utils::response('error_renaming_table', 'error');
         }
@@ -432,7 +433,7 @@ class config_ctrl extends Controller
             $alter->renameFld($tb, $old_name, $new_name);
 
             utils::response('ok_renaming_column', 'success');
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->log->error($e);
             utils::response('error_renaming_column', 'error');
         }
@@ -441,7 +442,7 @@ class config_ctrl extends Controller
 
     public function validate_app()
     {
-        $validate = new \DB\Validate\Validate($this->db, $this->prefix, $this->cfg);
+        $validate = new Validate($this->db, $this->prefix, $this->cfg);
         $report = $validate->all();
 
         $html = '<button type="button" class="btn btn-info pull-right" onclick="$(this).parent().find(\'.alert-info, .alert-success\').toggle();">' . tr::get('show_only_errors') . '</button>';

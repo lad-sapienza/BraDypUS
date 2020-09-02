@@ -13,6 +13,8 @@
  * @uses \Twig\Extension\DebugExtension
  */
 
+use DB\DBInterface;
+
 abstract class Controller
 {
 	protected $get;
@@ -30,7 +32,7 @@ abstract class Controller
 		$this->request = $request;
 	}
 
-	public function setDB(\DB\DB\DBInterface $db): void
+	public function setDB(DBInterface $db): void
 	{
 		$this->db = $db;
 	}

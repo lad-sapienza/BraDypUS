@@ -45,7 +45,7 @@ class search_ctrl extends Controller
 			$queryObj = new QueryFromRequest($this->db, $this->cfg, $this->request, true);
 			$resp['status'] = 'success';
 			$resp['verbose'] = tr::get('test_ok_x_found', [$queryObj->getTotal()]);
-		} catch (\Exception $e) {
+		} catch (\Throwable $e) {
 			$resp['status'] = 'error';
 			$resp['verbose'] = tr::get('test_error');
 		}

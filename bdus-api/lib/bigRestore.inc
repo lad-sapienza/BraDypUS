@@ -21,6 +21,7 @@
  * 	error		true
  *  
  */
+use DB\DBInterface;
 
 class bigRestore
 {
@@ -33,7 +34,7 @@ class bigRestore
 		$data_chunk_length = 16384;
 	
 	
-	public function __construct(\DB\DB\DBInterface $db)
+	public function __construct(DBInterface $db)
 	{
 		$this->db = $db;
 		sleep(1);

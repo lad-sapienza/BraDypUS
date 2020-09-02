@@ -75,7 +75,7 @@ class home_ctrl extends Controller
 				if (hash_file('sha256', "./css/mini.css") !== hash('sha256', $css)) {
 					file_put_contents("./css/mini.css", $str . $css);
 				}
-			} catch (Exception $e) {
+			} catch (\Throwable $e) {
 				$this->log->error($e);
       		}
 		}

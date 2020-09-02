@@ -65,7 +65,7 @@ class myExport_ctrl extends Controller
 
 			utils::message('export_success', 'success');
 		
-		} catch(Exception $e) {
+		} catch(\Throwable $e) {
 			$this->log->error($e);
 			utils::message('export_error', 'error');
 		}

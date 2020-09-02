@@ -64,7 +64,7 @@ class file_ctrl extends Controller
 
 			echo json_encode($result);
 
-		} catch (\Exception $e) {
+		} catch (\Throwable $e) {
 			$this->log->error($e);
 
 			echo json_encode([
@@ -142,14 +142,23 @@ class file_ctrl extends Controller
 
 				$this->db->commit();
 
-				$resp = array('status' => 'success', 'text'=> tr::get('ok_file_sorting_update'));
+				$resp = [
+					'status' => 'success', 
+					'text'=> tr::get('ok_file_sorting_update')
+				];
 			
-			} catch (\Exception $e) {
+			} catch (\DB\DBException $e) {
 				$this->db->rollBack();
-				$resp = array('status' => 'error', 'text'=> tr::get('error_file_sorting_update'));
+				$resp = [
+					'status' => 'error', 
+					'text'=> tr::get('error_file_sorting_update')
+				];
 			}
 		} else {
-			$resp = array('status' => 'error', 'text'=> tr::get('error_file_sorting_update'));
+			$resp = [
+				'status' => 'error', 
+				'text'=> tr::get('error_file_sorting_update')
+			];
 		}
 
 		echo json_encode($resp);

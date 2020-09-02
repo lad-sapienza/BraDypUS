@@ -22,7 +22,7 @@ class free_sql_ctrl extends Controller
 			
 			echo $bigRestore->getResponse(true);
 
-		} catch (Exception $e) {
+		} catch (\Throwable $e) {
 			$this->returnJson([
 				'status'=>'error', 
 				'text'=>$e->getMessage()
@@ -60,7 +60,7 @@ class free_sql_ctrl extends Controller
 			$this->db->commit();
 			
 			utils::response(tr::get('ok_free_sql_run_affected', [$ret ?: 0], 'success', true));
-		} catch (\Exception $e) {
+		} catch (\DB\DBException $e) {
 			$this->log->error($e);
 			$this->db->rollBack();
 			utils::response(

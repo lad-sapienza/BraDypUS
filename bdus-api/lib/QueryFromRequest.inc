@@ -43,8 +43,8 @@
  * 			'obj_encoded'		    string, required, \SQL\SafeQuery encoded query string
  */
 
-use \DB\DB\DBInterface;
-use \Config\Config;
+use DB\DBInterface;
+use Config\Config;
 
 class QueryFromRequest
 {

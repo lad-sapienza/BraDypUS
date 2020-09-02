@@ -34,7 +34,7 @@ class geoface_ctrl extends Controller
 				throw new \Exception('Insert geodata query returned false');
 			}
 
-		} catch (\Exception $e) {
+		} catch (\Throwable $e) {
 			$this->log->error($e);
 			utils::response('error_insert_geodata', 'error');
 		}
@@ -70,7 +70,7 @@ class geoface_ctrl extends Controller
 				throw new \Exception('Delete geodata query returned false');
 			}
 
-		} catch (\Exception $e) {
+		} catch (\Throwable $e) {
 			$this->log->error($e);
 			utils::response('error_delete_geodata', 'error');
 		}
@@ -104,7 +104,7 @@ class geoface_ctrl extends Controller
 				throw new \Exception('Update geometry query returned false');
 			}
 
-		} catch (\Exception $e) {
+		} catch (\Throwable $e) {
 			$this->log->error($e);
 			utils::response('error_update_geometry', 'error');
 		}
@@ -189,7 +189,7 @@ class geoface_ctrl extends Controller
 
 			echo $this->returnJson($response);
 
-		} catch (\Exception $e) {
+		} catch (\Throwable $e) {
 			$this->log->error($e);
 			utils::response('error_getting_geodata', 'error');
 		}

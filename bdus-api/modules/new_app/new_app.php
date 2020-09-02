@@ -45,7 +45,7 @@ class new_app_ctrl extends Controller
             utils::response( 'ok_app_created', 'success', false, ["log" => $log] );
 
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             utils::response( tr::get('error_app_not_created', [ $e->getMessage() ]), 'error', true );
             $this->log->error($e);
         }

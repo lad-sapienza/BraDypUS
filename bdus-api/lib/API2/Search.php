@@ -7,7 +7,7 @@ namespace API2;
  * @requires \Read\Record
  * @requires \toGeoJson
  */
-use \DB\DB\DBInterface;
+use DB\DBInterface;
 use \SQL\QueryBuilder;
 use \Config\Config;
 
@@ -19,7 +19,7 @@ class Search
 	/**
 	 * Runs a query from a shortSQl string and returns results
 	 *
-	 * @param \DB\DB\DBInterface $db	Database object
+	 * @param DBInterface $db	Database object
 	 * @param string $shortSql			ShortSQL string
 	 * @param array $opts				Options array, all values are optional:
 	 * 				totale_rows:	Total number of rows, if not provided will be calculated
@@ -83,7 +83,7 @@ class Search
 				];
 			}
     
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             return [
                 'type' => 'error',
 				'text' => $e->getMessage(),

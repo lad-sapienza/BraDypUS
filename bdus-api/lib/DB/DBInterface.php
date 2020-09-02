@@ -1,6 +1,6 @@
 <?php
 
-namespace DB\DB;
+namespace DB;
 
 /**
  * Interface to interact with database structure

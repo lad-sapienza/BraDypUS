@@ -1,6 +1,9 @@
 <?php
 namespace DB\Validate;
 
+use DB\DBInterface;
+use DB\Validate\Resp;
+
 class DbCfgAlign
 {
     private $db;
@@ -8,7 +11,7 @@ class DbCfgAlign
     private $inspect;
     private $cfg;
 
-    public function __construct(Resp $resp, \DB\DB\DBInterface $db, \Config\Config $cfg)
+    public function __construct(Resp $resp, DBInterface $db, \Config\Config $cfg)
     {
         $this->resp = $resp;
         $this->db = $db;

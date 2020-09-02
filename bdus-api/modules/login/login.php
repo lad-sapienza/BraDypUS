@@ -92,7 +92,7 @@ class login_ctrl extends Controller
 					utils::response('error_user_add', 'error');
 					return;
 				}
-			} catch(\Exception $e) {
+			} catch(\Throwable $e) {
 				utils::response($e->getMessage(), 'error');
 				return;
 			}
@@ -134,7 +134,7 @@ class login_ctrl extends Controller
 
 				utils::response('Authenticated');
 			}
-		} catch(\Exception $e) {
+		} catch(\Throwable $e) {
 			utils::response($e->getMessage(), 'error');
 		}
 	}

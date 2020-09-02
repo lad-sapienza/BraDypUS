@@ -84,7 +84,7 @@ class backup_ctrl extends Controller
 					break;
 			}
 
-		} catch(\Exception $e) {
+		} catch(\Throwable $e) {
 			echo 'error';
 			$this->log->error($e);
 		}

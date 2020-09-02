@@ -18,6 +18,8 @@
  * 			array of fields ids
  */
 
+use DB\DBInterface;
+
 class pref
 {
 	/**
@@ -95,10 +97,10 @@ class pref
 	/**
 	 * Saves pref data to db
 	 *
-	 * @param \DB\DB\DBInterface $db
+	 * @param DBInterface $db
 	 * @return void
 	 */
-	public static function save2DB(\DB\DB\DBInterface $db)
+	public static function save2DB(DBInterface $db)
 	{
 		$user = new User($db);
 		

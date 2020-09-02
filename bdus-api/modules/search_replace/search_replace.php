@@ -48,7 +48,9 @@ class search_replace_ctrl extends Controller
 				[ $search, $replace], 
 				'affected'
 			);
-		} catch(\Exception $e) {
+		} catch(\DB\DBException $e) {
+			echo 'error';
+		} catch(\Throwable $e) {
 			$this->log->error($e);
 			echo 'error';
 		}

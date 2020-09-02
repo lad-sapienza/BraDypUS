@@ -25,13 +25,10 @@ class preferences_ctrl extends Controller
 	
 	public function save2db()
 	{
-		try
-		{
+		try {
 			pref::save2DB($this->db);
 			utils::response('pref_saved_in_db');
-		}
-		catch(\Exception $e)
-		{
+		} catch(\Throwable $e) {
 			utils::response('pref_not_saved_in_db', 'error');
 		}
 	}

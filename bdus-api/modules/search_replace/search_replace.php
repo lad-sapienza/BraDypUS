@@ -34,7 +34,7 @@ class search_replace_ctrl extends Controller
 		$tb 		= $this->get['tb'];
 		$fld 		= $this->get['fld'];
 		$search 	= $this->get['search'];
-		$replace 	= $this->get['replace'];
+		$replace 	= $this->get['replace'] ?? '';
 		
 		try {
 			if (!$tb || !$fld || !$search || !$replace) {

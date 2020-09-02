@@ -1,3 +1,4 @@
+4.0.138-alpha[] = "Replace term in Search & Replace can be empty"
 4.0.137-alpha[] = "Refactored QueryBuilder, ShortSQL, with optional validation"
 4.0.136-alpha[] = "Dropped support cfg::fldEl, cfg::getPlg, cfg::getNonPlg"
 4.0.135-alpha[] = "Dropped support for cfg in \API2\getUniqueVal"

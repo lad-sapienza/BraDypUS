@@ -37,7 +37,7 @@ var search_replace = {
 				search = $('#modal input.search').val(),
 				replace = $('#modal input.replace').val();
 		 
-			if (!tb || !fld || !search || !replace){
+			if (!tb || !fld || !search){
 				core.message(core.tr('all_fields_required'), 'error');
 			} else {
 				core.open({

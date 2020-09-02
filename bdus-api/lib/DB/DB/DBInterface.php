@@ -25,6 +25,4 @@ interface DBInterface
 
     public function rollBack();
 
-    public function logError(string $channel, int $level, string $message, int $time ): bool;
-
 }

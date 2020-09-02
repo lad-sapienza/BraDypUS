@@ -43,7 +43,7 @@ class App
 					$this->log->pushHandler(new StreamHandler($log_file, Logger::DEBUG));
 					$this->log->pushHandler(new FirePHPHandler());
 				} else {
-					$this->log->pushHandler( new LogDBHandler($this->db) );
+					$this->log->pushHandler( new LogDBHandler($this->db, $this->prefix) );
 				}
 				$this->db->setLog($this->log);
 			}
@@ -92,7 +92,6 @@ class App
             }
 		} catch(\Throwable $e) {
 			$this->log->error($e);
-			var_dump($e);
 			echo "A fatal error occurred and the application could not be started. More information are filed in the log file";
         }
 	}

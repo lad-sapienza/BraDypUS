@@ -47,8 +47,8 @@ class DB implements \DB\DB\DBInterface
 		}
 		if ($custom_connection){
 			$cfg = $custom_connection;
-		} else if ($app){
-			$cfg = $this->getConnectionDataFromCfg($app);
+		} else if ($this->app){
+			$cfg = $this->getConnectionDataFromCfg($this->app);
 		} else {
 			throw new \Exception("Cannot resolve DB connection information");
 		}
@@ -298,22 +298,6 @@ class DB implements \DB\DB\DBInterface
 		} catch (\PDOException $e) {
 			$this->log->info($e, [$query, $values, $type, $fetch_style]);
 			throw new \Exception( tr::get('db_generic_error') );
-		}
-	}
-
-	public function logError(string $channel, int $level, string $message, int $time ): bool
-	{
-		try {
-			$query = 'INSERT INTO ' . PREFIX . 'log (channel, level, message, time) VALUES (:channel, :level, :message, :time)';
-			$sql = $this->db->prepare($query);
-			return $sql->execute([
-				'channel' => $channel,
-                'level' => $level,
-                'message' => $message,
-                'time' => $time
-			]);
-		} catch (\PDOException $e) {
-			// silece....
 		}
 	}
 

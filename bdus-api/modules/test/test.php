@@ -12,6 +12,7 @@ class test_ctrl extends Controller
 	public function test()
 	{	
 		
+			
 		// $firephp = new Monolog\Handler\FirePHPHandler();
 		// $this->log->pushHandler($firephp);
 		// $this->log->error('Error PHP', ["hello" => "world"]);
@@ -33,6 +34,55 @@ class test_ctrl extends Controller
 		// var_dump($inspect->tableColumns('sitarc__geodata'));
 
 		echo '<hr />end of test_ctrl::test()';
+	}
+
+	private function testShortSQL()
+	{
+		$test = implode( '~', [
+			// tb
+			'@siti:Siti',
+
+			// fields
+			'[id_sito',
+
+			// Join
+			'+sitarc__materiali_us||sitarc__materiali_us.localita|=|id_sito',
+
+			// Where
+			// '?id_sito|=|1||and|id_sito|=|1',
+			// '?1',
+			'?sitarc__m_biblio.bib_abbreviazione|like|%sara%',
+
+			// Group
+			'*id_sito,toponimo',
+
+			// Limit
+			'-30:0',
+
+			'>id_sito,toponimo',
+			// "@siti~?sitarc__m_biblio.bib_abbreviazione|like|%sara%",
+			
+		]);
+
+		try {
+			$qb = new \SQL\QueryBuilder();
+			$qb->loadShortSQL($this->prefix, $this->cfg, $test);
+
+			$sql = $qb->getSql();
+
+			echo "<code>$sql[0]</code>:<br>";
+			echo '<pre>' . json_encode($sql[1], JSON_PRETTY_PRINT) . '</pre>';
+			echo '<pre>' . json_encode($qb->getQueryObject()->get(), JSON_PRETTY_PRINT) . '</pre>';
+
+			echo "<hr>";
+			
+		} catch (\Throwable $th) {
+			echo '<pre>' . 
+				$test . "\n\n" . 
+				$th->getMessage() . "\n\n" . 
+				$th->getTraceAsString() . '</pre>';
+			var_dump($th);
+		}
 	}
 }
 ?>

@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Config;
 
+use Config\ConfigException;
 
 class ConfigLoad
 {

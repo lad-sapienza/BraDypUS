@@ -43,7 +43,7 @@
 		var email = $(this).find('input.email').val(),
 			pass = $(this).find('input.password').val();
 		
-		if ( email =='' || pass =='' ) {
+		if ( email === '' || pass === '' ) {
 			core.message(core.tr('email_password_needed'), 'error');
 			return false;
 		}
@@ -56,10 +56,10 @@
 				},
 				
 				function(data){
-					if (data.status == 'ok'){
+					if (data.status === 'success'){
 						window.location.reload();
 					} else {
-						core.message(data.verbose, 'error');
+						core.message(data.text, 'error');
 					}
 		});
 		event.preventDefault();

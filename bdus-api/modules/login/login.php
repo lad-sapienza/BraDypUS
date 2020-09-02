@@ -129,7 +129,7 @@ class login_ctrl extends Controller
 
 				$user = new User($this->db);
 
-				$user->login(null, null, null, $app_data['auth_login_as_user']);
+				$user->login(null, null, null, $app_data['auth_login_as_user'] ? (int) $app_data['auth_login_as_user'] : null);
 				$this->log->info("User {$_SESSION['user']['id']} logged in");
 
 				utils::response('Authenticated');
@@ -145,18 +145,15 @@ class login_ctrl extends Controller
 			$user = new User($this->db);
 			$user->login($this->post['email'], $this->post['password'], $this->post['remember']);
 			$this->log->info("User {$_SESSION['user']['id']} logged in");
-			$obj['status'] = 'ok';
+			utils::response('Go ahead', 'success');
+			$obj['status'] = 'success';
 		} catch (\Exception $e) {
 			$this->log->error($e);
-			$obj['status'] = 'no';
-			$obj['verbose'] = $e->getMessage();
+			utils::response($e->getMessage(), 'error');
 		} catch (\Throwable $e) {
 			$this->log->error($e);
-			$obj['status'] = 'no';
-			$obj['verbose'] = tr::get('generic_error');
+			utils::response(tr::get('generic_error'), 'error');
 		}
-
-		echo json_encode($obj);
 	}
 
 	public function select_app()

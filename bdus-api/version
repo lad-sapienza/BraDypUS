@@ -1,3 +1,4 @@
+4.0.138-alpha[] = "Better login management"
 4.0.138-alpha[] = "Error log entirely managed by \DB\LogDBHandler"
 4.0.138-alpha[] = "Replace term in Search & Replace can be empty"
 4.0.137-alpha[] = "Refactored QueryBuilder, ShortSQL, with optional validation"

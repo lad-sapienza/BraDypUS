@@ -27,16 +27,18 @@ class BackupMySQL
 	public function exportAll()
 	{
 		$this->sql = '';
-		$tables = $this->db->query('SHOW TABLES', null, 'read', true);
+		$tables = $this->db->query("SHOW TABLES", null, 'read');
 
-		foreach($tables as $index=>$tb)
-		{
-			if (preg_match('/^' . PREFIX . '/', $tb[0]))
-			{
-				$tbs[] = $tb[0];
-
-				$this->export($tb[0]);
+		$tables = array_filter(array_map(function ($r){
+			$el = array_values($r)[0];
+			if (strpos($el, PREFIX) !== false){
+				return $el;
 			}
+			return null;
+		}, $tables));
+
+		foreach($tables as $tb) {
+			$this->export($tb);
 		}
 		$this->sql2gzip($this->sql);
 	}
@@ -109,10 +111,12 @@ class BackupMySQL
 	 */
 	private function getColumns($tb)
 	{
-		$q = $this->db->query('SHOW CREATE TABLE ' . $tb, null, 'read', true);
+		$q = $this->db->query('SHOW CREATE TABLE ' . $tb, null, 'read');
+		$q = array_map(function($el){
+			return  preg_replace("/AUTO_INCREMENT=[\w]*./", '', $el['Create Table']);
+		}, $q);
 
-		$q[0][1] = preg_replace("/AUTO_INCREMENT=[\w]*./", '', $q[0][1]);
-		return "\n\n" . $q[0][1] . "; \n\n";
+		return "\n\n" . $q[0] . "; \n\n";
 	}
 
 

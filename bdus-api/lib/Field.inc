@@ -852,15 +852,15 @@ class Field implements TemplateInterface
             // 3.2 Field is populated with ID values get by another table. Other table's id field will be used as a label
             elseif ($setting['id_from_tb']) {
                 foreach ($val as $v) {
-                    $query = 'SELECT ' . $this->cfg->get("tables.{$setting['id_from_tb']}.id_field") . ' '.
+                    
+                    $query = 'SELECT ' . $this->cfg->get("tables.{$setting['id_from_tb']}.id_field") . ' AS id_from_tb_val '.
                             'FROM ' . $setting['id_from_tb'] . ' ' .
                             'WHERE id = ?';
+                    $res = $this->db->query($query, [ (int)$v ], 'read');
 
-                    $res = $this->db->query($query, [ $v ], 'read', true);
-
-                    if ($res[0][0]) {
+                    if ($res[0]['id_from_tb_val']) {
                         $html .= '<span class="a" onclick="api.record.read(\'' . $setting['id_from_tb'] . '\', [' . $v . '])">'
-                                . utils::format_text($res[0][0])
+                                . utils::format_text($res[0]['id_from_tb_val'])
                             . '</span>' . (next($val) === false ? ' ' : ';');
                     }
                 }

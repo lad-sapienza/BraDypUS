@@ -57,7 +57,7 @@ class config_ctrl extends Controller
 
         $sys_manage = new Manage($this->db, $this->prefix);
 
-        $res = $sys_manage->getBySQL('vocabularies', '1=1 GROUP BY voc');
+        $res = $sys_manage->getBySQL('vocabularies', '1=1 GROUP BY voc', [], ["voc"]);
         $all_voc = [];
         foreach ($res as $row) {
             array_push($all_voc, $row['voc']);

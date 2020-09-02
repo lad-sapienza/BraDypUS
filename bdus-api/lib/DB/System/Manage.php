@@ -323,21 +323,26 @@ class Manage
      * @param string $table     Table name (without prefix)
      * @param string $where     Where statement
      * @param array $values     Array with binding values
+     * @param array $custom_columns     Manually set the columns
      * @return array
      */
-    public function getBySQL(string $table, string $where, array $values = []): array
+    public function getBySQL(string $table, string $where, array $values = [], array $custom_columns = null): array
     {
         $tb = $this->prefix . $table;
 
-        $columns_str = $this->getStructure($table);
+        if ($custom_columns){
+            $columns = $custom_columns;
+        } else {
+            $columns_str = $this->getStructure($table);
 
-        $columns = [];
-        
-        foreach ($columns_str as $column) {
-            if ( strtolower($column['type']) === 'geometry' && $this->spatial) {
-                array_push($columns, 'ST_AsText(' . $column['name'] . ')');
-            } else {
-                array_push($columns, $column['name']);
+            $columns = [];
+            
+            foreach ($columns_str as $column) {
+                if ( strtolower($column['type']) === 'geometry' && $this->spatial) {
+                    array_push($columns, 'ST_AsText(' . $column['name'] . ')');
+                } else {
+                    array_push($columns, $column['name']);
+                }
             }
         }
 

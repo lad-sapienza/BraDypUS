@@ -1,3 +1,4 @@
+4.0.138-alpha[] = "Fixed bug with ANSI SQL strict GROUP usage (not problematic with SQLite)"
 4.0.138-alpha[] = "Bug fixing"
 4.0.138-alpha[] = "Removed unnecessary usage of query PDO::FETCH_NUM"
 4.0.138-alpha[] = "Better login management"

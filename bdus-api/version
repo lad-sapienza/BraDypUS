@@ -1,3 +1,4 @@
+4.0.138-alpha[] = "Bug fixing"
 4.0.138-alpha[] = "Removed unnecessary usage of query PDO::FETCH_NUM"
 4.0.138-alpha[] = "Better login management"
 4.0.138-alpha[] = "Error log entirely managed by \DB\LogDBHandler"

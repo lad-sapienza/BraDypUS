@@ -193,7 +193,7 @@ class record_ctrl extends Controller
                     'print' => $fieldObj
                 ]);
             } else {
-                $thml = $fields->showall();
+                $html = $fieldObj->showall();
             }
 
             $this->render('record', 'show', array(

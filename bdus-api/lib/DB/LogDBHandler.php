@@ -30,7 +30,7 @@ class LogDBHandler extends AbstractProcessingHandler
             $sys_mng->addRow('log', [
                 'channel' => $record['channel'],
                 'level' => $record['level'],
-                'message' => $record['message'],
+                'message' => $record['formatted'],
                 'time' => $record['datetime']->format('U')
             ]);
         } catch (\Throwable $th) {

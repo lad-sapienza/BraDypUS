@@ -173,14 +173,15 @@ var core = {
 		 * @param boolean sticky if true message will be sticky
 		 */
 		message: function(text, type, sticky) {
-
-			$.pnotify({
-		        //title: title ?  title : false,
-				history: false,
-		        text: text,
-		        type: type ? type : false,
-		        hide: sticky ? false : true,
-        		styling: "bootstrap"
-		    });
+			if (!type){
+				type = 'info';
+			}
+			if (type === 'info' || type === 'success' || type === 'warning' || type === 'error'){
+				iziToast[type]({
+					message: text
+				});
+			} else {
+				alert(text);
+			}
 		}
 };

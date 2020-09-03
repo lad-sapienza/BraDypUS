@@ -1,3 +1,4 @@
+4.0.140-alpha[] = "JS depencencies as node dev dependencies"
 4.0.140-alpha[] = "Updated jquery from 2.1.1 to 3.5.1"
 4.0.140-alpha[] = "pnotify replaced by izitoast"
 4.0.139-alpha[] = "Class DB namespaced and custom DBException added"

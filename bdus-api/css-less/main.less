@@ -4,15 +4,12 @@
  * @license			See file LICENSE distributed with this code
  */
 
-@import 'bootstrap/bootstrap.less';
-@import 'slider.less';
 @import 'datepicker.less';
 @import 'fineuploader-3.4.0.less';
 @import 'keyboard.less';
 @import 'jquery.jqplot.less';
 @import 'select2.less';
 @import 'font-awesome/font-awesome.less';
-@import 'iziToast.min.css';
 
 
 
@@ -450,7 +447,7 @@ ul.gallery{
 
 @media print {
   fieldset.links, div.permalink, div.showUserLinks, fieldset.geodata{
-    .responsive-invisibility();
+	display: none !important;
   }
 	#tabs{
 		display: none !important;

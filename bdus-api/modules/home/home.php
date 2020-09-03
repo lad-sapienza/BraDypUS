@@ -10,46 +10,61 @@
 
 class home_ctrl extends Controller 
 {
+    private $js_libs = [
+        'jquery.min.js',
+        'iziToast.min.js'
+    ];
+    
+    private $js_compress_libs = [
+        'php2js.js',
+        'jquery-sortable.js',
+        'bootstrap.js',
+        'bootstrap-datepicker.js',
+        'jquery.dataTables.js',
+        'datatables-bootstrap.js',
+        'jquery.keyboard.js',
+        'utils.js',
+        'jquery.fineuploader-3.4.0.js',
+        'core.js',
+        'api.js',
+        'layout.js',
+        'formControls.js',
+        'select2.full.js',
+        'enhanceForm.js',
+        'jquery.checklabel.js',
+        'jquery.printElement.js',
+        'jquery.jqplot.js',
+        'jqplot.barRenderer.min.js',
+        'jqplot.categoryAxisRenderer.min.js',
+        'jqplot.pointLabels.js',
+        'export-jqplot-to-png.js',
+        'jquery.insertAtCaret.js',
+        'bootstrap-slider.js',
+        'hashActions.js',
+    ];
+
+    private $css_libs = [
+        'mini.css',
+        'iziToast.min.css'
+    ];
+
     public function showAll()
     {
-        $js_libs = [
-            'php2js.js',
-            'jquery-2.1.1.min.js',
-            'jquery-sortable.js',
-            'bootstrap.js',
-            'bootstrap-datepicker.js',
-            'jquery.dataTables.js',
-            'datatables-bootstrap.js',
-            'jquery.keyboard.js',
-            'utils.js',
-            'jquery.pnotify.js',
-            'jquery.fineuploader-3.4.0.js',
-            'core.js',
-            'api.js',
-            'layout.js',
-            'formControls.js',
-            'select2.full.js',
-            'enhanceForm.js',
-            'jquery.checklabel.js',
-            'jquery.printElement.js',
-            'jquery.jqplot.js',
-            'jqplot.barRenderer.min.js',
-            'jqplot.categoryAxisRenderer.min.js',
-            'jqplot.pointLabels.js',
-            'export-jqplot-to-png.js',
-            'jquery.insertAtCaret.js',
-            'bootstrap-slider.js',
-            'hashActions.js'
-        ]; 
+        if ($this->get['mini'] === 1 || !file_exists('./css/mini.css')){
+            $this->compressCss();
+        }
+        if ($this->get['mini'] === 1 || !file_exists('./js/bdus.min.js')){
+            $this->compressJs();
+        }
 
         $this->render('home', 'main', [
             "version" => version::current(),
             "app_label" => strtoupper($this->cfg ? $this->cfg->get('main.name') : ''),
-            "css" => $this->compressCss( ['main.css'], $this->get['mini'] === 1 ),
+            "css_libs" => $this->showCSS(),
+            "js_libs" => $this->showJS( $_SESSION['debug_mode'] === true ),
             "tr_json" => tr::lang2json(),
             "debugMode" => DEBUG_ON ? "true" : "false",
             "prefix" => $this->prefix ?: '',
-            "js_libs" => $this->compressJs( $js_libs, $this->get['mini'] === 1, $_SESSION['debug_mode'] === true),
             "can_user_enter" => utils::canUser('enter') ? true : false,
             "address" => $this->request['address'],
             "token" => $this->request['token'],
@@ -58,79 +73,119 @@ class home_ctrl extends Controller
         ]);
     }
 
-    private function compressCss ( array $files, bool $mini = false): string
+    private function showCSS(): string
+    {
+        $html = [];
+        foreach ($this->css_libs as $css_file) {
+            $full_path = "./css/$css_file";
+            if (file_exists($full_path)){
+            
+                array_push(
+                    $html,
+                    '<link type="text/css" media="all" rel="stylesheet" href="' . $full_path . '?sha256' . hash_file('sha256', $full_path) . '" />'
+                );
+            } else {
+                $this->log->warning("CSS file `$full_path` not found");
+            }
+        }
+        return implode("\n  ", $html);
+    }
+
+    private function showJS( bool $debug = false ): string
+    {
+        $files_to_include = $this->js_libs;
+        if (!$debug){
+            array_push($files_to_include, 'bdus.mini.js');
+        } else {
+            $files_to_include = array_merge($files_to_include, $this->js_compress_libs);
+        }
+        $html = [];
+        foreach ($files_to_include as $file) {
+            if (file_exists("./js/$file")){
+                $full_path = "./js/$file";
+            } else if (file_exists("./js-sources/$file")){
+                $full_path = "./js-sources/$file";
+            } else {
+                $this->log->warning("Cannot find JS file `$file` not found");
+            }
+            if ( $full_path){
+                array_push(
+                    $html,
+                    '<script language="javascript" ' .
+                            'type="text/javascript" ' .
+						    'src="' . $full_path . '?sha256=' . hash_file('sha256', $full_path) . '"></script>'
+                );
+            }
+        }
+        return implode("\n", $html);
+    }
+
+    private function compressCss () : bool
 	{
-		if ( $mini && file_exists('./css-less/main.less')) {
-			$str = "/*\n * BraDypUS css minified archive includes different sources and licenses" .
-			        "\n * For details on external libraries (copyrights and licenses) please consult the Credits information" .
-        			"\n*/\n";
+		if ( !file_exists('./css-less/main.less')) {
+            $this->log->error("File `css-less/main.less` not found. Nothing to compress");
+            return false;
+        }
+        $mini_css= "/*\n * BraDypUS css minified archive includes different sources and licenses" .
+                "\n * For details on external libraries (copyrights and licenses) please consult the Credits information" .
+                "\n*/\n";
 
-	    	try {
-				$opts = [ 'compress' => true ];
-				
-				$parser = new Less_Parser($opts);
-				$parser->parseFile( "./css-less/main.less");
-				$css = $parser->getCss();
+        try {
+            $parser = new Less_Parser([
+                'compress' => true
+            ]);
+            $parser->parseFile( "./css-less/main.less");
+            $mini_css .= $parser->getCss();
 
-				if (hash_file('sha256', "./css/mini.css") !== hash('sha256', $css)) {
-					file_put_contents("./css/mini.css", $str . $css);
-				}
-			} catch (\Throwable $e) {
-				$this->log->error($e);
-      		}
-		}
-		return implode("\n", [
-			'<link type="text/css" media="all" rel="stylesheet" href="./css/mini.css?sha256' . hash_file('sha256', './css/mini.css') . '" />',
-			'<link rel="shortcut icon" href="./img/favicon.ico">'
-		]);
+            if (file_exists('./css/mini.css') && hash_file('sha256', "./css/mini.css") !== hash('sha256', $mini_css)) {
+                $delete = @unlink('./css/mini.css');
+                if (!$delete){
+                    $this->log->warning("Can not delete old CSS file `./css/mini.css`");
+                    return false;
+                }
+            }
+            if ( file_exists('./css/mini.css') ) {
+                return true;
+            }
+            return file_put_contents("./css/mini.css", $mini_css) === false ? false : true;
+
+        } catch (\Throwable $e) {
+            $this->log->error($e);
+        }
+        return false;
     }
     
-    private function compressJs( array $files, bool $mini = false, bool $debug = false ): string
+    private function compressJs(): bool
 	{
-		$str = [];
+        $str = [];
+        $str_to_write[] = "/*\n * BraDypUS javascripts minified archive includes different sources and licenses";
+        $str_to_write[] =  "\n * For details on external libraries (copyrights and licenses) please consult the Credits information";
+        $str_to_write[] =  "\n */";
 
-		if ( ($mini || !file_exists('./js/bdus.mini.js')) && is_dir('./js-sources')) {
+        foreach ($this->js_compress_libs as $file) {
 
-			$str_to_write[] = "/*\n * BraDypUS javascripts minified archive includes different sources and licenses";
-			$str_to_write[] =  "\n * For details on external libraries (copyrights and licenses) please consult the Credits information";
-			$str_to_write[] =  "\n */";
+            $file = ltrim($file);
 
-			foreach ($files as $file) {
+            if ( file_exists( './js-sources/' . $file ) ) {
+                $str_to_write[] = \JShrink\Minifier::minify( file_get_contents ( './js-sources/' . $file ) );
+            } else {
+                $this->log->warning("JS file `$file` not found");
+            }
+        }
+        $mini_js = implode("\n", $str_to_write);
+        
+        if ( file_exists('./js/bdus.mini.js') && hash_file('sha256', './js/bdus.mini.js') !== hash('sha256', $mini_js ) ) {
+            $deleted = @unlink('./js/bdus.mini.js');
+            if (!$deleted){
+                $this->log->warning("Cannot delete `./js/bdus.mini.js` file");
+                return false;
+            }
+        }
 
-				$file = ltrim($file);
-
-				if ( file_exists( './js-sources/' . $file ) ) {
-					$str_to_write[] = \JShrink\Minifier::minify( file_get_contents ( './js-sources/' . $file ) );
-				}
-			}
-
-			if ( !file_exists('./js/bdus.mini.js') ||
-				(file_exists('./js/bdus.mini.js') && hash_file('sha256', './js/bdus.mini.js') !== hash('sha256', implode("\n", $str_to_write)))
-				) {
-				@unlink('./js/bdus.mini.js');
-  				utils::write_in_file ( './js/bdus.mini.js', implode("\n", $str_to_write));
-			}
-			  
-			return '<script language="JavaScript" type="text/JavaScript" ' .
-						'src="./js/bdus.mini.js?sha256=' . hash_file('sha256', './js/bdus.mini.js') . '"></script>';
-			
-		} else if ( $debug && is_dir('./js-sources')) {
-			
-			foreach ( $files as $file ) {
-				$file = ltrim($file);
-
-				if ( file_exists( './js-sources/' . $file ) ) {
-					$str[] = '<script language="JavaScript" type="text/JavaScript" ' .
-				              ' src="./js-sources/' . $file .'?sha256=?_' . hash_file('sha256', './js-sources/' . $file) . '"></script>';
-				}
-			}
-
-			return implode("\n", $str);
-		
-		} else {
-			
-			return '<script language="JavaScript" type="text/JavaScript" src="./js/bdus.mini.js?sha256' . hash_file('sha256', './js/bdus.mini.js') . '"></script>' . "\n";
-    	}
+        if (file_exists('./js/bdus.mini.js')) {
+            return true;
+        }
+        return file_put_contents("./js/bdus.mini.js", $mini_js) === false ? false : true;
 	}
 
 

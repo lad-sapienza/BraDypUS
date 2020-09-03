@@ -92,7 +92,6 @@ class info_ctrl extends Controller
 				array('name' => 'bootstrap-datepicker.js', 'by' => 'Stefan Petre (Improvements by Andrew Rowls, by @eternicode, by Julian Bogdani)', 'web' => 'https://github.com/jbogdani/bootstrap-datepicker', 'lic' => 'Apache License v2.0'),
 				array('name' => "DataTables", 'by' => "Allan Jardine", "web"=>"http://www.datatables.net/", "lic"=>"GPL v2 or a BSD style license"),
 				array('name' => 'jQuery keyboard', 'by' => 'Jeremy Satterfield, modified by Rob Garrison (Mottie on github)', 'web' => 'https://github.com/Mottie/Keyboard', 'lic' => 'MIT'),
-				array('name' => 'jquery.pnotify.js', 'by' => 'Hunter Perrin', 'web' => 'https://github.com/sciactive/pnotify', 'lic' => 'Triple license: GPL, LGPL, and MPL'),
 				array('name' => "fileuploader", 'by' => "Andrew Valums, Widen Enterprises", "web"=>"https://github.com/Widen/fine-uploader", "lic"=>"GNU GPL v3"),
 				array('name' => 'Select2', 'by' => 'Igor Vaynberg', 'web' => 'https://github.com/ivaynberg/select2', 'lic' => 'Apache License v2.0'),
 				array('name' => 'jQueryPrintElement', 'by' => 'Erik Zaadi', 'web' => 'https://github.com/erikzaadi/jQueryPlugins/tree/master/jQuery.printElement', 'lic' => 'Dual licensed: MIT and GPL'),

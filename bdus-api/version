@@ -1,3 +1,4 @@
+4.0.140-alpha[] = "Class tr is initialized once"
 4.0.140-alpha[] = "New asset compression"
 4.0.140-alpha[] = "Added DB::hasSpatialExtension()"
 4.0.140-alpha[] = "Explicitly set class form-control on inputs"

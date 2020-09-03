@@ -23,7 +23,7 @@ class tr
 	 * 3) browser default language
 	 * 4) en
 	 */
-	private static function load_file()
+	public static function load_file(string $cfg_lang = null)
 	{
 		/*
 		 * Set $_SESSION['pref']['lang']
@@ -31,18 +31,11 @@ class tr
 		// language may be
 		if ( !pref::getLang() ) {
 
-			try {
-				$def_lang = cfg::main('lang');
-			} catch(\Throwable $e) {
-				// cfg throws Exception on error, eg.: app is not set yet
-				// if def_lang cannot be set, do nothing
-			}
-
 			$computer_lang = substr($_SERVER["HTTP_ACCEPT_LANGUAGE"], 0, 2);
 
-			if ($def_lang && file_exists (LOCALE_DIR . $def_lang . '.json')) {
-				pref::setLang($def_lang);
-			} else if ($computer_lang && file_exists (LOCALE_DIR . $computer_lang . '.json') ) {
+            if ($cfg_lang && file_exists(LOCALE_DIR . $cfg_lang . '.json')) {
+                pref::setLang($cfg_lang);
+            } else if ($computer_lang && file_exists (LOCALE_DIR . $computer_lang . '.json') ) {
 				pref::setLang($computer_lang);
 			} else {
 				pref::setLang('en');
@@ -65,7 +58,7 @@ class tr
 	 */
 	public static function get($string, $args = [])
 	{
-		$lang = self::$language_strings ?: self::load_file();
+		$lang = self::$language_strings;
 
 		$translated = $lang[$string] ? $lang[$string] : $string;
 
@@ -87,9 +80,6 @@ class tr
 	 */
 	public static function lang2json()
 	{
-		if(!self::$language_strings){
-			return json_encode(self::load_file());
-		}
 		return json_encode(self::$language_strings);
 	}
 

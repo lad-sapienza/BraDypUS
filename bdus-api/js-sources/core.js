@@ -32,7 +32,7 @@ var core = {
 				if (debugMode){
 					script = './modules/' + mod + '/' + mod + '.js';
 				} else {
-					script = './modules/' + mod + '/' + mod + '.mini.js';
+					script = './modules/' + mod + '/' + mod + '.min.js';
 				}
 
 				$.ajax({

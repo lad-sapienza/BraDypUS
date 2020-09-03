@@ -9,8 +9,11 @@ use Monolog\ErrorHandler;
 
 use DB\LogDBHandler;
 use DB\DB;
+
 use Config\Config;
-use \Adbar\Dot;
+use Adbar\Dot;
+
+use Bdus\CompressAssets;
 
 class App
 {
@@ -58,8 +61,35 @@ class App
 		$handler->registerFatalHandler();
 
 
-		if ($get['mini']) {
-			\utils::modScripts($this->log);
+		if ($get['mini'] === '1') {
+
+			CompressAssets::All($js_compress_libs = [
+				'php2js.js',
+				'jquery-sortable.js',
+				'bootstrap-datepicker.js',
+				'jquery.dataTables.js',
+				'datatables-bootstrap.js',
+				'jquery.keyboard.js',
+				'utils.js',
+				'jquery.fineuploader-3.4.0.js',
+				'core.js',
+				'api.js',
+				'layout.js',
+				'formControls.js',
+				'select2.full.js',
+				'enhanceForm.js',
+				'jquery.checklabel.js',
+				'jquery.printElement.js',
+				'jquery.jqplot.js',
+				'jqplot.barRenderer.min.js',
+				'jqplot.categoryAxisRenderer.min.js',
+				'jqplot.pointLabels.js',
+				'export-jqplot-to-png.js',
+				'jquery.insertAtCaret.js',
+				'bootstrap-slider.js',
+				'hashActions.js',
+			], $this->log);
+
 			\utils::emptyDir(MAIN_DIR . 'cache', false);
 		}
     }
@@ -85,8 +115,11 @@ class App
 				$_aa->setLog($this->log);
 				$_aa->setPrefix($this->prefix);
                 if (defined('APP')) {
-                    $_aa->setCfg(new Config(new Dot(), __DIR__ . '/../../projects/' . APP . '/cfg/', $this->prefix));
-                }
+					$dot = new Dot();
+					$config = new Config($dot, __DIR__ . '/../../projects/' . APP . '/cfg/', $this->prefix);
+					$_aa->setCfg($config);
+				}
+				\tr::load_file($config ? $config->get('main.lang') : null);
                 $_aa->$method();
             } else {
                 throw new \Exception("Called object {$obj} *must* extend Controller. No direct access is available");

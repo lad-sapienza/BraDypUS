@@ -1,3 +1,4 @@
+4.0.140-alpha[] = "Added DB::hasSpatialExtension()"
 4.0.140-alpha[] = "Explicitly set class form-control on inputs"
 4.0.140-alpha[] = "Boostrap 3.3.5 updated latest v3 branch 3.4.1"
 4.0.140-alpha[] = "Splitted asset inclusion from asset minification"

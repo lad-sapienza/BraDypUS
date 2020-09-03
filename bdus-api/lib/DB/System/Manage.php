@@ -67,14 +67,9 @@ class Manage
         $this->driver = $this->db->getEngine();
 
         if (!AvailableEngines::isValidEngine($this->driver)){
-            throw new \Exception("Not valid databse engine: $driver");
+            throw new \Exception("Not valid database engine: $driver");
         }
-        try {
-            $this->db->query("SELECT ST_GeomFromText('POINT(0 0)')");
-            $this->spatial = true;
-        } catch (\Throwable $th) {
-            $this->spatial = false;
-        }
+        $this->spatial = $this->db->hasSpatialExtension();
     }
 
     /**

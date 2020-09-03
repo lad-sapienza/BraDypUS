@@ -22,6 +22,7 @@ class LogDBHandler extends AbstractProcessingHandler
     {
         try {
             $sys_mng = new \DB\System\Manage($this->db, $this->prefix);
+            
             if (!$this->initialized) {
                 $sys_mng->createTable('log');
                 $this->initialized = true;

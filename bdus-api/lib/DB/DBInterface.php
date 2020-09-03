@@ -25,4 +25,6 @@ interface DBInterface
 
     public function rollBack();
 
+    public function hasSpatialExtension(): bool;
+
 }

@@ -23,7 +23,7 @@ class DB implements DBInterface
 	 * Database instance
 	 * @var object
 	 */
-	private $db;
+	private $pdo;
 	private $db_engine;
 	private $app;
 	private $log;
@@ -91,15 +91,15 @@ class DB implements DBInterface
 	{
 		$ret = false;
 		try {
-			$this->db->beginTransaction();
-			$ret = $this->db->exec($sql);
-			$this->db->commit();
+			$this->pdo->beginTransaction();
+			$ret = $this->pdo->exec($sql);
+			$this->pdo->commit();
 		} catch (DBException $e) {
-			$this->db->rollBack();
+			$this->pdo->rollBack();
 			$this->log->error($th);
 			// Already logged
 		} catch (\Throwable $th) {
-			$this->db->rollBack();
+			$this->pdo->rollBack();
 			$this->log->error($th);
 		}
 		return ($ret !== false);
@@ -108,7 +108,7 @@ class DB implements DBInterface
 	public function exec(string $sql): bool
 	{
 		try {
-			return $this->db->exec($sql) !== false;
+			return $this->pdo->exec($sql) !== false;
 		} catch (\PDOException $e) {
 			$this->log->error($e, [$sql]);
 			throw new DBException($e);
@@ -165,7 +165,7 @@ class DB implements DBInterface
 
 			$query = trim($query);
 
-			$sql = $this->db->prepare($query);
+			$sql = $this->pdo->prepare($query);
 
 			if ( !$values ) $values = [];
 
@@ -189,7 +189,7 @@ class DB implements DBInterface
 					break;
 
 				case 'id':
-					return $this->db->lastInsertId();
+					return $this->pdo->lastInsertId();
 					break;
 
 				case 'affected':
@@ -208,7 +208,7 @@ class DB implements DBInterface
 	 */
 	public function beginTransaction()
 	{
-		$this->db->beginTransaction();
+		$this->pdo->beginTransaction();
 	}
 
 	/**
@@ -216,7 +216,7 @@ class DB implements DBInterface
 	 */
 	public function commit()
 	{
-		$this->db->commit();
+		$this->pdo->commit();
 	}
 
 	/**
@@ -225,7 +225,7 @@ class DB implements DBInterface
 	 */
 	public function rollBack()
 	{
-		$this->db->rollBack();
+		$this->pdo->rollBack();
 	}
 
 
@@ -326,12 +326,12 @@ class DB implements DBInterface
 				\PDO::ATTR_EMULATE_PREPARES   => false
 			];
 
-			$this->db = new \PDO( $dsn, $user, $password, $dbOptions );
+			$this->pdo = new \PDO( $dsn, $user, $password, $dbOptions );
 
 			
 			if ($this->db_engine == 'sqlite') {
-				$this->db->query('PRAGMA encoding = "UTF-8"');
-				$this->db->query('PRAGMA foreign_keys = ON;');
+				$this->pdo->query('PRAGMA encoding = "UTF-8"');
+				$this->pdo->query('PRAGMA foreign_keys = ON;');
 			}
 
 		} catch (\PDOException $e) {
@@ -339,6 +339,22 @@ class DB implements DBInterface
 			throw new DBException($e);
 
 		}
+	}
+
+	/**
+	 * Checks is spatial extension is available
+	 *
+	 * @return boolean
+	 */
+	public function hasSpatialExtension(): bool
+	{
+		try {
+			$this->pdo->query("SELECT ST_GeomFromText('POINT(0 0)')");
+			return true;
+		} catch (\PDOException $e) {
+			return false;
+		}
+		
 	}
 
 

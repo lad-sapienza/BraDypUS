@@ -4,6 +4,9 @@
  * For details on external libraries (copyrights and licenses) please consult the Credits information
 
  */
+
+/* php2js.js */
+
 function sprintf(){var regex=/%%|%(\d+\$)?([-+\'#0 ]*)(\*\d+\$|\*|\d+)?(\.(\*\d+\$|\*|\d+))?([scboxXuidfegEG])/g;var a=arguments,i=0,format=a[i++];var pad=function(str,len,chr,leftJustify){if(!chr){chr=' ';}
 var padding=(str.length>=len)?'':Array(1+len-str.length>>>0).join(chr);return leftJustify?str+padding:padding+str;};var justify=function(value,prefix,leftJustify,minWidth,zeroPad,customPadChar){var diff=minWidth-value.length;if(diff>0){if(leftJustify||!zeroPad){value=pad(value,minWidth,customPadChar,leftJustify);}else{value=value.slice(0,prefix.length)+pad('',diff,'0',true)+value.slice(prefix.length);}}
 return value;};var formatBaseX=function(value,base,prefix,leftJustify,minWidth,precision,zeroPad){var number=value>>>0;prefix=prefix&&number&&{'2':'0b','8':'0','16':'0x'}[base]||'';value=prefix+pad(number.toString(base),precision||0,'0',false);return justify(value,prefix,leftJustify,minWidth,zeroPad);};var formatString=function(value,leftJustify,minWidth,precision,zeroPad,customPadChar){if(precision!==null){value=value.slice(0,precision);}
@@ -15,6 +18,9 @@ if(!isFinite(minWidth)){throw new Error('sprintf: (minimum-)width must be finite
 if(!precision){precision='fFeE'.indexOf(type)>-1?6:(type=='d')?0:undefined;}else if(precision=='*'){precision=+a[i++];}else if(precision.charAt(0)=='*'){precision=+a[precision.slice(1,-1)];}else{precision=+precision;}
 value=valueIndex?a[valueIndex.slice(0,-1)]:a[i++];switch(type){case's':return formatString(String(value),leftJustify,minWidth,precision,zeroPad,customPadChar);case'c':return formatString(String.fromCharCode(+value),leftJustify,minWidth,precision,zeroPad);case'b':return formatBaseX(value,2,prefixBaseX,leftJustify,minWidth,precision,zeroPad);case'o':return formatBaseX(value,8,prefixBaseX,leftJustify,minWidth,precision,zeroPad);case'x':return formatBaseX(value,16,prefixBaseX,leftJustify,minWidth,precision,zeroPad);case'X':return formatBaseX(value,16,prefixBaseX,leftJustify,minWidth,precision,zeroPad).toUpperCase();case'u':return formatBaseX(value,10,prefixBaseX,leftJustify,minWidth,precision,zeroPad);case'i':case'd':number=(+value)|0;prefix=number<0?'-':positivePrefix;value=prefix+pad(String(Math.abs(number)),precision,'0',false);return justify(value,prefix,leftJustify,minWidth,zeroPad);case'e':case'E':case'f':case'F':case'g':case'G':number=+value;prefix=number<0?'-':positivePrefix;method=['toExponential','toFixed','toPrecision']['efg'.indexOf(type.toLowerCase())];textTransform=['toString','toUpperCase']['eEfFgG'.indexOf(type)%2];value=prefix+Math.abs(number)[method](precision);return justify(value,prefix,leftJustify,minWidth,zeroPad)[textTransform]();default:return substring;}};return format.replace(regex,doFormat);}
 function vsprintf(format,args){return this.sprintf.apply(this,[format].concat(args));}
+
+/* jquery-sortable.js */
+
 !function($,window,undefined){var eventNames,pluginName='sortable',containerDefaults={drag:true,drop:true,exclude:"",nested:true,vertical:true},groupDefaults={afterMove:function($placeholder,container){},containerPath:"",containerSelector:"ol, ul",distance:0,handle:"",itemPath:"",itemSelector:"li",isValidTarget:function($item,container){return true},onCancel:function($item,container,_super){},onDrag:function($item,position,_super){$item.css(position)},onDragStart:function($item,container,_super){$item.css({height:$item.height(),width:$item.width()})
 $item.addClass("dragged")
 $("body").addClass("dragging")},onDrop:function($item,container,_super){$item.removeClass("dragged").removeAttr("style")
@@ -174,804 +180,10 @@ if(object&&API[methodOrOptions])
 return API[methodOrOptions].apply(object,args)||this
 else if(!object&&(methodOrOptions===undefined||typeof methodOrOptions==="object"))
 $t.data(pluginName,new Container($t,methodOrOptions))
-return this});};}(jQuery,window)
-/*!
- * Bootstrap v3.3.5 (http://getbootstrap.com)
- * Copyright 2011-2015 Twitter, Inc.
- * Licensed under the MIT license
- */
-if(typeof jQuery==='undefined'){throw new Error('Bootstrap\'s JavaScript requires jQuery')}
-+function($){'use strict';var version=$.fn.jquery.split(' ')[0].split('.')
-if((version[0]<2&&version[1]<9)||(version[0]==1&&version[1]==9&&version[2]<1)){throw new Error('Bootstrap\'s JavaScript requires jQuery version 1.9.1 or higher')}}(jQuery);+function($){'use strict';function transitionEnd(){var el=document.createElement('bootstrap')
-var transEndEventNames={WebkitTransition:'webkitTransitionEnd',MozTransition:'transitionend',OTransition:'oTransitionEnd otransitionend',transition:'transitionend'}
-for(var name in transEndEventNames){if(el.style[name]!==undefined){return{end:transEndEventNames[name]}}}
-return false}
-$.fn.emulateTransitionEnd=function(duration){var called=false
-var $el=this
-$(this).one('bsTransitionEnd',function(){called=true})
-var callback=function(){if(!called)$($el).trigger($.support.transition.end)}
-setTimeout(callback,duration)
-return this}
-$(function(){$.support.transition=transitionEnd()
-if(!$.support.transition)return
-$.event.special.bsTransitionEnd={bindType:$.support.transition.end,delegateType:$.support.transition.end,handle:function(e){if($(e.target).is(this))return e.handleObj.handler.apply(this,arguments)}}})}(jQuery);+function($){'use strict';var dismiss='[data-dismiss="alert"]'
-var Alert=function(el){$(el).on('click',dismiss,this.close)}
-Alert.VERSION='3.3.5'
-Alert.TRANSITION_DURATION=150
-Alert.prototype.close=function(e){var $this=$(this)
-var selector=$this.attr('data-target')
-if(!selector){selector=$this.attr('href')
-selector=selector&&selector.replace(/.*(?=#[^\s]*$)/,'')}
-var $parent=$(selector)
-if(e)e.preventDefault()
-if(!$parent.length){$parent=$this.closest('.alert')}
-$parent.trigger(e=$.Event('close.bs.alert'))
-if(e.isDefaultPrevented())return
-$parent.removeClass('in')
-function removeElement(){$parent.detach().trigger('closed.bs.alert').remove()}
-$.support.transition&&$parent.hasClass('fade')?$parent.one('bsTransitionEnd',removeElement).emulateTransitionEnd(Alert.TRANSITION_DURATION):removeElement()}
-function Plugin(option){return this.each(function(){var $this=$(this)
-var data=$this.data('bs.alert')
-if(!data)$this.data('bs.alert',(data=new Alert(this)))
-if(typeof option=='string')data[option].call($this)})}
-var old=$.fn.alert
-$.fn.alert=Plugin
-$.fn.alert.Constructor=Alert
-$.fn.alert.noConflict=function(){$.fn.alert=old
-return this}
-$(document).on('click.bs.alert.data-api',dismiss,Alert.prototype.close)}(jQuery);+function($){'use strict';var Button=function(element,options){this.$element=$(element)
-this.options=$.extend({},Button.DEFAULTS,options)
-this.isLoading=false}
-Button.VERSION='3.3.5'
-Button.DEFAULTS={loadingText:'loading...'}
-Button.prototype.setState=function(state){var d='disabled'
-var $el=this.$element
-var val=$el.is('input')?'val':'html'
-var data=$el.data()
-state+='Text'
-if(data.resetText==null)$el.data('resetText',$el[val]())
-setTimeout($.proxy(function(){$el[val](data[state]==null?this.options[state]:data[state])
-if(state=='loadingText'){this.isLoading=true
-$el.addClass(d).attr(d,d)}else if(this.isLoading){this.isLoading=false
-$el.removeClass(d).removeAttr(d)}},this),0)}
-Button.prototype.toggle=function(){var changed=true
-var $parent=this.$element.closest('[data-toggle="buttons"]')
-if($parent.length){var $input=this.$element.find('input')
-if($input.prop('type')=='radio'){if($input.prop('checked'))changed=false
-$parent.find('.active').removeClass('active')
-this.$element.addClass('active')}else if($input.prop('type')=='checkbox'){if(($input.prop('checked'))!==this.$element.hasClass('active'))changed=false
-this.$element.toggleClass('active')}
-$input.prop('checked',this.$element.hasClass('active'))
-if(changed)$input.trigger('change')}else{this.$element.attr('aria-pressed',!this.$element.hasClass('active'))
-this.$element.toggleClass('active')}}
-function Plugin(option){return this.each(function(){var $this=$(this)
-var data=$this.data('bs.button')
-var options=typeof option=='object'&&option
-if(!data)$this.data('bs.button',(data=new Button(this,options)))
-if(option=='toggle')data.toggle()
-else if(option)data.setState(option)})}
-var old=$.fn.button
-$.fn.button=Plugin
-$.fn.button.Constructor=Button
-$.fn.button.noConflict=function(){$.fn.button=old
-return this}
-$(document).on('click.bs.button.data-api','[data-toggle^="button"]',function(e){var $btn=$(e.target)
-if(!$btn.hasClass('btn'))$btn=$btn.closest('.btn')
-Plugin.call($btn,'toggle')
-if(!($(e.target).is('input[type="radio"]')||$(e.target).is('input[type="checkbox"]')))e.preventDefault()}).on('focus.bs.button.data-api blur.bs.button.data-api','[data-toggle^="button"]',function(e){$(e.target).closest('.btn').toggleClass('focus',/^focus(in)?$/.test(e.type))})}(jQuery);+function($){'use strict';var Carousel=function(element,options){this.$element=$(element)
-this.$indicators=this.$element.find('.carousel-indicators')
-this.options=options
-this.paused=null
-this.sliding=null
-this.interval=null
-this.$active=null
-this.$items=null
-this.options.keyboard&&this.$element.on('keydown.bs.carousel',$.proxy(this.keydown,this))
-this.options.pause=='hover'&&!('ontouchstart'in document.documentElement)&&this.$element.on('mouseenter.bs.carousel',$.proxy(this.pause,this)).on('mouseleave.bs.carousel',$.proxy(this.cycle,this))}
-Carousel.VERSION='3.3.5'
-Carousel.TRANSITION_DURATION=600
-Carousel.DEFAULTS={interval:5000,pause:'hover',wrap:true,keyboard:true}
-Carousel.prototype.keydown=function(e){if(/input|textarea/i.test(e.target.tagName))return
-switch(e.which){case 37:this.prev();break
-case 39:this.next();break
-default:return}
-e.preventDefault()}
-Carousel.prototype.cycle=function(e){e||(this.paused=false)
-this.interval&&clearInterval(this.interval)
-this.options.interval&&!this.paused&&(this.interval=setInterval($.proxy(this.next,this),this.options.interval))
-return this}
-Carousel.prototype.getItemIndex=function(item){this.$items=item.parent().children('.item')
-return this.$items.index(item||this.$active)}
-Carousel.prototype.getItemForDirection=function(direction,active){var activeIndex=this.getItemIndex(active)
-var willWrap=(direction=='prev'&&activeIndex===0)||(direction=='next'&&activeIndex==(this.$items.length-1))
-if(willWrap&&!this.options.wrap)return active
-var delta=direction=='prev'?-1:1
-var itemIndex=(activeIndex+delta)%this.$items.length
-return this.$items.eq(itemIndex)}
-Carousel.prototype.to=function(pos){var that=this
-var activeIndex=this.getItemIndex(this.$active=this.$element.find('.item.active'))
-if(pos>(this.$items.length-1)||pos<0)return
-if(this.sliding)return this.$element.one('slid.bs.carousel',function(){that.to(pos)})
-if(activeIndex==pos)return this.pause().cycle()
-return this.slide(pos>activeIndex?'next':'prev',this.$items.eq(pos))}
-Carousel.prototype.pause=function(e){e||(this.paused=true)
-if(this.$element.find('.next, .prev').length&&$.support.transition){this.$element.trigger($.support.transition.end)
-this.cycle(true)}
-this.interval=clearInterval(this.interval)
-return this}
-Carousel.prototype.next=function(){if(this.sliding)return
-return this.slide('next')}
-Carousel.prototype.prev=function(){if(this.sliding)return
-return this.slide('prev')}
-Carousel.prototype.slide=function(type,next){var $active=this.$element.find('.item.active')
-var $next=next||this.getItemForDirection(type,$active)
-var isCycling=this.interval
-var direction=type=='next'?'left':'right'
-var that=this
-if($next.hasClass('active'))return(this.sliding=false)
-var relatedTarget=$next[0]
-var slideEvent=$.Event('slide.bs.carousel',{relatedTarget:relatedTarget,direction:direction})
-this.$element.trigger(slideEvent)
-if(slideEvent.isDefaultPrevented())return
-this.sliding=true
-isCycling&&this.pause()
-if(this.$indicators.length){this.$indicators.find('.active').removeClass('active')
-var $nextIndicator=$(this.$indicators.children()[this.getItemIndex($next)])
-$nextIndicator&&$nextIndicator.addClass('active')}
-var slidEvent=$.Event('slid.bs.carousel',{relatedTarget:relatedTarget,direction:direction})
-if($.support.transition&&this.$element.hasClass('slide')){$next.addClass(type)
-$next[0].offsetWidth
-$active.addClass(direction)
-$next.addClass(direction)
-$active.one('bsTransitionEnd',function(){$next.removeClass([type,direction].join(' ')).addClass('active')
-$active.removeClass(['active',direction].join(' '))
-that.sliding=false
-setTimeout(function(){that.$element.trigger(slidEvent)},0)}).emulateTransitionEnd(Carousel.TRANSITION_DURATION)}else{$active.removeClass('active')
-$next.addClass('active')
-this.sliding=false
-this.$element.trigger(slidEvent)}
-isCycling&&this.cycle()
-return this}
-function Plugin(option){return this.each(function(){var $this=$(this)
-var data=$this.data('bs.carousel')
-var options=$.extend({},Carousel.DEFAULTS,$this.data(),typeof option=='object'&&option)
-var action=typeof option=='string'?option:options.slide
-if(!data)$this.data('bs.carousel',(data=new Carousel(this,options)))
-if(typeof option=='number')data.to(option)
-else if(action)data[action]()
-else if(options.interval)data.pause().cycle()})}
-var old=$.fn.carousel
-$.fn.carousel=Plugin
-$.fn.carousel.Constructor=Carousel
-$.fn.carousel.noConflict=function(){$.fn.carousel=old
-return this}
-var clickHandler=function(e){var href
-var $this=$(this)
-var $target=$($this.attr('data-target')||(href=$this.attr('href'))&&href.replace(/.*(?=#[^\s]+$)/,''))
-if(!$target.hasClass('carousel'))return
-var options=$.extend({},$target.data(),$this.data())
-var slideIndex=$this.attr('data-slide-to')
-if(slideIndex)options.interval=false
-Plugin.call($target,options)
-if(slideIndex){$target.data('bs.carousel').to(slideIndex)}
-e.preventDefault()}
-$(document).on('click.bs.carousel.data-api','[data-slide]',clickHandler).on('click.bs.carousel.data-api','[data-slide-to]',clickHandler)
-$(window).on('load',function(){$('[data-ride="carousel"]').each(function(){var $carousel=$(this)
-Plugin.call($carousel,$carousel.data())})})}(jQuery);+function($){'use strict';var Collapse=function(element,options){this.$element=$(element)
-this.options=$.extend({},Collapse.DEFAULTS,options)
-this.$trigger=$('[data-toggle="collapse"][href="#'+element.id+'"],'+'[data-toggle="collapse"][data-target="#'+element.id+'"]')
-this.transitioning=null
-if(this.options.parent){this.$parent=this.getParent()}else{this.addAriaAndCollapsedClass(this.$element,this.$trigger)}
-if(this.options.toggle)this.toggle()}
-Collapse.VERSION='3.3.5'
-Collapse.TRANSITION_DURATION=350
-Collapse.DEFAULTS={toggle:true}
-Collapse.prototype.dimension=function(){var hasWidth=this.$element.hasClass('width')
-return hasWidth?'width':'height'}
-Collapse.prototype.show=function(){if(this.transitioning||this.$element.hasClass('in'))return
-var activesData
-var actives=this.$parent&&this.$parent.children('.panel').children('.in, .collapsing')
-if(actives&&actives.length){activesData=actives.data('bs.collapse')
-if(activesData&&activesData.transitioning)return}
-var startEvent=$.Event('show.bs.collapse')
-this.$element.trigger(startEvent)
-if(startEvent.isDefaultPrevented())return
-if(actives&&actives.length){Plugin.call(actives,'hide')
-activesData||actives.data('bs.collapse',null)}
-var dimension=this.dimension()
-this.$element.removeClass('collapse').addClass('collapsing')[dimension](0).attr('aria-expanded',true)
-this.$trigger.removeClass('collapsed').attr('aria-expanded',true)
-this.transitioning=1
-var complete=function(){this.$element.removeClass('collapsing').addClass('collapse in')[dimension]('')
-this.transitioning=0
-this.$element.trigger('shown.bs.collapse')}
-if(!$.support.transition)return complete.call(this)
-var scrollSize=$.camelCase(['scroll',dimension].join('-'))
-this.$element.one('bsTransitionEnd',$.proxy(complete,this)).emulateTransitionEnd(Collapse.TRANSITION_DURATION)[dimension](this.$element[0][scrollSize])}
-Collapse.prototype.hide=function(){if(this.transitioning||!this.$element.hasClass('in'))return
-var startEvent=$.Event('hide.bs.collapse')
-this.$element.trigger(startEvent)
-if(startEvent.isDefaultPrevented())return
-var dimension=this.dimension()
-this.$element[dimension](this.$element[dimension]())[0].offsetHeight
-this.$element.addClass('collapsing').removeClass('collapse in').attr('aria-expanded',false)
-this.$trigger.addClass('collapsed').attr('aria-expanded',false)
-this.transitioning=1
-var complete=function(){this.transitioning=0
-this.$element.removeClass('collapsing').addClass('collapse').trigger('hidden.bs.collapse')}
-if(!$.support.transition)return complete.call(this)
-this.$element
-[dimension](0).one('bsTransitionEnd',$.proxy(complete,this)).emulateTransitionEnd(Collapse.TRANSITION_DURATION)}
-Collapse.prototype.toggle=function(){this[this.$element.hasClass('in')?'hide':'show']()}
-Collapse.prototype.getParent=function(){return $(this.options.parent).find('[data-toggle="collapse"][data-parent="'+this.options.parent+'"]').each($.proxy(function(i,element){var $element=$(element)
-this.addAriaAndCollapsedClass(getTargetFromTrigger($element),$element)},this)).end()}
-Collapse.prototype.addAriaAndCollapsedClass=function($element,$trigger){var isOpen=$element.hasClass('in')
-$element.attr('aria-expanded',isOpen)
-$trigger.toggleClass('collapsed',!isOpen).attr('aria-expanded',isOpen)}
-function getTargetFromTrigger($trigger){var href
-var target=$trigger.attr('data-target')||(href=$trigger.attr('href'))&&href.replace(/.*(?=#[^\s]+$)/,'')
-return $(target)}
-function Plugin(option){return this.each(function(){var $this=$(this)
-var data=$this.data('bs.collapse')
-var options=$.extend({},Collapse.DEFAULTS,$this.data(),typeof option=='object'&&option)
-if(!data&&options.toggle&&/show|hide/.test(option))options.toggle=false
-if(!data)$this.data('bs.collapse',(data=new Collapse(this,options)))
-if(typeof option=='string')data[option]()})}
-var old=$.fn.collapse
-$.fn.collapse=Plugin
-$.fn.collapse.Constructor=Collapse
-$.fn.collapse.noConflict=function(){$.fn.collapse=old
-return this}
-$(document).on('click.bs.collapse.data-api','[data-toggle="collapse"]',function(e){var $this=$(this)
-if(!$this.attr('data-target'))e.preventDefault()
-var $target=getTargetFromTrigger($this)
-var data=$target.data('bs.collapse')
-var option=data?'toggle':$this.data()
-Plugin.call($target,option)})}(jQuery);+function($){'use strict';var backdrop='.dropdown-backdrop'
-var toggle='[data-toggle="dropdown"]'
-var Dropdown=function(element){$(element).on('click.bs.dropdown',this.toggle)}
-Dropdown.VERSION='3.3.5'
-function getParent($this){var selector=$this.attr('data-target')
-if(!selector){selector=$this.attr('href')
-selector=selector&&/#[A-Za-z]/.test(selector)&&selector.replace(/.*(?=#[^\s]*$)/,'')}
-var $parent=selector&&$(selector)
-return $parent&&$parent.length?$parent:$this.parent()}
-function clearMenus(e){if(e&&e.which===3)return
-$(backdrop).remove()
-$(toggle).each(function(){var $this=$(this)
-var $parent=getParent($this)
-var relatedTarget={relatedTarget:this}
-if(!$parent.hasClass('open'))return
-if(e&&e.type=='click'&&/input|textarea/i.test(e.target.tagName)&&$.contains($parent[0],e.target))return
-$parent.trigger(e=$.Event('hide.bs.dropdown',relatedTarget))
-if(e.isDefaultPrevented())return
-$this.attr('aria-expanded','false')
-$parent.removeClass('open').trigger('hidden.bs.dropdown',relatedTarget)})}
-Dropdown.prototype.toggle=function(e){var $this=$(this)
-if($this.is('.disabled, :disabled'))return
-var $parent=getParent($this)
-var isActive=$parent.hasClass('open')
-clearMenus()
-if(!isActive){if('ontouchstart'in document.documentElement&&!$parent.closest('.navbar-nav').length){$(document.createElement('div')).addClass('dropdown-backdrop').insertAfter($(this)).on('click',clearMenus)}
-var relatedTarget={relatedTarget:this}
-$parent.trigger(e=$.Event('show.bs.dropdown',relatedTarget))
-if(e.isDefaultPrevented())return
-$this.trigger('focus').attr('aria-expanded','true')
-$parent.toggleClass('open').trigger('shown.bs.dropdown',relatedTarget)}
-return false}
-Dropdown.prototype.keydown=function(e){if(!/(38|40|27|32)/.test(e.which)||/input|textarea/i.test(e.target.tagName))return
-var $this=$(this)
-e.preventDefault()
-e.stopPropagation()
-if($this.is('.disabled, :disabled'))return
-var $parent=getParent($this)
-var isActive=$parent.hasClass('open')
-if(!isActive&&e.which!=27||isActive&&e.which==27){if(e.which==27)$parent.find(toggle).trigger('focus')
-return $this.trigger('click')}
-var desc=' li:not(.disabled):visible a'
-var $items=$parent.find('.dropdown-menu'+desc)
-if(!$items.length)return
-var index=$items.index(e.target)
-if(e.which==38&&index>0)index--
-if(e.which==40&&index<$items.length-1)index++
-if(!~index)index=0
-$items.eq(index).trigger('focus')}
-function Plugin(option){return this.each(function(){var $this=$(this)
-var data=$this.data('bs.dropdown')
-if(!data)$this.data('bs.dropdown',(data=new Dropdown(this)))
-if(typeof option=='string')data[option].call($this)})}
-var old=$.fn.dropdown
-$.fn.dropdown=Plugin
-$.fn.dropdown.Constructor=Dropdown
-$.fn.dropdown.noConflict=function(){$.fn.dropdown=old
-return this}
-$(document).on('click.bs.dropdown.data-api',clearMenus).on('click.bs.dropdown.data-api','.dropdown form',function(e){e.stopPropagation()}).on('click.bs.dropdown.data-api',toggle,Dropdown.prototype.toggle).on('keydown.bs.dropdown.data-api',toggle,Dropdown.prototype.keydown).on('keydown.bs.dropdown.data-api','.dropdown-menu',Dropdown.prototype.keydown)}(jQuery);+function($){'use strict';var Modal=function(element,options){this.options=options
-this.$body=$(document.body)
-this.$element=$(element)
-this.$dialog=this.$element.find('.modal-dialog')
-this.$backdrop=null
-this.isShown=null
-this.originalBodyPad=null
-this.scrollbarWidth=0
-this.ignoreBackdropClick=false
-if(this.options.remote){this.$element.find('.modal-content').load(this.options.remote,$.proxy(function(){this.$element.trigger('loaded.bs.modal')},this))}}
-Modal.VERSION='3.3.5'
-Modal.TRANSITION_DURATION=300
-Modal.BACKDROP_TRANSITION_DURATION=150
-Modal.DEFAULTS={backdrop:true,keyboard:true,show:true}
-Modal.prototype.toggle=function(_relatedTarget){return this.isShown?this.hide():this.show(_relatedTarget)}
-Modal.prototype.show=function(_relatedTarget){var that=this
-var e=$.Event('show.bs.modal',{relatedTarget:_relatedTarget})
-this.$element.trigger(e)
-if(this.isShown||e.isDefaultPrevented())return
-this.isShown=true
-this.checkScrollbar()
-this.setScrollbar()
-this.$body.addClass('modal-open')
-this.escape()
-this.resize()
-this.$element.on('click.dismiss.bs.modal','[data-dismiss="modal"]',$.proxy(this.hide,this))
-this.$dialog.on('mousedown.dismiss.bs.modal',function(){that.$element.one('mouseup.dismiss.bs.modal',function(e){if($(e.target).is(that.$element))that.ignoreBackdropClick=true})})
-this.backdrop(function(){var transition=$.support.transition&&that.$element.hasClass('fade')
-if(!that.$element.parent().length){that.$element.appendTo(that.$body)}
-that.$element.show().scrollTop(0)
-that.adjustDialog()
-if(transition){that.$element[0].offsetWidth}
-that.$element.addClass('in')
-that.enforceFocus()
-var e=$.Event('shown.bs.modal',{relatedTarget:_relatedTarget})
-transition?that.$dialog.one('bsTransitionEnd',function(){that.$element.trigger('focus').trigger(e)}).emulateTransitionEnd(Modal.TRANSITION_DURATION):that.$element.trigger('focus').trigger(e)})}
-Modal.prototype.hide=function(e){if(e)e.preventDefault()
-e=$.Event('hide.bs.modal')
-this.$element.trigger(e)
-if(!this.isShown||e.isDefaultPrevented())return
-this.isShown=false
-this.escape()
-this.resize()
-$(document).off('focusin.bs.modal')
-this.$element.removeClass('in').off('click.dismiss.bs.modal').off('mouseup.dismiss.bs.modal')
-this.$dialog.off('mousedown.dismiss.bs.modal')
-$.support.transition&&this.$element.hasClass('fade')?this.$element.one('bsTransitionEnd',$.proxy(this.hideModal,this)).emulateTransitionEnd(Modal.TRANSITION_DURATION):this.hideModal()}
-Modal.prototype.enforceFocus=function(){$(document).off('focusin.bs.modal').on('focusin.bs.modal',$.proxy(function(e){if(this.$element[0]!==e.target&&!this.$element.has(e.target).length){this.$element.trigger('focus')}},this))}
-Modal.prototype.escape=function(){if(this.isShown&&this.options.keyboard){this.$element.on('keydown.dismiss.bs.modal',$.proxy(function(e){e.which==27&&this.hide()},this))}else if(!this.isShown){this.$element.off('keydown.dismiss.bs.modal')}}
-Modal.prototype.resize=function(){if(this.isShown){$(window).on('resize.bs.modal',$.proxy(this.handleUpdate,this))}else{$(window).off('resize.bs.modal')}}
-Modal.prototype.hideModal=function(){var that=this
-this.$element.hide()
-this.backdrop(function(){that.$body.removeClass('modal-open')
-that.resetAdjustments()
-that.resetScrollbar()
-that.$element.trigger('hidden.bs.modal')})}
-Modal.prototype.removeBackdrop=function(){this.$backdrop&&this.$backdrop.remove()
-this.$backdrop=null}
-Modal.prototype.backdrop=function(callback){var that=this
-var animate=this.$element.hasClass('fade')?'fade':''
-if(this.isShown&&this.options.backdrop){var doAnimate=$.support.transition&&animate
-this.$backdrop=$(document.createElement('div')).addClass('modal-backdrop '+animate).appendTo(this.$body)
-this.$element.on('click.dismiss.bs.modal',$.proxy(function(e){if(this.ignoreBackdropClick){this.ignoreBackdropClick=false
-return}
-if(e.target!==e.currentTarget)return
-this.options.backdrop=='static'?this.$element[0].focus():this.hide()},this))
-if(doAnimate)this.$backdrop[0].offsetWidth
-this.$backdrop.addClass('in')
-if(!callback)return
-doAnimate?this.$backdrop.one('bsTransitionEnd',callback).emulateTransitionEnd(Modal.BACKDROP_TRANSITION_DURATION):callback()}else if(!this.isShown&&this.$backdrop){this.$backdrop.removeClass('in')
-var callbackRemove=function(){that.removeBackdrop()
-callback&&callback()}
-$.support.transition&&this.$element.hasClass('fade')?this.$backdrop.one('bsTransitionEnd',callbackRemove).emulateTransitionEnd(Modal.BACKDROP_TRANSITION_DURATION):callbackRemove()}else if(callback){callback()}}
-Modal.prototype.handleUpdate=function(){this.adjustDialog()}
-Modal.prototype.adjustDialog=function(){var modalIsOverflowing=this.$element[0].scrollHeight>document.documentElement.clientHeight
-this.$element.css({paddingLeft:!this.bodyIsOverflowing&&modalIsOverflowing?this.scrollbarWidth:'',paddingRight:this.bodyIsOverflowing&&!modalIsOverflowing?this.scrollbarWidth:''})}
-Modal.prototype.resetAdjustments=function(){this.$element.css({paddingLeft:'',paddingRight:''})}
-Modal.prototype.checkScrollbar=function(){var fullWindowWidth=window.innerWidth
-if(!fullWindowWidth){var documentElementRect=document.documentElement.getBoundingClientRect()
-fullWindowWidth=documentElementRect.right-Math.abs(documentElementRect.left)}
-this.bodyIsOverflowing=document.body.clientWidth<fullWindowWidth
-this.scrollbarWidth=this.measureScrollbar()}
-Modal.prototype.setScrollbar=function(){var bodyPad=parseInt((this.$body.css('padding-right')||0),10)
-this.originalBodyPad=document.body.style.paddingRight||''
-if(this.bodyIsOverflowing)this.$body.css('padding-right',bodyPad+this.scrollbarWidth)}
-Modal.prototype.resetScrollbar=function(){this.$body.css('padding-right',this.originalBodyPad)}
-Modal.prototype.measureScrollbar=function(){var scrollDiv=document.createElement('div')
-scrollDiv.className='modal-scrollbar-measure'
-this.$body.append(scrollDiv)
-var scrollbarWidth=scrollDiv.offsetWidth-scrollDiv.clientWidth
-this.$body[0].removeChild(scrollDiv)
-return scrollbarWidth}
-function Plugin(option,_relatedTarget){return this.each(function(){var $this=$(this)
-var data=$this.data('bs.modal')
-var options=$.extend({},Modal.DEFAULTS,$this.data(),typeof option=='object'&&option)
-if(!data)$this.data('bs.modal',(data=new Modal(this,options)))
-if(typeof option=='string')data[option](_relatedTarget)
-else if(options.show)data.show(_relatedTarget)})}
-var old=$.fn.modal
-$.fn.modal=Plugin
-$.fn.modal.Constructor=Modal
-$.fn.modal.noConflict=function(){$.fn.modal=old
-return this}
-$(document).on('click.bs.modal.data-api','[data-toggle="modal"]',function(e){var $this=$(this)
-var href=$this.attr('href')
-var $target=$($this.attr('data-target')||(href&&href.replace(/.*(?=#[^\s]+$)/,'')))
-var option=$target.data('bs.modal')?'toggle':$.extend({remote:!/#/.test(href)&&href},$target.data(),$this.data())
-if($this.is('a'))e.preventDefault()
-$target.one('show.bs.modal',function(showEvent){if(showEvent.isDefaultPrevented())return
-$target.one('hidden.bs.modal',function(){$this.is(':visible')&&$this.trigger('focus')})})
-Plugin.call($target,option,this)})}(jQuery);+function($){'use strict';var Tooltip=function(element,options){this.type=null
-this.options=null
-this.enabled=null
-this.timeout=null
-this.hoverState=null
-this.$element=null
-this.inState=null
-this.init('tooltip',element,options)}
-Tooltip.VERSION='3.3.5'
-Tooltip.TRANSITION_DURATION=150
-Tooltip.DEFAULTS={animation:true,placement:'top',selector:false,template:'<div class="tooltip" role="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner"></div></div>',trigger:'hover focus',title:'',delay:0,html:false,container:false,viewport:{selector:'body',padding:0}}
-Tooltip.prototype.init=function(type,element,options){this.enabled=true
-this.type=type
-this.$element=$(element)
-this.options=this.getOptions(options)
-this.$viewport=this.options.viewport&&$($.isFunction(this.options.viewport)?this.options.viewport.call(this,this.$element):(this.options.viewport.selector||this.options.viewport))
-this.inState={click:false,hover:false,focus:false}
-if(this.$element[0]instanceof document.constructor&&!this.options.selector){throw new Error('`selector` option must be specified when initializing '+this.type+' on the window.document object!')}
-var triggers=this.options.trigger.split(' ')
-for(var i=triggers.length;i--;){var trigger=triggers[i]
-if(trigger=='click'){this.$element.on('click.'+this.type,this.options.selector,$.proxy(this.toggle,this))}else if(trigger!='manual'){var eventIn=trigger=='hover'?'mouseenter':'focusin'
-var eventOut=trigger=='hover'?'mouseleave':'focusout'
-this.$element.on(eventIn+'.'+this.type,this.options.selector,$.proxy(this.enter,this))
-this.$element.on(eventOut+'.'+this.type,this.options.selector,$.proxy(this.leave,this))}}
-this.options.selector?(this._options=$.extend({},this.options,{trigger:'manual',selector:''})):this.fixTitle()}
-Tooltip.prototype.getDefaults=function(){return Tooltip.DEFAULTS}
-Tooltip.prototype.getOptions=function(options){options=$.extend({},this.getDefaults(),this.$element.data(),options)
-if(options.delay&&typeof options.delay=='number'){options.delay={show:options.delay,hide:options.delay}}
-return options}
-Tooltip.prototype.getDelegateOptions=function(){var options={}
-var defaults=this.getDefaults()
-this._options&&$.each(this._options,function(key,value){if(defaults[key]!=value)options[key]=value})
-return options}
-Tooltip.prototype.enter=function(obj){var self=obj instanceof this.constructor?obj:$(obj.currentTarget).data('bs.'+this.type)
-if(!self){self=new this.constructor(obj.currentTarget,this.getDelegateOptions())
-$(obj.currentTarget).data('bs.'+this.type,self)}
-if(obj instanceof $.Event){self.inState[obj.type=='focusin'?'focus':'hover']=true}
-if(self.tip().hasClass('in')||self.hoverState=='in'){self.hoverState='in'
-return}
-clearTimeout(self.timeout)
-self.hoverState='in'
-if(!self.options.delay||!self.options.delay.show)return self.show()
-self.timeout=setTimeout(function(){if(self.hoverState=='in')self.show()},self.options.delay.show)}
-Tooltip.prototype.isInStateTrue=function(){for(var key in this.inState){if(this.inState[key])return true}
-return false}
-Tooltip.prototype.leave=function(obj){var self=obj instanceof this.constructor?obj:$(obj.currentTarget).data('bs.'+this.type)
-if(!self){self=new this.constructor(obj.currentTarget,this.getDelegateOptions())
-$(obj.currentTarget).data('bs.'+this.type,self)}
-if(obj instanceof $.Event){self.inState[obj.type=='focusout'?'focus':'hover']=false}
-if(self.isInStateTrue())return
-clearTimeout(self.timeout)
-self.hoverState='out'
-if(!self.options.delay||!self.options.delay.hide)return self.hide()
-self.timeout=setTimeout(function(){if(self.hoverState=='out')self.hide()},self.options.delay.hide)}
-Tooltip.prototype.show=function(){var e=$.Event('show.bs.'+this.type)
-if(this.hasContent()&&this.enabled){this.$element.trigger(e)
-var inDom=$.contains(this.$element[0].ownerDocument.documentElement,this.$element[0])
-if(e.isDefaultPrevented()||!inDom)return
-var that=this
-var $tip=this.tip()
-var tipId=this.getUID(this.type)
-this.setContent()
-$tip.attr('id',tipId)
-this.$element.attr('aria-describedby',tipId)
-if(this.options.animation)$tip.addClass('fade')
-var placement=typeof this.options.placement=='function'?this.options.placement.call(this,$tip[0],this.$element[0]):this.options.placement
-var autoToken=/\s?auto?\s?/i
-var autoPlace=autoToken.test(placement)
-if(autoPlace)placement=placement.replace(autoToken,'')||'top'
-$tip.detach().css({top:0,left:0,display:'block'}).addClass(placement).data('bs.'+this.type,this)
-this.options.container?$tip.appendTo(this.options.container):$tip.insertAfter(this.$element)
-this.$element.trigger('inserted.bs.'+this.type)
-var pos=this.getPosition()
-var actualWidth=$tip[0].offsetWidth
-var actualHeight=$tip[0].offsetHeight
-if(autoPlace){var orgPlacement=placement
-var viewportDim=this.getPosition(this.$viewport)
-placement=placement=='bottom'&&pos.bottom+actualHeight>viewportDim.bottom?'top':placement=='top'&&pos.top-actualHeight<viewportDim.top?'bottom':placement=='right'&&pos.right+actualWidth>viewportDim.width?'left':placement=='left'&&pos.left-actualWidth<viewportDim.left?'right':placement
-$tip.removeClass(orgPlacement).addClass(placement)}
-var calculatedOffset=this.getCalculatedOffset(placement,pos,actualWidth,actualHeight)
-this.applyPlacement(calculatedOffset,placement)
-var complete=function(){var prevHoverState=that.hoverState
-that.$element.trigger('shown.bs.'+that.type)
-that.hoverState=null
-if(prevHoverState=='out')that.leave(that)}
-$.support.transition&&this.$tip.hasClass('fade')?$tip.one('bsTransitionEnd',complete).emulateTransitionEnd(Tooltip.TRANSITION_DURATION):complete()}}
-Tooltip.prototype.applyPlacement=function(offset,placement){var $tip=this.tip()
-var width=$tip[0].offsetWidth
-var height=$tip[0].offsetHeight
-var marginTop=parseInt($tip.css('margin-top'),10)
-var marginLeft=parseInt($tip.css('margin-left'),10)
-if(isNaN(marginTop))marginTop=0
-if(isNaN(marginLeft))marginLeft=0
-offset.top+=marginTop
-offset.left+=marginLeft
-$.offset.setOffset($tip[0],$.extend({using:function(props){$tip.css({top:Math.round(props.top),left:Math.round(props.left)})}},offset),0)
-$tip.addClass('in')
-var actualWidth=$tip[0].offsetWidth
-var actualHeight=$tip[0].offsetHeight
-if(placement=='top'&&actualHeight!=height){offset.top=offset.top+height-actualHeight}
-var delta=this.getViewportAdjustedDelta(placement,offset,actualWidth,actualHeight)
-if(delta.left)offset.left+=delta.left
-else offset.top+=delta.top
-var isVertical=/top|bottom/.test(placement)
-var arrowDelta=isVertical?delta.left*2-width+actualWidth:delta.top*2-height+actualHeight
-var arrowOffsetPosition=isVertical?'offsetWidth':'offsetHeight'
-$tip.offset(offset)
-this.replaceArrow(arrowDelta,$tip[0][arrowOffsetPosition],isVertical)}
-Tooltip.prototype.replaceArrow=function(delta,dimension,isVertical){this.arrow().css(isVertical?'left':'top',50*(1-delta / dimension)+'%').css(isVertical?'top':'left','')}
-Tooltip.prototype.setContent=function(){var $tip=this.tip()
-var title=this.getTitle()
-$tip.find('.tooltip-inner')[this.options.html?'html':'text'](title)
-$tip.removeClass('fade in top bottom left right')}
-Tooltip.prototype.hide=function(callback){var that=this
-var $tip=$(this.$tip)
-var e=$.Event('hide.bs.'+this.type)
-function complete(){if(that.hoverState!='in')$tip.detach()
-that.$element.removeAttr('aria-describedby').trigger('hidden.bs.'+that.type)
-callback&&callback()}
-this.$element.trigger(e)
-if(e.isDefaultPrevented())return
-$tip.removeClass('in')
-$.support.transition&&$tip.hasClass('fade')?$tip.one('bsTransitionEnd',complete).emulateTransitionEnd(Tooltip.TRANSITION_DURATION):complete()
-this.hoverState=null
-return this}
-Tooltip.prototype.fixTitle=function(){var $e=this.$element
-if($e.attr('title')||typeof $e.attr('data-original-title')!='string'){$e.attr('data-original-title',$e.attr('title')||'').attr('title','')}}
-Tooltip.prototype.hasContent=function(){return this.getTitle()}
-Tooltip.prototype.getPosition=function($element){$element=$element||this.$element
-var el=$element[0]
-var isBody=el.tagName=='BODY'
-var elRect=el.getBoundingClientRect()
-if(elRect.width==null){elRect=$.extend({},elRect,{width:elRect.right-elRect.left,height:elRect.bottom-elRect.top})}
-var elOffset=isBody?{top:0,left:0}:$element.offset()
-var scroll={scroll:isBody?document.documentElement.scrollTop||document.body.scrollTop:$element.scrollTop()}
-var outerDims=isBody?{width:$(window).width(),height:$(window).height()}:null
-return $.extend({},elRect,scroll,outerDims,elOffset)}
-Tooltip.prototype.getCalculatedOffset=function(placement,pos,actualWidth,actualHeight){return placement=='bottom'?{top:pos.top+pos.height,left:pos.left+pos.width / 2-actualWidth / 2}:placement=='top'?{top:pos.top-actualHeight,left:pos.left+pos.width / 2-actualWidth / 2}:placement=='left'?{top:pos.top+pos.height / 2-actualHeight / 2,left:pos.left-actualWidth}:{top:pos.top+pos.height / 2-actualHeight / 2,left:pos.left+pos.width}}
-Tooltip.prototype.getViewportAdjustedDelta=function(placement,pos,actualWidth,actualHeight){var delta={top:0,left:0}
-if(!this.$viewport)return delta
-var viewportPadding=this.options.viewport&&this.options.viewport.padding||0
-var viewportDimensions=this.getPosition(this.$viewport)
-if(/right|left/.test(placement)){var topEdgeOffset=pos.top-viewportPadding-viewportDimensions.scroll
-var bottomEdgeOffset=pos.top+viewportPadding-viewportDimensions.scroll+actualHeight
-if(topEdgeOffset<viewportDimensions.top){delta.top=viewportDimensions.top-topEdgeOffset}else if(bottomEdgeOffset>viewportDimensions.top+viewportDimensions.height){delta.top=viewportDimensions.top+viewportDimensions.height-bottomEdgeOffset}}else{var leftEdgeOffset=pos.left-viewportPadding
-var rightEdgeOffset=pos.left+viewportPadding+actualWidth
-if(leftEdgeOffset<viewportDimensions.left){delta.left=viewportDimensions.left-leftEdgeOffset}else if(rightEdgeOffset>viewportDimensions.right){delta.left=viewportDimensions.left+viewportDimensions.width-rightEdgeOffset}}
-return delta}
-Tooltip.prototype.getTitle=function(){var title
-var $e=this.$element
-var o=this.options
-title=$e.attr('data-original-title')||(typeof o.title=='function'?o.title.call($e[0]):o.title)
-return title}
-Tooltip.prototype.getUID=function(prefix){do prefix+=~~(Math.random()*1000000)
-while(document.getElementById(prefix))
-return prefix}
-Tooltip.prototype.tip=function(){if(!this.$tip){this.$tip=$(this.options.template)
-if(this.$tip.length!=1){throw new Error(this.type+' `template` option must consist of exactly 1 top-level element!')}}
-return this.$tip}
-Tooltip.prototype.arrow=function(){return(this.$arrow=this.$arrow||this.tip().find('.tooltip-arrow'))}
-Tooltip.prototype.enable=function(){this.enabled=true}
-Tooltip.prototype.disable=function(){this.enabled=false}
-Tooltip.prototype.toggleEnabled=function(){this.enabled=!this.enabled}
-Tooltip.prototype.toggle=function(e){var self=this
-if(e){self=$(e.currentTarget).data('bs.'+this.type)
-if(!self){self=new this.constructor(e.currentTarget,this.getDelegateOptions())
-$(e.currentTarget).data('bs.'+this.type,self)}}
-if(e){self.inState.click=!self.inState.click
-if(self.isInStateTrue())self.enter(self)
-else self.leave(self)}else{self.tip().hasClass('in')?self.leave(self):self.enter(self)}}
-Tooltip.prototype.destroy=function(){var that=this
-clearTimeout(this.timeout)
-this.hide(function(){that.$element.off('.'+that.type).removeData('bs.'+that.type)
-if(that.$tip){that.$tip.detach()}
-that.$tip=null
-that.$arrow=null
-that.$viewport=null})}
-function Plugin(option){return this.each(function(){var $this=$(this)
-var data=$this.data('bs.tooltip')
-var options=typeof option=='object'&&option
-if(!data&&/destroy|hide/.test(option))return
-if(!data)$this.data('bs.tooltip',(data=new Tooltip(this,options)))
-if(typeof option=='string')data[option]()})}
-var old=$.fn.tooltip
-$.fn.tooltip=Plugin
-$.fn.tooltip.Constructor=Tooltip
-$.fn.tooltip.noConflict=function(){$.fn.tooltip=old
-return this}}(jQuery);+function($){'use strict';var Popover=function(element,options){this.init('popover',element,options)}
-if(!$.fn.tooltip)throw new Error('Popover requires tooltip.js')
-Popover.VERSION='3.3.5'
-Popover.DEFAULTS=$.extend({},$.fn.tooltip.Constructor.DEFAULTS,{placement:'right',trigger:'click',content:'',template:'<div class="popover" role="tooltip"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content"></div></div>'})
-Popover.prototype=$.extend({},$.fn.tooltip.Constructor.prototype)
-Popover.prototype.constructor=Popover
-Popover.prototype.getDefaults=function(){return Popover.DEFAULTS}
-Popover.prototype.setContent=function(){var $tip=this.tip()
-var title=this.getTitle()
-var content=this.getContent()
-$tip.find('.popover-title')[this.options.html?'html':'text'](title)
-$tip.find('.popover-content').children().detach().end()[this.options.html?(typeof content=='string'?'html':'append'):'text'](content)
-$tip.removeClass('fade top bottom left right in')
-if(!$tip.find('.popover-title').html())$tip.find('.popover-title').hide()}
-Popover.prototype.hasContent=function(){return this.getTitle()||this.getContent()}
-Popover.prototype.getContent=function(){var $e=this.$element
-var o=this.options
-return $e.attr('data-content')||(typeof o.content=='function'?o.content.call($e[0]):o.content)}
-Popover.prototype.arrow=function(){return(this.$arrow=this.$arrow||this.tip().find('.arrow'))}
-function Plugin(option){return this.each(function(){var $this=$(this)
-var data=$this.data('bs.popover')
-var options=typeof option=='object'&&option
-if(!data&&/destroy|hide/.test(option))return
-if(!data)$this.data('bs.popover',(data=new Popover(this,options)))
-if(typeof option=='string')data[option]()})}
-var old=$.fn.popover
-$.fn.popover=Plugin
-$.fn.popover.Constructor=Popover
-$.fn.popover.noConflict=function(){$.fn.popover=old
-return this}}(jQuery);+function($){'use strict';function ScrollSpy(element,options){this.$body=$(document.body)
-this.$scrollElement=$(element).is(document.body)?$(window):$(element)
-this.options=$.extend({},ScrollSpy.DEFAULTS,options)
-this.selector=(this.options.target||'')+' .nav li > a'
-this.offsets=[]
-this.targets=[]
-this.activeTarget=null
-this.scrollHeight=0
-this.$scrollElement.on('scroll.bs.scrollspy',$.proxy(this.process,this))
-this.refresh()
-this.process()}
-ScrollSpy.VERSION='3.3.5'
-ScrollSpy.DEFAULTS={offset:10}
-ScrollSpy.prototype.getScrollHeight=function(){return this.$scrollElement[0].scrollHeight||Math.max(this.$body[0].scrollHeight,document.documentElement.scrollHeight)}
-ScrollSpy.prototype.refresh=function(){var that=this
-var offsetMethod='offset'
-var offsetBase=0
-this.offsets=[]
-this.targets=[]
-this.scrollHeight=this.getScrollHeight()
-if(!$.isWindow(this.$scrollElement[0])){offsetMethod='position'
-offsetBase=this.$scrollElement.scrollTop()}
-this.$body.find(this.selector).map(function(){var $el=$(this)
-var href=$el.data('target')||$el.attr('href')
-var $href=/^#./.test(href)&&$(href)
-return($href&&$href.length&&$href.is(':visible')&&[[$href[offsetMethod]().top+offsetBase,href]])||null}).sort(function(a,b){return a[0]-b[0]}).each(function(){that.offsets.push(this[0])
-that.targets.push(this[1])})}
-ScrollSpy.prototype.process=function(){var scrollTop=this.$scrollElement.scrollTop()+this.options.offset
-var scrollHeight=this.getScrollHeight()
-var maxScroll=this.options.offset+scrollHeight-this.$scrollElement.height()
-var offsets=this.offsets
-var targets=this.targets
-var activeTarget=this.activeTarget
-var i
-if(this.scrollHeight!=scrollHeight){this.refresh()}
-if(scrollTop>=maxScroll){return activeTarget!=(i=targets[targets.length-1])&&this.activate(i)}
-if(activeTarget&&scrollTop<offsets[0]){this.activeTarget=null
-return this.clear()}
-for(i=offsets.length;i--;){activeTarget!=targets[i]&&scrollTop>=offsets[i]&&(offsets[i+1]===undefined||scrollTop<offsets[i+1])&&this.activate(targets[i])}}
-ScrollSpy.prototype.activate=function(target){this.activeTarget=target
-this.clear()
-var selector=this.selector+'[data-target="'+target+'"],'+
-this.selector+'[href="'+target+'"]'
-var active=$(selector).parents('li').addClass('active')
-if(active.parent('.dropdown-menu').length){active=active.closest('li.dropdown').addClass('active')}
-active.trigger('activate.bs.scrollspy')}
-ScrollSpy.prototype.clear=function(){$(this.selector).parentsUntil(this.options.target,'.active').removeClass('active')}
-function Plugin(option){return this.each(function(){var $this=$(this)
-var data=$this.data('bs.scrollspy')
-var options=typeof option=='object'&&option
-if(!data)$this.data('bs.scrollspy',(data=new ScrollSpy(this,options)))
-if(typeof option=='string')data[option]()})}
-var old=$.fn.scrollspy
-$.fn.scrollspy=Plugin
-$.fn.scrollspy.Constructor=ScrollSpy
-$.fn.scrollspy.noConflict=function(){$.fn.scrollspy=old
-return this}
-$(window).on('load.bs.scrollspy.data-api',function(){$('[data-spy="scroll"]').each(function(){var $spy=$(this)
-Plugin.call($spy,$spy.data())})})}(jQuery);+function($){'use strict';var Tab=function(element){this.element=$(element)}
-Tab.VERSION='3.3.5'
-Tab.TRANSITION_DURATION=150
-Tab.prototype.show=function(){var $this=this.element
-var $ul=$this.closest('ul:not(.dropdown-menu)')
-var selector=$this.data('target')
-if(!selector){selector=$this.attr('href')
-selector=selector&&selector.replace(/.*(?=#[^\s]*$)/,'')}
-if($this.parent('li').hasClass('active'))return
-var $previous=$ul.find('.active:last a')
-var hideEvent=$.Event('hide.bs.tab',{relatedTarget:$this[0]})
-var showEvent=$.Event('show.bs.tab',{relatedTarget:$previous[0]})
-$previous.trigger(hideEvent)
-$this.trigger(showEvent)
-if(showEvent.isDefaultPrevented()||hideEvent.isDefaultPrevented())return
-var $target=$(selector)
-this.activate($this.closest('li'),$ul)
-this.activate($target,$target.parent(),function(){$previous.trigger({type:'hidden.bs.tab',relatedTarget:$this[0]})
-$this.trigger({type:'shown.bs.tab',relatedTarget:$previous[0]})})}
-Tab.prototype.activate=function(element,container,callback){var $active=container.find('> .active')
-var transition=callback&&$.support.transition&&($active.length&&$active.hasClass('fade')||!!container.find('> .fade').length)
-function next(){$active.removeClass('active').find('> .dropdown-menu > .active').removeClass('active').end().find('[data-toggle="tab"]').attr('aria-expanded',false)
-element.addClass('active').find('[data-toggle="tab"]').attr('aria-expanded',true)
-if(transition){element[0].offsetWidth
-element.addClass('in')}else{element.removeClass('fade')}
-if(element.parent('.dropdown-menu').length){element.closest('li.dropdown').addClass('active').end().find('[data-toggle="tab"]').attr('aria-expanded',true)}
-callback&&callback()}
-$active.length&&transition?$active.one('bsTransitionEnd',next).emulateTransitionEnd(Tab.TRANSITION_DURATION):next()
-$active.removeClass('in')}
-function Plugin(option){return this.each(function(){var $this=$(this)
-var data=$this.data('bs.tab')
-if(!data)$this.data('bs.tab',(data=new Tab(this)))
-if(typeof option=='string')data[option]()})}
-var old=$.fn.tab
-$.fn.tab=Plugin
-$.fn.tab.Constructor=Tab
-$.fn.tab.noConflict=function(){$.fn.tab=old
-return this}
-var clickHandler=function(e){e.preventDefault()
-Plugin.call($(this),'show')}
-$(document).on('click.bs.tab.data-api','[data-toggle="tab"]',clickHandler).on('click.bs.tab.data-api','[data-toggle="pill"]',clickHandler)}(jQuery);+function($){'use strict';var Affix=function(element,options){this.options=$.extend({},Affix.DEFAULTS,options)
-this.$target=$(this.options.target).on('scroll.bs.affix.data-api',$.proxy(this.checkPosition,this)).on('click.bs.affix.data-api',$.proxy(this.checkPositionWithEventLoop,this))
-this.$element=$(element)
-this.affixed=null
-this.unpin=null
-this.pinnedOffset=null
-this.checkPosition()}
-Affix.VERSION='3.3.5'
-Affix.RESET='affix affix-top affix-bottom'
-Affix.DEFAULTS={offset:0,target:window}
-Affix.prototype.getState=function(scrollHeight,height,offsetTop,offsetBottom){var scrollTop=this.$target.scrollTop()
-var position=this.$element.offset()
-var targetHeight=this.$target.height()
-if(offsetTop!=null&&this.affixed=='top')return scrollTop<offsetTop?'top':false
-if(this.affixed=='bottom'){if(offsetTop!=null)return(scrollTop+this.unpin<=position.top)?false:'bottom'
-return(scrollTop+targetHeight<=scrollHeight-offsetBottom)?false:'bottom'}
-var initializing=this.affixed==null
-var colliderTop=initializing?scrollTop:position.top
-var colliderHeight=initializing?targetHeight:height
-if(offsetTop!=null&&scrollTop<=offsetTop)return'top'
-if(offsetBottom!=null&&(colliderTop+colliderHeight>=scrollHeight-offsetBottom))return'bottom'
-return false}
-Affix.prototype.getPinnedOffset=function(){if(this.pinnedOffset)return this.pinnedOffset
-this.$element.removeClass(Affix.RESET).addClass('affix')
-var scrollTop=this.$target.scrollTop()
-var position=this.$element.offset()
-return(this.pinnedOffset=position.top-scrollTop)}
-Affix.prototype.checkPositionWithEventLoop=function(){setTimeout($.proxy(this.checkPosition,this),1)}
-Affix.prototype.checkPosition=function(){if(!this.$element.is(':visible'))return
-var height=this.$element.height()
-var offset=this.options.offset
-var offsetTop=offset.top
-var offsetBottom=offset.bottom
-var scrollHeight=Math.max($(document).height(),$(document.body).height())
-if(typeof offset!='object')offsetBottom=offsetTop=offset
-if(typeof offsetTop=='function')offsetTop=offset.top(this.$element)
-if(typeof offsetBottom=='function')offsetBottom=offset.bottom(this.$element)
-var affix=this.getState(scrollHeight,height,offsetTop,offsetBottom)
-if(this.affixed!=affix){if(this.unpin!=null)this.$element.css('top','')
-var affixType='affix'+(affix?'-'+affix:'')
-var e=$.Event(affixType+'.bs.affix')
-this.$element.trigger(e)
-if(e.isDefaultPrevented())return
-this.affixed=affix
-this.unpin=affix=='bottom'?this.getPinnedOffset():null
-this.$element.removeClass(Affix.RESET).addClass(affixType).trigger(affixType.replace('affix','affixed')+'.bs.affix')}
-if(affix=='bottom'){this.$element.offset({top:scrollHeight-height-offsetBottom})}}
-function Plugin(option){return this.each(function(){var $this=$(this)
-var data=$this.data('bs.affix')
-var options=typeof option=='object'&&option
-if(!data)$this.data('bs.affix',(data=new Affix(this,options)))
-if(typeof option=='string')data[option]()})}
-var old=$.fn.affix
-$.fn.affix=Plugin
-$.fn.affix.Constructor=Affix
-$.fn.affix.noConflict=function(){$.fn.affix=old
-return this}
-$(window).on('load',function(){$('[data-spy="affix"]').each(function(){var $spy=$(this)
-var data=$spy.data()
-data.offset=data.offset||{}
-if(data.offsetBottom!=null)data.offset.bottom=data.offsetBottom
-if(data.offsetTop!=null)data.offset.top=data.offsetTop
-Plugin.call($spy,data)})})}(jQuery);
+return this});};}(jQuery,window);
+
+/* bootstrap-datepicker.js */
+
 (function($){var $window=$(window);function UTCDate(){return new Date(Date.UTC.apply(Date,arguments));}
 function UTCToday(){var today=new Date();return UTCDate(today.getUTCFullYear(),today.getUTCMonth(),today.getUTCDate());}
 var Datepicker=function(element,options){var that=this;this._process_options(options);this.element=$(element);this.isInline=false;this.isInput=this.element.is('input');this.component=this.element.is('.date')?this.element.find('.add-on, .btn'):false;this.hasInput=this.component&&this.element.find('input').length;if(this.component&&this.component.length===0)
@@ -1110,6 +322,9 @@ DPGlobal.footTemplate+'</table>'+'</div>'+'<div class="datepicker-years">'+'<tab
 DPGlobal.headTemplate+
 DPGlobal.contTemplate+
 DPGlobal.footTemplate+'</table>'+'</div>'+'</div>';$.fn.datepicker.DPGlobal=DPGlobal;$.fn.datepicker.noConflict=function(){$.fn.datepicker=old;return this;};$(document).on('focus.datepicker.data-api click.datepicker.data-api','[data-provide="datepicker"]',function(e){var $this=$(this);if($this.data('datepicker'))return;e.preventDefault();$this.datepicker('show');});$(function(){$('[data-provide="datepicker-inline"]').datepicker();});}(window.jQuery));
+
+/* jquery.dataTables.js */
+
 (function(window,document,undefined){(function(factory){"use strict";if(typeof define==='function'&&define.amd){define(['jquery'],factory);}
 else if(jQuery&&!jQuery.fn.dataTable){factory(jQuery);}}
 (function($){"use strict";var DataTable=function(oInit){function _fnAddColumn(oSettings,nTh){var oDefaults=DataTable.defaults.columns;var iCol=oSettings.aoColumns.length;var oCol=$.extend({},DataTable.models.oColumn,oDefaults,{"sSortingClass":oSettings.oClasses.sSortable,"sSortingClassJUI":oSettings.oClasses.sSortJUI,"nTh":nTh?nTh:document.createElement('th'),"sTitle":oDefaults.sTitle?oDefaults.sTitle:nTh?nTh.innerHTML:'',"aDataSort":oDefaults.aDataSort?oDefaults.aDataSort:[iCol],"mData":oDefaults.mData?oDefaults.oDefaults:iCol});oSettings.aoColumns.push(oCol);if(oSettings.aoPreSearchCols[iCol]===undefined||oSettings.aoPreSearchCols[iCol]===null){oSettings.aoPreSearchCols[iCol]=$.extend({},DataTable.models.oSearch);}
@@ -1685,11 +900,17 @@ bDecimal=true;}}
 return'numeric';},function(sData){var iParse=Date.parse(sData);if((iParse!==null&&!isNaN(iParse))||(typeof sData==='string'&&sData.length===0)){return'date';}
 return null;},function(sData){if(typeof sData==='string'&&sData.indexOf('<')!=-1&&sData.indexOf('>')!=-1){return'html';}
 return null;}]);$.fn.DataTable=DataTable;$.fn.dataTable=DataTable;$.fn.dataTableSettings=DataTable.settings;$.fn.dataTableExt=DataTable.ext;}));}(window,document));
+
+/* datatables-bootstrap.js */
+
 $.extend(true,$.fn.dataTable.defaults,{"sDom":"<'row'<'col-md-6'f><'col-md-6'l>r>t<'row'<'col-md-6'i><'col-md-6'p>>","sPaginationType":"bootstrap","oLanguage":{"sLengthMenu":"Show _MENU_ Rows","sSearch":""}});$.extend($.fn.dataTableExt.oStdClasses,{"sWrapper":"dataTables_wrapper form-inline"});$.fn.dataTableExt.oApi.fnPagingInfo=function(oSettings){return{"iStart":oSettings._iDisplayStart,"iEnd":oSettings.fnDisplayEnd(),"iLength":oSettings._iDisplayLength,"iTotal":oSettings.fnRecordsTotal(),"iFilteredTotal":oSettings.fnRecordsDisplay(),"iPage":oSettings._iDisplayLength===-1?0:Math.ceil(oSettings._iDisplayStart / oSettings._iDisplayLength),"iTotalPages":oSettings._iDisplayLength===-1?0:Math.ceil(oSettings.fnRecordsDisplay()/ oSettings._iDisplayLength)};};$.extend($.fn.dataTableExt.oPagination,{"bootstrap":{"fnInit":function(oSettings,nPaging,fnDraw){var oLang=oSettings.oLanguage.oPaginate;var fnClickHandler=function(e){e.preventDefault();if(oSettings.oApi._fnPageChange(oSettings,e.data.action)){fnDraw(oSettings);}};$(nPaging).append('<ul class="pagination">'+'<li class="prev disabled"><a href="#"><i class="icon-double-angle-left"></i> '+oLang.sPrevious+'</a></li>'+'<li class="next disabled"><a href="#">'+oLang.sNext+' <i class="icon-double-angle-right"></i></a></li>'+'</ul>');var els=$('a',nPaging);$(els[0]).bind('click.DT',{action:"previous"},fnClickHandler);$(els[1]).bind('click.DT',{action:"next"},fnClickHandler);},"fnUpdate":function(oSettings,fnDraw){var iListLength=5;var oPaging=oSettings.oInstance.fnPagingInfo();var an=oSettings.aanFeatures.p;var i,ien,j,sClass,iStart,iEnd,iHalf=Math.floor(iListLength/2);if(oPaging.iTotalPages<iListLength){iStart=1;iEnd=oPaging.iTotalPages;}
 else if(oPaging.iPage<=iHalf){iStart=1;iEnd=iListLength;}else if(oPaging.iPage>=(oPaging.iTotalPages-iHalf)){iStart=oPaging.iTotalPages-iListLength+1;iEnd=oPaging.iTotalPages;}else{iStart=oPaging.iPage-iHalf+1;iEnd=iStart+iListLength-1;}
 for(i=0,ien=an.length;i<ien;i++){$('li:gt(0)',an[i]).filter(':not(:last)').remove();for(j=iStart;j<=iEnd;j++){sClass=(j==oPaging.iPage+1)?'class="active"':'';$('<li '+sClass+'><a href="#">'+j+'</a></li>').insertBefore($('li:last',an[i])[0]).bind('click',function(e){e.preventDefault();oSettings._iDisplayStart=(parseInt($('a',this).text(),10)-1)*oPaging.iLength;fnDraw(oSettings);});}
 if(oPaging.iPage===0){$('li:first',an[i]).addClass('disabled');}else{$('li:first',an[i]).removeClass('disabled');}
 if(oPaging.iPage===oPaging.iTotalPages-1||oPaging.iTotalPages===0){$('li:last',an[i]).addClass('disabled');}else{$('li:last',an[i]).removeClass('disabled');}}}}});if($.fn.DataTable.TableTools){$.extend(true,$.fn.DataTable.TableTools.classes,{"container":"DTTT btn-group","buttons":{"normal":"btn","disabled":"disabled"},"collection":{"container":"DTTT_dropdown dropdown-menu","buttons":{"normal":"","disabled":"disabled"}},"print":{"info":"DTTT_print_info modal"},"select":{"row":"active"}});$.extend(true,$.fn.DataTable.TableTools.DEFAULTS.oTags,{"collection":{"container":"ul","button":"li","liner":"a"}});}
+
+/* jquery.keyboard.js */
+
 /*!
 jQuery UI Virtual Keyboard
 Version 1.12
@@ -1881,6 +1102,9 @@ t.selectionStart=start;t.selectionEnd=end;}else{selRange=t.createTextRange();sel
 if(this.is(':visible')||this.css('visibility')!=='hidden'){this.focus();}
 t.scrollTop=sTop;return this;}else{if(ss){s=t.selectionStart;e=t.selectionEnd;if(t.tagName==='TEXTAREA'&&opera){val=this.val();n=val.substring(0,s).split('\n')[len]-1;s+=(n>0)?-n:0;e+=(n>0)?-n:0;}}else{if(t.tagName==='TEXTAREA'){val=this.val();range=selection[createRange]();stored_range=range[duplicate]();stored_range.moveToElementText(t);stored_range.setEndPoint('EndToEnd',range);s=stored_range.text.replace(/\r\n/g,'\r')[len];e=s+range.text.replace(/\r\n/g,'\r')[len];}else{val=this.val().replace(/\r\n/g,'\r');range=selection[createRange]()[duplicate]();range.moveEnd('character',val[len]);s=(range.text===''?val[len]:val.lastIndexOf(range.text));range=selection[createRange]()[duplicate]();range.moveStart('character',-val[len]);e=range.text[len];}}
 te=t.value.substring(s,e);return{start:s,end:e,text:te,replace:function(st){return t.value.substring(0,s)+st+t.value.substring(e,t.value[len]);}};}};})(jQuery,'length','createRange','duplicate');
+
+/* utils.js */
+
 var utils={myClone:function(what,opt){if(what.length===0)return false;opt=opt||{};var settings=$.extend({where:false,baseName:'a',empty:true,changeName:true,cloneEvents:false,loaded:false,preserveEnhance:true},opt);var changeName=function(el){var name=el.attr('name');if(name){name=name.replace(new RegExp(settings.baseName,'g'),settings.baseName+'s'+rand+'e');el.attr('name',name);}};var rand=(new Date()).getTime();if(settings.preserveEnhance){what.find(':input.multiselect, select, :input.combobox, :input.date').each(function(i,el){enhance.pimpEl(el,'destroy');});}
 what.each(function(i,el){el=$(el);if(!el.hasClass('cloned')){var cloned=el.clone(settings.cloneEvents);cloned.addClass('cloned');if(!cloned.is(':visible')){cloned.show();}
 if(settings.empty||settings.changeName){if(cloned.is(':input')){if(settings.empty){cloned.val('');}
@@ -1889,6 +1113,9 @@ if(settings.changeName){changeName($(cl_el));}});}}
 var removeButton=$('<button />').attr('type','button').addClass('btn btn-default btn-sm').css('margin','10px 0').html('<i class="glyphicon glyphicon-minus"></i>').click(function(){$(this).parent('div.clonedContainer').remove();});var div=$('<div />').attr('class','clonedContainer').html(cloned).append(removeButton);if(!settings.where){el.after(div);}else{settings.where.append(div);}
 if(settings.preserveEnhance){cloned.find(':input.multiselect, select, :input.combobox, :input.date').each(function(i,el){enhance.pimpEl(el);});}
 if(settings.loaded){settings.loaded(div);}}});if(settings.preserveEnhance){what.find(':input.multiselect, select, :input.combobox, :input.date').each(function(i,el){enhance.pimpEl(el);});}},myKeyboard:function(el){var customLayouts={'default':['{meta1} {meta2} {meta3} {meta4} {meta5}','','\u00a0 \u00a1 \u00a2 \u00a3 \u00a4 \u00a5 \u00a6 \u00a7 \u00a8 \u00a9 \u00aa \u00ab \u00ac \u00ad \u00ae \u00af','{sp:1} \u00b0 \u00b1 \u00b2 \u00b3 \u00b4 \u00b5 \u00b6 \u00b7 \u00b8 \u00b9 \u00ba \u00bb \u00bc \u00bd \u00be \u00bf','\u00c0 \u00c1 \u00c2 \u00c3 \u00c4 \u00c5 \u00c6 \u00c7 \u00c8 \u00c9 \u00ca \u00cb \u00cc \u00cd \u00ce \u00cf','{sp:1} \u00d0 \u00d1 \u00d2 \u00d3 \u00d4 \u00d5 \u00d6 \u00d7 \u00d8 \u00d9 \u00da \u00db \u00dc \u00dd \u00de \u00df','\u00e0 \u00e1 \u00e2 \u00e3 \u00e4 \u00e5 \u00e6 \u00e7 \u00e8 \u00e9 \u00ea \u00eb \u00ec \u00ed \u00ee \u00ef','{sp:1} \u00f0 \u00f1 \u00f2 \u00f3 \u00f4 \u00f5 \u00f6 \u00f7 \u00f8 \u00f9 \u00fa \u00fb \u00fc \u00fd \u00fe \u00ff','\u0100 \u0101 \u0102 \u0103 \u0104 \u0105 \u0106 \u0107 \u0108 \u0109 \u010a \u010b \u010c \u010d \u010e \u010f','{sp:1} \u0110 \u0111 \u0112 \u0113 \u0114 \u0115 \u0116 \u0117 \u0118 \u0119 \u011a \u011b \u011c \u011d \u011e \u011f','\u0120 \u0121 \u0122 \u0123 \u0124 \u0125 \u0126 \u0127 \u0128 \u0129 \u012a \u012b \u012c \u012d \u012e \u012f','{sp:1} \u0130 \u0131 \u0132 \u0133 \u0134 \u0135 \u0136 \u0137 \u0138 \u0139 \u013a \u013b \u013c \u013d \u013e \u013f','\u0140 \u0141 \u0142 \u0143 \u0144 \u0145 \u0146 \u0147 \u0148 \u0149 \u014a \u014b \u014c \u014d \u014e \u014f','{sp:1} \u0150 \u0151 \u0152 \u0153 \u0154 \u0155 \u0156 \u0157 \u0158 \u0159 \u015a \u015b \u015c \u015d \u015e \u015f','\u0160 \u0161 \u0162 \u0163 \u0164 \u0165 \u0166 \u0167 \u0168 \u0169 \u016a \u016b \u016c \u016d \u016e \u016f','{sp:1} \u0170 \u0171 \u0172 \u0173 \u0174 \u0175 \u0176 \u0177 \u0178 \u0179 \u017a \u017b \u017c \u017d \u017e \u017f','','{a} {c}'],'meta1':['{meta1} {meta2} {meta3} {meta4} {meta5}','','\u0391 \u0392 \u0393 \u0394 \u0395 \u0396 \u0397 \u0398 \u0399 \u039A \u039B \u039C','\u039D \u039E \u039F \u03A0 \u03A1 \u03A3 \u03A4 \u03A5 \u03A6 \u03A7 \u03A8 \u03A9','','\u03B1 \u03B2 \u03B3 \u03B4 \u03B5 \u03B6 \u03B7 \u03B8 \u03B9 \u03BA \u03BB \u03BC','\u03BD \u03BE \u03BF \u03C0 \u03C1 \u03C2 \u03C3 \u03C4 \u03C5 \u03C6 \u03C7 \u03C8 \u03C9','','\u03AA \u03CA \u03AC \u03AD \u03AE \u03AF \u03CC \u03CD \u03CE \u03B0','','{a} {c}'],'meta2':['{meta1} {meta2} {meta3} {meta4} {meta5}','','\u03AB \u03D4 \u03D0 \u03D1 \u03D2 \u03D3 \u03D5 \u03D6 \u03D7 \u03D8 \u03D9 \u03DA \u03DB \u03DC','\u03DD \u03DE \u03DF \u03E0 \u03E1 \u03E2 \u03E3 \u03E4 \u03E5 \u03E6 \u03E7 \u03E8 \u03E9','\u03EA \u03EB \u03EC \u03ED \u03EE \u03EF \u03F0 \u03F1 \u03F2 \u03F3 \u03F4 \u03F5','\u03F6 \u03F7 \u03F8 \u03F9 \u03FA \u03FB \u03FC \u03FD \u03FE \u03FF','','{a} {c}'],'meta3':['{meta1} {meta2} {meta3} {meta4} {meta5}','','\u0621 \u0622 \u0623 \u0624 \u0625 \u0626 \u0627 \u0628 \u0629 \u0630 \u0631 \u0632 \u0633 \u0634','\u0635 \u0636 \u0637 \u0638 \u0639 \u0640 \u0641 \u0642 \u0643 \u0644 \u0645 \u0646 \u0647','\u0648 \u0649 \u0650 \u0651 \u0652 \u0653 \u0654 \u0655 \u0656 \u0657 \u0658 \u0659 \u0660','','{a} {c}'],'meta4':['{meta1} {meta2} {meta3} {meta4} {meta5}','','\u0250 \u0251 \u0252 \u0253 \u0254 \u0255 \u0256 \u0257 \u0258 \u0259 \u0260 \u0260 \u0261 \u0262','\u0263 \u0264 \u0265 \u0266 \u0267 \u0268 \u0269 \u0270 \u0270 \u0271 \u0272 \u0273 \u0274','\u0275 \u0276 \u0277 \u0278 \u0279 \u0280 \u02A0 \u02A1 \u02A2 \u02A3 \u02A4 \u02A5 \u02A6 \u02A7','\u02A8 \u02A9 \u02AA \u02AB \u02AC \u02AD \u02AE \u02AF \u025A \u026A \u027A \u028A \u029A','\u025B \u026A \u027B \u028B \u029B \u025C \u026C \u027C \u028C \u029C \u025D \u026D \u027D \u028D','\u029D \u025E \u026E \u027E \u028E \u029E \u025F \u026F \u027F \u028F \u029F','','{a} {c}'],'meta5':['{meta1} {meta2} {meta3} {meta4} {meta5}','','\u0300 \u0301 \u0302 \u0303 \u0304 \u0305 \u0306 \u0307 \u0308 \u0309 \u0310 \u0311 \u0312 \u0313 \u0314','\u0315 \u0316 \u0317 \u0318 \u0319 \u0320 \u0321 \u0322 \u0323 \u0324 \u0325 \u0326 \u0327 \u0328','\u0329 \u0330 \u0331 \u0332 \u0333 \u0334 \u0335 \u0336 \u0337 \u0338 \u0339 \u0340 \u0341 \u0342 \u0343','\u0344 \u0345 \u0346 \u0347 \u0348 \u0349 \u0350 \u0351 \u0352 \u0353 \u0354 \u0355 \u0356 \u0357','\u0358 \u0359 \u0360 \u0361 \u0362 \u0363 \u0364 \u0365 \u0366 \u0367 \u0368 \u0369 \u030A \u030B \u030C','\u030D \u030E \u030F \u031A \u031B \u031C \u031D \u031E \u031F \u032A \u032B \u032C \u032D \u032E','\u032F \u033A \u033B \u033C \u033D \u033E \u033F \u034A \u034B \u034C \u034D \u034E \u034F \u035A \u035B','\u035C \u035D \u035E \u035F \u036A \u036B \u036C \u036D \u036E \u036F','','{a} {c}']};$(el).keyboard({initialized:function(e,keyboard,el){keyboard.reveal();},accepted:function(e,keyboard,el){keyboard.destroy();$(el).attr('changed','auto');},canceled:function(e,keyboard,el){keyboard.destroy();},hidden:function(e,keyboard,el){keyboard.destroy();},layout:'custom',display:{'meta1':'Greek','meta2':'Coptic','meta3':'Arabic','meta4':'Phonetic','meta5':'Diacritics'},customLayout:customLayouts});}};
+
+/* jquery.fineuploader-3.4.0.js */
+
 var qq=function(element){"use strict";return{hide:function(){element.style.display='none';return this;},attach:function(type,fn){if(element.addEventListener){element.addEventListener(type,fn,false);}else if(element.attachEvent){element.attachEvent('on'+type,fn);}
 return function(){qq(element).detach(type,fn);};},detach:function(type,fn){if(element.removeEventListener){element.removeEventListener(type,fn,false);}else if(element.attachEvent){element.detachEvent('on'+type,fn);}
 return this;},contains:function(descendant){if(element===descendant){return true;}
@@ -2183,6 +1410,9 @@ else if(typeof optionsOrCommand==='object'||!optionsOrCommand){init.apply(self,s
 else{$.error('Method '+optionsOrCommand+' does not exist on jQuery.fineUploader');}});if(retVals.length===1){return retVals[0];}
 else if(retVals.length>1){return retVals;}
 return this;};}(jQuery));
+
+/* core.js */
+
 var core={runMod:function(mod,args,loaded){if(!args){args=[];}else if(typeof args==='string'){args=[args];}
 if(typeof window[mod]==='object'&&!debugMode){window[mod].init.apply(null,args);}else{var script;if(debugMode){script='./modules/'+mod+'/'+mod+'.js';}else{script='./modules/'+mod+'/'+mod+'.mini.js';}
 $.ajax({url:script,dataType:"script",suppressErrors:true,success:function(data){window[mod].init.apply(null,args);if(loaded){loaded();}},error:function(jqxhr,settings,exception){core.open({obj:mod,method:'read',title:core.tr(mod)});}});}},loading:'<img src="./img/loader.gif"  alt="loading..." />',_get2url:function(get){if(typeof get==='string'){return get;}else if($.isPlainObject(get)){return $.param(get);}else if($.isArray(get)){return'param[]='+get.join('&param[]=');}
@@ -2190,9 +1420,12 @@ return false;},getHTML:function(obj,method,get,post,loaded){var URLstring='./?ob
 +(get?'&'+this._get2url(get):'');if(!post){$.get(URLstring,loaded);}else{$.post(URLstring,post,loaded);}},getJSON:function(obj,method,get,post,loaded){var URLstring='./?obj='+obj+'&method='+method
 +(get?'&'+this._get2url(get):'');if(!post){$.get(URLstring,loaded,'json');}else{$.post(URLstring,post,loaded,'json');}},runAndRespond(obj,method,get,post){core.getJSON(obj,method,get,post,data=>{core.message(data.text,data.status);});},open:function(opt,type){if(type==='modal'){layout.dialog.add(opt);}else{layout.tabs.add(opt);}},tr:function(string,args){if(!lang[string]){return string;}else{if(!args){return lang[string];}else{return vsprintf(lang[string],args);}}},message:function(text,type,sticky){if(!type){type='info';}
 if(type==='info'||type==='success'||type==='warning'||type==='error'){iziToast[type]({message:text});}else{alert(text);}}};
+
+/* api.js */
+
 var api={requireRestart:function(message){var html=(message?'<h3>'+message+'</h3>':'')+'<p class="lead text-warning"><i class="glyphicon glyphicon-warning-sign"></i> '+'<strong>'+core.tr('attention')+'</strong><br />'+core.tr('reload_sys_required')+'</p>';core.open({html:html,title:core.tr('attention'),buttons:[{text:core.tr('restart'),click:function(){api.reloadApp();}},{text:core.tr('cancel'),action:'close'}]},'modal');},reloadApp:function(clean){if(clean){window.location='./';}else{window.location.reload();}},logOut:function(){core.open({html:'<p class="text-warning"><i class="glyphicon glyphicon-exclamation-sign"></i> '+core.tr('logout_confirm_body')+'</p>',title:core.tr('logout_confirm_title'),buttons:[{text:core.tr('cancel'),action:'close'},{text:core.tr('close_application'),addclass:'btn-primary',click:function(){$.get('./?obj=login_ctrl&method=out',function(data){window.location='./';});}}]},'modal');},showResults:function(tb,url_data,title,post_data){core.open({obj:'record_ctrl',method:'showResults',param:url_data?url_data+'&tb='+tb:false,post:post_data,title:title});},record:{showMatrix:function(tb,obj_encoded){core.open({title:core.tr('harris_matrix'),obj:'matrix_ctrl',method:'show',param:{tb:tb,obj_encoded:obj_encoded},});},formatId:function(id_arr,is_idField){return is_idField?'id_field[]='+id_arr.join('&id_field[]='):'id[]='+id_arr.join('&id[]=');},preview:function(tb,id_arr){api.record.read(tb,id_arr);},read:function(tb,id_arr,is_idField){core.open({obj:'record_ctrl',method:'show',param:'tb='+tb+'&a=read',post:this.formatId(id_arr,is_idField),title:core.tr('read')+' ('+tb.replace(prefix,'')+' > '+(is_idField?'':'*')+id_arr[0]+')'});},edit:function(tb,id_arr){core.open({obj:'record_ctrl',method:'show',param:'tb='+tb+'&'+this.formatId(id_arr)+'&a=edit',title:core.tr('edit')+' ('+tb.replace(prefix,'')+')'});},erase:function(tb,id_arr,table_results){if(confirm(core.tr('confirm_delete'))){$.get('./?obj=record_ctrl&method=erase&'+this.formatId(id_arr)+'&tb='+tb,function(data){core.message(data.text,data.status);if(table_results){table_results.fnDraw();}else{layout.tabs.closeActive();}},'json');}},add:function(tb){core.open({obj:'record_ctrl',method:'show',param:'tb='+tb+'&a=add_new',title:core.tr('edit')+' ('+tb.replace(prefix,'')+')'});},toogleSelect:function(tableId){if($('#'+tableId+' tbody tr:first').hasClass('row_selected')){$('#'+tableId+' tbody tr').removeClass('row_selected');}else{$('#'+tableId+' tbody tr').addClass('row_selected');}},actOn:function(action,tb,table_results){var id_arr=[];if(action!='add'){var aTrs=table_results.fnGetNodes();for(var i=0;i<aTrs.length;i++){if($(aTrs[i]).hasClass('row_selected')){id_arr.push($(aTrs[i]).attr('id'));}}
 if(!id_arr[0]){core.message(core.tr('select_row_to_continue'),'error');return;}}
-switch(action){case'preview':this.preview(tb,id_arr);break;case'read':this.read(tb,id_arr);break;case'edit':this.edit(tb,id_arr);break;case'erase':this.erase(tb,id_arr,table_results);break;case'add':this.add(tb);break;default:return false;}}},preview:function(img){var Img=new Image();Img.src=$(img).attr('src');var winH=$(window).height(),imgH=Img.height,H=(imgH>winH?winH:imgH)-20;Img.height=(H-30);Img.title=$(img).attr('title');$(Img).addClass('img-responsive');core.open({html:$('<a />').attr('href',Img.src).attr('target','_blank').append(Img),loaded:function(){$('.modal-body').css({'max-height':H});}},'modal');},query:{show:function(query_text){core.open({html:'<pre>'+decodeURIComponent(query_text.replace(/\+/g,' '))+'</pre>',title:core.tr('query_text'),buttons:[{text:core.tr('close'),action:'close'}]},'modal');},Export:function(obj_encoded,tb){var html='<select class="export_format input-lg">'+'<option value="JSON">JSON</option>'+'<option value="XLS">XLS</option>'+'<option value="SQL">SQL (INSERT)</option>'+'<option value="CSV">CSV</option>'+'<option value="HTML">HTML</option>'+'<option value="XML">XML</option>'+'</select>';core.open({html:html,title:core.tr('export_select_format'),buttons:[{text:core.tr('continue'),click:function(div){layout.dialog.close(div);$.post('./?obj=myExport_ctrl&method=doExport&tb='+tb+'&format='+$(div).find('select.export_format').val()+'&obj_encoded='+obj_encoded,function(data){core.message(data.text,data.status);core.runMod('myExport');},'json');}},{text:core.tr('cancel'),action:'close'}]},'modal');},save:function(query_text,tb){var input=$('<input />').attr('type','text').val('query_'+new Date().getTime()).css('width','90%');core.open({html:input,title:core.tr('name_for_query_to_save'),buttons:[{text:core.tr('save'),click:function(dia){if(input.val()===''){core.message(core.tr('query_name_is_required'),'error');input.focus();}else{core.getJSON('saved_queries_ctrl','saveQuery','tb='+tb+'&name='+input.val(),{"query_object":query_text},function(data){core.message(data.text,data.status);});layout.dialog.close(dia);}}},{text:core.tr('close'),click:function(dia){layout.dialog.close(dia);}}]},'modal');}},file:{show_gallery:function(tb,id){core.open({obj:'file_ctrl',method:'gallery',param:{tb:tb,id:id},title:core.tr('file_gallery',[tb.replace(prefix,'')+'>'+id])});}},link:{add_ui:function(successFunction,closeFunction,select_one,def_tb){var div=$('<div />').append($('<div />').addClass('btn-group'),$('<div />').addClass('fl_content'),$('<input />').addClass('curr_tb').attr('type','hidden'));$.get('./?obj=userlinks_ctrl&method=get_all_tables',function(data){if(data.status=='success'){if(!def_tb){$.each(data.info,function(tb,label){$('<a />').html(label).addClass('btn btn-default').click(function(){div.find('.fl_content').load('./?obj=record_ctrl&method=showResults&noDblClick=1&tb='+tb+'&type=all&noOpts=1'+(select_one?'&select_one=true':''));div.find('input.curr_tb').val(tb);}).appendTo(div.find('.btn-group'));});}else{div.find('.fl_content').load('./?obj=record_ctrl&method=showResults&tb='+def_tb+'&type=all&noOpts=1'+(select_one?'&select_one=true':''));div.find('input.curr_tb').val(def_tb);}
+switch(action){case'preview':this.preview(tb,id_arr);break;case'read':this.read(tb,id_arr);break;case'edit':this.edit(tb,id_arr);break;case'erase':this.erase(tb,id_arr,table_results);break;case'add':this.add(tb);break;default:return false;}}},preview:function(img){var Img=new Image();Img.src=$(img).attr('src');var winH=$(window).height(),imgH=Img.height,H=(imgH>winH?winH:imgH)-20;Img.height=(H-30);Img.title=$(img).attr('title');$(Img).addClass('img-responsive');core.open({html:$('<a />').attr('href',Img.src).attr('target','_blank').append(Img),loaded:function(){$('.modal-body').css({'max-height':H});}},'modal');},query:{show:function(query_text){core.open({html:'<pre>'+decodeURIComponent(query_text.replace(/\+/g,' '))+'</pre>',title:core.tr('query_text'),buttons:[{text:core.tr('close'),action:'close'}]},'modal');},Export:function(obj_encoded,tb){var html='<select class="form-control export_format input-lg">'+'<option value="JSON">JSON</option>'+'<option value="XLS">XLS</option>'+'<option value="SQL">SQL (INSERT)</option>'+'<option value="CSV">CSV</option>'+'<option value="HTML">HTML</option>'+'<option value="XML">XML</option>'+'</select>';core.open({html:html,title:core.tr('export_select_format'),buttons:[{text:core.tr('continue'),click:function(div){layout.dialog.close(div);$.post('./?obj=myExport_ctrl&method=doExport&tb='+tb+'&format='+$(div).find('select.export_format').val()+'&obj_encoded='+obj_encoded,function(data){core.message(data.text,data.status);core.runMod('myExport');},'json');}},{text:core.tr('cancel'),action:'close'}]},'modal');},save:function(query_text,tb){var input=$('<input />').attr('type','text').addClass('form-control').val('query_'+new Date().getTime()).css('width','90%');core.open({html:input,title:core.tr('name_for_query_to_save'),buttons:[{text:core.tr('save'),click:function(dia){if(input.val()===''){core.message(core.tr('query_name_is_required'),'error');input.focus();}else{core.getJSON('saved_queries_ctrl','saveQuery','tb='+tb+'&name='+input.val(),{"query_object":query_text},function(data){core.message(data.text,data.status);});layout.dialog.close(dia);}}},{text:core.tr('close'),click:function(dia){layout.dialog.close(dia);}}]},'modal');}},file:{show_gallery:function(tb,id){core.open({obj:'file_ctrl',method:'gallery',param:{tb:tb,id:id},title:core.tr('file_gallery',[tb.replace(prefix,'')+'>'+id])});}},link:{add_ui:function(successFunction,closeFunction,select_one,def_tb){var div=$('<div />').append($('<div />').addClass('btn-group'),$('<div />').addClass('fl_content'),$('<input />').addClass('curr_tb').addClass('form-control').attr('type','hidden'));$.get('./?obj=userlinks_ctrl&method=get_all_tables',function(data){if(data.status=='success'){if(!def_tb){$.each(data.info,function(tb,label){$('<a />').html(label).addClass('btn btn-default').click(function(){div.find('.fl_content').load('./?obj=record_ctrl&method=showResults&noDblClick=1&tb='+tb+'&type=all&noOpts=1'+(select_one?'&select_one=true':''));div.find('input.curr_tb').val(tb);}).appendTo(div.find('.btn-group'));});}else{div.find('.fl_content').load('./?obj=record_ctrl&method=showResults&tb='+def_tb+'&type=all&noOpts=1'+(select_one?'&select_one=true':''));div.find('input.curr_tb').val(def_tb);}
 core.open({html:div,title:core.tr('new_link'),buttons:[{text:'<i class="glyphicon glyphicon-resize-small"></i> '+core.tr('save_links'),click:function(){var $this=$(this),aTrs=$('#list_'+div.find('div.id-holder').data('id')).dataTable().fnGetNodes(),id_arr=[],tb;for(var i=0;i<aTrs.length;i++){if($(aTrs[i]).hasClass('row_selected')){id_arr.push($(aTrs[i]).attr('id'));}}
 if(select_one){if(div.find('table.results').length<1){core.message(core.tr('select_tb_to_continue'),'error');}
 else if(!id_arr){core.message(core.tr('select_row_to_continue'),'error');}else{tb=div.find('input.curr_tb').val();successFunction(tb,id_arr,$(this));}}else{if(!id_arr){core.message(core.tr('select_tb_to_continue'),'error');}
@@ -2201,6 +1434,9 @@ core.message(data.text,data.status);});},show_userlinks:function(l_el){var l_con
 var thistb=$(this).data('table');api.link.add_ui(function(tb,arr_id){core.getJSON('userlinks_ctrl','addUserLink',{thistb:thistb,thisid:thisid,tb:tb,id:arr_id},false,function(data){if(data.status==='success'){api.link.show_userlinks(l_el);}
 core.message(data.text,data.status);});});});});}},fileUpload:function(el,url,opts){opts=opts||{};if(!el||!url){return false;}
 var d={request:{endpoint:url},autoUpload:true,text:{uploadButton:'<div><i class="glyphicon glyphicon-white glyphicon-upload"></i> '+(opts.button_text?opts.button_text:core.tr('click_drag_to_upload'))+'</div>',dragZone:core.tr('drop_to_upload')},template:'<div class="qq-uploader">'+'<pre class="qq-upload-drop-area"><span>{dragZoneText}</span></pre>'+'<div class="qq-upload-button btn btn-success" style="width: auto;">{uploadButtonText}</div>'+'<span class="qq-drop-processing"><span>{dropProcessingText}</span><span class="qq-drop-processing-spinner"></span></span>'+'<ul class="qq-upload-list" style="margin-top: 10px; text-align: center;"></ul>'+'</div>',classes:{success:'alert alert-success',fail:'alert alert-error'},validation:{allowedExtensions:(opts.limitExtensions?opts.limitExtensions:''),limitSize:(opts.limitSize?opts.limitSize:'')}};d.multiple=!opts.limit2one;el.fineUploader(d).on('complete',function(event,id,name,responseJSON){if(opts.complete){opts.complete(id,name,responseJSON);}}).on('error',function(event,id,name,reason){if(opts.error){opts.error(id,name,reason);}});}};
+
+/* layout.js */
+
 var layout={init:function(){$('<div />').attr('id','wrapper').appendTo('body');$(window).on('resize',function(){layout.setSize();});$(window).on('hashchange',function(e){hashActions.map2action();});},loadHome:function(){var html=`<div class="tabbable">
             <ul class="nav nav-tabs navbar-fixed-top" id="tabs" data-tabs="tabs">
                 <li class="active"><a href="#home">BraDypUS v3</a></li>
@@ -2220,6 +1456,9 @@ if(but.action==='close'){a.attr('data-dismiss','modal');}
 a.appendTo(footer);});}
 dialog.modal({'keyboard':true});dialog.on('hidden.bs.modal',function(){$('body').removeClass('modal-open');dialog.remove();});},close:function(dialog){if(dialog){dialog.modal('hide');}else{$('#modal').modal('hide');}}},tabs:{tab:'',start:function(el){if(typeof el=='string'){this.tab=tab=$(el);}else{this.tab=tab=el;}
 tab.find('a').click(function(e){e.preventDefault();$(this).tab('show');});tab.find('button.close').click(function(e){var li=$(this).parents('li');layout.tabs.close(li);return false;});},add:function(opts){var title=opts.title?opts.title:'',tab=this.tab,id=Math.random().toString(36).substring(2,15)+Math.random().toString(36).substring(2,15);this.tab.append('<li><a href="#added'+id+'">'+title+' <button class="close" type="button">×</button></a></li>');this.tab.next('div.tab-content').append('<div class="tab-pane" id="added'+id+'">'+core.loading+'</div>');this.tab.find('li a:last').tab('show');this.start(tab);this.optsToTabContent(opts,$('#added'+id));},closeActive:function(){var active=tab.find('li.active');layout.tabs.close(active);},reloadActive:function(){var d_active=$('div.tab-content div.active'),opts=tab.find('li.active').data('state');this.optsToTabContent(opts,d_active);},close:function(li){$('#'+li.find('a').attr('href').replace('#','')).remove();li.remove();if(li.hasClass('active')){tab.find('li a:last').tab('show');}},optsToTabContent:function(opts,element){element.html('<img src="./img/arrows-loader.gif" alt="loading..." />');var URLstring='./?';if(opts.html){element.html(opts.html);if(opts.loaded){opts.loaded(element);}}else if(opts.obj&&opts.method){core.getHTML(opts.obj,opts.method,opts.param,opts.post,data=>{element.html(data);typeof opts.loaded!=='undefined'&&opts.loaded(element);});this.tab.find('li.active').data('state',opts);}else{return false;}}},setSize:function(){if($(window).width()<768){$('#tabs').hide();$('#tabs_toggle').show();}else{$('#tabs').show();$('#tabs_toggle').hide();}}};
+
+/* formControls.js */
+
 function formControl(el,options){var $this=$(el);var wrongEl=[];var settings={addChange:true,checkOnSubmit:true,ajaxURL:'',submitURL:'',success:function(){},msg:{not_empty:core.tr('not_empty'),int:core.tr('int'),email:core.tr('email_check'),no_dupl:core.tr('no_dupl'),range:core.tr('range'),regex:core.tr('regex'),no_data_to_save:core.tr('no_data_to_save'),errors_in_form:core.tr('errors_in_form'),ajax_error:core.tr('ajax_error'),no_rules_for:core.tr('no_rules_for')}};if(options){settings=$.extend(settings,options);}
 if(settings.addChange){$this.find(':input').on('change',function(){$(this).attr('changed','auto');});}
 this.observe=function(){wrongEl=[];$this.find(':input[check]').on('change',function(){removeError(this);var el=$(this);if(el.attr('check')&&el.attr('check')!='undefined'){var thisCheckTypes=el.attr('check').split(' ');$.each(thisCheckTypes,function(index,type){checkInput(el,type,settings);});}});return this;};this.check=function(){wrongEl=[];removeError();var checkTypes=['not_empty','int','email','no_dupl','range','regex'];$.each(checkTypes,function(index,id){if(id!='no_dupl'){$this.find('[check~="'+id+'"]').each(function(index,el){checkInput($(el),id);});}});return this;};this.send=function(all){if(wrongEl.length>0){core.message(settings.msg.errors_in_form,'error');}else{var ser;if(all){ser=$this.serialize();}else{var not_changed=$this.find(':input:not([changed])');not_changed.attr('disabled','disabled');ser=$this.serialize();not_changed.removeAttr('disabled');}
@@ -2232,6 +1471,9 @@ break;case'no_dupl':if(val){$.ajax({url:settings.ajaxURL+'&fld='+input.attr('nam
 break;case'range':var min=parseInt(input.attr('min'));var max=parseInt(input.attr('max'));val=parseInt(val);if(val<min||val>max||isNaN(val)){styleError(input,settings.msg[checkType]+' ('+min+' - '+max+')');wrongEl.push(input);}
 break;case'regex':var mypattern=input.attr('mypattern');var pattern=new RegExp(mypattern);if(val&&!pattern.test(val)){styleError(input,settings.msg[checkType]+' ('+mypattern+')');wrongEl.push(input);}
 break;default:console.log(settings.msg.no_rules_for+' '+checkType);break;}};return this;}
+
+/* select2.full.js */
+
 /*!
  * Select2 4.0.3
  * https://select2.github.io
@@ -2600,9 +1842,18 @@ ret=instance[options].apply(instance,args);});if($.inArray(options,thisMethods)>
 return ret;}else{throw new Error('Invalid arguments for Select2: '+options);}};}
 if($.fn.select2.defaults==null){$.fn.select2.defaults=Defaults;}
 return Select2;});return{define:S2.define,require:S2.require};}());var select2=S2.require('jquery.select2');jQuery.fn.select2.amd=S2;return select2;}));
+
+/* enhanceForm.js */
+
 var enhance={dateFormat:'yyyy-mm-dd',getData:function(el){var datalist=$('datalist[for="'+el.attr('id')+'"]').first(),data=[];datalist.children("option").map(function(){var text=$(this).text(),value=$(this).val()?$(this).val():text;data.push({id:value,text:text});});return data;},getAjaxData:function(el){var datalist=$('datalist[for="'+el.attr('id')+'"]').first(),context=el.data('context'),att=el.data('att'),tags=el.data('tags');if(typeof context==='undefined'||typeof att==='undefined'){return{};}
 return{width:'100%',tags:(typeof tags!=='undefined'),createTag:function(params){return{id:params.term,val:params.term,newOption:true};},ajax:{url:'./?obj=menuValues_ctrl&method=getValuesUrl&context='+context+'&att='+att,dataType:'json',delay:250,tokenSeparators:[';'],data:function(p){return{q:p.term,p:p.page};},processResults:function(data,p){data.data.unshift({"id":'',"val":''}),p.page=p.page||1;return{results:data.data,pagination:{more:(p.page*30)<data.tot}};},cache:true},escapeMarkup:function(markup){return markup;},templateResult:function(a){return a.val;},templateSelection:function(a){return a.hasOwnProperty('val')?a.val:a.text;},minimumInputLength:0};},multiselect:function(el,destroy){if($(el).data('select2')&&destroy){$(el).select2('destroy');}else{$(el).select2($.extend({},{separator:';',tokenSeparators:[';']},enhance.getAjaxData($(el)))).on('change',function(){$(this).attr('changed','auto');});}},combobox:function(el,destroy){if($(el).data('select2')&&destroy){$(el).select2('destroy');}else{$(el).select2($.extend({},{data:enhance.getData($(el),true)},enhance.getAjaxData($(el)))).on('change',function(){$(this).attr('changed','auto');});}},select:function(el,destroy){if($(el).data('select2')&&destroy){$(el).select2('destroy');}else{$(el).select2(enhance.getAjaxData($(el))).on('change',function(){$(this).attr('changed','auto');});}},slider:function(el,destroy){if($(el).data('select2')&&destroy){$(el).slider('destroy');}else{var min=$(el).attr('min')?parseInt($(el).attr('min')):0,max=$(el).attr('max')?parseInt($(el).attr('max')):10,value=$(el).val()?parseInt($(el).val()):min;$(el).slider({'value':value,'min':min,'max':max,}).on('slideStop',function(){$(el).attr('changed','auto');});}},pimpEl:function(el,destroy){if($(el).hasClass('combobox')){enhance.combobox(el,destroy);}else if($(el).hasClass('multiselect')){enhance.multiselect(el,destroy);}else if($(el).hasClass('slider')){enhance.slider(el,destroy);}else if($(el).hasClass('date')){if(destroy){$(el).datepicker('remove');}else{$(el).datepicker({format:enhance.dateFormat});}}else if($(el).is('select')){enhance.select(el,destroy);}},form:function(form){$(form).find(':input').each(function(i,el){enhance.pimpEl(el);});}};
+
+/* jquery.checklabel.js */
+
 (function($){$.fn.checklabel=function(){this.each(function(){var label=$(this).find('label');var input=$(this).find('input');input.hide();label.click(function(){if(input.is(':checked')){input.attr('checked',false);label.removeClass('selected');}else{input.attr('checked',true);label.addClass('selected');}});});};})(jQuery);
+
+/* jquery.printElement.js */
+
 ;(function(window,undefined){var document=window["document"];var $=window["jQuery"];$.fn["printElement"]=function(options){var mainOptions=$.extend({},$.fn["printElement"]["defaults"],options);if(mainOptions["printMode"]=='iframe'){if(/chrome/.test(navigator.userAgent.toLowerCase()))
 mainOptions["printMode"]='popup';}
 $("[id^='printElement_']").remove();return this.each(function(){var opts=$.meta?$.extend({},mainOptions,$(this).data()):mainOptions;_printElement($(this),opts);});};$.fn["printElement"]["defaults"]={"printMode":'iframe',"pageTitle":'',"overrideElementCSS":null,"printBodyOptions":{"styleToAdd":'padding:10px;margin:10px;',"classNameToAdd":''},"leaveOpen":false,"iframeElementOptions":{"styleToAdd":'border:none;position:absolute;width:0px;height:0px;bottom:0px;left:0px;',"classNameToAdd":''}};$.fn["printElement"]["cssElement"]={"href":'',"media":''};function _printElement(element,opts){var html=_getMarkup(element,opts);var popupOrIframe=null;var documentToWriteTo=null;if(opts["printMode"].toLowerCase()=='popup'){popupOrIframe=window.open('about:blank','printElementWindow','width=650,height=440,scrollbars=yes');documentToWriteTo=popupOrIframe.document;}
@@ -2621,6 +1872,9 @@ html.push('<link type="text/css" rel="stylesheet" href="'+current+'" >');else
 html.push('<link type="text/css" rel="stylesheet" href="'+current["href"]+'" media="'+current["media"]+'" >');}}}
 else{$("link",document).filter(function(){return $(this).attr("rel").toLowerCase()=="stylesheet";}).each(function(){html.push('<link type="text/css" rel="stylesheet" href="'+$(this).attr("href")+'" media="'+$(this).attr('media')+'" >');});}
 html.push('<base href="'+_getBaseHref()+'" />');html.push('</head><body style="'+opts["printBodyOptions"]["styleToAdd"]+'" class="'+opts["printBodyOptions"]["classNameToAdd"]+'">');html.push('<div class="'+$element.attr('class')+'">'+elementHtml+'</div>');html.push('<script type="text/javascript">function printPage(){focus();print();'+((!opts["leaveOpen"]&&opts["printMode"].toLowerCase()=='popup')?'close();':'')+'}</script>');html.push('</body></html>');return html.join('');};})(window);
+
+/* jquery.jqplot.js */
+
 (function($){var undefined;$.fn.emptyForce=function(){for(var i=0,elem;(elem=$(this)[i])!=null;i++){if(elem.nodeType===1){$.cleanData(elem.getElementsByTagName("*"));}
 if($.jqplot.use_excanvas){elem.outerHTML="";}
 else{while(elem.firstChild){elem.removeChild(elem.firstChild);}}
@@ -3595,8 +2849,129 @@ el.show();top=parseInt(el.css('top'),10);wrapper=$.jqplot.effects.createWrapper(
 if(show){wrapper.css(ref,0);if(!motion){wrapper.css(ref2,distance);}}
 wrapper.animate(animation,{duration:o.duration,easing:o.easing,queue:false,complete:function(){if(mode==="hide"){el.hide();}
 $.jqplot.effects.restore(el,props);$.jqplot.effects.removeWrapper(el);done();}});};
+
+/* jqplot.barRenderer.min.js */
+
+/**
+ * jqPlot
+ * Pure JavaScript plotting plugin using jQuery
+ *
+ * Version: 1.0.3r1117
+ *
+ * Copyright (c) 2009-2011 Chris Leonello
+ * jqPlot is currently available for use in all personal or commercial projects 
+ * under both the MIT (http://www.opensource.org/licenses/mit-license.php) and GPL 
+ * version 2.0 (http://www.gnu.org/licenses/gpl-2.0.html) licenses. This means that you can 
+ * choose the license that best suits your project and use it accordingly. 
+ *
+ * Although not required, the author would appreciate an email letting him 
+ * know of any substantial use of jqPlot.  You can reach the author at: 
+ * chris at jqplot dot com or see http://www.jqplot.com/info.php .
+ *
+ * If you are feeling kind and generous, consider supporting the project by
+ * making a donation at: http://www.jqplot.com/donate.php .
+ *
+ * sprintf functions contained in jqplot.sprintf.js by Ash Searle:
+ *
+ *     version 2007.04.27
+ *     author Ash Searle
+ *     http://hexmen.com/blog/2007/03/printf-sprintf/
+ *     http://hexmen.com/js/sprintf.js
+ *     The author (Ash Searle) has placed this code in the public domain:
+ *     "This code is unrestricted: you are free to use it however you like."
+ *
+ * included jsDate library by Chris Leonello:
+ *
+ * Copyright (c) 2010-2011 Chris Leonello
+ *
+ * jsDate is currently available for use in all personal or commercial projects 
+ * under both the MIT and GPL version 2.0 licenses. This means that you can 
+ * choose the license that best suits your project and use it accordingly.
+ *
+ * jsDate borrows many concepts and ideas from the Date Instance 
+ * Methods by Ken Snyder along with some parts of Ken's actual code.
+ * 
+ * Ken's origianl Date Instance Methods and copyright notice:
+ * 
+ * Ken Snyder (ken d snyder at gmail dot com)
+ * 2008-09-10
+ * version 2.0.2 (http://kendsnyder.com/sandbox/date/)     
+ * Creative Commons Attribution License 3.0 (http://creativecommons.org/licenses/by/3.0/)
+ *
+ * jqplotToImage function based on Larry Siden's export-jqplot-to-png.js.
+ * Larry has generously given permission to adapt his code for inclusion
+ * into jqPlot.
+ *
+ * Larry's original code can be found here:
+ *
+ * https://github.com/lsiden/export-jqplot-to-png
+ * 
+ * 
+ */
 (function(d){d.jqplot.BarRenderer=function(){d.jqplot.LineRenderer.call(this)};d.jqplot.BarRenderer.prototype=new d.jqplot.LineRenderer();d.jqplot.BarRenderer.prototype.constructor=d.jqplot.BarRenderer;d.jqplot.BarRenderer.prototype.init=function(o,q){this.barPadding=8;this.barMargin=10;this.barDirection="vertical";this.barWidth=null;this.shadowOffset=2;this.shadowDepth=5;this.shadowAlpha=0.08;this.waterfall=false;this.groups=1;this.varyBarColor=false;this.highlightMouseOver=true;this.highlightMouseDown=false;this.highlightColors=[];this.transposedData=true;this.renderer.animation={show:false,direction:"down",speed:3000,_supported:true};this._type="bar";if(o.highlightMouseDown&&o.highlightMouseOver==null){o.highlightMouseOver=false}d.extend(true,this,o);d.extend(true,this.renderer,o);this.fill=true;if(this.barDirection==="horizontal"&&this.rendererOptions.animation&&this.rendererOptions.animation.direction==null){this.renderer.animation.direction="left"}if(this.waterfall){this.fillToZero=false;this.disableStack=true}if(this.barDirection=="vertical"){this._primaryAxis="_xaxis";this._stackAxis="y";this.fillAxis="y"}else{this._primaryAxis="_yaxis";this._stackAxis="x";this.fillAxis="x"}this._highlightedPoint=null;this._plotSeriesInfo=null;this._dataColors=[];this._barPoints=[];var p={lineJoin:"miter",lineCap:"round",fill:true,isarc:false,strokeStyle:this.color,fillStyle:this.color,closePath:this.fill};this.renderer.shapeRenderer.init(p);var n={lineJoin:"miter",lineCap:"round",fill:true,isarc:false,angle:this.shadowAngle,offset:this.shadowOffset,alpha:this.shadowAlpha,depth:this.shadowDepth,closePath:this.fill};this.renderer.shadowRenderer.init(n);q.postInitHooks.addOnce(h);q.postDrawHooks.addOnce(j);q.eventListenerHooks.addOnce("jqplotMouseMove",b);q.eventListenerHooks.addOnce("jqplotMouseDown",a);q.eventListenerHooks.addOnce("jqplotMouseUp",l);q.eventListenerHooks.addOnce("jqplotClick",e);q.eventListenerHooks.addOnce("jqplotRightClick",m)};function g(t,p,o,w){if(this.rendererOptions.barDirection=="horizontal"){this._stackAxis="x";this._primaryAxis="_yaxis"}if(this.rendererOptions.waterfall==true){this._data=d.extend(true,[],this.data);var s=0;var u=(!this.rendererOptions.barDirection||this.rendererOptions.barDirection==="vertical"||this.transposedData===false)?1:0;for(var q=0;q<this.data.length;q++){s+=this.data[q][u];if(q>0){this.data[q][u]+=this.data[q-1][u]}}this.data[this.data.length]=(u==1)?[this.data.length+1,s]:[s,this.data.length+1];this._data[this._data.length]=(u==1)?[this._data.length+1,s]:[s,this._data.length+1]}if(this.rendererOptions.groups>1){this.breakOnNull=true;var n=this.data.length;var v=parseInt(n/this.rendererOptions.groups,10);var r=0;for(var q=v;q<n;q+=v){this.data.splice(q+r,0,[null,null]);r++}for(q=0;q<this.data.length;q++){if(this._primaryAxis=="_xaxis"){this.data[q][0]=q+1}else{this.data[q][1]=q+1}}}}d.jqplot.preSeriesInitHooks.push(g);d.jqplot.BarRenderer.prototype.calcSeriesNumbers=function(){var r=0;var t=0;var q=this[this._primaryAxis];var p,o,u;for(var n=0;n<q._series.length;n++){o=q._series[n];if(o===this){u=n}if(o.renderer.constructor==d.jqplot.BarRenderer){r+=o.data.length;t+=1}}return[r,t,u]};d.jqplot.BarRenderer.prototype.setBarWidth=function(){var q;var n=0;var o=0;var t=this[this._primaryAxis];var x,r,v;var w=this._plotSeriesInfo=this.renderer.calcSeriesNumbers.call(this);n=w[0];o=w[1];var u=t.numberTicks;var p=(u-1)/2;if(t.name=="xaxis"||t.name=="x2axis"){if(this._stack){this.barWidth=(t._offsets.max-t._offsets.min)/n*o-this.barMargin}else{this.barWidth=((t._offsets.max-t._offsets.min)/p-this.barPadding*(o-1)-this.barMargin*2)/o}}else{if(this._stack){this.barWidth=(t._offsets.min-t._offsets.max)/n*o-this.barMargin}else{this.barWidth=((t._offsets.min-t._offsets.max)/p-this.barPadding*(o-1)-this.barMargin*2)/o}}return[n,o]};function f(o){var q=[];for(var s=0;s<o.length;s++){var r=d.jqplot.getColorComponents(o[s]);var n=[r[0],r[1],r[2]];var t=n[0]+n[1]+n[2];for(var p=0;p<3;p++){n[p]=(t>570)?n[p]*0.8:n[p]+0.3*(255-n[p]);n[p]=parseInt(n[p],10)}q.push("rgb("+n[0]+","+n[1]+","+n[2]+")")}return q}function i(v,u,s,t,o){var q=v,w=v-1,n,p,r=(o==="x")?0:1;if(q>0){p=t.series[w]._plotData[u][r];if((s*p)<0){n=i(w,u,s,t,o)}else{n=t.series[w].gridData[u][r]}}else{n=(r===0)?t.series[q]._xaxis.series_u2p(0):t.series[q]._yaxis.series_u2p(0)}return n}d.jqplot.BarRenderer.prototype.draw=function(E,L,q,G){var I;var A=d.extend({},q);var w=(A.shadow!=undefined)?A.shadow:this.shadow;var O=(A.showLine!=undefined)?A.showLine:this.showLine;var F=(A.fill!=undefined)?A.fill:this.fill;var p=this.xaxis;var J=this.yaxis;var y=this._xaxis.series_u2p;var K=this._yaxis.series_u2p;var D,C;this._dataColors=[];this._barPoints=[];if(this.barWidth==null){this.renderer.setBarWidth.call(this)}var N=this._plotSeriesInfo=this.renderer.calcSeriesNumbers.call(this);var x=N[0];var v=N[1];var s=N[2];var H=[];if(this._stack){this._barNudge=0}else{this._barNudge=(-Math.abs(v/2-0.5)+s)*(this.barWidth+this.barPadding)}if(O){var u=new d.jqplot.ColorGenerator(this.negativeSeriesColors);var B=new d.jqplot.ColorGenerator(this.seriesColors);var M=u.get(this.index);if(!this.useNegativeColors){M=A.fillStyle}var t=A.fillStyle;var r;var P;var o;if(this.barDirection=="vertical"){for(var I=0;I<L.length;I++){if(!this._stack&&this.data[I][1]==null){continue}H=[];r=L[I][0]+this._barNudge;if(this._stack&&this._prevGridData.length){o=i(this.index,I,this._plotData[I][1],G,"y")}else{if(this.fillToZero){o=this._yaxis.series_u2p(0)}else{if(this.waterfall&&I>0&&I<this.gridData.length-1){o=this.gridData[I-1][1]}else{if(this.waterfall&&I==0&&I<this.gridData.length-1){if(this._yaxis.min<=0&&this._yaxis.max>=0){o=this._yaxis.series_u2p(0)}else{if(this._yaxis.min>0){o=E.canvas.height}else{o=0}}}else{if(this.waterfall&&I==this.gridData.length-1){if(this._yaxis.min<=0&&this._yaxis.max>=0){o=this._yaxis.series_u2p(0)}else{if(this._yaxis.min>0){o=E.canvas.height}else{o=0}}}else{o=E.canvas.height}}}}}if((this.fillToZero&&this._plotData[I][1]<0)||(this.waterfall&&this._data[I][1]<0)){if(this.varyBarColor&&!this._stack){if(this.useNegativeColors){A.fillStyle=u.next()}else{A.fillStyle=B.next()}}else{A.fillStyle=M}}else{if(this.varyBarColor&&!this._stack){A.fillStyle=B.next()}else{A.fillStyle=t}}if(!this.fillToZero||this._plotData[I][1]>=0){H.push([r-this.barWidth/2,o]);H.push([r-this.barWidth/2,L[I][1]]);H.push([r+this.barWidth/2,L[I][1]]);H.push([r+this.barWidth/2,o])}else{H.push([r-this.barWidth/2,L[I][1]]);H.push([r-this.barWidth/2,o]);H.push([r+this.barWidth/2,o]);H.push([r+this.barWidth/2,L[I][1]])}this._barPoints.push(H);if(w&&!this._stack){var z=d.extend(true,{},A);delete z.fillStyle;this.renderer.shadowRenderer.draw(E,H,z)}var n=A.fillStyle||this.color;this._dataColors.push(n);this.renderer.shapeRenderer.draw(E,H,A)}}else{if(this.barDirection=="horizontal"){for(var I=0;I<L.length;I++){if(!this._stack&&this.data[I][0]==null){continue}H=[];r=L[I][1]-this._barNudge;P;if(this._stack&&this._prevGridData.length){P=i(this.index,I,this._plotData[I][0],G,"x")}else{if(this.fillToZero){P=this._xaxis.series_u2p(0)}else{if(this.waterfall&&I>0&&I<this.gridData.length-1){P=this.gridData[I-1][1]}else{if(this.waterfall&&I==0&&I<this.gridData.length-1){if(this._xaxis.min<=0&&this._xaxis.max>=0){P=this._xaxis.series_u2p(0)}else{if(this._xaxis.min>0){P=0}else{P=E.canvas.width}}}else{if(this.waterfall&&I==this.gridData.length-1){if(this._xaxis.min<=0&&this._xaxis.max>=0){P=this._xaxis.series_u2p(0)}else{if(this._xaxis.min>0){P=0}else{P=E.canvas.width}}}else{P=0}}}}}if((this.fillToZero&&this._plotData[I][1]<0)||(this.waterfall&&this._data[I][1]<0)){if(this.varyBarColor&&!this._stack){if(this.useNegativeColors){A.fillStyle=u.next()}else{A.fillStyle=B.next()}}}else{if(this.varyBarColor&&!this._stack){A.fillStyle=B.next()}else{A.fillStyle=t}}if(!this.fillToZero||this._plotData[I][0]>=0){H.push([P,r+this.barWidth/2]);H.push([P,r-this.barWidth/2]);H.push([L[I][0],r-this.barWidth/2]);H.push([L[I][0],r+this.barWidth/2])}else{H.push([L[I][0],r+this.barWidth/2]);H.push([L[I][0],r-this.barWidth/2]);H.push([P,r-this.barWidth/2]);H.push([P,r+this.barWidth/2])}this._barPoints.push(H);if(w&&!this._stack){var z=d.extend(true,{},A);delete z.fillStyle;this.renderer.shadowRenderer.draw(E,H,z)}var n=A.fillStyle||this.color;this._dataColors.push(n);this.renderer.shapeRenderer.draw(E,H,A)}}}}if(this.highlightColors.length==0){this.highlightColors=d.jqplot.computeHighlightColors(this._dataColors)}else{if(typeof(this.highlightColors)=="string"){var N=this.highlightColors;this.highlightColors=[];for(var I=0;I<this._dataColors.length;I++){this.highlightColors.push(N)}}}};d.jqplot.BarRenderer.prototype.drawShadow=function(z,G,p,B){var D;var w=(p!=undefined)?p:{};var t=(w.shadow!=undefined)?w.shadow:this.shadow;var I=(w.showLine!=undefined)?w.showLine:this.showLine;var A=(w.fill!=undefined)?w.fill:this.fill;var o=this.xaxis;var E=this.yaxis;var v=this._xaxis.series_u2p;var F=this._yaxis.series_u2p;var y,C,x,u,s,r;if(this._stack&&this.shadow){if(this.barWidth==null){this.renderer.setBarWidth.call(this)}var H=this._plotSeriesInfo=this.renderer.calcSeriesNumbers.call(this);u=H[0];s=H[1];r=H[2];if(this._stack){this._barNudge=0}else{this._barNudge=(-Math.abs(s/2-0.5)+r)*(this.barWidth+this.barPadding)}if(I){if(this.barDirection=="vertical"){for(var D=0;D<G.length;D++){if(this.data[D][1]==null){continue}C=[];var q=G[D][0]+this._barNudge;var n;if(this._stack&&this._prevGridData.length){n=i(this.index,D,this._plotData[D][1],B,"y")}else{if(this.fillToZero){n=this._yaxis.series_u2p(0)}else{n=z.canvas.height}}C.push([q-this.barWidth/2,n]);C.push([q-this.barWidth/2,G[D][1]]);C.push([q+this.barWidth/2,G[D][1]]);C.push([q+this.barWidth/2,n]);this.renderer.shadowRenderer.draw(z,C,w)}}else{if(this.barDirection=="horizontal"){for(var D=0;D<G.length;D++){if(this.data[D][0]==null){continue}C=[];var q=G[D][1]-this._barNudge;var J;if(this._stack&&this._prevGridData.length){J=i(this.index,D,this._plotData[D][0],B,"x")}else{if(this.fillToZero){J=this._xaxis.series_u2p(0)}else{J=0}}C.push([J,q+this.barWidth/2]);C.push([G[D][0],q+this.barWidth/2]);C.push([G[D][0],q-this.barWidth/2]);C.push([J,q-this.barWidth/2]);this.renderer.shadowRenderer.draw(z,C,w)}}}}}};function h(q,p,n){for(var o=0;o<this.series.length;o++){if(this.series[o].renderer.constructor==d.jqplot.BarRenderer){if(this.series[o].highlightMouseOver){this.series[o].highlightMouseDown=false}}}}function j(){if(this.plugins.barRenderer&&this.plugins.barRenderer.highlightCanvas){this.plugins.barRenderer.highlightCanvas.resetCanvas();this.plugins.barRenderer.highlightCanvas=null}this.plugins.barRenderer={highlightedSeriesIndex:null};this.plugins.barRenderer.highlightCanvas=new d.jqplot.GenericCanvas();this.eventCanvas._elem.before(this.plugins.barRenderer.highlightCanvas.createElement(this._gridPadding,"jqplot-barRenderer-highlight-canvas",this._plotDimensions,this));this.plugins.barRenderer.highlightCanvas.setContext();this.eventCanvas._elem.bind("mouseleave",{plot:this},function(n){k(n.data.plot)})}function c(u,t,q,p){var o=u.series[t];var n=u.plugins.barRenderer.highlightCanvas;n._ctx.clearRect(0,0,n._ctx.canvas.width,n._ctx.canvas.height);o._highlightedPoint=q;u.plugins.barRenderer.highlightedSeriesIndex=t;var r={fillStyle:o.highlightColors[q]};o.renderer.shapeRenderer.draw(n._ctx,p,r);n=null}function k(p){var n=p.plugins.barRenderer.highlightCanvas;n._ctx.clearRect(0,0,n._ctx.canvas.width,n._ctx.canvas.height);for(var o=0;o<p.series.length;o++){p.series[o]._highlightedPoint=null}p.plugins.barRenderer.highlightedSeriesIndex=null;p.target.trigger("jqplotDataUnhighlight");n=null}function b(r,q,u,t,s){if(t){var p=[t.seriesIndex,t.pointIndex,t.data];var o=jQuery.Event("jqplotDataMouseOver");o.pageX=r.pageX;o.pageY=r.pageY;s.target.trigger(o,p);if(s.series[p[0]].highlightMouseOver&&!(p[0]==s.plugins.barRenderer.highlightedSeriesIndex&&p[1]==s.series[p[0]]._highlightedPoint)){var n=jQuery.Event("jqplotDataHighlight");n.which=r.which;n.pageX=r.pageX;n.pageY=r.pageY;s.target.trigger(n,p);c(s,t.seriesIndex,t.pointIndex,t.points)}}else{if(t==null){k(s)}}}function a(q,p,t,s,r){if(s){var o=[s.seriesIndex,s.pointIndex,s.data];if(r.series[o[0]].highlightMouseDown&&!(o[0]==r.plugins.barRenderer.highlightedSeriesIndex&&o[1]==r.series[o[0]]._highlightedPoint)){var n=jQuery.Event("jqplotDataHighlight");n.which=q.which;n.pageX=q.pageX;n.pageY=q.pageY;r.target.trigger(n,o);c(r,s.seriesIndex,s.pointIndex,s.points)}}else{if(s==null){k(r)}}}function l(p,o,s,r,q){var n=q.plugins.barRenderer.highlightedSeriesIndex;if(n!=null&&q.series[n].highlightMouseDown){k(q)}}function e(q,p,t,s,r){if(s){var o=[s.seriesIndex,s.pointIndex,s.data];var n=jQuery.Event("jqplotDataClick");n.which=q.which;n.pageX=q.pageX;n.pageY=q.pageY;r.target.trigger(n,o)}}function m(r,q,u,t,s){if(t){var p=[t.seriesIndex,t.pointIndex,t.data];var n=s.plugins.barRenderer.highlightedSeriesIndex;if(n!=null&&s.series[n].highlightMouseDown){k(s)}var o=jQuery.Event("jqplotDataRightClick");o.which=r.which;o.pageX=r.pageX;o.pageY=r.pageY;s.target.trigger(o,p)}}})(jQuery);
+
+/* jqplot.categoryAxisRenderer.min.js */
+
+/**
+ * jqPlot
+ * Pure JavaScript plotting plugin using jQuery
+ *
+ * Version: 1.0.3r1117
+ *
+ * Copyright (c) 2009-2011 Chris Leonello
+ * jqPlot is currently available for use in all personal or commercial projects 
+ * under both the MIT (http://www.opensource.org/licenses/mit-license.php) and GPL 
+ * version 2.0 (http://www.gnu.org/licenses/gpl-2.0.html) licenses. This means that you can 
+ * choose the license that best suits your project and use it accordingly. 
+ *
+ * Although not required, the author would appreciate an email letting him 
+ * know of any substantial use of jqPlot.  You can reach the author at: 
+ * chris at jqplot dot com or see http://www.jqplot.com/info.php .
+ *
+ * If you are feeling kind and generous, consider supporting the project by
+ * making a donation at: http://www.jqplot.com/donate.php .
+ *
+ * sprintf functions contained in jqplot.sprintf.js by Ash Searle:
+ *
+ *     version 2007.04.27
+ *     author Ash Searle
+ *     http://hexmen.com/blog/2007/03/printf-sprintf/
+ *     http://hexmen.com/js/sprintf.js
+ *     The author (Ash Searle) has placed this code in the public domain:
+ *     "This code is unrestricted: you are free to use it however you like."
+ *
+ * included jsDate library by Chris Leonello:
+ *
+ * Copyright (c) 2010-2011 Chris Leonello
+ *
+ * jsDate is currently available for use in all personal or commercial projects 
+ * under both the MIT and GPL version 2.0 licenses. This means that you can 
+ * choose the license that best suits your project and use it accordingly.
+ *
+ * jsDate borrows many concepts and ideas from the Date Instance 
+ * Methods by Ken Snyder along with some parts of Ken's actual code.
+ * 
+ * Ken's origianl Date Instance Methods and copyright notice:
+ * 
+ * Ken Snyder (ken d snyder at gmail dot com)
+ * 2008-09-10
+ * version 2.0.2 (http://kendsnyder.com/sandbox/date/)     
+ * Creative Commons Attribution License 3.0 (http://creativecommons.org/licenses/by/3.0/)
+ *
+ * jqplotToImage function based on Larry Siden's export-jqplot-to-png.js.
+ * Larry has generously given permission to adapt his code for inclusion
+ * into jqPlot.
+ *
+ * Larry's original code can be found here:
+ *
+ * https://github.com/lsiden/export-jqplot-to-png
+ * 
+ * 
+ */
 (function(a){a.jqplot.CategoryAxisRenderer=function(b){a.jqplot.LinearAxisRenderer.call(this);this.sortMergedLabels=false};a.jqplot.CategoryAxisRenderer.prototype=new a.jqplot.LinearAxisRenderer();a.jqplot.CategoryAxisRenderer.prototype.constructor=a.jqplot.CategoryAxisRenderer;a.jqplot.CategoryAxisRenderer.prototype.init=function(e){this.groups=1;this.groupLabels=[];this._groupLabels=[];this._grouped=false;this._barsPerGroup=null;a.extend(true,this,{tickOptions:{formatString:"%d"}},e);var b=this._dataBounds;for(var f=0;f<this._series.length;f++){var g=this._series[f];if(g.groups){this.groups=g.groups}var h=g.data;for(var c=0;c<h.length;c++){if(this.name=="xaxis"||this.name=="x2axis"){if(h[c][0]<b.min||b.min==null){b.min=h[c][0]}if(h[c][0]>b.max||b.max==null){b.max=h[c][0]}}else{if(h[c][1]<b.min||b.min==null){b.min=h[c][1]}if(h[c][1]>b.max||b.max==null){b.max=h[c][1]}}}}if(this.groupLabels.length){this.groups=this.groupLabels.length}};a.jqplot.CategoryAxisRenderer.prototype.createTicks=function(){var D=this._ticks;var z=this.ticks;var F=this.name;var C=this._dataBounds;var v,A;var q,w;var d,c;var b,x;if(z.length){if(this.groups>1&&!this._grouped){var r=z.length;var p=parseInt(r/this.groups,10);var e=0;for(var x=p;x<r;x+=p){z.splice(x+e,0," ");e++}this._grouped=true}this.min=0.5;this.max=z.length+0.5;var m=this.max-this.min;this.numberTicks=2*z.length+1;for(x=0;x<z.length;x++){b=this.min+2*x*m/(this.numberTicks-1);var h=new this.tickRenderer(this.tickOptions);h.showLabel=false;h.setTick(b,this.name);this._ticks.push(h);var h=new this.tickRenderer(this.tickOptions);h.label=z[x];h.showMark=false;h.showGridline=false;h.setTick(b+0.5,this.name);this._ticks.push(h)}var h=new this.tickRenderer(this.tickOptions);h.showLabel=false;h.setTick(b+1,this.name);this._ticks.push(h)}else{if(F=="xaxis"||F=="x2axis"){v=this._plotDimensions.width}else{v=this._plotDimensions.height}if(this.min!=null&&this.max!=null&&this.numberTicks!=null){this.tickInterval=null}if(this.min!=null&&this.max!=null&&this.tickInterval!=null){if(parseInt((this.max-this.min)/this.tickInterval,10)!=(this.max-this.min)/this.tickInterval){this.tickInterval=null}}var y=[];var B=0;var q=0.5;var w,E;var f=false;for(var x=0;x<this._series.length;x++){var k=this._series[x];for(var u=0;u<k.data.length;u++){if(this.name=="xaxis"||this.name=="x2axis"){E=k.data[u][0]}else{E=k.data[u][1]}if(a.inArray(E,y)==-1){f=true;B+=1;y.push(E)}}}if(f&&this.sortMergedLabels){y.sort(function(j,i){return j-i})}this.ticks=y;for(var x=0;x<this._series.length;x++){var k=this._series[x];for(var u=0;u<k.data.length;u++){if(this.name=="xaxis"||this.name=="x2axis"){E=k.data[u][0]}else{E=k.data[u][1]}var n=a.inArray(E,y)+1;if(this.name=="xaxis"||this.name=="x2axis"){k.data[u][0]=n}else{k.data[u][1]=n}}}if(this.groups>1&&!this._grouped){var r=y.length;var p=parseInt(r/this.groups,10);var e=0;for(var x=p;x<r;x+=p+1){y[x]=" "}this._grouped=true}w=B+0.5;if(this.numberTicks==null){this.numberTicks=2*B+1}var m=w-q;this.min=q;this.max=w;var o=0;var g=parseInt(3+v/10,10);var p=parseInt(B/g,10);if(this.tickInterval==null){this.tickInterval=m/(this.numberTicks-1)}for(var x=0;x<this.numberTicks;x++){b=this.min+x*this.tickInterval;var h=new this.tickRenderer(this.tickOptions);if(x/2==parseInt(x/2,10)){h.showLabel=false;h.showMark=true}else{if(p>0&&o<p){h.showLabel=false;o+=1}else{h.showLabel=true;o=0}h.label=h.formatter(h.formatString,y[(x-1)/2]);h.showMark=false;h.showGridline=false}h.setTick(b,this.name);this._ticks.push(h)}}};a.jqplot.CategoryAxisRenderer.prototype.draw=function(b,j){if(this.show){this.renderer.createTicks.call(this);var h=0;var c;if(this._elem){this._elem.emptyForce()}this._elem=this._elem||a('<div class="jqplot-axis jqplot-'+this.name+'" style="position:absolute;"></div>');if(this.name=="xaxis"||this.name=="x2axis"){this._elem.width(this._plotDimensions.width)}else{this._elem.height(this._plotDimensions.height)}this.labelOptions.axis=this.name;this._label=new this.labelRenderer(this.labelOptions);if(this._label.show){var g=this._label.draw(b,j);g.appendTo(this._elem)}var f=this._ticks;for(var e=0;e<f.length;e++){var d=f[e];if(d.showLabel&&(!d.isMinorTick||this.showMinorTicks)){var g=d.draw(b,j);g.appendTo(this._elem)}}this._groupLabels=[];for(var e=0;e<this.groupLabels.length;e++){var g=a('<div style="position:absolute;" class="jqplot-'+this.name+'-groupLabel"></div>');g.html(this.groupLabels[e]);this._groupLabels.push(g);g.appendTo(this._elem)}}return this._elem};a.jqplot.CategoryAxisRenderer.prototype.set=function(){var e=0;var m;var k=0;var f=0;var d=(this._label==null)?false:this._label.show;if(this.show){var n=this._ticks;for(var c=0;c<n.length;c++){var g=n[c];if(g.showLabel&&(!g.isMinorTick||this.showMinorTicks)){if(this.name=="xaxis"||this.name=="x2axis"){m=g._elem.outerHeight(true)}else{m=g._elem.outerWidth(true)}if(m>e){e=m}}}var j=0;for(var c=0;c<this._groupLabels.length;c++){var b=this._groupLabels[c];if(this.name=="xaxis"||this.name=="x2axis"){m=b.outerHeight(true)}else{m=b.outerWidth(true)}if(m>j){j=m}}if(d){k=this._label._elem.outerWidth(true);f=this._label._elem.outerHeight(true)}if(this.name=="xaxis"){e+=j+f;this._elem.css({height:e+"px",left:"0px",bottom:"0px"})}else{if(this.name=="x2axis"){e+=j+f;this._elem.css({height:e+"px",left:"0px",top:"0px"})}else{if(this.name=="yaxis"){e+=j+k;this._elem.css({width:e+"px",left:"0px",top:"0px"});if(d&&this._label.constructor==a.jqplot.AxisLabelRenderer){this._label._elem.css("width",k+"px")}}else{e+=j+k;this._elem.css({width:e+"px",right:"0px",top:"0px"});if(d&&this._label.constructor==a.jqplot.AxisLabelRenderer){this._label._elem.css("width",k+"px")}}}}}};a.jqplot.CategoryAxisRenderer.prototype.pack=function(e,c){var C=this._ticks;var v=this.max;var s=this.min;var n=c.max;var l=c.min;var q=(this._label==null)?false:this._label.show;var x;for(var r in e){this._elem.css(r,e[r])}this._offsets=c;var g=n-l;var k=v-s;this.p2u=function(h){return(h-l)*k/g+s};this.u2p=function(h){return(h-s)*g/k+l};if(this.name=="xaxis"||this.name=="x2axis"){this.series_u2p=function(h){return(h-s)*g/k};this.series_p2u=function(h){return h*k/g+s}}else{this.series_u2p=function(h){return(h-v)*g/k};this.series_p2u=function(h){return h*k/g+v}}if(this.show){if(this.name=="xaxis"||this.name=="x2axis"){for(x=0;x<C.length;x++){var o=C[x];if(o.show&&o.showLabel){var b;if(o.constructor==a.jqplot.CanvasAxisTickRenderer&&o.angle){var A=(this.name=="xaxis")?1:-1;switch(o.labelPosition){case"auto":if(A*o.angle<0){b=-o.getWidth()+o._textRenderer.height*Math.sin(-o._textRenderer.angle)/2}else{b=-o._textRenderer.height*Math.sin(o._textRenderer.angle)/2}break;case"end":b=-o.getWidth()+o._textRenderer.height*Math.sin(-o._textRenderer.angle)/2;break;case"start":b=-o._textRenderer.height*Math.sin(o._textRenderer.angle)/2;break;case"middle":b=-o.getWidth()/2+o._textRenderer.height*Math.sin(-o._textRenderer.angle)/2;break;default:b=-o.getWidth()/2+o._textRenderer.height*Math.sin(-o._textRenderer.angle)/2;break}}else{b=-o.getWidth()/2}var D=this.u2p(o.value)+b+"px";o._elem.css("left",D);o.pack()}}var z=["bottom",0];if(q){var m=this._label._elem.outerWidth(true);this._label._elem.css("left",l+g/2-m/2+"px");if(this.name=="xaxis"){this._label._elem.css("bottom","0px");z=["bottom",this._label._elem.outerHeight(true)]}else{this._label._elem.css("top","0px");z=["top",this._label._elem.outerHeight(true)]}this._label.pack()}var d=parseInt(this._ticks.length/this.groups,10);for(x=0;x<this._groupLabels.length;x++){var B=0;var f=0;for(var u=x*d;u<=(x+1)*d;u++){if(this._ticks[u]._elem&&this._ticks[u].label!=" "){var o=this._ticks[u]._elem;var r=o.position();B+=r.left+o.outerWidth(true)/2;f++}}B=B/f;this._groupLabels[x].css({left:(B-this._groupLabels[x].outerWidth(true)/2)});this._groupLabels[x].css(z[0],z[1])}}else{for(x=0;x<C.length;x++){var o=C[x];if(o.show&&o.showLabel){var b;if(o.constructor==a.jqplot.CanvasAxisTickRenderer&&o.angle){var A=(this.name=="yaxis")?1:-1;switch(o.labelPosition){case"auto":case"end":if(A*o.angle<0){b=-o._textRenderer.height*Math.cos(-o._textRenderer.angle)/2}else{b=-o.getHeight()+o._textRenderer.height*Math.cos(o._textRenderer.angle)/2}break;case"start":if(o.angle>0){b=-o._textRenderer.height*Math.cos(-o._textRenderer.angle)/2}else{b=-o.getHeight()+o._textRenderer.height*Math.cos(o._textRenderer.angle)/2}break;case"middle":b=-o.getHeight()/2;break;default:b=-o.getHeight()/2;break}}else{b=-o.getHeight()/2}var D=this.u2p(o.value)+b+"px";o._elem.css("top",D);o.pack()}}var z=["left",0];if(q){var y=this._label._elem.outerHeight(true);this._label._elem.css("top",n-g/2-y/2+"px");if(this.name=="yaxis"){this._label._elem.css("left","0px");z=["left",this._label._elem.outerWidth(true)]}else{this._label._elem.css("right","0px");z=["right",this._label._elem.outerWidth(true)]}this._label.pack()}var d=parseInt(this._ticks.length/this.groups,10);for(x=0;x<this._groupLabels.length;x++){var B=0;var f=0;for(var u=x*d;u<=(x+1)*d;u++){if(this._ticks[u]._elem&&this._ticks[u].label!=" "){var o=this._ticks[u]._elem;var r=o.position();B+=r.top+o.outerHeight()/2;f++}}B=B/f;this._groupLabels[x].css({top:B-this._groupLabels[x].outerHeight()/2});this._groupLabels[x].css(z[0],z[1])}}}}})(jQuery);
+
+/* jqplot.pointLabels.js */
+
 (function($){$.jqplot.PointLabels=function(options){this.show=$.jqplot.config.enablePlugins;this.location='n';this.labelsFromSeries=false;this.seriesLabelIndex=null;this.labels=[];this._labels=[];this.stackedValue=false;this.ypadding=6;this.xpadding=6;this.escapeHTML=true;this.edgeTolerance=-5;this.formatter=$.jqplot.DefaultTickFormatter;this.formatString='';this.hideZeros=false;this._elems=[];$.extend(true,this,options);};var locations=['nw','n','ne','e','se','s','sw','w'];var locationIndicies={'nw':0,'n':1,'ne':2,'e':3,'se':4,'s':5,'sw':6,'w':7};var oppositeLocations=['se','s','sw','w','nw','n','ne','e'];$.jqplot.PointLabels.init=function(target,data,seriesDefaults,opts,plot){var options=$.extend(true,{},seriesDefaults,opts);options.pointLabels=options.pointLabels||{};if(this.renderer.constructor===$.jqplot.BarRenderer&&this.barDirection==='horizontal'&&!options.pointLabels.location){options.pointLabels.location='e';}
 this.plugins.pointLabels=new $.jqplot.PointLabels(options.pointLabels);this.plugins.pointLabels.setLabels.call(this);};$.jqplot.PointLabels.prototype.setLabels=function(){var p=this.plugins.pointLabels;var labelIdx;if(p.seriesLabelIndex!=null){labelIdx=p.seriesLabelIndex;}
 else if(this.renderer.constructor===$.jqplot.BarRenderer&&this.barDirection==='horizontal'){labelIdx=0;}
@@ -3620,14 +2995,23 @@ if(this.renderer.constructor==$.jqplot.BarRenderer){if(this.barDirection=="verti
 else{elt-=this._barNudge;}}
 elem.css('left',ell);elem.css('top',elt);var elr=ell+elem.width();var elb=elt+elem.height();var et=p.edgeTolerance;var scl=$(sctx.canvas).position().left;var sct=$(sctx.canvas).position().top;var scr=sctx.canvas.width+scl;var scb=sctx.canvas.height+sct;if(ell-et<scl||elt-et<sct||elr+et>scr||elb+et>scb){elem.remove();}
 elem=null;helem=null;}}};$.jqplot.postSeriesInitHooks.push($.jqplot.PointLabels.init);$.jqplot.postDrawSeriesHooks.push($.jqplot.PointLabels.draw);})(jQuery);
+
+/* export-jqplot-to-png.js */
+
 $(function(){$.fn.jqplotToImage=function(x_offset,y_offset){if($(this).width()==0||$(this).height()==0){return null;}
 var newCanvas=document.createElement("canvas");newCanvas.width=$(this).outerWidth()+Number(x_offset);newCanvas.height=$(this).outerHeight()+Number(y_offset);if(!newCanvas.getContext)return null;var newContext=newCanvas.getContext("2d");newContext.textAlign='left';newContext.textBaseline='top';function _jqpToImage(el,x_offset,y_offset){var tagname=el.tagName.toLowerCase();var p=$(el).position();var css=getComputedStyle(el);var left=x_offset+p.left+parseInt(css.marginLeft)+parseInt(css.borderLeftWidth)+parseInt(css.paddingLeft);var top=y_offset+p.top+parseInt(css.marginTop)+parseInt(css.borderTopWidth)+parseInt(css.paddingTop);if((tagname=='div'||tagname=='span')&&!$(el).hasClass('jqplot-highlighter-tooltip')){$(el).children().each(function(){_jqpToImage(this,left,top);});var text=$(el).childText();if(text){var metrics=newContext.measureText(text);newContext.font=$(el).getComputedFontStyle();newContext.fillText(text,left,top);}}
 else if(tagname=='canvas'){newContext.drawImage(el,left,top);}}
 $(this).children().each(function(){_jqpToImage(this,x_offset,y_offset);});return newCanvas;};$.fn.css2=jQuery.fn.css;$.fn.css=function(){if(arguments.length)return jQuery.fn.css2.apply(this,arguments);return window.getComputedStyle(this[0]);};$.fn.getComputedFontStyle=function(){var css=this.css();var attr=['font-style','font-weight','font-size','font-family'];var style=[];for(var i=0;i<attr.length;++i){var attr=String(css[attr[i]]);if(attr&&attr!='normal'){style.push(attr);}}
 return style.join(' ');}
 $.fn.childText=function(){return $(this).contents().filter(function(){return this.nodeType==3;}).text();};});
+
+/* jquery.insertAtCaret.js */
+
 jQuery.fn.extend({insertAtCaret:function(myValue){return this.each(function(i){if(document.selection){this.focus();sel=document.selection.createRange();sel.text=myValue;this.focus();}
 else if(this.selectionStart||this.selectionStart=='0'){var startPos=this.selectionStart;var endPos=this.selectionEnd;var scrollTop=this.scrollTop;this.value=this.value.substring(0,startPos)+myValue+this.value.substring(endPos,this.value.length);this.focus();this.selectionStart=startPos+myValue.length;this.selectionEnd=startPos+myValue.length;this.scrollTop=scrollTop;}else{this.value+=myValue;this.focus();}});}});
+
+/* bootstrap-slider.js */
+
 !function($){var Slider=function(element,options){this.element=$(element).hide();this.picker=$('<div class="slider">'+'<div class="slider-track">'+'<div class="slider-selection"></div>'+'<div class="slider-handle"></div>'+'<div class="slider-handle"></div>'+'</div>'+'<div class="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner"></div></div>'+'</div>').insertBefore(this.element).append(this.element);this.id=this.element.data('slider-id')||options.id;if(this.id){this.picker[0].id=this.id;}
 if(typeof Modernizr!=='undefined'&&Modernizr.touch){this.touchCapable=true;}
 var tooltip=this.element.data('slider-tooltip')||options.tooltip;this.tooltip=this.picker.find('.tooltip');this.tooltipInner=this.tooltip.find('div.tooltip-inner');this.orientation=this.element.data('slider-orientation')||options.orientation;switch(this.orientation){case'vertical':this.picker.addClass('slider-vertical');this.stylePos='top';this.mousePos='pageY';this.sizePos='offsetHeight';this.tooltip.addClass('right')[0].style.left='100%';break;default:this.picker.addClass('slider-horizontal').css('width',this.element.outerWidth());this.orientation='horizontal';this.stylePos='left';this.mousePos='pageX';this.sizePos='offsetWidth';this.tooltip.addClass('top')[0].style.top=-this.tooltip.outerHeight()-14+'px';break;}
@@ -3653,6 +3037,9 @@ var percentage=(ev[this.mousePos]-this.offset[this.stylePos])*100/this.size;perc
 return this.value[0];},destroy:function(){this.element.show().insertBefore(this.picker);this.picker.remove();},setValue:function(val){this.value=val;if(this.range){this.value[0]=Math.max(this.min,Math.min(this.max,this.value[0]));this.value[1]=Math.max(this.min,Math.min(this.max,this.value[1]));}else{this.value=[Math.max(this.min,Math.min(this.max,this.value))];this.handle2.addClass('hide');if(this.selection=='after'){this.value[1]=this.max;}else{this.value[1]=this.min;}}
 this.diff=this.max-this.min;this.percentage=[(this.value[0]-this.min)*100/this.diff,(this.value[1]-this.min)*100/this.diff,this.step*100/this.diff];this.layout();}};$.fn.slider=function(option,val){return this.each(function(){var $this=$(this),data=$this.data('slider'),options=typeof option==='object'&&option;if(!data){$this.data('slider',(data=new Slider(this,$.extend({},$.fn.slider.defaults,options))));}
 if(typeof option=='string'){data[option](val);}})};$.fn.slider.defaults={min:0,max:10,step:1,orientation:'horizontal',value:5,selection:'before',tooltip:'show',handle:'round',formater:function(value){return value;}};$.fn.slider.Constructor=Slider;}(window.jQuery);
+
+/* hashActions.js */
+
 const hashActions={getHash:function(what){var hash=location.hash;if(hash.length!==0){hash=hash.substring(2).split('/');switch(what){case'app':return hash[0];case'mapId':if(hash[0]&&hash[1]=='map'&&hash[2]){return hash[2];}else{return false;}
 case'queryId':if(hash[0]&&hash[1]=='query'&&hash[2]){return hash[2];}else{return false;}
 case'chartId':if(hash[0]&&hash[1]=='chart'&&hash[2]){return hash[2];}else{return false;}

@@ -602,4 +602,4 @@
     });
   };
 
-}(jQuery, window)
+}(jQuery, window);

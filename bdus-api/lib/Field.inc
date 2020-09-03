@@ -978,8 +978,8 @@ class Field implements TemplateInterface
 
     protected function htmlDate($core, $setting)
     {
-        return '<input type="text" ' .
-                'class="form-control date" ' .
+        return '<input type="date" ' .
+                'class="form-control" ' .
                 $core .
                 $setting['maxlength'] .
                 ($setting['direction'] === 'rtl' ? ' style="direction: rtl;" ' : '') .

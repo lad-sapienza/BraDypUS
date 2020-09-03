@@ -10,7 +10,6 @@ class CompressAssets
     public static $js_compress_libs = [
         'php2js.js',
         'jquery-sortable.js',
-        'bootstrap-datepicker.js',
         'jquery.dataTables.js',
         'datatables-bootstrap.js',
         'jquery.keyboard.js',

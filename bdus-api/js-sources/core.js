@@ -178,7 +178,8 @@ var core = {
 			}
 			if (type === 'info' || type === 'success' || type === 'warning' || type === 'error'){
 				iziToast[type]({
-					message: text
+					message: text,
+					maxWidth: '400px'
 				});
 			} else {
 				alert(text);

@@ -1,3 +1,4 @@
+4.0.140-alpha[] = "Removed support for bootstrap-datepicker for HTML5 input date"
 4.0.140-alpha[] = "Removed support for bootstrap-slider for HTML5 input range"
 4.0.140-alpha[] = "utils::is_online does not depend on bradypus.net domain"
 4.0.140-alpha[] = "Class tr is initialized once"

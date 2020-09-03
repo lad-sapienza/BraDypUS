@@ -134,12 +134,6 @@ var enhance = {
       enhance.combobox(el, destroy);
     } else if ($(el).hasClass('multiselect')) {
       enhance.multiselect(el, destroy);
-    } else if ($(el).hasClass('date')) {
-      if (destroy){
-        $(el).datepicker('remove');
-      } else {
-        $(el).datepicker({ format: enhance.dateFormat });
-      }
     } else if ($(el).is('select')) {
       enhance.select(el, destroy);
     }

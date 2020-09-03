@@ -32,9 +32,9 @@ var layout = {
         
         $('#wrapper').html(html);
         
-        $('<button id="tabs_toggle" type="button" class="btn btn-primary" style="z-index:9999; position:fixed;top:0; right:0">' +
-        '<i class="fa fa-reorder"></span>' +
-        '</button>')
+        $(`<button id="tabs_toggle" type="button" class="btn btn-primary" style="z-index:9999; position:fixed;top:0; right:0">
+            <i class="fa fa-reorder"></span>
+        </button>`)
         .appendTo($('#wrapper'))
         .on('click', function(){
             $('#tabs').toggle();

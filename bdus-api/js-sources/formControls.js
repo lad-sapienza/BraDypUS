@@ -45,6 +45,8 @@ function formControl(el, options){
 	// add changed attribute to form inputs on change event
 	if ( settings.addChange ) {
 		$this.find (':input').on('change', function(){
+			console.log(this);
+			console.log('changed');
 			$(this).attr('changed', 'auto');
 		});
 	}

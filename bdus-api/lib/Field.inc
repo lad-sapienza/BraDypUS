@@ -1049,7 +1049,7 @@ class Field implements TemplateInterface
      */
     protected function htmlSlider($core, $setting)
     {
-        return '<input type="text" class="slider form-control" ' . $core . ' value="' . $setting['data'] . '"'
+        return '<input type="range" class="slider" ' . $core . ' value="' . $setting['data'] . '"'
             .  ($setting['min'] ? 'min="' . $setting['min']. '"' : '')
             .  ($setting['max'] ? 'max="' . $setting['max']. '"' : '')
             . ' />';

@@ -20,9 +20,7 @@ class home_ctrl extends Controller
     private $css_libs = [
         'bootstrap.min.css',
         'iziToast.min.css',
-        'bdus.min.css',
-        
-        'slider.css',
+        'bdus.min.css'
     ];
 
     public function showAll()
@@ -67,7 +65,7 @@ class home_ctrl extends Controller
         if (!$debug){
             array_push($files_to_include, 'bdus.min.js');
         } else {
-            $files_to_include = array_merge($files_to_include, $this->js_compress_libs);
+            $files_to_include = array_merge($files_to_include, \Bdus\CompressAssets::$js_compress_libs);
         }
         $html = [];
         foreach ($files_to_include as $file) {

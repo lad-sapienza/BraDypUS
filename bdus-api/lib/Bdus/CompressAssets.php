@@ -7,13 +7,39 @@ use Monolog\Logger;
 
 class CompressAssets
 {
-    public static function All(array $js_compress_libs, Logger $log = null)
+    public static $js_compress_libs = [
+        'php2js.js',
+        'jquery-sortable.js',
+        'bootstrap-datepicker.js',
+        'jquery.dataTables.js',
+        'datatables-bootstrap.js',
+        'jquery.keyboard.js',
+        'utils.js',
+        'jquery.fineuploader-3.4.0.js',
+        'core.js',
+        'api.js',
+        'layout.js',
+        'formControls.js',
+        'select2.full.js',
+        'enhanceForm.js',
+        'jquery.checklabel.js',
+        'jquery.printElement.js',
+        'jquery.jqplot.js',
+        'jqplot.barRenderer.min.js',
+        'jqplot.categoryAxisRenderer.min.js',
+        'jqplot.pointLabels.js',
+        'export-jqplot-to-png.js',
+        'jquery.insertAtCaret.js',
+        'hashActions.js',
+    ];
+
+    public static function All(Logger $log = null)
     {
         return  self::moduleJS($log) 
                 && 
                 self::Css($log) 
                 && 
-                self::Js($js_compress_libs, $log);
+                self::Js(self::$js_compress_libs, $log);
     }
 
     public static function moduleJS(Logger $log = null): bool
@@ -77,7 +103,7 @@ class CompressAssets
         return false;
     }
 
-    public static function Js( array $js_compress_libs, Logger $log = null ): bool
+    public static function Js( Logger $log = null ): bool
 	{
         $minified_file = './js/bdus.min.js';
 
@@ -86,7 +112,7 @@ class CompressAssets
         $str_to_write[] =  "\n * For details on external libraries (copyrights and licenses) please consult the Credits information";
         $str_to_write[] =  "\n */";
 
-        foreach ($js_compress_libs as $file) {
+        foreach (self::$js_compress_libs as $file) {
 
             $file = ltrim($file);
 

@@ -129,30 +129,11 @@ var enhance = {
     }
   },
 
-  slider: function(el, destroy){
-    if ($(el).data('select2') && destroy){
-      $(el).slider('destroy');
-    } else {
-      var min = $(el).attr('min') ? parseInt($(el).attr('min')) : 0,
-      max = $(el).attr('max') ? parseInt($(el).attr('max')) : 10,
-      value = $(el).val() ? parseInt($(el).val()) : min;
-      $(el).slider({
-        'value': value,
-        'min': min,
-        'max': max,
-      }).on('slideStop', function(){
-        $(el).attr('changed', 'auto');
-      });
-    }
-  },
-
   pimpEl: function(el, destroy){
     if($(el).hasClass('combobox')) {
       enhance.combobox(el, destroy);
     } else if ($(el).hasClass('multiselect')) {
       enhance.multiselect(el, destroy);
-    } else if ($(el).hasClass('slider')) {
-      enhance.slider(el, destroy);
     } else if ($(el).hasClass('date')) {
       if (destroy){
         $(el).datepicker('remove');

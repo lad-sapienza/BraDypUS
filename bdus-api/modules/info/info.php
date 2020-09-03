@@ -96,7 +96,6 @@ class info_ctrl extends Controller
 				array('name' => 'Select2', 'by' => 'Igor Vaynberg', 'web' => 'https://github.com/ivaynberg/select2', 'lic' => 'Apache License v2.0'),
 				array('name' => 'jQueryPrintElement', 'by' => 'Erik Zaadi', 'web' => 'https://github.com/erikzaadi/jQueryPlugins/tree/master/jQuery.printElement', 'lic' => 'Dual licensed: MIT and GPL'),
 				array('name' => 'jqPlot', 'by' => 'Chris Leonello', 'web' => 'http://www.jqplot.com/', 'lic' => 'Dual license: MIT and GPL version 2'),
-				array('name' => 'Bootstrap Slider', 'by' => 'Stefan Petre, modified by Kyle Kemp and Julian Bogdani', 'web' => 'https://github.com/jbogdani/bootstrap-slider', 'lic' => 'Apache License v2.0'),
 				array('name' => 'OpenLayers', 'by'=>'OpenLayers Contributors', 'web'=>'http://openlayers.org/', 'lic'=>'2-clause BSD License (FreeBSD)'),
 				array('name' => 'D3', 'by' => 'Michael Bostock', 'web' => 'http://d3js.org/', 'lic' => 'BSD 3-Clause License'),
 				array('name' => 'Dagre', 'by' => 'Chris Pettitt', 'web' => 'https://github.com/cpettitt/dagre', 'lic' => 'MIT License'),

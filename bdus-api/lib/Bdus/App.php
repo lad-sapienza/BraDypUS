@@ -63,32 +63,7 @@ class App
 
 		if ($get['mini'] === '1') {
 
-			CompressAssets::All($js_compress_libs = [
-				'php2js.js',
-				'jquery-sortable.js',
-				'bootstrap-datepicker.js',
-				'jquery.dataTables.js',
-				'datatables-bootstrap.js',
-				'jquery.keyboard.js',
-				'utils.js',
-				'jquery.fineuploader-3.4.0.js',
-				'core.js',
-				'api.js',
-				'layout.js',
-				'formControls.js',
-				'select2.full.js',
-				'enhanceForm.js',
-				'jquery.checklabel.js',
-				'jquery.printElement.js',
-				'jquery.jqplot.js',
-				'jqplot.barRenderer.min.js',
-				'jqplot.categoryAxisRenderer.min.js',
-				'jqplot.pointLabels.js',
-				'export-jqplot-to-png.js',
-				'jquery.insertAtCaret.js',
-				'bootstrap-slider.js',
-				'hashActions.js',
-			], $this->log);
+			CompressAssets::All($this->log);
 
 			\utils::emptyDir(MAIN_DIR . 'cache', false);
 		}

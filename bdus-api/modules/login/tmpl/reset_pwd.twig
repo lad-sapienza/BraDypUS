@@ -7,11 +7,11 @@
 <h2>{{ tr.get('greeting', user.name) }}</h2>
 
 <div style="margin: 10px; padding:10px;">
-	<input type="password" id="reset-passw1" placeholder="{{ tr.get('new_password') }}" />
+	<input type="password" class="form-control" id="reset-passw1" placeholder="{{ tr.get('new_password') }}" />
 </div>
 
 <div style="margin: 10px; padding:10px;">
-	<input type="password" id="reset-passw2" placeholder="{{ tr.get('new_password_bis') }}" />
+	<input type="password" class="form-control" id="reset-passw2" placeholder="{{ tr.get('new_password_bis') }}" />
 </div>
 
 <input type="hidden" value="{{ user.id }}" id="reset-id">

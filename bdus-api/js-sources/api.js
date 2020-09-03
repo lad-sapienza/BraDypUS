@@ -286,7 +286,7 @@ var api = {
     },
 
     Export: function(obj_encoded, tb){
-      var html = '<select class="export_format input-lg">' +
+      var html = '<select class="form-control export_format input-lg">' +
         '<option value="JSON">JSON</option>' +
         '<option value="XLS">XLS</option>' +
         '<option value="SQL">SQL (INSERT)</option>' +
@@ -324,6 +324,7 @@ var api = {
 
       var input =  $('<input />')
         .attr('type', 'text')
+        .addClass('form-control')
         .val('query_' + new Date().getTime())
         .css('width', '90%');
 
@@ -391,7 +392,7 @@ var api = {
       var div = $('<div />').append(
           $('<div />').addClass('btn-group'),
           $('<div />').addClass('fl_content'),
-          $('<input />').addClass('curr_tb').attr('type', 'hidden')
+          $('<input />').addClass('curr_tb').addClass('form-control').attr('type', 'hidden')
           );
 
       $.get('./?obj=userlinks_ctrl&method=get_all_tables',function(data){

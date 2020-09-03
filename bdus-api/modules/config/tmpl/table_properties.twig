@@ -16,7 +16,7 @@
       <div class="form-group">
         <label class="col-sm-3 control-label">Name *</label>
         <div class="col-sm-7">
-          <input type="text" name="name" value="{{ data.name }}"
+          <input type="text" class="form-control" name="name" value="{{ data.name }}"
           {% if tb %}readonly="true"{% endif %}>
           {% if tb %}
           <button type="button" class="btn btn-block btn-danger" onclick="config.renameTb('{{ tb }}', this)">
@@ -30,7 +30,7 @@
       <div class="form-group">
         <label class="col-sm-3 control-label">Label *</label>
         <div class="col-sm-7">
-          <input type="text" name="label" value="{{ data.label }}">
+          <input type="text" class="form-control" name="label" value="{{ data.label }}">
         </div>
       </div>
 
@@ -38,7 +38,7 @@
       <div class="form-group">
         <label class="col-sm-3 control-label">Is plugin?</label>
         <div class="col-sm-7">
-          <select name="is_plugin">
+          <select name="is_plugin" class="form-control">
             <option{% if data.is_plugin == 0 %} selected="selected" {% endif %} value="">NO</option>
             <option{% if data.is_plugin == 1 %} selected="selected" {% endif %} value="1">YES</option>
           </select>
@@ -49,7 +49,7 @@
       <div class="form-group">
         <label class="col-sm-3 control-label">Order *</label>
         <div class="col-sm-7">
-          <select name="order">
+          <select name="order" class="form-control">
             <option></option>
             {% for id, label in field_list %}
             <option value="{{ id }}"{% if id == data.order %} selected="selected" {% endif %}>{{ label }}</option>
@@ -62,7 +62,7 @@
       <div class="form-group">
         <label class="col-sm-3 control-label">ID field *</label>
         <div class="col-sm-7">
-          <select name="id_field">
+          <select name="id_field" class="form-control">
             <option></option>
             {% for id, label in field_list %}
             <option value="{{ id }}"{% if id == data.id_field %} selected="selected" {% endif %}>{{ label }}</option>
@@ -76,7 +76,7 @@
         <label class="col-sm-3 control-label">Preview *</label>
         <div class="col-sm-7">
           {% for preview in data.preview %}
-            <select name="preview[]"{% if loop.index0 == 0 %} class="cloneable"{% endif %}>
+            <select name="preview[]"{% if loop.index0 == 0 %} class="cloneable form-control"{% endif %}>
               <option></option>
               {% for id, label in field_list %}
               <option value="{{ id }}"{% if id == preview %} selected="selected" {% endif %}>{{ label }}</option>
@@ -94,7 +94,7 @@
       <div class="form-group">
         <label class="col-sm-3 control-label">Edit template</label>
         <div class="col-sm-7">
-          <select name="tmpl_edit">
+          <select name="tmpl_edit" class="form-control">
             <option></option>
             {% for tmpl in template_list %}
             <option value="{{ id }}"{% if tmpl == data.tmpl_edit %} selected="selected" {% endif %}>{{ tmpl }}</option>
@@ -107,7 +107,7 @@
       <div class="form-group">
         <label class="col-sm-3 control-label">Read template</label>
         <div class="col-sm-7">
-          <select name="tmpl_read">
+          <select name="tmpl_read" class="form-control">
             <option></option>
             {% for tmpl in template_list %}
             <option value="{{ id }}"{% if tmpl == data.tmpl_read %} selected="selected" {% endif %}>{{ tmpl }}</option>
@@ -120,7 +120,7 @@
       <div class="form-group">
         <label class="col-sm-3 control-label">RS</label>
         <div class="col-sm-7">
-          <select name="rs">
+          <select name="rs" class="form-control">
             <option></option>
             {% for id, label in field_list %}
             <option value="{{ id }}"{% if id == data.rs %} selected="selected" {% endif %}>{{ label }}</option>
@@ -134,7 +134,7 @@
         <label class="col-sm-3 control-label">Plugins</label>
         <div class="col-sm-7">
           {% for plugin in data.plugin %}
-          <select name="plugin[]"{% if loop.first %} class="cloneable"{% endif %}>
+          <select name="plugin[]"{% if loop.first %} class="cloneable form-control"{% endif %}>
             <option></option>
             {% for id, plg in available_plugins %}
             <option value="{{ id }}"{% if id == plugin %} selected="selected" {% endif %}>{{ plg }}</option>
@@ -150,9 +150,9 @@
         <label class="col-sm-3 control-label">Backlinks</label>
         <div class="col-sm-7">
           {% for backlink in data.backlinks %}
-          <input type="text" name="backlinks[]"{% if loop.first %} class="cloneable"{% endif %} value="{{ backlink }}">
+          <input type="text" class="form-control" name="backlinks[]"{% if loop.first %} class="cloneable"{% endif %} value="{{ backlink }}">
           {% else %}
-          <input type="text" name="backlinks[]" class="cloneable">
+          <input type="text" class="form-control" name="backlinks[]" class="cloneable">
           {% endfor %}
           <span id="helpBlock" class="help-block">Destination full table name : plugin full table name : plugin field name</span>
           <button type="button" class="btn btn-default clone-action"  data-baseName="aaa">+</button>
@@ -173,7 +173,7 @@
             <div class="row">
               <div class="col-sm-4">
                 <label>Other table's name</label>
-                <select name="link[aaa{{ index }}][other_tb]">
+                <select name="link[aaa{{ index }}][other_tb]" class="form-control">
                   <option></option>
                   {% for id, label in available_tables %}
                     <option value="{{ id }}"{% if id == link_arr.other_tb %} selected="selected" {% endif %}>{{ label }}</option>
@@ -186,7 +186,7 @@
                   <div class="row cloneable">
                     <div class="col-sm-6">
                       <label>This table's field</label>
-                      <select name="link[aaa{{ index }}][fld][bbb{{ loop.index0 }}][my]">
+                      <select name="link[aaa{{ index }}][fld][bbb{{ loop.index0 }}][my]" class="form-control">
                         <option></option>
                         {% for id, label in field_list %}
                           <option value="{{ id }}"{% if id == fld_arr.my %} selected="selected" {% endif %}>{{ label }}</option>
@@ -195,7 +195,7 @@
                     </div>
                     <div class="col-sm-6">
                       <label>Other table's field</label>
-                      <input name="link[aaa{{ index }}][fld][bbb{{ loop.index0 }}][other]" value="{{ fld_arr.other }}" />
+                      <input class="form-control" name="link[aaa{{ index }}][fld][bbb{{ loop.index0 }}][other]" value="{{ fld_arr.other }}" />
                     </div>
                   </div>
                   <button type="button" class="btn btn-default clone-action"  data-baseName="bbb">+</button>

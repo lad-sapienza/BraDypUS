@@ -68,7 +68,7 @@ var search = {
 			input = fieldset.find('input.value');
 
 			var name = input.attr('name');
-			var select = $('<select>').attr('name', name).attr('data-tags', 'true').addClass('value');
+			var select = $('<select>').attr('name', name).attr('data-tags', 'true').addClass('value').addClass('form-control');
 			input.replaceWith(select);
 
 			if (destroy == 'destroy'){

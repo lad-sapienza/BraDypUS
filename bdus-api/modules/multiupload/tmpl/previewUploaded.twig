@@ -24,23 +24,23 @@
 			{% for x, d in data %}
 				<tr data-x="{{ x }}">
 					<td>
-            <input name="f[{{ x }}][path]" type="hidden" readonly="true" value="{{ d.path }}" />
-            <input name="f[{{ x }}][filename]" type="text" value="{{ d.file }}" />
+            <input class="form-control" name="f[{{ x }}][path]" type="hidden" readonly="true" value="{{ d.path }}" />
+            <input class="form-control" name="f[{{ x }}][filename]" type="text" value="{{ d.file }}" />
           </td>
           
 					<td style="width:50px;">
-            <input name="f[{{ x }}][ext]" type="text" readonly="true" value="{{ d.fData.ext }}" />
+            <input class="form-control" name="f[{{ x }}][ext]" type="text" readonly="true" value="{{ d.fData.ext }}" />
           </td>
 					
 					<td class="link tb-link">
 						{% if d.fData.tb %}
-						<input type="text" name="f[{{ x }}][tb]" value="{{ d.fData.tb }}" />
+						<input class="form-control" type="text" name="f[{{ x }}][tb]" value="{{ d.fData.tb }}" />
 						{% endif %}
 					</td>
 					
 					<td class="link id-link">
 						{% for id in d.fData.id %}
-						<input type="text" name="f[{{ x }}][id][]" value="{{ id }}"
+						<input class="form-control" type="text" name="f[{{ x }}][id][]" value="{{ id }}"
                    class="form-control" />
 						{% endfor %}
 						{% if d.fData.id|length == 0 %}

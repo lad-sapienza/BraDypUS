@@ -20,14 +20,14 @@
 			<li class="tb">
 				<div class="clearfix">
 					<div class="pull-left">
-						<select id="ref_tb" class="tb" style="font-size: 20px; height:38px; margin: 20px 0; width:250px;">
+						<select id="ref_tb" class="form-control tb" style="font-size: 20px; height:38px; margin: 20px 0; width:250px;">
 						{% for tb_id, tb_label in all_tb %}
                             <option value="{{ tb_id }}">{{ tb_label }}</option>
                         {% endfor %}
 						</select>
 					</div>
 					<div class="pull-right">
-						<input type="search" id="find-fn" placeholder="{{ tr.get('search-fn') }}">
+						<input class="form-control" type="search" id="find-fn" placeholder="{{ tr.get('search-fn') }}">
 					</div>
 				</div>
 			</li>

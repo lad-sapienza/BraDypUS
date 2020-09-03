@@ -4,7 +4,7 @@
     <div class="form-group">
       <label class="col-sm-3 control-label">LANG</label>
       <div class="col-sm-7">
-        <select type="text" name="lang">
+        <select type="text" name="lang" class="form-control">
           {% for l in available_langs %}
             <option{% if l|replace({'.inc':''}) == info.lang %} selected="true" {% endif %}>{{ l|replace({'.inc': ''}) }}</option>
           {% endfor %}
@@ -15,21 +15,21 @@
     <div class="form-group">
       <label class="col-sm-3 control-label">{{ tr.get('app_name') }}</label>
       <div class="col-sm-7">
-        <input type="text" name="name" readonly="true" value="{{ info.name }}" />
+        <input type="text" class="form-control" name="name" readonly="true" value="{{ info.name }}" />
       </div>
     </div>
     
     <div class="form-group">
       <label class="col-sm-3 control-label">{{ tr.get('definition') }}</label>
       <div class="col-sm-7">
-        <textarea name="definition">{{ info.definition }}</textarea>
+        <textarea class="form-control" name="definition">{{ info.definition }}</textarea>
       </div>
     </div>
     
     <div class="form-group">
       <label class="col-sm-3 control-label">STATUS</label>
       <div class="col-sm-7">
-        <select type="text" name="status">
+        <select type="text" name="status" class="form-control">
           {% for s in status %}
           <option{% if s == info.status %} selected="true" {% endif %}>{{ s }}</option>
           {% endfor %}
@@ -40,7 +40,7 @@
     <div class="form-group">
       <label class="col-sm-3 control-label">VIRTUAL KEYBOARD</label>
       <div class="col-sm-7">
-        <select type="text" name="virtual_keyboard">
+        <select type="text" name="virtual_keyboard" class="form-control">
           <option value="" {% if info.virtual_keyboard == false or info.virtual_keyboard == '0' %} selected="true" {% endif %}>0</option>
           <option value="1" {% if info.virtual_keyboard %} selected="true" {% endif %}>1</option>
         </select>
@@ -50,7 +50,7 @@
     <div class="form-group">
       <label class="col-sm-3 control-label">API login as user</label>
       <div class="col-sm-7">
-        <select type="text" name="api_login_as_user">
+        <select type="text" name="api_login_as_user" class="form-control">
           <option value="">{{ tr.get('disabled') }}</option>
           {% for u in users %}
           <option{% if info.api_login_as_user == u.id %} selected="true" {% endif %} value="{{ u.id }}">{{ u.name }} ({{u.verbose_privilege }})</option>
@@ -62,7 +62,7 @@
     <div class="form-group">
       <label class="col-sm-3 control-label">Authomatic login as user</label>
       <div class="col-sm-7">
-        <select type="text" name="auth_login_as_user">
+        <select type="text" name="auth_login_as_user" class="form-control">
           <option value="">{{ tr_disabled }}</option>
           {% for u in users %}
             <option{% if info.auth_login_as_user == u.id %} selected="true" {% endif %} value="{{ u.id }}">{{ u.name }} ({{u.verbose_privilege }})</option>
@@ -74,7 +74,7 @@
     <div class="form-group">
       <label class="col-sm-3 control-label">{{ tr.get('db_engine') }}</label>
       <div class="col-sm-7">
-        <select type="text" name="db_engine">
+        <select type="text" name="db_engine" class="form-control">
           {% for engine in db_engines %}
           <option {% if engine == info.db_engine %}selected="true"{% endif %}>{{ engine }}</option>
           {% endfor %}
@@ -85,56 +85,56 @@
     <div class="form-group">
       <label class="col-sm-3 control-label">{{ tr.get('db_host') }}</label>
       <div class="col-sm-7">
-        <input type="text" name="db_host" value="{{ info.db_host }}" />
+        <input type="text" class="form-control" name="db_host" value="{{ info.db_host }}" />
       </div>
     </div>
     
     <div class="form-group">
       <label class="col-sm-3 control-label">{{ tr.get('db_port') }}</label>
       <div class="col-sm-7">
-        <input type="text" name="db_port" value="{{ info.db_port }}" />
+        <input type="text" class="form-control" name="db_port" value="{{ info.db_port }}" />
       </div>
     </div>
     
     <div class="form-group">
       <label class="col-sm-3 control-label">{{ tr.get('db_name') }}</label>
       <div class="col-sm-7">
-        <input type="text" name="db_name" value="{{ info.db_name }}" />
+        <input type="text" class="form-control" name="db_name" value="{{ info.db_name }}" />
       </div>
     </div>
     
     <div class="form-group">
       <label class="col-sm-3 control-label">{{ tr.get('db_username') }}</label>
       <div class="col-sm-7">
-        <input type="text" name="db_username" value="{{ info.db_username }}" />
+        <input type="text" class="form-control" name="db_username" value="{{ info.db_username }}" />
       </div>
     </div>
     
     <div class="form-group">
       <label class="col-sm-3 control-label">{{ tr.get('db_password') }}</label>
       <div class="col-sm-7">
-        <input type="text" name="db_password" value="{{ info.db_password }}" />
+        <input type="text" class="form-control" name="db_password" value="{{ info.db_password }}" />
       </div>
     </div>
     
     <div class="form-group">
       <label class="col-sm-3 control-label">Google maps key</label>
       <div class="col-sm-7">
-        <input type="text" name="gmapskey" value="{{ info.gmapskey }}" />
+        <input type="text" class="form-control" name="gmapskey" value="{{ info.gmapskey }}" />
       </div>
     </div>
     
     <div class="form-group">
       <label class="col-sm-3 control-label">Limit uploaded images to size:</label>
       <div class="col-sm-7">
-        <input type="text" name="maxImageSize" value="{% if info.maxImageSize %}{{ info.maxImageSize }}{% else %}1500{% endif %}" />
+        <input type="text" class="form-control" name="maxImageSize" value="{% if info.maxImageSize %}{{ info.maxImageSize }}{% else %}1500{% endif %}" />
       </div>
     </div>
     
     <div class="form-group">
       <label class="col-sm-3 control-label">Google Analytics Id</label>
       <div class="col-sm-7">
-        <input type="text" name="googleanaytics" value="{{ info.googleanaytics }}" />
+        <input type="text" class="form-control" name="googleanaytics" value="{{ info.googleanaytics }}" />
       </div>
     </div>
 

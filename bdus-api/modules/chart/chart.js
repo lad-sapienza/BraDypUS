@@ -65,11 +65,12 @@ var chart = {
 		
 		saveAs: function(query_text){
 			core.open({
-				html: $('<div />').append(
-						$('<label />').text(core.tr('chart_name')),
-						$('<br />'),
-						$('<input />').addClass('chart_name')
-						),
+				html: `<div>
+				<label>${core.tr('chart_name')}</label>
+				<br>
+				<input type="text" class="chart_name form-control">
+				</div>`
+				,
 				title: core.tr('save_chart_as'),
 				buttons:[
 				         {

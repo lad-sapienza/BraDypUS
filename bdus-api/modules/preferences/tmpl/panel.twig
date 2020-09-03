@@ -33,7 +33,7 @@
 		<div class="panel panel-default">
 			<div class="panel-heading">{{ tr.get('result_pagination') }}</div>
 			<div class="panel-body">
-				<select id="pag-{{ uid }}">
+				<select id="pag-{{ uid }}" class="form-control">
 					<option value="0" {% if infinite_scroll == false %} selected="true" {% endif %}>{{ tr.get('pages') }}</option>
 					<option value="1" {% if infinite_scroll %} selected="true" {% endif %}>{{ tr.get('infinite_scroll') }}</option>
 				</select>
@@ -49,7 +49,7 @@
 		<div class="panel panel-default">
 			<div class="panel-heading">{{ tr.get('user_lang') }}</div>
 			<div class="panel-body">
-				<select id="lang-{{ uid }}">
+				<select id="lang-{{ uid }}" class="form-control">
 					{% for l in all_langs %}
 					<option {% if l == current_lang %} selected="true" {% endif %}>{{ l }}</option>
 					{% endfor %}

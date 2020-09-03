@@ -37,7 +37,7 @@ class free_sql_ctrl extends Controller
 			$uid = uniqid('upload');
 			
 			echo '<div class="upload"></div>' .
-					'<textarea style="width:97%; height: 220px" placeholder="Enter SQL code here"></textarea>' .
+					'<textarea class="form-control" style="width:97%; height: 220px" placeholder="Enter SQL code here"></textarea>' .
 					'<div class="status" style="display:none">' .
 						'<div class="progress progress-success">' .
 							'<div class="bar" style="width: 0%"></div>' .

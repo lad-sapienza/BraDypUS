@@ -87,7 +87,7 @@ var login = {
 		lost_pwd: function(app){
 			core.open({
 				html:'<p class="lead">' + core.tr('enter_email_to_get_password') + '</p>'
-					+ '<input type="text" class="email" placeholder="' + core.tr('email') + '" />',
+					+ '<input type="email" class="email form-control" placeholder="' + core.tr('email') + '" />',
 				title: core.tr('lost_passsword'),
 				buttons:[
 				         {

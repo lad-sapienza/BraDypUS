@@ -15,7 +15,7 @@ var vocabularies = {
 		},
 
 		edit: function(id, text, success){
-			var html = $('<input />').val(text).attr('type', 'text');
+			var html = `<input value="${text}" type="text" class="form-control">`;
 			core.open({
 				title: core.tr('edit_def'),
 				html: html,

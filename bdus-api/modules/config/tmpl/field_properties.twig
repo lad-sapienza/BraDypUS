@@ -23,7 +23,7 @@
       <div class="col-sm-7">
 
         {% if arr.type == 'input' %}
-          <input  class="input_{{ id }}" name="{{ id }}" 
+          <input  class="input_{{ id }} form-control" name="{{ id }}" 
                   type="text" 
                   {% if arr.required %} required="required" {% endif %}
                   {% if arr.pattern %} pattern="{{ arr.pattern }}" {% endif %}
@@ -36,7 +36,7 @@
           {% endif %}
         
         {% elseif arr.type == 'select' %}
-          <select class="input_{{ id }}" 
+          <select class="input_{{ id }} form-control" 
                   name="{{ id }}" 
                   {% if arr.required %} required="required" {% endif %}
                   {% if arr.readonly and data[id] %}readonly="true"{% endif %}
@@ -52,7 +52,7 @@
         {% elseif arr.type == 'multi_select' %}
         
           {% for v in data[id]%}
-          <select class="input_{{ id }}" 
+          <select class="input_{{ id }} form-control" 
                   name="{{ id }}[]"
                   {% if arr.required %} required="required" {% endif %}
                   {% if arr.readonly and data[id] %}readonly="true"{% endif %}
@@ -66,7 +66,7 @@
           </select>
           <br />
           {% endfor %}
-          <select class="input_{{ id }}" 
+          <select class="input_{{ id }} form-control" 
                   name="{{ id }}[]"
                   {% if arr.required %} required="required" {% endif %}
                   {% if arr.readonly and data[id] %}readonly="true"{% endif %}

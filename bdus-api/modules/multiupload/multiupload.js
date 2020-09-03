@@ -47,11 +47,11 @@ var multiupload = {
 		add_links: function(btn){
 			api.link.add_ui(
 					function(tb, id_arr, $this){
-						btn.parents('tr').find('td.tb-link').html('<input type="text" name="f[' + btn.data('x') + '][tb]" value="' + tb + '" />');
+						btn.parents('tr').find('td.tb-link').html('<input type="text" class="form-control" name="f[' + btn.data('x') + '][tb]" value="' + tb + '" />');
 						
 						btn.parents('tr').find('td.id-link').html('');
 						$.each(id_arr, function(i, id){
-							btn.parents('tr').find('td.id-link').append('<input type="text" style="width:25px" name="f[' + btn.data('x') + '][id][]" value="' + id + '"/>');
+							btn.parents('tr').find('td.id-link').append('<input type="text" class="form-control" style="width:25px" name="f[' + btn.data('x') + '][id][]" value="' + id + '"/>');
 						});
 					}
 				);

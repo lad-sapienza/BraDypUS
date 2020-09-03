@@ -10,7 +10,7 @@
 	<div class="pickFields" style="display: none">
 		<div class="row">
 			<div class="col-xs-6 col-sm-2">
-				<select name="adv[aa][connector]">{{ connector|raw }}</select>
+				<select name="adv[aa][connector]" class="form-control">{{ connector|raw }}</select>
 			</div>
 		</div>
 		{% include 'main_selects.twig' %}
@@ -18,7 +18,7 @@
 		
 	<div class="pickOrder" style="display: none">
 		<div style="width:300px;">
-			<select name="adv[order][aa]">{{ order|raw }}</select>
+			<select name="adv[order][aa]" class="form-control">{{ order|raw }}</select>
 		</div>
 	</div>
 	

@@ -17,7 +17,7 @@
 
 		<td>
 			{% if data is not empty %}
-			<select data-tb="{{ tb }}" data-context="read">
+			<select data-tb="{{ tb }}" data-context="read" class="form-control">
 				<option value=""> - </option>
 				{% for tmpl in data[tb]['list'] %}
 				{% if tmpl == data[tb]['default_read'] %}
@@ -32,7 +32,7 @@
 
 		<td>
 			{% if data is not empty %}
-			<select data-tb="{{ tb }}" data-context="edit">
+			<select data-tb="{{ tb }}" data-context="edit" class="form-control">
 				<option value=""> - </option>
 				{% for tmpl in data[tb]['list'] %}
 				{% if tmpl == data[tb]['default_edit'] %}

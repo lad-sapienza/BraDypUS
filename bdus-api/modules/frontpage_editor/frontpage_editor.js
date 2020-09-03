@@ -9,7 +9,7 @@ var frontpage_editor = {
 			$.get('./?obj=frontpage_editor_ctrl&method=get_content', function(data){
 				var html = '<p class="text-error">'
 						+ '<i class="glyphicon glyphicon-warning-sign"></i> <strong>' + core.tr('attention') + ':</strong> ' + core.tr('no_php_allowed') + '</p>'
-						+ '<textarea style="width: 98%; height: 300px">' + data + '</textarea>';
+						+ '<textarea class="form-control" style="width: 98%; height: 300px">' + data + '</textarea>';
 				var div = core.open({
 				html:html,
 				title: core.tr('edit_frontpage'),

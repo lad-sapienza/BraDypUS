@@ -1,3 +1,5 @@
+4.0.140-alpha[] = "Explicitly set class form-control on inputs"
+4.0.140-alpha[] = "Boostrap 3.3.5 updated latest v3 branch 3.4.1"
 4.0.140-alpha[] = "Splitted asset inclusion from asset minification"
 4.0.140-alpha[] = "JS depencencies as node dev dependencies"
 4.0.140-alpha[] = "Updated jquery from 2.1.1 to 3.5.1"

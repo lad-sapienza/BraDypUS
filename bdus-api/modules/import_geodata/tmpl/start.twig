@@ -11,7 +11,7 @@
       1. {{ tr.get('select_tb') }}
     </label>
     <div class="col-sm-9">
-      <select id="tb_{{ uid }}">
+      <select id="tb_{{ uid }}" class="form-control">
         <option></option>
         {% for tb, label in tables %}
         {% if 'files' != tb %}

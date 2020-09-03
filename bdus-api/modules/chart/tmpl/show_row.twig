@@ -15,7 +15,7 @@
 	
 	<div class="row_to_clone" style="padding:10px 0 0 0;">
 		<label class="control-label">{{ tr.get('field') }}</label>
-		<select name="bar_fld[{{ uid }}][row0]" class="bar_el">
+		<select name="bar_fld[{{ uid }}][row0]" class="bar_el form-control">
 			{% for id, label in flds %}
 				<option value="{{ id }}">{{ label }}</option>
 			{% endfor %}
@@ -28,7 +28,7 @@
 
 	<p><label class="control-label">{{ tr.get('define_function') }}</label></p>
 	
-	<select name="bar_function[{{ uid }}]">
+	<select name="bar_function[{{ uid }}]" class="form-control">
 		<option value="SUM">{{ tr.get('sum') }}</option>
 		<option value="COUNT">{{ tr.get('count') }}</option>
 	</select>

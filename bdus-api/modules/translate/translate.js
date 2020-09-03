@@ -20,7 +20,7 @@ var translate = {
 		
 		addLang: function(id){
 			core.open({
-				html: $('<input />').attr({type:'text', maxlength:2}).addClass('newLang'),
+				html: $('<input />').attr({type:'text', maxlength:2}).addClass('newLang').addClass('form-control'),
 				title: core.tr('new_lang_code_two_digits'),
 				buttons: [{
 					text: core.tr('save'),

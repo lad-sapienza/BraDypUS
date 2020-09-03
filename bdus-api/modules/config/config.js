@@ -10,7 +10,14 @@ var config = {
 
 		core.open({
 			title: core.tr('cfg_security_check'),
-			html: `<p class="lead text-danger">${core.tr('cfg_security_check_text')}</p><hr><form action="javascript:void(0)"><input type="password" class="adm_pwd form-control" placeholder="password"><button type="submit" style="display: none"></button></form>`,
+			html: `<p class="lead text-danger">
+			${core.tr('cfg_security_check_text')}
+			</p>
+			<hr>
+			<form action="javascript:void(0)">
+				<input type="password" class="adm_pwd form-control" placeholder="password">
+				<button type="submit" style="display: none"></button>
+			</form>`,
 			loaded: () => {
 				setTimeout( () => { 
 					$('#modal input.adm_pwd').focus();
@@ -181,7 +188,11 @@ var config = {
 	renameTb: (oldName) => {
 		core.open({
 			title: core.tr('rename_table'),
-			html: `<p class="lead text-danger">${core.tr('warning_rename_table')}</p><hr><input type="text" class="form-control new-tb-name" value="${oldName}">`,
+			html: `<p class="lead text-danger">
+				${core.tr('warning_rename_table')}
+			</p>
+			<hr>
+			<input type="text" class="form-control new-tb-name" value="${oldName}">`,
 			buttons: [
 				{
 					text: core.tr('close'),

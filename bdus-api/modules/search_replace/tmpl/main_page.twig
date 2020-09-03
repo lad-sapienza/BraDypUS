@@ -10,7 +10,7 @@
 	
 	
 	<div class="tb">
-		<select name="tb" class="tb">
+		<select name="tb" class="tb form-control">
 			<option></option>
 			{% for id, name in tbs %}
 				<option value="{{ id }}">{{ name }}</option>
@@ -21,7 +21,7 @@
 	<div class="fld" style="padding: 20px 0; display: none;">
 		{{ tr.get('select_fld_search') }}
 		<br />
-		<select class="fld">
+		<select class="fld form-control">
 			
 		</select>
 	</div>

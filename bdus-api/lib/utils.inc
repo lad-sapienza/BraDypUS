@@ -16,9 +16,15 @@ class utils
    * local one. The check is performed on host name
    * @return boolean
    */
-	public static function is_online()
+	public static function is_online() : bool
 	{
-		return preg_match('/bradypus.net/', $_SERVER['HTTP_HOST']);
+		$host = $_SERVER['HTTP_HOST'];
+		return !(
+			strpos($host, 'localhost')		!== false ||
+			strpos($host, '127.0')			!== false ||
+			strpos($host, '192.168')		!== false ||
+			strpos($host, 'bradypus.net') 	=== false 
+		);
 	}
 
 

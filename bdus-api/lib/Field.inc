@@ -42,7 +42,7 @@ class Field implements TemplateInterface
      * (non-PHPdoc)
      * @see TemplateInterface::cell()
      */
-    public function cell($nr)
+    public function cell( int $nr) : string
     {
         return "col-sm-$nr";
     }
@@ -51,7 +51,7 @@ class Field implements TemplateInterface
      * (non-PHPdoc)
      * @see TemplateInterface::sqlSum()
      */
-    public function sqlSum($tb, $fld, $filter = false)
+    public function sqlSum(string $tb, string $fld, string $filter = null)
     {
         $sql_values = [];
         try {
@@ -87,7 +87,7 @@ class Field implements TemplateInterface
      * (non-PHPdoc)
      * @see TemplateInterface::simpleSum()
      */
-    public function simpleSum($fields)
+    public function simpleSum( string $fields) : int
     {
         $flds_arr = utils::csv_explode($fields);
         $sum = 0;
@@ -104,7 +104,7 @@ class Field implements TemplateInterface
      * (non-PHPdoc)
      * @see TemplateInterface::permalink()
      */
-    public function permalink()
+    public function permalink() : string
     {
         if ($this->context != 'add_new') {
             return '<div class="permalink">' .
@@ -120,7 +120,7 @@ class Field implements TemplateInterface
     public function links()
     {
         if ($this->context === 'add_new') {
-            return;
+            return null;
         }
 
         $html = '<fieldset class="links">'
@@ -202,7 +202,7 @@ class Field implements TemplateInterface
     public function geodata()
     {
         if ($this->context === 'add_new') {
-            return;
+            return null;
         }
 
         $gdata = $this->record->getGeodata();
@@ -237,7 +237,7 @@ class Field implements TemplateInterface
      * (non-PHPdoc)
      * @see TemplateInterface::showall()
      */
-    public function showall()
+    public function showall() : string
     {
         $html = $this->image_thumbs();
 
@@ -293,7 +293,7 @@ class Field implements TemplateInterface
     public function rs()
     {
         if ($this->context == 'add_new') {
-            return;
+            return null;
         }
         $rs_fld = $this->cfg->get("tables.{$this->tb}.rs");
 

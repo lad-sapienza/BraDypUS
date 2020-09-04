@@ -10,9 +10,9 @@ interface TemplateInterface
 {
 	/**
 	 * Returns "col-sm-$nr" for use in templates. Also used by HtmlStartDiv to replace span-* syntax
-	 * @param unknown $nr
+	 * @param int $nr
 	 */
-	public function cell($nr);
+	public function cell(int $nr) : string;
 
 	/**
 	 * Retuns sums of fields from other tables using filter
@@ -21,29 +21,29 @@ interface TemplateInterface
 	 * @param string $where filtering options following this pattern: {name of other table's field to search in}={name of this table's field to get search value}; etc
 	 * @example <sqlSum table="test"  field="fldTest" where="campoAltro1=thisTableField1; campoAltro2=thisTableField2" />
 	 */
-	public function sqlSum($tb, $fld, $filter = false);
+	public function sqlSum( string $tb, string $fld, string $filter = null);
 
 	/**
 	 * Returns sum of values of the given fields for the current record in the current table
 	 * @param string $fields comma separated list of fields to sum up.
 	 * @example <simpleSum fields="field1, field2, etc" />
 	 */
-	public function simpleSum($fields);
+	public function simpleSum( string $fields) : int;
 
 	/**
 	 * Shows record permalink
 	 */
-	public function permalink();
+	public function permalink() : string;
 
 	/**
 	 * Shows fieldset with links to record, both system and user
 	 */
-	public function links();
+	public function links() : string;
 
 	/**
 	 * Shows list of available geodata + form to enter some more (WKT)
 	 */
-	public function geodata();
+	public function geodata() : string;
 
 	/**
 	 * Shows Stratigraphic relations module
@@ -94,7 +94,7 @@ interface TemplateInterface
 	 *
 	 * Shows all fields of a given table
 	 */
-	public function showall();
+	public function showall() : string;
 
 	/**
 	 *

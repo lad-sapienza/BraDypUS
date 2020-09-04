@@ -109,8 +109,7 @@ class utils
 	 */
 	public static function privilege($input = false, $translate = false)
 	{
-		if (!$input)
-		{
+		if (!$input) {
 			$input = $_SESSION['user']['privilege'];
 		}
 
@@ -123,28 +122,23 @@ class utils
 				40	=>'waiting'
 		);
 
-		if ($input == 'all' && !$translate)
-		{
+		if ($input === 'all' && !$translate) {
 			return $privilege_array;
 		}
 
-		if ($input == 'all' && $translate)
-		{
-			foreach ($privilege_array as $id=>$val)
-			{
+		if ($input === 'all' && $translate) {
+			foreach ($privilege_array as $id=>$val) {
 				$tr[$id] = tr::get($val);
 			}
 
 			return $tr;
 		}
 
-		if (in_array ($input, $privilege_array))
-		{
+		if (in_array ($input, $privilege_array)) {
 			return array_search($input, $privilege_array);
 		}
 
-		if (in_array($input, array_keys($privilege_array)))
-		{
+		if (in_array($input, array_keys($privilege_array))) {
 			return $translate ? tr::get($privilege_array[$input]) : $privilege_array[$input];
 		}
 
@@ -160,28 +154,24 @@ class utils
 	 */
 	public static function canUser($privilege = false, $creator = false)
 	{
-    if (defined('PROJ_DIR'))
-    {
-      $app_status = cfg::main('status');
-    } else {
-      $app_status = 'on';
-    }
+    	if (defined('PROJ_DIR')) {
+      		$app_status = strtolower(cfg::main('status'));
+    	} else {
+      		$app_status = 'on';
+    	}
 
-    $user_priv = $_SESSION['user']['privilege'];
+	    $user_priv = $_SESSION['user']['privilege'];
 
 
-		if (!$privilege)
-		{
+		if (!$privilege) {
 			$privilege = 'edit';
 		}
 
-		if (!$user_priv || $user_priv === 0)
-		{
+		if (!$user_priv || $user_priv === 0) {
 			return false;
 		}
 
-		switch($privilege)
-		{
+		switch($privilege) {
 			case 'enter':
 				return ($app_status !== 'off' && $user_priv < 39);
 				break;

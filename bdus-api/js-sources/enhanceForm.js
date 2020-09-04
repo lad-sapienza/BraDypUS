@@ -17,9 +17,6 @@
  * @example: enhance.element($('#elId'));
  */
 var enhance = {
-  //predefinied date format
-  dateFormat : 'yyyy-mm-dd',
-
   getData: function(el){
     var datalist = $('datalist[for="' + el.attr('id') + '"]').first(),
     data = [];
@@ -34,8 +31,7 @@ var enhance = {
   },
 
   getAjaxData: function(el){
-    var datalist = $('datalist[for="' + el.attr('id') + '"]').first(),
-      context = el.data('context'),
+    var context = el.data('context'),
       att = el.data('att'),
       tags = el.data('tags');
 
@@ -85,8 +81,7 @@ var enhance = {
     };
   },
 
-  multiselect: function(el, destroy)
-  {
+  multiselect: function(el, destroy) {
     if ($(el).data('select2') && destroy){
       $(el).select2('destroy');
     } else {

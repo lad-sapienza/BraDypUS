@@ -33,17 +33,17 @@ interface TemplateInterface
 	/**
 	 * Shows record permalink
 	 */
-	public function permalink() : string;
+	public function permalink() : ?string;
 
 	/**
 	 * Shows fieldset with links to record, both system and user
 	 */
-	public function links() : string;
+	public function links() : ?string;
 
 	/**
 	 * Shows list of available geodata + form to enter some more (WKT)
 	 */
-	public function geodata() : string;
+	public function geodata() : ?string;
 
 	/**
 	 * Shows Stratigraphic relations module

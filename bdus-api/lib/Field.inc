@@ -104,20 +104,21 @@ class Field implements TemplateInterface
      * (non-PHPdoc)
      * @see TemplateInterface::permalink()
      */
-    public function permalink() : string
+    public function permalink() : ?string
     {
-        if ($this->context != 'add_new') {
-            return '<div class="permalink">' .
+        if ($this->context === 'add_new') {
+            return null;
+        }
+        return '<div class="permalink">' .
         '<a href="' . "./#/" . APP . '/' . str_replace(PREFIX, null, $this->tb) . '/' . $this->record->getCore('id')  . '">PERMALINK</a>' .
       '</div>';
-        }
     }
 
     /**
      * (non-PHPdoc)
      * @see TemplateInterface::links()
      */
-    public function links()
+    public function links() : ?string
     {
         if ($this->context === 'add_new') {
             return null;
@@ -199,7 +200,7 @@ class Field implements TemplateInterface
      * (non-PHPdoc)
      * @see TemplateInterface::geodata()
      */
-    public function geodata()
+    public function geodata() : ?string
     {
         if ($this->context === 'add_new') {
             return null;

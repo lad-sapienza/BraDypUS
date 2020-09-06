@@ -49,7 +49,7 @@ class QueryBuilder
     }
 
     /**
-     * Shorthand method to serach in underlying QueryObject
+     * Shorthand method to search in underlying QueryObject
      *
      * @param string $index
      * @return void

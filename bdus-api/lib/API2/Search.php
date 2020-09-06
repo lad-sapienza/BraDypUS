@@ -46,7 +46,8 @@ class Search
         try {
 			$qb = new QueryBuilder();
 			$qb->loadShortSQL(self::$prefix, self::$cfg, $shortSql);
-			list($sql, $values, $tb) = $qb->getSql();
+			list($sql, $values) = $qb->getSql();
+			$tb = $qb->get('tb')[0];
 			$debug['shortSql'] 		= $shortSql;
 			$debug['urlencodedShortSql'] = urlencode($shortSql);
 			$debug['table'] 		= $tb;
@@ -63,7 +64,8 @@ class Search
 				if (!$qb->get('limit') ) {
 					$qb->setLimit($records_per_page, ($page-1) * $records_per_page);
 				}
-				list($sql, $values, $tb) = $qb->getSql();
+				list($sql, $values) = $qb->getSql();
+				$tb = $qb->get('tb')[0];
 
 				$debug['paginated_sql'] = $sql;
 				$debug['paginated_values'] = $values;
@@ -116,7 +118,7 @@ class Search
 		$fullResult = [];
 
 		foreach ($result as $id => $row) {
-			$record = new \Record\Read($db, $cfg);
+			$record = new \Record\Read(self::$db, self::$cfg);
 			$rowResult = $record->getFull($tb, $row['id']);
 			array_push($fullResult, $rowResult);
 		}

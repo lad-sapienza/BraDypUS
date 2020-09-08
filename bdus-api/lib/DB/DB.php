@@ -232,17 +232,17 @@ class DB implements DBInterface
 	private function validateParseConnectionData(array $cfg): array
 	{        
         if (!$cfg['db_engine']){
-            throw new DBException(tr::get('missing_db_engine'));
+            throw new DBException(\tr::get('missing_db_engine'));
         }
         
         if( !in_array($cfg['db_engine'], ['sqlite', 'mysql', 'pgsql'])) {
-            throw new DBException(tr::get('db_engine_not_supported', [$cfg['db_engine']]));
+            throw new DBException(\tr::get('db_engine_not_supported', [$cfg['db_engine']]));
         }
         
         // Set DSN for sqlite
         if ( $cfg['db_engine'] === 'sqlite') {
             if (!$cfg['db_path']){
-                throw new DBException( tr::get('missing_sqlite_file'));
+                throw new DBException( \tr::get('missing_sqlite_file'));
             }
             $dsn = "{$cfg['db_engine']}:{$cfg['db_path']}";
         }
@@ -250,15 +250,15 @@ class DB implements DBInterface
         if (!$dsn) {
             
             if (!$cfg['db_name']){
-                throw new DBException( tr::get('missing_db_name') );
+                throw new DBException( \tr::get('missing_db_name') );
             }
             
             if (!$cfg['db_username']){
-                throw new DBException( tr::get('missing_db_username') );
+                throw new DBException( \tr::get('missing_db_username') );
             }
             
             if (!$cfg['db_password']){
-                throw new DBException(tr::get('missing_db_password'));
+                throw new DBException( \tr::get('missing_db_password'));
             }
             
             if (!$cfg['db_host']){

@@ -26,7 +26,7 @@ sites [label=<
   <tr><td port="4" bgcolor="#ebebeb"><font color="blue">name</font>  (text, no dupl., id fld)</td></tr>
   <tr><td>typology (text, closed vocabulary)</td></tr>
   <tr><td>chronology (text, closedvocabulary)</td></tr>
-  <tr><td>descripion (text)</td></tr>
+  <tr><td>description (text)</td></tr>
 </table>>];
 
 bibliography [label=<

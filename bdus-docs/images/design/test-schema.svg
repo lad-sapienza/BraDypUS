@@ -138,7 +138,7 @@
 <polygon fill="none" stroke="black" points="0.5,-374.5 0.5,-401.5 225.5,-401.5 225.5,-374.5 0.5,-374.5"/>
 <text text-anchor="start" x="6.5" y="-384.3" font-family="arial" font-size="14.00">chronology (text, closedvocabulary)</text>
 <polygon fill="none" stroke="black" points="0.5,-347.5 0.5,-374.5 225.5,-374.5 225.5,-347.5 0.5,-347.5"/>
-<text text-anchor="start" x="64.5" y="-357.3" font-family="arial" font-size="14.00">descripion (text)</text>
+<text text-anchor="start" x="64.5" y="-357.3" font-family="arial" font-size="14.00">description (text)</text>
 </g>
 <!-- sites&#45;&gt;su -->
 <g id="edge1" class="edge">

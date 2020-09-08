@@ -5,7 +5,7 @@ be made via graphical user interface and no further need of coding.
 
 Hopefully this will be an important step towards a broader diffusion of the software.
 
-Applications, or ptojects, live in the `projects` directory, manually created 
+Applications, or projects, live in the `projects` directory, manually created 
 during the [installation process](/install). On a fresh installation the `projects` 
 folder is empty and the user the visits the main page on he browser will be promped
 to create a new application.
@@ -15,6 +15,13 @@ to create a new application.
 *Create new application prompt on a fresh installation*
 
 By clicking on the **Create new application** button the setup window appears.
+
+{: .bg-warning .p-2}
+For security reasons the **Create new application button** is not available on running installations
+that have at least on application defined. But system administrators whi have access to the application folder
+can enable this feature by simply creating a new empty file in the installation root named exactly 
+**UNSAFE_permit_app_creation** (no extension).
+
 
 ![screenshot](./../images/create_app/new_app_form.png "Create new application setup window") 
 *Create new application setup window*

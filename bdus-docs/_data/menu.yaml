@@ -44,6 +44,10 @@
       url: /setup/main-app-config
     - title: 6.2. Creating the first table
       url: /setup/create-table-sites
+    - title: 6.3. Adding columns
+      url: /setup/adding-columns
+    - title: 6.4. Managing vocabularies
+      url: /setup/vocabularies
 
 - title: 7. Online publishing (deploy)
   url: /deploy/intro

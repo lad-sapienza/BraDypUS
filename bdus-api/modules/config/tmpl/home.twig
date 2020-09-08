@@ -5,7 +5,12 @@
 
     <div class="col-sm-3 col-first">
 
-
+      <div style="margin: 2rem 0;">
+        <button class="btn btn-default btn-block" onclick="config.validateApp('{{ uid }}')">
+        {{ tr.get('cfg_validate_app') }}
+        </button>
+      </div>
+      
       <div style="margin: 2rem 0;">
         <button class="btn btn-default btn-block" onclick="config.viewAppProperties('{{ uid }}')">
         {{ tr.get('cfg_main_app') }}
@@ -40,12 +45,6 @@
           <i class="glyphicon glyphicon-plus"></i> {{ tr.get('cfg_add_table') }}
         </button>
 
-      </div>
-
-      <div style="margin: 2rem 0;">
-        <button class="btn btn-default btn-block" onclick="config.validateApp('{{ uid }}')">
-        {{ tr.get('cfg_validate_app') }}
-        </button>
       </div>
 
     </div>

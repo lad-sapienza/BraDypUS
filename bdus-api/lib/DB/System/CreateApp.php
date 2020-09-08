@@ -120,6 +120,20 @@ class CreateApp
                     "hide" => "1"
                 ],
                 [
+                    "name" => "table_link",
+                    "label" => "Linked table",
+                    "type" => "text",
+                    "readonly" => "1",
+                    "hide" => "1"
+                ],
+                [
+                    "name" => "id_link",
+                    "label" => "Linked id",
+                    "type" => "int",
+                    "readonly" => "1",
+                    "hide" => "1"
+                ],
+                [
                     "name" => "geometry",
                     "label" => "Coordinates (WKT format)",
                     "type" => "text"
@@ -130,6 +144,11 @@ class CreateApp
                   "name" => "id",
                   "label" => "ID",
                   "type" => "text",
+                  "readonly" => true
+                ], [
+                  "name" => "creator",
+                  "label" => "Creator",
+                  "type" => "int",
                   "readonly" => true
                 ], [
                   "name" => "ext",

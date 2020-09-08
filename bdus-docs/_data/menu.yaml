@@ -15,10 +15,10 @@
       url: /environment/knowledge-base
 
 - title: 3. Structure of the example database 
-  url: /design/intro
+  url: /design/
 
-- title: 4. Installing Bradypus locally
-  url: /install/intro
+- title: 4. Installing BraDypUS locally
+  url: /install/
   sub:
     - title: 4.1. Manual download
       url: /install/manual-download
@@ -29,28 +29,19 @@
     - title: 4.3. Uninstalling BraDypUS
       url: /install/uninstall
 
-- title: 4. Configuration
-  url: /config/intro
+- title: 5. Creating a new application
+  url: /create_app/
   sub:
-    - title: 4.1. Folder and file tree
-      url: /config/tree-structure
-    - title: 4.2. app_data.json
-      url: /config/app_data
-    - title: 4.3. tables.json
-      url: /config/tables
-    - title: 4.4. Data tables
-      url: /config/data-tables
-    - title: 4.5. Data table syntax
-      url: /config/data-tables-syntax
-- title: 5. Installation
-  url: /install/intro
-  sub:
-    - title: 5.1. Installing using BDUS Factory
-      url: /install/bdus-factory
-    - title: 5.2. Installingusin command line
-      url: /install/cli-pro
-    - title: 5.3. Manual installation
-      url: /install/manual
+    - title: 5.1. Folder and file tree
+      url: /create_app/tree-structure
+    - title: 5.2. app_data.json
+      url: /create_app/app_data
+    - title: 5.3. tables.json
+      url: /create_app/tables
+    - title: 5.4. Data tables
+      url: /create_app/data-tables
+    - title: 5.5. Data table syntax
+      url: /create_app/data-tables-syntax
 
 - title: 6. Online publishing (deploy)
   url: /deploy/intro

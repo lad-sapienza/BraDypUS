@@ -1,7 +1,7 @@
-# Vocabolario
+# Vocabolary
 
 <div class="form-group my-5 p-5 border bg-light shadow">
-    <input class="form-control" type="search" id="search-dic" placeholder="Cerca nel vocabolario">
+    <input class="form-control" type="search" id="search-dic" placeholder="Search in the vocabulary">
 </div>
 
 ### Geoface
@@ -10,9 +10,15 @@
 ---
 
 ### Plugin
-Un insieme di campi, raccolti in una tabella, che aggiungono informazioni ad una tabella di dati principale,
-ma che non è disponibile come tabella indipendente. Solitamente il plugin è collegata in relazione 1-n con
-la tabella di riferimento.
+A group of fields, gathered in a table, that add information to a main table.
+A plugin is not accessible on its own as an indipendent table.
+
+Normally a plugin in linked in a one-to-many relationship to the main table.
+The same plugin table might also be used by more than one main table; that is why
+plugins have two mandatory PK fields, named `table_link` and `id_link`.
+
+Finally, plugins name follow the pattern {prefix}m_{pluginname}. 
+The `m_` part stands for (one-to-)m(any).
 
 ---
 

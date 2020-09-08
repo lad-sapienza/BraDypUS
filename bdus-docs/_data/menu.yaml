@@ -1,56 +1,59 @@
-- title: 1. Presentazione
+- title: 1. Introduction
   url: /
 
-- title: 2. Requisiti del sistema
+- title: 2. System requirements
   url: /environment/system-requirements
   sub:
-    - title: 2.1. Preparare l'ambiente Windows
+    - title: 2.1. Setup environment in Windows
       url: /environment/setup-windows
-    - title: 2.2. Preparare l'ambiente MacOS / Linux / Unix
+    - title: 2.2. Setup environment in MacOS / Linux / Unix
       url: /environment/setup-nix
-    - title: 2.3. Conoscenze di base
+    - title: 2.3. Knowledge base
       url: /environment/knowledge-base
 
-- title: 3. Struttura della banca dati
+- title: 3. Structure of the example database 
   url: /design/intro
   sub:
-    - title: 3.1. Qualche convenzione
+    - title: 3.1. Some conventions
       url: /design/conventions
-    - title: 3.2. Schema DB
+    - title: 3.2. DB schema
       url: /design/schema
 
-- title: 4. Configurazione
+- title: 4. Configuration
   url: /config/intro
   sub:
-    - title: 4.1. Albero di cartelle e file
+    - title: 4.1. Folder and file tree
       url: /config/tree-structure
     - title: 4.2. app_data.json
       url: /config/app_data
     - title: 4.3. tables.json
       url: /config/tables
-    - title: 4.4. Tabelle di dati
+    - title: 4.4. Data tables
       url: /config/data-tables
-    - title: 4.5. Sintassi per le tabelle di dati
+    - title: 4.5. Data table syntax
       url: /config/data-tables-syntax
-- title: 5. Installazione
+- title: 5. Installation
   url: /install/intro
   sub:
-    - title: 5.1. Installazione usando BDUS Factory
+    - title: 5.1. Installing using BDUS Factory
       url: /install/bdus-factory
-    - title: 5.2. Installazione da riga di commando
+    - title: 5.2. Installingusin command line
       url: /install/cli-pro
-    - title: 5.3. Installazione manuale
+    - title: 5.3. Manual installation
       url: /install/manual
 
-- title: 6. Pubblicare online
+- title: 6. Online publishing (deploy)
   url: /deploy/intro
   sub:
-    - title: 6.1. Creazione dell'account
+    - title: 6.1. Make an account
       url: /deploy/infinityfree/make-account
-    - title: 6.2. Creazione del servizio
+    - title: 6.2. Create service
       url: /deploy/infinityfree/make-service
-    - title: 6.3. Caricamento file
+    - title: 6.3. Upoad files
       url: /deploy/infinityfree/upload-files
-    
-- title: Vocabolario
+
+- title: Vocabulary
   url: /voc
+
+- title: Migration from v3
+  url: /migration-from-v3

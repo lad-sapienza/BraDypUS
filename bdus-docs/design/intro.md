@@ -1,23 +1,32 @@
-# Progettazione del database
+# Structure of the example database
 
-La definizione della struttura della banca dati è di gran lunga il passaggio più importante e delicato
-dell'intero processo.
+The design of the database strucure is by far the 
+the most delicate and important passage and depends
+mainy on the data available and on the research aims.
 
-Per questa demo useremo un esempio di tipo archeologico, ridotto alla massima semplicità, ma che introduce varie caratteristiche 
-del sistema di gestione Bradypus.
+For this tutorial a very simple schema of an archaeological 
+database will be used. In its simplicity the schema is sufficiently
+articilated to give a glimpse of the main fatures of BraDypUS..
 
-La banca dati è composta da tre tabelle principali:
+The schema is made of three main tables:
+- `sites` contains structured information on archaeological sites
+- `su` contains structured information on stratigraphic units, or contexts.  
+Each `su` is located in a certain and known site, thus `sites` and `su` 
+are linked by a `one-to-many` relationship, ie. one site might have zero, one or more su.
+- `bibliography` contains bibliographic records on sites and su.  
+`bibliography` is linked in a `many-to-many` relationship with 
+both `sites` and `su`. This means that a bibliographic record might contain information for
+zero, one or many sites and su and vice-versa, a site might be described 
+by zero, one, or meny bibliographic records.  
+`many-to-many` relationships are obtained by use of a pivot table.
 
-- `siti` raccoglie informazioni sui siti archeologici di un dato territorio
-- `us` raccoglie informazioni sulle singole unità stratigrafiche scavate in un determinato sito.
-Questi significa che `siti` e `us` sono collegati da una relazione `uno-a-molti`: un sito può avere nessuna, una o molte us
-- `bibliografia` raccoglie dati bibliografici su siti e anche su us. Dunque, `bibliografia` è collegata in rapporto `molti-a-molti`
-sia con i `siti` che con le `us`; ovvero un record bibliografico può trattare di zero, uno o più siti (o us) e viceversa
-un sito (o us) può essere menzionata in zero, uno o più record bibliografici. Le relazioni `molti-a-molti` si realizzano di norma
-attraverso l'utilizzo di una tabella intermedia di appoggio.
+Finally, we will have the possibility of describing eventually
+samples taken from su. Since each su can provide zero, one or many samples,
+`su` and `samples` are thus joined in a `one-to-many` relationship.
 
-Inoltre prevederemo la possibilità di schedare anche possibili campionamenti delle unità stratigrafiche. Dal momento che per
-ogni `us` è possibile avere nessuno, uno o più campioni, `us` e `campioni` si trovano in relazione `uno-a-molti`, ma a
-differenza di quanto visto fino a qui i campioni non saranno un'entità separata, ma una appendice delle us.
+Yet, samples will not be available as a table on itsown. It will be only
+available as an appendinx to su. This appencices tables are called
+**plugins** in Bradypus.
 
-![screenshot](./../images/design/schema.png "Visual schema")
+![screenshot](./../images/design/schema.svg "Visual schema")
+Database schema to be built ([open SVG](./../images/design/schema.svg))

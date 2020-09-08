@@ -1,6 +1,7 @@
 # Migration from v3
 
 ## TL;DR
+- `db_engine` value in app_data.json is now required, should be set to "sqlite" for previous applications
 - Rename column `charts.query` to `charts.sql`
 - Rename column `queries.table` to `queries.tb`
 - Add column `queries.vals TEXT`
@@ -146,7 +147,7 @@ CREATE TABLE prefix__versions (
     editsql    TEXT               NOT NULL,
     editvalues TEXT
 );
-````
+```
 - **mysql**
 ```sql
 CREATE TABLE prefix__versions (
@@ -159,7 +160,7 @@ CREATE TABLE prefix__versions (
     editsql    TEXT               NOT NULL,
     editvalues TEXT
 );
-````
+```
 - **pgsql**
 ```sql
 CREATE TABLE prefix__versions (
@@ -172,4 +173,14 @@ CREATE TABLE prefix__versions (
     editsql    TEXT               NOT NULL,
     editvalues TEXT
 );
-````
+```
+
+### Configuration changes
+
+The db_engine key of the app_data.json congiguration file is not optional anymore,
+since SQLite is not the only supported database engine.
+For applications migrating from v3, if not already set, should be set as follows:
+
+```json
+"db_engine": "sqlite"
+```

@@ -30,7 +30,7 @@ If you already did, we are ready to go.
     git clone -b dev --single-branch https://github.com/bdus-db/BraDypUS.git
     ```
     Git will create a new directory named BraDypUS with all the need files. In details:
-    - `-b dev` means that the dev, aka development branch will be retrived. Version 4 lives here.
+    - `-b dev` means that the **dev**, i.e. the development branch will be retrived. Version 4 lives here.
     - `--single-branch` will prevent git from cloning everything, only the requeste branch will be downloaded
 
 2. Move inside the newly created directory named BraDypUS

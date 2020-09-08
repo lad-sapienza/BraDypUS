@@ -32,25 +32,25 @@
 - title: 5. Creating a new application
   url: /create_app/
   sub:
-    - title: 5.1. Folder and file tree
-      url: /create_app/tree-structure
-    - title: 5.2. app_data.json
-      url: /create_app/app_data
-    - title: 5.3. tables.json
-      url: /create_app/tables
-    - title: 5.4. Data tables
-      url: /create_app/data-tables
-    - title: 5.5. Data table syntax
-      url: /create_app/data-tables-syntax
+    - title: 5.1. Anatomy of the newly created application
+      url: /create_app/new-app-anatomy
+    - title: 5.2. Troubleshooting
+      url: /create_app/troubleshooting
 
-- title: 6. Online publishing (deploy)
+- title: 6. Setting up the application
+  url: /setup/
+  sub:
+    - title: 6.1. Creating the first table
+      url: /setup/create-table-sites
+
+- title: 7. Online publishing (deploy)
   url: /deploy/intro
   sub:
-    - title: 6.1. Make an account
+    - title: 7.1. Make an account
       url: /deploy/infinityfree/make-account
-    - title: 6.2. Create service
+    - title: 7.2. Create service
       url: /deploy/infinityfree/make-service
-    - title: 6.3. Upoad files
+    - title: 7.3. Upoad files
       url: /deploy/infinityfree/upload-files
 
 - title: Vocabulary

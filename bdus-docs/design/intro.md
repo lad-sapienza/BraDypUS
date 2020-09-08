@@ -6,7 +6,7 @@ mainy on the data available and on the research aims.
 
 For this tutorial a very simple schema of an archaeological 
 database will be used. In its simplicity the schema is sufficiently
-articilated to give a glimpse of the main fatures of BraDypUS..
+articilated to give a glimpse of the main fatures of BraDypUS.
 
 The schema is made of three main tables:
 - `sites` contains structured information on archaeological sites
@@ -28,5 +28,7 @@ Yet, samples will not be available as a table on itsown. It will be only
 available as an appendinx to su. This appencices tables are called
 **plugins** in Bradypus.
 
-![screenshot](./../images/design/schema.svg "Visual schema")
-Database schema to be built ([open SVG](./../images/design/schema.svg))
+![screenshot](./../images/design/test-schema.svg "Visual schema") 
+*Test database schema to be built ([open SVG](./../images/design/test-schema.svg))*
+
+[Download test schema in Graphiz dot format](./test-schema.dot)

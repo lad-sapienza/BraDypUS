@@ -1,5 +1,8 @@
 - title: 1. Introduction
   url: /
+  sub:
+    - title: 1.2. Some conventions
+      url: /design/conventions
 
 - title: 2. System requirements
   url: /environment/system-requirements
@@ -13,11 +16,18 @@
 
 - title: 3. Structure of the example database 
   url: /design/intro
+
+- title: 4. Installing Bradypus locally
+  url: /install/intro
   sub:
-    - title: 3.1. Some conventions
-      url: /design/conventions
-    - title: 3.2. DB schema
-      url: /design/schema
+    - title: 4.1. Manual download
+      url: /install/manual-download
+    - title: 4.2. Installing with the terminal and git
+      url: /install/terminal
+    - title: 4.3. Updating BraDypUS
+      url: /install/update
+    - title: 4.3. Uninstalling BraDypUS
+      url: /install/uninstall
 
 - title: 4. Configuration
   url: /config/intro

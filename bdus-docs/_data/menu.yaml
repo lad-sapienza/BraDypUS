@@ -40,7 +40,9 @@
 - title: 6. Setting up the application
   url: /setup/
   sub:
-    - title: 6.1. Creating the first table
+    - title: 6.1. Main app configuration
+      url: /setup/main-app-config
+    - title: 6.2. Creating the first table
       url: /setup/create-table-sites
 
 - title: 7. Online publishing (deploy)

@@ -28,10 +28,10 @@ On the left side are located the main functions, i.e:
 ![screenshot](./../images/setup/sys_config.png "System configuration module") 
 *System configuration module*
 
+A special mention requires the **Validate application** utility that performs a very deep
+analysis on the database structure and configuration files, and checks for perfect match.
 
-It is time now to start building our test database, following the 
-already introduced schema:
+In case of discrepancies, some suggestions will be provided.
 
-![screenshot](./../images/design/test-schema.svg "Visual schema") 
-*Test database schema to be built ([open SVG](./../images/design/test-schema.svg))*
-
+![screenshot](./../images/setup/vaildate_app.png "System configuration validation") 
+*System configuration validation*

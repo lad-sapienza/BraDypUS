@@ -1,6 +1,9 @@
 <?php
 namespace DB\System;
 
+
+use DB\DB;
+
 class CreateApp
 {
     private $app;
@@ -33,7 +36,7 @@ class CreateApp
         if (!$this->createDir("projects/$name/db")){
             throw new \Exception("Cannot create directory projects/$name/db");
         }
-        $this->db = new \DB($name, [
+        $this->db = new DB($name, [
             "db_engine" => $db_engine, 
             "db_path" => "projects/$name/db/bdus.sqlite", 
             "db_host" => $db_host, 

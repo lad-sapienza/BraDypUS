@@ -1,10 +1,4 @@
-{#
- * @author			Julian Bogdani <jbogdani@gmail.com>
- * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
- * @license			See file LICENSE distributed with this code
- #}
-
-<div class="row">
+<div class="row" id="{{ uid }}">
 
 	<div class="col-sm-6 col-sm-offset-3">
 
@@ -13,12 +7,12 @@
 			<label>{{ tr.get('voc') }}</label><br>
 
 			{% if voc %}
-				<input type="text" readonly="true" value="{{ voc }}" id="voc" class="form-control">
+			<input type="text" readonly="true" value="{{ voc }}" id="voc" class="form-control">
 			{% else %}
 			<select id="voc" class="form-control"  style="width:100%;" data-tags="true">
-				{% for voc in all_vocs %}
-					<option>{{ voc }}</option>
-				{% endfor %}
+			{% for voc in all_vocs %}
+				<option>{{ voc }}</option>
+			{% endfor %}
 			</select>
 			{% endif %}
 		</div>
@@ -31,7 +25,7 @@
 
 </div>
 
-{% if voc %}
+{% if voc == false %}
 <script>
 	enhance.combobox($('select#voc'));
 </script>

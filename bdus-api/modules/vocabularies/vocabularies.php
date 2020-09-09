@@ -31,7 +31,7 @@ class vocabularies_ctrl extends Controller
 		return $vocs;
 	}
 
-	public function show()
+	public function list()
 	{
 		$this->render('vocabularies', 'list', [
 			'vocs' => $this->getFullVocabularies(),
@@ -46,7 +46,7 @@ class vocabularies_ctrl extends Controller
 			$all_vocs = array_keys($this->getFullVocabularies());
 		}
 		
-		$this->render('vocabularies', 'new_form', [
+		$this->render('vocabularies', 'add_new_form', [
 			'voc' => $voc,
 			'all_vocs' => $all_vocs,
 		]);

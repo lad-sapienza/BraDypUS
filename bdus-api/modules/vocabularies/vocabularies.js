@@ -9,7 +9,7 @@ var vocabularies = {
 
 			core.open({
 				obj: 'vocabularies_ctrl',
-				method: 'show',
+				method: 'list',
 				title: core.tr('vocabulary_mng')
 			});
 		},
@@ -23,16 +23,16 @@ var vocabularies = {
 				         {
 				        	 text: core.tr('save'),
 				        	 click: function(){
-				        		 var val = $('#modal input').val();
-				        		 $.get('./?obj=vocabularies_ctrl&method=edit&id=' + id + '&val=' + val, function(data){
+								 var val = $('#modal input').val();
+								 core.getJSON('vocabularies_ctrl', 'edit', { id: id, val: val }, false, function(data){
 							         core.message(data.text, data.status);
-							         if (data.status == 'success'){
+							         if (data.status === 'success'){
 							        	 if (success){
 							        		 success(val);
 							        	 }
 								     }
 
-				        		 }, 'json');
+				        		 });
 				        		 $('#modal').modal('hide');
 				        	 }
 				         },
@@ -52,14 +52,14 @@ var vocabularies = {
 				        {
 				        	text: core.tr('erase'),
 				        	click: function(){
-				        		 $.get('./?obj=vocabularies_ctrl&method=erase&id=' + id, function(data){
+				        		 core.getJSON('vocabularies_ctrl', 'erase', { id: id }, false, function(data){
 							         core.message(data.text, data.status);
 							         if (data.status == 'success'){
 							        	 if (success){
 							        		 success();
 							        	 }
 								     }
-					        	 }, 'json');
+					        	 });
 
 				        		 $('#modal').modal('hide');
 				        	}
@@ -89,18 +89,16 @@ var vocabularies = {
 				        		var myvoc = $('#voc').val(), mydef = $('#def').val();
 				        		 if (!myvoc || !mydef){
 				        			 core.message(core.tr('voc_def_required'), 'error');
-				        		 }
-				        		 else
-				        		 {
-				        			 $.get('./?obj=vocabularies_ctrl&method=add&voc=' + myvoc + '&def=' + mydef, function(data){
-				        				 if (data.status == 'success'){
+				        		 } else {
+				        			 core.getJSON('vocabularies_ctrl', 'add', { vo: myvoc, def:mydef }, false, function(data){
+				        				 if (data.status === 'success'){
 				        					 $('#def').val('');
 				        					 if (success){
 				        						 success();
 				        					 }
 				        				 }
 				        				 core.message(data.text, data.status);
-				        			 }, 'json');
+				        			 });
 				        		 }
 				        	}
 				         },

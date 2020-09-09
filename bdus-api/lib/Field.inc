@@ -42,7 +42,7 @@ class Field implements TemplateInterface
      * (non-PHPdoc)
      * @see TemplateInterface::cell()
      */
-    public function cell( int $nr) : string
+    public function cell( $nr) : string
     {
         return "col-sm-$nr";
     }

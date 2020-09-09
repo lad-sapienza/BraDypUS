@@ -12,7 +12,7 @@ interface TemplateInterface
 	 * Returns "col-sm-$nr" for use in templates. Also used by HtmlStartDiv to replace span-* syntax
 	 * @param int $nr
 	 */
-	public function cell(int $nr) : string;
+	public function cell($nr) : string;
 
 	/**
 	 * Retuns sums of fields from other tables using filter

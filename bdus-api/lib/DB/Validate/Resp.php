@@ -5,7 +5,7 @@ class Resp
 {
     private $messages = [];
 
-    public function set(string $status, string $text, string $suggest = null): void
+    public function set(string $status, string $text, string $suggest = null, array $fix = null): void
     {
         $valid_statuses = ['success', 'info', 'warning', 'danger', 'head'];
         if (!in_array($status, $valid_statuses)) {
@@ -17,6 +17,9 @@ class Resp
         ];
         if ($suggest){
             $res['suggest'] = $suggest;
+        }
+        if ($fix && is_array($fix) && in_array($fix[0],  ['create', 'delete'])) {
+            $res['fix'] = $fix;
         }
         
         array_push($this->messages,  $res);

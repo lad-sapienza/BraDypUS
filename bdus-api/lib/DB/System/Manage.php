@@ -348,7 +348,6 @@ class Manage
 
     private function run (string $sql, array $values = [], string $return = null)
     {
-
         if (is_null($return)){
             return $this->db->exec($sql);
         } else if (\in_array($return, ['id', 'read', 'boolean', 'affected'])){    

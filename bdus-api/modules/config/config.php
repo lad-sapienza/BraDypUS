@@ -453,12 +453,74 @@ class config_ctrl extends Controller
             } else {
                 $html .= '<div class="alert alert-' . $item['status'] . '"> ' 
                     . $item['text'] 
-                    . ( $item['suggest'] ? '<div>' . $item['suggest'] . '</div>' : '' )
+                    . ( $item['fix'] ? '<br><button class="btn btn-danger" onclick="config.fix(this, \'' . implode("', '", $item['fix']) . '\')">' . $item['suggest'] . '</button>' : '' )
                 . '</div>';
             }
         }
 
         echo $html;
+    }
+
+    public function fix()
+    {
+        $action = $this->get['action'];
+        $tb = $this->get['tb'];
+        $col = $this->get['col'] ;
+
+        $sys_manage = new Manage($this->db, $this->prefix);
+
+
+        if ($action === 'create' && !$col) {
+            try {
+                $sys_manage->createTable($tb);
+                \utils::response('ok_creating_table', 'success');
+            } catch (\Throwable $th) {
+                $this->log->error($th);
+                \utils::response('error_creating_table', 'error');
+            }
+            return;
+        
+        }
+        $engine = $this->db->getEngine();
+        if ($engine === 'sqlite'){
+            $driver = new \DB\Alter\Sqlite($this->db);
+        } elseif($engine === 'mysql'){
+            $driver = new \DB\Alter\Mysql($this->db);
+        } elseif($engine === 'pgsql'){
+            $driver = new \DB\Alter\Postgres($this->db);
+        } else {
+            throw new \Exception("Unknown database engine: `$engine`");
+        }
+        $alter = new \DB\Alter($driver);
+
+        if ($action === 'create' && $col) {
+            $str = $sys_manage->getStructure(str_replace($this->prefix, '', $tb));
+            $type = false;
+            foreach ($str as $el) {
+                if ($el['name'] === $col){
+                    $type = $el['type'];
+                }
+            }
+            if ($type){
+                $alter->addFld($tb, $col, $type);
+                \utils::response('ok_adding_column', 'success');
+            } else {
+                \utils::response(tr::get('col_type_not_found', [$tb, $col]), 'error');
+            }
+            return;
+        
+        } else if ($action === 'delete' && !$col) {
+            $alter->dropTable($tb);
+            \utils::response('ok_deleting_table', 'success');
+            return;
+
+        } else if ($action === 'delete' && $col) {
+            $alter->dropFld($tb, $col);
+            \utils::response('ok_deleting_column', 'success');
+            return;
+
+        }
+        \utils::response(tr::get('invalid_action', [$action]), 'error', true); // TODO:translate
 
     }
 }

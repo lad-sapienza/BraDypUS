@@ -38,7 +38,7 @@ class CompressAssets
                 && 
                 self::Css($log) 
                 && 
-                self::Js(self::$js_compress_libs, $log);
+                self::Js($log, self::$js_compress_libs);
     }
 
     public static function moduleJS(Logger $log = null): bool
@@ -94,7 +94,7 @@ class CompressAssets
             $parser->parseFile( $main_less );
             $min_css .= $parser->getCss();
 
-            return self::write_if_different( $min_file, $mini_css, $log);
+            return self::write_if_different( $min_file, $min_css, $log);
 
         } catch (\Throwable $e) {
             if ($log) { $log->error($e); }

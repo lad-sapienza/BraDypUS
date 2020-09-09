@@ -401,6 +401,14 @@
     "cfg_validate_app": "Validate application",
     "show_only_errors": "Show only errors",
 
+    "ok_creating_table": "The table was created",
+    "error_creating_table": "Error in creating table. More information are logged in the system log",
+    "ok_adding_column": "The column was added",
+    "col_type_not_found": "Column type not found for table %s, column %s",
+    "ok_deleting_table": "The table was deleted",
+    "ok_deleting_column": "The column was deleted",
+    "invalid_action": "Not valid acrion %",
+
     "ok_cfg_data_updated": "The configuration data were saved",
     "error_cfg_data_updated": "Error. The configuration data were not saved",
     "system_email": "System email",

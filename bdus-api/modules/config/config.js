@@ -243,5 +243,12 @@ var config = {
 				}
 			]
 		}, 'modal');
+	},
+	fix: (thisButton, action, tb, col) => {
+		core.runAndRespond('config_ctrl', 'fix', {action: action, tb: tb, col: (col ? col : null )}, false, d => {
+			if (d.status === 'success'){
+				$(thisButton).parent().remove()
+			}
+		});
 	}
 };

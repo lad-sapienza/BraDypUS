@@ -7,6 +7,7 @@ use DB\Inspect\Sqlite;
 use DB\Inspect\Mysql;
 use DB\Inspect\Postgres;
 use DB\System\Manage;
+use DB\Validate\Resp;
 
 class SystemTables
 {
@@ -51,8 +52,11 @@ class SystemTables
             } else {
                 $this->resp->set(
                     'danger',
-                    "System table $tb does not exist in database."
+                    "System table $tb does not exist in database.",
+                    "Create table $tb",
+                    ['create', str_replace($this->prefix, '', $tb)]
                 );
+                
             }
         }
     }
@@ -77,16 +81,17 @@ class SystemTables
             $this->resp->set('head', "Checking $tb from model to database");
 
             foreach ($model_cols as $col) {
-                if (!in_array($col, $db_cols)){
-                    $this->resp->set(
-                        'danger',
-                        "Model field {$tb}.{$col} is not available in database table",
-                        "Manually add {$tb}.{$col} to the database"
-                    );
-                } else {
+                if (in_array($col, $db_cols)){
                     $this->resp->set(
                         'success',
                         "Model field {$tb}.{$col} is available in database table"
+                    );
+                } else {
+                    $this->resp->set(
+                        'danger',
+                        "Model field {$tb}.{$col} is not available in database table",
+                        "Add {$tb}.{$col} to the database",
+                        ['create', $this->prefix . $tb, $col]
                     );
                 }
             }
@@ -94,22 +99,21 @@ class SystemTables
             $this->resp->set('head', "Checking $tb from database to model");
 
             foreach ($db_cols as $col) {
-                if (!in_array($col, array_values($model_cols))){
-                    $this->resp->set(
-                        'danger',
-                        "Database column {$tb}.{$col} is not available in the model",
-                        "Manually remove {$tb}.{$col} from the database"
-                    );
-                } else {
+                if (in_array($col, array_values($model_cols))){
                     $this->resp->set(
                         'success',
                         "Database field {$tb}.{$col} is available in the model"
+                    );
+                } else {
+                    $this->resp->set(
+                        'danger',
+                        "Database column {$tb}.{$col} is not available in the model",
+                        "Remove {$tb}.{$col} from the database",
+                        ['delete', $this->prefix . $tb, $col]
                     );
                 }
             }
 
         }
-
-
     }
 }

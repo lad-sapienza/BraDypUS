@@ -120,10 +120,14 @@ var core = {
 		 * @param {string} method 	Method of controller object to call
 		 * @param {string|object|false} get url string of key=value parameters of objectwith key:values
 		 * @param {string|array|object|false} post post data 
+		 * @param {function|false} loaded callback function
 		 */
-		runAndRespond(obj, method, get, post) {
+		runAndRespond(obj, method, get, post, loaded) {
 			core.getJSON ( obj, method, get, post, data => {
 				core.message(data.text, data.status);
+				if (loaded){
+					loaded(data);
+				}
 			});
 		},
 

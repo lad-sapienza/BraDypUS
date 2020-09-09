@@ -1,3 +1,4 @@
+4.0.147-alpha[] = "Vocabulary definition renamed to item"
 4.0.146-alpha[] = "Fixed bug vocabularies module"
 4.0.145-alpha[] = "Fixed bug with tr namespace in DB\DB"
 4.0.144-alpha[] = "Fixed missing metadata on app creation"

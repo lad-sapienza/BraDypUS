@@ -191,7 +191,7 @@
     "confirm_delete_def": "Are you sure you want to delete this definition?",
     "ok_def_erase": "The definition was deleted",
     "error_def_erase": "Error, the definition was not deleted",
-    "def": "Definition",
+    "item": "Item",
     "voc": "Vocabulary",
     "new_voc": "New vocabulary",
     "new_def": "New definition",

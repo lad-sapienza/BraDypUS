@@ -90,7 +90,7 @@ var vocabularies = {
 				        		 if (!myvoc || !mydef){
 				        			 core.message(core.tr('voc_def_required'), 'error');
 				        		 } else {
-				        			 core.getJSON('vocabularies_ctrl', 'add', { vo: myvoc, def:mydef }, false, function(data){
+				        			 core.getJSON('vocabularies_ctrl', 'add', { voc: myvoc, def:mydef }, false, function(data){
 				        				 if (data.status === 'success'){
 				        					 $('#def').val('');
 				        					 if (success){

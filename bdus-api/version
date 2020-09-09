@@ -1,3 +1,4 @@
+4.0.150-alpha[] = "Fixed bug with ParseShortSql setting null values"
 4.0.149-alpha[] = "TemplateInterface::cell accepts both int and string as parameter"
 4.0.148-alpha[] = "Fixed bug on home with undefined cfg trying to get google analytics id"
 4.0.147-alpha[] = "Vocabulary definition renamed to item"

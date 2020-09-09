@@ -270,7 +270,10 @@ class ParseShortSql
         foreach ($where_parts as $index => $part) {
             list($p, $v, $j) = $this->parseWherePart($part, $index, $tb, $noValues);
             array_push($sql_parts, $p);
-            array_push($sql_values, $v);
+            // If value element is a field name, do not add value to list
+            if($v) {
+                array_push($sql_values, $v);
+            }
             $join_parts = array_merge($join_parts, $j ?: []);
         }
 

@@ -95,19 +95,19 @@ class Search
 
 	}
 	
-	private static function getTotal(string $sql, array $values = []): int
+	private static function getTotal(string $sql, array $values = null): int
     {
         $count_sql = 'SELECT count(*) AS tot FROM ( ' . $sql .' ) AS ' . uniqid('a');
         $res = self::$db->query($count_sql, $values);
         return $res[0]['tot'];
 	}
 	
-	private static function getData(string $sql, array $values = []): array
+	private static function getData(string $sql, array $values = null): array
     {   
         return self::$db->query($sql, $values, 'read');
 	}
 	
-	private static function getFullData(string $sql, array $values = [], string $tb): array
+	private static function getFullData(string $sql, array $values = null, string $tb): array
     {
 		$result = self::getData($sql, $values);
 

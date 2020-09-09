@@ -1,9 +1,6 @@
 <?php
 declare(strict_types=1);
 
-use SQL\ShortSql\Validator;
-use SQL\ShortSql\ParseShortSql;
-
 namespace SQL;
 
 /**

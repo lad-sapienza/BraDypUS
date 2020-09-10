@@ -103,7 +103,7 @@ class pref
 	 */
 	public static function save2DB(DBInterface $db)
 	{
-		cookieAuth::update();
+		\cookieAuth::update();
 		$sys_manager = new Manage($db, PREFIX);
 		return $sys_manager->editRow(
 			'users', 

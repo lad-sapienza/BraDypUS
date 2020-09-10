@@ -141,7 +141,7 @@ class login_ctrl extends Controller
 
 	public function autolog()
 	{
-		if (cookieAuth::get()) {
+		if (\cookieAuth::get()) {
 			\utils::response('Authenticated');
 			return;
 		}
@@ -297,7 +297,7 @@ class login_ctrl extends Controller
 	private function login(string $email = null, string $password = null, string $remember = null, int $user_id = null): bool
     {
         if (!$email && !$password && $remember) {
-            if (cookieAuth::get()) {
+            if (\cookieAuth::get()) {
                 return true;
             }
 		}
@@ -338,7 +338,7 @@ class login_ctrl extends Controller
             $_SESSION['user'] = $res;
 
             if ($remember && $remember !== 'false') {
-                cookieAuth::set();
+                \cookieAuth::set();
             }
             return true;
         } else {

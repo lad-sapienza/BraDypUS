@@ -6,6 +6,8 @@
  * @since			Aug 15, 2012
  */
 
+ use DB\System\Manage;
+
 class login_ctrl extends Controller
 {
 
@@ -29,12 +31,11 @@ class login_ctrl extends Controller
 
 	public function resetPwd()
 	{
-		$user = new User($this->db);
+		$sys_manager = new Manage($this->db, $this->prefix);
 
-		$res = $user->getUser(array('email'=>$this->get['address']));
-
+		$res = $sys_manager->getBySQL('users', 'email = ?', [ $this->get['address'] ] ); 
 		if ($res[0]) {
-			if ($this->get['token'] == $user->getToken($res[0])) {
+			if ($this->get['token'] == $this->getToken($this->db->getApp(), $res[0])) {
 				$this->render('login', 'reset_pwd', array(
 						'user' => $res[0],
 						'app' => $this->request['app']
@@ -46,67 +47,90 @@ class login_ctrl extends Controller
 	}
 
 
-
 	public function addUser()
 	{
 		$post = $this->post;
-
+		
+		// Check required fields
 		if (!$post['app'] || !$post['name'] || !$post['email'] || !$post['password'] || !$post['password2']) {
 			\utils::response('all_fields_required', 'error');
-			return;
-		} else if ($post['password'] != $post['password2']) {
+			return false;
+		}
+
+		// Check matching passwords
+		if ($post['password'] !== $post['password2']) {
 			\utils::response('pass_empty_or_not_match', 'error');
-			return;
-		} else {
-			try {
-				$user = new User($this->db);
+			return false;
+		}
 
-				$res = $user->insert($post['name'], $post['email'], $post['password']);
+		// Check valid email
+		if (filter_var($post['email'], FILTER_VALIDATE_EMAIL)) {
+			\utils::response( \tr::get('email_not_valid', [$post['email']]), 'error', true);
+		}
+		
+		if ($this->isDuplicate($post['email'])) {
+			\utils::response( \tr::get('email_present', [$post['email']]), 'error', true);
+        }
+		try {
 
-				if ($res) {
-					// email to user
-					$to = $post['email'];
-					$subject = \tr::get('new_user_email_subject');
-					$message = \tr::get('new_user_email_text', [$post['app']])
-							. "\n" . \tr::get('email_signature');
-					$headers = 'From: ' . $post['app'] . '@bradypus.net' . "\r\n" . 'Reply-To: ' . $post['app'] . '_db@bradypus.net' . "\r\n";
+			
+			$sys_manager = new Manage($this->db, $this->prefix);
+			$res = $sys_manager->addRow('users', [
+				'name', 
+				'email' => $post['email'], 
+				'password' => \utils::encodePwd($post['password']), 
+				'privilege' => 40
+			]);
+			
+			if ($res) {
+				// email to user
+				$to = $post['email'];
+				$subject = \tr::get('new_user_email_subject');
+				$message = \tr::get('new_user_email_text', [$post['app']])
+						. "\n" . \tr::get('email_signature');
+				$headers = 'From: ' . $post['app'] . '@bradypus.net' . "\r\n" . 'Reply-To: ' . $post['app'] . '_db@bradypus.net' . "\r\n";
+
+				@mail($to, $subject, $message, $headers);
+
+				// email to admins
+
+				$admins = $sys_manager->getBySQL('users', 'privilege <= ?', [
+					\utils::privilege('adm')
+				]);
+
+				foreach($admins as $adm) {
+					$to = $adm['email'];
+					$message = \tr::get('new_user_adm_email_text', [ $post['app'], $post['app'], $post['name'], $post['email'] ])
+						. "\n" . \tr::get('email_signature');
 
 					@mail($to, $subject, $message, $headers);
-
-					// email to admins
-
-					$admins = $user->getUserByPriv('adm', '<=');
-
-					foreach($admins as $adm)
-					{
-						$to = $adm['email'];
-						$message = \tr::get('new_user_adm_email_text', [ $post['app'], $post['app'], $post['name'], $post['email'] ])
-							. "\n" . \tr::get('email_signature');
-
-						@mail($to, $subject, $message, $headers);
-					}
-
-					echo json_encode(array('text'=> \tr::get('ok_user_add', [ $post['email'] ]), 'status'=>'success'));
-					return;
-				} else {
-					\utils::response('error_user_add', 'error');
-					return;
 				}
-			} catch(\Throwable $e) {
-				\utils::response($e->getMessage(), 'error');
-				return;
+				\utils::response( 
+					\tr::get('ok_user_add', [ $post['email'] ]), 
+					'success'
+				);
+				return true;
+			} else {
+				\utils::response('error_user_add', 'error');
+				return false;
 			}
-
+		} catch(\Throwable $e) {
+			\utils::response($e->getMessage(), 'error');
+			return false;
 		}
+		
 	}
-
 
 	public function out()
 	{
 		try {
 			$user_id = $_SESSION['user']['id'];
-			$user = new User($this->db);
-			$user->logout();
+			\pref::save2DB($this->db);
+			\utils::emptyDir(PROJ_TMP_DIR);
+			$this->deleteOldSessions();
+			\cookieAuth::destroy();
+			$_SESSION = [];
+			session_destroy();
 			$this->log->info("User {$user_id} logged out");
 		} catch (\Throwable $th) {
 			$this->log->error($th);
@@ -127,9 +151,12 @@ class login_ctrl extends Controller
 
 				$app_data = json_decode(file_get_contents(MAIN_DIR . "projects/{$this->get['app']}/cfg/app_data.json"), true);
 
-				$user = new User($this->db);
+				$auth_login_as_user = null;
 
-				$user->login(null, null, null, $app_data['auth_login_as_user'] ? (int) $app_data['auth_login_as_user'] : null);
+                if (isset($app_data['auth_login_as_user'])) {
+                    $auth_login_as_user = (int)$app_data['auth_login_as_user'];
+                }
+				$this->login(null, null, null, $auth_login_as_user);
 				$this->log->info("User {$_SESSION['user']['id']} logged in");
 
 				\utils::response('Authenticated');
@@ -142,8 +169,7 @@ class login_ctrl extends Controller
 	public function auth()
 	{
 		try {
-			$user = new User($this->db);
-			$user->login($this->post['email'], $this->post['password'], $this->post['remember']);
+			$this->login($this->post['email'], $this->post['password'], $this->post['remember']);
 			$this->log->info("User {$_SESSION['user']['id']} logged in");
 			\utils::response('Go ahead', 'success');
 			$obj['status'] = 'success';
@@ -192,9 +218,13 @@ class login_ctrl extends Controller
 
 	public function changePwd()
 	{
-		$user = new User($this->db);
+		$id = (int) $this->post['id'];
+		$password = \utils::encodePwd( $this->post['pwd'] );
 
-		if ($user->update($this->post['id'], false, false, $this->post['pwd'])) {
+		$sys_manager = new Manage($this->db, $this->prefix);
+		$res = $sys_manager->editRow('users', $id, ['password' => $password]);
+
+		if ( $res ) {
 			\utils::response('ok_password_update');
 		} else {
 			\utils::response('error_password_update', true);
@@ -205,12 +235,11 @@ class login_ctrl extends Controller
 
 	public  function sendToken()
 	{
-		$user = new User($this->db);
-
-		$res = $user->getUser(array('email'=>$this->get['email']));
+		$sys_manager = new Manage($this->db, $this->prefix);
+		$res = $sys_manager->getBySQL('users', 'email = ?', [$this->get['email']]);
 
 		if ($res[0]) {
-			$token = $user->getToken($res[0]);
+			$token = $this->getToken($this->db->getApp(), $res[0]);
 
 			$to = $this->get['email'];
 			$subject = \tr::get('lost_password_email_subject');
@@ -229,6 +258,102 @@ class login_ctrl extends Controller
 		} else {
 			\utils::response('email_not_found', true);
 		}
+	}
+
+	private function isDuplicateEmail( string $email, int $id = null ) : bool
+    {
+        $partial = [ "email = ? " ];
+        $values = [ $email ];
+
+        
+        if ($id) {
+            array_push($partial, "id != ? ");
+            array_push($values, $id);
+        }
+        $res = $this->db->query(
+            'SELECT count(*) as tot FROM ' . $this->prefix . 'users WHERE ' . implode(" AND ", $partial) . ' LIMIT 1 OFFSET 0', 
+            $values
+        );
+
+        return ($res[0]['tot'] > 0);
+	}
+	
+	private function deleteOldSessions()
+    {
+        $maxlife = 24*60*60; // 24h
+        $sessions = \utils::dirContent(MAIN_DIR . 'sessions');
+
+        if ($sessions && is_array($sessions)) {
+            foreach ($sessions as $s) {
+                $filetime = filectime(MAIN_DIR . 'sessions/' . $s);
+
+                if ($filetime && $filetime < time() - $maxlife) {
+                    @unlink(MAIN_DIR . 'sessions/' . $s);
+                }
+            }
+        }
+	}
+	
+	private function login(string $email = null, string $password = null, string $remember = null, int $user_id = null): bool
+    {
+        if (!$email && !$password && $remember) {
+            if (cookieAuth::get()) {
+                return true;
+            }
+		}
+		
+		$sys_manager = new Manage($this->db, $this->prefix);
+
+        if ($user_id) {
+			$res = $sys_manager->getById('users', $user_id);
+        } elseif (filter_var($email, FILTER_VALIDATE_EMAIL) && !empty($password)) {
+			// get user data
+			$res = $sys_manager->getBySQL(
+				'users', 
+				'email = ? AND password = ?', 
+				[ $email, \utils::encodePwd($password)]);
+			$res = $res[0];
+        } else {
+            throw new \Exception(\tr::get('email_password_needed'));
+        }
+
+        if ($res) {
+            // remove password from array
+            unset($res['password']);
+
+            // Set user preferences
+            if ( isset($res['settings']) ) {
+                $sett_arr = unserialize($res['settings']);
+                if (is_array($sett_arr) && !empty($sett_arr)){
+                    foreach ($sett_arr as $key => $value) {
+                        \pref::set($key, $value);
+                    }
+                }
+            }
+
+            // remove settings from array
+            unset($res['settings']);
+
+            // assign user data to session variable
+            $_SESSION['user'] = $res;
+
+            if ($remember && $remember !== 'false') {
+                cookieAuth::set();
+            }
+            return true;
+        } else {
+            throw new \Exception(\tr::get('login_data_not_valid'));
+        }
+	} // end of login
+	
+	private function getToken( string $app, array $user_data ) : string
+	{
+		unset($user_data['settings']);
+
+		return substr(
+			base64_encode(
+				$app . implode('', $user_data)
+			),  5,  10 );
 	}
 
 }

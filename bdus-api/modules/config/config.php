@@ -17,9 +17,8 @@ class config_ctrl extends Controller
     public function app_properties()
     {
         try{
-			$user = new User($this->db);
-		
-			$users = $user->getUser('all');
+            $sys_manage = new Manage($this->db, $this->prefix);
+            $users = $sys_manage->getBySQL('users', '1=1');
 		
 			foreach ($users as &$u){
 				$u['verbose_privilege'] = \utils::privilege($u['privilege'], 1);
@@ -357,12 +356,13 @@ class config_ctrl extends Controller
         $pwd = $this->post['pwd'];
         $current_user_id = $_SESSION['user']['id'];
 
-        $user = new User($this->db);
+        $sys_manager = new Manage($this->db, $this->prefix);
         
-        $me = $user->getUser([
-            "id" => $current_user_id,
-            "password" => $user->encodePwd($pwd)
+        $me = $sys_manager->getBySQL('users', 'id = ? AND password = ? ', [
+            $current_user_id,
+            \utils::encodePwd($pwd)
         ]);
+        
 
         if(!$me || !is_array($me)){
             \utils::response('invalid_pasword', 'error');

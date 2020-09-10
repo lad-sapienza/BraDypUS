@@ -19,6 +19,7 @@
  */
 
 use DB\DBInterface;
+use DB\System\Manage;
 
 class pref
 {
@@ -102,10 +103,14 @@ class pref
 	 */
 	public static function save2DB(DBInterface $db)
 	{
-		$user = new User($db);
-		
 		cookieAuth::update();
-
-		return $user->update($_SESSION['user']['id'], false, false, false, false, serialize($_SESSION['pref']));
+		$sys_manager = new Manage($db, PREFIX);
+		return $sys_manager->editRow(
+			'users', 
+			$_SESSION['user']['id'],
+			[
+				'settings' => serialize($_SESSION['pref'])
+			]
+		);
 	}
 }

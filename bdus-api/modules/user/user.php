@@ -6,6 +6,9 @@
  * @since			Aug 10, 2012
  */
 
+ use \Db\System\Manage;
+
+
 class user_ctrl extends Controller
 {
 	public function showList()
@@ -13,9 +16,8 @@ class user_ctrl extends Controller
 		$data = [ 'admin' => \utils::canUser('admin') ];
 
 		if (\utils::canUser('admin')) {
-			$user_obj = new User($this->db);
-			
-			$all_users = $user_obj->getUser('all');
+			$sys_manager = new DB\System\Manage($this->db, $this->prefix);
+			$all_users = $sys_manager->getBySQL('users', '1=1');
 			
 			foreach( $all_users as $user ) {
 				$data['users'][] = [
@@ -46,9 +48,8 @@ class user_ctrl extends Controller
 			$id = $this->get['id'];
 		}
 		try {
-			$user = new User($this->db);
-		
-			$ret = $user->delete($id);
+			$sys_manager = new Manage($this->db, $this->prefix);
+			$ret = $sys_manager->deleteRow('users', $id);
 		
 			if ($ret) {
 				$res['message'] = \tr::get('user_deleted');
@@ -76,9 +77,8 @@ class user_ctrl extends Controller
 		}
 		
 		if ($id) {
-			$user = new User($this->db);
-			$one_user = $user->getUser( [ 'id' => $id ] );
-			$one_user = $one_user[0];
+			$sys_manager = new Manage($this->db, $this->prefix);
+			$one_user = $sys_manager->getById('users', $id);
 		} else {
 			$one_user = [];
 		}
@@ -110,7 +110,7 @@ class user_ctrl extends Controller
 	{
     	$data = $this->post;
 		try {
-			$sys_manager = new \Db\System\Manage($this->db, $this->prefix);
+			$sys_manager = new Manage($this->db, $this->prefix);
 
 			foreach ($data as $key => &$value) {
 				if ($key === 'password'){

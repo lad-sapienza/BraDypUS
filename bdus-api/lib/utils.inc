@@ -546,4 +546,9 @@ class utils
 
 		return json_encode($response);
 	}
+
+	public static function encodePwd( string $password ) : string
+    {
+        return sha1($password);
+    }
 }

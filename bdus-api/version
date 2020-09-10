@@ -1,3 +1,4 @@
+4.0.153-alpha[] = "Removed support for User class"
 4.0.153-alpha[] = "Bug fixing"
 4.0.153-alpha[] = "Added Inspect::getAllTables"
 4.0.153-alpha[] = "Inspect initializes driver class"

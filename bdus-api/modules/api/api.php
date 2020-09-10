@@ -83,8 +83,8 @@ class api_ctrl extends Controller
 			if (!$this->get['tb']) {
 				throw new Exception("Tb parameter is mandatory");
 			}
-			if (strpos($this->get['tb'], $app . PREFIX_DELIMITER) === false) {
-		    $request['tb'] = $app . PREFIX_DELIMITER . $this->get['tb'];
+			if (strpos($this->get['tb'], $this->prefix) === false) {
+		    $request['tb'] = $this->prefix . $this->get['tb'];
 			} else {
 				$request['tb'] = $this->get['tb'];
 			}
@@ -215,7 +215,7 @@ class api_ctrl extends Controller
 			$records_per_page = $this->get['records_per_page'] ? $this->get['records_per_page'] : 30;
 			$header['total_pages'] = ceil($header['total_rows']/$records_per_page);
 			$header['table'] = $request['tb'];
-			$header['stripped_table'] = str_replace($app . PREFIX_DELIMITER, null, $request['tb']);
+			$header['stripped_table'] = str_replace($this->prefix, null, $request['tb']);
 			$header['table_label'] = $this->cfg->get("tables.{$request['tb']}.label");
 			$header['page'] = ($header['page'] > $header['total_pages']) ? $header['total_pages'] : $header['page'];
 

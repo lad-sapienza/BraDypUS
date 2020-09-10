@@ -174,7 +174,7 @@ class Field implements TemplateInterface
           '</span>';
 
                 if ($this->cfg->get("tables.$dest_tb.rs")) {
-                    $html .= ' (<span class="btn-link" onclick="api.record.showMatrix(\'' . $dest_tb . '\', \'' . base64_encode($l_arr['query']) . '\')">' . \tr::get('harris_matrix'). '</span>)';
+                    $html .= ' (<span class="btn-link" onclick="api.record.showMatrix(\'' . $dest_tb . '\', \'' . \SQL\SafeQuery::encode($l_arr['query']) . '\')">' . \tr::get('harris_matrix'). '</span>)';
                 }
 
                 $html .= '</li>';

@@ -41,7 +41,6 @@ class matrix_ctrl extends Controller
 	private function createDotContentNew(string $tb, string $where = null, array $values = null): string
     {
         $tbbis = $tb . 'bis';
-        $const = get_defined_constants();
         $rsfld = $this->cfg->get("tables.{$tb}.rs");
         $q = <<<EOD
 SELECT
@@ -51,7 +50,7 @@ SELECT
     rs.second as secondlabel,
     rs.relation as rel
 FROM
-{$const['PREFIX']}rs as rs
+{$this->prefix}rs as rs
 
 LEFT JOIN {$tb} ON  rs.tb = '{$tb}' AND rs.first = {$tb}.{$rsfld}
 LEFT JOIN {$tb} as {$tbbis} ON  rs.tb = '{$tb}' AND rs.second = {$tbbis}.{$rsfld}

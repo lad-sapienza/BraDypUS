@@ -8,6 +8,7 @@
  *
  */
 use DB\DBInterface;
+use DB\Inspect;
 
 class BackupMySQL
 {
@@ -28,15 +29,8 @@ class BackupMySQL
 	public function exportAll()
 	{
 		$this->sql = '';
-		$tables = $this->db->query("SHOW TABLES", null, 'read');
-
-		$tables = array_filter(array_map(function ($r){
-			$el = array_values($r)[0];
-			if (strpos($el, PREFIX) !== false){
-				return $el;
-			}
-			return null;
-		}, $tables));
+		$inspect = new Inspect($this->db);
+		$tables = $inspect->getAllTables();
 
 		foreach($tables as $tb) {
 			$this->export($tb);

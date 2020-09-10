@@ -92,6 +92,7 @@ var search = {
 					datalist.insertAfter(select)
 
 					select.attr('id', uid);
+					select.css('width', '100%');
 					datalist.attr('for', uid);
 
 					enhance.combobox(select);

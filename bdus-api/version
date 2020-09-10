@@ -1,3 +1,5 @@
+4.0.153-alpha[] = "Added Inspect::getAllTables"
+4.0.153-alpha[] = "Inspect initializes driver class"
 4.0.153-alpha[] = "version.user renamed to version.userid"
 4.0.152-alpha[] = "Namespaced usage cases of pref"
 4.0.151-alpha[] = "Namespaced usage cases of utils"

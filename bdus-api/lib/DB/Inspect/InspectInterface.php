@@ -20,4 +20,6 @@ interface InspectInterface
      *                  example: [ [ 'fld' => "fld_name", 'type' => 'column_type' ], [ ...etc... ] ]
      */
     public function tableColumns(string $tb): array;
+
+    public function getAllTables() : array;
 }

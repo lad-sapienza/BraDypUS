@@ -51,4 +51,9 @@ class Inspect implements Inspect\InspectInterface
     {
         return $this->driver->tableColumns($tb);
     }
+
+    public function getAllTables() : array
+    {
+        return $this->driver->getAllTables();
+    }
 }

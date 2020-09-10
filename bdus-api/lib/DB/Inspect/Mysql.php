@@ -41,7 +41,18 @@ class Mysql implements InspectInterface
                 'type' => $row['Type']
             ];
         }
-
         return $ret;
     }
+
+    public function getAllTables() : array
+    {
+        $res = $this->db->query("SHOW TABLES");
+        
+        $ret = [];
+        foreach ($res as $row) {
+            array_push($ret, array_values($row)[0]);
+        }
+        return $ret;
+    }
+
 }

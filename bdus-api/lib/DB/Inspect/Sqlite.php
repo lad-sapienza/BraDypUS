@@ -44,4 +44,15 @@ class Sqlite implements InspectInterface
 
         return $ret;
     }
+
+    public function getAllTables() : array
+    {
+        $res = $this->db->query("SELECT name FROM sqlite_master WHERE type ='table'");
+        
+        $ret = [];
+        foreach ($res as $row) {
+            array_push($ret, $row['name']);
+        }
+        return $ret;
+    }
 }

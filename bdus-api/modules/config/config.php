@@ -2,6 +2,7 @@
 use DB\Engines\AvailableEngines;
 use DB\Validate\Validate;
 use DB\System\Manage;
+use \DB\Alter;
 
 class config_ctrl extends Controller
 {
@@ -187,17 +188,7 @@ class config_ctrl extends Controller
             \cfg::setTb($post);
 
             // Add table to database
-            $engine = $this->db->getEngine();
-            if ($engine === 'sqlite'){
-                $driver = new \DB\Alter\Sqlite($this->db);
-            } elseif($engine === 'mysql'){
-                $driver = new \DB\Alter\Mysql($this->db);
-            } elseif($engine === 'pgsql'){
-                $driver = new \DB\Alter\Postgres($this->db);
-            } else {
-                throw new \Exception("Unknown database engine: `$engine`");
-            }
-            $alter = new \DB\Alter($driver);
+            $alter = new Alter($this->db);
             $alter->createMinimalTable($new_tb_name);
 
 			\utils::response('ok_cfg_data_updated', 'success', false, [
@@ -257,17 +248,7 @@ class config_ctrl extends Controller
             
             \cfg::setFld($tb, $fld, $post);
             
-            $engine = $this->db->getEngine();
-            if ($engine === 'sqlite'){
-                $driver = new \DB\Alter\Sqlite($this->db);
-            } elseif($engine === 'mysql'){
-                $driver = new \DB\Alter\Mysql($this->db);
-            } elseif($engine === 'pgsql'){
-                $driver = new \DB\Alter\Postgres($this->db);
-            } else {
-                throw new \Exception("Unknown database engine: `$engine`");
-            }
-            $alter = new \DB\Alter($driver);
+            $alter = new Alter($this->db);
             $alter->addFld($tb, $fld, $post['db_type']);
 
 			\utils::response('ok_cfg_data_updated', 'success', false, ["fld" => $fld]);
@@ -300,17 +281,7 @@ class config_ctrl extends Controller
         try {
             \cfg::deleteTb($tb);
             // Drop table from database
-            $engine = $this->db->getEngine();
-            if ($engine === 'sqlite'){
-                $driver = new \DB\Alter\Sqlite($this->db);
-            } elseif($engine === 'mysql'){
-                $driver = new \DB\Alter\Mysql($this->db);
-            } elseif($engine === 'pgsql'){
-                $driver = new \DB\Alter\Postgres($this->db);
-            } else {
-                throw new \Exception("Unknown database engine: `$engine`");
-            }
-            $alter = new \DB\Alter($driver);
+            $alter = new Alter($this->db);
             $alter->dropTable($tb);
             \utils::response('ok_cfg_tb_delete', 'success');
         } catch (\Throwable $th) {
@@ -327,17 +298,7 @@ class config_ctrl extends Controller
         try {
             \cfg::deleteFld($tb, $fld);
 
-            $engine = $this->db->getEngine();
-            if ($engine === 'sqlite'){
-                $driver = new \DB\Alter\Sqlite($this->db);
-            } elseif($engine === 'mysql'){
-                $driver = new \DB\Alter\Mysql($this->db);
-            } elseif($engine === 'pgsql'){
-                $driver = new \DB\Alter\Postgres($this->db);
-            } else {
-                throw new \Exception("Unknown database engine: `$engine`");
-            }
-            $alter = new \DB\Alter($driver);
+            $alter = new Alter($this->db);
             $alter->dropFld($tb, $fld);
 
             \utils::response('ok_cfg_column_delete', 'success');
@@ -385,17 +346,7 @@ class config_ctrl extends Controller
 
             \cfg::renameTb($old_name, $new_name);
 
-            $engine = $this->db->getEngine();
-            if ($engine === 'sqlite'){
-                $driver = new \DB\Alter\Sqlite($this->db);
-            } elseif($engine === 'mysql'){
-                $driver = new \DB\Alter\Mysql($this->db);
-            } elseif($engine === 'pgsql'){
-                $driver = new \DB\Alter\Postgres($this->db);
-            } else {
-                throw new \Exception("Unknown database engine: `$engine`");
-            }
-            $alter = new \DB\Alter($driver);
+            $alter = new Alter($this->db);
             $alter->renameTable($old_name, $new_name);
 
             \utils::response('ok_renaming_table', 'success');
@@ -419,17 +370,7 @@ class config_ctrl extends Controller
 
             \cfg::renameFld($tb, $old_name, $new_name);
 
-            $engine = $this->db->getEngine();
-            if ($engine === 'sqlite'){
-                $driver = new \DB\Alter\Sqlite($this->db);
-            } elseif($engine === 'mysql'){
-                $driver = new \DB\Alter\Mysql($this->db);
-            } elseif($engine === 'pgsql'){
-                $driver = new \DB\Alter\Postgres($this->db);
-            } else {
-                throw new \Exception("Unknown database engine: `$engine`");
-            }
-            $alter = new \DB\Alter($driver);
+            $alter = new Alter($this->db);
             $alter->renameFld($tb, $old_name, $new_name);
 
             \utils::response('ok_renaming_column', 'success');
@@ -481,17 +422,7 @@ class config_ctrl extends Controller
             return;
         
         }
-        $engine = $this->db->getEngine();
-        if ($engine === 'sqlite'){
-            $driver = new \DB\Alter\Sqlite($this->db);
-        } elseif($engine === 'mysql'){
-            $driver = new \DB\Alter\Mysql($this->db);
-        } elseif($engine === 'pgsql'){
-            $driver = new \DB\Alter\Postgres($this->db);
-        } else {
-            throw new \Exception("Unknown database engine: `$engine`");
-        }
-        $alter = new \DB\Alter($driver);
+        $alter = new Alter($this->db);
 
         if ($action === 'create' && $col) {
             $str = $sys_manage->getStructure(str_replace($this->prefix, '', $tb));

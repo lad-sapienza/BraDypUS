@@ -2,14 +2,25 @@
 
 namespace DB;
 
+use DB\DB;
 
 class Alter implements Alter\AlterInterface
 {
     private $driver;
 
-    public function __construct(Alter\AlterInterface $driver)
+    public function __construct(DB $db)
     {
-        $this->driver = $driver;
+        $engine = $db->getEngine();
+
+        if ($engine === 'sqlite'){
+            $this->driver = new \DB\Alter\Sqlite($db);
+        } elseif($engine === 'mysql'){
+            $this->driver = new \DB\Alter\Mysql($db);
+        } elseif($engine === 'pgsql'){
+            $this->driver = new \DB\Alter\Postgres($db);
+        } else {
+            throw new \Exception("Unknown database engine: `$engine`");
+        }
     }
 
     public function renameTable(string $old, string $new): bool

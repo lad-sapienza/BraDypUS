@@ -3,9 +3,6 @@ namespace DB\Validate;
 
 use DB\DBInterface;
 use DB\Inspect;
-use DB\Inspect\Sqlite;
-use DB\Inspect\Mysql;
-use DB\Inspect\Postgres;
 use DB\System\Manage;
 use DB\Validate\Resp;
 
@@ -24,15 +21,7 @@ class SystemTables
         $this->db = $db;
         $this->prefix = $prefix;
 
-        $db_engine = $db->getEngine();
-        if ($db_engine === 'sqlite'){
-            $driver = new Sqlite($db);
-        } else if ($db_engine === 'mysql'){
-            $driver = new Mysql($db);
-        } else if ($db_engine === 'pgsql'){
-            $driver = new Postgres($db);
-        }
-        $this->inspect = new Inspect($driver);
+        $this->inspect = new Inspect($db);
 
         $this->system = new Manage($this->db, $this->prefix);
     }

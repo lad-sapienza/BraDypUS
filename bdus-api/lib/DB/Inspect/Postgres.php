@@ -18,7 +18,7 @@ class Postgres implements InspectInterface
     public function tableExists(string $tb): bool
     {
         $res = $this->db->query(
-            "SELECT COUNT(*) as tot FROM information_schema.tables WHERE table_name = ?"
+            "SELECT COUNT(*) as tot FROM information_schema.tables WHERE table_name = ?",
             [ $tb ]
         );
         
@@ -41,6 +41,17 @@ class Postgres implements InspectInterface
             ];
         }
 
+        return $ret;
+    }
+
+    public function getAllTables() : array
+    {
+        $res = $this->db->query("SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname != 'pg_catalog' AND  schemaname != 'information_schema'");
+        
+        $ret = [];
+        foreach ($res as $row) {
+            array_push($ret, $row['tablename']);
+        }
         return $ret;
     }
 }

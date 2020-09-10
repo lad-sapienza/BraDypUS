@@ -2,13 +2,33 @@
 
 namespace DB;
 
+use DB\DB;
+use DB\Inspect\Sqlite;
+use DB\Inspect\Mysql;
+use DB\Inspect\Postgres;
+
 class Inspect implements Inspect\InspectInterface
 {
     private $driver;
 
-    public function __construct (Inspect\InspectInterface $driver)
+    public function __construct ( DB $db )
     {
-        $this->driver = $driver;
+        $engine = $db->getEngine();
+        switch ($engine) {
+            case 'sqlite':
+                $this->driver = new Sqlite($db);
+                break;
+            case 'mysql':
+                $this->driver = new Mysql($db);
+                break;
+            case 'pgsql':
+                $this->driver = new Postgres($db);
+                break;
+            
+            default:
+                throw new \Exception("Unknown driver $engine");
+                break;
+        }
     }
 
     

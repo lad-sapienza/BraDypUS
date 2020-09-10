@@ -18,14 +18,7 @@ class DbCfgAlign
         $this->cfg = $cfg;
 
         $db_engine = $db->getEngine();
-        if ($db_engine === 'sqlite'){
-            $driver = new \DB\Inspect\Sqlite($db);
-        } else if ($db_engine === 'mysql'){
-            $driver = new \DB\Inspect\Mysql($db);
-        } else if ($db_engine === 'pgsql'){
-            $driver = new \DB\Inspect\Postgres($db);
-        }
-        $this->inspect = new \DB\Inspect($driver);
+        $this->inspect = new \DB\Inspect($this->db);
     }
 
     public function cfgHasDb(): void

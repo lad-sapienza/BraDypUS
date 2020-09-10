@@ -20,7 +20,7 @@ class geoface_ctrl extends Controller
 
 		try {
 
-			if (!utils::canUser('add_new')) {
+			if (!\utils::canUser('add_new')) {
 				throw new \Exception('User has not enough privilege to add a new record');
 			}
 
@@ -29,14 +29,14 @@ class geoface_ctrl extends Controller
 			$new_id = $record->addGeodata($geometry);
 
 			if ($new_id) {
-				utils::response('ok_insert_geodata', false, false, array('id'=>$new_id));
+				\utils::response('ok_insert_geodata', false, false, array('id'=>$new_id));
 			} else {
 				throw new \Exception('Insert geodata query returned false');
 			}
 
 		} catch (\Throwable $e) {
 			$this->log->error($e);
-			utils::response('error_insert_geodata', 'error');
+			\utils::response('error_insert_geodata', 'error');
 		}
 
 	}
@@ -52,7 +52,7 @@ class geoface_ctrl extends Controller
 
 		try {
 
-			if (!utils::canUser('edit')) {
+			if (!\utils::canUser('edit')) {
 				throw new \Exception('User has not enough privilege to edit records');
 			}
 
@@ -65,14 +65,14 @@ class geoface_ctrl extends Controller
 			}
 
 			if (!$error) {
-				utils::response('ok_delete_geodata');
+				\utils::response('ok_delete_geodata');
 			} else {
 				throw new \Exception('Delete geodata query returned false');
 			}
 
 		} catch (\Throwable $e) {
 			$this->log->error($e);
-			utils::response('error_delete_geodata', 'error');
+			\utils::response('error_delete_geodata', 'error');
 		}
 	}
 
@@ -85,7 +85,7 @@ class geoface_ctrl extends Controller
 		$post = $this->post['geodata'];
 
 		try {
-			if (!utils::canUser('edit')) {
+			if (!\utils::canUser('edit')) {
 				throw new \Exception('User has not enough privilege to edit records');
 			}
 
@@ -99,14 +99,14 @@ class geoface_ctrl extends Controller
 			}
 
 			if (!$error) {
-				utils::response('ok_update_geometry');
+				\utils::response('ok_update_geometry');
 			} else {
 				throw new \Exception('Update geometry query returned false');
 			}
 
 		} catch (\Throwable $e) {
 			$this->log->error($e);
-			utils::response('error_update_geometry', 'error');
+			\utils::response('error_update_geometry', 'error');
 		}
 	}
 
@@ -152,17 +152,17 @@ class geoface_ctrl extends Controller
 				$response['status'] = 'success';
 				$response['data'] = \utils::mutliArray2GeoJSON($tb, $res);
 
-			} else if (!$res AND (trim($where) == '1' || !$where) && utils::canUser('add_new')) {
+			} else if (!$res AND (trim($where) == '1' || !$where) && \utils::canUser('add_new')) {
 
 				$response['status'] = 'warning';
 				$response['data'] = '';
 
 			} else {
-				utils::response('no_geodata_available', 'error');
+				\utils::response('no_geodata_available', 'error');
 				return;
 			}
 
-			$local_geodata = utils::dirContent(PROJ_DIR . 'geodata');
+			$local_geodata = \utils::dirContent(PROJ_DIR . 'geodata');
 			$local_layers = [];
 			if ($local_geodata){
                 foreach ($local_geodata as $vec) {
@@ -183,7 +183,7 @@ class geoface_ctrl extends Controller
 				'tb_id'			=>	$tb,
 				'tb'			=>	$this->cfg->get("tables.$tb.label"),
 				'gmapskey'		=>	$this->cfg->get("main.gmapskey"),
-				'canUserEdit' 	=> utils::canUser('edit'),
+				'canUserEdit' 	=> \utils::canUser('edit'),
 				'local_layers'	=> $local_layers
 			];
 
@@ -191,7 +191,7 @@ class geoface_ctrl extends Controller
 
 		} catch (\Throwable $e) {
 			$this->log->error($e);
-			utils::response('error_getting_geodata', 'error');
+			\utils::response('error_getting_geodata', 'error');
 		}
 	}
 

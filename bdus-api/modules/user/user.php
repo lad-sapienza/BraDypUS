@@ -10,9 +10,9 @@ class user_ctrl extends Controller
 {
 	public function showList()
 	{
-		$data = [ 'admin' => utils::canUser('admin') ];
+		$data = [ 'admin' => \utils::canUser('admin') ];
 
-		if (utils::canUser('admin')) {
+		if (\utils::canUser('admin')) {
 			$user_obj = new User($this->db);
 			
 			$all_users = $user_obj->getUser('all');
@@ -22,8 +22,8 @@ class user_ctrl extends Controller
 					'id' => $user['id'],
 					'name' => $user['name'],
 					'email' => $user['email'],
-					'privilege' => utils::privilege($user['privilege'], true),
-					'editable' => (utils::canUser('admin') && $user['privilege'] >= $_SESSION['user']['privilege'])
+					'privilege' => \utils::privilege($user['privilege'], true),
+					'editable' => (\utils::canUser('admin') && $user['privilege'] >= $_SESSION['user']['privilege'])
 				];
 			}
 		} else {
@@ -31,7 +31,7 @@ class user_ctrl extends Controller
 				'id' 		=> $_SESSION['user']['id'],
 				'name' 		=> $_SESSION['user']['name'],
 				'email' 	=> $_SESSION['user']['email'],
-				'privilege' => utils::privilege($_SESSION['user']['privilege'], true),
+				'privilege' => \utils::privilege($_SESSION['user']['privilege'], true),
 				'editable' 	=> true
 			];
 		}
@@ -51,13 +51,13 @@ class user_ctrl extends Controller
 			$ret = $user->delete($id);
 		
 			if ($ret) {
-				$res['message'] = tr::get('user_deleted');
+				$res['message'] = \tr::get('user_deleted');
 				$res['status'] = 'success';
 			} else {
 				throw new \Exception('User deletion query returned false');
 			}
 		} catch (\Throwable $e) {
-			$res['message'] = tr::get('user_not_deleted');
+			$res['message'] = \tr::get('user_not_deleted');
 			$res['status'] = 'error';
 		
 			$this->log->error($e);
@@ -70,8 +70,8 @@ class user_ctrl extends Controller
 	{
 		$id = $this->get['id'];
     
-		if (isset($id) && $id !== $_SESSION['user']['id'] && !utils::canUser('admin')){
-			echo tr::get('not_enough_privilege');
+		if (isset($id) && $id !== $_SESSION['user']['id'] && !\utils::canUser('admin')){
+			echo \tr::get('not_enough_privilege');
 			return;
 		}
 		
@@ -91,7 +91,7 @@ class user_ctrl extends Controller
 			'avatar' => md5( strtolower( trim( $one_user['email'] ) ) )
 		];
 
-		foreach (utils::privilege('all', true) as $k => $str) {
+		foreach (\utils::privilege('all', true) as $k => $str) {
 			if ($k >= $_SESSION['user']['privilege']) {
 				$data['privileges'][] = [
 					'id'	=> $one_user['id'],
@@ -131,14 +131,14 @@ class user_ctrl extends Controller
 			}
 		
 			if ($ret) {
-				utils::response('user_data_saved');
+				\utils::response('user_data_saved');
 			} else {
 				throw new \Exception('Query returned false');
 			}
 		} catch (\DB\DBException $e){
-            utils::response('user_data_not_saved', 'error');
+            \utils::response('user_data_not_saved', 'error');
         } catch (\Throwable $e){
-			utils::response('user_data_not_saved', 'error');
+			\utils::response('user_data_not_saved', 'error');
 			$this->log->error($e);
 		}
 	}

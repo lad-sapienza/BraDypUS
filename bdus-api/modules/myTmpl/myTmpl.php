@@ -12,10 +12,10 @@ class myTmpl_ctrl extends Controller
 	{
 		$tbs = $this->cfg->get('tables.*.label', 'is_plugin', null);
 
-		$tmpls = utils::dirContent(PROJ_DIR . 'templates/');
+		$tmpls = \utils::dirContent(PROJ_DIR . 'templates/');
 
 		if(!is_array($tmpls)) {
-			echo json_encode(array('status'=>'error', 'text'=>tr::get('no_tmpl_available')));
+			echo json_encode(array('status'=>'error', 'text' => \tr::get('no_tmpl_available')));
 			return;
 		}
 
@@ -54,7 +54,7 @@ class myTmpl_ctrl extends Controller
 
 		pref::setTmpl($tb, $context, $tmpl);
 		
-		utils::response('ok_tmpl_set', 'success');
-		// utils::response('error_tmpl_set', 'error');
+		\utils::response('ok_tmpl_set', 'success');
+		// \utils::response('error_tmpl_set', 'error');
 	}
 }

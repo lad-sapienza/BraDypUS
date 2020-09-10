@@ -48,19 +48,19 @@ class userlinks_ctrl extends Controller
 			}
 
 			if (!$no) {
-				utils::response('all_links_saved');
+				\utils::response('all_links_saved');
 			} else if ($no && $ok) {
 				error_log(cont($ok) . ' links were saved, ' . count($no) . ' links were not!');
-				utils::response('some_links_saved', 'error');
+				\utils::response('some_links_saved', 'error');
 			} else {
-				utils::response('no_link_saved', 'error');
+				\utils::response('no_link_saved', 'error');
 			}
 		} catch(\DB\DBException $e) {
 			// No log, already logged
-			utils::response('no_link_saved', 'error');
+			\utils::response('no_link_saved', 'error');
 		} catch(\Throwable $e) {
 			$this->log->error($e);
-			utils::response('no_link_saved', 'error');
+			\utils::response('no_link_saved', 'error');
 		}
 	}
 
@@ -70,9 +70,9 @@ class userlinks_ctrl extends Controller
 		$record = new Record('no importance', false, $this->db, $this->cfg);
 
 		if ($record->deleteUserLink($id)) {
-			utils::response('ok_userlink_erased');
+			\utils::response('ok_userlink_erased');
 		} else {
-			utils::response('error_userlink_erased');
+			\utils::response('error_userlink_erased');
 		}
 	}
 
@@ -94,17 +94,17 @@ class userlinks_ctrl extends Controller
 						'<span class="btn-link userlink_read" data-tb="' . $link['tb'] . '" data-id="' . $link['ref_id'] . '">' .
 							$this->cfg->get("tables.{$link['tb']}.label") . ', id:' . $link['ref_id'] .
 						'</span>'
-					. ( ($context == 'edit') ? ' [<span class="btn-link userlink_delete" data-id="' . $link['id'] . '">' . tr::get('erase') . '</span>]' : '')
+					. ( ($context == 'edit') ? ' [<span class="btn-link userlink_delete" data-id="' . $link['id'] . '">' . \tr::get('erase') . '</span>]' : '')
 					. '</li>';
 			}
 		}
 
-		$html = '<p><i class="glyphicon glyphicon-link"></i>  <strong>' . tr::get('user_links') . '</strong></p>'
-				. ( $tmp ? '<ul>' . implode('', $tmp) . '</ul>' : tr::get('no_user_links'))
+		$html = '<p><i class="glyphicon glyphicon-link"></i>  <strong>' . \tr::get('user_links') . '</strong></p>'
+				. ( $tmp ? '<ul>' . implode('', $tmp) . '</ul>' : \tr::get('no_user_links'))
 				. ( ($context == 'edit') ?
 						'<p>'
-							. '<span class="btn btn-default btn-sm userlink_reload" data-table="' . $tb . '" data-id="' . $id . '"><i class="glyphicon glyphicon-repeat"></i> ' . tr::get('reload') . '</span>'
-							. '<span class="btn btn-default btn-sm userlink_add" data-table="' . $tb . '" data-id="' . $id . '"><i class="glyphicon glyphicon-plus"></i> ' . tr::get('add') . '</span>'
+							. '<span class="btn btn-default btn-sm userlink_reload" data-table="' . $tb . '" data-id="' . $id . '"><i class="glyphicon glyphicon-repeat"></i> ' . \tr::get('reload') . '</span>'
+							. '<span class="btn btn-default btn-sm userlink_add" data-table="' . $tb . '" data-id="' . $id . '"><i class="glyphicon glyphicon-plus"></i> ' . \tr::get('add') . '</span>'
 						. '</p>' : '');
 
 		echo $html;

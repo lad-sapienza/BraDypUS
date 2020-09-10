@@ -674,7 +674,7 @@ class Record implements RecordInterface
 
 		foreach($bl_array as $bl_string) {
 
-			list($tb, $plg, $plg_fld) = utils::csv_explode($bl_string, ':');
+			list($tb, $plg, $plg_fld) = \utils::csv_explode($bl_string, ':');
 
 			if (!$tb || !$plg || !$plg_fld) {
 				error_log('Syntax error in configuration of ' . $this->tb . ' segment backlink');

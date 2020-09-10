@@ -50,8 +50,8 @@ class saved_queries_ctrl extends Controller
         $id = $this->get['id'];
 
         $msg = [
-            'status'=>'error', 
-            'text'=>tr::get('error_sharing_query')
+            'status' => 'error', 
+            'text' => \tr::get('error_sharing_query')
         ];
 
         try {
@@ -60,8 +60,8 @@ class saved_queries_ctrl extends Controller
 
             if ($res) {
                 $msg = [
-                    'status'=>'success', 
-                    'text'=>tr::get('ok_sharing_query')
+                    'status' => 'success', 
+                    'text' => \tr::get('ok_sharing_query')
                 ];
             }
             
@@ -78,8 +78,8 @@ class saved_queries_ctrl extends Controller
     {
         $id = $this->get['id'];
         $msg = [
-            'status'=>'error', 
-            'text'=>tr::get('error_unsharing_query')
+            'status' => 'error', 
+            'text' => \tr::get('error_unsharing_query')
         ];
 
         try {
@@ -88,8 +88,8 @@ class saved_queries_ctrl extends Controller
 
             if ($res) {
                 $msg = [
-                    'status'=>'success', 
-                    'text'=>tr::get('ok_unsharing_query')
+                    'status' => 'success', 
+                    'text' => \tr::get('ok_unsharing_query')
                 ];
             }
             
@@ -106,8 +106,8 @@ class saved_queries_ctrl extends Controller
     {
         $id = $this->get['id'];
         $msg = [
-            'status'=>'error', 
-            'text'=>tr::get('error_erasing_query')
+            'status' => 'error', 
+            'text' => \tr::get('error_erasing_query')
         ];
 
         try {
@@ -116,8 +116,8 @@ class saved_queries_ctrl extends Controller
 
             if ($res) {
                 $msg = [
-                    'status'=>'success', 
-                    'text'=>tr::get('ok_erasing_query')
+                    'status' => 'success', 
+                    'text' => \tr::get('ok_erasing_query')
                 ];
             }
             
@@ -135,8 +135,8 @@ class saved_queries_ctrl extends Controller
         $name = $this->get['name'];
         $query_object = $this->post['query_object'];
         $msg = [
-            'status'=>'error', 
-            'text'=>tr::get('error_saving_query')
+            'status' => 'error', 
+            'text' => \tr::get('error_saving_query')
         ];
         
         try {
@@ -154,8 +154,8 @@ class saved_queries_ctrl extends Controller
 
             if ($res) {
                 $msg = [
-                    'status'=>'success', 
-                    'text'=>tr::get('ok_saving_query')
+                    'status' => 'success', 
+                    'text' => \tr::get('ok_saving_query')
                 ];
             }
             

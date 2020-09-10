@@ -78,7 +78,7 @@ class menuValues_ctrl extends Controller
       break;
 
       case 'get_values_from_tb':
-        list($tb, $fld) = utils::csv_explode ($att, ':');
+        list($tb, $fld) = \utils::csv_explode ($att, ':');
         $query->setTable($tb)
           ->setField($fld, 'id')
           ->setField($fld, 'val')

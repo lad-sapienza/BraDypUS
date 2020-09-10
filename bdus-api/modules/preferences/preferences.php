@@ -12,7 +12,7 @@ class preferences_ctrl extends Controller
 	{
 		$this->render('preferences', 'panel', [
 			'infinite_scroll'=> pref::get('infinite_scroll'),
-			'all_langs' => tr::getAvailable(),
+			'all_langs' => \tr::getAvailable(),
 			'current_lang' => pref::get('lang'),
 			'user_id' => $_SESSION['user']['id']
 		]);
@@ -27,9 +27,9 @@ class preferences_ctrl extends Controller
 	{
 		try {
 			pref::save2DB($this->db);
-			utils::response('pref_saved_in_db');
+			\utils::response('pref_saved_in_db');
 		} catch(\Throwable $e) {
-			utils::response('pref_not_saved_in_db', 'error');
+			\utils::response('pref_not_saved_in_db', 'error');
 		}
 	}
 }

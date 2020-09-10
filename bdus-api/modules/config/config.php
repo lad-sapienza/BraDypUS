@@ -22,14 +22,14 @@ class config_ctrl extends Controller
 			$users = $user->getUser('all');
 		
 			foreach ($users as &$u){
-				$u['verbose_privilege'] = utils::privilege($u['privilege'], 1);
+				$u['verbose_privilege'] = \utils::privilege($u['privilege'], 1);
 			}
 		} catch (\Throwable $e){
 			$users = [];
 		}
 		
 		$this->render('config', 'app_properties', [
-            'available_langs' => tr::getAvailable(),
+            'available_langs' => \tr::getAvailable(),
             'info' => $this->cfg->get('main'),
             'status' => [ 'on', 'frozen', 'off' ],
             'users' => $users,
@@ -103,7 +103,7 @@ class config_ctrl extends Controller
             'data'  => $table_properties,
             'tb'    => $tb,
             'field_list' => $tb && $this->cfg->get("tables.$tb.fields.*.label") ? $this->cfg->get("tables.$tb.fields.*.label") : ['id' => 'id'],
-            'template_list' => utils::dirContent(PROJ_DIR . 'templates/'),
+            'template_list' => \utils::dirContent(PROJ_DIR . 'templates/'),
             'available_plugins' => is_array($this->cfg->get('tables.*.label', 'is_plugin', '1')) ? $this->cfg->get('tables.*.label', 'is_plugin', '1') : [],
             'available_tables' => $this->cfg->get('tables.*.label'),
         ]);
@@ -116,7 +116,7 @@ class config_ctrl extends Controller
 
 		try {
 
-			$post = utils::recursiveFilter($post);
+			$post = \utils::recursiveFilter($post);
 
 			// make indexed array for links and geoface
 			if($post['link']) {
@@ -142,13 +142,13 @@ class config_ctrl extends Controller
 				throw new \Exception('2. Required fields are missing');
             }
 
-			cfg::setTb($post);
+			\cfg::setTb($post);
 
-			utils::response('ok_cfg_data_updated');
+			\utils::response('ok_cfg_data_updated');
 
 		} catch(\Throwable $e) {
 			$this->log->error($e);
-			utils::response('error_cfg_data_updated', 'error');
+			\utils::response('error_cfg_data_updated', 'error');
 		}
     }
 
@@ -159,7 +159,7 @@ class config_ctrl extends Controller
 
 		try {
 
-			$post = utils::recursiveFilter($post);
+			$post = \utils::recursiveFilter($post);
 
 			if ($post['is_plugin'] === 1 && (!$post['name'] || !$post['label'] )) {
 
@@ -173,19 +173,19 @@ class config_ctrl extends Controller
             // Write table columns file
             $new_tb_name = $post['name'];
             
-            cfg::setFld( str_replace($this->prefix, null, $new_tb_name), 'id', [
+            \cfg::setFld( str_replace($this->prefix, null, $new_tb_name), 'id', [
                 "name" => "id",
                 "label" => "Id",
                 "type" => "text"
             ]);
-            cfg::setFld( str_replace($this->prefix, null, $new_tb_name), 'creator', [
+            \cfg::setFld( str_replace($this->prefix, null, $new_tb_name), 'creator', [
                 "name" => "creator",
                 "label" => "Creator",
                 "type" => "text"
             ]);
             
             // Write table data file
-            cfg::setTb($post);
+            \cfg::setTb($post);
 
             // Add table to database
             $engine = $this->db->getEngine();
@@ -201,13 +201,13 @@ class config_ctrl extends Controller
             $alter = new \DB\Alter($driver);
             $alter->createMinimalTable($new_tb_name);
 
-			utils::response('ok_cfg_data_updated', 'success', false, [
+			\utils::response('ok_cfg_data_updated', 'success', false, [
                 'tb' => $new_tb_name
             ]);
 
 		} catch(\Throwable $e) {
 			$this->log->error($e);
-			utils::response('error_cfg_data_updated', 'error');
+			\utils::response('error_cfg_data_updated', 'error');
 		}
     }
     
@@ -216,7 +216,7 @@ class config_ctrl extends Controller
 	{
 		$post = $this->post;
 		try {
-			$post = utils::recursiveFilter($post);
+			$post = \utils::recursiveFilter($post);
 
 			$tb = $post['tb_name'];
 			$fld = $post['fld_orig_name'];
@@ -227,13 +227,13 @@ class config_ctrl extends Controller
 				throw new \Exception('Both field name and field type are required');
             }
             
-			cfg::setFld($tb, $fld, $post);
+			\cfg::setFld($tb, $fld, $post);
 
-			utils::response('ok_cfg_data_updated');
+			\utils::response('ok_cfg_data_updated');
         
         } catch(\Throwable $e) {
             $this->log->error($e);
-			utils::response('error_cfg_data_updated', 'error');
+			\utils::response('error_cfg_data_updated', 'error');
 		}
     }
 
@@ -241,7 +241,7 @@ class config_ctrl extends Controller
 	{
 		$post = $this->post;
 		try {
-			$post = utils::recursiveFilter($post);
+			$post = \utils::recursiveFilter($post);
 
 			$tb = $post['tb_name'];
 			$fld = $post['name'];
@@ -252,11 +252,11 @@ class config_ctrl extends Controller
             }
             $available_flds = array_values($this->cfg->get("tables.$tb.fields.*.name"));
             if (in_array($fld, $available_flds)){
-                utils::response(tr::get('fld_already_available', [$fld]), 'error', true);
+                \utils::response(\tr::get('fld_already_available', [$fld]), 'error', true);
                 return;
             }
             
-            cfg::setFld($tb, $fld, $post);
+            \cfg::setFld($tb, $fld, $post);
             
             $engine = $this->db->getEngine();
             if ($engine === 'sqlite'){
@@ -271,11 +271,11 @@ class config_ctrl extends Controller
             $alter = new \DB\Alter($driver);
             $alter->addFld($tb, $fld, $post['db_type']);
 
-			utils::response('ok_cfg_data_updated', 'success', false, ["fld" => $fld]);
+			\utils::response('ok_cfg_data_updated', 'success', false, ["fld" => $fld]);
         
         } catch(\Throwable $e) {
             $this->log->error($e);
-			utils::response('error_cfg_data_updated', 'error');
+			\utils::response('error_cfg_data_updated', 'error');
 		}
     }
     
@@ -285,12 +285,12 @@ class config_ctrl extends Controller
 		
 		try {
 
-			cfg::setMain($data);
-            utils::response('ok_cfg_data_updated');
+			\cfg::setMain($data);
+            \utils::response('ok_cfg_data_updated');
             
 		} catch (\Throwable $e) {
 
-			utils::response('error_cfg_data_updated', 'error');
+			\utils::response('error_cfg_data_updated', 'error');
 		}
     }
 
@@ -299,7 +299,7 @@ class config_ctrl extends Controller
     {
         $tb = $this->get['tb'];
         try {
-            cfg::deleteTb($tb);
+            \cfg::deleteTb($tb);
             // Drop table from database
             $engine = $this->db->getEngine();
             if ($engine === 'sqlite'){
@@ -313,9 +313,9 @@ class config_ctrl extends Controller
             }
             $alter = new \DB\Alter($driver);
             $alter->dropTable($tb);
-            utils::response('ok_cfg_tb_delete', 'success');
+            \utils::response('ok_cfg_tb_delete', 'success');
         } catch (\Throwable $th) {
-            utils::response('error_cfg_tb_delete', 'error');
+            \utils::response('error_cfg_tb_delete', 'error');
         }
     }
 
@@ -326,7 +326,7 @@ class config_ctrl extends Controller
         $fld = $this->get['fld'];
 
         try {
-            cfg::deleteFld($tb, $fld);
+            \cfg::deleteFld($tb, $fld);
 
             $engine = $this->db->getEngine();
             if ($engine === 'sqlite'){
@@ -341,16 +341,16 @@ class config_ctrl extends Controller
             $alter = new \DB\Alter($driver);
             $alter->dropFld($tb, $fld);
 
-            utils::response('ok_cfg_column_delete', 'success');
+            \utils::response('ok_cfg_column_delete', 'success');
         } catch (\Throwable $th) {
-            utils::response('error_cfg_clumn_delete', 'error');
+            \utils::response('error_cfg_clumn_delete', 'error');
         }
     }
 
     public function security_check_pwd()
     {
-        if (!utils::canUser('super_admin')){
-            utils::response('not_a_super_admin_user', 'error');
+        if (!\utils::canUser('super_admin')){
+            \utils::response('not_a_super_admin_user', 'error');
             return;
         }
         // Logged used is super admin. Let's check the password
@@ -365,10 +365,10 @@ class config_ctrl extends Controller
         ]);
 
         if(!$me || !is_array($me)){
-            utils::response('invalid_pasword', 'error');
+            \utils::response('invalid_pasword', 'error');
             return;
         } else {
-            utils::response('valid_pasword', 'success');
+            \utils::response('valid_pasword', 'success');
             return;
         }
     }
@@ -383,7 +383,7 @@ class config_ctrl extends Controller
                 throw new \Exception("Table name $new_name has already been used");
             }
 
-            cfg::renameTb($old_name, $new_name);
+            \cfg::renameTb($old_name, $new_name);
 
             $engine = $this->db->getEngine();
             if ($engine === 'sqlite'){
@@ -398,10 +398,10 @@ class config_ctrl extends Controller
             $alter = new \DB\Alter($driver);
             $alter->renameTable($old_name, $new_name);
 
-            utils::response('ok_renaming_table', 'success');
+            \utils::response('ok_renaming_table', 'success');
         } catch (\Throwable $e) {
             $this->log->error($e);
-            utils::response('error_renaming_table', 'error');
+            \utils::response('error_renaming_table', 'error');
         }
     }
 
@@ -417,7 +417,7 @@ class config_ctrl extends Controller
                 throw new \Exception("Field name $new_name has already been used");
             }
 
-            cfg::renameFld($tb, $old_name, $new_name);
+            \cfg::renameFld($tb, $old_name, $new_name);
 
             $engine = $this->db->getEngine();
             if ($engine === 'sqlite'){
@@ -432,10 +432,10 @@ class config_ctrl extends Controller
             $alter = new \DB\Alter($driver);
             $alter->renameFld($tb, $old_name, $new_name);
 
-            utils::response('ok_renaming_column', 'success');
+            \utils::response('ok_renaming_column', 'success');
         } catch (\Throwable $e) {
             $this->log->error($e);
-            utils::response('error_renaming_column', 'error');
+            \utils::response('error_renaming_column', 'error');
         }
     }
 
@@ -445,7 +445,7 @@ class config_ctrl extends Controller
         $validate = new Validate($this->db, $this->prefix, $this->cfg);
         $report = $validate->all();
 
-        $html = '<button type="button" class="btn btn-info pull-right" onclick="$(this).parent().find(\'.alert-info, .alert-success\').toggle();">' . tr::get('show_only_errors') . '</button>';
+        $html = '<button type="button" class="btn btn-info pull-right" onclick="$(this).parent().find(\'.alert-info, .alert-success\').toggle();">' . \tr::get('show_only_errors') . '</button>';
 
         foreach ($report as $item) {
             if ($item['status'] === 'head'){
@@ -505,7 +505,7 @@ class config_ctrl extends Controller
                 $alter->addFld($tb, $col, $type);
                 \utils::response('ok_adding_column', 'success');
             } else {
-                \utils::response(tr::get('col_type_not_found', [$tb, $col]), 'error');
+                \utils::response(\tr::get('col_type_not_found', [$tb, $col]), 'error');
             }
             return;
         
@@ -520,7 +520,7 @@ class config_ctrl extends Controller
             return;
 
         }
-        \utils::response(tr::get('invalid_action', [$action]), 'error', true); // TODO:translate
+        \utils::response(\tr::get('invalid_action', [$action]), 'error', true); // TODO:translate
 
     }
 }

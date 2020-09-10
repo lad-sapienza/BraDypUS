@@ -25,9 +25,9 @@ class backup_ctrl extends Controller
 			$a = @unlink(PROJ_DIR . 'backups/' . $file);
 
 			if (!$a){
-				throw new \Exception(tr::get('error_erasing_file', [$file]));
+				throw new \Exception(\tr::get('error_erasing_file', [$file]));
 			}
-			$resp['text'] = tr::get('success_erasing_file', [$file]);
+			$resp['text'] = \tr::get('success_erasing_file', [$file]);
 			$resp['status'] = 'success';
 		} catch(\Exception $e) {
 			$resp['text'] = $e->getMessage();
@@ -38,10 +38,10 @@ class backup_ctrl extends Controller
 
 	public function getSavedBups()
 	{
-		$content = utils::dirContent(PROJ_DIR . 'backups');
+		$content = \utils::dirContent(PROJ_DIR . 'backups');
 
         if (!is_array($content)) {
-			echo '<h2>' . tr::get('no_bup_present') . '</h2>';
+			echo '<h2>' . \tr::get('no_bup_present') . '</h2>';
 			return;
         }
 
@@ -52,8 +52,8 @@ class backup_ctrl extends Controller
 			. '<td>' . round ( filesize( PROJ_DIR . 'backups/' . $file )/1024/1024, 3 ) . ' MB</td>'
 			. '<td>'
 				. '<div class="btn-group">'
-					.'<button class="download btn btn-info" onclick="backup.download(\'' . PROJ_DIR . 'backups/' . $file . '\')"><i class="glyphicon glyphicon-download-alt"></i> ' . tr::get('download') . '</button>'
-					. (utils::canUser('edit') ? ' <button type="button" class="btn btn-danger" onclick="backup.erase(\'' . $file . '\', this)"><i class="glyphicon glyphicon-trash"></i> ' . tr::get('erase') . '</button>' :  '')
+					.'<button class="download btn btn-info" onclick="backup.download(\'' . PROJ_DIR . 'backups/' . $file . '\')"><i class="glyphicon glyphicon-download-alt"></i> ' . \tr::get('download') . '</button>'
+					. (\utils::canUser('edit') ? ' <button type="button" class="btn btn-danger" onclick="backup.erase(\'' . $file . '\', this)"><i class="glyphicon glyphicon-trash"></i> ' . \tr::get('erase') . '</button>' :  '')
 				. '</div>'
 			. '</td>'
 			.'</tr>';

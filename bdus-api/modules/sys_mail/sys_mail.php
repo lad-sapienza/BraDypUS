@@ -13,7 +13,7 @@ class sys_mail_ctrl extends Controller
 	{
 		$to = '';
 		$subject = $this->post['subject'];
-		$body = $this->post['body'] . "\n" .tr::get('automatic_email_signature', [strtoupper(APP)]);
+		$body = $this->post['body'] . "\n" . \tr::get('automatic_email_signature', [strtoupper(APP)]);
 
 		$headers = 'From: ' . $this->post['from']  . "\r\n" . 'Reply-To: ' . $this->post['from'] . "\r\n";
 
@@ -30,17 +30,17 @@ class sys_mail_ctrl extends Controller
 		}
 		else
 		{
-			utils::alert_div('no_user_with_selected_privilege', true);
+			\utils::alert_div('no_user_with_selected_privilege', true);
 			return;
 		}
 
 		if (count($ok) > 0)
 		{
-			$ret_text = '<p>' . tr::get('ok_mail_sent_to_users', ['<ol><li>' . implode('</li><li>', $ok) . '</li></ol>']) . '</p>';
+			$ret_text = '<p>' . \tr::get('ok_mail_sent_to_users', ['<ol><li>' . implode('</li><li>', $ok) . '</li></ol>']) . '</p>';
 		}
 		if (count($no) > 0)
 		{
-			$ret_text = '<p>' . tr::get('error_mail_sent_to_users', ['<ol><li>' . implode('</li><li>', $no) . '</li></ol>']) . '</p>';
+			$ret_text = '<p>' . \tr::get('error_mail_sent_to_users', ['<ol><li>' . implode('</li><li>', $no) . '</li></ol>']) . '</p>';
 		}
 
 		echo $ret_text;
@@ -54,7 +54,7 @@ class sys_mail_ctrl extends Controller
 		$this->render('sys_mail', 'form', [
 			'adm_email' => APP . '_admin@bradypus.net',
 			'user_email' => $_SESSION['user']['email'],
-			'privileges' => utils::privilege('all', true)
+			'privileges' => \utils::privilege('all', true)
 		]);
 	}
 }

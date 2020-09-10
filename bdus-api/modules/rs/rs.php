@@ -29,7 +29,7 @@ class rs_ctrl extends Controller
             return $rels;
         } else {
             foreach ($rels as $k=>$r) {
-                $tr[$k] = tr::get($r);
+                $tr[$k] = \tr::get($r);
             }
             return $tr;
         }
@@ -42,9 +42,9 @@ class rs_ctrl extends Controller
         $record = new Record('no importance', false, $this->db, $this->cfg);
 
         if ($record->deleteRS($id)) {
-            utils::response('ok_relation_erased');
+            \utils::response('ok_relation_erased');
         } else {
-            utils::response('error_relation_erased');
+            \utils::response('error_relation_erased');
         }
     }
 
@@ -61,7 +61,7 @@ class rs_ctrl extends Controller
 
         if ($res && is_array($res)) {
             foreach ($res as $rel) {
-                $delete = ($context == 'edit') ? ' <a href="javascript:void(0)" class="delete" data-id="' . $rel['id'] . '" title="' . tr::get('erase') . '">[x]</a>' : '';
+                $delete = ($context == 'edit') ? ' <a href="javascript:void(0)" class="delete" data-id="' . $rel['id'] . '" title="' . \tr::get('erase') . '">[x]</a>' : '';
 
                 if ($id === $rel['first']) {
                     $data[$rel['relation']][] = '<div class="rsEl"><span class="a">' . $rel['second'] . '</span>' . $delete . '</div>';
@@ -101,9 +101,9 @@ class rs_ctrl extends Controller
         $id = $record->addRS($first, $relation, $second);
 
         if (!$id) {
-            utils::response('relation_already_exist', 'error');
+            \utils::response('relation_already_exist', 'error');
         } else {
-            utils::response('ok_relation_add', 'success', false, [ 'id' => $id ]);
+            \utils::response('ok_relation_add', 'success', false, [ 'id' => $id ]);
         }
     }
 }

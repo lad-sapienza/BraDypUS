@@ -62,9 +62,9 @@ class vocabularies_ctrl extends Controller
 		]);
 		
 		if ( $res ) {
-			utils::response('ok_def_update', 'success');
+			\utils::response('ok_def_update', 'success');
 		} else {
-			utils::response('error_def_update', 'error');
+			\utils::response('error_def_update', 'error');
 		}
 	}
 	
@@ -75,9 +75,9 @@ class vocabularies_ctrl extends Controller
 		$res = $this->getSysMng()->deleteRow('vocabularies', $id );
 
 		if ( $res ) {
-			utils::response('ok_def_erase', 'success');
+			\utils::response('ok_def_erase', 'success');
 		} else {
-			utils::response('error_def_erase', 'error');
+			\utils::response('error_def_erase', 'error');
 		}
 	}
 	
@@ -92,9 +92,9 @@ class vocabularies_ctrl extends Controller
 		]);
 
 		if ( $res ) {
-			utils::response('ok_def_added', 'success');
+			\utils::response('ok_def_added', 'success');
 		} else {
-			utils::response('error_def_added', 'error');
+			\utils::response('error_def_added', 'error');
 		}
 	}
 	
@@ -113,9 +113,9 @@ class vocabularies_ctrl extends Controller
 		}
 
 		if ($error){
-			utils::response('error_sort_update', 'error');
+			\utils::response('error_sort_update', 'error');
 		} else {
-			utils::response('ok_sort_update', 'success');
+			\utils::response('ok_sort_update', 'success');
 		}
 	}
 }

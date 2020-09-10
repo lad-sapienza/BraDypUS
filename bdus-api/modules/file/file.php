@@ -60,7 +60,7 @@ class file_ctrl extends Controller
 			}
 
 			$result['status'] = 'success';
-			$result['text'] = tr::get('file_uploaded_and_attached');
+			$result['text'] = \tr::get('file_uploaded_and_attached');
 
 			echo json_encode($result);
 
@@ -69,7 +69,7 @@ class file_ctrl extends Controller
 
 			echo json_encode([
 				'status'=>'error',
-				'text' => tr::get($e->getMessage())
+				'text' => \tr::get($e->getMessage())
 			]);
 		}
 	}
@@ -144,20 +144,20 @@ class file_ctrl extends Controller
 
 				$resp = [
 					'status' => 'success', 
-					'text'=> tr::get('ok_file_sorting_update')
+					'text'=> \tr::get('ok_file_sorting_update')
 				];
 			
 			} catch (\DB\DBException $e) {
 				$this->db->rollBack();
 				$resp = [
 					'status' => 'error', 
-					'text'=> tr::get('error_file_sorting_update')
+					'text'=> \tr::get('error_file_sorting_update')
 				];
 			}
 		} else {
 			$resp = [
 				'status' => 'error', 
-				'text'=> tr::get('error_file_sorting_update')
+				'text'=> \tr::get('error_file_sorting_update')
 			];
 		}
 
@@ -174,8 +174,8 @@ class file_ctrl extends Controller
 		$record = new Record($this->request['tb'], $this->request['id'], $this->db, $this->cfg);
 
 		$this->render('file', 'gallery', [
-			'title' => tr::get('file_gallery', [$this->cfg->get("tables.{$this->request['tb']}.label") . ', id. ' . $this->request['id']]),
-			'can_edit' => utils::canUser('edit'),
+			'title' => \tr::get('file_gallery', [$this->cfg->get("tables.{$this->request['tb']}.label") . ', id. ' . $this->request['id']]),
+			'can_edit' => \utils::canUser('edit'),
 			'all_files' => $record->getFullFiles(),
 			'images' => new images(),
 			'prefix' => $this->prefix,

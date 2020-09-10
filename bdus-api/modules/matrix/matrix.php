@@ -33,7 +33,7 @@ class matrix_ctrl extends Controller
 		} catch (\Exception $e) {
 			$this->log->error($e);
 			echo '<div class="alert alert-danger"> '
-					. '<strong>' . tr::get('attention') . ':</strong> ' . tr::get($e->getMessage()) . '</p>'
+					. '<strong>' . \tr::get('attention') . ':</strong> ' . \tr::get($e->getMessage()) . '</p>'
 				. '</div>';
 		}
 	}

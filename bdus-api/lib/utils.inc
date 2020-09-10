@@ -128,7 +128,7 @@ class utils
 
 		if ($input === 'all' && $translate) {
 			foreach ($privilege_array as $id=>$val) {
-				$tr[$id] = tr::get($val);
+				$tr[$id] = \tr::get($val);
 			}
 
 			return $tr;
@@ -139,7 +139,7 @@ class utils
 		}
 
 		if (in_array($input, array_keys($privilege_array))) {
-			return $translate ? tr::get($privilege_array[$input]) : $privilege_array[$input];
+			return $translate ? \tr::get($privilege_array[$input]) : $privilege_array[$input];
 		}
 
 		return false;
@@ -260,7 +260,7 @@ class utils
 					}
 				} else {
 					if ( !@unlink ( $dir . '/' . $file ) ) {
-						throw new \Exception(tr::get('cannot_delete_file', [$file]));
+						throw new \Exception(\tr::get('cannot_delete_file', [$file]));
 					}
 				}
 			}
@@ -268,7 +268,7 @@ class utils
 
 		if ( $dir !== PROJ_TMP_DIR && $delete) {
 			if ( !@rmdir( $dir ) ) {
-				throw new \Exception(tr::get('cannot_delete_dir', [$dir]));
+				throw new \Exception(\tr::get('cannot_delete_dir', [$dir]));
 			}
 		}
 
@@ -396,7 +396,7 @@ class utils
 			$status = 'success';
 		}
 		$response['status'] = $status;
-		$response['text'] = $dont_translate ? $text : tr::get($text);
+		$response['text'] = $dont_translate ? $text : \tr::get($text);
 		$other_args ? $response = array_merge($response, $other_args) : '';
 
 		echo json_encode($response);
@@ -414,7 +414,7 @@ class utils
 	public static function alert_div($text, $echo = false, $dont_translate = false)
 	{
 		$str = '<div class="text-danger">'
-				. '<strong>' . tr::get('attention') . ':</strong> ' . ($dont_translate ? $text : tr::get($text)) . '</p>'
+				. '<strong>' . \tr::get('attention') . ':</strong> ' . ($dont_translate ? $text : \tr::get($text)) . '</p>'
 			. '</div>';
 
 		if ($echo)

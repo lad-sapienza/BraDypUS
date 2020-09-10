@@ -99,7 +99,7 @@ class Export
 				'data' => $this->data
 				);
 
-		utils::write_formatted_json($this->filename, $data);
+		\utils::write_formatted_json($this->filename, $data);
 	}
 
 
@@ -127,7 +127,7 @@ class Export
 				$xml .= "\t</table>\n"
 			. "</root>";
 
-			$w = utils::write_in_file($this->filename, $xml);
+			$w = \utils::write_in_file($this->filename, $xml);
 
 			if (!$w) {
 				throw new \Exception('Can not write in file ' . $this->filename);
@@ -178,7 +178,7 @@ class Export
 			. "</html>";
 
 
-		$w = utils::write_in_file($this->filename, $html);
+		$w = \utils::write_in_file($this->filename, $html);
 
 		if (!$w) {
 			throw new \Exception('Can not write in file ' . $this->filename);
@@ -305,7 +305,7 @@ class Export
 		}
 
 
-		$w = utils::write_in_file($this->filename, $sql);
+		$w = \utils::write_in_file($this->filename, $sql);
 
 		if (!$w) {
 			throw new \Exception('Can not write in file ' . $this->filename);

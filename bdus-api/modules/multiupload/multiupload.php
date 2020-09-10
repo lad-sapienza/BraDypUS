@@ -35,11 +35,11 @@ class multiupload_ctrl extends Controller
 	 */
 	public function showPreview()
 	{
-		$dirContent = utils::dirContent($this->get['dir']);
+		$dirContent = \utils::dirContent($this->get['dir']);
 
 		if (!$dirContent)
 		{
-			echo '<h2>' . tr::get('no_files_found', [$dir]) . '</h2>';
+			echo '<h2>' . \tr::get('no_files_found', [$dir]) . '</h2>';
 			return;
 		}
 
@@ -103,11 +103,11 @@ class multiupload_ctrl extends Controller
 		}
 
 		if (is_array($error) && count($error) == count($this->post['f'])) {
-			echo json_encode(array('status'=>'error', 'text'=>tr::get('error_data_save')));
+			\utils::response('error_data_save', 'error');
 		} else if (is_array($error) && count($error) > 0) {
-			echo json_encode(array('status'=>'error', 'text'=>tr::get('partial_data_save')));
+			\utils::response('partial_data_save', 'error');
 		} else {
-			echo json_encode(array('status'=>'success', 'text'=>tr::get('ok_data_save')));
+			\utils::response('ok_data_save', 'success');
 		}
 	}
 }

@@ -69,7 +69,7 @@ class QueryFromRequest
     public function __construct(DBInterface $db, Config $cfg, array $request, bool $use_preview = false)
     {
         if (!$request['tb']) {
-            throw new \Exception(tr::get('parameter_missing', ['tb']));
+            throw new \Exception(\tr::get('parameter_missing', ['tb']));
         }
         $this->tb = $request['tb'];
 
@@ -190,15 +190,15 @@ class QueryFromRequest
     public function getQuery(bool $with_values = false )
     {
         if (!$this->fields) {
-            throw new \Exception(tr::get('parameter_missing', ['fields']));
+            throw new \Exception(\tr::get('parameter_missing', ['fields']));
         }
 
         if (!$this->tb) {
-            throw new \Exception(tr::get('parameter_missing', ['tb']));
+            throw new \Exception(\tr::get('parameter_missing', ['tb']));
         }
 
         if (!$this->where) {
-            throw new \Exception(tr::get('parameter_missing', ['where']));
+            throw new \Exception(\tr::get('parameter_missing', ['where']));
         }
 
         $sql = "SELECT " .
@@ -322,7 +322,7 @@ class QueryFromRequest
                 break;
                 
             default:
-                throw new \Exception(tr::get('parameter_missing', ['type']));
+                throw new \Exception(\tr::get('parameter_missing', ['type']));
                 break;
         }
         return;
@@ -373,7 +373,7 @@ class QueryFromRequest
             $where .= ($row['('] ? ' ( ' : '');
 
             // fld is a composite string: table-name-with-prefix:fieldname
-            $fld_arr = utils::csv_explode($row['fld'], ':');
+            $fld_arr = \utils::csv_explode($row['fld'], ':');
 
             // field name
             $tb = $fld_arr[0];
@@ -443,7 +443,7 @@ class QueryFromRequest
         $order = [];
         if (is_array($dati['order'])) {
             foreach ($dati['order'] as $o) {
-                $order_arr = utils::csv_explode($o, ':');
+                $order_arr = \utils::csv_explode($o, ':');
                 array_push($order, $order_arr[1]);
             }
         }
@@ -496,7 +496,7 @@ class QueryFromRequest
     private function formatFields()
     {
         if (!$this->fields) {
-            throw new \Exception(tr::get('parameter_missing', ['fields']));
+            throw new \Exception( \tr::get('parameter_missing', ['fields']));
         }
         $ret = [];
         foreach (array_keys($this->fields) as $f) {

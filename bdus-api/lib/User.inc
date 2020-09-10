@@ -56,7 +56,7 @@ class User
     public function login(string $email = null, string $password = null, string $remember = null, int $user_id = null): bool
     {
         if (!$this->app) {
-            throw new \Exception(tr::get('no_app_error'));
+            throw new \Exception(\tr::get('no_app_error'));
         }
 
         if (!$email && !$password && $remember) {
@@ -71,7 +71,7 @@ class User
             // get user data
             $res = $this->getUser(array('id'=> $user_id, 'email' => $email, 'password' => $this->encodePwd($password) ));
         } else {
-            throw new \Exception(tr::get('email_password_needed'));
+            throw new \Exception(\tr::get('email_password_needed'));
         }
 
         if ($res[0]) {
@@ -102,7 +102,7 @@ class User
 
             return true;
         } else {
-            throw new \Exception(tr::get('login_data_not_valid'));
+            throw new \Exception(\tr::get('login_data_not_valid'));
         }
     } // end of login
 
@@ -116,7 +116,7 @@ class User
         pref::save2DB($this->db);
 
         // emtpy user tmp dir
-        utils::emptyDir();
+        \utils::emptyDir();
 
         // delete old session files
         self::deleteOldSessions();
@@ -130,7 +130,7 @@ class User
     private static function deleteOldSessions()
     {
         $maxlife = 24*60*60; // 24h
-        $sessions = utils::dirContent(MAIN_DIR . 'sessions');
+        $sessions = \utils::dirContent(MAIN_DIR . 'sessions');
 
         if ($sessions && is_array($sessions)) {
             foreach ($sessions as $s) {
@@ -169,11 +169,11 @@ class User
         }
 
         if ($this->isDuplicate($email)) {
-            throw new \Exception(tr::get('email_present', ['<strong>' . $email . '</strong>']));
+            throw new \Exception(\tr::get('email_present', ['<strong>' . $email . '</strong>']));
         }
 
         if (!$this->isValid($email)) {
-            throw new \Exception(tr::get('email_not_valid', ['<strong>' . $email . '</strong>']));
+            throw new \Exception(\tr::get('email_not_valid', ['<strong>' . $email . '</strong>']));
         }
 
         $statement = "INSERT INTO " . $this->prefix . "users "
@@ -206,11 +206,11 @@ class User
     public function update($id, $name = false, $email = false, $password = false, $privilege = false, $settings = false)
     {
         if (!$name && !$email && !$password && !$privilege && !$settings) {
-            throw new \Exception(tr::get('not_enough_data'));
+            throw new \Exception(\tr::get('not_enough_data'));
         } elseif ($email and $this->isDuplicate($email, $id)) {
-            throw new \Exception(tr::get('email_present', ['<strong>' . $email . '</strong>']));
+            throw new \Exception(\tr::get('email_present', ['<strong>' . $email . '</strong>']));
         } elseif ($email && !$this->isValid($email)) {
-            throw new \Exception(tr::get('email_not_valid', ['<strong>' . $email . '</strong>']));
+            throw new \Exception(\tr::get('email_not_valid', ['<strong>' . $email . '</strong>']));
         } else {
             $partial_arr =  array();
 
@@ -290,7 +290,7 @@ class User
 
         return $this->db->query(
             "SELECT * FROM {$this->prefix}users WHERE privilege {$comparison} ?", 
-            [ utils::privilege($priv) ], 
+            [ \utils::privilege($priv) ], 
             'read'
         );
     }

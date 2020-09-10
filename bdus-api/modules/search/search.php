@@ -44,10 +44,10 @@ class search_ctrl extends Controller
 		try {
 			$queryObj = new QueryFromRequest($this->db, $this->cfg, $this->request, true);
 			$resp['status'] = 'success';
-			$resp['verbose'] = tr::get('test_ok_x_found', [$queryObj->getTotal()]);
+			$resp['verbose'] = \tr::get('test_ok_x_found', [$queryObj->getTotal()]);
 		} catch (\Throwable $e) {
 			$resp['status'] = 'error';
-			$resp['verbose'] = tr::get('test_error');
+			$resp['verbose'] = \tr::get('test_error');
 		}
 
 		echo json_encode($resp);
@@ -108,15 +108,15 @@ class search_ctrl extends Controller
 	private function opt_operators()
 	{
 		$operators = array(
-				'LIKE'		=>	tr::get('contains'),
-				'=' 		=>	tr::get('is_exactly'),
-				'NOT LIKE'	=>	tr::get('doesnt_contain'),
-				'starts_with'=>	tr::get('starts_with'),
-				'ends_with'	=>	tr::get('ends_with'),
-				'is_empty'	=> 	tr::get('is_empty'),		// SQL: field='' OR field IS NULL
-				'is_not_empty'=>tr::get('is_not_empty'),
-				'>'			=>	tr::get('bigger'),
-				'<'			=>	tr::get('smaller')
+				'LIKE'		=>	\tr::get('contains'),
+				'=' 		=>	\tr::get('is_exactly'),
+				'NOT LIKE'	=>	\tr::get('doesnt_contain'),
+				'starts_with'=>	\tr::get('starts_with'),
+				'ends_with'	=>	\tr::get('ends_with'),
+				'is_empty'	=> 	\tr::get('is_empty'),		// SQL: field='' OR field IS NULL
+				'is_not_empty'=>\tr::get('is_not_empty'),
+				'>'			=>	\tr::get('bigger'),
+				'<'			=>	\tr::get('smaller')
 		);
 
 		foreach ($operators as $operator => $label)

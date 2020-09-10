@@ -63,7 +63,7 @@ class GetUniqueVal
                 continue;
             }
             if ($fld_type === 'multi_select') {
-                $v_a = utils::csv_explode($v['f'], ';');
+                $v_a = \utils::csv_explode($v['f'], ';');
                 foreach ($v_a as $i) {
                     $i = trim($i);
 

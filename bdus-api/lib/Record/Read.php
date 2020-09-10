@@ -301,7 +301,7 @@ EOD;
 
 			foreach ($bl_data as $bl) {
 
-				list($ref_tb, $via_plg, $via_plg_fld) = utils::csv_explode($bl, ':');
+				list($ref_tb, $via_plg, $via_plg_fld) = \utils::csv_explode($bl, ':');
         $ref_tb_id = $this->cfg->get("tables.$ref_tb.id_field");
 
         $where = " id IN (SELECT DISTINCT id_link FROM {$via_plg} WHERE table_link = '{$ref_tb}' AND {$via_plg_fld} = {$id})";

@@ -56,10 +56,10 @@ class Field implements TemplateInterface
         $sql_values = [];
         try {
             if ($filter) {
-                $wh_arr = utils::csv_explode($filter, ';');
+                $wh_arr = \utils::csv_explode($filter, ';');
                 if (is_array($wh_arr) && !empty($wh_arr)) {
                     foreach ($wh_arr as $w) {
-                        $w_arr = utils::csv_explode($w, '=');
+                        $w_arr = \utils::csv_explode($w, '=');
 
                         array_push($tmp_where,  "{$w_arr[0]} = ?");
                         array_push($sql_values, $this->record->getCore($w_arr[1]));
@@ -89,7 +89,7 @@ class Field implements TemplateInterface
      */
     public function simpleSum( string $fields) : int
     {
-        $flds_arr = utils::csv_explode($fields);
+        $flds_arr = \utils::csv_explode($fields);
         $sum = 0;
 
         if (is_array($flds_arr) && !empty($flds_arr)) {
@@ -125,7 +125,7 @@ class Field implements TemplateInterface
         }
 
         $html = '<fieldset class="links">'
-            . '<legend>' . tr::get('links_avaliable') . '</legend>';
+            . '<legend>' . \tr::get('links_avaliable') . '</legend>';
 
         // Back-link table is a plugin table that servers as 1-n pivot.
         // Given two tables, prefix__aa and prefix__bb
@@ -143,10 +143,10 @@ class Field implements TemplateInterface
         $corelinks = $this->record->getCoreLinks();
 
         // SHOW CORELINKS
-        $html .= '<i class="glyphicon glyphicon-link"></i> <strong>' . tr::get('system_links'). '</strong><br />';
+        $html .= '<i class="glyphicon glyphicon-link"></i> <strong>' . \tr::get('system_links'). '</strong><br />';
 
         if (!empty($corelinks) && !empty($backlinks)) {
-            $html .= '<p>' . tr::get('no_system_links') . '</p>';
+            $html .= '<p>' . \tr::get('no_system_links') . '</p>';
         }
 
         if (is_array($backlinks)) {
@@ -168,13 +168,13 @@ class Field implements TemplateInterface
             $html .= '<ul>';
             foreach ($corelinks as $dest_tb=>$l_arr) {
                 $html .= '<li><span class="btn-link" onclick="' .
-         "api.showResults('{$dest_tb}', 'type=obj_encoded&obj_encoded=" . \SQL\SafeQuery::encode($l_arr['query'], $l_arr['values']) . "&total={$l_arr['tot']}', '" . tr::get('saved_queries') . " (". $this->cfg->get("tables.{$dest_tb}.label") . ")');" .
+         "api.showResults('{$dest_tb}', 'type=obj_encoded&obj_encoded=" . \SQL\SafeQuery::encode($l_arr['query'], $l_arr['values']) . "&total={$l_arr['tot']}', '" . \tr::get('saved_queries') . " (". $this->cfg->get("tables.{$dest_tb}.label") . ")');" .
           '" href="javascript:void(0)">' .
-          tr::get('links_in_table', ['<strong>' . $l_arr['tot'] . '</strong>', '<strong>' . $this->cfg->get("tables.$dest_tb.label") . '</strong>']) .
+          \tr::get('links_in_table', ['<strong>' . $l_arr['tot'] . '</strong>', '<strong>' . $this->cfg->get("tables.$dest_tb.label") . '</strong>']) .
           '</span>';
 
                 if ($this->cfg->get("tables.$dest_tb.rs")) {
-                    $html .= ' (<span class="btn-link" onclick="api.record.showMatrix(\'' . $dest_tb . '\', \'' . base64_encode($l_arr['query']) . '\')">' . tr::get('harris_matrix'). '</span>)';
+                    $html .= ' (<span class="btn-link" onclick="api.record.showMatrix(\'' . $dest_tb . '\', \'' . base64_encode($l_arr['query']) . '\')">' . \tr::get('harris_matrix'). '</span>)';
                 }
 
                 $html .= '</li>';
@@ -209,11 +209,11 @@ class Field implements TemplateInterface
         $gdata = $this->record->getGeodata();
 
         if ($gdata) {
-            $view_this = '<p>' . tr::get('x_geodata_available', ['<strong>' . count($gdata) . '</strong>'])
-            . ' <span class="btn btn-link" onclick="core.runMod(\'geoface\', [\'' . $this->tb . '\', \'' . base64_encode(' id= ' . $this->record->getCore('id') . ' ') . '\']);">' . tr::get('view_on_map') . '</span></p>';
+            $view_this = '<p>' . \tr::get('x_geodata_available', ['<strong>' . count($gdata) . '</strong>'])
+            . ' <span class="btn btn-link" onclick="core.runMod(\'geoface\', [\'' . $this->tb . '\', \'' . base64_encode(' id= ' . $this->record->getCore('id') . ' ') . '\']);">' . \tr::get('view_on_map') . '</span></p>';
         }
 
-        $view_all = '<p><span class="btn btn-link" onclick="core.runMod(\'geoface\', \'' . $this->tb . '\');">' . tr::get('view_all_records_on_map') . '</span></p>';
+        $view_all = '<p><span class="btn btn-link" onclick="core.runMod(\'geoface\', \'' . $this->tb . '\');">' . \tr::get('view_all_records_on_map') . '</span></p>';
 
 
         if ($this->cfg->get('tables.' . PREFIX . 'geodata.is_plugin')) {
@@ -228,8 +228,8 @@ class Field implements TemplateInterface
             );
         } else {
             return '<fieldset class="geodata">' .
-                '<legend>' . tr::get('geodata') . '</legend>' .
-                (is_array($gdata) ? $this->plg('geodata') . $view_this : '<p>' . tr::get('no_geodata_available') . '</p>') .
+                '<legend>' . \tr::get('geodata') . '</legend>' .
+                (is_array($gdata) ? $this->plg('geodata') . $view_this : '<p>' . \tr::get('no_geodata_available') . '</p>') .
                 $view_all . '</fieldset>';
         }
     }
@@ -336,7 +336,7 @@ class Field implements TemplateInterface
         if (is_array($data_arr) && !empty($data_arr[0]) && $this->tb != PREFIX . 'files') {
             $html .= '<div class="clearfix gal_button">' .
                     '<button type="button" class="btn btn-sm btn-info service" onclick="api.file.show_gallery(\'' . $this->tb . '\', \'' . $this->record->getCore('id') . '\');"><i class="glyphicon glyphicon-white glyphicon-file"></i> ' .
-                        tr::get('x_files_linked', [count($data_arr)]) .
+                        \tr::get('x_files_linked', [count($data_arr)]) .
                     '</button>' .
                     '</div>';
         }
@@ -348,7 +348,7 @@ class Field implements TemplateInterface
             $html .= '<div id="' . $uid . '" class="load_img_placeholder">sostituisci l\'immagine</div>' .
                     '<script>' .
                         "api.fileUpload($('#" . $uid . "'), './?obj=file_ctrl&method=upload', {" .
-                            "'button_text': '" . str_replace("'", "\'", tr::get('replace_file') ). "'," .
+                            "'button_text': '" . str_replace("'", "\'", \tr::get('replace_file') ). "'," .
                             "'complete': function(id, fileName, resp){" .
                                 "$('#{$uid}').parents('form').find('input[name*=filename]').val(resp.filename).attr('changed', 'auto');" .
                                 "$('#{$uid}').parents('form').find('input[name*=ext]').val(resp.ext).attr('changed', 'auto');" .
@@ -379,13 +379,13 @@ class Field implements TemplateInterface
 
 
         // 5. Attach file to record if current table is not FILES, context is EDIT and user can edit
-        if ($this->tb != PREFIX . 'files' && $this->context == 'edit' && utils::canUser('edit', $this->record->getCore('creator'))) {
+        if ($this->tb != PREFIX . 'files' && $this->context == 'edit' && \utils::canUser('edit', $this->record->getCore('creator'))) {
             $uid = uniqid('newfile');
 
             $html .= '<div id="' . $uid . '" class="load_img_placeholder"></div>' .
                     '<script>' .
                         "api.fileUpload($('#" . $uid . "'), './?obj=file_ctrl&method=uploadLink&dest_table=" . $this->tb . "&dest_id=" . $this->record->getId() . "', {" .
-                            "'button_text' : '" . str_replace("'", "\'", tr::get('click_drag_link_file')) . "'," .
+                            "'button_text' : '" . str_replace("'", "\'", \tr::get('click_drag_link_file')) . "'," .
                             "'limit2one': true," .
                             "'complete': function(id, fileName, resp){" .
                                 "if(resp.status == 'success'){" .
@@ -623,9 +623,9 @@ class Field implements TemplateInterface
 
         // get $tmpl_info data from template input
         if ($formatting) {
-            $tmpl_data_arr = utils::csv_explode($formatting, ';');
+            $tmpl_data_arr = \utils::csv_explode($formatting, ';');
             foreach ($tmpl_data_arr as $tmpl_data) {
-                $tmp_arr = utils::csv_explode($tmpl_data, ':');
+                $tmp_arr = \utils::csv_explode($tmpl_data, ':');
                 $tmpl_info[$tmp_arr[0]] = $tmp_arr[1];
                 unset($tmp_arr);
             }
@@ -685,7 +685,7 @@ class Field implements TemplateInterface
 
         // ADD DATA TO MENU VALUES, IF NOT PRESENT
         if ($setting['type'] == 'multi_select' && $setting['data']) {
-            $data_arr = utils::csv_explode($setting['data'], ';');
+            $data_arr = \utils::csv_explode($setting['data'], ';');
             if (is_array($data_arr)) {
                 foreach ($data_arr as $v) {
                     if (is_array($setting['menu_values']) && !in_array($v, $setting['menu_values'])) {
@@ -802,11 +802,11 @@ class Field implements TemplateInterface
         '>';
 
         // Val is always an array, for easy parsing: exploded values for multi_select od single value array
-        $val = ($setting['type'] == 'multi_select') ? utils::csv_explode($setting['data'], ';') : [$setting['data']];
+        $val = ($setting['type'] == 'multi_select') ? \utils::csv_explode($setting['data'], ';') : [$setting['data']];
 
         // 1. Boolean values: convert 1|0/false to yes|no
         if ($setting['type'] === 'boolean') {
-            $html .=  ((!$setting['data'] || $setting['data'] === 0)	? tr::get('no') : tr::get('yes'));
+            $html .=  ((!$setting['data'] || $setting['data'] === 0) ? \tr::get('no') : \tr::get('yes'));
         }
         // 2. Return false if data is empty
         elseif ($setting['data'] === false || $setting['data'] === null || $setting['data'] === '') {
@@ -817,7 +817,7 @@ class Field implements TemplateInterface
         else {
             // 3.1 Field is populated with values get by another table.field
             if ($setting['get_values_from_tb']) {
-                $from_table_arr = utils::csv_explode($setting['get_values_from_tb'], ':');
+                $from_table_arr = \utils::csv_explode($setting['get_values_from_tb'], ':');
 
                 $otherTb = $from_table_arr[0];
                 $otherFld = $from_table_arr[1];
@@ -838,8 +838,8 @@ class Field implements TemplateInterface
                 if ($otherTb === $this->tb || ($otherTb !== $this->tb && $otherFld !== $this->cfg->get("tables.{$otherTb}.id_field"))) {
                     foreach ($val as $v) {
                         $html .= "<span class=\"a\" " .
-                            " onclick=\"api.showResults('" . $otherTb. "', 'type=obj_encoded', '" . tr::get('contextual_search_in', [$this->cfg->get("tables.$otherTb.label")]) . "', {obj_encoded: '" . \SQL\SafeQuery::encode( $otherFld . " = ?", [$v]). "'})\">" .
-                            utils::format_text($v) .
+                            " onclick=\"api.showResults('" . $otherTb. "', 'type=obj_encoded', '" . \tr::get('contextual_search_in', [$this->cfg->get("tables.$otherTb.label")]) . "', {obj_encoded: '" . \SQL\SafeQuery::encode( $otherFld . " = ?", [$v]). "'})\">" .
+                            \utils::format_text($v) .
                             '</span>' . (next($val) === false ? ' ' : ';');
                     }
                 }
@@ -847,7 +847,7 @@ class Field implements TemplateInterface
                 else {
                     foreach ($val as $v) {
                         $html .= '<span class="a" onclick="api.record.read(\'' . $otherTb . '\', [\'' . $v . '\'], true)">' .
-                            utils::format_text($v) .
+                            \utils::format_text($v) .
                             '</span>' . (next($val) === false ? ' ' : ';');
                     }
                 }
@@ -863,7 +863,7 @@ class Field implements TemplateInterface
 
                     if ($res[0]['id_from_tb_val']) {
                         $html .= '<span class="a" onclick="api.record.read(\'' . $setting['id_from_tb'] . '\', [' . $v . '])">'
-                                . utils::format_text($res[0]['id_from_tb_val'])
+                                . \utils::format_text($res[0]['id_from_tb_val'])
                             . '</span>' . (next($val) === false ? ' ' : ';');
                     }
                 }
@@ -873,15 +873,15 @@ class Field implements TemplateInterface
                 foreach ($val as $v) {
                     if ($setting['active_link']) {
                         $html .= "<span class=\"a\" " .
-                            " onclick=\"api.showResults('" . $this->tb. "', 'type=obj_encoded', '" . tr::get('contextual_search_in', [$this->cfg->get("tables.{$this->tb}.label")] ) . "', {obj_encoded: '" . \SQL\SafeQuery::encode(
+                            " onclick=\"api.showResults('" . $this->tb. "', 'type=obj_encoded', '" . \tr::get('contextual_search_in', [$this->cfg->get("tables.{$this->tb}.label")] ) . "', {obj_encoded: '" . \SQL\SafeQuery::encode(
                                     "" . $setting['fieldname'] . " LIKE '%;" . $v . "' " .
                                     "OR " . $setting['fieldname'] . " LIKE '" . $v . ";%' " .
                                     "OR " . $setting['fieldname'] . " = '" . $v . "' "
                                 ). "'})\">" .
-                            utils::format_text($v) .
+                           \utils::format_text($v) .
                             '</span>' . (next($val) === false ? ' ' : ';');
                     } else {
-                        $html .=  utils::format_text($v) . ($v !== end($val) ? '; ' : '');
+                        $html .= \utils::format_text($v) . ($v !== end($val) ? '; ' : '');
                     }
                 }
             }
@@ -1037,8 +1037,8 @@ class Field implements TemplateInterface
     protected function htmlBoolean($core, $setting)
     {
         return '<select ' . $core . ' class="form-control">'
-            . '<option value="1"' . (($setting['data'] === 1) ? ' selected ': '') . '>' . tr::get('yes') . '</option>'
-            . '<option value="0"' . ((!$setting['data'] === 0 or $setting['data']==0) ? ' selected ': '') . '>' . tr::get('no') . '</option>'
+            . '<option value="1"' . (($setting['data'] === 1) ? ' selected ': '') . '>' . \tr::get('yes') . '</option>'
+            . '<option value="0"' . ((!$setting['data'] === 0 or $setting['data']==0) ? ' selected ': '') . '>' . \tr::get('no') . '</option>'
         . '</select>';
     } // fine htmlBoolean
 

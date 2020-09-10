@@ -85,7 +85,7 @@ class tr
 
 	public static function getAvailable(): array
 	{
-		$langs = utils::dirContent(LOCALE_DIR) ?? [];
+		$langs = \utils::dirContent(LOCALE_DIR) ?? [];
 		
 		array_walk($langs, function(&$el){ $el =  str_replace('.json', null, $el); });
 

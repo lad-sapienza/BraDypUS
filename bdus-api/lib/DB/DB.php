@@ -295,7 +295,7 @@ class DB implements DBInterface
 		$cfg = json_decode(file_get_contents($this->path_to_root . "projects/{$app}/cfg/app_data.json"), true);
 		
 		if (!is_array($cfg)){
-			throw new \Exception(tr::get('invalid_configuration_file', [$connection_file]) );
+			throw new \Exception(\tr::get('invalid_configuration_file', [$connection_file]) );
 		}
 
         if (file_exists($this->path_to_root . "projects/{$app}/db/bdus.sqlite")) {

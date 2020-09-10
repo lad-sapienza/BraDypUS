@@ -54,18 +54,18 @@ class record_ctrl extends Controller
 
             if (count($ok) == count($this->request['id'])) {
                 $data['status'] = 'success';
-                $data['verbose'] = tr::get('success_saved');
+                $data['verbose'] = \tr::get('success_saved');
                 $inserted_id ? $data['inserted_id'] = $inserted_id : '';
             } elseif (count($error) == count($this->request['id'])) {
                 $data['status'] = 'error';
-                $data['verbose'] = tr::get('error_saved');
+                $data['verbose'] = \tr::get('error_saved');
             } else {
                 $data['status'] = 'warning';
-                $data['verbose'] = tr::get('partial_success_saved', [ implode(', ', $ok), implode(', ', $error) ]);
+                $data['verbose'] = \tr::get('partial_success_saved', [ implode(', ', $ok), implode(', ', $error) ]);
             }
         } catch (\Throwable $e) {
             $data['status'] = 'error';
-            $data['verbose'] = tr::get('error_saved');
+            $data['verbose'] = \tr::get('error_saved');
             $this->log->error($e);
         }
 
@@ -76,8 +76,8 @@ class record_ctrl extends Controller
 
     public function erase()
     {
-        if (!utils::canUser('edit')) {
-            $data = array('status' => 'error', 'text'=> utils::alert_div('not_enough_privilege'));
+        if (!\utils::canUser('edit')) {
+            $data = array('status' => 'error', 'text'=> \utils::alert_div('not_enough_privilege'));
             echo json_encode($data);
             return;
         }
@@ -96,14 +96,14 @@ class record_ctrl extends Controller
             }
 
             if (count($this->request['id']) == count($error)) {
-                $data = array('status' => 'error', 'text' => tr::get('no_record_deleted'));
+                $data = array('status' => 'error', 'text' => \tr::get('no_record_deleted'));
             } elseif (count($this->request['id']) == count($ok)) {
-                $data = array('status' => 'success', 'text' => tr::get('all_record_deleted'));
+                $data = array('status' => 'success', 'text' => \tr::get('all_record_deleted'));
             } else {
-                $data = array('status' => 'warning', 'text' => tr::get('partially_deleted_with_count', [ count($ok), $count($error) ] ) );
+                $data = array('status' => 'warning', 'text' => \tr::get('partially_deleted_with_count', [ count($ok), $count($error) ] ) );
             }
         } else {
-            $data = array('status' => 'error', 'text' => tr::get('no_id_provided') );
+            $data = array('status' => 'error', 'text' => \tr::get('no_id_provided') );
         }
 
         echo json_encode($data);
@@ -113,17 +113,17 @@ class record_ctrl extends Controller
     public function show()
     {
         if (!$this->request['tb']) {
-            throw new \Exception(tr::get('tb_missing'));
+            throw new \Exception( \tr::get('tb_missing'));
         }
 
         // user must have enough privileges
-        if (!utils::canUser('read')) {
-            utils::alert_div('not_enough_privilege', true);
+        if (!\utils::canUser('read')) {
+            \utils::alert_div('not_enough_privilege', true);
             return;
         }
         // a record id must be provided in edit & read & preview mode
         if ($this->request['a'] !== 'add_new' && !$this->request['id'] && !$this->request['id_field']) {
-            throw new \Exception(tr::get('no_id_to_view'));
+            throw new \Exception( \tr::get('no_id_to_view'));
         }
 
         // no data are retrieved if context is add_new or multiple edit!
@@ -139,7 +139,7 @@ class record_ctrl extends Controller
         //Can not display more than 500 records!
         $total_records = count($id_arr);
         if ($total_records > 500) {
-            echo '<div class="alert">' . tr::get('too_much_records', [ $total_records, '500'] ) . '</div>';
+            echo '<div class="alert">' . \tr::get('too_much_records', [ $total_records, '500'] ) . '</div>';
             return;
         }
 
@@ -171,13 +171,13 @@ class record_ctrl extends Controller
             }
 
             if ($this->request['a'] == 'edit' &&
-                    (!utils::canUser('edit', $record->getCore('creator')) || (count($this->request['id']) > 1 && !utils::canUser('multiple_edit')))) {
-                echo '<h2>' . tr::get('not_enough_privilege') . '</h2>';
+                    (!\utils::canUser('edit', $record->getCore('creator')) || (count($this->request['id']) > 1 && !\utils::canUser('multiple_edit')))) {
+                echo '<h2>' . \tr::get('not_enough_privilege') . '</h2>';
                 continue;
             }
 
-            if ($this->request['a'] == 'add_new' && !utils::canUser('add_new')) {
-                echo '<h2>' . tr::get('not_enough_privilege') . '</h2>';
+            if ($this->request['a'] == 'add_new' && !\utils::canUser('add_new')) {
+                echo '<h2>' . \tr::get('not_enough_privilege') . '</h2>';
                 continue;
             }
 
@@ -199,13 +199,13 @@ class record_ctrl extends Controller
             $this->render('record', 'show', array(
                     'action' => $this->request['a'],
                     'html' => $html,
-                    'multiple_id' => (count((array)$this->request['id']) > 1) ? tr::get('multiple_edit_alert', [ count($this->request['id']), implode('; id: ', $this->request['id']) ] ) : false,
+                    'multiple_id' => (count((array)$this->request['id']) > 1) ? \tr::get('multiple_edit_alert', [ count($this->request['id']), implode('; id: ', $this->request['id']) ] ) : false,
                     'tb' => $this->request['tb'],
                     'id_url' => is_array($this->request['id']) ? 'id[]=' . implode('&id[]=', $this->request['id']) : false,
                     'totalRecords' => $total_records,
                     'id' => $flag_idfield ? $record->getCore('id') : $id,
-                    'can_edit' => (utils::canUser('edit', $record->getCore('creator')) || (count($this->request['id']) > 1 && utils::canUser('multiple_edit'))),
-                    'can_erase' => utils::canUser('edit', $record->getCore('creator')),
+                    'can_edit' => (\utils::canUser('edit', $record->getCore('creator')) || (count($this->request['id']) > 1 && \utils::canUser('multiple_edit'))),
+                    'can_erase' => \utils::canUser('edit', $record->getCore('creator')),
                     'continue_url' => $continue_url,
                     'virtual_keyboard' => $this->cfg->get('main.virtual_keyboard')
             ));
@@ -245,13 +245,13 @@ class record_ctrl extends Controller
 
     public function showResults()
     {
-        if (!utils::canUser('read')) {
-            echo utils::message(tr::get('not_enough_privilege'), 'error', 1);
+        if (!\utils::canUser('read')) {
+            echo \utils::message(\tr::get('not_enough_privilege'), 'error', 1);
             return;
         }
 
         if (!$this->request['tb']) {
-            throw new \Exception(tr::get('tb_missing'));
+            throw new \Exception(\tr::get('tb_missing'));
         }
 
         $queryObj = new QueryFromRequest($this->db, $this->cfg, $this->request, true);
@@ -269,13 +269,13 @@ class record_ctrl extends Controller
             // string, table name
             'tb' => $this->request['tb'],
             // string, total of records found
-            'records_found' => ($noResult ? tr::get('no_record_found') : tr::get('x_record_found', [$count])),
+            'records_found' => ($noResult ? \tr::get('no_record_found') : \tr::get('x_record_found', [$count])),
             // boolean, can current user add new records?
-            'can_user_add' => utils::canUser('add_new'),
+            'can_user_add' => \utils::canUser('add_new'),
             // boolean, can current user read this record?
-            'can_user_read' => utils::canUser('read'),
+            'can_user_read' => \utils::canUser('read'),
             // boolean, can current user edit this records?
-            'can_user_edit' => utils::canUser('edit'),
+            'can_user_edit' => \utils::canUser('edit'),
             
             'encoded_query_obj' => $encoded_query_obj,
             // string, \SQL\SafeQuery encoded query & values, to be used for bookmarking, export, matrix, charts, geoface

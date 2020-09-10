@@ -10,7 +10,7 @@ class translate_ctrl extends Controller
 {
 	public function showList()
 	{
-		$lang_files = utils::dirContent(LOCALE_DIR);
+		$lang_files = \utils::dirContent(LOCALE_DIR);
 		$available_lang = [];
 
 		foreach ($lang_files as $file) {
@@ -42,8 +42,8 @@ class translate_ctrl extends Controller
 		$lang = $this->get['lang'];
 		
 		if ( file_exists(LOCALE_DIR . $lang . '.json') ){
-			utils::response(
-				tr::get('error_lang_exists', [$lang]),
+			\utils::response(
+				\tr::get('error_lang_exists', [$lang]),
 				'error',
 				true
 			);
@@ -51,9 +51,9 @@ class translate_ctrl extends Controller
 		}
     
 		if ($this->arrayToFile($lang, [])) {
-			echo utils::response('ok_lang_create');
+			echo \utils::response('ok_lang_create');
 		} else {
-			echo utils::response('error_lang_create', 'error');
+			echo \utils::response('error_lang_create', 'error');
 		}
 	}
 	
@@ -63,9 +63,9 @@ class translate_ctrl extends Controller
 		$data = $this->post;
 		
 		if($this->arrayToFile($lang, $data)) {
-			utils::response('ok_language_update');
+			\utils::response('ok_language_update');
 		} else {
-			utils::response('error_language_update', 'error');
+			\utils::response('error_language_update', 'error');
 		}
 		
 	}

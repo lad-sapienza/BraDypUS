@@ -33,7 +33,7 @@ class free_sql_ctrl extends Controller
 	
 	public function input()
 	{
-		if (utils::canUser('super_admin')) {
+		if (\utils::canUser('super_admin')) {
 			$uid = uniqid('upload');
 			
 			echo '<div class="upload"></div>' .
@@ -46,7 +46,7 @@ class free_sql_ctrl extends Controller
 					'</div>'
 			;
 		} else {
-			echo tr::get('not_enough_privilege');
+			echo \tr::get('not_enough_privilege');
 		}
 	}
 	
@@ -59,12 +59,12 @@ class free_sql_ctrl extends Controller
 			$ret = $this->db->exec($sql);
 			$this->db->commit();
 			
-			utils::response(tr::get('ok_free_sql_run_affected', [$ret ?: 0], 'success', true));
+			\utils::response(\tr::get('ok_free_sql_run_affected', [$ret ?: 0], 'success', true));
 		} catch (\DB\DBException $e) {
 			$this->log->error($e);
 			$this->db->rollBack();
-			utils::response(
-				tr::get(
+			\utils::response(
+				\tr::get(
 					'error_free_sql_run_msg',
 					[$e->getMessage()]
 				), 

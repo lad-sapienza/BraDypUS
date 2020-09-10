@@ -67,7 +67,7 @@ class info_ctrl extends Controller
 		}
 		else
 		{
-			utils::response(tr::get('cannot_get_ip_for_system', [PHP_OS]), 'error', true);
+			\utils::response(\tr::get('cannot_get_ip_for_system', [PHP_OS]), 'error', true);
 		}
 		
 		if ($my_ip)

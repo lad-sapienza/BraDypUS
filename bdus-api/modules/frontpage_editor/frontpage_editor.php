@@ -33,7 +33,7 @@ class frontpage_editor_ctrl extends Controller
 	{
 		$text = $this->post['text'];
 		$file = $this->getFile();
-		$text = utils::clean_text_from_php($text);
+		$text = \utils::clean_text_from_php($text);
 		file_put_contents($file, $text);
 
 	}

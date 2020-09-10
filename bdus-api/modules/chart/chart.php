@@ -106,13 +106,13 @@ class chart_ctrl extends Controller
 			]);
 
 			if ( $res ) {
-				utils::response('ok_save_chart');
+				\utils::response('ok_save_chart');
 			} else {
 				throw new \Exception('Save chart query returned false');
 			}
 		} catch(\Throwable $e) {
 			$this->log->error($e);
-			utils::response('error_save_chart', 'error');
+			\utils::response('error_save_chart', 'error');
 		}
 	}
 
@@ -128,9 +128,9 @@ class chart_ctrl extends Controller
 		$res = $sys_manager->deleteRow('charts', $id);
 
 		if ( $res ) {
-			utils::response('ok_chart_erase');
+			\utils::response('ok_chart_erase', 'success');
 		} else {
-			utils::response('error_chart_erase', 'error');
+			\utils::response('error_chart_erase', 'error');
 		}
 	}
 
@@ -158,7 +158,7 @@ class chart_ctrl extends Controller
 			]);
 
 		} catch (\Throwable $th) {
-			echo utils::message(tr::get('chart_id_missing', [$this->get['id']]), 'error', true);
+			echo \utils::message(\tr::get('chart_id_missing', [$this->get['id']]), 'error', true);
 		}
 		
 		
@@ -172,7 +172,7 @@ class chart_ctrl extends Controller
 
 		$this->render('chart', 'show_all_charts', [
 			'all_charts' => $all_charts,
-			'can_admin' => utils::canUser('admin'),
+			'can_admin' => \utils::canUser('admin'),
 		]);
 
 	}
@@ -203,13 +203,13 @@ class chart_ctrl extends Controller
 			] );
 			
 			if ( $res ) {
-				utils::response('ok_update_chart');
+				\utils::response('ok_update_chart');
 			} else {
 				throw new \Exception('Update query returned false');
 			}
 		} catch (\Throwable $e) {
 			$this->log->error($e);
-			utils::response('error_update_chart', 'error');
+			\utils::response('error_update_chart', 'error');
 		}
 	}
 
@@ -231,7 +231,7 @@ class chart_ctrl extends Controller
 		foreach($data as $id => $one_series) {
 
 			if ($one_series['series_name'] === '') {
-				$one_series['series_name'] = tr::get('no_value');
+				$one_series['series_name'] = \tr::get('no_value');
 			}
 
 			$out['series'][$row] = [ 'label' => $one_series['series_name'] ];

@@ -30,7 +30,7 @@ try {
 
 } catch (\Throwable $e) {
 
-	utils::response('generic_error', 'error');
+	\utils::response('generic_error', 'error');
 
 	if (DEBUG_ON) {
 		echo "<strong>" . $e->getMessage() . "</strong>";

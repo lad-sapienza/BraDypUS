@@ -128,7 +128,7 @@ class DB implements DBInterface
 			foreach ($rows as $r) {
 				$dt = new \DateTime();
 
-				$insertSQL = "INSERT INTO " . PREFIX . "versions ( user, time, tb, rowid, content, editsql, editvalues ) VALUES (?, ?, ?, ?, ?, ? ,?)";
+				$insertSQL = "INSERT INTO " . PREFIX . "versions ( userid, time, tb, rowid, content, editsql, editvalues ) VALUES (?, ?, ?, ?, ?, ? ,?)";
 				$insertValues = [
 					$_SESSION['user']['id'],
 					$dt->format('U'),

@@ -22,7 +22,7 @@
     },
     {
         "name"      : "time",
-        "type"      : "INTEGER UNSIGNED",
+        "type"      : "INTEGER",
         "notnull"   : true
     }
 ]

@@ -6,7 +6,7 @@
         "notnull"   : false
     },
     {
-        "name"      : "user",
+        "name"      : "userid",
         "type"      : "INTEGER",
         "notnull"   : true
     },

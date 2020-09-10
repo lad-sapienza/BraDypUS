@@ -124,7 +124,7 @@ class geoface_ctrl extends Controller
 
 			list($where, $values) = $obj_encoded ? \SQL\SafeQuery::decode($obj_encoded) : ['1=1', []];
 
-			$pref_preview_flds = pref::get('preview');
+			$pref_preview_flds = \pref::get('preview');
 			$preview = $pref_preview_flds[$tb] ?? $this->cfg->get("tables.$tb.preview");
 
 			$part = [];

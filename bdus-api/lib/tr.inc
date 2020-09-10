@@ -29,20 +29,20 @@ class tr
 		 * Set $_SESSION['pref']['lang']
 		 */
 		// language may be
-		if ( !pref::getLang() ) {
+		if ( !\pref::getLang() ) {
 
 			$computer_lang = substr($_SERVER["HTTP_ACCEPT_LANGUAGE"], 0, 2);
 
             if ($cfg_lang && file_exists(LOCALE_DIR . $cfg_lang . '.json')) {
-                pref::setLang($cfg_lang);
+                \pref::setLang($cfg_lang);
             } else if ($computer_lang && file_exists (LOCALE_DIR . $computer_lang . '.json') ) {
-				pref::setLang($computer_lang);
+				\pref::setLang($computer_lang);
 			} else {
-				pref::setLang('en');
+				\pref::setLang('en');
 			}
 		}
 		self::$language_strings = json_decode(
-			file_get_contents(LOCALE_DIR . pref::getLang() . '.json'),
+			file_get_contents(LOCALE_DIR . \pref::getLang() . '.json'),
 			true
 		);
 

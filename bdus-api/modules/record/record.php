@@ -221,7 +221,7 @@ class record_ctrl extends Controller
         }
         $paths = [
             // preference saved template
-            pref::getTmpl($tb, $context),
+            \pref::getTmpl($tb, $context),
 
             // config, context-bound, template
             $this->cfg->get("tables.{$tb}.tmpl_{$context}"),
@@ -293,9 +293,9 @@ class record_ctrl extends Controller
             // int, Total numer of records found, to be used for datatable
             'iTotalRecords' => $count,
             // string, current system language, to be used for datatable
-            'lang' => pref::getLang(),
+            'lang' => \pref::getLang(),
             // boolean: if true infinite scroll of databatables will be activated
-            'infinte_scroll' => pref::get('infinite_scroll'),
+            'infinte_scroll' => \pref::get('infinite_scroll'),
             // boolean: if true only one records can be selected
             'select_one' => $this->request['select_one'],
             // boolean, if true id field will be available in datatables, but hidden

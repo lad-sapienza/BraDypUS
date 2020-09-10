@@ -83,7 +83,7 @@ class User
                 $sett_arr = unserialize($res[0]['settings']);
                 if (is_array($sett_arr) && !empty($sett_arr)){
                     foreach ($sett_arr as $key => $value) {
-                        pref::set($key, $value);
+                        \pref::set($key, $value);
                     }
                 }
             }
@@ -113,7 +113,7 @@ class User
     public function logout()
     {
         //save preferences to db
-        pref::save2DB($this->db);
+        \pref::save2DB($this->db);
 
         // emtpy user tmp dir
         \utils::emptyDir();

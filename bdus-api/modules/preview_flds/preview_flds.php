@@ -22,7 +22,7 @@ class preview_flds_ctrl extends Controller
 		
 		$this->render('preview_flds', 'form', [
 			'tb_data' => $tb,
-			'pref_data' => pref::get('preview'),
+			'pref_data' => \pref::get('preview'),
 		]);
 	}
 	
@@ -46,6 +46,6 @@ class preview_flds_ctrl extends Controller
 			$pref = null;
 		}
 		
-		pref::set('preview', $pref);
+		\pref::set('preview', $pref);
 	}
 }

@@ -511,7 +511,7 @@ class QueryFromRequest
 
     private function getPreviewFields( string $tb )
     {
-        $pref_preview = pref::get('preview');
+        $pref_preview = \pref::get('preview');
 
 		if (is_array($pref_preview) && is_array($pref_preview[$tb])) {
 			return $pref_preview[$tb];

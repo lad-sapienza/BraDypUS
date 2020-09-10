@@ -29,8 +29,8 @@ class myTmpl_ctrl extends Controller
 			}
 			$data[$tb]['default_read'] = $this->cfg->get("tables.$tb.tmpl_read");
 			$data[$tb]['default_edit'] = $this->cfg->get("tables.$tb.tmpl_edit");
-			$data[$tb]['user_read'] = pref::getTmpl($tb, 'read');
-			$data[$tb]['user_edit'] = pref::getTmpl($tb, 'edit');
+			$data[$tb]['user_read'] = \pref::getTmpl($tb, 'read');
+			$data[$tb]['user_edit'] = \pref::getTmpl($tb, 'edit');
 		}
 
 		$this->render('myTmpl', 'user_tmpl', [
@@ -52,7 +52,7 @@ class myTmpl_ctrl extends Controller
 		$context = $this->get['context'];
 		$tmpl = $this->get['tmpl'];
 
-		pref::setTmpl($tb, $context, $tmpl);
+		\pref::setTmpl($tb, $context, $tmpl);
 		
 		\utils::response('ok_tmpl_set', 'success');
 		// \utils::response('error_tmpl_set', 'error');

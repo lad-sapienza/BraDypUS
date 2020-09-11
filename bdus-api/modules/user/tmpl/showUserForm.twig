@@ -5,7 +5,9 @@
  #}
 
 <form action="javascript:void(0);">
+	{% if id %}
 	<input type="hidden" value="{{ id }}" name="id" />
+	{% endif %}
 	<table class="table table-striped">
 		<tr>
 			<th>{{ tr.get('name') }}</th>

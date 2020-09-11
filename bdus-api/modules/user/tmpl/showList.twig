@@ -37,7 +37,7 @@
 
 <script>
 $('button.user-erase').click(function(){
-	user.erase($(this).data('id'));
+	user.deleteOne($(this).data('id'));
 });
 
 $('button.user-edit').click(function(){

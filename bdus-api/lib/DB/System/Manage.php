@@ -197,6 +197,9 @@ class Manage
         $question_marks = [];
 
         foreach ($columns_str as $column) {
+            if ($column['name'] === 'id'){
+                continue;
+            }
             // Columns set as not null in structure must not be empty on record add
             if($column['notnull'] && !isset($data[$column['name']])){
                 throw new \Exception("Missing required key `{$column['name']}` from input data");

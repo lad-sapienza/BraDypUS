@@ -1,3 +1,5 @@
+4.0.157-alpha[] = "Backup uses spatie/db-dumper"
+4.0.157-alpha[] = "Added depencency spatie/db-dumper"
 4.0.156-alpha[] = "Fixed bug with user manager"
 4.0.155-alpha[] = "Alter initializes driver class"
 4.0.155-alpha[] = "Namespaced usage cases of cookieAuth"

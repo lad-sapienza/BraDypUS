@@ -1,5 +1,8 @@
 sessions/
 vendor/**/.git
+vendor/**/.github
+vendor/**/tests
+vendor/**/doc
 projects
 logs/
 cache/

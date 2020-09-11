@@ -5,7 +5,10 @@
  * @license			See file LICENSE distributed with this code
  * @since			Aug 10, 2012
  */
-
+use \Spatie\DbDumper\Databases\Sqlite;
+use \Spatie\DbDumper\Databases\MySql;
+use \Spatie\DbDumper\Databases\PostgreSql;
+use \Spatie\DbDumper\Compressors\GzipCompressor;
 
 class backup_ctrl extends Controller
 {
@@ -22,9 +25,9 @@ class backup_ctrl extends Controller
 			if (!$file){
 				throw new Exception("Missing parameter file");
 			}
-			$a = @unlink(PROJ_DIR . 'backups/' . $file);
+			$res = @unlink(PROJ_DIR . 'backups/' . $file);
 
-			if (!$a){
+			if (!$res){
 				throw new \Exception(\tr::get('error_erasing_file', [$file]));
 			}
 			$resp['text'] = \tr::get('success_erasing_file', [$file]);
@@ -67,26 +70,52 @@ class backup_ctrl extends Controller
 	public function doBackup()
 	{
 		try {
-			$file = PROJ_DIR . 'backups/' . APP . '_' . date('Y-m-d_H-i-s');
+			$file = PROJ_DIR . 'backups/' . $this->cfg->get('main.name') . '_' . date('Y-m-d_H-i-s') . '.sql.gz';
 
 			switch($this->db->getEngine()) {
+
 				case 'mysql':
-					$bupMysql = new BackupMySQL($this->db, $file . '.sql');
-					$bupMysql->exportAll();
+					$bup = MySQL::create()
+						->setDbName($this->cfg->get('main.db_name'))
+						->setUserName($d['db_username'])
+						->setPassword($d['db_password']);
+						
+					if (isset($d['db_host']) && $d['db_host'] !== '') {
+						$bup->setHost( $d['db_host'] );
+					}
+						
+					break;
+
+				case 'pgsql':
+					$bup = PostgreSql::create()
+						->setDbName($this->cfg->get('main.db_name'))
+						->setUserName($d['db_username'])
+						->setPassword($d['db_password']);
+						
+					if (isset($d['db_host']) && $d['db_host'] !== '') {
+						$bup->setHost( $d['db_host'] );
+					}
+						
 					break;
 
 				case 'sqlite':
-					copy(PROJ_DIR . 'db/bdus.sqlite', $file . '.db');
+					$bup = Sqlite::create()
+						->setDbName("./projects/" . $this->cfg->get('main.name') . "/db/bdus.sqlite");
 					break;
 
 				default:
 					throw new \Exception('Unknown or unsupported database driver');
 					break;
 			}
+			
+			$bup->useCompressor(new GzipCompressor())
+				->dumpToFile($file);
+			
+			\utils::response('ok_backup', 'success');
 
 		} catch(\Throwable $e) {
-			echo 'error';
 			$this->log->error($e);
+			\utils::response('error_backup', 'error');
 		}
 	}
 }

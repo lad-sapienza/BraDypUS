@@ -15,12 +15,12 @@ var backup = {
 				          {
 				        	  text: '<i class="glyphicon glyphicon-ok"></i> ' + core.tr('backup_now'),
 				        	  click: function(){
-				        		  $.get('./?obj=backup_ctrl&method=doBackup', function(data){
-				        			  if(!data || data == ''){
-				        				  core.message(core.tr('ok_backup'), 'success');
-				        				  $('#modal .modal-body').load('./?obj=backup_ctrl&method=getSavedBups');
-				        			  } else {
-				        				  core.message(core.tr('error_backup') + ' ' + core.tr('details_in_log'), 'error');
+				        		  core.getJSON('backup_ctrl', 'doBackup', false, false, data => {
+									  core.message(data.text, data.status);
+				        			  if(data.status === 'success'){
+										  core.getHTML('backup_ctrl','getSavedBups', false, false, d => {
+											$('#modal .modal-body').html(d);
+										  });
 				        			  }
 				        		  });
 				        	  } 

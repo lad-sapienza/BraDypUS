@@ -68,7 +68,7 @@ class login_ctrl extends Controller
 			\utils::response( \tr::get('email_not_valid', [$post['email']]), 'error', true);
 		}
 		
-		if ($this->isDuplicate($post['email'])) {
+		if (\utils::isDuplicateEmail($this->db, $this->prefix, $post['email'])) {
 			\utils::response( \tr::get('email_present', [$post['email']]), 'error', true);
         }
 		try {
@@ -260,24 +260,6 @@ class login_ctrl extends Controller
 		}
 	}
 
-	private function isDuplicateEmail( string $email, int $id = null ) : bool
-    {
-        $partial = [ "email = ? " ];
-        $values = [ $email ];
-
-        
-        if ($id) {
-            array_push($partial, "id != ? ");
-            array_push($values, $id);
-        }
-        $res = $this->db->query(
-            'SELECT count(*) as tot FROM ' . $this->prefix . 'users WHERE ' . implode(" AND ", $partial) . ' LIMIT 1 OFFSET 0', 
-            $values
-        );
-
-        return ($res[0]['tot'] > 0);
-	}
-	
 	private function deleteOldSessions()
     {
         $maxlife = 24*60*60; // 24h

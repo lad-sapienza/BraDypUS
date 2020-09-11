@@ -1,3 +1,4 @@
+4.0.156-alpha[] = "Fixed bug with user manager"
 4.0.155-alpha[] = "Alter initializes driver class"
 4.0.155-alpha[] = "Namespaced usage cases of cookieAuth"
 4.0.153-alpha[] = "Removed support for User class"

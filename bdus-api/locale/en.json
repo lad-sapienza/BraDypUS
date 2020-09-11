@@ -130,7 +130,7 @@
     "reader": "Read",
     "waiting": "Waiting",
     "user_data_saved": "User data was saved",
-    "user_data_not_saved": "Error. Can not save the User data",
+    "user_data_not_saved": "Error. Can not save user data",
     "confirm_erase_user": "Are you sure you want to erase the user?",
     "user_deleted": "The user was erased",
     "user_not_deleted": "Error! can not erase the user",

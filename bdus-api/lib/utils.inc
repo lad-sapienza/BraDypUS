@@ -550,5 +550,23 @@ class utils
 	public static function encodePwd( string $password ) : string
     {
         return sha1($password);
-    }
+	}
+	
+	public static function isDuplicateEmail( \DB\DB $db, string $prefix, string $email, int $id = null ) : bool
+    {
+        $partial = [ "email = ? " ];
+        $values = [ $email ];
+
+        
+        if ($id) {
+            array_push($partial, "id != ? ");
+            array_push($values, $id);
+        }
+        $res = $db->query(
+            'SELECT count(*) as tot FROM ' . $prefix . 'users WHERE ' . implode(" AND ", $partial) . ' LIMIT 1 OFFSET 0', 
+            $values
+        );
+
+        return ($res[0]['tot'] > 0);
+	}
 }

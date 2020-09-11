@@ -124,8 +124,16 @@ class user_ctrl extends Controller
 
 			if ($data['id'] && !empty($data['id'])) {
 				// Edit existing user
+				if (\utils::isDuplicateEmail( $this->db, $this->prefix, $data['email'], $data['id'] ) ) {
+					\utils::response( \tr::get('email_present', [$data['email']]), 'error', true);
+					return;
+				}
 				$ret = $sys_manager->editRow('users', $data['id'], $data);
 			} else {
+				if (\utils::isDuplicateEmail( $this->db, $this->prefix, $data['email'] ) ) {
+					\utils::response( \tr::get('email_present', [$data['email']]), 'error', true);
+					return;
+				}
 				// Add new user
 				$ret = $sys_manager->addRow('users', $data);
 			}
@@ -135,11 +143,9 @@ class user_ctrl extends Controller
 			} else {
 				throw new \Exception('Query returned false');
 			}
-		} catch (\DB\DBException $e){
-            \utils::response('user_data_not_saved', 'error');
-        } catch (\Throwable $e){
-			\utils::response('user_data_not_saved', 'error');
+		} catch (\Throwable $e){
 			$this->log->error($e);
+			\utils::response('user_data_not_saved', 'error');
 		}
 	}
 }

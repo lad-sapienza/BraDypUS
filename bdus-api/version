@@ -1,3 +1,4 @@
+4.0.157-alpha[] = "Added api.confirmSuperAdmPwd"
 4.0.157-alpha[] = "Fixed backup file names"
 4.0.157-alpha[] = "Removed BackupMySQL"
 4.0.157-alpha[] = "Backup uses spatie/db-dumper"

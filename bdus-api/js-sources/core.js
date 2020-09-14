@@ -123,6 +123,16 @@ var core = {
 		 * @param {function|false} loaded callback function
 		 */
 		runAndRespond(obj, method, get, post, loaded) {
+			if (typeof get === 'function'){
+				loaded = get;
+				get = false;
+				post = false;
+			}
+			if (typeof post === 'function') {
+				loaded = post;
+				post = false;
+			}
+
 			core.getJSON ( obj, method, get, post, data => {
 				core.message(data.text, data.status);
 				if (loaded){

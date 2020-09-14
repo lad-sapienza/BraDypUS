@@ -134,8 +134,7 @@ class bigRestore
 		
 			// Execute query if end of query detected (; as last character) AND NOT in parents
 			if (preg_match("/;$/",trim($dumpline)) && !$inparents) {
-				if(!$this->db->query($query, null, 'boolean')) {
-					//$error[] = $query;
+				if(!$this->db->exec($query)) {
 					throw new \Exception("Error in query " . $query);
 				}
 				$totalqueries++;
@@ -161,9 +160,8 @@ class bigRestore
 		$this->resp['bytes_done']   = $parsedoffset;		// bytes parsed in all sessions up to now
 		$this->resp['percent_done']  = (int)$parsedoffset*100/$this->resp['filesize'];
 		
-		if ($linenumber<$start+$this->linespersession) {
+		if ($linenumber < $start+$this->linespersession ) {
 			$this->resp['status'] = "completed";
-			$this->resp['error']  = true;
 		} else {
 			$this->resp['status']	= 'loading';
 		}

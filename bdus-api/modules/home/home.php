@@ -187,11 +187,6 @@ class home_ctrl extends Controller
                     $not_fresh && \utils::canUser('edit') ? "core.runMod('search_replace');" :  false 
                 ],
                 [ 
-                    "fa-upload", 
-                    'multiupload', 
-                    $not_fresh && \utils::canUser('edit') ? "core.runMod('multiupload');" :  false 
-                ],
-                [ 
                     "fa-cloud-upload", 
                     'import_geodata', 
                     $not_fresh && \utils::canUser('edit') ? "core.runMod('import_geodata');" :  false 

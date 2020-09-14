@@ -297,6 +297,10 @@ class DB implements DBInterface
 		if (!is_array($cfg)){
 			throw new \Exception(\tr::get('invalid_configuration_file', [$connection_file]) );
 		}
+		if ( null !== $cfg['db_engine'] && file_exists($this->path_to_root . "projects/{$app}/db/bdus.sqlite") ) {
+			$cfg['db_engine'] = 'sqlite';
+			file_put_contents( $file, json_encode($cfg, JSON_PRETTY_PRINT));
+		}
 
         if (file_exists($this->path_to_root . "projects/{$app}/db/bdus.sqlite")) {
             $cfg['db_path'] = $this->path_to_root . "projects/{$app}/db/bdus.sqlite";

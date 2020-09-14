@@ -56,7 +56,7 @@ class backup_ctrl extends Controller
 			'data' => $data,
 			'engine' => $this->db->getEngine(),
 			'canErase' => \utils::canUser('admin'),
-			'canRestore' => \utils::canUser('super_admin')
+			'canRestore' => \utils::canUser('super_admin') && $this->db->getEngine() !== 'pgsql'
 		]);
 	}
 
@@ -67,13 +67,13 @@ class backup_ctrl extends Controller
 			$f_info = $this->getInfoFromFileName($file);
 			if ($f_info['engine'] !== $this->db->getEngine()){
 				\utils::response(
-					tr::get("wrong_restore_engine", [$f_info['engine'], $this->db->getEngine() ]) , 
+					tr::get("wrong_restore_engine", [ $f_info['engine'], $this->db->getEngine() ] ) , 
 					'error'
 				);
 				return;
 			}
 
-			$restore = new bigRestore( $this->db );
+			$restore = new bigRestore( $this->db, ($this->db->getEngine() === 'sqlite') );
 			$restore->runImport(PROJ_DIR . 'backups/' . $file);
 
 			\utils::response("ok_backup_restored", 'success');
@@ -106,12 +106,13 @@ class backup_ctrl extends Controller
 
 				case 'pgsql':
 					$bup = PostgreSql::create()
-						->setDbName($this->cfg->get('main.db_name'))
-						->setUserName($d['db_username'])
-						->setPassword($d['db_password']);
+						->setDumpBinaryPath('/Applications/Postgres.app/Contents/Versions/latest/bin/')
+						->setDbName( $this->cfg->get('main.db_name') )
+						->setUserName( $this->cfg->get('main.db_username') )
+						->setPassword( $this->cfg->get('main.db_password') ) ;
 						
-					if (isset($d['db_host']) && $d['db_host'] !== '') {
-						$bup->setHost( $d['db_host'] );
+					if ( null !== $this->cfg->get('main.db_host') && '' !== $this->cfg->get('main.db_host') ) {
+						$bup->setHost( $this->cfg->get('main.db_host') );
 					}
 						
 					break;

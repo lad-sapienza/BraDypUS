@@ -32,11 +32,13 @@ class bigRestore
 	private $comment = [ '#', '--', '/*!' ];
 	private $maxquerylines = 200;
 	private $data_chunk_length = 16384;
+	private $force_drop_tb = false;
 	
 	
-	public function __construct(DBInterface $db)
+	public function __construct(DBInterface $db, bool $force_drop_tb = false)
 	{
 		$this->db = $db;
+		$this->force_drop_tb = $force_drop_tb;
 	}
 
 	public function runImport(string $filename, int $start = 1, int $offset = 0, $totalqueries = 0)
@@ -134,6 +136,13 @@ class bigRestore
 		
 			// Execute query if end of query detected (; as last character) AND NOT in parents
 			if (preg_match("/;$/",trim($dumpline)) && !$inparents) {
+
+				if ($this->force_drop_tb && preg_match('/CREATE TABLE( IF NOT EXISTS)? "?([a-z0-9_]+)"?\s/i', $query, $matches)) {
+					if(!$this->db->exec('DROP TABLE IF EXISTS "' . $matches[2] . '"')) {
+						throw new \Exception("Error in query " . $query);
+					}
+				}
+
 				if(!$this->db->exec($query)) {
 					throw new \Exception("Error in query " . $query);
 				}

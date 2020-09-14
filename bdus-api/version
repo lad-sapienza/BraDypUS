@@ -1,3 +1,4 @@
+4.0.159-alpha[] = "Disabled backup restore for pgsql"
 4.0.158-alpha[] = "Main config db_engine is set to sqlite, if db file exists and cfg is not set (v3 compatibility issue)"
 4.0.157-alpha[] = "Refactored backup"
 4.0.157-alpha[] = "Added api.confirmSuperAdmPwd"

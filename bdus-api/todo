@@ -1,0 +1,6 @@
+todo
+
+PREFIX in mods replaced by $this->prefix
+sys tables managed via system\manager
+
+replace current VK with https://virtual-keyboard.js.org/

@@ -141,7 +141,7 @@ class home_ctrl extends Controller
                 [ 
                     "fa-external-link", 
                     'export', 
-                    $not_fresh && \utils::canUser('edit') ? "api.query.Export('1', $('#ref_tb').val() );" :  false
+                    $not_fresh && \utils::canUser('edit') ? "api.query.Export('WyIxPTEiLFtdXQ', $('#ref_tb').val() );" :  false
                 ],
                 [ 
                     "fa-map-marker", 

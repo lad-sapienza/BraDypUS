@@ -6,6 +6,8 @@
  * @since			Aug 10, 2012
  */
 
+use DB\Export\Export;
+
 class myExport_ctrl extends Controller
 {
 	/**
@@ -50,27 +52,20 @@ class myExport_ctrl extends Controller
 			$where = $where ?: '1=1';
 		
 			$file = PROJ_DIR . 'export/' . $tb . '.' . date('U');
-		
-			$export_handle = new Export(
-				$this->db, 
-				$file, 
-				$tb, 
-				$where, 
-				$values, 
-				$this->cfg->get("tables.$tb.label"), 
-				$this->cfg->get("tables.$tb.fields.*.label")
-			);
-		
-			$export_handle->doExport($format);
 
-			\utils::message('export_success', 'success');
+			$exp = new Export($this->db, $tb, $where, $values);
+
+			if ($exp->saveToFile($format, $file)) {
+				echo \utils::response('export_success', 'success');
+			} else {
+				echo \utils::response('export_error', 'error');
+			}
+			return;
 		
 		} catch(\Throwable $e) {
 			$this->log->error($e);
-			\utils::message('export_error', 'error');
+			echo \utils::response('export_error', 'error');
 		}
-		
-		echo json_encode($resp);
 	}
 	
 	/**

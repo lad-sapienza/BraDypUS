@@ -46,12 +46,22 @@ class backup_ctrl extends Controller
         if (!is_array($content)) {
 			echo '<h2>' . \tr::get('no_bup_present') . '</h2>';
 			return;
-        }
+		}
 
 		$html = '<table class="table table-hover table-bordered table-striped">';
+		$html .= '<thead><tr>'
+			. '<th>App</th>'
+			. '<th>Engine</th>'
+			. '<th>Time</th>'
+			. '<th>Size</th>'
+			. '<th></th>'
+		.'</tr></thead>';
 		foreach($content as $file) {
+			$info = $this->getInfoFromFileName($file);
 			$html .= '<tr>'
-			. '<td>' . $file . '</td>'
+			. '<td>' . strtoupper($info['app']) . '</td>'
+			. '<td>' . $info['driver'] . '</td>'
+			. '<td>' . $info['formatted_time'] . '</td>'
 			. '<td>' . round ( filesize( PROJ_DIR . 'backups/' . $file )/1024/1024, 3 ) . ' MB</td>'
 			. '<td>'
 				. '<div class="btn-group">'
@@ -70,18 +80,18 @@ class backup_ctrl extends Controller
 	public function doBackup()
 	{
 		try {
-			$file = PROJ_DIR . 'backups/' . $this->cfg->get('main.name') . '_' . date('Y-m-d_H-i-s') . '.sql.gz';
+			$file = $this->setFileName();
 
 			switch($this->db->getEngine()) {
-
 				case 'mysql':
+
 					$bup = MySQL::create()
-						->setDbName($this->cfg->get('main.db_name'))
-						->setUserName($d['db_username'])
-						->setPassword($d['db_password']);
+						->setDbName( $this->cfg->get('main.db_name') )
+						->setUserName( $this->cfg->get('main.db_username') )
+						->setPassword( $this->cfg->get('main.db_password') ) ;
 						
-					if (isset($d['db_host']) && $d['db_host'] !== '') {
-						$bup->setHost( $d['db_host'] );
+					if ( null !== $this->cfg->get('main.db_host') && '' !== $this->cfg->get('main.db_host') ) {
+						$bup->setHost( $this->cfg->get('main.db_host') );
 					}
 						
 					break;
@@ -117,5 +127,43 @@ class backup_ctrl extends Controller
 			$this->log->error($e);
 			\utils::response('error_backup', 'error');
 		}
+	}
+
+	private function setFileName(): string
+	{
+		return $file = implode( '', [
+			'projects/', 
+			$this->cfg->get('main.name'),
+			'/backups/',
+			$this->cfg->get('main.name'),
+			'-',
+			$this->cfg->get('main.db_engine'),
+			'-',
+			(new DateTime())->getTimestamp(),
+			'.sql.gz'
+		]);
+	}
+
+	private function getInfoFromFileName( string $filename) : array
+	{
+		$filename = trim($filename);
+		$ret = [];
+		if( preg_match('/\.sql\.gz$/', $filename)) {
+			$ret['gz'] = true;
+			$filename = str_replace('.sql.gz', '', $filename);
+		} elseif( preg_match('/\.sql$/', $filename)) {
+			$filename = str_replace('.sql.gz', '', $filename);
+		} else {
+			throw new \Exception("Filename `$filename` MUST end in .sql or .sql.gz");
+		}
+
+		list($app, $driver, $date) = explode('-', $filename);
+
+		$ret['app'] = $app;
+		$ret['driver'] = $driver;
+		$ret['time'] = $date;
+		$ret['formatted_time'] = (new DateTime("@{$date}"))->format('c');
+
+		return $ret;
 	}
 }

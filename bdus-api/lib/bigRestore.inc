@@ -25,37 +25,33 @@ use DB\DBInterface;
 
 class bigRestore
 {
-	private $db,
-		$filename,
-		$resp,
-		$linespersession = 3000, 
-		$comment = array("#", "--", "/*!"),
-		$maxquerylines = 200,
-		$data_chunk_length = 16384;
+	private $db;
+	private $filename;
+	private $resp;
+	private $linespersession = 3000;
+	private $comment = [ '#', '--', '/*!' ];
+	private $maxquerylines = 200;
+	private $data_chunk_length = 16384;
 	
 	
 	public function __construct(DBInterface $db)
 	{
 		$this->db = $db;
-		sleep(1);
 	}
-	
-	public function runImport($filename, $start = false, $offset = false, $totalqueries = 0)
+
+	public function runImport(string $filename, int $start = 1, int $offset = 0, $totalqueries = 0)
 	{
 		@set_time_limit(0);
-		
-		if(!preg_match("/(\.(sql|gz))$/i", $filename))
-		{
-			throw new Exception('Invalid file type: Only sql o gz files can be parsed');
-		}
+
+		$this->validateFile($filename);
 		
 		$this->filename = $filename;
 		$this->resp['filename'] = $filename;
 		
-		$start = $start ? floor($start) : 1;
+		$start = floor($start);
 		$resp['start'] = $start;
 		
-		$offset = $offset ? floor($offset) : 0;
+		$offset = floor($offset);
 		$this->rest['offset'] = $offset;
 		
 		$linenumber = $start;
@@ -66,14 +62,12 @@ class bigRestore
 		
 		$file = $isgzip ? @gzopen($this->filename,"r") : @fopen($this->filename,"r");
 		
-		if(!$file)
-		{
-			throw new Exception("Can't open " . $this->filename . " for import");
+		if(!$file) {
+			throw new \Exception("Can't open " . $this->filename . " for import");
 		}
 		
-		if ((!$isgzip && fseek($file, $offset) != 0) || ($isgzip  && gzseek($file, $offset) != 0))
-		{
-			throw new Exception("Can't set file pointer to offset: " . $offset);
+		if ((!$isgzip && fseek($file, $offset) !== 0) || ($isgzip  && gzseek($file, $offset) !== 0)) {
+			throw new \Exception("Can't set file pointer to offset: " . $offset);
 		}
 		
 		
@@ -83,18 +77,15 @@ class bigRestore
 		$querylines = 0;
 		$inparents = false;
 		
-		while ($linenumber<$start+$this->linespersession OR $query!="")
-		{
+		while ( $linenumber < $start+$this->linespersession || !empty($query) ) {
 			// Read the whole next line
 			$dumpline = '';
 			
-			while (!feof($file) && substr ($dumpline, -1) != "\n" && substr ($dumpline, -1) != "\r")
-			{
+			while (!feof($file) && substr ($dumpline, -1) !== "\n" && substr ($dumpline, -1) !== "\r") {
 				$dumpline .= $isgzip ? gzgets($file, $this->data_chunk_length) : fgets($file, $this->data_chunk_length);
 			}
 			
-			if ($dumpline === '')
-			{
+			if (empty($dumpline)) {
 				break;
 			}
 		
@@ -103,22 +94,18 @@ class bigRestore
 				
 			// Skip comments and blank lines only if NOT in parents
 		
-			if (!$inparents)
-			{
+			if (!$inparents) {
 				$skipline = false;
 				reset($this->comment);
 				
-				foreach ($this->comment as $comment_value)
-				{
-					if (!$inparents && (trim($dumpline)== '' || strpos ($dumpline, $comment_value) === 0))
-					{
+				foreach ($this->comment as $comment_value) {
+					if (!$inparents && (trim($dumpline) === '' || strpos ($dumpline, $comment_value) === 0)){
 						$skipline = true;
 						break;
 					}
 				}
 				
-				if ($skipline)
-				{
+				if ($skipline) {
 					$linenumber++;
 					continue;
 				}
@@ -133,41 +120,36 @@ class bigRestore
 				
 			$parents = substr_count($dumpline_deslashed, "'") - substr_count ($dumpline_deslashed, "\\'");
 			
-			if ($parents % 2 != 0)
-			{
-				$inparents=!$inparents;
+			if ($parents % 2 !== 0) {
+				$inparents = !$inparents;
 			}
 				
 			// Add the line to query
 			$query .= $dumpline;
 		
 			// Don't count the line if in parents (text fields may include unlimited linebreaks)
-			if (!$inparents)
-			{
+			if (!$inparents) {
 				$querylines++;
 			}
 		
 			// Execute query if end of query detected (; as last character) AND NOT in parents
-			if (preg_match("/;$/",trim($dumpline)) && !$inparents)
-			{
-				if(!$this->db->query($query, null, 'boolean'))
-				{
+			if (preg_match("/;$/",trim($dumpline)) && !$inparents) {
+				if(!$this->db->query($query, null, 'boolean')) {
 					//$error[] = $query;
-					throw new Exception("Error in query " . $query);
+					throw new \Exception("Error in query " . $query);
 				}
 				$totalqueries++;
 				$queries++;
-				$query="";
-				$querylines=0;
+				$query = '';
+				$querylines =0;
 			}
 			$linenumber++;
 		}
 		
 		$parsedoffset = $isgzip ? gztell($file) : ftell($file);
 		
-		if (!$parsedoffset)
-		{
-			throw new Exception("Error. Can't read the file pointer offset");
+		if (!$parsedoffset) {
+			throw new \Exception("Error. Can't read the file pointer offset");
 		}
 		
 		$this->resp['lines_this']   = $linenumber-$start;	//
@@ -179,13 +161,10 @@ class bigRestore
 		$this->resp['bytes_done']   = $parsedoffset;		// bytes parsed in all sessions up to now
 		$this->resp['percent_done']  = (int)$parsedoffset*100/$this->resp['filesize'];
 		
-		if ($linenumber<$start+$this->linespersession)
-		{
+		if ($linenumber<$start+$this->linespersession) {
 			$this->resp['status'] = "completed";
 			$this->resp['error']  = true;
-		}
-		else
-		{
+		} else {
 			$this->resp['status']	= 'loading';
 		}
 		
@@ -193,24 +172,33 @@ class bigRestore
 		
 	}
 	
+	// https://www.php.net/manual/en/function.gzread.php
 	private function gzfilesize($filename)
 	{
 		$gzfs = FALSE;
-		if(($zp = fopen($filename, 'r'))!==FALSE)
-		{
-			if(@fread($zp, 2) == "\x1F\x8B")
-			{ // this is a gzip'd file
+		if(($zp = fopen($filename, 'r')) !== false) {
+			if(@fread($zp, 2) === "\x1F\x8B") { // this is a gzip'd file
 				fseek($zp, -4, SEEK_END);
 				if(strlen($datum = @fread($zp, 4))==4)
 					extract(unpack('Vgzfs', $datum));
-			}
-			else // not a gzip'd file, revert to regular filesize function
-			{
+			} else  {
+			// not a gzip'd file, revert to regular filesize function
 				$gzfs = filesize($filename);
 			}
 			fclose($zp);
 		}
 		return($gzfs);
+	}
+
+	private function validateFile( string $filename ): bool
+	{
+		if(!preg_match("/\.sql(\.gz)?$/i", $filename)) {
+			throw new \Exception("Invalid file type for input file `{$filename}`. Only *.sql o *.sql.gz files can be parsed");
+		}
+		if (!file_exists($filename)){
+			throw new \Exception("File `{$filename}` not found");
+		}
+		return true;
 	}
 	
 	
@@ -222,22 +210,22 @@ class bigRestore
 	
 	public function setComment($comment)
 	{
-		$this->comment[count($this->comment)]=$comment;
+		array_push( $this->comment, $comment);
 	}
 	
 	public function setMaxquerylines($maxquerylines)
 	{
-		$this->maxquerylines=$maxquerylines;
+		$this->maxquerylines = $maxquerylines;
 	}
 	
 	public function setData_chunk_length($data_chunk_length)
 	{
-		$this->data_chunk_length=$data_chunk_length;
+		$this->data_chunk_length = $data_chunk_length;
 	}
 	
-	public function getResponse($json = false)
+	public function getResponse()
 	{
-		return $json ? json_encode($this->resp) : $this->resp;
+		return $this->resp;
 	}	
 }
 ?>

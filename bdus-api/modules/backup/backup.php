@@ -39,41 +39,49 @@ class backup_ctrl extends Controller
 		$this->returnJson($resp);
 	}
 
-	public function getSavedBups()
+	public function list_all_backups()
 	{
-		$content = \utils::dirContent(PROJ_DIR . 'backups');
+		$files = \utils::dirContent(PROJ_DIR . 'backups');
 
-        if (!is_array($content)) {
-			echo '<h2>' . \tr::get('no_bup_present') . '</h2>';
-			return;
+		$data = [];
+		foreach ($files as $file ) {
+			$f_info = $this->getInfoFromFileName($file);
+			$f_info['orig'] = $file;
+			$f_info['full_orig'] = PROJ_DIR . 'backups/' . $file;
+			$f_info['size'] = round ( filesize( PROJ_DIR . 'backups/' . $file )/1024/1024, 3 );
+			array_push($data, $f_info);
 		}
 
-		$html = '<table class="table table-hover table-bordered table-striped">';
-		$html .= '<thead><tr>'
-			. '<th>App</th>'
-			. '<th>Engine</th>'
-			. '<th>Time</th>'
-			. '<th>Size</th>'
-			. '<th></th>'
-		.'</tr></thead>';
-		foreach($content as $file) {
-			$info = $this->getInfoFromFileName($file);
-			$html .= '<tr>'
-			. '<td>' . strtoupper($info['app']) . '</td>'
-			. '<td>' . $info['driver'] . '</td>'
-			. '<td>' . $info['formatted_time'] . '</td>'
-			. '<td>' . round ( filesize( PROJ_DIR . 'backups/' . $file )/1024/1024, 3 ) . ' MB</td>'
-			. '<td>'
-				. '<div class="btn-group">'
-					.'<button class="download btn btn-info" onclick="backup.download(\'' . PROJ_DIR . 'backups/' . $file . '\')"><i class="glyphicon glyphicon-download-alt"></i> ' . \tr::get('download') . '</button>'
-					. (\utils::canUser('edit') ? ' <button type="button" class="btn btn-danger" onclick="backup.erase(\'' . $file . '\', this)"><i class="glyphicon glyphicon-trash"></i> ' . \tr::get('erase') . '</button>' :  '')
-				. '</div>'
-			. '</td>'
-			.'</tr>';
-		}
-		$html .= '</table>';
+		$this->render('backup', 'list_all_backups', [
+			'data' => $data,
+			'engine' => $this->db->getEngine(),
+			'canErase' => \utils::canUser('admin'),
+			'canRestore' => \utils::canUser('super_admin')
+		]);
+	}
 
-		echo $html;
+	public function restoreBackup()
+	{
+		try {
+			$file = $this->get['file'];
+			$f_info = $this->getInfoFromFileName($file);
+			if ($f_info['engine'] !== $this->db->getEngine()){
+				\utils::response(
+					tr::get("wrong_restore_engine", [$f_info['engine'], $this->db->getEngine() ]) , 
+					'error'
+				);
+				return;
+			}
+
+			$restore = new bigRestore( $this->db );
+			$restore->runImport(PROJ_DIR . 'backups/' . $file);
+
+			\utils::response("ok_backup_restored", 'success');
+		} catch (\Throwable $th) {
+			$this->log->error($th);
+			\utils::response("error_backup_not_restored", 'error');
+		}
+		
 	}
 
 
@@ -114,7 +122,7 @@ class backup_ctrl extends Controller
 					break;
 
 				default:
-					throw new \Exception('Unknown or unsupported database driver');
+					throw new \Exception('Unknown or unsupported database engine');
 					break;
 			}
 			
@@ -157,10 +165,10 @@ class backup_ctrl extends Controller
 			throw new \Exception("Filename `$filename` MUST end in .sql or .sql.gz");
 		}
 
-		list($app, $driver, $date) = explode('-', $filename);
+		list($app, $engine, $date) = explode('-', $filename);
 
 		$ret['app'] = $app;
-		$ret['driver'] = $driver;
+		$ret['engine'] = $engine;
 		$ret['time'] = $date;
 		$ret['formatted_time'] = (new DateTime("@{$date}"))->format('c');
 

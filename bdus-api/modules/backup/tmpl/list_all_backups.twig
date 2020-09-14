@@ -1,0 +1,57 @@
+<h2>{{ tr.get('available_backups') }}</h2>
+
+<button class="btn btn-success" onclick="backup.create()">
+    <i class="glyphicon glyphicon-ok"></i> {{ tr.get('backup_now') }}
+</button>
+<hr>
+
+{% if data | length == 0 %}
+<p class="lead"> {{ tr.get('no_bup_present') }}</p>
+{% else %}
+
+
+<table class="table table-hover table-bordered table-striped">
+	<thead>
+        <tr>
+            <th>App</th>
+            <th>Engine</th>
+            <th>Time</th>
+            <th>Size</th>
+            <th></th>
+		</tr>
+    </thead>
+    <tbody>
+    {% for f in data %}
+        <tr>
+            <td>{{ f.app | upper }}</td>
+			<td>{{ f.engine }} </td>
+			<td>{{ f.formatted_time }}</td>
+			<td>{{ f.size }} MB</td>
+			<td>
+                <div class="btn-group">
+                    <button class="download btn btn-info" 
+                            onclick="backup.download('{{ f.full_orig }}')">
+                        <i class="glyphicon glyphicon-download-alt"></i>
+                        {{ tr.get('download') }}
+                    </button>
+                    {% if canErase %}
+                    <button type="button" 
+                            class="btn btn-warning" 
+                            onclick="backup.erase('{{ f.orig }}', this)">
+                        <i class="glyphicon glyphicon-trash"></i>
+                        {{ tr.get('erase') }}</button>
+                    {% endif %}
+                    {% if canRestore and engine == f.engine %}
+                    <button type="button" 
+                            class="btn btn-danger" 
+                            onclick="backup.restore('{{ f.orig }}', this)">
+                        <i class="glyphicon glyphicon-open"></i>
+                        {{ tr.get('restore') }}</button>
+                    {% endif %}
+				</div>
+			</td>
+		</tr>
+    {% endfor %}
+    <tbody>
+</table>
+{% endif %}

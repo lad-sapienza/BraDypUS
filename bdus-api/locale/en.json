@@ -199,9 +199,17 @@
     "error_def_added": "Error, the definition was not saved",
     "voc_def_required": "Both vocabulary name and definition are required to continue",
     "no_bup_present": "No backup available",
-    "backup_now": "Execute backup",
+    
+    "available_backups": "Available backups",
+    "backup_now": "Create new backup",
     "ok_backup": "Backup executed successfully",
     "error_backup": "Error, the backup was not executed",
+    "wrong_restore_engine" : "Error: wrong database. Backup was created from %s and you are trying to restore on %s",
+    "restore" : "Restore",
+    "ok_backup_restored" : "Backup was correctly restored",
+    "error_backup_not_restored" : "Error on restoring backup. More information are logged in the system log",
+
+
     "select_tb_search": "Select the table to search in",
     "select_fld_search": "Select the field to search in",
     "search_term": "Search for",

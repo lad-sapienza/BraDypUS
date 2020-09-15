@@ -76,7 +76,7 @@
         <label class="col-sm-3 control-label">Preview *</label>
         <div class="col-sm-7">
           {% for preview in data.preview %}
-            <select name="preview[]"{% if loop.index0 == 0 %} class="cloneable form-control"{% endif %}>
+            <select name="preview[]" class="form-control{% if loop.index0 == 0 %} cloneable{% endif %}">
               <option></option>
               {% for id, label in field_list %}
               <option value="{{ id }}"{% if id == preview %} selected="selected" {% endif %}>{{ label }}</option>

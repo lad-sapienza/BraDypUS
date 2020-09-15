@@ -134,7 +134,7 @@
         <label class="col-sm-3 control-label">Plugins</label>
         <div class="col-sm-7">
           {% for plugin in data.plugin %}
-          <select name="plugin[]"{% if loop.first %} class="cloneable form-control"{% endif %}>
+          <select name="plugin[]" class="form-control{% if loop.first %} cloneable{% endif %}">
             <option></option>
             {% for id, plg in available_plugins %}
             <option value="{{ id }}"{% if id == plugin %} selected="selected" {% endif %}>{{ plg }}</option>
@@ -173,7 +173,7 @@
             <div class="row">
               <div class="col-sm-4">
                 <label>Other table's name</label>
-                <select name="link[aaa{{ index }}][other_tb]" class="form-control">
+                <select name="link[aaa{{ index }}][other_tb]" class="form-control" onchange="config.setFldOptions($(this).val(), $(this).parents('.row').find('select.other'))">
                   <option></option>
                   {% for id, label in available_tables %}
                     <option value="{{ id }}"{% if id == link_arr.other_tb %} selected="selected" {% endif %}>{{ label }}</option>
@@ -194,8 +194,12 @@
                       </select>
                     </div>
                     <div class="col-sm-6">
-                      <label>Other table's field</label>
-                      <input class="form-control" name="link[aaa{{ index }}][fld][bbb{{ loop.index0 }}][other]" value="{{ fld_arr.other }}" />
+                      <label>Other table's field</label>                      
+                      <select class="form-control other" name="link[aaa{{ index }}][fld][bbb{{ loop.index0 }}][other]">
+                        {% for fld, label in  fld_arr.other_list %}
+                        <option value="{{ fld }}" {% if fld_arr.other == fld %}selected="selected"{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                      </select>
                     </div>
                   </div>
                   <button type="button" class="btn btn-default clone-action"  data-baseName="bbb">+</button>

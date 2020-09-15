@@ -97,7 +97,13 @@ class config_ctrl extends Controller
         // default values
 		if (!$table_properties['preview'])  $table_properties['preview'] = array(0=>'');
 		if (!$table_properties['plugin'])   $table_properties['plugin'] = array(0=>'');
-		if (!$table_properties['link'])     $table_properties['link'] = array(0=>array('fld'=>array(0=>'')));
+        if (!$table_properties['link'])     $table_properties['link'] = array(0=>array('fld'=>array(0=>'')));
+        
+        foreach($table_properties['link'] as $index => $link){
+            foreach ($link['fld'] as $i => $l_data) {
+                $table_properties['link'][$index]['fld'][$i]['other_list'] = $this->cfg->get("tables.{$link['other_tb']}.fields.*.label");
+            }
+        }
 
         $this->render('config', 'table_properties', [
             'data'  => $table_properties,
@@ -439,5 +445,11 @@ class config_ctrl extends Controller
         }
         \utils::response(\tr::get('invalid_action', [$action]), 'error', true); // TODO:translate
 
+    }
+
+    public function getFldList()
+    {
+        $tb = $this->get['tb'];
+        \utils::response('ok', 'success', true, ["fields" => $this->cfg->get("tables.$tb.fields.*.label")]);
     }
 }

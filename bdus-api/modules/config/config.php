@@ -161,7 +161,7 @@ class config_ctrl extends Controller
 
 			$post = \utils::recursiveFilter($post);
 
-			if ($post['is_plugin'] === 1 && (!$post['name'] || !$post['label'] )) {
+			if ($post['is_plugin'] === '1' && (!$post['name'] || !$post['label'] )) {
 
 				throw new \Exception('1. Required fields are missing');
 
@@ -178,11 +178,24 @@ class config_ctrl extends Controller
                 "label" => "Id",
                 "type" => "text"
             ]);
-            \cfg::setFld( str_replace($this->prefix, null, $new_tb_name), 'creator', [
-                "name" => "creator",
-                "label" => "Creator",
-                "type" => "text"
-            ]);
+            if ($post['is_plugin'] === '1') {
+                \cfg::setFld(str_replace($this->prefix, null, $new_tb_name), 'creator', [
+                    "name" => "table_link",
+                    "label" => "Linked table",
+                    "type" => "text"
+                ]);
+                \cfg::setFld(str_replace($this->prefix, null, $new_tb_name), 'creator', [
+                    "name" => "id_link",
+                    "label" => "Linked id",
+                    "type" => "int"
+                ]);
+            } else {
+                \cfg::setFld(str_replace($this->prefix, null, $new_tb_name), 'creator', [
+                    "name" => "creator",
+                    "label" => "Creator",
+                    "type" => "text"
+                ]);
+            }
             
             // Write table data file
             \cfg::setTb($post);

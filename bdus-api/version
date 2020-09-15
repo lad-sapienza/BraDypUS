@@ -1,3 +1,4 @@
+4.0.162-alpha[] = "Fixed bug with create plugin tables"
 4.0.161-alpha[] = "Refactored Export"
 4.0.160-alpha[] = "Dropped support for multiupload"
 4.0.159-alpha[] = "Disabled backup restore for pgsql"

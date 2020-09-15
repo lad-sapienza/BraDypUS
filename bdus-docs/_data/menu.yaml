@@ -60,12 +60,8 @@
 - title: 7. Online publishing (deploy)
   url: /deploy/intro
   sub:
-    - title: 7.1. Make an account
-      url: /deploy/infinityfree/make-account
-    - title: 7.2. Create service
-      url: /deploy/infinityfree/make-service
-    - title: 7.3. Upoad files
-      url: /deploy/infinityfree/upload-files
+    - title: 7.1. Publish to Infinityfree
+      url: /deploy/infinityfree
 
 - title: Vocabulary
   url: /voc

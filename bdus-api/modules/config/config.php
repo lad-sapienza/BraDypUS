@@ -185,21 +185,24 @@ class config_ctrl extends Controller
                 "type" => "text"
             ]);
             if ($post['is_plugin'] === '1') {
-                \cfg::setFld(str_replace($this->prefix, null, $new_tb_name), 'creator', [
+                \cfg::setFld(str_replace($this->prefix, null, $new_tb_name), 'table_link', [
                     "name" => "table_link",
                     "label" => "Linked table",
-                    "type" => "text"
+                    "type" => "text",
+                    "db_type" => "TEXT",
                 ]);
-                \cfg::setFld(str_replace($this->prefix, null, $new_tb_name), 'creator', [
+                \cfg::setFld(str_replace($this->prefix, null, $new_tb_name), 'id_link', [
                     "name" => "id_link",
                     "label" => "Linked id",
-                    "type" => "int"
+                    "type" => "int",
+                    "db_type" => "INTEGER",
                 ]);
             } else {
                 \cfg::setFld(str_replace($this->prefix, null, $new_tb_name), 'creator', [
                     "name" => "creator",
                     "label" => "Creator",
-                    "type" => "text"
+                    "type" => "text",
+                    "db_type" => "TEXT",
                 ]);
             }
             

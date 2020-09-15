@@ -238,7 +238,7 @@ class Record implements RecordInterface
 							$has_value_flag = true;
 						}
 
-						if ($key != 'id') {
+						if ($key !== 'id') {
 
 							$tmp[] = "{$key} = ?";
 							$values[] = $val;
@@ -280,6 +280,8 @@ class Record implements RecordInterface
 								$plg_row['id_link'] = $this->data['core']['id'];
 								array_push($values, $this->data['core']['id'] );
 							}
+							unset($plg_row['id']);
+
 							array_push($query, array(
 									'q' => 'INSERT INTO ' . $plg_name . " ('" . implode("', '", array_keys($plg_row)) . "') VALUES (:" . implode(', :', array_keys($plg_row)). ")",
 									'values' => $values

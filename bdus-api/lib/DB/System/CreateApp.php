@@ -116,6 +116,7 @@ class CreateApp
                     "name" => "id",
                     "label" => "ID",
                     "type" => "text",
+                    "db_type" => "INTEGER",
                     "readonly" => "1",
                     "hide" => "1"
                 ],
@@ -123,13 +124,15 @@ class CreateApp
                     "name" => "table_link",
                     "label" => "Linked table",
                     "type" => "text",
+                    "db_type" => "TEXT",
                     "readonly" => "1",
                     "hide" => "1"
                 ],
                 [
                     "name" => "id_link",
                     "label" => "Linked id",
-                    "type" => "int",
+                    "type" => "text",
+                    "db_type" => "INTEGER",
                     "readonly" => "1",
                     "hide" => "1"
                 ],
@@ -144,40 +147,47 @@ class CreateApp
                   "name" => "id",
                   "label" => "ID",
                   "type" => "text",
+                  "db_type" => "INTEGER",
                   "readonly" => true
                 ], [
                   "name" => "creator",
                   "label" => "Creator",
-                  "type" => "int",
-                  "readonly" => true
-                ], [
-                  "name" => "ext",
-                  "label" => "Extension",
                   "type" => "text",
-                  "check" => [
-                    "not_empty"
-                  ],
+                  "db_type" => "INTEGER",
                   "readonly" => true
                 ], [
                   "name" => "filename",
                   "label" => "Filename",
                   "type" => "text",
+                  "db_type" => "TEXT",
                   "check" => [
                     "not_empty"
                   ],
                   "readonly" => true
                 ], [
+                    "name" => "ext",
+                    "label" => "Extension",
+                    "type" => "text",
+                    "db_type" => "TEXT",
+                    "check" => [
+                      "not_empty"
+                    ],
+                    "readonly" => true
+                ], [
                   "name" => "keywords",
                   "label" => "Keywords",
-                  "type" => "text"
+                  "type" => "text",
+                  "db_type" => "TEXT"
                 ], [
                   "name" => "description",
                   "label" => "Description",
-                  "type" => "long_text"
+                  "type" => "long_text",
+                  "db_type" => "TEXT"
                 ], [
                   "name" => "printable",
                   "label" => "Printable",
-                  "type" => "boolean"
+                  "type" => "boolean",
+                  "db_type" => "INTEGER",
                 ]
               ]
         ];

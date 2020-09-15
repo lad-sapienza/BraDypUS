@@ -11,6 +11,7 @@ configuration files of Bradypus are written in JSON. A basic knowledge of
 [SLQ](https://en.wikipedia.org/wiki/SQL) might also help for a more detailed
 configuration of the database schema.
 
+
 Text editors and IDEs like [VisualStudio Code](https://code.visualstudio.com/)
 or [Atom](https://atom.io/), among many others, greatly help in fixing typos or
 syntax errors.

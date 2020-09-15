@@ -4,3 +4,9 @@ PREFIX in mods replaced by $this->prefix
 sys tables managed via system\manager
 
 replace current VK with https://virtual-keyboard.js.org/
+
+
+Record\Edit uses STATIC! Read::
+
+
+Create new table plugin creates creator, but not table_link and id_link!

@@ -12,7 +12,7 @@ class images
 	 *
 	 * Returns array of system registered extension types and corresponding icons
 	 */
-	public static function availableTypes()
+	private static function availableTypes()
 	{
 		$availableTypes = [
 			"Simple text" => [
@@ -102,7 +102,7 @@ class images
 	 * Returns ordered and associative array containing verbose file type and icon
 	 * @param string $ext	file extension
 	 */
-	public static function checkExt($ext = false)
+	private static function checkExt($ext = false)
 	{
 		if ( $ext ) {
 			foreach ( self::availableTypes() as $name => $arr_values ) {

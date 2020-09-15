@@ -50,6 +50,12 @@
       url: /setup/vocabularies
     - title: 6.5. Creating other data tables
       url: /setup/other-data-tables
+    - title: 6.6. Finalizing setup
+      url: /setup/finalizing-setup
+    - title: 6.7. Final appearance of configuration files
+      url: /setup/preview-config
+    - title: 6.8. Some advices and hacks
+      url: /setup/advices-and-hacks
 
 - title: 7. Online publishing (deploy)
   url: /deploy/intro

@@ -63,8 +63,8 @@ in ordine alfabetico.
         "id_from_tb": "test__bibliografia"
     },
     {
-        "name": "pp",
-        "label": "pp",
+        "name": "pages",
+        "label": "pages",
         "type": "text"
     }
 ]

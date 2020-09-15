@@ -95,3 +95,23 @@ from the database ones.
     - name: notes
     - label: Notes
     - type: long_text
+
+#### test__m_citations
+- id
+- table_link
+- id_link
+- short
+    - name: short
+    - label: Short
+    - type: select
+    - db_type: TEXT
+    - id_from_tb: test__bibliography
+- pages
+    - name: pages
+    - label: Pages
+    - type: text
+    - db_type: TEXT
+- notes
+    - name: notes
+    - label: Notes
+    - type: long_text

@@ -41,14 +41,14 @@ bibliography [label=<
   <tr><td>publishedin (text)</td></tr>
 </table>>];
 
-m_citation [label=<
+m_citations [label=<
 <table border="0" cellborder="1" cellspacing="0" cellpadding="5">
-  <tr><td port="1" bgcolor="#99BED8"><b>m_citation</b></td></tr>
+  <tr><td port="1" bgcolor="#99BED8"><b>m_citations</b></td></tr>
   <tr><td port="2" bgcolor="#cccccc"><font color="red">id</font>  (int, PK)</td></tr>
   <tr><td port="3" bgcolor="#cccccc"><font color="red">table_link</font>  (text, FK)</td></tr>
   <tr><td port="4" bgcolor="#cccccc"><font color="red">id_link</font>  (text, FK)</td></tr>
   <tr><td port="5">short (text, gets values dynamically from bibliography.short)</td></tr>
-  <tr><td>pp. (text)</td></tr>
+  <tr><td>pages (text)</td></tr>
   <tr><td>notes (text)</td></tr>
 </table>>];
 
@@ -72,15 +72,15 @@ su:1 -> m_samples:1;
 su:1 -> m_samples:3 [ color=lightcoral arrowhead="none" ];
 su:2 -> m_samples:4 [ color=lightcoral arrowhead="none" ];
 
-sites:1 -> m_citation:1;
-sites:1 -> m_citation:3 [ color=lightcoral arrowhead="none" ];
-sites:2 -> m_citation:4 [ color=lightcoral arrowhead="none" ];
+sites:1 -> m_citations:1;
+sites:1 -> m_citations:3 [ color=lightcoral arrowhead="none" ];
+sites:2 -> m_citations:4 [ color=lightcoral arrowhead="none" ];
 
-su:1 -> m_citation:1;
-su:1 -> m_citation:3 [ color=lightcoral arrowhead="none" ];
-su:2 -> m_citation:4 [ color=lightcoral arrowhead="none" ];
+su:1 -> m_citations:1;
+su:1 -> m_citations:3 [ color=lightcoral arrowhead="none" ];
+su:2 -> m_citations:4 [ color=lightcoral arrowhead="none" ];
 
-bibliography:1 -> m_citation:1;
+bibliography:1 -> m_citations:1;
 
-bibliography :4-> m_citation:5 [ color=lightcoral arrowhead="none" ];
+bibliography :4-> m_citations:5 [ color=lightcoral arrowhead="none" ];
 }

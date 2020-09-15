@@ -185,11 +185,19 @@ Follows the full content of the final configuration files, that  can be founf in
         "type": "text",
         "db_type": "INTEGER",
         "readonly": "1",
-        "disabled": "1"
+        "hide": "1"
     },
     {
-        "name": "creator",
-        "label": "Creator",
+        "name": "table_link",
+        "label": "Linked table",
+        "type": "text",
+        "db_type": "TEXT",
+        "readonly": "1",
+        "hide": "1"
+    },
+    {
+        "name": "id_link",
+        "label": "Linked id",
         "type": "text",
         "db_type": "INTEGER",
         "readonly": "1",
@@ -204,7 +212,7 @@ Follows the full content of the final configuration files, that  can be founf in
     },
     {
         "name": "pages",
-        "label": "pages",
+        "label": "Pages",
         "type": "text",
         "db_type": "TEXT"
     }
@@ -218,17 +226,25 @@ Follows the full content of the final configuration files, that  can be founf in
         "name": "id",
         "label": "Id",
         "type": "text",
-        "db_type": "INTEGER"
+        "db_type": "INTEGER",
+        "readonly": "1",
+        "hide": "1"
     },
     {
         "name": "table_link",
         "label": "Linked table",
-        "type": "text"
+        "type": "text",
+        "db_type": "TEXT",
+        "readonly": "1",
+        "hide": "1"
     },
     {
         "name": "id_link",
         "label": "Linked id",
-        "type": "int"
+        "type": "text",
+        "db_type": "INTEGER",
+        "readonly": "1",
+        "hide": "1"
     },
     {
         "name": "datetaken",
@@ -343,7 +359,7 @@ Follows the full content of the final configuration files, that  can be founf in
     {
         "name": "type",
         "label": "Type",
-        "type": "text",
+        "type": "select",
         "db_type": "TEXT",
         "vocabulary_set": "su_type"
     },
@@ -371,8 +387,7 @@ Follows the full content of the final configuration files, that  can be founf in
                 "chronology"
             ],
             "plugin": [
-                "test__m_citations",
-                "test__geodata"
+                "test__m_citations"
             ],
             "link": [
                 {

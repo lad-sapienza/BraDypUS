@@ -45,6 +45,12 @@ add new item easily.
 Once enterd vocabulary items can be re-ordered by simply dragging and dropping single items, 
 edited by clicking on the penci icon or deleted by clicking in the trash bin icon.
 
-![screenshot](./../images/setup/edit-vocabulary-items.png "Vocabulary list") 
+![screenshot](./../images/setup/edit_vocabulary_items.png "Vocabulary list") 
 *Vocabulary list*
 
+
+Once one ore more vocabularies are set, they will appear in the drop-down list
+of field properties, and thus linkk to single fields.
+
+![screenshot](./../images/setup/voc_linked_to_field.png "Linking field to vocabulary") 
+*Linking field to vocabulary*

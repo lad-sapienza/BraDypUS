@@ -25,7 +25,7 @@ samples taken from su. Since each su can provide zero, one or many samples,
 `su` and `samples` are thus joined in a `one-to-many` relationship.
 
 Yet, samples will not be available as a table on itsown. It will be only
-available as an appendinx to su. This appencices tables are called
+available as an appendix to `su`. This appencices tables are called
 **plugins** in Bradypus.
 
 ![screenshot](./../images/design/test-schema.svg "Visual schema") 

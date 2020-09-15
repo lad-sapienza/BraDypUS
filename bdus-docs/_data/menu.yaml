@@ -48,6 +48,8 @@
       url: /setup/adding-columns
     - title: 6.4. Managing vocabularies
       url: /setup/vocabularies
+    - title: 6.5. Creating other data tables
+      url: /setup/other-data-tables
 
 - title: 7. Online publishing (deploy)
   url: /deploy/intro

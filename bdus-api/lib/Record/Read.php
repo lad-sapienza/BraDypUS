@@ -175,7 +175,7 @@ EOD;
             }
             $this->cache['manuallinks'] = $manualLinks;
         }
-
+        
         return $this->cache['manuallinks'];
     }
 
@@ -328,13 +328,13 @@ EOD;
                     }
 
                     $backlinks[$ref_tb] = [
-            'tb_id' => $ref_tb,
-            'tb_stripped' => str_replace(PREFIX, null, $ref_tb),
+                        'tb_id' => $ref_tb,
+                        'tb_stripped' => str_replace(PREFIX, null, $ref_tb),
                         "tb_label" => $this->cfg->get("tables.$ref_tb.label"),
                         'tot' => $r[0]['tot'],
-            'where' => $where,
+                        'where' => $where,
                         'data' => $r
-            ];
+                    ];
                 }
             }
             $this->cache['files'] = $backlinks;
@@ -511,7 +511,7 @@ EOD;
         $r = $this->db->query($full_sql, $sql_val, 'read');
 
         if (!$r) {
-            return false;
+            return [];
         }
 
         $ret = [];

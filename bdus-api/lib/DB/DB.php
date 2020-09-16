@@ -292,10 +292,11 @@ class DB implements DBInterface
 			throw new \Exception("Missing configuration file $file");
 		}
 
-		$cfg = json_decode(file_get_contents($this->path_to_root . "projects/{$app}/cfg/app_data.json"), true);
+		$cfg = json_decode(file_get_contents($file), true);
 		
 		if (!is_array($cfg)){
-			throw new \Exception(\tr::get('invalid_configuration_file', [$connection_file]) );
+			echo $app;
+			throw new \Exception(\tr::get('invalid_configuration_file', [$file]) );
 		}
 		if ( null !== $cfg['db_engine'] && file_exists($this->path_to_root . "projects/{$app}/db/bdus.sqlite") ) {
 			$cfg['db_engine'] = 'sqlite';

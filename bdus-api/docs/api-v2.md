@@ -184,8 +184,6 @@ The response structure is similar to the following simplified example:
         {
             "id": "1",
             "geometry": "POINT (31.255061 29.849491)",
-            "geo_el_elips": null,
-            "geo_el_asl": null,
             "geojson": "{\"type\":\"Point\",\"coordinates\":[31.255061,29.849491]}"
         }
     ],

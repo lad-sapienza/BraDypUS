@@ -124,13 +124,8 @@ class login_ctrl extends Controller
 	public function out()
 	{
 		try {
-			$user_id = $_SESSION['user']['id'];
-			\pref::save2DB($this->db);
-			\utils::emptyDir(PROJ_TMP_DIR);
-			$this->deleteOldSessions();
-			\cookieAuth::destroy();
-			$_SESSION = [];
-			session_destroy();
+			self::endUserSession( $this->db );
+			
 			$this->log->info("User {$user_id} logged out");
 		} catch (\Throwable $th) {
 			$this->log->error($th);
@@ -155,7 +150,7 @@ class login_ctrl extends Controller
 
                 if (isset($app_data['auth_login_as_user'])) {
                     $auth_login_as_user = (int)$app_data['auth_login_as_user'];
-                }
+				}
 				$this->login(null, null, null, $auth_login_as_user);
 				$this->log->info("User {$_SESSION['user']['id']} logged in");
 
@@ -260,7 +255,7 @@ class login_ctrl extends Controller
 		}
 	}
 
-	private function deleteOldSessions()
+	private static function deleteOldSessions()
     {
         $maxlife = 24*60*60; // 24h
         $sessions = \utils::dirContent(MAIN_DIR . 'sessions');
@@ -300,33 +295,53 @@ class login_ctrl extends Controller
         }
 
         if ($res) {
-            // remove password from array
-            unset($res['password']);
 
-            // Set user preferences
-            if ( isset($res['settings']) ) {
-                $sett_arr = unserialize($res['settings']);
-                if (is_array($sett_arr) && !empty($sett_arr)){
-                    foreach ($sett_arr as $key => $value) {
-                        \pref::set($key, $value);
-                    }
-                }
-            }
-
-            // remove settings from array
-            unset($res['settings']);
-
-            // assign user data to session variable
-            $_SESSION['user'] = $res;
-
-            if ($remember && $remember !== 'false') {
-                \cookieAuth::set();
-            }
+			self::startUserSession($res, ($remember && $remember !== 'false'));
+            
             return true;
         } else {
             throw new \Exception(\tr::get('login_data_not_valid'));
         }
 	} // end of login
+
+	public static function startUserSession( array $user , bool $remember = false) : void
+	{
+		// remove password from array
+		unset($user['password']);
+
+		// Set user preferences
+		if ( isset($user['settings']) ) {
+			$sett_arr = unserialize($user['settings']);
+			if (is_array($sett_arr) && !empty($sett_arr)){
+				foreach ($sett_arr as $key => $value) {
+					\pref::set($key, $value);
+				}
+			}
+		}
+
+		// remove settings from array
+		unset($user['settings']);
+
+		// assign user data to session variable
+		$_SESSION['user'] = $user;
+
+		if ($remember) {
+			\cookieAuth::set();
+		}
+	}
+
+	public static function endUserSession(\DB\DB $db = null) : void
+	{
+		$user_id = $_SESSION['user']['id'];
+		if ($db){
+			\pref::save2DB($db);
+		}
+		\utils::emptyDir(PROJ_TMP_DIR);
+		self::deleteOldSessions();
+		\cookieAuth::destroy();
+		$_SESSION = [];
+		session_destroy();
+	}
 	
 	private function getToken( string $app, array $user_data ) : string
 	{

@@ -211,36 +211,32 @@ EOD;
         return $this->cache['rs'];
     }
 
-    /**
-     * [getGeodata description]
-     * @return [type]      [description]
-     * {
-     *    "id": (int),
-     *    "geometry": (string, wkt),
-     *    "geo_el_elips": (int),
-     *    "geo_el_asl": (int)
-     *    "geojson": (string, geojson)
-     * }
-     */
-    public function getGeodata()
-    {
-        if (!isset($this->cache['geodata'])) {
-            $r = $this->db->query(
-                "SELECT id, geometry, geo_el_elips, geo_el_asl FROM " . PREFIX . "geodata WHERE table_link = ? AND id_link = ?",
-                [$this->tb, $this->id]
-            );
-        
-            $ret = [];
-            if (is_array($r)) {
-                foreach ($r as $row) {
-                    $row['geojson'] = \Symm\Gisconverter\Gisconverter::wktToGeojson($row['geometry']);
-                    $ret[$row['id']] = $row;
-                }
-            }
-            $this->cache['geodata'] = $ret;
-        }
-        return $this->cache['geodata'];
-    }
+  /**
+   * [getGeodata description]
+   * @param  string $tb  Table name
+   * @param  int    $id  Record ID
+   * @return [type]      [description]
+   * {
+   *    "id": (int),
+   *    "geometry": (string, wkt),
+   *    "geojson": (string, geojson)
+   * }
+   */
+  public function getGeodata(string $tb, int $id)
+  {
+      $r = $this->db->query(
+          "SELECT id, geometry FROM " . PREFIX . "geodata WHERE table_link = ? AND id_link = ?",
+          [$tb, $id]
+      );
+    
+      $ret = [];
+      if (is_array($r)) {
+          foreach ($r as $row) {
+              $row['geojson'] = \Symm\Gisconverter\Gisconverter::wktToGeojson($row['geometry']);
+              $ret[$row['id']] = $row;
+          }
+      }
+  }
 
     /**
      * Returns list of files linked to the record

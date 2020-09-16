@@ -112,41 +112,17 @@ class Persist
                     $gd['_geometry']
                 ];
 
-                if ( isset($gd['_geo_el_elips']) ) {
-                    array_push($fields, 'geo_el_elips');
-                    array_push($values, $gd['_geo_el_elips']);
-                }
-                if ( isset($gd['_geo_el_asl']) ) {
-                    array_push($fields, 'geo_el_asl');
-                    array_push($values, $gd['_geo_el_asl']);
-                }
-
                 $sql = "INSERT INTO " . PREFIX . "geodata "
                     . "(" . implode(", ", $fields) . ") "
                     . "VALUES (". implode(',', array_fill(0, count($values), '?')) .")";
                 
 
             // UPDATE
-            } else if ( isset($gd['id']) && (
-                    isset($gd['_geometry']) ||
-                    isset($gd['_geo_el_elips']) ||
-                    isset($gd['_geo_el_asl'])
-                )
-            ) {
+            } else if ( isset($gd['id']) && isset($gd['_geometry']) ) {
                 $fields = [];
                 $values = [];
-                if ( isset($gd['_geometry']) ){
-                    array_push($fields, "geometry = ?");
-                    array_push($values, $gd['_geometry']);
-                }
-                if ( isset($gd['_geo_el_elips']) ){
-                    array_push($fields, "geo_el_elips = ?");
-                    array_push($values, $gd['_geo_el_elips']);
-                }
-                if ( isset($gd['_geo_el_asl']) ){
-                    array_push($fields, "geo_el_asl = ?");
-                    array_push($values, $gd['_geo_el_asl']);
-                }
+                array_push($fields, "geometry = ?");
+                array_push($values, $gd['_geometry']);
                 $sql = "UPDATE " . PREFIX . "geodata SET " . implode(", ", $fields). " WHERE id = ?";
                 array_push($values, $gd['id']);
                 

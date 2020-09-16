@@ -54,13 +54,13 @@ class api2 extends Controller
         $this->app = $this->get['app'];
         $valid_apps = \utils::dirContent(MAIN_DIR . "projects");
         if (!$this->app || !in_array($this->app, $valid_apps)) {
-            throw new \Exception("Invalid app {$this->app}. App must be one of " . implode(', ', $valid_apps));
+            throw new \Exception("Invalid app `{$this->app}`. App must be one of " . implode(', ', $valid_apps));
         }
 
         // Validate verb
         $this->verb = $this->get['verb'];
         if (!$this->verb || !in_array($this->verb, $this->valid_verbs)) {
-            throw new \Exception("Invalid verb {$this->verb}. Verb must be one of " . implode(', ', $this->valid_verbs));
+            throw new \Exception("Invalid verb `{$this->verb}`. Verb must be one of " . implode(', ', $this->valid_verbs));
         }
 
         // Tb must have prefix
@@ -75,14 +75,33 @@ class api2 extends Controller
                 throw new \Exception("System tables cannot be queried");
             }
         }
+    }
 
-        
+    private function logApiUser() : bool
+    {
+        $auth_user_id = $this->cfg->get('main.api_login_as_user');
+        if (!$auth_user_id){
+            return false;
+        }
+        $sys_manager = new Manage($this->db, $this->prefix);
+        $res = $sys_manager->getById('users', (int)$auth_user_id);
+        if (!empty($res)){
+            \login_ctrl::startUserSession($res);
+            return true;
+        }
+        return false;
     }
 
     public function run()
     {
         $this->debug = DEBUG_ON;
         try {
+            $this->logApiUser();
+            
+            if (!\utils::canUser('read')){
+                throw new \Exception(\tr::get('not_authorized'));
+            }
+
             $this->validateInput();
             
             $pp_response = $this->preProcess();
@@ -97,15 +116,16 @@ class api2 extends Controller
 
             $resp = $this->{$this->verb}();
             
-            return $this->array2response($resp);
+            $this->array2response($resp);
 
         } catch (\Throwable $e) {
-            return $this->array2response([
+            $this->array2response([
                 'type' => 'error',
                 'text' => $e->getMessage(),
                 'trace' => $this->debug ? $e->getTrace() : "Turn on API2 debug to read trace"
             ]);
         }
+        \login_ctrl::endUserSession();
     }
 
     private function postProcess($data)

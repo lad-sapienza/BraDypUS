@@ -215,5 +215,15 @@ var config = {
 				$(thisButton).parent().remove()
 			}
 		});
+	},
+
+	setFldOptions: (tb, dest_select) => {
+		core.getJSON('config_ctrl', 'getFldList', {tb: tb}, false, d => {
+			const fields = d.fields;
+			$(dest_select).find('option').remove();
+			for (const [key, value] of Object.entries(fields)) {
+				$(dest_select).append(`<option value="${key}">${value}</option>`)
+			}
+		})
 	}
 };

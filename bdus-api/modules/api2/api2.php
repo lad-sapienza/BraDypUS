@@ -24,10 +24,11 @@
  *      curl --location --request GET '/api/v2/paths?verb=search&shortsql=@places(&total_rows=&page=&geojson=&records_per_page&full_records&pretty=1)'
  */
 
- use \DB\System\Manage;
- use \API2\Inspect;
- use \API2\GetUniqueVal;
- use \API2\Search;
+use \DB\System\Manage;
+use \API2\Inspect;
+use \API2\GetUniqueVal;
+use \API2\Search;
+use \Record\Read;
 
 class api2 extends Controller
 {
@@ -209,8 +210,8 @@ class api2 extends Controller
         if (!$id) {
             throw new \Exception("Record id is required with verb read");
         }
-        $read_record = new \Record\Read($this->db, $this->cfg);
-        $resp = $read_record->getFull($tb, $id);
+        $read_record = new Read($this->db, $this->cfg, $tb, $id);
+        $resp = $read_record->getFull();
         
         return $resp;
     }

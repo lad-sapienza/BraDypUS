@@ -8,6 +8,8 @@ class Read
 {
     protected $db;
     protected $cfg;
+    protected $tb;
+    protected $id;
 
     private $cache = [];
 
@@ -17,16 +19,21 @@ class Read
      *
      * @param DBInterface $db       DB object
      */
-    public function __construct(DBInterface $db, Config $cfg)
+    public function __construct(DBInterface $db, Config $cfg, string $tb, int $id)
     {
         $this->db = $db;
         $this->cfg = $cfg;
+        $this->tb = $tb;
+        $this->id = $id;
+    }
+
+    public function getTb() : string
+    {
+        return $this->tb;
     }
 
     /**
      * Return a complete array of record data
-     * @param  string $tb  Table name
-     * @param  int    $id  Record ID
      * @return array      Complete array of record data
      *
      * "metadata": {
@@ -43,32 +50,31 @@ class Read
      * "geodata":     { see $this->getGeodata for docs     },
      * "rs":          { see $this->getRs for docs          }
      */
-    public function getFull(string $tb, int $id): array
+    public function getFull(): array
     {
-        $core = $this->getCore($tb, $id) ?: [];
+        $core = $this->getCore() ?: [];
 
         return [
             'metadata' => [
-                'tb_id' => $tb,
-                'rec_id' => $id,
-                'tb_stripped' => str_replace(PREFIX, null, $tb),
-                'tb_label' => $this->cfg->get("tables.$tb.label")
+                'tb_id' => $this->tb,
+                'rec_id' => $this->id,
+                'tb_stripped' => str_replace(PREFIX, null, $this->tb),
+                'tb_label' => $this->cfg->get("tables.{$this->tb}.label")
             ],
             'core'       => $core,
-            'plugins'    => $this->getPlugins($tb, $id),
-            'links'      => $this->getLinks($tb, $core),
-            'backlinks'  => $this->getBackLinks($tb, $id),
-            'manualLinks'=> $this->getManualLinks($tb, $id),
-            'files'      => $this->getFiles($tb, $id),
-            'geodata'    => $this->getGeodata($tb, $id),
-            'rs'         => $this->cfg->get("tables.$tb.rs") ? $this->getRs($tb, $id): []
+            'plugins'    => $this->getPlugins(),
+            'links'      => $this->getLinks(),
+            'backlinks'  => $this->getBackLinks(),
+            'manualLinks'=> $this->getManualLinks(),
+            'files'      => $this->getFiles(),
+            'geodata'    => $this->getGeodata(),
+            'rs'         => $this->cfg->get("tables.{$this->tb}.rs") ? $this->getRs(): []
         ];
     }
 
     /**
    * Returns array with core data
-   * @param  string  $tb   name
-   * @param  int    $id   Record ID
+   * @param string $fld   Firld name, to return only a segment;
    * @return array        Array of table data
    *
    *    "id": {
@@ -79,18 +85,22 @@ class Read
    *    },
    *    {...}
    */
-    public function getCore(string $tb, int $id): array
+    public function getCore(string $fld = null, bool $return_val = false)
     {
-        if (!$this->cache['core']) {
-            $this->cache['core'] = $this->getTbRecord($tb, "{$tb}.id = ?", [$id], true);
+        if (!isset($this->cache['core'])) {
+            $this->cache['core'] = $this->getTbRecord($this->tb, "{$this->tb}.id = ?", [$this->id], true);
         }
-        return $this->cache['core'];
+        if (!$fld) {
+            return $this->cache['core'];
+        } elseif ($return_val) {
+            $this->cache['core'][$fld]['val'];
+        } else {
+            return $this->cache['core'][$fld];
+        }
     }
 
     /**
      * Return array of manually entered links
-     * @param  string $tb  Table name
-     * @param  int    $id  Record ID
      * @return array      Array of manually entered links
      * link_id: {
      *    "key": (int),
@@ -101,9 +111,9 @@ class Read
      *    "ref_label": (string|int)
      * }
      */
-    public function getManualLinks(string $tb, int $id): array
+    public function getManualLinks(): array
     {
-        if (!$this->cache['manualLinks']) {
+        if (!isset($this->cache['manuallinks'])) {
             $manualLinks = [];
             $prefix = PREFIX;
             $sql = <<<EOD
@@ -121,20 +131,20 @@ SELECT {$prefix}userlinks.*
 EOD;
 
             $values = [
-                $tb,
-                $id,
-                $tb,
-                $id
+                $this->tb,
+                $this->id,
+                $this->tb,
+                $this->id
             ];
 
             $res = $this->db->query($sql, $values, 'read');
 
             if (is_array($res) && !empty($res)) {
                 foreach ($res as $r) {
-                    if ($tb == $r['tb_one'] and $id == $r['id_one']) {
+                    if ($this->tb === $r['tb_one'] and $this->id === $r['id_one']) {
                         $mlt = $r['tb_two'];
                         $mli = $r['id_two'];
-                    } elseif ($tb == $r['tb_two'] and $id == $r['id_two']) {
+                    } elseif ($this->tb === $r['tb_two'] and $this->id === $r['id_two']) {
                         $mlt = $r['tb_one'];
                         $mli = $r['id_one'];
                     }
@@ -163,16 +173,14 @@ EOD;
                     ];
                 }
             }
-
-            $this->cache['manualLinks'] = $manualLinks;
+            $this->cache['manuallinks'] = $manualLinks;
         }
-        return $this->cache['manualLinks'];
+        
+        return $this->cache['manuallinks'];
     }
 
     /**
      * Returns array of RS data, if available
-     * @param  string $tb  Table name
-     * @param  int    $id  Record ID
      * @return array      array of RS data or empty array
      * {
      *    "id": "1",
@@ -181,63 +189,55 @@ EOD;
      *    "relation": (int)
      * }
      */
-    public function getRs(string $tb, int $id)
+    public function getRs()
     {
-        if (!$this->cache['rs']) {
+        if (!isset($this->cache['rs'])){
             $res = $this->db->query(
                 "SELECT id, first, second, relation FROM " . PREFIX . "rs WHERE tb = ? AND (first= ? OR second = ?)",
-                [$tb, $id, $id],
+                [$this->tb, $this->id, $this->id],
                 'read'
             );
-
+    
             $ret = [];
-
+    
             if ($res && !\is_array($res)) {
                 foreach ($res as $key => $value) {
                     $ret[$value['id']] = $value;
                 }
             }
+
             $this->cache['rs'] = $ret;
         }
-
         return $this->cache['rs'];
     }
 
-    /**
-     * [getGeodata description]
-     * @param  string $tb  Table name
-     * @param  int    $id  Record ID
-     * @return [type]      [description]
-     * {
-     *    "id": (int),
-     *    "geometry": (string, wkt),
-     *    "geojson": (string, geojson)
-     * }
-     */
-    public function getGeodata(string $tb, int $id)
-    {
-        if (!$this->cache['geodata']) {
-            $r = $this->db->query(
-                "SELECT id, geometry FROM " . PREFIX . "geodata WHERE table_link = ? AND id_link = ?",
-                [$tb, $id]
-            );
+  /**
+   * [getGeodata description]
+   * @return [type]      [description]
+   * {
+   *    "id": (int),
+   *    "geometry": (string, wkt),
+   *    "geojson": (string, geojson)
+   * }
+   */
+  public function getGeodata()
+  {
+      $r = $this->db->query(
+          "SELECT id, geometry FROM " . PREFIX . "geodata WHERE table_link = ? AND id_link = ?",
+          [$this->tb, $this->id]
+      );
     
-            $ret = [];
-            if (is_array($r)) {
-                foreach ($r as $row) {
-                    $row['geojson'] = \Symm\Gisconverter\Gisconverter::wktToGeojson($row['geometry']);
-                    $ret[$row['id']] = $row;
-                }
-            }
-            $this->cache['geodata'] = $ret;
-        }
-        return $this->cache['geodata'];
-    }
+      $ret = [];
+      if (is_array($r)) {
+          foreach ($r as $row) {
+              $row['geojson'] = \Symm\Gisconverter\Gisconverter::wktToGeojson($row['geometry']);
+              $ret[$row['id']] = $row;
+          }
+      }
+  }
 
     /**
      * Returns list of files linked to the record
-     * @param  string $tb  Table name
-     * @param  int    $id  Record ID
      * @return [type]      [description]
      * {
      *    "id": (int),
@@ -250,9 +250,9 @@ EOD;
      * }
 
      */
-    public function getFiles(string $tb, int $id)
+    public function getFiles()
     {
-        if (!$this->cache['files']) {
+        if (!isset($this->cache['files'])) {
             $prefix = PREFIX;
             $sql = <<<EOD
 SELECT {$prefix}files.*
@@ -272,21 +272,22 @@ ORDER BY ul.sort;
 )
 EOD;
             $sql_val = [
-                $tb,
-                $id,
-                $tb,
-                $id
+                $this->tb,
+                $this->id,
+                $this->tb,
+                $this->id
             ];
 
-            $this->cache['files'] = $this->db->query($sql, $sql_val);
+            $ret = $this->db->query($sql, $sql_val);
+
+            $this->cache['files'] = $ret;
         }
         return $this->cache['files'];
+        
     }
 
     /**
      * Returns array of backlinks data
-     * @param  string $tb  Table name
-     * @param  int    $id  Record ID
      * @return array      Array with backlink data
      *
      * "backlinks": {
@@ -301,22 +302,22 @@ EOD;
      *            "label": (string)
      *          },
      */
-    public function getBackLinks(string $tb, int $id)
+    public function getBackLinks()
     {
-        if (!$this->cache['backlinks']) {
+        if (!isset($this->cache['files'])) {
             $backlinks = [];
-            $bl_data = $this->cfg->get("tables.$tb.backlinks");
+            $bl_data = $this->cfg->get("tables.{$this->tb}.backlinks");
 
             if (is_array($bl_data)) {
                 foreach ($bl_data as $bl) {
                     list($ref_tb, $via_plg, $via_plg_fld) = \utils::csv_explode($bl, ':');
                     $ref_tb_id = $this->cfg->get("tables.$ref_tb.id_field");
 
-                    $where = " id IN (SELECT DISTINCT id_link FROM {$via_plg} WHERE table_link = '{$ref_tb}' AND {$via_plg_fld} = {$id})";
+                    $where = " id IN (SELECT DISTINCT id_link FROM {$via_plg} WHERE table_link = '{$ref_tb}' AND {$via_plg_fld} = {$this->id})";
 
                     $sql = "SELECT count(id) as tot FROM {$ref_tb} WHERE id IN (SELECT DISTINCT id_link FROM {$via_plg} WHERE table_link = '{$ref_tb}' AND {$via_plg_fld} = ?)";
 
-                    $sql_val = [$id];
+                    $sql_val = [$this->id];
 
 
                     $r = $this->db->query($sql, $sql_val);
@@ -334,15 +335,14 @@ EOD;
                     ];
                 }
             }
-            $this->cache['backlinks'] = $backlinks;
+            $this->cache['files'] = $backlinks;
         }
-        return $this->cache['backlinks'];
+        return $this->cache['files'];
+
     }
 
     /**
      * Returns array with (system) links data
-     * @param  string $tb  Table name
-     * @param  int    $id  Record ID
      * @return array       Array of links data, or empty array
      *
      * "(referenced table full name)": {
@@ -353,12 +353,12 @@ EOD;
      *    "where": (SQL where statement to fetch records)
  *    },
      */
-    public function getLinks(string $tb, array $core)
+    public function getLinks()
     {
-        if (!$this->cache['links']) {
+        if (!isset($this->cache['links'])) {
             $links = [];
 
-            $links_data = $this->cfg->get("tables.$tb.link");
+            $links_data = $this->cfg->get("tables.{$this->tb}.link");
 
             if (is_array($links_data)) {
                 foreach ($links_data as $ld) {
@@ -373,17 +373,17 @@ EOD;
                         "SELECT count(id) as tot FROM {$ld['other_tb']} WHERE " . implode($where, ' AND '),
                         $values
                     );
-
-                    $tot_inks_found = (int)$r[0]['tot'];
-                    if ($tot_inks_found > 0) {
+                    $tot_links = (int)$r[0]['tot'];
+                    if ($tot_links > 0 ) {
                         $links[$ld['other_tb']] = [
                             'tb_id' => $ld['other_tb'],
                             'tb_stripped' => str_replace(PREFIX, null, $ld['other_tb']),
                             "tb_label" => $this->cfg->get("tables.{$ld['other_tb']}.label"),
-                            'tot' => $tot_inks_found,
+                            'tot' => $tot_links,
                             'where' => implode($where, ' AND ')
                         ];
                     }
+                    
                 }
             }
             $this->cache['links'] = $links;
@@ -393,8 +393,6 @@ EOD;
 
     /**
      * Returns array with plugins data
-     * @param  string $tb  Table name
-     * @param  int    $id  Record ID
      * @return array      Array of plugins data, or empty array
      *
      * "(referenced plugin table full name)": {
@@ -417,15 +415,15 @@ EOD;
      *    ]
      * }
      */
-    public function getPlugins(string $tb, int $id)
+    public function getPlugins()
     {
-        if (!$this->cache['plugins']) {
+        if (!isset($this->cache['plugins'])) {
             $plugins = [];
 
-            $plg_names = $this->cfg->get("tables.$tb.plugin");
+            $plg_names = $this->cfg->get("tables.{$this->tb}.plugin");
             if ($plg_names && is_array($plg_names)) {
                 foreach ($plg_names as $p) {
-                    $plg_data = $this->getTbRecord($p, "table_link = ? AND id_link = ?", [$tb, $id], false, true) ?: [];
+                    $plg_data = $this->getTbRecord($p, "table_link = ? AND id_link = ?", [$this->tb, $this->id], false, true) ?: [];
                     if (empty($plg_data)) {
                         continue;
                     }
@@ -457,7 +455,6 @@ EOD;
             $this->cache['plugins'] = $plugins;
         }
         return $this->cache['plugins'];
-            
     }
 
     /**

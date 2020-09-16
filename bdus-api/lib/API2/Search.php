@@ -10,6 +10,7 @@ namespace API2;
 use DB\DBInterface;
 use \SQL\QueryBuilder;
 use \Config\Config;
+use \Record\Read;
 
 class Search
 {	
@@ -118,8 +119,8 @@ class Search
 		$fullResult = [];
 
 		foreach ($result as $id => $row) {
-			$record = new \Record\Read(self::$db, self::$cfg);
-			$rowResult = $record->getFull($tb, $row['id']);
+			$record = new Read(self::$db, self::$cfg, $tb, $row['id']);
+			$rowResult = $record->getFull();
 			array_push($fullResult, $rowResult);
 		}
 		

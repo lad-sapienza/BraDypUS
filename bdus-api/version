@@ -1,3 +1,5 @@
+4.0.0-alpha.169[] = "Fixed bug with Alter SQLite::dropFld"
+4.0.0-alpha.168[] = "Record\Read uses paramater-less methods"
 4.0.0-alpha.167[] = "Record\Read uses internal cache"
 4.0.0-alpha.166[] = "Removed support for geodata.geo_el_elips and geodata.geo_el_asl"
 4.0.0-alpha.165[] = "Secured API access"

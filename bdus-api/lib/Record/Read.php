@@ -213,8 +213,6 @@ EOD;
 
   /**
    * [getGeodata description]
-   * @param  string $tb  Table name
-   * @param  int    $id  Record ID
    * @return [type]      [description]
    * {
    *    "id": (int),
@@ -222,11 +220,11 @@ EOD;
    *    "geojson": (string, geojson)
    * }
    */
-  public function getGeodata(string $tb, int $id)
+  public function getGeodata()
   {
       $r = $this->db->query(
           "SELECT id, geometry FROM " . PREFIX . "geodata WHERE table_link = ? AND id_link = ?",
-          [$tb, $id]
+          [$this->tb, $this->id]
       );
     
       $ret = [];
@@ -375,14 +373,17 @@ EOD;
                         "SELECT count(id) as tot FROM {$ld['other_tb']} WHERE " . implode($where, ' AND '),
                         $values
                     );
-
-                    $links[$ld['other_tb']] = [
-                        'tb_id' => $ld['other_tb'],
-                        'tb_stripped' => str_replace(PREFIX, null, $ld['other_tb']),
-                        "tb_label" => $this->cfg->get("tables.{$ld['other_tb']}.label"),
-                        'tot' => $r[0]['tot'],
-                        'where' => implode($where, ' AND ')
-                    ];
+                    $tot_links = (int)$r[0]['tot'];
+                    if ($tot_links > 0 ) {
+                        $links[$ld['other_tb']] = [
+                            'tb_id' => $ld['other_tb'],
+                            'tb_stripped' => str_replace(PREFIX, null, $ld['other_tb']),
+                            "tb_label" => $this->cfg->get("tables.{$ld['other_tb']}.label"),
+                            'tot' => $tot_links,
+                            'where' => implode($where, ' AND ')
+                        ];
+                    }
+                    
                 }
             }
             $this->cache['links'] = $links;

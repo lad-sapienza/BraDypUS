@@ -238,11 +238,9 @@ class Edit
      *
      * @param boolean $id
      * @param boolean $geometry
-     * @param boolean $geo_el_elips
-     * @param boolean $geo_el_asl
      * @return void
      */
-    public function setGeodata($id = false, $geometry = false, $geo_el_elips = false, $geo_el_asl = false)
+    public function setGeodata($id = false, $geometry = false)
     {   
         // Missing data
         if (!$id && !$geometry) {
@@ -251,14 +249,12 @@ class Edit
         // Add new row
         } else if ( !$id && $geometry ) {
             array_push($this->model['geodata'], [
-                "_geometry" => $geometry,
-                "_geo_el_elips" => $geo_el_elips,
-                "_geo_el_asl" => $geo_el_asl
+                "_geometry" => $geometry
             ]);
             return $this;
         
         // Delete geodata
-        } else if ( $id && !$geometry && !$geo_el_elips && !$geo_el_asl ){
+        } else if ( $id && !$geometry ){
             if ( isset ($this->model['geodata'][$id]) ) {
                 $this->model['geodata'][$id]['_delete'] = true;
             } else {
@@ -267,22 +263,13 @@ class Edit
             return $this;
 
         // Update
-        } else if ($id && ( $geometry || $geo_el_elips || $geo_el_asl ) ) {
+        } else if ($id &&  $geometry ) {
             if ( isset ($this->model['geodata'][$id]) ) {
                 
                 // Update geometry
                 if ( $geometry && $this->model['geodata'][$id]['geometry'] !== $geometry) {
                     $this->model['geodata'][$id]['_geometry'] = $geometry;
                 }
-                // Update geo_el_elips
-                if ( $geo_el_elips && $this->model['geodata'][$id]['geo_el_elips'] !== $geo_el_elips) {
-                    $this->model['geodata'][$id]['_geo_el_elips'] = $geo_el_elips;
-                }
-                // Update geo_el_asl
-                if ( $geo_el_asl && $this->model['geodata'][$id]['geo_el_asl'] !== $geo_el_asl) {
-                    $this->model['geodata'][$id]['_geo_el_asl'] = $geo_el_asl;
-                }
-
                 
             } else {
                 $this->addLog("Geodata #{$id} not found: ignoring geodata update");

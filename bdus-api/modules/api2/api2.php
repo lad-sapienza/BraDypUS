@@ -54,13 +54,13 @@ class api2 extends Controller
         $this->app = $this->get['app'];
         $valid_apps = \utils::dirContent(MAIN_DIR . "projects");
         if (!$this->app || !in_array($this->app, $valid_apps)) {
-            throw new \Exception("Invalid app {$this->app}. App must be one of " . implode(', ', $valid_apps));
+            throw new \Exception("Invalid app `{$this->app}`. App must be one of " . implode(', ', $valid_apps));
         }
 
         // Validate verb
         $this->verb = $this->get['verb'];
         if (!$this->verb || !in_array($this->verb, $this->valid_verbs)) {
-            throw new \Exception("Invalid verb {$this->verb}. Verb must be one of " . implode(', ', $this->valid_verbs));
+            throw new \Exception("Invalid verb `{$this->verb}`. Verb must be one of " . implode(', ', $this->valid_verbs));
         }
 
         // Tb must have prefix

@@ -1,3 +1,4 @@
+4.0.0-alpha.166[] = "Removed support for geodata.geo_el_elips and geodata.geo_el_asl"
 4.0.0-alpha.165[] = "Secured API access"
 4.0.0-alpha.164[] = "Bug fixing"
 4.0.0-alpha.163[] = "Config links uses only dropb down menus for fields"

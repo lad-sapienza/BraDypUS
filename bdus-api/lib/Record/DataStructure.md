@@ -105,12 +105,8 @@
     "geodata_id" => {
         "id": (int),
         "geometry": (string, wkt),
-        "geo_el_elips": (int),
-        "geo_el_asl": (int),
         "geojson": (string, geojson),
         "_geometry": (string, wkt),
-        "_geo_el_elips": (int),
-        "_geo_el_asl": (int),
     },
     { ... }
 },

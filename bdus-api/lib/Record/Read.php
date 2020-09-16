@@ -208,15 +208,13 @@ EOD;
    * {
    *    "id": (int),
    *    "geometry": (string, wkt),
-   *    "geo_el_elips": (int),
-   *    "geo_el_asl": (int)
    *    "geojson": (string, geojson)
    * }
    */
   public function getGeodata(string $tb, int $id)
   {
     $r = $this->db->query(
-      "SELECT id, geometry, geo_el_elips, geo_el_asl FROM " . PREFIX . "geodata WHERE table_link = ? AND id_link = ?",
+      "SELECT id, geometry FROM " . PREFIX . "geodata WHERE table_link = ? AND id_link = ?",
       [$tb, $id]);
     
     $ret = [];

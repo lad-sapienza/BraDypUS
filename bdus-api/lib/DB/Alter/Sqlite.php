@@ -69,16 +69,16 @@ class Sqlite implements AlterInterface
         
         $tmp_tb = uniqid($tb);
 
-        $sql['create_tmp'] = \preg_replace(
+        $sql['create_tmp'] = preg_replace(
             [
-                '/CREATE\s+TABLE\s+"?' . $tb. '"?/i',
-                '/,\s?"?\b' . $fld_name . '\b"?\s[^\),]+/i',
-                '/\(\s?"?\b' . $fld_name . '\b"?\s[^,]+,\s?/i'
+                '/CREATE\s+TABLE\s+"?' . $tb. '"?/im',
+                '/"?\b' . $fld_name . '\b"?[^\),]+,?/im',
+                '/,\s*\)/im',
             ],
             [
                 'CREATE TABLE "' . $tmp_tb. '"',
                 '',
-                '(',
+                ')'
             ],
             $orig_sql
         );

@@ -405,7 +405,7 @@ class config_ctrl extends Controller
 
         $sys_manage = new Manage($this->db, $this->prefix);
 
-
+        // Create table: yes create, no col
         if ($action === 'create' && !$col) {
             try {
                 $sys_manage->createTable($tb);
@@ -419,6 +419,7 @@ class config_ctrl extends Controller
         }
         $alter = new Alter($this->db);
 
+        // Add column: yes create, yes col
         if ($action === 'create' && $col) {
             $str = $sys_manage->getStructure(str_replace($this->prefix, '', $tb));
             $type = false;
@@ -435,11 +436,13 @@ class config_ctrl extends Controller
             }
             return;
         
+        // Drop table: yes delete, no col
         } else if ($action === 'delete' && !$col) {
             $alter->dropTable($tb);
             \utils::response('ok_deleting_table', 'success');
             return;
 
+        // Drop column: yes delete, yes column
         } else if ($action === 'delete' && $col) {
             $alter->dropFld($tb, $col);
             \utils::response('ok_deleting_column', 'success');

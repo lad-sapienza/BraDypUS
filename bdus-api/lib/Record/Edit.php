@@ -5,7 +5,7 @@ namespace Record;
 class Edit
 {
     /**
-     * Model datas tructure
+     * Model data structure
      *
      * @var array
      */
@@ -37,7 +37,7 @@ class Edit
         ];
 
         $this->model["core"]        = $id ? Read::getCore($tb, $id) :               [];
-        $this->model["plugins"]     = $id ? Read::getPlugins($app, $tb, $id) :      [];
+        $this->model["plugins"]     = $id ? Read::getPlugin($app, $tb, $id) :      [];
         $this->model["manualLinks"] = $id ? Read::getManualLinks($app, $tb, $id) :  [];
         $this->model["files"]       = $id ? Read::getFiles($app, $tb, $id) :        [];
         $this->model["geodata"]     = $id ? Read::getGeodata($app, $tb, $id) :      [];

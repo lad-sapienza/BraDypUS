@@ -19,7 +19,7 @@ class Persist
     {
         $this_class = new self($edit);
         $this_class->Core();
-        $this_class->Plugins();
+        $this_class->Plugin();
         $this_class->ManualLinks();
         $this_class->Geodata();
         $this_class->Rs();

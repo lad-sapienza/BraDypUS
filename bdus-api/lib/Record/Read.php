@@ -550,7 +550,7 @@ EOD;
                     $ret[str_replace('@', '', $k)]['val_label'] = $v;
                 }
             }
-            $return_arr[] = $ret;
+            $return_arr[(int)$res['id']] = $ret;
         }
 
         return $return_first ? reset($return_arr) : $return_arr;

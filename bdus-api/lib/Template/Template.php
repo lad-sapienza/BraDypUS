@@ -240,7 +240,6 @@ class Template implements TemplateInterface
                     '<fieldset>';
 
         if (file_exists(PROJ_DIR . 'templates/' . str_replace(PREFIX, null, $plg) . '.twig')) {
-            $this->current_plugin = $plg;
             $this->current_plugin_index = (int) $index;
 
             $html .= $this->plg_fld('id', false);

@@ -6,11 +6,13 @@ use Config\Config;
 use DB\DB;
 
 use Template\TemplateInterface;
-use Template\Parts\Links;
-use Template\Parts\Geodata;
-use Template\Parts\Rs;
-use Template\Parts\Images;
-use Template\Parts\Field;
+use Template\Parts\{
+    Links, 
+    Geodata, 
+    Rs, 
+    Images, 
+    Field
+};
 
 use Twig\Environment;
 use Twig\Loader\FilesystemLoader;

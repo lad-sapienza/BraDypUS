@@ -112,7 +112,12 @@ class record_ctrl extends Controller
 
     public function show()
     {
-        if (!$this->request['tb']) {
+        $tb = $this->request['tb'];
+        $context = $this->request['a'];
+        $id = $this->request['id'];
+        $id_field = $this->request['id_field'];
+
+        if (!$tb) {
             throw new \Exception( \tr::get('tb_missing'));
         }
 
@@ -122,36 +127,37 @@ class record_ctrl extends Controller
             return;
         }
         // a record id must be provided in edit & read & preview mode
-        if ($this->request['a'] !== 'add_new' && !$this->request['id'] && !$this->request['id_field']) {
+        if ($context !== 'add_new' && !$id && !$id_field) {
             throw new \Exception( \tr::get('no_id_to_view'));
         }
 
         // no data are retrieved if context is add_new or multiple edit!
-        if ($this->request['a'] === 'add_new' or ($this->request['a'] === 'edit' and count($this->request['id']) > 1)) {
-            $id_arr = array('new');
-        } elseif ($this->request['id_field']) {
-            $id_arr = $this->request['id_field'];
+        if ($context === 'add_new' || ($context === 'edit' and count($id) > 1)) {
+            $id_arr = ['new'];
+        } elseif ($id_field) {
+            $id_arr = $id_field;
             $flag_idfield = true;
         } else {
-            $id_arr = $this->request['id'];
+            $id_arr = $id;
         }
+        
 
-        //Can not display more than 500 records!
+        //Can not display more than 100 records!
         $total_records = count($id_arr);
-        if ($total_records > 500) {
-            echo '<div class="alert">' . \tr::get('too_much_records', [ $total_records, '500'] ) . '</div>';
+        if ($total_records > 100) {
+            echo '<div class="alert">' . \tr::get('too_much_records', [ $total_records, '100'] ) . '</div>';
             return;
         }
 
         $step = 10;
 
-        foreach ($id_arr as $index => $id) {
+        foreach ($id_arr as $index => $one_id) {
             $index = $index+1;
 
             if ($index > ($step)) {
                 return;
             }
-            if (($key = array_search($id, $id_arr)) !== false) {
+            if (($key = array_search($one_id, $id_arr)) !== false) {
                 unset($id_arr[$key]);
             }
             if ($index === $total_records) {
@@ -160,8 +166,8 @@ class record_ctrl extends Controller
                 echo $continue_url = 'id[]=' . implode('&id[]=', $id_arr);
             }
 
-            if ($id == 'new') {
-                $id = false;
+            if ($one_id === 'new') {
+                $one_id = false;
             }
 
             $record = new Record($this->request['tb'], ($flag_idfield ? false : $id), $this->db, $this->cfg);
@@ -170,13 +176,13 @@ class record_ctrl extends Controller
                 $record->setIdField($id);
             }
 
-            if ($this->request['a'] == 'edit' &&
-                    (!\utils::canUser('edit', $record->getCore('creator')) || (count($this->request['id']) > 1 && !\utils::canUser('multiple_edit')))) {
+            if ($context === 'edit' &&
+                    (!\utils::canUser('edit', $record->getCore('creator')) || (count($id) > 1 && !\utils::canUser('multiple_edit')))) {
                 echo '<h2>' . \tr::get('not_enough_privilege') . '</h2>';
                 continue;
             }
 
-            if ($this->request['a'] == 'add_new' && !\utils::canUser('add_new')) {
+            if ($context === 'add_new' && !\utils::canUser('add_new')) {
                 echo '<h2>' . \tr::get('not_enough_privilege') . '</h2>';
                 continue;
             }
@@ -185,7 +191,7 @@ class record_ctrl extends Controller
             $fieldObj = new Field($this->request['a'], $record, $this->log, $this->cfg);
             
             // get template
-            $template_file = $this->getTemplate($this->request['tb'], $this->request['a']);
+            $template_file = $this->getTemplate($tb, $context);
 
             if ($template_file){
                 $twig = new \Twig\Environment( new \Twig\Loader\FilesystemLoader(PROJ_DIR . 'templates/'), unserialize(CACHE) );
@@ -196,19 +202,19 @@ class record_ctrl extends Controller
                 $html = $fieldObj->showall();
             }
 
-            $this->render('record', 'show', array(
-                    'action' => $this->request['a'],
-                    'html' => $html,
-                    'multiple_id' => (count((array)$this->request['id']) > 1) ? \tr::get('multiple_edit_alert', [ count($this->request['id']), implode('; id: ', $this->request['id']) ] ) : false,
-                    'tb' => $this->request['tb'],
-                    'id_url' => is_array($this->request['id']) ? 'id[]=' . implode('&id[]=', $this->request['id']) : false,
-                    'totalRecords' => $total_records,
-                    'id' => $flag_idfield ? $record->getCore('id') : $id,
-                    'can_edit' => (\utils::canUser('edit', $record->getCore('creator')) || (count($this->request['id']) > 1 && \utils::canUser('multiple_edit'))),
-                    'can_erase' => \utils::canUser('edit', $record->getCore('creator')),
-                    'continue_url' => $continue_url,
-                    'virtual_keyboard' => $this->cfg->get('main.virtual_keyboard')
-            ));
+            $this->render('record', 'show', [
+                'action' => $context,
+                'html' => $html,
+                'multiple_id' => (count((array)$id) > 1) ? \tr::get('multiple_edit_alert', [ count($id), implode('; id: ', $id) ] ) : false,
+                'tb' => $tb,
+                'id_url' => is_array($id) ? 'id[]=' . implode('&id[]=', $id) : false,
+                'totalRecords' => $total_records,
+                'id' => $flag_idfield ? $record->getCore('id') : $one_id,
+                'can_edit' => (\utils::canUser('edit', $record->getCore('creator')) || (count($id) > 1 && \utils::canUser('multiple_edit'))),
+                'can_erase' => \utils::canUser('edit', $record->getCore('creator')),
+                'continue_url' => $continue_url,
+                'virtual_keyboard' => $this->cfg->get('main.virtual_keyboard')
+            ]);
         }
     }
 

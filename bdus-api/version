@@ -1,3 +1,4 @@
+4.0.0-alpha.170[] = "Declare paramaters in record_ctrl"
 4.0.0-alpha.169[] = "Fixed bug with Alter SQLite::dropFld"
 4.0.0-alpha.168[] = "Record\Read uses paramater-less methods"
 4.0.0-alpha.167[] = "Record\Read uses internal cache"

@@ -41,10 +41,6 @@ class Template implements TemplateInterface
         return "col-sm-$nr";
     }
 
-    /**
-     * (non-PHPdoc)
-     * @see TemplateInterface::simpleSum()
-     */
     public function simpleSum(string $fields) : int
     {
         $flds_arr = explode(",", $fields);
@@ -58,10 +54,6 @@ class Template implements TemplateInterface
         return $sum;
     }
 
-    /**
-     * (non-PHPdoc)
-     * @see TemplateInterface::permalink()
-     */
     public function permalink() : ?string
     {
         if ($this->context === 'add_new') {
@@ -72,10 +64,6 @@ class Template implements TemplateInterface
       '</div>';
     }
 
-    /**
-     * (non-PHPdoc)
-     * @see TemplateInterface::links()
-     */
     public function links() : ?string
     {
         if ($this->context === 'add_new') {
@@ -122,10 +110,6 @@ class Template implements TemplateInterface
         }
     }
 
-    /**
-     * (non-PHPdoc)
-     * @see TemplateInterface::geodata()
-     */
     public function geodata() : ?string
     {
         if ($this->context === 'add_new') {
@@ -143,10 +127,6 @@ class Template implements TemplateInterface
         );
     }
 
-    /**
-     * (non-PHPdoc)
-     * @see TemplateInterface::showall()
-     */
     public function showall() : string
     {
         $tb = $this->record->getTb();
@@ -184,10 +164,6 @@ class Template implements TemplateInterface
         return $html;
     }
 
-    /**
-     * (non-PHPdoc)
-     * @see TemplateInterface::rs()
-     */
     public function rs() : ?string
     {
         if ($this->context === 'add_new') {
@@ -206,10 +182,6 @@ class Template implements TemplateInterface
         );
     }
 
-    /**
-     * (non-PHPdoc)
-     * @see TemplateInterface::image_thumbs()
-     */
     public function image_thumbs(int $max = 2) : ?string
     {
         // get file data
@@ -262,12 +234,6 @@ class Template implements TemplateInterface
         return $fld->show();
     }
 
-    /**
-     * Returns html for a single plugin row
-     * @param string $plg plugin name
-     * @param mixed $index plugin row index
-     * @return void|string
-     */
     protected function showPlgRow($plg, $index)
     {
         $html = '<div class="pluginrow">' .
@@ -306,10 +272,6 @@ class Template implements TemplateInterface
         return $html;
     }
 
-    /**
-     * (non-PHPdoc)
-     * @see iTemTemplateInterfaceplate::plg()
-     */
     public function plg($plg) : ?string
     {
         if (!preg_match('/' . PREFIX . '/', $plg)) {

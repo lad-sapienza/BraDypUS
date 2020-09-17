@@ -134,11 +134,13 @@ class record_ctrl extends Controller
         // no data are retrieved if context is add_new or multiple edit!
         if ($context === 'add_new' || ($context === 'edit' and count($id) > 1)) {
             $id_arr = ['new'];
+            $flag_idfield = false;
         } elseif ($id_field) {
             $id_arr = $id_field;
             $flag_idfield = true;
         } else {
             $id_arr = $id;
+            $flag_idfield = false;
         }
         
 
@@ -170,14 +172,10 @@ class record_ctrl extends Controller
                 $one_id = false;
             }
 
-            $record = new Record($this->request['tb'], ($flag_idfield ? false : $id), $this->db, $this->cfg);
-
-            if ($flag_idfield) {
-                $record->setIdField($id);
-            }
+            $readRecord = new \Record\Read($this->db, $this->cfg, $tb, $one_id, $flag_idfield);
 
             if ($context === 'edit' &&
-                    (!\utils::canUser('edit', $record->getCore('creator')) || (count($id) > 1 && !\utils::canUser('multiple_edit')))) {
+                    (!\utils::canUser('edit', $readRecord->getCore('creator', true)) || (count($id) > 1 && !\utils::canUser('multiple_edit')))) {
                 echo '<h2>' . \tr::get('not_enough_privilege') . '</h2>';
                 continue;
             }
@@ -187,8 +185,7 @@ class record_ctrl extends Controller
                 continue;
             }
 
-            // Initialize Field
-            $fieldObj = new Field($this->request['a'], $record, $this->log, $this->cfg);
+            $fieldObj = new \Template\Template($context, $readRecord, $this->db, $this->cfg);
             
             // get template
             $template_file = $this->getTemplate($tb, $context);
@@ -209,9 +206,9 @@ class record_ctrl extends Controller
                 'tb' => $tb,
                 'id_url' => is_array($id) ? 'id[]=' . implode('&id[]=', $id) : false,
                 'totalRecords' => $total_records,
-                'id' => $flag_idfield ? $record->getCore('id') : $one_id,
-                'can_edit' => (\utils::canUser('edit', $record->getCore('creator')) || (count($id) > 1 && \utils::canUser('multiple_edit'))),
-                'can_erase' => \utils::canUser('edit', $record->getCore('creator')),
+                'id' => $flag_idfield ? $readRecord->getCore('id') : $one_id,
+                'can_edit' => (\utils::canUser('edit', $readRecord->getCore('creator')) || (count($id) > 1 && \utils::canUser('multiple_edit'))),
+                'can_erase' => \utils::canUser('edit', $readRecord->getCore('creator')),
                 'continue_url' => $continue_url,
                 'virtual_keyboard' => $this->cfg->get('main.virtual_keyboard')
             ]);

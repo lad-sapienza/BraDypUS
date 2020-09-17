@@ -44,7 +44,7 @@ class Read
      *    "tb_label": (referenced table label),
      * },
      * "core":        { see $this->getTbRecord for docs    },
-     * "plugins":     { see $this->getPlugins for docs     },
+     * "plugins":     { see $this->getPlugin for docs     },
      * "links":       { see $this->getLinks for docs       },
      * "backlinks":   { see $this->getBackLinks for docs   },
      * "manualLinks": { see $this->getManualLinks for docs },
@@ -64,7 +64,7 @@ class Read
                 'tb_label' => $this->cfg->get("tables.{$this->tb}.label")
             ],
             'core'       => $core,
-            'plugins'    => $this->getPlugins(),
+            'plugins'    => $this->getPlugin(),
             'links'      => $this->getLinks(),
             'backlinks'  => $this->getBackLinks(),
             'manualLinks'=> $this->getManualLinks(),
@@ -244,6 +244,7 @@ EOD;
         $this->cache['geodata'] = $ret;
     }
     return $this->cache['geodata'];
+  }
 
     /**
      * Returns list of files linked to the record
@@ -425,46 +426,56 @@ EOD;
      *    ]
      * }
      */
-    public function getPlugins()
+    public function getPlugin( string $plugin = null, int $index = null, string $fld = null )
     {
-        if (!isset($this->cache['plugins'])) {
-            $plugins = [];
+        $required = $plugin ? [$plugin] : $this->cfg->get("tables.{$this->tb}.plugin") ?: [];
 
-            $plg_names = $this->cfg->get("tables.{$this->tb}.plugin");
-            if ($plg_names && is_array($plg_names)) {
-                foreach ($plg_names as $p) {
-                    $plg_data = $this->getTbRecord($p, "table_link = ? AND id_link = ?", [$this->tb, $this->id], false, true) ?: [];
-                    if (empty($plg_data)) {
-                        continue;
-                    }
-                    $indexed_plg_data = [];
-                    foreach ($plg_data as $key => $row) {
-                        $indexed_plg_data[$row['id']['val']];
-                    }
-                    // sort records using sort field, if available
-                    if (in_array('sort', array_keys(reset($plg_data)))) {
-                        usort($plg_data, function ($a, $b) {
-                            if ($a['sort'] === $b['sort']) {
-                                return 0;
-                            }
-                            return ($a['sort'] > $b['sort']) ? 1 : -1;
-                        });
-                    }
+        $ret = [];
 
-                    $plugins[$p] = [
-                        "metadata" => [
-                            "tb_id" => $p,
-                            "tb_stripped" => str_replace(PREFIX, null, $p),
-                            "tb_label" => $this->cfg->get("tables.$p.label"),
-                            "tot" => count($plg_data)
-                        ],
-                        "data" => $plg_data
-                    ];
+        foreach ($required as $p) {
+            if (!isset($this->cache['plugins'][$p])) {
+                $plg_data = $this->getTbRecord($p, "table_link = ? AND id_link = ?", [$this->tb, $this->id], false) ?: [];
+                if (empty($plg_data)) {
+                    continue;
                 }
+                $indexed_plg_data = [];
+                foreach ($plg_data as $key => $row) {
+                    $indexed_plg_data[$row['id']['val']];
+                }
+                // sort records using sort field, if available
+                if (in_array('sort', array_keys(reset($plg_data)))) {
+                    usort($plg_data, function ($a, $b) {
+                        if ($a['sort'] === $b['sort']) {
+                            return 0;
+                        }
+                        return ($a['sort'] > $b['sort']) ? 1 : -1;
+                    });
+                }
+
+                $this->cache['plugins'][$p] = [
+                    "metadata" => [
+                        "tb_id" => $p,
+                        "tb_stripped" => str_replace(PREFIX, null, $p),
+                        "tb_label" => $this->cfg->get("tables.$p.label"),
+                        "tot" => count($plg_data)
+                    ],
+                    "data" => $plg_data
+                ];
             }
-            $this->cache['plugins'] = $plugins;
+            $ret[$p] = $this->cache['plugins'][$p];
         }
-        return $this->cache['plugins'];
+
+        if (!$plugin){
+            return $ret;
+            
+        }
+        if (!isset($index)){
+            return $ret[$plugin];
+        }
+        if (!$fld){
+            return $ret[$plugin]['data'][$index];
+        }
+        return $ret[$plugin]['data'][$index][$fld]['val'];
     }
 
     /**
@@ -488,7 +499,6 @@ EOD;
     private function getTbRecord(string $tb, string $sql, array $sql_val = [], bool $return_first = false, bool $return_all_fields = false)
     {
         $cfg = $this->cfg->get("tables.$tb.fields");
-
         $fields = $return_all_fields ? ["*"] : ["{$tb}.*"];
         $join = [];
 
@@ -540,7 +550,7 @@ EOD;
                     $ret[str_replace('@', '', $k)]['val_label'] = $v;
                 }
             }
-            $return_arr[(int)$res['id']] = $ret;
+            $return_arr[] = $ret;
         }
 
         return $return_first ? reset($return_arr) : $return_arr;

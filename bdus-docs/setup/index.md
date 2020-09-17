@@ -13,7 +13,7 @@ We can now login in the new application, which is almost entirely disabled, beca
 We need to enter in the **System configuration** module, where all the configuration
 and table structure can be edited.
 
-{: .bg-warning .p-3}
+{: .callout-block .callout-block-warning }
 System configuration is a highly dangerous functionality since data tables can be added or removed,
 deleting, with no possibility for recover entire datasets.
 

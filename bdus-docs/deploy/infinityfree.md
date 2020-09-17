@@ -2,6 +2,16 @@
 title: Publishing the locally created application to Infinityfree
 ---
 
+{: .callout-block .callout-block-info}
+The choise of Infinityfree for this demo is determined by
+a **non exhaustive** research of free PHP hosting solutions. 
+There are probably many equivalent or better alternatives
+that offer for free the same or more features.  
+It should be stressed out that the free plan of Infinityfree 
+**is not** the best solution for a production environment, while
+it is more than enough for testin purposes.
+
+
 - [Create account](#create-account)
 - [Create the service](#create-the-service)
 - [Upload the files](#upload-the-files)

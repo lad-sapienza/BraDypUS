@@ -12,7 +12,7 @@ each of them has its own settings and costraints.
 Bradypus is a multi-project system, it means that on the same 
 installation many applications can coexist, each being fully isolted and self-contained.
 
-{: .alert .alert-warning }
+{: .callout-block .callout-block-warning }
 Pay attention: when designing multi-app system based on MySQL or PostgreSQL, 
 make sure to create a separate db user for each application. This will grant full
 isolation between different projects.

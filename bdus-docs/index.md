@@ -10,7 +10,7 @@ management, and develoment of BraDypUS, a web-based relational database managing
 In this guide **BDUS** is used as a short form of **BraDypUS**; the terms are equivalent.
 
 ### Version
-The guide is dedicated to the still immature version **4.x.x**, which is a major an almost total
+The guide is dedicated to the still immature version **4.0.0**, which is a major an almost total
 rescript of the whole application with few, but remarkable, new features.
 Read the [migration guide](/migration-from-v3) for more information.
 

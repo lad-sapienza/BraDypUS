@@ -18,7 +18,7 @@ to create a new application.
 
 By clicking on the **Create new application** button the setup window appears.
 
-{: .bg-warning .p-2}
+{: .callout-block .callout-block-warning }
 For security reasons the **Create new application button** is not available on running installations
 that have at least on application defined. But system administrators whi have access to the application folder
 can enable this feature by simply creating a new empty file in the installation root named exactly 
@@ -39,7 +39,7 @@ If the database ongin of your choise is SQLite, the setup finishes here.
 
 But if you ar going to work with MySQL or PostgreSQL, then further information are required.
 
-{: .bg-warning .p-2}
+{: .callout-block .callout-block-warning }
 Be sure have a running MySQL or PostgreSQL service and to have **already** 
 created the database for BraDypUS.  
 It is recommended, for security reasons, to have a single database for each application, and

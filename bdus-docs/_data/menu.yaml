@@ -57,8 +57,8 @@
     - title: 6.8. Some advices and hacks
       url: /setup/advices-and-hacks
 
-- title: 7. Online publishing (deploy)
-  url: /deploy/intro
+- title: 7. Deploy application
+  url: /deploy/
   sub:
     - title: 7.1. Publish to Infinityfree
       url: /deploy/infinityfree

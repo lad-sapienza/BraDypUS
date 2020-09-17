@@ -1,4 +1,6 @@
-# System requirements
+---
+title: System requirements
+---
 
 To run Bradypus locally, for development and testing purposes, 
 a web server and php are needed. Indeed, PHP is the only required

@@ -1,4 +1,6 @@
-# Finalizing setup
+---
+title: Finalizing setup
+---
 
 Now that table structure has been completed it is time to finalize the setup, 
 by (continuing) editing table properties. We could not do this before, as single fields were missing.

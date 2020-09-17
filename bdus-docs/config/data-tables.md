@@ -1,5 +1,6 @@
-# Sintassi dei file di configurazione della tabella
-
+---
+title: Sintassi dei file di configurazione della tabella
+---
 
 - Posizione: `projects/test/cfg/*.json`
 - Descrizione: Configurazione delle singole tabelle di dati, comprese le tabelle [plugin](/voc#plugin).

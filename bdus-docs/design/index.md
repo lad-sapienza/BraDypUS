@@ -1,4 +1,6 @@
-# Structure of the example database
+---
+title: Structure of the example database
+---
 
 The design of the database strucure is by far the 
 the most delicate and important passage and depends

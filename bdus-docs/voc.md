@@ -1,9 +1,5 @@
 # Vocabolary
 
-<div class="form-group my-5 p-5 border bg-light shadow">
-    <input class="form-control" type="search" id="search-dic" placeholder="Search in the vocabulary">
-</div>
-
 ### Geoface
 **TODO**
 

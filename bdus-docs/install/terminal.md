@@ -1,4 +1,6 @@
-# Installing with the terminal and git
+---
+title: Installing with the terminal and git
+---
 
 To install Bradypus with the terminal and git you need:
 - a connection to the Internet

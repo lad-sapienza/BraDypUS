@@ -1,5 +1,6 @@
-# Setup environment in Windows
-
+---
+title: Setup environment in Windows
+---
 
 Windows operating system does not ship usually with a PHP installation, wich 
 must be installe manually. The [official documentation](https://www.php.net/manual/en/install.windows.php) 

@@ -1,5 +1,6 @@
-# Some conventions
-
+---
+title: Some conventions
+---
 
 Bradypus is a [relational system](https://en.wikipedia.org/wiki/Relational_database) 
 which means that at its base there are **tables**.
@@ -11,7 +12,7 @@ each of them has its own settings and costraints.
 Bradypus is a multi-project system, it means that on the same 
 installation many applications can coexist, each being fully isolted and self-contained.
 
-{:.bg-warning .p-3}
+{: .alert .alert-warning }
 Pay attention: when designing multi-app system based on MySQL or PostgreSQL, 
 make sure to create a separate db user for each application. This will grant full
 isolation between different projects.

@@ -1,4 +1,6 @@
-# Creating the first table
+---
+title: Creating the first table
+---
 
 The first data table to create is `sites`, or, to quote it with its full name `test__sites`.
 

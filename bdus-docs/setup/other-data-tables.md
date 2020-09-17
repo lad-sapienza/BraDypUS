@@ -1,4 +1,6 @@
-# Creating other data tables
+---
+title: Creating other data tables
+---
 
 
 In the same manner, we will create otherdata tables, following the [main schema](/design/).

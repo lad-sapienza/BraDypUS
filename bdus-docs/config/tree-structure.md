@@ -1,4 +1,6 @@
-# Struttura (albero) di file e cartelle
+---
+title: Struttura (albero) di file e cartelle
+---
 
 A questo punto è oppurtuno offrire una panoramica generale della struttura di file e cartelle
 di una installazione Bradypus completa, in modo da avere una chiara panoramica di quello

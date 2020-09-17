@@ -1,4 +1,6 @@
-# Setup environment in MacOS / Linux / Unix
+---
+title: Setup environment in MacOS / Linux / Unix
+---
 
 Normally *nix operating systems (Linux, MacOS, Unix) come with a
 default installation of PHP and often also a web server (like Apache).

@@ -1,4 +1,6 @@
-# Setting up the application
+---
+title: Setting up the application
+---
 
 Up to now we have downloaded the main software and created the new application,
 setting up the database connection, and BraDypUS took care of the rest.

@@ -1,4 +1,6 @@
-# Adding columns / fields
+---
+title: Adding columns / fields
+---
 
 By adding a table, the two system required columns::
 - id (int, PK)

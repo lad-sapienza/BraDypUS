@@ -1,4 +1,6 @@
-# Some advices and hacks
+---
+title: Some advices and hacks
+---
 
 Follow here some advices regarding the configuration of the database
 that might help in solving practical issues. Please feel free to contribute,

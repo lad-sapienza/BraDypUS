@@ -1,4 +1,6 @@
-# Knowledge base
+---
+title: Knowledge base
+---
 
 For the creation of a new Bradypus database application, 
 **no particular knowledge of server settings and/or programming languages is required since in v4**.

@@ -1,4 +1,6 @@
-# Migration from v3
+---
+title: Migration from v3
+---
 
 ## TL;DR
 - `db_engine` value in app_data.json is now required, should be set to "sqlite" for previous applications

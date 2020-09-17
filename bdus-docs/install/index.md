@@ -1,4 +1,6 @@
-# Installing Bradypus locally
+---
+title: Installing Bradypus locally
+---
 
 To install Bradypus locally two different approaches can be followed:
 - The [manual download](manual-download) from Github, you will need:

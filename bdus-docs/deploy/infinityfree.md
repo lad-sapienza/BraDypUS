@@ -1,4 +1,6 @@
-# Publishing the locally created application to Infinityfree
+---
+title: Publishing the locally created application to Infinityfree
+---
 
 - [Create account](#create-account)
 - [Create the service](#create-the-service)

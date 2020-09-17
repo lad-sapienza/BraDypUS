@@ -1,4 +1,6 @@
-# Configurazione generale del sistema Bradyus
+---
+title: Configurazione generale del sistema Bradyus
+---
 
 Il sistema Bradypus è gestito da un insieme di file di configurazione in formato 
 [JSON](https://www.json.org/) un formato molto semplice di registrazione di dati,

@@ -1,27 +1,10 @@
 ---
 ---
 
-h1{
-    margin-bottom: 3rem;
-    padding-bottom: .5rem;
-    border-bottom: 1px solid #ebebeb;
-}
-
-h2{
-    margin-top: 3rem;
-}
-
-blockquote{
-    margin-left: 1rem;
-    margin-right: 1rem;
-    padding: 2rem;
-    background-color: #f9f9f9;
-}
 img[alt=Bradypus] { width: 200px; }
 img[alt=screenshot] { 
     max-width: 100% !important;
     margin: 2rem;
-    box-shadow: 0 0 1rem rgb(94, 94, 94);
 }
 img[alt=screenshot] + em {
     text-align: center;

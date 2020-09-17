@@ -1,4 +1,6 @@
-# Troubleshooting
+---
+title: Troubleshooting
+---
 
 Some common errors that might occur are:
 

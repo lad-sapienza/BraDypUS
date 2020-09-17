@@ -1,4 +1,6 @@
-# Main app configuration
+---
+title: Main app configuration
+---
 
 The **Main app configuration** permits to expand and update some of the information entered
 during the installation process.

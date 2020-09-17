@@ -1,4 +1,6 @@
-# Updating BraDypUS
+---
+title: Updating BraDypUS
+---
 
 If you installed BraDypUS via **terminal**, updating is straightforward (change the path to the current installation):
 

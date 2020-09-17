@@ -1,4 +1,6 @@
-# Anatomy of the newly created application
+---
+title: Anatomy of the newly created application
+---
 
 Once the new application has been succesfully created a similar report will
 be print, giving credit for any single operation:

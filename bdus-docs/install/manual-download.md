@@ -1,4 +1,6 @@
-# Manual download and installation
+---
+title: Manual download and installation
+---
 
 To install Bradypus maually you need:
 - a connection to the Internet

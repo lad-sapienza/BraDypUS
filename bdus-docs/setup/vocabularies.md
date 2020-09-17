@@ -1,4 +1,6 @@
-# Managing vocabularies
+---
+title: Managing vocabularies
+---
 
 BDUS has a built-in functionality to easily define and edit vocabularies, 
 i.e. list of values to link with `select`, `combo_select` and 

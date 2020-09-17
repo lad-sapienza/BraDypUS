@@ -1,4 +1,6 @@
-# Pubblicare tutto online
+---
+title: Pubblicare tutto online
+---
 
 Una volta che abiamo creato e testato la nostra applicazione,
 l'ultimo passaggio è quello di pubblicarlo online

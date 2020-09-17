@@ -1,4 +1,6 @@
-# Final appearance of configuration files
+---
+title: Final appearance of configuration files
+---
 
 If you are not interested on going through the looking glass skip this part.
 

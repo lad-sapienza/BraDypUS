@@ -1,8 +1,10 @@
 - title: 1. Introduction
   url: /
   sub:
-    - title: 1.2. Some conventions
-      url: /design/conventions
+    - title: 1.1. Some conventions
+      url: /conventions
+    - title: 1.2. Structure of the application
+      url: /tree-structure
 
 - title: 2. System requirements
   url: /environment/system-requirements

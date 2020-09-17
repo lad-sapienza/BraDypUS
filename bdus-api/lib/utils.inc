@@ -569,4 +569,15 @@ class utils
 
         return ($res[0]['tot'] > 0);
 	}
+
+	public function debug($d, bool $echo = false) : void
+	{
+		$json = json_encode($d, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE);
+		if ($echo){
+			echo "<pre>$json</pre>";
+		} else {
+			error_log( 'DEBUG: ' . $json );
+		}
+		
+	}
 }

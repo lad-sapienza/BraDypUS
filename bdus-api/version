@@ -1,3 +1,4 @@
+4.0.0-alpha.170[] = "Record\Read supports id_field"
 4.0.0-alpha.170[] = "Added utility method utils::debug"
 4.0.0-alpha.170[] = "Declare paramaters in record_ctrl"
 4.0.0-alpha.169[] = "Fixed bug with Alter SQLite::dropFld"

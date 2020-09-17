@@ -6,10 +6,11 @@ use Config\Config;
 
 class Read
 {
-    protected $db;
-    protected $cfg;
-    protected $tb;
-    protected $id;
+    private $db;
+    private $cfg;
+    private $tb;
+    private $id;
+    private $is_id_fld;
 
     private $cache = [];
 
@@ -19,12 +20,13 @@ class Read
      *
      * @param DBInterface $db       DB object
      */
-    public function __construct(DBInterface $db, Config $cfg, string $tb, int $id)
+    public function __construct(DBInterface $db, Config $cfg, string $tb, int $id, bool $is_id_fld = false)
     {
         $this->db = $db;
         $this->cfg = $cfg;
         $this->tb = $tb;
         $this->id = $id;
+        $this->is_id_fld = $is_id_fld;
     }
 
     public function getTb() : string
@@ -88,12 +90,17 @@ class Read
     public function getCore(string $fld = null, bool $return_val = false)
     {
         if (!isset($this->cache['core'])) {
-            $this->cache['core'] = $this->getTbRecord($this->tb, "{$this->tb}.id = ?", [$this->id], true);
+            if ($this->is_id_fld){
+                $sql = "{$this->tb}." . $this->cfg->get("tables.{$this->tb}.id_field"). " = ?";
+            } else {
+                $sql = "{$this->tb}.id = ?";
+            }
+            $this->cache['core'] = $this->getTbRecord($this->tb, $sql, [$this->id], true);
         }
         if (!$fld) {
             return $this->cache['core'];
         } elseif ($return_val) {
-            $this->cache['core'][$fld]['val'];
+            return $this->cache['core'][$fld]['val'];
         } else {
             return $this->cache['core'][$fld];
         }
@@ -222,19 +229,21 @@ EOD;
    */
   public function getGeodata()
   {
-      $r = $this->db->query(
-          "SELECT id, geometry FROM " . PREFIX . "geodata WHERE table_link = ? AND id_link = ?",
-          [$this->tb, $this->id]
-      );
-    
-      $ret = [];
-      if (is_array($r)) {
-          foreach ($r as $row) {
-              $row['geojson'] = \Symm\Gisconverter\Gisconverter::wktToGeojson($row['geometry']);
-              $ret[$row['id']] = $row;
-          }
-      }
-  }
+    if (!isset($this->cache['geodata'])){
+        $r = $this->db->query(
+            "SELECT id, geometry FROM " . PREFIX . "geodata WHERE table_link = ? AND id_link = ?",
+            [$this->tb, $this->id]
+        );
+        $ret = [];
+        if (is_array($r)) {
+            foreach ($r as $row) {
+                $row['geojson'] = \Symm\Gisconverter\Gisconverter::wktToGeojson($row['geometry']);
+                $ret[$row['id']] = $row;
+            }
+        }
+        $this->cache['geodata'] = $ret;
+    }
+    return $this->cache['geodata'];
 
     /**
      * Returns list of files linked to the record
@@ -304,7 +313,7 @@ EOD;
      */
     public function getBackLinks()
     {
-        if (!isset($this->cache['files'])) {
+        if (!isset($this->cache['backlinks'])) {
             $backlinks = [];
             $bl_data = $this->cfg->get("tables.{$this->tb}.backlinks");
 
@@ -335,9 +344,9 @@ EOD;
                     ];
                 }
             }
-            $this->cache['files'] = $backlinks;
+            $this->cache['backlinks'] = $backlinks;
         }
-        return $this->cache['files'];
+        return $this->cache['backlinks'];
 
     }
 
@@ -366,7 +375,7 @@ EOD;
                     $values = [];
                     foreach ($ld['fld'] as $c) {
                         $where[] = " {$c['other']} = ? ";
-                        $values[] = $core[$c['my']]['val'];
+                        $values[] = $this->getCore($c['my'], true);
                     }
 
                     $r = $this->db->query(
@@ -380,7 +389,8 @@ EOD;
                             'tb_stripped' => str_replace(PREFIX, null, $ld['other_tb']),
                             "tb_label" => $this->cfg->get("tables.{$ld['other_tb']}.label"),
                             'tot' => $tot_links,
-                            'where' => implode($where, ' AND ')
+                            'where' => implode($where, ' AND '),
+                            'values' => $values
                         ];
                     }
                     

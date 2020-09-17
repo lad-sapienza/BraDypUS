@@ -1,13 +1,13 @@
 <?php
 
-namespace Tempate\Parts;
+namespace Template\Parts;
 
 use SQL\SafeQuery;
 use Config\Config;
 
 class Links
 {
-    public static function showAll( array $corelinks = [], array $backlinks = [], Config $cfg) : string
+    public static function showAll( array $corelinks = [], array $backlinks = [], string $context, string $tb, int $id, Config $cfg) : string
     {
         $html = '<fieldset class="links">'
             . '<legend>' . \tr::get('links_avaliable') . '</legend>';
@@ -17,11 +17,12 @@ class Links
         }
 
         if (!empty($corelinks) ) {
-            $html .= self::showCoreLinks($corelinks);
+            $html .= self::showCoreLinks($corelinks, $cfg);
         }
         if (!empty($backlinks)) {
-            $html .= self::showBackLinks($backlinks);
+            $html .= self::showBackLinks($backlinks, $cfg);
         }
+        $html .= self::showUserLinks ($context, $tb, $id );
 
         $html .= '</fieldset>';
         return $html;
@@ -30,6 +31,7 @@ class Links
 
     public static function showUserLinks (string $context, string $tb, int $id ) : string
     {
+        // TODO: no lazy loading.
         return '<div class="showUserLinks" data-context="' . $context . '" data-tb="' . $tb . '" data-id="' . $id . '"></div>';
     }
 
@@ -59,18 +61,17 @@ class Links
                     . '<strong>' . \tr::get('system_links'). '</strong>'
             . '</p>'
             . '<ul>';
-
         foreach ($corelinks as $dest_tb => $l_arr) {
             $html .= '<li>' .
                 '<span class="btn-link" '
                  . 'onclick="' .
-                    "api.showResults('{$dest_tb}', 'type=obj_encoded&obj_encoded=" . SafeQuery::encode($l_arr['query'], $l_arr['values']) . "&total={$l_arr['tot']}', '" . \tr::get('saved_queries') . " (". $cfg->get("tables.{$dest_tb}.label") . ")');"
+                    "api.showResults('{$dest_tb}', 'type=obj_encoded&obj_encoded=" . SafeQuery::encode($l_arr['where'], $l_arr['values']) . "&total={$l_arr['tot']}', '" . \tr::get('saved_queries') . " (". $cfg->get("tables.{$dest_tb}.label") . ")');"
                 . '" href="javascript:void(0)">' .
                     \tr::get('links_in_table', ['<strong>' . $l_arr['tot'] . '</strong>', '<strong>' . $cfg->get("tables.$dest_tb.label") . '</strong>'])
                 . '</span>';
 
             if ($cfg->get("tables.$dest_tb.rs")) {
-                $html .= ' (<span class="btn-link" onclick="api.record.showMatrix(\'' . $dest_tb . '\', \'' . SafeQuery::encode($l_arr['query']) . '\')">' 
+                $html .= ' (<span class="btn-link" onclick="api.record.showMatrix(\'' . $dest_tb . '\', \'' . SafeQuery::encode($l_arr['where'], $l_arr['values']) . '\')">' 
                         . \tr::get('harris_matrix') 
                     . '</span>)';
             }

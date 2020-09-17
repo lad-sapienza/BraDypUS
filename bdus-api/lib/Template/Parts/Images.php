@@ -1,12 +1,12 @@
 <?php
 
-namespace Tempate\Parts;
+namespace Template\Parts;
 
 use Intervention\Image\ImageManager;
 
 class Images
 {
-    public static function showAll( array $data_arr = [], int $max = 2, string $tb, int $id, string $context, bool $canUserEdit) : string
+    public static function showAll( array $data_arr = [], int $max = 2, string $tb, int $id = null, string $context, bool $canUserEdit) : string
     {
         // max can not be bigger than the no of images found in the DB
         if ($max === 0 || $max > count($data_arr)) {

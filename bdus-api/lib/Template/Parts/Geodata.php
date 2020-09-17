@@ -1,13 +1,13 @@
 <?php
 
-namespace Tempate\Parts;
+namespace Template\Parts;
 
 use SQL\SafeQuery;
 use Config\Config;
 
 class Geodata
 {
-    public static function showAll( array $gdata = [], string $tb, int $id, string $plg_html, Config $cfg) : string
+    public static function showAll( array $gdata = [], string $tb, int $id, string $plg_html = null, Config $cfg) : string
     {
         if (!empty($gdata)) {
             $view_this = '<p>' . \tr::get('x_geodata_available', ['<strong>' . count($gdata) . '</strong>'])

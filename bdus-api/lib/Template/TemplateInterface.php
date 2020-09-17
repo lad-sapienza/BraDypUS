@@ -3,23 +3,13 @@
 namespace Template;
 
 
-interface TemplateInterfaceStrict
+interface TemplateInterface
 {
 	/**
 	 * Returns "col-sm-$nr" for use in templates. Also used by HtmlStartDiv to replace span-* syntax
 	 * @param int $nr
 	 */
 	public function cell ( string $nr) : string;
-
-	/**
-	 * Returns sums of fields from other tables using filter
-	 * @param string $tb	other table name, without prefix
-	 * @param string $fld	other table field whose values will be summed
-	 * @param string $where filtering options following this pattern: {name of other table's field to search in}={name of this table's field to get search value}; etc
-	 * @example <sqlSum table="test"  field="fldTest" where="campoAltro1=thisTableField1; campoAltro2=thisTableField2" />
-	 * @example {{ print.sqlSum(test, fldTest, campoAltro1=thisTableField1; campoAltro2=thisTableField2) }}
-	 */
-	public function sqlSum( string $tb, string $fld, string $filter = null) : string;
 
 	/**
 	 * Returns sum of values of the given fields for the current record in the current table
@@ -36,17 +26,17 @@ interface TemplateInterfaceStrict
 	/**
 	 * Shows fieldset with links to record, both system and user
 	 */
-	public function links() : string;
+	public function links() : ?string;
 
 	/**
 	 * Shows list of available geodata + form to enter some more (WKT)
 	 */
-	public function geodata() : string;
+	public function geodata() : ?string;
 
 	/**
 	 * Shows Stratigraphic relations module
 	 */
-	public function rs() : string;
+	public function rs() : ?string;
 
 	/**
 	 *
@@ -57,7 +47,7 @@ interface TemplateInterfaceStrict
 	 * @example template <fld name="id_sito" />
 	 */
 
-	public function fld($fieldname, $formatting = false) : string;
+	public function fld(string $fieldname, string $formatting = null) : string;
 
 	/**
 	 *
@@ -67,7 +57,7 @@ interface TemplateInterfaceStrict
 	 * @example template {{ print.plg_fld('abbreviazione', 'width:200px') }}
 	 * @example template {{ print.plg_fld('abbreviazione') }}
 	 */
-	public function plg_fld($fieldname, $formatting = false) : string;
+	public function plg_fld(string $fieldname, string $formatting = null) : string;
 
 	/**
 	 *
@@ -84,7 +74,7 @@ interface TemplateInterfaceStrict
 	 * @param string $plg plugin name
 	 */
 
-	public function plg($plg) : string;
+	public function plg($plg) : ?string;
 
 	/**
 	 *
@@ -97,6 +87,6 @@ interface TemplateInterfaceStrict
 	 * Returns html containing linked files info
 	 * @param mixed $max maximum no of files to show, default: 2. Any number can be used. 'all' will show up all available images.
 	 */
-	public function image_thumbs(int $max = 2): string;
+	public function image_thumbs(int $max = 2): ?string;
 
 }

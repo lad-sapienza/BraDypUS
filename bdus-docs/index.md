@@ -1,5 +1,5 @@
 ---
-title:  "Welcome to BraDypUS: a web-based RDBMS"
+title:  "Welcome to BraDypUS"
 ---
 
 ![Bradypus](images/bdus.svg "Bradypus")

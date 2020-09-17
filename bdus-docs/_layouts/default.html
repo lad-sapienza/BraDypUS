@@ -48,10 +48,9 @@
                 </div><!--//docs-logo-wrapper-->
 	            <div class="docs-top-utilities d-flex justify-content-end align-items-center">
 	                <div class="top-search-box d-none d-lg-flex">
-		                <form class="search-form" id="search-arg" action="javascript:void(0)">
-				            <input type="search" placeholder="Search the docs..." name="search" autocomplete="off" class="form-control search-input">
-				            <button type="submit" class="btn search-btn" value="Search"><i class="fas fa-search"></i></button>
-				        </form>
+		                <div class="search-form">
+				            <input type="search" id="search-arg"  placeholder="Search the docs..." name="search" autocomplete="off" class="form-control search-input">
+                        </div>
 	                </div>
 	
 					<ul class="social-list list-inline mx-md-3 mx-lg-5 mb-0 d-none d-lg-flex">
@@ -208,6 +207,28 @@
     <script>
         hljs.initHighlightingOnLoad();
         hljs.initLineNumbersOnLoad();
+
+        $('#search-arg').on('search', event => {
+            doSearch(event.target.value);
+        });
+        
+        $('#search-arg').on('keyup', event =>{
+            doSearch(event.target.value);
+        });
+
+        function doSearch(filter) {
+            if (!filter || filter === ''){
+                $('li.searcheable').removeClass('d-none');
+            } else {
+                $.each($('li.searcheable'), function(i, el){
+                if ($(el).text().toLowerCase().indexOf(filter.toLowerCase()) > -1){
+                    $(el).removeClass('d-none');
+                } else {
+                    $(el).addClass('d-none');
+                }
+                });
+            }
+        }
     </script>
 
     

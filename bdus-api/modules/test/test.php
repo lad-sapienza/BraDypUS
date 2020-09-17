@@ -12,6 +12,7 @@ class test_ctrl extends Controller
 
 	public function test()
 	{	
+        // $this->testTmpl();
 		// $firephp = new Monolog\Handler\FirePHPHandler();
 		// $this->log->pushHandler($firephp);
 		// $this->log->error('Error PHP', ["hello" => "world"]);
@@ -33,7 +34,54 @@ class test_ctrl extends Controller
 		// var_dump($inspect->tableColumns('sitarc__geodata'));
 
 		echo '<hr />end of test_ctrl::test()';
-	}
+    }
+    
+    private function testTmpl()
+    {
+        $read_rec = new \Record\Read( $this->db, $this->cfg, 'sitarc__siti', '3');
+        
+        
+        $tmpl = new \Template\Template(
+            'edit',
+            $read_rec,
+            $this->db,
+            $this->cfg
+        );
+
+        foreach ([
+            // '$tmpl->cell("1")' => $tmpl->cell('1'), //OK
+            // '$tmpl->simpleSum("wgs84z34_east, wgs84z34_north")' => $tmpl->simpleSum('wgs84z34_east, wgs84z34_north'), // OK
+            // '$tmpl->permalink()' => $tmpl->permalink(), // OK
+            // '$tmpl->links()' => $tmpl->links(), // OK
+
+            // Link comprende anche userlinks
+            // '$tmpl->userlinks()' => $tmpl->userlinks(), // OK
+            // '$tmpl->rs()' => $tmpl->rs(), // OK
+            
+            // '$tmpl->fld("anno")' => $tmpl->fld('anno'), // Select
+            // '$tmpl->fld("fase")' => $tmpl->fld('fase'), // Input
+            // '$tmpl->fld("descrizione")' => $tmpl->fld('descrizione'), // Textarea
+            // '$tmpl->plg_fld()' => $tmpl->plg_fld(),
+            // '$tmpl->value("anno")' => $tmpl->value('anno'), // OK
+            // '$tmpl->plg("")' => $tmpl->plg('anno'),
+            // '$tmpl->showall()' => $tmpl->showall(),
+            // '$tmpl->image_thumbs()' => $tmpl->image_thumbs(), // OK
+            '$tmpl->plg("m_biblio")' => $tmpl->plg('m_biblio'), // OK
+
+            // Geodata dipende da fld
+            // '$tmpl->geodata()' => $tmpl->geodata(),
+        ] as $name => $html) {
+            $this->print_test($name, $html);
+        }
+    }
+    private function print_test(string $name, $html)
+    {
+        echo '<div style="margin: 2rem auto; border: 1px solid red; padding: 1rem;">' .
+        '<code>' . $name . '</code><hr>' .
+        '<div>' . $html . '</div><hr>' .
+        '<pre>' . htmlentities($html) . '</pre>' .
+        '</div>';
+    }
 
     private function testUAC()
     {

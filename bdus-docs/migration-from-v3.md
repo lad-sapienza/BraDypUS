@@ -35,6 +35,10 @@ and a special FTP account should have been available on the remote server. This 
 **insecure** feature and totally relied in external settings (FTP account) that are not always
 available out-of-the-box. No GUI alternative is available.
 
+### Deprecated print.sqlSum
+The function `print.sqlSum` in the templates has been deprecated and no replacement has been provided.
+The funcion is scarcely (if never) use.d
+
 ---
 
 ## Database schema

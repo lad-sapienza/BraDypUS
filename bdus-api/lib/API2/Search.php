@@ -44,56 +44,46 @@ class Search
         $records_per_page	= $opts['records_per_page']	?: 30;
 		$full_records 		= $opts['full_records'] 	?: false;
 		
-        try {
-			$qb = new QueryBuilder();
-			$qb->loadShortSQL(self::$prefix, self::$cfg, $shortSql);
+		$qb = new QueryBuilder();
+		$qb->loadShortSQL(self::$prefix, self::$cfg, $shortSql);
+		list($sql, $values) = $qb->getSql();
+		$tb = $qb->get('tb')[0];
+		$debug['shortSql'] 		= $shortSql;
+		$debug['urlencodedShortSql'] = urlencode($shortSql);
+		$debug['table'] 		= $tb;
+		$debug['main_sql'] 		= $sql;
+		$debug['main_values']	= $values;			
+
+		$header['total_rows'] 	= $total_rows ?: (int) self::getTotal($sql, $values);
+		$header['total_pages'] 	= ceil($header['total_rows']/$records_per_page);
+		$header['stripped_table'] = str_replace(PREFIX, null, $tb);
+		$header['table_label'] 	= self::$cfg->get("tables.$tb.label");
+		$header['page'] 		= ($page > $header['total_pages']) ? $header['total_pages'] : $page;
+
+		if ($header['total_rows'] > $records_per_page ) {
+			if (!$qb->get('limit') ) {
+				$qb->setLimit($records_per_page, ($page-1) * $records_per_page);
+			}
 			list($sql, $values) = $qb->getSql();
 			$tb = $qb->get('tb')[0];
-			$debug['shortSql'] 		= $shortSql;
-			$debug['urlencodedShortSql'] = urlencode($shortSql);
-			$debug['table'] 		= $tb;
-			$debug['main_sql'] 		= $sql;
-			$debug['main_values']	= $values;			
 
-			$header['total_rows'] 	= $total_rows ?: (int) self::getTotal($sql, $values);
-			$header['total_pages'] 	= ceil($header['total_rows']/$records_per_page);
-			$header['stripped_table'] = str_replace(PREFIX, null, $tb);
-			$header['table_label'] 	= self::$cfg->get("tables.$tb.label");
-			$header['page'] 		= ($page > $header['total_pages']) ? $header['total_pages'] : $page;
+			$debug['paginated_sql'] = $sql;
+			$debug['paginated_values'] = $values;
+		}
 
-			if ($header['total_rows'] > $records_per_page ) {
-				if (!$qb->get('limit') ) {
-					$qb->setLimit($records_per_page, ($page-1) * $records_per_page);
-				}
-				list($sql, $values) = $qb->getSql();
-				$tb = $qb->get('tb')[0];
+		$header['no_records_shown'] = (int) self::getTotal($sql, $values);
 
-				$debug['paginated_sql'] = $sql;
-				$debug['paginated_values'] = $values;
-			}
+		$records = $full_records ? self::getFullData($sql, $values, $tb) : self::getData($sql, $values);
 
-			$header['no_records_shown'] = (int) self::getTotal($sql, $values);
-
-			$records = $full_records ? self::getFullData($sql, $values, $tb) : self::getData($sql, $values);
-
-			if ($geojson) {
-				return \utils::mutliArray2GeoJSON ( $tb, $records );
-			} else {
-				return [
-					'head' => $header,
-					'debug' => $debugging ? $debug : false,
-					'records' => $records
-				];
-			}
-    
-        } catch (\Throwable $e) {
-            return [
-                'type' => 'error',
-				'text' => $e->getMessage(),
-                'trace' => $e->getTrace()
-            ];
-        }
-
+		if ($geojson) {
+			return \utils::mutliArray2GeoJSON ( $tb, $records );
+		} else {
+			return [
+				'head' => $header,
+				'debug' => $debugging ? $debug : false,
+				'records' => $records
+			];
+		}
 	}
 	
 	private static function getTotal(string $sql, array $values = null): int

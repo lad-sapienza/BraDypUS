@@ -290,9 +290,8 @@ class api2 extends Controller
         $geojson 			= (bool) $this->get['geojson'];
         $records_per_page	= $this->get['records_per_page'] 	? (int)$this->get['records_per_page']	: false;
         $full_records		= (bool) $this->get['full_records'];
-
+        
         $resp = Search::run(
-            $this->db,
             $this->prefix,
             $shortsql,
             [
@@ -303,8 +302,10 @@ class api2 extends Controller
                 'full_records'		=> $full_records
             ],
             $this->debug,
+            $this->db,
             $this->cfg
         );
+        
         return $resp;
     }
 

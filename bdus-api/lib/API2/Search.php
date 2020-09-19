@@ -31,7 +31,7 @@ class Search
 	 * @param bool	$debugging:	if true, some debugging information will be returned
 	 * @return array
 	 */
-    public static function run(DBInterface $db, string $prefix, string $shortSql, array $opts = [], bool $debugging = false, Config $cfg): array
+    public static function run( string $prefix, string $shortSql, array $opts = [], bool $debugging = false, DBInterface $db, Config $cfg ): array
     {	
 		self::$db = $db;
 		self::$cfg = $cfg;
@@ -90,7 +90,7 @@ class Search
             return [
                 'type' => 'error',
 				'text' => $e->getMessage(),
-                'trace' => json_encode($e->getTrace(), JSON_PRETTY_PRINT)
+                'trace' => $e->getTrace()
             ];
         }
 

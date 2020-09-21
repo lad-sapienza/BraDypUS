@@ -1,3 +1,5 @@
+4.0.0-alpha.170[] = "Added fields index in API2 search results"
+4.0.0-alpha.170[] = "Minor bug fixes mainly in API2"
 4.0.0-alpha.170[] = "API2\Search throws Exception"
 4.0.0-alpha.170[] = "Changed parameter order in API2\Search::run"
 4.0.0-alpha.169[] = "Fixed bug with Alter SQLite::dropFld"

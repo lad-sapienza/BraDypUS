@@ -74,6 +74,13 @@ class Search
 		$header['no_records_shown'] = (int) self::getTotal($sql, $values);
 
 		$records = $full_records ? self::getFullData($sql, $values, $tb) : self::getData($sql, $values);
+		$labels = [];
+		if (isset($records[0]) && is_array($records[0])){
+			foreach (array_keys($records[0]) as $fld) {
+				$labels[$fld] = self::$cfg->get("tables.$tb.fields.$fld.label");
+			}
+		}
+		$header['fields'] = $labels;
 
 		if ($geojson) {
 			return \utils::mutliArray2GeoJSON ( $tb, $records );

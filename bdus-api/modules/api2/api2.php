@@ -280,6 +280,7 @@ class api2 extends Controller
      */
     private function search()
     {
+
         $shortsql = $this->get['shortsql'];
         if (!$shortsql) {
             throw new \Exception("ShortSQL text is required with verb search");

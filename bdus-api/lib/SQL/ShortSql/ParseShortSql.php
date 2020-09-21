@@ -49,7 +49,7 @@ class ParseShortSql
     public function parseAll(string $str): self
     {
         $this->setParts($str);
-        $this->parseParts($str);
+        $this->parseParts();
         return $this;
     }
 
@@ -76,7 +76,7 @@ class ParseShortSql
     }
 
 
-    private function parseParts(string $str)
+    private function parseParts()
     {
         list($tb, $tb_alias) = $this->parseTb($this->parts['tb']);
         $this->qo->setTb($tb, $tb_alias);

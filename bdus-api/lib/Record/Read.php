@@ -234,6 +234,7 @@ EOD;
               $ret[$row['id']] = $row;
           }
       }
+      return $ret;
   }
 
     /**
@@ -304,7 +305,7 @@ EOD;
      */
     public function getBackLinks()
     {
-        if (!isset($this->cache['files'])) {
+        if (!isset($this->cache['backlinks'])) {
             $backlinks = [];
             $bl_data = $this->cfg->get("tables.{$this->tb}.backlinks");
 
@@ -335,9 +336,9 @@ EOD;
                     ];
                 }
             }
-            $this->cache['files'] = $backlinks;
+            $this->cache['backlinks'] = $backlinks;
         }
-        return $this->cache['files'];
+        return $this->cache['backlinks'];
 
     }
 

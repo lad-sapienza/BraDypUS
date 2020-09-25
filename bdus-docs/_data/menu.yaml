@@ -1,68 +1,74 @@
-- title: 1. Introduction
+- title: Introduction
   url: /
   sub:
-    - title: 1.1. Some conventions
+    - title: Some conventions
       url: /conventions
-    - title: 1.2. Structure of the application
+    - title: Structure of the application
       url: /tree-structure
 
-- title: 2. System requirements
+- title: System requirements
   url: /environment/system-requirements
   sub:
-    - title: 2.1. Setup environment in Windows
+    - title: Setup environment in Windows
       url: /environment/setup-windows
-    - title: 2.2. Setup environment in MacOS / Linux / Unix
+    - title: Setup environment in MacOS / Linux / Unix
       url: /environment/setup-nix
-    - title: 2.3. Knowledge base
+    - title: Knowledge base
       url: /environment/knowledge-base
 
-- title: 3. Structure of the example database 
+- title: Structure of the example database 
   url: /design/
 
-- title: 4. Installing BraDypUS locally
+- title: Installing BraDypUS locally
   url: /install/
   sub:
-    - title: 4.1. Manual download
+    - title: Manual download
       url: /install/manual-download
-    - title: 4.2. Installing with the terminal and git
+    - title: Installing with the terminal and git
       url: /install/terminal
-    - title: 4.3. Updating BraDypUS
+    - title: Updating BraDypUS
       url: /install/update
-    - title: 4.3. Uninstalling BraDypUS
+    - title: Uninstalling BraDypUS
       url: /install/uninstall
 
-- title: 5. Creating a new application
+- title: Creating a new application
   url: /create_app/
   sub:
-    - title: 5.1. Anatomy of the newly created application
+    - title: Anatomy of the newly created application
       url: /create_app/new-app-anatomy
-    - title: 5.2. Troubleshooting
+    - title: Troubleshooting
       url: /create_app/troubleshooting
 
-- title: 6. Setting up the application
+- title: Setting up the application
   url: /setup/
   sub:
-    - title: 6.1. Main app configuration
+    - title: Main app configuration
       url: /setup/main-app-config
-    - title: 6.2. Creating the first table
+    - title: Creating the first table
       url: /setup/create-table-sites
-    - title: 6.3. Adding columns
+    - title: Adding columns
       url: /setup/adding-columns
-    - title: 6.4. Managing vocabularies
+    - title: Managing vocabularies
       url: /setup/vocabularies
-    - title: 6.5. Creating other data tables
+    - title: Creating other data tables
       url: /setup/other-data-tables
-    - title: 6.6. Finalizing setup
+    - title: Finalizing setup
       url: /setup/finalizing-setup
-    - title: 6.7. Final appearance of configuration files
+    - title: Final appearance of configuration files
       url: /setup/preview-config
-    - title: 6.8. Some advices and hacks
+    - title: Some advices and hacks
       url: /setup/advices-and-hacks
 
-- title: 7. Deploy application
+- title: Deploy application
   url: /deploy/
   sub:
-    - title: 7.1. Publish to Infinityfree
+    - title: Publish to Infinityfree
+      url: /deploy/infinityfree
+
+- title: API
+  url: /api/
+  sub:
+    - title: Publish to Infinityfree
       url: /deploy/infinityfree
 
 - title: Vocabulary

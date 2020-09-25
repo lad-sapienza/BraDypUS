@@ -68,8 +68,8 @@
 - title: API
   url: /api/
   sub:
-    - title: Publish to Infinityfree
-      url: /deploy/infinityfree
+    - title: ShortSQL
+      url: /api/shortsql
 
 - title: Vocabulary
   url: /voc

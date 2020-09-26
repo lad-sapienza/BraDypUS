@@ -81,11 +81,27 @@ class ParseShortSql
         list($tb, $tb_alias) = $this->parseTb($this->parts['tb']);
         $this->qo->setTb($tb, $tb_alias);
 
-        // validate $fields: set to * if not available
-        $fields = $this->parseFldList($this->parts['fields'], $tb);
-        foreach ($fields as $f) {
-            $this->qo->setField($f[0], $f[1], $f[2]);
+        $group = $this->parseGroup($this->parts['group'], $tb);
+        if (!empty($group)){
+            foreach ($group as $g) {
+                // If grouping is active, fields are set from grouping
+                $this->qo->setField(null, $g);
+                $this->qo->setGroupFld($g);
+            }
+        } else {
+            // Fields are snet only if grouping is off
+            // validate $fields: set to * if not available
+            list ($fields, $join_by_fld) = $this->parseFldList($this->parts['fields'], $tb);
+            foreach ($fields as $f) {
+                $this->qo->setField($f[0], $f[1], $f[2]);
+            }
+            foreach ($join_by_fld as $j) {
+                $this->qo->setJoin( $j[0], $j[1], $j[2]);
+            }
         }
+        
+
+        
 
         $joins = $this->parseJoinArr($this->parts['join'] ?? []);
         foreach ($joins as $j) {
@@ -112,14 +128,11 @@ class ParseShortSql
         }
         
         list($rows, $offset) = $this->parseLimit($this->parts['limit']);
-        if ($rows && $offset) {
+        if (isset($rows) && isset($offset)) {
             $this->qo->setLimit((int)$rows, (int)$offset);
         }
 
-        $group = $this->parseGroup($this->parts['group'], $tb);
-        foreach ($group as $g) {
-            $this->qo->setGroupFld($g);
-        }
+        
 
     }
 
@@ -158,18 +171,37 @@ class ParseShortSql
     {
         if (!$fields || $fields === '*' ){
             return [ [ $tb, '*', null ] ];
-        } else {
-            $formatted_flds = [];
-            $fields_arr = explode(',', $fields);
-            foreach ($fields_arr as $f) {
-                list($tb, $fld, $alias) = $this->parseFld($f, $tb);
-                array_push($formatted_flds, [
-                    $tb, $fld, $alias
+        }
+
+        $formatted_flds = [];
+        $join_by_fld = [];
+        $fields_arr = explode(',', $fields);
+        foreach ($fields_arr as $f) {
+            list($tbf, $fld, $alias) = $this->parseFld($f, $tb);
+            array_push($formatted_flds, [
+                $tbf, $fld, $alias
+            ]);
+
+            if (
+                $tbf !== $tb &&
+                (
+                    $tbf === $this->prefix . 'geodata' ||
+                    (
+                        $this->cfg && 
+                        in_array($tbf, $this->cfg->get("tables.$tb.plugin"))
+                    )
+                )
+            ){
+                // This is a plugin column!
+                array_push ($join_by_fld , [
+                    $tbf, null, [
+                        [null, $tbf.'.table_link', '=', "'$tb'"], 
+                        ['AND', $tbf.'.id_link', '=', "{$tb}.id"]
+                    ]
                 ]);
             }
-            return $formatted_flds;
-            
         }
+        return [$formatted_flds, $join_by_fld];
     }
 
     /**

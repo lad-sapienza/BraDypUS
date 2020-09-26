@@ -6,7 +6,7 @@
  * @since				Jul 02, 2018
  *
  *  inspect:
- *      curl --location --request GET '/api/v2/paths?verb=inspect&tb=manuscripts&pretty=1'
+ *      curl --location --request GET '/api/v2/paths?verb=inspect&tb=manuscripts(&pretty=1)'
 
  *  getChart:
  *      curl --location --request GET '/api/v2/paths?verb=getChart&id=1(&pretty=1)'
@@ -60,7 +60,10 @@ class api2 extends Controller
 
         // Validate verb
         $this->verb = $this->get['verb'];
-        if (!$this->verb || !in_array($this->verb, $this->valid_verbs)) {
+        if (!$this->verb) {
+            throw new \Exception("Missing verb. Verb must be one of " . implode(', ', $this->valid_verbs));
+        }
+        if (!in_array($this->verb, $this->valid_verbs)) {
             throw new \Exception("Invalid verb `{$this->verb}`. Verb must be one of " . implode(', ', $this->valid_verbs));
         }
 

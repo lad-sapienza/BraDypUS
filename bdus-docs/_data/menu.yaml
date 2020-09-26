@@ -70,6 +70,8 @@
   sub:
     - title: ShortSQL
       url: /api/shortsql
+    - title: ShortSQL Examples
+      url: /api/shortsql-examples
 
 - title: Vocabulary
   url: /voc

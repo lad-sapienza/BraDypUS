@@ -1,3 +1,4 @@
+4.0.0-alpha.171[] = "QueryObject::setJoins checks for duplicate values before adding item"
 4.0.0-alpha.170[] = "Added fields index in API2 search results"
 4.0.0-alpha.170[] = "Minor bug fixes mainly in API2"
 4.0.0-alpha.170[] = "API2\Search throws Exception"

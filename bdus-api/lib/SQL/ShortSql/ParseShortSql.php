@@ -89,7 +89,7 @@ class ParseShortSql
                 $this->qo->setGroupFld($g);
             }
         } else {
-            // Fields are snet only if grouping is off
+            // Fields are set only if grouping is off
             // validate $fields: set to * if not available
             list ($fields, $join_by_fld) = $this->parseFldList($this->parts['fields'], $tb);
             foreach ($fields as $f) {
@@ -170,7 +170,10 @@ class ParseShortSql
     private function parseFldList ( string $fields = null, string $tb ) : array
     {
         if (!$fields || $fields === '*' ){
-            return [ [ $tb, '*', null ] ];
+            return [
+                [ [ $tb, '*', null ] ],
+                []
+            ];
         }
 
         $formatted_flds = [];

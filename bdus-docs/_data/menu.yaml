@@ -80,9 +80,10 @@
   sub:
     - title: User preferences
       url: /usage/user-preferences
-    - title: Find and replace
     - title: Database backup
       url: /usage/backup
+    - title: Data export
+      url: /usage/export
     - title: Find and replace
       url: /usage/find-replace
     - title: System translation

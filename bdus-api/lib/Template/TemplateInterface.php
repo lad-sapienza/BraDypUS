@@ -36,8 +36,8 @@ interface TemplateInterface
 	 * Writes out single field
 	 * @param string $fieldname		field name to show
 	 * @param string $formatting	formatting information
-	 * @example template <fld name="id_sito" style="width:200" />
-	 * @example template <fld name="id_sito" />
+	 * @example template {{ print.fld( 'id_sito', 'width:200') }}
+	 * @example template {{ print.fld( 'id_sito') }}
 	 */
 
 	public function fld(string $fieldname, string $formatting = null) : string;
@@ -47,8 +47,8 @@ interface TemplateInterface
 	 * Writes out single field
 	 * @param string $fieldname		field name to show
 	 * @param string $formatting	formatting information
-	 * @example template {{ print.plg_fld('abbreviazione', 'width:200px') }}
-	 * @example template {{ print.plg_fld('abbreviazione') }}
+	 * @example template {{ print.fld( 'id_sito', 'width:200') }}
+	 * @example template {{ print.fld( 'id_sito') }}
 	 */
 	public function plg_fld(string $fieldname, string $formatting = null) : string;
 

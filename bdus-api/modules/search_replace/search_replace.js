@@ -47,14 +47,16 @@ var search_replace = {
 					         {
 					        	 text: core.tr('confirm'),
 			 		        	 click: function(){
-			 		        		 $.get('./?&obj=search_replace_ctrl&method=replace&tb=' + tb + '&fld=' + fld + '&search=' + search + '&replace=' + replace, function(data){
-			 		        			 if (data == 'error'){
-			 		        				 core.message(core.tr('error_search_replace'), 'error');
-			 		        			 } else {
-			 		        				core.message(core.tr('ok_search_replace', [data]), 'success');
-			 		        				$('#modal').modal('hide');
-			 		        			 }
-			 		        		 });
+									  core.runAndRespond('search_replace_ctrl', 'replace', {
+										  tb: tb,
+										  fld: fld,
+										  search: search,
+										  replace: replace
+									  }, d => {
+										  if (d.status === 'success'){
+											  $('#modal').modal('hide');
+										  }
+									  })
 			 		        	 } 
 					         },
 					         {

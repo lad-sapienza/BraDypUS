@@ -12,7 +12,7 @@ class search_replace_ctrl extends Controller
 	public function main_page()
 	{
 		$this->render('search_replace', 'main_page', [
-			'tbs' => $this->cfg->get('tables.*.label', 'is_plugin', null)
+			'tbs' => $this->cfg->get('tables.*.label')
 		]);
 	}
 
@@ -43,16 +43,18 @@ class search_replace_ctrl extends Controller
 
 			$values = false;
 
-			echo $this->db->query(
+			$ret = $this->db->query(
 				"UPDATE {$tb} SET {$fld} = REPLACE ({$fld} , ?, ?)", 
 				[ $search, $replace], 
 				'affected'
 			);
+
+			\utils::response(tr::get('ok_search_replace', [$ret]), 'success', true);
 		} catch(\DB\DBException $e) {
-			echo 'error';
+			\utils::response('error_search_replace', 'error');
 		} catch(\Throwable $e) {
 			$this->log->error($e);
-			echo 'error';
+			\utils::response('error_search_replace', 'error');
 		}
 	}
 }

@@ -41,7 +41,7 @@ class backup_ctrl extends Controller
 
 	public function list_all_backups()
 	{
-		$files = \utils::dirContent(PROJ_DIR . 'backups');
+		$files = \utils::dirContent(PROJ_DIR . 'backups') ?: [];
 
 		$data = [];
 		foreach ($files as $file ) {

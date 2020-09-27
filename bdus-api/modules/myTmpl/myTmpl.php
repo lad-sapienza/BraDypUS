@@ -12,12 +12,7 @@ class myTmpl_ctrl extends Controller
 	{
 		$tbs = $this->cfg->get('tables.*.label', 'is_plugin', null);
 
-		$tmpls = \utils::dirContent(PROJ_DIR . 'templates/');
-
-		if(!is_array($tmpls)) {
-			echo json_encode(array('status'=>'error', 'text' => \tr::get('no_tmpl_available')));
-			return;
-		}
+		$tmpls = \utils::dirContent(PROJ_DIR . 'templates/') ?: [];
 
 		$data = [];
 
@@ -33,7 +28,7 @@ class myTmpl_ctrl extends Controller
 			$data[$tb]['user_edit'] = \pref::getTmpl($tb, 'edit');
 		}
 
-		$this->render('myTmpl', 'user_tmpl', [
+		$this->render('myTmpl', 'show', [
 			'tabs' => $tbs,
 			'data' => $data,
 		]);

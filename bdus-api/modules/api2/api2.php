@@ -6,7 +6,7 @@
  * @since				Jul 02, 2018
  *
  *  inspect:
- *      curl --location --request GET '/api/v2/paths?verb=inspect&tb=manuscripts&pretty=1'
+ *      curl --location --request GET '/api/v2/paths?verb=inspect&tb=manuscripts(&pretty=1)'
 
  *  getChart:
  *      curl --location --request GET '/api/v2/paths?verb=getChart&id=1(&pretty=1)'
@@ -60,7 +60,10 @@ class api2 extends Controller
 
         // Validate verb
         $this->verb = $this->get['verb'];
-        if (!$this->verb || !in_array($this->verb, $this->valid_verbs)) {
+        if (!$this->verb) {
+            throw new \Exception("Missing verb. Verb must be one of " . implode(', ', $this->valid_verbs));
+        }
+        if (!in_array($this->verb, $this->valid_verbs)) {
             throw new \Exception("Invalid verb `{$this->verb}`. Verb must be one of " . implode(', ', $this->valid_verbs));
         }
 
@@ -280,6 +283,7 @@ class api2 extends Controller
      */
     private function search()
     {
+
         $shortsql = $this->get['shortsql'];
         if (!$shortsql) {
             throw new \Exception("ShortSQL text is required with verb search");
@@ -290,9 +294,8 @@ class api2 extends Controller
         $geojson 			= (bool) $this->get['geojson'];
         $records_per_page	= $this->get['records_per_page'] 	? (int)$this->get['records_per_page']	: false;
         $full_records		= (bool) $this->get['full_records'];
-
+        
         $resp = Search::run(
-            $this->db,
             $this->prefix,
             $shortsql,
             [
@@ -303,8 +306,10 @@ class api2 extends Controller
                 'full_records'		=> $full_records
             ],
             $this->debug,
+            $this->db,
             $this->cfg
         );
+        
         return $resp;
     }
 

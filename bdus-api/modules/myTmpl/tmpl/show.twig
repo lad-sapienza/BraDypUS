@@ -4,13 +4,17 @@
  * @license			See file LICENSE distributed with this code
  #}
 
-<table class="table table-bordered table-striped table-hover" id="{{ uid }}">
-	<tr>
-		<th>&nbsp;</th>
-		<th>{{ tr.get('read') }}</th>
-		<th>{{ tr.get('edit') }}</th>
-	</tr>
+<h2>{{ tr.get('template_mng') }}</h2>
 
+<table class="table table-bordered table-striped table-hover" id="{{ uid }}">
+	<thead>
+		<tr>
+			<th></th>
+			<th>{{ tr.get('read') }}</th>
+			<th>{{ tr.get('edit') }}</th>
+		</tr>
+	</thead>
+	<tbody>
 	{% for tb, tb_label in tabs %}
 	<tr>
 		<th>{{ tb_label }}</th>
@@ -47,6 +51,7 @@
 
 	</tr>
 	{% endfor %}
+	</tbody>
 </table>
 
 <script>
@@ -56,8 +61,5 @@ $('#{{ uid }} select').on('change', function(){
 		"context": $(this).data('context'),
 		"tmpl": $(this).val() ? $(this).val() : false
 	});
-	{# $.get('./?obj=myTmpl_ctrl&method=changeTmpl&tb=' + $(this).data('tb') + '&context=' + $(this).data('context') + '&tmpl=' + $(this).val(), function(data){
-		core.message(data.text, data.status);
-	}); #}
 });
 </script>

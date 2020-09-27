@@ -42,11 +42,23 @@ class QueryObject
     
     public function setJoin( string $tb, string $tb_alias = null, array $on)
     {
-        array_push( $this->obj['joins'], [
-            $tb,
-            $tb_alias,
-            $on
-        ]);
+        $found = false;
+        foreach ($this->obj['joins'] as $j) {
+            if ($j == [
+                $tb,
+                $tb_alias,
+                $on
+            ]){
+                $found = true;
+            }
+        }
+        if (!$found) {
+            array_push($this->obj['joins'], [
+                trim($tb),
+                $tb_alias,
+                $on
+            ]);
+        }
     }
     
     public function setWherePart(string $connector = null, string $fld, string $operator, string $val)

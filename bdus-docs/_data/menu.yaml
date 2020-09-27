@@ -80,6 +80,8 @@
   sub:
     - title: User preferences
       url: /usage/user-preferences
+    - title: System translation
+      url: /usage/system-translation
 
 - title: API
   url: /api/

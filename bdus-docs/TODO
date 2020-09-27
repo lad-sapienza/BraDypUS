@@ -1,18 +1,18 @@
 TODO:
 
 [vocabularies]
-- [] user privileges
-- [] search/replace
-- [] Backup
-- [] Export
+- [ ] user privileges
+- [ ] search/replace
+- [ ] Backup
+- [ ] Export
 - [x] User preferences
-- [] Geoface
-- [] System translation (mentioned in usage/user-preferences as /usage/system-translation)
+- [ ] Geoface
+- [x] System translation (mentioned in usage/user-preferences as /usage/system-translation)
 
 
-- rs
+- [ ] rs
 - [x] Template system  (mentioned in usage/user-preferences as /manage/template-system)
 
-- history
+- [] history
 
 - [x] API

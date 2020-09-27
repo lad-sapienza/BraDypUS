@@ -3,6 +3,10 @@ title: System translation
 ---
 
 
+{: .callout-block .callout-block-warning }
+This feature is available only for super-administrators
+
+
 BraDypUS database system is available in Italian and English, 
 but other locales can be added easily. Translations are located in
 JSON files in the `/locale/` directory. The files are named with the

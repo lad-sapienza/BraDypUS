@@ -43,19 +43,6 @@ class Template implements TemplateInterface
         return "col-sm-$nr";
     }
 
-    public function simpleSum(string $fields) : int
-    {
-        $flds_arr = explode(",", $fields);
-        $sum = 0;
-
-        if (!empty($flds_arr)) {
-            foreach ($flds_arr as $fld) {
-                $sum += (int)$this->record->getCore($fld, true);
-            }
-        }
-        return $sum;
-    }
-
     public function permalink() : ?string
     {
         if ($this->context === 'add_new') {

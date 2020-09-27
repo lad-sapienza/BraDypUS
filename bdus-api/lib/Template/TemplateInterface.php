@@ -12,13 +12,6 @@ interface TemplateInterface
 	public function cell ( string $nr) : string;
 
 	/**
-	 * Returns sum of values of the given fields for the current record in the current table
-	 * @param string $fields comma separated list of fields to sum up.
-	 * @example <simpleSum fields="field1, field2, etc" />
-	 */
-	public function simpleSum( string $fields) : int;
-
-	/**
 	 * Shows record permalink
 	 */
 	public function permalink() : ?string;

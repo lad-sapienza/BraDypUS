@@ -1,3 +1,4 @@
+4.0.0-alpha.173[] = "Deprecated print.simpleSum"
 4.0.0-alpha.172[] = "New template system used in production"
 4.0.0-alpha.172[] = "Refactored templating system"
 4.0.0-alpha.172[] = "Record\Read::getPlugins renamed Record\Read::getPlugin"

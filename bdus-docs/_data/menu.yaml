@@ -65,6 +65,12 @@
     - title: Publish to Infinityfree
       url: /deploy/infinityfree
 
+- title: Using the application
+  url: /usage/
+  sub:
+    - title: User preferences
+      url: /usage/user-preferences
+
 - title: API
   url: /api/
   sub:

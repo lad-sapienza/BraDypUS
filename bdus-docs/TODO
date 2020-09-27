@@ -2,8 +2,8 @@ TODO:
 
 [vocabularies]
 - [ ] user privileges
-- [ ] search/replace
-- [ ] Backup (mentioned in /usage/find-replace as /usage/backup)
+- [x] search/replace
+- [x] Backup (mentioned in /usage/find-replace as /usage/backup)
 - [ ] Export
 - [x] User preferences
 - [ ] Geoface

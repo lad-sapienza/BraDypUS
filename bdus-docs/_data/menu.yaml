@@ -81,6 +81,9 @@
     - title: User preferences
       url: /usage/user-preferences
     - title: Find and replace
+    - title: Database backup
+      url: /usage/backup
+    - title: Find and replace
       url: /usage/find-replace
     - title: System translation
       url: /usage/system-translation

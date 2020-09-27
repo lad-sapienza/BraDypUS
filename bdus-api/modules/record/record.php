@@ -294,8 +294,8 @@ class record_ctrl extends Controller
             'iTotalRecords' => $count,
             // string, current system language, to be used for datatable
             'lang' => \pref::getLang(),
-            // boolean: if true infinite scroll of databatables will be activated
-            'infinte_scroll' => \pref::get('infinite_scroll'),
+            // boolean: if true infinite scrolling of databatables will be activated
+            'infinte_scrolling' => \pref::get('infinite_scrolling'),
             // boolean: if true only one records can be selected
             'select_one' => $this->request['select_one'],
             // boolean, if true id field will be available in datatables, but hidden

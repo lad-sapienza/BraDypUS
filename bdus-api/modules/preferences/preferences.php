@@ -11,7 +11,7 @@ class preferences_ctrl extends Controller
 	public function open()
 	{
 		$this->render('preferences', 'panel', [
-			'infinite_scroll'=> \pref::get('infinite_scroll'),
+			'infinite_scrolling'=> \pref::get('infinite_scrolling'),
 			'all_langs' => \tr::getAvailable(),
 			'current_lang' => \pref::get('lang'),
 			'user_id' => $_SESSION['user']['id']

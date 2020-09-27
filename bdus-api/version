@@ -1,3 +1,4 @@
+4.0.0-alpha.171[] = "Infinte scroll renamed to Infinite scrolling"
 4.0.0-alpha.171[] = "Mention of plugin (and geodata) column in field list in ShortSQL, triggers plugin table JOIN"
 4.0.0-alpha.171[] = "QueryObject::setJoins checks for duplicate values before adding item"
 4.0.0-alpha.170[] = "Added fields index in API2 search results"

@@ -51,11 +51,3 @@ The order of the blocks is not important, and except for the table block, they a
     **Optional**.  
     Group statement. Comma separated list of fields to use for grouping.  
     Each field shoul be a valid field and may be provided as `table.field` or `field`
-
-## Notes on output SQL
-
-ShortSQL tries to return dialcet agnostic SQL, which can be run on the main database engine supported by BraDypUS,
-SQLite, MySQL/MariaDB and PostgreSQL. This means that:
-- no backticks (**`**) are used to mark table or column names. In general, table ane column names **are not** marked;
-- column aliases are marked by double quotes (**"**). This is supported in all the mentioned database engines;
-- offset is clearly stated in limit statement and is never ommitted, whitch is a MySQL-limited feature.

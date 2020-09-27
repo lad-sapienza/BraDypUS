@@ -292,17 +292,3 @@ Please note that caret used before the value in WHERE (and ON) statement
 as string (wrapped in single quotes). In this case it is a column name.
 
 ---
-
-
-
-## Caveat
-In order to use the string in a query string it must be url-encoded, es:
-```js
-// javascript
-const urisafe = encodeURIComponent(shortSql);
-```
-or
-```php
-// php
-$urisafe = urlencode($shortSql);
-```

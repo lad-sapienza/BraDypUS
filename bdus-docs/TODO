@@ -11,8 +11,8 @@ TODO:
 
 
 - rs
-- template system  (mentioned in usage/user-preferences as /manage/template-system)
+- [x] Template system  (mentioned in usage/user-preferences as /manage/template-system)
 
 - history
 
-- API
+- [x] API

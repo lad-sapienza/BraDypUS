@@ -65,6 +65,16 @@
     - title: Publish to Infinityfree
       url: /deploy/infinityfree
 
+- title: Template system
+  url: /template-system/
+  sub:
+    - title: Creating a new template
+      url: /template-system/create-new-template
+    - title: The print object
+      url: /template-system/print-object
+    - title: A template example
+      url: /template-system/template-example
+
 - title: Using the application
   url: /usage/
   sub:

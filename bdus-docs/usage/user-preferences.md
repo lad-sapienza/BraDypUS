@@ -43,7 +43,7 @@ This module permits each user to select, for each data-table, what template
 to use, allowing to use different templates in read and edit/add new contexts.
 The drop-down menu will be automatically filled with available templates.
 
-For more information on templates, please read the [relative page](/manage/template-system).
+For more information on templates, please read the [relative page](/template-system/).
 
 ![screenshot](../../images/usage/tmpl-manager.png "Template manager")
 *Template manager*

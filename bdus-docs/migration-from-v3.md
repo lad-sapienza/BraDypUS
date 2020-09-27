@@ -10,6 +10,7 @@ title: Migration from v3
 - Optionally create table `versions`
 - Rename `span-n` classes used as `div_class` attributes in templates to `col-sm-n`
 - Remove function `print.sqlSum` in templates
+- Remove function `print.simpleSum` in templates
 
 ---
 
@@ -145,6 +146,13 @@ As other parts of the system, the template engine has been fully rewritten as we
 #### Deprecated print.sqlSum
 
 The function `print.sqlSum` in the templates has been deprecated and no replacement has been provided.
+The funcion was scarcely (if ever) used.
+
+#### Deprecated print.simpleSum
+
+The function `print.simpleSum` in the templates has been deprecated. 
+It can be easily replaced by manually summing values obtained by 
+`print.value` method.
 The funcion was scarcely (if ever) used.
 
 #### Deprecated usage of span-n class

@@ -139,7 +139,7 @@ class home_ctrl extends Controller
                     $not_fresh && \utils::canUser('read') ? '<input type="text" style="width: 90%;" placeholder="' . \tr::get('fast_search') . '" class="form-control fast_search" />' : false
                 ],
                 [ 
-                    "fa-external-link", 
+                    "fa-random", 
                     'export', 
                     $not_fresh && \utils::canUser('edit') ? "api.query.Export('WyIxPTEiLFtdXQ', $('#ref_tb').val() );" :  false
                 ],

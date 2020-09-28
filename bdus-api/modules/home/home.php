@@ -25,6 +25,7 @@ class home_ctrl extends Controller
         'iziToast.min.css',
         'dataTables.bootstrap.min.css',
         'select2.min.css',
+        'font-awesome.min.css',
         'bdus.min.css'
     ];
 

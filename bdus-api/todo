@@ -9,3 +9,9 @@ TODO
 [] Record\Edit uses STATIC! Read::
 
 [] Validate must check also for backup executables!
+
+[] replace fine uploader with https://github.com/flowjs/flow.js and https://github.com/flowjs/flow-php-server
+
+[] replace jqplot with chart.js
+
+[] replace jquery-sortable with https://sortablejs.github.io/sortablejs/

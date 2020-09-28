@@ -10,8 +10,6 @@ class CompressAssets
     public static $js_compress_libs = [
         'php2js.js',
         'jquery-sortable.js',
-        // 'jquery.dataTables.js',
-        // 'datatables-bootstrap.js',
         'jquery.keyboard.js',
         'utils.js',
         'jquery.fineuploader-3.4.0.js',
@@ -19,7 +17,6 @@ class CompressAssets
         'api.js',
         'layout.js',
         'formControls.js',
-        'select2.full.js',
         'enhanceForm.js',
         'jquery.checklabel.js',
         'jquery.printElement.js',

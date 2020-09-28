@@ -17,12 +17,14 @@ class home_ctrl extends Controller
         'iziToast.min.js',
         'jquery.dataTables.min.js',
         'dataTables.bootstrap.min.js',
+        'select2.full.min.js',
     ];
     
     private $css_libs = [
         'bootstrap.min.css',
         'iziToast.min.css',
         'dataTables.bootstrap.min.css',
+        'select2.min.css',
         'bdus.min.css'
     ];
 

@@ -16,24 +16,27 @@
  * @example: enhance.form($('#formId'));
  * @example: enhance.element($('#elId'));
  */
-var enhance = {
+const enhance = {
   getData: function(el){
-    var datalist = $('datalist[for="' + el.attr('id') + '"]').first(),
-    data = [];
+    const datalist = $('datalist[for="' + el.attr('id') + '"]').first();
+    let data = [];
 
     datalist.children( "option" ).map(function() {
-      var text = $(this).text(),
-      value = $(this).val() ? $(this).val(): text;
+      const text = $(this).text();
+      const value = $(this).val() ? $(this).val(): text;
 
-      data.push({id: value, text: text});
+      data.push({
+        id: value, 
+        text: text
+      });
     });
     return data;
   },
 
-  getAjaxData: function(el){
-    var context = el.data('context'),
-      att = el.data('att'),
-      tags = el.data('tags');
+  getAjaxData: el => {
+    const context = el.data('context');
+    const att = el.data('att');
+    const tags = el.data('tags');
 
     // Return empty object if no data attribute are found
     if(typeof context === 'undefined' || typeof att === 'undefined'){
@@ -74,14 +77,14 @@ var enhance = {
         cache: true
       },
 
-      escapeMarkup:        function (markup) { return markup; },
-      templateResult:      function (a) { return a.val; },
-      templateSelection:  function (a) { return a.hasOwnProperty('val') ? a.val : a.text; },
+      escapeMarkup:        markup =>  markup,
+      templateResult:      a => { return a.val; },
+      templateSelection:   a => { return a.hasOwnProperty('val') ? a.val : a.text; },
       minimumInputLength:  0
     };
   },
 
-  multiselect: function(el, destroy) {
+  multiselect: (el, destroy) => {
     if ($(el).data('select2') && destroy){
       $(el).select2('destroy');
     } else {
@@ -96,7 +99,7 @@ var enhance = {
     }
   },
 
-  combobox: function(el, destroy){
+  combobox: (el, destroy) => {
 
     if($(el).data('select2') && destroy){
       $(el).select2('destroy');
@@ -109,10 +112,9 @@ var enhance = {
         $(this).attr('changed', 'auto');
       });
     }
-
   },
 
-  select: function(el, destroy){
+  select: (el, destroy) => {
     if($(el).data('select2') && destroy){
       $(el).select2('destroy');
     } else {
@@ -124,7 +126,7 @@ var enhance = {
     }
   },
 
-  pimpEl: function(el, destroy){
+  pimpEl: (el, destroy) => {
     if($(el).hasClass('combobox')) {
       enhance.combobox(el, destroy);
     } else if ($(el).hasClass('multiselect')) {
@@ -134,7 +136,7 @@ var enhance = {
     }
   },
   // form function: takes form element and applies to all input elements all available widges
-  form: function(form){
+  form: form => {
     $(form).find(':input').each(function(i, el){
       enhance.pimpEl(el);
     });

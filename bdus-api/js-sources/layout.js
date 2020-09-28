@@ -23,7 +23,7 @@ var layout = {
         
         var html = `<div class="tabbable">
             <ul class="nav nav-tabs navbar-fixed-top" id="tabs" data-tabs="tabs">
-                <li class="active"><a href="#home">BraDypUS v3</a></li>
+                <li class="active"><a href="#home">BraDypUS</a></li>
             </ul>
             <div class="tab-content">
                 <div class="tab-pane active" id="home"></div>
@@ -314,7 +314,6 @@ var layout = {
                 return false;
             }
         }
-
     },
 
     setSize : function(){

@@ -7,9 +7,13 @@
  */
 var api = {
     requireRestart: function(message){
-      var html =  (message ? '<h3>' + message + '</h3>' : '') +
-          '<p class="lead text-warning"><i class="glyphicon glyphicon-warning-sign"></i> ' +
-          '<strong>' + core.tr('attention') + '</strong><br />' + core.tr('reload_sys_required') + '</p>';
+      const html =  `${ message ? `<h3>${ message }</h3>` : ''}
+      <p class="lead text-warning">
+        <i class="glyphicon glyphicon-warning-sign"></i>
+        <strong>${core.tr('attention')}</strong>
+        <br />
+        ${core.tr('reload_sys_required')}
+      </p>`;
 
       core.open({
         html: html,
@@ -17,7 +21,7 @@ var api = {
         buttons:[
             {
                text: core.tr('restart'),
-               click: function(){
+               click: () => {
                  api.reloadApp();
                }
             },
@@ -33,9 +37,7 @@ var api = {
     confirmSuperAdmPwd: function(success) {
       core.open({
         title: core.tr('cfg_security_check'),
-        html: `<p class="lead text-danger">
-        ${core.tr('cfg_security_check_text')}
-        </p>
+        html: `<p class="lead text-danger">${core.tr('cfg_security_check_text')}</p>
         <hr>
         <form action="javascript:void(0)">
           <input type="password" class="adm_pwd form-control" placeholder="password">
@@ -43,7 +45,7 @@ var api = {
         </form>`,
         loaded: () => {
           setTimeout( () => { 
-            $('#modal input.adm_pwd').focus();
+            $('#modal input.adm_pwd').trigger('focus');
           }, 500 );
           $('#modal form').on('submit', ()=>{
             const pwd = $('#modal .adm_pwd').val();
@@ -67,7 +69,7 @@ var api = {
             addclass: 'btn-danger',
             text: core.tr('validate_password'),
             click: () => {
-              $('#modal form').submit();
+              $('#modal form').trigger('submit');
             }
           }
         ]
@@ -567,11 +569,11 @@ var api = {
 
           //RELOAD
           $(l_el).find('span.userlink_reload')
-            .click( function(){  api.link.show_userlinks(l_el);  });
+            .on('click',  () => {  api.link.show_userlinks(l_el);  });
 
           //ADD
           $(l_el).find('span.userlink_add')
-            .click(function(){
+            .on('click', () => {
               var thisid = $(this).data('id')
               var thistb = $(this).data('table');
 
@@ -617,12 +619,15 @@ var api = {
           uploadButton: '<div><i class="glyphicon glyphicon-white glyphicon-upload"></i> ' + ( opts.button_text ? opts.button_text : core.tr('click_drag_to_upload') ) + '</div>',
           dragZone: core.tr('drop_to_upload')
         },
-        template: '<div class="qq-uploader">' +
-              '<pre class="qq-upload-drop-area"><span>{dragZoneText}</span></pre>' +
-              '<div class="qq-upload-button btn btn-success" style="width: auto;">{uploadButtonText}</div>' +
-              '<span class="qq-drop-processing"><span>{dropProcessingText}</span><span class="qq-drop-processing-spinner"></span></span>' +
-              '<ul class="qq-upload-list" style="margin-top: 10px; text-align: center;"></ul>' +
-            '</div>',
+        template: `<div class="qq-uploader">
+            <pre class="qq-upload-drop-area"><span>{dragZoneText}</span></pre>
+            <div class="qq-upload-button btn btn-success" style="width: auto;">{uploadButtonText}</div>
+              <span class="qq-drop-processing">
+                <span>{dropProcessingText}</span>
+                <span class="qq-drop-processing-spinner"></span>
+              </span>
+              <ul class="qq-upload-list" style="margin-top: 10px; text-align: center;"></ul>
+            </div>`,
         classes: {
           success: 'alert alert-success',
           fail: 'alert alert-error'
@@ -636,8 +641,6 @@ var api = {
     d.multiple = !opts.limit2one;
 
 
-
-
     el.fineUploader(d)
       .on('complete', function(event, id, name, responseJSON){
         if (opts.complete){
@@ -649,8 +652,5 @@ var api = {
           opts.error(id, name, reason);
         }
       });
-
-
-
   }
 };

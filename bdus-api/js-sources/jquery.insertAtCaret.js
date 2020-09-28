@@ -11,8 +11,7 @@ jQuery.fn.extend({
 	      sel = document.selection.createRange();
 	      sel.text = myValue;
 	      this.focus();
-	    }
-	    else if (this.selectionStart || this.selectionStart == '0') {
+	    } else if (this.selectionStart || this.selectionStart == '0') {
 	      var startPos = this.selectionStart;
 	      var endPos = this.selectionEnd;
 	      var scrollTop = this.scrollTop;

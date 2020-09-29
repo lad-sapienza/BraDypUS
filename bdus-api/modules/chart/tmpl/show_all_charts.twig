@@ -22,10 +22,10 @@
 		<td>{{ chart.date }}</td>
 		<td>
 			<div class="btn-group">
-			<span class="btn btn-default display_chart" data-id="{{ chart.id }}"><i class="glyphicon glyphicon-eye-open"></i> {{ tr.get('display') }}</span>
+			<span class="btn btn-default display_chart" data-id="{{ chart.id }}"><i class="fa fa-eye"></i> {{ tr.get('display') }}</span>
 			{% if can_admin %}
-			<span class="btn btn-default edit_chart" data-id="{{ chart.id }}"><i class="glyphicon glyphicon-pencil"></i> {{ tr.get('edit') }}</span>
-			<span class="btn btn-default erase_chart" data-id="{{ chart.id }}"><i class="glyphicon glyphicon-trash"></i> {{ tr.get('erase') }}</span>
+			<span class="btn btn-default edit_chart" data-id="{{ chart.id }}"><i class="fa fa-pencil"></i> {{ tr.get('edit') }}</span>
+			<span class="btn btn-default erase_chart" data-id="{{ chart.id }}"><i class="fa fa-trash"></i> {{ tr.get('erase') }}</span>
 			{% endif %}
 			</div>
 		</td>

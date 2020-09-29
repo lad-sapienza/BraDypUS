@@ -203,7 +203,7 @@ class Field
         return '<label> ' .
                 ($help ? '<span class="help" data-content="' . str_replace('"', '\"', $help). '">' : '') .
                 $this->settings['label'] .
-                ($help ? ' <i class="glyphicon glyphicon-info-sign"></i>' : '') .
+                ($help ? ' <i class="fa fa-info-circle"></i>' : '') .
             ' </label>';
 	}
 

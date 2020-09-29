@@ -1,3 +1,4 @@
+4.0.0-alpha.175[] = "Replaced glyphicon with font-awesome"
 4.0.0-alpha.175[] = "Javascript moved to js file in vocabularies module"
 4.0.0-alpha.175[] = "jquery-sortable replaced by sortable.js"
 4.0.0-alpha.175[] = "Font Awesome updated from 4.3.0 to 4.7.0 and loaded from node"

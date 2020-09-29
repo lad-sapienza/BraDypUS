@@ -99,7 +99,7 @@ var utils = {
 					.attr('type', 'button')
 					.addClass('btn btn-default btn-sm')
 					.css('margin', '10px 0')
-					.html('<i class="glyphicon glyphicon-minus"></i>')
+					.html('<i class="fa fa-minus"></i>')
 					.click(function(){
 						$(this).parent('div.clonedContainer').remove();
 						});

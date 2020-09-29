@@ -12,24 +12,24 @@
 		<!-- READ -->
 	{% if can_user_read %}
 	<a onclick="api.record.actOn('read', '{{ tb }}', dt{{ tb }}{{ uid }});" title="{{ tr.get('read') }}" class="btn btn-default">
-		<i class="glyphicon glyphicon-eye-open"></i>
+		<i class="fa fa-eye"></i>
 	</a>
 	{% endif %}
 
 	<!-- EDIT -->
 	{% if can_user_edit %}
 	<a onclick="api.record.actOn('edit', '{{ tb }}', dt{{ tb }}{{ uid }});" title="{{ tr.get('edit') }}" class="btn btn-default">
-		<i class="glyphicon glyphicon-pencil"></i>
+		<i class="fa fa-pencil"></i>
 	</a>
 
 	<!-- ERASE -->
 	<a onclick="api.record.actOn('erase', '{{ tb }}', dt{{ tb }}{{ uid }});" title="{{ tr.get('erase') }}" class="btn btn-default">
-		<i class="glyphicon glyphicon-trash"></i>
+		<i class="fa fa-trash"></i>
 	</a>
 
 	<!-- CHECK/UNCHECK ALL -->
 	<a onclick="api.record.toogleSelect('list_{{ tb }}{{ uid }}');" title="{{ tr.get('toggle_select_all') }}" class="btn btn-default">
-		<i class="glyphicon glyphicon-flag"></i>
+		<i class="fa fa-flag"></i>
 	</a>
 
 	{% endif %}
@@ -37,25 +37,25 @@
 	{% if can_user_add %}
 	<!-- ADD NEW -->
 	<a onclick="api.record.actOn('add', '{{ tb }}');" title="{{ tr.get('add') }}" class="btn btn-default">
-		<i class="glyphicon glyphicon-file"></i>
+		<i class="fa fa-file"></i>
 	</a>
 	{% endif %}
 
 	<!-- SAVE QUERY -->
 	<a onclick="api.query.save('{{ encoded_where_obj }}', '{{ tb }}');" title="{{ tr.get('save_query_as') }}" class="btn btn-default">
-		<i class="glyphicon glyphicon-bookmark"></i>
+		<i class="fa fa-bookmark"></i>
 	</a>
 
 	<!-- RELOAD BUTTON -->
 	<a onclick="dt{{ tb }}{{ uid }}.fnDraw();" title="{{ tr.get('reload_query') }}" class="btn btn-default">
-		<i class="glyphicon glyphicon-repeat"></i>
+		<i class="fa fa-repeat"></i>
 	</a>
 
 	{% if noResult == false %}
 
 	<!-- EXPORT QUERY BUTTON  -->
 	<a onclick="api.query.Export('{{ encoded_where_obj }}', '{{ tb }}');" title="{{ tr.get('export_query') }}" class="btn btn-default">
-		<i class="glyphicon glyphicon-random"></i>
+		<i class="fa fa-random"></i>
 	</a>
 
 	<!-- MATRIX -->
@@ -67,17 +67,17 @@
 
 	<!-- BUILD CHART -->
 	<a onclick="core.runMod('chart', ['{{ tb }}', '{{ encoded_where_obj }}']);" title="{{ tr.get('build_chart') }}" class="btn btn-default">
-		<i class="glyphicon glyphicon-align-left"></i>
+		<i class="fa fa-bar-chart"></i>
 	</a>
 
 	<!-- MAP -->
 	<a onclick="core.runMod('geoface', ['{{ tb }}', '{{ encoded_where_obj }}']);" title="{{ tr.get('view_on_map') }}" class="btn btn-default">
-		<i class="glyphicon glyphicon-map-marker"></i>
+		<i class="fa fa-map-marker"></i>
 	</a>
 
 	<!-- PRINT -->
 	<a title="{{ tr.get('print') }}" class="btn btn-default print-results">
-		<i class="glyphicon glyphicon-print"></i>
+		<i class="fa fa-print"></i>
 	</a>
 
 	{% endif %}

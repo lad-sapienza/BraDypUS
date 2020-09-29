@@ -8,7 +8,7 @@ var frontpage_editor = {
 		init: function(){
 			$.get('./?obj=frontpage_editor_ctrl&method=get_content', function(data){
 				var html = '<p class="text-error">'
-						+ '<i class="glyphicon glyphicon-warning-sign"></i> <strong>' + core.tr('attention') + ':</strong> ' + core.tr('no_php_allowed') + '</p>'
+						+ '<i class="fa fa-exclamation-triangle"></i> <strong>' + core.tr('attention') + ':</strong> ' + core.tr('no_php_allowed') + '</p>'
 						+ '<textarea class="form-control" style="width: 98%; height: 300px">' + data + '</textarea>';
 				var div = core.open({
 				html:html,

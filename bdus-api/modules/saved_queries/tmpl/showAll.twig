@@ -22,14 +22,14 @@
           <a  data-action="execute" data-tb="{{ q.tb }}"
               data-text="{{ q.obj_encoded }}"
               class="btn btn-success"
-          ><i class="glyphicon glyphicon-play"></i>
+          ><i class="fa fa-play"></i>
             {{ tr.get('execute_query') }}
           </a>
           {% if q.is_global == false %}
           <a  data-action="share" 
               data-id="{{ q.id }}"
               class="btn btn-info"
-          ><i class="glyphicon glyphicon-star"></i>
+          ><i class="fa fa-star"></i>
             {{ tr.get('share') }}
           </a>
           {% endif %}
@@ -37,7 +37,7 @@
           <a  data-action="unshare" 
               data-id="{{ q.id }}"
               class="btn btn-warning"
-          ><i class="glyphicon glyphicon-star-empty"></i>
+          ><i class="fa fa-star-o"></i>
             {{ tr.get('unshare') }}
           </a>
           {% endif %}
@@ -45,7 +45,7 @@
           <a  data-action="erase" 
               data-id="{{ q.id }}"
               class="btn btn-danger"
-          ><i class="glyphicon glyphicon-trash"></i>
+          ><i class="fa fa-trash"></i>
             {{ tr.get('erase') }}
           </a>
           {% endif %}

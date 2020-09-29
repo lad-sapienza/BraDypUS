@@ -1,7 +1,7 @@
 <h2>{{ tr.get('available_backups') }}</h2>
 
 <button class="btn btn-success" onclick="backup.create()">
-    <i class="glyphicon glyphicon-ok"></i> {{ tr.get('backup_now') }}
+    <i class="fa fa-check"></i> {{ tr.get('backup_now') }}
 </button>
 <hr>
 
@@ -31,21 +31,21 @@
                 <div class="btn-group">
                     <button class="download btn btn-info" 
                             onclick="backup.download('{{ f.full_orig }}')">
-                        <i class="glyphicon glyphicon-download-alt"></i>
+                        <i class="fa fa-download"></i>
                         {{ tr.get('download') }}
                     </button>
                     {% if canErase %}
                     <button type="button" 
                             class="btn btn-warning" 
                             onclick="backup.erase('{{ f.orig }}', this)">
-                        <i class="glyphicon glyphicon-trash"></i>
+                        <i class="fa fa-trash"></i>
                         {{ tr.get('erase') }}</button>
                     {% endif %}
                     {% if canRestore and engine == f.engine %}
                     <button type="button" 
                             class="btn btn-danger" 
                             onclick="backup.restore('{{ f.orig }}', this)">
-                        <i class="glyphicon glyphicon-open"></i>
+                        <i class="fa fa-undo"></i>
                         {{ tr.get('restore') }}</button>
                     {% endif %}
 				</div>

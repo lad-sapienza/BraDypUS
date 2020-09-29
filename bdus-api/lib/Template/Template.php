@@ -290,7 +290,7 @@ class Template implements TemplateInterface
             foreach ($plg_array['data'] as $index => $plg_data) {
                 $this->current_plugin_index = (int) $index;
                 $html .= $this->showPlgRow($plg, $index) .
-                    (($this->context === 'add_new' or $this->context === 'edit') ?'<button type="button" class="deleteplg btn btn-sm btn-default"><i class="glyphicon glyphicon-minus"></i></button>' : '') .
+                    (($this->context === 'add_new' or $this->context === 'edit') ?'<button type="button" class="deleteplg btn btn-sm btn-default"><i class="fa fa-minus"></i></button>' : '') .
                     '<br/>';
             }
         }
@@ -299,7 +299,7 @@ class Template implements TemplateInterface
         if ($this->context === 'edit' or $this->context === 'add_new') {
             $html .= '<div class="plg_container">' .
                     '</div>'.
-                    '<button type="button" class="addplg btn btn-sm btn-default"><i class="glyphicon glyphicon-plus"></i></button>';
+                    '<button type="button" class="addplg btn btn-sm btn-default"><i class="fa fa-plus"></i></button>';
         }
         $html .= '</fieldset>';
 

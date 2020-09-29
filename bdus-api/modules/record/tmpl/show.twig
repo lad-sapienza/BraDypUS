@@ -13,30 +13,30 @@
   <div class="navbar clearfix menu">
 
     {% if multiple_id == false and action != 'add_new' %}
-      <button class="reload btn btn-success navbar-btn" data-id="{{ id }}"><i class="glyphicon glyphicon-white glyphicon-repeat"></i> {{ tr.get('reload') }}</button>
+      <button class="reload btn btn-success navbar-btn" data-id="{{ id }}"><i class="fa fa-repeat"></i> {{ tr.get('reload') }}</button>
     {% endif %}
 
     {% if action == 'read' or action == 'preview' %}
 
       {% if can_edit %}
-      <button class="open-edit btn btn-success navbar-btn" data-id="{{ id }}"><i class="glyphicon glyphicon-white glyphicon-pencil"></i> {{ tr.get('edit') }}</button>
+      <button class="open-edit btn btn-success navbar-btn" data-id="{{ id }}"><i class="fa fa-pencil"></i> {{ tr.get('edit') }}</button>
       {% endif %}
 
       {% if totalRecords > 1 %}
-        <button class="print-all btn btn-info navbar-btn" data-id="{{ uid }}"><i class="glyphicon glyphicon-white glyphicon-print"></i> {{ tr.get('print_all') }}</button>
+        <button class="print-all btn btn-info navbar-btn" data-id="{{ uid }}"><i class="fa fa-print"></i> {{ tr.get('print_all') }}</button>
       {% endif %}
 
-      <button class="print btn btn-info navbar-btn" data-id="{{ uid }}"><i class="glyphicon glyphicon-white glyphicon-print"></i> {{ tr.get('print_record') }}</button>
+      <button class="print btn btn-info navbar-btn" data-id="{{ uid }}"><i class="fa fa-print"></i> {{ tr.get('print_record') }}</button>
 
     {% endif %}
     {% if action == 'edit' or action == 'add_new' %}
-      <button class="save-edit btn btn-success navbar-btn" data-id="{{ uid }}" ><i class="glyphicon glyphicon-white glyphicon-pencil"></i> {{ tr.get('save') }}</button>
+      <button class="save-edit btn btn-success navbar-btn" data-id="{{ uid }}" ><i class="fa fa-pencil"></i> {{ tr.get('save') }}</button>
       {% if action == 'edit' %}
-        <button class="save-as-new btn btn-success navbar-btn" data-id="{{ uid }}" ><i class="glyphicon glyphicon-white glyphicon-retweet"></i> {{ tr.get('save_as_new') }}</button>
+        <button class="save-as-new btn btn-success navbar-btn" data-id="{{ uid }}" ><i class="fa fa-retweet"></i> {{ tr.get('save_as_new') }}</button>
       {% endif %}
     {% endif %}
     {% if can_erase and action != 'add_new' %}
-      <button class="erase btn btn-danger navbar-btn"><i class="glyphicon glyphicon-white glyphicon-trash"></i> {{ tr.get('erase') }}</button>
+      <button class="erase btn btn-danger navbar-btn"><i class="fa fa-trash"></i> {{ tr.get('erase') }}</button>
     {% endif %}
 
   </div> {# END OF ACTION BUTTON CONTAINER #}

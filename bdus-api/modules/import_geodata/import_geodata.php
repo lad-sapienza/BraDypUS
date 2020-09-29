@@ -83,7 +83,7 @@ class import_geodata_ctrl extends Controller
         $this->cfg->get("tables.$tb.id_field")
       );
       
-      echo '<div class="text-success lead"><i class="glyphicon glyphicon-ok"></i> ' 
+      echo '<div class="text-success lead"><i class="fa fa-check"></i> ' 
         . \tr::get('geodata_ok_uploaded', [$totalImports] ) . '</div>';
       
     } catch (\Throwable $e) {

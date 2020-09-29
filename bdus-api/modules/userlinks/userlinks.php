@@ -99,12 +99,12 @@ class userlinks_ctrl extends Controller
 			}
 		}
 
-		$html = '<p><i class="glyphicon glyphicon-link"></i>  <strong>' . \tr::get('user_links') . '</strong></p>'
+		$html = '<p><i class="fa fa-link"></i>  <strong>' . \tr::get('user_links') . '</strong></p>'
 				. ( $tmp ? '<ul>' . implode('', $tmp) . '</ul>' : \tr::get('no_user_links'))
 				. ( ($context == 'edit') ?
 						'<p>'
-							. '<span class="btn btn-default btn-sm userlink_reload" data-table="' . $tb . '" data-id="' . $id . '"><i class="glyphicon glyphicon-repeat"></i> ' . \tr::get('reload') . '</span>'
-							. '<span class="btn btn-default btn-sm userlink_add" data-table="' . $tb . '" data-id="' . $id . '"><i class="glyphicon glyphicon-plus"></i> ' . \tr::get('add') . '</span>'
+							. '<span class="btn btn-default btn-sm userlink_reload" data-table="' . $tb . '" data-id="' . $id . '"><i class="fa fa-repeat"></i> ' . \tr::get('reload') . '</span>'
+							. '<span class="btn btn-default btn-sm userlink_add" data-table="' . $tb . '" data-id="' . $id . '"><i class="fa fa-plus"></i> ' . \tr::get('add') . '</span>'
 						. '</p>' : '');
 
 		echo $html;

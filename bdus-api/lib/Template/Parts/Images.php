@@ -33,7 +33,7 @@ class Images
                     '<button type="button" ' .
                             'class="btn btn-sm btn-info service" ' .
                             'onclick="api.file.show_gallery(\'' . $tb . '\', \'' . $id . '\');">' .
-                        '<i class="glyphicon glyphicon-white glyphicon-file"></i> ' .
+                        '<i class="fa fa-file"></i> ' .
                         \tr::get('x_files_linked', [count($data_arr)]) .
                     '</button>' .
                 '</div>';

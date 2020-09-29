@@ -9,7 +9,7 @@ var api = {
     requireRestart: function(message){
       const html =  `${ message ? `<h3>${ message }</h3>` : ''}
       <p class="lead text-warning">
-        <i class="glyphicon glyphicon-warning-sign"></i>
+        <i class="fa fa-exclamation-triangle"></i>
         <strong>${core.tr('attention')}</strong>
         <br />
         ${core.tr('reload_sys_required')}
@@ -89,7 +89,7 @@ var api = {
      */
     logOut: function(){
       core.open({
-        html: '<p class="text-warning"><i class="glyphicon glyphicon-exclamation-sign"></i> ' + core.tr('logout_confirm_body') + '</p>',
+        html: '<p class="text-warning"><i class="fa fa-exclamation-triangle"></i> ' + core.tr('logout_confirm_body') + '</p>',
         title: core.tr('logout_confirm_title'),
         buttons: [
                 {
@@ -468,14 +468,13 @@ var api = {
                 title:core.tr('new_link'),
                 buttons: [
                           {
-                            text:'<i class="glyphicon glyphicon-resize-small"></i> ' + core.tr('save_links'),
+                            text:'<i class="fa fa-link"></i> ' + core.tr('save_links'),
                             click: function(){
-                              var $this = $(this),
-                                aTrs = $('#list_' + div.find('div.id-holder').data('id')).dataTable().fnGetNodes(),
+                              var aTrs = $('#list_' + div.find('div.id-holder').data('id')).dataTable().fnGetNodes(),
                                 id_arr = [],
                                 tb;
 
-                              for ( var i=0 ; i<aTrs.length ; i++ ){
+                              for ( var i=0 ; i < aTrs.length ; i++ ){
                                 if ( $(aTrs[i]).hasClass('row_selected') ){
                                   id_arr.push( $(aTrs[i]).attr('id') );
                                 }
@@ -616,7 +615,7 @@ var api = {
         },
         autoUpload: true,
         text: {
-          uploadButton: '<div><i class="glyphicon glyphicon-white glyphicon-upload"></i> ' + ( opts.button_text ? opts.button_text : core.tr('click_drag_to_upload') ) + '</div>',
+          uploadButton: '<div><i class="fa fa-upload"></i> ' + ( opts.button_text ? opts.button_text : core.tr('click_drag_to_upload') ) + '</div>',
           dragZone: core.tr('drop_to_upload')
         },
         template: `<div class="qq-uploader">

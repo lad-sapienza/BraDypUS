@@ -57,7 +57,7 @@ class Links
     public static function showCoreLinks (array $corelinks, Config $cfg ) : string
     {
         $html = '<p>' 
-                    . '<i class="glyphicon glyphicon-link"></i> '
+                    . '<i class="fa fa-link"></i> '
                     . '<strong>' . \tr::get('system_links'). '</strong>'
             . '</p>'
             . '<ul>';

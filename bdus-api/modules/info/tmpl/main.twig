@@ -27,7 +27,7 @@
 		{% for l in libs %}
 			<dt style="font-size:1.2em; margin-top:7px;">{{ l.name }}</dt>
 			<dd>{% if l.by %}by {{ l.by }}<br />{% endif %}
-			Web: <a href="{{ l.web }}" target="_blank"><i class="glyphicon glyphicon-globe"></i> {{ l.web }}</a><br />
+			Web: <a href="{{ l.web }}" target="_blank"><i class="fa fa-globe"></i> {{ l.web }}</a><br />
 			License: {{ l.lic }}</dd>
 		{% endfor %}
 		</dl>

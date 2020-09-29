@@ -24,8 +24,8 @@ class myExport_ctrl extends Controller
 				$html .= '<tr>'
 				. '<td>' . $file . '</td>'
 				. '<td>' . round ( filesize( PROJ_DIR . 'export/' . $file )/1024/1024, 3 ) . ' MB</td>'
-				. '<td><button class="download btn btn-primary" data-file="' . PROJ_DIR . 'export/' . $file . '"><i class="glyphicon glyphicon-download-alt"></i> ' . \tr::get('download') . '</button> '
-				. (\utils::canUser('edit') ? '<button type="button" class="erase btn btn-danger" data-file="' . $file . '"><i class="glyphicon glyphicon-trash"></i> ' . \tr::get('erase') . '</button>' :  '') . '</td>'
+				. '<td><button class="download btn btn-primary" data-file="' . PROJ_DIR . 'export/' . $file . '"><i class="fa fa-download"></i> ' . \tr::get('download') . '</button> '
+				. (\utils::canUser('edit') ? '<button type="button" class="erase btn btn-danger" data-file="' . $file . '"><i class="fa fa-trash"></i> ' . \tr::get('erase') . '</button>' :  '') . '</td>'
 				.'</tr>';
 			}
 			$html .= '</table>';

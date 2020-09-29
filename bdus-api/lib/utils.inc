@@ -201,31 +201,25 @@ class utils
 	 * @param string $delete	if true directory will be deleted
 	 * @throws \Exception
 	 */
-	public static function emptyDir( $dir = false, $delete = false, $limit2current = false )
+	public static function emptyDir( string $dir, bool $delete_dir = false )
 	{
-		!$dir ? $dir = PROJ_TMP_DIR : '';
+		$files_in_tmp = self::dirContent( $dir ) ?: [];
 
-		$files_in_tmp = self::dirContent( $dir );
-
-		if ( $files_in_tmp[0] ) {
-			foreach ( $files_in_tmp as $file ) {
-				if ( is_dir ( $dir . '/' . $file ) ) {
-					if( !$limit2current ) {
-						self::emptyDir( $dir . '/' . $file, true );
-					}
-				} else {
-					if ( !@unlink ( $dir . '/' . $file ) ) {
-						throw new \Exception(\tr::get('cannot_delete_file', [$file]));
-					}
+		foreach ( $files_in_tmp as $file ) {
+			if ( is_dir ( $dir . '/' . $file ) ) {
+				self::emptyDir( $dir . '/' . $file, true );
+			} else {
+				if ( !@unlink ( $dir . '/' . $file ) ) {
+					throw new \Exception(\tr::get('cannot_delete_file', [$file]));
 				}
 			}
 		}
 
-		if ( $dir !== PROJ_TMP_DIR && $delete) {
-			if ( !@rmdir( $dir ) ) {
-				throw new \Exception(\tr::get('cannot_delete_dir', [$dir]));
-			}
+		if ( $delete_dir && !@rmdir( $dir ) ) {
+			throw new \Exception(\tr::get('cannot_delete_dir', [$dir]));
 		}
+
+		return true;
 
 	} //end of emptyDir
 
@@ -390,6 +384,8 @@ class utils
 	
 	public static function isDuplicateEmail( \DB\DB $db, string $prefix, string $email, int $id = null ) : bool
     {
+		$manager = new \DB\System\Manage($db, $prefix);
+
         $partial = [ "email = ? " ];
         $values = [ $email ];
 
@@ -397,11 +393,8 @@ class utils
         if ($id) {
             array_push($partial, "id != ? ");
             array_push($values, $id);
-        }
-        $res = $db->query(
-            'SELECT count(*) as tot FROM ' . $prefix . 'users WHERE ' . implode(" AND ", $partial) . ' LIMIT 1 OFFSET 0', 
-            $values
-        );
+		}
+		$res = $manager->getBySQL('users', implode(" AND ", $partial) . ' LIMIT 1 OFFSET 0', $values, ['count(*) as tot']);
 
         return ($res[0]['tot'] > 0);
 	}

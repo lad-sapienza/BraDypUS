@@ -1,11 +1,10 @@
 TODO
 
-[] PREFIX in mods replaced by $this->prefix
+[] remove constants in libs
+
 [] sys tables managed via system\manager
 
 [] replace current VK with https://virtual-keyboard.js.org/
-
-[x] Record\Read invert little endian parameters
 
 [] Record\Edit uses STATIC! Read::
 
@@ -18,3 +17,7 @@ TODO
 [x] replace jquery-sortable with https://sortablejs.github.io/sortablejs/
 
 [x] replace glyphicon with font-awesome
+
+[x] Record\Read invert little endian parameters
+
+[x] PREFIX in mods replaced by $this->prefix

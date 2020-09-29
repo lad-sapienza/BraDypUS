@@ -15,7 +15,7 @@ class Images
         // start writing main container. Styles are handled via CSS
         $html = '<div class="file_thumbnails clearfix">';
 
-        // 1. Show up tu $max images
+        // 1. Show up to $max images
         if (!empty($data_arr[0])) {
             // show images (div.db_images)
             for ($x = 0; $x < $max; $x++) {

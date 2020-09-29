@@ -6,6 +6,8 @@
  * @since			Jan 10, 2013
  */
 
+use \Record\Read;
+
 class record_ctrl extends Controller
 {
     public function save_data()
@@ -172,7 +174,7 @@ class record_ctrl extends Controller
                 $one_id = false;
             }
 
-            $readRecord = new \Record\Read($this->db, $this->cfg, $tb, $one_id, $flag_idfield);
+            $readRecord = new Read($one_id, $flag_idfield, $tb, $this->db, $this->cfg);
 
             if ($context === 'edit' &&
                     (!\utils::canUser('edit', $readRecord->getCore('creator', true)) || (count($id) > 1 && !\utils::canUser('multiple_edit')))) {

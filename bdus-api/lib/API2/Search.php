@@ -1,13 +1,7 @@
 <?php
 namespace API2;
-/**
- * Gets Unique values from database
- * @requires ShortSql
- * @requires DB
- * @requires \Read\Record
- * @requires \toGeoJson
- */
-use DB\DBInterface;
+
+use \DB\DBInterface;
 use \SQL\QueryBuilder;
 use \Config\Config;
 use \Record\Read;
@@ -116,7 +110,7 @@ class Search
 		$fullResult = [];
 
 		foreach ($result as $id => $row) {
-			$record = new Read(self::$db, self::$cfg, $tb, $row['id']);
+			$record = new Read($row['id'], false, $tb, self::$db, self::$cfg);
 			$rowResult = $record->getFull();
 			array_push($fullResult, $rowResult);
 		}

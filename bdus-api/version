@@ -1,3 +1,4 @@
+4.0.0-alpha.175[] = "Record\Read parameters follow little endian order"
 4.0.0-alpha.175[] = "Code cleaning"
 4.0.0-alpha.175[] = "Replaced glyphicon with font-awesome"
 4.0.0-alpha.175[] = "Javascript moved to js file in vocabularies module"
@@ -213,7 +214,7 @@
 4.0.0-alpha.37[] = "Refactored constants"
 4.0.0-alpha.36[] = "Inline docs and better error handling for cfg"
 4.0.0-alpha.35[] = "Fixed bug with Query builder (join => joins)"
-4.0.0-alpha.34[] = "ReadRecord renamed to \Read\Record"
+4.0.0-alpha.34[] = "ReadRecord renamed to \Record\Read"
 4.0.0-alpha.33[] = "Better error reporting"
 4.0.0-alpha.32[] = "JSON tr loaded on bootstrap"
 4.0.0-alpha.31[] = "Removed support for PROJS_DIR"

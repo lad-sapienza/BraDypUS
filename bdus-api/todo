@@ -5,7 +5,8 @@ TODO
 
 [] replace current VK with https://virtual-keyboard.js.org/
 
-[] Record\Read invert little endian parameters
+[x] Record\Read invert little endian parameters
+
 [] Record\Edit uses STATIC! Read::
 
 [] Validate must check also for backup executables!

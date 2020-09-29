@@ -20,7 +20,7 @@ class Read
      *
      * @param DBInterface $db       DB object
      */
-    public function __construct(DBInterface $db, Config $cfg, string $tb, int $id, bool $is_id_fld = false)
+    public function __construct(int $id, bool $is_id_fld = false, string $tb, DBInterface $db, Config $cfg)
     {
         $this->db = $db;
         $this->cfg = $cfg;

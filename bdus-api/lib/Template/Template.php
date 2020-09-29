@@ -1,9 +1,9 @@
 <?php
 namespace Template;
 
-use Record\Read;
-use Config\Config;
-use DB\DB;
+use \Record\Read;
+use \Config\Config;
+use \DB\DB;
 
 use Template\TemplateInterface;
 use Template\Parts\{

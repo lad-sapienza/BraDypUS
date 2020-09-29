@@ -1,3 +1,4 @@
+4.0.0-alpha.175[] = "jquery-sortable replaced by sortable.js"
 4.0.0-alpha.175[] = "Font Awesome updated from 4.3.0 to 4.7.0 and loaded from node"
 4.0.0-alpha.175[] = "Select2 updated from 4.0.3 to 4.0.13 and loaded from node"
 4.0.0-alpha.175[] = "DataTables updated from 1.9.4 to 1.10.22 and loaded from node"

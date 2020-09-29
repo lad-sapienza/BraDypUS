@@ -88,7 +88,6 @@ class info_ctrl extends Controller
 		$libs = array(
 				array('name' => "jQuery", 'by' => "jQuery Foundation", "web"=>"http://jquery.com/", "lic"=>"MIT, GPL"),
 				array('name' => 'php2js.js', 'web' => 'http://phpjs.org/', 'lic' => 'MIT'),
-				array('name' => 'jquery-sortable.js', 'by' => ' Jonas von Andrian', 'web' => 'http://johnny.github.io/jquery-sortable/', 'lic' =>'Modified BSD License'),
 				array('name' => 'bootstrap-datepicker.js', 'by' => 'Stefan Petre (Improvements by Andrew Rowls, by @eternicode, by Julian Bogdani)', 'web' => 'https://github.com/jbogdani/bootstrap-datepicker', 'lic' => 'Apache License v2.0'),
 				array('name' => "DataTables", 'by' => "Allan Jardine", "web"=>"http://www.datatables.net/", "lic"=>"GPL v2 or a BSD style license"),
 				array('name' => 'jQuery keyboard', 'by' => 'Jeremy Satterfield, modified by Rob Garrison (Mottie on github)', 'web' => 'https://github.com/Mottie/Keyboard', 'lic' => 'MIT'),

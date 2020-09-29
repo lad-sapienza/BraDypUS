@@ -9,7 +9,6 @@ class CompressAssets
 {
     public static $js_compress_libs = [
         'php2js.js',
-        'jquery-sortable.js',
         'jquery.keyboard.js',
         'utils.js',
         'jquery.fineuploader-3.4.0.js',

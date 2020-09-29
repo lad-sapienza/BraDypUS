@@ -331,30 +331,6 @@ li.alert-error {
 	display: inline;
 }
 
-/* SORTABLE styles */
-body.dragging, body.dragging * {
-  cursor: move !important;
-}
-
-.dragged {
-  position: absolute;
-  opacity: 0.5;
-  z-index: 2000;
-}
-
-ul.sortable li.placeholder {
-  position: relative;
-  padding:20px;
-  border: 1px dashed #999;
-  border-radius: 0.2em;
-  background: #ebebeb;
-  /** More li styles **/
-
-  &:before{
-  	position: absolute;
-  }
-}
-
 /* GALLERY styles */
 
 ul.gallery{
@@ -369,14 +345,9 @@ ul.gallery{
 
 /* VOCABULARIES */
 
-.voc_definition{
-	background:#ebebeb;
-	padding:10px;
-	margin: 0 0 5px 0;
-	li:not(:last-child){
-		padding:5px 0 5px 10px;
-		border-bottom: 1px dashed #ccc;
-	}
+ul.list-group ul.sortable{
+    padding: 1rem;
+    background: #ebebeb;
 }
 
 .state-disabled{

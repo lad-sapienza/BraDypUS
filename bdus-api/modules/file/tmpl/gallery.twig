@@ -49,20 +49,14 @@ $('ul.gallery li').hover(
 			}
 	);
 
-var ulSort = $('ul.sortable').sortable({
-	nested: false,
-	onDrop: function(item, container, _super){
-		console.log('fired OnDrop');
-		var string = ulSort.sortable('serialize').get();
-		core.getJSON('file_ctrl', 'sort', false, {'filegallery': string}, function(data){
-			core.message(data.text, data.status);
-		}, 'json');
 
-		_super(item, container);
-	},
-	serialize: function (parent, children, isContainer) {
-		return isContainer ? children : parent.data('id');
-	},
+new Sortable(document.getElementsByClassName('sortable')[0], {
+	animation: 150,
+	ghostClass: 'active',
+	onEnd: function (evt) {
+		const sortArray = this.toArray();
+		core.runAndRespond('file_ctrl', 'sort', { filegallery: sortArray });
+	}
 });
 
 </script>

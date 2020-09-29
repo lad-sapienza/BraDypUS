@@ -14,4 +14,6 @@ TODO
 
 [] replace jqplot with chart.js
 
-[] replace jquery-sortable with https://sortablejs.github.io/sortablejs/
+[x] replace jquery-sortable with https://sortablejs.github.io/sortablejs/
+
+[] replace glyphicons with font-awesome

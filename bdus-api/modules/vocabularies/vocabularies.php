@@ -101,17 +101,15 @@ class vocabularies_ctrl extends Controller
 	public function sort()
 	{
 		$error = false;
-		foreach($this->post as $voc => $sort_data) {
-			foreach ($sort_data as $sort => $id) {
-				$res = $this->getSysMng()->editRow('vocabularies', (int)$id, [
-					'sort' => $sort
-				]);
-				if (!$res){
-					$error = true;
-				}
+		$sortArray = $this->get['sort'];
+		foreach ($sortArray as $sort => $id) {
+			$res = $this->getSysMng()->editRow('vocabularies', (int)$id, [
+				'sort' => (int)$sort
+			]);
+			if (!$res){
+				$error = true;
 			}
 		}
-
 		if ($error){
 			\utils::response('error_sort_update', 'error');
 		} else {

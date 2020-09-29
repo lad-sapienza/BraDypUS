@@ -18,6 +18,7 @@ class home_ctrl extends Controller
         'jquery.dataTables.min.js',
         'dataTables.bootstrap.min.js',
         'select2.full.min.js',
+        'sortable.umd.js',
     ];
     
     private $css_libs = [

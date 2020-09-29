@@ -122,11 +122,10 @@ class file_ctrl extends Controller
 	 */
 	public function sort()
 	{
-		$data = $this->post;
+		$data = $this->get['filegallery'];
 
-		if (is_array($data['filegallery'])) {
-
-			foreach($data['filegallery'] as $sort => $id) {
+		if (is_array($data)) {
+			foreach($data as $sort => $id) {
 				$sql[] = [
 					'UPDATE ' . $this->prefix .'userlinks SET sort = ? WHERE id = ?',
 					[$sort, $id]

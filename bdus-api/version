@@ -1,3 +1,4 @@
+4.0.0-alpha.175[] = "Code cleaning"
 4.0.0-alpha.175[] = "Replaced glyphicon with font-awesome"
 4.0.0-alpha.175[] = "Javascript moved to js file in vocabularies module"
 4.0.0-alpha.175[] = "jquery-sortable replaced by sortable.js"

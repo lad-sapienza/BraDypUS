@@ -91,7 +91,7 @@ class Field
                     foreach ($val as $v) {
                         $html .= "<span class=\"a\" " .
                             " onclick=\"api.showResults('" . $otherTb. "', 'type=obj_encoded', '" . \tr::get('contextual_search_in', [$this->cfg->get("tables.$otherTb.label")]) . "', {obj_encoded: '" . SafeQuery::encode( $otherFld . " = ?", [$v]). "'})\">" .
-                            \utils::format_text($v) .
+                            $this->format_text($v) .
                             '</span>' . (next($val) === false ? ' ' : ';');
                     }
                 }
@@ -99,7 +99,7 @@ class Field
                 else {
                     foreach ($val as $v) {
                         $html .= '<span class="a" onclick="api.record.read(\'' . $otherTb . '\', [\'' . $v . '\'], true)">' .
-                            \utils::format_text($v) .
+                            $this->format_text($v) .
                             '</span>' . (next($val) === false ? ' ' : ';');
                     }
                 }
@@ -116,7 +116,7 @@ class Field
 
                     if ($res[0]['id_from_tb_val']) {
                         $html .= '<span class="a" onclick="api.record.read(\'' . $this->settings['id_from_tb'] . '\', [' . $v . '])">'
-                                . \utils::format_text($res[0]['id_from_tb_val'])
+                                . $this->format_text($res[0]['id_from_tb_val'])
                             . '</span>' . (next($val) === false ? ' ' : ';');
                     }
                 }
@@ -131,10 +131,10 @@ class Field
                                     "OR " . $this->settings['fieldname'] . " LIKE '" . $v . ";%' " .
                                     "OR " . $this->settings['fieldname'] . " = '" . $v . "' "
                                 ). "'})\">" .
-                           \utils::format_text($v) .
+                           $this->format_text($v) .
                             '</span>' . (next($val) === false ? ' ' : ';');
                     } else {
-                        $html .= \utils::format_text($v) . ($v !== end($val) ? '; ' : '');
+                        $html .= $this->format_text($v) . ($v !== end($val) ? '; ' : '');
                     }
                 }
             }
@@ -142,6 +142,34 @@ class Field
 
         return $html . '</div>';
     }
+
+    public function format_text($text, $html = false)
+	{
+		if ($text !== '') {
+			$text = @htmlentities($text, ENT_QUOTES, 'UTF-8');
+        }
+
+        // Linkify
+        $text = preg_replace("/(https?:\/\/)([^ \t\r\n$\)]+)/i", "<a href=\"\\0\" target=\"_blank\">\\0</a>", $text);
+        $text = preg_replace("/([a-z0-9\._-]+)(@[a-z0-9\.-_]+)(\.{1}[a-z]{2,6})/i", "<a href=\"mailto:\\1\\2\\3\">\\1\\2\\3</a>", $text);
+
+		// Add DB links
+		$text = preg_replace_callback(
+			'/@([a-z]+)\.([0-9]+)(\[([^\]]+)\])?/',
+            function($m){
+                $p = PREFIX;
+                if ($m[3] && $m[4]){
+                    return "<span class=\"btn-link\" onclick=\"api.record.read('{$p}{$m[1]}', ['{$m[2]}'], true)\">{$m[4]}</span>";
+                } else {
+                    return "<span class=\"btn-link\" onclick=\"api.record.read('{$p}{$m[1]}', ['{$m[2]}'], true)\">{$m[1]}.{$m[2]}</span>";
+                }
+            },
+			$text);
+
+		$text = nl2br($text);
+
+		return $text;
+	}
 
 
     private function contentEdit()

@@ -87,7 +87,7 @@ class cfg
 		switch($what) {
 
 			case 'main':
-				if (!\utils::write_formatted_json(PROJ_DIR . 'cfg/app_data.json', self::$data['main'])) {
+				if (!self::write_formatted_json(PROJ_DIR . 'cfg/app_data.json', self::$data['main'])) {
 					throw new \Exception('Can not write in ' . PROJ_DIR . 'cfg/app_data.json');
 				}
 				break;
@@ -95,7 +95,7 @@ class cfg
 			case 'table':
 				$arr['tables'] = self::$data['table'];
 
-				if (!\utils::write_formatted_json(PROJ_DIR . 'cfg/tables.json', $arr)) {
+				if (!self::write_formatted_json(PROJ_DIR . 'cfg/tables.json', $arr)) {
 					throw new \Exception('Can not write in ' . PROJ_DIR . 'cfg/tables.json');
 				}
 				break;
@@ -107,12 +107,18 @@ class cfg
 					throw new \Exception('Empty array of data for table ' . $what);
 				}
 
-				if (!\utils::write_formatted_json($file, self::$data['tables'][$what])) {
+				if (!self::write_formatted_json($file, self::$data['tables'][$what])) {
 					throw new \Exception('Can not write in ' . $file);
 				}
 
 				break;
 		}
+	}
+
+	private static function write_formatted_json($file, $obj)
+	{
+		$text = json_encode($obj, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+		return @file_put_contents($file, $text) && @file_exists($file);
 	}
 
 

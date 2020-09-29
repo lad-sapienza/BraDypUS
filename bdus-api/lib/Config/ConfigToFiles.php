@@ -40,8 +40,8 @@ class ConfigToFiles
 
     private static function write_in_file( string $path, array $data ) : void
     {
-        $ret = \file_put_contents(\json_encode($data, \JSON_PRETTY_PRINT|\JSON_UNESCAPED_UNICODE));
-        if (!$ret){
+        $ret = \file_put_contents($path, \json_encode($data, \JSON_PRETTY_PRINT|\JSON_UNESCAPED_UNICODE));
+        if (!$ret || !\file_exists($path)){
             throw new ConfigException("Cannot write configuration file `$path`");
         }
     }

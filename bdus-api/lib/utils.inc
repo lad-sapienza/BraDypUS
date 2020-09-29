@@ -27,51 +27,6 @@ class utils
 		);
 	}
 
-
-	/**
-	 * Converts array or object to json and writes it to file
-	 * @param string $file
-	 * @param mixed $obj
-	 */
-	public static function write_formatted_json($file, $obj)
-	{
-		$text = json_encode($obj, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
-		return self::write_in_file($file, $text);
-	}
-
-	/**
-	 *
-	 * Writes text in file. If file does not exit, it will be created
-	 * @param string $file	complete path to file
-	 * @param string $text	text to write in file
-	 */
-	public static function write_in_file ( $file, $text = false, $gz = false )
-	{
-		try {
-
-			if ( !$text )	$text = '';
-
-			if ( $gz )		$file .= '.gz';
-
-			$f = $gz ? @gzopen($file,'w9') : @fopen($file, 'w');
-			if ( !$f )		throw new Exception("Cannot open $file");
-
-			$write = $gz ? @gzwrite ( $gzh, $text ) : @fwrite ( $f, $text );
-			if ( !$write )	throw new Exception("Cannot write on file $file");
-
-            if ($gz) @gzclose($gzh);
-            else @fclose($f);
-
-			if ( !file_exists($file) ) throw new Exception("File $file still does not exist");
-
-			return true;
-
-		} catch (\Throwable $th) {
-			return false;
-		}
-		
-	}
-
 	/**
 	 *
 	 * Prints out a message, using core.message abstraction layer.
@@ -296,94 +251,6 @@ class utils
 	}
 
 	/**
-	 *
-	 * Decodes text (if decode is true)
-	 * Transforms text in html characters (if html is true)
-	 * Linkifies texts and applies nl2br
-	 * @param string $text		text to format
-	 * @param boolean $html
-	 * @param boolean $decode
-	 */
-	public static function format_text($text, $html = false, $decode = false)
-	{
-		if ($decode) {
-			$text = base64_decode($text);
-		}
-		if (!$html && $text !== '') {
-			$text = @htmlentities($text, ENT_QUOTES, 'UTF-8');
-		}
-		$text = self::linkify($text);
-
-		$text = self::add_db_links($text);
-
-		$text = nl2br($text);
-
-		return $text;
-	}
-
-	/**
-	 * Replaces in text patterns like @{table-name}.{id-value} with direct links to the relative view record page
-	 * @param string $text [description]
-	 * @since 2019-07-12
-	 */
-	private static function add_db_links($text){
-		return preg_replace_callback(
-			'/@([a-z]+)\.([0-9]+)(\[([^\]]+)\])?/',
-	    function($m){
-	      $p = PREFIX;
-	      if ($m[3] && $m[4]){
-	        return "<span class=\"btn-link\" onclick=\"api.record.read('{$p}{$m[1]}', ['{$m[2]}'], true)\">{$m[4]}</span>";
-	      } else {
-	        return "<span class=\"btn-link\" onclick=\"api.record.read('{$p}{$m[1]}', ['{$m[2]}'], true)\">{$m[1]}.{$m[2]}</span>";
-	      }
-	    },
-			$text);
-	}
-
-	/**
-	 *
-	 * Transforms plain-text links to html links
-	 * @param string $text		text to check
-	 * @param boolean $escape	text is escaped?
-	 */
-	public static function linkify($text, $escape = false)
-	{
-		if ($escape) {
-			$text = preg_replace("/(https?:\/\/)([^ \t\r\n$\)]+)/i", "<a href=\\\"\\0\\\" target=\\\"_blank\\\">\\0</a>", $text);
-			$text = preg_replace("/([a-z0-9\._-]+)(@[a-z0-9\.-_]+)(\.{1}[a-z]{2,6})/i", "<a href=\\\"mailto:\\1\\2\\3\\\">\\1\\2\\3</a>", $text);
-		} else {
-			$text = preg_replace("/(https?:\/\/)([^ \t\r\n$\)]+)/i", "<a href=\"\\0\" target=\"_blank\">\\0</a>", $text);
-			$text = preg_replace("/([a-z0-9\._-]+)(@[a-z0-9\.-_]+)(\.{1}[a-z]{2,6})/i", "<a href=\"mailto:\\1\\2\\3\">\\1\\2\\3</a>", $text);
-		}
-		return $text;
-	}
-
-	/**
-	 *
-	 * Returns formatted full path for file
-	 * @param int $file_id		file id
-	 * @param string $file_ext	file extensione
-	 */
-	public function get_file_path($file_id, $file_ext)
-	{
-		return PROJ_DIR . 'files/' . $file_id . '.' . $file_ext;
-	}
-
-	/**
-	 * Returns text, stripslashed and without php tags
-	 * @param string $text
-	 * @return mixed
-	 */
-	public static function clean_text_from_php($text)
-	{
-		$text = stripslashes($text);
-
-		$forbidden = array('<?php', '<?', '?>');
-
-		return str_replace($forbidden, null, $text);
-	}
-
-	/**
 	 * Echoes JSON encoded simple response
 	 * @param string $text text to show up
 	 * @param string $status	success|error(|warning|info)
@@ -433,14 +300,12 @@ class utils
    */
 	public static function recursiveFilter($arr, $callback = false)
 	{
-		foreach ($arr as &$a)
-		{
-			if (is_array($a))
-			{
+		foreach ($arr as &$a) {
+			if (is_array($a)) {
 				$a = self::recursiveFilter($a, $callback);
 			}
 		}
-    return $callback ? array_filter($arr, $callback ) : array_filter($arr);
+    	return $callback ? array_filter($arr, $callback ) : array_filter($arr);
 	}
 
 	

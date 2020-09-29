@@ -33,7 +33,9 @@ class frontpage_editor_ctrl extends Controller
 	{
 		$text = $this->post['text'];
 		$file = $this->getFile();
-		$text = \utils::clean_text_from_php($text);
+
+		$text = stripslashes($text);
+		$text = str_replace(['<?php', '<?', '?>'], null, $text);
 		file_put_contents($file, $text);
 
 	}

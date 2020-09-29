@@ -10,7 +10,52 @@ var vocabularies = {
 			core.open({
 				obj: 'vocabularies_ctrl',
 				method: 'list',
-				title: core.tr('vocabulary_mng')
+				title: core.tr('vocabulary_mng'),
+				loaded: (html) => {
+					
+					html.find('.sortable').each( (index, element)=>{
+						new Sortable(element, {
+							animation: 150,
+							ghostClass: 'active',
+							onEnd: function (evt) {
+								const sortArray = this.toArray();
+								core.runAndRespond('vocabularies_ctrl', 'sort', { sort: sortArray });
+							}
+						});
+					});
+					// Add listener to vocs, to open own items
+					html.find('a.voc').on('click', function(){
+						$(this).parents('li').find('a').toggleClass('active');
+						$(this).next('ul').toggle();
+					});
+
+					// Add listener to item edit button
+					html.find('.edit_def').on('click', function(){
+						var li = $(this).parents('li:eq(0)');
+						vocabularies.edit(li.data('id'), li.data('text'), function(val){
+							li.data('text', val);
+							li.find('.def').text(val);
+						});
+					});
+
+					// Add listener to item delete button
+					html.find('.delete_def').on('click', function(){
+						var li = $(this).parents('li:eq(0)');
+						vocabularies.erase(li.data('id'), function(){
+							if (li.siblings().length === 1 ){
+								li. parent('ul').parent('li').remove();
+							} else {
+								li.remove();
+							}
+						})
+					});
+					// Add listener to add new vocabulary button
+					html.find('.add_voc').on('click', () => {
+						vocabularies.add_new($(this).data('voc'), function(){
+							layout.tabs.reloadActive();
+						});
+					});
+				}
 			});
 		},
 

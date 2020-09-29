@@ -49,12 +49,12 @@ class search_replace_ctrl extends Controller
 				'affected'
 			);
 
-			\utils::response(tr::get('ok_search_replace', [$ret]), 'success', true);
+			$this->response('ok_search_replace', 'success', [$ret]);
 		} catch(\DB\DBException $e) {
-			\utils::response('error_search_replace', 'error');
+			$this->response('error_search_replace', 'error');
 		} catch(\Throwable $e) {
 			$this->log->error($e);
-			\utils::response('error_search_replace', 'error');
+			$this->response('error_search_replace', 'error');
 		}
 	}
 }

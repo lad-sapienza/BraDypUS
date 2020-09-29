@@ -58,6 +58,14 @@ abstract class Controller
 		echo json_encode($data);
 	}
 	
+	public function response(string $text, string $status = 'success', array $text_bindings = null, array $other_args = []): void
+	{
+		$response['status'] = $status;
+		$response['text'] = \tr::get($text, $text_bindings);
+		$other_args ? $response = array_merge($response, $other_args) : '';
+		echo json_encode($response);
+	}
+	
 	
 	public function compileTmpl($module, $template, $data = [])
 	{

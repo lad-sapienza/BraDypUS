@@ -5,6 +5,7 @@
  * @license			See file LICENSE distributed with this code
  * @since			Jan 8, 2013
  */
+use \DB\System\Manage;
 
 class file_ctrl extends Controller
 {
@@ -123,44 +124,25 @@ class file_ctrl extends Controller
 	public function sort()
 	{
 		$data = $this->get['filegallery'];
+		$error = false;
 
 		if (is_array($data)) {
+			$manager = new Manage($this->db, $this->prefix);
 			foreach($data as $sort => $id) {
-				$sql[] = [
-					'UPDATE ' . $this->prefix .'userlinks SET sort = ? WHERE id = ?',
-					[$sort, $id]
-				];
-			}
-
-			$this->db->beginTransaction();
-
-			try {
-				foreach ($sql as $s) {
-					$this->db->query($s[0], $s[1]);
+				$res = $manager->editRow('userlinks', $id, ['sort' => $sort]);
+				if (!$res){
+					$error = true;
 				}
-
-				$this->db->commit();
-
-				$resp = [
-					'status' => 'success', 
-					'text'=> \tr::get('ok_file_sorting_update')
-				];
-			
-			} catch (\DB\DBException $e) {
-				$this->db->rollBack();
-				$resp = [
-					'status' => 'error', 
-					'text'=> \tr::get('error_file_sorting_update')
-				];
 			}
+			if ($error){
+				$this->response('error_file_sorting_update', 'error');
+			} else {
+				$this->response('ok_file_sorting_update', 'success');
+			}
+			
 		} else {
-			$resp = [
-				'status' => 'error', 
-				'text'=> \tr::get('error_file_sorting_update')
-			];
+			$this->response('error_file_sorting_update', 'error');
 		}
-
-		echo json_encode($resp);
 	}
 
 	/**

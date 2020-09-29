@@ -235,38 +235,9 @@ class utils
 	 * @param string $string
 	 * @param string $separator
 	 */
-	public static function csv_explode($string, $delimiter = ',') {
-
-		$string = str_replace($delimiter .' ', $delimiter, $string);
-
-		if ( preg_match('/' . $delimiter . '/i', $string) )
-		{
-			return array_filter(explode($delimiter, $string));
-
-		}
-		else
-		{
-			return array($string);
-		}
-	}
-
-	/**
-	 * Echoes JSON encoded simple response
-	 * @param string $text text to show up
-	 * @param string $status	success|error(|warning|info)
-	 * @param boolean $dont_translate if true text will not be translated
-	 * @param array $other_args some other arguments to return
-	 */
-	public static function response(string $text, $status = false, bool $dont_translate = false, array $other_args = []): void
+	public static function csv_explode(string $string, string $delimiter = ','): array
 	{
-		if (!$status) {
-			$status = 'success';
-		}
-		$response['status'] = $status;
-		$response['text'] = $dont_translate ? $text : \tr::get($text);
-		$other_args ? $response = array_merge($response, $other_args) : '';
-
-		echo json_encode($response);
+		return array_filter(array_map('trim', explode($delimiter, $string)), 'strlen');
 	}
 
   /**

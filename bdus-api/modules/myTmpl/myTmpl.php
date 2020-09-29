@@ -49,7 +49,6 @@ class myTmpl_ctrl extends Controller
 
 		\pref::setTmpl($tb, $context, $tmpl);
 		
-		\utils::response('ok_tmpl_set', 'success');
-		// \utils::response('error_tmpl_set', 'error');
+		$this->response('ok_tmpl_set', 'success');
 	}
 }

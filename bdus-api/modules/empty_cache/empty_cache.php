@@ -12,9 +12,9 @@ class empty_cache_ctrl extends Controller
 	{
 		try {
 			\utils::emptyDir(MAIN_DIR . 'cache', false);
-			\utils::response('ok_cache_emptied', 'success');
+			$this->response('ok_cache_emptied', 'success');
 		} catch (\Exception $e) {
-			\utils::response('error_cache_not_emptied', 'error');
+			$this->response('error_cache_not_emptied', 'error');
 		}
 	}
 }

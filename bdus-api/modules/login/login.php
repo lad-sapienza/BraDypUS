@@ -53,27 +53,27 @@ class login_ctrl extends Controller
 		
 		// Check required fields
 		if (!$post['app'] || !$post['name'] || !$post['email'] || !$post['password'] || !$post['password2']) {
-			\utils::response('all_fields_required', 'error');
+			$this->esponse('all_fields_required', 'error');
 			return false;
 		}
 
 		// Check matching passwords
 		if ($post['password'] !== $post['password2']) {
-			\utils::response('pass_empty_or_not_match', 'error');
+			$this->response('pass_empty_or_not_match', 'error');
 			return false;
 		}
 
 		// Check valid email
 		if (filter_var($post['email'], FILTER_VALIDATE_EMAIL)) {
-			\utils::response( \tr::get('email_not_valid', [$post['email']]), 'error', true);
+			$this->response( 'email_not_valid', 'error', [$post['email']]);
 		}
 		
 		if (\utils::isDuplicateEmail($this->db, $this->prefix, $post['email'])) {
-			\utils::response( \tr::get('email_present', [$post['email']]), 'error', true);
-        }
+			$this->response('email_present', 'error', [$post['email']]);
+		}
+		
 		try {
 
-			
 			$sys_manager = new Manage($this->db, $this->prefix);
 			$res = $sys_manager->addRow('users', [
 				'name', 
@@ -105,17 +105,14 @@ class login_ctrl extends Controller
 
 					@mail($to, $subject, $message, $headers);
 				}
-				\utils::response( 
-					\tr::get('ok_user_add', [ $post['email'] ]), 
-					'success'
-				);
+				$this->response( 'ok_user_add', 'success', [ $post['email'] ]);
 				return true;
 			} else {
-				\utils::response('error_user_add', 'error');
+				$this->response('error_user_add', 'error');
 				return false;
 			}
 		} catch(\Throwable $e) {
-			\utils::response($e->getMessage(), 'error');
+			$this->response($e->getMessage(), 'error');
 			return false;
 		}
 		
@@ -137,7 +134,7 @@ class login_ctrl extends Controller
 	public function autolog()
 	{
 		if (\cookieAuth::get()) {
-			\utils::response('Authenticated');
+			$this->response('Authenticated', 'success');
 			return;
 		}
 
@@ -154,10 +151,10 @@ class login_ctrl extends Controller
 				$this->login(null, null, null, $auth_login_as_user);
 				$this->log->info("User {$_SESSION['user']['id']} logged in");
 
-				\utils::response('Authenticated');
+				$this->response('Authenticated', 'success');
 			}
 		} catch(\Throwable $e) {
-			\utils::response($e->getMessage(), 'error');
+			$this->response($e->getMessage(), 'error');
 		}
 	}
 
@@ -166,14 +163,14 @@ class login_ctrl extends Controller
 		try {
 			$this->login($this->post['email'], $this->post['password'], $this->post['remember']);
 			$this->log->info("User {$_SESSION['user']['id']} logged in");
-			\utils::response('Go ahead', 'success');
+			$this->response('Go ahead', 'success');
 			$obj['status'] = 'success';
 		} catch (\Exception $e) {
 			$this->log->error($e);
-			\utils::response($e->getMessage(), 'error');
+			$this->response($e->getMessage(), 'error');
 		} catch (\Throwable $e) {
 			$this->log->error($e);
-			\utils::response(\tr::get('generic_error'), 'error');
+			$this->response('generic_error', 'error');
 		}
 	}
 
@@ -190,11 +187,11 @@ class login_ctrl extends Controller
 				foreach ($availables_DB as $db) {
 					$appl = json_decode(file_get_contents(MAIN_DIR . "projects/$db/cfg/app_data.json"), true);
 
-					$data[] = array(
-							'db' => $db,
-							'definition' => $appl['definition'],
-							'name' => strtoupper($appl['name'])
-					);
+					$data[] = [
+						'db' => $db,
+						'definition' => $appl['definition'],
+						'name' => strtoupper($appl['name'])
+					];
 				}
 			}
 
@@ -220,9 +217,9 @@ class login_ctrl extends Controller
 		$res = $sys_manager->editRow('users', $id, ['password' => $password]);
 
 		if ( $res ) {
-			\utils::response('ok_password_update');
+			$this->response('ok_password_update', 'success');
 		} else {
-			\utils::response('error_password_update', true);
+			$this->response('error_password_update', 'error');
 		}
 
 	}
@@ -246,12 +243,12 @@ class login_ctrl extends Controller
 			$resp = mail($to, $subject, $message, $headers);
 
 			if ($resp) {
-				\utils::response('anything');
+				$this->response('anything', 'success');
 			} else {
-				\utils::response('error_sending_email', true);
+				$this->response('error_sending_email', 'error');
 			}
 		} else {
-			\utils::response('email_not_found', true);
+			$this->response('email_not_found', 'error');
 		}
 	}
 

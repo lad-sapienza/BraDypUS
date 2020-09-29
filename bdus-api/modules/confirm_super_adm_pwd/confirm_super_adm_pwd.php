@@ -6,7 +6,7 @@ class confirm_super_adm_pwd_ctrl extends Controller
     public function check_pwd()
     {
         if (!\utils::canUser('super_admin')){
-            \utils::response('not_a_super_admin_user', 'error');
+            $this->response('not_a_super_admin_user', 'error');
             return;
         }
         // Logged used is super admin. Let's check the password
@@ -22,10 +22,10 @@ class confirm_super_adm_pwd_ctrl extends Controller
         
 
         if(!$me || !is_array($me)){
-            \utils::response('invalid_pasword', 'error');
+            $this->response('invalid_pasword', 'error');
             return;
         } else {
-            \utils::response('valid_pasword', 'success');
+            $this->response('valid_pasword', 'success');
             return;
         }
     }

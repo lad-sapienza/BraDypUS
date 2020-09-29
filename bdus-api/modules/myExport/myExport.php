@@ -56,15 +56,15 @@ class myExport_ctrl extends Controller
 			$exp = new Export($this->db, $tb, $where, $values);
 
 			if ($exp->saveToFile($format, $file)) {
-				echo \utils::response('export_success', 'success');
+				$this->response('export_success', 'success');
 			} else {
-				echo \utils::response('export_error', 'error');
+				$this->response('export_error', 'error');
 			}
 			return;
 		
 		} catch(\Throwable $e) {
 			$this->log->error($e);
-			echo \utils::response('export_error', 'error');
+			$this->response('export_error', 'error');
 		}
 	}
 	
@@ -82,13 +82,9 @@ class myExport_ctrl extends Controller
 			if (!$a){
 				throw new \Exception(\tr::get('error_erasing_file', [$file]));
 			}
-			$resp['text'] = \tr::get('success_erasing_file', [$file]);
-			$resp['status'] = 'success';
+			$this->response('success_erasing_file', 'success', [$file]);
 		} catch(\Exception $e) {
-			$resp['text'] = $e->getMessage();
-			$resp['status'] = 'error';
+			$this->response($e->getMessage(), 'error');
 		}
-		
-		echo json_encode($resp);
 	}
 }

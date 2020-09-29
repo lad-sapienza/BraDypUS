@@ -106,13 +106,13 @@ class chart_ctrl extends Controller
 			]);
 
 			if ( $res ) {
-				\utils::response('ok_save_chart');
+				$this->response('ok_save_chart');
 			} else {
 				throw new \Exception('Save chart query returned false');
 			}
 		} catch(\Throwable $e) {
 			$this->log->error($e);
-			\utils::response('error_save_chart', 'error');
+			$this->response('error_save_chart', 'error');
 		}
 	}
 
@@ -128,9 +128,9 @@ class chart_ctrl extends Controller
 		$res = $sys_manager->deleteRow('charts', $id);
 
 		if ( $res ) {
-			\utils::response('ok_chart_erase', 'success');
+			$this->response('ok_chart_erase', 'success');
 		} else {
-			\utils::response('error_chart_erase', 'error');
+			$this->response('error_chart_erase', 'error');
 		}
 	}
 
@@ -203,13 +203,13 @@ class chart_ctrl extends Controller
 			] );
 			
 			if ( $res ) {
-				\utils::response('ok_update_chart');
+				$this->response('ok_update_chart');
 			} else {
 				throw new \Exception('Update query returned false');
 			}
 		} catch (\Throwable $e) {
 			$this->log->error($e);
-			\utils::response('error_update_chart', 'error');
+			$this->response('error_update_chart', 'error');
 		}
 	}
 

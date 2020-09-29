@@ -150,11 +150,11 @@ class config_ctrl extends Controller
 
 			\cfg::setTb($post);
 
-			\utils::response('ok_cfg_data_updated');
+			$this->response('ok_cfg_data_updated');
 
 		} catch(\Throwable $e) {
 			$this->log->error($e);
-			\utils::response('error_cfg_data_updated', 'error');
+			$this->response('error_cfg_data_updated', 'error');
 		}
     }
 
@@ -213,13 +213,13 @@ class config_ctrl extends Controller
             $alter = new Alter($this->db);
             $alter->createMinimalTable($new_tb_name);
 
-			\utils::response('ok_cfg_data_updated', 'success', false, [
+			$this->response('ok_cfg_data_updated', 'success', null, [
                 'tb' => $new_tb_name
             ]);
 
 		} catch(\Throwable $e) {
 			$this->log->error($e);
-			\utils::response('error_cfg_data_updated', 'error');
+			$this->response('error_cfg_data_updated', 'error');
 		}
     }
     
@@ -241,11 +241,11 @@ class config_ctrl extends Controller
             
 			\cfg::setFld($tb, $fld, $post);
 
-			\utils::response('ok_cfg_data_updated');
+			$this->response('ok_cfg_data_updated', 'success');
         
         } catch(\Throwable $e) {
             $this->log->error($e);
-			\utils::response('error_cfg_data_updated', 'error');
+			$this->response('error_cfg_data_updated', 'error');
 		}
     }
 
@@ -264,7 +264,7 @@ class config_ctrl extends Controller
             }
             $available_flds = array_values($this->cfg->get("tables.$tb.fields.*.name"));
             if (in_array($fld, $available_flds)){
-                \utils::response(\tr::get('fld_already_available', [$fld]), 'error', true);
+                $this->response('fld_already_available', 'error', [$fld]);
                 return;
             }
             
@@ -273,11 +273,11 @@ class config_ctrl extends Controller
             $alter = new Alter($this->db);
             $alter->addFld($tb, $fld, $post['db_type']);
 
-			\utils::response('ok_cfg_data_updated', 'success', false, ["fld" => $fld]);
+			$this->response('ok_cfg_data_updated', 'success', null, ["fld" => $fld]);
         
         } catch(\Throwable $e) {
             $this->log->error($e);
-			\utils::response('error_cfg_data_updated', 'error');
+			$this->response('error_cfg_data_updated', 'error');
 		}
     }
     
@@ -288,11 +288,11 @@ class config_ctrl extends Controller
 		try {
 
 			\cfg::setMain($data);
-            \utils::response('ok_cfg_data_updated');
+            $this->response('ok_cfg_data_updated', 'success');
             
 		} catch (\Throwable $e) {
 
-			\utils::response('error_cfg_data_updated', 'error');
+			$this->response('error_cfg_data_updated', 'error');
 		}
     }
 
@@ -305,9 +305,9 @@ class config_ctrl extends Controller
             // Drop table from database
             $alter = new Alter($this->db);
             $alter->dropTable($tb);
-            \utils::response('ok_cfg_tb_delete', 'success');
+            $this->response('ok_cfg_tb_delete', 'success');
         } catch (\Throwable $th) {
-            \utils::response('error_cfg_tb_delete', 'error');
+            $this->response('error_cfg_tb_delete', 'error');
         }
     }
 
@@ -323,9 +323,9 @@ class config_ctrl extends Controller
             $alter = new Alter($this->db);
             $alter->dropFld($tb, $fld);
 
-            \utils::response('ok_cfg_column_delete', 'success');
+            $this->response('ok_cfg_column_delete', 'success');
         } catch (\Throwable $th) {
-            \utils::response('error_cfg_clumn_delete', 'error');
+            $this->response('error_cfg_clumn_delete', 'error');
         }
     }
     
@@ -344,10 +344,10 @@ class config_ctrl extends Controller
             $alter = new Alter($this->db);
             $alter->renameTable($old_name, $new_name);
 
-            \utils::response('ok_renaming_table', 'success');
+            $this->response('ok_renaming_table', 'success');
         } catch (\Throwable $e) {
             $this->log->error($e);
-            \utils::response('error_renaming_table', 'error');
+            $this->response('error_renaming_table', 'error');
         }
     }
 
@@ -368,10 +368,10 @@ class config_ctrl extends Controller
             $alter = new Alter($this->db);
             $alter->renameFld($tb, $old_name, $new_name);
 
-            \utils::response('ok_renaming_column', 'success');
+            $this->response('ok_renaming_column', 'success');
         } catch (\Throwable $e) {
             $this->log->error($e);
-            \utils::response('error_renaming_column', 'error');
+            $this->response('error_renaming_column', 'error');
         }
     }
 
@@ -409,10 +409,10 @@ class config_ctrl extends Controller
         if ($action === 'create' && !$col) {
             try {
                 $sys_manage->createTable($tb);
-                \utils::response('ok_creating_table', 'success');
+                $this->response('ok_creating_table', 'success');
             } catch (\Throwable $th) {
                 $this->log->error($th);
-                \utils::response('error_creating_table', 'error');
+                $this->response('error_creating_table', 'error');
             }
             return;
         
@@ -430,32 +430,32 @@ class config_ctrl extends Controller
             }
             if ($type){
                 $alter->addFld($tb, $col, $type);
-                \utils::response('ok_adding_column', 'success');
+                $this->response('ok_adding_column', 'success');
             } else {
-                \utils::response(\tr::get('col_type_not_found', [$tb, $col]), 'error');
+                $this->response('col_type_not_found', 'error', [$tb, $col]);
             }
             return;
         
         // Drop table: yes delete, no col
         } else if ($action === 'delete' && !$col) {
             $alter->dropTable($tb);
-            \utils::response('ok_deleting_table', 'success');
+            $this->response('ok_deleting_table', 'success');
             return;
 
         // Drop column: yes delete, yes column
         } else if ($action === 'delete' && $col) {
             $alter->dropFld($tb, $col);
-            \utils::response('ok_deleting_column', 'success');
+            $this->response('ok_deleting_column', 'success');
             return;
 
         }
-        \utils::response(\tr::get('invalid_action', [$action]), 'error', true); // TODO:translate
+        $this->response('invalid_action', 'error', [$action]);
 
     }
 
     public function getFldList()
     {
         $tb = $this->get['tb'];
-        \utils::response('ok', 'success', true, ["fields" => $this->cfg->get("tables.$tb.fields.*.label")]);
+        $this->response('ok', 'success', true, ["fields" => $this->cfg->get("tables.$tb.fields.*.label")]);
     }
 }

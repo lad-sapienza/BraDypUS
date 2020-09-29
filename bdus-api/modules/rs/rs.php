@@ -42,9 +42,9 @@ class rs_ctrl extends Controller
         $record = new Record('no importance', false, $this->db, $this->cfg);
 
         if ($record->deleteRS($id)) {
-            \utils::response('ok_relation_erased');
+            $this->response('ok_relation_erased', 'success');
         } else {
-            \utils::response('error_relation_erased');
+            $this->response('error_relation_erased', 'error');
         }
     }
 
@@ -101,9 +101,9 @@ class rs_ctrl extends Controller
         $id = $record->addRS($first, $relation, $second);
 
         if (!$id) {
-            \utils::response('relation_already_exist', 'error');
+            $this->response('relation_already_exist', 'error');
         } else {
-            \utils::response('ok_relation_add', 'success', false, [ 'id' => $id ]);
+            $this->response('ok_relation_add', 'success', null, [ 'id' => $id ]);
         }
     }
 }

@@ -42,18 +42,14 @@ class translate_ctrl extends Controller
 		$lang = $this->get['lang'];
 		
 		if ( file_exists(LOCALE_DIR . $lang . '.json') ){
-			\utils::response(
-				\tr::get('error_lang_exists', [$lang]),
-				'error',
-				true
-			);
+			$this->response('error_lang_exists', 'error', [$lang]);
 			return;
 		}
     
 		if ($this->arrayToFile($lang, [])) {
-			echo \utils::response('ok_lang_create');
+			$this->response('ok_lang_create', 'success');
 		} else {
-			echo \utils::response('error_lang_create', 'error');
+			$this->response('error_lang_create', 'error');
 		}
 	}
 	
@@ -63,9 +59,9 @@ class translate_ctrl extends Controller
 		$data = $this->post;
 		
 		if($this->arrayToFile($lang, $data)) {
-			\utils::response('ok_language_update');
+			$this->response('ok_language_update', 'success');
 		} else {
-			\utils::response('error_language_update', 'error');
+			$this->response('error_language_update', 'error');
 		}
 		
 	}

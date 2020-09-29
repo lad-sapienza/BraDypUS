@@ -29,14 +29,14 @@ class geoface_ctrl extends Controller
 			$new_id = $record->addGeodata($geometry);
 
 			if ($new_id) {
-				\utils::response('ok_insert_geodata', false, false, array('id'=>$new_id));
+				$this->response('ok_insert_geodata', 'success', null, [ 'id' => $new_id ] );
 			} else {
 				throw new \Exception('Insert geodata query returned false');
 			}
 
 		} catch (\Throwable $e) {
 			$this->log->error($e);
-			\utils::response('error_insert_geodata', 'error');
+			$this->response('error_insert_geodata', 'error');
 		}
 
 	}
@@ -65,14 +65,14 @@ class geoface_ctrl extends Controller
 			}
 
 			if (!$error) {
-				\utils::response('ok_delete_geodata');
+				$this->response('ok_delete_geodata', 'success');
 			} else {
 				throw new \Exception('Delete geodata query returned false');
 			}
 
 		} catch (\Throwable $e) {
 			$this->log->error($e);
-			\utils::response('error_delete_geodata', 'error');
+			$this->response('error_delete_geodata', 'error');
 		}
 	}
 
@@ -99,14 +99,14 @@ class geoface_ctrl extends Controller
 			}
 
 			if (!$error) {
-				\utils::response('ok_update_geometry');
+				$this->response('ok_update_geometry', 'success');
 			} else {
 				throw new \Exception('Update geometry query returned false');
 			}
 
 		} catch (\Throwable $e) {
 			$this->log->error($e);
-			\utils::response('error_update_geometry', 'error');
+			$this->response('error_update_geometry', 'error');
 		}
 	}
 
@@ -158,7 +158,7 @@ class geoface_ctrl extends Controller
 				$response['data'] = '';
 
 			} else {
-				\utils::response('no_geodata_available', 'error');
+				$this->response('no_geodata_available', 'error');
 				return;
 			}
 
@@ -191,7 +191,7 @@ class geoface_ctrl extends Controller
 
 		} catch (\Throwable $e) {
 			$this->log->error($e);
-			\utils::response('error_getting_geodata', 'error');
+			$this->response('error_getting_geodata', 'error');
 		}
 	}
 

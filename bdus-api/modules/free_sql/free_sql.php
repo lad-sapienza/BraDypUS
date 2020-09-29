@@ -59,18 +59,11 @@ class free_sql_ctrl extends Controller
 			$ret = $this->db->exec($sql);
 			$this->db->commit();
 			
-			\utils::response(\tr::get('ok_free_sql_run_affected', [$ret ?: 0], 'success', true));
+			$this->response('ok_free_sql_run_affected', 'success', [$ret ?: 0]);
 		} catch (\DB\DBException $e) {
 			$this->log->error($e);
 			$this->db->rollBack();
-			\utils::response(
-				\tr::get(
-					'error_free_sql_run_msg',
-					[$e->getMessage()]
-				), 
-				'error', 
-				true
-			);
+			$this->response('error_free_sql_run_msg', 'error', [$e->getMessage()]);
 		}
 	}
 }

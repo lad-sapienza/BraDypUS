@@ -1,3 +1,4 @@
+4.0.0-alpha.175[] = "Added method Controller::response replacing utils::response"
 4.0.0-alpha.175[] = "Record\Read parameters follow little endian order"
 4.0.0-alpha.175[] = "Code cleaning"
 4.0.0-alpha.175[] = "Replaced glyphicon with font-awesome"

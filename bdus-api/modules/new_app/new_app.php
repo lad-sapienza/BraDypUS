@@ -42,11 +42,11 @@ class new_app_ctrl extends Controller
             $createApp->createAll();
             $log = $createApp->getLog();
 
-            \utils::response( 'ok_app_created', 'success', false, ["log" => $log] );
+            $this->response( 'ok_app_created', 'success', null, ["log" => $log] );
 
 
         } catch (\Throwable $e) {
-            \utils::response( \tr::get('error_app_not_created', [ $e->getMessage() ]), 'error', true );
+            $this->response('error_app_not_created', 'error', [ $e->getMessage() ]);
             $this->log->error($e);
         }
     }

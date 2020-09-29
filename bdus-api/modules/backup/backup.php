@@ -66,20 +66,17 @@ class backup_ctrl extends Controller
 			$file = $this->get['file'];
 			$f_info = $this->getInfoFromFileName($file);
 			if ($f_info['engine'] !== $this->db->getEngine()){
-				\utils::response(
-					tr::get("wrong_restore_engine", [ $f_info['engine'], $this->db->getEngine() ] ) , 
-					'error'
-				);
+				$this->response( "wrong_restore_engine", 'error', [ $f_info['engine'], $this->db->getEngine() ] );
 				return;
 			}
 
 			$restore = new bigRestore( $this->db, ($this->db->getEngine() === 'sqlite') );
 			$restore->runImport(PROJ_DIR . 'backups/' . $file);
 
-			\utils::response("ok_backup_restored", 'success');
+			$this->response("ok_backup_restored", 'success');
 		} catch (\Throwable $th) {
 			$this->log->error($th);
-			\utils::response("error_backup_not_restored", 'error');
+			$this->response("error_backup_not_restored", 'error');
 		}
 		
 	}
@@ -130,11 +127,11 @@ class backup_ctrl extends Controller
 			$bup->useCompressor(new GzipCompressor())
 				->dumpToFile($file);
 			
-			\utils::response('ok_backup', 'success');
+			$this->response('ok_backup', 'success');
 
 		} catch(\Throwable $e) {
 			$this->log->error($e);
-			\utils::response('error_backup', 'error');
+			$this->response('error_backup', 'error');
 		}
 	}
 

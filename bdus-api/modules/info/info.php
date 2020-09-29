@@ -23,40 +23,37 @@ class info_ctrl extends Controller
         
 		$ipRegEx="[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}";
 		
-		if (preg_match("/^win/i", PHP_OS ))
-		{
-      //windows systems
+		if (preg_match("/^win/i", PHP_OS )) {
+      	//windows systems
 			$cmd = "ipconfig/all";
 			exec($cmd, $msg);
 			$msg = implode("\n", $msg);
 			preg_match("/(.+)ipv4 address[\. ]+ : ({$ipRegEx})\(Preferred\)/i", $msg, $ip);
-      if (empty($ip))
-      {
-        preg_match("/(.+)indirizzo ip[\. ]+ : ({$ipRegEx})/i", $msg, $ip);
-      }
+
+			if (empty($ip)) {
+				preg_match("/(.+)indirizzo ip[\. ]+ : ({$ipRegEx})/i", $msg, $ip);
+			}
+
 			$my_ip = $ip[2];
-		}
-		else if ( preg_match ( "/linux/i", PHP_OS ) )
-		{
+
+		} else if ( preg_match ( "/linux/i", PHP_OS ) ) {
 			//linux system
 			$cmd = "/sbin/ifconfig";
 			exec($cmd, $msg);
 			$msg=implode("\n", $msg);
 			preg_match("/inet addr:({$ipRegEx})/i", $msg, $ip);
 			$my_ip = $ip[1];
-		}
-		else if ( strtolower( PHP_OS) == 'darwin' )
-		{
+
+		} else if ( strtolower( PHP_OS) == 'darwin' ) {
+
 			//http://blogostuff.blogspot.com/2005/08/fun-with-ifconfig-on-mac-os-x.html
 			$cmd = 'ifconfig | grep "inet "';
 			exec($cmd, $msg);
 
 			$tmp_msg = $msg;
 			
-			foreach ( $tmp_msg as &$line)
-			{
-				if (preg_match('/127\.0\.0\.1/', $line))
-				{
+			foreach ( $tmp_msg as &$line) {
+				if (preg_match('/127\.0\.0\.1/', $line)) {
 					$line = false;
 				}
 			}
@@ -64,20 +61,15 @@ class info_ctrl extends Controller
 			preg_match("/inet ({$ipRegEx})/i", implode($tmp_msg), $ip);
 		
 			$my_ip = $ip[1];
-		}
-		else
-		{
-			\utils::response(\tr::get('cannot_get_ip_for_system', [PHP_OS]), 'error', true);
+		} else {
+			$this->response('cannot_get_ip_for_system', 'error', [PHP_OS]);
 		}
 		
-		if ($my_ip)
-		{
-			$r['status'] = 'success';
-			$r['text'] = $my_ip;
-			$r['more'] = $msg;
-			$r['cmd'] = $cmd;
-			
-			echo json_encode($r);
+		if ($my_ip) {
+			$this->response($my_ip, 'success', null, [
+				'more' => $msg,
+				'cmd' => $cmd,
+			]);
 		}
 	}
 	

@@ -48,19 +48,19 @@ class userlinks_ctrl extends Controller
 			}
 
 			if (!$no) {
-				\utils::response('all_links_saved');
+				$this->response('all_links_saved','success');
 			} else if ($no && $ok) {
 				error_log(cont($ok) . ' links were saved, ' . count($no) . ' links were not!');
-				\utils::response('some_links_saved', 'error');
+				$this->response('some_links_saved', 'error');
 			} else {
-				\utils::response('no_link_saved', 'error');
+				$this->response('no_link_saved', 'error');
 			}
 		} catch(\DB\DBException $e) {
 			// No log, already logged
-			\utils::response('no_link_saved', 'error');
+			$this->response('no_link_saved', 'error');
 		} catch(\Throwable $e) {
 			$this->log->error($e);
-			\utils::response('no_link_saved', 'error');
+			$this->response('no_link_saved', 'error');
 		}
 	}
 
@@ -70,9 +70,9 @@ class userlinks_ctrl extends Controller
 		$record = new Record('no importance', false, $this->db, $this->cfg);
 
 		if ($record->deleteUserLink($id)) {
-			\utils::response('ok_userlink_erased');
+			$this->response('ok_userlink_erased', 'success');
 		} else {
-			\utils::response('error_userlink_erased');
+			$this->response('error_userlink_erased', 'success');
 		}
 	}
 

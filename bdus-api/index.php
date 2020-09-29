@@ -30,7 +30,11 @@ try {
 
 } catch (\Throwable $e) {
 
-	\utils::response('generic_error', 'error');
+	$ret = [
+		"text" => tr::get('generic_error'), 
+		"status" => 'error'
+	];
+	echo json_encode($ret, JSON_UNESCAPED_UNICODE);
 
 	if (DEBUG_ON) {
 		echo "<strong>" . $e->getMessage() . "</strong>";

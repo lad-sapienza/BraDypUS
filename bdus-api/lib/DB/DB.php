@@ -115,7 +115,7 @@ class DB implements DBInterface
 		}
 	}
 
-	public function backupBeforeEdit (string $table, int $id, string $query, array $values = []): void
+	public function backupBeforeEdit ( string $table, int $id, string $query, array $values = []): void
 	{
 		try {
 			// Get record from database

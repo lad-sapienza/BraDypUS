@@ -2,6 +2,9 @@
 
 namespace Record;
 
+use \Record\Read;
+use \Record\Persist;
+
 class Edit
 {
     /**
@@ -26,22 +29,14 @@ class Edit
      * @param string $tb        Table name
      * @param int|false $id     Record id
      */
-    public function __construct ($app, $tb, $id = false)
+    public function __construct (Read $record)
     {
-        $this->model = [
-            "metadata" => [
-                "app"   => $app,
-                "tb_id" => $tb,
-                "rec_id" => $id,
-            ]
-        ];
+        $this->model = $record->fetFull();
+    }
 
-        $this->model["core"]        = $id ? Read::getCore($tb, $id) :               [];
-        $this->model["plugins"]     = $id ? Read::getPlugin($app, $tb, $id) :      [];
-        $this->model["manualLinks"] = $id ? Read::getManualLinks($app, $tb, $id) :  [];
-        $this->model["files"]       = $id ? Read::getFiles($app, $tb, $id) :        [];
-        $this->model["geodata"]     = $id ? Read::getGeodata($app, $tb, $id) :      [];
-        $this->model["rs"]          = $id ? Read::getRs($app, $tb, $id) :           [];
+    public function persist(string $prefix)
+    {
+        Persist::all($this, $prefix);
     }
 
     private function addLog($msg)

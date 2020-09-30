@@ -1,3 +1,4 @@
+4.0.0-alpha.176[] = "Updated Record\Edit and Record\Persist and added Record\Edit::persist method"
 4.0.0-alpha.176[] = "New logo"
 4.0.0-alpha.175[] = "Added method Controller::response replacing utils::response"
 4.0.0-alpha.175[] = "Record\Read parameters follow little endian order"

@@ -6,7 +6,10 @@ TODO
 
 [] replace current VK with https://virtual-keyboard.js.org/
 
-[] Record\Edit uses STATIC! Read::
+[ ] Test Record\Edit
+[ ] Test Record\Persist
+
+[x] Record\Edit uses STATIC! Read::
 
 [] Validate must check also for backup executables!
 

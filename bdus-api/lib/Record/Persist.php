@@ -8,16 +8,17 @@ class Persist
     private $id;
     private $model = [];
 
-    public function __construct (Edit $edit){
-
-        $this->model= $edit->getModel();
-        $this->tb   = $this->model['metadata']['tb_id'];
-        $this->id   = $this->model['metadata']['rec_id'];
+    public function __construct (Edit $edit, string $prefix)
+    {
+        $this->model    = $edit->getModel();
+        $this->tb       = $this->model['metadata']['tb_id'];
+        $this->id       = $this->model['metadata']['rec_id'];
+        $this->prefix   = $prefix;
     }
 
-    public static function all(Edit $edit)
+    public static function all(Edit $edit, string $prefix)
     {
-        $this_class = new self($edit);
+        $this_class = new self($edit, $prefix);
         $this_class->Core();
         $this_class->Plugin();
         $this_class->ManualLinks();
@@ -62,7 +63,7 @@ class Persist
                  isset($l['_tb_id']) &&
                  isset($l['_ref_id'])
             ){
-                $sql = "INSERT INTO " . PREFIX . "userlinks "
+                $sql = "INSERT INTO {$this->prefix}userlinks "
                     . "(tb_one, id_one, tb_two, id_two, sort) "
                     . "VALUES (?, ?, ?, ?, ?)";
                 $values = [
@@ -75,14 +76,14 @@ class Persist
 
             // UPDATE sort
             } else if ( isset($l['key']) && isset($l['_sort']) ) {
-                $sql = "UPDATE " . PREFIX . "userlinks SET sort = ? WHERE id = ?";
+                $sql = "UPDATE {$this->prefix}userlinks SET sort = ? WHERE id = ?";
                 $values = [
                     $l['_sort'], $l['key']
                 ];
 
             // DELETE
             } else if ( isset($l['key']) && isset($l['_deleted'])){
-                $sql = "DELETE FROM " . PREFIX . "userlinks WHERE id = ?";
+                $sql = "DELETE FROM {$this->prefix}userlinks WHERE id = ?";
                 $values = [ $l['key'] ];
             }
 
@@ -112,7 +113,7 @@ class Persist
                     $gd['_geometry']
                 ];
 
-                $sql = "INSERT INTO " . PREFIX . "geodata "
+                $sql = "INSERT INTO {$this->prefix}geodata "
                     . "(" . implode(", ", $fields) . ") "
                     . "VALUES (". implode(',', array_fill(0, count($values), '?')) .")";
                 
@@ -123,13 +124,13 @@ class Persist
                 $values = [];
                 array_push($fields, "geometry = ?");
                 array_push($values, $gd['_geometry']);
-                $sql = "UPDATE " . PREFIX . "geodata SET " . implode(", ", $fields). " WHERE id = ?";
+                $sql = "UPDATE {$this->prefix}geodata SET " . implode(", ", $fields). " WHERE id = ?";
                 array_push($values, $gd['id']);
                 
 
             // DELETE
             } else if ( isset($gd['id']) && isset($gd['id']['_deleted'])){
-                $sql = "DELETE FROM " . PREFIX . "geodata WHERE id = ?";
+                $sql = "DELETE FROM {$this->prefix}geodata WHERE id = ?";
                 $values = [ $gd['id'] ];
             }
 
@@ -163,7 +164,7 @@ class Persist
                     $rs['_relation']
                 ];
 
-                $sql = "INSERT INTO " . PREFIX . "rs "
+                $sql = "INSERT INTO {$this->prefix}rs "
                     . "(" . implode(", ", $fields) . ") "
                     . "VALUES (". implode(',', array_fill(0, count($values), '?')) .")";
                 
@@ -187,13 +188,13 @@ class Persist
                     $rs['_second'],
                     $rs['_relation']
                 ];
-                $sql = "UPDATE " . PREFIX . "rs SET " . implode(", ", $fields). " WHERE id = ?";
+                $sql = "UPDATE {$this->prefix}rs SET " . implode(", ", $fields). " WHERE id = ?";
                 array_push($values, $rs['id']);
                 
 
             // DELETE
             } else if ( isset($rs['id']) && isset($rs['id']['_deleted'])){
-                $sql = "DELETE FROM " . PREFIX . "rs WHERE id = ?";
+                $sql = "DELETE FROM {$this->prefix}rs WHERE id = ?";
                 $values = [ $rs['id'] ];
             }
 
@@ -348,21 +349,21 @@ class Persist
         // Delete manual links
         foreach( $this->model['manualLinks'] as $l ){
             $this->runInDb(
-                "DELETE FROM " . PREFIX . "userlinks WHERE id = ?",
+                "DELETE FROM {$this->prefix}userlinks WHERE id = ?",
                 [ $l['key'] ]
             );
         }
 
         // Delete geodata
         $this->runInDb(
-            "DELETE FROM " . PREFIX . "geodata WHERE table_link = ? AND id_link = ?",
+            "DELETE FROM {$this->prefix}geodata WHERE table_link = ? AND id_link = ?",
             [ $this->tb, $this->id ]
         );
 
         // DELETE RS
         foreach( $this->model['rs'] as $rs ){
             $this->runInDb(
-                "DELETE FROM " . PREFIX . "rs WHERE id = ?",
+                "DELETE FROM {$this->prefix}rs WHERE id = ?",
                 [ $rs['id'] ]
             );
         }
@@ -370,18 +371,15 @@ class Persist
         // Delete and remove files
         foreach( $this->model['files'] as $file ){
             $this->runInDb(
-                "DELETE FROM " . PREFIX . "files WHERE id = ?",
+                "DELETE FROM {$this->prefix}files WHERE id = ?",
                 [ $file['id'] ]
             );
-            // TODO
-            echo "@unlink(". PROJ_DIR . "files/{$file['id']}.{$file['ext']})";
+            @unlink(PROJ_DIR . "files/{$file['id']}.{$file['ext']}");
         }
         $this->runInDb(
-            "DELETE FROM " . PREFIX . "paths__userlinks WHERE "
+            "DELETE FROM {$this->prefix}userlinks WHERE "
                 . "(tb_one = ? AND id_one = ?) OR (tb_two = ? AND id_two = ?)",
             [ $this->tb, $this->id, $this->tb, $this->id ]
         );
-        
-
     }
 }

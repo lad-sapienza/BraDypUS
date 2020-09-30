@@ -22,11 +22,12 @@ class Read
      */
     public function __construct(int $id, bool $is_id_fld = false, string $tb, DBInterface $db, Config $cfg)
     {
-        $this->db = $db;
-        $this->cfg = $cfg;
-        $this->tb = $tb;
         $this->id = $id;
         $this->is_id_fld = $is_id_fld;
+        $this->tb = $tb;
+        $this->db = $db;
+        $this->cfg = $cfg;
+        
     }
 
     public function getTb() : string
@@ -59,7 +60,7 @@ class Read
         return [
             'metadata' => [
                 'tb_id' => $this->tb,
-                'rec_id' => $this->id,
+                'rec_id' => $core['id'],
                 'tb_stripped' => str_replace(PREFIX, null, $this->tb),
                 'tb_label' => $this->cfg->get("tables.{$this->tb}.label")
             ],

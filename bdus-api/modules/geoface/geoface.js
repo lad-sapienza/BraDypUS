@@ -195,8 +195,8 @@ var geoface  = {
 		geoface.map = new L.map('map');
 
     var availableBaseMaps = {
-      "OSM": new L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png').addTo(geoface.map),
-      "AWMC" : L.tileLayer('http://{s}.tiles.mapbox.com/v3/isawnyu.map-knmctlkh/{z}/{x}/{y}.png'),
+      "OSM": new L.tileLayer('https://{s}.tile.osm.org/{z}/{x}/{y}.png').addTo(geoface.map),
+      "AWMC" : L.tileLayer('https://{s}.tiles.mapbox.com/v3/isawnyu.map-knmctlkh/{z}/{x}/{y}.png'),
       "Imperium\/DARE" : L.tileLayer('https://dh.gu.se/tiles/imperium/{z}/{x}/{y}.png')
     };
 

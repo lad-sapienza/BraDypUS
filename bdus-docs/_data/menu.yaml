@@ -88,6 +88,8 @@
       url: /usage/find-replace
     - title: System translation
       url: /usage/system-translation
+    - title: Add new records
+      url: /usage/new
 
 - title: API
   url: /api/

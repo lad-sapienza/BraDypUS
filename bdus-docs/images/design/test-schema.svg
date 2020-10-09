@@ -136,7 +136,7 @@
 <polygon fill="none" stroke="black" points="0.5,-401.5 0.5,-428.5 225.5,-428.5 225.5,-401.5 0.5,-401.5"/>
 <text text-anchor="start" x="12.5" y="-411.3" font-family="arial" font-size="14.00">typology (text, closed vocabulary)</text>
 <polygon fill="none" stroke="black" points="0.5,-374.5 0.5,-401.5 225.5,-401.5 225.5,-374.5 0.5,-374.5"/>
-<text text-anchor="start" x="6.5" y="-384.3" font-family="arial" font-size="14.00">chronology (text, closedvocabulary)</text>
+<text text-anchor="start" x="6.5" y="-384.3" font-family="arial" font-size="14.00">chronology (text, closed vocabulary)</text>
 <polygon fill="none" stroke="black" points="0.5,-347.5 0.5,-374.5 225.5,-374.5 225.5,-347.5 0.5,-347.5"/>
 <text text-anchor="start" x="64.5" y="-357.3" font-family="arial" font-size="14.00">description (text)</text>
 </g>
@@ -190,7 +190,7 @@
 <polygon fill="none" stroke="black" points="515,-279.5 515,-306.5 688,-306.5 688,-279.5 515,-279.5"/>
 <text text-anchor="start" x="573.5" y="-289.3" font-family="arial" font-size="14.00">title (text)</text>
 <polygon fill="none" stroke="black" points="515,-252.5 515,-279.5 688,-279.5 688,-252.5 515,-252.5"/>
-<text text-anchor="start" x="559.5" y="-262.3" font-family="arial" font-size="14.00">year (int|date)</text>
+<text text-anchor="start" x="559.5" y="-262.3" font-family="arial" font-size="14.00">year (date|int)</text>
 <polygon fill="none" stroke="black" points="515,-225.5 515,-252.5 688,-252.5 688,-225.5 515,-225.5"/>
 <text text-anchor="start" x="550" y="-235.3" font-family="arial" font-size="14.00">publishedin (text)</text>
 </g>

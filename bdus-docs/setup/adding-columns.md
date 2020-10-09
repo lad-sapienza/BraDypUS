@@ -50,7 +50,7 @@ Database field type. Caveat: DATETIME is MySQL (and SQLite) specific; TIMESTAMP 
 elect from the list the vocabulary that will be used to compile the suggested values if field type is `select`, `combo_select` or `multi_select`. In a fresh instalation the list is empty since no vocabulary has been created yet
 
 #### get_values_from_tb
-Insert here the table and field name, whose unique values will be used to compile the suggested values if field type is `select`, `combo_select` or `multi_select`. Syntax: {prefix}__{tablename}:{fieldid}, eg.: sitarc__siti:id_sito
+Insert here the table and field name, whose unique values will be used to compile the suggested values if field type is `select`, `combo_select` or `multi_select`. Syntax: {prefix}__{tablename}:{fieldid}, eg.: test__sites:id
 
 #### id_from_tb
 Select here the table, whose unique id values will be used to compile the suggested values if field type is `select`, `combo_select` or `multi_select`. In the database the id will be filed, but users will see the id_field

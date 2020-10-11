@@ -89,7 +89,7 @@
     - title: System translation
       url: /usage/system-translation
     - title: Add new records
-      url: /usage/new
+      url: /usage/crud
 
 - title: API
   url: /api/

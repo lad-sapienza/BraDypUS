@@ -19,9 +19,9 @@ class Config
             $this->dot = $dot;
             $this->path2cfg = $path2cfg;
             $this->prefix = $prefix;
-            $this->cfg = ConfigLoad::all( $path2cfg, $prefix );
+            $this->cfg = Load::all( $path2cfg, $prefix );
         } catch ( ConfigException $e) {
-            $this->addError($e->getMessage, "error");
+            $this->addError($e->getMessage(), "error");
         }
         
     }
@@ -87,7 +87,7 @@ class Config
 
     private function mngFields(array $part, array $cfg)
     {
-        $data = $cfg['tables'][$part[1]]['fields'];
+        $data = $cfg['tables'][$part[1]]['fields'] ?: [];
 
         // tables.tb.fields.*, 
         if (!isset($part[4])){
@@ -172,7 +172,74 @@ class Config
 
     public function save()
     {
-        return ConfigToFiles::all( $this->cfg, $this->path2cfg, $this->prefix );
+        return ToFiles::all( $this->cfg, $this->path2cfg, $this->prefix );
     }
+
+    public function setMain(array $main)
+    {
+        $this->cfg['main'] = $main;
+        return ToFiles::all( $this->cfg, $this->path2cfg, $this->prefix );
+    }
+
+    public function setTable(array $tb_data)
+    {
+        $tb = $tb_data['name'];
+
+        $tb_data['fields'] = $this->cfg['tables'][$tb]['fields'] ?: [];
+
+        $this->cfg['tables'][$tb] = $tb_data;
+
+        return ToFiles::all( $this->cfg, $this->path2cfg, $this->prefix );
+    }
+
+    public function renameFld(string $tb, string $old_name, string $new_name)
+	{
+        // https://stackoverflow.com/a/8884153
+        $keys = array_keys($this->cfg['tables'][$tb]['fields']);
+        $index = array_search($old_name, $keys, true);
+        $keys[$index] = $new_name;
+        $this->cfg['tables'][$tb]['fields'] = array_combine($keys, array_values($this->cfg['tables'][$tb]['fields']));
+        $this->cfg['tables'][$tb]['fields'][$new_name]['name'] = $new_name;
+        return ToFiles::all( $this->cfg, $this->path2cfg, $this->prefix );
+    }
+    
+    public function deleteFld(string $tb, string $fld) {
+        unset($this->cfg['tables'][$tb]['fields'][$fld]);
+        return ToFiles::all( $this->cfg, $this->path2cfg, $this->prefix );
+    }
+
+    public function renameTb(string $old_name, string $new_name)
+	{
+        $keys = array_keys($this->cfg['tables']);
+        $index = array_search($old_name, $keys, true);
+        $keys[$index] = $new_name;
+        $this->cfg['tables'] = array_combine($keys, array_values($this->cfg['tables']));
+        
+        $this->cfg['tables'][$new_name]['name'] = $new_name;
+
+        ToFiles::all( $this->cfg, $this->path2cfg, $this->prefix );
+		
+		rename(
+			$this->path2cfg . str_replace($this->prefix, null, $old_name) . '.json',
+			$this->path2cfg . str_replace($this->prefix, null, $new_name) . '.json'
+		);
+    }
+    
+    public function deleteTb($tb)
+	{
+        unset($this->cfg['tables'][$tb]);
+        
+        ToFiles::all( $this->cfg, $this->path2cfg, $this->prefix );
+        
+		unlink($this->path2cfg . str_replace($this->prefix, null, $tb) . '.json');
+    }
+    
+    public function setFld(string $tb, string $fld_name, array $post_data)
+	{
+        $this->cfg['tables'][$tb]['fields'][$fld_name] = $post_data;
+
+        ToFiles::all( $this->cfg, $this->path2cfg, $this->prefix );
+        
+	}
 
 }

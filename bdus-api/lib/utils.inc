@@ -110,7 +110,8 @@ class utils
 	public static function canUser($privilege = false, $creator = false)
 	{
     	if (defined('PROJ_DIR')) {
-      		$app_status = strtolower(cfg::main('status'));
+			$app_data = json_decode(file_get_contents(PROJ_DIR . 'cfg/app_data.json'), true);
+      		$app_status = $app_data['status'];
     	} else {
       		$app_status = 'on';
     	}

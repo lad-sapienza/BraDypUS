@@ -13,7 +13,7 @@ class test_ctrl extends Controller
     public function test()    
 	{	
 
-        var_dump( \utils::csv_explode("u;no, d;ue   , t;;  r    ;    e,,"));
+        
         // $this->testTmpl();
 		// $firephp = new Monolog\Handler\FirePHPHandler();
 		// $this->log->pushHandler($firephp);

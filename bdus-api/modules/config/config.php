@@ -97,9 +97,9 @@ class config_ctrl extends Controller
         // default values
 		if (!$table_properties['preview'])  $table_properties['preview'] = array(0=>'');
 		if (!$table_properties['plugin'])   $table_properties['plugin'] = array(0=>'');
-        if (!$table_properties['link'])     $table_properties['link'] = array(0=>array('fld'=>array(0=>'')));
-        
-        foreach($table_properties['link'] as $index => $link){
+        if (!$table_properties['link'])     $table_properties['link'] = array(0=>array('fld'=>array(0=>[])));
+
+        foreach ($table_properties['link'] as $index => $link) {
             foreach ($link['fld'] as $i => $l_data) {
                 $table_properties['link'][$index]['fld'][$i]['other_list'] = $this->cfg->get("tables.{$link['other_tb']}.fields.*.label");
             }
@@ -148,7 +148,7 @@ class config_ctrl extends Controller
 				throw new \Exception('2. Required fields are missing');
             }
 
-			\cfg::setTb($post);
+            $this->cfg->setTable($post);
 
 			$this->response('ok_cfg_data_updated');
 
@@ -178,27 +178,31 @@ class config_ctrl extends Controller
 
             // Write table columns file
             $new_tb_name = $post['name'];
+
+            // Write table data file
+            $this->cfg->setTable($post);
+
             
-            \cfg::setFld( str_replace($this->prefix, null, $new_tb_name), 'id', [
+            $this->cfg->setFld($new_tb_name, 'id', [
                 "name" => "id",
                 "label" => "Id",
                 "type" => "text"
             ]);
             if ($post['is_plugin'] === '1') {
-                \cfg::setFld(str_replace($this->prefix, null, $new_tb_name), 'table_link', [
+                $this->cfg->setFld($new_tb_name, 'table_link', [
                     "name" => "table_link",
                     "label" => "Linked table",
                     "type" => "text",
                     "db_type" => "TEXT",
                 ]);
-                \cfg::setFld(str_replace($this->prefix, null, $new_tb_name), 'id_link', [
+                $this->cfg->setFld($new_tb_name, 'id_link', [
                     "name" => "id_link",
                     "label" => "Linked id",
                     "type" => "int",
                     "db_type" => "INTEGER",
                 ]);
             } else {
-                \cfg::setFld(str_replace($this->prefix, null, $new_tb_name), 'creator', [
+                $this->cfg->setFld($new_tb_name, 'creator', [
                     "name" => "creator",
                     "label" => "Creator",
                     "type" => "text",
@@ -206,9 +210,6 @@ class config_ctrl extends Controller
                 ]);
             }
             
-            // Write table data file
-            \cfg::setTb($post);
-
             // Add table to database
             $alter = new Alter($this->db);
             $alter->createMinimalTable($new_tb_name);
@@ -239,7 +240,7 @@ class config_ctrl extends Controller
 				throw new \Exception('Both field name and field type are required');
             }
             
-			\cfg::setFld($tb, $fld, $post);
+			$this->cfg->setFld($tb, $fld, $post);
 
 			$this->response('ok_cfg_data_updated', 'success');
         
@@ -268,7 +269,7 @@ class config_ctrl extends Controller
                 return;
             }
             
-            \cfg::setFld($tb, $fld, $post);
+            $this->cfg->setFld($tb, $fld, $post);
             
             $alter = new Alter($this->db);
             $alter->addFld($tb, $fld, $post['db_type']);
@@ -287,7 +288,7 @@ class config_ctrl extends Controller
 		
 		try {
 
-			\cfg::setMain($data);
+            $this->cfg->setMain($data);
             $this->response('ok_cfg_data_updated', 'success');
             
 		} catch (\Throwable $e) {
@@ -301,7 +302,7 @@ class config_ctrl extends Controller
     {
         $tb = $this->get['tb'];
         try {
-            \cfg::deleteTb($tb);
+            $this->cfg->deleteTb($tb);
             // Drop table from database
             $alter = new Alter($this->db);
             $alter->dropTable($tb);
@@ -318,7 +319,7 @@ class config_ctrl extends Controller
         $fld = $this->get['fld'];
 
         try {
-            \cfg::deleteFld($tb, $fld);
+            $this->cfg->deleteFld($tb, $fld);
 
             $alter = new Alter($this->db);
             $alter->dropFld($tb, $fld);
@@ -339,7 +340,7 @@ class config_ctrl extends Controller
                 throw new \Exception("Table name $new_name has already been used");
             }
 
-            \cfg::renameTb($old_name, $new_name);
+            $this->cfg->renameTb($old_name, $new_name);
 
             $alter = new Alter($this->db);
             $alter->renameTable($old_name, $new_name);
@@ -363,7 +364,7 @@ class config_ctrl extends Controller
                 throw new \Exception("Field name $new_name has already been used");
             }
 
-            \cfg::renameFld($tb, $old_name, $new_name);
+            $this->cfg->renameFld($tb, $old_name, $new_name);
 
             $alter = new Alter($this->db);
             $alter->renameFld($tb, $old_name, $new_name);

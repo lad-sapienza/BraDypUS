@@ -5,7 +5,7 @@ namespace Config;
 
 use Config\ConfigException;
 
-class ConfigLoad
+class Load
 {
 
     public static function all( string $path2cfg, string $prefix ) : array

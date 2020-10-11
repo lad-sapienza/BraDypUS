@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Config;
 
 
-class ConfigToFiles
+class ToFiles
 {
 
     public static function all( array $cfg, string $path2cfg, string $prefix ) : void

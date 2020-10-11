@@ -120,7 +120,3 @@ if (@$_GET['debug'] === '0') {
 require_once LIB_DIR . 'autoLoader.php';
 require_once $root . 'vendor/autoload.php';
 new autoLoader(LIB_DIR, MOD_DIR);
-
-if (defined('PROJ_DIR')) {
-	cfg::load(APP, true);
-}

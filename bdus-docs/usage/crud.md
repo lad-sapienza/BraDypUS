@@ -13,9 +13,8 @@ You can use the **<u>New</u>** function to insert new records in the selected ta
 ![screenshot](../../images/usage/insert_records.png "Insert records")
 
 After each save, keep an eye on the alert message at the bottom right of the screen. 
-**<span style="color:green"> If the bar is green </span>** then all data has been saved without errors, **<span
-style="color:red">if the bar is red</span>** then there may be problems.
-
+**<span style="color:green"> If the alert message is green </span>** then all data has been saved without errors,
+**<span style="color:red">if the alert message is red</span>** then there may be problems.
 <cite> In this case **check that you have entered all the data correctly before closing the tab**, or you may
 lose the data you entered!<cite>
 
@@ -63,7 +62,7 @@ You can use two methods to edit or update a record:
 
 ![screenshot](../../images/usage/edit_tab.png "Edit tab")
 
-**2.** After selecting the record you are interested in editing click on the pencil icon (**<u>Edit</u>** ) from the icon menu
+**2.** After selecting the record you are interested in editing click on the pencil icon (**<u>Edit</u>**) from the icon menu
 at the top left of the screen
 
 ![screenshot](../../images/usage/edit_icon.png "Edit icon")
@@ -72,7 +71,7 @@ at the top left of the screen
 ## Delete
 ---
 
-To find the records you want to delete please have a look above the **<u>Search</u>**  function section
+To find the records you want to delete please have a look above the **<u>Search</u>** function section
 
 You can use two methods to delete a record:
 

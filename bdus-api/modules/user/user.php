@@ -6,7 +6,7 @@
  * @since			Aug 10, 2012
  */
 
- use \Db\System\Manage;
+ use \DB\System\Manage;
 
 
 class user_ctrl extends Controller

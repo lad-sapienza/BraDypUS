@@ -186,7 +186,7 @@ class Field
                 break;
 
             case 'date':
-                $html .= $this->htmlDate();
+                $html .= $formElement->Date();
                 break;
 
             case 'long_text':

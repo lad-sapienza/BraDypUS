@@ -1,0 +1,30 @@
+{
+  "name": "bradypus",
+  "version": "3.1.19",
+  "description": "BraDypUS web database system",
+  "scripts": {
+    "move": "cp node_modules/jquery/dist/jquery.min.js js/ && cp node_modules/jquery/dist/jquery.min.map js/ && cp node_modules/bootstrap/dist/js/bootstrap.min.js js/ && cp node_modules/bootstrap/dist/css/bootstrap.min.css css/ && cp node_modules/bootstrap/dist/css/bootstrap.min.css.map css/  && cp node_modules/izitoast/dist/js/iziToast.min.js js/ && cp node_modules/izitoast/dist/css/iziToast.min.css css/ && cp node_modules/datatables.net/js/jquery.dataTables.min.js js/ && cp node_modules/datatables.net-bs/js/dataTables.bootstrap.min.js js/ && cp node_modules/datatables.net-bs/css/dataTables.bootstrap.min.css css/ && cp node_modules/select2/dist/js/select2.full.min.js js/ && cp -r node_modules/select2/dist/js/i18n js/ && cp node_modules/select2/dist/css/select2.min.css css/ && cp node_modules/font-awesome/css/font-awesome.min.css css/  && cp node_modules/font-awesome/css/font-awesome.css.map css/  && cp -r node_modules/font-awesome/fonts/* fonts/ & cp node_modules/sortablejs/dist/sortable.umd.js js/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "github.com:jbogdani/BraDypUS.git"
+  },
+  "author": "Julian Bogdani (BraDypUS)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/bdus-db/BraDypUS/issues"
+  },
+  "homepage": "https://github.com/bdus-db/BraDypUS",
+  "devDependencies": {
+    "bootstrap": "^3.4.1",
+    "izitoast": "^1.4.0",
+    "jquery": "^3.5.1"
+  },
+  "dependencies": {
+    "datatables.net": "^1.10.22",
+    "datatables.net-bs": "^1.10.22",
+    "font-awesome": "^4.7.0",
+    "select2": "^4.0.13",
+    "sortablejs": "^1.12.0"
+  }
+}

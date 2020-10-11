@@ -6,7 +6,6 @@ vendor/**/doc
 projects
 logs/
 cache/
-package.json
 node_modules/
 .DS_Store
 UNSAFE_permit_app_creation

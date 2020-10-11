@@ -2,9 +2,9 @@
 title: CRUD functions - Create, read, update and delete
 ---
 
-
+---
 ## Create
-
+---
 
 You can use the **new** function to insert new records in the selected table
 
@@ -17,9 +17,9 @@ After each save, keep an eye on the alert message at the bottom right of the scr
 In this case check that you have entered all the data correctly before closing the tab, or you may lose the data you
 entered!
 
-
+---
 ## Read
-
+---
 
 You can view all your records in read mode using the **show all function**. 
 
@@ -42,9 +42,9 @@ then you can use on of the two methods described above to view it
    ![screenshot](../../images/usage/search_by_name.png "Search by name")
    ![screenshot](../../images/usage/search_by_id.png "Search by id")
 
-
+---
 ## Update
-
+---
 
 You can use two methods to edit or update a record:
 

@@ -2,6 +2,7 @@
 title: CRUD functions - Create, read, update and delete
 ---
 
+
 ## Create
 
 You can use the **new** function to insert new records in the selected table
@@ -14,6 +15,7 @@ After each save, keep an eye on the alert message at the bottom right of the scr
 **If the bar is green** then all data has been saved without errors, **if the bar is red** then there may be problems. 
 In this case check that you have entered all the data correctly before closing the tab, or you may lose the data you
 entered!
+
 
 ## Read
 
@@ -37,4 +39,17 @@ then you can use on of the two methods described above to view it
 
    ![screenshot](../../images/usage/search_by_name.png "Search by name")
    ![screenshot](../../images/usage/search_by_id.png "Search by id")
+
+
+## Update
+
+You can use two methods to edit or update a record:
+
+- After double clicking on the record you are interested in, you will be returned to its tab
+
+![screenshot](../../images/usage/edit.png "Edit")
+
+  From here click the **edit** function in the top left corner to have the possibility to modify your data
+
+![screenshot](../../images/usage/edit_tab.png "Edit tab")
 

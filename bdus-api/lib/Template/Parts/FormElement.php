@@ -76,7 +76,7 @@ class FormElement
                 $this->settings['maxlength'] .
                 ($this->settings['height'] ? 'rows="' . $this->settings['height'] . '"': '') .
                 ' class="form-control">' .
-                    $sthis->etting['data'] .
+                    $this->settings['data'] .
              '</textarea>';
     }
 

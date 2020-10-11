@@ -49,7 +49,7 @@ class Template implements TemplateInterface
             return null;
         }
         return '<div class="permalink">' .
-        '<a href="' . "./#/" . APP . '/' . $this->record->getTb() . '/' . $this->record->getCore('id', true)  . '">PERMALINK</a>' .
+        '<a href="' . "./#/" . APP . '/' . str_replace(PREFIX, null, $this->record->getTb()) . '/' . $this->record->getCore('id', true)  . '">PERMALINK</a>' .
       '</div>';
     }
 

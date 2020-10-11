@@ -76,7 +76,7 @@ To find the records you want to delete please have a look above the **<u>Search<
 
 You can use two methods to delete a record:
 
-**1.** To delete a record you can double click on it to open its tab and from there select the **<u>Delete</u>** function from
+**1.** To delete a record you can double click on it to open its tab and from there select the **<u>Erase</u>** function from
 the top left menu
 
 ![screenshot](../../images/usage/erase.png "Erase")

@@ -50,7 +50,7 @@ and then you can use on of the two methods described above to view it
 ## Update
 ---
 
-To find the records you want to update please have a look above the **<u>Search</u>**  function section
+To find the records you want to update please have a look above the **<u>Read</u>**  function section
 
 You can use two methods to edit or update a record:
 
@@ -71,7 +71,7 @@ at the top left of the screen
 ## Delete
 ---
 
-To find the records you want to delete please have a look above the **<u>Search</u>** function section
+To find the records you want to delete please have a look above the **<u>Read</u>** function section
 
 You can use two methods to delete a record:
 

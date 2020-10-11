@@ -81,7 +81,7 @@ the top left menu
 
 ![screenshot](../../images/usage/erase.png "Erase")
     
-**2.** To delete a record you can select it and then click on the trash icon (**<u>Delete</u>**) from the icon menu at the top
+**2.** To delete a record you can select it and then click on the trash icon (**<u>Erase</u>**) from the icon menu at the top
 left of the screen
 
 ![screenshot](../../images/usage/trash.png "Trash")

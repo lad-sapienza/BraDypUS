@@ -1,3 +1,4 @@
+4.0.0-alpha.182[] = "Bug fixed with RS and multiple edits"
 4.0.0-alpha.182[] = "Bug fixed with Template element Date"
 4.0.0-alpha.181[] = "Removed class cfg"
 4.0.0-alpha.180[] = "Removed prefix from table name in permalinks"

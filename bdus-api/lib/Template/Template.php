@@ -155,7 +155,11 @@ class Template implements TemplateInterface
 
     public function rs() : ?string
     {
-        if ($this->context === 'add_new') {
+        if (
+            $this->context === 'add_new'
+            ||
+            ! $this->record->getCore($rs_fld, true) // In multiple edit the value is not set
+        ) {
             return null;
         }
         $rs_fld = $this->cfg->get("tables.{$this->record->getTb()}.rs");

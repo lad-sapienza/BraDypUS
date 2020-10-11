@@ -88,7 +88,7 @@
       url: /usage/find-replace
     - title: System translation
       url: /usage/system-translation
-    - title: Add new records
+    - title: CRUD
       url: /usage/crud
 
 - title: API

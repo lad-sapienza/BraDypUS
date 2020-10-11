@@ -5,6 +5,7 @@ title: CRUD functions - Create, read, update and delete
 
 ## Create
 
+
 You can use the **new** function to insert new records in the selected table
 
 ![screenshot](../../images/usage/create.png "Create")
@@ -18,6 +19,7 @@ entered!
 
 
 ## Read
+
 
 You can view all your records in read mode using the **show all function**. 
 
@@ -43,13 +45,17 @@ then you can use on of the two methods described above to view it
 
 ## Update
 
+
 You can use two methods to edit or update a record:
 
 - After double clicking on the record you are interested in, you will be returned to its tab
 
-![screenshot](../../images/usage/edit.png "Edit")
+    ![screenshot](../../images/usage/edit.png "Edit")
 
   From here click the **edit** function in the top left corner to have the possibility to modify your data
 
-![screenshot](../../images/usage/edit_tab.png "Edit tab")
+    ![screenshot](../../images/usage/edit_tab.png "Edit tab")
 
+- After selecting the record you are interested in editing click on the pencil icon (**edit**) from the icon menu at the top left
+
+    ![screenshot](../../images/usage/edit_icon.png "Edit icon")

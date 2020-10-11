@@ -2,6 +2,7 @@
 namespace DB\Validate;
 
 use DB\Validate\Info;
+use DB\Validate\DumpExists;
 use DB\Validate\Resp;
 use DB\Validate\DbCfgAlign;
 
@@ -37,6 +38,8 @@ class Validate
     {   
         $this->resp->set('head', 'Main system information');
         Info::getInfo($this->resp, $this->cfg);
+
+        DumpExists::check($this->resp, $this->db->getEngine());
 
         $sys = new SystemTables($this->resp, $this->db, $this->prefix);
         $this->resp->set('head', 'Check if system tables are available');

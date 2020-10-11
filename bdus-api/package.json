@@ -17,14 +17,13 @@
   "homepage": "https://github.com/bdus-db/BraDypUS",
   "devDependencies": {
     "bootstrap": "^3.4.1",
-    "izitoast": "^1.4.0",
-    "jquery": "^3.5.1"
-  },
-  "dependencies": {
     "datatables.net": "^1.10.22",
     "datatables.net-bs": "^1.10.22",
     "font-awesome": "^4.7.0",
+    "izitoast": "^1.4.0",
+    "jquery": "^3.5.1",
     "select2": "^4.0.13",
     "sortablejs": "^1.12.0"
+
   }
 }

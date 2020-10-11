@@ -47,6 +47,7 @@ then you can use on of the two methods described above to view it
 ---
 
 To find the records you want to update please have a look above the **Search** function section
+
 You can use two methods to edit or update a record:
 
 - After double clicking on the record you are interested in, you will be returned to its tab
@@ -66,6 +67,7 @@ You can use two methods to edit or update a record:
 ---
 
 To find the records you want to delete please have a look above the **Search** function section
+
 You can use two methods to delete a record:
 
 - To delete a record you can double click on it to open its tab and from there select the **Delete** function from the top left menu

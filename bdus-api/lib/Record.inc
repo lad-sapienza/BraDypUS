@@ -157,7 +157,7 @@ class Record implements RecordInterface
 				$flag['core'] = $this->db->query($query, $values, 'boolean');
 
 				// moves updaded file
-				if ($this->tb == PREFIX . 'files') {
+				if ($this->tb === PREFIX . 'files') {
 
 					if (file_exists($this->tmp_dir . $this->data['core']['filename'] . '.' . $this->data['core']['ext'])) {
 

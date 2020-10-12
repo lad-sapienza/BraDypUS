@@ -104,10 +104,18 @@ class Sqlite implements AlterInterface
         return true;
     }
 
-    public function createMinimalTable( string $tb): bool
+    public function createMinimalTable( string $tb, bool $is_plugin = false ): bool
     {
-        $sql = "CREATE TABLE IF NOT EXISTS {$tb} (id INTEGER PRIMARY KEY AUTOINCREMENT, creator INTEGER NOT NULL)";
+        $sql = "CREATE TABLE IF NOT EXISTS {$tb} (id INTEGER PRIMARY KEY AUTOINCREMENT, ";
         
+        if ($is_plugin) {
+            $sql .= "table_link TEXT NOT NULL, id_link INTEGER NOT NULL";
+        } else {
+            $sql .= "creator INTEGER NOT NULL";
+        }
+
+        $sql .= ")";
+
         return $this->db->execInTransaction($sql);
     }
 

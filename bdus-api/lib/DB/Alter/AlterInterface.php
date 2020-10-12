@@ -50,9 +50,10 @@ interface AlterInterface
      * Creates new table
      *
      * @param string $tb        table name
+     * @param bool  $is_plugin  if table is plugin or not
      * @return boolean
      */
-    public function createMinimalTable(string $tb): bool;
+    public function createMinimalTable(string $tb, bool $is_plugin): bool;
     
     /**
      * Drops table from database

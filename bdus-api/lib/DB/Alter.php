@@ -55,9 +55,9 @@ class Alter implements Alter\AlterInterface
         return $this->driver->dropFld($tb, $fld_name);
     }
 
-    public function createMinimalTable(string $tb): bool
+    public function createMinimalTable(string $tb, bool $is_plugin): bool
     {
-        return $this->driver->createMinimalTable($tb);
+        return $this->driver->createMinimalTable($tb, $is_plugin);
     }
 
     public function dropTable(string $tb): bool

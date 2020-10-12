@@ -37,9 +37,16 @@ class Mysql implements AlterInterface
         return  $this->db->execInTransaction($sql);
     }
 
-    public function createMinimalTable( string $tb): bool
+    public function createMinimalTable( string $tb, bool $is_plugin): bool
     {
-        $sql = "CREATE TABLE IF NOT EXISTS {$tb} (id INTEGER PRIMARY KEY AUTO_INCREMENT, creator INTEGER NOT NULL)";
+        $sql = "CREATE TABLE IF NOT EXISTS {$tb} (id INTEGER PRIMARY KEY AUTO_INCREMENT, ";
+        if ($is_plugin) {
+            $sql .= "table_link TEXT NOT NULL, id_link INTEGER NOT NULL";
+        } else {
+            $sql .= "creator INTEGER NOT NULL";
+        }
+
+        $sql .= ")";
         return $this->db->execInTransaction($sql);
     }
 

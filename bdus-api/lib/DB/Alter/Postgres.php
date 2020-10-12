@@ -38,9 +38,16 @@ class Postgres implements AlterInterface
         return $this->db->execInTransaction($sql);
     }
 
-    public function createMinimalTable( string $tb): bool
+    public function createMinimalTable( string $tb, bool $is_plugin = false ): bool
     {
-        $sql = "CREATE TABLE IF NOT EXISTS {$tb} (id SERIAL PRIMARY KEY, creator INTEGER NOT NULL)";
+        $sql = "CREATE TABLE IF NOT EXISTS {$tb} (id SERIAL PRIMARY KEY, ";
+        if ($is_plugin) {
+            $sql .= "table_link TEXT NOT NULL, id_link INTEGER NOT NULL";
+        } else {
+            $sql .= "creator INTEGER NOT NULL";
+        }
+
+        $sql .= ")";
         return $this->db->execInTransaction($sql);
     }
 

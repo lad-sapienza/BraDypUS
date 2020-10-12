@@ -95,6 +95,7 @@ class config_ctrl extends Controller
         $table_properties = $tb ? $this->cfg->get("tables.$tb") : [];
 
         // default values
+		if (!$table_properties['name'])     $table_properties['name'] = $this->prefix;
 		if (!$table_properties['preview'])  $table_properties['preview'] = array(0=>'');
 		if (!$table_properties['plugin'])   $table_properties['plugin'] = array(0=>'');
         if (!$table_properties['link'])     $table_properties['link'] = array(0=>array('fld'=>array(0=>[])));
@@ -212,7 +213,7 @@ class config_ctrl extends Controller
             
             // Add table to database
             $alter = new Alter($this->db);
-            $alter->createMinimalTable($new_tb_name);
+            $alter->createMinimalTable($new_tb_name, ($post['is_plugin'] === '1') );
 
 			$this->response('ok_cfg_data_updated', 'success', null, [
                 'tb' => $new_tb_name

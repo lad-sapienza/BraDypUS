@@ -24,7 +24,7 @@ By clicking on **Add new field** it is possible to add a new column.
 ## The available column settings are
 
 #### name
-Database name of the column. Please follow the pattern: ^[a-z]{3,15}$
+Database name of the column. Please follow the pattern: ^[a-z_]{2,15}$
 
 #### label
 The label will be shown to the users. Please stick as possible to the field name, but make this string easy to understand. No limitations on spaces, uppercase or other special charactes are defined.

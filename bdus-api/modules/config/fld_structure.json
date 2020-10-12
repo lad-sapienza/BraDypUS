@@ -1,10 +1,10 @@
 {
     "name": {
         "type": "input",
-        "help": "Database name of the column. Please follow the pattern: ^[a-z]{3,15}$",
+        "help": "Database name of the column. Please follow the pattern: ^[a-z_]{3,15}$",
         "required": true,
         "readonly": true,
-        "pattern": "^[a-z]{3,15}$"
+        "pattern": "^[a-z_]{2,15}$"
     },
     "label": {
         "type": "input",

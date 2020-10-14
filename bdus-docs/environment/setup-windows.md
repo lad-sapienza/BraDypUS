@@ -1,19 +1,16 @@
-# Preparare l'ambiente Windows
+---
+title: Setup environment in Windows
+---
 
+Windows operating system does not ship usually with a PHP installation, wich 
+must be installe manually. The [official documentation](https://www.php.net/manual/en/install.windows.php) 
+is a good starting point for information.
 
-Windows di norma non ha una installazione PHP di default e per questo motivo è necessario
-installare del software aggiuntivo.
-
-L'opzione minimale è quella di installare solo PHP e usare come server web il server incluso,
-altrimenti esistono delle soluzioni software più complete, che in maniera abbastanza semplice 
-permettono di creare un ambiente di lavoro adeguato.
-
-Alcune delle possibili scelte sono
+If a more robust and easy to use working environment is required, the following
+solutions are both easy to use and open source, and permit to install and manage 
+from a graphical interface several servers, databases and languages:
 - [XAMPP](https://www.apachefriends.org/)
 - [WampServer](http://www.wampserver.com/)
 - [WAMP](https://www.mamp.info/)
 - [Uniform Server](http://www.uniformserver.com/)
 - [Mongoose](https://github.com/cesanta/mongoose)
-
-Tra queste sicuramente **XAMPP** è una scelta completamente gratuita, abbastanza facile da installare e completa.
-Una possibile guida si può trovare a [questo link](https://download.html.it/tutorial/xampp-guida-al-download-alla-configurazione/).

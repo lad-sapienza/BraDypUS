@@ -1,30 +1,32 @@
-# Preparare l'ambiente MacOS / Linux / Unix
+---
+title: Setup environment in MacOS / Linux / Unix
+---
 
-Di norma, i sistemi operativi MacOS / Linux / Unix comprendono di default una installazione PHP, che è possibile 
-usare per questa guida.
+Normally *nix operating systems (Linux, MacOS, Unix) come with a
+default installation of PHP and often also a web server (like Apache).
 
-Per verificare se PHP è disponibile è possibile aprire il Terminale (Applicazioni > Utilities > Terminale.app)
-e digitare il commando: 
+To verify that PHP is available, open a Terminal / Command Line and type:
 ```bash
 which php
 ``` 
-seguito da Invio. La risposta dovrebbe essere qualcosa come 
+and then type Enter. Something similar to the following should appear in the terminal
 ```bash
 /usr/bin/php
 ```
+This is the full path pf the PHP executable.
 
-Per scoprire che versione di PHP è installata è possibile scrivere sul Terminale: 
+To check the version of the installed PHP, type in the Terminal: 
 ```bash
 php -v
 ```
+You will get an output similar to the following:
+```bash
+PHP 7.3.11 (cli) (built: Jul  5 2020 03:23:39) ( NTS )
+Copyright (c) 1997-2018 The PHP Group
+Zend Engine v3.3.11, Copyright (c) 1998-2018 Zend Technologies
+```
 
-In caso non sia disponibile una versione PHPo in caso si vogliano usare soluzione grafiche, che non comprendano
-l'uso del terminale allora è possibile, come per Windows, optare per una soluzione completa, es.:
-
-Alcune delle possibili scelte sono
+As in Windows, integrated solutions are also available, such as:
 - [XAMPP](https://www.apachefriends.org/)
 - [WAMP](https://www.mamp.info/)
 - [Mongoose](https://github.com/cesanta/mongoose)
-
-Tra queste sicuramente **XAMPP** è una scelta completamente gratuita, abbastanza facile da installare e completa.
-Una possibile guida si può trovare a [questo link](https://download.html.it/tutorial/xampp-guida-al-download-alla-configurazione/).

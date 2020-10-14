@@ -1,56 +1,108 @@
-- title: 1. Presentazione
+- title: Introduction
   url: /
+  sub:
+    - title: Some conventions
+      url: /conventions
+    - title: Structure of the application
+      url: /tree-structure
 
-- title: 2. Requisiti del sistema
+- title: System requirements
   url: /environment/system-requirements
   sub:
-    - title: 2.1. Preparare l'ambiente Windows
+    - title: Setup environment in Windows
       url: /environment/setup-windows
-    - title: 2.2. Preparare l'ambiente MacOS / Linux / Unix
+    - title: Setup environment in MacOS / Linux / Unix
       url: /environment/setup-nix
-    - title: 2.3. Conoscenze di base
+    - title: Knowledge base
       url: /environment/knowledge-base
 
-- title: 3. Struttura della banca dati
-  url: /design/intro
-  sub:
-    - title: 3.1. Qualche convenzione
-      url: /design/conventions
-    - title: 3.2. Schema DB
-      url: /design/schema
+- title: Structure of the example database 
+  url: /design/
 
-- title: 4. Configurazione
-  url: /config/intro
+- title: Installing BraDypUS locally
+  url: /install/
   sub:
-    - title: 4.1. Albero di cartelle e file
-      url: /config/tree-structure
-    - title: 4.2. app_data.json
-      url: /config/app_data
-    - title: 4.3. tables.json
-      url: /config/tables
-    - title: 4.4. Tabelle di dati
-      url: /config/data-tables
-    - title: 4.5. Sintassi per le tabelle di dati
-      url: /config/data-tables-syntax
-- title: 5. Installazione
-  url: /install/intro
-  sub:
-    - title: 5.1. Installazione usando BDUS Factory
-      url: /install/bdus-factory
-    - title: 5.2. Installazione da riga di commando
-      url: /install/cli-pro
-    - title: 5.3. Installazione manuale
-      url: /install/manual
+    - title: Manual download
+      url: /install/manual-download
+    - title: Installing with the terminal and git
+      url: /install/terminal
+    - title: Updating BraDypUS
+      url: /install/update
+    - title: Uninstalling BraDypUS
+      url: /install/uninstall
 
-- title: 6. Pubblicare online
-  url: /deploy/intro
+- title: Creating a new application
+  url: /create_app/
   sub:
-    - title: 6.1. Creazione dell'account
-      url: /deploy/infinityfree/make-account
-    - title: 6.2. Creazione del servizio
-      url: /deploy/infinityfree/make-service
-    - title: 6.3. Caricamento file
-      url: /deploy/infinityfree/upload-files
-    
-- title: Vocabolario
+    - title: Anatomy of the newly created application
+      url: /create_app/new-app-anatomy
+    - title: Troubleshooting
+      url: /create_app/troubleshooting
+
+- title: Setting up the application
+  url: /setup/
+  sub:
+    - title: Main app configuration
+      url: /setup/main-app-config
+    - title: Creating the first table
+      url: /setup/create-table-sites
+    - title: Adding columns
+      url: /setup/adding-columns
+    - title: Managing vocabularies
+      url: /setup/vocabularies
+    - title: Creating other data tables
+      url: /setup/other-data-tables
+    - title: Finalizing setup
+      url: /setup/finalizing-setup
+    - title: Final appearance of configuration files
+      url: /setup/preview-config
+    - title: Some advices and hacks
+      url: /setup/advices-and-hacks
+
+- title: Deploy application
+  url: /deploy/
+  sub:
+    - title: Publish to Infinityfree
+      url: /deploy/infinityfree
+
+- title: Template system
+  url: /template-system/
+  sub:
+    - title: Creating a new template
+      url: /template-system/create-new-template
+    - title: The print object
+      url: /template-system/print-object
+    - title: A template example
+      url: /template-system/template-example
+
+- title: Using the application
+  url: /usage/
+  sub:
+    - title: User preferences
+      url: /usage/user-preferences
+    - title: Database backup
+      url: /usage/backup
+    - title: Data export
+      url: /usage/export
+    - title: Find and replace
+      url: /usage/find-replace
+    - title: System translation
+      url: /usage/system-translation
+    - title: CRUD
+      url: /usage/crud
+
+- title: API
+  url: /api/
+  sub:
+    - title: ShortSQL
+      url: /api/shortsql
+    - title: Remarks on ShortSQL
+      url: /api/remarks-on-shortsql
+    - title: ShortSQL Examples
+      url: /api/shortsql-examples
+
+- title: Vocabulary
   url: /voc
+
+- title: Migration from v3
+  url: /migration-from-v3

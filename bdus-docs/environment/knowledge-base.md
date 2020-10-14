@@ -1,12 +1,26 @@
-# Conoscenze di base
+---
+title: Knowledge base
+---
 
-Per la creazione di questa banca dati di esempio non sono necessarie conoscenze particolari,
-anche se aiuta avere una conoscenza di base di [JSON](https://www.json.org/) un formato semplice
-basato sul JavaScript che viene usato dal sistema per i file di configurazione e del [SLQ](https://en.wikipedia.org/wiki/SQL).
+For the creation of a new Bradypus database application, 
+**no particular knowledge of server settings and/or programming languages is required since in v4**.
+Application creation and setup is done via graphical user interfaces (GUI).
 
-In ogni caso l'utilizzo di un programma di modifica testo moderno come [VisualStudio Code](https://code.visualstudio.com/)
-o [Atom](https://atom.io/) semplifica di molto il lavoro e aiuta a correggere errori di digitazione nella creazione dei 
-file di configurazione.
+Yet, if a manual setup or configuration is needed,
+a vary basic knowledge of [JSON](https://www.json.org/),
+a simple but powerful format based on Javascript might help, since all 
+configuration files of Bradypus are written in JSON. A basic knowledge of
+[SLQ](https://en.wikipedia.org/wiki/SQL) might also help for a more detailed
+configuration of the database schema.
 
-Lo stesso vale per i programmi di gestione di database, come [SQLiteStudio](https://sqlitestudio.pl/) nel caso di Sqlite, 
-i quali permettono di creare le strutture di banche dati senza richiedere una conoscenza pregressa del linguaggio SQL.
+
+Text editors and IDEs like [VisualStudio Code](https://code.visualstudio.com/)
+or [Atom](https://atom.io/), among many others, greatly help in fixing typos or
+syntax errors.
+
+For the database, GUI tools like 
+[SQLiteStudio](https://sqlitestudio.pl/) for Sqlite, 
+[phpMyAdmin](https://www.phpmyadmin.net/)for MySQL, or
+[pgAdmin](https://www.pgadmin.org/) for PostgreSQL might help in
+creating and editing complex database structures with few or no
+knowledge of SQL.

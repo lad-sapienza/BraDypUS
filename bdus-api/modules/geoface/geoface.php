@@ -127,7 +127,9 @@ class geoface_ctrl extends Controller
 			$pref_preview_flds = \pref::get('preview');
 			$preview = $pref_preview_flds[$tb] ?? $this->cfg->get("tables.$tb.preview");
 
-			$part = [];
+			$part = [
+				"{$tb}.id  AS id"
+			];
 
 			foreach ($preview as $fldid) {
 				if ($fldid != 'id') {
@@ -138,8 +140,10 @@ class geoface_ctrl extends Controller
 			if (!preg_match('/' . $tb . '\.id/', $where) && $where) {
 				$where = str_replace('id', $tb . '.id', $where);
 			}
+			array_push($part, $this->prefix . 'geodata.id AS geo_id');
+			array_push($part, 'geometry');
 
-			$sql = "SELECT {$tb}.id  AS id, " . implode(', ', $part) . ', ' . $this->prefix . 'geodata.id AS geo_id,  geometry '
+			$sql = "SELECT " . implode(', ', $part)
 			. " FROM  $tb LEFT JOIN " . $this->prefix . 'geodata '
 			. " ON {$tb}.id = " . $this->prefix . 'geodata.id_link AND ' . $this->prefix . "geodata.table_link = '{$tb}' "
 			. ' WHERE geometry IS NOT NULL '

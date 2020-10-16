@@ -572,9 +572,9 @@ var api = {
 
           //ADD
           $(l_el).find('span.userlink_add')
-            .on('click', () => {
-              var thisid = $(this).data('id')
-              var thistb = $(this).data('table');
+            .on('click', (e) => {
+              var thisid = $(e.target).data('id')
+              var thistb = $(e.target).data('table');
 
               api.link.add_ui(function(tb, arr_id){
                 core.getJSON('userlinks_ctrl', 'addUserLink', { thistb: thistb, thisid: thisid, tb: tb, id: arr_id }, false, function(data){

@@ -48,12 +48,12 @@ class FormElement
 
     public function Input() : string
     {
-        return '<input ' . $this->common_attributes .
-                    $this->settings['maxlength'] .
-                    ' type="text" ' .
-                    'value="' . $this->settings['html_data'] . '" ' .
+        return '<input type="text" ' .
                     'class="form-control"' .
+                    $this->common_attributes .
+                    $this->settings['maxlength'] .
                     ($this->settings['direction'] === 'rtl' ? ' style="direction: rtl;" ' : '') .
+                    'value="' . $this->settings['html_data'] . '" ' .
                 '>';
     }
 
@@ -63,6 +63,7 @@ class FormElement
                     'class="form-control" ' .
                     $this->common_attributes .
                     $this->settings['maxlength'] .
+                    'value="' . $this->settings['html_data'] . '" ' .
                     ($this->settings['direction'] === 'rtl' ? ' style="direction: rtl;" ' : '') .
                     'value="' . $settings['html_data'] . 
                 '">';

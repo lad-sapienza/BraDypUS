@@ -458,6 +458,6 @@ class config_ctrl extends Controller
     public function getFldList()
     {
         $tb = $this->get['tb'];
-        $this->response('ok', 'success', true, ["fields" => $this->cfg->get("tables.$tb.fields.*.label")]);
+        $this->response('ok', 'success', null, ["fields" => $this->cfg->get("tables.$tb.fields.*.label")]);
     }
 }

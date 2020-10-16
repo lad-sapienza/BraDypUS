@@ -1,3 +1,4 @@
+4.0.0-alpha.185[] = "Fixed issue with config links get table columna"
 4.0.0-alpha.185[] = "Fixed issue geodata query"
 4.0.0-alpha.184[] = "Fixed issue with plugin fields not being set as such"
 4.0.0-alpha.184[] = "Table creation function also creates service columns for plugin tables"

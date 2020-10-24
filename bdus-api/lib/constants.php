@@ -22,14 +22,6 @@ define ( 'PREFIX_DELIMITER', '__');
 $error_log = MAIN_DIR . 'logs/error.log';
 ini_set('error_log', $error_log);
 
-// Make shure sessions folders exist
-if (!is_dir(MAIN_DIR . 'sessions')){
-	@mkdir(MAIN_DIR . 'sessions');
-}
-if (is_dir(MAIN_DIR . 'sessions') && is_writable(MAIN_DIR . 'sessions') ){
-	//SETS SESSION SAVE PATH
-	ini_set ( 'session.save_path', MAIN_DIR . 'sessions' );
-}
 
 //SETS SESSION MAX LIFE TIME
 ini_set('session.gc_maxlifetime', (3600*8)); #8h

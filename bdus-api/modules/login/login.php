@@ -252,22 +252,6 @@ class login_ctrl extends Controller
 		}
 	}
 
-	private static function deleteOldSessions()
-    {
-        $maxlife = 24*60*60; // 24h
-        $sessions = \utils::dirContent(MAIN_DIR . 'sessions');
-
-        if ($sessions && is_array($sessions)) {
-            foreach ($sessions as $s) {
-                $filetime = filectime(MAIN_DIR . 'sessions/' . $s);
-
-                if ($filetime && $filetime < time() - $maxlife) {
-                    @unlink(MAIN_DIR . 'sessions/' . $s);
-                }
-            }
-        }
-	}
-	
 	private function login(string $email = null, string $password = null, string $remember = null, int $user_id = null): bool
     {
         if (!$email && !$password && $remember) {
@@ -334,7 +318,6 @@ class login_ctrl extends Controller
 			\pref::save2DB($db);
 		}
 		\utils::emptyDir(PROJ_TMP_DIR);
-		self::deleteOldSessions();
 		\cookieAuth::destroy();
 		$_SESSION = [];
 		session_destroy();

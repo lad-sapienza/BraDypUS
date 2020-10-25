@@ -21,7 +21,7 @@
 ob_start();
 
 try {
-	$basePath = './';
+	$basePath = __DIR__ . DIRECTORY_SEPARATOR;
 
 	require_once './lib/constants.php';
 
@@ -30,11 +30,10 @@ try {
 
 } catch (\Throwable $e) {
 
-	$ret = [
+	echo json_encode([
 		"text" => tr::get('generic_error'), 
 		"status" => 'error'
-	];
-	echo json_encode($ret, JSON_UNESCAPED_UNICODE);
+	], JSON_UNESCAPED_UNICODE);
 
 	if (DEBUG_ON) {
 		echo "<strong>" . $e->getMessage() . "</strong>";

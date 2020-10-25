@@ -1,3 +1,4 @@
+4.0.0-alpha.188[] = "Enhaced inline doc dor Bdus\App"
 4.0.0-alpha.187[] = "Removed support for local session dir"
 4.0.0-alpha.186[] = "Fixed issue with add new manual link"
 4.0.0-alpha.186[] = "Fixed issue with Date element non showing value"

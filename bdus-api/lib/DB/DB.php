@@ -110,7 +110,9 @@ class DB implements DBInterface
 		try {
 			return $this->pdo->exec($sql) !== false;
 		} catch (\PDOException $e) {
-			$this->log->error($e, [$sql]);
+			if ($this->log){
+				$this->log->error($e, [$sql]);
+			}
 			throw new DBException($e);
 		}
 	}

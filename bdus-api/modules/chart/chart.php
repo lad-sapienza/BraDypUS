@@ -101,7 +101,7 @@ class chart_ctrl extends Controller
 			$res = $sys_manager->addRow('charts', [
 				'user_id'	=> $_SESSION['user']['id'],
 				'name'		=> $post['name'],
-				'sql'		=> QueryFromRequest::makeSafeStatement( base64_decode( $post['query_text'] ) ),
+				'sqltext'		=> QueryFromRequest::makeSafeStatement( base64_decode( $post['query_text'] ) ),
 				'date'		=> (new \DateTime())->format('Y-m-d H:i:s'),
 			]);
 
@@ -146,12 +146,12 @@ class chart_ctrl extends Controller
 			$sys_manager = new Manage($this->db, $this->prefix);
 			$chart = $sys_manager->getById('charts', $id);
 
-			$data = $this->db->query($chart['sql']);
+			$data = $this->db->query($chart['sqltext']);
 
 			$formatted_data = $this->formatResult($data);
 
 			$this->render('chart', 'display_chart', [
-				'encoded_query' => base64_encode( $chart['sql'] ),
+				'encoded_query' => base64_encode( $chart['sqltext'] ),
 				'data' 			=> $formatted_data['data'],
 				'series'		=> $formatted_data['series'],
 				'ticks'			=> $formatted_data['ticks']
@@ -199,7 +199,7 @@ class chart_ctrl extends Controller
 			$sys_manager = new Manage($this->db, $this->prefix);
 			$res = $sys_manager->editRow('charts', $id, [
 				'name' => $name,
-				'sql' => QueryFromRequest::makeSafeStatement($text)
+				'sqltext' => QueryFromRequest::makeSafeStatement($text)
 			] );
 			
 			if ( $res ) {

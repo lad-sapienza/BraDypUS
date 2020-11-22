@@ -1,16 +1,13 @@
 RewriteEngine on
-RewriteBase /
-
-RewriteCond %{SERVER_PORT} 80
-RewriteCond %{HTTP_HOST} ^db\.bradypus\.net [NC]
-RewriteRule ^(.*)$ https://db.bradypus.net/$1 [R,L]
-
-RewriteRule ^(mini|debug|logout)/?$ ./?$1=1
-
-RewriteRule (css|js|projects)/(.+) $1/$2
 
 #/api/v2/app-name/tb-name-without-prefix/data
-RewriteRule ^api/v2/([a-z0-9_]+) ./?obj=api2&method=run&app=$1 [QSA,L]
+RewriteRule ^api/v2/([a-z0-9_]+) index.php?obj=api2&method=run&app=$1 [QSA,L]
 
 #/api/app-name/tb-name-without-prefix/data
-RewriteRule ^api/([a-z0-9_]+)/([a-z_]+) ./?obj=api_ctrl&method=run&app=$1&tb=$2 [QSA,L]
+RewriteRule ^api/([a-z0-9_]+)/([a-z_]+) index.ph?obj=api_ctrl&method=run&app=$1&tb=$2 [QSA,L]
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ([a-z0-9_]+)/ index.php?app=$1 [QSA,L]
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule . index.php [L]

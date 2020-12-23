@@ -24,9 +24,9 @@ define ( 'PREFIX_DELIMITER', '__');
 ini_set('session.gc_maxlifetime', (60*60*8)); #8h
 
 /**
- * Error reporting is set to ALL but NOT: Warning or Notice
+ * Error reporting is set to nonr
  */
-error_reporting(E_ALL & ~E_WARNING & ~E_NOTICE);
+error_reporting(0);
 
 /**
  * Turn off display errors
@@ -129,7 +129,8 @@ if ( @$_GET['debug'] === '1' || $_SESSION['debug_mode'] ) {
  */
 if (DEBUG_ON === true) {
 	define('CACHE', serialize( [ "autoescape" => false, "debug" => true ] ));
-	error_reporting(E_ALL);
+	// Error reporting is set to ALL but NOT: Warning or Notice
+	error_reporting(E_ALL & ~E_WARNING & ~E_NOTICE);
 } else {
 	define('CACHE', serialize([ "autoescape" => false, "cache" => "cache"]));
 }

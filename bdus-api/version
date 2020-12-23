@@ -1,3 +1,4 @@
+4.0.0-alpha.191[] = "Undefined index fix"
 4.0.0-alpha.191[] = "Image (thumbnail) path is set relatively"
 4.0.0-alpha.191[] = "Error reporting is seto to none in prod and E_ALL & ~E_WARNING & ~E_NOTICE in dev"
 4.0.0-alpha.190[] = "Some Notices suppressed"

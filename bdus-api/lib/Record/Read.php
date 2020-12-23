@@ -504,7 +504,7 @@ EOD;
         $join = [];
 
         foreach ($cfg as $arr) {
-            if ($arr['id_from_tb']) {
+            if (isset($arr['id_from_tb'])) {
                 $ref_tb = $arr['id_from_tb'];
                 $ref_alias = uniqid('al');
                 $ref_tb_fld = $this->cfg->get("tables.{$arr['id_from_tb']}.id_field");

@@ -1,3 +1,4 @@
+4.0.0-alpha.190[] = "Default error reporting is set to: E_ALL & ~E_WARNING & ~E_NOTICE"
 4.0.0-alpha.189[] = "Rewritten .htaccess"
 4.0.0-alpha.188[] = "chart.sql renamed to chart.sqltext"
 4.0.0-alpha.188[] = "Enhaced inline documentation for constants and index"

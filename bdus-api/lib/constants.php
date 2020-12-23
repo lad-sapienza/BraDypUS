@@ -24,9 +24,9 @@ define ( 'PREFIX_DELIMITER', '__');
 ini_set('session.gc_maxlifetime', (60*60*8)); #8h
 
 /**
- * Error reporting is set to ALL but nor Notice
+ * Error reporting is set to ALL but NOT: Warning or Notice
  */
-error_reporting(E_ALL & ~E_NOTICE);
+error_reporting(E_ALL & ~E_WARNING & ~E_NOTICE);
 
 /**
  * Turn off display errors

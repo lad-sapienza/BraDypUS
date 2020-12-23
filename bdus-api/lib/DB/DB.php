@@ -145,7 +145,9 @@ class DB implements DBInterface
 		} catch (DBException $e) {
 			// Already logged!
 		} catch (\Throwable $th) {
-			$this->log->error($th);
+			if ($this->log){
+				$this->log->error($th);
+			}
 		}
 	}
 

@@ -1,3 +1,4 @@
+4.0.0-alpha.192[] = "Conditional logging in DB"
 4.0.0-alpha.192[] = "Fixed bug with implode misused"
 4.0.0-alpha.191[] = "Fix type"
 4.0.0-alpha.191[] = "Undefined index fix"

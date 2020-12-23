@@ -376,12 +376,12 @@ EOD;
                     $where = [];
                     $values = [];
                     foreach ($ld['fld'] as $c) {
-                        $where[] = " {$c['other']} = ? ";
-                        $values[] = $this->getCore($c['my'], true);
+                        array_push($where, " {$c['other']} = ? ");
+                        array_push($values, $this->getCore($c['my'], true));
                     }
 
                     $r = $this->db->query(
-                        "SELECT count(id) as tot FROM {$ld['other_tb']} WHERE " . implode($where, ' AND '),
+                        "SELECT count(id) as tot FROM {$ld['other_tb']} WHERE " . implode(' AND ', $where),
                         $values
                     );
                     $tot_links = (int)$r[0]['tot'];
@@ -429,7 +429,7 @@ EOD;
      */
     public function getPlugin( string $plugin = null, int $index = null, string $fld = null )
     {
-        $required = $plugin ? [$plugin] : $this->cfg->get("tables.{$this->tb}.plugin") ?: [];
+        $required = $plugin ? [$plugin] : ($this->cfg->get("tables.{$this->tb}.plugin") ?: []);
 
         $ret = [];
 

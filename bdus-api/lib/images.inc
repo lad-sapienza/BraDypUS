@@ -136,7 +136,7 @@ class images
 	 */
 	public static function getThumbHtml($file_array, $path = false)
 	{
-		$path = $path ? $path : PROJ_DIR . 'files/';
+		$path = $path ? $path : 'projects/' . APP . '/files/';
 
 		$data = self::checkExt($file_array['ext']);
 

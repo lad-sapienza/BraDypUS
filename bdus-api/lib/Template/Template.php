@@ -254,7 +254,7 @@ class Template implements TemplateInterface
             }
 
             foreach ($plg_fields as $fld_n => $fld_l) {
-                $html .= $this->getFld($fld_n, null, $plg, $index);
+                $html .= $this->getFld($fld_n, null, $plg, (int)$index);
             }
         }
 

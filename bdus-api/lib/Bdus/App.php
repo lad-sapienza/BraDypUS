@@ -108,13 +108,13 @@ class App
     public function route()
     {	
         // Set object
-        $obj = $this->get['obj'] ?: 'home_ctrl';
+        $obj = $this->get['obj'] ?? 'home_ctrl';
         
         // Set method
-        $method = $this->get['method'] ?: 'showAll';
+        $method = $this->get['method'] ?? 'showAll';
         
         // Compress assets and empty cache dire, if mini parameter is set
-        if ($get['mini'] === '1') {
+        if (isset($get['mini']) && $get['mini'] === '1') {
             CompressAssets::All($this->log);
             \utils::emptyDir(MAIN_DIR . 'cache', false);
         }

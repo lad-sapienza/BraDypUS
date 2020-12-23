@@ -391,7 +391,7 @@ EOD;
                             'tb_stripped' => str_replace(PREFIX, null, $ld['other_tb']),
                             "tb_label" => $this->cfg->get("tables.{$ld['other_tb']}.label"),
                             'tot' => $tot_links,
-                            'where' => implode($where, ' AND '),
+                            'where' => implode(' AND ', $where),
                             'values' => $values
                         ];
                     }

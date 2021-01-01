@@ -1,10 +1,8 @@
 <?php
-
 /**
- * @author			Julian Bogdani <jbogdani@gmail.com>
- * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
- * @license			See file LICENSE distributed with this code
- * @since				Oct 17, 2013
+ * @copyright 2008-2021 Julian Bogdani
+ * @license AGPL-3.0; see LICENSE
+ * @since Oct 17, 2013
  */
 class version
 {

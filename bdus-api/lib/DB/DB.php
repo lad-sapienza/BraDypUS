@@ -2,11 +2,9 @@
 /**
  * Main database connection class.
  * Catches and logs all PDO Exceptions and throws DBExceptions in case of errors
- *
- * @author			Julian Bogdani <jbogdani@gmail.com>
- * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
- * @license			See file LICENSE distributed with this code
- * @since			31/mar/2011
+
+ * @copyright 2008-2021 Julian Bogdani
+ * @license AGPL-3.0; see LICENSE
  */
 
 namespace DB;

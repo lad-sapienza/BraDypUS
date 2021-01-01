@@ -1,9 +1,8 @@
 <?php
 /**
-* @author			Julian Bogdani <jbogdani@gmail.com>
-* @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
-* @license			See file LICENSE distributed with this code
-* @since			Apr 7, 2012
+ * @copyright 2008-2021 Julian Bogdani
+ * @license AGPL-3.0; see LICENSE
+ * @since			Apr 7, 2012
 */
 
 // required since php 5.0.1: http://php.net/manual/en/function.date-default-timezone-set.php

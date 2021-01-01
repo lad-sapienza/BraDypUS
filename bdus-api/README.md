@@ -1,12 +1,10 @@
-# BraDypUS [v.3]
+# BraDypUS [v.4]
 
-### The web based flexible database system, now open source (MIT license)
+### The web based, flexible, free (AGPL) database system
 
 ## More information:
 
-* [bradypus.net/webdb](https://bradypus.net/webdb)
-* [bradypus.net/bdus_system](https://bradypus.net/bdus_system)
-* [db.bradypus.net](https://db.bradypus.net)
+* [bdus.cloud](https://bdus.cloud)
 
 ---
 

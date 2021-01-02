@@ -1,3 +1,4 @@
+4.0.0-alpha.194[] = "Dropped support for PROJ_TMP_DIR, replaced by system tmp dir"
 4.0.0-alpha.194[] = "Refactored file thumbnails"
 4.0.0-alpha.194[] = "Dropped support images class"
 4.0.0-alpha.194[] = "Dropped support in file.php for images class"

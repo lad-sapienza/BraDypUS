@@ -1,7 +1,5 @@
 TODO
 
-[] duplicate class images and Template\Parts\Images
-
 [] remove constants in libs
 
 [] sys tables managed via system\manager
@@ -11,13 +9,13 @@ TODO
 [ ] Test Record\Edit
 [ ] Test Record\Persist
 
-[x] Record\Edit uses STATIC! Read::
-
-[x] Validate must check also for backup executables!
-
 [] replace fine uploader with https://github.com/flowjs/flow.js and https://github.com/flowjs/flow-php-server
 
 [] replace jqplot with chart.js
+
+[x] Validate must check also for backup executables!
+
+[x] Record\Edit uses STATIC! Read::
 
 [x] replace jquery-sortable with https://sortablejs.github.io/sortablejs/
 

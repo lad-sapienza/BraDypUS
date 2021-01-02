@@ -316,7 +316,6 @@ class login_ctrl extends Controller
 		if ($db){
 			\pref::save2DB($db);
 		}
-		\utils::emptyDir(PROJ_TMP_DIR);
 		\cookieAuth::destroy();
 		$_SESSION = [];
 		session_destroy();

@@ -56,7 +56,7 @@ class Record implements RecordInterface
 		$this->tb = $tb;
 		$this->db = $db;
 		$this->cfg = $cfg;
-		$this->tmp_dir = PROJ_TMP_DIR;
+		$this->tmp_dir = sys_get_temp_dir();
 
 		if ($id === 'last_added') {
 			$t = $db->query('SELECT id FROM ' . $tb . ' WHERE 1=1 ORDER BY id DESC LIMIT 1 OFFSET 0', null, 'read');

@@ -75,14 +75,12 @@ if( defined('APP') ) {
 	define ( 'PREFIX', APP . PREFIX_DELIMITER);
 	
 	define ( 'PROJ_DIR', 		MAIN_DIR . 'projects' . DIRECTORY_SEPARATOR . APP . DIRECTORY_SEPARATOR);
-	define ( 'PROJ_TMP_DIR',	sys_get_temp_dir() );
 	
 	/*
 	 * Create directories that MUST exist for each valid app
 	 */
 	$must_exist_dirs = [
 		PROJ_DIR . 'files', 
-		PROJ_TMP_DIR, 
 		PROJ_DIR . 'backups', 
 		PROJ_DIR . 'export', 
 		PROJ_DIR . 'db'

@@ -83,6 +83,7 @@ class record_ctrl extends Controller
             return;
         }
         if (is_array($this->request['id'])) {
+            $error = [];
             foreach ($this->request['id'] as $id) {
                 try {
                     $record = new Record($this->get['tb'], $id, $this->db, $this->cfg);
@@ -96,7 +97,7 @@ class record_ctrl extends Controller
                 }
             }
 
-            if (count($this->request['id']) == count($error)) {
+            if ( count($this->request['id']) ===  count($error) ) {
                 $data = array('status' => 'error', 'text' => \tr::get('no_record_deleted'));
             } elseif (count($this->request['id']) == count($ok)) {
                 $data = array('status' => 'success', 'text' => \tr::get('all_record_deleted'));

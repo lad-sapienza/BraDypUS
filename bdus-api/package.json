@@ -3,7 +3,7 @@
   "version": "4.0.0",
   "description": "BraDypUS web database system",
   "scripts": {
-    "move": "cp node_modules/jquery/dist/jquery.min.js js/ && cp node_modules/jquery/dist/jquery.min.map js/ && cp node_modules/bootstrap/dist/js/bootstrap.min.js js/ && cp node_modules/bootstrap/dist/css/bootstrap.min.css css/ && cp node_modules/bootstrap/dist/css/bootstrap.min.css.map css/  && cp node_modules/izitoast/dist/js/iziToast.min.js js/ && cp node_modules/izitoast/dist/css/iziToast.min.css css/ && cp node_modules/datatables.net/js/jquery.dataTables.min.js js/ && cp node_modules/datatables.net-bs/js/dataTables.bootstrap.min.js js/ && cp node_modules/datatables.net-bs/css/dataTables.bootstrap.min.css css/ && cp node_modules/select2/dist/js/select2.full.min.js js/ && cp -r node_modules/select2/dist/js/i18n js/ && cp node_modules/select2/dist/css/select2.min.css css/ && cp node_modules/font-awesome/css/font-awesome.min.css css/  && cp node_modules/font-awesome/css/font-awesome.css.map css/  && cp -r node_modules/font-awesome/fonts/* fonts/ & cp node_modules/sortablejs/dist/sortable.umd.js js/"
+    "move": "cp node_modules/jquery/dist/jquery.min.js js/ && cp node_modules/jquery/dist/jquery.min.map js/ && cp node_modules/bootstrap/dist/js/bootstrap.min.js js/ && cp node_modules/bootstrap/dist/css/bootstrap.min.css css/ && cp node_modules/bootstrap/dist/css/bootstrap.min.css.map css/  && cp node_modules/izitoast/dist/js/iziToast.min.js js/ && cp node_modules/izitoast/dist/css/iziToast.min.css css/ && cp node_modules/datatables.net/js/jquery.dataTables.min.js js/ && cp node_modules/datatables.net-bs/js/dataTables.bootstrap.min.js js/ && cp node_modules/datatables.net-bs/css/dataTables.bootstrap.min.css css/ && cp node_modules/select2/dist/js/select2.full.min.js js/ && cp -r node_modules/select2/dist/js/i18n js/ && cp node_modules/select2/dist/css/select2.min.css css/ && cp node_modules/font-awesome/css/font-awesome.min.css css/  && cp node_modules/font-awesome/css/font-awesome.css.map css/  && cp -r node_modules/font-awesome/fonts/* fonts/ && cp node_modules/sortablejs/dist/sortable.umd.js js/ && cp node_modules/@fancyapps/fancybox/dist/jquery.fancybox.min.js js/ && cp node_modules/@fancyapps/fancybox/dist/jquery.fancybox.min.css css/"
   },
   "repository": {
     "type": "git",
@@ -16,6 +16,7 @@
   },
   "homepage": "https://github.com/bdus-db/BraDypUS",
   "devDependencies": {
+    "@fancyapps/fancybox": "^3.5.7",
     "bootstrap": "^3.4.1",
     "datatables.net": "^1.10.22",
     "datatables.net-bs": "^1.10.22",
@@ -24,6 +25,5 @@
     "jquery": "^3.5.1",
     "select2": "^4.0.13",
     "sortablejs": "^1.12.0"
-
   }
 }

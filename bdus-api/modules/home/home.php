@@ -22,6 +22,7 @@ class home_ctrl extends Controller
         'dataTables.bootstrap.min.js',
         'select2.full.min.js',
         'sortable.umd.js',
+        'jquery.fancybox.min.js',
     ];
     
     private $css_libs = [
@@ -30,6 +31,7 @@ class home_ctrl extends Controller
         'dataTables.bootstrap.min.css',
         'select2.min.css',
         'font-awesome.min.css',
+        'jquery.fancybox.min.css',
         'bdus.min.css'
     ];
 

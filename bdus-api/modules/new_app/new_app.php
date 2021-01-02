@@ -1,4 +1,9 @@
 <?php
+/**
+ * @copyright 2008-2021 Julian Bogdani
+ * @license AGPL-3.0; see LICENSE
+ * @since 4.0.0
+ */
 
 
 class new_app_ctrl extends Controller

@@ -1,9 +1,7 @@
 <?php
 /**
- * Search and replace controller class
- * @author			Julian Bogdani <jbogdani@gmail.com>
- * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
- * @license			See file LICENSE distributed with this code
+ * @copyright 2008-2021 Julian Bogdani
+ * @license AGPL-3.0; see LICENSE
  * @since			Aug 10, 2012
  */
 

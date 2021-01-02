@@ -1,5 +1,8 @@
 <?php
 /**
+ * @copyright 2008-2021 Julian Bogdani
+ * @license AGPL-3.0; see LICENSE
+ * 
  * Returns list of values to use as select2 ajax source
  * @uses DB
  * @uses  \SQL\QueryBuilder

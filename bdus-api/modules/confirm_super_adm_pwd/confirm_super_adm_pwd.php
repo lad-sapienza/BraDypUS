@@ -1,5 +1,10 @@
 <?php
-use DB\System\Manage;
+/**
+ * @copyright 2008-2021 Julian Bogdani
+ * @license AGPL-3.0; see LICENSE
+ */
+
+ use DB\System\Manage;
 
 class confirm_super_adm_pwd_ctrl extends Controller
 {

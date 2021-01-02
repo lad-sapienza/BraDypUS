@@ -1,5 +1,10 @@
 <?php 
-use DB\Engines\AvailableEngines;
+/**
+ * @copyright 2008-2021 Julian Bogdani
+ * @license AGPL-3.0; see LICENSE
+ */
+
+ use DB\Engines\AvailableEngines;
 use DB\Validate\Validate;
 use DB\System\Manage;
 use \DB\Alter;

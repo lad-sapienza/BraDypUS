@@ -35,6 +35,7 @@ class file_ctrl extends Controller
 			$result = $this->upload();
 
 			if (!$result['success']) {
+				$this->log->error($result['error']);
 				throw new \Exception('error_uploading_file');
 			}
 
@@ -88,8 +89,8 @@ class file_ctrl extends Controller
 
 		$result = $uploader->handleUpload($upload_dir);
 
-		if ($result['success'])
-		{
+
+		if ($result['success']) {
 
 			$result['filename'] = pathinfo($uploader->getUploadName(), PATHINFO_FILENAME);
 
@@ -97,7 +98,7 @@ class file_ctrl extends Controller
 
 			$result['uploadDir'] = $upload_dir;
 
-			$result['thumbnail'] = images::getThumbHtml(array('id' => $result['filename'], 'ext' => $result['ext']), $upload_dir);
+			$result['thumbnail'] = Images::getThumbHtml( ['id' => $result['filename'], 'ext' => $result['ext'] ], $upload_dir);
 
 			$maxImageSize = $this->cfg->get('main.maxImageSize') ?: 1500;
 
@@ -105,9 +106,10 @@ class file_ctrl extends Controller
 
 		}
 
-		if ($this->request['dont_echo'])
-		{
+		if ($this->request['dont_echo']) {
 			return $result;
+		} else {
+			echo json_encode($result);
 		}
 		else
 		{

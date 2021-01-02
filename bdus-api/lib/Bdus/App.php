@@ -118,7 +118,7 @@ class App
         $method = $this->get['method'] ?? 'showAll';
         
         // Compress assets and empty cache dire, if mini parameter is set
-        if (isset($get['mini']) && $get['mini'] === '1') {
+        if (isset($this->get['mini']) && $this->get['mini'] === '1') {
             CompressAssets::All($this->log);
             \utils::emptyDir(MAIN_DIR . 'cache', false);
         }

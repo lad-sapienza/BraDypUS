@@ -10,7 +10,7 @@
  * 
  */
 
- use Bdus\CompressAssets;
+use Bdus\CompressAssets;
 
 class home_ctrl extends Controller 
 {

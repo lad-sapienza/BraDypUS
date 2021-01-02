@@ -2,7 +2,10 @@
 /**
  * @copyright 2008-2021 Julian Bogdani
  * @license AGPL-3.0; see LICENSE
+ * @since 4.0.0
  */
+declare(strict_types = 1);
+
 namespace Bdus;
 
 use JShrink\Minifier;
@@ -35,7 +38,7 @@ class CompressAssets
     {
         return  self::moduleJS($log) 
                 && 
-                self::Css($log) 
+                self::Css($log)
                 && 
                 self::Js($log, self::$js_compress_libs);
     }
@@ -130,7 +133,7 @@ class CompressAssets
         return self::write_if_different( $minified_file, $mini_js_text, $log);
     }
     
-    private function write_if_different(string $dest_file, string $text, Logger $log): bool
+    private static function write_if_different(string $dest_file, string $text, Logger $log): bool
     {
         if ( file_exists($dest_file) && hash_file('sha256', $dest_file) !== hash('sha256', $text ) ) {
             $deleted = @unlink($dest_file);

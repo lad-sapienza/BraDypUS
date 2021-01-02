@@ -4,7 +4,10 @@
  * @license AGPL-3.0; see LICENSE
  * @since			Jan 8, 2013
  */
+
 use \DB\System\Manage;
+use \Intervention\Image\ImageManager;
+use \Template\Parts\Images;
 
 class file_ctrl extends Controller
 {
@@ -102,7 +105,7 @@ class file_ctrl extends Controller
 
 			$maxImageSize = $this->cfg->get('main.maxImageSize') ?: 1500;
 
-			images::resizeIfImg($result['uploadDir'] . $result['filename'] . '.' . $result['ext'], $maxImageSize);
+			$this->silentlyResize($result['uploadDir'] . $result['filename'] . '.' . $result['ext'], $maxImageSize);
 
 		}
 
@@ -111,11 +114,26 @@ class file_ctrl extends Controller
 		} else {
 			echo json_encode($result);
 		}
-		else
-		{
-			echo json_encode($result);
-		}
 	}
+
+	private function silentlyResize($file, $maxImageSize)
+    {
+        // Silently return true if file does not exist
+        if (!file_exists($file)) {
+            return true;
+        }
+        // Silently return true if file is not an image
+        if (substr( strtolower(mime_content_type($file)), 0, 5 ) !== "image"){
+            return true;
+        }
+        
+        $im = new ImageManager();
+        $img = $im->make($file)->resize($maxImageSize, $maxImageSize, function ($constraint) {
+            $constraint->aspectRatio();
+            $constraint->upsize();
+        })->save()->destroy();
+        return true;
+    }
 
 
 	/**

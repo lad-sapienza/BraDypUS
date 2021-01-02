@@ -1,10 +1,8 @@
 # Dump the contents of a database
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/spatie/db-dumper.svg?style=flat-square)](https://packagist.org/packages/spatie/db-dumper)
+![run-tests](https://github.com/spatie/db-dumper/workflows/run-tests/badge.svg)
 [![MIT Licensed](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE.md)
-![GitHub Workflow Status](https://img.shields.io/github/workflow/status/spatie/db-dumper/run-tests?label=Tests)
-[![Quality Score](https://img.shields.io/scrutinizer/g/spatie/db-dumper.svg?style=flat-square)](https://scrutinizer-ci.com/g/spatie/db-dumper)
-[![StyleCI](https://styleci.io/repos/49829051/shield?branch=master)](https://styleci.io/repos/49829051)
 [![Total Downloads](https://img.shields.io/packagist/dt/spatie/db-dumper.svg?style=flat-square)](https://packagist.org/packages/spatie/db-dumper)
 
 This repo contains an easy to use class to dump a database using PHP. Currently MySQL, PostgreSQL, SQLite and MongoDB are supported. Behind
@@ -52,9 +50,7 @@ Spatie\DbDumper\Databases\MongoDb::create()
 
 ## Support us
 
-Learn how to create a package like this one, by watching our premium video course:
-
-[![Laravel Package training](https://spatie.be/github/package-training.jpg)](https://laravelpackage.training)
+[<img src="https://github-ads.s3.eu-central-1.amazonaws.com/db-dumper.jpg?t=1" width="419px" />](https://spatie.be/github-ad-click/db-dumper)
 
 We invest a lot of resources into creating [best in class open source packages](https://spatie.be/open-source). You can support us by [buying one of our paid products](https://spatie.be/open-source/support-us).
 
@@ -276,7 +272,7 @@ composer test
 
 ## Contributing
 
-Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
+Please see [CONTRIBUTING](.github/CONTRIBUTING.md) for details.
 
 ## Security
 
@@ -288,13 +284,6 @@ If you discover any security related issues, please email freek@spatie.be instea
 - [All Contributors](../../contributors)
 
 Initial PostgreSQL support was contributed by [Adriano Machado](https://github.com/ammachado). SQlite support was contributed by [Peter Matseykanets](https://twitter.com/pmatseykanets).
-
-## Support us
-
-Spatie is a webdesign agency based in Antwerp, Belgium. You'll find an overview of all our open source projects [on our website](https://spatie.be/opensource).
-
-Does your business depend on our contributions? Reach out and support us on [Patreon](https://www.patreon.com/spatie).
-All pledges will be dedicated to allocating workforce on maintenance and new awesome stuff.
 
 ## License
 

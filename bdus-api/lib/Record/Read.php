@@ -269,34 +269,45 @@ EOD;
     public function getFiles()
     {
         if (!isset($this->cache['files'])) {
+
             $prefix = PREFIX;
-            $sql = <<<EOD
+
+            if ($this->tb === $prefix . 'files' ){
+                $core = $this->getCore();
+                $tmp = [];
+                foreach ($core as $key => $value) {
+                    $tmp[$key] = $value['val'];
+                }
+                $this->cache['files'] = [$tmp];
+            } else {
+
+                $sql = <<<EOD
 SELECT {$prefix}files.*
 FROM {$prefix}files
-      INNER JOIN
-      {$prefix}userlinks AS ul ON (ul.tb_one = '{$prefix}files' AND 
-                                   ul.id_one = {$prefix}files.id AND 
-                                   ul.tb_two = ? AND 
-                                   ul.id_two = ?) OR 
-                                  (ul.tb_two = '{$prefix}files' AND 
-                                   ul.id_two = {$prefix}files.id AND 
-                                   ul.tb_one = ? AND 
-                                   ul.id_one = ?) 
+    INNER JOIN
+    {$prefix}userlinks AS ul ON (ul.tb_one = '{$prefix}files' AND 
+                                ul.id_one = {$prefix}files.id AND 
+                                ul.tb_two = ? AND 
+                                ul.id_two = ?) OR 
+                                (ul.tb_two = '{$prefix}files' AND 
+                                ul.id_two = {$prefix}files.id AND 
+                                ul.tb_one = ? AND 
+                                ul.id_one = ?) 
 WHERE 1=1
 ORDER BY ul.sort;
-  
 )
 EOD;
-            $sql_val = [
-                $this->tb,
-                $this->id,
-                $this->tb,
-                $this->id
-            ];
+                $sql_val = [
+                    $this->tb,
+                    $this->id,
+                    $this->tb,
+                    $this->id
+                ];
 
-            $ret = $this->db->query($sql, $sql_val);
+                $this->cache['files'] = $this->db->query($sql, $sql_val);
 
-            $this->cache['files'] = $ret;
+            }
+
         }
         return $this->cache['files'];
         

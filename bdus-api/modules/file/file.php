@@ -65,6 +65,7 @@ class file_ctrl extends Controller
 
 			$result['status'] = 'success';
 			$result['text'] = \tr::get('file_uploaded_and_attached');
+			$result['thumbnail'] = Images::getThumbHtml( ['id' => $record->getCore('id'), 'ext' => $record->getCore('ext') ]);
 
 			echo json_encode($result);
 
@@ -86,7 +87,7 @@ class file_ctrl extends Controller
 	 */
 	public function upload()
 	{
-		$upload_dir = $this->request['upload_dir'] ?: PROJ_TMP_DIR;
+		$upload_dir = $this->request['upload_dir'] ?: sys_get_temp_dir();
 
 		$uploader = new qqFileUploader();
 

@@ -92,6 +92,8 @@ class home_ctrl extends Controller
                             'type="text/javascript" ' .
 						    'src="assets/' . $asset . '?sha256=' . hash_file('sha256', "assets/$asset") . '"></script>'
                 );
+            } elseif (substr( $asset, -4 ) === '.map') {
+                // ignore map files...
             } else {
                 $this->log->warning("Unknown asset type: `$asset`");
             }

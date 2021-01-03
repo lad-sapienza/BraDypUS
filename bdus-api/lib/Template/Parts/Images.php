@@ -6,6 +6,9 @@
 
 namespace Template\Parts;
 
+use \Intervention\Image\ImageManager;
+
+
 class Images
 {
     /**
@@ -230,13 +233,14 @@ class Images
         $data = self::checkExt($file_array['ext']);
         
         if ($data['type'] === 'image') {
+            $thumb = self::getThumb($path . $file_array['id'] . '.' . $file_array['ext']);
+            
             $html = '<div class="preview-item">'
             . '<a data-fancybox href="' . $path . $file_array['id'] . '.' . $file_array['ext'] . '"> '
             . '<img class="" '
-            . 'src="' . $path . $file_array['id'] . '.' . $file_array['ext'] . '?' . uniqid('file') . '" '
-            . 'style="" '
-            . ( $file_array['description'] ? ' alt="' . str_replace('"', null, $file_array['description']) . '" ' : ''  )
-            . ( $file_array['description'] ? ' title="' . str_replace('"', null, $file_array['description']) . '" ' : '')
+            . 'src="' . $thumb . '" '
+            . ( $file_array['description'] ? ' alt="' . str_replace('"', '', $file_array['description']) . '" ' : ''  )
+            . ( $file_array['description'] ? ' title="' . str_replace('"', '', $file_array['description']) . '" ' : '')
             . ' =""'
             . '/>'
             . '</a></div>';
@@ -248,5 +252,25 @@ class Images
             .'</div>';
         }
         return $html;
+    }
+    
+    private static function getThumb( string $file ): string
+    {
+        if (!\is_dir("cache/img")){
+            \mkdir("cache/img");
+        }
+        $hash = md5_file($file);
+        $thumb = "cache/img/{$hash}";
+        if (!file_exists($thumb)){
+            $im = new ImageManager();
+            $img = $im->make($file)->resize(200, 200, function ($constraint) {
+                $constraint->aspectRatio();
+                $constraint->upsize();
+            })->save($thumb)->destroy();
+        }
+        if (!file_exists($thumb)){
+            return $file . '?' . $hash;
+        }
+        return $thumb;
     }
 }

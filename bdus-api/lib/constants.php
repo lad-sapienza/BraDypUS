@@ -12,7 +12,6 @@ date_default_timezone_set('Europe/Rome');
  * Main CONSTANTS are always set
  */
 define ( 'MAIN_DIR',	$basePath);
-define ( 'MOD_DIR',		MAIN_DIR . 'modules' . DIRECTORY_SEPARATOR );
 define ( 'LOCALE_DIR',	MAIN_DIR . 'locale' . DIRECTORY_SEPARATOR );
 define ( 'PREFIX_DELIMITER', '__');
 
@@ -133,4 +132,4 @@ if (DEBUG_ON === true) {
 
 require_once MAIN_DIR . 'lib/autoLoader.php';
 require_once $root . 'vendor/autoload.php';
-new autoLoader(MAIN_DIR . 'lib/', MOD_DIR);
+new autoLoader(MAIN_DIR . 'lib/', MAIN_DIR . 'modules/');

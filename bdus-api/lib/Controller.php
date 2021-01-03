@@ -68,13 +68,13 @@ abstract class Controller
 	
 	public function compileTmpl($module, $template, $data = [])
 	{
-		if (!file_exists(MOD_DIR . $module . '/tmpl/' . $template . '.twig')) {
+		if (!file_exists(MAIN_DIR . 'modules/' . $module . '/tmpl/' . $template . '.twig')) {
 			throw new \Exception('Template not found');
 		}
 
 		$settings = unserialize(CACHE);
 		
-		$twig = new \Twig\Environment( new \Twig\Loader\FilesystemLoader(MOD_DIR . $module . '/tmpl'), $settings );
+		$twig = new \Twig\Environment( new \Twig\Loader\FilesystemLoader(MAIN_DIR . 'modules/' . $module . '/tmpl'), $settings );
 		if ($settings['debug']) {
 			$twig->addExtension(new \Twig\Extension\DebugExtension());
 		}

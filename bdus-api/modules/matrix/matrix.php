@@ -26,7 +26,7 @@ class matrix_ctrl extends Controller
 			
 			$this->render('matrix', 'matrix', array(
 				'dotText' => $safeDotTex,
-				'selfPath' => MOD_DIR . 'matrix/',
+				'selfPath' => MAIN_DIR . 'modules/matrix/',
 				'tb' => $tb
 			));
 		} catch (\Exception $e) {

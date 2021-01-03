@@ -1,3 +1,4 @@
+4.0.0-alpha.195[] = "Gulp is used for js and css"
 4.0.0-alpha.194[] = "Updated dataTables and Sortable"
 4.0.0-alpha.194[] = "Dropped support for PROJ_TMP_DIR, replaced by system tmp dir"
 4.0.0-alpha.194[] = "Refactored file thumbnails"

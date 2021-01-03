@@ -3,7 +3,8 @@
   "version": "4.0.0",
   "description": "BraDypUS web database system",
   "scripts": {
-    "move": "cp node_modules/jquery/dist/jquery.min.js js/ && cp node_modules/jquery/dist/jquery.min.map js/ && cp node_modules/bootstrap/dist/js/bootstrap.min.js js/ && cp node_modules/bootstrap/dist/css/bootstrap.min.css css/ && cp node_modules/bootstrap/dist/css/bootstrap.min.css.map css/  && cp node_modules/izitoast/dist/js/iziToast.min.js js/ && cp node_modules/izitoast/dist/css/iziToast.min.css css/ && cp node_modules/datatables.net/js/jquery.dataTables.min.js js/ && cp node_modules/datatables.net-bs/js/dataTables.bootstrap.min.js js/ && cp node_modules/datatables.net-bs/css/dataTables.bootstrap.min.css css/ && cp node_modules/select2/dist/js/select2.full.min.js js/ && cp -r node_modules/select2/dist/js/i18n js/ && cp node_modules/select2/dist/css/select2.min.css css/ && cp node_modules/font-awesome/css/font-awesome.min.css css/  && cp node_modules/font-awesome/css/font-awesome.css.map css/  && cp -r node_modules/font-awesome/fonts/* fonts/ && cp node_modules/sortablejs/Sortable.min.js js/ && cp node_modules/@fancyapps/fancybox/dist/jquery.fancybox.min.js js/ && cp node_modules/@fancyapps/fancybox/dist/jquery.fancybox.min.css css/"
+    "build": "gulp build",
+    "dev": "gulp"
   },
   "repository": {
     "type": "git",
@@ -21,6 +22,12 @@
     "datatables.net": "^1.10.23",
     "datatables.net-bs": "^1.10.23",
     "font-awesome": "^4.7.0",
+    "gulp": "^4.0.2",
+    "gulp-clean-css": "^4.3.0",
+    "gulp-concat": "^2.6.1",
+    "gulp-less": "^4.0.1",
+    "gulp-rename": "^2.0.0",
+    "gulp-terser": "^2.0.0",
     "izitoast": "^1.4.0",
     "jquery": "^3.5.1",
     "select2": "^4.0.13",

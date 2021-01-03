@@ -5,42 +5,34 @@
   <title>BraDypUS {{ version }}{% if app_label %}::{{ app_label }}{% endif %}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <link rel="shortcut icon" href="./assets/bdus/img/favicon.ico">
+  <link rel="shortcut icon" type="image/png" href="./assets/bdus/img/favicon.png">
+  <link rel="shortcut icon" sizes="192x192" href="./assets/bdus/img/favicon.png">
+  <link rel="apple-touch-icon" href="./assets/bdus/img/favicon.png">
 
   <script>
-  const lang = {{ tr_json }};
-  </script>
-  <script>
-    var debugMode = {{ debugMode }};
-    var prefix = "{{ prefix }}";
+    const lang = {{ tr_json }};
+    const debugMode = {{ debugMode }};
+    const prefix = "{{ prefix }}";
   </script>
   {{ assets }}
   
   <script>
     $(document).ready(function(){
       layout.init();
-
-      {% if can_user_enter %}
-
+{% if can_user_enter %}
       layout.loadHome();
       hashActions.map2action();
-
-      {% elseif request and token %}
-
+{% elseif request and token %}
       core.runMod('login', ['loadResetPwd', '{{ request_app }}', '{{ address }}', '{{ token }}'], function(){
         login.loadLogin();
       });
-
-      {% else %}
-
+{% else %}
       core.runMod('login', false, function(){
         login.autologin('{{ request_app }}');
         login.loadLogin('{{ request_app }}');
       });
-
-      {% endif %}
+{% endif %}
     });
-
 {% if googleanaytics %}
     var _gaq = _gaq || [];
     _gaq.push(['_setAccount', '{{ googleanaytics }}']);

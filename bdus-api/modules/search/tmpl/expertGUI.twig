@@ -62,7 +62,11 @@
 
 <script>
 	$('#{{ uid }} .insert').click(function(){
-		$(this).parents('form').find('textarea[name="querytext"]').insertAtCaret($(this).data('value'));
+		const text = $(this).data('value');
+		const el = document.querySelector('#{{ uid }} textarea[name="querytext"]');
+		const [start, end] = [el.selectionStart, el.selectionEnd];
+		el.setRangeText(text, start, end);
+		
 	});
 
 	$('#{{ uid }} button.send').on('click', function(){

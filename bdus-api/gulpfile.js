@@ -51,7 +51,6 @@ const bdusJs = [
     "jqplot.categoryAxisRenderer.min.js",
     "jqplot.pointLabels.js",
     "export-jqplot-to-png.js",
-    "jquery.insertAtCaret.js",
     "hashActions.js"
 ];
 

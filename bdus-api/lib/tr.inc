@@ -31,16 +31,16 @@ class tr
 
 			$computer_lang = substr($_SERVER["HTTP_ACCEPT_LANGUAGE"], 0, 2);
 
-            if ($cfg_lang && file_exists(LOCALE_DIR . $cfg_lang . '.json')) {
+            if ($cfg_lang && file_exists(MAIN_DIR . 'locale/' . $cfg_lang . '.json')) {
                 \pref::setLang($cfg_lang);
-            } else if ($computer_lang && file_exists (LOCALE_DIR . $computer_lang . '.json') ) {
+            } else if ($computer_lang && file_exists (MAIN_DIR . 'locale/' . $computer_lang . '.json') ) {
 				\pref::setLang($computer_lang);
 			} else {
 				\pref::setLang('en');
 			}
 		}
 		self::$language_strings = json_decode(
-			file_get_contents(LOCALE_DIR . \pref::getLang() . '.json'),
+			file_get_contents(MAIN_DIR . 'locale/' . \pref::getLang() . '.json'),
 			true
 		);
 
@@ -83,7 +83,7 @@ class tr
 
 	public static function getAvailable(): array
 	{
-		$langs = \utils::dirContent(LOCALE_DIR) ?? [];
+		$langs = \utils::dirContent(MAIN_DIR . 'locale/') ?? [];
 		
 		array_walk($langs, function(&$el){ $el =  str_replace('.json', null, $el); });
 

@@ -12,7 +12,6 @@ date_default_timezone_set('Europe/Rome');
  * Main CONSTANTS are always set
  */
 define ( 'MAIN_DIR',	$basePath);
-define ( 'LOCALE_DIR',	MAIN_DIR . 'locale' . DIRECTORY_SEPARATOR );
 define ( 'PREFIX_DELIMITER', '__');
 
 /**

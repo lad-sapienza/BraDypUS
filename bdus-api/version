@@ -1,4 +1,6 @@
-4.0.0-alpha.200[] = "Removed constant LIB_DIR"
+4.0.0-alpha.201[] = "Removed constant LOCALE_DIR"
+4.0.0-alpha.201[] = "Removed constant MOD_DIR"
+4.0.0-alpha.201[] = "Removed constant LIB_DIR"
 4.0.0-alpha.200[] = "Updated favicon"
 4.0.0-alpha.200[] = "Image thumbnails are created and cashed"
 4.0.0-alpha.199[] = "New asset management"

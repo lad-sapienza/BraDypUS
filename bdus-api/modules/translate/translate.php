@@ -9,7 +9,7 @@ class translate_ctrl extends Controller
 {
 	public function showList()
 	{
-		$lang_files = \utils::dirContent(LOCALE_DIR);
+		$lang_files = \utils::dirContent(MAIN_DIR . 'locale/');
 		$available_lang = [];
 
 		foreach ($lang_files as $file) {
@@ -40,7 +40,7 @@ class translate_ctrl extends Controller
 	{
 		$lang = $this->get['lang'];
 		
-		if ( file_exists(LOCALE_DIR . $lang . '.json') ){
+		if ( file_exists(MAIN_DIR . 'locale/' . $lang . '.json') ){
 			$this->response('error_lang_exists', 'error', [$lang]);
 			return;
 		}
@@ -67,17 +67,17 @@ class translate_ctrl extends Controller
 
 	private function arrayToFile(string $lang, array $data): bool
 	{
-		return file_put_contents(LOCALE_DIR . $lang . '.json', json_encode($data, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE));
+		return file_put_contents(MAIN_DIR . 'locale/' . $lang . '.json', json_encode($data, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE));
 	}
 
 	private function getAllString(string $lang): array
 	{
-		if (!file_exists(LOCALE_DIR . $lang . '.json')){
+		if (!file_exists(MAIN_DIR . 'locale/' . $lang . '.json')){
 			throw new Exception("Language file {$lang}.json not found");
 		}
 
 		$arr = json_decode(
-			file_get_contents(LOCALE_DIR . $lang . '.json'),
+			file_get_contents(MAIN_DIR . 'locale/' . $lang . '.json'),
 			true
 		);
 		if (!is_array($arr)){

@@ -5,9 +5,7 @@
   <title>BraDypUS {{ version }}{% if app_label %}::{{ app_label }}{% endif %}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  {{ css_libs }}
-
-  <link rel="shortcut icon" href="./img/favicon.ico">
+  <link rel="shortcut icon" href="./assets/bdus/img/favicon.ico">
 
   <script>
   const lang = {{ tr_json }};
@@ -16,7 +14,7 @@
     var debugMode = {{ debugMode }};
     var prefix = "{{ prefix }}";
   </script>
-  {{ js_libs }}
+  {{ assets }}
   
   <script>
     $(document).ready(function(){

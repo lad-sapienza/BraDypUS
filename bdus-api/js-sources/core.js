@@ -59,7 +59,7 @@ var core = {
 		/**
 		 * returns img tag with loading gif
 		 */
-		loading : '<img src="./img/loader.gif"  alt="loading..." />',
+		loading : '<img src="./assets/bdus/img/loader.gif"  alt="loading..." />',
 
 		_get2url: function(get){
 			if (typeof get === 'string'){

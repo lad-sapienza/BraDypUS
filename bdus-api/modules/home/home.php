@@ -12,25 +12,45 @@
 
 class home_ctrl extends Controller 
 {
-    private $js_libs = [
-        'jquery.min.js',
-        'bootstrap.min.js',
-        'iziToast.min.js',
-        'jquery.dataTables.min.js',
-        'dataTables.bootstrap.min.js',
-        'select2.full.min.js',
-        'Sortable.min.js',
-        'jquery.fancybox.min.js',
-    ];
-    
-    private $css_libs = [
-        'bootstrap.min.css',
-        'iziToast.min.css',
-        'dataTables.bootstrap.min.css',
-        'select2.min.css',
-        'font-awesome.min.css',
-        'jquery.fancybox.min.css',
-        'bdus.min.css'
+    private $assets = [
+        // jquery
+        "jquery/dist/jquery.min.js",
+        "jquery/dist/jquery.min.map",
+
+        // bootstrap
+        "bootstrap/dist/js/bootstrap.min.js",
+        "bootstrap/dist/css/bootstrap.min.css",
+        "bootstrap/dist/css/bootstrap.min.css.map",
+
+        // izitoast
+        "izitoast/dist/js/iziToast.min.js",
+        "izitoast/dist/css/iziToast.min.css",
+
+        // datatables.net
+        "datatables.net/js/jquery.dataTables.min.js",
+
+        // datatables.net-bs
+        "datatables.net-bs/js/dataTables.bootstrap.min.js",
+        "datatables.net-bs/css/dataTables.bootstrap.min.css",
+
+        // select2
+        "select2/dist/js/select2.full.min.js",
+        "select2/dist/css/select2.min.css",
+
+        // sortablejs
+        "sortablejs/Sortable.min.js",
+
+        // fancybox
+        "@fancyapps/fancybox/dist/jquery.fancybox.min.js",
+        "@fancyapps/fancybox/dist/jquery.fancybox.min.css",
+
+        // font-awesome
+        "font-awesome/css/font-awesome.min.css",
+        "font-awesome/css/font-awesome.css.map",
+
+        // bdus
+        "bdus/bdus.min.css",
+        "bdus/bdus.min.js"
     ];
 
     public function showAll()
@@ -38,8 +58,7 @@ class home_ctrl extends Controller
         $this->render('home', 'main', [
             "version" => version::current(),
             "app_label" => strtoupper($this->cfg ? $this->cfg->get('main.name') : ''),
-            "css_libs" => $this->showCSS(),
-            "js_libs" => $this->showJS( $_SESSION['debug_mode'] === true ),
+            "assets" => $this->loadAssets(),
             "tr_json" => \tr::lang2json(),
             "debugMode" => DEBUG_ON ? "true" : "false",
             "prefix" => $this->prefix ?: '',
@@ -51,49 +70,37 @@ class home_ctrl extends Controller
         ]);
     }
 
-    private function showCSS(): string
+    private function loadAssets(): string
     {
         $html = [];
-        foreach ($this->css_libs as $css_file) {
-            $full_path = "./css/$css_file";
-            if (file_exists($full_path)){
-            
-                array_push(
-                    $html,
-                    '<link type="text/css" media="all" rel="stylesheet" href="' . $full_path . '?sha256' . hash_file('sha256', $full_path) . '" />'
-                );
-            } else {
-                $this->log->warning("CSS file `$full_path` not found");
-            }
-        }
-        return implode("\n  ", $html);
-    }
+        foreach ($this->assets as $asset) {
 
-    private function showJS( bool $debug = false ): string
-    {
-        $files_to_include = $this->js_libs;
-        array_push($files_to_include, 'bdus.min.js');
-        $html = [];
-        foreach ($files_to_include as $file) {
-            if (file_exists("./js/$file")){
-                $full_path = "./js/$file";
-            } else if (file_exists("./js-sources/$file")){
-                $full_path = "./js-sources/$file";
-            } else {
-                $this->log->warning("Cannot find JS file `$file` not found");
+            if (!file_exists("assets/$asset")){
+                $this->log->warning("Asset `$asset` not found!");
             }
-            if ( $full_path){
+
+            if (substr( $asset, -4 ) === '.css'){
+                array_push(
+                    $html, 
+                    '<link type="text/css" media="all" rel="stylesheet" href="assets/' . $asset . '?sha256' . hash_file('sha256', "assets/$asset") . '" />'
+                );
+
+            } elseif (substr( $asset, -3 ) === '.js') {
                 array_push(
                     $html,
                     '<script language="javascript" ' .
                             'type="text/javascript" ' .
-						    'src="' . $full_path . '?sha256=' . hash_file('sha256', $full_path) . '"></script>'
+						    'src="assets/' . $asset . '?sha256=' . hash_file('sha256', "assets/$asset") . '"></script>'
                 );
+            } else {
+                $this->log->warning("Unknown asset type: `$asset`");
             }
         }
+
         return implode("\n  ", $html);
     }
 
+    
     public function main_home() {
 
         if (!\utils::canUser('enter')) {

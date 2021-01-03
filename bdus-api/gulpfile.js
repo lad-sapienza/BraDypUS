@@ -7,29 +7,42 @@ const cleanCSS = require('gulp-clean-css');
 const rename = require("gulp-rename");
 
 const vendors = {
-    "js": [
+    "jquery": [
         "jquery/dist/jquery.min.js",
-        "jquery/dist/jquery.min.map",
-        "bootstrap/dist/js/bootstrap.min.js",
-        "izitoast/dist/js/iziToast.min.js",
-        "datatables.net/js/jquery.dataTables.min.js",
-        "datatables.net-bs/js/dataTables.bootstrap.min.js",
-        "select2/dist/js/select2.full.min.js",
-        "select2/dist/js/i18n",
-        "sortablejs/Sortable.min.js",
-        "@fancyapps/fancybox/dist/jquery.fancybox.min.js"
+        "jquery/dist/jquery.min.map"
     ],
-    "css": [
+    "bootstrap": [
+        "bootstrap/dist/js/bootstrap.min.js",
         "bootstrap/dist/css/bootstrap.min.css",
         "bootstrap/dist/css/bootstrap.min.css.map",
-        "izitoast/dist/css/iziToast.min.css",
-        "datatables.net-bs/css/dataTables.bootstrap.min.css",
-        "select2/dist/css/select2.min.css",
-        "font-awesome/css/font-awesome.min.css",
-        "font-awesome/css/font-awesome.css.map",
+        "bootstrap/dist/fonts/*"
+    ],
+    "izitoast": [
+        "izitoast/dist/js/iziToast.min.js",
+        "izitoast/dist/css/iziToast.min.css"
+    ],
+    "datatables.net": [
+        "datatables.net/js/jquery.dataTables.min.js"
+    ],
+    "datatables.net-bs": [
+        "datatables.net-bs/js/dataTables.bootstrap.min.js",
+        "datatables.net-bs/css/dataTables.bootstrap.min.css"
+    ],
+    "select2": [
+        "select2/dist/js/select2.full.min.js",
+        "select2/dist/js/i18n/*",
+        "select2/dist/css/select2.min.css"
+    ],
+    "sortablejs": [
+        "sortablejs/Sortable.min.js"
+    ],
+    "fancybox": [
+        "@fancyapps/fancybox/dist/jquery.fancybox.min.js",
         "@fancyapps/fancybox/dist/jquery.fancybox.min.css"
     ],
-    "fonts": [
+    "font-awesome": [
+        "font-awesome/css/font-awesome.min.css",
+        "font-awesome/css/font-awesome.css.map",
         "font-awesome/fonts/*"
     ]
 };
@@ -57,8 +70,8 @@ const bdusJs = [
 gulp.task('moveVendors', done => {
     Object.entries(vendors).forEach(([key, vals]) => {
         vals.forEach( (v) => {
-          gulp.src(`node_modules/${v}`)
-            .pipe(gulp.dest(`./${key}/`));
+          gulp.src(`node_modules/${v}`, {base: `./node_modules/${key}/`})
+            .pipe(gulp.dest(`./assets/${key}/`));
         });
       });
     done();
@@ -69,14 +82,14 @@ gulp.task('compile2Css', () => {
         .pipe(less().on('error', function(err){ console.log(err.message); this.emit('end'); }))
         .pipe(cleanCSS())
         .pipe(rename('bdus.min.css'))
-        .pipe(gulp.dest('./css/'));
+        .pipe(gulp.dest('./assets/bdus/'));
 });
 
 gulp.task('minifyBdusJs', () => {
     return gulp.src(bdusJs.map(e => `js-sources/${e}`))
         .pipe(terser())
         .pipe(concat(`bdus.min.js`))
-        .pipe(gulp.dest('./js/'))
+        .pipe(gulp.dest('./assets/bdus/'))
 });
 
 gulp.task('minifyMods', () => {
@@ -91,7 +104,7 @@ gulp.task('minifyMods', () => {
 gulp.task('build', gulp.series('moveVendors', 'compile2Css', 'minifyBdusJs', 'minifyMods'));
 
 gulp.task('default', () => {
-    gulp.watch(['./css-less/main.less'], gulp.series('compile2Css'));
+    gulp.watch(['./css-less/**/*.less'], gulp.series('compile2Css'));
     gulp.watch(['./js-sources/**/*.js'], gulp.series('minifyBdusJs'));
     gulp.watch(['./modules/**/*.js', '!./modules/**/*.min.js'], gulp.series('minifyMods'));
 });

@@ -178,7 +178,7 @@ class file_ctrl extends Controller
 			'title' => \tr::get('file_gallery', [$this->cfg->get("tables.{$this->request['tb']}.label") . ', id. ' . $this->request['id']]),
 			'can_edit' => \utils::canUser('edit'),
 			'all_files' => $record->getFullFiles(),
-			'images' => new images(),
+			'images' => new Images(),
 			'prefix' => $this->prefix,
 			'path' => PROJ_DIR . 'files'
 		]);

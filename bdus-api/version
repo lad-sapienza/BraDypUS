@@ -1,3 +1,4 @@
+4.0.0-alpha.199[] = "New asset management"
 4.0.0-alpha.195[] = "Dropped support jquery.insertAtCaret.js"
 4.0.0-alpha.195[] = "Dropped support for PHP minification of CSS and JS"
 4.0.0-alpha.195[] = "Gulp is used for js and css"

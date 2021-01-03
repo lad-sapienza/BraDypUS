@@ -5,7 +5,7 @@
  #}
 
 <h3>{{ title }}</h3>
-<ul class="gallery{% if can_edit %} sortable{% endif %} thumbnails">
+<ul class="gallery{% if can_edit %} sortable{% endif %} thumbnails file_thumbnails">
 	{% for file in all_files %}
 
 	<li data-id="{{ file.linkid }}">

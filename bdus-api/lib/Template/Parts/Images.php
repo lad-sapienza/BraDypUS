@@ -32,7 +32,7 @@ class Images
         
         // 1. Show up to $max images
         foreach ($filtered as $img) {
-            $html .= '<div class="preview-item">' . self::getThumbHtml($img) . '</div>';
+            $html .= self::getThumbHtml($img);
         }
         
         
@@ -230,19 +230,22 @@ class Images
         $data = self::checkExt($file_array['ext']);
         
         if ($data['type'] === 'image') {
-            $html = '<div class="img">'
+            $html = '<div class="preview-item">'
             . '<a data-fancybox href="' . $path . $file_array['id'] . '.' . $file_array['ext'] . '"> '
             . '<img class="" '
             . 'src="' . $path . $file_array['id'] . '.' . $file_array['ext'] . '?' . uniqid('file') . '" '
-            . 'style="max-width:200px; max-height:200px;" '
+            . 'style="" '
             . ( $file_array['description'] ? ' alt="' . str_replace('"', null, $file_array['description']) . '" ' : ''  )
             . ( $file_array['description'] ? ' title="' . str_replace('"', null, $file_array['description']) . '" ' : '')
             . ' =""'
             . '/>'
             . '</a></div>';
         } else {
-            $html = '<div style="cursor:pointer; width:200px; height:200px; background:url(' . MAIN_DIR . 'img/mime_icons/' . $data['icon'] . ') no-repeat center center;"'
-            . ' onclick="window.open(\'' . $path . $file_array['id'] . '.' . $file_array['ext'] . '\')"></div>';
+            $html = '<div class="preview-item">'
+            . '<a href="' . $path . $file_array['id'] . '.' . $file_array['ext'] . '" target="_blank">'
+            . '<img src="assets/bdus/img/mime_icons/' . $data['icon'] . '">'
+            . '</a>'
+            .'</div>';
         }
         return $html;
     }

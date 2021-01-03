@@ -292,7 +292,7 @@ var layout = {
          * @param Object element element where to load data
          */
         optsToTabContent: function(opts, element){
-            element.html('<img src="./img/loader.gif" alt="loading..." />');
+            element.html('<img src="./assets/bdus/img/loader.gif" alt="loading..." />');
             
             var URLstring = './?';
             

@@ -10,8 +10,6 @@
  * 
  */
 
-use Bdus\CompressAssets;
-
 class home_ctrl extends Controller 
 {
     private $js_libs = [
@@ -74,11 +72,7 @@ class home_ctrl extends Controller
     private function showJS( bool $debug = false ): string
     {
         $files_to_include = $this->js_libs;
-        if (!$debug){
-            array_push($files_to_include, 'bdus.min.js');
-        } else {
-            $files_to_include = array_merge($files_to_include, \Bdus\CompressAssets::$js_compress_libs);
-        }
+        array_push($files_to_include, 'bdus.min.js');
         $html = [];
         foreach ($files_to_include as $file) {
             if (file_exists("./js/$file")){

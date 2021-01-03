@@ -6,7 +6,7 @@
     'aliases' => 
     array (
     ),
-    'reference' => '7695286db8bcb9eaea2583ee37b4ea1532add7ae',
+    'reference' => '52322a3b9a295a99baab7b73b0b83ab9f94d6a18',
     'name' => '__root__',
   ),
   'versions' => 
@@ -18,7 +18,7 @@
       'aliases' => 
       array (
       ),
-      'reference' => '7695286db8bcb9eaea2583ee37b4ea1532add7ae',
+      'reference' => '52322a3b9a295a99baab7b73b0b83ab9f94d6a18',
     ),
     'adbario/php-dot-notation' => 
     array (
@@ -151,15 +151,6 @@
       ),
       'reference' => '21ab697b7692b891dac37c64d10c9d83d4433f80',
     ),
-    'tedivm/jshrink' => 
-    array (
-      'pretty_version' => 'v1.3.3',
-      'version' => '1.3.3.0',
-      'aliases' => 
-      array (
-      ),
-      'reference' => '566e0c731ba4e372be2de429ef7d54f4faf4477a',
-    ),
     'twig/twig' => 
     array (
       'pretty_version' => 'v3.1.1',
@@ -168,15 +159,6 @@
       array (
       ),
       'reference' => 'b02fa41f3783a2616eccef7b92fbc2343ffed737',
-    ),
-    'wikimedia/less.php' => 
-    array (
-      'pretty_version' => 'v3.1.0',
-      'version' => '3.1.0.0',
-      'aliases' => 
-      array (
-      ),
-      'reference' => 'a486d78b9bd16b72f237fc6093aa56d69ce8bd13',
     ),
   ),
 );

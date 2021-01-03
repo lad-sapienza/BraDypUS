@@ -17,8 +17,6 @@ use DB\DB;
 use Config\Config;
 use Adbar\Dot;
 
-use Bdus\CompressAssets;
-
 class App
 {	
     // Array of GET parameters
@@ -117,15 +115,6 @@ class App
         // Set method
         $method = $this->get['method'] ?? 'showAll';
         
-        // Compress assets and empty cache dire, if mini parameter is set
-        if (isset($this->get['mini']) && $this->get['mini'] === '1') {
-            CompressAssets::All($this->log);
-            \utils::emptyDir(MAIN_DIR . 'cache', false);
-        }
-        
-        /**
-        * All set: run everything
-        */
         try {
             
             /**

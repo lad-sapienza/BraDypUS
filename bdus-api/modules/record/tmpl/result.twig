@@ -98,7 +98,6 @@
 	<tbody></tbody>
 </table>
 <script>
-
 	var dt{{ tb }}{{ uid }} = $('#list_{{ tb }}{{ uid }}').dataTable({
 		"aaSorting": [],
 		{% if infinte_scroll %}
@@ -106,11 +105,11 @@
         "bScrollCollapse": true,
         "sScrollY": "400px",
         {% endif %}
-		{% if lang %}
+		{# if lang %}
 		"oLanguage": {
-			"sUrl": "./js/datatable-i18n/{{ lang }}.txt"
+			"sUrl": "./assets/datatable-plugins/i18n/{{ lang }}_{{ lang }}.json"
 			},
-		{% endif %}
+		{% endif #}
 		"iDisplayLength": 30,
 		"bProcessing": true,
         "bServerSide": true,

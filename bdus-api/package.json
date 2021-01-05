@@ -21,6 +21,7 @@
     "bootstrap": "^3.4.1",
     "datatables.net": "^1.10.23",
     "datatables.net-bs": "^1.10.23",
+    "datatables.net-plugins": "^1.10.22",
     "font-awesome": "^4.7.0",
     "gulp": "^4.0.2",
     "gulp-clean-css": "^4.3.0",

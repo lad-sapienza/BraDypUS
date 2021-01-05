@@ -28,6 +28,10 @@ const vendors = {
         "datatables.net-bs/js/dataTables.bootstrap.min.js",
         "datatables.net-bs/css/dataTables.bootstrap.min.css"
     ],
+
+    "datatables.net-plugins": [
+        "datatables.net-plugins/i18n/it_it.json",
+    ],
     "select2": [
         "select2/dist/js/select2.full.min.js",
         "select2/dist/js/i18n/*",

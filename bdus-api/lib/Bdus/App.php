@@ -27,10 +27,14 @@ class App
     protected $request;
     // Application prefix
     protected $prefix;
+    // Application name
+    protected $app;
     // Database object
     protected $db;
     // Log object
     protected $log;
+    // true if debug is on
+    protected $debug;
     
     
     public function __construct(array $get, array $post, array $request)
@@ -47,25 +51,56 @@ class App
         * Set $this->request to be injected in Controller
         */
         $this->request = $request;
-        /**
-        * Set $this->prefix to be injected in Controller
-        */
-        if (defined('PREFIX')){
-            $this->prefix = PREFIX;
-        }
         
+    }
+
+    private function start(): void
+    {
         /**
-        * Initialize Database object, if APP is defined
+         * Initialize Database object, if $this->app is defined
         */
-        if (\defined('APP')) {
-            $this->db = new DB(APP);
+        if ($this->app) {
+            $this->db = new DB($this->app);
         }
-        
+
         /**
-        * Sets $this->log and initializes Log object
-        */
+         * Sets $this->log and initializes Log object
+         */
         $this->setupLogger();
-        
+
+    }
+
+    /**
+     * Set $this->app to be injected in Controller
+     *
+     * @param string $app
+     * @return void
+     */
+    public function setApp( string $app ): void
+    {
+        $this->app = $app;
+    }
+
+    /**
+     * Set $this->prefix to be injected in Controller
+     *
+     * @param string $prefix
+     * @return void
+     */
+    public function setPrefix( string $prefix ): void
+    {
+        $this->prefix = $prefix;
+    }
+
+    /**
+     * Set the debug-check variable
+     *
+     * @param boolean $debug
+     * @return void
+     */
+    public function setDebug( bool $debug = false ): void
+    {
+        $this->debug = $debug;
     }
     
     /**
@@ -87,7 +122,7 @@ class App
             * environment is not in debug mode
             * Otherwise, errors are written in the file
             */
-            if ($this->db && ( !\defined('DEBUG_ON') || \DEBUG_ON === false )) {
+            if ($this->db && !$this->debug ) {
                 $this->log->pushHandler( new LogDBHandler($this->db, $this->prefix) );
                 $this->db->setLog($this->log);
             } else {
@@ -109,6 +144,8 @@ class App
     
     public function route()
     {	
+        $this->start();
+
         // Set object
         $obj = $this->get['obj'] ?? 'home_ctrl';
         
@@ -137,11 +174,16 @@ class App
             $_aa = new $obj($this->get, $this->post, $this->request);
             
             /**
-            * Injects DB object, if available, to object
-            */
+             * Injects DB object, if available, to object
+             */
             if ($this->db) {
                 $_aa->setDB($this->db);
             }
+
+            /**
+             * Injects debug variable
+             */
+            $_aa->setDebug($this->debug);
             
             /**
             * Injects Log to object
@@ -154,11 +196,11 @@ class App
             $_aa->setPrefix($this->prefix);
             
             /**
-            * Initializes Config and injects it to object if APP is available
+            * Initializes Config and injects it to object if $this->app is available
             */
-            if (defined('APP')) {
+            if ($this->app) {
                 $dot = new Dot();
-                $config = new Config($dot, __DIR__ . '/../../projects/' . APP . '/cfg/', $this->prefix);
+                $config = new Config($dot, __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'projects' . DIRECTORY_SEPARATOR . $this->app . DIRECTORY_SEPARATOR . 'cfg' . DIRECTORY_SEPARATOR, $this->prefix);
                 $_aa->setCfg($config);
             }
             

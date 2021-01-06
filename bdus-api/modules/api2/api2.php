@@ -50,7 +50,7 @@ class api2 extends Controller
     {
         $this->pretty = $this->get['pretty'];
         
-        // Validate APP
+        // Validate app
         $this->app = $this->get['app'];
         $valid_apps = \utils::dirContent(MAIN_DIR . "projects");
         if (!$this->app || !in_array($this->app, $valid_apps)) {
@@ -97,7 +97,6 @@ class api2 extends Controller
 
     public function run()
     {
-        $this->debug = DEBUG_ON;
         try {
             $this->logApiUser();
             

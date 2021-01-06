@@ -1,3 +1,4 @@
+4.0.0-alpha.202[] = "Reduced use of constants in modules"
 4.0.0-alpha.201[] = "Added Italian language for datatables"
 4.0.0-alpha.201[] = "Removed constant LOCALE_DIR"
 4.0.0-alpha.201[] = "Removed constant MOD_DIR"

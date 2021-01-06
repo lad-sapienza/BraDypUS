@@ -23,6 +23,7 @@ abstract class Controller
 	protected $log;
 	protected $prefix;
 	protected $cfg;
+	protected $debug;
 
 	public function __construct($get, $post, $request)
 	{
@@ -50,6 +51,11 @@ abstract class Controller
 	{
 		$this->log = $log;
 	}
+
+	public function setDebug( bool $debug = false ): void
+    {
+        $this->debug = $debug;
+    }
 
 	public function returnJson($data)
 	{

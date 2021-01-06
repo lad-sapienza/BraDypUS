@@ -60,7 +60,7 @@ class home_ctrl extends Controller
             "app_label" => strtoupper($this->cfg ? $this->cfg->get('main.name') : ''),
             "assets" => $this->loadAssets(),
             "tr_json" => \tr::lang2json(),
-            "debugMode" => DEBUG_ON ? "true" : "false",
+            "debugMode" => $this->debug ? "true" : "false",
             "prefix" => $this->prefix ?: '',
             "can_user_enter" => \utils::canUser('enter') ? true : false,
             "address" => $this->request['address'],
@@ -114,7 +114,7 @@ class home_ctrl extends Controller
         $not_fresh = count($all_tb) > 1;
 
         $this->render('home', 'home', [
-            "app" => strtoupper(APP),
+            "app" => strtoupper($this->app),
             "app_definition" => $this->cfg->get('main.definition'),
             "is_frozen_text" => $this->cfg->get('main.status') === 'frozen' ? \tr::get('app_is_frozen') :  false,
             "all_tb" => $all_tb,

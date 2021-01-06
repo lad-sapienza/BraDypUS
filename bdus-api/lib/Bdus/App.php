@@ -54,7 +54,7 @@ class App
         
     }
 
-    private function start(): void
+    public function start(): void
     {
         /**
          * Initialize Database object, if $this->app is defined
@@ -67,6 +67,8 @@ class App
          * Sets $this->log and initializes Log object
          */
         $this->setupLogger();
+
+        $this->route();
 
     }
 
@@ -142,10 +144,8 @@ class App
         $handler->registerFatalHandler();
     }
     
-    public function route()
+    private function route()
     {	
-        $this->start();
-
         // Set object
         $obj = $this->get['obj'] ?? 'home_ctrl';
         

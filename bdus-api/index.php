@@ -31,9 +31,9 @@ try {
 		$app->setPrefix(PREFIX);
 	}
 	if (defined('APP')) {
-		$app->setApp = APP;
+		$app->setApp(APP);
 	}
-	$app->route();
+	$app->start();
 
 } catch (\Throwable $e) {
 

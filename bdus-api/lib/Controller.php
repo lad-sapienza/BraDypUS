@@ -55,7 +55,16 @@ abstract class Controller
 	public function setDebug( bool $debug = false ): void
     {
         $this->debug = $debug;
-    }
+	}
+	
+	public function getCacheSettings(): array
+	{
+		if ($this->debug) {
+			return [ "autoescape" => false, "debug" => true ];
+		} else {
+			return [ "autoescape" => false, "cache" => "cache" ];
+		}
+	}
 
 	public function returnJson($data)
 	{
@@ -74,13 +83,13 @@ abstract class Controller
 	
 	public function compileTmpl($module, $template, $data = [])
 	{
-		if (!file_exists(MAIN_DIR . 'modules/' . $module . '/tmpl/' . $template . '.twig')) {
+		if (!file_exists(MAIN_DIR . 'modules' . DIRECTORY_SEPARATOR . $module . DIRECTORY_SEPARATOR . 'tmpl' . DIRECTORY_SEPARATOR . $template . '.twig')) {
 			throw new \Exception('Template not found');
 		}
 
-		$settings = unserialize(CACHE);
+		$settings = $this->getCacheSettings();
 		
-		$twig = new \Twig\Environment( new \Twig\Loader\FilesystemLoader(MAIN_DIR . 'modules/' . $module . '/tmpl'), $settings );
+		$twig = new \Twig\Environment( new \Twig\Loader\FilesystemLoader(MAIN_DIR . 'modules' . DIRECTORY_SEPARATOR . $module . DIRECTORY_SEPARATOR . 'tmpl'), $settings );
 		if ($settings['debug']) {
 			$twig->addExtension(new \Twig\Extension\DebugExtension());
 		}

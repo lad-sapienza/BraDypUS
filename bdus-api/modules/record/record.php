@@ -193,7 +193,7 @@ class record_ctrl extends Controller
             $template_file = $this->getTemplate($tb, $context);
 
             if ($template_file){
-                $twig = new \Twig\Environment( new \Twig\Loader\FilesystemLoader(PROJ_DIR . 'templates/'), unserialize(CACHE) );
+                $twig = new \Twig\Environment( new \Twig\Loader\FilesystemLoader(PROJ_DIR . 'templates/'), $this->getCacheSettings() );
                 $html = $twig->render($template_file, [
                     'print' => $fieldObj
                 ]);

@@ -21,19 +21,19 @@
 ob_start();
 
 try {
-	$basePath = __DIR__ . '/';
+	$basePath = './';
 
 	require_once './lib/constants.php';
 
-	$app = new \Bdus\App($_GET, $_POST, $_REQUEST);
-	$app->setDebug(DEBUG_ON);
+	$application = new \Bdus\App($_GET, $_POST, $_REQUEST);
+	$application->setDebug(DEBUG_ON);
 	if (defined('PREFIX')){
-		$app->setPrefix(PREFIX);
+		$application->setPrefix(PREFIX);
 	}
 	if (defined('APP')) {
-		$app->setApp(APP);
+		$application->setApp(APP);
 	}
-	$app->start();
+	$application->start();
 
 } catch (\Throwable $e) {
 

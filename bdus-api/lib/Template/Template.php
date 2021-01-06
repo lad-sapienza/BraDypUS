@@ -54,7 +54,7 @@ class Template implements TemplateInterface
             return null;
         }
         return '<div class="permalink">' .
-        '<a href="' . "./#/" . APP . '/' . str_replace(PREFIX, null, $this->record->getTb()) . '/' . $this->record->getCore('id', true)  . '">PERMALINK</a>' .
+        '<a href="' . "./#/" . $this->cfg->get('main.name') . '/' . str_replace(PREFIX, null, $this->record->getTb()) . '/' . $this->record->getCore('id', true)  . '">PERMALINK</a>' .
       '</div>';
     }
 
@@ -191,7 +191,8 @@ class Template implements TemplateInterface
             $this->record->getTb(),
             $this->record->getCore('id', true),
             $this->context,
-            \utils::canUser('edit', $this->record->getCore('creator', true))
+            \utils::canUser('edit', $this->record->getCore('creator', true) ),
+            $this->cfg->get('main.name')
         );
     }
 

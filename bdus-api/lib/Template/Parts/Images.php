@@ -22,7 +22,8 @@ class Images
     * @param boolean $canUserEdit
     * @return string
     */
-    public static function showAll( array $data_arr = [], int $max = 2, string $tb, int $id = null, string $context, bool $canUserEdit) : string
+    public static function showAll( array $data_arr = [], int $max = 2, string $tb, int $id = null, string $context, bool $canUserEdit, string $app) : string
+
     {
         // max can not be bigger than the no of images found in the DB
         if ($max === 0 || $max > count($data_arr)) {
@@ -35,7 +36,7 @@ class Images
         
         // 1. Show up to $max images
         foreach ($filtered as $img) {
-            $html .= self::getThumbHtml($img);
+            $html .= self::getThumbHtml($img, "projects/{$app}/files/");
         }
         
         
@@ -226,10 +227,8 @@ class Images
      * 			description: optional
      * @param string $path, if null defult file path (PROJ_DIR . 'files') will be used
      */
-    public static function getThumbHtml($file_array, $path = false)
+    public static function getThumbHtml($file_array, string $path): string
     {
-        $path = $path ? $path : 'projects/' . APP . '/files/';
-        
         $data = self::checkExt($file_array['ext']);
         
         if ($data['type'] === 'image') {

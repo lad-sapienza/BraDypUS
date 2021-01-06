@@ -65,7 +65,7 @@ class file_ctrl extends Controller
 
 			$result['status'] = 'success';
 			$result['text'] = \tr::get('file_uploaded_and_attached');
-			$result['thumbnail'] = Images::getThumbHtml( ['id' => $record->getCore('id'), 'ext' => $record->getCore('ext') ]);
+			$result['thumbnail'] = Images::getThumbHtml( ['id' => $record->getCore('id'), 'ext' => $record->getCore('ext') ], 'projects/' . $this->cfg->get('main.name') . '/files/');
 
 			echo json_encode($result);
 

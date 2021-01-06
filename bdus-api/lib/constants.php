@@ -12,7 +12,6 @@ date_default_timezone_set('Europe/Rome');
  * Main CONSTANTS are always set
  */
 define ( 'MAIN_DIR',	$basePath);
-define ( 'PREFIX_DELIMITER', '__');
 
 /**
  * Set session lifetime to last 8h
@@ -48,10 +47,11 @@ if ($_GET['logout']){
  * Or define from SESSION['app']
  * In both cases, application directory must exist!
  */
-if ( isset($_REQUEST['app']) && is_dir(__DIR__ . '/../projects/' . $_REQUEST['app'] ) ) {
+if ( isset($_REQUEST['app']) && is_dir(MAIN_DIR . 'projects/' . $_REQUEST['app'] ) ) {
 	define ( 'APP', $_REQUEST['app']);
+	$_SESSION['app'] = APP;
 } elseif (isset($_SESSION['app'])) {
-	if (is_dir(__DIR__ . '/../projects/' . $_SESSION['app'] )) {
+	if (is_dir(MAIN_DIR . 'projects/' . $_SESSION['app'] )) {
 		define ( 'APP', $_SESSION['app']);
 	} else {
 		/**
@@ -68,8 +68,7 @@ if ( isset($_REQUEST['app']) && is_dir(__DIR__ . '/../projects/' . $_REQUEST['ap
  */
 if( defined('APP') ) {
 	
-	$_SESSION['app'] = APP;
-	define ( 'PREFIX', APP . PREFIX_DELIMITER);
+	define ( 'PREFIX', APP . '__');
 	
 	define ( 'PROJ_DIR', 		MAIN_DIR . 'projects/' . APP . '/');
 	
@@ -99,23 +98,21 @@ if( defined('APP') ) {
 }
 
 /**
- * If debug is explicitly set to 0, stop debug_mode
+ * If debug is explicitly set to 0|1, stop|stop debug_mode
  */
-if ( @$_GET['debug'] === '0' ) {
-	$_SESSION['debug_mode'] = false;
+if (isset($_GET['debug'])) {
+	if ( $_GET['debug'] === '1' ) {
+		$_SESSION['debug_mode'] = true;
+	} else {
+		$_SESSION['debug_mode'] = false;
+	}
 }
 
+
 /**
- * Set DEBUG_ON as true if debug mode is on
- * Otherwise set it to false
+ * Set DEBUG_ON as $_SESSION['debug_mode']
  */
-if ( @$_GET['debug'] === '1' || $_SESSION['debug_mode'] ) {
-	$_SESSION['debug_mode'] = true;
-	define('DEBUG_ON', true);
-} else {
-	$_SESSION['debug_mode'] = false;
-	define('DEBUG_ON', false);
-}
+define('DEBUG_ON', $_SESSION['debug_mode']);
 
 /**
  * Set cache if debug is false, 
@@ -129,6 +126,6 @@ if (DEBUG_ON === true) {
 	define('CACHE', serialize([ "autoescape" => false, "cache" => "cache"]));
 }
 
-require_once MAIN_DIR . 'lib/autoLoader.php';
-require_once $root . 'vendor/autoload.php';
-new autoLoader(MAIN_DIR . 'lib/', MAIN_DIR . 'modules/');
+require_once $basePath . 'lib/autoLoader.php';
+require_once $basePath . 'vendor/autoload.php';
+new autoLoader($basePath . 'lib/', $basePath . 'modules/');

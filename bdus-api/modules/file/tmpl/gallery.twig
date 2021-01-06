@@ -9,7 +9,7 @@
 	{% for file in all_files %}
 
 	<li data-id="{{ file.linkid }}">
-		{{ images.getThumbHtml(file)|raw }}
+		{{ images.getThumbHtml(file, path ~ '/')|raw }}
 		<div style="position: relative;">
 			<div class="opts btn-group" style="display: none; position:absolute; top:-40px;">
 				<button class="btn btn-default btn-sm read" data-table="{{ prefix }}files" data-id="{{ file.id }}"><i class="fa fa-eye"></i></button>

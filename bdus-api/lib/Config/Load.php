@@ -15,10 +15,10 @@ class Load
 
     public static function all( string $path2cfg, string $prefix ) : array
     {
-        $cfg['main'] = self::path2array($path2cfg . \DIRECTORY_SEPARATOR . 'app_data.json');
-        $cfg['tables'] = self::getTables($path2cfg . \DIRECTORY_SEPARATOR . 'tables.json');
+        $cfg['main'] = self::path2array($path2cfg . '/app_data.json');
+        $cfg['tables'] = self::getTables($path2cfg . '/tables.json');
         foreach ($cfg['tables'] as $tb => $tb_data) {
-            $cfg['tables'][$tb]['fields'] = self::getFields($path2cfg . \DIRECTORY_SEPARATOR . \str_replace($prefix, '', $tb) . '.json');
+            $cfg['tables'][$tb]['fields'] = self::getFields($path2cfg . '/' . \str_replace($prefix, '', $tb) . '.json');
         }
         return $cfg;
     }

@@ -21,7 +21,7 @@
 ob_start();
 
 try {
-	$basePath = __DIR__ . DIRECTORY_SEPARATOR;
+	$basePath = __DIR__ . '/';
 
 	require_once './lib/constants.php';
 

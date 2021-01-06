@@ -200,7 +200,7 @@ class App
             */
             if ($this->app) {
                 $dot = new Dot();
-                $config = new Config($dot, __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'projects' . DIRECTORY_SEPARATOR . $this->app . DIRECTORY_SEPARATOR . 'cfg' . DIRECTORY_SEPARATOR, $this->prefix);
+                $config = new Config($dot, __DIR__ . '/../../projects/' . $this->app . '/cfg/', $this->prefix);
                 $_aa->setCfg($config);
             }
             

@@ -32,8 +32,8 @@ class autoloader
 
             $mod = str_replace('_ctrl', null, $className);
 
-            if (file_exists($this->modDir . $mod . DIRECTORY_SEPARATOR . $mod . '.php')) {
-                require_once $this->modDir . $mod . DIRECTORY_SEPARATOR . $mod . '.php';
+            if (file_exists($this->modDir . $mod . '/' . $mod . '.php')) {
+                require_once $this->modDir . $mod . '/' . $mod . '.php';
             }
 
         } else {
@@ -42,14 +42,14 @@ class autoloader
                 require_once $this->libDir . $className . '.inc';
             } elseif (file_exists($this->libDir . $className . '.php')) {
                 require_once $this->libDir . $className . '.php';
-            } elseif (file_exists($this->libDir . str_replace('\\', DIRECTORY_SEPARATOR, $className) . '.php')) {
-                require_once $this->libDir . str_replace('\\', DIRECTORY_SEPARATOR, $className) . '.php';
-            } elseif (file_exists($this->modDir . DIRECTORY_SEPARATOR . $className . DIRECTORY_SEPARATOR . $className . '.php')) {
-                require_once $this->modDir . DIRECTORY_SEPARATOR . $className . DIRECTORY_SEPARATOR . $className . '.php';
-            } elseif (file_exists($this->libDir . 'interfaces' . DIRECTORY_SEPARATOR . $className . '.inc')) {
-                require_once $this->libDir . 'interfaces' . DIRECTORY_SEPARATOR . $className . '.inc';
-            } elseif (file_exists($this->libDir . 'interfaces' . DIRECTORY_SEPARATOR . $className . '.php')) {
-                require_once $this->libDir . 'interfaces' . DIRECTORY_SEPARATOR . $className . '.php';
+            } elseif (file_exists($this->libDir . str_replace('\\', '/', $className) . '.php')) {
+                require_once $this->libDir . str_replace('\\', '/', $className) . '.php';
+            } elseif (file_exists($this->modDir . '/' . $className . '/' . $className . '.php')) {
+                require_once $this->modDir . '/' . $className . '/' . $className . '.php';
+            } elseif (file_exists($this->libDir . 'interfaces/' . $className . '.inc')) {
+                require_once $this->libDir . 'interfaces/' . $className . '.inc';
+            } elseif (file_exists($this->libDir . 'interfaces/' . $className . '.php')) {
+                require_once $this->libDir . 'interfaces/' . $className . '.php';
             } else {
                 return false;
             }

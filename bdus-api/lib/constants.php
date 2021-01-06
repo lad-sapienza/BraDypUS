@@ -48,10 +48,10 @@ if ($_GET['logout']){
  * Or define from SESSION['app']
  * In both cases, application directory must exist!
  */
-if ( isset($_REQUEST['app']) && is_dir(__DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'projects' . DIRECTORY_SEPARATOR . $_REQUEST['app'] ) ) {
+if ( isset($_REQUEST['app']) && is_dir(__DIR__ . '/../projects/' . $_REQUEST['app'] ) ) {
 	define ( 'APP', $_REQUEST['app']);
 } elseif (isset($_SESSION['app'])) {
-	if (is_dir(__DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'projects' . DIRECTORY_SEPARATOR . $_SESSION['app'] )) {
+	if (is_dir(__DIR__ . '/../projects/' . $_SESSION['app'] )) {
 		define ( 'APP', $_SESSION['app']);
 	} else {
 		/**
@@ -71,7 +71,7 @@ if( defined('APP') ) {
 	$_SESSION['app'] = APP;
 	define ( 'PREFIX', APP . PREFIX_DELIMITER);
 	
-	define ( 'PROJ_DIR', 		MAIN_DIR . 'projects' . DIRECTORY_SEPARATOR . APP . DIRECTORY_SEPARATOR);
+	define ( 'PROJ_DIR', 		MAIN_DIR . 'projects/' . APP . '/');
 	
 	/*
 	 * Create directories that MUST exist for each valid app
@@ -129,6 +129,6 @@ if (DEBUG_ON === true) {
 	define('CACHE', serialize([ "autoescape" => false, "cache" => "cache"]));
 }
 
-require_once MAIN_DIR . 'lib' . DIRECTORY_SEPARATOR . 'autoLoader.php';
-require_once $root . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php';
-new autoLoader(MAIN_DIR . 'lib' . DIRECTORY_SEPARATOR, MAIN_DIR . 'modules' . DIRECTORY_SEPARATOR);
+require_once MAIN_DIR . 'lib/autoLoader.php';
+require_once $root . 'vendor/autoload.php';
+new autoLoader(MAIN_DIR . 'lib/', MAIN_DIR . 'modules/');

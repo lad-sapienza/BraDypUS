@@ -173,7 +173,7 @@ class geoface_ctrl extends Controller
 					$parts = pathinfo($vec);
 					if ( in_array( strtolower($parts['extension']), [ 'csv', 'gpx', 'kml', 'wkt', 'topojson', 'geojson']) ){
 						$local_layers[] = [
-							'full_path' => PROJ_DIR . 'geodata' . DIRECTORY_SEPARATOR . $vec,
+							'full_path' => PROJ_DIR . 'geodata/' . $vec,
 							'name' => $parts['filename'],
 							'ext' => $parts['extension']
 						];

@@ -26,13 +26,17 @@ try {
 	require_once './lib/constants.php';
 
 	$application = new \Bdus\App($_GET, $_POST, $_REQUEST);
+
 	$application->setDebug(DEBUG_ON);
+
 	if (defined('PREFIX')){
 		$application->setPrefix(PREFIX);
 	}
+
 	if (defined('APP')) {
 		$application->setApp(APP);
 	}
+
 	$application->start();
 
 } catch (\Throwable $e) {

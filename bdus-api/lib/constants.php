@@ -112,7 +112,7 @@ if (isset($_GET['debug'])) {
 /**
  * Set DEBUG_ON as $_SESSION['debug_mode']
  */
-define('DEBUG_ON', $_SESSION['debug_mode']);
+define('DEBUG_ON', isset($_SESSION['debug_mode']) && $_SESSION['debug_mode']);
 
 /**
  * Set cache if debug is false, 

@@ -56,7 +56,7 @@ class Record implements RecordInterface
 		$this->tb = $tb;
 		$this->db = $db;
 		$this->cfg = $cfg;
-		$this->tmp_dir = sys_get_temp_dir();
+		$this->tmp_dir = sys_get_temp_dir() . '/';
 
 		if ($id === 'last_added') {
 			$t = $db->query('SELECT id FROM ' . $tb . ' WHERE 1=1 ORDER BY id DESC LIMIT 1 OFFSET 0', null, 'read');
@@ -68,11 +68,6 @@ class Record implements RecordInterface
 	public function getId()
 	{
 		return $this->id;
-	}
-
-	public function setTmpFolder($dir)
-	{
-		$this->tmp_dir = $dir;
 	}
 
 	/**
@@ -181,7 +176,7 @@ class Record implements RecordInterface
 				$last_id = $this->db->query($query, $values, 'id');
 
 				// moves updaded file
-				if ($this->tb == PREFIX . 'files') {
+				if ($this->tb === PREFIX . 'files') {
 
 					if (file_exists($this->tmp_dir . $this->data['core']['filename'] . '.' . $this->data['core']['ext'])) {
 

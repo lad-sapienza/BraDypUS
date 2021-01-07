@@ -87,7 +87,7 @@ class file_ctrl extends Controller
 	 */
 	public function upload()
 	{
-		$upload_dir = $this->request['upload_dir'] ?: sys_get_temp_dir();
+		$upload_dir = $this->request['upload_dir'] ?: sys_get_temp_dir() . '/';
 
 		$uploader = new qqFileUploader();
 

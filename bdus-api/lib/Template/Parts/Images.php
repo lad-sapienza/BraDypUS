@@ -103,13 +103,13 @@ class Images
                 "'button_text' : '" . str_replace("'", "\'", \tr::get('click_drag_link_file')) . "'," .
                 "'limit2one': true," .
                 "'complete': function(id, fileName, resp){" .
-                    "if(resp.status == 'success'){" .
+                    "if(resp.status === 'success'){" .
                         "$('#{$uid}').parents('div.file_thumbnails').prepend('<div class=\"preview-item\">' + resp.thumbnail + \"</div>\");" .
-                        "}" .
-                        "core.message(resp.text, resp.status);" .
-                        "}" .
-                        "});" .
-                        '</script>';
+                    "}" .
+                    "core.message(resp.text, resp.status);" .
+                "}" .
+            "});" .
+            '</script>';
         }
         // end of service div
         $html .= '</div>';

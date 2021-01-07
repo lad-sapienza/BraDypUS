@@ -34,7 +34,6 @@ var core = {
       } else {
         script = './modules/' + mod + '/' + mod + '.min.js';
       }
-      console.log(script);
       
       $.ajax({
         url: script,

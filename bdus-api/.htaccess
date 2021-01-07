@@ -1,13 +1,19 @@
 RewriteEngine on
 
-#/api/v2/app-name/tb-name-without-prefix/data
+# /api/v2/app-name/tb-name-without-prefix/data
 RewriteRule ^api/v2/([a-z0-9_]+) index.php?obj=api2&method=run&app=$1 [QSA,L]
 
-#/api/app-name/tb-name-without-prefix/data
+# /api/app-name/tb-name-without-prefix/data
 RewriteRule ^api/([a-z0-9_]+)/([a-z_]+) index.ph?obj=api_ctrl&method=run&app=$1&tb=$2 [QSA,L]
 
+# Missing JS files throw 404 error
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^.*\.js$ - [L,R=404]
+
+# Missing file with app in request redirects to index with app parameter
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ([a-z0-9_]+)/ index.php?app=$1 [QSA,L]
 
+# Missing file without app in request
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule . index.php [L]

@@ -1,3 +1,4 @@
+4.0.0-alpha.203[] = "Missing JS file throw error 404 in .htaccess"
 4.0.0-alpha.202[] = "Fixed bug with setting debug"
 4.0.0-alpha.202[] = "Removed usage of APP constant outside index.php and constants.php"
 4.0.0-alpha.202[] = "Removed usage of DIRECTORY_SEPARATOR"

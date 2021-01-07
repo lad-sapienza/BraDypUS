@@ -76,6 +76,8 @@ if( defined('APP') ) {
 	 * Create directories that MUST exist for each valid app
 	 */
 	$must_exist_dirs = [
+		MAIN_DIR . 'cache',
+		MAIN_DIR . 'cache/img',
 		PROJ_DIR . 'files', 
 		PROJ_DIR . 'backups', 
 		PROJ_DIR . 'export', 

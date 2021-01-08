@@ -11,12 +11,12 @@ of this feature, please consider seriously to use v2, since the previous
 version be deprecated very soon.
 
 The API endpoint is available at the `/api/` relative URL, eg.:
-`https://db.bradypus.net/api/`.
+`https://bdus.cloud/db/api/`.
 
 {: .callout-block .callout-block-warning}
 The API function must be activated in the main app configuration file in order for the API to work. The API should run as a specific user of the database
 
-Foreach API call the **application name**  and a set of **parameters** should be provided in the URL in the form: `https://{base-url}/api/v2/{app-name}/?parameters`, eg.: `https://db.bradypus.net/api/test/?parameters`
+Foreach API call the **application name**  and a set of **parameters** should be provided in the URL in the form: `https://{base-url}/api/v2/{app-name}/?parameters`, eg.: `https://bdus.cloud/db/api/test/?parameters`
 
 ### Available parameters
 - `pretty` [bool, optional, default: 0]: if seto to `1` the returned JSON will be indented for easier reading

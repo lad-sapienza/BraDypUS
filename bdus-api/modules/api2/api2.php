@@ -34,7 +34,6 @@ class api2 extends Controller
     private $app;
     private $verb;
     private $pretty = false;
-    private $debug = false;
     private $valid_verbs = [
         'read',
         'search',

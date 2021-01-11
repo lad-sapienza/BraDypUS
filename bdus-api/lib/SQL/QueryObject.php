@@ -72,12 +72,12 @@ class QueryObject
     /**
      * Adds field name and eventually the alias to $this->obj['fields']
      *
-     * @param string $tb
      * @param string $fld
      * @param string $alias
+     * @param string $tb
      * @return self
      */
-    public function setField(string $tb = null, string $fld, string $alias = null): self
+    public function setField(string $fld, string $alias = null, string $tb = null): self
     {
         array_push ( $this->obj['fields'], [$tb, $fld, $alias] );
         return $this;

@@ -62,15 +62,15 @@ class menuValues_ctrl extends Controller
     {
       case 'vocabulary_set':
         $query->setTb($this->prefix . 'vocabularies')
-          ->setField(null, 'def', 'id')
-          ->setField(null, 'def', 'val')
+          ->setField('def', 'id')
+          ->setField('def', 'val')
           ->setWherePart(null, null, 'voc', '=', '?', null)
           ->setWhereValues([$att])
           ->setLimit($this->res_x_page, $offset)
           ->setOrderFld('sort', 'asc');
 
         $tot->setTb($this->prefix . 'vocabularies')
-          ->setField(null, 'count(id)', 'tot')
+          ->setField('count(id)', 'tot')
           ->setWherePart(null, null, 'voc', '=', '?', null)
           ->setWhereValues([$att])
           ->setOrderFld('sort', 'asc');
@@ -87,14 +87,14 @@ class menuValues_ctrl extends Controller
       case 'get_values_from_tb':
         list($tb, $fld) = \utils::csv_explode ($att, ':');
         $query->setTb($tb)
-          ->setField(null, $fld, 'id')
-          ->setField(null, $fld, 'val')
+          ->setField($fld, 'id')
+          ->setField($fld, 'val')
           ->setGroupFld($fld)
           ->setLimit($this->res_x_page, $offset)
           ->setOrderFld($fld, 'asc');
 
         $tot->setTb($tb)
-          ->setField(null, 'count(id)', 'tot')
+          ->setField('count(id)', 'tot')
           ->setOrderFld($fld, 'asc');
 
           if ($q && !empty($q)) {
@@ -109,13 +109,13 @@ class menuValues_ctrl extends Controller
         $id_field = $this->cfg->get("tables.{$att}.id_field");
 
         $query->setTb($att)
-          ->setField(null, 'id', 'id')
-          ->setField(null, $id_field, 'val')
+          ->setField('id', 'id')
+          ->setField($id_field, 'val')
           ->setLimit($this->res_x_page, $offset)
           ->setOrderFld($id_field, 'asc');
 
         $tot->setTb($att)
-          ->setField(null, 'count(id)', 'tot')
+          ->setField('count(id)', 'tot')
           ->setOrderFld($id_field, 'asc');
 
         if ($q && !empty($q)) {

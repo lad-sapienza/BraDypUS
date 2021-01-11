@@ -106,7 +106,7 @@ class ParseShortSql
         if (!empty($group)){
             foreach ($group as $g) {
                 // If grouping is active, fields are set from grouping
-                $this->qo->setField(null, $g);
+                $this->qo->setField($g);
                 $this->qo->setGroupFld($g);
             }
         } else {
@@ -114,7 +114,7 @@ class ParseShortSql
             // validate $fields: set to * if not available
             list ($fields, $join_by_fld) = $this->parseFldList($this->parts['fields'], $tb);
             foreach ($fields as $f) {
-                $this->qo->setField($f[0], $f[1], $f[2]);
+                $this->qo->setField($f[1], $f[2], $f[0]);
             }
             foreach ($join_by_fld as $j) {
                 $this->qo->setJoin( $j[0], $j[1], $j[2]);

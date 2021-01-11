@@ -1,12 +1,15 @@
 TODO
 
-[x] Remove useless QueryBuilder
-[] $this->log non è disponibile in DB
-    es.: http://db.localhost/api/v2/sitarc/?verb=getUniqueVal&tb=sites&fld=tipologia_rinvenimento&debug=1
+Roadmap towards v 4.0.0
 
-[x] QueryObject::setField: tb parameter should be last!
+[] remove support for Api v1 (deprecated in 4.0.0-beta.2)
 
 [] Kill QueryFromRequest
+    [] Remake advanced search
+
+BUG
+[] $this->log non è disponibile in DB
+    es.: http://db.localhost/api/v2/sitarc/?verb=getUniqueVal&tb=sites&fld=tipologia_rinvenimento&debug=1
 
 [] remove constants in libs
     [] remove CACHE in Template
@@ -21,6 +24,10 @@ TODO
 [] replace fine uploader with https://github.com/flowjs/flow.js and https://github.com/flowjs/flow-php-server
 
 [] replace jqplot with chart.js
+
+[x] Remove useless QueryBuilder
+
+[x] QueryObject::setField: tb parameter should be last!
 
 [x] Validate must check also for backup executables!
 

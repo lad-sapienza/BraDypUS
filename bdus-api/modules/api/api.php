@@ -205,6 +205,7 @@ class api_ctrl extends Controller
 			$query = new QueryFromRequest($this->db, $this->cfg, $request, false);
 
 			// Set Header
+			$header['alert'] = "The API v1 has been deprecated since version 4.0.0-beta.2 and will be removed in first release of version 4.0.0";
 			$header['query_where'] = $query->getWhere();
 			$header['query_arrived'] = $query->getQuery();
 			$header['query_encoded'] = base64_encode($query->getQuery());

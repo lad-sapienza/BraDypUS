@@ -1,20 +1,18 @@
 <?php
 /**
+ * Gets Unique values from database
+ * 
  * @copyright 2008-2021 Julian Bogdani
  * @license AGPL-3.0; see LICENSE
+ * @requires cfg
+ * @requires DB
  */
 
 namespace API2;
 
 use Config\Config;
 use DB\DBInterface;
-use \ShortSql\ShortSql;
 use SQL\ShortSql\ParseShortSql;
-/**
- * Gets Unique values from database
- * @requires cfg
- * @requires DB
- */
 
 
 class GetUniqueVal
@@ -46,13 +44,11 @@ class GetUniqueVal
         }
 
         if ($where) {
-            list($where_arr, $where_values) = (new ParseShortSql())->parseWhere($where, $tb);
-            $where_sql = '';
-            // https://stackoverflow.com/a/15939539/586449
-            array_walk_recursive($where_arr,function($v) use (&$where_sql){ $where_sql .= " $v "; });
-            array_push($sql_part, trim($where_sql));
-            
-            $values = array_merge($values, $where_values);
+            $parseShortSql = new ParseShortSql();
+            $parseShortSql->parseAll("@$tb~?$where");
+            list($where_sql, $v) = $parseShortSql->getSql(true);
+            array_push($sql_part, $where_sql);
+            $values = array_merge($values, $v);
         }
 
         if(!$str && !$where){

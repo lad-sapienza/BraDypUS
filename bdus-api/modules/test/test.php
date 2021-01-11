@@ -12,7 +12,7 @@ class test_ctrl extends Controller
     public function test()    
 	{	
 
-        
+        // $this->testShortSQL();
         // $this->testTmpl();
 		// $firephp = new Monolog\Handler\FirePHPHandler();
 		// $this->log->pushHandler($firephp);
@@ -247,9 +247,9 @@ class test_ctrl extends Controller
 			'+sitarc__materiali_us||sitarc__materiali_us.localita|=|id_sito',
 
 			// Where
-			// '?id_sito|=|1||and|id_sito|=|1',
+			'?id_sito|=|1||and|id_sito|=|1',
 			// '?1',
-			'?sitarc__m_biblio.bib_abbreviazione|like|%sara%',
+			// '?sitarc__m_biblio.bib_abbreviazione|like|%sara%',
 
 			// Group
 			'*id_sito,toponimo',
@@ -263,14 +263,14 @@ class test_ctrl extends Controller
 		]);
 
 		try {
-			$qb = new \SQL\QueryBuilder();
-			$qb->loadShortSQL($this->prefix, $this->cfg, $test);
+            $pss = new \SQL\ShortSql\ParseShortSql($this->prefix, $this->cfg);
+            $pss->parseAll($test);
 
-			$sql = $qb->getSql();
+			$sql = $pss->getSql();
 
 			echo "<code>$sql[0]</code>:<br>";
 			echo '<pre>' . json_encode($sql[1], JSON_PRETTY_PRINT) . '</pre>';
-			echo '<pre>' . json_encode($qb->getQueryObject()->get(), JSON_PRETTY_PRINT) . '</pre>';
+			echo '<pre>' . json_encode($pss->getQueryObject()->get(), JSON_PRETTY_PRINT) . '</pre>';
 
 			echo "<hr>";
 			

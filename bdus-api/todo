@@ -1,5 +1,17 @@
 TODO
 
+[] GetUniqueVal::run
+[] ParseShortSql::parseParts
+[] ParseShortSql::parseJoinArr
+    [x] ParseShortSql::parseWhere
+        [x] ParseShortSql::parseWherePart
+
+[] Remove useless QueryBuilder
+[] $this->log non è disponibile in DB
+    es.: http://db.localhost/api/v2/sitarc/?verb=getUniqueVal&tb=sites&fld=tipologia_rinvenimento&debug=1
+
+[] QueryObject::setField: tb parameter should be last!
+
 [] remove constants in libs
     [] remove CACHE in Template
 

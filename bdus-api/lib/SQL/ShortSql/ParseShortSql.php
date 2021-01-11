@@ -57,11 +57,27 @@ class ParseShortSql
         $this->parseParts();
         return $this;
     }
-
+    
     public function getQueryObject()
     {
         return $this->qo;
     }
+
+    /**
+     * Alias of QueryObject::getSql
+     * Returns array containing as
+     *  first element the SQL statement, if $onlyWhere is truw, only the WHERE parte will be returned
+     *  second element, an array with values
+     * @param bool $onlyWhere
+     * @return array
+     */
+    public function getSql(bool $onlyWhere = false) : array
+    {
+        return $this->qo->getSql($onlyWhere);
+    }
+
+
+    
 
     private function setParts(string $str) : void
     {
@@ -116,7 +132,22 @@ class ParseShortSql
         if ($this->parts['where'] && $this->parts['where'] !== '1') {
             list($where, $values, $plg_joins) = $this->parseWhere($this->parts['where'], $tb);
             foreach ($where as $w) {
-                $this->qo->setWherePart($w[0], $w[1], $w[2], $w[3]);
+                /*
+                connector
+                opened_bracket
+                fld
+                operator
+                binded
+                closed_bracket
+                */
+                $this->qo->setWherePart(
+                    $w['connector'], 
+                    $w['opened_bracket'], 
+                    $w['fld'], 
+                    $w['operator'], 
+                    $w['binded'], 
+                    $w['closed_bracket']
+                );
             }
             $this->qo->setWhereValues($values);
         }
@@ -287,14 +318,24 @@ class ParseShortSql
     }
 
     /**
-     * Gets where sting an returns array with: where statement, array of values, array of join parts
+     * Gets where ShortSQL string an returns array with: where statement, array of values, array of join parts
      *
      * @param string $str
      * @param string $tb
      * @param boolean $noValues
-     * @return array
+     * @return array    The returned array contains:
+     *                  As first element an array arrays of validated parts 
+     *                      Each array follows the pattern:
+     *                          connector:          [connector], 
+     *                          opened_bracket:     [opened_bracket], 
+     *                          fld:                [field]
+     *                          operator:           [operator]
+     *                          binded:             [binded]
+     *                          closed_bracket:     [closed_bracket], 
+     *                  As second element array values to bind to the query
+     *                  As third, optional, element an array with automatic join statements
      */
-    public function parseWhere(string $str = null, string $tb, bool $noValues = false) : array
+    private function parseWhere(string $str = null, string $tb, bool $noValues = false) : array
     {
         $sql_values = [];
         $sql_parts = [];
@@ -345,6 +386,33 @@ class ParseShortSql
         if (!is_array($mini_parts) || empty($mini_parts)){
             throw new ShortSqlException("Invalid part: `$part`. Syntax error");
         }
+        $opened_bracket = null;
+        $closed_bracket = null;
+
+        // Open bracket is present (first block)
+        if ($mini_parts[0] === '('){
+            $opened_bracket = '(';
+            array_shift($mini_parts);
+        }
+
+        // Open bracket is present (other than first block)
+        if ($mini_parts[1] === '('){
+            $opened_bracket = '(';
+            array_splice($mini_parts, 1, 1);
+        }
+        
+
+        // Close bracket is present
+        if ($mini_parts[count($mini_parts)-1] === ')'){
+            $closed_bracket = ')';
+            array_pop($mini_parts);
+        }
+        // It makes no sense to have open and close bracket in the same block: completely remove brackets
+        if ($opened_bracket && $closed_bracket) {
+            $opened_bracket = null;
+            $closed_bracket = null;
+        }
+
         
         // First block of the where statement must contain 3 parts
         if ($index === 0 && count($mini_parts) !== 3) {
@@ -437,10 +505,12 @@ class ParseShortSql
 
         return([
             [
-                $connector, 
-                $fld, 
-                $operator, 
-                $binded
+                "connector" => $connector, 
+                "opened_bracket" => $opened_bracket,
+                "fld" => $fld, 
+                "operator" => $operator, 
+                "binded" => $binded,
+                "closed_bracket" => $closed_bracket
             ],
             $value,
             $auto_join
@@ -455,7 +525,7 @@ class ParseShortSql
      * @param string $tb
      * @return array
      */
-    public function parseGroup(string $group_str = null, string $tb) : array
+    private function parseGroup(string $group_str = null, string $tb) : array
     {
         if (!$group_str){
             return [];
@@ -475,7 +545,7 @@ class ParseShortSql
      * @param string $limit_str
      * @return void
      */
-    public function parseLimit(string $limit_str = null): array
+    private function parseLimit(string $limit_str = null): array
     {
         if (!$limit_str){
             return [];
@@ -501,7 +571,7 @@ class ParseShortSql
      * @param string $tb
      * @return array
      */
-    public function parseOrder(string $order = null, string $tb): array
+    private function parseOrder(string $order = null, string $tb): array
     {
         if (!$order){
             return [];

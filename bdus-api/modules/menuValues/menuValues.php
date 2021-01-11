@@ -5,10 +5,10 @@
  * 
  * Returns list of values to use as select2 ajax source
  * @uses DB
- * @uses  \SQL\QueryBuilder
+ * @uses  \SQL\QueryObject
  */
 
-use \SQL\QueryBuilder;
+use \SQL\QueryObject;
 
 class menuValues_ctrl extends Controller
 {
@@ -54,67 +54,75 @@ class menuValues_ctrl extends Controller
 
 
 
-    $query = new QueryBuilder();
+    $query = new QueryObject();
 
-    $tot = new QueryBuilder();
+    $tot = new QueryObject();
 
     switch($context)
     {
       case 'vocabulary_set':
-        $query->setTable($this->prefix . 'vocabularies')
-          ->setField('def', 'id')
-          ->setField('def', 'val')
-          ->setWhere('voc', $att)
+        $query->setTb($this->prefix . 'vocabularies')
+          ->setField(null, 'def', 'id')
+          ->setField(null, 'def', 'val')
+          ->setWherePart(null, null, 'voc', '=', '?', null)
+          ->setWhereValues([$att])
           ->setLimit($this->res_x_page, $offset)
-          ->setOrder('sort');
+          ->setOrderFld('sort', 'asc');
 
-        $tot->setTable($this->prefix . 'vocabularies')
-          ->setField('count(id)', 'tot')
-          ->setWhere('voc', $att)
-          ->setOrder('sort');
+        $tot->setTb($this->prefix . 'vocabularies')
+          ->setField(null, 'count(id)', 'tot')
+          ->setWherePart(null, null, 'voc', '=', '?', null)
+          ->setWhereValues([$att])
+          ->setOrderFld('sort', 'asc');
 
         if ($q && !empty($q)) {
-          $query->setWhere('def', "%{$q}%", 'LIKE');
-          $tot->setWhere('def', "%{$q}%", 'LIKE');
+          $query->setWherePart(null, null, 'def', 'LIKE', "?", null);
+          $query->setWhereValues(["%{$q}%"]);
+          $tot->setWherePart(null, null, 'def', 'LIKE', "?", null);
+          $tot->setWherePart(["%{$q}%"]);
         }
 
       break;
 
       case 'get_values_from_tb':
         list($tb, $fld) = \utils::csv_explode ($att, ':');
-        $query->setTable($tb)
-          ->setField($fld, 'id')
-          ->setField($fld, 'val')
-          ->setGroup($fld)
+        $query->setTb($tb)
+          ->setField(null, $fld, 'id')
+          ->setField(null, $fld, 'val')
+          ->setGroupFld($fld)
           ->setLimit($this->res_x_page, $offset)
-          ->setOrder($fld);
+          ->setOrderFld($fld, 'asc');
 
-        $tot->setTable($tb)
-          ->setField('count(id)', 'tot')
-          ->setOrder($fld);
+        $tot->setTb($tb)
+          ->setField(null, 'count(id)', 'tot')
+          ->setOrderFld($fld, 'asc');
 
           if ($q && !empty($q)) {
-            $query->setWhere($fld, "%{$q}%", 'LIKE');
-            $tot->setWhere($fld, "%{$q}%", 'LIKE');
+            $query->setWherePart(null, null, $fld, 'LIKE', "?", null);
+            $query->setWhereValues(["%{$q}%"]);
+            $tot->setWherePart (null, null, $fld, 'LIKE', "?", null);
+            $tot->setWhereValues (["%{$q}%"]);
           }
       break;
 
       case 'id_from_tb':
         $id_field = $this->cfg->get("tables.{$att}.id_field");
 
-        $query->setTable($att)
-          ->setField('id', 'id')
-          ->setField($id_field, 'val')
+        $query->setTb($att)
+          ->setField(null, 'id', 'id')
+          ->setField(null, $id_field, 'val')
           ->setLimit($this->res_x_page, $offset)
-          ->setOrder($id_field);
+          ->setOrderFld($id_field, 'asc');
 
-        $tot->setTable($att)
-          ->setField('count(id)', 'tot')
-          ->setOrder($id_field);
+        $tot->setTb($att)
+          ->setField(null, 'count(id)', 'tot')
+          ->setOrderFld($id_field, 'asc');
 
         if ($q && !empty($q)) {
-          $query->setWhere($id_field, "%{$q}%", 'LIKE');
-          $tot->setWhere($id_field, "%{$q}%", 'LIKE');
+          $query->setWherePart(null, null, $id_field, 'LIKE', "?", null);
+          $query->setWherePart(["%{$q}%"]);
+          $tot->setWherePart(null, null, $id_field, 'LIKE', "?", null);
+          $tot->setWherePart(["%{$q}%"]);
         }
       break;
     }

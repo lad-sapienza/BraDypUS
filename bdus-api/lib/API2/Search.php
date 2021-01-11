@@ -7,7 +7,8 @@
 namespace API2;
 
 use \DB\DBInterface;
-use \SQL\QueryBuilder;
+use \SQL\ShortSql\ParseShortSql;
+use \SQL\ShortSql\Validator;
 use \Config\Config;
 use \Record\Read;
 
@@ -43,10 +44,11 @@ class Search
         $records_per_page	= $opts['records_per_page']	?: 30;
 		$full_records 		= $opts['full_records'] 	?: false;
 		
-		$qb = new QueryBuilder();
-		$qb->loadShortSQL(self::$prefix, self::$cfg, $shortSql);
-		list($sql, $values) = $qb->getSql();
-		$tb = $qb->get('tb')[0];
+		$parseShortSql = new ParseShortSql(self::$prefix, self::$cfg, new Validator(self::$cfg));
+		$qo = $parseShortSql->parseAll($shortSql)->getQueryObject();
+
+		list($sql, $values) = $qo->getSql();
+		$tb = $qo->get('tb')[0];
 		$debug['shortSql'] 		= $shortSql;
 		$debug['urlencodedShortSql'] = urlencode($shortSql);
 		$debug['table'] 		= $tb;
@@ -60,11 +62,11 @@ class Search
 		$header['page'] 		= ($page > $header['total_pages']) ? $header['total_pages'] : $page;
 
 		if ($header['total_rows'] > $records_per_page ) {
-			if (!$qb->get('limit') ) {
-				$qb->setLimit($records_per_page, ($page-1) * $records_per_page);
+			if (!$qo->get('limit') ) {
+				$qo->setLimit($records_per_page, ($page-1) * $records_per_page);
 			}
-			list($sql, $values) = $qb->getSql();
-			$tb = $qb->get('tb')[0];
+			list($sql, $values) = $qo->getSql();
+			$tb = $qo->get('tb')[0];
 
 			$debug['paginated_sql'] = $sql;
 			$debug['paginated_values'] = $values;

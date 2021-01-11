@@ -199,7 +199,9 @@ class DB implements DBInterface
 					break;
 			}
 		} catch (\PDOException $e) {
-			$this->log->error($e, [$query, $values, $type, $fetch_style]);
+            if ($this->log) {
+                $this->log->error($e, [$query, $values, $type, $fetch_style]);
+            }
 			throw new DBException( \tr::get('db_generic_error') );
 		}
 	}

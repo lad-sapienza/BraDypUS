@@ -1,7 +1,7 @@
 <?php
 /**
 /**
- * @copyright 2008-2021 Julian Bogdani
+ * @copyright 2007-2021 Julian Bogdani
  * @license AGPL-3.0; see LICENSE
  * @since			Apr 15, 2012
  * @uses			cfg

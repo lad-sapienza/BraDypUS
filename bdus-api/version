@@ -1,3 +1,4 @@
+4.0.0-beta.3[] = "Fixed bug with Record/Read not loading full plugin records"
 4.0.0-beta.2[] = "Deprecated API v.1"
 4.0.0-beta.2[] = "Changed parameter order in QueryObject::setField. Tb is now last parameter"
 4.0.0-beta.1[] = "First beta version"

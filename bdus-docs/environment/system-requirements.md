@@ -22,7 +22,7 @@ may be used (`php -S localhost:8000`).
 - A database, eg. 
     - [SQLite 3](https://www.sqlite.org/index.html). Sqlite will be used in this guide
     - [MariaDB](http://go.mariadb.com/), or [MySQL](https://www.mysql.com) or [Percona](https://www.percona.com/)
-    - [PostgreSQL](https://www.postgresql.org/) (non tested)
+    - [PostgreSQL](https://www.postgresql.org/) (>= 12.0.0)
 - An interface to the database, be it [CLI](https://en.wikipedia.org/wiki/Command-line_interface) 
 or [GUI](https://en.wikipedia.org/wiki/Graphical_user_interface) 
 to be used to create and edit the database structure, eg.

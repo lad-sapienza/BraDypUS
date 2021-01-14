@@ -549,20 +549,22 @@ class ParseShortSql
         if ($value[0] === '^') {
             list($binded_tb, $binded_fld, $binded_alias) = $this->parseFld(substr($value, 1));
             $binded = "$binded_tb.$binded_fld";
+            unset($value);
         } else if (($value[0] === ']')) {
             list ($sub_query, $sub_values) = $this->parseSubQuery(substr($value, 1));
             $binded = " ( {$sub_query} ) ";
             $value = $sub_values;
         } else if (in_array($operator, ['IS NULL', 'IS NOT NULL'])) {
             $binded = '';
-        } else if ($noValues) {
+            unset($value);
+        } else if ($noValues ) {
             $binded = "'" . str_replace("'", "\'", $value) . "'";
+            unset($value);
+        } else if ($operator === "IN" ) {
+            $binded = $value;
+            unset($value);
         } else {
             $binded = '?';
-        }
-        // Value is not passed if value starts with ^ or if operator is IS NULL or IS NOT NULL
-        if ($value[0] === '^' || in_array($operator, ['IS NULL', 'IS NOT NULL']) ){
-            unset($value);
         }
 
 

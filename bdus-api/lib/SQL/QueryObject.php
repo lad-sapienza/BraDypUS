@@ -34,7 +34,7 @@ class QueryObject
     /**
      * Returns array of query data 
      * Or part of them, if $index is provided
-     * Returns dalse
+     * Returns False
      *
      * @param string $index
      * @return void
@@ -88,7 +88,13 @@ class QueryObject
      *
      * @param string $tb
      * @param string $tb_alias
-     * @param array $on
+     * @param array $on: each on element is structured as follows:
+     *                      connector         => null or AND|OR, 
+     *                      opened_bracket    => null or (, 
+     *                      fld               => {$fld_tb}.table_link, 
+     *                      operator          => =|LIKE|etc..., 
+     *                      binded            => "value",
+     *                      closed_bracket    => null or )
      * @return self
      */
     public function setJoin( string $tb, string $tb_alias = null, array $on): self
@@ -195,7 +201,7 @@ class QueryObject
     }
 
     /**
-     * TRansforms $where array to SQL string
+     * Transforms $where array to SQL string
      * TODO: implement brackets
      *
      * @param array $where
@@ -213,6 +219,22 @@ class QueryObject
                 $str .= "{$w[0]} ";
             }
             $str .= "{$w[1]} {$w[2]} {$w[3]} {$w[4]} {$w[5]}";
+        }
+        return $str;
+    }
+
+    private function indexedWhereToStr(array $where = null): string
+    {
+        if (!$where || empty($where)) {
+            return '1=1';
+        }
+        $str = '';
+
+        foreach ($where as $i => $w) {
+            if ($i !== 0){
+                $str .= "{$w['connector']} ";
+            }
+            $str .= "{$w['opened_bracket']} {$w['fld']} {$w['operator']} {$w['binded']} {$w['closed_bracket']}";
         }
         return $str;
     }
@@ -257,7 +279,7 @@ class QueryObject
         foreach ($joins as $j) {
             array_push(
                 $sql,
-                "JOIN {$j[0]} " . ( isset($j[1]) ? ' AS "' . $j[1]. '"' : '') . " ON " . $this->whereToStr($j[2])
+                "JOIN {$j[0]} " . ( isset($j[1]) ? ' AS "' . $j[1]. '"' : '') . " ON " . $this->indexedWhereToStr($j[2])
             );
         }
 

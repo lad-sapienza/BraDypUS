@@ -19,6 +19,8 @@ class ParseShortSql
 {
     private $parts;
 
+    private $added_aliases = [];
+
     private $prefix;
     private $validator;
     private $cfg;
@@ -100,6 +102,7 @@ class ParseShortSql
     private function parseParts()
     {
         list($tb, $tb_alias) = $this->parseTb($this->parts['tb']);
+        
         $this->qo->setTb($tb, $tb_alias);
 
         $group = $this->parseGroup($this->parts['group'], $tb);
@@ -157,7 +160,7 @@ class ParseShortSql
                 $this->qo->setJoin($j[0], $j[1], $j[2]);
             }
         }
-
+        
         $order = $this->parseOrder($this->parts['order'], $tb);
         foreach ($order as $o) {
             $this->qo->setOrderFld($o[0], $o[1]);
@@ -182,12 +185,18 @@ class ParseShortSql
     {
         list($tb, $alias) = explode(':', $tb);
 
-        // If table name has no prefix, add it
-        if($this->prefix && strpos($tb, $this->prefix) === false){
-            $tb = $this->prefix . $tb;
-        }
-        if ($this->validator){
-            $this->validator->isValidTable($tb);
+        if (!in_array($tb, $this->added_aliases)) {
+        
+            // If table name has no prefix, add it
+            if ($this->prefix && strpos($tb, $this->prefix) === false) {
+                $tb = $this->prefix . $tb;
+            }
+            // Validator is not triggered if table name is a valid alias
+            if (!in_array($tb, $this->added_aliases) && $this->validator) {
+                $this->validator->isValidTable($tb);
+            }
+
+            array_push($this->added_aliases, $alias);
         }
 
         return [$tb, $alias];
@@ -234,8 +243,22 @@ class ParseShortSql
                 // This is a plugin column!
                 array_push ($join_by_fld , [
                     $tbf, null, [
-                        [null, $tbf.'.table_link', '=', "'$tb'"], 
-                        ['AND', $tbf.'.id_link', '=', "{$tb}.id"]
+                        [
+                            "connector"         => null, 
+                            "opened_bracket"    => null, 
+                            "fld"               => "$tbf.table_link", 
+                            "operator"          => "=", 
+                            "binded"            => "'{$tb}'",
+                            "closed_bracket"
+                        ],
+                        [
+                            "connector"         => 'AND', 
+                            "opened_bracket"    => null, 
+                            "fld"               => "$tbf.id_link", 
+                            "operator"          => "=", 
+                            "binded"            => "{$tb}.id",
+                            "closed_bracket"
+                        ]
                     ]
                 ]);
             }
@@ -270,7 +293,7 @@ class ParseShortSql
         // Add prefix and validate table name
         list($tb, $tbAlias) = $this->parseTb( $tb );
 
-        if($this->validator){
+        if( !in_array($tb, $this->added_aliases) && $this->validator){
             $this->validator->isValidFld( $fld, $tb );
         }
         
@@ -450,14 +473,27 @@ class ParseShortSql
         list($fld_tb, $fld, $alias) = $this->parseFld($fld, $tb);
 
         // If field-table is different from table name JOIN plugin table
-        if( $tb !== $fld_tb ) {
+        if( $tb !== $fld_tb && !\in_array($fld_tb, $this->added_aliases)) {
             // Add PREFIX to table name, if not available
             $auto_join[] = [
                 $fld_tb,
                 null, 
                 [
-                    [null, "{$fld_tb}.table_link", "=", "'{$tb}'"],
-                    ["AND", "{$fld_tb}.id_link", "=", "{$tb}.id"]
+                    [
+                        "connector"         => null, 
+                        "opened_bracket"    => null, 
+                        "fld"               => "{$fld_tb}.table_link", 
+                        "operator"          => "=", 
+                        "binded"            => "'{$tb}'",
+                        "closed_bracket"    => null
+                    ],
+                    [
+                        "connector"         => "AND", 
+                        "opened_bracket"    => null, 
+                        "fld"               => "{$fld_tb}.id_link", 
+                        "operator"          => "=", 
+                        "binded"            => "{$tb}.id"],
+                        "closed_bracket"    => null
                 ]
             ];
         }

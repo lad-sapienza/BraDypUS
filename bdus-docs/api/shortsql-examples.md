@@ -204,7 +204,29 @@ SELECT
 
 ---
 
-### Example #10: searching in plugins / autojoin
+### Example #10: where using more statements and brackets
+
+```txt
+@sites~?(|name|like|site-%||and|typology|=|large%20settlement|)
+```
+
+is parsed as
+
+```SQL
+SELECT 
+    test__sites.* 
+  FROM test__sites 
+  WHERE 
+    (
+    test__sites.name LIKE 'site-%' 
+    AND 
+    test__sites.typology = 'large settlement'
+    );
+```
+
+---
+
+### Example #11: searching in plugins / autojoin
 
 ```txt
 @sites~?test__m_citations.short|=|Doe 2020
@@ -246,7 +268,7 @@ values stored in the database
 
 ---
 
-### Example #11: Autojoin by requesting plugin column
+### Example #12: Autojoin by requesting plugin column
 
 ```txt
 @sites~[id,name,test__geodata.geometry
@@ -270,7 +292,7 @@ is mentioned in the column list. Unique postfixes are automatically set.
 
 ---
 
-### Example #12: Joins
+### Example #13: Joins
 
 ```txt
 @su~[su.*,test__sites.*~+sites||id|=|^su.site

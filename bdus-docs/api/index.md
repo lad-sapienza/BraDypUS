@@ -5,13 +5,15 @@ title: API
 Bradypus is shipped with a read-only JSON Rest API that makes it very easy to 
 query and retrieve informations programmatically.
 
-The API is versioned, and the current version is v2. Both v1 and v2 are
-available, but if you are planning to create applications that make use
-of this feature, please consider seriously to use v2, since the previous
-version be deprecated very soon.
+{: .callout-block .callout-block-warning}
+The API is versioned, and the currently maintained version is v2. 
+Both v1 and v2 are available, but v1 has been deprecatedand 
+**will be removed in first stable release of v4** . If you are planning 
+to create new applications that make use of the API you should use v2.
+Please also consider migrating your v1 based applications as soon as possible.
 
-The API endpoint is available at the `/api/` relative URL, eg.:
-`https://bdus.cloud/db/api/`.
+The API endpoint is available at the `/api/v2/` relative URL, eg.:
+`https://bdus.cloud/db/api/v2/`.
 
 {: .callout-block .callout-block-warning}
 The API function must be activated in the main app configuration file in order for the API to work. The API should run as a specific user of the database

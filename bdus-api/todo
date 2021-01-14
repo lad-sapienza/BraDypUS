@@ -25,6 +25,8 @@ BUG
 
 [] replace jqplot with chart.js
 
+[x] Added support for subqueries and IN operator in ShortSQL
+
 [x] Remove useless QueryBuilder
 
 [x] QueryObject::setField: tb parameter should be last!

@@ -130,19 +130,19 @@ class QueryObject
      * @param string $val
      * @return self
      */
-    public function setWherePart(string $connector = null, string $open_bracket = null, string $fld, string $operator, string $val, string $closed_bracket = null): self
+    public function setWherePart(string $connector = null, string $opened_bracket = null, string $fld, string $operator, string $val, string $closed_bracket = null): self
     {
         if ( count($this->obj['where']) > 0 && !$connector ) {
             throw new \Exception("Connector is required for query parts other than first");
         }
 
         array_push( $this->obj['where'] , [
-            $connector,
-            $open_bracket,
-            $fld,
-            $operator,
-            $val,
-            $closed_bracket
+            "connector"     => $connector,
+            "opened_bracket"=> $opened_bracket,
+            "fld"           => $fld,
+            "operator"      => $operator,
+            "binded"        => $val,
+            "closed_bracket"=> $closed_bracket
         ]);
         return $this;
     }
@@ -250,7 +250,7 @@ class QueryObject
     {
         if ($onlyWhere){
             return [
-                $this->whereToStr( $this->obj['where'] ),
+                $this->indexedWhereToStr( $this->obj['where'] ),
                 $this->obj['values']
             ];
         }
@@ -285,7 +285,7 @@ class QueryObject
 
         array_push(
             $sql, 
-            'WHERE ' . $this->whereToStr( $this->obj['where'] )
+            'WHERE ' . $this->indexedWhereToStr( $this->obj['where'] )
         );
 
         $group = $this->obj['group'];

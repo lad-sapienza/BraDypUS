@@ -86,7 +86,8 @@ class Validator
             '>',
             '>=',
             'is null',
-            'is not null'
+            'is not null',
+            'in'
         ];
         // Validate connector
         if (!in_array(strtolower($operator), $valid_operators)) {

@@ -53,6 +53,24 @@ class ParseShortSql
         ];
     }
 
+    /**
+     * Parses sub quary from base64url encoded string
+     *
+     * @param string $base64url_string
+     * @return array    first element is SQL text, second element array of values
+     */
+    private function parseSubQuery(string $base64url_string) : array
+    {
+        //  base64url_decode
+        $decoded_string = base64_decode( strtr( $base64url_string, '-_', '+/') . str_repeat('=', 3 - ( 3 + strlen( $base64url_string )) % 4 ));
+
+        $self = new self($this->prefix, $this->cfg, $this->validator);
+        $self->parseAll($decoded_string);
+
+        return $self->getSql();
+
+    }
+
     public function parseAll(string $str): self
     {
         $this->setParts($str);
@@ -236,7 +254,8 @@ class ParseShortSql
                     $tbf === $this->prefix . 'geodata' ||
                     (
                         $this->cfg && 
-                        in_array($tbf, $this->cfg->get("tables.$tb.plugin"))
+                        \is_array($this->cfg->get("tables.$tb.plugin")) && 
+                        \in_array($tbf, $this->cfg->get("tables.$tb.plugin"))
                     )
                 )
             ){
@@ -376,7 +395,11 @@ class ParseShortSql
             array_push($sql_parts, $p);
             // If value element is a field name, do not add value to list
             if($v) {
-                array_push($sql_values, $v);
+                if (\is_string($v)) {
+                    array_push($sql_values, $v);
+                } else {
+                    $sql_values = array_merge($sql_values, $v);
+                }
             }
             $join_parts = array_merge($join_parts, $j ?: []);
         }
@@ -459,7 +482,7 @@ class ParseShortSql
             // Connectors, as operators, are uppercase for better readability
             $connector = strtoupper($connector);
         } else {
-            list($fld, $operator, $value) = $mini_parts;            
+            list($fld, $operator, $value) = $mini_parts;
         }
 
         if($this->validator){
@@ -526,6 +549,10 @@ class ParseShortSql
         if ($value[0] === '^') {
             list($binded_tb, $binded_fld, $binded_alias) = $this->parseFld(substr($value, 1));
             $binded = "$binded_tb.$binded_fld";
+        } else if (($value[0] === ']')) {
+            list ($sub_query, $sub_values) = $this->parseSubQuery(substr($value, 1));
+            $binded = " ( {$sub_query} ) ";
+            $value = $sub_values;
         } else if (in_array($operator, ['IS NULL', 'IS NOT NULL'])) {
             $binded = '';
         } else if ($noValues) {

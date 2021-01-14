@@ -295,7 +295,7 @@ is mentioned in the column list. Unique postfixes are automatically set.
 ### Example #13: Joins
 
 ```txt
-@su~[su.*,test__sites.*~+sites||id|=|^su.site
+@su~[su.*,test__sites.*~+sites||id|=|^su.sites
 ```
 
 is parsed as

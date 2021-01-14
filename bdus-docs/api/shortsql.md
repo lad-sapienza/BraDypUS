@@ -34,6 +34,8 @@ The order of the blocks is not important, and except for the table block, they a
     Brackets might be used to logically group statement parts. In that case opening bracket must placed before the field name and separad by the usual pipe (`|`). The closing bracket must be placed after the value, pipe-separated.  
     - Field names may be provided as `field`, `field:alias`, `table.field` or `table.field:alias`
     - If value starts with a caret (`^`), the value will not binded nor escaped by quotes as string: it is assumed to be a table field name.
+    - If value starts with a closing square bracket (`]`), the value is assumed to be a subquery. The ShortSQL syntax supports subqueries, but their content must be [Base64web encoded](https://en.wikipedia.org/wiki/Base64#URL_applications). The subquery strictly follow the ShortSQL format. Subqueries will be enclosed in round brackets, so you **should not** include them in the ShortSql text.
+
 
 - **>**`field:order`  
     **Optional**.  

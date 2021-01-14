@@ -7,7 +7,7 @@ The following examples assume that `test` application is being used, e.g. `/api/
 
 ---
 
-### Example #1. Minimal case
+### Minimal case
 
 The string:
 
@@ -25,7 +25,7 @@ If only the table name is provided, it is assumed that all columns and all rows 
 
 ---
 
-### Example #2: columns
+### columns
 
 The fields block can be used to retrieve only some columns:
 
@@ -41,7 +41,7 @@ SELECT test__sites.name, test__sites.typology FROM test__sites WHERE 1=1
 
 ---
 
-### Example #3: column aliases
+### column aliases
 
 Aliases can be provided for column names:
 
@@ -57,7 +57,7 @@ SELECT test__sites.name AS "Site name", test__sites.typology AS "Site typology" 
 
 ---
 
-### Example #4: ordering
+### ordering
 
 Records can be orderd by one column
 
@@ -97,7 +97,7 @@ SELECT
 
 ---
 
-### Example #5: limit
+### Limit
 
 Results can be limited
 
@@ -116,7 +116,7 @@ Remember both Limit and Offset must be provided, as MySQL-like statements, such 
 
 ---
 
-### Example #6: grouping
+### Grouping
 
 Results can be grouped using one column
 
@@ -152,7 +152,7 @@ will be parsed as
 
 ---
 
-### Example #7: simple where
+### Simple where
 
 ```txt
 @sites~?name|=|site-01
@@ -166,7 +166,7 @@ SELECT test__sites.* FROM test__sites WHERE test__sites.name = 'site-01'
 
 ---
 
-### Example #8: simple where using like and wildcard
+### Simple where using like and wildcard
 
 ```txt
 @sites~?name|like|site-%
@@ -184,7 +184,7 @@ SELECT
 
 ---
 
-### Example #9: where using more statements
+### Where using more statements
 
 ```txt
 @sites~?name|like|site-%||and|typology|=|large settlement
@@ -204,7 +204,7 @@ SELECT
 
 ---
 
-### Example #10: where using more statements and brackets
+### Where using more statements and brackets
 
 ```txt
 @sites~?(|name|like|site-%||and|typology|=|large%20settlement|)
@@ -225,8 +225,30 @@ SELECT
 ```
 
 ---
+### Where using subquery
 
-### Example #11: searching in plugins / autojoin
+```txt
+@sites~?typology|IN|]QHN1fltzaXRlc34_aWR8SVMgTk9UIE5VTEx8
+```
+
+Where `QHN1fltzaXRlc34_aWR8SVMgTk9UIE5VTEx8` is the base64web encoded version of:
+`@su~[sites~?id|IS NOT NULL|`
+
+is parsed as
+
+```SQL
+SELECT test__sites.*
+  FROM test__sites
+ WHERE test__sites.typology IN (
+           SELECT test__su.sites
+             FROM test__su
+            WHERE test__su.id IS NOT NULL
+       );
+```
+
+---
+
+### Searching in plugins / auto-join
 
 ```txt
 @sites~?test__m_citations.short|=|Doe 2020
@@ -268,7 +290,7 @@ values stored in the database
 
 ---
 
-### Example #12: Autojoin by requesting plugin column
+### Auto-join by requesting plugin column
 
 ```txt
 @sites~[id,name,test__geodata.geometry
@@ -292,7 +314,7 @@ is mentioned in the column list. Unique postfixes are automatically set.
 
 ---
 
-### Example #13: Joins
+### Joins
 
 ```txt
 @su~[su.*,test__sites.*~+sites||id|=|^su.sites

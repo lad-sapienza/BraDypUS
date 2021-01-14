@@ -305,6 +305,7 @@ class api_ctrl extends Controller
 		}
 
 		if (is_array($data)) {
+			$data = array_merge(['Alert' => "Pay attention. The API v1 has been deprecated and will be removed in the first stable release of bdus v4. Please migrate your application as soon as possible"], $data);
 			$data = json_encode($data, (version_compare(PHP_VERSION, '5.4.0') >=0 ? JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE : false));
 		}
 

@@ -1,3 +1,4 @@
+4.0.0-beta.5[] = "Added bdus version in API response"
 4.0.0-beta.5[] = "Added support for subqueries and IN operator in ShortSQL"
 4.0.0-beta.4[] = "Explicit ON structure for JOINS, supporting brackes"
 4.0.0-beta.3[] = "Fixed bug with Record/Read not loading full plugin records"

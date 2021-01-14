@@ -344,6 +344,8 @@ class api2 extends Controller
         }
 
         if (is_array($data)) {
+            // Always add version to API response
+            $data = array_merge(['version' => version::current()], $data);
             $flag = $this->pretty ? JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE : JSON_UNESCAPED_UNICODE;
             $data = json_encode($data, (version_compare(PHP_VERSION, '5.4.0') >= 0 ? $flag : false));
         }

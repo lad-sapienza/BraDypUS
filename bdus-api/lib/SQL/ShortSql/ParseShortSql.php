@@ -268,7 +268,7 @@ class ParseShortSql
                             "fld"               => "$tbf.table_link", 
                             "operator"          => "=", 
                             "binded"            => "'{$tb}'",
-                            "closed_bracket"
+                            "closed_bracket"    => null
                         ],
                         [
                             "connector"         => 'AND', 
@@ -276,7 +276,7 @@ class ParseShortSql
                             "fld"               => "$tbf.id_link", 
                             "operator"          => "=", 
                             "binded"            => "{$tb}.id",
-                            "closed_bracket"
+                            "closed_bracket"    => null
                         ]
                     ]
                 ]);

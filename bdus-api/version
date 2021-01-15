@@ -1,3 +1,4 @@
+4.0.0-beta.6[] = "Bug fixed: SQL brackets were not set correctly"
 4.0.0-beta.6[] = "Bug fixed: values of IN operator in shortsql are not binded nor enclosed in single quotes"
 4.0.0-beta.5[] = "Added bdus version in API response"
 4.0.0-beta.5[] = "Added support for subqueries and IN operator in ShortSQL"

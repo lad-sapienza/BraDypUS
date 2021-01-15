@@ -100,21 +100,18 @@ class QueryObject
     public function setJoin( string $tb, string $tb_alias = null, array $on): self
     {
         $found = false;
+        $data_arr = [
+            trim($tb),
+            $tb_alias,
+            $on
+        ];
         foreach ($this->obj['joins'] as $j) {
-            if ($j == [
-                $tb,
-                $tb_alias,
-                $on
-            ]){
+            if ($j === $data_arr){
                 $found = true;
             }
         }
         if (!$found) {
-            array_push($this->obj['joins'], [
-                trim($tb),
-                $tb_alias,
-                $on
-            ]);
+            array_push($this->obj['joins'], $data_arr);
         }
         return $this;
     }

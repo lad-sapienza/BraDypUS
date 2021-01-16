@@ -47,10 +47,13 @@ class ParseShortSql
             '@' => 'tb'    ,
             '[' => 'fields',
             '+' => 'join'  ,
+            ']' => 'join'  ,
             '?' => 'where' ,
             '*' => 'group' ,
             '>' => 'order' ,
             '-' => 'limit'
+            // RESERVED: ^ value is fieldame, not string
+            // RESERVED: < introduces subquery
         ];
     }
 

@@ -1,3 +1,4 @@
+4.0.0-beta.9[] = "ShortSql symbol for JOIN changed from + to ]"
 4.0.0-beta.8[] = "Manage::getById manages empty query results"
 4.0.0-beta.7[] = "Added missing form-controll class to Send email module template"
 4.0.0-beta.6[] = "Bug fixed: SQL brackets were not set correctly"

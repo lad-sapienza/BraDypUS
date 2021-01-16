@@ -25,7 +25,7 @@ If only the table name is provided, it is assumed that all columns and all rows 
 
 ---
 
-### columns
+### Columns
 
 The fields block can be used to retrieve only some columns:
 
@@ -41,7 +41,7 @@ SELECT test__sites.name, test__sites.typology FROM test__sites WHERE 1=1
 
 ---
 
-### column aliases
+### Column aliases
 
 Aliases can be provided for column names:
 
@@ -57,7 +57,21 @@ SELECT test__sites.name AS "Site name", test__sites.typology AS "Site typology" 
 
 ---
 
-### ordering
+### Aggregative functions on columns
+
+```txt
+@sites~[id|count
+```
+
+is parsed as
+
+```SQL
+SELECT count(test__sites.id) FROM test__sites WHERE 1=1
+```
+
+---
+
+### Ordering
 
 Records can be orderd by one column
 
@@ -228,8 +242,8 @@ SELECT
 ### Where using subquery
 
 ```txt
-@sites~?typology|IN|]QHN1fltzaXRlc34_aWR8SVMgTk9UIE5VTEx8
-```
+@sites~?typology|IN|<QHN1fltzaXRlc34_aWR8SVMgTk9UIE5VTEx8
+``
 
 Where `QHN1fltzaXRlc34_aWR8SVMgTk9UIE5VTEx8` is the base64web encoded version of:
 `@su~[sites~?id|IS NOT NULL|`

@@ -311,7 +311,7 @@ class Manage
         $values = [$id];
 
         $res = $this->run($sql, $values, 'read');
-        if (\is_array($res)) {
+        if (\is_array($res) && \is_array($res[0])) {
             return $res[0];
         } else {
             return [];

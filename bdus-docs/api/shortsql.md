@@ -24,7 +24,7 @@ The order of the blocks is not important, and except for the table block, they a
     Each field can be followed by an optional alias, separated by a colon (:).  
     Fields can be argument of aggregative functions, such as `avg`, `count`, `max`, `min`, `sum`, that must follow the the field name and alias separated by a pipe (|)
 
-- **+**`tbname:Alias||onStatement`  
+- **]**`tbname:Alias||onStatement`  
     **Optional**.  
     **Multiple**.  
     Join statement. Each statement if made of two parts separated by a double pipe (`||`). The first part is the table name to be joined optinally followed by an alias (separated by a colon `:`). Alias is not supported yet (04.02.2020).  

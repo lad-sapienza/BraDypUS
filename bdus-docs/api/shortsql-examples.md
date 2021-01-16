@@ -90,7 +90,7 @@ SELECT
   ORDER BY test__sites.name ASC
 ```
 
-or many columns, in bosth directions (asc and desc):
+or many columns, in both directions (asc and desc):
 
 ```txt
 @sites~[name:Site name,typology:Site typology~>name:asc,typology:desc
@@ -304,7 +304,7 @@ values stored in the database
 
 ---
 
-### Auto-join by requesting plugin column
+### Auto-join by explicitly requesting plugin column
 
 ```txt
 @sites~[id,name,test__geodata.geometry
@@ -331,7 +331,7 @@ is mentioned in the column list. Unique postfixes are automatically set.
 ### Joins
 
 ```txt
-@su~[su.*,test__sites.*~+sites||id|=|^su.sites
+@su~[su.*,sites.*~]sites||id|=|^su.sites
 ```
 
 is parsed as

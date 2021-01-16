@@ -62,7 +62,7 @@ class Validator
 
         // proved field must be in fields array; no alien fields are supported
         if (!in_array($fld, $flds)){
-            throw new ShortSqlException("The field $fld is not available for table $tb");
+            throw new ShortSqlException("The field `$fld` is not available for table `$tb`");
         }
         return true;
     }
@@ -91,7 +91,7 @@ class Validator
         ];
         // Validate connector
         if (!in_array(strtolower($operator), $valid_operators)) {
-            throw new ShortSqlException("Operator '{$operator}' non valid. Only " . implode(", ", $valid_operators) . " are allowed");
+            throw new ShortSqlException("Operator `{$operator}` non valid. Only " . implode(", ", $valid_operators) . " are allowed");
         }
         return true;
     }
@@ -102,14 +102,30 @@ class Validator
      *
      * @param string $connector Connector to check
      * @throws ShortSqlException        On errors
-     * @return boolean
+     * @return bool
      */
-    public function isValidConnector($connector)
+    public function isValidConnector( string $connector): bool
     {
         $valid_connectors = ['and', 'or'];
         // Validate connector
         if (!in_array(strtolower($connector), $valid_connectors)) {
-            throw new ShortSqlException("Connector '{$connector}' non valid. Only " . implode(", ", $valid_connectors) . " are allowed");
+            throw new ShortSqlException("Connector `{$connector}` non valid. Only " . implode(", ", $valid_connectors) . " are allowed");
+        }
+        return true;
+    }
+
+    /**
+     * Checks if $function is valid function
+     *
+     * @param string $function  Function name to check
+     * @throws ShortSqlException on errors
+     * @return boolean
+     */
+    public function isValidFunction( string $function ) : bool
+    {
+        $valid_functions = [ 'avg', 'count', 'max', 'min', 'sum' ];
+        if (!in_array(strtolower($function), $valid_functions)) {
+            throw new ShortSqlException("Function `{$function}` non valid. Only " . implode(", ", $valid_functions) . " are allowed");
         }
         return true;
     }

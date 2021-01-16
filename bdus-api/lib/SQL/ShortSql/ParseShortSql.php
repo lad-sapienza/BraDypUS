@@ -19,7 +19,8 @@ class ParseShortSql
 {
     private $parts;
 
-    private $added_aliases = [];
+    private $added_tb_aliases = [];
+    private $added_fld_aliases = [];
 
     private $prefix;
     private $validator;
@@ -73,7 +74,22 @@ class ParseShortSql
 
     public function parseAll(string $str): self
     {
-        $this->setParts($str);
+        // Explode string
+        $parts = explode('~', $str);
+
+        // And set parts
+        foreach ($parts as $part) {
+            foreach ($this->symbols as $symbol => $key) {
+                if ($part[0] === $symbol) {
+                    if($key === 'join') {
+                        $this->parts[$key][] = substr($part, 1);
+                    } else {
+                        $this->parts[$key] = substr($part, 1);
+                    }
+                }
+            }
+        }
+
         $this->parseParts();
         return $this;
     }
@@ -97,32 +113,19 @@ class ParseShortSql
     }
 
 
-    
-
-    private function setParts(string $str) : void
-    {
-        $parts = explode('~', $str);
-
-        foreach ($parts as $part) {
-            foreach ($this->symbols as $symbol => $key) {
-                if ($part[0] === $symbol) {
-                    if($key === 'join') {
-                        $this->parts[$key][] = substr($part, 1);
-                    } else {
-                        $this->parts[$key] = substr($part, 1);
-                    }
-                }
-            }
-        }
-    }
-
-
+    /**
+     * Validates parts and sets queryobject
+     *
+     * @return void
+     */
     private function parseParts()
     {
         list($tb, $tb_alias) = $this->parseTb($this->parts['tb']);
         
+        // Table
         $this->qo->setTb($tb, $tb_alias);
 
+        // Group & Fields & Auto-joins resolved by fields
         $group = $this->parseGroup($this->parts['group'], $tb);
         if (!empty($group)){
             foreach ($group as $g) {
@@ -135,7 +138,7 @@ class ParseShortSql
             // validate $fields: set to * if not available
             list ($fields, $join_by_fld) = $this->parseFldList($this->parts['fields'], $tb);
             foreach ($fields as $f) {
-                $this->qo->setField($f[1], $f[2], $f[0]);
+                $this->qo->setField($f[1], $f[2], $f[0], $f[3]);
             }
             foreach ($join_by_fld as $j) {
                 $this->qo->setJoin( $j[0], $j[1], $j[2]);
@@ -143,13 +146,13 @@ class ParseShortSql
         }
         
 
-        
-
+        // Explixit joins
         $joins = $this->parseJoinArr($this->parts['join'] ?? []);
         foreach ($joins as $j) {
             $this->qo->setJoin($j[0], $j[1], $j[2]);
         }
         
+        // Where & Auto-Joins resolved by Where fields
         if ($this->parts['where'] && $this->parts['where'] !== '1') {
             list($where, $values, $plg_joins) = $this->parseWhere($this->parts['where'], $tb);
             foreach ($where as $w) {
@@ -179,17 +182,17 @@ class ParseShortSql
             }
         }
         
+        // Order
         $order = $this->parseOrder($this->parts['order'], $tb);
         foreach ($order as $o) {
             $this->qo->setOrderFld($o[0], $o[1]);
         }
         
+        // Limit
         list($rows, $offset) = $this->parseLimit($this->parts['limit']);
         if (isset($rows) && isset($offset)) {
             $this->qo->setLimit((int)$rows, (int)$offset);
         }
-
-        
 
     }
 
@@ -203,28 +206,29 @@ class ParseShortSql
     {
         list($tb, $alias) = explode(':', $tb);
 
-        if (!in_array($tb, $this->added_aliases)) {
+        if (!in_array($tb, $this->added_tb_aliases)) {
         
             // If table name has no prefix, add it
             if ($this->prefix && strpos($tb, $this->prefix) === false) {
                 $tb = $this->prefix . $tb;
             }
             // Validator is not triggered if table name is a valid alias
-            if (!in_array($tb, $this->added_aliases) && $this->validator) {
+            if (!in_array($tb, $this->added_tb_aliases) && $this->validator) {
                 $this->validator->isValidTable($tb);
             }
 
-            array_push($this->added_aliases, $alias);
+            array_push($this->added_tb_aliases, $alias);
         }
 
         return [$tb, $alias];
     }
 
     /**
-     * Parses string of fields, eg.:
-     * null, '*', 'tb.*', 'fld1,fldn', 'tb.fld1,fldn
-     * And return aray of array containing for each field:
-     *  table name, field name, field alias
+     * Parses string of fields, eg.: null, '*', 'tb.*', 'fld1,fldn', 'tb.fld1,fldn
+     * And returns array of arrays containing:
+     *      as first element an array of fields, providing for each : table name, field name, field alias, function
+     *      as second element array of auto-joins calculated from fields, providing for each:
+     *          table name, table alias (always null), [ connector, open bracket. fieldname, operator, binded, close bracket]
      *
      * @param array $fields_arr
      * @param string $tb
@@ -234,7 +238,7 @@ class ParseShortSql
     {
         if (!$fields || $fields === '*' ){
             return [
-                [ [ $tb, '*', null ] ],
+                [ [ $tb, '*', null, null ] ],
                 []
             ];
         }
@@ -242,15 +246,16 @@ class ParseShortSql
         $formatted_flds = [];
         $join_by_fld = [];
         $fields_arr = explode(',', $fields);
+
         foreach ($fields_arr as $f) {
-            list($tbf, $fld, $alias) = $this->parseFld($f, $tb);
+
+            list($tbf, $fld, $alias, $function) = $this->parseFld($f, $tb);
             array_push($formatted_flds, [
-                $tbf, $fld, $alias
+                $tbf, $fld, $alias, $function
             ]);
 
             if (
-                $tbf !== $tb &&
-                (
+                $tbf !== $tb && (
                     $tbf === $this->prefix . 'geodata' ||
                     (
                         $this->cfg && 
@@ -286,14 +291,26 @@ class ParseShortSql
     }
 
     /**
-     * Parese single field string and returns array of table name, field name, field alias'
+     * Parses single field string and returns array of table name, field name, field alias?, field function?
      *
      * @param string $fld
      * @param string $tb
-     * @return void
+     * @return array
      */
-    private function parseFld(string $fld, string $tb = null){
+    private function parseFld(string $fld, string $tb = null): array
+    {
+
         
+        // if function name is provided as pipe separated, get it
+        $function = null;
+        if (strpos($fld, '|') !== false){
+            list($fld, $function) = explode('|', $fld);
+
+            if( $this->validator ){
+                $this->validator->isValidFunction( $function );
+            }
+        }
+
         // if table name is provided as dot-separated prefix, get it
         if (strpos($fld, '.') !== false){
             list($tb, $fld) = explode('.', $fld);
@@ -301,6 +318,9 @@ class ParseShortSql
 
         // If alias is provided as colon-separated postfix, get it
         list($fld, $alias) = explode(':', $fld);
+        if ($alias) {
+            array_push($this->added_fld_aliases, $alias);
+        }
 
         // Table name is provided as parameter 
         // or as a dot-separated prefix in the field name
@@ -312,11 +332,11 @@ class ParseShortSql
         // Add prefix and validate table name
         list($tb, $tbAlias) = $this->parseTb( $tb );
 
-        if( !in_array($tb, $this->added_aliases) && $this->validator){
+        if( !in_array($tb, $this->added_tb_aliases) && !in_array($fld, $this->added_fld_aliases) && $this->validator){
             $this->validator->isValidFld( $fld, $tb );
         }
         
-        return [$tb, $fld, $alias];
+        return [$tb, $fld, $alias, $function];
     }
 
     /**
@@ -492,11 +512,11 @@ class ParseShortSql
         // Operators, as connectors, are uppercase
         $operator = strtoupper($operator); // Always upper case
 
-        // Set $tb, $fls and possibly $alias
-        list($fld_tb, $fld, $alias) = $this->parseFld($fld, $tb);
+        // Set $tb, $fld and possibly $alias
+        list($fld_tb, $fld, $alias, $function) = $this->parseFld($fld, $tb);
 
         // If field-table is different from table name JOIN plugin table
-        if( $tb !== $fld_tb && !\in_array($fld_tb, $this->added_aliases)) {
+        if( $tb !== $fld_tb && !\in_array($fld_tb, $this->added_tb_aliases)) {
             // Add PREFIX to table name, if not available
             $auto_join[] = [
                 $fld_tb,
@@ -541,16 +561,18 @@ class ParseShortSql
             $fld = "$alias.$id_from_tb_id_fld";
         } else {
             // $fld must always contain table name as prefix
-            $fld = "$fld_tb.$fld";
+            if (!\in_array($fld, $this->added_fld_aliases)) {
+                $fld = "$fld_tb.$fld";
+            }
         }
 
         // Set value
-        // If the caret is the forst char, the value is not a string: it is a field name
+        // If the caret is the first char, the value is not a string: it is a field name
         if ($value[0] === '^') {
             list($binded_tb, $binded_fld, $binded_alias) = $this->parseFld(substr($value, 1));
             $binded = "$binded_tb.$binded_fld";
             unset($value);
-        } else if (($value[0] === ']')) {
+        } else if (($value[0] === '<')) {
             list ($sub_query, $sub_values) = $this->parseSubQuery(substr($value, 1));
             $binded = " ( {$sub_query} ) ";
             $value = $sub_values;

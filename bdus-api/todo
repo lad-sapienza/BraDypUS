@@ -47,6 +47,8 @@ BUG
 
 [] replace jqplot with chart.js
 
+[x] QueryObject && ParseShortSql: support for functions in column list.
+
 [x] Added support for subqueries and IN operator in ShortSQL
 
 [x] Remove useless QueryBuilder

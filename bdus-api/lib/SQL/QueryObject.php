@@ -21,7 +21,7 @@ class QueryObject
     {
         $this->obj = [
             'tb'        => [], // [ tb, alias ]
-            'fields'    => [], // [ [tb, fld, alias], [...] ]
+            'fields'    => [], // [ [tb, fld, alias, function], [...] ]
             'joins'     => [], // [ [tb, alias, on ], [...] ]
             'where'     => [], // [ [null, field, operator, value], [ connector, field, operator, value], [...] ]
             'group'     => [], // [ fld1, fld2, ... ]
@@ -75,11 +75,12 @@ class QueryObject
      * @param string $fld
      * @param string $alias
      * @param string $tb
+     * @param string $function
      * @return self
      */
-    public function setField(string $fld, string $alias = null, string $tb = null): self
+    public function setField(string $fld, string $alias = null, string $tb = null, string $function = null): self
     {
-        array_push ( $this->obj['fields'], [$tb, $fld, $alias] );
+        array_push ( $this->obj['fields'], [$tb, $fld, $alias, $function] );
         return $this;
     }
     
@@ -258,11 +259,21 @@ class QueryObject
         $fld_arr = [];
         foreach ($this->obj['fields'] as $f) {
             if (is_array($f)) {
-                
-                array_push(
-                    $fld_arr,
-                    ( $f[0] ? $f[0] . '.' : '') . $f[1] . ( $f[2] ? ' AS "' . $f[2] . '"' : '')
-                );
+                /**
+                 * 0: table name
+                 * 1: column name
+                 * 2: column alias
+                 * 3: function
+                 */
+                $f_str = ( $f[0] ? $f[0] . '.' : '') . $f[1]; // Add table
+                if ($f[3]) { // Add function
+                    $f_str = "{$f[3]}({$f_str})";
+                }
+                if ($f[2]) { // Add alias
+                    $f_str = "{$f_str} AS \"{$f[2]}\"";
+                }
+
+                array_push( $fld_arr, $f_str );
             } else {
                 array_push($fld_arr, $this->obj['tb'][0] . '.*');
             }

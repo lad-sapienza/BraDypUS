@@ -417,7 +417,7 @@ class ParseShortSql
             list($p, $v, $j) = $this->parseWherePart($part, $index, $tb, $noValues);
             array_push($sql_parts, $p);
             // If value element is a field name, do not add value to list
-            if($v) {
+            if($v !== false) {
                 if (\is_string($v)) {
                     array_push($sql_values, $v);
                 } else {

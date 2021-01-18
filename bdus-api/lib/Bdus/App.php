@@ -130,6 +130,7 @@ class App
             } else {
                 $this->log->pushHandler(new StreamHandler($log_file, Logger::DEBUG));
                 $this->log->pushHandler(new FirePHPHandler());
+                $this->db->setLog($this->log);
             }
         } catch (\Throwable $th) {
             /**

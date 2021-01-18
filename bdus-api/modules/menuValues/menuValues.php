@@ -94,7 +94,7 @@ class menuValues_ctrl extends Controller
           ->setOrderFld($fld, 'asc');
 
         $tot->setTb($tb)
-          ->setField('count(id)', 'tot')
+          ->setField('id', 'tot', $tb, 'count')
           ->setOrderFld($fld, 'asc');
 
           if ($q && !empty($q)) {

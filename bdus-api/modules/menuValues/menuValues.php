@@ -47,6 +47,7 @@ class menuValues_ctrl extends Controller
    */
   private function getValues(string $context, string $att, string $q = null, int $p = null)
   {
+
     if (!$p){
       $p = 1;
     }
@@ -70,7 +71,7 @@ class menuValues_ctrl extends Controller
           ->setOrderFld('sort', 'asc');
 
         $tot->setTb($this->prefix . 'vocabularies')
-          ->setField('count(id)', 'tot')
+          ->setField('id', 'tot', $this->prefix . 'vocabularies', 'count')
           ->setWherePart(null, null, 'voc', '=', '?', null)
           ->setWhereValues([$att])
           ->setOrderFld('sort', 'asc');
@@ -108,6 +109,7 @@ class menuValues_ctrl extends Controller
       case 'id_from_tb':
         $id_field = $this->cfg->get("tables.{$att}.id_field");
 
+
         $query->setTb($att)
           ->setField('id', 'id')
           ->setField($id_field, 'val')
@@ -115,19 +117,20 @@ class menuValues_ctrl extends Controller
           ->setOrderFld($id_field, 'asc');
 
         $tot->setTb($att)
-          ->setField('count(id)', 'tot')
+          ->setField('id', 'tot', $att, 'count')
           ->setOrderFld($id_field, 'asc');
 
         if ($q && !empty($q)) {
           $query->setWherePart(null, null, $id_field, 'LIKE', "?", null);
-          $query->setWherePart(["%{$q}%"]);
+          $query->setWhereValues(["%{$q}%"]);
           $tot->setWherePart(null, null, $id_field, 'LIKE', "?", null);
-          $tot->setWherePart(["%{$q}%"]);
+          $tot->setWhereValues(["%{$q}%"]);
         }
       break;
     }
     list($sql, $val) = $query->getSql();
     list($tot_sql, $tot_val) = $tot->getSql();
+
 
     return [
       "tot" => $this->db->query($tot_sql, $tot_val)[0]['tot'],

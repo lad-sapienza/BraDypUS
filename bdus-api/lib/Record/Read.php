@@ -451,7 +451,7 @@ EOD;
 
         foreach ($required as $p) {
             if (!isset($this->cache['plugins'][$p])) {
-                $plg_data = $this->getTbRecord($p, "table_link = ? AND id_link = ?", [$this->tb, $this->id], false, true) ?: [];
+                $plg_data = $this->getTbRecord($p, "table_link = ? AND id_link = ?", [$this->tb, $this->id], false, false) ?: [];
                 if (empty($plg_data)) {
                     continue;
                 }

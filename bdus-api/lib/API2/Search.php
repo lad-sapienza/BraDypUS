@@ -8,7 +8,7 @@ namespace API2;
 
 use \DB\DBInterface;
 use \SQL\ShortSql\ParseShortSql;
-use \SQL\ShortSql\Validator;
+use \SQL\Validator;
 use \Config\Config;
 use \Record\Read;
 
@@ -48,7 +48,7 @@ class Search
 		$qo = $parseShortSql->parseAll($shortSql)->getQueryObject();
 
 		list($sql, $values) = $qo->getSql();
-		$tb = $qo->get('tb')[0];
+		$tb = $qo->get('tb')['name'];
 		$debug['shortSql'] 		= $shortSql;
 		$debug['urlencodedShortSql'] = urlencode($shortSql);
 		$debug['table'] 		= $tb;
@@ -62,11 +62,11 @@ class Search
 		$header['page'] 		= ($page > $header['total_pages']) ? $header['total_pages'] : $page;
 
 		if ($header['total_rows'] > $records_per_page ) {
-			if (!$qo->get('limit') ) {
+			if (!empty($qo->get('limit')) ) {
 				$qo->setLimit($records_per_page, ($page-1) * $records_per_page);
 			}
 			list($sql, $values) = $qo->getSql();
-			$tb = $qo->get('tb')[0];
+			$tb = $qo->get('tb')['name'];
 
 			$debug['paginated_sql'] = $sql;
 			$debug['paginated_values'] = $values;

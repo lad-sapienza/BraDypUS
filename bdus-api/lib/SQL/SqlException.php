@@ -6,9 +6,9 @@
 
 declare(strict_types=1);
 
-namespace SQL\ShortSql;
+namespace SQL;
 
-class ShortSqlException extends \Exception
+class SqlException extends \Exception
 {
 
 }

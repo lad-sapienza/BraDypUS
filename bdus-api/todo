@@ -2,29 +2,8 @@ TODO
 
 Roadmap towards v 4.0.0
 
-[ ] Subquery in whete should use subQuery index, bot value!
+[ ] Subquery in where should use subQuery index, not value!
 [ ] Validate QueryObject
-[ ] subquery as column
-
-[x] API: possibilità di aggiungere subquery nel nome del campo, es:
-SELECT paths__geodata.geometry,
-       (select count(*) from paths__m_msplaces where  place = paths__places.id) as "Tot. manuscripts",
-       paths__places.id,
-       paths__places.name,
-       paths__places.pleiades,
-       paths__places.typology
-  FROM paths__places
-       JOIN
-       paths__geodata ON paths__geodata.table_link = 'paths__places' AND 
-                         paths__geodata.id_link = paths__places.id
- WHERE paths__places.id IN (
-           SELECT paths__m_msplaces.place
-             FROM paths__m_msplaces
-            WHERE paths__m_msplaces.table_link = 'paths__manuscripts' AND 
-                  paths__m_msplaces.type = 'discovery'
-       )
- LIMIT 500 OFFSET 0;
-
 
 [] remove support for Api v1 (deprecated in 4.0.0-beta.2)
 
@@ -48,6 +27,8 @@ BUG
 [] replace fine uploader with https://github.com/flowjs/flow.js and https://github.com/flowjs/flow-php-server
 
 [] replace jqplot with chart.js
+
+[x] subQuery as column
 
 [x] API: possibilità di inserire funzioni da applicare ai nome del campo: count, avg, max
 

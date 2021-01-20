@@ -20,6 +20,7 @@ class Field
     {
 
         $ret = [
+            "subQuery" => null,
             "fld"   => null,
             "alias" => null,
             "tb"    => null,
@@ -45,8 +46,8 @@ class Field
         if ( $fld[0] === '<' ) {
             list($sub_query, $sub_values) = SubQuery::parse(substr($fld, 1), $parseShortSql);
             
-            $ret['tb']      = $tb;
-            $ret['fld']     = $sub_query;
+            $ret['subQuery']   = $sub_query;
+            $ret['values']     = $sub_values;
 
             return $ret;
 

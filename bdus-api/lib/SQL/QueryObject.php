@@ -39,7 +39,7 @@
  *          fld-name,       required, string
  *          operator:       required, string,
  *          value,          required if subQuery not set, string
- *          subQuery: QueryObject, required if value not set, Object
+ *          subQuery: QueryObject, required if value not set, Object [Not implemented: passed as string]
  *          close-bracket,  optional, string
  *      ]
  * ]
@@ -224,6 +224,17 @@ class QueryObject
             ]);
         }
         
+        return $this;
+    }
+
+    public function setFieldSubQuery(string $subQuery, string $alias = null, array $values = null): self
+    {
+        array_push ( $this->obj['fields'], [
+            "subQuery"   => $subQuery, 
+            "alias" => $alias, 
+            "fn"    => $function
+            ] 
+        );
         return $this;
     }
     
@@ -465,14 +476,18 @@ class QueryObject
         $fld_arr = [];
         foreach ($this->obj['fields'] as $f) {
             if (is_array($f)) {
-                $f_str = ( $f['tb'] ? $f['tb'] . '.' : '') . $f['fld']; // Add table
-                if ($f['fn']) { // Add function
-                    $f_str = "{$f['fn']}({$f_str})";
+                if ($f['subQuery']){
+                    $f_str = " ( {$f['subQuery']} ) ";
+                    $this->obj['values'] = array_merge($this->obj['values'], $f['values']);
+                } else {
+                    $f_str = ( $f['tb'] ? $f['tb'] . '.' : '') . $f['fld']; // Add table
+                    if ($f['fn']) { // Add function
+                        $f_str = "{$f['fn']}({$f_str})";
+                    }
                 }
                 if ($f['alias']) { // Add alias
                     $f_str = "{$f_str} AS \"{$f['alias']}\"";
                 }
-
                 array_push( $fld_arr, $f_str );
             } else {
                 array_push($fld_arr, $this->obj['tb']['name'] . '.*');

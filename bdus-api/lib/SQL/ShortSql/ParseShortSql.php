@@ -13,7 +13,6 @@ use SQL\ShortSql\Order;
 use SQL\ShortSql\Limit;
 use SQL\ShortSql\Group;
 use SQL\ShortSql\Where;
-use SQL\ShortSql\SubQuery;
 use SQL\ShortSql\Join;
 
 use SQL\QueryObject;
@@ -127,7 +126,12 @@ class ParseShortSql
             // Fields are set only if grouping is off
             $fields = $this->parseFldList($this->parts['fields'], $tb);
             foreach ($fields as $f) {
-                $this->qo->setField($f[1], $f[2], $f[0], $f[3]);
+                if ($f['fld'] && !$f['subQuery']){
+                    $this->qo->setField($f['fld'], $f['alias'], $f['tb'], $f['fn']);
+                } else {
+                    $this->qo->setFieldSubQuery($f['subQuery'], $f['alias'], $f['values'], $f['fn']);
+                }
+                
             }
         }
         
@@ -209,7 +213,14 @@ class ParseShortSql
     {
         if (!$fields || $fields === '*' ){
             return [
-                [ $tb, '*', null, null ]
+                [ 
+                    "tb"    => $tb, 
+                    "fld"   => '*', 
+                    "alias" => null, 
+                    "fn"    => null,
+                    "subQuery" => null,
+                    "values" => null
+                ]
             ];
         }
 
@@ -219,14 +230,8 @@ class ParseShortSql
         foreach ($fields_arr as $f) {
 
             $parsedFld = Field::parse($this->prefix, $f, $tb, new self($this->prefix, $this->cfg));
-            $tbf        = $parsedFld['tb'];
-            $fld        = $parsedFld['fld'];
-            $alias      = $parsedFld['alias'];
-            $function   = $parsedFld['fn'];
-            unset($parsedFld);
-            array_push($formatted_flds, [
-                $tbf, $fld, $alias, $function
-            ]);
+            // tb, fld, alias, fn, subQuery, values
+            array_push($formatted_flds, $parsedFld);
         }
         return $formatted_flds;
     }

@@ -216,7 +216,7 @@ class QueryObject
                     "opened_bracket"    => null,
                     "fld"               => "{$tb}.table_link",
                     "operator"          => "=", 
-                    "binded"            => "'$tb'",
+                    "binded"            => "'{$this->obj['tb']['name']}'",
                     "closed_bracket"    => null
                 ],
                 [
@@ -224,7 +224,7 @@ class QueryObject
                     "opened_bracket"    => null,
                     "fld"               => "{$tb}.id_link",
                     "operator"          => "=", 
-                    "binded"            => "$tb.id",
+                    "binded"            => "{$this->obj['tb']['name']}.id",
                     "closed_bracket"    => null
                 ]
             ]);
@@ -334,7 +334,7 @@ class QueryObject
                     "opened_bracket"    => null,
                     "fld"               => "{$tb}.table_link",
                     "operator"          => "=", 
-                    "binded"            => "'$tb'",
+                    "binded"            => "'{$this->obj['tb']['name']}'",
                     "closed_bracket"    => null
                 ],
                 [
@@ -342,7 +342,7 @@ class QueryObject
                     "opened_bracket"    => null,
                     "fld"               => "{$tb}.id_link",
                     "operator"          => "=", 
-                    "binded"            => "$tb.id",
+                    "binded"            => "{$this->obj['tb']['name']}.id",
                     "closed_bracket"    => null
                 ]
             ]);

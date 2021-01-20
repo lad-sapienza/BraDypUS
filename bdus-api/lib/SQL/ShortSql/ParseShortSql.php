@@ -34,7 +34,7 @@ class ParseShortSql
     {
         $this->prefix = $prefix;
         $this->cfg = $cfg;
-        $this->qo = new QueryObject(false, $this->cfg);
+        $this->qo = new QueryObject($this->cfg);
         $this->parts = [
             'tb'        => null, // tb, [tb, alias]
             'fields'    => null, // fld1,fld2, [[tb, fld1, fld1_alias], [ ... ]]
@@ -134,7 +134,6 @@ class ParseShortSql
                 
             }
         }
-        
 
         // Explixit joins
         $joins = Join::parse(

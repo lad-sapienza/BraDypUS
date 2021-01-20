@@ -55,9 +55,9 @@ class menuValues_ctrl extends Controller
 
 
 
-    $query = new QueryObject();
+    $query = new QueryObject($this->cfg);
 
-    $tot = new QueryObject();
+    $tot = new QueryObject($this->cfg);
 
     switch($context)
     {

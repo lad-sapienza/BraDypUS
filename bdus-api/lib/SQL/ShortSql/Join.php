@@ -48,7 +48,7 @@ class Join
             $tb_alias = $parsedTb['alias'];
             unset($parsedTb);
 
-            // Parse ON statementto SQL and vales
+            // Parse ON statement to SQL and values
             $parsedWhere = Where::parse(
                 $cfg, 
                 implode('||', $j_parts), 

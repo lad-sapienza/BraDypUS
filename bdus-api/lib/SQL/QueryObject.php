@@ -97,7 +97,7 @@ class QueryObject
     /**
      * Initializes the class and sets default values for query object
      */
-    public function __construct( bool $disable_join = false, Config $cfg = null )
+    public function __construct( Config $cfg = null )
     {
         $this->auto_join = !$disable_join;
         $this->cfg = $cfg;
@@ -115,6 +115,12 @@ class QueryObject
             'limit'     => null, // [ tot: n, offset: n ]
             'values'    => [], // [val, val, val]
         ];
+    }
+
+    public function setAutoJoin( bool $auto_join = false) : self
+    {
+        $this->auto_join = $auto_join;
+        return $this;
     }
 
     /**
@@ -373,14 +379,15 @@ class QueryObject
      */
     public function setJoin( string $tb, string $tb_alias = null, array $on): self
     {
-        $found = false;
         $data_arr = [
             'tb'    => trim($tb),
             'alias' => $tb_alias,
             'on'    => $on
         ];
         // Add JOIN only if not already available
+        $found = false;
         foreach ($this->obj['joins'] as $j) {
+            
             if ($j === $data_arr){
                 $found = true;
             }

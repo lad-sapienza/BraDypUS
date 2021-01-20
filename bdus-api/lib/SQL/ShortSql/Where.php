@@ -52,7 +52,7 @@ class Where
         }
 
         foreach ($where_parts as $index => $part) {
-            list($p, $v, $j) = self::parsePart($part, $index, $tb, $noValues);
+            list($p, $v) = self::parsePart($part, $index, $tb, $noValues);
             array_push($sql_parts, $p);
             // If value element is a field name, do not add value to list
             if(isset($v)) {
@@ -166,7 +166,6 @@ class Where
         } else {
             $binded = '?';
         }
-
 
         return([
             [

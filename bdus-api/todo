@@ -2,9 +2,11 @@ TODO
 
 Roadmap towards v 4.0.0
 
-[] API: possibilità di inserire funzioni da applicare ai nome del campo: count, avg, max
+[ ] Subquery in whete should use subQuery index, bot value!
+[ ] Validate QueryObject
+[ ] subquery as column
 
-[] API: possibilità di aggiungere subquery nel nome del campo, es:
+[x] API: possibilità di aggiungere subquery nel nome del campo, es:
 SELECT paths__geodata.geometry,
        (select count(*) from paths__m_msplaces where  place = paths__places.id) as "Tot. manuscripts",
        paths__places.id,
@@ -46,6 +48,8 @@ BUG
 [] replace fine uploader with https://github.com/flowjs/flow.js and https://github.com/flowjs/flow-php-server
 
 [] replace jqplot with chart.js
+
+[x] API: possibilità di inserire funzioni da applicare ai nome del campo: count, avg, max
 
 [x] QueryObject && ParseShortSql: support for functions in column list.
 

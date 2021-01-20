@@ -8,7 +8,6 @@ namespace API2;
 
 use \DB\DBInterface;
 use \SQL\ShortSql\ParseShortSql;
-use \SQL\Validator;
 use \Config\Config;
 use \Record\Read;
 
@@ -44,7 +43,7 @@ class Search
         $records_per_page	= $opts['records_per_page']	?: 30;
 		$full_records 		= $opts['full_records'] 	?: false;
 		
-		$parseShortSql = new ParseShortSql(self::$prefix, self::$cfg, new Validator(self::$cfg));
+		$parseShortSql = new ParseShortSql(self::$prefix, self::$cfg);
 		$qo = $parseShortSql->parseAll($shortSql)->getQueryObject();
 
 		list($sql, $values) = $qo->getSql();

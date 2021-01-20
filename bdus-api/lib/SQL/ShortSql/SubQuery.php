@@ -14,12 +14,17 @@ use SQL\ShortSql\ParseShortSql;
 class SubQuery
 {
 
-    public static function parse(string $base64url_string, ParseShortSql $parseShortSql ) : array
+    public static function parse(string $base64url_string, ParseShortSql $parseShortSql, bool $disable_auto_join = false ) : array
     {
-        //  base64url_decode
-        $decoded_string = base64_decode( strtr( $base64url_string, '-_', '+/') . str_repeat('=', 3 - ( 3 + strlen( $base64url_string )) % 4 ));
+        if($base64url_string[0] === '!'){
+            $base64url_string = \substr($base64url_string, 1);
+            $disable_auto_join = true;
+        }
+        //  https://www.php.net/manual/en/function.base64-encode.php#123098
+        $decoded_string = base64_decode(str_replace(['-','_'], ['+','/'], $base64url_string));
+        // str_replace(['+','/','='], ['-','_',''], base64_encode($string));
 
-        $parseShortSql->parseAll($decoded_string);
+        $parseShortSql->parseAll($decoded_string, $disable_auto_join);
 
         return $parseShortSql->getSql();
 

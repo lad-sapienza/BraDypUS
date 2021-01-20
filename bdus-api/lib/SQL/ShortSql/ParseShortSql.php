@@ -58,8 +58,21 @@ class ParseShortSql
         ];
     }
 
-    public function parseAll(string $str): self
+    public function parseAll(string $str, bool $disable_auto_join = false ): self
     {
+        if ($disable_auto_join){
+            $this->qo->setAutoJoin(false);
+        }
+        $str = \preg_replace_callback('/{([^}]+)}/', function($m){
+            $s = $m[1];
+            $strict = '';
+            if($s[0] === '!'){
+                $s = substr($s, 1);
+                $strict = '!';
+            }
+            return '<' . $strict . str_replace(['+','/','='], ['-','_',''], base64_encode( $s ));
+        }, $str);
+
         // Explode string
         $parts = explode('~', $str);
 

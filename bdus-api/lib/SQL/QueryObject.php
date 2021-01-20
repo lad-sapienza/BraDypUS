@@ -485,7 +485,9 @@ class QueryObject
             if (is_array($f)) {
                 if ($f['subQuery']){
                     $f_str = " ( {$f['subQuery']} ) ";
-                    $this->obj['values'] = array_merge($this->obj['values'], $f['values']);
+                    if ($f['values'] && is_array($f['values'])) {
+                        $this->obj['values'] = array_merge($this->obj['values'], $f['values']);
+                    }
                 } else {
                     $f_str = ( $f['tb'] ? $f['tb'] . '.' : '') . $f['fld']; // Add table
                     if ($f['fn']) { // Add function

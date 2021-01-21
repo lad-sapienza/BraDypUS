@@ -242,11 +242,8 @@ SELECT
 ### Where using subquery
 
 ```txt
-@sites~?typology|IN|<QHN1fltzaXRlc34_aWR8SVMgTk9UIE5VTEx8
+@sites~?typology|IN|{@su~[sites~?id|IS NOT NULL|}
 ``
-
-Where `QHN1fltzaXRlc34_aWR8SVMgTk9UIE5VTEx8` is the base64web encoded version of:
-`@su~[sites~?id|IS NOT NULL|`
 
 is parsed as
 

@@ -70,3 +70,6 @@ The verb tells the API what to do. One of the following strings ca be used:
     - `voc` [string, **required**]: vobaulary name  
     Example: [http://bdus.localhost/api/v2/test/?verb=getVocabulary&voc=site_typology](http://bdus.localhost/api/v2/test/?verb=getVocabulary&voc=site_typology)
 
+  - `getApiVersion`: returns the current version of BraDypUS
+    Example: [http://bdus.localhost/api/v2/test/?verb=getApiVersion](http://bdus.localhost/api/v2/test/?verb=getApiVersion)
+

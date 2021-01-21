@@ -32,7 +32,7 @@ class Validator
         'in'
     ];
     private $valid_connectors = ['and', 'or'];
-    private $valid_functions = [ 'avg', 'count', 'max', 'min', 'sum' ];
+    private $valid_functions = [ 'avg', 'count', 'max', 'min', 'sum', 'group_concat' ];
 
     public function __construct(Config $cfg)
     {

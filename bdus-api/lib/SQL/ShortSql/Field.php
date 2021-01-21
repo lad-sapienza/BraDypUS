@@ -48,7 +48,6 @@ class Field
             
             $ret['subQuery']   = $sub_query;
             $ret['values']     = $sub_values;
-
             return $ret;
 
         } elseif (strpos($fld, '.') !== false){

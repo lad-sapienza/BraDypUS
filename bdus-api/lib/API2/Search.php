@@ -61,7 +61,7 @@ class Search
 		$header['page'] 		= ($page > $header['total_pages']) ? $header['total_pages'] : $page;
 
 		if ($header['total_rows'] > $records_per_page ) {
-			if (!empty($qo->get('limit')) ) {
+			if (empty($qo->get('limit')) ) {
 				$qo->setLimit($records_per_page, ($page-1) * $records_per_page);
 			}
 			list($sql, $values) = $qo->getSql();

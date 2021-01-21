@@ -40,7 +40,8 @@ class api2 extends Controller
         'inspect',
         'getChart',
         'getUniqueVal',
-        'getVocabulary'
+        'getVocabulary',
+        'getApiVersion',
     ];
     /**
      * Main validation & variable setting
@@ -328,6 +329,11 @@ class api2 extends Controller
         return $resp;
     }
 
+    private function getApiVersion()
+    {
+        return ['version' => version::current()];
+    }
+
     /**
      * Formats array data as pretty-printed JSON and returns or echoes (with Cross-domain allow policy) it
      * @param  array  $data       array of input data
@@ -345,7 +351,6 @@ class api2 extends Controller
 
         if (is_array($data)) {
             // Always add version to API response
-            $data = array_merge(['version' => version::current()], $data);
             $flag = $this->pretty ? JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE : JSON_UNESCAPED_UNICODE;
             $data = json_encode($data, (version_compare(PHP_VERSION, '5.4.0') >= 0 ? $flag : false));
         }

@@ -49,8 +49,8 @@
  * ]
  * order: [
  *      [
- *          fld-name:   optional, string
- *          direction:  optional, string
+ *          fld: fld-name   optional, string
+ *          dir: direction:  optional, string
  *      ]
  * ]
  * limit: [
@@ -112,7 +112,7 @@ class QueryObject
             'where'     => [], // [ [null, field, operator, value], [ connector, field, operator, value], [...] ]
             'group'     => [], // [ fld1, fld2, ... ]
             'order'     => [], // [ [fld,ASC|DESC], [...] ]
-            'limit'     => null, // [ tot: n, offset: n ]
+            'limit'     => [], // [ tot: n, offset: n ]
             'values'    => [], // [val, val, val]
         ];
     }
@@ -241,6 +241,10 @@ class QueryObject
             "fn"    => $function
             ] 
         );
+        if ($values && is_array($values)){
+            $this->setWhereValues($values);
+        }
+        
         return $this;
     }
     

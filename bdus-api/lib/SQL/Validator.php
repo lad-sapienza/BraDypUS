@@ -34,19 +34,18 @@ class Validator
     private $valid_connectors = ['and', 'or'];
     private $valid_functions = [ 'avg', 'count', 'max', 'min', 'sum', 'group_concat' ];
 
+
     public function __construct(Config $cfg)
     {
         $this->cfg = $cfg;
     }
 
+
     public function validateQueryObject(QueryObject $qo): bool
     {
         $this->qo = $qo;
-        // Get table info
-        $tb = $qo->get('tb')['name'];
-        
-        // 1. Validates tabe name
-        $this->isValidTable($tb);
+
+        $this->isValidTable();
 
         // 2. Validate single fields
         $fields = $qo->get('fields');
@@ -57,26 +56,197 @@ class Validator
                 // TODO: call self
             }
             if($fld['fn']) {
-                $this->isValidFunction($fld['fn']);
+                if (!in_array(strtolower($fld['fn']), $this->valid_functions)) {
+                    throw new SqlException("Function `{$fld['fn']}` non valid. Only " . implode(", ", $this->valid_functions) . " are allowed");
+                }
             }
             
         }
         unset($fields);
+
+        $joins = $qo->get('joins');
+        if (\is_array($joins)){
+            foreach ($joins as $join) {
+                $this->isValidJoin($join);
+            }
+        }
+        unset($joins);
+
+        $where = $qo->get('where');
+        $this->isValidWhere($where);
+        unset($where);
+        
+        $group = $qo->get('group');
+        $this->isValidGroup($group);
+        unset($group);
+
+        $order = $qo->get('order');
+        $this->isValidOrder($order);
+        unset($order);
+
+        $limit = $qo->get('limit');
+        $this->isValidLimit($limit);
+        unset($limit);
+
+        $values = $qo->get('values');
+        $this->isValidValues($values);
+        unset($values);
+
+        return true;
+    }
+
+
+    private function isValidWhere( array $where) : bool
+    {
+        foreach ($where as $index => $wp) {
+            $error_in = "index `{$index}` of " . json_encode($where, JSON_PRETTY_PRINT);
+            if(!\is_array($wp)) {
+                throw new SqlException("Where part should be an array in {$error_in}");
+            }
+            if ($index > 0 && !in_array(strtolower($$wp['connector']), $this->valid_connectors)) {
+                throw new SqlException("Connector `{$$wp['connector']}` non valid. Only " . implode(", ", $this->valid_connectors) . " are allowed");
+            }
+            if ($wp['opened_bracket'] && $wp['opened_bracket'] !== "(") {
+                throw new SqlException("If available, open bracket should be `(` in {$error_in}");
+            }
+            if ($wp['closed_bracket'] && $wp['closed_bracket'] !== ")") {
+                throw new SqlException("If available, close bracket should be `)` in {$error_in}");
+            }
+            if (!$wp['fld']) {
+                throw new SqlException("Index `fld` is required in {$error_in}");
+            }
+            $this->isValidFld($wp['fld']);
+            
+            if (!in_array(strtolower($wp['operator']), $this->valid_operators)) {
+                throw new SqlException("Operator `{$wp['operator']}` non valid. Only " . implode(", ", $this->valid_operators) . " are allowed");
+            }
+            
+            if (!$wp['binded']) {
+                throw new SqlException("Index `binded` is required in {$error_in}");
+            }
+        }
+        return true;
+    }
+
+
+    private function isValidJoin( array $join) : bool
+    {
+        if (!isset($join['tb'])){
+            throw new SqlException("Missing required index `tb` in join: " . json_encode($join));
+        }
+        if (!isset($join['on']) || !\is_array($join['on'])){
+            throw new SqlException("Missing required index `on` in join: " . json_encode($join));
+        }
+        // Validate $tb
+        $this->isValidTable($join['tb'], $join['alias']);
+        $this->isValidWhere($join['on']);
+
+        return true;
+    }
+
+
+    private function isValidValues(array $values): bool
+    {
+        if (empty($values)){
+            return true;
+        }
+
+        foreach ($values as $key => $value) {
+            if (!is_int($key)){
+                throw new SqlException("Values should be entered as indexed arrays: " . var_export($key, true));
+            }
+            if (\is_array($value)){
+                throw new SqlException("Values should be a bi-dimentional array");
+            }
+        }
+
+        return true;
+    }
+
+
+    private function isValidLimit(array $limit): bool
+    {
+        if (empty($limit)){
+            return true;
+        }
+        if (!$limit['tot']){
+            throw new SqlException("Missing `tot` index for limit  statement");
+        }
+        if (!is_numeric($limit['tot'])){
+            throw new SqlException("Index `tot` for limit  statement is not numeric: ". var_export($limit, true));
+        }
+        if ($limit['offset'] !== 0 && !$limit['offset']){
+            throw new SqlException("Missing index `offset` for limit  statement: " . var_export($limit, true));
+        }
+        if (!is_numeric($limit['offset'])){
+            throw new SqlException("Index `offset` for limit  statement is not numeric: " . var_export($limit, true));
+        }
+
+        return true;
+    }
+
+
+    private function isValidOrder(array $order): bool
+    {
+        if (empty($order)){
+            return true;
+        }
+        foreach ($order as $index => $or) {
+            if (!$or['fld']){
+                throw new SqlException("Missing `fld` index for order index " . ($index+1) . " statement");
+            }
+            if (!$or['dir']){
+                throw new SqlException("Missing `dir` index for order index " . ($index+1) . " statement");
+            }
+            if (!\in_array(\strtolower($or['dir']), ['asc', 'desc'])) {
+                throw new SqlException("Invalid order direction `{$od['dir']}` for order index " . ($index+1) . " statement");
+            }
+            if (\strpos($or['fld'], '.') !== false ){
+                list($tb, $or['fld']) = explode('.', $or['fld']);
+            } else {
+                $tb = $this->qo->get('tb')['name'];
+            }
+            $this->isValidFld( $or['fld'], $tb );
+        }
+        return true;
+    }
+
+
+    private function isValidGroup(array $group): bool
+    {
+        if (empty($group)) {
+            return true;
+        }
+        foreach ($group as $fld) {
+            if (\strpos($fld, '.') !== false ){
+                list($tb, $fld) = explode('.', $fld);
+            } else {
+                $tb = $this->qo->get('tb')['name'];
+            }
+            $this->isValidFld( $fld, $tb );
+        }
+        return true;
     }
 
     /**
      * Checks if table is available in cfg
      *
-     * @param string $tb    Complete table name (with prefix)
-     * @throws SqlException    On Error
-     * @return true         On Success
+     * @throws SqlException     On Error
+     * @return true             On Success
      */
-    public function isValidTable ( string $tb ) : bool
+    private function isValidTable ( string $tb = null, string $alias = null) : bool
     {
+        $tb     = $tb ?? $this->qo->get('tb')['name'];
+        $alias  = $alias ?? $this->qo->get('tb')['alias'];
+
         $all_tbs = array_keys($this->cfg->get('tables.*.name'));
 
         if (!in_array($tb, $all_tbs)){
             throw new SqlException("Not valid table: $tb");
+        }
+
+        if(!is_null($alias) && !is_string($alias)){
+            throw new SqlException("Not valid table alias `$alias`. Should be string or null");
         }
         return true;
     }
@@ -89,16 +259,22 @@ class Validator
      * @throws SqlException    On error
      * @return bool
      */
-    public function isValidFld ( $fld, $tb ) : bool
+    public function isValidFld ( string $fld, string $tb = null ) : bool
     {
         /*
-        Id valid if:
+        Is valid if:
             is *
             $tb (core or plugin) has column $fld in cfg
             $tb is alias for table and table has $fld in cfg
         */
         if ($fld === '*'){
             return true;
+        }
+        if (\strpos($fld, '.') !== false ) {
+            list($tb, $fld) = \explode('.', $fld);
+        }
+        if (!$tb){
+            throw new SqlException("Cannot validate field `{$fld}` without table name");
         }
 
         // Get list of fields from configuration files: $tb is valid core|plugin table
@@ -115,54 +291,6 @@ class Validator
         // proved field must be in fields array; no alien fields are supported
         if (!in_array($fld, $flds)){
             throw new SqlException("The field `$fld` is not available for table `$tb`");
-        }
-        return true;
-    }
-
-    /**
-     * Checks if operator is valid
-     *
-     * @param string $operator  Operator to check
-     * @throws SqlException        On errors
-     * @return boolean
-     */
-    public function isValidOperator($operator)
-    {
-        // Validate connector
-        if (!in_array(strtolower($operator), $this->valid_operators)) {
-            throw new SqlException("Operator `{$operator}` non valid. Only " . implode(", ", $this->valid_operators) . " are allowed");
-        }
-        return true;
-    }
-
-
-    /**
-     * Checks if connector is valid
-     *
-     * @param string $connector Connector to check
-     * @throws SqlException        On errors
-     * @return bool
-     */
-    public function isValidConnector( string $connector): bool
-    {
-        // Validate connector
-        if (!in_array(strtolower($connector), $this->valid_connectors)) {
-            throw new SqlException("Connector `{$connector}` non valid. Only " . implode(", ", $this->valid_connectors) . " are allowed");
-        }
-        return true;
-    }
-
-    /**
-     * Checks if $function is valid function
-     *
-     * @param string $function  Function name to check
-     * @throws SqlException on errors
-     * @return boolean
-     */
-    public function isValidFunction( string $function ) : bool
-    {
-        if (!in_array(strtolower($function), $this->valid_functions)) {
-            throw new SqlException("Function `{$function}` non valid. Only " . implode(", ", $this->valid_functions) . " are allowed");
         }
         return true;
     }

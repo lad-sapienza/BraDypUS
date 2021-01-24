@@ -26,9 +26,12 @@
  *          tb: tb-name:        required, string
  *          alias: tb-alias:    optional, string
  *          on: on-statement:   required, array [
- *              fld-name:   required, string
- *              operator:   required, string
- *              value:      required, string
+ *              connector       required if not first element, string: and|or
+ *              opened_bracket  optional, string: (
+ *              fld             required, string
+ *              operator        required, string
+ *              binded          required: string
+ *              closed_bracket  oprional, string: )
  *          ], [...]
  *      ]
  * ]
@@ -36,7 +39,7 @@
  *      [
  *          connector,      optional if first, string
  *          open-bracket,   optional, string
- *          fld-name,       required, string
+ *          fld,            required, string
  *          operator:       required, string,
  *          value,          required if subQuery not set, string
  *          subQuery: QueryObject, required if value not set, Object [Not implemented: passed as string]
@@ -69,6 +72,7 @@
 namespace SQL;
 
 use \SQL\SqlExceptions;
+use \SQL\Validator;
 use Config\Config;
 
 class QueryObject
@@ -475,6 +479,8 @@ class QueryObject
      */
     public function getSql(bool $onlyWhere = false) : array
     {
+        $this->validate();
+
         if ($onlyWhere){
             return [
                 $this->whereToStr( $this->obj['where'] ),
@@ -539,6 +545,14 @@ class QueryObject
             implode(' ', $sql), 
             $this->obj['values']
         ];
+    }
+
+    private function validate()
+    {
+        if ($this->cfg) {
+            $validator = new Validator($this->cfg);
+            $validator->validateQueryObject($this);
+        }
     }
 
 }

@@ -501,7 +501,11 @@ class QueryObject
                 } else {
                     $f_str = ( $f['tb'] ? $f['tb'] . '.' : '') . $f['fld']; // Add table
                     if ($f['fn']) { // Add function
-                        $f_str = "{$f['fn']}({$f_str})";
+                        if ($f['fn'] === 'count_distinct'){
+                            $f_str = "COUNT( DISTINCT {$f_str})";
+                        } else {
+                            $f_str = "{$f['fn']}({$f_str})";
+                        }
                     }
                 }
                 if ($f['alias']) { // Add alias

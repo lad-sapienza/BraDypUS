@@ -32,7 +32,7 @@ class Validator
         'in'
     ];
     private $valid_connectors = ['and', 'or'];
-    private $valid_functions = [ 'avg', 'count', 'max', 'min', 'sum', 'group_concat' ];
+    private $valid_functions = [ 'avg', 'count', 'max', 'min', 'sum', 'group_concat', 'count_distinct' ];
 
     private $field_aliases = [];
 
@@ -108,8 +108,8 @@ class Validator
             if(!\is_array($wp)) {
                 throw new SqlException("Where part should be an array in {$error_in}");
             }
-            if ($index > 0 && !in_array(strtolower($$wp['connector']), $this->valid_connectors)) {
-                throw new SqlException("Connector `{$$wp['connector']}` non valid. Only " . implode(", ", $this->valid_connectors) . " are allowed");
+            if ($index > 0 && !in_array(strtolower($wp['connector']), $this->valid_connectors)) {
+                throw new SqlException("Connector `{$wp['connector']}` non valid. Only " . implode(", ", $this->valid_connectors) . " are allowed");
             }
             if ($wp['opened_bracket'] && $wp['opened_bracket'] !== "(") {
                 throw new SqlException("If available, open bracket should be `(` in {$error_in}");

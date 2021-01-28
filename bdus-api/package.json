@@ -1,6 +1,6 @@
 {
   "name": "bradypus",
-  "version": "4.0.0",
+  "version": "4.0.0-alpha.220",
   "description": "BraDypUS web database system",
   "scripts": {
     "build": "gulp build",

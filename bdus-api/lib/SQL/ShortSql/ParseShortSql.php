@@ -139,6 +139,9 @@ class ParseShortSql
             // Fields are set only if grouping is off
             $fields = $this->parseFldList($this->parts['fields'], $tb);
             foreach ($fields as $f) {
+                if ($f['alias']){
+                    array_push($this->added_fld_aliases, $f['alias']);
+                }
                 if ($f['fld'] && !$f['subQuery']){
                     $this->qo->setField($f['fld'], $f['alias'], $f['tb'], $f['fn']);
                 } else {

@@ -34,6 +34,8 @@ class Validator
     private $valid_connectors = ['and', 'or'];
     private $valid_functions = [ 'avg', 'count', 'max', 'min', 'sum', 'group_concat' ];
 
+    private $field_aliases = [];
+
 
     public function __construct(Config $cfg)
     {
@@ -59,6 +61,9 @@ class Validator
                 if (!in_array(strtolower($fld['fn']), $this->valid_functions)) {
                     throw new SqlException("Function `{$fld['fn']}` non valid. Only " . implode(", ", $this->valid_functions) . " are allowed");
                 }
+            }
+            if ($fld['alias']){
+                array_push($this->field_aliases, $fld['alias']);
             }
             
         }
@@ -272,6 +277,10 @@ class Validator
         }
         if (\strpos($fld, '.') !== false ) {
             list($tb, $fld) = \explode('.', $fld);
+        }
+        // If field name is a registerd alias, do not perform any validation
+        if (\in_array($fld, $this->field_aliases)){
+            return true;
         }
         if (!$tb){
             throw new SqlException("Cannot validate field `{$fld}` without table name");

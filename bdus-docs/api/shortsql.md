@@ -22,7 +22,7 @@ The order of the blocks is not important, and except for the table block, they a
     **Optional**, Default: `*`.  
     List of fields to fetch, separated by commas.  
     Each field can be followed by an optional alias, separated by a colon (:).  
-    Fields can be argument of aggregative functions, such as `avg`, `count`, `max`, `min`, `sum`, `group_concat`, that must follow the the field name and alias separated by a pipe (|)
+    Fields can be argument of aggregative functions, such as `avg`, `count`, `max`, `min`, `sum`, `group_concat`, that must follow the the field name and alias separated by a pipe (|). Also count_distinct is supported, which is not a valid SQL function, but outputs the combination of `COUNT` and `DISTICT`, eg. `mycol|count_distinct` => COUNT ( DISTINCT mycol)
 
 - **]**`tbname:Alias||onStatement`  
     **Optional**.  

@@ -46,7 +46,7 @@ class api2 extends Controller
     /**
      * Main validation & variable setting
      */
-    private function validateInput()
+    private function validateInput() : void
     {
         $this->pretty = $this->get['pretty'];
         
@@ -118,10 +118,10 @@ class api2 extends Controller
 
             $resp = $this->{$this->verb}();
             
-            $this->array2response($resp);
+            echo $this->array2response($resp);
 
         } catch (\Throwable $e) {
-            $this->array2response([
+            echo $this->array2response([
                 'type' => 'error',
                 'text' => $e->getMessage(),
                 'trace' => $this->debug ? $e->getTrace() : "Turn on API2 debug to read trace"
@@ -130,7 +130,7 @@ class api2 extends Controller
         \login_ctrl::endUserSession();
     }
 
-    private function postProcess($data)
+    private function postProcess($data) : array
     {
         if (file_exists("projects/{$this->get['app']}/mods/api/PostProcess.php")) {
             require_once("projects/{$this->get['app']}/mods/api/PostProcess.php");
@@ -183,9 +183,9 @@ class api2 extends Controller
     /**
      * Returns information on table or on all tables structure
      *		$this->get['tb'] is optional
-     * @return Array
+     * @return array
      */
-    private function inspect()
+    private function inspect(): array
     {
         $tb = $this->get['tb'];
 
@@ -198,9 +198,9 @@ class api2 extends Controller
      * Validates request and returna array of record data
      *		$this->get['tb'] is required
      *		$this->get['id'] is required
-     * @return Array
+     * @return array
      */
-    private function read()
+    private function read(): array
     {
         $tb = $this->get['tb'];
         $id = $this->get['id'];
@@ -222,7 +222,7 @@ class api2 extends Controller
      *		$this->get['voc'] is requires
      * @return Array
      */
-    private function getVocabulary()
+    private function getVocabulary() : array
     {
         $voc = $this->get['voc'];
         if (!$voc) {
@@ -250,7 +250,7 @@ class api2 extends Controller
      *		$this->get['w'] is optional
      * @return Array
      */
-    private function getUniqueVal()
+    private function getUniqueVal() : array
     {
         $tb			= $this->get['tb'];
         $fld		= $this->get['fld'];
@@ -277,9 +277,9 @@ class api2 extends Controller
      * 		$this->get['records_per_page'],
      * 		$this->get['full_records'] are optional
      *
-     * @return Array
+     * @return array
      */
-    private function search()
+    private function search() : array
     {
 
         $shortsql = $this->get['shortsql'];
@@ -316,9 +316,9 @@ class api2 extends Controller
     /**
      * Validates request and returns chart data
      *	$this->get['id'] is required. Can be a valid chart id or string 'all'
-     * @return Array
+     * @return array
      */
-    private function getChart()
+    private function getChart() : array
     {
         $chartId = (int) $this->get['id'];
         if (!$chartId) {
@@ -339,7 +339,7 @@ class api2 extends Controller
      * @param  array  $data       array of input data
      * @return string
      */
-    private function array2response($data)
+    private function array2response($data) : string
     {
         $mime = 'application/json';
 
@@ -357,6 +357,7 @@ class api2 extends Controller
 
         header('Access-Control-Allow-Origin: *');
         header('Content-type: ' . $mime . '; charset=utf-8');
-        echo $data;
+
+        return $data;
     }
 }

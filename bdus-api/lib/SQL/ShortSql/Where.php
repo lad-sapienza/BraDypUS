@@ -143,12 +143,18 @@ class Where
         // Set value
         // If the caret is the first char, the value is not a string: it is a field name
         if ($value[0] === '^') {
-            $parsedFld = Field::parse(self::$prefix, substr($value, 1));
-            $binded_tb = $parsedFld['tb'];
-            $binded_fld    = $parsedFld['fld'];
-            $binded_alias  = $parsedFld['alias'];
-            unset($parsedFld);
-            $binded = "$binded_tb.$binded_fld";
+            if (\is_numeric(substr($value, 1))){
+                $binded = substr($value, 1);
+            } else {
+                $parsedFld = Field::parse(self::$prefix, substr($value, 1));
+                $binded_tb = $parsedFld['tb'];
+                $binded_fld    = $parsedFld['fld'];
+                $binded_alias  = $parsedFld['alias'];
+                $binded = "$binded_tb.$binded_fld";
+                unset($binded_tb);
+                unset($binded_fld);
+                unset($parsedFld);
+            }
             unset($value);
         } else if (($value[0] === '<')) {
             list ($sub_query, $sub_values) = SubQuery::parse(substr($value, 1), self::$parseShortSql);

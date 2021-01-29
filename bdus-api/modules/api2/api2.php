@@ -264,7 +264,7 @@ class api2 extends Controller
             throw new \Exception("Field name is required with verb getUniqueVal");
         }
 
-        $resp = GetUniqueVal::run($tb, $fld, $substring, $where, $this->db, $this->cfg);
+        $resp = GetUniqueVal::run($tb, $fld, $substring, $where, $this->db, $this->cfg, $this->prefix);
 
         return $resp;
     }

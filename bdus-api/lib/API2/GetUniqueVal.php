@@ -17,7 +17,7 @@ use SQL\ShortSql\ParseShortSql;
 
 class GetUniqueVal
 {
-    public static function run(string $tb, string $fld, string $str = null, string $where = null, DBInterface $db, Config $cfg)
+    public static function run(string $tb, string $fld, string $str = null, string $where = null, DBInterface $db, Config $cfg, string $prefix)
     {
         if ($str === 'false'){
             $str = false;
@@ -44,8 +44,8 @@ class GetUniqueVal
         }
 
         if ($where) {
-            $parseShortSql = new ParseShortSql();
-            $parseShortSql->parseAll("@$tb~?$where");
+            $parseShortSql = new ParseShortSql($prefix, $cfg);
+            $parseShortSql->parseAll("@{$tb}~?{$where}");
             list($where_sql, $v) = $parseShortSql->getSql(true);
             array_push($sql_part, $where_sql);
             $values = array_merge($values, $v);

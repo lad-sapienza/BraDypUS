@@ -287,10 +287,11 @@ class Validator
         }
 
         // Get list of fields from configuration files: $tb is valid core|plugin table
-        $flds = array_keys($this->cfg->get("tables.$tb.fields.*.name"));
-        
-        if (!$flds || !empty($flds)){
-            // Not valid table: maybe an alias?
+        $full_flds = $this->cfg->get("tables.$tb.fields.*.name");
+        if (!$full_flds || !is_array($full_flds)){
+            $flds = [];
+        } else {
+            $flds = array_values($full_flds);
         }
 
         // Add system fields, not available usually on cfg files

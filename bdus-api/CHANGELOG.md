@@ -81,6 +81,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Deprecated API v.1
 
 ### Removed
+- Removed in-app docs in favour of documentation site (docs.bdus.cloud)
 - Removed usage of APP constant outside index.php and constants.php
 - Removed usage of DIRECTORY_SEPARATOR
 - Reduced use of constants in modules

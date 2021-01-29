@@ -30,7 +30,7 @@ class ParseShortSql
     private $cfg;
     private $qo;
 
-    public function __construct(string $prefix = null, Config $cfg = null)
+    public function __construct(string $prefix, Config $cfg = null)
     {
         $this->prefix = $prefix;
         $this->cfg = $cfg;

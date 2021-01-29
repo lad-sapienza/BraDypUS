@@ -126,7 +126,7 @@ class Validator
                 throw new SqlException("Operator `{$wp['operator']}` non valid. Only " . implode(", ", $this->valid_operators) . " are allowed");
             }
             
-            if (!$wp['binded']) {
+            if (!isset($wp['binded'])) {
                 throw new SqlException("Index `binded` is required in {$error_in}");
             }
         }

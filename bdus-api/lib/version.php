@@ -6,27 +6,14 @@
  */
 class version
 {
-	private static function parse()
-	{
-		$va = parse_ini_file('version', 1);
-		if (!$va) {
-			throw new Exception('File `version` can not be parsed ' . __FILE__ . ', ' . __LINE__);
-		} else {
-			return $va;
-		}
-	}
-
-	public static function changelog()
-	{
-		return self::parse();
-	}
-
 	public static function current()
 	{
-		$va = array_keys(self::parse());
-		// https://stackoverflow.com/a/35599573/586449
-		usort($va, 'version_compare');
-		return end($va);
+		$va = json_decode( file_get_contents('package.json'), true);
+		if (!$va || !is_array($va)) {
+			throw new Exception('File `package.json` can not be parsed ' . __FILE__ . ', ' . __LINE__);
+		} else {
+			return $va['version'];
+		}
 	}
 
 }

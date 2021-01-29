@@ -154,10 +154,10 @@ EOD;
 
             if (is_array($res) && !empty($res)) {
                 foreach ($res as $r) {
-                    if ($this->tb === $r['tb_one'] and $this->id === $r['id_one']) {
+                    if ($this->tb === $r['tb_one'] && $this->id === (int)$r['id_one']) {
                         $mlt = $r['tb_two'];
                         $mli = $r['id_two'];
-                    } elseif ($this->tb === $r['tb_two'] and $this->id === $r['id_two']) {
+                    } elseif ($this->tb === $r['tb_two'] && $this->id === (int)$r['id_two']) {
                         $mlt = $r['tb_one'];
                         $mli = $r['id_one'];
                     }
@@ -451,7 +451,7 @@ EOD;
 
         foreach ($required as $p) {
             if (!isset($this->cache['plugins'][$p])) {
-                $plg_data = $this->getTbRecord($p, "table_link = ? AND id_link = ?", [$this->tb, $this->id], false, false) ?: [];
+                $plg_data = $this->getTbRecord($p, "table_link = ? AND id_link = ?", [$this->tb, $this->id], false, true) ?: [];
                 if (empty($plg_data)) {
                     continue;
                 }

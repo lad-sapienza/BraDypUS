@@ -35,7 +35,7 @@ The order of the blocks is not important, and except for the table block, they a
     The different parts of the WHERE are separated by double pipes (`||`). The first part is made of three elements (field name, operator, reference value) separated by single pipes (`|`); other parts are made of four elements, having a connector as first element.  
     Brackets might be used to logically group statement parts. In that case opening bracket must placed before the field name and separad by the usual pipe (`|`). The closing bracket must be placed after the value, pipe-separated.  
     - Field names may be provided as `field`, `field:alias`, `table.field` or `table.field:alias`
-    - If value starts with a caret (`^`), the value will not binded nor escaped by quotes as string: it is assumed to be a table field name.
+    - If value starts with a caret (`^`), the value will not binded nor escaped by quotes as string: it is assumed to be a table field name or a numeric value.
     - If value is enclosed in curly brackets it is assumed to be a subquery. The subquery strictly follow the ShortSQL format. Subqueries will be automatically enclosed in round brackets, so you **should not** include them in the ShortSql text.
 
 

@@ -20,9 +20,11 @@ The order of the blocks is not important, and except for the table block, they a
 
 - **[**`field:Alias,fieldn:AliasN`  
     **Optional**, Default: `*`.  
-    List of fields to fetch, separated by commas. Each field can be followed by an optional alias, separated by a colon (:).
+    List of fields to fetch, separated by commas.  
+    Each field can be followed by an optional alias, separated by a colon (:).  
+    Fields can be argument of aggregative functions, such as `avg`, `count`, `max`, `min`, `sum`, `group_concat`, that must follow the the field name and alias separated by a pipe (|). Also count_distinct is supported, which is not a valid SQL function, but outputs the combination of `COUNT` and `DISTICT`, eg. `mycol|count_distinct` => COUNT ( DISTINCT mycol)
 
-- **+**`tbname:Alias||onStatement`  
+- **]**`tbname:Alias||onStatement`  
     **Optional**.  
     **Multiple**.  
     Join statement. Each statement if made of two parts separated by a double pipe (`||`). The first part is the table name to be joined optinally followed by an alias (separated by a colon `:`). Alias is not supported yet (04.02.2020).  
@@ -31,8 +33,11 @@ The order of the blocks is not important, and except for the table block, they a
 - **?**`where`  
     **Optional**
     The different parts of the WHERE are separated by double pipes (`||`). The first part is made of three elements (field name, operator, reference value) separated by single pipes (`|`); other parts are made of four elements, having a connector as first element.  
+    Brackets might be used to logically group statement parts. In that case opening bracket must placed before the field name and separad by the usual pipe (`|`). The closing bracket must be placed after the value, pipe-separated.  
     - Field names may be provided as `field`, `field:alias`, `table.field` or `table.field:alias`
-    - If value starts with a caret (`^`), the value will not binded nor escaped by quotes as string: it is assumed to be a table field name.
+    - If value starts with a caret (`^`), the value will not binded nor escaped by quotes as string: it is assumed to be a table field name or a numeric value.
+    - If value is enclosed in curly brackets it is assumed to be a subquery. The subquery strictly follow the ShortSQL format. Subqueries will be automatically enclosed in round brackets, so you **should not** include them in the ShortSql text.
+
 
 - **>**`field:order`  
     **Optional**.  

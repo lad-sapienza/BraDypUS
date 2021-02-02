@@ -4,7 +4,7 @@ title: Migration from v3
 
 ## TL;DR
 - `db_engine` value in app_data.json is now required, and should be set to `sqlite`.
-- Rename column `charts.query` to `charts.sql`
+- Rename column `charts.query` to `charts.sqltext`
 - Rename column `queries.table` to `queries.tb`
 - Add column `queries.vals TEXT`
 - Optionally create table `versions`

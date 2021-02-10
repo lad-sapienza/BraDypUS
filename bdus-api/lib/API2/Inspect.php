@@ -14,9 +14,9 @@ use Config\Config;
 
 class Inspect
 {
-    public static function Configuration(Config $cfg, string $tb = null)
+    public static function Configuration(Config $cfg, string $tb = null): array
     {
-
+        $resp = [];
         if ($tb) {
             // Inspect table
             $stripped_name = str_replace(PREFIX, null, $tb);
@@ -24,6 +24,10 @@ class Inspect
             $resp['stripped_name'] = $stripped_name;
 
             $tb_cfg = $cfg->get("tables.$tb");
+            if (!$tb_cfg && !is_array($tb_cfg)){
+                // Not a valid table. Return empty array
+                return [];
+            }
             foreach ($tb_cfg as $key => $value) {
                 if ($key !== 'fields'){
                     $resp[$key] = $value;

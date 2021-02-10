@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Validate application also fixes errors
 
 ### Changed
+- Read::getBackLinks and Read::getLinks return ShortSQL in where key
 - ShortSql symbol for JOIN changed from + to ]
 - cache and cache/img are required directories
 - Changed parameter order in QueryObject::setField. Tb is now last parameter

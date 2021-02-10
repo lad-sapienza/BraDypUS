@@ -341,6 +341,7 @@ EOD;
                     $ref_tb_id = $this->cfg->get("tables.$ref_tb.id_field");
 
                     $where = " id IN (SELECT DISTINCT id_link FROM {$via_plg} WHERE table_link = '{$ref_tb}' AND {$via_plg_fld} = {$this->id})";
+                    $short_sql = "id|in|{@{$via_plg}~[id_link|distinct~table_link|=|{$ref_tb}||and|{$via_plg_fld}|=|^{$this->id}}";
 
                     $sql = "SELECT count(id) as tot FROM {$ref_tb} WHERE id IN (SELECT DISTINCT id_link FROM {$via_plg} WHERE table_link = '{$ref_tb}' AND {$via_plg_fld} = ?)";
 
@@ -357,7 +358,7 @@ EOD;
                         'tb_stripped' => str_replace(PREFIX, null, $ref_tb),
                         "tb_label" => $this->cfg->get("tables.$ref_tb.label"),
                         'tot' => $r[0]['tot'],
-                        'where' => $where,
+                        'where' => $short_sql,
                         'data' => $r
                     ];
                 }
@@ -391,9 +392,11 @@ EOD;
                 foreach ($links_data as $ld) {
                     $where = [];
                     $values = [];
+                    $short_sql = [];
                     foreach ($ld['fld'] as $c) {
                         array_push($where, " {$c['other']} = ? ");
                         array_push($values, $this->getCore($c['my'], true));
+                        array_push($short_sql, "{$c['other']}|=|" . $this->getCore($c['my'], true));
                     }
 
                     $r = $this->db->query(
@@ -407,11 +410,9 @@ EOD;
                             'tb_stripped' => str_replace(PREFIX, null, $ld['other_tb']),
                             "tb_label" => $this->cfg->get("tables.{$ld['other_tb']}.label"),
                             'tot' => $tot_links,
-                            'where' => implode(' AND ', $where),
-                            'values' => $values
+                            'where' => implode('||and|', $short_sql)
                         ];
                     }
-                    
                 }
             }
             $this->cache['links'] = $links;

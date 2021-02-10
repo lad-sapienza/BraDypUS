@@ -32,7 +32,16 @@ class Validator
         'in'
     ];
     private $valid_connectors = ['and', 'or'];
-    private $valid_functions = [ 'avg', 'count', 'max', 'min', 'sum', 'group_concat', 'count_distinct' ];
+    private $valid_functions = [ 
+        'avg', 
+        'count', 
+        'max', 
+        'min', 
+        'sum', 
+        'group_concat', 
+        'distinct', 
+        'count_distinct' 
+    ];
 
     private $field_aliases = [];
 

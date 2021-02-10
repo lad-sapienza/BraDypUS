@@ -501,8 +501,10 @@ class QueryObject
                 } else {
                     $f_str = ( $f['tb'] ? $f['tb'] . '.' : '') . $f['fld']; // Add table
                     if ($f['fn']) { // Add function
-                        if ($f['fn'] === 'count_distinct'){
+                        if ($f['fn'] === 'count_distinct') {
                             $f_str = "COUNT( DISTINCT {$f_str})";
+                        } elseif ($f['fn'] === 'distinct'){
+                            $f_str = "DISTINCT {$f_str}";
                         } else {
                             $f_str = "{$f['fn']}({$f_str})";
                         }

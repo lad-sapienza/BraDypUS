@@ -207,7 +207,7 @@ class QueryObject
                 // https://stackoverflow.com/a/10473026
                 substr_compare($tb, 'geodata', -strlen('geodata')) === 0 // Field table is geodata
                 ||
-                (                   // Firld table is plugin table
+                (                   // Field table is plugin table
                     $this->cfg
                     && \is_array($this->cfg->get("tables.{$this->obj['tb']['name']}.plugin"))
                     && \in_array($tb, $this->cfg->get("tables.{$this->obj['tb']['name']}.plugin"))

@@ -8,7 +8,7 @@
  * @requires DB
  */
 
-namespace API2;
+namespace API;
 
 use Config\Config;
 use DB\DBInterface;

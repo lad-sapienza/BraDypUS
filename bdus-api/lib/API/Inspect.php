@@ -4,7 +4,7 @@
  * @license AGPL-3.0; see LICENSE
  */
 
-namespace API2;
+namespace API;
 /**
  * Returns configuration info
  * @requires cfg

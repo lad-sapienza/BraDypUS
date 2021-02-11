@@ -3,7 +3,7 @@ title: ShortSql Examples
 ---
 
 
-The following examples assume that `test` application is being used, e.g. `/api/v2/test/?verb=search&shortsql=`
+The following examples assume that `test` application is being used, e.g. `/api/test/?verb=search&shortsql=`
 
 ---
 

@@ -35,6 +35,6 @@ usefull to comfortably edit the configuration files
     - [SublimeText](https://www.sublimetext.com/)
     - [Notepad++](https://notepad-plus-plus.org/downloads/)
     - ecc.
-- [Git](https://git-scm.com/), might be very usefull for the installationa and udating of the
+- [Git](https://git-scm.com/), might be very usefull for the installation and updating of the
 entire system
-- A Terminal, that makes installationa and configuration really fast.
+- A Terminal, that makes installation and configuration really fast.

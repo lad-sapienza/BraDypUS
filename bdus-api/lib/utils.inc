@@ -169,26 +169,25 @@ class utils
 	 * Returns  an array with all content (not . or ..) of $dir
 	 * @param string $dir	path to dir
 	 */
-	public static function dirContent ( $dir )
+	public static function dirContent ( string $dir )
 	{
-		$dont_consider = array(
-			'.', '..', '.DS_Store', 'undefined', '.svn'
-		);
-		$handle = @opendir($dir);
-
-		if ( $handle ) {
-
-			while ( false !== ( $file = readdir ( $handle ) ) ) {
-				if (!in_array($file, $dont_consider)) {
-					$dir_content[] = $file;
-				}
-			}
-
-			closedir($handle);
-
-			return $dir_content;
-		} else {
+		$dont_consider = [
+			'.', '..', '.DS_Store', 'undefined', '.svn', '.git'
+		];
+		if (!is_dir($dir)){
 			return false;
+		}
+		$files = scandir($dir);
+		$ret = [];
+		foreach ($files as $f) {
+			if(!in_array($files, $f)){
+				array_push($ret, $f);
+			}
+		}
+		if (empty($ret)){
+			return false;
+		} else {
+			return $ret;
 		}
 	} // end of dirContent
 

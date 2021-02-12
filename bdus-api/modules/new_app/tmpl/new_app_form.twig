@@ -39,38 +39,40 @@
             </div>
         </div>
 
-        <div class="form-group db_host">
-            <label class="col-sm-2 control-label">{{ tr.get('db_host') }}</label>
-            <div class="col-sm-10">
-                <input type="text" class="form-control" name="db_host" value="">
+        <div class="optional">
+            <div class="form-group">
+                <label class="col-sm-2 control-label">{{ tr.get('db_host') }}</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" name="db_host" value="">
+                </div>
             </div>
-        </div>
 
-        <div class="form-group db_port">
-            <label class="col-sm-2 control-label">{{ tr.get('db_port') }}</label>
-            <div class="col-sm-10">
-                <input type="text" class="form-control" name="db_port">
+            <div class="form-group">
+                <label class="col-sm-2 control-label">{{ tr.get('db_port') }}</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" name="db_port">
+                </div>
             </div>
-        </div>
 
-        <div class="form-group db_name">
-            <label class="col-sm-2 control-label">{{ tr.get('db_name') }}</label>
-            <div class="col-sm-10">
-                <input type="text" class="form-control" name="db_name">
+            <div class="form-group">
+                <label class="col-sm-2 control-label">{{ tr.get('db_name') }}</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" name="db_name">
+                </div>
             </div>
-        </div>
 
-        <div class="form-group db_username">
-            <label class="col-sm-2 control-label">{{ tr.get('db_username') }}</label>
-            <div class="col-sm-10">
-                <input type="text" class="form-control" name="db_username">
+            <div class="form-group">
+                <label class="col-sm-2 control-label">{{ tr.get('db_username') }}</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" name="db_username">
+                </div>
             </div>
-        </div>
 
-        <div class="form-group db_password">
-            <label class="col-sm-2 control-label">{{ tr.get('db_password') }}</label>
-            <div class="col-sm-10">
-                <input type="text" class="form-control" name="db_password">
+            <div class="form-group">
+                <label class="col-sm-2 control-label">{{ tr.get('db_password') }}</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" name="db_password">
+                </div>
             </div>
         </div>
 
@@ -78,42 +80,35 @@
 
         <div class="form-group">
             <div class="col-sm-offset-2 col-sm-10">
-                <button type="submit" class="btn btn-danger">{{ tr.get('app_create') }}</button>
-                <button type="button" class="btn btn-success closeForm">{{ tr.get('close') }}</button>
+                <button type="submit" class="btn btn-danger btn-block">{{ tr.get('app_create') }}</button>
             </div>
         </div>
     </form>
 </div>
 <script>
-$('#{{ uid }} button.closeForm').click(function(){
-    window.location.reload(true);
-});
-const toggleDBOpt = () => {
-    if ($(':input[name="db_engine"]').val() === 'sqlite'){
-        $('.db_host, .db_port, .db_name, .db_username, .db_password').hide();
-    } else {
-        $('.db_host, .db_port, .db_name, .db_username, .db_password').show();
-    }
+if ($(':input[name="db_engine"]').val() === 'sqlite'){
+    $('.optional').hide();
+} else {
+    $('.optional').show();
 }
 
-toggleDBOpt();
-
 $(':input[name="db_engine"]').on('change', ()=>{
-    toggleDBOpt();
+    if ($(':input[name="db_engine"]').val() === 'sqlite'){
+        $('.optional').hide();
+    } else {
+        $('.optional').show();
+    }
 });
 
 $('#{{ uid }} form').on('submit', (e) => {
 
     e.preventDefault();
-
     const formData = $('#{{ uid }} form').serializeArray();
-
     core.getJSON('new_app_ctrl', 'add_app', false, formData, resp => {
         core.message(resp.text, resp.status, resp.status === 'error');
         if (resp.status === 'success'){
             $('#{{ uid }} .report').html(`<h2>Report</h2><hr>${resp.log.map( i => `<li>${i}</li>`).join('')}`);
         }
     })
-    
 });
 </script>

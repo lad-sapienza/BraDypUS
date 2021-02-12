@@ -34,14 +34,18 @@ var login = {
 			$('#wrapper').html(core.loading).load('./?obj=login_ctrl&method=select_app' + (app ? '&app=' + app : ''));
 		},
 		
-		loadLoginForm: function(db){
-			$('#select_apps .buttons').slideUp();
-			$('#select_apps .login').load('./?obj=login_ctrl&method=loginForm&app='+ db).slideDown();
-		},
-
-		loadCreateApp: function(db){
-			$('#select_apps .buttons').slideUp();
-			$('#select_apps .login').load('./?obj=new_app_ctrl&method=new_app_form').slideDown();
+		loadCreateApp: () => {
+			core.open({
+				obj:'new_app_ctrl',
+				method: 'new_app_form',
+				title: core.tr('app_create'),
+				buttons:[
+					{
+						text: core.tr('close'),
+						action: 'close'
+					}
+					]
+			}, 'modal');
 		},
 		
 		autologin: function(app){

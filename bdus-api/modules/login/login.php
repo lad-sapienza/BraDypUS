@@ -10,17 +10,6 @@
 class login_ctrl extends Controller
 {
 
-	public function loginForm()
-	{
-		$app_data = json_decode(file_get_contents(MAIN_DIR . "projects/{$this->request['app']}/cfg/app_data.json"), true);
-
-		$this->render('login', 'login', [
-			'appdata' => $app_data,
-		]);
-	}
-
-
-
 	public function newUserForm()
 	{
 		$this->render('login', 'new_user', [
@@ -184,7 +173,15 @@ class login_ctrl extends Controller
 				asort($availables_DB);
 
 				foreach ($availables_DB as $db) {
+					if (!file_exists(MAIN_DIR . "projects/$db/cfg/app_data.json")){
+						continue;
+					}
 					$appl = json_decode(file_get_contents(MAIN_DIR . "projects/$db/cfg/app_data.json"), true);
+
+					// Skip not well-formatted json files
+					if (!is_array($appl)){
+						continue;
+					}
 
 					$data[] = [
 						'db' => $db,

@@ -16,6 +16,7 @@
     "app_create": "Create new application",
     "ok_app_created": "Your application was successfylly created",
     "error_app_not_created": "Error. The application was not created: %s",
+    "not_allowed_app_create": "You are not allowed to create a new application",
 
     "email_password_needed": "Both fields (email and password) are required",
     "remember_me": "Remain connected",

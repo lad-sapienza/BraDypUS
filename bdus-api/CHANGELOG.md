@@ -77,6 +77,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Namespaced usage cases of pref
 - Namespaced usage cases of utils
 - Vocabulary definition renamed to item
+- utils::dirContent ignores .git
+- New login UI
 
 ### Deprecated
 - Deprecated API v.1

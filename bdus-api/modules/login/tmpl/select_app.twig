@@ -27,30 +27,51 @@
 			{% if dataApp %}
 			<h3>{{ choose_db }}</h3>
 			{% endif %}
+
 			<div class="row">
-			
-			{% for dataApp in data %}
-				<div class="col-sm-3 col-xs-6">
-					<a class="btn btn-default btn-lg app" href="javascript:void(0)" data-db="{{ dataApp.db }}">
-						{{ dataApp.name }}
-						<span class="pull-right" style="right:3px; color:#759bbc; position:relative;"><i class="icon-play-sign hidden-xs"></i></span>
-					</a>
+				<div class="col-md-4 col-md-offset-4">
+
+					<div class="form-group">
+						<select id="app" style="width:100%" class="form-control">
+							<option></option>
+							{% for dataApp in data %}
+							<option {% if app and app == dataApp.db %} selected="selected" {% endif %} value="{{ dataApp.db }}">{{ dataApp.name }}. {{ dataApp.definition }}</option>
+							{% endfor %}
+						</select>
+					</div>
+
+					<form method="post" id="{{ uid }}" class="big" action="javascript:void(0)">
+						<div class="form-group">
+							<input type="email" class="email form-control" name="email" placeholder="{{ tr.get('email') }}" />
+						</div>
+						<div class="form-group">
+							<input type="password" class="password form-control" name="password" placeholder="{{ tr.get('password') }}" />
+						</div>
+						<div class="form-group">
+							<label><input type="checkbox" name="remember" class="remember" /> {{ tr.get('remember_me') }}</label>
+						</div>
+						<div class="form-group">
+							<button type="submit" class="btn btn-success btn-block"><i class="fa fa-check"></i> {{ tr.get('send') }}</button>
+						</div>
+
+						<div class="row">
+							<div class="col-xs-6">
+								<button type="button" class="btn btn-default btn-block" id="lost_pwd">{{ tr.get('lost_passsword') }}</button>
+							</div>
+							<div class="col-xs-6">
+								<button type="button" class="btn btn-default btn-block" id="new_user">{{ tr.get('register_new_user') }}</button>
+							</div>
+						</div>
+					</form>
+
+					{% if create_app %}
+					<hr>
+					<button class="btn btn-danger btn-block app_create">{{ tr.get('app_create') }}</button>
+					{% endif %}
+
 				</div>
-				{% if app and app == dataApp.db %}
-					<script>login.loadLoginForm('{{ dataApp.db }}');</script>
-				{% endif %}
-			{% endfor %}
+			</div>
 		</div>
-		
-		{% if create_app %}
-		<div class="text-center">
-			<hr>
-			<button class="btn btn-lg btn-danger app_create">{{ tr.get('app_create') }}</button>
-		</div>
-		{% endif %}
-		</div>
-		<div class="login"></div>
-		
 	</div>
 	
 	
@@ -74,11 +95,63 @@
 </div>
 
 <script>
-	$('.app').on('click', function(){
-		login.loadLoginForm($(this).data('db'));
+	$('#{{ uid }} :input').prop("disabled", true);
+
+	$('#app')
+		.on('change', e => {
+			if(e.target.value){
+				$('#{{ uid }} :input').prop("disabled", false);
+			} else {
+				$('#{{ uid }} :input').prop("disabled", true);
+			}
+		})
+		.select2({
+			placeholder: '{{ tr.get('choose_db') }}',
+			templateResult: d => {
+				return $(`<span><strong>${d.text.split('. ').join('</strong><br>')}</span>`);
+			}
+		});
+
+	$('#{{ uid }}').on('submit', function(event){
+
+		event.preventDefault();
+		
+		const email = $(this).find('input.email').val();
+		const pass = $(this).find('input.password').val();
+		
+		if ( email === '' || pass === '' ) {
+			core.message(core.tr('email_password_needed'), 'error');
+			return false;
+		}
+		core.getJSON('login_ctrl', 'auth', false, {
+				email: email,
+				password: pass,
+				app: $('#app').val(),
+				remember: $(this).find('input.remember').is(':checked')
+			},
+			data => {
+				if (data.status === 'success'){
+					window.location.reload();
+				} else {
+					core.message(data.text, 'error');
+				}
+			}
+		);
+
+		return false;
 	});
+
+
 	$('.app_create').on('click', function(){
 		login.loadCreateApp();
+	});
+
+	$('#lost_pwd').on('click', function(){
+		login.lost_pwd($('#app').val());
+	});
+	
+	$('#new_user').on('click', function(){
+		login.new_user_form($('#app').val());
 	});
 	
 </script>

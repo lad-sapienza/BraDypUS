@@ -11,9 +11,13 @@ class new_app_ctrl extends Controller
     public function new_app_form()
     {
         $AvailableEngines = new \DB\Engines\AvailableEngines();
-        $this->render('new_app', 'new_app_form', [
-            "db_engines" => $AvailableEngines->getList()
-        ]);
+        if ( file_exists('./UNSAFE_permit_app_creation') || !\utils::dirContent("./projects") ){
+            $this->render('new_app', 'new_app_form', [
+                "db_engines" => $AvailableEngines->getList()
+            ]);
+        } else {
+            echo tr::get('not_allowed_app_create');
+        }
     }
 
 

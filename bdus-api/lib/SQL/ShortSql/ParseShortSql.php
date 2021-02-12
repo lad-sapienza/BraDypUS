@@ -35,6 +35,7 @@ class ParseShortSql
         $this->prefix = $prefix;
         $this->cfg = $cfg;
         $this->qo = new QueryObject($this->cfg);
+        $this->qo->enable_validation();
         $this->parts = [
             'tb'        => null, // tb, [tb, alias]
             'fields'    => null, // fld1,fld2, [[tb, fld1, fld1_alias], [ ... ]]

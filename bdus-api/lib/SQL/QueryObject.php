@@ -99,6 +99,13 @@ class QueryObject
     private $cfg;
 
     /**
+     * If true validation will be performed
+     *
+     * @var boolean
+     */
+    private $validation = false;
+
+    /**
      * Initializes the class and sets default values for query object
      */
     public function __construct( Config $cfg = null )
@@ -119,6 +126,11 @@ class QueryObject
             'limit'     => [], // [ tot: n, offset: n ]
             'values'    => [], // [val, val, val]
         ];
+    }
+
+    public function enable_validation()
+    {
+        $this->validation = true;
     }
 
     public function setAutoJoin( bool $auto_join = false) : self
@@ -479,7 +491,7 @@ class QueryObject
      */
     public function getSql(bool $onlyWhere = false) : array
     {
-        $this->validate();
+        $this->validateObject();
 
         if ($onlyWhere){
             return [
@@ -553,9 +565,9 @@ class QueryObject
         ];
     }
 
-    private function validate()
+    private function validateObject()
     {
-        if ($this->cfg) {
+        if ($this->cfg && $validation) {
             $validator = new Validator($this->cfg);
             $validator->validateQueryObject($this);
         }

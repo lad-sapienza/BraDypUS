@@ -77,10 +77,10 @@ class menuValues_ctrl extends Controller
           ->setOrderFld('sort', 'asc');
 
         if ($q && !empty($q)) {
-          $query->setWherePart(null, null, 'def', 'LIKE', "?", null);
+          $query->setWherePart('and', null, 'def', 'LIKE', "?", null);
           $query->setWhereValues(["%{$q}%"]);
-          $tot->setWherePart(null, null, 'def', 'LIKE', "?", null);
-          $tot->setWherePart(["%{$q}%"]);
+          $tot->setWherePart('and', null, 'def', 'LIKE', "?", null);
+          $tot->setWhereValues(["%{$q}%"]);
         }
 
       break;

@@ -340,26 +340,23 @@ EOD;
                     list($ref_tb, $via_plg, $via_plg_fld) = \utils::csv_explode($bl, ':');
                     $ref_tb_id = $this->cfg->get("tables.$ref_tb.id_field");
 
-                    $where = " id IN (SELECT DISTINCT id_link FROM {$via_plg} WHERE table_link = '{$ref_tb}' AND {$via_plg_fld} = {$this->id})";
-                    $short_sql = "id|in|{@{$via_plg}~[id_link|distinct~table_link|=|{$ref_tb}||and|{$via_plg_fld}|=|^{$this->id}}";
-
-                    $sql = "SELECT count(id) as tot FROM {$ref_tb} WHERE id IN (SELECT DISTINCT id_link FROM {$via_plg} WHERE table_link = '{$ref_tb}' AND {$via_plg_fld} = ?)";
-
-                    $sql_val = [$this->id];
-
-
-                    $r = $this->db->query($sql, $sql_val);
+                    $r = $this->db->query(
+                        "SELECT count(id) as tot FROM {$ref_tb} WHERE id IN (SELECT DISTINCT id_link FROM {$via_plg} WHERE table_link = '{$ref_tb}' AND {$via_plg_fld} = ?)",
+                        [$this->id]
+                    );
                     if ($r[0]['tot'] == 0) {
                         continue;
                     }
-
                     $backlinks[$ref_tb] = [
                         'tb_id' => $ref_tb,
                         'tb_stripped' => str_replace(PREFIX, null, $ref_tb),
                         "tb_label" => $this->cfg->get("tables.$ref_tb.label"),
                         'tot' => $r[0]['tot'],
-                        'where' => $short_sql,
-                        'data' => $r
+                        'where' => "id|in|{@{$via_plg}~[id_link|distinct~table_link|=|{$ref_tb}||and|{$via_plg_fld}|=|^{$this->id}}",
+                        'data' => $this->db->query(
+                            "SELECT id, {$ref_tb_id} as label FROM {$ref_tb} WHERE id IN (SELECT DISTINCT id_link FROM {$via_plg} WHERE table_link = '{$ref_tb}' AND {$via_plg_fld} = ?)",
+                            [$this->id]
+                        )
                     ];
                 }
             }

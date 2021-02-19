@@ -19,6 +19,11 @@ class Links
 
         if (empty($corelinks) && empty($backlinks)) {
             $html .= '<p>' . \tr::get('no_system_links') . '</p>';
+        } else {
+            $html .= '<p>' 
+                    . '<i class="fa fa-link"></i> '
+                    . '<strong>' . \tr::get('system_links'). '</strong>'
+            . '</p>';
         }
 
         if (!empty($corelinks) ) {
@@ -43,29 +48,28 @@ class Links
 
     public static function showBackLinks (array $backlinks, Config $cfg ) : string
     {
-        $html .= '<ul>';
-
+        $html = '';
+        
         foreach ($backlinks as $dest_tb => $l_arr) {
-            foreach ($l_arr as $v) {
+            if ((int)$l_arr['tot'] > 0) {
+                $html .= \tr::get('links_in_table', [$l_arr['tot'], $l_arr['tb_label']]) . ':';
+            }
+            foreach ($l_arr['data'] as $v) {
                 $html .= '<li><span class="btn-link" onclick="' 
-                            . "api.record.read('{$dest_tb}', ['{$v['id']}'], " . ($c['label'] ? 'true' : ''). ");"
+                            . "api.record.read('{$dest_tb}', ['{$v['id']}']);"
                         .'" href="javascript:void(0)">'
-                    . $cfg->get( "tables.{$dest_tb}.label") . ':' . ($v['label'] ?: $v['id'])
+                    . $cfg->get( "tables.{$dest_tb}.label") . ': ' . ($v['label'] )
                 . '</span></li>';
             }
+            $html .= '</ul>';
         }
-        $html .= '</ul>';
 
         return $html;
     }
 
     public static function showCoreLinks (array $corelinks, Config $cfg ) : string
     {
-        $html = '<p>' 
-                    . '<i class="fa fa-link"></i> '
-                    . '<strong>' . \tr::get('system_links'). '</strong>'
-            . '</p>'
-            . '<ul>';
+        $html = '<ul>';
         foreach ($corelinks as $dest_tb => $l_arr) {
             $html .= '<li>' .
                 '<span class="btn-link" '

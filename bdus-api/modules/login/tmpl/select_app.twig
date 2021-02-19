@@ -95,7 +95,9 @@
 </div>
 
 <script>
-	$('#{{ uid }} :input').prop("disabled", true);
+	if(!$('#app').val()){
+		$('#{{ uid }} :input').prop("disabled", true);
+	}
 
 	$('#app')
 		.on('change', e => {

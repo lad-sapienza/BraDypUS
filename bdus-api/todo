@@ -3,7 +3,7 @@ TODO
 Roadmap towards v 4.0.0
 
 [ ] Subquery in where should use subQuery index, not value!
-
+[ ] Links::showUserLinks no lazy load
 
 [] Kill QueryFromRequest
     [] Remake advanced search

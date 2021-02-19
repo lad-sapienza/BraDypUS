@@ -56,6 +56,8 @@ class FormElement
                     'class="form-control"' .
                     $this->common_attributes .
                     $this->settings['maxlength'] .
+                    ($this->settings['min'] ? 'min="' . $this->settings['min']. '"' : '') .
+                    ($this->settings['max'] ? 'max="' . $this->settings['max'] . '"' : '') .
                     ($this->settings['direction'] === 'rtl' ? ' style="direction: rtl;" ' : '') .
                     'value="' . $this->settings['html_data'] . '" ' .
                 '>';

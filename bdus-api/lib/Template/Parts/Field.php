@@ -366,8 +366,8 @@ class Field
 		}
 		
         // DISABLED
-        if ($settings['maxlength']) {
-            $settings['maxlength'] = ' maxlength="' . $settings['maxlength'] . '" ';
+        if ($settings['max_length']) {
+            $settings['maxlength'] = ' maxlength="' . $settings['max_length'] . '" ';
         }
 
 

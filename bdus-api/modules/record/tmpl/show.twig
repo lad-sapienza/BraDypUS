@@ -148,13 +148,14 @@
 
 		{# ADD PLUGIN BUTTON #}
 		$('#container{{ uid }}').find('button.addplg').click(function(){
-      utils.myClone(
-					$(this).prevAll('div.pluginrow').first(),
-					{
-						where:$(this).prevAll('div.plg_container').first(),
-						baseName:'id:',
-						cloneEvents: true
-					});
+			utils.myClone(
+				$(this).prevAll('div.pluginrow').first(),
+				{
+					where:$(this).prevAll('div.plg_container').first(),
+					baseName:'id:',
+					cloneEvents: true
+				}
+			);
 		});
 
 		{# VIRTUAL KEYBOARD INITIALIZAION #}

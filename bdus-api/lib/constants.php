@@ -19,7 +19,7 @@ define ( 'MAIN_DIR',	$basePath);
 ini_set('session.gc_maxlifetime', (60*60*8)); #8h
 
 /**
- * Error reporting is set to nonr
+ * Error reporting is set to none
  */
 error_reporting(0);
 
@@ -124,6 +124,8 @@ if (DEBUG_ON === true) {
 	define('CACHE', serialize( [ "autoescape" => false, "debug" => true ] ));
 	// Error reporting is set to ALL but NOT: Warning or Notice
 	error_reporting(E_ALL & ~E_WARNING & ~E_NOTICE);
+	ini_set('error_log', 'logs/error.log');
+
 } else {
 	define('CACHE', serialize([ "autoescape" => false, "cache" => "cache"]));
 }

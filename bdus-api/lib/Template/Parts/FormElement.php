@@ -11,10 +11,12 @@ class FormElement
 {
     private $common_attributes = '';
     private $settings;
+    private $context;
 
-    public function __construct( array $settings )
+    public function __construct( array $settings, string $context )
     {
         $this->settings = $settings;
+        $this->context = $context;
 
         $att_arr = [
             'name' => $settings['name'],

@@ -179,7 +179,7 @@ class Field
 
     private function contentEdit()
     {
-        $formElement = new FormElement($this->settings);
+        $formElement = new FormElement($this->settings, $this->context);
 
         $html = '<div class="field_content">';
 

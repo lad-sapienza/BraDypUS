@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Validate application also fixes errors
 
 ### Changed
+- Deprecated symm/gisconverter replaced by phayes/geophp
 - Read::getBackLinks and Read::getLinks return ShortSQL in where key
 - ShortSql symbol for JOIN changed from + to ]
 - cache and cache/img are required directories
@@ -225,7 +226,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dropped support for DB::start
 - \DB\DB\DBInterface is injected to \ShortSql\ToJson
 - Database class dependency is set to \DB\DB\DBInterface instead of \DB
-- toGeoJson::fromMultiArray replaced by utils::mutliArray2GeoJSON
+- toGeoJson::fromMultiArray replaced by utils::multiArray2GeoJSON
 - \Record\Read is not static and expects database dependency
 - JSMin replaced by tedivm/jshrink
 - Enhanced use of central logger

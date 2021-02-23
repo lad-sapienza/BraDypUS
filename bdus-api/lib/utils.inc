@@ -281,7 +281,7 @@ class utils
 	 * @param array $rows	Array or database data
 	 * @return array		Valid geoJSON as array
 	 */
-	public static function mutliArray2GeoJSON(string $tb, array $rows): array
+	public static function multiArray2GeoJSON(string $tb, array $rows): array
     {
         $geo = [
             'type' => 'FeatureCollection',
@@ -305,8 +305,14 @@ class utils
                 continue;
             }
 
+			$geo = \geoPHP::load($r['geometry'] ? $r['geometry'] : $r[$tb . '.geometry'], 'wkt');
+			if (!$geo){
+				error_log('No valid geometry column found in row: ' . var_export($r, true));
+                continue;
+			} 
+
             $arr['type']		= 'Feature';
-            $arr['geometry']	= json_decode(\Symm\Gisconverter\Gisconverter::wktToGeojson($r['geometry'] ? $r['geometry'] : $r[$tb . '.geometry']), true);
+            $arr['geometry']	= json_decode($geo->out('geojson'), true);
 
             unset($r['geometry']);
             if ($r) {

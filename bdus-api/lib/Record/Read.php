@@ -243,7 +243,14 @@ EOD;
         $ret = [];
         if (is_array($r)) {
             foreach ($r as $row) {
-                $row['geojson'] = \Symm\Gisconverter\Gisconverter::wktToGeojson($row['geometry']);
+                $geo = \geoPHP::load($row['geometry'],'wkt');
+                if (!$geo){
+                    // Invalid geometry
+                    $gj = null;
+                } else {
+                    $gj = $geo->out('geojson');
+                }
+                $row['geojson'] = $gj;
                 $ret[$row['id']] = $row;
             }
         }

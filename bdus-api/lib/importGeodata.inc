@@ -102,7 +102,7 @@ class importGeodata
          continue;
        }
 
-       $wkt_geometry = \Symm\Gisconverter\Gisconverter::geojsonToWkt(json_encode($row['geometry']));
+       $wkt_geometry = (\geoPHP::load($row['geometry'], 'geojson'))->out('wkt');
 
        $sql = " INSERT INTO " . PREFIX . "geodata "
          . "(table_link, id_link, geometry) "

@@ -154,7 +154,7 @@ class geoface_ctrl extends Controller
 			if($res) {
 
 				$response['status'] = 'success';
-				$response['data'] = \utils::mutliArray2GeoJSON($tb, $res);
+				$response['data'] = \utils::multiArray2GeoJSON($tb, $res);
 
 			} else if (!$res AND (trim($where) == '1' || !$where) && \utils::canUser('add_new')) {
 

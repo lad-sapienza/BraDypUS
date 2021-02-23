@@ -85,7 +85,7 @@ class Search
         }
         
         if ($geojson) {
-            return \utils::mutliArray2GeoJSON ( $tb, $records );
+            return \utils::multiArray2GeoJSON ( $tb, $records );
         } else {
             return [
                 'head' => $header,

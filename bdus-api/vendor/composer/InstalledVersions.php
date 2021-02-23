@@ -30,7 +30,7 @@ private static $installed = array (
     'aliases' => 
     array (
     ),
-    'reference' => '849965556e1f9baafb0eda12cb2043595a53f321',
+    'reference' => 'f103fcf9be0046994059e7e6d6ca33f251c55bf5',
     'name' => '__root__',
   ),
   'versions' => 
@@ -42,7 +42,7 @@ private static $installed = array (
       'aliases' => 
       array (
       ),
-      'reference' => '849965556e1f9baafb0eda12cb2043595a53f321',
+      'reference' => 'f103fcf9be0046994059e7e6d6ca33f251c55bf5',
     ),
     'adbario/php-dot-notation' => 
     array (
@@ -177,12 +177,12 @@ private static $installed = array (
     ),
     'twig/twig' => 
     array (
-      'pretty_version' => 'v3.1.1',
-      'version' => '3.1.1.0',
+      'pretty_version' => 'v3.3.0',
+      'version' => '3.3.0.0',
       'aliases' => 
       array (
       ),
-      'reference' => 'b02fa41f3783a2616eccef7b92fbc2343ffed737',
+      'reference' => '1f3b7e2c06cc05d42936a8ad508ff1db7975cdc5',
     ),
   ),
 );

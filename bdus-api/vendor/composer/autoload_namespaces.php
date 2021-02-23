@@ -6,5 +6,4 @@ $vendorDir = dirname(dirname(__FILE__));
 $baseDir = dirname($vendorDir);
 
 return array(
-    'Symm\\Gisconverter' => array($vendorDir . '/symm/gisconverter/src'),
 );

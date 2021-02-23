@@ -102,22 +102,13 @@ class ComposerStaticInit63dffac3da0006282de7c3f45bc18505
         ),
     );
 
-    public static $prefixesPsr0 = array (
-        'S' => 
-        array (
-            'Symm\\Gisconverter' => 
-            array (
-                0 => __DIR__ . '/..' . '/symm/gisconverter/src',
-            ),
-        ),
-    );
-
     public static $classMap = array (
         'Attribute' => __DIR__ . '/..' . '/symfony/polyfill-php80/Resources/stubs/Attribute.php',
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
         'Stringable' => __DIR__ . '/..' . '/symfony/polyfill-php80/Resources/stubs/Stringable.php',
         'UnhandledMatchError' => __DIR__ . '/..' . '/symfony/polyfill-php80/Resources/stubs/UnhandledMatchError.php',
         'ValueError' => __DIR__ . '/..' . '/symfony/polyfill-php80/Resources/stubs/ValueError.php',
+        'geoPHP' => __DIR__ . '/..' . '/phayes/geophp/geoPHP.inc',
     );
 
     public static function getInitializer(ClassLoader $loader)
@@ -125,7 +116,6 @@ class ComposerStaticInit63dffac3da0006282de7c3f45bc18505
         return \Closure::bind(function () use ($loader) {
             $loader->prefixLengthsPsr4 = ComposerStaticInit63dffac3da0006282de7c3f45bc18505::$prefixLengthsPsr4;
             $loader->prefixDirsPsr4 = ComposerStaticInit63dffac3da0006282de7c3f45bc18505::$prefixDirsPsr4;
-            $loader->prefixesPsr0 = ComposerStaticInit63dffac3da0006282de7c3f45bc18505::$prefixesPsr0;
             $loader->classMap = ComposerStaticInit63dffac3da0006282de7c3f45bc18505::$classMap;
 
         }, null, ClassLoader::class);

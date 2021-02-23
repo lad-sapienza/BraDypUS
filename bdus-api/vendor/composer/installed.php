@@ -6,7 +6,7 @@
     'aliases' => 
     array (
     ),
-    'reference' => '52322a3b9a295a99baab7b73b0b83ab9f94d6a18',
+    'reference' => '9cf66ff554f4ab44d78669fdf601d5bb9bbf27e8',
     'name' => '__root__',
   ),
   'versions' => 
@@ -18,7 +18,7 @@
       'aliases' => 
       array (
       ),
-      'reference' => '52322a3b9a295a99baab7b73b0b83ab9f94d6a18',
+      'reference' => '9cf66ff554f4ab44d78669fdf601d5bb9bbf27e8',
     ),
     'adbario/php-dot-notation' => 
     array (
@@ -55,6 +55,15 @@
       array (
       ),
       'reference' => '1cb1cde8e8dd0f70cc0fe51354a59acad9302084',
+    ),
+    'phayes/geophp' => 
+    array (
+      'pretty_version' => '1.2',
+      'version' => '1.2.0.0',
+      'aliases' => 
+      array (
+      ),
+      'reference' => '015404e85b602e0df1f91441f8db0f9e98f7e567',
     ),
     'psr/http-message' => 
     array (
@@ -141,15 +150,6 @@
       array (
       ),
       'reference' => 'bd8815b8b6705298beaa384f04fabd459c10bedd',
-    ),
-    'symm/gisconverter' => 
-    array (
-      'pretty_version' => 'v1.0.5',
-      'version' => '1.0.5.0',
-      'aliases' => 
-      array (
-      ),
-      'reference' => '21ab697b7692b891dac37c64d10c9d83d4433f80',
     ),
     'twig/twig' => 
     array (

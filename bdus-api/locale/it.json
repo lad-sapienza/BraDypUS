@@ -251,6 +251,7 @@
     "int": "Questo campo ammette solo valori numerici",
     "email_check": "Il valore inserito non sembra essere un indirizzo email valido",
     "no_dupl": "Il valore inserito è già stato usato per questo campo. Il campo non ammette duplicati",
+    "valid_wkt": "Il valore inserito non è Well KNown Text valido",
     "range": "Il valore inserito non è compreso nella gamma prevista",
     "regex": "Il valore inserito non è ben formattato",
     "no_data_to_save": "Il modulo non contiene cambiamenti da salvare nella banca dati",

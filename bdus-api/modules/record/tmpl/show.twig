@@ -80,9 +80,10 @@
 
 		{# FORM SUBMISSION AND CHECKS #}
 		var myForm{{ uid }} =  new formControl('#form{{ uid }}', {
-			ajaxURL:'./?&obj=record_ctrl&method=check_duplicates',
+			validationURL:'./?&obj=validation_ctrl&method=validate',
 			submitURL: './?obj=record_ctrl&method=save_data&tb={{ tb }}&{% if id_url %}{{ id_url }}{% else %}a=add_new{% endif %}',
 			success: function(data){
+				return;
 				if (data.inserted_id){
 					layout.tabs.closeActive();
 					api.record.edit('{{ tb }}', [data.inserted_id] );

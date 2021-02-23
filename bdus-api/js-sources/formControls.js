@@ -14,13 +14,13 @@ function formControl(el, options){
 	var $this = $(el);
 
 	// array filled with errors
-	var wrongEl = [];
+	var wrongEl = {};
 
 	//default settings
 	var settings = {
 			addChange	: true,
 			checkOnSubmit: true,
-			ajaxURL		: '',	// server must reply (text) 'error' or 'success'
+			validationURL : '',	// server must reply (text) 'error' or 'success'
 			submitURL 	: '', 	//server must reply json with obj.status: 'success' or 'error'
 			success 	: function(){},	// action to perform on success!
 			msg : {
@@ -30,6 +30,7 @@ function formControl(el, options){
 				no_dupl			: core.tr('no_dupl'),
 				range			: core.tr('range'),
 				regex			: core.tr('regex'),
+				valid_wkt		: core.tr('valid_wkt'),
 				no_data_to_save	: core.tr('no_data_to_save'),
 				errors_in_form 	: core.tr('errors_in_form'),
 				ajax_error 		: core.tr('ajax_error'),
@@ -52,14 +53,18 @@ function formControl(el, options){
 	// public method observe
 	this.observe = function(){
 
-		// reset wrongEl array
-		wrongEl = [];
+		// reset wrongEl array except for no_dupl
+		Object.entries(wrongEl).forEach( ([key, value]) => {
+			if (value !== 'no_dupl'){
+				delete wrongEl[key];
+			}
+		});
 
 		$this.find(':input[check]').on('change', function(){
 			removeError(this);
 			var el = $(this);
 
-			if ( el.attr('check') && el.attr('check') != 'undefined' ) {
+			if ( el.attr('check') && el.attr('check') !== 'undefined' ) {
 				var thisCheckTypes = el.attr('check').split(' ');
 
 				$.each( thisCheckTypes, function(index, type){
@@ -75,20 +80,18 @@ function formControl(el, options){
 	this.check = function(){
 
 		// reset wrongEl array
-		wrongEl = [];
+		// wrongEl = [];
 
 		// remove previous errors from form
 		removeError();
-
-		var checkTypes = [ 'not_empty', 'int', 'email', 'no_dupl', 'range', 'regex' ];
+		
+		// no duplicate is checked only on keyup!
+		var checkTypes = [ 'not_empty', 'int', 'email', /* 'no_dupl', */ 'range', 'regex', 'valid_wkt' ];
 
 		$.each(checkTypes, function(index, id){
-			// no duplicate is checked only on keyup!
-			if (id != 'no_dupl'){
-				$this.find('[check~="' + id + '"]').each(function(index, el){
-					checkInput($(el), id);
-				});
-			}
+			$this.find('[check~="' + id + '"]').each(function(index, el){
+				checkInput($(el), id);
+			});
 		});
 
 		return this;
@@ -100,9 +103,8 @@ function formControl(el, options){
 	 *	only inputs with 'changed' tags will be sent!
 	 */
 	this.send = function (all) {
-
 		// checks for pesent errors
-		if ( wrongEl.length > 0 ) {
+		if ( Object.keys(wrongEl).length > 0 ) {
 
 			core.message(settings.msg.errors_in_form, 'error');
 
@@ -225,7 +227,7 @@ function formControl(el, options){
 			case 'int':
 				if ( isNaN(val) ) {
 					styleError(input, settings.msg[checkType]);
-					wrongEl.push(input);
+					wrongEl[input.attr('id')] = 'int';
 				}
 				break;
 			case 'email':
@@ -233,23 +235,40 @@ function formControl(el, options){
 
 				if ( val !== '' && !emailPattern.test(val) ) {
 					styleError(input, settings.msg[checkType]);
-					wrongEl.push(input);
+					wrongEl[input.attr('id')] = 'email';
 				}
 				break;
 			case 'not_empty':
 				if ( val === '' ) {
 					styleError(input, settings.msg[checkType]);
-					wrongEl.push(input);
+					wrongEl[input.attr('id')] = 'not_empty';
 				}
 				break;
 			case 'no_dupl':
 				if (val){
 					$.ajax({
-						url: settings.ajaxURL + '&fld=' + input.attr('name') + '&val=' + val,
+						url: settings.validationURL + '&type=duplicates&fld=' + input.attr('name') + '&val=' + val,
 						complete: function(data){
-							if (data.responseText == 'error') {
+							if (data.responseText === 'error') {
 								styleError(input, settings.msg[checkType]);
-								wrongEl.push(input);
+								wrongEl[input.attr('id')] = 'no_dupl';
+							}
+						},
+						error: function(data){
+							styleError(input, settings.msg.ajax_error);
+							core.message(settings.msg.ajax_error, 'error');
+						}
+					});
+				}
+				break;
+			case 'valid_wkt':
+				if (val){
+					$.ajax({
+						url: settings.validationURL + '&type=wkt&val=' + val,
+						complete: function(data){
+							if (data.responseText === 'error') {
+								styleError(input, settings.msg[checkType]);
+								wrongEl[input.attr('id')] = 'wkt';
 							}
 						},
 						error: function(data){
@@ -267,7 +286,7 @@ function formControl(el, options){
 
 				if ( val < min || val > max  || isNaN(val)) {
 					styleError(input, settings.msg[checkType] + ' (' + min + ' - ' + max + ')');
-					wrongEl.push(input);
+					wrongEl[input.attr('id')] = 'range';
 				}
 				break;
 
@@ -276,7 +295,7 @@ function formControl(el, options){
 				var pattern = new RegExp (mypattern);
 				if (val && !pattern.test(val)) {
 					styleError(input, settings.msg[checkType] + ' (' + mypattern+ ')');
-					wrongEl.push(input);
+					wrongEl[input.attr('id')] = 'regex';
 				}
 				break;
 

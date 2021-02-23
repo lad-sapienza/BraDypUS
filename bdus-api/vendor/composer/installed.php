@@ -6,7 +6,7 @@
     'aliases' => 
     array (
     ),
-    'reference' => '9cf66ff554f4ab44d78669fdf601d5bb9bbf27e8',
+    'reference' => '849965556e1f9baafb0eda12cb2043595a53f321',
     'name' => '__root__',
   ),
   'versions' => 
@@ -18,7 +18,7 @@
       'aliases' => 
       array (
       ),
-      'reference' => '9cf66ff554f4ab44d78669fdf601d5bb9bbf27e8',
+      'reference' => '849965556e1f9baafb0eda12cb2043595a53f321',
     ),
     'adbario/php-dot-notation' => 
     array (
@@ -108,12 +108,12 @@
     ),
     'spatie/db-dumper' => 
     array (
-      'pretty_version' => '2.18.0',
-      'version' => '2.18.0.0',
+      'pretty_version' => '2.21.0',
+      'version' => '2.21.0.0',
       'aliases' => 
       array (
       ),
-      'reference' => 'eddb2b7c6877817d97bbdc1c60d1a800bf5a267a',
+      'reference' => '54150d138dfe5b8043c2a7c6c27a8b41a9e8f418',
     ),
     'symfony/polyfill-ctype' => 
     array (

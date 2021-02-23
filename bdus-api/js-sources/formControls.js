@@ -61,12 +61,9 @@ function formControl(el, options){
 		});
 
 		$this.find(':input[check]').on('change', function(){
-			removeError(this);
 			var el = $(this);
-
 			if ( el.attr('check') && el.attr('check') !== 'undefined' ) {
 				var thisCheckTypes = el.attr('check').split(' ');
-
 				$.each( thisCheckTypes, function(index, type){
 					checkInput(el, type, settings);
 				});
@@ -79,12 +76,6 @@ function formControl(el, options){
 	// public method: Checks the form for errors;
 	this.check = function(){
 
-		// reset wrongEl array
-		// wrongEl = [];
-
-		// remove previous errors from form
-		removeError();
-		
 		// no duplicate is checked only on keyup!
 		var checkTypes = [ 'not_empty', 'int', 'email', /* 'no_dupl', */ 'range', 'regex', 'valid_wkt' ];
 
@@ -198,16 +189,8 @@ function formControl(el, options){
 	// private method: Removes error style (class) and text from form or from element
 	var removeError = function(el){
 
-		if ( el ) {
-			$(el).next('span.notValid').remove();
-			$(el).removeClass('notValid');
-
-		} else {
-
-			$this.find('span.notValid').remove();
-			$this.find(':input.notValid').removeClass('notValid');
-
-		}
+		$(el).next('span.notValid').remove();
+		$(el).removeClass('notValid');
 	};
 
 
@@ -221,6 +204,9 @@ function formControl(el, options){
 
 
 		var val = input.val();
+
+		removeError(input);
+
 
 		switch ( checkType ) {
 

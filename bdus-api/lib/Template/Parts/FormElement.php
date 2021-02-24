@@ -126,9 +126,9 @@ class FormElement
     {
         return '<select ' . 
                     $this->common_attributes .
-                    ' class="form-control">'
-            . '<option value="1"' . (($this->settings['data'] === 1) ? ' selected ': '') . '>' . \tr::get('yes') . '</option>'
-            . '<option value="0"' . ((!$this->settings['data'] === 0 or $this->settings['data']==0) ? ' selected ': '') . '>' . \tr::get('no') . '</option>'
+                    ' class="form-control" style="width:100%">'
+            . '<option value="1"' . ( (int)$this->settings['data'] === 1 ? ' selected ': '') . '>' . \tr::get('yes') . '</option>'
+            . '<option value="0"' . ( ( (int)$this->settings['data'] === 0 || !$this->settings['data'] ) ? ' selected ': '') . '>' . \tr::get('no') . '</option>'
         . '</select>';
     }
 

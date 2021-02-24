@@ -79,11 +79,10 @@
 		{% endif %}
 
 		{# FORM SUBMISSION AND CHECKS #}
-		var myForm{{ uid }} =  new formControl('#form{{ uid }}', {
+		var myForm{{ uid }} =  new formControls('#form{{ uid }}', {
 			validationURL:'./?&obj=validation_ctrl&method=validate',
 			submitURL: './?obj=record_ctrl&method=save_data&tb={{ tb }}&{% if id_url %}{{ id_url }}{% else %}a=add_new{% endif %}',
 			success: function(data){
-				return;
 				if (data.inserted_id){
 					layout.tabs.closeActive();
 					api.record.edit('{{ tb }}', [data.inserted_id] );

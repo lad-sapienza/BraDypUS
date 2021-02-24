@@ -8,9 +8,10 @@
  *
  */
 
-function formControl(el, options){
+function formControls(el, options){
 
 	// element
+	
 	var $this = $(el);
 
 	// array filled with errors

@@ -89,7 +89,16 @@ function formControls(form, options){
     
     $.each(checkTypes, function(index, id){
       $form.find('[check~="' + id + '"]').each(function(index, el){
-        checkInput($(el), id);
+        // not_empty is always validated in core, but not in plugins
+        if (id === 'not_empty' && !$(el).data('changeonchange')){
+          checkInput($(el), id);
+        // unless plugin data is inserted
+        } else if (id === 'not_empty' && $(el).data('changeonchange') && $(`:input[name="${$(el).data('changeonchange')}"]`).attr('changed')) {
+          checkInput($(el), id);
+        // other controls only on changed inputs
+        } else if ($(el).data('changed')){
+          checkInput($(el), id);
+        }
       });
     });
     
@@ -126,7 +135,7 @@ function formControls(form, options){
         core.message(settings.msg.no_data_to_save, 'error');
       } else {
         $.post( settings.submitURL, ser, function(data){
-          if (data.status == 'success'){
+          if (data.status === 'success'){
             // remove changed tags if there is a successful response from server!
             $form.find(':input[changed="auto"]').removeAttr('changed');
             core.message(data.verbose, 'success');
@@ -216,6 +225,8 @@ function formControls(form, options){
               if (data.responseText === 'error') {
                 styleError(input, settings.msg[checkType]);
                 wrongEl[input.attr('id')] = 'no_dupl';
+              } else {
+                delete wrongEl[input.attr('id')];
               }
             },
             error: function(data){
@@ -233,6 +244,8 @@ function formControls(form, options){
               if (data.responseText === 'error') {
                 styleError(input, settings.msg[checkType]);
                 wrongEl[input.attr('id')] = 'wkt';
+              } else {
+                delete wrongEl[input.attr('id')];
               }
             },
             error: function(data){

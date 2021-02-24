@@ -1,36 +1,36 @@
 <div id="{{ uid }}">
     <form class="form-horizontal">
         <div class="form-group">
-            <label class="col-sm-2 control-label">{{ tr.get('app_name') }}</label>
-            <div class="col-sm-10">
+            <label class="col-sm-4 control-label">{{ tr.get('app_name') }}</label>
+            <div class="col-sm-8">
                 <input type="text" class="form-control" name="name" pattern="^[a-z]{3,7}$" required>
             </div>
         </div>
         
         <div class="form-group">
-            <label class="col-sm-2 control-label">{{ tr.get('definition') }}</label>
-            <div class="col-sm-10">
+            <label class="col-sm-4 control-label">{{ tr.get('definition') }}</label>
+            <div class="col-sm-8">
                 <input type="text" class="form-control" name="definition" required>
             </div>
         </div>
 
         <div class="form-group">
-            <label class="col-sm-2 control-label">{{ tr.get('your_email') }}</label>
-            <div class="col-sm-10">
+            <label class="col-sm-4 control-label">{{ tr.get('your_email') }}</label>
+            <div class="col-sm-8">
                 <input type="text" class="form-control" name="your_email" required>
             </div>
         </div>
 
         <div class="form-group">
-            <label class="col-sm-2 control-label">{{ tr.get('your_password') }}</label>
-            <div class="col-sm-10">
+            <label class="col-sm-4 control-label">{{ tr.get('your_password') }}</label>
+            <div class="col-sm-8">
                 <input type="password" class="form-control" name="your_password" required>
             </div>
         </div>
 
         <div class="form-group">
-            <label class="col-sm-2 control-label">{{ tr.get('db_engine') }}</label>
-            <div class="col-sm-10">
+            <label class="col-sm-4 control-label">{{ tr.get('db_engine') }}</label>
+            <div class="col-sm-8">
                 <select class="form-control" name="db_engine">
                 {% for db in db_engines %}
                 <option>{{ db }}</option>
@@ -41,36 +41,36 @@
 
         <div class="optional">
             <div class="form-group">
-                <label class="col-sm-2 control-label">{{ tr.get('db_host') }}</label>
-                <div class="col-sm-10">
+                <label class="col-sm-4 control-label">{{ tr.get('db_host') }}</label>
+                <div class="col-sm-8">
                     <input type="text" class="form-control" name="db_host" value="">
                 </div>
             </div>
 
             <div class="form-group">
-                <label class="col-sm-2 control-label">{{ tr.get('db_port') }}</label>
-                <div class="col-sm-10">
+                <label class="col-sm-4 control-label">{{ tr.get('db_port') }}</label>
+                <div class="col-sm-8">
                     <input type="text" class="form-control" name="db_port">
                 </div>
             </div>
 
             <div class="form-group">
-                <label class="col-sm-2 control-label">{{ tr.get('db_name') }}</label>
-                <div class="col-sm-10">
+                <label class="col-sm-4 control-label">{{ tr.get('db_name') }}</label>
+                <div class="col-sm-8">
                     <input type="text" class="form-control" name="db_name">
                 </div>
             </div>
 
             <div class="form-group">
-                <label class="col-sm-2 control-label">{{ tr.get('db_username') }}</label>
-                <div class="col-sm-10">
+                <label class="col-sm-4 control-label">{{ tr.get('db_username') }}</label>
+                <div class="col-sm-8">
                     <input type="text" class="form-control" name="db_username">
                 </div>
             </div>
 
             <div class="form-group">
-                <label class="col-sm-2 control-label">{{ tr.get('db_password') }}</label>
-                <div class="col-sm-10">
+                <label class="col-sm-4 control-label">{{ tr.get('db_password') }}</label>
+                <div class="col-sm-8">
                     <input type="text" class="form-control" name="db_password">
                 </div>
             </div>
@@ -79,7 +79,7 @@
         <div class="report"></div>
 
         <div class="form-group">
-            <div class="col-sm-offset-2 col-sm-10">
+            <div class="col-sm-offset-4 col-sm-8">
                 <button type="submit" class="btn btn-danger btn-block">{{ tr.get('app_create') }}</button>
             </div>
         </div>

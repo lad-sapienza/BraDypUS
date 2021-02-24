@@ -20,12 +20,14 @@
       <hr>
         
       <h4 class="text-center">{{ tr.get('cfg_available_tables') }}</h4>
-
+      <div class="sortable">
       {% for tbid, tbname in table_list %}
-        <nav class="navbar navbar-default">
+        <nav class="navbar navbar-default" data-id="{{ tbid }}">
           <div class="container-fluid">
             <div class="navbar-header">
-              <span class="navbar-brand">{{ tbname }}</span>
+              <span class="navbar-brand">
+                <i class="fa fa-arrows" title="{{ tr.get('drag_to_sort') }}" style="cursor:move"></i> {{ tbname }}
+              </span>
             </div>
 
             <div>
@@ -37,6 +39,7 @@
           </div>
         </nav>
       {% endfor %}
+      </div>
       <div style="margin: 2rem 0;">
         <button 
           type="button" 
@@ -55,3 +58,16 @@
 
   </div>
 </div>
+
+<script>
+$('#{{ uid }} .sortable').each( (index, element)=>{
+						new Sortable(element, {
+							animation: 150,
+							ghostClass: 'active',
+							onEnd: function (evt) {
+								const sortArray = this.toArray();
+                core.runAndRespond('config_ctrl', 'sortTables', { sort: sortArray });
+							}
+						});
+					});
+</script>

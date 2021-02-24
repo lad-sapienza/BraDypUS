@@ -247,4 +247,17 @@ class Config
         
 	}
 
+    public function sortTables( array $sort): bool
+    {
+        uksort($this->cfg['tables'], function( $a, $b ) use ($sort) {
+            $index_a = array_search($a, $sort);
+            $index_b = array_search($b, $sort);
+            
+            return $index_a < $index_b ? -1 : 1;
+        });
+
+        ToFiles::all( $this->cfg, $this->path2cfg, $this->prefix );
+        return true;
+    }
+
 }

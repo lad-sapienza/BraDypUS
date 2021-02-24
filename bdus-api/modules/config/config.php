@@ -465,4 +465,17 @@ class config_ctrl extends Controller
         $tb = $this->get['tb'];
         $this->response('ok', 'success', null, ["fields" => $this->cfg->get("tables.$tb.fields.*.label")]);
     }
+
+    public function sortTables()
+    {
+        $error = false;
+        $sortArray = $this->get['sort'];
+        $this->cfg->sortTables($sortArray);
+
+        if ($this->cfg->sortTables($sortArray)){
+            $this->response('ok_sort_update', 'success');
+		} else {
+			$this->response('error_sort_update', 'error');
+		}
+    }
 }

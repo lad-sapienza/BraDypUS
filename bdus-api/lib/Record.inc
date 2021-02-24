@@ -170,8 +170,8 @@ class Record implements RecordInterface
 				}
 
 				$values[':creator'] = $_SESSION['user']['id'];
-				$query = "INSERT INTO {$this->tb} (creator, '" . 
-					implode("', '", array_keys($this->data['core'])) . "') VALUES (:creator, :" . implode(', :', array_keys($this->data['core'])). ")";
+				$query = "INSERT INTO {$this->tb} (creator, " . 
+					implode(", ", array_keys($this->data['core'])) . ") VALUES (:creator, :" . implode(', :', array_keys($this->data['core'])). ")";
 
 				$last_id = $this->db->query($query, $values, 'id');
 

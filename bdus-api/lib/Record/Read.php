@@ -302,7 +302,6 @@ FROM {$prefix}files
                                 ul.id_one = ?) 
 WHERE 1=1
 ORDER BY ul.sort;
-)
 EOD;
                 $sql_val = [
                     $this->tb,

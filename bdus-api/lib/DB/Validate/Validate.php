@@ -44,6 +44,8 @@ class Validate
         $this->resp->set('head', 'Main system information');
         Info::getInfo($this->resp, $this->cfg);
 
+        $this->resp->set( 'info', ($this->db->hasSpatialExtension() ? "Spatial extension available" : "Spatial extension NOT available") );
+
         DumpExists::check($this->resp, $this->db->getEngine());
 
         $sys = new SystemTables($this->resp, $this->db, $this->prefix);

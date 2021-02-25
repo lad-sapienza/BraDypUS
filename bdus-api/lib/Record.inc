@@ -277,7 +277,7 @@ class Record implements RecordInterface
 							unset($plg_row['id']);
 
 							array_push($query, array(
-									'q' => 'INSERT INTO ' . $plg_name . " ('" . implode("', '", array_keys($plg_row)) . "') VALUES (:" . implode(', :', array_keys($plg_row)). ")",
+									'q' => 'INSERT INTO ' . $plg_name . " (" . implode(", ", array_keys($plg_row)) . ") VALUES (:" . implode(', :', array_keys($plg_row)). ")",
 									'values' => $values
 							));
 						}

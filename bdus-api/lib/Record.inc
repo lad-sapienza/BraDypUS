@@ -232,10 +232,9 @@ class Record implements RecordInterface
 							$has_value_flag = true;
 						}
 
-						if ($key !== 'id') {
-
-							$tmp[] = "{$key} = ?";
-							$values[] = $val;
+						if ($key !== 'id' ) {
+							$tmp[] = "{$key} = :{$key}";
+							$values[":{$key}"] = $val;
 						}
 					}
 
@@ -255,8 +254,8 @@ class Record implements RecordInterface
 					} else if($plg_row['id'] AND !empty($plg_row['id'])) {
 						// plg.row.UPDATE
 
-						$update_plg_query = 'UPDATE ' . $plg_name . ' SET ' . implode(', ', $tmp) . ' WHERE id = ?';
-						array_push($values, $plg_row['id'] );
+						$update_plg_query = 'UPDATE ' . $plg_name . ' SET ' . implode(', ', $tmp) . ' WHERE id = :idwhere';
+						$values[':idwhere'] = $plg_row['id'];
 						
 						// Backup before update
 						$this->db->backupBeforeEdit($plg_name, $plg_row['id'], $update_plg_query, $values);
@@ -272,7 +271,7 @@ class Record implements RecordInterface
 							// if context is add new must re-set the value of core_id manually!
 							if (empty($plg_row['id_link']) AND $this->data['core']['id']) {
 								$plg_row['id_link'] = $this->data['core']['id'];
-								array_push($values, $this->data['core']['id'] );
+								$values[':id_link'] = $this->data['core']['id'];
 							}
 							unset($plg_row['id']);
 

@@ -234,6 +234,9 @@ class Record implements RecordInterface
 
 						if ($key !== 'id' ) {
 							$tmp[] = "{$key} = :{$key}";
+							if ($key === 'geometry' && $this->db->hasSpatialExtension()) {
+								$val = "ST_GeomFromText('{$val}')";
+							}
 							$values[":{$key}"] = $val;
 						}
 					}
@@ -252,11 +255,11 @@ class Record implements RecordInterface
 						));
 
 					} else if($plg_row['id'] AND !empty($plg_row['id'])) {
-						// plg.row.UPDATE
 
+						// plg.row.UPDATE
 						$update_plg_query = 'UPDATE ' . $plg_name . ' SET ' . implode(', ', $tmp) . ' WHERE id = :idwhere';
 						$values[':idwhere'] = $plg_row['id'];
-						
+
 						// Backup before update
 						$this->db->backupBeforeEdit($plg_name, $plg_row['id'], $update_plg_query, $values);
 

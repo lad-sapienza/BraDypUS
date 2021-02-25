@@ -234,9 +234,6 @@ class Record implements RecordInterface
 
 						if ($key !== 'id' ) {
 							$tmp[] = "{$key} = :{$key}";
-							if ($key === 'geometry' && $this->db->hasSpatialExtension()) {
-								$val = "ST_GeomFromText('{$val}')";
-							}
 							$values[":{$key}"] = $val;
 						}
 					}
@@ -921,10 +918,12 @@ EOD;
 
 	private function loadGeodata()
 	{
-		$geometry_col = $this->db->hasSpatialExtension() ? 'ST_AsText(geometry)' : 'geometry';
 		$this->data['geodata'] = $this->db->query(
-			'SELECT id, table_link, id_link, ' . $geometry_col . ' FROM ' . PREFIX . 'geodata WHERE table_link = :tb AND id_link= :id',
-			[ ':tb'=>$this->tb, ':id'=>$this->id ],
+			'SELECT id, table_link, id_link, geometry FROM ' . PREFIX . 'geodata WHERE table_link = :tb AND id_link= :id',
+			[
+				':tb'=>$this->tb,
+				':id'=>$this->id
+			],
 			'read'
 		);
 		$this->loaded['geodata'] = true;
@@ -932,10 +931,13 @@ EOD;
 
 	public function addGeodata(string $wkt_geometry)
 	{
-		$geometry = $this->db->hasSpatialExtension() ? "ST_GeomFromText('{$wkt_geometry}')" : $wkt_geometry;
 		return  $this->db->query(
 				'INSERT INTO ' . PREFIX . 'geodata (table_link, id_link, geometry) VALUES(:table_link, :id_link, :geometry)',
-				array(':table_link'=>$this->tb, ':id_link'=>$this->id, ':geometry' => $geometry),
+				[
+					':table_link'=>$this->tb,
+					':id_link'=>$this->id,
+					':geometry' => $wkt_geometry
+				],
 				'id'
 		);
 	}

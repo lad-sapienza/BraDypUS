@@ -318,11 +318,9 @@ class utils
             if ($r) {
                 $arr['properties']	= $r;
             }
-
-            array_push($geo['features'], $arr);
 		}
 		
-		return $geo;
+		return $arr;
 	}
 	
 	public static function jsonForTabletop(DBInterface $db, string $tb, array $params): string

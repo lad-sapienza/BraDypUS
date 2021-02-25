@@ -166,8 +166,10 @@ class Manage
                 // TIMESTAMP fields are set to DATETIME on MySQL and SQLite
                 $type = $driver === 'pgsql' ? 'TIMESTAMP' : 'DATETIME';
             } else if(strtolower($clm['type']) === 'geometry'){
-                // Geometry fields are set to text in non spatial databases
-                $type = $spatial ? 'GEOMETRY' : 'TEXT';
+                // TODO Geometry fields are set to text in non spatial databases
+                // And to geometry in spatial databases. Not yet supported!
+                // $type = $spatial ? 'GEOMETRY' : 'TEXT';
+                $type = 'TEXT';
             } else {
                 $type = $clm['type'];
             }

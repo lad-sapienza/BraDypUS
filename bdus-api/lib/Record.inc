@@ -919,15 +919,18 @@ EOD;
 
 	private function loadGeodata()
 	{
+		$geometry_col = $this->db->hasSpatialExtension() ? 'ST_AsText(geometry)' : 'geometry';
 		$this->data['geodata'] = $this->db->query(
-				'SELECT * FROM ' . PREFIX . 'geodata WHERE table_link = :tb AND id_link= :id',
-				array(':tb'=>$this->tb, ':id'=>$this->id),
-				'read');
+			'SELECT id, table_link, id_link, ' . $geometry_col . ' FROM ' . PREFIX . 'geodata WHERE table_link = :tb AND id_link= :id',
+			[ ':tb'=>$this->tb, ':id'=>$this->id ],
+			'read'
+		);
 		$this->loaded['geodata'] = true;
 	}
 
-	public function addGeodata($geometry)
+	public function addGeodata(string $wkt_geometry)
 	{
+		$geometry = $this->db->hasSpatialExtension() ? "ST_GeomFromText('{$wkt_geometry}')" : $wkt_geometry;
 		return  $this->db->query(
 				'INSERT INTO ' . PREFIX . 'geodata (table_link, id_link, geometry) VALUES(:table_link, :id_link, :geometry)',
 				array(':table_link'=>$this->tb, ':id_link'=>$this->id, ':geometry' => $geometry),

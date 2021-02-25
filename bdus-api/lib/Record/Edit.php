@@ -242,6 +242,9 @@ class Edit
      */
     public function setGeodata($id = false, $geometry = false)
     {   
+        // TODO: rename $geometry to $wkt_geometry
+        // pass wkt_geometry through ST_AsText function, if a geographic database is available
+        
         // Missing data
         if (!$id && !$geometry) {
             $this->addLog("Both id and geometry are missing: ignoring setGeodata");

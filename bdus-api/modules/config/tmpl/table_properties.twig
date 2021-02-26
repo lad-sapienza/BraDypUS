@@ -150,7 +150,7 @@
         <label class="col-sm-3 control-label">Backlinks</label>
         <div class="col-sm-7">
           {% for backlink in data.backlinks %}
-          <input type="text" class="form-control" name="backlinks[]"{% if loop.first %} class="cloneable"{% endif %} value="{{ backlink }}">
+          <input type="text" class="form-control{% if loop.first %} class="cloneable"{% endif %}" name="backlinks[]" value="{{ backlink }}">
           {% else %}
           <input type="text" class="form-control cloneable" name="backlinks[]">
           {% endfor %}

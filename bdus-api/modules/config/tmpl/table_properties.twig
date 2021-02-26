@@ -152,7 +152,7 @@
           {% for backlink in data.backlinks %}
           <input type="text" class="form-control" name="backlinks[]"{% if loop.first %} class="cloneable"{% endif %} value="{{ backlink }}">
           {% else %}
-          <input type="text" class="form-control" name="backlinks[]" class="cloneable">
+          <input type="text" class="form-control cloneable" name="backlinks[]">
           {% endfor %}
           <span id="helpBlock" class="help-block">Destination full table name : plugin full table name : plugin field name</span>
           <button type="button" class="btn btn-default clone-action"  data-baseName="aaa">+</button>

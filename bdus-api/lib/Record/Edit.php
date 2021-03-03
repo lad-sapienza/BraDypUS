@@ -20,7 +20,7 @@ class Edit
     private $model = [];
 
     /**
-     * Container for non-blockinf internal messages / warnings / etc.
+     * Container for non-blocking internal messages / warnings / etc.
      *
      * @var array
      */
@@ -36,20 +36,20 @@ class Edit
      */
     public function __construct (Read $record)
     {
-        $this->model = $record->fetFull();
+        $this->model = $record->getFull();
     }
 
-    public function persist(string $prefix)
+    public function persist(string $prefix) : void
     {
-        Persist::all($this, $prefix);
+        Persist::all($this->getModel(), $prefix);
     }
 
-    private function addLog($msg)
+    private function addLog( string $msg) : void
     {
         $this->log[] = $msg;
     }
 
-    public function getLog()
+    public function getLog() : array
     {
         return $this->log;
     }
@@ -60,11 +60,11 @@ class Edit
      * If $json, JSON version will be returned
      * if $pretty, the JSON is indented
      *
-     * @param boolean $json     if true, JSON will bereturned
+     * @param boolean $json     if true, JSON will be returned
      * @param boolean $pretty   if true, returned JSON will be indented
      * @return array|string     Model array or JSON represeentation
      */
-    public function getModel($json = false, $pretty = false)
+    public function getModel( bool $json = false, bool $pretty = false) : mixed
     {
         return $json ? json_encode($this->model, ($pretty ? JSON_PRETTY_PRINT : false)) : $this->model;
     }
@@ -75,7 +75,7 @@ class Edit
      *
      * @return object   Main object
      */
-    public function delete()
+    public function delete() : self
     {
         if( isset($this->model['core']['id']) ) {
             $this->model['core']['id']['_delete'] = true;
@@ -95,7 +95,7 @@ class Edit
      * @param array $data_arr array of fld => val pairs with core data
      * @return object   Main object
      */
-    public function setCore($data_arr = [])
+    public function setCore(array $data_arr = []) : self
     {
         foreach ($data_arr as $fld => $val) {
             if ( $this->model['core'][$fld]['val'] !== $val ) {
@@ -111,7 +111,7 @@ class Edit
         return $this;
     }
 
-    public function setFile( $id = false, $data = [], $file = false )
+    public function setFile( int $id = null, array $data = [], $file = false ) : self
     {
         // TODO:che facciamo con i file?
         // Delete
@@ -172,7 +172,7 @@ class Edit
      * @param string|false $relation
      * @return void
      */
-    public function setRs($id = false, $first = false, $second = false, $relation = false)
+    public function setRs(int $id = null, string $first = null, string $second = null, string $relation = null) : self
     {   
         // Missing data
         if (!$id && (!$first || !$second || !$relation) ) {
@@ -226,21 +226,16 @@ class Edit
     }
 
     /**
-     * Sets geodata. The following actions are available:
-     *      Add new geodata,                    eg: setGeodata(false, somestr, somestr?, somestr?)
-     *      Delete geodata,                     eg: setGeodata(someint)
-     *      Update sorting for existing link,   eg: setGeodata(someint, somestr, somestr, somestr)
-     *                                          eg: setGeodata(someint, somestr, somestr?, somestr?)
-     *                                          eg: setGeodata(someint, somestr?, somestr, somestr?)
-     *                                          eg: setGeodata(someint, somestr?, somestr?, somestr)
-     * Perfect matches are being ignored
-
+     * Sets, updates or deletes geodata. The following actions are available:
+     *  if $id is set an geometry is not set the geometry will be deleted
+     *  if $id is set an geometry is set the geometry will be updates
+     *  if $id is not set an geometry is set the geometry will be added
      *
-     * @param boolean $id
-     * @param boolean $geometry
-     * @return void
+     * @param integer $id
+     * @param string $geometry
+     * @return self
      */
-    public function setGeodata($id = false, $geometry = false)
+    public function setGeodata( int $id = null, string $geometry = null) : self
     {   
         // TODO: rename $geometry to $wkt_geometry
         // pass wkt_geometry through ST_AsText function, if a geographic database is available
@@ -283,18 +278,14 @@ class Edit
 
     /**
      * Sets manual link. The following actions are available:
-     *      Update sorting for existing link,   eg: setManualLink(someint, false, false, someint)
-     *      Add new link,                       eg: setManualLink(false, somestr, someint)
-     *      Delete link,                        eg: setManualLink(someint)
-     * Perfect matches are being ignored
      *
-     * @param int $id           id of link record
-     * @param string $toTable   referenced table
-     * @param int|false $toId         referenced record id
-     * @param int|false $sort       sorting
-     * @return object   Main object
+     * @param integer $id
+     * @param string $toTable
+     * @param integer $toId
+     * @param integer $sort
+     * @return self
      */
-    public function setManualLink($id = false, $toTable = false, $toId = false, $sort = false)
+    public function setManualLink( int $id = null, string $toTable = null, int $toId = null, int $sort = null) : self
     {   
         // New link
         if ( !$id ) {
@@ -330,7 +321,7 @@ class Edit
         }
     }
 
-    public function setPluginRow($plugin, $id = false, $data_arr = [])
+    public function setPluginRow($plugin, $id = false, $data_arr = []) : void
     {   
         // Scenario 1: update values for existing plugin record
         if ( 

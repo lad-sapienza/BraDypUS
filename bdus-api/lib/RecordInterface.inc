@@ -4,6 +4,7 @@
  * @license AGPL-3.0; see LICENSE
  * @since			Apr 24, 2012
  */
+use DB\DBInterface;
 
 interface RecordInterface
 {
@@ -11,27 +12,27 @@ interface RecordInterface
 	 *
 	 * Returns reference table
 	 */
-	public function getTb();
+	public function getTb() : string;
 
 	/**
 	 *
 	 * Returns DB object
 	 */
-	public function getDB();
+	public function getDB() : DBInterface;
 
 	/**
 	 *
 	 * Writes core data to Record
 	 * @param array $core_data array of core data
 	 */
-	public function setCore($core_data);
+	public function setCore( array $core_data) : void;
 
 	/**
 	 *
 	 * Returns core data
 	 * @param string $fieldname fieldname
 	 */
-	public function getCore($fieldname = false);
+	public function getCore(string $fieldname = null) : mixed;
 
 	/**
 	 *
@@ -39,7 +40,7 @@ interface RecordInterface
 	 * @param string $plugin	plugin name
 	 * @param array $plugin_data	plugin's array data
 	 */
-	public function setPlugin($plugin, $plugin_data);
+	public function setPlugin( string $plugin, array $plugin_data) : void;
 
 	/**
 	 *
@@ -48,14 +49,14 @@ interface RecordInterface
 	 * @param int $index	row index
 	 * @param string $fieldname fieldname
 	 */
-	public function getPlugin($plugin, $index = false, $fieldname = false);
+	public function getPlugin(string $plugin, int $index = null, string $fieldname = null);
 
 	/**
 	 *
 	 * Returns all plugins data
 	 * @param boolean $load if true data will be loaded from DB
 	 */
-	public function getAllPlugins($load = false);
+	public function getAllPlugins( bool $load = false) : array;
 
 	/**
 	 *
@@ -74,7 +75,7 @@ interface RecordInterface
 	 * 	...
 	 * )
 	 */
-	public function getCoreLinks($details = false);
+	public function getCoreLinks( bool $details = false) : array;
 
 	/**
 	 * Returns array with back-links data.

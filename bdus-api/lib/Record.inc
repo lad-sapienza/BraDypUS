@@ -109,7 +109,7 @@ class Record implements RecordInterface
 	 * (non-PHPdoc)
 	 * @see RecordInterface::getTb()
 	 */
-	public function getTb()
+	public function getTb() : string
 	{
 		return $this->tb;
 	}
@@ -118,7 +118,7 @@ class Record implements RecordInterface
 	 * (non-PHPdoc)
 	 * @see RecordInterface::getDB()
 	 */
-	public function getDB()
+	public function getDB() : DBInterface
 	{
 		return $this->db;
 	}
@@ -239,7 +239,7 @@ class Record implements RecordInterface
 					}
 
 					// plg.row.DELETE
-					if($plg_row['id_delete'] AND !empty($plg_row['id_delete'])) {
+					if($plg_row['id_delete'] && !empty($plg_row['id_delete'])) {
 
 						$delete_plg_query = 'DELETE FROM ' . $plg_name . ' WHERE id = ?';
 						$delete_plg_values = [ $plg_row['id_delete'] ];
@@ -251,7 +251,7 @@ class Record implements RecordInterface
 								'values' => $delete_plg_values
 						));
 
-					} else if($plg_row['id'] AND !empty($plg_row['id'])) {
+					} else if($plg_row['id'] && !empty($plg_row['id'])) {
 
 						// plg.row.UPDATE
 						$update_plg_query = 'UPDATE ' . $plg_name . ' SET ' . implode(', ', $tmp) . ' WHERE id = :idwhere';
@@ -289,7 +289,6 @@ class Record implements RecordInterface
 				$this->db->beginTransaction();
 
 				foreach ($query as $q_arr) {
-
 					$ret = $this->db->query($q_arr['q'], $q_arr['values'], 'boolean');
 					$flag['plugins'][($ret ? 'success' : 'error')][] = true;
 				}
@@ -427,7 +426,7 @@ class Record implements RecordInterface
 	 * (non-PHPdoc)
 	 * @see RecordInterface::setCore()
 	 */
-	public function setCore($core_data)
+	public function setCore( array $core_data) : void
 	{
 		if (!$this->loaded['core']) {
 			$this->loadCore();
@@ -454,7 +453,7 @@ class Record implements RecordInterface
 	 * (non-PHPdoc)
 	 * @see RecordInterface::getCore()
 	 */
-	public function getCore($fieldname = false)
+	public function getCore( string $fieldname = null) : mixed
 	{
 		if (!$this->loaded['core']) {
 			$this->loadCore();
@@ -506,7 +505,7 @@ class Record implements RecordInterface
 	 * (non-PHPdoc)
 	 * @see RecordInterface::setPlugin()
 	 */
-	public function setPlugin($plugin, $plugin_data)
+	public function setPlugin( string $plugin, array $plugin_data) : void
 	{
 		if ($this->id) {
 			$this->loadAllPlugins();
@@ -518,7 +517,7 @@ class Record implements RecordInterface
 		}
 
 		if (!is_array($this->data['plugins'][$plugin])) {
-			$this->data['plugins'][$plugin] = array();
+			$this->data['plugins'][$plugin] = [];
 		}
 
 		foreach ($plugin_data as $key => &$data_arr) {
@@ -540,7 +539,7 @@ class Record implements RecordInterface
 	 * (non-PHPdoc)
 	 * @see RecordInterface::getPlugin()
 	 */
-	public function getPlugin($plugin, $index = false, $fieldname = false)
+	public function getPlugin(string $plugin, int $index = null, string $fieldname = null)
 	{
 		$this->getCore();
 
@@ -579,7 +578,7 @@ class Record implements RecordInterface
 	 * (non-PHPdoc)
 	 * @see RecordInterface::getAllPlugins()
 	 */
-	public function getAllPlugins($load = false)
+	public function getAllPlugins( bool $load = false) : array
 	{
 		$this->getCore();
 
@@ -716,7 +715,7 @@ EOD;
 	 * (non-PHPdoc)
 	 * @see RecordInterface::getCoreLinks()
 	 */
-	public function getCoreLinks($details = false)
+	public function getCoreLinks( bool $details = false) : array
 	{
 		if ($details) {
 			if (!$this->loaded['corelink_details']) {

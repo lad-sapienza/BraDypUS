@@ -13,17 +13,17 @@ class Persist
     private $id;
     private $model = [];
 
-    public function __construct (Edit $edit, string $prefix)
+    public function __construct (array $model, string $prefix)
     {
-        $this->model    = $edit->getModel();
+        $this->model    = $model;
         $this->tb       = $this->model['metadata']['tb_id'];
         $this->id       = $this->model['metadata']['rec_id'];
         $this->prefix   = $prefix;
     }
 
-    public static function all(Edit $edit, string $prefix)
+    public static function all(array $model, string $prefix)
     {
-        $this_class = new self($edit, $prefix);
+        $this_class = new self($model, $prefix);
         $this_class->Core();
         $this_class->Plugin();
         $this_class->ManualLinks();

@@ -202,7 +202,7 @@ EOD;
      *    "relation": (int)
      * }
      */
-    public function getRs()
+    public function getRs() : array
     {
         if (!isset($this->cache['rs'])){
             $res = $this->db->query(
@@ -233,7 +233,7 @@ EOD;
    *    "geojson": (string, geojson)
    * }
    */
-  public function getGeodata()
+  public function getGeodata() : array
   {
     if (!isset($this->cache['geodata'])){
         $r = $this->db->query(
@@ -273,7 +273,7 @@ EOD;
      * }
 
      */
-    public function getFiles()
+    public function getFiles() : array
     {
         if (!isset($this->cache['files'])) {
 
@@ -335,7 +335,7 @@ EOD;
      *            "label": (string)
      *          },
      */
-    public function getBackLinks()
+    public function getBackLinks() : array
     {
         if (!isset($this->cache['backlinks'])) {
             $backlinks = [];
@@ -369,7 +369,6 @@ EOD;
             $this->cache['backlinks'] = $backlinks;
         }
         return $this->cache['backlinks'];
-
     }
 
     /**
@@ -384,7 +383,7 @@ EOD;
      *    "where": (SQL where statement to fetch records)
  *    },
      */
-    public function getLinks()
+    public function getLinks() : array
     {
         if (!isset($this->cache['links'])) {
             $links = [];
@@ -455,7 +454,7 @@ EOD;
 
         foreach ($required as $p) {
             if (!isset($this->cache['plugins'][$p])) {
-                $plg_data = $this->getTbRecord($p, "table_link = ? AND id_link = ?", [$this->tb, $this->id], false, true) ?: [];
+                $plg_data = $this->getTbRecord($p, "table_link = ? AND id_link = ?", [$this->tb, $this->id], false) ?: [];
                 if (empty($plg_data)) {
                     continue;
                 }
@@ -505,7 +504,6 @@ EOD;
      * @param  string  $sql          Where SQl statement
      * @param  array   $sql_val      binding data
      * @param  boolean $return_first If true only the first row of the results will be returned
-     * @param  boolean $return_all_fields If true All fields, in case of JOIN, will be returned, otherwize table namespace will be used
      * @return array                array of table data
      *
      * "core": {
@@ -517,10 +515,10 @@ EOD;
      *    },
      *    {...}
      */
-    private function getTbRecord(string $tb, string $sql, array $sql_val = [], bool $return_first = false, bool $return_all_fields = false)
+    private function getTbRecord(string $tb, string $sql, array $sql_val = [], bool $return_first = false) : array
     {
         $cfg = $this->cfg->get("tables.$tb.fields");
-        $fields = $return_all_fields ? ["*"] : ["{$tb}.*"];
+        $fields = ["{$tb}.*"];
         $join = [];
 
         foreach ($cfg as $arr) {

@@ -192,7 +192,9 @@ class config_ctrl extends Controller
             $this->cfg->setFld($new_tb_name, 'id', [
                 "name" => "id",
                 "label" => "Id",
-                "type" => "text"
+                "type" => "text",
+                "readonly" => true,
+                "db_type" => "INTEGER",
             ]);
             if ($post['is_plugin'] === '1') {
                 $this->cfg->setFld($new_tb_name, 'table_link', [
@@ -213,6 +215,7 @@ class config_ctrl extends Controller
                     "label" => "Creator",
                     "type" => "text",
                     "db_type" => "TEXT",
+                    "readonly" => true,
                 ]);
             }
             

@@ -453,7 +453,7 @@ class Record implements RecordInterface
 	 * (non-PHPdoc)
 	 * @see RecordInterface::getCore()
 	 */
-	public function getCore( string $fieldname = null) : mixed
+	public function getCore( string $fieldname = null)
 	{
 		if (!$this->loaded['core']) {
 			$this->loadCore();

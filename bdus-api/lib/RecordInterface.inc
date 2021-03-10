@@ -32,7 +32,7 @@ interface RecordInterface
 	 * Returns core data
 	 * @param string $fieldname fieldname
 	 */
-	public function getCore(string $fieldname = null) : mixed;
+	public function getCore(string $fieldname = null);
 
 	/**
 	 *

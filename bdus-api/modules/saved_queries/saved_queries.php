@@ -146,7 +146,7 @@ class saved_queries_ctrl extends Controller
                 'date'  => (new \DateTime())->format('Y-m-d H:i:s'),
                 'name'  => $name,
                 'text'  => $text,
-                'values'=> $values,
+                'vals'  => json_encode($values),
                 'tb'    => $tb,
                 'is_global'=> 0
             ]);

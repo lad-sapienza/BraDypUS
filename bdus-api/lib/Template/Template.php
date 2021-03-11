@@ -292,7 +292,7 @@ class Template implements TemplateInterface
 
         // 1. No records found in database, but context is add_new or edit => show empty form:
         if (empty($plg_array) && ($this->context === 'edit' || $this->context === 'add_new')) {
-            $html .= $this->showPlgRow($plg, uniqid()) . '<br/>';
+            $html .= $this->showPlgRow($plg, uniqid(999)) . '<br/>';
         }
 
         // 2. Some records returned from database

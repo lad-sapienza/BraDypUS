@@ -36,7 +36,9 @@ class Images
         
         // 1. Show up to $max images
         foreach ($filtered as $img) {
-            $html .= self::getThumbHtml($img, "projects/{$app}/files/");
+            if (!empty($img)) {
+                $html .= self::getThumbHtml($img, "projects/{$app}/files/");
+            }
         }
         
         

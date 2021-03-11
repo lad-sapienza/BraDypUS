@@ -51,19 +51,15 @@ class user_ctrl extends Controller
 			$ret = $sys_manager->deleteRow('users', $id);
 		
 			if ($ret) {
-				$res['message'] = \tr::get('user_deleted');
-				$res['status'] = 'success';
+				$this->response(\tr::get('user_deleted'), 'success');
 			} else {
 				throw new \Exception('User deletion query returned false');
 			}
 		} catch (\Throwable $e) {
+			$this->response(\tr::get('user_not_deleted'), 'error');
 			$res['message'] = \tr::get('user_not_deleted');
-			$res['status'] = 'error';
-		
 			$this->log->error($e);
 		}
-		
-		echo json_encode($res);
 	}
 	
 	public function showUserForm()

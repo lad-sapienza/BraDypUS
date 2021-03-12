@@ -376,7 +376,8 @@ class config_ctrl extends Controller
             $this->cfg->renameFld($tb, $old_name, $new_name);
 
             $alter = new Alter($this->db);
-            $alter->renameFld($tb, $old_name, $new_name);
+            $type = $this->cfg->get("tables.$tb.fields.$old_name.db_type") ?: 'TEXT';
+            $alter->renameFld($tb, $old_name, $new_name, $type);
 
             $this->response('ok_renaming_column', 'success');
         } catch (\Throwable $e) {

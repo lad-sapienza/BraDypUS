@@ -26,6 +26,27 @@ class DbCfgAlign
         $this->inspect = new \DB\Inspect($this->db);
     }
 
+    public function cfgHasDb_type(): void
+    {
+        $cfg_tbs = $this->cfg->get('tables.*.name');
+        foreach ($cfg_tbs as $cfg_tb) {
+            $db_types = $this->cfg->get("tables.$cfg_tb.fields.*.db_type");
+            foreach ($db_types as $fld => $type) {
+                if ($type && !empty($type)){
+                    $this->resp->set(
+                        'success',
+                        "Column {$cfg_tb}.{$fld} has db_type: $type"
+                    );
+                } else {
+                    $this->resp->set(
+                        'danger',
+                        "Missind db_type for column {$cfg_tb}.{$fld}"
+                    );
+                }
+            }
+        }
+    }
+
     public function cfgHasDb(): void
     {
         $cfg_tbs = $this->cfg->get('tables.*.name');

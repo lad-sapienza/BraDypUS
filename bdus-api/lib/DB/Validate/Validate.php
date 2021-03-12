@@ -55,6 +55,8 @@ class Validate
         $sys->latestStructure();
         
         $db_cfg = new DbCfgAlign($this->resp, $this->db, $this->cfg);
+        $this->resp->set('head', 'Checking for db_type in configuration');
+        $db_cfg->cfgHasDb_type();
         $this->resp->set('head', 'Configuration and database tables alignement');
         $db_cfg->cfgHasDb();
         $this->resp->set('head', 'Configuration and database fields alignement');

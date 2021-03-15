@@ -299,28 +299,38 @@ class utils
                 throw new Exception('Input data is not a multidimensional array');
             }
 
-            if (!$r['geometry'] && !$r[$tb . '.geometry']) {
+			$geom = $r['geometry'] ? $r['geometry'] : $r[$tb . '.geometry'];
+
+            if (!$geom) {
                 // single row error does not block entire process
                 error_log('No valid geometry column found in row: ' . var_export($r, true));
                 continue;
             }
-
-			$geo = \geoPHP::load($r['geometry'] ? $r['geometry'] : $r[$tb . '.geometry'], 'wkt');
-			if (!$geo){
-				error_log('No valid geometry column found in row: ' . var_export($r, true));
-                continue;
-			} 
+			// Fix for: https://github.com/phayes/geoPHP/issues/181
+			$geom = str_replace(
+				['( ', ' (', ' )', ') '],
+				['(', '(', ')', ')'],
+				$geom
+			);
+			try {
+				$geoPHP = \geoPHP::load($geom, 'wkt');
+			} catch (\Throwable $th) {
+				error_log("WKT geometry {$geom} could not be parsed: " . var_export($r, true));
+				continue;
+			}
 
             $arr['type']		= 'Feature';
-            $arr['geometry']	= json_decode($geo->out('geojson'), true);
+            $arr['geometry']	= json_decode($geoPHP->out('geojson'), true);
 
             unset($r['geometry']);
             if ($r) {
                 $arr['properties']	= $r;
             }
+
+			array_push($geo['features'], $arr);
 		}
 		
-		return $arr;
+		return $geo;
 	}
 	
 	public static function jsonForTabletop(DBInterface $db, string $tb, array $params): string

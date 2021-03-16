@@ -14,7 +14,7 @@ the "Rename table" button. Please note that if you change the table name all
 settings using table name (links, or field properties) mus be **manually** updated.
 - **Label**: The name of the table shown to te user. Can be changed anytime, since this
 does not affect the resto of configuration
-- **Is plugin?**: yes if this is a plugin table, no, if it is a data table ([for differences click here]((design/conventions#data-tables)).
+- **Is plugin?**: yes if this is a plugin table, no, if it is a data table ([for differences click here](../conventions#data-tables)).
 - **Order**: select the field whose values will be used to sort the records in the query result view
 - **ID field**: select the field that will act as user defined identifier (tha database will still use `id` as unique identifier)
 - **Preview**: select the fields that will be shown by default in the query result view

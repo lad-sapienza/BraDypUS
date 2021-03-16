@@ -30,7 +30,7 @@ private static $installed = array (
     'aliases' => 
     array (
     ),
-    'reference' => 'eef69563a817589cdd00ff96448f0683852a6385',
+    'reference' => 'cba1646d40bcc2737f308778160ad6399047eaa2',
     'name' => '__root__',
   ),
   'versions' => 
@@ -42,7 +42,7 @@ private static $installed = array (
       'aliases' => 
       array (
       ),
-      'reference' => 'eef69563a817589cdd00ff96448f0683852a6385',
+      'reference' => 'cba1646d40bcc2737f308778160ad6399047eaa2',
     ),
     'adbario/php-dot-notation' => 
     array (
@@ -132,12 +132,12 @@ private static $installed = array (
     ),
     'spatie/db-dumper' => 
     array (
-      'pretty_version' => '2.21.0',
-      'version' => '2.21.0.0',
+      'pretty_version' => '2.21.1',
+      'version' => '2.21.1.0',
       'aliases' => 
       array (
       ),
-      'reference' => '54150d138dfe5b8043c2a7c6c27a8b41a9e8f418',
+      'reference' => '05e5955fb882008a8947c5a45146d86cfafa10d1',
     ),
     'symfony/polyfill-ctype' => 
     array (
@@ -168,8 +168,8 @@ private static $installed = array (
     ),
     'symfony/process' => 
     array (
-      'pretty_version' => 'v5.2.3',
-      'version' => '5.2.3.0',
+      'pretty_version' => 'v5.2.4',
+      'version' => '5.2.4.0',
       'aliases' => 
       array (
       ),
@@ -407,7 +407,6 @@ self::$canGetVendors = method_exists('Composer\Autoload\ClassLoader', 'getRegist
 $installed = array();
 
 if (self::$canGetVendors) {
-
 foreach (ClassLoader::getRegisteredLoaders() as $vendorDir => $loader) {
 if (isset(self::$installedByVendor[$vendorDir])) {
 $installed[] = self::$installedByVendor[$vendorDir];

@@ -65,14 +65,10 @@ The data tables can be of two types, `regular` and `plugin`.
 are ancillary tables, usually linked in a `1-many` relationship with a `regular` table.
 `Plugin` tables do not live on their own and fully depend on one or many `regular` tables.
 
-Tra le tabelle di dati alcune sono di secondo ordine e vengono chiamate `plugin` e contengono dati aggiuntivi
-relativamente a una tabella di dati principale.
-
-Nel nostro caso, la tabella dei campioni è una tabella `plugin`.
-
 ### Data tables name
 Regular data tables are named using the prefix followed by a lower-case string 
-of ASCII, with no spaces, dashes, etc.
+of ASCII, with no spaces, dashes, etc. Please avoid the usage of SQL keywords,
+like `values`, `select`, `sort`, or similar.
 
 The following are valid regular table names for application test:
 - **test__sites**

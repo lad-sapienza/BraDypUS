@@ -16,6 +16,10 @@ class ComposerStaticInit63dffac3da0006282de7c3f45bc18505
     );
 
     public static $prefixLengthsPsr4 = array (
+        'g' => 
+        array (
+            'geoPHP\\' => 7,
+        ),
         'T' => 
         array (
             'Twig\\' => 5,
@@ -52,6 +56,10 @@ class ComposerStaticInit63dffac3da0006282de7c3f45bc18505
     );
 
     public static $prefixDirsPsr4 = array (
+        'geoPHP\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/funiq/geophp/src',
+        ),
         'Twig\\' => 
         array (
             0 => __DIR__ . '/..' . '/twig/twig/src',
@@ -108,7 +116,6 @@ class ComposerStaticInit63dffac3da0006282de7c3f45bc18505
         'Stringable' => __DIR__ . '/..' . '/symfony/polyfill-php80/Resources/stubs/Stringable.php',
         'UnhandledMatchError' => __DIR__ . '/..' . '/symfony/polyfill-php80/Resources/stubs/UnhandledMatchError.php',
         'ValueError' => __DIR__ . '/..' . '/symfony/polyfill-php80/Resources/stubs/ValueError.php',
-        'geoPHP' => __DIR__ . '/..' . '/phayes/geophp/geoPHP.inc',
     );
 
     public static function getInitializer(ClassLoader $loader)

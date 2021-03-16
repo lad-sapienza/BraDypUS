@@ -6,7 +6,7 @@
     'aliases' => 
     array (
     ),
-    'reference' => 'cba1646d40bcc2737f308778160ad6399047eaa2',
+    'reference' => 'd284e7389c4bb1351b738585575f0901c97b9bb3',
     'name' => '__root__',
   ),
   'versions' => 
@@ -18,7 +18,7 @@
       'aliases' => 
       array (
       ),
-      'reference' => 'cba1646d40bcc2737f308778160ad6399047eaa2',
+      'reference' => 'd284e7389c4bb1351b738585575f0901c97b9bb3',
     ),
     'adbario/php-dot-notation' => 
     array (
@@ -28,6 +28,16 @@
       array (
       ),
       'reference' => 'eee4fc81296531e6aafba4c2bbccfc5adab1676e',
+    ),
+    'funiq/geophp' => 
+    array (
+      'pretty_version' => 'dev-master',
+      'version' => 'dev-master',
+      'aliases' => 
+      array (
+        0 => '9999999-dev',
+      ),
+      'reference' => '694e2f3cc55962e988ab77cb29f3b0177f4a2d2d',
     ),
     'guzzlehttp/psr7' => 
     array (
@@ -55,15 +65,6 @@
       array (
       ),
       'reference' => '1cb1cde8e8dd0f70cc0fe51354a59acad9302084',
-    ),
-    'phayes/geophp' => 
-    array (
-      'pretty_version' => '1.2',
-      'version' => '1.2.0.0',
-      'aliases' => 
-      array (
-      ),
-      'reference' => '015404e85b602e0df1f91441f8db0f9e98f7e567',
     ),
     'psr/http-message' => 
     array (

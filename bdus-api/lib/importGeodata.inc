@@ -12,6 +12,7 @@
  */
 
 use DB\DBInterface;
+use \geoPHP\geoPHP;
 
 class importGeodata
 {
@@ -102,7 +103,7 @@ class importGeodata
          continue;
        }
 
-       $wkt_geometry = (\geoPHP::load($row['geometry'], 'geojson'))->out('wkt');
+       $wkt_geometry = (geoPHP::load($row['geometry'], 'geojson'))->out('wkt');
 
        $sql = " INSERT INTO " . PREFIX . "geodata "
          . "(table_link, id_link, geometry) "

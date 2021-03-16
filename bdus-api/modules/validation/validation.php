@@ -4,7 +4,7 @@
  * @license AGPL-3.0; see LICENSE
  * @since			Jan 10, 2013
  */
-
+use \geoPHP\geoPHP;
 
 class validation_ctrl extends Controller
 {
@@ -32,7 +32,7 @@ class validation_ctrl extends Controller
             if (!$this->request['val']) {
                 throw new \Exception('Field value is required');
             }
-            $geo = \geoPHP::load($this->request['val'], 'wkt');
+            $geo = geoPHP::load($this->request['val'], 'wkt');
             if (!$geo){
                 throw new \Exception("String {$this->request['val']} is not valid WKT");
             }

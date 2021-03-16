@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2012b46a6ab42d927632fd34a06df344",
+    "content-hash": "1b8e5ec60a1977164cd9376f143f6dbf",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -58,6 +58,77 @@
                 "source": "https://github.com/adbario/php-dot-notation/tree/2.x"
             },
             "time": "2019-01-01T23:59:15+00:00"
+        },
+        {
+            "name": "funiq/geophp",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/funiq/geoPHP.git",
+                "reference": "694e2f3cc55962e988ab77cb29f3b0177f4a2d2d"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/funiq/geoPHP/zipball/694e2f3cc55962e988ab77cb29f3b0177f4a2d2d",
+                "reference": "694e2f3cc55962e988ab77cb29f3b0177f4a2d2d",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.5.0"
+            },
+            "require-dev": {
+                "php": ">=5.5.0",
+                "php-coveralls/php-coveralls": "2.*",
+                "phpstan/phpstan": "^0.12.18",
+                "phpunit/phpunit": "5.* || 8.*",
+                "squizlabs/php_codesniffer": "3.*"
+            },
+            "suggest": {
+                "ext-geos": "GEOS allows more advanced operations"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "geoPHP\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL-2.0-or-later",
+                "BSD-3-Clause"
+            ],
+            "authors": [
+                {
+                    "name": "Patrick Hayes",
+                    "role": "Original creator"
+                },
+                {
+                    "name": "Péter Báthory",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Open-source native PHP library for doing geometry operations. Can read and write a wide variety of formats: (E)WKT, (E)WKB, TWKB, GeoJSON, KML, GPX, GeoRSS. Works with all Simple-Feature geometries (Point, LineString, Polygon...) and can be used to get centroids, bounding-boxes, area, etc.",
+            "homepage": "https://github.com/funiq/geoPHP",
+            "keywords": [
+                "Polygon",
+                "converter",
+                "geoPHP",
+                "geojson",
+                "geometry",
+                "gis",
+                "gpx",
+                "kml",
+                "linestring",
+                "twkb",
+                "wkb",
+                "wkt"
+            ],
+            "support": {
+                "issues": "https://github.com/funiq/geoPHP/issues",
+                "source": "https://github.com/funiq/geoPHP/tree/master"
+            },
+            "time": "2020-06-27T20:04:05+00:00"
         },
         {
             "name": "guzzlehttp/psr7",
@@ -303,46 +374,6 @@
                 }
             ],
             "time": "2020-12-14T13:15:25+00:00"
-        },
-        {
-            "name": "phayes/geophp",
-            "version": "1.2",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/phayes/geoPHP.git",
-                "reference": "015404e85b602e0df1f91441f8db0f9e98f7e567"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/phayes/geoPHP/zipball/015404e85b602e0df1f91441f8db0f9e98f7e567",
-                "reference": "015404e85b602e0df1f91441f8db0f9e98f7e567",
-                "shasum": ""
-            },
-            "require-dev": {
-                "phpunit/phpunit": "4.1.*"
-            },
-            "type": "library",
-            "autoload": {
-                "classmap": [
-                    "geoPHP.inc"
-                ]
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "GPL-2 or New-BSD"
-            ],
-            "authors": [
-                {
-                    "name": "Patrick Hayes"
-                }
-            ],
-            "description": "GeoPHP is a open-source native PHP library for doing geometry operations. It is written entirely in PHP and can therefore run on shared hosts. It can read and write a wide variety of formats: WKT (including EWKT), WKB (including EWKB), GeoJSON, KML, GPX, GeoRSS). It works with all Simple-Feature geometries (Point, LineString, Polygon, GeometryCollection etc.) and can be used to get centroids, bounding-boxes, area, and a wide variety of other useful information.",
-            "homepage": "https://github.com/phayes/geoPHP",
-            "support": {
-                "issues": "https://github.com/phayes/geoPHP/issues",
-                "source": "https://github.com/phayes/geoPHP/tree/master"
-            },
-            "time": "2014-12-02T06:11:22+00:00"
         },
         {
             "name": "psr/http-message",
@@ -935,7 +966,9 @@
     "packages-dev": [],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "funiq/geophp": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": [],

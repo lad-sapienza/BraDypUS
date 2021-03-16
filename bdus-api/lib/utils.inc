@@ -6,6 +6,7 @@
  */
 
 use DB\DBInterface;
+use \geoPHP\geoPHP;
 
 class utils
 {
@@ -313,7 +314,7 @@ class utils
 				$geom
 			);
 			try {
-				$geoPHP = \geoPHP::load($geom, 'wkt');
+				$geoPHP = geoPHP::load($geom, 'wkt');
 			} catch (\Throwable $th) {
 				error_log("WKT geometry {$geom} could not be parsed: " . var_export($r, true));
 				continue;

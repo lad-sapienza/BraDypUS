@@ -52,6 +52,8 @@
       url: /setup/vocabularies
     - title: Creating other data tables
       url: /setup/other-data-tables
+    - title: Changing table order
+      url: /setup/changing-table-order
     - title: Finalizing setup
       url: /setup/finalizing-setup
     - title: Final appearance of configuration files

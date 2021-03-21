@@ -26,13 +26,13 @@ class geoface_ctrl extends Controller
 
 			$record = new Record($tb, $id, $this->db, $this->cfg);
 
-			$new_id = $record->addGeodata($geometry);
+			$record->setPlugin($this->prefix . 'geodata', [
+				"id:addnew" => [ "geometry" => $geometry]
+			]);
 
-			if ($new_id) {
-				$this->response('ok_insert_geodata', 'success', null, [ 'id' => $new_id ] );
-			} else {
-				throw new \Exception('Insert geodata query returned false');
-			}
+			$record->persist();
+			$this->response('ok_insert_geodata', 'success', null, [ 'id' => $new_id ] );
+
 
 		} catch (\Throwable $e) {
 			$this->log->error($e);
@@ -55,15 +55,17 @@ class geoface_ctrl extends Controller
 			if (!\utils::canUser('edit')) {
 				throw new \Exception('User has not enough privilege to edit records');
 			}
-
+			// Fake record object
 			$record = new Record('novalue', false, $this->db, $this->cfg);
 
 			foreach ($id_arr as $id) {
-				if (!$record->deleteGeodata($id)) {
+				$del = $this->db->query('DELETE FROM ' . $this->prefix . 'geodata WHERE id = ?' ,
+						  [ $id ],
+						  'boolean');
+				if (!$del) {
 					$error = true;
 				}
 			}
-
 			if (!$error) {
 				$this->response('ok_delete_geodata', 'success');
 			} else {

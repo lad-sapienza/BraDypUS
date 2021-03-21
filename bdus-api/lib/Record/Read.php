@@ -55,7 +55,6 @@ class Read
      * "backlinks":   { see $this->getBackLinks for docs   },
      * "manualLinks": { see $this->getManualLinks for docs },
      * "files":       { see $this->getFiles for docs       },
-     * "geodata":     { see $this->getGeodata for docs     },
      * "rs":          { see $this->getRs for docs          }
      */
     public function getFull(): array
@@ -82,7 +81,7 @@ class Read
 
     /**
    * Returns array with core data
-   * @param string $fld   Firld name, to return only a segment;
+   * @param string $fld   Field name, to return only a segment;
    * @return array        Array of table data
    *
    *    "id": {
@@ -101,7 +100,7 @@ class Read
             } else {
                 $sql = "{$this->tb}.id = ?";
             }
-            $this->cache['core'] = $this->getTbRecord($this->tb, $sql, [$this->id], true);
+            $this->cache['core'] = $this->getTbRecord($this->tb, $sql, [$this->id], true, false);
         }
         if (!$fld) {
             return $this->cache['core'];
@@ -224,40 +223,35 @@ EOD;
         return $this->cache['rs'];
     }
 
-  /**
-   * [getGeodata description]
-   * @return [type]      [description]
-   * {
-   *    "id": (int),
-   *    "geometry": (string, wkt),
-   *    "geojson": (string, geojson)
-   * }
-   */
-  public function getGeodata() : array
-  {
-    if (!isset($this->cache['geodata'])){
-        $r = $this->db->query(
-            "SELECT id, geometry FROM " . PREFIX . "geodata WHERE table_link = ? AND id_link = ?",
-            [$this->tb, $this->id]
-        );
-        $ret = [];
-        if (is_array($r)) {
-            foreach ($r as $row) {
-                $geo = \geoPHP::load($row['geometry'],'wkt');
-                if (!$geo){
-                    // Invalid geometry
-                    $gj = null;
-                } else {
-                    $gj = $geo->out('geojson');
-                }
-                $row['geojson'] = $gj;
-                $ret[$row['id']] = $row;
+    /**
+     * Returns array of geodata or empty array, if geodata are not available
+     * [
+     *  {
+     *      "(field id)": {
+     *          "id": (row id),
+     *          "table_link": (row id),
+     *      }
+     *  }
+     * ]
+     * @return array
+     */
+    public function getGeodata() : array
+    {
+        if (!isset($this->cache['geodata'])){
+            $plugins = $this->getPlugin();
+            if (
+                    isset($plugins['geogata']) 
+                &&  isset($plugins['geogata']['data'])
+                &&  is_array($plugins['geogata']['data'])
+                &&  !empty($plugins['geogata']['data'])
+            ){
+                $this->cache['geodata'] = $plugins['geogata']['data'];
+            } else {
+                $this->cache['geodata'] = [];
             }
         }
-        $this->cache['geodata'] = $ret;
+        return $this->cache['geodata'];
     }
-    return $this->cache['geodata'];
-  }
 
     /**
      * Returns list of files linked to the record
@@ -454,7 +448,7 @@ EOD;
 
         foreach ($required as $p) {
             if (!isset($this->cache['plugins'][$p])) {
-                $plg_data = $this->getTbRecord($p, "table_link = ? AND id_link = ?", [$this->tb, $this->id], false) ?: [];
+                $plg_data = $this->getTbRecord($p, "table_link = ? AND id_link = ?", [$this->tb, $this->id], false, true) ?: [];
                 if (empty($plg_data)) {
                     continue;
                 }
@@ -504,6 +498,7 @@ EOD;
      * @param  string  $sql          Where SQl statement
      * @param  array   $sql_val      binding data
      * @param  boolean $return_first If true only the first row of the results will be returned
+     * @param  boolean $return_all_fields If true all fields will be returned, otherwise only table fields
      * @return array                array of table data
      *
      * "core": {
@@ -515,10 +510,10 @@ EOD;
      *    },
      *    {...}
      */
-    private function getTbRecord(string $tb, string $sql, array $sql_val = [], bool $return_first = false) : array
+    private function getTbRecord(string $tb, string $sql, array $sql_val = [], bool $return_first = false, bool $return_all_fields = false) : array
     {
         $cfg = $this->cfg->get("tables.$tb.fields");
-        $fields = ["{$tb}.*"];
+        $fields = $return_all_fields ? ["*"] : ["{$tb}.*"];
         $join = [];
 
         foreach ($cfg as $arr) {

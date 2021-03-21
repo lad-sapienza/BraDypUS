@@ -26,11 +26,6 @@ interface TemplateInterface
 	public function links() : ?string;
 
 	/**
-	 * Shows list of available geodata + form to enter some more (WKT)
-	 */
-	public function geodata() : ?string;
-
-	/**
 	 * Shows Stratigraphic relations module
 	 */
 	public function rs() : ?string;

@@ -27,7 +27,6 @@ class Persist
         $this_class->Core();
         $this_class->Plugin();
         $this_class->ManualLinks();
-        $this_class->Geodata();
         $this_class->Rs();
         $this_class->Files();
     }
@@ -97,54 +96,6 @@ class Persist
             }
         }
     }
-
-
-    public function Geodata()
-    {
-        if (!$this->id){
-            throw new Exception("Set core before geodata: missing id");
-        }
-        foreach( $this->model['geodata'] as $geoid => $gd ){
-            // Add new link
-            if ( !isset($gd['id']) && isset($gd['_geometry']) ){
-                $fields = [
-                    "table_link",
-                    "id_link",
-                    "geometry"
-                ];
-                $values = [
-                    $this->tb,
-                    $this->id,
-                    $gd['_geometry']
-                ];
-
-                $sql = "INSERT INTO {$this->prefix}geodata "
-                    . "(" . implode(", ", $fields) . ") "
-                    . "VALUES (". implode(',', array_fill(0, count($values), '?')) .")";
-                
-
-            // UPDATE
-            } else if ( isset($gd['id']) && isset($gd['_geometry']) ) {
-                $fields = [];
-                $values = [];
-                array_push($fields, "geometry = ?");
-                array_push($values, $gd['_geometry']);
-                $sql = "UPDATE {$this->prefix}geodata SET " . implode(", ", $fields). " WHERE id = ?";
-                array_push($values, $gd['id']);
-                
-
-            // DELETE
-            } else if ( isset($gd['id']) && isset($gd['id']['_deleted'])){
-                $sql = "DELETE FROM {$this->prefix}geodata WHERE id = ?";
-                $values = [ $gd['id'] ];
-            }
-
-            if ($sql) {
-                $this->runInDb($sql, $values);
-            }
-        }
-    }
-
 
     public function Rs()
     {
@@ -358,12 +309,6 @@ class Persist
                 [ $l['key'] ]
             );
         }
-
-        // Delete geodata
-        $this->runInDb(
-            "DELETE FROM {$this->prefix}geodata WHERE table_link = ? AND id_link = ?",
-            [ $this->tb, $this->id ]
-        );
 
         // DELETE RS
         foreach( $this->model['rs'] as $rs ){

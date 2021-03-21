@@ -13,7 +13,6 @@ use \DB\DB;
 use Template\TemplateInterface;
 use Template\Parts\{
     Links, 
-    Geodata, 
     Rs, 
     Images, 
     Field
@@ -104,23 +103,6 @@ class Template implements TemplateInterface
         }
     }
 
-    public function geodata() : ?string
-    {
-        if ($this->context === 'add_new') {
-            return null;
-        }
-        if ($this->record->getCore('id', true) === null) {
-            return null;
-        }
-        return Geodata::showAll(
-            $this->record->getGeodata(),
-            $this->record->getTb(),
-            $this->record->getCore('id', true),
-            $this->plg(PREFIX . 'geodata'),
-            $this->cfg
-        );
-    }
-
     public function showall() : string
     {
         $tb = $this->record->getTb();
@@ -141,8 +123,6 @@ class Template implements TemplateInterface
         $html .= '<div class="col-sm-4">';
         //LINKS
         $html .= $this->links();
-        //GEODATA
-        $html .= $this->geodata();
         // PLUGINS
         $plg_arr = $this->cfg->get("tables.{$tb}.plugin");
         if (is_array($plg_arr)) {

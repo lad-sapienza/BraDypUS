@@ -176,7 +176,7 @@ class QueryObject
     
     /**
      * Adds field name and eventually the alias and function to apply to $this->obj['fields']
-     * Optional auto-join is performed for plugin or geodata tables
+     * Optional auto-join is performed for plugin tables
      *
      * @param string $fld       column name, without table name
      * @param string $alias     column alias, optional

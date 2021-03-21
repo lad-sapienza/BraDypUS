@@ -11,7 +11,6 @@
  * $data['corelinks'] = array with sum-up info about corelinks [table_name => [tot:int, query:string, values:array], [...]]
  * $data['userlinks'] =
  * $data['files'] =
- * $data['geodata']
  * 
  * $data	=>	[
  * 		"core"		=> [
@@ -76,7 +75,6 @@ class Record implements RecordInterface
 	 * 		coreLinks
 	 * 		allPlugins
 	 * 		fullFiles
-	 * 		geodata
 	 * 		rs
 	 * 		userLinks
 	 *
@@ -93,8 +91,6 @@ class Record implements RecordInterface
 		$rec['allPlugins']	= $this->getAllPlugins(true);
 
 		$rec['fullFiles']	= $this->getFullFiles();
-
-		$rec['geodata'] 	= $this->getGeodata();
 
 		if ($this->cfg->get("tables.$tb.rs")) {
 			$rec['rs'] 		= $this->getRS();
@@ -334,10 +330,6 @@ class Record implements RecordInterface
 			." ( tb_one = '" . $this->tb . "' AND id_one = '" . $id . "')"
 			. ' OR '
 			. "( tb_two = '" . $this->tb . "' AND id_two = '" . $id . "')";
-
-		//GEODATA
-		// TODO: NO BACKUP HERE
-		$q[] = "DELETE FROM " . PREFIX . "geodata WHERE  table_link = '" . $this->tb . "' AND id_link = " . $id;
 
 		//DELETE FILE (deleted only if all db erases are OK)
 		// TODO: NO BACKUP HERE
@@ -905,45 +897,4 @@ EOD;
 				'boolean'
 				);
 	}
-
-	public function getGeodata()
-	{
-		if (!$this->loaded['geodata']) {
-			$this->loadGeodata();
-		}
-
-		return $this->data['geodata'];
-	}
-
-	private function loadGeodata()
-	{
-		$this->data['geodata'] = $this->db->query(
-			'SELECT id, table_link, id_link, geometry FROM ' . PREFIX . 'geodata WHERE table_link = :tb AND id_link= :id',
-			[
-				':tb'=>$this->tb,
-				':id'=>$this->id
-			],
-			'read'
-		);
-		$this->loaded['geodata'] = true;
-	}
-
-	public function addGeodata(string $wkt_geometry)
-	{
-		return  $this->db->query(
-				'INSERT INTO ' . PREFIX . 'geodata (table_link, id_link, geometry) VALUES(:table_link, :id_link, :geometry)',
-				[
-					':table_link'=>$this->tb,
-					':id_link'=>$this->id,
-					':geometry' => $wkt_geometry
-				],
-				'id'
-		);
-	}
-
-	public function deleteGeodata($id)
-	{
-		return $this->db->query('DELETE FROM ' . PREFIX . 'geodata WHERE id = ?', [ $id ], 'boolean');
-	}
-
 }

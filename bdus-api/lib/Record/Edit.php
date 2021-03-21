@@ -201,7 +201,7 @@ class Edit
             }
             return $this;
         
-        // Delete geodata
+        // Delete rs
         } else if ( $id && !$first && !$second && !$relation ){
             if ( isset ($this->model['rs'][$id]) ) {
                 $this->model['rs'][$id]['_delete'] = true;
@@ -220,57 +220,6 @@ class Edit
                 
             } else {
                 $this->addLog("Rs #{$id} not found: ignoring rs update");
-            }
-            return $this;
-        }
-    }
-
-    /**
-     * Sets, updates or deletes geodata. The following actions are available:
-     *  if $id is set an geometry is not set the geometry will be deleted
-     *  if $id is set an geometry is set the geometry will be updates
-     *  if $id is not set an geometry is set the geometry will be added
-     *
-     * @param integer $id
-     * @param string $geometry
-     * @return self
-     */
-    public function setGeodata( int $id = null, string $geometry = null) : self
-    {   
-        // TODO: rename $geometry to $wkt_geometry
-        // pass wkt_geometry through ST_AsText function, if a geographic database is available
-        
-        // Missing data
-        if (!$id && !$geometry) {
-            $this->addLog("Both id and geometry are missing: ignoring setGeodata");
-        
-        // Add new row
-        } else if ( !$id && $geometry ) {
-            array_push($this->model['geodata'], [
-                "_geometry" => $geometry
-            ]);
-            return $this;
-        
-        // Delete geodata
-        } else if ( $id && !$geometry ){
-            if ( isset ($this->model['geodata'][$id]) ) {
-                $this->model['geodata'][$id]['_delete'] = true;
-            } else {
-                $this->addLog("Geodata  #{$id} not found: ignoring geodata deletion");
-            }
-            return $this;
-
-        // Update
-        } else if ($id &&  $geometry ) {
-            if ( isset ($this->model['geodata'][$id]) ) {
-                
-                // Update geometry
-                if ( $geometry && $this->model['geodata'][$id]['geometry'] !== $geometry) {
-                    $this->model['geodata'][$id]['_geometry'] = $geometry;
-                }
-                
-            } else {
-                $this->addLog("Geodata #{$id} not found: ignoring geodata update");
             }
             return $this;
         }

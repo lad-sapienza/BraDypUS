@@ -2,6 +2,7 @@ TODO
 
 Roadmap towards v 4.0.0
 
+[ ] https://pristine.js.org/ should replace formControl
 [ ] Subquery in where should use subQuery index, not value!
 [ ] Links::showUserLinks no lazy load
 

@@ -92,11 +92,10 @@
 				
 			}
 		});
-		myForm{{ uid }}.observe();
 
 		$('#form{{ uid }}').on('submit', function(event){
 			event.preventDefault();
-			myForm{{ uid }}.check().send();
+			myForm{{ uid }}.send();
 		});
 
 		{# ENHACE FORM ELEMENTS #}
@@ -219,10 +218,6 @@
 						  styleToAdd:'background: #fff;color:#000;padding:10px;margin:10px;'
 					  }
 				  });
-			});
-
-			$('#form{{ uid }}').find(':input[data-changeonchange]').on('change', function(el){
-				$(':input[name="' + $(this).data('changeonchange') + '"]').attr('changed', 'auto');
 			});
 
 

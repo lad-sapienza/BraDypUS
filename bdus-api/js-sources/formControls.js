@@ -18,7 +18,6 @@ function formControls(form, options){
   
   //default settings
   var settings = {
-    addChange	: true,
     checkOnSubmit: true,
     validationURL : '',         // server must reply (text) 'error' or 'success'
     submitURL 	: '',           //server must reply json with obj.status: 'success' or 'error'
@@ -42,39 +41,63 @@ function formControls(form, options){
   if (options){
     settings = $.extend(settings, options);
   }
-  
-  // add changed attribute to form inputs on change event
-  if ( settings.addChange ) {
-    $form.find (':input').on('change', function(){
-      $(this).attr('changed', 'auto');
-    });
-  }
-  
-  // public method observe
-  this.observe = function(){
+
+  const onSuccessCb = (input_el, type) => {
     
-    // reset wrongEl array except for no_dupl
-    Object.entries(wrongEl).forEach( ([key, value]) => {
-      if (value !== 'no_dupl'){
-        delete wrongEl[key];
+    const input_id = input_el.attr('id');
+
+    if (Array.isArray(wrongEl[input_id]) && wrongEl[input_id].indexOf(type) > -1){
+      wrongEl[input_id].splice(wrongEl[input_id].indexOf(type), 1);
+      if (wrongEl[input_id].length < 1){
+        delete wrongEl[input_id];
+        removeError(input_el);
       }
-    });
-    
-    $form.find(':input[check]').on('change', function(){
-      var el = $(this);
-      if ( el.attr('check') && el.attr('check') !== 'undefined' ) {
-        var thisCheckTypes = el.attr('check').split(' ');
-        $.each( thisCheckTypes, function(index, type){
-          checkInput(el, type, settings);
-        });
+    }
+
+    if (typeof wrongEl[input_el] === 'undefined'){
+      input_el.attr('changed', 'auto');
+      const id_name = input_el.data('changeonchange');
+      if (id_name){
+        $(`:input[name="${id_name}"]`).attr('changed','auto');
       }
-    });
-    
-    return this;
+    }
   };
+
+  const onErrorCb = (input_el, type) => {
+    styleError(input_el, settings.msg[type]);
+    const input_id = input_el.attr('id');
+    if (Array.isArray(wrongEl[input_id])){
+      wrongEl[input_id].push(type);
+    } else {
+      wrongEl[input_id] = [type];
+    }
+    
+    // Remove change attribute to single input
+    input_el.removeAttr('changed');
+  };
+
+
+
+  // add changed attribute to form inputs on change event
+  $form.on('change', ':input', function(){
+
+    const input = $(this);
+
+    // Input has validation rules
+    if (input.attr('check') !== 'undefined'){
+      const thisCheckTypes = input.attr('check').split(' ');
+      
+      $.each( thisCheckTypes, function(index, type){
+        checkInput( input, type );
+      });
+    } else {
+      input.attr('changed', 'auto');
+    }
+  });
+
   
   // public method: Checks the form for errors;
-  this.check = function(){
+  const checkBeforeSubmit = function(){
     
     // no duplicate is checked only on keyup!
     var checkTypes = [ 
@@ -83,12 +106,17 @@ function formControls(form, options){
       'email', 
       /* 'no_dupl', */ 
       'range', 
-      'regex', 
-      'valid_wkt' 
+      'regex'
+      /* 'valid_wkt' */ 
     ];
     
     $.each(checkTypes, function(index, id){
       $form.find('[check~="' + id + '"]').each(function(index, el){
+
+        // Ignore not checked values
+        if (!$(el).attr('changed')){
+          return;
+        }
         // not_empty is always validated in core, but not in plugins
         if (id === 'not_empty' && !$(el).data('changeonchange')){
           checkInput($(el), id);
@@ -101,8 +129,6 @@ function formControls(form, options){
         }
       });
     });
-    
-    return this;
   };
   
   /**
@@ -111,8 +137,18 @@ function formControls(form, options){
   *	only inputs with 'changed' tags will be sent!
   */
   this.send = function (all) {
+    
+    checkBeforeSubmit();
+    // Stop only if errors are in not changed objects
+    let stop;
+    for (const el_id in wrongEl) {
+      if ($(`#${el_id}`).attr('changed')){
+        stop = true;
+      }
+    }
+
     // checks for pesent errors
-    if ( Object.keys(wrongEl).length > 0 ) {
+    if ( stop ) {
       core.message(settings.msg.errors_in_form, 'error');
     } else {
       
@@ -130,7 +166,6 @@ function formControls(form, options){
         not_changed.removeAttr('disabled');
       }
       
-      
       if ( !ser ) {
         core.message(settings.msg.no_data_to_save, 'error');
       } else {
@@ -140,8 +175,6 @@ function formControls(form, options){
             $form.find(':input[changed="auto"]').removeAttr('changed');
             core.message(data.verbose, 'success');
             settings.success(data);
-          } else if (data.status == 'error') {
-            core.message(data.verbose, 'error');
           } else {
             core.message(data.verbose, 'error');
           }
@@ -163,28 +196,24 @@ function formControls(form, options){
   };
   
   // private method
-  var styleError = function(input, checkType){
+  const styleError = function(input, checkType){
     if ( !input.hasClass('notValid') ) {
-      $('<span />')
+      $('<div />')
         .addClass('notValid')
         .html('*' + checkType)
-        .insertAfter(input).position({
-          my: 'left center',
-          at: 'right-10 center',
-          of: input
-        });
+        .insertAfter(input);
     } else {
-      input.next('span.notValid').append('<br />' + checkType);
+      input.next('div.notValid').append('<br />' + checkType);
     }
     input.addClass('notValid');
   };
   
   // private method: Removes error style (class) and text from form or from element
   var removeError = function(el){
-    $(el).next('span.notValid').remove();
+    $(el).next('div.notValid').remove();
     $(el).removeClass('notValid');
   };
-  
+
   /**
   *	Main check function:
   *		checks input value using checkType
@@ -194,27 +223,28 @@ function formControls(form, options){
     
     var val = input.val();
     
-    removeError(input);
-    
     switch ( checkType ) {
       case 'int':
         if ( isNaN(val) ) {
-          styleError(input, settings.msg[checkType]);
-          wrongEl[input.attr('id')] = 'int';
+          onErrorCb(input, checkType);
+        } else {
+          onSuccessCb(input, checkType);
         }
       break;
       case 'email':
         var emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
         
         if ( val !== '' && !emailPattern.test(val) ) {
-          styleError(input, settings.msg[checkType]);
-          wrongEl[input.attr('id')] = 'email';
+          onErrorCb(input, checkType)
+        } else {
+          onSuccessCb(input, checkType);
         }
         break;
         case 'not_empty':
         if ( val === '' ) {
-          styleError(input, settings.msg[checkType]);
-          wrongEl[input.attr('id')] = 'not_empty';
+          onErrorCb(input, checkType)
+        } else {
+          onSuccessCb(input, checkType);
         }
       break;
       case 'no_dupl':
@@ -223,10 +253,9 @@ function formControls(form, options){
             url: settings.validationURL + '&type=duplicates&fld=' + input.attr('name') + '&val=' + val,
             complete: function(data){
               if (data.responseText === 'error') {
-                styleError(input, settings.msg[checkType]);
-                wrongEl[input.attr('id')] = 'no_dupl';
+                onErrorCb(input, checkType)
               } else {
-                delete wrongEl[input.attr('id')];
+                onSuccessCb(input, checkType);
               }
             },
             error: function(data){
@@ -242,10 +271,9 @@ function formControls(form, options){
             url: settings.validationURL + '&type=wkt&val=' + val,
             complete: function(data){
               if (data.responseText === 'error') {
-                styleError(input, settings.msg[checkType]);
-                wrongEl[input.attr('id')] = 'wkt';
+                onErrorCb(input, checkType)
               } else {
-                delete wrongEl[input.attr('id')];
+                onSuccessCb(input, checkType);
               }
             },
             error: function(data){
@@ -262,8 +290,9 @@ function formControls(form, options){
         val = parseInt(val);
         
         if ( val < min || val > max  || isNaN(val)) {
-          styleError(input, settings.msg[checkType] + ' (' + min + ' - ' + max + ')');
-          wrongEl[input.attr('id')] = 'range';
+          onErrorCb(input, checkType)
+        } else {
+          onSuccessCb(input, checkType);
         }
       break;
       
@@ -271,8 +300,9 @@ function formControls(form, options){
         var mypattern = input.attr('mypattern');
         var pattern = new RegExp (mypattern);
         if (val && !pattern.test(val)) {
-          styleError(input, settings.msg[checkType] + ' (' + mypattern+ ')');
-          wrongEl[input.attr('id')] = 'regex';
+          onErrorCb(input, checkType)
+        } else {
+          onSuccessCb(input, checkType);
         }
       break;
       

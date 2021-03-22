@@ -54,7 +54,7 @@ class FormElement
 
     public function Input() : string
     {
-        return '<input type="text" ' .
+        return '<input type="' . ( $this->settings['min'] && $this->settings['max'] ? 'number' : 'text'). '" ' .
                     'class="form-control"' .
                     $this->common_attributes .
                     $this->settings['maxlength'] .

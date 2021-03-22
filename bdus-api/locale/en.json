@@ -261,7 +261,7 @@
     "email_check": "The entered value does not seem a valid email address",
     "no_dupl": "This value has already been used in this field. No duplicates are allowed",
     "valid_wkt": "This value is nor valid Well Known Text",
-    "range": "The enetred value is not in the expected range",
+    "range": "The entered value is not in the expected range",
     "regex": "The entered value is not well formatted",
     "no_data_to_save": "The form does not contain changes to save in the database",
     "errors_in_form": "The form contains errors and data was not saved. Please check before continuing",

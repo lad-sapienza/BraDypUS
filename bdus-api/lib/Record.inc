@@ -803,8 +803,14 @@ EOD;
 		$first = trim($first);
 		$second = trim($second);
 		$res = $this->db->query(
-				'SELECT * FROM ' . PREFIX . 'rs WHERE tb = :tb AND ( (first = :first AND second =:second) OR (first=:second AND second = :first) )',
-				array(':tb'=>$this->tb, ':first'=>$first, ':second'=>$second),
+				'SELECT * FROM ' . PREFIX . 'rs WHERE tb = :tb AND ( (first = :first_one AND second = :second_one) OR (first = :second_two AND second = :first_two) )',
+				[
+					':tb'=>$this->tb, 
+					':first_one'=>$first, 
+					':second_one'=>$second,
+					':second_two'=>$second,
+					':first_two'=>$first
+				],
 				'read'
 		);
 

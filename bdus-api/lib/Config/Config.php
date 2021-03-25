@@ -32,7 +32,7 @@ class Config
     }
 
     /**
-     * Ceturns configuration string or Array, using dot notation with or without wildchar
+     * Returns configuration string or Array, using dot notation with or without wildchar
      * For tables, if filter_key and filter values are set, onlymatchin records will be returned
      * Examples of valid dot notation, making use of wildchar
      * main
@@ -198,7 +198,7 @@ class Config
     }
 
     public function renameFld(string $tb, string $old_name, string $new_name)
-	{
+    {
         // https://stackoverflow.com/a/8884153
         $keys = array_keys($this->cfg['tables'][$tb]['fields']);
         $index = array_search($old_name, $keys, true);
@@ -214,7 +214,7 @@ class Config
     }
 
     public function renameTb(string $old_name, string $new_name)
-	{
+    {
         $keys = array_keys($this->cfg['tables']);
         $index = array_search($old_name, $keys, true);
         $keys[$index] = $new_name;
@@ -223,29 +223,28 @@ class Config
         $this->cfg['tables'][$new_name]['name'] = $new_name;
 
         ToFiles::all( $this->cfg, $this->path2cfg, $this->prefix );
-		
-		rename(
-			$this->path2cfg . str_replace($this->prefix, null, $old_name) . '.json',
-			$this->path2cfg . str_replace($this->prefix, null, $new_name) . '.json'
-		);
+        
+        rename(
+            $this->path2cfg . str_replace($this->prefix, null, $old_name) . '.json',
+            $this->path2cfg . str_replace($this->prefix, null, $new_name) . '.json'
+        );
     }
     
     public function deleteTb($tb)
-	{
+    {
         unset($this->cfg['tables'][$tb]);
         
         ToFiles::all( $this->cfg, $this->path2cfg, $this->prefix );
         
-		unlink($this->path2cfg . str_replace($this->prefix, null, $tb) . '.json');
+        unlink($this->path2cfg . str_replace($this->prefix, null, $tb) . '.json');
     }
     
     public function setFld(string $tb, string $fld_name, array $post_data)
-	{
+    {
         $this->cfg['tables'][$tb]['fields'][$fld_name] = $post_data;
 
         ToFiles::all( $this->cfg, $this->path2cfg, $this->prefix );
-        
-	}
+    }
 
     public function sortTables( array $sort): bool
     {

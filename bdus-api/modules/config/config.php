@@ -25,15 +25,15 @@ class config_ctrl extends Controller
         try{
             $sys_manage = new Manage($this->db, $this->prefix);
             $users = $sys_manage->getBySQL('users', '1=1');
-		
-			foreach ($users as &$u){
-				$u['verbose_privilege'] = \utils::privilege($u['privilege'], 1);
-			}
-		} catch (\Throwable $e){
-			$users = [];
-		}
-		
-		$this->render('config', 'app_properties', [
+
+            foreach ($users as &$u){
+                $u['verbose_privilege'] = \utils::privilege($u['privilege'], 1);
+            }
+        } catch (\Throwable $e){
+            $users = [];
+        }
+
+        $this->render('config', 'app_properties', [
             'available_langs' => \tr::getAvailable(),
             'info' => $this->cfg->get('main'),
             'status' => [ 'on', 'frozen', 'off' ],
@@ -46,7 +46,7 @@ class config_ctrl extends Controller
     {
         $tb = $this->get['tb'];
 
-		$this->render('config', 'fld_list', [
+        $this->render('config', 'fld_list', [
             'tb' => $tb,
             'tb_label' => $this->cfg->get("tables.$tb.label"),
             'all_fields' => $this->cfg->get("tables.$tb.fields.*")
@@ -100,9 +100,9 @@ class config_ctrl extends Controller
         $table_properties = $tb ? $this->cfg->get("tables.$tb") : [];
 
         // default values
-		if (!$table_properties['name'])     $table_properties['name'] = $this->prefix;
-		if (!$table_properties['preview'])  $table_properties['preview'] = array(0=>'');
-		if (!$table_properties['plugin'])   $table_properties['plugin'] = array(0=>'');
+        if (!$table_properties['name'])     $table_properties['name'] = $this->prefix;
+        if (!$table_properties['preview'])  $table_properties['preview'] = array(0=>'');
+        if (!$table_properties['plugin'])   $table_properties['plugin'] = array(0=>'');
         if (!$table_properties['link'])     $table_properties['link'] = array(0=>array('fld'=>array(0=>[])));
 
         foreach ($table_properties['link'] as $index => $link) {
@@ -119,67 +119,63 @@ class config_ctrl extends Controller
             'available_plugins' => is_array($this->cfg->get('tables.*.label', 'is_plugin', '1')) ? $this->cfg->get('tables.*.label', 'is_plugin', '1') : [],
             'available_tables' => $this->cfg->get('tables.*.label'),
         ]);
-
     }
 
     public function save_tb_data()
-	{
-		$post = $this->post;
+    {
+        $post = $this->post;
 
-		try {
+        try {
 
-			$post = \utils::recursiveFilter($post);
+            $post = \utils::recursiveFilter($post);
 
-			// make indexed array for links and geoface
-			if($post['link']) {
+            // make indexed array for links and geoface
+            if($post['link']) {
 
-				$post['link'] = array_values($post['link']);
+                $post['link'] = array_values($post['link']);
 
-				$tmp = array_values($post['link']);
+                $tmp = array_values($post['link']);
 
-				foreach ($tmp as &$link) {
-					$link['fld'] = array_values($link['fld']);
-				}
+                foreach ($tmp as &$link) {
+                    $link['fld'] = array_values($link['fld']);
+                }
 
-				$post['link'] = false;
-				$post['link'] = $tmp;
-			}
+                $post['link'] = false;
+                $post['link'] = $tmp;
+           }
 
-			if ($post['is_plugin'] == 1 && (!$post['name'] || !$post['label'] )) {
-
-				throw new \Exception('1. Required fields are missing');
-
-			} else if ( (!$post['is_plugin'] || $post['is_plugin'] == 0) && ( !$post['name'] || !$post['label'] || !$post['order'] && !$post['id_field'] || !$post['preview'] ) ) {
-
-				throw new \Exception('2. Required fields are missing');
+            if ($post['is_plugin'] == 1 && (!$post['name'] || !$post['label'] )) {
+                throw new \Exception('1. Required fields are missing');
+            } else if ( (!$post['is_plugin'] || $post['is_plugin'] == 0) && ( !$post['name'] || !$post['label'] || !$post['order'] && !$post['id_field'] || !$post['preview'] ) ) {
+                throw new \Exception('2. Required fields are missing');
             }
 
             $this->cfg->setTable($post);
 
-			$this->response('ok_cfg_data_updated');
+            $this->response('ok_cfg_data_updated');
 
-		} catch(\Throwable $e) {
-			$this->log->error($e);
-			$this->response('error_cfg_data_updated', 'error');
-		}
+        } catch(\Throwable $e) {
+            $this->log->error($e);
+            $this->response('error_cfg_data_updated', 'error');
+        }
     }
 
 
     public function add_new_tb()
-	{
-		$post = $this->post;
+    {
+        $post = $this->post;
 
-		try {
+        try {
 
-			$post = \utils::recursiveFilter($post);
+            $post = \utils::recursiveFilter($post);
 
-			if ($post['is_plugin'] === '1' && (!$post['name'] || !$post['label'] )) {
+            if ($post['is_plugin'] === '1' && (!$post['name'] || !$post['label'] )) {
 
-				throw new \Exception('1. Required fields are missing');
+                throw new \Exception('1. Required fields are missing');
 
-			} else if ( (!$post['is_plugin'] || $post['is_plugin'] == 0) && ( !$post['name'] || !$post['label'] || !$post['order'] && !$post['id_field'] || !$post['preview'] ) ) {
+            } else if ( (!$post['is_plugin'] || $post['is_plugin'] == 0) && ( !$post['name'] || !$post['label'] || !$post['order'] && !$post['id_field'] || !$post['preview'] ) ) {
 
-				throw new \Exception('2. Required fields are missing');
+                throw new \Exception('2. Required fields are missing');
             }
 
             // Write table columns file
@@ -223,54 +219,54 @@ class config_ctrl extends Controller
             $alter = new Alter($this->db);
             $alter->createMinimalTable($new_tb_name, ($post['is_plugin'] === '1') );
 
-			$this->response('ok_cfg_data_updated', 'success', null, [
+            $this->response('ok_cfg_data_updated', 'success', null, [
                 'tb' => $new_tb_name
             ]);
 
-		} catch(\Throwable $e) {
-			$this->log->error($e);
-			$this->response('error_cfg_data_updated', 'error');
-		}
+        } catch(\Throwable $e) {
+            $this->log->error($e);
+            $this->response('error_cfg_data_updated', 'error');
+        }
     }
     
 
     public function save_fld_properties()
-	{
-		$post = $this->post;
-		try {
-			$post = \utils::recursiveFilter($post);
+    {
+        $post = $this->post;
+        try {
+            $post = \utils::recursiveFilter($post);
 
-			$tb = $post['tb_name'];
-			$fld = $post['fld_orig_name'];
-			unset($post['tb_name']);
-			unset($post['fld_orig_name']);
+            $tb = $post['tb_name'];
+            $fld = $post['fld_orig_name'];
+            unset($post['tb_name']);
+            unset($post['fld_orig_name']);
 
-			if (!$post['name'] || !$post['type']){
-				throw new \Exception('Both field name and field type are required');
+            if (!$post['name'] || !$post['type']){
+                throw new \Exception('Both field name and field type are required');
             }
             
-			$this->cfg->setFld($tb, $fld, $post);
+            $this->cfg->setFld($tb, $fld, $post);
 
-			$this->response('ok_cfg_data_updated', 'success');
+            $this->response('ok_cfg_data_updated', 'success');
         
         } catch(\Throwable $e) {
             $this->log->error($e);
-			$this->response('error_cfg_data_updated', 'error');
-		}
+            $this->response('error_cfg_data_updated', 'error');
+        }
     }
 
     public function add_new_fld()
-	{
-		$post = $this->post;
-		try {
-			$post = \utils::recursiveFilter($post);
+    {
+        $post = $this->post;
+        try {
+            $post = \utils::recursiveFilter($post);
 
-			$tb = $post['tb_name'];
-			$fld = $post['name'];
-			unset($post['tb_name']);
+            $tb = $post['tb_name'];
+            $fld = $post['name'];
+            unset($post['tb_name']);
 
-			if (!$post['name'] || !$post['type']){
-				throw new \Exception('Both field name and field type are required');
+            if (!$post['name'] || !$post['type']){
+                throw new \Exception('Both field name and field type are required');
             }
             $available_flds = array_values($this->cfg->get("tables.$tb.fields.*.name"));
             if (in_array($fld, $available_flds)){
@@ -283,27 +279,24 @@ class config_ctrl extends Controller
             $alter = new Alter($this->db);
             $alter->addFld($tb, $fld, $post['db_type']);
 
-			$this->response('ok_cfg_data_updated', 'success', null, ["fld" => $fld]);
+            $this->response('ok_cfg_data_updated', 'success', null, ["fld" => $fld]);
         
         } catch(\Throwable $e) {
             $this->log->error($e);
-			$this->response('error_cfg_data_updated', 'error');
-		}
+            $this->response('error_cfg_data_updated', 'error');
+        }
     }
     
     public function save_app_properties()
     {
         $data = $this->post;
-		
-		try {
-
+        try {
             $this->cfg->setMain($data);
             $this->response('ok_cfg_data_updated', 'success');
             
-		} catch (\Throwable $e) {
-
-			$this->response('error_cfg_data_updated', 'error');
-		}
+        } catch (\Throwable $e) {
+            $this->response('error_cfg_data_updated', 'error');
+        }
     }
 
     
@@ -478,8 +471,8 @@ class config_ctrl extends Controller
 
         if ($this->cfg->sortTables($sortArray)){
             $this->response('ok_sort_update', 'success');
-		} else {
-			$this->response('error_sort_update', 'error');
-		}
+        } else {
+            $this->response('error_sort_update', 'error');
+        }
     }
 }

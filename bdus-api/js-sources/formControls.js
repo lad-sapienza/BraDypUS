@@ -82,12 +82,11 @@ function formControls(form, options){
   $form.on('change', ':input', function(){
 
     const input = $(this);
+    const available_checks = input.attr('check');
 
     // Input has validation rules
-    if (input.attr('check') !== 'undefined'){
-      const thisCheckTypes = input.attr('check').split(' ');
-      
-      $.each( thisCheckTypes, function(index, type){
+    if (typeof available_checks !== 'undefined'){
+      available_checks.split(" ").map( type => {
         checkInput( input, type );
       });
     } else {

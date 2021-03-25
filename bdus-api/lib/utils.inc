@@ -178,18 +178,9 @@ class utils
 		if (!is_dir($dir)){
 			return false;
 		}
-		$files = scandir($dir);
-		$ret = [];
-		foreach ($files as $f) {
-			if(!in_array($files, $f)){
-				array_push($ret, $f);
-			}
-		}
-		if (empty($ret)){
-			return false;
-		} else {
-			return $ret;
-		}
+		$ret = array_diff(scandir($dir), $dont_consider);
+		
+		return empty($ret) ? false : $ret;
 	} // end of dirContent
 
 

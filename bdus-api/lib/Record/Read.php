@@ -449,6 +449,7 @@ EOD;
         foreach ($required as $p) {
             if (!isset($this->cache['plugins'][$p])) {
                 $plg_data = $this->getTbRecord($p, "table_link = ? AND id_link = ?", [$this->tb, $this->id], false, true) ?: [];
+
                 if (empty($plg_data)) {
                     continue;
                 }
@@ -513,7 +514,7 @@ EOD;
     private function getTbRecord(string $tb, string $sql, array $sql_val = [], bool $return_first = false, bool $return_all_fields = false) : array
     {
         $cfg = $this->cfg->get("tables.$tb.fields");
-        $fields = $return_all_fields ? ["*"] : ["{$tb}.*"];
+        $fields = ["{$tb}.*"];
         $join = [];
 
         foreach ($cfg as $arr) {
@@ -535,6 +536,19 @@ EOD;
                     $join,
                     " LEFT JOIN {$ref_tb} AS {$ref_alias} ON {$ref_alias}.id = {$tb}.{$arr['name']} "
                 );
+
+                if ($return_all_fields){
+                    $joined_flds = $this->cfg->get("tables.$ref_tb.fields.*.name");
+                    unset($joined_flds['id']);
+                    $joined_flds = array_map(function ($e) use ($ref_tb){
+                        return $ref_tb . "." . $e;
+                    }, $joined_flds);
+
+                    array_merge(
+                        $fields,
+                        $joined_flds
+                    );
+                }
             }
         }
 
@@ -551,7 +565,7 @@ EOD;
 
         $ret = [];
         $return_arr = [];
-
+        
         foreach ($r as $res) {
             foreach ($res as $k => $v) {
                 if (strpos($k, '@') === false) {

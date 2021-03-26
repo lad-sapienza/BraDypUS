@@ -98,8 +98,12 @@ class api extends Controller
     public function run()
     {
         try {
-            $this->logApiUser();
-            
+            try {
+                $this->logApiUser();
+            } catch (\Throwable $th) {
+                throw new \Exception('Cannot log user and bootstrap the application');
+            }
+
             if (!\utils::canUser('read')){
                 throw new \Exception(\tr::get('not_authorized'));
             }

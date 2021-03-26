@@ -54,7 +54,7 @@ class GetUniqueVal
         if(!$str && !$where){
             array_push($sql_part, " 1=1 ");
         }
-        $sql .= implode(' AND ', $sql_part);
+        $sql .= implode(' AND ', $sql_part) . ' ORDER BY ' . $f;
         $res = $db->query($sql, $values);
         
         $resp = [];

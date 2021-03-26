@@ -137,9 +137,7 @@ SELECT {$prefix}userlinks.*
        (tb_two = ? AND 
         id_two = ? AND
         tb_one != '{$prefix}files')
- ORDER BY sort,
-          id;
-)
+ ORDER BY sort, id
 EOD;
 
             $values = [

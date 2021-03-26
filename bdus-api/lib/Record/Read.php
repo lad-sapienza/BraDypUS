@@ -540,11 +540,12 @@ EOD;
                 if ($return_all_fields){
                     $joined_flds = $this->cfg->get("tables.$ref_tb.fields.*.name");
                     unset($joined_flds['id']);
-                    $joined_flds = array_map(function ($e) use ($ref_tb){
-                        return $ref_tb . "." . $e;
+                    unset($joined_flds[$arr['name']]);
+                    $joined_flds = array_map(function ($e) use ($ref_alias){
+                        return $ref_alias . "." . $e;
                     }, $joined_flds);
-
-                    array_merge(
+                    
+                    $fields = array_merge(
                         $fields,
                         $joined_flds
                     );
@@ -556,7 +557,6 @@ EOD;
             " FROM {$tb} " .
             implode(' ', $join) .
             " WHERE {$sql}";
-
         $r = $this->db->query($full_sql, $sql_val, 'read');
 
         if (!$r) {

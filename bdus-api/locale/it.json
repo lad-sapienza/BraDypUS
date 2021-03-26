@@ -25,7 +25,7 @@
     "missing_db_username": "Manca l'indicazione del nome utente del database nel file di configurazione",
     "missing_db_password": "Manca l'indicazione della password dell'utente del database nel file di configurazione",
     "missing_sqlite_file": "Manca il file di database SQLite",
-    "db_generic_error": "Errore generico del database. Controlloare il log degli errori per maggiorni informazioni",
+    "db_generic_error": "Errore generico del database. Controllare il log degli errori per maggiorni informazioni",
     "send": "Invia",
     "email_present": "Errore. L'indirizzo %s è già presente nel database. Non è possibile proseguire",
     "email_not_valid": "Errore. L'indirizzo %s non sembra un indirizzo email valido. Non è possibile proseguire",

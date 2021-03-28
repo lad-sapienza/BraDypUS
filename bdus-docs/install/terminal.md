@@ -16,7 +16,7 @@ it is posibble to
 ## TL;DR
 
 ```bash
-git clone -b dev --single-branch https://github.com/bdus-db/BraDypUS.git && \
+git clone -b master --single-branch https://github.com/bdus-db/BraDypUS.git && \
 cd BraDypUS && \
 mkdir projects && \
 php -S localhost:8000

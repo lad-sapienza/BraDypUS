@@ -30,7 +30,74 @@ Yet, samples will not be available as a table on itsown. It will be only
 available as an appendix to `su`. This appencices tables are called
 **plugins** in Bradypus.
 
+<iframe width="100%" height="500" style="border:none" src='https://dbdiagram.io/embed/605201aaecb54e10c33be14a'> </iframe>
+
 ![screenshot](./../images/design/test-schema.svg "Visual schema") 
 *Test database schema to be built ([open SVG](./../images/design/test-schema.svg))*
 
 [Download test schema in Graphiz dot format](./test-schema.dot)
+
+```dbml
+Project bdus4Test {
+  Note: 'Test database for Bradypus v4'
+}
+Table test__sites {
+  id          int [pk, increment]
+  creator     text
+  name        text
+  chronology  text
+  capital     text
+  description text
+  lastmodified  text
+  editor      text
+}
+Table tests__su {
+  id          int [pk, increment]
+  creator     int
+  site        text
+  su          text
+  type        text
+  description text
+  note        text
+}
+
+
+Table tests__bibliography {
+  id          int [pk, increment]
+  creator     int
+  short       text
+  author      text
+  title       text
+  year        text
+  publishedin text
+}
+
+Table tests__m_citations {
+    id         int [pk, increment]
+    table_link text
+    id_link    text
+    name       text
+    pages      text
+    notes      text
+}
+
+Table tests__m_samples {
+  id            int [pk, increment]
+  table_link    text
+  id_link       int
+  datetaken     text
+  analysis      text
+  reliability   text
+  resultsvalues text
+  notes         text
+  info          text
+}
+
+Ref: "test__sites"."id" < "tests__m_citations"."id_link"
+
+Ref: "tests__m_citations"."name" < "tests__bibliography"."id"
+
+Ref: "tests__su"."id" < "tests__m_citations"."id_link"
+
+Ref: "tests__su"."id" < "tests__m_samples"."id_link"
+```

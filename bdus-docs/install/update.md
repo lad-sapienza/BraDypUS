@@ -6,7 +6,7 @@ If you installed BraDypUS via **terminal**, updating is straightforward (change 
 
 ```bash
 cd /path/to/current/installation/BraDypUS && \
-git fetch origin dev && \
+git fetch origin master && \
 git reset --hard FETCH_HEAD && \
 git clean -df 
 ```

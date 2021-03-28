@@ -93,6 +93,14 @@
     - title: CRUD
       url: /usage/crud
 
+- title: System plugins
+  url: /system-plugins/
+  sub:
+    - title: Geodata & GeoFace
+      url: /system-plugins/geodata
+    - title: Stratigraphical relationship
+      url: /system-plugins/rs
+
 - title: API
   url: /api/
   sub:

@@ -17,15 +17,15 @@ Fill in your email address before submitting
 Fill in your password before submitting
 - **DB engine is required**  
 Select a database engine before submitting
-- **DB host is required for database engine mysql|pgsql**  
+- **DB host is required for database engine mysql or pgsql**  
 Fill in the database host for mysql or pgsql before submitting
-- **DB port is required for database engine mysql|pgsql**  
+- **DB port is required for database engine mysql or pgsql**  
 Fill in the database port for mysql or pgsql before submitting
-- **DB name is required for database engine mysql|pgsql**  
+- **DB name is required for database engine mysql or pgsql**  
 Fill in the database name for mysql or pgsql before submitting
-- **DB username is required for database engine mysql|pgsql**  
+- **DB username is required for database engine mysql or pgsql**  
 Fill in the database username for mysql or pgsql before submitting
-- **DB password is required for database engine mysql|pgsql**  
+- **DB password is required for database engine mysql or pgsql**  
 Fill in the database password for mysql or pgsql before submitting
 - **Cannot create directory projects/test/dir-name**  
 Probably there is a file permission issue and the web server is not permitted to create new directories. 

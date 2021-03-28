@@ -10,9 +10,14 @@ management, and develoment of BraDypUS, a web-based relational database managing
 In this guide **BDUS** is used as a short form of **BraDypUS**; the terms are equivalent.
 
 ### Version
-The guide is dedicated to the still immature version **4.0.0**, which is a major an almost total
-rescript of the whole application with few, but remarkable, new features.
+The guide is dedicated version **4.0.0**, which is a major an almost total
+rewrite of the whole application with few, but remarkable, new features.
 Read the [migration guide](/migration-from-v3) for more information.
+
+{: .callout-block .callout-block-warning }
+Pay attention: version 3.x has been deprecated and applications will 
+gradually be migrated. New installs of v3 are **highly discouraged**.
+
 
 ### Target users
 The guide is written both for expert users, who are very confortable with web technologies

@@ -10,9 +10,6 @@ Roadmap towards v 4.0.0
     [] Remake advanced search
 
 BUG
-[] $this->log non è disponibile in DB
-    es.: http://db.localhost/api/v2/sitarc/?verb=getUniqueVal&tb=sites&fld=tipologia_rinvenimento&debug=1
-
 [] remove constants in libs
     [] remove CACHE in Template
 

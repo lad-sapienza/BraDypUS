@@ -3,30 +3,26 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [4.0.0]
+## [4.0.0] - 2020-03-26
 ### Added
-- Added support for subQuery in Field
-- Added support for subqueries and IN operator in ShortSQL
-- Manage::getById manages empty query results
-- Explicit ON structure for JOINS, supporting brackes
-- Introduced Controller::getCacheSettings()
-- Added Italian language for datatables
-- Image thumbnails are created and cashed
-- New asset management
-- Gulp is used for js and css
+- Almost complete refactoring of PHP scripts
+- Added support for MySQL and PostgreSQL
+- Added full support for application craetion and full management via GUI
+- Added support for ShortSQL in API
+- Added Changelog
+- Add application validation and error fix
+- Added Gulp.js for js and css minification
 - Added @fancyapps/fancybox
 - Added method Controller::response replacing utils::response
-- Added utility method utils::debug
-- Validation checks for backup executables using which
-- Added api.confirmSuperAdmPwd
 - Added depencency spatie/db-dumper
-- Added Inspect::getAllTables
-- Validate application also fixes errors
+- New error handling using Monolog
+- Composer is used for php dependencies
+- Security check before accessing system configuration
+
 
 ### Changed
 - Deprecated symm/gisconverter replaced by phayes/geophp
 - Read::getBackLinks and Read::getLinks return ShortSQL in where key
-- ShortSql symbol for JOIN changed from + to ]
 - cache and cache/img are required directories
 - Changed parameter order in QueryObject::setField. Tb is now last parameter
 - Missing JS file throw error 404 in .htaccess
@@ -78,11 +74,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Vocabulary definition renamed to item
 - utils::dirContent ignores .git
 - New login UI
-
-### Deprecated
-- Deprecated API v.1
+- utils::is_online does not depend on bradypus.net domain
+- Explicitly set class form-control on inputs
+- Boostrap 3.3.5 updated latest v3 branch 3.4.1
+- JS depencencies as node dev dependencies
+- Updated jquery from 2.1.1 to 3.5.1
+- pnotify replaced by izitoast
+- Translation enhanced
+- Removed support for tr::sget replaced by tr::get with second optional argument
+- Removed support for tr::show and replaced with echo tr::get
+- ReadRecord renamed to \Record\Read
+- Controller has not direct access to GET / POST / REQUEST
+- Google Analytics id is now an application level option
+- Cleaner login ui
+- Application dies if project folders are not writtable
+- Cleaned GeoFace: load valid local layers automatically: no table settings
 
 ### Removed
+- Removed support for API version 1 and 2 and versioning
 - Removed in-app docs in favour of documentation site (docs.bdus.cloud)
 - Removed usage of APP constant outside index.php and constants.php
 - Removed usage of DIRECTORY_SEPARATOR
@@ -105,234 +114,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Disabled backup restore for pgsql
 - Removed BackupMySQL
 - Removed support for User class
-
-### Fixed
-- Bug fix: MenuValues uses explicit count function
-- Bug fix: Log not being set in DB object on debug environment
-- Bug fix: ShortSql 0 values are not interpreted as false
-- Added missing form-controll class to Send email module template
-- Bug fixed: SQL brackets were not set correctly
-- Bug fixed: values of IN operator in shortsql are not binded nor enclosed in single quotes
-- Fixed bug with Record/Read not loading full plugin records
-- Fixed bug with debug variable in api2
-- Fixed bug with missing slash in system tmp dir
-- Fixed bug with setting debug
-- Fixed Record\Read issue with files table
-- Fixed bug with counting undefined
-- Fixed bug with implode misused
-- Fixed bug with implode misused
-- Fixed bug str_replacing with null
-- Fixed issue with add new manual link
-- Fixed issue with Date element non showing value
-- Fixed issue with config links get table columna
-- Fixed issue geodata query
-- Fixed issue with plugin fields not being set as such
-- Bug fixed with RS and multiple edits
-- Bug fixed with RS and multiple edits
-- Bug fixed with Template element Date
-- Fixed issue with textarea value not being set
-- Fixed Lower/Upper case issue in user.php
-- Fixed bug with create plugin tables
-- Fixed backup file names
-- Fixed bug with user manager
-- Fixed bug on home with undefined cfg trying to get google analytics id
-- Fixed bug vocabularies module
-- Fixed bug with tr namespace in DB\DB
-- Fixed missing metadata on app creation
+- Removed support for bootstrap-datepicker for HTML5 input date
+- Removed support for bootstrap-slider for HTML5 input range
+- Removed unnecessary usage of query PDO::FETCH_NUM
+- Removed support for download Harris Matrix
+- Dropped support for FTP sync
+- Removed support for most recent query
+- Removed support for GET/POST/REQUEST access in modules
+- Removed support for .html templates. Only .twig extension is supported
+- Removed backtick syntax from SQL
+- Dropped support for Vocabulary class
+- Dropped support for Database import
+- Removed support for Meta class
+- Removed support for myException
+- Removed system constants from DB_connection
+- Dropped support for controllers not extending Controller
+- Removed supporto for Pelagios Imperium (not available anymore) and updated DARE Imperium Url
 
 ### Security
 - Conditional logging in DB
 - Secured API access
 
-
-- Disabled functions in home on fresh app
-- Fixed bug with CreateApp
-- Bug fixed in API2\Search
-- Removed unused file select3 v3.2
-- Removed support for bootstrap-datepicker for HTML5 input date
-- Removed support for bootstrap-slider for HTML5 input range
-- utils::is_online does not depend on bradypus.net domain
-- Class tr is initialized once
-- New asset compression
-- Added DB::hasSpatialExtension()
-- Explicitly set class form-control on inputs
-- Boostrap 3.3.5 updated latest v3 branch 3.4.1
-- Splitted asset inclusion from asset minification
-- JS depencencies as node dev dependencies
-- Updated jquery from 2.1.1 to 3.5.1
-- pnotify replaced by izitoast
-- Class DB namespaced and custom DBException added
-- Fixed bug with ANSI SQL strict GROUP usage (not problematic with SQLite)
-- Removed unnecessary usage of query PDO::FETCH_NUM
-- Better login management
-- Error log entirely managed by \DB\LogDBHandler
-- Replace term in Search & Replace can be empty
-- Refactored QueryBuilder, ShortSQL, with optional validation
-- Dropped support cfg::fldEl, cfg::getPlg, cfg::getNonPlg
-- Dropped support for cfg in \API2\getUniqueVal
-- Dropped support for cfg in \API2\getUniqueVal
-- Added \DB\DB\DBInterface::logError
-- Dropped support for cfg in \API2\Inspect
-- Dropped support for \Record
-- Dropped support for QueryFromRequest
-- Dropped support for ParseTmpl
-- ParseTmpl and Field use \Config\Config
-- \Record\Read does not use anymore cfg
-- \DB\Validate\Info does not use anymore cfg
-- ImportGeodata does not use anymore cfg
-- Export does not use anymore cfg
-- \DB\Validate uses Config\Config
-- \Config\Config replaces Cfg in modules, part 2
-- Renamed and moved Interfaces
-- QueryBuilder namespaced
-- SafeQuery namespaced
-- Query renamed to QueryFromRequest and namespaced
-- Added \Config\Config
-- Dropped support for application error.log; on debug no database log will be written
-- Dropped use of q_encoded everywhere except api v1
-- Dropped use of q_encoded in records_ctrl, replaced by obj_encoded
-- Dropped support for Matrix class
-- Cleaned .gitignore
-- Dropped support for Vocabulary class
-- Config module does not use Vocabularies class
-- Api v2 does not use Vocabularies class
-- Charts uses DB System Manager
-- Saved queries uses DB System Manager
-- PREFIX contstant replaced by $this->prefix in controllers
-- Removed support for AppAgnosticDB
-- Bug fixing
-- Added new function: create application
-- Force logout is now brutal & prefix is available in Controller
-- Fixed warning in cfg
-- Dropped support for myException
-- Dropped use of Meta in myException
-- Dropped use of Meta in myHistory
-- Log activity is registered outside User object (nomore Meta dependency)
-- Dropped support for Meta::addVersion
-- DB uses Monolog
-- Log added to system tables
-- Debug does not depend on Meta
-- Better error handling in index and BDUS\App
-- cfg uses Exceptions instead of myExceprions
-- Removed system constants from DB_connection
-- Removed system constants from autoLoader
-- Cleaner login ui
-- Strict typing in DB class
-- Updated links
-- \DB\DB\DBInterface is injected to pref
-- Removed deprecated MaekProject
-- Dropped support for DB::start
-- \DB\DB\DBInterface is injected to \ShortSql\ToJson
-- Database class dependency is set to \DB\DB\DBInterface instead of \DB
-- toGeoJson::fromMultiArray replaced by utils::multiArray2GeoJSON
-- \Record\Read is not static and expects database dependency
-- JSMin replaced by tedivm/jshrink
-- Enhanced use of central logger
-- Removed unused class BigDump
-- Cleaned index
-- Dropped support for controllers not extending Controller
-- Limited use of DB initialization, use of Monolog
-- Updated twig, installed monolog
-- Added application validation
-- Rename field
-- Rename table
-- Security check before accessing system configuration
-- Add and remove column (config and db) from GUI
-- Added alert on table delete
-- Added centralized class to manage creation and amangement of system tables
-- Add and remove table (config and db) from GUI
-- Removed param[] arguments from module vocabularies
-- Removed param[] arguments from module front_page
-- Removed param[] arguments from module charts
-- Removed param[] arguments from module backup
-- Removed param[] arguments from module free_sql
-- Removed param[] arguments from module userlinks
-- Removed param[] arguments from module MyTmpl
-- Added utility method core.runAndRespond
-- RS uses template
-- Application dies if project folders are not writtable
-- Fixed bug with record::deleteRS
-- Removed param[] arguments from module RS
-- Removed param[] arguments from module saved_queries
-- Removed param[] arguments from user module
-- Removed param[] arguments from import_geodata
-- Dropped support for Database import
-- refactored utils::write_in_file and fixed bug with compiled config.js
-- Traslated config module
-- Refactored translation system, using json
-- Fixed bug with vocabularies launcher in home
-- cfg::load returns silenty false if app_data cannot be determined
-- Cleaned GeoFace: load valid local layers automatically: no table settings
-- Cleaned translations
-- Removed supporto for Pelagios Imperium (not available anymore) and updated DARE Imperium Url
-- config replaces single app configuration modules
-- Dropped support for app_cfg dot_path
-- Added DB::execInTransaction
-- Added \Bdus\App::route that replaces Controller::route
-- Removing param[] in object calls
-- Refactored meta::addVersion accessible and explicity called via db::backupBeforeEdit
-- Fixed LIMIT/OFFSET compatibility issue with pgsql
-- Fixed charset setting compatibility issue with pgsql
-- Fixed where 1 compatibility issue with pgsql
-- Removed unused methods from DB
-- Google Analytics id is now an application level option
-- Removed backtick syntax from SQL
-- \Record::Read::getFiles uses JOIN and solves sorting issue
-- Added methos Controller::compileTmpl
-- Controller checks if method exist, before running
-- Controller has not direct access to GET / POST / REQUEST
-- Removed support for .html templates. Only .twig extension is supported
-- Controller->json renamed to Controller->returnJson
-- Debug option can only be passed as GET paramater (not also as POST)
-- Removed support for GET/POST/REQUEST access in modules
-- Simplified Controller code
-- Removed support for force_array query parameter
-- Added missing edit_tbs_data in home
-- Cleaned Matrix
-- Added support for IS NULL and IS NOT NULL in ShortSQL
-- Removed support for most recent query
-- Home_ctrl uses constant APP instead of $_SESSION['app']
-- Inline docs and better error control for tr
-- DB uses constant APP instead of $_SESSION['app']
-- Refactored constants
-- Inline docs and better error handling for cfg
-- Fixed bug with Query builder (join => joins)
-- ReadRecord renamed to \Record\Read
-- Better error reporting
-- JSON tr loaded on bootstrap
-- Removed support for PROJS_DIR
-- Debug issue solved, Api uses system debug
-- Inspect becomes a system library
-- API2 getCharts uses Chart object
-- utils::compressModScripts renamed to Compress::modScripts
-- Better error management with chart module
-- Table options are statically loaded
-- Hash Actions moved to separate file
-- Fixed bug with DEBUG_ON setting
-- home renamed to home_ctrl
-- Cleaner debugging
-- Compress refactored
-- Home is a module
-- Removed support for controller.php and for module request
-- ShortSql refactored
-- Re-organised and versioned API docs
-- Cleaner api2 trace and debug controlled
-- Added support for namespaced libraries in lib folder
-- User class minor bug fixes
-- Removed support for tr::sget replaced by tr::get with second optional argument
-- Removed support for tr::show and replaced with echo tr::get
-- Translation enhanced
-- Rewrite of DB_connection
-- BackupMySQL disables versioning
-- Versioning can be turned off and on in DB
-- MySQL compatibility issues fixed
-- Dropped support for FTP sync
-- symm/gisconverter updated, via composer
-- wikimedia/less.php updated, via composer
-- Intervention image updated, via composer
-- Added support for composer and Twig is loaded by composer
-- Record page uses layout.tabs.reloadActive when possible
-- Removed support for download Harris Matrix
 
 ## 3.15.17 - 2021-01-07
 - Fixed bug with Vocabulary manager

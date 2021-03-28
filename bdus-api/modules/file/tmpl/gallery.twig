@@ -5,18 +5,18 @@
  #}
 
 <h3>{{ title }}</h3>
-<ul class="gallery{% if can_edit %} sortable{% endif %} thumbnails">
+<ul class="gallery{% if can_edit %} sortable{% endif %} thumbnails file_thumbnails">
 	{% for file in all_files %}
 
 	<li data-id="{{ file.linkid }}">
-		{{ images.getThumbHtml(file)|raw }}
+		{{ images.getThumbHtml(file, path ~ '/')|raw }}
 		<div style="position: relative;">
 			<div class="opts btn-group" style="display: none; position:absolute; top:-40px;">
-				<button class="btn btn-default btn-sm read" data-table="{{ prefix }}files" data-id="{{ file.id }}"><i class="glyphicon glyphicon-eye-open"></i></button>
+				<button class="btn btn-default btn-sm read" data-table="{{ prefix }}files" data-id="{{ file.id }}"><i class="fa fa-eye"></i></button>
 				{% if can_edit %}
-				<button class="btn btn-default btn-sm edit" data-table="{{ prefix }}files" data-id="{{ file.id }}"><i class="glyphicon glyphicon-pencil"></i></button>
+				<button class="btn btn-default btn-sm edit" data-table="{{ prefix }}files" data-id="{{ file.id }}"><i class="fa fa-pencil"></i></button>
 				{% endif %}
-				<button class="btn btn-default btn-sm download" data-path="{{ path }}{{ file.id }}.{{ file.ext}}"><i class="glyphicon glyphicon-download-alt"></i></button>
+				<button class="btn btn-default btn-sm download" data-path="{{ path }}{{ file.id }}.{{ file.ext}}"><i class="fa fa-download"></i></button>
 			</div>
 		</div>
 	</li>
@@ -49,20 +49,14 @@ $('ul.gallery li').hover(
 			}
 	);
 
-var ulSort = $('ul.sortable').sortable({
-	nested: false,
-	onDrop: function(item, container, _super){
-		console.log('fired OnDrop');
-		var string = ulSort.sortable('serialize').get();
-		core.getJSON('file_ctrl', 'sort', false, {'filegallery': string}, function(data){
-			core.message(data.text, data.status);
-		}, 'json');
 
-		_super(item, container);
-	},
-	serialize: function (parent, children, isContainer) {
-		return isContainer ? children : parent.data('id');
-	},
+new Sortable(document.getElementsByClassName('sortable')[0], {
+	animation: 150,
+	ghostClass: 'active',
+	onEnd: function (evt) {
+		const sortArray = this.toArray();
+		core.runAndRespond('file_ctrl', 'sort', { filegallery: sortArray });
+	}
 });
 
 </script>

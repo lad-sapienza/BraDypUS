@@ -10,7 +10,7 @@
 	
 	
 	<div class="tb">
-		<select name="tb" class="tb">
+		<select name="tb" class="tb form-control">
 			<option></option>
 			{% for id, name in tbs %}
 				<option value="{{ id }}">{{ name }}</option>
@@ -21,7 +21,7 @@
 	<div class="fld" style="padding: 20px 0; display: none;">
 		{{ tr.get('select_fld_search') }}
 		<br />
-		<select class="fld">
+		<select class="fld form-control">
 			
 		</select>
 	</div>
@@ -30,18 +30,18 @@
 	<div style="padding: 20px 0; display:none;" class="val">
 			{{ tr.get('search_term') }}
 			<br />
-			<input class="search" type="text" />
+			<input class="search form-control" type="text" />
 			<br /><br />
 			{{ tr.get('replace_term') }}
 			<br />
-			<input class="replace" type="text" />
+			<input class="replace form-control" type="text" />
 	</div>
 
 </div>
 
 <script>
 	$('#{{ uid }} select.tb').on('change', function(){
-		if ($(this).val() != ''){
+		if ($(this).val() !== ''){
 			search_replace.setFld('{{ uid }}', $(this).val());
 		}else{
 			$('#{{ uid }} div.fld').hide();

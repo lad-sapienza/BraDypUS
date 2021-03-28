@@ -1,10 +1,13 @@
 <?php
 /**
- * @author			Julian Bogdani <jbogdani@gmail.com>
- * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
- * @license			See file LICENSE distributed with this code
+ * @copyright 2007-2021 Julian Bogdani
+ * @license AGPL-3.0; see LICENSE
  * @since			Jan 8, 2013
  */
+
+use \DB\System\Manage;
+use \Intervention\Image\ImageManager;
+use \Template\Parts\Images;
 
 class file_ctrl extends Controller
 {
@@ -25,66 +28,54 @@ class file_ctrl extends Controller
 	 */
 	public function uploadLink()
 	{
-		try
-		{
-			if (
-					!$this->request['dest_table'] ||
-					!$this->request['dest_id']
-					)
-			{
-				throw new myException('file_data_missing');
+		try {
+			if ( !$this->request['dest_table'] || !$this->request['dest_id'] ) {
+				throw new \Exception('file_data_missing');
 			}
 
 			$this->request['dont_echo'] = true;
 
 			$result = $this->upload();
 
-			if (!$result['success'])
-			{
-				throw new myException('error_uploading_file');
+			if (!$result['success']) {
+				$this->log->error($result['error']);
+				throw new \Exception('error_uploading_file');
 			}
 
-			$record = new Record(PREFIX . 'files', false, new DB());
+			$record = new Record($this->prefix . 'files', false, $this->db, $this->cfg);
 
-			$record->setCore(
-					array(
-							PREFIX . 'files' => array(
-									'ext' => $result['ext'],
-									'filename' => $result['filename']
-									)
-							)
-					);
+			$record->setCore([
+				$this->prefix . 'files' => [
+					'ext' => $result['ext'],
+					'filename' => $result['filename']
+				]
+			]);
 			$pers = $record->persist();
 
-			if (!$pers)
-			{
-				throw new myException('error_saving_file');
+			if (!$pers) {
+				throw new \Exception('error_saving_file');
 			}
 
 			$link = $record->addUserLink($this->request['dest_table'], $this->request['dest_id']);
 
-			if (!$link)
-			{
+			if (!$link) {
 				$record->delete();
-				throw new myException('error_adding_link');
+				throw new \Exception('error_adding_link');
 			}
 
 			$result['status'] = 'success';
-			$result['text'] = tr::get('file_uploaded_and_attached');
+			$result['text'] = \tr::get('file_uploaded_and_attached');
+			$result['thumbnail'] = Images::getThumbHtml( ['id' => $record->getCore('id'), 'ext' => $record->getCore('ext') ], 'projects/' . $this->cfg->get('main.name') . '/files/');
 
 			echo json_encode($result);
 
-		}
-		catch (myException $e)
-		{
-			$e->log();
+		} catch (\Throwable $e) {
+			$this->log->error($e);
 
-			echo json_encode(
-					array(
-							'status'=>'error',
-							'text' => tr::get($e->getMessage())
-							)
-					);
+			echo json_encode([
+				'status'=>'error',
+				'text' => \tr::get($e->getMessage())
+			]);
 		}
 	}
 
@@ -96,14 +87,14 @@ class file_ctrl extends Controller
 	 */
 	public function upload()
 	{
-		$upload_dir = $this->request['upload_dir'] ?: PROJ_TMP_DIR;
+		$upload_dir = $this->request['upload_dir'] ?: sys_get_temp_dir() . '/';
 
 		$uploader = new qqFileUploader();
 
 		$result = $uploader->handleUpload($upload_dir);
 
-		if ($result['success'])
-		{
+
+		if ($result['success']) {
 
 			$result['filename'] = pathinfo($uploader->getUploadName(), PATHINFO_FILENAME);
 
@@ -111,23 +102,39 @@ class file_ctrl extends Controller
 
 			$result['uploadDir'] = $upload_dir;
 
-			$result['thumbnail'] = images::getThumbHtml(array('id' => $result['filename'], 'ext' => $result['ext']), $upload_dir);
+			$result['thumbnail'] = Images::getThumbHtml( ['id' => $result['filename'], 'ext' => $result['ext'] ], $upload_dir);
 
-			$maxImageSize = cfg::main('maxImageSize') ? cfg::main('maxImageSize') : 1500;
+			$maxImageSize = $this->cfg->get('main.maxImageSize') ?: 1500;
 
-			images::resizeIfImg($result['uploadDir'] . $result['filename'] . '.' . $result['ext'], $maxImageSize);
+			$this->silentlyResize($result['uploadDir'] . $result['filename'] . '.' . $result['ext'], $maxImageSize);
 
 		}
 
-		if ($this->request['dont_echo'])
-		{
+		if ($this->request['dont_echo']) {
 			return $result;
-		}
-		else
-		{
+		} else {
 			echo json_encode($result);
 		}
 	}
+
+	private function silentlyResize($file, $maxImageSize)
+    {
+        // Silently return true if file does not exist
+        if (!file_exists($file)) {
+            return true;
+        }
+        // Silently return true if file is not an image
+        if (substr( strtolower(mime_content_type($file)), 0, 5 ) !== "image"){
+            return true;
+        }
+        
+        $im = new ImageManager();
+        $img = $im->make($file)->resize($maxImageSize, $maxImageSize, function ($constraint) {
+            $constraint->aspectRatio();
+            $constraint->upsize();
+        })->save()->destroy();
+        return true;
+    }
 
 
 	/**
@@ -136,42 +143,26 @@ class file_ctrl extends Controller
 	 */
 	public function sort()
 	{
-		$data = $this->post;
+		$data = $this->get['filegallery'];
+		$error = false;
 
-		if (is_array($data['filegallery']))
-		{
-			foreach($data['filegallery'] as $sort => $id)
-			{
-				$sql[] = 'UPDATE `' . PREFIX .'userlinks` SET `sort` = ' . $sort . ' WHERE `id` = ' . $id;
-			}
-
-			$db = new DB();
-
-			$db->beginTransaction();
-
-			try
-			{
-				foreach ($sql as $s)
-				{
-					$db->query($s);
+		if (is_array($data)) {
+			$manager = new Manage($this->db, $this->prefix);
+			foreach($data as $sort => $id) {
+				$res = $manager->editRow('userlinks', $id, ['sort' => $sort]);
+				if (!$res){
+					$error = true;
 				}
-
-				$db->commit();
-
-				$resp = array('status' => 'success', 'text'=> tr::get('ok_file_sorting_update'));
 			}
-			catch (myException $e)
-			{
-				$db->rollBack();
-				$resp = array('status' => 'error', 'text'=> tr::get('error_file_sorting_update'));
+			if ($error){
+				$this->response('error_file_sorting_update', 'error');
+			} else {
+				$this->response('ok_file_sorting_update', 'success');
 			}
+			
+		} else {
+			$this->response('error_file_sorting_update', 'error');
 		}
-		else
-		{
-			$resp = array('status' => 'error', 'text'=> tr::get('error_file_sorting_update'));
-		}
-
-		echo json_encode($resp);
 	}
 
 	/**
@@ -181,15 +172,15 @@ class file_ctrl extends Controller
 	 */
 	public function gallery()
 	{
-		$record = new Record($this->request['tb'], $this->request['id'], new DB);
+		$record = new Record($this->request['tb'], $this->request['id'], $this->db, $this->cfg);
 
-		$this->render('file', 'gallery', array(
-				'title' => tr::sget('file_gallery', cfg::tbEl($this->request['tb'], 'label') . ', id. ' . $this->request['id']),
-				'can_edit' => utils::canUser('edit'),
-				'all_files' => $record->getFullFiles(),
-				'images' => new images(),
-				'prefix' => PREFIX,
-				'path' => PROJ_DIR . 'files'
-		));
+		$this->render('file', 'gallery', [
+			'title' => \tr::get('file_gallery', [$this->cfg->get("tables.{$this->request['tb']}.label") . ', id. ' . $this->request['id']]),
+			'can_edit' => \utils::canUser('edit'),
+			'all_files' => $record->getFullFiles(),
+			'images' => new Images(),
+			'prefix' => $this->prefix,
+			'path' => PROJ_DIR . 'files'
+		]);
 	}
 }

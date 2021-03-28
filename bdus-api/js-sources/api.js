@@ -7,9 +7,13 @@
  */
 var api = {
     requireRestart: function(message){
-      var html =  (message ? '<h3>' + message + '</h3>' : '') +
-          '<p class="lead text-warning"><i class="glyphicon glyphicon-warning-sign"></i> ' +
-          '<strong>' + core.tr('attention') + '</strong><br />' + core.tr('reload_sys_required') + '</p>';
+      const html =  `${ message ? `<h3>${ message }</h3>` : ''}
+      <p class="lead text-warning">
+        <i class="fa fa-exclamation-triangle"></i>
+        <strong>${core.tr('attention')}</strong>
+        <br />
+        ${core.tr('reload_sys_required')}
+      </p>`;
 
       core.open({
         html: html,
@@ -17,7 +21,7 @@ var api = {
         buttons:[
             {
                text: core.tr('restart'),
-               click: function(){
+               click: () => {
                  api.reloadApp();
                }
             },
@@ -28,6 +32,48 @@ var api = {
             ]
       }, 'modal');
 
+    },
+
+    confirmSuperAdmPwd: function(success) {
+      core.open({
+        title: core.tr('cfg_security_check'),
+        html: `<p class="lead text-danger">${core.tr('cfg_security_check_text')}</p>
+        <hr>
+        <form action="javascript:void(0)">
+          <input type="password" class="adm_pwd form-control" placeholder="password">
+          <button type="submit" style="display: none"></button>
+        </form>`,
+        loaded: () => {
+          setTimeout( () => { 
+            $('#modal input.adm_pwd').trigger('focus');
+          }, 500 );
+          $('#modal form').on('submit', ()=>{
+            const pwd = $('#modal .adm_pwd').val();
+              core.getJSON('confirm_super_adm_pwd_ctrl', 'check_pwd', false, {pwd: pwd}, data =>{
+                core.message(data.text, data.status)
+                if (data.status === 'success'){
+                  $('#modal').modal('hide');
+                  if (typeof success === 'function'){
+                    success();
+                  }
+                }
+              });
+          });
+        },
+        buttons: [
+          {
+            text: core.tr('close'),
+            action: 'close'
+          },
+          {
+            addclass: 'btn-danger',
+            text: core.tr('validate_password'),
+            click: () => {
+              $('#modal form').trigger('submit');
+            }
+          }
+        ]
+      }, 'modal');
     },
 
     reloadApp: function(clean){
@@ -43,7 +89,7 @@ var api = {
      */
     logOut: function(){
       core.open({
-        html: '<p class="text-warning"><i class="glyphicon glyphicon-exclamation-sign"></i> ' + core.tr('logout_confirm_body') + '</p>',
+        html: '<p class="text-warning"><i class="fa fa-exclamation-triangle"></i> ' + core.tr('logout_confirm_body') + '</p>',
         title: core.tr('logout_confirm_title'),
         buttons: [
                 {
@@ -54,7 +100,7 @@ var api = {
                   text: core.tr('close_application'),
                   addclass: 'btn-primary',
                   click: function() {
-                    $.get('controller.php?obj=login_ctrl&method=out', function(data){
+                    $.get('./?obj=login_ctrl&method=out', function(data){
                       window.location = './';
                     });
                   }
@@ -96,12 +142,12 @@ var api = {
        * @param istring query    sql query
        * @returns {undefined}
        */
-      showMatrix: function(tb, query){
+      showMatrix: function(tb, obj_encoded){
         core.open({
           title: core.tr('harris_matrix'),
           obj: 'matrix_ctrl',
           method: 'show',
-          param: {tb: tb, query: query},
+          param: {tb: tb, obj_encoded: obj_encoded},
         });
       },
 
@@ -163,7 +209,7 @@ var api = {
          */
       erase: function (tb, id_arr, table_results){
         if ( confirm ( core.tr('confirm_delete') ) ) {
-          $.get('./controller.php?obj=record_ctrl&method=erase&' + this.formatId(id_arr) + '&tb=' + tb, function(data){
+          $.get('./?obj=record_ctrl&method=erase&' + this.formatId(id_arr) + '&tb=' + tb, function(data){
             core.message(data.text, data.status);
             if (table_results){
               table_results.fnDraw();
@@ -285,8 +331,8 @@ var api = {
       }, 'modal');
     },
 
-    Export: function(query_text, tb){
-      var html = '<select class="export_format input-lg">' +
+    Export: function(obj_encoded, tb){
+      var html = '<select class="form-control export_format input-lg">' +
         '<option value="JSON">JSON</option>' +
         '<option value="XLS">XLS</option>' +
         '<option value="SQL">SQL (INSERT)</option>' +
@@ -303,7 +349,7 @@ var api = {
                     text: core.tr('continue'),
                     click: function(div){
                       layout.dialog.close(div);
-                      $.post('controller.php?obj=myExport_ctrl&method=doExport&param[]=' + tb + '&param[]=' + $(div).find('select.export_format').val() + '&param[]=' + query_text, function(data){
+                      $.post('./?obj=myExport_ctrl&method=doExport&tb=' + tb + '&format=' + $(div).find('select.export_format').val() + '&obj_encoded=' + obj_encoded, function(data){
 
                         core.message(data.text, data.status);
 
@@ -324,6 +370,7 @@ var api = {
 
       var input =  $('<input />')
         .attr('type', 'text')
+        .addClass('form-control')
         .val('query_' + new Date().getTime())
         .css('width', '90%');
 
@@ -338,13 +385,14 @@ var api = {
                        core.message(core.tr('query_name_is_required'), 'error');
                        input.focus();
                      } else {
-                       $.post(
-                           'controller.php?obj=saved_queries_ctrl&method=actions&param[]=save&param[]=' + tb + '&param[]=' + input.val() + '&param[]=' + query_text,
-                           function(data){
-                             core.message(data.text, data.status);
-                           },
-                           'json'
-                           );
+                       core.getJSON(
+                         'saved_queries_ctrl', 
+                         'saveQuery', 
+                         'tb=' + tb + '&name=' + input.val(),
+                         {"query_object": query_text},
+                         function(data){
+                           core.message(data.text, data.status);
+                         });
                        layout.dialog.close(dia);
                      }
                    }
@@ -390,10 +438,10 @@ var api = {
       var div = $('<div />').append(
           $('<div />').addClass('btn-group'),
           $('<div />').addClass('fl_content'),
-          $('<input />').addClass('curr_tb').attr('type', 'hidden')
+          $('<input />').addClass('curr_tb').addClass('form-control').attr('type', 'hidden')
           );
 
-      $.get('controller.php?obj=userlinks_ctrl&method=get_all_tables',function(data){
+      $.get('./?obj=userlinks_ctrl&method=get_all_tables',function(data){
         if (data.status == 'success'){
 
           if (!def_tb){
@@ -402,7 +450,7 @@ var api = {
                 .html(label)
                 .addClass('btn btn-default')
                 .click(function(){
-                  div.find('.fl_content').load('controller.php?obj=record_ctrl&method=showResults&noDblClick=1&force_array=1&tb=' + tb + '&type=all&noOpts=1' + (select_one ? '&select_one=true' : ''));
+                  div.find('.fl_content').load('./?obj=record_ctrl&method=showResults&noDblClick=1&tb=' + tb + '&type=all&noOpts=1' + (select_one ? '&select_one=true' : ''));
                   div.find('input.curr_tb').val(tb);
                 })
                 .appendTo(div.find('.btn-group'));
@@ -410,7 +458,7 @@ var api = {
 
           } else {
             div.find('.fl_content')
-              .load('controller.php?obj=record_ctrl&method=showResults&force_array=1&tb=' + def_tb + '&type=all&noOpts=1' + (select_one ? '&select_one=true' : ''));
+              .load('./?obj=record_ctrl&method=showResults&tb=' + def_tb + '&type=all&noOpts=1' + (select_one ? '&select_one=true' : ''));
             div.find('input.curr_tb').val(def_tb);
           }
 
@@ -420,14 +468,13 @@ var api = {
                 title:core.tr('new_link'),
                 buttons: [
                           {
-                            text:'<i class="glyphicon glyphicon-resize-small"></i> ' + core.tr('save_links'),
+                            text:'<i class="fa fa-link"></i> ' + core.tr('save_links'),
                             click: function(){
-                              var $this = $(this),
-                                aTrs = $('#list_' + div.find('div.id-holder').data('id')).dataTable().fnGetNodes(),
+                              var aTrs = $('#list_' + div.find('div.id-holder').data('id')).dataTable().fnGetNodes(),
                                 id_arr = [],
                                 tb;
 
-                              for ( var i=0 ; i<aTrs.length ; i++ ){
+                              for ( var i=0 ; i < aTrs.length ; i++ ){
                                 if ( $(aTrs[i]).hasClass('row_selected') ){
                                   id_arr.push( $(aTrs[i]).attr('id') );
                                 }
@@ -477,7 +524,7 @@ var api = {
      * @returns {undefined}
      */
     delete_userlink: function(linkId, successFunction){
-      core.getJSON('userlinks_ctrl', 'delete', [linkId], false, function(data){
+      core.getJSON('userlinks_ctrl', 'deleteUserLink', { "id": linkId }, false, function(data){
         if (data.status == 'success' && successFunction){
           successFunction(data);
         }
@@ -491,12 +538,18 @@ var api = {
        * @returns {undefined}
        */
     show_userlinks: function(l_el){
-      var l_context = l_el.data('context'),
-        l_tb = l_el.data('tb'),
-        l_id = l_el.data('id');
+      var l_context = l_el.data('context');
+      var l_tb = l_el.data('tb');
+      var l_id = l_el.data('id');
 
-      l_el.html('')
-        .load('controller.php?obj=userlinks_ctrl&method=show&param[]=' + l_tb + '&param[]=' + l_id + '&param[]=' + l_context, function(){
+      l_el.html('');
+
+      core.getHTML('userlinks_ctrl', 'showUserLinks', {
+        "tb": l_tb,
+        "id": l_id,
+        "context": l_context
+      }, function(returned_html){
+        l_el.html(returned_html);
           //READ
           $(l_el).find('span.userlink_read').on('click', function(){
             api.record.read($(this).data('tb'), [$(this).data('id')]);
@@ -515,17 +568,17 @@ var api = {
 
           //RELOAD
           $(l_el).find('span.userlink_reload')
-            .click( function(){  api.link.show_userlinks(l_el);  });
+            .on('click',  () => {  api.link.show_userlinks(l_el);  });
 
           //ADD
           $(l_el).find('span.userlink_add')
-            .click(function(){
-              var thisid = $(this).data('id'),
-                thistb = $(this).data('table');
+            .on('click', (e) => {
+              var thisid = $(e.target).data('id')
+              var thistb = $(e.target).data('table');
 
               api.link.add_ui(function(tb, arr_id){
-                core.getJSON('userlinks_ctrl', 'link', false, {thistb:thistb, thisid:thisid, tb:tb, id:arr_id}, function(data){
-                  if (data.status == 'success'){
+                core.getJSON('userlinks_ctrl', 'addUserLink', { thistb: thistb, thisid: thisid, tb: tb, id: arr_id }, false, function(data){
+                  if (data.status === 'success'){
                     api.link.show_userlinks(l_el);
                   }
                   core.message(data.text, data.status);
@@ -562,15 +615,18 @@ var api = {
         },
         autoUpload: true,
         text: {
-          uploadButton: '<div><i class="glyphicon glyphicon-white glyphicon-upload"></i> ' + ( opts.button_text ? opts.button_text : core.tr('click_drag_to_upload') ) + '</div>',
+          uploadButton: '<div><i class="fa fa-upload"></i> ' + ( opts.button_text ? opts.button_text : core.tr('click_drag_to_upload') ) + '</div>',
           dragZone: core.tr('drop_to_upload')
         },
-        template: '<div class="qq-uploader">' +
-              '<pre class="qq-upload-drop-area"><span>{dragZoneText}</span></pre>' +
-              '<div class="qq-upload-button btn btn-success" style="width: auto;">{uploadButtonText}</div>' +
-              '<span class="qq-drop-processing"><span>{dropProcessingText}</span><span class="qq-drop-processing-spinner"></span></span>' +
-              '<ul class="qq-upload-list" style="margin-top: 10px; text-align: center;"></ul>' +
-            '</div>',
+        template: `<div class="qq-uploader">
+            <pre class="qq-upload-drop-area"><span>{dragZoneText}</span></pre>
+            <div class="qq-upload-button btn btn-success" style="width: auto;">{uploadButtonText}</div>
+              <span class="qq-drop-processing">
+                <span>{dropProcessingText}</span>
+                <span class="qq-drop-processing-spinner"></span>
+              </span>
+              <ul class="qq-upload-list" style="margin-top: 10px; text-align: center;"></ul>
+            </div>`,
         classes: {
           success: 'alert alert-success',
           fail: 'alert alert-error'
@@ -584,8 +640,6 @@ var api = {
     d.multiple = !opts.limit2one;
 
 
-
-
     el.fineUploader(d)
       .on('complete', function(event, id, name, responseJSON){
         if (opts.complete){
@@ -597,8 +651,5 @@ var api = {
           opts.error(id, name, reason);
         }
       });
-
-
-
   }
 };

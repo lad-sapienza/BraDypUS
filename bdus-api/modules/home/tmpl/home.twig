@@ -1,0 +1,96 @@
+<div class="visible-xs">
+	<div class="jumbotron">
+		<h2>{{ app }}</h2>
+		<p>{{ app_definition }}</p>
+	</div>
+</div>
+
+{% if is_frozen_text %}
+  <div class="bg-danger lead text-danger" style="padding: 10px;">
+    <i class="fa fa-info-circle"></i> {{ is_frozen_text }}
+  </div>
+{% endif %}
+
+<div class="row">
+	<div class="col-md-9">
+		<ul class="home clearfix">
+			<li>
+                <h2>{{ tr.get('data_mng') }}</h2>
+            </li>
+			<li class="tb">
+				<div class="clearfix">
+					<div class="pull-left">
+						<select id="ref_tb" class="form-control tb" style="font-size: 20px; height:38px; margin: 20px 0; width:250px;">
+						{% for tb_id, tb_label in all_tb %}
+                            <option value="{{ tb_id }}">{{ tb_label }}</option>
+                        {% endfor %}
+						</select>
+					</div>
+					<div class="pull-right">
+						<input class="form-control" type="search" id="find-fn" placeholder="{{ tr.get('search-fn') }}">
+					</div>
+				</div>
+			</li>
+
+			<li class="tb_opt">
+				<ul class="searcheable-list">
+				{% for i in tb_options %}
+					<li {% if i[2] %}onclick="{{ i[2] }}"{% else %}class="state-disabled"{% endif %}>
+						{% if i[0]%}<i class="fa {{ i[0] }}"></i><br />{% endif %}
+						{{ tr.get(i[1]) }}
+						{% if i[3]%}{{ i[3] }}{% endif %}
+					</li>
+				{% endfor %}
+				</ul>
+			</li>
+
+			<li>
+                <h2>{{ tr.get('options') }}</h2>
+				
+                <ul class="searcheable-list">
+
+                {% for i in option_list %}
+                    <li {% if i[2] %}onclick="{{ i[2] }}"{% else %}class="state-disabled"{% endif %}>
+                        {% if i[0]%}<i class="fa {{ i[0] }}"></i><br />{% endif %}
+                        {{ tr.get(i[1]) }}
+                    </li>
+                {% endfor %}
+				</ul>
+			</li>
+
+			<li>
+                <h2>{{ tr.get('other') }}</h2>
+				<ul class="searcheable-list">
+
+					<li onclick="window.open('https://bradypus.net');">
+						<i class="fa fa-globe"></i><br />
+						{{ tr.get('bdus_web') }}
+					</li>
+
+					<li onclick="core.runMod('info', 'copyright');">
+						<i class="fa fa-info-circle"></i><br />
+						{{ tr.get('info') }}
+					</li>
+
+					<li onclick="api.reloadApp(1);">
+						<i class="fa fa-refresh"></i><br />
+						{{ tr.get('restart') }}
+					</li>
+					<li onclick="api.logOut();">
+						<i class="fa fa-power-off"></i><br />
+						{{ tr.get('close_application') }}
+					</li>
+				</ul>
+			</li>
+		</ul>
+	</div>
+
+	<div class="col-md-3 hidden-xs" style="padding:10px; text-align:right;">
+		{{ welcome }}
+
+		<hr style="margin-top: 50px;" />
+		This database is powered by <br />
+		<a href="https://bradypus.net" title="bradypus.net" target="_blank">
+		<span style="font-size:1.5em">BraDypUS</span> <br />COMMUNICATING CULTURAL HERITAGE</a><br />
+	</div>
+</div>

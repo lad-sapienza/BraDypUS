@@ -1,0 +1,60 @@
+{#
+ * @author			Julian Bogdani <jbogdani@gmail.com>
+ * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
+ * @license			See file LICENSE distributed with this code
+ #}
+
+<fieldset id="flds{{ uid }}">
+	
+	<legend>{{ tr.get('bar') }}</legend>
+	
+	<div>
+		<label>{{ tr.get('label') }}</label>
+		<input class="form-control" type="text" name="bar_name[{{ uid }}]" />
+	</div>
+	
+	<div class="row_to_clone" style="padding:10px 0 0 0;">
+		<label class="control-label">{{ tr.get('field') }}</label>
+		<select name="bar_fld[{{ uid }}][row0]" class="bar_el form-control">
+			{% for id, label in flds %}
+				<option value="{{ id }}">{{ label }}</option>
+			{% endfor %}
+		</select>
+	</div>
+	
+	<div class="row_container"></div>
+	
+	<button class="add_row btn btn-default" type="button"><i class="fa fa-plus"></i> {{ tr.get('add') }}</button>
+
+	<p><label class="control-label">{{ tr.get('define_function') }}</label></p>
+	
+	<select name="bar_function[{{ uid }}]" class="form-control">
+		<option value="SUM">{{ tr.get('sum') }}</option>
+		<option value="COUNT">{{ tr.get('count') }}</option>
+	</select>
+	
+	{% if remove %}
+	<hr />
+	<button type="button" class="removeTD btn btn-danger"><i class="fa fa-minus"></i> {{ tr.get('remove_bar') }}</button>
+	{% endif %}
+	
+	
+	
+</fieldset>
+
+<script>
+	$('button.removeTD').click(function(){
+		$(this).parents('div.added_bar').remove();
+	});
+	
+	$('#flds{{ uid }} button.add_row').click( function(){
+		utils.myClone( 
+				$(this).siblings('div.row_to_clone'),
+				{
+					where: $(this).siblings('div.row_container').first(),
+					baseName:'row'
+				});
+	});
+	
+	$('select.bar_el').select2({'width': '95%'});
+</script>

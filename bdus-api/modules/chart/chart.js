@@ -5,12 +5,12 @@
  */
 
 var chart = {
-		init: function(tb, query){
+		init: function(tb, obj_encoded){
 			
-			if (tb == 'showChart' && query){
-				chart.showChartById(query);
+			if (tb === 'showChart' && obj_encoded){
+				chart.showChartById(obj_encoded);
 			} else if (tb){
-				chart.showBuilder(tb, query);
+				chart.showBuilder(tb, obj_encoded);
 			} else {
 				chart.showSaved();
 			}
@@ -27,7 +27,7 @@ var chart = {
 		},
 		
 		editChart: function(id, name, text){
-			core.getJSON('chart_ctrl', 'update', false, {'id':id, 'name':name, 'text':text}, function(data){
+			core.getJSON('chart_ctrl', 'update_chart', false, {'id':id, 'name':name, 'text':text}, function(data){
 				core.message(data.text, data.status);
 			});
 		},
@@ -35,7 +35,7 @@ var chart = {
 		buildFromParams: function(form_data){
 			core.open({
 				 obj: 'chart_ctrl',
-				 method: 'processdata',
+				 method: 'process_chart_data',
 				 title: core.tr('chart'),
 				 post: form_data
 			 });
@@ -47,7 +47,7 @@ var chart = {
 		showSaved: function(){
 			core.open({
 				obj: 'chart_ctrl',
-				method: 'show_all',
+				method: 'show_all_charts',
 				title: core.tr('saved_charts')
 			});
 		},
@@ -65,20 +65,21 @@ var chart = {
 		
 		saveAs: function(query_text){
 			core.open({
-				html: $('<div />').append(
-						$('<label />').text(core.tr('chart_name')),
-						$('<br />'),
-						$('<input />').addClass('chart_name')
-						),
+				html: `<div>
+				<label>${core.tr('chart_name')}</label>
+				<br>
+				<input type="text" class="chart_name form-control">
+				</div>`
+				,
 				title: core.tr('save_chart_as'),
 				buttons:[
 				         {
 				        	 text: core.tr('save'),
 				        	 click: function(){
-				        		 core.getJSON('chart_ctrl', 'saveAs', false, {query_text:query_text, name:$('#modal input.chart_name').val()}, function(data){
+				        		 core.getJSON('chart_ctrl', 'save_chart_as', false, {query_text:query_text, name:$('#modal input.chart_name').val()}, function(data){
 				        			 core.message(data.text, data.status);
-				        			 if (data.status == 'success'){
-				        				 $('#modal').modal('close');
+				        			 if (data.status === 'success'){
+				        				 $('#modal').modal('hide');
 				        			 }
 				        		 });
 				        	 }
@@ -91,12 +92,12 @@ var chart = {
 			}, 'modal');
 		},
 		
-		showBuilder: function(tb, query){
+		showBuilder: function(tb, obj_encoded){
 			core.open({
 				title: core.tr('build_chart'),
 				obj: 'chart_ctrl',
-				method: 'showBuilder',
-				param: {tb: tb, query: query}
+				method: 'show_chart_builder',
+				param: {tb: tb, obj_encoded: obj_encoded}
 			});
 			
 		}

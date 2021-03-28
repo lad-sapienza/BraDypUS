@@ -1,0 +1,53 @@
+{#
+ * @author			Julian Bogdani <jbogdani@gmail.com>
+ * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
+ * @license			See file LICENSE distributed with this code
+ #}
+<h2>{{ tr.get('user_mng') }}</h2>
+
+<table cellpadding="10" class="table table-striped table-bordered table-hover">
+	<thead>
+		<th>{{ tr.get('name') }}</th>
+		<th>{{ tr.get('email') }}</th>
+		<th>{{ tr.get('privilege') }}</th>
+		<th></th>
+	</thead>
+
+	<tbody>
+	
+	{% for user in users %}
+		<tr>
+			<td>{{ user.name }}</td>
+			<td>{{ user.email }}</td>
+			<td>{{ user.privilege }}</td>
+			<td>
+			{% if user.editable %}
+				<button class="user-edit btn btn-info" data-id="{{ user.id }}"><i class="fa fa-pencil"></i> {{ tr.get('edit') }}</button>
+				<button class="user-erase btn btn-danger" data-id="{{ user.id }}"><i class="fa fa-trash"></i> {{ tr.get('erase') }}</button>
+			{% endif %}
+			</td>
+		</tr>
+	{% endfor %}
+	
+	</tbody>
+</table>
+
+{% if admin %}
+<p><button class="btn btn-primary user-add" type="button"><i class="fa fa-plus"></i> {{ tr.get('add_new_user') }}</button></p>
+{% endif %}
+
+<script>
+$('button.user-erase').click(function(){
+	user.deleteOne($(this).data('id'));
+});
+
+$('button.user-edit').click(function(){
+	user.showUserForm($(this).data('id'));
+});
+
+{% if admin %}
+$('button.user-add').click(function(){
+	user.showUserForm();
+});
+{% endif %}
+</script>

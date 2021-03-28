@@ -18,16 +18,15 @@
 <script>
   api.fileUpload(
     $('#upload-{{ uid }}'),
-    'controller.php?obj=file_ctrl&method=upload',
+    './?obj=file_ctrl&method=upload',
     {
       limitExtensions: ['geojson', 'json'],
       limit2one: true,
       complete: function(id, name, resp){
         if (resp.success){
           $('#fields_{{ uid }}')
-            .load('controller.php?obj=import_geodata_ctrl&method=setFields&'
-              + 'param[]={{ tb }}&'
-              + 'param[]=' + resp.uploadDir + '/' + resp.filename + '.' + resp.ext
+            .load('./?obj=import_geodata_ctrl&method=setFields&tb={{ tb }}&file='
+              + encodeURIComponent(resp.uploadDir + '/' + resp.filename + '.' + resp.ext)
               );
         }
       }

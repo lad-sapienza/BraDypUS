@@ -5,7 +5,7 @@
  */
 
 var search = {
-		init: function(method, tb, fast_string_or_recent_limit){
+		init: function(method, tb, fast_string){
 
 			switch(method){
 				case 'advanced':
@@ -16,16 +16,12 @@ var search = {
 					search.sqlExpert(tb);
 					break;
 
-				case 'mostRecent':
-					search.mostRecent((fast_string_or_recent_limit ? fast_string_or_recent_limit : 10), tb);
-					break;
-
 				case 'all':
 					search.all(tb);
 					break;
 
 				case 'fast':
-					search.fast(fast_string_or_recent_limit, tb);
+					search.fast(fast_string, tb);
 					break;
 			}
 		},
@@ -39,12 +35,6 @@ var search = {
 
 			api.showResults(tb, 'type=all', core.tr('show_all') + ' (' + tb + ')');
 		},
-
-		mostRecent: function(nr, tb){
-
-			api.showResults(tb, 'type=recent&limit=' + nr, core.tr('most_recent_records') + ' (' + tb + ')');
-		},
-
 
 		advanced: function(tb){
 			core.open({
@@ -78,7 +68,7 @@ var search = {
 			input = fieldset.find('input.value');
 
 			var name = input.attr('name');
-			var select = $('<select>').attr('name', name).attr('data-tags', 'true').addClass('value');
+			var select = $('<select>').attr('name', name).attr('data-tags', 'true').addClass('value').addClass('form-control');
 			input.replaceWith(select);
 
 			if (destroy == 'destroy'){
@@ -91,7 +81,10 @@ var search = {
 			var datalist = $('<datalist />'),
 			uid = 'uid' + Date.now();
 			if (fld.val()){
-				core.getJSON('search_ctrl', 'getUsedValues', {tb: fld.val().split(':')[0], fld:fld.val().split(':')[1]}, false, function(data){
+				core.getJSON('search_ctrl', 'getUsedValues', {
+					tb: fld.val().split(':')[0], 
+					fld:fld.val().split(':')[1]
+				}, false, function(data){
 					$.each(data, function(i, val){
 						datalist.append('<option>' + val + '</option>');
 					});
@@ -99,6 +92,7 @@ var search = {
 					datalist.insertAfter(select)
 
 					select.attr('id', uid);
+					select.css('width', '100%');
 					datalist.attr('for', uid);
 
 					enhance.combobox(select);

@@ -1,8 +1,7 @@
 <?php
 /**
- * @author			Julian Bogdani <jbogdani@gmail.com>
- * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
- * @license			See file LICENSE distributed with this code
+ * @copyright 2007-2021 Julian Bogdani
+ * @license AGPL-3.0; see LICENSE
  * @since			Aug 10, 2013
  */
 
@@ -10,17 +9,11 @@ class empty_cache_ctrl extends Controller
 {
 	public function doEmpty()
 	{
-		try
-		{
-			utils::emptyDir(MAIN_DIR . 'cache', false);
-			
-			$response = array('status'=> 'success', 'text'=>tr::get('ok_cache_emptied'));
+		try {
+			\utils::emptyDir(MAIN_DIR . 'cache', false);
+			$this->response('ok_cache_emptied', 'success');
+		} catch (\Exception $e) {
+			$this->response('error_cache_not_emptied', 'error');
 		}
-		catch (myException $e)
-		{
-			$response = array('status'=> 'error', 'text'=>tr::get('error_cache_not_emptied'));
-		}
-		
-		echo json_encode($response);
 	}
 }

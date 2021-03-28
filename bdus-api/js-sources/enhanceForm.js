@@ -16,28 +16,27 @@
  * @example: enhance.form($('#formId'));
  * @example: enhance.element($('#elId'));
  */
-var enhance = {
-  //predefinied date format
-  dateFormat : 'yyyy-mm-dd',
-
+const enhance = {
   getData: function(el){
-    var datalist = $('datalist[for="' + el.attr('id') + '"]').first(),
-    data = [];
+    const datalist = $('datalist[for="' + el.attr('id') + '"]').first();
+    let data = [];
 
     datalist.children( "option" ).map(function() {
-      var text = $(this).text(),
-      value = $(this).val() ? $(this).val(): text;
+      const text = $(this).text();
+      const value = $(this).val() ? $(this).val(): text;
 
-      data.push({id: value, text: text});
+      data.push({
+        id: value, 
+        text: text
+      });
     });
     return data;
   },
 
-  getAjaxData: function(el){
-    var datalist = $('datalist[for="' + el.attr('id') + '"]').first(),
-      context = el.data('context'),
-      att = el.data('att'),
-      tags = el.data('tags');
+  getAjaxData: el => {
+    const context = el.data('context');
+    const att = el.data('att');
+    const tags = el.data('tags');
 
     // Return empty object if no data attribute are found
     if(typeof context === 'undefined' || typeof att === 'undefined'){
@@ -55,7 +54,7 @@ var enhance = {
         };
       },
       ajax: {
-        url: 'controller.php?obj=menuValues_ctrl&method=getValuesUrl&context=' + context + '&att=' + att,
+        url: './?obj=menuValues_ctrl&method=getValuesUrl&context=' + context + '&att=' + att,
         dataType: 'json',
         delay: 250,
         tokenSeparators: [';'],
@@ -78,15 +77,14 @@ var enhance = {
         cache: true
       },
 
-      escapeMarkup:        function (markup) { return markup; },
-      templateResult:      function (a) { return a.val; },
-      templateSelection:  function (a) { return a.hasOwnProperty('val') ? a.val : a.text; },
+      escapeMarkup:        markup =>  markup,
+      templateResult:      a => { return a.val; },
+      templateSelection:   a => { return a.hasOwnProperty('val') ? a.val : a.text; },
       minimumInputLength:  0
     };
   },
 
-  multiselect: function(el, destroy)
-  {
+  multiselect: (el, destroy) => {
     if ($(el).data('select2') && destroy){
       $(el).select2('destroy');
     } else {
@@ -101,7 +99,7 @@ var enhance = {
     }
   },
 
-  combobox: function(el, destroy){
+  combobox: (el, destroy) => {
 
     if($(el).data('select2') && destroy){
       $(el).select2('destroy');
@@ -114,10 +112,9 @@ var enhance = {
         $(this).attr('changed', 'auto');
       });
     }
-
   },
 
-  select: function(el, destroy){
+  select: (el, destroy) => {
     if($(el).data('select2') && destroy){
       $(el).select2('destroy');
     } else {
@@ -129,42 +126,17 @@ var enhance = {
     }
   },
 
-  slider: function(el, destroy){
-    if ($(el).data('select2') && destroy){
-      $(el).slider('destroy');
-    } else {
-      var min = $(el).attr('min') ? parseInt($(el).attr('min')) : 0,
-      max = $(el).attr('max') ? parseInt($(el).attr('max')) : 10,
-      value = $(el).val() ? parseInt($(el).val()) : min;
-      $(el).slider({
-        'value': value,
-        'min': min,
-        'max': max,
-      }).on('slideStop', function(){
-        $(el).attr('changed', 'auto');
-      });
-    }
-  },
-
-  pimpEl: function(el, destroy){
+  pimpEl: (el, destroy) => {
     if($(el).hasClass('combobox')) {
       enhance.combobox(el, destroy);
     } else if ($(el).hasClass('multiselect')) {
       enhance.multiselect(el, destroy);
-    } else if ($(el).hasClass('slider')) {
-      enhance.slider(el, destroy);
-    } else if ($(el).hasClass('date')) {
-      if (destroy){
-        $(el).datepicker('remove');
-      } else {
-        $(el).datepicker({ format: enhance.dateFormat });
-      }
     } else if ($(el).is('select')) {
       enhance.select(el, destroy);
     }
   },
   // form function: takes form element and applies to all input elements all available widges
-  form: function(form){
+  form: form => {
     $(form).find(':input').each(function(i, el){
       enhance.pimpEl(el);
     });

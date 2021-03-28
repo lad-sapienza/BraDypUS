@@ -22,12 +22,12 @@
 	$.fn.checklabel = function() {
 		
 		this.each(function(){
-			var label = $(this).find('label');
-			var input = $(this).find('input');
+			const label = $(this).find('label');
+			const input = $(this).find('input');
 			
 			input.hide();
 			
-			label.click(function(){
+			label.on('click', function(){
 				if ( input.is(':checked') ) {
 					input.attr('checked', false);
 					label.removeClass('selected');

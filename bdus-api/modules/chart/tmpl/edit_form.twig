@@ -1,0 +1,49 @@
+{#
+ * @author			Julian Bogdani <jbogdani@gmail.com>
+ * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
+ * @license			See file LICENSE distributed with this code
+ #}
+
+<div id="{{ uid }}" class="row">
+	
+	<div class="col-sm-6">
+		<div class="row">
+			<div class="col-sm-2">
+				<label>Id</label>
+				<input type="text" class="id form-control" readonly="readonly" value="{{ chart.id }}" style="width:90%" />
+			</div>
+			
+			<div class="col-sm-10">
+				<label>{{ tr.get('name') }}</label>
+				<input type="text" class="name form-control" value="{{ chart.name }}" style="width:90%" />
+			</div>
+			
+		</div>
+		
+		<p>
+			<label>{{ tr.get('text') }}</label>
+			<textarea class="text form-control" style="width:90%; height:250px;">{{ chart.sql }}</textarea>
+		</p>
+		
+		<p>
+			<button class="btn btn-success save">{{ tr.get('save') }}</button>
+		</p>
+	</div>
+	
+	<div class="col-sm-6">
+		
+		<h4 class="text-error">{{ tr.get('sql_not_allowed') }}</h4>
+		<pre>update, delete, truncate, ;, insert, insert, update, create, drop, file, index, alter, alter routine, create routine, execute</pre>
+	</div>
+		
+</div>
+
+<script>
+	$('#{{ uid }} button.save').on('click', function(){
+		var id =  $('#{{ uid }} input.id').val()
+		q_text = $('#{{ uid }} textarea.text').val(),
+		name = $('#{{ uid }} input.name').val();
+		
+		chart.editChart(id, name, q_text);
+	});
+</script>

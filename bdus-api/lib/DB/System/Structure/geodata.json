@@ -1,0 +1,23 @@
+[
+    {
+        "name"      : "id",
+        "type"      : "INTEGER",
+        "pk"        : true,
+        "notnull"   : false
+    },
+    {
+        "name"      : "table_link",
+        "type"      : "TEXT",
+        "notnull"   : true
+    },
+    {
+        "name"      : "id_link",
+        "type"      : "INTEGER",
+        "notnull"   : true
+    },
+    {
+        "name"      : "geometry",
+        "type"      : "GEOMETRY",
+        "notnull"   : true
+    }
+]

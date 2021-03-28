@@ -5,100 +5,100 @@
  */
 
 var rs = {
-		init: function(){
-			$.each($('div.showRS'), function(i, el){
-				rs.show($(el));
-			});
-		},
-
-		show: function(el){
-
-			if (el.length === 0) {
-				return;
+	init: function(){
+		$.each($('div.showRS'), function(i, el){
+			rs._show($(el));
+		});
+	},
+	_deleteRS: function(id, elToRemove){
+		core.getJSON('rs_ctrl', 'deleteRS', { "id": id }, false, function(data){
+			core.message(data.text, data.status);
+			if (data.status === 'success'){
+				elToRemove.remove();
 			}
+		});
+	},
 
-			var tb = el.data('table'),
-				// ID value is encoded for URL usage, to escape spaces or other special chars
-				id = encodeURI(el.data('id')),
-				context = el.data('context');
+	_addRS: function(tb, first, relation, second, el){
+		core.getJSON('rs_ctrl', 'saveNewRS', { "tb": tb, "first": first, "relation": relation, "second": second }, false, function(data){
+			core.message(data.text, data.status);
 
-			if (!tb || !id || !context){
-				return false;
+			if (data.status === 'success'){
+				el.find('input.second').val('');
+				el.find('td.r' + relation).append(
+					$('<div />').append(
+						second,
+						' ',
+						$('<span />').attr({
+							'data-id': data.id,
+							'title': core.tr('erase')
+						})
+						.addClass('delete_js a')
+						.text('[x]')
+						.click(function(){
+							rs._deleteRS( data.id , $(this).parent('div'));
+						})
+					)
+				);
 			}
+		});
+	},
 
-			if ( el.children().length > 0 ) {
-     		return false;
-	 		}
+	_show: function(el){
 
-			if (el.data('pending') === true || el.data('done') === true) {
-				return false;
-			}
+		if (el.length === 0) {
+			return false;
+		}
 
-			el.data('pending', true);
+		var tb = el.data('table');
+		// ID value is encoded for URL usage, to escape spaces or other special chars
+		var id = encodeURI(el.data('id'));
+		var context = el.data('context');
 
-			el.load('controller.php?obj=rs_ctrl&method=getAll&param[]=' + tb + '&param[]=' + id + '&param[]=' + context, function(){
+		if (!tb || !id || !context){
+			return false;
+		}
 
-				el.data('done', true);
-				el.data('pending', false);
+		if ( el.children().length > 0 ) {
+			return false;
+		}
 
-				if (context == 'read'){
-					el.find('div.rsEl').on('click', function(){
-						api.record.read(tb, [$(this).text()], true	);
-					});
+		if (el.data('pending') === true || el.data('done') === true) {
+			return false;
+		}
 
-				}
-				//add action
-				else if (context == 'edit'){
-					el.find('button.save').click(function(){
-						var relation = el.find('select.rel').val(),
-						second = el.find('input.second').val();
+		el.data('pending', true);
 
-						if (!second){
-							core.message(core.tr('rs_all_fields_required'), 'error');
-						} else {
-							core.getJSON('rs_ctrl', 'saveNew', [tb, id, relation, second], false, function(data){
-								core.message(data.text, data.status);
+		el.load('./?obj=rs_ctrl&method=getAllRS&tb=' + tb + '&id=' + id + '&context=' + context, function(){
 
-								if (data.status == 'success'){
-									el.find('input.second').val('');
-									el.find('td.r' + relation).append(
-											$('<div />').append(
-													second,
-													' ',
-													$('<span />').attr({
-														'data-id': data.id,
-														'title': core.tr('erase')
-													})
-													.addClass('delete_js a')
-													.text('[x]')
-													.click(function(){
-														$this = $(this);
-														core.getJSON('rs_ctrl', 'delete', [data.id], false, function(data){
-															core.message(data.text, data.status);
-															if (data.status == 'success'){
-																$this.parent('div').remove();
-															}
-														});
-													})
-													)
-													);
-								}
-							});
-						}
-					});
-				}
+			el.data('done', true);
+			el.data('pending', false);
 
-				//delete action
-				el.find('a.delete').click(function(){
-					$this = $(this);
-					core.getJSON('rs_ctrl', 'delete', [$this.data('id')], false, function(data){
-						core.message(data.text, data.status);
-						if (data.status == 'success'){
-							$this.parent('div').remove();
-						}
-					});
+			if (context === 'read'){
+				el.find('div.rsEl').on('click', function(){
+					api.record.read(tb, [$(this).text()], true	);
 				});
 
+			}
+			//add action
+			else if (context === 'edit'){
+				el.find('button.save').click(function(){
+					var relation = el.find('select.rel').val();
+					var second = el.find('input.second').val();
+
+					if (!second){
+						core.message(core.tr('rs_all_fields_required'), 'error');
+					} else {
+						rs._addRS( tb, id, relation, second, el);
+					}
+				});
+			}
+
+			//delete action
+			el.find('a.delete').click(function(){
+				rs._deleteRS($(this).data('id'), $(this).parent('div'));
 			});
-		}
+
+		});
+	}
 };

@@ -6,55 +6,84 @@
 
 <div class="container" id="select_apps">
 
-	<div class="clearfix">
-		<div class="pull-left">
-			<h2>BraDypUS web.Databases</h2>
+	<div class="text-center">
+		<img style="width:300px;" alt="BraDypUS Cloud Databases" src="./assets/bdus/img/bdus.svg" />
+	</div>
+
+	<div class="row">
+		<div class="col-sm-6">
+			
 		</div>
-		<div class="pull-right">
-			<a title="BraDypUS COMMUNICATING CULTURAL HERITAGE" target="_blank" href="http://bradypus.net" class="pull-right">
-				<img alt="BraDypUS COMMUNICATING CULTURAL HERITAGE" src="./img/bradypus.png" />
-			</a>
+		<div class="col-sm-6 text-right">
 		</div>
 	</div>
+
+	<hr>
 	
 	<div class="btn-container">
 	
 		<div class="buttons clearfix">
 	
-			
+			{% if dataApp %}
 			<h3>{{ choose_db }}</h3>
-			
-			{% for dataApp in data %}
-				<div class="col-sm-3 col-xs-6">
-					<a class="btn btn-default btn-lg app" href="javascript:void(0)" data-db="{{ dataApp.db }}">
-						{{ dataApp.name }}
-						<span class="pull-right" style="right:3px; color:#759bbc; position:relative;"><i class="icon-play-sign hidden-xs"></i></span>
-					</a>
+			{% endif %}
+
+			<div class="row">
+				<div class="col-md-4 col-md-offset-4">
+
+					<div class="form-group">
+						<select id="app" style="width:100%" class="form-control">
+							<option></option>
+							{% for dataApp in data %}
+							<option {% if app and app == dataApp.db %} selected="selected" {% endif %} value="{{ dataApp.db }}">{{ dataApp.name }}. {{ dataApp.definition }}</option>
+							{% endfor %}
+						</select>
+					</div>
+
+					<form method="post" id="{{ uid }}" class="big" action="javascript:void(0)">
+						<div class="form-group">
+							<input type="email" class="email form-control" name="email" placeholder="{{ tr.get('email') }}" />
+						</div>
+						<div class="form-group">
+							<input type="password" class="password form-control" name="password" placeholder="{{ tr.get('password') }}" />
+						</div>
+						<div class="form-group">
+							<label><input type="checkbox" name="remember" class="remember" /> {{ tr.get('remember_me') }}</label>
+						</div>
+						<div class="form-group">
+							<button type="submit" class="btn btn-success btn-block"><i class="fa fa-check"></i> {{ tr.get('send') }}</button>
+						</div>
+
+						<div class="row">
+							<div class="col-xs-6">
+								<button type="button" class="btn btn-default btn-block" id="lost_pwd">{{ tr.get('lost_passsword') }}</button>
+							</div>
+							<div class="col-xs-6">
+								<button type="button" class="btn btn-default btn-block" id="new_user">{{ tr.get('register_new_user') }}</button>
+							</div>
+						</div>
+					</form>
+
+					{% if create_app %}
+					<hr>
+					<button class="btn btn-danger btn-block app_create">{{ tr.get('app_create') }}</button>
+					{% endif %}
+
 				</div>
-				{% if app and app == dataApp.db %}
-					<script>login.loadLoginForm('{{ dataApp.db }}');</script>
-				{% endif %}
-			{% endfor %}
+			</div>
 		</div>
-		
-		<div class="login"></div>
-		
 	</div>
 	
 	
 </div>
 
 <div class="footer">
-	<a title="BraDypUS COMMUNICATING CULTURAL HERITAGE" target="_blank" href="http://bradypus.net">
-		BraDypUS. <small>COMMUNICATING CULTURAL HERITAGE</small><br />
-		http://bradypus.net
-	</a>
-	<br />
-	v.<code>{{ version }}</code>
   
+  <p><strong>BraDypUS</strong> | v. {{ version }}</p>
   <p class="text-muted">
+  
     <a href="https://github.com/jbogdani/BraDypUS" target="_blank">
-      BraDypUS databases is an open source (MIT licensed) software
+      BraDypUS databases is a free and open source (AGPL-3.0 licensed) software
       available for download on GitHub
     </a>
     <br />
@@ -66,7 +95,65 @@
 </div>
 
 <script>
-	$('.app').on('click', function(){
-		login.loadLoginForm($(this).data('db'));
+	if(!$('#app').val()){
+		$('#{{ uid }} :input').prop("disabled", true);
+	}
+
+	$('#app')
+		.on('change', e => {
+			if(e.target.value){
+				$('#{{ uid }} :input').prop("disabled", false);
+			} else {
+				$('#{{ uid }} :input').prop("disabled", true);
+			}
+		})
+		.select2({
+			placeholder: '{{ tr.get('choose_db') }}',
+			templateResult: d => {
+				return $(`<span><strong>${d.text.split('. ').join('</strong><br>')}</span>`);
+			}
+		});
+
+	$('#{{ uid }}').on('submit', function(event){
+
+		event.preventDefault();
+		
+		const email = $(this).find('input.email').val();
+		const pass = $(this).find('input.password').val();
+		
+		if ( email === '' || pass === '' ) {
+			core.message(core.tr('email_password_needed'), 'error');
+			return false;
+		}
+		core.getJSON('login_ctrl', 'auth', false, {
+				email: email,
+				password: pass,
+				app: $('#app').val(),
+				remember: $(this).find('input.remember').is(':checked')
+			},
+			data => {
+				if (data.status === 'success'){
+					window.location.reload();
+				} else {
+					core.message(data.text, 'error');
+				}
+			}
+		);
+
+		return false;
 	});
+
+
+	$('.app_create').on('click', function(){
+		login.loadCreateApp();
+	});
+
+	$('#lost_pwd').on('click', function(){
+		login.lost_pwd($('#app').val());
+	});
+	
+	$('#new_user').on('click', function(){
+		login.new_user_form($('#app').val());
+	});
+	
 </script>

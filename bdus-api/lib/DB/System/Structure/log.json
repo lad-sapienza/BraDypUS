@@ -1,0 +1,28 @@
+[
+    {
+        "name"      : "id",
+        "type"      : "INTEGER",
+        "pk"        : true,
+        "notnull"   : false
+    },
+    {
+        "name"      : "channel",
+        "type"      : "TEXT",
+        "notnull"   : true
+    },
+    {
+        "name"      : "level",
+        "type"      : "INTEGER",
+        "notnull"   : true
+    },
+    {
+        "name"      : "message",
+        "type"      : "TEXT",
+        "notnull"   : true
+    },
+    {
+        "name"      : "time",
+        "type"      : "INTEGER",
+        "notnull"   : true
+    }
+]

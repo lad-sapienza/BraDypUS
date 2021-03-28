@@ -1,21 +1,28 @@
 <?php
 /**
- * @author			Julian Bogdani <jbogdani@gmail.com>
- * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
- * @license			See file LICENSE distributed with this code
+ * @copyright 2007-2021 Julian Bogdani
+ * @license AGPL-3.0; see LICENSE
  * @since			Aug 11, 2012
  */
 
-class debug extends Controller
+class debug_ctrl extends Controller
 {
 
 	public function sql2json()
 	{
-		return Meta::getData($this->get['tb'], $this->post);
+		$params = $this->post;
+
+		echo \utils::jsonForTabletop($this->db, $this->prefix . 'log', $params);
 	}
 
 	public function read()
 	{
-		echo Meta::tableTop('errorlog', "./controller.php?&obj=debug&method=sql2json&tb=errorlog");
+		$fields = ['id', 'channel', 'level', 'message', 'time'];
+		
+		$this->render('debug', 'read', [
+			'th_fields' => '<th>' . implode('</th><th>', $fields) . '</th>',
+			'm_data' => '{"mData":"' . implode('"},{"mData":"', $fields) . '"}',
+			'ajaxSource' => "./?obj=debug_ctrl&method=sql2json"
+		]);
 	}
 }

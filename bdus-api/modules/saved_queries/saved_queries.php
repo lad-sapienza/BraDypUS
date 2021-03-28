@@ -1,123 +1,170 @@
 <?php
 /**
- * @author			Julian Bogdani <jbogdani@gmail.com>
- * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
- * @license			See file LICENSE distributed with this code
+ * @copyright 2007-2021 Julian Bogdani
+ * @license AGPL-3.0; see LICENSE
  * @since			Aug 10, 2012
  */
 
-class saved_queries_ctrl
+use \DB\System\Manage;
+
+class saved_queries_ctrl extends Controller
 {
-    public static function getById($id)
+    public function getById()
     {
-        $savedQ = new SavedQueries(new DB());
+        $id = $this->get['id'];
 
-        $res = $savedQ->getById($id);
+        $sys_manager = new Manage($this->db, $this->prefix);
+        $res = $sys_manager->getById('queries', $id);
 
-        if ($res[0]) {
-            echo json_encode(array('status' => 'success', 'tb'=>$res[0]['table'], 'text'=>urlencode(base64_encode($res[0]['text']))));
+        if (!empty($res)) {
+            echo json_encode([
+                'status' => 'success', 
+                'tb'=>$res['tb'], 
+                'obj_encoded'=> \SQL\SafeQuery::encode($res['text'], json_decode($res['vals'], true))
+            ]);
         } else {
-            echo json_encode(array('status'=>'error'));
+            echo json_encode( [ 'status'=>'error' ] );
         }
     }
 
-    public static function showAll()
+    public function showAll()
     {
-        $savedQ = new SavedQueries(new DB());
+        $sys_manager = new Manage($this->db, $this->prefix);
+        $res = $sys_manager->getBySQL('queries', "user_id = ? OR is_global = ?", [$_SESSION['user']['id'], 1]);
 
-        $res = $savedQ->getAll();
-
-        if (count($res) == 0) {
-            //echo '<div class="alert">' . tr.get('no_saved_queries') . '</div>';
-            return;
+        foreach ($res as &$q) {
+            $q['tb_label'] = $this->cfg->get("tables.{$q['tb']}.label");
+            $q['obj_encoded'] = \SQL\SafeQuery::encode($q['text'], json_decode($q['vals']));
+            $q['owned_by_me'] = $_SESSION['user']['id'] === $q['user_id'];
         }
 
-
-        $html = '<h2>' . tr::get('saved_queries') . '</h2>' .
-      '<table class="saved_q table table-bordered table-striped">';
-        foreach ($res as $q) {
-            $html .= '<tr>' .
-        '<th>' . $q['id'] . '</th>' .
-        '<td>' . $q['name'] . '</td>' .
-        '<td>' . cfg::tbEl($q['table'], 'label') . '</td>' .
-        '<td>' . $q['date'] . '</td>' .
-        '<td class="buttons">' .
-          '<div class="btn-group">' .
-            '<a data-action="execute" data-tb="' . $q['table'] . '" ' .
-              'data-text="' . urlencode(base64_encode($q['text'])) . '" ' .
-              'class="btn btn-success">' .
-              '<i class="glyphicon glyphicon-play"></i> ' .
-                tr::get('execute_query') .
-              '</a>' .
-                        // only owners can delete queries
-                        (($q['is_global'] == 0) ?
-                    ' <a data-action="share" data-id="' . $q['id'] . '" ' .
-                      'class="btn btn-info"><i class="glyphicon glyphicon-star"></i> ' .
-                        tr::get('share') .
-                    '</a>'
-                  : '') .
-                        (($q['is_global'] == 1 and $_SESSION['user']['id'] == $q['user_id']) ?
-                  ' <a data-action="unshare" data-id="' . $q['id'] . '" ' .
-                    'class="btn btn-warning"><i class="glyphicon glyphicon-star-empty"></i> ' .
-                      tr::get('unshare') . '</a>'
-                  : '') .
-            (($_SESSION['user']['id'] == $q['user_id']) ?
-                  ' <a data-action="erase" data-id="' . $q['id'] . '" ' .
-                  'class="btn btn-danger"><i class="glyphicon glyphicon-trash"></i> ' .
-                  tr::get('erase') . '</a>' : '') .
-
-                        '</div>' .
-                    '</td>' .
-            '</tr>';
-        }
-        $html .= '</table>';
-
-        echo $html;
+        $this->render('saved_queries', 'showAll', [
+            'saved_queries' => $res
+        ]);
     }
 
 
-    public static function actions($action, $id_tb, $name = false, $text = false)
+    public function shareQuery()
     {
+        $id = $this->get['id'];
+
+        $msg = [
+            'status' => 'error', 
+            'text' => \tr::get('error_sharing_query')
+        ];
+
         try {
-            $savedQ = new SavedQueries(new DB());
+            $sys_manager = new Manage($this->db, $this->prefix);
+            $res = $sys_manager->editRow('queries', $id, ['is_global' => 1]);
 
-            switch ($action) {
-                case 'share':
-                    if ($savedQ->share($id_tb)) {
-                        $msg = array('status'=>'success', 'text'=>tr::get('ok_sharing_query'));
-                    } else {
-                        $msg = array('status'=>'error', 'text'=>tr::get('error_sharing_query'));
-                    }
-                    break;
-
-                case 'unshare':
-                    if ($savedQ->unshare($id_tb)) {
-                        $msg = array('status'=>'success', 'text'=>tr::get('ok_unsharing_query'));
-                    } else {
-                        $msg = array('status'=>'error', 'text'=>tr::get('error_unsharing_query'));
-                    }
-                    break;
-
-                case 'erase':
-                    if ($savedQ->erase($id_tb)) {
-                        $msg = array('status'=>'success', 'text'=>tr::get('ok_erasing_query'));
-                    } else {
-                        $msg = array('status'=>'error', 'text'=>tr::get('error_erasing_query'));
-                    }
-                    break;
-
-                case 'save':
-                    if ($savedQ->save($name, $text, $id_tb)) {
-                        $msg = array('status'=>'success', 'text'=>tr::get('ok_saving_query'));
-                    } else {
-                        $msg = array('status'=>'error', 'text'=>tr::get('error_saving_query'));
-                    }
-                    break;
+            if ($res) {
+                $msg = [
+                    'status' => 'success', 
+                    'text' => \tr::get('ok_sharing_query')
+                ];
             }
-        } catch (myException $e) {
-            $e->log();
+            
+        } catch (\DB\DBException $e) {
+            // Already logged
+        } catch (\Throwable $e) {
+            $this->log->error($e);
         }
 
-        echo json_encode($msg);
+        $this->returnJson($msg);
     }
+
+    public function unShareQuery()
+    {
+        $id = $this->get['id'];
+        $msg = [
+            'status' => 'error', 
+            'text' => \tr::get('error_unsharing_query')
+        ];
+
+        try {
+            $sys_manager = new Manage($this->db, $this->prefix);
+            $res = $sys_manager->editRow('queries', $id, ['is_global' => 0]);
+
+            if ($res) {
+                $msg = [
+                    'status' => 'success', 
+                    'text' => \tr::get('ok_unsharing_query')
+                ];
+            }
+            
+        } catch (\DB\DBException $e) {
+            // do nothing
+        } catch (\Throwable $e) {
+            $this->log->error($e);
+        }
+
+        $this->returnJson($msg);
+    }
+
+    public function deleteQuery()
+    {
+        $id = $this->get['id'];
+        $msg = [
+            'status' => 'error', 
+            'text' => \tr::get('error_erasing_query')
+        ];
+
+        try {
+            $sys_manager = new Manage($this->db, $this->prefix);
+            $res = $sys_manager->deleteRow('queries', $id);
+
+            if ($res) {
+                $msg = [
+                    'status' => 'success', 
+                    'text' => \tr::get('ok_erasing_query')
+                ];
+            }
+            
+        } catch (\DB\DBException $e) {
+        } catch (\Throwable $e) {
+            $this->log->error($e);
+        }
+
+        $this->returnJson($msg);
+    }
+
+    public function saveQuery()
+    {
+        $tb = $this->get['tb'];
+        $name = $this->get['name'];
+        $query_object = $this->post['query_object'];
+        $msg = [
+            'status' => 'error', 
+            'text' => \tr::get('error_saving_query')
+        ];
+        
+        try {
+            $sys_manager = new Manage($this->db, $this->prefix);
+            list($text, $values) = \SQL\SafeQuery::decode($query_object);
+            $res = $sys_manager->addRow('queries', [
+                'user_id' => $_SESSION['user']['id'],
+                'date'  => (new \DateTime())->format('Y-m-d H:i:s'),
+                'name'  => $name,
+                'text'  => $text,
+                'vals'  => json_encode($values),
+                'tb'    => $tb,
+                'is_global'=> 0
+            ]);
+
+            if ($res) {
+                $msg = [
+                    'status' => 'success', 
+                    'text' => \tr::get('ok_saving_query')
+                ];
+            }
+            
+        } catch (\DB\DBException $e) {
+            // already logged
+        } catch (\Throwable $e) {
+            $this->log->error($e);
+        }
+
+        $this->returnJson($msg);
+    }
+
 }

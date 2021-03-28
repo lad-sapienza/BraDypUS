@@ -1,75 +1,69 @@
 <?php
 /**
- * @author			Julian Bogdani <jbogdani@gmail.com>
- * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
- * @license			See file LICENSE distributed with this code
+/**
+ * @copyright 2007-2021 Julian Bogdani
+ * @license AGPL-3.0; see LICENSE
  * @since			Jan 8, 2013
  */
 
-class free_sql_ctrl
+class free_sql_ctrl extends Controller
 {
-	public static function import($filename, $start = false, $offset = false, $totalqueries = false)
+	public function import()
 	{
-		try
-		{
-			$bigRestore = new bigRestore(new DB());
+		$filename = $this->get['filename']; 
+		$start = $this->get['start']; 
+		$offset = $this->get['offset']; 
+		$totalqueries = $this->get['totalqueries']; 
+
+		try {
+			$bigRestore = new bigRestore($this->db);
 			
 			$bigRestore->runImport($filename, $start, $offset, $totalqueries);
 			
 			echo $bigRestore->getResponse(true);
-		}
-		catch (Exception $e)
-		{
-			echo json_encode(array('status'=>'error', 'text'=>$e->getMessage()));
+
+		} catch (\Throwable $e) {
+			$this->returnJson([
+				'status'=>'error', 
+				'text'=>$e->getMessage()
+			]);
 		}
 	}
 
 	
-	public static function input()
+	public function input()
 	{
-		if (utils::canUser('super_admin'))
-		{
+		if (\utils::canUser('super_admin')) {
 			$uid = uniqid('upload');
 			
 			echo '<div class="upload"></div>' .
-					'<textarea style="width:97%; height: 220px" placeholder="Enter SQL code here"></textarea>' .
+					'<textarea class="form-control" style="width:97%; height: 220px" placeholder="Enter SQL code here"></textarea>' .
 					'<div class="status" style="display:none">' .
 						'<div class="progress progress-success">' .
 							'<div class="bar" style="width: 0%"></div>' .
 						'</div>' .
-						'<div class="lead verbose"></div>' .
+						'<div class="verbose"></div>' .
 					'</div>'
 			;
-		}
-		else
-		{
-			echo tr::get('not_enough_privilege');
+		} else {
+			echo \tr::get('not_enough_privilege');
 		}
 	}
 	
-	public static function run($post)
+	public function run()
 	{
-		try
-		{
-			$db = new DB();
+		$sql = $this->post['sql'];
+		
+		try {
+			$this->db->beginTransaction();
+			$ret = $this->db->exec($sql);
+			$this->db->commit();
 			
-			$db->beginTransaction();
-			
-			$ret = $db->doQuery($post['sql']);
-			
-			$db->commit();
-			
-			if ($ret === false)
-			{
-				throw new myException();
-			}
-			
-			utils::response('Query executed!');
-		}
-		catch (myException $e)
-		{
-			$db->rollBack();
-			utils::response('Error. No query executed! <pre><strong>DEBUG:</strong><br />' . $e->getMessage() . '</pre>', 'error');
+			$this->response('ok_free_sql_run_affected', 'success', [$ret ?: 0]);
+		} catch (\DB\DBException $e) {
+			$this->log->error($e);
+			$this->db->rollBack();
+			$this->response('error_free_sql_run_msg', 'error', [$e->getMessage()]);
 		}
 	}
 }

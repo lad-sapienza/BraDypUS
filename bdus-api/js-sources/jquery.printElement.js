@@ -1,4 +1,4 @@
-/// <reference path="http://code.jquery.com/jquery-1.4.1-vsdoc.js" />
+// <reference path="http://code.jquery.com/jquery-1.4.1-vsdoc.js" />
 /*
 * Print Element Plugin 1.2
 *

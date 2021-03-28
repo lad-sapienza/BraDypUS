@@ -1,323 +1,367 @@
 <?php
 /**
- * @author			Julian Bogdani <jbogdani@gmail.com>
- * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
- * @license			See file LICENSE distributed with this code
- * @since			Apr 21, 2013
+ * @copyright 2007-2021 Julian Bogdani
+ * @license AGPL-3.0; see LICENSE
+ * @since				Jul 02, 2018
  *
- *
- * API is reacheable at {app_base_url}/api/{app_name}/{no_prefix_tb_name}
- *  eg.: https://db.bradypus.net/sitarc/siti
- *
- * Available parameters:
- * GET:
- *  app:  string,  required, application name (eg: sitarc)
- *  tb:   string, required, no-prefix table name (eg: siti)
- *  records_per_page: int, optional, default: 30 number of records to show in each page.
- *
- *  id:   int, (database) ID for single record. Only one record will be returned
- *
- *
+ *  inspect:
+ *      curl --location --request GET '/api/v2/paths?verb=inspect&tb=manuscripts(&pretty=1)'
+
+ *  getChart:
+ *      curl --location --request GET '/api/v2/paths?verb=getChart&id=1(&pretty=1)'
+
+ *  read
+ *      curl --location --request GET '/api/v2/paths?verb=read&tb=manuscripts&id=1(&pretty=1)'
+
+ *  getVocabulary
+ *      curl --location --request GET '/api/v2/paths?verb=getVocabulary&voc=abbreviations(&pretty=1)'
+ * 
+ *  getUniqueVal
+ *      curl --location --request GET '/api/v2/paths?verb=getUniqueVal&tb=manuscripts&fld=cmclid(&s=MICH&w=cmclid|like|%25AA%25&pretty=1)'
+ * 
+ *  search
+ *      curl --location --request GET '/api/v2/paths?verb=search&shortsql=@places(&total_rows=&page=&geojson=&records_per_page&full_records&pretty=1)'
  */
 
-class api_ctrl extends Controller
+use \DB\System\Manage;
+use \API\Inspect;
+use \API\GetUniqueVal;
+use \API\Search;
+use \Record\Read;
+
+class api extends Controller
 {
+    private $app;
+    private $verb;
+    private $pretty = false;
+    private $valid_verbs = [
+        'read',
+        'search',
+        'inspect',
+        'getChart',
+        'getUniqueVal',
+        'getVocabulary',
+        'getApiVersion',
+    ];
+    /**
+     * Main validation & variable setting
+     */
+    private function validateInput() : void
+    {
+        $this->pretty = $this->get['pretty'];
+        
+        // Validate app
+        $this->app = $this->get['app'];
+        $valid_apps = \utils::dirContent(MAIN_DIR . "projects");
+        if (!$this->app || !in_array($this->app, $valid_apps)) {
+            throw new \Exception("Invalid app `{$this->app}`. App must be one of " . implode(', ', $valid_apps));
+        }
 
+        // Validate verb
+        $this->verb = $this->get['verb'];
+        if (!$this->verb) {
+            throw new \Exception("Missing verb. Verb must be one of " . implode(', ', $this->valid_verbs));
+        }
+        if (!in_array($this->verb, $this->valid_verbs)) {
+            throw new \Exception("Invalid verb `{$this->verb}`. Verb must be one of " . implode(', ', $this->valid_verbs));
+        }
 
-	/**
-	 * [run_v2 description]
-	 * 		api/app/tb?
-	 * 			verb:  Required. One of: read | edit | inspect
-	 * 			id: required for verb read and for verb search, type id_array
-	 *
-	 * 			type: required for verb search. One of: all | recent | advanced | sqlExpert | fast | id_array | encoded
-	 *
-	 * 			limit: optional for type recent, default: 20
-	 * 			adv (post): required for type advanced
-	 * 			join: optional, for type sqlExpert
-	 * 			querytext: required for type sqlExpert
-	 * 			string: required for type fast
-	 *
-	 * 			records_per_page: optional for type search, used for pagination, default: 30
-	 *
-	 * @return [type] [description]
-	 */
-	public function run()
-	{
+        // Tb must have prefix
+        if ($this->get['tb'] && strpos($this->get['tb'], $this->prefix) === false) {
+            $this->get['tb'] = $this->prefix . $this->get['tb'];
+        }
 
-		try {
-
-			if ( file_exists("projects/{$this->get['app']}/mods/api/PreProcess.php")) {
-				require_once("projects/{$this->get['app']}/mods/api/PreProcess.php");
-				$preProcess = new PreProcess();
-
-				$pp = $preProcess->run($this->get, $this->post);
-
-				if ($pp['headers'] && is_array($pp['headers'])) {
-					foreach ($pp['headers'] as $k => $v) {
-						header("$k: $v");
-					}
-				}
-				if ($pp['echo']) {
-					echo $pp['echo'];
-				}
-
-				if ($pp['halt']) {
-					return;
-				}
-			}
-
-			// Initialize array of request data
-			$request = [];
-
-			// Check all input data
-
-			// $_GET['app']: mandatory
-			$valid_apps = utils::dirContent(PROJS_DIR);
-			if (!$this->get['app'] || !in_array($this->get['app'], $valid_apps)) {
-				throw new Exception("Invalid app {$this->get['app']}. App must be one of " . implode(', ', $valid_apps));
-			}
-			$app = $this->get['app'];
-
-
-			// $_GET['tb']: mandatory
-			if (!$this->get['tb']) {
-				throw new Exception("Tb parameter is mandatory");
-			}
-			if (strpos($this->get['tb'], $app . PREFIX_DELIMITER) === false) {
-		    $request['tb'] = $app . PREFIX_DELIMITER . $this->get['tb'];
-			} else {
-				$request['tb'] = $this->get['tb'];
-			}
-
-
-			// $_GET['verb']: mandatory, one of read, search
-			$valid_verbs = ['read', 'search', 'inspect'];
-			if (!$this->get['verb'] || !in_array($this->get['verb'], $valid_verbs)) {
-				throw new Exception("Invalid verb {$this->get['verb']}. Verb must be one of " . implode(', ', $valid_verbs));
-			}
-
-
-			// READ verb => Migrated in v2
-			if ($this->get['verb'] === 'read') {
-				if (!$this->get['id']) {
-					throw new Exception("Parameter id is required with verb read");
-				}
-				return $this->array2response(
-					$this->getOne($request['tb'], $this->get['id'])
-				);
-			}
-
-			// INSPECT verb => Migrated in v2
-			if ($this->get['verb'] === 'inspect') {
-
-				if ($request['tb'] === PREFIX . 'all') {
-					$ret = [];
-
-					foreach (cfg::tbEl('all', 'all') as $t) {
-						$stripped_name = str_replace(PREFIX, null, $t['name']);
-						foreach (cfg::fldEl($t['name']) as $f){
-							$t['fields'][$f['name']] = $f;
-						}
-						$ret[$stripped_name] = $t;
-					}
-					return $this->array2response( $ret );
-				}
-				$ret = [];
-				$flds = cfg::fldEl($request['tb']);
-
-				foreach ($flds as $f) {
-					$f['fullname'] = $request['tb'] . ':' . $f['name'];
-					array_push($ret, $f);
-				}
-				foreach (cfg::tbEl($request['tb'], 'plugin') as $plg) {
-					foreach (cfg::fldEl($plg) as $f) {
-						$f['fullname'] = $plg . ':' . $f['name'];
-						$f['label'] = cfg::tbEl($plg, 'label') . ': ' . $f['label'];
-						array_push($ret, $f);
-					}
-				}
-
-				return $this->array2response( $ret );
-			}
-
-
-			// SEARCH verb
-			if ($this->get['verb'] === 'search') {
-
-				$valid_types = ['all', 'recent', 'advanced', 'sqlExpert', 'fast', 'id_array', 'encoded'];
-
-				if( !in_array($this->get['type'], $valid_types)) {
-					throw new Exception("Invalid search type {$this->get['type']}. Type must be one of " . implode(', ', $valid_types));
-				}
-				$request['type'] = $this->get['type'];
-
-				// Set query parameters
-
-				switch ($request['type']) {
-					case 'all':
-						// No params set
-						break;
-
-					case 'recent':
-						$request['limit'] = $this->get['limit'] ? $this->get['limit'] : 20;
-						break;
-
-					case 'advanced':
-						$request['adv'] = $this->get['adv'];
-						if (is_string($request['adv'])) {
-							parse_str($request['adv'], $request['adv']);
-						}
-						if (!$request['adv'] || !is_array($request['adv']) ) {
-							throw new Exception("Parameter adv (POST, array) is required for type advanced");
-						}
-						break;
-
-					case 'sqlExpert':
-						if (!$this->get['querytext']) {
-							throw new Exception("Parameter querytext is required for type sqlExpert");
-						}
-						$request['querytext'] = $this->get['querytext'];
-						$request['join'] = $this->get['join'];
-						$request['fields'] = $this->request['fields'];
-						break;
-
-					case 'fast':
-						$request['string'] = $this->get['string'];
-						if (!$request['string']) {
-							throw new Exception("Parameter string is required for type fast");
-						}
-						break;
-
-					case 'id_array':
-						if (!$this->get['id']) {
-							throw new Exception("Parameter id is required for type id_array");
-						}
-						$request['id'] = $this->get['id'];
-						break;
-
-					case 'encoded':
-						if (!$this->request['q_encoded']) {
-							throw new Exception("Parameter q_encoded is required for type encoded");
-						}
-						$request['q_encoded'] = $this->request['q_encoded'];
-						$request['join'] = $this->request['join'];
-						$request['fields'] = $this->request['fields'];
-						$request['limit_start'] = $this->request['limit_start'];
-						$request['limit_end'] = $this->request['limit_end'];
-						$request['group'] = $this->request['group'];
-						break;
-				}
-			}
-
-			$query = new Query(new DB, $request);
-
-			// Set Header
-			$header['query_where'] = $query->getWhere();
-			$header['query_arrived'] = $query->getQuery();
-			$header['query_encoded'] = base64_encode($query->getQuery());
-			$header['total_rows'] = $this->get['total_rows'] ? $this->get['total_rows'] : (int) $query->getTotal();
-			$header['page'] = ($this->get['page'] && (int)$this->get['page'] > 0) ? (int)$this->get['page'] : 1;
-
-			$records_per_page = $this->get['records_per_page'] ? $this->get['records_per_page'] : 30;
-			$header['total_pages'] = ceil($header['total_rows']/$records_per_page);
-			$header['table'] = $request['tb'];
-			$header['stripped_table'] = str_replace($app . PREFIX_DELIMITER, null, $request['tb']);
-			$header['table_label'] = cfg::tbEl($request['tb'], 'label');
-			$header['page'] = ($header['page'] > $header['total_pages']) ? $header['total_pages'] : $header['page'];
-
-			if ($request['limit_end']) {
-				$query->setLimit($request['limit_start'], $request['limit_end']);
-			} else if ($header['total_rows'] > 0) {
-				$query->setLimit(($header['page'] -1) * $records_per_page, $records_per_page);
-			}
-
-			$header['no_records_shown'] = (int) $query->getTotal();
-			$header['query_executed'] = $query->getQuery();
-			$header['fields'] = $query->getFields();
-
-			if ($this->request['geojson']) {
-				return $this->array2response(
-					toGeoJson::fromMultiArray(
-						$query->getResults( ($this->get['fullRecords'] && $this->get['fullRecords'] !== 'false') ), true, $request['tb']
-					)
-				);
-			} else {
-				return $this->array2response([
-					'head' => $header,
-					'records' => $query->getResults( ($this->get['fullRecords'] && $this->get['fullRecords'] !== 'false') )
-				]);
-			}
-
-		} catch (Exception $e) {
-			return $this->array2response([
-				'type' => 'error',
-				'text' => $e->getMessage(),
-				'trace' => json_encode($e->getTrace(), JSON_PRETTY_PRINT)
-				]);
-		}
-	}
-
-	/**
-	 * Return full array with record data
-	 * @param  string $tb table name
-	 * @param  int $id record id
-	 * @return array     array with all data
-	 */
-	private function getOne($tb, $id)
-	{
-		$rec = new Record($tb, $id, new DB);
-		$data['metadata'] = [
-			'table' => $tb,
-			'stripped_table' => str_replace(PREFIX, null, $tb),
-			'table_label' => cfg::tbEl($tb, 'label')
-		];
-    $data['fields'] = cfg::fldEl($tb, 'all', 'label');
-		$data['core'] = $rec->getCore();
-		$data['coreLinks'] = $rec->getCoreLinks();
-		$data['backLinks'] = $rec->getBackLinks();
-		$data['allPlugins'] = $rec->getAllPlugins();
-		$data['fullFiles'] = $rec->getFullFiles();
-		$data['geodata'] = $rec->getGeodata();
-    if (cfg::tbEl($tb, 'rs')){
-      $data['rs'] = $rec->getRS();
+        if ($this->get['tb']) {
+            // Validate table
+            $sys_manage = new Manage($this->db, $this->prefix);
+            if (in_array($this->get['tb'], $sys_manage->available_tables)) {
+                throw new \Exception("System tables cannot be queried");
+            }
+        }
     }
-		$data['userLinks'] = $rec->getUserLinks();
 
-		foreach ($data['coreLinks'] as $tb => &$cl) {
-			$cl['tb_label'] = cfg::tbEl($tb, 'label');
-		}
-		return $data;
-	}
+    private function logApiUser() : bool
+    {
+        $auth_user_id = $this->cfg->get('main.api_login_as_user');
+        if (!$auth_user_id){
+            return false;
+        }
+        $sys_manager = new Manage($this->db, $this->prefix);
+        $res = $sys_manager->getById('users', (int)$auth_user_id);
+        if (!empty($res)){
+            \login_ctrl::startUserSession($res);
+            return true;
+        }
+        return false;
+    }
 
-	/**
-	 * Formats array data as pretty-printed JSON and returns or echoes (with Cross-domain allow policy) it
-	 * @param  array  $data       array of input data
-	 * @return string
-	 */
-	private function array2response($data)
-	{
-		$mime = 'application/json';
+    public function run()
+    {
+        try {
+            try {
+                $this->logApiUser();
+            } catch (\Throwable $th) {
+                throw new \Exception('Cannot log user and bootstrap the application');
+            }
 
-		if ( $data['type'] !== 'error' && $data['records'] && file_exists("projects/{$this->get['app']}/mods/api/PostProcess.php")) {
-			require_once("projects/{$this->get['app']}/mods/api/PostProcess.php");
-			$postProcess = new PostProcess();
+            if (!\utils::canUser('read')){
+                throw new \Exception(\tr::get('not_authorized'));
+            }
 
-			$resp = $postProcess->run($data, $this->get, $this->post);
+            $this->validateInput();
+            
+            $pp_response = $this->preProcess();
+            
+            if ($pp_response === 'halt') {
+                return;
+            }
 
-			$data = $resp['data'];
-			$mime ?: $resp['mime'];
-		}
+            if (!method_exists($this, $this->verb)) {
+                throw new \Exception("Verb {$this->verb} has not been implemented yet");
+            }
 
-		if (is_array($data)) {
-			$data = json_encode($data, (version_compare(PHP_VERSION, '5.4.0') >=0 ? JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE : false));
-		}
+            $resp = $this->{$this->verb}();
+            
+            echo $this->array2response($resp);
 
-		header('Access-Control-Allow-Origin: *');
-		header('Content-type: ' . $mime . '; charset=utf-8');
-		echo $data;
+        } catch (\Throwable $e) {
+            echo $this->array2response([
+                'type' => 'error',
+                'text' => $e->getMessage(),
+                'trace' => $this->debug ? $e->getTrace() : "Turn on API debug to read trace"
+            ]);
+        }
+        \login_ctrl::endUserSession();
+    }
+
+    private function postProcess($data) : array
+    {
+        if (file_exists("projects/{$this->get['app']}/mods/api/PostProcess.php")) {
+            require_once("projects/{$this->get['app']}/mods/api/PostProcess.php");
+            $postProcess = new PostProcess();
+
+            if (!method_exists($postProcess, 'run')) {
+                return false;
+            }
+
+            $resp = $postProcess->run($data, $this->get, $this->post);
+
+            return [
+                'data' => $resp['data'],
+                'mime' => $resp['mime']
+            ];
+        } else {
+            return ["data" => $data];
+        }
+    }
+
+    private function preProcess()
+    {
+        if (file_exists("projects/{$this->get['app']}/mods/api/PreProcess.php")) {
+            require_once("projects/{$this->get['app']}/mods/api/PreProcess.php");
+            $preProcess = new PreProcess();
+
+            if (!method_exists($preProcess, 'run')) {
+                return false;
+            }
+
+            $pp = $preProcess->run($this->get, $this->post);
+
+            if ($pp['headers'] && is_array($pp['headers'])) {
+                foreach ($pp['headers'] as $k => $v) {
+                    header("$k: $v");
+                }
+            }
+            if ($pp['echo']) {
+                echo $pp['echo'];
+            }
+
+            if ($pp['halt']) {
+                return 'halt';
+            }
+        } else {
+            return $data;
+        }
+    }
+
+    /**
+     * Returns information on table or on all tables structure
+     *		$this->get['tb'] is optional
+     * @return array
+     */
+    private function inspect(): array
+    {
+        $tb = $this->get['tb'];
+
+        $resp = Inspect::Configuration($this->cfg, $tb);
+        
+        return $resp;
+    }
+
+    /**
+     * Validates request and returna array of record data
+     *		$this->get['tb'] is required
+     *		$this->get['id'] is required
+     * @return array
+     */
+    private function read(): array
+    {
+        $tb = $this->get['tb'];
+        $id = $this->get['id'];
+
+        if (!$tb) {
+            throw new \Exception("Table name is required with verb read");
+        }
+        if (!$id) {
+            throw new \Exception("Record id is required with verb read");
+        }
+        $read_record = new Read($id, false, $tb, $this->db, $this->cfg);
+        $resp = $read_record->getFull();
+        
+        return $resp;
+    }
+
+    /**
+     * Validated request and returns aray of vocabulary items
+     *		$this->get['voc'] is requires
+     * @return Array
+     */
+    private function getVocabulary() : array
+    {
+        $voc = $this->get['voc'];
+        if (!$voc) {
+            throw new \Exception("Vocabulary name is required with verb getVocabulary");
+        }
+        
+        $sys_manage = new Manage($this->db, $this->prefix);
+        $res = $sys_manage->getBySQL('vocabularies', 'voc = ?  ORDER BY sort ASC LIMIT 500 OFFSET 0', [$voc]);
+        
+        $resp = [];
+        if (is_array($res)) {
+            foreach ($res as $r) {
+                array_push($resp, $r['def']);
+            }
+        }
+        
+        return $resp;
+    }
+    
+    /**
+     * Validates request and returns array of unique values
+     *		$this->get['tb'] is required
+     *		$this->get['fld'] is required
+     *		$this->get['s'] is optional
+     *		$this->get['w'] is optional
+     * @return Array
+     */
+    private function getUniqueVal() : array
+    {
+        $tb			= $this->get['tb'];
+        $fld		= $this->get['fld'];
+        $substring	= $this->get['s'];
+        $where		= $this->get['w'];
+
+        if (!$tb) {
+            throw new \Exception("Table name is required with verb getUniqueVal");
+        }
+        if (!$fld) {
+            throw new \Exception("Field name is required with verb getUniqueVal");
+        }
+
+        $resp = GetUniqueVal::run($tb, $fld, $substring, $where, $this->db, $this->cfg, $this->prefix);
+
+        return $resp;
+    }
+    /**
+     * Validates request and returns result of search verb
+     * 	$this->get['shortsql'] is required
+     * 	$this->get['total_rows'],
+     * 		$this->get['page'],
+     * 		$this->get['geojson'],
+     * 		$this->get['records_per_page'],
+     * 		$this->get['full_records'] are optional
+     *
+     * @return array
+     */
+    private function search() : array
+    {
+
+        $shortsql = $this->get['shortsql'];
+        if (!$shortsql) {
+            throw new \Exception("ShortSQL text is required with verb search");
+        }
+
+        $total_rows 		= $this->get['total_rows']			? (int)$this->get['total_rows']			: false;
+        $page 				= $this->get['page']				? (int)$this->get['page']				: false;
+        $geojson 			= (bool) $this->get['geojson'];
+        $records_per_page	= $this->get['records_per_page'] 	? (int)$this->get['records_per_page']	: false;
+        $full_records		= (bool) $this->get['full_records'];
+        
+        $resp = Search::run(
+            $this->prefix,
+            $shortsql,
+            [
+                'total_rows' 		=> $total_rows,
+                'page'				=> $page,
+                'geojson'			=> $geojson,
+                'records_per_page'	=> $records_per_page,
+                'full_records'		=> $full_records
+            ],
+            $this->debug,
+            $this->db,
+            $this->cfg
+        );
+        
+        return $resp;
+    }
 
 
-	}
 
+    /**
+     * Validates request and returns chart data
+     *	$this->get['id'] is required. Can be a valid chart id or string 'all'
+     * @return array
+     */
+    private function getChart() : array
+    {
+        $chartId = (int) $this->get['id'];
+        if (!$chartId) {
+            throw new \Exception("Chart id is required");
+        }
+        require_once __DIR__ . '/GetChart.php';
+        $resp = GetChart::run($chartId, $this->db, $this->prefix);
+        return $resp;
+    }
+
+    private function getApiVersion()
+    {
+        return ['version' => version::current()];
+    }
+
+    /**
+     * Formats array data as pretty-printed JSON and returns or echoes (with Cross-domain allow policy) it
+     * @param  array  $data       array of input data
+     * @return string
+     */
+    private function array2response($data) : string
+    {
+        $mime = 'application/json';
+
+        if ($data['type'] !== 'error' && $data['records'] ) {
+            $pp = $this->postProcess($data);
+            $data = $pp['data'];
+            $mime ?: $pp['mime'];
+        }
+
+        if (is_array($data)) {
+            // Always add version to API response
+            $flag = $this->pretty ? JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE : JSON_UNESCAPED_UNICODE;
+            $data = json_encode($data, (version_compare(PHP_VERSION, '5.4.0') >= 0 ? $flag : false));
+        }
+
+        header('Access-Control-Allow-Origin: *');
+        header('Content-type: ' . $mime . '; charset=utf-8');
+
+        return $data;
+    }
 }

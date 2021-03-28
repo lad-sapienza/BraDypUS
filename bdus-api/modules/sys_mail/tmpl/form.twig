@@ -10,7 +10,7 @@
 		<div class="row">
 			<div class="col-sm-5">
 				<h5>{{ tr.get('sender') }}</h5>
-				<select name="from">
+				<select name="from" class="form-control">
 					<option value="{{ adm_email }}">{{ adm_email }}</option>
 					<option value="{{ user_email }}">{{ user_email }}</option>
 				</select>
@@ -24,8 +24,8 @@
 			
 			<div class="col-sm-7">
 				<h5>{{ tr.get('content') }}</h5>
-				<p><input type="text" name="subject" placeholder="{{ tr.get('subject') }}" /></p>
-				<textarea name="body" style="height:200px" placeholder="{{ tr.get('body') }}"></textarea>
+				<p><input class="form-control" type="text" name="subject" placeholder="{{ tr.get('subject') }}" /></p>
+				<textarea class="form-control" name="body" style="height:200px" placeholder="{{ tr.get('body') }}"></textarea>
 			</div>
 		</div>
 		</fieldset>

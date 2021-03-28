@@ -1,123 +1,135 @@
 <?php
 /**
- * @author			Julian Bogdani <jbogdani@gmail.com>
- * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
- * @license			See file LICENSE distributed with this code
+ * @copyright 2007-2021 Julian Bogdani
+ * @license AGPL-3.0; see LICENSE
  * @since			Apr 7, 2012
- */
-/*
- * Main CONSTANTS
- */
+*/
 
-define ( 'MAIN_DIR',	$basePath);
-define ( 'PROJS_DIR',	MAIN_DIR . 'projects/' );
-define ( 'LIB_DIR',		MAIN_DIR . 'lib/' );
-define ( 'MOD_DIR',		MAIN_DIR . 'modules/' );
-define ( 'LOCALE_DIR',	MAIN_DIR . 'locale/');
-$error_log = MAIN_DIR . 'logs/error.log';
-
-// required since 5.0.1: http://php.net/manual/en/function.date-default-timezone-set.php
+// required since php 5.0.1: http://php.net/manual/en/function.date-default-timezone-set.php
 date_default_timezone_set('Europe/Rome');
 
-// SETS ERROR REPORTING
-( ini_get('error_reporting') <> 6135 )	?	ini_set('error_reporting', 6135) : '';
+/**
+ * Main CONSTANTS are always set
+ */
+define ( 'MAIN_DIR',	$basePath);
 
-if (!is_dir(MAIN_DIR . 'sessions')){
-	@mkdir(MAIN_DIR . 'sessions');
-	if (!is_dir(MAIN_DIR . 'sessions')){
-		throw new Exception('Cannot create sessions folder');
-	}
-}
+/**
+ * Set session lifetime to last 8h
+ */
+ini_set('session.gc_maxlifetime', (60*60*8)); #8h
 
-//SETS SESSION SAVE PATH
-ini_set ( 'session.save_path', MAIN_DIR . 'sessions' );
+/**
+ * Error reporting is set to none
+ */
+error_reporting(0);
 
-// TURN OFF ERROR DISPLAY
+/**
+ * Turn off display errors
+ */
 ini_set('display_errors', 'off');
 
-//SETS SESSION MAX LIFE TIME
-ini_set('session.gc_maxlifetime', (3600*8)); #8h
-
-//START SESSION
+/**
+ * Start session
+ */
 session_start();
 
-/*
- * Session CONSTANTS
+/**
+ * Force logout
  */
-($_REQUEST['app'] && is_dir('./projects/' . $_REQUEST['app'])) ? $_SESSION['app'] = $_REQUEST['app'] : '';
-
-define ( 'PREFIX_DELIMITER', '__');
-
-if($_SESSION['app']) {
-	define ( 'PROJ_DIR', PROJS_DIR . $_SESSION['app']."/");
-	define ( 'APP', $_SESSION['app']);
-	define ( 'PREFIX', APP . PREFIX_DELIMITER);
+if ($_GET['logout']){
+	$_SESSION = [];
+	session_destroy();
+	header("Location: ./");
 }
 
-/*
- * PROJect CONSTANTS
+/**
+ * Define APP from REQUEST['app] (POST or GET): 
+ * Or define from SESSION['app']
+ * In both cases, application directory must exist!
  */
-if ( defined('PROJ_DIR')) {
-	define ('PROJ_TMP_DIR',		PROJ_DIR . 'tmp/' . $_SESSION['user']['id'] . '/');
-	$error_log 				= 	PROJ_DIR . 'error.log';
-
-
+if ( isset($_REQUEST['app']) && is_dir(MAIN_DIR . 'projects/' . $_REQUEST['app'] ) ) {
+	define ( 'APP', $_REQUEST['app']);
+	$_SESSION['app'] = APP;
+} elseif (isset($_SESSION['app'])) {
+	if (is_dir(MAIN_DIR . 'projects/' . $_SESSION['app'] )) {
+		define ( 'APP', $_SESSION['app']);
+	} else {
+		/**
+		 * Edge case: session app is set, but application direcory is not set. 
+		 * Force logout
+		 */
+		$_SESSION = [];
+		session_destroy();
+		header("Location: ./");
+	}
+}
+/**
+ * Define PROJ_DIR and PREFIX: APP dependent
+ */
+if( defined('APP') ) {
+	
+	define ( 'PREFIX', APP . '__');
+	
+	define ( 'PROJ_DIR', 		MAIN_DIR . 'projects/' . APP . '/');
+	
 	/*
-	 * Create directories that MUST exist
+	 * Create directories that MUST exist for each valid app
 	 */
 	$must_exist_dirs = [
+		MAIN_DIR . 'cache',
+		MAIN_DIR . 'cache/img',
 		PROJ_DIR . 'files', 
-		PROJ_TMP_DIR, 
 		PROJ_DIR . 'backups', 
 		PROJ_DIR . 'export', 
 		PROJ_DIR . 'db'
 	];
-
+	
 	foreach($must_exist_dirs as $dir) {
 		if (!is_dir($dir)) {
-			mkdir($dir, 0777, true);
+			@mkdir($dir, 0777, true);
+		}
+	}
+	
+	$must_be_writtable = $must_exist_dirs;
+	
+	foreach ($must_be_writtable as $file) {
+		if (!is_writable($file)){
+			die("Directory $dir is not writable. Application cannot start!");
 		}
 	}
 }
 
-// LOG PHP ERRORS TO APPLICATION ERROR.LOG FILE
-define ('ERROR_LOG', $error_log);
-ini_set('error_log', ERROR_LOG);
-
-
-// DEBUG OPTIONS
-if ($__go_debug){
-	$_SESSION['debug_mode'] = true;
+/**
+ * If debug is explicitly set to 0|1, stop|stop debug_mode
+ */
+if (isset($_GET['debug'])) {
+	if ( $_GET['debug'] === '1' ) {
+		$_SESSION['debug_mode'] = true;
+	} else {
+		$_SESSION['debug_mode'] = false;
+	}
 }
 
-if ($__stop_debug){
-	$_SESSION['debug_mode'] = false;
-}
 
-if ($_SESSION['debug_mode']){
-	define('DEBUG_ON', true);
+/**
+ * Set DEBUG_ON as $_SESSION['debug_mode']
+ */
+define('DEBUG_ON', isset($_SESSION['debug_mode']) && $_SESSION['debug_mode']);
+
+/**
+ * Set cache if debug is false, 
+ * otherwise set to true
+ */
+if (DEBUG_ON === true) {
+	define('CACHE', serialize( [ "autoescape" => false, "debug" => true ] ));
+	// Error reporting is set to ALL but NOT: Warning or Notice
+	error_reporting(E_ALL & ~E_WARNING & ~E_NOTICE);
+	ini_set('error_log', 'logs/error.log');
+
 } else {
-	define('DEBUG_ON', false);
+	define('CACHE', serialize([ "autoescape" => false, "cache" => "cache"]));
 }
 
-if (DEBUG_ON) {
-	define('CACHE', serialize( ['debug' => true] ));
-} else {
-	define('CACHE', serialize( ['cache'=>'cache'] ));
-}
-
-
-require_once LIB_DIR . 'myException.php';
-require_once LIB_DIR . 'autoLoader.php';
-new autoLoader();
-
-require_once $root . 'lib/vendor/Twig/Autoloader.php';
-Twig_Autoloader::register();
-
-set_error_handler('Meta::logError', 6135);
-
-tr::load_file();
-
-if (defined('PROJ_DIR')) {
-	cfg::load(false, true);
-}
+require_once $basePath . 'lib/autoLoader.php';
+require_once $basePath . 'vendor/autoload.php';
+new autoLoader($basePath . 'lib/', $basePath . 'modules/');

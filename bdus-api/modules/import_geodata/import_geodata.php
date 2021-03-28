@@ -1,8 +1,7 @@
 <?php
 /**
- * @author			Julian Bogdani <jbogdani@gmail.com>
- * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
- * @license			See file LICENSE distributed with this code
+ * @copyright 2007-2021 Julian Bogdani
+ * @license AGPL-3.0; see LICENSE
  * @since				May 3, 2014
  */
 
@@ -10,85 +9,85 @@ class import_geodata_ctrl extends Controller
 {
   public function start()
   {
-    $this->render('import_geodata', 'start', array(
-      'tables' => cfg::getNonPlg()
-    ));
+    $this->render('import_geodata', 'start', [
+      'tables' => $this->cfg->get('tables.*.label', 'is_plugin', null)
+    ]);
   }
   
   public function load_file()
   {
-    $tb = $this->request['param'][0];
+    $tb = $this->request['tb'];
     
-    $this->render('import_geodata', 'load_file', array(
+    $this->render('import_geodata', 'load_file', [
       'tb' => $tb
-    ));
+    ]);
   }
   
   public function setFields()
   {
-    $tb = $this->request['param'][0];
-    $file = $this->request['param'][1];
+    $tb = $this->get['tb'];
+    $file = $this->get['file'];
     
-    try
-    {
+    try {
+
       $import = new importGeodata();
 
       $resp = $import->checkGeojson(file_get_contents($file));
       
-      $this->render('import_geodata', 'setFields', array(
+      $this->render('import_geodata', 'setFields', [
         'tb' => $tb,
         'file' => $file,
-        'id_label' => cfg::fldEl($tb, cfg::tbEl($tb, 'id_field'), 'label'),
+        'id_label' => $this->cfg->get("tables.{$tb}.fields." . $this->cfg->get("tables.{$tb}.id_field") . ".label"),
         'resp' => $resp
-      ));
+      ]);
       
-    }
-    catch (myException $e)
-    {
-      $e->log();
-      utils::alert_div('empty_or_wrong_geojson', true);
+    } catch (\Throwable $e) {
+      $this->log->error($e);
+      \utils::alert_div('empty_or_wrong_geojson', true);
     }
   }
   
   public function confirm()
   {
-    $tb = $this->request['param'][0];
-    $file = $this->request['param'][1];
-    $id_field = $this->request['param'][2];
+    $tb = $this->get['tb'];
+    $file = $this->get['file'];
+    $id_field = $this->get['id_field'];
     
     $this->render('import_geodata', 'confirm', array(
       'tb' => $tb,
-      'tb_label' => cfg::tbEl($tb, 'label'),
+      'tb_label' => $this->cfg->get("tables.{$tb}.label"),
       'file' => $file,
-      'id_label' => cfg::fldEl($tb, cfg::tbEl($tb, 'id_field'), 'label'),
+      'id_label' => $this->cfg->get("tables.$tb.fields." . $this->cfg->get("tables.$tb.id_field"). ".label"),
       'id_field' => $id_field
       ));
   }
   
   public function process()
   {
-    $tb = $this->request['param'][0];
-    $file = $this->request['param'][1];
-    $id_field = $this->request['param'][2];
-    $delete = $this->request['param'][3] === 'yes' ? true :  false;
+    $tb = $this->get['tb'];
+    $file = $this->get['file'];
+    $id_field = $this->get['id_field'];
+    $delete = $this->get['delete'] === 'yes' ? true :  false;
     
     
-    try
-    {
+    try {
       $import = new importGeodata();
       
-      $import->settings(new DB(), $tb, file_get_contents($file), $id_field, $delete);
+      $totalImports = $import->runImport(
+        $this->db, 
+        $tb, 
+        file_get_contents($file), 
+        $id_field, 
+        $delete,
+        $this->cfg->get("tables.$tb.id_field")
+      );
       
-      $totalImports = $import->runImport();
+      echo '<div class="text-success lead"><i class="fa fa-check"></i> ' 
+        . \tr::get('geodata_ok_uploaded', [$totalImports] ) . '</div>';
       
-      echo '<div class="text-success lead"><i class="glyphicon glyphicon-ok"></i> ' 
-        . tr::sget('geodata_ok_uploaded', array($totalImports)) . '</div>';
-      
-    }
-    catch (myException $e)
-    {
-      $e->log();
-      utils::alert_div('geodata_ok_uploaded', true);
+    } catch (\Throwable $e) {
+      $this->log->error($e);
+      \utils::alert_div('geodata_ok_uploaded', true);
     }
   }
 }

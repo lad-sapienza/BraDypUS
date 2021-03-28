@@ -1,9 +1,8 @@
 <?php
 /**
- * Manages user preerences
- * @author			Julian Bogdani <jbogdani@gmail.com>
- * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
- * @license			See file LICENSE distributed with this code
+/**
+ * @copyright 2007-2021 Julian Bogdani
+ * @license AGPL-3.0; see LICENSE
  * @since			Aug 11, 2012
  * 
  * $_SESSION['pref']
@@ -18,6 +17,9 @@
  * 			array of fields ids
  */
 
+use DB\DBInterface;
+use DB\System\Manage;
+
 class pref
 {
 	/**
@@ -28,23 +30,17 @@ class pref
 	 */
 	public static function setTmpl($tb, $context, $tmpl = false)
 	{
-		if ($tmpl)
-		{
+		if ($tmpl) {
 			$_SESSION['pref']['tmpl'][$tb][$context] = $tmpl;
-		}
-		else
-		{
+		} else {
 			unset($_SESSION['pref']['tmpl'][$tb][$context]);
-			if (empty($_SESSION['pref']['tmpl'][$tb]))
-			{
+			if (empty($_SESSION['pref']['tmpl'][$tb])) {
 				unset($_SESSION['pref']['tmpl'][$tb]);
 			}
-			if (empty($_SESSION['pref']['tmpl']))
-			{
+			if (empty($_SESSION['pref']['tmpl'])) {
 				unset($_SESSION['pref']['tmpl']);
 			}
 		}
-		
 	}
 	
 	/**
@@ -74,12 +70,9 @@ class pref
 	 */
 	public static function set($el, $val = false)
 	{
-		if ($val)
-		{
+		if ($val) {
 			$_SESSION['pref'][$el] = $val;
-		}
-		else
-		{
+		} else {
 			unset($_SESSION['pref']);
 		}
 	}
@@ -103,31 +96,20 @@ class pref
 	
 	/**
 	 * Saves pref data to db
+	 *
+	 * @param DBInterface $db
+	 * @return void
 	 */
-	public static function save2DB()
+	public static function save2DB(DBInterface $db)
 	{
-		$user = new User(new DB());
-		
-		cookieAuth::update();
-
-		return $user->update($_SESSION['user']['id'], false, false, false, false, serialize($_SESSION['pref']));
-	}
-	
-	/**
-	 * Loads ref data from db
-	 * @param string $app
-	 */
-	public static function getFromDB($app = false)
-	{
-		
-		$user = new User(new DB($app));
-		
-		$uData = $user->getUser(array('id'=>$_SESSION['user']['id']));
-		
-		unset($_SESSION['pref']);
-		if ($uData[0]['settings'])
-		{
-			$_SESSION['pref'] = unserialize($uData[0]['settings']);
-		}
+		\cookieAuth::update();
+		$sys_manager = new Manage($db, PREFIX);
+		return $sys_manager->editRow(
+			'users', 
+			$_SESSION['user']['id'],
+			[
+				'settings' => serialize($_SESSION['pref'])
+			]
+		);
 	}
 }

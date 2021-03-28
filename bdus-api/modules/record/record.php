@@ -1,10 +1,11 @@
 <?php
 /**
- * @author			Julian Bogdani <jbogdani@gmail.com>
- * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
- * @license			See file LICENSE distributed with this code
+ * @copyright 2007-2021 Julian Bogdani
+ * @license AGPL-3.0; see LICENSE
  * @since			Jan 10, 2013
  */
+
+use \Record\Read;
 
 class record_ctrl extends Controller
 {
@@ -22,7 +23,7 @@ class record_ctrl extends Controller
             if (is_array($this->request['id'])) {
                 foreach ($this->request['id'] as $id) {
                     try {
-                        $record = new Record($this->get['tb'], $id, new DB);
+                        $record = new Record($this->get['tb'], $id, $this->db, $this->cfg);
 
                         if (is_array($this->post['core'])) {
                             $record->setCore($this->post['core']);
@@ -45,28 +46,28 @@ class record_ctrl extends Controller
                         } else {
                             $error[$id] = true;
                         }
-                    } catch (myException $e) {
+                    } catch (\Throwable $e) {
                         $error[$id] = true;
-                        $e->log($e);
+                        $this->log->error($e);
                     }
                 }
             }
 
             if (count($ok) == count($this->request['id'])) {
                 $data['status'] = 'success';
-                $data['verbose'] = tr::get('success_saved');
+                $data['verbose'] = \tr::get('success_saved');
                 $inserted_id ? $data['inserted_id'] = $inserted_id : '';
             } elseif (count($error) == count($this->request['id'])) {
                 $data['status'] = 'error';
-                $data['verbose'] = tr::get('error_saved');
+                $data['verbose'] = \tr::get('error_saved');
             } else {
                 $data['status'] = 'warning';
-                $data['verbose'] = tr::sget('partial_success_saved', array(implode(', ', $ok), imaplode(', ', $error)));
+                $data['verbose'] = \tr::get('partial_success_saved', [ implode(', ', $ok), implode(', ', $error) ]);
             }
-        } catch (myException $e) {
+        } catch (\Throwable $e) {
             $data['status'] = 'error';
-            $data['verbose'] = tr::get('error_saved');
-            $e->log($e);
+            $data['verbose'] = \tr::get('error_saved');
+            $this->log->error($e);
         }
 
         echo json_encode($data);
@@ -76,34 +77,35 @@ class record_ctrl extends Controller
 
     public function erase()
     {
-        if (!utils::canUser('edit')) {
-            $data = array('status' => 'error', 'text'=> utils::alert_div('not_enough_privilege'));
+        if (!\utils::canUser('edit')) {
+            $data = array('status' => 'error', 'text'=> \utils::alert_div('not_enough_privilege'));
             echo json_encode($data);
             return;
         }
         if (is_array($this->request['id'])) {
+            $error = [];
             foreach ($this->request['id'] as $id) {
                 try {
-                    $record = new Record($this->get['tb'], $id, new DB);
+                    $record = new Record($this->get['tb'], $id, $this->db, $this->cfg);
 
                     $record->delete();
 
                     $ok[] = true;
-                } catch (myException $e) {
-                    $e->log();
+                } catch (\Throwable $e) {
+                    $this->log->error($e);
                     $error[] = true;
                 }
             }
 
-            if (count($this->request['id']) == count($error)) {
-                $data = array('status' => 'error', 'text' => tr::get('no_record_deleted'));
+            if ( count($this->request['id']) ===  count($error) ) {
+                $data = array('status' => 'error', 'text' => \tr::get('no_record_deleted'));
             } elseif (count($this->request['id']) == count($ok)) {
-                $data = array('status' => 'success', 'text' => tr::get('all_record_deleted'));
+                $data = array('status' => 'success', 'text' => \tr::get('all_record_deleted'));
             } else {
-                $data = array('status' => 'warning', 'text' => tr::sget('partially_deleted_with_count', array(count($ok), $count($error) )) );
+                $data = array('status' => 'warning', 'text' => \tr::get('partially_deleted_with_count', [ count($ok), $count($error) ] ) );
             }
         } else {
-            $data = array('status' => 'error', 'text' => tr::get('no_id_provided') );
+            $data = array('status' => 'error', 'text' => \tr::get('no_id_provided') );
         }
 
         echo json_encode($data);
@@ -112,56 +114,54 @@ class record_ctrl extends Controller
 
     public function show()
     {
-        if (!$this->request['tb']) {
-            throw new myException(tr::get('tb_missing'));
+        $tb = $this->request['tb'];
+        $context = $this->request['a'];
+        $id = $this->request['id'];
+        $id_field = $this->request['id_field'];
+
+        if (!$tb) {
+            throw new \Exception( \tr::get('tb_missing'));
         }
 
         // user must have enough privileges
-        if (!utils::canUser('read')) {
-            utils::alert_div('not_enough_privilege', true);
+        if (!\utils::canUser('read')) {
+            \utils::alert_div('not_enough_privilege', true);
             return;
         }
         // a record id must be provided in edit & read & preview mode
-        if ($this->request['a'] !== 'add_new' && !$this->request['id'] && !$this->request['id_field']) {
-            throw new myException(tr::get('no_id_to_view'));
-        }
-
-        // $show_next is the id to show in edit mode, after edit is completed
-        if ($this->request['a'] == 'add_new') {
-            $show_next = "['last_added']";
-        } elseif (is_array($this->request['id'])) {
-            $show_next = "['" . implode($this->request['id']) . "']";
-        } elseif (is_array($this->request['id_field'])) {
-            $show_next = "['" . implode($this->request['id_field']) . "']";
+        if ($context !== 'add_new' && !$id && !$id_field) {
+            throw new \Exception( \tr::get('no_id_to_view'));
         }
 
         // no data are retrieved if context is add_new or multiple edit!
-        if ($this->request['a'] == 'add_new' or ($this->request['a'] == 'edit' and count($this->request['id']) > 1)) {
-            $id_arr = array('new');
-        } elseif ($this->request['id_field']) {
-            $id_arr = $this->request['id_field'];
+        if ($context === 'add_new' || ($context === 'edit' and count($id) > 1)) {
+            $id_arr = ['new'];
+            $flag_idfield = false;
+        } elseif ($id_field) {
+            $id_arr = $id_field;
             $flag_idfield = true;
         } else {
-            $id_arr = $this->request['id'];
+            $id_arr = $id;
+            $flag_idfield = false;
         }
+        
 
-        //Can not display more than 500 records!
+        //Can not display more than 100 records!
         $total_records = count($id_arr);
-
-        if ($total_records > 500) {
-            echo '<div class="alert">' . tr::sget('too_much_records', array($total_records, '500')) . '</div>';
+        if ($total_records > 100) {
+            echo '<div class="alert">' . \tr::get('too_much_records', [ $total_records, '100'] ) . '</div>';
             return;
         }
 
         $step = 10;
 
-        foreach ($id_arr as $index => $id) {
+        foreach ($id_arr as $index => $one_id) {
             $index = $index+1;
 
             if ($index > ($step)) {
                 return;
             }
-            if (($key = array_search($id, $id_arr)) !== false) {
+            if (($key = array_search($one_id, $id_arr)) !== false) {
                 unset($id_arr[$key]);
             }
             if ($index === $total_records) {
@@ -170,94 +170,148 @@ class record_ctrl extends Controller
                 echo $continue_url = 'id[]=' . implode('&id[]=', $id_arr);
             }
 
-            if ($id == 'new') {
-                $id = false;
+            if ($one_id === 'new') {
+                $one_id = false;
             }
 
-            $record = new Record($this->request['tb'], ($flag_idfield ? false : $id), new DB);
+            $readRecord = new Read($one_id, $flag_idfield, $tb, $this->db, $this->cfg);
 
-            if ($flag_idfield) {
-                $record->setIdField($id);
-            }
-
-            if ($this->request['a'] == 'edit' &&
-                    (!utils::canUser('edit', $record->getCore('creator')) || (count($this->request['id']) > 1 && !utils::canUser('multiple_edit')))) {
-                echo '<h2>' . tr::get('not_enough_privilege') . '</h2>';
+            if ($context === 'edit' &&
+                    (!\utils::canUser('edit', $readRecord->getCore('creator', true)) || (count($id) > 1 && !\utils::canUser('multiple_edit')))) {
+                echo '<h2>' . \tr::get('not_enough_privilege') . '</h2>';
                 continue;
             }
 
-            if ($this->request['a'] == 'add_new' && !utils::canUser('add_new')) {
-                echo '<h2>' . tr::get('not_enough_privilege') . '</h2>';
+            if ($context === 'add_new' && !\utils::canUser('add_new')) {
+                echo '<h2>' . \tr::get('not_enough_privilege') . '</h2>';
                 continue;
             }
 
-            $tmpl = new ParseTmpl($this->request['a'], $record);
+            $fieldObj = new \Template\Template($context, $readRecord, $this->db, $this->cfg);
+            
+            // get template
+            $template_file = $this->getTemplate($tb, $context);
 
-            $this->render('record', 'show', array(
-                    'form_id' => uniqid('editadd') . rand(10, 999),
-                    'action' => $this->request['a'],
-                    'html' => $tmpl->parseAll(),
-                    'multiple_id' => (count($this->request['id']) > 1) ? tr::sget('multiple_edit_alert', array(count($this->request['id']), implode('; id: ', $this->request['id']))) : false,
-                    'tb' => $this->request['tb'],
-                    'id_url' => is_array($this->request['id']) ? 'id[]=' . implode('&id[]=', $this->request['id']) : false,
-                    'totalRecords' => $total_records,
-                    'id' => $flag_idfield ? $record->getCore('id') : $id,
-                    'show_next' => $show_next,
-                    'can_edit' => (utils::canUser('edit', $record->getCore('creator')) || (count($this->request['id']) > 1 && utils::canUser('multiple_edit'))),
-                    'can_erase' => utils::canUser('edit', $record->getCore('creator')),
-                    'continue_url' => $continue_url,
-                    'virtual_keyboard' => cfg::main('virtual_keyboard')
-            ));
+            if ($template_file){
+                $twig = new \Twig\Environment( new \Twig\Loader\FilesystemLoader(PROJ_DIR . 'templates/'), $this->getCacheSettings() );
+                $html = $twig->render($template_file, [
+                    'print' => $fieldObj
+                ]);
+            } else {
+                $html = $fieldObj->showall();
+            }
+
+            $this->render('record', 'show', [
+                'action' => $context,
+                'html' => $html,
+                'multiple_id' => (count((array)$id) > 1) ? \tr::get('multiple_edit_alert', [ count($id), implode('; id: ', $id) ] ) : false,
+                'tb' => $tb,
+                'id_url' => is_array($id) ? 'id[]=' . implode('&id[]=', $id) : false,
+                'totalRecords' => $total_records,
+                'id' => $flag_idfield ? $readRecord->getCore('id') : $one_id,
+                'can_edit' => (\utils::canUser('edit', $readRecord->getCore('creator')) || (count($id) > 1 && \utils::canUser('multiple_edit'))),
+                'can_erase' => \utils::canUser('edit', $readRecord->getCore('creator')),
+                'continue_url' => $continue_url,
+                'virtual_keyboard' => $this->cfg->get('main.virtual_keyboard')
+            ]);
         }
+    }
+
+    private function getTemplate(string $tb, string $context)
+    {
+        $stripped_tb = str_replace($this->prefix, null, $tb);
+
+        if ( $context === 'add_new'){
+            $context = 'edit';
+        }
+        $paths = [
+            // preference saved template
+            \pref::getTmpl($tb, $context),
+
+            // config, context-bound, template
+            $this->cfg->get("tables.{$tb}.tmpl_{$context}"),
+            
+            // default, context-bound template: {tb_name}_{context}.twig eg. siti_edit.twig
+            $stripped_tb . '_' . $context . '.twig',
+
+            // default, context indipendent template
+			$stripped_tb . '.twig'
+        ];
+
+        $tmpl = false;
+
+        foreach ($paths as $path) {
+            if ($path && file_exists( PROJ_DIR . 'templates/' . $path ) && !$tmpl){
+                $tmpl = $path;
+            }
+        }
+        return $tmpl;
     }
 
     public function showResults()
     {
-        if (!utils::canUser('read')) {
-            echo utils::message(tr::get('not_enough_privilege'), 'error', 1);
+        if (!\utils::canUser('read')) {
+            echo \utils::message(\tr::get('not_enough_privilege'), 'error', 1);
             return;
         }
 
         if (!$this->request['tb']) {
-            throw new myException(tr::get('tb_missing'));
+            throw new \Exception(\tr::get('tb_missing'));
         }
 
-        $queryObj = new Query(new DB(), $this->request, true);
+        $queryObj = new QueryFromRequest($this->db, $this->cfg, $this->request, true);
 
         $count = $this->request['total'] ?: $queryObj->getTotal();
 
-        if ($count == 0) {
+        if ($count === 0) {
             $noResult = true;
         }
 
-        $this->render('record', 'result', array(
-                'tb' => $this->request['tb'],
-                'records_found' => ($noResult ? tr::get('no_record_found') : tr::sget('x_record_found', $count)),
-                'can_user_add' => utils::canUser('add_new'),
-                'can_user_read' => utils::canUser('read'),
-                'can_user_edit' => utils::canUser('edit'),
-                'urlencoded_query' => urlencode($queryObj->getQuery()),
-                'encoded_query' => base64_encode($queryObj->getQuery()),
-                'encoded_where' => $queryObj->getWhere(true),
-                'uid' => uniqid(),
-                'noResult' => $noResult,
-                'noDblClick' => $this->request['noDblClick'],
-                'hasRS' => cfg::tbEl($this->request['tb'], 'rs'),
-                'noOpts' => $this->request['noOpts'],
-                'col_names' => $queryObj->getFields(),
-                'iTotalRecords' => $count,
-                'lang' => pref::getLang(),
-                //TODO: user panel controle for user preferences
-                'infinte_scroll' => pref::get('infinite_scroll'),
-                'select_one' => $this->request['select_one'],
-                'hideId' => (cfg::fldEl($this->request['tb'], 'id', 'hide') == 1)
-        ));
+        list($qq, $vv) = $queryObj->getQuery(true);
+        $encoded_query_obj = \SQL\SafeQuery::encode($qq, $vv);
+
+        $this->render('record', 'result', [
+            // string, table name
+            'tb' => $this->request['tb'],
+            // string, total of records found
+            'records_found' => ($noResult ? \tr::get('no_record_found') : \tr::get('x_record_found', [$count])),
+            // boolean, can current user add new records?
+            'can_user_add' => \utils::canUser('add_new'),
+            // boolean, can current user read this record?
+            'can_user_read' => \utils::canUser('read'),
+            // boolean, can current user edit this records?
+            'can_user_edit' => \utils::canUser('edit'),
+            
+            'encoded_query_obj' => $encoded_query_obj,
+            // string, \SQL\SafeQuery encoded query & values, to be used for bookmarking, export, matrix, charts, geoface
+            'encoded_where_obj' => $queryObj->getWhereAndValues(),
+            // boolean, if no records are found, set to true: no table of results will be output in template
+            'noResult' => $noResult,
+            // boolean, if true double click on records is not allowed
+            'noDblClick' => $this->request['noDblClick'],
+            // boolean, if table has or not activated RS plugin
+            'hasRS' => $this->cfg->get("tables.{$this->request['tb']}.rs"),
+            // boolean, if true option buttons will not be shown in template
+            'noOpts' => $this->request['noOpts'],
+            // array, list of preview columns, to be used for datatable
+            'col_names' => $queryObj->getFields(),
+            // int, Total numer of records found, to be used for datatable
+            'iTotalRecords' => $count,
+            // string, current system language, to be used for datatable
+            'lang' => \pref::getLang(),
+            // boolean: if true infinite scrolling of databatables will be activated
+            'infinte_scrolling' => \pref::get('infinite_scrolling'),
+            // boolean: if true only one records can be selected
+            'select_one' => $this->request['select_one'],
+            // boolean, if true id field will be available in datatables, but hidden
+            'hideId' => ($this->cfg->get("tables.{$this->request['tb']}.fields.id.hide") == 1)
+        ]);
     }
 
     /**
      * http://datatables.net/usage/server-side
      * 	REQUEST
-     * 		q_encoded
+     * 		obj_encoded
      * 		sEcho: (int)
      * 		iTotalRecords: (int)
      * 		iDisplayStart
@@ -269,62 +323,43 @@ class record_ctrl extends Controller
      */
     public function sql2json()
     {
-        $this->request['type'] = 'encoded';
+        try {
+            $this->request['type'] = 'obj_encoded';
 
-        $qObj = new Query(new DB(), $this->request, true);
+            $qObj = new QueryFromRequest($this->db, $this->cfg, $this->request, true);
 
-        $response['sEcho'] = intval($this->request['sEcho']);
-        $response['query_arrived'] = $qObj->getQuery();
+            $response['sEcho'] = intval($this->request['sEcho']);
+            $response['query_arrived'] = $qObj->getQuery();
 
-        $response['iTotalRecords'] = $response['iTotalDisplayRecords'] = isset($this->request['iTotalRecords']) ? $this->request['iTotalRecords'] : $qObj->getTotal();
+            $response['iTotalRecords'] = $response['iTotalDisplayRecords'] = isset($this->request['iTotalRecords']) ? $this->request['iTotalRecords'] : $qObj->getTotal();
 
-        if (isset($this->request['iDisplayStart']) && $this->request['iDisplayLength'] != '-1') {
-            $qObj->setLimit(intval($this->request['iDisplayStart']), $this->request['iDisplayLength']);
-        }
+            if (isset($this->request['iDisplayStart']) && $this->request['iDisplayLength'] != '-1') {
+                $qObj->setLimit(intval($this->request['iDisplayStart']), $this->request['iDisplayLength']);
+            }
 
-        if (isset($this->request['iSortCol_0'])) {
-            $fields = array_keys($qObj->getFields());
-            $qObj->setOrder($fields[$this->request['iSortCol_0']], ($this->request['sSortDir_0']==='asc' ? 'asc' : 'desc'));
-        }
+            if (isset($this->request['iSortCol_0'])) {
+                $fields = array_keys($qObj->getFields());
+                $qObj->setOrder($fields[$this->request['iSortCol_0']], ($this->request['sSortDir_0']==='asc' ? 'asc' : 'desc'));
+            }
 
-        if ($this->request['sSearch']) {
-            $qObj->setSubQuery($this->request['sSearch']);
-            $response['iTotalDisplayRecords'] = $qObj->getTotal();
-        }
+            if ($this->request['sSearch']) {
+                $qObj->setSubQuery($this->request['sSearch']);
+                $response['iTotalDisplayRecords'] = $qObj->getTotal();
+            }
 
-        $response['query_executed'] = $qObj->getQuery();
+            $response['query_executed'] = $qObj->getQuery();
 
-        $response['aaData'] = $qObj->getResults();
+            $response['aaData'] = $qObj->getResults();
 
-        foreach ($response['aaData'] as $id => &$row) {
-            $response['aaData'][$id]['DT_RowId'] = $row['id'];
+            foreach ($response['aaData'] as $id => &$row) {
+                $response['aaData'][$id]['DT_RowId'] = $row['id'];
+            }
+
+        } catch (\Throwable $th) {
+            $this->log->error($th);
+            $response = [];
         }
 
         echo json_encode($response);
-    }
-
-
-
-    public function check_duplicates()
-    {
-        try {
-            if (!$this->request['fld'] or !$this->request['val']) {
-                throw new myException('Field name and value are required');
-            }
-            if (preg_match('/core\[/', $this->request['fld'])) {
-                $arr = explode('][', preg_replace('/core\[(.+)\]/', '$1', $this->request['fld']));
-
-                $query = 'SELECT count(*) as `tot` FROM `' . $arr[0] . '` WHERE `' . $arr[1] . '`=:' . $arr[1];
-
-                $res = DB::start()->query($query, array(':' . $arr[1] => $this->request['val']), 'read');
-
-                if ($res[0]['tot'] > 0) {
-                    echo 'error';
-                }
-            }
-        } catch (myException $e) {
-            echo 'error';
-            $e->log();
-        }
     }
 }

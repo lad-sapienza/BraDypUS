@@ -28,20 +28,29 @@ var login = {
 		
 		loadLogin : function(app){
 			if (!app){
-				app = core.getHash('app');
+				app = hashActions.getHash('app');
 			}
 			
-			$('#wrapper').html(core.loading).load('controller.php?obj=login_ctrl&method=select_app' + (app ? '&app=' + app : ''));
+			$('#wrapper').html(core.loading).load('./?obj=login_ctrl&method=select_app' + (app ? '&app=' + app : ''));
 		},
 		
-		loadLoginForm: function(db){
-			$('#select_apps .buttons').slideUp();
-			$('#select_apps .login').load('controller.php?obj=login_ctrl&method=loginForm', {'app': db}).slideDown();
+		loadCreateApp: () => {
+			core.open({
+				obj:'new_app_ctrl',
+				method: 'new_app_form',
+				title: core.tr('app_create'),
+				buttons:[
+					{
+						text: core.tr('close'),
+						action: 'close'
+					}
+					]
+			}, 'modal');
 		},
 		
 		autologin: function(app){
 			if (!app){
-				app = core.getHash('app');
+				app = hashActions.getHash('app');
 			}
 			// try autologin (cookie authentication or application free autologin)
 			core.getJSON('login_ctrl', 'autolog', {'app': app}, false, function(data){
@@ -82,7 +91,7 @@ var login = {
 		lost_pwd: function(app){
 			core.open({
 				html:'<p class="lead">' + core.tr('enter_email_to_get_password') + '</p>'
-					+ '<input type="text" class="email" placeholder="' + core.tr('email') + '" />',
+					+ '<input type="email" class="email form-control" placeholder="' + core.tr('email') + '" />',
 				title: core.tr('lost_passsword'),
 				buttons:[
 				         {
@@ -93,7 +102,7 @@ var login = {
 				        		 if (!email || email ==''){
 				        			 core.message(core.tr('all_fields_required'), 'error');
 				        		 }else{
-				        			 core.getJSON('login_ctrl', 'sendToken',{ 'app': app, 'email': email }, false,function(data){
+				        			 core.getJSON('login_ctrl', 'sendToken', { 'app': app, 'email': email }, false,function(data){
 				        				 if (data.status == 'success'){
 				        					 $('#modal .modal-body').html('<h3>' + core.tr('forgot_text', ['<u>' + email + '</u>']) + '</h3>');
 				        				 } else {

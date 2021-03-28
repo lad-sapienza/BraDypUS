@@ -11,10 +11,12 @@
       1. {{ tr.get('select_tb') }}
     </label>
     <div class="col-sm-9">
-      <select id="tb_{{ uid }}">
+      <select id="tb_{{ uid }}" class="form-control">
         <option></option>
-        {% for tb, label in tables if 'files' not in tb %}
+        {% for tb, label in tables %}
+        {% if 'files' != tb %}
           <option value="{{ tb }}">{{ label }}</option>
+        {% endif %}
         {% endfor %}
       </select>
     </div>
@@ -29,7 +31,7 @@
     if (!$(this).val()){
       $('#tb_dest_{{ uid }}').html('');
     } else {
-      $('#tb_dest_{{ uid }}').load('controller.php?obj=import_geodata_ctrl&method=load_file&param[]=' + $(this).val());
+      $('#tb_dest_{{ uid }}').load('./?obj=import_geodata_ctrl&method=load_file&file=' + encodeURIComponent($(this).val()) );
     }
   });
 </script>

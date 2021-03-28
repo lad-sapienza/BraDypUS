@@ -1,0 +1,31 @@
+<div id ="{{ uid }}">
+  <h2>{{ tr.get('select_lang_to_edit') }}</h2>
+
+  <div>
+    {% for lang in available_lang %}
+      <button type="button" data-lang="{{ lang }}" class="lang btn btn-info">
+        <i class="fa fa-globe"></i> {{ lang|upper }}
+      </button>
+    {% endfor %}
+    
+    <button type="button" class="add btn btn-warning">{{ tr.get('add') }}</button>
+
+  </div>
+
+  <hr />
+  <div class="transl-content"></div>
+</div>
+
+
+<script>
+$('#{{ uid }} button.lang').on('click', function(){
+  translate.showForm(
+    $(this).data('lang'),
+    $('#{{ uid }} div.transl-content')
+  );
+});
+
+$('#{{ uid }} button.add').on('click', function(){
+  translate.addLang('{{ uid }}');
+});
+</script>

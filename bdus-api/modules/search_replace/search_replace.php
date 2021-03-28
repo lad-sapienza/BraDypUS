@@ -1,9 +1,7 @@
 <?php
 /**
- * Search and replace controller class
- * @author			Julian Bogdani <jbogdani@gmail.com>
- * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
- * @license			See file LICENSE distributed with this code
+ * @copyright 2007-2021 Julian Bogdani
+ * @license AGPL-3.0; see LICENSE
  * @since			Aug 10, 2012
  */
 
@@ -11,9 +9,9 @@ class search_replace_ctrl extends Controller
 {
 	public function main_page()
 	{
-		echo $this->render('search_replace', 'main_page', array(
-				'tbs' => cfg::getNonPlg()
-				));
+		$this->render('search_replace', 'main_page', [
+			'tbs' => $this->cfg->get('tables.*.label')
+		]);
 	}
 
 	/**
@@ -23,7 +21,7 @@ class search_replace_ctrl extends Controller
 	{
 		$tb = $this->get['tb'];
 
-		echo json_encode(cfg::fldEl($tb, 'all', 'label'));
+		echo json_encode($this->cfg->get("tables.$tb.fields.*.label"));
 	}
 
 	/**
@@ -31,27 +29,30 @@ class search_replace_ctrl extends Controller
 	 */
 	public function replace()
 	{
-		$tb = $this->get['tb'];
-		$fld = $this->get['fld'];
-		$search = $this->get['search'];
-		$replace = $this->get['replace'];
+		$tb 		= $this->get['tb'];
+		$fld 		= $this->get['fld'];
+		$search 	= $this->get['search'];
+		$replace 	= $this->get['replace'] ?? '';
 		
-		try
-		{
-			$db = new DB();
-
-			$query = "UPDATE `" . $tb . "` SET `" . $fld . "` = REPLACE (`" . $fld . "`, '" . str_replace("'", "\'", $search) . "', '" . str_replace("'", "\'", $replace ) . "')";
+		try {
+			if (!$tb || !$fld || !$search || !$replace) {
+				throw new \Exception('All fields are required');
+			}
 
 			$values = false;
 
-			$no = $db->query($query, $values, 'affected');
+			$ret = $this->db->query(
+				"UPDATE {$tb} SET {$fld} = REPLACE ({$fld} , ?, ?)", 
+				[ $search, $replace], 
+				'affected'
+			);
 
-			echo $no;
-		}
-		catch(myException $e)
-		{
-			$e->log();
-			echo 'error';
+			$this->response('ok_search_replace', 'success', [$ret]);
+		} catch(\DB\DBException $e) {
+			$this->response('error_search_replace', 'error');
+		} catch(\Throwable $e) {
+			$this->log->error($e);
+			$this->response('error_search_replace', 'error');
 		}
 	}
 }

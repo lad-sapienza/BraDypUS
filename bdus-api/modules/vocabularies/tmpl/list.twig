@@ -9,18 +9,16 @@
 {% if vocs|length == 0 %}
 	<h2 class="text-error">{{ tr.get('no_voc_available') }}</h2>
 {% else %}
-	<h4>{{ tr.get('available_vocs') }}</h4>
+	<h2>{{ tr.get('available_vocs') }}</h2>
 {% endif %}
 
 <div style="margin: 20px 0;">
 	<button class="btn btn-primary add_voc">
-		<i class="glyphicon glyphicon-plus"></i> {{ tr.get('new_voc') }}
+		<i class="fa fa-plus"></i> {{ tr.get('new_voc') }}
 	</button>
 </div>
 
 {% if vocs|length > 0 %}
-
-
 
 	<ul class="list-group" style="width:300px;">
 
@@ -28,82 +26,24 @@
 
 		<li class="list-unstyled">
 			<a class="voc list-group-item" href="javascript:void(0)">{{ voc }}</a>
-			<ul class="sortable list-unstyled voc_definition" style="display:none;" data-voc="{{ voc }}">
+			<ul class="sortable list-unstyled xvoc_definition" style="display:none;" data-voc="{{ voc }}">
 				{% for id,def in voc_arr %}
-					<li data-id="{{ id }}" data-text="{{ def }}">
-						<i class="glyphicon glyphicon-move" title="{{ tr.get('drag_to_sort') }}" style="cursor:move"></i>
+					<li data-id="{{ id }}" data-text="{{ def }}" class="list-group-item">
+						<i class="fa fa-arrows" title="{{ tr.get('drag_to_sort') }}" style="cursor:move"></i>
 						<span class="def">{{ def }}</span>
 						<span class="badge pull-right">
-							<i class="glyphicon glyphicon-pencil edit_def" title="{{ tr.get('edit') }}" style="cursor:pointer"></i>
+							<i class="fa fa-pencil edit_def" title="{{ tr.get('edit') }}" style="cursor:pointer"></i>
 						</span>
 						<span class="badge pull-right">
-							<i class="glyphicon glyphicon-trash delete_def" title="{{ tr.get('erase') }}" style="cursor:pointer"></i>
+							<i class="fa fa-trash delete_def" title="{{ tr.get('erase') }}" style="cursor:pointer"></i>
 						</span>
 					</li>
 				{% endfor %}
-					<li style="padding: 5px;"><button class="btn btn-default btn-sm add_voc" data-voc="{{ voc }}"><i class="glyphicon glyphicon-plus"></i></button></li>
+					<div style="padding: 5px;"><button class="btn btn-default btn-sm add_voc" data-voc="{{ voc }}"><i class="fa fa-plus"></i></button></div>
 			</ul>
 		</li>
 
 	{% endfor %}
 	</ul>
 
-	<script>
-
-		$.each($('ul.sortable'), function(i, el){
-			var ulSort = $(el).sortable({
-				nested: false,
-				handle: 'i.glyphicon-move',
-				onDrop: function(item, container, _super){
-					var string = ulSort.sortable('serialize').get();
-					var new_string = {};
-					new_string[$(el).data('voc')] = string;
-
-
-					$.post('controller.php?obj=vocabularies_ctrl&method=sort', new_string, function(data){
-						core.message(data.text, data.status);
-					}, 'json');
-
-					_super(item, container);
-				},
-				serialize: function (parent, children, isContainer) {
-					return isContainer ? children : parent.data('id');
-				},
-			});
-		});
-
-
-
-		$('a.voc').on('click', function(){
-			$(this).parents('li').find('a').toggleClass('active');
-			$(this).next('ul').toggle();
-		});
-
-		$('.edit_def').on('click', function(){
-			var li = $(this).parents('li:eq(0)');
-			vocabularies.edit(li.data('id'), li.data('text'), function(val){
-				li.data('text', val);
-				li.find('.def').text(val);
-			});
-		});
-		$('.delete_def').on('click', function(){
-			var li = $(this).parents('li:eq(0)');
-			vocabularies.erase(li.data('id'), function(){
-				if (li.siblings().length === 1 ){
-					li. parent('ul').parent('li').remove();
-				} else {
-					li.remove();
-				}
-			})
-		});
-	</script>
-
 {% endif  %}
-
-	<script>
-	$('.add_voc').on('click', function(){
-		vocabularies.add_new($(this).data('voc'), function(){
-			layout.tabs.reloadActive();
-		});
-	});
-	</script>

@@ -1,47 +1,72 @@
 <?php
 /**
- * @author			Julian Bogdani <jbogdani@gmail.com>
- * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
- * @license			See file LICENSE distributed with this code
+ * @copyright 2007-2021 Julian Bogdani
+ * @license AGPL-3.0; see LICENSE
  * @since			Apr 21, 2012
  * @uses			cfg
  *
  * $data['core'] = array of core data [field_id=>value]
- * $data['plugins'] = array of arrays od plugin data [plugin_name=>[fld_id=>value]]
+ * $data['plugins'] = array of arrays of plugin data [plugin_name=>[fld_id=>value]]
  * $data['corelinks_details'] = array of arrays links id and id_field: [table_name => [ [id=int, id_field=string], [...]], [...] ]
  * $data['corelinks'] = array with sum-up info about corelinks [table_name => [tot:int, query:string, values:array], [...]]
  * $data['userlinks'] =
  * $data['files'] =
- * $data['geodata']
+ * 
+ * $data	=>	[
+ * 		"core"		=> [
+ * 				fieldid => fieldvalue,
+ * 				fieldid => fieldvalue,
+ * 				...
+ * 		],
+ * 		"plugins"	=> [
+ * 				plugin1_name => [
+ * 					fieldid => fieldvalue,
+ * 					fieldid => fieldvalue,
+ * 					...
+* 				],
+ * 				plugin2_name => [
+ * 					...
+* 				],
+				...
+ * 		],
+ * 		"corelinks_details": [
+ * 				
+ * 		],
+ * ]
  */
 
-class Record implements iRecord
-{
-	protected $tb, $id, $db, $data, $loaded, $changed, $idField, $tmp_dir;
+use DB\DBInterface;
+use \Config\Config;
 
-	public function __construct($tb, $id = false, DB $db)
+class Record implements RecordInterface
+{
+	protected $tb;
+	protected $id;
+	protected $db;
+	protected $cfg;
+	protected $data;
+	protected $loaded;
+	protected $changed;
+	protected $idField;
+	protected $tmp_dir;
+
+	public function __construct($tb, $id = false, DBInterface $db, Config $cfg)
 	{
 		$this->tb = $tb;
+		$this->db = $db;
+		$this->cfg = $cfg;
+		$this->tmp_dir = sys_get_temp_dir() . '/';
 
 		if ($id === 'last_added') {
-
-			$t = $db->query('SELECT `id` FROM `' . $tb . '` WHERE 1 ORDER BY `id` DESC LIMIT 0,1', false, 'read');
+			$t = $db->query('SELECT id FROM ' . $tb . ' WHERE 1=1 ORDER BY id DESC LIMIT 1 OFFSET 0', null, 'read');
 			$id = $t[0]['id'];
 		}
-
 		$this->id = $id;
-		$this->db = $db;
-		$this->tmp_dir = PROJ_TMP_DIR;
 	}
 
 	public function getId()
 	{
 		return $this->id;
-	}
-
-	public function setTmpFolder($dir)
-	{
-		$this->tmp_dir = $dir;
 	}
 
 	/**
@@ -50,7 +75,6 @@ class Record implements iRecord
 	 * 		coreLinks
 	 * 		allPlugins
 	 * 		fullFiles
-	 * 		geodata
 	 * 		rs
 	 * 		userLinks
 	 *
@@ -68,9 +92,7 @@ class Record implements iRecord
 
 		$rec['fullFiles']	= $this->getFullFiles();
 
-		$rec['geodata'] 	= $this->getGeodata();
-
-		if (cfg::tbEl($tb, 'rs')) {
+		if ($this->cfg->get("tables.$tb.rs")) {
 			$rec['rs'] 		= $this->getRS();
 		}
 
@@ -81,25 +103,25 @@ class Record implements iRecord
 
 	/**
 	 * (non-PHPdoc)
-	 * @see iRecord::getTb()
+	 * @see RecordInterface::getTb()
 	 */
-	public function getTb()
+	public function getTb() : string
 	{
 		return $this->tb;
 	}
 
 	/**
 	 * (non-PHPdoc)
-	 * @see iRecord::getDB()
+	 * @see RecordInterface::getDB()
 	 */
-	public function getDB()
+	public function getDB() : DBInterface
 	{
 		return $this->db;
 	}
 
 	/**
 	 * (non-PHPdoc)
-	 * @see iRecord::persist()
+	 * @see RecordInterface::persist()
 	 */
 	public function persist()
 	{
@@ -112,17 +134,20 @@ class Record implements iRecord
 
 					if ($key !== 'id' AND in_array($key, $this->changed['core'])) {
 
-						$tmp[] = "'" . $key . "' = :" . $key;
-						$values[':' . $key] = $val;
+						$tmp[] = "{$key} = ?";
+						$values[] = $val;
 					}
 				}
 
-				$query = 'UPDATE `' . $this->tb . '` SET ' . implode(', ', $tmp) . ' WHERE `id` = ' . $this->id;
+				$query = 'UPDATE ' . $this->tb . ' SET ' . implode(', ', $tmp) . ' WHERE id = ? ';
+				$values[] = $this->id;
 
+				// Backup record:
+				$this->db->backupBeforeEdit($this->tb, $this->id, $query, $values);
 				$flag['core'] = $this->db->query($query, $values, 'boolean');
 
 				// moves updaded file
-				if ($this->tb == PREFIX . 'files') {
+				if ($this->tb === PREFIX . 'files') {
 
 					if (file_exists($this->tmp_dir . $this->data['core']['filename'] . '.' . $this->data['core']['ext'])) {
 
@@ -137,17 +162,17 @@ class Record implements iRecord
 
 				// CORE.insert
 				foreach ($this->data['core'] as $key => $val) {
-					$values[':' . $key] = $val;
+					$values[":{$key}"] = $val;
 				}
 
 				$values[':creator'] = $_SESSION['user']['id'];
-				$query = "INSERT INTO `{$this->tb}` (`creator`, '" . 
-					implode("', '", array_keys($this->data['core'])) . "') VALUES (:creator, :" . implode(', :', array_keys($this->data['core'])). ")";
+				$query = "INSERT INTO {$this->tb} (creator, " . 
+					implode(", ", array_keys($this->data['core'])) . ") VALUES (:creator, :" . implode(', :', array_keys($this->data['core'])). ")";
 
 				$last_id = $this->db->query($query, $values, 'id');
 
 				// moves updaded file
-				if ($this->tb == PREFIX . 'files') {
+				if ($this->tb === PREFIX . 'files') {
 
 					if (file_exists($this->tmp_dir . $this->data['core']['filename'] . '.' . $this->data['core']['ext'])) {
 
@@ -174,7 +199,7 @@ class Record implements iRecord
 				if (!$rel['id']) {
 
 					array_push($q_arr, array(
-							'q' => 'INSERT INTO `' . PREFIX . 'rs` (`tb`, `first`, `second`, `relation`) VALUES (:tb, :first, :second, :relation)',
+							'q' => 'INSERT INTO ' . PREFIX . 'rs (tb, first, second, relation) VALUES (:tb, :first, :second, :relation)',
 							'values'=>array(':tb'=>$tb, ':first'=>$rel['first'], ':second'=>$re['second'], ':relation'=>$rel['relation'])
 							));
 				}
@@ -192,8 +217,8 @@ class Record implements iRecord
 
 				foreach ($plg_all_rows as $plg_row) {
 
-					$tmp = array();
-					$values = array();
+					$tmp = [];
+					$values = [];
 
 					$has_value_flag = false;
 
@@ -203,24 +228,36 @@ class Record implements iRecord
 							$has_value_flag = true;
 						}
 
-						if ($key != 'id') {
-
-							$tmp[] = "'" . $key . "' = :" . $key;
-							$values[':' . $key] = $val;
+						if ($key !== 'id' ) {
+							$tmp[] = "{$key} = :{$key}";
+							$values[":{$key}"] = $val;
 						}
 					}
 
 					// plg.row.DELETE
-					if($plg_row['id_delete'] AND !empty($plg_row['id_delete'])) {
+					if($plg_row['id_delete'] && !empty($plg_row['id_delete'])) {
+
+						$delete_plg_query = 'DELETE FROM ' . $plg_name . ' WHERE id = ?';
+						$delete_plg_values = [ $plg_row['id_delete'] ];
+						
+						// Backup before delete
+						$this->db->backupBeforeEdit($plg_name, $plg_row['id_delete'], $delete_plg_query, $delete_plg_values);
 						array_push($query, array(
-								'q' => 'DELETE FROM `' . $plg_name . '` WHERE `id` = ' . $plg_row['id_delete'],
-								'values' => false
+								'q' => $delete_plg_query,
+								'values' => $delete_plg_values
 						));
 
-					} else if($plg_row['id'] AND !empty($plg_row['id'])) {
+					} else if($plg_row['id'] && !empty($plg_row['id'])) {
+
 						// plg.row.UPDATE
+						$update_plg_query = 'UPDATE ' . $plg_name . ' SET ' . implode(', ', $tmp) . ' WHERE id = :idwhere';
+						$values[':idwhere'] = $plg_row['id'];
+
+						// Backup before update
+						$this->db->backupBeforeEdit($plg_name, $plg_row['id'], $update_plg_query, $values);
+
 						array_push($query, array(
-								'q' => 'UPDATE `' . $plg_name . '` SET ' . implode(', ', $tmp) . ' WHERE `id` = ' . $plg_row['id'],
+								'q' => $update_plg_query,
 								'values' => $values
 						));
 
@@ -232,8 +269,10 @@ class Record implements iRecord
 								$plg_row['id_link'] = $this->data['core']['id'];
 								$values[':id_link'] = $this->data['core']['id'];
 							}
+							unset($plg_row['id']);
+
 							array_push($query, array(
-									'q' => 'INSERT INTO `' . $plg_name . "` ('" . implode("', '", array_keys($plg_row)) . "') VALUES (:" . implode(', :', array_keys($plg_row)). ")",
+									'q' => 'INSERT INTO ' . $plg_name . " (" . implode(", ", array_keys($plg_row)) . ") VALUES (:" . implode(', :', array_keys($plg_row)). ")",
 									'values' => $values
 							));
 						}
@@ -246,7 +285,6 @@ class Record implements iRecord
 				$this->db->beginTransaction();
 
 				foreach ($query as $q_arr) {
-
 					$ret = $this->db->query($q_arr['q'], $q_arr['values'], 'boolean');
 					$flag['plugins'][($ret ? 'success' : 'error')][] = true;
 				}
@@ -260,7 +298,7 @@ class Record implements iRecord
 
 	/**
 	 * (non-PHPdoc)
-	 * @see iRecord::delete()
+	 * @see RecordInterface::delete()
 	 */
 	public function delete()
 	{
@@ -271,44 +309,47 @@ class Record implements iRecord
 		}
 
 		// CORE
-		$q[] = 'DELETE FROM `' . $this->tb . '` WHERE `id` = ' . $id;
+		$q[] = 'DELETE FROM ' . $this->tb . ' WHERE id = ' . $id;
+		// Backup before delete
+		$this->db->backupBeforeEdit($this->tb, $id, 'DELETE FROM ' . $this->tb . ' WHERE id = ' . $id);
 
 		// PLUGINS
-		$plugins = cfg::tbEl($this->tb, 'plugin');
+		$plugins = $this->cfg->get("tables.{$this->tb}.plugin");
 
 		if (is_array($plugins)) {
 
 			foreach ($plugins as $plg) {
-				$q[] = 'DELETE FROM `' . $plg . '` WHERE `table_link` = \'' . $this->tb. '\' AND `id_link` = ' . $id;
+				// TODO: NO BACKUP HERE
+				$q[] = 'DELETE FROM ' . $plg . ' WHERE table_link = \'' . $this->tb. '\' AND id_link = ' . $id;
 			}
 		}
 
 		// USERLINKS
-		$q[] = 'DELETE FROM `' . PREFIX . 'userlinks` WHERE '
-			." ( `tb_one` = '" . $this->tb . "' AND `id_one` = '" . $id . "')"
+		// TODO: NO BACKUP HERE
+		$q[] = 'DELETE FROM ' . PREFIX . 'userlinks WHERE '
+			." ( tb_one = '" . $this->tb . "' AND id_one = '" . $id . "')"
 			. ' OR '
-			. "( `tb_two` = '" . $this->tb . "' AND `id_two` = '" . $id . "')";
-
-		//GEODATA
-		$q[] = "DELETE FROM `" . PREFIX . "geodata` WHERE  `table_link` = '" . $this->tb . "' AND `id_link` = " . $id;
+			. "( tb_two = '" . $this->tb . "' AND id_two = '" . $id . "')";
 
 		//DELETE FILE (deleted only if all db erases are OK)
+		// TODO: NO BACKUP HERE
 		if ($this->tb == PREFIX . 'files') {
 			$file_to_delete = PROJ_DIR . 'files/' . $id . '.' . $this->getCore('ext');
 		}
 
 		// RS
-		$rs_fld = cfg::tbEl($this->tb, 'rs');
+		// TODO: NO BACKUP HERE
+		$rs_fld = $this->cfg->get("tables.{$this->tb}.rs");
 		if ($rs_fld) {
 
 			if (!$this->loaded['core']) {
 				$this->getCore();
 			}
 
-			$q[] = 'DELETE FROM `' . PREFIX . 'rs` WHERE ' . "`tb` = '" . $this->tb . "' AND ( "
-						. " `first` =  '" . $this->data['core'][$rs_fld] . "' "
+			$q[] = 'DELETE FROM ' . PREFIX . 'rs WHERE ' . "tb = '" . $this->tb . "' AND ( "
+						. " first =  '" . $this->data['core'][$rs_fld] . "' "
 						. ' OR '
-						. " `second` =  '" . $this->data['core'][$rs_fld] . "' "
+						. " second =  '" . $this->data['core'][$rs_fld] . "' "
 					. ' )';
 
 		}
@@ -330,9 +371,9 @@ class Record implements iRecord
 
 			return true;
 
-		} catch (myException $e) {
+		} catch (\DB\DBException $e) {
 			$this->db->rollBack();
-			throw new myException($e);
+			throw new \Exception($e);
 		}
 	}
 
@@ -353,12 +394,12 @@ class Record implements iRecord
 	{
 		if ($this->id) {
 
-			$query = "SELECT * FROM `" . $this->tb . "` WHERE `id` = :id";
+			$query = "SELECT * FROM " . $this->tb . " WHERE id = :id";
 			$values = array(':id' => $this->id);
 
 		} else if ($this->idField) {
 
-			$query = "SELECT * FROM `" . $this->tb . "` WHERE `" . cfg::tbEl($this->tb, 'id_field'). "` = :id_field LIMIT 0, 1";
+			$query = "SELECT * FROM " . $this->tb . " WHERE " . $this->cfg->get("tables.{$this->tb}.id_field"). " = :id_field LIMIT 1 OFFSET 0";
 			$values = array(':id_field' => $this->idField);
 		}
 
@@ -375,9 +416,9 @@ class Record implements iRecord
 
 	/**
 	 * (non-PHPdoc)
-	 * @see iRecord::setCore()
+	 * @see RecordInterface::setCore()
 	 */
-	public function setCore($core_data)
+	public function setCore( array $core_data) : void
 	{
 		if (!$this->loaded['core']) {
 			$this->loadCore();
@@ -402,9 +443,9 @@ class Record implements iRecord
 
 	/**
 	 * (non-PHPdoc)
-	 * @see iRecord::getCore()
+	 * @see RecordInterface::getCore()
 	 */
-	public function getCore($fieldname = false)
+	public function getCore( string $fieldname = null)
 	{
 		if (!$this->loaded['core']) {
 			$this->loadCore();
@@ -432,7 +473,7 @@ class Record implements iRecord
 			return;
 		}
 
-		$query = "SELECT * FROM `" . $plugin . "` WHERE `table_link` = :table_link AND `id_link` = :id_link";
+		$query = "SELECT * FROM " . $plugin . " WHERE table_link = :table_link AND id_link = :id_link";
 
 		$res = $this->db->query($query, array(':table_link'=>$this->tb, ':id_link' => $core_id));
 
@@ -454,9 +495,9 @@ class Record implements iRecord
 
 	/**
 	 * (non-PHPdoc)
-	 * @see iRecord::setPlugin()
+	 * @see RecordInterface::setPlugin()
 	 */
-	public function setPlugin($plugin, $plugin_data)
+	public function setPlugin( string $plugin, array $plugin_data) : void
 	{
 		if ($this->id) {
 			$this->loadAllPlugins();
@@ -468,7 +509,7 @@ class Record implements iRecord
 		}
 
 		if (!is_array($this->data['plugins'][$plugin])) {
-			$this->data['plugins'][$plugin] = array();
+			$this->data['plugins'][$plugin] = [];
 		}
 
 		foreach ($plugin_data as $key => &$data_arr) {
@@ -488,9 +529,9 @@ class Record implements iRecord
 
 	/**
 	 * (non-PHPdoc)
-	 * @see iRecord::getPlugin()
+	 * @see RecordInterface::getPlugin()
 	 */
-	public function getPlugin($plugin, $index = false, $fieldname = false)
+	public function getPlugin(string $plugin, int $index = null, string $fieldname = null)
 	{
 		$this->getCore();
 
@@ -512,7 +553,7 @@ class Record implements iRecord
 	 */
 	private function loadAllPlugins()
 	{
-		$plugins = cfg::tbEl($this->tb, 'plugin');
+		$plugins = $this->cfg->get("tables.{$this->tb}.plugin");
 
 		if (!$plugins) {
 			$this->loaded['allPlugins'] = true;
@@ -527,9 +568,9 @@ class Record implements iRecord
 
 	/**
 	 * (non-PHPdoc)
-	 * @see iRecord::getAllPlugins()
+	 * @see RecordInterface::getAllPlugins()
 	 */
-	public function getAllPlugins($load = false)
+	public function getAllPlugins( bool $load = false) : array
 	{
 		$this->getCore();
 
@@ -546,7 +587,7 @@ class Record implements iRecord
 	 */
 	private function loadCoreLinks($detail = false)
 	{
-		$links = cfg::tbEl($this->tb, 'link');
+		$links = $this->cfg->get("tables.{$this->tb}.link");
 
 		if (!$links) {
 			$this->loaded['corelinks'] = true;
@@ -565,27 +606,29 @@ class Record implements iRecord
 			 */
 
 			if ( !is_array($link['fld']) || !is_array($link['fld'][0]) ) {
-				error_log('Configuration problem. Tables > `' . $this->tb . '` > links > `' . $link['other_tb'] . '` NOT well formatted and will be ignored');
+				error_log('Configuration problem. Tables > ' . $this->tb . ' > links > ' . $link['other_tb'] . ' NOT well formatted and will be ignored');
 				continue;
 			}
 
-			$tmp = array();
+			$tmp = [];
+			$tmp_values = [];
 
 			foreach ($link['fld'] as $fld_arr) {
-				$tmp[] = ' `' . $fld_arr['other'] . "` ='" . $this->data['core'][$fld_arr['my']] . "' ";
+				$tmp[] = ' ' . $fld_arr['other'] . " = ? ";
+				$tmp_values[] = $this->data['core'][$fld_arr['my']] ?? '';
 			}
 
-			$id_fld = cfg::tbEl($link['other_tb'], 'id_field');
+			$id_fld = $this->cfg->get("tables.{$link['other_tb']}.id_field");
 
-			$query = "SELECT `id` " . ( ($id_fld == 'id') ? '' : ', `' . $id_fld . '`') . " FROM `" . $link['other_tb'] . "` WHERE " . implode(' AND ', $tmp);
-
-			$res = $this->db->query($query, false, 'read');
+			$query = "SELECT id " . ( ($id_fld === 'id') ? '' : ', ' . $id_fld . '') . " FROM " . $link['other_tb'] . " WHERE " . implode(' AND ', $tmp);
+			$res = $this->db->query($query, $tmp_values, 'read');
 
 			if ($res) {
 
 				if (!$detail) {
 					$this->data['corelinks'][$link['other_tb']]['tot'] = count($res);
 					$this->data['corelinks'][$link['other_tb']]['query'] = implode(' AND ', $tmp);
+					$this->data['corelinks'][$link['other_tb']]['values'] = $tmp_values;
 
 				} else {
 					foreach ($res as $row) {
@@ -599,7 +642,7 @@ class Record implements iRecord
 
 	/**
 	 * (non-PHPdoc)
-	 * @see iRecord::getBackLinks()
+	 * @see RecordInterface::getBackLinks()
 	 */
 	public function getBackLinks()
 	{
@@ -609,7 +652,7 @@ class Record implements iRecord
 
 		$ret = [];
 
-		$bl_array = cfg::tbEl($this->tb, 'backlinks');
+		$bl_array = $this->cfg->get("tables.{$this->tb}.backlinks");
 
 		if (!$bl_array) {
 			return $ret;
@@ -617,39 +660,39 @@ class Record implements iRecord
 
 		foreach($bl_array as $bl_string) {
 
-			list($tb, $plg, $plg_fld) = utils::csv_explode($bl_string, ':');
+			list($tb, $plg, $plg_fld) = \utils::csv_explode($bl_string, ':');
 
 			if (!$tb || !$plg || !$plg_fld) {
 				error_log('Syntax error in configuration of ' . $this->tb . ' segment backlink');
 				continue;
 			}
 
-			$this_id_fld_val = $this->getCore(cfg::tbEl($this->tb, 'id_field'));
+			$this_id_fld_val = $this->getCore($this->cfg->get("tables.{$this->tb}.id_field"));
 
 			if (!$this_id_fld_val) {
 				continue;
 			}
 
-			$dest_id_fld = cfg::tbEl($tb, 'id_field');
+			$dest_id_fld = $this->cfg->get("tables.$tb.id_field");
 
 			if ($dest_id_fld === 'id') {
 				// If id_field of the destrination table is id field, the query is simple
-				$sql = "SELECT `id_link` as id FROM `{$plg}` WHERE `table_link` = '{$tb}' AND `{$plg_fld}` = '" . $this->getCore('id') . "'";
+				$sql = "SELECT id_link as id FROM {$plg} WHERE table_link = '{$tb}' AND {$plg_fld} = '" . $this->getCore('id') . "'";
 
 			} else {
         // SQl query is more complicated and is run on the destination table
 				$sql = <<<EOD
-SELECT `id`, `{$dest_id_fld}` as label FROM `{$tb}`
-	WHERE `id` IN (
-		SELECT `id_link` FROM `{$plg}` WHERE
-			`table_link` = '{$tb}'
+SELECT id, {$dest_id_fld} as label FROM {$tb}
+	WHERE id IN (
+		SELECT id_link FROM {$plg} WHERE
+			table_link = '{$tb}'
 			AND
-			`{$plg_fld}` = '{$this->getCore('id')}'
+			{$plg_fld} = '{$this->getCore('id')}'
 		)
 EOD;
 			}
 
-			$r = $this->db->query($sql, false, 'read');
+			$r = $this->db->query($sql, null, 'read');
 			if ($r[0]['id']) {
 				$ret[$tb] = $r;
 			}
@@ -662,9 +705,9 @@ EOD;
 
 	/**
 	 * (non-PHPdoc)
-	 * @see iRecord::getCoreLinks()
+	 * @see RecordInterface::getCoreLinks()
 	 */
-	public function getCoreLinks($details = false)
+	public function getCoreLinks( bool $details = false) : array
 	{
 		if ($details) {
 			if (!$this->loaded['corelink_details']) {
@@ -696,19 +739,19 @@ EOD;
 		} else {
 
 			if ($this->data['core']['id']) {
-				$query = 'SELECT `' . PREFIX . 'files`.*, `' . PREFIX . 'userlinks`.`id` as linkid'
-						. ' FROM `' . PREFIX . 'files` JOIN `' . PREFIX . 'userlinks`'
+				$query = 'SELECT ' . PREFIX . 'files.*, ' . PREFIX . 'userlinks.id as linkid'
+						. ' FROM ' . PREFIX . 'files JOIN ' . PREFIX . 'userlinks'
 						. ' ON ( '
-							. "(`" . PREFIX . "userlinks`.`tb_one` = '" . PREFIX . "files' AND  `" . PREFIX . "userlinks`.`id_one` = `" . PREFIX . "files`.`id`)"
+							. "(" . PREFIX . "userlinks.tb_one = '" . PREFIX . "files' AND  " . PREFIX . "userlinks.id_one = " . PREFIX . "files.id)"
 							. ' OR '
-							. "(`" . PREFIX . "userlinks`.`tb_two` = '" . PREFIX . "files' AND  `" . PREFIX . "userlinks`.`id_two` = `" . PREFIX . "files`.`id`)"
+							. "(" . PREFIX . "userlinks.tb_two = '" . PREFIX . "files' AND  " . PREFIX . "userlinks.id_two = " . PREFIX . "files.id)"
 						. ')'
 						. ' WHERE '
-							. "(`" . PREFIX . "userlinks`.`tb_one` = '" . $this->tb . "' AND  `" . PREFIX . "userlinks`.`id_one` = '" . $this->data['core']['id'] . "')"
+							. "(" . PREFIX . "userlinks.tb_one = '" . $this->tb . "' AND  " . PREFIX . "userlinks.id_one = '" . $this->data['core']['id'] . "')"
 							. ' OR '
-							. "(`" . PREFIX . "userlinks`.`tb_two` = '" . $this->tb . "' AND  `" . PREFIX . "userlinks`.`id_two` = '" . $this->data['core']['id'] . "')"
-						. ' ORDER BY `' . PREFIX . 'userlinks`.`sort`, `' . PREFIX . 'userlinks`.`id`';
-				$this->data['fullfiles'] = $this->db->query($query, false, 'read');
+							. "(" . PREFIX . "userlinks.tb_two = '" . $this->tb . "' AND  " . PREFIX . "userlinks.id_two = '" . $this->data['core']['id'] . "')"
+						. ' ORDER BY ' . PREFIX . 'userlinks.sort, ' . PREFIX . 'userlinks.id';
+				$this->data['fullfiles'] = $this->db->query($query, null, 'read');
 			}
 		}
 
@@ -717,7 +760,7 @@ EOD;
 
 	/**
 	 * (non-PHPdoc)
-	 * @see iRecord::getFullFiles()
+	 * @see RecordInterface::getFullFiles()
 	 */
 	public function getFullFiles()
 	{
@@ -729,16 +772,19 @@ EOD;
 
 	private function loadRS()
 	{
-		$query = 'SELECT * FROM `' . PREFIX . 'rs` WHERE `tb`=:table AND (`first`=:id OR `second` = :id)';
 
-		$this->data['rs'] = $this->db->query($query, array(':table'=>$this->tb, ':id'=>$this->id), 'read');
+		$this->data['rs'] = $this->db->query(
+			'SELECT * FROM ' . PREFIX . 'rs WHERE tb = ? AND (first = ? OR second = ?)', 
+			[ $this->tb, $this->id, $this->id], 
+			'read'
+		);
 
 		$this->loaded['rs'] = true;
 	}
 
 	/**
 	 * (non-PHPdoc)
-	 * @see iRecord::getRS()
+	 * @see RecordInterface::getRS()
 	 */
 	public function getRS()
 	{
@@ -750,15 +796,21 @@ EOD;
 
 	/**
 	 * (non-PHPdoc)
-	 * @see iRecord::setRS()
+	 * @see RecordInterface::setRS()
 	 */
 	public function addRS($first, $relation, $second)
 	{
 		$first = trim($first);
 		$second = trim($second);
 		$res = $this->db->query(
-				'SELECT * FROM `' . PREFIX . 'rs` WHERE `tb` = :tb AND ( (`first` = :first AND `second` =:second) OR (`first`=:second AND `second` = :first) )',
-				array(':tb'=>$this->tb, ':first'=>$first, ':second'=>$second),
+				'SELECT * FROM ' . PREFIX . 'rs WHERE tb = :tb AND ( (first = :first_one AND second = :second_one) OR (first = :second_two AND second = :first_two) )',
+				[
+					':tb'=>$this->tb, 
+					':first_one'=>$first, 
+					':second_one'=>$second,
+					':second_two'=>$second,
+					':first_two'=>$first
+				],
 				'read'
 		);
 
@@ -766,7 +818,7 @@ EOD;
 			return false;
 		} else {
 			return $this->db->query(
-					'INSERT INTO `' . PREFIX . 'rs` (`tb`, `first`, `second`, `relation`) VALUES (:tb, :first, :second, :relation)',
+					'INSERT INTO ' . PREFIX . 'rs (tb, first, second, relation) VALUES (:tb, :first, :second, :relation)',
 					array(':tb'=>$this->tb, ':first'=>$first, ':second'=>$second, ':relation'=>$relation),
 					'id'
 			);
@@ -776,7 +828,7 @@ EOD;
 
 	public function deleteRS($id)
 	{
-		return $this->db->query('DELETE FROM `' . PREFIX . 'rs` WHERE `id`=' . $id, false, 'boolean');
+		return $this->db->query('DELETE FROM ' . PREFIX . 'rs WHERE id = ?', [ $id ], 'boolean');
 	}
 
 	/**
@@ -812,9 +864,16 @@ EOD;
 
 	private function loadUserLinks()
 	{
-		$sql = 'SELECT * FROM `' . PREFIX . 'userlinks` WHERE (`tb_one` = :thistb AND `id_one` = :thisid) OR (`tb_two` = :thistb AND `id_two` = :thisid) ORDER BY `sort`, `id`';
-
-		$userlinks = $this->db->query($sql, array(':thistb' =>$this->tb, ':thisid' =>$this->id), 'read');
+		$userlinks = $this->db->query(
+			'SELECT * FROM ' . PREFIX . 'userlinks WHERE (tb_one = ? AND id_one = ?) OR (tb_two = ? AND id_two = ?) ORDER BY sort, id',
+			[ 
+				$this->tb, 
+				$this->id, 
+				$this->tb, 
+				$this->id 
+			],
+			'read'
+		);
 
 		if ($userlinks) {
 
@@ -833,48 +892,15 @@ EOD;
 
 	public function deleteUserLink($id)
 	{
-		return $this->db->query('DELETE FROM `' . PREFIX . 'userlinks` WHERE `id`=' . $id, false, 'boolean');
+		return $this->db->query('DELETE FROM ' . PREFIX . 'userlinks WHERE id = ?', [ $id ], 'boolean');
 	}
 
 	public function addUserLink($tb, $id)
 	{
 		return $this->db->query(
-				'INSERT INTO `' . PREFIX . 'userlinks` (`tb_one`, `id_one`, `tb_two`, `id_two`) VALUES (:thistb, :thisid, :tb, :id)',
-				array(':thistb'=>$this->tb, ':thisid'=>$this->id, ':tb' => $tb, ':id' => $id),
+				'INSERT INTO ' . PREFIX . 'userlinks (tb_one, id_one, tb_two, id_two) VALUES (:thistb, :thisid, :tb, :id)',
+				[ ':thistb'=>$this->tb, ':thisid'=>$this->id, ':tb' => $tb, ':id' => $id ],
 				'boolean'
 				);
 	}
-
-	public function getGeodata()
-	{
-		if (!$this->loaded['geodata']) {
-			$this->loadGeodata();
-		}
-
-		return $this->data['geodata'];
-	}
-
-	private function loadGeodata()
-	{
-		$this->data['geodata'] = $this->db->query(
-				'SELECT * FROM `' . PREFIX . 'geodata` WHERE `table_link` = :tb AND `id_link`= :id',
-				array(':tb'=>$this->tb, ':id'=>$this->id),
-				'read');
-		$this->loaded['geodata'] = true;
-	}
-
-	public function addGeodata($geometry)
-	{
-		return  $this->db->query(
-				'INSERT INTO `' . PREFIX . 'geodata` (`table_link`, `id_link`, `geometry`) VALUES(:table_link, :id_link, :geometry)',
-				array(':table_link'=>$this->tb, ':id_link'=>$this->id, ':geometry' => $geometry),
-				'id'
-		);
-	}
-
-	public function deleteGeodata($id)
-	{
-		return $this->db->query('DELETE FROM `' . PREFIX . 'geodata` WHERE `id`= ' . $id, false, 'boolean');
-	}
-
 }

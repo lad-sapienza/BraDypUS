@@ -1,8 +1,7 @@
 <?php
 /**
- * @author			Julian Bogdani <jbogdani@gmail.com>
- * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
- * @license			See file LICENSE distributed with this code
+ * @copyright 2007-2021 Julian Bogdani
+ * @license AGPL-3.0; see LICENSE
  * @since			Aug 11, 2012
  */
 
@@ -10,39 +9,28 @@ class myTmpl_ctrl extends Controller
 {
 	public function show()
 	{
-		$tbs = cfg::getNonPlg();
+		$tbs = $this->cfg->get('tables.*.label', 'is_plugin', null);
 
-		$tmpls = utils::dirContent(PROJ_DIR . 'templates/');
+		$tmpls = \utils::dirContent(PROJ_DIR . 'templates/') ?: [];
 
-		if(!is_array($tmpls))
-		{
-			echo json_encode(array('status'=>'error', 'text'=>tr::get('no_tmpl_available')));
-			return;
-		}
+		$data = [];
 
-		$data = array();
-
-		foreach ($tbs as $tb=>$label)
-		{
-			foreach ($tmpls as $tmpl)
-			{
-				if (preg_match('/' . str_replace(PREFIX, null, $tb) . '/', $tmpl))
-				{
+		foreach ($tbs as $tb=>$label) {
+			foreach ($tmpls as $tmpl) {
+				if (preg_match('/' . str_replace($this->prefix, null, $tb) . '/', $tmpl)) {
 					$data[$tb]['list'][] = $tmpl;
 				}
 			}
-			$data[$tb]['default_read'] = cfg::tbEl($tb, 'tmpl_read');
-			$data[$tb]['default_edit'] = cfg::tbEl($tb, 'tmpl_edit');
-			$data[$tb]['user_read'] = pref::getTmpl($tb, 'read');
-			$data[$tb]['user_edit'] = pref::getTmpl($tb, 'edit');
+			$data[$tb]['default_read'] = $this->cfg->get("tables.$tb.tmpl_read");
+			$data[$tb]['default_edit'] = $this->cfg->get("tables.$tb.tmpl_edit");
+			$data[$tb]['user_read'] = \pref::getTmpl($tb, 'read');
+			$data[$tb]['user_edit'] = \pref::getTmpl($tb, 'edit');
 		}
 
-    $this->render('myTmpl', 'user_tmpl', array(
-      'tr' => new tr(),
-      'tabs' => $tbs,
-      'data' => $data,
-      'uid' => uniqid('tmpl')
-		));
+		$this->render('myTmpl', 'show', [
+			'tabs' => $tbs,
+			'data' => $data,
+		]);
 
 	}
 
@@ -52,8 +40,14 @@ class myTmpl_ctrl extends Controller
 	 * @param string $context
 	 * @param string $tmpl template name with extension
 	 */
-	public function change()
+	public function changeTmpl()
 	{
-    pref::setTmpl($this->get['param'][0], $this->get['param'][1], $this->get['param'][2]);
+		$tb = $this->get['tb'];
+		$context = $this->get['context'];
+		$tmpl = $this->get['tmpl'];
+
+		\pref::setTmpl($tb, $context, $tmpl);
+		
+		$this->response('ok_tmpl_set', 'success');
 	}
 }

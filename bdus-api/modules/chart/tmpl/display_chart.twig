@@ -1,0 +1,54 @@
+{#
+ * @author			Julian Bogdani <jbogdani@gmail.com>
+ * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
+ * @license			See file LICENSE distributed with this code
+ #}
+
+<div id="{{ uid }}">
+	<input type="hidden" name="query_text" value="{{ encoded_query }}" class="query_text" />
+ 
+	<div class="chart" style="max-width:1000px;"></div>
+	
+	<p>
+		<button class="btn btn-default download"><i class="fa fa-download"></i> {{ tr.get('download_img') }}</button>
+		<button class="btn btn-default save_as"><i class="fa fa-floppy-o"></i> {{ tr.get('save_chart_as') }}</button>
+	</p>
+</div>
+
+<script>
+
+	$('#{{ uid }} button.download').on('click', function(){
+		 var img = $('#{{ uid }} div.jqplot-target').jqplotToImage(50, 0);
+		 if (img) {
+			 window.open(img.toDataURL("image/png"));
+		 } 
+	});
+	
+	$('#{{ uid }} button.save_as').on('click', function(){
+		chart.saveAs($('#{{ uid }} input.query_text').val());
+	});
+	
+	var plot = $.jqplot('{{ uid }} div.chart', {{ data|json_encode() }}, {
+		seriesDefaults:{
+			renderer:$.jqplot.BarRenderer,
+			pointLabels: { show: true },
+			rendererOptions: {fillToZero: true}
+		},
+		legend: {
+			show: true,
+			//location: 'ne',
+			//xoffset: -115,
+			placement: 'outsideGrid'
+		},
+		series: {{ series|json_encode() }},
+		axes: {
+			xaxis: {
+				renderer: $.jqplot.CategoryAxisRenderer,
+				ticks: {{ ticks|json_encode() }}
+			},
+			yaxis: {
+				pad: 1.05
+			}
+		}
+	});
+</script>

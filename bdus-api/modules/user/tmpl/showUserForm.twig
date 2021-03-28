@@ -1,0 +1,36 @@
+{#
+ * @author			Julian Bogdani <jbogdani@gmail.com>
+ * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
+ * @license			See file LICENSE distributed with this code
+ #}
+
+<form action="javascript:void(0);">
+	{% if id %}
+	<input type="hidden" value="{{ id }}" name="id" />
+	{% endif %}
+	<table class="table table-striped">
+		<tr>
+			<th>{{ tr.get('name') }}</th>
+			<td><input class="form-control" type="text" value="{{ name }}" name="name" /></td>
+			<td rowspan="4" style="vertical-align:top;"><img src="http://www.gravatar.com/avatar/{{ avatar }}.png?s=80&amp;d=identicon" alt="avatar"></td>
+		</tr>
+		<tr>
+			<th>{{ tr.get('email') }}</th>
+			<td><input class="form-control" type="email" value="{{ email }}" name="email" /></td>
+		</tr>
+		<tr>
+		<th>{{ tr.get('password') }}</th>
+			<td><input class="form-control" type="password" name="password" /></td>
+		</tr>
+		<tr>
+			<th>{{ tr.get('privilege') }}</th>
+			<td>
+				<select class="form-control" name="privilege">
+				{% for priv in privileges %}
+					<option value="{{ priv.value }}" {% if priv.selected %} selected="selected" {% endif %} >{{ priv.label }}</option>
+				{% endfor %}
+				</select>
+			</td>
+		</tr>
+	</table>
+</form>

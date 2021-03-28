@@ -1,15 +1,20 @@
 <?php
 /**
- * @author			Julian Bogdani <jbogdani@gmail.com>
- * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
- * @license			See file LICENSE distributed with this code
+ * @copyright 2007-2021 Julian Bogdani
+ * @license AGPL-3.0; see LICENSE
  * @since			Jan 10, 2012
  */
 
 class autoloader
 {
-    public function __construct()
+    protected $libDir;
+    protected $modDir;
+
+    public function __construct(string $libDir, string $modDir)
     {
+        $this->libDir = $libDir;
+        $this->modDir = $modDir;
+
         spl_autoload_register(array($this, 'loader'));
     }
 
@@ -18,47 +23,35 @@ class autoloader
         if (class_exists($className)) {
             return true;
         }
-        // Manually installed external libraries
-        switch ($className) {
-			      case 'Less_Parser':
-			        require_once LIB_DIR . 'vendor/lessphp/Less.php';
-			        return true;
-		    }
-        if (strpos($className, "Intervention\\Image\\") !== false) {
-            $f = LIB_DIR . 'vendor/' . str_replace("\\", "/", $className) . '.php';
-            if (file_exists($f)) {
-                require_once $f;
-                return true;
-            }
-        }
+        if (is_file($this->libDir . 'vendor/' . str_replace('\\', '/', $className) . '.php')) {
 
-        if (is_file(LIB_DIR . 'vendor/' . str_replace('\\', '/', $className) . '.php')) {
+            require_once $this->libDir . 'vendor/' . str_replace('\\', '/', $className) . '.php';
 
-            require_once LIB_DIR . 'vendor/' . str_replace('\\', '/', $className) . '.php';
-
-        } elseif (preg_match('/_ctrl/', $className)) {
+        // https://stackoverflow.com/a/619725/586449
+        } elseif (substr_compare($className, '_ctrl', -5, 5) === 0 ) {
 
             $mod = str_replace('_ctrl', null, $className);
 
-            if (file_exists(MOD_DIR . $mod . '/' . $mod . '.php')) {
-                require_once MOD_DIR . $mod . '/' . $mod . '.php';
+            if (file_exists($this->modDir . $mod . '/' . $mod . '.php')) {
+                require_once $this->modDir . $mod . '/' . $mod . '.php';
             }
 
         } else {
 
-            if (file_exists(LIB_DIR . $className . '.inc')) {
-                require_once LIB_DIR . $className . '.inc';
-            } elseif (file_exists(LIB_DIR . $className . '.php')) {
-                require_once LIB_DIR . $className . '.php';
-            } elseif (file_exists(MOD_DIR . '/' . $className . '/' . $className . '.php')) {
-                require_once MOD_DIR . '/' . $className . '/' . $className . '.php';
-            } elseif (file_exists(LIB_DIR . 'interfaces/' . $className . '.inc')) {
-                require_once LIB_DIR . 'interfaces/' . $className . '.inc';
-            } elseif (file_exists(LIB_DIR . 'interfaces/' . $className . '.php')) {
-                require_once LIB_DIR . 'interfaces/' . $className . '.php';
+            if (file_exists($this->libDir . $className . '.inc')) {
+                require_once $this->libDir . $className . '.inc';
+            } elseif (file_exists($this->libDir . $className . '.php')) {
+                require_once $this->libDir . $className . '.php';
+            } elseif (file_exists($this->libDir . str_replace('\\', '/', $className) . '.php')) {
+                require_once $this->libDir . str_replace('\\', '/', $className) . '.php';
+            } elseif (file_exists($this->modDir . '/' . $className . '/' . $className . '.php')) {
+                require_once $this->modDir . '/' . $className . '/' . $className . '.php';
+            } elseif (file_exists($this->libDir . 'interfaces/' . $className . '.inc')) {
+                require_once $this->libDir . 'interfaces/' . $className . '.inc';
+            } elseif (file_exists($this->libDir . 'interfaces/' . $className . '.php')) {
+                require_once $this->libDir . 'interfaces/' . $className . '.php';
             } else {
                 return false;
-                //throw new myException('Error: Can not load class `' . $className . '`');
             }
         }
     }

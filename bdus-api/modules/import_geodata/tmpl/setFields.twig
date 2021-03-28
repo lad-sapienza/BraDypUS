@@ -9,7 +9,7 @@
   
   <label class="col-sm-3 control-label">{{ id_label }}</label>
   <div class="col-sm-6">
-    <select id="flds_{{ uid }}">
+    <select id="flds_{{ uid }}" class="form-control">
       {% for fld, firstVal in resp %}
         <option value="{{ fld }}">{{ fld }} (eg: "{{ firstVal }}")</option>
       {% endfor %}
@@ -24,10 +24,8 @@
 
 <script>
   $('#continue-{{ uid }}').on('click', function(){
-    $('#confirm_{{ uid }}').load('controller.php?obj=import_geodata_ctrl&method=confirm&'
-      + 'param[]={{ tb }}&'
-      + 'param[]={{ file }}&'
-      + 'param[]=' + $('#flds_{{ uid }}').val()
+    $('#confirm_{{ uid }}').load('./?obj=import_geodata_ctrl&method=confirm&tb={{ tb }}&file='
+      + encodeURIComponent('{{ file }}') + '&id_field=' + $('#flds_{{ uid }}').val()
       );
   });
 </script>

@@ -37,7 +37,7 @@ var search_replace = {
 				search = $('#modal input.search').val(),
 				replace = $('#modal input.replace').val();
 		 
-			if (!tb || !fld || !search || !replace){
+			if (!tb || !fld || !search){
 				core.message(core.tr('all_fields_required'), 'error');
 			} else {
 				core.open({
@@ -47,14 +47,16 @@ var search_replace = {
 					         {
 					        	 text: core.tr('confirm'),
 			 		        	 click: function(){
-			 		        		 $.get('controller.php?&obj=search_replace_ctrl&method=replace&tb=' + tb + '&fld=' + fld + '&search=' + search + '&replace=' + replace, function(data){
-			 		        			 if (data == 'error'){
-			 		        				 core.message(core.tr('error_search_replace'), 'error');
-			 		        			 } else {
-			 		        				core.message(core.tr('ok_search_replace', [data]), 'success');
-			 		        				$('#modal').modal('hide');
-			 		        			 }
-			 		        		 });
+									  core.runAndRespond('search_replace_ctrl', 'replace', {
+										  tb: tb,
+										  fld: fld,
+										  search: search,
+										  replace: replace
+									  }, d => {
+										  if (d.status === 'success'){
+											  $('#modal').modal('hide');
+										  }
+									  })
 			 		        	 } 
 					         },
 					         {
@@ -77,7 +79,7 @@ var search_replace = {
 			$('#' + uid).find('select.fld').html($('<option />'));
 			
 			//get field names
-			$.get('controller.php?obj=search_replace_ctrl&method=getFld&tb=' + tb, function(data){
+			$.get('./?obj=search_replace_ctrl&method=getFld&tb=' + tb, function(data){
 				$.each(data, function(index, el){
 					$('<option />')
 						.attr('value', index)

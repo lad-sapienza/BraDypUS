@@ -61,9 +61,6 @@ svg{
 
 <div id="{{ uid }}">
 	<div class="svg_container">
-			<div class="clearfix">
-				<button class="btn btn-info pull-right download">{{ tr.get('download') }}</button>
-			</div>
 		<svg id="svg{{ uid }}" width=100%></svg>
 	</div>
 </div>
@@ -84,16 +81,6 @@ svg{
 		}
 		
 		api.record.read('{{ tb }}', [id]);
-	});
-	
-	$('#{{ uid }} .download').on('click', function(){
-		core.getJSON('matrix_ctrl', 'getStaticImage', {tb: '{{ tb }}', query: '{{ query_arrived }}'}, function(data){
-			if (data.status == 'success'){
-				window.open(data.text, "_blank");
-			} else {
-				core.message(data.text, data.status);
-			}
-		});
 	});
 	
 </script>

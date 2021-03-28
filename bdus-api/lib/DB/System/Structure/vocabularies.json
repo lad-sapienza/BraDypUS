@@ -1,0 +1,23 @@
+[
+    {
+        "name"      : "id",
+        "type"      : "INTEGER",
+        "pk"        : true,
+        "notnull"   : false
+    },
+    {
+        "name"      : "voc",
+        "type"      : "TEXT",
+        "notnull"   : true
+    },
+    {
+        "name"      : "def",
+        "type"      : "TEXT",
+        "notnull"   : true
+    },
+    {
+        "name"      : "sort",
+        "type"      : "INTEGER",
+        "notnull"   : false
+    }
+]

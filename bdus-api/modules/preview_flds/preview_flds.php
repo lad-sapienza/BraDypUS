@@ -1,8 +1,7 @@
 <?php
 /**
- * @author			Julian Bogdani <jbogdani@gmail.com>
- * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
- * @license			See file LICENSE distributed with this code
+ * @copyright 2007-2021 Julian Bogdani
+ * @license AGPL-3.0; see LICENSE
  * @since			May 17, 2013
  */
 
@@ -10,20 +9,20 @@ class preview_flds_ctrl extends Controller
 {
 	public function showForm()
 	{
-		foreach(cfg::tbEl('all', 'label') as $tb_id => $tb_name)
-		{
-			$tb[] = array(
-					'id' => $tb_id,
-					'name' => $tb_name,
-					'flds' => cfg::fldEl($tb_id, 'all', 'label')
-					);
+		$tb_list = $this->cfg->get('tables.*.label');
+		
+		foreach($tb_list as $tb_id => $tb_name) {
+			$tb[] = [
+				'id' => $tb_id,
+				'name' => $tb_name,
+				'flds' => $this->cfg->get("tables.{$tb_id}.fields.*.label")
+			];
 		}
 		
-		$this->render('preview_flds', 'form', array(
-				'tb_data' => $tb,
-				'pref_data' => pref::get('preview'),
-				'tr' => new tr()
-				));
+		$this->render('preview_flds', 'form', [
+			'tb_data' => $tb,
+			'pref_data' => \pref::get('preview'),
+		]);
 	}
 	
 	
@@ -46,6 +45,6 @@ class preview_flds_ctrl extends Controller
 			$pref = null;
 		}
 		
-		pref::set('preview', $pref);
+		\pref::set('preview', $pref);
 	}
 }

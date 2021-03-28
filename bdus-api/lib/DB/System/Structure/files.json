@@ -1,0 +1,38 @@
+[
+    {
+        "name"      : "id",
+        "type"      : "INTEGER",
+        "pk"        : true,
+        "notnull"   : false
+    },
+    {
+        "name"      : "creator",
+        "type"      : "TEXT",
+        "notnull"   : true
+    },
+    {
+        "name"      : "ext",
+        "type"      : "TEXT",
+        "notnull"   : true
+    },
+    {
+        "name"      : "keywords",
+        "type"      : "TEXT",
+        "notnull"   : false
+    },
+    {
+        "name"      : "description",
+        "type"      : "TEXT",
+        "notnull"   : false
+    },
+    {
+        "name"      : "printable",
+        "type"      : "INTEGER",
+        "notnull"   : false
+    },
+    {
+        "name"      : "filename",
+        "type"      : "TEXT",
+        "notnull"   : true
+    }
+]

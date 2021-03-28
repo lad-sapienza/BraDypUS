@@ -9,34 +9,25 @@ var backup = {
 			
 			core.open({
 				obj: 'backup_ctrl',
-				method: 'getSavedBups',
-				title: core.tr('backup'),
-				buttons: [
-				          {
-				        	  text: '<i class="glyphicon glyphicon-ok"></i> ' + core.tr('backup_now'),
-				        	  click: function(){
-				        		  $.get('controller.php?obj=backup_ctrl&method=doBackup', function(data){
-				        			  if(!data || data == ''){
-				        				  core.message(core.tr('ok_backup'), 'success');
-				        				  $('#modal .modal-body').load('controller.php?obj=backup_ctrl&method=getSavedBups');
-				        			  } else {
-				        				  core.message(core.tr('error_backup') + ' ' + core.tr('details_in_log'), 'error');
-				        			  }
-				        		  });
-				        	  } 
-				          },
-				          {
-				        	  text: '<i class="glyphicon glyphicon-remove"></i> ' + core.tr('close'),
-				        	  click: 'close'
-				          }
-				          ]
-			}, 'modal');
+				method: 'list_all_backups',
+				title: core.tr('backup')
+			});
+		},
+
+		create: function() {
+			core.runAndRespond('backup_ctrl', 'doBackup', data => {
+				layout.tabs.reloadActive()
+			});
 		},
 		
 		erase: function(file, button){
-			core.getJSON('backup_ctrl', 'erase', [file], false, function(data){
-				core.message(data.text, data.status);
-				$('#modal .modal-body').load('controller.php?obj=backup_ctrl&method=getSavedBups');
+			core.runAndRespond('backup_ctrl', 'deleteBackup', {file: file}, data => {
+				layout.tabs.reloadActive()
+			});
+		},
+		restore: function(file, button){
+			api.confirmSuperAdmPwd( () => {
+				core.runAndRespond('backup_ctrl', 'restoreBackup', {file: file});
 			});
 		},
 		

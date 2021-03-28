@@ -1,0 +1,73 @@
+<div id="{{ uid }}" class="config_container">
+<h2>{{ tr.get('sys_config') }}</h2>
+
+  <div class="row main">
+
+    <div class="col-sm-3 col-first">
+
+      <div style="margin: 2rem 0;">
+        <button class="btn btn-default btn-block" onclick="config.validateApp('{{ uid }}')">
+        {{ tr.get('cfg_validate_app') }}
+        </button>
+      </div>
+      
+      <div style="margin: 2rem 0;">
+        <button class="btn btn-default btn-block" onclick="config.viewAppProperties('{{ uid }}')">
+        {{ tr.get('cfg_main_app') }}
+        </button>
+      </div>
+
+      <hr>
+        
+      <h4 class="text-center">{{ tr.get('cfg_available_tables') }}</h4>
+      <div class="sortable">
+      {% for tbid, tbname in table_list %}
+        <nav class="navbar navbar-default" data-id="{{ tbid }}">
+          <div class="container-fluid">
+            <div class="navbar-header">
+              <span class="navbar-brand">
+                <i class="fa fa-arrows" title="{{ tr.get('drag_to_sort') }}" style="cursor:move"></i> {{ tbname }}
+              </span>
+            </div>
+
+            <div>
+              <ul class="nav navbar-nav navbar-right">
+                <li><a href="javascript:void(0)" onclick="config.viewTbProperties('{{ tbid }}', '{{ uid }}')">Main »</a></li>
+                <li><a href="javascript:void(0)" onclick="config.viewFldList('{{ tbid }}', '{{ uid }}')">Fields »</a></li>
+              </ul>
+            </div>
+          </div>
+        </nav>
+      {% endfor %}
+      </div>
+      <div style="margin: 2rem 0;">
+        <button 
+          type="button" 
+          class="btn btn-success btn-block" 
+          onclick="config.viewTbProperties('{{ tbid }}', '{{ uid }}')">
+          <i class="fa fa-plus"></i> {{ tr.get('cfg_add_table') }}
+        </button>
+
+      </div>
+
+    </div>
+
+    <div class="field-list-column"></div>
+
+    <div class="col-sm-6 edit-column"></div>
+
+  </div>
+</div>
+
+<script>
+$('#{{ uid }} .sortable').each( (index, element)=>{
+						new Sortable(element, {
+							animation: 150,
+							ghostClass: 'active',
+							onEnd: function (evt) {
+								const sortArray = this.toArray();
+                core.runAndRespond('config_ctrl', 'sortTables', { sort: sortArray });
+							}
+						});
+					});
+</script>

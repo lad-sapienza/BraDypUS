@@ -4,17 +4,20 @@
  * @license			See file LICENSE distributed with this code
  #}
 
-<div class="btn-group">
+<div class="row">
+
+	<div class="col-xs-6">
 	{% for tb in tb_data %}
-		<a class="btn tb_name" data-tb_id="{{ tb.id }}">{{ tb.name }}</a>
+		<p><a class="btn btn-default btn-block tb_name" data-tb_id="{{ tb.id }}">{{ tb.name }}</a></p>
 	{% endfor %}
-</div>
+	</div>
 
 
-<div class="well">
-	<form class="preview_flds" action="#">
+	<div class="col-xs-6">
+		<div class="well">
+		<form class="preview_flds" action="#">
 		{% for tb in tb_data %}
-			<div id="details_{{tb.id}}{{ uid }}" style="display:none;">
+			<div id="details_{{tb.id}}{{ uid }}" style="padding: 0 2rem; display:none;">
 				{% for id, name in tb.flds %}
 					<label class="checkbox">
 						<input type="checkbox" name="{{ tb.id }}[{{ id }}]" {% if id in pref_data[tb.id] %} checked="checked" {% endif %}/>
@@ -24,8 +27,13 @@
 				<button class="btn btn-default">{{ tr.get('save') }}</button>
 			</div>
 		{% endfor %}
-	</form>
+		</form>
+		</div>
+	</div>
+
 </div>
+
+
 
 <script>
 	$('.tb_name').on('click', function(){
@@ -33,7 +41,7 @@
 	});
 	
 	$('form.preview_flds').on('submit', function(event){
-		$.post('controller.php?obj=preview_flds_ctrl&method=save', $(this).serialize(), function(){
+		$.post('./?obj=preview_flds_ctrl&method=save', $(this).serialize(), function(){
 			core.message(core.tr('ok_preview_set'), 'success');
 		});
 		

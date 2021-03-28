@@ -1,10 +1,12 @@
 <?php
 /**
- * @author			Julian Bogdani <jbogdani@gmail.com>
- * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
- * @license			See file LICENSE distributed with this code
- * @since			Apr 7, 2012
+ * @copyright 2007-2021 Julian Bogdani
+ * @license AGPL-3.0; see LICENSE
+ * @since Apr 7, 2012
  */
+
+use DB\DBInterface;
+use \geoPHP\geoPHP;
 
 class utils
 {
@@ -14,60 +16,15 @@ class utils
    * local one. The check is performed on host name
    * @return boolean
    */
-	public static function is_online()
+	public static function is_online() : bool
 	{
-		return preg_match('/bradypus.net/', $_SERVER['HTTP_HOST']);
-	}
-
-
-	/**
-	 * Converts array or object to json and writes it to file
-	 * @param string $file
-	 * @param mixed $obj
-	 */
-	public static function write_formatted_json($file, $obj)
-	{
-		$text = json_encode($obj, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
-		return self::write_in_file($file, $text);
-	}
-
-	/**
-	 *
-	 * Writes text in file. If file does not exit, it will be created
-	 * @param string $file	complete path to file
-	 * @param string $text	text to write in file
-	 */
-	public static function write_in_file ( $file, $text = false, $gz = false )
-	{
-		if ( !$gz )
-		{
-			$f = @fopen($file, 'w');
-
-			if (!$f) return false;
-
-			if ($text)
-			{
-				if ( !@fwrite ( $f, $text ) ) return false;
-			}
-
-			@fclose($f);
-
-			return true;
-		}
-		else
-		{
-			$file .= '.gz';
-
-			$gzh = @gzopen($file,'w9');
-
-			if ( !$gzh ) return false;
-
-			if ( !@gzwrite($gzh, $text) ) return false;
-
-			@gzclose($gzh);
-
-			return true;
-		}
+		$host = $_SERVER['HTTP_HOST'];
+		return !(
+			strpos($host, 'localhost')		!== false ||
+			strpos($host, '127.0')			!== false ||
+			strpos($host, '192.168')		!== false ||
+			strpos($host, 'bradypus.net') 	=== false 
+		);
 	}
 
 	/**
@@ -107,8 +64,7 @@ class utils
 	 */
 	public static function privilege($input = false, $translate = false)
 	{
-		if (!$input)
-		{
+		if (!$input) {
 			$input = $_SESSION['user']['privilege'];
 		}
 
@@ -121,29 +77,24 @@ class utils
 				40	=>'waiting'
 		);
 
-		if ($input == 'all' && !$translate)
-		{
+		if ($input === 'all' && !$translate) {
 			return $privilege_array;
 		}
 
-		if ($input == 'all' && $translate)
-		{
-			foreach ($privilege_array as $id=>$val)
-			{
-				$tr[$id] = tr::get($val);
+		if ($input === 'all' && $translate) {
+			foreach ($privilege_array as $id=>$val) {
+				$tr[$id] = \tr::get($val);
 			}
 
 			return $tr;
 		}
 
-		if (in_array ($input, $privilege_array))
-		{
+		if (in_array ($input, $privilege_array)) {
 			return array_search($input, $privilege_array);
 		}
 
-		if (in_array($input, array_keys($privilege_array)))
-		{
-			return $translate ? tr::get($privilege_array[$input]) : $privilege_array[$input];
+		if (in_array($input, array_keys($privilege_array))) {
+			return $translate ? \tr::get($privilege_array[$input]) : $privilege_array[$input];
 		}
 
 		return false;
@@ -158,28 +109,25 @@ class utils
 	 */
 	public static function canUser($privilege = false, $creator = false)
 	{
-    if (defined('PROJ_DIR'))
-    {
-      $app_status = cfg::main('status');
-    } else {
-      $app_status = 'on';
-    }
+    	if (defined('PROJ_DIR')) {
+			$app_data = json_decode(file_get_contents(PROJ_DIR . 'cfg/app_data.json'), true);
+      		$app_status = $app_data['status'];
+    	} else {
+      		$app_status = 'on';
+    	}
 
-    $user_priv = $_SESSION['user']['privilege'];
+	    $user_priv = $_SESSION['user']['privilege'];
 
 
-		if (!$privilege)
-		{
+		if (!$privilege) {
 			$privilege = 'edit';
 		}
 
-		if (!$user_priv || $user_priv === 0)
-		{
+		if (!$user_priv || $user_priv === 0) {
 			return false;
 		}
 
-		switch($privilege)
-		{
+		switch($privilege) {
 			case 'enter':
 				return ($app_status !== 'off' && $user_priv < 39);
 				break;
@@ -222,31 +170,17 @@ class utils
 	 * Returns  an array with all content (not . or ..) of $dir
 	 * @param string $dir	path to dir
 	 */
-	public static function dirContent ( $dir )
+	public static function dirContent ( string $dir )
 	{
-		$dont_consider = array(
-			'.', '..', '.DS_Store', 'undefined', '.svn'
-		);
-		$handle = @opendir($dir);
-
-		if ( $handle )
-		{
-			while ( false !== ( $file = readdir ( $handle ) ) )
-			{
-				if (!in_array($file, $dont_consider))
-				{
-					$dir_content[] = $file;
-				}
-			}
-
-			closedir($handle);
-
-			return $dir_content;
-		}
-		else
-		{
+		$dont_consider = [
+			'.', '..', '.DS_Store', 'undefined', '.svn', '.git'
+		];
+		if (!is_dir($dir)){
 			return false;
 		}
+		$ret = array_diff(scandir($dir), $dont_consider);
+		
+		return empty($ret) ? false : $ret;
 	} // end of dirContent
 
 
@@ -256,42 +190,27 @@ class utils
 	 * By default (no dir specified) the user temporary folder will be emptied!
 	 * @param string $dir	directory to empty
 	 * @param string $delete	if true directory will be deleted
-	 * @throws myException
+	 * @throws \Exception
 	 */
-	public static function emptyDir( $dir = false, $delete = false, $limit2current = false )
+	public static function emptyDir( string $dir, bool $delete_dir = false )
 	{
-		!$dir ? $dir = PROJ_TMP_DIR : '';
+		$files_in_tmp = self::dirContent( $dir ) ?: [];
 
-		$files_in_tmp = self::dirContent( $dir );
-
-		if ( $files_in_tmp[0] )
-		{
-			foreach ( $files_in_tmp as $file )
-			{
-				if ( is_dir ( $dir . '/' . $file ) )
-				{
-          if( !$limit2current )
-          {
-            self::emptyDir( $dir . '/' . $file, true );
-          }
-				}
-				else
-				{
-					if ( !@unlink ( $dir . '/' . $file ) )
-					{
-						throw new myException(tr::sget('cannot_delete_file', $file));
-					}
+		foreach ( $files_in_tmp as $file ) {
+			if ( is_dir ( $dir . '/' . $file ) ) {
+				self::emptyDir( $dir . '/' . $file, true );
+			} else {
+				if ( !@unlink ( $dir . '/' . $file ) ) {
+					throw new \Exception(\tr::get('cannot_delete_file', [$file]));
 				}
 			}
 		}
 
-		if ( $dir !== PROJ_TMP_DIR && $delete)
-		{
-			if ( !@rmdir( $dir ) )
-			{
-				throw new myException(tr::sget('cannot_delete_dir', $dir));
-			}
+		if ( $delete_dir && !@rmdir( $dir ) ) {
+			throw new \Exception(\tr::get('cannot_delete_dir', [$dir]));
 		}
+
+		return true;
 
 	} //end of emptyDir
 
@@ -301,127 +220,9 @@ class utils
 	 * @param string $string
 	 * @param string $separator
 	 */
-	public static function csv_explode($string, $delimiter = ',') {
-
-		$string = str_replace($delimiter .' ', $delimiter, $string);
-
-		if ( preg_match('/' . $delimiter . '/i', $string) )
-		{
-			return array_filter(explode($delimiter, $string));
-
-		}
-		else
-		{
-			return array($string);
-		}
-	}
-
-	/**
-	 *
-	 * Decodes text (if decode is true)
-	 * Transforms text in html characters (if html is true)
-	 * Linkifies texts and applies nl2br
-	 * @param string $text		text to format
-	 * @param boolean $html
-	 * @param boolean $decode
-	 */
-	public static function format_text($text, $html = false, $decode = false)
+	public static function csv_explode(string $string, string $delimiter = ','): array
 	{
-		if ($decode) {
-			$text = base64_decode($text);
-		}
-		if (!$html && $text !== '') {
-			$text = @htmlentities($text, ENT_QUOTES, 'UTF-8');
-		}
-		$text = self::linkify($text);
-
-		$text = self::add_db_links($text);
-
-		$text = nl2br($text);
-
-		return $text;
-	}
-
-	/**
-	 * Replaces in text patterns like @{table-name}.{id-value} with direct links to the relative view record page
-	 * @param string $text [description]
-	 * @since 2019-07-12
-	 */
-	private static function add_db_links($text){
-		return preg_replace_callback(
-			'/@([a-z]+)\.([0-9]+)(\[([^\]]+)\])?/',
-	    function($m){
-	      $p = PREFIX;
-	      if ($m[3] && $m[4]){
-	        return "<span class=\"btn-link\" onclick=\"api.record.read('{$p}{$m[1]}', ['{$m[2]}'], true)\">{$m[4]}</span>";
-	      } else {
-	        return "<span class=\"btn-link\" onclick=\"api.record.read('{$p}{$m[1]}', ['{$m[2]}'], true)\">{$m[1]}.{$m[2]}</span>";
-	      }
-	    },
-			$text);
-	}
-
-	/**
-	 *
-	 * Transforms plain-text links to html links
-	 * @param string $text		text to check
-	 * @param boolean $escape	text is escaped?
-	 */
-	public static function linkify($text, $escape = false)
-	{
-		if ($escape) {
-			$text = preg_replace("/(https?:\/\/)([^ \t\r\n$\)]+)/i", "<a href=\\\"\\0\\\" target=\\\"_blank\\\">\\0</a>", $text);
-			$text = preg_replace("/([a-z0-9\._-]+)(@[a-z0-9\.-_]+)(\.{1}[a-z]{2,6})/i", "<a href=\\\"mailto:\\1\\2\\3\\\">\\1\\2\\3</a>", $text);
-		} else {
-			$text = preg_replace("/(https?:\/\/)([^ \t\r\n$\)]+)/i", "<a href=\"\\0\" target=\"_blank\">\\0</a>", $text);
-			$text = preg_replace("/([a-z0-9\._-]+)(@[a-z0-9\.-_]+)(\.{1}[a-z]{2,6})/i", "<a href=\"mailto:\\1\\2\\3\">\\1\\2\\3</a>", $text);
-		}
-		return $text;
-	}
-
-	/**
-	 *
-	 * Returns formatted full path for file
-	 * @param int $file_id		file id
-	 * @param string $file_ext	file extensione
-	 */
-	public function get_file_path($file_id, $file_ext)
-	{
-		return PROJ_DIR . 'files/' . $file_id . '.' . $file_ext;
-	}
-
-	/**
-	 * Returns text, stripslashed and without php tags
-	 * @param string $text
-	 * @return mixed
-	 */
-	public static function clean_text_from_php($text)
-	{
-		$text = stripslashes($text);
-
-		$forbidden = array('<?php', '<?', '?>');
-
-		return str_replace($forbidden, null, $text);
-	}
-
-	/**
-	 * Echoes JSON encoded simple response
-	 * @param string $text text to show up
-	 * @param string $status	success|error(|warning|info)
-	 * @param boolean $dont_translate if true text will not be translated
-	 * @param array $other_args some other arguments to return
-	 */
-	public static function response($text, $status = false, $dont_translate = false, $other_args = false)
-	{
-		if (!$status)
-		{
-			$status = 'success';
-		}
-		$response['status'] = $status;
-		$response['text'] = $dont_translate ? $text : tr::get($text);
-		$other_args ? $response = array_merge($response, $other_args) : '';
-
-		echo json_encode($response);
+		return array_filter(array_map('trim', explode($delimiter, $string)), 'strlen');
 	}
 
   /**
@@ -436,63 +237,14 @@ class utils
 	public static function alert_div($text, $echo = false, $dont_translate = false)
 	{
 		$str = '<div class="text-danger">'
-				. '<strong>' . tr::get('attention') . ':</strong> ' . ($dont_translate ? $text : tr::get($text)) . '</p>'
+				. '<strong>' . \tr::get('attention') . ':</strong> ' . ($dont_translate ? $text : \tr::get($text)) . '</p>'
 			. '</div>';
 
 		if ($echo)
 			echo $str;
 		return $str;
 	}
-
-  /**
-   * Minifies all module javascript files. Return true on success or false on error.
-   * @return boolean
-   * @throws myException
-   */
-	public static function compressModScripts()
-	{
-		$modules = self::dirContent(MOD_DIR);
-
-		foreach ($modules as $mod)
-		{
-			try
-			{
-				if (is_dir(MOD_DIR . $mod))
-				{
-					$js_file = MOD_DIR . $mod . '/' . $mod. '.js';
-
-					$compress_file = MOD_DIR . $mod . '/' . $mod . '.mini.js';
-
-					if (file_exists($js_file))
-					{
-						$str = "/*\n * copyright BraDypUS \n */";
-						$str .= JSMin::minify ( file_get_contents ( $js_file ) );
-
-						if (!self::write_in_file($compress_file, $str))
-						{
-							throw new myException('Can not write compressed file ' . $compress_file);
-						}
-					}
-				}
-			}
-			catch (myException $e)
-			{
-				$e->log();
-				$error = true;
-			}
-		}
-		try
-		{
-			utils::emptyDir(MAIN_DIR . 'cache', false);
-		}
-		catch (myException $e)
-		{
-			$e->log();
-			$error = true;
-		}
-
-		return $error ? false : true;
-	}
+	
 
   /**
    * Recursively filters array using an optional callback function
@@ -504,13 +256,162 @@ class utils
    */
 	public static function recursiveFilter($arr, $callback = false)
 	{
-		foreach ($arr as &$a)
-		{
-			if (is_array($a))
-			{
+		foreach ($arr as &$a) {
+			if (is_array($a)) {
 				$a = self::recursiveFilter($a, $callback);
 			}
 		}
-    return $callback ? array_filter($arr, $callback ) : array_filter($arr);
+    	return $callback ? array_filter($arr, $callback ) : array_filter($arr);
+	}
+
+	
+
+	/**
+	 * Converts a multidimensional array to GeoJSON
+	 *
+	 * @param string $tb	Table name
+	 * @param array $rows	Array or database data
+	 * @return array		Valid geoJSON as array
+	 */
+	public static function multiArray2GeoJSON(string $tb, array $rows): array
+    {
+        $geo = [
+            'type' => 'FeatureCollection',
+            'features' => []
+        ];
+
+
+        if (!is_array($rows)) {
+            throw new Exception('Input data is not an array');
+        }
+
+        foreach ($rows as $r) {
+            $arr = [];
+            if (!is_array($r)) {
+                throw new Exception('Input data is not a multidimensional array');
+            }
+
+			$geom = $r['geometry'] ? $r['geometry'] : $r[$tb . '.geometry'];
+
+            if (!$geom) {
+                // single row error does not block entire process
+                error_log('No valid geometry column found in row: ' . var_export($r, true));
+                continue;
+            }
+			// Fix for: https://github.com/phayes/geoPHP/issues/181
+			$geom = str_replace(
+				['( ', ' (', ' )', ') '],
+				['(', '(', ')', ')'],
+				$geom
+			);
+			try {
+				$geoPHP = geoPHP::load($geom, 'wkt');
+			} catch (\Throwable $th) {
+				error_log("WKT geometry {$geom} could not be parsed: " . var_export($r, true));
+				continue;
+			}
+
+            $arr['type']		= 'Feature';
+            $arr['geometry']	= json_decode($geoPHP->out('geojson'), true);
+
+            unset($r['geometry']);
+            if ($r) {
+                $arr['properties']	= $r;
+            }
+
+			array_push($geo['features'], $arr);
+		}
+		
+		return $geo;
+	}
+	
+	public static function jsonForTabletop(DBInterface $db, string $tb, array $params): string
+	{
+		$fields = ['id', 'channel', 'level', 'message', 'time'];
+
+		$q = 'SELECT * FROM ' . $tb . ' WHERE ';
+
+		$v = [];
+		$w = [];
+
+		if ($params['sSearch']) {
+			foreach ($fields as $f) {
+				$w[] = "$f LIKE ?";
+				$v[] = "%{$params['sSearch']}%";
+			}
+			$q .= implode(' OR ', $w);
+		} else {
+			$q .= ' 1=1';
+		}
+
+		$response['sEcho'] = intval($params['sEcho']);
+		$response['query_arrived'] = $q;
+
+		if ( isset($params['iTotalRecords']) ) {
+			$response['iTotalRecords'] = $params['iTotalRecords'];
+		} else {
+			$res_tot = $db->query('SELECT count(id) as tot FROM ' . $tb . ' WHERE 1=1');
+			$response['iTotalRecords'] = $res_tot[0]['tot'];
+		}
+
+		$response['iTotalDisplayRecords'] = $response['iTotalRecords'];
+
+		if (isset($params['iSortCol_0'])) {
+			$q .= ' ORDER BY ' . $fields[$params['iSortCol_0']] . ' ' . ($params['sSortDir_0']==='asc' ? 'asc' : 'desc');
+		} else {
+			$q .= ' ORDER BY id DESC';
+		}
+
+		if (isset($params['iDisplayStart']) && $params['iDisplayLength'] !== '-1') {
+			$q .= ' LIMIT ' . $params['iDisplayLength'] . ' OFFSET ' . $params['iDisplayStart'];
+		} else {
+			$q .= ' LIMIT 30 OFFSET 0 ';
+		}
+
+		$response['query_executed'] = $q;
+
+		$response['aaData'] = $db->query($q, $v);
+
+		foreach ($response['aaData'] as $id => &$row) {
+			$date = new DateTime();
+			$date->setTimestamp($row['time']);
+			$row['time'] = $date->format('Y-m-d H:i:s');
+			$response['aaData'][$id]['DT_RowId'] = $row['id'];
+		}
+
+		return json_encode($response);
+	}
+
+	public static function encodePwd( string $password ) : string
+    {
+        return sha1($password);
+	}
+	
+	public static function isDuplicateEmail( \DB\DB $db, string $prefix, string $email, int $id = null ) : bool
+    {
+		$manager = new \DB\System\Manage($db, $prefix);
+
+        $partial = [ "email = ? " ];
+        $values = [ $email ];
+
+        
+        if ($id) {
+            array_push($partial, "id != ? ");
+            array_push($values, $id);
+		}
+		$res = $manager->getBySQL('users', implode(" AND ", $partial) . ' LIMIT 1 OFFSET 0', $values, ['count(*) as tot']);
+
+        return ($res[0]['tot'] > 0);
+	}
+
+	public function debug($d, bool $echo = false) : void
+	{
+		$json = json_encode($d, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE);
+		if ($echo){
+			echo "<pre>$json</pre>";
+		} else {
+			error_log( 'DEBUG: ' . $json );
+		}
+		
 	}
 }

@@ -1,8 +1,7 @@
 <?php
 /**
- * @author			Julian Bogdani <jbogdani@gmail.com>
- * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
- * @license			See file LICENSE distributed with this code
+ * @copyright 2007-2021 Julian Bogdani
+ * @license AGPL-3.0; see LICENSE
  * @since			Aug 12, 2012
  */
 
@@ -10,101 +9,81 @@ class translate_ctrl extends Controller
 {
 	public function showList()
 	{
-    $opened_lang = $this->request['param'][0];
-    
-		$langs = utils::dirContent(LOCALE_DIR);
-		
-		$uid = uniqid('transl');
-		
-		$html = '<h2>' . tr::get('select_lang_to_edit') . '</h2>';
-		
-		$html .= '<div id="but_' . $uid . '">';
-		
-		foreach($langs as $l)
-		{
-			if ($l != 'it.inc')
-			{
-				$ll = str_replace('.inc', null, $l);
-				$html .= '<button type="button" data-lang="' . $ll . '" class="lang btn btn-info"><i class="glyphicon glyphicon-white glyphicon-globe"></i> ' . strtoupper($ll) . '</button> ';
-			}
+		$lang_files = \utils::dirContent(MAIN_DIR . 'locale/');
+		$available_lang = [];
+
+		foreach ($lang_files as $file) {
+            if (strpos($file, '.json') !== false) {
+                $available_lang[] = str_replace('.json', null, $file);
+            }
 		}
-		$html .= ' <button type="button" class="add btn btn-warning">' . tr::get('add') . '</button>';
-		
-				
-		$html .= '</div>'
-				. '<hr />'
-				. '<div id="cont_' . $uid . '" class="transl-content"></div>'
-				. '<script>'
-						. "$('#but_{$uid} button.lang').on('click', function(){"
-								. "$('#cont_{$uid}').html(core.loading).load('controller.php?obj=translate_ctrl&method=showForm&param[]=' + $(this).data('lang'));"
-						."});"
-						. "$('#but_{$uid} button.add').on('click', function(){"
-								. "translate.addLang('{$uid}'); "
-						."});"
-						. ($opened_lang ? "$('#cont_{$uid}').html(core.loading).load('controller.php?obj=translate_ctrl&method=showForm&param[]={$opened_lang}')" : '')
-				. '</script>';
-		echo $html;
-		
+		$this->render('translate', 'showList', [
+			'available_lang' => $available_lang
+		]);
 	}
 	
 	public function showForm()
 	{
-    
-    $lng = $this->request['param'][0];
+		$lang_to_edit = $this->get['lang'];
 
-		require LOCALE_DIR . 'it.inc';
-		$it = $lang;
-		unset($lang);
-		
-		require LOCALE_DIR . $lng . '.inc';
-		$edit_lang = $lang;
-		unset($lang);
-		
-    
-    $this->render('translate', 'form', array(
-      'lng' => $lng,
-      'it' => $it,
-      'edit_lang' => $edit_lang
-		));
+		$edit_lang 	= $this->getAllString($lang_to_edit);
+
+		$this->render('translate', 'showForm', [
+			'lng' => $lang_to_edit,
+			'main_lng' => 'en',
+			'main_lng_data' => $this->getAllString('en'),
+			'edit_lang' => $edit_lang
+		]);
 	}
 	
 	public function newLang()
 	{
-    
-    $lang = $this->request['param'][0];
-    
-		if (!file_exists(LOCALE_DIR . $lang . '.inc') && utils::write_in_file(LOCALE_DIR . $lang . '.inc', ''))
-		{
-			echo utils::response('ok_lang_create');
+		$lang = $this->get['lang'];
+		
+		if ( file_exists(MAIN_DIR . 'locale/' . $lang . '.json') ){
+			$this->response('error_lang_exists', 'error', [$lang]);
+			return;
 		}
-		else
-		{
-			echo utils::response('error_lang_create', 'error');
+    
+		if ($this->arrayToFile($lang, [])) {
+			$this->response('ok_lang_create', 'success');
+		} else {
+			$this->response('error_lang_create', 'error');
 		}
 	}
 	
-	public function save()
+	public function saveData()
 	{
-    $post = $this->post;
-    
-		$lang = $post['edit_lang'];
-    
-		unset($post['edit_lang']);
+		$lang = $this->get['lang'];
+		$data = $this->post;
+		
+		if($this->arrayToFile($lang, $data)) {
+			$this->response('ok_language_update', 'success');
+		} else {
+			$this->response('error_language_update', 'error');
+		}
+		
+	}
 
-		foreach ($post as $k => $v)
-		{
-			$text[]='$lang[\'' . $k . '\'] = "' . str_replace(array('"', "\r\n"), array('\'', '\\n'), $v) . '";'; 
+	private function arrayToFile(string $lang, array $data): bool
+	{
+		return file_put_contents(MAIN_DIR . 'locale/' . $lang . '.json', json_encode($data, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE));
+	}
+
+	private function getAllString(string $lang): array
+	{
+		if (!file_exists(MAIN_DIR . 'locale/' . $lang . '.json')){
+			throw new Exception("Language file {$lang}.json not found");
 		}
-		
-		if(utils::write_in_file(LOCALE_DIR . $lang .'.inc', '<?php' . "\n" . implode("\n", $text)))
-		{
-			utils::response('ok_language_update');
+
+		$arr = json_decode(
+			file_get_contents(MAIN_DIR . 'locale/' . $lang . '.json'),
+			true
+		);
+		if (!is_array($arr)){
+			throw new Exception("Syntax error in anguage file {$lang}.json");
 		}
-		else
-		{
-			utils::response('error_language_update', 'error');
-		}
-		
+		return $arr;
 	}
 		
 }

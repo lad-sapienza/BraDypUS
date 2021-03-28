@@ -1,18 +1,17 @@
 <?php
 /**
- * Translation class
- * @author			Julian Bogdani <jbogdani@gmail.com>
- * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
- * @license			See file LICENSE distributed with this code
+ * @copyright 2007-2021 Julian Bogdani
+ * @license AGPL-3.0; see LICENSE
  * @since			Apr 7, 2012
  * @uses			cfg
+ * @uses			pref
  */
 
 
 class tr
 {
 
-	private static $language_strings;
+	private static $language_strings = false;
 
 	/**
 	 *
@@ -22,105 +21,72 @@ class tr
 	 * 3) browser default language
 	 * 4) en
 	 */
-	public static function load_file()
+	public static function load_file(string $cfg_lang = null)
 	{
 		/*
 		 * Set $_SESSION['pref']['lang']
 		 */
 		// language may be
-		if ( !pref::getLang() )
-		{
-			try
-			{
-				$def_lang = cfg::main('lang');
-			}
-			catch(myException $e)
-			{
-				// do nothing
-			}
+		if ( !\pref::getLang() ) {
 
 			$computer_lang = substr($_SERVER["HTTP_ACCEPT_LANGUAGE"], 0, 2);
 
-			if ($def_lang)
-			{
-				pref::setLang($def_lang);
+            if ($cfg_lang && file_exists(MAIN_DIR . 'locale/' . $cfg_lang . '.json')) {
+                \pref::setLang($cfg_lang);
+            } else if ($computer_lang && file_exists (MAIN_DIR . 'locale/' . $computer_lang . '.json') ) {
+				\pref::setLang($computer_lang);
+			} else {
+				\pref::setLang('en');
 			}
-			else if ($computer_lang AND file_exists (LOCALE_DIR . $computer_lang . '.inc') )
-			{
-				pref::setLang($computer_lang);
-			}
-			else
-			{
-				pref::setLang('en');
-			}
-
 		}
-		require_once LOCALE_DIR . pref::getLang() . '.inc';
+		self::$language_strings = json_decode(
+			file_get_contents(MAIN_DIR . 'locale/' . \pref::getLang() . '.json'),
+			true
+		);
 
-		self::$language_strings = $lang;
-	}
-
-	/**
-	 *
-	 * Returns formatted string
-	 * @param string $string	input string
-	 * @param mixed $args		array of arguments for formatting
-	 * @param boolean $escape	boolean escape
-	 */
-	public static function sget($string, $args, $escape = false)
-	{
-		if (!is_array($args))
-		{
-			$args = array($args);
-		}
-		$ret = vsprintf(self::get($string), $args);
-
-		return $escape ? str_replace("'", "\'", $ret) : $ret;
+		return self::$language_strings;
 	}
 
 	/**
 	 *
 	 * Translates $string
 	 * @param string $string string to translate
-	 * @param boolean $escape boolean controle if string mus be escaped or not
+	 * @param mixed $args	single argument (string) or array of arguments for formatting
+	 * @return string	translated string
 	 */
-	public static function get($string, $escape = false)
+	public static function get($string, $args = [])
 	{
 		$lang = self::$language_strings;
 
-		$ret = $lang[$string] ? $lang[$string] : $string;
+		$translated = $lang[$string] ? $lang[$string] : $string;
 
-		return $escape ? str_replace("'", "\'", $ret) : $ret;
+		if (is_string($args)){
+			$args = [$args];
+		}
+
+		if (is_array($args) && count($args) > 0) {
+			return vsprintf(self::get($translated), $args);
+		}
+
+		return $translated;
 	}
 
 	/**
 	 *
-	 * Returns current language as json (is_string is false) or as javascript variable (is_string = true)
-	 * @param boolean $is_string
+	 * Returns current language as json
+	 * @return string JSON encoded
 	 */
-	public static function lang2json($is_string = false)
+	public static function lang2json()
 	{
-		$lang = self::$language_strings;
-
-		if ($is_string)
-		{
-			echo 'var lang = ' . json_encode($lang) . ';';
-		}
-		else
-		{
-			return json_encode($lang);
-		}
+		return json_encode(self::$language_strings);
 	}
 
-	/**
-	 *
-	 * Uses self::get and echoes translated string
-	 * @param string $string
-	 * @param boolean $escape boolean controle if string mus be escaped or not
-	 */
-	public static function show($string, $escape = false)
+	public static function getAvailable(): array
 	{
-		echo self::get($string, $escape);
-	}
+		$langs = \utils::dirContent(MAIN_DIR . 'locale/') ?? [];
+		
+		array_walk($langs, function(&$el){ $el =  str_replace('.json', null, $el); });
 
+		return $langs;
+	}
 }

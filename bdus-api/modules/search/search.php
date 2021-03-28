@@ -1,8 +1,7 @@
 <?php
 /**
- * @author			Julian Bogdani <jbogdani@gmail.com>
- * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
- * @license			See file LICENSE distributed with this code
+ * @copyright 2007-2021 Julian Bogdani
+ * @license AGPL-3.0; see LICENSE
  * @since			Sep 11, 2012
  */
 
@@ -19,21 +18,18 @@ class search_ctrl extends Controller
 		$fld = $this->request['fld'];
 
 		// check if query field ia a id_from_tb field
-		$second_table = cfg::fldEl($tb, $fld, 'id_from_tb');
+		$second_table = $this->cfg->get("tables.$tb.fields.$fld.id_from_tb");
 
 		if ($second_table) {
-
-			$second_field = cfg::tbEl($second_table, 'id_field');
-			$q = "SELECT `{$second_field}` as {$fld} FROM {$second_table} WHERE 1 GROUP BY `{$second_field}`";
+			$second_field = $this->cfg->get("tables.{$second_table}.id_field");
+			$q = "SELECT {$second_field} as {$fld} FROM {$second_table} WHERE 1=1 GROUP BY {$second_field}";
 
 		} else {
 
-			$q = "SELECT `{$fld}` FROM `{$tb}` WHERE 1 GROUP BY `{$fld}`";
+			$q = "SELECT {$fld} FROM {$tb} WHERE 1=1 GROUP BY {$fld}";
 		}
 
-
-		$db = new DB();
-		$res = $db->query($q);
+		$res = $this->db->query($q);
 		foreach ($res as $r){
 			$arr[] = $r[$fld];
 		}
@@ -44,16 +40,13 @@ class search_ctrl extends Controller
 	 */
 	public function test()
 	{
-		try
-		{
-			$queryObj = new Query(new DB(), $this->request, true);
+		try {
+			$queryObj = new QueryFromRequest($this->db, $this->cfg, $this->request, true);
 			$resp['status'] = 'success';
-			$resp['verbose'] = tr::sget('test_ok_x_found', $queryObj->getTotal());
-		}
-		catch (myException $e)
-		{
+			$resp['verbose'] = \tr::get('test_ok_x_found', [$queryObj->getTotal()]);
+		} catch (\Throwable $e) {
 			$resp['status'] = 'error';
-			$resp['verbose'] = tr::get('test_error');
+			$resp['verbose'] = \tr::get('test_error');
 		}
 
 		echo json_encode($resp);
@@ -66,12 +59,13 @@ class search_ctrl extends Controller
 	 */
 	public function expertGUI()
 	{
-		$this->render('search', 'expertGUI', array(
-				'tr'		=> new tr(),
-				'tb'		=> $this->request['tb'],
-				'fields'	=> cfg::fldEl($this->request['tb'], 'all', 'name'),
-				'operators'	=> array ('=', '!=', 'LIKE', '>', '<', '>=', '<=', 'IS NULL', 'IS NOT NULL', '(', ')', '%', "'", 'AND', 'OR', 'NOT')
-		));
+		$tb = $this->request['tb'];
+		
+		$this->render('search', 'expertGUI', [
+			'tb'		=> $tb,
+			'fields'	=> $this->cfg->get("tables.{$tb}.fields.*.label"),
+			'operators'	=> array ('=', '!=', 'LIKE', '>', '<', '>=', '<=', 'IS NULL', 'IS NOT NULL', '(', ')', '%', "'", 'AND', 'OR', 'NOT')
+		]);
 	}
 
 
@@ -82,14 +76,14 @@ class search_ctrl extends Controller
 	 */
 	public function advancedGUI()
 	{
-		$this->render('search', 'advanced', array(
-				'fields'	=> $this->opt_all_flds($this->request['tb']),
-				'operators'	=> $this->opt_operators(),
-				'connector'	=> $this->opt_connector($this->request['tb']),
-				'order'		=> $this->opt_all_flds($this->request['tb']),
-				'tb'		=> $this->request['tb'],
-				'uid'		=> uniqid('uid')
-				));
+		$tb = $this->request['tb'];
+		$this->render('search', 'advanced', [
+			'fields'	=> $this->opt_all_flds($tb),
+			'operators'	=> $this->opt_operators(),
+			'connector'	=> $this->opt_connector($tb),
+			'order'		=> $this->opt_all_flds($tb),
+			'tb'		=> $tb,
+		]);
 	}
 
 
@@ -113,15 +107,15 @@ class search_ctrl extends Controller
 	private function opt_operators()
 	{
 		$operators = array(
-				'LIKE'		=>	tr::get('contains'),
-				'=' 		=>	tr::get('is_exactly'),
-				'NOT LIKE'	=>	tr::get('doesnt_contain'),
-				'starts_with'=>	tr::get('starts_with'),
-				'ends_with'	=>	tr::get('ends_with'),
-				'is_empty'	=> 	tr::get('is_empty'),		// SQL: `field`='' OR `field` IS NULL
-				'is_not_empty'=>tr::get('is_not_empty'),
-				'>'			=>	tr::get('bigger'),
-				'<'			=>	tr::get('smaller')
+				'LIKE'		=>	\tr::get('contains'),
+				'=' 		=>	\tr::get('is_exactly'),
+				'NOT LIKE'	=>	\tr::get('doesnt_contain'),
+				'starts_with'=>	\tr::get('starts_with'),
+				'ends_with'	=>	\tr::get('ends_with'),
+				'is_empty'	=> 	\tr::get('is_empty'),		// SQL: field='' OR field IS NULL
+				'is_not_empty'=>\tr::get('is_not_empty'),
+				'>'			=>	\tr::get('bigger'),
+				'<'			=>	\tr::get('smaller')
 		);
 
 		foreach ($operators as $operator => $label)
@@ -134,23 +128,21 @@ class search_ctrl extends Controller
 
 	private function opt_all_flds($tb)
 	{
-		$fields = cfg::fldEl($tb, 'all', 'label');
+		$fields = $this->cfg->get("tables.$tb.fields.*.label");
 
-		foreach ($fields as $name=>$label)
-		{
+		foreach ($fields as $name => $label) {
 			$opt[] = '<option value="' . $tb . ':' . $name .'">' . $label . '</option>';
 		}
-		$plg = cfg::tbEl($tb, 'plugin');
 
-		if (is_array($plg))
-		{
-			foreach ($plg as $p)
-			{
-				$fields = cfg::fldEl($p, 'all', 'label');
+		$plg = $this->cfg->get("tables.{$tb}.plugin");
 
-				foreach ($fields as $name=>$label)
-				{
-					$opt[] = '<option value="' . $p . ':' . $name .'">' . cfg::tbEl($p, 'label') . " > " . $label . '</option>';
+		if (is_array($plg)) {
+			foreach ($plg as $p) {
+
+				$fields = $this->cfg->get("tables.{$p}.fields.*.label");
+
+				foreach ($fields as $name => $label) {
+					$opt[] = '<option value="' . $p . ':' . $name .'">' . $this->cfg->get("tables.$p.label") . " > " . $label . '</option>';
 				}
 			}
 		}

@@ -1,9 +1,14 @@
 <?php
 /**
+ * @copyright 2007-2021 Julian Bogdani
+ * @license AGPL-3.0; see LICENSE
+ * 
  * Returns list of values to use as select2 ajax source
  * @uses DB
- * @uses  QueryBuilder
+ * @uses  \SQL\QueryObject
  */
+
+use \SQL\QueryObject;
 
 class menuValues_ctrl extends Controller
 {
@@ -11,7 +16,7 @@ class menuValues_ctrl extends Controller
    * Max number of results per page
    * @var integer
    */
-  private static $res_x_page = 30;
+  private $res_x_page = 30;
 
   /**
    * Wrapper function for getValues to be used with query parameters:
@@ -28,8 +33,8 @@ class menuValues_ctrl extends Controller
     $q = $this->get['q'];
     $p = $this->get['p'];
 
-    $data = self::getValues($context, $att, $q, $p);
-    $this->json($data);
+    $data = $this->getValues($context, $att, $q, $p);
+    echo $this->returnJson($data);
   }
 
   /**
@@ -37,91 +42,99 @@ class menuValues_ctrl extends Controller
    * @param  string  $context Context of usage, one of: vocabulary_set | get_values_from_tb | id_from_tb
    * @param  string  $att     Second attribute value: name of vocabulay, table name & field name (colon separated) or table name
    * @param  string $q       Filter string to search for (LIKE operator will be used)
-   * @param  string $p       Page nuber to return
+   * @param  string $p       Page number to return
    * @return array           Array with query results (tot: totale number of results, data: array of data)
    */
-  public static function getValues($context, $att, $q = false, $p = 1)
+  private function getValues(string $context, string $att, string $q = null, int $p = null)
   {
-    $offset = self::$res_x_page * ($p - 1);
+
+    if (!$p){
+      $p = 1;
+    }
+    $offset = $this->res_x_page * ($p - 1);
 
 
-    $query = new QueryBuilder();
 
-    $tot = new QueryBuilder();
+    $query = new QueryObject($this->cfg);
+
+    $tot = new QueryObject($this->cfg);
 
     switch($context)
     {
       case 'vocabulary_set':
-        $query->setTable(PREFIX . 'vocabularies')
-          ->setFields('def', 'id')
-          ->setFields('def', 'val')
-          ->setWhere('voc', $att)
-          ->setLimit(self::$res_x_page, $offset)
-          ->setOrder('sort');
+        $query->setTb($this->prefix . 'vocabularies')
+          ->setField('def', 'id')
+          ->setField('def', 'val')
+          ->setWherePart(null, null, 'voc', '=', '?', null)
+          ->setWhereValues([$att])
+          ->setLimit($this->res_x_page, $offset)
+          ->setOrderFld('sort', 'asc');
 
-        $tot->setTable(PREFIX . 'vocabularies')
-          ->setFields('count(id)', 'tot')
-          ->setWhere('voc', $att)
-          ->setOrder('sort');
+        $tot->setTb($this->prefix . 'vocabularies')
+          ->setField('id', 'tot', $this->prefix . 'vocabularies', 'count')
+          ->setWherePart(null, null, 'voc', '=', '?', null)
+          ->setWhereValues([$att])
+          ->setOrderFld('sort', 'asc');
 
-        if ($q && !empty($q))
-        {
-          $query->setWhere('def', "%{$q}%", 'LIKE');
-          $tot->setWhere('def', "%{$q}%", 'LIKE');
+        if ($q && !empty($q)) {
+          $query->setWherePart('and', null, 'def', 'LIKE', "?", null);
+          $query->setWhereValues(["%{$q}%"]);
+          $tot->setWherePart('and', null, 'def', 'LIKE', "?", null);
+          $tot->setWhereValues(["%{$q}%"]);
         }
-
 
       break;
 
       case 'get_values_from_tb':
-        list($tb, $fld) = utils::csv_explode ($att, ':');
-        $query->setTable($tb)
-          ->setFields($fld, 'id')
-          ->setFields($fld, 'val')
-          ->setGroup($fld)
-          ->setLimit(self::$res_x_page, $offset)
-          ->setOrder($fld);
+        list($tb, $fld) = \utils::csv_explode ($att, ':');
+        $query->setTb($tb)
+          ->setField($fld, 'id')
+          ->setField($fld, 'val')
+          ->setGroupFld($fld)
+          ->setLimit($this->res_x_page, $offset)
+          ->setOrderFld($fld, 'asc');
 
-        $tot->setTable($tb)
-          ->setFields('count(id)', 'tot')
-          ->setOrder($fld);
+        $tot->setTb($tb)
+          ->setField('id', 'tot', $tb, 'count')
+          ->setOrderFld($fld, 'asc');
 
-          if ($q && !empty($q))
-          {
-            $query->setWhere($fld, "%{$q}%", 'LIKE');
-            $tot->setWhere($fld, "%{$q}%", 'LIKE');
+          if ($q && !empty($q)) {
+            $query->setWherePart(null, null, $fld, 'LIKE', "?", null);
+            $query->setWhereValues(["%{$q}%"]);
+            $tot->setWherePart (null, null, $fld, 'LIKE', "?", null);
+            $tot->setWhereValues (["%{$q}%"]);
           }
       break;
 
       case 'id_from_tb':
-        $id_field = cfg::tbEl($att, 'id_field');
+        $id_field = $this->cfg->get("tables.{$att}.id_field");
 
-        $query->setTable($att)
-          ->setFields('id', 'id')
-          ->setFields($id_field, 'val')
-          ->setLimit(self::$res_x_page, $offset)
-          ->setOrder($id_field);
 
-        $tot->setTable($att)
-          ->setFields('count(id)', 'tot')
-          ->setOrder($id_field);
+        $query->setTb($att)
+          ->setField('id', 'id')
+          ->setField($id_field, 'val')
+          ->setLimit($this->res_x_page, $offset)
+          ->setOrderFld($id_field, 'asc');
 
-        if ($q && !empty($q))
-        {
-          $query->setWhere($id_field, "%{$q}%", 'LIKE');
-          $tot->setWhere($id_field, "%{$q}%", 'LIKE');
+        $tot->setTb($att)
+          ->setField('id', 'tot', $att, 'count')
+          ->setOrderFld($id_field, 'asc');
+
+        if ($q && !empty($q)) {
+          $query->setWherePart(null, null, $id_field, 'LIKE', "?", null);
+          $query->setWhereValues(["%{$q}%"]);
+          $tot->setWherePart(null, null, $id_field, 'LIKE', "?", null);
+          $tot->setWhereValues(["%{$q}%"]);
         }
       break;
     }
-
     list($sql, $val) = $query->getSql();
     list($tot_sql, $tot_val) = $tot->getSql();
 
-    $db = new DB();
 
     return [
-      "tot" => $db->query($tot_sql, $tot_val)[0]['tot'],
-      "data" => $db->query($sql, $val),
+      "tot" => $this->db->query($tot_sql, $tot_val)[0]['tot'],
+      "data" => $this->db->query($sql, $val),
     ];
   }
 

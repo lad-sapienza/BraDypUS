@@ -1,4 +1,9 @@
 <?php
+/**
+ * @copyright 2007-2021 Julian Bogdani
+ * @license AGPL-3.0; see LICENSE
+ */
+
 
 class qqFileUploader {
 
@@ -122,7 +127,7 @@ class qqFileUploader {
                 return array('error' => "Server error. Chunks directory isn't writable or executable.");
             }
 
-            $targetFolder = $this->chunksFolder.DIRECTORY_SEPARATOR.$uuid;
+            $targetFolder = $this->chunksFolder.'/'.$uuid;
 
             if (!file_exists($targetFolder)){
                 mkdir($targetFolder);
@@ -140,7 +145,7 @@ class qqFileUploader {
                 $target = fopen($target, 'wb');
 
                 for ($i=0; $i<$totalParts; $i++){
-                    $chunk = fopen($targetFolder.DIRECTORY_SEPARATOR.$i, "rb");
+                    $chunk = fopen($targetFolder.'/'.$i, "rb");
                     stream_copy_to_stream($chunk, $target);
                     fclose($chunk);
                 }
@@ -149,7 +154,7 @@ class qqFileUploader {
                 fclose($target);
 
                 for ($i=0; $i<$totalParts; $i++){
-                    unlink($targetFolder.DIRECTORY_SEPARATOR.$i);
+                    unlink($targetFolder.'/'.$i);
                 }
 
                 rmdir($targetFolder);
@@ -204,12 +209,12 @@ class qqFileUploader {
 
         // Get unique file name for the file, by appending random suffix.
 
-        while (file_exists($uploadDirectory . DIRECTORY_SEPARATOR . $unique . $ext)){
+        while (file_exists($uploadDirectory . '/' . $unique . $ext)){
             $suffix += rand(1, 999);
             $unique = $base.'-'.$suffix;
         }
 
-        $result =  $uploadDirectory . DIRECTORY_SEPARATOR . $unique . $ext;
+        $result =  $uploadDirectory . '/' . $unique . $ext;
 
         // Create an empty target file
         if (!touch($result)){
@@ -233,7 +238,7 @@ class qqFileUploader {
             if ($item == "." || $item == "..")
                 continue;
 
-            $path = $this->chunksFolder.DIRECTORY_SEPARATOR.$item;
+            $path = $this->chunksFolder.'/'.$item;
 
             if (!is_dir($path))
                 continue;
@@ -253,7 +258,7 @@ class qqFileUploader {
             if ($item == "." || $item == "..")
                 continue;
 
-            unlink($dir.DIRECTORY_SEPARATOR.$item);
+            unlink($dir.'/'.$item);
         }
         rmdir($dir);
     }

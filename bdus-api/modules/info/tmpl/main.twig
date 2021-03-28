@@ -1,7 +1,6 @@
 {#
- * @author			Julian Bogdani <jbogdani@gmail.com>
- * @copyright		BraDypUS, Julian Bogdani <jbogdani@gmail.com>
- * @license			See file LICENSE distributed with this code
+ * @copyright 2007-2021 Julian Bogdani
+ * @license AGPL-3.0; see LICENSE
  #}
 
 <div class="row">
@@ -11,8 +10,8 @@
 				<h3>BraDypUS v. {{ version }} </h3>
 			</div>
 			<div class="panel-body">
-				<p>Bradypus is developed by Julian Bogdani and is freely (MIT licensed) available on 
-				<a href="https://github.com/jbogdani/BraDypUS" target="_blank">Github</a>
+				<p>Bradypus is developed by Julian Bogdani and is freely (AGPL-3.0 licensed) available on 
+				<a href="https://github.com/bdus-db/BraDypUS" target="_blank">Github</a>
 				<p>&copy; Julian Bogdani / 2007 - {{ date }}</p>
 			</div>
 			<div class="panel-footer">
@@ -27,7 +26,7 @@
 		{% for l in libs %}
 			<dt style="font-size:1.2em; margin-top:7px;">{{ l.name }}</dt>
 			<dd>{% if l.by %}by {{ l.by }}<br />{% endif %}
-			Web: <a href="{{ l.web }}" target="_blank"><i class="glyphicon glyphicon-globe"></i> {{ l.web }}</a><br />
+			Web: <a href="{{ l.web }}" target="_blank"><i class="fa fa-globe"></i> {{ l.web }}</a><br />
 			License: {{ l.lic }}</dd>
 		{% endfor %}
 		</dl>
@@ -49,6 +48,9 @@
 			<dd><a href="" target="_blank"></a></dd> 
 			 -->
 			
+			<dt>GNU Affero General Public License (GPL) v.3</dt>
+			<dd><a href="https://www.gnu.org/licenses/agpl-3.0.en.html" target="_blank">https://www.gnu.org/licenses/agpl-3.0.en.html</a></dd>
+
 			<dt>GNU General Public License (GPL) v.3</dt>
 			<dd><a href="http://www.gnu.org/licenses/gpl-2.0.html" target="_blank">http://www.gnu.org/licenses/gpl-2.0.html</a></dd>
 			

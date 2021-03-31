@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 namespace Config;
 
-use Config\ConfigException;
+use \Config\ConfigException;
 
 class Load
 {

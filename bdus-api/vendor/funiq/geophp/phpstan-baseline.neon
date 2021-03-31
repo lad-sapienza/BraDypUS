@@ -1,0 +1,322 @@
+parameters:
+	ignoreErrors:
+		-
+			message: "#^Strict comparison using \\=\\=\\= between DOMDocument and false will always evaluate to false\\.$#"
+			count: 1
+			path: src/Adapter/GPX.php
+
+		-
+			message: "#^Parameter \\#1 \\$x of class geoPHP\\\\Geometry\\\\Point constructor expects float\\|int\\|null, string given\\.$#"
+			count: 1
+			path: src/Adapter/GPX.php
+
+		-
+			message: "#^Parameter \\#2 \\$y of class geoPHP\\\\Geometry\\\\Point constructor expects float\\|int\\|null, string given\\.$#"
+			count: 1
+			path: src/Adapter/GPX.php
+
+		-
+			message: "#^Parameter \\#3 \\$z of class geoPHP\\\\Geometry\\\\Point constructor expects float\\|int\\|null, string\\|null given\\.$#"
+			count: 1
+			path: src/Adapter/GPX.php
+
+		-
+			message: "#^Parameter \\#1 \\$geometry of method geoPHP\\\\Adapter\\\\GPX\\:\\:collectionToGPX\\(\\) expects geoPHP\\\\Geometry\\\\Collection, geoPHP\\\\Geometry\\\\Geometry given\\.$#"
+			count: 1
+			path: src/Adapter/GPX.php
+
+		-
+			message: "#^Parameter \\#1 \\$haystack of function strpos expects string, float given\\.$#"
+			count: 2
+			path: src/Adapter/GeoHash.php
+
+		-
+			message: "#^Parameter \\#1 \\$string of function strlen expects string, float given\\.$#"
+			count: 2
+			path: src/Adapter/GeoHash.php
+
+		-
+			message: "#^Parameter \\#1 \\$srid of method geoPHP\\\\Geometry\\\\Geometry\\:\\:setSRID\\(\\) expects int, string\\|null given\\.$#"
+			count: 2
+			path: src/Adapter/GeoJSON.php
+
+		-
+			message: "#^Unreachable statement \\- code above always terminates\\.$#"
+			count: 3
+			path: src/Adapter/GeoJSON.php
+
+		-
+			message: "#^Strict comparison using \\=\\=\\= between DOMDocument and false will always evaluate to false\\.$#"
+			count: 1
+			path: src/Adapter/GeoRSS.php
+
+		-
+			message: "#^Parameter \\#1 \\$x of class geoPHP\\\\Geometry\\\\Point constructor expects float\\|int\\|null, string given\\.$#"
+			count: 6
+			path: src/Adapter/GeoRSS.php
+
+		-
+			message: "#^Parameter \\#2 \\$y of class geoPHP\\\\Geometry\\\\Point constructor expects float\\|int\\|null, string given\\.$#"
+			count: 6
+			path: src/Adapter/GeoRSS.php
+
+		-
+			message: "#^Parameter \\#1 \\$geometry of method geoPHP\\\\Adapter\\\\GeoRSS\\:\\:linestringToGeoRSS\\(\\) expects geoPHP\\\\Geometry\\\\LineString, geoPHP\\\\Geometry\\\\Geometry given\\.$#"
+			count: 1
+			path: src/Adapter/GeoRSS.php
+
+		-
+			message: "#^Parameter \\#1 \\$geometry of method geoPHP\\\\Adapter\\\\GeoRSS\\:\\:polygonToGeoRSS\\(\\) expects geoPHP\\\\Geometry\\\\Polygon, geoPHP\\\\Geometry\\\\Geometry given\\.$#"
+			count: 1
+			path: src/Adapter/GeoRSS.php
+
+		-
+			message: "#^Parameter \\#1 \\$geometry of method geoPHP\\\\Adapter\\\\GeoRSS\\:\\:collectionToGeoRSS\\(\\) expects geoPHP\\\\Geometry\\\\Collection, geoPHP\\\\Geometry\\\\Geometry given\\.$#"
+			count: 1
+			path: src/Adapter/GeoRSS.php
+
+		-
+			message: "#^Method geoPHP\\\\Adapter\\\\GoogleGeocode\\:\\:read\\(\\) should return geoPHP\\\\Geometry\\\\Geometry but returns null\\.$#"
+			count: 1
+			path: src/Adapter/GoogleGeocode.php
+
+		-
+			message: "#^Method geoPHP\\\\Adapter\\\\GoogleGeocode\\:\\:read\\(\\) should return geoPHP\\\\Geometry\\\\Geometry but returns false\\.$#"
+			count: 1
+			path: src/Adapter/GoogleGeocode.php
+
+		-
+			message: "#^Method geoPHP\\\\Adapter\\\\GoogleGeocode\\:\\:write\\(\\) should return array\\<object\\>\\|string\\|null but returns false\\.$#"
+			count: 1
+			path: src/Adapter/GoogleGeocode.php
+
+		-
+			message: "#^Strict comparison using \\=\\=\\= between DOMDocument and false will always evaluate to false\\.$#"
+			count: 1
+			path: src/Adapter/KML.php
+
+		-
+			message: "#^Strict comparison using \\=\\=\\= between DOMDocument and false will always evaluate to false\\.$#"
+			count: 1
+			path: src/Adapter/OSM.php
+
+		-
+			message: "#^Parameter \\#1 \\$x of class geoPHP\\\\Geometry\\\\Point constructor expects float\\|int\\|null, string given\\.$#"
+			count: 1
+			path: src/Adapter/OSM.php
+
+		-
+			message: "#^Parameter \\#2 \\$y of class geoPHP\\\\Geometry\\\\Point constructor expects float\\|int\\|null, string given\\.$#"
+			count: 1
+			path: src/Adapter/OSM.php
+
+		-
+			message: "#^Result of && is always false\\.$#"
+			count: 1
+			path: src/Adapter/OSM.php
+
+		-
+			message: "#^Negated boolean expression is always true\\.$#"
+			count: 1
+			path: src/Adapter/OSM.php
+
+		-
+			message: "#^Result of \\|\\| is always true\\.$#"
+			count: 1
+			path: src/Adapter/OSM.php
+
+		-
+			message: "#^Strict comparison using \\!\\=\\= between null and null will always evaluate to false\\.$#"
+			count: 3
+			path: src/Adapter/TWKB.php
+
+		-
+			message: "#^Parameter \\#1 \\$value of method geoPHP\\\\Adapter\\\\BinaryWriter\\:\\:writeSVarInt\\(\\) expects int, float given\\.$#"
+			count: 6
+			path: src/Adapter/TWKB.php
+
+		-
+			message: "#^Parameter \\#1 \\$srid of method geoPHP\\\\Geometry\\\\Geometry\\:\\:setSRID\\(\\) expects int, null given\\.$#"
+			count: 1
+			path: src/Adapter/WKB.php
+
+		-
+			message: "#^Left side of && is always true\\.$#"
+			count: 1
+			path: src/Adapter/WKT.php
+
+		-
+			message: "#^Parameter \\#1 \\$x of class geoPHP\\\\Geometry\\\\Point constructor expects float\\|int\\|null, string given\\.$#"
+			count: 1
+			path: src/Adapter/WKT.php
+
+		-
+			message: "#^Parameter \\#2 \\$y of class geoPHP\\\\Geometry\\\\Point constructor expects float\\|int\\|null, string given\\.$#"
+			count: 1
+			path: src/Adapter/WKT.php
+
+		-
+			message: "#^Parameter \\#3 \\$z of class geoPHP\\\\Geometry\\\\Point constructor expects float\\|int\\|null, string\\|null given\\.$#"
+			count: 1
+			path: src/Adapter/WKT.php
+
+		-
+			message: "#^Parameter \\#4 \\$m of class geoPHP\\\\Geometry\\\\Point constructor expects float\\|int\\|null, string\\|null given\\.$#"
+			count: 1
+			path: src/Adapter/WKT.php
+
+		-
+			message: "#^Parameter \\#2 \\$code of class geoPHP\\\\Exception\\\\UnsupportedMethodException constructor expects int, null given\\.$#"
+			count: 1
+			path: src/Exception/UnsupportedMethodException.php
+
+		-
+			message: "#^Parameter \\#1 \\$geometry of static method geoPHP\\\\Geometry\\\\Collection\\:\\:getPointsRecursive\\(\\) expects geoPHP\\\\Geometry\\\\Collection, geoPHP\\\\Geometry\\\\Geometry given\\.$#"
+			count: 1
+			path: src/Geometry/Collection.php
+
+		-
+			message: "#^Call to function is_array\\(\\) with geoPHP\\\\Geometry\\\\Geometry will always evaluate to false\\.$#"
+			count: 1
+			path: src/Geometry/Geometry.php
+
+		-
+			message: "#^Cannot call method makeValid\\(\\) on GEOSGeometry\\|false\\.$#"
+			count: 1
+			path: src/Geometry/Geometry.php
+
+		-
+			message: "#^Cannot call method buildArea\\(\\) on GEOSGeometry\\|false\\.$#"
+			count: 1
+			path: src/Geometry/Geometry.php
+
+		-
+			message: "#^Method GEOSGeometry\\:\\:project\\(\\) invoked with 2 parameters, 1 required\\.$#"
+			count: 1
+			path: src/Geometry/Geometry.php
+
+		-
+			message: "#^Method geoPHP\\\\Geometry\\\\GeometryCollection\\:\\:centroid\\(\\) should return geoPHP\\\\Geometry\\\\Point but returns geoPHP\\\\Geometry\\\\Geometry\\|null\\.$#"
+			count: 1
+			path: src/Geometry/GeometryCollection.php
+
+		-
+			message: "#^Call to an undefined method geoPHP\\\\Geometry\\\\Geometry\\:\\:explodeGeometries\\(\\)\\.$#"
+			count: 1
+			path: src/Geometry/GeometryCollection.php
+
+		-
+			message: "#^Method geoPHP\\\\Geometry\\\\GeometryCollection\\:\\:boundary\\(\\) should return geoPHP\\\\Geometry\\\\Geometry but returns null\\.$#"
+			count: 1
+			path: src/Geometry/GeometryCollection.php
+
+		-
+			message: "#^If condition is always true\\.$#"
+			count: 3
+			path: src/Geometry/LineString.php
+
+		-
+			message: "#^Method geoPHP\\\\Geometry\\\\LineString\\:\\:vincentyLength\\(\\) should return float but returns null\\.$#"
+			count: 1
+			path: src/Geometry/LineString.php
+
+		-
+			message: "#^Cannot access offset 0 on geoPHP\\\\Geometry\\\\LineString\\.$#"
+			count: 2
+			path: src/Geometry/LineString.php
+
+		-
+			message: "#^Cannot access offset 1 on geoPHP\\\\Geometry\\\\LineString\\.$#"
+			count: 2
+			path: src/Geometry/LineString.php
+
+		-
+			message: "#^Method geoPHP\\\\Geometry\\\\MultiGeometry\\:\\:boundary\\(\\) should return geoPHP\\\\Geometry\\\\Geometry but returns GEOSGeometry\\.$#"
+			count: 1
+			path: src/Geometry/MultiGeometry.php
+
+		-
+			message: "#^Method geoPHP\\\\Geometry\\\\MultiLineString\\:\\:centroid\\(\\) should return geoPHP\\\\Geometry\\\\Point but returns null\\.$#"
+			count: 1
+			path: src/Geometry/MultiLineString.php
+
+		-
+			message: "#^Method geoPHP\\\\Geometry\\\\MultiLineString\\:\\:centroid\\(\\) should return geoPHP\\\\Geometry\\\\Point but returns geoPHP\\\\Geometry\\\\Geometry\\|null\\.$#"
+			count: 1
+			path: src/Geometry/MultiLineString.php
+
+		-
+			message: "#^Method geoPHP\\\\Geometry\\\\MultiPoint\\:\\:centroid\\(\\) should return geoPHP\\\\Geometry\\\\Point but returns geoPHP\\\\Geometry\\\\Geometry\\|null\\.$#"
+			count: 1
+			path: src/Geometry/MultiPoint.php
+
+		-
+			message: "#^Method geoPHP\\\\Geometry\\\\MultiPoint\\:\\:explode\\(\\) should return array\\<array\\<geoPHP\\\\Geometry\\\\Point\\>\\|geoPHP\\\\Geometry\\\\LineString\\> but returns null\\.$#"
+			count: 1
+			path: src/Geometry/MultiPoint.php
+
+		-
+			message: "#^Method geoPHP\\\\Geometry\\\\MultiPolygon\\:\\:centroid\\(\\) should return geoPHP\\\\Geometry\\\\Point but returns null\\.$#"
+			count: 1
+			path: src/Geometry/MultiPolygon.php
+
+		-
+			message: "#^Method geoPHP\\\\Geometry\\\\MultiPolygon\\:\\:centroid\\(\\) should return geoPHP\\\\Geometry\\\\Point but returns geoPHP\\\\Geometry\\\\Geometry\\|null\\.$#"
+			count: 1
+			path: src/Geometry/MultiPolygon.php
+
+		-
+			message: "#^Parameter \\#2 \\$allowEmptyComponents of method geoPHP\\\\Geometry\\\\Surface\\:\\:__construct\\(\\) expects bool, null given\\.$#"
+			count: 1
+			path: src/Geometry/Polygon.php
+
+		-
+			message: "#^Method geoPHP\\\\Geometry\\\\Polygon\\:\\:centroid\\(\\) should return geoPHP\\\\Geometry\\\\Point but returns geoPHP\\\\Geometry\\\\Geometry\\|null\\.$#"
+			count: 1
+			path: src/Geometry/Polygon.php
+
+		-
+			message: "#^Method geoPHP\\\\Geometry\\\\Polygon\\:\\:pointOnVertex\\(\\) invoked with 2 parameters, 1 required\\.$#"
+			count: 1
+			path: src/Geometry/Polygon.php
+
+		-
+			message: "#^Cannot access offset 0 on geoPHP\\\\Geometry\\\\LineString\\.$#"
+			count: 1
+			path: src/Geometry/Polygon.php
+
+		-
+			message: "#^Cannot access offset 1 on geoPHP\\\\Geometry\\\\LineString\\.$#"
+			count: 1
+			path: src/Geometry/Polygon.php
+
+		-
+			message: "#^If condition is always true\\.$#"
+			count: 2
+			path: src/geoPHP.php
+
+		-
+			message: "#^Unreachable statement \\- code above always terminates\\.$#"
+			count: 1
+			path: src/geoPHP.php
+
+		-
+			message: "#^Method geoPHP\\\\geoPHP\\:\\:buildGeometry\\(\\) should return geoPHP\\\\Geometry\\\\Geometry but returns null\\.$#"
+			count: 2
+			path: src/geoPHP.php
+
+		-
+			message: "#^Parameter \\#1 \\$points of class geoPHP\\\\Geometry\\\\LineString constructor expects array\\<geoPHP\\\\Geometry\\\\Point\\>, string given\\.$#"
+			count: 1
+			path: tests/unit/Geometry/LineStringTest.php
+
+		-
+			message: "#^Parameter \\#1 \\$points of class geoPHP\\\\Geometry\\\\LineString constructor expects array\\<geoPHP\\\\Geometry\\\\Point\\>, array\\<int, geoPHP\\\\Geometry\\\\LineString\\> given\\.$#"
+			count: 1
+			path: tests/unit/Geometry/LineStringTest.php
+
+		-
+			message: "#^Parameter \\#3 \\$argument of method geoPHP\\\\Tests\\\\MethodsTest\\:\\:_methods_tester\\(\\) expects array, string\\|null given\\.$#"
+			count: 1
+			path: tests/unit/MethodsTest.php
+

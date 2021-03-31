@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated guzzlehttp/psr7 from v1.7.0 to v1.8.1
 
 ### Fixed
+- Addedd funiq/geophp files to git
 - utils::debug was not defined as static and was throwing warning
 - Typo fix in Changelog
 

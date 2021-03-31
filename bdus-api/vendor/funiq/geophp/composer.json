@@ -1,0 +1,69 @@
+{
+  "name": "funiq/geophp",
+  "license": [
+    "GPL-2.0-or-later",
+    "BSD-3-Clause"
+  ],
+  "type": "library",
+  "description": "Open-source native PHP library for doing geometry operations. Can read and write a wide variety of formats: (E)WKT, (E)WKB, TWKB, GeoJSON, KML, GPX, GeoRSS. Works with all Simple-Feature geometries (Point, LineString, Polygon...) and can be used to get centroids, bounding-boxes, area, etc.",
+  "keywords": ["geophp", "gis", "geometry", "converter", "linestring", "polygon", "wkt", "wkb", "kml", "gpx", "geojson", "twkb"],
+  "homepage": "https://github.com/funiq/geoPHP",
+  "authors": [
+    {
+      "name": "Patrick Hayes",
+      "role": "Original creator"
+    },
+    {
+      "name": "Péter Báthory",
+      "role": "Developer"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "geoPHP\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "geoPHP\\Tests\\": "tests/unit"
+    }
+  },
+  "require": {
+    "php": ">=5.5.0"
+  },
+  "require-dev": {
+    "php": ">=5.5.0",
+    "phpunit/phpunit": "5.* || 8.*",
+    "php-coveralls/php-coveralls": "2.*",
+    "squizlabs/php_codesniffer": "3.*",
+    "phpstan/phpstan": "^0.12.18"
+  },
+  "suggest": {
+    "ext-geos": "GEOS allows more advanced operations"
+  },
+  "scripts": {
+    "tests": [
+      "@cs",
+      "@cs-warning",
+      "@stan",
+      "@unit",
+      "@test-input",
+      "@performance"
+    ],
+    "tests-ci": [
+      "@cs",
+      "@stan",
+      "@unit-clover",
+      "@test-input",
+      "@performance"
+    ],
+    "cs": "vendor/bin/phpcs --cache -n -p src/",
+    "cs-warning": "vendor/bin/phpcs --cache -p -w src/ || true",
+    "cs-fix": "vendor/bin/phpcbf --cache -n -p src/",
+    "stan" : "vendor/bin/phpstan analyze",
+    "unit": "GEOS_DISABLED=1 vendor/bin/phpunit --color=always --coverage-html build/coverage/",
+    "unit-clover": "GEOS_DISABLED=1 vendor/bin/phpunit --color=always --coverage-clover build/logs/clover.xml",
+    "test-input": "cd tests && php test.php && cd ..",
+    "performance": "cd tests && php geometryPerformance.php && cd .."
+  }
+}

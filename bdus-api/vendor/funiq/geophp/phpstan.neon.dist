@@ -1,0 +1,11 @@
+includes:
+  - phpstan-baseline.neon
+parameters:
+  level: 5
+  paths:
+    - src/
+    - tests/unit
+  ignoreErrors:
+    - "#^Unsafe usage of new static\\(\\)\\.$#"
+  inferPrivatePropertyTypeFromConstructor: true
+  treatPhpDocTypesAsCertain: false

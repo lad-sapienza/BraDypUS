@@ -5,6 +5,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [4.0.1] - Not released
 ### Changed
+- Remove manual correction of WKT coordinates
 - Config::__construct throws Exception instaead of silently adding errors
 - Updated datatables.net from v1.10.23 to v1.10.24
 - Updated datatables.net-bs from v1.10.23 to v1.10.24

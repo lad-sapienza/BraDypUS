@@ -5,6 +5,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [4.0.1] - Not released
 ### Changed
+- Config::__construct throws Exception instaead of silently adding errors
 - Updated datatables.net from v1.10.23 to v1.10.24
 - Updated datatables.net-bs from v1.10.23 to v1.10.24
 - Updated datatables.net-plugins from v1.10.22 to v1.10.24
@@ -12,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated guzzlehttp/psr7 from v1.7.0 to v1.8.1
 
 ### Fixed
+- utils::debug was not defined as static and was throwing warning
 - Typo fix in Changelog
 
 ## [4.0.0] - 2020-03-26

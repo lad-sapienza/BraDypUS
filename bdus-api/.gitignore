@@ -3,6 +3,7 @@ vendor/**/.git
 vendor/**/.github
 vendor/**/tests
 vendor/**/doc
+vendor/**/docs
 projects
 logs/
 cache/

@@ -3,11 +3,27 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [4.0.0] - 2020-03-26
+## [4.0.1] - 2021-04-01
+### Changed
+- Added vendor/**/docs to .gitignore
+- Remove manual correction of WKT coordinates
+- Config::__construct throws Exception instaead of silently adding errors
+- Updated datatables.net from v1.10.23 to v1.10.24
+- Updated datatables.net-bs from v1.10.23 to v1.10.24
+- Updated datatables.net-plugins from v1.10.22 to v1.10.24
+- Updated jquery from v3.5.1 to v3.6.0
+- Updated guzzlehttp/psr7 from v1.7.0 to v1.8.1
+
+### Fixed
+- Addedd funiq/geophp files to git
+- utils::debug was not defined as static and was throwing warning
+- Typo fix in Changelog
+
+## [4.0.0] - 2021-03-26
 ### Added
 - Almost complete refactoring of PHP scripts
 - Added support for MySQL and PostgreSQL
-- Added full support for application craetion and full management via GUI
+- Added full support for application creation and full management via GUI
 - Added support for ShortSQL in API
 - Added Changelog
 - Add application validation and error fix

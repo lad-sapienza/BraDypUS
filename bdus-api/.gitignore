@@ -1,8 +1,10 @@
 sessions/
 vendor/**/.git
 vendor/**/.github
+vendor/**/.gitignore
 vendor/**/tests
 vendor/**/doc
+vendor/**/docs
 projects
 logs/
 cache/

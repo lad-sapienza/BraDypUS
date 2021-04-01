@@ -1,0 +1,81 @@
+# docs available at http://docs.travis-ci.com/user/languages/php/
+language: php
+
+os: linux
+dist: xenial
+version: ~> 1
+
+before_script:
+  - composer self-update
+
+cache:
+  directories:
+  - vendor
+  - $HOME/.composer/cache/files
+
+install:
+  - if [[ -z $PHPSTAN ]]; then export COMPOSER_REMOVE="phpstan/phpstan"; fi
+  - if [[ $DISABLE_UNIT ]]; then export COMPOSER_REMOVE="$COMPOSER_REMOVE phpunit/phpunit"; fi
+  - if [[ $TRAVIS_PHP_VERSION = "nightly" ]]; then export COMPOSER_FLAGS="--ignore-platform-reqs"; fi
+  - |
+    if [[ $COMPOSER_REMOVE ]]; then
+      echo "Removing $COMPOSER_REMOVE dependencies"
+      composer remove --dev --no-update --no-interaction $COMPOSER_FLAGS $COMPOSER_REMOVE
+    fi
+  - composer install --prefer-dist --no-interaction $COMPOSER_FLAGS
+
+  # TODO Install geos library -- as a matrix test
+  # TODO optionally set up a postgis database for testing
+
+script:
+  - mkdir -p build/logs
+  - if [[ -z $DISABLE_UNIT ]]; then composer unit-clover; fi
+  - composer test-input
+  - composer performance
+
+jobs:
+  include:
+    - stage: Smoke
+      php: 7.4
+      env: PHPCS=1
+      script: composer cs
+    - stage: Smoke
+      php: 7.4
+      env: PHPCS_WARNING=1
+      script: composer cs-warning
+    - stage: Smoke
+      php: 7.4
+      env: PHPSTAN=1
+      script: vendor/bin/phpstan analyse
+
+    - stage: Test
+      php: 5.5
+      dist: trusty
+      name: PHP 5.5 without Unit tests
+      env: DISABLE_UNIT=1
+    - stage: Test
+      php: 5.6
+    - stage: Test
+      php: 7.0
+    - stage: Test
+      php: 7.1
+    - stage: Test
+      php: 7.2
+    - stage: Test
+      php: 7.3
+    - stage: Test
+      php: 7.4
+
+    - php: nightly
+
+# FIXME: allow_failures doesn't appear to work with stages defined. How to solve that?
+  allow_failures:
+    - php: nightly
+
+  fast_finish: true
+
+after_success:
+  - |
+  - if [[ -f "build/logs/clover.xml" && $TRAVIS_PHP_VERSION != "nightly" ]]; then
+      travis_retry php vendor/bin/php-coveralls -v;
+    fi

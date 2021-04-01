@@ -6,7 +6,7 @@
     'aliases' => 
     array (
     ),
-    'reference' => 'd284e7389c4bb1351b738585575f0901c97b9bb3',
+    'reference' => '835256bd6182171a533b477552c007403cb6dee1',
     'name' => '__root__',
   ),
   'versions' => 
@@ -18,7 +18,7 @@
       'aliases' => 
       array (
       ),
-      'reference' => 'd284e7389c4bb1351b738585575f0901c97b9bb3',
+      'reference' => '835256bd6182171a533b477552c007403cb6dee1',
     ),
     'adbario/php-dot-notation' => 
     array (
@@ -41,12 +41,12 @@
     ),
     'guzzlehttp/psr7' => 
     array (
-      'pretty_version' => '1.7.0',
-      'version' => '1.7.0.0',
+      'pretty_version' => '1.8.1',
+      'version' => '1.8.1.0',
       'aliases' => 
       array (
       ),
-      'reference' => '53330f47520498c0ae1f61f7e2c90f55690c06a3',
+      'reference' => '35ea11d335fd638b5882ff1725228b3d35496ab1',
     ),
     'intervention/image' => 
     array (

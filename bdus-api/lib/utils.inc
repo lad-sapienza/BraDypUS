@@ -298,12 +298,6 @@ class utils
                 error_log('No valid geometry column found in row: ' . var_export($r, true));
                 continue;
             }
-			// Fix for: https://github.com/phayes/geoPHP/issues/181
-			$geom = str_replace(
-				['( ', ' (', ' )', ') '],
-				['(', '(', ')', ')'],
-				$geom
-			);
 			try {
 				$geoPHP = geoPHP::load($geom, 'wkt');
 			} catch (\Throwable $th) {
@@ -404,7 +398,7 @@ class utils
         return ($res[0]['tot'] > 0);
 	}
 
-	public function debug($d, bool $echo = false) : void
+	public static function debug($d, bool $echo = false) : void
 	{
 		$json = json_encode($d, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE);
 		if ($echo){

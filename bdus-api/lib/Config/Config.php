@@ -8,6 +8,8 @@ declare(strict_types=1);
 
 namespace Config;
 
+use \Config\ConfigException;
+
 
 class Config
 {
@@ -19,14 +21,14 @@ class Config
     private $errors = [];
 
     public function __construct( \Adbar\Dot $dot, string $path2cfg, string $prefix )
-    {   
+    {
         try {
             $this->dot = $dot;
             $this->path2cfg = $path2cfg;
             $this->prefix = $prefix;
             $this->cfg = Load::all( $path2cfg, $prefix );
         } catch ( ConfigException $e) {
-            $this->addError($e->getMessage(), "error");
+            throw new \Exception($e->getMessage());
         }
         
     }

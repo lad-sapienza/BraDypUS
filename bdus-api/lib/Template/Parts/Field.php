@@ -327,7 +327,7 @@ class Field
         }
         // Merge config & formatting data
         $settings = array_merge($config, $tmpl_info);
-        if ($settings['div_class']) {
+        if ($settings['div_class'] && \preg_match('/span-([0-9]{1,2})/', $settings['div_class'])) {
             error_log("Deprecation warning: the template used for table `{$this->tb}` uses span-n as div_class for field `{$this->fld}`. The class name has been deprecated and should be replaced with col-sm-n");
             $settings['div_class'] = preg_replace('/span-([0-9]{1,2})/', 'col-sm-$1', $settings['div_class']);
         }

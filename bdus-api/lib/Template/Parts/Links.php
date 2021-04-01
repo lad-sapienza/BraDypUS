@@ -8,6 +8,7 @@
 namespace Template\Parts;
 
 use SQL\SafeQuery;
+use SQL\ShortSql\ParseShortSql;
 use Config\Config;
 
 class Links
@@ -71,16 +72,21 @@ class Links
     {
         $html = '<ul>';
         foreach ($corelinks as $dest_tb => $l_arr) {
+            $prefix = \str_replace($l_arr['tb_stripped'], '', $l_arr['tb_id']);
+            $parseShortSql = new ParseShortSql($prefix, $cfg);
+            $parseShortSql->parseAll("@{$l_arr['tb_stripped']}~?{$l_arr['where']}");
+            list($where_sql, $v) = $parseShortSql->getSql(true);
+
             $html .= '<li>' .
                 '<span class="btn-link" '
                  . 'onclick="' .
-                    "api.showResults('{$dest_tb}', 'type=obj_encoded&obj_encoded=" . SafeQuery::encode($l_arr['where'], $l_arr['values']) . "&total={$l_arr['tot']}', '" . \tr::get('saved_queries') . " (". $cfg->get("tables.{$dest_tb}.label") . ")');"
+                    "api.showResults('{$dest_tb}', 'type=obj_encoded&obj_encoded=" . SafeQuery::encode($where_sql, $v) . "&total={$l_arr['tot']}', '" . \tr::get('saved_queries') . " (". $cfg->get("tables.{$dest_tb}.label") . ")');"
                 . '" href="javascript:void(0)">' .
                     \tr::get('links_in_table', ['<strong>' . $l_arr['tot'] . '</strong>', '<strong>' . $cfg->get("tables.$dest_tb.label") . '</strong>'])
                 . '</span>';
 
             if ($cfg->get("tables.$dest_tb.rs")) {
-                $html .= ' (<span class="btn-link" onclick="api.record.showMatrix(\'' . $dest_tb . '\', \'' . SafeQuery::encode($l_arr['where'], $l_arr['values']) . '\')">' 
+                $html .= ' (<span class="btn-link" onclick="api.record.showMatrix(\'' . $dest_tb . '\', \'' . SafeQuery::encode($where_sql, $v) . '\')">' 
                         . \tr::get('harris_matrix') 
                     . '</span>)';
             }

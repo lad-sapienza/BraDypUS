@@ -11,6 +11,8 @@ title: Migration from v3
 - Rename `span-n` classes used as `div_class` attributes in templates to `col-sm-n`
 - Remove function `print.sqlSum` in templates
 - Remove function `print.simpleSum` in templates
+- Remove column `geodata.geo_el_elips`
+- Remove column `geodata.geo_el_asl`
 
 ---
 
@@ -53,8 +55,8 @@ of clarity. No change has put in place regarding the useof appication prefix.
 
 #### Renamed column charts.query
 
-The column `charts.query` has been renamed to `charts.sql`, since `query` is a SQL 
-reserved keyword and caused unpredictable errors.
+The column `charts.query` has been renamed to `charts.sqltext`, since `query` is a SQL 
+reserved keyword and causes unpredictable errors.
 No changes in field type has been made.
 
 To upgrade the database, run on of the following statement, and 
@@ -62,7 +64,7 @@ To upgrade the database, run on of the following statement, and
 
 - **sqlite**:
 ```sql
-ALTER TABLE prefix__charts RENAME COLUMN "query" TO sql;
+ALTER TABLE prefix__charts RENAME COLUMN "query" TO sqltext;
 ```
 
 Also the new **System configuration** module can be used (> **Validate application**)..
@@ -92,6 +94,14 @@ To upgrade the database, please run on of the following statement, and
 ```sql
 ALTER TABLE prefix__queries ADD COLUMN vals TEXT;
 ```
+
+#### Dropped support for `geodata.geo_el_elips` and `geodata.geo_el_asl`
+In v4 it has been removed system support for largely unused columns 
+`geodata.geo_el_elips` and `geodata.geo_el_asl`, so you need to delete them manually
+during update.  
+Not deleting these columns will **not** produce any error. If you need elevation
+data (or other data related to geodata), you can of course add columns to table
+geodata and document them in the relative configuration file.
 
 #### Added table `logs`
 

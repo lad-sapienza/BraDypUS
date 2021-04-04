@@ -15,7 +15,7 @@ class Read
     private $cfg;
     private $tb;
     private $id;
-    private $is_id_fld;
+    private $id_fld;
 
     private $cache = [];
 
@@ -25,10 +25,13 @@ class Read
      *
      * @param DBInterface $db       DB object
      */
-    public function __construct(int $id, bool $is_id_fld = false, string $tb, DBInterface $db, Config $cfg)
+    public function __construct(int $id = null, string $id_fld = null, string $tb, DBInterface $db, Config $cfg)
     {
         $this->id = $id;
-        $this->is_id_fld = $is_id_fld;
+        $this->id_fld = $id_fld;
+        if (!$id && !$id_fld){
+            throw new \Exception("Record id or id_fld value are required");
+        }
         $this->tb = $tb;
         $this->db = $db;
         $this->cfg = $cfg;
@@ -95,12 +98,14 @@ class Read
     public function getCore(string $fld = null, bool $return_val = false)
     {
         if (!isset($this->cache['core'])) {
-            if ($this->is_id_fld){
+            if ($this->id_fld){
                 $sql = "{$this->tb}." . $this->cfg->get("tables.{$this->tb}.id_field"). " = ?";
+                $val = [$this->id_fld];
             } else {
                 $sql = "{$this->tb}.id = ?";
+                $val = [$this->id];
             }
-            $this->cache['core'] = $this->getTbRecord($this->tb, $sql, [$this->id], true, false);
+            $this->cache['core'] = $this->getTbRecord($this->tb, $sql, $val, true, false);
         }
         if (!$fld) {
             return $this->cache['core'];

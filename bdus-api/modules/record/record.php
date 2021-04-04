@@ -171,10 +171,14 @@ class record_ctrl extends Controller
             }
 
             if ($one_id === 'new') {
-                $one_id = false;
+                $one_id = null;
             }
 
-            $readRecord = new Read($one_id, $flag_idfield, $tb, $this->db, $this->cfg);
+            if($flag_idfield){
+                $readRecord = new Read(null, $one_id, $tb, $this->db, $this->cfg);
+            } else {
+                $readRecord = new Read($one_id, null, $tb, $this->db, $this->cfg);
+            }
 
             if ($context === 'edit' &&
                     (!\utils::canUser('edit', $readRecord->getCore('creator', true)) || (count($id) > 1 && !\utils::canUser('multiple_edit')))) {

@@ -118,7 +118,7 @@ class Search
         $fullResult = [];
         
         foreach ($result as $id => $row) {
-            $record = new Read($row['id'], false, $tb, self::$db, self::$cfg);
+            $record = new Read($row['id'], null, $tb, self::$db, self::$cfg);
             $rowResult = $record->getFull();
             array_push($fullResult, $rowResult);
         }

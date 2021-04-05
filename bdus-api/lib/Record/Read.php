@@ -29,9 +29,6 @@ class Read
     {
         $this->id = $id;
         $this->id_fld = $id_fld;
-        if (!$id && !$id_fld){
-            throw new \Exception("Record id or id_fld value are required");
-        }
         $this->tb = $tb;
         $this->db = $db;
         $this->cfg = $cfg;

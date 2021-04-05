@@ -23,6 +23,19 @@ textarea{
 body.login{
     padding-top: 40px;
     background-color: #f5f5f5;
+
+    .select2-selection__rendered {
+        line-height: 41px !important;
+    }
+    .select2-selection__placeholder{
+        font-size: 16px;
+    }
+    .select2-container .select2-selection--single {
+        height: 45px !important;
+    }
+    .select2-selection__arrow {
+        height: 44px !important;
+    }
     
     #select_apps{
         
@@ -283,10 +296,6 @@ form.big {
 div.tab-content{
     margin: 50px 0 0 0;
     padding: 0 10px;
-}
-
-.ui-draggable > .modal-header{
-    cursor: move;
 }
 
 ul.nav-tabs li button.close{

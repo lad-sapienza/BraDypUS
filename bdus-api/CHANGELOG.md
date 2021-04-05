@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [4.0.3] - 2021-04-04
 ### Fixed
 Fixed issue with adding new record throwing error
+Bigger text for choose application input in login page
 
 ## [4.0.2] - 2021-04-04
 ### Changed

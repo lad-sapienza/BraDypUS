@@ -302,6 +302,7 @@ class Template implements TemplateInterface
 
     public function value($fld, $plg = false) : string
     {
-        return  $plg ? $this->record->getPlugin($this->current_plugin, $this->current_plugin_index, $fld) : $this->record->getCore($fld, true);
+        $val = $plg ? $this->record->getPlugin($this->current_plugin, $this->current_plugin_index, $fld) : $this->record->getCore($fld, true);
+        return $val ?: '';
     }
 }

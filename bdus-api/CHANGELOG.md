@@ -3,7 +3,11 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [4.0.3] - 2021-04-04
+## [4.0.4] - 2021-04-05
+### Fixed
+Fixed issue with Template::value returning null
+
+## [4.0.3] - 2021-04-05
 ### Fixed
 Fixed issue with adding new record throwing error
 Bigger text for choose application input in login page

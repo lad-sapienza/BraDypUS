@@ -424,11 +424,11 @@ class QueryFromRequest
                     break;
 
                 case 'is_empty':
-                    $where .= sprintf($format, $fld . " = '' OR " . $fld . " IS NULL) ");
+                    $where .= sprintf($format, "( {$fld} = '' OR  {$fld} IS NULL) ");
                     break;
 
                 case 'is_not_empty':
-                    $where .= sprintf($format, $fld . " != '' AND " . $fld . " IS NOT NULL) ");
+                    $where .= sprintf($format, "( {$fld} != '' AND {$fld} IS NOT NULL) ");
                     break;
 
                 default:

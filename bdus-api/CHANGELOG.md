@@ -5,16 +5,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [4.0.5] - 2021-04-10
 ### Fixed
-Fixed issue with legacy saved queries with empty values
+- Fixed bug with QueryFromRequest::advSearch non opening bracket
+- Fixed issue with legacy saved queries with empty values
 
 ## [4.0.4] - 2021-04-05
 ### Fixed
-Fixed issue with Template::value returning null
+- Fixed issue with Template::value returning null
 
 ## [4.0.3] - 2021-04-05
 ### Fixed
-Fixed issue with adding new record throwing error
-Bigger text for choose application input in login page
+- Fixed issue with adding new record throwing error
+- Bigger text for choose application input in login page
 
 ## [4.0.2] - 2021-04-04
 ### Changed

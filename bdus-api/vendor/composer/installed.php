@@ -6,7 +6,7 @@
     'aliases' => 
     array (
     ),
-    'reference' => '835256bd6182171a533b477552c007403cb6dee1',
+    'reference' => '2a5e4c2c7cf249ba51060fbb01841f86ed202081',
     'name' => '__root__',
   ),
   'versions' => 
@@ -18,7 +18,7 @@
       'aliases' => 
       array (
       ),
-      'reference' => '835256bd6182171a533b477552c007403cb6dee1',
+      'reference' => '2a5e4c2c7cf249ba51060fbb01841f86ed202081',
     ),
     'adbario/php-dot-notation' => 
     array (
@@ -56,6 +56,15 @@
       array (
       ),
       'reference' => 'abbf18d5ab8367f96b3205ca3c89fb2fa598c69e',
+    ),
+    'michelf/php-markdown' => 
+    array (
+      'pretty_version' => '1.9.0',
+      'version' => '1.9.0.0',
+      'aliases' => 
+      array (
+      ),
+      'reference' => 'c83178d49e372ca967d1a8c77ae4e051b3a3c75c',
     ),
     'monolog/monolog' => 
     array (

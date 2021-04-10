@@ -10,67 +10,49 @@
 				<h3>BraDypUS v. {{ version }} </h3>
 			</div>
 			<div class="panel-body">
-				<p>Bradypus is developed by Julian Bogdani and is freely (AGPL-3.0 licensed) available on 
-				<a href="https://github.com/bdus-db/BraDypUS" target="_blank">Github</a>
+				<p>Bradypus is developed by Julian Bogdani 
+				and is released as free and open source software
+				with the
+				<a	href="https://www.gnu.org/licenses/agpl-3.0.en.html" 
+					target="_blank"
+					rel="nofollow noopener noreferrer"
+					>GNU AGPL-3.0 license</a>.</p>
+
+				<p>The code is hosted on
+				<a 
+					href="https://github.com/bdus-db/BraDypUS" 
+					target="_blank"
+					target="_blank"
+					rel="nofollow noopener noreferrer"
+					>Github</a>.</p>
+				
+				<p>BraDypUS version numering follows the 
+				<a 
+					href="http://semver.org/" 
+					target="_blank"
+					target="_blank"
+					rel="nofollow noopener noreferrer"
+					>Semantic versioning (semver) guidelines</a>.</p>
+
+				<p>The changelog follows the 
+				<a 
+					href="https://keepachangelog.com/en/1.0.0/" 
+					target="_blank"
+					target="_blank"
+				rel="nofollow noopener noreferrer"
+				>Keep a Changelog</a> guidelines.</p>
+
 				<p>&copy; Julian Bogdani / 2007 - {{ date }}</p>
+				
 			</div>
 			<div class="panel-footer">
-				BraDypUS version numering follows the <a href="http://semver.org/" target="_blank">semver guidelines</a>
+				
 			</div>
 		</div>
 	</div>
 	
 	<div class="col-sm-4">
-		<h3>External code</h3>
-		<dl>
-		{% for l in libs %}
-			<dt style="font-size:1.2em; margin-top:7px;">{{ l.name }}</dt>
-			<dd>{% if l.by %}by {{ l.by }}<br />{% endif %}
-			Web: <a href="{{ l.web }}" target="_blank"><i class="fa fa-globe"></i> {{ l.web }}</a><br />
-			License: {{ l.lic }}</dd>
-		{% endfor %}
-		</dl>
-		
-		<hr />
-		<h4>Licenses texts</h4>
-		<dl>
-			<dt>Apache version 2.0</dt>
-			<dd><a href="http://www.apache.org/licenses/LICENSE-2.0.txt" target="_blank">http://www.apache.org/licenses/LICENSE-2.0.txt</a></dd>
-			
-			<dt>BSD 3-Clause License ('modified' or 'new')</dt>
-			<dd><a href="http://opensource.org/licenses/BSD-3-Clause" target="_blank">http://opensource.org/licenses/BSD-3-Clause</a></dd>
-			
-			<dt>BSD 2-Clause License ('simplified' or FreeBSD)</dt>
-			<dd><a href="http://opensource.org/licenses/BSD-2-Clause" target="_blank">http://opensource.org/licenses/BSD-2-Clause</a></dd>
-			
-			<!--
-			<dt></dt>
-			<dd><a href="" target="_blank"></a></dd> 
-			 -->
-			
-			<dt>GNU Affero General Public License (GPL) v.3</dt>
-			<dd><a href="https://www.gnu.org/licenses/agpl-3.0.en.html" target="_blank">https://www.gnu.org/licenses/agpl-3.0.en.html</a></dd>
-
-			<dt>GNU General Public License (GPL) v.3</dt>
-			<dd><a href="http://www.gnu.org/licenses/gpl-2.0.html" target="_blank">http://www.gnu.org/licenses/gpl-2.0.html</a></dd>
-			
-			<dt>GNU General Public License (GPL) v.3</dt>
-			<dd><a href="http://www.gnu.org/licenses/gpl.html" target="_blank">http://www.gnu.org/licenses/gpl.html</a></dd>
-			
-			<dt>GNU Lesser General Public License (LGPL)</dt>
-			<dd><a href="http://www.gnu.org/licenses/lgpl.html" target="_blank">http://www.gnu.org/licenses/lgpl.html</a></dd>
-			
-			<dt>MIT</dt>
-			<dd><a href="http://opensource.org/licenses/MIT" target="_blank">http://opensource.org/licenses/MIT</a></dd>
-			
-			<dt>Mozilla Public License v1.1</dt>
-			<dd><a href="http://www.mozilla.org/MPL/1.1/" target="_blank">http://www.mozilla.org/MPL/1.1/</a></dd>
-			
-			<dt>Mozilla Public License v2.0</dt>
-			<dd><a href="http://www.mozilla.org/MPL/2.0/" target="_blank">http://www.mozilla.org/MPL/2.0/</a></dd>
-			
-			
-		</dl>
+		{{ changelog }}
 	</div>
 </div>
 

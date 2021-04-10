@@ -4,6 +4,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [4.0.5] - 2021-04-10
+### Added
+- Changelog visible in app and markdown parser added to composer
+
 ### Fixed
 - Fixed bug with QueryFromRequest::advSearch non opening bracket
 - Fixed issue with legacy saved queries with empty values

@@ -74,7 +74,7 @@ class Links
         foreach ($corelinks as $dest_tb => $l_arr) {
             $prefix = \str_replace($l_arr['tb_stripped'], '', $l_arr['tb_id']);
             $parseShortSql = new ParseShortSql($prefix, $cfg);
-            $parseShortSql->parseAll("@{$l_arr['tb_stripped']}~?{$l_arr['where']}");
+            $parseShortSql->parseAll("@{$l_arr['tb_stripped']}~?{$l_arr['where']}", true);
             list($where_sql, $v) = $parseShortSql->getSql(true);
 
             $html .= '<li>' .

@@ -140,6 +140,7 @@ class Template implements TemplateInterface
 
     public function rs() : ?string
     {
+        $rs_fld = $this->cfg->get("tables.{$this->record->getTb()}.rs");
         if (
             $this->context === 'add_new'
             ||
@@ -147,7 +148,6 @@ class Template implements TemplateInterface
         ) {
             return null;
         }
-        $rs_fld = $this->cfg->get("tables.{$this->record->getTb()}.rs");
 
         if (!$rs_fld) {
             return null;

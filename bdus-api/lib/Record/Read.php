@@ -83,7 +83,7 @@ class Read
    * Returns array with core data
    * @param string $fld   Field name, to return only a segment;
    * @param bool $return_val
-   * @return array        Array of table data
+   * @return array|int|string        Array of table data of int|string if $fld is set
    *
    *    "id": {
    *        "name": (field id),

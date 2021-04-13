@@ -59,11 +59,17 @@ class ParseShortSql
         ];
     }
 
+    /**
+     * Parses ShortSQL string
+     *
+     * @param string $str           Short SQL string to parse
+     * @param boolean $disable_auto_join    If true, auto_join will be disabled, default false (auto_join on)
+     * @return self
+     */
     public function parseAll(string $str, bool $disable_auto_join = false ): self
     {
-        if ($disable_auto_join){
-            $this->qo->setAutoJoin(false);
-        }
+        // Turn on auto_join by default
+        $this->qo->setAutoJoin(!$disable_auto_join);
         $str = \preg_replace_callback('/{([^}]+)}/', function($m){
             $s = $m[1];
             $strict = '';

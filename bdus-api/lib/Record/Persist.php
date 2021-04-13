@@ -25,10 +25,15 @@ class Persist
     {
         $this_class = new self($model, $prefix);
         $this_class->Core();
-        $this_class->Plugin();
+        $this_class->Plugins();
         $this_class->ManualLinks();
         $this_class->Rs();
         $this_class->Files();
+    }
+
+    public function Files()
+    {
+        // TODO:
     }
 
     /**
@@ -58,7 +63,7 @@ class Persist
     public function ManualLinks()
     {
         if (!$this->id){
-            throw new Exception("Set core before manualLinks: missing id");
+            throw new \Exception("Set core before manualLinks: missing id");
         }
         foreach( $this->model['manualLinks'] as $linkid => $l ){
             // Add new link
@@ -191,7 +196,7 @@ class Persist
                     }
                     if (!isset($plg_fld_to_write['id_link'])){
                         if (!$this->id){
-                            throw new Exception("Set core before plugins: missing id");
+                            throw new \Exception("Set core before plugins: missing id");
                         }                
                         $plg_fld_to_write['id_link']['_val'] = $this->id; 
                     }
@@ -283,7 +288,7 @@ class Persist
 
     private function recursivelyDeleteAll(){
         if (!$this->id){
-            throw new Exception("Can not delete all: missing id");
+            throw new \Exception("Can not delete all: missing id");
         }
 
         // DELETE FROM TABLE

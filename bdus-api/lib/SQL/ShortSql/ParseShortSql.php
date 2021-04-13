@@ -37,7 +37,7 @@ class ParseShortSql
         $this->qo = new QueryObject($this->cfg);
         $this->qo->enable_validation();
         $this->parts = [
-            'tb'        => null, // tb, [tb, alias]
+            'tb'        => '', // tb, [tb, alias]
             'fields'    => null, // fld1,fld2, [[tb, fld1, fld1_alias], [ ... ]]
             'join'      => null, // [ [tb, on, values], [...] ]
             'where'     => null, // [ [null, fld, op, val ], [conn, fld, op, val] ]
@@ -54,7 +54,7 @@ class ParseShortSql
             '*' => 'group' ,
             '>' => 'order' ,
             '-' => 'limit'
-            // RESERVED: ^ value is fieldame, not string
+            // RESERVED: ^ value is to be considered as literal when used for values (eg. fieldname, or integer), and will not be cast into a string
             // RESERVED: < introduces subquery
         ];
     }

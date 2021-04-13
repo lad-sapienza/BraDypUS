@@ -73,7 +73,7 @@ class FormElement
                     $this->settings['maxlength'] .
                     'value="' . $this->settings['html_data'] . '" ' .
                     ($this->settings['direction'] === 'rtl' ? ' style="direction: rtl;" ' : '') .
-                    'value="' . $settings['html_data'] . 
+                    'value="' . $this->settings['html_data'] . 
                 '">';
     }
 

@@ -102,7 +102,7 @@ class record_ctrl extends Controller
             } elseif (count($this->request['id']) == count($ok)) {
                 $data = array('status' => 'success', 'text' => \tr::get('all_record_deleted'));
             } else {
-                $data = array('status' => 'warning', 'text' => \tr::get('partially_deleted_with_count', [ count($ok), $count($error) ] ) );
+                $data = array('status' => 'warning', 'text' => \tr::get('partially_deleted_with_count', [ count($ok), count($error) ] ) );
             }
         } else {
             $data = array('status' => 'error', 'text' => \tr::get('no_id_provided') );

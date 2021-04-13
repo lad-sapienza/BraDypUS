@@ -92,7 +92,7 @@ class DB implements DBInterface
 			$this->pdo->beginTransaction();
 			$ret = $this->pdo->exec($sql);
 			$this->pdo->commit();
-		} catch (DBException $e) {
+		} catch (DBException $th) {
 			$this->pdo->rollBack();
 			$this->log->error($th);
 			// Already logged

@@ -213,7 +213,7 @@ class Validator
                 throw new SqlException("Missing `dir` index for order index " . ($index+1) . " statement");
             }
             if (!\in_array(\strtolower($or['dir']), ['asc', 'desc'])) {
-                throw new SqlException("Invalid order direction `{$od['dir']}` for order index " . ($index+1) . " statement");
+                throw new SqlException("Invalid order direction `{$or['dir']}` for order index " . ($index+1) . " statement");
             }
             if (\strpos($or['fld'], '.') !== false ){
                 list($tb, $or['fld']) = explode('.', $or['fld']);

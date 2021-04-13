@@ -91,6 +91,10 @@ function formControls(form, options){
       });
     } else {
       input.attr('changed', 'auto');
+      const id_name = input.data('changeonchange');
+      if (id_name){
+        $(`:input[name="${id_name}"]`).attr('changed','auto');
+      }
     }
   });
 

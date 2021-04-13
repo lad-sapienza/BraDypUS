@@ -211,7 +211,7 @@ class Field
                 break;
 
             case 'boolean':
-                $html .= $formElement->Boolean($core, $this->settings);
+                $html .= $formElement->Boolean();
                 break;
 
             case 'slider':

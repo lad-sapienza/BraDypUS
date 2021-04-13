@@ -53,7 +53,7 @@ class Sqlite implements AlterInterface
         // Get create table sql text
         $res = $this->db->query('SELECT * FROM sqlite_master WHERE name = ?', [ $tb ] );
         if (!$res || !\is_array($res) || !$res[0]['sql'] ) {
-            throw new \Exception("Cannot get create SQL for $table");
+            throw new \Exception("Cannot get create SQL for $tb");
         }
         
         $orig_sql = $res[0]['sql'];

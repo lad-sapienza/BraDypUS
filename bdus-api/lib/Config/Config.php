@@ -51,7 +51,6 @@ class Config
      * @param string $key
      * @param string $filter_key
      * @param string $filter_val
-     * @return void
      */
     public function get(string $key = '*', string $filter_key = null, string $filter_val = null)
     {
@@ -162,7 +161,7 @@ class Config
             if (!empty($ret)){
                 return $ret;
             }
-            $this->addError("Invalid search parameter `$key`", 'error');
+            $this->addError("Invalid search parameter `$filter_key`", 'error');
             return false;
         }
     }

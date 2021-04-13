@@ -110,7 +110,6 @@ class QueryObject
      */
     public function __construct( Config $cfg = null )
     {
-        $this->auto_join = !$disable_join;
         $this->cfg = $cfg;
 
         $this->obj = [
@@ -145,7 +144,6 @@ class QueryObject
      * Returns false if provided index does not exist
      *
      * @param string $index
-     * @return void
      */
     public function get(string $index = null)
     {
@@ -212,7 +210,7 @@ class QueryObject
                 and field table geodata or another plugin table
         */
         if (
-               $this->auto_join             // autojoin ON
+               $this->auto_join                    // autojoin ON
             && $this->obj['tb']['name']            // Main table is set
             && $this->obj['tb']['name'] !== $tb    // Field table is different from main table
             && (
@@ -254,7 +252,7 @@ class QueryObject
         array_push ( $this->obj['fields'], [
             "subQuery"   => $subQuery, 
             "alias" => $alias, 
-            "fn"    => $function
+            "fn"    => null
             ] 
         );
         if ($values && is_array($values)){
@@ -567,7 +565,7 @@ class QueryObject
 
     private function validateObject()
     {
-        if ($this->cfg && $validation) {
+        if ($this->cfg) {
             $validator = new Validator($this->cfg);
             $validator->validateQueryObject($this);
         }

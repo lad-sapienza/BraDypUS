@@ -82,6 +82,7 @@ class Read
     /**
    * Returns array with core data
    * @param string $fld   Field name, to return only a segment;
+   * @param bool $return_val
    * @return array        Array of table data
    *
    *    "id": {
@@ -352,7 +353,7 @@ EOD;
                         'tb_stripped' => str_replace(PREFIX, null, $ref_tb),
                         "tb_label" => $this->cfg->get("tables.$ref_tb.label"),
                         'tot' => $r[0]['tot'],
-                        'where' => "id|in|{@{$via_plg}~[id_link|distinct~table_link|=|{$ref_tb}||and|{$via_plg_fld}|=|^{$this->id}}",
+                        'where' => "id|in|{@{$via_plg}~[id_link|distinct~?table_link|=|{$ref_tb}||and|{$via_plg_fld}|=|{$this->id}}",
                         'data' => $this->db->query(
                             "SELECT id, {$ref_tb_id} as label FROM {$ref_tb} WHERE id IN (SELECT DISTINCT id_link FROM {$via_plg} WHERE table_link = '{$ref_tb}' AND {$via_plg_fld} = ?)",
                             [$this->id]

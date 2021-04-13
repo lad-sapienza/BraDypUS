@@ -72,7 +72,7 @@ class Manage
         $this->driver = $this->db->getEngine();
 
         if (!AvailableEngines::isValidEngine($this->driver)){
-            throw new \Exception("Not valid database engine: $driver");
+            throw new \Exception("Not valid database engine: $this->driver");
         }
         $this->spatial = $this->db->hasSpatialExtension();
     }
@@ -97,13 +97,13 @@ class Manage
         $file_path = __DIR__ . '/Structure/' . $table . '.json';
         
         if (!file_exists($file_path)){
-            throw new Exception("Cannot find structure configuration file {$file_path}");
+            throw new \Exception("Cannot find structure configuration file {$file_path}");
         }
         
         $array = json_decode( file_get_contents($file_path), true);
 
         if (!$array || !\is_array($array) || empty($array)) {
-            throw new Exception("Configuration file {$file_path} has invalid syntax or is empty");
+            throw new \Exception("Configuration file {$file_path} has invalid syntax or is empty");
         }
 
         $this->structure[$table] = $array;

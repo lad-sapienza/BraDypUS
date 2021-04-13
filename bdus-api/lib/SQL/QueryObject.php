@@ -565,7 +565,8 @@ class QueryObject
 
     private function validateObject()
     {
-        if ($this->cfg) {
+        // TODO: Validator is turned off: handle vocabularies validation
+        if ($this->cfg && true === false) {
             $validator = new Validator($this->cfg);
             $validator->validateQueryObject($this);
         }

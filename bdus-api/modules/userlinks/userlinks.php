@@ -49,7 +49,7 @@ class userlinks_ctrl extends Controller
 			if (!$no) {
 				$this->response('all_links_saved','success');
 			} else if ($no && $ok) {
-				error_log(cont($ok) . ' links were saved, ' . count($no) . ' links were not!');
+				error_log(count($ok) . ' links were saved, ' . count($no) . ' links were not!');
 				$this->response('some_links_saved', 'error');
 			} else {
 				$this->response('no_link_saved', 'error');

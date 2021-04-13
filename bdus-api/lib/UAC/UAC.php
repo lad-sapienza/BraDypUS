@@ -104,7 +104,7 @@ class UAC
                 return $this->can_multiple_edit();
 
             case 'admin':
-                return ($app_status !== 'frozen' && $this->ual['global'] <= $this::ADM);
+                return ($this->app_status !== 'frozen' && $this->ual['global'] <= $this::ADM);
 				break;
 
             case 'super_admin':

@@ -41,7 +41,7 @@ class login_ctrl extends Controller
 		
 		// Check required fields
 		if (!$post['app'] || !$post['name'] || !$post['email'] || !$post['password'] || !$post['password2']) {
-			$this->esponse('all_fields_required', 'error');
+			$this->response('all_fields_required', 'error');
 			return false;
 		}
 
@@ -109,8 +109,8 @@ class login_ctrl extends Controller
 	public function out()
 	{
 		try {
+			$user_id = $_SESSION['user']['id'];
 			self::endUserSession( $this->db );
-			
 			$this->log->info("User {$user_id} logged out");
 		} catch (\Throwable $th) {
 			$this->log->error($th);
@@ -309,7 +309,6 @@ class login_ctrl extends Controller
 
 	public static function endUserSession(\DB\DB $db = null) : void
 	{
-		$user_id = $_SESSION['user']['id'];
 		if ($db){
 			\pref::save2DB($db);
 		}

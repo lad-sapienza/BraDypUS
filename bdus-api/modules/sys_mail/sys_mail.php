@@ -18,27 +18,21 @@ class sys_mail_ctrl extends Controller
 
 		$users_email = $this->db->query('SELECT * FROM ' . $this->prefix . 'users WHERE privilege IN (' . implode(', ', $this->post['to']) . ')');
 
-		if ($users_email)
-		{
-			foreach ($users_email as $usr)
-			{
+		if ($users_email) {
+			foreach ($users_email as $usr) {
 				$res = mail($usr['email'], $subject, $body, $headers);
 
 				$res ? $ok[] = $usr['name'] . ' <' . $usr['email'] . '>' : $no[] = $usr['name'] . ' <' . $usr['email'] . '>';
 			}
-		}
-		else
-		{
+		} else {
 			\utils::alert_div('no_user_with_selected_privilege', true);
 			return;
 		}
 
-		if (count($ok) > 0)
-		{
+		if (count($ok) > 0) {
 			$ret_text = '<p>' . \tr::get('ok_mail_sent_to_users', ['<ol><li>' . implode('</li><li>', $ok) . '</li></ol>']) . '</p>';
 		}
-		if (count($no) > 0)
-		{
+		if (count($no) > 0) {
 			$ret_text = '<p>' . \tr::get('error_mail_sent_to_users', ['<ol><li>' . implode('</li><li>', $no) . '</li></ol>']) . '</p>';
 		}
 

@@ -14,7 +14,7 @@ class Resp
     {
         $valid_statuses = ['success', 'info', 'warning', 'danger', 'head'];
         if (!in_array($status, $valid_statuses)) {
-            throw new \Exception("Invalid status: $status. Only " .  implode(', ', $valid_statuses . " allowed"));
+            throw new \Exception("Invalid status: $status. Only " .  implode(', ', $valid_statuses) . " allowed");
         }
         $res = [
             "status" => $status,

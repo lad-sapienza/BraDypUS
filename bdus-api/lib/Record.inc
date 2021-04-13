@@ -92,7 +92,7 @@ class Record implements RecordInterface
 
 		$rec['fullFiles']	= $this->getFullFiles();
 
-		if ($this->cfg->get("tables.$tb.rs")) {
+		if ($this->cfg->get("tables.{$this->tb}.rs")) {
 			$rec['rs'] 		= $this->getRS();
 		}
 
@@ -200,7 +200,7 @@ class Record implements RecordInterface
 
 					array_push($q_arr, array(
 							'q' => 'INSERT INTO ' . PREFIX . 'rs (tb, first, second, relation) VALUES (:tb, :first, :second, :relation)',
-							'values'=>array(':tb'=>$tb, ':first'=>$rel['first'], ':second'=>$re['second'], ':relation'=>$rel['relation'])
+							'values'=>array(':tb'=>$this->tb, ':first'=>$rel['first'], ':second'=>$rel['second'], ':relation'=>$rel['relation'])
 							));
 				}
 			}

@@ -39,7 +39,7 @@ class test_ctrl extends Controller
     
     private function testTmpl()
     {
-        $read_rec = new \Record\Read( $this->db, $this->cfg, 'sitarc__siti', '3');
+        $read_rec = new \Record\Read( 3, null, 'sitarc__siti', $this->db, $this->cfg);
         
         
         $tmpl = new \Template\Template(

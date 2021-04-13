@@ -280,7 +280,7 @@ class Template implements TemplateInterface
             foreach ($plg_array['data'] as $index => $plg_data) {
                 $this->current_plugin_index = (int) $index;
                 $html .= $this->showPlgRow($plg, $index) .
-                    (($this->context === 'add_new' or $this->context === 'edit') ?'<button type="button" class="deleteplg btn btn-sm btn-default"><i class="fa fa-minus"></i></button>' : '') .
+                    (($this->context === 'add_new' || $this->context === 'edit') ? '<button type="button" class="deleteplg btn btn-sm btn-default"><i class="fa fa-minus"></i></button>' : '') .
                     '<br/>';
             }
         }

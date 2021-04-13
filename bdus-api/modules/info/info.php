@@ -9,16 +9,6 @@ use Michelf\Markdown;
 
 class info_ctrl extends Controller
 {
-    public function faq()
-    {
-        
-        $this->render('info', 'faq', array(
-            'date' => date('Y'),
-            'libs' => $libs,
-            'version' => version::current()
-        ));
-    }
-    
     public function getIP()
     {
         

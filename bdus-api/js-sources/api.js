@@ -257,13 +257,11 @@ var api = {
 
         var id_arr = [];
 
-        if (action != 'add'){
+        if (action !== 'add'){
           // get selected rows
           var aTrs = table_results.fnGetNodes();
-          for ( var i=0 ; i<aTrs.length ; i++ )
-          {
-            if ( $(aTrs[i]).hasClass('row_selected') )
-            {
+          for ( var i=0 ; i<aTrs.length ; i++ ) {
+            if ( $(aTrs[i]).hasClass('row_selected') ) {
               id_arr.push( $(aTrs[i]).attr('id') );
             }
           }

@@ -199,6 +199,7 @@ class record_ctrl extends Controller
             if ($template_file){
                 $twig = new \Twig\Environment( new \Twig\Loader\FilesystemLoader(PROJ_DIR . 'templates/'), $this->getCacheSettings() );
                 $html = $twig->render($template_file, [
+                    'uid' => uniqid('t'),
                     'print' => $fieldObj
                 ]);
             } else {

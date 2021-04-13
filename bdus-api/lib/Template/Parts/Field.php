@@ -336,16 +336,16 @@ class Field
         $settings['fieldname'] = $this->fld;
 		
 		// NAME
-        $settings['name'] = $this->plg_index ?
-                    'plg[' . $this->tb . '][id:' . $this->plg_index . '][' . $this->fld. ']':
-                    'core[' . $this->tb . '][' . $this->fld. ']';
+        $settings['name'] = is_null($this->plg_index) ?
+                    'core[' . $this->tb . '][' . $this->fld. ']' : 
+                    'plg[' . $this->tb . '][id:' . $this->plg_index . '][' . $this->fld. ']';
 
         $settings['name'] .= $settings['type'] == 'multi_select' ? '[]' : '';
 
 		// CHANGEONCHANGE
-		$settings['changeonchange'] = $this->plg_index ?
-                    'plg[' . $this->tb . '][id:' . $this->plg_index . '][id]':
-                    'core[' . $this->tb . '][' . $this->fld. ']';
+		$settings['changeonchange'] = is_null($this->plg_index) ?
+                    'core[' . $this->tb . '][' . $this->fld. ']' :
+                    'plg[' . $this->tb . '][id:' . $this->plg_index . '][id]';
 
 		// ID
 		$settings['id'] = str_replace(['_', '.'], null, uniqid($this->tb . $this->fld, true));

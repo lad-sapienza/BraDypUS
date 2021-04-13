@@ -5,9 +5,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [4.0.6] - 2021-04-11
 ### Fixed
+- Fixed bug with plugins first record being marked as core
 - Fixed bug with plugins not being saved
 - Fixed bug with uid not being set on template files
-- Many syntax fixes
+- Many syntax typos fixed
 
 ## [4.0.5] - 2021-04-11
 ### Added

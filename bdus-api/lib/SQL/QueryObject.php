@@ -202,6 +202,13 @@ class QueryObject
             ] 
         );
 
+        $is_plugin_fld = (
+            $this->cfg
+                    && \is_array($this->cfg->get("tables.{$this->obj['tb']['name']}.plugin"))
+                    && \in_array($tb, $this->cfg->get("tables.{$this->obj['tb']['name']}.plugin"))
+        );
+
+        $is_geodata_fld = (substr_compare($tb, 'geodata', -strlen('geodata')) === 0); // https://stackoverflow.com/a/10473026
         /*
         Auto-join if:
                 auto_join flag is true
@@ -213,17 +220,12 @@ class QueryObject
                $this->auto_join                    // autojoin ON
             && $this->obj['tb']['name']            // Main table is set
             && $this->obj['tb']['name'] !== $tb    // Field table is different from main table
-            && (
-                // https://stackoverflow.com/a/10473026
-                substr_compare($tb, 'geodata', -strlen('geodata')) === 0 // Field table is geodata
-                ||
-                (                                   // Field table is plugin table
-                    $this->cfg
-                    && \is_array($this->cfg->get("tables.{$this->obj['tb']['name']}.plugin"))
-                    && \in_array($tb, $this->cfg->get("tables.{$this->obj['tb']['name']}.plugin"))
-                )
-            )
+            && ( $is_geodata_fld || $is_plugin_fld )
         ){
+            // The main results is grouped by id, not to have multiple time the same record
+            
+            $this->setGroupFld( $this->obj['tb']['name'] . ".id");
+
             $this->setJoin($tb, null, [
                 [
                     "connector"         => null, 
@@ -332,20 +334,22 @@ class QueryObject
                 and field table is different from main table
                 and field table geodata or another plugin table
         */
+        $is_plugin_fld = (
+            $this->cfg
+            && \is_array($this->cfg->get("tables.{$this->obj['tb']['name']}.plugin"))
+            && \in_array($tb, $this->cfg->get("tables.{$this->obj['tb']['name']}.plugin"))
+        );
+
+        $is_geodata_fld = ( substr_compare($tb, 'geodata', -strlen('geodata')) === 0 ); // Field table is geodata
+
         if (
             $this->auto_join
             && $this->obj['tb']['name']
             && $this->obj['tb']['name'] !== $tb
-            && (
-                // https://stackoverflow.com/a/10473026
-                substr_compare($tb, 'geodata', -strlen('geodata')) === 0 // Field table is geodata
-                || (                   // Field table is plugin table TODO: TEST
-                    $this->cfg
-                    && \is_array($this->cfg->get("tables.{$this->obj['tb']['name']}.plugin"))
-                    && \in_array($tb, $this->cfg->get("tables.{$this->obj['tb']['name']}.plugin"))
-                )
-            )
+            && ( $is_geodata_fld || $is_plugin_fld )
         ){
+            $this->setGroupFld( $this->obj['tb']['name'] . ".id");
+            
             $this->setJoin($tb, null, [
                 [
                     "connector"         => null, 

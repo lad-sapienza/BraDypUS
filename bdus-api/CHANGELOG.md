@@ -3,6 +3,10 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.0.7] - 2021-04-16
+### Fixed
+- Fixed bug with ShortSQL returning the same records many times when search on plugins or geodata is performed
+
 ## [4.0.6] - 2021-04-11
 ### Fixed
 - Fixed bug introduces with QueryObject code cleaning, and auto_joining not being enabled bu default

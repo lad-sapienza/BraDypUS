@@ -75,7 +75,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Composer is used for php dependencies
 - Security check before accessing system configuration
 
-
 ### Changed
 - Deprecated symm/gisconverter replaced by phayes/geophp
 - Read::getBackLinks and Read::getLinks return ShortSQL in where key
@@ -192,51 +191,69 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Secured API access
 
 
-## 3.15.17 - 2021-01-07
+## [3.15.17] - 2021-01-07
+### Fixed
 - Fixed bug with Vocabulary manager
 
-## 3.15.16 - 2020-08-31
+## [3.15.16] - 2020-08-31
+### Fixed
 - Fixed bug with QueryBuilder
 
 ## [3.15.11] - 2020-08-10
+### Fixed
 - Fixed issue with countable not initialized
 
 ## [3.15.10] - 2020-08-06
+### Fixed
 - readRecord::getFiles uses JOIN and solves issue with sorting
 
 ## [3.15.9] - 2020-07-19
+### Changed
 - ShortSqlToJson uses ReadRecord::getFull instead of Record::readFull
 
 ## [3.15.8] - 2020-07-19
+### Fixed
 - Fixed bug with API v2 post processing data
 
 ## [3.15.7] - 2020-07-18
+### Fixed
 - RS element of ReadRecord::getFull (api2::read)depends on system cfg
 
 ## [3.15.6] - 2020-07-11
+### Changed
 - Better management of PDO options
 
 ## [3.15.5] - 2020-07-11
+### Fixed
 - Bug fixed with DSN string creation
 
 ## [3.15.4] - 2020-07-11
+### Added
 - Inline docs for ShortSQL
 
 ## [3.15.3] - 2020-07-11
+### Fixed
 - Fixed typo in ShortSQL docs
 
 ## [3.15.2] - 2020-07-05
+### Fixed
 - Fixed minor GUI bug in SqlExpert module
 
 ## [3.15.1] - 2020-07-05
+### Fixed
 - Fixed bug History showing error log
 
 ## [3.15.0] - 2020-07-01
-- Fixed bug with password recover
-- Enhanced error reporting
+### Removed
 - Removed support for constants PROJ_CFG_TB, PROJ_CFG_APPDATA, PROJ_CFG_DIR, PROJ_TMPL_DIR, PROJ_EXP_DIR, PROJ_BUP_DIR, PROJ_FILES_DIR, PROJ_GEO_DIR, PROJ_DB.
-- Throwable catched in index and controller
+
+### Changed
+- Enhanced error reporting
 - DB connection information for engines other than sqlite are located in app_data.json
+- Throwable catched in index and controller
+
+### Fixed
+- Fixed bug with password recover
 
 
 ## [3.14.0] - 2020-01-20
@@ -249,186 +266,240 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [3.13.11]
+### Fixed
 - Fixed bug with getFullFiles method
 
 ## [3.13.10]
+### Fixed
 - Fixed bug with duplicate values in api2::getUniqueVal
 
 ## [3.13.9] - 2020-06-05
+### Fixed
 - Fixed bug not allowing new vocabularies to be defined if no vocabularies are available
 
 ## [3.13.8] - 2020-05-02
 - Removed app_data.search_code
 
 ## [3.13.7] - 2020-03-03
+### Fixed
 - Fixed bug with geoface not pasing table variable
 
 ## [3.13.6] - 2019-12-13
+### Changed
 - Api::getVocabulary return max 500 records, sorted by `sort`
 
 ## [3.13.5] - 2019-12-03
 - Fixed bug with id_from_tb referencing same tables multiple times for same record
 
 ## [3.13.4] - 2019-11-19
+### Added
 - New API method getVocabulary
 
 ## [3.13.3] - 2019-10-23
+### Added
 - Inline docs enhanced & minors fixes in User class
+
+### Fixed
 - Fixed issue with incorect initialization of Meta DB
 - Fixed minor undefined Constat issue
 
 ## [3.13.2] - 2019-08-06
+### Fixed
 - Fixed minor bug in support for automated internal links in the form of @tb.id or @tb.id[label]
 
 ## [3.13.1] - 2019-07-16
+### Fixed
 - Fixed bug with JOIN statement in read record, api version 2
 
 ## [3.13.0] - 2019-07-12
+### Added
 - It is possible to add reference to internal elements via @{table-name}.{record-id} syntax
 
 ## [3.11.3] - 2019-07-10
+### Fixed
 - Fixed bug with toGeoJson accepting now complex geometry field name
 
 ## [3.11.2] - 2019-07-09
+### Fixed
 - Fixed bug with ReadRecord::getTbRecord
 
 ## [3.11.1] - 2019-07-01
+### Changed
 - In GeoJSON export process single row error does not block entire process
 
 ## [3.11.8]
+### Removed
 - Removed hardcoded prefix divider (__)
 
 ## [3.11.7] -  2019-01-23
+### Changed
 - Files are sorted in ReadRecords
 
 ## [3.11.6] - 2019-01-23
+### Fixed
 - Fixed bug with getFiles in API
 
 ## [3.11.5] - 2018-10-21
-- Bug fixed with getUniqueVal in id_from_tb fields
+### Changed
 - Plugin records are ordered using sort, if available
+
+### Fixed
+- Bug fixed with getUniqueVal in id_from_tb fields
 
 ## [3.11.4] - 2018-09-17
 - Meta::addVersion is run before edit query is executed
 
 ## [3.11.3] - 2018-09-17
+### Added
 - API inspect outputs also plugin fields
 
 ## [3.11.2] - 2018-09-14
+### Added
 - Added support for getUniqueVal API method
-- Backlinks return `DISTINCT` values
 - New API method getChart
 - New API method inspect all, and more information returned in view record method
+### Changed
+- Backlinks return `DISTINCT` values
 
 ## [3.11.1] - 2019-06-22
+### Changed
 - Added support for a more granulated error & history log
 
 ## [3.10.5] - 2019-12-13
+### Fixed
 - Fixed bug with force update
 
 ## [3.10.5] - 2019-12-03
+### Changed
 - Updated info
 
 ## [3.10.3] - 2019-12-03
+### Added
 - Added field setting force_default
 
 ## [3.10.2] - 2019-12-03
+### Changed
 - Def_value is now available also in editing mode
 
 ## [3.10.1] - 2019-06-28
+### Changed
 - In GeoJSON export process single row error does not block entire process
+
+### Fixed
 - Fixed bug with version::current
 
 ## [3.10.0] - 2019-06-28
+### Changed
 - Images are down-sized to 1500px by default. The value can be changed in app data
 
 ## [3.9.8] - 2019-05-20
+### Added
 - Added control for sessions folder, created on the fly, if not available
 
 ## [3.9.7] - 2019-05-18
+### Changed
 - Set default field order (id) for tables with order not set
 
 ## [3.9.6] - 2019-05-14
+### Fixed
 - Fixed bug with ambiguous field name in Query::setOrder
 
 ## [3.9.5] - 2018-08-29
-- Empty rows are excluded in advanced search
-- Fixed bug with chart deletion
-- Updated supportfor query_where in response
+### Added
 - Added support for getChart method
-- Fixed bug with history file size being compressed
 - Added support for preprocess in API
-- Minor fixes in autoloader
 - API's geojson param supports GET & POST
 - Encoded query in api supports GET & POST
-- Typo fix
-- Fixed bug with Where statement repeated
-- Removed support for self refering joins
-- Empty links and plugins are not returned
-- Enhanced error reporting in API v2
-- Enhanced error reporting in API
 - Addedd support for geojson export
-- Files are removed from from manual links
 - API v2 implemented verb inspect
 - API v2 implemented and tested read method
-- Better control of backlinks
-- Input class instace can be Exception or Error
-- Minor typo fix
-- Addeddu support for API v2
-- Enhanced error log, removing redundancy
-- getTraceAsString replaced by full trace export
-- Insert queries are excluded from verisoning
-- Minor typo fixes
+- Added support for API v2
 - Version info added
 - Table label is added to corelinks array
-- Inline docs enhanced
 - Added support for backlinks in view record API method
 - Added metadata section in the view record object with full information about the referenced table
 - Added support for inspect all in API + enhanced docs
-- Page parameter is always converted to integer and is bigger than 0
-- Bug fixed with wrong filter
-- Fatal errors are captured and logged in catch group
 - Added Meta::logError & Meta::logException
 - New error log module
-- Deleted useless js debug modules
 - Automatically load modules
+- Added method Meta::guessTable
+- Added support for a more granular error & history log
+
+### Changed
+- Empty rows are excluded in advanced search
+- Updated support for query_where in response
+- Enhanced error reporting in API v2
+- Enhanced error reporting in API
+- Better control of backlinks
+- Input class instace can be Exception or Error
+- Enhanced error log, removing redundancy
+- getTraceAsString replaced by full trace export
+- Insert queries are excluded from versoning
+- Page parameter is always converted to integer and is bigger than 0
+- Fatal errors are captured and logged in catch group
 - Empty queries are not run
 - Query can be null
 - Added possibility to run modules without need of js files
 - Module debug fetches data from Meta table
 - error_log replaced by Meta::addErrorLog
-- Dropped support for utils::packlog
-- Dropped support for logs packing and user log managed by Meta
-- Removed support for constant PROJ_HISTORY
-- Removed support for history::autopack and history delete
 - My history gets data from Meta
 - DB uses Meta for record history and error log
-- Added method Meta::guessTable
-- Added support for a more granular error & history log
+
+### Removed
+- Removed support for self refering joins
+- Empty links and plugins are not returned
+- Files are removed from from manual links
+- Deleted useless js debug modules
+- Dropped support for utils::packlog
+- Dropped support for logs packing and user log managed by Meta
+- Dropped support for constant PROJ_HISTORY
+- Dropped support for history::autopack and history delete
+
+### Fixed
+- Fixed bug with chart deletion
+- Fixed bug with history file size being compressed
+- Minor fixes in autoloader
+- Typo fix
+- Fixed bug with Where statement repeated
+- Inline docs enhanced
+- Bug fixed with wrong filter
 
 ## [3.9.4] - 2018-06-22
+### Fixed
 - Fixed bug with history file size being compressed
 
 ## [3.9.3] - 2018-05-07
+### Added
 - Added support for data preprocess & manipulation in API
 
 ## [3.9.2] - 2018-05-07
-- History log files are gzipped and backed up if bigger then 1Mb
+### Added
 - Added support for data postprocess & manupulation in API
 
+### Changed
+- History log files are gzipped and backed up if bigger then 1Mb
+
 ## [3.9.1] - 2018-05-03
+### Added
 - Added support for data postprocess & manipulation in API
 
 ## [3.8.17] - 2018-05-03
+### Changed
 - Autoloader supports both php & inc extensions
 
 ## [3.8.16] - 2018-05-02
+### Added
 - Implemented verb inspect in API
 - Api support for geoJSON
 - Added docs for geoJSON
-- Simplified geoJSON creation
 - Added support for sorting plugins items using the `sort` field
+
+### Changed
+- Simplified geoJSON creation
+
+### Fixed
 - Fixed bug with multi select fields in plugins
+
 
 ## [3.8.15] - 2018-04-17
 - Simplified geoJSON creation
@@ -762,18 +833,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New versioning system
 
 ## [3.1.15]
+### Fixed
 - Minor layout fix in Chart module
 - Bug fixed with user permissions (R&W own records users)
 - Minor typo fix
 - Bug fixed with multiselect fieldtype in read mode (dynamic linking)
 
+
 ## [3.1.14]
-3.1.14      Bug fixed with date format
+### Fixed
+- Bug fixed with date format
+
 
 ## [3.1.13]
+### Fixed
 - Bug fixed with main record controller: ID and ID field were confused
 
+
 ## [3.1.12]
+### Changed
 - Multiselect values are now processed separately in read and edit mode
 
 ## [3.1.11]

@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Record\Read::getBackLinks uses literal fieldname in ShortSQL
 - Fixed bug with ShortSQL returning the same records many times when search on plugins or geodata is performed
 
+
 ## [4.0.6] - 2021-04-11
 ### Fixed
 - Fixed bug introduces with QueryObject code cleaning, and auto_joining not being enabled bu default
@@ -18,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed bug with plugins not being saved
 - Fixed bug with uid not being set on template files
 - Many syntax typos fixed
+
 
 ## [4.0.5] - 2021-04-11
 ### Added
@@ -28,18 +30,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed bug with QueryFromRequest::advSearch non opening bracket
 - Fixed issue with legacy saved queries with empty values
 
+
 ## [4.0.4] - 2021-04-05
 ### Fixed
 - Fixed issue with Template::value returning null
+
 
 ## [4.0.3] - 2021-04-05
 ### Fixed
 - Fixed issue with adding new record throwing error
 - Bigger text for choose application input in login page
 
+
 ## [4.0.2] - 2021-04-04
 ### Changed
 - Cleaner parameter's definition for \Record\Read: first is always integer, second always string
+
 
 ## [4.0.1] - 2021-04-01
 ### Changed
@@ -58,6 +64,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Addedd funiq/geophp files to git
 - utils::debug was not defined as static and was throwing warning
 - Typo fix in Changelog
+
 
 ## [4.0.0] - 2021-03-26
 ### Added
@@ -195,53 +202,66 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Fixed bug with Vocabulary manager
 
+
 ## [3.15.16] - 2020-08-31
 ### Fixed
 - Fixed bug with QueryBuilder
+
 
 ## [3.15.11] - 2020-08-10
 ### Fixed
 - Fixed issue with countable not initialized
 
+
 ## [3.15.10] - 2020-08-06
 ### Fixed
 - readRecord::getFiles uses JOIN and solves issue with sorting
+
 
 ## [3.15.9] - 2020-07-19
 ### Changed
 - ShortSqlToJson uses ReadRecord::getFull instead of Record::readFull
 
+
 ## [3.15.8] - 2020-07-19
 ### Fixed
 - Fixed bug with API v2 post processing data
+
 
 ## [3.15.7] - 2020-07-18
 ### Fixed
 - RS element of ReadRecord::getFull (api2::read)depends on system cfg
 
+
 ## [3.15.6] - 2020-07-11
 ### Changed
 - Better management of PDO options
+
 
 ## [3.15.5] - 2020-07-11
 ### Fixed
 - Bug fixed with DSN string creation
 
+
 ## [3.15.4] - 2020-07-11
 ### Added
 - Inline docs for ShortSQL
+
 
 ## [3.15.3] - 2020-07-11
 ### Fixed
 - Fixed typo in ShortSQL docs
 
+
 ## [3.15.2] - 2020-07-05
 ### Fixed
 - Fixed minor GUI bug in SqlExpert module
 
+
 ## [3.15.1] - 2020-07-05
 ### Fixed
 - Fixed bug History showing error log
+
 
 ## [3.15.0] - 2020-07-01
 ### Removed
@@ -269,31 +289,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Fixed bug with getFullFiles method
 
+
 ## [3.13.10]
 ### Fixed
 - Fixed bug with duplicate values in api2::getUniqueVal
+
 
 ## [3.13.9] - 2020-06-05
 ### Fixed
 - Fixed bug not allowing new vocabularies to be defined if no vocabularies are available
 
+
 ## [3.13.8] - 2020-05-02
 - Removed app_data.search_code
+
 
 ## [3.13.7] - 2020-03-03
 ### Fixed
 - Fixed bug with geoface not pasing table variable
 
+
 ## [3.13.6] - 2019-12-13
 ### Changed
 - Api::getVocabulary return max 500 records, sorted by `sort`
 
+
 ## [3.13.5] - 2019-12-03
 - Fixed bug with id_from_tb referencing same tables multiple times for same record
+
 
 ## [3.13.4] - 2019-11-19
 ### Added
 - New API method getVocabulary
+
 
 ## [3.13.3] - 2019-10-23
 ### Added
@@ -303,41 +331,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed issue with incorect initialization of Meta DB
 - Fixed minor undefined Constat issue
 
+
 ## [3.13.2] - 2019-08-06
 ### Fixed
 - Fixed minor bug in support for automated internal links in the form of @tb.id or @tb.id[label]
+
 
 ## [3.13.1] - 2019-07-16
 ### Fixed
 - Fixed bug with JOIN statement in read record, api version 2
 
+
 ## [3.13.0] - 2019-07-12
 ### Added
 - It is possible to add reference to internal elements via @{table-name}.{record-id} syntax
+
 
 ## [3.11.3] - 2019-07-10
 ### Fixed
 - Fixed bug with toGeoJson accepting now complex geometry field name
 
+
 ## [3.11.2] - 2019-07-09
 ### Fixed
 - Fixed bug with ReadRecord::getTbRecord
+
 
 ## [3.11.1] - 2019-07-01
 ### Changed
 - In GeoJSON export process single row error does not block entire process
 
+
 ## [3.11.8]
 ### Removed
 - Removed hardcoded prefix divider (__)
+
 
 ## [3.11.7] -  2019-01-23
 ### Changed
 - Files are sorted in ReadRecords
 
+
 ## [3.11.6] - 2019-01-23
 ### Fixed
 - Fixed bug with getFiles in API
+
 
 ## [3.11.5] - 2018-10-21
 ### Changed
@@ -346,12 +384,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Bug fixed with getUniqueVal in id_from_tb fields
 
+
 ## [3.11.4] - 2018-09-17
 - Meta::addVersion is run before edit query is executed
+
 
 ## [3.11.3] - 2018-09-17
 ### Added
 - API inspect outputs also plugin fields
+
 
 ## [3.11.2] - 2018-09-14
 ### Added
@@ -361,25 +402,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Backlinks return `DISTINCT` values
 
+
 ## [3.11.1] - 2019-06-22
 ### Changed
 - Added support for a more granulated error & history log
+
 
 ## [3.10.5] - 2019-12-13
 ### Fixed
 - Fixed bug with force update
 
+
 ## [3.10.5] - 2019-12-03
 ### Changed
 - Updated info
+
 
 ## [3.10.3] - 2019-12-03
 ### Added
 - Added field setting force_default
 
+
 ## [3.10.2] - 2019-12-03
 ### Changed
 - Def_value is now available also in editing mode
+
 
 ## [3.10.1] - 2019-06-28
 ### Changed
@@ -388,21 +435,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Fixed bug with version::current
 
+
 ## [3.10.0] - 2019-06-28
 ### Changed
 - Images are down-sized to 1500px by default. The value can be changed in app data
+
 
 ## [3.9.8] - 2019-05-20
 ### Added
 - Added control for sessions folder, created on the fly, if not available
 
+
 ## [3.9.7] - 2019-05-18
 ### Changed
 - Set default field order (id) for tables with order not set
 
+
 ## [3.9.6] - 2019-05-14
 ### Fixed
 - Fixed bug with ambiguous field name in Query::setOrder
+
 
 ## [3.9.5] - 2018-08-29
 ### Added
@@ -464,13 +516,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Inline docs enhanced
 - Bug fixed with wrong filter
 
+
 ## [3.9.4] - 2018-06-22
 ### Fixed
 - Fixed bug with history file size being compressed
 
+
 ## [3.9.3] - 2018-05-07
 ### Added
 - Added support for data preprocess & manipulation in API
+
 
 ## [3.9.2] - 2018-05-07
 ### Added
@@ -479,13 +534,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - History log files are gzipped and backed up if bigger then 1Mb
 
+
 ## [3.9.1] - 2018-05-03
 ### Added
 - Added support for data postprocess & manipulation in API
 
+
 ## [3.8.17] - 2018-05-03
 ### Changed
 - Autoloader supports both php & inc extensions
+
 
 ## [3.8.16] - 2018-05-02
 ### Added
@@ -502,34 +560,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [3.8.15] - 2018-04-17
+### Changed
 - Simplified geoJSON creation
 
+
 ## [3.8.14] - 2018-03-26
+### Added
 - Added support for sorting plugins items using the `sort` field
 
+
 ## [3.8.13] - 2018-03-15
+### Fixed
 - Fixed bug with multi select fields in plugins
 
+
 ## [3.8.12] - 2018-03-08
+### Changed
 - New SQL query for matrixes
 
+
 ## [3.8.11] - 2018-03-08
+### Added
 - All delete errors are logged
 
+
 ## [3.8.10] - 2018-03-01
+### Fixed
 - Fixed bug with js clone method
 
+
 ## [3.8.9] - 2018-02-11
+### Added
 - API supports limit_start and limit_end parameters
 - Per table options show after data is loaded
 
+
 ## [3.8.8] - 2017-12-31
+### Fixed
 - Fixed bug with vocabulary lit not being editable
 
+
 ## [3.8.7] - 2017-12-13
+### Added
 - Added foreign keys constraint for sqlite
 
+
 ## [3.8.6] - 2017-12-11
+### Fixed
 - Fixed bug with query pagination
 - Fixed bug Multiple records view
 - Fixed bug with stratigraphic relationship module non running with multiple records
@@ -537,23 +614,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [3.8.5] - 2017-12-02
+### Added
 - Added support for limiting in queries & API
 - Added support for grouping in API
 - Added support for grouping in queries
 
 ## [3.8.4] - 2017-11-25
+### Removed
 - No round corners in layout
+
+### Added
 - Added table_label in Api
-- Integers in app name in api call
 
 ## [3.8.3] - 2017-11-13
+### Added
 - Added backlinks support
-- Fixed backlink bug
 
 ## [3.8.2] - 2017-10-12
+### Changed
 - Google maps key moved to main application data
 
 ## [3.8.1] - 2017-10-11
+### Added
 - New Imperium (Pelagios & DARE) and AWMC basemaps to Geoface
 
 ## [3.7.3] - 2017-10-10
@@ -855,19 +937,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Multiselect values are now processed separately in read and edit mode
 
 ## [3.1.11]
-- Bug multiple record read mode (last record was missing)
+### Fixed
+- Fixed bug with multiple record read mode (last record was missing)
 
 ## [3.1.10]
-- Bug fixed wit boolean field types
+### Changed
 - Links now show link to Harris' Matrix, if destination table has Stratigraphic Relationship plugin activated
 
+### Fixed
+- Bug fixed wit boolean field types
+
 ## [3.1.9]
+### Removed
 - Removed XML metadata XSD files
 
 ## [3.1.8]
-- Bug fixed with print all function (read multiple records)
+### Changed
 - Controller::render() is initialized with autoescape set to false by default
 - Replaced, when possible, manual initialization of Twig with Controller::render() method
+
+### Fixed
+- Bug fixed with print all function (read multiple records)
+
 
 ## [3.1.7]
 - Print style enhancment. Bug fixed with images height and added new css classes in Field to hide in print mode services as geoface, links, permalink, etc.

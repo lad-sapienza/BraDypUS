@@ -294,9 +294,15 @@ class QueryObject
                 and field is set to id_from_table
         */
         list($tb, $strip_fld) = explode('.', $fld);
+        // Literal fieldname support since v4.0.7
+        if($strip_fld[0] === '^'){
+            $strip_fld = substr($strip_fld, 1);
+            $dont_id_from_tb = true;
+            $fld = $tb . '.' . $strip_fld;
+        }
         if ($this->auto_join && $this->cfg) {
             $id_from_tb = $this->cfg->get("tables.$tb.fields.$strip_fld.id_from_tb");
-            if ($id_from_tb) {
+            if ($id_from_tb && !$dont_id_from_tb) {
                 // Set unique alias for joined table (might be same as referenced table)
                 $alias = uniqid($id_from_tb);
                 // Get the id_field of to-join table

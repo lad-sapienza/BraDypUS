@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added support for literal fieldnames (autojoin disabled) in ShortSQL: prefixed by `^`
 
 ### Fixed
+- Record\Read::getBackLinks uses literal fieldname in ShortSQL
 - Fixed bug with ShortSQL returning the same records many times when search on plugins or geodata is performed
 
 ## [4.0.6] - 2021-04-11

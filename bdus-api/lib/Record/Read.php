@@ -8,6 +8,7 @@ namespace Record;
 
 use DB\DBInterface;
 use Config\Config;
+use \geoPHP\geoPHP;
 
 class Read
 {
@@ -65,7 +66,7 @@ class Read
             'metadata' => [
                 'tb_id' => $this->tb,
                 'rec_id' => $core['id'],
-                'tb_stripped' => str_replace(PREFIX, null, $this->tb),
+                'tb_stripped' => str_replace(PREFIX, '', $this->tb),
                 'tb_label' => $this->cfg->get("tables.{$this->tb}.label")
             ],
             'core'       => $core,
@@ -178,7 +179,7 @@ EOD;
                     $manualLinks[$r['id']] = [
                         "key"         => $r['id'],
                         "tb_id"       => $mlt,
-                        "tb_stripped" => str_replace(PREFIX, null, $mlt),
+                        "tb_stripped" => str_replace(PREFIX, '', $mlt),
                         "tb_label"    => $this->cfg->get("tables.$mlt.label"),
                         "ref_id"      => $mli,
                         "ref_label"   => $ref_val_label,
@@ -239,17 +240,22 @@ EOD;
     public function getGeodata() : array
     {
         if (!isset($this->cache['geodata'])){
-            $plugins = $this->getPlugin();
+            $geodata = $this->getPlugin(PREFIX . 'geodata');
             if (
-                    isset($plugins['geogata']) 
-                &&  isset($plugins['geogata']['data'])
-                &&  is_array($plugins['geogata']['data'])
-                &&  !empty($plugins['geogata']['data'])
+                    isset($geodata) 
+                &&  isset($geodata['data'])
+                &&  is_array($geodata['data'])
+                &&  !empty($geodata['data'])
             ){
-                $this->cache['geodata'] = $plugins['geogata']['data'];
+                foreach ($geodata['data'] as $key => $value) {
+                    $geoPHP = geoPHP::load($geodata['data'][$key]['geometry']['val'], 'wkt');
+                    $geodata['data'][$key]['geojson'] = $geoPHP->out('json');
+                }
+                $this->cache['geodata'] = $geodata['data'];
             } else {
                 $this->cache['geodata'] = [];
             }
+            \utils::debug($this->cache['geodata']);
         }
         return $this->cache['geodata'];
     }
@@ -350,7 +356,7 @@ EOD;
                     }
                     $backlinks[$ref_tb] = [
                         'tb_id' => $ref_tb,
-                        'tb_stripped' => str_replace(PREFIX, null, $ref_tb),
+                        'tb_stripped' => str_replace(PREFIX, '', $ref_tb),
                         "tb_label" => $this->cfg->get("tables.$ref_tb.label"),
                         'tot' => $r[0]['tot'],
                         'where' => "id|in|{@{$via_plg}~[id_link|distinct~?table_link|=|{$ref_tb}||and|^{$via_plg_fld}|=|{$this->id}}",
@@ -404,7 +410,7 @@ EOD;
                     if ($tot_links > 0 ) {
                         $links[$ld['other_tb']] = [
                             'tb_id' => $ld['other_tb'],
-                            'tb_stripped' => str_replace(PREFIX, null, $ld['other_tb']),
+                            'tb_stripped' => str_replace(PREFIX, '', $ld['other_tb']),
                             "tb_label" => $this->cfg->get("tables.{$ld['other_tb']}.label"),
                             'tot' => $tot_links,
                             'where' => implode('||and|', $short_sql)
@@ -471,7 +477,7 @@ EOD;
                 $this->cache['plugins'][$p] = [
                     "metadata" => [
                         "tb_id" => $p,
-                        "tb_stripped" => str_replace(PREFIX, null, $p),
+                        "tb_stripped" => str_replace(PREFIX, '', $p),
                         "tb_label" => $this->cfg->get("tables.$p.label"),
                         "tot" => count($plg_data)
                     ],

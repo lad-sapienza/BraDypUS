@@ -17,7 +17,7 @@ class myTmpl_ctrl extends Controller
 
 		foreach ($tbs as $tb=>$label) {
 			foreach ($tmpls as $tmpl) {
-				if (preg_match('/' . str_replace($this->prefix, null, $tb) . '/', $tmpl)) {
+				if (preg_match('/' . str_replace($this->prefix, '', $tb) . '/', $tmpl)) {
 					$data[$tb]['list'][] = $tmpl;
 				}
 			}

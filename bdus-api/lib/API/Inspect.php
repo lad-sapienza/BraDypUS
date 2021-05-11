@@ -19,7 +19,7 @@ class Inspect
         $resp = [];
         if ($tb) {
             // Inspect table
-            $stripped_name = str_replace(PREFIX, null, $tb);
+            $stripped_name = str_replace(PREFIX, '', $tb);
 
             $resp['stripped_name'] = $stripped_name;
 
@@ -58,7 +58,7 @@ class Inspect
             $all_cfg = $cfg->get('tables');
             // Inspect all
             foreach ( $all_cfg as $tname => $t ) {
-                $stripped_name = str_replace(PREFIX, null, $t['name']);
+                $stripped_name = str_replace(PREFIX, '', $t['name']);
                 $t['stripped_name'] = $stripped_name;
 
                 foreach ($t['fields'] as $f) {

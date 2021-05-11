@@ -30,7 +30,7 @@ class autoloader
         // https://stackoverflow.com/a/619725/586449
         } elseif (substr_compare($className, '_ctrl', -5, 5) === 0 ) {
 
-            $mod = str_replace('_ctrl', null, $className);
+            $mod = str_replace('_ctrl', '', $className);
 
             if (file_exists($this->modDir . $mod . '/' . $mod . '.php')) {
                 require_once $this->modDir . $mod . '/' . $mod . '.php';

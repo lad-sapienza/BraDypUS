@@ -35,7 +35,7 @@ class frontpage_editor_ctrl extends Controller
 		$file = $this->getFile();
 
 		$text = stripslashes($text);
-		$text = str_replace(['<?php', '<?', '?>'], null, $text);
+		$text = str_replace(['<?php', '<?', '?>'], '', $text);
 		file_put_contents($file, $text);
 
 	}

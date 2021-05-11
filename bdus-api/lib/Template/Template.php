@@ -53,7 +53,7 @@ class Template implements TemplateInterface
             return null;
         }
         return '<div class="permalink">' .
-        '<a href="' . "./#/" . $this->cfg->get('main.name') . '/' . str_replace(PREFIX, null, $this->record->getTb()) . '/' . $this->record->getCore('id', true)  . '">PERMALINK</a>' .
+        '<a href="' . "./#/" . $this->cfg->get('main.name') . '/' . str_replace(PREFIX, '', $this->record->getTb()) . '/' . $this->record->getCore('id', true)  . '">PERMALINK</a>' .
       '</div>';
     }
 
@@ -218,14 +218,14 @@ class Template implements TemplateInterface
         $html = '<div class="pluginrow">' .
                     '<fieldset>';
 
-        if (file_exists(PROJ_DIR . 'templates/' . str_replace(PREFIX, null, $plg) . '.twig')) {
+        if (file_exists(PROJ_DIR . 'templates/' . str_replace(PREFIX, '', $plg) . '.twig')) {
             $this->current_plugin_index = (int) $index;
 
             $html .= $this->plg_fld('id', false);
 
             $twig = new Environment(new FilesystemLoader(PROJ_DIR . 'templates/'), unserialize(CACHE));
 
-            $html .= $twig->render(str_replace(PREFIX, null, $plg) . '.twig', array(
+            $html .= $twig->render(str_replace(PREFIX, '', $plg) . '.twig', array(
                     'print' => $this,
                     'plg'=> $plg,
                     'index' => $index,
@@ -248,6 +248,11 @@ class Template implements TemplateInterface
                 '</div>';
 
         return $html;
+    }
+
+    public function geodata() : ?string
+    {
+        return $this->plg('geodata');
     }
 
     public function plg($plg) : ?string

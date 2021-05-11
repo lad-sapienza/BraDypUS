@@ -226,8 +226,8 @@ class Config
         ToFiles::all( $this->cfg, $this->path2cfg, $this->prefix );
         
         rename(
-            $this->path2cfg . str_replace($this->prefix, null, $old_name) . '.json',
-            $this->path2cfg . str_replace($this->prefix, null, $new_name) . '.json'
+            $this->path2cfg . str_replace($this->prefix, '', $old_name) . '.json',
+            $this->path2cfg . str_replace($this->prefix, '', $new_name) . '.json'
         );
     }
     
@@ -237,7 +237,7 @@ class Config
         
         ToFiles::all( $this->cfg, $this->path2cfg, $this->prefix );
         
-        unlink($this->path2cfg . str_replace($this->prefix, null, $tb) . '.json');
+        unlink($this->path2cfg . str_replace($this->prefix, '', $tb) . '.json');
     }
     
     public function setFld(string $tb, string $fld_name, array $post_data)

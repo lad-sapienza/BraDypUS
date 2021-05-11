@@ -14,7 +14,7 @@ class translate_ctrl extends Controller
 
 		foreach ($lang_files as $file) {
             if (strpos($file, '.json') !== false) {
-                $available_lang[] = str_replace('.json', null, $file);
+                $available_lang[] = str_replace('.json', '', $file);
             }
 		}
 		$this->render('translate', 'showList', [

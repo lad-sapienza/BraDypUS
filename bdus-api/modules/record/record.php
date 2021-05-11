@@ -224,7 +224,7 @@ class record_ctrl extends Controller
 
     private function getTemplate(string $tb, string $context)
     {
-        $stripped_tb = str_replace($this->prefix, null, $tb);
+        $stripped_tb = str_replace($this->prefix, '', $tb);
 
         if ( $context === 'add_new'){
             $context = 'edit';

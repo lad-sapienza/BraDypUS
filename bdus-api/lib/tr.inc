@@ -85,7 +85,7 @@ class tr
 	{
 		$langs = \utils::dirContent(MAIN_DIR . 'locale/') ?? [];
 		
-		array_walk($langs, function(&$el){ $el =  str_replace('.json', null, $el); });
+		array_walk($langs, function(&$el){ $el =  str_replace('.json', '', $el); });
 
 		return $langs;
 	}

@@ -348,7 +348,7 @@ class Field
                     'plg[' . $this->tb . '][id:' . $this->plg_index . '][id]';
 
 		// ID
-		$settings['id'] = str_replace(['_', '.'], null, uniqid($this->tb . $this->fld, true));
+		$settings['id'] = str_replace(['_', '.'], '', uniqid($this->tb . $this->fld, true));
 		
 		// DISPLAY
         if ($settings['hide']) {

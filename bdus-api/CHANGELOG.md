@@ -8,9 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Column `creator` is by default of type INTEGER
 - Columns `table_link` and `id_link` are hidden bu default
 - Button `Create new application` is hidden on success
+- Sub-template system for records uses Controller as Twig initializer
 
 ### Added
 - All values inserted in system configuration are trimmed by default
+
+### Fixed
+- Fixed bug with Geoface not starting on table without geodata
 
 ## [4.0.8] - 2021-05-11
 ### Added

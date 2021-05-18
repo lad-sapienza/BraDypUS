@@ -250,6 +250,7 @@ class utils
    * Recursively filters array using an optional callback function
    *  If no callback function is defined the resulting array will contain only
    *  not null/empty values of the original array. Key-value association is mantained
+   *  Array values are trimmed
    * @param array $arr  Original array to filter
    * @param mixed $callback Callback function, default false. Can be a function or a function name
    * @return array  Filtered array
@@ -259,9 +260,11 @@ class utils
 		foreach ($arr as &$a) {
 			if (is_array($a)) {
 				$a = self::recursiveFilter($a, $callback);
+			} else {
+				$a = trim($a);
 			}
 		}
-    	return $callback ? array_filter($arr, $callback ) : array_filter($arr);
+    	return $callback ? array_filter($arr) : array_filter($arr);
 	}
 
 	

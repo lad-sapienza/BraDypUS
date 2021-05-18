@@ -78,7 +78,7 @@
 
         <div class="report"></div>
 
-        <div class="form-group">
+        <div class="form-group app_create">
             <div class="col-sm-offset-4 col-sm-8">
                 <button type="submit" class="btn btn-danger btn-block">{{ tr.get('app_create') }}</button>
             </div>
@@ -108,6 +108,7 @@ $('#{{ uid }} form').on('submit', (e) => {
         core.message(resp.text, resp.status, resp.status === 'error');
         if (resp.status === 'success'){
             $('#{{ uid }} .report').html(`<h2>Report</h2><hr>${resp.log.map( i => `<li>${i}</li>`).join('')}`);
+            $('.app_create').hide();
         }
     })
 });

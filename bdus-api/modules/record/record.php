@@ -6,6 +6,7 @@
  */
 
 use \Record\Read;
+use Template\Template;
 
 class record_ctrl extends Controller
 {
@@ -191,17 +192,13 @@ class record_ctrl extends Controller
                 continue;
             }
 
-            $fieldObj = new \Template\Template($context, $readRecord, $this->db, $this->cfg);
+            $fieldObj = new Template($context, $readRecord, $this->db, $this->cfg);
             
             // get template
             $template_file = $this->getTemplate($tb, $context);
 
             if ($template_file){
-                $twig = new \Twig\Environment( new \Twig\Loader\FilesystemLoader(PROJ_DIR . 'templates/'), $this->getCacheSettings() );
-                $html = $twig->render($template_file, [
-                    'uid' => uniqid('t'),
-                    'print' => $fieldObj
-                ]);
+                $html = $this->compileTmpl(PROJ_DIR . 'templates/', $template_file, [ 'print' => $fieldObj ]);
             } else {
                 $html = $fieldObj->showall();
             }

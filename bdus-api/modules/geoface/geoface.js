@@ -56,25 +56,31 @@ var geoface  = {
 	 */
 	getData: function(){
 
-    core.getJSON('geoface_ctrl', 'getGeoJson', {tb: geoface.param.tb, obj_encoded: geoface.param.obj_encoded}, false, function(data){
+    core.getJSON(
+      'geoface_ctrl', 
+      'getGeoJson', 
+      {
+        tb: geoface.param.tb, 
+        obj_encoded: geoface.param.obj_encoded
+      }, 
+      false, 
+      function(data){
+        if (data.status === 'error'){
+          core.message(data.text, 'error', true);
+          return;
+        }
 
-      if (data.status === 'error'){
-        core.message(data.text, 'error', true);
-				return;
-			}
+        if (data.status === 'warning'){
+          core.message(core.tr('no_geodata_present_create'), 'warning', true);
+        }
 
-      if (data.status === 'warning'){
-        core.message(core.tr('no_geodata_present_create'), 'warning', true);
-      }
+        // set geoJSON
+        geoface.geoJSON = data.data;
 
-      // set geoJSON
-      geoface.geoJSON = data.data;
+        // set metadata
+        geoface.metadata = data.metadata;
 
-      // set metadata
-      geoface.metadata = data.metadata;
-
-      geoface.runQueue();
-
+        geoface.runQueue();
     });
   },
 

@@ -7,6 +7,7 @@ TODO
 [] Kill QueryFromRequest
     [] Rewrite advanced search
 BUG
+[ ] Quando non ci sono geometrie per una tabella, e si richiede l'apertura di Geoface, questo si deve comunque aprire!
 [ ] remove constants in libs
     [ ] remove CACHE in Template
 [ ] sys tables managed via system\manager

@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Button `Create new application` is hidden on success
 - Sub-template system for records uses Controller as Twig initializer
 
+### Deprecated
+- Deprecated \utils::alert_div
+
 ### Removed
 - Removed unused Controller::getCacheSettings
 

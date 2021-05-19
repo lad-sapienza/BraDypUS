@@ -94,21 +94,6 @@ abstract class Controller
   }
 
   /**
-   * Returns array with Twig cache settings
-   * TODO: replace with Environment object?
-   *
-   * @return array
-   */
-  public function getCacheSettings(): array
-  {
-    if ($this->debug) {
-      return ["autoescape" => false, "debug" => true];
-    } else {
-      return ["autoescape" => false, "cache" => "cache"];
-    }
-  }
-
-  /**
    * Echoes json-encoded data from array, with proper header
    *
    * @param array $data
@@ -167,7 +152,7 @@ abstract class Controller
       throw new \Exception("Template {$tmpl_dir}/{$tmpl_file} not found");
     }
 
-    $settings = $this->getCacheSettings();
+    $settings =  $this->debug ? ["autoescape" => false, "debug" => true] : ["autoescape" => false, "cache" => "cache"];
 
     $twig = new Environment(new FilesystemLoader($tmpl_dir), $settings);
     if ($settings['debug']) {

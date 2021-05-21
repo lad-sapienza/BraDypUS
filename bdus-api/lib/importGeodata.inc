@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @copyright 2007-2021 Julian Bogdani
  * @license AGPL-3.0; see LICENSE
@@ -20,20 +21,25 @@ class importGeodata
   private $tb;
 
   /**
-   * Loads and parses geojson and returns properties of first feature or throws
-   *  \Exception on error.
+   * Loads and parses geojson and returns properties of first feature
+   * Throws \Exception on error.
    *
    * @param string $geojson GeoJSON string to check
-   * @return type
+   * @return array
    * @throws \Exception
    */
-  public function checkGeojson($geojson)
+  public function checkGeojson($geojson): array
   {
     //decode geojson to array
     $geo_array = is_string($geojson) ? json_decode($geojson, 1) : $geojson;
 
     // stop if geojson is empty or not valid
-    if (!$geo_array || !is_array($geo_array) || !$geo_array['features'] || empty($geo_array['features'])) {
+    if (
+      !$geo_array
+      || !is_array($geo_array)
+      || !$geo_array['features']
+      || empty($geo_array['features'])
+    ) {
       throw new \Exception('GeoJSON string is empty, not well formatted or contains no geometries');
     }
 
@@ -42,31 +48,29 @@ class importGeodata
 
   /**
    * Starts importing process and returns number of successfully processed records
-   * or throws \Exception and rolls back all queries.
+   * Rhrows \Exception and rolls back all queries.
+   * 
    * @param DBInterface $db    Instance of database object
    * @param string $tb  target table name
    * @param string $geojson geojson file content
    * @param string $idfield field name in geojson file containing  idfield value
    * @param boolean $deleteOld  Delete existing records flag. If true
    *  all existing records linked to $tb will be deleted
-   * @return int  If successful the number of processed rows will be returned
+   * @return int  The number of processed rows will be returned
    * @throws \Exception
    */
-  public function runImport(DBInterface $db, string $tb, string $geojson, string $idfield, bool $deleteOld = false, string $table_id_fld): int
-  {
+  public function runImport(
+    DBInterface $db,
+    string $tb,
+    string $geojson,
+    string $idfield,
+    bool $deleteOld = false,
+    string $table_id_fld
+  ): int {
     $this->db = $db;
     $this->tb = $tb;
 
-    if (!$this->db) {
-      throw new \Exception('Database object is missings');
-    }
-    if (!$this->tb) {
-      throw new \Exception('Destination table is missing');
-    }
-
-
-    try
-    {
+    try {
       $this->db->beginTransaction();
 
       // Remove existing data
@@ -88,49 +92,47 @@ class importGeodata
 
 
         if (!$id_value || empty($id_value)) {
-         continue;
+          continue;
         }
 
         $res = $this->db->query(
           "SELECT id FROM " . $this->tb . " "
             . "WHERE " . $table_id_fld . " = ?",
-            [ $row['properties'][$idfield] ],
-          'read');
+          [$row['properties'][$idfield]],
+          'read'
+        );
 
-       $row_id = $res[0]['id'];
+        $row_id = $res[0]['id'];
 
-       if (!$row_id || empty($row_id)) {
-         continue;
-       }
+        if (!$row_id || empty($row_id)) {
+          continue;
+        }
 
-       $wkt_geometry = (geoPHP::load($row['geometry'], 'geojson'))->out('wkt');
+        $wkt_geometry = (geoPHP::load($row['geometry'], 'geojson'))->out('wkt');
 
-       $sql = " INSERT INTO " . PREFIX . "geodata "
-         . "(table_link, id_link, geometry) "
-         . " VALUES "
-         . "(?, ?, ?) "
-         ;
-       $values = [ $this->tb, $row_id, $wkt_geometry ];
+        $sql = " INSERT INTO " . PREFIX . "geodata "
+          . "(table_link, id_link, geometry) "
+          . " VALUES "
+          . "(?, ?, ?) ";
+        $values = [$this->tb, $row_id, $wkt_geometry];
 
 
-       if (!$this->db->query($sql, $values, 'boolean')) {
-         throw new \Exception('Error in executing SQL: ' . $sql);
-       }
+        if (!$this->db->query($sql, $values, 'boolean')) {
+          throw new \Exception('Error in executing SQL: ' . $sql);
+        }
 
-       $count++;
-     }
+        $count++;
+      }
 
-     $this->db->commit();
+      $this->db->commit();
 
-     return $count;
-    
+      return $count;
     } catch (\DB\DBException $e) {
 
       $this->db->rollBack();
 
       throw new \Exception($e);
     }
-
   }
 
 
@@ -141,15 +143,13 @@ class importGeodata
    * @throws Exception
    */
 
-  private function deletePreviousData()
+  private function deletePreviousData(): bool
   {
     $sql = "DELETE FROM " . PREFIX . "geodata WHERE table_link = ?";
 
-    if (!$this->db->query($sql, [ $this->tb ], 'boolean')) {
+    if (!$this->db->query($sql, [$this->tb], 'boolean')) {
       throw new \Exception('Error in deleting previous inserted geodata');
     }
+    return true;
   }
-
 }
-
-?>

@@ -7,6 +7,7 @@ TODO
 [] Kill QueryFromRequest
     [] Rewrite advanced search
 BUG
+[ ] Remove utils::is_online
 [ ] Remove utils::alert_div
 [ ] Spostare utils::privilege nella classe che gestisce i privilegi in generale
 [ ] Spostare utils::canUser nella classe che gestisce i privilegi in generale

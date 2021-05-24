@@ -122,7 +122,7 @@
     "name": "Name",
     "email": "Email",
     "password": "Password",
-    "privilege": "Privilege",
+    "role": "Role",
     "super_admin": "Super admin",
     "admin": "Admin",
     "writer": "Read & Write",

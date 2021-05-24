@@ -120,7 +120,7 @@
     "name": "Nome",
     "email": "Indirizzo email",
     "password": "Password",
-    "privilege": "Privilegio d'accesso",
+    "role": "Ruolo d'accesso",
     "super_admin": "Super amministratore",
     "admin": "Amministratore",
     "writer": "Lettura & Scrittura",

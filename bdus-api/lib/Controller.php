@@ -14,6 +14,7 @@
  */
 
 use DB\DBInterface;
+use UAC\UAC;
 use Config\Config;
 use Monolog\Logger;
 use Twig\Environment;
@@ -29,6 +30,7 @@ abstract class Controller
   protected $log;
   protected $prefix;
   protected $cfg;
+  protected $uac;
   protected $debug;
 
   public function __construct($get, $post, $request)
@@ -51,6 +53,12 @@ abstract class Controller
       substr($host, 0, 5) === "127.0" ||
       substr($host, 0, 7) === "192.168");
   }
+
+  public function setUAC(UAC $uac): void
+  {
+    $this->uac = $uac;
+  }
+
   /**
    * Injects Database object dependency
    *

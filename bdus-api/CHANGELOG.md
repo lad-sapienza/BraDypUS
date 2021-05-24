@@ -7,15 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Added Controller::is_online that replaces utils::is_online
+- Inline documentation for \DB\DB
+
 ### Changed
-- Column `creator` is by default of type INTEGER
-- Columns `table_link` and `id_link` are hidden bu default
-- Button `Create new application` is hidden on success
 - Sub-template system for records uses Controller as Twig initializer
 - Updated guzzlehttp/psr7 from 1.8.1 to 1.8.2
 - Updated psr/log from 1.1.3 to 1.1.4
 - Updated symfony/process from v5.2.4 to v5.2.7
 - Updated twig/twig from v3.3.0 to v3.3.2
+- UAC object is initialized by Bdus\App and initialized in Controller
 
 ### Deprecated
 - Deprecated \utils::alert_div

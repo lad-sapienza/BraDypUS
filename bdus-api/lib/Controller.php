@@ -39,6 +39,19 @@ abstract class Controller
   }
 
   /**
+   * Returns true if this is a live application
+   * and false if it is running on localhost / 127.0* or 192.168*
+   *
+   * @return boolean
+   */
+  public function is_online(): bool
+  {
+    $host = $_SERVER['HTTP_HOST'];
+    return !(strpos($host, 'localhost') !== false ||
+      substr($host, 0, 5) === "127.0" ||
+      substr($host, 0, 7) === "192.168");
+  }
+  /**
    * Injects Database object dependency
    *
    * @param DBInterface $db

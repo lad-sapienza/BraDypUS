@@ -15,16 +15,15 @@ class utils
   /**
    * Checks if current installation is the official online installation or a
    * local one. The check is performed on host name
+   * @deprecated version
    * @return boolean
    */
   public static function is_online(): bool
   {
     $host = $_SERVER['HTTP_HOST'];
     return !(strpos($host, 'localhost')    !== false ||
-      strpos($host, '127.0')      !== false ||
-      strpos($host, '192.168')    !== false ||
-      strpos($host, 'bradypus.net')   === false ||
-      strpos($host, 'bdus.cloud')   === false);
+      substr($host, 0, 5 ) === "127.0" ||
+      substr($host, 0, 7 ) === "192.168");
   }
 
   /**

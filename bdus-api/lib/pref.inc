@@ -98,7 +98,7 @@ class pref
    * 
    * @return string
    */
-  public static function getLang(): string
+  public static function getLang(): ?string
   {
     return $_SESSION['pref']['lang'];
   }

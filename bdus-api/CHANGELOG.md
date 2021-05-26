@@ -28,6 +28,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed bug with Geoface not starting on table without geodata
 - Fixed indentation and error handling in version
 
+## [4.0.10] - 2021-05-26
+### Removed
+- Removed support for php 5.4 in api
+
+### Fixed
+- Removed debug message in \Record\Read
+
 ## [4.0.9] - 2021-05-18
 ### Added
 - All values inserted in system configuration are trimmed by default

@@ -255,7 +255,6 @@ EOD;
             } else {
                 $this->cache['geodata'] = [];
             }
-            \utils::debug($this->cache['geodata']);
         }
         return $this->cache['geodata'];
     }

@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Fixed bug with Geoface not starting on table without geodata
 - Fixed indentation and error handling in version
+- Previous (v3) backup files are listed and do not throw error
 
 ## [4.0.10] - 2021-05-26
 ### Removed

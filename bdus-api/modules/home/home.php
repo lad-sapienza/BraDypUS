@@ -212,6 +212,11 @@ class home_ctrl extends Controller
                     $not_fresh && \utils::canUser('admin') ? "core.runMod('vocabularies');" :  false 
                 ],
                 [ 
+                    "fa-id-card-o", 
+                    'tmpl_mng', 
+                    \utils::canUser('admin') ? "core.runMod('templates');" :  false 
+                ],
+                [ 
                     "fa-edit", 
                     'front_page_editor', 
                     \utils::canUser('admin') ? "core.runMod('frontpage_editor');" :  false 

@@ -28,12 +28,7 @@ var core = {
     if (typeof window[mod] === 'object' && !debugMode){
       window[mod].init.apply(null, args);
     } else {
-      var script;
-      if (debugMode){
-        script = './modules/' + mod + '/' + mod + '.js';
-      } else {
-        script = './modules/' + mod + '/' + mod + '.min.js';
-      }
+      const script = `./modules/${mod} /${mod}${ debugMode ? '.min' : '' }.js`;
       
       $.ajax({
         url: script,

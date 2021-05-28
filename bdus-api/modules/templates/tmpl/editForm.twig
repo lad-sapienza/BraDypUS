@@ -1,0 +1,40 @@
+<div id="{{ uid }}">
+  
+  <h3>{{ tmpl }}</h3>
+
+  {% if error %}
+  <div class="text-danger">{{ error }}</div>
+  {% else %}
+  <pre contenteditable class="content">{{ content }}</pre>
+
+  <div class="row">
+    <div class="col-xs-6">
+      <button class="btn btn-success btn-block saveTmpl">{{ tr.get('save')}}</button>
+    </div>
+    <div class="col-xs-3">
+      <button class="btn btn-warning btn-block renameTmpl">{{ tr.get('rename')}}</button>
+    </div>
+    <div class="col-xs-3">
+      <button class="btn btn-danger btn-block deleteTmpl">{{ tr.get('erase')}}</button>
+    </div>
+  </div>
+  {% endif %}
+</div>
+<script>
+
+$('#{{ uid }}').on('click', e => {
+  const el = $(e.target);
+  if (el.hasClass('saveTmpl')){
+    const text = $('#{{ uid }} .content').text();
+    templates.saveTmpl('{{ tmpl }}', text);
+  }
+
+  if (el.hasClass('deleteTmpl')){
+    templates.deleteTmpl('{{ tmpl }}');
+  }
+
+  if (el.hasClass('renameTmpl')){
+    templates.renameTmpl('{{ tmpl }}');
+  }
+});
+</script>

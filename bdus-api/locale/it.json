@@ -455,5 +455,20 @@
     "geodata_ok_uploaded": "Nessun errore nel processo di importazione. %s geometrie sono state caricate",
     "app_is_frozen": "Attenzione. Questa applicazione è stata congelata. È possibile leggere tutte le schede ed eseguire ricerche ma non è possibile modificare i dati",
     "debug": "Debug",
-    "not_authorized": "Sembra che tu non sia autorizzato ad accedere a questa risorsa."
+    "not_authorized": "Sembra che tu non sia autorizzato ad accedere a questa risorsa.",
+    "file_not_found": "Il file `%s` non è stato trovato",
+    "rename": "Rinomina",
+    "tmpl_mng": "Gestore delle maschere",
+    "available_tmpls": "Maschere disponibili",
+    "add_new_tmpl": "Crea una nuova maschera",
+    "confirm_delete_tmpl": "Sei sicuro di volere cancellare questa maschera? Questa azione è irrevocabile.",
+    "error_getting_content_of_file": "Non è stato possibile recuperare il contenuto del file `%s`",
+    "tmpl_file_exists": "La maschera `%s` esiste già",
+    "tmpl_file_updated": "La maschera %s` è stata aggiornata",
+    "tmpl_file_not_updated": "Errore. Non è stato possibile aggiornare la maschera `%s`",
+    "tmpl_file_deleted": "La maschera %s` è stata cancellata",
+    "tmpl_file_not_deleted": "Errore. Non è stato possibile cancellare la maschera `%s`",
+    "tmpl_file_renamed": "La maschera %s` è stata rinominata in `%s`",
+    "tmpl_file_not_renamed": "Errore. Non è stato possibile rinominare la maschera `%s` in `%s`",
+    "enter_tmpl_name": "Inserisci il nome della maschera completo dell'estensione (.twig)"
 }

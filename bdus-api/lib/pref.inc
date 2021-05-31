@@ -52,7 +52,7 @@ class pref
    * @param string $tb	table name
    * @param string $context	context
    */
-  public static function getTmpl(string $tb, string $context): string
+  public static function getTmpl(string $tb, string $context): ?string
   {
     return $_SESSION['pref']['tmpl'][$tb][$context];
   }
@@ -62,7 +62,7 @@ class pref
    * Get user preference
    * @param string $el	preference key to get
    */
-  public static function get(string $el): string
+  public static function get(string $el): ?string
   {
     return $_SESSION['pref'][$el];
   }

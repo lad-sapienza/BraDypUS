@@ -110,13 +110,13 @@ class QueryFromRequest
   }
 
 
-  public function setOrder($fld = false, $type = false): QueryFromRequest
+  public function setOrder($fld = false, $type = false): ?QueryFromRequest
   {
     if (!preg_match('/(LIMIT)/', $this->where)) {
       !$type ? $type = 'asc' : '';
       if (!$fld) {
         if (preg_match('/ORDER/', $this->where)) {
-          return;
+          return null;
         }
         if ($this->cfg->get("tables.{$this->tb}.order")) {
           $fld = $this->tb . '.' . $this->cfg->get("tables.{$this->tb}.order");

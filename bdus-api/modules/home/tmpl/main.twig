@@ -22,6 +22,7 @@
 {% if can_user_enter %}
       layout.loadHome();
       hashActions.map2action();
+      keepAlive.start();
 {% elseif request and token %}
       core.runMod('login', ['loadResetPwd', '{{ request_app }}', '{{ address }}', '{{ token }}'], function(){
         login.loadLogin();

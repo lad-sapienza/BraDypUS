@@ -28,7 +28,7 @@ var core = {
     if (typeof window[mod] === 'object' && !debugMode){
       window[mod].init.apply(null, args);
     } else {
-      const script = `./modules/${mod} /${mod}${ debugMode ? '.min' : '' }.js`;
+      const script = `./modules/${mod}/${mod}${ debugMode ? '.min' : '' }.js`;
       
       $.ajax({
         url: script,

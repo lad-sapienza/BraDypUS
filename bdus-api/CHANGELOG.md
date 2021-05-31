@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Added new admin function: create, edit, delete, rename templates
+- Added new function keepAlive: session is automatically updated every 3 minutes
 - Added Controller::is_online that replaces utils::is_online
 - Inline documentation for \DB\DB
 

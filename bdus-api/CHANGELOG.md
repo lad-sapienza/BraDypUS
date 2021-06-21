@@ -10,8 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added new function keepAlive: session is automatically updated every 3 minutes
 - Added Controller::is_online that replaces utils::is_online
 - Inline documentation for \DB\DB
+- Inline documentation for \Inspect
 
 ### Changed
+- Updated datatables.net from 1.10.24 to 1.10.25
+- Updated datatables.net-bs from 1.10.24 to 2.1.1
+- Updated gulp-less from 4.0.1 to 5.0.0
 - Sub-template system for records uses Controller as Twig initializer
 - Updated guzzlehttp/psr7 from 1.8.1 to 1.8.2
 - Updated psr/log from 1.1.3 to 1.1.4

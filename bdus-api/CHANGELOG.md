@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Inline documentation for \Inspect
 
 ### Changed
+- Updated select2 from 4.0.13 to 4.1.0-rc.0
 - Updated datatables.net from 1.10.24 to 1.10.25
 - Updated datatables.net-bs from 1.10.24 to 2.1.1
 - Updated gulp-less from 4.0.1 to 5.0.0

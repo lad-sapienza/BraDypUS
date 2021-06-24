@@ -62,7 +62,7 @@ class pref
    * Get user preference
    * @param string $el	preference key to get
    */
-  public static function get(string $el): ?string
+  public static function get(string $el)
   {
     return $_SESSION['pref'][$el];
   }

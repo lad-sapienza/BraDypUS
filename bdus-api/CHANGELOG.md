@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed unused Controller::getCacheSettings
 
 ### Fixed
+- pref::set $val parameter might be string, array or null. Removed type check
 - pref::get might return string, array or null. Removed type check
 - Fixed bug with Geoface not starting on table without geodata
 - Fixed indentation and error handling in version

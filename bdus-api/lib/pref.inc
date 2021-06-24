@@ -71,10 +71,10 @@ class pref
    * Sets or unsets a preference
    *
    * @param string $el
-   * @param string|null $val
+   * @param $val
    * @return void
    */
-  public static function set(string $el, ?string $val): void
+  public static function set(string $el, $val): void
   {
     if ($val) {
       $_SESSION['pref'][$el] = $val;

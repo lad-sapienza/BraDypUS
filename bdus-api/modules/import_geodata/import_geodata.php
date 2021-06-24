@@ -43,7 +43,7 @@ class import_geodata_ctrl extends Controller
       
     } catch (\Throwable $e) {
       $this->log->error($e);
-      \utils::alert_div('empty_or_wrong_geojson', true);
+      echo \utils::alert_div(\tr::get('empty_or_wrong_geojson'));
     }
   }
   
@@ -87,7 +87,7 @@ class import_geodata_ctrl extends Controller
       
     } catch (\Throwable $e) {
       $this->log->error($e);
-      \utils::alert_div('geodata_ok_uploaded', true);
+      echo \utils::alert_div(\tr::get('geodata_ok_uploaded'));
     }
   }
 }

@@ -122,7 +122,7 @@
     "name": "Name",
     "email": "Email",
     "password": "Password",
-    "privilege": "Privilege",
+    "role": "Role",
     "super_admin": "Super admin",
     "admin": "Admin",
     "writer": "Read & Write",
@@ -474,5 +474,22 @@
     "app_is_frozen": "Attention! This application is frozen, You can read all records and run queries, but you will not be able to edit the data.",
 
     "debug": "Debug",
-    "not_authorized": "You are not authorized to access this resource"
+    "not_authorized": "You are not authorized to access this resource",
+
+    "file_not_found": "File `%s` not found",
+    "rename": "Rename",
+
+    "tmpl_mng": "Template manager",
+    "available_tmpls": "Available templates",
+    "add_new_tmpl": "Create a new template",
+    "confirm_delete_tmpl": "Are you sure you want to delete template `%s`? This action cannot be undone.",
+    "error_getting_content_of_file": "Cannot get content of file `%s`",
+    "tmpl_file_exists": "Template file `%s` already exists!",
+    "tmpl_file_updated": "Template file `%s` was successfully updated",
+    "tmpl_file_not_updated": "Error: Cannot save date to template file `%s`",
+    "tmpl_file_deleted": "Template file `%s` was successfully deleted",
+    "tmpl_file_not_deleted": "Error: Cannot delete template file `%s`",
+    "tmpl_file_renamed": "Template file `%s` successfully renamed to `%s`",
+    "tmpl_file_not_renamed": "Error: Cannot rename template file `%s` to `%s`",
+    "enter_tmpl_name": "Enter the template name with file extension (.twig)"
 }

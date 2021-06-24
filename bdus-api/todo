@@ -7,7 +7,10 @@ TODO
 [] Kill QueryFromRequest
     [] Rewrite advanced search
 BUG
-[ ] Quando non ci sono geometrie per una tabella, e si richiede l'apertura di Geoface, questo si deve comunque aprire!
+[ ] Remove utils::is_online
+[ ] Remove utils::alert_div
+[ ] Spostare utils::privilege nella classe che gestisce i privilegi in generale
+[ ] Spostare utils::canUser nella classe che gestisce i privilegi in generale
 [ ] remove constants in libs
     [ ] remove CACHE in Template
 [ ] sys tables managed via system\manager

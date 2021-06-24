@@ -1,0 +1,43 @@
+<div id="{{ uid }}">
+
+  <h2>{{ tr.get('tmpl_mng') }}</h2>
+  <div class="row">
+    <div class="col-sm-3">
+      <h3>{{ tr.get('available_tmpls') }}</h3>
+
+      <button class="add_new_tmpl btn btn-block btn-warning">
+        {{ tr.get('add_new_tmpl') }}
+      </button>
+
+      <hr>
+
+      <div class="list-group">
+
+      {% for tmpl in available_tmpls %}
+      <a href="#" class="tmpl list-group-item" data-tmpl="{{ tmpl }}">
+          {{ tmpl }}
+      </a>
+      {% endfor %}
+      </div>
+    </div>
+    <div class="col-sm-9 content_space">
+    </div>
+  </div>
+</div>
+
+<script>
+$('#{{ uid }}').on('click', e => {
+  const el = $(e.target);
+  e.preventDefault();
+  const where = $('#{{ uid }} .content_space');
+
+  if (el.hasClass('tmpl')){
+    const tmpl = el.data('tmpl');
+    templates.openEditForm(tmpl, where);
+  }
+
+  if (el.hasClass('add_new_tmpl')){
+    templates.createTmpl();
+  }
+});
+</script>

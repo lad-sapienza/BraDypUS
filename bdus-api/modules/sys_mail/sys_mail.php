@@ -25,7 +25,7 @@ class sys_mail_ctrl extends Controller
 				$res ? $ok[] = $usr['name'] . ' <' . $usr['email'] . '>' : $no[] = $usr['name'] . ' <' . $usr['email'] . '>';
 			}
 		} else {
-			\utils::alert_div('no_user_with_selected_privilege', true);
+			echo \utils::alert_div(\tr::get('no_user_with_selected_privilege'));
 			return;
 		}
 

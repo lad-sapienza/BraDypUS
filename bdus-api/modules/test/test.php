@@ -86,7 +86,7 @@ class test_ctrl extends Controller
 
     private function testUAC()
     {
-        $uac = new \UAC\UAC( $this->cfg->get('main.status'), \utils::is_online(), $this->db );
+        $uac = new \UAC\UAC( $this->cfg->get('main.status'), $this->is_online(), $this->db );
         $actions = $uac->available_actions;
 
         // // Pure GLOBAL
@@ -223,7 +223,7 @@ class test_ctrl extends Controller
             ($user_owns_record ? " where users OWNS record" : '') .
             "<ul>";
         foreach ($actions as $action) {
-            $ret = $uac->user( $user )->can( $action, $onTable, $onRecId, $user_owns_record );
+            $ret = $uac->setUAL( $user )->can( $action, $onTable, $onRecId, $user_owns_record );
             $html .= '<li class="text-' . ( $ret ? 'success' : 'danger') . '">' .
                 "Can <strong>$action</strong>: " . 
                 ( $ret ? '&#10004; ' : '&#10006;') .

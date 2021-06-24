@@ -3,6 +3,41 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.1.0] - 2021-06-24
+
+### Added
+- Added new admin function: create, edit, delete, rename templates
+- Added new function keepAlive: session is automatically updated every 3 minutes
+- Added Controller::is_online that replaces utils::is_online
+- Inline documentation for \DB\DB
+- Inline documentation for \Inspect
+
+### Changed
+- Updated select2 from 4.0.13 to 4.1.0-rc.0
+- Updated datatables.net from 1.10.24 to 1.10.25
+- Updated datatables.net-bs from 1.10.24 to 2.1.1
+- Updated gulp-less from 4.0.1 to 5.0.0
+- Sub-template system for records uses Controller as Twig initializer
+- Updated guzzlehttp/psr7 from 1.8.1 to 1.8.2
+- Updated psr/log from 1.1.3 to 1.1.4
+- Updated symfony/process from v5.2.4 to v5.2.7
+- Updated twig/twig from v3.3.0 to v3.3.2
+- UAC object is initialized by Bdus\App and initialized in Controller
+
+### Deprecated
+- Deprecated \utils::alert_div
+- Deprecated utils::is_online replaced by Controller::is_online
+
+### Removed
+- Removed unused Controller::getCacheSettings
+
+### Fixed
+- Fixed bug with Geoface not starting on table without geodata
+- Fixed indentation and error handling in version
+- Previous (v3) backup files are listed and do not throw error
+- Fixed bug with used data not being injected correctly to utils::canUser
+- Fixed bugs with type checking
+
 ## [4.0.10] - 2021-05-26
 ### Removed
 - Removed support for php 5.4 in api
@@ -11,13 +46,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed debug message in \Record\Read
 
 ## [4.0.9] - 2021-05-18
+### Added
+- All values inserted in system configuration are trimmed by default
+
 ### Changed
 - Column `creator` is by default of type INTEGER
 - Columns `table_link` and `id_link` are hidden bu default
 - Button `Create new application` is hidden on success
-
-### Added
-- All values inserted in system configuration are trimmed by default
 
 ## [4.0.8] - 2021-05-11
 ### Added

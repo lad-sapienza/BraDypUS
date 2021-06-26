@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @copyright 2007-2021 Julian Bogdani
  * @license AGPL-3.0; see LICENSE
@@ -108,7 +109,7 @@ class QueryObject
     /**
      * Initializes the class and sets default values for query object
      */
-    public function __construct( Config $cfg = null )
+    public function __construct(Config $cfg = null)
     {
         $this->cfg = $cfg;
 
@@ -132,7 +133,7 @@ class QueryObject
         $this->validation = true;
     }
 
-    public function setAutoJoin( bool $auto_join = false) : self
+    public function setAutoJoin(bool $auto_join = false): self
     {
         $this->auto_join = $auto_join;
         return $this;
@@ -149,13 +150,13 @@ class QueryObject
     {
         if (!$index) {
             return $this->obj;
-        } else if ( array_key_exists($index, $this->obj) ) {
+        } else if (array_key_exists($index, $this->obj)) {
             return $this->obj[$index];
         } else {
             return false;
         }
     }
-    
+
     /**
      * Adds table name and eventually the alias to $this->obj['tb']
      *
@@ -163,7 +164,7 @@ class QueryObject
      * @param string $alias     table alias
      * @return self
      */
-    public function setTb( string $tb, string $alias = null) : self
+    public function setTb(string $tb, string $alias = null): self
     {
         $this->obj['tb']['name'] = $tb;
         if ($alias) {
@@ -171,7 +172,7 @@ class QueryObject
         }
         return $this;
     }
-    
+
     /**
      * Adds field name and eventually the alias and function to apply to $this->obj['fields']
      * Optional auto-join is performed for plugin tables
@@ -182,10 +183,14 @@ class QueryObject
      * @param string $function  aggregative function name to apply to data
      * @return self
      */
-    public function setField(string $fld, string $alias = null, string $tb = null, string $function = null): self
-    {
+    public function setField(
+        string $fld,
+        string $alias = null,
+        string $tb = null,
+        string $function = null
+    ): self {
         // Table name could also be provided as dot-separated prefix:
-        if (strpos($fld, '.') !== false){
+        if (strpos($fld, '.') !== false) {
             list($tb, $fld) = explode('.', $fld);
         }
         if (!$tb) {
@@ -194,19 +199,19 @@ class QueryObject
             }
             $tb = $this->obj['tb']['name'];
         }
-        array_push ( $this->obj['fields'], [
-            "tb"    => $tb, 
-            "fld"   => $fld, 
-            "alias" => $alias, 
-            "fn"    => $function
-            ] 
+        array_push(
+            $this->obj['fields'],
+            [
+                "tb"    => $tb,
+                "fld"   => $fld,
+                "alias" => $alias,
+                "fn"    => $function
+            ]
         );
 
-        $is_plugin_fld = (
-            $this->cfg
-                    && \is_array($this->cfg->get("tables.{$this->obj['tb']['name']}.plugin"))
-                    && \in_array($tb, $this->cfg->get("tables.{$this->obj['tb']['name']}.plugin"))
-        );
+        $is_plugin_fld = ($this->cfg
+            && \is_array($this->cfg->get("tables.{$this->obj['tb']['name']}.plugin"))
+            && \in_array($tb, $this->cfg->get("tables.{$this->obj['tb']['name']}.plugin")));
 
         $is_geodata_fld = (substr_compare($tb, 'geodata', -strlen('geodata')) === 0); // https://stackoverflow.com/a/10473026
         /*
@@ -217,55 +222,60 @@ class QueryObject
                 and field table geodata or another plugin table
         */
         if (
-               $this->auto_join                    // autojoin ON
+            $this->auto_join                    // autojoin ON
             && $this->obj['tb']['name']            // Main table is set
             && $this->obj['tb']['name'] !== $tb    // Field table is different from main table
-            && ( $is_geodata_fld || $is_plugin_fld )
-        ){
+            && ($is_geodata_fld || $is_plugin_fld)
+        ) {
             // The main results is grouped by id, not to have multiple time the same record
-            
-            $this->setGroupFld( $this->obj['tb']['name'] . ".id");
+
+            $this->setGroupFld($this->obj['tb']['name'] . ".id");
 
             $this->setJoin($tb, null, [
                 [
-                    "connector"         => null, 
+                    "connector"         => null,
                     "opened_bracket"    => null,
                     "fld"               => "{$tb}.table_link",
-                    "operator"          => "=", 
+                    "operator"          => "=",
                     "binded"            => "'{$this->obj['tb']['name']}'",
                     "closed_bracket"    => null
                 ],
                 [
-                    "connector"         => "AND", 
+                    "connector"         => "AND",
                     "opened_bracket"    => null,
                     "fld"               => "{$tb}.id_link",
-                    "operator"          => "=", 
+                    "operator"          => "=",
                     "binded"            => "{$this->obj['tb']['name']}.id",
                     "closed_bracket"    => null
                 ]
             ]);
         }
-        
+
         return $this;
     }
 
-    public function setFieldSubQuery(string $subQuery, string $alias = null, array $values = null): self
-    {
-        array_push ( $this->obj['fields'], [
-            "subQuery"   => $subQuery, 
-            "alias" => $alias, 
-            "fn"    => null
-            ] 
+    public function setFieldSubQuery(
+        string $subQuery,
+        string $alias = null,
+        array $values = null
+    ): self {
+        array_push(
+            $this->obj['fields'],
+            [
+                "subQuery"   => $subQuery,
+                "alias" => $alias,
+                "fn"    => null
+            ]
         );
-        if ($values && is_array($values)){
+        if ($values && is_array($values)) {
             $this->setWhereValues($values);
         }
-        
+
         return $this;
     }
-    
 
-    
+
+
     /**
      * Adds WHERE part to $this->obj['where']
      * The WHERE part is an array of 4 elements: connector, field, operator, value. 
@@ -281,9 +291,15 @@ class QueryObject
      * @param string $closed_bracket
      * @return self
      */
-    public function setWherePart(string $connector = null, string $opened_bracket = null, string $fld, string $operator, string $val, string $closed_bracket = null): self
-    {
-        if ( count($this->obj['where']) > 0 && !$connector ) {
+    public function setWherePart(
+        string $connector = null,
+        string $opened_bracket = null,
+        string $fld,
+        string $operator,
+        string $val,
+        string $closed_bracket = null
+    ): self {
+        if (count($this->obj['where']) > 0 && !$connector) {
             throw new \Exception("Connector is required for query parts other than first");
         }
 
@@ -295,7 +311,7 @@ class QueryObject
         */
         list($tb, $strip_fld) = explode('.', $fld);
         // Literal fieldname support since v4.0.7
-        if($strip_fld[0] === '^'){
+        if ($strip_fld[0] === '^') {
             $strip_fld = substr($strip_fld, 1);
             $dont_id_from_tb = true;
             $fld = $tb . '.' . $strip_fld;
@@ -310,27 +326,27 @@ class QueryObject
                 // Set ON statement
                 $on = [
                     [
-                        "connector"         => null, 
+                        "connector"         => null,
                         "opened_bracket"    => null,
                         "fld"               => "{$tb}.{$strip_fld}",
-                        "operator"          => "=", 
+                        "operator"          => "=",
                         "binded"            => "{$alias}.id",
                         "closed_bracket"    => null
                     ]
                 ];
                 // Set JOIN
-                $this->setJoin( $id_from_tb, $alias, $on);
+                $this->setJoin($id_from_tb, $alias, $on);
                 $fld = $alias . '.' . $id_from_tb_id_fld;
             }
         }
 
-        array_push( $this->obj['where'] , [
+        array_push($this->obj['where'], [
             "connector"     => $connector,
-            "opened_bracket"=> $opened_bracket,
+            "opened_bracket" => $opened_bracket,
             "fld"           => $fld,
             "operator"      => $operator,
             "binded"        => $val,
-            "closed_bracket"=> $closed_bracket
+            "closed_bracket" => $closed_bracket
         ]);
 
         /*
@@ -340,42 +356,40 @@ class QueryObject
                 and field table is different from main table
                 and field table geodata or another plugin table
         */
-        $is_plugin_fld = (
-            $this->cfg
+        $is_plugin_fld = ($this->cfg
             && \is_array($this->cfg->get("tables.{$this->obj['tb']['name']}.plugin"))
-            && \in_array($tb, $this->cfg->get("tables.{$this->obj['tb']['name']}.plugin"))
-        );
+            && \in_array($tb, $this->cfg->get("tables.{$this->obj['tb']['name']}.plugin")));
 
-        $is_geodata_fld = ( substr_compare($tb, 'geodata', -strlen('geodata')) === 0 ); // Field table is geodata
+        $is_geodata_fld = (substr_compare($tb, 'geodata', -strlen('geodata')) === 0); // Field table is geodata
 
         if (
             $this->auto_join
             && $this->obj['tb']['name']
             && $this->obj['tb']['name'] !== $tb
-            && ( $is_geodata_fld || $is_plugin_fld )
-        ){
-            $this->setGroupFld( $this->obj['tb']['name'] . ".id");
-            
+            && ($is_geodata_fld || $is_plugin_fld)
+        ) {
+            $this->setGroupFld($this->obj['tb']['name'] . ".id");
+
             $this->setJoin($tb, null, [
                 [
-                    "connector"         => null, 
+                    "connector"         => null,
                     "opened_bracket"    => null,
                     "fld"               => "{$tb}.table_link",
-                    "operator"          => "=", 
+                    "operator"          => "=",
                     "binded"            => "'{$this->obj['tb']['name']}'",
                     "closed_bracket"    => null
                 ],
                 [
-                    "connector"         => "AND", 
+                    "connector"         => "AND",
                     "opened_bracket"    => null,
                     "fld"               => "{$tb}.id_link",
-                    "operator"          => "=", 
+                    "operator"          => "=",
                     "binded"            => "{$this->obj['tb']['name']}.id",
                     "closed_bracket"    => null
                 ]
             ]);
         }
-        
+
         return $this;
     }
 
@@ -385,7 +399,7 @@ class QueryObject
      * @param array $values
      * @return self
      */
-    public function setWhereValues( array $values ): self
+    public function setWhereValues(array $values): self
     {
         $this->obj['values'] = array_merge($this->obj['values'], $values);
         return $this;
@@ -405,7 +419,7 @@ class QueryObject
      *                      closed_bracket    => null or )
      * @return self
      */
-    public function setJoin( string $tb, string $tb_alias = null, array $on): self
+    public function setJoin(string $tb, string $tb_alias = null, array $on): self
     {
         $data_arr = [
             'tb'    => trim($tb),
@@ -415,8 +429,8 @@ class QueryObject
         // Add JOIN only if not already available
         $found = false;
         foreach ($this->obj['joins'] as $j) {
-            
-            if ($j === $data_arr){
+
+            if ($j === $data_arr) {
                 $found = true;
             }
         }
@@ -436,9 +450,11 @@ class QueryObject
      */
     public function setOrderFld(string $fld, string $dir): self
     {
-        array_push( $this->obj['order'], [
-            'fld'   => $fld, 
-            'dir'   => $dir
+        array_push(
+            $this->obj['order'],
+            [
+                'fld'   => $fld,
+                'dir'   => $dir
             ]
         );
         return $this;
@@ -456,7 +472,7 @@ class QueryObject
     public function setLimit(int $tot, int $offset): self
     {
         $this->obj['limit'] = [
-            'tot' => $tot, 
+            'tot' => $tot,
             'offset' => $offset
         ];
         return $this;
@@ -468,9 +484,9 @@ class QueryObject
      * @param string $fld
      * @return self
      */
-    public function setGroupFld( string $fld ): self
+    public function setGroupFld(string $fld): self
     {
-        array_push( $this->obj['group'], $fld);
+        array_push($this->obj['group'], $fld);
         return $this;
     }
 
@@ -482,7 +498,7 @@ class QueryObject
         $str = '';
 
         foreach ($where as $i => $w) {
-            if ($i !== 0){
+            if ($i !== 0) {
                 $str .= "{$w['connector']} ";
             }
             $str .= "{$w['opened_bracket']} {$w['fld']} {$w['operator']} {$w['binded']} {$w['closed_bracket']}";
@@ -497,33 +513,33 @@ class QueryObject
      * @param bool $onlyWhere
      * @return array
      */
-    public function getSql(bool $onlyWhere = false) : array
+    public function getSql(bool $onlyWhere = false): array
     {
         $this->validateObject();
 
-        if ($onlyWhere){
+        if ($onlyWhere) {
             return [
-                $this->whereToStr( $this->obj['where'] ),
+                $this->whereToStr($this->obj['where']),
                 $this->obj['values']
             ];
         }
 
-        $sql = [ 'SELECT' ];
+        $sql = ['SELECT'];
 
         $fld_arr = [];
         foreach ($this->obj['fields'] as $f) {
             if (is_array($f)) {
-                if ($f['subQuery']){
+                if ($f['subQuery']) {
                     $f_str = " ( {$f['subQuery']} ) ";
                     if ($f['values'] && is_array($f['values'])) {
                         $this->obj['values'] = array_merge($this->obj['values'], $f['values']);
                     }
                 } else {
-                    $f_str = ( $f['tb'] ? $f['tb'] . '.' : '') . $f['fld']; // Add table
+                    $f_str = ($f['tb'] ? $f['tb'] . '.' : '') . $f['fld']; // Add table
                     if ($f['fn']) { // Add function
                         if ($f['fn'] === 'count_distinct') {
                             $f_str = "COUNT( DISTINCT {$f_str})";
-                        } elseif ($f['fn'] === 'distinct'){
+                        } elseif ($f['fn'] === 'distinct') {
                             $f_str = "DISTINCT {$f_str}";
                         } else {
                             $f_str = "{$f['fn']}({$f_str})";
@@ -533,42 +549,44 @@ class QueryObject
                 if ($f['alias']) { // Add alias
                     $f_str = "{$f_str} AS \"{$f['alias']}\"";
                 }
-                array_push( $fld_arr, $f_str );
+                array_push($fld_arr, $f_str);
             } else {
                 array_push($fld_arr, $this->obj['tb']['name'] . '.*');
             }
         }
 
-        array_push($sql, implode(', ', $fld_arr ));
+        array_push($sql, implode(', ', $fld_arr));
 
         array_push($sql, 'FROM ' . $this->obj['tb']['name'] . ($this->obj['tb']['alias'] ? ' AS "' . $this->obj['tb']['alias'] . '"' : ''));
 
         foreach ($this->obj['joins'] as $j) {
-            array_push( $sql,
-                "JOIN {$j['tb']} " . ( isset($j['alias']) ? ' AS "' . $j['alias']. '"' : '') . " ON " . $this->whereToStr($j['on'])
+            array_push(
+                $sql,
+                "JOIN {$j['tb']} " . (isset($j['alias']) ? ' AS "' . $j['alias'] . '"' : '') . " ON " . $this->whereToStr($j['on'])
             );
         }
 
-        array_push( $sql, 
-            'WHERE ' . $this->whereToStr( $this->obj['where'] )
+        array_push(
+            $sql,
+            'WHERE ' . $this->whereToStr($this->obj['where'])
         );
 
-        if (!empty($this->obj['group'])){
+        if (!empty($this->obj['group'])) {
             array_push($sql, 'GROUP BY ' . implode(', ', $this->obj['group']));
         }
-        
-        if (!empty($this->obj['order'])){
-            array_push($sql, 'ORDER BY ' . implode(', ', array_map( function($el){
+
+        if (!empty($this->obj['order'])) {
+            array_push($sql, 'ORDER BY ' . implode(', ', array_map(function ($el) {
                 return $el['fld'] . ' ' . $el['dir'];
             }, $this->obj['order'])));
         }
-        
-        if(!empty($this->obj['limit'])){
+
+        if (!empty($this->obj['limit'])) {
             array_push($sql, "LIMIT {$this->obj['limit']['tot']} OFFSET {$this->obj['limit']['offset']}");
         }
 
         return [
-            implode(' ', $sql), 
+            implode(' ', $sql),
             $this->obj['values']
         ];
     }
@@ -581,5 +599,4 @@ class QueryObject
             $validator->validateQueryObject($this);
         }
     }
-
 }

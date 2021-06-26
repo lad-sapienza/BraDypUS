@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @copyright 2007-2021 Julian Bogdani
  * @license AGPL-3.0; see LICENSE
@@ -26,9 +27,14 @@ class Join
      * @param array $join_arr
      * @return array
      */
-    public static function parse(string $prefix, array $join_arr = null, Config $cfg, ParseShortSql $parseShortSql, array $added_fld_aliases = []) : array
-    {
-        if (!$join_arr){
+    public static function parse(
+        string $prefix,
+        array $join_arr = null,
+        Config $cfg,
+        ParseShortSql $parseShortSql,
+        array $added_fld_aliases = []
+    ): array {
+        if (!$join_arr) {
             return [];
         }
 
@@ -50,11 +56,11 @@ class Join
 
             // Parse ON statement to SQL and values
             $parsedWhere = Where::parse(
-                $cfg, 
-                implode('||', $j_parts), 
-                $tb, 
-                true, 
-                $added_fld_aliases, 
+                $cfg,
+                implode('||', $j_parts),
+                $tb,
+                true,
+                $added_fld_aliases,
                 $parseShortSql,
                 $prefix
             );
@@ -75,5 +81,4 @@ class Join
         // [ tb_name, tb_alias, on (where array), values (array)]
         return $ret;
     }
-
 }

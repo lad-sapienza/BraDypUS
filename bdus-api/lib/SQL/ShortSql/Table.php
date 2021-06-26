@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @copyright 2007-2021 Julian Bogdani
  * @license AGPL-3.0; see LICENSE
@@ -11,7 +12,7 @@ namespace SQL\ShortSql;
 class Table
 {
 
-    public static function parse( string $prefix, string $tb ) : array
+    public static function parse(string $prefix, string $tb): array
     {
         list($tb, $alias) = explode(':', $tb);
 
@@ -21,10 +22,8 @@ class Table
         }
 
         return [
-            "tb"    => $tb, 
+            "tb"    => $tb,
             "alias" => $alias
         ];
     }
-
-
 }

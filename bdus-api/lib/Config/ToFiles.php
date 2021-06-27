@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @copyright 2007-2021 Julian Bogdani
  * @license AGPL-3.0; see LICENSE
@@ -12,7 +13,7 @@ namespace Config;
 class ToFiles
 {
 
-    public static function all( array $cfg, string $path2cfg, string $prefix ) : void
+    public static function all(array $cfg, string $path2cfg, string $prefix): void
     {
         self::write_in_file($path2cfg . '/app_data.json', $cfg['main']);
         self::writeTables($path2cfg . '/tables.json', $cfg['tables']);
@@ -21,7 +22,7 @@ class ToFiles
         }
     }
 
-    private static function writeFields( string $path, array $data ) : void
+    private static function writeFields(string $path, array $data): void
     {
         $ret = [];
 
@@ -31,7 +32,7 @@ class ToFiles
         self::write_in_file($path, $ret);
     }
 
-    private static function writeTables( string $path , array $data) : void
+    private static function writeTables(string $path, array $data): void
     {
         $ret = [];
 
@@ -41,12 +42,12 @@ class ToFiles
         }
         self::write_in_file($path, ["tables" => $ret]);
     }
-    
 
-    private static function write_in_file( string $path, array $data ) : void
+
+    private static function write_in_file(string $path, array $data): void
     {
-        $ret = \file_put_contents($path, \json_encode($data, \JSON_PRETTY_PRINT|\JSON_UNESCAPED_UNICODE));
-        if (!$ret || !\file_exists($path)){
+        $ret = \file_put_contents($path, \json_encode($data, \JSON_PRETTY_PRINT | \JSON_UNESCAPED_UNICODE));
+        if (!$ret || !\file_exists($path)) {
             throw new ConfigException("Cannot write configuration file `$path`");
         }
     }

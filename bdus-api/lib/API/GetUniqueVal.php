@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Gets Unique values from database
  * 
@@ -17,12 +18,19 @@ use SQL\ShortSql\ParseShortSql;
 
 class GetUniqueVal
 {
-    public static function run(string $tb, string $fld, string $str = null, string $where = null, DBInterface $db, Config $cfg, string $prefix)
-    {
-        if ($str === 'false'){
+    public static function run(
+        string $tb,
+        string $fld,
+        string $str = null,
+        string $where = null,
+        DBInterface $db,
+        Config $cfg,
+        string $prefix
+    ) {
+        if ($str === 'false') {
             $str = false;
         }
-        if ($where === 'false'){
+        if ($where === 'false') {
             $where = false;
         }
         $fld_type = $cfg->get("tables.$tb.fields.$fld.type");
@@ -51,12 +59,12 @@ class GetUniqueVal
             $values = array_merge($values, $v);
         }
 
-        if(!$str && !$where){
+        if (!$str && !$where) {
             array_push($sql_part, " 1=1 ");
         }
         $sql .= implode(' AND ', $sql_part) . ' ORDER BY ' . $f;
         $res = $db->query($sql, $values);
-        
+
         $resp = [];
         foreach ($res as $v) {
             // Ignore empty values
@@ -76,12 +84,12 @@ class GetUniqueVal
                     if ($str && strpos(strtolower($i), strtolower($str)) === false) {
                         continue;
                     }
-                    if ($i !== ""){
+                    if ($i !== "") {
                         array_push($resp, $i);
                     }
                 }
             } else {
-                if(!in_array($v['f'], $resp)){
+                if (!in_array($v['f'], $resp)) {
                     array_push($resp, trim($v['f']));
                 }
             }

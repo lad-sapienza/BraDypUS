@@ -47,8 +47,11 @@ class UAC
    * @param boolean $is_online
    * @param DBInterface $db
    */
-  public function __construct(string $app_status, bool $is_online = false, DBInterface $db)
-  {
+  public function __construct(
+    string $app_status,
+    bool $is_online = false,
+    DBInterface $db
+  ) {
     if (!in_array($app_status, ['on', 'off', 'frozen'])) {
       throw new \Exception("Unknown apps status: `$app_status`: must be `on`, `off` or `frozen`",);
     }

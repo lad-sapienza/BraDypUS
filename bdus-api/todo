@@ -1,14 +1,17 @@
 TODO
 
+In version 4.2
+[ ] Remove utils::is_online, deprecated in v.4.1.0
+[ ] Remove utils::alert_div, deprecated in v.4.1.0
+
 [ ] Document ^fieldname in ShortSQL
 [ ] https://pristine.js.org/ should replace formControl
 [ ] Subquery in where should use subQuery index, not value!
 [ ] Links::showUserLinks no lazy load
 [] Kill QueryFromRequest
     [] Rewrite advanced search
-BUG
-[ ] Remove utils::is_online
-[ ] Remove utils::alert_div
+
+
 [ ] Spostare utils::privilege nella classe che gestisce i privilegi in generale
 [ ] Spostare utils::canUser nella classe che gestisce i privilegi in generale
 [ ] remove constants in libs

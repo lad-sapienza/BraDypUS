@@ -261,7 +261,10 @@ class utils
         $a = trim($a);
       }
     }
-    return array_filter($arr, $callback);
+    if (is_callable($callback)) {
+      return array_filter($arr, $callback);
+    }
+    return array_filter($arr);
   }
 
 

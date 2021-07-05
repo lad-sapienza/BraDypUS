@@ -252,7 +252,7 @@ class utils
    * @param callable|null $callback Callback function, default false. Can be a function or a function name
    * @return array  Filtered array
    */
-  public static function recursiveFilter(array $arr, ?callable $callback): array
+  public static function recursiveFilter(array $arr, ?callable $callback = null): array
   {
     foreach ($arr as &$a) {
       if (is_array($a)) {

@@ -20,7 +20,7 @@ By clicking on the **Create new application** button the setup window appears.
 
 {: .callout-block .callout-block-warning }
 For security reasons the **Create new application button** is not available on running installations
-that have at least on application defined. But system administrators whi have access to the application folder
+that have at least one application defined. But system administrators who have access to the application folder
 can enable this feature by simply creating a new empty file in the installation root named exactly 
 **UNSAFE_permit_app_creation** (no extension).
 

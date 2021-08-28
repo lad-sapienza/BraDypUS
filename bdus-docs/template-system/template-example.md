@@ -2,7 +2,7 @@
 title: A template example
 ---
 
-Follows a working examplte template fr table test__sites
+Follows a working examplte template of table test__sites
 
 {% raw %}
 ```html

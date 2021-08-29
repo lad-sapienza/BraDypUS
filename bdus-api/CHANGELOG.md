@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added CITATION.cff
 
 ### Changed
+- Updated sortablejs from 1.13.0 to 1.14.0
 - Updated monolog/monolog from 2.2.0 to 2.3.2
 - Updated intervention/image from 2.5.1 to 2.6.1
 - Code formatting

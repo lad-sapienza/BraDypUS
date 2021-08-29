@@ -114,11 +114,8 @@ class Search
         return self::$db->query($sql, $values, 'read');
     }
 
-    private static function getFullData(
-        string $sql,
-        array $values = null,
-        string $tb
-    ): array {
+    private static function getFullData(string $sql, array $values = null, string $tb): array
+    {
         $result = self::getData($sql, $values);
 
         if (!is_array($result)) {

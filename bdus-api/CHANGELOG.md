@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Added CITATION.cff
 
+### Changed
+- Code formatting
 ## [4.1.1] - 2021-06-24
 ### Fixed
 - Fixed bug with utils::recursiveFilter

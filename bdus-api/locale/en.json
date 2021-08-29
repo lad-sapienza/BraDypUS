@@ -486,7 +486,7 @@
     "error_getting_content_of_file": "Cannot get content of file `%s`",
     "tmpl_file_exists": "Template file `%s` already exists!",
     "tmpl_file_updated": "Template file `%s` was successfully updated",
-    "tmpl_file_not_updated": "Error: Cannot save date to template file `%s`",
+    "tmpl_file_not_updated": "Error: Cannot save data to template file `%s`",
     "tmpl_file_deleted": "Template file `%s` was successfully deleted",
     "tmpl_file_not_deleted": "Error: Cannot delete template file `%s`",
     "tmpl_file_renamed": "Template file `%s` successfully renamed to `%s`",

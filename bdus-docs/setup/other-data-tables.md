@@ -70,7 +70,7 @@ from the database ones.
     - db_type: TEXT
 - year
     - name: year
-    - label: Year of pubblication
+    - label: Year of publication
     - type: text
     - db_type: TEXT
 - publishedin

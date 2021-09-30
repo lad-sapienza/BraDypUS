@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Added CITATION.cff
 
+### Fixed
+- Fixed bug preventing the appearance of change password
+
 ### Changed
 - Updated sortablejs from 1.13.0 to 1.14.0
 - Updated monolog/monolog from 2.2.0 to 2.3.2

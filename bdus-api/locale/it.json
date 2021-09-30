@@ -292,7 +292,7 @@
     "alert_email_important": "Attenzione. È necessario inserire un indirizzo email attivo. Tutti i messaggi del sistema, compreso quello di conferma di accesso alla banca dati verranno inviati a questo indirizzo.",
     "ok_user_add": "L'utente è stato aggiunto al database ma non sarà possibile accedervi finché un amministratore avrà valutato e autorizzato l'accesso ai dati. Un messaggio email di conferma è stato spedito all'indirizzo %s.",
     "error_user_add": "Errore. L'utente non è stato aggiunto al database",
-    "email_signature": "Lo staff di BraDypUS\r\nCommunicating Cultural Heritage\r\nhttp:\/\/bradypus.net\r\n--------\r\nATTENZIONE: questa è un messaggio generato automaticamente. Si prega di non rispondere. Per ogni dubbio o domanza si prega di scrivere a db@bradypus.net",
+    "email_signature": "BraDypUS\r\nCloud Database\r\nhttps:\/\/bdus.cloud\r\n--------\r\nATTENZIONE: questa è un messaggio generato automaticamente: si prega di non rispondere.",
     "new_user_email_subject": "Notifica registrazione utenza BraDypUS",
     "new_user_email_text": "Gentile utente, \r\n le inviamo questa email per confermare che la sua utenza al database %s di BraDypUS è stata creata con successo.\r\n Non sarà possibile raggiungere i dati finché un amministratore del sistema non abbia valutato e confermato il vostro accesso.\r\nRiceverete presto una email di notifica a questo stesso indirizzo.",
     "new_user_adm_email_text": "Gentile amministratore del database %s di BraDypUS, \r\nUn nuovo utente ha richiesto di accedere alla banca dati %s.\r\nI suoi dati di registrazione sono:\r\nnome: %s\r\nemail: %s\r\n",

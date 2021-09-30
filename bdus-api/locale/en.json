@@ -301,7 +301,7 @@
     "alert_email_important": "Alert. You must enter a valid and active email address. All system messages, and database access confirmation message will use this address.",
     "ok_user_add": "The user was saved in the database but can not enter until an administrator will grant access privilege. A confirmation email was sent to the address %s",
     "error_user_add": "Error. The user was not saved in the database",
-    "email_signature": "BraDypUS\r\nCloud Database\r\nhttps:\/\/bdus.cloud--------\r\PAY ATTENTION: this is an automatically sent message: do not reply",
+    "email_signature": "BraDypUS\r\nCloud Database\r\nhttps:\/\/bdus.cloud--------\r\nPAY ATTENTION: this is an automatically sent message: do not reply",
     "new_user_email_subject": "New BraDypUS user notification",
     "new_user_email_text": "Dear user,\r\nyou receive this email message to confirm your subscription to %s database by BraDypUS.\r\nYou will not be able to login until a system administrator has confirmed your subscription.\r\nThe confirmation message will be send to this email address.",
     "new_user_adm_email_text": "Dear administrator of %s database by BraDypUS,\r\nA new user has requested access to the database %s.\r\nHis registration data are:\r\nname:  %s\r\nemail: %s",

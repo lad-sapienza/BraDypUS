@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed circle feature in geoface
 
 ### Fixed
+- Fixed bug with Geoface not handling correctly polygon drawing
 - Fixed bug preventing the appearance of change password
 
 ### Changed

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @copyright 2007-2021 Julian Bogdani
  * @license AGPL-3.0; see LICENSE
@@ -24,18 +25,21 @@ class Order
      * @param string $tb
      * @return array
      */
-    public static function parse(string $prefix, string $order = null, string $tb = null): array
-    {
+    public static function parse(
+        string $prefix,
+        string $order = null,
+        string $tb = null
+    ): array {
         $ret_sort = [];
 
-        if (!$order){
+        if (!$order) {
             return $ret_sort;
         }
 
         $sort_arr = explode(',', $order);
         foreach ($sort_arr as $s) {
             list($fld, $order) = explode(':', $s);
-            if ( !$order || !in_array(strtolower($order), ['asc', 'desc']) ){
+            if (!$order || !in_array(strtolower($order), ['asc', 'desc'])) {
                 $order = 'ASC';
             }
             $parsefFld = Field::parse($prefix, $fld, $tb);
@@ -44,16 +48,14 @@ class Order
             $fld = $parsefFld['fld'];
             $alias = $parsefFld['alias'];
 
-            if (!$tb){
+            if (!$tb) {
                 throw new SqlException("Cannot get table name for column `{$fld}` used in ORDER");
             }
-            \array_push($ret_sort, [ 
-                "fld"   => "$tb.$fld", 
-                "dir"   => strtoupper($order) ]);
+            \array_push($ret_sort, [
+                "fld"   => "$tb.$fld",
+                "dir"   => strtoupper($order)
+            ]);
         }
         return $ret_sort;
     }
-
-    
-
 }

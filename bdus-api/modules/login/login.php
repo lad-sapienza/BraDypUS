@@ -76,7 +76,7 @@ class login_ctrl extends Controller
 				$subject = \tr::get('new_user_email_subject');
 				$message = \tr::get('new_user_email_text', [$post['app']])
 						. "\n" . \tr::get('email_signature');
-				$headers = 'From: ' . $post['app'] . '@bradypus.net' . "\r\n" . 'Reply-To: ' . $post['app'] . '_db@bradypus.net' . "\r\n";
+				$headers = 'From: ' . $post['app'] . '@bdus.cloud' . "\r\n" . 'Reply-To: ' . $post['app'] . '_db@bdus.cloud' . "\r\n";
 
 				@mail($to, $subject, $message, $headers);
 
@@ -231,9 +231,9 @@ class login_ctrl extends Controller
 
 			$to = $this->get['email'];
 			$subject = \tr::get('lost_password_email_subject');
-			$message = \tr::get('lost_password_email_text', [ 'https://db.bradypus.net/?app=' . $this->get['app'] . '&address=' . $this->get['email'] . '&token=' . $token ])
+			$message = \tr::get('lost_password_email_text', [ 'https://bdus.cloud/db/?app=' . $this->get['app'] . '&address=' . $this->get['email'] . '&token=' . $token ])
 				. "\n" . \tr::get('email_signature');
-			$headers = 'From: ' . $this->get['app'] . '@bradypus.net' . "\r\n" . 'Reply-To: ' . $this->get['app'] . '@bradypus.net' . "\r\n";
+			$headers = 'From: ' . $this->get['app'] . '@bdus.cloud' . "\r\n" . 'Reply-To: ' . $this->get['app'] . '@bdus.cloud' . "\r\n";
 
 
 			$resp = mail($to, $subject, $message, $headers);

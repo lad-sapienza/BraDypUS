@@ -3,7 +3,28 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.2.0] - 2021-10-19
+
+### Added
+- Added CITATION.cff
+
+### Removed
+- Removed circle feature in geoface
+
+### Fixed
+- Fixed bug with Geoface not handling correctly polygon drawing
+- Fixed bug preventing the appearance of change password
+
+### Changed
+- Replaced instances of bradypus.net with bdus.cloud
+- Updated sortablejs from 1.13.0 to 1.14.0
+- Updated monolog/monolog from 2.2.0 to 2.3.2
+- Updated intervention/image from 2.5.1 to 2.6.1
+- Code formatting
+
+
 ## [4.1.2] - 2021-08-22
+
 ### Added
 - Added CITATION.cff
 

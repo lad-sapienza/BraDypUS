@@ -15,7 +15,7 @@ class utils
   /**
    * Checks if current installation is the official online installation or a
    * local one. The check is performed on host name
-   * @deprecated version
+   * @deprecated 4.1.0
    * @return boolean
    */
   public static function is_online(): bool
@@ -229,7 +229,7 @@ class utils
 
   /**
    * Returns a well formatted HTML string with .text-error CSS class and message
-   * Deprecated since 4.0.9
+   * @deprecated 4.1.0
    * 
    * @param string $text  Text to be displayed/returned
    * @return string Well formatted HTML string

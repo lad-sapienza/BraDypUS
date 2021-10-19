@@ -80,7 +80,12 @@ class record_ctrl extends Controller
   public function erase()
   {
     if (!\utils::canUser('edit')) {
-      $data = array('status' => 'error', 'text' => \utils::alert_div(\tr::get('not_enough_privilege')));
+      $data = [
+        'status' => 'error', 
+        'text' => '<div class="text-danger">'
+          . '<strong>' . \tr::get('attention') . ':</strong> ' . \tr::get('not_enough_privilege') . '</p>'
+          . '</div>'
+      ];
       echo json_encode($data);
       return;
     }
@@ -127,7 +132,9 @@ class record_ctrl extends Controller
 
     // user must have enough privileges
     if (!\utils::canUser('read')) {
-      echo \utils::alert_div(\tr::get('not_enough_privilege'));
+      echo '<div class="text-danger">'
+        . '<strong>' . \tr::get('attention') . ':</strong> ' . \tr::get('not_enough_privilege') . '</p>'
+        . '</div>';
       return;
     }
     // a record id must be provided in edit & read & preview mode

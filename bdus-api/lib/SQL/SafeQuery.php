@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @copyright 2007-2021 Julian Bogdani
  * @license AGPL-3.0; see LICENSE
@@ -21,10 +22,10 @@ class SafeQuery
      * @param array $values
      * @return string
      */
-    public static function encode( string $sql, array $values= [] ): string
+    public static function encode(string $sql, array $values = []): string
     {
-        $json = json_encode([ $sql, $values ]);
-        return str_replace(['+','/','='], ['-','_',''], base64_encode($json));
+        $json = json_encode([$sql, $values]);
+        return str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($json));
     }
 
     /**
@@ -39,7 +40,7 @@ class SafeQuery
      */
     public static function decode(string $string): array
     {
-        $json_str = base64_decode(str_replace(['-','_'], ['+','/'], $string));
-        return json_decode( $json_str, true );
+        $json_str = base64_decode(str_replace(['-', '_'], ['+', '/'], $string));
+        return json_decode($json_str, true);
     }
 }

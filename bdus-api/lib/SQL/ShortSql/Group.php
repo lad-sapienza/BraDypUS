@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @copyright 2007-2021 Julian Bogdani
  * @license AGPL-3.0; see LICENSE
@@ -24,19 +25,19 @@ class Group
      * @param string $tb
      * @return array
      */
-    public static function parse(string $prefix, string $group_str = null, string $tb) : array
-    {
-        if (!$group_str){
+    public static function parse(
+        string $prefix,
+        string $group_str = null,
+        string $tb
+    ): array {
+        if (!$group_str) {
             return [];
         }
-        $formatted_flds = array_map(function($f) use ($tb, $prefix){
+        $formatted_flds = array_map(function ($f) use ($tb, $prefix) {
             $parsedFld = Field::parse($prefix, $f, $tb);
             return $parsedFld['tb'] . '.' . $parsedFld['fld'];
         }, explode(',', $group_str));
-        
+
         return $formatted_flds;
     }
-
-    
-
 }

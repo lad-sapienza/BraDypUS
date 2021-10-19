@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @copyright 2007-2021 Julian Bogdani
  * @license AGPL-3.0; see LICENSE
@@ -13,7 +14,7 @@ use \Config\ConfigException;
 class Load
 {
 
-    public static function all( string $path2cfg, string $prefix ) : array
+    public static function all(string $path2cfg, string $prefix): array
     {
         $cfg['main'] = self::path2array($path2cfg . '/app_data.json');
         $cfg['tables'] = self::getTables($path2cfg . '/tables.json');
@@ -23,10 +24,10 @@ class Load
         return $cfg;
     }
 
-    private static function getFields( string $path ) : array
+    private static function getFields(string $path): array
     {
         $flds_array = self::path2array($path);
-        
+
         $ret = [];
 
         foreach ($flds_array as $fld_data) {
@@ -35,7 +36,7 @@ class Load
         return $ret;
     }
 
-    private static function getTables( string $path ) : array
+    private static function getTables(string $path): array
     {
         $tables_array = self::path2array($path);
         $ret = [];
@@ -45,15 +46,15 @@ class Load
         }
         return $ret;
     }
-    
 
-    private static function path2array( string $path ) : array
+
+    private static function path2array(string $path): array
     {
-        if (!file_exists($path)){
+        if (!file_exists($path)) {
             throw new ConfigException("Configuration file `$path` not found");
         }
         $array = json_decode(file_get_contents($path), true);
-        if (!$array || !\is_array($array) || empty($array)){
+        if (!$array || !\is_array($array) || empty($array)) {
             throw new ConfigException("Invalid JSON in file `$path`");
         }
         return $array;

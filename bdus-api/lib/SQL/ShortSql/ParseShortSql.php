@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @copyright 2007-2021 Julian Bogdani
  * @license AGPL-3.0; see LICENSE
@@ -8,7 +9,6 @@ declare(strict_types=1);
 
 namespace SQL\ShortSql;
 
-use SQL\SqlException;
 use SQL\ShortSql\Order;
 use SQL\ShortSql\Limit;
 use SQL\ShortSql\Group;
@@ -23,7 +23,6 @@ class ParseShortSql
 {
     private $parts;
 
-    private $added_tb_aliases = [];
     private $added_fld_aliases = [];
 
     private $prefix;
@@ -47,12 +46,12 @@ class ParseShortSql
             'values'    => null,
         ];
         $this->symbols = [
-            '@' => 'tb'    ,
+            '@' => 'tb',
             '[' => 'fields',
-            ']' => 'join'  ,
-            '?' => 'where' ,
-            '*' => 'group' ,
-            '>' => 'order' ,
+            ']' => 'join',
+            '?' => 'where',
+            '*' => 'group',
+            '>' => 'order',
             '-' => 'limit'
             // RESERVED: ^ value is to be considered as literal when used for values (eg. fieldname, or integer), and will not be cast into a string
             // RESERVED: < introduces subquery
@@ -66,18 +65,18 @@ class ParseShortSql
      * @param boolean $disable_auto_join    If true, auto_join will be disabled, default false (auto_join on)
      * @return self
      */
-    public function parseAll(string $str, bool $disable_auto_join = false ): self
+    public function parseAll(string $str, bool $disable_auto_join = false): self
     {
         // Turn on auto_join by default
         $this->qo->setAutoJoin(!$disable_auto_join);
-        $str = \preg_replace_callback('/{([^}]+)}/', function($m){
+        $str = \preg_replace_callback('/{([^}]+)}/', function ($m) {
             $s = $m[1];
             $strict = '';
-            if($s[0] === '!'){
+            if ($s[0] === '!') {
                 $s = substr($s, 1);
                 $strict = '!';
             }
-            return '<' . $strict . str_replace(['+','/','='], ['-','_',''], base64_encode( $s ));
+            return '<' . $strict . str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($s));
         }, $str);
 
         // Explode string
@@ -87,7 +86,7 @@ class ParseShortSql
         foreach ($parts as $part) {
             foreach ($this->symbols as $symbol => $key) {
                 if ($part[0] === $symbol) {
-                    if($key === 'join') {
+                    if ($key === 'join') {
                         $this->parts[$key][] = substr($part, 1);
                     } else {
                         $this->parts[$key] = substr($part, 1);
@@ -99,7 +98,7 @@ class ParseShortSql
         $this->parseParts();
         return $this;
     }
-    
+
     public function getQueryObject()
     {
         return $this->qo;
@@ -113,7 +112,7 @@ class ParseShortSql
      * @param bool $onlyWhere
      * @return array
      */
-    public function getSql(bool $onlyWhere = false) : array
+    public function getSql(bool $onlyWhere = false): array
     {
         return $this->qo->getSql($onlyWhere);
     }
@@ -130,13 +129,13 @@ class ParseShortSql
         $tb = $parsedTb['tb'];
         $tb_alias = $parsedTb['alias'];
         unset($parsedTb);
-        
+
         // Table
         $this->qo->setTb($tb, $tb_alias);
 
         // Group & Fields
         $group = Group::parse($this->prefix, $this->parts['group'], $tb);
-        if (!empty($group)){
+        if (!empty($group)) {
             foreach ($group as $g) {
                 // If grouping is active, fields are set from grouping
                 $this->qo->setField($g);
@@ -146,21 +145,20 @@ class ParseShortSql
             // Fields are set only if grouping is off
             $fields = $this->parseFldList($this->parts['fields'], $tb);
             foreach ($fields as $f) {
-                if ($f['alias']){
+                if ($f['alias']) {
                     array_push($this->added_fld_aliases, $f['alias']);
                 }
-                if ($f['fld'] && !$f['subQuery']){
+                if ($f['fld'] && !$f['subQuery']) {
                     $this->qo->setField($f['fld'], $f['alias'], $f['tb'], $f['fn']);
                 } else {
                     $this->qo->setFieldSubQuery($f['subQuery'], $f['alias'], $f['values'], $f['fn']);
                 }
-                
             }
         }
 
         // Explixit joins
         $joins = Join::parse(
-            $this->prefix, 
+            $this->prefix,
             ($this->parts['join'] ?? []),
             $this->cfg,
             new self($this->prefix, $this->cfg),
@@ -170,16 +168,16 @@ class ParseShortSql
         foreach ($joins as $j) {
             $this->qo->setJoin($j['tb'], $j['alias'], $j['on']);
         }
-        
+
         // Where & Auto-Joins resolved by Where fields
         if ($this->parts['where'] && $this->parts['where'] !== '1') {
 
             $parsedWhere = Where::parse(
-                $this->cfg, 
-                $this->parts['where'], 
-                $tb, 
-                false, 
-                $this->added_fld_aliases, 
+                $this->cfg,
+                $this->parts['where'],
+                $tb,
+                false,
+                $this->added_fld_aliases,
                 new self($this->prefix, $this->cfg),
                 $this->prefix
             );
@@ -197,29 +195,28 @@ class ParseShortSql
                 closed_bracket
                 */
                 $this->qo->setWherePart(
-                    $w['connector'], 
-                    $w['opened_bracket'], 
-                    $w['fld'], 
-                    $w['operator'], 
-                    $w['binded'], 
+                    $w['connector'],
+                    $w['opened_bracket'],
+                    $w['fld'],
+                    $w['operator'],
+                    $w['binded'],
                     $w['closed_bracket']
                 );
             }
             $this->qo->setWhereValues($values);
         }
-        
+
         // Order
         $order = Order::parse($this->prefix, $this->parts['order'], $tb);
         foreach ($order as $o) {
             $this->qo->setOrderFld($o['fld'], $o['dir']);
         }
-        
+
         // Limit
         $parsedLimit = Limit::parse($this->parts['limit']);
         if (isset($parsedLimit['rows']) && isset($parsedLimit['offset'])) {
             $this->qo->setLimit((int)$parsedLimit['rows'], (int)$parsedLimit['offset']);
         }
-
     }
 
 
@@ -231,14 +228,14 @@ class ParseShortSql
      * @param string $tb
      * @return array
      */
-    private function parseFldList ( string $fields = null, string $tb ) : array
+    private function parseFldList(string $fields = null, string $tb): array
     {
-        if (!$fields || $fields === '*' ){
+        if (!$fields || $fields === '*') {
             return [
-                [ 
-                    "tb"    => $tb, 
-                    "fld"   => '*', 
-                    "alias" => null, 
+                [
+                    "tb"    => $tb,
+                    "fld"   => '*',
+                    "alias" => null,
                     "fn"    => null,
                     "subQuery" => null,
                     "values" => null
@@ -257,5 +254,4 @@ class ParseShortSql
         }
         return $formatted_flds;
     }
-
 }

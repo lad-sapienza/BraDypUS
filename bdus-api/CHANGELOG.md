@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Added CITATION.cff
 
+### Removed
+- Removed circle feature in geoface
+
 ### Fixed
 - Fixed bug preventing the appearance of change password
 

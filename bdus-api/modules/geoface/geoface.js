@@ -290,8 +290,11 @@ var geoface  = {
     if (geoface.metadata.canUserEdit && typeof L.Control.Draw !== 'undefined'){
       // Create draw control
       var drawControl = new L.Control.Draw({
-				draw: { marker: false },
-				edit: { featureGroup: geoface.overlay[geoface.metadata.tb] }
+        draw: { 
+          marker: false,
+          circle: false,
+        },
+        edit: { featureGroup: geoface.overlay[geoface.metadata.tb] }
       });
       // Add draw control to map
       geoface.map.addControl(drawControl);

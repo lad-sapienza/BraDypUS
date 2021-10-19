@@ -16,6 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed bug preventing the appearance of change password
 
 ### Changed
+- Updated gulp from v3.9.x to v4.0.x
+- Updated datatables.net from v1.10.25 to v1.11.3
+- Updated datatables.net-bs from v1.10.25 to v1.11.3
+- Updated gulp-terser from v2.0.1 to v2.1.0
 - Replaced instances of bradypus.net with bdus.cloud
 - Updated sortablejs from 1.13.0 to 1.14.0
 - Updated monolog/monolog from 2.2.0 to 2.3.2

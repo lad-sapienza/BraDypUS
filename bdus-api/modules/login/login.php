@@ -131,12 +131,12 @@ class login_ctrl extends Controller
 
 				$app_data = json_decode(file_get_contents(MAIN_DIR . "projects/{$this->get['app']}/cfg/app_data.json"), true);
 
-				$auth_login_as_user = null;
+				$aut_login_as_user = null;
 
-                if (isset($app_data['auth_login_as_user'])) {
-                    $auth_login_as_user = (int)$app_data['auth_login_as_user'];
+                if (isset($app_data['aut_login_as_user'])) {
+                    $aut_login_as_user = (int)$app_data['aut_login_as_user'];
 				}
-				$this->login(null, null, null, $auth_login_as_user);
+				$this->login(null, null, null, $aut_login_as_user);
 				$this->log->info("User {$_SESSION['user']['id']} logged in");
 
 				$this->response('Authenticated', 'success');

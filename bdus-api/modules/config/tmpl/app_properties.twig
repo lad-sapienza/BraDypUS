@@ -60,12 +60,12 @@
     </div>
     
     <div class="form-group">
-      <label class="col-sm-3 control-label">Authomatic login as user</label>
+      <label class="col-sm-3 control-label">Automatic login as user</label>
       <div class="col-sm-7">
-        <select type="text" name="auth_login_as_user" class="form-control">
+        <select type="text" name="aut_login_as_user" class="form-control">
           <option value="">{{ tr_disabled }}</option>
           {% for u in users %}
-            <option{% if info.auth_login_as_user == u.id %} selected="true" {% endif %} value="{{ u.id }}">{{ u.name }} ({{u.verbose_privilege }})</option>
+            <option{% if info.aut_login_as_user == u.id %} selected="true" {% endif %} value="{{ u.id }}">{{ u.name }} ({{u.verbose_privilege }})</option>
           {% endfor %}
         </select>
       </div>

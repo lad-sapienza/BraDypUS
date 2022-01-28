@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @copyright 2007-2021 Julian Bogdani
  * @license AGPL-3.0; see LICENSE
@@ -26,17 +27,21 @@ class Read
      *
      * @param DBInterface $db       DB object
      */
-    public function __construct(int $id = null, string $id_fld = null, string $tb, DBInterface $db, Config $cfg)
-    {
+    public function __construct(
+        int $id = null,
+        string $id_fld = null,
+        string $tb,
+        DBInterface $db,
+        Config $cfg
+    ) {
         $this->id = $id;
         $this->id_fld = $id_fld;
         $this->tb = $tb;
         $this->db = $db;
         $this->cfg = $cfg;
-        
     }
 
-    public function getTb() : string
+    public function getTb(): string
     {
         return $this->tb;
     }
@@ -73,38 +78,41 @@ class Read
             'plugins'    => $this->getPlugin(),
             'links'      => $this->getLinks(),
             'backlinks'  => $this->getBackLinks(),
-            'manualLinks'=> $this->getManualLinks(),
+            'manualLinks' => $this->getManualLinks(),
             'files'      => $this->getFiles(),
             'geodata'    => $this->getGeodata(),
-            'rs'         => $this->cfg->get("tables.{$this->tb}.rs") ? $this->getRs(): []
+            'rs'         => $this->cfg->get("tables.{$this->tb}.rs") ? $this->getRs() : []
         ];
     }
 
     /**
-   * Returns array with core data
-   * @param string $fld   Field name, to return only a segment;
-   * @param bool $return_val
-   * @return array|int|string        Array of table data of int|string if $fld is set
-   *
-   *    "id": {
-   *        "name": (field id),
-   *        "label": (field label),
-   *        "val": (value),
-   *        "val_label": (if available — id_from_table fields — value label)
-   *    },
-   *    {...}
-   */
+     * Returns array with core data
+     * @param string $fld   Field name, to return only a segment;
+     * @param bool $return_val
+     * @return array|int|string        Array of table data of int|string if $fld is set
+     *
+     *    "id": {
+     *        "name": (field id),
+     *        "label": (field label),
+     *        "val": (value),
+     *        "val_label": (if available — id_from_table fields — value label)
+     *    },
+     *    {...}
+     */
     public function getCore(string $fld = null, bool $return_val = false)
     {
         if (!isset($this->cache['core'])) {
-            if ($this->id_fld){
-                $sql = "{$this->tb}." . $this->cfg->get("tables.{$this->tb}.id_field"). " = ?";
+            if ($this->id_fld) {
+                $sql = "{$this->tb}." . $this->cfg->get("tables.{$this->tb}.id_field") . " = ?";
                 $val = [$this->id_fld];
             } else {
                 $sql = "{$this->tb}.id = ?";
                 $val = [$this->id];
             }
             $this->cache['core'] = $this->getTbRecord($this->tb, $sql, $val, true, false);
+            if(!$this->id){
+                $this->id = $this->cache['core']['id']['val'];
+            }
         }
         if (!$fld) {
             return $this->cache['core'];
@@ -168,7 +176,7 @@ EOD;
                     if ($id_fld === 'id') {
                         $ref_val_label = $mli;
                     } else {
-                        $lres= $this->db->query(
+                        $lres = $this->db->query(
                             "SELECT {$id_fld} as label FROM {$mlt} WHERE id = ?",
                             [$mli],
                             'read'
@@ -189,7 +197,7 @@ EOD;
             }
             $this->cache['manuallinks'] = $manualLinks;
         }
-        
+
         return $this->cache['manuallinks'];
     }
 
@@ -203,17 +211,17 @@ EOD;
      *    "relation": (int)
      * }
      */
-    public function getRs() : array
+    public function getRs(): array
     {
-        if (!isset($this->cache['rs'])){
+        if (!isset($this->cache['rs'])) {
             $res = $this->db->query(
                 "SELECT id, first, second, relation FROM " . PREFIX . "rs WHERE tb = ? AND (first= ? OR second = ?)",
                 [$this->tb, $this->id, $this->id],
                 'read'
             );
-    
+
             $ret = [];
-    
+
             if ($res && !\is_array($res)) {
                 foreach ($res as $key => $value) {
                     $ret[$value['id']] = $value;
@@ -237,16 +245,16 @@ EOD;
      * ]
      * @return array
      */
-    public function getGeodata() : array
+    public function getGeodata(): array
     {
-        if (!isset($this->cache['geodata'])){
+        if (!isset($this->cache['geodata'])) {
             $geodata = $this->getPlugin(PREFIX . 'geodata');
             if (
-                    isset($geodata) 
+                isset($geodata)
                 &&  isset($geodata['data'])
                 &&  is_array($geodata['data'])
                 &&  !empty($geodata['data'])
-            ){
+            ) {
                 foreach ($geodata['data'] as $key => $value) {
                     $geoPHP = geoPHP::load($geodata['data'][$key]['geometry']['val'], 'wkt');
                     $geodata['data'][$key]['geojson'] = $geoPHP->out('json');
@@ -273,13 +281,13 @@ EOD;
      * }
 
      */
-    public function getFiles() : array
+    public function getFiles(): array
     {
         if (!isset($this->cache['files'])) {
 
             $prefix = PREFIX;
 
-            if ($this->tb === $prefix . 'files' ){
+            if ($this->tb === $prefix . 'files') {
                 $core = $this->getCore();
                 $tmp = [];
                 foreach ($core as $key => $value) {
@@ -311,12 +319,9 @@ EOD;
                 ];
 
                 $this->cache['files'] = $this->db->query($sql, $sql_val);
-
             }
-
         }
         return $this->cache['files'];
-        
     }
 
     /**
@@ -335,7 +340,7 @@ EOD;
      *            "label": (string)
      *          },
      */
-    public function getBackLinks() : array
+    public function getBackLinks(): array
     {
         if (!isset($this->cache['backlinks'])) {
             $backlinks = [];
@@ -381,9 +386,9 @@ EOD;
      *    "tb_label": (referenced table label),
      *    "tot": (total number of links found),
      *    "where": (SQL where statement to fetch records)
- *    },
+     *    },
      */
-    public function getLinks() : array
+    public function getLinks(): array
     {
         if (!isset($this->cache['links'])) {
             $links = [];
@@ -406,7 +411,7 @@ EOD;
                         $values
                     );
                     $tot_links = (int)$r[0]['tot'];
-                    if ($tot_links > 0 ) {
+                    if ($tot_links > 0) {
                         $links[$ld['other_tb']] = [
                             'tb_id' => $ld['other_tb'],
                             'tb_stripped' => str_replace(PREFIX, '', $ld['other_tb']),
@@ -446,7 +451,7 @@ EOD;
      *    ]
      * }
      */
-    public function getPlugin( string $plugin = null, int $index = null, string $fld = null )
+    public function getPlugin(string $plugin = null, int $index = null, string $fld = null)
     {
         $required = $plugin ? [$plugin] : ($this->cfg->get("tables.{$this->tb}.plugin") ?: []);
 
@@ -486,14 +491,13 @@ EOD;
             $ret[$p] = $this->cache['plugins'][$p];
         }
 
-        if (!$plugin){
+        if (!$plugin) {
             return $ret;
-            
         }
-        if (!isset($index)){
+        if (!isset($index)) {
             return $ret[$plugin];
         }
-        if (!$fld){
+        if (!$fld) {
             return $ret[$plugin]['data'][$index];
         }
         return $ret[$plugin]['data'][$index][$fld]['val'];
@@ -517,7 +521,7 @@ EOD;
      *    },
      *    {...}
      */
-    private function getTbRecord(string $tb, string $sql, array $sql_val = [], bool $return_first = false, bool $return_all_fields = false) : array
+    private function getTbRecord(string $tb, string $sql, array $sql_val = [], bool $return_first = false, bool $return_all_fields = false): array
     {
         $cfg = $this->cfg->get("tables.$tb.fields");
         $fields = ["{$tb}.*"];
@@ -535,7 +539,7 @@ EOD;
 
                 array_push(
                     $fields,
-                    $ref_alias .'.' . $ref_tb_fld .' AS "@' . $arr['name'] . '"'
+                    $ref_alias . '.' . $ref_tb_fld . ' AS "@' . $arr['name'] . '"'
                 );
 
                 array_push(
@@ -543,14 +547,14 @@ EOD;
                     " LEFT JOIN {$ref_tb} AS {$ref_alias} ON {$ref_alias}.id = {$tb}.{$arr['name']} "
                 );
 
-                if ($return_all_fields){
+                if ($return_all_fields) {
                     $joined_flds = $this->cfg->get("tables.$ref_tb.fields.*.name");
                     unset($joined_flds['id']);
                     unset($joined_flds[$arr['name']]);
-                    $joined_flds = array_map(function ($e) use ($ref_alias){
+                    $joined_flds = array_map(function ($e) use ($ref_alias) {
                         return $ref_alias . "." . $e;
                     }, $joined_flds);
-                    
+
                     $fields = array_merge(
                         $fields,
                         $joined_flds
@@ -571,7 +575,7 @@ EOD;
 
         $ret = [];
         $return_arr = [];
-        
+
         foreach ($r as $res) {
             foreach ($res as $k => $v) {
                 if (strpos($k, '@') === false) {

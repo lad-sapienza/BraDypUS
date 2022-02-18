@@ -5,7 +5,7 @@
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
-        'reference' => 'd266be2ed7ef01cc466894036e7e0765bee4163a',
+        'reference' => '9d082c690b4d3c1a786c438e9d7061fcce98ad45',
         'name' => '__root__',
         'dev' => true,
     ),
@@ -16,7 +16,7 @@
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
-            'reference' => 'd266be2ed7ef01cc466894036e7e0765bee4163a',
+            'reference' => '9d082c690b4d3c1a786c438e9d7061fcce98ad45',
             'dev_requirement' => false,
         ),
         'adbario/php-dot-notation' => array(
@@ -49,12 +49,12 @@
             'dev_requirement' => false,
         ),
         'intervention/image' => array(
-            'pretty_version' => '2.6.1',
-            'version' => '2.6.1.0',
+            'pretty_version' => '2.7.1',
+            'version' => '2.7.1.0',
             'type' => 'library',
             'install_path' => __DIR__ . '/../intervention/image',
             'aliases' => array(),
-            'reference' => '0925f10b259679b5d8ca58f3a2add9255ffcda45',
+            'reference' => '744ebba495319501b873a4e48787759c72e3fb8c',
             'dev_requirement' => false,
         ),
         'michelf/php-markdown' => array(

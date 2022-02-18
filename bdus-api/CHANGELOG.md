@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed 
 - Updated twig/twig from v3.3.2 to v3.3.8
+- Updated intervention/image from v2.6.1 to v2.7.1
 
 ## [4.2.3] - 2022-02-18
 

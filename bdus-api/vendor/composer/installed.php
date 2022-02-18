@@ -5,7 +5,7 @@
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
-        'reference' => '9d082c690b4d3c1a786c438e9d7061fcce98ad45',
+        'reference' => '62694d54aa876c4e7957ad303567bb1686ed85ce',
         'name' => '__root__',
         'dev' => true,
     ),
@@ -16,7 +16,7 @@
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
-            'reference' => '9d082c690b4d3c1a786c438e9d7061fcce98ad45',
+            'reference' => '62694d54aa876c4e7957ad303567bb1686ed85ce',
             'dev_requirement' => false,
         ),
         'adbario/php-dot-notation' => array(
@@ -58,12 +58,12 @@
             'dev_requirement' => false,
         ),
         'michelf/php-markdown' => array(
-            'pretty_version' => '1.9.0',
-            'version' => '1.9.0.0',
+            'pretty_version' => '1.9.1',
+            'version' => '1.9.1.0',
             'type' => 'library',
             'install_path' => __DIR__ . '/../michelf/php-markdown',
             'aliases' => array(),
-            'reference' => 'c83178d49e372ca967d1a8c77ae4e051b3a3c75c',
+            'reference' => '5024d623c1a057dcd2d076d25b7d270a1d0d55f3',
             'dev_requirement' => false,
         ),
         'monolog/monolog' => array(

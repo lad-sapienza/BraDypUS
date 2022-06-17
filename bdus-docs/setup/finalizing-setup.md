@@ -53,7 +53,7 @@ Links are added at the bottom of the table properties page, and for each table m
 outbound links might be added.
 
 Each link is defined by a reference to the referred table (**Other table's name**) and by
-the names of the fields providing the connection. usually one pair of fields is provided,
+the names of the fields providing the connection. Usually one pair of fields is provided,
 but if needed many pairs can be added.
 
 ![screenshot](./../images/setup/link_sites_to_su.png "Links of table Sites pointing to table SU") 

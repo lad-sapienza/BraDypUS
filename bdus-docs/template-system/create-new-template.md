@@ -43,7 +43,7 @@ project, in the test case: `projects/test/templates/`
 
 After the name of the file is entered, the new and empty 
 template file is available in the left side of th screen.
-As soon as new templates are added, these will be slphabetically listed here:
+As soon as new templates are added, these will be alphabetically listed here:
 
 ![screenshot](./../images/template-system/03-edit-template.png "New template file created") 
 *New template file created*

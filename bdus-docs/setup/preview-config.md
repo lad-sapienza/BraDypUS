@@ -4,7 +4,7 @@ title: Final appearance of configuration files
 
 If you are not interested on going through the looking glass skip this part.
 
-Follows the full content of the final configuration files, that  can be founf in `cfg` folder
+Follows the full content of the final configuration files, that  can be found in `cfg` folder
 
 - [app_data.json](#app_datajson)
 - [bibliography.json](#bibliographyjson)

@@ -68,13 +68,15 @@ class menuValues_ctrl extends Controller
           ->setWherePart(null, null, 'voc', '=', '?', null)
           ->setWhereValues([$att])
           ->setLimit($this->res_x_page, $offset)
-          ->setOrderFld('sort', 'asc');
+          ->setOrderFld('sort', 'ASC');
 
         $tot->setTb($this->prefix . 'vocabularies')
           ->setField('id', 'tot', $this->prefix . 'vocabularies', 'count')
           ->setWherePart(null, null, 'voc', '=', '?', null)
           ->setWhereValues([$att])
-          ->setOrderFld('sort', 'asc');
+          ->setGroupFld('voc')
+          ->setGroupFld('sort')
+          ->setOrderFld('sort', 'ASC');
 
         if ($q && !empty($q)) {
           $query->setWherePart('and', null, 'def', 'LIKE', "?", null);
@@ -96,7 +98,9 @@ class menuValues_ctrl extends Controller
 
         $tot->setTb($tb)
           ->setField('id', 'tot', $tb, 'count')
-          ->setOrderFld($fld, 'asc');
+          ->setGroupFld('id')
+          ->setGroupFld($fld)
+          ->setOrderFld($fld, 'ASC');
 
           if ($q && !empty($q)) {
             $query->setWherePart(null, null, $fld, 'LIKE', "?", null);
@@ -118,6 +122,8 @@ class menuValues_ctrl extends Controller
 
         $tot->setTb($att)
           ->setField('id', 'tot', $att, 'count')
+          ->setGroupFld('id')
+          ->setGroupFld($id_field)
           ->setOrderFld($id_field, 'asc');
 
         if ($q && !empty($q)) {
@@ -130,7 +136,6 @@ class menuValues_ctrl extends Controller
     }
     list($sql, $val) = $query->getSql();
     list($tot_sql, $tot_val) = $tot->getSql();
-
 
     return [
       "tot" => $this->db->query($tot_sql, $tot_val)[0]['tot'],

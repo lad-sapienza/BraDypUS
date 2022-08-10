@@ -43,17 +43,17 @@ Data tables and plugins tables are tightly linkes, as seen above, in the table c
 by listing, for each tables, the linked plugins.
 
 As you might have noted a plugin might *serve* many tables, as `test__m_citations` does.
-It is for thes reason that plugins tables hace a bouble foreing key: `table_link` and `id_link`.
+It is for these reason that plugins tables have a bouble foreing key: `table_link` and `id_link`.
 
-For each tables must be clearly specified the outbound links, for examples Sites nd US are links,
-since each Site produces zero, one or manu SU and, the othr way round, each SU is located in one Site.
+For each tables must be clearly specified the outbound links, for examples Sites and US are links,
+since each Site produces zero, one or many SU and, the other way round, each SU is located in one Site.
 This one-to-many relation **must** be mapped both in Sites and SU.
 
 Links are added at the bottom of the table properties page, and for each table many 
 outbound links might be added.
 
 Each link is defined by a reference to the referred table (**Other table's name**) and by
-the names of the fields providing the connection. usually one pair of fields is provided,
+the names of the fields providing the connection. Usually one pair of fields is provided,
 but if needed many pairs can be added.
 
 ![screenshot](./../images/setup/link_sites_to_su.png "Links of table Sites pointing to table SU") 

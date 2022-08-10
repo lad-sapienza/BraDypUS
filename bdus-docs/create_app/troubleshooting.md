@@ -5,7 +5,7 @@ title: Troubleshooting
 Some common errors that might occur are:
 
 - **App name `test` has already been used**  
-Probably a prevuous attempt to create the application has been made. 
+Probably a previous attempt to create the application has been made. 
 Abort the current attempt or manually delete the application in the `project` folder
 - **App name is required**  
 Fill in the application name before submitting

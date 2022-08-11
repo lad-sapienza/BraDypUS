@@ -20,9 +20,9 @@ The API function must be activated in the main app configuration file in order f
 Foreach API call the **application name**  and a set of **parameters** should be provided in the URL in the form: `https://{base-url}/api/{app-name}/?parameters`, eg.: `https://bdus.cloud/dev/db/api/tests/?parameters`
 
 ### Available parameters
-- `pretty` [bool, optional, default: 0]: if seto to `1` the returned JSON will be indented for easier reading
+- `pretty` [bool, optional, default: 0]: if set to `1` the returned JSON will be indented for easier reading
 
-- `debug` [bool, optional, default: 0]: if seto to `1` the debug will be turned on and detailed information on errorwill be returned
+- `debug` [bool, optional, default: 0]: if set to `1` the debug will be turned on and detailed information on errorwill be returned
 
 - `verb` [string, **required**]  
 The verb tells the API what to do. One of the following strings ca be used:

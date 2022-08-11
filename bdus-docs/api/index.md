@@ -17,7 +17,7 @@ The API endpoint is available at the `/api/` relative URL, eg.:
 {: .callout-block .callout-block-warning}
 The API function must be activated in the main app configuration file in order for the API to work. The API should run as a specific user of the database
 
-Foreach API call the **application name**  and a set of **parameters** should be provided in the URL in the form: `https://{base-url}/api/{app-name}/?parameters`, eg.: `https://bdus.cloud/db/api/test/?parameters`
+Foreach API call the **application name**  and a set of **parameters** should be provided in the URL in the form: `https://{base-url}/api/{app-name}/?parameters`, eg.: `https://bdus.cloud/dev/db/api/tests/?parameters`
 
 ### Available parameters
 - `pretty` [bool, optional, default: 0]: if seto to `1` the returned JSON will be indented for easier reading
@@ -30,7 +30,7 @@ The verb tells the API what to do. One of the following strings ca be used:
   - `read` returns all available information about a record. Table namea an recordsis ust be provided
     - `tb` [string, **required**]: table name with no prefix
     - `id` [int, **required**]: row id  
-    Example: [https://bdus.cloud/db/api/test/?verb=read&tb=sites&id=1](https://bdus.cloud/db/api/test/?verb=read&tb=sites&id=1)
+    Example: [https://bdus.cloud/dev/db/api/tests/?verb=read&tb=sites&id=1](https://bdus.cloud/dev/db/api/tests/?verb=read&tb=sites&id=1)
 
   - `search` performs a search in the databases and returnes results
     - `shortsql` [string, **required**]: string with [ShortSQL](/api/shortsql) filter
@@ -39,36 +39,36 @@ The verb tells the API what to do. One of the following strings ca be used:
     - `records_per_page`  [integer, optional, default: 30]: number of records per page, default: 30
     - `full_records` [boolean, optional, default: 0]: if true for each returned record full data will be returned, otherwize only preview fields (faster) will be returned  
     - `geojson` [boolean, optional, default: 0]: if true and if geogata ara available for table, valid geojson will be returned
-    Example #1: [https://bdus.cloud/db/api/test/?verb=search&shortsql=@sites](https://bdus.cloud/db/api/test/?verb=search&shortsql=@sites)  
-    Example #2: [https://bdus.cloud/db/api/test/?verb=search&shortsql=@sites&total_rows=1](https://bdus.cloud/db/api/test/?verb=search&shortsql=@sites&total_rows=1)  
-    Example #3: [https://bdus.cloud/db/api/test/?verb=search&shortsql=@sites&total_rows=1&page=1](https://bdus.cloud/db/api/test/?verb=search&shortsql=@sites&total_rows=1&page=1)  
-    Example #4: [https://bdus.cloud/db/api/test/?verb=search&shortsql=@sites&total_rows=1&page=1&records_per_page=10](https://bdus.cloud/db/api/test/?verb=search&shortsql=@sites&total_rows=1&page=1&records_per_page=10)  
-    Example #5: [https://bdus.cloud/db/api/test/?verb=search&shortsql=@sites&total_rows=1&page=1&records_per_page=10&full_records=1](https://bdus.cloud/db/api/test/?verb=search&shortsql=@sites&total_rows=1&page=1&records_per_page=10&full_records=1)  
-    Example #6: [https://bdus.cloud/db/api/test/?verb=search&shortsql=@sites&geojson=1&records_per_page=1000](https://bdus.cloud/db/api/test/?verb=search&shortsql=@sites&geojson=1&records_per_page=1000)
+    Example #1: [https://bdus.cloud/dev/db/api/tests/?verb=search&shortsql=@sites](https://bdus.cloud/dev/db/api/tests/?verb=search&shortsql=@sites)  
+    Example #2: [https://bdus.cloud/dev/db/api/tests/?verb=search&shortsql=@sites&total_rows=1](https://bdus.cloud/dev/db/api/tests/?verb=search&shortsql=@sites&total_rows=1)  
+    Example #3: [https://bdus.cloud/dev/db/api/tests/?verb=search&shortsql=@sites&total_rows=1&page=1](https://bdus.cloud/dev/db/api/tests/?verb=search&shortsql=@sites&total_rows=1&page=1)  
+    Example #4: [https://bdus.cloud/dev/db/api/tests/?verb=search&shortsql=@sites&total_rows=1&page=1&records_per_page=10](https://bdus.cloud/dev/db/api/tests/?verb=search&shortsql=@sites&total_rows=1&page=1&records_per_page=10)  
+    Example #5: [https://bdus.cloud/dev/db/api/tests/?verb=search&shortsql=@sites&total_rows=1&page=1&records_per_page=10&full_records=1](https://bdus.cloud/dev/db/api/tests/?verb=search&shortsql=@sites&total_rows=1&page=1&records_per_page=10&full_records=1)  
+    Example #6: [https://bdus.cloud/dev/db/api/tests/?verb=search&shortsql=@sites&geojson=1&records_per_page=1000](https://bdus.cloud/dev/db/api/tests/?verb=search&shortsql=@sites&geojson=1&records_per_page=1000)
 
   - `inspect`: returns information on configuration  
-  Example: [https://bdus.cloud/db/api/test/?verb=inspect](https://bdus.cloud/db/api/test/?verb=inspect)
+  Example: [https://bdus.cloud/dev/db/api/tests/?verb=inspect](https://bdus.cloud/dev/db/api/tests/?verb=inspect)
     - `tb` [string, optional]: if present only data for indicated table will be returned  
-    Example: [https://bdus.cloud/db/api/test/?verb=inspect&tb=sites](https://bdus.cloud/db/api/test/?verb=inspect&tb=sites)
+    Example: [https://bdus.cloud/dev/db/api/tests/?verb=inspect&tb=sites](https://bdus.cloud/dev/db/api/tests/?verb=inspect&tb=sites)
   
   - `getChart`: returns data for specific chart
     - `id` [string, **required**]: id of the chart to output  
-    Example: [https://bdus.cloud/db/api/test/?verb=getChart&id=1](https://bdus.cloud/db/api/test/?verb=getChart&id=1)
+    Example: [https://bdus.cloud/dev/db/api/tests/?verb=getChart&id=1](https://bdus.cloud/dev/db/api/tests/?verb=getChart&id=1)
   
   - `getUniqueVal`: returns list of unique values used in a specific table and field
     - `tb` [string, **required**]: name of the table, without prefix
     - `fld` [string, **required**]: name of the field
     - `s` [string, optional]: filter sub-string. If present only values containing the provided substrings will be returned
     - `w` [string, optional]: string with [ShortSQL](/api/shortsql) filter to use to limit search  
-    Example #1: [https://bdus.cloud/db/api/test/?verb=getUniqueVal&tb=sites&fld=typology](https://bdus.cloud/db/api/test/?verb=getUniqueVal&tb=sites&fld=typology)  
-    Example #2: [https://bdus.cloud/db/api/test/?verb=getUniqueVal&tb=sites&fld=typology&s=large](https://bdus.cloud/db/api/test/?verb=getUniqueVal&tb=sites&fld=typology&s=large)  
-    Example #3: [https://bdus.cloud/db/api/test/?verb=getUniqueVal&tb=sites&fld=typology&w=chronology|like|%prehistoric%](https://bdus.cloud/db/api/test/?verb=getUniqueVal&tb=sites&fld=typology&w=chronology|like|%prehistoric%)  
-    Example #4: [https://bdus.cloud/db/api/test/?verb=getUniqueVal&tb=sites&fld=typology&s=large&w=chronology|like|%prehistoric%](https://bdus.cloud/db/api/test/?verb=getUniqueVal&tb=sites&fld=typology&s=large&w=chronology|like|%prehistoric%)  
+    Example #1: [https://bdus.cloud/dev/db/api/tests/?verb=getUniqueVal&tb=sites&fld=typology](https://bdus.cloud/dev/db/api/tests/?verb=getUniqueVal&tb=sites&fld=typology)  
+    Example #2: [https://bdus.cloud/dev/db/api/tests/?verb=getUniqueVal&tb=sites&fld=typology&s=large](https://bdus.cloud/dev/db/api/tests/?verb=getUniqueVal&tb=sites&fld=typology&s=large)  
+    Example #3: [https://bdus.cloud/dev/db/api/tests/?verb=getUniqueVal&tb=sites&fld=typology&w=chronology|like|%prehistoric%](https://bdus.cloud/dev/db/api/tests/?verb=getUniqueVal&tb=sites&fld=typology&w=chronology|like|%prehistoric%)  
+    Example #4: [https://bdus.cloud/dev/db/api/tests/?verb=getUniqueVal&tb=sites&fld=typology&s=large&w=chronology|like|%prehistoric%](https://bdus.cloud/dev/db/api/tests/?verb=getUniqueVal&tb=sites&fld=typology&s=large&w=chronology|like|%prehistoric%)  
   
   - `getVocabulary`: returns list of vocabulary items for specific vocabulary
     - `voc` [string, **required**]: vobaulary name  
-    Example: [https://bdus.cloud/db/api/test/?verb=getVocabulary&voc=site_typology](https://bdus.cloud/db/api/test/?verb=getVocabulary&voc=site_typology)
+    Example: [https://bdus.cloud/dev/db/api/tests/?verb=getVocabulary&voc=site_typology](https://bdus.cloud/dev/db/api/tests/?verb=getVocabulary&voc=site_typology)
 
   - `getApiVersion`: returns the current version of BraDypUS
-    Example: [https://bdus.cloud/db/api/test/?verb=getApiVersion](https://bdus.cloud/db/api/test/?verb=getApiVersion)
+    Example: [https://bdus.cloud/dev/db/api/tests/?verb=getApiVersion](https://bdus.cloud/dev/db/api/tests/?verb=getApiVersion)
 

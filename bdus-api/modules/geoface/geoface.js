@@ -281,7 +281,9 @@ var geoface  = {
             });
           } else if (lay.layertype === 'overlay'){
             geoface.overlay[lay.label] = L.tileLayer.wms(lay.path, {
-              layers: lay.wmslayers
+              layers: lay.wmslayers,
+              transparent: true,
+              format: 'image/png'
             });
           }
         } else if (lay.type === 'tiles'){

@@ -493,7 +493,6 @@ class config_ctrl extends Controller
 
   public function geoface_properties()
   {
-    $geodata_list = [];
     $datatypes = [
       "wms",
       "tiles",
@@ -502,15 +501,17 @@ class config_ctrl extends Controller
     
     $local_files = array_diff(\utils::dirContent(PROJ_DIR . 'geodata'), ["index.json"]);
 
-
-    if (!file_exists(__DIR__ . 'index.json')){
+    $geodata_list = [];
+    
+    if (file_exists(PROJ_DIR . 'geodata/index.json')){
       $geodata_list = json_decode( file_get_contents(PROJ_DIR . 'geodata/index.json'), TRUE);
     }
     array_push($geodata_list, [
       "label" => "",
       "type" => "",
       "path" => "",
-      "layertype" => ""
+      "wmslayers" => "",
+      "layertype" => "overlay"
     ]);
 
     $this->render('config', 'geoface_properties', [

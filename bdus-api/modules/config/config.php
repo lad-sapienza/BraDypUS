@@ -490,4 +490,69 @@ class config_ctrl extends Controller
       $this->response('error_sort_update', 'error');
     }
   }
+
+  public function geoface_properties()
+  {
+    $geodata_list = [];
+    $datatypes = [
+      "wms",
+      "tiles",
+      "local"
+    ];
+    
+    $local_files = array_diff(\utils::dirContent(PROJ_DIR . 'geodata'), ["index.json"]);
+
+
+    if (!file_exists(__DIR__ . 'index.json')){
+      $geodata_list = json_decode( file_get_contents(PROJ_DIR . 'geodata/index.json'), TRUE);
+    }
+    array_push($geodata_list, [
+      "label" => "",
+      "type" => "",
+      "path" => "",
+      "layertype" => ""
+    ]);
+
+    $this->render('config', 'geoface_properties', [
+      "geodata_list" => $geodata_list,
+      "datatypes" => $datatypes,
+      "local_files" => $local_files,
+      "upload_dir" => PROJ_DIR . 'geodata'
+    ]);
+  }
+
+  public function save_geoface_properties()
+  {
+    $data = $this->post;
+
+    $json = json_encode(array_filter($data, function($el){
+      return in_array($el['type'], ["wms", "local", "tiles"]) && !empty($el['path']);
+    }), JSON_PRETTY_PRINT);
+
+    try {
+      file_put_contents(PROJ_DIR . 'geodata/index.json', $json);
+
+      $this->response('ok_geoface_updated', 'success');
+    } catch (\Throwable $th) {
+      $this->response('error_geoface_updated', 'error');
+    }
+  }
+
+  public function delete_local_geofile()
+  {
+    $file = PROJ_DIR . 'geodata/' . $this->get['file'];
+
+    try {
+      @unlink($file);
+
+      if (file_exists($file)){
+        throw new Exception("File $file not deleted");
+      }
+
+      $this->response('ok_geoface_updated', 'success');
+    } catch (\Throwable $th) {
+      $this->response('error_geoface_updated', 'error');
+    }
+  }
+
 }

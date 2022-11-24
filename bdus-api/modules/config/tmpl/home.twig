@@ -17,6 +17,12 @@
         </button>
       </div>
 
+      <div style="margin: 2rem 0;">
+        <button class="btn btn-default btn-block" onclick="config.viewGeoFaceProperties('{{ uid }}')">
+        {{ tr.get('cfg_geoface') }}
+        </button>
+      </div>
+
       <hr>
         
       <h4 class="text-center">{{ tr.get('cfg_available_tables') }}</h4>
@@ -60,14 +66,14 @@
 </div>
 
 <script>
-$('#{{ uid }} .sortable').each( (index, element)=>{
-						new Sortable(element, {
-							animation: 150,
-							ghostClass: 'active',
-							onEnd: function (evt) {
-								const sortArray = this.toArray();
-                core.runAndRespond('config_ctrl', 'sortTables', { sort: sortArray });
-							}
-						});
-					});
+$('#{{ uid }} .sortable').each( (index, element) => {
+  new Sortable(element, {
+    animation: 150,
+    ghostClass: 'active',
+    onEnd: function (evt) {
+      const sortArray = this.toArray();
+      core.runAndRespond('config_ctrl', 'sortTables', { sort: sortArray });
+    }
+  });
+});
 </script>

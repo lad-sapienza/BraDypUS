@@ -198,16 +198,13 @@ var geoface  = {
     geoface.map = new L.map('map');
     
     var availableBaseMaps = {
-      "OSM": new L.tileLayer('https://{s}.tile.osm.org/{z}/{x}/{y}.png').addTo(geoface.map),
-      "AWMC" : L.tileLayer('https://{s}.tiles.mapbox.com/v3/isawnyu.map-knmctlkh/{z}/{x}/{y}.png'),
-      "Imperium\/DARE" : L.tileLayer('https://dh.gu.se/tiles/imperium/{z}/{x}/{y}.png')
+      "OSM": new L.tileLayer('https://{s}.tile.osm.org/{z}/{x}/{y}.png').addTo(geoface.map)
     };
-    
-    if (typeof L.gridLayer.googleMutant !== 'undefined') {
+    if (typeof L.gridLayer.googleMutant !== 'undefined' && geoface.metadata.gmapskey !== '') {
       availableBaseMaps['Google Satellite'] =	L.gridLayer.googleMutant({ type:'satellite'});
       availableBaseMaps['Google Roadmap'] =		L.gridLayer.googleMutant({ type:'roadmap'});
       availableBaseMaps['Google Terrain'] =		L.gridLayer.googleMutant({ type:'terrain' });
-      availableBaseMaps['Google Hybrid'] =			L.gridLayer.googleMutant({ type:'hybrid'});
+      availableBaseMaps['Google Hybrid'] =		L.gridLayer.googleMutant({ type:'hybrid'});
     }
     
     // baseMap object contains all basemaps
@@ -243,40 +240,64 @@ var geoface  = {
       
     })
     .addTo(geoface.map);
-      
-    if (typeof geoface.metadata.local_layers !== 'undefined' && typeof omnivore !== 'undefined'){
-      $.each(geoface.metadata.local_layers, function (i, lay){
-        const ext = lay.ext;
-        const name = lay.name;
-        const full_path = lay.full_path;
-        
-        switch (lay.ext) {
-          case 'csv':
-          case 'gpx':
-          case 'kml':
-          case 'wkt':
-          case 'topojson':
-          case 'geojson':
-          geoface.overlay[name] = omnivore[ext](full_path, null, L.geoJson(null, {
-            onEachFeature: function (feature, layer) {
-              var html = '';
-              $.each(feature.properties, function(key, val){
-                if (val){
-                  html += key + ': <strong>' + val + '</strong><br />';
+
+    if (typeof geoface.metadata.custom_layers !== 'undefined'){
+      $.each(geoface.metadata.custom_layers, function (i, lay){
+        // Handle local layers
+        if (lay.type === 'local' && typeof omnivore !== 'undefined'){
+          const path_parts = lay.path.split('.');
+          const ext = path_parts[path_parts.length - 1];
+
+          switch(ext){
+            case 'csv':
+            case 'gpx':
+            case 'kml':
+            case 'wkt':
+            case 'topojson':
+            case 'geojson':
+              geoface.overlay[lay.label] = omnivore[ext](`${geoface.metadata.baseLocalPath}${lay.path}`, null, L.geoJson(null, {
+                onEachFeature: function (feature, layer) {
+                  var html = '';
+                  $.each(feature.properties, function(key, val){
+                    if (val){
+                      html += key + ': <strong>' + val + '</strong><br />';
+                    }
+                  });
+                  layer.bindPopup(html);
                 }
-              });
-              layer.bindPopup(html);
-            }
-          }))
-          .addTo(geoface.map);
-          break;
-          default:
-          console.log('Unknown extension: ' + ext);
-          break;
+              }))
+              .addTo(geoface.map);
+              break;
+            default:
+            console.log('Unknown extension: ' + ext);
+            break;
+          }
+
+        // Handle WMS
+        } else if (lay.type === 'wms'){
+          if (lay.layertype === 'base'){
+            baseMaps[lay.label] = L.tileLayer.wms(lay.path, {
+              layers: lay.wmslayers
+            });
+          } else if (lay.layertype === 'overlay'){
+            geoface.overlay[lay.label] = L.tileLayer.wms(lay.path, {
+              layers: lay.wmslayers
+            });
+          }
+        } else if (lay.type === 'tiles'){
+          if (lay.layertype === 'base'){
+            baseMaps[lay.label] = L.tileLayer(lay.path);
+          } else if (lay.layertype === 'overlay'){
+            geoface.overlay[lay.label] = L.tileLayer(lay.path);
+          }
         }
+
       });
+      
+      // Handle TMS
     }
       
+    
     //Add other layers, both basemaps and overlays to map
     geoface.map.addControl(new L.Control.Layers( baseMaps, geoface.overlay, {}));
       

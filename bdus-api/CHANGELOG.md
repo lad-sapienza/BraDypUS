@@ -3,6 +3,15 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.3.0] - 2022-11-24
+
+### Removed
+- DARE basemap for GeoFace was removed as a default option. It can be added as a custom Web Tile Service.
+- DARE basemap for GeoFace was removed since the external service was not working anymore.
+
+### Added
+- GeoFace can be configured to use custom WMS, WTS and locally stored csv, gpx, kml, wkt, topojson, and geojson files
+
 ## [4.2.5] - 2022-08-04
 
 ### Fixed

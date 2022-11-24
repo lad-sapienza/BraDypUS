@@ -225,5 +225,46 @@ var config = {
 				$(dest_select).append(`<option value="${key}">${value}</option>`)
 			}
 		})
-	}
+	},
+
+	viewGeoFaceProperties: (uid) => {
+		core.getHTML('config_ctrl', 'geoface_properties', false, false, html => {
+			$('#' + uid + ' .edit-column').html(html);
+			$('#' + uid +' .field-list-column').html('').removeClass('col-sm-3');
+		})
+	},
+	saveGeoFaceProperties: (form, uid) => {
+		core.getJSON('config_ctrl', 'save_geoface_properties', false, form.serializeArray(), function(data){
+			core.message(data.text, data.status);
+			if(data.status === 'success'){
+				config.viewGeoFaceProperties(form.parents('.config_container').attr('id'))
+			}
+		});
+	},
+
+	deleteGeoFile: (file, clickedButton) => {
+		core.open({
+			'title': core.tr('delete') + ' ' + file,
+			'html': core.tr('confirm_delete_geofile', [file]),
+			'buttons': [
+				{
+					'text': 'Delete',
+					'addclass': 'btn btn-danger',
+					'click': (dialog) => {
+						core.getJSON('config_ctrl', 'delete_local_geofile', {file: file}, false, function(data){
+							core.message(data.text, data.status);
+							dialog.modal('hide');
+							if(data.status === 'success'){
+								config.viewGeoFaceProperties(clickedButton.parents('.config_container').attr('id'))
+							}
+						})
+					}
+				},
+				{
+					'text': core.tr('cancel'),
+					'click': 'close'
+				}
+			]
+		}, 'modal');
+	},
 };

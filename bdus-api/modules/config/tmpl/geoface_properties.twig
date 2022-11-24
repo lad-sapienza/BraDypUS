@@ -1,0 +1,92 @@
+<h2>{{ tr.get('cfg_geoface') }}</h2>
+<fieldset>
+  <form action="javascript:void(0)" class="form-horizontal" id="{{ uid }}">
+
+  <h3>Available resources</h3>
+  <div class="row">
+    <div class="col-sm-2"><label>Label</label></div>
+    <div class="col-sm-2"><label>Type</label></div>
+    <div class="col-sm-3"><label>Path*</label></div>
+    <div class="col-sm-3"><label>WMS layers</label></div>
+    <div class="col-sm-2"><label>Layer type</label></div>
+  </div>
+  {% for index, gd in geodata_list %}
+    <div class="row form-group">
+      <div class="col-sm-2">
+        <input type="text" class="form-control" name="{{ index }}[label]" value="{{ gd.label }}" />
+      </div>
+      <div class="col-sm-2">
+      <select class="form-control" name="{{ index }}[type]]">
+      {% for type in datatypes %}
+        <option value="{{ type }}" {% if type == gd.type %}selected="selected"{% endif %}>{{ type }}</option>
+      {% endfor %}
+      </select>
+      </div>
+      <div class="col-sm-3">
+        <input type="text" class="form-control" name="{{ index }}[path]" value="{{ gd.path }}" />
+      </div>
+      <div class="col-sm-3">
+        <input type="text" class="form-control" name="{{ index }}[wmslayers]" value="{{ gd.wmslayers }}" />
+      </div>
+      <div class="col-sm-2">
+        <select class="form-control" name="{{ index }}[layertype]]">
+          <option value="base" {% if 'base' == gd.layertype %}selected="selected"{% endif %}>base</option>
+          <option value="overlay" {% if 'overlay' == gd.layertype %}selected="selected"{% endif %}>overlay</option>
+        </select>
+      </div>
+    </div>
+  {% endfor %}
+
+    <button type="submit" class="btn btn-success btn-block"><i class="fa fa-floppy-o"></i> {{ tr.get('save') }}</button>
+
+  </form>
+</fieldset>
+
+<fieldset>
+  <h3>Local files</h3>
+  <div class="list-group">
+  {% for file in local_files %}
+    <div class="list-group-item">
+      {{ file }}
+      <span class="pull-right">
+        <button onclick="config.deleteGeoFile('{{ file }}', $(this))" class="btn btn-xs btn-danger">
+          {{ tr.get('delete') }}
+        </button>
+      </span>
+    </div>
+  {% endfor %}
+  </div>
+  <hr />
+
+  <div class="form-group">
+    <div id="upload-{{ uid }}"></div>
+</div>
+    
+<div id="fields_{{ uid }}" style="margin-top: 60px;"></div>
+    
+<script>
+  api.fileUpload(
+    $('#upload-{{ uid }}'),
+    './?obj=file_ctrl&method=upload&upload_dir={{ upload_dir }}',
+    {
+      limitExtensions: ['csv', 'gpx', 'kml', 'wkt', 'topojson', 'geojson'],
+      limit2one: false,
+      complete: function(id, name, resp){
+        if (resp.success){
+          config.viewGeoFaceProperties($('#fields_{{ uid }}').parents('.config_container').attr('id'));
+        }
+      }
+    }
+  
+    );
+  
+</script>
+
+
+</fieldset>
+<script>
+$('form#{{ uid }}').on('submit', function(event){
+  event.preventDefault();
+  config.saveGeoFaceProperties($(this));
+});
+</script>

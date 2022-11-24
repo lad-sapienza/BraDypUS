@@ -377,6 +377,14 @@
 
     "cfg_security_check": "Security check",
     "cfg_security_check_text": "To continue please enter your password. Rememeber that you need super-admin privileges to access system & database configuration",
+    "cfg_geoface": "GeoFace configuration",
+    "delete": "Delete",
+    "ok_geofile_deleted": "Local geofile was successfully deleted",
+    "error_geofile_deleted": "Error: Local geofile was not deleted",
+    "ok_geoface_updated": "GeoFace configuration saved",
+    "error_geoface_updated": "Error: GeoFace configuration not saved",
+    "confirm_delete_geofile": "Are you sure you want to delete the geofile %s? This action can not be undone.",
+    
     "validate_password": "Validate password",
     "invalid_pasword": "Invalid password",
     "valid_pasword": "Valid password! Welcome super admin, and be careful.",

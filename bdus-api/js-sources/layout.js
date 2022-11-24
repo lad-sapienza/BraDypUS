@@ -181,7 +181,7 @@ var layout = {
                         if (but.click === 'close'){
                             a.attr('data-dismiss', 'modal');
                         } else{
-                            a.click(function(){ but.click(dialog); });
+                            a.on('click', function(){ but.click(dialog); });
                         }
                     }
                     

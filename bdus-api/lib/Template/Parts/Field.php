@@ -160,13 +160,15 @@ class Field
 
 		// Add DB links
 		$text = preg_replace_callback(
-			'/@([a-z]+)\.([0-9]+)(\[([^\]]+)\])?/',
+			'/@([a-z]+)\.([^\[\s]+)(\[([^\]]+)\])?/',
             function($m){
                 $p = PREFIX;
+                $tbname = $p . $m[1];
+                $idvalue = str_replace('+', ' ', $m[2]);
                 if ($m[3] && $m[4]){
-                    return "<span class=\"btn-link\" onclick=\"api.record.read('{$p}{$m[1]}', ['{$m[2]}'], true)\">{$m[4]}</span>";
+                    return "<span class=\"btn-link\" onclick=\"api.record.read('{$tbname}', ['{$idvalue}'], true)\">{$m[4]}</span>";
                 } else {
-                    return "<span class=\"btn-link\" onclick=\"api.record.read('{$p}{$m[1]}', ['{$m[2]}'], true)\">{$m[1]}.{$m[2]}</span>";
+                    return "<span class=\"btn-link\" onclick=\"api.record.read('{$tbname}', ['{$idvalue}'], true)\">{$m[1]}.{$idvalue}</span>";
                 }
             },
 			$text);

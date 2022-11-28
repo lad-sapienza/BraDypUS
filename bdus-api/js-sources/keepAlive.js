@@ -1,5 +1,5 @@
 const keepAlive = {
-  ms: 3 * 60 * 1000, // 3 min
+  ms: .6 * 60 * 1000, // 3 min
   interval: {},
 
   start(){
@@ -10,7 +10,7 @@ const keepAlive = {
   },
   _keepAlive: () => {
     core.getJSON('keepAlive_ctrl', 'run', false, false, r => {
-      if (r.type !== 'success'){
+      if (r.status !== 'success'){
         console.log(r.text);
         this.stop();
       }

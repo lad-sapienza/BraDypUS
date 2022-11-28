@@ -91,6 +91,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [4.1.2] - 2021-08-22
 
+### Fixed
+- Keep alive was logging on success not on error.
+
 ### Added
 - Added CITATION.cff
 

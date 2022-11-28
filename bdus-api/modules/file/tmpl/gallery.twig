@@ -5,18 +5,21 @@
  #}
 
 <h3>{{ title }}</h3>
-<ul class="gallery{% if can_edit %} sortable{% endif %} thumbnails file_thumbnails">
+<button type="button" class="btn btn-success" onclick="layout.tabs.reloadActive()">{{ tr.get('reload') }}</button>
+<ul class="gallery{% if can_edit %} sortable{% endif %} thumbnails file_thumbnails" id="{{ uid }}">
 	{% for file in all_files %}
-
-	<li data-id="{{ file.linkid }}">
-		{{ images.getThumbHtml(file, path ~ '/')|raw }}
+	<li data-id="{{ file.linkid }}" id="li_{{ uid }}_{{ file.id }}">
+		{{ images.getThumbHtml(file, path ~ '/', uid)|raw }}
 		<div style="position: relative;">
 			<div class="opts btn-group" style="display: none; position:absolute; top:-40px;">
 				<button class="btn btn-default btn-sm read" data-table="{{ prefix }}files" data-id="{{ file.id }}"><i class="fa fa-eye"></i></button>
 				{% if can_edit %}
 				<button class="btn btn-default btn-sm edit" data-table="{{ prefix }}files" data-id="{{ file.id }}"><i class="fa fa-pencil"></i></button>
+				{% if images.is_img(file.ext) %}
+					<button class="btn btn-default btn-sm rotate" data-fileid="{{file.id}}" data-path="{{ path }}/{{ file.id }}.{{ file.ext}}"><i class="fa fa-repeat"></i></button>
 				{% endif %}
-				<button class="btn btn-default btn-sm download" data-path="{{ path }}{{ file.id }}.{{ file.ext}}"><i class="fa fa-download"></i></button>
+				{% endif %}
+				<a class="btn btn-default btn-sm" download href="{{ path }}/{{ file.id }}.{{ file.ext}}"><i class="fa fa-download"></i></a>
 			</div>
 		</div>
 	</li>
@@ -29,16 +32,23 @@ $('ul.gallery button.read')
 		api.record.read($(this).data('table'), [$(this).data('id')]);
 	});
 
-$('ul.gallery button.edit')
-	.click(function(){
-		api.record.edit($(this).data('table'), [$(this).data('id')]);
-	});
+{% if can_edit %}
+$('ul.gallery button.edit').on('click', function(){
+	api.record.edit($(this).data('table'), [$(this).data('id')]);
+});
 
-
-$('ul.gallery button.download')
-	.click(function(){
-		window.open($(this).data('path'));
+$('ul.gallery button.rotate').on('click', event =>{
+	const file_path = event.currentTarget.dataset.path;
+	const file_id = event.currentTarget.dataset.fileid;
+	const img = document.querySelector(`#li_{{ uid }}_${file_id} img`);
+	core.getJSON('file_ctrl', 'rotate', { image: file_path }, false, resp => {
+     core.message(resp.text, resp.status);
+		 if (resp.status === 'success'){
+			img.src = file_path + '?'+ new Date().getTime();
+		 }
 	});
+});
+{% endif %}
 
 $('ul.gallery li').hover(
 		function(){

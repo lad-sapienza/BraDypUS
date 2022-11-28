@@ -426,6 +426,8 @@
     "error_file_sorting_update": "Errore. Non è stato possibile cambiare l'ordine",
     "run_free_sql": "Esegui una query SQL libera",
     "file_gallery": "Galleria dei file di %s",
+    "img_rotated": "L'immagine è stata ruotata",
+    "img_not_rotated": "Errore: non è stato possibile ruotare l'immagine",
     "user_preferences": "Preferenze utente",
     "result_pagination": "Impaginazione risultati",
     "infinite_scrolling": "Scorrimento infinito",

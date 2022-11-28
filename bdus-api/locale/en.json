@@ -445,6 +445,8 @@
     "error_file_sorting_update": "Error. Can not update the order of the attached files",
     "run_free_sql": "Run a free SQL query",
     "file_gallery": "File gallery for %s",
+    "img_rotated": "The image was correctly rotated",
+    "img_not_rotated": "Error: it was not possible to rotate the image",
     "user_preferences": "User preferences",
     "result_pagination": "Result pagination",
     "infinite_scrolling": "Infinite scrolling",

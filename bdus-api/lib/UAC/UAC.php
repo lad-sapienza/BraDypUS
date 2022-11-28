@@ -52,8 +52,9 @@ class UAC
     bool $is_online = false,
     DBInterface $db
   ) {
-    if (!in_array($app_status, ['on', 'off', 'frozen'])) {
-      throw new \Exception("Unknown apps status: `$app_status`: must be `on`, `off` or `frozen`",);
+    $valid_app_status = ['on', 'off', 'frozen'];
+    if (!in_array($app_status, $valid_app_status)) {
+      throw new \Exception("Unknown apps status: `$app_status`: must be one of: " . implode(', ', $valid_app_status),);
     }
     $this->app_status = $app_status;
     $this->is_online = $is_online;

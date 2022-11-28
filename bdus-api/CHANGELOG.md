@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed 
 - Updated copyright year
 
+### Added
+- Added the possibility to rotate images in the file galley view
+
 ## [4.3.2] - 2022-11-26
 
 ### Added

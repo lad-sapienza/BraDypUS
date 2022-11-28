@@ -118,23 +118,38 @@ class file_ctrl extends Controller
 	}
 
 	private function silentlyResize($file, $maxImageSize)
-    {
-        // Silently return true if file does not exist
-        if (!file_exists($file)) {
-            return true;
-        }
-        // Silently return true if file is not an image
-        if (substr( strtolower(mime_content_type($file)), 0, 5 ) !== "image"){
-            return true;
-        }
-        
-        $im = new ImageManager();
-        $img = $im->make($file)->resize($maxImageSize, $maxImageSize, function ($constraint) {
-            $constraint->aspectRatio();
-            $constraint->upsize();
-        })->save()->destroy();
-        return true;
-    }
+	{
+			// Silently return true if file does not exist
+			if (!file_exists($file)) {
+					return true;
+			}
+			// Silently return true if file is not an image
+			if (substr( strtolower(mime_content_type($file)), 0, 5 ) !== "image"){
+					return true;
+			}
+			
+			$im = new ImageManager();
+			$im->make($file)->resize($maxImageSize, $maxImageSize, function ($constraint) {
+					$constraint->aspectRatio();
+					$constraint->upsize();
+			})->save()->destroy();
+			return true;
+	}
+
+	public function rotate ()
+	{
+		try {
+			$image = $this->get['image'];
+			$im = new ImageManager();
+			$im->make($image)->rotate(90)->save();
+			echo $this->response('img_rotated', 'success');
+		} catch (\Throwable $th) {
+			$this->log->error($th);
+			var_dump($th);
+			echo $this->response('img_not_rotated', 'error');
+		}
+		
+	}
 
 
 	/**

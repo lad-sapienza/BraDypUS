@@ -33,11 +33,13 @@ class Images
         $filtered = array_slice($data_arr, 0, $max);
         // start writing main container. Styles are handled via CSS
         $html = '<div class="file_thumbnails">';
+
+        $gal_uid = uniqid('gall');
         
         // 1. Show up to $max images
         foreach ($filtered as $img) {
             if (!empty($img)) {
-                $html .= self::getThumbHtml($img, "projects/{$app}/files/");
+                $html .= self::getThumbHtml($img, "projects/{$app}/files/", $gal_uid);
             }
         }
         
@@ -219,6 +221,19 @@ class Images
         return $ret;
     }
 
+    /**
+     * Checks if file is an image or not
+     *
+     * @param string $extension File extension
+     * @return boolean
+     */
+    public static function is_img(string $extension): bool
+    {
+        $data = self::checkExt($extension);
+
+        return $data['type'] === 'image';
+    }
+
 
     /**
      *
@@ -229,7 +244,7 @@ class Images
      * 			description: optional
      * @param string $path, if null defult file path (PROJ_DIR . 'files') will be used
      */
-    public static function getThumbHtml($file_array, string $path): string
+    public static function getThumbHtml(array $file_array, string $path, string $gallery_name = ''): string
     {
         $data = self::checkExt($file_array['ext']);
         
@@ -237,12 +252,11 @@ class Images
             $thumb = self::getThumb($path . $file_array['id'] . '.' . $file_array['ext']);
             
             $html = '<div class="preview-item">'
-            . '<a data-fancybox href="' . $path . $file_array['id'] . '.' . $file_array['ext'] . '"> '
-            . '<img class="" '
+            . '<a data-fancybox' . (!empty($gallery_name) ? '="' . $gallery_name . '"' : ''). ' href="' . $path . $file_array['id'] . '.' . $file_array['ext'] . '"> '
+            . '<img '
             . 'src="' . $thumb . '" '
             . ( $file_array['description'] ? ' alt="' . str_replace('"', '', $file_array['description']) . '" ' : ''  )
             . ( $file_array['description'] ? ' title="' . str_replace('"', '', $file_array['description']) . '" ' : '')
-            . ' =""'
             . '/>'
             . '</a></div>';
         } else {

@@ -4,7 +4,7 @@
  * Main database connection class.
  * Catches and logs all PDO Exceptions and throws DBExceptions in case of errors
 
- * @copyright 2007-2021 Julian Bogdani
+ * @copyright 2007-2022 Julian Bogdani
  * @license AGPL-3.0; see LICENSE
  */
 

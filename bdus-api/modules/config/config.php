@@ -223,7 +223,7 @@ class config_ctrl extends Controller
         $this->cfg->setFld($new_tb_name, 'id_link', [
           "name" => "id_link",
           "label" => "Linked id",
-          "type" => "int",
+          "type" => "text",
           "db_type" => "INTEGER",
           "hidden" => true,
         ]);

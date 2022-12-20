@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [4.4.1] - 2022-12-20
 
 ### Fixed
+- Fixed issue with id_link type not being set correctly on new plugin table creation
 - Fixed blocking issue that prevented new vocabularies to be added
 
 ## [4.4.0] - 2022-11-28

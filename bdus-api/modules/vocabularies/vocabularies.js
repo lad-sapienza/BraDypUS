@@ -51,7 +51,11 @@ var vocabularies = {
 					});
 					// Add listener to add new vocabulary button
 					html.find('.add_voc').on('click', (e) => {
-						vocabularies.add_new(e.target.closest("[data-voc]").dataset.voc, () => layout.tabs.reloadActive() );
+						
+						vocabularies.add_new(
+							(e.target.closest("[data-voc]") ? e.target.closest("[data-voc]").dataset.voc :  ''),
+							() => layout.tabs.reloadActive()
+						);
 					});
 				}
 			});

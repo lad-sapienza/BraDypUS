@@ -22,18 +22,19 @@
 </div>
 <script>
 
-$('#{{ uid }}').on('click', e => {
+$('#{{ uid }} .btn').on('click', e => {
   const el = $(e.target);
-  if (el.hasClass('saveTmpl')){
-    const text = $('#{{ uid }} .content').text();
+
+  if (e.target.classList.contains("saveTmpl")){
+    const text = document.querySelector('#{{ uid }} .content').innerText;
     templates.saveTmpl('{{ tmpl }}', text);
   }
 
-  if (el.hasClass('deleteTmpl')){
+  if (e.target.classList.contains("deleteTmpl")){
     templates.deleteTmpl('{{ tmpl }}');
   }
 
-  if (el.hasClass('renameTmpl')){
+  if (e.target.classList.contains("renameTmpl")){
     templates.renameTmpl('{{ tmpl }}');
   }
 });

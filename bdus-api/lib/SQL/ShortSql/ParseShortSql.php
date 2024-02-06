@@ -28,6 +28,7 @@ class ParseShortSql
     private $prefix;
     private $cfg;
     private $qo;
+    private $symbols;
 
     public function __construct(string $prefix, Config $cfg = null)
     {

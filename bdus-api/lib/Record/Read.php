@@ -401,9 +401,11 @@ EOD;
                     $values = [];
                     $short_sql = [];
                     foreach ($ld['fld'] as $c) {
+                        $c['short_other'] = ($c['my'] === 'id') ? '^' . $c['other'] : $c['other'];
+                        
                         array_push($where, " {$c['other']} = ? ");
                         array_push($values, $this->getCore($c['my'], true));
-                        array_push($short_sql, "{$c['other']}|=|" . $this->getCore($c['my'], true));
+                        array_push($short_sql, "{$c['short_other']}|=|" . $this->getCore($c['my'], true));
                     }
 
                     $r = $this->db->query(

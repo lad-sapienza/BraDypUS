@@ -45,20 +45,24 @@ const api = {
         </form>`,
       loaded: () => {
         setTimeout(() => {
-          $('#modal input.adm_pwd').trigger('focus');
+          const pwdInput = document.querySelector('#modal input.adm_pwd');
+          if (pwdInput) pwdInput.focus();
         }, 500);
-        $('#modal form').on('submit', () => {
-          const pwd = $('#modal .adm_pwd').val();
-          core.getJSON('confirm_super_adm_pwd_ctrl', 'check_pwd', false, { pwd: pwd }, data => {
-            core.message(data.text, data.status)
-            if (data.status === 'success') {
-              $('#modal').modal('hide');
-              if (typeof success === 'function') {
-                success();
+        const modalForm = document.querySelector('#modal form');
+        if (modalForm) {
+          modalForm.addEventListener('submit', () => {
+            const pwd = document.querySelector('#modal .adm_pwd').value;
+            core.getJSON('confirm_super_adm_pwd_ctrl', 'check_pwd', false, { pwd: pwd }, data => {
+              core.message(data.text, data.status)
+              if (data.status === 'success') {
+                $('#modal').modal('hide'); // Keep jQuery for Bootstrap modal plugin
+                if (typeof success === 'function') {
+                  success();
+                }
               }
-            }
+            });
           });
-        });
+        }
       },
       buttons: [
         {
@@ -69,7 +73,8 @@ const api = {
           addclass: 'btn-danger',
           text: core.tr('validate_password'),
           click: () => {
-            $('#modal form').trigger('submit');
+            const form = document.querySelector('#modal form');
+            if (form) form.dispatchEvent(new Event('submit'));
           }
         }
       ]
@@ -239,10 +244,13 @@ const api = {
      * @returns {undefined}
      */
     toggleSelect: function (tableId) {
-      if ($('#' + tableId + ' tbody tr:first').hasClass('row_selected')) {
-        $('#' + tableId + ' tbody tr').removeClass('row_selected');
+      const table = document.getElementById(tableId);
+      if (!table) return;
+      const firstRow = table.querySelector('tbody tr');
+      if (firstRow && firstRow.classList.contains('row_selected')) {
+        table.querySelectorAll('tbody tr').forEach(tr => tr.classList.remove('row_selected'));
       } else {
-        $('#' + tableId + ' tbody tr').addClass('row_selected');
+        table.querySelectorAll('tbody tr').forEach(tr => tr.classList.add('row_selected'));
       }
     },
     /**
@@ -260,8 +268,8 @@ const api = {
         // get selected rows
         const aTrs = table_results.fnGetNodes();
         for (let i = 0; i < aTrs.length; i++) {
-          if ($(aTrs[i]).hasClass('row_selected')) {
-            id_arr.push($(aTrs[i]).attr('id'));
+          if (aTrs[i].classList.contains('row_selected')) {
+            id_arr.push(aTrs[i].id);
           }
         }
 
@@ -300,18 +308,26 @@ const api = {
 
   preview: function (img) {
     const Img = new Image();
-    Img.src = $(img).attr('src');
-    const winH = $(window).height(),
-      imgH = Img.height,
-      H = (imgH > winH ? winH : imgH) - 20;
+    const imgEl = img instanceof HTMLElement ? img : document.querySelector(img);
+    Img.src = imgEl.getAttribute('src');
+    const winH = window.innerHeight;
+    const imgH = Img.height;
+    const H = (imgH > winH ? winH : imgH) - 20;
     Img.height = (H - 30);
-    Img.title = $(img).attr('title');
+    Img.title = imgEl.getAttribute('title');
 
-    $(Img).addClass('img-responsive');
+    Img.classList.add('img-responsive');
+
+    const a = document.createElement('a');
+    a.href = Img.src;
+    a.target = '_blank';
+    a.appendChild(Img);
+
     core.open({
-      html: $('<a />').attr('href', Img.src).attr('target', '_blank').append(Img),
+      html: a,
       loaded: function () {
-        $('.modal-body').css({ 'max-height': H });
+        const modalBody = document.querySelector('.modal-body');
+        if (modalBody) modalBody.style.maxHeight = H + 'px';
       }
     }, 'modal');
   },
@@ -346,7 +362,9 @@ const api = {
             text: core.tr('continue'),
             click: function (div) {
               layout.dialog.close(div);
-              $.post('./?obj=myExport_ctrl&method=doExport&tb=' + tb + '&format=' + $(div).find('select.export_format').val() + '&obj_encoded=' + obj_encoded, function (data) {
+              const select = div.querySelector('select.export_format');
+              const val = select ? select.value : '';
+              $.post('./?obj=myExport_ctrl&method=doExport&tb=' + tb + '&format=' + val + '&obj_encoded=' + obj_encoded, function (data) {
 
                 core.message(data.text, data.status);
 
@@ -365,11 +383,11 @@ const api = {
 
     save: function (query_text, tb) {
 
-      const input = $('<input />')
-        .attr('type', 'text')
-        .addClass('form-control')
-        .val('query_' + new Date().getTime())
-        .css('width', '90%');
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'form-control';
+      input.value = 'query_' + new Date().getTime();
+      input.style.width = '90%';
 
       core.open({
         html: input,
@@ -378,14 +396,14 @@ const api = {
           {
             text: core.tr('save'),
             click: function (dia) {
-              if (input.val() === '') {
+              if (input.value === '') {
                 core.message(core.tr('query_name_is_required'), 'error');
                 input.focus();
               } else {
                 core.getJSON(
                   'saved_queries_ctrl',
                   'saveQuery',
-                  'tb=' + tb + '&name=' + input.val(),
+                  'tb=' + tb + '&name=' + input.value,
                   { "query_object": query_text },
                   function (data) {
                     core.message(data.text, data.status);

@@ -6,7 +6,7 @@
 */
 
 
-var core = {
+const core = {
 
   /**
   * Checks if module is present. If not the module is loaded.
@@ -59,9 +59,9 @@ var core = {
   _get2url: function (get) {
     if (typeof get === 'string') {
       return get;
-    } else if ($.isPlainObject(get)) {
+    } else if (Object.prototype.toString.call(get) === '[object Object]') {
       return $.param(get);
-    } else if ($.isArray(get)) {
+    } else if (Array.isArray(get)) {
       return 'param[]=' + get.join('&param[]=');
     }
     return false;
@@ -78,7 +78,7 @@ var core = {
   */
   getHTML: function (obj, method, get, post, loaded) {
 
-    var URLstring = './?obj=' + obj + '&method=' + method
+    const URLstring = './?obj=' + obj + '&method=' + method
       + (get ? '&' + this._get2url(get) : '');
 
     if (!post) {
@@ -98,7 +98,7 @@ var core = {
   * @returns {undefined}
   */
   getJSON: function (obj, method, get, post, loaded) {
-    var URLstring = './?obj=' + obj + '&method=' + method
+    const URLstring = './?obj=' + obj + '&method=' + method
       + (get ? '&' + this._get2url(get) : '');
 
     if (!post) {
@@ -113,11 +113,11 @@ var core = {
   * Automatically runs core.message on response
   * @param {string} obj 		Controller object to call
   * @param {string} method 	Method of controller object to call
-  * @param {string|object|false} get url string of key=value parameters of objectwith key:values
+  * @param {string|object|false} get url string of key=value parameters of object with key:values
   * @param {string|array|object|false} post post data 
   * @param {function|false} loaded callback function
   */
-  runAndRespond(obj, method, get, post, loaded) {
+  runAndRespond: function (obj, method, get, post, loaded) {
     if (typeof get === 'function') {
       loaded = get;
       get = false;
@@ -157,7 +157,7 @@ var core = {
     }
   },
   /**
-  * Returns translates string, if translation is available
+  * Returns translated string, if translation is available
   * @param string string String to be translated
   * @param array|false args Array of argument to use for vsprintf
   */
@@ -178,7 +178,7 @@ var core = {
   /**
   * Displays system message
   * @param string text		Message text
-  * @param string type		Message type: error|sucess|info, default: info
+  * @param string type		Message type: error|success|info, default: info
   * @param boolean sticky if true message will be sticky
   */
   message: function (text, type, sticky) {

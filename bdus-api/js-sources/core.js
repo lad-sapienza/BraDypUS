@@ -7,7 +7,7 @@
 
 
 var core = {
-  
+
   /**
   * Checks if module is present. If not the module is loaded.
   * Runs the init method of module using args as function arguments
@@ -17,30 +17,30 @@ var core = {
   * @param {array} args array of arguments for modules init function
   * @param {function|false} loaded 		the function to run once the module is loaded and init method has run.
   */
-  runMod: function(mod, args, loaded){
-    
-    if (!args){
+  runMod: function (mod, args, loaded) {
+
+    if (!args) {
       args = [];
-    } else if (typeof args === 'string'){
+    } else if (typeof args === 'string') {
       args = [args];
     }
-    
-    if (typeof window[mod] === 'object' && !debugMode){
+
+    if (typeof window[mod] === 'object' && !debugMode) {
       window[mod].init.apply(null, args);
     } else {
-      const script = `./modules/${mod}/${mod}${ debugMode ? '.min' : '' }.js`;
-      
+      const script = `./modules/${mod}/${mod}${debugMode ? '.min' : ''}.js`;
+
       $.ajax({
         url: script,
         dataType: "script",
         suppressErrors: true,
-        success: function(data){
+        success: function (data) {
           window[mod].init.apply(null, args);
-          if (loaded){
+          if (loaded) {
             loaded();
           }
         },
-        error: function(jqxhr, settings, exception) {
+        error: function (jqxhr, settings, exception) {
           core.open({
             obj: mod,
             method: 'read',
@@ -50,23 +50,23 @@ var core = {
       });
     }
   },
-  
+
   /**
   * returns img tag with loading gif
   */
-  loading : '<img src="./assets/bdus/img/loader.gif"  alt="loading..." />',
-  
-  _get2url: function(get){
-    if (typeof get === 'string'){
+  loading: '<img src="./assets/bdus/img/loader.gif"  alt="loading..." />',
+
+  _get2url: function (get) {
+    if (typeof get === 'string') {
       return get;
-    } else if($.isPlainObject(get))  {
+    } else if ($.isPlainObject(get)) {
       return $.param(get);
-    } else if ($.isArray(get)){
+    } else if ($.isArray(get)) {
       return 'param[]=' + get.join('&param[]=');
     }
     return false;
   },
-  
+
   /**
   * Performs an Ajax call and gets JSON from object::method
   * @param {string} obj object to call (with _ctrl part)
@@ -76,18 +76,18 @@ var core = {
   * @param {function|false} loaded callback function
   * @returns {undefined}
   */
-  getHTML: function(obj,method,get,post,loaded){
-    
+  getHTML: function (obj, method, get, post, loaded) {
+
     var URLstring = './?obj=' + obj + '&method=' + method
-    + ( get ? '&' + this._get2url(get) : '');
-    
-    if (!post){
+      + (get ? '&' + this._get2url(get) : '');
+
+    if (!post) {
       $.get(URLstring, loaded);
     } else {
       $.post(URLstring, post, loaded);
     }
   },
-  
+
   /**
   * Performs an Ajax call and gets JSON from object::method
   * @param {string} obj object to call (with _ctrl part)
@@ -97,17 +97,17 @@ var core = {
   * @param {function|false} loaded callback function
   * @returns {undefined}
   */
-  getJSON: function(obj,method,get,post,loaded){
+  getJSON: function (obj, method, get, post, loaded) {
     var URLstring = './?obj=' + obj + '&method=' + method
-    + ( get ? '&' + this._get2url(get) : '');
-    
-    if (!post){
+      + (get ? '&' + this._get2url(get) : '');
+
+    if (!post) {
       $.get(URLstring, loaded, 'json');
     } else {
       $.post(URLstring, post, loaded, 'json');
     }
   },
-  
+
   /**
   * Utility wrapper of getJSON
   * Automatically runs core.message on response
@@ -118,7 +118,7 @@ var core = {
   * @param {function|false} loaded callback function
   */
   runAndRespond(obj, method, get, post, loaded) {
-    if (typeof get === 'function'){
+    if (typeof get === 'function') {
       loaded = get;
       get = false;
       post = false;
@@ -127,15 +127,15 @@ var core = {
       loaded = post;
       post = false;
     }
-    
-    core.getJSON ( obj, method, get, post, data => {
+
+    core.getJSON(obj, method, get, post, data => {
       core.message(data.text, data.status);
-      if (loaded){
+      if (loaded) {
         loaded(data);
       }
     });
   },
-  
+
   /**
   *
   * @param opts
@@ -149,8 +149,8 @@ var core = {
   * opt.unique	?	boolean		[tabs only]
   * opt.opts		?	object		[dialog only]
   */
-  open: function(opt, type){
-    if (type === 'modal'){
+  open: function (opt, type) {
+    if (type === 'modal') {
       layout.dialog.add(opt);
     } else {
       layout.tabs.add(opt);
@@ -162,7 +162,7 @@ var core = {
   * @param array|false args Array of argument to use for vsprintf
   */
   tr: function (string, args) {
-    
+
     if (!lang[string]) {
       return string;
     } else {
@@ -173,19 +173,19 @@ var core = {
       }
     }
   },
-  
-  
+
+
   /**
   * Displays system message
   * @param string text		Message text
   * @param string type		Message type: error|sucess|info, default: info
   * @param boolean sticky if true message will be sticky
   */
-  message: function(text, type, sticky) {
-    if (!type){
+  message: function (text, type, sticky) {
+    if (!type) {
       type = 'info';
     }
-    if (type === 'info' || type === 'success' || type === 'warning' || type === 'error'){
+    if (type === 'info' || type === 'success' || type === 'warning' || type === 'error') {
       iziToast[type]({
         message: text,
         maxWidth: '400px'

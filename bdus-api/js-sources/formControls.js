@@ -11,13 +11,13 @@
 function formControls(form, options){
   
   // element
-  var $form = $(form);
+  const $form = $(form);
   
   // array filled with errors
-  var wrongEl = {};
+  const wrongEl = {};
   
   //default settings
-  var settings = {
+  let settings = {
     checkOnSubmit: true,
     validationURL : '',         // server must reply (text) 'error' or 'success'
     submitURL 	: '',           //server must reply json with obj.status: 'success' or 'error'
@@ -54,7 +54,7 @@ function formControls(form, options){
       }
     }
 
-    if (typeof wrongEl[input_el] === 'undefined'){
+    if (typeof wrongEl[input_id] === 'undefined'){
       input_el.attr('changed', 'auto');
       const id_name = input_el.data('changeonchange');
       if (id_name){
@@ -67,7 +67,9 @@ function formControls(form, options){
     styleError(input_el, settings.msg[type]);
     const input_id = input_el.attr('id');
     if (Array.isArray(wrongEl[input_id])){
-      wrongEl[input_id].push(type);
+      if (wrongEl[input_id].indexOf(type) === -1) {
+        wrongEl[input_id].push(type);
+      }
     } else {
       wrongEl[input_id] = [type];
     }
@@ -103,16 +105,18 @@ function formControls(form, options){
   const checkBeforeSubmit = function(){
     
     // no duplicate is checked only on keyup!
-    var checkTypes = [ 
+    const checkTypes = [ 
       'not_empty', 
       'int', 
       'email', 
-      /* 'no_dupl', */ 
+      'no_dupl', 
       'range', 
-      'regex'
-      /* 'valid_wkt' */ 
+      'regex',
+      'valid_wkt'
     ];
     
+    const promises = [];
+
     $.each(checkTypes, function(index, id){
       $form.find('[check~="' + id + '"]').each(function(index, el){
 
@@ -122,16 +126,18 @@ function formControls(form, options){
         }
         // not_empty is always validated in core, but not in plugins
         if (id === 'not_empty' && !$(el).data('changeonchange')){
-          checkInput($(el), id);
+          promises.push(checkInput($(el), id));
         // unless plugin data is inserted
         } else if (id === 'not_empty' && $(el).data('changeonchange') && $(`:input[name="${$(el).data('changeonchange')}"]`).attr('changed')) {
-          checkInput($(el), id);
+          promises.push(checkInput($(el), id));
         // other controls only on changed inputs
         } else if ($(el).data('changed')){
-          checkInput($(el), id);
+          promises.push(checkInput($(el), id));
         }
       });
     });
+
+    return Promise.all(promises);
   };
   
   /**
@@ -139,29 +145,30 @@ function formControls(form, options){
   *	checks if the wrongEl contains errors; if yes form will not be send; an error message will appear
   *	only inputs with 'changed' tags will be sent!
   */
-  this.send = function (all) {
+  this.send = async function (all) {
     
-    checkBeforeSubmit();
+    await checkBeforeSubmit();
+    
     // Stop only if errors are in not changed objects
-    let stop;
+    let stop = false;
     for (const el_id in wrongEl) {
       if ($(`#${el_id}`).attr('changed')){
         stop = true;
       }
     }
 
-    // checks for pesent errors
+    // checks for present errors
     if ( stop ) {
       core.message(settings.msg.errors_in_form, 'error');
     } else {
       
-      var ser;
+      let ser;
       
       if (all){
         ser = $form.serialize();
       } else {
         // disable unchanged inputs!
-        var not_changed = $form.find(':input:not([changed])');
+        const not_changed = $form.find(':input:not([changed])');
         not_changed.attr('disabled','disabled');
         // serialize changed inputs
         ser = $form.serialize();
@@ -206,13 +213,17 @@ function formControls(form, options){
         .html('*' + checkType)
         .insertAfter(input);
     } else {
-      input.next('div.notValid').append('<br />' + checkType);
+      // Avoid duplicate error messages
+      const errDiv = input.next('div.notValid');
+      if (errDiv.html().indexOf(checkType) === -1) {
+        errDiv.append('<br />' + checkType);
+      }
     }
     input.addClass('notValid');
   };
   
   // private method: Removes error style (class) and text from form or from element
-  var removeError = function(el){
+  const removeError = function(el){
     $(el).next('div.notValid').remove();
     $(el).removeClass('notValid');
   };
@@ -222,97 +233,113 @@ function formControls(form, options){
   *		checks input value using checkType
   *		if check is not successful input will be send to wrongEl array and input will be marked with error text and style
   */
-  var checkInput = function(input, checkType){
+  const checkInput = function(input, checkType){
     
-    var val = input.val();
+    let val = input.val();
     
-    switch ( checkType ) {
-      case 'int':
-        if ( isNaN(val) ) {
-          onErrorCb(input, checkType);
-        } else {
-          onSuccessCb(input, checkType);
-        }
-      break;
-      case 'email':
-        var emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
-        
-        if ( val !== '' && !emailPattern.test(val) ) {
-          onErrorCb(input, checkType)
-        } else {
-          onSuccessCb(input, checkType);
-        }
+    return new Promise((resolve) => {
+      switch ( checkType ) {
+        case 'int':
+          if ( isNaN(val) ) {
+            onErrorCb(input, checkType);
+          } else {
+            onSuccessCb(input, checkType);
+          }
+          resolve();
         break;
-        case 'not_empty':
-        if ( val === '' ) {
-          onErrorCb(input, checkType)
-        } else {
-          onSuccessCb(input, checkType);
-        }
-      break;
-      case 'no_dupl':
-        if (val){
-          $.ajax({
-            url: settings.validationURL + '&type=duplicates&fld=' + input.attr('name') + '&val=' + val,
-            complete: function(data){
-              if (data.responseText === 'error') {
-                onErrorCb(input, checkType)
-              } else {
-                onSuccessCb(input, checkType);
+        case 'email':
+          const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
+          
+          if ( val !== '' && !emailPattern.test(val) ) {
+            onErrorCb(input, checkType)
+          } else {
+            onSuccessCb(input, checkType);
+          }
+          resolve();
+          break;
+          case 'not_empty':
+          if ( val === '' ) {
+            onErrorCb(input, checkType)
+          } else {
+            onSuccessCb(input, checkType);
+          }
+          resolve();
+        break;
+        case 'no_dupl':
+          if (val){
+            $.ajax({
+              url: settings.validationURL + '&type=duplicates&fld=' + input.attr('name') + '&val=' + val,
+              success: function(data){
+                if (data === 'error') {
+                  onErrorCb(input, checkType)
+                } else {
+                  onSuccessCb(input, checkType);
+                }
+                resolve();
+              },
+              error: function(data){
+                styleError(input, settings.msg.ajax_error);
+                core.message(settings.msg.ajax_error, 'error');
+                resolve();
               }
-            },
-            error: function(data){
-              styleError(input, settings.msg.ajax_error);
-              core.message(settings.msg.ajax_error, 'error');
-            }
-          });
-        }
-      break;
-      case 'valid_wkt':
-        if (val){
-          $.ajax({
-            url: settings.validationURL + '&type=wkt&val=' + val,
-            complete: function(data){
-              if (data.responseText === 'error') {
-                onErrorCb(input, checkType)
-              } else {
-                onSuccessCb(input, checkType);
+            });
+          } else {
+            resolve();
+          }
+        break;
+        case 'valid_wkt':
+          if (val){
+            $.ajax({
+              url: settings.validationURL + '&type=wkt&val=' + val,
+              success: function(data){
+                if (data === 'error') {
+                  onErrorCb(input, checkType)
+                } else {
+                  onSuccessCb(input, checkType);
+                }
+                resolve();
+              },
+              error: function(data){
+                styleError(input, settings.msg.ajax_error);
+                core.message(settings.msg.ajax_error, 'error');
+                resolve();
               }
-            },
-            error: function(data){
-              styleError(input, settings.msg.ajax_error);
-              core.message(settings.msg.ajax_error, 'error');
-            }
-          });
-        }
-      break;
-      case 'range':
-        var min = parseInt(input.attr('min'));
-        var max = parseInt(input.attr('max'));
+            });
+          } else {
+            resolve();
+          }
+        break;
+        case 'range':
+          const min = parseInt(input.attr('min'), 10);
+          const max = parseInt(input.attr('max'), 10);
+          
+          val = parseInt(val, 10);
+          
+          if ( val < min || val > max  || isNaN(val)) {
+            onErrorCb(input, checkType)
+          } else {
+            onSuccessCb(input, checkType);
+          }
+          resolve();
+        break;
         
-        val = parseInt(val);
+        case 'regex':
+          const mypattern = input.attr('mypattern');
+          const pattern = new RegExp (mypattern);
+          if (val && !pattern.test(val)) {
+            onErrorCb(input, checkType)
+          } else {
+            onSuccessCb(input, checkType);
+          }
+          resolve();
+        break;
         
-        if ( val < min || val > max  || isNaN(val)) {
-          onErrorCb(input, checkType)
-        } else {
-          onSuccessCb(input, checkType);
-        }
-      break;
-      
-      case 'regex':
-        var mypattern = input.attr('mypattern');
-        var pattern = new RegExp (mypattern);
-        if (val && !pattern.test(val)) {
-          onErrorCb(input, checkType)
-        } else {
-          onSuccessCb(input, checkType);
-        }
-      break;
-      
-      default:
-        console.log(settings.msg.no_rules_for + ' ' + checkType);
-      break;
-    }
+        default:
+          console.log(settings.msg.no_rules_for + ' ' + checkType);
+          resolve();
+        break;
+      }
+    });
   };
   return this;
 }

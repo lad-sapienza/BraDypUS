@@ -9,6 +9,50 @@ At present, about thirty Italian and International reserach projects, mainly rel
 
 Recently a new [Educational](https://bdus.cloud/db/edu) service has been activated to host research data of younger researchers, typically graduate and PhD students, PostDocs, indipendent researchers, etc. This service runs the latest build of the 4.x branch.
 
+## Run with Docker
+
+BraDypUS is now available as a Docker image, making it easy to run on any platform without manual installation. The official image is available on Docker Hub at `jbogdani/bradypus`.
+
+### Quick Start
+
+To run BraDypUS with Docker Compose, create a `docker-compose.yml` file:
+
+```yaml
+services:
+  bradypus:
+    image: jbogdani/bradypus:latest
+    container_name: bradypus
+    ports:
+      - "8080:80"
+    # IMPORTANT: Mount the data volume for persistence
+    volumes:
+      # Mount your local projects folder into the container
+      - ./projects:/var/www/html/projects
+    restart: unless-stopped
+```
+
+Then run:
+
+```bash
+docker-compose up -d
+```
+
+BraDypUS will be available at `http://localhost:8080`
+
+### Using Docker CLI
+
+Alternatively, run directly with Docker:
+
+```bash
+docker run -d \
+  --name bradypus \
+  -p 8080:80 \
+  -v ./projects:/var/www/html/projects \
+  jbogdani/bradypus:latest
+```
+
+**Important:** The `projects` volume mount ensures your data persists across container restarts.
+
 ## More information:
 
 * [bdus.cloud](https://bdus.cloud)

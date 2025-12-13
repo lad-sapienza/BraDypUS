@@ -1,0 +1,75 @@
+name: Docker Image Build and Publish on Release
+
+# 1. Trigger: Run this workflow only when a 'release' event is created (published)
+on:
+  release:
+    types: [published]
+
+# Define permissions needed for the workflow
+permissions:
+  contents: read # To checkout the code
+  packages: write # To push to GitHub Container Registry (if using GHCR)
+
+# The main job that will build and push the image
+jobs:
+  build_and_push:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # 1. Checkout the Code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        # We need the full history to derive tags accurately
+        with:
+          fetch-depth: 0
+
+      # 2. Set up QEMU for multi-platform builds (optional, but recommended)
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      
+      # 3. Set up Docker Buildx (Docker's advanced builder)
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # 4. Log in to the Container Registry
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+
+      # 5. Extract Metadata (Tags and Labels)
+      # This step automatically generates tags based on the Git reference (the release tag)
+      - name: Extract metadata (tags, labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKER_USERNAME }}/bradypus # Image name format: <USERNAME>/<REPO_NAME>
+          tags: |
+            # Semantic versioning: for v1.2.3 creates tags 1.2.3, 1.2, 1
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            # Always tag as latest for non-prerelease versions
+            type=raw,value=latest,enable={{is_default_branch}}
+          flavor: |
+            latest=auto
+
+      # 6. Build and Push the Docker Image
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          # Use the Dockerfile created in the previous step
+          context: .
+          file: ./Dockerfile 
+          # Multi-platform build for broader compatibility
+          platforms: linux/amd64,linux/arm64
+          push: true # Key step: tells it to push to the registry
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # GitHub Actions caching for faster subsequent builds
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          # Add provenance attestations for supply chain security
+          provenance: true
+          sbom: true

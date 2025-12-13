@@ -62,8 +62,8 @@ jobs:
           # Use the Dockerfile created in the previous step
           context: .
           file: ./Dockerfile 
-          # Multi-platform build for broader compatibility
-          platforms: linux/amd64,linux/arm64
+          # Build for AMD64 only (ARM64 via emulation is very slow)
+          platforms: linux/amd64
           push: true # Key step: tells it to push to the registry
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

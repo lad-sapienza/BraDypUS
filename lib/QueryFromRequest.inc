@@ -528,8 +528,12 @@ class QueryFromRequest
    * Cleans sql query statement from dangerouse queries
    * @param string $statement		sql query statement
    */
-  public static function makeSafeStatement($statement)
-  {
-    return preg_replace('/update|delete|truncate|;|insert|insert|update|create|drop|file|index|alter|alter routine|create routine|execute/i', '', $statement);
+  public static function makeSafeStatement($statement) {
+    // 1. Protegge l'integrità delle parole chiave isolate
+    // 2. Mantiene il punto e virgola rimosso per evitare multi-query
+    $forbidden = ['update', 'delete', 'truncate', 'insert', 'create', 'create routine', 'drop', 'index', 'alter', 'alter routine', 'execute', 'grant'];
+    $pattern = '/\b(' . implode('|', $forbidden) . ')\b|;/i';
+    
+    return preg_replace($pattern, '', $statement);
   }
 }

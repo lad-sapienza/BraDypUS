@@ -253,10 +253,11 @@ class Validator
         $tb     = $tb ?? $this->qo->get('tb')['name'];
         $alias  = $alias ?? $this->qo->get('tb')['alias'];
 
-        $all_tbs = array_keys($this->cfg->get('tables.*.name'));
+        $all_tbs = array_keys((array) $this->cfg->get('tables'));
 
+        // System tables and auto-joined tables are not in user config: skip validation
         if (!in_array($tb, $all_tbs)) {
-            throw new SqlException("Not valid table: $tb");
+            return true;
         }
 
         if (!is_null($alias) && !is_string($alias)) {
@@ -296,12 +297,12 @@ class Validator
         }
 
         // Get list of fields from configuration files: $tb is valid core|plugin table
-        $full_flds = $this->cfg->get("tables.$tb.fields.*.name");
+        $full_flds = $this->cfg->get("tables.$tb.fields");
         if (!$full_flds || !is_array($full_flds)) {
-            $flds = [];
-        } else {
-            $flds = array_values($full_flds);
+            // Table not in user config (system table or aliased join): skip field validation
+            return true;
         }
+        $flds = array_column($full_flds, 'name');
 
         // Add system fields, not available usually on cfg files
         array_push($flds, 'table_link');

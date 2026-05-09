@@ -112,6 +112,7 @@ class QueryObject
     public function __construct(Config $cfg = null)
     {
         $this->cfg = $cfg;
+        $this->validation = ($cfg !== null);
 
         $this->obj = [
             'tb'        => [
@@ -593,8 +594,7 @@ class QueryObject
 
     private function validateObject()
     {
-        // TODO: Validator is turned off: handle vocabularies validation
-        if ($this->cfg && true === false) {
+        if ($this->cfg && $this->validation) {
             $validator = new Validator($this->cfg);
             $validator->validateQueryObject($this);
         }

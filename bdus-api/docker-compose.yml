@@ -1,0 +1,29 @@
+services:
+
+  # PHP/Apache backend — serves the existing app and the JSON API bridge
+  app:
+    build: .
+    ports:
+      - "8080:80"
+    volumes:
+      # Live source mount: changes on host are immediately reflected
+      - .:/var/www/html
+      # Persistent project data (databases, uploaded files, backups)
+      - bradypus-projects:/var/www/html/projects
+
+  # Node/Vite dev server — only started with: docker compose --profile vue up
+  # Activate once Vue + Vite are configured (npm run dev will run vite)
+  node:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - .:/app
+    ports:
+      - "5173:5173"
+    # Vite must listen on 0.0.0.0 to be reachable from outside the container
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    profiles:
+      - vue
+
+volumes:
+  bradypus-projects:

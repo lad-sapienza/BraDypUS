@@ -1,0 +1,8 @@
+.git
+.claude
+.github
+node_modules
+cache/
+sessions/
+logs/
+.DS_Store

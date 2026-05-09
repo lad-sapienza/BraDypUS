@@ -10,6 +10,17 @@
 
 class user_ctrl extends Controller
 {
+	/**
+	 * Returns user list.
+	 *
+	 * JSON shape:
+	 * {
+	 *   "admin": bool,
+	 *   "users": [
+	 *     { "id": int, "name": string, "email": string, "privilege": string, "editable": bool }
+	 *   ]
+	 * }
+	 */
 	public function showList()
 	{
 		$data = [ 'admin' => \utils::canUser('admin') ];
@@ -17,7 +28,7 @@ class user_ctrl extends Controller
 		if (\utils::canUser('admin')) {
 			$sys_manager = new DB\System\Manage($this->db, $this->prefix);
 			$all_users = $sys_manager->getBySQL('users', '1=1');
-			
+
 			foreach( $all_users as $user ) {
 				$data['users'][] = [
 					'id' => $user['id'],
@@ -36,9 +47,12 @@ class user_ctrl extends Controller
 				'editable' 	=> true
 			];
 		}
-		
-    
-    	$this->render('user', 'showList', $data);
+
+		if ($this->wantsJson()) {
+			$this->returnJson($data);
+		} else {
+			$this->render('user', 'showList', $data);
+		}
 	}
 	
 	public function deleteOne($id = false)
@@ -62,43 +76,61 @@ class user_ctrl extends Controller
 		}
 	}
 	
+	/**
+	 * Returns data for a single user form (new or existing).
+	 *
+	 * JSON shape:
+	 * {
+	 *   "id": int|null,
+	 *   "name": string,
+	 *   "email": string,
+	 *   "avatar": string,        // md5 of email, for Gravatar
+	 *   "privileges": [
+	 *     { "id": int|null, "value": int, "label": string, "selected": bool }
+	 *   ]
+	 * }
+	 */
 	public function showUserForm()
 	{
 		$id = $this->get['id'];
-    
-		if (isset($id) && $id !== $_SESSION['user']['id'] && !\utils::canUser('admin')){
-			echo \tr::get('not_enough_privilege');
+
+		if (isset($id) && $id !== $_SESSION['user']['id'] && !\utils::canUser('admin')) {
+			$this->wantsJson()
+				? $this->returnJson(['status' => 'error', 'text' => \tr::get('not_enough_privilege')])
+				: print(\tr::get('not_enough_privilege'));
 			return;
 		}
-		
+
 		if ($id) {
 			$sys_manager = new Manage($this->db, $this->prefix);
 			$one_user = $sys_manager->getById('users', $id);
 		} else {
 			$one_user = [];
 		}
-		
-		
+
 		$data = [
-			'id' => $one_user['id'],
-			'name' => $one_user['name'],
-			'email' => $one_user['email'],
-			'avatar' => md5( strtolower( trim( $one_user['email'] ) ) )
+			'id'     => $one_user['id'] ?? null,
+			'name'   => $one_user['name'] ?? '',
+			'email'  => $one_user['email'] ?? '',
+			'avatar' => md5( strtolower( trim( $one_user['email'] ?? '' ) ) )
 		];
 
 		foreach (\utils::privilege('all', true) as $k => $str) {
 			if ($k >= $_SESSION['user']['privilege']) {
 				$data['privileges'][] = [
-					'id'	=> $one_user['id'],
-					'value' => $k,
-					'label' => $str,
-					'selected' => ($k === $one_user['privilege'])
+					'id'       => $one_user['id'] ?? null,
+					'value'    => $k,
+					'label'    => $str,
+					'selected' => ($k === ($one_user['privilege'] ?? null))
 				];
 			}
 		}
-		
-    	$this->render('user', 'showUserForm', $data);
-		
+
+		if ($this->wantsJson()) {
+			$this->returnJson($data);
+		} else {
+			$this->render('user', 'showUserForm', $data);
+		}
 	}
 	
 	public function saveUserData()

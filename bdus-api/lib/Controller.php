@@ -115,6 +115,26 @@ abstract class Controller
   }
 
   /**
+   * Returns true if the caller expects a JSON response.
+   * Detected via Accept: application/json header or ?format=json query param.
+   * Used by controllers to support both the legacy HTML rendering path and
+   * the new Vue frontend API path without duplicating business logic.
+   *
+   * @return bool
+   */
+  protected function wantsJson(): bool
+  {
+    $accept = $_SERVER['HTTP_ACCEPT'] ?? '';
+    if (strpos($accept, 'application/json') !== false) {
+      return true;
+    }
+    if (isset($this->get['format']) && $this->get['format'] === 'json') {
+      return true;
+    }
+    return false;
+  }
+
+  /**
    * Echoes json-encoded data from array, with proper header
    *
    * @param array $data

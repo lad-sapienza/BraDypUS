@@ -21,7 +21,7 @@ services:
     ports:
       - "5173:5173"
     # Vite must listen on 0.0.0.0 to be reachable from outside the container
-    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    command: sh -c "npm install && npm run vue:dev -- --host 0.0.0.0"
     profiles:
       - vue
 

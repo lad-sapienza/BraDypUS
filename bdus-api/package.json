@@ -4,7 +4,10 @@
   "description": "BraDypUS web database system",
   "scripts": {
     "build": "gulp build",
-    "dev": "gulp"
+    "dev": "gulp",
+    "vue:dev": "vite",
+    "vue:build": "vite build",
+    "vue:preview": "vite preview"
   },
   "repository": {
     "type": "git",
@@ -16,8 +19,17 @@
     "url": "https://github.com/bdus-db/BraDypUS/issues"
   },
   "homepage": "https://github.com/bdus-db/BraDypUS",
+  "dependencies": {
+    "@primevue/themes": "^4.0.0",
+    "pinia": "^2.0.0",
+    "primeicons": "^7.0.0",
+    "primevue": "^4.0.0",
+    "vue": "^3.5.0",
+    "vue-router": "^4.0.0"
+  },
   "devDependencies": {
     "@fancyapps/fancybox": "^3.5.7",
+    "@vitejs/plugin-vue": "^5.0.0",
     "bootstrap": "^3.4.1",
     "datatables.net": "^1.11.3",
     "datatables.net-bs": "^1.11.3",
@@ -32,6 +44,7 @@
     "izitoast": "^1.4.0",
     "jquery": "^3.5.1",
     "select2": "^4.1.0-rc.0",
-    "sortablejs": "^1.10.2"
+    "sortablejs": "^1.10.2",
+    "vite": "^6.0.0"
   }
 }

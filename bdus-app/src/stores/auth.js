@@ -52,7 +52,7 @@ export const useAuthStore = defineStore('auth', () => {
     app.value = null
   }
 
-  const isAuthenticated = () => !!user.value
+  const isAuthenticated = () => !!(user.value?.id)
 
   return { user, app, login, selectApp, fetchMe, logout, isAuthenticated }
 })

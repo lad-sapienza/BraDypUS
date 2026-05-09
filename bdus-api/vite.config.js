@@ -3,11 +3,14 @@ import vue from '@vitejs/plugin-vue'
 import { fileURLToPath, URL } from 'node:url'
 
 export default defineConfig({
+  // Vue source lives in vue/ to avoid conflicts with the PHP app at the root
+  root: 'vue',
+
   plugins: [vue()],
 
   resolve: {
     alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
+      '@': fileURLToPath(new URL('./vue/src', import.meta.url))
     }
   },
 
@@ -26,10 +29,7 @@ export default defineConfig({
   },
 
   build: {
-    outDir: 'dist/vue',
-    manifest: true,
-    rollupOptions: {
-      input: 'index.html'
-    }
+    outDir: '../dist/vue',
+    manifest: true
   }
 })

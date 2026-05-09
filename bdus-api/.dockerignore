@@ -2,6 +2,7 @@
 .claude
 .github
 node_modules
+dist/vue
 cache/
 sessions/
 logs/

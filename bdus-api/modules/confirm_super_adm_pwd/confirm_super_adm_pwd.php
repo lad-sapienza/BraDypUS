@@ -20,13 +20,9 @@ class confirm_super_adm_pwd_ctrl extends Controller
 
         $sys_manager = new Manage($this->db, $this->prefix);
         
-        $me = $sys_manager->getBySQL('users', 'id = ? AND password = ? ', [
-            $current_user_id,
-            \utils::encodePwd($pwd)
-        ]);
-        
+        $me = $sys_manager->getById('users', $current_user_id);
 
-        if(!$me || !is_array($me)){
+        if (!$me || !\utils::verifyPassword($pwd, $me['password'])) {
             $this->response('invalid_pasword', 'error');
             return;
         } else {

@@ -381,7 +381,15 @@ class utils
 
   public static function encodePwd(string $password): string
   {
-    return sha1($password);
+    return password_hash($password, PASSWORD_DEFAULT);
+  }
+
+  public static function verifyPassword(string $plain, string $stored): bool
+  {
+    if (strlen($stored) === 40) {
+      return $stored === sha1($plain);
+    }
+    return password_verify($plain, $stored);
   }
 
   public static function isDuplicateEmail(\DB\DB $db, string $prefix, string $email, int $id = null): bool

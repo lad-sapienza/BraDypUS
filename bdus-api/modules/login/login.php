@@ -261,20 +261,21 @@ class login_ctrl extends Controller
         if ($user_id) {
 			$res = $sys_manager->getById('users', $user_id);
         } elseif (filter_var($email, FILTER_VALIDATE_EMAIL) && !empty($password)) {
-			// get user data
-			$res = $sys_manager->getBySQL(
-				'users', 
-				'email = ? AND password = ?', 
-				[ $email, \utils::encodePwd($password)]);
-			$res = $res[0];
+			$rows = $sys_manager->getBySQL('users', 'email = ?', [$email]);
+			$res = $rows[0] ?? null;
+			if (!$res || !\utils::verifyPassword($password, $res['password'])) {
+				throw new \Exception(\tr::get('login_data_not_valid'));
+			}
+			// Silently migrate legacy SHA1 hash to bcrypt on successful login
+			if (strlen($res['password']) === 40) {
+				$sys_manager->editRow('users', $res['id'], ['password' => password_hash($password, PASSWORD_DEFAULT)]);
+			}
         } else {
             throw new \Exception(\tr::get('email_password_needed'));
         }
 
         if ($res) {
-
 			self::startUserSession($res, ($remember && $remember !== 'false'));
-            
             return true;
         } else {
             throw new \Exception(\tr::get('login_data_not_valid'));

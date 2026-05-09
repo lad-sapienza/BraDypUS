@@ -110,7 +110,7 @@ class user_ctrl extends Controller
 			foreach ($data as $key => &$value) {
 				if ($key === 'password'){
                     if ($value && $value !== '') {
-                        $value = sha1($value);
+                        $value = password_hash($value, PASSWORD_DEFAULT);
                     } else {
 						unset($data[$key]);
 					}

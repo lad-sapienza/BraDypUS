@@ -20,14 +20,14 @@ class GetChart
 
         $chart = $sys_manage->getById('charts', $id);
 
-        if (!$chart || !empty($chart) ) {
+        if (!$chart || empty($chart) ) {
             throw new \Exception("Chart #{$id} not found");
         }
 
         return [
             'name' => $chart['name'],
             'id' => $chart['id'],
-            'data' => $db->query($chart['sql'])
+            'data' => $db->query($chart['sqltext'])
         ];
     }
 }

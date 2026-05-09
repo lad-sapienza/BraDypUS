@@ -31,7 +31,6 @@ class geoface_ctrl extends Controller
             ]);
 
             $record->persist();
-            // TODO: $new_id is undefined
             $this->response('ok_insert_geodata', 'success', null, ['id' => $record->getCore('id')]);
         } catch (\Throwable $e) {
             $this->log->error($e);

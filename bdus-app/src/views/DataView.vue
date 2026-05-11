@@ -2,47 +2,8 @@
   <AppLayout>
     <div class="data-layout">
 
-      <!-- ── Table sidebar ─────────────────────────────────── -->
-      <aside class="table-sidebar app-table-sidebar" :class="{ 'sidebar-hidden': sidebarHidden }">
-        <div class="table-sidebar-header">
-          <span>{{ t('data_mng') }}</span>
-          <ProgressSpinner v-if="loadingTables" style="width:18px;height:18px" />
-          <!-- close button — small screens only -->
-          <button class="sidebar-close-btn" @click="sidebarHidden = true" :title="t('close')">
-            <i class="pi pi-times" />
-          </button>
-        </div>
-        <div v-if="tables.length === 0 && !loadingTables" class="table-sidebar-empty">
-          {{ t('no_record_found') }}
-        </div>
-        <nav class="table-nav">
-          <button
-            v-for="tbl in tables"
-            :key="tbl.name"
-            class="table-nav-item"
-            :class="{ active: selectedTable?.name === tbl.name }"
-            :title="tbl.label"
-            @click="selectTable(tbl)"
-          >
-            <i class="pi pi-table" />
-            <span>{{ tbl.label }}</span>
-          </button>
-        </nav>
-      </aside>
-
       <!-- ── Records panel ──────────────────────────────────── -->
       <div class="records-panel">
-
-        <!-- Reopen sidebar button: always visible on small screens when sidebar is collapsed -->
-        <div v-if="sidebarHidden" class="sidebar-reopen-bar">
-          <button
-            class="sidebar-open-btn"
-            :title="t('data_mng')"
-            @click="sidebarHidden = false"
-          >
-            <i class="pi pi-list" />
-          </button>
-        </div>
 
         <div v-if="!selectedTable" class="records-placeholder">
           <i class="pi pi-arrow-left" />
@@ -319,6 +280,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import { api } from '@/api'
 import { useI18n } from '@/i18n'
+import { useTables } from '@/composables/useTables'
 import AppLayout from '@/components/AppLayout.vue'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
@@ -340,29 +302,33 @@ const route  = useRoute()
 const router = useRouter()
 const { responseMessage } = api
 
-// ── Tables ───────────────────────────────────────────────────
-const tables        = ref([])
-const selectedTable = ref(null)
-const loadingTables = ref(false)
+// ── Tables (shared singleton composable) ─────────────────────
+const { tables, loadTables } = useTables()
 
-// ── Sidebar collapse (small screens only) ────────────────────
-const sidebarHidden = ref(false)
-const SMALL_SCREEN  = 900  // px — below this the sidebar auto-collapses on selection
+// ── Selected table: derived from route query ──────────────────
+const selectedTable = computed(() =>
+  tables.value.find(tbl => tbl.name === route.query.tb) ?? null
+)
 
 // ── Column visibility ─────────────────────────────────────────
 const colToggler         = ref()
 const visibleColumnNames = ref(new Set())   // Set of field names the user wants to see
 
-/** All fields available for this table (from advConfig, loaded eagerly on table select) */
-const allAvailableColumns = computed(() =>
-  advFields.value
-    .map(f => {
-      // advFields value format is "tablename:fieldname"
-      const [, name] = f.value.includes(':') ? f.value.split(':') : [null, f.value]
-      return { name, label: f.label }
-    })
+/**
+ * All main-table fields available for column toggling.
+ * advFields value format: "tablename:fieldname" — for both main table
+ * and plugin tables. We keep only entries belonging to the selected table
+ * (prefix = selectedTable.name + ':') to avoid passing plugin field names
+ * to getRecords where they would cause SQL errors.
+ */
+const allAvailableColumns = computed(() => {
+  const tb = selectedTable.value?.name
+  if (!tb || !advFields.value.length) return []
+  return advFields.value
+    .filter(f => f.value.startsWith(tb + ':'))
+    .map(f => ({ name: f.value.split(':')[1], label: f.label }))
     .filter(f => f.name && f.name !== 'id')
-)
+})
 
 /** localStorage key for a given table's column prefs */
 function colStorageKey(tbName) { return `bradypus:columns:${tbName}` }
@@ -474,17 +440,13 @@ const activeSearchLabel = computed(() => {
   return ''
 })
 
-// ── Load tables, then apply any URL params ─────────────────────
+// ── Init: load tables (from singleton) then apply URL params ──
 onMounted(async () => {
-  loadingTables.value = true
   try {
-    const res = await api.get('home_ctrl', 'listTables')
-    tables.value = res.tables ?? []
+    await loadTables()
     applyRouteParams()
   } catch {
     toast.add({ severity: 'error', summary: 'Error', detail: 'Could not load tables', life: 3000 })
-  } finally {
-    loadingTables.value = false
   }
 })
 
@@ -499,22 +461,30 @@ onMounted(async () => {
  * getBackLinks() — e.g. "id|=|713" or "^ctx_id|=|42||and|site|=|Rome".
  * We feed it as an expert query to record_ctrl::getRecords().
  */
+// Track last applied tb+where to avoid redundant fetches
+let lastAppliedTb    = null
+let lastAppliedWhere = null
+
 function applyRouteParams() {
   const tbParam    = route.query.tb
-  const whereParam = route.query.where
+  const whereParam = route.query.where ?? null
 
   if (!tbParam) return
 
-  const tbl = tables.value.find(t => t.name === tbParam)
-  if (!tbl) return   // unknown table (permissions or typo)
+  // Guard: skip if nothing changed
+  if (tbParam === lastAppliedTb && whereParam === lastAppliedWhere) return
 
-  const tableChanged = selectedTable.value?.name !== tbParam
-  selectedTable.value = tbl
+  // Table must exist in the list (permissions or typo check)
+  const tbl = tables.value.find(t => t.name === tbParam)
+  if (!tbl) return
+
+  const tableChanged = lastAppliedTb !== tbParam
+  lastAppliedTb    = tbParam
+  lastAppliedWhere = whereParam
 
   if (tableChanged) {
     advConfigFor = null
-    visibleColumnNames.value = new Set()   // reset → will re-init from prefs/defaults
-    autoCollapseSidebar()
+    visibleColumnNames.value = new Set()
     loadAdvConfig()   // eager load all fields for the column toggler
   }
 
@@ -527,18 +497,10 @@ function applyRouteParams() {
   } else if (tableChanged) {
     resetSearch()   // also calls fetchRecords
   }
-  // If same table, no where param, no change → do nothing (avoids double fetch)
 }
 
-// Re-apply whenever the user follows another link while DataView is alive
+// Re-apply whenever route query changes
 watch(() => route.query, applyRouteParams)
-
-// ── Select table ─────────────────────────────────────────────
-function selectTable(tbl) {
-  // Update the URL — applyRouteParams (via watch) will handle the rest.
-  // We strip 'where' on manual table selection (user starts fresh).
-  router.replace({ query: { tb: tbl.name } })
-}
 
 // ── Panel toggle ──────────────────────────────────────────────
 async function togglePanel(name) {
@@ -750,135 +712,12 @@ function onRowClick(event) {
 <style scoped>
 .data-layout {
   display: flex;
-  flex: 1;          /* fill the flex-column main-content area */
-  min-height: 0;    /* allow shrink below content size */
+  flex: 1;
+  min-height: 0;
   overflow: hidden;
+  flex-direction: column;   /* records-panel is the only child now */
 }
 
-/* ── Table sidebar ───────────────────────────────────────── */
-.table-sidebar {
-  width: 200px;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  border-right: 1px solid var(--p-surface-border);
-  transition: width 0.2s ease, opacity 0.2s ease;
-}
-
-/* Collapsed state — only active below 900 px (enforced via JS flag) */
-.table-sidebar.sidebar-hidden {
-  width: 0;
-  opacity: 0;
-  pointer-events: none;
-  border-right: none;
-}
-
-.table-sidebar-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.75rem 1rem;
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  color: var(--p-text-muted-color);
-  border-bottom: 1px solid var(--p-surface-border);
-  flex-shrink: 0;
-  gap: 0.5rem;
-}
-
-/* Close button: visible only on small screens */
-.sidebar-close-btn {
-  display: none;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  color: var(--p-text-muted-color);
-  padding: 0.2rem;
-  border-radius: 4px;
-  line-height: 1;
-  margin-left: auto;
-  flex-shrink: 0;
-}
-.sidebar-close-btn:hover { color: var(--p-text-color); background: var(--p-surface-hover); }
-
-@media (max-width: 899px) {
-  .sidebar-close-btn { display: flex; align-items: center; }
-}
-
-/* Reopen bar: sits at top of records-panel, visible on small screens when sidebar is hidden */
-.sidebar-reopen-bar {
-  display: none;
-  flex-shrink: 0;
-  padding: 0.35rem 0.75rem;
-  border-bottom: 1px solid var(--p-surface-border);
-}
-@media (max-width: 899px) {
-  .sidebar-reopen-bar { display: flex; }
-}
-
-/* Reopen button */
-.sidebar-open-btn {
-  display: none;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  color: var(--p-text-muted-color);
-  padding: 0.3rem 0.4rem;
-  border-radius: 4px;
-  font-size: 1rem;
-  line-height: 1;
-  flex-shrink: 0;
-}
-.sidebar-open-btn:hover { color: var(--p-text-color); background: var(--p-surface-hover); }
-
-@media (max-width: 899px) {
-  .sidebar-open-btn { display: flex; align-items: center; }
-}
-
-.table-sidebar-empty {
-  padding: 1rem;
-  font-size: 0.85rem;
-  color: var(--p-text-muted-color);
-}
-
-.table-nav { flex: 1; overflow-y: auto; padding: 0.25rem 0; }
-
-.table-nav-item {
-  display: flex;
-  align-items: flex-start;  /* icon stays top-aligned on multi-line labels */
-  gap: 0.6rem;
-  width: 100%;
-  padding: 0.5rem 1rem;
-  border: none;
-  background: transparent;
-  text-align: left;
-  font-size: 0.875rem;
-  line-height: 1.35;
-  color: var(--p-text-color);
-  cursor: pointer;
-  transition: background 0.15s;
-}
-
-/* Icon: aligned top, fixed size, nudge for optical alignment with first line */
-.table-nav-item .pi {
-  flex-shrink: 0;
-  font-size: 0.85rem;
-  margin-top: 0.1rem;
-}
-
-/* Label: wrap naturally within sidebar width, cap at two lines */
-.table-nav-item span {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.table-nav-item:hover  { background: var(--p-surface-hover); }
-.table-nav-item.active { background: var(--p-primary-50); color: var(--p-primary-color); font-weight: 600; }
 
 /* ── Records panel ───────────────────────────────────────── */
 .records-panel {

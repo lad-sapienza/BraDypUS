@@ -69,19 +69,38 @@
       <nav class="sidebar-nav">
         <template v-for="group in navGroups" :key="group.labelKey">
           <div class="nav-group-label">{{ t(group.labelKey) }}</div>
-          <component
-            :is="item.disabled ? 'span' : 'RouterLink'"
-            v-for="item in group.items"
-            :key="item.to"
-            v-bind="item.disabled ? {} : { to: item.to }"
-            class="nav-item"
-            :class="{ disabled: item.disabled }"
-            :title="t(item.labelKey)"
-            @click="!item.disabled && closeMobileDrawer()"
-          >
-            <i :class="['pi', item.icon]" />
-            <span class="nav-label">{{ t(item.labelKey) }}</span>
-          </component>
+          <template v-for="item in group.items" :key="item.to">
+            <component
+              :is="item.disabled ? 'span' : 'RouterLink'"
+              v-bind="item.disabled ? {} : { to: item.to }"
+              class="nav-item"
+              :class="{ disabled: item.disabled }"
+              :title="t(item.labelKey)"
+              @click="!item.disabled && closeMobileDrawer()"
+            >
+              <i :class="['pi', item.icon]" />
+              <span class="nav-label">{{ t(item.labelKey) }}</span>
+            </component>
+
+            <!-- Table sub-list: rendered below the "data_mng" item when on /data -->
+            <template v-if="item.to === '/data' && isDataRoute">
+              <div v-if="tablesLoading" class="nav-tables-loading">
+                <i class="pi pi-spin pi-spinner" />
+              </div>
+              <RouterLink
+                v-for="tbl in navTables"
+                :key="tbl.name"
+                :to="`/data?tb=${encodeURIComponent(tbl.name)}`"
+                class="nav-item nav-table-item"
+                :class="{ active: route.query.tb === tbl.name }"
+                :title="tbl.label"
+                @click="closeMobileDrawer()"
+              >
+                <i class="pi pi-table" />
+                <span class="nav-label nav-table-label">{{ tbl.label }}</span>
+              </RouterLink>
+            </template>
+          </template>
         </template>
       </nav>
 
@@ -102,12 +121,13 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from '@/i18n'
 import { api } from '@/api'
+import { useTables } from '@/composables/useTables'
 import Select from 'primevue/select'
 import Button from 'primevue/button'
 import Menu from 'primevue/menu'
@@ -115,7 +135,13 @@ import Dialog from 'primevue/dialog'
 import UserForm from '@/components/users/UserForm.vue'
 
 const router = useRouter()
-const auth = useAuthStore()
+const route  = useRoute()
+const auth   = useAuthStore()
+const { tables: navTables, loading: tablesLoading, loadTables } = useTables()
+
+// Load table list when navigating to /data (or when already there on mount)
+const isDataRoute = computed(() => route.path === '/data')
+watch(isDataRoute, (val) => { if (val) loadTables() }, { immediate: true })
 const toast = useToast()
 const { t, locale, setLocale, availableLocales } = useI18n()
 const currentLocale = computed({
@@ -438,6 +464,48 @@ const navGroups = computed(() => [
   .sidebar.collapsed .nav-group-label { opacity: 0; height: 0; padding: 0; }
   .sidebar.collapsed .nav-label       { display: none; }
   .sidebar.collapsed .nav-item        { justify-content: center; padding: 0.6rem; }
+}
+
+/* ── Table sub-items ──────────────────────────────────────── */
+.nav-tables-loading {
+  padding: 0.4rem 1rem 0.4rem 2.5rem;
+  color: var(--p-text-muted-color);
+  font-size: 0.8rem;
+}
+
+.nav-table-item {
+  padding-left: 2.25rem;   /* indent relative to parent nav-item */
+  font-size: 0.82rem;
+  color: var(--p-text-muted-color);
+}
+
+.nav-table-item .pi {
+  font-size: 0.78rem;
+  color: var(--p-text-muted-color);
+}
+
+.nav-table-item.active,
+.nav-table-item.router-link-active {
+  background: var(--p-primary-50);
+  color: var(--p-primary-color);
+  font-weight: 600;
+}
+.nav-table-item.active .pi,
+.nav-table-item.router-link-active .pi {
+  color: var(--p-primary-color);
+}
+
+.nav-table-label {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.3;
+}
+
+/* collapsed sidebar: hide table sub-items entirely (no icons to show) */
+@media (min-width: 1024px) {
+  .sidebar.collapsed .nav-table-item { display: none; }
 }
 
 /* ── Footer ───────────────────────────────────────────────── */

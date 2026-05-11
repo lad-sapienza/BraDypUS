@@ -147,12 +147,13 @@
 <script setup>
 import { ref, computed } from 'vue'
 import InputText  from 'primevue/inputtext'
-import Textarea   from 'primevue/textarea'
-import Select     from 'primevue/select'
+import Textarea    from 'primevue/textarea'
+import Select      from 'primevue/select'
 import MultiSelect from 'primevue/multiselect'
-import Slider     from 'primevue/slider'
-import { api }    from '@/api'
+import Slider      from 'primevue/slider'
+import { api }     from '@/api'
 import { useI18n } from '@/i18n'
+import { onMounted } from 'vue'
 
 const { t } = useI18n()
 
@@ -199,6 +200,15 @@ const boolOptions = computed(() => [
 const multiSelectArray = computed(() => {
   if (!props.modelValue) return []
   return String(props.modelValue).split(';').map(v => v.trim()).filter(Boolean)
+})
+
+// Pre-load async options for multi_select on mount so the closed-state display
+// can resolve labels immediately (without waiting for the user to open the dropdown).
+// Static (dic) options are already computed synchronously and need no fetch.
+onMounted(() => {
+  if (props.schema.type === 'multi_select') {
+    loadOptions()
+  }
 })
 </script>
 

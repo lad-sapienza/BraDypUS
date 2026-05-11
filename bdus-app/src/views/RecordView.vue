@@ -67,41 +67,58 @@
     <!-- ── Content ─────────────────────────────────────────────────── -->
     <div v-else-if="record" class="record-content">
 
-      <!-- Core fields -->
-      <fieldset class="record-section">
-        <legend>{{ record.metadata.tb_label }}</legend>
-        <div class="fields-grid">
-          <div
-            v-for="fld in visibleCoreFields"
-            :key="fld.name"
-            class="field-cell"
-          >
-            <FieldDisplay
-              v-if="mode === 'read'"
-              :schema="fld"
-              :value="record.core[fld.name]"
-            />
-            <FieldEditor
-              v-else
-              :schema="fld"
-              :tb="record.metadata.tb_id"
-              :modelValue="editData.core[fld.name]"
-              @update:modelValue="v => editData.core[fld.name] = v"
-            />
-          </div>
-        </div>
-      </fieldset>
+      <!-- Template-driven layout (when a template is active) -->
+      <template v-if="hasTemplate">
+        <TemplateSection
+          v-for="(section, idx) in record.schema.template.sections"
+          :key="idx"
+          :section="section"
+          :mode="mode"
+          :tb="record.metadata.tb_id"
+          :record="record"
+          :schema="record.schema"
+          :edit-data="editData"
+        />
+      </template>
 
-      <!-- Plugin sections -->
-      <PluginSection
-        v-for="(plg, plgTb) in record.plugins"
-        :key="plgTb"
-        :schema="record.schema?.plugins?.[plgTb]"
-        :plugin="plg"
-        :mode="mode"
-        :edit-rows="editData.plugins[plgTb] ?? []"
-        @update:edit-rows="v => editData.plugins[plgTb] = v"
-      />
+      <!-- Default layout (no template) -->
+      <template v-else>
+        <!-- Core fields -->
+        <fieldset class="record-section">
+          <legend>{{ record.metadata.tb_label }}</legend>
+          <div class="fields-grid">
+            <div
+              v-for="fld in visibleCoreFields"
+              :key="fld.name"
+              class="field-cell"
+            >
+              <FieldDisplay
+                v-if="mode === 'read'"
+                :schema="fld"
+                :value="record.core[fld.name]"
+              />
+              <FieldEditor
+                v-else
+                :schema="fld"
+                :tb="record.metadata.tb_id"
+                :modelValue="editData.core[fld.name]"
+                @update:modelValue="v => editData.core[fld.name] = v"
+              />
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Plugin sections -->
+        <PluginSection
+          v-for="(plg, plgTb) in record.plugins"
+          :key="plgTb"
+          :schema="record.schema?.plugins?.[plgTb]"
+          :plugin="plg"
+          :mode="mode"
+          :edit-rows="editData.plugins[plgTb] ?? []"
+          @update:edit-rows="v => editData.plugins[plgTb] = v"
+        />
+      </template>
 
       <!-- Links & Backlinks (count-based, from table config) -->
       <fieldset
@@ -184,10 +201,11 @@ import Message        from 'primevue/message'
 import ProgressSpinner from 'primevue/progressspinner'
 import { api }        from '@/api'
 import { useI18n }    from '@/i18n'
-import FieldDisplay   from '@/components/record/FieldDisplay.vue'
-import FieldEditor    from '@/components/record/FieldEditor.vue'
-import PluginSection  from '@/components/record/PluginSection.vue'
-import FileGallery    from '@/components/record/FileGallery.vue'
+import FieldDisplay    from '@/components/record/FieldDisplay.vue'
+import FieldEditor     from '@/components/record/FieldEditor.vue'
+import PluginSection   from '@/components/record/PluginSection.vue'
+import TemplateSection from '@/components/record/TemplateSection.vue'
+import FileGallery     from '@/components/record/FileGallery.vue'
 
 const { t }   = useI18n()
 const route   = useRoute()
@@ -257,6 +275,9 @@ const geodataCount = computed(() => {
   return Array.isArray(g) ? g.length : Object.keys(g).length
 })
 
+/** True when the loaded record includes a valid resolved template. */
+const hasTemplate = computed(() => !!record.value?.schema?.template)
+
 // ── Load record ─────────────────────────────────────────────────
 async function fetchRecord() {
   if (!tb.value) return
@@ -265,6 +286,7 @@ async function fetchRecord() {
   try {
     const params = { tb: tb.value }
     if (id.value) params.id = id.value
+    if (route.query.template) params.template = route.query.template
 
     const res = await api.get('record_ctrl', 'getRecord', params)
 
@@ -273,6 +295,16 @@ async function fetchRecord() {
       return
     }
     record.value = res
+
+    // Warn if a template was requested but could not be loaded/validated
+    if (res.schema?.template_errors) {
+      toast.add({
+        severity: 'warn',
+        summary:  t('template') ?? 'Template',
+        detail:   res.schema.template_errors[0],
+        life:     5000,
+      })
+    }
 
     // If add_new, enter edit mode immediately
     if (isNew.value) enterEditMode()

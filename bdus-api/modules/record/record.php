@@ -66,8 +66,27 @@ class record_ctrl extends Controller
         $qRequest['type'] = 'all';
     }
 
+    // Optional: custom column list from the frontend column-visibility toggler.
+    // If provided, override the default preview fields for this query.
+    $customColumns = $this->get['columns'] ?? $this->post['columns'] ?? null;
+    if ($customColumns && is_array($customColumns)) {
+      // Build associative [fieldName => label] map, always prepend id.
+      $colMap = [];
+      foreach ($customColumns as $col) {
+        $col = preg_replace('/[^a-zA-Z0-9_]/', '', $col);  // sanitise
+        if (!$col || $col === 'id') continue;
+        $label = $this->cfg->get("tables.{$tb}.fields.{$col}.label") ?: $col;
+        $colMap[$col] = $label;
+      }
+      $colMap = array_merge(['id' => 'id'], $colMap);
+      $qRequest['fields'] = $colMap;
+    }
+
+    // use_preview=true unless we are supplying a custom column list
+    $usePreview = !isset($qRequest['fields']);
+
     try {
-      $qObj = new \QueryFromRequest($this->db, $this->cfg, $qRequest, true);
+      $qObj = new \QueryFromRequest($this->db, $this->cfg, $qRequest, $usePreview);
 
       $total = $qObj->getTotal();
 

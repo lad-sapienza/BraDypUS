@@ -15,6 +15,12 @@ define('MAIN_DIR', $basePath);
 define('DEBUG_ON', false);
 define('PREFIX',   'test__');   // needed by Record\Read::getFull() and buildTableSchema()
 
+// PROJ_DIR is normally set per-request by constants.php (depends on the logged-in app).
+// In tests we point it to a dedicated temp tree so filesystem-touching tests
+// (backup_ctrl, etc.) have a safe scratch space that is isolated from any real project.
+$testProjDir = sys_get_temp_dir() . '/bradypus_test_proj/';
+define('PROJ_DIR', $testProjDir);
+
 // ── Suppress errors the way production does, but keep PHPUnit able to catch ─
 // (do NOT call error_reporting(0) — that would hide PHPUnit's own errors)
 

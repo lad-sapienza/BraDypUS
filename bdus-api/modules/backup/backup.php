@@ -256,22 +256,16 @@ class backup_ctrl extends Controller
   // ── Private helpers ───────────────────────────────────────────────────────
 
   /**
-   * Builds the destination path for a new backup file.
-   * Pattern: projects/{app}/backups/{app}-{engine}-{timestamp}.sql.gz
+   * Builds the absolute destination path for a new backup file.
+   * Pattern: {PROJ_DIR}backups/{app}-{engine}-{timestamp}.sql.gz
    */
   private function buildFileName(): string
   {
-    return implode('', [
-      'projects/',
+    return PROJ_DIR . 'backups/' . implode('-', [
       $this->cfg->get('main.name'),
-      '/backups/',
-      $this->cfg->get('main.name'),
-      '-',
       $this->db->getEngine(),
-      '-',
       (new DateTime())->getTimestamp(),
-      '.sql.gz',
-    ]);
+    ]) . '.sql.gz';
   }
 
   /**
@@ -293,15 +287,25 @@ class backup_ctrl extends Controller
     $pdo = new \PDO('sqlite:' . $dbPath);
     $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 
-    $gz = gzopen($outputFile, 'wb9');
+    // Level 6 = default gzip compression: good ratio, much faster than 9.
+    $gz = gzopen($outputFile, 'wb6');
     if (!$gz) {
       throw new \Exception("Cannot create backup file: {$outputFile}");
     }
 
-    gzwrite($gz, "-- BraDypUS SQLite backup\n");
-    gzwrite($gz, "-- Generated: " . date('Y-m-d H:i:s') . "\n");
-    gzwrite($gz, "-- Source: {$dbPath}\n\n");
-    gzwrite($gz, "BEGIN TRANSACTION;\n\n");
+    // Helper: flush a string buffer to the gzip stream and reset it.
+    $flush = function (string &$buf) use ($gz): void {
+      if ($buf !== '') {
+        gzwrite($gz, $buf);
+        $buf = '';
+      }
+    };
+
+    $buf  = '';
+    $buf .= "-- BraDypUS SQLite backup\n";
+    $buf .= "-- Generated: " . date('Y-m-d H:i:s') . "\n";
+    $buf .= "-- Source: {$dbPath}\n\n";
+    $buf .= "BEGIN TRANSACTION;\n\n";
 
     // Read all schema objects that have SQL (skip internal sqlite_ entries)
     $objects = $pdo->query(
@@ -309,7 +313,7 @@ class backup_ctrl extends Controller
       "WHERE sql IS NOT NULL ORDER BY type DESC, name ASC"
     )->fetchAll(\PDO::FETCH_ASSOC);
 
-    // Pass 1: tables — structure + data
+    // Pass 1: tables — structure + cursor-based row iteration (no fetchAll)
     foreach ($objects as $obj) {
       if ($obj['type'] !== 'table') {
         continue;
@@ -320,18 +324,29 @@ class backup_ctrl extends Controller
 
       $qName = $this->quoteSqliteId($obj['name']);
 
-      gzwrite($gz, "-- Table: {$obj['name']}\n");
-      gzwrite($gz, "DROP TABLE IF EXISTS {$qName};\n");
-      gzwrite($gz, $obj['sql'] . ";\n\n");
+      $buf .= "-- Table: {$obj['name']}\n";
+      $buf .= "DROP TABLE IF EXISTS {$qName};\n";
+      $buf .= $obj['sql'] . ";\n\n";
+      $flush($buf);
 
-      $rows = $pdo->query("SELECT * FROM {$qName}")->fetchAll(\PDO::FETCH_ASSOC);
-      foreach ($rows as $row) {
-        $cols = implode(', ', array_map([$this, 'quoteSqliteId'],  array_keys($row)));
-        $vals = implode(', ', array_map([$this, 'quoteSqliteVal'], array_values($row)));
-        gzwrite($gz, "INSERT INTO {$qName} ({$cols}) VALUES ({$vals});\n");
+      // Cursor-based: never loads the full table into memory.
+      $stmt    = $pdo->query("SELECT * FROM {$qName}");
+      $hasRows = false;
+      while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+        if (!$hasRows) {
+          $cols    = implode(', ', array_map([$this, 'quoteSqliteId'], array_keys($row)));
+          $hasRows = true;
+        }
+        $vals  = implode(', ', array_map([$this, 'quoteSqliteVal'], array_values($row)));
+        $buf  .= "INSERT INTO {$qName} ({$cols}) VALUES ({$vals});\n";
+        // Flush every ~256 KB to keep memory flat.
+        if (strlen($buf) >= 262144) {
+          $flush($buf);
+        }
       }
-      if ($rows) {
-        gzwrite($gz, "\n");
+      if ($hasRows) {
+        $buf .= "\n";
+        $flush($buf);
       }
     }
 
@@ -343,11 +358,12 @@ class backup_ctrl extends Controller
       if (str_starts_with($obj['name'], 'sqlite_')) {
         continue;
       }
-      gzwrite($gz, "-- {$obj['type']}: {$obj['name']}\n");
-      gzwrite($gz, $obj['sql'] . ";\n\n");
+      $buf .= "-- {$obj['type']}: {$obj['name']}\n";
+      $buf .= $obj['sql'] . ";\n\n";
     }
 
-    gzwrite($gz, "COMMIT;\n");
+    $buf .= "COMMIT;\n";
+    $flush($buf);
     gzclose($gz);
   }
 

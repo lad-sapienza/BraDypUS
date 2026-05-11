@@ -28,22 +28,38 @@ async function get(obj, method, params = {}) {
 
 /**
  * POST request to a controller method.
- * Data is sent as FormData to match the existing PHP $_POST expectations.
+ *
+ * Simple scalar values go as FormData (populates $_POST in PHP).
+ * If any value is an object/array, the whole body is sent as JSON
+ * and PHP must read php://input — handled by the Controller base class.
+ *
  * @param {string} obj
  * @param {string} method
- * @param {object} data
+ * @param {object} data       - request body
+ * @param {object} urlParams  - extra key=value pairs appended to the URL query string
  */
-async function post(obj, method, data = {}) {
+async function post(obj, method, data = {}, urlParams = {}) {
   const url = new URL(PHP, window.location.origin)
   url.searchParams.set('obj', obj)
   url.searchParams.set('method', method)
+  Object.entries(urlParams).forEach(([k, v]) => url.searchParams.set(k, v))
 
-  const body = new FormData()
-  Object.entries(data).forEach(([k, v]) => body.append(k, v))
+  const hasComplex = Object.values(data).some(
+    v => v !== null && typeof v === 'object'
+  )
+
+  let body, extraHeaders = {}
+  if (hasComplex) {
+    body = JSON.stringify(data)
+    extraHeaders['Content-Type'] = 'application/json'
+  } else {
+    body = new FormData()
+    Object.entries(data).forEach(([k, v]) => body.append(k, v ?? ''))
+  }
 
   const res = await fetch(url, {
     method: 'POST',
-    headers: { Accept: 'application/json' },
+    headers: { Accept: 'application/json', ...extraHeaders },
     credentials: 'same-origin',
     body
   })
@@ -52,4 +68,27 @@ async function post(obj, method, data = {}) {
   return res.json()
 }
 
-export const api = { get, post }
+/**
+ * Converts a v5 backend response to a human-readable message string.
+ *
+ * Backend v5 convention:
+ *   { status, code, ...semanticFields }       — normal response
+ *   { status: 'error', code: 'db_error', detail: '...' } — DB/exception error
+ *
+ * The caller provides a `t` function from useI18n() and optional extra args
+ * for %s interpolation (positional, same as tr::get in PHP).
+ *
+ * @param {object} res      - parsed JSON response
+ * @param {function} t      - translation function from useI18n()
+ * @param {...*} args       - extra interpolation args for %s placeholders
+ * @returns {string}
+ */
+function responseMessage(res, t, ...args) {
+  if (!res?.code) return ''
+  if (res.code === 'db_error') {
+    return `${t('db_error')}: ${res.detail ?? ''}`
+  }
+  return t(res.code, ...args)
+}
+
+export const api = { get, post, responseMessage }

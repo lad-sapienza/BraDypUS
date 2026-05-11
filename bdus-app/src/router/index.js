@@ -15,6 +15,31 @@ const routes = [
     path: '/users',
     component: () => import('@/views/UsersView.vue'),
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/vocabularies',
+    component: () => import('@/views/VocabulariesView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/data',
+    component: () => import('@/views/DataView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/log',
+    component: () => import('@/views/LogView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    // :id is either a numeric record id or the literal string 'new'
+    path: '/record/:tb/:id',
+    component: () => import('@/views/RecordView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/record/:tb',
+    redirect: to => ({ path: `/record/${to.params.tb}/new` })
   }
 ]
 

@@ -329,7 +329,7 @@ async function addItem() {
 .voc-names {
   width: 200px;
   flex-shrink: 0;
-  border: 1px solid var(--p-surface-border);
+  border: 1px solid var(--p-content-border-color);
   border-radius: 6px;
   overflow: hidden;
 }
@@ -340,15 +340,15 @@ async function addItem() {
   justify-content: space-between;
   padding: 0.6rem 0.9rem;
   cursor: pointer;
-  border-bottom: 1px solid var(--p-surface-border);
+  border-bottom: 1px solid var(--p-content-border-color);
   font-size: 0.875rem;
   transition: background 0.15s;
 }
 
 .voc-name-item:last-child { border-bottom: none; }
-.voc-name-item:hover { background: var(--p-surface-hover); }
+.voc-name-item:hover { background: var(--p-content-hover-background); }
 .voc-name-item.active {
-  background: var(--p-primary-50);
+  background: var(--p-highlight-background);
   color: var(--p-primary-color);
   font-weight: 600;
 }

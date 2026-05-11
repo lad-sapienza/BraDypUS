@@ -278,7 +278,7 @@ onMounted(fetchLogs)
   align-items: center;
   gap: 0.5rem;
   padding: 0.6rem 1rem;
-  border-bottom: 1px solid var(--p-surface-border);
+  border-bottom: 1px solid var(--p-content-border-color);
   flex-shrink: 0;
   flex-wrap: wrap;
 }
@@ -326,7 +326,7 @@ onMounted(fetchLogs)
   word-break: break-all;
   font-size: 0.78rem;
   font-family: monospace;
-  background: var(--p-surface-ground);
+  background: var(--bdus-bg);
   border-radius: 6px;
   max-height: 400px;
   overflow-y: auto;

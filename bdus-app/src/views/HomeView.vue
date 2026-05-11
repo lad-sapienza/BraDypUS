@@ -84,7 +84,7 @@ const modules = [
   align-items: center;
   justify-content: center;
   height: 80px;
-  background: var(--p-primary-50);
+  background: var(--p-highlight-background);
 }
 
 .card-icon-header .pi {

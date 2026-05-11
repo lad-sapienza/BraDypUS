@@ -8,38 +8,29 @@
 import Toast         from 'primevue/toast'
 import ConfirmDialog from 'primevue/confirmdialog'
 import { RouterView } from 'vue-router'
+// Importing useDarkMode here ensures the .dark-mode class is applied to <html>
+// on every page (including /login) as soon as the app boots.
+import { useDarkMode } from '@/composables/useDarkMode'
+useDarkMode()
 </script>
 
 <style>
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-body {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-               Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', Arial, sans-serif;
-  background: var(--p-surface-ground, #f8f9fa);
-  color: var(--p-text-color, #212529);
-  min-height: 100vh;
-}
-
 /* Fixed elements (topbar, sidebar) need global solid backgrounds
-   because scoped CSS + position:fixed can break stacking/paint */
+   because scoped CSS + position:fixed can break stacking/paint.
+   Uses --bdus-surface defined in main.css (flips in .dark-mode). */
 .app-topbar {
-  background-color: var(--p-surface-card, #ffffff) !important;
-  border-bottom: 1px solid var(--p-surface-border, #dee2e6) !important;
+  background-color: var(--bdus-surface) !important;
+  border-bottom: 1px solid var(--p-content-border-color) !important;
   box-shadow: 0 2px 8px rgba(0,0,0,0.10) !important;
 }
 
 .app-sidebar {
-  background-color: var(--p-surface-card, #ffffff) !important;
-  border-right: 1px solid var(--p-surface-border, #dee2e6) !important;
-  box-shadow: 2px 0 12px rgba(0,0,0,0.10) !important;
+  background-color: var(--bdus-surface) !important;
+  border-right: 1px solid var(--p-content-border-color) !important;
+  box-shadow: 2px 0 12px rgba(0,0,0,0.06) !important;
 }
 
 .app-table-sidebar {
-  background-color: var(--p-surface-card, #ffffff) !important;
+  background-color: var(--bdus-surface) !important;
 }
 </style>

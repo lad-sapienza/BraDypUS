@@ -2,11 +2,14 @@
 /**
  * @copyright 2007-2022 Julian Bogdani
  * @license AGPL-3.0; see LICENSE
+ *
+ * @deprecated XML export is not supported in v5. Use CSV, JSON or XLSX instead.
  */
 
 namespace DB\Export;
 
 
+/** @deprecated XML export is not supported in v5. Use CSV, JSON or XLSX instead. */
 class XML
 {
     public function saveToFile( array $data, array $metadata, string $file ) : bool

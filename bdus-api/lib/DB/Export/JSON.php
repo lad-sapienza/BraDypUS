@@ -6,18 +6,22 @@
 
 namespace DB\Export;
 
-
-class JSON
+class JSON implements ExportInterface
 {
-    public function saveToFile( array $data, array $metadata, string $file ) : bool
+    public function render(array $data, array $metadata): string
+    {
+        return json_encode(
+            ['metadata' => $metadata, 'data' => $data],
+            JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE
+        );
+    }
+
+    /**
+     * @deprecated Use Export::streamToResponse() instead.
+     */
+    public function saveToFile(array $data, array $metadata, string $file): bool
     {
         $file .= '.json';
-
-		$json = json_encode([
-            'metadata' => $metadata,
-            'data' => $data
-        ], JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE);
-
-        return file_put_contents($file, $json);
+        return (bool) file_put_contents($file, $this->render($data, $metadata));
     }
 }

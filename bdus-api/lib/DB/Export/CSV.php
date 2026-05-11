@@ -6,38 +6,59 @@
 
 namespace DB\Export;
 
-
-class CSV
+class CSV implements ExportInterface
 {
-    public function saveToFile( array $data, array $metadata, string $file ) : bool
+    private string $delimiter = ',';
+    private string $enclosure = '"';
+
+    public function render(array $data, array $metadata): string
     {
-        $file .= '.csv';
-
-		$delimiter = ',';
-		$enclosure = '"';
-
-		//open file
-		$fh = @fopen($file, 'w+');
-
-		if (!$fh) {
-            throw new \Exception('Can not open file ' . $file . ' in write mode');
-		}
-
-		if (empty($data)) {
+        if (empty($data)) {
             throw new \Exception('Empty dataset');
         }
 
-        if (!fputcsv($fh, array_keys($data[0]), $delimiter, $enclosure)) {
-            throw new \Exception('Can not write column names in file ' . $file );
+        $fh = fopen('php://temp', 'r+');
+
+        fputcsv($fh, array_keys($data[0]), $this->delimiter, $this->enclosure);
+
+        foreach ($data as $row) {
+            fputcsv($fh, $row, $this->delimiter, $this->enclosure);
         }
 
-        foreach ( $data as $line ) {
-            if (!fputcsv($fh, $line, $delimiter, $enclosure)) {
-                throw new \Exception('Can not write data in file ' . $file );
+        rewind($fh);
+        $content = stream_get_contents($fh);
+        fclose($fh);
+
+        return $content;
+    }
+
+    /**
+     * @deprecated Use Export::streamToResponse() instead.
+     */
+    public function saveToFile(array $data, array $metadata, string $file): bool
+    {
+        $file .= '.csv';
+
+        $fh = @fopen($file, 'w+');
+        if (!$fh) {
+            throw new \Exception('Can not open file ' . $file . ' in write mode');
+        }
+
+        if (empty($data)) {
+            throw new \Exception('Empty dataset');
+        }
+
+        if (!fputcsv($fh, array_keys($data[0]), $this->delimiter, $this->enclosure)) {
+            throw new \Exception('Can not write column names in file ' . $file);
+        }
+
+        foreach ($data as $row) {
+            if (!fputcsv($fh, $row, $this->delimiter, $this->enclosure)) {
+                throw new \Exception('Can not write data in file ' . $file);
             }
         }
+
         @fclose($fh);
-        
         return true;
     }
 }

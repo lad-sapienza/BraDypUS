@@ -2,11 +2,15 @@
 /**
  * @copyright 2007-2022 Julian Bogdani
  * @license AGPL-3.0; see LICENSE
+ *
+ * @deprecated SQL INSERT export is not supported in v5.
+ *             Use the backup module for full SQL dumps.
  */
 
 namespace DB\Export;
 
 
+/** @deprecated SQL INSERT export is not supported in v5. Use the backup module for full SQL dumps. */
 class SQL
 {
     public function saveToFile( array $data, array $metadata, string $file ) : bool

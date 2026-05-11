@@ -2,11 +2,16 @@
 /**
  * @copyright 2007-2022 Julian Bogdani
  * @license AGPL-3.0; see LICENSE
+ *
+ * @deprecated Legacy binary XLS (BIFF) writer. Use XLSX instead.
+ *             This class uses utf8_decode() which is removed in PHP 9
+ *             and produces files unreadable by modern Excel versions.
  */
 
 namespace DB\Export;
 
 
+/** @deprecated Legacy binary XLS (BIFF) writer. Use XLSX instead. */
 class XLS
 {
 	protected $xls;

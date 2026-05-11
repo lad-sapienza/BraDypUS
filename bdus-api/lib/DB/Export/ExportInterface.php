@@ -6,8 +6,16 @@
 
 namespace DB\Export;
 
-
 interface ExportInterface
 {
-    public function saveToFile( array $data = [], array $metadata = [], string $file ) : bool;
+    /**
+     * Renders the data to a string ready to be sent or written.
+     */
+    public function render(array $data, array $metadata): string;
+
+    /**
+     * @deprecated Use Export::streamToResponse() instead.
+     *             Kept for v4 backward compatibility only.
+     */
+    public function saveToFile(array $data, array $metadata, string $file): bool;
 }

@@ -10,32 +10,35 @@ class DumpExists
 {
     public static function Check(Resp $resp, string $db_engine): void
     {
-        switch( $db_engine ) {
+        // SQLite backup/restore is handled entirely by a native PHP/PDO implementation
+        // (backup.php::dumpSqliteNative) — no external binary is required.
+        // MySQL and PostgreSQL still depend on their respective CLI dump tools.
+        switch ($db_engine) {
+            case 'sqlite':
+                $resp->set('success',
+                    'Backup is available. SQLite dumps are handled natively via PHP/PDO (no external binary required)'
+                );
+                return;
+
             case 'mysql':
                 $cmd = 'mysqldump';
-            break;
+                break;
             case 'pgsql':
                 $cmd = 'pg_dump';
-            break;
-            case 'sqlite':
-                $cmd = 'sqlite3';
-            break;
+                break;
+            default:
+                $resp->set('danger', 'Unknown database engine: ' . $db_engine);
+                return;
         }
 
-        if ($cmd) {
-            @exec("which $cmd", $out);
-            if (trim(implode($out)) === ''){
-                $resp->set('danger',
-                    "Backup is not available. Executable $cmd was not found"
-                );
-            } else {
-                $resp->set('success',
-                    "Backup is available. Executable $cmd will be used"
-                );
-            }
-        } else {
+        @exec("which $cmd", $out);
+        if (trim(implode($out)) === '') {
             $resp->set('danger',
-                'Unknown database engine: ' . $db_engine
+                "Backup is not available. Executable $cmd was not found"
+            );
+        } else {
+            $resp->set('success',
+                "Backup is available. Executable $cmd will be used"
             );
         }
     }

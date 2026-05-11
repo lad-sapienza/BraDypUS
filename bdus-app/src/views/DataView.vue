@@ -57,6 +57,34 @@
                 text
                 @click="colToggler.toggle($event)"
               />
+
+              <!-- Export -->
+              <Button
+                v-if="totalRecords > 0"
+                icon="pi pi-download"
+                :title="t('export')"
+                size="small"
+                severity="secondary"
+                text
+                @click="exportPopover.toggle($event)"
+              />
+              <Popover ref="exportPopover" class="export-popover">
+                <div class="col-toggler-header">{{ t('export') }} ({{ totalRecords }} {{ t('records') }})</div>
+                <div class="col-toggler-list">
+                  <div class="col-toggler-item" @click="doExport('csv')">
+                    <i class="pi pi-file" />
+                    <span>CSV</span>
+                  </div>
+                  <div class="col-toggler-item" @click="doExport('xlsx')">
+                    <i class="pi pi-file-excel" />
+                    <span>XLSX</span>
+                  </div>
+                  <div class="col-toggler-item" @click="doExport('json')">
+                    <i class="pi pi-file-code" />
+                    <span>JSON</span>
+                  </div>
+                </div>
+              </Popover>
               <Popover ref="colToggler" class="col-toggler-popover">
                 <div class="col-toggler-header">{{ t('preview_fields') }}</div>
                 <div class="col-toggler-list">
@@ -66,7 +94,7 @@
                     class="col-toggler-item"
                     @click="toggleColumn(col.name)"
                   >
-                    <i :class="['pi', visibleColumnNames.has(col.name) ? 'pi-check-square' : 'pi-stop']" />
+                    <i :class="['pi', visibleColumnNames.includes(col.name) ? 'pi-check-square' : 'pi-stop']" />
                     <span>{{ col.label }}</span>
                   </div>
                 </div>
@@ -234,7 +262,15 @@
           </div>
 
           <!-- ── DataTable ───────────────────────────────────── -->
+          <!--
+            :key uses the SORTED column set, so:
+            • Adding/removing a column → set changes → full remount (fixes PrimeVue
+              scrollable header/body sync issue when columns are added dynamically).
+            • Reordering columns → sorted set is unchanged → no remount, PrimeVue's
+              native drag-reorder works within the existing DataTable instance.
+          -->
           <DataTable
+            :key="visibleColumnNames.slice().sort().join(',')"
             :value="records"
             lazy
             paginator
@@ -244,6 +280,7 @@
             :rowsPerPageOptions="[15, 30, 50, 100]"
             sortMode="single"
             removableSort
+            reorderableColumns
             scrollable
             scrollHeight="flex"
             size="small"
@@ -251,6 +288,7 @@
             @page="onPage"
             @sort="onSort"
             @row-click="onRowClick"
+            @column-reorder="onColumnReorder"
           >
             <template #empty>{{ t('no_record_found') }}</template>
             <Column
@@ -310,9 +348,16 @@ const selectedTable = computed(() =>
   tables.value.find(tbl => tbl.name === route.query.tb) ?? null
 )
 
-// ── Column visibility ─────────────────────────────────────────
-const colToggler         = ref()
-const visibleColumnNames = ref(new Set())   // Set of field names the user wants to see
+// ── Column visibility & order ────────────────────────────────
+const colToggler    = ref()
+const exportPopover = ref()
+
+/**
+ * Ordered array of visible field names.
+ * Using an ordered array (not a Set) so that both visibility and column
+ * order are stored in a single structure and persisted to localStorage.
+ */
+const visibleColumnNames = ref([])
 
 /**
  * All main-table fields available for column toggling.
@@ -334,9 +379,8 @@ const allAvailableColumns = computed(() => {
 function colStorageKey(tbName) { return `bradypus:columns:${tbName}` }
 
 /**
- * Called when a table is selected or advConfig is freshly loaded.
- * Restores saved preferences, or defaults to the preview columns
- * returned by the last getRecords call.
+ * Called when there are no saved prefs (initial first visit to a table).
+ * Populates visibleColumnNames from the preview columns the backend returned.
  */
 function initVisibleColumns(tbName) {
   const saved = localStorage.getItem(colStorageKey(tbName))
@@ -344,34 +388,48 @@ function initVisibleColumns(tbName) {
     try {
       const arr = JSON.parse(saved)
       if (Array.isArray(arr) && arr.length) {
-        visibleColumnNames.value = new Set(arr)
+        visibleColumnNames.value = arr
         return
       }
     } catch { /* ignore */ }
   }
   // No saved prefs: use whatever the backend returned as default (preview fields)
-  visibleColumnNames.value = new Set(columns.value.map(c => c.name))
+  visibleColumnNames.value = columns.value.map(c => c.name)
 }
 
 function saveColumnPrefs(tbName) {
-  localStorage.setItem(colStorageKey(tbName), JSON.stringify([...visibleColumnNames.value]))
+  localStorage.setItem(colStorageKey(tbName), JSON.stringify(visibleColumnNames.value))
 }
 
 function toggleColumn(name) {
-  const s = new Set(visibleColumnNames.value)
-  if (s.has(name)) {
-    if (s.size === 1) return   // keep at least one column visible
-    s.delete(name)
+  const arr = [...visibleColumnNames.value]
+  const idx = arr.indexOf(name)
+  if (idx >= 0) {
+    if (arr.length === 1) return   // keep at least one column visible
+    arr.splice(idx, 1)
   } else {
-    s.add(name)
+    arr.push(name)
   }
-  visibleColumnNames.value = s
+  visibleColumnNames.value = arr
   saveColumnPrefs(selectedTable.value?.name)
   fetchRecords()   // refetch with updated column list
 }
 
+/**
+ * Called when the user drags a column header to reorder.
+ * dragIndex / dropIndex are positions in the rendered displayColumns array.
+ * We reorder visibleColumnNames to match and save — no refetch needed.
+ */
+function onColumnReorder(event) {
+  const arr = [...visibleColumnNames.value]
+  const moved = arr.splice(event.dragIndex, 1)[0]
+  arr.splice(event.dropIndex, 0, moved)
+  visibleColumnNames.value = arr
+  saveColumnPrefs(selectedTable.value?.name)
+}
+
 function selectAllColumns() {
-  visibleColumnNames.value = new Set(allAvailableColumns.value.map(c => c.name))
+  visibleColumnNames.value = allAvailableColumns.value.map(c => c.name)
   saveColumnPrefs(selectedTable.value?.name)
   fetchRecords()
 }
@@ -379,18 +437,21 @@ function selectAllColumns() {
 function resetColumns() {
   if (!selectedTable.value) return
   localStorage.removeItem(colStorageKey(selectedTable.value.name))
-  visibleColumnNames.value = new Set()   // empty → backend uses preview defaults
+  visibleColumnNames.value = []   // empty → backend uses preview defaults
   fetchRecords()
 }
 
-/** Filtered column list actually rendered in the DataTable (from what the backend returned) */
+/**
+ * Columns actually rendered in the DataTable.
+ * Order follows visibleColumnNames (user's saved/drag order).
+ * Only entries that the backend actually returned are included —
+ * newly-added columns appear here after the fetch completes.
+ */
 const displayColumns = computed(() =>
-  columns.value.filter(c => visibleColumnNames.value.has(c.name))
+  visibleColumnNames.value
+    .map(name => columns.value.find(c => c.name === name))
+    .filter(Boolean)
 )
-
-function autoCollapseSidebar() {
-  if (window.innerWidth < SMALL_SCREEN) sidebarHidden.value = true
-}
 
 // ── Records ──────────────────────────────────────────────────
 const records        = ref([])
@@ -461,18 +522,47 @@ onMounted(async () => {
  * getBackLinks() — e.g. "id|=|713" or "^ctx_id|=|42||and|site|=|Rome".
  * We feed it as an expert query to record_ctrl::getRecords().
  */
-// Track last applied tb+where to avoid redundant fetches
+// Track last applied params to avoid redundant fetches
 let lastAppliedTb    = null
 let lastAppliedWhere = null
+let lastAppliedQt    = null
+let lastAppliedQ     = null
+
+// Prevents the route watcher from re-triggering a fetch when we ourselves
+// call router.replace() to persist filter state in the URL.
+let ignoreNextRouteChange = false
+
+/**
+ * Push the current filter type + value into the URL (for bookmarking / back-nav).
+ * Uses router.replace() so the URL changes without adding a history entry.
+ */
+function updateFilterUrl(type, query) {
+  ignoreNextRouteChange = true
+  const newQuery = { tb: route.query.tb }
+  if (route.query.where) newQuery.where = route.query.where
+  if (type && query != null) { newQuery.qt = type; newQuery.q = query }
+  lastAppliedQt = newQuery.qt ?? null
+  lastAppliedQ  = newQuery.q  ?? null
+  router.replace({ query: newQuery })
+}
 
 function applyRouteParams() {
+  if (ignoreNextRouteChange) { ignoreNextRouteChange = false; return }
+
   const tbParam    = route.query.tb
   const whereParam = route.query.where ?? null
+  const qtParam    = route.query.qt    ?? null
+  const qParam     = route.query.q     ?? null
 
   if (!tbParam) return
 
   // Guard: skip if nothing changed
-  if (tbParam === lastAppliedTb && whereParam === lastAppliedWhere) return
+  if (
+    tbParam    === lastAppliedTb    &&
+    whereParam === lastAppliedWhere &&
+    qtParam    === lastAppliedQt    &&
+    qParam     === lastAppliedQ
+  ) return
 
   // Table must exist in the list (permissions or typo check)
   const tbl = tables.value.find(t => t.name === tbParam)
@@ -481,10 +571,36 @@ function applyRouteParams() {
   const tableChanged = lastAppliedTb !== tbParam
   lastAppliedTb    = tbParam
   lastAppliedWhere = whereParam
+  lastAppliedQt    = qtParam
+  lastAppliedQ     = qParam
 
   if (tableChanged) {
     advConfigFor = null
-    visibleColumnNames.value = new Set()
+
+    // Restore saved column preferences NOW so that the first fetchRecords()
+    // call already uses the full saved set as colParam.
+    // If we left visibleColumnNames empty here and restored only inside
+    // initVisibleColumns() (which runs after the fetch), the first fetch would
+    // use preview mode and columns.value would only contain preview fields —
+    // causing a mismatch where saved non-preview columns appear checked in the
+    // toggler but are absent from the DataTable.
+    const saved = localStorage.getItem(colStorageKey(tbParam))
+    let restoredFromStorage = false
+    if (saved) {
+      try {
+        const arr = JSON.parse(saved)
+        if (Array.isArray(arr) && arr.length) {
+          visibleColumnNames.value = arr
+          restoredFromStorage = true
+        }
+      } catch { /* ignore corrupted data */ }
+    }
+    if (!restoredFromStorage) {
+      // No saved prefs: leave empty so initVisibleColumns() can populate
+      // from the backend preview fields after the first fetch.
+      visibleColumnNames.value = []
+    }
+
     loadAdvConfig()   // eager load all fields for the column toggler
   }
 
@@ -494,7 +610,40 @@ function applyRouteParams() {
     openPanel.value     = null
     page.value = 1
     fetchRecords()
-  } else if (tableChanged) {
+    return
+  }
+
+  // Restore persisted filter from URL params (e.g. when navigating back from a record)
+  if (qtParam && qParam != null) {
+    if (qtParam === 'fast') {
+      fastSearch.value   = qParam
+      activeSearch.value = 'fast'
+      openPanel.value    = null
+      page.value         = 1
+      fetchRecords()
+    } else if (qtParam === 'expert') {
+      expertQuery.value  = qParam
+      activeSearch.value = 'expert'
+      openPanel.value    = 'expert'
+      page.value         = 1
+      fetchRecords()
+    } else if (qtParam === 'advanced') {
+      try {
+        const rows = JSON.parse(atob(qParam))
+        if (Array.isArray(rows) && rows.length) {
+          advRows.value      = rows.map(r => ({ _id: _rowId++, _suggestions: null, ...r }))
+          activeSearch.value = 'advanced'
+          openPanel.value    = 'advanced'
+          page.value         = 1
+          fetchRecords()
+          return
+        }
+      } catch { /* fall through to resetSearch */ }
+    }
+    return
+  }
+
+  if (tableChanged) {
     resetSearch()   // also calls fetchRecords
   }
 }
@@ -552,6 +701,7 @@ function resetSearch() {
   activeSearch.value  = null
   openPanel.value     = null
   page.value          = 1
+  updateFilterUrl(null, null)
   fetchRecords()
 }
 
@@ -561,6 +711,7 @@ function runFastSearch() {
   activeSearch.value = 'fast'
   openPanel.value    = null
   page.value         = 1
+  updateFilterUrl('fast', fastSearch.value)
   fetchRecords()
 }
 
@@ -580,6 +731,7 @@ function runAdvancedSearch() {
   activeSearch.value = 'advanced'
   openPanel.value    = null
   page.value         = 1
+  updateFilterUrl('advanced', btoa(JSON.stringify(adv)))
   fetchRecords()
 }
 
@@ -589,6 +741,7 @@ function runExpertSearch() {
   activeSearch.value = 'expert'
   openPanel.value    = null
   page.value         = 1
+  updateFilterUrl('expert', expertQuery.value)
   fetchRecords()
 }
 
@@ -601,10 +754,10 @@ async function fetchRecords() {
     const tbName   = selectedTable.value.name
     const urlParams = { tb: tbName }
 
-    // Custom column list: passed when the user has an explicit selection.
-    // Empty set means "use backend preview defaults" (no param sent).
-    const colParam = visibleColumnNames.value.size > 0
-      ? [...visibleColumnNames.value]
+    // Custom column list (comma-separated string for GET, array for POST/JSON).
+    // Empty array means "use backend preview defaults" (no param sent).
+    const colParam = visibleColumnNames.value.length > 0
+      ? visibleColumnNames.value
       : null
 
     if (activeSearch.value === 'advanced') {
@@ -647,7 +800,8 @@ async function fetchRecords() {
         search_type: 'shortSql',
         where:       shortSqlWhere.value,
       }
-      if (colParam) params.columns = colParam
+      // columns sent as comma-separated string to avoid URL array-encoding issues
+      if (colParam) params.columns = colParam.join(',')
       res = await api.get('record_ctrl', 'getRecords', params)
 
     } else {
@@ -660,7 +814,8 @@ async function fetchRecords() {
         search_type: activeSearch.value === 'fast' ? 'fast' : 'all',
         search:      activeSearch.value === 'fast' ? fastSearch.value : '',
       }
-      if (colParam) params.columns = colParam
+      // columns sent as comma-separated string to avoid URL array-encoding issues
+      if (colParam) params.columns = colParam.join(',')
       res = await api.get('record_ctrl', 'getRecords', params)
     }
 
@@ -674,7 +829,7 @@ async function fetchRecords() {
     if (res.fields?.length) {
       columns.value = res.fields.filter(f => f.name !== 'id')
       // If no saved preference yet, initialise from returned preview columns
-      if (visibleColumnNames.value.size === 0) {
+      if (visibleColumnNames.value.length === 0) {
         initVisibleColumns(selectedTable.value?.name)
       }
     }
@@ -704,8 +859,33 @@ function onRowClick(event) {
   const tb = selectedTable.value?.name
   const id = event.data?.id
   if (tb && id != null) {
-    router.push(`/record/${encodeURIComponent(tb)}/${id}`)
+    router.push({
+      path:  `/record/${encodeURIComponent(tb)}/${id}`,
+      query: { back: route.fullPath },
+    })
   }
+}
+
+/**
+ * Trigger a file download by building the export URL from the current
+ * route query (which already encodes the active filter via updateFilterUrl).
+ * The browser navigates to the URL; PHP responds with Content-Disposition: attachment.
+ */
+function doExport(format) {
+  exportPopover.value?.hide()
+
+  const params = new URLSearchParams()
+  params.set('obj',    'record_ctrl')
+  params.set('method', 'exportRecords')
+  params.set('tb',     selectedTable.value?.name ?? '')
+  params.set('format', format)
+
+  // Pass through whichever filter params are currently in the URL
+  if (route.query.qt)    params.set('qt',    route.query.qt)
+  if (route.query.q)     params.set('q',     route.query.q)
+  if (route.query.where) params.set('where', route.query.where)
+
+  window.open('/index.php?' + params.toString(), '_blank')
 }
 </script>
 

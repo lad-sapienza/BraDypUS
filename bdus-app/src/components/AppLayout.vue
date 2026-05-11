@@ -70,7 +70,47 @@
         <template v-for="group in navGroups" :key="group.labelKey">
           <div class="nav-group-label">{{ t(group.labelKey) }}</div>
           <template v-for="item in group.items" :key="item.to">
+
+            <!-- "Gestione dati" — accordion toggle, not a router link -->
+            <template v-if="item.to === '/data'">
+              <button
+                class="nav-item nav-item-accordion"
+                :class="{ 'is-active': isDataRoute, disabled: item.disabled }"
+                :disabled="item.disabled"
+                :title="t(item.labelKey)"
+                @click="dataAccordionOpen = !dataAccordionOpen"
+              >
+                <i :class="['pi', item.icon]" />
+                <span class="nav-label">{{ t(item.labelKey) }}</span>
+                <i
+                  class="pi pi-chevron-down accordion-chevron nav-label"
+                  :class="{ open: dataAccordionOpen }"
+                />
+              </button>
+
+              <!-- Table sub-list: shown when accordion is open -->
+              <template v-if="dataAccordionOpen">
+                <div v-if="tablesLoading" class="nav-tables-loading">
+                  <i class="pi pi-spin pi-spinner" />
+                </div>
+                <RouterLink
+                  v-for="tbl in navTables"
+                  :key="tbl.name"
+                  :to="`/data?tb=${encodeURIComponent(tbl.name)}`"
+                  class="nav-item nav-table-item"
+                  :class="{ active: route.query.tb === tbl.name }"
+                  :title="tbl.label"
+                  @click="closeMobileDrawer()"
+                >
+                  <i class="pi pi-table" />
+                  <span class="nav-label nav-table-label">{{ tbl.label }}</span>
+                </RouterLink>
+              </template>
+            </template>
+
+            <!-- All other nav items — normal RouterLink or disabled span -->
             <component
+              v-else
               :is="item.disabled ? 'span' : 'RouterLink'"
               v-bind="item.disabled ? {} : { to: item.to }"
               class="nav-item"
@@ -82,24 +122,6 @@
               <span class="nav-label">{{ t(item.labelKey) }}</span>
             </component>
 
-            <!-- Table sub-list: rendered below the "data_mng" item when on /data -->
-            <template v-if="item.to === '/data' && isDataRoute">
-              <div v-if="tablesLoading" class="nav-tables-loading">
-                <i class="pi pi-spin pi-spinner" />
-              </div>
-              <RouterLink
-                v-for="tbl in navTables"
-                :key="tbl.name"
-                :to="`/data?tb=${encodeURIComponent(tbl.name)}`"
-                class="nav-item nav-table-item"
-                :class="{ active: route.query.tb === tbl.name }"
-                :title="tbl.label"
-                @click="closeMobileDrawer()"
-              >
-                <i class="pi pi-table" />
-                <span class="nav-label nav-table-label">{{ tbl.label }}</span>
-              </RouterLink>
-            </template>
           </template>
         </template>
       </nav>
@@ -140,8 +162,15 @@ const auth   = useAuthStore()
 const { tables: navTables, loading: tablesLoading, loadTables } = useTables()
 
 // Load table list when navigating to /data (or when already there on mount)
-const isDataRoute = computed(() => route.path === '/data')
-watch(isDataRoute, (val) => { if (val) loadTables() }, { immediate: true })
+const isDataRoute       = computed(() => route.path === '/data')
+const dataAccordionOpen = ref(isDataRoute.value)
+
+watch(isDataRoute, (val) => {
+  if (val) {
+    dataAccordionOpen.value = true   // auto-open when entering /data
+    loadTables()
+  }
+}, { immediate: true })
 const toast = useToast()
 const { t, locale, setLocale, availableLocales } = useI18n()
 const currentLocale = computed({
@@ -465,6 +494,31 @@ const navGroups = computed(() => [
   .sidebar.collapsed .nav-label       { display: none; }
   .sidebar.collapsed .nav-item        { justify-content: center; padding: 0.6rem; }
 }
+
+/* ── Accordion nav item (Gestione Dati) ───────────────────── */
+.nav-item-accordion {
+  width: 100%;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.nav-item-accordion.is-active {
+  color: var(--p-primary-color);
+  font-weight: 600;
+}
+
+.accordion-chevron {
+  margin-left: auto;
+  font-size: 0.7rem;
+  opacity: 0.6;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+  width: auto !important;   /* override .nav-item .pi fixed width */
+}
+.accordion-chevron.open { transform: rotate(0deg); }
+.accordion-chevron:not(.open) { transform: rotate(-90deg); }
 
 /* ── Table sub-items ──────────────────────────────────────── */
 .nav-tables-loading {

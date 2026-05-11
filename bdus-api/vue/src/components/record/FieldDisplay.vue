@@ -80,7 +80,7 @@ function linkedText(text) {
   flex-direction: column;
   gap: 0.2rem;
   padding: 0.4rem 0;
-  border-bottom: 1px solid var(--p-surface-border);
+  border-bottom: 1px solid var(--p-content-border-color);
 }
 
 .field-label {

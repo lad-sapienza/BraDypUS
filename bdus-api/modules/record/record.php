@@ -431,6 +431,13 @@ class record_ctrl extends Controller
    */
   private function resolveFieldOptions(string $tb, string $fld): array
   {
+    // Validate $tb against known config tables to prevent config traversal.
+    // $fld is used only as a config key, not directly in SQL.
+    $knownTables = array_keys($this->cfg->get('tables') ?? []);
+    if (!in_array($tb, $knownTables, true)) {
+      return [];
+    }
+
     $cfg = $this->cfg->get("tables.{$tb}.fields.{$fld}") ?? [];
 
     if (!empty($cfg['get_values_from_tb'])) {
@@ -621,6 +628,155 @@ class record_ctrl extends Controller
     }
   }
 
+  // ── v5 file management endpoints ─────────────────────────────────────────
+
+  /**
+   * Uploads a file and attaches it to a record via a userlink.
+   *
+   * POST ?obj=record_ctrl&method=uploadFile&tb=TABLE&id=RECORD_ID
+   * Multipart body: file=<binary>
+   *
+   * Response: { status, code, file: { id, ext, filename, url, is_image, description, keywords, printable } }
+   */
+  public function uploadFile(): void
+  {
+    if (!\utils::canUser('edit')) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+      return;
+    }
+
+    $tb = $this->get['tb'] ?? ($this->post['tb'] ?? null);
+    $id = $this->get['id'] ?? ($this->post['id'] ?? null);
+
+    if (!$tb || !$id) {
+      $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
+      return;
+    }
+
+    if (empty($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
+      $this->returnJson(['status' => 'error', 'code' => 'error_uploading_file']);
+      return;
+    }
+
+    try {
+      $original = basename($_FILES['file']['name']);
+      $ext      = strtolower(pathinfo($original, PATHINFO_EXTENSION));
+      $filename = pathinfo($original, PATHINFO_FILENAME);
+      $creator  = $_SESSION['user']['id'] ?? 'anonymous';
+      $prefix   = $this->prefix;
+      $appName  = $this->cfg->get('main.name') ?? '';
+
+      // Insert file record to obtain the auto-increment id
+      $this->db->query(
+        "INSERT INTO {$prefix}files (creator, ext, filename) VALUES (?, ?, ?)",
+        [$creator, $ext, $filename]
+      );
+      $fileId = $this->db->lastId();
+
+      // Move file to projects/{app}/files/{id}.{ext}
+      $destDir  = PROJ_DIR . 'files/';
+      $destFile = $destDir . $fileId . '.' . $ext;
+
+      if (!is_dir($destDir)) {
+        mkdir($destDir, 0755, true);
+      }
+
+      if (!move_uploaded_file($_FILES['file']['tmp_name'], $destFile)) {
+        // Roll back the file record if the move fails
+        $this->db->query("DELETE FROM {$prefix}files WHERE id = ?", [$fileId]);
+        throw new \RuntimeException('move_uploaded_file failed');
+      }
+
+      // Create userlink: files-table → record
+      $this->db->query(
+        "INSERT INTO {$prefix}userlinks (tb_one, id_one, tb_two, id_two) VALUES (?, ?, ?, ?)",
+        ["{$prefix}files", $fileId, $tb, (int)$id]
+      );
+
+      $imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'tiff', 'svg'];
+      $url       = 'projects/' . $appName . '/files/' . $fileId . '.' . $ext;
+
+      $this->returnJson([
+        'status' => 'success',
+        'code'   => 'ok_file_uploaded',
+        'file'   => [
+          'id'          => $fileId,
+          'ext'         => $ext,
+          'filename'    => $filename,
+          'description' => null,
+          'keywords'    => null,
+          'printable'   => null,
+          'url'         => $url,
+          'is_image'    => in_array($ext, $imageExts, true),
+        ],
+      ]);
+
+    } catch (\Throwable $e) {
+      $this->log->error($e);
+      $this->returnJson(['status' => 'error', 'code' => 'error_uploading_file', 'detail' => $e->getMessage()]);
+    }
+  }
+
+  /**
+   * Deletes a file: removes the physical file, the file record, and all userlinks.
+   *
+   * POST ?obj=record_ctrl&method=deleteFile
+   * Body (JSON or form): { fileId: int }
+   *
+   * Response: { status, code }
+   */
+  public function deleteFile(): void
+  {
+    if (!\utils::canUser('edit')) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+      return;
+    }
+
+    $fileId = (int)($this->post['fileId'] ?? $this->get['fileId'] ?? 0);
+    if (!$fileId) {
+      $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
+      return;
+    }
+
+    $prefix  = $this->prefix;
+    $appName = $this->cfg->get('main.name') ?? '';
+
+    try {
+      // Fetch file metadata (need ext to locate physical file)
+      $rows = $this->db->query("SELECT ext FROM {$prefix}files WHERE id = ?", [$fileId]);
+      if (empty($rows)) {
+        $this->returnJson(['status' => 'error', 'code' => 'record_not_found']);
+        return;
+      }
+      $ext = $rows[0]['ext'];
+
+      // Remove all userlinks that reference this file on either side
+      $this->db->query(
+        "DELETE FROM {$prefix}userlinks WHERE tb_one = ? AND id_one = ?",
+        ["{$prefix}files", $fileId]
+      );
+      $this->db->query(
+        "DELETE FROM {$prefix}userlinks WHERE tb_two = ? AND id_two = ?",
+        ["{$prefix}files", $fileId]
+      );
+
+      // Delete the file record
+      $this->db->query("DELETE FROM {$prefix}files WHERE id = ?", [$fileId]);
+
+      // Delete physical file (best-effort: ignore if already missing)
+      $physicalPath = PROJ_DIR . 'files/' . $fileId . '.' . $ext;
+      if (file_exists($physicalPath)) {
+        @unlink($physicalPath);
+      }
+
+      $this->returnJson(['status' => 'success', 'code' => 'ok_file_deleted']);
+
+    } catch (\Throwable $e) {
+      $this->log->error($e);
+      $this->returnJson(['status' => 'error', 'code' => 'error_file_deleted', 'detail' => $e->getMessage()]);
+    }
+  }
+
   // ── Legacy v4 methods (kept for Twig-based rendering) ────────────────────
 
   public function save_data()
@@ -739,6 +895,7 @@ class record_ctrl extends Controller
   }
 
 
+  /** @deprecated v5 — replaced by RecordView.vue + getRecord() */
   public function show()
   {
     $tb = $this->request['tb'];
@@ -880,6 +1037,7 @@ class record_ctrl extends Controller
     return $tmpl;
   }
 
+  /** @deprecated v5 — replaced by DataView.vue + getRecords() */
   public function showResults()
   {
     if (!\utils::canUser('read')) {
@@ -941,6 +1099,8 @@ class record_ctrl extends Controller
   }
 
   /**
+   * @deprecated v5 — replaced by DataView.vue + getRecords() (ShortSQL-based, no DataTables dependency)
+   *
    * http://datatables.net/usage/server-side
    * 	REQUEST
    * 		obj_encoded

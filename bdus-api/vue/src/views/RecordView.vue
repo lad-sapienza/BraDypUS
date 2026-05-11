@@ -1,10 +1,11 @@
 <template>
+  <AppLayout>
   <div class="record-view">
 
     <!-- ── Header ──────────────────────────────────────────────────── -->
     <div class="record-header">
       <div class="record-breadcrumb">
-        <router-link to="/data" class="back-link">
+        <router-link :to="backTarget" class="back-link">
           <i class="pi pi-arrow-left" />
           {{ record?.metadata?.tb_label ?? t('data') }}
         </router-link>
@@ -16,7 +17,7 @@
       <div class="header-actions">
         <!-- Template selector (read mode, when >1 template available) -->
         <Select
-          v-if="mode === 'read' && availableTemplates.length > 1"
+          v-if="mode === 'read' && availableTemplates.length > 0"
           v-model="selectedTemplate"
           :options="templateOptions"
           optionLabel="label"
@@ -201,6 +202,7 @@
     </div>
 
   </div>
+  </AppLayout>
 </template>
 
 <script setup>
@@ -208,6 +210,7 @@ import { ref, computed, watch, reactive, onMounted } from 'vue'
 import { useRoute, useRouter }   from 'vue-router'
 import { useToast }              from 'primevue/usetoast'
 import { useConfirm }            from 'primevue/useconfirm'
+import AppLayout      from '@/components/AppLayout.vue'
 import Button         from 'primevue/button'
 import Tag            from 'primevue/tag'
 import Message        from 'primevue/message'
@@ -232,6 +235,17 @@ const { responseMessage } = api
 const tb = computed(() => route.params.tb)
 const id = computed(() => route.params.id === 'new' ? null : route.params.id)
 const isNew = computed(() => !id.value)
+
+/**
+ * Where the back-link returns to.
+ * If DataView passed ?back=<fullPath> (including filter params), honour it.
+ * Otherwise fall back to the plain table view.
+ */
+const backTarget = computed(() => {
+  const back = route.query.back
+  if (back) return back
+  return `/data?tb=${tb.value}`
+})
 
 // ── State ────────────────────────────────────────────────────────
 const record     = ref(null)
@@ -475,7 +489,7 @@ async function doDelete() {
       return
     }
     toast.add({ severity: 'success', summary: t('delete'), detail: t('all_record_deleted'), life: 3000 })
-    router.push('/data')
+    router.push(backTarget.value)
   } catch (e) {
     toast.add({ severity: 'error', summary: t('generic_error'), detail: e.message, life: 5000 })
   }
@@ -500,7 +514,8 @@ watch(() => route.params.id, fetchRecord)
 .record-view {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
   overflow: hidden;
 }
 

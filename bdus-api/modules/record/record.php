@@ -68,8 +68,22 @@ class record_ctrl extends Controller
 
     // Optional: custom column list from the frontend column-visibility toggler.
     // If provided, override the default preview fields for this query.
-    $customColumns = $this->get['columns'] ?? $this->post['columns'] ?? null;
-    if ($customColumns && is_array($customColumns)) {
+    //
+    // GET requests send columns as a comma-separated string (e.g. "cmclid,tm,creator")
+    // to avoid URL array-encoding issues with columns[]=…
+    //
+    // POST requests (advanced/expert search) send columns as a JSON array.
+    // Both formats are accepted here.
+    $colsRaw = $this->get['columns'] ?? $this->post['columns'] ?? null;
+    $customColumns = null;
+    if ($colsRaw) {
+      if (is_string($colsRaw)) {
+        $customColumns = array_values(array_filter(explode(',', $colsRaw)));
+      } elseif (is_array($colsRaw)) {
+        $customColumns = $colsRaw;
+      }
+    }
+    if ($customColumns && count($customColumns) > 0) {
       // Build associative [fieldName => label] map, always prepend id.
       $colMap = [];
       foreach ($customColumns as $col) {
@@ -118,6 +132,89 @@ class record_ctrl extends Controller
         $detail .= ' — ' . $e->getPrevious()->getMessage();
       }
       $this->returnJson(['status' => 'error', 'code' => 'db_error', 'detail' => $detail]);
+    }
+  }
+
+  /**
+   * Exports all records matching the current search as a downloadable file.
+   *
+   * Accepts the same search parameters as getRecords() (search_type, search,
+   * querytext, adv, where) but ignores pagination and streams the file directly
+   * to the browser via Content-Disposition: attachment.
+   *
+   * The frontend builds the URL from its current route.query, so the parameters
+   * mirror the URL-persistence format used by DataView:
+   *
+   * GET ?obj=record_ctrl&method=exportRecords
+   *     &tb=TABLE
+   *     &format=csv|json|xlsx
+   *     &qt=fast|expert|advanced|shortSql   (optional — mirrors route.query.qt)
+   *     &q=VALUE                             (optional — mirrors route.query.q)
+   *     &where=SHORTSQL                      (optional — mirrors route.query.where)
+   *
+   * For qt=advanced, q must be a base64-encoded JSON array of search rows
+   * (same encoding used by DataView when persisting filter state in the URL).
+   */
+  public function exportRecords(): void
+  {
+    if (!\utils::canUser('read')) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+      return;
+    }
+
+    $tb     = $this->get['tb']     ?? null;
+    $format = $this->get['format'] ?? 'csv';
+
+    if (!$tb) {
+      $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
+      return;
+    }
+
+    // Translate URL-persistence params (qt/q/where) into QueryFromRequest shape.
+    // This mirrors the mapping that DataView::applyRouteParams does on the frontend.
+    $qt    = $this->get['qt']    ?? null;
+    $q     = $this->get['q']     ?? null;
+    $where = $this->get['where'] ?? null;
+
+    $qRequest = ['tb' => $tb, 'type' => 'all'];
+
+    if ($where) {
+      $qRequest['type']  = 'shortSql';
+      $qRequest['where'] = $where;
+    } elseif ($qt === 'fast' && $q !== null) {
+      $qRequest['type']   = 'fast';
+      $qRequest['string'] = $q;
+    } elseif ($qt === 'expert' && $q !== null) {
+      $qRequest['type']      = 'sqlExpert';
+      $qRequest['querytext'] = $q;
+      $qRequest['join']      = '';
+    } elseif ($qt === 'advanced' && $q !== null) {
+      $rows = @json_decode(@base64_decode($q), true);
+      if (is_array($rows) && count($rows) > 0) {
+        $qRequest['type'] = 'advanced';
+        $qRequest['adv']  = $rows;
+      }
+    }
+
+    try {
+      $qObj  = new \QueryFromRequest($this->db, $this->cfg, $qRequest, false);
+      $rows  = $qObj->getResults();  // no setLimit() → full result set
+
+      $metadata = [
+        'table'  => $tb,
+        'filter' => $qt ?? 'all',
+        'query'  => $q ?? $where ?? null,
+      ];
+
+      $filename = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $tb)
+                . '_' . date('Ymd_His');
+
+      $exp = \DB\Export\Export::fromData($rows ?: [], $metadata);
+      $exp->streamToResponse($format, $filename);
+
+    } catch (\Throwable $e) {
+      $this->log->error($e);
+      $this->returnJson(['status' => 'error', 'code' => 'db_error', 'detail' => $e->getMessage()]);
     }
   }
 

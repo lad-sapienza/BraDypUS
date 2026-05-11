@@ -14,6 +14,19 @@
       </div>
 
       <div class="header-actions">
+        <!-- Template selector (read mode, when >1 template available) -->
+        <Select
+          v-if="mode === 'read' && availableTemplates.length > 1"
+          v-model="selectedTemplate"
+          :options="templateOptions"
+          optionLabel="label"
+          optionValue="value"
+          size="small"
+          class="template-select"
+          :title="t('template')"
+          @change="onTemplateChange"
+        />
+
         <template v-if="mode === 'read' && record">
           <Button
             v-if="record.metadata?.can_edit"
@@ -199,6 +212,7 @@ import Button         from 'primevue/button'
 import Tag            from 'primevue/tag'
 import Message        from 'primevue/message'
 import ProgressSpinner from 'primevue/progressspinner'
+import Select          from 'primevue/select'
 import { api }        from '@/api'
 import { useI18n }    from '@/i18n'
 import FieldDisplay    from '@/components/record/FieldDisplay.vue'
@@ -278,6 +292,43 @@ const geodataCount = computed(() => {
 /** True when the loaded record includes a valid resolved template. */
 const hasTemplate = computed(() => !!record.value?.schema?.template)
 
+// ── Template selection ────────────────────────────────────────────
+const availableTemplates = ref([])   // string[] — names returned by getTemplates
+
+function tplStorageKey(tbName) { return `bradypus:template:${tbName}` }
+
+const selectedTemplate = ref(null)   // currently chosen template name or null
+
+const templateOptions = computed(() => [
+  { label: t('default_layout'), value: null },
+  ...availableTemplates.value.map(name => ({ label: name, value: name })),
+])
+
+async function loadAvailableTemplates() {
+  if (!tb.value) return
+  try {
+    const res = await api.get('record_ctrl', 'getTemplates', { tb: tb.value })
+    availableTemplates.value = res.templates ?? []
+    // Restore saved preference for this table
+    const saved = localStorage.getItem(tplStorageKey(tb.value))
+    if (saved && availableTemplates.value.includes(saved)) {
+      selectedTemplate.value = saved
+    } else {
+      selectedTemplate.value = null
+    }
+  } catch { /* non-fatal */ }
+}
+
+function onTemplateChange(e) {
+  const val = e.value
+  if (val) {
+    localStorage.setItem(tplStorageKey(tb.value), val)
+  } else {
+    localStorage.removeItem(tplStorageKey(tb.value))
+  }
+  fetchRecord()
+}
+
 // ── Load record ─────────────────────────────────────────────────
 async function fetchRecord() {
   if (!tb.value) return
@@ -286,7 +337,9 @@ async function fetchRecord() {
   try {
     const params = { tb: tb.value }
     if (id.value) params.id = id.value
-    if (route.query.template) params.template = route.query.template
+    // Priority: selectedTemplate state > URL param (for direct links)
+    const tplParam = selectedTemplate.value ?? route.query.template ?? null
+    if (tplParam) params.template = tplParam
 
     const res = await api.get('record_ctrl', 'getRecord', params)
 
@@ -429,10 +482,18 @@ async function doDelete() {
 }
 
 // ── Init ──────────────────────────────────────────────────────────
-onMounted(fetchRecord)
+onMounted(async () => {
+  await loadAvailableTemplates()
+  fetchRecord()
+})
 
 // Reload when route params change (navigating record→record)
-watch(() => [route.params.tb, route.params.id], fetchRecord)
+// Re-load templates too if the table changes (tb is part of the route)
+watch(() => route.params.tb, async () => {
+  await loadAvailableTemplates()
+  fetchRecord()
+})
+watch(() => route.params.id, fetchRecord)
 </script>
 
 <style scoped>
@@ -473,7 +534,14 @@ watch(() => [route.params.tb, route.params.id], fetchRecord)
   font-size: 0.78rem;
 }
 
-.header-actions { display: flex; gap: 0.4rem; }
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.template-select { width: 140px; }
 
 /* ── Loading / Error ── */
 .record-loading {

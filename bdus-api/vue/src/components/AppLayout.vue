@@ -7,7 +7,34 @@
         <i class="pi pi-bars" />
       </button>
       <span class="topbar-brand">BraDypUS</span>
-      <span class="topbar-user">{{ auth.user?.name }}</span>
+      <!-- User menu -->
+      <Button
+        text
+        size="small"
+        class="topbar-user-btn"
+        :title="auth.user?.name"
+        @click="userMenu.toggle($event)"
+      >
+        <i class="pi pi-user" style="font-size:0.9rem" />
+        <span class="topbar-user-name">{{ auth.user?.name }}</span>
+        <i class="pi pi-chevron-down" style="font-size:0.65rem;opacity:0.6" />
+      </Button>
+      <Menu ref="userMenu" :model="userMenuItems" popup />
+
+      <!-- Profile dialog -->
+      <Dialog
+        v-model:visible="profileVisible"
+        :header="t('user_profile')"
+        modal
+        :style="{ width: '420px' }"
+      >
+        <UserForm
+          :initial="profileData"
+          :saving="profileSaving"
+          @save="saveProfile"
+          @cancel="profileVisible = false"
+        />
+      </Dialog>
 
       <Select
         v-model="currentLocale"
@@ -77,17 +104,71 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useToast } from 'primevue/usetoast'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from '@/i18n'
+import { api } from '@/api'
 import Select from 'primevue/select'
+import Button from 'primevue/button'
+import Menu from 'primevue/menu'
+import Dialog from 'primevue/dialog'
+import UserForm from '@/components/users/UserForm.vue'
 
 const router = useRouter()
 const auth = useAuthStore()
+const toast = useToast()
 const { t, locale, setLocale, availableLocales } = useI18n()
 const currentLocale = computed({
   get: () => locale.value,
   set: (v) => setLocale(v)
 })
+
+// ── User menu (topbar) ─────────────────────────────────────────
+const userMenu        = ref()
+const profileVisible  = ref(false)
+const profileData     = ref({})
+const profileSaving   = ref(false)
+
+const userMenuItems = computed(() => [
+  {
+    label:   t('user_profile'),
+    icon:    'pi pi-user-edit',
+    command: openProfile,
+  },
+  { separator: true },
+  {
+    label:   t('logout'),
+    icon:    'pi pi-sign-out',
+    command: handleLogout,
+    class:   'menu-item-danger',
+  },
+])
+
+async function openProfile() {
+  try {
+    const res = await api.get('user_ctrl', 'showUserForm', { id: auth.user?.id })
+    profileData.value   = res
+    profileVisible.value = true
+  } catch (e) {
+    toast.add({ severity: 'error', summary: 'Error', detail: e.message, life: 4000 })
+  }
+}
+
+async function saveProfile(data) {
+  profileSaving.value = true
+  try {
+    const res = await api.post('user_ctrl', 'saveUserData', data)
+    if (res.status !== 'success') throw new Error(res.text ?? res.code)
+    toast.add({ severity: 'success', summary: t('user_data_saved'), life: 3000 })
+    profileVisible.value = false
+    // Refresh auth store so topbar name updates
+    await auth.fetchMe()
+  } catch (e) {
+    toast.add({ severity: 'error', summary: 'Error', detail: e.message, life: 4000 })
+  } finally {
+    profileSaving.value = false
+  }
+}
 
 // Mobile drawer (< 1024px)
 const drawerOpen = ref(false)
@@ -204,10 +285,26 @@ const navGroups = computed(() => [
   flex: 1;
 }
 
-.topbar-user {
+.topbar-user-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
   font-size: 0.82rem;
   color: var(--p-text-muted-color);
+  padding: 0.25rem 0.5rem !important;
+  border-radius: 6px;
 }
+.topbar-user-btn:hover { color: var(--p-text-color) !important; }
+
+.topbar-user-name {
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Red tint for logout item in user menu */
+:global(.menu-item-danger > .p-menuitem-content) { color: var(--p-red-400) !important; }
 
 :deep(.locale-select) {
   width: 60px;

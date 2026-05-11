@@ -261,6 +261,8 @@ const navGroups = computed(() => [
       { labelKey: 'find_replace',   icon: 'pi-search-plus',  to: '/find-replace', disabled: true  },
       { labelKey: 'vocabulary_mng', icon: 'pi-book',         to: '/vocabularies', disabled: false },
       { labelKey: 'history',        icon: 'pi-history',      to: '/history',      disabled: true  },
+      { labelKey: 'import_geodata', icon: 'pi-map-marker',   to: '/import-geo',   disabled: true  },
+      { labelKey: 'backup',         icon: 'pi-save',         to: '/backups'                       },
     ],
   },
   {
@@ -273,19 +275,11 @@ const navGroups = computed(() => [
     ],
   },
   {
-    labelKey: 'nav_import_export',
-    items: [
-      { labelKey: 'import_geodata', icon: 'pi-map-marker',   to: '/import-geo',   disabled: true  },
-      { labelKey: 'backup',         icon: 'pi-save',         to: '/backups'                       },
-    ],
-  },
-  {
     labelKey: 'nav_admin',
     items: [
       { labelKey: 'user_mng',       icon: 'pi-users',        to: '/users',        disabled: false },
       { labelKey: 'sys_config',     icon: 'pi-cog',          to: '/config',       disabled: true  },
       { labelKey: 'free_sql',       icon: 'pi-code',         to: '/free-sql',     disabled: true  },
-      { labelKey: 'empty_cache',    icon: 'pi-trash',        to: '/empty-cache',  disabled: true  },
     ],
   },
   {
@@ -293,7 +287,7 @@ const navGroups = computed(() => [
     items: [
       { labelKey: 'test',           icon: 'pi-check-circle', to: '/test',         disabled: true  },
       { labelKey: 'app_log',        icon: 'pi-list',         to: '/log',          disabled: false },
-      { labelKey: 'info',           icon: 'pi-info-circle',  to: '/info',         disabled: true  },
+      { labelKey: 'info',           icon: 'pi-info-circle',  to: '/info',         disabled: false },
     ],
   },
 ])

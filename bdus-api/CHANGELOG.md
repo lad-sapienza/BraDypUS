@@ -3,6 +3,47 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.0.0] - unreleased
+
+Complete rewrite of the frontend: from jQuery + Bootstrap 3 + Twig server-side
+rendering to a Vue 3 SPA (Vite, Pinia, PrimeVue / Aura theme).
+The PHP backend is preserved and extended with JSON endpoints consumed by the new frontend.
+
+### Added
+- Vue 3 SPA with Vite dev server and hash-based routing
+- PrimeVue Aura theme; dark-mode ready via CSS custom properties
+- Responsive layout: collapsible sidebar (desktop) + slide-in drawer (mobile)
+- Locale switcher (🇮🇹 / 🇬🇧) with reactive i18n throughout the UI
+- **DataView**: paginated record table, column toggler with persistent column order,
+  sortable columns, fast / advanced / SQL expert search, active filter persisted
+  in the URL so Back navigation restores the exact search state
+- **RecordView**: full record display and edit — all field types (text, textarea,
+  date, select, multi_select, boolean, link_to, link_out), plugin tables, linked
+  files/images, geodata panel, RS (stratigraphic relations), template selector
+- Streaming export from any active search: CSV, XLSX (zero-dependency PHP OOXML
+  writer), JSON — served as download attachment, no temp file on disk
+- Add-record button (toolbar + FAB) gated by `can_add` privilege
+- **BackupView**: list backups, create, download, delete (admin), restore (super_admin);
+  native PHP/PDO SQLite dumper replaces Spatie's CLI-dependent one — works in Docker
+- **InfoView**: version badge + full changelog
+- **LogView**, **UsersView**, **VocabulariesView**, **HomeView**, **LoginView** migrated
+- 118 PHPUnit integration + unit tests covering all migrated controllers
+
+### Changed
+- All module endpoints now return JSON (`returnJson()`) instead of rendering Twig
+- `backup_ctrl::buildFileName()` uses `PROJ_DIR` (was a relative path)
+- `DB\Export\Export` refactored: `fromData()` factory + `streamToResponse()`;
+  HTML / XML / SQL / XLS exporters deprecated
+- Password hashing upgraded from SHA1 to bcrypt (transparent migration on login)
+- Sidebar reorganised: Import geodata and Backup moved under Data; Empty cache removed
+
+### Fixed
+- `dumpSqliteNative()`: cursor-based row iteration (no full-table `fetchAll()`),
+  gzip level 6 instead of 9 — significantly faster on large databases
+- Multi_select fields now pre-load options on mount so labels resolve in closed state
+- Table switch in DataView no longer ignored due to Vue 3 reactive-update batching
+- FAB uses `position: fixed` so it is not clipped by `overflow: hidden` ancestors
+
 ## [4.4.7] - 2026-05-09
 
 ### Fixed

@@ -178,6 +178,18 @@ abstract class BdusTestCase extends TestCase
                     ('test__files', 2, 'test__items', 1, 2)"
         );
 
+        // A manual link between item 1 and item 2 (not a file link)
+        // userlinks ids 1,2 are the file links above; this becomes id 3.
+        static::$db->execInTransaction(
+            "INSERT INTO test__userlinks (tb_one, id_one, tb_two, id_two, sort)
+             VALUES ('test__items', 1, 'test__items', 2, 1)"
+        );
+
+        // An RS entry referencing item 1 (first='1' so Read::getRs() can find it by id=1)
+        static::$db->execInTransaction(
+            "INSERT INTO test__rs (tb, first, second, relation) VALUES ('test__items', '1', '2', 1)"
+        );
+
         // A couple of log entries
         $now = time();
         static::$db->execInTransaction(

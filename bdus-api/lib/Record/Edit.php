@@ -39,9 +39,9 @@ class Edit
         $this->model = $record->getFull();
     }
 
-    public function persist(string $prefix) : void
+    public function persist(\DB\DBInterface $db, \Config\Config $cfg): array
     {
-        Persist::all($this->getModel(), $prefix);
+        return Persist::all($this->getModel(), $db, $cfg);
     }
 
     private function addLog( string $msg) : void
@@ -270,44 +270,40 @@ class Edit
         }
     }
 
-    public function setPluginRow($plugin, $id = false, $data_arr = []) : void
-    {   
-        // Scenario 1: update values for existing plugin record
-        if ( 
-            $id && 
-            !empty($data) &&
+    public function setPluginRow(string $plugin, int $id = null, array $data_arr = []): self
+    {
+        // UPDATE: existing row, with new data
+        if (
+            $id &&
+            !empty($data_arr) &&
             isset($this->model['plugins'][$plugin]['data'][$id])
-        ){
-
+        ) {
             foreach ($data_arr as $fld => $val) {
-                if (in_array($fld, ['table_link', 'id_link'])){
-                    // table_link and id_link fields can not be set
+                if (in_array($fld, ['table_link', 'id_link'], true)) {
                     continue;
                 }
-                if ( $this->model['plugins'][$plugin]['data'][$id][$fld]['val'] !== $val){
+                if ($this->model['plugins'][$plugin]['data'][$id][$fld]['val'] !== $val) {
                     $this->model['plugins'][$plugin]['data'][$id][$fld]['_val'] = $val;
                 }
             }
 
-        // Scenario 2: add new plugin record
-        } else if ( !$id && !empty($data) ){
-            foreach ($data_arr as $fld => $val) {
-                $new_row = [
-                    $fld => [
-                        "name" => $fld,
-                        "_val" => $val
-                    ]
-                ];
-            }
-            array_push($this->model['plugins'][$plugin]['data'], $new_row);
-        
-        // Scenario 3: delete plugin record
-        } else if (
-            $id && 
+        // DELETE: existing row, no data
+        } elseif (
+            $id &&
             empty($data_arr) &&
             isset($this->model['plugins'][$plugin]['data'][$id])
         ) {
-            $this->model['plugins'][$plugin]['data'][$id]['id']["_delete"] = true;
+            $this->model['plugins'][$plugin]['data'][$id]['id']['_delete'] = true;
+
+        // INSERT: no id, with data
+        } elseif (!$id && !empty($data_arr)) {
+            $new_row = [];
+            foreach ($data_arr as $fld => $val) {
+                $new_row[$fld] = ['name' => $fld, '_val' => $val];
+            }
+            $this->model['plugins'][$plugin]['data'][] = $new_row;
         }
+
+        return $this;
     }
 }

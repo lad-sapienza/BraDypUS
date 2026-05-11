@@ -6,7 +6,8 @@
             "order": "id",
             "id_field": "id",
             "preview": ["id", "name", "status"],
-            "plugin": []
+            "plugin": ["test__tags"],
+            "rs": "id"
         },
         {
             "name": "test__tags",

@@ -222,7 +222,7 @@ EOD;
 
             $ret = [];
 
-            if ($res && !\is_array($res)) {
+            if ($res && is_array($res)) {
                 foreach ($res as $key => $value) {
                     $ret[$value['id']] = $value;
                 }

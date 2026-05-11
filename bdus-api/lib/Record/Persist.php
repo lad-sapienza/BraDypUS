@@ -4,337 +4,426 @@
  * @license AGPL-3.0; see LICENSE
  */
 
-
 namespace Record;
 
+use DB\DBInterface;
+use Config\Config;
+
+/**
+ * Persists a Record model to the database.
+ *
+ * Receives the model produced by Record\Read::getFull() (after optional
+ * modifications by Record\Edit) and translates the _val / _delete markers
+ * into INSERT / UPDATE / DELETE SQL statements.
+ *
+ * All SQL placeholders are positional `?` to match the rest of BraDypUS.
+ */
 class Persist
-{   
-    private $tb;
-    private $id;
-    private $model = [];
+{
+    private DBInterface $db;
+    private Config $cfg;
 
-    public function __construct (array $model, string $prefix)
-    {
-        $this->model    = $model;
-        $this->tb       = $this->model['metadata']['tb_id'];
-        $this->id       = $this->model['metadata']['rec_id'];
-        $this->prefix   = $prefix;
-    }
+    /** Full model array */
+    private array $model;
 
-    public static function all(array $model, string $prefix)
-    {
-        $this_class = new self($model, $prefix);
-        $this_class->Core();
-        $this_class->Plugins();
-        $this_class->ManualLinks();
-        $this_class->Rs();
-        $this_class->Files();
-    }
+    /** Fully-qualified table name, e.g. "test__items" */
+    private string $tb;
 
-    public function Files()
+    /** Prefix derived from $tb, e.g. "test__" */
+    private string $prefix;
+
+    /** Current record id (null for new records, populated after INSERT) */
+    private ?int $id;
+
+    // ── Constructor & factory ────────────────────────────────────────────────
+
+    public function __construct(array $model, DBInterface $db, Config $cfg)
     {
-        // TODO:
+        $this->model  = $model;
+        $this->db     = $db;
+        $this->cfg    = $cfg;
+        $this->tb     = $this->model['metadata']['tb_id'];
+        // rec_id may be an int, a string, or the full field array ['name'=>'id','val'=>N]
+        $recId        = $this->model['metadata']['rec_id'];
+        if (is_array($recId)) {
+            $recId = $recId['val'] ?? null;
+        }
+        $this->id     = $recId ? (int) $recId : null;
+
+        // Derive prefix from table name: everything up to and including the first "__"
+        $dbl          = strpos($this->tb, '__');
+        $this->prefix = ($dbl !== false) ? substr($this->tb, 0, $dbl + 2) : '';
     }
 
     /**
-     * Returns Model array
-     * If $json, JSON version will be returned
-     * if $pretty, the JSON is indented
+     * Persist all sections of the model and return an array of result counts.
      *
-     * @param boolean $json     if true, JSON will bereturned
-     * @param boolean $pretty   if true, returned JSON will be indented
-     * @return array|string     Model array or JSON represeentation
+     * @param array       $model  Model as returned by Read::getFull() + Edit modifications
+     * @param DBInterface $db     Active DB connection
+     * @param Config      $cfg    Application config
+     * @return array              ['core'=>[…], 'plugins'=>[…], 'manualLinks'=>[…], 'rs'=>[…]]
      */
-
-    public function getModel($json = false, $pretty = false)
+    public static function all(array $model, DBInterface $db, Config $cfg): array
     {
-        return $json ? json_encode($this->model, ($pretty ? JSON_PRETTY_PRINT : false)) : $this->model;
+        $instance = new self($model, $db, $cfg);
+
+        $result = [];
+        $result['core'] = $instance->persistCore();
+
+        // After core, sync the id back into the instance so sub-sections can use it.
+        // persistCore() already updates $this->id internally.
+
+        $result['plugins']     = $instance->persistPlugins();
+        $result['manualLinks'] = $instance->persistManualLinks();
+        $result['rs']          = $instance->persistRs();
+
+        return $result;
     }
 
+    // ── Public single-section methods ────────────────────────────────────────
 
-    private function runInDb($sql, $val, $setCoreId = false)
+    /**
+     * Persist the core record (INSERT, UPDATE, or DELETE cascade).
+     *
+     * @return array  e.g. ['affected'=>1, 'id'=>42] or ['deleted'=>1] or ['affected'=>0]
+     */
+    public function persistCore(): array
     {
-        echo "<pre>$sql\t" . json_encode($val) . "</pre>";
-        if (!$this->id && $setCoreId){
-            echo('set $this->id after query');
+        // Full record deletion requested
+        if (isset($this->model['core']['id']['_delete'])) {
+            return $this->deleteAll();
         }
-    }
 
-    public function ManualLinks()
-    {
-        if (!$this->id){
-            throw new \Exception("Set core before manualLinks: missing id");
-        }
-        foreach( $this->model['manualLinks'] as $linkid => $l ){
-            // Add new link
-            if ( 
-                !isset($l['key']) &&
-                 isset($l['_tb_id']) &&
-                 isset($l['_ref_id'])
-            ){
-                $sql = "INSERT INTO {$this->prefix}userlinks "
-                    . "(tb_one, id_one, tb_two, id_two, sort) "
-                    . "VALUES (?, ?, ?, ?, ?)";
-                $values = [
-                    $this->tb,
-                    $this->id,
-                    $l['_tb_id'],
-                    $l['_ref_id'],
-                    $l['_sort']
-                ];
-
-            // UPDATE sort
-            } else if ( isset($l['key']) && isset($l['_sort']) ) {
-                $sql = "UPDATE {$this->prefix}userlinks SET sort = ? WHERE id = ?";
-                $values = [
-                    $l['_sort'], $l['key']
-                ];
-
-            // DELETE
-            } else if ( isset($l['key']) && isset($l['_deleted'])){
-                $sql = "DELETE FROM {$this->prefix}userlinks WHERE id = ?";
-                $values = [ $l['key'] ];
-            }
-
-            if ($sql) {
-                $this->runInDb($sql, $values);
-            }
-        }
-    }
-
-    public function Rs()
-    {
-        foreach( $this->model['rs'] as $rsid => $rs ){
-            // Add new link
-            if ( 
-                !isset($rs['id']) && 
-                isset($rs['_first']) &&
-                isset($rs['_second']) &&
-                isset($rs['_relation'])
-            ){
-                $fields = [
-                    "tb",
-                    "first",
-                    "second",
-                    "relation"
-                ];
-                $values = [
-                    $this->tb,
-                    $rs['_first'],
-                    $rs['_second'],
-                    $rs['_relation']
-                ];
-
-                $sql = "INSERT INTO {$this->prefix}rs "
-                    . "(" . implode(", ", $fields) . ") "
-                    . "VALUES (". implode(',', array_fill(0, count($values), '?')) .")";
-                
-
-            // UPDATE
-            } else if ( 
-                isset($gd['id']) && 
-                isset($rs['_first']) &&
-                isset($rs['_second']) &&
-                isset($rs['_relation'])
-            ) {
-                $fields = [
-                    "tb",
-                    "first",
-                    "second",
-                    "relation"
-                ];
-                $values = [
-                    $this->tb,
-                    $rs['_first'],
-                    $rs['_second'],
-                    $rs['_relation']
-                ];
-                $sql = "UPDATE {$this->prefix}rs SET " . implode(", ", $fields). " WHERE id = ?";
-                array_push($values, $rs['id']);
-                
-
-            // DELETE
-            } else if ( isset($rs['id']) && isset($rs['id']['_deleted'])){
-                $sql = "DELETE FROM {$this->prefix}rs WHERE id = ?";
-                $values = [ $rs['id'] ];
-            }
-
-            if ($sql) {
-                $this->runInDb($sql, $values);
-            }
-        }
-    }
-
-    public function Plugins()
-    {
-        foreach ($this->model['plugins'] as $plugin_name => $plugin_data) {
-            foreach ($plugin_data['data'] as $plg_row) {
-
-                $sql = false;
-                $values = [];
-
-                // Delete row
-                if ( 
-                    isset($plg_row['id']['val']) && 
-                    isset($plg_row['id']['_delete'])
-                ){
-                    // delete row
-                    $sql = "DELETE FROM {$plugin_name} WHERE id = ?";
-                    $values = [$plg_row['id']['val']];
-
-                // New row
-                } else if (!isset($plg_row['id']['val'])){
-                    $plg_fld_to_write = [];
-                    foreach ($plg_row as $el) {
-                        if(isset($el['_val'])){
-                            $plg_fld_to_write[$el['name']] = $el['_val'];
-                        }
-                    }
-
-                    if (!isset($plg_fld_to_write['table_link'])){
-                        $plg_fld_to_write['table_link']['_val'] = $this->tb;
-                    }
-                    if (!isset($plg_fld_to_write['id_link'])){
-                        if (!$this->id){
-                            throw new \Exception("Set core before plugins: missing id");
-                        }                
-                        $plg_fld_to_write['id_link']['_val'] = $this->id; 
-                    }
-
-                    if ( !empty($plg_fld_to_write)){
-                        $sql = "INSERT INTO {$plugin_name} ("
-                            . implode(", ", array_keys($plg_fld_to_write)) 
-                            . ") VALUES ( " 
-                            // https://www.php.net/manual/en/function.str-repeat.php
-                            . implode(',', array_fill(0, count($plg_fld_to_write), '?'))
-                            . ")";
-                        $values = array_values($plg_fld_to_write);
-                    } 
-
-                // Update existing row 
-                } else {
-                    $plg_fld_to_write = [];
-                    foreach ($plg_row as $el) {
-                        if(
-                            !in_array($el['name'], ['id', 'table_link', 'id_link']) &&
-                            isset($el['_val'])
-                        ){
-                            $plg_fld_to_write[$el['name']] = $el['_val'];
-                        }
-                    }
-
-                    if(!empty($plg_fld_to_write)){
-                        $sql = "UPDATE {$plugin_name} SET "
-                            . implode(" = ? ", array_keys($plg_fld_to_write)) 
-                            . " WHERE id = ?";
-                        $values = array_values($plg_fld_to_write);
-                        $values = array_push($values, $plg_row['id']['val']);
-                    }
-
-                }
-
-                if ($sql) {
-                    $this->runInDb($sql, $values);
-                }
-            }
-        }
-    }
-
-
-    public function Core()
-    {
-        if (isset($this->model['core']['id']['_delete'])){
-            $this->recursivelyDeleteAll();
-            return;
-        }
-        $core_el_updated = [];
-
+        // Collect changed fields
+        $changed = [];
         foreach ($this->model['core'] as $fld => $data) {
             if (isset($data['_val'])) {
-                $core_el_updated[$data['name']] = $data['_val'];
+                $changed[$data['name']] = $data['_val'];
             }
         }
 
-        if (empty($core_el_updated)){
-            return true;
+        if (empty($changed)) {
+            return ['affected' => 0];
         }
 
-        // Update
-        if ($this->id){
-            $sql = "UPDATE $this->tb SET "
-                . implode(", ", array_map(function($v){
-                    return "{$v} = ? ";
-                }, array_keys($core_el_updated)))
-                . " WHERE id = ?";
-            $values = array_values($core_el_updated);
-            array_push($values, $this->id);
-            
+        if ($this->id) {
+            // UPDATE
+            $setParts = array_map(fn($k) => "{$k} = ?", array_keys($changed));
+            $sql      = "UPDATE {$this->tb} SET " . implode(', ', $setParts) . " WHERE id = ?";
+            $values   = array_values($changed);
+            $values[] = $this->id;
+
+            $this->db->query($sql, $values, 'boolean');
+
+            return ['affected' => 1, 'id' => $this->id];
         } else {
-        // Add
-            $sql = "INSERT INTO {$this->tb}, (" 
-                . implode( ", ", array_keys($core_el_updated) )
-                . ") VALUES ("
-                . implode(", ", array_map(function($v){
-                    return "?";
-                }, array_values($core_el_updated)))
-                . ")";
-            $values = array_values($core_el_updated);
-        }
+            // INSERT
+            $fields   = array_keys($changed);
+            $placeholders = implode(', ', array_fill(0, count($fields), '?'));
+            $sql      = "INSERT INTO {$this->tb} (" . implode(', ', $fields) . ") VALUES ({$placeholders})";
+            $values   = array_values($changed);
 
-        $this->runInDb($sql, $values, true);
+            $newId    = (int) $this->db->query($sql, $values, 'id');
+            $this->id = $newId;
+
+            return ['affected' => 1, 'id' => $this->id];
+        }
     }
 
+    /**
+     * Persist all plugin rows (INSERT, UPDATE, DELETE) in a single transaction.
+     *
+     * @return array  ['inserted'=>N, 'updated'=>N, 'deleted'=>N]
+     */
+    public function persistPlugins(): array
+    {
+        $counts = ['inserted' => 0, 'updated' => 0, 'deleted' => 0];
 
-
-    private function recursivelyDeleteAll(){
-        if (!$this->id){
-            throw new \Exception("Can not delete all: missing id");
+        if (empty($this->model['plugins'])) {
+            return $counts;
         }
 
-        // DELETE FROM TABLE
-        $this->runInDb(
-            "DELETE FROM {$this->tb} WHERE id = ? ",
-            [ $this->id ]
-        );
+        $this->db->beginTransaction();
 
-        // DELETE plugins
-        foreach ($this->model['plugins'] as $plugin_name => $plugin_data) {
-            foreach ($plugin_data['data'] as $row_id => $plg_row) {
-                $this->runInDb(
-                    "DELETE FROM $plugin_name WHERE id = ? ",
-                    [ $row_id ]
+        try {
+            foreach ($this->model['plugins'] as $pluginName => $pluginData) {
+                if (empty($pluginData['data'])) {
+                    continue;
+                }
+
+                foreach ($pluginData['data'] as $row) {
+                    $rowId = $row['id']['val'] ?? null;
+
+                    // DELETE
+                    if ($rowId && isset($row['id']['_delete'])) {
+                        $this->db->query(
+                            "DELETE FROM {$pluginName} WHERE id = ?",
+                            [$rowId],
+                            'boolean'
+                        );
+                        $counts['deleted']++;
+                        continue;
+                    }
+
+                    // UPDATE
+                    if ($rowId) {
+                        $toWrite = [];
+                        foreach ($row as $fld => $data) {
+                            if (
+                                in_array($fld, ['id', 'table_link', 'id_link'], true)
+                                || !isset($data['_val'])
+                            ) {
+                                continue;
+                            }
+                            $toWrite[$fld] = $data['_val'];
+                        }
+
+                        if (!empty($toWrite)) {
+                            $setParts = array_map(fn($k) => "{$k} = ?", array_keys($toWrite));
+                            $sql      = "UPDATE {$pluginName} SET " . implode(', ', $setParts) . " WHERE id = ?";
+                            $values   = array_values($toWrite);
+                            $values[] = $rowId;
+
+                            $this->db->query($sql, $values, 'boolean');
+                            $counts['updated']++;
+                        }
+                        continue;
+                    }
+
+                    // INSERT (no existing id)
+                    $toWrite = [];
+                    foreach ($row as $fld => $data) {
+                        if (isset($data['_val'])) {
+                            $toWrite[$fld] = $data['_val'];
+                        }
+                    }
+
+                    if (empty($toWrite)) {
+                        continue;
+                    }
+
+                    if (!isset($toWrite['table_link'])) {
+                        $toWrite['table_link'] = $this->tb;
+                    }
+                    if (!isset($toWrite['id_link'])) {
+                        if (!$this->id) {
+                            throw new \Exception("Cannot insert plugin row: core id not set. Persist core first.");
+                        }
+                        $toWrite['id_link'] = $this->id;
+                    }
+
+                    $fields       = array_keys($toWrite);
+                    $placeholders = implode(', ', array_fill(0, count($fields), '?'));
+                    $sql          = "INSERT INTO {$pluginName} (" . implode(', ', $fields) . ") VALUES ({$placeholders})";
+                    $values       = array_values($toWrite);
+
+                    $this->db->query($sql, $values, 'boolean');
+                    $counts['inserted']++;
+                }
+            }
+
+            $this->db->commit();
+        } catch (\Throwable $e) {
+            $this->db->rollBack();
+            throw $e;
+        }
+
+        return $counts;
+    }
+
+    /**
+     * Persist manual links (userlinks table): INSERT, UPDATE sort, DELETE.
+     *
+     * @return array  ['inserted'=>N, 'updated'=>N, 'deleted'=>N]
+     */
+    public function persistManualLinks(): array
+    {
+        $counts = ['inserted' => 0, 'updated' => 0, 'deleted' => 0];
+
+        if (empty($this->model['manualLinks'])) {
+            return $counts;
+        }
+
+        foreach ($this->model['manualLinks'] as $link) {
+            $key = $link['key'] ?? null;
+
+            // DELETE
+            if ($key && isset($link['_delete'])) {
+                $this->db->query(
+                    "DELETE FROM {$this->prefix}userlinks WHERE id = ?",
+                    [$key],
+                    'boolean'
                 );
+                $counts['deleted']++;
+                continue;
+            }
+
+            // UPDATE sort
+            if ($key && isset($link['_sort']) && !isset($link['_delete'])) {
+                $this->db->query(
+                    "UPDATE {$this->prefix}userlinks SET sort = ? WHERE id = ?",
+                    [$link['_sort'], $key],
+                    'boolean'
+                );
+                $counts['updated']++;
+                continue;
+            }
+
+            // INSERT
+            if (!$key && isset($link['_tb_id']) && isset($link['_ref_id'])) {
+                if (!$this->id) {
+                    throw new \Exception("Cannot insert manual link: core id not set. Persist core first.");
+                }
+                $sort = $link['_sort'] ?? null;
+                $this->db->query(
+                    "INSERT INTO {$this->prefix}userlinks (tb_one, id_one, tb_two, id_two, sort) VALUES (?, ?, ?, ?, ?)",
+                    [$this->tb, $this->id, $link['_tb_id'], $link['_ref_id'], $sort],
+                    'boolean'
+                );
+                $counts['inserted']++;
             }
         }
 
-        // Delete manual links
-        foreach( $this->model['manualLinks'] as $l ){
-            $this->runInDb(
-                "DELETE FROM {$this->prefix}userlinks WHERE id = ?",
-                [ $l['key'] ]
-            );
+        return $counts;
+    }
+
+    /**
+     * Persist record-set (RS) relations: INSERT, UPDATE, DELETE.
+     *
+     * @return array  ['inserted'=>N, 'updated'=>N, 'deleted'=>N]
+     */
+    public function persistRs(): array
+    {
+        $counts = ['inserted' => 0, 'updated' => 0, 'deleted' => 0];
+
+        if (empty($this->model['rs'])) {
+            return $counts;
         }
 
-        // DELETE RS
-        foreach( $this->model['rs'] as $rs ){
-            $this->runInDb(
-                "DELETE FROM {$this->prefix}rs WHERE id = ?",
-                [ $rs['id'] ]
-            );
+        foreach ($this->model['rs'] as $rs) {
+            $rsId = $rs['id'] ?? null;
+
+            // DELETE
+            if ($rsId && isset($rs['_delete'])) {
+                $this->db->query(
+                    "DELETE FROM {$this->prefix}rs WHERE id = ?",
+                    [$rsId],
+                    'boolean'
+                );
+                $counts['deleted']++;
+                continue;
+            }
+
+            // UPDATE
+            if (
+                $rsId
+                && (isset($rs['_first']) || isset($rs['_second']) || isset($rs['_relation']))
+            ) {
+                $toWrite = [];
+                if (isset($rs['_first']))    $toWrite['first']    = $rs['_first'];
+                if (isset($rs['_second']))   $toWrite['second']   = $rs['_second'];
+                if (isset($rs['_relation'])) $toWrite['relation'] = $rs['_relation'];
+
+                if (!empty($toWrite)) {
+                    $setParts = array_map(fn($k) => "{$k} = ?", array_keys($toWrite));
+                    $sql      = "UPDATE {$this->prefix}rs SET " . implode(', ', $setParts) . " WHERE id = ?";
+                    $values   = array_values($toWrite);
+                    $values[] = $rsId;
+
+                    $this->db->query($sql, $values, 'boolean');
+                    $counts['updated']++;
+                }
+                continue;
+            }
+
+            // INSERT
+            if (
+                !$rsId
+                && isset($rs['_first'])
+                && isset($rs['_second'])
+                && isset($rs['_relation'])
+            ) {
+                $this->db->query(
+                    "INSERT INTO {$this->prefix}rs (tb, first, second, relation) VALUES (?, ?, ?, ?)",
+                    [$this->tb, $rs['_first'], $rs['_second'], $rs['_relation']],
+                    'boolean'
+                );
+                $counts['inserted']++;
+            }
         }
 
-        // Delete and remove files
-        foreach( $this->model['files'] as $file ){
-            $this->runInDb(
-                "DELETE FROM {$this->prefix}files WHERE id = ?",
-                [ $file['id'] ]
-            );
-            @unlink(PROJ_DIR . "files/{$file['id']}.{$file['ext']}");
+        return $counts;
+    }
+
+    // ── Private helpers ──────────────────────────────────────────────────────
+
+    /**
+     * Delete the core record and all associated data in a single transaction.
+     *
+     * Handles:
+     *  1. Core row
+     *  2. All plugin rows (by table_link + id_link)
+     *  3. All userlinks entries referencing this record
+     *  4. All rs entries referencing this record (via the rs field configured in cfg)
+     *
+     * File deletion is NOT handled here — that is the controller's responsibility.
+     *
+     * @return array  ['deleted' => 1]
+     */
+    private function deleteAll(): array
+    {
+        if (!$this->id) {
+            throw new \Exception("Cannot delete record: id not set.");
         }
-        $this->runInDb(
-            "DELETE FROM {$this->prefix}userlinks WHERE "
-                . "(tb_one = ? AND id_one = ?) OR (tb_two = ? AND id_two = ?)",
-            [ $this->tb, $this->id, $this->tb, $this->id ]
-        );
+
+        $this->db->beginTransaction();
+
+        try {
+            // 1. Delete core row
+            $this->db->query(
+                "DELETE FROM {$this->tb} WHERE id = ?",
+                [$this->id],
+                'boolean'
+            );
+
+            // 2. Delete all plugin rows
+            foreach ($this->model['plugins'] as $pluginName => $pluginData) {
+                $this->db->query(
+                    "DELETE FROM {$pluginName} WHERE table_link = ? AND id_link = ?",
+                    [$this->tb, $this->id],
+                    'boolean'
+                );
+            }
+
+            // 3. Delete userlinks in both directions
+            $this->db->query(
+                "DELETE FROM {$this->prefix}userlinks WHERE (tb_one = ? AND id_one = ?) OR (tb_two = ? AND id_two = ?)",
+                [$this->tb, $this->id, $this->tb, $this->id],
+                'boolean'
+            );
+
+            // 4. Delete RS entries
+            // The rs field configured in cfg determines which core field's value is
+            // used as first/second in the rs table.
+            $rsFld = $this->cfg->get("tables.{$this->tb}.rs");
+            if ($rsFld) {
+                // Retrieve the value of the rs field from the core data
+                $rsFldVal = $this->model['core'][$rsFld]['val'] ?? null;
+                if ($rsFldVal !== null) {
+                    $this->db->query(
+                        "DELETE FROM {$this->prefix}rs WHERE tb = ? AND (first = ? OR second = ?)",
+                        [$this->tb, $rsFldVal, $rsFldVal],
+                        'boolean'
+                    );
+                }
+            }
+
+            $this->db->commit();
+        } catch (\Throwable $e) {
+            $this->db->rollBack();
+            throw $e;
+        }
+
+        return ['deleted' => 1];
     }
 }

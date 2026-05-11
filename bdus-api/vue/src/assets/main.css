@@ -1,8 +1,45 @@
-/* Global reset & base typography */
+/* ── App-level design tokens (light / dark) ──────────────────────────────
+   PrimeVue v4 Aura does NOT define --p-surface-ground or --p-surface-card
+   (those were v3 variables). We define our own that correctly flip when
+   the .dark-mode class is on <html>.
+
+   Light palette (slate):  surface.50 = #f8fafc, surface.0 = #ffffff
+   Dark palette  (zinc):   surface.950 = #09090b, surface.900 = #18181b
+   ---------------------------------------------------------------------- */
+:root {
+  /* Page body background — slightly off-white / slightly off-black */
+  --bdus-bg:       #f8fafc;   /* slate-50  */
+  /* Panel / card / topbar / sidebar surface */
+  --bdus-surface:  #ffffff;   /* white     */
+  /* Raised surface inside a panel (e.g. record section background) */
+  --bdus-raised:   #f1f5f9;   /* slate-100 */
+}
+
+.dark-mode {
+  --bdus-bg:       #09090b;   /* zinc-950  */
+  --bdus-surface:  #18181b;   /* zinc-900  */
+  --bdus-raised:   #27272a;   /* zinc-800  */
+}
+
+/* ── Global reset & base typography ─────────────────────────────────────── */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+}
+
+/* Lock the viewport so page-body scrolling never occurs.
+   All scrolling must happen inside explicit overflow-y:auto containers. */
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+}
+
+#app {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 body {
@@ -12,7 +49,7 @@ body {
   font-size: 14px;
   line-height: 1.5;
   color: var(--p-text-color);
-  background: var(--p-surface-ground);
+  background: var(--bdus-bg);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -26,12 +63,12 @@ a:hover {
   text-decoration: underline;
 }
 
-/* ── Record sections ── */
+/* ── Record sections ─────────────────────────────────────────────────────── */
 /* Shared legend style for every fieldset.record-section across all components.
    Defined globally so scoped CSS in child components (TemplateSection,
    PluginSection, RecordView) doesn't need to duplicate it. */
 .record-section {
-  border: 1px solid var(--p-surface-border);
+  border: 1px solid var(--p-content-border-color);
   border-radius: 6px;
   padding: 0.75rem 1rem;
   margin: 0;

@@ -36,6 +36,15 @@
         />
       </Dialog>
 
+      <!-- Dark mode toggle -->
+      <button
+        class="topbar-btn"
+        :title="isDark ? t('light_mode') : t('dark_mode')"
+        @click="toggleDark"
+      >
+        <i :class="isDark ? 'pi pi-sun' : 'pi pi-moon'" />
+      </button>
+
       <Select
         v-model="currentLocale"
         :options="availableLocales"
@@ -149,7 +158,8 @@ import { useToast } from 'primevue/usetoast'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from '@/i18n'
 import { api } from '@/api'
-import { useTables } from '@/composables/useTables'
+import { useTables }   from '@/composables/useTables'
+import { useDarkMode } from '@/composables/useDarkMode'
 import Select from 'primevue/select'
 import Button from 'primevue/button'
 import Menu from 'primevue/menu'
@@ -160,6 +170,7 @@ const router = useRouter()
 const route  = useRoute()
 const auth   = useAuthStore()
 const { tables: navTables, loading: tablesLoading, loadTables } = useTables()
+const { isDark, toggle: toggleDark } = useDarkMode()
 
 // Load table list when navigating to /data (or when already there on mount)
 const isDataRoute       = computed(() => route.path === '/data')
@@ -281,8 +292,9 @@ const navGroups = computed(() => [
   {
     labelKey: 'nav_admin',
     items: [
-      { labelKey: 'user_mng',       icon: 'pi-users',        to: '/users',        disabled: false },
+      { labelKey: 'user_mng',        icon: 'pi-users',        to: '/users',        disabled: false },
       { labelKey: 'sys_config',     icon: 'pi-cog',          to: '/config',       disabled: false },
+      { labelKey: 'design_templates', icon: 'pi-palette',    to: '/templates',    disabled: false },
       { labelKey: 'free_sql',       icon: 'pi-code',         to: '/free-sql',     disabled: true  },
     ],
   },
@@ -302,7 +314,8 @@ const navGroups = computed(() => [
 .layout {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  height: 100%;        /* fills #app which is 100vh; prevents body scrolling */
+  overflow: hidden;
 }
 
 /* ── Topbar ───────────────────────────────────────────────── */
@@ -328,7 +341,7 @@ const navGroups = computed(() => [
   border-radius: 4px;
   line-height: 1;
 }
-.topbar-btn:hover { background: var(--p-surface-hover); }
+.topbar-btn:hover { background: var(--p-content-hover-background); }
 
 .topbar-brand {
   font-weight: 700;
@@ -422,7 +435,7 @@ const navGroups = computed(() => [
   font-size: 0.8rem;
   flex-shrink: 0;
 }
-.collapse-btn:hover { background: var(--p-surface-hover); }
+.collapse-btn:hover { background: var(--p-content-hover-background); }
 
 @media (min-width: 1024px) {
   .desktop-only { display: flex; }
@@ -464,10 +477,10 @@ const navGroups = computed(() => [
   transition: background 0.15s;
 }
 
-.nav-item:hover:not(.disabled) { background: var(--p-surface-hover); }
+.nav-item:hover:not(.disabled) { background: var(--p-content-hover-background); }
 
 .nav-item.router-link-active {
-  background: var(--p-primary-50);
+  background: var(--p-highlight-background);
   color: var(--p-primary-color);
   font-weight: 600;
 }
@@ -537,7 +550,7 @@ const navGroups = computed(() => [
 
 .nav-table-item.active,
 .nav-table-item.router-link-active {
-  background: var(--p-primary-50);
+  background: var(--p-highlight-background);
   color: var(--p-primary-color);
   font-weight: 600;
 }
@@ -561,13 +574,13 @@ const navGroups = computed(() => [
 
 /* ── Footer ───────────────────────────────────────────────── */
 .sidebar-footer {
-  border-top: 1px solid var(--p-surface-border);
+  border-top: 1px solid var(--p-content-border-color);
   padding: 0.25rem 0;
   flex-shrink: 0;
 }
 
 .nav-logout { color: var(--p-red-400); }
-.nav-logout:hover { background: var(--p-red-50) !important; }
+.nav-logout:hover { background: color-mix(in srgb, var(--p-red-400) 12%, transparent) !important; }
 
 /* ── Main content ─────────────────────────────────────────── */
 .main-content {

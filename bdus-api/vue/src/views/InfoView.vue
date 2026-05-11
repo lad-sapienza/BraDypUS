@@ -94,7 +94,7 @@ onMounted(async () => {
   font-weight: 700;
   margin: 1.5rem 0 0.4rem;
   padding-bottom: 0.25rem;
-  border-bottom: 1px solid var(--p-surface-border);
+  border-bottom: 1px solid var(--p-content-border-color);
   color: var(--p-text-color);
 }
 
@@ -127,7 +127,7 @@ onMounted(async () => {
 .changelog-body :deep(code) {
   font-family: monospace;
   font-size: 0.82em;
-  background: var(--p-surface-hover);
+  background: var(--p-content-hover-background);
   padding: 0.1em 0.35em;
   border-radius: 3px;
 }

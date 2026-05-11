@@ -123,14 +123,14 @@ async function handleLogin() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--p-surface-ground);
+  background: var(--bdus-bg);
 }
 
 .login-card {
   width: 100%;
   max-width: 420px;
   padding: 2.5rem;
-  background: var(--p-surface-card);
+  background: var(--bdus-surface);
   border-radius: var(--p-border-radius-xl);
   box-shadow: var(--p-card-shadow);
 }

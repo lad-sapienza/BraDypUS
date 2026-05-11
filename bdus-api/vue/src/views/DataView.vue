@@ -965,7 +965,7 @@ function doExport(format) {
   display: flex;
   flex-direction: column;
   gap: 0;
-  border: 1px solid var(--p-surface-border);
+  border: 1px solid var(--p-content-border-color);
   border-radius: 6px;
   overflow: hidden;
 }
@@ -975,7 +975,7 @@ function doExport(format) {
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 0.75rem;
-  background: var(--p-surface-card, #fff);
+  background: var(--bdus-surface);
 }
 
 .search-input-wrap { flex: 1; min-width: 0; }
@@ -991,8 +991,8 @@ function doExport(format) {
 /* ── Collapsible panels ──────────────────────────────────── */
 .search-panel {
   padding: 0.75rem 1rem;
-  border-top: 1px solid var(--p-surface-border);
-  background: var(--p-surface-ground, #f8f9fa);
+  border-top: 1px solid var(--p-content-border-color);
+  background: var(--bdus-bg);
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
@@ -1066,7 +1066,7 @@ function doExport(format) {
 
 .records-table { flex: 1; min-height: 0; }
 .clickable-rows :deep(tbody tr) { cursor: pointer; }
-.clickable-rows :deep(tbody tr:hover td) { background: var(--p-surface-hover); }
+.clickable-rows :deep(tbody tr:hover td) { background: var(--p-content-hover-background); }
 
 .cell-value {
   display: block;
@@ -1104,14 +1104,14 @@ function doExport(format) {
   border-radius: 4px;
   transition: background 0.12s;
 }
-.col-toggler-item:hover { background: var(--p-surface-hover); }
+.col-toggler-item:hover { background: var(--p-content-hover-background); }
 .col-toggler-item .pi   { color: var(--p-primary-color); font-size: 0.95rem; }
 
 .col-toggler-actions {
   display: flex;
   gap: 0.25rem;
   padding: 0.4rem 0.5rem 0.25rem;
-  border-top: 1px solid var(--p-surface-border);
+  border-top: 1px solid var(--p-content-border-color);
 }
 
 /* ── Add record ──────────────────────────────────────────── */

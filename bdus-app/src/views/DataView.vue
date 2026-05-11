@@ -84,6 +84,35 @@
                 @click="togglePanel('expert')"
               />
 
+              <!-- Column visibility toggler -->
+              <Button
+                v-if="columns.length"
+                icon="pi pi-table"
+                :title="t('preview_fields')"
+                size="small"
+                severity="secondary"
+                text
+                @click="colToggler.toggle($event)"
+              />
+              <Popover ref="colToggler" class="col-toggler-popover">
+                <div class="col-toggler-header">{{ t('preview_fields') }}</div>
+                <div class="col-toggler-list">
+                  <div
+                    v-for="col in columns"
+                    :key="col.name"
+                    class="col-toggler-item"
+                    @click="toggleColumn(col.name)"
+                  >
+                    <i :class="['pi', visibleColumnNames.has(col.name) ? 'pi-check-square' : 'pi-stop']" />
+                    <span>{{ col.label }}</span>
+                  </div>
+                </div>
+                <div class="col-toggler-actions">
+                  <Button :label="t('select_all')" text size="small" @click="selectAllColumns" />
+                  <Button :label="t('reset')" text size="small" severity="secondary" @click="resetColumns" />
+                </div>
+              </Popover>
+
               <Tag
                 v-if="activeSearch"
                 severity="warn"
@@ -262,7 +291,7 @@
           >
             <template #empty>{{ t('no_record_found') }}</template>
             <Column
-              v-for="col in columns"
+              v-for="col in displayColumns"
               :key="col.name"
               :field="col.name"
               :header="col.label"
@@ -301,6 +330,7 @@ import Tag from 'primevue/tag'
 import Select from 'primevue/select'
 import AutoComplete from 'primevue/autocomplete'
 import ProgressSpinner from 'primevue/progressspinner'
+import Popover from 'primevue/popover'
 
 const { t } = useI18n()
 const toast  = useToast()
@@ -316,6 +346,62 @@ const loadingTables = ref(false)
 // ── Sidebar collapse (small screens only) ────────────────────
 const sidebarHidden = ref(false)
 const SMALL_SCREEN  = 900  // px — below this the sidebar auto-collapses on selection
+
+// ── Column visibility ─────────────────────────────────────────
+const colToggler         = ref()
+const visibleColumnNames = ref(new Set())   // Set of column names currently shown
+
+/** localStorage key for a given table's column prefs */
+function colStorageKey(tbName) { return `bradypus:columns:${tbName}` }
+
+/** Called when fetchRecords() refreshes the column list. Merges with saved prefs. */
+function syncVisibleColumns(newColumns, tbName) {
+  const saved = localStorage.getItem(colStorageKey(tbName))
+  if (saved) {
+    try {
+      const arr = JSON.parse(saved)
+      // keep only names that still exist in the new column list
+      const valid = new Set(arr.filter(n => newColumns.some(c => c.name === n)))
+      visibleColumnNames.value = valid.size ? valid : new Set(newColumns.map(c => c.name))
+      return
+    } catch { /* ignore corrupt data */ }
+  }
+  // No saved prefs → show all
+  visibleColumnNames.value = new Set(newColumns.map(c => c.name))
+}
+
+function saveColumnPrefs(tbName) {
+  localStorage.setItem(colStorageKey(tbName), JSON.stringify([...visibleColumnNames.value]))
+}
+
+function toggleColumn(name) {
+  const s = new Set(visibleColumnNames.value)
+  if (s.has(name)) {
+    if (s.size === 1) return   // keep at least one column
+    s.delete(name)
+  } else {
+    s.add(name)
+  }
+  visibleColumnNames.value = s
+  saveColumnPrefs(selectedTable.value?.name)
+}
+
+function selectAllColumns() {
+  visibleColumnNames.value = new Set(columns.value.map(c => c.name))
+  saveColumnPrefs(selectedTable.value?.name)
+}
+
+function resetColumns() {
+  if (selectedTable.value) {
+    localStorage.removeItem(colStorageKey(selectedTable.value.name))
+    visibleColumnNames.value = new Set(columns.value.map(c => c.name))
+  }
+}
+
+/** Filtered column list actually rendered in the DataTable */
+const displayColumns = computed(() =>
+  columns.value.filter(c => visibleColumnNames.value.has(c.name))
+)
 
 function autoCollapseSidebar() {
   if (window.innerWidth < SMALL_SCREEN) sidebarHidden.value = true
@@ -587,7 +673,9 @@ async function fetchRecords() {
 
     totalRecords.value = res.total ?? 0
     if (res.fields?.length) {
-      columns.value = res.fields.filter(f => f.name !== 'id')
+      const newCols = res.fields.filter(f => f.name !== 'id')
+      columns.value = newCols
+      syncVisibleColumns(newCols, selectedTable.value?.name)
     }
     records.value = res.data ?? []
 
@@ -879,5 +967,43 @@ function onRowClick(event) {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* ── Column toggler popover ──────────────────────────────── */
+:deep(.col-toggler-popover) { min-width: 200px; }
+
+.col-toggler-header {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--p-text-muted-color);
+  padding: 0.5rem 0.75rem 0.25rem;
+}
+
+.col-toggler-list {
+  max-height: 260px;
+  overflow-y: auto;
+  padding: 0.25rem 0;
+}
+
+.col-toggler-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.75rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  border-radius: 4px;
+  transition: background 0.12s;
+}
+.col-toggler-item:hover { background: var(--p-surface-hover); }
+.col-toggler-item .pi   { color: var(--p-primary-color); font-size: 0.95rem; }
+
+.col-toggler-actions {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.4rem 0.5rem 0.25rem;
+  border-top: 1px solid var(--p-surface-border);
 }
 </style>

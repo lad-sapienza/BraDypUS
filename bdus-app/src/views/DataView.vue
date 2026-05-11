@@ -33,6 +33,17 @@
       <!-- ── Records panel ──────────────────────────────────── -->
       <div class="records-panel">
 
+        <!-- Reopen sidebar button: always visible on small screens when sidebar is collapsed -->
+        <div v-if="sidebarHidden" class="sidebar-reopen-bar">
+          <button
+            class="sidebar-open-btn"
+            :title="t('data_mng')"
+            @click="sidebarHidden = false"
+          >
+            <i class="pi pi-list" />
+          </button>
+        </div>
+
         <div v-if="!selectedTable" class="records-placeholder">
           <i class="pi pi-arrow-left" />
           <p>{{ t('choose_db') }}</p>
@@ -45,15 +56,6 @@
 
             <!-- Row 1: always visible -->
             <div class="search-bar">
-              <!-- reopen sidebar button — small screens only, shown when sidebar is hidden -->
-              <button
-                v-if="sidebarHidden"
-                class="sidebar-open-btn"
-                :title="t('data_mng')"
-                @click="sidebarHidden = false"
-              >
-                <i class="pi pi-list" />
-              </button>
               <IconField class="search-input-wrap">
                 <InputIcon class="pi pi-search" />
                 <InputText
@@ -98,7 +100,7 @@
                 <div class="col-toggler-header">{{ t('preview_fields') }}</div>
                 <div class="col-toggler-list">
                   <div
-                    v-for="col in columns"
+                    v-for="col in allAvailableColumns"
                     :key="col.name"
                     class="col-toggler-item"
                     @click="toggleColumn(col.name)"
@@ -349,25 +351,40 @@ const SMALL_SCREEN  = 900  // px — below this the sidebar auto-collapses on se
 
 // ── Column visibility ─────────────────────────────────────────
 const colToggler         = ref()
-const visibleColumnNames = ref(new Set())   // Set of column names currently shown
+const visibleColumnNames = ref(new Set())   // Set of field names the user wants to see
+
+/** All fields available for this table (from advConfig, loaded eagerly on table select) */
+const allAvailableColumns = computed(() =>
+  advFields.value
+    .map(f => {
+      // advFields value format is "tablename:fieldname"
+      const [, name] = f.value.includes(':') ? f.value.split(':') : [null, f.value]
+      return { name, label: f.label }
+    })
+    .filter(f => f.name && f.name !== 'id')
+)
 
 /** localStorage key for a given table's column prefs */
 function colStorageKey(tbName) { return `bradypus:columns:${tbName}` }
 
-/** Called when fetchRecords() refreshes the column list. Merges with saved prefs. */
-function syncVisibleColumns(newColumns, tbName) {
+/**
+ * Called when a table is selected or advConfig is freshly loaded.
+ * Restores saved preferences, or defaults to the preview columns
+ * returned by the last getRecords call.
+ */
+function initVisibleColumns(tbName) {
   const saved = localStorage.getItem(colStorageKey(tbName))
   if (saved) {
     try {
       const arr = JSON.parse(saved)
-      // keep only names that still exist in the new column list
-      const valid = new Set(arr.filter(n => newColumns.some(c => c.name === n)))
-      visibleColumnNames.value = valid.size ? valid : new Set(newColumns.map(c => c.name))
-      return
-    } catch { /* ignore corrupt data */ }
+      if (Array.isArray(arr) && arr.length) {
+        visibleColumnNames.value = new Set(arr)
+        return
+      }
+    } catch { /* ignore */ }
   }
-  // No saved prefs → show all
-  visibleColumnNames.value = new Set(newColumns.map(c => c.name))
+  // No saved prefs: use whatever the backend returned as default (preview fields)
+  visibleColumnNames.value = new Set(columns.value.map(c => c.name))
 }
 
 function saveColumnPrefs(tbName) {
@@ -377,28 +394,30 @@ function saveColumnPrefs(tbName) {
 function toggleColumn(name) {
   const s = new Set(visibleColumnNames.value)
   if (s.has(name)) {
-    if (s.size === 1) return   // keep at least one column
+    if (s.size === 1) return   // keep at least one column visible
     s.delete(name)
   } else {
     s.add(name)
   }
   visibleColumnNames.value = s
   saveColumnPrefs(selectedTable.value?.name)
+  fetchRecords()   // refetch with updated column list
 }
 
 function selectAllColumns() {
-  visibleColumnNames.value = new Set(columns.value.map(c => c.name))
+  visibleColumnNames.value = new Set(allAvailableColumns.value.map(c => c.name))
   saveColumnPrefs(selectedTable.value?.name)
+  fetchRecords()
 }
 
 function resetColumns() {
-  if (selectedTable.value) {
-    localStorage.removeItem(colStorageKey(selectedTable.value.name))
-    visibleColumnNames.value = new Set(columns.value.map(c => c.name))
-  }
+  if (!selectedTable.value) return
+  localStorage.removeItem(colStorageKey(selectedTable.value.name))
+  visibleColumnNames.value = new Set()   // empty → backend uses preview defaults
+  fetchRecords()
 }
 
-/** Filtered column list actually rendered in the DataTable */
+/** Filtered column list actually rendered in the DataTable (from what the backend returned) */
 const displayColumns = computed(() =>
   columns.value.filter(c => visibleColumnNames.value.has(c.name))
 )
@@ -489,21 +508,26 @@ function applyRouteParams() {
   const tbl = tables.value.find(t => t.name === tbParam)
   if (!tbl) return   // unknown table (permissions or typo)
 
+  const tableChanged = selectedTable.value?.name !== tbParam
   selectedTable.value = tbl
-  advConfigFor        = null
-  autoCollapseSidebar()
+
+  if (tableChanged) {
+    advConfigFor = null
+    visibleColumnNames.value = new Set()   // reset → will re-init from prefs/defaults
+    autoCollapseSidebar()
+    loadAdvConfig()   // eager load all fields for the column toggler
+  }
 
   if (whereParam) {
     shortSqlWhere.value = whereParam
     activeSearch.value  = 'shortSql'
     openPanel.value     = null
-  } else {
-    resetSearch()
-    return   // resetSearch already calls fetchRecords
+    page.value = 1
+    fetchRecords()
+  } else if (tableChanged) {
+    resetSearch()   // also calls fetchRecords
   }
-
-  page.value = 1
-  fetchRecords()
+  // If same table, no where param, no change → do nothing (avoids double fetch)
 }
 
 // Re-apply whenever the user follows another link while DataView is alive
@@ -511,11 +535,9 @@ watch(() => route.query, applyRouteParams)
 
 // ── Select table ─────────────────────────────────────────────
 function selectTable(tbl) {
-  selectedTable.value = tbl
-  advConfigFor = null   // force config reload for new table
-  autoCollapseSidebar()
-  resetSearch()
-  fetchRecords()
+  // Update the URL — applyRouteParams (via watch) will handle the rest.
+  // We strip 'where' on manual table selection (user starts fresh).
+  router.replace({ query: { tb: tbl.name } })
 }
 
 // ── Panel toggle ──────────────────────────────────────────────
@@ -614,7 +636,14 @@ async function fetchRecords() {
   loadingRecords.value = true
   try {
     let res
-    const urlParams = { tb: selectedTable.value.name }
+    const tbName   = selectedTable.value.name
+    const urlParams = { tb: tbName }
+
+    // Custom column list: passed when the user has an explicit selection.
+    // Empty set means "use backend preview defaults" (no param sent).
+    const colParam = visibleColumnNames.value.size > 0
+      ? [...visibleColumnNames.value]
+      : null
 
     if (activeSearch.value === 'advanced') {
       const adv = advRows.value
@@ -627,42 +656,50 @@ async function fetchRecords() {
           value:     r.value ?? '',
           ')':       r.close ? true : false,
         }))
-      res = await api.post('record_ctrl', 'getRecords', {
+      const body = {
         page: page.value, per_page: perPage.value,
         sort_field: sortField.value ?? '', sort_dir: sortDir.value,
         search_type: 'advanced', adv,
-      }, urlParams)
+      }
+      if (colParam) body.columns = colParam
+      res = await api.post('record_ctrl', 'getRecords', body, urlParams)
 
     } else if (activeSearch.value === 'expert') {
-      res = await api.post('record_ctrl', 'getRecords', {
+      const body = {
         page: page.value, per_page: perPage.value,
         sort_field: sortField.value ?? '', sort_dir: sortDir.value,
         search_type: 'sqlExpert', querytext: expertQuery.value, join: '',
-      }, urlParams)
+      }
+      if (colParam) body.columns = colParam
+      res = await api.post('record_ctrl', 'getRecords', body, urlParams)
 
     } else if (activeSearch.value === 'shortSql') {
       // ShortSQL WHERE produced by Record\Read::getLinks() / getBackLinks().
       // Sent as a GET param so the URL is bookmarkable.
-      res = await api.get('record_ctrl', 'getRecords', {
-        tb:          selectedTable.value.name,
+      const params = {
+        tb:          tbName,
         page:        page.value,
         per_page:    perPage.value,
         sort_field:  sortField.value ?? '',
         sort_dir:    sortDir.value,
         search_type: 'shortSql',
         where:       shortSqlWhere.value,
-      })
+      }
+      if (colParam) params.columns = colParam
+      res = await api.get('record_ctrl', 'getRecords', params)
 
     } else {
-      res = await api.get('record_ctrl', 'getRecords', {
-        tb:          selectedTable.value.name,
+      const params = {
+        tb:          tbName,
         page:        page.value,
         per_page:    perPage.value,
         sort_field:  sortField.value ?? '',
         sort_dir:    sortDir.value,
         search_type: activeSearch.value === 'fast' ? 'fast' : 'all',
         search:      activeSearch.value === 'fast' ? fastSearch.value : '',
-      })
+      }
+      if (colParam) params.columns = colParam
+      res = await api.get('record_ctrl', 'getRecords', params)
     }
 
     if (res.status === 'error') {
@@ -673,9 +710,11 @@ async function fetchRecords() {
 
     totalRecords.value = res.total ?? 0
     if (res.fields?.length) {
-      const newCols = res.fields.filter(f => f.name !== 'id')
-      columns.value = newCols
-      syncVisibleColumns(newCols, selectedTable.value?.name)
+      columns.value = res.fields.filter(f => f.name !== 'id')
+      // If no saved preference yet, initialise from returned preview columns
+      if (visibleColumnNames.value.size === 0) {
+        initVisibleColumns(selectedTable.value?.name)
+      }
     }
     records.value = res.data ?? []
 
@@ -769,7 +808,18 @@ function onRowClick(event) {
   .sidebar-close-btn { display: flex; align-items: center; }
 }
 
-/* Reopen button in search bar: visible only on small screens when sidebar is hidden */
+/* Reopen bar: sits at top of records-panel, visible on small screens when sidebar is hidden */
+.sidebar-reopen-bar {
+  display: none;
+  flex-shrink: 0;
+  padding: 0.35rem 0.75rem;
+  border-bottom: 1px solid var(--p-surface-border);
+}
+@media (max-width: 899px) {
+  .sidebar-reopen-bar { display: flex; }
+}
+
+/* Reopen button */
 .sidebar-open-btn {
   display: none;
   border: none;

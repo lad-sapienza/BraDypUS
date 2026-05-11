@@ -15,7 +15,13 @@ async function get(obj, method, params = {}) {
   const url = new URL(PHP, window.location.origin)
   url.searchParams.set('obj', obj)
   url.searchParams.set('method', method)
-  Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v))
+  Object.entries(params).forEach(([k, v]) => {
+    if (Array.isArray(v)) {
+      v.forEach(item => url.searchParams.append(k + '[]', item))
+    } else {
+      url.searchParams.set(k, v)
+    }
+  })
 
   const res = await fetch(url, {
     headers: { Accept: 'application/json' },

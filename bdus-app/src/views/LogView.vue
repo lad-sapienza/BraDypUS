@@ -1,4 +1,5 @@
 <template>
+  <AppLayout>
   <div class="log-view">
 
     <!-- ── Toolbar ────────────────────────────────────────────── -->
@@ -135,11 +136,13 @@
     </Dialog>
 
   </div>
+  </AppLayout>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
+import AppLayout from '@/components/AppLayout.vue'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Button from 'primevue/button'
@@ -264,7 +267,8 @@ onMounted(fetchLogs)
 .log-view {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
   overflow: hidden;
 }
 

@@ -3,10 +3,14 @@
     <div class="data-layout">
 
       <!-- ── Table sidebar ─────────────────────────────────── -->
-      <aside class="table-sidebar app-table-sidebar">
+      <aside class="table-sidebar app-table-sidebar" :class="{ 'sidebar-hidden': sidebarHidden }">
         <div class="table-sidebar-header">
           <span>{{ t('data_mng') }}</span>
           <ProgressSpinner v-if="loadingTables" style="width:18px;height:18px" />
+          <!-- close button — small screens only -->
+          <button class="sidebar-close-btn" @click="sidebarHidden = true" :title="t('close')">
+            <i class="pi pi-times" />
+          </button>
         </div>
         <div v-if="tables.length === 0 && !loadingTables" class="table-sidebar-empty">
           {{ t('no_record_found') }}
@@ -41,6 +45,15 @@
 
             <!-- Row 1: always visible -->
             <div class="search-bar">
+              <!-- reopen sidebar button — small screens only, shown when sidebar is hidden -->
+              <button
+                v-if="sidebarHidden"
+                class="sidebar-open-btn"
+                :title="t('data_mng')"
+                @click="sidebarHidden = false"
+              >
+                <i class="pi pi-list" />
+              </button>
               <IconField class="search-input-wrap">
                 <InputIcon class="pi pi-search" />
                 <InputText
@@ -300,6 +313,14 @@ const tables        = ref([])
 const selectedTable = ref(null)
 const loadingTables = ref(false)
 
+// ── Sidebar collapse (small screens only) ────────────────────
+const sidebarHidden = ref(false)
+const SMALL_SCREEN  = 900  // px — below this the sidebar auto-collapses on selection
+
+function autoCollapseSidebar() {
+  if (window.innerWidth < SMALL_SCREEN) sidebarHidden.value = true
+}
+
 // ── Records ──────────────────────────────────────────────────
 const records        = ref([])
 const columns        = ref([])
@@ -384,6 +405,7 @@ function applyRouteParams() {
 
   selectedTable.value = tbl
   advConfigFor        = null
+  autoCollapseSidebar()
 
   if (whereParam) {
     shortSqlWhere.value = whereParam
@@ -405,6 +427,7 @@ watch(() => route.query, applyRouteParams)
 function selectTable(tbl) {
   selectedTable.value = tbl
   advConfigFor = null   // force config reload for new table
+  autoCollapseSidebar()
   resetSearch()
   fetchRecords()
 }
@@ -613,6 +636,15 @@ function onRowClick(event) {
   flex-direction: column;
   overflow: hidden;
   border-right: 1px solid var(--p-surface-border);
+  transition: width 0.2s ease, opacity 0.2s ease;
+}
+
+/* Collapsed state — only active below 900 px (enforced via JS flag) */
+.table-sidebar.sidebar-hidden {
+  width: 0;
+  opacity: 0;
+  pointer-events: none;
+  border-right: none;
 }
 
 .table-sidebar-header {
@@ -627,6 +659,45 @@ function onRowClick(event) {
   color: var(--p-text-muted-color);
   border-bottom: 1px solid var(--p-surface-border);
   flex-shrink: 0;
+  gap: 0.5rem;
+}
+
+/* Close button: visible only on small screens */
+.sidebar-close-btn {
+  display: none;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--p-text-muted-color);
+  padding: 0.2rem;
+  border-radius: 4px;
+  line-height: 1;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+.sidebar-close-btn:hover { color: var(--p-text-color); background: var(--p-surface-hover); }
+
+@media (max-width: 899px) {
+  .sidebar-close-btn { display: flex; align-items: center; }
+}
+
+/* Reopen button in search bar: visible only on small screens when sidebar is hidden */
+.sidebar-open-btn {
+  display: none;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--p-text-muted-color);
+  padding: 0.3rem 0.4rem;
+  border-radius: 4px;
+  font-size: 1rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.sidebar-open-btn:hover { color: var(--p-text-color); background: var(--p-surface-hover); }
+
+@media (max-width: 899px) {
+  .sidebar-open-btn { display: flex; align-items: center; }
 }
 
 .table-sidebar-empty {

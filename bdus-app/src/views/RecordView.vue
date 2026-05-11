@@ -494,22 +494,6 @@ watch(() => [route.params.tb, route.params.id], fetchRecord)
   gap: 1rem;
 }
 
-/* ── Sections ── */
-.record-section {
-  border: 1px solid var(--p-surface-border);
-  border-radius: 6px;
-  padding: 0.75rem 1rem;
-  margin: 0;
-}
-.record-section legend {
-  font-size: 0.8rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--p-text-muted-color);
-  padding: 0 0.4rem;
-}
-
 /* ── Fields grid ── */
 .fields-grid {
   display: grid;

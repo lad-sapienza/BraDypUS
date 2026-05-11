@@ -81,6 +81,22 @@
     <!-- ── Content ─────────────────────────────────────────────────── -->
     <div v-else-if="record" class="record-content">
 
+      <!-- Files (always first, before fields, for visibility) -->
+      <fieldset
+        v-if="record.files?.length || mode === 'edit'"
+        class="record-section"
+      >
+        <legend>{{ t('files') }}</legend>
+        <FileGallery
+          :files="record.files ?? []"
+          :editMode="mode === 'edit'"
+          :recordTb="record.metadata.tb_id"
+          :recordId="id"
+          @file-uploaded="onFileUploaded"
+          @file-deleted="onFileDeleted"
+        />
+      </fieldset>
+
       <!-- Template-driven layout (when a template is active) -->
       <template v-if="hasTemplate">
         <TemplateSection
@@ -178,15 +194,6 @@
         </div>
       </fieldset>
 
-      <!-- Files -->
-      <fieldset
-        v-if="record.files?.length"
-        class="record-section"
-      >
-        <legend>{{ t('files') }}</legend>
-        <FileGallery :files="record.files" />
-      </fieldset>
-
       <!-- Geodata -->
       <fieldset
         v-if="hasGeodata"
@@ -206,8 +213,8 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, reactive, onMounted } from 'vue'
-import { useRoute, useRouter }   from 'vue-router'
+import { ref, computed, watch, reactive, onMounted, provide } from 'vue'
+import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
 import { useToast }              from 'primevue/usetoast'
 import { useConfirm }            from 'primevue/useconfirm'
 import AppLayout      from '@/components/AppLayout.vue'
@@ -248,11 +255,15 @@ const backTarget = computed(() => {
 })
 
 // ── State ────────────────────────────────────────────────────────
-const record     = ref(null)
-const mode       = ref('read')
-const loading    = ref(false)
-const saving     = ref(false)
-const fetchError = ref(null)
+const record       = ref(null)
+const mode         = ref('read')
+const loading      = ref(false)
+const saving       = ref(false)
+const fetchError   = ref(null)
+
+/** Set to true on a failed save attempt so all FieldEditors show their errors */
+const forceValidate = ref(false)
+provide('forceValidate', forceValidate)
 
 // Reactive edit data: flat values only (not the full {name,label,val} objects)
 const editData = reactive({ core: {}, plugins: {} })
@@ -417,11 +428,57 @@ function enterEditMode() {
 }
 
 function cancelEdit() {
+  forceValidate.value = false
   mode.value = 'read'
+}
+
+// ── Validation ────────────────────────────────────────────────────
+/**
+ * Returns the labels of fields that fail their validation rules.
+ * Checks core fields + plugin fields.
+ */
+function collectValidationErrors() {
+  const bad = []
+
+  // Core fields
+  for (const fld of visibleCoreFields.value) {
+    if (fld.required && (editData.core[fld.name] === null || editData.core[fld.name] === undefined || editData.core[fld.name] === '')) {
+      bad.push(fld.label)
+    }
+  }
+
+  // Plugin fields
+  for (const [plgTb, rows] of Object.entries(editData.plugins)) {
+    const plgFields = record.value?.schema?.plugins?.[plgTb]?.fields ?? []
+    const plgLabel  = record.value?.schema?.plugins?.[plgTb]?.label ?? plgTb
+    for (const row of rows.filter(r => !r._delete)) {
+      for (const fld of plgFields) {
+        if (fld.required && !row.fields[fld.name]) {
+          bad.push(`${plgLabel} → ${fld.label}`)
+        }
+      }
+    }
+  }
+
+  return bad
 }
 
 // ── Save ─────────────────────────────────────────────────────────
 async function saveRecord() {
+  // Pre-save validation
+  const errors = collectValidationErrors()
+  if (errors.length) {
+    forceValidate.value = true
+    toast.add({
+      severity: 'warn',
+      summary:  t('validation_error'),
+      detail:   `${t('required_fields_missing')}: ${errors.join(', ')}`,
+      life:     6000,
+    })
+    return
+  }
+
+  forceValidate.value = false
   saving.value = true
   try {
     // Build plugins payload: only rows that have changed, been deleted, or are new
@@ -450,7 +507,8 @@ async function saveRecord() {
       return
     }
 
-    toast.add({ severity: 'success', summary: t('save'), detail: t(res.code), life: 3000 })
+    toast.add({ severity: 'success', summary: t('saved'), detail: t(res.code), life: 3000 })
+    forceValidate.value = false
     mode.value = 'read'
 
     // If this was a new record, navigate to the saved record
@@ -495,6 +553,42 @@ async function doDelete() {
   }
 }
 
+// ── File events (from FileGallery in edit mode) ───────────────────
+/**
+ * A file was successfully uploaded: add it optimistically to the local files array
+ * so the gallery refreshes without a full record reload.
+ */
+function onFileUploaded(newFile) {
+  if (record.value) {
+    record.value.files = [...(record.value.files ?? []), newFile]
+  }
+}
+
+/**
+ * A file was successfully deleted: remove it from the local files array.
+ */
+function onFileDeleted(fileId) {
+  if (record.value) {
+    record.value.files = (record.value.files ?? []).filter(f => f.id !== fileId)
+  }
+}
+
+// ── Unsaved changes guard ─────────────────────────────────────────
+onBeforeRouteLeave((_to, _from, next) => {
+  if (mode.value !== 'edit') {
+    next()
+    return
+  }
+  confirm.require({
+    message:  t('unsaved_changes_warning'),
+    header:   t('unsaved_changes'),
+    icon:     'pi pi-exclamation-triangle',
+    severity: 'warn',
+    accept:   () => next(),
+    reject:   () => next(false),
+  })
+})
+
 // ── Init ──────────────────────────────────────────────────────────
 onMounted(async () => {
   await loadAvailableTemplates()
@@ -526,7 +620,7 @@ watch(() => route.params.id, fetchRecord)
   justify-content: space-between;
   gap: 1rem;
   padding: 0.6rem 1.25rem;
-  border-bottom: 1px solid var(--p-surface-border);
+  border-bottom: 1px solid var(--p-content-border-color);
   flex-shrink: 0;
   flex-wrap: wrap;
 }
@@ -542,7 +636,7 @@ watch(() => route.params.id, fetchRecord)
 .sep { color: var(--p-text-muted-color); }
 .record-title-text { font-weight: 600; }
 .new-badge {
-  background: var(--p-primary-50);
+  background: var(--p-highlight-background);
   color: var(--p-primary-700);
   border-radius: 4px;
   padding: 0.1rem 0.4rem;

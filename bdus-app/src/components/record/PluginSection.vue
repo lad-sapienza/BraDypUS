@@ -185,11 +185,11 @@ function removeRow(idx) {
   letter-spacing: 0.04em;
   color: var(--p-text-muted-color);
   padding: 0.3rem 0.5rem;
-  border-bottom: 2px solid var(--p-surface-border);
+  border-bottom: 2px solid var(--p-content-border-color);
 }
 .plugin-table td {
   padding: 0.25rem 0.5rem;
-  border-bottom: 1px solid var(--p-surface-border);
+  border-bottom: 1px solid var(--p-content-border-color);
   vertical-align: top;
 }
 /* In plugin table, suppress FieldDisplay border/padding */
@@ -205,7 +205,7 @@ function removeRow(idx) {
   gap: 0.5rem;
   align-items: flex-start;
   padding: 0.5rem 0;
-  border-bottom: 1px solid var(--p-surface-border);
+  border-bottom: 1px solid var(--p-content-border-color);
 }
 .plugin-row-fields {
   flex: 1;

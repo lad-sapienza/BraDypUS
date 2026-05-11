@@ -97,4 +97,33 @@ function responseMessage(res, t, ...args) {
   return t(res.code, ...args)
 }
 
-export const api = { get, post, responseMessage }
+/**
+ * Upload a file to a controller method via multipart/form-data.
+ *
+ * @param {string} obj
+ * @param {string} method
+ * @param {File}   file        - the File object from an <input type="file">
+ * @param {string} [field]     - form field name (default: 'file')
+ * @param {object} [urlParams] - extra key=value pairs appended to the URL query string
+ */
+async function upload(obj, method, file, field = 'file', urlParams = {}) {
+  const url = new URL(PHP, window.location.origin)
+  url.searchParams.set('obj', obj)
+  url.searchParams.set('method', method)
+  Object.entries(urlParams).forEach(([k, v]) => url.searchParams.set(k, v))
+
+  const fd = new FormData()
+  fd.append(field, file)
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { Accept: 'application/json' },   // NO Content-Type — browser sets multipart boundary
+    credentials: 'same-origin',
+    body: fd,
+  })
+
+  if (!res.ok) throw new Error(`${obj}::${method} — HTTP ${res.status}`)
+  return res.json()
+}
+
+export const api = { get, post, upload, responseMessage }

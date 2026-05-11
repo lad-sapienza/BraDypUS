@@ -95,21 +95,7 @@ function fieldSchema(name) {
 </script>
 
 <style scoped>
-.template-section {
-  border: 1px solid var(--p-surface-border);
-  border-radius: 6px;
-  padding: 0.75rem 1rem;
-  margin: 0;
-}
-
-.template-section legend {
-  font-size: 0.8rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--p-text-muted-color);
-  padding: 0 0.4rem;
-}
+/* .record-section base style (border, padding, radius) is in main.css */
 
 .legend-collapsible {
   cursor: pointer;

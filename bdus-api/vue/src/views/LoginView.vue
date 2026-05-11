@@ -6,13 +6,24 @@
       <form @submit.prevent="handleLogin">
         <div class="field">
           <label for="app">Application</label>
-          <InputText
+          <Select
             id="app"
             v-model="form.app"
-            placeholder="app-name"
+            :options="apps"
+            optionLabel="name"
+            optionValue="db"
+            placeholder="Select an application…"
+            :loading="loadingApps"
             :disabled="loading"
             fluid
-          />
+          >
+            <template #option="{ option }">
+              <div>
+                <div class="app-name">{{ option.name }}</div>
+                <div v-if="option.definition" class="app-definition">{{ option.definition }}</div>
+              </div>
+            </template>
+          </Select>
         </div>
 
         <div class="field">
@@ -48,6 +59,7 @@
           label="Login"
           icon="pi pi-sign-in"
           :loading="loading"
+          :disabled="!form.app || !form.email || !form.password"
           fluid
         />
       </form>
@@ -56,9 +68,11 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { api } from '@/api'
+import Select from 'primevue/select'
 import InputText from 'primevue/inputtext'
 import Password from 'primevue/password'
 import Button from 'primevue/button'
@@ -67,9 +81,27 @@ import Message from 'primevue/message'
 const router = useRouter()
 const auth = useAuthStore()
 
-const form = ref({ app: '', email: '', password: '' })
+const form = ref({ app: null, email: '', password: '' })
 const loading = ref(false)
+const loadingApps = ref(false)
 const error = ref(null)
+const apps = ref([])
+
+onMounted(async () => {
+  loadingApps.value = true
+  try {
+    const res = await api.get('login_ctrl', 'listApps')
+    apps.value = res.apps ?? []
+    // Pre-select if only one app available
+    if (apps.value.length === 1) {
+      form.value.app = apps.value[0].db
+    }
+  } catch {
+    apps.value = []
+  } finally {
+    loadingApps.value = false
+  }
+})
 
 async function handleLogin() {
   error.value = null
@@ -122,5 +154,15 @@ async function handleLogin() {
   font-size: 0.9rem;
   font-weight: 500;
   color: var(--p-text-muted-color);
+}
+
+.app-name {
+  font-weight: 600;
+}
+
+.app-definition {
+  font-size: 0.8rem;
+  color: var(--p-text-muted-color);
+  margin-top: 0.1rem;
 }
 </style>

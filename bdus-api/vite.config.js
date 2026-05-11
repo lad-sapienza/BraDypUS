@@ -10,7 +10,8 @@ export default defineConfig({
 
   resolve: {
     alias: {
-      '@': fileURLToPath(new URL('./vue/src', import.meta.url))
+      '@': fileURLToPath(new URL('./vue/src', import.meta.url)),
+      '@locale': fileURLToPath(new URL('./locale', import.meta.url))
     }
   },
 
@@ -22,6 +23,16 @@ export default defineConfig({
       // In Docker Compose, 'app' is the PHP service hostname.
       // Outside Docker (direct npm run vue:dev), change to http://localhost:8080
       '/index.php': {
+        target: 'http://app:80',
+        changeOrigin: true
+      },
+      // Forward static assets served by PHP (uploaded files, cached thumbnails).
+      // In dev the Vite server has no access to projects/ or cache/; Apache does.
+      '/projects/': {
+        target: 'http://app:80',
+        changeOrigin: true
+      },
+      '/cache/': {
         target: 'http://app:80',
         changeOrigin: true
       }

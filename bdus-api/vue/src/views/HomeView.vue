@@ -3,24 +3,24 @@
     <div class="home-page">
 
       <div class="page-header">
-        <h2>Dashboard</h2>
-        <p>Welcome back, <strong>{{ auth.user?.name }}</strong></p>
+        <h2>{{ t('dashboard') }}</h2>
+        <p>{{ t('welcome_back', auth.user?.name) }}</p>
       </div>
 
       <div class="cards-grid">
-        <Card v-for="item in modules" :key="item.label">
+        <Card v-for="item in modules" :key="item.labelKey">
           <template #header>
             <div class="card-icon-header">
               <i :class="['pi', item.icon]" />
             </div>
           </template>
-          <template #title>{{ item.label }}</template>
+          <template #title>{{ t(item.labelKey) }}</template>
           <template #content>
-            <p>{{ item.description }}</p>
+            <p>{{ t(item.descKey) }}</p>
           </template>
           <template #footer>
             <Button
-              label="Open"
+              :label="t('open')"
               icon="pi pi-arrow-right"
               iconPos="right"
               :disabled="!item.route"
@@ -37,18 +37,20 @@
 <script setup>
 import AppLayout from '@/components/AppLayout.vue'
 import { useAuthStore } from '@/stores/auth'
+import { useI18n } from '@/i18n'
 import Card from 'primevue/card'
 import Button from 'primevue/button'
 
 const auth = useAuthStore()
+const { t } = useI18n()
 
 const modules = [
-  { label: 'Users',         icon: 'pi-users',     description: 'Manage users and access privileges.',                    route: '/users'  },
-  { label: 'Data',          icon: 'pi-database',  description: 'Browse, search and edit records in your tables.',        route: null      },
-  { label: 'Map',           icon: 'pi-map',       description: 'Visualize and edit geospatial data.',                    route: null      },
-  { label: 'Charts',        icon: 'pi-chart-bar', description: 'Build and run charts from saved SQL queries.',           route: null      },
-  { label: 'Harris Matrix', icon: 'pi-share-alt', description: 'View stratigraphic relationships as a diagram.',         route: null      },
-  { label: 'Settings',      icon: 'pi-cog',       description: 'Configure tables, fields and application options.',      route: null      },
+  { labelKey: 'user_mng',      icon: 'pi-users',     descKey: 'module_users_desc',    route: '/users'  },
+  { labelKey: 'data_mng',      icon: 'pi-database',  descKey: 'module_data_desc',     route: null      },
+  { labelKey: 'map',           icon: 'pi-map',       descKey: 'module_map_desc',      route: null      },
+  { labelKey: 'chart',         icon: 'pi-chart-bar', descKey: 'module_charts_desc',   route: null      },
+  { labelKey: 'harris_matrix', icon: 'pi-share-alt', descKey: 'module_harris_desc',   route: null      },
+  { labelKey: 'sys_config',    icon: 'pi-cog',       descKey: 'module_settings_desc', route: null      },
 ]
 </script>
 

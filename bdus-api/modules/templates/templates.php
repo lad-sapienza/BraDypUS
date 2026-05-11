@@ -159,8 +159,8 @@ class templates_ctrl extends Controller
 
     $appName  = $this->cfg->get('main.name') ?? '';
     $stripped = str_replace($this->prefix, '', $tb);
-    $dir      = 'projects/' . $appName . '/template/';
-    $path     = $dir . $stripped . '.' . $name . '.json';
+    $dir      = \Template\Loader::getDir($appName);
+    $path     = \Template\Loader::getPath($appName, $stripped, $name);
 
     if (!is_dir($dir)) {
       mkdir($dir, 0755, true);
@@ -198,7 +198,7 @@ class templates_ctrl extends Controller
 
     $appName  = $this->cfg->get('main.name') ?? '';
     $stripped = str_replace($this->prefix, '', $tb);
-    $path     = 'projects/' . $appName . '/template/' . $stripped . '.' . $name . '.json';
+    $path     = \Template\Loader::getPath($appName, $stripped, $name);
 
     if (!file_exists($path)) {
       $this->returnJson(['status' => 'error', 'code' => 'template_not_found']);
@@ -243,9 +243,8 @@ class templates_ctrl extends Controller
 
     $appName  = $this->cfg->get('main.name') ?? '';
     $stripped = str_replace($this->prefix, '', $tb);
-    $dir      = 'projects/' . $appName . '/template/';
-    $oldPath  = $dir . $stripped . '.' . $oldName . '.json';
-    $newPath  = $dir . $stripped . '.' . $newName . '.json';
+    $oldPath  = \Template\Loader::getPath($appName, $stripped, $oldName);
+    $newPath  = \Template\Loader::getPath($appName, $stripped, $newName);
 
     if (!file_exists($oldPath)) {
       $this->returnJson(['status' => 'error', 'code' => 'template_not_found']);

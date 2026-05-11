@@ -588,6 +588,7 @@
     "database": "Database",
     "layout": "Layout",
     "templates": "Templates",
+    "plugin": "Plugin",
     "plugins": "Plugins",
     "links": "Links",
     "backlinks": "Backlinks",

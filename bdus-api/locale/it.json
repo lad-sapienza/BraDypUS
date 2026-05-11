@@ -566,6 +566,7 @@
     "database": "Database",
     "layout": "Layout",
     "templates": "Template",
+    "plugin": "Plugin",
     "plugins": "Plugin",
     "links": "Connessioni",
     "backlinks": "Backlink",

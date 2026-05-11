@@ -150,6 +150,25 @@ class Loader
         return $errors;
     }
 
+    // ── Public helpers ────────────────────────────────────────────────────
+
+    /**
+     * Returns the directory that holds templates for an app.
+     * Uses the configured projectsRoot (overridable via setProjectsRoot()).
+     */
+    public static function getDir(string $appName): string
+    {
+        return self::dir($appName, null);
+    }
+
+    /**
+     * Returns the full path for a specific template file.
+     */
+    public static function getPath(string $appName, string $tbStripped, string $templateName): string
+    {
+        return self::path($appName, $tbStripped, $templateName, null);
+    }
+
     // ── Private helpers ───────────────────────────────────────────────────
 
     /**

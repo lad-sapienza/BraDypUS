@@ -339,6 +339,131 @@ class record_ctrl extends Controller
     ];
   }
 
+  // ── v5 persistence endpoint ──────────────────────────────────────────────
+
+  /**
+   * Save (create or update) a single record.
+   *
+   * POST ?obj=record_ctrl&method=saveRecord
+   * Body (JSON or form):
+   * {
+   *   tb:      string,            // table name
+   *   id:      int|null,          // omit / null for new records
+   *   core:    { field: value },  // only fields that should be saved
+   *   plugins: {                  // optional
+   *     "tbl__name": [
+   *       { id: int|null, _delete: bool, _isNew: bool, fields: { fld: val } }
+   *     ]
+   *   }
+   * }
+   *
+   * Response: { status, code, id? }
+   */
+  public function saveRecord(): void
+  {
+    if (!\utils::canUser('edit')) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+      return;
+    }
+
+    // Controller base class already merges JSON body into $this->post
+    $tb   = $this->post['tb'] ?? ($this->get['tb'] ?? null);
+    $id   = isset($this->post['id']) && $this->post['id'] !== '' && $this->post['id'] !== null
+              ? (int) $this->post['id']
+              : null;
+    $core = $this->post['core'] ?? [];
+    $plgs = $this->post['plugins'] ?? [];
+
+    if (!$tb) {
+      $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
+      return;
+    }
+
+    try {
+      if ($id) {
+        // ── UPDATE path: load existing record, apply changes, persist ────
+        $reader = new \Record\Read($id, null, $tb, $this->db, $this->cfg);
+        $editor = new \Record\Edit($reader);
+
+        if (!empty($core)) {
+          $editor->setCore($core);
+        }
+
+        foreach ($plgs as $plgTb => $rows) {
+          foreach ($rows as $row) {
+            $rowId  = !empty($row['id']) ? (int)$row['id'] : null;
+            $delete = !empty($row['_delete']);
+            $isNew  = !empty($row['_isNew']);
+            $fields = $row['fields'] ?? [];
+
+            if ($delete && $rowId) {
+              $editor->setPluginRow($plgTb, $rowId, []);
+            } elseif ($isNew && !empty($fields)) {
+              $editor->setPluginRow($plgTb, null, $fields);
+            } elseif ($rowId && !empty($fields)) {
+              $editor->setPluginRow($plgTb, $rowId, $fields);
+            }
+          }
+        }
+
+        $result = $editor->persist($this->db, $this->cfg);
+        $newId  = $result['core']['id'] ?? $id;
+
+      } else {
+        // ── INSERT path: build model directly with _val markers ─────────
+        // For new records we skip Read/Edit (nothing to compare against)
+        // and hand-craft the model with _val markers for every submitted field.
+        $coreModel = [];
+        foreach ($core as $fld => $val) {
+          $coreModel[$fld] = ['name' => $fld, '_val' => $val];
+        }
+
+        $pluginsModel = [];
+        foreach ($plgs as $plgTb => $rows) {
+          $pluginsModel[$plgTb] = ['data' => []];
+          foreach ($rows as $row) {
+            if (!empty($row['_delete'])) continue;       // nothing to delete on insert
+            $fields = $row['fields'] ?? [];
+            if (empty($fields)) continue;
+            $newRow = [];
+            foreach ($fields as $fld => $val) {
+              $newRow[$fld] = ['name' => $fld, '_val' => $val];
+            }
+            $pluginsModel[$plgTb]['data'][] = $newRow;
+          }
+        }
+
+        $model = [
+          'metadata'    => [
+            'tb_id'      => $tb,
+            'rec_id'     => null,
+            'tb_stripped'=> str_replace($this->prefix, '', $tb),
+            'tb_label'   => $this->cfg->get("tables.{$tb}.label"),
+          ],
+          'core'        => $coreModel,
+          'plugins'     => $pluginsModel,
+          'manualLinks' => [],
+          'files'       => [],
+          'geodata'     => [],
+          'rs'          => [],
+        ];
+
+        $result = \Record\Persist::all($model, $this->db, $this->cfg);
+        $newId  = $result['core']['id'] ?? null;
+      }
+
+      $this->returnJson([
+        'status' => 'success',
+        'code'   => $id ? 'success_saved' : 'success_created',
+        'id'     => $newId,
+      ]);
+
+    } catch (\Throwable $e) {
+      $this->log->error($e);
+      $this->returnJson(['status' => 'error', 'code' => 'error_saved', 'detail' => $e->getMessage()]);
+    }
+  }
+
   // ── Legacy v4 methods (kept for Twig-based rendering) ────────────────────
 
   public function save_data()
@@ -409,39 +534,51 @@ class record_ctrl extends Controller
 
 
 
-  public function erase()
+  public function erase(): void
   {
     if (!\utils::canUser('edit')) {
-      echo json_encode(['status' => 'error', 'code' => 'not_enough_privilege']);
+      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
-    if (is_array($this->request['id'])) {
-      $ok    = [];
-      $error = [];
-      foreach ($this->request['id'] as $id) {
-        try {
-          $record = new Record($this->get['tb'], $id, $this->db, $this->cfg);
-          $record->delete();
-          $ok[] = $id;
-        } catch (\Throwable $e) {
-          $this->log->error($e);
-          $error[] = $id;
-        }
-      }
 
-      if (count($this->request['id']) === count($error)) {
-        $data = ['status' => 'error',   'code' => 'no_record_deleted'];
-      } elseif (count($this->request['id']) === count($ok)) {
-        $data = ['status' => 'success', 'code' => 'all_record_deleted', 'deleted' => count($ok)];
-      } else {
-        $data = ['status' => 'warning', 'code' => 'partially_deleted_with_count',
-                 'deleted' => count($ok), 'failed' => count($error)];
-      }
-    } else {
-      $data = ['status' => 'error', 'code' => 'no_id_provided'];
+    $tb  = $this->request['tb'] ?? null;
+    $raw = $this->request['id'] ?? null;
+
+    if (!$tb || !$raw) {
+      $this->returnJson(['status' => 'error', 'code' => 'no_id_provided']);
+      return;
     }
 
-    echo json_encode($data);
+    // Accept both a single id and an array of ids
+    $ids = is_array($raw) ? array_map('intval', $raw) : [(int)$raw];
+
+    $ok    = [];
+    $error = [];
+
+    foreach ($ids as $id) {
+      if (!$id) continue;
+      try {
+        $reader = new \Record\Read($id, null, $tb, $this->db, $this->cfg);
+        $editor = new \Record\Edit($reader);
+        $editor->delete();
+        $editor->persist($this->db, $this->cfg);
+        $ok[] = $id;
+      } catch (\Throwable $e) {
+        $this->log->error($e);
+        $error[] = $id;
+      }
+    }
+
+    if (empty($ok) && !empty($error)) {
+      $data = ['status' => 'error',   'code' => 'no_record_deleted'];
+    } elseif (empty($error)) {
+      $data = ['status' => 'success', 'code' => 'all_record_deleted', 'deleted' => count($ok)];
+    } else {
+      $data = ['status' => 'warning', 'code' => 'partially_deleted_with_count',
+               'deleted' => count($ok), 'failed' => count($error)];
+    }
+
+    $this->returnJson($data);
   }
 
 

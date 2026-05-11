@@ -321,15 +321,51 @@ function cancelEdit() {
   mode.value = 'read'
 }
 
-// ── Save (deferred — UI only for now) ────────────────────────────
+// ── Save ─────────────────────────────────────────────────────────
 async function saveRecord() {
-  // TODO: wire up to record_ctrl::save_data() once persistence layer is validated
-  toast.add({
-    severity: 'warn',
-    summary: t('save'),
-    detail: t('save_not_implemented'),
-    life: 4000,
-  })
+  saving.value = true
+  try {
+    // Build plugins payload: only rows that have changed, been deleted, or are new
+    const pluginsPayload = {}
+    for (const [plgTb, rows] of Object.entries(editData.plugins)) {
+      const plgRows = rows.map(row => ({
+        id:      row.id ?? null,
+        _delete: row._delete ?? false,
+        _isNew:  row._isNew  ?? false,
+        fields:  row.fields  ?? {},
+      }))
+      if (plgRows.length) pluginsPayload[plgTb] = plgRows
+    }
+
+    const payload = {
+      tb:      tb.value,
+      id:      id.value ?? null,
+      core:    { ...editData.core },
+      plugins: pluginsPayload,
+    }
+
+    const res = await api.post('record_ctrl', 'saveRecord', payload)
+
+    if (res.status === 'error') {
+      toast.add({ severity: 'error', summary: t('generic_error'), detail: responseMessage(res, t), life: 5000 })
+      return
+    }
+
+    toast.add({ severity: 'success', summary: t('save'), detail: t(res.code), life: 3000 })
+    mode.value = 'read'
+
+    // If this was a new record, navigate to the saved record
+    if (!id.value && res.id) {
+      router.replace(`/record/${tb.value}/${res.id}`)
+    } else {
+      // Reload to reflect server-side computed values
+      await fetchRecord()
+    }
+  } catch (e) {
+    toast.add({ severity: 'error', summary: t('generic_error'), detail: e.message, life: 5000 })
+  } finally {
+    saving.value = false
+  }
 }
 
 // ── Delete ────────────────────────────────────────────────────────

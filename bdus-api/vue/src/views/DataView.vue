@@ -114,6 +114,17 @@
                   <i class="pi pi-times" style="cursor:pointer;margin-left:0.4rem" @click="resetSearch" />
                 </template>
               </Tag>
+
+              <!-- Add record — only for users with add_new privilege -->
+              <Button
+                v-if="canAdd"
+                :label="t('new_record')"
+                icon="pi pi-plus"
+                size="small"
+                severity="primary"
+                class="add-record-btn"
+                @click="addRecord"
+              />
             </div>
 
             <!-- ── Advanced search panel ──────────────────────── -->
@@ -306,6 +317,17 @@
           </DataTable>
 
         </template>
+
+        <!-- FAB — only for users with add_new privilege -->
+        <button
+          v-if="canAdd && selectedTable"
+          class="fab-add"
+          :title="t('new_record')"
+          @click="addRecord"
+        >
+          <i class="pi pi-plus" />
+        </button>
+
       </div>
     </div>
 
@@ -458,6 +480,7 @@ const records        = ref([])
 const columns        = ref([])
 const totalRecords   = ref(0)
 const loadingRecords = ref(false)
+const canAdd         = ref(false)   // backend-controlled: utils::canUser('add_new')
 const page           = ref(1)
 const perPage        = ref(30)
 const sortField      = ref(null)
@@ -826,6 +849,7 @@ async function fetchRecords() {
     }
 
     totalRecords.value = res.total ?? 0
+    canAdd.value       = res.can_add ?? false
     if (res.fields?.length) {
       columns.value = res.fields.filter(f => f.name !== 'id')
       // If no saved preference yet, initialise from returned preview columns
@@ -853,6 +877,13 @@ function onSort(event) {
   sortDir.value   = event.sortOrder === -1 ? 'desc' : 'asc'
   page.value      = 1
   fetchRecords()
+}
+
+function addRecord() {
+  const tb = selectedTable.value?.name
+  if (tb) {
+    router.push(`/record/${encodeURIComponent(tb)}/new`)
+  }
 }
 
 function onRowClick(event) {
@@ -1075,4 +1106,42 @@ function doExport(format) {
   padding: 0.4rem 0.5rem 0.25rem;
   border-top: 1px solid var(--p-surface-border);
 }
+
+/* ── Add record ──────────────────────────────────────────── */
+/* Toolbar button: pushed to the right by the active-search tag's margin-left:auto */
+.add-record-btn {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* When no active filter tag is shown, the button still needs to sit on the right */
+.search-bar:not(:has(.search-active-tag)) .add-record-btn {
+  margin-left: auto;
+}
+
+/* FAB: fixed to the viewport bottom-right corner, always reachable */
+.fab-add {
+  position: fixed;
+  bottom: 1.75rem;
+  right: 1.75rem;
+  z-index: 10;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 50%;
+  background: var(--p-primary-color);
+  color: var(--p-primary-contrast-color, #fff);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.20);
+  transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
+}
+.fab-add:hover {
+  background: var(--p-primary-hover-color, var(--p-primary-color));
+  transform: scale(1.08);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+}
+.fab-add .pi { font-size: 1.3rem; }
 </style>

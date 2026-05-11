@@ -118,9 +118,10 @@ class record_ctrl extends Controller
       $qObj->setLimit(($page - 1) * $perPage, $perPage);
 
       $this->returnJson([
-        'total'  => $total,
-        'fields' => $fields,
-        'data'   => $qObj->getResults(),
+        'total'   => $total,
+        'fields'  => $fields,
+        'data'    => $qObj->getResults(),
+        'can_add' => \utils::canUser('add_new'),
       ]);
 
     } catch (\Throwable $e) {

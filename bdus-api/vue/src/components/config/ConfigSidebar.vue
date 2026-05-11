@@ -140,11 +140,11 @@ async function onDrop(e, targetName) {
 .cfg-sidebar {
   width: 220px;
   flex-shrink: 0;
-  border-right: 1px solid var(--p-surface-border);
+  border-right: 1px solid var(--p-content-border-color);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: var(--p-surface-card);
+  background: var(--bdus-surface);
 }
 
 /* ── Top action buttons ─────────────────────────────── */
@@ -167,9 +167,9 @@ async function onDrop(e, targetName) {
   text-align: left;
   transition: background 0.15s;
 }
-.cfg-action-btn:hover  { background: var(--p-surface-hover); }
+.cfg-action-btn:hover  { background: var(--p-content-hover-background); }
 .cfg-action-btn.active {
-  background: var(--p-primary-50);
+  background: var(--p-highlight-background);
   color: var(--p-primary-color);
   font-weight: 600;
 }
@@ -177,7 +177,7 @@ async function onDrop(e, targetName) {
 
 .cfg-sidebar-divider {
   height: 1px;
-  background: var(--p-surface-border);
+  background: var(--p-content-border-color);
   margin: 0.25rem 0;
   flex-shrink: 0;
 }
@@ -208,7 +208,7 @@ async function onDrop(e, targetName) {
   transition: background 0.15s, color 0.15s;
 }
 .cfg-icon-btn:hover {
-  background: var(--p-surface-hover);
+  background: var(--p-content-hover-background);
   color: var(--p-text-color);
 }
 
@@ -241,8 +241,8 @@ async function onDrop(e, targetName) {
   margin: 0 0.25rem;
   transition: background 0.12s;
 }
-.cfg-table-item:hover  { background: var(--p-surface-hover); }
-.cfg-table-item.active { background: var(--p-primary-50); }
+.cfg-table-item:hover  { background: var(--p-content-hover-background); }
+.cfg-table-item.active { background: var(--p-highlight-background); }
 
 .cfg-drag-handle {
   font-size: 0.75rem;
@@ -264,7 +264,7 @@ async function onDrop(e, targetName) {
 
 .cfg-plugin-badge {
   font-size: 0.65rem;
-  background: var(--p-surface-hover);
+  background: var(--p-content-hover-background);
   color: var(--p-text-muted-color);
   padding: 0.05rem 0.3rem;
   border-radius: 3px;

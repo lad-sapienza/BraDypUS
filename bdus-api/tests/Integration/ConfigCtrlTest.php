@@ -189,7 +189,7 @@ class ConfigCtrlTest extends BdusTestCase
         $ctrl = $this->makeController('config_ctrl', ['tb' => self::TB]);
         $res  = $this->callController($ctrl, 'getTableConfig');
 
-        foreach (['table', 'field_labels', 'templates', 'available_plugins', 'available_tables'] as $key) {
+        foreach (['table', 'field_labels', 'available_plugins', 'available_tables'] as $key) {
             $this->assertArrayHasKey($key, $res, "Response missing key: $key");
         }
     }

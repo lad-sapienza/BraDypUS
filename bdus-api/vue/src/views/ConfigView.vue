@@ -43,7 +43,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, defineAsyncComponent } from 'vue'
+import { ref, computed, watch, onMounted, defineAsyncComponent } from 'vue'
 import { useI18n }                  from '@/i18n'
 import { useConfigStore }           from '@/stores/config'
 import AppLayout                    from '@/components/AppLayout.vue'
@@ -118,8 +118,13 @@ async function onRenamed(newName) {
 }
 
 // ── Load table list as soon as unlocked ───────────────────────────────
+// onMounted covers the case where the page loads while already unlocked.
+// The watch covers the normal flow: user submits the password gate after mount.
 onMounted(() => {
   if (store.unlocked) store.loadTables()
+})
+watch(() => store.unlocked, (unlocked) => {
+  if (unlocked) store.loadTables()
 })
 </script>
 

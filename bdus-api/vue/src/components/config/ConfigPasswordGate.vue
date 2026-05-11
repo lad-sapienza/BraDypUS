@@ -80,8 +80,8 @@ async function submit() {
   align-items: center;
   gap: 1rem;
   padding: 2.5rem 2rem;
-  background: var(--p-surface-card);
-  border: 1px solid var(--p-surface-border);
+  background: var(--bdus-surface);
+  border: 1px solid var(--p-content-border-color);
   border-radius: 12px;
   box-shadow: 0 4px 24px rgba(0,0,0,0.08);
 }

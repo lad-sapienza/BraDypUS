@@ -12,6 +12,7 @@ use \DB\Alter;
 
 class config_ctrl extends Controller
 {
+  /** @deprecated v5 — replaced by ConfigSidebar.vue + getTableList() */
   public function home()
   {
     $table_list = $this->cfg->get('tables.*.label');
@@ -21,6 +22,7 @@ class config_ctrl extends Controller
     ]);
   }
 
+  /** @deprecated v5 — replaced by ConfigAppForm.vue + getAppProperties() / save_app_properties() */
   public function app_properties()
   {
     try {
@@ -43,6 +45,7 @@ class config_ctrl extends Controller
     ]);
   }
 
+  /** @deprecated v5 — replaced by ConfigFieldList.vue + getTableConfig() */
   public function fld_list()
   {
     $tb = $this->get['tb'];
@@ -55,6 +58,7 @@ class config_ctrl extends Controller
   }
 
 
+  /** @deprecated v5 — replaced by ConfigFieldForm.vue + getFldConfig() / getFldStructure() */
   public function field_properties()
   {
     $tb = $this->get['tb'];
@@ -94,6 +98,7 @@ class config_ctrl extends Controller
   }
 
 
+  /** @deprecated v5 — replaced by ConfigTableForm.vue + getTableConfig() / save_tb_data() */
   public function table_properties()
   {
     $tb = $this->get['tb'] ?: false;
@@ -398,6 +403,7 @@ class config_ctrl extends Controller
   }
 
 
+  /** @deprecated v5 — replaced by ConfigValidation.vue + getValidationReport() */
   public function validate_app()
   {
     $validate = new Validate($this->db, $this->prefix, $this->cfg);
@@ -556,6 +562,43 @@ class config_ctrl extends Controller
     }
   }
 
+  /**
+   * Upload a GeoJSON / KML / any geo-file to the geodata directory.
+   * The file is stored under its original name (sanitised).
+   *
+   * POST multipart/form-data ?obj=config_ctrl&method=uploadGeoFile
+   * Field name: "file"
+   *
+   * Response: { status, code, filename? }
+   */
+  public function uploadGeoFile(): void
+  {
+    if (!\utils::canUser('super_admin')) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+      return;
+    }
+
+    if (empty($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
+      $this->returnJson(['status' => 'error', 'code' => 'error_geoface_updated']);
+      return;
+    }
+
+    $original = basename($_FILES['file']['name']);
+    // Sanitise: keep only alphanumerics, dashes, underscores, dots
+    $safe     = preg_replace('/[^a-zA-Z0-9._\-]/', '_', $original);
+    $dest     = PROJ_DIR . 'geodata/' . $safe;
+
+    try {
+      if (!move_uploaded_file($_FILES['file']['tmp_name'], $dest)) {
+        throw new \RuntimeException("move_uploaded_file failed");
+      }
+      $this->returnJson(['status' => 'success', 'code' => 'ok_geoface_updated', 'filename' => $safe]);
+    } catch (\Throwable $e) {
+      $this->log->error($e);
+      $this->returnJson(['status' => 'error', 'code' => 'error_geoface_updated']);
+    }
+  }
+
   // ══════════════════════════════════════════════════════════════════════════
   // v5 JSON endpoints — additive only; all existing methods left untouched
   // ══════════════════════════════════════════════════════════════════════════
@@ -617,8 +660,9 @@ class config_ctrl extends Controller
       'status'         => 'success',
       'main'           => $this->cfg->get('main'),
       'users'          => $users,
-      'db_engines'     => AvailableEngines::getList(),
-      'langs'          => \tr::getAvailable(),
+      // array_values() re-indexes to 0-based so PHP encodes these as JSON arrays, not objects
+      'db_engines'     => array_values(AvailableEngines::getList()),
+      'langs'          => array_values(\tr::getAvailable()),
       'status_options' => ['on', 'frozen', 'off'],
     ]);
   }
@@ -628,7 +672,7 @@ class config_ctrl extends Controller
    *
    * GET ?obj=config_ctrl&method=getTableConfig[&tb=TABLE_NAME]
    *
-   * Response: { status, table, field_labels, templates, available_plugins, available_tables }
+   * Response: { status, table, field_labels, available_plugins, available_tables }
    */
   public function getTableConfig(): void
   {
@@ -654,15 +698,24 @@ class config_ctrl extends Controller
     }
     unset($link);
 
-    $fieldLabels = $tb
-      ? ($this->cfg->get("tables.$tb.fields.*.label") ?: ['id' => 'id'])
-      : ['id' => 'id'];
+    // Build field_labels as {fieldName: label} so JS gets a predictable associative object.
+    // cfg->get("tables.$tb.fields.*.label") returns a numerically-keyed array which
+    // JSON-encodes as an array — useless for dropdowns that need field names as values.
+    $fieldLabels = ['id' => 'id'];
+    if ($tb) {
+      foreach ($this->cfg->get("tables.$tb.fields") ?: [] as $fld) {
+        if (!empty($fld['name'])) {
+          $fieldLabels[$fld['name']] = $fld['label'] ?? $fld['name'];
+        }
+      }
+    }
 
+    // available_plugins and available_tables: cfg->get returns {tableName: label} keyed
+    // by table name — that's already the right format for option dropdowns in the frontend.
     $this->returnJson([
       'status'            => 'success',
       'table'             => $table,
       'field_labels'      => $fieldLabels,
-      'templates'         => \utils::dirContent(PROJ_DIR . 'templates/') ?: [],
       'available_plugins' => $this->cfg->get('tables.*.label', 'is_plugin', '1') ?: [],
       'available_tables'  => $this->cfg->get('tables.*.label') ?: [],
     ]);

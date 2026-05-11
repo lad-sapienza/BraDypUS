@@ -1,0 +1,20 @@
+{
+    "tables": [
+        {
+            "name": "test__items",
+            "label": "Items",
+            "order": "id",
+            "id_field": "id",
+            "preview": ["id", "name", "status"],
+            "plugin": []
+        },
+        {
+            "name": "test__tags",
+            "label": "Tags",
+            "order": "id",
+            "id_field": "id",
+            "is_plugin": "1",
+            "preview": ["id", "label"]
+        }
+    ]
+}

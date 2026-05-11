@@ -1,0 +1,7 @@
+[
+    { "name": "id",          "label": "ID",          "type": "text",      "readonly": "1" },
+    { "name": "creator",     "label": "Creator",     "type": "text",      "hide": "1" },
+    { "name": "name",        "label": "Name",        "type": "text" },
+    { "name": "description", "label": "Description", "type": "long_text" },
+    { "name": "status",      "label": "Status",      "type": "select" }
+]

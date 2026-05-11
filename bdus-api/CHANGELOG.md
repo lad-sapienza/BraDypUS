@@ -17,17 +17,33 @@ The PHP backend is preserved and extended with JSON endpoints consumed by the ne
 - **DataView**: paginated record table, column toggler with persistent column order,
   sortable columns, fast / advanced / SQL expert search, active filter persisted
   in the URL so Back navigation restores the exact search state
-- **RecordView**: full record display and edit — all field types (text, textarea,
-  date, select, multi_select, boolean, link_to, link_out), plugin tables, linked
-  files/images, geodata panel, RS (stratigraphic relations), template selector
+- **RecordView / RecordEdit**: full record display and edit — all field types (text,
+  textarea, date, select, multi_select, boolean, combo_select, slider, link_to,
+  link_out), plugin tables (add/edit/delete rows), file upload and deletion,
+  unsaved-changes guard on navigation, client-side validation with force-validate on
+  save, linked records panel, geodata count, template selector
 - Streaming export from any active search: CSV, XLSX (zero-dependency PHP OOXML
   writer), JSON — served as download attachment, no temp file on disk
 - Add-record button (toolbar + FAB) gated by `can_add` privilege
+- **ConfigView**: full application configuration UI — password-gated, split
+  sidebar/panel shell with 6 panels:
+  - **App settings**: 15-field form for name, label, language, status, engine, etc.
+  - **Validation**: schema validation report with one-click fixes; dark-mode status rows
+  - **Geoface**: WMS/WFS/local layer editor + GeoJSON/KML file upload
+  - **Table settings**: name, label, layout fields, preview fields, plugins, backlinks,
+    cross-table links; rename and delete table; add new table
+  - **Field list**: split panel with field list and inline field editor
+  - **Field form**: auto-generated from `fld_structure.json`; supports input, select,
+    multi_select meta-types
+- **Design Templates** (`/templates`): visual editor for JSON record-view layout
+  templates — create, edit, rename, delete per-table templates; section cards with
+  label, plugin selector, collapsible flag, content rows (field + width)
 - **BackupView**: list backups, create, download, delete (admin), restore (super_admin);
   native PHP/PDO SQLite dumper replaces Spatie's CLI-dependent one — works in Docker
 - **InfoView**: version badge + full changelog
 - **LogView**, **UsersView**, **VocabulariesView**, **HomeView**, **LoginView** migrated
-- 118 PHPUnit integration + unit tests covering all migrated controllers
+- 167 PHPUnit integration + unit tests covering all migrated controllers
+- Module readmes: `vue/docs/{data,log,search,backup,info,config,templates}.md`
 
 ### Changed
 - All module endpoints now return JSON (`returnJson()`) instead of rendering Twig
@@ -35,11 +51,32 @@ The PHP backend is preserved and extended with JSON endpoints consumed by the ne
 - `DB\Export\Export` refactored: `fromData()` factory + `streamToResponse()`;
   HTML / XML / SQL / XLS exporters deprecated
 - Password hashing upgraded from SHA1 to bcrypt (transparent migration on login)
-- Sidebar reorganised: Import geodata and Backup moved under Data; Empty cache removed
+- Sidebar reorganised: Import geodata and Backup moved under Data; Empty cache removed;
+  Design Templates added under Admin
+- CSS design tokens normalised (`--p-surface-*` → `--bdus-*` / `--p-content-*`) across
+  all components and views for correct dark-mode rendering
+- File gallery panel moved above core fields in RecordView for immediate visibility
+- ConfigTableForm: Twig template selector (`tmpl_edit` / `tmpl_read`) removed — setting
+  is not used in v5; YAML keys preserved on disk but ignored on save
+- All v4 PHP methods superseded by Vue equivalents tagged `@deprecated v5`
+- Backup validation no longer requires the `sqlite3` CLI binary; `DumpExists::Check()`
+  returns success immediately for SQLite (native PHP/PDO dump needs no external tool)
 
 ### Fixed
 - `dumpSqliteNative()`: cursor-based row iteration (no full-table `fetchAll()`),
   gzip level 6 instead of 9 — significantly faster on large databases
+- `html`/`body`/`#app` locked to viewport height (`overflow: hidden`) so internal
+  containers scroll instead of the page body — record header now stays fixed
+- Select/dropdown fields pre-load async options on mount so the current value
+  displays correctly in edit mode without opening the dropdown first
+- Config App Settings crash: non-sequential PHP array keys now forced through
+  `array_values()` so PrimeVue `Select` always receives a JSON array, not an object
+- Config table list populates after password-gate submission via `watch` on
+  `store.unlocked` (previously only triggered in `onMounted`)
+- Toast notifications now show a "Saved" title and the response detail separately,
+  eliminating blank toasts when the backend returns no `code`
+- Dark-mode-compatible status row colours in ConfigValidation:
+  `color-mix(in srgb, ...)` instead of hardcoded `-50` palette tokens
 - Multi_select fields now pre-load options on mount so labels resolve in closed state
 - Table switch in DataView no longer ignored due to Vue 3 reactive-update batching
 - FAB uses `position: fixed` so it is not clipped by `overflow: hidden` ancestors

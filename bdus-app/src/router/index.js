@@ -42,6 +42,11 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/config',
+    component: () => import('@/views/ConfigView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     // :id is either a numeric record id or the literal string 'new'
     path: '/record/:tb/:id',
     component: () => import('@/views/RecordView.vue'),

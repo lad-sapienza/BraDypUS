@@ -78,7 +78,7 @@
                 :class="{ 'is-active': isDataRoute, disabled: item.disabled }"
                 :disabled="item.disabled"
                 :title="t(item.labelKey)"
-                @click="dataAccordionOpen = !dataAccordionOpen"
+                @click="() => { dataAccordionOpen = !dataAccordionOpen; if (dataAccordionOpen) loadTables() }"
               >
                 <i :class="['pi', item.icon]" />
                 <span class="nav-label">{{ t(item.labelKey) }}</span>
@@ -171,6 +171,10 @@ watch(isDataRoute, (val) => {
     loadTables()
   }
 }, { immediate: true })
+
+// Also load on mount so the list is ready whenever the accordion is opened,
+// regardless of which route the user lands on.
+onMounted(loadTables)
 const toast = useToast()
 const { t, locale, setLocale, availableLocales } = useI18n()
 const currentLocale = computed({
@@ -278,7 +282,7 @@ const navGroups = computed(() => [
     labelKey: 'nav_admin',
     items: [
       { labelKey: 'user_mng',       icon: 'pi-users',        to: '/users',        disabled: false },
-      { labelKey: 'sys_config',     icon: 'pi-cog',          to: '/config',       disabled: true  },
+      { labelKey: 'sys_config',     icon: 'pi-cog',          to: '/config',       disabled: false },
       { labelKey: 'free_sql',       icon: 'pi-code',         to: '/free-sql',     disabled: true  },
     ],
   },

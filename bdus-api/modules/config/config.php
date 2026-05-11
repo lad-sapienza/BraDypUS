@@ -556,4 +556,245 @@ class config_ctrl extends Controller
     }
   }
 
+  // ══════════════════════════════════════════════════════════════════════════
+  // v5 JSON endpoints — additive only; all existing methods left untouched
+  // ══════════════════════════════════════════════════════════════════════════
+
+  /**
+   * Returns the sorted list of configured tables.
+   *
+   * GET ?obj=config_ctrl&method=getTableList
+   *
+   * Response: { status, tables: [{name, label, is_plugin}] }
+   */
+  public function getTableList(): void
+  {
+    if (!\utils::canUser('super_admin')) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+      return;
+    }
+
+    $names  = $this->cfg->get('tables.*.name') ?: [];
+    $tables = [];
+    foreach ($names as $name) {
+      $tables[] = [
+        'name'      => $name,
+        'label'     => $this->cfg->get("tables.$name.label") ?? $name,
+        'is_plugin' => $this->cfg->get("tables.$name.is_plugin") ?: '0',
+      ];
+    }
+
+    $this->returnJson(['status' => 'success', 'tables' => $tables]);
+  }
+
+  /**
+   * Returns app-level settings, user list, DB engines and available languages.
+   *
+   * GET ?obj=config_ctrl&method=getAppProperties
+   *
+   * Response: { status, main, users, db_engines, langs, status_options }
+   */
+  public function getAppProperties(): void
+  {
+    if (!\utils::canUser('super_admin')) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+      return;
+    }
+
+    $users = [];
+    try {
+      $sys_manage = new Manage($this->db, $this->prefix);
+      $rows = $sys_manage->getBySQL('users', '1=1');
+      foreach ($rows as $u) {
+        $u['verbose_privilege'] = \utils::privilege($u['privilege'], 1);
+        $users[] = $u;
+      }
+    } catch (\Throwable $e) {
+      // no users table in test / fresh install — return empty list
+    }
+
+    $this->returnJson([
+      'status'         => 'success',
+      'main'           => $this->cfg->get('main'),
+      'users'          => $users,
+      'db_engines'     => AvailableEngines::getList(),
+      'langs'          => \tr::getAvailable(),
+      'status_options' => ['on', 'frozen', 'off'],
+    ]);
+  }
+
+  /**
+   * Returns full config for one table (or empty defaults for "add new").
+   *
+   * GET ?obj=config_ctrl&method=getTableConfig[&tb=TABLE_NAME]
+   *
+   * Response: { status, table, field_labels, templates, available_plugins, available_tables }
+   */
+  public function getTableConfig(): void
+  {
+    if (!\utils::canUser('super_admin')) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+      return;
+    }
+
+    $tb    = $this->get['tb'] ?? '';
+    $table = $tb ? ($this->cfg->get("tables.$tb") ?: []) : [];
+
+    // Apply same defaults as the legacy table_properties() Twig method
+    if (!isset($table['name']))    $table['name']    = $this->prefix;
+    if (!isset($table['preview'])) $table['preview'] = [''];
+    if (!isset($table['plugin']))  $table['plugin']  = [''];
+    if (!isset($table['link']))    $table['link']    = [['fld' => [[]]]];
+
+    // Enrich each link entry with the field labels of the linked table
+    foreach ($table['link'] as &$link) {
+      if (!empty($link['other_tb'])) {
+        $link['other_fields'] = $this->cfg->get("tables.{$link['other_tb']}.fields.*.label") ?: [];
+      }
+    }
+    unset($link);
+
+    $fieldLabels = $tb
+      ? ($this->cfg->get("tables.$tb.fields.*.label") ?: ['id' => 'id'])
+      : ['id' => 'id'];
+
+    $this->returnJson([
+      'status'            => 'success',
+      'table'             => $table,
+      'field_labels'      => $fieldLabels,
+      'templates'         => \utils::dirContent(PROJ_DIR . 'templates/') ?: [],
+      'available_plugins' => $this->cfg->get('tables.*.label', 'is_plugin', '1') ?: [],
+      'available_tables'  => $this->cfg->get('tables.*.label') ?: [],
+    ]);
+  }
+
+  /**
+   * Returns the field meta-schema (fld_structure.json) with vocabulary names
+   * and table names injected in place of the placeholder strings.
+   *
+   * GET ?obj=config_ctrl&method=getFldStructure
+   *
+   * Response: { status, structure: { ... } }
+   */
+  public function getFldStructure(): void
+  {
+    if (!\utils::canUser('super_admin')) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+      return;
+    }
+
+    $this->returnJson(['status' => 'success', 'structure' => $this->buildFldStructure()]);
+  }
+
+  /**
+   * Returns the config data for one field together with the field meta-schema.
+   *
+   * GET ?obj=config_ctrl&method=getFldConfig&tb=TABLE&fld=FIELD
+   * (fld may be omitted for "add new" — returns empty field data)
+   *
+   * Response: { status, field, structure }
+   */
+  public function getFldConfig(): void
+  {
+    if (!\utils::canUser('super_admin')) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+      return;
+    }
+
+    $tb  = $this->get['tb']  ?? '';
+    $fld = $this->get['fld'] ?? '';
+
+    $field = ($tb && $fld) ? ($this->cfg->get("tables.$tb.fields.$fld") ?: []) : [];
+
+    $this->returnJson([
+      'status'    => 'success',
+      'field'     => $field,
+      'structure' => $this->buildFldStructure(),
+    ]);
+  }
+
+  /**
+   * Returns the geoface layer list and the list of locally stored geo-files.
+   *
+   * GET ?obj=config_ctrl&method=getGeoFaceConfig
+   *
+   * Response: { status, layers: [...], local_files: [...] }
+   */
+  public function getGeoFaceConfig(): void
+  {
+    if (!\utils::canUser('super_admin')) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+      return;
+    }
+
+    $layers    = [];
+    $indexFile = PROJ_DIR . 'geodata/index.json';
+    if (file_exists($indexFile)) {
+      $layers = json_decode(file_get_contents($indexFile), true) ?: [];
+    }
+
+    $localFiles = array_values(array_diff(
+      \utils::dirContent(PROJ_DIR . 'geodata') ?: [],
+      ['index.json']
+    ));
+
+    $this->returnJson([
+      'status'      => 'success',
+      'layers'      => $layers,
+      'local_files' => $localFiles,
+    ]);
+  }
+
+  /**
+   * Runs the full DB↔config validation and returns a structured report.
+   * This is the v5 equivalent of validate_app() which returns raw HTML.
+   *
+   * GET ?obj=config_ctrl&method=getValidationReport
+   *
+   * Response: { status, report: [{status, text, suggest?, fix?}] }
+   */
+  public function getValidationReport(): void
+  {
+    if (!\utils::canUser('super_admin')) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+      return;
+    }
+
+    try {
+      $validate = new Validate($this->db, $this->prefix, $this->cfg);
+      $this->returnJson(['status' => 'success', 'report' => $validate->all()]);
+    } catch (\Throwable $e) {
+      $this->log->error($e);
+      $this->returnJson(['status' => 'error', 'code' => 'error_validation', 'detail' => $e->getMessage()]);
+    }
+  }
+
+  // ── Private helpers ───────────────────────────────────────────────────────
+
+  /**
+   * Builds the field meta-schema array from fld_structure.json,
+   * injecting live vocabulary names and configured table names.
+   */
+  private function buildFldStructure(): array
+  {
+    $allVoc = [];
+    try {
+      $sys_manage = new Manage($this->db, $this->prefix);
+      $rows = $sys_manage->getBySQL('vocabularies', '1=1 GROUP BY voc', [], ['voc']);
+      $allVoc = array_column($rows, 'voc');
+    } catch (\Throwable $e) {
+      // no vocabularies table (fresh install / test env) — leave list empty
+    }
+
+    $tableNames = array_values($this->cfg->get('tables.*.name') ?: []);
+
+    $raw = file_get_contents(__DIR__ . '/fld_structure.json');
+    $raw = str_replace(
+      ['list-of-system-defined-vocabularies-here', 'list-of-available-tables-here'],
+      [implode('","', $allVoc), implode('","', $tableNames)],
+      $raw
+    );
+
+    return json_decode($raw, true) ?? [];
+  }
 }

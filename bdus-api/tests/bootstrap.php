@@ -21,6 +21,14 @@ define('PREFIX',   'test__');   // needed by Record\Read::getFull() and buildTab
 $testProjDir = sys_get_temp_dir() . '/bradypus_test_proj/';
 define('PROJ_DIR', $testProjDir);
 
+// Pre-create the sub-directories that filesystem-touching controllers expect.
+foreach (['backups', 'db', 'geodata', 'templates', 'export', 'files'] as $sub) {
+    $dir = $testProjDir . $sub;
+    if (!is_dir($dir)) {
+        mkdir($dir, 0755, true);
+    }
+}
+
 // ── Suppress errors the way production does, but keep PHPUnit able to catch ─
 // (do NOT call error_reporting(0) — that would hide PHPUnit's own errors)
 

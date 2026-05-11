@@ -276,7 +276,7 @@ const navGroups = computed(() => [
     labelKey: 'nav_import_export',
     items: [
       { labelKey: 'import_geodata', icon: 'pi-map-marker',   to: '/import-geo',   disabled: true  },
-      { labelKey: 'backup',         icon: 'pi-save',         to: '/backups',      disabled: true  },
+      { labelKey: 'backup',         icon: 'pi-save',         to: '/backups'                       },
     ],
   },
   {

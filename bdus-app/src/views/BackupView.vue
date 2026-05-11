@@ -75,7 +75,6 @@
 
     </div>
 
-    <ConfirmDialog />
   </AppLayout>
 </template>
 
@@ -89,7 +88,6 @@ import Message        from 'primevue/message'
 import ProgressSpinner from 'primevue/progressspinner'
 import DataTable      from 'primevue/datatable'
 import Column         from 'primevue/column'
-import ConfirmDialog  from 'primevue/confirmdialog'
 import { api }        from '@/api'
 import { useI18n }    from '@/i18n'
 

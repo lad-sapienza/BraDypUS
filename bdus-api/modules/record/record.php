@@ -153,6 +153,24 @@ class record_ctrl extends Controller
       $full['metadata']['can_delete'] = \utils::canUser('edit');
       $full['schema'] = $schema;
 
+      // Template loading
+      $appName    = $this->cfg->get('main.name') ?? '';
+      $tbStripped = str_replace($this->prefix, '', $tb);
+      $tplName    = $this->get['template'] ?? null;
+      if ($tplName) {
+        $tpl = \Template\Loader::load($appName, $tbStripped, $tplName);
+        if ($tpl === null) {
+          $full['schema']['template']        = null;
+          $full['schema']['template_errors'] = ['template_not_found'];
+        } else {
+          $fieldNames  = array_column($this->cfg->get("tables.{$tb}.fields") ?: [], 'name');
+          $pluginNames = $this->cfg->get("tables.{$tb}.plugin") ?: [];
+          $errors      = \Template\Loader::validate($tpl, $fieldNames, $pluginNames);
+          $full['schema']['template']        = $errors ? null : $tpl;
+          $full['schema']['template_errors'] = $errors ?: null;
+        }
+      }
+
       // Enrich each file with a relative URL and an is_image flag so the
       // frontend can render thumbnails and download links without extra API calls.
       if (!empty($full['files']) && \is_array($full['files'])) {
@@ -198,6 +216,28 @@ class record_ctrl extends Controller
       $this->log->error($e);
       $this->returnJson(['status' => 'error', 'code' => 'db_error', 'detail' => $e->getMessage()]);
     }
+  }
+
+  /**
+   * Returns available template names for a given table.
+   *
+   * GET ?obj=record_ctrl&method=getTemplates&tb=TABLE
+   *
+   * Response: { templates: ["default", "compact", ...] }
+   */
+  public function getTemplates(): void
+  {
+    $tb = $this->get['tb'] ?? null;
+    if (!$tb) {
+      $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
+      return;
+    }
+
+    $appName    = $this->cfg->get('main.name') ?? '';
+    $tbStripped = str_replace($this->prefix, '', $tb);
+    $templates  = \Template\Loader::listAvailable($appName, $tbStripped);
+
+    $this->returnJson(['templates' => $templates]);
   }
 
   // ── Private helpers ───────────────────────────────────────────────────────

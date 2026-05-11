@@ -1,0 +1,11 @@
+{
+  "sections": [
+    {
+      "label": "Bad",
+      "content": [
+        { "field": "nonexistent_field", "width": "1/2" },
+        { "field": "name", "width": "bad_width" }
+      ]
+    }
+  ]
+}

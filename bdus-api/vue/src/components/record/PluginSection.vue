@@ -31,15 +31,19 @@
           :key="row._uid"
           class="plugin-edit-row"
         >
-          <div class="plugin-row-fields">
-            <FieldEditor
+          <div class="plugin-row-fields" :class="{ 'has-layout': columnLayout }">
+            <div
               v-for="col in editableFields"
               :key="col.name"
-              :schema="col"
-              :tb="plugin.metadata.tb_id"
-              :modelValue="row.fields[col.name]"
-              @update:modelValue="v => row.fields[col.name] = v"
-            />
+              :style="columnLayout ? { flexBasis: columnWidthMap[col.name], maxWidth: columnWidthMap[col.name] } : {}"
+            >
+              <FieldEditor
+                :schema="col"
+                :tb="plugin.metadata.tb_id"
+                :modelValue="row.fields[col.name]"
+                @update:modelValue="v => row.fields[col.name] = v"
+              />
+            </div>
           </div>
           <Button
             icon="pi pi-trash"
@@ -71,6 +75,7 @@ import Button      from 'primevue/button'
 import FieldDisplay from './FieldDisplay.vue'
 import FieldEditor  from './FieldEditor.vue'
 import { useI18n }  from '@/i18n'
+import { widthToCss } from './templateUtils.js'
 
 const { t } = useI18n()
 
@@ -83,13 +88,40 @@ const props = defineProps({
   mode:     { type: String, default: 'read' },
   /** Reactive edit rows array (only used in edit mode) */
   editRows: { type: Array, default: () => [] },
+  /**
+   * Optional column layout from a template section: array of { field, width? }.
+   * When provided, only listed fields are shown (in declared order).
+   */
+  columnLayout: { type: Array, default: null },
 })
 const emit = defineEmits(['update:editRows'])
 
 // ── Fields ─────────────────────────────────────────────────────
-const visibleFields = computed(() =>
-  (props.schema?.fields ?? []).filter(f => !f.hide && !['id','table_link','id_link','sort'].includes(f.name))
-)
+
+/** Map of field name → CSS width string, built from columnLayout (if any). */
+const columnWidthMap = computed(() => {
+  if (!props.columnLayout) return {}
+  const map = {}
+  for (const item of props.columnLayout) {
+    map[item.field] = widthToCss(item.width ?? '1/1')
+  }
+  return map
+})
+
+const visibleFields = computed(() => {
+  const allFields = (props.schema?.fields ?? []).filter(
+    f => !f.hide && !['id', 'table_link', 'id_link', 'sort'].includes(f.name)
+  )
+  if (!props.columnLayout) {
+    return allFields
+  }
+  // Respect order and filter from columnLayout — skip fields not in schema
+  const byName = Object.fromEntries(allFields.map(f => [f.name, f]))
+  return props.columnLayout
+    .filter(item => item.field in byName)
+    .map(item => byName[item.field])
+})
+
 const editableFields = computed(() =>
   visibleFields.value.filter(f => !f.readonly && !f.disabled)
 )
@@ -180,6 +212,11 @@ function removeRow(idx) {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 0.5rem;
+}
+.plugin-row-fields.has-layout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 0.5rem;
 }
 .add-row-btn { margin-top: 0.5rem; }
 </style>

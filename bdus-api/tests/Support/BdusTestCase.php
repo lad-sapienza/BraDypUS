@@ -62,6 +62,10 @@ abstract class BdusTestCase extends TestCase
             static::$prefix
         );
 
+        // Point the template Loader at the fixtures directory so controller
+        // integration tests can resolve fixture templates without a real project dir.
+        \Template\Loader::setProjectsRoot(__DIR__ . '/../fixtures/');
+
         // Schema + seed data
         static::createSchema();
         static::seedData();

@@ -173,4 +173,39 @@ class RecordCtrlGetRecordTest extends BdusTestCase
         $this->assertSame('error',             $res['status']);
         $this->assertSame('parameter_missing', $res['code']);
     }
+
+    // ── Template loading ──────────────────────────────────────────
+
+    public function testGetRecordWithValidTemplateIncludesSchemaTemplate(): void
+    {
+        $ctrl = $this->makeController('record_ctrl', ['tb' => self::TB, 'id' => 1, 'template' => 'default']);
+        $res  = $this->callController($ctrl, 'getRecord');
+
+        $this->assertArrayHasKey('schema', $res);
+        $this->assertArrayHasKey('template', $res['schema'], 'schema.template key missing');
+        $this->assertNotNull($res['schema']['template'], 'schema.template should not be null for a valid template');
+        $this->assertNull($res['schema']['template_errors'], 'schema.template_errors should be null for a valid template');
+        $this->assertArrayHasKey('sections', $res['schema']['template']);
+    }
+
+    public function testGetRecordWithInvalidTemplateNameReturnsTemplateErrors(): void
+    {
+        $ctrl = $this->makeController('record_ctrl', ['tb' => self::TB, 'id' => 1, 'template' => 'nonexistent']);
+        $res  = $this->callController($ctrl, 'getRecord');
+
+        $this->assertArrayHasKey('schema', $res);
+        $this->assertNull($res['schema']['template'], 'schema.template should be null for a missing template');
+        $this->assertIsArray($res['schema']['template_errors']);
+        $this->assertContains('template_not_found', $res['schema']['template_errors']);
+    }
+
+    public function testGetTemplatesReturnsAvailableNames(): void
+    {
+        $ctrl = $this->makeController('record_ctrl', ['tb' => self::TB]);
+        $res  = $this->callController($ctrl, 'getTemplates');
+
+        $this->assertArrayHasKey('templates', $res);
+        $this->assertIsArray($res['templates']);
+        $this->assertContains('default', $res['templates']);
+    }
 }

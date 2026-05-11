@@ -32,11 +32,33 @@ class vocabularies_ctrl extends Controller
 
 	public function list()
 	{
-		$this->render('vocabularies', 'list', [
-			'vocs' => $this->getFullVocabularies(),
-		]);
+		if ($this->wantsJson()) {
+			$res = $this->getSysMng()->getBySQL('vocabularies', '1=1 ORDER BY voc, sort');
+			$grouped = [];
+			foreach ($res as $row) {
+				$grouped[$row['voc']][] = [
+					'id'   => (int) $row['id'],
+					'def'  => $row['def'],
+					'sort' => (int) $row['sort'],
+				];
+			}
+			$vocs = [];
+			foreach ($grouped as $name => $items) {
+				$vocs[] = ['name' => $name, 'items' => $items];
+			}
+			$this->returnJson(['vocs' => $vocs]);
+		} else {
+			// @deprecated v5 — Twig render, remove when legacy UI is retired
+			$this->render('vocabularies', 'list', [
+				'vocs' => $this->getFullVocabularies(),
+			]);
+		}
 	}
-	
+
+	/**
+	 * @deprecated v5 — remove when legacy UI is retired
+	 * 
+	 */
 	public function add_new_form()
 	{
 		$voc = $this->get['voc'] ?: false ;
@@ -100,19 +122,22 @@ class vocabularies_ctrl extends Controller
 	public function sort()
 	{
 		$error = false;
-		$sortArray = $this->get['sort'];
-		foreach ($sortArray as $sort => $id) {
-			$res = $this->getSysMng()->editRow('vocabularies', (int)$id, [
-				'sort' => (int)$sort
-			]);
-			if (!$res){
-				$error = true;
+		// Accept both legacy GET sort[sort]=id and new POST { ids: [...] }
+		$ids = $this->post['ids'] ?? null;
+		if ($ids !== null) {
+			foreach ($ids as $sort => $id) {
+				$res = $this->getSysMng()->editRow('vocabularies', (int)$id, ['sort' => (int)$sort]);
+				if (!$res) $error = true;
+			}
+		} else {
+			$sortArray = $this->get['sort'];
+			foreach ($sortArray as $sort => $id) {
+				$res = $this->getSysMng()->editRow('vocabularies', (int)$id, ['sort' => (int)$sort]);
+				if (!$res) $error = true;
 			}
 		}
-		if ($error){
-			$this->response('error_sort_update', 'error');
-		} else {
-			$this->response('ok_sort_update', 'success');
-		}
+		$error
+			? $this->response('error_sort_update', 'error')
+			: $this->response('ok_sort_update', 'success');
 	}
 }

@@ -7,5 +7,13 @@
         "spatie/db-dumper": "2.21.1",
         "funiq/geophp": "dev-master",
         "michelf/php-markdown": "^1.9"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11"
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
     }
 }

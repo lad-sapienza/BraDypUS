@@ -53,6 +53,28 @@ class home_ctrl extends Controller
         "bdus/bdus.min.js"
     ];
 
+    /**
+     * Returns JSON list of non-plugin tables available to the current user.
+     *
+     * GET ?obj=home_ctrl&method=listTables
+     * Response: { tables: [ { name: string, label: string }, ... ] }
+     */
+    public function listTables(): void
+    {
+        if (!\utils::canUser('enter')) {
+            $this->returnJson(['status' => 'error', 'text' => \tr::get('not_enough_privilege')]);
+            return;
+        }
+
+        $raw = $this->cfg->get('tables.*.label', 'is_plugin', null);
+        $tables = [];
+        foreach ($raw as $name => $label) {
+            $tables[] = ['name' => $name, 'label' => $label ?: $name];
+        }
+
+        $this->returnJson(['tables' => $tables]);
+    }
+
     public function showAll()
     {
         $this->render('home', 'main', [

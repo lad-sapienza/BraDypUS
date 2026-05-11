@@ -36,8 +36,17 @@ abstract class Controller
   public function __construct($get, $post, $request)
   {
     $this->get = $get;
-    $this->post = $post;
-    $this->request = $request;
+
+    // If the request body is JSON (sent by Vue api.post with complex data),
+    // merge decoded JSON into $post so $this->post works transparently.
+    $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
+    if (str_contains($contentType, 'application/json')) {
+      $json = json_decode(file_get_contents('php://input'), true);
+      $post = is_array($json) ? array_merge($post, $json) : $post;
+    }
+
+    $this->post    = $post;
+    $this->request = array_merge($get, $post);
   }
 
   /**

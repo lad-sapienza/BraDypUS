@@ -162,6 +162,45 @@ class login_ctrl extends Controller
 		}
 	}
 
+	/**
+	 * Returns JSON list of available applications (no auth required).
+	 * Used by the Vue frontend to populate the app selector on the login page.
+	 *
+	 * GET ?obj=login_ctrl&method=listApps
+	 * Response: { apps: [ { db: string, name: string, definition: string }, ... ] }
+	 */
+	public function listApps(): void
+	{
+		$availables_DB = \utils::dirContent(MAIN_DIR . "projects");
+		$data = [];
+
+		if ($availables_DB && is_array($availables_DB)) {
+			asort($availables_DB);
+
+			foreach ($availables_DB as $db) {
+				$cfg = MAIN_DIR . "projects/$db/cfg/app_data.json";
+				if (!file_exists($cfg)) {
+					continue;
+				}
+				$appl = json_decode(file_get_contents($cfg), true);
+				if (!is_array($appl)) {
+					continue;
+				}
+				$data[] = [
+					'db'         => $db,
+					'name'       => strtoupper($appl['name'] ?? $db),
+					'definition' => $appl['definition'] ?? '',
+				];
+			}
+		}
+
+		$this->returnJson(['apps' => $data]);
+	}
+
+	/**
+	 * @deprecated v5 — replaced by listApps() (JSON) + Vue login dropdown.
+	 *             Remove when the legacy Twig UI is retired.
+	 */
 	public function select_app()
 	{
 		try {

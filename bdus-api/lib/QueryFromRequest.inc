@@ -41,6 +41,10 @@
  *
  * 		'obj_encoded'
  * 			'obj_encoded'		    string, required, \SQL\SafeQuery encoded query string
+ *
+ * 		'shortSql'
+ * 			'where'		string, required, ShortSQL WHERE expression (e.g. "id|=|713" or "^fld|=|val||and|other|LIKE|foo")
+ * 					Parsed via SQL\ShortSql\ParseShortSql — same syntax as Record\Read::getLinks() produces.
  */
 
 use DB\DBInterface;
@@ -293,7 +297,9 @@ class QueryFromRequest
 
       case 'sqlExpert':
         $this->join = $this->makeSafeStatement(urldecode($request['join']));
-        $this->where = '(' . $this->makeSafeStatement(urldecode($request['querytext'])) . ')';
+        $safe = trim($this->makeSafeStatement(urldecode($request['querytext'])));
+        // An empty querytext would produce WHERE () — a syntax error; fall back to all records
+        $this->where = $safe !== '' ? '(' . $safe . ')' : '1=1';
         break;
 
       case 'fast':
@@ -322,6 +328,28 @@ class QueryFromRequest
         $encoded = trim(preg_replace('/\s+/', ' ', $q));
         $this->where = preg_replace('/^SELECT(.+?)WHERE/i', '', $encoded);
         $this->values = $v;
+        break;
+
+      case 'shortSql':
+        // `where` is a ShortSQL WHERE expression produced by Record\Read::getLinks() /
+        // getBackLinks(), e.g. "id|=|713" or "^fld|=|val||and|other|LIKE|foo".
+        // We build a minimal ShortSQL string "@table~?where" and let ParseShortSql
+        // handle the {subquery} encoding and Where::parse() translation to SQL.
+        $whereStr = trim($request['where'] ?? '');
+        if ($whereStr === '' || $whereStr === '1') {
+          $this->where = '1=1';
+          break;
+        }
+        // Derive the app prefix from the table name (e.g. "test__items" → "test__").
+        // QueryFromRequest has no explicit prefix property; the table name is the
+        // canonical source of truth until the PREFIX constant is removed in v5.
+        $dblUnder = strpos($this->tb, '__');
+        $tbPrefix = ($dblUnder !== false) ? substr($this->tb, 0, $dblUnder + 2) : '';
+        $parser = new \SQL\ShortSql\ParseShortSql($tbPrefix, $this->cfg);
+        $parser->parseAll('@' . $this->tb . '~?' . $whereStr, true);
+        [$whereSql, $whereVals] = $parser->getSql(true);
+        $this->where  = $whereSql  ?: '1=1';
+        $this->values = $whereVals ?: [];
         break;
 
       default:
@@ -357,6 +385,11 @@ class QueryFromRequest
   private function advSearch($dati)
   {
     $where = '';
+
+    if (empty($dati)) {
+      // No criteria provided — return all records rather than an invalid empty WHERE
+      return '1=1';
+    }
 
     foreach ($dati as $nr => $row) {
 
@@ -451,6 +484,12 @@ class QueryFromRequest
       }
     }
 
+
+    // All rows were skipped (all values empty with non-is_empty operators):
+    // avoid an empty WHERE clause which would cause a SQL syntax error.
+    if (trim($where) === '') {
+      $where = '1=1';
+    }
 
     if (count($order) > 0) {
       $where .= ' ORDER BY ' . implode(', ', $order);

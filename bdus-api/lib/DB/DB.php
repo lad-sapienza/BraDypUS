@@ -260,7 +260,8 @@ class DB implements DBInterface
       if ($this->log) {
         $this->log->error($e, [$query, $values, $type, $fetch_style]);
       }
-      throw new DBException(\tr::get('db_generic_error'));
+      // Pass PDOException as $previous so callers can inspect the original message
+      throw new DBException(\tr::get('db_generic_error'), 0, $e);
     }
   }
 
@@ -350,8 +351,8 @@ class DB implements DBInterface
     return [
       $cfg['db_engine'],
       $dsn,
-      $cfg['db_username'],
-      $cfg['db_password']
+      $cfg['db_username'] ?? null,
+      $cfg['db_password'] ?? null
     ];
   }
 

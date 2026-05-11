@@ -11,6 +11,336 @@ use Template\Template;
 
 class record_ctrl extends Controller
 {
+  /**
+   * Returns a paginated JSON list of records for a given table.
+   * Used by the Vue data module.
+   *
+   * GET ?obj=record_ctrl&method=getRecords&tb=TABLE&page=1&per_page=30
+   *     &sort_field=FIELD&sort_dir=asc|desc&search=STRING
+   *
+   * Response:
+   * {
+   *   total:  int,
+   *   fields: [ { name: string, label: string }, ... ],
+   *   data:   [ { id, field1, field2, ... }, ... ]
+   * }
+   */
+  public function getRecords(): void
+  {
+    if (!\utils::canUser('read')) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+      return;
+    }
+
+    $tb = $this->get['tb'] ?? null;
+    if (!$tb) {
+      $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
+      return;
+    }
+
+    // GET params (fast search / pagination / sort)
+    $page       = max(1, (int)($this->get['page']       ?? $this->post['page']       ?? 1));
+    $perPage    = min(200, max(1, (int)($this->get['per_page']  ?? $this->post['per_page']  ?? 30)));
+    $sortFld    = $this->get['sort_field'] ?? $this->post['sort_field'] ?? null;
+    $sortDir    = (($this->get['sort_dir'] ?? $this->post['sort_dir'] ?? 'asc') === 'desc') ? 'desc' : 'asc';
+    $searchType = $this->get['search_type'] ?? $this->post['search_type'] ?? 'all';
+
+    // Build QueryFromRequest-compatible request array
+    $qRequest = ['tb' => $tb, 'type' => $searchType];
+
+    switch ($searchType) {
+      case 'fast':
+        $qRequest['string'] = $this->get['search'] ?? $this->post['search'] ?? '';
+        break;
+      case 'advanced':
+        $qRequest['adv'] = $this->post['adv'] ?? [];
+        break;
+      case 'sqlExpert':
+        $qRequest['querytext'] = $this->post['querytext'] ?? $this->get['querytext'] ?? '';
+        $qRequest['join']      = $this->post['join']      ?? $this->get['join']      ?? '';
+        break;
+      case 'shortSql':
+        $qRequest['where'] = $this->get['where'] ?? $this->post['where'] ?? '';
+        break;
+      default:
+        $qRequest['type'] = 'all';
+    }
+
+    try {
+      $qObj = new \QueryFromRequest($this->db, $this->cfg, $qRequest, true);
+
+      $total = $qObj->getTotal();
+
+      // Build field list for column headers
+      $rawFields = $qObj->getFields();
+      $fields = [];
+      foreach ($rawFields as $fldName => $fldLabel) {
+        $fields[] = ['name' => $fldName, 'label' => $fldLabel ?: $fldName];
+      }
+
+      if ($sortFld) {
+        $qObj->setOrder($sortFld, $sortDir);
+      }
+
+      $qObj->setLimit(($page - 1) * $perPage, $perPage);
+
+      $this->returnJson([
+        'total'  => $total,
+        'fields' => $fields,
+        'data'   => $qObj->getResults(),
+      ]);
+
+    } catch (\Throwable $e) {
+      $this->log->error($e);
+      // Surface the original DB engine message (e.g. "no such column: foo") so
+      // the caller — especially in sqlExpert mode — gets an actionable error.
+      $detail = $e->getMessage();
+      if ($e->getPrevious()) {
+        $detail .= ' — ' . $e->getPrevious()->getMessage();
+      }
+      $this->returnJson(['status' => 'error', 'code' => 'db_error', 'detail' => $detail]);
+    }
+  }
+
+  // ── Vue v5 record view/edit API ──────────────────────────────────────────
+
+  /**
+   * Returns the full record data + schema, ready for Vue RecordView.
+   *
+   * GET ?obj=record_ctrl&method=getRecord&tb=TABLE&id=ID
+   *     (omit id for add_new)
+   *
+   * Response:
+   * {
+   *   metadata: { tb_id, tb_stripped, tb_label, rec_id, id_field, can_edit, can_delete },
+   *   schema:   { fields: [{name, label, type, readonly, options_source, ...}], plugins: {...} },
+   *   core:     { field: { name, label, val, val_label? }, ... },
+   *   plugins:  { tb: { metadata, data } },
+   *   links, backlinks, manualLinks, files, geodata, rs
+   * }
+   */
+  public function getRecord(): void
+  {
+    if (!\utils::canUser('read')) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+      return;
+    }
+
+    $tb = $this->get['tb'] ?? null;
+    $id = isset($this->get['id']) ? (int)$this->get['id'] : null;
+
+    if (!$tb) {
+      $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
+      return;
+    }
+
+    try {
+      $schema = $this->buildTableSchema($tb);
+
+      if ($id) {
+        $reader = new \Record\Read($id, null, $tb, $this->db, $this->cfg);
+        $full   = $reader->getFull();
+        // getFull() stores the full field object in metadata.rec_id — fix to int
+        $recId  = $full['core']['id']['val'] ?? $id;
+      } else {
+        $full  = $this->buildEmptyRecord($tb, $schema);
+        $recId = null;
+      }
+
+      $full['metadata']['rec_id']     = $recId;
+      $full['metadata']['id_field']   = $this->cfg->get("tables.{$tb}.id_field");
+      $full['metadata']['can_edit']   = \utils::canUser('edit');
+      $full['metadata']['can_delete'] = \utils::canUser('edit');
+      $full['schema'] = $schema;
+
+      // Enrich each file with a relative URL and an is_image flag so the
+      // frontend can render thumbnails and download links without extra API calls.
+      if (!empty($full['files']) && \is_array($full['files'])) {
+        $appName   = $this->cfg->get('main.name') ?? '';
+        $basePath  = 'projects/' . $appName . '/files/';
+        $imageExts = ['png', 'jpeg', 'jpg', 'bmp', 'ico', 'tif', 'tiff'];
+        foreach ($full['files'] as &$file) {
+          $ext = \strtolower($file['ext'] ?? '');
+          $file['url']      = $basePath . $file['id'] . '.' . $ext;
+          $file['is_image'] = \in_array($ext, $imageExts, true);
+        }
+        unset($file);
+      }
+
+      $this->returnJson($full);
+
+    } catch (\Throwable $e) {
+      $this->log->error($e);
+      $this->returnJson(['status' => 'error', 'code' => 'db_error', 'detail' => $e->getMessage()]);
+    }
+  }
+
+  /**
+   * Returns select options for a field (select / combo_select / multi_select).
+   *
+   * GET ?obj=record_ctrl&method=getFieldOptions&tb=TABLE&fld=FIELD
+   *
+   * Response: [{ value, label }, ...]
+   */
+  public function getFieldOptions(): void
+  {
+    $tb  = $this->get['tb'] ?? null;
+    $fld = $this->get['fld'] ?? null;
+
+    if (!$tb || !$fld) {
+      $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
+      return;
+    }
+
+    try {
+      $this->returnJson($this->resolveFieldOptions($tb, $fld));
+    } catch (\Throwable $e) {
+      $this->log->error($e);
+      $this->returnJson(['status' => 'error', 'code' => 'db_error', 'detail' => $e->getMessage()]);
+    }
+  }
+
+  // ── Private helpers ───────────────────────────────────────────────────────
+
+  /**
+   * Builds { fields: [...], plugins: { tb: { tb_id, label, fields } } }
+   * for the given table.
+   */
+  private function buildTableSchema(string $tb): array
+  {
+    $plugins = [];
+    foreach ($this->cfg->get("tables.{$tb}.plugin") ?: [] as $plg) {
+      $plugins[$plg] = [
+        'tb_id'       => $plg,
+        'tb_stripped' => str_replace($this->prefix, '', $plg),
+        'label'       => $this->cfg->get("tables.{$plg}.label") ?: $plg,
+        'fields'      => $this->buildFieldSchema($plg),
+      ];
+    }
+
+    return ['fields' => $this->buildFieldSchema($tb), 'plugins' => $plugins];
+  }
+
+  /**
+   * Returns an array of field-schema objects for a single table.
+   */
+  private function buildFieldSchema(string $tb): array
+  {
+    $result = [];
+    foreach ($this->cfg->get("tables.{$tb}.fields") ?: [] as $fld) {
+      $check = $fld['check'] ?? [];
+      if (is_string($check)) {
+        $check = array_filter(explode(' ', $check));
+      }
+
+      $schema = [
+        'name'          => $fld['name'],
+        'label'         => $fld['label'] ?? $fld['name'],
+        'type'          => $fld['type'] ?? 'text',
+        'readonly'      => !empty($fld['readonly']),
+        'disabled'      => !empty($fld['disabled']),
+        'hide'          => !empty($fld['hide']),
+        'help'          => $fld['help'] ?? null,
+        'required'      => in_array('required', (array)$check, true),
+        'min'           => $fld['min'] ?? null,
+        'max'           => $fld['max'] ?? null,
+        'max_length'    => $fld['max_length'] ?? null,
+        'pattern'       => $fld['pattern'] ?? null,
+        'def_value'     => $fld['def_value'] ?? null,
+        'force_default' => !empty($fld['force_default']),
+        'active_link'   => !empty($fld['active_link']),
+        'direction'     => $fld['direction'] ?? null,
+        'options_source' => null,
+      ];
+
+      if (!empty($fld['get_values_from_tb'])) {
+        $schema['options_source'] = ['type' => 'db',         'ref' => $fld['get_values_from_tb']];
+      } elseif (!empty($fld['id_from_tb'])) {
+        $schema['options_source'] = ['type' => 'id_from_tb', 'ref' => $fld['id_from_tb']];
+      } elseif (!empty($fld['vocabulary_set'])) {
+        $schema['options_source'] = ['type' => 'vocabulary',  'set' => $fld['vocabulary_set']];
+      } elseif (!empty($fld['dic'])) {
+        $schema['options_source'] = ['type' => 'static', 'items' => (array)$fld['dic']];
+      }
+
+      $result[] = $schema;
+    }
+
+    return $result;
+  }
+
+  /**
+   * Resolves select options for a field from its configured source.
+   */
+  private function resolveFieldOptions(string $tb, string $fld): array
+  {
+    $cfg = $this->cfg->get("tables.{$tb}.fields.{$fld}") ?? [];
+
+    if (!empty($cfg['get_values_from_tb'])) {
+      [$refTb, $refFld] = array_pad(explode(':', $cfg['get_values_from_tb'], 2), 2, null);
+      $rows = $this->db->query(
+        "SELECT DISTINCT {$refFld} as v FROM {$refTb} WHERE {$refFld} IS NOT NULL AND {$refFld} != '' ORDER BY {$refFld}"
+      ) ?: [];
+      return array_map(fn($r) => ['value' => $r['v'], 'label' => $r['v']], $rows);
+    }
+
+    if (!empty($cfg['id_from_tb'])) {
+      $refTb  = $cfg['id_from_tb'];
+      $idFld  = $this->cfg->get("tables.{$refTb}.id_field") ?: 'id';
+      $rows   = $this->db->query(
+        "SELECT id, {$idFld} as lbl FROM {$refTb} ORDER BY {$idFld}"
+      ) ?: [];
+      return array_map(fn($r) => ['value' => $r['id'], 'label' => $r['lbl']], $rows);
+    }
+
+    if (!empty($cfg['vocabulary_set'])) {
+      $rows = $this->db->query(
+        "SELECT def as v FROM {$this->prefix}vocabularies WHERE voc = ? ORDER BY sort",
+        [$cfg['vocabulary_set']]
+      ) ?: [];
+      return array_map(fn($r) => ['value' => $r['v'], 'label' => $r['v']], $rows);
+    }
+
+    if (!empty($cfg['dic'])) {
+      return array_map(fn($v) => ['value' => $v, 'label' => $v], (array)$cfg['dic']);
+    }
+
+    return [];
+  }
+
+  /**
+   * Builds an empty record skeleton for add_new mode, applying def_value defaults.
+   */
+  private function buildEmptyRecord(string $tb, array $schema): array
+  {
+    $core = [];
+    foreach ($schema['fields'] as $fld) {
+      $def = $fld['def_value'];
+      if ($def === '%today%')        { $def = date('Y-m-d'); }
+      elseif ($def === '%current_user%') { $def = $_SESSION['user']['id'] ?? null; }
+
+      $core[$fld['name']] = ['name' => $fld['name'], 'label' => $fld['label'], 'val' => $def, 'val_label' => null];
+    }
+
+    $plugins = [];
+    foreach ($schema['plugins'] as $plg => $plgSchema) {
+      $plugins[$plg] = [
+        'metadata' => ['tb_id' => $plg, 'tb_stripped' => $plgSchema['tb_stripped'], 'tb_label' => $plgSchema['label'], 'tot' => 0],
+        'data'     => [],
+      ];
+    }
+
+    return [
+      'metadata'    => ['tb_id' => $tb, 'tb_stripped' => str_replace($this->prefix, '', $tb), 'tb_label' => $this->cfg->get("tables.{$tb}.label")],
+      'core'        => $core,
+      'plugins'     => $plugins,
+      'links'       => [], 'backlinks' => [], 'manualLinks' => [],
+      'files'       => [], 'geodata'   => [], 'rs'          => [],
+    ];
+  }
+
+  // ── Legacy v4 methods (kept for Twig-based rendering) ────────────────────
+
   public function save_data()
   {
     try {
@@ -57,18 +387,20 @@ class record_ctrl extends Controller
 
       if (count($ok) == count($this->request['id'])) {
         $data['status'] = 'success';
-        $data['verbose'] = \tr::get('success_saved');
-        $inserted_id ? $data['inserted_id'] = $inserted_id : '';
+        $data['code']   = 'success_saved';
+        if ($inserted_id) { $data['inserted_id'] = $inserted_id; }
       } elseif (count($error) == count($this->request['id'])) {
         $data['status'] = 'error';
-        $data['verbose'] = \tr::get('error_saved');
+        $data['code']   = 'error_saved';
       } else {
         $data['status'] = 'warning';
-        $data['verbose'] = \tr::get('partial_success_saved', [implode(', ', $ok), implode(', ', $error)]);
+        $data['code']   = 'partial_success_saved';
+        $data['saved']  = array_keys($ok);
+        $data['failed'] = array_keys($error);
       }
     } catch (\Throwable $e) {
       $data['status'] = 'error';
-      $data['verbose'] = \tr::get('error_saved');
+      $data['code']   = 'error_saved';
       $this->log->error($e);
     }
 
@@ -80,39 +412,33 @@ class record_ctrl extends Controller
   public function erase()
   {
     if (!\utils::canUser('edit')) {
-      $data = [
-        'status' => 'error', 
-        'text' => '<div class="text-danger">'
-          . '<strong>' . \tr::get('attention') . ':</strong> ' . \tr::get('not_enough_privilege') . '</p>'
-          . '</div>'
-      ];
-      echo json_encode($data);
+      echo json_encode(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
     if (is_array($this->request['id'])) {
+      $ok    = [];
       $error = [];
       foreach ($this->request['id'] as $id) {
         try {
           $record = new Record($this->get['tb'], $id, $this->db, $this->cfg);
-
           $record->delete();
-
-          $ok[] = true;
+          $ok[] = $id;
         } catch (\Throwable $e) {
           $this->log->error($e);
-          $error[] = true;
+          $error[] = $id;
         }
       }
 
-      if (count($this->request['id']) ===  count($error)) {
-        $data = array('status' => 'error', 'text' => \tr::get('no_record_deleted'));
-      } elseif (count($this->request['id']) == count($ok)) {
-        $data = array('status' => 'success', 'text' => \tr::get('all_record_deleted'));
+      if (count($this->request['id']) === count($error)) {
+        $data = ['status' => 'error',   'code' => 'no_record_deleted'];
+      } elseif (count($this->request['id']) === count($ok)) {
+        $data = ['status' => 'success', 'code' => 'all_record_deleted', 'deleted' => count($ok)];
       } else {
-        $data = array('status' => 'warning', 'text' => \tr::get('partially_deleted_with_count', [count($ok), count($error)]));
+        $data = ['status' => 'warning', 'code' => 'partially_deleted_with_count',
+                 'deleted' => count($ok), 'failed' => count($error)];
       }
     } else {
-      $data = array('status' => 'error', 'text' => \tr::get('no_id_provided'));
+      $data = ['status' => 'error', 'code' => 'no_id_provided'];
     }
 
     echo json_encode($data);

@@ -545,22 +545,30 @@ onMounted(async () => {
  * getBackLinks() — e.g. "id|=|713" or "^ctx_id|=|42||and|site|=|Rome".
  * We feed it as an expert query to record_ctrl::getRecords().
  */
-// Track last applied params to avoid redundant fetches
+// Track last applied params to avoid redundant fetches triggered by our own
+// router.replace() calls (filter URL persistence). The guard compares all four
+// relevant params; if all match, the change originated from updateFilterUrl()
+// and there is nothing to re-fetch.
+//
+// NOTE: we intentionally do NOT use a boolean "ignoreNextRouteChange" flag here.
+// Vue 3 batches reactive updates within the same tick, so if the user switches
+// tables immediately after a filter update, the watcher fires only once with the
+// final URL. A boolean flag would have caused that table switch to be silently
+// ignored. The lastApplied* comparison is safe in all cases:
+//   - updateFilterUrl() pre-updates lastAppliedQt/Q before router.replace(), so
+//     when the watcher fires for the replace, all four values match → skip ✓
+//   - a genuine table switch changes tbParam → mismatch → proceeds ✓
 let lastAppliedTb    = null
 let lastAppliedWhere = null
 let lastAppliedQt    = null
 let lastAppliedQ     = null
 
-// Prevents the route watcher from re-triggering a fetch when we ourselves
-// call router.replace() to persist filter state in the URL.
-let ignoreNextRouteChange = false
-
 /**
  * Push the current filter type + value into the URL (for bookmarking / back-nav).
  * Uses router.replace() so the URL changes without adding a history entry.
+ * Pre-updates lastAppliedQt/Q so the watcher's guard skips the resulting change.
  */
 function updateFilterUrl(type, query) {
-  ignoreNextRouteChange = true
   const newQuery = { tb: route.query.tb }
   if (route.query.where) newQuery.where = route.query.where
   if (type && query != null) { newQuery.qt = type; newQuery.q = query }
@@ -570,7 +578,6 @@ function updateFilterUrl(type, query) {
 }
 
 function applyRouteParams() {
-  if (ignoreNextRouteChange) { ignoreNextRouteChange = false; return }
 
   const tbParam    = route.query.tb
   const whereParam = route.query.where ?? null

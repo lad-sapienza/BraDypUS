@@ -17,6 +17,7 @@
             :key="tbl.name"
             class="table-nav-item"
             :class="{ active: selectedTable?.name === tbl.name }"
+            :title="tbl.label"
             @click="selectTable(tbl)"
           >
             <i class="pi pi-table" />
@@ -599,7 +600,8 @@ function onRowClick(event) {
 <style scoped>
 .data-layout {
   display: flex;
-  height: 100%;
+  flex: 1;          /* fill the flex-column main-content area */
+  min-height: 0;    /* allow shrink below content size */
   overflow: hidden;
 }
 
@@ -637,24 +639,37 @@ function onRowClick(event) {
 
 .table-nav-item {
   display: flex;
-  align-items: center;
+  align-items: flex-start;  /* icon stays top-aligned on multi-line labels */
   gap: 0.6rem;
   width: 100%;
-  padding: 0.55rem 1rem;
+  padding: 0.5rem 1rem;
   border: none;
   background: transparent;
   text-align: left;
   font-size: 0.875rem;
+  line-height: 1.35;
   color: var(--p-text-color);
   cursor: pointer;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   transition: background 0.15s;
 }
+
+/* Icon: aligned top, fixed size, nudge for optical alignment with first line */
+.table-nav-item .pi {
+  flex-shrink: 0;
+  font-size: 0.85rem;
+  margin-top: 0.1rem;
+}
+
+/* Label: wrap naturally within sidebar width, cap at two lines */
+.table-nav-item span {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 .table-nav-item:hover  { background: var(--p-surface-hover); }
 .table-nav-item.active { background: var(--p-primary-50); color: var(--p-primary-color); font-weight: 600; }
-.table-nav-item .pi    { flex-shrink: 0; font-size: 0.85rem; }
 
 /* ── Records panel ───────────────────────────────────────── */
 .records-panel {

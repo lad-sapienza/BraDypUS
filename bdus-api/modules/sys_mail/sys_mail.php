@@ -9,6 +9,7 @@
 class sys_mail_ctrl extends Controller
 {
 
+    /** @deprecated v5 — requires native PHP mail() + MTA; not ported */
     public function send()
     {
         $to = '';
@@ -43,6 +44,7 @@ class sys_mail_ctrl extends Controller
     }
 
 
+    /** @deprecated v5 — requires native PHP mail() + MTA; not ported */
     public function showForm()
     {
 

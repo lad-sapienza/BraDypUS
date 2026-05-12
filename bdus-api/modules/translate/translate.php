@@ -7,6 +7,7 @@
 
 class translate_ctrl extends Controller
 {
+  /** @deprecated v5 — locale files managed directly in git; UI not ported */
 	public function showList()
 	{
 		$lang_files = \utils::dirContent(MAIN_DIR . 'locale/');
@@ -22,6 +23,7 @@ class translate_ctrl extends Controller
 		]);
 	}
 	
+  /** @deprecated v5 — locale files managed directly in git; UI not ported */
 	public function showForm()
 	{
 		$lang_to_edit = $this->get['lang'];
@@ -36,6 +38,7 @@ class translate_ctrl extends Controller
 		]);
 	}
 	
+  /** @deprecated v5 — locale files managed directly in git; UI not ported */
 	public function newLang()
 	{
 		$lang = $this->get['lang'];
@@ -52,6 +55,7 @@ class translate_ctrl extends Controller
 		}
 	}
 	
+  /** @deprecated v5 — locale files managed directly in git; UI not ported */
 	public function saveData()
 	{
 		$lang = $this->get['lang'];

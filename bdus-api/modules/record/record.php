@@ -779,6 +779,7 @@ class record_ctrl extends Controller
 
   // ── Legacy v4 methods (kept for Twig-based rendering) ────────────────────
 
+  /** @deprecated v5 — replaced by saveRecord() consumed by RecordView.vue */
   public function save_data()
   {
     try {

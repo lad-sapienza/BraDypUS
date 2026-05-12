@@ -624,5 +624,21 @@
     "module_templates_desc": "Crea e modifica i template di layout JSON per le pagine di record",
     "design_templates": "Template di visualizzazione",
     "user_profile": "Profilo utente",
-    "test": "Test"
+    "test": "Test",
+    "add_section": "Aggiungi sezione",
+    "add_template": "Aggiungi template",
+    "collapsed_by_default": "Compresso per default",
+    "collapsible": "Comprimibile",
+    "confirm_delete_template": "Sei sicuro di voler eliminare questo template? Questa azione non può essere annullata.",
+    "core_section": "Sezione principale",
+    "create": "Crea",
+    "delete_template": "Elimina template",
+    "new_section": "Nuova sezione",
+    "no_templates": "Nessun template. Clicca + per crearne uno.",
+    "section_label": "Etichetta",
+    "select_or_create_template": "Seleziona un template dalla lista o creane uno nuovo.",
+    "select_table_for_template": "Seleziona una tabella dal pannello a sinistra per gestire i suoi template.",
+    "template_name": "Nome del template",
+    "template_name_chars": "Solo lettere, numeri, trattini e underscore.",
+    "template_name_hint": "es. default"
 }

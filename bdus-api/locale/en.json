@@ -624,5 +624,21 @@
     "error_file_deleted": "Error deleting file",
     "design_templates": "Design templates",
     "user_profile": "User profile",
-    "test": "Test"
+    "test": "Test",
+    "add_section": "Add section",
+    "add_template": "Add template",
+    "collapsed_by_default": "Collapsed by default",
+    "collapsible": "Collapsible",
+    "confirm_delete_template": "Are you sure you want to delete this template? This action cannot be undone.",
+    "core_section": "Core section",
+    "create": "Create",
+    "delete_template": "Delete template",
+    "new_section": "New section",
+    "no_templates": "No templates yet. Click + to create one.",
+    "section_label": "Label",
+    "select_or_create_template": "Select a template from the list or create a new one.",
+    "select_table_for_template": "Select a table from the left panel to manage its templates.",
+    "template_name": "Template name",
+    "template_name_chars": "Only letters, numbers, hyphens and underscores.",
+    "template_name_hint": "e.g. default"
 }

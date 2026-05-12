@@ -29,7 +29,7 @@
           v-for="item in section.content"
           :key="item.field"
           class="template-field-cell"
-          :style="{ flexBasis: widthToCss(item.width ?? '1/1'), maxWidth: widthToCss(item.width ?? '1/1') }"
+          :style="{ gridColumn: 'span ' + widthToSpan(item.width ?? '1/1') }"
         >
           <FieldDisplay
             v-if="mode === 'read'"
@@ -55,7 +55,7 @@ import { ref, computed } from 'vue'
 import FieldDisplay  from './FieldDisplay.vue'
 import FieldEditor   from './FieldEditor.vue'
 import PluginSection from './PluginSection.vue'
-import { widthToCss } from './templateUtils.js'
+import { widthToSpan } from './templateUtils.js'
 
 const props = defineProps({
   /** One section object from template.sections */
@@ -116,15 +116,13 @@ function fieldSchema(name) {
 }
 
 .template-fields {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
   gap: 0 1.5rem;
 }
 
 .template-field-cell {
-  flex-grow: 0;
-  flex-shrink: 0;
-  box-sizing: border-box;
   min-width: 0;
+  box-sizing: border-box;
 }
 </style>

@@ -84,3 +84,22 @@ a:hover {
   padding: 0.2rem 0.6rem;
   border-radius: 4px;
 }
+
+/* ── PrimeVue Select: force correct flex layout ──────────────────────────────
+   PrimeVue 4 generates its CSS at runtime via JS; the label inside .p-select
+   can render in a column stack on certain builds. This global rule restores
+   the expected row layout without relying on scoped :deep() which loses the
+   race against the injected stylesheet. */
+.p-select {
+  display: inline-flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+}
+
+.p-select .p-select-label {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}

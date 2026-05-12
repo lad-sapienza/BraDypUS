@@ -261,15 +261,15 @@ onUnmounted(() => window.removeEventListener('resize', onResize))
 
 function handleLogout() {
   confirm.require({
-    message:       t('logout_confirm_message'),
-    header:        t('logout'),
-    icon:          'pi pi-sign-out',
-    rejectLabel:   t('cancel'),
-    acceptLabel:   t('logout'),
-    acceptClass:   'p-button-danger',
+    message:      t('logout_confirm_message'),
+    header:       t('logout'),
+    icon:         'pi pi-sign-out',
+    severity:     'danger',
+    rejectProps:  { label: t('cancel'), severity: 'secondary', outlined: true },
+    acceptProps:  { label: t('logout'), severity: 'danger' },
     accept: async () => {
       await auth.logout()
-      router.push('/login')
+      window.location.hash = '/login'
     },
   })
 }

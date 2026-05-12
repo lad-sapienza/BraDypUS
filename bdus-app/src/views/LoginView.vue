@@ -11,18 +11,11 @@
             v-model="form.app"
             :options="apps"
             optionLabel="name"
-            optionValue="db"
             placeholder="Select an application…"
             :loading="loadingApps"
             :disabled="loading"
             fluid
           >
-            <template #value="{ value }">
-              <span v-if="value">
-                {{ apps.find(a => a.db === value)?.name ?? value }}
-              </span>
-              <span v-else class="p-placeholder">Select an application…</span>
-            </template>
             <template #option="{ option }">
               <div>
                 <div class="app-option-name">{{ option.name }}</div>
@@ -87,6 +80,7 @@ import Message from 'primevue/message'
 const router = useRouter()
 const auth = useAuthStore()
 
+// form.app holds the full option object; .db is extracted on submit
 const form = ref({ app: null, email: '', password: '' })
 const loading = ref(false)
 const loadingApps = ref(false)
@@ -100,7 +94,7 @@ onMounted(async () => {
     apps.value = res.apps ?? []
     // Pre-select if only one app available
     if (apps.value.length === 1) {
-      form.value.app = apps.value[0].db
+      form.value.app = apps.value[0]
     }
   } catch {
     apps.value = []
@@ -113,7 +107,7 @@ async function handleLogin() {
   error.value = null
   loading.value = true
   try {
-    await auth.login(form.value.email, form.value.password, form.value.app)
+    await auth.login(form.value.email, form.value.password, form.value.app?.db)
     router.push('/')
   } catch (e) {
     error.value = e.message

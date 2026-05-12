@@ -35,7 +35,7 @@
             <div
               v-for="col in editableFields"
               :key="col.name"
-              :style="columnLayout ? { flexBasis: columnWidthMap[col.name], maxWidth: columnWidthMap[col.name] } : {}"
+              :style="columnLayout ? { gridColumn: 'span ' + (columnWidthMap[col.name] ?? 12) } : {}"
             >
               <FieldEditor
                 :schema="col"
@@ -75,7 +75,7 @@ import Button      from 'primevue/button'
 import FieldDisplay from './FieldDisplay.vue'
 import FieldEditor  from './FieldEditor.vue'
 import { useI18n }  from '@/i18n'
-import { widthToCss } from './templateUtils.js'
+import { widthToSpan } from './templateUtils.js'
 
 const { t } = useI18n()
 
@@ -98,12 +98,12 @@ const emit = defineEmits(['update:editRows'])
 
 // ── Fields ─────────────────────────────────────────────────────
 
-/** Map of field name → CSS width string, built from columnLayout (if any). */
+/** Map of field name → grid column span number, built from columnLayout (if any). */
 const columnWidthMap = computed(() => {
   if (!props.columnLayout) return {}
   const map = {}
   for (const item of props.columnLayout) {
-    map[item.field] = widthToCss(item.width ?? '1/1')
+    map[item.field] = widthToSpan(item.width ?? '1/1')
   }
   return map
 })
@@ -214,8 +214,8 @@ function removeRow(idx) {
   gap: 0.5rem;
 }
 .plugin-row-fields.has-layout {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
   gap: 0 0.5rem;
 }
 .add-row-btn { margin-top: 0.5rem; }

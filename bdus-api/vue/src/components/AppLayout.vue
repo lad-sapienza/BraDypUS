@@ -154,7 +154,8 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useToast } from 'primevue/usetoast'
+import { useToast }   from 'primevue/usetoast'
+import { useConfirm } from 'primevue/useconfirm'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from '@/i18n'
 import { api } from '@/api'
@@ -166,9 +167,10 @@ import Menu from 'primevue/menu'
 import Dialog from 'primevue/dialog'
 import UserForm from '@/components/users/UserForm.vue'
 
-const router = useRouter()
-const route  = useRoute()
-const auth   = useAuthStore()
+const router  = useRouter()
+const route   = useRoute()
+const auth    = useAuthStore()
+const confirm = useConfirm()
 const { tables: navTables, loading: tablesLoading, loadTables } = useTables()
 const { isDark, toggle: toggleDark } = useDarkMode()
 
@@ -257,9 +259,19 @@ function onResize() {
 onMounted(() => window.addEventListener('resize', onResize))
 onUnmounted(() => window.removeEventListener('resize', onResize))
 
-async function handleLogout() {
-  await auth.logout()
-  router.push('/login')
+function handleLogout() {
+  confirm.require({
+    message:       t('logout_confirm_message'),
+    header:        t('logout'),
+    icon:          'pi pi-sign-out',
+    rejectLabel:   t('cancel'),
+    acceptLabel:   t('logout'),
+    acceptClass:   'p-button-danger',
+    accept: async () => {
+      await auth.logout()
+      router.push('/login')
+    },
+  })
 }
 
 const navGroups = computed(() => [

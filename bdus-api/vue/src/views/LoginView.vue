@@ -17,10 +17,16 @@
             :disabled="loading"
             fluid
           >
+            <template #value="{ value }">
+              <span v-if="value">
+                {{ apps.find(a => a.db === value)?.name ?? value }}
+              </span>
+              <span v-else class="p-placeholder">Select an application…</span>
+            </template>
             <template #option="{ option }">
               <div>
-                <div class="app-name">{{ option.name }}</div>
-                <div v-if="option.definition" class="app-definition">{{ option.definition }}</div>
+                <div class="app-option-name">{{ option.name }}</div>
+                <div v-if="option.definition" class="app-option-definition">{{ option.definition }}</div>
               </div>
             </template>
           </Select>
@@ -156,11 +162,11 @@ async function handleLogin() {
   color: var(--p-text-muted-color);
 }
 
-.app-name {
+.app-option-name {
   font-weight: 600;
 }
 
-.app-definition {
+.app-option-definition {
   font-size: 0.8rem;
   color: var(--p-text-muted-color);
   margin-top: 0.1rem;

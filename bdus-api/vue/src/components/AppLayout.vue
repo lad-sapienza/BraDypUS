@@ -287,7 +287,7 @@ const navGroups = computed(() => [
       { labelKey: 'data_mng',       icon: 'pi-database',     to: '/data',         disabled: false },
       { labelKey: 'find_replace',   icon: 'pi-search-plus',  to: '/find-replace', disabled: true  },
       { labelKey: 'vocabulary_mng', icon: 'pi-book',         to: '/vocabularies', disabled: false },
-      { labelKey: 'history',        icon: 'pi-history',      to: '/history',      disabled: true  },
+      { labelKey: 'history',        icon: 'pi-history',      to: '/history',      disabled: false },
       { labelKey: 'import_geodata', icon: 'pi-map-marker',   to: '/import-geo',   disabled: true  },
       { labelKey: 'backup',         icon: 'pi-save',         to: '/backups'                       },
     ],

@@ -52,6 +52,11 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/history',
+    component: () => import('@/views/HistoryView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     // :id is either a numeric record id or the literal string 'new'
     path: '/record/:tb/:id',
     component: () => import('@/views/RecordView.vue'),

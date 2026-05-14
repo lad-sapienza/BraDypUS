@@ -439,7 +439,7 @@
     "no_user_with_selected_privilege": "Non esiste alcun utente nel database avete i privilegi specificati",
     "ok_mail_sent_to_users": "Il messaggio è stato inviato senza problemi ai seguenti utenti: %s",
     "error_mail_sent_to_users": "Non è stato possibile inviare il messaggio ai seguenti utenti: %s",
-    "history": "Storico",
+    "history": "Cronologia modifiche",
     "history_is_empty": "Lo storico delle modifiche è vuoto",
     "ok_file_sorting_update": "L'ordine dei file allegati è stato cambiato",
     "error_file_sorting_update": "Errore. Non è stato possibile cambiare l'ordine",
@@ -640,5 +640,14 @@
     "select_table_for_template": "Seleziona una tabella dal pannello a sinistra per gestire i suoi template.",
     "template_name": "Nome del template",
     "template_name_chars": "Solo lettere, numeri, trattini e underscore.",
-    "template_name_hint": "es. default"
+    "template_name_hint": "es. default",
+    "history_filter_tb": "Filtra per tabella…",
+    "history_filter_user": "Filtra per utente…",
+    "history_no_entries": "Nessuna voce trovata.",
+    "history_col_time": "Ora",
+    "history_col_user": "Utente",
+    "history_col_tb": "Tabella",
+    "history_col_rowid": "Riga",
+    "history_col_content": "Contenuto",
+    "history_col_values": "Valori"
 }

@@ -433,16 +433,45 @@ function cancelEdit() {
 }
 
 // ── Validation ────────────────────────────────────────────────────
+
 /**
- * Returns the labels of fields that fail their validation rules.
- * Checks core fields + plugin fields.
+ * Returns true if the given value fails the field's client-side rules.
+ * Mirrors the logic in FieldEditor.vue — keep in sync.
+ */
+function fieldHasClientError(fld, value) {
+  const check   = fld.check ?? []
+  const isEmpty = value === null || value === undefined || value === ''
+
+  if (fld.required && isEmpty)   return true
+  if (isEmpty)                   return false
+
+  if (check.includes('int')   && !/^-?\d+$/.test(String(value)))            return true
+  if (check.includes('email') && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value))) return true
+
+  if (fld.type !== 'date' && fld.min != null && Number(value) < Number(fld.min)) return true
+  if (fld.type !== 'date' && fld.max != null && Number(value) > Number(fld.max)) return true
+  if (fld.type === 'date'  && fld.min        && String(value) < String(fld.min))  return true
+  if (fld.type === 'date'  && fld.max        && String(value) > String(fld.max))  return true
+
+  if (fld.max_length && String(value).length > Number(fld.max_length)) return true
+
+  if (fld.pattern) {
+    try { if (!new RegExp(fld.pattern).test(String(value))) return true } catch {}
+  }
+
+  return false
+}
+
+/**
+ * Collects labels of all fields that fail client-side validation.
+ * Returns an empty array if everything is valid.
  */
 function collectValidationErrors() {
   const bad = []
 
   // Core fields
   for (const fld of visibleCoreFields.value) {
-    if (fld.required && (editData.core[fld.name] === null || editData.core[fld.name] === undefined || editData.core[fld.name] === '')) {
+    if (fieldHasClientError(fld, editData.core[fld.name])) {
       bad.push(fld.label)
     }
   }
@@ -453,7 +482,7 @@ function collectValidationErrors() {
     const plgLabel  = record.value?.schema?.plugins?.[plgTb]?.label ?? plgTb
     for (const row of rows.filter(r => !r._delete)) {
       for (const fld of plgFields) {
-        if (fld.required && !row.fields[fld.name]) {
+        if (fieldHasClientError(fld, row.fields[fld.name])) {
           bad.push(`${plgLabel} → ${fld.label}`)
         }
       }
@@ -503,7 +532,19 @@ async function saveRecord() {
     const res = await api.post('record_ctrl', 'saveRecord', payload)
 
     if (res.status === 'error') {
-      toast.add({ severity: 'error', summary: t('generic_error'), detail: responseMessage(res, t), life: 5000 })
+      if (res.code === 'validation_failed' && res.errors?.length) {
+        // Server-side validation errors (no_dupl, valid_wkt, …) — show field list
+        forceValidate.value = true
+        const labels = res.errors.map(e => e.label).join(', ')
+        toast.add({
+          severity: 'warn',
+          summary:  t('validation_error'),
+          detail:   `${t('validation_server_errors')}: ${labels}`,
+          life:     8000,
+        })
+      } else {
+        toast.add({ severity: 'error', summary: t('generic_error'), detail: responseMessage(res, t), life: 5000 })
+      }
       return
     }
 

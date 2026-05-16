@@ -649,5 +649,10 @@
     "history_col_tb": "Tabella",
     "history_col_rowid": "Riga",
     "history_col_content": "Contenuto",
-    "history_col_values": "Valori"
+    "history_col_values": "Valori",
+    "value_must_be_integer": "Il valore deve essere un numero intero",
+    "invalid_email": "Indirizzo email non valido",
+    "value_not_unique": "Questo valore esiste già nel database",
+    "invalid_wkt": "Geometria non valida (atteso formato WKT)",
+    "validation_server_errors": "Validazione lato server fallita per"
 }

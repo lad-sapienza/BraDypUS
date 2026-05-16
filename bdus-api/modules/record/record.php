@@ -385,9 +385,14 @@ class record_ctrl extends Controller
   {
     $result = [];
     foreach ($this->cfg->get("tables.{$tb}.fields") ?: [] as $fld) {
+      // Normalize check to a clean array of tokens.
+      // Old configs use a space-separated string (e.g. "required int no_dupl");
+      // new configs use an array. Both 'required' and 'not_empty' mean mandatory.
       $check = $fld['check'] ?? [];
       if (is_string($check)) {
-        $check = array_filter(explode(' ', $check));
+        $check = array_values(array_filter(array_map('trim', explode(' ', $check))));
+      } else {
+        $check = array_values((array)$check);
       }
 
       $schema = [
@@ -398,7 +403,9 @@ class record_ctrl extends Controller
         'disabled'      => !empty($fld['disabled']),
         'hide'          => !empty($fld['hide']),
         'help'          => $fld['help'] ?? null,
-        'required'      => in_array('required', (array)$check, true),
+        // 'required' is normalized from either the 'required' or 'not_empty' check token
+        'required'      => in_array('required', $check, true) || in_array('not_empty', $check, true),
+        'check'         => $check,   // full token list for frontend validation
         'min'           => $fld['min'] ?? null,
         'max'           => $fld['max'] ?? null,
         'max_length'    => $fld['max_length'] ?? null,
@@ -543,6 +550,17 @@ class record_ctrl extends Controller
       return;
     }
 
+    // Server-side validation — runs before any DB write
+    $validationErrors = $this->validatePayload($tb, $id, $core, $plgs);
+    if (!empty($validationErrors)) {
+      $this->returnJson([
+        'status' => 'error',
+        'code'   => 'validation_failed',
+        'errors' => $validationErrors,
+      ]);
+      return;
+    }
+
     try {
       if ($id) {
         // ── UPDATE path: load existing record, apply changes, persist ────
@@ -626,6 +644,178 @@ class record_ctrl extends Controller
       $this->log->error($e);
       $this->returnJson(['status' => 'error', 'code' => 'error_saved', 'detail' => $e->getMessage()]);
     }
+  }
+
+  // ── Validation helpers ────────────────────────────────────────────────────
+
+  /**
+   * Validates core and plugin fields before saving.
+   * Returns an array of error objects, empty if everything is valid.
+   *
+   * @param  string   $tb    Main table id
+   * @param  int|null $id    Record id (null = INSERT); used for no_dupl to exclude self
+   * @param  array    $core  Core field values { fieldName: value }
+   * @param  array    $plgs  Plugin rows { plgTb: [ {_delete, fields: {fn: v}} ] }
+   * @return array    [ { field, label, rule, ...extra }, ... ]
+   */
+  private function validatePayload(string $tb, ?int $id, array $core, array $plgs): array
+  {
+    $errors = [];
+
+    // Build field-config map for core table
+    $fieldMap = [];
+    foreach ($this->cfg->get("tables.{$tb}.fields") ?: [] as $fld) {
+      $fieldMap[$fld['name']] = $fld;
+    }
+
+    foreach ($core as $fldName => $value) {
+      if (!isset($fieldMap[$fldName])) {
+        continue;
+      }
+      $errors = array_merge(
+        $errors,
+        $this->validateFieldValue($fldName, $value, $fieldMap[$fldName], $tb, $id)
+      );
+    }
+
+    // Plugin fields
+    foreach ($plgs as $plgTb => $rows) {
+      $plgMap = [];
+      foreach ($this->cfg->get("tables.{$plgTb}.fields") ?: [] as $fld) {
+        $plgMap[$fld['name']] = $fld;
+      }
+      foreach ($rows as $row) {
+        if (!empty($row['_delete'])) {
+          continue;
+        }
+        foreach ($row['fields'] ?? [] as $fldName => $value) {
+          if (!isset($plgMap[$fldName])) {
+            continue;
+          }
+          $errors = array_merge(
+            $errors,
+            $this->validateFieldValue($fldName, $value, $plgMap[$fldName], $plgTb, null)
+          );
+        }
+      }
+    }
+
+    return $errors;
+  }
+
+  /**
+   * Validates a single field value against its config rules.
+   * Returns an array of error objects (empty = valid).
+   */
+  private function validateFieldValue(
+    string $fldName,
+    mixed  $value,
+    array  $cfg,
+    string $tb,
+    ?int   $excludeId
+  ): array {
+    $errors = [];
+    $label  = $cfg['label'] ?? $fldName;
+    $type   = $cfg['type']  ?? 'text';
+
+    // Normalize check tokens
+    $check = $cfg['check'] ?? [];
+    if (is_string($check)) {
+      $check = array_values(array_filter(array_map('trim', explode(' ', $check))));
+    } else {
+      $check = array_values((array)$check);
+    }
+
+    $isEmpty = ($value === null || $value === '' || $value === false);
+
+    // required / not_empty
+    if ((in_array('required', $check, true) || in_array('not_empty', $check, true)) && $isEmpty) {
+      $errors[] = ['field' => $fldName, 'label' => $label, 'rule' => 'required'];
+    }
+
+    // No further checks on empty values
+    if ($isEmpty) {
+      return $errors;
+    }
+
+    // int — must be a whole number
+    if (in_array('int', $check, true) && !preg_match('/^-?\d+$/', (string)$value)) {
+      $errors[] = ['field' => $fldName, 'label' => $label, 'rule' => 'int'];
+    }
+
+    // email
+    if (in_array('email', $check, true) && !filter_var($value, FILTER_VALIDATE_EMAIL)) {
+      $errors[] = ['field' => $fldName, 'label' => $label, 'rule' => 'email'];
+    }
+
+    // min / max — numeric or date (ISO string comparison for dates)
+    $min = $cfg['min'] ?? null;
+    $max = $cfg['max'] ?? null;
+
+    if ($min !== null) {
+      $tooSmall = ($type === 'date')
+        ? ((string)$value < (string)$min)
+        : (is_numeric($value) && (float)$value < (float)$min);
+      if ($tooSmall) {
+        $errors[] = ['field' => $fldName, 'label' => $label, 'rule' => 'min', 'min' => $min];
+      }
+    }
+    if ($max !== null) {
+      $tooBig = ($type === 'date')
+        ? ((string)$value > (string)$max)
+        : (is_numeric($value) && (float)$value > (float)$max);
+      if ($tooBig) {
+        $errors[] = ['field' => $fldName, 'label' => $label, 'rule' => 'max', 'max' => $max];
+      }
+    }
+
+    // max_length
+    $maxLen = $cfg['max_length'] ?? null;
+    if ($maxLen && mb_strlen((string)$value) > (int)$maxLen) {
+      $errors[] = ['field' => $fldName, 'label' => $label, 'rule' => 'max_length', 'max_length' => $maxLen];
+    }
+
+    // pattern / regex — use the 'pattern' config key
+    $pattern = $cfg['pattern'] ?? null;
+    if ($pattern) {
+      $delimited = '/' . str_replace('/', '\/', $pattern) . '/u';
+      if (@preg_match($delimited, (string)$value) === 0) {
+        $errors[] = ['field' => $fldName, 'label' => $label, 'rule' => 'pattern'];
+      }
+    }
+
+    // no_dupl — uniqueness check in DB (excludes current record on UPDATE)
+    if (in_array('no_dupl', $check, true)) {
+      $sql    = "SELECT COUNT(*) as c FROM {$tb} WHERE {$fldName} = ?";
+      $params = [$value];
+      if ($excludeId) {
+        $sql    .= ' AND id != ?';
+        $params[] = $excludeId;
+      }
+      $count = (int)($this->db->query($sql, $params)[0]['c'] ?? 0);
+      if ($count > 0) {
+        $errors[] = ['field' => $fldName, 'label' => $label, 'rule' => 'no_dupl'];
+      }
+    }
+
+    // valid_wkt — basic prefix check (no geometry library needed)
+    if (in_array('valid_wkt', $check, true)) {
+      $wktPrefixes = ['POINT', 'LINESTRING', 'POLYGON', 'MULTIPOINT',
+                      'MULTILINESTRING', 'MULTIPOLYGON', 'GEOMETRYCOLLECTION'];
+      $upper = strtoupper(trim((string)$value));
+      $valid = false;
+      foreach ($wktPrefixes as $prefix) {
+        if (str_starts_with($upper, $prefix)) {
+          $valid = true;
+          break;
+        }
+      }
+      if (!$valid) {
+        $errors[] = ['field' => $fldName, 'label' => $label, 'rule' => 'valid_wkt'];
+      }
+    }
+
+    return $errors;
   }
 
   // ── v5 file management endpoints ─────────────────────────────────────────

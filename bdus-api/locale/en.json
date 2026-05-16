@@ -649,5 +649,10 @@
     "history_col_tb": "Table",
     "history_col_rowid": "Row",
     "history_col_content": "Content",
-    "history_col_values": "Values"
+    "history_col_values": "Values",
+    "value_must_be_integer": "Value must be a whole number",
+    "invalid_email": "Invalid email address",
+    "value_not_unique": "This value already exists in the database",
+    "invalid_wkt": "Invalid geometry (WKT format expected)",
+    "validation_server_errors": "Server validation failed for"
 }

@@ -80,7 +80,12 @@ abstract class BdusTestCase extends TestCase
                 creator     TEXT,
                 name        TEXT,
                 description TEXT,
-                status      TEXT
+                status      TEXT,
+                score       TEXT,
+                email_addr  TEXT,
+                geo_data    TEXT,
+                ref_code    TEXT,
+                birth_date  TEXT
             )
         ');
 

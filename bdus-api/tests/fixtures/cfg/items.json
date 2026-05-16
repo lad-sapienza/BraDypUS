@@ -1,7 +1,12 @@
 [
     { "name": "id",          "label": "ID",          "type": "text",      "readonly": "1" },
     { "name": "creator",     "label": "Creator",     "type": "text",      "hide": "1" },
-    { "name": "name",        "label": "Name",        "type": "text" },
-    { "name": "description", "label": "Description", "type": "long_text" },
-    { "name": "status",      "label": "Status",      "type": "select" }
+    { "name": "name",        "label": "Name",        "type": "text",      "check": "not_empty no_dupl" },
+    { "name": "description", "label": "Description", "type": "long_text", "max_length": 50 },
+    { "name": "status",      "label": "Status",      "type": "select" },
+    { "name": "score",       "label": "Score",       "type": "text",      "check": "int", "min": "0", "max": "100" },
+    { "name": "email_addr",  "label": "Email",       "type": "text",      "check": "email" },
+    { "name": "geo_data",    "label": "Geometry",    "type": "text",      "check": "valid_wkt" },
+    { "name": "ref_code",    "label": "Ref code",    "type": "text",      "pattern": "^[A-Z]{3}$" },
+    { "name": "birth_date",  "label": "Birth date",  "type": "date",      "min": "1900-01-01", "max": "2100-12-31" }
 ]

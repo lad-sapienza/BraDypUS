@@ -297,13 +297,13 @@ EOD;
             } else {
 
                 $sql = <<<EOD
-SELECT {$prefix}files.*
+SELECT {$prefix}files.*, fl.id AS link_id, fl.sort AS link_sort
 FROM {$prefix}files
     INNER JOIN {$prefix}file_links AS fl
         ON fl.file_id = {$prefix}files.id
        AND fl.table_name = ?
        AND fl.record_id  = ?
-ORDER BY fl.sort
+ORDER BY fl.sort, fl.id
 EOD;
                 $this->cache['files'] = $this->db->query($sql, [$this->tb, $this->id]);
             }

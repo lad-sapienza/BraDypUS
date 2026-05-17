@@ -118,6 +118,7 @@
     "continue": "Continue",
     "save": "Save",
     "saved": "Saved",
+    "saving": "Saving",
     "save_as_new": "Save as new",
     "confirm_save_as_new": "Are you sure you want to save this record as a new one? Remember: plugin data and manual links will not be duplicated!",
     "cannot_get_ip_for_system": "Can not get the IP address for the %s OS",

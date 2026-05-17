@@ -282,7 +282,7 @@ or tests touching that table will fail with "no such table".
 | import_geodata | low | File upload + geodata parse |
 | chart | low | jqPlot charts; likely replaced |
 | matrix (v4) | — | Superseded by RsGraph/MatrixView |
-| userlinks | low | Manual link management UI |
+| userlinks | ✅ | ManualLinksSection.vue; add/delete via record_ctrl endpoints |
 | new_app | low | App creation wizard |
 
 ### Deprecated (no Vue equivalent needed)

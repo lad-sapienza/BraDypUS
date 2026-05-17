@@ -5,6 +5,8 @@ services:
     build: .
     ports:
       - "8080:80"
+    environment:
+      - BRADYPUS_DEBUG=1   # set to 0 (or remove) in production
     volumes:
       # Live source mount: changes on host are immediately reflected
       - .:/var/www/html

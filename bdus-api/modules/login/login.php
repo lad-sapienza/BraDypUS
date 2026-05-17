@@ -137,7 +137,7 @@ class login_ctrl extends Controller
 	{
 		try {
 			$user = $this->authenticate($this->post['email'], $this->post['password']);
-			\DB\System\Migrate::run($this->db, $this->prefix);
+			\DB\System\Migrate::run($this->db, $this->prefix, $this->log);
 			$this->log->info("User {$user['id']} logged into " . APP);
 			$token = \JWT\JwtManager::generate($user, APP);
 			$this->response('ok', 'success', null, ['token' => $token]);

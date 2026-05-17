@@ -10,6 +10,7 @@ namespace DB\System;
 use DB\DBInterface;
 use DB\System\Manage;
 use DB\System\Migrations\M001_AddUserTablePrivs;
+use Monolog\Logger;
 
 /**
  * Schema migration runner.
@@ -45,7 +46,7 @@ class Migrate
      * @param DBInterface $db
      * @param string $prefix  Application table prefix (e.g. "paths__")
      */
-    public static function run(DBInterface $db, string $prefix): void
+    public static function run(DBInterface $db, string $prefix, Logger $log = null): void
     {
         $manage = new Manage($db, $prefix);
 
@@ -62,18 +63,33 @@ class Migrate
         $applied = $applied ? array_column($applied, 'name') : [];
 
         // Run each pending migration in order.
+        $pending = 0;
         foreach (self::ALL_MIGRATIONS as $class) {
             if (in_array($class::NAME, $applied, true)) {
                 continue;
             }
 
-            $class::run($manage);
+            $pending++;
+            $log?->info("DB migration: applying {$class::NAME}");
+
+            try {
+                $class::run($manage);
+            } catch (\Throwable $e) {
+                $log?->error("DB migration failed: {$class::NAME} — " . $e->getMessage());
+                throw $e;
+            }
 
             $db->query(
                 "INSERT INTO {$prefix}migrations (name, applied_at) VALUES (?, ?)",
                 [$class::NAME, time()],
                 'boolean'
             );
+
+            $log?->info("DB migration: {$class::NAME} applied successfully");
+        }
+
+        if ($pending === 0) {
+            $log?->debug("DB migrations: schema up to date ({$prefix})");
         }
     }
 }

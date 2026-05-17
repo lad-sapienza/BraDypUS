@@ -40,19 +40,11 @@ try {
 
 } catch (\Throwable $e) {
 
+	// Always respond with valid JSON — debug details go to logs/error.log, not the response body.
 	echo json_encode([
-		"text" => tr::get('generic_error'), 
-		"status" => 'error'
+		"text" => tr::get('generic_error'),
+		"status" => 'error',
+		"debug" => DEBUG_ON ? $e->getMessage() : null,
 	], JSON_UNESCAPED_UNICODE);
-
-	if (DEBUG_ON) {
-		echo "<strong>" . $e->getMessage() . "</strong>";
-		echo "<hr>";
-		echo nl2br($e->getTraceAsString());
-		echo "<hr>";
-		echo "<pre>";
-		var_dump($e);
-		echo "</pre>";
-	}
 }
 ob_end_flush();

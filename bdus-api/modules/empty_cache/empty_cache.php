@@ -7,6 +7,11 @@
 
 class empty_cache_ctrl extends Controller
 {
+	/**
+	 * @deprecated v5 — the Twig template cache no longer exists; the v5
+	 *             frontend is a Vite-built SPA with no server-side cache.
+	 *             This module can be removed once all v4 UIs are retired.
+	 */
 	public function doEmpty()
 	{
 		try {

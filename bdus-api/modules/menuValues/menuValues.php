@@ -19,12 +19,10 @@ class menuValues_ctrl extends Controller
   private $res_x_page = 30;
 
   /**
-   * Wrapper function for getValues to be used with query parameters:
-   *    context:  Context of usage, one of: vocabulary_set | get_values_from_tb | id_from_tb
-   *    att:      Second attribute value: name of vocabulay, table name & field name (colon separated) or table name
-   *    q:        Filter string to search for (LIKE operator will be used)
-   *    p:        Page nuber to return
-   * @return string Formatted json data (tot: totale number of results, data: array of data)
+   * @deprecated v5 — replaced by record_ctrl::getFieldOptions() which serves
+   *             the same vocabulary_set / get_values_from_tb / id_from_tb
+   *             contexts for the Vue frontend. This module can be removed
+   *             once all v4 Twig UIs are retired.
    */
   public function getValuesUrl()
   {

@@ -25,15 +25,16 @@
 
 <script setup>
 import { ref, onMounted }  from 'vue'
+import { marked }          from 'marked'
 import AppLayout           from '@/components/AppLayout.vue'
 import ProgressSpinner     from 'primevue/progressspinner'
 import Message             from 'primevue/message'
 import Tag                 from 'primevue/tag'
 import { api }             from '@/api'
 
-const loading      = ref(true)
-const error        = ref(null)
-const version      = ref('')
+const loading       = ref(true)
+const error         = ref(null)
+const version       = ref('')
 const changelogHtml = ref('')
 
 onMounted(async () => {
@@ -41,7 +42,7 @@ onMounted(async () => {
     const res = await api.get('info_ctrl', 'getInfo')
     if (res.status === 'error') throw new Error(res.code)
     version.value       = res.version
-    changelogHtml.value = res.changelog_html
+    changelogHtml.value = marked.parse(res.changelog_md ?? '')
   } catch (e) {
     error.value = e.message
   } finally {

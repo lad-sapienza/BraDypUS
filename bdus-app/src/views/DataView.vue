@@ -132,6 +132,22 @@
                 />
               </Popover>
 
+              <!-- Charts -->
+              <Button
+                icon="pi pi-chart-bar"
+                :title="t('charts')"
+                size="small"
+                severity="secondary"
+                text
+                @click="chartPopover.toggle($event)"
+              />
+              <Popover ref="chartPopover" class="chart-popover">
+                <ChartPanel
+                  :currentTb="selectedTable?.name ?? ''"
+                  :currentFilter="currentSearch"
+                />
+              </Popover>
+
               <!-- View on map -->
               <Button
                 icon="pi pi-map"
@@ -394,6 +410,7 @@ import AutoComplete from 'primevue/autocomplete'
 import ProgressSpinner from 'primevue/progressspinner'
 import Popover from 'primevue/popover'
 import SavedQueriesPanel from '@/components/SavedQueriesPanel.vue'
+import ChartPanel from '@/components/ChartPanel.vue'
 
 const { t } = useI18n()
 const toast  = useToast()
@@ -413,6 +430,8 @@ const selectedTable = computed(() =>
 const colToggler          = ref()
 const exportPopover       = ref()
 const savedQueriesPopover = ref()
+const chartPopover        = ref()
+const showChartPanel      = ref(false)
 
 /**
  * Ordered array of visible field names.
@@ -1217,6 +1236,7 @@ function doExport(format) {
 /* ── Column toggler popover ──────────────────────────────── */
 :deep(.col-toggler-popover) { min-width: 200px; }
 :deep(.saved-queries-popover) { min-width: 320px; max-width: 440px; max-height: 480px; overflow-y: auto; }
+:deep(.chart-popover) { min-width: 320px; max-width: 480px; max-height: 600px; overflow-y: auto; }
 
 .col-toggler-header {
   font-size: 0.7rem;

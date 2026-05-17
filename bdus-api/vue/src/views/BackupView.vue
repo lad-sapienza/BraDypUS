@@ -147,12 +147,7 @@ async function createBackup() {
 
 // ── Download ──────────────────────────────────────────────────────────────
 function downloadBackup(file) {
-  const params = new URLSearchParams({
-    obj:    'backup_ctrl',
-    method: 'downloadBackup',
-    file,
-  })
-  window.open(assetUrl('index.php') + '?' + params.toString(), '_blank')
+  window.open(assetUrl(`api/backup/${encodeURIComponent(file)}/download`), '_blank')
 }
 
 // ── Delete ────────────────────────────────────────────────────────────────

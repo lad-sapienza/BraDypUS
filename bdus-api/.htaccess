@@ -1,19 +1,13 @@
-RewriteEngine on
+RewriteEngine On
 
-# REST API v1 routing — must come before the legacy api rule
-RewriteRule ^api/v1(/.*)?$ index.php [QSA,L]
+# All routing logic lives in PHP (lib/Bdus/Router.php via FastRoute).
+# This file only needs to redirect non-existent paths to index.php.
+#
+# Nginx equivalent:
+#   location / { try_files $uri $uri/ /index.php$is_args$args; }
+#
+# Caddy equivalent:
+#   try_files {path} /index.php
 
-# /api/app-name/tb-name-without-prefix/data
-RewriteRule ^api/([a-z0-9_]+) index.php?obj=api&method=run&app=$1 [QSA,L]
-
-# Missing JS files throw 404 error
 RewriteCond %{REQUEST_FILENAME} !-f
-RewriteRule ^.*\.js$ - [L,R=404]
-
-# Missing file with app in request redirects to index with app parameter
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteRule ([a-z0-9_]+)/ index.php?app=$1 [QSA,L]
-
-# Missing file without app in request
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteRule . index.php [L]
+RewriteRule ^ index.php [L]

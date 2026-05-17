@@ -48,13 +48,33 @@ try {
 
 	require_once './lib/constants.php';
 
-	// ── REST API v1 ───────────────────────────────────────────────────────────
-	// Detected before the normal Bdus routing; constants.php (autoloader) is
-	// already loaded at this point so all namespaced classes are available.
+	// ── REST API v1 ──────────────────────────────────────────────────────────
+	// Handled before general routing.  constants.php (autoloader) is already
+	// loaded at this point so all namespaced classes are available.
 	if (isset($_SERVER['REQUEST_URI']) && preg_match('#/api/v1(/|$)#', $_SERVER['REQUEST_URI'])) {
 		\API\V1\Router::handle();
 		ob_end_flush();
 		exit;
+	}
+
+	// ── FastRoute dispatch ────────────────────────────────────────────────────
+	// Matches /api/... paths to controller::method and merges URL vars + JSON
+	// body into $_GET / $_POST / $_REQUEST.  Legacy ?obj=&method= requests are
+	// returned as [null, null, []] and handled by Bdus\App normally.
+	\Bdus\Router::dispatch();
+
+	// ── Legacy public REST API ────────────────────────────────────────────────
+	// Requests that reach here without a FastRoute match AND that look like
+	// /api/{app}/... are the old public REST API (served by api_ctrl::run).
+	// Previously handled by .htaccess; now handled in PHP so that the web-server
+	// config stays a simple catch-all.
+	if (!isset($_GET['obj'])) {
+		$_uri = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?: '';
+		if (preg_match('#^(?:.*/)?api/([a-z0-9_]+)(/.*)?$#', $_uri, $_m)) {
+			$_GET     = array_merge($_GET,     ['obj' => 'api', 'method' => 'run', 'app' => $_m[1]]);
+			$_REQUEST = array_merge($_REQUEST, $_GET);
+		}
+		unset($_uri, $_m);
 	}
 
 	$application = new \Bdus\App($_GET, $_POST, $_REQUEST);

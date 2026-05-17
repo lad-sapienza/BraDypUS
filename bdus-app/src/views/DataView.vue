@@ -115,6 +115,23 @@
                 </template>
               </Tag>
 
+              <!-- Saved searches -->
+              <Button
+                icon="pi pi-bookmark"
+                :title="t('saved_queries')"
+                size="small"
+                severity="secondary"
+                text
+                @click="savedQueriesPopover.toggle($event)"
+              />
+              <Popover ref="savedQueriesPopover" class="saved-queries-popover">
+                <SavedQueriesPanel
+                  :currentSearch="currentSearch"
+                  :currentTb="selectedTable?.name ?? ''"
+                  @load-query="onLoadQuery"
+                />
+              </Popover>
+
               <!-- Harris Matrix — only for tables with rs_field configured -->
               <Button
                 v-if="selectedTable?.rs_field"
@@ -366,6 +383,7 @@ import Select from 'primevue/select'
 import AutoComplete from 'primevue/autocomplete'
 import ProgressSpinner from 'primevue/progressspinner'
 import Popover from 'primevue/popover'
+import SavedQueriesPanel from '@/components/SavedQueriesPanel.vue'
 
 const { t } = useI18n()
 const toast  = useToast()
@@ -382,8 +400,9 @@ const selectedTable = computed(() =>
 )
 
 // ── Column visibility & order ────────────────────────────────
-const colToggler    = ref()
-const exportPopover = ref()
+const colToggler          = ref()
+const exportPopover       = ref()
+const savedQueriesPopover = ref()
 
 /**
  * Ordered array of visible field names.
@@ -534,6 +553,64 @@ const activeSearchLabel = computed(() => {
   if (activeSearch.value === 'shortSql') return t('linked_records')
   return ''
 })
+
+// ── Saved queries: current search payload ────────────────────
+/**
+ * Returns the current active search payload suitable for storing as a
+ * saved query, or null when there is no meaningful search to save.
+ */
+const currentSearch = computed(() => {
+  if (activeSearch.value === 'advanced') {
+    const adv = advRows.value.filter(r => r.fld && (r.value || ['is_empty', 'is_not_empty'].includes(r.operator)))
+    if (!adv.length) return null
+    return {
+      search_type: 'advanced',
+      adv,
+      sort_field: sortField.value ?? '',
+      sort_dir:   sortDir.value,
+    }
+  }
+  if (activeSearch.value === 'expert' && expertQuery.value.trim()) {
+    return {
+      search_type: 'sqlExpert',
+      querytext:   expertQuery.value,
+      join:        '',
+      sort_field:  sortField.value ?? '',
+      sort_dir:    sortDir.value,
+    }
+  }
+  return null
+})
+
+/**
+ * Called when SavedQueriesPanel emits `load-query`.
+ * Restores the search state from the stored payload and fetches records.
+ */
+function onLoadQuery(payload) {
+  if (!payload?.search_type) return
+
+  savedQueriesPopover.value?.hide()
+  page.value = 1
+
+  if (payload.search_type === 'advanced' && Array.isArray(payload.adv)) {
+    advRows.value      = payload.adv.map(r => ({ _id: _rowId++, _suggestions: null, ...r }))
+    activeSearch.value = 'advanced'
+    openPanel.value    = 'advanced'
+    updateFilterUrl('advanced', btoa(JSON.stringify(payload.adv)))
+    fetchRecords()
+  } else if (payload.search_type === 'sqlExpert' && payload.querytext) {
+    expertQuery.value  = payload.querytext
+    activeSearch.value = 'expert'
+    openPanel.value    = 'expert'
+    updateFilterUrl('expert', payload.querytext)
+    fetchRecords()
+  } else if (payload.search_type === 'shortSql' && payload.where) {
+    shortSqlWhere.value = payload.where
+    activeSearch.value  = 'shortSql'
+    openPanel.value     = null
+    fetchRecords()
+  }
+}
 
 // ── Init: load tables (from singleton) then apply URL params ──
 onMounted(async () => {
@@ -1104,6 +1181,7 @@ function doExport(format) {
 
 /* ── Column toggler popover ──────────────────────────────── */
 :deep(.col-toggler-popover) { min-width: 200px; }
+:deep(.saved-queries-popover) { min-width: 320px; max-width: 440px; max-height: 480px; overflow-y: auto; }
 
 .col-toggler-header {
   font-size: 0.7rem;

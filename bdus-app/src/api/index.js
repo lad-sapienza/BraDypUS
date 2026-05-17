@@ -1,19 +1,74 @@
 /**
- * Minimal API client for BraDypUS PHP backend.
- * All calls send Accept: application/json to trigger the wantsJson() bridge.
+ * BraDypUS API client — stateless, JWT-based.
+ *
+ * Every request carries  Authorization: Bearer <token>.
+ * No cookies / credentials are sent.
+ *
+ * Proactive refresh: if the token has < 30 min left, the client silently
+ * calls login_ctrl/refresh before the actual request so the user never
+ * hits a 401 mid-session.
+ *
+ * On 401 the token is cleared and the page is redirected to #/login.
  */
+
+import { getToken, setToken, clearToken, needsRefresh } from '@/token'
 
 const PHP = '/index.php'
 
-/**
- * GET request to a controller method.
- * @param {string} obj   - controller name (e.g. 'user_ctrl')
- * @param {string} method - method name (e.g. 'showList')
- * @param {object} params - additional query params
- */
+// ── Refresh lock ─────────────────────────────────────────────────────
+// Ensures only one in-flight refresh call at a time even when several
+// requests fire concurrently.
+let _refreshPromise = null
+
+async function _doRefresh() {
+  if (_refreshPromise) return _refreshPromise
+  _refreshPromise = (async () => {
+    try {
+      const token = getToken()
+      if (!token) return
+      const url = new URL(PHP, window.location.origin)
+      url.searchParams.set('obj',    'login_ctrl')
+      url.searchParams.set('method', 'refresh')
+      const res = await fetch(url, {
+        headers: { Accept: 'application/json', ..._bearer() },
+      })
+      if (res.ok) {
+        const data = await res.json()
+        if (data.token) setToken(data.token)
+      } else {
+        clearToken()
+      }
+    } finally {
+      _refreshPromise = null
+    }
+  })()
+  return _refreshPromise
+}
+
+// ── Auth header ──────────────────────────────────────────────────────
+function _bearer() {
+  const t = getToken()
+  return t ? { Authorization: `Bearer ${t}` } : {}
+}
+
+// ── 401 handler ──────────────────────────────────────────────────────
+function _handle401() {
+  clearToken()
+  window.location.hash = '/login'
+}
+
+// ── Proactive refresh guard ──────────────────────────────────────────
+async function _guardRefresh() {
+  const t = getToken()
+  if (t && needsRefresh(t)) await _doRefresh()
+}
+
+// ── GET ──────────────────────────────────────────────────────────────
 async function get(obj, method, params = {}) {
+  await _guardRefresh()
+
   const url = new URL(PHP, window.location.origin)
-  url.searchParams.set('obj', obj)
+  url.searchParams.set('obj',    obj)
   url.searchParams.set('method', method)
   Object.entries(params).forEach(([k, v]) => {
     if (Array.isArray(v)) {
@@ -24,29 +79,20 @@ async function get(obj, method, params = {}) {
   })
 
   const res = await fetch(url, {
-    headers: { Accept: 'application/json' },
-    credentials: 'same-origin'   // keep PHP session cookie
+    headers: { Accept: 'application/json', ..._bearer() },
   })
 
+  if (res.status === 401) { _handle401(); throw new Error('Unauthenticated') }
   if (!res.ok) throw new Error(`${obj}::${method} — HTTP ${res.status}`)
   return res.json()
 }
 
-/**
- * POST request to a controller method.
- *
- * Simple scalar values go as FormData (populates $_POST in PHP).
- * If any value is an object/array, the whole body is sent as JSON
- * and PHP must read php://input — handled by the Controller base class.
- *
- * @param {string} obj
- * @param {string} method
- * @param {object} data       - request body
- * @param {object} urlParams  - extra key=value pairs appended to the URL query string
- */
+// ── POST ─────────────────────────────────────────────────────────────
 async function post(obj, method, data = {}, urlParams = {}) {
+  await _guardRefresh()
+
   const url = new URL(PHP, window.location.origin)
-  url.searchParams.set('obj', obj)
+  url.searchParams.set('obj',    obj)
   url.searchParams.set('method', method)
   Object.entries(urlParams).forEach(([k, v]) => url.searchParams.set(k, v))
 
@@ -65,50 +111,21 @@ async function post(obj, method, data = {}, urlParams = {}) {
 
   const res = await fetch(url, {
     method: 'POST',
-    headers: { Accept: 'application/json', ...extraHeaders },
-    credentials: 'same-origin',
-    body
+    headers: { Accept: 'application/json', ..._bearer(), ...extraHeaders },
+    body,
   })
 
+  if (res.status === 401) { _handle401(); throw new Error('Unauthenticated') }
   if (!res.ok) throw new Error(`${obj}::${method} — HTTP ${res.status}`)
   return res.json()
 }
 
-/**
- * Converts a v5 backend response to a human-readable message string.
- *
- * Backend v5 convention:
- *   { status, code, ...semanticFields }       — normal response
- *   { status: 'error', code: 'db_error', detail: '...' } — DB/exception error
- *
- * The caller provides a `t` function from useI18n() and optional extra args
- * for %s interpolation (positional, same as tr::get in PHP).
- *
- * @param {object} res      - parsed JSON response
- * @param {function} t      - translation function from useI18n()
- * @param {...*} args       - extra interpolation args for %s placeholders
- * @returns {string}
- */
-function responseMessage(res, t, ...args) {
-  if (!res?.code) return ''
-  if (res.code === 'db_error') {
-    return `${t('db_error')}: ${res.detail ?? ''}`
-  }
-  return t(res.code, ...args)
-}
-
-/**
- * Upload a file to a controller method via multipart/form-data.
- *
- * @param {string} obj
- * @param {string} method
- * @param {File}   file        - the File object from an <input type="file">
- * @param {string} [field]     - form field name (default: 'file')
- * @param {object} [urlParams] - extra key=value pairs appended to the URL query string
- */
+// ── Upload ───────────────────────────────────────────────────────────
 async function upload(obj, method, file, field = 'file', urlParams = {}) {
+  await _guardRefresh()
+
   const url = new URL(PHP, window.location.origin)
-  url.searchParams.set('obj', obj)
+  url.searchParams.set('obj',    obj)
   url.searchParams.set('method', method)
   Object.entries(urlParams).forEach(([k, v]) => url.searchParams.set(k, v))
 
@@ -116,14 +133,21 @@ async function upload(obj, method, file, field = 'file', urlParams = {}) {
   fd.append(field, file)
 
   const res = await fetch(url, {
-    method: 'POST',
-    headers: { Accept: 'application/json' },   // NO Content-Type — browser sets multipart boundary
-    credentials: 'same-origin',
-    body: fd,
+    method:  'POST',
+    headers: { Accept: 'application/json', ..._bearer() },
+    body:    fd,
   })
 
+  if (res.status === 401) { _handle401(); throw new Error('Unauthenticated') }
   if (!res.ok) throw new Error(`${obj}::${method} — HTTP ${res.status}`)
   return res.json()
+}
+
+// ── Response helper ──────────────────────────────────────────────────
+function responseMessage(res, t, ...args) {
+  if (!res?.code) return ''
+  if (res.code === 'db_error') return `${t('db_error')}: ${res.detail ?? ''}`
+  return t(res.code, ...args)
 }
 
 export const api = { get, post, upload, responseMessage }

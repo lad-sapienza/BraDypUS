@@ -57,6 +57,11 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/matrix/:tb',
+    component: () => import('@/views/MatrixView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     // :id is either a numeric record id or the literal string 'new'
     path: '/record/:tb/:id',
     component: () => import('@/views/RecordView.vue'),
@@ -74,15 +79,13 @@ const router = createRouter({
   routes
 })
 
-router.beforeEach(async (to) => {
+router.beforeEach((to) => {
   if (!to.meta.requiresAuth) return true
 
+  // Token is validated client-side (expiry check). Signature verification
+  // happens server-side on every API call; a tampered token gets a 401.
   const auth = useAuthStore()
   if (!auth.isAuthenticated()) {
-    await auth.fetchMe()
-  }
-
-  if (to.meta.requiresAuth && !auth.isAuthenticated()) {
     return { path: '/login' }
   }
 

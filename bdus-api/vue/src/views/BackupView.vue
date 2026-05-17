@@ -88,7 +88,7 @@ import Message        from 'primevue/message'
 import ProgressSpinner from 'primevue/progressspinner'
 import DataTable      from 'primevue/datatable'
 import Column         from 'primevue/column'
-import { api }        from '@/api'
+import { api, assetUrl } from '@/api'
 import { useI18n }    from '@/i18n'
 
 const { t }   = useI18n()
@@ -152,7 +152,7 @@ function downloadBackup(file) {
     method: 'downloadBackup',
     file,
   })
-  window.open('/index.php?' + params.toString(), '_blank')
+  window.open(assetUrl('index.php') + '?' + params.toString(), '_blank')
 }
 
 // ── Delete ────────────────────────────────────────────────────────────────

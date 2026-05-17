@@ -287,16 +287,12 @@ class record_ctrl extends Controller
         }
       }
 
-      // Enrich each file with a relative URL and an is_image flag so the
-      // frontend can render thumbnails and download links without extra API calls.
+      // Mark each file with is_image so the frontend can pick the right renderer.
+      // URL is reconstructed on the frontend using assetUrl() + app name from JWT.
       if (!empty($full['files']) && \is_array($full['files'])) {
-        $appName   = $this->cfg->get('main.name') ?? '';
-        $basePath  = 'projects/' . $appName . '/files/';
         $imageExts = ['png', 'jpeg', 'jpg', 'bmp', 'ico', 'tif', 'tiff'];
         foreach ($full['files'] as &$file) {
-          $ext = \strtolower($file['ext'] ?? '');
-          $file['url']      = $basePath . $file['id'] . '.' . $ext;
-          $file['is_image'] = \in_array($ext, $imageExts, true);
+          $file['is_image'] = \in_array(\strtolower($file['ext'] ?? ''), $imageExts, true);
         }
         unset($file);
       }
@@ -887,7 +883,6 @@ class record_ctrl extends Controller
       );
 
       $imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'tiff', 'svg'];
-      $url       = 'projects/' . $appName . '/files/' . $fileId . '.' . $ext;
 
       $this->returnJson([
         'status' => 'success',
@@ -899,7 +894,6 @@ class record_ctrl extends Controller
           'description' => null,
           'keywords'    => null,
           'printable'   => null,
-          'url'         => $url,
           'is_image'    => in_array($ext, $imageExts, true),
         ],
       ]);

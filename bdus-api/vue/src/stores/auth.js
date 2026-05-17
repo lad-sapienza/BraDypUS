@@ -14,6 +14,7 @@ function userFromPayload(p) {
     id:              p.sub,
     name:            p.name  ?? '',
     email:           p.eml   ?? '',
+    app:             p.app   ?? '',
     privilege_value: p.prv,
     can_write:       p.prv <= 25,
   }

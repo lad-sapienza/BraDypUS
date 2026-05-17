@@ -11,7 +11,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./vue/src', import.meta.url)),
-      '@locale': fileURLToPath(new URL('./locale', import.meta.url))
+      '@locale': fileURLToPath(new URL('./vue/src/locale', import.meta.url))
     }
   },
 

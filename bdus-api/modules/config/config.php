@@ -496,7 +496,7 @@ class config_ctrl extends Controller
       'db_engines'     => array_values(AvailableEngines::getList()),
       'langs'          => array_values(array_map(
         fn($f) => str_replace('.json', '', $f),
-        array_filter(\utils::dirContent(MAIN_DIR . 'locale/') ?: [], fn($f) => str_ends_with($f, '.json'))
+        array_filter(\utils::dirContent(MAIN_DIR . 'vue/src/locale/') ?: [], fn($f) => str_ends_with($f, '.json'))
       )),
       'status_options' => ['on', 'frozen', 'off'],
     ]);

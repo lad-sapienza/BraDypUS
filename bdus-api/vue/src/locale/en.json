@@ -219,6 +219,7 @@
     "ok_saving_query": "The query was saved",
     "ok_saved_query": "Query saved",
     "save_current_search": "Save current search",
+    "save_query_hint": "Run an advanced or SQL search to enable saving.",
     "error_saving_query": "Error, the query was not saved",
     "query_not_found": "Query not found",
     "query_access_denied": "You cannot modify this query",

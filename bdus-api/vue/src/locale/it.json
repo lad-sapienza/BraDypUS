@@ -219,6 +219,7 @@
     "ok_saving_query": "La query è stata salvata",
     "ok_saved_query": "Ricerca salvata",
     "save_current_search": "Salva la ricerca corrente",
+    "save_query_hint": "Esegui una ricerca avanzata o SQL per abilitare il salvataggio.",
     "error_saving_query": "Errore, non è stato possibile salvare la query",
     "query_not_found": "Ricerca non trovata",
     "query_access_denied": "Non puoi modificare questa ricerca",

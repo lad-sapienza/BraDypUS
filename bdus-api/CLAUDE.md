@@ -277,7 +277,7 @@ or tests touching that table will fail with "no such table".
 
 | Module | Priority | Notes |
 |---|---|---|
-| file | medium | `sortFiles()` PHP endpoint done; Vue FileGallery sort not yet wired |
+| file | medium | ✅ sort drag-and-drop completo (SortableJS); upload/delete già presenti |
 | geoface | medium | Leaflet map; full geodata CRUD |
 | import_geodata | low | File upload + geodata parse |
 | chart | low | jqPlot charts; likely replaced |

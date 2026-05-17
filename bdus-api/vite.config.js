@@ -19,15 +19,19 @@ export default defineConfig({
     host: '0.0.0.0',   // required for Docker
     port: 5173,
     proxy: {
-      // Forward all PHP calls to the Apache container.
+      // Forward API calls to the Apache/PHP container.
       // In Docker Compose, 'app' is the PHP service hostname.
-      // Outside Docker (direct npm run vue:dev), change to http://localhost:8080
+      // Outside Docker (direct npm run dev), change target to http://localhost:8080
+      '/api/': {
+        target: 'http://app:80',
+        changeOrigin: true
+      },
+      // Legacy PHP entry point (still used during migration / direct access).
       '/index.php': {
         target: 'http://app:80',
         changeOrigin: true
       },
-      // Forward static assets served by PHP (uploaded files, cached thumbnails).
-      // In dev the Vite server has no access to projects/ or cache/; Apache does.
+      // Static assets served by PHP (uploaded files, cached thumbnails).
       '/projects/': {
         target: 'http://app:80',
         changeOrigin: true

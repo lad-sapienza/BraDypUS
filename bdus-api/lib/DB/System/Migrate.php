@@ -10,6 +10,7 @@ namespace DB\System;
 use DB\DBInterface;
 use DB\System\Manage;
 use DB\System\Migrations\M001_AddUserTablePrivs;
+use DB\System\Migrations\M002_CreateFileLinks;
 use Monolog\Logger;
 
 /**
@@ -37,6 +38,7 @@ class Migrate
      */
     private const ALL_MIGRATIONS = [
         M001_AddUserTablePrivs::class,
+        M002_CreateFileLinks::class,
     ];
 
     /**

@@ -881,10 +881,10 @@ class record_ctrl extends Controller
         throw new \RuntimeException('move_uploaded_file failed');
       }
 
-      // Create userlink: files-table → record
+      // Create file link in the dedicated junction table
       $this->db->query(
-        "INSERT INTO {$prefix}userlinks (tb_one, id_one, tb_two, id_two) VALUES (?, ?, ?, ?)",
-        ["{$prefix}files", $fileId, $tb, (int)$id]
+        "INSERT INTO {$prefix}file_links (file_id, table_name, record_id) VALUES (?, ?, ?)",
+        [$fileId, $tb, (int)$id]
       );
 
       $imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'tiff', 'svg'];
@@ -944,14 +944,10 @@ class record_ctrl extends Controller
       }
       $ext = $rows[0]['ext'];
 
-      // Remove all userlinks that reference this file on either side
+      // Remove all file_links that reference this file
       $this->db->query(
-        "DELETE FROM {$prefix}userlinks WHERE tb_one = ? AND id_one = ?",
-        ["{$prefix}files", $fileId]
-      );
-      $this->db->query(
-        "DELETE FROM {$prefix}userlinks WHERE tb_two = ? AND id_two = ?",
-        ["{$prefix}files", $fileId]
+        "DELETE FROM {$prefix}file_links WHERE file_id = ?",
+        [$fileId]
       );
 
       // Delete the file record

@@ -47,6 +47,7 @@ class Manage
     private $spatial;
     public $available_tables = [
         'charts',
+        'file_links',
         'files',
         'geodata',
         'log',
@@ -78,6 +79,9 @@ class Manage
         }
         $this->spatial = $this->db->hasSpatialExtension();
     }
+
+    public function getDb(): DBInterface  { return $this->db; }
+    public function getPrefix(): string   { return $this->prefix ?? ''; }
 
     /**
      * Loads table structure in the object,if not loaded yet

@@ -299,26 +299,13 @@ EOD;
                 $sql = <<<EOD
 SELECT {$prefix}files.*
 FROM {$prefix}files
-    INNER JOIN
-    {$prefix}userlinks AS ul ON (ul.tb_one = '{$prefix}files' AND 
-                                ul.id_one = {$prefix}files.id AND 
-                                ul.tb_two = ? AND 
-                                ul.id_two = ?) OR 
-                                (ul.tb_two = '{$prefix}files' AND 
-                                ul.id_two = {$prefix}files.id AND 
-                                ul.tb_one = ? AND 
-                                ul.id_one = ?) 
-WHERE 1=1 
-ORDER BY ul.sort
+    INNER JOIN {$prefix}file_links AS fl
+        ON fl.file_id = {$prefix}files.id
+       AND fl.table_name = ?
+       AND fl.record_id  = ?
+ORDER BY fl.sort
 EOD;
-                $sql_val = [
-                    $this->tb,
-                    $this->id,
-                    $this->tb,
-                    $this->id
-                ];
-
-                $this->cache['files'] = $this->db->query($sql, $sql_val);
+                $this->cache['files'] = $this->db->query($sql, [$this->tb, $this->id]);
             }
         }
         return $this->cache['files'];

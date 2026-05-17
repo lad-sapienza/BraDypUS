@@ -37,7 +37,7 @@ class myHistory_ctrl extends Controller
       $values[] = $tb;
     }
     if ($user !== '') {
-      $where   .= ' AND user LIKE ?';
+      $where   .= ' AND userid LIKE ?';
       $values[] = "%{$user}%";
     }
 
@@ -49,7 +49,7 @@ class myHistory_ctrl extends Controller
 
       $offset = ($page - 1) * $perPage;
       $rows   = $this->db->query(
-        "SELECT id, user, time, tb, rowid, content, editsql, editvalues
+        "SELECT id, userid AS user, time, tb, rowid, content, editsql, editvalues
            FROM {$vTb}
           WHERE {$where}
           ORDER BY id DESC

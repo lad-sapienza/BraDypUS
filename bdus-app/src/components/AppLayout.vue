@@ -295,29 +295,19 @@ const navGroups = computed(() => [
     ],
   },
   {
-    labelKey: 'nav_visualisation',
-    items: [
-      { labelKey: 'saved_queries',  icon: 'pi-list',         to: '/queries',      disabled: true  },
-      { labelKey: 'chart',          icon: 'pi-chart-bar',    to: '/charts',       disabled: true  },
-      { labelKey: 'map',            icon: 'pi-map',          to: '/map',          disabled: true  },
-      { labelKey: 'harris_matrix',  icon: 'pi-share-alt',    to: '/matrix',       disabled: true  },
-    ],
-  },
-  {
     labelKey: 'nav_admin',
     items: [
-      { labelKey: 'user_mng',        icon: 'pi-users',        to: '/users',        disabled: false },
-      { labelKey: 'sys_config',     icon: 'pi-cog',          to: '/config',       disabled: false },
-      { labelKey: 'design_templates', icon: 'pi-palette',    to: '/templates',    disabled: false },
-      { labelKey: 'free_sql',       icon: 'pi-code',         to: '/free-sql',     disabled: true  },
+      { labelKey: 'user_mng',          icon: 'pi-users',        to: '/users',     disabled: false },
+      { labelKey: 'sys_config',        icon: 'pi-cog',          to: '/config',    disabled: false },
+      { labelKey: 'design_templates',  icon: 'pi-palette',      to: '/templates', disabled: false },
+      { labelKey: 'free_sql',          icon: 'pi-code',         to: '/free-sql',  disabled: false },
     ],
   },
   {
     labelKey: 'nav_system',
     items: [
-      { labelKey: 'test',           icon: 'pi-check-circle', to: '/test',         disabled: true  },
-      { labelKey: 'app_log',        icon: 'pi-list',         to: '/log',          disabled: false },
-      { labelKey: 'info',           icon: 'pi-info-circle',  to: '/info',         disabled: false },
+      { labelKey: 'app_log',           icon: 'pi-list',         to: '/log',       disabled: false },
+      { labelKey: 'info',              icon: 'pi-info-circle',  to: '/info',      disabled: false },
     ],
   },
 ])

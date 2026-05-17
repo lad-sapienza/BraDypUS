@@ -152,6 +152,16 @@ abstract class BdusTestCase extends TestCase
                 filename    TEXT    NOT NULL
             )
         ');
+
+        static::$db->execInTransaction('
+            CREATE TABLE test__file_links (
+                id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                file_id     INTEGER NOT NULL,
+                table_name  TEXT    NOT NULL,
+                record_id   INTEGER NOT NULL,
+                sort        INTEGER
+            )
+        ');
     }
 
     // ── Seed ──────────────────────────────────────────────────────────────
@@ -177,20 +187,19 @@ abstract class BdusTestCase extends TestCase
              VALUES ('tag-a', 1, 'test__items'), ('tag-b', 1, 'test__items')"
         );
 
-        // A file (image) and a document linked to item 1 via userlinks
+        // A file (image) and a document linked to item 1 via file_links
         static::$db->execInTransaction(
             "INSERT INTO test__files (id, creator, ext, keywords, description, printable, filename)
              VALUES (1, 'admin', 'jpg', 'photo', 'A photo', 1, 'photo'),
                     (2, 'admin', 'pdf', 'doc',   'A document', 0, 'document')"
         );
         static::$db->execInTransaction(
-            "INSERT INTO test__userlinks (tb_one, id_one, tb_two, id_two, sort)
-             VALUES ('test__files', 1, 'test__items', 1, 1),
-                    ('test__files', 2, 'test__items', 1, 2)"
+            "INSERT INTO test__file_links (file_id, table_name, record_id, sort)
+             VALUES (1, 'test__items', 1, 1),
+                    (2, 'test__items', 1, 2)"
         );
 
-        // A manual link between item 1 and item 2 (not a file link)
-        // userlinks ids 1,2 are the file links above; this becomes id 3.
+        // A manual link between item 1 and item 2 (record↔record, not a file link)
         static::$db->execInTransaction(
             "INSERT INTO test__userlinks (tb_one, id_one, tb_two, id_two, sort)
              VALUES ('test__items', 1, 'test__items', 2, 1)"

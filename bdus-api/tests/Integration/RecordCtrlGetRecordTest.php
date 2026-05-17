@@ -107,15 +107,16 @@ class RecordCtrlGetRecordTest extends BdusTestCase
 
     // ── manualLinks ───────────────────────────────────────────────
 
-    public function testGetRecordManualLinksShapeForFileRecord(): void
+    public function testGetRecordManualLinksShapeForItemRecord(): void
     {
-        // The seed inserts file id=1 (jpg) linked to test__items/1 via userlinks.
-        // Viewing the file record should expose that link in manualLinks.
-        $ctrl = $this->makeController('record_ctrl', ['tb' => 'test__files', 'id' => 1]);
+        // The seed inserts a manual link between items 1 and 2 in test__userlinks
+        // (record-to-record link, NOT a file link — those live in test__file_links).
+        // Viewing item 1 should expose item 2 in manualLinks.
+        $ctrl = $this->makeController('record_ctrl', ['tb' => 'test__items', 'id' => 1]);
         $res  = $this->callController($ctrl, 'getRecord');
 
         $this->assertArrayHasKey('manualLinks', $res);
-        $this->assertNotEmpty($res['manualLinks'], 'Expected at least one manual link for file 1');
+        $this->assertNotEmpty($res['manualLinks'], 'Expected at least one manual link for item 1');
 
         $link = array_values($res['manualLinks'])[0];
         foreach (['key', 'tb_id', 'tb_stripped', 'ref_id', 'ref_label'] as $k) {
@@ -123,7 +124,7 @@ class RecordCtrlGetRecordTest extends BdusTestCase
         }
         $this->assertSame('test__items', $link['tb_id']);
         $this->assertSame('items',       $link['tb_stripped']);
-        $this->assertSame(1,             $link['ref_id']);
+        $this->assertSame(2,             $link['ref_id']);
     }
 
     // ── files enrichment ─────────────────────────────────────────

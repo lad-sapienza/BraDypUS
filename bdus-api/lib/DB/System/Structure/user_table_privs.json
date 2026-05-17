@@ -1,0 +1,28 @@
+[
+    {
+        "name"      : "id",
+        "type"      : "INTEGER",
+        "pk"        : true,
+        "notnull"   : false
+    },
+    {
+        "name"      : "user_id",
+        "type"      : "INTEGER",
+        "notnull"   : true
+    },
+    {
+        "name"      : "table_name",
+        "type"      : "TEXT",
+        "notnull"   : true
+    },
+    {
+        "name"      : "privilege",
+        "type"      : "INTEGER",
+        "notnull"   : true
+    },
+    {
+        "name"      : "subset",
+        "type"      : "TEXT",
+        "notnull"   : false
+    }
+]

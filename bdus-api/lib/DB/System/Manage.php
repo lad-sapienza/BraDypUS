@@ -50,10 +50,12 @@ class Manage
         'files',
         'geodata',
         'log',
+        'migrations',
         'queries',
         'rs',
         'userlinks',
         'users',
+        'user_table_privs',
         'versions',
         'vocabularies',
     ];

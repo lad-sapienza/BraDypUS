@@ -1,50 +1,71 @@
 <?php
 /**
- * @copyright 2007-2022 Julian Bogdani
+ * @copyright 2007-2025 Julian Bogdani
  * @license AGPL-3.0; see LICENSE
- * @since			Aug 10, 2012
+ * @since Aug 10, 2012
  */
 
- use \DB\System\Manage;
-
+use \DB\System\Manage;
 
 class user_ctrl extends Controller
 {
 	/**
 	 * Returns user list.
 	 *
-	 * JSON shape:
+	 * v5 JSON shape:
 	 * {
-	 *   "admin": bool,
+	 *   "admin":     bool,
+	 *   "can_write": bool,
 	 *   "users": [
-	 *     { "id": int, "name": string, "email": string, "privilege": string, "editable": bool }
+	 *     {
+	 *       "id":              int,
+	 *       "name":            string,
+	 *       "email":           string,
+	 *       "privilege":       string,   // translated label
+	 *       "privilege_value": int,      // raw numeric level
+	 *       "editable":        bool,
+	 *       "override_count":  int       // number of per-table overrides
+	 *     }
 	 *   ]
 	 * }
 	 */
 	public function showList()
 	{
-		$data = [ 'admin' => \utils::canUser('admin') ];
+		$data = [
+			'admin'     => \utils::canUser('admin'),
+			'can_write' => \utils::canUser('add_new'),
+		];
 
 		if (\utils::canUser('admin')) {
-			$sys_manager = new DB\System\Manage($this->db, $this->prefix);
-			$all_users = $sys_manager->getBySQL('users', '1=1');
+			$sys_manager = new Manage($this->db, $this->prefix);
+			$all_users   = $sys_manager->getBySQL('users', '1=1');
 
-			foreach( $all_users as $user ) {
+			foreach ($all_users as $user) {
+				// Count per-table privilege overrides for the badge indicator.
+				$overrides = $this->db->query(
+					"SELECT COUNT(*) AS cnt FROM {$this->prefix}user_table_privs WHERE user_id = ?",
+					[(int) $user['id']],
+					'read'
+				);
 				$data['users'][] = [
-					'id' => $user['id'],
-					'name' => $user['name'],
-					'email' => $user['email'],
-					'privilege' => \utils::privilege($user['privilege'], true),
-					'editable' => (\utils::canUser('admin') && $user['privilege'] >= $_SESSION['user']['privilege'])
+					'id'              => $user['id'],
+					'name'            => $user['name'],
+					'email'           => $user['email'],
+					'privilege'       => \utils::privilege($user['privilege'], true),
+					'privilege_value' => (int) $user['privilege'],
+					'editable'        => (\utils::canUser('admin') && $user['privilege'] >= \Auth\CurrentUser::privilege()),
+					'override_count'  => (int) ($overrides[0]['cnt'] ?? 0),
 				];
 			}
 		} else {
 			$data['users'][] = [
-				'id' 		=> $_SESSION['user']['id'],
-				'name' 		=> $_SESSION['user']['name'],
-				'email' 	=> $_SESSION['user']['email'],
-				'privilege' => \utils::privilege($_SESSION['user']['privilege'], true),
-				'editable' 	=> true
+				'id'              => \Auth\CurrentUser::id(),
+				'name'            => \Auth\CurrentUser::get('name'),
+				'email'           => \Auth\CurrentUser::get('email'),
+				'privilege'       => \utils::privilege(\Auth\CurrentUser::privilege(), true),
+				'privilege_value' => \Auth\CurrentUser::privilege(),
+				'editable'        => true,
+				'override_count'  => 0,
 			];
 		}
 
@@ -54,16 +75,30 @@ class user_ctrl extends Controller
 			$this->render('user', 'showList', $data);
 		}
 	}
-	
+
+	/**
+	 * Deletes a user and all their per-table privilege overrides.
+	 *
+	 * GET ?obj=user_ctrl&method=deleteOne&id=ID
+	 */
 	public function deleteOne($id = false)
 	{
-		if (!$id){
+		if (!$id) {
 			$id = $this->get['id'];
 		}
+		$id = (int) $id;
 		try {
 			$sys_manager = new Manage($this->db, $this->prefix);
+
+			// Cascade: remove per-table overrides before deleting the user.
+			$this->db->query(
+				"DELETE FROM {$this->prefix}user_table_privs WHERE user_id = ?",
+				[$id],
+				'boolean'
+			);
+
 			$ret = $sys_manager->deleteRow('users', $id);
-		
+
 			if ($ret) {
 				$this->response(\tr::get('user_deleted'), 'success');
 			} else {
@@ -71,57 +106,54 @@ class user_ctrl extends Controller
 			}
 		} catch (\Throwable $e) {
 			$this->response(\tr::get('user_not_deleted'), 'error');
-			$res['message'] = \tr::get('user_not_deleted');
 			$this->log->error($e);
 		}
 	}
-	
+
 	/**
 	 * Returns data for a single user form (new or existing).
 	 *
-	 * JSON shape:
+	 * v5 JSON shape:
 	 * {
-	 *   "id": int|null,
-	 *   "name": string,
-	 *   "email": string,
-	 *   "avatar": string,        // md5 of email, for Gravatar
-	 *   "privileges": [
-	 *     { "id": int|null, "value": int, "label": string, "selected": bool }
-	 *   ]
+	 *   "id":         int|null,
+	 *   "name":       string,
+	 *   "email":      string,
+	 *   "avatar":     string,
+	 *   "privileges": [ { "value": int, "label": string, "selected": bool } ]
 	 * }
+	 *
+	 * GET ?obj=user_ctrl&method=showUserForm[&id=ID]
 	 */
 	public function showUserForm()
 	{
-		$id = $this->get['id'];
+		$id = $this->get['id'] ?? null;
 
-		if (isset($id) && $id !== $_SESSION['user']['id'] && !\utils::canUser('admin')) {
-			$this->wantsJson()
-				? $this->returnJson(['status' => 'error', 'text' => \tr::get('not_enough_privilege')])
-				: print(\tr::get('not_enough_privilege'));
+		if ($id && $id != \Auth\CurrentUser::id() && !\utils::canUser('admin')) {
+			$this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
 			return;
 		}
 
 		if ($id) {
 			$sys_manager = new Manage($this->db, $this->prefix);
-			$one_user = $sys_manager->getById('users', $id);
+			$one_user    = $sys_manager->getById('users', (int) $id);
 		} else {
 			$one_user = [];
 		}
 
 		$data = [
-			'id'     => $one_user['id'] ?? null,
-			'name'   => $one_user['name'] ?? '',
-			'email'  => $one_user['email'] ?? '',
-			'avatar' => md5( strtolower( trim( $one_user['email'] ?? '' ) ) )
+			'id'        => $one_user['id']        ?? null,
+			'name'      => $one_user['name']       ?? '',
+			'email'     => $one_user['email']      ?? '',
+			'privilege' => $one_user['privilege']  ?? null,
+			'avatar'    => md5(strtolower(trim($one_user['email'] ?? ''))),
 		];
 
 		foreach (\utils::privilege('all', true) as $k => $str) {
-			if ($k >= $_SESSION['user']['privilege']) {
+			if ($k >= \Auth\CurrentUser::privilege()) {
 				$data['privileges'][] = [
-					'id'       => $one_user['id'] ?? null,
 					'value'    => $k,
 					'label'    => $str,
-					'selected' => ($k === ($one_user['privilege'] ?? null))
+					'selected' => ($k === ($one_user['privilege'] ?? null)),
 				];
 			}
 		}
@@ -132,47 +164,192 @@ class user_ctrl extends Controller
 			$this->render('user', 'showUserForm', $data);
 		}
 	}
-	
+
+	/**
+	 * Saves user basic data (name, email, password, privilege).
+	 *
+	 * POST ?obj=user_ctrl&method=saveUserData
+	 */
 	public function saveUserData()
 	{
-    	$data = $this->post;
+		$data = $this->post;
 		try {
 			$sys_manager = new Manage($this->db, $this->prefix);
 
 			foreach ($data as $key => &$value) {
-				if ($key === 'password'){
-                    if ($value && $value !== '') {
-                        $value = password_hash($value, PASSWORD_DEFAULT);
-                    } else {
+				if ($key === 'password') {
+					if ($value && $value !== '') {
+						$value = password_hash($value, PASSWORD_DEFAULT);
+					} else {
 						unset($data[$key]);
 					}
 				}
 			}
 
-			if ($data['id'] && !empty($data['id'])) {
+			if (!empty($data['id'])) {
 				// Edit existing user
-				if (\utils::isDuplicateEmail( $this->db, $this->prefix, $data['email'], $data['id'] ) ) {
+				if (\utils::isDuplicateEmail($this->db, $this->prefix, $data['email'], $data['id'])) {
 					$this->response('email_present', 'error', [$data['email']]);
 					return;
 				}
-				$ret = $sys_manager->editRow('users', $data['id'], $data);
+				$ret = $sys_manager->editRow('users', (int) $data['id'], $data);
 			} else {
-				if (\utils::isDuplicateEmail( $this->db, $this->prefix, $data['email'] ) ) {
+				if (\utils::isDuplicateEmail($this->db, $this->prefix, $data['email'])) {
 					$this->response('email_present', 'error', [$data['email']]);
 					return;
 				}
-				// Add new user
 				$ret = $sys_manager->addRow('users', $data);
 			}
-		
+
 			if ($ret) {
 				$this->response('user_data_saved', 'success');
 			} else {
 				throw new \Exception('Query returned false');
 			}
-		} catch (\Throwable $e){
+		} catch (\Throwable $e) {
 			$this->log->error($e);
 			$this->response('user_data_not_saved', 'error');
+		}
+	}
+
+	// ── Per-table privilege overrides ─────────────────────────────────────────
+
+	/**
+	 * Returns all per-table privilege overrides for a user.
+	 *
+	 * v5 JSON shape:
+	 * [
+	 *   { "id": int, "user_id": int, "table_name": string,
+	 *     "privilege": int, "subset": string|null }
+	 * ]
+	 *
+	 * GET ?obj=user_ctrl&method=getTablePrivileges&user_id=ID
+	 */
+	public function getTablePrivileges(): void
+	{
+		if (!\utils::canUser('admin')) {
+			$this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+			return;
+		}
+
+		$userId = (int) ($this->get['user_id'] ?? 0);
+		if (!$userId) {
+			$this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
+			return;
+		}
+
+		try {
+			$rows = $this->db->query(
+				"SELECT id, user_id, table_name, privilege, subset
+				 FROM {$this->prefix}user_table_privs
+				 WHERE user_id = ?
+				 ORDER BY table_name",
+				[$userId],
+				'read'
+			) ?: [];
+
+			$this->returnJson($rows);
+		} catch (\Throwable $e) {
+			$this->log->error($e);
+			$this->returnJson(['status' => 'error', 'code' => 'db_error', 'detail' => $e->getMessage()]);
+		}
+	}
+
+	/**
+	 * Upserts a per-table privilege override for a user.
+	 * If a row for (user_id, table_name) already exists it is updated;
+	 * otherwise a new row is inserted.
+	 *
+	 * POST ?obj=user_ctrl&method=saveTablePrivilege
+	 * Body: { user_id, table_name, privilege, subset? }
+	 *
+	 * Success: { "status": "success", "code": "privilege_saved", "id": int }
+	 */
+	public function saveTablePrivilege(): void
+	{
+		if (!\utils::canUser('admin')) {
+			$this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+			return;
+		}
+
+		$userId    = (int)   ($this->post['user_id']    ?? 0);
+		$tableName = trim(    $this->post['table_name'] ?? '');
+		$privilege = (int)   ($this->post['privilege']  ?? 0);
+		$subset    = trim(    $this->post['subset']      ?? '') ?: null;
+
+		if (!$userId || !$tableName || !$privilege) {
+			$this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
+			return;
+		}
+
+		try {
+			// Check for existing row (upsert by application logic — no UNIQUE constraint in DB).
+			$existing = $this->db->query(
+				"SELECT id FROM {$this->prefix}user_table_privs
+				 WHERE user_id = ? AND table_name = ?",
+				[$userId, $tableName],
+				'read'
+			);
+
+			if (!empty($existing)) {
+				$rowId = (int) $existing[0]['id'];
+				$this->db->query(
+					"UPDATE {$this->prefix}user_table_privs
+					 SET privilege = ?, subset = ?
+					 WHERE id = ?",
+					[$privilege, $subset, $rowId],
+					'boolean'
+				);
+				$this->returnJson(['status' => 'success', 'code' => 'privilege_saved', 'id' => $rowId]);
+			} else {
+				$rowId = $this->db->query(
+					"INSERT INTO {$this->prefix}user_table_privs
+					 (user_id, table_name, privilege, subset) VALUES (?, ?, ?, ?)",
+					[$userId, $tableName, $privilege, $subset],
+					'id'
+				);
+				$this->returnJson(['status' => 'success', 'code' => 'privilege_saved', 'id' => (int) $rowId]);
+			}
+		} catch (\Throwable $e) {
+			$this->log->error($e);
+			$this->returnJson(['status' => 'error', 'code' => 'db_error', 'detail' => $e->getMessage()]);
+		}
+	}
+
+	/**
+	 * Deletes a per-table privilege override by its id.
+	 *
+	 * GET ?obj=user_ctrl&method=deleteTablePrivilege&id=ID
+	 * Success: { "status": "success", "code": "privilege_deleted" }
+	 */
+	public function deleteTablePrivilege(): void
+	{
+		if (!\utils::canUser('admin')) {
+			$this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+			return;
+		}
+
+		$id = (int) ($this->get['id'] ?? 0);
+		if (!$id) {
+			$this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
+			return;
+		}
+
+		try {
+			$affected = $this->db->query(
+				"DELETE FROM {$this->prefix}user_table_privs WHERE id = ?",
+				[$id],
+				'affected'
+			);
+
+			if ($affected > 0) {
+				$this->returnJson(['status' => 'success', 'code' => 'privilege_deleted']);
+			} else {
+				$this->returnJson(['status' => 'error', 'code' => 'not_found']);
+			}
+		} catch (\Throwable $e) {
+			$this->log->error($e);
+			$this->returnJson(['status' => 'error', 'code' => 'db_error', 'detail' => $e->getMessage()]);
 		}
 	}
 }

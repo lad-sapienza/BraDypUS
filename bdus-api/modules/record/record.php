@@ -1160,7 +1160,17 @@ class record_ctrl extends Controller
             break;
           case 'advanced':
             $advRaw = $this->get['adv'] ?? $this->post['adv'] ?? '';
-            $qRequest['adv'] = is_string($advRaw) ? (json_decode($advRaw, true) ?? []) : $advRaw;
+            if (is_string($advRaw)) {
+              // When sent as a GET param (matrix view), adv is base64-encoded JSON.
+              // When sent as a POST body (DataView), adv may already be a decoded array.
+              $decoded = json_decode($advRaw, true);
+              if ($decoded === null) {
+                $decoded = json_decode(base64_decode($advRaw), true) ?? [];
+              }
+              $qRequest['adv'] = $decoded;
+            } else {
+              $qRequest['adv'] = $advRaw;
+            }
             break;
           case 'sqlExpert':
             $qRequest['querytext'] = $this->get['querytext'] ?? '';

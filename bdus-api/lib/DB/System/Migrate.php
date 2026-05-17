@@ -70,26 +70,27 @@ class Migrate
             }
 
             $pending++;
-            $log?->info("DB migration: applying {$class::NAME}");
+            $name = $class::NAME;
+            $log?->info("DB migration: applying $name");
 
             try {
                 $class::run($manage);
             } catch (\Throwable $e) {
-                $log?->error("DB migration failed: {$class::NAME} — " . $e->getMessage());
+                $log?->error("DB migration failed: $name — " . $e->getMessage());
                 throw $e;
             }
 
             $db->query(
                 "INSERT INTO {$prefix}migrations (name, applied_at) VALUES (?, ?)",
-                [$class::NAME, time()],
+                [$name, time()],
                 'boolean'
             );
 
-            $log?->info("DB migration: {$class::NAME} applied successfully");
+            $log?->info("DB migration: $name applied successfully");
         }
 
         if ($pending === 0) {
-            $log?->debug("DB migrations: schema up to date ({$prefix})");
+            $log?->debug("DB migrations: schema up to date ($prefix)");
         }
     }
 }

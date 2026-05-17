@@ -143,6 +143,39 @@ async function upload(obj, method, file, field = 'file', urlParams = {}) {
   return res.json()
 }
 
+// ── Multi-file upload ─────────────────────────────────────────────────
+/**
+ * Upload multiple files plus optional plain-text fields in a single request.
+ *
+ * @param {string}  obj       Controller name
+ * @param {string}  method    Method name
+ * @param {Object}  files     { fieldName: File, … }
+ * @param {Object}  data      { key: value, … }  (plain strings/numbers)
+ * @param {Object}  urlParams Extra query-string params
+ */
+async function uploadMulti(obj, method, files = {}, data = {}, urlParams = {}) {
+  await _guardRefresh()
+
+  const url = new URL(PHP, window.location.origin)
+  url.searchParams.set('obj',    obj)
+  url.searchParams.set('method', method)
+  Object.entries(urlParams).forEach(([k, v]) => url.searchParams.set(k, v))
+
+  const fd = new FormData()
+  Object.entries(files).forEach(([k, v]) => { if (v) fd.append(k, v) })
+  Object.entries(data).forEach(([k, v])  => fd.append(k, v ?? ''))
+
+  const res = await fetch(url, {
+    method:  'POST',
+    headers: { Accept: 'application/json', ..._bearer() },
+    body:    fd,
+  })
+
+  if (res.status === 401) { _handle401(); throw new Error('Unauthenticated') }
+  if (!res.ok) throw new Error(`${obj}::${method} — HTTP ${res.status}`)
+  return res.json()
+}
+
 // ── Response helper ──────────────────────────────────────────────────
 function responseMessage(res, t, ...args) {
   if (!res?.code) return ''
@@ -150,4 +183,4 @@ function responseMessage(res, t, ...args) {
   return t(res.code, ...args)
 }
 
-export const api = { get, post, upload, responseMessage }
+export const api = { get, post, upload, uploadMulti, responseMessage }

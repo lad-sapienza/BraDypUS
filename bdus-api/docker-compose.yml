@@ -7,6 +7,9 @@ services:
       - "8080:80"
     environment:
       - BRADYPUS_DEBUG=1   # set to 0 (or remove) in production
+      # Uncomment the line below to enable the "Create new application" wizard.
+      # Remove it again once the application has been created.
+      # - BRADYPUS_ALLOW_NEW_APP=1
     volumes:
       # Live source mount: changes on host are immediately reflected
       - .:/var/www/html

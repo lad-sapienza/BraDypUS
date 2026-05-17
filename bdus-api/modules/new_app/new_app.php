@@ -11,12 +11,15 @@ class new_app_ctrl extends Controller
 
     /**
      * App creation is permitted when:
-     *   a) The file UNSAFE_permit_app_creation exists in the project root, OR
-     *   b) The projects/ directory is empty (first-time setup)
+     *   a) The env variable BRADYPUS_ALLOW_NEW_APP is set to '1', OR
+     *   b) The projects/ directory is empty (first-time / fresh install)
+     *
+     * Set the env variable in docker-compose.yml, .env, or your server
+     * config, and remove it again once the app has been created.
      */
     private function isPermitted(): bool
     {
-        return file_exists(MAIN_DIR . 'UNSAFE_permit_app_creation')
+        return getenv('BRADYPUS_ALLOW_NEW_APP') === '1'
             || !\utils::dirContent(MAIN_DIR . 'projects');
     }
 

@@ -174,26 +174,15 @@
       </fieldset>
 
       <!-- Manual links (individual record-to-record links via userlinks table) -->
-      <fieldset
-        v-if="hasManualLinks"
-        class="record-section"
-      >
-        <legend>{{ t('linked_records') }}</legend>
-        <div
-          v-for="(group, groupTb) in manualLinksByTable"
-          :key="groupTb"
-          class="manual-links-group"
-        >
-          <div class="manual-links-tb-label">{{ group.tb_label }}</div>
-          <ul class="links-list">
-            <li v-for="ml in group.items" :key="ml.key">
-              <router-link :to="`/record/${ml.tb_id}/${ml.ref_id}`">
-                {{ ml.ref_label }}
-              </router-link>
-            </li>
-          </ul>
-        </div>
-      </fieldset>
+      <ManualLinksSection
+        v-if="hasManualLinks || mode === 'edit'"
+        :links="record.manualLinks ?? {}"
+        :editMode="mode === 'edit'"
+        :recordTb="record.metadata.tb_id"
+        :recordId="id"
+        @link-added="onLinkAdded"
+        @link-deleted="onLinkDeleted"
+      />
 
       <!-- Geodata -->
       <fieldset
@@ -241,9 +230,10 @@ import { useI18n }    from '@/i18n'
 import FieldDisplay    from '@/components/record/FieldDisplay.vue'
 import FieldEditor     from '@/components/record/FieldEditor.vue'
 import PluginSection   from '@/components/record/PluginSection.vue'
-import TemplateSection from '@/components/record/TemplateSection.vue'
-import FileGallery     from '@/components/record/FileGallery.vue'
-import RsSection      from '@/components/record/RsSection.vue'
+import TemplateSection    from '@/components/record/TemplateSection.vue'
+import FileGallery        from '@/components/record/FileGallery.vue'
+import RsSection          from '@/components/record/RsSection.vue'
+import ManualLinksSection from '@/components/record/ManualLinksSection.vue'
 
 const { t }   = useI18n()
 const route   = useRoute()
@@ -300,23 +290,10 @@ const hasLinks = computed(() =>
   Object.keys(record.value?.backlinks ?? {}).length > 0
 )
 
-// Manual links: individual record-to-record links stored in userlinks table.
-// Backend returns an object keyed by link id; we group by target table for display.
+// Manual links
 const hasManualLinks = computed(() =>
   Object.keys(record.value?.manualLinks ?? {}).length > 0
 )
-
-const manualLinksByTable = computed(() => {
-  const groups = {}
-  for (const ml of Object.values(record.value?.manualLinks ?? {})) {
-    if (!groups[ml.tb_id]) {
-      groups[ml.tb_id] = { tb_label: ml.tb_label, items: [] }
-    }
-    groups[ml.tb_id].items.push(ml)
-  }
-  // Within each group preserve backend sort order (already sorted by sort, id)
-  return groups
-})
 
 const hasGeodata = computed(() => {
   const g = record.value?.geodata
@@ -635,6 +612,24 @@ function onFileDeleted(fileId) {
 function onFilesReordered(newFiles) {
   if (record.value) {
     record.value.files = newFiles
+  }
+}
+
+// ── Manual link events (from ManualLinksSection) ──────────────────
+function onLinkAdded(link) {
+  if (record.value) {
+    record.value.manualLinks = {
+      ...(record.value.manualLinks ?? {}),
+      [link.key]: link,
+    }
+  }
+}
+
+function onLinkDeleted(linkKey) {
+  if (record.value?.manualLinks) {
+    const updated = { ...record.value.manualLinks }
+    delete updated[linkKey]
+    record.value.manualLinks = updated
   }
 }
 

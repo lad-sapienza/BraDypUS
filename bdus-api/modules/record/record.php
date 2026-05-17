@@ -1101,6 +1101,183 @@ class record_ctrl extends Controller
     }
   }
 
+  // ── Manual links (userlinks) ──────────────────────────────────────────────
+
+  /**
+   * Searches records in a table to use as manual-link candidates.
+   *
+   * GET ?obj=record_ctrl&method=searchLinkCandidates&tb=TABLE&q=QUERY
+   *
+   * If the table's id_field is 'id': returns the record whose id matches q (exact).
+   * If the table's id_field is a text column: returns records where that column LIKE %q%.
+   * When q is empty, returns the 20 most-recent records.
+   *
+   * Response: { status, data: [ { id, label }, … ] }
+   */
+  public function searchLinkCandidates(): void
+  {
+    if (!\utils::canUser('read')) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+      return;
+    }
+
+    $tb = $this->get['tb'] ?? null;
+    $q  = $this->get['q']  ?? null;
+
+    if (!$tb || !$this->cfg->get("tables.$tb")) {
+      $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
+      return;
+    }
+
+    $idFld = $this->cfg->get("tables.$tb.id_field") ?? 'id';
+
+    try {
+      if ($idFld === 'id') {
+        if ($q !== null && $q !== '') {
+          $sql    = "SELECT id, id AS label FROM {$tb} WHERE id = ? LIMIT 20";
+          $values = [(int)$q];
+        } else {
+          $sql    = "SELECT id, id AS label FROM {$tb} ORDER BY id DESC LIMIT 20";
+          $values = [];
+        }
+      } else {
+        if ($q !== null && $q !== '') {
+          $sql    = "SELECT id, {$idFld} AS label FROM {$tb} WHERE {$idFld} LIKE ? LIMIT 20";
+          $values = ["%$q%"];
+        } else {
+          $sql    = "SELECT id, {$idFld} AS label FROM {$tb} ORDER BY id DESC LIMIT 20";
+          $values = [];
+        }
+      }
+
+      $res = $this->db->query($sql, $values, 'read');
+      $this->returnJson(['status' => 'success', 'data' => $res ?: []]);
+
+    } catch (\Throwable $e) {
+      $this->log->error($e);
+      $this->returnJson(['status' => 'error', 'code' => 'db_error', 'detail' => $e->getMessage()]);
+    }
+  }
+
+  /**
+   * Adds a manual link between two records.
+   *
+   * POST ?obj=record_ctrl&method=addManualLink
+   * Body: { tb_one, id_one, tb_two, id_two }
+   *
+   * Checks for duplicates in both directions before inserting.
+   * Response: { status, code, link: { key, tb_id, tb_stripped, tb_label, ref_id, ref_label } }
+   */
+  public function addManualLink(): void
+  {
+    if (!\utils::canUser('edit')) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+      return;
+    }
+
+    $tbOne = $this->post['tb_one'] ?? null;
+    $idOne = $this->post['id_one'] ?? null;
+    $tbTwo = $this->post['tb_two'] ?? null;
+    $idTwo = $this->post['id_two'] ?? null;
+
+    if (!$tbOne || !$idOne || !$tbTwo || !$idTwo) {
+      $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
+      return;
+    }
+
+    $idOne  = (int)$idOne;
+    $idTwo  = (int)$idTwo;
+    $prefix = $this->prefix;
+
+    try {
+      // Dedup: check both directions
+      $count = (int) ($this->db->query(
+        "SELECT COUNT(*) AS c FROM {$prefix}userlinks
+         WHERE (tb_one = ? AND id_one = ? AND tb_two = ? AND id_two = ?)
+            OR (tb_one = ? AND id_one = ? AND tb_two = ? AND id_two = ?)",
+        [$tbOne, $idOne, $tbTwo, $idTwo, $tbTwo, $idTwo, $tbOne, $idOne],
+        'read'
+      )[0]['c'] ?? 0);
+
+      if ($count > 0) {
+        $this->returnJson(['status' => 'error', 'code' => 'link_already_exists']);
+        return;
+      }
+
+      $newId = (int) $this->db->query(
+        "INSERT INTO {$prefix}userlinks (tb_one, id_one, tb_two, id_two) VALUES (?, ?, ?, ?)",
+        [$tbOne, $idOne, $tbTwo, $idTwo],
+        'id'
+      );
+
+      // Resolve the label of the linked record
+      $idFld = $this->cfg->get("tables.$tbTwo.id_field") ?? 'id';
+      if ($idFld === 'id') {
+        $refLabel = $idTwo;
+      } else {
+        $lres     = $this->db->query("SELECT {$idFld} AS label FROM {$tbTwo} WHERE id = ?", [$idTwo], 'read');
+        $refLabel = $lres[0]['label'] ?? $idTwo;
+      }
+
+      $this->returnJson([
+        'status' => 'success',
+        'code'   => 'all_links_saved',
+        'link'   => [
+          'key'         => $newId,
+          'tb_id'       => $tbTwo,
+          'tb_stripped' => str_replace(PREFIX, '', $tbTwo),
+          'tb_label'    => $this->cfg->get("tables.$tbTwo.label"),
+          'ref_id'      => $idTwo,
+          'ref_label'   => $refLabel,
+          'sort'        => null,
+        ],
+      ]);
+
+    } catch (\Throwable $e) {
+      $this->log->error($e);
+      $this->returnJson(['status' => 'error', 'code' => 'db_error', 'detail' => $e->getMessage()]);
+    }
+  }
+
+  /**
+   * Deletes a manual link by its userlinks.id.
+   *
+   * POST ?obj=record_ctrl&method=deleteManualLink
+   * Body: { id }
+   *
+   * Response: { status, code }
+   */
+  public function deleteManualLink(): void
+  {
+    if (!\utils::canUser('edit')) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+      return;
+    }
+
+    $id = $this->post['id'] ?? ($this->get['id'] ?? null);
+    if (!$id) {
+      $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
+      return;
+    }
+
+    try {
+      $affected = $this->db->query(
+        "DELETE FROM {$this->prefix}userlinks WHERE id = ?",
+        [(int)$id],
+        'affected'
+      );
+
+      $this->returnJson($affected > 0
+        ? ['status' => 'success', 'code' => 'ok_userlink_erased']
+        : ['status' => 'error',   'code' => 'not_found']
+      );
+
+    } catch (\Throwable $e) {
+      $this->log->error($e);
+      $this->returnJson(['status' => 'error', 'code' => 'db_error', 'detail' => $e->getMessage()]);
+    }
+  }
+
   /**
    * Returns all RS data for a table (or a filtered subset) for graph visualization.
    *

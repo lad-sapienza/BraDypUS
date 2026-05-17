@@ -340,6 +340,8 @@
     "some_links_saved": "Some links were saved other not. More information in error log",
     "no_link_saved": "Error. No link was saved",
     "no_user_links": "No link available for this record",
+    "link_already_exists": "This link already exists",
+    "type_to_search": "Type to search…",
     "new_link": "Add new link",
     "select_tb_to_continue": "Select a table to continue",
     "save_links": "Link to selected records",

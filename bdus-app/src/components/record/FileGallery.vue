@@ -19,7 +19,7 @@
           <!-- thumbnail for images, icon for docs -->
           <Image
             v-if="f.is_image"
-            :src="f.url"
+            :src="fileUrl(f)"
             :alt="f.description || f.filename || String(f.id)"
             preview
             :width="60"
@@ -33,7 +33,7 @@
           <span v-if="f.description" class="sort-desc">{{ f.description }}</span>
 
           <!-- actions -->
-          <a :href="f.url" :download="downloadName(f)" class="file-action" :title="t('download')">
+          <a :href="fileUrl(f)" :download="downloadName(f)" class="file-action" :title="t('download')">
             <i class="pi pi-download" />
           </a>
           <button
@@ -75,7 +75,7 @@
       <div v-if="images.length" class="images-grid">
         <div v-for="f in images" :key="f.id" class="img-thumb">
           <Image
-            :src="f.url"
+            :src="fileUrl(f)"
             :alt="f.description || f.filename || String(f.id)"
             :title="f.description || ''"
             preview
@@ -85,7 +85,7 @@
           />
           <div v-if="f.description" class="img-caption">{{ f.description }}</div>
           <div class="img-actions">
-            <a :href="f.url" :download="downloadName(f)" class="file-action" :title="t('download')">
+            <a :href="fileUrl(f)" :download="downloadName(f)" class="file-action" :title="t('download')">
               <i class="pi pi-download" />
             </a>
           </div>
@@ -96,11 +96,11 @@
       <ul v-if="docs.length" class="docs-list">
         <li v-for="f in docs" :key="f.id" class="doc-item">
           <i :class="['doc-icon', fileIcon(f.ext)]" />
-          <a :href="f.url" target="_blank" rel="noopener noreferrer" class="doc-name">
+          <a :href="fileUrl(f)" target="_blank" rel="noopener noreferrer" class="doc-name">
             {{ docLabel(f) }}
           </a>
           <span v-if="f.description" class="doc-desc">{{ f.description }}</span>
-          <a :href="f.url" :download="downloadName(f)" class="file-action" :title="t('download')">
+          <a :href="fileUrl(f)" :download="downloadName(f)" class="file-action" :title="t('download')">
             <i class="pi pi-download" />
           </a>
         </li>
@@ -120,18 +120,25 @@ import Image   from 'primevue/image'
 import Button  from 'primevue/button'
 import { useToast }   from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
-import { api }     from '@/api'
-import { useI18n } from '@/i18n'
+import { api, assetUrl } from '@/api'
+import { useI18n }       from '@/i18n'
+import { useAuthStore }  from '@/stores/auth'
 
 const { t }   = useI18n()
 const toast   = useToast()
 const confirm = useConfirm()
+const auth    = useAuthStore()
+
+/** Resolve a file object to its full URL. */
+function fileUrl(f) {
+  return assetUrl(`projects/${auth.user?.app}/files/${f.id}.${f.ext}`)
+}
 
 const props = defineProps({
   /**
    * Array of file objects as returned by record_ctrl::getRecord().
    * Each: { id, link_id, link_sort, ext, filename, description,
-   *         keywords, printable, url, is_image }
+   *         keywords, printable, is_image }
    */
   files:    { type: Array,           default: () => [] },
   /** When true, shows sort handles, delete buttons and upload button */

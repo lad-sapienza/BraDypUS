@@ -398,7 +398,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
-import { api } from '@/api'
+import { api, assetUrl } from '@/api'
 import { useI18n } from '@/i18n'
 import { useTables } from '@/composables/useTables'
 import AppLayout from '@/components/AppLayout.vue'
@@ -1087,7 +1087,7 @@ function doExport(format) {
   if (route.query.q)     params.set('q',     route.query.q)
   if (route.query.where) params.set('where', route.query.where)
 
-  window.open('/index.php?' + params.toString(), '_blank')
+  window.open(assetUrl('index.php') + '?' + params.toString(), '_blank')
 }
 </script>
 

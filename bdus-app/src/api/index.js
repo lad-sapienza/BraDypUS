@@ -13,7 +13,21 @@
 
 import { getToken, setToken, clearToken, needsRefresh } from '@/token'
 
-const PHP = '/index.php'
+/**
+ * Base URL of the PHP backend.
+ * In development (same origin) this is empty, so all paths stay relative.
+ * In production with a separate backend, set VITE_API_BASE=https://api.example.com
+ */
+const API_BASE = import.meta.env.VITE_API_BASE ?? ''
+const PHP      = API_BASE + '/index.php'
+
+/**
+ * Resolve a backend-relative asset path to a full URL.
+ * Usage: assetUrl('projects/myapp/files/42.jpg')
+ */
+export function assetUrl(path) {
+  return API_BASE + '/' + path
+}
 
 // ── Refresh lock ─────────────────────────────────────────────────────
 // Ensures only one in-flight refresh call at a time even when several

@@ -1,18 +1,11 @@
-[
-    {
-        "name"      : "id",
-        "type"      : "INTEGER",
-        "pk"        : true,
-        "notnull"   : false
-    },
-    {
-        "name"      : "name",
-        "type"      : "TEXT",
-        "notnull"   : true
-    },
-    {
-        "name"      : "applied_at",
-        "type"      : "INTEGER",
-        "notnull"   : true
-    }
-]
+{
+    "columns": [
+        { "name": "id",         "type": "INTEGER", "pk": true, "notnull": false },
+        { "name": "name",       "type": "TEXT",               "notnull": true  },
+        { "name": "applied_at", "type": "INTEGER",            "notnull": true  }
+    ],
+    "indexes": [
+        { "name": "migrations_name_idx", "columns": ["name"], "unique": true }
+    ],
+    "relations": []
+}

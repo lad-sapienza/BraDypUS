@@ -1,33 +1,15 @@
-[
-    {
-        "name"      : "id",
-        "type"      : "INTEGER",
-        "pk"        : true,
-        "notnull"   : false
-    },
-    {
-        "name"      : "tb_one",
-        "type"      : "TEXT",
-        "notnull"   : true
-    },
-    {
-        "name"      : "id_one",
-        "type"      : "INTEGER",
-        "notnull"   : true
-    },
-    {
-        "name"      : "tb_two",
-        "type"      : "TEXT",
-        "notnull"   : true
-    },
-    {
-        "name"      : "id_two",
-        "type"      : "INTEGER",
-        "notnull"   : true
-    },
-    {
-        "name"      : "sort",
-        "type"      : "INTEGER",
-        "notnull"   : false
-    }
-]
+{
+    "columns": [
+        { "name": "id",     "type": "INTEGER", "pk": true, "notnull": false },
+        { "name": "tb_one", "type": "TEXT",               "notnull": true  },
+        { "name": "id_one", "type": "INTEGER",            "notnull": true  },
+        { "name": "tb_two", "type": "TEXT",               "notnull": true  },
+        { "name": "id_two", "type": "INTEGER",            "notnull": true  },
+        { "name": "sort",   "type": "INTEGER",            "notnull": false }
+    ],
+    "indexes": [
+        { "name": "ul_one_idx", "columns": ["tb_one", "id_one"] },
+        { "name": "ul_two_idx", "columns": ["tb_two", "id_two"] }
+    ],
+    "relations": []
+}

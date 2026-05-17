@@ -1,23 +1,12 @@
-[
-    {
-        "name"      : "id",
-        "type"      : "INTEGER",
-        "pk"        : true,
-        "notnull"   : false
-    },
-    {
-        "name"      : "table_link",
-        "type"      : "TEXT",
-        "notnull"   : true
-    },
-    {
-        "name"      : "id_link",
-        "type"      : "INTEGER",
-        "notnull"   : true
-    },
-    {
-        "name"      : "geometry",
-        "type"      : "GEOMETRY",
-        "notnull"   : true
-    }
-]
+{
+    "columns": [
+        { "name": "id",         "type": "INTEGER",  "pk": true, "notnull": false },
+        { "name": "table_link", "type": "TEXT",                 "notnull": true  },
+        { "name": "id_link",    "type": "INTEGER",              "notnull": true  },
+        { "name": "geometry",   "type": "GEOMETRY",             "notnull": true  }
+    ],
+    "indexes": [
+        { "name": "geo_lookup_idx", "columns": ["table_link", "id_link"] }
+    ],
+    "relations": []
+}

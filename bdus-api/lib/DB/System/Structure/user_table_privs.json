@@ -1,28 +1,22 @@
-[
-    {
-        "name"      : "id",
-        "type"      : "INTEGER",
-        "pk"        : true,
-        "notnull"   : false
-    },
-    {
-        "name"      : "user_id",
-        "type"      : "INTEGER",
-        "notnull"   : true
-    },
-    {
-        "name"      : "table_name",
-        "type"      : "TEXT",
-        "notnull"   : true
-    },
-    {
-        "name"      : "privilege",
-        "type"      : "INTEGER",
-        "notnull"   : true
-    },
-    {
-        "name"      : "subset",
-        "type"      : "TEXT",
-        "notnull"   : false
-    }
-]
+{
+    "columns": [
+        { "name": "id",         "type": "INTEGER", "pk": true, "notnull": false },
+        { "name": "user_id",    "type": "INTEGER",             "notnull": true  },
+        { "name": "table_name", "type": "TEXT",                "notnull": true  },
+        { "name": "privilege",  "type": "INTEGER",             "notnull": true  },
+        { "name": "subset",     "type": "TEXT",                "notnull": false }
+    ],
+    "indexes": [
+        { "name": "utp_user_idx",  "columns": ["user_id"] },
+        { "name": "utp_table_idx", "columns": ["table_name"] }
+    ],
+    "relations": [
+        {
+            "name":       "utp_user_fk",
+            "column":     "user_id",
+            "ref_table":  "users",
+            "ref_column": "id",
+            "on_delete":  "CASCADE"
+        }
+    ]
+}

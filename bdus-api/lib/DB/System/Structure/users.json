@@ -1,33 +1,14 @@
-[
-    {
-        "name"      : "id",
-        "type"      : "INTEGER",
-        "pk"        : true,
-        "notnull"   : false
-    },
-    {
-        "name"      : "name",
-        "type"      : "TEXT",
-        "notnull"   : true
-    },
-    {
-        "name"      : "email",
-        "type"      : "TEXT",
-        "notnull"   : true
-    },
-    {
-        "name"      : "password",
-        "type"      : "TEXT",
-        "notnull"   : true
-    },
-    {
-        "name"      : "privilege",
-        "type"      : "INTEGER",
-        "notnull"   : true
-    },
-    {
-        "name"      : "settings",
-        "type"      : "TEXT",
-        "notnull"   : false
-    }
-]
+{
+    "columns": [
+        { "name": "id",        "type": "INTEGER", "pk": true, "notnull": false },
+        { "name": "name",      "type": "TEXT",               "notnull": true  },
+        { "name": "email",     "type": "TEXT",               "notnull": true  },
+        { "name": "password",  "type": "TEXT",               "notnull": true  },
+        { "name": "privilege", "type": "INTEGER",            "notnull": true  },
+        { "name": "settings",  "type": "TEXT",               "notnull": false }
+    ],
+    "indexes": [
+        { "name": "users_email_idx", "columns": ["email"], "unique": true }
+    ],
+    "relations": []
+}

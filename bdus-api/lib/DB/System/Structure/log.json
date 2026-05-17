@@ -1,28 +1,14 @@
-[
-    {
-        "name"      : "id",
-        "type"      : "INTEGER",
-        "pk"        : true,
-        "notnull"   : false
-    },
-    {
-        "name"      : "channel",
-        "type"      : "TEXT",
-        "notnull"   : true
-    },
-    {
-        "name"      : "level",
-        "type"      : "INTEGER",
-        "notnull"   : true
-    },
-    {
-        "name"      : "message",
-        "type"      : "TEXT",
-        "notnull"   : true
-    },
-    {
-        "name"      : "time",
-        "type"      : "INTEGER",
-        "notnull"   : true
-    }
-]
+{
+    "columns": [
+        { "name": "id",      "type": "INTEGER", "pk": true, "notnull": false },
+        { "name": "channel", "type": "TEXT",               "notnull": true  },
+        { "name": "level",   "type": "INTEGER",            "notnull": true  },
+        { "name": "message", "type": "TEXT",               "notnull": true  },
+        { "name": "time",    "type": "INTEGER",            "notnull": true  }
+    ],
+    "indexes": [
+        { "name": "log_channel_idx", "columns": ["channel"] },
+        { "name": "log_time_idx",    "columns": ["time"] }
+    ],
+    "relations": []
+}

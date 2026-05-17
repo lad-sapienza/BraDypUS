@@ -1,28 +1,21 @@
-[
-    {
-        "name"      : "id",
-        "type"      : "INTEGER",
-        "pk"        : true,
-        "notnull"   : false
-    },
-    {
-        "name"      : "user_id",
-        "type"      : "INTEGER",
-        "notnull"   : true
-    },
-    {
-        "name"      : "name",
-        "type"      : "TEXT",
-        "notnull"   : true
-    },
-    {
-        "name"      : "sqltext",
-        "type"      : "TEXT",
-        "notnull"   : true
-    },
-    {
-        "name"      : "date",
-        "type"      : "TIMESTAMP",
-        "notnull"   : true
-    }
-]
+{
+    "columns": [
+        { "name": "id",      "type": "INTEGER",   "pk": true, "notnull": false },
+        { "name": "user_id", "type": "INTEGER",               "notnull": true  },
+        { "name": "name",    "type": "TEXT",                   "notnull": true  },
+        { "name": "sqltext", "type": "TEXT",                   "notnull": true  },
+        { "name": "date",    "type": "TIMESTAMP",              "notnull": true  }
+    ],
+    "indexes": [
+        { "name": "charts_user_idx", "columns": ["user_id"] }
+    ],
+    "relations": [
+        {
+            "name":       "charts_user_fk",
+            "column":     "user_id",
+            "ref_table":  "users",
+            "ref_column": "id",
+            "on_delete":  "CASCADE"
+        }
+    ]
+}

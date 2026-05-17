@@ -1,28 +1,13 @@
-[
-    {
-        "name"      : "id",
-        "type"      : "INTEGER",
-        "pk"        : true,
-        "notnull"   : false
-    },
-    {
-        "name"      : "tb",
-        "type"      : "TEXT",
-        "notnull"   : true
-    },
-    {
-        "name"      : "first",
-        "type"      : "TEXT",
-        "notnull"   : true
-    },
-    {
-        "name"      : "second",
-        "type"      : "TEXT",
-        "notnull"   : true
-    },
-    {
-        "name"      : "relation",
-        "type"      : "INTEGER",
-        "notnull"   : true
-    }
-]
+{
+    "columns": [
+        { "name": "id",       "type": "INTEGER", "pk": true, "notnull": false },
+        { "name": "tb",       "type": "TEXT",               "notnull": true  },
+        { "name": "first",    "type": "TEXT",               "notnull": true  },
+        { "name": "second",   "type": "TEXT",               "notnull": true  },
+        { "name": "relation", "type": "INTEGER",            "notnull": true  }
+    ],
+    "indexes": [
+        { "name": "rs_lookup_idx", "columns": ["tb", "first"] }
+    ],
+    "relations": []
+}

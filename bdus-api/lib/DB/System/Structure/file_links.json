@@ -1,28 +1,22 @@
-[
-    {
-        "name"      : "id",
-        "type"      : "INTEGER",
-        "pk"        : true,
-        "notnull"   : false
-    },
-    {
-        "name"      : "file_id",
-        "type"      : "INTEGER",
-        "notnull"   : true
-    },
-    {
-        "name"      : "table_name",
-        "type"      : "TEXT",
-        "notnull"   : true
-    },
-    {
-        "name"      : "record_id",
-        "type"      : "INTEGER",
-        "notnull"   : true
-    },
-    {
-        "name"      : "sort",
-        "type"      : "INTEGER",
-        "notnull"   : false
-    }
-]
+{
+    "columns": [
+        { "name": "id",         "type": "INTEGER", "pk": true, "notnull": false },
+        { "name": "file_id",    "type": "INTEGER",             "notnull": true  },
+        { "name": "table_name", "type": "TEXT",                "notnull": true  },
+        { "name": "record_id",  "type": "INTEGER",             "notnull": true  },
+        { "name": "sort",       "type": "INTEGER",             "notnull": false }
+    ],
+    "indexes": [
+        { "name": "fl_lookup_idx", "columns": ["table_name", "record_id"] },
+        { "name": "fl_file_idx",   "columns": ["file_id"] }
+    ],
+    "relations": [
+        {
+            "name":       "fl_file_fk",
+            "column":     "file_id",
+            "ref_table":  "files",
+            "ref_column": "id",
+            "on_delete":  "CASCADE"
+        }
+    ]
+}

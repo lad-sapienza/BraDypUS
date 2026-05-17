@@ -43,8 +43,9 @@ class Manage
     private $db;
     private $prefix;
     private $driver;
-    private $structure;
     private $spatial;
+    /** @var array<string, array{columns: array, indexes: array, relations: array}> */
+    private array $descriptor = [];
     public $available_tables = [
         'charts',
         'file_links',
@@ -83,65 +84,168 @@ class Manage
     public function getDb(): DBInterface  { return $this->db; }
     public function getPrefix(): string   { return $this->prefix ?? ''; }
 
+    // ── Descriptor loading ───────────────────────────────────────────────────
+
     /**
-     * Loads table structure in the object,if not loaded yet
-     * and returns it
+     * Loads and caches the full table descriptor (columns + indexes + relations).
+     * Supports both the current object format and the legacy flat-array format
+     * (legacy: columns only, no indexes or relations).
      *
-     * @param string $table     Table name (without prefix)
-     * @return array            Table stricture
+     * @param string $table  Table name without prefix
+     * @return array{columns: array, indexes: array, relations: array}
      */
-    public function getStructure(string $table): array
+    private function loadDescriptor(string $table): array
     {
-        if ( isset($this->structure[$table] ) ){
-            return $this->structure[$table];
+        if (isset($this->descriptor[$table])) {
+            return $this->descriptor[$table];
         }
 
-        if ( !in_array($table, $this->available_tables) ){
+        if (!in_array($table, $this->available_tables)) {
             throw new \Exception("Table $table is not a valid system table");
         }
 
         $file_path = __DIR__ . '/Structure/' . $table . '.json';
-        
-        if (!file_exists($file_path)){
+
+        if (!file_exists($file_path)) {
             throw new \Exception("Cannot find structure configuration file {$file_path}");
         }
-        
-        $array = json_decode( file_get_contents($file_path), true);
 
-        if (!$array || !\is_array($array) || empty($array)) {
+        $data = json_decode(file_get_contents($file_path), true);
+
+        if (!$data || !\is_array($data) || empty($data)) {
             throw new \Exception("Configuration file {$file_path} has invalid syntax or is empty");
         }
 
-        $this->structure[$table] = $array;
+        // New format: { columns: [...], indexes: [...], relations: [...] }
+        // Legacy format: flat array of column objects
+        if (isset($data['columns'])) {
+            $descriptor = [
+                'columns'   => $data['columns'],
+                'indexes'   => $data['indexes']   ?? [],
+                'relations' => $data['relations'] ?? [],
+            ];
+        } else {
+            $descriptor = [
+                'columns'   => $data,
+                'indexes'   => [],
+                'relations' => [],
+            ];
+        }
 
-        return $array;
+        $this->descriptor[$table] = $descriptor;
+        return $descriptor;
     }
 
     /**
-     * Composes SQL for table creation, depending on driver
-     * And executes it in the database
-     * Returns true if successfull or false if not
+     * Returns column definitions for a system table.
+     * Backward-compatible: all existing callers continue to work unchanged.
      *
-     * @param string $table     Table name (without prefix)
-     * @return boolean
+     * @param string $table  Table name without prefix
+     * @return array         Array of column definition arrays
      */
-    public function createTable( string $table ): bool
+    public function getStructure(string $table): array
     {
-        $tb = $this->prefix . $table;
+        return $this->loadDescriptor($table)['columns'];
+    }
 
-        $columns_str = $this->getStructure($table);
+    /**
+     * Returns index definitions declared for a system table.
+     * Each entry: { name, columns[], unique? }
+     */
+    public function getIndexDefinitions(string $table): array
+    {
+        return $this->loadDescriptor($table)['indexes'];
+    }
 
+    /**
+     * Returns FK relation definitions declared for a system table.
+     * Each entry: { name, column, ref_table, ref_column, on_delete }
+     */
+    public function getRelationDefinitions(string $table): array
+    {
+        return $this->loadDescriptor($table)['relations'];
+    }
+
+    // ── Table creation ───────────────────────────────────────────────────────
+
+    /**
+     * Creates a system table from its JSON descriptor, then applies indexes
+     * and (for MySQL/PG) FK constraints. Idempotent: uses CREATE TABLE IF NOT EXISTS.
+     * On SQLite, FK constraints are included inline in the DDL.
+     *
+     * @param string $table  Table name without prefix
+     */
+    public function createTable(string $table): bool
+    {
+        $tb      = $this->prefix . $table;
         $columns = [];
 
-        foreach ($columns_str as $clm) {
-            array_push($columns, $this->getCreateColumnStatement($clm, $this->driver, $this->spatial));
+        foreach ($this->getStructure($table) as $clm) {
+            $columns[] = $this->getCreateColumnStatement($clm, $this->driver, $this->spatial);
         }
 
-        $sql = "CREATE TABLE IF NOT EXISTS {$tb} (\n" .
-            "\t". implode(",\n\t", $columns) . 
-            "\n)";
+        // SQLite: FK constraints must be declared inside CREATE TABLE
+        if ($this->driver === 'sqlite') {
+            foreach ($this->getRelationDefinitions($table) as $rel) {
+                $columns[] = $this->buildInlineFkClause($rel);
+            }
+        }
 
-        return $this->run($sql);
+        $sql = "CREATE TABLE IF NOT EXISTS {$tb} (\n\t" . implode(",\n\t", $columns) . "\n)";
+        $ok  = $this->run($sql);
+
+        if (!$ok) {
+            return false;
+        }
+
+        // Apply indexes on all engines
+        $this->applyIndexes($table);
+
+        // MySQL/PG: apply FK constraints via ALTER TABLE
+        if ($this->driver !== 'sqlite') {
+            $this->applyRelations($table);
+        }
+
+        return true;
+    }
+
+    /**
+     * Builds a FOREIGN KEY inline clause for use inside CREATE TABLE (SQLite only).
+     */
+    private function buildInlineFkClause(array $rel): string
+    {
+        $refTable = $this->prefix . $rel['ref_table'];
+        $refCol   = $rel['ref_column'] ?? 'id';
+        $onDelete = strtoupper($rel['on_delete'] ?? 'RESTRICT');
+        return "FOREIGN KEY ({$rel['column']}) REFERENCES {$refTable}({$refCol}) ON DELETE {$onDelete}";
+    }
+
+    /**
+     * Applies all index definitions for a table. Called by createTable().
+     */
+    private function applyIndexes(string $table): void
+    {
+        foreach ($this->getIndexDefinitions($table) as $idx) {
+            $this->createIndex($table, $idx['name'], $idx['columns'], $idx['unique'] ?? false);
+        }
+    }
+
+    /**
+     * Applies all FK relation definitions for a table via ALTER TABLE.
+     * Called by createTable() on MySQL/PG only.
+     */
+    private function applyRelations(string $table): void
+    {
+        foreach ($this->getRelationDefinitions($table) as $rel) {
+            $this->addForeignKey(
+                $table,
+                $rel['name'],
+                $rel['column'],
+                $rel['ref_table'],
+                $rel['ref_column'] ?? 'id',
+                $rel['on_delete']  ?? 'RESTRICT'
+            );
+        }
     }
 
     /**
@@ -361,6 +465,156 @@ class Manage
         
         return $this->run($sql, $values, 'read');
     }
+
+    // ── Public trans-engine index & FK API ───────────────────────────────────
+
+    /**
+     * Creates an index on a system table. Idempotent: no-op if already exists.
+     *
+     * @param string   $table    Table name without prefix
+     * @param string   $name     Index name without prefix (prefix is prepended automatically)
+     * @param string[] $columns  Columns to include in the index
+     * @param bool     $unique   Whether to create a UNIQUE index (default false)
+     */
+    public function createIndex(string $table, string $name, array $columns, bool $unique = false): bool
+    {
+        $tb      = $this->prefix . $table;
+        $idxName = $this->prefix . $name;
+        $cols    = implode(', ', $columns);
+        $uniq    = $unique ? 'UNIQUE ' : '';
+
+        if ($this->driver === 'mysql') {
+            // MySQL < 8.0.29 has no IF NOT EXISTS for regular indexes
+            if ($this->indexExists($tb, $idxName)) {
+                return true;
+            }
+            $sql = "CREATE {$uniq}INDEX {$idxName} ON {$tb} ({$cols})";
+        } else {
+            // SQLite and PostgreSQL both support IF NOT EXISTS
+            $sql = "CREATE {$uniq}INDEX IF NOT EXISTS {$idxName} ON {$tb} ({$cols})";
+        }
+
+        return (bool) $this->run($sql);
+    }
+
+    /**
+     * Drops an index. No-op if the index does not exist.
+     *
+     * @param string $table  Table name without prefix (needed by MySQL syntax)
+     * @param string $name   Index name without prefix
+     */
+    public function dropIndex(string $table, string $name): bool
+    {
+        $tb      = $this->prefix . $table;
+        $idxName = $this->prefix . $name;
+
+        $sql = match ($this->driver) {
+            'mysql'  => "DROP INDEX {$idxName} ON {$tb}",
+            default  => "DROP INDEX IF EXISTS {$idxName}",  // SQLite, PostgreSQL
+        };
+
+        return (bool) $this->run($sql);
+    }
+
+    /**
+     * Adds a FK constraint to an existing table.
+     *
+     * SQLite does NOT support adding FK constraints to existing tables.
+     * On SQLite this method throws \BadMethodCallException.
+     * For new tables, declare FK constraints in the structure JSON 'relations' section —
+     * createTable() will include them in the CREATE TABLE DDL automatically.
+     *
+     * @param string $table      Table without prefix (the table that holds the FK column)
+     * @param string $name       Constraint name without prefix
+     * @param string $column     FK column name on $table
+     * @param string $refTable   Referenced table without prefix
+     * @param string $refColumn  Referenced column (default: id)
+     * @param string $onDelete   CASCADE | RESTRICT | SET NULL | NO ACTION
+     *
+     * @throws \BadMethodCallException on SQLite
+     */
+    public function addForeignKey(
+        string $table,
+        string $name,
+        string $column,
+        string $refTable,
+        string $refColumn = 'id',
+        string $onDelete  = 'RESTRICT'
+    ): bool {
+        if ($this->driver === 'sqlite') {
+            throw new \BadMethodCallException(
+                "SQLite does not support adding FK constraints to existing tables. " .
+                "Declare FK constraints in the structure JSON 'relations' section; " .
+                "createTable() will include them in the CREATE TABLE DDL."
+            );
+        }
+
+        $tb         = $this->prefix . $table;
+        $constraint = $this->prefix . $name;
+        $ref        = $this->prefix . $refTable;
+        $onDelete   = strtoupper($onDelete);
+
+        $sql = "ALTER TABLE {$tb} ADD CONSTRAINT {$constraint} " .
+               "FOREIGN KEY ({$column}) REFERENCES {$ref}({$refColumn}) ON DELETE {$onDelete}";
+
+        return (bool) $this->run($sql);
+    }
+
+    /**
+     * Drops a FK constraint from an existing table.
+     *
+     * @throws \BadMethodCallException on SQLite
+     */
+    public function dropForeignKey(string $table, string $name): bool
+    {
+        if ($this->driver === 'sqlite') {
+            throw new \BadMethodCallException(
+                "SQLite does not support dropping FK constraints from existing tables."
+            );
+        }
+
+        $tb         = $this->prefix . $table;
+        $constraint = $this->prefix . $name;
+
+        $sql = match ($this->driver) {
+            'mysql'  => "ALTER TABLE {$tb} DROP FOREIGN KEY {$constraint}",
+            'pgsql'  => "ALTER TABLE {$tb} DROP CONSTRAINT IF EXISTS {$constraint}",
+            default  => throw new \BadMethodCallException("Driver {$this->driver} not supported for dropForeignKey"),
+        };
+
+        return (bool) $this->run($sql);
+    }
+
+    /**
+     * Checks whether a named index exists on a table.
+     * Used internally to guard against duplicate creation on MySQL.
+     */
+    private function indexExists(string $tb, string $idxName): bool
+    {
+        $result = match ($this->driver) {
+            'mysql'  => $this->db->query(
+                "SELECT COUNT(*) AS cnt FROM information_schema.STATISTICS
+                  WHERE table_schema = DATABASE() AND table_name = ? AND index_name = ?",
+                [$tb, $idxName],
+                'read'
+            ),
+            'pgsql'  => $this->db->query(
+                "SELECT COUNT(*) AS cnt FROM pg_indexes WHERE tablename = ? AND indexname = ?",
+                [$tb, $idxName],
+                'read'
+            ),
+            'sqlite' => $this->db->query(
+                "SELECT COUNT(*) AS cnt FROM sqlite_master WHERE type='index' AND tbl_name = ? AND name = ?",
+                [$tb, $idxName],
+                'read'
+            ),
+            default  => throw new \Exception("Driver {$this->driver} not supported"),
+        };
+
+        return isset($result[0]['cnt']) && (int)$result[0]['cnt'] > 0;
+    }
+
+    // ── Internal query runner ─────────────────────────────────────────────────
 
     private function run (string $sql, array $values = [], string $return = null)
     {

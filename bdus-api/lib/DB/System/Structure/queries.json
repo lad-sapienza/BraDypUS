@@ -1,43 +1,24 @@
-[
-    {
-        "name"      : "id",
-        "type"      : "INTEGER",
-        "pk"        : true,
-        "notnull"   : false
-    },
-    {
-        "name"      : "user_id",
-        "type"      : "INTEGER",
-        "notnull"   : true
-    },
-    {
-        "name"      : "date",
-        "type"      : "TIMESTAMP",
-        "notnull"   : true
-    },
-    {
-        "name"      : "name",
-        "type"      : "TEXT",
-        "notnull"   : true
-    },
-    {
-        "name"      : "text",
-        "type"      : "TEXT",
-        "notnull"   : true
-    },
-    {
-        "name"      : "vals",
-        "type"      : "TEXT",
-        "notnull"   : true
-    },
-    {
-        "name"      : "tb",
-        "type"      : "TEXT",
-        "notnull"   : true
-    },
-    {
-        "name"      : "is_global",
-        "type"      : "INTEGER",
-        "notnull"   : false
-    }
-]
+{
+    "columns": [
+        { "name": "id",        "type": "INTEGER",   "pk": true, "notnull": false },
+        { "name": "user_id",   "type": "INTEGER",              "notnull": true  },
+        { "name": "date",      "type": "TIMESTAMP",            "notnull": true  },
+        { "name": "name",      "type": "TEXT",                 "notnull": true  },
+        { "name": "text",      "type": "TEXT",                 "notnull": true  },
+        { "name": "vals",      "type": "TEXT",                 "notnull": true  },
+        { "name": "tb",        "type": "TEXT",                 "notnull": true  },
+        { "name": "is_global", "type": "INTEGER",              "notnull": false }
+    ],
+    "indexes": [
+        { "name": "queries_user_idx", "columns": ["user_id"] }
+    ],
+    "relations": [
+        {
+            "name":       "queries_user_fk",
+            "column":     "user_id",
+            "ref_table":  "users",
+            "ref_column": "id",
+            "on_delete":  "CASCADE"
+        }
+    ]
+}

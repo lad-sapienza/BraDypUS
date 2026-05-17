@@ -63,7 +63,7 @@
         />
       </form>
 
-      <div class="create-app-link">
+      <div v-if="canCreateApp" class="create-app-link">
         <router-link to="/new-app">{{ t('create_new_app') }}</router-link>
       </div>
     </div>
@@ -92,16 +92,21 @@ const loading = ref(false)
 const loadingApps = ref(false)
 const error = ref(null)
 const apps = ref([])
+const canCreateApp = ref(false)
 
 onMounted(async () => {
   loadingApps.value = true
   try {
-    const res = await api.get('login_ctrl', 'listApps')
-    apps.value = res.apps ?? []
+    const [appsRes, statusRes] = await Promise.all([
+      api.get('login_ctrl', 'listApps'),
+      api.get('new_app_ctrl', 'getStatus'),
+    ])
+    apps.value = appsRes.apps ?? []
     // Pre-select if only one app available
     if (apps.value.length === 1) {
       form.value.app = apps.value[0]
     }
+    canCreateApp.value = statusRes.permitted ?? false
   } catch {
     apps.value = []
   } finally {

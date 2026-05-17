@@ -1,10 +1,11 @@
 {
     "columns": [
-        { "name": "id",      "type": "INTEGER",   "pk": true, "notnull": false },
-        { "name": "user_id", "type": "INTEGER",               "notnull": true  },
-        { "name": "name",    "type": "TEXT",                   "notnull": true  },
-        { "name": "sqltext", "type": "TEXT",                   "notnull": true  },
-        { "name": "date",    "type": "TIMESTAMP",              "notnull": true  }
+        { "name": "id",         "type": "INTEGER",  "pk": true, "notnull": false },
+        { "name": "user_id",    "type": "INTEGER",              "notnull": true  },
+        { "name": "name",       "type": "TEXT",                 "notnull": true  },
+        { "name": "definition", "type": "TEXT",                 "notnull": false },
+        { "name": "created_at", "type": "INTEGER",              "notnull": false },
+        { "name": "is_global",  "type": "INTEGER",              "notnull": false }
     ],
     "indexes": [
         { "name": "charts_user_idx", "columns": ["user_id"] }

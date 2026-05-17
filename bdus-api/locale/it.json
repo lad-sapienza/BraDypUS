@@ -708,5 +708,19 @@
     "users": "Utenti",
     "new_user": "Nuovo utente",
     "edit_user": "Modifica utente",
-    "table": "Tabella"
+    "table": "Tabella",
+    "charts": "Grafici",
+    "chart_type": "Tipo di grafico",
+    "metric": "Metrica",
+    "x_field": "Raggruppa per campo",
+    "y_field": "Campo valore",
+    "aggregate_function": "Funzione",
+    "use_current_filter": "Usa filtro corrente",
+    "ok_sharing_chart": "Grafico condiviso",
+    "ok_unsharing_chart": "Grafico privato",
+    "chart_not_found": "Grafico non trovato",
+    "chart_access_denied": "Non puoi modificare questo grafico",
+    "invalid_chart_type": "Tipo di grafico non valido",
+    "invalid_chart_field": "Campo non valido",
+    "run_chart": "Esegui"
 }

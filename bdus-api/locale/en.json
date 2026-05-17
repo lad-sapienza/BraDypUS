@@ -708,5 +708,19 @@
     "users": "Users",
     "new_user": "New user",
     "edit_user": "Edit user",
-    "table": "Table"
+    "table": "Table",
+    "charts": "Charts",
+    "chart_type": "Chart type",
+    "metric": "Metric",
+    "x_field": "Group by field",
+    "y_field": "Value field",
+    "aggregate_function": "Function",
+    "use_current_filter": "Use current filter",
+    "ok_sharing_chart": "Chart shared",
+    "ok_unsharing_chart": "Chart unshared",
+    "chart_not_found": "Chart not found",
+    "chart_access_denied": "You cannot modify this chart",
+    "invalid_chart_type": "Invalid chart type",
+    "invalid_chart_field": "Invalid field",
+    "run_chart": "Run"
 }

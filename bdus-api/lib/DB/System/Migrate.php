@@ -12,6 +12,7 @@ use DB\System\Manage;
 use DB\System\Migrations\M001_AddUserTablePrivs;
 use DB\System\Migrations\M002_CreateFileLinks;
 use DB\System\Migrations\M003_RefactorQueriesTable;
+use DB\System\Migrations\M004_RefactorChartsTable;
 use Monolog\Logger;
 
 /**
@@ -41,6 +42,7 @@ class Migrate
         M001_AddUserTablePrivs::class,
         M002_CreateFileLinks::class,
         M003_RefactorQueriesTable::class,
+        M004_RefactorChartsTable::class,
     ];
 
     /**

@@ -30,6 +30,15 @@
         <i class="pi pi-map" />
         <span>{{ t('geoface') }}</span>
       </button>
+      <button
+        class="cfg-action-btn"
+        :class="{ active: active === 'apikeys' }"
+        @click="$emit('select', 'apikeys')"
+        :title="t('api_keys')"
+      >
+        <i class="pi pi-key" />
+        <span>{{ t('api_keys') }}</span>
+      </button>
     </div>
 
     <div class="cfg-sidebar-divider" />

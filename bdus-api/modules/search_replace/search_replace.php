@@ -16,7 +16,7 @@ class search_replace_ctrl extends Controller
 	 */
 	public function getTableList(): void
 	{
-		if (!\utils::canUser('adm')) {
+		if (!\utils::canUser('admin')) {
 			$this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
 			return;
 		}
@@ -40,7 +40,7 @@ class search_replace_ctrl extends Controller
 	 */
 	public function getFieldList(): void
 	{
-		if (!\utils::canUser('adm')) {
+		if (!\utils::canUser('admin')) {
 			$this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
 			return;
 		}
@@ -74,7 +74,7 @@ class search_replace_ctrl extends Controller
 	 */
 	public function doReplace(): void
 	{
-		if (!\utils::canUser('adm')) {
+		if (!\utils::canUser('admin')) {
 			$this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
 			return;
 		}

@@ -94,6 +94,7 @@
           :recordId="id"
           @file-uploaded="onFileUploaded"
           @file-deleted="onFileDeleted"
+          @files-reordered="onFilesReordered"
         />
       </fieldset>
 
@@ -624,6 +625,16 @@ function onFileUploaded(newFile) {
 function onFileDeleted(fileId) {
   if (record.value) {
     record.value.files = (record.value.files ?? []).filter(f => f.id !== fileId)
+  }
+}
+
+/**
+ * Files were reordered via drag-and-drop: update the local array so view-mode
+ * reflects the new order immediately without a full record reload.
+ */
+function onFilesReordered(newFiles) {
+  if (record.value) {
+    record.value.files = newFiles
   }
 }
 

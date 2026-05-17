@@ -29,7 +29,6 @@ class search_replace_ctrl extends Controller
 				'label' => $this->cfg->get("tables.$name.label") ?? $name,
 			];
 		}
-		usort($tables, fn($a, $b) => strcmp($a['label'], $b['label']));
 		$this->returnJson(['tables' => $tables]);
 	}
 
@@ -62,7 +61,6 @@ class search_replace_ctrl extends Controller
 				];
 			}
 		}
-		usort($fields, fn($a, $b) => strcmp($a['label'], $b['label']));
 		$this->returnJson(['fields' => $fields]);
 	}
 

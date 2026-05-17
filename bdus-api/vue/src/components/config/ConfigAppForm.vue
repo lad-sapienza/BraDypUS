@@ -133,7 +133,7 @@ import Select    from 'primevue/select'
 import Password  from 'primevue/password'
 import Message   from 'primevue/message'
 import { useToast } from 'primevue/usetoast'
-import { useI18n }  from '@/i18n'
+import { useI18n, availableLocales } from '@/i18n'
 import { api }      from '@/api'
 
 const { t }  = useI18n()
@@ -143,7 +143,9 @@ const loading       = ref(false)
 const saving        = ref(false)
 const error         = ref(null)
 const form          = ref(null)
-const langs         = ref([])
+// Available UI languages — owned by the frontend, not fetched from the backend.
+// To add a new locale: add the JSON file to src/locale/ and add an entry here.
+const langs         = availableLocales.map(l => l.code)
 const statusOptions = ref([])
 const dbEngines     = ref([])
 const users         = ref([])
@@ -161,7 +163,6 @@ async function load() {
     if (res.status === 'error') throw new Error(t(res.code))
     form.value          = { ...res.main }
     // PHP may return these as objects ({key:val}) if keys are non-sequential — normalise to arrays
-    langs.value         = Array.isArray(res.langs)         ? res.langs         : Object.values(res.langs         ?? {})
     statusOptions.value = Array.isArray(res.status_options) ? res.status_options : Object.values(res.status_options ?? {})
     dbEngines.value     = Array.isArray(res.db_engines)    ? res.db_engines    : Object.values(res.db_engines    ?? {})
     users.value         = res.users         ?? []

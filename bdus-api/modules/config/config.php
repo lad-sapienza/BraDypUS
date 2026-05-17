@@ -494,10 +494,6 @@ class config_ctrl extends Controller
       'users'          => $users,
       // array_values() re-indexes to 0-based so PHP encodes these as JSON arrays, not objects
       'db_engines'     => array_values(AvailableEngines::getList()),
-      'langs'          => array_values(array_map(
-        fn($f) => str_replace('.json', '', $f),
-        array_filter(\utils::dirContent(MAIN_DIR . 'vue/src/locale/') ?: [], fn($f) => str_ends_with($f, '.json'))
-      )),
       'status_options' => ['on', 'frozen', 'off'],
     ]);
   }

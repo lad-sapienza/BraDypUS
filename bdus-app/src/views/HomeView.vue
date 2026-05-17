@@ -16,6 +16,64 @@
         </div>
       </div>
 
+      <!-- Welcome text (between banner and cards) -->
+      <div v-if="welcomeContent || isAdmin" class="welcome-section">
+
+        <!-- View mode -->
+        <div v-if="!editingWelcome">
+          <div
+            v-if="welcomeContent"
+            class="welcome-body"
+            v-html="renderedWelcome"
+          />
+          <div v-else class="welcome-empty">
+            <i class="pi pi-info-circle" />
+            {{ t('welcome_empty_hint') }}
+          </div>
+          <div v-if="isAdmin" class="welcome-actions">
+            <Button
+              :label="t('edit')"
+              icon="pi pi-pencil"
+              size="small"
+              severity="secondary"
+              outlined
+              @click="startEdit"
+            />
+          </div>
+        </div>
+
+        <!-- Edit mode (admin only) -->
+        <div v-else class="welcome-editor">
+          <Textarea
+            v-model="editBuffer"
+            :placeholder="t('welcome_placeholder')"
+            rows="8"
+            class="w-full welcome-textarea"
+            autoResize
+          />
+          <div class="welcome-editor-hint">
+            <i class="pi pi-info-circle" />
+            {{ t('welcome_md_hint') }}
+          </div>
+          <div class="welcome-editor-actions">
+            <Button
+              :label="t('cancel')"
+              severity="secondary"
+              outlined
+              size="small"
+              @click="cancelEdit"
+            />
+            <Button
+              :label="t('save')"
+              icon="pi pi-check"
+              size="small"
+              :loading="saving"
+              @click="saveWelcome"
+            />
+          </div>
+        </div>
+      </div>
+
       <div class="page-header">
         <h2>{{ t('dashboard') }}</h2>
       </div>
@@ -48,29 +106,79 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { marked } from 'marked'
 import AppLayout from '@/components/AppLayout.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from '@/i18n'
 import { api } from '@/api'
-import Card from 'primevue/card'
-import Button from 'primevue/button'
+import { useToast } from 'primevue/usetoast'
+import Card     from 'primevue/card'
+import Button   from 'primevue/button'
+import Textarea from 'primevue/textarea'
 
-const auth = useAuthStore()
+const auth  = useAuthStore()
 const { t } = useI18n()
+const toast = useToast()
 
 const appName       = ref('')
 const appDefinition = ref('')
 
-onMounted(async () => {
+// ── Welcome text ──────────────────────────────────────────────────────────────
+const welcomeContent  = ref('')   // raw MD/HTML from server
+const editingWelcome  = ref(false)
+const editBuffer      = ref('')
+const saving          = ref(false)
+
+const isAdmin = computed(() => {
+  const priv = auth.user?.privilege
+  return priv !== undefined && priv <= 20   // adm or super_adm
+})
+
+// Render MD + raw HTML (marked passes HTML through unchanged)
+const renderedWelcome = computed(() => marked.parse(welcomeContent.value || ''))
+
+function startEdit() {
+  editBuffer.value    = welcomeContent.value
+  editingWelcome.value = true
+}
+
+function cancelEdit() {
+  editingWelcome.value = false
+}
+
+async function saveWelcome() {
+  saving.value = true
   try {
-    const res = await api.get('info_ctrl', 'getAppInfo')
+    const res = await api.post('frontpage_editor_ctrl', 'saveWelcome', { content: editBuffer.value })
     if (res.status === 'success') {
-      appName.value       = res.name
-      appDefinition.value = res.definition
+      welcomeContent.value  = editBuffer.value
+      editingWelcome.value  = false
+      toast.add({ severity: 'success', summary: t('save'), detail: t(res.code), life: 3000 })
+    } else {
+      toast.add({ severity: 'error', summary: t('error'), detail: t(res.code ?? 'error'), life: 4000 })
     }
-  } catch {
-    // non-critical — fall back to empty
+  } catch (e) {
+    toast.add({ severity: 'error', summary: t('error'), detail: String(e), life: 4000 })
+  } finally {
+    saving.value = false
+  }
+}
+
+onMounted(async () => {
+  // Load app info and welcome text in parallel
+  const [infoRes, welcomeRes] = await Promise.allSettled([
+    api.get('info_ctrl', 'getAppInfo'),
+    api.get('frontpage_editor_ctrl', 'getWelcome'),
+  ])
+
+  if (infoRes.status === 'fulfilled' && infoRes.value.status === 'success') {
+    appName.value       = infoRes.value.name
+    appDefinition.value = infoRes.value.definition
+  }
+
+  if (welcomeRes.status === 'fulfilled') {
+    welcomeContent.value = welcomeRes.value.content ?? ''
   }
 })
 
@@ -127,6 +235,73 @@ const modules = [
   color: var(--p-text-muted-color);
   white-space: nowrap;
   padding-top: 0.25rem;
+}
+
+/* ── Welcome section ─────────────────────────────────────── */
+.welcome-section {
+  margin-bottom: 2rem;
+  padding: 1.25rem 1.5rem;
+  background: var(--p-surface-card);
+  border: 1px solid var(--p-surface-border);
+  border-radius: var(--p-border-radius-lg);
+}
+
+.welcome-body {
+  line-height: 1.7;
+  color: var(--p-text-color);
+}
+
+/* Scope markdown-generated styles */
+.welcome-body :deep(h1),
+.welcome-body :deep(h2),
+.welcome-body :deep(h3) {
+  font-weight: 600;
+  margin: 0.75rem 0 0.4rem;
+  color: var(--p-text-color);
+}
+
+.welcome-body :deep(p)  { margin: 0.4rem 0; }
+.welcome-body :deep(ul),
+.welcome-body :deep(ol) { padding-left: 1.5rem; margin: 0.4rem 0; }
+.welcome-body :deep(a)  { color: var(--p-primary-color); }
+.welcome-body :deep(code) {
+  background: var(--p-surface-ground);
+  padding: 0.1em 0.3em;
+  border-radius: 3px;
+  font-size: 0.88em;
+}
+
+.welcome-empty {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--p-text-muted-color);
+  font-size: 0.9rem;
+}
+
+.welcome-actions {
+  margin-top: 0.75rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.welcome-editor { display: flex; flex-direction: column; gap: 0.5rem; }
+
+.welcome-textarea { font-family: monospace; font-size: 0.88rem; }
+
+.welcome-editor-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  color: var(--p-text-muted-color);
+}
+
+.welcome-editor-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
 }
 
 /* ── Section header ───────────────────────────────────────── */

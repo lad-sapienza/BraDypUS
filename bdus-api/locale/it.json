@@ -674,6 +674,7 @@
     "rs_no_relations": "Nessuna relazione stratigrafica definita",
     "rs_identifier": "Identificativo unità",
     "rs_select_relation": "Seleziona tipo di relazione",
+    "back_to_table": "Torna alla tabella",
     "back_to_record": "Torna al record",
     "open_matrix": "Apri nel grafo",
     "rs_edit_mode": "Modifica relazioni",

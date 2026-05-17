@@ -16,6 +16,16 @@
 
       <span class="matrix-spacer" />
 
+      <!-- Back to table -->
+      <Button
+        :label="tableLabel || t('back_to_table')"
+        icon="pi pi-arrow-left"
+        size="small"
+        severity="secondary"
+        outlined
+        @click="backToTable"
+      />
+
       <!-- Back to record -->
       <Button
         v-if="fromId"
@@ -185,6 +195,7 @@ const canWrite = computed(() => auth.user?.can_write === true)
 const tb          = computed(() => route.params.tb)
 const highlightId = computed(() => route.query.highlight ?? null)
 const fromId      = computed(() => route.query.from_id   ?? null)
+const backUrl     = computed(() => route.query.back       ?? null)
 
 /** Label of the current table (from shared useTables cache). */
 const tableLabel = computed(() =>
@@ -202,15 +213,41 @@ const mutating   = ref(false)  // shared loading flag for add/delete
 // ── Relation options ──────────────────────────────────────────────
 const relationOptions = computed(() => buildRelationOptions(t))
 
+// ── Translate DataView URL params (qt/q/where) → getRsMatrix API params ──
+// DataView stores search state as qt=<type>&q=<payload> in the URL (URL-friendly),
+// but getRsMatrix expects search_type=<type> + type-specific params (adv, search, etc.)
+function buildMatrixApiParams() {
+  const p    = { tb: tb.value }
+  const qt   = route.query.qt    ?? null
+  const q    = route.query.q     ?? null
+  const where = route.query.where ?? null
+
+  if (where) {
+    p.search_type = 'shortSql'
+    p.where       = where
+  } else if (qt === 'fast' && q) {
+    p.search_type = 'fast'
+    p.search      = q
+  } else if (qt === 'advanced' && q) {
+    p.search_type = 'advanced'
+    p.adv         = q          // base64-encoded JSON — same format backend expects
+  } else if (qt === 'expert' && q) {
+    p.search_type = 'sqlExpert'
+    p.querytext   = q
+  } else {
+    p.search_type = 'all'
+  }
+
+  return p
+}
+
 // ── Load matrix data ──────────────────────────────────────────────
 async function loadMatrix() {
   if (!tb.value) return
   loading.value    = true
   fetchError.value = null
 
-  const params = { tb: tb.value, ...route.query }
-  delete params.highlight
-  delete params.from_id
+  const params = buildMatrixApiParams()
 
   try {
     const res = await api.get('record_ctrl', 'getRsMatrix', params)
@@ -233,10 +270,18 @@ function onNodeClick({ db_id }) {
   router.push(`/record/${encodeURIComponent(tb.value)}/${db_id}`)
 }
 
-// ── Back to originating record ────────────────────────────────────
+// ── Back navigation ───────────────────────────────────────────────
 function backToRecord() {
   if (!fromId.value) return
   router.push(`/record/${encodeURIComponent(tb.value)}/${fromId.value}`)
+}
+
+function backToTable() {
+  if (backUrl.value) {
+    router.push(backUrl.value)
+  } else {
+    router.push('/data')
+  }
 }
 
 // ── PNG export ────────────────────────────────────────────────────

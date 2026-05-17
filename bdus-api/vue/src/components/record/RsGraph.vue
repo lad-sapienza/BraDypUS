@@ -26,7 +26,7 @@
 <script setup>
 import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useI18n } from '@/i18n'
-import { REL_LABELS, UNDIRECTED } from '@/composables/useRsRelations'
+import { REL_KEYS, UNDIRECTED, SWAP_DIRECTION } from '@/composables/useRsRelations'
 
 const { t } = useI18n()
 
@@ -51,6 +51,9 @@ let cy = null
 function buildElements() {
   const elements = []
 
+  // Index node identifiers for O(1) lookup when validating edges
+  const nodeIds = new Set(props.nodes.map(n => String(n.identifier)))
+
   for (const n of props.nodes) {
     elements.push({
       group: 'nodes',
@@ -58,20 +61,39 @@ function buildElements() {
         id:        String(n.identifier),
         label:     String(n.identifier),
         db_id:     n.db_id,
-        in_filter: n.in_filter,
-        highlight: String(n.identifier) === props.highlightId,
+        // Store as integer (0/1) — Cytoscape selectors don't handle JS booleans
+        in_filter: n.in_filter ? 1 : 0,
+        highlight: String(n.identifier) === props.highlightId ? 1 : 0,
       },
     })
   }
 
   // Track undirected edges to avoid A↔B and B↔A duplicates
   const seenUndirected = new Set()
+  let skipped = 0
 
   for (const r of props.relations) {
+    const src = String(r.first)
+    const tgt = String(r.second)
+
+    // Skip orphan edges — their source or target record no longer exists
+    // (e.g. deleted record whose RS rows were not cleaned up)
+    if (!nodeIds.has(src) || !nodeIds.has(tgt)) {
+      skipped++
+      continue
+    }
+
     const rel     = parseInt(r.relation, 10)
     const isUndir = UNDIRECTED.has(rel)
+
+    // Passive relations (1,2,3,4): first = older unit, second = newer.
+    // Swap source/target so arrows flow newer→older (top→bottom in dagre TB).
+    const needsSwap = SWAP_DIRECTION.has(rel)
+    const edgeSrc = needsSwap ? tgt : src
+    const edgeTgt = needsSwap ? src : tgt
+
     const edgeKey = isUndir
-      ? [r.first, r.second].sort().join('|') + '|' + rel
+      ? [edgeSrc, edgeTgt].sort().join('|') + '|' + rel
       : null
 
     if (isUndir) {
@@ -84,13 +106,17 @@ function buildElements() {
       data: {
         id:       'e' + r.id,
         rs_id:    r.id,           // raw DB id for deleteRs
-        source:   String(r.first),
-        target:   String(r.second),
-        label:    REL_LABELS[rel] ?? String(rel),
+        source:   edgeSrc,
+        target:   edgeTgt,
+        label:    REL_KEYS[rel] ? t(REL_KEYS[rel]) : String(rel),
         relation: rel,
-        directed: !isUndir,
+        directed: isUndir ? 0 : 1,   // integer for Cytoscape selector compat
       },
     })
+  }
+
+  if (skipped > 0) {
+    console.warn(`[RsGraph] Skipped ${skipped} orphan relation(s) — source or target node not in dataset`)
   }
 
   return elements
@@ -108,7 +134,9 @@ function buildStyle() {
         'text-halign':      'center',
         'font-size':        '11px',
         'font-weight':      '600',
-        'width':            'label',
+        // 'label' keyword for width is deprecated in Cytoscape ≥3.23; use min-width instead
+        'min-width':        'label',
+        'min-height':       'label',
         'height':           '28px',
         'padding':          '8px',
         'background-color': '#ffffff',
@@ -118,8 +146,8 @@ function buildStyle() {
       },
     },
     {
-      // Highlighted node (current record)
-      selector: 'node[?highlight]',
+      // Highlighted node (current record) — stored as integer 1
+      selector: 'node[highlight = 1]',
       style: {
         'background-color': '#f97316',
         'border-color':     '#ea580c',
@@ -127,8 +155,8 @@ function buildStyle() {
       },
     },
     {
-      // Nodes outside the filter
-      selector: 'node[in_filter = false]',
+      // Nodes outside the filter — stored as integer 0
+      selector: 'node[in_filter = 0]',
       style: {
         'border-style':     'dashed',
         'border-color':     '#94a3b8',
@@ -163,11 +191,22 @@ function buildStyle() {
       },
     },
     {
-      // Undirected edges (relations 9=same, 10=bound)
-      selector: 'edge[directed = false]',
+      // Undirected edges (relations 9=same, 10=bound) — directed=0 means undirected
+      selector: 'edge[directed = 0]',
       style: {
         'target-arrow-shape': 'none',
         'line-style':         'dashed',
+      },
+    },
+    {
+      // Counter-flow edges indicate stratigraphic cycles (data error)
+      selector: 'edge.cyclic',
+      style: {
+        'line-color':         '#ef4444',
+        'target-arrow-color': '#ef4444',
+        'width':              2,
+        'label':              'data(label)',
+        'color':              '#ef4444',
       },
     },
     {
@@ -239,10 +278,27 @@ async function initCy() {
       nodesep: 40,
       edgeSep: 20,
       animate: false,
+      fit:     true,
     },
-    minZoom:         0.2,
+    minZoom:         0.05,
     maxZoom:         3,
     wheelSensitivity: 0.3,
+  })
+
+  // After layout: fit viewport and mark counter-flow (cyclic) edges in red.
+  // A directed edge is counter-flow when its source node sits below its target
+  // node in the TB layout — this indicates a stratigraphic cycle in the data.
+  cy.on('layoutstop', () => {
+    cy.fit(undefined, 20)
+    cy.edges('[directed = 1]').forEach(edge => {
+      const sy = edge.source().position('y')
+      const ty = edge.target().position('y')
+      if (sy > ty) {
+        edge.addClass('cyclic')
+      } else {
+        edge.removeClass('cyclic')
+      }
+    })
   })
 
   // ── Node tap ──────────────────────────────────────────────────

@@ -674,6 +674,7 @@
     "rs_no_relations": "No stratigraphic relations defined",
     "rs_identifier": "Unit identifier",
     "rs_select_relation": "Select relation type",
+    "back_to_table": "Back to table",
     "back_to_record": "Back to record",
     "open_matrix": "Open in matrix",
     "rs_edit_mode": "Edit relations",

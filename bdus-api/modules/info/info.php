@@ -4,8 +4,6 @@
  * @license AGPL-3.0; see LICENSE
  */
 
-use Michelf\Markdown;
-
 class info_ctrl extends Controller
 {
   /**
@@ -31,11 +29,12 @@ class info_ctrl extends Controller
   }
 
   /**
-   * Returns app version and full changelog rendered as HTML.
+   * Returns app version and full changelog as raw Markdown.
+   * Rendering is done client-side by the Vue frontend (marked.js).
    *
-   * GET ?obj=info_ctrl&method=getInfo
+   * GET /api/info
    *
-   * Response: { version: string, changelog_html: string }
+   * Response: { version: string, changelog_md: string }
    */
   public function getInfo(): void
   {
@@ -45,10 +44,8 @@ class info_ctrl extends Controller
     }
 
     $this->returnJson([
-      'version'        => \version::current(),
-      'changelog_html' => Markdown::defaultTransform(
-        file_get_contents(MAIN_DIR . 'CHANGELOG.md')
-      ),
+      'version'      => \version::current(),
+      'changelog_md' => file_get_contents(MAIN_DIR . 'CHANGELOG.md') ?: '',
     ]);
   }
 

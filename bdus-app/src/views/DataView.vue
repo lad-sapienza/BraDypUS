@@ -115,6 +115,18 @@
                 </template>
               </Tag>
 
+              <!-- Harris Matrix — only for tables with rs_field configured -->
+              <Button
+                v-if="selectedTable?.rs_field"
+                :label="t('harris_matrix')"
+                icon="pi pi-share-alt"
+                size="small"
+                severity="secondary"
+                outlined
+                class="add-record-btn"
+                @click="openMatrix"
+              />
+
               <!-- Add record — only for users with add_new privilege -->
               <Button
                 v-if="canAdd"
@@ -891,6 +903,21 @@ function addRecord() {
   if (tb) {
     router.push(`/record/${encodeURIComponent(tb)}/new`)
   }
+}
+
+/**
+ * Navigate to the Harris Matrix view for the current table,
+ * passing the active search params from the current route URL.
+ * MatrixView / getRsMatrix() accept the same search_type/search/adv/where
+ * params as getRecords(), so we forward the entire current query.
+ */
+function openMatrix() {
+  const tb = selectedTable.value?.name
+  if (!tb) return
+  router.push({
+    path:  `/matrix/${encodeURIComponent(tb)}`,
+    query: { ...route.query },
+  })
 }
 
 function onRowClick(event) {

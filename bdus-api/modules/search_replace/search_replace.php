@@ -21,12 +21,12 @@ class search_replace_ctrl extends Controller
 			return;
 		}
 
+		$names  = $this->cfg->get('tables.*.name') ?: [];
 		$tables = [];
-		$all = $this->cfg->get('tables') ?? [];
-		foreach ($all as $name => $cfg) {
+		foreach ($names as $name) {
 			$tables[] = [
 				'name'  => $name,
-				'label' => $cfg['label'] ?? $name,
+				'label' => $this->cfg->get("tables.$name.label") ?? $name,
 			];
 		}
 		usort($tables, fn($a, $b) => strcmp($a['label'], $b['label']));
@@ -51,15 +51,14 @@ class search_replace_ctrl extends Controller
 			return;
 		}
 
+		$names  = $this->cfg->get("tables.{$tb}.fields.*.name") ?: [];
 		$fields = [];
-		$all = $this->cfg->get("tables.{$tb}.fields") ?? [];
-		foreach ($all as $name => $cfg) {
-			// Only text-like fields make sense for search & replace
-			$type = $cfg['type'] ?? 'text';
+		foreach ($names as $name) {
+			$type = $this->cfg->get("tables.{$tb}.fields.{$name}.type") ?? 'text';
 			if (in_array($type, ['text', 'textarea', 'combo_select'], true)) {
 				$fields[] = [
 					'name'  => $name,
-					'label' => $cfg['label'] ?? $name,
+					'label' => $this->cfg->get("tables.{$tb}.fields.{$name}.label") ?? $name,
 				];
 			}
 		}

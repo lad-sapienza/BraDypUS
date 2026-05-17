@@ -3,14 +3,12 @@ set -e
 
 # Create writable directories if missing
 mkdir -p /var/www/html/cache \
-         /var/www/html/sessions \
          /var/www/html/logs
 
 # Fix permissions on writable directories
 # (needed when source is volume-mounted from host)
 chown -R www-data:www-data \
     /var/www/html/cache \
-    /var/www/html/sessions \
     /var/www/html/logs \
     /var/www/html/projects 2>/dev/null || true
 

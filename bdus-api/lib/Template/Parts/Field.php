@@ -456,7 +456,7 @@ class Field
             case '%today%':
                 return date('Y-m-d');
             case '%current_user%':
-                return $_SESSION['user']['name'];
+                return \Auth\CurrentUser::get('name');
             default:
                 return $def_value;
         }

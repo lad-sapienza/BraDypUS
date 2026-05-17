@@ -69,16 +69,6 @@
               size="small"
             />
           </div>
-          <div class="cfg-form-field">
-            <label>{{ t('auto_login_as_user') }}</label>
-            <Select
-              v-model="form.aut_login_as_user"
-              :options="userOptions"
-              option-label="label"
-              option-value="value"
-              size="small"
-            />
-          </div>
         </div>
       </section>
 
@@ -181,7 +171,6 @@ async function load() {
     }
     // normalise user-ids to strings
     form.value.api_login_as_user = form.value.api_login_as_user ? String(form.value.api_login_as_user) : ''
-    form.value.aut_login_as_user = form.value.aut_login_as_user ? String(form.value.aut_login_as_user) : ''
   } catch (e) {
     error.value = e.message
   } finally {

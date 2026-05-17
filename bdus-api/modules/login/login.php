@@ -106,53 +106,41 @@ class login_ctrl extends Controller
 		
 	}
 
-	public function out()
+	public function out(): void
 	{
-		try {
-			$user_id = $_SESSION['user']['id'];
-			self::endUserSession( $this->db );
+		// JWT logout is client-side (clear sessionStorage).
+		// This endpoint exists solely for server-side logging.
+		$user_id = \Auth\CurrentUser::id();
+		if ($user_id) {
 			$this->log->info("User {$user_id} logged out");
-		} catch (\Throwable $th) {
-			$this->log->error($th);
 		}
-		
+		$this->response('ok', 'success');
 	}
 
-
-	public function autolog()
+	/**
+	 * Refresh the JWT for the currently authenticated user.
+	 * constants.php has already validated the incoming token, so we just
+	 * re-issue one with a fresh expiry.
+	 */
+	public function refresh(): void
 	{
-		if (\cookieAuth::get()) {
-			$this->response('Authenticated', 'success');
+		if (!\Auth\CurrentUser::isAuthenticated()) {
+			http_response_code(401);
+			$this->response('unauthorized', 'error');
 			return;
 		}
-
-		try {
-			if (file_exists(MAIN_DIR . "projects/{$this->get['app']}/cfg/app_data.json")) {
-
-				$app_data = json_decode(file_get_contents(MAIN_DIR . "projects/{$this->get['app']}/cfg/app_data.json"), true);
-
-				$aut_login_as_user = null;
-
-                if (isset($app_data['aut_login_as_user'])) {
-                    $aut_login_as_user = (int)$app_data['aut_login_as_user'];
-				}
-				$this->login(null, null, null, $aut_login_as_user);
-				$this->log->info("User {$_SESSION['user']['id']} logged in");
-
-				$this->response('Authenticated', 'success');
-			}
-		} catch(\Throwable $e) {
-			$this->response($e->getMessage(), 'error');
-		}
+		$token = \JWT\JwtManager::generate(\Auth\CurrentUser::get(), APP);
+		$this->response('ok', 'success', null, ['token' => $token]);
 	}
 
-	public function auth()
+	public function auth(): void
 	{
 		try {
-			$this->login($this->post['email'], $this->post['password'], $this->post['remember']);
-			$this->log->info("User {$_SESSION['user']['id']} logged in");
-			$this->response('Go ahead', 'success');
-			$obj['status'] = 'success';
+			$user = $this->authenticate($this->post['email'], $this->post['password']);
+			\DB\System\Migrate::run($this->db, $this->prefix);
+			$this->log->info("User {$user['id']} logged into " . APP);
+			$token = \JWT\JwtManager::generate($user, APP);
+			$this->response('ok', 'success', null, ['token' => $token]);
 		} catch (\Exception $e) {
 			$this->log->error($e);
 			$this->response($e->getMessage(), 'error');
@@ -287,74 +275,32 @@ class login_ctrl extends Controller
 		}
 	}
 
-	private function login(string $email = null, string $password = null, string $remember = null, int $user_id = null): bool
+	/**
+	 * Authenticate a user by email + password.
+	 * Returns a clean user array (no password, no settings) on success,
+	 * or throws on failure.
+	 */
+	private function authenticate(string $email, string $password): array
     {
-        if (!$email && !$password && $remember) {
-            if (\cookieAuth::get()) {
-                return true;
-            }
+		if (!filter_var($email, FILTER_VALIDATE_EMAIL) || empty($password)) {
+			throw new \Exception(\tr::get('email_password_needed'));
 		}
-		
+
 		$sys_manager = new Manage($this->db, $this->prefix);
+		$rows = $sys_manager->getBySQL('users', 'email = ?', [$email]);
+		$res  = $rows[0] ?? null;
 
-        if ($user_id) {
-			$res = $sys_manager->getById('users', $user_id);
-        } elseif (filter_var($email, FILTER_VALIDATE_EMAIL) && !empty($password)) {
-			$rows = $sys_manager->getBySQL('users', 'email = ?', [$email]);
-			$res = $rows[0] ?? null;
-			if (!$res || !\utils::verifyPassword($password, $res['password'])) {
-				throw new \Exception(\tr::get('login_data_not_valid'));
-			}
-			// Silently migrate legacy SHA1 hash to bcrypt on successful login
-			if (strlen($res['password']) === 40) {
-				$sys_manager->editRow('users', $res['id'], ['password' => password_hash($password, PASSWORD_DEFAULT)]);
-			}
-        } else {
-            throw new \Exception(\tr::get('email_password_needed'));
-        }
-
-        if ($res) {
-			self::startUserSession($res, ($remember && $remember !== 'false'));
-            return true;
-        } else {
-            throw new \Exception(\tr::get('login_data_not_valid'));
-        }
-	} // end of login
-
-	public static function startUserSession( array $user , bool $remember = false) : void
-	{
-		// remove password from array
-		unset($user['password']);
-
-		// Set user preferences
-		if ( isset($user['settings']) ) {
-			$sett_arr = unserialize($user['settings']);
-			if (is_array($sett_arr) && !empty($sett_arr)){
-				foreach ($sett_arr as $key => $value) {
-					\pref::set($key, $value);
-				}
-			}
+		if (!$res || !\utils::verifyPassword($password, $res['password'])) {
+			throw new \Exception(\tr::get('login_data_not_valid'));
 		}
 
-		// remove settings from array
-		unset($user['settings']);
-
-		// assign user data to session variable
-		$_SESSION['user'] = $user;
-
-		if ($remember) {
-			\cookieAuth::set();
+		// Silently migrate legacy SHA1 hash to bcrypt on successful login
+		if (strlen($res['password']) === 40) {
+			$sys_manager->editRow('users', $res['id'], ['password' => password_hash($password, PASSWORD_DEFAULT)]);
 		}
-	}
 
-	public static function endUserSession(\DB\DB $db = null) : void
-	{
-		if ($db){
-			\pref::save2DB($db);
-		}
-		\cookieAuth::destroy();
-		$_SESSION = [];
-		session_destroy();
+		unset($res['password'], $res['settings']);
+		return $res;
 	}
 	
 	private function getToken( string $app, array $user_data ) : string

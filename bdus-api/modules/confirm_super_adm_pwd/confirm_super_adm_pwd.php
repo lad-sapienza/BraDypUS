@@ -16,7 +16,7 @@ class confirm_super_adm_pwd_ctrl extends Controller
         }
         // Logged used is super admin. Let's check the password
         $pwd = $this->post['pwd'];
-        $current_user_id = $_SESSION['user']['id'];
+        $current_user_id = \Auth\CurrentUser::id();
 
         $sys_manager = new Manage($this->db, $this->prefix);
         

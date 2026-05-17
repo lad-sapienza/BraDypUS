@@ -1,135 +1,122 @@
 <?php
 /**
- * @copyright 2007-2022 Julian Bogdani
+ * @copyright 2007-2025 Julian Bogdani
  * @license AGPL-3.0; see LICENSE
- * @since			Apr 7, 2012
-*/
+ *
+ * Bootstrap: constants, autoloaders, JWT authentication.
+ *
+ * No PHP sessions are used in v5. Authentication is carried by a
+ * per-request JWT in the Authorization: Bearer header.
+ * Application context (APP / PREFIX / PROJ_DIR) is derived from the
+ * token's 'app' claim, or from $_REQUEST['app'] for unauthenticated
+ * endpoints (login, app list, password-reset).
+ */
 
-// required since php 5.0.1: http://php.net/manual/en/function.date-default-timezone-set.php
 date_default_timezone_set('Europe/Rome');
 
-/**
- * Main CONSTANTS are always set
- */
-define ( 'MAIN_DIR',	$basePath);
+define('MAIN_DIR', $basePath);
 
-/**
- * Set session lifetime to last 8h
- */
-ini_set('session.gc_maxlifetime', (60*60*8)); #8h
-
-/**
- * Error reporting is set to none
- */
 error_reporting(0);
-
-/**
- * Turn off display errors
- */
 ini_set('display_errors', 'off');
 
 /**
- * Start session
+ * Debug mode: set the BRADYPUS_DEBUG=1 environment variable to enable.
+ * When on: Twig debug mode, verbose error reporting, no template cache.
  */
-session_start();
+define('DEBUG_ON', getenv('BRADYPUS_DEBUG') === '1');
 
-/**
- * Force logout
- */
-if ($_GET['logout']){
-	$_SESSION = [];
-	session_destroy();
-	header("Location: ./");
-}
-
-/**
- * Define APP from REQUEST['app] (POST or GET): 
- * Or define from SESSION['app']
- * In both cases, application directory must exist!
- */
-if ( isset($_REQUEST['app']) && is_dir(MAIN_DIR . 'projects/' . $_REQUEST['app'] ) ) {
-	define ( 'APP', $_REQUEST['app']);
-	$_SESSION['app'] = APP;
-} elseif (isset($_SESSION['app'])) {
-	if (is_dir(MAIN_DIR . 'projects/' . $_SESSION['app'] )) {
-		define ( 'APP', $_SESSION['app']);
-	} else {
-		/**
-		 * Edge case: session app is set, but application direcory is not set. 
-		 * Force logout
-		 */
-		$_SESSION = [];
-		session_destroy();
-		header("Location: ./");
-	}
-}
-/**
- * Define PROJ_DIR and PREFIX: APP dependent
- */
-if( defined('APP') ) {
-	
-	define ( 'PREFIX', APP . '__');
-	
-	define ( 'PROJ_DIR', 		MAIN_DIR . 'projects/' . APP . '/');
-	
-	/*
-	 * Create directories that MUST exist for each valid app
-	 */
-	$must_exist_dirs = [
-		MAIN_DIR . 'cache',
-		MAIN_DIR . 'cache/img',
-		PROJ_DIR . 'files', 
-		PROJ_DIR . 'backups', 
-		PROJ_DIR . 'export', 
-		PROJ_DIR . 'db'
-	];
-	
-	foreach($must_exist_dirs as $dir) {
-		if (!is_dir($dir)) {
-			@mkdir($dir, 0777, true);
-		}
-	}
-	
-	$must_be_writtable = $must_exist_dirs;
-	
-	foreach ($must_be_writtable as $file) {
-		if (!is_writable($file)){
-			die("Directory $dir is not writable. Application cannot start!");
-		}
-	}
-}
-
-/**
- * If debug is explicitly set to 0|1, stop|stop debug_mode
- */
-if (isset($_GET['debug'])) {
-	if ( $_GET['debug'] === '1' ) {
-		$_SESSION['debug_mode'] = true;
-	} else {
-		$_SESSION['debug_mode'] = false;
-	}
-}
-
-
-/**
- * Set DEBUG_ON as $_SESSION['debug_mode']
- */
-define('DEBUG_ON', isset($_SESSION['debug_mode']) && $_SESSION['debug_mode']);
-
-/**
- * Set cache if debug is false, 
- * otherwise set to true
- */
-if (DEBUG_ON === true) {
-	define('CACHE', serialize( [ "autoescape" => false, "debug" => true ] ));
-	// Error reporting is set to ALL but NOT: Warning or Notice
-	error_reporting(E_ALL & ~E_WARNING & ~E_NOTICE);
-	ini_set('error_log', 'logs/error.log');
-
+if (DEBUG_ON) {
+    define('CACHE', serialize(["autoescape" => false, "debug" => true]));
+    error_reporting(E_ALL & ~E_WARNING & ~E_NOTICE);
+    ini_set('error_log', 'logs/error.log');
 } else {
-	define('CACHE', serialize([ "autoescape" => false, "cache" => "cache"]));
+    define('CACHE', serialize(["autoescape" => false, "cache" => "cache"]));
 }
 
+// ── Autoloaders (must come before any class usage) ────────────────────
 require_once $basePath . 'lib/autoLoader.php';
 require_once $basePath . 'vendor/autoload.php';
 new autoLoader($basePath . 'lib/', $basePath . 'modules/');
+
+// ── JWT / App resolution ──────────────────────────────────────────────
+
+/**
+ * Extract the Bearer token from the Authorization header.
+ * Nginx and some PHP-FPM setups expose it under REDIRECT_HTTP_AUTHORIZATION.
+ */
+function _bdus_bearer_token(): ?string
+{
+    // 1. Standard $_SERVER key (mod_php, most FPM setups)
+    // 2. Some Apache+rewrite configs expose it under REDIRECT_
+    // 3. getallheaders() works on any PHP 7.3+ SAPI (Apache, nginx-FPM, Caddy, CLI)
+    $header = $_SERVER['HTTP_AUTHORIZATION']
+           ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION']
+           ?? '';
+
+    if ($header === '' && function_exists('getallheaders')) {
+        $all    = getallheaders();                            // case-insensitive lookup
+        $header = $all['Authorization'] ?? $all['authorization'] ?? '';
+    }
+
+    if (preg_match('/^Bearer\s+(.+)$/i', $header, $m)) {
+        return trim($m[1]);
+    }
+    return null;
+}
+
+$_bdus_token = _bdus_bearer_token();
+
+if ($_bdus_token) {
+    // Peek at the unverified 'app' claim to load the correct per-app secret.
+    $app_hint = \JWT\JwtManager::peekApp($_bdus_token);
+
+    if ($app_hint && is_dir(MAIN_DIR . 'projects/' . $app_hint)) {
+        define('APP',      $app_hint);
+        define('PREFIX',   APP . '__');
+        define('PROJ_DIR', MAIN_DIR . 'projects/' . APP . '/');
+
+        // Full signature verification
+        $claims = \JWT\JwtManager::decode($_bdus_token, APP);
+        if ($claims) {
+            \Auth\CurrentUser::set([
+                'id'        => (int) $claims['sub'],
+                'privilege' => (int) $claims['prv'],
+                'name'      => $claims['name'] ?? '',
+                'email'     => $claims['eml']  ?? '',
+                'app'       => APP,
+            ]);
+        }
+    }
+
+} elseif (isset($_REQUEST['app']) && is_dir(MAIN_DIR . 'projects/' . $_REQUEST['app'])) {
+    // Unauthenticated request with explicit app param
+    // (login, app list, password-reset flows)
+    define('APP',      $_REQUEST['app']);
+    define('PREFIX',   APP . '__');
+    define('PROJ_DIR', MAIN_DIR . 'projects/' . APP . '/');
+}
+
+// ── Runtime directories ───────────────────────────────────────────────
+
+if (defined('APP')) {
+    $must_exist_dirs = [
+        MAIN_DIR . 'cache',
+        MAIN_DIR . 'cache/img',
+        PROJ_DIR . 'files',
+        PROJ_DIR . 'backups',
+        PROJ_DIR . 'export',
+        PROJ_DIR . 'db',
+    ];
+
+    foreach ($must_exist_dirs as $dir) {
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0777, true);
+        }
+    }
+
+    foreach ($must_exist_dirs as $dir) {
+        if (!is_writable($dir)) {
+            die("Directory {$dir} is not writable. Application cannot start!");
+        }
+    }
+}

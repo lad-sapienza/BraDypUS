@@ -98,7 +98,7 @@ class chart_ctrl extends Controller
 
       $sys_manager = new Manage($this->db, $this->prefix);
       $res = $sys_manager->addRow('charts', [
-        'user_id'  => $_SESSION['user']['id'],
+        'user_id'  => \Auth\CurrentUser::id(),
         'name'    => $post['name'],
         'sqltext'  => QueryFromRequest::makeSafeStatement(base64_decode($post['query_text'])),
         'date'    => (new \DateTime())->format('Y-m-d H:i:s'),

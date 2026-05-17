@@ -1,124 +1,61 @@
 <?php
-
 /**
-/**
- * @copyright 2007-2022 Julian Bogdani
+ * @copyright 2007-2025 Julian Bogdani
  * @license AGPL-3.0; see LICENSE
- * @since			Aug 11, 2012
- * 
- * $_SESSION['pref']
- * 	infinte_scroll				boolean, if true infine scroll in result page is activated, else pagination is used
- * 	tmpl
- * 		table-name
- * 			context-of-usage	string,	edit|add_new|read|previre
- * 				template-name	string,	name of template
- * 	lang	string,	user language
- * 	preview
- * 		table-name
- * 			array of fields ids
+ *
+ * Stateless per-request preference store.
+ *
+ * In v5 there are no PHP sessions. Preferences that used to live in
+ * $_SESSION['pref'] are now held in static arrays for the duration of
+ * the current HTTP request only. Long-lived user preferences (templates,
+ * preview fields) will be migrated to the users.settings JSON column or
+ * to the Vue / localStorage layer as v5 modules replace their v4 counterparts.
  */
-
-use DB\DBInterface;
-use DB\System\Manage;
 
 class pref
 {
-  /**
-   * Sets or unsets a template for thable in context
-   *
-   * @param string $tb
-   * @param string $context
-   * @param string|null $tmpl
-   * @return void
-   */
-  public static function setTmpl(string $tb, string $context, ?string $tmpl): void
-  {
-    if ($tmpl) {
-      $_SESSION['pref']['tmpl'][$tb][$context] = $tmpl;
-    } else {
-      unset($_SESSION['pref']['tmpl'][$tb][$context]);
-      if (empty($_SESSION['pref']['tmpl'][$tb])) {
-        unset($_SESSION['pref']['tmpl'][$tb]);
-      }
-      if (empty($_SESSION['pref']['tmpl'])) {
-        unset($_SESSION['pref']['tmpl']);
-      }
+    /** @var string|null  current resolved language code */
+    private static ?string $lang = null;
+
+    /** @var array<string,mixed>  generic key-value preferences */
+    private static array $data = [];
+
+    /** @var array<string,array<string,string>>  per-table templates  [tb][context] */
+    private static array $tmpls = [];
+
+    // ── Language ─────────────────────────────────────────────────────────
+
+    public static function getLang(): ?string
+    {
+        return self::$lang;
     }
-  }
 
-  /**
-   * Gets template name for table and context
-   * 
-   * @param string $tb	table name
-   * @param string $context	context
-   */
-  public static function getTmpl(string $tb, string $context): ?string
-  {
-    return $_SESSION['pref']['tmpl'][$tb][$context];
-  }
-
-
-  /**
-   * Get user preference
-   * @param string $el	preference key to get
-   */
-  public static function get(string $el)
-  {
-    return $_SESSION['pref'][$el];
-  }
-
-  /**
-   * Sets or unsets a preference
-   *
-   * @param string $el
-   * @param $val
-   * @return void
-   */
-  public static function set(string $el, $val): void
-  {
-    if ($val) {
-      $_SESSION['pref'][$el] = $val;
-    } else {
-      unset($_SESSION['pref']);
+    public static function setLang(string $lang): void
+    {
+        self::$lang = $lang;
     }
-  }
 
-  /**
-   * Sets user language
-   * 
-   * @param string $lang language code
-   */
-  public static function setLang(string $lang): void
-  {
-    $_SESSION['pref']['lang'] = $lang;
-  }
+    // ── Generic preferences ──────────────────────────────────────────────
 
-  /**
-   * Gets user language
-   * 
-   * @return string
-   */
-  public static function getLang(): ?string
-  {
-    return $_SESSION['pref']['lang'];
-  }
+    public static function get(string $key): mixed
+    {
+        return self::$data[$key] ?? null;
+    }
 
-  /**
-   * Saves pref data to db
-   *
-   * @param DBInterface $db
-   * @return boolean
-   */
-  public static function save2DB(DBInterface $db): bool
-  {
-    \cookieAuth::update();
-    $sys_manager = new Manage($db, PREFIX);
-    return $sys_manager->editRow(
-      'users',
-      $_SESSION['user']['id'],
-      [
-        'settings' => serialize($_SESSION['pref'])
-      ]
-    );
-  }
+    public static function set(string $key, mixed $value): void
+    {
+        self::$data[$key] = $value;
+    }
+
+    // ── Record templates ─────────────────────────────────────────────────
+
+    public static function getTmpl(string $tb, string $context): ?string
+    {
+        return self::$tmpls[$tb][$context] ?? null;
+    }
+
+    public static function setTmpl(string $tb, string $context, string $tmpl): void
+    {
+        self::$tmpls[$tb][$context] = $tmpl;
+    }
 }

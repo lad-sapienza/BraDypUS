@@ -1,46 +1,77 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { api } from '@/api'
+import { getToken, setToken, clearToken, decodePayload, isExpired } from '@/token'
+
+/**
+ * Build a normalised user object from a decoded JWT payload.
+ * Privilege logic: lower numeric value = higher privilege.
+ * Writers (prv ≤ 25) can create / edit records.
+ */
+function userFromPayload(p) {
+  if (!p) return null
+  return {
+    id:              p.sub,
+    name:            p.name  ?? '',
+    email:           p.eml   ?? '',
+    privilege_value: p.prv,
+    can_write:       p.prv <= 25,
+  }
+}
 
 export const useAuthStore = defineStore('auth', () => {
-  const user = ref(null)
+  // Restore user from an existing, non-expired token on store init so that
+  // page reloads within the same tab don't require a full re-login.
+  const stored = getToken()
+  const user   = ref((!stored || isExpired(stored)) ? null : userFromPayload(decodePayload(stored)))
 
-  /**
-   * Attempt login with email + password.
-   * PHP sets the session cookie; we store the returned user info locally.
-   */
+  // ── Login ────────────────────────────────────────────────────────
+
   async function login(email, password, appName) {
-    const res = await api.post('login_ctrl', 'auth', {
-      email,
-      password,
-      app: appName
-    })
+    const res = await api.post('login_ctrl', 'auth', { email, password, app: appName })
     if (res.status !== 'success') throw new Error(res.text)
-    // After successful login, fetch user data
-    await fetchMe()
+    _applyToken(res.token)
   }
 
-  /**
-   * Fetch current session user data.
-   * Returns null if not authenticated.
-   */
-  async function fetchMe() {
+  // ── Silent refresh ───────────────────────────────────────────────
+
+  async function refresh() {
     try {
-      const res = await api.get('user_ctrl', 'showList')
-      if (res.users && res.users.length > 0) {
-        user.value = res.users[0]
-      }
+      const res = await api.get('login_ctrl', 'refresh')
+      if (res.token) _applyToken(res.token)
     } catch {
-      user.value = null
+      // If refresh fails the user is eventually redirected to /login
+      // when the current token expires.
     }
   }
 
+  // ── Logout ───────────────────────────────────────────────────────
+
   async function logout() {
-    await api.get('login_ctrl', 'out')
+    // Fire-and-forget: PHP endpoint only logs the event.
+    api.get('login_ctrl', 'out').catch(() => {})
+    clearToken()
     user.value = null
   }
 
-  const isAuthenticated = () => !!(user.value?.id)
+  // ── Auth check ───────────────────────────────────────────────────
 
-  return { user, login, fetchMe, logout, isAuthenticated }
+  const isAuthenticated = () => {
+    const token = getToken()
+    return !!(user.value?.id) && !!token && !isExpired(token)
+  }
+
+  // ── Internal ─────────────────────────────────────────────────────
+
+  function _applyToken(token) {
+    setToken(token)
+    user.value = userFromPayload(decodePayload(token))
+  }
+
+  /** Patch local user fields after a profile save (no API roundtrip needed). */
+  function updateProfile(fields) {
+    if (user.value) user.value = { ...user.value, ...fields }
+  }
+
+  return { user, login, refresh, logout, isAuthenticated, updateProfile }
 })

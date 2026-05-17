@@ -18,6 +18,7 @@ use DB\DB;
 use Config\Config;
 use Adbar\Dot;
 use UAC\UAC;
+use UAC\Loader as UACLoader;
 
 class App
 {
@@ -213,6 +214,20 @@ class App
           $_aa->is_online(),
           $this->db
         );
+
+        // Load per-table privilege overrides for the authenticated user.
+        // Falls back silently to global-only UAL if the migration has not
+        // run yet (first boot before login) or if the user is not logged in.
+        if (\Auth\CurrentUser::isAuthenticated()) {
+          $ual = UACLoader::buildUAL(
+            \Auth\CurrentUser::id(),
+            \Auth\CurrentUser::privilege(),
+            $this->db,
+            $this->prefix
+          );
+          $uac->setUAL($ual);
+        }
+
         $_aa->setUAC($uac);
       }
 

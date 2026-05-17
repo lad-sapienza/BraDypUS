@@ -63,7 +63,7 @@ class utils
   public static function privilege($input = false, $translate = false)
   {
     if (!$input) {
-      $input = $_SESSION['user']['privilege'];
+      $input = \Auth\CurrentUser::privilege();
     }
 
     $privilege_array = array(
@@ -116,7 +116,7 @@ class utils
       $app_status = 'on';
     }
 
-    $user_priv = $_SESSION['user']['privilege'];
+    $user_priv = \Auth\CurrentUser::privilege();
 
 
     if (!$privilege) {
@@ -144,7 +144,7 @@ class utils
         break;
 
       case 'edit':
-        return $app_status !== 'frozen' && ($user_priv < 21 || ($creator  && $creator == $_SESSION['user']['id'] && $user_priv < 26));
+        return $app_status !== 'frozen' && ($user_priv < 21 || ($creator && $creator == \Auth\CurrentUser::id() && $user_priv < 26));
         break;
 
       case 'multiple_edit':

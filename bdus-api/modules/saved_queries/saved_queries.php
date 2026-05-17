@@ -30,12 +30,12 @@ class saved_queries_ctrl extends Controller
     public function showAll()
     {
         $sys_manager = new Manage($this->db, $this->prefix);
-        $res = $sys_manager->getBySQL('queries', "user_id = ? OR is_global = ?", [$_SESSION['user']['id'], 1]);
+        $res = $sys_manager->getBySQL('queries', "user_id = ? OR is_global = ?", [\Auth\CurrentUser::id(), 1]);
 
         foreach ($res as &$q) {
             $q['tb_label'] = $this->cfg->get("tables.{$q['tb']}.label");
             $q['obj_encoded'] = \SQL\SafeQuery::encode($q['text'], json_decode($q['vals']) ?: [] );
-            $q['owned_by_me'] = $_SESSION['user']['id'] === $q['user_id'];
+            $q['owned_by_me'] = \Auth\CurrentUser::id() === (int) $q['user_id'];
         }
 
         $this->render('saved_queries', 'showAll', [
@@ -142,7 +142,7 @@ class saved_queries_ctrl extends Controller
             $sys_manager = new Manage($this->db, $this->prefix);
             list($text, $values) = \SQL\SafeQuery::decode($query_object);
             $res = $sys_manager->addRow('queries', [
-                'user_id' => $_SESSION['user']['id'],
+                'user_id' => \Auth\CurrentUser::id(),
                 'date'  => (new \DateTime())->format('Y-m-d H:i:s'),
                 'name'  => $name,
                 'text'  => $text,

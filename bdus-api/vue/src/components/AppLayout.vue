@@ -233,8 +233,10 @@ async function saveProfile(data) {
     if (res.status !== 'success') throw new Error(res.text ?? res.code)
     toast.add({ severity: 'success', summary: t('user_data_saved'), life: 3000 })
     profileVisible.value = false
-    // Refresh auth store so topbar name updates
-    await auth.fetchMe()
+    // Patch local user so the topbar reflects the new name/email immediately.
+    // The JWT will carry updated claims on next login.
+    if (data.name  !== undefined) auth.updateProfile({ name:  data.name  })
+    if (data.email !== undefined) auth.updateProfile({ email: data.email })
   } catch (e) {
     toast.add({ severity: 'error', summary: 'Error', detail: e.message, life: 4000 })
   } finally {

@@ -165,7 +165,7 @@ class Record implements RecordInterface
 					$values[":{$key}"] = $val;
 				}
 
-				$values[':creator'] = $_SESSION['user']['id'];
+				$values[':creator'] = \Auth\CurrentUser::id();
 				$query = "INSERT INTO {$this->tb} (creator, " . 
 					implode(", ", array_keys($this->data['core'])) . ") VALUES (:creator, :" . implode(', :', array_keys($this->data['core'])). ")";
 

@@ -185,7 +185,7 @@ class DB implements DBInterface
 
         $insertSQL = "INSERT INTO " . PREFIX . "versions ( userid, time, tb, rowid, content, editsql, editvalues ) VALUES (?, ?, ?, ?, ?, ? ,?)";
         $insertValues = [
-          $_SESSION['user']['id'],
+          \Auth\CurrentUser::id(),
           $dt->format('U'),
           $table,
           ($r['id'] ?: ''),

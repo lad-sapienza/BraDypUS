@@ -50,7 +50,7 @@ class sys_mail_ctrl extends Controller
 
         $this->render('sys_mail', 'form', [
             'adm_email' => $this->app . '_admin@bdus.cloud',
-            'user_email' => $_SESSION['user']['email'],
+            'user_email' => \Auth\CurrentUser::get('email'),
             'privileges' => \utils::privilege('all', true)
         ]);
     }

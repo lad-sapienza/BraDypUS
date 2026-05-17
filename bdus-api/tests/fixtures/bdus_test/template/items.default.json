@@ -1,22 +1,17 @@
 {
-  "sections": [
-    {
-      "label": "Main",
-      "collapsible": false,
-      "content": [
-        { "field": "name",        "width": "1/2" },
-        { "field": "status",      "width": "1/4" },
-        { "field": "description", "width": "1/1" }
-      ]
-    },
-    {
-      "label": "Tags",
-      "plugin": "test__tags",
-      "collapsible": true,
-      "collapsed": false,
-      "content": [
-        { "field": "label", "width": "3/4" }
-      ]
-    }
-  ]
+    "sections": [
+        {
+            "label": "Main",
+            "content": [
+                {
+                    "field": "name",
+                    "width": "1\/2"
+                },
+                {
+                    "field": "status",
+                    "width": "1\/4"
+                }
+            ]
+        }
+    ]
 }

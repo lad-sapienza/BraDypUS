@@ -69,7 +69,11 @@ class home_ctrl extends Controller
         $raw = $this->cfg->get('tables.*.label', 'is_plugin', null);
         $tables = [];
         foreach ($raw as $name => $label) {
-            $tables[] = ['name' => $name, 'label' => $label ?: $name];
+            $tables[] = [
+                'name'     => $name,
+                'label'    => $label ?: $name,
+                'rs_field' => $this->cfg->get("tables.{$name}.rs") ?? null,
+            ];
         }
 
         $this->returnJson(['tables' => $tables]);

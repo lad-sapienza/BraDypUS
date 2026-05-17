@@ -206,6 +206,18 @@
         </div>
       </fieldset>
 
+      <!-- Stratigraphic Relations (RS) — only when table has rs_field configured -->
+      <RsSection
+        v-if="record.schema?.rs_field && !isNew"
+        :rs="record.rs ?? {}"
+        :schema="record.schema"
+        :core="record.core"
+        :mode="mode"
+        :tb="record.metadata.tb_id"
+        :record_id="id"
+        @rs-updated="fetchRecord"
+      />
+
     </div>
 
   </div>
@@ -230,6 +242,7 @@ import FieldEditor     from '@/components/record/FieldEditor.vue'
 import PluginSection   from '@/components/record/PluginSection.vue'
 import TemplateSection from '@/components/record/TemplateSection.vue'
 import FileGallery     from '@/components/record/FileGallery.vue'
+import RsSection      from '@/components/record/RsSection.vue'
 
 const { t }   = useI18n()
 const route   = useRoute()

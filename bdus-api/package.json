@@ -21,6 +21,8 @@
   "homepage": "https://github.com/bdus-db/BraDypUS",
   "dependencies": {
     "@primevue/themes": "^4.0.0",
+    "cytoscape": "^3.33.3",
+    "cytoscape-dagre": "^3.0.0",
     "pinia": "^2.0.0",
     "primeicons": "^7.0.0",
     "primevue": "^4.0.0",

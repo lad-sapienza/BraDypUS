@@ -5,8 +5,13 @@
  * @since			Aug 14, 2012
  */
 
+/**
+ * @deprecated v5 — replaced by record_ctrl::addRs(), deleteRs(), getRsMatrix()
+ *             consumed by RsSection.vue and MatrixView.vue
+ */
 class rs_ctrl extends Controller
 {
+    /** @deprecated v5 */
     private static function rels($translate = false)
     {
         $rels = [
@@ -34,6 +39,7 @@ class rs_ctrl extends Controller
         }
     }
 
+    /** @deprecated v5 — replaced by record_ctrl::deleteRs() */
     public function deleteRS()
     {
         $id = $this->get['id'];
@@ -48,6 +54,7 @@ class rs_ctrl extends Controller
     }
 
 
+    /** @deprecated v5 — replaced by record_ctrl::getRsMatrix() + RsSection.vue */
     public function getAllRS()
     {
         $tb = $this->get['tb'];
@@ -83,6 +90,7 @@ class rs_ctrl extends Controller
     }
 
 
+    /** @deprecated v5 — replaced by record_ctrl::addRs() */
     public function saveNewRS()
     {
         $tb = $this->get['tb'];

@@ -375,7 +375,11 @@ class record_ctrl extends Controller
       ];
     }
 
-    return ['fields' => $this->buildFieldSchema($tb), 'plugins' => $plugins];
+    return [
+      'fields'   => $this->buildFieldSchema($tb),
+      'plugins'  => $plugins,
+      'rs_field' => $this->cfg->get("tables.{$tb}.rs") ?? null,
+    ];
   }
 
   /**
@@ -488,7 +492,7 @@ class record_ctrl extends Controller
     foreach ($schema['fields'] as $fld) {
       $def = $fld['def_value'];
       if ($def === '%today%')        { $def = date('Y-m-d'); }
-      elseif ($def === '%current_user%') { $def = $_SESSION['user']['id'] ?? null; }
+      elseif ($def === '%current_user%') { $def = \Auth\CurrentUser::id(); }
 
       $core[$fld['name']] = ['name' => $fld['name'], 'label' => $fld['label'], 'val' => $def, 'val_label' => null];
     }
@@ -852,7 +856,7 @@ class record_ctrl extends Controller
       $original = basename($_FILES['file']['name']);
       $ext      = strtolower(pathinfo($original, PATHINFO_EXTENSION));
       $filename = pathinfo($original, PATHINFO_FILENAME);
-      $creator  = $_SESSION['user']['id'] ?? 'anonymous';
+      $creator  = \Auth\CurrentUser::id() ?? 'anonymous';
       $prefix   = $this->prefix;
       $appName  = $this->cfg->get('main.name') ?? '';
 
@@ -964,6 +968,308 @@ class record_ctrl extends Controller
     } catch (\Throwable $e) {
       $this->log->error($e);
       $this->returnJson(['status' => 'error', 'code' => 'error_file_deleted', 'detail' => $e->getMessage()]);
+    }
+  }
+
+  // ── v5 stratigraphic relations (RS) endpoints ────────────────────────────
+
+  /**
+   * The 10 Harris Matrix relation types.
+   * Each pair (n, n+4) for n=1..4 are inverses of each other.
+   * Relations 9 and 10 are symmetric (undirected).
+   */
+  private static function rsRelations(): array
+  {
+    return [
+      1 => 'is_covered_by',
+      2 => 'is_cut_by',
+      3 => 'carries',
+      4 => 'is_filled_by',
+      5 => 'covers',
+      6 => 'cuts',
+      7 => 'leans_against',
+      8 => 'fills',
+      9 => 'is_the_same_as',
+      10 => 'is_bound_to',
+    ];
+  }
+
+  /**
+   * Returns the inverse relation code for polarity inversion.
+   * Relations 1-4 ↔ 5-8 (pairs offset by 4).
+   * Relations 9, 10 are self-inverse (symmetric).
+   */
+  private static function rsInverse(int $rel): int
+  {
+    if ($rel >= 1 && $rel <= 4) return $rel + 4;
+    if ($rel >= 5 && $rel <= 8) return $rel - 4;
+    return $rel; // 9, 10 symmetric
+  }
+
+  /**
+   * Adds a stratigraphic relation between two records.
+   *
+   * POST ?obj=record_ctrl&method=addRs
+   * Body: { tb, first, relation, second }
+   *
+   * Deduplication checks both directions (A→B and B→A inverse) before INSERT.
+   * Response: { status, code, id? }
+   */
+  public function addRs(): void
+  {
+    if (!\utils::canUser('edit')) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+      return;
+    }
+
+    $tb       = $this->post['tb']       ?? ($this->get['tb']       ?? null);
+    $first    = $this->post['first']    ?? ($this->get['first']    ?? null);
+    $relation = $this->post['relation'] ?? ($this->get['relation'] ?? null);
+    $second   = $this->post['second']   ?? ($this->get['second']   ?? null);
+
+    if (!$tb || !$first || !$relation || !$second) {
+      $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
+      return;
+    }
+
+    $relation = (int) $relation;
+    $inverse  = self::rsInverse($relation);
+
+    try {
+      // Deduplication: check both A→B (with this relation) and B→A (with inverse)
+      $count = (int) ($this->db->query(
+        "SELECT COUNT(*) AS c FROM " . PREFIX . "rs
+         WHERE tb = ? AND (
+           (first = ? AND second = ? AND relation = ?) OR
+           (first = ? AND second = ? AND relation = ?)
+         )",
+        [$tb, $first, $second, $relation, $second, $first, $inverse]
+      )[0]['c'] ?? 0);
+
+      if ($count > 0) {
+        $this->returnJson(['status' => 'error', 'code' => 'relation_already_exist']);
+        return;
+      }
+
+      $this->db->query(
+        "INSERT INTO " . PREFIX . "rs (tb, first, second, relation) VALUES (?, ?, ?, ?)",
+        [$tb, $first, $second, $relation],
+        'boolean'
+      );
+      $newId = (int) $this->db->query('SELECT last_insert_rowid() AS id', [], 'read')[0]['id'];
+
+      $this->returnJson(['status' => 'success', 'code' => 'ok_relation_add', 'id' => $newId]);
+
+    } catch (\Throwable $e) {
+      $this->log->error($e);
+      $this->returnJson(['status' => 'error', 'code' => 'db_error', 'detail' => $e->getMessage()]);
+    }
+  }
+
+  /**
+   * Deletes a single stratigraphic relation by its row id.
+   *
+   * GET/POST ?obj=record_ctrl&method=deleteRs&id=ROW_ID
+   * Response: { status, code }
+   */
+  public function deleteRs(): void
+  {
+    if (!\utils::canUser('edit')) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+      return;
+    }
+
+    $id = $this->post['id'] ?? ($this->get['id'] ?? null);
+    if (!$id) {
+      $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
+      return;
+    }
+
+    try {
+      $affected = $this->db->query(
+        "DELETE FROM " . PREFIX . "rs WHERE id = ?",
+        [(int)$id],
+        'affected'
+      );
+
+      if ($affected === 0) {
+        $this->returnJson(['status' => 'error', 'code' => 'not_found']);
+        return;
+      }
+
+      $this->returnJson(['status' => 'success', 'code' => 'ok_relation_erased']);
+
+    } catch (\Throwable $e) {
+      $this->log->error($e);
+      $this->returnJson(['status' => 'error', 'code' => 'db_error', 'detail' => $e->getMessage()]);
+    }
+  }
+
+  /**
+   * Returns all RS data for a table (or a filtered subset) for graph visualization.
+   *
+   * Accepts the same search parameters as getRecords() so the caller can pass
+   * the current DataView query without re-encoding IDs.
+   *
+   * GET ?obj=record_ctrl&method=getRsMatrix&tb=TABLE
+   *     [&search_type=fast&search=TERM]
+   *     [&search_type=shortSql&where=SHORTSQL]
+   *     [&search_type=advanced&adv=BASE64]
+   *     [&search_type=sqlExpert&querytext=SQL&join=JOIN]
+   *
+   * Response:
+   * {
+   *   rs_field: string,
+   *   nodes: [ { db_id: int, identifier: string, in_filter: bool }, ... ],
+   *   relations: [ { id, first, second, relation }, ... ]
+   * }
+   *
+   * Nodes with in_filter=false appear in relations but were not part of the
+   * filtered record set (shown with attenuated style in the graph).
+   */
+  public function getRsMatrix(): void
+  {
+    if (!\utils::canUser('read')) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+      return;
+    }
+
+    $tb = $this->get['tb'] ?? null;
+    if (!$tb) {
+      $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
+      return;
+    }
+
+    $rsField = $this->cfg->get("tables.{$tb}.rs");
+    if (!$rsField) {
+      $this->returnJson(['status' => 'error', 'code' => 'rs_not_configured']);
+      return;
+    }
+
+    try {
+      // ── Step 1: resolve which records to include ───────────────────────────
+      $searchType = $this->get['search_type'] ?? 'all';
+      $filtered   = ($searchType !== 'all');
+
+      if ($filtered) {
+        // Re-use QueryFromRequest to get matching db IDs (same logic as getRecords)
+        $qRequest = ['tb' => $tb, 'type' => $searchType];
+        switch ($searchType) {
+          case 'fast':
+            $qRequest['string'] = $this->get['search'] ?? '';
+            break;
+          case 'advanced':
+            $advRaw = $this->get['adv'] ?? $this->post['adv'] ?? '';
+            $qRequest['adv'] = is_string($advRaw) ? (json_decode($advRaw, true) ?? []) : $advRaw;
+            break;
+          case 'sqlExpert':
+            $qRequest['querytext'] = $this->get['querytext'] ?? '';
+            $qRequest['join']      = $this->get['join']      ?? '';
+            break;
+          case 'shortSql':
+            $qRequest['where'] = $this->get['where'] ?? '';
+            break;
+        }
+
+        $qObj = new \QueryFromRequest($this->db, $this->cfg, $qRequest, true);
+        // Fetch all matching IDs (no pagination — full result set for the matrix)
+        list($subSql, $subVals) = $qObj->getQuery(true);
+        $idRows = $this->db->query(
+          "SELECT id FROM ({$subSql}) AS _rs_sub",
+          $subVals
+        ) ?: [];
+        $dbIds = array_column($idRows, 'id');
+      }
+
+      // ── Step 2: fetch rs_field values for the filter set ──────────────────
+      $filterNodes = []; // identifier => db_id
+
+      if ($filtered && empty($dbIds)) {
+        // Empty result set → no nodes, no relations
+        $this->returnJson(['rs_field' => $rsField, 'nodes' => [], 'relations' => []]);
+        return;
+      }
+
+      if ($filtered) {
+        $placeholders = implode(',', array_fill(0, count($dbIds), '?'));
+        $rows = $this->db->query(
+          "SELECT id, {$rsField} AS identifier FROM {$tb} WHERE id IN ({$placeholders})",
+          $dbIds
+        ) ?: [];
+      } else {
+        $rows = $this->db->query(
+          "SELECT id, {$rsField} AS identifier FROM {$tb}"
+        ) ?: [];
+      }
+
+      foreach ($rows as $r) {
+        if ($r['identifier'] !== null && $r['identifier'] !== '') {
+          $filterNodes[(string)$r['identifier']] = (int)$r['id'];
+        }
+      }
+
+      $filterIdentifiers = array_keys($filterNodes);
+
+      // ── Step 3: fetch RS relations ─────────────────────────────────────────
+      if ($filtered && !empty($filterIdentifiers)) {
+        $ph = implode(',', array_fill(0, count($filterIdentifiers), '?'));
+        $relations = $this->db->query(
+          "SELECT id, first, second, relation FROM " . PREFIX . "rs
+           WHERE tb = ? AND (first IN ({$ph}) OR second IN ({$ph}))",
+          array_merge([$tb], $filterIdentifiers, $filterIdentifiers)
+        ) ?: [];
+      } else {
+        $relations = $this->db->query(
+          "SELECT id, first, second, relation FROM " . PREFIX . "rs WHERE tb = ?",
+          [$tb]
+        ) ?: [];
+      }
+
+      // ── Step 4: collect all unique identifiers (including dangling) ────────
+      $allIdentifiers = $filterNodes; // identifier => db_id (in_filter=true)
+      $danglingIds = [];
+
+      foreach ($relations as $rel) {
+        foreach (['first', 'second'] as $side) {
+          $ident = (string)$rel[$side];
+          if (!isset($allIdentifiers[$ident])) {
+            $danglingIds[] = $ident;
+          }
+        }
+      }
+
+      // Resolve dangling identifiers → db_id (may not exist if records were deleted)
+      if (!empty($danglingIds)) {
+        $ph = implode(',', array_fill(0, count($danglingIds), '?'));
+        $dRows = $this->db->query(
+          "SELECT id, {$rsField} AS identifier FROM {$tb}
+           WHERE {$rsField} IN ({$ph})",
+          $danglingIds
+        ) ?: [];
+        foreach ($dRows as $r) {
+          $allIdentifiers[(string)$r['identifier']] = (int)$r['id'];
+        }
+      }
+
+      // ── Step 5: build response ─────────────────────────────────────────────
+      $nodes = [];
+      foreach ($allIdentifiers as $ident => $dbId) {
+        $nodes[] = [
+          'db_id'      => $dbId,
+          'identifier' => (string)$ident,
+          'in_filter'  => isset($filterNodes[$ident]),
+        ];
+      }
+
+      $this->returnJson([
+        'rs_field'  => $rsField,
+        'nodes'     => $nodes,
+        'relations' => array_values($relations),
+      ]);
+
+    } catch (\Throwable $e) {
+      $this->log->error($e);
+      $this->returnJson(['status' => 'error', 'code' => 'db_error', 'detail' => $e->getMessage()]);
     }
   }
 

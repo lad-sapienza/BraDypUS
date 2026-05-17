@@ -261,7 +261,6 @@
                 <label class="expert-label">{{ t('sql_expert_search') }} — WHERE …</label>
                 <Textarea
                   v-model="expertQuery"
-                  :placeholder="`cmclid LIKE 'P.Bodm%' AND dialect = 'coptic'`"
                   rows="3"
                   fluid
                   class="expert-textarea"
@@ -916,7 +915,7 @@ function openMatrix() {
   if (!tb) return
   router.push({
     path:  `/matrix/${encodeURIComponent(tb)}`,
-    query: { ...route.query },
+    query: { ...route.query, back: route.fullPath },
   })
 }
 

@@ -28,6 +28,21 @@ export const REL_LABELS = {
 export const UNDIRECTED = new Set([9, 10])
 
 /**
+ * Relations where the Harris matrix arrow must be reversed.
+ * For these, `first` is the older (substrate) unit and `second` is the newer.
+ * Arrow must go second → first so that newer units appear above older in the
+ * top-to-bottom dagre layout.
+ *
+ *   1 "is covered by": first is covered by second → second is newer → swap
+ *   2 "is cut by":     first is cut by second     → second is newer → swap
+ *   3 "carries":       first carries second        → second is newer → swap
+ *   4 "is filled by":  first is filled by second   → second is newer → swap
+ *
+ * Relations 5,6,7,8: first is the actor (newer unit) → no swap needed.
+ */
+export const SWAP_DIRECTION = new Set([1, 2, 3, 4])
+
+/**
  * Inversion map: given a relation code, returns its inverse.
  * Pairs: 1↔5, 2↔6, 3↔7, 4↔8.  9 and 10 are self-inverse.
  */

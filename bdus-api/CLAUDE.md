@@ -285,13 +285,13 @@ or tests touching that table will fail with "no such table".
 | userlinks | low | Manual link management UI |
 | new_app | low | App creation wizard |
 | preview_flds | low | Field preview helper |
-| myTmpl | low | Template preview |
 
 ### Deprecated (no Vue equivalent needed)
 
 - `empty_cache` — no Twig cache in v5
 - `menuValues` — no longer needed
 - `free_sql` — replaced by SQL expert search in DataView
+- `myTmpl` — template preview superseded by TemplatesView
 
 ---
 

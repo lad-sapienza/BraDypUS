@@ -82,6 +82,12 @@
               <InputText v-model="layer.path" size="small" placeholder="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
             </div>
           </div>
+          <div class="cfg-layer-row" v-else-if="layer.type === 'maplibre_style'">
+            <div class="cfg-field-group" style="flex:1">
+              <label>{{ t('maplibre_style_url') }}</label>
+              <InputText v-model="layer.path" size="small" placeholder="https://..." />
+            </div>
+          </div>
         </div>
       </section>
 
@@ -150,7 +156,7 @@ const layers     = ref([])
 const localFiles = ref([])
 const fileInput  = ref(null)
 
-const dataTypes  = ['wms', 'tiles', 'local']
+const dataTypes  = ['wms', 'tiles', 'local', 'maplibre_style']
 const layerRoles = ['overlay', 'base']
 
 function addLayer() {

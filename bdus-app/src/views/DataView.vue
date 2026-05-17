@@ -132,6 +132,16 @@
                 />
               </Popover>
 
+              <!-- View on map -->
+              <Button
+                icon="pi pi-map"
+                :title="t('view_on_map')"
+                size="small"
+                severity="secondary"
+                text
+                @click="openGeoface"
+              />
+
               <!-- Harris Matrix — only for tables with rs_field configured -->
               <Button
                 v-if="selectedTable?.rs_field"
@@ -979,6 +989,31 @@ function addRecord() {
   if (tb) {
     router.push(`/record/${encodeURIComponent(tb)}/new`)
   }
+}
+
+/**
+ * Navigate to the GeoFace (map) view for the current table,
+ * forwarding the current active filter as query parameters so the map
+ * shows only the records matching the current search.
+ */
+function openGeoface() {
+  const tb = selectedTable.value?.name
+  if (!tb) return
+  const query = {}
+  if (activeSearch.value === 'advanced') {
+    const adv = advRows.value.filter(r => r.fld)
+    if (adv.length) {
+      query.search_type = 'advanced'
+      query.adv = JSON.stringify(adv)
+    }
+  } else if (activeSearch.value === 'expert' && expertQuery.value) {
+    query.search_type = 'sqlExpert'
+    query.querytext = expertQuery.value
+  } else if (activeSearch.value === 'shortSql' && shortSqlWhere.value) {
+    query.search_type = 'shortSql'
+    query.where = shortSqlWhere.value
+  }
+  router.push({ path: `/geoface/${encodeURIComponent(tb)}`, query })
 }
 
 /**

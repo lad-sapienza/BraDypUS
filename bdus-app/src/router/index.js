@@ -80,6 +80,11 @@ const routes = [
   {
     path: '/record/:tb',
     redirect: to => ({ path: `/record/${to.params.tb}/new` })
+  },
+  {
+    path: '/geoface/:tb',
+    component: () => import('@/views/GeofaceView.vue'),
+    meta: { requiresAuth: true }
   }
 ]
 

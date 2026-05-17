@@ -8,6 +8,7 @@ namespace DB\Validate;
 
 use DB\Validate\Info;
 use DB\Validate\DumpExists;
+use DB\Validate\Filesystem;
 use DB\Validate\Resp;
 use DB\Validate\DbCfgAlign;
 
@@ -41,6 +42,9 @@ class Validate
 
     public function all(): array
     {   
+        $this->resp->set('head', 'Security checks');
+        (new Filesystem($this->resp))->cfgDirProtected();
+
         $this->resp->set('head', 'Main system information');
         Info::getInfo($this->resp, $this->cfg);
 

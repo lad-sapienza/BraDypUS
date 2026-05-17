@@ -1076,18 +1076,15 @@ function onRowClick(event) {
 function doExport(format) {
   exportPopover.value?.hide()
 
-  const params = new URLSearchParams()
-  params.set('obj',    'record_ctrl')
-  params.set('method', 'exportRecords')
-  params.set('tb',     selectedTable.value?.name ?? '')
-  params.set('format', format)
+  const tb = selectedTable.value?.name ?? ''
+  const qs = new URLSearchParams({ format })
 
   // Pass through whichever filter params are currently in the URL
-  if (route.query.qt)    params.set('qt',    route.query.qt)
-  if (route.query.q)     params.set('q',     route.query.q)
-  if (route.query.where) params.set('where', route.query.where)
+  if (route.query.qt)    qs.set('qt',    route.query.qt)
+  if (route.query.q)     qs.set('q',     route.query.q)
+  if (route.query.where) qs.set('where', route.query.where)
 
-  window.open(assetUrl('index.php') + '?' + params.toString(), '_blank')
+  window.open(assetUrl(`api/records/${encodeURIComponent(tb)}/export`) + '?' + qs.toString(), '_blank')
 }
 </script>
 

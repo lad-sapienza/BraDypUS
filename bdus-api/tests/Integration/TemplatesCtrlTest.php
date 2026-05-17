@@ -85,10 +85,10 @@ class TemplatesCtrlTest extends BdusTestCase
 
     public function testGetTableListRequiresSuperAdmin(): void
     {
-        $_SESSION['user']['privilege'] = 99;
+        $this->setPrivilege(99);
         $ctrl = $this->makeController('templates_ctrl');
         $res  = $this->callController($ctrl, 'getTableList');
-        $_SESSION['user']['privilege'] = 1;
+        $this->setPrivilege(1);
 
         $this->assertSame('error', $res['status']);
         $this->assertSame('not_enough_privilege', $res['code']);
@@ -153,10 +153,10 @@ class TemplatesCtrlTest extends BdusTestCase
 
     public function testGetTemplateListRequiresSuperAdmin(): void
     {
-        $_SESSION['user']['privilege'] = 99;
+        $this->setPrivilege(99);
         $ctrl = $this->makeController('templates_ctrl', ['tb' => self::TB]);
         $res  = $this->callController($ctrl, 'getTemplateList');
-        $_SESSION['user']['privilege'] = 1;
+        $this->setPrivilege(1);
 
         $this->assertSame('error', $res['status']);
     }
@@ -296,14 +296,14 @@ class TemplatesCtrlTest extends BdusTestCase
 
     public function testSaveTemplateRequiresSuperAdmin(): void
     {
-        $_SESSION['user']['privilege'] = 99;
+        $this->setPrivilege(99);
         $ctrl = $this->makeController(
             'templates_ctrl',
             ['tb' => self::TB, 'name' => self::TMP_NAME],
             ['sections' => []]
         );
         $res = $this->callController($ctrl, 'saveTemplate');
-        $_SESSION['user']['privilege'] = 1;
+        $this->setPrivilege(1);
 
         $this->assertSame('error', $res['status']);
     }
@@ -408,10 +408,10 @@ class TemplatesCtrlTest extends BdusTestCase
 
     public function testDeleteTemplateRequiresSuperAdmin(): void
     {
-        $_SESSION['user']['privilege'] = 99;
+        $this->setPrivilege(99);
         $ctrl = $this->makeController('templates_ctrl', ['tb' => self::TB, 'name' => 'default']);
         $res  = $this->callController($ctrl, 'deleteTemplate');
-        $_SESSION['user']['privilege'] = 1;
+        $this->setPrivilege(1);
 
         $this->assertSame('error', $res['status']);
     }

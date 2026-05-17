@@ -32,15 +32,11 @@ foreach (['backups', 'db', 'geodata', 'templates', 'export', 'files'] as $sub) {
 // ── Suppress errors the way production does, but keep PHPUnit able to catch ─
 // (do NOT call error_reporting(0) — that would hide PHPUnit's own errors)
 
-// ── Stub superglobals BEFORE autoloading so pref.inc / tr.inc don't warn ──
-// PHP CLI does not initialise $_SESSION automatically.
-if (!isset($_SESSION)) {
-    $_SESSION = [];
-}
-// pref.inc reads $_SESSION['pref']['lang'] — stub it so no warning fires
-if (!isset($_SESSION['pref'])) {
-    $_SESSION['pref'] = ['lang' => 'en'];
-}
+// ── CACHE: used by Template\Template when rendering Twig templates ────────
+// Disable file caching in tests to avoid stale artefacts.
+define('CACHE', serialize(["autoescape" => false, "cache" => false]));
+
+// ── Stub server vars needed by Controller base class ─────────────────────
 $_SERVER['HTTP_ACCEPT_LANGUAGE'] = $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? 'en';
 $_SERVER['HTTP_HOST']            = $_SERVER['HTTP_HOST']            ?? 'localhost';
 $_SERVER['CONTENT_TYPE']         = $_SERVER['CONTENT_TYPE']         ?? '';

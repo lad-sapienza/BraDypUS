@@ -95,10 +95,10 @@ class ConfigCtrlTest extends BdusTestCase
 
     public function testGetTableListRequiresSuperAdmin(): void
     {
-        $_SESSION['user']['privilege'] = 11;
+        $this->setPrivilege(11);
         $ctrl = $this->makeController('config_ctrl');
         $res  = $this->callController($ctrl, 'getTableList');
-        $_SESSION['user']['privilege'] = 1;
+        $this->setPrivilege(1);
 
         $this->assertSame('error',                $res['status']);
         $this->assertSame('not_enough_privilege', $res['code']);
@@ -156,10 +156,10 @@ class ConfigCtrlTest extends BdusTestCase
 
     public function testGetAppPropertiesRequiresSuperAdmin(): void
     {
-        $_SESSION['user']['privilege'] = 11;
+        $this->setPrivilege(11);
         $ctrl = $this->makeController('config_ctrl');
         $res  = $this->callController($ctrl, 'getAppProperties');
-        $_SESSION['user']['privilege'] = 1;
+        $this->setPrivilege(1);
 
         $this->assertSame('error', $res['status']);
         $this->assertSame('not_enough_privilege', $res['code']);
@@ -225,10 +225,10 @@ class ConfigCtrlTest extends BdusTestCase
 
     public function testGetTableConfigRequiresSuperAdmin(): void
     {
-        $_SESSION['user']['privilege'] = 11;
+        $this->setPrivilege(11);
         $ctrl = $this->makeController('config_ctrl', ['tb' => self::TB]);
         $res  = $this->callController($ctrl, 'getTableConfig');
-        $_SESSION['user']['privilege'] = 1;
+        $this->setPrivilege(1);
 
         $this->assertSame('error', $res['status']);
     }
@@ -279,10 +279,10 @@ class ConfigCtrlTest extends BdusTestCase
 
     public function testGetFldStructureRequiresSuperAdmin(): void
     {
-        $_SESSION['user']['privilege'] = 11;
+        $this->setPrivilege(11);
         $ctrl = $this->makeController('config_ctrl');
         $res  = $this->callController($ctrl, 'getFldStructure');
-        $_SESSION['user']['privilege'] = 1;
+        $this->setPrivilege(1);
 
         $this->assertSame('error', $res['status']);
     }
@@ -337,10 +337,10 @@ class ConfigCtrlTest extends BdusTestCase
 
     public function testGetFldConfigRequiresSuperAdmin(): void
     {
-        $_SESSION['user']['privilege'] = 11;
+        $this->setPrivilege(11);
         $ctrl = $this->makeController('config_ctrl', ['tb' => self::TB, 'fld' => self::FLD]);
         $res  = $this->callController($ctrl, 'getFldConfig');
-        $_SESSION['user']['privilege'] = 1;
+        $this->setPrivilege(1);
 
         $this->assertSame('error', $res['status']);
     }
@@ -393,10 +393,10 @@ class ConfigCtrlTest extends BdusTestCase
 
     public function testGetGeoFaceConfigRequiresSuperAdmin(): void
     {
-        $_SESSION['user']['privilege'] = 11;
+        $this->setPrivilege(11);
         $ctrl = $this->makeController('config_ctrl');
         $res  = $this->callController($ctrl, 'getGeoFaceConfig');
-        $_SESSION['user']['privilege'] = 1;
+        $this->setPrivilege(1);
 
         $this->assertSame('error', $res['status']);
     }
@@ -468,10 +468,10 @@ class ConfigCtrlTest extends BdusTestCase
 
     public function testGetValidationReportRequiresSuperAdmin(): void
     {
-        $_SESSION['user']['privilege'] = 11;
+        $this->setPrivilege(11);
         $ctrl = $this->makeController('config_ctrl');
         $res  = $this->callController($ctrl, 'getValidationReport');
-        $_SESSION['user']['privilege'] = 1;
+        $this->setPrivilege(1);
 
         $this->assertSame('error', $res['status']);
         $this->assertSame('not_enough_privilege', $res['code']);

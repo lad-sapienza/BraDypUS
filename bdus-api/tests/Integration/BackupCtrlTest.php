@@ -316,10 +316,10 @@ class BackupCtrlTest extends BdusTestCase
 
     public function testListBackupsRequiresReadPrivilege(): void
     {
-        $_SESSION['user']['privilege'] = 100; // no privilege
+        $this->setPrivilege(100); // no privilege
         $ctrl = $this->makeController('backup_ctrl');
         $res  = $this->callController($ctrl, 'listBackups');
-        $_SESSION['user']['privilege'] = 1;   // restore
+        $this->setPrivilege(1);   // restore
 
         $this->assertSame('error', $res['status']);
         $this->assertSame('not_enough_privilege', $res['code']);
@@ -327,10 +327,10 @@ class BackupCtrlTest extends BdusTestCase
 
     public function testDoBackupRequiresEditPrivilege(): void
     {
-        $_SESSION['user']['privilege'] = 100;
+        $this->setPrivilege(100);
         $ctrl = $this->makeController('backup_ctrl');
         $res  = $this->callController($ctrl, 'doBackup');
-        $_SESSION['user']['privilege'] = 1;
+        $this->setPrivilege(1);
 
         $this->assertSame('error', $res['status']);
         $this->assertSame('not_enough_privilege', $res['code']);
@@ -338,10 +338,10 @@ class BackupCtrlTest extends BdusTestCase
 
     public function testDeleteBackupRequiresAdminPrivilege(): void
     {
-        $_SESSION['user']['privilege'] = 30; // below admin threshold
+        $this->setPrivilege(30); // below admin threshold
         $ctrl = $this->makeController('backup_ctrl', ['file' => 'any.sql.gz']);
         $res  = $this->callController($ctrl, 'deleteBackup');
-        $_SESSION['user']['privilege'] = 1;
+        $this->setPrivilege(1);
 
         $this->assertSame('error', $res['status']);
         $this->assertSame('not_enough_privilege', $res['code']);
@@ -353,10 +353,10 @@ class BackupCtrlTest extends BdusTestCase
     {
         // super_admin requires privilege < 2 (online) or < 11 (offline).
         // In the test environment is_online() is false, so we need >= 11 to be denied.
-        $_SESSION['user']['privilege'] = 11;
+        $this->setPrivilege(11);
         $ctrl = $this->makeController('backup_ctrl', ['file' => 'any.sql.gz']);
         $res  = $this->callController($ctrl, 'restoreBackup');
-        $_SESSION['user']['privilege'] = 1;
+        $this->setPrivilege(1);
 
         $this->assertSame('error',                $res['status']);
         $this->assertSame('not_enough_privilege', $res['code']);

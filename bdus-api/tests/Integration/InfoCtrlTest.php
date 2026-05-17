@@ -40,10 +40,10 @@ class InfoCtrlTest extends BdusTestCase
 
     public function testGetInfoRequiresReadPrivilege(): void
     {
-        $_SESSION['user']['privilege'] = 99; // no privileges
+        $this->setPrivilege(99); // no privileges
         $ctrl = $this->makeController('info_ctrl');
         $res  = $this->callController($ctrl, 'getInfo');
-        $_SESSION['user']['privilege'] = 1;  // restore
+        $this->setPrivilege(1);  // restore
 
         $this->assertSame('error', $res['status']);
         $this->assertSame('not_enough_privilege', $res['code']);

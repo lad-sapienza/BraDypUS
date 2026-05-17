@@ -37,11 +37,13 @@ abstract class BdusTestCase extends TestCase
     {
         // Simulate a logged-in super-admin so utils::canUser() passes.
         // privilege = 1 satisfies every privilege level check (all are < N where N >= 2).
-        $_SESSION['user'] = [
+        \Auth\CurrentUser::set([
             'id'        => 1,
             'name'      => 'Test Admin',
+            'email'     => 'test@example.com',
             'privilege' => 1,
-        ];
+            'app'       => 'test',
+        ]);
 
         // Silent logger
         static::$log = new Logger('test');
@@ -207,6 +209,28 @@ abstract class BdusTestCase extends TestCase
                ('test', 200, 'Info message',  " . ($now - 3600) . "),
                ('test', 400, 'Error message', " . ($now - 100)  . ")"
         );
+    }
+
+    // ── Auth helpers ──────────────────────────────────────────────────────
+
+    /**
+     * Change the privilege of the simulated logged-in user for a single assertion,
+     * then restore it to the default super-admin value (1).
+     *
+     * Usage:
+     *   $this->setPrivilege(99);   // low-privilege user
+     *   // … assertion expecting 'error' …
+     *   $this->setPrivilege(1);    // restore super-admin
+     */
+    protected function setPrivilege(int $privilege): void
+    {
+        \Auth\CurrentUser::set([
+            'id'        => 1,
+            'name'      => 'Test Admin',
+            'email'     => 'test@example.com',
+            'privilege' => $privilege,
+            'app'       => 'test',
+        ]);
     }
 
     // ── Controller helpers ────────────────────────────────────────────────

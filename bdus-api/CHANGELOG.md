@@ -105,6 +105,52 @@ The PHP backend is preserved and extended with JSON endpoints consumed by the ne
   returns success immediately for SQLite (native PHP/PDO dump needs no external tool)
 
 ### Fixed
+- **Harris Matrix — search filter not applied**: `getRsMatrix` received
+  the advanced search payload as a base64-encoded GET param (`adv=BASE64`)
+  but called `json_decode()` directly, getting null and falling back to
+  "all records". Now tries plain `json_decode` first (POST path), then
+  `base64_decode` + `json_decode` (GET/matrix path).
+- **Harris Matrix — edge direction**: passive relations (1 "is covered by",
+  2 "is cut by", 3 "carries", 4 "is filled by") had source/target in the
+  wrong order. Added `SWAP_DIRECTION` set; `buildElements()` now swaps
+  `first`↔`second` for these relations so arrows always flow newer→older
+  (top→bottom in the dagre layout).
+- **Harris Matrix — cyclic edges highlighted**: after layout, directed edges
+  whose source `y` > target `y` (counter-flow = stratigraphic cycle) are
+  marked with class `cyclic` and rendered in red.
+- **Harris Matrix — Cytoscape rendering**: boolean data stored as JS
+  `true`/`false` produced invalid selectors (`[attr = false]` not supported).
+  Changed to integers (0/1); updated all selectors accordingly. Replaced
+  deprecated `width: 'label'` with `min-width: 'label'`. Added `fit: true`
+  to dagre layout and a `layoutstop` handler to ensure viewport fits large
+  graphs.
+- **Harris Matrix — orphan edges crash**: Cytoscape threw on edges whose
+  source or target node was not in the dataset (deleted records with orphan
+  RS rows). Orphan edges are now silently skipped with a `console.warn`.
+- **Harris Matrix — "back to table" button missing**: the toolbar only showed
+  "back to record" when opened from a specific record. A permanent "back to
+  table" button is now always visible; `DataView.openMatrix()` passes the
+  current URL as `back` query param so the exact search state is restored.
+- **Harris Matrix — URL param mismatch**: `MatrixView` was forwarding
+  DataView's URL-friendly `qt`/`q` params directly to `getRsMatrix`, which
+  expects `search_type`/`adv`/`search` etc. Added `buildMatrixApiParams()`
+  to translate between the two conventions.
+- **Race condition on SQLite config rewrite**: `DB::getConnectionDataFromCfg`
+  rewrote `app_data.json` on every request when `db_engine` was already set
+  (`null !== $cfg['db_engine']`). Concurrent Vue API calls caused partial
+  reads → `json_decode` failure → `invalid_configuration_file` error.
+  Condition changed to `null ===` so the write only fires for the one-time
+  legacy migration.
+- **Global error handler returned invalid JSON in debug mode**: `index.php`
+  appended raw HTML (`var_dump`, stack trace) after the JSON response body,
+  breaking `JSON.parse` in the Vue frontend. Error details already go to
+  `logs/error.log`; a `debug` field in the JSON response is now sufficient.
+- **Migration runner — PHP parse error**: `{$class::NAME}` string
+  interpolation with `::` is not valid PHP syntax. Assigned the constant to
+  a local variable before interpolation.
+- **Harris Matrix — edge labels translated**: relation labels on graph edges
+  now use the active UI locale via `t(REL_KEYS[rel])` instead of fixed
+  English abbreviations.
 - `getHistory()` query referenced column `user`; actual column in the
   `versions` table is `userid` — fixed with `userid AS user` alias so the
   API shape is unchanged

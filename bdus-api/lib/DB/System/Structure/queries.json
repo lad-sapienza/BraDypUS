@@ -1,13 +1,12 @@
 {
     "columns": [
-        { "name": "id",        "type": "INTEGER",   "pk": true, "notnull": false },
-        { "name": "user_id",   "type": "INTEGER",              "notnull": true  },
-        { "name": "date",      "type": "TIMESTAMP",            "notnull": true  },
-        { "name": "name",      "type": "TEXT",                 "notnull": true  },
-        { "name": "text",      "type": "TEXT",                 "notnull": true  },
-        { "name": "vals",      "type": "TEXT",                 "notnull": true  },
-        { "name": "tb",        "type": "TEXT",                 "notnull": true  },
-        { "name": "is_global", "type": "INTEGER",              "notnull": false }
+        { "name": "id",         "type": "INTEGER",   "pk": true, "notnull": false },
+        { "name": "user_id",    "type": "INTEGER",              "notnull": true  },
+        { "name": "created_at", "type": "INTEGER",              "notnull": false },
+        { "name": "name",       "type": "TEXT",                 "notnull": true  },
+        { "name": "tb",         "type": "TEXT",                 "notnull": true  },
+        { "name": "query",      "type": "TEXT",                 "notnull": false },
+        { "name": "is_global",  "type": "INTEGER",              "notnull": false }
     ],
     "indexes": [
         { "name": "queries_user_idx", "columns": ["user_id"] }

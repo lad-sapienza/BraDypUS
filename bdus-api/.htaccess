@@ -1,5 +1,8 @@
 RewriteEngine on
 
+# REST API v1 routing — must come before the legacy api rule
+RewriteRule ^api/v1(/.*)?$ index.php [QSA,L]
+
 # /api/app-name/tb-name-without-prefix/data
 RewriteRule ^api/([a-z0-9_]+) index.php?obj=api&method=run&app=$1 [QSA,L]
 

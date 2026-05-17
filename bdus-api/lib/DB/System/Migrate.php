@@ -13,6 +13,7 @@ use DB\System\Migrations\M001_AddUserTablePrivs;
 use DB\System\Migrations\M002_CreateFileLinks;
 use DB\System\Migrations\M003_RefactorQueriesTable;
 use DB\System\Migrations\M004_RefactorChartsTable;
+use DB\System\Migrations\M005_CreateApiKeys;
 use Monolog\Logger;
 
 /**
@@ -43,6 +44,7 @@ class Migrate
         M002_CreateFileLinks::class,
         M003_RefactorQueriesTable::class,
         M004_RefactorChartsTable::class,
+        M005_CreateApiKeys::class,
     ];
 
     /**

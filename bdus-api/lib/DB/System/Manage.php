@@ -47,6 +47,7 @@ class Manage
     /** @var array<string, array{columns: array, indexes: array, relations: array}> */
     private array $descriptor = [];
     public $available_tables = [
+        'api_keys',
         'charts',
         'file_links',
         'files',

@@ -722,5 +722,19 @@
     "chart_access_denied": "Non puoi modificare questo grafico",
     "invalid_chart_type": "Tipo di grafico non valido",
     "invalid_chart_field": "Campo non valido",
-    "run_chart": "Esegui"
+    "run_chart": "Esegui",
+    "api_keys": "Chiavi API",
+    "api_keys_hint": "Gestisci le chiavi di accesso all'API REST",
+    "api_key_label": "Nome / descrizione della chiave",
+    "create_api_key": "Crea chiave",
+    "api_key_copy_now": "Copia la chiave ora: non sarà più visibile",
+    "ok_api_key_created": "Chiave creata",
+    "ok_api_key_revoked": "Chiave revocata",
+    "ok_api_key_deleted": "Chiave eliminata",
+    "revoke": "Revoca",
+    "active": "Attiva",
+    "revoked": "Revocata",
+    "last_used": "Ultimo utilizzo",
+    "no_api_keys": "Nessuna chiave API definita",
+    "copied": "Copiato"
 }

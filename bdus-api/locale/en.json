@@ -722,5 +722,19 @@
     "chart_access_denied": "You cannot modify this chart",
     "invalid_chart_type": "Invalid chart type",
     "invalid_chart_field": "Invalid field",
-    "run_chart": "Run"
+    "run_chart": "Run",
+    "api_keys": "API Keys",
+    "api_keys_hint": "Manage access keys for the REST API",
+    "api_key_label": "Key name / description",
+    "create_api_key": "Create key",
+    "api_key_copy_now": "Copy the key now: it will not be shown again",
+    "ok_api_key_created": "Key created",
+    "ok_api_key_revoked": "Key revoked",
+    "ok_api_key_deleted": "Key deleted",
+    "revoke": "Revoke",
+    "active": "Active",
+    "revoked": "Revoked",
+    "last_used": "Last used",
+    "no_api_keys": "No API keys defined",
+    "copied": "Copied"
 }

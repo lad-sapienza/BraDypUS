@@ -62,6 +62,10 @@
           fluid
         />
       </form>
+
+      <div class="create-app-link">
+        <router-link to="/new-app">{{ t('create_new_app') }}</router-link>
+      </div>
     </div>
   </div>
 </template>
@@ -71,12 +75,14 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { api } from '@/api'
+import { useI18n } from '@/i18n'
 import Select from 'primevue/select'
 import InputText from 'primevue/inputtext'
 import Password from 'primevue/password'
 import Button from 'primevue/button'
 import Message from 'primevue/message'
 
+const { t } = useI18n()
 const router = useRouter()
 const auth = useAuthStore()
 
@@ -164,5 +170,18 @@ async function handleLogin() {
   font-size: 0.8rem;
   color: var(--p-text-muted-color);
   margin-top: 0.1rem;
+}
+
+.create-app-link {
+  text-align: center;
+  margin-top: 1.25rem;
+  font-size: 0.85rem;
+}
+.create-app-link a {
+  color: var(--p-text-muted-color);
+  text-decoration: none;
+}
+.create-app-link a:hover {
+  color: var(--p-primary-color);
 }
 </style>

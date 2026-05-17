@@ -235,7 +235,7 @@ class CreateApp
         $this->sys_manager->addRow('users', [
             'name' => $this->email,
             'email' => $this->email,
-            'password' => sha1($this->password),
+            'password' => password_hash($this->password, PASSWORD_BCRYPT),
             'privilege' => 1,
         ]);
         array_push($this->log, "User data added");

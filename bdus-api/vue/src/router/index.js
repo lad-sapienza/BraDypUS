@@ -12,6 +12,11 @@ const routes = [
     component: () => import('@/views/LoginView.vue')
   },
   {
+    path: '/new-app',
+    component: () => import('@/views/NewAppView.vue')
+    // no requiresAuth — public route, no JWT needed
+  },
+  {
     path: '/users',
     component: () => import('@/views/UsersView.vue'),
     meta: { requiresAuth: true }

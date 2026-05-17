@@ -86,7 +86,7 @@ class test_ctrl extends Controller
 
     private function testUAC()
     {
-        $uac = new \UAC\UAC( $this->cfg->get('main.status'), $this->is_online(), $this->db );
+        $uac = new \UAC\UAC( $this->cfg->get('main.status'), $this->db );
         $actions = $uac->available_actions;
 
         // // Pure GLOBAL

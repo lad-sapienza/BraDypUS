@@ -261,7 +261,7 @@ class DB implements DBInterface
         $this->log->error($e, [$query, $values, $type, $fetch_style]);
       }
       // Pass PDOException as $previous so callers can inspect the original message
-      throw new DBException(\tr::get('db_generic_error'), 0, $e);
+      throw new DBException('Database error', 0, $e);
     }
   }
 
@@ -305,17 +305,17 @@ class DB implements DBInterface
   private function validateConnectionData(array $cfg): array
   {
     if (!$cfg['db_engine']) {
-      throw new DBException(\tr::get('missing_db_engine'));
+      throw new DBException('Missing database engine configuration');
     }
 
     if (!in_array($cfg['db_engine'], ['sqlite', 'mysql', 'pgsql'])) {
-      throw new DBException(\tr::get('db_engine_not_supported', [$cfg['db_engine']]));
+      throw new DBException("Database engine '{$cfg['db_engine']}' is not supported");
     }
 
     // Set DSN for sqlite
     if ($cfg['db_engine'] === 'sqlite') {
       if (!$cfg['db_path']) {
-        throw new DBException(\tr::get('missing_sqlite_file'));
+        throw new DBException('Missing SQLite file path');
       }
       $dsn = "sqlite:{$cfg['db_path']}";
     }
@@ -324,15 +324,15 @@ class DB implements DBInterface
     if (!$dsn) {
 
       if (!$cfg['db_name']) {
-        throw new DBException(\tr::get('missing_db_name'));
+        throw new DBException('Missing database name');
       }
 
       if (!$cfg['db_username']) {
-        throw new DBException(\tr::get('missing_db_username'));
+        throw new DBException('Missing database username');
       }
 
       if (!$cfg['db_password']) {
-        throw new DBException(\tr::get('missing_db_password'));
+        throw new DBException('Missing database password');
       }
 
       if (!$cfg['db_host']) {
@@ -375,7 +375,7 @@ class DB implements DBInterface
     $cfg = json_decode(file_get_contents($file), true);
 
     if (!is_array($cfg)) {
-      throw new \Exception(\tr::get('invalid_configuration_file', [$file]));
+      throw new \Exception("Invalid configuration file: {$file}");
     }
     // One-time migration: legacy apps may not have db_engine set in config.
     // Only write the file when db_engine is actually missing (null), not on every request.

@@ -112,43 +112,4 @@ class search_replace_ctrl extends Controller
 		}
 	}
 
-	// ── Legacy v4 methods ─────────────────────────────────────────────────────
-
-	/** @deprecated v5 — replaced by getTableList() + SearchReplaceView.vue */
-	public function main_page()
-	{
-		$this->render('search_replace', 'main_page', [
-			'tbs' => $this->cfg->get('tables.*.label')
-		]);
-	}
-
-	/** @deprecated v5 — replaced by getFieldList() */
-	public function getFld()
-	{
-		$tb = $this->get['tb'];
-		echo json_encode($this->cfg->get("tables.$tb.fields.*.label"));
-	}
-
-	/** @deprecated v5 — replaced by doReplace() */
-	public function replace()
-	{
-		$tb      = $this->get['tb'];
-		$fld     = $this->get['fld'];
-		$search  = $this->get['search'];
-		$replace = $this->get['replace'] ?? '';
-		try {
-			if (!$tb || !$fld || !$search || !$replace) {
-				throw new \Exception('All fields are required');
-			}
-			$ret = $this->db->query(
-				"UPDATE {$tb} SET {$fld} = REPLACE ({$fld} , ?, ?)",
-				[$search, $replace],
-				'affected'
-			);
-			$this->response('ok_search_replace', 'success', [$ret]);
-		} catch (\Throwable $e) {
-			$this->log->error($e);
-			$this->response('error_search_replace', 'error');
-		}
-	}
 }

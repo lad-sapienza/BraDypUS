@@ -73,23 +73,4 @@ class myHistory_ctrl extends Controller
     }
   }
 
-  // ── Legacy v4 methods ─────────────────────────────────────────────────────
-
-  /** @deprecated v5 — replaced by getHistory() consumed by Vue HistoryView */
-  public function sql2json()
-  {
-    $params = $this->post;
-    echo \utils::jsonForTabletop($this->db, $this->prefix . 'versions', $params);
-  }
-
-  /** @deprecated v5 — replaced by Vue HistoryView (/history route) */
-  public function show_all()
-  {
-    $fields = ['id', 'user', 'time', 'tb', 'rowid', 'content', 'editsql', 'editvalues'];
-    $this->render('myHistory', 'read', [
-      'th_fields'  => '<th>' . implode('</th><th>', $fields) . '</th>',
-      'm_data'     => '{"mData":"' . implode('"},{"mData":"', $fields) . '"}',
-      'ajaxSource' => "./?obj=myHistory_ctrl&method=sql2json",
-    ]);
-  }
 }

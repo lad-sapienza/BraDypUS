@@ -12,121 +12,6 @@ use \DB\Alter;
 
 class config_ctrl extends Controller
 {
-  /** @deprecated v5 — replaced by ConfigSidebar.vue + getTableList() */
-  public function home()
-  {
-    $table_list = $this->cfg->get('tables.*.label');
-
-    $this->render('config', 'home', [
-      "table_list" => $table_list
-    ]);
-  }
-
-  /** @deprecated v5 — replaced by ConfigAppForm.vue + getAppProperties() / save_app_properties() */
-  public function app_properties()
-  {
-    try {
-      $sys_manage = new Manage($this->db, $this->prefix);
-      $users = $sys_manage->getBySQL('users', '1=1');
-
-      foreach ($users as &$u) {
-        $u['verbose_privilege'] = \utils::privilege($u['privilege'], 1);
-      }
-    } catch (\Throwable $e) {
-      $users = [];
-    }
-
-    $this->render('config', 'app_properties', [
-      'available_langs' => \tr::getAvailable(),
-      'info' => $this->cfg->get('main'),
-      'status' => ['on', 'frozen', 'off'],
-      'users' => $users,
-      'db_engines' => \DB\Engines\AvailableEngines::getList()
-    ]);
-  }
-
-  /** @deprecated v5 — replaced by ConfigFieldList.vue + getTableConfig() */
-  public function fld_list()
-  {
-    $tb = $this->get['tb'];
-
-    $this->render('config', 'fld_list', [
-      'tb' => $tb,
-      'tb_label' => $this->cfg->get("tables.$tb.label"),
-      'all_fields' => $this->cfg->get("tables.$tb.fields.*")
-    ]);
-  }
-
-
-  /** @deprecated v5 — replaced by ConfigFieldForm.vue + getFldConfig() / getFldStructure() */
-  public function field_properties()
-  {
-    $tb = $this->get['tb'];
-    $fld = $this->get['fld'] ?: false;
-
-    $data = $fld ? $this->cfg->get("tables.$tb.fields.$fld") : [];
-
-    $sys_manage = new Manage($this->db, $this->prefix);
-
-    $res = $sys_manage->getBySQL('vocabularies', '1=1 GROUP BY voc', [], ["voc"]);
-    $all_voc = [];
-    foreach ($res as $row) {
-      array_push($all_voc, $row['voc']);
-    }
-
-    $fld_structure = file_get_contents(__DIR__ . '/fld_structure.json');
-
-    $fld_structure = str_replace(
-      [
-        'list-of-system-defined-vocabularies-here',
-        'list-of-available-tables-here'
-      ],
-      [
-        implode('","', $all_voc),
-        implode('","', array_values($this->cfg->get('tables.*.name')))
-      ],
-      $fld_structure
-    );
-    $fld_structure = json_decode($fld_structure, TRUE);
-
-    $this->render('config', 'field_properties', [
-      'tb'    => $tb,
-      'fld'   => $fld,
-      'data'  => $data,
-      'fld_structure' => $fld_structure
-    ]);
-  }
-
-
-  /** @deprecated v5 — replaced by ConfigTableForm.vue + getTableConfig() / save_tb_data() */
-  public function table_properties()
-  {
-    $tb = $this->get['tb'] ?: false;
-
-    $table_properties = $tb ? $this->cfg->get("tables.$tb") : [];
-
-    // default values
-    if (!$table_properties['name'])     $table_properties['name'] = $this->prefix;
-    if (!$table_properties['preview'])  $table_properties['preview'] = array(0 => '');
-    if (!$table_properties['plugin'])   $table_properties['plugin'] = array(0 => '');
-    if (!$table_properties['link'])     $table_properties['link'] = array(0 => array('fld' => array(0 => [])));
-
-    foreach ($table_properties['link'] as $index => $link) {
-      foreach ($link['fld'] as $i => $l_data) {
-        $table_properties['link'][$index]['fld'][$i]['other_list'] = $this->cfg->get("tables.{$link['other_tb']}.fields.*.label");
-      }
-    }
-
-    $this->render('config', 'table_properties', [
-      'data'  => $table_properties,
-      'tb'    => $tb,
-      'field_list' => $tb && $this->cfg->get("tables.$tb.fields.*.label") ? $this->cfg->get("tables.$tb.fields.*.label") : ['id' => 'id'],
-      'template_list' => \utils::dirContent(PROJ_DIR . 'templates/'),
-      'available_plugins' => is_array($this->cfg->get('tables.*.label', 'is_plugin', '1')) ? $this->cfg->get('tables.*.label', 'is_plugin', '1') : [],
-      'available_tables' => $this->cfg->get('tables.*.label'),
-    ]);
-  }
-
   private function check_required(array $data, array $indices): array
   {
     $missing = [];
@@ -403,28 +288,6 @@ class config_ctrl extends Controller
   }
 
 
-  /** @deprecated v5 — replaced by ConfigValidation.vue + getValidationReport() */
-  public function validate_app()
-  {
-    $validate = new Validate($this->db, $this->prefix, $this->cfg);
-    $report = $validate->all();
-
-    $html = '<button type="button" class="btn btn-info pull-right" onclick="$(this).parent().find(\'.alert-info, .alert-success\').toggle();">' . \tr::get('show_only_errors') . '</button>';
-
-    foreach ($report as $item) {
-      if ($item['status'] === 'head') {
-        $html .= '<h3>' . $item['text'] . '</h3>';
-      } else {
-        $html .= '<div class="alert alert-' . $item['status'] . '"> '
-          . $item['text']
-          . ($item['fix'] ? '<br><button class="btn btn-danger" onclick="config.fix(this, \'' . implode("', '", $item['fix']) . '\')">' . $item['suggest'] . '</button>' : '')
-          . '</div>';
-      }
-    }
-
-    echo $html;
-  }
-
   public function fix()
   {
     $action = $this->get['action'];
@@ -495,37 +358,6 @@ class config_ctrl extends Controller
     } else {
       $this->response('error_sort_update', 'error');
     }
-  }
-
-  public function geoface_properties()
-  {
-    $datatypes = [
-      "wms",
-      "tiles",
-      "local"
-    ];
-    
-    $local_files = array_diff(\utils::dirContent(PROJ_DIR . 'geodata'), ["index.json"]);
-
-    $geodata_list = [];
-    
-    if (file_exists(PROJ_DIR . 'geodata/index.json')){
-      $geodata_list = json_decode( file_get_contents(PROJ_DIR . 'geodata/index.json'), TRUE);
-    }
-    array_push($geodata_list, [
-      "label" => "",
-      "type" => "",
-      "path" => "",
-      "wmslayers" => "",
-      "layertype" => "overlay"
-    ]);
-
-    $this->render('config', 'geoface_properties', [
-      "geodata_list" => $geodata_list,
-      "datatypes" => $datatypes,
-      "local_files" => $local_files,
-      "upload_dir" => PROJ_DIR . 'geodata'
-    ]);
   }
 
   public function save_geoface_properties()
@@ -662,7 +494,10 @@ class config_ctrl extends Controller
       'users'          => $users,
       // array_values() re-indexes to 0-based so PHP encodes these as JSON arrays, not objects
       'db_engines'     => array_values(AvailableEngines::getList()),
-      'langs'          => array_values(\tr::getAvailable()),
+      'langs'          => array_values(array_map(
+        fn($f) => str_replace('.json', '', $f),
+        array_filter(\utils::dirContent(MAIN_DIR . 'locale/') ?: [], fn($f) => str_ends_with($f, '.json'))
+      )),
       'status_options' => ['on', 'frozen', 'off'],
     ]);
   }

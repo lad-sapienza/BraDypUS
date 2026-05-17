@@ -103,42 +103,4 @@ class new_app_ctrl extends Controller
         }
     }
 
-    // ── v4 methods (deprecated) ──────────────────────────────────────────────
-
-    /** @deprecated v5 — use getStatus() + create() */
-    public function new_app_form()
-    {
-        $AvailableEngines = new \DB\Engines\AvailableEngines();
-        if ($this->isPermitted()) {
-            $this->render('new_app', 'new_app_form', [
-                "db_engines" => $AvailableEngines->getList()
-            ]);
-        } else {
-            echo \tr::get('not_allowed_app_create');
-        }
-    }
-
-    /** @deprecated v5 — use create() */
-    public function add_app()
-    {
-        try {
-            $createApp = new \DB\System\CreateApp(
-                $this->post['name'],
-                $this->post['definition'],
-                $this->post['your_email'],
-                $this->post['your_password'],
-                $this->post['db_engine'],
-                $this->post['db_host']     ?? null,
-                $this->post['db_port']     ?? null,
-                $this->post['db_name']     ?? null,
-                $this->post['db_username'] ?? null,
-                $this->post['db_password'] ?? null
-            );
-            $createApp->createAll();
-            $this->response('ok_app_created', 'success', null, ['log' => $createApp->getLog()]);
-        } catch (\Throwable $e) {
-            $this->response('error_app_not_created', 'error', [$e->getMessage()]);
-            $this->log->error($e);
-        }
-    }
 }

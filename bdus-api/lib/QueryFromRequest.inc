@@ -77,7 +77,7 @@ class QueryFromRequest
     bool $use_preview = false
   ) {
     if (!$request['tb']) {
-      throw new \Exception(\tr::get('parameter_missing', ['tb']));
+      throw new \Exception('Missing required parameter: tb');
     }
     $this->tb = $request['tb'];
 
@@ -197,15 +197,15 @@ class QueryFromRequest
   public function getQuery(bool $with_values = false)
   {
     if (!$this->fields) {
-      throw new \Exception(\tr::get('parameter_missing', ['fields']));
+      throw new \Exception('Missing required parameter: fields');
     }
 
     if (!$this->tb) {
-      throw new \Exception(\tr::get('parameter_missing', ['tb']));
+      throw new \Exception('Missing required parameter: tb');
     }
 
     if (!$this->where) {
-      throw new \Exception(\tr::get('parameter_missing', ['where']));
+      throw new \Exception('Missing required parameter: where');
     }
 
     $sql = "SELECT " .
@@ -242,29 +242,11 @@ class QueryFromRequest
 
 
   /**
-   *
-   * Returns array of results for query
-   * @param boolean $full if true also links  and images will be returned (usefyll for API)
+   * Returns array of results for query.
    */
-  public function getResults($full = false): array
+  public function getResults(): array
   {
-    $result = $this->db->query($this->getQuery(), $this->getValues(), 'read');
-
-    if (!$full || !is_array($result)) {
-      return $result;
-    }
-
-    if (is_array($result)) {
-      $fullResult = [];
-
-      foreach ($result as $id => $row) {
-        $rec = new Record($this->tb, $row['id'], $this->db, $this->cfg);
-        $rowResult = $rec->readFull();
-        array_push($fullResult, $rowResult);
-      }
-
-      return $fullResult;
-    }
+    return $this->db->query($this->getQuery(), $this->getValues(), 'read') ?: [];
   }
 
   /**
@@ -353,7 +335,7 @@ class QueryFromRequest
         break;
 
       default:
-        throw new \Exception(\tr::get('parameter_missing', ['type']));
+        throw new \Exception('Missing required parameter: type');
         break;
     }
     return;
@@ -538,7 +520,7 @@ class QueryFromRequest
   private function formatFields()
   {
     if (!$this->fields) {
-      throw new \Exception(\tr::get('parameter_missing', ['fields']));
+      throw new \Exception('Missing required parameter: fields');
     }
     $ret = [];
     foreach (array_keys($this->fields) as $f) {
@@ -553,13 +535,7 @@ class QueryFromRequest
 
   private function getPreviewFields(string $tb)
   {
-    $pref_preview = \pref::get('preview');
-
-    if (is_array($pref_preview) && is_array($pref_preview[$tb])) {
-      return $pref_preview[$tb];
-    } else {
-      return $this->cfg->get("tables.{$tb}.preview");
-    }
+    return $this->cfg->get("tables.{$tb}.preview");
   }
 
   /**

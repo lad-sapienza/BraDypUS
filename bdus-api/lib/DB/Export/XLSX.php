@@ -44,15 +44,6 @@ class XLSX implements ExportInterface
         return $content;
     }
 
-    /**
-     * @deprecated Use Export::streamToResponse() instead.
-     */
-    public function saveToFile(array $data, array $metadata, string $file): bool
-    {
-        $file .= '.xlsx';
-        return (bool) file_put_contents($file, $this->render($data, $metadata));
-    }
-
     // ── OOXML parts ───────────────────────────────────────────────────────────
 
     private function contentTypes(): string

@@ -6,59 +6,20 @@
  * @since Apr 7, 2012
  */
 
-use DB\DBInterface;
 use \geoPHP\geoPHP;
 
 class utils
 {
 
   /**
-   * Checks if current installation is the official online installation or a
-   * local one. The check is performed on host name
-   * @deprecated 4.1.0
-   * @return boolean
-   */
-  public static function is_online(): bool
-  {
-    $host = $_SERVER['HTTP_HOST'];
-    return !(strpos($host, 'localhost')    !== false ||
-      substr($host, 0, 5 ) === "127.0" ||
-      substr($host, 0, 7 ) === "192.168");
-  }
-
-  /**
+   * A map of privileges: translates privilege code to string and string to code.
+   * If $input is false will be set to the logged user privilege code.
+   * If $input is 'all', the full array (int => string_key) is returned.
+   * If $input is a string key, the corresponding integer code is returned.
+   * If $input is an integer code, the corresponding string key is returned.
    *
-   * PHP wrapper of javascript core.message abstraction layer.
-   * The following messages types are availables
-   * 		notice (default type)
-   * 		success
-   * 		warning
-   * 		error
-   * @param string $text	text of the message to be shown
-   * @param string $type	notice (default) | success | warning | error
-   * @param bool $sticky	true or false (default).
-   */
-  public static function message(string $text, string $type = null, bool $sticky = false): string
-  {
-    return '<script>'
-      . ' core.message('
-      . "'" . str_replace("'", "\'", $text) . "'"
-      . ($type ? ", '" . $type . "'" : ', false')
-      . ($sticky ? ", true" : '')
-      . ')'
-      . '</script>';
-  }
-
-  /**
-   *
-   * A map of privileges: translates privilege code to string and string to code
-   * If $input is false will be set with logged user privilege code
-   * if $input is all all array will be returned
-   * If $input is a string the corrispondent code will be returned
-   * If $input is an integer the corrispondent string will be returned
-   * TODO: move in general proviliege/user class
    * @param mixed $input initial privilege
-   * @param boolean $translate
+   * @param mixed $translate ignored (kept for BC, no longer used)
    */
   public static function privilege($input = false, $translate = false)
   {
@@ -68,23 +29,15 @@ class utils
 
     $privilege_array = array(
       1  => 'super_admin',
-      10  => 'admin',
-      20  => 'writer',
-      25  => 'self_writer',
-      30  => 'reader',
-      40  => 'waiting'
+      10 => 'admin',
+      20 => 'writer',
+      25 => 'self_writer',
+      30 => 'reader',
+      40 => 'waiting'
     );
 
-    if ($input === 'all' && !$translate) {
+    if ($input === 'all') {
       return $privilege_array;
-    }
-
-    if ($input === 'all' && $translate) {
-      foreach ($privilege_array as $id => $val) {
-        $tr[$id] = \tr::get($val);
-      }
-
-      return $tr;
     }
 
     if (in_array($input, $privilege_array)) {
@@ -92,7 +45,7 @@ class utils
     }
 
     if (in_array($input, array_keys($privilege_array))) {
-      return $translate ? \tr::get($privilege_array[$input]) : $privilege_array[$input];
+      return $privilege_array[$input];
     }
 
     return false;
@@ -156,7 +109,7 @@ class utils
         break;
 
       case 'super_admin':
-        return (($user_priv < 11 && !self::is_online()) || $user_priv < 2);
+        return ($user_priv < 2);
         break;
 
       default:
@@ -204,13 +157,13 @@ class utils
         self::emptyDir($dir . '/' . $file, true);
       } else {
         if (!@unlink($dir . '/' . $file)) {
-          throw new \Exception(\tr::get('cannot_delete_file', [$file]));
+          throw new \Exception("Cannot delete file: {$file}");
         }
       }
     }
 
     if ($delete_dir && !@rmdir($dir)) {
-      throw new \Exception(\tr::get('cannot_delete_dir', [$dir]));
+      throw new \Exception("Cannot delete directory: {$dir}");
     }
 
     return true;
@@ -226,21 +179,6 @@ class utils
   {
     return array_filter(array_map('trim', explode($delimiter, $string)), 'strlen');
   }
-
-  /**
-   * Returns a well formatted HTML string with .text-error CSS class and message
-   * @deprecated 4.1.0
-   * 
-   * @param string $text  Text to be displayed/returned
-   * @return string Well formatted HTML string
-   */
-  public static function alert_div(string $text): string
-  {
-    return '<div class="text-danger">'
-      . '<strong>' . \tr::get('attention') . ':</strong> ' . $text . '</p>'
-      . '</div>';
-  }
-
 
   /**
    * Recursively filters array using an optional callback function
@@ -320,63 +258,6 @@ class utils
     }
 
     return $geo;
-  }
-
-  public static function jsonForTabletop(DBInterface $db, string $tb, array $params): string
-  {
-    $fields = ['id', 'channel', 'level', 'message', 'time'];
-
-    $q = 'SELECT * FROM ' . $tb . ' WHERE ';
-
-    $v = [];
-    $w = [];
-
-    if ($params['sSearch']) {
-      foreach ($fields as $f) {
-        $w[] = "$f LIKE ?";
-        $v[] = "%{$params['sSearch']}%";
-      }
-      $q .= implode(' OR ', $w);
-    } else {
-      $q .= ' 1=1';
-    }
-
-    $response['sEcho'] = intval($params['sEcho']);
-    $response['query_arrived'] = $q;
-
-    if (isset($params['iTotalRecords'])) {
-      $response['iTotalRecords'] = $params['iTotalRecords'];
-    } else {
-      $res_tot = $db->query('SELECT count(id) as tot FROM ' . $tb . ' WHERE 1=1');
-      $response['iTotalRecords'] = $res_tot[0]['tot'];
-    }
-
-    $response['iTotalDisplayRecords'] = $response['iTotalRecords'];
-
-    if (isset($params['iSortCol_0'])) {
-      $q .= ' ORDER BY ' . $fields[$params['iSortCol_0']] . ' ' . ($params['sSortDir_0'] === 'asc' ? 'asc' : 'desc');
-    } else {
-      $q .= ' ORDER BY id DESC';
-    }
-
-    if (isset($params['iDisplayStart']) && $params['iDisplayLength'] !== '-1') {
-      $q .= ' LIMIT ' . $params['iDisplayLength'] . ' OFFSET ' . $params['iDisplayStart'];
-    } else {
-      $q .= ' LIMIT 30 OFFSET 0 ';
-    }
-
-    $response['query_executed'] = $q;
-
-    $response['aaData'] = $db->query($q, $v);
-
-    foreach ($response['aaData'] as $id => &$row) {
-      $date = new DateTime();
-      $date->setTimestamp($row['time']);
-      $row['time'] = $date->format('Y-m-d H:i:s');
-      $response['aaData'][$id]['DT_RowId'] = $row['id'];
-    }
-
-    return json_encode($response);
   }
 
   public static function encodePwd(string $password): string

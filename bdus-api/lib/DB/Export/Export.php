@@ -6,14 +6,9 @@
 
 namespace DB\Export;
 
-use DB\DBInterface;
 use DB\Export\JSON;
 use DB\Export\CSV;
 use DB\Export\XLSX;
-use DB\Export\SQL;
-use DB\Export\HTML;
-use DB\Export\XML;
-use DB\Export\XLS;
 
 class Export
 {
@@ -36,33 +31,6 @@ class Export
         $exp->data     = $data;
         $exp->metadata = $metadata;
         return $exp;
-    }
-
-    /**
-     * @deprecated Use Export::fromData() instead.
-     *             This constructor executes a raw SELECT * without going through
-     *             QueryFromRequest, so it bypasses search logic and column selection.
-     */
-    public function __construct(
-        DBInterface $db    = null,
-        string      $tb    = null,
-        string      $where = null,
-        array       $values = null
-    ) {
-        if ($db === null) {
-            // Called via fromData() — fields will be set by the factory.
-            return;
-        }
-
-        $this->data     = $db->query(
-            'SELECT * FROM ' . $tb . ' WHERE ' . ($where ?: '1=1'),
-            $values
-        );
-        $this->metadata = [
-            'table'         => $tb,
-            'filter'        => $where,
-            'filter_values' => $values,
-        ];
     }
 
     // ── v5 API ────────────────────────────────────────────────────────────────
@@ -93,18 +61,6 @@ class Export
         echo $content;
     }
 
-    // ── v4 legacy API ─────────────────────────────────────────────────────────
-
-    /**
-     * @deprecated Use streamToResponse() instead.
-     *             Kept for v4 backward compatibility (myExport_ctrl::doExport).
-     */
-    public function saveToFile(string $format, string $file): bool
-    {
-        [,, $formatter] = $this->resolveFormatter($format);
-        return $formatter->saveToFile($this->data, $this->metadata, $file);
-    }
-
     // ── Private ───────────────────────────────────────────────────────────────
 
     /**
@@ -127,23 +83,6 @@ class Export
                     'xlsx',
                     new XLSX(),
                 ];
-
-            // ── Legacy formats (v4 only) ─────────────────────────────────────
-            /** @deprecated */
-            case 'sql':
-                return ['text/plain; charset=utf-8', 'sql', new SQL()];
-
-            /** @deprecated */
-            case 'html':
-                return ['text/html; charset=utf-8', 'html', new HTML()];
-
-            /** @deprecated */
-            case 'xml':
-                return ['application/xml; charset=utf-8', 'xml', new XML()];
-
-            /** @deprecated */
-            case 'xls':
-                return ['application/vnd.ms-excel', 'xls', new XLS()];
 
             default:
                 throw new \Exception("Unknown export format: `$format`");

@@ -21,16 +21,13 @@ ini_set('display_errors', 'off');
 
 /**
  * Debug mode: set the BRADYPUS_DEBUG=1 environment variable to enable.
- * When on: Twig debug mode, verbose error reporting, no template cache.
+ * When on: verbose error reporting.
  */
 define('DEBUG_ON', getenv('BRADYPUS_DEBUG') === '1');
 
 if (DEBUG_ON) {
-    define('CACHE', serialize(["autoescape" => false, "debug" => true]));
     error_reporting(E_ALL & ~E_WARNING & ~E_NOTICE);
     ini_set('error_log', 'logs/error.log');
-} else {
-    define('CACHE', serialize(["autoescape" => false, "cache" => "cache"]));
 }
 
 // ── Autoloaders (must come before any class usage) ────────────────────

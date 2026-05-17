@@ -62,22 +62,4 @@ class frontpage_editor_ctrl extends Controller
 		$this->returnJson(['status' => 'success', 'code' => 'ok_save']);
 	}
 
-	// ── Legacy v4 methods ─────────────────────────────────────────────────────
-
-	/** @deprecated v5 — replaced by getWelcome() */
-	public function get_content()
-	{
-		$file = $this->getFile();
-		echo file_get_contents($file);
-	}
-
-	/** @deprecated v5 — replaced by saveWelcome() */
-	public function save_content()
-	{
-		$text = $this->post['text'];
-		$file = $this->getFile();
-		$text = stripslashes($text);
-		$text = str_replace(['<?php', '<?', '?>'], '', $text);
-		file_put_contents($file, $text);
-	}
 }

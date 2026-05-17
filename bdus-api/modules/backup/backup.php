@@ -193,10 +193,10 @@ class backup_ctrl extends Controller
 
     try {
       if (!file_exists($path)) {
-        throw new \Exception(\tr::get('file_not_found'));
+        throw new \Exception('File not found');
       }
       if (!@unlink($path)) {
-        throw new \Exception(\tr::get('error_erasing_file', [$file]));
+        throw new \Exception("Error erasing file: {$file}");
       }
       $this->returnJson(['status' => 'success', 'code' => 'success_erasing_file']);
     } catch (\Exception $e) {

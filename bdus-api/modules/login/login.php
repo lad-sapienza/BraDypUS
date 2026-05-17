@@ -10,31 +10,6 @@
 class login_ctrl extends Controller
 {
 
-	public function newUserForm()
-	{
-		$this->render('login', 'new_user', [
-			'app' => $this->get['app'],
-		]);
-	}
-
-	public function resetPwd()
-	{
-		$sys_manager = new Manage($this->db, $this->prefix);
-
-		$res = $sys_manager->getBySQL('users', 'email = ?', [ $this->get['address'] ] ); 
-		if ($res[0]) {
-			if ($this->get['token'] == $this->getToken($this->db->getApp(), $res[0])) {
-				$this->render('login', 'reset_pwd', array(
-						'user' => $res[0],
-						'app' => $this->request['app']
-				));
-			}
-		} else {
-			echo '<h3 class="text-error">' . \tr::get('email_not_found') . '</h3>';
-		}
-	}
-
-
 	public function addUser()
 	{
 		$post = $this->post;
@@ -73,9 +48,8 @@ class login_ctrl extends Controller
 			if ($res) {
 				// email to user
 				$to = $post['email'];
-				$subject = \tr::get('new_user_email_subject');
-				$message = \tr::get('new_user_email_text', [$post['app']])
-						. "\n" . \tr::get('email_signature');
+				$subject = 'New user registration';
+				$message = "Your account for {$post['app']} has been created.\nThank you for registering.";
 				$headers = 'From: ' . $post['app'] . '@bdus.cloud' . "\r\n" . 'Reply-To: ' . $post['app'] . '_db@bdus.cloud' . "\r\n";
 
 				@mail($to, $subject, $message, $headers);
@@ -83,13 +57,12 @@ class login_ctrl extends Controller
 				// email to admins
 
 				$admins = $sys_manager->getBySQL('users', 'privilege <= ?', [
-					\utils::privilege('adm')
+					\utils::privilege('admin')
 				]);
 
 				foreach($admins as $adm) {
 					$to = $adm['email'];
-					$message = \tr::get('new_user_adm_email_text', [ $post['app'], $post['app'], $post['name'], $post['email'] ])
-						. "\n" . \tr::get('email_signature');
+					$message = "A new user {$post['name']} ({$post['email']}) has registered on {$post['app']}.";
 
 					@mail($to, $subject, $message, $headers);
 				}
@@ -185,52 +158,6 @@ class login_ctrl extends Controller
 		$this->returnJson(['apps' => $data]);
 	}
 
-	/**
-	 * @deprecated v5 — replaced by listApps() (JSON) + Vue login dropdown.
-	 *             Remove when the legacy Twig UI is retired.
-	 */
-	public function select_app()
-	{
-		try {
-			$availables_DB = \utils::dirContent(MAIN_DIR . "projects");
-			
-			$data = [];
-
-			if ($availables_DB && is_array($availables_DB)) {
-				asort($availables_DB);
-
-				foreach ($availables_DB as $db) {
-					if (!file_exists(MAIN_DIR . "projects/$db/cfg/app_data.json")){
-						continue;
-					}
-					$appl = json_decode(file_get_contents(MAIN_DIR . "projects/$db/cfg/app_data.json"), true);
-
-					// Skip not well-formatted json files
-					if (!is_array($appl)){
-						continue;
-					}
-
-					$data[] = [
-						'db' => $db,
-						'definition' => $appl['definition'],
-						'name' => strtoupper($appl['name'])
-					];
-				}
-			}
-
-			$this->render('login', 'select_app', [
-				'data' => $data,
-				'app' => $this->get['app'],
-				'choose_db' => \tr::get('choose_db'),
-				'version' => version::current(),
-				'create_app' => file_exists('./UNSAFE_permit_app_creation') || !$availables_DB
-			]);
-
-		} catch (\Exception $e) {
-			$this->log->error($e);
-		}
-	}
-
 	public function changePwd()
 	{
 		$id = (int) $this->post['id'];
@@ -257,9 +184,9 @@ class login_ctrl extends Controller
 			$token = $this->getToken($this->db->getApp(), $res[0]);
 
 			$to = $this->get['email'];
-			$subject = \tr::get('lost_password_email_subject');
-			$message = \tr::get('lost_password_email_text', [ 'https://bdus.cloud/db/?app=' . $this->get['app'] . '&address=' . $this->get['email'] . '&token=' . $token ])
-				. "\n" . \tr::get('email_signature');
+			$subject = 'Password reset request';
+			$resetUrl = 'https://bdus.cloud/db/?app=' . $this->get['app'] . '&address=' . $this->get['email'] . '&token=' . $token;
+			$message = "Click the following link to reset your password: {$resetUrl}";
 			$headers = 'From: ' . $this->get['app'] . '@bdus.cloud' . "\r\n" . 'Reply-To: ' . $this->get['app'] . '@bdus.cloud' . "\r\n";
 
 
@@ -283,7 +210,7 @@ class login_ctrl extends Controller
 	private function authenticate(string $email, string $password): array
     {
 		if (!filter_var($email, FILTER_VALIDATE_EMAIL) || empty($password)) {
-			throw new \Exception(\tr::get('email_password_needed'));
+			throw new \Exception('email_password_needed');
 		}
 
 		$sys_manager = new Manage($this->db, $this->prefix);
@@ -291,7 +218,7 @@ class login_ctrl extends Controller
 		$res  = $rows[0] ?? null;
 
 		if (!$res || !\utils::verifyPassword($password, $res['password'])) {
-			throw new \Exception(\tr::get('login_data_not_valid'));
+			throw new \Exception('login_data_not_valid');
 		}
 
 		// Silently migrate legacy SHA1 hash to bcrypt on successful login

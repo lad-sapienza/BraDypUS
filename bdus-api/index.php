@@ -51,7 +51,7 @@ try {
 
 	// Always respond with valid JSON — debug details go to logs/error.log, not the response body.
 	echo json_encode([
-		"text" => tr::get('generic_error'),
+		"text" => 'generic_error',
 		"status" => 'error',
 		"debug" => DEBUG_ON ? $e->getMessage() : null,
 	], JSON_UNESCAPED_UNICODE);

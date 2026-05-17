@@ -108,30 +108,4 @@ class debug_ctrl extends Controller
     }
   }
 
-  // ──────────────────────────────────────────────────────────────────────────
-  // Legacy v4 methods (jQuery DataTables / Twig)
-  // ──────────────────────────────────────────────────────────────────────────
-
-  /**
-   * @deprecated v5 — replaced by getLogs() (JSON) consumed by Vue LogView
-   */
-  public function sql2json()
-  {
-    $params = $this->post;
-    echo \utils::jsonForTabletop($this->db, $this->prefix . 'log', $params);
-  }
-
-  /**
-   * @deprecated v5 — replaced by Vue LogView (/log route)
-   */
-  public function read()
-  {
-    $fields = ['id', 'channel', 'level', 'message', 'time'];
-
-    $this->render('debug', 'read', [
-      'th_fields' => '<th>' . implode('</th><th>', $fields) . '</th>',
-      'm_data'    => '{"mData":"' . implode('"},{"mData":"', $fields) . '"}',
-      'ajaxSource' => "./?obj=debug_ctrl&method=sql2json"
-    ]);
-  }
 }

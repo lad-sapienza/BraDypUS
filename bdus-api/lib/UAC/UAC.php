@@ -28,28 +28,24 @@ class UAC
     'delete',           // <= UPDATE || <= CREATE && is own record
     'multiple_edit',    // <= UPDATE
     'admin',            // <= ADM
-    'super_admin'       // <= SUPERADM || <= ADM && is offline
+    'super_admin'       // <= SUPERADM
   ];
 
   private $ual; // User Access Level array [global: int, tb_a: int, tb_n: int, tb_a: [int, where], tb_b, [int, where] ]
   private $app_status;
-  private $is_online;
   private $action;
   private $db;
 
   /**
    * Initializes class and sets:
-   *   - appliation status
-   *   - on/offline status
+   *   - application status
    *   - Database object
    *
    * @param string $app_status: on, off or frozen
-   * @param boolean $is_online
    * @param DBInterface $db
    */
   public function __construct(
     string $app_status,
-    bool $is_online = false,
     DBInterface $db
   ) {
     $valid_app_status = ['on', 'off', 'frozen'];
@@ -57,7 +53,6 @@ class UAC
       throw new \Exception("Unknown apps status: `$app_status`: must be one of: " . implode(', ', $valid_app_status),);
     }
     $this->app_status = $app_status;
-    $this->is_online = $is_online;
     $this->db = $db;
   }
 
@@ -136,7 +131,7 @@ class UAC
         break;
 
       case 'super_admin':
-        return (($this->ual['global'] <= $this::ADM && !$this->is_online) || $this->ual['global'] <= $this::SUPERADM);
+        return ($this->ual['global'] <= $this::SUPERADM);
         break;
     }
     return false;

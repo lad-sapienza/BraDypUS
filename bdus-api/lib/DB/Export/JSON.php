@@ -16,12 +16,4 @@ class JSON implements ExportInterface
         );
     }
 
-    /**
-     * @deprecated Use Export::streamToResponse() instead.
-     */
-    public function saveToFile(array $data, array $metadata, string $file): bool
-    {
-        $file .= '.json';
-        return (bool) file_put_contents($file, $this->render($data, $metadata));
-    }
 }

@@ -211,7 +211,6 @@ class App
       if ($this->app && $config && $this->db) {
         $uac = new UAC(
           $config->get('main.status'),
-          $_aa->is_online(),
           $this->db
         );
 
@@ -230,11 +229,6 @@ class App
 
         $_aa->setUAC($uac);
       }
-
-      /**
-       * Load locales
-       */
-      \tr::load_file($config ? $config->get('main.lang') : null);
 
       /**
        * Run finally the method

@@ -19,60 +19,24 @@ class vocabularies_ctrl extends Controller
 		return $this->sys_manager;
 	}
 
-	private function getFullVocabularies()
-	{
-		$res = $this->getSysMng()->getBySQL('vocabularies', '1=1 ORDER BY voc, sort');
-		$vocs = [];
-
-		foreach($res as $arr) {
-			$vocs[$arr['voc']][$arr['id']] = $arr['def'];
-		}
-		return $vocs;
-	}
-
 	public function list()
 	{
-		if ($this->wantsJson()) {
-			$res = $this->getSysMng()->getBySQL('vocabularies', '1=1 ORDER BY voc, sort');
-			$grouped = [];
-			foreach ($res as $row) {
-				$grouped[$row['voc']][] = [
-					'id'   => (int) $row['id'],
-					'def'  => $row['def'],
-					'sort' => (int) $row['sort'],
-				];
-			}
-			$vocs = [];
-			foreach ($grouped as $name => $items) {
-				$vocs[] = ['name' => $name, 'items' => $items];
-			}
-			$this->returnJson(['vocs' => $vocs]);
-		} else {
-			// @deprecated v5 — Twig render, remove when legacy UI is retired
-			$this->render('vocabularies', 'list', [
-				'vocs' => $this->getFullVocabularies(),
-			]);
+		$res = $this->getSysMng()->getBySQL('vocabularies', '1=1 ORDER BY voc, sort');
+		$grouped = [];
+		foreach ($res as $row) {
+			$grouped[$row['voc']][] = [
+				'id'   => (int) $row['id'],
+				'def'  => $row['def'],
+				'sort' => (int) $row['sort'],
+			];
 		}
+		$vocs = [];
+		foreach ($grouped as $name => $items) {
+			$vocs[] = ['name' => $name, 'items' => $items];
+		}
+		$this->returnJson(['vocs' => $vocs]);
 	}
 
-	/**
-	 * @deprecated v5 — remove when legacy UI is retired
-	 * 
-	 */
-	public function add_new_form()
-	{
-		$voc = $this->get['voc'] ?: false ;
-
-		if (!$voc) {
-			$all_vocs = array_keys($this->getFullVocabularies());
-		}
-		
-		$this->render('vocabularies', 'add_new_form', [
-			'voc' => $voc,
-			'all_vocs' => $all_vocs,
-		]);
-	}
-	
 	public function edit()
 	{
 		$id = $this->get['id'];

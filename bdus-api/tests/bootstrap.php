@@ -32,10 +32,6 @@ foreach (['backups', 'db', 'geodata', 'templates', 'export', 'files'] as $sub) {
 // ── Suppress errors the way production does, but keep PHPUnit able to catch ─
 // (do NOT call error_reporting(0) — that would hide PHPUnit's own errors)
 
-// ── CACHE: used by Template\Template when rendering Twig templates ────────
-// Disable file caching in tests to avoid stale artefacts.
-define('CACHE', serialize(["autoescape" => false, "cache" => false]));
-
 // ── Stub server vars needed by Controller base class ─────────────────────
 $_SERVER['HTTP_ACCEPT_LANGUAGE'] = $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? 'en';
 $_SERVER['HTTP_HOST']            = $_SERVER['HTTP_HOST']            ?? 'localhost';
@@ -48,6 +44,3 @@ require_once $basePath . 'vendor/autoload.php';
 require_once $basePath . 'lib/autoLoader.php';
 new autoloader($basePath . 'lib/', $basePath . 'modules/');
 
-// ── Locale helper (tr::get) ───────────────────────────────────────────────
-// tr is loaded via the autoloader from lib/tr.inc; pre-load English strings
-\tr::load_file('en');

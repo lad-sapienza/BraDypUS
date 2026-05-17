@@ -69,11 +69,7 @@ class user_ctrl extends Controller
 			];
 		}
 
-		if ($this->wantsJson()) {
-			$this->returnJson($data);
-		} else {
-			$this->render('user', 'showList', $data);
-		}
+		$this->returnJson($data);
 	}
 
 	/**
@@ -100,12 +96,12 @@ class user_ctrl extends Controller
 			$ret = $sys_manager->deleteRow('users', $id);
 
 			if ($ret) {
-				$this->response(\tr::get('user_deleted'), 'success');
+				$this->returnJson(['status' => 'success', 'code' => 'user_deleted']);
 			} else {
 				throw new \Exception('User deletion query returned false');
 			}
 		} catch (\Throwable $e) {
-			$this->response(\tr::get('user_not_deleted'), 'error');
+			$this->returnJson(['status' => 'error', 'code' => 'user_not_deleted']);
 			$this->log->error($e);
 		}
 	}
@@ -158,11 +154,7 @@ class user_ctrl extends Controller
 			}
 		}
 
-		if ($this->wantsJson()) {
-			$this->returnJson($data);
-		} else {
-			$this->render('user', 'showUserForm', $data);
-		}
+		$this->returnJson($data);
 	}
 
 	/**

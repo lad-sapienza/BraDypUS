@@ -52,16 +52,4 @@ class info_ctrl extends Controller
     ]);
   }
 
-  /**
-   * @deprecated v5 — replaced by getInfo() (JSON) consumed by Vue InfoView.
-   *   Twig template (tmpl/main.twig) removed.
-   */
-  public function copyright(): void
-  {
-    $this->render('info', 'main', [
-      'date'      => date('Y'),
-      'changelog' => Markdown::defaultTransform(file_get_contents('CHANGELOG.md')),
-      'version'   => \version::current(),
-    ]);
-  }
 }

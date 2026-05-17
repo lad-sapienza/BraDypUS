@@ -4,22 +4,12 @@
  * @copyright 2007-2022 Julian Bogdani
  * @license AGPL-3.0; see LICENSE
  * @since			Jan 12, 2013
- * 
- * @uses Exception
- * @uses cfg
- * @uses tr
- * @uses \Twig\Environment
- * @uses \Twig\Loader\FilesystemLoader
- * @uses \Twig\Extension\DebugExtension
  */
 
 use DB\DBInterface;
 use UAC\UAC;
 use Config\Config;
 use Monolog\Logger;
-use Twig\Environment;
-use Twig\Loader\FilesystemLoader;
-use Twig\Extension\DebugExtension;
 
 abstract class Controller
 {
@@ -47,20 +37,6 @@ abstract class Controller
 
     $this->post    = $post;
     $this->request = array_merge($get, $post);
-  }
-
-  /**
-   * Returns true if this is a live application
-   * and false if it is running on localhost / 127.0* or 192.168*
-   *
-   * @return boolean
-   */
-  public function is_online(): bool
-  {
-    $host = $_SERVER['HTTP_HOST'];
-    return !(strpos($host, 'localhost') !== false ||
-      substr($host, 0, 5) === "127.0" ||
-      substr($host, 0, 7) === "192.168");
   }
 
   public function setUAC(UAC $uac): void
@@ -124,26 +100,6 @@ abstract class Controller
   }
 
   /**
-   * Returns true if the caller expects a JSON response.
-   * Detected via Accept: application/json header or ?format=json query param.
-   * Used by controllers to support both the legacy HTML rendering path and
-   * the new Vue frontend API path without duplicating business logic.
-   *
-   * @return bool
-   */
-  protected function wantsJson(): bool
-  {
-    $accept = $_SERVER['HTTP_ACCEPT'] ?? '';
-    if (strpos($accept, 'application/json') !== false) {
-      return true;
-    }
-    if (isset($this->get['format']) && $this->get['format'] === 'json') {
-      return true;
-    }
-    return false;
-  }
-
-  /**
    * Echoes json-encoded data from array, with proper header
    *
    * @param array $data
@@ -156,78 +112,25 @@ abstract class Controller
   }
 
   /**
-   * Echoes json-encoded data from text, with proper header
+   * Echoes a simple status+text JSON response.
+   * Legacy helper used by many modules; `text` carries an i18n code string.
    *
-   * @param string $text
-   * @param string $status
-   * @param array $text_bindings
-   * @param array $other_args
-   * @return void
+   * @param string $text    i18n code (e.g. 'ok_def_update')
+   * @param string $status  'success' | 'error'
+   * @param array|null $text_bindings  ignored (kept for BC)
+   * @param array $other_args  extra keys merged into the response
    */
   public function response(
     string $text,
     string $status = 'success',
-    array $text_bindings = null,
+    ?array $text_bindings = null,
     array $other_args = []
   ): void {
-    $response['status'] = $status;
-    $response['text'] = \tr::get($text, $text_bindings);
-    $other_args ? $response = array_merge($response, $other_args) : '';
-    echo json_encode($response);
+    $res = ['status' => $status, 'text' => $text];
+    if (!empty($other_args)) {
+      $res = array_merge($res, $other_args);
+    }
+    echo json_encode($res);
   }
 
-  /**
-   * Compiles template from path and filename or module and template name
-   * and returns html
-   *
-   * @param string $module module name or path to template directory
-   * @param string $template template name or template file name with extension
-   * @param array $data optional array of template data
-   * @return string
-   */
-  public function compileTmpl(
-    string $module,
-    string $template,
-    array $data = []
-  ): string {
-    // Template can be a full path to a template file or a template name in the module folder
-    if (file_exists($module . '/' . $template)) {
-      $tmpl_file = $template;
-      $tmpl_dir = $module;
-    } else {
-      $tmpl_file = $template . '.twig';
-      $tmpl_dir = MAIN_DIR . 'modules/' . $module . '/tmpl';
-    }
-    if (!file_exists("{$tmpl_dir}/{$tmpl_file}")) {
-      throw new \Exception("Template {$tmpl_dir}/{$tmpl_file} not found");
-    }
-
-    $settings =  $this->debug ? ["autoescape" => false, "debug" => true] : ["autoescape" => false, "cache" => "cache"];
-
-    $twig = new Environment(new FilesystemLoader($tmpl_dir), $settings);
-    if ($settings['debug']) {
-      $twig->addExtension(new DebugExtension());
-    }
-
-    $data['uid'] = uniqid('uid');
-    $data['tr'] = new tr();
-
-    return $twig->render($tmpl_file, $data);
-  }
-
-  /**
-   * Alias for Controller::compileTmpl, but echoes result
-   *
-   * @param string $module module name or path to template directory
-   * @param string $template template name or template file name with extension
-   * @param array $data optional array of template data
-   * @return void
-   */
-  public function render(
-    string $module,
-    string $template,
-    array $data = []
-  ): void {
-    echo $this->compileTmpl($module, $template, $data);
-  }
 }

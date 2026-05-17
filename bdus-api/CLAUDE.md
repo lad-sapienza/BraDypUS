@@ -284,7 +284,6 @@ or tests touching that table will fail with "no such table".
 | matrix (v4) | — | Superseded by RsGraph/MatrixView |
 | userlinks | low | Manual link management UI |
 | new_app | low | App creation wizard |
-| preview_flds | low | Field preview helper |
 
 ### Deprecated (no Vue equivalent needed)
 
@@ -292,6 +291,7 @@ or tests touching that table will fail with "no such table".
 - `menuValues` — no longer needed
 - `free_sql` — replaced by SQL expert search in DataView
 - `myTmpl` — template preview superseded by TemplatesView
+- `preview_flds` — field visibility per record list superseded by DataView column toggler (pref:: system also deprecated)
 
 ---
 

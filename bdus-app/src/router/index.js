@@ -85,6 +85,11 @@ const routes = [
     path: '/geoface/:tb',
     component: () => import('@/views/GeofaceView.vue'),
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/import',
+    component: () => import('@/views/ImportView.vue'),
+    meta: { requiresAuth: true }
   }
 ]
 

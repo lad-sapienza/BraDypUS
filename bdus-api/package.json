@@ -1,13 +1,11 @@
 {
   "name": "bradypus",
-  "version": "4.4.7",
+  "version": "5.0.0",
   "description": "BraDypUS web database system",
   "scripts": {
-    "build": "gulp build",
-    "dev": "gulp",
-    "vue:dev": "vite",
-    "vue:build": "vite build",
-    "vue:preview": "vite preview"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "repository": {
     "type": "git",
@@ -34,22 +32,7 @@
     "vue-router": "^4.0.0"
   },
   "devDependencies": {
-    "@fancyapps/fancybox": "^3.5.7",
     "@vitejs/plugin-vue": "^5.0.0",
-    "bootstrap": "^3.4.1",
-    "datatables.net": "^1.11.3",
-    "datatables.net-bs": "^1.11.3",
-    "datatables.net-plugins": "^1.10.22",
-    "font-awesome": "^4.7.0",
-    "gulp": "^4.0.0",
-    "gulp-clean-css": "^4.3.0",
-    "gulp-concat": "^2.6.1",
-    "gulp-less": "^5.0.0",
-    "gulp-rename": "^2.0.0",
-    "gulp-terser": "^2.1.0",
-    "izitoast": "^1.4.0",
-    "jquery": "^3.5.1",
-    "select2": "^4.1.0-rc.0",
     "sortablejs": "^1.10.2",
     "vite": "^6.0.0"
   }

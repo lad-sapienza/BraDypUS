@@ -122,15 +122,21 @@
                 size="small"
                 severity="secondary"
                 text
-                @click="savedQueriesPopover.toggle($event)"
+                @click="savedQueriesDialog = true"
               />
-              <Popover ref="savedQueriesPopover" class="saved-queries-popover">
+              <Dialog
+                v-model:visible="savedQueriesDialog"
+                :header="t('saved_queries')"
+                :style="{ width: '36rem', maxWidth: '95vw' }"
+                :draggable="false"
+                modal
+              >
                 <SavedQueriesPanel
                   :currentSearch="currentSearch"
                   :currentTb="selectedTable?.name ?? ''"
                   @load-query="onLoadQuery"
                 />
-              </Popover>
+              </Dialog>
 
               <!-- Charts -->
               <Button
@@ -409,6 +415,7 @@ import Select from 'primevue/select'
 import AutoComplete from 'primevue/autocomplete'
 import ProgressSpinner from 'primevue/progressspinner'
 import Popover from 'primevue/popover'
+import Dialog from 'primevue/dialog'
 import SavedQueriesPanel from '@/components/SavedQueriesPanel.vue'
 import ChartPanel from '@/components/ChartPanel.vue'
 
@@ -429,7 +436,7 @@ const selectedTable = computed(() =>
 // ── Column visibility & order ────────────────────────────────
 const colToggler          = ref()
 const exportPopover       = ref()
-const savedQueriesPopover = ref()
+const savedQueriesDialog  = ref(false)
 const chartPopover        = ref()
 const showChartPanel      = ref(false)
 
@@ -618,7 +625,7 @@ const currentSearch = computed(() => {
 function onLoadQuery(payload) {
   if (!payload?.search_type) return
 
-  savedQueriesPopover.value?.hide()
+  savedQueriesDialog.value = false
   page.value = 1
 
   if (payload.search_type === 'advanced' && Array.isArray(payload.adv)) {

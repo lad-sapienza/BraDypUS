@@ -2,9 +2,9 @@
   <div class="saved-queries-panel">
 
     <!-- ── Save current search ─────────────────────────────────── -->
-    <div v-if="currentSearch" class="save-section">
+    <div class="save-section">
       <div class="save-section-label">{{ t('save_current_search') }}</div>
-      <div class="save-row">
+      <div v-if="currentSearch" class="save-row">
         <InputText
           v-model="newQueryName"
           :placeholder="t('name_for_query_to_save')"
@@ -21,9 +21,13 @@
           @click="doSave"
         />
       </div>
+      <div v-else class="save-hint">
+        <i class="pi pi-info-circle" />
+        {{ t('save_query_hint') }}
+      </div>
     </div>
 
-    <Divider v-if="currentSearch" />
+    <Divider />
 
     <!-- ── Query list ───────────────────────────────────────────── -->
     <div v-if="loading" class="panel-loading">
@@ -272,6 +276,15 @@ function emitLoad(q) {
   padding: 1rem 0;
 }
 
+/* ── Save hint (no active search) ────────────────────── */
+.save-hint {
+  font-size: 0.82rem;
+  color: var(--p-text-muted-color);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
 /* ── Query list ───────────────────────────────────────── */
 .query-list {
   list-style: none;
@@ -280,6 +293,8 @@ function emitLoad(q) {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  max-height: 55vh;
+  overflow-y: auto;
 }
 
 .query-item {

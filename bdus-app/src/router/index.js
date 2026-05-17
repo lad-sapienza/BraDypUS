@@ -57,6 +57,11 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/find-replace',
+    component: () => import('@/views/SearchReplaceView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/matrix/:tb',
     component: () => import('@/views/MatrixView.vue'),
     meta: { requiresAuth: true }

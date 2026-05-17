@@ -10,6 +10,29 @@ rendering to a Vue 3 SPA (Vite, Pinia, PrimeVue / Aura theme).
 The PHP backend is preserved and extended with JSON endpoints consumed by the new frontend.
 
 ### Added
+- **Stateless JWT authentication**: PHP sessions removed entirely; each
+  request carries a signed `Authorization: Bearer` token stored in
+  `sessionStorage` (per-tab — multiple apps open simultaneously in one
+  browser). Per-app secrets stored at `projects/{app}/cfg/.jwt_secret`
+  (auto-generated, chmod 0600). Silent proactive token refresh when < 30
+  min remain. `firebase/php-jwt ^7.0` dependency added.
+- **Per-table privilege overrides**: admins can assign read/write/admin
+  overrides per table per user, with an optional raw SQL WHERE subset for
+  row-level filtering. Managed via an expandable row in the Users view.
+  New `user_table_privs` system table; applied automatically via the new
+  DB migration runner (`DB\System\Migrate`) on every login.
+- **Harris Matrix / stratigraphic relations**: tables with `rs_field`
+  configured expose full relation management inline in RecordView
+  (`RsSection` + `RsGraph` powered by Cytoscape.js / cytoscape-dagre) and
+  a standalone full-page Harris Matrix view at `/matrix/:tb/:id`.
+  `DataView` toolbar shows a "Harris Matrix" button for eligible tables.
+- **cfg/ directory protection**: `projects/{app}/cfg/.htaccess` denying all
+  web access is written on app creation and self-healed by the Filesystem
+  validation check if missing.
+- `Auth\CurrentUser` static class: centralised per-request user state
+  replacing all direct `$_SESSION['user']` access across the codebase.
+- `DB\Validate\Filesystem`: new validation check verifying cfg/ is
+  web-inaccessible; runs first in the validation report.
 - Vue 3 SPA with Vite dev server and hash-based routing
 - PrimeVue Aura theme; dark-mode ready via CSS custom properties
 - Responsive layout: collapsible sidebar (desktop) + slide-in drawer (mobile)
@@ -45,6 +68,25 @@ The PHP backend is preserved and extended with JSON endpoints consumed by the ne
 - 167 PHPUnit integration + unit tests covering all migrated controllers
 - Module readmes: `vue/docs/{data,log,search,backup,info,config,templates}.md`
 
+### Removed
+- PHP session-based authentication (`session_start()`, `$_SESSION['user']`)
+- `cookieAuth.inc` (dead code)
+- `autolog` feature (anonymous login via configured user_id — incompatible
+  with per-tab JWT isolation)
+- `pref.inc` session-based persistence replaced by a stateless per-request
+  static store (user preferences will migrate to `users.settings` or
+  Vue localStorage in a future release)
+- Gulp / LESS build pipeline (`gulpfile.js` removed); v5 frontend is
+  built entirely by Vite
+
+### Security
+- `Authorization: Bearer` header is now read via `getallheaders()` as
+  fallback, making JWT auth fully server-agnostic (Apache mod_php, nginx-FPM,
+  Caddy, CLI) — no longer requires the Apache-specific `RewriteRule`
+  workaround in `.htaccess`
+- JWT secrets are auto-generated per application, stored with chmod 0600,
+  and the containing directory is .htaccess-protected against web access
+
 ### Changed
 - All module endpoints now return JSON (`returnJson()`) instead of rendering Twig
 - `backup_ctrl::buildFileName()` uses `PROJ_DIR` (was a relative path)
@@ -63,6 +105,15 @@ The PHP backend is preserved and extended with JSON endpoints consumed by the ne
   returns success immediately for SQLite (native PHP/PDO dump needs no external tool)
 
 ### Fixed
+- `getHistory()` query referenced column `user`; actual column in the
+  `versions` table is `userid` — fixed with `userid AS user` alias so the
+  API shape is unchanged
+- `showUserForm()` response was missing the `privilege` field, leaving the
+  role Select empty in the user profile dialog
+- `pref` class deletion caused `tr::load_file()` to crash on every request
+  with `Class "pref" not found` — recreated as stateless store
+- `firebase/php-jwt` was not installed, causing a fatal error after
+  successful authentication; `generic_error` was shown to the user
 - `dumpSqliteNative()`: cursor-based row iteration (no full-table `fetchAll()`),
   gzip level 6 instead of 9 — significantly faster on large databases
 - `html`/`body`/`#app` locked to viewport height (`overflow: hidden`) so internal

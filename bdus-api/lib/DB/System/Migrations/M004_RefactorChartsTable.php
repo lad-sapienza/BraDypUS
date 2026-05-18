@@ -69,11 +69,18 @@ class M004_RefactorChartsTable
 
         // 4. Populate `created_at` from the existing `date` column (best-effort).
         //    Old SQL charts are NOT converted — `definition` stays NULL.
-        $rows = $db->query(
-            "SELECT id, date FROM {$prefix}charts WHERE created_at IS NULL",
-            [],
-            'read'
-        );
+        //    For new apps created after v5 the `date` column never existed —
+        //    catch that case and return early (nothing to migrate).
+        try {
+            $rows = $db->query(
+                "SELECT id, date FROM {$prefix}charts WHERE created_at IS NULL",
+                [],
+                'read'
+            );
+        } catch (\Throwable $e) {
+            // `date` column does not exist — fresh v5 app, nothing to migrate.
+            return;
+        }
 
         if (!$rows) {
             return;

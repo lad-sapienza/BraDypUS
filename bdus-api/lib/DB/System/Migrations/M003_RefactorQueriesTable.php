@@ -58,11 +58,18 @@ class M003_RefactorQueriesTable
         // 3. Populate existing rows that have `text` but no `query` yet.
         //    We use a raw SELECT against the old columns (which still exist in
         //    the DB even though the descriptor no longer lists them).
-        $rows = $db->query(
-            "SELECT id, text, date FROM {$prefix}queries WHERE query IS NULL AND text IS NOT NULL",
-            [],
-            'read'
-        );
+        //    For new apps created after v5 the `text` column never existed —
+        //    catch that case and return early (nothing to migrate).
+        try {
+            $rows = $db->query(
+                "SELECT id, text, date FROM {$prefix}queries WHERE query IS NULL AND text IS NOT NULL",
+                [],
+                'read'
+            );
+        } catch (\Throwable $e) {
+            // `text` column does not exist — this is a fresh v5 app, nothing to migrate.
+            return;
+        }
 
         if (!$rows) {
             return;

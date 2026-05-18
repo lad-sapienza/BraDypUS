@@ -85,6 +85,34 @@ a:hover {
   border-radius: 4px;
 }
 
+/* ── Auth pages shared layout (LoginView, NewAppView) ───────────────────────
+   Defined globally so both views can use the same centred-card layout
+   without duplicating scoped styles. */
+.login-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bdus-bg);
+}
+
+.login-card {
+  width: 100%;
+  max-width: 420px;
+  padding: 2.5rem;
+  background: var(--bdus-surface);
+  border-radius: var(--p-border-radius-xl);
+  box-shadow: var(--p-card-shadow);
+}
+
+.login-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 2rem;
+  text-align: center;
+  color: var(--p-primary-color);
+}
+
 /* ── PrimeVue Select: force correct flex layout ──────────────────────────────
    PrimeVue 4 generates its CSS at runtime via JS; the label inside .p-select
    can render in a column stack on certain builds. This global rule restores

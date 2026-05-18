@@ -129,30 +129,7 @@ async function handleLogin() {
 </script>
 
 <style scoped>
-.login-wrapper {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--bdus-bg);
-}
-
-.login-card {
-  width: 100%;
-  max-width: 420px;
-  padding: 2.5rem;
-  background: var(--bdus-surface);
-  border-radius: var(--p-border-radius-xl);
-  box-shadow: var(--p-card-shadow);
-}
-
-.login-title {
-  font-size: 1.8rem;
-  font-weight: 700;
-  margin-bottom: 2rem;
-  text-align: center;
-  color: var(--p-primary-color);
-}
+/* .login-wrapper / .login-card / .login-title live in main.css (shared with NewAppView) */
 
 .field {
   display: flex;

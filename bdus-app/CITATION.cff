@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: Bogdani
+    given-names: Julian
+    orcid: https://orcid.org/0000-0001-5250-927X
+    affiliation: "LAD – Laboratorio di Archeologia Digitale, Sapienza University of Rome"
+title: "BraDypUS — bdus-app (Vue frontend)"
+version: 5.0.0
+doi: "10.5281/zenodo.1467904"
+date-released: 2026-05-18
+license: "AGPL-3.0"
+url: "https://github.com/lad-sapienza/bdus-app"
+repository-code: "https://github.com/lad-sapienza/bdus-app"
+abstract: >
+  BraDypUS is an open-source web database system for archaeological and
+  cultural-heritage research. bdus-app is the Vue 3 / Vite frontend that
+  provides the user interface, consuming the REST API exposed by bdus-api.
+keywords:
+  - archaeology
+  - cultural heritage
+  - database
+  - web application
+  - digital humanities
+  - vue

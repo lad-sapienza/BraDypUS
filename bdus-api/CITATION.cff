@@ -4,8 +4,21 @@ authors:
   - family-names: Bogdani
     given-names: Julian
     orcid: https://orcid.org/0000-0001-5250-927X
-title: "BraDypUS"
-version: 4.2.0
+    affiliation: "LAD – Laboratorio di Archeologia Digitale, Sapienza University of Rome"
+title: "BraDypUS — bdus-api (PHP backend)"
+version: 5.0.0
 doi: "10.5281/zenodo.1467904"
-date-released: 2021-08-22
+date-released: 2026-05-18
 license: "AGPL-3.0"
+url: "https://github.com/lad-sapienza/bdus-api"
+repository-code: "https://github.com/lad-sapienza/bdus-api"
+abstract: >
+  BraDypUS is an open-source web database system for archaeological and
+  cultural-heritage research. bdus-api is the PHP/Apache backend that
+  provides the REST API consumed by the Vue frontend (bdus-app).
+keywords:
+  - archaeology
+  - cultural heritage
+  - database
+  - web application
+  - digital humanities

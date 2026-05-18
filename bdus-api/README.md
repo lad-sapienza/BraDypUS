@@ -1,119 +1,149 @@
-# BraDypUS
+# bdus-api — BraDypUS PHP backend
 
-**The web-based, flexible, free (AGPL) database system**
+**Part of [BraDypUS](https://bdus.cloud)** — the open-source web database system for archaeological and cultural-heritage research.
 
-BraDypUS is an open-source web database developed at
-[LAD – Laboratorio di Archeologia Digitale, Sapienza University of Rome](https://lad.saras.uniroma1.it)
-by Julian Bogdani. It targets archaeological and cultural-heritage research teams who need to
-create, manage and publish relational databases on the web without writing code.
+Developed at [LAD – Laboratorio di Archeologia Digitale, Sapienza University of Rome](https://lad.saras.uniroma1.it) by [Julian Bogdani](https://orcid.org/0000-0001-5250-927X).
 
-License: [GNU AGPL-3.0](https://www.gnu.org/licenses/agpl-3.0.en.html) ·
-Docs: [docs.bdus.cloud](https://docs.bdus.cloud) ·
-Cloud: [bdus.cloud](https://bdus.cloud) ·
-[![DOI](https://zenodo.org/badge/18011343.svg)](https://zenodo.org/badge/latestdoi/18011343)
+License: [GNU AGPL-3.0](LICENSE) · Docs: [docs.bdus.cloud](https://docs.bdus.cloud) · Cloud: [bdus.cloud](https://bdus.cloud) · [![DOI](https://zenodo.org/badge/18011343.svg)](https://zenodo.org/badge/latestdoi/18011343)
+
+> This repository contains the **PHP/Apache backend** only.  
+> The Vue frontend lives in **[lad-sapienza/bdus-app](https://github.com/lad-sapienza/bdus-app)**.
 
 ---
 
-## Quick start
+## What it does
 
-### With Docker (recommended)
+bdus-api exposes a REST JSON API that the Vue frontend (bdus-app) consumes. It handles:
 
-**Requirements:** Docker + Docker Compose (no other dependencies on the host).
-
-```bash
-git clone https://github.com/bdus-db/BraDypUS.git
-cd BraDypUS
-
-# Start PHP/Apache backend (port 8080) + Vite dev server (port 5173)
-docker compose --profile vue up
-```
-
-| Service | URL |
-|---|---|
-| PHP API / legacy UI | http://localhost:8080 |
-| Vue dev UI | http://localhost:5173 |
-
-The first start installs Composer dependencies automatically inside the container
-(`composer install` is run by the entrypoint if `vendor/` is missing).
-
-To stop: `docker compose --profile vue down`
+- User authentication and session management
+- Multi-tenant application management (one SQLite / MySQL / PostgreSQL database per project)
+- CRUD operations on records, with a flexible field-type system
+- Search (simple, advanced, free SQL, ShortSQL DSL)
+- File uploads and image management
+- Geodata (GeoJSON read/write)
+- Charts and saved queries
+- Configuration management
+- Schema migrations
+- A public read-only REST API (v1, Bearer/API-key auth)
 
 ---
 
-### Without Docker
+## Requirements
 
-**Requirements:**
-
-| Tool | Minimum version |
+| Tool | Minimum |
 |---|---|
 | PHP | 8.2 |
 | PHP extensions | `pdo`, `pdo_sqlite` (or `pdo_mysql` / `pdo_pgsql`), `mbstring`, `gd` |
 | Composer | 2.x |
-| Node.js | 20 LTS |
-| npm | 10+ |
-| Web server | Apache with `mod_rewrite`, or any PHP-capable server |
-
-```bash
-git clone https://github.com/bdus-db/BraDypUS.git
-cd BraDypUS
-
-# PHP dependencies
-composer install
-
-# Node / Vue dependencies
-npm install
-
-# Start the Vite dev server (assumes PHP is served at http://localhost:8080)
-# Edit the `server.proxy` target in vite.config.js if your PHP URL differs
-npm run vue:dev
-```
-
-Point your web server document root at the repository root.  
-The Vite dev server proxies `/index.php` and `/projects/` to the PHP backend,
-so both can run side by side during development.
+| Web server | Apache with `mod_rewrite`, or Nginx |
 
 ---
 
-## Development environment (with Docker)
+## Quick start with Docker (recommended)
 
-The `docker-compose.yml` defines two services:
+**Only Docker + Docker Compose needed on the host.**
 
-| Service | Description |
-|---|---|
-| `app` | PHP 8.2 + Apache, source live-mounted, port **8080** |
-| `node` (profile `vue`) | Node 20, Vite dev server, port **5173** |
-
-### Useful commands
+### Backend only
 
 ```bash
-# Backend only (no Vite)
+git clone https://github.com/lad-sapienza/bdus-api.git
+cd bdus-api
 docker compose up
-
-# Backend + Vue dev server
-docker compose --profile vue up
-
-# Run PHP dependency installer manually
-docker compose exec app composer install
-
-# Rebuild the PHP image (after Dockerfile changes)
-docker compose build
-
-# Open a shell in the PHP container
-docker compose exec app bash
 ```
 
-### Running the test suite
+The API is now available at **http://localhost:8080**.  
+On first start Composer dependencies are installed automatically inside the container.
 
-Tests use PHPUnit 11 with an in-memory SQLite database — no database
-configuration needed.
+To create your first application, add `BRADYPUS_ALLOW_NEW_APP=1` to the
+`environment:` section of `docker-compose.yml` (or to a `.env` file), then visit
+**http://localhost:5173** from the running frontend.
+
+### Full stack (backend + frontend together)
+
+Clone both repositories side by side and use the parent compose file:
 
 ```bash
-# Run all tests inside the PHP container
+mkdir BraDypUS && cd BraDypUS
+git clone https://github.com/lad-sapienza/bdus-api.git
+git clone https://github.com/lad-sapienza/bdus-app.git
+
+# Write the unified compose (see bdus-app README for full content)
+# then:
+docker compose up
+```
+
+| Service | URL |
+|---|---|
+| PHP API | http://localhost:8080 |
+| Vue UI | http://localhost:5173 |
+
+---
+
+## Quick start without Docker
+
+```bash
+git clone https://github.com/lad-sapienza/bdus-api.git
+cd bdus-api
+composer install
+```
+
+Point your web server document root at the repository root.  
+The `.htaccess` handles URL rewriting for Apache. For Nginx use:
+
+```nginx
+location / {
+    try_files $uri $uri/ /index.php$is_args$args;
+}
+```
+
+Start the Vue frontend separately (see [bdus-app](https://github.com/lad-sapienza/bdus-app))
+and set `VITE_API_BASE` or `API_PROXY_TARGET` to point at this server.
+
+---
+
+## Environment variables
+
+| Variable | Default | Description |
+|---|---|---|
+| `BRADYPUS_DEBUG` | `0` | Set to `1` to enable verbose error output |
+| `BRADYPUS_ALLOW_NEW_APP` | _(unset)_ | Set to `1` to enable the "Create new application" wizard |
+| `BRADYPUS_CORS_ORIGIN` | _(unset)_ | Space-separated allowed CORS origins (e.g. `http://localhost:5173`) |
+
+Copy `.env.example` to `.env` and edit as needed.
+
+---
+
+## Running the tests
+
+Tests use PHPUnit 11 with an in-memory SQLite database — no configuration needed.
+
+```bash
+# Inside Docker
 docker compose exec app ./vendor/bin/phpunit --testdox
 
-# Or, if you have PHP available on the host
+# Or locally (requires PHP on the host)
 ./vendor/bin/phpunit --testdox
 ```
 
-The suite currently covers `debug_ctrl`, `record_ctrl`, `search_ctrl` and
-`QueryFromRequest` (60 tests).
+---
+
+## Data directory
+
+Each application stores its data under `projects/{app_name}/`:
+
+```
+projects/{app_name}/
+├── cfg/        YAML configuration files
+├── files/      Uploaded files
+├── backups/    Database backups
+├── export/     Export output
+└── db/         SQLite database (if using SQLite engine)
+```
+
+The `projects/` directory is bind-mounted in Docker so data persists across container restarts.
+
+---
+
+## License
+
+GNU Affero General Public License v3.0 — see [LICENSE](LICENSE).

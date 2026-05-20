@@ -30,10 +30,19 @@ class M006_AddApiKeyPrivilege
 
         // ALTER TABLE ... ADD COLUMN is supported by SQLite ≥ 3.1, MySQL, and PostgreSQL.
         // The DEFAULT value ensures all existing rows are immediately valid.
-        $db->query(
-            "ALTER TABLE {$table} ADD COLUMN privilege INTEGER DEFAULT 30",
-            [],
-            'boolean'
-        );
+        //
+        // Idempotency note: api_keys.json was updated to include `privilege` at the
+        // same time as this migration was written. Databases created after that update
+        // will have the column already (M005 reads the JSON), so we catch the
+        // "duplicate column" error and treat it as a no-op.
+        try {
+            $db->query(
+                "ALTER TABLE {$table} ADD COLUMN privilege INTEGER DEFAULT 30",
+                [],
+                'boolean'
+            );
+        } catch (\Throwable $e) {
+            // Column already exists — nothing to do.
+        }
     }
 }

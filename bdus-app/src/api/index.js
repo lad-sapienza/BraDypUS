@@ -5,15 +5,14 @@
  * No cookies / credentials are sent.
  *
  * Proactive refresh: if the token has < 30 min left, the client silently
- * calls login_ctrl/refresh before the actual request so the user never
+ * calls /api/auth/refresh before the actual request so the user never
  * hits a 401 mid-session.
  *
  * On 401 the token is cleared and the page is redirected to #/login.
  *
  * ── URL resolution ──────────────────────────────────────────────────────────
- * All call sites use the legacy  api.get(ctrl, method, params) / api.post(ctrl, method, data)
- * signatures.  Internally, ROUTE_MAP translates (ctrl, method) → (HTTP verb, path).
- * If no entry exists the request falls back to the legacy ?obj=&method= format.
+ * All calls go through ROUTE_MAP which translates (ctrl, method) → (HTTP verb, path).
+ * A call with no ROUTE_MAP entry is a developer error and throws immediately.
  *
  * Path params (e.g. {tb}, {id}) are extracted from the caller's params/data
  * and substituted into the URL; the remaining values go as query string (GET)
@@ -28,7 +27,6 @@ import { getToken, setToken, clearToken, needsRefresh } from '@/token'
  * In production with a separate backend, set VITE_API_BASE=https://api.example.com
  */
 const API_BASE = import.meta.env.VITE_API_BASE ?? ''
-const PHP      = API_BASE + '/index.php'
 
 /**
  * Resolve a backend-relative asset path to a full URL.
@@ -45,6 +43,10 @@ export function assetUrl(path) {
 // IMPORTANT: the httpMethod here is the authoritative verb used on the wire.
 // Whether the caller used api.get() or api.post() only determines how the
 // remaining (non-path) params are treated: query-string vs request body.
+//
+// Every api.get() / api.post() call in the codebase MUST have an entry here.
+// Missing entries throw at call time — add the route to both this map and
+// Bdus\Router (lib/Bdus/Router.php) simultaneously.
 
 const ROUTE_MAP = {
   // ── Auth ──────────────────────────────────────────────────────────────────
@@ -61,12 +63,12 @@ const ROUTE_MAP = {
   'info_ctrl:getAppInfo': ['GET', '/api/info/app', []],
 
   // ── Records ───────────────────────────────────────────────────────────────
-  'record_ctrl:getRecord':              ['GET',    '/api/record/{tb}/{id}',       ['tb', 'id']],
-  'record_ctrl:getRecords':             ['POST',   '/api/records/{tb}',           ['tb']],
-  'record_ctrl:exportRecords':          ['GET',    '/api/records/{tb}/export',    ['tb']],
-  'record_ctrl:saveRecord':             ['POST',   '/api/record/{tb}',            ['tb']],
-  'record_ctrl:erase':                  ['DELETE', '/api/record/{tb}/{id}',       ['tb', 'id']],
-  'record_ctrl:getTemplates':           ['GET',    '/api/record/{tb}/templates',  ['tb']],
+  'record_ctrl:getRecord':              ['GET',    '/api/record/{tb}/{id}',            ['tb', 'id']],
+  'record_ctrl:getRecords':             ['POST',   '/api/records/{tb}',                ['tb']],
+  'record_ctrl:exportRecords':          ['GET',    '/api/records/{tb}/export',         ['tb']],
+  'record_ctrl:saveRecord':             ['POST',   '/api/record/{tb}',                 ['tb']],
+  'record_ctrl:erase':                  ['DELETE', '/api/record/{tb}/{id}',            ['tb', 'id']],
+  'record_ctrl:getTemplates':           ['GET',    '/api/record/{tb}/templates',       ['tb']],
   'record_ctrl:getFieldOptions':        ['GET',    '/api/record/{tb}/field-options',   ['tb']],
   'record_ctrl:searchLinkCandidates':   ['GET',    '/api/record/{tb}/link-candidates', ['tb']],
 
@@ -89,46 +91,46 @@ const ROUTE_MAP = {
   'search_ctrl:getUsedValues':     ['GET', '/api/search/{tb}/values', ['tb']],
 
   // ── Users ─────────────────────────────────────────────────────────────────
-  'user_ctrl:showList':             ['GET',    '/api/users',                    []],
-  'user_ctrl:showUserForm':         ['GET',    '/api/user',                     []],
-  'user_ctrl:saveUserData':         ['POST',   '/api/user',                     []],
-  'user_ctrl:deleteOne':            ['DELETE', '/api/user/{id}',                ['id']],
-  'user_ctrl:getTablePrivileges':   ['GET',    '/api/user/{user_id}/privileges', ['user_id']],
-  'user_ctrl:saveTablePrivilege':   ['POST',   '/api/user/{user_id}/privileges', ['user_id']],
-  'user_ctrl:deleteTablePrivilege': ['DELETE', '/api/privilege/{id}',            ['id']],
+  'user_ctrl:showList':             ['GET',    '/api/users',                      []],
+  'user_ctrl:showUserForm':         ['GET',    '/api/user',                       []],
+  'user_ctrl:saveUserData':         ['POST',   '/api/user',                       []],
+  'user_ctrl:deleteOne':            ['DELETE', '/api/user/{id}',                  ['id']],
+  'user_ctrl:getTablePrivileges':   ['GET',    '/api/user/{user_id}/privileges',  ['user_id']],
+  'user_ctrl:saveTablePrivilege':   ['POST',   '/api/user/{user_id}/privileges',  ['user_id']],
+  'user_ctrl:deleteTablePrivilege': ['DELETE', '/api/privilege/{id}',             ['id']],
 
   // ── Configuration ─────────────────────────────────────────────────────────
-  'config_ctrl:getAppProperties':       ['GET', '/api/config/app',               []],
-  'config_ctrl:save_app_properties':    ['PUT', '/api/config/app',               []],
-  'config_ctrl:getTableList':           ['GET', '/api/config/tables',            []],
-  'config_ctrl:add_new_tb':             ['POST',   '/api/config/tables',         []],
-  'config_ctrl:save_tb_data':           ['PUT',    '/api/config/table/{tb}',     ['tb']],
-  'config_ctrl:delete_tb':              ['DELETE', '/api/config/table/{tb}',     ['tb']],
-  'config_ctrl:rename_tb':              ['PATCH',  '/api/config/table/{tb}',     ['tb']],
-  'config_ctrl:sortTables':             ['POST',   '/api/config/tables/sort',    []],
-  'config_ctrl:getTableConfig':         ['GET',    '/api/config/table/{tb}',     ['tb']],
-  'config_ctrl:getFldStructure':        ['GET',    '/api/config/field-structure', []],
-  'config_ctrl:getFldList':             ['GET',    '/api/config/table/{tb}/fields', ['tb']],
-  'config_ctrl:add_new_fld':            ['POST',   '/api/config/table/{tb}/field',         ['tb']],
-  'config_ctrl:save_fld_properties':    ['PUT',    '/api/config/table/{tb}/field/{fld}',   ['tb', 'fld']],
-  'config_ctrl:delete_column':          ['DELETE', '/api/config/table/{tb}/field/{fld}',   ['tb', 'fld']],
-  'config_ctrl:rename_column':          ['PATCH',  '/api/config/table/{tb}/field/{fld}',   ['tb', 'fld']],
-  'config_ctrl:getGeoFaceConfig':       ['GET',    '/api/config/geoface',         []],
-  'config_ctrl:save_geoface_properties':['PUT',    '/api/config/geoface',         []],
-  'config_ctrl:uploadGeoFile':          ['POST',   '/api/config/geofile',         []],
-  'config_ctrl:delete_local_geofile':   ['DELETE', '/api/config/geofile',         []],
-  'config_ctrl:getValidationReport':    ['GET',    '/api/config/validation',      []],
-  'config_ctrl:fix':                    ['POST',   '/api/config/validation/fix',  []],
+  'config_ctrl:getAppProperties':        ['GET',    '/api/config/app',                            []],
+  'config_ctrl:save_app_properties':     ['PUT',    '/api/config/app',                            []],
+  'config_ctrl:getTableList':            ['GET',    '/api/config/tables',                         []],
+  'config_ctrl:add_new_tb':              ['POST',   '/api/config/tables',                         []],
+  'config_ctrl:sortTables':              ['POST',   '/api/config/tables/sort',                    []],
+  'config_ctrl:getTableConfig':          ['GET',    '/api/config/table/{tb}',                     ['tb']],
+  'config_ctrl:save_tb_data':            ['PUT',    '/api/config/table/{tb}',                     ['tb']],
+  'config_ctrl:delete_tb':               ['DELETE', '/api/config/table/{tb}',                     ['tb']],
+  'config_ctrl:rename_tb':               ['PATCH',  '/api/config/table/{tb}',                     ['tb']],
+  'config_ctrl:getFldStructure':         ['GET',    '/api/config/field-structure',                []],
+  'config_ctrl:getFldList':              ['GET',    '/api/config/table/{tb}/fields',              ['tb']],
+  'config_ctrl:add_new_fld':             ['POST',   '/api/config/table/{tb}/field',               ['tb']],
+  'config_ctrl:save_fld_properties':     ['PUT',    '/api/config/table/{tb}/field/{fld}',         ['tb', 'fld']],
+  'config_ctrl:delete_column':           ['DELETE', '/api/config/table/{tb}/field/{fld}',         ['tb', 'fld']],
+  'config_ctrl:rename_column':           ['PATCH',  '/api/config/table/{tb}/field/{fld}',         ['tb', 'fld']],
+  'config_ctrl:getGeoFaceConfig':        ['GET',    '/api/config/geoface',                        []],
+  'config_ctrl:save_geoface_properties': ['PUT',    '/api/config/geoface',                        []],
+  'config_ctrl:uploadGeoFile':           ['POST',   '/api/config/geofile',                        []],
+  'config_ctrl:delete_local_geofile':    ['DELETE', '/api/config/geofile',                        []],
+  'config_ctrl:getValidationReport':     ['GET',    '/api/config/validation',                     []],
+  'config_ctrl:fix':                     ['POST',   '/api/config/validation/fix',                 []],
 
   // ── Admin ─────────────────────────────────────────────────────────────────
   'confirm_super_adm_pwd_ctrl:check_pwd': ['POST', '/api/admin/check-password', []],
 
   // ── Backups ───────────────────────────────────────────────────────────────
-  'backup_ctrl:listBackups':   ['GET',    '/api/backups',                  []],
-  'backup_ctrl:doBackup':      ['POST',   '/api/backups',                  []],
-  'backup_ctrl:deleteBackup':  ['DELETE', '/api/backup/{file}',            ['file']],
-  'backup_ctrl:restoreBackup': ['POST',   '/api/backup/{file}/restore',    ['file']],
-  'backup_ctrl:downloadBackup':['GET',    '/api/backup/{file}/download',   ['file']],
+  'backup_ctrl:listBackups':    ['GET',    '/api/backups',                    []],
+  'backup_ctrl:doBackup':       ['POST',   '/api/backups',                    []],
+  'backup_ctrl:deleteBackup':   ['DELETE', '/api/backup/{file}',              ['file']],
+  'backup_ctrl:restoreBackup':  ['POST',   '/api/backup/{file}/restore',      ['file']],
+  'backup_ctrl:downloadBackup': ['GET',    '/api/backup/{file}/download',     ['file']],
 
   // ── Logs ──────────────────────────────────────────────────────────────────
   'debug_ctrl:getLogs':   ['GET',  '/api/logs',       []],
@@ -184,9 +186,9 @@ const ROUTE_MAP = {
   'vocabularies_ctrl:erase': ['DELETE', '/api/vocabulary/{id}',     ['id']],
 
   // ── Search & replace ──────────────────────────────────────────────────────
-  'search_replace_ctrl:getTableList': ['GET',  '/api/search-replace/tables',       []],
-  'search_replace_ctrl:getFieldList': ['GET',  '/api/search-replace/{tb}/fields',  ['tb']],
-  'search_replace_ctrl:doReplace':    ['POST', '/api/search-replace',              []],
+  'search_replace_ctrl:getTableList': ['GET',  '/api/search-replace/tables',      []],
+  'search_replace_ctrl:getFieldList': ['GET',  '/api/search-replace/{tb}/fields', ['tb']],
+  'search_replace_ctrl:doReplace':    ['POST', '/api/search-replace',             []],
 
   // ── Free SQL ──────────────────────────────────────────────────────────────
   'free_sql_ctrl:verifyPassword': ['POST', '/api/free-sql/verify', []],
@@ -194,9 +196,9 @@ const ROUTE_MAP = {
 
   // ── Data import ───────────────────────────────────────────────────────────
   'import_ctrl:getTableFields': ['GET',  '/api/import/{tb}/fields', ['tb']],
-  'import_ctrl:importData':     ['POST', '/api/import/data',         []],
-  'import_ctrl:importGeoJson':  ['POST', '/api/import/geojson',      []],
-  'import_ctrl:importPhotos':   ['POST', '/api/import/photos',       []],
+  'import_ctrl:importData':     ['POST', '/api/import/data',        []],
+  'import_ctrl:importGeoJson':  ['POST', '/api/import/geojson',     []],
+  'import_ctrl:importPhotos':   ['POST', '/api/import/photos',      []],
 
   // ── New application wizard ────────────────────────────────────────────────
   'new_app_ctrl:getStatus': ['GET',  '/api/new-app/status', []],
@@ -207,17 +209,23 @@ const ROUTE_MAP = {
 
 /**
  * Resolve (ctrl, method) against ROUTE_MAP and build the final request config.
+ * Throws if no entry is found — a missing route is always a developer error.
  *
  * @param {string}  ctrl       Controller name, e.g. 'record_ctrl'
  * @param {string}  method     Method name, e.g. 'getRecord'
  * @param {Object}  data       Caller's primary params (body for POST, query for GET)
  * @param {Object}  urlParams  Caller's explicit URL/query params (api.post 4th arg)
  * @param {boolean} isGetCall  true when the caller used api.get() — all data → query
- * @returns {{ httpMethod, url, query, body } | null}  null = legacy fallback
+ * @returns {{ httpMethod, url, query, body }}
  */
 function buildRoute(ctrl, method, data = {}, urlParams = {}, isGetCall = false) {
   const entry = ROUTE_MAP[`${ctrl}:${method}`]
-  if (!entry) return null
+  if (!entry) {
+    throw new Error(
+      `No route defined for ${ctrl}:${method}. ` +
+      `Add it to ROUTE_MAP in api/index.js and to Bdus\\Router in lib/Bdus/Router.php.`
+    )
+  }
 
   const [httpMethod, template, pathParams] = entry
 
@@ -258,9 +266,8 @@ async function _doRefresh() {
     try {
       const token = getToken()
       if (!token) return
-      const url = new URL(PHP, window.location.origin)
-      url.searchParams.set('obj',    'login_ctrl')
-      url.searchParams.set('method', 'refresh')
+      const r   = buildRoute('login_ctrl', 'refresh', {}, {}, true)
+      const url = new URL(r.url, window.location.origin)
       const res = await fetch(url, {
         headers: { Accept: 'application/json', ..._bearer() },
       })
@@ -302,7 +309,7 @@ async function _guardRefresh() {
  * @param {string|URL} url
  * @param {string}     httpMethod  e.g. 'GET', 'POST', 'DELETE'
  * @param {Object}     [bodyData]  Plain object for the request body (non-GET)
- * @param {string}     label       Used in error messages  'ctrl::method'
+ * @param {string}     label       Used in error messages, e.g. 'ctrl::method'
  */
 async function _fetch(url, httpMethod, bodyData, label) {
   const headers = { Accept: 'application/json', ..._bearer() }
@@ -325,60 +332,27 @@ async function _fetch(url, httpMethod, bodyData, label) {
 // ── GET ──────────────────────────────────────────────────────────────────────
 async function get(obj, method, params = {}) {
   await _guardRefresh()
-
-  const r = buildRoute(obj, method, params, {}, true)
-
-  if (r) {
-    const url = new URL(r.url, window.location.origin)
-    appendQuery(url, r.query)
-    return _fetch(url, r.httpMethod, r.body, `${obj}::${method}`)
-  }
-
-  // Legacy fallback
-  const url = new URL(PHP, window.location.origin)
-  url.searchParams.set('obj',    obj)
-  url.searchParams.set('method', method)
-  appendQuery(url, params)
-  return _fetch(url, 'GET', null, `${obj}::${method}`)
+  const r   = buildRoute(obj, method, params, {}, true)
+  const url = new URL(r.url, window.location.origin)
+  appendQuery(url, r.query)
+  return _fetch(url, r.httpMethod, r.body, `${obj}::${method}`)
 }
 
 // ── POST ─────────────────────────────────────────────────────────────────────
 async function post(obj, method, data = {}, urlParams = {}) {
   await _guardRefresh()
-
-  const r = buildRoute(obj, method, data, urlParams, false)
-
-  if (r) {
-    const url = new URL(r.url, window.location.origin)
-    appendQuery(url, r.query)
-    return _fetch(url, r.httpMethod, r.body, `${obj}::${method}`)
-  }
-
-  // Legacy fallback
-  const url = new URL(PHP, window.location.origin)
-  url.searchParams.set('obj',    obj)
-  url.searchParams.set('method', method)
-  appendQuery(url, urlParams)
-  return _fetch(url, 'POST', data, `${obj}::${method}`)
+  const r   = buildRoute(obj, method, data, urlParams, false)
+  const url = new URL(r.url, window.location.origin)
+  appendQuery(url, r.query)
+  return _fetch(url, r.httpMethod, r.body, `${obj}::${method}`)
 }
 
 // ── Upload ───────────────────────────────────────────────────────────────────
 async function upload(obj, method, file, field = 'file', urlParams = {}) {
   await _guardRefresh()
-
-  const r = buildRoute(obj, method, {}, urlParams, false)
-
-  const url = r
-    ? new URL(r.url, window.location.origin)
-    : (() => {
-        const u = new URL(PHP, window.location.origin)
-        u.searchParams.set('obj',    obj)
-        u.searchParams.set('method', method)
-        return u
-      })()
-
-  if (r) appendQuery(url, r.query)
-  else    appendQuery(url, urlParams)
+  const r   = buildRoute(obj, method, {}, urlParams, false)
+  const url = new URL(r.url, window.location.origin)
+  appendQuery(url, r.query)
 
   const fd = new FormData()
   fd.append(field, file)
@@ -405,28 +379,13 @@ async function upload(obj, method, file, field = 'file', urlParams = {}) {
  */
 async function uploadMulti(obj, method, files = {}, data = {}, urlParams = {}) {
   await _guardRefresh()
-
-  const r = buildRoute(obj, method, data, urlParams, false)
-
-  const url = r
-    ? new URL(r.url, window.location.origin)
-    : (() => {
-        const u = new URL(PHP, window.location.origin)
-        u.searchParams.set('obj',    obj)
-        u.searchParams.set('method', method)
-        return u
-      })()
-
-  if (r) appendQuery(url, r.query)
-  else    appendQuery(url, urlParams)
+  const r   = buildRoute(obj, method, data, urlParams, false)
+  const url = new URL(r.url, window.location.origin)
+  appendQuery(url, r.query)
 
   const fd = new FormData()
   Object.entries(files).forEach(([k, v]) => { if (v) fd.append(k, v) })
-
-  // For route-resolved requests, non-path data from the body goes into FormData.
-  // For legacy requests, use original data.
-  const bodySource = r ? r.body : data
-  Object.entries(bodySource).forEach(([k, v]) => fd.append(k, v ?? ''))
+  Object.entries(r.body).forEach(([k, v]) => fd.append(k, v ?? ''))
 
   const res = await fetch(url, {
     method:  'POST',
@@ -442,11 +401,10 @@ async function uploadMulti(obj, method, files = {}, data = {}, urlParams = {}) {
 /**
  * Canonical way to turn any API response into a translated human string.
  *
- * API contract (both response() and returnJson() paths):
- *   { status: 'success'|'error', code: string, text?: string, ...extra }
+ * API contract: { status: 'success'|'error', code: string, text?: string, ...extra }
  *
- * `code` is the i18n key.  `text` is kept for BC (legacy endpoints that
- * only emit `text`); we fall back to it when `code` is absent.
+ * `code` is the i18n key.  `text` is a BC alias (same value) kept for
+ * endpoints that have not yet been updated.
  * Always use this function for toast detail / error messages — never read
  * res.code or res.text directly in components.
  */

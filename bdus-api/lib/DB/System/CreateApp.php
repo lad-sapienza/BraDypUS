@@ -206,7 +206,7 @@ class CreateApp
         static::writeCfgHtaccess("projects/{$this->app}/cfg");
         array_push($this->log, "cfg/.htaccess protection written");
 
-        @file_put_contents("projects/{$this->app}/welcome.html", "<h1>" . strtoupper($this->app) . "</h1>\n\n<h3>A BraDypUS database</h3>");
+        @file_put_contents("projects/{$this->app}/welcome.md", "# " . strtoupper($this->app) . "\n\n# A BraDypUS database");
         array_push($this->log, "Welcome page created!");
     }
 

@@ -1,0 +1,3106 @@
+openapi: 3.1.0
+
+info:
+  title: BraDypUS API
+  description: |
+    REST JSON API for [BraDypUS](https://bdus.cloud) — the open-source web
+    database system for archaeological and cultural-heritage research.
+
+    ## Authentication
+    All endpoints except `GET /api/auth/apps`, `POST /api/auth/login`,
+    `GET /api/new-app/status`, and `POST /api/new-app` require a JWT bearer
+    token obtained from `POST /api/auth/login`.
+
+    API keys (managed via `/api/api-keys`) may be used in place of a JWT for
+    programmatic access. They carry an explicit privilege level
+    (`read` | `edit` | `admin`) enforced per route.
+
+    ## Common response envelope
+    Every response carries a top-level `status` field (`"success"` | `"error"`).
+    Error responses additionally carry a `code` string (i18n key) and an
+    optional `detail` string.
+
+    ## Table names
+    Table names are plain strings (e.g. `us`, `periodi`). The legacy `APP__`
+    prefix is not used in v5.
+  version: 5.0.0
+  license:
+    name: GNU AGPL-3.0
+    url: https://www.gnu.org/licenses/agpl-3.0.html
+  contact:
+    name: LAD – Laboratorio di Archeologia Digitale, Sapienza University of Rome
+    url: https://lad.saras.uniroma1.it
+
+servers:
+  - url: /
+    description: Same-origin (Vite dev-server proxy)
+  - url: http://localhost:8080
+    description: Docker dev server
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: auth
+    description: Authentication and session management
+  - name: records
+    description: Record CRUD and listing
+  - name: files
+    description: File upload, deletion and sorting
+  - name: rs
+    description: Stratigraphic relations (Harris matrix)
+  - name: manual-links
+    description: Manual cross-table links
+  - name: search
+    description: Search configuration and field-value lookup
+  - name: config
+    description: Application and table configuration
+  - name: charts
+    description: Saved charts and on-demand chart data
+  - name: backup
+    description: Database backup management
+  - name: geoface
+    description: Geodata (GeoJSON read/write)
+  - name: users
+    description: User management and per-table privileges
+  - name: templates
+    description: Record-view layout templates
+  - name: vocabularies
+    description: Controlled vocabulary management
+  - name: saved-queries
+    description: Saved search queries
+  - name: api-keys
+    description: API key management
+  - name: import
+    description: Bulk data and geodata import
+  - name: search-replace
+    description: Find-and-replace across a table field
+  - name: free-sql
+    description: Password-gated free-form SQL execution
+  - name: system
+    description: Application info, history, logs, welcome page, new-app wizard
+
+# ──────────────────────────────────────────────────────────────────────────────
+paths:
+
+  # ── Auth ──────────────────────────────────────────────────────────────────
+
+  /api/auth/apps:
+    get:
+      tags: [auth]
+      summary: List available applications
+      description: Returns the list of app names that exist on this server. No authentication required.
+      security: []
+      responses:
+        '200':
+          description: App list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      apps:
+                        type: array
+                        items:
+                          type: string
+                        example: [myapp, edu]
+
+  /api/auth/login:
+    post:
+      tags: [auth]
+      summary: Authenticate and obtain a JWT
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password, app]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                app:
+                  type: string
+                  description: Application name
+            example:
+              email: admin@example.com
+              password: s3cr3t
+              app: myapp
+      responses:
+        '200':
+          description: JWT issued
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - allOf:
+                      - $ref: '#/components/schemas/Success'
+                      - type: object
+                        required: [token]
+                        properties:
+                          token:
+                            type: string
+                            description: Signed JWT, valid for 2 hours
+                  - $ref: '#/components/schemas/Error'
+
+  /api/auth/refresh:
+    get:
+      tags: [auth]
+      summary: Refresh the current JWT
+      description: Issues a fresh token with a new expiry. The current token must still be valid.
+      responses:
+        '200':
+          description: Refreshed token
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    required: [token]
+                    properties:
+                      token:
+                        type: string
+
+  /api/auth/logout:
+    get:
+      tags: [auth]
+      summary: Logout (server-side acknowledgement)
+      description: JWT auth is stateless; this endpoint exists as a server-side signal. The client clears its token from sessionStorage.
+      responses:
+        '200':
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+
+  # ── System ────────────────────────────────────────────────────────────────
+
+  /api/info:
+    get:
+      tags: [system]
+      summary: Server version and changelog
+      responses:
+        '200':
+          description: Version info and changelog markdown
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      version:
+                        type: string
+                        example: 5.0.0
+                      changelog:
+                        type: string
+                        description: Changelog content as Markdown
+
+  /api/info/app:
+    get:
+      tags: [system]
+      summary: Current application metadata
+      responses:
+        '200':
+          description: App info
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      app:
+                        type: string
+                      label:
+                        type: string
+                      lang:
+                        type: string
+                      status:
+                        type: string
+                        enum: [on, off]
+
+  /api/tables:
+    get:
+      tags: [system]
+      summary: List user-visible tables for the home view
+      responses:
+        '200':
+          description: Table list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      tables:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/TableMeta'
+
+  /api/history:
+    get:
+      tags: [system]
+      summary: Recent edit history for the current user
+      responses:
+        '200':
+          description: History entries
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      history:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            tb:
+                              type: string
+                            id:
+                              type: integer
+                            action:
+                              type: string
+                            time:
+                              type: integer
+
+  /api/welcome:
+    get:
+      tags: [system]
+      summary: Get the welcome-page Markdown content
+      responses:
+        '200':
+          description: Welcome content
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      content:
+                        type: string
+                        description: Raw Markdown
+    put:
+      tags: [system]
+      summary: Save the welcome-page Markdown content
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [content]
+              properties:
+                content:
+                  type: string
+      responses:
+        '200':
+          description: Saved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+
+  /api/logs:
+    get:
+      tags: [system]
+      summary: Retrieve application error log entries
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+        - name: level
+          in: query
+          schema:
+            type: string
+            enum: [error, warning, info, debug]
+      responses:
+        '200':
+          description: Log entries
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      logs:
+                        type: array
+                        items:
+                          type: object
+
+  /api/logs/purge:
+    post:
+      tags: [system]
+      summary: Purge log entries older than N days
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                days:
+                  type: integer
+                  default: 30
+      responses:
+        '200':
+          description: Purge result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedSuccess'
+
+  /api/new-app/status:
+    get:
+      tags: [system]
+      summary: Check whether app creation is permitted
+      security: []
+      responses:
+        '200':
+          description: Permission status
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    required: [permitted]
+                    properties:
+                      permitted:
+                        type: boolean
+
+  /api/new-app:
+    post:
+      tags: [system]
+      summary: Create a new application
+      description: Requires `BRADYPUS_ALLOW_NEW_APP=1` on the server.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, definition, email, password, db_engine]
+              properties:
+                name:
+                  type: string
+                  pattern: '^[a-z][a-z0-9_]{2,19}$'
+                  description: Lowercase alphanumeric slug, 3–20 characters
+                definition:
+                  type: string
+                  description: Short human-readable description of the database
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                db_engine:
+                  type: string
+                  enum: [sqlite, mysql, pgsql]
+                db_host:
+                  type: string
+                db_port:
+                  type: string
+                db_name:
+                  type: string
+                db_username:
+                  type: string
+                db_password:
+                  type: string
+      responses:
+        '200':
+          description: App created or error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  /api/admin/check-password:
+    post:
+      tags: [system]
+      summary: Verify super-admin password gate
+      description: Used before exposing sensitive admin operations in the UI.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [password]
+              properties:
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Password check result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  # ── Records ───────────────────────────────────────────────────────────────
+
+  /api/record/{tb}/new:
+    get:
+      tags: [records]
+      summary: Get a blank record scaffold
+      parameters:
+        - $ref: '#/components/parameters/tb'
+      responses:
+        '200':
+          description: Empty record with field metadata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordResponse'
+
+  /api/record/{tb}/{id}:
+    get:
+      tags: [records]
+      summary: Fetch a single record by id
+      parameters:
+        - $ref: '#/components/parameters/tb'
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Record data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordResponse'
+    delete:
+      tags: [records]
+      summary: Delete one or more records
+      description: Pass a single integer id in the path. To delete multiple records at once, pass `id` as a repeated query-string parameter.
+      parameters:
+        - $ref: '#/components/parameters/tb'
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Deletion result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  /api/record/{tb}:
+    post:
+      tags: [records]
+      summary: Create or update a record
+      description: Omit `id` to create; include `id` to update.
+      parameters:
+        - $ref: '#/components/parameters/tb'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [core]
+              properties:
+                id:
+                  type: integer
+                  description: Omit to create; provide to update
+                core:
+                  type: object
+                  description: Field name → value map for main table fields
+                  additionalProperties: true
+                plugins:
+                  type: object
+                  description: Plugin table name → array of rows
+                  additionalProperties:
+                    type: array
+                    items:
+                      type: object
+            examples:
+              create:
+                value:
+                  core:
+                    sigla: US001
+                    periodo: Età contemporanea
+                  plugins: {}
+              update:
+                value:
+                  id: 1
+                  core:
+                    sigla: US001-rev
+                  plugins: {}
+      responses:
+        '200':
+          description: Save result with the record id
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/CodedResult'
+                  - type: object
+                    properties:
+                      id:
+                        type: integer
+
+  /api/records/{tb}:
+    get:
+      tags: [records]
+      summary: List / search records (GET)
+      description: |
+        Supports pagination, sorting, and filtering via query params.
+
+        **Simple filter shortcut**: any `q_{field}=value` parameter is
+        interpreted as a `WHERE field = value` clause. Multiple `q_` params
+        are AND-combined.
+      parameters:
+        - $ref: '#/components/parameters/tb'
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 30
+        - name: sort
+          in: query
+          schema:
+            type: string
+        - name: order
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+        - name: search_type
+          in: query
+          schema:
+            type: string
+            enum: [all, shortSql, advanced, sqlExpert]
+        - name: where
+          in: query
+          description: ShortSQL WHERE expression (used with `search_type=shortSql`)
+          schema:
+            type: string
+        - name: q_{field}
+          in: query
+          description: Simple equality filter. Replace `{field}` with the actual field name.
+          schema:
+            type: string
+          example: q_sigla=US001
+      responses:
+        '200':
+          description: Paginated record list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordListResponse'
+    post:
+      tags: [records]
+      summary: List / search records (POST)
+      description: |
+        Same as GET but accepts the search payload in the request body.
+
+        **Shorthand body**: `{"search": [{"field","operator","value","connector"}]}`
+        is converted to the `advanced` search format automatically.
+      parameters:
+        - $ref: '#/components/parameters/tb'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                search_type:
+                  type: string
+                  enum: [all, shortSql, advanced, sqlExpert]
+                where:
+                  type: string
+                adv:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/AdvancedSearchRow'
+                querytext:
+                  type: string
+                  description: Raw SQL WHERE clause (sqlExpert mode)
+                search:
+                  type: array
+                  description: Shorthand advanced search
+                  items:
+                    type: object
+                    required: [field, operator, value]
+                    properties:
+                      field:
+                        type: string
+                      operator:
+                        type: string
+                        example: '='
+                      value:
+                        type: string
+                      connector:
+                        type: string
+                        enum: [AND, OR]
+                        default: AND
+            examples:
+              shorthand:
+                value:
+                  search:
+                    - field: periodo
+                      operator: '='
+                      value: Basso Medioevo
+      responses:
+        '200':
+          description: Paginated record list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordListResponse'
+
+  /api/records/{tb}/export:
+    get:
+      tags: [records]
+      summary: Export records as a file download
+      parameters:
+        - $ref: '#/components/parameters/tb'
+        - name: format
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [csv, json, xlsx]
+        - name: search_type
+          in: query
+          schema:
+            type: string
+        - name: where
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: File download (streamed)
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+            application/json:
+              schema:
+                type: string
+                format: binary
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+
+  /api/record/{tb}/templates:
+    get:
+      tags: [records]
+      summary: List available layout templates for a table
+      parameters:
+        - $ref: '#/components/parameters/tb'
+      responses:
+        '200':
+          description: Template list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      templates:
+                        type: array
+                        items:
+                          type: string
+
+  /api/record/{tb}/field-options:
+    get:
+      tags: [records]
+      summary: Fetch async options for a select field
+      parameters:
+        - $ref: '#/components/parameters/tb'
+        - name: field
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: q
+          in: query
+          description: Optional search string to filter options
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Option list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      options:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            value:
+                              type: string
+                            label:
+                              type: string
+
+  /api/record/{tb}/link-candidates:
+    get:
+      tags: [records]
+      summary: Search records that can be linked to a manual link field
+      parameters:
+        - $ref: '#/components/parameters/tb'
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: field
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Candidate records
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      records:
+                        type: array
+                        items:
+                          type: object
+
+  # ── Files ────────────────────────────────────────────────────────────────
+
+  /api/record/{tb}/{id}/file:
+    post:
+      tags: [files]
+      summary: Upload a file and attach it to a record
+      parameters:
+        - $ref: '#/components/parameters/tb'
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Upload result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  /api/file/{fileId}:
+    delete:
+      tags: [files]
+      summary: Delete an uploaded file
+      parameters:
+        - name: fileId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Deletion result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  /api/files/sort:
+    post:
+      tags: [files]
+      summary: Update the display order of attached files
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ids]
+              properties:
+                ids:
+                  type: array
+                  items:
+                    type: integer
+                  description: File ids in the desired order
+      responses:
+        '200':
+          description: Sort result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  # ── Stratigraphic Relations (RS) ─────────────────────────────────────────
+
+  /api/record/{tb}/rs:
+    post:
+      tags: [rs]
+      summary: Add a stratigraphic relation between two records
+      parameters:
+        - $ref: '#/components/parameters/tb'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tb, first, relation, second]
+              properties:
+                tb:
+                  type: string
+                first:
+                  type: integer
+                  description: Id of the first record
+                relation:
+                  type: integer
+                  description: |
+                    Relation code:
+                    1=is_covered_by, 2=is_cut_by, 3=carries, 4=is_filled_by,
+                    5=covers, 6=cuts, 7=leans_against, 8=fills,
+                    9=is_the_same_as, 10=is_bound_to
+                  minimum: 1
+                  maximum: 10
+                second:
+                  type: integer
+                  description: Id of the second record
+      responses:
+        '200':
+          description: Relation added or duplicate error
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/CodedResult'
+                  - type: object
+                    properties:
+                      id:
+                        type: integer
+
+  /api/rs/{id}:
+    delete:
+      tags: [rs]
+      summary: Delete a stratigraphic relation
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Deletion result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  /api/rs/matrix:
+    get:
+      tags: [rs]
+      summary: Get Harris matrix data for a table
+      parameters:
+        - name: tb
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: search_type
+          in: query
+          schema:
+            type: string
+        - name: where
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Matrix nodes and edges
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      nodes:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                            label:
+                              type: string
+                      relations:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                            first:
+                              type: integer
+                            second:
+                              type: integer
+                            relation:
+                              type: integer
+
+  # ── Manual Links ─────────────────────────────────────────────────────────
+
+  /api/manual-link:
+    post:
+      tags: [manual-links]
+      summary: Create a manual cross-table link
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tb_one, id_one, tb_two, id_two]
+              properties:
+                tb_one:
+                  type: string
+                id_one:
+                  type: integer
+                tb_two:
+                  type: string
+                id_two:
+                  type: integer
+      responses:
+        '200':
+          description: Link created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  /api/manual-link/{id}:
+    delete:
+      tags: [manual-links]
+      summary: Delete a manual link
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  # ── Search ────────────────────────────────────────────────────────────────
+
+  /api/search/{tb}/config:
+    get:
+      tags: [search]
+      summary: Get search UI configuration for a table
+      description: Returns the list of searchable fields and the available operators for the advanced search form.
+      parameters:
+        - $ref: '#/components/parameters/tb'
+      responses:
+        '200':
+          description: Search config
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      fields:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            name:
+                              type: string
+                            label:
+                              type: string
+                            type:
+                              type: string
+                      operators:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            value:
+                              type: string
+                            label:
+                              type: string
+
+  /api/search/{tb}/values:
+    get:
+      tags: [search]
+      summary: Get distinct values used in a field
+      description: Used to populate suggestion dropdowns in the advanced search form.
+      parameters:
+        - $ref: '#/components/parameters/tb'
+        - name: field
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Distinct values
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      values:
+                        type: array
+                        items:
+                          type: string
+
+  # ── Config ───────────────────────────────────────────────────────────────
+
+  /api/config/app:
+    get:
+      tags: [config]
+      summary: Get application-level properties
+      responses:
+        '200':
+          description: App properties
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      properties:
+                        type: object
+    put:
+      tags: [config]
+      summary: Save application-level properties
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Saved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  /api/config/tables:
+    get:
+      tags: [config]
+      summary: List all tables in the configuration
+      responses:
+        '200':
+          description: Table list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      tables:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/TableMeta'
+    post:
+      tags: [config]
+      summary: Create a new table
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, label]
+              properties:
+                name:
+                  type: string
+                  pattern: '^[a-z][a-z0-9_]*$'
+                label:
+                  type: string
+                is_plugin:
+                  type: string
+                  enum: ['0', '1']
+                  default: '0'
+      responses:
+        '200':
+          description: Table created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/CodedResult'
+                  - type: object
+                    properties:
+                      tb:
+                        type: string
+
+  /api/config/tables/sort:
+    post:
+      tags: [config]
+      summary: Update table display order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tables]
+              properties:
+                tables:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: Order updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  /api/config/table/{tb}:
+    get:
+      tags: [config]
+      summary: Get full configuration for a table
+      parameters:
+        - $ref: '#/components/parameters/tb'
+      responses:
+        '200':
+          description: Table config
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      table:
+                        $ref: '#/components/schemas/TableConfig'
+    put:
+      tags: [config]
+      summary: Save table-level properties (label, order, preview, rs, links…)
+      parameters:
+        - $ref: '#/components/parameters/tb'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TableConfig'
+      responses:
+        '200':
+          description: Saved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+    patch:
+      tags: [config]
+      summary: Rename a table
+      parameters:
+        - $ref: '#/components/parameters/tb'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [new_name]
+              properties:
+                new_name:
+                  type: string
+      responses:
+        '200':
+          description: Rename result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+    delete:
+      tags: [config]
+      summary: Delete a table and its data
+      parameters:
+        - $ref: '#/components/parameters/tb'
+      responses:
+        '200':
+          description: Deletion result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  /api/config/table/{tb}/fields:
+    get:
+      tags: [config]
+      summary: List all fields for a table
+      parameters:
+        - $ref: '#/components/parameters/tb'
+      responses:
+        '200':
+          description: Field list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      fields:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/FieldConfig'
+
+  /api/config/table/{tb}/field:
+    post:
+      tags: [config]
+      summary: Add a new field to a table
+      parameters:
+        - $ref: '#/components/parameters/tb'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FieldConfig'
+      responses:
+        '200':
+          description: Field added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  /api/config/table/{tb}/field/{fld}:
+    put:
+      tags: [config]
+      summary: Save field properties
+      parameters:
+        - $ref: '#/components/parameters/tb'
+        - $ref: '#/components/parameters/fld'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FieldConfig'
+      responses:
+        '200':
+          description: Saved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+    patch:
+      tags: [config]
+      summary: Rename a field
+      parameters:
+        - $ref: '#/components/parameters/tb'
+        - $ref: '#/components/parameters/fld'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [new_name]
+              properties:
+                new_name:
+                  type: string
+      responses:
+        '200':
+          description: Rename result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+    delete:
+      tags: [config]
+      summary: Delete a field
+      parameters:
+        - $ref: '#/components/parameters/tb'
+        - $ref: '#/components/parameters/fld'
+      responses:
+        '200':
+          description: Deletion result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  /api/config/field-structure:
+    get:
+      tags: [config]
+      summary: Get the meta-structure that defines allowed field properties
+      description: Used by the frontend to render the field editor form dynamically.
+      responses:
+        '200':
+          description: Field structure definition
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      structure:
+                        type: array
+                        items:
+                          type: object
+
+  /api/config/validation:
+    get:
+      tags: [config]
+      summary: Run the schema validation report
+      responses:
+        '200':
+          description: Validation report
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      report:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            check:
+                              type: string
+                            status:
+                              type: string
+                              enum: [ok, warning, error]
+                            message:
+                              type: string
+
+  /api/config/validation/fix:
+    post:
+      tags: [config]
+      summary: Apply an automatic fix suggested by the validation report
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [check]
+              properties:
+                check:
+                  type: string
+                  description: Name of the check to fix
+      responses:
+        '200':
+          description: Fix result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  /api/config/geoface:
+    get:
+      tags: [config]
+      summary: Get GeoFace (map) configuration
+      responses:
+        '200':
+          description: GeoFace config
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      config:
+                        type: object
+    put:
+      tags: [config]
+      summary: Save GeoFace configuration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Saved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+    post:
+      tags: [config]
+      summary: Upload a local GeoJSON / KML base-layer file
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Upload result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+    delete:
+      tags: [config]
+      summary: Delete a locally uploaded geofile
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                filename:
+                  type: string
+      responses:
+        '200':
+          description: Deletion result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  # ── Charts ───────────────────────────────────────────────────────────────
+
+  /api/charts:
+    get:
+      tags: [charts]
+      summary: List saved charts visible to the current user
+      responses:
+        '200':
+          description: Chart list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      charts:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Chart'
+    post:
+      tags: [charts]
+      summary: Save a new chart
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, definition]
+              properties:
+                name:
+                  type: string
+                definition:
+                  $ref: '#/components/schemas/ChartDefinition'
+      responses:
+        '200':
+          description: Chart saved
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/CodedResult'
+                  - type: object
+                    properties:
+                      chart:
+                        $ref: '#/components/schemas/Chart'
+
+  /api/chart/data:
+    post:
+      tags: [charts]
+      summary: Compute chart data without saving
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [definition]
+              properties:
+                definition:
+                  $ref: '#/components/schemas/ChartDefinition'
+      responses:
+        '200':
+          description: Chart data ready for rendering
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - description: Metric chart
+                    allOf:
+                      - $ref: '#/components/schemas/Success'
+                      - type: object
+                        properties:
+                          type:
+                            type: string
+                            enum: [metric]
+                          value:
+                            type: number
+                          label:
+                            type: string
+                  - description: Categorical chart (bar, line, pie, doughnut)
+                    allOf:
+                      - $ref: '#/components/schemas/Success'
+                      - type: object
+                        properties:
+                          type:
+                            type: string
+                            enum: [bar, line, pie, doughnut]
+                          labels:
+                            type: array
+                            items:
+                              type: string
+                          data:
+                            type: array
+                            items:
+                              type: number
+
+  /api/chart/{id}/share:
+    post:
+      tags: [charts]
+      summary: Share a chart with all users
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Share result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  /api/chart/{id}/unshare:
+    post:
+      tags: [charts]
+      summary: Unshare a chart (revert to private)
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Unshare result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  /api/chart/{id}:
+    delete:
+      tags: [charts]
+      summary: Delete a saved chart
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Deletion result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  # ── Backup ───────────────────────────────────────────────────────────────
+
+  /api/backups:
+    get:
+      tags: [backup]
+      summary: List available backups
+      responses:
+        '200':
+          description: Backup list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      backups:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            file:
+                              type: string
+                            size:
+                              type: integer
+                            date:
+                              type: string
+                              format: date-time
+    post:
+      tags: [backup]
+      summary: Create a new backup
+      responses:
+        '200':
+          description: Backup created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  /api/backup/{file}/download:
+    get:
+      tags: [backup]
+      summary: Download a backup file
+      parameters:
+        - $ref: '#/components/parameters/file'
+      responses:
+        '200':
+          description: Backup file download
+          content:
+            application/gzip:
+              schema:
+                type: string
+                format: binary
+
+  /api/backup/{file}/restore:
+    post:
+      tags: [backup]
+      summary: Restore a backup (replaces current database)
+      parameters:
+        - $ref: '#/components/parameters/file'
+      responses:
+        '200':
+          description: Restore result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  /api/backup/{file}:
+    delete:
+      tags: [backup]
+      summary: Delete a backup file
+      parameters:
+        - $ref: '#/components/parameters/file'
+      responses:
+        '200':
+          description: Deletion result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  # ── Geoface ───────────────────────────────────────────────────────────────
+
+  /api/geoface:
+    get:
+      tags: [geoface]
+      summary: Get geodata as GeoJSON for a table
+      parameters:
+        - name: tb
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: search_type
+          in: query
+          schema:
+            type: string
+        - name: where
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: GeoJSON FeatureCollection
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      geojson:
+                        type: object
+
+  /api/geoface/feature:
+    post:
+      tags: [geoface]
+      summary: Create a new geometry feature
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tb, id, geometry]
+              properties:
+                tb:
+                  type: string
+                id:
+                  type: integer
+                geometry:
+                  type: string
+                  description: WKT geometry string
+      responses:
+        '200':
+          description: Feature created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+    put:
+      tags: [geoface]
+      summary: Update an existing geometry feature
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id, geometry]
+              properties:
+                id:
+                  type: integer
+                geometry:
+                  type: string
+      responses:
+        '200':
+          description: Update result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+    delete:
+      tags: [geoface]
+      summary: Delete a geometry feature
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id]
+              properties:
+                id:
+                  type: integer
+      responses:
+        '200':
+          description: Deletion result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  # ── Users ─────────────────────────────────────────────────────────────────
+
+  /api/users:
+    get:
+      tags: [users]
+      summary: List all users
+      responses:
+        '200':
+          description: User list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      users:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/User'
+
+  /api/user:
+    get:
+      tags: [users]
+      summary: Get the current user's profile form data
+      responses:
+        '200':
+          description: User form data
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      user:
+                        $ref: '#/components/schemas/User'
+    post:
+      tags: [users]
+      summary: Create or update a user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserInput'
+      responses:
+        '200':
+          description: Save result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  /api/user/{id}:
+    get:
+      tags: [users]
+      summary: Get a specific user's profile form data
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: User form data
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      user:
+                        $ref: '#/components/schemas/User'
+    delete:
+      tags: [users]
+      summary: Delete a user
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Deletion result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  /api/user/{user_id}/privileges:
+    get:
+      tags: [users]
+      summary: Get per-table privilege overrides for a user
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Privilege list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      privileges:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/TablePrivilege'
+    post:
+      tags: [users]
+      summary: Create or update a per-table privilege override
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TablePrivilege'
+      responses:
+        '200':
+          description: Save result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  /api/privilege/{id}:
+    delete:
+      tags: [users]
+      summary: Delete a per-table privilege override
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Deletion result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  # ── Templates ─────────────────────────────────────────────────────────────
+
+  /api/templates:
+    get:
+      tags: [templates]
+      summary: List tables that have at least one layout template
+      responses:
+        '200':
+          description: Table list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      tables:
+                        type: array
+                        items:
+                          type: string
+
+  /api/templates/{tb}:
+    get:
+      tags: [templates]
+      summary: List layout template names for a table
+      parameters:
+        - $ref: '#/components/parameters/tb'
+      responses:
+        '200':
+          description: Template names
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      templates:
+                        type: array
+                        items:
+                          type: string
+
+  /api/template/{tb}/{name}:
+    get:
+      tags: [templates]
+      summary: Get a template's JSON content
+      parameters:
+        - $ref: '#/components/parameters/tb'
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Template content
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      content:
+                        type: object
+    post:
+      tags: [templates]
+      summary: Save (create or overwrite) a template
+      parameters:
+        - $ref: '#/components/parameters/tb'
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Template JSON content (sections array)
+      responses:
+        '200':
+          description: Save result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+    delete:
+      tags: [templates]
+      summary: Delete a template
+      parameters:
+        - $ref: '#/components/parameters/tb'
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deletion result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  /api/template/{tb}/{name}/rename:
+    post:
+      tags: [templates]
+      summary: Rename a template
+      parameters:
+        - $ref: '#/components/parameters/tb'
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [new_name]
+              properties:
+                new_name:
+                  type: string
+      responses:
+        '200':
+          description: Rename result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  # ── Vocabularies ──────────────────────────────────────────────────────────
+
+  /api/vocabularies:
+    get:
+      tags: [vocabularies]
+      summary: List all vocabulary entries
+      parameters:
+        - name: tb
+          in: query
+          schema:
+            type: string
+        - name: field
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Vocabulary list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      vocabularies:
+                        type: array
+                        items:
+                          type: object
+    post:
+      tags: [vocabularies]
+      summary: Add a vocabulary entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tb, field, value]
+              properties:
+                tb:
+                  type: string
+                field:
+                  type: string
+                value:
+                  type: string
+      responses:
+        '200':
+          description: Add result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  /api/vocabularies/sort:
+    post:
+      tags: [vocabularies]
+      summary: Update the display order of vocabulary entries
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ids]
+              properties:
+                ids:
+                  type: array
+                  items:
+                    type: integer
+      responses:
+        '200':
+          description: Sort result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  /api/vocabulary/{id}:
+    patch:
+      tags: [vocabularies]
+      summary: Edit a vocabulary entry value
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [value]
+              properties:
+                value:
+                  type: string
+      responses:
+        '200':
+          description: Edit result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+    delete:
+      tags: [vocabularies]
+      summary: Delete a vocabulary entry
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Deletion result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  # ── Saved Queries ─────────────────────────────────────────────────────────
+
+  /api/saved-queries:
+    get:
+      tags: [saved-queries]
+      summary: List saved queries visible to the current user
+      responses:
+        '200':
+          description: Query list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      queries:
+                        type: array
+                        items:
+                          type: object
+    post:
+      tags: [saved-queries]
+      summary: Save a new query
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, tb, definition]
+              properties:
+                name:
+                  type: string
+                tb:
+                  type: string
+                definition:
+                  type: object
+      responses:
+        '200':
+          description: Save result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  /api/saved-query/{id}/share:
+    post:
+      tags: [saved-queries]
+      summary: Share a saved query with all users
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Share result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  /api/saved-query/{id}/unshare:
+    post:
+      tags: [saved-queries]
+      summary: Unshare a saved query
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Unshare result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  /api/saved-query/{id}:
+    delete:
+      tags: [saved-queries]
+      summary: Delete a saved query
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Deletion result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  # ── API Keys ──────────────────────────────────────────────────────────────
+
+  /api/api-keys:
+    get:
+      tags: [api-keys]
+      summary: List API keys for the current application
+      responses:
+        '200':
+          description: Key list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      keys:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ApiKey'
+    post:
+      tags: [api-keys]
+      summary: Create a new API key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [label, privilege]
+              properties:
+                label:
+                  type: string
+                privilege:
+                  type: string
+                  enum: [read, edit, admin]
+      responses:
+        '200':
+          description: Key created — the raw key is returned only once
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/CodedResult'
+                  - type: object
+                    properties:
+                      key:
+                        type: string
+                        description: The raw API key value (shown once; store it securely)
+
+  /api/api-key/{id}/revoke:
+    post:
+      tags: [api-keys]
+      summary: Revoke (deactivate) an API key
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Revoke result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  /api/api-key/{id}:
+    delete:
+      tags: [api-keys]
+      summary: Permanently delete an API key
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Deletion result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  # ── Import ────────────────────────────────────────────────────────────────
+
+  /api/import/{tb}/fields:
+    get:
+      tags: [import]
+      summary: Get importable field list for a table
+      parameters:
+        - $ref: '#/components/parameters/tb'
+      responses:
+        '200':
+          description: Field list for import mapping
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      fields:
+                        type: array
+                        items:
+                          type: object
+
+  /api/import/preview-file:
+    post:
+      tags: [import]
+      summary: Upload a CSV/XLSX file and return column headers + sample rows
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: File preview
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      columns:
+                        type: array
+                        items:
+                          type: string
+                      preview:
+                        type: array
+                        items:
+                          type: object
+
+  /api/import/preview-photos:
+    post:
+      tags: [import]
+      summary: Upload a ZIP of photos and return the file list
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Photo list preview
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  /api/import/data:
+    post:
+      tags: [import]
+      summary: Execute a tabular data import
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tb, mapping, file_token]
+              properties:
+                tb:
+                  type: string
+                mapping:
+                  type: object
+                  description: Source column → target field mapping
+                file_token:
+                  type: string
+                  description: Token returned by preview-file
+      responses:
+        '200':
+          description: Import result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  /api/import/geojson:
+    post:
+      tags: [import]
+      summary: Import GeoJSON geometries matched by a key field
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file, tb, key_field]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                tb:
+                  type: string
+                key_field:
+                  type: string
+      responses:
+        '200':
+          description: Import result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  /api/import/photos:
+    post:
+      tags: [import]
+      summary: Execute a photo import from the uploaded ZIP
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tb, key_field, file_token]
+              properties:
+                tb:
+                  type: string
+                key_field:
+                  type: string
+                file_token:
+                  type: string
+      responses:
+        '200':
+          description: Import result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  # ── Search & Replace ─────────────────────────────────────────────────────
+
+  /api/search-replace/tables:
+    get:
+      tags: [search-replace]
+      summary: List tables eligible for find-and-replace
+      responses:
+        '200':
+          description: Table list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      tables:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/TableMeta'
+
+  /api/search-replace/{tb}/fields:
+    get:
+      tags: [search-replace]
+      summary: List fields eligible for find-and-replace in a table
+      parameters:
+        - $ref: '#/components/parameters/tb'
+      responses:
+        '200':
+          description: Field list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      fields:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            name:
+                              type: string
+                            label:
+                              type: string
+
+  /api/search-replace:
+    post:
+      tags: [search-replace]
+      summary: Execute a find-and-replace operation
+      description: Replaces all occurrences of `search` with `replace` in `fld` across all rows of `tb`. This operation is irreversible.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tb, fld, search]
+              properties:
+                tb:
+                  type: string
+                fld:
+                  type: string
+                search:
+                  type: string
+                replace:
+                  type: string
+                  description: Replacement string (empty string to delete matches)
+                  default: ''
+      responses:
+        '200':
+          description: Replace result
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/CodedResult'
+                  - type: object
+                    properties:
+                      affected:
+                        type: integer
+                        description: Number of rows updated
+
+  # ── Free SQL ──────────────────────────────────────────────────────────────
+
+  /api/free-sql/verify:
+    post:
+      tags: [free-sql]
+      summary: Verify the super-admin password before entering free SQL mode
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [password]
+              properties:
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Password verification result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  /api/free-sql/run:
+    post:
+      tags: [free-sql]
+      summary: Execute a raw SQL statement
+      description: Only available to super_admin users after password verification.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [sql]
+              properties:
+                sql:
+                  type: string
+      responses:
+        '200':
+          description: Query result
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/CodedResult'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          type: object
+                      affected:
+                        type: integer
+
+# ──────────────────────────────────────────────────────────────────────────────
+components:
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT obtained from POST /api/auth/login. Valid for 2 hours; refresh via GET /api/auth/refresh.
+
+  parameters:
+    tb:
+      name: tb
+      in: path
+      required: true
+      description: Table name (unprefixed, e.g. `us`, `periodi`)
+      schema:
+        type: string
+        pattern: '^[a-z][a-z0-9_]*$'
+    id:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+    fld:
+      name: fld
+      in: path
+      required: true
+      description: Field name
+      schema:
+        type: string
+    file:
+      name: file
+      in: path
+      required: true
+      description: Backup filename (may contain path separators)
+      schema:
+        type: string
+
+  schemas:
+
+    # ── Common responses ───────────────────────────────────────────────────
+
+    Success:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [success]
+
+    Error:
+      type: object
+      required: [status, code]
+      properties:
+        status:
+          type: string
+          enum: [error]
+        code:
+          type: string
+          description: i18n key identifying the error
+        detail:
+          type: string
+          description: Optional human-readable detail
+
+    CodedSuccess:
+      allOf:
+        - $ref: '#/components/schemas/Success'
+        - type: object
+          required: [code]
+          properties:
+            code:
+              type: string
+
+    CodedResult:
+      oneOf:
+        - $ref: '#/components/schemas/CodedSuccess'
+        - $ref: '#/components/schemas/Error'
+
+    # ── Records ────────────────────────────────────────────────────────────
+
+    FieldValue:
+      type: object
+      description: A single field's value as returned by getRecord()
+      properties:
+        val:
+          description: The stored value
+        label:
+          type: string
+          description: Human-readable field label
+        type:
+          type: string
+          description: Field type (text, textarea, date, select, …)
+        readonly:
+          type: boolean
+        options:
+          type: array
+          description: Available options (for select/multi_select fields)
+          items:
+            type: object
+
+    RecordResponse:
+      allOf:
+        - $ref: '#/components/schemas/Success'
+        - type: object
+          properties:
+            core:
+              type: object
+              description: Main table fields — field name → FieldValue
+              additionalProperties:
+                $ref: '#/components/schemas/FieldValue'
+            plugins:
+              type: object
+              description: Plugin table name → array of plugin rows
+              additionalProperties:
+                type: array
+                items:
+                  type: object
+            links:
+              type: array
+              description: Manual links to other records
+              items:
+                type: object
+            files:
+              type: array
+              description: Attached files
+              items:
+                type: object
+            metadata:
+              type: object
+              properties:
+                id:
+                  type: integer
+                tb:
+                  type: string
+                can_edit:
+                  type: boolean
+                can_delete:
+                  type: boolean
+
+    RecordListResponse:
+      allOf:
+        - $ref: '#/components/schemas/Success'
+        - type: object
+          required: [total, data]
+          properties:
+            total:
+              type: integer
+              description: Total matching records (before pagination)
+            data:
+              type: array
+              description: Current page of records (flat key→value objects)
+              items:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                additionalProperties: true
+            tb:
+              type: string
+            page:
+              type: integer
+            limit:
+              type: integer
+
+    AdvancedSearchRow:
+      type: object
+      required: [fld, operator, value]
+      properties:
+        fld:
+          type: string
+          description: 'Field reference in the format `table:field`'
+        operator:
+          type: string
+          example: '='
+        value:
+          type: string
+        connector:
+          type: string
+          enum: [AND, OR]
+          default: AND
+        '(':
+          type: string
+          default: ''
+        ')':
+          type: string
+          default: ''
+
+    # ── Tables ─────────────────────────────────────────────────────────────
+
+    TableMeta:
+      type: object
+      required: [name, label]
+      properties:
+        name:
+          type: string
+        label:
+          type: string
+        is_plugin:
+          type: string
+          enum: ['0', '1']
+
+    TableConfig:
+      allOf:
+        - $ref: '#/components/schemas/TableMeta'
+        - type: object
+          properties:
+            order:
+              type: string
+              description: Default sort field
+            id_field:
+              type: string
+            preview:
+              type: array
+              items:
+                type: string
+              description: Fields shown in record list preview
+            rs:
+              type: string
+              description: Field used as label in stratigraphic relations
+            plugin:
+              type: array
+              items:
+                type: string
+              description: Plugin table names attached to this table
+            link:
+              type: array
+              items:
+                type: object
+                properties:
+                  other_tb:
+                    type: string
+                  fld:
+                    type: string
+
+    # ── Fields ─────────────────────────────────────────────────────────────
+
+    FieldConfig:
+      type: object
+      required: [name, label, type, db_type]
+      properties:
+        name:
+          type: string
+        label:
+          type: string
+        type:
+          type: string
+          enum:
+            - text
+            - textarea
+            - date
+            - integer
+            - float
+            - boolean
+            - select
+            - multi_select
+            - combo_select
+            - slider
+            - link_to
+            - link_out
+            - long_text
+        db_type:
+          type: string
+          enum: [TEXT, INTEGER, REAL]
+        readonly:
+          oneOf:
+            - type: boolean
+            - type: string
+              enum: ['0', '1']
+        hide:
+          oneOf:
+            - type: boolean
+            - type: string
+              enum: ['0', '1']
+        check:
+          type: array
+          items:
+            type: string
+          description: Validation rules (e.g. `not_empty`)
+        vocabulary_set:
+          type: string
+        id_from_tb:
+          type: string
+          description: For link_to fields — source table
+
+    # ── Charts ─────────────────────────────────────────────────────────────
+
+    ChartDefinition:
+      type: object
+      required: [tb, type]
+      properties:
+        tb:
+          type: string
+        type:
+          type: string
+          enum: [metric, bar, line, pie, doughnut]
+        field:
+          type: string
+          description: Aggregate field (metric charts only)
+        function:
+          type: string
+          enum: [COUNT, SUM, AVG, MIN, MAX]
+          description: Aggregate function (metric charts only)
+        x_field:
+          type: string
+          description: Group-by field (non-metric charts)
+        y_field:
+          type: string
+          description: Aggregate field (non-metric charts)
+        y_function:
+          type: string
+          enum: [COUNT, SUM, AVG, MIN, MAX]
+          description: Aggregate function (non-metric charts)
+        filter:
+          type: object
+          description: Optional WHERE filter in the same search-type format used by getRecords()
+      examples:
+        - tb: us
+          type: pie
+          x_field: periodo
+          y_field: id
+          y_function: COUNT
+        - tb: us
+          type: metric
+          field: id
+          function: COUNT
+
+    Chart:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        definition:
+          $ref: '#/components/schemas/ChartDefinition'
+        is_global:
+          type: integer
+          enum: [0, 1]
+        user_id:
+          type: integer
+        owned_by_me:
+          type: boolean
+        tb_label:
+          type: string
+        created_at:
+          type: integer
+          description: Unix timestamp
+
+    # ── Users ──────────────────────────────────────────────────────────────
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        privilege:
+          type: integer
+          description: |
+            Privilege level (lower = more privileged):
+            1=super_admin, 5=admin, 10=adm, 20=edit, 25=create, 30=read
+
+    UserInput:
+      allOf:
+        - $ref: '#/components/schemas/User'
+        - type: object
+          properties:
+            password:
+              type: string
+              description: Required when creating; omit to keep existing password
+
+    TablePrivilege:
+      type: object
+      required: [tb, privilege]
+      properties:
+        id:
+          type: integer
+        tb:
+          type: string
+        privilege:
+          type: integer
+        where_sql:
+          type: string
+          description: Optional row-level SQL WHERE clause
+
+    # ── API Keys ───────────────────────────────────────────────────────────
+
+    ApiKey:
+      type: object
+      properties:
+        id:
+          type: integer
+        label:
+          type: string
+        privilege:
+          type: string
+          enum: [read, edit, admin]
+        is_active:
+          type: integer
+          enum: [0, 1]
+        created_at:
+          type: integer
+        last_used_at:
+          type: integer
+          nullable: true

@@ -33,6 +33,147 @@ use function FastRoute\simpleDispatcher;
 class Router
 {
     /**
+     * Minimum privilege required to access each route.
+     *
+     * Values: 'none' | 'read' | 'edit' | 'admin'
+     *
+     *   none  — public; no authentication required (login, public info)
+     *   read  — any authenticated principal (JWT user or API key with privilege ≤ 30)
+     *   edit  — write operations (API key privilege ≤ 25)
+     *   admin — administrative operations (API key privilege ≤ 10)
+     *
+     * The key format is 'ctrl::method' matching the pairs defined in the route
+     * collector below.  Any route NOT listed here defaults to 'admin' (safest).
+     *
+     * This map is the single source of truth for route access control and will
+     * also serve as the foundation for OpenAPI spec generation.
+     */
+    public const ROUTE_PRIVILEGE = [
+        // ── Public / no-auth ────────────────────────────────────────────────
+        'login_ctrl::listApps'   => 'none',
+        'login_ctrl::auth'       => 'none',
+        'login_ctrl::refresh'    => 'none',
+        'login_ctrl::out'        => 'none',
+        'info_ctrl::getInfo'     => 'none',
+        'new_app_ctrl::getStatus'=> 'none',
+        'new_app_ctrl::create'   => 'none',
+
+        // ── Read — any authenticated principal ───────────────────────────────
+        'home_ctrl::listTables'                      => 'read',
+        'info_ctrl::getAppInfo'                      => 'read',
+        'record_ctrl::getRecord'                     => 'read',
+        'record_ctrl::getRecords'                    => 'read',
+        'record_ctrl::exportRecords'                 => 'read',
+        'record_ctrl::getTemplates'                  => 'read',
+        'record_ctrl::getFieldOptions'               => 'read',
+        'record_ctrl::searchLinkCandidates'          => 'read',
+        'record_ctrl::getRsMatrix'                   => 'read',
+        'search_ctrl::getAdvancedConfig'             => 'read',
+        'search_ctrl::getUsedValues'                 => 'read',
+        'chart_ctrl::listCharts'                     => 'read',
+        'chart_ctrl::getData'                        => 'read',
+        'saved_queries_ctrl::listQueries'            => 'read',
+        'myHistory_ctrl::getHistory'                 => 'read',
+        'frontpage_editor_ctrl::getWelcome'          => 'read',
+        'geoface_ctrl::getGeoJson'                   => 'read',
+        'vocabularies_ctrl::list'                    => 'read',
+
+        // ── Edit — write operations ──────────────────────────────────────────
+        'record_ctrl::saveRecord'                    => 'edit',
+        'record_ctrl::erase'                         => 'edit',
+        'record_ctrl::uploadFile'                    => 'edit',
+        'record_ctrl::deleteFile'                    => 'edit',
+        'file_ctrl::sortFiles'                       => 'edit',
+        'record_ctrl::addRs'                         => 'edit',
+        'record_ctrl::deleteRs'                      => 'edit',
+        'record_ctrl::addManualLink'                 => 'edit',
+        'record_ctrl::deleteManualLink'              => 'edit',
+        'chart_ctrl::saveChart'                      => 'edit',
+        'chart_ctrl::shareChart'                     => 'edit',
+        'chart_ctrl::unshareChart'                   => 'edit',
+        'chart_ctrl::deleteChart'                    => 'edit',
+        'saved_queries_ctrl::saveQuery'              => 'edit',
+        'saved_queries_ctrl::shareQuery'             => 'edit',
+        'saved_queries_ctrl::unshareQuery'           => 'edit',
+        'saved_queries_ctrl::deleteQuery'            => 'edit',
+        'geoface_ctrl::saveNew'                      => 'edit',
+        'geoface_ctrl::updateGeometry'               => 'edit',
+        'geoface_ctrl::eraseGeometry'                => 'edit',
+        'vocabularies_ctrl::add'                     => 'edit',
+        'vocabularies_ctrl::sort'                    => 'edit',
+        'vocabularies_ctrl::edit'                    => 'edit',
+        'vocabularies_ctrl::erase'                   => 'edit',
+        'import_ctrl::getTableFields'                => 'edit',
+        'import_ctrl::importData'                    => 'edit',
+        'import_ctrl::importGeoJson'                 => 'edit',
+        'import_ctrl::importPhotos'                  => 'edit',
+
+        // ── Admin — privileged operations ────────────────────────────────────
+        'user_ctrl::showList'                        => 'admin',
+        'user_ctrl::showUserForm'                    => 'admin',
+        'user_ctrl::saveUserData'                    => 'admin',
+        'user_ctrl::deleteOne'                       => 'admin',
+        'user_ctrl::getTablePrivileges'              => 'admin',
+        'user_ctrl::saveTablePrivilege'              => 'admin',
+        'user_ctrl::deleteTablePrivilege'            => 'admin',
+        'config_ctrl::getAppProperties'              => 'admin',
+        'config_ctrl::save_app_properties'           => 'admin',
+        'config_ctrl::getTableList'                  => 'admin',
+        'config_ctrl::add_new_tb'                    => 'admin',
+        'config_ctrl::sortTables'                    => 'admin',
+        'config_ctrl::getTableConfig'                => 'admin',
+        'config_ctrl::save_tb_data'                  => 'admin',
+        'config_ctrl::delete_tb'                     => 'admin',
+        'config_ctrl::rename_tb'                     => 'admin',
+        'config_ctrl::getFldStructure'               => 'admin',
+        'config_ctrl::getFldList'                    => 'admin',
+        'config_ctrl::add_new_fld'                   => 'admin',
+        'config_ctrl::save_fld_properties'           => 'admin',
+        'config_ctrl::delete_column'                 => 'admin',
+        'config_ctrl::rename_column'                 => 'admin',
+        'config_ctrl::getGeoFaceConfig'              => 'admin',
+        'config_ctrl::save_geoface_properties'       => 'admin',
+        'config_ctrl::uploadGeoFile'                 => 'admin',
+        'config_ctrl::delete_local_geofile'          => 'admin',
+        'config_ctrl::getValidationReport'           => 'admin',
+        'config_ctrl::fix'                           => 'admin',
+        'confirm_super_adm_pwd_ctrl::check_pwd'      => 'admin',
+        'backup_ctrl::listBackups'                   => 'admin',
+        'backup_ctrl::doBackup'                      => 'admin',
+        'backup_ctrl::deleteBackup'                  => 'admin',
+        'backup_ctrl::restoreBackup'                 => 'admin',
+        'backup_ctrl::downloadBackup'                => 'admin',
+        'debug_ctrl::getLogs'                        => 'admin',
+        'debug_ctrl::purgeLogs'                      => 'admin',
+        'api_ctrl::listKeys'                         => 'admin',
+        'api_ctrl::createKey'                        => 'admin',
+        'api_ctrl::revokeKey'                        => 'admin',
+        'api_ctrl::deleteKey'                        => 'admin',
+        'frontpage_editor_ctrl::saveWelcome'         => 'admin',
+        'templates_ctrl::getTableList'               => 'admin',
+        'templates_ctrl::getTemplateList'            => 'admin',
+        'templates_ctrl::getTemplate'                => 'admin',
+        'templates_ctrl::saveTemplate'               => 'admin',
+        'templates_ctrl::deleteTemplate'             => 'admin',
+        'templates_ctrl::renameTemplate'             => 'admin',
+        'search_replace_ctrl::getTableList'          => 'admin',
+        'search_replace_ctrl::getFieldList'          => 'admin',
+        'search_replace_ctrl::doReplace'             => 'admin',
+        'free_sql_ctrl::verifyPassword'              => 'admin',
+        'free_sql_ctrl::runSql'                      => 'admin',
+    ];
+
+    /**
+     * Look up the minimum privilege required for a given controller::method.
+     *
+     * Returns 'admin' (safest) for any pair not explicitly listed in ROUTE_PRIVILEGE.
+     */
+    public static function requiredPrivilege(string $ctrl, string $method): string
+    {
+        return self::ROUTE_PRIVILEGE[$ctrl . '::' . $method] ?? 'admin';
+    }
+
+    /**
      * Dispatch the current HTTP request.
      *
      * Modifies $_GET, $_POST, $_REQUEST in place so that Bdus\App and all

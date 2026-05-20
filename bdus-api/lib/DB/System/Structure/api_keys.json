@@ -6,7 +6,8 @@
         { "name": "created_by",   "type": "INTEGER",            "notnull": false },
         { "name": "created_at",   "type": "INTEGER",            "notnull": true  },
         { "name": "last_used_at", "type": "INTEGER",            "notnull": false },
-        { "name": "revoked_at",   "type": "INTEGER",            "notnull": false }
+        { "name": "revoked_at",   "type": "INTEGER",            "notnull": false },
+        { "name": "privilege",    "type": "INTEGER",            "notnull": false, "default": 30 }
     ],
     "indexes": [
         { "name": "api_keys_hash_idx", "columns": ["key_hash"], "unique": true }

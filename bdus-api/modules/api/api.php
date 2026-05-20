@@ -67,6 +67,20 @@ class api_ctrl extends Controller
             return;
         }
 
+        // Validate privilege: must be one of the three allowed levels.
+        // Default to READ (30) when not supplied.
+        $allowedPrivileges = [\UAC\UAC::ADM, \UAC\UAC::CREATE, \UAC\UAC::READ]; // 10, 25, 30
+        $privilege = isset($this->post['privilege'])
+            ? (int) $this->post['privilege']
+            : \UAC\UAC::READ;
+        if (!in_array($privilege, $allowedPrivileges, true)) {
+            $this->returnJson([
+                'status' => 'error',
+                'code'   => 'invalid_privilege',
+            ]);
+            return;
+        }
+
         // Generate a cryptographically random 64-char hex key.
         $plainKey = bin2hex(random_bytes(32));
         $keyHash  = hash('sha256', $plainKey);
@@ -77,14 +91,16 @@ class api_ctrl extends Controller
             'label'      => $label,
             'created_by' => \Auth\CurrentUser::id(),
             'created_at' => time(),
+            'privilege'  => $privilege,
         ]);
 
         $this->returnJson([
-            'status' => 'success',
-            'code'   => 'ok_api_key_created',
-            'id'     => $id,
-            'label'  => $label,
-            'key'    => $plainKey, // shown ONCE — never stored in plain text
+            'status'    => 'success',
+            'code'      => 'ok_api_key_created',
+            'id'        => $id,
+            'label'     => $label,
+            'privilege' => $privilege,
+            'key'       => $plainKey, // shown ONCE — never stored in plain text
         ]);
     }
 

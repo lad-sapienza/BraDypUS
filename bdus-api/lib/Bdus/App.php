@@ -146,6 +146,25 @@ class App
     $handler->registerFatalHandler();
   }
 
+  /**
+   * Map privilege-level strings to the numeric UAC threshold.
+   * A principal satisfies a level when its privilege int is <= the threshold.
+   * (Lower number = more privileged, following the UAC scale.)
+   */
+  private function apiKeyHasPrivilege(string $required): bool
+  {
+    $privilege = \Auth\CurrentUser::privilege();
+    if ($privilege === null) {
+      return false;
+    }
+    return match ($required) {
+      'read'  => $privilege <= \UAC\UAC::READ,    // <= 30
+      'edit'  => $privilege <= \UAC\UAC::CREATE,  // <= 25
+      'admin' => $privilege <= \UAC\UAC::ADM,     // <= 10
+      default => false,
+    };
+  }
+
   private function route()
   {
     // Set object
@@ -155,6 +174,40 @@ class App
     $method = $this->get['method'] ?? 'showAll';
 
     try {
+
+      // ── Auth gate ────────────────────────────────────────────────────────
+      // Determine the minimum privilege required for this route.
+      $requiredPrivilege = \Bdus\Router::requiredPrivilege($obj, $method);
+
+      if ($requiredPrivilege !== 'none') {
+        // If not already authenticated via JWT, try API key auth.
+        if (!\Auth\CurrentUser::isAuthenticated() && $this->db && $this->prefix) {
+          \Auth\ApiKeyAuth::attempt($this->db, $this->prefix);
+        }
+
+        // Reject completely unauthenticated requests.
+        if (!\Auth\CurrentUser::isAuthenticated()) {
+          http_response_code(401);
+          header('Content-Type: application/json');
+          echo json_encode(
+            ['status' => 'error', 'code' => 'unauthenticated', 'text' => 'unauthenticated'],
+            JSON_UNESCAPED_UNICODE
+          );
+          return;
+        }
+
+        // For API key requests: enforce route-level privilege sandbox.
+        // JWT users are trusted — their per-controller checks remain in place.
+        if (\Auth\CurrentUser::isApiKey() && !$this->apiKeyHasPrivilege($requiredPrivilege)) {
+          http_response_code(403);
+          header('Content-Type: application/json');
+          echo json_encode(
+            ['status' => 'error', 'code' => 'not_enough_privilege', 'text' => 'not_enough_privilege'],
+            JSON_UNESCAPED_UNICODE
+          );
+          return;
+        }
+      }
 
       /**
        * Check if method exists in object

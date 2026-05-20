@@ -14,6 +14,7 @@ use DB\System\Migrations\M002_CreateFileLinks;
 use DB\System\Migrations\M003_RefactorQueriesTable;
 use DB\System\Migrations\M004_RefactorChartsTable;
 use DB\System\Migrations\M005_CreateApiKeys;
+use DB\System\Migrations\M006_AddApiKeyPrivilege;
 use Monolog\Logger;
 
 /**
@@ -45,6 +46,7 @@ class Migrate
         M003_RefactorQueriesTable::class,
         M004_RefactorChartsTable::class,
         M005_CreateApiKeys::class,
+        M006_AddApiKeyPrivilege::class,
     ];
 
     /**

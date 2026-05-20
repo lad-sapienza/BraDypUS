@@ -48,15 +48,6 @@ try {
 
 	require_once './lib/constants.php';
 
-	// ── REST API v1 ──────────────────────────────────────────────────────────
-	// Handled before general routing.  constants.php (autoloader) is already
-	// loaded at this point so all namespaced classes are available.
-	if (isset($_SERVER['REQUEST_URI']) && preg_match('#/api/v1(/|$)#', $_SERVER['REQUEST_URI'])) {
-		\API\V1\Router::handle();
-		ob_end_flush();
-		exit;
-	}
-
 	// ── FastRoute dispatch ────────────────────────────────────────────────────
 	// Matches /api/... paths to controller::method and merges URL vars + JSON
 	// body into $_GET / $_POST / $_REQUEST.  Legacy ?obj=&method= requests are

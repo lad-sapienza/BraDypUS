@@ -16,8 +16,9 @@ class CurrentUser
     private static array $data = [];
 
     /**
-     * Populate from JWT claims or a user array.
+     * Populate from JWT claims, a user array, or an API key record.
      * Expected keys: id, name, email, privilege, app
+     * API key sets: id=0, name, privilege, is_api_key=true
      */
     public static function set(array $data): void
     {
@@ -45,8 +46,20 @@ class CurrentUser
         return isset(self::$data['privilege']) ? (int) self::$data['privilege'] : null;
     }
 
+    /**
+     * Returns true when the request carries a valid identity — either a
+     * JWT-authenticated user (id > 0) or a valid API key (is_api_key = true).
+     */
     public static function isAuthenticated(): bool
     {
-        return !empty(self::$data['id']);
+        return !empty(self::$data['id']) || !empty(self::$data['is_api_key']);
+    }
+
+    /**
+     * Returns true when the current principal is an API key (not a human user).
+     */
+    public static function isApiKey(): bool
+    {
+        return !empty(self::$data['is_api_key']);
     }
 }

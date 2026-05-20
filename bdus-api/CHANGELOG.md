@@ -224,6 +224,34 @@ The PHP backend is preserved and extended with JSON endpoints consumed by the ne
   and `text` with the same value; (2) `responseMessage()` in the Vue API layer falls
   back to `text` when `code` is absent; (3) all components standardised to use
   `api.responseMessage(res, t)` for messages and `res.code ?? res.text` for throws.
+- **Legacy API fallback removed** from `api/index.js`: `ROUTE_MAP` was already 100%
+  complete so the `?obj=&method=` fallback path was dead code; removed for clarity.
+  Any unmapped route now throws a descriptive error at build time.
+
+### Added (cont.)
+- **API key privilege levels**: API keys now carry a privilege level (read / edit /
+  admin) stored in a new `privilege` column on `{prefix}api_keys` (migration M006).
+  `Auth\ApiKeyAuth` authenticates key-bearing requests and populates `CurrentUser`
+  so all existing `utils::canUser()` checks work unchanged.
+- **Route-level privilege map** (`Bdus\Router::ROUTE_PRIVILEGE`): every route in the
+  FastRoute dispatcher now has an explicit required privilege level
+  (`none` | `read` | `edit` | `admin`). `App::route()` enforces this before the
+  controller runs — returning 401 for unauthenticated requests and 403 when an API
+  key's privilege is insufficient for the route. JWT-authenticated users continue
+  to rely on per-controller `utils::canUser()` checks as before.
+- `Auth\CurrentUser::isApiKey()`: helper that returns `true` when the current
+  principal is an API key rather than a human user.
+
+### Removed (cont.)
+- **`API\V1\Router` / `API\V1\Auth` / `API\V1\Handler` / `API\V1\Filter`**:
+  the legacy read-only REST API surface (`/api/v1/{app}/...`) has been
+  removed. Its functionality is fully superseded by the unified
+  `Bdus\Router` surface (`/api/...`) which supports both JWT and API key
+  auth with per-route privilege control. Clients should migrate to the new
+  endpoints: `/api/records/{tb}`, `/api/record/{tb}/{id}`, `/api/tables`.
+- **`API\Inspect` / `API\Search` / `API\GetUniqueVal`**: helper classes that
+  were only used by `API\V1\Handler`; removed along with V1.
+- `/api/v1/` URI prefix intercept removed from `index.php`.
 
 ## [4.4.7] - 2026-05-09
 

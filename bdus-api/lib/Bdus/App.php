@@ -9,7 +9,6 @@ namespace Bdus;
 
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
-use Monolog\Handler\FirePHPHandler;
 use Monolog\ErrorHandler;
 
 use DB\LogDBHandler;
@@ -130,7 +129,6 @@ class App
         $this->db->setLog($this->log);
       } else {
         $this->log->pushHandler(new StreamHandler($log_file, Logger::DEBUG));
-        $this->log->pushHandler(new FirePHPHandler());
         if ($this->db) {
           $this->db->setLog($this->log);
         }

@@ -813,6 +813,6 @@
   "invalid_privilege": "Invalid privilege level",
   "copied": "Copied",
   "login": "Login",
-  "app_name_hint": "Lowercase letters, digits and underscores only. Must start with a letter.",
+  "app_name_hint": "3–20 characters. Lowercase letters, digits and underscores only. Must start with a letter.",
   "ok_save": "Saved"
 }

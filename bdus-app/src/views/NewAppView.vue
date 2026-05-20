@@ -35,6 +35,7 @@
             :invalid="!!errors.name"
             :disabled="loading"
             fluid
+            @input="normalizeAppName"
           />
           <small v-if="errors.name" class="field-error">{{ errors.name }}</small>
           <small class="field-hint">{{ t('app_name_hint') }}</small>
@@ -211,6 +212,30 @@ onMounted(async () => {
   }
 })
 
+/**
+ * Normalize the app name on every keystroke:
+ *   1. lowercase
+ *   2. replace spaces and hyphens with underscores
+ *   3. strip anything that is not [a-z0-9_]
+ *   4. strip leading digits/underscores (name must start with a letter)
+ *
+ * The user sees the final valid slug forming in real time — no error needed
+ * until submit if the field is still empty.
+ */
+function normalizeAppName() {
+  let v = form.name
+    .toLowerCase()
+    .replace(/[\s-]+/g, '_')          // spaces / hyphens → underscore
+    .replace(/[^a-z0-9_]/g, '')       // drop everything else
+    .replace(/^[^a-z]+/, '')          // strip leading non-letter chars
+    .slice(0, 20)                     // cap at 20 characters
+  form.name = v
+  // Clear the validation error as soon as the value is valid
+  if (errors.name && /^[a-z][a-z0-9_]{2,19}$/.test(v)) {
+    errors.name = ''
+  }
+}
+
 function validate() {
   errors.name     = ''
   errors.email    = ''
@@ -218,7 +243,7 @@ function validate() {
   errors.db_engine = ''
   let ok = true
 
-  if (!form.name || !/^[a-z][a-z0-9_]*$/.test(form.name)) {
+  if (!form.name || !/^[a-z][a-z0-9_]{2,19}$/.test(form.name)) {
     errors.name = t('app_name_hint')
     ok = false
   }

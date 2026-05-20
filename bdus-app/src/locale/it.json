@@ -813,6 +813,6 @@
   "invalid_privilege": "Livello di privilegio non valido",
   "copied": "Copiato",
   "login": "Accedi",
-  "app_name_hint": "Solo lettere minuscole, cifre e trattini bassi. Deve iniziare con una lettera.",
+  "app_name_hint": "3–20 caratteri. Solo lettere minuscole, cifre e trattini bassi. Deve iniziare con una lettera.",
   "ok_save": "Salvato"
 }

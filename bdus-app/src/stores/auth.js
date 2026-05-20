@@ -30,7 +30,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function login(email, password, appName) {
     const res = await api.post('login_ctrl', 'auth', { email, password, app: appName })
-    if (res.status !== 'success') throw new Error(res.text)
+    if (res.status !== 'success') throw new Error(res.code ?? res.text ?? 'generic_error')
     _applyToken(res.token)
   }
 

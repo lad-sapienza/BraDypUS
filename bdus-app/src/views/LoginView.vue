@@ -121,7 +121,7 @@ async function handleLogin() {
     await auth.login(form.value.email, form.value.password, form.value.app?.db)
     router.push('/')
   } catch (e) {
-    error.value = e.message
+    error.value = t(e.message)
   } finally {
     loading.value = false
   }

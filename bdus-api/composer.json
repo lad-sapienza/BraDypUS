@@ -1,4 +1,7 @@
 {
+    "name": "bdus/api",
+    "description": "BraDypUS web API",
+    "version": "5.0.0",
     "require": {
         "firebase/php-jwt": "^7.0",
         "intervention/image": "^2.6",

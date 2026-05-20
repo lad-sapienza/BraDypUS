@@ -14,12 +14,12 @@ class version
    */
   public static function current(): string
   {
-    if (!file_exists('package.json')) {
-      throw new \Exception('File `package.json` not found.');
+    if (!file_exists('composer.json')) {
+      throw new \Exception('File `composer.json` not found.');
     }
-    $va = json_decode(file_get_contents('package.json'), true);
+    $va = json_decode(file_get_contents('composer.json'), true);
     if (!$va || !is_array($va)) {
-      throw new \Exception('File `package.json` can not be parsed in: ' . __FILE__ . ', ' . __LINE__);
+      throw new \Exception('File `composer.json` can not be parsed in: ' . __FILE__ . ', ' . __LINE__);
     } else {
       return $va['version'];
     }

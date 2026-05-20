@@ -77,33 +77,36 @@ class search_ctrl extends Controller
   // Shared methods (used by both v4 and v5)
   // ──────────────────────────────────────────────────────────────────────────
 
-	/**
-	 * @param $this->request['tb']
-	 * @param $this->request['fld']
-	 */
-	public function getUsedValues()
-	{
-		$tb = $this->request['tb'];
-		$fld = $this->request['fld'];
+  public function getUsedValues(): void
+  {
+    $tb  = $this->get['tb']    ?? null;
+    $fld = $this->get['field'] ?? null;
 
-		// check if query field ia a id_from_tb field
-		$second_table = $this->cfg->get("tables.$tb.fields.$fld.id_from_tb");
+    if (!$tb || !$fld) {
+      $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
+      return;
+    }
 
-		if ($second_table) {
-			$second_field = $this->cfg->get("tables.{$second_table}.id_field");
-			$q = "SELECT {$second_field} as {$fld} FROM {$second_table} WHERE 1=1 GROUP BY {$second_field}";
+    try {
+      // If the field references another table, fetch values from there instead.
+      $second_table = $this->cfg->get("tables.{$tb}.fields.{$fld}.id_from_tb");
 
-		} else {
+      if ($second_table) {
+        $second_field = $this->cfg->get("tables.{$second_table}.id_field");
+        $q = "SELECT {$second_field} AS val FROM {$second_table} WHERE 1=1 GROUP BY {$second_field}";
+      } else {
+        $q = "SELECT {$fld} AS val FROM {$tb} WHERE {$fld} IS NOT NULL GROUP BY {$fld}";
+      }
 
-			$q = "SELECT {$fld} FROM {$tb} WHERE 1=1 GROUP BY {$fld}";
-		}
+      $rows   = $this->db->query($q);
+      $values = array_column($rows ?? [], 'val');
 
-		$res = $this->db->query($q);
-		foreach ($res as $r){
-			$arr[] = $r[$fld];
-		}
-		echo json_encode($arr);
-	}
+      $this->returnJson(['status' => 'success', 'values' => $values]);
+    } catch (\Throwable $e) {
+      $this->log->error($e);
+      $this->returnJson(['status' => 'error', 'code' => 'db_error', 'detail' => $e->getMessage()]);
+    }
+  }
 	/**
 	 * @param $this->request
 	 */
@@ -119,7 +122,7 @@ class search_ctrl extends Controller
 			$resp['code']   = 'test_error';
 		}
 
-		echo json_encode($resp);
+		$this->returnJson($resp);
 	}
 
 

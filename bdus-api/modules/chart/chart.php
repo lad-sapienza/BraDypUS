@@ -229,7 +229,7 @@ class chart_ctrl extends Controller
      */
     public function shareChart(): void
     {
-        $id = isset($this->post['id']) ? (int) $this->post['id'] : null;
+        $id = (int) ($this->post['id'] ?? $this->get['id'] ?? 0) ?: null;
         if (!$id) {
             $this->returnJson(['status' => 'error', 'code' => 'parameter_missing', 'detail' => 'id']);
             return;
@@ -265,7 +265,7 @@ class chart_ctrl extends Controller
      */
     public function unshareChart(): void
     {
-        $id = isset($this->post['id']) ? (int) $this->post['id'] : null;
+        $id = (int) ($this->post['id'] ?? $this->get['id'] ?? 0) ?: null;
         if (!$id) {
             $this->returnJson(['status' => 'error', 'code' => 'parameter_missing', 'detail' => 'id']);
             return;
@@ -301,7 +301,7 @@ class chart_ctrl extends Controller
      */
     public function deleteChart(): void
     {
-        $id = isset($this->post['id']) ? (int) $this->post['id'] : null;
+        $id = (int) ($this->post['id'] ?? $this->get['id'] ?? 0) ?: null;
         if (!$id) {
             $this->returnJson(['status' => 'error', 'code' => 'parameter_missing', 'detail' => 'id']);
             return;

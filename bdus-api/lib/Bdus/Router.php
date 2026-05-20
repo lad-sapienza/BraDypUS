@@ -208,6 +208,7 @@ class Router
             $r->addRoute('GET', '/api/info/app', ['info_ctrl', 'getAppInfo']);
 
             // ── Records ───────────────────────────────────────────────────────
+            $r->addRoute('GET',             '/api/record/{tb}/new',           ['record_ctrl', 'getRecord']);
             $r->addRoute('GET',             '/api/record/{tb}/{id:\d+}',      ['record_ctrl', 'getRecord']);
             $r->addRoute(['GET', 'POST'],   '/api/records/{tb}',              ['record_ctrl', 'getRecords']);
             $r->addRoute('GET',             '/api/records/{tb}/export',       ['record_ctrl', 'exportRecords']);

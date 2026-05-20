@@ -107,6 +107,12 @@ abstract class Controller
    */
   public function returnJson(array $data): void
   {
+    // Guarantee every response carries a `status` field.
+    // Callers that already set it (e.g. error responses) are left unchanged;
+    // callers that omit it get 'success' injected at the top of the object.
+    if (!array_key_exists('status', $data)) {
+      $data = ['status' => 'success'] + $data;
+    }
     header("Content-type:application/json");
     echo json_encode($data);
   }

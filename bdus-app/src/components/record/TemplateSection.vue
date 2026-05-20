@@ -62,7 +62,7 @@ const props = defineProps({
   section:  { type: Object, required: true },
   /** 'read' | 'edit' */
   mode:     { type: String, default: 'read' },
-  /** Full table id (e.g. 'test__items'), passed to FieldEditor */
+  /** Full table id (e.g. 'items'), passed to FieldEditor */
   tb:       { type: String, required: true },
   /** Full record data from getRecord() API */
   record:   { type: Object, required: true },

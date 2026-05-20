@@ -58,11 +58,6 @@
           />
         </div>
 
-        <!-- Result message -->
-        <Message v-if="result" :severity="result.severity" class="sr-result">
-          {{ result.text }}
-        </Message>
-
         <!-- Action -->
         <div class="sr-actions">
           <Button
@@ -79,6 +74,27 @@
 
     <!-- Confirmation dialog -->
     <ConfirmDialog />
+
+    <!-- Result dialog -->
+    <Dialog
+      v-model:visible="showResult"
+      :header="t('find_replace')"
+      modal
+      :closable="true"
+      :style="{ width: '26rem' }"
+    >
+      <div class="sr-result-body">
+        <i
+          :class="result?.severity === 'success'
+            ? 'pi pi-check-circle sr-result-icon sr-result-success'
+            : 'pi pi-times-circle sr-result-icon sr-result-error'"
+        />
+        <span>{{ result?.text }}</span>
+      </div>
+      <template #footer>
+        <Button :label="t('close')" @click="showResult = false" autofocus />
+      </template>
+    </Dialog>
   </AppLayout>
 </template>
 
@@ -92,7 +108,7 @@ import { api }        from '@/api'
 import Select         from 'primevue/select'
 import InputText      from 'primevue/inputtext'
 import Button         from 'primevue/button'
-import Message        from 'primevue/message'
+import Dialog         from 'primevue/dialog'
 import ConfirmDialog  from 'primevue/confirmdialog'
 
 const { t }   = useI18n()
@@ -110,6 +126,7 @@ const loadingTables = ref(false)
 const loadingFields = ref(false)
 const running       = ref(false)
 const result        = ref(null)   // { severity, text }
+const showResult    = ref(false)
 
 const canSubmit = computed(() =>
   selectedTable.value && selectedField.value && searchStr.value.trim()
@@ -177,8 +194,10 @@ async function doReplace() {
         text: t(res.code ?? 'error'),
       }
     }
+    showResult.value = true
   } catch (e) {
-    toast.add({ severity: 'error', summary: t('error'), detail: String(e), life: 4000 })
+    result.value = { severity: 'error', text: String(e) }
+    showResult.value = true
   } finally {
     running.value = false
   }
@@ -228,7 +247,20 @@ async function doReplace() {
   color: var(--p-text-muted-color);
 }
 
-.sr-result { margin: 0; }
+.sr-result-body {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.25rem 0;
+}
+
+.sr-result-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.sr-result-success { color: var(--p-green-500); }
+.sr-result-error   { color: var(--p-red-500);   }
 
 .sr-actions {
   display: flex;

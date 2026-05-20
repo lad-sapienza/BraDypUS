@@ -357,7 +357,7 @@ async function fetchRecord() {
 
     const recordPath = id.value
       ? `/api/record/${tb.value}/${id.value}`
-      : `/api/record/${tb.value}`
+      : `/api/record/${tb.value}/new`
     const res = await api.get(recordPath, queryParams)
 
     if (res.status === 'error') {

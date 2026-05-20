@@ -139,10 +139,11 @@ class RecordCtrlGetRecordTest extends BdusTestCase
         $this->assertCount(2, $files, 'Expected 2 files linked to item 1');
 
         foreach ($files as $f) {
-            $this->assertArrayHasKey('url',      $f, 'File missing url key');
+            // url is no longer returned by the backend: the Vue frontend
+            // constructs it client-side from auth.user.app + file fields.
+            $this->assertArrayNotHasKey('url', $f, 'url should not be in file response (built client-side)');
             $this->assertArrayHasKey('is_image', $f, 'File missing is_image key');
-            $this->assertStringContainsString('projects/', $f['url']);
-            $this->assertStringContainsString('/files/',   $f['url']);
+            $this->assertArrayHasKey('filename', $f, 'File missing filename key');
             $this->assertIsBool($f['is_image']);
         }
 
@@ -151,9 +152,9 @@ class RecordCtrlGetRecordTest extends BdusTestCase
         $this->assertTrue($byExt['jpg']['is_image'],  'jpg should be flagged as image');
         $this->assertFalse($byExt['pdf']['is_image'], 'pdf should NOT be flagged as image');
 
-        // URL pattern: projects/{app}/files/{id}.{ext}
-        $this->assertSame('projects/bdus_test/files/1.jpg', $byExt['jpg']['url']);
-        $this->assertSame('projects/bdus_test/files/2.pdf', $byExt['pdf']['url']);
+        // url is built client-side; verify the raw fields needed to construct it are present
+        $this->assertArrayHasKey('id',  $byExt['jpg']);
+        $this->assertArrayHasKey('ext', $byExt['jpg']);
     }
 
     // ── getFieldOptions ───────────────────────────────────────────

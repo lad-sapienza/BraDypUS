@@ -144,14 +144,14 @@ class ConfigCtrlTest extends BdusTestCase
         $this->assertContains('off',    $res['status_options']);
     }
 
-    public function testGetAppPropertiesHasLangs(): void
+    public function testGetAppPropertiesHasNoLangs(): void
     {
+        // langs was removed from the backend response in v5: the frontend
+        // owns the list of available locales (vue/src/i18n/index.js).
         $ctrl = $this->makeController('config_ctrl');
         $res  = $this->callController($ctrl, 'getAppProperties');
 
-        $this->assertIsArray($res['langs']);
-        $this->assertNotEmpty($res['langs']);
-        $this->assertContains('en', $res['langs']);
+        $this->assertArrayNotHasKey('langs', $res);
     }
 
     public function testGetAppPropertiesRequiresSuperAdmin(): void

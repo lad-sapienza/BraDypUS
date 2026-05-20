@@ -16,8 +16,8 @@ class InfoCtrlTest extends BdusTestCase
         $ctrl = $this->makeController('info_ctrl');
         $res  = $this->callController($ctrl, 'getInfo');
 
-        $this->assertArrayHasKey('version',        $res);
-        $this->assertArrayHasKey('changelog_html', $res);
+        $this->assertArrayHasKey('version',      $res);
+        $this->assertArrayHasKey('changelog_md', $res); // raw MD; HTML conversion done client-side
     }
 
     public function testGetInfoVersionIsNonEmptyString(): void
@@ -29,13 +29,14 @@ class InfoCtrlTest extends BdusTestCase
         $this->assertNotEmpty($res['version']);
     }
 
-    public function testGetInfoChangelogIsHtml(): void
+    public function testGetInfoChangelogIsMd(): void
     {
         $ctrl = $this->makeController('info_ctrl');
         $res  = $this->callController($ctrl, 'getInfo');
 
-        // Markdown is converted to HTML; we expect at least one HTML tag.
-        $this->assertStringContainsString('<', $res['changelog_html']);
+        // Raw Markdown is returned; HTML conversion is done client-side via marked.js.
+        $this->assertIsString($res['changelog_md']);
+        $this->assertNotEmpty($res['changelog_md']);
     }
 
     public function testGetInfoRequiresReadPrivilege(): void

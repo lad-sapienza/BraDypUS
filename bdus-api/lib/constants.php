@@ -85,12 +85,25 @@ if ($_bdus_token) {
         }
     }
 
-} elseif (isset($_REQUEST['app']) && is_dir(MAIN_DIR . 'projects/' . $_REQUEST['app'])) {
-    // Unauthenticated request with explicit app param
-    // (login, app list, password-reset flows)
-    define('APP',      $_REQUEST['app']);
-    define('PREFIX',   APP . '__');
-    define('PROJ_DIR', MAIN_DIR . 'projects/' . APP . '/');
+} else {
+    // Unauthenticated request: resolve the app from $_REQUEST or the JSON body.
+    // The Vue frontend sends credentials as application/json, so $_REQUEST['app']
+    // is not populated — we fall back to parsing the raw input.
+    $_bdus_app = $_REQUEST['app'] ?? null;
+
+    if (!$_bdus_app) {
+        $raw = file_get_contents('php://input');
+        if ($raw) {
+            $decoded = json_decode($raw, true);
+            $_bdus_app = $decoded['app'] ?? null;
+        }
+    }
+
+    if ($_bdus_app && is_dir(MAIN_DIR . 'projects/' . $_bdus_app)) {
+        define('APP',      $_bdus_app);
+        define('PREFIX',   APP . '__');
+        define('PROJ_DIR', MAIN_DIR . 'projects/' . APP . '/');
+    }
 }
 
 // ── Runtime directories ───────────────────────────────────────────────

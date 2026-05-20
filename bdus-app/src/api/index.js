@@ -309,17 +309,11 @@ async function _fetch(url, httpMethod, bodyData, label) {
   const opts    = { method: httpMethod, headers }
 
   if (httpMethod !== 'GET' && bodyData && Object.keys(bodyData).length > 0) {
-    const hasComplex = Object.values(bodyData).some(
-      v => v !== null && typeof v === 'object'
-    )
-    if (hasComplex) {
-      opts.body = JSON.stringify(bodyData)
-      headers['Content-Type'] = 'application/json'
-    } else {
-      const fd = new FormData()
-      Object.entries(bodyData).forEach(([k, v]) => fd.append(k, v ?? ''))
-      opts.body = fd
-    }
+    // Always send JSON — PHP's mergeRequestBody() handles it for all verbs.
+    // File uploads go through api.upload() / api.uploadMulti() which use
+    // FormData directly; _fetch() never needs FormData.
+    opts.body = JSON.stringify(bodyData)
+    headers['Content-Type'] = 'application/json'
   }
 
   const res = await fetch(url, opts)

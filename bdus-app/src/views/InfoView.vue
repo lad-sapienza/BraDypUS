@@ -9,10 +9,23 @@
       <Message v-else-if="error" severity="error">{{ error }}</Message>
 
       <template v-else>
-        <!-- Version badge -->
+        <!-- Header: title + version badges -->
         <div class="info-header">
           <span class="info-title">BraDypUS</span>
-          <Tag :value="`v${version}`" severity="secondary" class="info-version-tag" />
+          <div class="info-badges">
+            <Tag
+              :value="`api v${apiVersion}`"
+              severity="secondary"
+              class="info-version-tag"
+              v-tooltip.bottom="'bdus-api (PHP backend)'"
+            />
+            <Tag
+              :value="`app v${appVersion}`"
+              severity="contrast"
+              class="info-version-tag"
+              v-tooltip.bottom="'bdus-app (Vue frontend)'"
+            />
+          </div>
         </div>
 
         <!-- Changelog -->
@@ -34,14 +47,15 @@ import { api }             from '@/api'
 
 const loading       = ref(true)
 const error         = ref(null)
-const version       = ref('')
+const apiVersion    = ref('')
+const appVersion    = __APP_VERSION__   // injected at build time by vite.config.js
 const changelogHtml = ref('')
 
 onMounted(async () => {
   try {
     const res = await api.get('info_ctrl', 'getInfo')
     if (res.status === 'error') throw new Error(res.code)
-    version.value       = res.version
+    apiVersion.value    = res.version
     changelogHtml.value = marked.parse(res.changelog_md ?? '')
   } catch (e) {
     error.value = e.message
@@ -74,6 +88,11 @@ onMounted(async () => {
   align-items: center;
   gap: 0.75rem;
   flex-shrink: 0;
+}
+
+.info-badges {
+  display: flex;
+  gap: 0.4rem;
 }
 
 .info-title {

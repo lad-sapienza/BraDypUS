@@ -3102,5 +3102,4 @@ components:
         created_at:
           type: integer
         last_used_at:
-          type: integer
-          nullable: true
+          type: [integer, "null"]

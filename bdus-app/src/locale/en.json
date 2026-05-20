@@ -451,6 +451,7 @@
   "ok_renaming_column": "The column was successfully renamed",
   "cfg_add_column": "Add new field",
   "cfg_new_column_setting": "New field configuration",
+  "tb_already_available": "Table %s already exists and cannot be created again",
   "fld_already_available": "Field %s is already available and cannot be added",
   "delete_column": "Delete column",
   "warning_delete_column": "Pay attention please. Deleting the column will definitely delete all the configuration and also the database data. It will not be possible to recover the lost data.",

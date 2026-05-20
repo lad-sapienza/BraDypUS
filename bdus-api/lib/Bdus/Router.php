@@ -104,6 +104,8 @@ class Router
         'vocabularies_ctrl::edit'                    => 'edit',
         'vocabularies_ctrl::erase'                   => 'edit',
         'import_ctrl::getTableFields'                => 'edit',
+        'import_ctrl::previewFile'                   => 'edit',
+        'import_ctrl::previewPhotos'                 => 'edit',
         'import_ctrl::importData'                    => 'edit',
         'import_ctrl::importGeoJson'                 => 'edit',
         'import_ctrl::importPhotos'                  => 'edit',
@@ -339,7 +341,9 @@ class Router
             $r->addRoute('POST', '/api/free-sql/run',    ['free_sql_ctrl', 'runSql']);
 
             // ── Data import ───────────────────────────────────────────────────
-            $r->addRoute('GET',  '/api/import/{tb}/fields', ['import_ctrl', 'getTableFields']);
+            $r->addRoute('GET',  '/api/import/{tb}/fields',  ['import_ctrl', 'getTableFields']);
+            $r->addRoute('POST', '/api/import/preview-file', ['import_ctrl', 'previewFile']);
+            $r->addRoute('POST', '/api/import/preview-photos', ['import_ctrl', 'previewPhotos']);
             $r->addRoute('POST', '/api/import/data',         ['import_ctrl', 'importData']);
             $r->addRoute('POST', '/api/import/geojson',      ['import_ctrl', 'importGeoJson']);
             $r->addRoute('POST', '/api/import/photos',       ['import_ctrl', 'importPhotos']);

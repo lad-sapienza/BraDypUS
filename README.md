@@ -1,63 +1,23 @@
-# BraDypUS [v.4]
-
-### The web based, flexible, free (AGPL) database system
-
-
-Bradypus is an open-source software developed at [LAD: Laboratorio di Archeologia Digitale at Sapienza University of Rome](https://lad.saras.uniroma1.it) by Julian Bogdani and previously released unnder the terms of MIT License and since v4 under the terms of the [GNU AGPL-3.0 License](https://www.gnu.org/licenses/agpl-3.0.en.html). It is aimed at easily creating, impementing and publishing relational databases on the Web, especially for the archaeolgical domain. Beyound traditional text-based search, it integrates tools for dynamic Harris Matrix creation and graphical data analysis through charts.
-
-At present, about thirty Italian and International reserach projects, mainly related to Archaeology and Cultural Heritage are actively maintained.
-
-Recently a new [Educational](https://bdus.cloud/db/edu) service has been activated to host research data of younger researchers, typically graduate and PhD students, PostDocs, indipendent researchers, etc. This service runs the latest build of the 4.x branch.
-
-## Run with Docker
-
-BraDypUS is now available as a Docker image, making it easy to run on any platform without manual installation. The official image is available on Docker Hub at `jbogdani/bradypus`.
-
-### Quick Start
-
-To run BraDypUS with Docker Compose, create a `docker-compose.yml` file:
-
-```yaml
-services:
-  bradypus:
-    image: jbogdani/bradypus:latest
-    container_name: bradypus
-    ports:
-      - "8080:80"
-    # IMPORTANT: Mount the data volume for persistence
-    volumes:
-      # Mount your local projects folder into the container
-      - ./projects:/var/www/html/projects
-    restart: unless-stopped
-```
-
-Then run:
-
-```bash
-docker-compose up -d
-```
-
-BraDypUS will be available at `http://localhost:8080`
-
-### Using Docker CLI
-
-Alternatively, run directly with Docker:
-
-```bash
-docker run -d \
-  --name bradypus \
-  -p 8080:80 \
-  -v ./projects:/var/www/html/projects \
-  jbogdani/bradypus:latest
-```
-
-**Important:** The `projects` volume mount ensures your data persists across container restarts.
-
-## More information:
-
-* [bdus.cloud](https://bdus.cloud)
-* [LAD website](https://lad.saras.uniroma1.it)
+> [!WARNING]
+> **This repository has been split into two separate repos and is no longer maintained.**
+>
+> | Component | Repository |
+> |---|---|
+> | PHP backend (API) | [lad-sapienza/bdus-api](https://github.com/lad-sapienza/bdus-api) |
+> | Vue 3 frontend | [lad-sapienza/bdus-app](https://github.com/lad-sapienza/bdus-app) |
+>
+> Please open issues, PRs and discussions in the appropriate repo above.
 
 ---
 
-[![DOI](https://zenodo.org/badge/18011343.svg)](https://zenodo.org/badge/latestdoi/18011343)
+# BraDypUS [v.4] *(archived)*
+
+BraDypUS is an open-source web database system developed at [LAD: Laboratorio di Archeologia Digitale, Sapienza University of Rome](https://lad.saras.uniroma1.it) by Julian Bogdani, released under the [GNU AGPL-3.0 License](https://www.gnu.org/licenses/agpl-3.0.en.html).
+
+It is aimed at easily creating, implementing and publishing relational databases on the Web, especially for the archaeological domain. Beyond traditional text-based search, it integrates tools for dynamic Harris Matrix creation and graphical data analysis through charts.
+
+About thirty Italian and international research projects, mainly related to Archaeology and Cultural Heritage, were actively maintained on this codebase.
+
+An [Educational](https://bdus.cloud/db/edu) service hosts research data for graduate and PhD students, PostDocs and independent researchers, running the latest build of the 4.x branch.
+
+This repository contains the history of the monolithic v4 codebase (PHP backend + jQuery/Bootstrap frontend bundled together). The v5 rewrite separated the two components into the repos linked above.

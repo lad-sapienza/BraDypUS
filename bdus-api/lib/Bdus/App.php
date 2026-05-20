@@ -69,6 +69,16 @@ class App
      */
     $this->setupLogger();
 
+    /**
+     * One-time pre-flight: rename legacy APP__* tables to unprefixed names and
+     * update tables.json, so that Config::__construct() can load cleanly even
+     * on apps that were created before the v5 prefix removal.
+     * This is idempotent — it is a no-op once the tables are already renamed.
+     */
+    if ($this->db) {
+      \DB\System\Migrate::maybeRemovePrefix($this->db, $this->log);
+    }
+
     $this->route();
   }
 
@@ -255,7 +265,7 @@ class App
        */
       if ($this->app) {
         $dot = new Dot();
-        $config = new Config($dot, __DIR__ . '/../../projects/' . $this->app . '/cfg/', $this->prefix);
+        $config = new Config($dot, __DIR__ . '/../../projects/' . $this->app . '/cfg/');
         $_aa->setCfg($config);
       }
 

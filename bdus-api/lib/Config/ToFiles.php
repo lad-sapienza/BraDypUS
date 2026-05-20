@@ -13,12 +13,12 @@ namespace Config;
 class ToFiles
 {
 
-    public static function all(array $cfg, string $path2cfg, string $prefix): void
+    public static function all(array $cfg, string $path2cfg): void
     {
         self::write_in_file($path2cfg . '/app_data.json', $cfg['main']);
         self::writeTables($path2cfg . '/tables.json', $cfg['tables']);
         foreach ($cfg['tables'] as $tb => $tb_data) {
-            self::writeFields($path2cfg . '/' . \str_replace($prefix, '', $tb) . '.json', $cfg['tables'][$tb]['fields']);
+            self::writeFields($path2cfg . '/' . $tb . '.json', $cfg['tables'][$tb]['fields']);
         }
     }
 

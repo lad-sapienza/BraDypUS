@@ -71,7 +71,7 @@ class Read
             'metadata' => [
                 'tb_id' => $this->tb,
                 'rec_id' => $core['id'],
-                'tb_stripped' => str_replace(PREFIX, '', $this->tb),
+                'tb_stripped' => $this->tb,
                 'tb_label' => $this->cfg->get("tables.{$this->tb}.label")
             ],
             'core'       => $core,
@@ -139,16 +139,15 @@ class Read
     {
         if (!isset($this->cache['manuallinks'])) {
             $manualLinks = [];
-            $prefix = PREFIX;
             $sql = <<<EOD
-SELECT {$prefix}userlinks.*
-  FROM {$prefix}userlinks
- WHERE (tb_one = ? AND 
+SELECT userlinks.*
+  FROM userlinks
+ WHERE (tb_one = ? AND
         id_one = ? AND
-        tb_two != '{$prefix}files') OR 
-       (tb_two = ? AND 
+        tb_two != 'files') OR
+       (tb_two = ? AND
         id_two = ? AND
-        tb_one != '{$prefix}files')
+        tb_one != 'files')
  ORDER BY sort, id
 EOD;
 
@@ -187,7 +186,7 @@ EOD;
                     $manualLinks[$r['id']] = [
                         "key"         => $r['id'],
                         "tb_id"       => $mlt,
-                        "tb_stripped" => str_replace(PREFIX, '', $mlt),
+                        "tb_stripped" => $mlt,
                         "tb_label"    => $this->cfg->get("tables.$mlt.label"),
                         "ref_id"      => $mli,
                         "ref_label"   => $ref_val_label,
@@ -248,7 +247,7 @@ EOD;
     public function getGeodata(): array
     {
         if (!isset($this->cache['geodata'])) {
-            $geodata = $this->getPlugin(PREFIX . 'geodata');
+            $geodata = $this->getPlugin('geodata');
             if (
                 isset($geodata)
                 &&  isset($geodata['data'])
@@ -285,9 +284,7 @@ EOD;
     {
         if (!isset($this->cache['files'])) {
 
-            $prefix = PREFIX;
-
-            if ($this->tb === $prefix . 'files') {
+            if ($this->tb === 'files') {
                 $core = $this->getCore();
                 $tmp = [];
                 foreach ($core as $key => $value) {
@@ -297,10 +294,10 @@ EOD;
             } else {
 
                 $sql = <<<EOD
-SELECT {$prefix}files.*, fl.id AS link_id, fl.sort AS link_sort
-FROM {$prefix}files
-    INNER JOIN {$prefix}file_links AS fl
-        ON fl.file_id = {$prefix}files.id
+SELECT files.*, fl.id AS link_id, fl.sort AS link_sort
+FROM files
+    INNER JOIN file_links AS fl
+        ON fl.file_id = files.id
        AND fl.table_name = ?
        AND fl.record_id  = ?
 ORDER BY fl.sort, fl.id
@@ -347,7 +344,7 @@ EOD;
                     }
                     $backlinks[$ref_tb] = [
                         'tb_id' => $ref_tb,
-                        'tb_stripped' => str_replace(PREFIX, '', $ref_tb),
+                        'tb_stripped' => $ref_tb,
                         "tb_label" => $this->cfg->get("tables.$ref_tb.label"),
                         'tot' => $r[0]['tot'],
                         'where' => "id|in|{@{$via_plg}~[id_link|distinct~?table_link|=|{$ref_tb}||and|^{$via_plg_fld}|=|{$this->id}}",
@@ -403,7 +400,7 @@ EOD;
                     if ($tot_links > 0) {
                         $links[$ld['other_tb']] = [
                             'tb_id' => $ld['other_tb'],
-                            'tb_stripped' => str_replace(PREFIX, '', $ld['other_tb']),
+                            'tb_stripped' => $ld['other_tb'],
                             "tb_label" => $this->cfg->get("tables.{$ld['other_tb']}.label"),
                             'tot' => $tot_links,
                             'where' => implode('||and|', $short_sql)
@@ -470,7 +467,7 @@ EOD;
                 $this->cache['plugins'][$p] = [
                     "metadata" => [
                         "tb_id" => $p,
-                        "tb_stripped" => str_replace(PREFIX, '', $p),
+                        "tb_stripped" => $p,
                         "tb_label" => $this->cfg->get("tables.$p.label"),
                         "tot" => count($plg_data)
                     ],

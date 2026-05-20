@@ -50,7 +50,7 @@ class CreateApp
             "db_username" => $db_username, 
             "db_password" => $db_password]);
         
-        $this->sys_manager = new Manage($this->db, $this->app . '__');
+        $this->sys_manager = new Manage($this->db, '');
 
         $this->db_data = [
             "definition"    => $definition, 
@@ -98,7 +98,7 @@ class CreateApp
             "tables" => [
                 "tables" => [
                     [
-                        "name" => "{$this->app}__files",
+                        "name" => "files",
                         "label" => "Files",
                         "order" => "id",
                         "preview" => [
@@ -110,7 +110,7 @@ class CreateApp
                         "id_field" => "id"
                     ],
                     [
-                        "name" => "{$this->app}__geodata",
+                        "name" => "geodata",
                         "label" => "Geografical coordinates",
                         "is_plugin" => "1"
                     ]

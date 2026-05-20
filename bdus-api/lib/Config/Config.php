@@ -17,20 +17,17 @@ class Config
     private $dot;
     private $cfg;
     private $path2cfg;
-    private $prefix;
 
     private $errors = [];
 
     public function __construct(
         \Adbar\Dot $dot,
-        string $path2cfg,
-        string $prefix
+        string $path2cfg
     ) {
         try {
             $this->dot = $dot;
             $this->path2cfg = $path2cfg;
-            $this->prefix = $prefix;
-            $this->cfg = Load::all($path2cfg, $prefix);
+            $this->cfg = Load::all($path2cfg);
         } catch (ConfigException $e) {
             throw new \Exception($e->getMessage());
         }
@@ -183,13 +180,13 @@ class Config
 
     public function save()
     {
-        return ToFiles::all($this->cfg, $this->path2cfg, $this->prefix);
+        return ToFiles::all($this->cfg, $this->path2cfg);
     }
 
     public function setMain(array $main)
     {
         $this->cfg['main'] = $main;
-        return ToFiles::all($this->cfg, $this->path2cfg, $this->prefix);
+        return ToFiles::all($this->cfg, $this->path2cfg);
     }
 
     public function setTable(array $tb_data)
@@ -200,7 +197,7 @@ class Config
 
         $this->cfg['tables'][$tb] = $tb_data;
 
-        return ToFiles::all($this->cfg, $this->path2cfg, $this->prefix);
+        return ToFiles::all($this->cfg, $this->path2cfg);
     }
 
     public function renameFld(
@@ -214,13 +211,13 @@ class Config
         $keys[$index] = $new_name;
         $this->cfg['tables'][$tb]['fields'] = array_combine($keys, array_values($this->cfg['tables'][$tb]['fields']));
         $this->cfg['tables'][$tb]['fields'][$new_name]['name'] = $new_name;
-        return ToFiles::all($this->cfg, $this->path2cfg, $this->prefix);
+        return ToFiles::all($this->cfg, $this->path2cfg);
     }
 
     public function deleteFld(string $tb, string $fld)
     {
         unset($this->cfg['tables'][$tb]['fields'][$fld]);
-        return ToFiles::all($this->cfg, $this->path2cfg, $this->prefix);
+        return ToFiles::all($this->cfg, $this->path2cfg);
     }
 
     public function renameTb(string $old_name, string $new_name)
@@ -232,11 +229,11 @@ class Config
 
         $this->cfg['tables'][$new_name]['name'] = $new_name;
 
-        ToFiles::all($this->cfg, $this->path2cfg, $this->prefix);
+        ToFiles::all($this->cfg, $this->path2cfg);
 
         rename(
-            $this->path2cfg . str_replace($this->prefix, '', $old_name) . '.json',
-            $this->path2cfg . str_replace($this->prefix, '', $new_name) . '.json'
+            $this->path2cfg . $old_name . '.json',
+            $this->path2cfg . $new_name . '.json'
         );
     }
 
@@ -244,16 +241,16 @@ class Config
     {
         unset($this->cfg['tables'][$tb]);
 
-        ToFiles::all($this->cfg, $this->path2cfg, $this->prefix);
+        ToFiles::all($this->cfg, $this->path2cfg);
 
-        unlink($this->path2cfg . str_replace($this->prefix, '', $tb) . '.json');
+        unlink($this->path2cfg . $tb . '.json');
     }
 
     public function setFld(string $tb, string $fld_name, array $post_data)
     {
         $this->cfg['tables'][$tb]['fields'][$fld_name] = $post_data;
 
-        ToFiles::all($this->cfg, $this->path2cfg, $this->prefix);
+        ToFiles::all($this->cfg, $this->path2cfg);
     }
 
     public function sortTables(array $sort): bool
@@ -265,7 +262,7 @@ class Config
             return $index_a < $index_b ? -1 : 1;
         });
 
-        ToFiles::all($this->cfg, $this->path2cfg, $this->prefix);
+        ToFiles::all($this->cfg, $this->path2cfg);
         return true;
     }
 }

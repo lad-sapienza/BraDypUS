@@ -69,7 +69,7 @@ if ($_bdus_token) {
 
     if ($app_hint && is_dir(MAIN_DIR . 'projects/' . $app_hint)) {
         define('APP',      $app_hint);
-        define('PREFIX',   APP . '__');
+        define('PREFIX',   '');
         define('PROJ_DIR', MAIN_DIR . 'projects/' . APP . '/');
 
         // Full signature verification
@@ -101,7 +101,7 @@ if ($_bdus_token) {
 
     if ($_bdus_app && is_dir(MAIN_DIR . 'projects/' . $_bdus_app)) {
         define('APP',      $_bdus_app);
-        define('PREFIX',   APP . '__');
+        define('PREFIX',   '');
         define('PROJ_DIR', MAIN_DIR . 'projects/' . APP . '/');
     }
 }

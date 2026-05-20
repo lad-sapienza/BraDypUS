@@ -50,9 +50,9 @@ class Persist
         }
         $this->id     = $recId ? (int) $recId : null;
 
-        // Derive prefix from table name: everything up to and including the first "__"
-        $dbl          = strpos($this->tb, '__');
-        $this->prefix = ($dbl !== false) ? substr($this->tb, 0, $dbl + 2) : '';
+        // Use the runtime app prefix (e.g. "myapp__") for system table references.
+        // Deriving it from $this->tb would fail for tables that have no prefix.
+        $this->prefix = defined('PREFIX') ? PREFIX : '';
     }
 
     /**

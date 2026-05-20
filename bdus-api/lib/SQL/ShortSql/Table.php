@@ -16,11 +16,6 @@ class Table
     {
         list($tb, $alias) = explode(':', $tb);
 
-        // If table name has no prefix, add it
-        if (strpos($tb, $prefix) === false) {
-            $tb = $prefix . $tb;
-        }
-
         return [
             "tb"    => $tb,
             "alias" => $alias

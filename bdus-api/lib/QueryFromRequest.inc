@@ -322,12 +322,8 @@ class QueryFromRequest
           $this->where = '1=1';
           break;
         }
-        // Derive the app prefix from the table name (e.g. "test__items" → "test__").
-        // QueryFromRequest has no explicit prefix property; the table name is the
-        // canonical source of truth until the PREFIX constant is removed in v5.
-        $dblUnder = strpos($this->tb, '__');
-        $tbPrefix = ($dblUnder !== false) ? substr($this->tb, 0, $dblUnder + 2) : '';
-        $parser = new \SQL\ShortSql\ParseShortSql($tbPrefix, $this->cfg);
+        // Prefix is always '' in v5; pass it explicitly to ParseShortSql.
+        $parser = new \SQL\ShortSql\ParseShortSql('', $this->cfg);
         $parser->parseAll('@' . $this->tb . '~?' . $whereStr, true);
         [$whereSql, $whereVals] = $parser->getSql(true);
         $this->where  = $whereSql  ?: '1=1';

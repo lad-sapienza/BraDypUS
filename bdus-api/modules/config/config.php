@@ -93,7 +93,6 @@ class config_ctrl extends Controller
         if (empty($post['preview']))  { $post['preview']  = ['id']; }
       }
 
-      // Write table columns file
       $new_tb_name = $post['name'];
 
       // Write table data file
@@ -152,10 +151,11 @@ class config_ctrl extends Controller
     try {
       $post = \utils::recursiveFilter($post);
 
-      $tb = $post['tb_name'];
-      $fld = $post['fld_orig_name'];
-      unset($post['tb_name']);
-      unset($post['fld_orig_name']);
+      // tb and fld come from URL path params (/api/config/table/{tb}/field/{fld})
+      // No POST-body fallback: the API contract requires these in the URL.
+      $tb  = $this->get['tb']  ?? null;
+      $fld = $this->get['fld'] ?? null;
+      unset($post['tb_name'], $post['fld_orig_name']);
 
       if (!$post['name'] || !$post['type']) {
         throw new \Exception('Both field name and field type are required');
@@ -176,7 +176,7 @@ class config_ctrl extends Controller
     try {
       $post = \utils::recursiveFilter($post);
 
-      $tb = $post['tb_name'];
+      $tb  = $this->get['tb'] ?? null;
       $fld = $post['name'];
       unset($post['tb_name']);
 
@@ -316,7 +316,7 @@ class config_ctrl extends Controller
 
     // Add column: yes create, yes col
     if ($action === 'create' && $col) {
-      $str = $sys_manage->getStructure(str_replace($this->prefix, '', $tb));
+      $str = $sys_manage->getStructure($tb);
       $type = false;
       foreach ($str as $el) {
         if ($el['name'] === $col) {
@@ -518,7 +518,7 @@ class config_ctrl extends Controller
     $table = $tb ? ($this->cfg->get("tables.$tb") ?: []) : [];
 
     // Apply same defaults as the legacy table_properties() Twig method
-    if (!isset($table['name']))    $table['name']    = $this->prefix;
+    if (!isset($table['name']))    $table['name']    = '';
     if (!isset($table['preview'])) $table['preview'] = [''];
     if (!isset($table['plugin']))  $table['plugin']  = [''];
     if (!isset($table['link']))    $table['link']    = [['fld' => [[]]]];

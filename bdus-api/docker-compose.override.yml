@@ -1,0 +1,7 @@
+# Development overrides — loaded automatically by `docker compose up`.
+# Sets the dev port (8080) and opt-in dev flags.
+# Do NOT use in production or CI; pass explicit -f flags instead.
+services:
+  app:
+    ports:
+      - "8080:80"

@@ -9,7 +9,7 @@
 #     shared network without the "not created for this project" warning
 services:
   app:
-    ports: !override
+    ports:
       - "8081:80"
     environment:
       - BRADYPUS_DEBUG=1

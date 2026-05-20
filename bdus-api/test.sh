@@ -136,7 +136,7 @@ trap cleanup EXIT
 header "Step 3 — Server readiness"
 info "Waiting for ${HEALTH_URL} (timeout: ${HEALTH_TIMEOUT} s)…"
 ELAPSED=0
-until curl -sf --max-time 2 "$HEALTH_URL" &>/dev/null; do
+until curl -s --max-time 2 -o /dev/null "$HEALTH_URL"; do
   sleep 2; ELAPSED=$((ELAPSED + 2))
   if [[ $ELAPSED -ge $HEALTH_TIMEOUT ]]; then
     fail "Server did not become ready within ${HEALTH_TIMEOUT} s"

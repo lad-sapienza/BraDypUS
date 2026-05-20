@@ -1,8 +1,6 @@
 services:
   app:
     build: .
-    ports:
-      - "8080:80"
     environment:
       - BRADYPUS_DEBUG=1
       # Uncomment to enable the "Create new application" wizard:

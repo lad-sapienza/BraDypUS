@@ -211,6 +211,19 @@ The PHP backend is preserved and extended with JSON endpoints consumed by the ne
   for complex objects. PHP does not populate `$_POST` from `FormData` on PUT requests,
   so the body was silently discarded and the file was truncated to 0 bytes. Fixed by
   always serialising the body as JSON with `Content-Type: application/json`.
+- **Login crash — `$this->db` null**: `constants.php` resolved the app context from
+  `$_REQUEST['app']`, which PHP only populates from form-encoded bodies. The Vue
+  frontend sends login credentials as `application/json`, so `$_REQUEST['app']` was
+  always empty, `APP` was never defined, `$this->db` stayed null, and
+  `Manage::__construct()` threw a `TypeError`. Fixed by falling back to
+  `json_decode(file_get_contents('php://input'))` when `$_REQUEST['app']` is absent.
+- **API response contract inconsistency**: `Controller::response()` emitted `text` as
+  the i18n key but `returnJson()` callers used `code`; the frontend read both fields
+  in inconsistent order across components, causing untranslated raw codes to appear in
+  toasts and error messages. Fixed by: (1) `response()` now always emits both `code`
+  and `text` with the same value; (2) `responseMessage()` in the Vue API layer falls
+  back to `text` when `code` is absent; (3) all components standardised to use
+  `api.responseMessage(res, t)` for messages and `res.code ?? res.text` for throws.
 
 ## [4.4.7] - 2026-05-09
 

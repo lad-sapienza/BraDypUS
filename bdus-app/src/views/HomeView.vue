@@ -169,13 +169,15 @@ onMounted(async () => {
 })
 
 const modules = [
-  { labelKey: 'data_mng',          icon: 'pi-database',  descKey: 'module_data_desc',      route: '/data'      },
-  { labelKey: 'user_mng',          icon: 'pi-users',      descKey: 'module_users_desc',     route: '/users'     },
-  { labelKey: 'sys_config',        icon: 'pi-cog',        descKey: 'module_settings_desc',  route: '/config'    },
-  { labelKey: 'design_templates',  icon: 'pi-palette',    descKey: 'module_templates_desc', route: '/templates' },
-  { labelKey: 'map',               icon: 'pi-map',        descKey: 'module_map_desc',       route: null         },
-  { labelKey: 'chart',             icon: 'pi-chart-bar',  descKey: 'module_charts_desc',    route: null         },
-  { labelKey: 'harris_matrix',     icon: 'pi-share-alt',  descKey: 'module_harris_desc',    route: null         },
+  { labelKey: 'data_mng',         icon: 'pi-database',   descKey: 'module_data_desc',          route: '/data'         },
+  { labelKey: 'user_mng',         icon: 'pi-users',       descKey: 'module_users_desc',         route: '/users'        },
+  { labelKey: 'sys_config',       icon: 'pi-cog',         descKey: 'module_settings_desc',      route: '/config'       },
+  { labelKey: 'design_templates', icon: 'pi-palette',     descKey: 'module_templates_desc',     route: '/templates'    },
+  { labelKey: 'vocabulary_mng',   icon: 'pi-book',        descKey: 'module_vocabularies_desc',  route: '/vocabularies' },
+  { labelKey: 'backup',           icon: 'pi-server',      descKey: 'module_backup_desc',        route: '/backups'      },
+  { labelKey: 'import_data',      icon: 'pi-upload',      descKey: 'module_import_desc',        route: '/import'       },
+  { labelKey: 'history',          icon: 'pi-clock',       descKey: 'module_history_desc',       route: '/history'      },
+  { labelKey: 'find_replace',     icon: 'pi-search-plus', descKey: 'module_find_replace_desc',  route: '/find-replace' },
 ]
 </script>
 

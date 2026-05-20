@@ -14,13 +14,13 @@ use Tests\Support\BdusTestCase;
  * All existing v4 Twig methods are intentionally NOT tested here — they
  * are left untouched by the migration.
  *
- * Fixture tables:  test__items  (regular), test__tags (plugin)
- * Fixture fields on test__items: id, creator, name, description, status
+ * Fixture tables:  items  (regular), tags (plugin)
+ * Fixture fields on items: id, creator, name, description, status
  */
 class ConfigCtrlTest extends BdusTestCase
 {
-    private const TB       = 'test__items';
-    private const TB_PLUG  = 'test__tags';
+    private const TB       = 'items';
+    private const TB_PLUG  = 'tags';
     private const FLD      = 'name';
 
     // ── Setup / teardown ──────────────────────────────────────────────────
@@ -208,7 +208,7 @@ class ConfigCtrlTest extends BdusTestCase
         $ctrl = $this->makeController('config_ctrl', ['tb' => self::TB]);
         $res  = $this->callController($ctrl, 'getTableConfig');
 
-        // test__tags is a plugin table — must appear in available_plugins
+        // tags is a plugin table — must appear in available_plugins
         $this->assertArrayHasKey(self::TB_PLUG, $res['available_plugins']);
     }
 

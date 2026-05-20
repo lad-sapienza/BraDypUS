@@ -9,12 +9,12 @@ use Tests\Support\BdusTestCase;
  *   searchLinkCandidates(), addManualLink(), deleteManualLink()
  *
  * Seed state (from BdusTestCase):
- *   - 5 items in test__items (ids 1–5)
- *   - 1 existing userlink: test__items/1 ↔ test__items/2
+ *   - 5 items in items (ids 1–5)
+ *   - 1 existing userlink: items/1 ↔ items/2
  */
 class RecordCtrlManualLinksTest extends BdusTestCase
 {
-    private const TB = 'test__items';
+    private const TB = 'items';
 
     // ── searchLinkCandidates ──────────────────────────────────────────────────
 
@@ -40,7 +40,7 @@ class RecordCtrlManualLinksTest extends BdusTestCase
 
     public function testSearchLinkCandidatesFiltersByQuery(): void
     {
-        // id_field for test__items is 'id', so q matches by exact id
+        // id_field for items is 'id', so q matches by exact id
         $ctrl = $this->makeController('record_ctrl', ['tb' => self::TB, 'q' => '3']);
         $res  = $this->callController($ctrl, 'searchLinkCandidates');
 

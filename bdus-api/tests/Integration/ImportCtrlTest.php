@@ -9,9 +9,9 @@ use Tests\Support\BdusTestCase;
  *   getTableFields(), importData(), importGeoJson(), importPhotos()
  *
  * Notes:
- * - $tb values use the full prefixed table name (e.g. "test__items") — the
+ * - $tb values use the full prefixed table name (e.g. "items") — the
  *   same format the frontend sends after calling listTables().
- * - The base BdusTestCase already creates test__files and test__file_links,
+ * - The base BdusTestCase already creates files and file_links,
  *   so this class does NOT override createSchema().
  * - File-upload methods (previewFile, previewPhotos) are exercised indirectly:
  *   we plant the temp file the controller would create after move_uploaded_file,
@@ -20,7 +20,7 @@ use Tests\Support\BdusTestCase;
  */
 class ImportCtrlTest extends BdusTestCase
 {
-    private const TB = 'test__items';
+    private const TB = 'items';
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
@@ -97,11 +97,11 @@ class ImportCtrlTest extends BdusTestCase
     {
         // Ensure "Import Item A" exists (may have been inserted by the previous test).
         $existing = static::$db->query(
-            "SELECT id FROM test__items WHERE name = 'Import Item A'", [], 'read'
+            "SELECT id FROM items WHERE name = 'Import Item A'", [], 'read'
         );
         if (empty($existing)) {
             static::$db->execInTransaction(
-                "INSERT INTO test__items (name, description) VALUES ('Import Item A', 'Old')"
+                "INSERT INTO items (name, description) VALUES ('Import Item A', 'Old')"
             );
         }
 
@@ -122,7 +122,7 @@ class ImportCtrlTest extends BdusTestCase
         $this->assertSame(1, $res['updated']);
 
         $row = static::$db->query(
-            "SELECT description FROM test__items WHERE name = 'Import Item A'", [], 'read'
+            "SELECT description FROM items WHERE name = 'Import Item A'", [], 'read'
         );
         $this->assertSame('Updated Desc', $row[0]['description']);
     }
@@ -245,10 +245,10 @@ class ImportCtrlTest extends BdusTestCase
         $geojson = json_encode(['type' => 'FeatureCollection', 'features' => []]);
         $tempId  = $this->plantTempFile($geojson);
 
-        // test__tags has no geodata field in the fixture config
+        // tags has no geodata field in the fixture config
         $ctrl = $this->makeController('import_ctrl', [], [
             'temp_id'   => $tempId,
-            'tb'        => 'test__tags',
+            'tb'        => 'tags',
             'geo_prop'  => 'id',
             'key_field' => 'id',
         ]);
@@ -263,7 +263,7 @@ class ImportCtrlTest extends BdusTestCase
         $geojson = json_encode(['type' => 'FeatureCollection', 'features' => []]);
         $tempId  = $this->plantTempFile($geojson);
 
-        // test__items has geo_data with type=geodata in the fixture config
+        // items has geo_data with type=geodata in the fixture config
         $ctrl = $this->makeController('import_ctrl', [], [
             'temp_id'   => $tempId,
             'tb'        => self::TB,
@@ -340,7 +340,7 @@ class ImportCtrlTest extends BdusTestCase
         @mkdir(constant('PROJ_DIR') . 'files/', 0755, true);
 
         // Pick an existing record
-        $rows = static::$db->query("SELECT id FROM test__items LIMIT 1", [], 'read');
+        $rows = static::$db->query("SELECT id FROM items LIMIT 1", [], 'read');
         $this->assertNotEmpty($rows, 'Need at least one item record');
         $recordId = $rows[0]['id'];
 
@@ -371,12 +371,12 @@ class ImportCtrlTest extends BdusTestCase
         $this->assertSame(0, $res['not_found']);
 
         $fileRows = static::$db->query(
-            "SELECT id FROM test__files WHERE creator = 'import'", [], 'read'
+            "SELECT id FROM files WHERE creator = 'import'", [], 'read'
         );
         $this->assertNotEmpty($fileRows);
 
         $linkRows = static::$db->query(
-            "SELECT * FROM test__file_links WHERE table_name = ? AND record_id = ?",
+            "SELECT * FROM file_links WHERE table_name = ? AND record_id = ?",
             [self::TB, $recordId],
             'read'
         );

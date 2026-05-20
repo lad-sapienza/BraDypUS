@@ -11,8 +11,8 @@ use Tests\Support\BdusTestCase;
  *   getTableList, getTemplateList, getTemplate,
  *   saveTemplate, deleteTemplate, renameTemplate
  *
- * Fixture app:    bdus_test  (prefix test__)
- * Fixture tables: test__items (regular), test__tags (plugin)
+ * Fixture app:    bdus_test  (prefix )
+ * Fixture tables: items (regular), tags (plugin)
  * Fixture fields: id, creator, name, description, status
  *
  * The test suite creates/deletes template files inside the fixture template
@@ -21,9 +21,9 @@ use Tests\Support\BdusTestCase;
  */
 class TemplatesCtrlTest extends BdusTestCase
 {
-    private const TB      = 'test__items';
-    private const STRIPPED = 'items';   // TB minus prefix 'test__'
-    private const TB_PLUG = 'test__tags';
+    private const TB      = 'items';
+    private const STRIPPED = 'items';   // TB minus prefix ''
+    private const TB_PLUG = 'tags';
 
     /** Name used for templates created/renamed during tests */
     private const TMP_NAME  = 'tmp_test';

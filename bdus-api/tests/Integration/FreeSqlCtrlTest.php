@@ -12,7 +12,7 @@ use Tests\Support\BdusTestCase;
  * one so the happy-path can be tested.
  *
  * runSql() is tested against the in-memory SQLite DB that every test class
- * already has (test__items etc.).
+ * already has (items etc.).
  */
 class FreeSqlCtrlTest extends BdusTestCase
 {
@@ -23,7 +23,7 @@ class FreeSqlCtrlTest extends BdusTestCase
         parent::createSchema();
 
         static::$db->execInTransaction('
-            CREATE TABLE test__users (
+            CREATE TABLE users (
                 id        INTEGER PRIMARY KEY AUTOINCREMENT,
                 name      TEXT    NOT NULL,
                 email     TEXT    NOT NULL,
@@ -42,7 +42,7 @@ class FreeSqlCtrlTest extends BdusTestCase
         // Super-admin user (id=1) with a known bcrypt hash of "secret123"
         $hash = password_hash('secret123', PASSWORD_DEFAULT);
         static::$db->execInTransaction(
-            "INSERT INTO test__users (id, name, email, privilege, password)
+            "INSERT INTO users (id, name, email, privilege, password)
              VALUES (1, 'Test Admin', 'test@example.com', 1, '{$hash}')"
         );
     }
@@ -92,7 +92,7 @@ class FreeSqlCtrlTest extends BdusTestCase
     public function testRunSqlSelectReturnsRows(): void
     {
         $ctrl = $this->makeController('free_sql_ctrl', [], [
-            'sql' => 'SELECT id, name FROM test__items ORDER BY id',
+            'sql' => 'SELECT id, name FROM items ORDER BY id',
         ]);
         $res = $this->callController($ctrl, 'runSql');
 
@@ -108,7 +108,7 @@ class FreeSqlCtrlTest extends BdusTestCase
     public function testRunSqlSelectEmptyResultSet(): void
     {
         $ctrl = $this->makeController('free_sql_ctrl', [], [
-            'sql' => "SELECT * FROM test__items WHERE name = '__no_such_name__'",
+            'sql' => "SELECT * FROM items WHERE name = '__no_such_name__'",
         ]);
         $res = $this->callController($ctrl, 'runSql');
 
@@ -120,7 +120,7 @@ class FreeSqlCtrlTest extends BdusTestCase
     public function testRunSqlCountIsRecognisedAsSelect(): void
     {
         $ctrl = $this->makeController('free_sql_ctrl', [], [
-            'sql' => 'SELECT COUNT(*) AS cnt FROM test__items',
+            'sql' => 'SELECT COUNT(*) AS cnt FROM items',
         ]);
         $res = $this->callController($ctrl, 'runSql');
 
@@ -134,7 +134,7 @@ class FreeSqlCtrlTest extends BdusTestCase
     public function testRunSqlInsertReturnsAffectedCount(): void
     {
         $ctrl = $this->makeController('free_sql_ctrl', [], [
-            'sql' => "INSERT INTO test__items (name, description) VALUES ('FreeSql Insert', 'via free sql')",
+            'sql' => "INSERT INTO items (name, description) VALUES ('FreeSql Insert', 'via free sql')",
         ]);
         $res = $this->callController($ctrl, 'runSql');
 
@@ -144,7 +144,7 @@ class FreeSqlCtrlTest extends BdusTestCase
 
         // Verify it landed in the DB
         $rows = static::$db->query(
-            "SELECT id FROM test__items WHERE name = 'FreeSql Insert'", [], 'read'
+            "SELECT id FROM items WHERE name = 'FreeSql Insert'", [], 'read'
         );
         $this->assertNotEmpty($rows);
     }
@@ -152,7 +152,7 @@ class FreeSqlCtrlTest extends BdusTestCase
     public function testRunSqlUpdateReturnsAffectedCount(): void
     {
         $ctrl = $this->makeController('free_sql_ctrl', [], [
-            'sql' => "UPDATE test__items SET status = 'sql_updated' WHERE name = 'Alpha item'",
+            'sql' => "UPDATE items SET status = 'sql_updated' WHERE name = 'Alpha item'",
         ]);
         $res = $this->callController($ctrl, 'runSql');
 
@@ -197,7 +197,7 @@ class FreeSqlCtrlTest extends BdusTestCase
     public function testRunSqlWithLeadingComment(): void
     {
         $ctrl = $this->makeController('free_sql_ctrl', [], [
-            'sql' => "-- count records\nSELECT COUNT(*) AS n FROM test__items",
+            'sql' => "-- count records\nSELECT COUNT(*) AS n FROM items",
         ]);
         $res = $this->callController($ctrl, 'runSql');
 

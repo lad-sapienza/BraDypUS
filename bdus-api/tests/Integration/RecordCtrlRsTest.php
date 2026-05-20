@@ -9,13 +9,13 @@ use Tests\Support\BdusTestCase;
  *   addRs(), deleteRs(), getRsMatrix()
  * and for the rs_field exposure in buildTableSchema() / getRecord().
  *
- * The test__items fixture has "rs": "id", meaning the identifier used in RS
+ * The items fixture has "rs": "id", meaning the identifier used in RS
  * is the value of the `id` field.  Seed data provides one initial RS entry:
- *   tb=test__items, first='1', second='2', relation=1  (item 1 is_covered_by item 2)
+ *   tb=items, first='1', second='2', relation=1  (item 1 is_covered_by item 2)
  */
 class RecordCtrlRsTest extends BdusTestCase
 {
-    private const TB = 'test__items';
+    private const TB = 'items';
 
     // ── buildTableSchema exposes rs_field ─────────────────────────────────────
 
@@ -67,7 +67,7 @@ class RecordCtrlRsTest extends BdusTestCase
 
         // Confirm row exists in DB
         $row = static::$db->query(
-            "SELECT * FROM test__rs WHERE id = ?",
+            "SELECT * FROM rs WHERE id = ?",
             [(int)$res['id']],
             'read'
         );
@@ -76,7 +76,7 @@ class RecordCtrlRsTest extends BdusTestCase
         $this->assertSame('4', $row[0]['second']);
 
         // Cleanup
-        static::$db->query('DELETE FROM test__rs WHERE id = ?', [(int)$res['id']], 'boolean');
+        static::$db->query('DELETE FROM rs WHERE id = ?', [(int)$res['id']], 'boolean');
     }
 
     public function testAddRsRejectsDuplicateSameDirection(): void
@@ -150,7 +150,7 @@ class RecordCtrlRsTest extends BdusTestCase
         $this->assertSame('error', $res2['status'], 'Reverse of symmetric relation must be rejected');
 
         // Cleanup
-        static::$db->query('DELETE FROM test__rs WHERE id = ?', [$id1], 'boolean');
+        static::$db->query('DELETE FROM rs WHERE id = ?', [$id1], 'boolean');
     }
 
     // ── deleteRs ──────────────────────────────────────────────────────────────
@@ -159,7 +159,7 @@ class RecordCtrlRsTest extends BdusTestCase
     {
         // Insert a throwaway relation
         static::$db->query(
-            "INSERT INTO test__rs (tb, first, second, relation) VALUES (?, ?, ?, ?)",
+            "INSERT INTO rs (tb, first, second, relation) VALUES (?, ?, ?, ?)",
             [self::TB, '4', '5', 2],
             'boolean'
         );
@@ -171,7 +171,7 @@ class RecordCtrlRsTest extends BdusTestCase
         $this->assertSame('success',            $res['status']);
         $this->assertSame('ok_relation_erased', $res['code']);
 
-        $row = static::$db->query('SELECT id FROM test__rs WHERE id = ?', [$tmpId], 'read');
+        $row = static::$db->query('SELECT id FROM rs WHERE id = ?', [$tmpId], 'read');
         $this->assertEmpty($row, 'Row must be gone after deleteRs');
     }
 
@@ -271,8 +271,8 @@ class RecordCtrlRsTest extends BdusTestCase
 
     public function testGetRsMatrixTableWithoutRsReturnsError(): void
     {
-        // test__tags has no "rs" config key
-        $ctrl = $this->makeController('record_ctrl', ['tb' => 'test__tags']);
+        // tags has no "rs" config key
+        $ctrl = $this->makeController('record_ctrl', ['tb' => 'tags']);
         $res  = $this->callController($ctrl, 'getRsMatrix');
 
         $this->assertSame('error',              $res['status']);

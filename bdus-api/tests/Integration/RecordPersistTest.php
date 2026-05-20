@@ -18,8 +18,8 @@ use Record\Persist;
  */
 class RecordPersistTest extends BdusTestCase
 {
-    private const TB     = 'test__items';
-    private const TB_PLG = 'test__tags';
+    private const TB     = 'items';
+    private const TB_PLG = 'tags';
 
     // ── Helper: build a Read object for a given item id ───────────────────
 
@@ -40,7 +40,7 @@ class RecordPersistTest extends BdusTestCase
         $this->assertSame(0, $result['core']['affected']);
 
         // Verify DB unchanged
-        $rows = static::$db->query("SELECT name FROM test__items WHERE id = 2", [], 'read');
+        $rows = static::$db->query("SELECT name FROM items WHERE id = 2", [], 'read');
         $this->assertSame('Beta item', $rows[0]['name']);
     }
 
@@ -56,7 +56,7 @@ class RecordPersistTest extends BdusTestCase
         $this->assertSame(1, $result['core']['affected']);
         $this->assertSame(2, $result['core']['id']);
 
-        $rows = static::$db->query("SELECT name FROM test__items WHERE id = 2", [], 'read');
+        $rows = static::$db->query("SELECT name FROM items WHERE id = 2", [], 'read');
         $this->assertSame('Beta item UPDATED', $rows[0]['name']);
     }
 
@@ -91,11 +91,11 @@ class RecordPersistTest extends BdusTestCase
         $newId = $result['core']['id'];
         $this->assertGreaterThan(5, $newId); // we have 5 seed items
 
-        $rows = static::$db->query("SELECT name FROM test__items WHERE id = ?", [$newId], 'read');
+        $rows = static::$db->query("SELECT name FROM items WHERE id = ?", [$newId], 'read');
         $this->assertSame('New Record From Test', $rows[0]['name']);
 
         // Clean up the inserted row so it does not affect other tests
-        static::$db->execInTransaction("DELETE FROM test__items WHERE id = {$newId}");
+        static::$db->execInTransaction("DELETE FROM items WHERE id = {$newId}");
     }
 
     // ── Plugin: INSERT ────────────────────────────────────────────────────
@@ -110,7 +110,7 @@ class RecordPersistTest extends BdusTestCase
         $this->assertSame(1, $result['plugins']['inserted']);
 
         $rows = static::$db->query(
-            "SELECT label FROM test__tags WHERE id_link = 3 AND table_link = 'test__items'",
+            "SELECT label FROM tags WHERE id_link = 3 AND table_link = 'items'",
             [],
             'read'
         );
@@ -118,7 +118,7 @@ class RecordPersistTest extends BdusTestCase
         $this->assertContains('new-tag-for-3', $labels);
 
         // Clean up
-        static::$db->execInTransaction("DELETE FROM test__tags WHERE id_link = 3 AND label = 'new-tag-for-3'");
+        static::$db->execInTransaction("DELETE FROM tags WHERE id_link = 3 AND label = 'new-tag-for-3'");
     }
 
     // ── Plugin: UPDATE ────────────────────────────────────────────────────
@@ -133,11 +133,11 @@ class RecordPersistTest extends BdusTestCase
 
         $this->assertSame(1, $result['plugins']['updated']);
 
-        $rows = static::$db->query("SELECT label FROM test__tags WHERE id = 1", [], 'read');
+        $rows = static::$db->query("SELECT label FROM tags WHERE id = 1", [], 'read');
         $this->assertSame('tag-a-updated', $rows[0]['label']);
 
         // Restore original value
-        static::$db->execInTransaction("UPDATE test__tags SET label = 'tag-a' WHERE id = 1");
+        static::$db->execInTransaction("UPDATE tags SET label = 'tag-a' WHERE id = 1");
     }
 
     // ── Plugin: DELETE ────────────────────────────────────────────────────
@@ -146,10 +146,10 @@ class RecordPersistTest extends BdusTestCase
     {
         // First insert a temporary tag so we can delete it
         static::$db->execInTransaction(
-            "INSERT INTO test__tags (label, id_link, table_link) VALUES ('temp-tag', 4, 'test__items')"
+            "INSERT INTO tags (label, id_link, table_link) VALUES ('temp-tag', 4, 'items')"
         );
         $tempId = (int) static::$db->query(
-            "SELECT id FROM test__tags WHERE label = 'temp-tag' AND id_link = 4",
+            "SELECT id FROM tags WHERE label = 'temp-tag' AND id_link = 4",
             [],
             'read'
         )[0]['id'];
@@ -161,7 +161,7 @@ class RecordPersistTest extends BdusTestCase
 
         $this->assertSame(1, $result['plugins']['deleted']);
 
-        $rows = static::$db->query("SELECT id FROM test__tags WHERE id = ?", [$tempId], 'read');
+        $rows = static::$db->query("SELECT id FROM tags WHERE id = ?", [$tempId], 'read');
         $this->assertEmpty($rows);
     }
 
@@ -171,20 +171,20 @@ class RecordPersistTest extends BdusTestCase
     {
         $read  = $this->makeRead(5);
         $edit  = new Edit($read);
-        $edit->setManualLink(null, 'test__items', 3, 1);
+        $edit->setManualLink(null, 'items', 3, 1);
         $result = $edit->persist(static::$db, static::$cfg);
 
         $this->assertSame(1, $result['manualLinks']['inserted']);
 
         $rows = static::$db->query(
-            "SELECT id FROM test__userlinks WHERE tb_one = 'test__items' AND id_one = 5 AND tb_two = 'test__items' AND id_two = 3",
+            "SELECT id FROM userlinks WHERE tb_one = 'items' AND id_one = 5 AND tb_two = 'items' AND id_two = 3",
             [],
             'read'
         );
         $this->assertNotEmpty($rows);
 
         // Clean up
-        static::$db->execInTransaction("DELETE FROM test__userlinks WHERE tb_one = 'test__items' AND id_one = 5 AND id_two = 3");
+        static::$db->execInTransaction("DELETE FROM userlinks WHERE tb_one = 'items' AND id_one = 5 AND id_two = 3");
     }
 
     // ── ManualLinks: DELETE ───────────────────────────────────────────────
@@ -193,7 +193,7 @@ class RecordPersistTest extends BdusTestCase
     {
         // The seed added a userlink between item 1 and item 2; it is id=3.
         $rows = static::$db->query(
-            "SELECT id FROM test__userlinks WHERE tb_one = 'test__items' AND id_one = 1 AND tb_two = 'test__items' AND id_two = 2",
+            "SELECT id FROM userlinks WHERE tb_one = 'items' AND id_one = 1 AND tb_two = 'items' AND id_two = 2",
             [],
             'read'
         );
@@ -208,7 +208,7 @@ class RecordPersistTest extends BdusTestCase
         $this->assertSame(1, $result['manualLinks']['deleted']);
 
         $after = static::$db->query(
-            "SELECT id FROM test__userlinks WHERE id = ?",
+            "SELECT id FROM userlinks WHERE id = ?",
             [$ulId],
             'read'
         );
@@ -228,14 +228,14 @@ class RecordPersistTest extends BdusTestCase
         $this->assertSame(1, $result['rs']['inserted']);
 
         $rows = static::$db->query(
-            "SELECT id FROM test__rs WHERE tb = 'test__items' AND first = 'C' AND second = 'D'",
+            "SELECT id FROM rs WHERE tb = 'items' AND first = 'C' AND second = 'D'",
             [],
             'read'
         );
         $this->assertNotEmpty($rows);
 
         // Clean up
-        static::$db->execInTransaction("DELETE FROM test__rs WHERE first = 'C' AND second = 'D'");
+        static::$db->execInTransaction("DELETE FROM rs WHERE first = 'C' AND second = 'D'");
     }
 
     // ── RS: DELETE ────────────────────────────────────────────────────────
@@ -245,7 +245,7 @@ class RecordPersistTest extends BdusTestCase
         // The seed inserted an RS row (first='1', second='2') that Read::getRs() will
         // find when reading item id=1 (because first='1' matches $this->id=1).
         $rows = static::$db->query(
-            "SELECT id FROM test__rs WHERE tb = 'test__items' AND first = '1' AND second = '2'",
+            "SELECT id FROM rs WHERE tb = 'items' AND first = '1' AND second = '2'",
             [],
             'read'
         );
@@ -261,7 +261,7 @@ class RecordPersistTest extends BdusTestCase
         $this->assertSame(1, $result['rs']['deleted']);
 
         $after = static::$db->query(
-            "SELECT id FROM test__rs WHERE id = ?",
+            "SELECT id FROM rs WHERE id = ?",
             [$rsId],
             'read'
         );
@@ -274,19 +274,19 @@ class RecordPersistTest extends BdusTestCase
     {
         // Insert a temporary item with a tag for clean cascade deletion test
         static::$db->execInTransaction(
-            "INSERT INTO test__items (creator, name, description, status) VALUES ('admin', 'TempItem', 'to delete', 'active')"
+            "INSERT INTO items (creator, name, description, status) VALUES ('admin', 'TempItem', 'to delete', 'active')"
         );
         $tempItemId = (int) static::$db->query(
-            "SELECT id FROM test__items WHERE name = 'TempItem'",
+            "SELECT id FROM items WHERE name = 'TempItem'",
             [],
             'read'
         )[0]['id'];
 
         static::$db->execInTransaction(
-            "INSERT INTO test__tags (label, id_link, table_link) VALUES ('temp-tag-del', {$tempItemId}, 'test__items')"
+            "INSERT INTO tags (label, id_link, table_link) VALUES ('temp-tag-del', {$tempItemId}, 'items')"
         );
         static::$db->execInTransaction(
-            "INSERT INTO test__userlinks (tb_one, id_one, tb_two, id_two, sort) VALUES ('test__items', {$tempItemId}, 'test__items', 2, 1)"
+            "INSERT INTO userlinks (tb_one, id_one, tb_two, id_two, sort) VALUES ('items', {$tempItemId}, 'items', 2, 1)"
         );
 
         // Now read and delete via Edit
@@ -299,7 +299,7 @@ class RecordPersistTest extends BdusTestCase
 
         // Verify item gone
         $itemRows = static::$db->query(
-            "SELECT id FROM test__items WHERE id = ?",
+            "SELECT id FROM items WHERE id = ?",
             [$tempItemId],
             'read'
         );
@@ -307,7 +307,7 @@ class RecordPersistTest extends BdusTestCase
 
         // Verify tags gone
         $tagRows = static::$db->query(
-            "SELECT id FROM test__tags WHERE id_link = ? AND table_link = 'test__items'",
+            "SELECT id FROM tags WHERE id_link = ? AND table_link = 'items'",
             [$tempItemId],
             'read'
         );
@@ -315,7 +315,7 @@ class RecordPersistTest extends BdusTestCase
 
         // Verify userlinks gone
         $ulRows = static::$db->query(
-            "SELECT id FROM test__userlinks WHERE (tb_one = 'test__items' AND id_one = ?) OR (tb_two = 'test__items' AND id_two = ?)",
+            "SELECT id FROM userlinks WHERE (tb_one = 'items' AND id_one = ?) OR (tb_two = 'items' AND id_two = ?)",
             [$tempItemId, $tempItemId],
             'read'
         );

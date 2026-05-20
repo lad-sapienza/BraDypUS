@@ -8,7 +8,7 @@ use Tests\Support\BdusTestCase;
  * Integration tests for saved_queries_ctrl v5 endpoints:
  *   listQueries(), saveQuery(), shareQuery(), unshareQuery(), deleteQuery()
  *
- * The test__queries table is created in createSchema() and seeded in seedData().
+ * The queries table is created in createSchema() and seeded in seedData().
  * All v5 methods use POST bodies; they are placed in $post (and $get/$request).
  */
 class SavedQueriesCtrlTest extends BdusTestCase
@@ -22,7 +22,7 @@ class SavedQueriesCtrlTest extends BdusTestCase
 
         // users table is required by saved_queries FK (present in real DB but not in base schema)
         static::$db->execInTransaction('
-            CREATE TABLE test__users (
+            CREATE TABLE users (
                 id        INTEGER PRIMARY KEY AUTOINCREMENT,
                 name      TEXT    NOT NULL,
                 email     TEXT    NOT NULL,
@@ -32,7 +32,7 @@ class SavedQueriesCtrlTest extends BdusTestCase
 
         // The new v5 queries table (no text/vals/date — fresh install schema)
         static::$db->execInTransaction('
-            CREATE TABLE test__queries (
+            CREATE TABLE queries (
                 id         INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id    INTEGER NOT NULL,
                 created_at INTEGER,
@@ -52,13 +52,13 @@ class SavedQueriesCtrlTest extends BdusTestCase
 
         // Insert the test user (id=1, matches BdusTestCase::CurrentUser id=1)
         static::$db->execInTransaction(
-            "INSERT INTO test__users (id, name, email, privilege) VALUES (1, 'Test Admin', 'test@example.com', 1)"
+            "INSERT INTO users (id, name, email, privilege) VALUES (1, 'Test Admin', 'test@example.com', 1)"
         );
 
         // Seed one query owned by user 1
         static::$db->execInTransaction(
-            "INSERT INTO test__queries (user_id, created_at, name, tb, query, is_global)
-             VALUES (1, " . time() . ", 'My first search', 'test__items',
+            "INSERT INTO queries (user_id, created_at, name, tb, query, is_global)
+             VALUES (1, " . time() . ", 'My first search', 'items',
                      '{\"search_type\":\"sqlExpert\",\"querytext\":\"status = ''active''\"}', 0)"
         );
     }
@@ -102,7 +102,7 @@ class SavedQueriesCtrlTest extends BdusTestCase
     {
         $ctrl = $this->makeController('saved_queries_ctrl', [], [
             'name'  => 'Test save',
-            'tb'    => 'test__items',
+            'tb'    => 'items',
             'query' => ['search_type' => 'sqlExpert', 'querytext' => 'id > 1'],
         ]);
         $res = $this->callController($ctrl, 'saveQuery');
@@ -115,7 +115,7 @@ class SavedQueriesCtrlTest extends BdusTestCase
     {
         $ctrl = $this->makeController('saved_queries_ctrl', [], [
             'name'  => 'Shaped query',
-            'tb'    => 'test__items',
+            'tb'    => 'items',
             'query' => ['search_type' => 'sqlExpert', 'querytext' => 'id > 2'],
         ]);
         $res = $this->callController($ctrl, 'saveQuery');
@@ -127,7 +127,7 @@ class SavedQueriesCtrlTest extends BdusTestCase
             $this->assertArrayHasKey($k, $q, "Missing key: $k in returned query");
         }
         $this->assertSame('Shaped query', $q['name']);
-        $this->assertSame('test__items',  $q['tb']);
+        $this->assertSame('items',  $q['tb']);
         $this->assertSame(0,              (int) $q['is_global']);
         $this->assertTrue($q['owned_by_me']);
         $this->assertIsArray($q['query']);
@@ -137,7 +137,7 @@ class SavedQueriesCtrlTest extends BdusTestCase
     public function testSaveQueryMissingName(): void
     {
         $ctrl = $this->makeController('saved_queries_ctrl', [], [
-            'tb'    => 'test__items',
+            'tb'    => 'items',
             'query' => ['search_type' => 'sqlExpert', 'querytext' => 'id > 1'],
         ]);
         $res = $this->callController($ctrl, 'saveQuery');
@@ -165,7 +165,7 @@ class SavedQueriesCtrlTest extends BdusTestCase
         // First save a fresh query so we have a known id
         $save = $this->makeController('saved_queries_ctrl', [], [
             'name'  => 'To share',
-            'tb'    => 'test__items',
+            'tb'    => 'items',
             'query' => ['search_type' => 'sqlExpert', 'querytext' => 'status = \'active\''],
         ]);
         $saved = $this->callController($save, 'saveQuery');
@@ -189,7 +189,7 @@ class SavedQueriesCtrlTest extends BdusTestCase
         // Save and share
         $save = $this->makeController('saved_queries_ctrl', [], [
             'name'  => 'To unshare',
-            'tb'    => 'test__items',
+            'tb'    => 'items',
             'query' => ['search_type' => 'sqlExpert', 'querytext' => 'id > 0'],
         ]);
         $saved = $this->callController($save, 'saveQuery');
@@ -217,7 +217,7 @@ class SavedQueriesCtrlTest extends BdusTestCase
         // Save a query to delete
         $save = $this->makeController('saved_queries_ctrl', [], [
             'name'  => 'To delete',
-            'tb'    => 'test__items',
+            'tb'    => 'items',
             'query' => ['search_type' => 'sqlExpert', 'querytext' => 'id = 1'],
         ]);
         $saved = $this->callController($save, 'saveQuery');

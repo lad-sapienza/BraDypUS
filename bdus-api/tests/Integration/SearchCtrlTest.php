@@ -9,7 +9,7 @@ use Tests\Support\BdusTestCase;
  */
 class SearchCtrlTest extends BdusTestCase
 {
-    private const TB = 'test__items';
+    private const TB = 'items';
 
     // ── getAdvancedConfig ─────────────────────────────────────────────────
 
@@ -46,9 +46,9 @@ class SearchCtrlTest extends BdusTestCase
         $res     = $this->callController($ctrl, 'getAdvancedConfig');
         $values  = array_column($res['fields'], 'value');
 
-        $this->assertContains('test__items:name',        $values);
-        $this->assertContains('test__items:description', $values);
-        $this->assertContains('test__items:status',      $values);
+        $this->assertContains('items:name',        $values);
+        $this->assertContains('items:description', $values);
+        $this->assertContains('items:status',      $values);
     }
 
     public function testGetAdvancedConfigOperatorsCount(): void
@@ -98,18 +98,19 @@ class SearchCtrlTest extends BdusTestCase
     public function testGetUsedValuesReturnsArray(): void
     {
         $ctrl = $this->makeController('search_ctrl', [
-            'tb'  => self::TB,
-            'fld' => 'status',
+            'tb'    => self::TB,
+            'field' => 'status',
         ]);
         ob_start();
         $ctrl->getUsedValues();
         $raw = ob_get_clean();
         $values = json_decode($raw, true);
 
-        $this->assertIsArray($values);
-        $this->assertContains('active',   $values);
-        $this->assertContains('inactive', $values);
-        $this->assertContains('pending',  $values);
+        $this->assertSame('success', $values['status']);
+        $this->assertIsArray($values['values']);
+        $this->assertContains('active',   $values['values']);
+        $this->assertContains('inactive', $values['values']);
+        $this->assertContains('pending',  $values['values']);
     }
 
     // ── test (query tester) ───────────────────────────────────────────────

@@ -14,8 +14,8 @@ use Record\Edit;
  */
 class RecordEditTest extends BdusTestCase
 {
-    private const TB     = 'test__items';
-    private const TB_PLG = 'test__tags';
+    private const TB     = 'items';
+    private const TB_PLG = 'tags';
 
     // ── Helper ────────────────────────────────────────────────────────────
 
@@ -115,12 +115,12 @@ class RecordEditTest extends BdusTestCase
         $edit        = $this->makeEdit(1);
         $countBefore = count($edit->getModel()['manualLinks']);
 
-        $edit->setManualLink(null, 'test__items', 3, 5);
+        $edit->setManualLink(null, 'items', 3, 5);
         $model = $edit->getModel();
 
         $this->assertSame($countBefore + 1, count($model['manualLinks']));
         $last = end($model['manualLinks']);
-        $this->assertSame('test__items', $last['_tb_id']);
+        $this->assertSame('items', $last['_tb_id']);
         $this->assertSame(3,            $last['_ref_id']);
         $this->assertSame(5,            $last['_sort']);
     }
@@ -134,7 +134,7 @@ class RecordEditTest extends BdusTestCase
         // Find the non-file manual link
         $mlKey = null;
         foreach ($model['manualLinks'] as $key => $link) {
-            if ($link['tb_id'] !== 'test__files') {
+            if ($link['tb_id'] !== 'files') {
                 $mlKey = $key;
                 break;
             }

@@ -12,7 +12,7 @@ use Tests\Support\BdusTestCase;
  */
 class QueryFromRequestTest extends BdusTestCase
 {
-    private const TB = 'test__items';
+    private const TB = 'items';
 
     // ── Helpers ───────────────────────────────────────────────────────────
 
@@ -97,7 +97,7 @@ class QueryFromRequestTest extends BdusTestCase
     public function testSqlExpertStripsUnsafeKeywords(): void
     {
         // makeSafeStatement should strip DROP/DELETE/etc.
-        $q = $this->qfr(['type' => 'sqlExpert', 'querytext' => "1=1; drop table test__items", 'join' => '']);
+        $q = $this->qfr(['type' => 'sqlExpert', 'querytext' => "1=1; drop table items", 'join' => '']);
         $where = $q->getWhere();
         $this->assertStringNotContainsStringIgnoringCase('drop', $where);
     }
@@ -109,7 +109,7 @@ class QueryFromRequestTest extends BdusTestCase
     public function testAdvancedSearchSingleCondition(): void
     {
         $adv = [
-            ['connector' => '', '(' => false, 'fld' => 'test__items:status', 'operator' => '=', 'value' => 'active', ')' => false],
+            ['connector' => '', '(' => false, 'fld' => 'items:status', 'operator' => '=', 'value' => 'active', ')' => false],
         ];
         $q = $this->qfr(['type' => 'advanced', 'adv' => $adv]);
         $this->assertSame(3, $q->getTotal());
@@ -118,8 +118,8 @@ class QueryFromRequestTest extends BdusTestCase
     public function testAdvancedSearchMultipleConditionsAnd(): void
     {
         $adv = [
-            ['connector' => '',    '(' => false, 'fld' => 'test__items:status', 'operator' => '=',    'value' => 'active', ')' => false],
-            ['connector' => 'AND', '(' => false, 'fld' => 'test__items:name',   'operator' => 'LIKE', 'value' => 'item',   ')' => false],
+            ['connector' => '',    '(' => false, 'fld' => 'items:status', 'operator' => '=',    'value' => 'active', ')' => false],
+            ['connector' => 'AND', '(' => false, 'fld' => 'items:name',   'operator' => 'LIKE', 'value' => 'item',   ')' => false],
         ];
         $q = $this->qfr(['type' => 'advanced', 'adv' => $adv]);
         // active + contains "item": Alpha, Beta(inactive), Gamma → only Alpha & Gamma
@@ -129,7 +129,7 @@ class QueryFromRequestTest extends BdusTestCase
     public function testAdvancedSearchIsEmpty(): void
     {
         $adv = [
-            ['connector' => '', '(' => false, 'fld' => 'test__items:description', 'operator' => 'is_not_empty', 'value' => '', ')' => false],
+            ['connector' => '', '(' => false, 'fld' => 'items:description', 'operator' => 'is_not_empty', 'value' => '', ')' => false],
         ];
         $q = $this->qfr(['type' => 'advanced', 'adv' => $adv]);
         $this->assertSame(5, $q->getTotal());
@@ -146,7 +146,7 @@ class QueryFromRequestTest extends BdusTestCase
     public function testAdvancedSearchAllRowsSkippedReturnsAll(): void
     {
         $adv = [
-            ['connector' => '', '(' => false, 'fld' => 'test__items:name', 'operator' => 'LIKE', 'value' => '', ')' => false],
+            ['connector' => '', '(' => false, 'fld' => 'items:name', 'operator' => 'LIKE', 'value' => '', ')' => false],
         ];
         $q = $this->qfr(['type' => 'advanced', 'adv' => $adv]);
         $this->assertSame(5, $q->getTotal());

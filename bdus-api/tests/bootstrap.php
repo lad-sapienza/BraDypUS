@@ -13,7 +13,7 @@ $basePath = __DIR__ . '/../';
 date_default_timezone_set('Europe/Rome');
 define('MAIN_DIR', $basePath);
 define('DEBUG_ON', false);
-define('PREFIX',   'test__');   // needed by Record\Read::getFull() and buildTableSchema()
+define('PREFIX',   '');   // needed by Record\Read::getFull() and buildTableSchema()
 
 // PROJ_DIR is normally set per-request by constants.php (depends on the logged-in app).
 // In tests we point it to a dedicated temp tree so filesystem-touching tests

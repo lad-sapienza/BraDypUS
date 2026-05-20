@@ -12,7 +12,7 @@ use Tests\Support\BdusTestCase;
  */
 class RecordCtrlTest extends BdusTestCase
 {
-    private const TB = 'test__items';
+    private const TB = 'items';
 
     // ── all ───────────────────────────────────────────────────────────────
 
@@ -88,7 +88,7 @@ class RecordCtrlTest extends BdusTestCase
                 'page'        => 1,
                 'per_page'    => 30,
                 'adv'         => [
-                    ['connector' => '', '(' => false, 'fld' => 'test__items:status',
+                    ['connector' => '', '(' => false, 'fld' => 'items:status',
                      'operator' => '=', 'value' => 'active', ')' => false],
                 ],
             ]

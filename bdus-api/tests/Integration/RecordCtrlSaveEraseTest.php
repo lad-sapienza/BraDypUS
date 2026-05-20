@@ -13,7 +13,7 @@ use Tests\Support\BdusTestCase;
  */
 class RecordCtrlSaveEraseTest extends BdusTestCase
 {
-    private const TB = 'test__items';
+    private const TB = 'items';
 
     // ── saveRecord — UPDATE ───────────────────────────────────────────────
 
@@ -37,7 +37,7 @@ class RecordCtrlSaveEraseTest extends BdusTestCase
 
         // Verify DB was updated
         $row = static::$db->query(
-            'SELECT description FROM test__items WHERE id = ?',
+            'SELECT description FROM items WHERE id = ?',
             [1],
             'read'
         );
@@ -45,7 +45,7 @@ class RecordCtrlSaveEraseTest extends BdusTestCase
 
         // Restore original value for other tests
         static::$db->query(
-            "UPDATE test__items SET description = 'First description' WHERE id = ?",
+            "UPDATE items SET description = 'First description' WHERE id = ?",
             [1],
             'boolean'
         );
@@ -100,14 +100,14 @@ class RecordCtrlSaveEraseTest extends BdusTestCase
 
         // Verify in DB
         $row = static::$db->query(
-            'SELECT name FROM test__items WHERE id = ?',
+            'SELECT name FROM items WHERE id = ?',
             [$newId],
             'read'
         );
         $this->assertSame('Zeta item', $row[0]['name']);
 
         // Clean up
-        static::$db->query('DELETE FROM test__items WHERE id = ?', [$newId], 'boolean');
+        static::$db->query('DELETE FROM items WHERE id = ?', [$newId], 'boolean');
     }
 
     public function testSaveRecordInsertWithPluginRow(): void
@@ -120,7 +120,7 @@ class RecordCtrlSaveEraseTest extends BdusTestCase
                 'tb'      => self::TB,
                 'core'    => ['name' => 'Eta item', 'status' => 'active', 'creator' => 'admin'],
                 'plugins' => [
-                    'test__tags' => [
+                    'tags' => [
                         ['id' => null, '_delete' => false, '_isNew' => true,
                          'fields' => ['label' => 'new-plugin-tag']],
                     ]
@@ -135,7 +135,7 @@ class RecordCtrlSaveEraseTest extends BdusTestCase
 
         // The tag should have been inserted
         $tags = static::$db->query(
-            'SELECT * FROM test__tags WHERE id_link = ? AND table_link = ?',
+            'SELECT * FROM tags WHERE id_link = ? AND table_link = ?',
             [$newId, self::TB],
             'read'
         );
@@ -143,8 +143,8 @@ class RecordCtrlSaveEraseTest extends BdusTestCase
         $this->assertSame('new-plugin-tag', $tags[0]['label']);
 
         // Clean up
-        static::$db->query('DELETE FROM test__items WHERE id = ?', [$newId], 'boolean');
-        static::$db->query('DELETE FROM test__tags WHERE id_link = ?', [$newId], 'boolean');
+        static::$db->query('DELETE FROM items WHERE id = ?', [$newId], 'boolean');
+        static::$db->query('DELETE FROM tags WHERE id_link = ?', [$newId], 'boolean');
     }
 
     // ── erase ─────────────────────────────────────────────────────────────
@@ -153,7 +153,7 @@ class RecordCtrlSaveEraseTest extends BdusTestCase
     {
         // Insert a throwaway record, then erase it
         static::$db->query(
-            "INSERT INTO test__items (creator, name, description, status)
+            "INSERT INTO items (creator, name, description, status)
              VALUES ('admin', 'Temp item', 'To be deleted', 'active')",
             [],
             'boolean'
@@ -168,7 +168,7 @@ class RecordCtrlSaveEraseTest extends BdusTestCase
 
         // Confirm it is gone
         $row = static::$db->query(
-            'SELECT id FROM test__items WHERE id = ?',
+            'SELECT id FROM items WHERE id = ?',
             [$tmpId],
             'read'
         );

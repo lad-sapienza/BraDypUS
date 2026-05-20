@@ -9,7 +9,7 @@ use Tests\Support\BdusTestCase;
  */
 class RecordCtrlGetRecordTest extends BdusTestCase
 {
-    private const TB = 'test__items';
+    private const TB = 'items';
 
     // ── getRecord ─────────────────────────────────────────────────
 
@@ -109,10 +109,10 @@ class RecordCtrlGetRecordTest extends BdusTestCase
 
     public function testGetRecordManualLinksShapeForItemRecord(): void
     {
-        // The seed inserts a manual link between items 1 and 2 in test__userlinks
-        // (record-to-record link, NOT a file link — those live in test__file_links).
+        // The seed inserts a manual link between items 1 and 2 in userlinks
+        // (record-to-record link, NOT a file link — those live in file_links).
         // Viewing item 1 should expose item 2 in manualLinks.
-        $ctrl = $this->makeController('record_ctrl', ['tb' => 'test__items', 'id' => 1]);
+        $ctrl = $this->makeController('record_ctrl', ['tb' => 'items', 'id' => 1]);
         $res  = $this->callController($ctrl, 'getRecord');
 
         $this->assertArrayHasKey('manualLinks', $res);
@@ -122,7 +122,7 @@ class RecordCtrlGetRecordTest extends BdusTestCase
         foreach (['key', 'tb_id', 'tb_stripped', 'ref_id', 'ref_label'] as $k) {
             $this->assertArrayHasKey($k, $link, "manualLinks entry missing key: $k");
         }
-        $this->assertSame('test__items', $link['tb_id']);
+        $this->assertSame('items', $link['tb_id']);
         $this->assertSame('items',       $link['tb_stripped']);
         $this->assertSame(2,             $link['ref_id']);
     }
@@ -161,7 +161,7 @@ class RecordCtrlGetRecordTest extends BdusTestCase
 
     public function testGetFieldOptionsStaticDic(): void
     {
-        // The 'status' field in test__items is type=select with no source configured
+        // The 'status' field in items is type=select with no source configured
         // → should return empty array (no dic/vocabulary/get_values_from_tb set)
         $ctrl = $this->makeController('record_ctrl', ['tb' => self::TB, 'fld' => 'status']);
         $res  = $this->callController($ctrl, 'getFieldOptions');

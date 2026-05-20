@@ -17,11 +17,11 @@ class TemplateLoaderTest extends TestCase
 
     // ── Field / plugin lists matching the fixture config ──────────────────
 
-    /** Core field names for test__items */
+    /** Core field names for items */
     private array $fieldNames = ['id', 'creator', 'name', 'description', 'status'];
 
-    /** Plugin table IDs for test__items */
-    private array $pluginNames = ['test__tags'];
+    /** Plugin table IDs for items */
+    private array $pluginNames = ['tags'];
 
     // ── load() ────────────────────────────────────────────────────────────
 
@@ -99,7 +99,7 @@ class TemplateLoaderTest extends TestCase
             'sections' => [
                 [
                     'label'   => 'No Such Plugin',
-                    'plugin'  => 'test__no_such',
+                    'plugin'  => 'no_such',
                     'content' => [
                         ['field' => 'label', 'width' => '1/1'],
                     ],
@@ -107,9 +107,9 @@ class TemplateLoaderTest extends TestCase
             ],
         ];
 
-        $errors = Loader::validate($tpl, $this->fieldNames, ['test__tags']);
+        $errors = Loader::validate($tpl, $this->fieldNames, ['tags']);
         $this->assertNotEmpty($errors);
         $allErrors = implode(' ', $errors);
-        $this->assertStringContainsString('test__no_such', $allErrors);
+        $this->assertStringContainsString('no_such', $allErrors);
     }
 }

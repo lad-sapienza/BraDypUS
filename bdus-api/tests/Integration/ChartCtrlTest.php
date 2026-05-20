@@ -8,8 +8,8 @@ use Tests\Support\BdusTestCase;
  * Integration tests for chart_ctrl v5 endpoints:
  *   getData(), listCharts(), saveChart(), shareChart(), unshareChart(), deleteChart()
  *
- * The test__charts table is created in createSchema() and seeded in seedData().
- * Tests use the test__items table (5 seeded rows) for chart data queries.
+ * The charts table is created in createSchema() and seeded in seedData().
+ * Tests use the items table (5 seeded rows) for chart data queries.
  */
 class ChartCtrlTest extends BdusTestCase
 {
@@ -21,7 +21,7 @@ class ChartCtrlTest extends BdusTestCase
 
         // users table required for charts FK
         static::$db->execInTransaction('
-            CREATE TABLE test__users (
+            CREATE TABLE users (
                 id        INTEGER PRIMARY KEY AUTOINCREMENT,
                 name      TEXT    NOT NULL,
                 email     TEXT    NOT NULL,
@@ -30,7 +30,7 @@ class ChartCtrlTest extends BdusTestCase
         ');
 
         static::$db->execInTransaction('
-            CREATE TABLE test__charts (
+            CREATE TABLE charts (
                 id         INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id    INTEGER NOT NULL,
                 created_at INTEGER,
@@ -48,14 +48,14 @@ class ChartCtrlTest extends BdusTestCase
         parent::seedData();
 
         static::$db->execInTransaction(
-            "INSERT INTO test__users (id, name, email, privilege) VALUES (1, 'Test Admin', 'test@example.com', 1)"
+            "INSERT INTO users (id, name, email, privilege) VALUES (1, 'Test Admin', 'test@example.com', 1)"
         );
 
         // Seed one chart owned by user 1
         static::$db->execInTransaction(
-            "INSERT INTO test__charts (user_id, created_at, name, definition, is_global)
+            "INSERT INTO charts (user_id, created_at, name, definition, is_global)
              VALUES (1, " . time() . ", 'My first chart',
-                     '{\"tb\":\"test__items\",\"type\":\"metric\",\"field\":\"id\",\"function\":\"COUNT\"}', 0)"
+                     '{\"tb\":\"items\",\"type\":\"metric\",\"field\":\"id\",\"function\":\"COUNT\"}', 0)"
         );
     }
 
@@ -65,7 +65,7 @@ class ChartCtrlTest extends BdusTestCase
     {
         $ctrl = $this->makeController('chart_ctrl', [], [
             'definition' => [
-                'tb'       => 'test__items',
+                'tb'       => 'items',
                 'type'     => 'metric',
                 'field'    => 'id',
                 'function' => 'COUNT',
@@ -85,7 +85,7 @@ class ChartCtrlTest extends BdusTestCase
     {
         $ctrl = $this->makeController('chart_ctrl', [], [
             'definition' => [
-                'tb'         => 'test__items',
+                'tb'         => 'items',
                 'type'       => 'bar',
                 'x_field'    => 'status',
                 'y_field'    => 'id',
@@ -109,7 +109,7 @@ class ChartCtrlTest extends BdusTestCase
     {
         $ctrl = $this->makeController('chart_ctrl', [], [
             'definition' => [
-                'tb'   => 'test__items',
+                'tb'   => 'items',
                 'type' => 'treemap', // not a valid type
             ],
         ]);
@@ -125,7 +125,7 @@ class ChartCtrlTest extends BdusTestCase
     {
         $ctrl = $this->makeController('chart_ctrl', [], [
             'definition' => [
-                'tb'       => 'test__items',
+                'tb'       => 'items',
                 'type'     => 'metric',
                 'field'    => 'nonexistent_column',
                 'function' => 'COUNT',
@@ -166,7 +166,7 @@ class ChartCtrlTest extends BdusTestCase
         $ctrl = $this->makeController('chart_ctrl', [], [
             'name'       => 'Test chart',
             'definition' => [
-                'tb'       => 'test__items',
+                'tb'       => 'items',
                 'type'     => 'metric',
                 'field'    => 'id',
                 'function' => 'COUNT',
@@ -183,7 +183,7 @@ class ChartCtrlTest extends BdusTestCase
         $ctrl = $this->makeController('chart_ctrl', [], [
             'name'       => 'Shaped chart',
             'definition' => [
-                'tb'       => 'test__items',
+                'tb'       => 'items',
                 'type'     => 'metric',
                 'field'    => 'id',
                 'function' => 'COUNT',
@@ -201,14 +201,14 @@ class ChartCtrlTest extends BdusTestCase
         $this->assertSame(0, (int) $c['is_global']);
         $this->assertTrue($c['owned_by_me']);
         $this->assertIsArray($c['definition']);
-        $this->assertSame('test__items', $c['definition']['tb']);
+        $this->assertSame('items', $c['definition']['tb']);
     }
 
     public function testSaveChartMissingName(): void
     {
         $ctrl = $this->makeController('chart_ctrl', [], [
             'definition' => [
-                'tb'       => 'test__items',
+                'tb'       => 'items',
                 'type'     => 'metric',
                 'field'    => 'id',
                 'function' => 'COUNT',
@@ -228,7 +228,7 @@ class ChartCtrlTest extends BdusTestCase
         $save = $this->makeController('chart_ctrl', [], [
             'name'       => 'To share',
             'definition' => [
-                'tb'       => 'test__items',
+                'tb'       => 'items',
                 'type'     => 'metric',
                 'field'    => 'id',
                 'function' => 'COUNT',
@@ -258,7 +258,7 @@ class ChartCtrlTest extends BdusTestCase
         $save = $this->makeController('chart_ctrl', [], [
             'name'       => 'To delete',
             'definition' => [
-                'tb'       => 'test__items',
+                'tb'       => 'items',
                 'type'     => 'metric',
                 'field'    => 'id',
                 'function' => 'COUNT',

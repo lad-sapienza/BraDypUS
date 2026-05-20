@@ -9,7 +9,7 @@ use Tests\Support\BdusTestCase;
  *
  * Covers validatePayload() / validateFieldValue() called inside saveRecord().
  *
- * The test__items fixture config (tests/fixtures/cfg/items.json) has been
+ * The items fixture config (tests/fixtures/cfg/items.json) has been
  * enriched with check constraints so all rules can be exercised:
  *   - name        : check="not_empty no_dupl"
  *   - description : max_length=50
@@ -25,7 +25,7 @@ use Tests\Support\BdusTestCase;
  */
 class RecordCtrlValidationTest extends BdusTestCase
 {
-    private const TB = 'test__items';
+    private const TB = 'items';
 
     // ── helper ────────────────────────────────────────────────────────────────
 

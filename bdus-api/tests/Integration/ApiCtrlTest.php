@@ -8,7 +8,7 @@ use Tests\Support\BdusTestCase;
  * Integration tests for api_ctrl v5 endpoints:
  *   listKeys(), createKey(), revokeKey(), deleteKey()
  *
- * The test__api_keys table is created in createSchema().
+ * The api_keys table is created in createSchema().
  * All v5 methods use POST bodies; they are placed in $post.
  *
  * NOTE: Auth.php and Router.php (the public REST API) depend on HTTP headers
@@ -24,14 +24,15 @@ class ApiCtrlTest extends BdusTestCase
         parent::createSchema();
 
         static::$db->execInTransaction('
-            CREATE TABLE test__api_keys (
+            CREATE TABLE api_keys (
                 id           INTEGER PRIMARY KEY AUTOINCREMENT,
                 key_hash     TEXT    NOT NULL,
                 label        TEXT    NOT NULL,
                 created_by   INTEGER,
                 created_at   INTEGER NOT NULL,
                 last_used_at INTEGER,
-                revoked_at   INTEGER
+                revoked_at   INTEGER,
+                privilege    INTEGER DEFAULT 30
             )
         ');
     }

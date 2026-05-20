@@ -16,7 +16,7 @@ use Monolog\Handler\NullHandler;
  *  - $db   : DB instance backed by a fresh in-memory SQLite DB
  *  - $cfg  : Config instance loaded from tests/fixtures/cfg/
  *  - $log  : silent Monolog logger (NullHandler)
- *  - prefix: 'test__'
+ *  - prefix: ''
  *
  * The in-memory DB is recreated for every test class (setUpBeforeClass),
  * so tests within the same class share state (fast), but classes are isolated.
@@ -30,7 +30,7 @@ abstract class BdusTestCase extends TestCase
     protected static DB     $db;
     protected static Config $cfg;
     protected static Logger $log;
-    protected static string $prefix = 'test__';
+    protected static string $prefix = '';
 
     // ── Boot once per test class ──────────────────────────────────────────
     public static function setUpBeforeClass(): void
@@ -60,8 +60,7 @@ abstract class BdusTestCase extends TestCase
         $dot = new Dot();
         static::$cfg = new Config(
             $dot,
-            __DIR__ . '/../fixtures/cfg/',
-            static::$prefix
+            __DIR__ . '/../fixtures/cfg/'
         );
 
         // Point the template Loader at the fixtures directory so controller
@@ -77,7 +76,7 @@ abstract class BdusTestCase extends TestCase
     protected static function createSchema(): void
     {
         static::$db->execInTransaction('
-            CREATE TABLE test__items (
+            CREATE TABLE items (
                 id          INTEGER PRIMARY KEY AUTOINCREMENT,
                 creator     TEXT,
                 name        TEXT,
@@ -92,7 +91,7 @@ abstract class BdusTestCase extends TestCase
         ');
 
         static::$db->execInTransaction('
-            CREATE TABLE test__tags (
+            CREATE TABLE tags (
                 id         INTEGER PRIMARY KEY AUTOINCREMENT,
                 label      TEXT,
                 id_link    INTEGER,
@@ -101,7 +100,7 @@ abstract class BdusTestCase extends TestCase
         ');
 
         static::$db->execInTransaction('
-            CREATE TABLE test__log (
+            CREATE TABLE log (
                 id      INTEGER PRIMARY KEY AUTOINCREMENT,
                 channel TEXT NOT NULL,
                 level   INTEGER NOT NULL,
@@ -112,7 +111,7 @@ abstract class BdusTestCase extends TestCase
 
         // ── System tables required by Record\Read::getFull() ──────────────
         static::$db->execInTransaction('
-            CREATE TABLE test__userlinks (
+            CREATE TABLE userlinks (
                 id     INTEGER PRIMARY KEY AUTOINCREMENT,
                 tb_one TEXT    NOT NULL,
                 id_one INTEGER NOT NULL,
@@ -123,7 +122,7 @@ abstract class BdusTestCase extends TestCase
         ');
 
         static::$db->execInTransaction('
-            CREATE TABLE test__rs (
+            CREATE TABLE rs (
                 id       INTEGER PRIMARY KEY AUTOINCREMENT,
                 tb       TEXT    NOT NULL,
                 first    TEXT    NOT NULL,
@@ -133,7 +132,7 @@ abstract class BdusTestCase extends TestCase
         ');
 
         static::$db->execInTransaction('
-            CREATE TABLE test__geodata (
+            CREATE TABLE geodata (
                 id         INTEGER PRIMARY KEY AUTOINCREMENT,
                 table_link TEXT    NOT NULL,
                 id_link    INTEGER NOT NULL,
@@ -142,7 +141,7 @@ abstract class BdusTestCase extends TestCase
         ');
 
         static::$db->execInTransaction('
-            CREATE TABLE test__files (
+            CREATE TABLE files (
                 id          INTEGER PRIMARY KEY AUTOINCREMENT,
                 creator     TEXT    NOT NULL,
                 ext         TEXT    NOT NULL,
@@ -154,7 +153,7 @@ abstract class BdusTestCase extends TestCase
         ');
 
         static::$db->execInTransaction('
-            CREATE TABLE test__file_links (
+            CREATE TABLE file_links (
                 id          INTEGER PRIMARY KEY AUTOINCREMENT,
                 file_id     INTEGER NOT NULL,
                 table_name  TEXT    NOT NULL,
@@ -176,44 +175,44 @@ abstract class BdusTestCase extends TestCase
         ];
         foreach ($items as $i => [$name, $desc, $status]) {
             static::$db->execInTransaction(
-                "INSERT INTO test__items (creator, name, description, status)
+                "INSERT INTO items (creator, name, description, status)
                  VALUES ('admin', '$name', '$desc', '$status')"
             );
         }
 
         // A couple of tags linked to item 1
         static::$db->execInTransaction(
-            "INSERT INTO test__tags (label, id_link, table_link)
-             VALUES ('tag-a', 1, 'test__items'), ('tag-b', 1, 'test__items')"
+            "INSERT INTO tags (label, id_link, table_link)
+             VALUES ('tag-a', 1, 'items'), ('tag-b', 1, 'items')"
         );
 
         // A file (image) and a document linked to item 1 via file_links
         static::$db->execInTransaction(
-            "INSERT INTO test__files (id, creator, ext, keywords, description, printable, filename)
+            "INSERT INTO files (id, creator, ext, keywords, description, printable, filename)
              VALUES (1, 'admin', 'jpg', 'photo', 'A photo', 1, 'photo'),
                     (2, 'admin', 'pdf', 'doc',   'A document', 0, 'document')"
         );
         static::$db->execInTransaction(
-            "INSERT INTO test__file_links (file_id, table_name, record_id, sort)
-             VALUES (1, 'test__items', 1, 1),
-                    (2, 'test__items', 1, 2)"
+            "INSERT INTO file_links (file_id, table_name, record_id, sort)
+             VALUES (1, 'items', 1, 1),
+                    (2, 'items', 1, 2)"
         );
 
         // A manual link between item 1 and item 2 (record↔record, not a file link)
         static::$db->execInTransaction(
-            "INSERT INTO test__userlinks (tb_one, id_one, tb_two, id_two, sort)
-             VALUES ('test__items', 1, 'test__items', 2, 1)"
+            "INSERT INTO userlinks (tb_one, id_one, tb_two, id_two, sort)
+             VALUES ('items', 1, 'items', 2, 1)"
         );
 
         // An RS entry referencing item 1 (first='1' so Read::getRs() can find it by id=1)
         static::$db->execInTransaction(
-            "INSERT INTO test__rs (tb, first, second, relation) VALUES ('test__items', '1', '2', 1)"
+            "INSERT INTO rs (tb, first, second, relation) VALUES ('items', '1', '2', 1)"
         );
 
         // A couple of log entries
         $now = time();
         static::$db->execInTransaction(
-            "INSERT INTO test__log (channel, level, message, time)
+            "INSERT INTO log (channel, level, message, time)
              VALUES
                ('test', 200, 'Info message',  " . ($now - 3600) . "),
                ('test', 400, 'Error message', " . ($now - 100)  . ")"

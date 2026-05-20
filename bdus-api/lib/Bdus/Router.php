@@ -110,7 +110,7 @@ class Router
         'import_ctrl::importGeoJson'                 => 'edit',
         'import_ctrl::importPhotos'                  => 'edit',
 
-        // ── Admin — privileged operations ────────────────────────────────────
+        // ── Admin (privilege ≤ 10) — user management and operational tasks ───
         'user_ctrl::showList'                        => 'admin',
         'user_ctrl::showUserForm'                    => 'admin',
         'user_ctrl::saveUserData'                    => 'admin',
@@ -118,27 +118,6 @@ class Router
         'user_ctrl::getTablePrivileges'              => 'admin',
         'user_ctrl::saveTablePrivilege'              => 'admin',
         'user_ctrl::deleteTablePrivilege'            => 'admin',
-        'config_ctrl::getAppProperties'              => 'admin',
-        'config_ctrl::save_app_properties'           => 'admin',
-        'config_ctrl::getTableList'                  => 'admin',
-        'config_ctrl::add_new_tb'                    => 'admin',
-        'config_ctrl::sortTables'                    => 'admin',
-        'config_ctrl::getTableConfig'                => 'admin',
-        'config_ctrl::save_tb_data'                  => 'admin',
-        'config_ctrl::delete_tb'                     => 'admin',
-        'config_ctrl::rename_tb'                     => 'admin',
-        'config_ctrl::getFldStructure'               => 'admin',
-        'config_ctrl::getFldList'                    => 'admin',
-        'config_ctrl::add_new_fld'                   => 'admin',
-        'config_ctrl::save_fld_properties'           => 'admin',
-        'config_ctrl::delete_column'                 => 'admin',
-        'config_ctrl::rename_column'                 => 'admin',
-        'config_ctrl::getGeoFaceConfig'              => 'admin',
-        'config_ctrl::save_geoface_properties'       => 'admin',
-        'config_ctrl::uploadGeoFile'                 => 'admin',
-        'config_ctrl::delete_local_geofile'          => 'admin',
-        'config_ctrl::getValidationReport'           => 'admin',
-        'config_ctrl::fix'                           => 'admin',
         'confirm_super_adm_pwd_ctrl::check_pwd'      => 'admin',
         'backup_ctrl::listBackups'                   => 'admin',
         'backup_ctrl::doBackup'                      => 'admin',
@@ -151,28 +130,51 @@ class Router
         'api_ctrl::createKey'                        => 'admin',
         'api_ctrl::revokeKey'                        => 'admin',
         'api_ctrl::deleteKey'                        => 'admin',
-        'frontpage_editor_ctrl::saveWelcome'         => 'admin',
-        'templates_ctrl::getTableList'               => 'admin',
-        'templates_ctrl::getTemplateList'            => 'admin',
-        'templates_ctrl::getTemplate'                => 'admin',
-        'templates_ctrl::saveTemplate'               => 'admin',
-        'templates_ctrl::deleteTemplate'             => 'admin',
-        'templates_ctrl::renameTemplate'             => 'admin',
-        'search_replace_ctrl::getTableList'          => 'admin',
-        'search_replace_ctrl::getFieldList'          => 'admin',
-        'search_replace_ctrl::doReplace'             => 'admin',
-        'free_sql_ctrl::verifyPassword'              => 'admin',
-        'free_sql_ctrl::runSql'                      => 'admin',
+
+        // ── Super-admin (privilege = 1) — schema config and raw SQL ──────────
+        'config_ctrl::getAppProperties'              => 'super_admin',
+        'config_ctrl::save_app_properties'           => 'super_admin',
+        'config_ctrl::getTableList'                  => 'super_admin',
+        'config_ctrl::add_new_tb'                    => 'super_admin',
+        'config_ctrl::sortTables'                    => 'super_admin',
+        'config_ctrl::getTableConfig'                => 'super_admin',
+        'config_ctrl::save_tb_data'                  => 'super_admin',
+        'config_ctrl::delete_tb'                     => 'super_admin',
+        'config_ctrl::rename_tb'                     => 'super_admin',
+        'config_ctrl::getFldStructure'               => 'super_admin',
+        'config_ctrl::getFldList'                    => 'super_admin',
+        'config_ctrl::add_new_fld'                   => 'super_admin',
+        'config_ctrl::save_fld_properties'           => 'super_admin',
+        'config_ctrl::delete_column'                 => 'super_admin',
+        'config_ctrl::rename_column'                 => 'super_admin',
+        'config_ctrl::getGeoFaceConfig'              => 'super_admin',
+        'config_ctrl::save_geoface_properties'       => 'super_admin',
+        'config_ctrl::uploadGeoFile'                 => 'super_admin',
+        'config_ctrl::delete_local_geofile'          => 'super_admin',
+        'config_ctrl::getValidationReport'           => 'super_admin',
+        'config_ctrl::fix'                           => 'super_admin',
+        'frontpage_editor_ctrl::saveWelcome'         => 'super_admin',
+        'templates_ctrl::getTableList'               => 'super_admin',
+        'templates_ctrl::getTemplateList'            => 'super_admin',
+        'templates_ctrl::getTemplate'                => 'super_admin',
+        'templates_ctrl::saveTemplate'               => 'super_admin',
+        'templates_ctrl::deleteTemplate'             => 'super_admin',
+        'templates_ctrl::renameTemplate'             => 'super_admin',
+        'search_replace_ctrl::getTableList'          => 'super_admin',
+        'search_replace_ctrl::getFieldList'          => 'super_admin',
+        'search_replace_ctrl::doReplace'             => 'super_admin',
+        'free_sql_ctrl::verifyPassword'              => 'super_admin',
+        'free_sql_ctrl::runSql'                      => 'super_admin',
     ];
 
     /**
      * Look up the minimum privilege required for a given controller::method.
      *
-     * Returns 'admin' (safest) for any pair not explicitly listed in ROUTE_PRIVILEGE.
+     * Returns 'super_admin' (safest) for any pair not explicitly listed in ROUTE_PRIVILEGE.
      */
     public static function requiredPrivilege(string $ctrl, string $method): string
     {
-        return self::ROUTE_PRIVILEGE[$ctrl . '::' . $method] ?? 'admin';
+        return self::ROUTE_PRIVILEGE[$ctrl . '::' . $method] ?? 'super_admin';
     }
 
     /**

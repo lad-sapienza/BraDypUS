@@ -161,10 +161,36 @@ class user_ctrl extends Controller
 	 * Saves user basic data (name, email, password, privilege).
 	 *
 	 * POST ?obj=user_ctrl&method=saveUserData
+	 *
+	 * Access rules:
+	 *  - Only admins (privilege <= 10) can create users or edit other users.
+	 *  - Non-admins may update their own name/email/password but cannot
+	 *    change their privilege level.
+	 *  - Nobody can set a user's privilege to a value lower (= more powerful)
+	 *    than their own, preventing admins from escalating to super_admin.
 	 */
 	public function saveUserData()
 	{
-		$data = $this->post;
+		$data      = $this->post;
+		$isAdmin   = \utils::canUser('admin');
+		$isNewUser = empty($data['id']);
+		$isOwnUser = !$isNewUser && (int)$data['id'] === \Auth\CurrentUser::id();
+
+		// Only admins can create new users or edit other users.
+		if (!$isAdmin && ($isNewUser || !$isOwnUser)) {
+			$this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+			return;
+		}
+
+		// Privilege changes are admin-only; additionally nobody can set a
+		// privilege numerically lower (= more powerful) than their own.
+		if (array_key_exists('privilege', $data)) {
+			if (!$isAdmin || (int)$data['privilege'] < \Auth\CurrentUser::privilege()) {
+				$this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+				return;
+			}
+		}
+
 		try {
 			$sys_manager = new Manage($this->db, $this->prefix);
 
@@ -178,7 +204,7 @@ class user_ctrl extends Controller
 				}
 			}
 
-			if (!empty($data['id'])) {
+			if (!$isNewUser) {
 				// Edit existing user
 				if (\utils::isDuplicateEmail($this->db, $this->prefix, $data['email'], $data['id'])) {
 					$this->response('email_present', 'error', [$data['email']]);
@@ -194,7 +220,9 @@ class user_ctrl extends Controller
 			}
 
 			if ($ret) {
-				$this->response('user_data_saved', 'success');
+				// For new users, include the generated ID so callers can reference it.
+				$extra = $isNewUser ? ['id' => $ret] : [];
+				$this->response('user_data_saved', 'success', null, $extra);
 			} else {
 				throw new \Exception('Query returned false');
 			}

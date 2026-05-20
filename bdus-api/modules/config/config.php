@@ -23,8 +23,22 @@ class config_ctrl extends Controller
     return $missing;
   }
 
+  /**
+   * Guards the method against non-super_admin callers.
+   * Returns false and emits a JSON error if access is denied.
+   */
+  private function requireSuperAdmin(): bool
+  {
+    if (!\utils::canUser('super_admin')) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+      return false;
+    }
+    return true;
+  }
+
   public function save_tb_data()
   {
+    if (!$this->requireSuperAdmin()) return;
     $post = $this->post;
 
     try {
@@ -71,6 +85,7 @@ class config_ctrl extends Controller
 
   public function add_new_tb()
   {
+    if (!$this->requireSuperAdmin()) return;
     $post = $this->post;
 
     try {
@@ -154,6 +169,7 @@ class config_ctrl extends Controller
 
   public function save_fld_properties()
   {
+    if (!$this->requireSuperAdmin()) return;
     $post = $this->post;
     try {
       $post = \utils::recursiveFilter($post);
@@ -179,6 +195,7 @@ class config_ctrl extends Controller
 
   public function add_new_fld()
   {
+    if (!$this->requireSuperAdmin()) return;
     $post = $this->post;
     try {
       $post = \utils::recursiveFilter($post);
@@ -210,6 +227,7 @@ class config_ctrl extends Controller
 
   public function save_app_properties()
   {
+    if (!$this->requireSuperAdmin()) return;
     $data = $this->post;
     try {
       $this->cfg->setMain($data);
@@ -222,6 +240,7 @@ class config_ctrl extends Controller
 
   public function delete_tb()
   {
+    if (!$this->requireSuperAdmin()) return;
     $tb = $this->get['tb'];
     try {
       $this->cfg->deleteTb($tb);
@@ -237,6 +256,7 @@ class config_ctrl extends Controller
 
   public function delete_column()
   {
+    if (!$this->requireSuperAdmin()) return;
     $tb = $this->get['tb'];
     $fld = $this->get['fld'];
 
@@ -254,6 +274,7 @@ class config_ctrl extends Controller
 
   public function rename_tb()
   {
+    if (!$this->requireSuperAdmin()) return;
     $old_name = $this->get['old_name'];
     $new_name = $this->get['new_name'];
     try {
@@ -276,6 +297,7 @@ class config_ctrl extends Controller
 
   public function rename_column()
   {
+    if (!$this->requireSuperAdmin()) return;
     $tb = $this->get['tb'];
     $old_name = $this->get['old_name'];
     $new_name = $this->get['new_name'];
@@ -302,6 +324,7 @@ class config_ctrl extends Controller
 
   public function fix()
   {
+    if (!$this->requireSuperAdmin()) return;
     $action = $this->get['action'];
     $tb = $this->get['tb'];
     $col = $this->get['col'];
@@ -355,12 +378,14 @@ class config_ctrl extends Controller
 
   public function getFldList()
   {
+    if (!$this->requireSuperAdmin()) return;
     $tb = $this->get['tb'];
     $this->response('ok', 'success', null, ["fields" => $this->cfg->get("tables.$tb.fields.*.label")]);
   }
 
   public function sortTables()
   {
+    if (!$this->requireSuperAdmin()) return;
     $sortArray = $this->post['sort'] ?? $this->get['sort'] ?? [];
     if ($this->cfg->sortTables($sortArray)) {
       $this->response('ok_sort_update', 'success');
@@ -371,6 +396,7 @@ class config_ctrl extends Controller
 
   public function save_geoface_properties()
   {
+    if (!$this->requireSuperAdmin()) return;
     $data = $this->post;
 
     $json = json_encode(array_filter($data, function($el){
@@ -388,6 +414,7 @@ class config_ctrl extends Controller
 
   public function delete_local_geofile()
   {
+    if (!$this->requireSuperAdmin()) return;
     $file = PROJ_DIR . 'geodata/' . $this->get['file'];
 
     try {

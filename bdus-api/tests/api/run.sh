@@ -213,10 +213,18 @@ run_phase "Backup" "08_backup.hurl" \
   --variable "jwt=${JWT}"
 
 # ════════════════════════════════════════════════════════════════════
-# Phase 9 — Cleanup
+# Phase 9 — Users and privilege enforcement
 # ════════════════════════════════════════════════════════════════════
-header "Phase 9 — Cleanup"
-run_phase "Logout" "09_cleanup.hurl" \
+header "Phase 9 — Users & privileges"
+run_phase "Users & privileges" "09_users_privileges.hurl" \
+  --variable "jwt=${JWT}" \
+  --variable "app_name=${APP_NAME}"
+
+# ════════════════════════════════════════════════════════════════════
+# Phase 10 — Cleanup
+# ════════════════════════════════════════════════════════════════════
+header "Phase 10 — Cleanup"
+run_phase "Logout" "10_cleanup.hurl" \
   --variable "jwt=${JWT}"
 
 # Remove the test app from disk

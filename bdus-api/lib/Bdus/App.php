@@ -168,10 +168,11 @@ class App
       return false;
     }
     return match ($required) {
-      'read'  => $privilege <= \UAC\UAC::READ,    // <= 30
-      'edit'  => $privilege <= \UAC\UAC::CREATE,  // <= 25
-      'admin' => $privilege <= \UAC\UAC::ADM,     // <= 10
-      default => false,
+      'read'        => $privilege <= \UAC\UAC::READ,    // <= 30
+      'edit'        => $privilege <= \UAC\UAC::CREATE,  // <= 25
+      'admin'       => $privilege <= \UAC\UAC::ADM,     // <= 10
+      'super_admin' => $privilege <= \UAC\UAC::SUPERADM, // == 1
+      default       => false,
     };
   }
 

@@ -176,6 +176,11 @@ class chart_ctrl extends Controller
      */
     public function saveChart(): void
     {
+        if (!\utils::canUser('edit')) {
+            $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+            return;
+        }
+
         $name       = $this->post['name']       ?? null;
         $definition = $this->post['definition'] ?? null;
 

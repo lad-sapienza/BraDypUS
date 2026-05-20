@@ -243,6 +243,59 @@ The PHP backend is preserved and extended with JSON endpoints consumed by the ne
   principal is an API key rather than a human user.
 
 ### Removed (cont.)
+- **Table prefix system** (`APP__`): `PREFIX` constant is now always an empty
+  string. All table names — user tables and system tables alike — are stored
+  and accessed without any application prefix. The prefix was a legacy
+  workaround for shared MySQL/PostgreSQL databases; every current deployment
+  uses per-application SQLite files, making it unnecessary. See the migration
+  note below.
+
+### Added (cont.)
+- **End-to-end API test suite** (`tests/api/`): nine Hurl phases cover the
+  full application lifecycle — `01` create-app, `02` login/JWT capture, `03`
+  config (tables + fields), `04` records CRUD, `05` stratigraphic relations
+  (RS), `06` search (shortSql, advanced, SQL expert), `07` charts (save/fetch
+  data/delete), `08` backup (create/list/delete), `09` cleanup/logout.
+  Run with `bash tests/api/run.sh tests/api/vars.env`.
+- **`getRecords()` simple-filter shortcuts**: a GET request to
+  `/api/records/{tb}?q_{field}=value` now applies a `WHERE field = value`
+  filter without requiring the full ShortSQL syntax. Multiple `q_` params are
+  AND-combined. A POST body `{"search": [{"field","operator","value"}]}` is
+  also accepted as a shorthand for the advanced search format.
+- **`Controller::returnJson()` auto-status**: if the array passed to
+  `returnJson()` does not include a `status` key, `"status":"success"` is
+  injected automatically, removing boilerplate from every call-site.
+
+### Fixed (cont.)
+- **Legacy prefix boot crash**: existing apps created before v5 that still
+  have `APP__`-prefixed tables in SQLite (e.g. `test__users`, `test__files`)
+  would crash at login with *"Configuration file …/test__files.json not
+  found"* because `Config::__construct()` runs before migrations. Fixed with a
+  two-part change: (1) `Migrate::maybeRemovePrefix()` is now `public static`
+  so it can be called early; (2) `App::start()` calls it immediately after DB
+  initialisation — before routing — so every legacy app is transparently
+  upgraded on its first request. The pre-flight renames all `APP__*` tables in
+  SQLite and rewrites `tables.json`; it is a no-op once the rename is done.
+- **`CreateApp` wrote prefixed table names**: `CreateApp::__construct()` was
+  passing `APP . '__'` to `Manage` and writing `"{APP}__files"` /
+  `"{APP}__geodata"` into the generated `tables.json`. New apps therefore
+  booted with the prefix baked in, defeating the removal. Fixed: `Manage` is
+  now constructed with `''` and the generated entries use the bare names
+  `"files"` / `"geodata"`.
+- **Chart `delete` / `share` / `unshare` ignored the route-param `id`**:
+  `deleteChart()`, `shareChart()` and `unshareChart()` read only
+  `$this->post['id']`, but FastRoute merges path-parameter values into
+  `$_GET`. Requests to `DELETE /api/chart/{id}` and
+  `POST /api/chart/{id}/share` therefore always saw `id = null` and returned
+  *"parameter missing"*. Fixed by reading `$this->post['id'] ?? $this->get['id']`.
+- **`GET /api/record/{tb}/new` route missing**: the route for fetching a
+  blank new-record form was absent from the FastRoute table; it now returns
+  the empty record scaffold.
+- **`search_ctrl::getUsedValues()` used legacy `$this->request`**: refactored
+  to read `tb` / `field` from `$_GET`, always use `returnJson()`, and return
+  `{"values":[...]}` instead of a bare JSON array.
+
+### Removed (cont.)
 - **`API\V1\Router` / `API\V1\Auth` / `API\V1\Handler` / `API\V1\Filter`**:
   the legacy read-only REST API surface (`/api/v1/{app}/...`) has been
   removed. Its functionality is fully superseded by the unified

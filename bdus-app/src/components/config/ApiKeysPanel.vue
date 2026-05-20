@@ -19,6 +19,14 @@
             fluid
             @keydown.enter="createKey"
           />
+          <Select
+            v-model="newPrivilege"
+            :options="privilegeOptions"
+            option-label="label"
+            option-value="value"
+            :placeholder="t('privilege')"
+            style="min-width: 12rem"
+          />
           <Button
             :label="t('create_api_key')"
             icon="pi pi-plus"
@@ -61,6 +69,14 @@
           <Column field="last_used_at" :header="t('last_used')">
             <template #body="{ data }">{{ data.last_used_at ? formatDate(data.last_used_at) : '—' }}</template>
           </Column>
+          <Column field="privilege" :header="t('privilege')">
+            <template #body="{ data }">
+              <Tag
+                :value="privilegeLabel(data.privilege)"
+                :severity="privilegeSeverity(data.privilege)"
+              />
+            </template>
+          </Column>
           <Column field="is_active" :header="t('status')">
             <template #body="{ data }">
               <Tag
@@ -97,9 +113,10 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import Button    from 'primevue/button'
 import InputText from 'primevue/inputtext'
+import Select    from 'primevue/select'
 import Message   from 'primevue/message'
 import DataTable from 'primevue/datatable'
 import Column    from 'primevue/column'
@@ -111,12 +128,36 @@ import { api }      from '@/api'
 const { t }  = useI18n()
 const toast  = useToast()
 
-const loading  = ref(false)
-const creating = ref(false)
-const error    = ref(null)
-const keys     = ref([])
-const newLabel = ref('')
-const newKey   = ref(null)
+// Privilege levels mirror UAC constants (lower = more privileged)
+const PRIV_ADMIN = 10
+const PRIV_EDIT  = 25
+const PRIV_READ  = 30
+
+const privilegeOptions = computed(() => [
+  { value: PRIV_READ,  label: t('priv_read')  },
+  { value: PRIV_EDIT,  label: t('priv_edit')  },
+  { value: PRIV_ADMIN, label: t('priv_admin') },
+])
+
+function privilegeLabel(priv) {
+  if (priv <= PRIV_ADMIN) return t('priv_admin')
+  if (priv <= PRIV_EDIT)  return t('priv_edit')
+  return t('priv_read')
+}
+
+function privilegeSeverity(priv) {
+  if (priv <= PRIV_ADMIN) return 'danger'
+  if (priv <= PRIV_EDIT)  return 'warn'
+  return 'info'
+}
+
+const loading      = ref(false)
+const creating     = ref(false)
+const error        = ref(null)
+const keys         = ref([])
+const newLabel     = ref('')
+const newPrivilege = ref(PRIV_READ)
+const newKey       = ref(null)
 
 // ── Load ──────────────────────────────────────────────────────────────────
 
@@ -143,13 +184,14 @@ async function createKey() {
   creating.value = true
   newKey.value   = null
   try {
-    const res = await api.post('api_ctrl', 'createKey', { label })
+    const res = await api.post('api_ctrl', 'createKey', { label, privilege: newPrivilege.value })
     if (res.status === 'error') {
       toast.add({ severity: 'error', summary: t(res.code) || res.code, life: 5000 })
       return
     }
-    newKey.value   = res.key
-    newLabel.value = ''
+    newKey.value      = res.key
+    newLabel.value    = ''
+    newPrivilege.value = PRIV_READ
     toast.add({ severity: 'success', summary: t('ok_api_key_created'), life: 4000 })
     await load()
   } catch (e) {

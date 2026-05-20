@@ -82,10 +82,15 @@ class config_ctrl extends Controller
           throw new \Exception("Required field(s):  " . implode(', ', $missing) . " are missing");
         }
       } else if (!$post['is_plugin'] || $post['is_plugin'] == 0) {
-        $missing = $this->check_required($post, ['name', 'label', 'order', 'id_field', 'preview']);
+        $missing = $this->check_required($post, ['name', 'label']);
         if (!empty($missing)) {
           throw new \Exception("Required field(s):  " . implode(', ', $missing) . " are missing");
         }
+        // Default layout fields to 'id' — the only field guaranteed to exist
+        // on a brand-new table. The user can update them once real fields are added.
+        if (empty($post['order']))    { $post['order']    = 'id'; }
+        if (empty($post['id_field'])) { $post['id_field'] = 'id'; }
+        if (empty($post['preview']))  { $post['preview']  = ['id']; }
       }
 
       // Write table columns file

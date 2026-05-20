@@ -802,5 +802,6 @@
   "no_api_keys": "Nessuna chiave API definita",
   "copied": "Copiato",
   "login": "Accedi",
-  "app_name_hint": "Solo lettere minuscole, cifre e trattini bassi. Deve iniziare con una lettera."
+  "app_name_hint": "Solo lettere minuscole, cifre e trattini bassi. Deve iniziare con una lettera.",
+  "ok_save": "Salvato"
 }

@@ -802,5 +802,6 @@
   "no_api_keys": "No API keys defined",
   "copied": "Copied",
   "login": "Login",
-  "app_name_hint": "Lowercase letters, digits and underscores only. Must start with a letter."
+  "app_name_hint": "Lowercase letters, digits and underscores only. Must start with a letter.",
+  "ok_save": "Saved"
 }

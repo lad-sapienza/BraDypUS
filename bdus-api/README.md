@@ -15,7 +15,8 @@ License: [GNU AGPL-3.0](LICENSE) · Docs: [docs.bdus.cloud](https://docs.bdus.cl
 
 bdus-api exposes a REST JSON API that the Vue frontend (bdus-app) consumes. It handles:
 
-- User authentication and session management
+- User authentication (stateless JWT; per-tab, multi-app)
+- API key authentication with per-key privilege levels (read / edit / admin)
 - Multi-tenant application management (one SQLite / MySQL / PostgreSQL database per project)
 - CRUD operations on records, with a flexible field-type system
 - Search (simple, advanced, free SQL, ShortSQL DSL)
@@ -23,8 +24,7 @@ bdus-api exposes a REST JSON API that the Vue frontend (bdus-app) consumes. It h
 - Geodata (GeoJSON read/write)
 - Charts and saved queries
 - Configuration management
-- Schema migrations
-- A public read-only REST API (v1, Bearer/API-key auth)
+- Schema migrations (auto-applied at login; self-healing pre-flight for legacy databases)
 
 ---
 
@@ -115,6 +115,8 @@ Copy `.env.example` to `.env` and edit as needed.
 
 ## Running the tests
 
+### PHPUnit — unit and integration tests
+
 Tests use PHPUnit 11 with an in-memory SQLite database — no configuration needed.
 
 ```bash
@@ -125,6 +127,23 @@ docker compose exec app ./vendor/bin/phpunit --testdox
 ./vendor/bin/phpunit --testdox
 ```
 
+### Hurl — end-to-end API test suite
+
+Nine sequential phases cover the full application lifecycle against a running server.
+Requires [hurl](https://hurl.dev) and [jq](https://jqlang.github.io/jq/) (`brew install hurl jq`).
+
+```bash
+# Start the server first (Docker or native), then:
+bash tests/api/run.sh tests/api/vars.env
+
+# Useful flags
+bash tests/api/run.sh tests/api/vars.env --from=04   # resume from phase 04
+bash tests/api/run.sh tests/api/vars.env --only=06   # run a single phase
+bash tests/api/run.sh tests/api/vars.env --list      # dry-run: show all steps
+```
+
+Edit `tests/api/vars.env` to point at a different server or app name.
+
 ---
 
 ## Data directory
@@ -133,7 +152,7 @@ Each application stores its data under `projects/{app_name}/`:
 
 ```
 projects/{app_name}/
-├── cfg/        YAML configuration files
+├── cfg/        JSON configuration files (tables, fields, app settings)
 ├── files/      Uploaded files
 ├── backups/    Database backups
 ├── export/     Export output

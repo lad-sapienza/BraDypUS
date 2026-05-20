@@ -112,13 +112,16 @@ abstract class Controller
   }
 
   /**
-   * Echoes a simple status+text JSON response.
-   * Legacy helper used by many modules; `text` carries an i18n code string.
+   * Echoes a normalised JSON response.
    *
-   * @param string $text    i18n code (e.g. 'ok_def_update')
-   * @param string $status  'success' | 'error'
-   * @param array|null $text_bindings  ignored (kept for BC)
-   * @param array $other_args  extra keys merged into the response
+   * Guaranteed shape: { status, code, text, ...extra }
+   *   - `code`  — canonical i18n key; always present (frontend uses this)
+   *   - `text`  — same value as `code`, kept for backwards compatibility
+   *
+   * @param string      $text          i18n key (e.g. 'ok_def_update')
+   * @param string      $status        'success' | 'error'
+   * @param array|null  $text_bindings ignored (kept for BC)
+   * @param array       $other_args    extra keys merged into the response
    */
   public function response(
     string $text,
@@ -126,7 +129,7 @@ abstract class Controller
     ?array $text_bindings = null,
     array $other_args = []
   ): void {
-    $res = ['status' => $status, 'text' => $text];
+    $res = ['status' => $status, 'code' => $text, 'text' => $text];
     if (!empty($other_args)) {
       $res = array_merge($res, $other_args);
     }

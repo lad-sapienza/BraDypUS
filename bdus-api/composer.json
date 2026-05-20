@@ -1,13 +1,13 @@
 {
     "name": "bdus/api",
-    "description": "BraDypUS web API",
+    "description": "BraDypUS PHP backend",
     "version": "5.0.0",
     "require": {
         "firebase/php-jwt": "^7.0",
-        "intervention/image": "^2.6",
-        "monolog/monolog": "^2.3",
-        "adbario/php-dot-notation": "^2.2",
-        "spatie/db-dumper": "2.21.1",
+        "intervention/image": "^3.0",
+        "monolog/monolog": "^3.0",
+        "adbario/php-dot-notation": "^3.0",
+        "spatie/db-dumper": "^3.0",
         "funiq/geophp": "dev-master",
         "nikic/fast-route": "^1.3"
     },

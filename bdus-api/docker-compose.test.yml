@@ -1,0 +1,15 @@
+# Test-only Compose override — used exclusively by test.sh.
+#
+# docker compose -p bdus-test -f docker-compose.yml -f docker-compose.test.yml up -d
+#
+# Key differences from the dev compose:
+#   - Port 8081 (avoids collision with a running dev container on 8080)
+#   - BRADYPUS_ALLOW_NEW_APP=1 required by Hurl Phase 1 (create-app)
+services:
+  app:
+    ports:
+      - "8081:80"
+    environment:
+      - BRADYPUS_DEBUG=1
+      - BRADYPUS_ALLOW_NEW_APP=1
+      - BRADYPUS_CORS_ORIGIN=http://localhost:5173

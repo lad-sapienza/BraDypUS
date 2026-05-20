@@ -67,6 +67,15 @@ The PHP backend is preserved and extended with JSON endpoints consumed by the ne
 - **LogView**, **UsersView**, **VocabulariesView**, **HomeView**, **LoginView** migrated
 - 167 PHPUnit integration + unit tests covering all migrated controllers
 - Module readmes: `vue/docs/{data,log,search,backup,info,config,templates}.md`
+- **REST router** (`nikic/fast-route ^1.3`): clean URL routing for the public
+  REST API (`/api/…`) without query-string dispatch. All legacy `?obj=…&method=…`
+  URLs remain intact for the Vue frontend.
+- **CORS support**: `Access-Control-Allow-Origin` / `Access-Control-Allow-Headers`
+  headers emitted for REST API responses so third-party frontends can consume
+  public endpoints without a proxy.
+- **`welcome.md` scaffold**: a starter welcome-page file is generated inside
+  `projects/{app}/cfg/` when a new application is created, giving users an
+  editable landing page out of the box.
 
 ### Removed
 - PHP session-based authentication (`session_start()`, `$_SESSION['user']`)
@@ -78,6 +87,12 @@ The PHP backend is preserved and extended with JSON endpoints consumed by the ne
   Vue localStorage in a future release)
 - Gulp / LESS build pipeline (`gulpfile.js` removed); v5 frontend is
   built entirely by Vite
+- `michelf/php-markdown` PHP dependency removed; Markdown → HTML conversion
+  for the changelog and welcome page is now performed client-side (`marked.js`)
+- `Monolog\Handler\FirePHPHandler` removed (FirePHP browser extension is
+  abandoned); the debug handler stack now uses `StreamHandler` only
+- `langs` key removed from `getAppProperties` response; the list of available
+  UI locales is owned by the Vue frontend, not the backend
 
 ### Security
 - `Authorization: Bearer` header is now read via `getallheaders()` as
@@ -103,6 +118,12 @@ The PHP backend is preserved and extended with JSON endpoints consumed by the ne
 - All v4 PHP methods superseded by Vue equivalents tagged `@deprecated v5`
 - Backup validation no longer requires the `sqlite3` CLI binary; `DumpExists::Check()`
   returns success immediately for SQLite (native PHP/PDO dump needs no external tool)
+- Application version is now read from `composer.json` at runtime instead of
+  being hardcoded; `info_ctrl::getInfo()` returns the value from the `version` key
+- Composer dependencies updated: `adbario/php-dot-notation` 3.5,
+  `monolog/monolog` 3.10, `intervention/image` 3.11, `spatie/db-dumper` 3.8;
+  `intervention/image` v3 API migration applied (`ImageManager` + `Driver` class,
+  `read()` replaces `make()`, explicit path required for `save()`)
 
 ### Fixed
 - **Harris Matrix — search filter not applied**: `getRsMatrix` received
@@ -177,6 +198,19 @@ The PHP backend is preserved and extended with JSON endpoints consumed by the ne
 - Multi_select fields now pre-load options on mount so labels resolve in closed state
 - Table switch in DataView no longer ignored due to Vue 3 reactive-update batching
 - FAB uses `position: fixed` so it is not clipped by `overflow: hidden` ancestors
+- **M003 / M004 migrations crash on new apps**: `M003_RefactorQueriesTable` and
+  `M004_RefactorChartsTable` executed `SELECT` statements against columns (`text`,
+  `date`) that only exist in databases upgraded from v4. Fresh v5 databases never
+  had those columns, causing a fatal DB error on first login. Both migrations now
+  catch the `\Throwable` and return early when those columns are absent.
+- **Privilege name `adm` → `admin`**: the internal privilege string was changed to
+  match the token used throughout the codebase; users with the old value were
+  silently treated as unprivileged.
+- **Welcome markdown not persisting on PUT**: `_fetch()` in the Vue API layer sent
+  `FormData` for simple key-value payloads and fell back to `application/json` only
+  for complex objects. PHP does not populate `$_POST` from `FormData` on PUT requests,
+  so the body was silently discarded and the file was truncated to 0 bytes. Fixed by
+  always serialising the body as JSON with `Content-Type: application/json`.
 
 ## [4.4.7] - 2026-05-09
 

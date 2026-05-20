@@ -1,8 +1,33 @@
 {
     "name": "bdus/api",
-    "description": "BraDypUS PHP backend",
+    "description": "BraDypUS — open-source web database system for archaeological and cultural-heritage research (PHP backend)",
     "version": "5.0.0",
+    "license": "AGPL-3.0-only",
+    "authors": [
+        {
+            "name": "Julian Bogdani",
+            "email": "julian.bogdani@uniroma1.it",
+            "homepage": "https://lad.saras.uniroma1.it",
+            "role": "Developer"
+        }
+    ],
+    "homepage": "https://bdus.cloud",
+    "support": {
+        "issues": "https://github.com/lad-sapienza/bdus-api/issues",
+        "source": "https://github.com/lad-sapienza/bdus-api",
+        "docs": "https://docs.bdus.cloud"
+    },
+    "keywords": [
+        "archaeology",
+        "cultural heritage",
+        "database",
+        "web application",
+        "digital humanities",
+        "api",
+        "rest"
+    ],
     "require": {
+        "php": ">=8.2",
         "firebase/php-jwt": "^7.0",
         "intervention/image": "^3.0",
         "monolog/monolog": "^3.0",
@@ -13,6 +38,11 @@
     },
     "require-dev": {
         "phpunit/phpunit": "^11"
+    },
+    "config": {
+        "platform": {
+            "php": "8.2"
+        }
     },
     "autoload-dev": {
         "psr-4": {

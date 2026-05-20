@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5816d6cf8d4c75fdcf884d703776b9ae",
+    "content-hash": "5fc4449371201065956e5347556b6fa7",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -130,19 +130,19 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/funiq/geoPHP.git",
-                "reference": "694e2f3cc55962e988ab77cb29f3b0177f4a2d2d"
+                "reference": "42ba83cda286f9b76cf6da2e149e2cb36cefc6e8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/funiq/geoPHP/zipball/694e2f3cc55962e988ab77cb29f3b0177f4a2d2d",
-                "reference": "694e2f3cc55962e988ab77cb29f3b0177f4a2d2d",
+                "url": "https://api.github.com/repos/funiq/geoPHP/zipball/42ba83cda286f9b76cf6da2e149e2cb36cefc6e8",
+                "reference": "42ba83cda286f9b76cf6da2e149e2cb36cefc6e8",
                 "shasum": ""
             },
             "require": {
-                "php": ">=5.5.0"
+                "php": "5.5 - 8.0"
             },
             "require-dev": {
-                "php": ">=5.5.0",
+                "php": "5.5 - 8.0",
                 "php-coveralls/php-coveralls": "2.*",
                 "phpstan/phpstan": "^0.12.18",
                 "phpunit/phpunit": "5.* || 8.*",
@@ -151,7 +151,6 @@
             "suggest": {
                 "ext-geos": "GEOS allows more advanced operations"
             },
-            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -191,9 +190,9 @@
             ],
             "support": {
                 "issues": "https://github.com/funiq/geoPHP/issues",
-                "source": "https://github.com/funiq/geoPHP/tree/master"
+                "source": "https://github.com/funiq/geoPHP/tree/v2.0.0"
             },
-            "time": "2020-06-27T20:04:05+00:00"
+            "time": "2022-07-05T09:31:12+00:00"
         },
         {
             "name": "intervention/gif",
@@ -607,20 +606,20 @@
         },
         {
             "name": "symfony/process",
-            "version": "v7.4.11",
+            "version": "v8.0.11",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/process.git",
-                "reference": "d9593c9efa40499eb078b81144de42cbc28a31f0"
+                "reference": "26d89e459f037d2873300605d0a07e7a8ef84db0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/process/zipball/d9593c9efa40499eb078b81144de42cbc28a31f0",
-                "reference": "d9593c9efa40499eb078b81144de42cbc28a31f0",
+                "url": "https://api.github.com/repos/symfony/process/zipball/26d89e459f037d2873300605d0a07e7a8ef84db0",
+                "reference": "26d89e459f037d2873300605d0a07e7a8ef84db0",
                 "shasum": ""
             },
             "require": {
-                "php": ">=8.2"
+                "php": ">=8.4"
             },
             "type": "library",
             "autoload": {
@@ -648,7 +647,7 @@
             "description": "Executes commands in sub-processes",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/process/tree/v7.4.11"
+                "source": "https://github.com/symfony/process/tree/v8.0.11"
             },
             "funding": [
                 {
@@ -668,7 +667,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-05-11T16:55:21+00:00"
+            "time": "2026-05-11T16:56:32+00:00"
         }
     ],
     "packages-dev": [
@@ -2461,7 +2460,12 @@
     },
     "prefer-stable": false,
     "prefer-lowest": false,
-    "platform": {},
+    "platform": {
+        "php": ">=8.2"
+    },
     "platform-dev": {},
+    "platform-overrides": {
+        "php": "8.2"
+    },
     "plugin-api-version": "2.9.0"
 }

@@ -5,6 +5,7 @@
  */
 
 use \Intervention\Image\ImageManager;
+use \Intervention\Image\Drivers\Gd\Driver;
 
 class file_ctrl extends Controller
 {
@@ -12,8 +13,8 @@ class file_ctrl extends Controller
 	{
 		try {
 			$image = $this->get['image'];
-			$im = new ImageManager();
-			$im->make($image)->rotate(90)->save();
+			$im = new ImageManager(new Driver());
+			$im->read($image)->rotate(90)->save($image);
 			echo $this->response('img_rotated', 'success');
 		} catch (\Throwable $th) {
 			$this->log->error($th);

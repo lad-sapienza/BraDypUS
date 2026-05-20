@@ -42,27 +42,65 @@ class record_ctrl extends Controller
     $perPage    = min(200, max(1, (int)($this->get['per_page']  ?? $this->post['per_page']  ?? 30)));
     $sortFld    = $this->get['sort_field'] ?? $this->post['sort_field'] ?? null;
     $sortDir    = (($this->get['sort_dir'] ?? $this->post['sort_dir'] ?? 'asc') === 'desc') ? 'desc' : 'asc';
-    $searchType = $this->get['search_type'] ?? $this->post['search_type'] ?? 'all';
+    $searchType = $this->get['search_type'] ?? $this->post['search_type'] ?? null;
 
-    // Build QueryFromRequest-compatible request array
-    $qRequest = ['tb' => $tb, 'type' => $searchType];
+    // Build QueryFromRequest-compatible request array.
+    // Auto-detect search type when search_type is not provided explicitly.
+    $qRequest = ['tb' => $tb, 'type' => $searchType ?? 'all'];
 
-    switch ($searchType) {
-      case 'fast':
-        $qRequest['string'] = $this->get['search'] ?? $this->post['search'] ?? '';
-        break;
-      case 'advanced':
-        $qRequest['adv'] = $this->post['adv'] ?? [];
-        break;
-      case 'sqlExpert':
-        $qRequest['querytext'] = $this->post['querytext'] ?? $this->get['querytext'] ?? '';
-        $qRequest['join']      = $this->post['join']      ?? $this->get['join']      ?? '';
-        break;
-      case 'shortSql':
-        $qRequest['where'] = $this->get['where'] ?? $this->post['where'] ?? '';
-        break;
-      default:
-        $qRequest['type'] = 'all';
+    if ($searchType) {
+      // Explicit search_type
+      switch ($searchType) {
+        case 'fast':
+          $qRequest['string'] = $this->get['search'] ?? $this->post['search'] ?? '';
+          break;
+        case 'advanced':
+          $qRequest['adv'] = $this->post['adv'] ?? [];
+          break;
+        case 'sqlExpert':
+          $qRequest['querytext'] = $this->post['querytext'] ?? $this->get['querytext'] ?? '';
+          $qRequest['join']      = $this->post['join']      ?? $this->get['join']      ?? '';
+          break;
+        case 'shortSql':
+          $qRequest['where'] = $this->get['where'] ?? $this->post['where'] ?? '';
+          break;
+        default:
+          $qRequest['type'] = 'all';
+      }
+    } elseif (isset($this->post['search']) && is_array($this->post['search'])) {
+      // Convenience POST format: { "search": [{ "field", "operator", "value" }] }
+      // Converts to QueryFromRequest 'advanced' format automatically.
+      $adv = [];
+      foreach ($this->post['search'] as $row) {
+        $field = $row['field'] ?? null;
+        if (!$field) continue;
+        $adv[] = [
+          'fld'       => $tb . ':' . $field,
+          'operator'  => $row['operator'] ?? '=',
+          'value'     => $row['value']    ?? '',
+          'connector' => $row['connector'] ?? 'AND',
+          '('         => '',
+          ')'         => '',
+        ];
+      }
+      if (!empty($adv)) {
+        $qRequest['type'] = 'advanced';
+        $qRequest['adv']  = $adv;
+      }
+    } else {
+      // Check for q_fieldname=value GET params (simple field equality filter).
+      // e.g. ?q_sigla=US001 → WHERE sigla = 'US001'
+      $qWhereParts = [];
+      foreach ($this->get as $key => $val) {
+        if (str_starts_with($key, 'q_') && $val !== '' && $val !== null) {
+          $fieldName     = substr($key, 2);
+          $qWhereParts[] = $fieldName . '|=|' . $val;
+        }
+      }
+      if (!empty($qWhereParts)) {
+        $qRequest['type']  = 'shortSql';
+        $qRequest['where'] = implode('||and|', $qWhereParts);
+      }
     }
 
     // Optional: custom column list from the frontend column-visibility toggler.
@@ -271,7 +309,7 @@ class record_ctrl extends Controller
 
       // Template loading
       $appName    = $this->cfg->get('main.name') ?? '';
-      $tbStripped = str_replace($this->prefix, '', $tb);
+      $tbStripped = $tb;
       $tplName    = $this->get['template'] ?? null;
       if ($tplName) {
         $tpl = \Template\Loader::load($appName, $tbStripped, $tplName);
@@ -346,7 +384,7 @@ class record_ctrl extends Controller
     }
 
     $appName    = $this->cfg->get('main.name') ?? '';
-    $tbStripped = str_replace($this->prefix, '', $tb);
+    $tbStripped = $tb;
     $templates  = \Template\Loader::listAvailable($appName, $tbStripped);
 
     $this->returnJson(['templates' => $templates]);
@@ -364,7 +402,7 @@ class record_ctrl extends Controller
     foreach ($this->cfg->get("tables.{$tb}.plugin") ?: [] as $plg) {
       $plugins[$plg] = [
         'tb_id'       => $plg,
-        'tb_stripped' => str_replace($this->prefix, '', $plg),
+        'tb_stripped' => $plg,
         'label'       => $this->cfg->get("tables.{$plg}.label") ?: $plg,
         'fields'      => $this->buildFieldSchema($plg),
       ];
@@ -501,7 +539,7 @@ class record_ctrl extends Controller
     }
 
     return [
-      'metadata'    => ['tb_id' => $tb, 'tb_stripped' => str_replace($this->prefix, '', $tb), 'tb_label' => $this->cfg->get("tables.{$tb}.label")],
+      'metadata'    => ['tb_id' => $tb, 'tb_stripped' => $tb, 'tb_label' => $this->cfg->get("tables.{$tb}.label")],
       'core'        => $core,
       'plugins'     => $plugins,
       'links'       => [], 'backlinks' => [], 'manualLinks' => [],
@@ -594,9 +632,23 @@ class record_ctrl extends Controller
         // ── INSERT path: build model directly with _val markers ─────────
         // For new records we skip Read/Edit (nothing to compare against)
         // and hand-craft the model with _val markers for every submitted field.
+
+        // Server-side system fields: always override client-supplied values.
+        // `creator` is NOT NULL in the DB and must be the authenticated user's id.
+        // `id` must never be supplied on insert (auto-assigned by DB).
+        unset($core['id']);
+        if (array_key_exists('creator', $core)) {
+          $core['creator'] = \Auth\CurrentUser::id() ?: 0;
+        }
+
         $coreModel = [];
         foreach ($core as $fld => $val) {
           $coreModel[$fld] = ['name' => $fld, '_val' => $val];
+        }
+
+        // Ensure creator is always written, even if frontend omitted it entirely.
+        if (!isset($coreModel['creator'])) {
+          $coreModel['creator'] = ['name' => 'creator', '_val' => \Auth\CurrentUser::id() ?: 0];
         }
 
         $pluginsModel = [];
@@ -618,7 +670,7 @@ class record_ctrl extends Controller
           'metadata'    => [
             'tb_id'      => $tb,
             'rec_id'     => null,
-            'tb_stripped'=> str_replace($this->prefix, '', $tb),
+            'tb_stripped'=> $tb,
             'tb_label'   => $this->cfg->get("tables.{$tb}.label"),
           ],
           'core'        => $coreModel,
@@ -1218,7 +1270,7 @@ class record_ctrl extends Controller
         'link'   => [
           'key'         => $newId,
           'tb_id'       => $tbTwo,
-          'tb_stripped' => str_replace(PREFIX, '', $tbTwo),
+          'tb_stripped' => $tbTwo,
           'tb_label'    => $this->cfg->get("tables.$tbTwo.label"),
           'ref_id'      => $idTwo,
           'ref_label'   => $refLabel,
@@ -1456,8 +1508,8 @@ class record_ctrl extends Controller
       return;
     }
 
-    $tb  = $this->request['tb'] ?? null;
-    $raw = $this->request['id'] ?? null;
+    $tb  = $this->get['tb'] ?? null;
+    $raw = $this->get['id'] ?? null;
 
     if (!$tb || !$raw) {
       $this->returnJson(['status' => 'error', 'code' => 'no_id_provided']);

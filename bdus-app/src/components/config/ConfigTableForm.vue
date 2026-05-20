@@ -67,8 +67,10 @@
         </div>
       </section>
 
-      <!-- ── Layout (only for non-plugin / existing tables) ──────── -->
-      <section v-if="!isPlugin" class="cfg-section">
+      <!-- ── Layout (only for existing non-plugin tables) ──────────
+           Hidden when creating a new table: order/id_field/preview
+           default to 'id' on the backend and are configured later. -->
+      <section v-if="tb && !isPlugin" class="cfg-section">
         <div class="cfg-section-title">{{ t('layout') }}</div>
         <div class="cfg-form-row">
 

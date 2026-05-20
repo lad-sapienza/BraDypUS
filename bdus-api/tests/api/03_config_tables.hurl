@@ -29,6 +29,21 @@ jsonpath "$.code"   == "ok_cfg_data_updated"
 jsonpath "$.tb" == "us"
 
 
+# ── 3b-neg. Duplicate table name → tb_already_available ─────────────
+POST {{base_url}}/api/config/tables
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{
+  "name":      "us",
+  "label":     "Duplicate — must fail",
+  "is_plugin": "0"
+}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "error"
+jsonpath "$.code"   == "tb_already_available"
+
+
 # ── 3c. Add fields to us ────────────────────────────────────────────
 POST {{base_url}}/api/config/table/us/field
 Authorization: Bearer {{jwt}}
@@ -37,6 +52,17 @@ Content-Type: application/json
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
+
+# ── 3c-neg. Duplicate field name → fld_already_available ────────────
+POST {{base_url}}/api/config/table/us/field
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "name": "sigla", "label": "Duplicate — must fail", "type": "text", "db_type": "TEXT" }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "error"
+jsonpath "$.code"   == "fld_already_available"
+
 
 POST {{base_url}}/api/config/table/us/field
 Authorization: Bearer {{jwt}}

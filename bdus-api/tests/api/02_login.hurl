@@ -1,10 +1,67 @@
 # ════════════════════════════════════════════════════════════════════
 # Phase 2 — Authenticate and capture the JWT
 #
-# The token is captured here and injected into all subsequent phases
-# by run.sh via --variable jwt=<value>.
+# Negative cases are verified first; the successful login follows and
+# its token is captured for all subsequent phases by run.sh.
 # ════════════════════════════════════════════════════════════════════
 
+# ── 2a. Invalid email format → email_password_needed ────────────────
+POST {{base_url}}/api/auth/login
+Content-Type: application/json
+{
+  "email":    "not-an-email",
+  "password": "doesntmatter",
+  "app":      "{{app_name}}"
+}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "error"
+jsonpath "$.code"   == "email_password_needed"
+
+
+# ── 2b. Empty password → email_password_needed ──────────────────────
+POST {{base_url}}/api/auth/login
+Content-Type: application/json
+{
+  "email":    "{{admin_email}}",
+  "password": "",
+  "app":      "{{app_name}}"
+}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "error"
+jsonpath "$.code"   == "email_password_needed"
+
+
+# ── 2c. Valid email format, wrong password → login_data_not_valid ────
+POST {{base_url}}/api/auth/login
+Content-Type: application/json
+{
+  "email":    "{{admin_email}}",
+  "password": "DefinitelyWrongPassword!999",
+  "app":      "{{app_name}}"
+}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "error"
+jsonpath "$.code"   == "login_data_not_valid"
+
+
+# ── 2d. Non-existent user → login_data_not_valid ─────────────────────
+POST {{base_url}}/api/auth/login
+Content-Type: application/json
+{
+  "email":    "nobody@nowhere.invalid",
+  "password": "anypassword",
+  "app":      "{{app_name}}"
+}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "error"
+jsonpath "$.code"   == "login_data_not_valid"
+
+
+# ── 2e. Valid credentials → JWT issued ──────────────────────────────
 POST {{base_url}}/api/auth/login
 Content-Type: application/json
 {
@@ -20,7 +77,7 @@ jsonpath "$.token"  isString
 jwt: jsonpath "$.token"
 
 
-# 2b. The refresh endpoint must return a fresh token.
+# ── 2f. Refresh endpoint returns a fresh token ──────────────────────
 GET {{base_url}}/api/auth/refresh
 Authorization: Bearer {{jwt}}
 HTTP 200
@@ -29,7 +86,7 @@ jsonpath "$.status" == "success"
 jsonpath "$.token"  isString
 
 
-# 2c. App info is reachable with the token.
+# ── 2g. App info is reachable with the token ────────────────────────
 GET {{base_url}}/api/info/app
 Authorization: Bearer {{jwt}}
 HTTP 200

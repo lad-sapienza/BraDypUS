@@ -95,6 +95,13 @@ class config_ctrl extends Controller
 
       $new_tb_name = $post['name'];
 
+      // Reject duplicate table names before touching the config or the DB.
+      $existing = array_column($this->cfg->get('tables') ?? [], 'name');
+      if (in_array($new_tb_name, $existing, true)) {
+        $this->response('tb_already_available', 'error', [$new_tb_name]);
+        return;
+      }
+
       // Write table data file
       $this->cfg->setTable($post);
 

@@ -26,7 +26,7 @@ bdus-api backend via a REST JSON API and provides:
 - Full configuration panel (tables, fields, validation rules, users)
 - Dark / light mode
 
-**Stack:** Vue 3 · Vite · PrimeVue 4 · Pinia · Vue Router · MapLibre GL · Chart.js
+**Stack:** Vue 3 · Vite · PrimeVue 4 · Pinia · Vue Router · MapLibre GL · Chart.js · Cytoscape.js
 
 ---
 

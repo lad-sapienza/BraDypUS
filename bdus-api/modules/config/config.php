@@ -354,10 +354,7 @@ class config_ctrl extends Controller
 
   public function sortTables()
   {
-    $error = false;
-    $sortArray = $this->get['sort'];
-    $this->cfg->sortTables($sortArray);
-
+    $sortArray = $this->post['sort'] ?? $this->get['sort'] ?? [];
     if ($this->cfg->sortTables($sortArray)) {
       $this->response('ok_sort_update', 'success');
     } else {

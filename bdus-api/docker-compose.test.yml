@@ -5,6 +5,8 @@
 # Key differences from the dev compose:
 #   - Port 8081 (avoids collision with a running dev container on 8080)
 #   - BRADYPUS_ALLOW_NEW_APP=1 required by Hurl Phase 1 (create-app)
+#   - bradypus-net declared external so the test project reuses the
+#     shared network without the "not created for this project" warning
 services:
   app:
     ports: !override
@@ -13,3 +15,7 @@ services:
       - BRADYPUS_DEBUG=1
       - BRADYPUS_ALLOW_NEW_APP=1
       - BRADYPUS_CORS_ORIGIN=http://localhost:5173
+
+networks:
+  bradypus-net:
+    external: true

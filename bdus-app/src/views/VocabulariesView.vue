@@ -191,12 +191,12 @@ async function saveEdit(item) {
     const res = await api.get('vocabularies_ctrl', 'edit', { id: item.id, val: editingVal.value })
     if (res.status === 'success') {
       item.def = editingVal.value
-      toast.add({ severity: 'success', summary: 'Saved', life: 2000 })
+      toast.add({ severity: 'success', summary: t('saved'), life: 2000 })
     } else {
-      toast.add({ severity: 'error', summary: 'Error', detail: res.text, life: 3000 })
+      toast.add({ severity: 'error', summary: t('error'), detail: api.responseMessage(res, t), life: 3000 })
     }
   } catch {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Save failed', life: 3000 })
+    toast.add({ severity: 'error', summary: t('error'), detail: t('generic_error'), life: 3000 })
   } finally {
     cancelEdit()
   }
@@ -219,13 +219,13 @@ async function eraseItem(item) {
   try {
     const res = await api.get('vocabularies_ctrl', 'erase', { id: item.id })
     if (res.status === 'success') {
-      toast.add({ severity: 'success', summary: 'Deleted', life: 2000 })
+      toast.add({ severity: 'success', summary: t('deleted'), life: 2000 })
       await load()
     } else {
-      toast.add({ severity: 'error', summary: 'Error', detail: res.text, life: 3000 })
+      toast.add({ severity: 'error', summary: t('error'), detail: api.responseMessage(res, t), life: 3000 })
     }
   } catch {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Delete failed', life: 3000 })
+    toast.add({ severity: 'error', summary: t('error'), detail: t('generic_error'), life: 3000 })
   }
 }
 
@@ -253,15 +253,15 @@ async function createVocAndItem() {
   try {
     const res = await api.get('vocabularies_ctrl', 'add', { voc: newVocName.value, def: newVocDef.value })
     if (res.status === 'success') {
-      toast.add({ severity: 'success', summary: 'Created', life: 2000 })
+      toast.add({ severity: 'success', summary: t('saved'), life: 2000 })
       newVocDialog.value = false
       await load()
       selected.value = vocs.value.find(v => v.name === newVocName.value) ?? null
     } else {
-      toast.add({ severity: 'error', summary: 'Error', detail: res.text, life: 3000 })
+      toast.add({ severity: 'error', summary: t('error'), detail: api.responseMessage(res, t), life: 3000 })
     }
   } catch {
-    toast.add({ severity: 'error', summary: 'Error', life: 3000 })
+    toast.add({ severity: 'error', summary: t('error'), detail: t('generic_error'), life: 3000 })
   } finally {
     saving.value = false
   }
@@ -280,14 +280,14 @@ async function addItem() {
   try {
     const res = await api.get('vocabularies_ctrl', 'add', { voc: addItemVoc.value, def: addItemDef.value })
     if (res.status === 'success') {
-      toast.add({ severity: 'success', summary: 'Added', life: 2000 })
+      toast.add({ severity: 'success', summary: t('saved'), life: 2000 })
       addItemDialog.value = false
       await load()
     } else {
-      toast.add({ severity: 'error', summary: 'Error', detail: res.text, life: 3000 })
+      toast.add({ severity: 'error', summary: t('error'), detail: api.responseMessage(res, t), life: 3000 })
     }
   } catch {
-    toast.add({ severity: 'error', summary: 'Error', life: 3000 })
+    toast.add({ severity: 'error', summary: t('error'), detail: t('generic_error'), life: 3000 })
   } finally {
     saving.value = false
   }

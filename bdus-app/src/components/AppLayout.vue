@@ -230,7 +230,7 @@ async function saveProfile(data) {
   profileSaving.value = true
   try {
     const res = await api.post('user_ctrl', 'saveUserData', data)
-    if (res.status !== 'success') throw new Error(res.text ?? res.code)
+    if (res.status !== 'success') throw new Error(res.code ?? res.text ?? 'generic_error')
     toast.add({ severity: 'success', summary: t('user_data_saved'), life: 3000 })
     profileVisible.value = false
     // Patch local user so the topbar reflects the new name/email immediately.

@@ -439,10 +439,22 @@ async function uploadMulti(obj, method, files = {}, data = {}, urlParams = {}) {
 }
 
 // ── Response helper ──────────────────────────────────────────────────────────
+/**
+ * Canonical way to turn any API response into a translated human string.
+ *
+ * API contract (both response() and returnJson() paths):
+ *   { status: 'success'|'error', code: string, text?: string, ...extra }
+ *
+ * `code` is the i18n key.  `text` is kept for BC (legacy endpoints that
+ * only emit `text`); we fall back to it when `code` is absent.
+ * Always use this function for toast detail / error messages — never read
+ * res.code or res.text directly in components.
+ */
 function responseMessage(res, t, ...args) {
-  if (!res?.code) return ''
-  if (res.code === 'db_error') return `${t('db_error')}: ${res.detail ?? ''}`
-  return t(res.code, ...args)
+  const key = res?.code ?? res?.text
+  if (!key) return ''
+  if (key === 'db_error') return `${t('db_error')}: ${res.detail ?? ''}`
+  return t(key, ...args)
 }
 
 export const api = { get, post, upload, uploadMulti, responseMessage }

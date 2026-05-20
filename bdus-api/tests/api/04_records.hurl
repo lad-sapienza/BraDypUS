@@ -1,0 +1,157 @@
+# ════════════════════════════════════════════════════════════════════
+# Phase 4 — Record CRUD
+#
+# Creates two US records, one periodo record, reads and updates them,
+# then deletes one to verify the full write lifecycle.
+# ════════════════════════════════════════════════════════════════════
+
+# ── 4a. Fetch empty record skeleton ─────────────────────────────────
+GET {{base_url}}/api/record/us/new
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.core" isCollection
+
+
+# ── 4b. Insert US 1 ─────────────────────────────────────────────────
+POST {{base_url}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{
+  "core": {
+    "sigla":           "US001",
+    "descrizione":     "Strato di humus superficiale",
+    "interpretazione": "Strato di formazione moderna",
+    "periodo":         "Età contemporanea"
+  },
+  "plugins": {}
+}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+jsonpath "$.code"   == "success_created"
+jsonpath "$.id"     isInteger
+[Captures]
+us_id_1: jsonpath "$.id"
+
+
+# ── 4c. Insert US 2 ─────────────────────────────────────────────────
+POST {{base_url}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{
+  "core": {
+    "sigla":           "US002",
+    "descrizione":     "Strato argilloso grigio-marrone",
+    "interpretazione": "Livello di abbandono medievale",
+    "periodo":         "Basso Medioevo"
+  },
+  "plugins": {}
+}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+jsonpath "$.id"     isInteger
+[Captures]
+us_id_2: jsonpath "$.id"
+
+
+# ── 4d. Insert US 3 (will be deleted later) ─────────────────────────
+POST {{base_url}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{
+  "core": {
+    "sigla":       "US003",
+    "descrizione": "Buca di palo",
+    "periodo":     "Età del Bronzo"
+  },
+  "plugins": {}
+}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+[Captures]
+us_id_3: jsonpath "$.id"
+
+
+# ── 4e. Insert periodo record ────────────────────────────────────────
+POST {{base_url}}/api/record/periodi
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{
+  "core": {
+    "nome":        "Basso Medioevo",
+    "data_inizio": "1000",
+    "data_fine":   "1400"
+  },
+  "plugins": {}
+}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+[Captures]
+periodo_id_1: jsonpath "$.id"
+
+
+# ── 4f. Read US 1 back ──────────────────────────────────────────────
+GET {{base_url}}/api/record/us/{{us_id_1}}
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.core.sigla.val"           == "US001"
+jsonpath "$.core.descrizione.val"     isString
+jsonpath "$.metadata.can_edit"        == true
+
+
+# ── 4g. Update US 1 — add interpretazione ───────────────────────────
+POST {{base_url}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{
+  "id": {{us_id_1}},
+  "core": {
+    "interpretazione": "Strato di formazione moderna (aggiornato)"
+  },
+  "plugins": {}
+}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+jsonpath "$.code"   == "success_saved"
+jsonpath "$.id"     == {{us_id_1}}
+
+
+# ── 4h. Read US 1 — verify update ───────────────────────────────────
+GET {{base_url}}/api/record/us/{{us_id_1}}
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.core.interpretazione.val" == "Strato di formazione moderna (aggiornato)"
+
+
+# ── 4i. Get record list ──────────────────────────────────────────────
+GET {{base_url}}/api/records/us
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+jsonpath "$.total"  >= 3
+jsonpath "$.data"   isCollection
+
+
+# ── 4j. Delete US 3 ─────────────────────────────────────────────────
+DELETE {{base_url}}/api/record/us/{{us_id_3}}
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+jsonpath "$.code"   == "all_record_deleted"
+
+
+# ── 4k. Verify US 3 is gone ─────────────────────────────────────────
+GET {{base_url}}/api/records/us
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.total" == 2

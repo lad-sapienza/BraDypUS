@@ -119,7 +119,7 @@ const canSubmit = computed(() =>
 onMounted(async () => {
   loadingTables.value = true
   try {
-    const res = await api.get('search_replace_ctrl', 'getTableList')
+    const res = await api.get('/api/search-replace/tables')
     tables.value = res.tables ?? []
   } finally {
     loadingTables.value = false
@@ -135,7 +135,7 @@ async function onTableChange() {
 
   loadingFields.value = true
   try {
-    const res = await api.get('search_replace_ctrl', 'getFieldList', { tb: selectedTable.value })
+    const res = await api.get(`/api/search-replace/${selectedTable.value}/fields`)
     fields.value = res.fields ?? []
   } finally {
     loadingFields.value = false
@@ -160,7 +160,7 @@ async function doReplace() {
   running.value = true
   result.value  = null
   try {
-    const res = await api.post('search_replace_ctrl', 'doReplace', {
+    const res = await api.post('/api/search-replace', {
       tb:      selectedTable.value,
       fld:     selectedField.value,
       search:  searchStr.value,

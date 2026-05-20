@@ -323,7 +323,7 @@ const templateOptions = computed(() => [
 async function loadAvailableTemplates() {
   if (!tb.value) return
   try {
-    const res = await api.get('record_ctrl', 'getTemplates', { tb: tb.value })
+    const res = await api.get(`/api/record/${tb.value}/templates`)
     availableTemplates.value = res.templates ?? []
     // Restore saved preference for this table
     const saved = localStorage.getItem(tplStorageKey(tb.value))
@@ -351,13 +351,14 @@ async function fetchRecord() {
   loading.value = true
   fetchError.value = null
   try {
-    const params = { tb: tb.value }
-    if (id.value) params.id = id.value
     // Priority: selectedTemplate state > URL param (for direct links)
     const tplParam = selectedTemplate.value ?? route.query.template ?? null
-    if (tplParam) params.template = tplParam
+    const queryParams = tplParam ? { template: tplParam } : {}
 
-    const res = await api.get('record_ctrl', 'getRecord', params)
+    const recordPath = id.value
+      ? `/api/record/${tb.value}/${id.value}`
+      : `/api/record/${tb.value}`
+    const res = await api.get(recordPath, queryParams)
 
     if (res.status === 'error') {
       fetchError.value = responseMessage(res, t)
@@ -514,13 +515,12 @@ async function saveRecord() {
     }
 
     const payload = {
-      tb:      tb.value,
       id:      id.value ?? null,
       core:    { ...editData.core },
       plugins: pluginsPayload,
     }
 
-    const res = await api.post('record_ctrl', 'saveRecord', payload)
+    const res = await api.post(`/api/record/${tb.value}`, payload)
 
     if (res.status === 'error') {
       if (res.code === 'validation_failed' && res.errors?.length) {
@@ -570,10 +570,7 @@ function confirmDelete() {
 
 async function doDelete() {
   try {
-    const res = await api.post('record_ctrl', 'erase', {}, {
-      tb: tb.value,
-      id: id.value,
-    })
+    const res = await api.delete(`/api/record/${tb.value}/${id.value}`)
     if (res.status === 'error') {
       toast.add({ severity: 'error', summary: t('generic_error'), detail: responseMessage(res, t), life: 5000 })
       return

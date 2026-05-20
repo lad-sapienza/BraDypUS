@@ -438,7 +438,7 @@ watch(selectedTable, async (tb) => {
   geoProp.value  = null
   if (!tb) return
   try {
-    const res = await api.get('import_ctrl', 'getTableFields', { tb })
+    const res = await api.get(`/api/import/${tb}/fields`)
     if (res.status === 'success') tableFields.value = res.fields ?? []
   } catch { /* ignore */ }
 })
@@ -470,13 +470,13 @@ async function doPreview() {
     let res
     if (importType.value === 'photos') {
       res = await api.uploadMulti(
-        'import_ctrl', 'previewPhotos',
+        '/api/import/preview-photos',
         { zip: selectedZip.value, index: selectedIndex.value },
         { tb: selectedTable.value }
       )
     } else {
       res = await api.uploadMulti(
-        'import_ctrl', 'previewFile',
+        '/api/import/preview-file',
         { file: selectedFile.value },
         { type: importType.value, tb: selectedTable.value }
       )
@@ -503,7 +503,7 @@ async function doImport() {
     let res
 
     if (importType.value === 'csv' || importType.value === 'json') {
-      res = await api.post('import_ctrl', 'importData', {
+      res = await api.post('/api/import/data', {
         temp_id:   previewData.value.temp_id,
         type:      importType.value,
         tb:        selectedTable.value,
@@ -512,7 +512,7 @@ async function doImport() {
       })
 
     } else if (importType.value === 'geojson') {
-      res = await api.post('import_ctrl', 'importGeoJson', {
+      res = await api.post('/api/import/geojson', {
         temp_id:   previewData.value.temp_id,
         tb:        selectedTable.value,
         geo_prop:  geoProp.value,
@@ -520,7 +520,7 @@ async function doImport() {
       })
 
     } else if (importType.value === 'photos') {
-      res = await api.post('import_ctrl', 'importPhotos', {
+      res = await api.post('/api/import/photos', {
         temp_id: previewData.value.temp_id,
         tb:      selectedTable.value,
       })

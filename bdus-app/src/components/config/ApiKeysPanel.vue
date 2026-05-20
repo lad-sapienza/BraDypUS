@@ -165,7 +165,7 @@ async function load() {
   loading.value = true
   error.value   = null
   try {
-    const res = await api.get('api_ctrl', 'listKeys')
+    const res = await api.get('/api/api-keys')
     if (res.status === 'error') throw new Error(t(res.code) || res.code)
     keys.value = res.keys ?? []
   } catch (e) {
@@ -184,7 +184,7 @@ async function createKey() {
   creating.value = true
   newKey.value   = null
   try {
-    const res = await api.post('api_ctrl', 'createKey', { label, privilege: newPrivilege.value })
+    const res = await api.post('/api/api-keys', { label, privilege: newPrivilege.value })
     if (res.status === 'error') {
       toast.add({ severity: 'error', summary: t(res.code) || res.code, life: 5000 })
       return
@@ -205,7 +205,7 @@ async function createKey() {
 
 async function revokeKey(id) {
   try {
-    const res = await api.post('api_ctrl', 'revokeKey', { id })
+    const res = await api.post(`/api/api-key/${id}/revoke`)
     toast.add({
       severity: res.status === 'success' ? 'success' : 'error',
       summary:  t(res.status === 'success' ? 'ok_api_key_revoked' : res.code),
@@ -221,7 +221,7 @@ async function revokeKey(id) {
 
 async function deleteKey(id) {
   try {
-    const res = await api.post('api_ctrl', 'deleteKey', { id })
+    const res = await api.delete(`/api/api-key/${id}`)
     toast.add({
       severity: res.status === 'success' ? 'success' : 'error',
       summary:  t(res.status === 'success' ? 'ok_api_key_deleted' : res.code),

@@ -218,7 +218,7 @@ const userMenuItems = computed(() => [
 
 async function openProfile() {
   try {
-    const res = await api.get('user_ctrl', 'showUserForm', { id: auth.user?.id })
+    const res = await api.get(`/api/user/${auth.user?.id}`)
     profileData.value   = res
     profileVisible.value = true
   } catch (e) {
@@ -229,7 +229,7 @@ async function openProfile() {
 async function saveProfile(data) {
   profileSaving.value = true
   try {
-    const res = await api.post('user_ctrl', 'saveUserData', data)
+    const res = await api.post('/api/user', data)
     if (res.status !== 'success') throw new Error(res.code ?? res.text ?? 'generic_error')
     toast.add({ severity: 'success', summary: t('user_data_saved'), life: 3000 })
     profileVisible.value = false

@@ -110,7 +110,7 @@ async function loadBackups() {
   loading.value    = true
   fetchError.value = null
   try {
-    const res = await api.get('backup_ctrl', 'listBackups')
+    const res = await api.get('/api/backups')
     if (res.status === 'error') throw new Error(responseMessage(res, t))
     backups.value    = res.backups    ?? []
     engine.value     = res.engine     ?? ''
@@ -129,7 +129,7 @@ onMounted(loadBackups)
 async function createBackup() {
   creating.value = true
   try {
-    const res = await api.get('backup_ctrl', 'doBackup')
+    const res = await api.post('/api/backups')
     if (res.status === 'error') {
       const msg = responseMessage(res, t)
       const detail = res.detail ? `${msg}: ${res.detail}` : msg
@@ -161,7 +161,7 @@ function confirmDelete(file) {
     acceptClass:   'p-button-danger',
     accept: async () => {
       try {
-        const res = await api.get('backup_ctrl', 'deleteBackup', { file })
+        const res = await api.delete(`/api/backup/${encodeURIComponent(file)}`)
         if (res.status === 'error') {
           toast.add({ severity: 'error', summary: t('error'), detail: responseMessage(res, t), life: 5000 })
         } else {
@@ -186,7 +186,7 @@ function confirmRestore(file) {
     acceptClass:   'p-button-warning',
     accept: async () => {
       try {
-        const res = await api.get('backup_ctrl', 'restoreBackup', { file })
+        const res = await api.post(`/api/backup/${encodeURIComponent(file)}/restore`)
         if (res.status === 'error') {
           toast.add({ severity: 'error', summary: t('error'), detail: responseMessage(res, t), life: 6000 })
         } else {

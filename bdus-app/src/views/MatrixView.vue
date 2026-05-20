@@ -250,7 +250,7 @@ async function loadMatrix() {
   const params = buildMatrixApiParams()
 
   try {
-    const res = await api.get('record_ctrl', 'getRsMatrix', params)
+    const res = await api.get('/api/rs/matrix', params)
     if (res.status === 'error') {
       fetchError.value = t(res.code ?? 'error')
     } else {
@@ -310,8 +310,7 @@ async function confirmAdd() {
   if (!pendingRelation.value || !pendingEdge.value) return
   mutating.value = true
   try {
-    const res = await api.post('record_ctrl', 'addRs', {
-      tb:       tb.value,
+    const res = await api.post(`/api/record/${tb.value}/rs`, {
       first:    pendingEdge.value.from.id,
       relation: pendingRelation.value,
       second:   pendingEdge.value.to.id,
@@ -353,7 +352,7 @@ async function confirmDelete() {
   if (!pendingDelete.value) return
   mutating.value = true
   try {
-    const res = await api.get('record_ctrl', 'deleteRs', { id: pendingDelete.value.rs_id })
+    const res = await api.delete(`/api/rs/${pendingDelete.value.rs_id}`)
     if (res.status === 'success') {
       cancelDelete()
       await loadMatrix()

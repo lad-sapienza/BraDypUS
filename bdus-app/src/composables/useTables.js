@@ -21,7 +21,7 @@ export function useTables() {
     if (fetched && !force) return
     loading.value = true
     try {
-      const res = await api.get('home_ctrl', 'listTables')
+      const res = await api.get('/api/tables')
       tables.value = res.tables ?? []
       fetched = true
     } finally {

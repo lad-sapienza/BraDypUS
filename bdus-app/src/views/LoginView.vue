@@ -98,8 +98,8 @@ onMounted(async () => {
   loadingApps.value = true
   try {
     const [appsRes, statusRes] = await Promise.all([
-      api.get('login_ctrl', 'listApps'),
-      api.get('new_app_ctrl', 'getStatus'),
+      api.get('/api/auth/apps'),
+      api.get('/api/new-app/status'),
     ])
     apps.value = appsRes.apps ?? []
     // Pre-select if only one app available

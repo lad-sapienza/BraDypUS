@@ -208,7 +208,7 @@ async function fetchLogs() {
     if (filterLevel.value > 0) params.level  = filterLevel.value
     if (filterSearch.value)    params.search = filterSearch.value
 
-    const data = await api.get('debug_ctrl', 'getLogs', params)
+    const data = await api.get('/api/logs', params)
     if (data.status === 'error') throw new Error(responseMessage(data, t))
     rows.value  = data.data  ?? []
     total.value = data.total ?? 0
@@ -240,7 +240,7 @@ function onPage(event) {
 async function doPurge() {
   purging.value = true
   try {
-    const data = await api.post('debug_ctrl', 'purgeLogs', { days: purgeDays.value })
+    const data = await api.post('/api/logs/purge', { days: purgeDays.value })
     if (data.status === 'error') throw new Error(responseMessage(data, t))
     toast.add({ severity: 'success', summary: t('log_purge'),
       detail: t('log_purge_success', data.deleted, data.days), life: 4000 })

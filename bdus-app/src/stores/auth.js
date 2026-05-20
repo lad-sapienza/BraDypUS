@@ -29,7 +29,7 @@ export const useAuthStore = defineStore('auth', () => {
   // ── Login ────────────────────────────────────────────────────────
 
   async function login(email, password, appName) {
-    const res = await api.post('login_ctrl', 'auth', { email, password, app: appName })
+    const res = await api.post('/api/auth/login', { email, password, app: appName })
     if (res.status !== 'success') throw new Error(res.code ?? res.text ?? 'generic_error')
     _applyToken(res.token)
   }
@@ -38,7 +38,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function refresh() {
     try {
-      const res = await api.get('login_ctrl', 'refresh')
+      const res = await api.get('/api/auth/refresh')
       if (res.token) _applyToken(res.token)
     } catch {
       // If refresh fails the user is eventually redirected to /login
@@ -50,7 +50,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function logout() {
     // Fire-and-forget: PHP endpoint only logs the event.
-    api.get('login_ctrl', 'out').catch(() => {})
+    api.get('/api/auth/logout').catch(() => {})
     clearToken()
     user.value = null
   }

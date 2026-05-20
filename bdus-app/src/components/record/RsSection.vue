@@ -327,8 +327,7 @@ async function addRelation() {
   if (!newRelation.value || !newOther.value.trim() || !selfId.value) return
   adding.value = true
   try {
-    const res = await api.post('record_ctrl', 'addRs', {
-      tb:       props.tb,
+    const res = await api.post(`/api/record/${props.tb}/rs`, {
       first:    String(selfId.value),
       relation: newRelation.value,
       second:   newOther.value.trim(),
@@ -355,7 +354,7 @@ async function addRelation() {
 // ── Delete relation ───────────────────────────────────────────────
 async function deleteRelation(rowId) {
   try {
-    const res = await api.get('record_ctrl', 'deleteRs', { id: rowId })
+    const res = await api.delete(`/api/rs/${rowId}`)
     if (res.status === 'success') {
       emit('rs-updated')
     } else {

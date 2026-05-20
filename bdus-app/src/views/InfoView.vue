@@ -53,7 +53,7 @@ const changelogHtml = ref('')
 
 onMounted(async () => {
   try {
-    const res = await api.get('info_ctrl', 'getInfo')
+    const res = await api.get('/api/info')
     if (res.status === 'error') throw new Error(res.code)
     apiVersion.value    = res.version
     changelogHtml.value = marked.parse(res.changelog_md ?? '')

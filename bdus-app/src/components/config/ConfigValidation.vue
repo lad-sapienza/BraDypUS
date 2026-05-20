@@ -93,7 +93,7 @@ async function load() {
   loading.value = true
   error.value   = null
   try {
-    const res = await api.get('config_ctrl', 'getValidationReport')
+    const res = await api.get('/api/config/validation')
     if (res.status === 'error') throw new Error(t(res.code))
     report.value = res.report ?? []
   } catch (e) {
@@ -108,7 +108,7 @@ async function runFix(item, idx) {
   const [action, tb, col] = item.fix
   fixing.value = idx
   try {
-    const res = await api.get('config_ctrl', 'fix', { action, tb, col: col ?? '' })
+    const res = await api.post('/api/config/validation/fix', { action, tb, col: col ?? '' })
     toast.add({ severity: res.status === 'success' ? 'success' : 'error', summary: t('saved'), detail: api.responseMessage(res, t), life: 4000 })
     await load()   // refresh the report after a fix
   } catch (e) {

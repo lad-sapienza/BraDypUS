@@ -135,7 +135,7 @@ async function onDrop(e, targetName) {
 
   // Persist to backend
   try {
-    await api.get('config_ctrl', 'sortTables', {
+    await api.post('/api/config/tables/sort', {
       sort: reordered.map(t => t.name)
     })
   } catch {

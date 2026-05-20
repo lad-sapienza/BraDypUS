@@ -136,7 +136,7 @@ function cancelEdit() {
 async function saveWelcome() {
   saving.value = true
   try {
-    const res = await api.post('frontpage_editor_ctrl', 'saveWelcome', { content: editBuffer.value })
+    const res = await api.put('/api/welcome', { content: editBuffer.value })
     if (res.status === 'success') {
       welcomeContent.value  = editBuffer.value
       editingWelcome.value  = false
@@ -154,8 +154,8 @@ async function saveWelcome() {
 onMounted(async () => {
   // Load app info and welcome text in parallel
   const [infoRes, welcomeRes] = await Promise.allSettled([
-    api.get('info_ctrl', 'getAppInfo'),
-    api.get('frontpage_editor_ctrl', 'getWelcome'),
+    api.get('/api/info/app'),
+    api.get('/api/welcome'),
   ])
 
   if (infoRes.status === 'fulfilled' && infoRes.value.status === 'success') {

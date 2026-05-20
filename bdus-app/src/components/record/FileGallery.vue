@@ -213,7 +213,7 @@ async function handleSortEnd() {
 
   sortSaving.value = true
   try {
-    const res = await api.post('file_ctrl', 'sortFiles', { order: linkIds })
+    const res = await api.post('/api/files/sort', { order: linkIds })
     if (res.status === 'error') {
       toast.add({ severity: 'error', summary: t('generic_error'), detail: t(res.code), life: 5000 })
       // Revert to prop order on error
@@ -241,8 +241,7 @@ async function onFileSelected(evt) {
   uploading.value = true
   try {
     const res = await api.upload(
-      'record_ctrl', 'uploadFile', file, 'file',
-      { tb: props.recordTb, id: props.recordId }
+      `/api/record/${props.recordTb}/${props.recordId}/file`, file, 'file'
     )
     if (res.status === 'error') {
       toast.add({ severity: 'error', summary: t('generic_error'), detail: t(res.code), life: 5000 })
@@ -270,7 +269,7 @@ function confirmDeleteFile(file) {
 
 async function doDeleteFile(file) {
   try {
-    const res = await api.post('record_ctrl', 'deleteFile', { fileId: file.id })
+    const res = await api.delete(`/api/file/${file.id}`)
     if (res.status === 'error') {
       toast.add({ severity: 'error', summary: t('generic_error'), detail: t(res.code), life: 5000 })
       return

@@ -146,7 +146,7 @@ const callerPrivilege = computed(() => auth.user?.privilege_value ?? 1)
 async function loadUsers() {
   loading.value = true
   try {
-    const res = await api.get('user_ctrl', 'showList')
+    const res = await api.get('/api/users')
     users.value   = res.users ?? []
     isAdmin.value = res.admin ?? false
   } catch (e) {
@@ -158,7 +158,7 @@ async function loadUsers() {
 
 // ── Open user form ────────────────────────────────────────────────
 async function openForm(user) {
-  const res = await api.get('user_ctrl', 'showUserForm', user ? { id: user.id } : {})
+  const res = await api.get(user ? `/api/user/${user.id}` : '/api/user')
   formData.value = res
   formVisible.value = true
 }
@@ -167,7 +167,7 @@ async function openForm(user) {
 async function saveUser(data) {
   saving.value = true
   try {
-    const res = await api.post('user_ctrl', 'saveUserData', data)
+    const res = await api.post('/api/user', data)
     if (res.status !== 'success') throw new Error(t(res.code ?? 'error'))
     toast.add({ severity: 'success', summary: t('users'), detail: t('user_data_saved'), life: 3000 })
     formVisible.value = false
@@ -193,7 +193,7 @@ function confirmDelete(user) {
 
 async function deleteUser(id) {
   try {
-    const res = await api.get('user_ctrl', 'deleteOne', { id })
+    const res = await api.delete(`/api/user/${id}`)
     if (res.status !== 'success') throw new Error(t(res.code ?? 'error'))
     toast.add({ severity: 'success', summary: t('users'), detail: t('user_deleted'), life: 3000 })
     await loadUsers()

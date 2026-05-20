@@ -268,8 +268,7 @@ async function loadOptions() {
   if (optionsLoaded || props.schema.options_source?.type === 'static') return
   loadingOptions.value = true
   try {
-    const res = await api.get('record_ctrl', 'getFieldOptions', {
-      tb:  props.tb,
+    const res = await api.get(`/api/record/${props.tb}/field-options`, {
       fld: props.schema.name,
     })
     asyncOptions.value = Array.isArray(res) ? res : []

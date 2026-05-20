@@ -825,7 +825,7 @@ async function loadAdvConfig() {
   if (!tb || advConfigFor === tb) return
   loadingAdvConfig.value = true
   try {
-    const res = await api.get('search_ctrl', 'getAdvancedConfig', { tb })
+    const res = await api.get(`/api/search/${tb}/config`)
     if (res.status === 'error') throw new Error(responseMessage(res, t))
     advFields.value     = res.fields     ?? []
     advOperators.value  = res.operators  ?? []   // [{ value, key }]
@@ -843,7 +843,7 @@ async function loadSuggestions(row, query) {
   if (!row.fld) return
   const [tb, fld] = row.fld.split(':')
   try {
-    const values = await api.get('search_ctrl', 'getUsedValues', { tb, fld })
+    const values = await api.get(`/api/search/${tb}/values`, { fld })
     row._suggestions = (Array.isArray(values) ? values : [])
       .filter(v => v != null && String(v).toLowerCase().includes(query.toLowerCase()))
       .slice(0, 50)
@@ -911,8 +911,7 @@ async function fetchRecords() {
   loadingRecords.value = true
   try {
     let res
-    const tbName   = selectedTable.value.name
-    const urlParams = { tb: tbName }
+    const tbName = selectedTable.value.name
 
     // Custom column list (comma-separated string for GET, array for POST/JSON).
     // Empty array means "use backend preview defaults" (no param sent).
@@ -937,7 +936,7 @@ async function fetchRecords() {
         search_type: 'advanced', adv,
       }
       if (colParam) body.columns = colParam
-      res = await api.post('record_ctrl', 'getRecords', body, urlParams)
+      res = await api.post(`/api/records/${tbName}`, body)
 
     } else if (activeSearch.value === 'expert') {
       const body = {
@@ -946,13 +945,12 @@ async function fetchRecords() {
         search_type: 'sqlExpert', querytext: expertQuery.value, join: '',
       }
       if (colParam) body.columns = colParam
-      res = await api.post('record_ctrl', 'getRecords', body, urlParams)
+      res = await api.post(`/api/records/${tbName}`, body)
 
     } else if (activeSearch.value === 'shortSql') {
       // ShortSQL WHERE produced by Record\Read::getLinks() / getBackLinks().
       // Sent as a GET param so the URL is bookmarkable.
-      const params = {
-        tb:          tbName,
+      const body = {
         page:        page.value,
         per_page:    perPage.value,
         sort_field:  sortField.value ?? '',
@@ -961,12 +959,11 @@ async function fetchRecords() {
         where:       shortSqlWhere.value,
       }
       // columns sent as comma-separated string to avoid URL array-encoding issues
-      if (colParam) params.columns = colParam.join(',')
-      res = await api.get('record_ctrl', 'getRecords', params)
+      if (colParam) body.columns = colParam.join(',')
+      res = await api.post(`/api/records/${tbName}`, body)
 
     } else {
-      const params = {
-        tb:          tbName,
+      const body = {
         page:        page.value,
         per_page:    perPage.value,
         sort_field:  sortField.value ?? '',
@@ -975,8 +972,8 @@ async function fetchRecords() {
         search:      activeSearch.value === 'fast' ? fastSearch.value : '',
       }
       // columns sent as comma-separated string to avoid URL array-encoding issues
-      if (colParam) params.columns = colParam.join(',')
-      res = await api.get('record_ctrl', 'getRecords', params)
+      if (colParam) body.columns = colParam.join(',')
+      res = await api.post(`/api/records/${tbName}`, body)
     }
 
     if (res.status === 'error') {

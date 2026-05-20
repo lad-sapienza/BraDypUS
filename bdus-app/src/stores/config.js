@@ -25,7 +25,7 @@ export const useConfigStore = defineStore('config', () => {
    * Throws an Error with a translatable code on failure.
    */
   async function unlock(password) {
-    const res = await api.post('confirm_super_adm_pwd_ctrl', 'check_pwd', { pwd: password })
+    const res = await api.post('/api/admin/check-password', { pwd: password })
     if (res.status !== 'success') {
       throw new Error(res.code ?? res.text ?? 'invalid_password')
     }
@@ -47,7 +47,7 @@ export const useConfigStore = defineStore('config', () => {
     loading.value = true
     error.value   = null
     try {
-      const res = await api.get('config_ctrl', 'getTableList')
+      const res = await api.get('/api/config/tables')
       if (res.status === 'error') throw new Error(res.code)
       tables.value = res.tables ?? []
     } catch (e) {

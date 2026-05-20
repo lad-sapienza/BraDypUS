@@ -315,7 +315,7 @@ function pluginFieldOptions(plgTb) {
 // ── Boot ────────────────────────────────────────────────────────────────
 onMounted(async () => {
   try {
-    const res = await api.get('templates_ctrl', 'getTableList')
+    const res = await api.get('/api/templates')
     if (res.status === 'error') throw new Error(t(res.code))
     tables.value = res.tables ?? []
   } catch (e) {
@@ -334,7 +334,7 @@ async function selectTable(tbl) {
   plugins.value       = []
 
   try {
-    const res = await api.get('templates_ctrl', 'getTemplateList', { tb: tbl.tb })
+    const res = await api.get(`/api/templates/${tbl.tb}`)
     if (res.status === 'error') throw new Error(t(res.code))
     templateNames.value = res.templates ?? []
     coreFields.value    = res.fields    ?? []
@@ -352,7 +352,7 @@ async function selectTable(tbl) {
 async function loadPluginFields(plgTb) {
   if (pluginFieldsCache.value[plgTb]) return
   try {
-    const res = await api.get('config_ctrl', 'getFldList', { tb: plgTb })
+    const res = await api.get(`/api/config/table/${plgTb}/fields`)
     const raw = res.fields ?? {}
     // getFldList returns { name: label } map; convert to [{ name, label }]
     pluginFieldsCache.value[plgTb] = Object.entries(raw).map(([name, label]) => ({ name, label }))
@@ -366,7 +366,7 @@ async function openTemplate(name) {
   renaming.value     = false
 
   try {
-    const res = await api.get('templates_ctrl', 'getTemplate', { tb: selectedTb.value, name })
+    const res = await api.get(`/api/template/${selectedTb.value}/${name}`)
     if (res.status === 'error') throw new Error(t(res.code))
     // Deep-clone so edits don't alias the fetched object
     form.value = JSON.parse(JSON.stringify(res.template))
@@ -426,10 +426,7 @@ async function saveTemplate() {
       if (!s.collapsible) { delete s.collapsed }
     }
 
-    const res = await api.post(
-      'templates_ctrl', 'saveTemplate', payload,
-      { tb: selectedTb.value, name: selectedName.value }
-    )
+    const res = await api.post(`/api/template/${selectedTb.value}/${selectedName.value}`, payload)
     toast.add({
       severity: res.status === 'success' ? 'success' : 'error',
       summary:  t('saved'),
@@ -460,9 +457,7 @@ function confirmDelete() {
 async function doDelete() {
   deleting.value = true
   try {
-    const res = await api.get('templates_ctrl', 'deleteTemplate', {
-      tb: selectedTb.value, name: selectedName.value,
-    })
+    const res = await api.delete(`/api/template/${selectedTb.value}/${selectedName.value}`)
     toast.add({
       severity: res.status === 'success' ? 'success' : 'error',
       summary:  t('saved'),
@@ -494,8 +489,8 @@ async function confirmRename() {
   }
   renameLoading.value = true
   try {
-    const res = await api.get('templates_ctrl', 'renameTemplate', {
-      tb: selectedTb.value, old: selectedName.value, new: newName.value,
+    const res = await api.post(`/api/template/${selectedTb.value}/${selectedName.value}/rename`, {
+      old: selectedName.value, new: newName.value,
     })
     toast.add({
       severity: res.status === 'success' ? 'success' : 'error',
@@ -525,10 +520,7 @@ async function createTemplate() {
   try {
     // Create an empty but valid template and save it immediately
     const payload = { sections: [] }
-    const res = await api.post(
-      'templates_ctrl', 'saveTemplate', payload,
-      { tb: selectedTb.value, name }
-    )
+    const res = await api.post(`/api/template/${selectedTb.value}/${name}`, payload)
     toast.add({
       severity: res.status === 'success' ? 'success' : 'error',
       summary:  t('saved'),

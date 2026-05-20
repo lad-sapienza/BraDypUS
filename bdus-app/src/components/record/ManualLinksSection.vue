@@ -128,7 +128,7 @@ const deletingId = ref(null)
 async function deleteLink(ml) {
   deletingId.value = ml.key
   try {
-    const res = await api.post('record_ctrl', 'deleteManualLink', { id: ml.key })
+    const res = await api.delete(`/api/manual-link/${ml.key}`)
     if (res.status === 'error') {
       toast.add({ severity: 'error', summary: t('generic_error'), detail: t(res.code), life: 5000 })
       return
@@ -161,9 +161,8 @@ function onTableChange() {
 async function onSearch(event) {
   if (!selectedTable.value) return
   try {
-    const res = await api.get('record_ctrl', 'searchLinkCandidates', {
-      tb: selectedTable.value,
-      q:  event.query ?? '',
+    const res = await api.get(`/api/record/${selectedTable.value}/link-candidates`, {
+      q: event.query ?? '',
     })
     // Exclude records already linked
     const linked = new Set(
@@ -184,7 +183,7 @@ async function onRecordSelected(event) {
   if (!candidate || !selectedTable.value) return
 
   try {
-    const res = await api.post('record_ctrl', 'addManualLink', {
+    const res = await api.post('/api/manual-link', {
       tb_one: props.recordTb,
       id_one: props.recordId,
       tb_two: selectedTable.value,

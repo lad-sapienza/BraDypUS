@@ -160,7 +160,7 @@ async function unlock() {
   gateError.value = null
   unlocking.value = true
   try {
-    const res = await api.post('free_sql_ctrl', 'verifyPassword', {
+    const res = await api.post('/api/free-sql/verify', {
       password: gatePassword.value,
     })
     if (res.status === 'success') {
@@ -186,7 +186,7 @@ async function runQuery() {
   running.value = true
   result.value  = null
   try {
-    const res = await api.post('free_sql_ctrl', 'runSql', { sql: sql.value })
+    const res = await api.post('/api/free-sql/run', { sql: sql.value })
     result.value = res
   } catch (e) {
     result.value = { status: 'error', detail: e.message }

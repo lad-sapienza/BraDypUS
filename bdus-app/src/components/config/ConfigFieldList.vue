@@ -127,8 +127,8 @@ async function load() {
   try {
     // Fetch field list for the table + fld_structure in one call
     const [cfgRes, strRes] = await Promise.all([
-      api.get('config_ctrl', 'getTableConfig', { tb: props.tb }),
-      api.get('config_ctrl', 'getFldStructure'),
+      api.get(`/api/config/table/${props.tb}`),
+      api.get('/api/config/field-structure'),
     ])
     if (cfgRes.status === 'error') throw new Error(t(cfgRes.code))
     if (strRes.status === 'error') throw new Error(t(strRes.code))
@@ -195,7 +195,7 @@ function deleteField(fld) {
 
 async function doDelete(fld) {
   try {
-    const res = await api.get('config_ctrl', 'delete_column', { tb: props.tb, fld: fld.name })
+    const res = await api.delete(`/api/config/table/${props.tb}/field/${fld.name}`)
     toast.add({
       severity: res.status === 'success' ? 'success' : 'error',
       summary:  t('saved'),
@@ -226,8 +226,7 @@ async function confirmRename() {
   }
   renaming.value = true
   try {
-    const res = await api.get('config_ctrl', 'rename_column', {
-      tb:       props.tb,
+    const res = await api.patch(`/api/config/table/${props.tb}/field/${renamingFld.value.name}`, {
       old_name: renamingFld.value.name,
       new_name: newName.value
     })

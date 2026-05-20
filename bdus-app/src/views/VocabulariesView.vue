@@ -159,7 +159,7 @@ const addItemHeader = computed(() => `Add item to '${addItemVoc.value}'`)
 async function load() {
   loading.value = true
   try {
-    const res = await api.get('vocabularies_ctrl', 'list')
+    const res = await api.get('/api/vocabularies')
     vocs.value = res.vocs ?? []
     // keep selection in sync after reload
     if (selected.value) {
@@ -188,7 +188,7 @@ function cancelEdit() {
 async function saveEdit(item) {
   if (editingVal.value === item.def) { cancelEdit(); return }
   try {
-    const res = await api.get('vocabularies_ctrl', 'edit', { id: item.id, val: editingVal.value })
+    const res = await api.patch(`/api/vocabulary/${item.id}`, { val: editingVal.value })
     if (res.status === 'success') {
       item.def = editingVal.value
       toast.add({ severity: 'success', summary: t('saved'), life: 2000 })
@@ -217,7 +217,7 @@ function confirmErase(item) {
 
 async function eraseItem(item) {
   try {
-    const res = await api.get('vocabularies_ctrl', 'erase', { id: item.id })
+    const res = await api.delete(`/api/vocabulary/${item.id}`)
     if (res.status === 'success') {
       toast.add({ severity: 'success', summary: t('deleted'), life: 2000 })
       await load()
@@ -234,7 +234,7 @@ async function onReorder(event) {
   selected.value.items = event.value
   const ids = event.value.map(i => i.id)
   try {
-    await api.post('vocabularies_ctrl', 'sort', { ids })
+    await api.post('/api/vocabularies/sort', { ids })
   } catch {
     toast.add({ severity: 'warn', summary: 'Sort not saved', life: 3000 })
   }
@@ -251,7 +251,7 @@ async function createVocAndItem() {
   if (!newVocName.value || !newVocDef.value) return
   saving.value = true
   try {
-    const res = await api.get('vocabularies_ctrl', 'add', { voc: newVocName.value, def: newVocDef.value })
+    const res = await api.post('/api/vocabularies', { voc: newVocName.value, def: newVocDef.value })
     if (res.status === 'success') {
       toast.add({ severity: 'success', summary: t('saved'), life: 2000 })
       newVocDialog.value = false
@@ -278,7 +278,7 @@ async function addItem() {
   if (!addItemDef.value) return
   saving.value = true
   try {
-    const res = await api.get('vocabularies_ctrl', 'add', { voc: addItemVoc.value, def: addItemDef.value })
+    const res = await api.post('/api/vocabularies', { voc: addItemVoc.value, def: addItemDef.value })
     if (res.status === 'success') {
       toast.add({ severity: 'success', summary: t('saved'), life: 2000 })
       addItemDialog.value = false

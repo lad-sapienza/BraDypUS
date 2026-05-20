@@ -201,7 +201,7 @@ const needsDbDetails = computed(() =>
 
 onMounted(async () => {
   try {
-    const res = await api.get('new_app_ctrl', 'getStatus')
+    const res = await api.get('/api/new-app/status')
     permitted.value = res.permitted ?? false
     engines.value   = res.engines  ?? []
   } catch {
@@ -260,7 +260,7 @@ async function handleCreate() {
       })
     }
 
-    const res = await api.post('new_app_ctrl', 'create', payload)
+    const res = await api.post('/api/new-app', payload)
     if (res.status === 'error') {
       errorMsg.value = res.detail || t(res.code)
       return

@@ -136,7 +136,7 @@ async function fetchHistory() {
     if (filterTb.value)   params.tb   = filterTb.value
     if (filterUser.value) params.user = filterUser.value
 
-    const data = await api.get('myHistory_ctrl', 'getHistory', params)
+    const data = await api.get('/api/history', params)
     if (data.status === 'error') throw new Error(responseMessage(data, t))
     rows.value  = data.data  ?? []
     total.value = data.total ?? 0

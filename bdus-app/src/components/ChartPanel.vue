@@ -371,7 +371,7 @@ async function fetchFields() {
   if (!props.currentTb) return
   loadingFields.value = true
   try {
-    const res = await api.get('search_ctrl', 'getAdvancedConfig', { tb: props.currentTb })
+    const res = await api.get(`/api/search/${props.currentTb}/config`)
     if (res.status === 'error') throw new Error(responseMessage(res, t))
     // getAdvancedConfig returns { fields: [{value:'tb:fieldname', label:'...'}] }
     // We want only fields belonging to currentTb, stripping the table prefix
@@ -393,7 +393,7 @@ async function fetchFields() {
 async function fetchCharts() {
   loadingCharts.value = true
   try {
-    const res = await api.get('chart_ctrl', 'listCharts')
+    const res = await api.get('/api/charts')
     if (res.status === 'error') throw new Error(responseMessage(res, t))
     charts.value = res.charts ?? []
   } catch (e) {
@@ -427,7 +427,7 @@ async function runChart() {
   running.value = true
   result.value  = null
   try {
-    const res = await api.post('chart_ctrl', 'getData', {
+    const res = await api.post('/api/chart/data', {
       definition: buildDefinition(),
     })
     if (res.status === 'error') throw new Error(responseMessage(res, t))
@@ -444,7 +444,7 @@ async function doSaveChart() {
   if (!name || !result.value) return
   saving.value = true
   try {
-    const res = await api.post('chart_ctrl', 'saveChart', {
+    const res = await api.post('/api/charts', {
       name,
       definition: buildDefinition(),
     })
@@ -478,9 +478,9 @@ function loadAndRun(c) {
 async function toggleShare(c) {
   pendingId.value     = c.id
   pendingAction.value = 'share'
-  const method = c.is_global ? 'unshareChart' : 'shareChart'
+  const shareAction = c.is_global ? 'unshare' : 'share'
   try {
-    const res = await api.post('chart_ctrl', method, { id: c.id })
+    const res = await api.post(`/api/chart/${c.id}/${shareAction}`)
     if (res.status === 'error') throw new Error(responseMessage(res, t))
     c.is_global = c.is_global ? 0 : 1
   } catch (e) {
@@ -500,7 +500,7 @@ async function doDelete(c) {
   pendingAction.value = 'delete'
   confirmingId.value  = null
   try {
-    const res = await api.post('chart_ctrl', 'deleteChart', { id: c.id })
+    const res = await api.delete(`/api/chart/${c.id}`)
     if (res.status === 'error') throw new Error(responseMessage(res, t))
     charts.value = charts.value.filter(r => r.id !== c.id)
     toast.add({ severity: 'success', summary: t('ok_chart_erase'), life: 2500 })

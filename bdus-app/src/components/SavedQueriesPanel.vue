@@ -159,7 +159,7 @@ onMounted(fetchQueries)
 async function fetchQueries() {
   loading.value = true
   try {
-    const res = await api.get('saved_queries_ctrl', 'listQueries')
+    const res = await api.get('/api/saved-queries')
     if (res.status === 'error') throw new Error(responseMessage(res, t))
     queries.value = res.queries ?? []
   } catch (e) {
@@ -175,7 +175,7 @@ async function doSave() {
 
   saving.value = true
   try {
-    const res = await api.post('saved_queries_ctrl', 'saveQuery', {
+    const res = await api.post('/api/saved-queries', {
       name,
       tb:    props.currentTb,
       query: props.currentSearch,
@@ -194,9 +194,9 @@ async function doSave() {
 async function toggleShare(q) {
   pendingId.value     = q.id
   pendingAction.value = 'share'
-  const method = q.is_global ? 'unshareQuery' : 'shareQuery'
+  const shareAction = q.is_global ? 'unshare' : 'share'
   try {
-    const res = await api.post('saved_queries_ctrl', method, { id: q.id })
+    const res = await api.post(`/api/saved-query/${q.id}/${shareAction}`)
     if (res.status === 'error') throw new Error(responseMessage(res, t))
     q.is_global = !q.is_global
   } catch (e) {
@@ -216,7 +216,7 @@ async function doDelete(q) {
   pendingAction.value = 'delete'
   confirmingId.value  = null
   try {
-    const res = await api.post('saved_queries_ctrl', 'deleteQuery', { id: q.id })
+    const res = await api.delete(`/api/saved-query/${q.id}`)
     if (res.status === 'error') throw new Error(responseMessage(res, t))
     queries.value = queries.value.filter(r => r.id !== q.id)
     toast.add({ severity: 'success', summary: t('ok_erasing_query'), life: 2500 })

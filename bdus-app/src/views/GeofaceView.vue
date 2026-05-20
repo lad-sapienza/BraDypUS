@@ -102,7 +102,7 @@ async function loadGeoJson() {
   loading.value   = true
   loadError.value = null
   try {
-    const res = await api.get('geoface_ctrl', 'getGeoJson', buildFilterParams())
+    const res = await api.get('/api/geoface', buildFilterParams())
     if (res.status === 'error') throw new Error(t(res.code ?? 'generic_error'))
     geojson.value = res.geojson
     meta.value    = res.meta ?? {}
@@ -319,7 +319,7 @@ function onDrawCreate(e) {
 async function onLinkSearch(event) {
   const tb = route.params.tb
   try {
-    const res = await api.get('record_ctrl', 'searchLinkCandidates', { tb, q: event.query })
+    const res = await api.get(`/api/record/${tb}/link-candidates`, { q: event.query })
     linkSuggestions.value = (res.data ?? []).map(r => ({
       label: String(r.label ?? r.id),
       id:    r.id
@@ -332,7 +332,7 @@ async function onLinkSearch(event) {
 async function onLinkSelect(event) {
   const recordId = event.value.id
   try {
-    const res = await api.post('geoface_ctrl', 'saveNew', {
+    const res = await api.post('/api/geoface/feature', {
       tb:       route.params.tb,
       id:       recordId,
       geometry: pendingGeometry.value
@@ -365,7 +365,7 @@ async function onDrawUpdate(e) {
   if (!geodata.length) return
 
   try {
-    const res = await api.post('geoface_ctrl', 'updateGeometry', { geodata })
+    const res = await api.put('/api/geoface/feature', { geodata })
     if (res.status === 'error') {
       toast.add({ severity: 'error', summary: t('generic_error'), detail: t(res.code ?? 'generic_error'), life: 4000 })
     } else {
@@ -385,7 +385,7 @@ async function onDrawDelete(e) {
   if (!ids.length) return
 
   try {
-    const res = await api.post('geoface_ctrl', 'eraseGeometry', { ids })
+    const res = await api.delete('/api/geoface/feature', { ids })
     if (res.status === 'error') {
       toast.add({ severity: 'error', summary: t('generic_error'), detail: t(res.code ?? 'generic_error'), life: 4000 })
     } else {
@@ -399,7 +399,7 @@ async function onDrawDelete(e) {
 
 async function reloadGeoJson() {
   try {
-    const res = await api.get('geoface_ctrl', 'getGeoJson', buildFilterParams())
+    const res = await api.get('/api/geoface', buildFilterParams())
     if (res.status !== 'error') {
       geojson.value = res.geojson
       const src = map?.getSource('records')

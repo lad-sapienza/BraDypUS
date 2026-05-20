@@ -151,15 +151,15 @@ async function submit() {
 
   try {
     // Determine endpoint: add new vs edit existing
-    const isNew     = !origName.value
-    const endpoint  = isNew ? 'add_new_fld' : 'save_fld_properties'
-    const payload   = {
-      ...form.value,
-      tb_name:       props.tb,
-      fld_orig_name: origName.value,
-    }
+    const isNew   = !origName.value
+    const payload = { ...form.value }
 
-    const res = await api.post('config_ctrl', endpoint, payload)
+    let res
+    if (isNew) {
+      res = await api.post(`/api/config/table/${props.tb}/field`, payload)
+    } else {
+      res = await api.put(`/api/config/table/${props.tb}/field/${origName.value}`, payload)
+    }
     toast.add({
       severity: res.status === 'success' ? 'success' : 'error',
       summary:  t('saved'),

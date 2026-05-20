@@ -171,7 +171,7 @@ async function load() {
   loading.value = true
   error.value   = null
   try {
-    const res = await api.get('config_ctrl', 'getGeoFaceConfig')
+    const res = await api.get('/api/config/geoface')
     if (res.status === 'error') throw new Error(t(res.code))
     layers.value     = res.layers      ?? []
     localFiles.value = res.local_files ?? []
@@ -185,7 +185,7 @@ async function load() {
 async function save() {
   saving.value = true
   try {
-    const res = await api.post('config_ctrl', 'save_geoface_properties', layers.value)
+    const res = await api.put('/api/config/geoface', layers.value)
     toast.add({
       severity: res.status === 'success' ? 'success' : 'error',
       summary:  t('saved'),
@@ -202,7 +202,7 @@ async function save() {
 async function deleteFile(filename) {
   deletingFile.value = filename
   try {
-    const res = await api.get('config_ctrl', 'delete_local_geofile', { file: filename })
+    const res = await api.delete('/api/config/geofile', { file: filename })
     toast.add({
       severity: res.status === 'success' ? 'success' : 'error',
       summary:  t('saved'),
@@ -225,7 +225,7 @@ async function uploadFile(event) {
   if (!file) return
   uploading.value = true
   try {
-    const res = await api.upload('config_ctrl', 'uploadGeoFile', file, 'file')
+    const res = await api.upload('/api/config/geofile', file, 'file')
     toast.add({
       severity: res.status === 'success' ? 'success' : 'error',
       summary:  t('saved'),

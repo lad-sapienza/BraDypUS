@@ -159,7 +159,7 @@ async function load() {
   loading.value = true
   error.value   = null
   try {
-    const res = await api.get('config_ctrl', 'getAppProperties')
+    const res = await api.get('/api/config/app')
     if (res.status === 'error') throw new Error(t(res.code))
     form.value          = { ...res.main }
     // PHP may return these as objects ({key:val}) if keys are non-sequential — normalise to arrays
@@ -182,7 +182,7 @@ async function load() {
 async function save() {
   saving.value = true
   try {
-    const res = await api.post('config_ctrl', 'save_app_properties', form.value)
+    const res = await api.put('/api/config/app', form.value)
     toast.add({
       severity: res.status === 'success' ? 'success' : 'error',
       summary:  t('saved'),

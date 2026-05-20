@@ -174,7 +174,7 @@ const form      = ref(emptyForm())
 async function load() {
   loading.value = true
   try {
-    const res = await api.get('user_ctrl', 'getTablePrivileges', { user_id: props.userId })
+    const res = await api.get(`/api/user/${props.userId}/privileges`)
     rows.value = Array.isArray(res) ? res : []
   } catch (e) {
     toast.add({ severity: 'error', summary: t('table_privileges'), detail: String(e), life: 4000 })
@@ -188,8 +188,7 @@ async function saveRow() {
   if (!form.value.table_name || !form.value.privilege) return
   saving.value = true
   try {
-    const res = await api.post('user_ctrl', 'saveTablePrivilege', {
-      user_id:    props.userId,
+    const res = await api.post(`/api/user/${props.userId}/privileges`, {
       table_name: form.value.table_name,
       privilege:  form.value.privilege,
       subset:     form.value.subset || '',
@@ -227,7 +226,7 @@ function resetForm() {
 async function deleteRow(id) {
   deleting.value = id
   try {
-    const res = await api.get('user_ctrl', 'deleteTablePrivilege', { id })
+    const res = await api.delete(`/api/privilege/${id}`)
     if (res.status === 'success') {
       toast.add({ severity: 'success', summary: t('table_privileges'), detail: t('privilege_deleted'), life: 2500 })
       await load()

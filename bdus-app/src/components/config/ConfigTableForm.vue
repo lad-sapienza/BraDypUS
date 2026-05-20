@@ -329,7 +329,7 @@ async function load() {
   loading.value   = true
   loadError.value = null
   try {
-    const res = await api.get('config_ctrl', 'getTableConfig', props.tb ? { tb: props.tb } : {})
+    const res = await api.get(props.tb ? `/api/config/table/${props.tb}` : '/api/config/tables')
     if (res.status === 'error') throw new Error(t(res.code))
 
     table.value            = res.table
@@ -384,7 +384,7 @@ async function onOtherTbChange(link) {
   const tb = link.other_tb
   if (!tb || otherTableFields.value[tb]) return
   try {
-    const res = await api.get('config_ctrl', 'getFldList', { tb })
+    const res = await api.get(`/api/config/table/${tb}/fields`)
     if (res.status === 'success' || res.code === 'ok') {
       otherTableFields.value = { ...otherTableFields.value, [tb]: res.fields ?? {} }
     }
@@ -395,10 +395,10 @@ async function onOtherTbChange(link) {
 async function save() {
   saving.value = true
   try {
-    const endpoint = props.tb ? 'save_tb_data' : 'add_new_tb'
-    const payload  = buildPayload()
-    const res      = await api.post('config_ctrl', endpoint, payload,
-                       props.tb ? { tb: props.tb } : {})
+    const payload = buildPayload()
+    const res = props.tb
+      ? await api.put(`/api/config/table/${props.tb}`, payload)
+      : await api.post('/api/config/tables', payload)
     toast.add({
       severity: res.status === 'success' ? 'success' : 'error',
       summary:  t('saved'),
@@ -450,7 +450,7 @@ function deleteTable() {
 async function doDelete() {
   deleting.value = true
   try {
-    const res = await api.get('config_ctrl', 'delete_tb', { tb: props.tb })
+    const res = await api.delete(`/api/config/table/${props.tb}`)
     toast.add({
       severity: res.status === 'success' ? 'success' : 'error',
       summary:  t('saved'),
@@ -475,7 +475,7 @@ async function confirmRename() {
   }
   renaming.value = true
   try {
-    const res = await api.get('config_ctrl', 'rename_tb', {
+    const res = await api.patch(`/api/config/table/${props.tb}`, {
       old_name: props.tb,
       new_name: newName.value
     })

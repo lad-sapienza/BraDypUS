@@ -7,7 +7,7 @@
 #   - BRADYPUS_ALLOW_NEW_APP=1 required by Hurl Phase 1 (create-app)
 services:
   app:
-    ports:
+    ports: !override
       - "8081:80"
     environment:
       - BRADYPUS_DEBUG=1

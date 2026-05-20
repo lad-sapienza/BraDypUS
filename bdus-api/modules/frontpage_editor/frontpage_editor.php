@@ -44,7 +44,7 @@ class frontpage_editor_ctrl extends Controller
 	 */
 	public function saveWelcome(): void
 	{
-		if (!\utils::canUser('adm')) {
+		if (!\utils::canUser('admin')) {
 			$this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
 			return;
 		}

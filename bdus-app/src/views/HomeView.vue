@@ -2,20 +2,6 @@
   <AppLayout>
     <div class="home-page">
 
-      <!-- App identity banner -->
-      <div class="app-banner">
-        <div class="app-banner-text">
-          <h1 class="app-name">{{ appName || 'BraDypUS' }}</h1>
-          <p v-if="appDefinition" class="app-definition">{{ appDefinition }}</p>
-        </div>
-        <div class="app-banner-meta">
-          <span class="welcome-chip">
-            <i class="pi pi-user" />
-            {{ auth.user?.name }}
-          </span>
-        </div>
-      </div>
-
       <!-- Welcome text (between banner and cards) -->
       <div v-if="welcomeContent || isAdmin" class="welcome-section">
 
@@ -131,7 +117,7 @@ const editBuffer      = ref('')
 const saving          = ref(false)
 
 const isAdmin = computed(() => {
-  const priv = auth.user?.privilege
+  const priv = auth.user?.privilege_value
   return priv !== undefined && priv <= 20   // adm or super_adm
 })
 
@@ -200,42 +186,6 @@ const modules = [
   height: 100%;
 }
 
-/* ── App banner ───────────────────────────────────────────── */
-.app-banner {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 1.5rem 2rem;
-  margin-bottom: 2rem;
-  background: var(--p-highlight-background);
-  border-radius: var(--p-border-radius-xl);
-  border-left: 4px solid var(--p-primary-color);
-}
-
-.app-name {
-  font-size: 1.6rem;
-  font-weight: 700;
-  color: var(--p-primary-color);
-  margin-bottom: 0.25rem;
-  text-transform: uppercase;
-}
-
-.app-definition {
-  color: var(--p-text-muted-color);
-  font-size: 0.95rem;
-  margin: 0;
-}
-
-.welcome-chip {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.85rem;
-  color: var(--p-text-muted-color);
-  white-space: nowrap;
-  padding-top: 0.25rem;
-}
 
 /* ── Welcome section ─────────────────────────────────────── */
 .welcome-section {

@@ -84,6 +84,15 @@ class Persist
     {
         // Full record deletion requested
         if (isset($this->model['core']['id']['_delete'])) {
+            // Snapshot the full record before deleting so it can be recovered later.
+            if ($this->id) {
+                $this->db->saveSnapshot(
+                    $this->tb,
+                    $this->id,
+                    $this->buildSnapshotContent(),
+                    'delete'
+                );
+            }
             return $this->deleteAll();
         }
 
@@ -100,6 +109,14 @@ class Persist
         }
 
         if ($this->id) {
+            // Snapshot the record as it is NOW, before the UPDATE is applied.
+            $this->db->saveSnapshot(
+                $this->tb,
+                $this->id,
+                $this->buildSnapshotContent(),
+                'update'
+            );
+
             // UPDATE
             $setParts = array_map(fn($k) => "{$k} = ?", array_keys($changed));
             $sql      = "UPDATE {$this->tb} SET " . implode(', ', $setParts) . " WHERE id = ?";
@@ -346,6 +363,46 @@ class Persist
         }
 
         return $counts;
+    }
+
+    // ── Snapshot helpers ─────────────────────────────────────────────────────
+
+    /**
+     * Builds the snapshot payload for saveSnapshot().
+     *
+     * Captures the record state AS IT IS IN THE DATABASE right now (before the
+     * current write is applied), so a future restore can reconstruct it exactly.
+     *
+     * Core fields are extracted from the model's `val` entries (already loaded
+     * by Record\Read before any Edit modifications).  Plugin rows are re-queried
+     * from the DB to get raw flat arrays — the model's plugin structure is too
+     * rich and would complicate restore logic.
+     *
+     * @return array  ['core' => [field => value, …], 'plugins' => [tb => [rows]]]
+     */
+    private function buildSnapshotContent(): array
+    {
+        // Core: flatten {fieldname: {val: …}} → {fieldname: value}
+        $core = [];
+        foreach ($this->model['core'] as $fld => $data) {
+            $core[$fld] = $data['val'] ?? null;
+        }
+
+        // Plugins: fetch raw current rows from DB for every plugin table
+        // configured for this table (not just those present in the model —
+        // a plugin with no rows simply gets an empty array in the snapshot).
+        $plugins     = [];
+        $pluginNames = $this->cfg->get("tables.{$this->tb}.plugin") ?: [];
+
+        foreach ($pluginNames as $pluginName) {
+            $rows = $this->db->query(
+                "SELECT * FROM {$pluginName} WHERE table_link = ? AND id_link = ?",
+                [$this->tb, $this->id]
+            ) ?: [];
+            $plugins[$pluginName] = $rows;
+        }
+
+        return ['core' => $core, 'plugins' => $plugins];
     }
 
     // ── Private helpers ──────────────────────────────────────────────────────

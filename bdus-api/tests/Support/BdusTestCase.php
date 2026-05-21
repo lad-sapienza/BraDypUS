@@ -118,6 +118,20 @@ abstract class BdusTestCase extends TestCase
             )
         ');
 
+        static::$db->execInTransaction('
+            CREATE TABLE bdus_versions (
+                id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                userid      TEXT    NOT NULL,
+                time        INTEGER NOT NULL,
+                tb          TEXT    NOT NULL,
+                rowid       INTEGER NOT NULL,
+                content     TEXT    NOT NULL,
+                editsql     TEXT,
+                editvalues  TEXT,
+                operation   TEXT    NOT NULL DEFAULT \'update\'
+            )
+        ');
+
         // ── System tables required by Record\Read::getFull() ──────────────
         static::$db->execInTransaction('
             CREATE TABLE bdus_userlinks (

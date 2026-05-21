@@ -13,7 +13,7 @@ class templates_ctrl extends Controller
    *
    * GET ?obj=templates_ctrl&method=getTableList
    *
-   * Response: { status, tables: [{ tb, label, stripped }] }
+   * Response: { status, tables: [{ tb, label }] }
    */
   public function getTableList(): void
   {
@@ -26,9 +26,8 @@ class templates_ctrl extends Controller
     $tables = [];
     foreach ($all as $tb => $label) {
       $tables[] = [
-        'tb'       => $tb,
-        'label'    => $label ?: $tb,
-        'stripped' => $tb,
+        'tb'    => $tb,
+        'label' => $label ?: $tb,
       ];
     }
 
@@ -57,8 +56,7 @@ class templates_ctrl extends Controller
     }
 
     $appName   = $this->cfg->get('main.name') ?? '';
-    $stripped  = $tb;
-    $templates = \Template\Loader::listAvailable($appName, $stripped);
+    $templates = \Template\Loader::listAvailable($appName, $tb);
 
     // Field list for the editor's field selector
     $fields = [];
@@ -107,8 +105,7 @@ class templates_ctrl extends Controller
     }
 
     $appName  = $this->cfg->get('main.name') ?? '';
-    $stripped = $tb;
-    $tpl      = \Template\Loader::load($appName, $stripped, $name);
+    $tpl = \Template\Loader::load($appName, $tb, $name);
 
     if ($tpl === null) {
       $this->returnJson(['status' => 'error', 'code' => 'template_not_found']);
@@ -157,10 +154,9 @@ class templates_ctrl extends Controller
       return;
     }
 
-    $appName  = $this->cfg->get('main.name') ?? '';
-    $stripped = $tb;
-    $dir      = \Template\Loader::getDir($appName);
-    $path     = \Template\Loader::getPath($appName, $stripped, $name);
+    $appName = $this->cfg->get('main.name') ?? '';
+    $dir     = \Template\Loader::getDir($appName);
+    $path    = \Template\Loader::getPath($appName, $tb, $name);
 
     if (!is_dir($dir)) {
       mkdir($dir, 0755, true);
@@ -196,9 +192,8 @@ class templates_ctrl extends Controller
       return;
     }
 
-    $appName  = $this->cfg->get('main.name') ?? '';
-    $stripped = $tb;
-    $path     = \Template\Loader::getPath($appName, $stripped, $name);
+    $appName = $this->cfg->get('main.name') ?? '';
+    $path    = \Template\Loader::getPath($appName, $tb, $name);
 
     if (!file_exists($path)) {
       $this->returnJson(['status' => 'error', 'code' => 'template_not_found']);
@@ -241,10 +236,9 @@ class templates_ctrl extends Controller
       return;
     }
 
-    $appName  = $this->cfg->get('main.name') ?? '';
-    $stripped = $tb;
-    $oldPath  = \Template\Loader::getPath($appName, $stripped, $oldName);
-    $newPath  = \Template\Loader::getPath($appName, $stripped, $newName);
+    $appName = $this->cfg->get('main.name') ?? '';
+    $oldPath = \Template\Loader::getPath($appName, $tb, $oldName);
+    $newPath = \Template\Loader::getPath($appName, $tb, $newName);
 
     if (!file_exists($oldPath)) {
       $this->returnJson(['status' => 'error', 'code' => 'template_not_found']);

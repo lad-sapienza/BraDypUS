@@ -268,7 +268,7 @@ class record_ctrl extends Controller
    *
    * Response:
    * {
-   *   metadata: { tb_id, tb_stripped, tb_label, rec_id, id_field, can_edit, can_delete },
+   *   metadata: { tb_id, tb_label, rec_id, id_field, can_edit, can_delete },
    *   schema:   { fields: [{name, label, type, readonly, options_source, ...}], plugins: {...} },
    *   core:     { field: { name, label, val, val_label? }, ... },
    *   plugins:  { tb: { metadata, data } },
@@ -310,11 +310,10 @@ class record_ctrl extends Controller
       $full['schema'] = $schema;
 
       // Template loading
-      $appName    = $this->cfg->get('main.name') ?? '';
-      $tbStripped = $tb;
-      $tplName    = $this->get['template'] ?? null;
+      $appName = $this->cfg->get('main.name') ?? '';
+      $tplName = $this->get['template'] ?? null;
       if ($tplName) {
-        $tpl = \Template\Loader::load($appName, $tbStripped, $tplName);
+        $tpl = \Template\Loader::load($appName, $tb, $tplName);
         if ($tpl === null) {
           $full['schema']['template']        = null;
           $full['schema']['template_errors'] = ['template_not_found'];
@@ -386,9 +385,8 @@ class record_ctrl extends Controller
       return;
     }
 
-    $appName    = $this->cfg->get('main.name') ?? '';
-    $tbStripped = $tb;
-    $templates  = \Template\Loader::listAvailable($appName, $tbStripped);
+    $appName   = $this->cfg->get('main.name') ?? '';
+    $templates = \Template\Loader::listAvailable($appName, $tb);
 
     $this->returnJson(["status" => "success", "templates" => $templates]);
   }
@@ -404,9 +402,8 @@ class record_ctrl extends Controller
     $plugins = [];
     foreach ($this->cfg->get("tables.{$tb}.plugin") ?: [] as $plg) {
       $plugins[$plg] = [
-        'tb_id'       => $plg,
-        'tb_stripped' => $plg,
-        'label'       => $this->cfg->get("tables.{$plg}.label") ?: $plg,
+        'tb_id'  => $plg,
+        'label'  => $this->cfg->get("tables.{$plg}.label") ?: $plg,
         'fields'      => $this->buildFieldSchema($plg),
       ];
     }
@@ -537,13 +534,13 @@ class record_ctrl extends Controller
     $plugins = [];
     foreach ($schema['plugins'] as $plg => $plgSchema) {
       $plugins[$plg] = [
-        'metadata' => ['tb_id' => $plg, 'tb_stripped' => $plgSchema['tb_stripped'], 'tb_label' => $plgSchema['label'], 'tot' => 0],
+        'metadata' => ['tb_id' => $plg, 'tb_label' => $plgSchema['label'], 'tot' => 0],
         'data'     => [],
       ];
     }
 
     return [
-      'metadata'    => ['tb_id' => $tb, 'tb_stripped' => $tb, 'tb_label' => $this->cfg->get("tables.{$tb}.label")],
+      'metadata'    => ['tb_id' => $tb, 'tb_label' => $this->cfg->get("tables.{$tb}.label")],
       'core'        => $core,
       'plugins'     => $plugins,
       'links'       => [], 'backlinks' => [], 'manualLinks' => [],
@@ -673,9 +670,8 @@ class record_ctrl extends Controller
         $model = [
           'metadata'    => [
             'tb_id'      => $tb,
-            'rec_id'     => null,
-            'tb_stripped'=> $tb,
-            'tb_label'   => $this->cfg->get("tables.{$tb}.label"),
+            'rec_id'  => null,
+            'tb_label' => $this->cfg->get("tables.{$tb}.label"),
           ],
           'core'        => $coreModel,
           'plugins'     => $pluginsModel,
@@ -1213,7 +1209,7 @@ class record_ctrl extends Controller
    * Body: { tb_one, id_one, tb_two, id_two }
    *
    * Checks for duplicates in both directions before inserting.
-   * Response: { status, code, link: { key, tb_id, tb_stripped, tb_label, ref_id, ref_label } }
+   * Response: { status, code, link: { key, tb_id, tb_label, ref_id, ref_label } }
    */
   public function addManualLink(): void
   {
@@ -1269,10 +1265,9 @@ class record_ctrl extends Controller
         'status' => 'success',
         'code'   => 'all_links_saved',
         'link'   => [
-          'key'         => $newId,
-          'tb_id'       => $tbTwo,
-          'tb_stripped' => $tbTwo,
-          'tb_label'    => $this->cfg->get("tables.$tbTwo.label"),
+          'key'      => $newId,
+          'tb_id'    => $tbTwo,
+          'tb_label' => $this->cfg->get("tables.$tbTwo.label"),
           'ref_id'      => $idTwo,
           'ref_label'   => $refLabel,
           'sort'        => null,

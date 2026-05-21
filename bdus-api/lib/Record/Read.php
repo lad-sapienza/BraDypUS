@@ -52,7 +52,7 @@ class Read
      *
      * "metadata": {
      *    "tb_id": (referenced table full name),
-     *    "tb_stripped": (referenced table name without prefix),
+
      *    "tb_label": (referenced table label),
      * },
      * "core":        { see $this->getTbRecord for docs    },
@@ -71,7 +71,6 @@ class Read
             'metadata' => [
                 'tb_id' => $this->tb,
                 'rec_id' => $core['id'],
-                'tb_stripped' => $this->tb,
                 'tb_label' => $this->cfg->get("tables.{$this->tb}.label")
             ],
             'core'       => $core,
@@ -129,7 +128,7 @@ class Read
      * link_id: {
      *    "key": (int),
      *    "tb_id": (referenced table full name),
-     *    "tb_stripped": (referenced table name without prefix),
+
      *    "tb_label": (referenced table Label),
      *    "ref_id": (int),
      *    "ref_label": (string|int)
@@ -186,7 +185,6 @@ EOD;
                     $manualLinks[$r['id']] = [
                         "key"         => $r['id'],
                         "tb_id"       => $mlt,
-                        "tb_stripped" => $mlt,
                         "tb_label"    => $this->cfg->get("tables.$mlt.label"),
                         "ref_id"      => $mli,
                         "ref_label"   => $ref_val_label,
@@ -330,7 +328,6 @@ EOD;
      * "backlinks": {
      *    "(referenced table full name)": {
      *        "tb_id": (referenced table full name),
-     *        "tb_stripped": (referenced table name without prefix),
      *        "tb_label": (referenced table Label),
      *        "tot": (total number of links found),
      *        "data": [
@@ -359,7 +356,6 @@ EOD;
                     }
                     $backlinks[$ref_tb] = [
                         'tb_id' => $ref_tb,
-                        'tb_stripped' => $ref_tb,
                         "tb_label" => $this->cfg->get("tables.$ref_tb.label"),
                         'tot' => $r[0]['tot'],
                         'where' => "id|in|{@{$via_plg}~[id_link|distinct~?table_link|=|{$ref_tb}||and|^{$via_plg_fld}|=|{$this->id}}",
@@ -381,7 +377,7 @@ EOD;
      *
      * "(referenced table full name)": {
      *    "tb_id": (referenced table full name),
-     *    "tb_stripped": (referenced table name without prefix),
+
      *    "tb_label": (referenced table label),
      *    "tot": (total number of links found),
      *    "where": (SQL where statement to fetch records)
@@ -415,7 +411,6 @@ EOD;
                     if ($tot_links > 0) {
                         $links[$ld['other_tb']] = [
                             'tb_id' => $ld['other_tb'],
-                            'tb_stripped' => $ld['other_tb'],
                             "tb_label" => $this->cfg->get("tables.{$ld['other_tb']}.label"),
                             'tot' => $tot_links,
                             'where' => implode('||and|', $short_sql)
@@ -435,7 +430,6 @@ EOD;
      * "(referenced plugin table full name)": {
      *    "metadata": {
      *        "tb_id": (referenced plugin table full name),
-     *        "tb_stripped": (referenced plugin table name without prefix),
      *        "tb_label": (referenced plugin table label),
      *        "tot": (total number of items found)
      *    },
@@ -482,7 +476,6 @@ EOD;
                 $this->cache['plugins'][$p] = [
                     "metadata" => [
                         "tb_id" => $p,
-                        "tb_stripped" => $p,
                         "tb_label" => $this->cfg->get("tables.$p.label"),
                         "tot" => count($plg_data)
                     ],

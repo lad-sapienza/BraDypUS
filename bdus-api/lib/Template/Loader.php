@@ -10,7 +10,7 @@ namespace Template;
  * Loads, lists, and validates JSON record-view templates.
  *
  * Template files are stored at:
- *   {projectsRoot}{appName}/template/{tbStripped}.{templateName}.json
+ *   {projectsRoot}{appName}/template/{tb}.{templateName}.json
  */
 class Loader
 {
@@ -34,11 +34,11 @@ class Loader
      */
     public static function load(
         string $appName,
-        string $tbStripped,
+        string $tb,
         string $templateName,
         string $projectsRoot = null
     ): ?array {
-        $path = self::path($appName, $tbStripped, $templateName, $projectsRoot);
+        $path = self::path($appName, $tb, $templateName, $projectsRoot);
         if (!is_file($path)) {
             return null;
         }
@@ -64,7 +64,7 @@ class Loader
      */
     public static function listAvailable(
         string $appName,
-        string $tbStripped,
+        string $tb,
         string $projectsRoot = null
     ): array {
         $dir = self::dir($appName, $projectsRoot);
@@ -72,7 +72,7 @@ class Loader
             return [];
         }
 
-        $prefix = $tbStripped . '.';
+        $prefix = $tb . '.';
         $suffix = '.json';
         $names  = [];
 
@@ -164,9 +164,9 @@ class Loader
     /**
      * Returns the full path for a specific template file.
      */
-    public static function getPath(string $appName, string $tbStripped, string $templateName): string
+    public static function getPath(string $appName, string $tb, string $templateName): string
     {
-        return self::path($appName, $tbStripped, $templateName, null);
+        return self::path($appName, $tb, $templateName, null);
     }
 
     // ── Private helpers ───────────────────────────────────────────────────
@@ -176,11 +176,11 @@ class Loader
      */
     private static function path(
         string $appName,
-        string $tbStripped,
+        string $tb,
         string $templateName,
         ?string $projectsRoot
     ): string {
-        return self::dir($appName, $projectsRoot) . $tbStripped . '.' . $templateName . '.json';
+        return self::dir($appName, $projectsRoot) . $tb . '.' . $templateName . '.json';
     }
 
     /**

@@ -18,7 +18,7 @@ abstract class Controller
   protected $request;
   protected $db;
   protected $log;
-  protected $prefix;
+
   protected $cfg;
   protected $uac;
   protected $debug;
@@ -64,17 +64,6 @@ abstract class Controller
   public function setCfg(Config $cfg): void
   {
     $this->cfg = $cfg;
-  }
-
-  /**
-   * Sets application prefix
-   *
-   * @param string $prefix
-   * @return void
-   */
-  public function setPrefix(string $prefix = null): void
-  {
-    $this->prefix = $prefix;
   }
 
   /**

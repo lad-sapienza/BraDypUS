@@ -16,7 +16,6 @@ use Monolog\Handler\NullHandler;
  *  - $db   : DB instance backed by a fresh in-memory SQLite DB
  *  - $cfg  : Config instance loaded from tests/fixtures/cfg/
  *  - $log  : silent Monolog logger (NullHandler)
- *  - prefix: ''
  *
  * The in-memory DB is recreated for every test class (setUpBeforeClass),
  * so tests within the same class share state (fast), but classes are isolated.
@@ -30,7 +29,6 @@ abstract class BdusTestCase extends TestCase
     protected static DB     $db;
     protected static Config $cfg;
     protected static Logger $log;
-    protected static string $prefix = '';
 
     // ── Boot once per test class ──────────────────────────────────────────
     public static function setUpBeforeClass(): void
@@ -256,7 +254,6 @@ abstract class BdusTestCase extends TestCase
         $ctrl->setDB(static::$db);
         $ctrl->setCfg(static::$cfg);
         $ctrl->setLog(static::$log);
-        $ctrl->setPrefix(static::$prefix);
         return $ctrl;
     }
 

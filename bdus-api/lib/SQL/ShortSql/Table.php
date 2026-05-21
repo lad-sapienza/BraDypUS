@@ -12,7 +12,7 @@ namespace SQL\ShortSql;
 class Table
 {
 
-    public static function parse(string $prefix, string $tb): array
+    public static function parse(string $tb): array
     {
         list($tb, $alias) = explode(':', $tb);
 

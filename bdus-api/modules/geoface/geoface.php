@@ -60,9 +60,7 @@ class geoface_ctrl extends Controller
                 case 'shortSql':
                     $whereStr = trim($this->get['where'] ?? '');
                     if ($whereStr !== '' && $whereStr !== '1') {
-                        $dblUnder = strpos($tb, '__');
-                        $tbPrefix = ($dblUnder !== false) ? substr($tb, 0, $dblUnder + 2) : '';
-                        $parser = new \SQL\ShortSql\ParseShortSql($tbPrefix, $this->cfg);
+                        $parser = new \SQL\ShortSql\ParseShortSql($this->cfg);
                         $parser->parseAll('@' . $tb . '~?' . $whereStr, true);
                         [$userWhere, $userValues] = $parser->getSql(true);
                     }

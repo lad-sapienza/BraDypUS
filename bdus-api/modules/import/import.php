@@ -263,7 +263,6 @@ class import_ctrl extends Controller
             return;
         }
 
-        $fullTb   = $tb; // $tb already includes the app prefix (e.g. "myapp_items")
         $inserted = 0;
         $updated  = 0;
 
@@ -284,7 +283,7 @@ class import_ctrl extends Controller
                 if (empty($data)) continue;
 
                 $existing = $this->db->query(
-                    "SELECT id FROM {$fullTb} WHERE {$keyField} = ?",
+                    "SELECT id FROM {$tb} WHERE {$keyField} = ?",
                     [$keyValue],
                     'read'
                 );
@@ -298,13 +297,13 @@ class import_ctrl extends Controller
                     $sets = implode(', ', array_map(fn($f) => "{$f} = ?", array_keys($updateData)));
                     $vals = array_values($updateData);
                     $vals[] = $id;
-                    $this->db->query("UPDATE {$fullTb} SET {$sets} WHERE id = ?", $vals, 'boolean');
+                    $this->db->query("UPDATE {$tb} SET {$sets} WHERE id = ?", $vals, 'boolean');
                     $updated++;
                 } else {
                     $cols = implode(', ', array_keys($data));
                     $phs  = implode(', ', array_fill(0, count($data), '?'));
                     $this->db->query(
-                        "INSERT INTO {$fullTb} ({$cols}) VALUES ({$phs})",
+                        "INSERT INTO {$tb} ({$cols}) VALUES ({$phs})",
                         array_values($data),
                         'id'
                     );
@@ -382,7 +381,6 @@ class import_ctrl extends Controller
             return;
         }
 
-        $fullTb   = $tb; // $tb already includes the app prefix (e.g. "myapp_items")
         $updated  = 0;
         $notFound = 0;
 
@@ -394,7 +392,7 @@ class import_ctrl extends Controller
                 if ($keyValue === null) { $notFound++; continue; }
 
                 $existing = $this->db->query(
-                    "SELECT id FROM {$fullTb} WHERE {$keyField} = ?",
+                    "SELECT id FROM {$tb} WHERE {$keyField} = ?",
                     [$keyValue],
                     'read'
                 );
@@ -406,7 +404,7 @@ class import_ctrl extends Controller
                 )->out('wkt');
 
                 $this->db->query(
-                    "UPDATE {$fullTb} SET {$geoField} = ? WHERE id = ?",
+                    "UPDATE {$tb} SET {$geoField} = ? WHERE id = ?",
                     [$wkt, $existing[0]['id']],
                     'boolean'
                 );
@@ -479,7 +477,6 @@ class import_ctrl extends Controller
         }
 
         $index  = $this->parseCsvIndex($idxPath);
-        $fullTb = $this->prefix . $tb;
 
         $zip = new \ZipArchive();
         if ($zip->open($zipPath) !== true) {
@@ -513,7 +510,7 @@ class import_ctrl extends Controller
 
                 // Verify the target record exists
                 $rec = $this->db->query(
-                    "SELECT id FROM {$fullTb} WHERE id = ?",
+                    "SELECT id FROM {$tb} WHERE id = ?",
                     [$recordId],
                     'read'
                 );

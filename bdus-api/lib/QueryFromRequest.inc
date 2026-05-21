@@ -322,8 +322,7 @@ class QueryFromRequest
           $this->where = '1=1';
           break;
         }
-        // Prefix is always '' in v5; pass it explicitly to ParseShortSql.
-        $parser = new \SQL\ShortSql\ParseShortSql('', $this->cfg);
+        $parser = new \SQL\ShortSql\ParseShortSql($this->cfg);
         $parser->parseAll('@' . $this->tb . '~?' . $whereStr, true);
         [$whereSql, $whereVals] = $parser->getSql(true);
         $this->where  = $whereSql  ?: '1=1';

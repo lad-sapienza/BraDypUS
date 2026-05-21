@@ -126,7 +126,8 @@ class record_ctrl extends Controller
       foreach ($customColumns as $col) {
         $col = preg_replace('/[^a-zA-Z0-9_]/', '', $col);  // sanitise
         if (!$col || $col === 'id') continue;
-        $label = $this->cfg->get("tables.{$tb}.fields.{$col}.label") ?: $col;
+        $allFields = $this->cfg->get("tables.{$tb}.fields.*") ?? [];
+        $label = $allFields[$col]['label'] ?? $col;
         $colMap[$col] = $label;
       }
       $colMap = array_merge(['id' => 'id'], $colMap);
@@ -482,7 +483,8 @@ class record_ctrl extends Controller
       return [];
     }
 
-    $cfg = $this->cfg->get("tables.{$tb}.fields.{$fld}") ?? [];
+    $allFields = $this->cfg->get("tables.{$tb}.fields.*") ?? [];
+    $cfg = $allFields[$fld] ?? [];
 
     if (!empty($cfg['get_values_from_tb'])) {
       [$refTb, $refFld] = array_pad(explode(':', $cfg['get_values_from_tb'], 2), 2, null);

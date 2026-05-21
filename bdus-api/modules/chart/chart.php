@@ -403,9 +403,7 @@ class chart_ctrl extends Controller
                 if ($whereStr === '' || $whereStr === '1') {
                     return ['', []];
                 }
-                $dblUnder = strpos($tb, '__');
-                $tbPrefix = ($dblUnder !== false) ? substr($tb, 0, $dblUnder + 2) : '';
-                $parser = new \SQL\ShortSql\ParseShortSql($tbPrefix, $this->cfg);
+                $parser = new \SQL\ShortSql\ParseShortSql($this->cfg);
                 $parser->parseAll('@' . $tb . '~?' . $whereStr, true);
                 [$whereClause, $whereValues] = $parser->getSql(true);
                 return [$whereClause, $whereValues];

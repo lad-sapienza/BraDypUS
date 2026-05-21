@@ -25,14 +25,12 @@ class ParseShortSql
 
     private $added_fld_aliases = [];
 
-    private $prefix;
     private $cfg;
     private $qo;
     private $symbols;
 
-    public function __construct(string $prefix, Config $cfg = null)
+    public function __construct(Config $cfg = null)
     {
-        $this->prefix = $prefix;
         $this->cfg = $cfg;
         $this->qo = new QueryObject($this->cfg);
         $this->qo->enable_validation();
@@ -126,7 +124,7 @@ class ParseShortSql
      */
     private function parseParts()
     {
-        $parsedTb = Table::parse($this->prefix, $this->parts['tb']);
+        $parsedTb = Table::parse($this->parts['tb']);
         $tb = $parsedTb['tb'];
         $tb_alias = $parsedTb['alias'];
         unset($parsedTb);
@@ -135,7 +133,7 @@ class ParseShortSql
         $this->qo->setTb($tb, $tb_alias);
 
         // Group & Fields
-        $group = Group::parse($this->prefix, $this->parts['group'], $tb);
+        $group = Group::parse($this->parts['group'], $tb);
         if (!empty($group)) {
             foreach ($group as $g) {
                 // If grouping is active, fields are set from grouping
@@ -159,10 +157,9 @@ class ParseShortSql
 
         // Explixit joins
         $joins = Join::parse(
-            $this->prefix,
             ($this->parts['join'] ?? []),
             $this->cfg,
-            new self($this->prefix, $this->cfg),
+            new self($this->cfg),
             $this->added_fld_aliases
         );
 
@@ -179,8 +176,7 @@ class ParseShortSql
                 $tb,
                 false,
                 $this->added_fld_aliases,
-                new self($this->prefix, $this->cfg),
-                $this->prefix
+                new self($this->cfg)
             );
             $where = $parsedWhere['sql_parts'];
             $values = $parsedWhere['sql_values'];
@@ -208,7 +204,7 @@ class ParseShortSql
         }
 
         // Order
-        $order = Order::parse($this->prefix, $this->parts['order'], $tb);
+        $order = Order::parse($this->parts['order'], $tb);
         foreach ($order as $o) {
             $this->qo->setOrderFld($o['fld'], $o['dir']);
         }
@@ -249,7 +245,7 @@ class ParseShortSql
 
         foreach ($fields_arr as $f) {
 
-            $parsedFld = Field::parse($this->prefix, $f, $tb, new self($this->prefix, $this->cfg));
+            $parsedFld = Field::parse($f, $tb, new self($this->cfg));
             // tb, fld, alias, fn, subQuery, values
             array_push($formatted_flds, $parsedFld);
         }

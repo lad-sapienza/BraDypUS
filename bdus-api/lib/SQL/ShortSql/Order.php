@@ -26,7 +26,6 @@ class Order
      * @return array
      */
     public static function parse(
-        string $prefix,
         string $order = null,
         string $tb = null
     ): array {
@@ -42,7 +41,7 @@ class Order
             if (!$order || !in_array(strtolower($order), ['asc', 'desc'])) {
                 $order = 'ASC';
             }
-            $parsefFld = Field::parse($prefix, $fld, $tb);
+            $parsefFld = Field::parse($fld, $tb);
 
             $tb = $parsefFld['tb'];
             $fld = $parsefFld['fld'];

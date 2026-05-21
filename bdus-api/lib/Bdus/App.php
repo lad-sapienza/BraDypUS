@@ -27,8 +27,6 @@ class App
   protected $post;
   // Array of REQUEST parameters
   protected $request;
-  // Application prefix
-  protected $prefix;
   // Application name
   protected $app;
   // Database object
@@ -101,17 +99,6 @@ class App
   public function setApp(string $app): void
   {
     $this->app = $app;
-  }
-
-  /**
-   * Set $this->prefix to be injected in Controller
-   *
-   * @param string $prefix
-   * @return void
-   */
-  public function setPrefix(string $prefix): void
-  {
-    $this->prefix = $prefix;
   }
 
   /**
@@ -202,7 +189,7 @@ class App
 
       if ($requiredPrivilege !== 'none') {
         // If not already authenticated via JWT, try API key auth.
-        if (!\Auth\CurrentUser::isAuthenticated() && $this->db && $this->prefix) {
+        if (!\Auth\CurrentUser::isAuthenticated() && $this->db) {
           \Auth\ApiKeyAuth::attempt($this->db);
         }
 
@@ -265,11 +252,6 @@ class App
        * Injects Log to object
        */
       $_aa->setLog($this->log);
-
-      /**
-       * Injects Prefix to object
-       */
-      $_aa->setPrefix($this->prefix);
 
       /**
        * Initializes Config and injects it to object if $this->app is available

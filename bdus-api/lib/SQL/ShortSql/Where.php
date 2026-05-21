@@ -22,7 +22,6 @@ class Where
     static private $cfg;
     static private $field_aliases;
     static private $parseShortSql;
-    static private $prefix;
 
     /**
      * Undocumented function
@@ -42,13 +41,11 @@ class Where
         string $tb,
         bool $noValues = false,
         array $field_aliases = [],
-        ParseShortSql $parseShortSql,
-        string $prefix
+        ParseShortSql $parseShortSql
     ): array {
         self::$cfg = $cfg;
         self::$field_aliases = $field_aliases;
         self::$parseShortSql = $parseShortSql;
-        self::$prefix = $prefix;
 
         $sql_values = [];
         $sql_parts = [];
@@ -141,7 +138,7 @@ class Where
         $operator = strtoupper($operator); // Always upper case
 
         // Set $tb, $fld and possibly $alias
-        $parsedFld = Field::parse(self::$prefix, $fld, $tb);
+        $parsedFld = Field::parse($fld, $tb);
         $fld_tb = $parsedFld['tb'];
         $fld    = $parsedFld['fld'];
         $alias  = $parsedFld['alias'];
@@ -158,7 +155,7 @@ class Where
             if (\is_numeric(substr($value, 1))) {
                 $binded = substr($value, 1);
             } else {
-                $parsedFld = Field::parse(self::$prefix, substr($value, 1));
+                $parsedFld = Field::parse(substr($value, 1));
                 $binded_tb = $parsedFld['tb'];
                 $binded_fld    = $parsedFld['fld'];
                 $binded_alias  = $parsedFld['alias'];

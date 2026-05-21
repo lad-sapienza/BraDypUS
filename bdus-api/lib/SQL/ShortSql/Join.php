@@ -28,7 +28,6 @@ class Join
      * @return array
      */
     public static function parse(
-        string $prefix,
         array $join_arr = null,
         Config $cfg,
         ParseShortSql $parseShortSql,
@@ -49,7 +48,7 @@ class Join
             $tb = array_shift($j_parts);
 
             // Format table name
-            $parsedTb = Table::parse($prefix, $tb);
+            $parsedTb = Table::parse($tb);
             $tb = $parsedTb['tb'];
             $tb_alias = $parsedTb['alias'];
             unset($parsedTb);
@@ -61,8 +60,7 @@ class Join
                 $tb,
                 true,
                 $added_fld_aliases,
-                $parseShortSql,
-                $prefix
+                $parseShortSql
             );
             $on = $parsedWhere['sql_parts'];
             // TODO: è giusto che $values rimanga orfana?

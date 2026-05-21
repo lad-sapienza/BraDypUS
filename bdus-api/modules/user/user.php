@@ -206,13 +206,13 @@ class user_ctrl extends Controller
 
 			if (!$isNewUser) {
 				// Edit existing user
-				if (\utils::isDuplicateEmail($this->db, $this->prefix, $data['email'], $data['id'])) {
+				if (\utils::isDuplicateEmail($this->db, $data['email'], $data['id'])) {
 					$this->response('email_present', 'error', [$data['email']]);
 					return;
 				}
 				$ret = $sys_manager->editRow('bdus_users', (int) $data['id'], $data);
 			} else {
-				if (\utils::isDuplicateEmail($this->db, $this->prefix, $data['email'])) {
+				if (\utils::isDuplicateEmail($this->db, $data['email'])) {
 					$this->response('email_present', 'error', [$data['email']]);
 					return;
 				}

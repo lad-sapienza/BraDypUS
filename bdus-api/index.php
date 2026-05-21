@@ -72,10 +72,6 @@ try {
 
 	$application->setDebug(DEBUG_ON);
 
-	if (defined('PREFIX')){
-		$application->setPrefix(PREFIX);
-	}
-
 	if (defined('APP')) {
 		$application->setApp(APP);
 	}

@@ -273,7 +273,7 @@ class utils
     return password_verify($plain, $stored);
   }
 
-  public static function isDuplicateEmail(\DB\DB $db, string $prefix = '', string $email = '', int $id = null): bool
+  public static function isDuplicateEmail(\DB\DB $db, string $email = '', int $id = null): bool
   {
     $manager = new \DB\System\Manage($db);
 

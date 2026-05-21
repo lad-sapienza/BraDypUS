@@ -26,15 +26,14 @@ class Group
      * @return array
      */
     public static function parse(
-        string $prefix,
         string $group_str = null,
         string $tb
     ): array {
         if (!$group_str) {
             return [];
         }
-        $formatted_flds = array_map(function ($f) use ($tb, $prefix) {
-            $parsedFld = Field::parse($prefix, $f, $tb);
+        $formatted_flds = array_map(function ($f) use ($tb) {
+            $parsedFld = Field::parse($f, $tb);
             return $parsedFld['tb'] . '.' . $parsedFld['fld'];
         }, explode(',', $group_str));
 

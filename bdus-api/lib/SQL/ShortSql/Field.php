@@ -18,7 +18,6 @@ use SQL\ShortSql\ParseShortSql;
 class Field
 {
     public static function parse(
-        string $prefix,
         string $fld,
         string $tb = null,
         ParseShortSql $parseShortSql = null
@@ -64,7 +63,7 @@ class Field
         }
 
         // Add prefix to table name
-        $parsedTb = Table::parse($prefix,  $tb);
+        $parsedTb = Table::parse($tb);
         $ret['tb']      = $parsedTb['tb'];
         $ret['fld']     = $fld;
 

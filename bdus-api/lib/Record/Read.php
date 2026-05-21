@@ -534,7 +534,7 @@ EOD;
                 );
 
                 if ($return_all_fields) {
-                    $joined_flds = $this->cfg->get("tables.$ref_tb.fields.*.name");
+                    $joined_flds = $this->cfg->get("tables.$ref_tb.fields.*.name") ?: [];
                     unset($joined_flds['id']);
                     unset($joined_flds[$arr['name']]);
                     $joined_flds = array_map(function ($e) use ($ref_alias) {

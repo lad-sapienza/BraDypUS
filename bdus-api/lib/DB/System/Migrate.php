@@ -77,7 +77,13 @@ class Migrate
         // This runs on every boot but is a no-op once the prefix is gone.
         self::maybeRemovePrefixFromConfig($oldPrefix, $log);
 
-        // ── 1b. Strip prefix from userlinks data ─────────────────────────────
+        // ── 1b. Strip prefix from per-table field config files ───────────────
+        // Individual table JSON files (e.g. manuscripts.json) may contain
+        // id_from_tb and get_values_from_tb properties that reference other
+        // tables by their prefixed names. Fix them before Config loads.
+        self::maybeRemovePrefixFromFieldConfigs($oldPrefix, $log);
+
+        // ── 1c. Strip prefix from userlinks data ─────────────────────────────
         // The userlinks table stores table names as text values in tb_one/tb_two.
         // These must be updated before any migration (especially M002) reads them.
         // Idempotent: if the data is already clean, the UPDATE affects 0 rows.
@@ -189,6 +195,69 @@ class Migrate
             json_encode(['tables' => $data['tables']], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
         );
         $log?->info("Migrate: updated tables.json (prefix '{$oldPrefix}' stripped)");
+    }
+
+    /**
+     * Strips the legacy APP__ prefix from table-name references inside
+     * per-table field config files (everything in cfg/ except tables.json
+     * and app_data.json).
+     *
+     * Properties fixed:
+     *  - id_from_tb            plain table name  → strip prefix
+     *  - get_values_from_tb    "table:field"     → strip prefix from table part
+     *
+     * Idempotent: once the prefix is gone the loop finds nothing to change.
+     */
+    private static function maybeRemovePrefixFromFieldConfigs(
+        string $oldPrefix,
+        Logger $log = null
+    ): void {
+        $cfgDir = PROJ_DIR . 'cfg/';
+        if (!is_dir($cfgDir)) {
+            return;
+        }
+
+        $skip = ['tables.json', 'app_data.json'];
+
+        foreach (glob($cfgDir . '*.json') as $path) {
+            $fname = basename($path);
+            if (in_array($fname, $skip, true)) {
+                continue;
+            }
+
+            $raw = file_get_contents($path);
+            if ($raw === false || strpos($raw, $oldPrefix) === false) {
+                continue; // Fast path: prefix not present.
+            }
+
+            $data = json_decode($raw, true);
+            if (!is_array($data)) {
+                continue;
+            }
+
+            $dirty = false;
+            foreach ($data as &$fld) {
+                if (!is_array($fld)) {
+                    continue;
+                }
+                // id_from_tb: plain table name
+                if (isset($fld['id_from_tb']) && str_starts_with($fld['id_from_tb'], $oldPrefix)) {
+                    $fld['id_from_tb'] = substr($fld['id_from_tb'], strlen($oldPrefix));
+                    $dirty = true;
+                }
+                // get_values_from_tb: "table:field" — strip prefix only from table part
+                if (isset($fld['get_values_from_tb']) && str_starts_with($fld['get_values_from_tb'], $oldPrefix)) {
+                    $fld['get_values_from_tb'] = substr($fld['get_values_from_tb'], strlen($oldPrefix));
+                    $dirty = true;
+                }
+            }
+            unset($fld);
+
+            if ($dirty) {
+                file_put_contents($path, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+                $log?->info("Migrate: stripped prefix from field config {$fname}");
+            }
+        }
     }
 
     /**

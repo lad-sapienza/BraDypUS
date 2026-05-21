@@ -795,6 +795,42 @@ paths:
                         items:
                           type: object
 
+  # ── Deleted records ──────────────────────────────────────────────────────
+
+  /api/record/{tb}/deleted:
+    get:
+      tags: [versions]
+      summary: List deleted records that can be restored
+      description: >
+        Returns one entry per rowid whose most-recent snapshot has
+        `operation=delete` and that no longer exists in the main table.
+        Use `POST /api/version/{id}/restore` to recover a listed record.
+      parameters:
+        - name: tb
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: List of recoverable deleted records
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:  { type: string, example: success }
+                  deleted:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        version_id: { type: integer }
+                        rowid:      { type: integer }
+                        userid:     { type: string }
+                        time:       { type: string }
+                        content:
+                          $ref: '#/components/schemas/VersionContent'
+
   # ── Version history ──────────────────────────────────────────────────────
 
   /api/record/{tb}/{id}/versions:

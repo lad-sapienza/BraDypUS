@@ -85,6 +85,16 @@ class App
        * Idempotent — no-op once all tables carry the bdus_ prefix.
        */
       \DB\System\Migrate::maybeAddBdusPrefix($this->db, $this->log);
+
+      /**
+       * Run all pending schema migrations on every request.
+       * Each migration is idempotent (records itself in bdus_migrations so it
+       * never re-runs), so the overhead on steady-state requests is just one
+       * SELECT on the migrations table — negligible.
+       * Running here (not only at login) ensures upgrades take effect
+       * immediately even for already-authenticated sessions.
+       */
+      \DB\System\Migrate::run($this->db, $this->log);
     }
 
     $this->route();

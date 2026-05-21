@@ -1550,6 +1550,78 @@ class record_ctrl extends Controller
     $this->returnJson($data);
   }
 
+  // ── Deleted records ────────────────────────────────────────────────────────
+
+  /**
+   * Returns all records that were deleted but could be restored.
+   *
+   * GET /api/record/{tb}/deleted
+   *
+   * A record is "currently deleted" when:
+   *   - a snapshot with operation='delete' exists for it, AND
+   *   - its rowid is no longer present in the main table.
+   *
+   * Only the most-recent delete snapshot per rowid is returned (handles
+   * the case where a record was deleted, restored, then deleted again).
+   *
+   * Response: { deleted: [{ version_id, rowid, userid, time, content:{core,plugins} }, …] }
+   * Ordered by deletion time, newest first.
+   */
+  public function getDeletedRecords(): void
+  {
+    if (!\utils::canUser('read')) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+      return;
+    }
+
+    $tb = $this->get['tb'] ?? null;
+
+    if (!$tb) {
+      $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
+      return;
+    }
+
+    if (!$this->cfg->get("tables.{$tb}")) {
+      $this->returnJson(['status' => 'error', 'code' => 'unknown_table']);
+      return;
+    }
+
+    try {
+      // Most-recent delete snapshot per rowid, only for rows absent from the table.
+      $rows = $this->db->query(
+        "SELECT v.id, v.rowid, v.userid, v.time, v.content
+         FROM bdus_versions v
+         WHERE v.tb = ?
+           AND v.operation = 'delete'
+           AND v.id = (
+               SELECT MAX(v2.id) FROM bdus_versions v2
+               WHERE v2.tb = v.tb AND v2.rowid = v.rowid AND v2.operation = 'delete'
+           )
+           AND v.rowid NOT IN (SELECT id FROM {$tb})
+         ORDER BY v.time DESC",
+        [$tb]
+      ) ?: [];
+
+      $deleted = array_map(function (array $row): array {
+        $d = new \DateTime();
+        $d->setTimestamp((int)$row['time']);
+        return [
+          'version_id' => (int)$row['id'],
+          'rowid'      => (int)$row['rowid'],
+          'userid'     => $row['userid'],
+          'time'       => $d->format('Y-m-d H:i:s'),
+          'content'    => json_decode($row['content'], true) ?? ['core' => [], 'plugins' => []],
+        ];
+      }, $rows);
+
+      $this->returnJson(['deleted' => $deleted]);
+
+    } catch (\Throwable $e) {
+      $this->log->error($e);
+      $this->returnJson(['status' => 'error', 'code' => 'db_error', 'detail' => $e->getMessage()]);
+    }
+  }
+
   // ── Version history ────────────────────────────────────────────────────────
 
   /**

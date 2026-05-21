@@ -66,37 +66,37 @@ class Migrate
             return;
         }
 
-        $oldPrefix        = APP . '__';
-        $oldMigrTable     = $oldPrefix . 'migrations';
-        $driver           = $db->getEngine();
+        $oldPrefix    = APP . '__';
+        $driver       = $db->getEngine();
 
-        // Only SQLite is supported for this auto-migration (the user confirmed all apps are SQLite).
+        // ── 1. Strip prefix from tables.json (config side) ───────────────────
+        // This check is independent of the DB: if tables.json still references
+        // prefixed table names (e.g. after a manual DB rename), fix it now.
+        // This runs on every boot but is a no-op once the prefix is gone.
+        self::maybeRemovePrefixFromConfig($oldPrefix, $log);
+
+        // ── 2. Rename DB tables (SQLite only) ────────────────────────────────
+        // Only SQLite is supported for this auto-migration (all apps use SQLite).
         // On other engines the DBA should run the rename manually.
         if ($driver !== 'sqlite') {
             $log?->warning("maybeRemovePrefix: auto-rename not supported for engine {$driver}; please rename tables manually.");
             return;
         }
 
-        // Check whether the old migrations table still exists.
-        $exists = $db->query(
-            "SELECT COUNT(*) AS cnt FROM sqlite_master WHERE type='table' AND name=?",
-            [$oldMigrTable],
-            'read'
-        );
-        if (!$exists || (int)($exists[0]['cnt'] ?? 0) === 0) {
-            return; // Already migrated or fresh install.
-        }
-
-        $log?->info("Migrate: found legacy prefix tables (prefix={$oldPrefix}); renaming…");
-
-        // Fetch every table that starts with the old prefix.
-        $tables = $db->query(
+        // Check whether any legacy-prefix tables still exist in the DB.
+        $prefixed = $db->query(
             "SELECT name FROM sqlite_master WHERE type='table' AND name LIKE ?",
             [$oldPrefix . '%'],
             'read'
         ) ?: [];
 
-        foreach ($tables as $row) {
+        if (empty($prefixed)) {
+            return; // Already migrated or fresh install.
+        }
+
+        $log?->info("Migrate: found legacy prefix tables (prefix={$oldPrefix}); renaming…");
+
+        foreach ($prefixed as $row) {
             $oldName = $row['name'];
             $newName = substr($oldName, strlen($oldPrefix));
 
@@ -118,41 +118,69 @@ class Migrate
                 $log?->error("maybeRemovePrefix: failed to rename {$oldName}: " . $e->getMessage());
             }
         }
+    }
 
-        // Update tables.json: strip prefix from all table names and any nested references.
+    /**
+     * Strips the legacy APP__ prefix from all table names and references inside
+     * tables.json (name, plugin[], link[].other_tb, backlinks[]).
+     *
+     * Idempotent: once the prefix is gone the loop simply finds nothing to strip.
+     */
+    private static function maybeRemovePrefixFromConfig(string $oldPrefix, Logger $log = null): void
+    {
         $cfgPath = PROJ_DIR . 'cfg/tables.json';
-        if (file_exists($cfgPath)) {
-            $data = json_decode(file_get_contents($cfgPath), true);
-            if ($data && isset($data['tables'])) {
-                array_walk($data['tables'], function (&$tb) use ($oldPrefix) {
-                    // Table name
-                    if (str_starts_with($tb['name'], $oldPrefix)) {
-                        $tb['name'] = substr($tb['name'], strlen($oldPrefix));
-                    }
-                    // Plugin references
-                    if (isset($tb['plugin']) && is_array($tb['plugin'])) {
-                        $tb['plugin'] = array_map(
-                            fn($p) => str_starts_with($p, $oldPrefix) ? substr($p, strlen($oldPrefix)) : $p,
-                            $tb['plugin']
-                        );
-                    }
-                    // Link other_tb references
-                    if (isset($tb['link']) && is_array($tb['link'])) {
-                        foreach ($tb['link'] as &$link) {
-                            if (isset($link['other_tb']) && str_starts_with($link['other_tb'], $oldPrefix)) {
-                                $link['other_tb'] = substr($link['other_tb'], strlen($oldPrefix));
-                            }
-                        }
-                        unset($link);
-                    }
-                });
-                file_put_contents(
-                    $cfgPath,
-                    json_encode(['tables' => $data['tables']], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
-                );
-                $log?->info("Migrate: updated tables.json (prefix stripped)");
+        if (!file_exists($cfgPath)) {
+            return;
+        }
+
+        $data = json_decode(file_get_contents($cfgPath), true);
+        if (!$data || !isset($data['tables'])) {
+            return;
+        }
+
+        // Quick scan: is the prefix present at all?
+        $needsUpdate = false;
+        foreach ($data['tables'] as $tb) {
+            if (str_starts_with($tb['name'] ?? '', $oldPrefix)) {
+                $needsUpdate = true;
+                break;
             }
         }
+        if (!$needsUpdate) {
+            return; // Nothing to do.
+        }
+
+        $strip = fn(string $s) => str_starts_with($s, $oldPrefix)
+            ? substr($s, strlen($oldPrefix))
+            : $s;
+
+        array_walk($data['tables'], function (&$tb) use ($oldPrefix, $strip) {
+            $tb['name'] = $strip($tb['name'] ?? '');
+
+            if (isset($tb['plugin']) && is_array($tb['plugin'])) {
+                $tb['plugin'] = array_map($strip, $tb['plugin']);
+            }
+            if (isset($tb['link']) && is_array($tb['link'])) {
+                foreach ($tb['link'] as &$link) {
+                    if (isset($link['other_tb'])) {
+                        $link['other_tb'] = $strip($link['other_tb']);
+                    }
+                }
+                unset($link);
+            }
+            if (isset($tb['backlinks']) && is_array($tb['backlinks'])) {
+                $tb['backlinks'] = array_map(
+                    fn($bl) => str_replace($oldPrefix, '', $bl),
+                    $tb['backlinks']
+                );
+            }
+        });
+
+        file_put_contents(
+            $cfgPath,
+            json_encode(['tables' => $data['tables']], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+        );
+        $log?->info("Migrate: updated tables.json (prefix '{$oldPrefix}' stripped)");
     }
 
     /**

@@ -20,7 +20,7 @@ interface DBInterface
     
     public function exec(string $sql): bool;
     
-    public function backupBeforeEdit(string $table, int $id, string $query, array $values = []);
+    public function saveSnapshot(string $tb, int $id, array $content, string $operation = 'update'): void;
 
     public function query(string $query, array $values = null, string $type = null, bool $fetch_style = false );
 

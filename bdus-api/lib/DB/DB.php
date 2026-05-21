@@ -162,41 +162,43 @@ class DB implements DBInterface
   }
 
   /**
-   * Backups a record (saves a json-encoded version in versions table)
+   * Saves a full record snapshot to bdus_versions before a write operation.
    *
-   * @param string $table
-   * @param integer $id
-   * @param string $query
-   * @param array $values
-   * @return void
+   * The caller (Record\Persist) is responsible for building $content, because
+   * plugin data requires Config knowledge unavailable at the DB layer:
+   *
+   *   $content = [
+   *     'core'    => ['id' => 1, 'name' => 'Alpha', …],
+   *     'plugins' => ['tags' => [['id' => 3, 'label' => 'foo', …], …]],
+   *   ]
+   *
+   * @param string $tb        Table name (user-data table, not a system table).
+   * @param int    $id        Primary key of the record being modified.
+   * @param array  $content   Full snapshot: {core: {...}, plugins: {tb: [rows]}}.
+   * @param string $operation One of 'update' | 'delete' | 'restore'.
    */
-  public function backupBeforeEdit(string $table, int $id, string $query, array $values = []): void
-  {
+  public function saveSnapshot(
+    string $tb,
+    int $id,
+    array $content,
+    string $operation = 'update'
+  ): void {
     try {
-      // Get record from database
-      $rows = $this->query('SELECT * FROM ' . $table . ' WHERE id = ?', [$id]);
-
-      if (!is_array($rows)) {
-        $rows = [];
-      }
-
-      foreach ($rows as $r) {
-        $dt = new \DateTime();
-
-        $insertSQL = "INSERT INTO bdus_versions ( userid, time, tb, rowid, content, editsql, editvalues ) VALUES (?, ?, ?, ?, ?, ? ,?)";
-        $insertValues = [
+      $dt = new \DateTime();
+      $this->query(
+        "INSERT INTO bdus_versions (userid, time, tb, rowid, content, operation)
+         VALUES (?, ?, ?, ?, ?, ?)",
+        [
           \Auth\CurrentUser::id(),
           $dt->format('U'),
-          $table,
-          ($r['id'] ?: ''),
-          json_encode($r),
-          $query,
-          json_encode($values)
-        ];
-        $this->query($insertSQL, $insertValues);
-      }
+          $tb,
+          $id,
+          json_encode($content, JSON_UNESCAPED_UNICODE),
+          $operation,
+        ]
+      );
     } catch (DBException $e) {
-      // Already logged!
+      // Already logged by DB::run().
     } catch (\Throwable $th) {
       if ($this->log) {
         $this->log->error($th);

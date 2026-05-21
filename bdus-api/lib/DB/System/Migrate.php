@@ -17,6 +17,7 @@ use DB\System\Migrations\M005_CreateApiKeys;
 use DB\System\Migrations\M006_AddApiKeyPrivilege;
 use DB\System\Migrations\M007_RepairFileLinks;
 use DB\System\Migrations\M008_AddBdusPrefix;
+use DB\System\Migrations\M009_AddVersionOperation;
 use Monolog\Logger;
 
 /**
@@ -51,6 +52,7 @@ class Migrate
         M006_AddApiKeyPrivilege::class,
         M007_RepairFileLinks::class,
         M008_AddBdusPrefix::class,
+        M009_AddVersionOperation::class,
     ];
 
     /**

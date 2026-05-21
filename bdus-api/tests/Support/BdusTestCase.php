@@ -121,7 +121,7 @@ abstract class BdusTestCase extends TestCase
         static::$db->execInTransaction('
             CREATE TABLE bdus_versions (
                 id          INTEGER PRIMARY KEY AUTOINCREMENT,
-                userid      TEXT    NOT NULL,
+                userid      INTEGER NOT NULL,
                 time        INTEGER NOT NULL,
                 tb          TEXT    NOT NULL,
                 rowid       INTEGER NOT NULL,

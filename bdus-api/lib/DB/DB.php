@@ -185,15 +185,20 @@ class DB implements DBInterface
   ): void {
     try {
       $dt = new \DateTime();
+      // editsql and editvalues are legacy columns that may carry NOT NULL on
+      // older databases; pass empty strings to satisfy that constraint.
+      // They are unused by the snapshot system (all data lives in `content`).
       $this->query(
-        "INSERT INTO bdus_versions (userid, time, tb, rowid, content, operation)
-         VALUES (?, ?, ?, ?, ?, ?)",
+        "INSERT INTO bdus_versions (userid, time, tb, rowid, content, editsql, editvalues, operation)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
         [
           \Auth\CurrentUser::id(),
           $dt->format('U'),
           $tb,
           $id,
           json_encode($content, JSON_UNESCAPED_UNICODE),
+          '',   // editsql  — legacy column, kept for schema compat
+          '',   // editvalues — legacy column, kept for schema compat
           $operation,
         ]
       );

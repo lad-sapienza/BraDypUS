@@ -529,7 +529,7 @@ class import_ctrl extends Controller
 
                 // Insert into system files table
                 $fileId = $this->db->query(
-                    "INSERT INTO {$this->prefix}files (ext, filename, creator) VALUES (?, ?, ?)",
+                    "INSERT INTO bdus_files (ext, filename, creator) VALUES (?, ?, ?)",
                     [$ext, $destName, 'import'],
                     'id'
                 );
@@ -537,7 +537,7 @@ class import_ctrl extends Controller
 
                 // Link file to record
                 $this->db->query(
-                    "INSERT INTO {$this->prefix}file_links (file_id, table_name, record_id, sort)"
+                    "INSERT INTO bdus_file_links (file_id, table_name, record_id, sort)"
                     . " VALUES (?, ?, ?, ?)",
                     [$fileId, $tb, $recordId, 0],
                     'boolean'

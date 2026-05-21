@@ -503,7 +503,7 @@ class record_ctrl extends Controller
 
     if (!empty($cfg['vocabulary_set'])) {
       $rows = $this->db->query(
-        "SELECT def as v FROM {$this->prefix}vocabularies WHERE voc = ? ORDER BY sort",
+        "SELECT def as v FROM bdus_vocabularies WHERE voc = ? ORDER BY sort",
         [$cfg['vocabulary_set']]
       ) ?: [];
       return array_map(fn($r) => ['value' => $r['v'], 'label' => $r['v']], $rows);
@@ -904,12 +904,11 @@ class record_ctrl extends Controller
       $ext      = strtolower(pathinfo($original, PATHINFO_EXTENSION));
       $filename = pathinfo($original, PATHINFO_FILENAME);
       $creator  = \Auth\CurrentUser::id() ?? 'anonymous';
-      $prefix   = $this->prefix;
       $appName  = $this->cfg->get('main.name') ?? '';
 
       // Insert file record to obtain the auto-increment id
       $this->db->query(
-        "INSERT INTO {$prefix}files (creator, ext, filename) VALUES (?, ?, ?)",
+        "INSERT INTO bdus_files (creator, ext, filename) VALUES (?, ?, ?)",
         [$creator, $ext, $filename]
       );
       $fileId = $this->db->lastId();
@@ -924,13 +923,13 @@ class record_ctrl extends Controller
 
       if (!move_uploaded_file($_FILES['file']['tmp_name'], $destFile)) {
         // Roll back the file record if the move fails
-        $this->db->query("DELETE FROM {$prefix}files WHERE id = ?", [$fileId]);
+        $this->db->query("DELETE FROM bdus_files WHERE id = ?", [$fileId]);
         throw new \RuntimeException('move_uploaded_file failed');
       }
 
       // Create file link in the dedicated junction table
       $this->db->query(
-        "INSERT INTO {$prefix}file_links (file_id, table_name, record_id) VALUES (?, ?, ?)",
+        "INSERT INTO bdus_file_links (file_id, table_name, record_id) VALUES (?, ?, ?)",
         [$fileId, $tb, (int)$id]
       );
 
@@ -977,12 +976,11 @@ class record_ctrl extends Controller
       return;
     }
 
-    $prefix  = $this->prefix;
     $appName = $this->cfg->get('main.name') ?? '';
 
     try {
       // Fetch file metadata (need ext to locate physical file)
-      $rows = $this->db->query("SELECT ext FROM {$prefix}files WHERE id = ?", [$fileId]);
+      $rows = $this->db->query("SELECT ext FROM bdus_files WHERE id = ?", [$fileId]);
       if (empty($rows)) {
         $this->returnJson(['status' => 'error', 'code' => 'record_not_found']);
         return;
@@ -991,12 +989,12 @@ class record_ctrl extends Controller
 
       // Remove all file_links that reference this file
       $this->db->query(
-        "DELETE FROM {$prefix}file_links WHERE file_id = ?",
+        "DELETE FROM bdus_file_links WHERE file_id = ?",
         [$fileId]
       );
 
       // Delete the file record
-      $this->db->query("DELETE FROM {$prefix}files WHERE id = ?", [$fileId]);
+      $this->db->query("DELETE FROM bdus_files WHERE id = ?", [$fileId]);
 
       // Delete physical file (best-effort: ignore if already missing)
       $physicalPath = PROJ_DIR . 'files/' . $fileId . '.' . $ext;

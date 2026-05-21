@@ -23,7 +23,7 @@ class myHistory_ctrl extends Controller
       return;
     }
 
-    $vTb     = $this->prefix . 'versions';
+    $vTb     = 'bdus_versions';
     $page    = max(1,   (int)($this->get['page']     ?? 1));
     $perPage = min(200, max(1, (int)($this->get['per_page'] ?? 50)));
     $tb      = trim($this->get['tb']   ?? '');

@@ -62,6 +62,11 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/deleted-records',
+    component: () => import('@/views/DeletedRecordsView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/find-replace',
     component: () => import('@/views/SearchReplaceView.vue'),
     meta: { requiresAuth: true }

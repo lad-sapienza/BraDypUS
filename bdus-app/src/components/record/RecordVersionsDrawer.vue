@@ -87,10 +87,9 @@
           </div>
 
           <div
-            v-for="field in coreFields"
+            v-for="field in coreFields.filter(f => f.changed)"
             :key="field.name"
-            class="vd-field-row"
-            :class="{ changed: field.changed, unchanged: !field.changed }"
+            class="vd-field-row changed"
           >
             <Checkbox
               v-if="diff.current.core"
@@ -103,17 +102,14 @@
               <label :for="`f-${field.name}`" class="vd-field-name">
                 {{ field.label }}
               </label>
-              <template v-if="field.changed">
-                <div class="vd-val vd-val-snap">
-                  <span class="vd-val-label">{{ t('version_snapshot') }}</span>
-                  <code>{{ formatVal(field.snapVal) }}</code>
-                </div>
-                <div class="vd-val vd-val-cur">
-                  <span class="vd-val-label">{{ t('version_current') }}</span>
-                  <code>{{ formatVal(field.curVal) }}</code>
-                </div>
-              </template>
-              <span v-else class="vd-unchanged-note">{{ t('version_unchanged') }}</span>
+              <div class="vd-val vd-val-snap">
+                <span class="vd-val-label">{{ t('version_snapshot') }}</span>
+                <code>{{ formatVal(field.snapVal) }}</code>
+              </div>
+              <div class="vd-val vd-val-cur">
+                <span class="vd-val-label">{{ t('version_current') }}</span>
+                <code>{{ formatVal(field.curVal) }}</code>
+              </div>
             </div>
           </div>
         </div>

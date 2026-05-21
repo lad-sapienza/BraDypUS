@@ -77,6 +77,8 @@ tags:
     description: Find-and-replace across a table field
   - name: free-sql
     description: Password-gated free-form SQL execution
+  - name: versions
+    description: Record version history and point-in-time restore
   - name: system
     description: Application info, history, logs, welcome page, new-app wizard
 
@@ -792,6 +794,138 @@ paths:
                         type: array
                         items:
                           type: object
+
+  # ── Version history ──────────────────────────────────────────────────────
+
+  /api/record/{tb}/{id}/versions:
+    get:
+      tags: [versions]
+      summary: List recorded versions for a record
+      description: >
+        Returns all snapshot entries for the given record, newest first.
+        Each entry identifies when the snapshot was taken, by whom, and what
+        operation triggered it (`update` | `delete` | `restore`).
+      parameters:
+        - $ref: '#/components/parameters/tb'
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Version list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      versions:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/VersionEntry'
+
+  /api/version/{id}:
+    get:
+      tags: [versions]
+      summary: Fetch a version snapshot plus the current record state
+      description: >
+        Returns the full snapshot content for one version entry together with
+        the current live state of the same record.  The frontend uses both to
+        compute and render the diff.  `current.core` is `null` when the record
+        has been deleted since the snapshot was taken.
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Version diff payload
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      version:
+                        allOf:
+                          - $ref: '#/components/schemas/VersionEntry'
+                          - type: object
+                            properties:
+                              content:
+                                $ref: '#/components/schemas/VersionContent'
+                      current:
+                        $ref: '#/components/schemas/VersionContent'
+
+  /api/version/{id}/restore:
+    post:
+      tags: [versions]
+      summary: Restore a record to a previously snapshotted state
+      description: >
+        Applies values from the chosen snapshot back to the live record.
+
+
+        **Core fields**: pass an array of field names in `fields` to restore
+        only those fields; omit or pass an empty array to restore all core
+        fields.  `id` and `creator` are always excluded from writes.
+
+
+        **Plugins**: pass plugin table names in `restore_plugins` to restore
+        those sections (all-or-nothing: current rows deleted, snapshot rows
+        re-inserted).  Omit or pass an empty array to leave plugins untouched.
+
+
+        **Deleted record recovery**: when the target record no longer exists, a
+        full INSERT is performed using all snapshot core values (including the
+        original `id`) and all snapshot plugins.  The `fields` /
+        `restore_plugins` filters are ignored in this case.
+
+
+        A pre-restore snapshot with `operation=restore` is always saved before
+        any write so the action is auditable and itself reversible.
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fields:
+                  type: array
+                  items:
+                    type: string
+                  description: >
+                    Core field names to restore.
+                    Empty array or omitted → restore all core fields.
+                  example: ['name', 'status']
+                restore_plugins:
+                  type: array
+                  items:
+                    type: string
+                  description: >
+                    Plugin table names to restore (all-or-nothing per section).
+                    Empty array or omitted → no plugins restored.
+                  example: ['tags']
+      responses:
+        '200':
+          description: Restore result
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/CodedResult'
+                  - type: object
+                    properties:
+                      tb:
+                        type: string
+                        description: Table name of the restored record
+                      id:
+                        type: integer
+                        description: Primary key of the restored record
+                      created:
+                        type: boolean
+                        description: >
+                          `true` when the record did not exist and was
+                          re-inserted (deleted-record recovery path).
 
   # ── Files ────────────────────────────────────────────────────────────────
 
@@ -3103,3 +3237,47 @@ components:
           type: integer
         last_used_at:
           type: [integer, "null"]
+
+    # ── Versions ──────────────────────────────────────────────────────────
+
+    VersionEntry:
+      type: object
+      description: Metadata for a single version snapshot entry.
+      properties:
+        id:
+          type: integer
+          description: Version entry primary key
+        userid:
+          type: string
+          description: ID or name of the user who triggered the snapshot
+        time:
+          type: string
+          format: date-time
+          description: Timestamp of the snapshot (Y-m-d H:i:s)
+        operation:
+          type: string
+          enum: [update, delete, restore]
+          description: >
+            What triggered the snapshot:
+            `update` — a field edit; `delete` — the record was erased;
+            `restore` — a rollback was applied to this record.
+
+    VersionContent:
+      type: object
+      description: Full record snapshot captured at a point in time.
+      properties:
+        core:
+          type: [object, "null"]
+          description: >
+            Flat field→value map of the main table row.
+            `null` when the record has since been deleted.
+          additionalProperties: true
+        plugins:
+          type: object
+          description: >
+            Plugin table name → array of raw DB rows at snapshot time.
+          additionalProperties:
+            type: array
+            items:
+              type: object
+              additionalProperties: true

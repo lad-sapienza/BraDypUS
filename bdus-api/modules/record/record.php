@@ -156,6 +156,7 @@ class record_ctrl extends Controller
       $qObj->setLimit(($page - 1) * $perPage, $perPage);
 
       $this->returnJson([
+        "status"  => "success",
         'total'   => $total,
         'fields'  => $fields,
         'data'    => $qObj->getResults(),
@@ -335,6 +336,7 @@ class record_ctrl extends Controller
         }
         unset($file);
       }
+      $full["status"] = "success";
 
       $this->returnJson($full);
 
@@ -362,7 +364,7 @@ class record_ctrl extends Controller
     }
 
     try {
-      $this->returnJson(['options' => $this->resolveFieldOptions($tb, $fld)]);
+      $this->returnJson(["status" => "success", "options" => $this->resolveFieldOptions($tb, $fld)]);
     } catch (\Throwable $e) {
       $this->log->error($e);
       $this->returnJson(['status' => 'error', 'code' => 'db_error', 'detail' => $e->getMessage()]);
@@ -388,7 +390,7 @@ class record_ctrl extends Controller
     $tbStripped = $tb;
     $templates  = \Template\Loader::listAvailable($appName, $tbStripped);
 
-    $this->returnJson(['templates' => $templates]);
+    $this->returnJson(["status" => "success", "templates" => $templates]);
   }
 
   // ── Private helpers ───────────────────────────────────────────────────────
@@ -1413,7 +1415,7 @@ class record_ctrl extends Controller
 
       if ($filtered && empty($dbIds)) {
         // Empty result set → no nodes, no relations
-        $this->returnJson(['rs_field' => $rsField, 'nodes' => [], 'relations' => []]);
+        $this->returnJson(["status" => "success", "rs_field" => $rsField, "nodes" => [], "relations" => []]);
         return;
       }
 
@@ -1489,6 +1491,7 @@ class record_ctrl extends Controller
       }
 
       $this->returnJson([
+        "status"    => "success",
         'rs_field'  => $rsField,
         'nodes'     => $nodes,
         'relations' => array_values($relations),
@@ -1547,5 +1550,328 @@ class record_ctrl extends Controller
     $this->returnJson($data);
   }
 
+  // ── Version history ────────────────────────────────────────────────────────
+
+  /**
+   * Returns the list of recorded versions for a single record.
+   *
+   * GET /api/record/{tb}/{id}/versions
+   *
+   * Response: { versions: [{ id, userid, time, operation }, …] }
+   * Ordered newest-first.
+   */
+  public function getVersions(): void
+  {
+    if (!\utils::canUser('read')) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+      return;
+    }
+
+    $tb  = $this->get['tb']  ?? null;
+    $id  = (int)($this->get['id'] ?? 0);
+
+    if (!$tb || !$id) {
+      $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
+      return;
+    }
+
+    // Validate table against config to prevent probing arbitrary tables.
+    $knownTables = array_keys($this->cfg->get('tables') ?? []);
+    if (!in_array($tb, $knownTables, true)) {
+      $this->returnJson(['status' => 'error', 'code' => 'unknown_table']);
+      return;
+    }
+
+    try {
+      $rows = $this->db->query(
+        "SELECT id, userid, time, operation
+           FROM bdus_versions
+          WHERE tb = ? AND rowid = ?
+          ORDER BY id DESC",
+        [$tb, $id]
+      ) ?: [];
+
+      foreach ($rows as &$row) {
+        if ($row['time']) {
+          $d = new \DateTime();
+          $d->setTimestamp((int)$row['time']);
+          $row['time'] = $d->format('Y-m-d H:i:s');
+        }
+        $row['id'] = (int)$row['id'];
+      }
+
+      $this->returnJson(['versions' => $rows]);
+
+    } catch (\Throwable $e) {
+      $this->log->error($e);
+      $this->returnJson(['status' => 'error', 'code' => 'db_error', 'detail' => $e->getMessage()]);
+    }
+  }
+
+  /**
+   * Returns the full snapshot for one version entry plus the current state of
+   * the same record, so the frontend can compute and display the diff.
+   *
+   * GET /api/version/{id}
+   *
+   * Response:
+   * {
+   *   version: { id, userid, time, operation, content: { core, plugins } },
+   *   current: { core, plugins }
+   * }
+   *
+   * `current.core` is null when the record has been deleted.
+   */
+  public function getVersionDiff(): void
+  {
+    if (!\utils::canUser('read')) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+      return;
+    }
+
+    $versionId = (int)($this->get['id'] ?? 0);
+
+    if (!$versionId) {
+      $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
+      return;
+    }
+
+    try {
+      $rows = $this->db->query(
+        "SELECT * FROM bdus_versions WHERE id = ?",
+        [$versionId]
+      );
+
+      if (empty($rows)) {
+        $this->returnJson(['status' => 'error', 'code' => 'version_not_found']);
+        return;
+      }
+
+      $ver     = $rows[0];
+      $tb      = $ver['tb'];
+      $rid     = (int)$ver['rowid'];
+      $content = json_decode($ver['content'], true) ?? ['core' => [], 'plugins' => []];
+
+      if ($ver['time']) {
+        $d = new \DateTime();
+        $d->setTimestamp((int)$ver['time']);
+        $ver['time'] = $d->format('Y-m-d H:i:s');
+      }
+
+      // Current state of the core row (null if the record was deleted)
+      $currentRows = $this->db->query("SELECT * FROM {$tb} WHERE id = ?", [$rid]) ?: [];
+      $currentCore = $currentRows[0] ?? null;
+
+      // Current state of plugins (flat DB rows for direct comparison)
+      $pluginNames    = $this->cfg->get("tables.{$tb}.plugin") ?: [];
+      $currentPlugins = [];
+      foreach ($pluginNames as $pluginName) {
+        $currentPlugins[$pluginName] = $this->db->query(
+          "SELECT * FROM {$pluginName} WHERE table_link = ? AND id_link = ?",
+          [$tb, $rid]
+        ) ?: [];
+      }
+
+      $this->returnJson([
+        'version' => [
+          'id'        => (int)$ver['id'],
+          'userid'    => $ver['userid'],
+          'time'      => $ver['time'],
+          'operation' => $ver['operation'],
+          'content'   => $content,
+        ],
+        'current' => [
+          'core'    => $currentCore,
+          'plugins' => $currentPlugins,
+        ],
+      ]);
+
+    } catch (\Throwable $e) {
+      $this->log->error($e);
+      $this->returnJson(['status' => 'error', 'code' => 'db_error', 'detail' => $e->getMessage()]);
+    }
+  }
+
+  /**
+   * Restores a record to a previously snapshotted state.
+   *
+   * POST /api/version/{id}/restore
+   * Body: { fields: ['name', 'status', …], restore_plugins: ['tags', …] }
+   *
+   * - `fields` (optional): core fields to restore.
+   *   Empty array or missing → restore all core fields.
+   *   `id` and `creator` are always excluded from updates.
+   * - `restore_plugins` (optional): plugin sections to restore (all-or-nothing
+   *   per section: delete current rows, re-insert snapshot rows).
+   *   Empty array or missing → no plugins restored.
+   *
+   * Deleted-record recovery: when the target record no longer exists in the
+   * main table, a full INSERT is performed (all core fields, all plugins),
+   * restoring the original id to preserve referential integrity.
+   *
+   * The current state is snapshotted with operation='restore' before any
+   * write so the action is fully auditable and itself reversible.
+   *
+   * Response: { code: 'success_restored', tb, id, created: bool }
+   */
+  public function restoreVersion(): void
+  {
+    if (!\utils::canUser('edit')) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+      return;
+    }
+
+    $versionId      = (int)($this->post['version_id']     ?? $this->get['id']          ?? 0);
+    $fields         =       $this->post['fields']          ?? [];
+    $restorePlugins =       $this->post['restore_plugins'] ?? [];
+
+    if (!$versionId) {
+      $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
+      return;
+    }
+
+    try {
+      $rows = $this->db->query(
+        "SELECT * FROM bdus_versions WHERE id = ?",
+        [$versionId]
+      );
+
+      if (empty($rows)) {
+        $this->returnJson(['status' => 'error', 'code' => 'version_not_found']);
+        return;
+      }
+
+      $ver     = $rows[0];
+      $tb      = $ver['tb'];
+      $rid     = (int)$ver['rowid'];
+      $content = json_decode($ver['content'], true) ?? ['core' => [], 'plugins' => []];
+
+      // Validate table against config.
+      $knownTables = array_keys($this->cfg->get('tables') ?? []);
+      if (!in_array($tb, $knownTables, true)) {
+        $this->returnJson(['status' => 'error', 'code' => 'unknown_table']);
+        return;
+      }
+
+      $snapshotCore    = $content['core']    ?? [];
+      $snapshotPlugins = $content['plugins'] ?? [];
+
+      // Fetch current live state to determine UPDATE vs INSERT.
+      $currentRows = $this->db->query("SELECT * FROM {$tb} WHERE id = ?", [$rid]) ?: [];
+      $currentCore = $currentRows[0] ?? null;
+      $recordExists = ($currentCore !== null);
+
+      $pluginNames    = $this->cfg->get("tables.{$tb}.plugin") ?: [];
+      $currentPlugins = [];
+      foreach ($pluginNames as $pluginName) {
+        $currentPlugins[$pluginName] = $this->db->query(
+          "SELECT * FROM {$pluginName} WHERE table_link = ? AND id_link = ?",
+          [$tb, $rid]
+        ) ?: [];
+      }
+
+      // ── Pre-restore snapshot (only when the record still exists) ──────────
+      // Records the state being overwritten so the restore itself is auditable
+      // and reversible.
+      if ($recordExists) {
+        $this->db->saveSnapshot($tb, $rid, [
+          'core'    => $currentCore,
+          'plugins' => $currentPlugins,
+        ], 'restore');
+      }
+
+      // ── Write ─────────────────────────────────────────────────────────────
+      $this->db->beginTransaction();
+      try {
+        if (!$recordExists) {
+          // ── Deleted record recovery: full INSERT with original id ──────
+          // All fields are restored (UI filtering is irrelevant when bringing
+          // back a record that no longer exists).
+          $insertData = $snapshotCore;   // snapshot already contains 'id'
+          $flds  = array_keys($insertData);
+          $ph    = implode(', ', array_fill(0, count($flds), '?'));
+          $this->db->query(
+            "INSERT INTO {$tb} (" . implode(', ', $flds) . ") VALUES ({$ph})",
+            array_values($insertData)
+          );
+
+          // Restore all plugin sections from the snapshot.
+          foreach ($snapshotPlugins as $pluginName => $snapshotRows) {
+            $this->db->query(
+              "DELETE FROM {$pluginName} WHERE table_link = ? AND id_link = ?",
+              [$tb, $rid], 'boolean'
+            );
+            foreach ($snapshotRows as $r) {
+              unset($r['id']);
+              $r['table_link'] = $tb;
+              $r['id_link']    = $rid;
+              $flds = array_keys($r);
+              $ph   = implode(', ', array_fill(0, count($flds), '?'));
+              $this->db->query(
+                "INSERT INTO {$pluginName} (" . implode(', ', $flds) . ") VALUES ({$ph})",
+                array_values($r)
+              );
+            }
+          }
+
+        } else {
+          // ── Normal restore: UPDATE selected core fields ────────────────
+          $coreToRestore = empty($fields)
+            ? array_keys($snapshotCore)
+            : array_intersect((array)$fields, array_keys($snapshotCore));
+
+          // Never overwrite system/immutable fields.
+          $coreToRestore = array_diff($coreToRestore, ['id', 'creator']);
+
+          if (!empty($coreToRestore)) {
+            $toWrite = array_intersect_key($snapshotCore, array_flip($coreToRestore));
+            $setParts = array_map(fn($k) => "{$k} = ?", array_keys($toWrite));
+            $sql      = "UPDATE {$tb} SET " . implode(', ', $setParts) . " WHERE id = ?";
+            $vals     = array_values($toWrite);
+            $vals[]   = $rid;
+            $this->db->query($sql, $vals, 'boolean');
+          }
+
+          // ── Restore selected plugin sections (all-or-nothing) ──────────
+          foreach ((array)$restorePlugins as $pluginName) {
+            if (!isset($snapshotPlugins[$pluginName])) {
+              continue;
+            }
+            $this->db->query(
+              "DELETE FROM {$pluginName} WHERE table_link = ? AND id_link = ?",
+              [$tb, $rid], 'boolean'
+            );
+            foreach ($snapshotPlugins[$pluginName] as $r) {
+              unset($r['id']);
+              $r['table_link'] = $tb;
+              $r['id_link']    = $rid;
+              $flds = array_keys($r);
+              $ph   = implode(', ', array_fill(0, count($flds), '?'));
+              $this->db->query(
+                "INSERT INTO {$pluginName} (" . implode(', ', $flds) . ") VALUES ({$ph})",
+                array_values($r)
+              );
+            }
+          }
+        }
+
+        $this->db->commit();
+      } catch (\Throwable $e) {
+        $this->db->rollBack();
+        throw $e;
+      }
+
+      $this->returnJson([
+        'code'    => 'success_restored',
+        'tb'      => $tb,
+        'id'      => $rid,
+        'created' => !$recordExists,
+      ]);
+
+    } catch (\Throwable $e) {
+      $this->log->error($e);
+      $this->returnJson(['status' => 'error', 'code' => 'db_error', 'detail' => $e->getMessage()]);
+    }
+  }
 
 }

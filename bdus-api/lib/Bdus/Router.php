@@ -68,6 +68,8 @@ class Router
         'record_ctrl::getFieldOptions'               => 'read',
         'record_ctrl::searchLinkCandidates'          => 'read',
         'record_ctrl::getRsMatrix'                   => 'read',
+        'record_ctrl::getVersions'                   => 'read',
+        'record_ctrl::getVersionDiff'                => 'read',
         'search_ctrl::getAdvancedConfig'             => 'read',
         'search_ctrl::getUsedValues'                 => 'read',
         'chart_ctrl::listCharts'                     => 'read',
@@ -81,6 +83,7 @@ class Router
         // ── Edit — write operations ──────────────────────────────────────────
         'record_ctrl::saveRecord'                    => 'edit',
         'record_ctrl::erase'                         => 'edit',
+        'record_ctrl::restoreVersion'                => 'edit',
         'record_ctrl::uploadFile'                    => 'edit',
         'record_ctrl::deleteFile'                    => 'edit',
         'file_ctrl::sortFiles'                       => 'edit',
@@ -219,6 +222,9 @@ class Router
             $r->addRoute('GET',             '/api/record/{tb}/templates',     ['record_ctrl', 'getTemplates']);
             $r->addRoute('GET',             '/api/record/{tb}/field-options', ['record_ctrl', 'getFieldOptions']);
             $r->addRoute('GET',             '/api/record/{tb}/link-candidates', ['record_ctrl', 'searchLinkCandidates']);
+            $r->addRoute('GET',             '/api/record/{tb}/{id:\d+}/versions', ['record_ctrl', 'getVersions']);
+            $r->addRoute('GET',             '/api/version/{id:\d+}',              ['record_ctrl', 'getVersionDiff']);
+            $r->addRoute('POST',            '/api/version/{id:\d+}/restore',      ['record_ctrl', 'restoreVersion']);
 
             // ── Files ─────────────────────────────────────────────────────────
             $r->addRoute('POST',   '/api/record/{tb}/{id:\d+}/file', ['record_ctrl', 'uploadFile']);

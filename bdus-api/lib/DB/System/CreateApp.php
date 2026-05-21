@@ -98,7 +98,7 @@ class CreateApp
             "tables" => [
                 "tables" => [
                     [
-                        "name" => "files",
+                        "name" => "bdus_files",
                         "label" => "Files",
                         "order" => "id",
                         "preview" => [
@@ -110,13 +110,13 @@ class CreateApp
                         "id_field" => "id"
                     ],
                     [
-                        "name" => "geodata",
+                        "name" => "bdus_geodata",
                         "label" => "Geografical coordinates",
                         "is_plugin" => "1"
                     ]
                 ]
             ],
-            "geodata" => [
+            "bdus_geodata" => [
                 [
                     "name" => "id",
                     "label" => "ID",
@@ -147,7 +147,7 @@ class CreateApp
                     "type" => "text"
                 ]
             ],
-            "files" => [
+            "bdus_files" => [
                 [
                   "name" => "id",
                   "label" => "ID",

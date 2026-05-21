@@ -271,7 +271,7 @@ async function loadOptions() {
     const res = await api.get(`/api/record/${props.tb}/field-options`, {
       fld: props.schema.name,
     })
-    asyncOptions.value = Array.isArray(res) ? res : []
+    asyncOptions.value = Array.isArray(res?.options) ? res.options : []
     optionsLoaded = true
   } catch (e) {
     toast.add({

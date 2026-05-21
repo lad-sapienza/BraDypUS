@@ -15,7 +15,7 @@ class LogDBHandler extends AbstractProcessingHandler
     private $db;
     private $initialized = false;
 
-    public function __construct(DBInterface $db, string $prefix = '', $level = Logger::DEBUG, bool $bubble = true)
+    public function __construct(DBInterface $db, $level = Logger::DEBUG, bool $bubble = true)
     {
         $this->db = $db;
         parent::__construct($level, $bubble);

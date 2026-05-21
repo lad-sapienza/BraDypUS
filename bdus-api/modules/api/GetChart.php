@@ -14,7 +14,7 @@ use DB\DBInterface;
 
 class GetChart
 {
-    public static function run(int $id, DBInterface $db, string $prefix = '')
+    public static function run(int $id, DBInterface $db)
     {
         $sys_manage = new Manage($db);
 

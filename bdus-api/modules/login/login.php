@@ -31,7 +31,7 @@ class login_ctrl extends Controller
 			$this->response( 'email_not_valid', 'error', [$post['email']]);
 		}
 		
-		if (\utils::isDuplicateEmail($this->db, $this->prefix, $post['email'])) {
+		if (\utils::isDuplicateEmail($this->db, $post['email'])) {
 			$this->response('email_present', 'error', [$post['email']]);
 		}
 		
@@ -110,7 +110,7 @@ class login_ctrl extends Controller
 	{
 		try {
 			$user = $this->authenticate($this->post['email'], $this->post['password']);
-			\DB\System\Migrate::run($this->db, $this->prefix, $this->log);
+			\DB\System\Migrate::run($this->db, $this->log);
 			$this->log->info("User {$user['id']} logged into " . APP);
 			$token = \JWT\JwtManager::generate($user, APP);
 			$this->response('ok', 'success', null, ['token' => $token]);

@@ -19,14 +19,12 @@ class Validate
 {
     private $db;
     private $resp;
-    private $prefix;
     private $cfg;
-    
-    public function __construct(DBInterface $db, string $prefix = null, Config $cfg)
+
+    public function __construct(DBInterface $db, Config $cfg)
     {
         $this->db = $db;
         $this->resp = new Resp();
-        $this->prefix = $prefix;
         $this->cfg = $cfg;
         /**
          * 1. each cfg-table must have db-table: OK

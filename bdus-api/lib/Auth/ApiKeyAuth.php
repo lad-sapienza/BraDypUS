@@ -28,9 +28,8 @@ class ApiKeyAuth
      * Returns false (silently) if no key is present or the key is invalid.
      *
      * @param DBInterface $db
-     * @param string      $prefix  Kept for backward compatibility; ignored.
      */
-    public static function attempt(DBInterface $db, string $prefix = ''): bool
+    public static function attempt(DBInterface $db): bool
     {
         $key = self::extractKey();
         if ($key === null) {

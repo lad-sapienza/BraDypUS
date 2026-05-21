@@ -43,11 +43,10 @@ class file_ctrl extends Controller
 			return;
 		}
 
-		$prefix = $this->prefix;
 		$error  = false;
 		foreach ($order as $sort => $fileLinkId) {
 			$ok = $this->db->query(
-				"UPDATE {$prefix}file_links SET sort = ? WHERE id = ?",
+				"UPDATE bdus_file_links SET sort = ? WHERE id = ?",
 				[(int)$sort, (int)$fileLinkId],
 				'boolean'
 			);

@@ -32,14 +32,12 @@ class Loader
      * @param int         $userId        User's database id
      * @param int         $globalPriv    User's global privilege level (from users table)
      * @param DBInterface $db
-     * @param string      $prefix        Application table prefix (kept for backward compatibility; ignored)
      * @return array
      */
     public static function buildUAL(
         int $userId,
         int $globalPriv,
-        DBInterface $db,
-        string $prefix = ''
+        DBInterface $db
     ): array {
         $ual = ['global' => $globalPriv];
 

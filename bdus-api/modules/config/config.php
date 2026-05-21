@@ -681,7 +681,7 @@ class config_ctrl extends Controller
     }
 
     try {
-      $validate = new Validate($this->db, $this->prefix, $this->cfg);
+      $validate = new Validate($this->db, $this->cfg);
       $this->returnJson(['status' => 'success', 'report' => $validate->all()]);
     } catch (\Throwable $e) {
       $this->log->error($e);

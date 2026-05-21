@@ -28,7 +28,7 @@ class templates_ctrl extends Controller
       $tables[] = [
         'tb'       => $tb,
         'label'    => $label ?: $tb,
-        'stripped' => str_replace($this->prefix, '', $tb),
+        'stripped' => $tb,
       ];
     }
 
@@ -57,7 +57,7 @@ class templates_ctrl extends Controller
     }
 
     $appName   = $this->cfg->get('main.name') ?? '';
-    $stripped  = str_replace($this->prefix, '', $tb);
+    $stripped  = $tb;
     $templates = \Template\Loader::listAvailable($appName, $stripped);
 
     // Field list for the editor's field selector
@@ -107,7 +107,7 @@ class templates_ctrl extends Controller
     }
 
     $appName  = $this->cfg->get('main.name') ?? '';
-    $stripped = str_replace($this->prefix, '', $tb);
+    $stripped = $tb;
     $tpl      = \Template\Loader::load($appName, $stripped, $name);
 
     if ($tpl === null) {
@@ -158,7 +158,7 @@ class templates_ctrl extends Controller
     }
 
     $appName  = $this->cfg->get('main.name') ?? '';
-    $stripped = str_replace($this->prefix, '', $tb);
+    $stripped = $tb;
     $dir      = \Template\Loader::getDir($appName);
     $path     = \Template\Loader::getPath($appName, $stripped, $name);
 
@@ -197,7 +197,7 @@ class templates_ctrl extends Controller
     }
 
     $appName  = $this->cfg->get('main.name') ?? '';
-    $stripped = str_replace($this->prefix, '', $tb);
+    $stripped = $tb;
     $path     = \Template\Loader::getPath($appName, $stripped, $name);
 
     if (!file_exists($path)) {
@@ -242,7 +242,7 @@ class templates_ctrl extends Controller
     }
 
     $appName  = $this->cfg->get('main.name') ?? '';
-    $stripped = str_replace($this->prefix, '', $tb);
+    $stripped = $tb;
     $oldPath  = \Template\Loader::getPath($appName, $stripped, $oldName);
     $newPath  = \Template\Loader::getPath($appName, $stripped, $newName);
 

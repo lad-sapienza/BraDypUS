@@ -145,7 +145,7 @@ class App
        * Otherwise, errors are written in the file
        */
       if ($this->db && !$this->debug) {
-        $this->log->pushHandler(new LogDBHandler($this->db, $this->prefix));
+        $this->log->pushHandler(new LogDBHandler($this->db));
         $this->db->setLog($this->log);
       } else {
         $this->log->pushHandler(new StreamHandler($log_file, Logger::DEBUG));
@@ -203,7 +203,7 @@ class App
       if ($requiredPrivilege !== 'none') {
         // If not already authenticated via JWT, try API key auth.
         if (!\Auth\CurrentUser::isAuthenticated() && $this->db && $this->prefix) {
-          \Auth\ApiKeyAuth::attempt($this->db, $this->prefix);
+          \Auth\ApiKeyAuth::attempt($this->db);
         }
 
         // Reject completely unauthenticated requests.
@@ -293,8 +293,7 @@ class App
           $ual = UACLoader::buildUAL(
             \Auth\CurrentUser::id(),
             \Auth\CurrentUser::privilege(),
-            $this->db,
-            $this->prefix
+            $this->db
           );
           $uac->setUAL($ual);
         }

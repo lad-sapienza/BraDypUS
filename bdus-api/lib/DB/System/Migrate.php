@@ -362,9 +362,8 @@ class Migrate
      * Called once after successful login.
      *
      * @param DBInterface $db
-     * @param string $prefix  Kept for backward compatibility; ignored (always '' after v5 prefix removal).
      */
-    public static function run(DBInterface $db, string $prefix = '', Logger $log = null): void
+    public static function run(DBInterface $db, Logger $log = null): void
     {
         // Pre-flight: if this is an existing app still using the legacy APP__ prefix,
         // rename all tables and update config before the normal migration loop starts.

@@ -29,6 +29,16 @@
         />
 
         <template v-if="mode === 'read' && record">
+          <!-- Version history button (only for existing records) -->
+          <Button
+            v-if="!isNew"
+            :label="t('version_history')"
+            icon="pi pi-history"
+            size="small"
+            severity="secondary"
+            outlined
+            @click="versionsDrawerOpen = true"
+          />
           <Button
             v-if="record.metadata?.can_edit"
             :label="t('edit')"
@@ -211,6 +221,17 @@
     </div>
 
   </div>
+
+  <!-- ── Version history drawer ──────────────────────────────────── -->
+  <RecordVersionsDrawer
+    v-if="record && !isNew"
+    v-model="versionsDrawerOpen"
+    :tb="record.metadata.tb_id"
+    :recordId="id"
+    :fieldSchemas="record.schema?.fields ?? []"
+    @restored="fetchRecord"
+  />
+
   </AppLayout>
 </template>
 
@@ -232,8 +253,9 @@ import FieldEditor     from '@/components/record/FieldEditor.vue'
 import PluginSection   from '@/components/record/PluginSection.vue'
 import TemplateSection    from '@/components/record/TemplateSection.vue'
 import FileGallery        from '@/components/record/FileGallery.vue'
-import RsSection          from '@/components/record/RsSection.vue'
-import ManualLinksSection from '@/components/record/ManualLinksSection.vue'
+import RsSection              from '@/components/record/RsSection.vue'
+import ManualLinksSection     from '@/components/record/ManualLinksSection.vue'
+import RecordVersionsDrawer   from '@/components/record/RecordVersionsDrawer.vue'
 
 const { t }   = useI18n()
 const route   = useRoute()
@@ -264,6 +286,7 @@ const mode         = ref('read')
 const loading      = ref(false)
 const saving       = ref(false)
 const fetchError   = ref(null)
+const versionsDrawerOpen = ref(false)
 
 /** Set to true on a failed save attempt so all FieldEditors show their errors */
 const forceValidate = ref(false)

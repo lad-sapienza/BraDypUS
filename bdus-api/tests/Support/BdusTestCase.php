@@ -84,7 +84,18 @@ abstract class BdusTestCase extends TestCase
                 email_addr  TEXT,
                 geo_data    TEXT,
                 ref_code    TEXT,
-                birth_date  TEXT
+                birth_date  TEXT,
+                lang_code   TEXT,
+                category    TEXT
+            )
+        ');
+
+        static::$db->execInTransaction('
+            CREATE TABLE bdus_vocabularies (
+                id   INTEGER PRIMARY KEY AUTOINCREMENT,
+                voc  TEXT    NOT NULL,
+                def  TEXT    NOT NULL,
+                sort INTEGER
             )
         ');
 
@@ -205,6 +216,15 @@ abstract class BdusTestCase extends TestCase
         // An RS entry referencing item 1 (first='1' so Read::getRs() can find it by id=1)
         static::$db->execInTransaction(
             "INSERT INTO bdus_rs (tb, first, second, relation) VALUES ('items', '1', '2', 1)"
+        );
+
+        // Vocabulary entries for the 'test_cat' set (used by RecordCtrlFieldOptionsTest)
+        static::$db->execInTransaction(
+            "INSERT INTO bdus_vocabularies (voc, def, sort) VALUES
+               ('test_cat', 'Cat-A', 1),
+               ('test_cat', 'Cat-B', 2),
+               ('test_cat', 'Cat-C', 3),
+               ('other_set', 'Other-X', 1)"
         );
 
         // A couple of log entries

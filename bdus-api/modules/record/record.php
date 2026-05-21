@@ -362,7 +362,7 @@ class record_ctrl extends Controller
     }
 
     try {
-      $this->returnJson($this->resolveFieldOptions($tb, $fld));
+      $this->returnJson(['options' => $this->resolveFieldOptions($tb, $fld)]);
     } catch (\Throwable $e) {
       $this->log->error($e);
       $this->returnJson(['status' => 'error', 'code' => 'db_error', 'detail' => $e->getMessage()]);

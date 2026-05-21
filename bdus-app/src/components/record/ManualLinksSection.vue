@@ -91,7 +91,7 @@ const props = defineProps({
   /**
    * Manual links object as returned by record_ctrl::getRecord().
    * Keyed by userlinks.id; each value:
-   *   { key, tb_id, tb_stripped, tb_label, ref_id, ref_label, sort }
+   *   { key, tb_id, tb_label, ref_id, ref_label, sort }
    */
   links:    { type: Object,          default: () => ({}) },
   editMode: { type: Boolean,         default: false },

@@ -42,7 +42,7 @@ class Export
      * Must be called before any other output is sent.
      *
      * @param string $format   'csv' | 'json' | 'xlsx'
-     * @param string $filename Base filename without extension (e.g. "paths__manuscripts_1715000000")
+     * @param string $filename Base filename without extension (e.g. "manuscripts_1715000000")
      */
     public function streamToResponse(string $format, string $filename): void
     {

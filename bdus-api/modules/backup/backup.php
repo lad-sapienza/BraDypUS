@@ -58,6 +58,7 @@ class backup_ctrl extends Controller
     usort($backups, fn($a, $b) => ($b['timestamp'] ?? 0) <=> ($a['timestamp'] ?? 0));
 
     $this->returnJson([
+      "status"      => "success",
       'engine'      => $engine,
       'can_delete'  => \utils::canUser('admin'),
       'can_restore' => \utils::canUser('super_admin') && $engine !== 'pgsql',

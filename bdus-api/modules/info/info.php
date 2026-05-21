@@ -44,6 +44,7 @@ class info_ctrl extends Controller
     }
 
     $this->returnJson([
+      "status"       => "success",
       'version'      => \version::current(),
       'changelog_md' => file_get_contents(MAIN_DIR . 'CHANGELOG.md') ?: '',
     ]);

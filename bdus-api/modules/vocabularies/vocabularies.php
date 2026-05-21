@@ -34,7 +34,7 @@ class vocabularies_ctrl extends Controller
 		foreach ($grouped as $name => $items) {
 			$vocs[] = ['name' => $name, 'items' => $items];
 		}
-		$this->returnJson(['vocs' => $vocs]);
+		$this->returnJson(["status" => "success", "vocs" => $vocs]);
 	}
 
 	public function edit()

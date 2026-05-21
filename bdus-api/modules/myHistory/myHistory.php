@@ -65,7 +65,7 @@ class myHistory_ctrl extends Controller
         }
       }
 
-      $this->returnJson(['total' => $total, 'data' => $rows]);
+      $this->returnJson(["status" => "success", "total" => $total, "data" => $rows]);
 
     } catch (\Throwable $e) {
       $this->log->error($e);

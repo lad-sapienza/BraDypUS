@@ -69,8 +69,10 @@ class search_ctrl extends Controller
 
     // Connectors: AND/OR/XOR are language-agnostic technical terms.
     $connectors = ['AND', 'OR', 'XOR'];
+    $resp = compact('fields', 'operators', 'connectors');
+    $resp['status'] = 'success';
 
-    $this->returnJson(compact('fields', 'operators', 'connectors'));
+    $this->returnJson($resp);
   }
 
   // ──────────────────────────────────────────────────────────────────────────

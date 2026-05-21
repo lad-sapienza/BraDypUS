@@ -29,7 +29,7 @@ class search_replace_ctrl extends Controller
 				'label' => $this->cfg->get("tables.$name.label") ?? $name,
 			];
 		}
-		$this->returnJson(['tables' => $tables]);
+		$this->returnJson(["status" => "success", "tables" => $tables]);
 	}
 
 	/**
@@ -61,7 +61,7 @@ class search_replace_ctrl extends Controller
 				];
 			}
 		}
-		$this->returnJson(['fields' => $fields]);
+		$this->returnJson(["status" => "success", "fields" => $fields]);
 	}
 
 	/**

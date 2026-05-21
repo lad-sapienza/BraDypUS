@@ -155,7 +155,7 @@ class login_ctrl extends Controller
 			}
 		}
 
-		$this->returnJson(['apps' => $data]);
+		$this->returnJson([ 'status' => 'success', 'apps' => $data]);
 	}
 
 	public function changePwd()

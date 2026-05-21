@@ -68,7 +68,7 @@ class user_ctrl extends Controller
 				'override_count'  => 0,
 			];
 		}
-
+		$data["status"] = "success";
 		$this->returnJson($data);
 	}
 
@@ -154,6 +154,7 @@ class user_ctrl extends Controller
 			}
 		}
 
+		$data["status"] = "success";
 		$this->returnJson($data);
 	}
 
@@ -267,7 +268,7 @@ class user_ctrl extends Controller
 				[$userId],
 				'read'
 			) ?: [];
-
+			// TODO: add status code and message to the response envelope
 			$this->returnJson($rows);
 		} catch (\Throwable $e) {
 			$this->log->error($e);

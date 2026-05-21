@@ -909,11 +909,11 @@ class record_ctrl extends Controller
       $appName  = $this->cfg->get('main.name') ?? '';
 
       // Insert file record to obtain the auto-increment id
-      $this->db->query(
+      $fileId = $this->db->query(
         "INSERT INTO bdus_files (creator, ext, filename) VALUES (?, ?, ?)",
-        [$creator, $ext, $filename]
+        [$creator, $ext, $filename],
+        'id'
       );
-      $fileId = $this->db->lastId();
 
       // Move file to projects/{app}/files/{id}.{ext}
       $destDir  = PROJ_DIR . 'files/';

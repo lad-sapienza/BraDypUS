@@ -221,6 +221,13 @@ run_phase "Users & privileges" "09_users_privileges.hurl" \
   --variable "app_name=${APP_NAME}"
 
 # ════════════════════════════════════════════════════════════════════
+# Phase 11 — Record version history
+# ════════════════════════════════════════════════════════════════════
+header "Phase 11 — Record version history"
+run_phase "Version history" "11_versions.hurl" \
+  --variable "jwt=${JWT}"
+
+# ════════════════════════════════════════════════════════════════════
 # Phase 10 — Cleanup
 # ════════════════════════════════════════════════════════════════════
 header "Phase 10 — Cleanup"

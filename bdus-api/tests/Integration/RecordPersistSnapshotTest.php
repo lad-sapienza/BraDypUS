@@ -185,6 +185,29 @@ class RecordPersistSnapshotTest extends BdusTestCase
         );
     }
 
+    // ── no phantom snapshot when string value is unchanged ───────────────────
+
+    public function testNoSnapshotWhenValueStringEqual(): void
+    {
+        // Seed: item 4 has status='pending' (string in DB).
+        // Send status as the same string — must not create a snapshot.
+        $countBefore = $this->versionCount(self::TB, 4);
+
+        $ctrl = $this->makeController('record_ctrl', [], [
+            'tb'   => self::TB,
+            'id'   => 4,
+            'core' => ['status' => 'pending'],  // same value already in DB
+        ]);
+        $res = $this->callController($ctrl, 'saveRecord');
+        $this->assertSame('success', $res['status']);
+
+        $this->assertSame(
+            $countBefore,
+            $this->versionCount(self::TB, 4),
+            'No snapshot must be created when the submitted value equals the stored value.'
+        );
+    }
+
     // ── snapshot operation column is set correctly ────────────────────────────
 
     public function testSnapshotOperationColumnIsUpdate(): void

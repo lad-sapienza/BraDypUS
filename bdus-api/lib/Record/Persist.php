@@ -109,6 +109,28 @@ class Persist
         }
 
         if ($this->id) {
+            // Second-pass filter: drop fields whose new value is string-equal to
+            // the current DB value.  Edit::setCore() uses strict PHP !== which
+            // fires on type mismatches (DB returns "5"/string, form sends 5/int).
+            // Those "changes" produce a no-op UPDATE and a phantom history entry.
+            $changed = array_filter(
+                $changed,
+                function ($newVal, string $fldName): bool {
+                    $oldVal = $this->model['core'][$fldName]['val'] ?? null;
+                    // Both null → no change.
+                    if ($oldVal === null && ($newVal === null || $newVal === '')) {
+                        return false;
+                    }
+                    // String comparison: "5" and 5 are equal, so no phantom entry.
+                    return (string)($oldVal ?? '') !== (string)($newVal ?? '');
+                },
+                ARRAY_FILTER_USE_BOTH
+            );
+
+            if (empty($changed)) {
+                return ['affected' => 0];
+            }
+
             // Snapshot the record as it is NOW, before the UPDATE is applied.
             $this->db->saveSnapshot(
                 $this->tb,

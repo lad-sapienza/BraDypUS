@@ -1671,6 +1671,7 @@ class record_ctrl extends Controller
         }
         $row['id'] = (int)$row['id'];
       }
+      unset($row); // break reference
 
       $this->returnJson(['versions' => $rows]);
 

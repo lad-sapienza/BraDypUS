@@ -157,6 +157,13 @@ class Migrate
         // Idempotent: if the data is already clean, the UPDATE affects 0 rows.
         self::maybeRemovePrefixFromUserlinks($db, $oldPrefix, $log);
 
+        // ── 1d. Strip prefix from table_link / tb data columns ───────────────
+        // Plugin tables store the parent table name in a table_link column.
+        // System tables (versions, geodata, rs) store it in a tb column.
+        // None of these are touched by the DB rename above, so the rows still
+        // reference the old prefixed name after the rename.
+        self::maybeRemovePrefixFromTableLinks($db, $oldPrefix, $log);
+
         // ── 2. Rename DB tables (SQLite only) ────────────────────────────────
         // Only SQLite is supported for this auto-migration (all apps use SQLite).
         // On other engines the DBA should run the rename manually.
@@ -208,6 +215,16 @@ class Migrate
      *
      * Idempotent: once the prefix is gone the loop simply finds nothing to strip.
      */
+    /**
+     * Known system table names (bare form, without any prefix).
+     * Used by both maybeRemovePrefixFromConfig and maybeCleanSystemTablesFromConfig.
+     */
+    private const SYSTEM_TABLE_NAMES = [
+        'files', 'file_links', 'userlinks', 'users', 'user_table_privs',
+        'geodata', 'rs', 'versions', 'log', 'vocabularies',
+        'queries', 'charts', 'api_keys', 'migrations',
+    ];
+
     private static function maybeRemovePrefixFromConfig(string $oldPrefix, Logger $log = null): void
     {
         $cfgPath = PROJ_DIR . 'cfg/tables.json';
@@ -220,49 +237,79 @@ class Migrate
             return;
         }
 
-        // Quick scan: is the prefix present at all?
-        $needsUpdate = false;
-        foreach ($data['tables'] as $tb) {
-            if (str_starts_with($tb['name'] ?? '', $oldPrefix)) {
-                $needsUpdate = true;
-                break;
-            }
-        }
-        if (!$needsUpdate) {
-            return; // Nothing to do.
-        }
-
         $strip = fn(string $s) => str_starts_with($s, $oldPrefix)
             ? substr($s, strlen($oldPrefix))
             : $s;
 
-        array_walk($data['tables'], function (&$tb) use ($oldPrefix, $strip) {
-            $tb['name'] = $strip($tb['name'] ?? '');
+        // Check whether prefix stripping or system-table cleanup is needed.
+        $needsPrefix = false;
+        foreach ($data['tables'] as $tb) {
+            if (str_starts_with($tb['name'] ?? '', $oldPrefix)) {
+                $needsPrefix = true;
+                break;
+            }
+        }
 
-            if (isset($tb['plugin']) && is_array($tb['plugin'])) {
-                $tb['plugin'] = array_map($strip, $tb['plugin']);
+        // Always check for system table contamination — it may survive a partial
+        // migration that already stripped the prefix but didn't clean the list.
+        $systemNames = array_merge(
+            self::SYSTEM_TABLE_NAMES,
+            array_map(fn($n) => 'bdus_' . $n, self::SYSTEM_TABLE_NAMES)
+        );
+        $hasSystemEntries = false;
+        foreach ($data['tables'] as $tb) {
+            $stripped = $strip($tb['name'] ?? '');
+            if (in_array($stripped, $systemNames, true) || in_array($tb['name'] ?? '', $systemNames, true)) {
+                $hasSystemEntries = true;
+                break;
             }
-            if (isset($tb['link']) && is_array($tb['link'])) {
-                foreach ($tb['link'] as &$link) {
-                    if (isset($link['other_tb'])) {
-                        $link['other_tb'] = $strip($link['other_tb']);
-                    }
+        }
+
+        if (!$needsPrefix && !$hasSystemEntries) {
+            return; // Nothing to do.
+        }
+
+        if ($needsPrefix) {
+            array_walk($data['tables'], function (&$tb) use ($oldPrefix, $strip) {
+                $tb['name'] = $strip($tb['name'] ?? '');
+
+                if (isset($tb['plugin']) && is_array($tb['plugin'])) {
+                    $tb['plugin'] = array_map($strip, $tb['plugin']);
                 }
-                unset($link);
-            }
-            if (isset($tb['backlinks']) && is_array($tb['backlinks'])) {
-                $tb['backlinks'] = array_map(
-                    fn($bl) => str_replace($oldPrefix, '', $bl),
-                    $tb['backlinks']
-                );
-            }
-        });
+                if (isset($tb['link']) && is_array($tb['link'])) {
+                    foreach ($tb['link'] as &$link) {
+                        if (isset($link['other_tb'])) {
+                            $link['other_tb'] = $strip($link['other_tb']);
+                        }
+                    }
+                    unset($link);
+                }
+                if (isset($tb['backlinks']) && is_array($tb['backlinks'])) {
+                    $tb['backlinks'] = array_map(
+                        fn($bl) => str_replace($oldPrefix, '', $bl),
+                        $tb['backlinks']
+                    );
+                }
+            });
+            $log?->info("Migrate: updated tables.json (prefix '{$oldPrefix}' stripped)");
+        }
+
+        // Remove system table entries — always, not only when prefix was stripped.
+        // v4 apps listed system tables in tables.json as regular tables; v5 does not.
+        $before = count($data['tables']);
+        $data['tables'] = array_values(array_filter(
+            $data['tables'],
+            fn($tb) => !in_array($tb['name'] ?? '', $systemNames, true)
+        ));
+        $removed = $before - count($data['tables']);
+        if ($removed > 0) {
+            $log?->info("Migrate: removed {$removed} system table(s) from tables.json");
+        }
 
         file_put_contents(
             $cfgPath,
             json_encode(['tables' => $data['tables']], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
         );
-        $log?->info("Migrate: updated tables.json (prefix '{$oldPrefix}' stripped)");
     }
 
     /**
@@ -359,6 +406,128 @@ class Migrate
             'boolean'
         );
         $log?->info("Migrate: stripped prefix '{$oldPrefix}' from userlinks.tb_one / tb_two");
+    }
+
+    /**
+     * Strips the legacy APP__ prefix from table_link / tb data columns across
+     * all plugin tables and system tables.
+     *
+     * Plugin tables: any user table that has a `table_link` TEXT column stores
+     * the parent table name there (e.g. "APP__manuscripts" → "manuscripts").
+     *
+     * System tables that store a table name in a `tb` column:
+     *   versions / bdus_versions, rs / bdus_rs
+     * System tables that store it in a `table_link` column:
+     *   geodata / bdus_geodata
+     *
+     * All UPDATEs use REPLACE() which is a no-op when the prefix is absent,
+     * making this method fully idempotent.
+     */
+    private static function maybeRemovePrefixFromTableLinks(
+        DBInterface $db,
+        string $oldPrefix,
+        Logger $log = null
+    ): void {
+        if ($db->getEngine() !== 'sqlite') {
+            return;
+        }
+
+        // ── Plugin tables: scan every non-system table for a table_link column ──
+        $allTables = $db->query(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'",
+            [], 'read'
+        ) ?: [];
+
+        // System-table name variants (bare and bdus_ prefixed).
+        $systemTables = [
+            'migrations', 'bdus_migrations',
+            'users',      'bdus_users',
+            'user_table_privs', 'bdus_user_table_privs',
+            'files',      'bdus_files',
+            'file_links', 'bdus_file_links',
+            'userlinks',  'bdus_userlinks',
+            'versions',   'bdus_versions',
+            'geodata',    'bdus_geodata',
+            'rs',         'bdus_rs',
+            'log',        'bdus_log',
+            'vocabularies', 'bdus_vocabularies',
+            'queries',    'bdus_queries',
+            'charts',     'bdus_charts',
+            'api_keys',   'bdus_api_keys',
+        ];
+
+        foreach ($allTables as $row) {
+            $tbl = $row['name'];
+            // Skip known system tables (bare, bdus_, and legacy-prefixed variants).
+            $unprefixed = str_starts_with($tbl, $oldPrefix)
+                ? substr($tbl, strlen($oldPrefix))
+                : $tbl;
+            if (
+                in_array($tbl, $systemTables, true) ||
+                str_starts_with($tbl, 'bdus_') ||
+                in_array($unprefixed, ['versions', 'geodata', 'rs', 'log', 'vocabularies',
+                    'files', 'file_links', 'userlinks', 'users', 'user_table_privs',
+                    'migrations', 'queries', 'charts', 'api_keys'], true)
+            ) {
+                continue;
+            }
+
+            // Check if this table has a table_link column.
+            $cols = $db->query("PRAGMA table_info(\"{$tbl}\")", [], 'read') ?: [];
+            $hasTableLink = false;
+            foreach ($cols as $col) {
+                if ($col['name'] === 'table_link') {
+                    $hasTableLink = true;
+                    break;
+                }
+            }
+
+            if (!$hasTableLink) {
+                continue;
+            }
+
+            $db->query(
+                "UPDATE \"{$tbl}\" SET table_link = REPLACE(table_link, ?, '')
+                  WHERE table_link LIKE ?",
+                [$oldPrefix, $oldPrefix . '%'],
+                'boolean'
+            );
+        }
+
+        // ── System tables: tb column (versions / bdus_versions, rs / bdus_rs) ──
+        foreach (['versions', 'bdus_versions', 'rs', 'bdus_rs'] as $tbl) {
+            $exists = $db->query(
+                "SELECT COUNT(*) AS cnt FROM sqlite_master WHERE type='table' AND name=?",
+                [$tbl], 'read'
+            );
+            if ((int)($exists[0]['cnt'] ?? 0) === 0) {
+                continue;
+            }
+            $db->query(
+                "UPDATE \"{$tbl}\" SET tb = REPLACE(tb, ?, '') WHERE tb LIKE ?",
+                [$oldPrefix, $oldPrefix . '%'],
+                'boolean'
+            );
+        }
+
+        // ── System tables: table_link column (geodata / bdus_geodata) ────────
+        foreach (['geodata', 'bdus_geodata'] as $tbl) {
+            $exists = $db->query(
+                "SELECT COUNT(*) AS cnt FROM sqlite_master WHERE type='table' AND name=?",
+                [$tbl], 'read'
+            );
+            if ((int)($exists[0]['cnt'] ?? 0) === 0) {
+                continue;
+            }
+            $db->query(
+                "UPDATE \"{$tbl}\" SET table_link = REPLACE(table_link, ?, '')
+                  WHERE table_link LIKE ?",
+                [$oldPrefix, $oldPrefix . '%'],
+                'boolean'
+            );
+        }
+
+        $log?->info("Migrate: stripped prefix '{$oldPrefix}' from table_link / tb data columns");
     }
 
     /**

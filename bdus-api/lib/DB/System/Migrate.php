@@ -15,6 +15,7 @@ use DB\System\Migrations\M003_RefactorQueriesTable;
 use DB\System\Migrations\M004_RefactorChartsTable;
 use DB\System\Migrations\M005_CreateApiKeys;
 use DB\System\Migrations\M006_AddApiKeyPrivilege;
+use DB\System\Migrations\M007_RepairFileLinks;
 use Monolog\Logger;
 
 /**
@@ -47,6 +48,7 @@ class Migrate
         M004_RefactorChartsTable::class,
         M005_CreateApiKeys::class,
         M006_AddApiKeyPrivilege::class,
+        M007_RepairFileLinks::class,
     ];
 
     /**
@@ -74,6 +76,12 @@ class Migrate
         // prefixed table names (e.g. after a manual DB rename), fix it now.
         // This runs on every boot but is a no-op once the prefix is gone.
         self::maybeRemovePrefixFromConfig($oldPrefix, $log);
+
+        // ── 1b. Strip prefix from userlinks data ─────────────────────────────
+        // The userlinks table stores table names as text values in tb_one/tb_two.
+        // These must be updated before any migration (especially M002) reads them.
+        // Idempotent: if the data is already clean, the UPDATE affects 0 rows.
+        self::maybeRemovePrefixFromUserlinks($db, $oldPrefix, $log);
 
         // ── 2. Rename DB tables (SQLite only) ────────────────────────────────
         // Only SQLite is supported for this auto-migration (all apps use SQLite).
@@ -181,6 +189,39 @@ class Migrate
             json_encode(['tables' => $data['tables']], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
         );
         $log?->info("Migrate: updated tables.json (prefix '{$oldPrefix}' stripped)");
+    }
+
+    /**
+     * Strips the legacy APP__ prefix from the tb_one and tb_two data columns
+     * of the userlinks table, if it exists.
+     *
+     * This must run before M002_CreateFileLinks so that migration can correctly
+     * identify and move file↔record rows. Idempotent: if the prefix is already
+     * absent the UPDATE affects 0 rows.
+     */
+    private static function maybeRemovePrefixFromUserlinks(
+        DBInterface $db,
+        string $oldPrefix,
+        Logger $log = null
+    ): void {
+        // Check whether the userlinks table exists at all.
+        $exists = $db->query(
+            "SELECT COUNT(*) AS cnt FROM sqlite_master WHERE type='table' AND name='userlinks'",
+            [],
+            'read'
+        );
+        if (!$exists || (int)($exists[0]['cnt'] ?? 0) === 0) {
+            return;
+        }
+
+        // REPLACE() in SQLite replaces all occurrences — safe to run unconditionally.
+        $db->query(
+            "UPDATE userlinks SET tb_one = REPLACE(tb_one, ?, ''), tb_two = REPLACE(tb_two, ?, '')
+             WHERE  tb_one LIKE ? OR tb_two LIKE ?",
+            [$oldPrefix, $oldPrefix, $oldPrefix . '%', $oldPrefix . '%'],
+            'boolean'
+        );
+        $log?->info("Migrate: stripped prefix '{$oldPrefix}' from userlinks.tb_one / tb_two");
     }
 
     /**

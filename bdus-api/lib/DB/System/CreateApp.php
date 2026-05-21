@@ -50,7 +50,7 @@ class CreateApp
             "db_username" => $db_username, 
             "db_password" => $db_password]);
         
-        $this->sys_manager = new Manage($this->db, '');
+        $this->sys_manager = new Manage($this->db);
 
         $this->db_data = [
             "definition"    => $definition, 
@@ -232,7 +232,7 @@ class CreateApp
 
     private function addUser()
     {
-        $this->sys_manager->addRow('users', [
+        $this->sys_manager->addRow('bdus_users', [
             'name' => $this->email,
             'email' => $this->email,
             'password' => password_hash($this->password, PASSWORD_BCRYPT),

@@ -24,6 +24,6 @@ class M001_AddUserTablePrivs
     public static function run(Manage $manage): void
     {
         // createTable() uses CREATE TABLE IF NOT EXISTS — safe to call multiple times.
-        $manage->createTable('user_table_privs');
+        $manage->createTable('bdus_user_table_privs');
     }
 }

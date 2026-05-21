@@ -20,9 +20,9 @@ class SavedQueriesCtrlTest extends BdusTestCase
         // Build base schema (items, tags, log, userlinks, rs, geodata, files, file_links)
         parent::createSchema();
 
-        // users table is required by saved_queries FK (present in real DB but not in base schema)
+        // bdus_users table is required by saved_queries FK (present in real DB but not in base schema)
         static::$db->execInTransaction('
-            CREATE TABLE users (
+            CREATE TABLE bdus_users (
                 id        INTEGER PRIMARY KEY AUTOINCREMENT,
                 name      TEXT    NOT NULL,
                 email     TEXT    NOT NULL,
@@ -32,7 +32,7 @@ class SavedQueriesCtrlTest extends BdusTestCase
 
         // The new v5 queries table (no text/vals/date — fresh install schema)
         static::$db->execInTransaction('
-            CREATE TABLE queries (
+            CREATE TABLE bdus_queries (
                 id         INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id    INTEGER NOT NULL,
                 created_at INTEGER,
@@ -52,12 +52,12 @@ class SavedQueriesCtrlTest extends BdusTestCase
 
         // Insert the test user (id=1, matches BdusTestCase::CurrentUser id=1)
         static::$db->execInTransaction(
-            "INSERT INTO users (id, name, email, privilege) VALUES (1, 'Test Admin', 'test@example.com', 1)"
+            "INSERT INTO bdus_users (id, name, email, privilege) VALUES (1, 'Test Admin', 'test@example.com', 1)"
         );
 
         // Seed one query owned by user 1
         static::$db->execInTransaction(
-            "INSERT INTO queries (user_id, created_at, name, tb, query, is_global)
+            "INSERT INTO bdus_queries (user_id, created_at, name, tb, query, is_global)
              VALUES (1, " . time() . ", 'My first search', 'items',
                      '{\"search_type\":\"sqlExpert\",\"querytext\":\"status = ''active''\"}', 0)"
         );

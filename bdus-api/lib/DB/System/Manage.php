@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright 2007-2022 Julian Bogdani
+ * @copyright 2007-2025 Julian Bogdani
  * @license AGPL-3.0; see LICENSE
  */
 
@@ -10,29 +10,29 @@ use DB\Engines\AvailableEngines;
 
 /**
  * Main class used to manage (CRUD) system tables
- * 
+ *
+ * All table names passed to public methods must be full bdus_* names.
+ *
  * Test / Examples
  * $db = new \DB();
- * $mng = new \DB\System\Manage($db, PREFIX);
- * $mng->createTable('charts');
- * $mng->createTable('files');
- * $mng->createTable('geodata');
- * $mng->createTable('queries');
- * $mng->createTable('rs');
- * $mng->createTable('userlinks');
- * $mng->createTable('vocabularies');
- * $mng->createTable('ciccia');
+ * $mng = new \DB\System\Manage($db);
+ * $mng->createTable('bdus_charts');
+ * $mng->createTable('bdus_files');
+ * $mng->createTable('bdus_geodata');
+ * $mng->createTable('bdus_queries');
+ * $mng->createTable('bdus_rs');
+ * $mng->createTable('bdus_userlinks');
+ * $mng->createTable('bdus_vocabularies');
 
- * $mng->addRow('geodata', [ 'table_link' => 'ciao', 'id_link'	=> 1, 'geometry' => 'POINT(0, 1)' ]);
- * $mng->addRow('geodata', [ 'id_link'	=> 1, 'geometry' => 'POINT(0, 1)' ]);
-		
- * $mng->editRow('geodata', 1, [ 'table_link' => 'ciao', 'id_link'	=> 1, 'geometry' => 'POINT(0, 1)' ]);
+ * $mng->addRow('bdus_geodata', [ 'table_link' => 'ciao', 'id_link' => 1, 'geometry' => 'POINT(0, 1)' ]);
 
- * $mng->deleteRow('geodata', 1);
+ * $mng->editRow('bdus_geodata', 1, [ 'table_link' => 'ciao', 'id_link' => 1, 'geometry' => 'POINT(0, 1)' ]);
 
- * $mng->getById('geodata', 1);
+ * $mng->deleteRow('bdus_geodata', 1);
 
- * $mng->getBySQL('geodata', 'table_link = ?', ['sitarc__siti']);
+ * $mng->getById('bdus_geodata', 1);
+
+ * $mng->getBySQL('bdus_geodata', 'table_link = ?', ['sitarc__siti']);
  *
  */
 
@@ -41,39 +41,35 @@ use DB\DBInterface;
 class Manage
 {
     private $db;
-    private $prefix;
     private $driver;
     private $spatial;
     /** @var array<string, array{columns: array, indexes: array, relations: array}> */
     private array $descriptor = [];
     public $available_tables = [
-        'api_keys',
-        'charts',
-        'file_links',
-        'files',
-        'geodata',
-        'log',
-        'migrations',
-        'queries',
-        'rs',
-        'userlinks',
-        'users',
-        'user_table_privs',
-        'versions',
-        'vocabularies',
+        'bdus_api_keys',
+        'bdus_charts',
+        'bdus_file_links',
+        'bdus_files',
+        'bdus_geodata',
+        'bdus_log',
+        'bdus_migrations',
+        'bdus_queries',
+        'bdus_rs',
+        'bdus_userlinks',
+        'bdus_users',
+        'bdus_user_table_privs',
+        'bdus_versions',
+        'bdus_vocabularies',
     ];
 
     /**
      * Initializes class
      *
-     * @param DBInterface $db           DB class
-     * @param string $prefix    Application prefix, if available
-     * @param string $driver    DB driver: throws error if it is not a valid driver
+     * @param DBInterface $db  DB class
      */
-    public function __construct(DBInterface $db, string $prefix = null)
+    public function __construct(DBInterface $db)
     {
         $this->db = $db;
-        $this->prefix = $prefix;
         $this->driver = $this->db->getEngine();
 
         if (!AvailableEngines::isValidEngine($this->driver)){
@@ -83,7 +79,6 @@ class Manage
     }
 
     public function getDb(): DBInterface  { return $this->db; }
-    public function getPrefix(): string   { return $this->prefix ?? ''; }
 
     // ── Descriptor loading ───────────────────────────────────────────────────
 
@@ -92,7 +87,7 @@ class Manage
      * Supports both the current object format and the legacy flat-array format
      * (legacy: columns only, no indexes or relations).
      *
-     * @param string $table  Table name without prefix
+     * @param string $table  Table full name (bdus_*)
      * @return array{columns: array, indexes: array, relations: array}
      */
     private function loadDescriptor(string $table): array
@@ -105,7 +100,9 @@ class Manage
             throw new \Exception("Table $table is not a valid system table");
         }
 
-        $file_path = __DIR__ . '/Structure/' . $table . '.json';
+        // Strip bdus_ prefix to find the JSON structure file (files stay named e.g. users.json)
+        $shortName = str_starts_with($table, 'bdus_') ? substr($table, 5) : $table;
+        $file_path = __DIR__ . '/Structure/' . $shortName . '.json';
 
         if (!file_exists($file_path)) {
             throw new \Exception("Cannot find structure configuration file {$file_path}");
@@ -141,7 +138,7 @@ class Manage
      * Returns column definitions for a system table.
      * Backward-compatible: all existing callers continue to work unchanged.
      *
-     * @param string $table  Table name without prefix
+     * @param string $table  Table full name (bdus_*)
      * @return array         Array of column definition arrays
      */
     public function getStructure(string $table): array
@@ -174,11 +171,11 @@ class Manage
      * and (for MySQL/PG) FK constraints. Idempotent: uses CREATE TABLE IF NOT EXISTS.
      * On SQLite, FK constraints are included inline in the DDL.
      *
-     * @param string $table  Table name without prefix
+     * @param string $table  Table full name (bdus_*)
      */
     public function createTable(string $table): bool
     {
-        $tb      = $this->prefix . $table;
+        $tb      = $table;
         $columns = [];
 
         foreach ($this->getStructure($table) as $clm) {
@@ -212,10 +209,11 @@ class Manage
 
     /**
      * Builds a FOREIGN KEY inline clause for use inside CREATE TABLE (SQLite only).
+     * ref_table in JSON is already a full bdus_* name.
      */
     private function buildInlineFkClause(array $rel): string
     {
-        $refTable = $this->prefix . $rel['ref_table'];
+        $refTable = $rel['ref_table'];
         $refCol   = $rel['ref_column'] ?? 'id';
         $onDelete = strtoupper($rel['on_delete'] ?? 'RESTRICT');
         return "FOREIGN KEY ({$rel['column']}) REFERENCES {$refTable}({$refCol}) ON DELETE {$onDelete}";
@@ -251,7 +249,7 @@ class Manage
 
     /**
      * Returns string with create information for single column
-     * depending on databade driver
+     * depending on database driver
      *
      * @param array $clm        Array data for column: name, type, pk, notnull
      * @param string $driver    Database driver
@@ -296,17 +294,17 @@ class Manage
     }
 
     /**
-     * Adds a new row on the table, 
+     * Adds a new row on the table,
      * checking that not null columns are available.
      * Returns the id of the inserted record
      *
-     * @param string $table     Table name (without prefix)
+     * @param string $table     Table full name (bdus_*)
      * @param array $data       Data indexed array
      * @return integer
      */
     public function addRow(string $table, array $data): int
     {
-        $tb = $this->prefix . $table;
+        $tb = $table;
 
         $columns_str = $this->getStructure($table);
 
@@ -332,7 +330,7 @@ class Manage
                 array_push($values, $data[$column['name']]);
             }
         }
-        
+
 
         $sql = "INSERT INTO {$tb} (" .
             implode(", ", $columns ) . ") VALUES (" .
@@ -343,15 +341,15 @@ class Manage
 
     /**
      * Deletes row from table
-     * and returns numer of affected records
+     * and returns number of affected records
      *
-     * @param string $table     Table name (without prefix)
+     * @param string $table     Table full name (bdus_*)
      * @param integer $id       Id of record to delete
      * @return integer
      */
     public function deleteRow(string $table, int $id): int
     {
-        $tb = $this->prefix . $table;
+        $tb = $table;
 
         $sql = "DELETE FROM {$tb} WHERE id = ?";
         $values = [$id];
@@ -363,14 +361,14 @@ class Manage
      * Edits cells in the table
      * Returns true on success or false on error
      *
-     * @param string $table     Table name (without prefix)
-     * @param integer $id       Id if the recprd to edit
+     * @param string $table     Table full name (bdus_*)
+     * @param integer $id       Id of the record to edit
      * @param array $data       Array of data to write
      * @return boolean
      */
     public function editRow(string $table, int $id, array $data): bool
     {
-        $tb = $this->prefix . $table;
+        $tb = $table;
 
         $columns_str = $this->getStructure($table);
 
@@ -393,21 +391,21 @@ class Manage
 
         $sql = "UPDATE {$tb} SET " .
             implode(", ", $columns ) . " WHERE id = ?";
-        
+
         return $this->run($sql, $values, 'boolean');
     }
 
     /**
      * Gets a row from table by id
-     * returns arrau of data
+     * returns array of data
      *
-     * @param string $table     Table name (without prefix)
+     * @param string $table     Table full name (bdus_*)
      * @param integer $id       Id of the record to return
      * @return array
      */
     public function getById(string $table, int $id): array
     {
-        $tb = $this->prefix . $table;
+        $tb = $table;
 
         $columns_str = $this->getStructure($table);
 
@@ -432,19 +430,19 @@ class Manage
     }
 
     /**
-     * Gets one or more recprds form table
+     * Gets one or more records from table
      * using a where statement
      * Returns array of data
      *
-     * @param string $table     Table name (without prefix)
-     * @param string $where     Where statement
-     * @param array $values     Array with binding values
+     * @param string $table             Table full name (bdus_*)
+     * @param string $where             Where statement
+     * @param array $values             Array with binding values
      * @param array $custom_columns     Manually set the columns
      * @return array
      */
     public function getBySQL(string $table, string $where, array $values = [], array $custom_columns = null): array
     {
-        $tb = $this->prefix . $table;
+        $tb = $table;
 
         if ($custom_columns){
             $columns = $custom_columns;
@@ -452,7 +450,7 @@ class Manage
             $columns_str = $this->getStructure($table);
 
             $columns = [];
-            
+
             foreach ($columns_str as $column) {
                 if ( strtolower($column['type']) === 'geometry' && $this->spatial) {
                     array_push($columns, 'ST_AsText(' . $column['name'] . ')');
@@ -463,7 +461,7 @@ class Manage
         }
 
         $sql = "SELECT " . implode(", ", $columns). " FROM {$tb} WHERE {$where}";
-        
+
         return $this->run($sql, $values, 'read');
     }
 
@@ -472,15 +470,15 @@ class Manage
     /**
      * Creates an index on a system table. Idempotent: no-op if already exists.
      *
-     * @param string   $table    Table name without prefix
-     * @param string   $name     Index name without prefix (prefix is prepended automatically)
+     * @param string   $table    Table full name (bdus_*)
+     * @param string   $name     Index name
      * @param string[] $columns  Columns to include in the index
      * @param bool     $unique   Whether to create a UNIQUE index (default false)
      */
     public function createIndex(string $table, string $name, array $columns, bool $unique = false): bool
     {
-        $tb      = $this->prefix . $table;
-        $idxName = $this->prefix . $name;
+        $tb      = $table;
+        $idxName = $name;
         $cols    = implode(', ', $columns);
         $uniq    = $unique ? 'UNIQUE ' : '';
 
@@ -501,13 +499,13 @@ class Manage
     /**
      * Drops an index. No-op if the index does not exist.
      *
-     * @param string $table  Table name without prefix (needed by MySQL syntax)
-     * @param string $name   Index name without prefix
+     * @param string $table  Table full name (bdus_*) (needed by MySQL syntax)
+     * @param string $name   Index name
      */
     public function dropIndex(string $table, string $name): bool
     {
-        $tb      = $this->prefix . $table;
-        $idxName = $this->prefix . $name;
+        $tb      = $table;
+        $idxName = $name;
 
         $sql = match ($this->driver) {
             'mysql'  => "DROP INDEX {$idxName} ON {$tb}",
@@ -525,10 +523,10 @@ class Manage
      * For new tables, declare FK constraints in the structure JSON 'relations' section —
      * createTable() will include them in the CREATE TABLE DDL automatically.
      *
-     * @param string $table      Table without prefix (the table that holds the FK column)
-     * @param string $name       Constraint name without prefix
+     * @param string $table      Table full name (bdus_*) (the table that holds the FK column)
+     * @param string $name       Constraint name
      * @param string $column     FK column name on $table
-     * @param string $refTable   Referenced table without prefix
+     * @param string $refTable   Referenced table full name (bdus_*)
      * @param string $refColumn  Referenced column (default: id)
      * @param string $onDelete   CASCADE | RESTRICT | SET NULL | NO ACTION
      *
@@ -550,9 +548,9 @@ class Manage
             );
         }
 
-        $tb         = $this->prefix . $table;
-        $constraint = $this->prefix . $name;
-        $ref        = $this->prefix . $refTable;
+        $tb         = $table;
+        $constraint = $name;
+        $ref        = $refTable;
         $onDelete   = strtoupper($onDelete);
 
         $sql = "ALTER TABLE {$tb} ADD CONSTRAINT {$constraint} " .
@@ -574,8 +572,8 @@ class Manage
             );
         }
 
-        $tb         = $this->prefix . $table;
-        $constraint = $this->prefix . $name;
+        $tb         = $table;
+        $constraint = $name;
 
         $sql = match ($this->driver) {
             'mysql'  => "ALTER TABLE {$tb} DROP FOREIGN KEY {$constraint}",
@@ -621,7 +619,7 @@ class Manage
     {
         if (is_null($return)){
             return $this->db->exec($sql);
-        } else if (\in_array($return, ['id', 'read', 'boolean', 'affected'])){    
+        } else if (\in_array($return, ['id', 'read', 'boolean', 'affected'])){
             return $this->db->query($sql, $values, $return);
         }
     }

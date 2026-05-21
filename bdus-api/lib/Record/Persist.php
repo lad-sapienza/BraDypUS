@@ -26,11 +26,8 @@ class Persist
     /** Full model array */
     private array $model;
 
-    /** Fully-qualified table name, e.g. "test__items" */
+    /** Fully-qualified table name */
     private string $tb;
-
-    /** Prefix derived from $tb, e.g. "test__" */
-    private string $prefix;
 
     /** Current record id (null for new records, populated after INSERT) */
     private ?int $id;
@@ -49,10 +46,6 @@ class Persist
             $recId = $recId['val'] ?? null;
         }
         $this->id     = $recId ? (int) $recId : null;
-
-        // Use the runtime app prefix (e.g. "myapp__") for system table references.
-        // Deriving it from $this->tb would fail for tables that have no prefix.
-        $this->prefix = defined('PREFIX') ? PREFIX : '';
     }
 
     /**
@@ -250,7 +243,7 @@ class Persist
             // DELETE
             if ($key && isset($link['_delete'])) {
                 $this->db->query(
-                    "DELETE FROM {$this->prefix}userlinks WHERE id = ?",
+                    "DELETE FROM bdus_userlinks WHERE id = ?",
                     [$key],
                     'boolean'
                 );
@@ -261,7 +254,7 @@ class Persist
             // UPDATE sort
             if ($key && isset($link['_sort']) && !isset($link['_delete'])) {
                 $this->db->query(
-                    "UPDATE {$this->prefix}userlinks SET sort = ? WHERE id = ?",
+                    "UPDATE bdus_userlinks SET sort = ? WHERE id = ?",
                     [$link['_sort'], $key],
                     'boolean'
                 );
@@ -276,7 +269,7 @@ class Persist
                 }
                 $sort = $link['_sort'] ?? null;
                 $this->db->query(
-                    "INSERT INTO {$this->prefix}userlinks (tb_one, id_one, tb_two, id_two, sort) VALUES (?, ?, ?, ?, ?)",
+                    "INSERT INTO bdus_userlinks (tb_one, id_one, tb_two, id_two, sort) VALUES (?, ?, ?, ?, ?)",
                     [$this->tb, $this->id, $link['_tb_id'], $link['_ref_id'], $sort],
                     'boolean'
                 );
@@ -306,7 +299,7 @@ class Persist
             // DELETE
             if ($rsId && isset($rs['_delete'])) {
                 $this->db->query(
-                    "DELETE FROM {$this->prefix}rs WHERE id = ?",
+                    "DELETE FROM bdus_rs WHERE id = ?",
                     [$rsId],
                     'boolean'
                 );
@@ -326,7 +319,7 @@ class Persist
 
                 if (!empty($toWrite)) {
                     $setParts = array_map(fn($k) => "{$k} = ?", array_keys($toWrite));
-                    $sql      = "UPDATE {$this->prefix}rs SET " . implode(', ', $setParts) . " WHERE id = ?";
+                    $sql      = "UPDATE bdus_rs SET " . implode(', ', $setParts) . " WHERE id = ?";
                     $values   = array_values($toWrite);
                     $values[] = $rsId;
 
@@ -344,7 +337,7 @@ class Persist
                 && isset($rs['_relation'])
             ) {
                 $this->db->query(
-                    "INSERT INTO {$this->prefix}rs (tb, first, second, relation) VALUES (?, ?, ?, ?)",
+                    "INSERT INTO bdus_rs (tb, first, second, relation) VALUES (?, ?, ?, ?)",
                     [$this->tb, $rs['_first'], $rs['_second'], $rs['_relation']],
                     'boolean'
                 );
@@ -397,7 +390,7 @@ class Persist
 
             // 3. Delete userlinks in both directions
             $this->db->query(
-                "DELETE FROM {$this->prefix}userlinks WHERE (tb_one = ? AND id_one = ?) OR (tb_two = ? AND id_two = ?)",
+                "DELETE FROM bdus_userlinks WHERE (tb_one = ? AND id_one = ?) OR (tb_two = ? AND id_two = ?)",
                 [$this->tb, $this->id, $this->tb, $this->id],
                 'boolean'
             );
@@ -411,7 +404,7 @@ class Persist
                 $rsFldVal = $this->model['core'][$rsFld]['val'] ?? null;
                 if ($rsFldVal !== null) {
                     $this->db->query(
-                        "DELETE FROM {$this->prefix}rs WHERE tb = ? AND (first = ? OR second = ?)",
+                        "DELETE FROM bdus_rs WHERE tb = ? AND (first = ? OR second = ?)",
                         [$this->tb, $rsFldVal, $rsFldVal],
                         'boolean'
                     );

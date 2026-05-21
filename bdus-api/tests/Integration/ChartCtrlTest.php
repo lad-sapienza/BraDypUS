@@ -19,9 +19,9 @@ class ChartCtrlTest extends BdusTestCase
     {
         parent::createSchema();
 
-        // users table required for charts FK
+        // bdus_users table required for charts FK
         static::$db->execInTransaction('
-            CREATE TABLE users (
+            CREATE TABLE bdus_users (
                 id        INTEGER PRIMARY KEY AUTOINCREMENT,
                 name      TEXT    NOT NULL,
                 email     TEXT    NOT NULL,
@@ -30,7 +30,7 @@ class ChartCtrlTest extends BdusTestCase
         ');
 
         static::$db->execInTransaction('
-            CREATE TABLE charts (
+            CREATE TABLE bdus_charts (
                 id         INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id    INTEGER NOT NULL,
                 created_at INTEGER,
@@ -48,12 +48,12 @@ class ChartCtrlTest extends BdusTestCase
         parent::seedData();
 
         static::$db->execInTransaction(
-            "INSERT INTO users (id, name, email, privilege) VALUES (1, 'Test Admin', 'test@example.com', 1)"
+            "INSERT INTO bdus_users (id, name, email, privilege) VALUES (1, 'Test Admin', 'test@example.com', 1)"
         );
 
         // Seed one chart owned by user 1
         static::$db->execInTransaction(
-            "INSERT INTO charts (user_id, created_at, name, definition, is_global)
+            "INSERT INTO bdus_charts (user_id, created_at, name, definition, is_global)
              VALUES (1, " . time() . ", 'My first chart',
                      '{\"tb\":\"items\",\"type\":\"metric\",\"field\":\"id\",\"function\":\"COUNT\"}', 0)"
         );

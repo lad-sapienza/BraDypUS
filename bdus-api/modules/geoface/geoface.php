@@ -98,7 +98,7 @@ class geoface_ctrl extends Controller
                 $part[] = "{$tb}.{$fldId} AS \"{$label}\"";
             }
 
-            $part[] = $this->prefix . 'geodata.id AS geo_id';
+            $part[] = 'bdus_geodata.id AS geo_id';
             $part[] = 'geometry';
 
             // Qualify WHERE clause: if it references bare `id`, prefix with table name
@@ -108,9 +108,9 @@ class geoface_ctrl extends Controller
 
             $sql = 'SELECT ' . implode(', ', $part)
                 . " FROM {$tb}"
-                . ' LEFT JOIN ' . $this->prefix . 'geodata'
-                . " ON {$tb}.id = " . $this->prefix . "geodata.id_link"
-                . " AND " . $this->prefix . "geodata.table_link = '{$tb}'"
+                . ' LEFT JOIN bdus_geodata'
+                . " ON {$tb}.id = bdus_geodata.id_link"
+                . " AND bdus_geodata.table_link = '{$tb}'"
                 . ' WHERE geometry IS NOT NULL'
                 . ($userWhere ? ' AND ' . $userWhere : '');
 
@@ -177,7 +177,7 @@ class geoface_ctrl extends Controller
             $wkt = \geoPHP\geoPHP::load(json_encode($geometry), 'geojson')->out('wkt');
 
             $ok = $this->db->query(
-                'INSERT INTO ' . $this->prefix . 'geodata (table_link, id_link, geometry) VALUES (?, ?, ?)',
+                'INSERT INTO bdus_geodata (table_link, id_link, geometry) VALUES (?, ?, ?)',
                 [$tb, (int)$id, $wkt],
                 'boolean'
             );
@@ -188,7 +188,7 @@ class geoface_ctrl extends Controller
 
             // Retrieve the newly inserted row id
             $row = $this->db->query(
-                'SELECT id FROM ' . $this->prefix . 'geodata WHERE table_link = ? AND id_link = ? ORDER BY id DESC LIMIT 1',
+                'SELECT id FROM bdus_geodata WHERE table_link = ? AND id_link = ? ORDER BY id DESC LIMIT 1',
                 [$tb, (int)$id]
             );
             $geoId = $row[0]['id'] ?? null;
@@ -238,7 +238,7 @@ class geoface_ctrl extends Controller
                 $wkt = \geoPHP\geoPHP::load(json_encode($geomRaw), 'geojson')->out('wkt');
 
                 $ok = $this->db->query(
-                    'UPDATE ' . $this->prefix . 'geodata SET geometry = ? WHERE id = ?',
+                    'UPDATE bdus_geodata SET geometry = ? WHERE id = ?',
                     [$wkt, (int)$geoId],
                     'boolean'
                 );
@@ -280,7 +280,7 @@ class geoface_ctrl extends Controller
         try {
             foreach ($ids as $id) {
                 $ok = $this->db->query(
-                    'DELETE FROM ' . $this->prefix . 'geodata WHERE id = ?',
+                    'DELETE FROM bdus_geodata WHERE id = ?',
                     [(int)$id],
                     'boolean'
                 );

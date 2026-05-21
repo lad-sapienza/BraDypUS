@@ -183,7 +183,7 @@ class DB implements DBInterface
       foreach ($rows as $r) {
         $dt = new \DateTime();
 
-        $insertSQL = "INSERT INTO " . PREFIX . "versions ( userid, time, tb, rowid, content, editsql, editvalues ) VALUES (?, ?, ?, ?, ?, ? ,?)";
+        $insertSQL = "INSERT INTO bdus_versions ( userid, time, tb, rowid, content, editsql, editvalues ) VALUES (?, ?, ?, ?, ?, ? ,?)";
         $insertValues = [
           \Auth\CurrentUser::id(),
           $dt->format('U'),

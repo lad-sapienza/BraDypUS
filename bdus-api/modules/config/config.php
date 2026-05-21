@@ -329,7 +329,7 @@ class config_ctrl extends Controller
     $tb = $this->get['tb'];
     $col = $this->get['col'];
 
-    $sys_manage = new Manage($this->db, $this->prefix);
+    $sys_manage = new Manage($this->db);
 
     // Create table: yes create, no col
     if ($action === 'create' && !$col) {
@@ -514,8 +514,8 @@ class config_ctrl extends Controller
 
     $users = [];
     try {
-      $sys_manage = new Manage($this->db, $this->prefix);
-      $rows = $sys_manage->getBySQL('users', '1=1');
+      $sys_manage = new Manage($this->db);
+      $rows = $sys_manage->getBySQL('bdus_users', '1=1');
       foreach ($rows as $u) {
         $u['verbose_privilege'] = \utils::privilege($u['privilege'], 1);
         $users[] = $u;
@@ -699,8 +699,8 @@ class config_ctrl extends Controller
   {
     $allVoc = [];
     try {
-      $sys_manage = new Manage($this->db, $this->prefix);
-      $rows = $sys_manage->getBySQL('vocabularies', '1=1 GROUP BY voc', [], ['voc']);
+      $sys_manage = new Manage($this->db);
+      $rows = $sys_manage->getBySQL('bdus_vocabularies', '1=1 GROUP BY voc', [], ['voc']);
       $allVoc = array_column($rows, 'voc');
     } catch (\Throwable $e) {
       // no vocabularies table (fresh install / test env) — leave list empty

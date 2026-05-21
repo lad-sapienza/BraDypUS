@@ -14,7 +14,7 @@
         {
             "name":       "charts_user_fk",
             "column":     "user_id",
-            "ref_table":  "users",
+            "ref_table":  "bdus_users",
             "ref_column": "id",
             "on_delete":  "CASCADE"
         }

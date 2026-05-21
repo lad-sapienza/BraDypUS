@@ -24,7 +24,7 @@ class ApiCtrlTest extends BdusTestCase
         parent::createSchema();
 
         static::$db->execInTransaction('
-            CREATE TABLE api_keys (
+            CREATE TABLE bdus_api_keys (
                 id           INTEGER PRIMARY KEY AUTOINCREMENT,
                 key_hash     TEXT    NOT NULL,
                 label        TEXT    NOT NULL,

@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright 2007-2022 Julian Bogdani
+ * @copyright 2007-2025 Julian Bogdani
  * @license AGPL-3.0; see LICENSE
  */
 
@@ -13,27 +13,25 @@ use DB\DBInterface;
 class LogDBHandler extends AbstractProcessingHandler
 {
     private $db;
-    private $prefix;
     private $initialized = false;
 
-    public function __construct(DBInterface $db, string $prefix, $level = Logger::DEBUG, bool $bubble = true)
+    public function __construct(DBInterface $db, string $prefix = '', $level = Logger::DEBUG, bool $bubble = true)
     {
         $this->db = $db;
-        $this->prefix = $prefix;
         parent::__construct($level, $bubble);
     }
 
     protected function write(array $record): void
     {
         try {
-            $sys_mng = new \DB\System\Manage($this->db, $this->prefix);
-            
+            $sys_mng = new \DB\System\Manage($this->db);
+
             if (!$this->initialized) {
-                $sys_mng->createTable('log');
+                $sys_mng->createTable('bdus_log');
                 $this->initialized = true;
             }
 
-            $sys_mng->addRow('log', [
+            $sys_mng->addRow('bdus_log', [
                 'channel' => $record['channel'],
                 'level' => $record['level'],
                 'message' => $record['formatted'],

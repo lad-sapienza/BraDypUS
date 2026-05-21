@@ -25,12 +25,12 @@ class GeofaceCtrlTest extends BdusTestCase
 
         // Seed one geometry linked to item 1 (POINT in WKT)
         static::$db->execInTransaction(
-            "INSERT INTO geodata (table_link, id_link, geometry) VALUES ('items', 1, 'POINT(12.5 41.9)')"
+            "INSERT INTO bdus_geodata (table_link, id_link, geometry) VALUES ('items', 1, 'POINT(12.5 41.9)')"
         );
 
         // Store the inserted id for later assertions
         $row = static::$db->query(
-            "SELECT id FROM geodata WHERE table_link = 'items' AND id_link = 1 ORDER BY id DESC LIMIT 1"
+            "SELECT id FROM bdus_geodata WHERE table_link = 'items' AND id_link = 1 ORDER BY id DESC LIMIT 1"
         );
         static::$geoId = (int)($row[0]['id'] ?? 0);
     }
@@ -155,7 +155,7 @@ class GeofaceCtrlTest extends BdusTestCase
 
         // Verify the geometry was actually updated in the DB
         $row = static::$db->query(
-            'SELECT geometry FROM geodata WHERE id = ?',
+            'SELECT geometry FROM bdus_geodata WHERE id = ?',
             [static::$geoId]
         );
         $this->assertNotEmpty($row);
@@ -177,10 +177,10 @@ class GeofaceCtrlTest extends BdusTestCase
     {
         // Insert a temporary geometry to delete
         static::$db->execInTransaction(
-            "INSERT INTO geodata (table_link, id_link, geometry) VALUES ('items', 3, 'POINT(10.0 40.0)')"
+            "INSERT INTO bdus_geodata (table_link, id_link, geometry) VALUES ('items', 3, 'POINT(10.0 40.0)')"
         );
         $row = static::$db->query(
-            "SELECT id FROM geodata WHERE table_link = 'items' AND id_link = 3 ORDER BY id DESC LIMIT 1"
+            "SELECT id FROM bdus_geodata WHERE table_link = 'items' AND id_link = 3 ORDER BY id DESC LIMIT 1"
         );
         $tmpId = (int)($row[0]['id'] ?? 0);
         $this->assertGreaterThan(0, $tmpId);
@@ -192,7 +192,7 @@ class GeofaceCtrlTest extends BdusTestCase
         $this->assertSame('ok_delete_geodata', $res['code']);
 
         // Verify it is gone
-        $check = static::$db->query('SELECT id FROM geodata WHERE id = ?', [$tmpId]);
+        $check = static::$db->query('SELECT id FROM bdus_geodata WHERE id = ?', [$tmpId]);
         $this->assertEmpty($check);
     }
 

@@ -154,9 +154,9 @@ class chart_ctrl extends Controller
      */
     public function listCharts(): void
     {
-        $sys_manager = new Manage($this->db, $this->prefix);
+        $sys_manager = new Manage($this->db);
         $rows = $sys_manager->getBySQL(
-            'charts',
+            'bdus_charts',
             'user_id = ? OR is_global = ?',
             [\Auth\CurrentUser::id(), 1]
         );
@@ -198,8 +198,8 @@ class chart_ctrl extends Controller
         }
 
         try {
-            $sys_manager = new Manage($this->db, $this->prefix);
-            $newId = $sys_manager->addRow('charts', [
+            $sys_manager = new Manage($this->db);
+            $newId = $sys_manager->addRow('bdus_charts', [
                 'user_id'    => \Auth\CurrentUser::id(),
                 'created_at' => time(),
                 'name'       => $name,
@@ -212,7 +212,7 @@ class chart_ctrl extends Controller
                 return;
             }
 
-            $row = $sys_manager->getById('charts', $newId);
+            $row = $sys_manager->getById('bdus_charts', $newId);
             $this->returnJson([
                 'status' => 'success',
                 'code'   => 'ok_save_chart',
@@ -240,8 +240,8 @@ class chart_ctrl extends Controller
             return;
         }
 
-        $sys_manager = new Manage($this->db, $this->prefix);
-        $row = $sys_manager->getById('charts', $id);
+        $sys_manager = new Manage($this->db);
+        $row = $sys_manager->getById('bdus_charts', $id);
 
         if (empty($row)) {
             $this->returnJson(['status' => 'error', 'code' => 'chart_not_found']);
@@ -253,7 +253,7 @@ class chart_ctrl extends Controller
         }
 
         try {
-            $sys_manager->editRow('charts', $id, ['is_global' => 1]);
+            $sys_manager->editRow('bdus_charts', $id, ['is_global' => 1]);
             $this->returnJson(['status' => 'success', 'code' => 'ok_sharing_chart']);
         } catch (\Throwable $e) {
             $this->log->error($e);
@@ -276,8 +276,8 @@ class chart_ctrl extends Controller
             return;
         }
 
-        $sys_manager = new Manage($this->db, $this->prefix);
-        $row = $sys_manager->getById('charts', $id);
+        $sys_manager = new Manage($this->db);
+        $row = $sys_manager->getById('bdus_charts', $id);
 
         if (empty($row)) {
             $this->returnJson(['status' => 'error', 'code' => 'chart_not_found']);
@@ -289,7 +289,7 @@ class chart_ctrl extends Controller
         }
 
         try {
-            $sys_manager->editRow('charts', $id, ['is_global' => 0]);
+            $sys_manager->editRow('bdus_charts', $id, ['is_global' => 0]);
             $this->returnJson(['status' => 'success', 'code' => 'ok_unsharing_chart']);
         } catch (\Throwable $e) {
             $this->log->error($e);
@@ -312,8 +312,8 @@ class chart_ctrl extends Controller
             return;
         }
 
-        $sys_manager = new Manage($this->db, $this->prefix);
-        $row = $sys_manager->getById('charts', $id);
+        $sys_manager = new Manage($this->db);
+        $row = $sys_manager->getById('bdus_charts', $id);
 
         if (empty($row)) {
             $this->returnJson(['status' => 'error', 'code' => 'chart_not_found']);
@@ -325,7 +325,7 @@ class chart_ctrl extends Controller
         }
 
         try {
-            $sys_manager->deleteRow('charts', $id);
+            $sys_manager->deleteRow('bdus_charts', $id);
             $this->returnJson(['status' => 'success', 'code' => 'ok_chart_erase']);
         } catch (\Throwable $e) {
             $this->log->error($e);

@@ -1079,7 +1079,7 @@ class record_ctrl extends Controller
     try {
       // Deduplication: check both A→B (with this relation) and B→A (with inverse)
       $count = (int) ($this->db->query(
-        "SELECT COUNT(*) AS c FROM " . PREFIX . "rs
+        "SELECT COUNT(*) AS c FROM bdus_rs
          WHERE tb = ? AND (
            (first = ? AND second = ? AND relation = ?) OR
            (first = ? AND second = ? AND relation = ?)
@@ -1093,7 +1093,7 @@ class record_ctrl extends Controller
       }
 
       $this->db->query(
-        "INSERT INTO " . PREFIX . "rs (tb, first, second, relation) VALUES (?, ?, ?, ?)",
+        "INSERT INTO bdus_rs (tb, first, second, relation) VALUES (?, ?, ?, ?)",
         [$tb, $first, $second, $relation],
         'boolean'
       );
@@ -1128,7 +1128,7 @@ class record_ctrl extends Controller
 
     try {
       $affected = $this->db->query(
-        "DELETE FROM " . PREFIX . "rs WHERE id = ?",
+        "DELETE FROM bdus_rs WHERE id = ?",
         [(int)$id],
         'affected'
       );
@@ -1232,12 +1232,11 @@ class record_ctrl extends Controller
 
     $idOne  = (int)$idOne;
     $idTwo  = (int)$idTwo;
-    $prefix = $this->prefix;
 
     try {
       // Dedup: check both directions
       $count = (int) ($this->db->query(
-        "SELECT COUNT(*) AS c FROM {$prefix}userlinks
+        "SELECT COUNT(*) AS c FROM bdus_userlinks
          WHERE (tb_one = ? AND id_one = ? AND tb_two = ? AND id_two = ?)
             OR (tb_one = ? AND id_one = ? AND tb_two = ? AND id_two = ?)",
         [$tbOne, $idOne, $tbTwo, $idTwo, $tbTwo, $idTwo, $tbOne, $idOne],
@@ -1250,7 +1249,7 @@ class record_ctrl extends Controller
       }
 
       $newId = (int) $this->db->query(
-        "INSERT INTO {$prefix}userlinks (tb_one, id_one, tb_two, id_two) VALUES (?, ?, ?, ?)",
+        "INSERT INTO bdus_userlinks (tb_one, id_one, tb_two, id_two) VALUES (?, ?, ?, ?)",
         [$tbOne, $idOne, $tbTwo, $idTwo],
         'id'
       );
@@ -1307,7 +1306,7 @@ class record_ctrl extends Controller
 
     try {
       $affected = $this->db->query(
-        "DELETE FROM {$this->prefix}userlinks WHERE id = ?",
+        "DELETE FROM bdus_userlinks WHERE id = ?",
         [(int)$id],
         'affected'
       );
@@ -1442,13 +1441,13 @@ class record_ctrl extends Controller
       if ($filtered && !empty($filterIdentifiers)) {
         $ph = implode(',', array_fill(0, count($filterIdentifiers), '?'));
         $relations = $this->db->query(
-          "SELECT id, first, second, relation FROM " . PREFIX . "rs
+          "SELECT id, first, second, relation FROM bdus_rs
            WHERE tb = ? AND (first IN ({$ph}) OR second IN ({$ph}))",
           array_merge([$tb], $filterIdentifiers, $filterIdentifiers)
         ) ?: [];
       } else {
         $relations = $this->db->query(
-          "SELECT id, first, second, relation FROM " . PREFIX . "rs WHERE tb = ?",
+          "SELECT id, first, second, relation FROM bdus_rs WHERE tb = ?",
           [$tb]
         ) ?: [];
       }

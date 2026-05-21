@@ -26,7 +26,7 @@ class debug_ctrl extends Controller
    */
   public function getLogs(): void
   {
-    $tb      = $this->prefix . 'log';
+    $tb      = 'bdus_log';
     $page    = max(1,   (int)($this->get['page']     ?? 1));
     $perPage = min(200, max(1, (int)($this->get['per_page'] ?? 50)));
     $level   = (int)($this->get['level'] ?? 0);
@@ -88,7 +88,7 @@ class debug_ctrl extends Controller
   {
     $days   = max(1, (int)($this->post['days'] ?? 30));
     $cutoff = time() - ($days * 86400);
-    $tb     = $this->prefix . 'log';
+    $tb     = 'bdus_log';
 
     try {
       $deleted = (int)$this->db->query(

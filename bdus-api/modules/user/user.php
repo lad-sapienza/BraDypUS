@@ -37,13 +37,13 @@ class user_ctrl extends Controller
 		];
 
 		if (\utils::canUser('admin')) {
-			$sys_manager = new Manage($this->db, $this->prefix);
-			$all_users   = $sys_manager->getBySQL('users', '1=1');
+			$sys_manager = new Manage($this->db);
+			$all_users   = $sys_manager->getBySQL('bdus_users', '1=1');
 
 			foreach ($all_users as $user) {
 				// Count per-table privilege overrides for the badge indicator.
 				$overrides = $this->db->query(
-					"SELECT COUNT(*) AS cnt FROM {$this->prefix}user_table_privs WHERE user_id = ?",
+					"SELECT COUNT(*) AS cnt FROM bdus_user_table_privs WHERE user_id = ?",
 					[(int) $user['id']],
 					'read'
 				);
@@ -84,16 +84,16 @@ class user_ctrl extends Controller
 		}
 		$id = (int) $id;
 		try {
-			$sys_manager = new Manage($this->db, $this->prefix);
+			$sys_manager = new Manage($this->db);
 
 			// Cascade: remove per-table overrides before deleting the user.
 			$this->db->query(
-				"DELETE FROM {$this->prefix}user_table_privs WHERE user_id = ?",
+				"DELETE FROM bdus_user_table_privs WHERE user_id = ?",
 				[$id],
 				'boolean'
 			);
 
-			$ret = $sys_manager->deleteRow('users', $id);
+			$ret = $sys_manager->deleteRow('bdus_users', $id);
 
 			if ($ret) {
 				$this->returnJson(['status' => 'success', 'code' => 'user_deleted']);
@@ -130,8 +130,8 @@ class user_ctrl extends Controller
 		}
 
 		if ($id) {
-			$sys_manager = new Manage($this->db, $this->prefix);
-			$one_user    = $sys_manager->getById('users', (int) $id);
+			$sys_manager = new Manage($this->db);
+			$one_user    = $sys_manager->getById('bdus_users', (int) $id);
 		} else {
 			$one_user = [];
 		}
@@ -192,7 +192,7 @@ class user_ctrl extends Controller
 		}
 
 		try {
-			$sys_manager = new Manage($this->db, $this->prefix);
+			$sys_manager = new Manage($this->db);
 
 			foreach ($data as $key => &$value) {
 				if ($key === 'password') {
@@ -210,13 +210,13 @@ class user_ctrl extends Controller
 					$this->response('email_present', 'error', [$data['email']]);
 					return;
 				}
-				$ret = $sys_manager->editRow('users', (int) $data['id'], $data);
+				$ret = $sys_manager->editRow('bdus_users', (int) $data['id'], $data);
 			} else {
 				if (\utils::isDuplicateEmail($this->db, $this->prefix, $data['email'])) {
 					$this->response('email_present', 'error', [$data['email']]);
 					return;
 				}
-				$ret = $sys_manager->addRow('users', $data);
+				$ret = $sys_manager->addRow('bdus_users', $data);
 			}
 
 			if ($ret) {
@@ -261,7 +261,7 @@ class user_ctrl extends Controller
 		try {
 			$rows = $this->db->query(
 				"SELECT id, user_id, table_name, privilege, subset
-				 FROM {$this->prefix}user_table_privs
+				 FROM bdus_user_table_privs
 				 WHERE user_id = ?
 				 ORDER BY table_name",
 				[$userId],
@@ -305,7 +305,7 @@ class user_ctrl extends Controller
 		try {
 			// Check for existing row (upsert by application logic — no UNIQUE constraint in DB).
 			$existing = $this->db->query(
-				"SELECT id FROM {$this->prefix}user_table_privs
+				"SELECT id FROM bdus_user_table_privs
 				 WHERE user_id = ? AND table_name = ?",
 				[$userId, $tableName],
 				'read'
@@ -314,7 +314,7 @@ class user_ctrl extends Controller
 			if (!empty($existing)) {
 				$rowId = (int) $existing[0]['id'];
 				$this->db->query(
-					"UPDATE {$this->prefix}user_table_privs
+					"UPDATE bdus_user_table_privs
 					 SET privilege = ?, subset = ?
 					 WHERE id = ?",
 					[$privilege, $subset, $rowId],
@@ -323,7 +323,7 @@ class user_ctrl extends Controller
 				$this->returnJson(['status' => 'success', 'code' => 'privilege_saved', 'id' => $rowId]);
 			} else {
 				$rowId = $this->db->query(
-					"INSERT INTO {$this->prefix}user_table_privs
+					"INSERT INTO bdus_user_table_privs
 					 (user_id, table_name, privilege, subset) VALUES (?, ?, ?, ?)",
 					[$userId, $tableName, $privilege, $subset],
 					'id'
@@ -357,7 +357,7 @@ class user_ctrl extends Controller
 
 		try {
 			$affected = $this->db->query(
-				"DELETE FROM {$this->prefix}user_table_privs WHERE id = ?",
+				"DELETE FROM bdus_user_table_privs WHERE id = ?",
 				[$id],
 				'affected'
 			);

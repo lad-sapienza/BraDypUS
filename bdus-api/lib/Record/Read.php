@@ -140,14 +140,14 @@ class Read
         if (!isset($this->cache['manuallinks'])) {
             $manualLinks = [];
             $sql = <<<EOD
-SELECT userlinks.*
-  FROM userlinks
+SELECT bdus_userlinks.*
+  FROM bdus_userlinks
  WHERE (tb_one = ? AND
         id_one = ? AND
-        tb_two != 'files') OR
+        tb_two != 'bdus_files') OR
        (tb_two = ? AND
         id_two = ? AND
-        tb_one != 'files')
+        tb_one != 'bdus_files')
  ORDER BY sort, id
 EOD;
 
@@ -214,7 +214,7 @@ EOD;
     {
         if (!isset($this->cache['rs'])) {
             $res = $this->db->query(
-                "SELECT id, first, second, relation FROM " . PREFIX . "rs WHERE tb = ? AND (first= ? OR second = ?)",
+                "SELECT id, first, second, relation FROM bdus_rs WHERE tb = ? AND (first= ? OR second = ?)",
                 [$this->tb, $this->id, $this->id],
                 'read'
             );
@@ -247,21 +247,36 @@ EOD;
     public function getGeodata(): array
     {
         if (!isset($this->cache['geodata'])) {
-            $geodata = $this->getPlugin('geodata');
-            if (
-                isset($geodata)
-                &&  isset($geodata['data'])
-                &&  is_array($geodata['data'])
-                &&  !empty($geodata['data'])
-            ) {
-                foreach ($geodata['data'] as $key => $value) {
-                    $geoPHP = geoPHP::load($geodata['data'][$key]['geometry']['val'], 'wkt');
-                    $geodata['data'][$key]['geojson'] = $geoPHP->out('json');
+            // Query bdus_geodata directly (same pattern as getRs / getManualLinks).
+            // The generic getPlugin() mechanism is NOT used here because geodata
+            // is a bdus_ system table and its name no longer appears in the app config.
+            $res = $this->db->query(
+                "SELECT id, table_link, id_link, geometry
+                   FROM bdus_geodata
+                  WHERE table_link = ? AND id_link = ?",
+                [$this->tb, $this->id],
+                'read'
+            );
+
+            $geodata = [];
+            if ($res && is_array($res)) {
+                foreach ($res as $row) {
+                    $entry = [
+                        'id'         => ['name' => 'id',         'label' => 'ID',          'val' => (int) $row['id']],
+                        'table_link' => ['name' => 'table_link', 'label' => 'Table',        'val' => $row['table_link']],
+                        'id_link'    => ['name' => 'id_link',    'label' => 'Record ID',    'val' => (int) $row['id_link']],
+                        'geometry'   => ['name' => 'geometry',   'label' => 'Coordinates',  'val' => $row['geometry']],
+                    ];
+                    try {
+                        $geoPHP = geoPHP::load($row['geometry'], 'wkt');
+                        $entry['geojson'] = $geoPHP->out('json');
+                    } catch (\Throwable $e) {
+                        $entry['geojson'] = null;
+                    }
+                    $geodata[(int) $row['id']] = $entry;
                 }
-                $this->cache['geodata'] = $geodata['data'];
-            } else {
-                $this->cache['geodata'] = [];
             }
+            $this->cache['geodata'] = $geodata;
         }
         return $this->cache['geodata'];
     }
@@ -284,7 +299,7 @@ EOD;
     {
         if (!isset($this->cache['files'])) {
 
-            if ($this->tb === 'files') {
+            if ($this->tb === 'bdus_files') {
                 $core = $this->getCore();
                 $tmp = [];
                 foreach ($core as $key => $value) {
@@ -294,10 +309,10 @@ EOD;
             } else {
 
                 $sql = <<<EOD
-SELECT files.*, fl.id AS link_id, fl.sort AS link_sort
-FROM files
-    INNER JOIN file_links AS fl
-        ON fl.file_id = files.id
+SELECT bdus_files.*, fl.id AS link_id, fl.sort AS link_sort
+FROM bdus_files
+    INNER JOIN bdus_file_links AS fl
+        ON fl.file_id = bdus_files.id
        AND fl.table_name = ?
        AND fl.record_id  = ?
 ORDER BY fl.sort, fl.id

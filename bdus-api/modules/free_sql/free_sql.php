@@ -39,7 +39,7 @@ class free_sql_ctrl extends Controller
         }
 
         $rows = $this->db->query(
-            "SELECT password FROM {$this->prefix}users WHERE id = ?",
+            "SELECT password FROM bdus_users WHERE id = ?",
             [\Auth\CurrentUser::id()],
             'read'
         );

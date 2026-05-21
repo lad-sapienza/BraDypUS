@@ -14,14 +14,14 @@ class vocabularies_ctrl extends Controller
 	private function getSysMng()
 	{
 		if (!$this->sys_manager){
-			$this->sys_manager = new Manage($this->db, $this->prefix);
+			$this->sys_manager = new Manage($this->db);
 		}
 		return $this->sys_manager;
 	}
 
 	public function list()
 	{
-		$res = $this->getSysMng()->getBySQL('vocabularies', '1=1 ORDER BY voc, sort');
+		$res = $this->getSysMng()->getBySQL('bdus_vocabularies', '1=1 ORDER BY voc, sort');
 		$grouped = [];
 		foreach ($res as $row) {
 			$grouped[$row['voc']][] = [
@@ -42,7 +42,7 @@ class vocabularies_ctrl extends Controller
 		$id = $this->get['id'];
 		$val = $this->get['val'];
 
-		$res = $this->getSysMng()->editRow('vocabularies', $id, [
+		$res = $this->getSysMng()->editRow('bdus_vocabularies', $id, [
 			'def' => $val
 		]);
 		
@@ -57,7 +57,7 @@ class vocabularies_ctrl extends Controller
 	{
 		$id = $this->get['id'];
 
-		$res = $this->getSysMng()->deleteRow('vocabularies', $id );
+		$res = $this->getSysMng()->deleteRow('bdus_vocabularies', $id );
 
 		if ( $res ) {
 			$this->response('ok_def_erase', 'success');
@@ -71,7 +71,7 @@ class vocabularies_ctrl extends Controller
 		$voc = $this->get['voc'];
 		$def = $this->get['def'];
 
-		$res = $this->getSysMng()->addRow('vocabularies', [
+		$res = $this->getSysMng()->addRow('bdus_vocabularies', [
 			'voc' => $voc,
 			'def' => $def
 		]);
@@ -90,13 +90,13 @@ class vocabularies_ctrl extends Controller
 		$ids = $this->post['ids'] ?? null;
 		if ($ids !== null) {
 			foreach ($ids as $sort => $id) {
-				$res = $this->getSysMng()->editRow('vocabularies', (int)$id, ['sort' => (int)$sort]);
+				$res = $this->getSysMng()->editRow('bdus_vocabularies', (int)$id, ['sort' => (int)$sort]);
 				if (!$res) $error = true;
 			}
 		} else {
 			$sortArray = $this->get['sort'];
 			foreach ($sortArray as $sort => $id) {
-				$res = $this->getSysMng()->editRow('vocabularies', (int)$id, ['sort' => (int)$sort]);
+				$res = $this->getSysMng()->editRow('bdus_vocabularies', (int)$id, ['sort' => (int)$sort]);
 				if (!$res) $error = true;
 			}
 		}

@@ -37,8 +37,8 @@ class login_ctrl extends Controller
 		
 		try {
 
-			$sys_manager = new Manage($this->db, $this->prefix);
-			$res = $sys_manager->addRow('users', [
+			$sys_manager = new Manage($this->db);
+			$res = $sys_manager->addRow('bdus_users', [
 				'name', 
 				'email' => $post['email'], 
 				'password' => \utils::encodePwd($post['password']), 
@@ -56,7 +56,7 @@ class login_ctrl extends Controller
 
 				// email to admins
 
-				$admins = $sys_manager->getBySQL('users', 'privilege <= ?', [
+				$admins = $sys_manager->getBySQL('bdus_users', 'privilege <= ?', [
 					\utils::privilege('admin')
 				]);
 
@@ -163,8 +163,8 @@ class login_ctrl extends Controller
 		$id = (int) $this->post['id'];
 		$password = \utils::encodePwd( $this->post['pwd'] );
 
-		$sys_manager = new Manage($this->db, $this->prefix);
-		$res = $sys_manager->editRow('users', $id, ['password' => $password]);
+		$sys_manager = new Manage($this->db);
+		$res = $sys_manager->editRow('bdus_users', $id, ['password' => $password]);
 
 		if ( $res ) {
 			$this->response('ok_password_update', 'success');
@@ -177,8 +177,8 @@ class login_ctrl extends Controller
 
 	public  function sendToken()
 	{
-		$sys_manager = new Manage($this->db, $this->prefix);
-		$res = $sys_manager->getBySQL('users', 'email = ?', [$this->get['email']]);
+		$sys_manager = new Manage($this->db);
+		$res = $sys_manager->getBySQL('bdus_users', 'email = ?', [$this->get['email']]);
 
 		if ($res[0]) {
 			$token = $this->getToken($this->db->getApp(), $res[0]);
@@ -213,8 +213,8 @@ class login_ctrl extends Controller
 			throw new \Exception('email_password_needed');
 		}
 
-		$sys_manager = new Manage($this->db, $this->prefix);
-		$rows = $sys_manager->getBySQL('users', 'email = ?', [$email]);
+		$sys_manager = new Manage($this->db);
+		$rows = $sys_manager->getBySQL('bdus_users', 'email = ?', [$email]);
 		$res  = $rows[0] ?? null;
 
 		if (!$res || !\utils::verifyPassword($password, $res['password'])) {
@@ -223,7 +223,7 @@ class login_ctrl extends Controller
 
 		// Silently migrate legacy SHA1 hash to bcrypt on successful login
 		if (strlen($res['password']) === 40) {
-			$sys_manager->editRow('users', $res['id'], ['password' => password_hash($password, PASSWORD_DEFAULT)]);
+			$sys_manager->editRow('bdus_users', $res['id'], ['password' => password_hash($password, PASSWORD_DEFAULT)]);
 		}
 
 		unset($res['password'], $res['settings']);

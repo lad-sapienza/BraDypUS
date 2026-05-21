@@ -16,13 +16,14 @@ use DB\System\Migrations\M004_RefactorChartsTable;
 use DB\System\Migrations\M005_CreateApiKeys;
 use DB\System\Migrations\M006_AddApiKeyPrivilege;
 use DB\System\Migrations\M007_RepairFileLinks;
+use DB\System\Migrations\M008_AddBdusPrefix;
 use Monolog\Logger;
 
 /**
  * Schema migration runner.
  *
  * Migrations are applied at login time (once per session) and are idempotent:
- * each migration is tracked by name in the {prefix}migrations table and is
+ * each migration is tracked by name in the bdus_migrations table and is
  * never executed twice.
  *
  * ## Adding a new migration
@@ -49,6 +50,7 @@ class Migrate
         M005_CreateApiKeys::class,
         M006_AddApiKeyPrivilege::class,
         M007_RepairFileLinks::class,
+        M008_AddBdusPrefix::class,
     ];
 
     /**
@@ -273,7 +275,7 @@ class Migrate
         string $oldPrefix,
         Logger $log = null
     ): void {
-        // Check whether the userlinks table exists at all.
+        // Check whether the userlinks table exists at all (bare name — pre-M008).
         $exists = $db->query(
             "SELECT COUNT(*) AS cnt FROM sqlite_master WHERE type='table' AND name='userlinks'",
             [],
@@ -300,21 +302,38 @@ class Migrate
      * @param DBInterface $db
      * @param string $prefix  Kept for backward compatibility; ignored (always '' after v5 prefix removal).
      */
-    public static function run(DBInterface $db, string $prefix, Logger $log = null): void
+    public static function run(DBInterface $db, string $prefix = '', Logger $log = null): void
     {
         // Pre-flight: if this is an existing app still using the legacy APP__ prefix,
         // rename all tables and update config before the normal migration loop starts.
         self::maybeRemovePrefix($db, $log);
 
-        $manage = new Manage($db, $prefix);
+        // Pre-flight: rename bare 'migrations' table to 'bdus_migrations' if needed.
+        // This runs before the migration loop so the tracking table is always bdus_*.
+        if ($db->getEngine() === 'sqlite') {
+            $bare = $db->query(
+                "SELECT COUNT(*) AS cnt FROM sqlite_master WHERE type='table' AND name='migrations'",
+                [], 'read'
+            );
+            $has_bdus = $db->query(
+                "SELECT COUNT(*) AS cnt FROM sqlite_master WHERE type='table' AND name='bdus_migrations'",
+                [], 'read'
+            );
+            if ((int)($bare[0]['cnt'] ?? 0) > 0 && (int)($has_bdus[0]['cnt'] ?? 0) === 0) {
+                $db->exec('ALTER TABLE "migrations" RENAME TO "bdus_migrations"');
+                $log?->info('Migrate: renamed migrations → bdus_migrations');
+            }
+        }
+
+        $manage = new Manage($db);
 
         // Bootstrap: ensure the migrations tracking table exists.
         // This is the only table created outside the normal migration flow.
-        $manage->createTable('migrations');
+        $manage->createTable('bdus_migrations');
 
         // Load already-applied migration names.
         $applied = $db->query(
-            "SELECT name FROM {$prefix}migrations",
+            "SELECT name FROM bdus_migrations",
             [],
             'read'
         );
@@ -339,7 +358,7 @@ class Migrate
             }
 
             $db->query(
-                "INSERT INTO {$prefix}migrations (name, applied_at) VALUES (?, ?)",
+                "INSERT INTO bdus_migrations (name, applied_at) VALUES (?, ?)",
                 [$name, time()],
                 'boolean'
             );
@@ -348,7 +367,7 @@ class Migrate
         }
 
         if ($pending === 0) {
-            $log?->debug("DB migrations: schema up to date ($prefix)");
+            $log?->debug("DB migrations: schema up to date");
         }
     }
 }

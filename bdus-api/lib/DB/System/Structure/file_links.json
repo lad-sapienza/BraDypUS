@@ -14,7 +14,7 @@
         {
             "name":       "fl_file_fk",
             "column":     "file_id",
-            "ref_table":  "files",
+            "ref_table":  "bdus_files",
             "ref_column": "id",
             "on_delete":  "CASCADE"
         }

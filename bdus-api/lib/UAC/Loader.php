@@ -32,21 +32,21 @@ class Loader
      * @param int         $userId        User's database id
      * @param int         $globalPriv    User's global privilege level (from users table)
      * @param DBInterface $db
-     * @param string      $prefix        Application table prefix
+     * @param string      $prefix        Application table prefix (kept for backward compatibility; ignored)
      * @return array
      */
     public static function buildUAL(
         int $userId,
         int $globalPriv,
         DBInterface $db,
-        string $prefix
+        string $prefix = ''
     ): array {
         $ual = ['global' => $globalPriv];
 
         try {
             $rows = $db->query(
                 "SELECT table_name, privilege, subset
-                 FROM {$prefix}user_table_privs
+                 FROM bdus_user_table_privs
                  WHERE user_id = ?",
                 [$userId],
                 'read'

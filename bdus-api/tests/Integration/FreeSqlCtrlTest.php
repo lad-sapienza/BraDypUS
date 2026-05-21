@@ -23,7 +23,7 @@ class FreeSqlCtrlTest extends BdusTestCase
         parent::createSchema();
 
         static::$db->execInTransaction('
-            CREATE TABLE users (
+            CREATE TABLE bdus_users (
                 id        INTEGER PRIMARY KEY AUTOINCREMENT,
                 name      TEXT    NOT NULL,
                 email     TEXT    NOT NULL,
@@ -42,7 +42,7 @@ class FreeSqlCtrlTest extends BdusTestCase
         // Super-admin user (id=1) with a known bcrypt hash of "secret123"
         $hash = password_hash('secret123', PASSWORD_DEFAULT);
         static::$db->execInTransaction(
-            "INSERT INTO users (id, name, email, privilege, password)
+            "INSERT INTO bdus_users (id, name, email, privilege, password)
              VALUES (1, 'Test Admin', 'test@example.com', 1, '{$hash}')"
         );
     }

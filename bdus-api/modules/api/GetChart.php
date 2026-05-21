@@ -14,11 +14,11 @@ use DB\DBInterface;
 
 class GetChart
 {
-    public static function run(int $id, DBInterface $db, string $prefix)
+    public static function run(int $id, DBInterface $db, string $prefix = '')
     {
-        $sys_manage = new Manage($db, $prefix);
+        $sys_manage = new Manage($db);
 
-        $chart = $sys_manage->getById('charts', $id);
+        $chart = $sys_manage->getById('bdus_charts', $id);
 
         if (!$chart || empty($chart) ) {
             throw new \Exception("Chart #{$id} not found");

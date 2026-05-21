@@ -23,6 +23,6 @@ class M005_CreateApiKeys
 
     public static function run(Manage $manage): void
     {
-        $manage->createTable('api_keys');
+        $manage->createTable('bdus_api_keys');
     }
 }

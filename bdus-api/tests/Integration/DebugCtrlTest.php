@@ -87,7 +87,7 @@ class DebugCtrlTest extends BdusTestCase
         // Note: days is clamped to min 1 inside purgeLogs(), so use a short period
         // Instead: seed a very old entry and purge it
         static::$db->execInTransaction(
-            "INSERT INTO log (channel, level, message, time)
+            "INSERT INTO bdus_log (channel, level, message, time)
              VALUES ('test', 200, 'Very old entry', " . (time() - 86400 * 10) . ")"
         );
 

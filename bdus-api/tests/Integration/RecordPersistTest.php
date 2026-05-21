@@ -177,14 +177,14 @@ class RecordPersistTest extends BdusTestCase
         $this->assertSame(1, $result['manualLinks']['inserted']);
 
         $rows = static::$db->query(
-            "SELECT id FROM userlinks WHERE tb_one = 'items' AND id_one = 5 AND tb_two = 'items' AND id_two = 3",
+            "SELECT id FROM bdus_userlinks WHERE tb_one = 'items' AND id_one = 5 AND tb_two = 'items' AND id_two = 3",
             [],
             'read'
         );
         $this->assertNotEmpty($rows);
 
         // Clean up
-        static::$db->execInTransaction("DELETE FROM userlinks WHERE tb_one = 'items' AND id_one = 5 AND id_two = 3");
+        static::$db->execInTransaction("DELETE FROM bdus_userlinks WHERE tb_one = 'items' AND id_one = 5 AND id_two = 3");
     }
 
     // ── ManualLinks: DELETE ───────────────────────────────────────────────
@@ -193,7 +193,7 @@ class RecordPersistTest extends BdusTestCase
     {
         // The seed added a userlink between item 1 and item 2; it is id=3.
         $rows = static::$db->query(
-            "SELECT id FROM userlinks WHERE tb_one = 'items' AND id_one = 1 AND tb_two = 'items' AND id_two = 2",
+            "SELECT id FROM bdus_userlinks WHERE tb_one = 'items' AND id_one = 1 AND tb_two = 'items' AND id_two = 2",
             [],
             'read'
         );
@@ -208,7 +208,7 @@ class RecordPersistTest extends BdusTestCase
         $this->assertSame(1, $result['manualLinks']['deleted']);
 
         $after = static::$db->query(
-            "SELECT id FROM userlinks WHERE id = ?",
+            "SELECT id FROM bdus_userlinks WHERE id = ?",
             [$ulId],
             'read'
         );
@@ -228,14 +228,14 @@ class RecordPersistTest extends BdusTestCase
         $this->assertSame(1, $result['rs']['inserted']);
 
         $rows = static::$db->query(
-            "SELECT id FROM rs WHERE tb = 'items' AND first = 'C' AND second = 'D'",
+            "SELECT id FROM bdus_rs WHERE tb = 'items' AND first = 'C' AND second = 'D'",
             [],
             'read'
         );
         $this->assertNotEmpty($rows);
 
         // Clean up
-        static::$db->execInTransaction("DELETE FROM rs WHERE first = 'C' AND second = 'D'");
+        static::$db->execInTransaction("DELETE FROM bdus_rs WHERE first = 'C' AND second = 'D'");
     }
 
     // ── RS: DELETE ────────────────────────────────────────────────────────
@@ -245,7 +245,7 @@ class RecordPersistTest extends BdusTestCase
         // The seed inserted an RS row (first='1', second='2') that Read::getRs() will
         // find when reading item id=1 (because first='1' matches $this->id=1).
         $rows = static::$db->query(
-            "SELECT id FROM rs WHERE tb = 'items' AND first = '1' AND second = '2'",
+            "SELECT id FROM bdus_rs WHERE tb = 'items' AND first = '1' AND second = '2'",
             [],
             'read'
         );
@@ -261,7 +261,7 @@ class RecordPersistTest extends BdusTestCase
         $this->assertSame(1, $result['rs']['deleted']);
 
         $after = static::$db->query(
-            "SELECT id FROM rs WHERE id = ?",
+            "SELECT id FROM bdus_rs WHERE id = ?",
             [$rsId],
             'read'
         );
@@ -286,7 +286,7 @@ class RecordPersistTest extends BdusTestCase
             "INSERT INTO tags (label, id_link, table_link) VALUES ('temp-tag-del', {$tempItemId}, 'items')"
         );
         static::$db->execInTransaction(
-            "INSERT INTO userlinks (tb_one, id_one, tb_two, id_two, sort) VALUES ('items', {$tempItemId}, 'items', 2, 1)"
+            "INSERT INTO bdus_userlinks (tb_one, id_one, tb_two, id_two, sort) VALUES ('items', {$tempItemId}, 'items', 2, 1)"
         );
 
         // Now read and delete via Edit
@@ -315,7 +315,7 @@ class RecordPersistTest extends BdusTestCase
 
         // Verify userlinks gone
         $ulRows = static::$db->query(
-            "SELECT id FROM userlinks WHERE (tb_one = 'items' AND id_one = ?) OR (tb_two = 'items' AND id_two = ?)",
+            "SELECT id FROM bdus_userlinks WHERE (tb_one = 'items' AND id_one = ?) OR (tb_two = 'items' AND id_two = ?)",
             [$tempItemId, $tempItemId],
             'read'
         );

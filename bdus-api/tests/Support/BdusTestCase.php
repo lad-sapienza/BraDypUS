@@ -100,7 +100,7 @@ abstract class BdusTestCase extends TestCase
         ');
 
         static::$db->execInTransaction('
-            CREATE TABLE log (
+            CREATE TABLE bdus_log (
                 id      INTEGER PRIMARY KEY AUTOINCREMENT,
                 channel TEXT NOT NULL,
                 level   INTEGER NOT NULL,
@@ -111,7 +111,7 @@ abstract class BdusTestCase extends TestCase
 
         // ── System tables required by Record\Read::getFull() ──────────────
         static::$db->execInTransaction('
-            CREATE TABLE userlinks (
+            CREATE TABLE bdus_userlinks (
                 id     INTEGER PRIMARY KEY AUTOINCREMENT,
                 tb_one TEXT    NOT NULL,
                 id_one INTEGER NOT NULL,
@@ -122,7 +122,7 @@ abstract class BdusTestCase extends TestCase
         ');
 
         static::$db->execInTransaction('
-            CREATE TABLE rs (
+            CREATE TABLE bdus_rs (
                 id       INTEGER PRIMARY KEY AUTOINCREMENT,
                 tb       TEXT    NOT NULL,
                 first    TEXT    NOT NULL,
@@ -132,7 +132,7 @@ abstract class BdusTestCase extends TestCase
         ');
 
         static::$db->execInTransaction('
-            CREATE TABLE geodata (
+            CREATE TABLE bdus_geodata (
                 id         INTEGER PRIMARY KEY AUTOINCREMENT,
                 table_link TEXT    NOT NULL,
                 id_link    INTEGER NOT NULL,
@@ -141,7 +141,7 @@ abstract class BdusTestCase extends TestCase
         ');
 
         static::$db->execInTransaction('
-            CREATE TABLE files (
+            CREATE TABLE bdus_files (
                 id          INTEGER PRIMARY KEY AUTOINCREMENT,
                 creator     TEXT    NOT NULL,
                 ext         TEXT    NOT NULL,
@@ -153,7 +153,7 @@ abstract class BdusTestCase extends TestCase
         ');
 
         static::$db->execInTransaction('
-            CREATE TABLE file_links (
+            CREATE TABLE bdus_file_links (
                 id          INTEGER PRIMARY KEY AUTOINCREMENT,
                 file_id     INTEGER NOT NULL,
                 table_name  TEXT    NOT NULL,
@@ -186,33 +186,33 @@ abstract class BdusTestCase extends TestCase
              VALUES ('tag-a', 1, 'items'), ('tag-b', 1, 'items')"
         );
 
-        // A file (image) and a document linked to item 1 via file_links
+        // A file (image) and a document linked to item 1 via bdus_file_links
         static::$db->execInTransaction(
-            "INSERT INTO files (id, creator, ext, keywords, description, printable, filename)
+            "INSERT INTO bdus_files (id, creator, ext, keywords, description, printable, filename)
              VALUES (1, 'admin', 'jpg', 'photo', 'A photo', 1, 'photo'),
                     (2, 'admin', 'pdf', 'doc',   'A document', 0, 'document')"
         );
         static::$db->execInTransaction(
-            "INSERT INTO file_links (file_id, table_name, record_id, sort)
+            "INSERT INTO bdus_file_links (file_id, table_name, record_id, sort)
              VALUES (1, 'items', 1, 1),
                     (2, 'items', 1, 2)"
         );
 
         // A manual link between item 1 and item 2 (record↔record, not a file link)
         static::$db->execInTransaction(
-            "INSERT INTO userlinks (tb_one, id_one, tb_two, id_two, sort)
+            "INSERT INTO bdus_userlinks (tb_one, id_one, tb_two, id_two, sort)
              VALUES ('items', 1, 'items', 2, 1)"
         );
 
         // An RS entry referencing item 1 (first='1' so Read::getRs() can find it by id=1)
         static::$db->execInTransaction(
-            "INSERT INTO rs (tb, first, second, relation) VALUES ('items', '1', '2', 1)"
+            "INSERT INTO bdus_rs (tb, first, second, relation) VALUES ('items', '1', '2', 1)"
         );
 
         // A couple of log entries
         $now = time();
         static::$db->execInTransaction(
-            "INSERT INTO log (channel, level, message, time)
+            "INSERT INTO bdus_log (channel, level, message, time)
              VALUES
                ('test', 200, 'Info message',  " . ($now - 3600) . "),
                ('test', 400, 'Error message', " . ($now - 100)  . ")"

@@ -24,9 +24,8 @@ class M006_AddApiKeyPrivilege
 
     public static function run(Manage $manage): void
     {
-        $db     = $manage->getDb();
-        $prefix = $manage->getPrefix();
-        $table  = $prefix . 'api_keys';
+        $db    = $manage->getDb();
+        $table = 'bdus_api_keys';
 
         // ALTER TABLE ... ADD COLUMN is supported by SQLite ≥ 3.1, MySQL, and PostgreSQL.
         // The DEFAULT value ensures all existing rows are immediately valid.

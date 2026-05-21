@@ -23,9 +23,9 @@ class saved_queries_ctrl extends Controller
      */
     public function listQueries(): void
     {
-        $sys_manager = new Manage($this->db, $this->prefix);
+        $sys_manager = new Manage($this->db);
         $rows = $sys_manager->getBySQL(
-            'queries',
+            'bdus_queries',
             'user_id = ? OR is_global = ?',
             [\Auth\CurrentUser::id(), 1]
         );
@@ -61,8 +61,8 @@ class saved_queries_ctrl extends Controller
         $queryJson = is_array($query) ? json_encode($query) : ($query ?? null);
 
         try {
-            $sys_manager = new Manage($this->db, $this->prefix);
-            $newId = $sys_manager->addRow('queries', [
+            $sys_manager = new Manage($this->db);
+            $newId = $sys_manager->addRow('bdus_queries', [
                 'user_id'    => \Auth\CurrentUser::id(),
                 'created_at' => time(),
                 'name'       => $name,
@@ -76,7 +76,7 @@ class saved_queries_ctrl extends Controller
                 return;
             }
 
-            $row = $sys_manager->getById('queries', $newId);
+            $row = $sys_manager->getById('bdus_queries', $newId);
             $this->returnJson([
                 'status' => 'success',
                 'code'   => 'ok_saved_query',
@@ -104,8 +104,8 @@ class saved_queries_ctrl extends Controller
             return;
         }
 
-        $sys_manager = new Manage($this->db, $this->prefix);
-        $row = $sys_manager->getById('queries', $id);
+        $sys_manager = new Manage($this->db);
+        $row = $sys_manager->getById('bdus_queries', $id);
 
         if (empty($row)) {
             $this->returnJson(['status' => 'error', 'code' => 'query_not_found']);
@@ -117,7 +117,7 @@ class saved_queries_ctrl extends Controller
         }
 
         try {
-            $sys_manager->editRow('queries', $id, ['is_global' => 1]);
+            $sys_manager->editRow('bdus_queries', $id, ['is_global' => 1]);
             $this->returnJson(['status' => 'success', 'code' => 'ok_sharing_query']);
         } catch (\Throwable $e) {
             $this->log->error($e);
@@ -140,8 +140,8 @@ class saved_queries_ctrl extends Controller
             return;
         }
 
-        $sys_manager = new Manage($this->db, $this->prefix);
-        $row = $sys_manager->getById('queries', $id);
+        $sys_manager = new Manage($this->db);
+        $row = $sys_manager->getById('bdus_queries', $id);
 
         if (empty($row)) {
             $this->returnJson(['status' => 'error', 'code' => 'query_not_found']);
@@ -153,7 +153,7 @@ class saved_queries_ctrl extends Controller
         }
 
         try {
-            $sys_manager->editRow('queries', $id, ['is_global' => 0]);
+            $sys_manager->editRow('bdus_queries', $id, ['is_global' => 0]);
             $this->returnJson(['status' => 'success', 'code' => 'ok_unsharing_query']);
         } catch (\Throwable $e) {
             $this->log->error($e);
@@ -176,8 +176,8 @@ class saved_queries_ctrl extends Controller
             return;
         }
 
-        $sys_manager = new Manage($this->db, $this->prefix);
-        $row = $sys_manager->getById('queries', $id);
+        $sys_manager = new Manage($this->db);
+        $row = $sys_manager->getById('bdus_queries', $id);
 
         if (empty($row)) {
             $this->returnJson(['status' => 'error', 'code' => 'query_not_found']);
@@ -189,7 +189,7 @@ class saved_queries_ctrl extends Controller
         }
 
         try {
-            $sys_manager->deleteRow('queries', $id);
+            $sys_manager->deleteRow('bdus_queries', $id);
             $this->returnJson(['status' => 'success', 'code' => 'ok_erasing_query']);
         } catch (\Throwable $e) {
             $this->log->error($e);

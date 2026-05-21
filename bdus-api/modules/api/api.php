@@ -33,8 +33,8 @@ class api_ctrl extends Controller
             return;
         }
 
-        $manage = new Manage($this->db, $this->prefix);
-        $rows   = $manage->getBySQL('api_keys', '1=1 ORDER BY created_at DESC') ?: [];
+        $manage = new Manage($this->db);
+        $rows   = $manage->getBySQL('bdus_api_keys', '1=1 ORDER BY created_at DESC') ?: [];
 
         $result = array_map(function (array $r): array {
             unset($r['key_hash']);
@@ -85,8 +85,8 @@ class api_ctrl extends Controller
         $plainKey = bin2hex(random_bytes(32));
         $keyHash  = hash('sha256', $plainKey);
 
-        $manage = new Manage($this->db, $this->prefix);
-        $id     = $manage->addRow('api_keys', [
+        $manage = new Manage($this->db);
+        $id     = $manage->addRow('bdus_api_keys', [
             'key_hash'   => $keyHash,
             'label'      => $label,
             'created_by' => \Auth\CurrentUser::id(),
@@ -126,8 +126,8 @@ class api_ctrl extends Controller
             return;
         }
 
-        $manage = new Manage($this->db, $this->prefix);
-        $manage->editRow('api_keys', $id, ['revoked_at' => time()]);
+        $manage = new Manage($this->db);
+        $manage->editRow('bdus_api_keys', $id, ['revoked_at' => time()]);
 
         $this->returnJson(['status' => 'success', 'code' => 'ok_api_key_revoked']);
     }
@@ -154,8 +154,8 @@ class api_ctrl extends Controller
             return;
         }
 
-        $manage = new Manage($this->db, $this->prefix);
-        $manage->deleteRow('api_keys', $id);
+        $manage = new Manage($this->db);
+        $manage->deleteRow('bdus_api_keys', $id);
 
         $this->returnJson(['status' => 'success', 'code' => 'ok_api_key_deleted']);
     }

@@ -273,9 +273,9 @@ class utils
     return password_verify($plain, $stored);
   }
 
-  public static function isDuplicateEmail(\DB\DB $db, string $prefix, string $email, int $id = null): bool
+  public static function isDuplicateEmail(\DB\DB $db, string $prefix = '', string $email = '', int $id = null): bool
   {
-    $manager = new \DB\System\Manage($db, $prefix);
+    $manager = new \DB\System\Manage($db);
 
     $partial = ["email = ? "];
     $values = [$email];
@@ -285,7 +285,7 @@ class utils
       array_push($partial, "id != ? ");
       array_push($values, $id);
     }
-    $res = $manager->getBySQL('users', implode(" AND ", $partial) . ' LIMIT 1 OFFSET 0', $values, ['count(*) as tot']);
+    $res = $manager->getBySQL('bdus_users', implode(" AND ", $partial) . ' LIMIT 1 OFFSET 0', $values, ['count(*) as tot']);
 
     return ($res[0]['tot'] > 0);
   }

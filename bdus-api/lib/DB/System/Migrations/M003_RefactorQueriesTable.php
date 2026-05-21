@@ -30,13 +30,12 @@ class M003_RefactorQueriesTable
 
     public static function run(Manage $manage): void
     {
-        $db     = $manage->getDb();
-        $prefix = $manage->getPrefix();
+        $db = $manage->getDb();
 
         // 1. Add `query` column (idempotent)
         try {
             $db->query(
-                "ALTER TABLE {$prefix}queries ADD COLUMN query TEXT",
+                "ALTER TABLE bdus_queries ADD COLUMN query TEXT",
                 [],
                 'boolean'
             );
@@ -47,7 +46,7 @@ class M003_RefactorQueriesTable
         // 2. Add `created_at` column (idempotent)
         try {
             $db->query(
-                "ALTER TABLE {$prefix}queries ADD COLUMN created_at INTEGER",
+                "ALTER TABLE bdus_queries ADD COLUMN created_at INTEGER",
                 [],
                 'boolean'
             );
@@ -62,7 +61,7 @@ class M003_RefactorQueriesTable
         //    catch that case and return early (nothing to migrate).
         try {
             $rows = $db->query(
-                "SELECT id, text, date FROM {$prefix}queries WHERE query IS NULL AND text IS NOT NULL",
+                "SELECT id, text, date FROM bdus_queries WHERE query IS NULL AND text IS NOT NULL",
                 [],
                 'read'
             );
@@ -94,7 +93,7 @@ class M003_RefactorQueriesTable
             }
 
             $db->query(
-                "UPDATE {$prefix}queries SET query = ?, created_at = ? WHERE id = ?",
+                "UPDATE bdus_queries SET query = ?, created_at = ? WHERE id = ?",
                 [$queryPayload, $createdAt, (int) $row['id']],
                 'boolean'
             );

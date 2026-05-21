@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright 2007-2022 Julian Bogdani
+ * @copyright 2007-2025 Julian Bogdani
  * @license AGPL-3.0; see LICENSE
  */
 
@@ -16,26 +16,22 @@ class SystemTables
     private $db;
     private $resp;
     private $inspect;
-    private $prefix;
     private $system;
 
 
-    public function __construct(Resp $resp, DBInterface $db, string $prefix = null)
+    public function __construct(Resp $resp, DBInterface $db)
     {
         $this->resp = $resp;
         $this->db = $db;
-        $this->prefix = $prefix;
 
         $this->inspect = new Inspect($db);
 
-        $this->system = new Manage($this->db, $this->prefix);
+        $this->system = new Manage($this->db);
     }
 
     public function checkExist(): void
     {
-        $sys_tables = array_map( function($el){
-            return $this->prefix . $el;
-        }, $this->system->available_tables);
+        $sys_tables = $this->system->available_tables;
 
         foreach ($sys_tables as $tb) {
             if ($this->inspect->tableExists($tb)){
@@ -48,20 +44,20 @@ class SystemTables
                     'danger',
                     "System table $tb does not exist in database.",
                     "Create table $tb",
-                    ['create', str_replace($this->prefix, '', $tb)]
+                    ['create', $tb]
                 );
-                
+
             }
         }
     }
 
     public function latestStructure()
     {
-        $short_sys_tables = $this->system->available_tables;
-        
-        foreach ($short_sys_tables as $tb) {
-            
-            if (!$this->inspect->tableExists($this->prefix . $tb)){
+        $sys_tables = $this->system->available_tables;
+
+        foreach ($sys_tables as $tb) {
+
+            if (!$this->inspect->tableExists($tb)){
                 continue;
             }
             $model_cols = array_map(function($el){
@@ -70,8 +66,8 @@ class SystemTables
 
             $db_cols = array_map(function($el){
                 return $el['fld'];
-            }, $this->inspect->tableColumns($this->prefix.$tb));
-            
+            }, $this->inspect->tableColumns($tb));
+
             $this->resp->set('head', "Checking $tb from model to database");
 
             foreach ($model_cols as $col) {
@@ -85,7 +81,7 @@ class SystemTables
                         'danger',
                         "Model field {$tb}.{$col} is not available in database table",
                         "Add {$tb}.{$col} to the database",
-                        ['create', $this->prefix . $tb, $col]
+                        ['create', $tb, $col]
                     );
                 }
             }
@@ -103,7 +99,7 @@ class SystemTables
                         'danger',
                         "Database column {$tb}.{$col} is not available in the model",
                         "Remove {$tb}.{$col} from the database",
-                        ['delete', $this->prefix . $tb, $col]
+                        ['delete', $tb, $col]
                     );
                 }
             }

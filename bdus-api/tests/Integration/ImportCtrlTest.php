@@ -371,12 +371,12 @@ class ImportCtrlTest extends BdusTestCase
         $this->assertSame(0, $res['not_found']);
 
         $fileRows = static::$db->query(
-            "SELECT id FROM files WHERE creator = 'import'", [], 'read'
+            "SELECT id FROM bdus_files WHERE creator = 'import'", [], 'read'
         );
         $this->assertNotEmpty($fileRows);
 
         $linkRows = static::$db->query(
-            "SELECT * FROM file_links WHERE table_name = ? AND record_id = ?",
+            "SELECT * FROM bdus_file_links WHERE table_name = ? AND record_id = ?",
             [self::TB, $recordId],
             'read'
         );

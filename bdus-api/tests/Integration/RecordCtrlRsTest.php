@@ -67,7 +67,7 @@ class RecordCtrlRsTest extends BdusTestCase
 
         // Confirm row exists in DB
         $row = static::$db->query(
-            "SELECT * FROM rs WHERE id = ?",
+            "SELECT * FROM bdus_rs WHERE id = ?",
             [(int)$res['id']],
             'read'
         );
@@ -76,7 +76,7 @@ class RecordCtrlRsTest extends BdusTestCase
         $this->assertSame('4', $row[0]['second']);
 
         // Cleanup
-        static::$db->query('DELETE FROM rs WHERE id = ?', [(int)$res['id']], 'boolean');
+        static::$db->query('DELETE FROM bdus_rs WHERE id = ?', [(int)$res['id']], 'boolean');
     }
 
     public function testAddRsRejectsDuplicateSameDirection(): void
@@ -150,7 +150,7 @@ class RecordCtrlRsTest extends BdusTestCase
         $this->assertSame('error', $res2['status'], 'Reverse of symmetric relation must be rejected');
 
         // Cleanup
-        static::$db->query('DELETE FROM rs WHERE id = ?', [$id1], 'boolean');
+        static::$db->query('DELETE FROM bdus_rs WHERE id = ?', [$id1], 'boolean');
     }
 
     // ── deleteRs ──────────────────────────────────────────────────────────────
@@ -159,7 +159,7 @@ class RecordCtrlRsTest extends BdusTestCase
     {
         // Insert a throwaway relation
         static::$db->query(
-            "INSERT INTO rs (tb, first, second, relation) VALUES (?, ?, ?, ?)",
+            "INSERT INTO bdus_rs (tb, first, second, relation) VALUES (?, ?, ?, ?)",
             [self::TB, '4', '5', 2],
             'boolean'
         );
@@ -171,7 +171,7 @@ class RecordCtrlRsTest extends BdusTestCase
         $this->assertSame('success',            $res['status']);
         $this->assertSame('ok_relation_erased', $res['code']);
 
-        $row = static::$db->query('SELECT id FROM rs WHERE id = ?', [$tmpId], 'read');
+        $row = static::$db->query('SELECT id FROM bdus_rs WHERE id = ?', [$tmpId], 'read');
         $this->assertEmpty($row, 'Row must be gone after deleteRs');
     }
 

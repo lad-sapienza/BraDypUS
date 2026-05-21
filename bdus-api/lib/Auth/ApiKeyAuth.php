@@ -28,9 +28,9 @@ class ApiKeyAuth
      * Returns false (silently) if no key is present or the key is invalid.
      *
      * @param DBInterface $db
-     * @param string      $prefix  Application table prefix
+     * @param string      $prefix  Kept for backward compatibility; ignored.
      */
-    public static function attempt(DBInterface $db, string $prefix): bool
+    public static function attempt(DBInterface $db, string $prefix = ''): bool
     {
         $key = self::extractKey();
         if ($key === null) {
@@ -41,7 +41,7 @@ class ApiKeyAuth
 
         try {
             $rows = $db->query(
-                "SELECT id, label, privilege FROM {$prefix}api_keys
+                "SELECT id, label, privilege FROM bdus_api_keys
                   WHERE key_hash = ? AND revoked_at IS NULL LIMIT 1",
                 [$keyHash],
                 'read'
@@ -60,7 +60,7 @@ class ApiKeyAuth
         // Update last_used_at asynchronously (non-critical, fire-and-forget).
         try {
             $db->query(
-                "UPDATE {$prefix}api_keys SET last_used_at = ? WHERE key_hash = ?",
+                "UPDATE bdus_api_keys SET last_used_at = ? WHERE key_hash = ?",
                 [time(), $keyHash],
                 'boolean'
             );

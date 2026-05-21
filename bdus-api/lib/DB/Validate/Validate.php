@@ -52,7 +52,7 @@ class Validate
 
         DumpExists::check($this->resp, $this->db->getEngine());
 
-        $sys = new SystemTables($this->resp, $this->db, $this->prefix);
+        $sys = new SystemTables($this->resp, $this->db);
         $this->resp->set('head', 'Check if system tables are available');
         $sys->checkExist();
         $this->resp->set('head', 'Check if system tables structure is up-to-date');

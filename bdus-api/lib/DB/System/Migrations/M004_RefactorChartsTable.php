@@ -31,13 +31,12 @@ class M004_RefactorChartsTable
 
     public static function run(Manage $manage): void
     {
-        $db     = $manage->getDb();
-        $prefix = $manage->getPrefix();
+        $db = $manage->getDb();
 
         // 1. Add `definition` column (idempotent)
         try {
             $db->query(
-                "ALTER TABLE {$prefix}charts ADD COLUMN definition TEXT",
+                "ALTER TABLE bdus_charts ADD COLUMN definition TEXT",
                 [],
                 'boolean'
             );
@@ -48,7 +47,7 @@ class M004_RefactorChartsTable
         // 2. Add `created_at` column (idempotent)
         try {
             $db->query(
-                "ALTER TABLE {$prefix}charts ADD COLUMN created_at INTEGER",
+                "ALTER TABLE bdus_charts ADD COLUMN created_at INTEGER",
                 [],
                 'boolean'
             );
@@ -59,7 +58,7 @@ class M004_RefactorChartsTable
         // 3. Add `is_global` column (idempotent)
         try {
             $db->query(
-                "ALTER TABLE {$prefix}charts ADD COLUMN is_global INTEGER",
+                "ALTER TABLE bdus_charts ADD COLUMN is_global INTEGER",
                 [],
                 'boolean'
             );
@@ -73,7 +72,7 @@ class M004_RefactorChartsTable
         //    catch that case and return early (nothing to migrate).
         try {
             $rows = $db->query(
-                "SELECT id, date FROM {$prefix}charts WHERE created_at IS NULL",
+                "SELECT id, date FROM bdus_charts WHERE created_at IS NULL",
                 [],
                 'read'
             );
@@ -99,7 +98,7 @@ class M004_RefactorChartsTable
             }
 
             $db->query(
-                "UPDATE {$prefix}charts SET created_at = ? WHERE id = ?",
+                "UPDATE bdus_charts SET created_at = ? WHERE id = ?",
                 [$createdAt, (int) $row['id']],
                 'boolean'
             );

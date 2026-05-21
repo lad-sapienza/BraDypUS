@@ -69,14 +69,24 @@ class App
      */
     $this->setupLogger();
 
-    /**
-     * One-time pre-flight: rename legacy APP__* tables to unprefixed names and
-     * update tables.json, so that Config::__construct() can load cleanly even
-     * on apps that were created before the v5 prefix removal.
-     * This is idempotent — it is a no-op once the tables are already renamed.
-     */
     if ($this->db) {
+      /**
+       * One-time pre-flight: rename legacy APP__* tables to unprefixed names and
+       * update tables.json, so that Config::__construct() can load cleanly even
+       * on apps that were created before the v5 prefix removal.
+       * Idempotent — no-op once the tables are already renamed.
+       */
       \DB\System\Migrate::maybeRemovePrefix($this->db, $this->log);
+
+      /**
+       * One-time pre-flight: rename bare system tables to bdus_* names.
+       * Must run here (before routing) so that login and every other request
+       * can find bdus_users, bdus_charts, etc. immediately after a code upgrade.
+       * M008 does the same inside the migration loop, but that runs only after
+       * a successful login — too late for authentication itself.
+       * Idempotent — no-op once all tables carry the bdus_ prefix.
+       */
+      \DB\System\Migrate::maybeAddBdusPrefix($this->db, $this->log);
     }
 
     $this->route();

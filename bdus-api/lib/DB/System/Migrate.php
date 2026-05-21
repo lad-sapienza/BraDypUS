@@ -54,6 +54,68 @@ class Migrate
     ];
 
     /**
+     * One-time upgrade: rename all bare system tables to bdus_* names.
+     *
+     * Must run from App::start() BEFORE routing so that login (and every other
+     * request) can find bdus_users, bdus_charts, etc. from the very first boot
+     * after a code upgrade.  M008 does the same work inside the migration loop
+     * but that runs only after a successful login — too late for auth itself.
+     *
+     * Idempotent: each rename is guarded by checking the old name exists and
+     * the new name does not. Safe to call on every request.
+     *
+     * @param DBInterface $db
+     * @param Logger|null $log
+     */
+    public static function maybeAddBdusPrefix(DBInterface $db, Logger $log = null): void
+    {
+        if ($db->getEngine() !== 'sqlite') {
+            return; // Only SQLite supported; other engines need manual DBA rename.
+        }
+
+        // System tables to rename (bare → bdus_). 'migrations' is handled first.
+        $tables = [
+            'migrations'       => 'bdus_migrations',
+            'api_keys'         => 'bdus_api_keys',
+            'charts'           => 'bdus_charts',
+            'file_links'       => 'bdus_file_links',
+            'files'            => 'bdus_files',
+            'geodata'          => 'bdus_geodata',
+            'log'              => 'bdus_log',
+            'queries'          => 'bdus_queries',
+            'rs'               => 'bdus_rs',
+            'userlinks'        => 'bdus_userlinks',
+            'users'            => 'bdus_users',
+            'user_table_privs' => 'bdus_user_table_privs',
+            'versions'         => 'bdus_versions',
+            'vocabularies'     => 'bdus_vocabularies',
+        ];
+
+        foreach ($tables as $old => $new) {
+            $oldExists = $db->query(
+                "SELECT COUNT(*) AS cnt FROM sqlite_master WHERE type='table' AND name=?",
+                [$old], 'read'
+            );
+            if ((int)($oldExists[0]['cnt'] ?? 0) === 0) {
+                continue; // Already renamed or never existed under bare name.
+            }
+            $newExists = $db->query(
+                "SELECT COUNT(*) AS cnt FROM sqlite_master WHERE type='table' AND name=?",
+                [$new], 'read'
+            );
+            if ((int)($newExists[0]['cnt'] ?? 0) > 0) {
+                continue; // Already migrated.
+            }
+            try {
+                $db->exec("ALTER TABLE \"{$old}\" RENAME TO \"{$new}\"");
+                $log?->info("Migrate: renamed {$old} → {$new}");
+            } catch (\Throwable $e) {
+                $log?->error("maybeAddBdusPrefix: failed to rename {$old}: " . $e->getMessage());
+            }
+        }
+    }
+
+    /**
      * One-time upgrade: if tables are still named with the legacy APP__ prefix,
      * rename them all (user tables + system tables) and update tables.json.
      *

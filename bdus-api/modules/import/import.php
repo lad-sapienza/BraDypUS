@@ -112,14 +112,12 @@ class import_ctrl extends Controller
 
             } elseif ($type === 'geojson') {
                 [$count, $geoTypes, $geoProps] = $this->previewGeoJsonFile($tempPath);
-                $geoField = $tb ? $this->findGeoField($tb) : null;
                 $this->returnJson([
                     'status'         => 'success',
                     'temp_id'        => $tempId,
                     'count'          => $count,
                     'geometry_types' => $geoTypes,
                     'geo_props'      => $geoProps,
-                    'geo_field'      => $geoField,
                 ]);
 
             } else {
@@ -300,6 +298,8 @@ class import_ctrl extends Controller
                     $this->db->query("UPDATE {$tb} SET {$sets} WHERE id = ?", $vals, 'boolean');
                     $updated++;
                 } else {
+                    // Always set creator to the authenticated user
+                    $data['creator'] = \Auth\CurrentUser::id() ?: 0;
                     $cols = implode(', ', array_keys($data));
                     $phs  = implode(', ', array_fill(0, count($data), '?'));
                     $this->db->query(
@@ -339,7 +339,10 @@ class import_ctrl extends Controller
      *
      * For each GeoJSON feature:
      *   1. Look up record by feature.properties[geo_prop] == table.key_field
-     *   2. Replace existing geodata with the feature's geometry (WKT)
+     *   2. Upsert geometry into bdus_geodata (table_link=tb, id_link=record.id)
+     *
+     * Geodata is stored in the bdus_geodata system table, not as a column in
+     * the user table. Upsert: UPDATE if a row already exists, INSERT otherwise.
      *
      * Atomic — any error triggers rollback.
      *
@@ -359,12 +362,6 @@ class import_ctrl extends Controller
 
         if (!$tempId || !$tb || !$geoProp || !$keyField) {
             $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
-            return;
-        }
-
-        $geoField = $this->findGeoField($tb);
-        if (!$geoField) {
-            $this->returnJson(['status' => 'error', 'code' => 'import_error_no_geo_field']);
             return;
         }
 
@@ -398,16 +395,33 @@ class import_ctrl extends Controller
                 );
                 if (!$existing) { $notFound++; continue; }
 
+                $recordId = (int) $existing[0]['id'];
+
                 $wkt = \geoPHP\geoPHP::load(
                     json_encode($feature['geometry']),
                     'geojson'
                 )->out('wkt');
 
-                $this->db->query(
-                    "UPDATE {$tb} SET {$geoField} = ? WHERE id = ?",
-                    [$wkt, $existing[0]['id']],
-                    'boolean'
+                // Upsert into bdus_geodata
+                $geoRow = $this->db->query(
+                    "SELECT id FROM bdus_geodata WHERE table_link = ? AND id_link = ?",
+                    [$tb, $recordId],
+                    'read'
                 );
+
+                if ($geoRow) {
+                    $this->db->query(
+                        "UPDATE bdus_geodata SET geometry = ? WHERE id = ?",
+                        [$wkt, (int) $geoRow[0]['id']],
+                        'boolean'
+                    );
+                } else {
+                    $this->db->query(
+                        "INSERT INTO bdus_geodata (table_link, id_link, geometry) VALUES (?, ?, ?)",
+                        [$tb, $recordId, $wkt],
+                        'id'
+                    );
+                }
                 $updated++;
             }
 
@@ -669,17 +683,5 @@ class import_ctrl extends Controller
         return array_key_first($counts);
     }
 
-    /**
-     * Returns the name of the first geodata-type field in a table,
-     * or null if none exists.
-     */
-    private function findGeoField(string $tb): ?string
-    {
-        foreach ($this->cfg->get("tables.{$tb}.fields") ?: [] as $fld) {
-            if (($fld['type'] ?? '') === 'geodata') {
-                return $fld['name'];
-            }
-        }
-        return null;
-    }
 }
+

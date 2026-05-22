@@ -88,7 +88,7 @@ jsonpath "$.status"          == "success"
 jsonpath "$.versions"        isCollection
 jsonpath "$.versions"        count == 2
 jsonpath "$.versions[0].id"  isInteger
-jsonpath "$.versions[0].userid"    isString
+jsonpath "$.versions[0].userid"    isInteger
 jsonpath "$.versions[0].time"      isString
 jsonpath "$.versions[0].operation" == "update"
 jsonpath "$.versions[1].operation" == "update"
@@ -109,7 +109,7 @@ jsonpath "$.version"              isCollection
 jsonpath "$.version.id"           == {{v_id_newer}}
 jsonpath "$.version.operation"    == "update"
 jsonpath "$.version.time"         isString
-jsonpath "$.version.userid"       isString
+jsonpath "$.version.userid"       isInteger
 
 
 # ── 11g. version.content has core + plugins keys ─────────────────────

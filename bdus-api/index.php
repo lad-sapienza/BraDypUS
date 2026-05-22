@@ -82,9 +82,9 @@ try {
 
 	// Always respond with valid JSON — debug details go to logs/error.log, not the response body.
 	echo json_encode([
-		"text" => 'generic_error',
 		"status" => 'error',
-		"debug" => DEBUG_ON ? $e->getMessage() : null,
+		"code"   => 'generic_error',
+		"debug"  => DEBUG_ON ? $e->getMessage() : null,
 	], JSON_UNESCAPED_UNICODE);
 }
 ob_end_flush();

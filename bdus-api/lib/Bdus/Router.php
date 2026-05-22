@@ -387,8 +387,8 @@ class Router
             case \FastRoute\Dispatcher::METHOD_NOT_ALLOWED:
                 http_response_code(405);
                 echo json_encode([
-                    'status' => 'error',
-                    'text'   => 'method_not_allowed',
+                    'status'  => 'error',
+                    'code'    => 'method_not_allowed',
                     'allowed' => $routeInfo[1],
                 ], JSON_UNESCAPED_UNICODE);
                 exit;

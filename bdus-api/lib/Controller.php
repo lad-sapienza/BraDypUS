@@ -124,7 +124,7 @@ abstract class Controller
     ?array $text_bindings = null,
     array $other_args = []
   ): void {
-    $res = ['status' => $status, 'code' => $text, 'text' => $text];
+    $res = ['status' => $status, 'code' => $text];
     if (!empty($other_args)) {
       $res = array_merge($res, $other_args);
     }

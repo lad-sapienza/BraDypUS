@@ -208,7 +208,7 @@ class App
           http_response_code(401);
           header('Content-Type: application/json');
           echo json_encode(
-            ['status' => 'error', 'code' => 'unauthenticated', 'text' => 'unauthenticated'],
+            ['status' => 'error', 'code' => 'unauthenticated'],
             JSON_UNESCAPED_UNICODE
           );
           return;
@@ -220,7 +220,7 @@ class App
           http_response_code(403);
           header('Content-Type: application/json');
           echo json_encode(
-            ['status' => 'error', 'code' => 'not_enough_privilege', 'text' => 'not_enough_privilege'],
+            ['status' => 'error', 'code' => 'not_enough_privilege'],
             JSON_UNESCAPED_UNICODE
           );
           return;

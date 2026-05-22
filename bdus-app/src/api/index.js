@@ -200,13 +200,11 @@ async function uploadMulti(path, files = {}, data = {}) {
  *
  * API contract: { status: 'success'|'error', code: string, text?: string, ...extra }
  *
- * `code` is the i18n key.  `text` is a BC alias (same value) kept for
- * endpoints that have not yet been updated.
- * Always use this function for toast detail / error messages — never read
- * res.code or res.text directly in components.
+ * `code` is the i18n key used for toast detail / error messages.
+ * Always use this function rather than reading res.code directly in components.
  */
 function responseMessage(res, t, ...args) {
-  const key = res?.code ?? res?.text
+  const key = res?.code
   if (!key) return ''
   if (key === 'db_error') return `${t('db_error')}: ${res.detail ?? ''}`
   return t(key, ...args)

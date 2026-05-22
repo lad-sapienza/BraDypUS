@@ -27,7 +27,7 @@ export const useConfigStore = defineStore('config', () => {
   async function unlock(password) {
     const res = await api.post('/api/admin/check-password', { pwd: password })
     if (res.status !== 'success') {
-      throw new Error(res.code ?? res.text ?? 'invalid_password')
+      throw new Error(res.code ?? 'invalid_password')
     }
     unlocked.value = true
   }

@@ -228,6 +228,13 @@ run_phase "Version history" "11_versions.hurl" \
   --variable "jwt=${JWT}"
 
 # ════════════════════════════════════════════════════════════════════
+# Phase 12 — Data import (CSV, JSON, GeoJSON)
+# ════════════════════════════════════════════════════════════════════
+header "Phase 12 — Data import"
+run_phase "Data import" "12_import.hurl" \
+  --variable "jwt=${JWT}"
+
+# ════════════════════════════════════════════════════════════════════
 # Phase 10 — Cleanup
 # ════════════════════════════════════════════════════════════════════
 header "Phase 10 — Cleanup"

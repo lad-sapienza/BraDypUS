@@ -1798,7 +1798,7 @@ class record_ctrl extends Controller
    */
   public function restoreVersion(): void
   {
-    if (!\utils::canUser('edit')) {
+    if (!\utils::canUser('admin')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }

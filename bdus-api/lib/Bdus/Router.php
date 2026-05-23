@@ -84,7 +84,7 @@ class Router
         // ── Edit — write operations ──────────────────────────────────────────
         'record_ctrl::saveRecord'                    => 'edit',
         'record_ctrl::erase'                         => 'edit',
-        'record_ctrl::restoreVersion'                => 'edit',
+        'record_ctrl::restoreVersion'                => 'admin',
         'record_ctrl::uploadFile'                    => 'edit',
         'record_ctrl::deleteFile'                    => 'edit',
         'file_ctrl::sortFiles'                       => 'edit',
@@ -115,6 +115,7 @@ class Router
         'import_ctrl::importPhotos'                  => 'edit',
 
         // ── Admin (privilege ≤ 10) — user management and operational tasks ───
+        'home_ctrl::getMigrations'                   => 'admin',
         'user_ctrl::showList'                        => 'admin',
         'user_ctrl::showUserForm'                    => 'admin',
         'user_ctrl::saveUserData'                    => 'admin',
@@ -207,7 +208,8 @@ class Router
             $r->addRoute('GET',  '/api/auth/logout',  ['login_ctrl', 'out']);
 
             // ── Tables / home ─────────────────────────────────────────────────
-            $r->addRoute('GET', '/api/tables', ['home_ctrl', 'listTables']);
+            $r->addRoute('GET', '/api/tables',     ['home_ctrl', 'listTables']);
+            $r->addRoute('GET', '/api/migrations', ['home_ctrl', 'getMigrations']);
 
             // ── Info ──────────────────────────────────────────────────────────
             $r->addRoute('GET', '/api/info',     ['info_ctrl', 'getInfo']);

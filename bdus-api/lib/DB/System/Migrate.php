@@ -47,7 +47,7 @@ class Migrate
      * Ordered list of all migrations.
      * New migrations are appended at the end — never reorder.
      */
-    private const ALL_MIGRATIONS = [
+    public const ALL_MIGRATIONS = [
         M001_AddUserTablePrivs::class,
         M002_CreateFileLinks::class,
         M003_RefactorQueriesTable::class,

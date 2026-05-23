@@ -10,6 +10,8 @@
  * 
  */
 
+use DB\System\Migrate;
+
 class home_ctrl extends Controller
 {
     /**
@@ -40,5 +42,65 @@ class home_ctrl extends Controller
         }
 
         $this->returnJson(['tables' => $tables]);
+    }
+
+    /**
+     * Returns the list of all known DB migrations and their applied status.
+     * Admin-only: useful for diagnosing upgrade state across multiple apps.
+     *
+     * GET /api/migrations
+     *
+     * Response: {
+     *   status: 'success',
+     *   total: N,
+     *   applied: N,
+     *   migrations: [
+     *     { name: string, applied: bool, applied_at: string|null },
+     *     …
+     *   ]
+     * }
+     */
+    public function getMigrations(): void
+    {
+        if (!\utils::canUser('admin')) {
+            $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+            return;
+        }
+
+        // Fetch already-applied migrations from DB.
+        $rows = $this->db->query(
+            "SELECT name, applied_at FROM bdus_migrations ORDER BY applied_at ASC",
+            [],
+            'read'
+        ) ?: [];
+
+        // Build lookup: name → applied_at timestamp
+        $appliedMap = [];
+        foreach ($rows as $row) {
+            $appliedMap[$row['name']] = $row['applied_at'];
+        }
+
+        // Merge with the full ordered list of known migrations.
+        $migrations = [];
+        foreach (Migrate::ALL_MIGRATIONS as $class) {
+            $name      = $class::NAME;
+            $appliedAt = $appliedMap[$name] ?? null;
+            $migrations[] = [
+                'name'       => $name,
+                'applied'    => isset($appliedMap[$name]),
+                'applied_at' => $appliedAt
+                    ? date('Y-m-d H:i:s', (int)$appliedAt)
+                    : null,
+            ];
+        }
+
+        $applied = count(array_filter($migrations, fn($m) => $m['applied']));
+
+        $this->returnJson([
+            'status'     => 'success',
+            'total'      => count($migrations),
+            'applied'    => $applied,
+            'migrations' => $migrations,
+        ]);
     }
 }

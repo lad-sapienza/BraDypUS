@@ -184,6 +184,14 @@ abstract class BdusTestCase extends TestCase
                 sort        INTEGER
             )
         ');
+
+        static::$db->execInTransaction('
+            CREATE TABLE bdus_migrations (
+                id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                name       TEXT    NOT NULL UNIQUE,
+                applied_at INTEGER NOT NULL
+            )
+        ');
     }
 
     // ── Seed ──────────────────────────────────────────────────────────────

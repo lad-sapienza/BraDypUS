@@ -105,20 +105,6 @@
         </div>
       </section>
 
-      <!-- ── External services ───────────────────────────────────── -->
-      <section class="cfg-section">
-        <div class="cfg-section-title">{{ t('external_services') }}</div>
-        <div class="cfg-form-row">
-          <div class="cfg-form-field">
-            <label>{{ t('google_maps_key') }}</label>
-            <InputText v-model="form.gmapskey" size="small" />
-          </div>
-          <div class="cfg-form-field">
-            <label>{{ t('google_analytics_id') }}</label>
-            <InputText v-model="form.googleanaytics" size="small" />
-          </div>
-        </div>
-      </section>
 
     </div>
   </div>

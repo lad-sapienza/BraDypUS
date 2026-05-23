@@ -6,6 +6,7 @@ use PHPUnit\Framework\TestCase;
 use DB\DB;
 use DB\System\Manage;
 use DB\System\Migrations\M016_RenameAppDataJson;
+use Config\Load;
 use Monolog\Logger;
 use Monolog\Handler\NullHandler;
 
@@ -75,5 +76,39 @@ class M016MigrationTest extends TestCase
 
         @rmdir($dir2 . '/cfg');
         @rmdir($dir2);
+    }
+
+    // ── Pre-migration fallback (Load::main) ───────────────────────────────────
+    // These tests pin the fallback behaviour that allows login to list apps
+    // even before M016 has run on a given installation.
+
+    public function testLoadMainReadsConfigJson(): void
+    {
+        $dir = sys_get_temp_dir() . '/bdus_m016_load_' . uniqid();
+        mkdir($dir . '/cfg', 0755, true);
+        file_put_contents($dir . '/cfg/config.json', '{"name":"post-m016","status":"on"}');
+
+        $data = Load::main($dir . '/cfg');
+        $this->assertSame('post-m016', $data['name']);
+
+        @unlink($dir . '/cfg/config.json');
+        @rmdir($dir . '/cfg');
+        @rmdir($dir);
+    }
+
+    public function testLoadMainFallsBackToAppDataJson(): void
+    {
+        // Simulates a pre-M016 installation: only app_data.json exists.
+        $dir = sys_get_temp_dir() . '/bdus_m016_fallback_' . uniqid();
+        mkdir($dir . '/cfg', 0755, true);
+        file_put_contents($dir . '/cfg/app_data.json', '{"name":"pre-m016","status":"on"}');
+
+        $data = Load::main($dir . '/cfg');
+        $this->assertSame('pre-m016', $data['name'],
+            'Load::main must fall back to app_data.json before M016 runs');
+
+        @unlink($dir . '/cfg/app_data.json');
+        @rmdir($dir . '/cfg');
+        @rmdir($dir);
     }
 }

@@ -139,7 +139,12 @@ class login_ctrl extends Controller
 			asort($availables_DB);
 
 			foreach ($availables_DB as $db) {
+				// M016 renames app_data.json → config.json at migration time.
+				// Fall back to the legacy name for apps that haven't migrated yet.
 				$cfg = MAIN_DIR . "projects/$db/cfg/config.json";
+				if (!file_exists($cfg)) {
+					$cfg = MAIN_DIR . "projects/$db/cfg/app_data.json";
+				}
 				if (!file_exists($cfg)) {
 					continue;
 				}

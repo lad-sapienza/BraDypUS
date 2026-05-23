@@ -26,7 +26,7 @@ class Load
      */
     public static function all(string $path2cfg): array
     {
-        $cfg['main'] = self::path2array($path2cfg . '/config.json');
+        $cfg['main'] = self::path2array(self::resolveMainConfig($path2cfg));
         $cfg['tables'] = self::getTables($path2cfg . '/tables.json');
         foreach ($cfg['tables'] as $tb => $tb_data) {
             $cfg['tables'][$tb]['fields'] = self::getFields($path2cfg . '/' . $tb . '.json');
@@ -35,12 +35,26 @@ class Load
     }
 
     /**
-     * Loads only the app-level settings from config.json.
+     * Loads only the app-level settings from config.json (or app_data.json
+     * for apps that have not yet run the M016 migration).
      * Used by Config when table/field definitions come from the DB instead.
      */
     public static function main(string $path2cfg): array
     {
-        return self::path2array($path2cfg . '/config.json');
+        return self::path2array(self::resolveMainConfig($path2cfg));
+    }
+
+    /**
+     * Returns the path to the main config file, falling back to the legacy
+     * app_data.json name for apps that have not yet run the M016 migration.
+     */
+    private static function resolveMainConfig(string $path2cfg): string
+    {
+        $new = $path2cfg . '/config.json';
+        if (file_exists($new)) {
+            return $new;
+        }
+        return $path2cfg . '/app_data.json'; // pre-M016 fallback
     }
 
     private static function getFields(string $path): array

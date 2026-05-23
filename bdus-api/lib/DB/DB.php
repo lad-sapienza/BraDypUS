@@ -373,10 +373,15 @@ class DB implements DBInterface
   private function getConnectionDataFromCfg(string $app): array
   {
     $cfg = [];
+    // M016 renames app_data.json → config.json at migration time.
+    // Fall back to the legacy name for apps that haven't migrated yet.
     $file = $this->path_to_root . "projects/{$app}/cfg/config.json";
+    if (!file_exists($file)) {
+      $file = $this->path_to_root . "projects/{$app}/cfg/app_data.json";
+    }
 
     if (!file_exists($file)) {
-      throw new \Exception("Missing configuration file $file");
+      throw new \Exception("Missing configuration file for app '{$app}'");
     }
 
     $cfg = json_decode(file_get_contents($file), true);

@@ -664,6 +664,7 @@
   "backlinks": "Backlink",
   "backlinks_help": "Sintassi: tabella_destinazione:tabella_plugin:campo_plugin",
   "danger_zone": "Zona pericolosa",
+  "max_image_size": "Dimensione massima immagini (px)",
   "is_plugin": "È un plugin?",
   "enabled": "Abilitato",
   "order_field": "Campo di ordinamento",

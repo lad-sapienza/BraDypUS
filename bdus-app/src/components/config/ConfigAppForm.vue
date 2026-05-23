@@ -37,6 +37,15 @@
           <Textarea v-model="form.definition" rows="3" style="width:100%" />
         </div>
 
+        <div class="cfg-form-row">
+          <div class="cfg-form-field">
+            <label>{{ t('max_image_size') }}</label>
+            <InputText v-model="form.maxImageSize" size="small" placeholder="1500" />
+          </div>
+        </div>
+
+      </section>
+
       <!-- ── Database ────────────────────────────────────────────── -->
       <section class="cfg-section">
         <div class="cfg-section-title">{{ t('database') }}</div>

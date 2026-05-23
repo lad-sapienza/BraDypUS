@@ -666,6 +666,7 @@
   "backlinks": "Backlinks",
   "backlinks_help": "Syntax: destination_table:plugin_table:plugin_field",
   "danger_zone": "Danger zone",
+  "max_image_size": "Max image size (px)",
   "is_plugin": "Is plugin?",
   "enabled": "Enabled",
   "order_field": "Order field",

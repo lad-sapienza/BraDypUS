@@ -16,7 +16,7 @@ jsonpath "$.operators" isCollection
 GET {{base_url}}/api/search/us/values
 Authorization: Bearer {{jwt}}
 [QueryStringParams]
-field: periodo
+fld: periodo
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"

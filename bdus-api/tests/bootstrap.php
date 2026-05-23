@@ -22,7 +22,7 @@ $testProjDir = sys_get_temp_dir() . '/bradypus_test_proj/';
 define('PROJ_DIR', $testProjDir);
 
 // Pre-create the sub-directories that filesystem-touching controllers expect.
-foreach (['backups', 'db', 'geodata', 'templates', 'export', 'files'] as $sub) {
+foreach (['backups', 'db', 'geodata', 'export', 'files'] as $sub) {
     $dir = $testProjDir . $sub;
     if (!is_dir($dir)) {
         mkdir($dir, 0755, true);

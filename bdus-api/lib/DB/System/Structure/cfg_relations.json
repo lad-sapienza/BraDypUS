@@ -1,0 +1,13 @@
+{
+    "columns": [
+        { "name": "id",      "type": "INTEGER", "pk": true, "notnull": false },
+        { "name": "from_tb", "type": "TEXT",               "notnull": true  },
+        { "name": "to_tb",   "type": "TEXT",               "notnull": true  },
+        { "name": "fld",     "type": "TEXT",               "notnull": false },
+        { "name": "sort",    "type": "INTEGER",            "notnull": false }
+    ],
+    "indexes": [
+        { "name": "cfg_rel_from_idx", "unique": false, "columns": ["from_tb"] }
+    ],
+    "relations": []
+}

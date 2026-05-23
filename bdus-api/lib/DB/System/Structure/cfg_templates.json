@@ -1,0 +1,14 @@
+{
+    "columns": [
+        { "name": "id",          "type": "INTEGER", "pk": true, "notnull": false },
+        { "name": "table_name",  "type": "TEXT",               "notnull": true  },
+        { "name": "name",        "type": "TEXT",               "notnull": true  },
+        { "name": "content",     "type": "TEXT",               "notnull": true  },
+        { "name": "updated_at",  "type": "TEXT",               "notnull": false }
+    ],
+    "indexes": [
+        { "name": "cfg_tmpl_tb_name_idx", "unique": true, "columns": ["table_name", "name"] },
+        { "name": "cfg_tmpl_tb_idx",                      "columns": ["table_name"] }
+    ],
+    "relations": []
+}

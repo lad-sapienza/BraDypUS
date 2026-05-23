@@ -268,8 +268,10 @@ class App
        */
       if ($this->app) {
         $dot = new Dot();
-        $config = new Config($dot, __DIR__ . '/../../projects/' . $this->app . '/cfg/');
+        $config = new Config($dot, __DIR__ . '/../../projects/' . $this->app . '/cfg/', $this->db);
         $_aa->setCfg($config);
+        // Give Template\Loader access to the DB so it can read from bdus_cfg_templates.
+        \Template\Loader::setDb($this->db);
       }
 
       if ($this->app && $config && $this->db) {

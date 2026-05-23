@@ -47,6 +47,10 @@ class Manage
     private array $descriptor = [];
     public $available_tables = [
         'bdus_api_keys',
+        'bdus_cfg_fields',
+        'bdus_cfg_relations',
+        'bdus_cfg_tables',
+        'bdus_cfg_templates',
         'bdus_charts',
         'bdus_file_links',
         'bdus_files',
@@ -462,7 +466,9 @@ class Manage
 
         $sql = "SELECT " . implode(", ", $columns). " FROM {$tb} WHERE {$where}";
 
-        return $this->run($sql, $values, 'read');
+        // DB::query() may return null (no result / error); normalize to array
+        // so the return type declaration is always satisfied.
+        return $this->run($sql, $values, 'read') ?: [];
     }
 
     // ── Public trans-engine index & FK API ───────────────────────────────────

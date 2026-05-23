@@ -204,3 +204,44 @@ Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
+
+
+# ── 3j. Configure link: us → periodi ────────────────────────────────
+# A link joins two tables via field mappings (e.g. us.periodo = periodi.nome).
+# After saving, the link must be readable back from bdus_cfg_relations.
+PUT {{base_url}}/api/config/table/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{
+  "name":      "us",
+  "label":     "Unità stratigrafiche",
+  "is_plugin": "0",
+  "order":     "sigla",
+  "id_field":  "id",
+  "preview":   ["sigla"],
+  "rs":        "sigla",
+  "link": [
+    {
+      "other_tb": "periodi",
+      "fld": [
+        { "my": "periodo", "other": "nome" }
+      ]
+    }
+  ]
+}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+
+# ── 3k. Read back table config and verify link is stored ─────────────
+GET {{base_url}}/api/config/table/us
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.status"                    == "success"
+jsonpath "$.table.link"                isCollection
+jsonpath "$.table.link"                count == 1
+jsonpath "$.table.link[0].other_tb"    == "periodi"
+jsonpath "$.table.link[0].fld[0].my"   == "periodo"
+jsonpath "$.table.link[0].fld[0].other" == "nome"

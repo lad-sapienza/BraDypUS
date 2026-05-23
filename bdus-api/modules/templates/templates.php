@@ -22,12 +22,19 @@ class templates_ctrl extends Controller
       return;
     }
 
-    $all = $this->cfg->get('tables.*.label', 'is_plugin', null) ?: [];
-    $tables = [];
+    $all     = $this->cfg->get('tables.*.label', 'is_plugin', null) ?: [];
+    $appName = $this->cfg->get('main.name') ?? '';
+    $prefix  = $appName !== '' ? $appName . '__' : '';
+    $tables  = [];
     foreach ($all as $tb => $label) {
+      // Skip built-in system tables (bdus_files, bdus_geodata, …).
+      if (str_starts_with($tb, 'bdus_')) continue;
       $tables[] = [
-        'tb'    => $tb,
-        'label' => $label ?: $tb,
+        'tb'      => $tb,
+        'label'   => $label ?: $tb,
+        'stripped' => ($prefix !== '' && str_starts_with($tb, $prefix))
+                        ? substr($tb, strlen($prefix))
+                        : $tb,
       ];
     }
 
@@ -155,15 +162,8 @@ class templates_ctrl extends Controller
     }
 
     $appName = $this->cfg->get('main.name') ?? '';
-    $dir     = \Template\Loader::getDir($appName);
-    $path    = \Template\Loader::getPath($appName, $tb, $name);
 
-    if (!is_dir($dir)) {
-      mkdir($dir, 0755, true);
-    }
-
-    $json = json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-    if (file_put_contents($path, $json) === false) {
+    if (!\Template\Loader::save($appName, $tb, $name, $payload)) {
       $this->returnJson(['status' => 'error', 'code' => 'template_save_failed']);
       return;
     }
@@ -193,15 +193,9 @@ class templates_ctrl extends Controller
     }
 
     $appName = $this->cfg->get('main.name') ?? '';
-    $path    = \Template\Loader::getPath($appName, $tb, $name);
 
-    if (!file_exists($path)) {
+    if (!\Template\Loader::delete($appName, $tb, $name)) {
       $this->returnJson(['status' => 'error', 'code' => 'template_not_found']);
-      return;
-    }
-
-    if (!unlink($path)) {
-      $this->returnJson(['status' => 'error', 'code' => 'template_delete_failed']);
       return;
     }
 
@@ -237,18 +231,16 @@ class templates_ctrl extends Controller
     }
 
     $appName = $this->cfg->get('main.name') ?? '';
-    $oldPath = \Template\Loader::getPath($appName, $tb, $oldName);
-    $newPath = \Template\Loader::getPath($appName, $tb, $newName);
 
-    if (!file_exists($oldPath)) {
+    if (!\Template\Loader::exists($appName, $tb, $oldName)) {
       $this->returnJson(['status' => 'error', 'code' => 'template_not_found']);
       return;
     }
-    if (file_exists($newPath)) {
+    if (\Template\Loader::exists($appName, $tb, $newName)) {
       $this->returnJson(['status' => 'error', 'code' => 'template_name_exists']);
       return;
     }
-    if (!rename($oldPath, $newPath)) {
+    if (!\Template\Loader::rename($appName, $tb, $oldName, $newName)) {
       $this->returnJson(['status' => 'error', 'code' => 'template_rename_failed']);
       return;
     }

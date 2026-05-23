@@ -13,6 +13,24 @@ namespace Config;
 class ToFiles
 {
 
+    /**
+     * Writes only the app-level settings to app_data.json.
+     * Used when table/field config is persisted in the DB.
+     */
+    public static function writeMain(string $path2cfg, array $main): void
+    {
+        self::write_in_file($path2cfg . '/app_data.json', $main);
+    }
+
+    /**
+     * Serialises the full in-memory config (tables + fields) to JSON files.
+     *
+     * @deprecated Since v5.1 table/field config is stored in bdus_cfg_tables /
+     *             bdus_cfg_fields (DB-backed).  This method is only called by
+     *             Config when $useDb is false — i.e., for apps that have not yet
+     *             run the M011_ConfigToDb migration.  Once all apps are migrated
+     *             this method can be removed.
+     */
     public static function all(array $cfg, string $path2cfg): void
     {
         self::write_in_file($path2cfg . '/app_data.json', $cfg['main']);

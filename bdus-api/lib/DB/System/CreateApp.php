@@ -8,6 +8,7 @@ namespace DB\System;
 
 
 use DB\DB;
+use Config\ToDB;
 
 class CreateApp
 {
@@ -81,133 +82,70 @@ class CreateApp
 
     private function createConfig()
     {
-        $cfg = [
-            "app_data" => [
-                "lang" => "en",
-                "name" => $this->app,
-                "definition" => $this->db_data['definition'],
-                "status"=> "on",
-                "db_engine" => $this->db_data['db_engine'],
-                "db_host"=> $this->db_data['db_host'],
-                "db_port"=> $this->db_data['db_port'],
-                "db_name"=> $this->db_data['db_name'],
-                "db_username"=> $this->db_data['db_username'],
-                "db_password"=> $this->db_data['db_password'],
-                "maxImageSize" => "1500",
-            ],
-            "tables" => [
-                "tables" => [
-                    [
-                        "name" => "bdus_files",
-                        "label" => "Files",
-                        "order" => "id",
-                        "preview" => [
-                            "id",
-                            "filename",
-                            "ext",
-                            "keywords"
-                        ],
-                        "id_field" => "id"
-                    ],
-                    [
-                        "name" => "bdus_geodata",
-                        "label" => "Geografical coordinates",
-                        "is_plugin" => "1"
-                    ]
-                ]
-            ],
-            "bdus_geodata" => [
-                [
-                    "name" => "id",
-                    "label" => "ID",
-                    "type" => "text",
-                    "db_type" => "INTEGER",
-                    "readonly" => "1",
-                    "hide" => "1"
-                ],
-                [
-                    "name" => "table_link",
-                    "label" => "Linked table",
-                    "type" => "text",
-                    "db_type" => "TEXT",
-                    "readonly" => "1",
-                    "hide" => "1"
-                ],
-                [
-                    "name" => "id_link",
-                    "label" => "Linked id",
-                    "type" => "text",
-                    "db_type" => "INTEGER",
-                    "readonly" => "1",
-                    "hide" => "1"
-                ],
-                [
-                    "name" => "geometry",
-                    "label" => "Coordinates (WKT format)",
-                    "type" => "text"
-                ]
-            ],
-            "bdus_files" => [
-                [
-                  "name" => "id",
-                  "label" => "ID",
-                  "type" => "text",
-                  "db_type" => "INTEGER",
-                  "readonly" => true
-                ], [
-                  "name" => "creator",
-                  "label" => "Creator",
-                  "type" => "text",
-                  "db_type" => "INTEGER",
-                  "readonly" => true
-                ], [
-                  "name" => "filename",
-                  "label" => "Filename",
-                  "type" => "text",
-                  "db_type" => "TEXT",
-                  "check" => [
-                    "not_empty"
-                  ],
-                  "readonly" => true
-                ], [
-                    "name" => "ext",
-                    "label" => "Extension",
-                    "type" => "text",
-                    "db_type" => "TEXT",
-                    "check" => [
-                      "not_empty"
-                    ],
-                    "readonly" => true
-                ], [
-                  "name" => "keywords",
-                  "label" => "Keywords",
-                  "type" => "text",
-                  "db_type" => "TEXT"
-                ], [
-                  "name" => "description",
-                  "label" => "Description",
-                  "type" => "long_text",
-                  "db_type" => "TEXT"
-                ], [
-                  "name" => "printable",
-                  "label" => "Printable",
-                  "type" => "boolean",
-                  "db_type" => "INTEGER",
-                ]
-              ]
+        // ── 1. Write app_data.json (DB credentials + boot settings — must stay on fs) ──
+        $appData = [
+            "lang"         => "en",
+            "name"         => $this->app,
+            "definition"   => $this->db_data['definition'],
+            "status"       => "on",
+            "db_engine"    => $this->db_data['db_engine'],
+            "db_host"      => $this->db_data['db_host'],
+            "db_port"      => $this->db_data['db_port'],
+            "db_name"      => $this->db_data['db_name'],
+            "db_username"  => $this->db_data['db_username'],
+            "db_password"  => $this->db_data['db_password'],
+            "maxImageSize" => "1500",
         ];
-        foreach ($cfg as $file => $contents) {
-            @file_put_contents("projects/$this->app/cfg/$file.json", \json_encode($contents, JSON_PRETTY_PRINT));
-            array_push($this->log, "Configuration file projects/cfg/$this->app/$file.json created!");
-        }
+        @file_put_contents(
+            "projects/$this->app/cfg/app_data.json",
+            json_encode($appData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+        );
+        array_push($this->log, "Configuration file projects/$this->app/cfg/app_data.json created");
 
         // Protect the cfg/ directory from direct web access.
-        // It contains sensitive data (DB credentials, JWT secret).
         static::writeCfgHtaccess("projects/{$this->app}/cfg");
         array_push($this->log, "cfg/.htaccess protection written");
 
+        // ── 2. Seed bdus_cfg_tables + bdus_cfg_fields with the two built-in system tables ──
+        // bdus_files (main table — visible in file manager)
+        ToDB::upsertTable($this->db, [
+            'name'     => 'bdus_files',
+            'label'    => 'Files',
+            'order'    => 'id',
+            'id_field' => 'id',
+            'preview'  => ['id', 'filename', 'ext', 'keywords'],
+        ]);
+        foreach ([
+            ['name' => 'id',          'label' => 'ID',                      'type' => 'text',     'db_type' => 'INTEGER', 'readonly' => true],
+            ['name' => 'creator',     'label' => 'Creator',                  'type' => 'text',     'db_type' => 'INTEGER', 'readonly' => true],
+            ['name' => 'filename',    'label' => 'Filename',                 'type' => 'text',     'db_type' => 'TEXT',    'readonly' => true, 'check' => ['not_empty']],
+            ['name' => 'ext',         'label' => 'Extension',                'type' => 'text',     'db_type' => 'TEXT',    'readonly' => true, 'check' => ['not_empty']],
+            ['name' => 'keywords',    'label' => 'Keywords',                 'type' => 'text',     'db_type' => 'TEXT'],
+            ['name' => 'description', 'label' => 'Description',              'type' => 'long_text','db_type' => 'TEXT'],
+            ['name' => 'printable',   'label' => 'Printable',                'type' => 'boolean',  'db_type' => 'INTEGER'],
+        ] as $fld) {
+            ToDB::upsertField($this->db, 'bdus_files', $fld);
+        }
+        array_push($this->log, "bdus_files config seeded in DB");
+
+        // bdus_geodata (plugin table — linked to user tables)
+        ToDB::upsertTable($this->db, [
+            'name'      => 'bdus_geodata',
+            'label'     => 'Geographical coordinates',
+            'is_plugin' => 1,
+        ]);
+        foreach ([
+            ['name' => 'id',         'label' => 'ID',              'type' => 'text', 'db_type' => 'INTEGER', 'readonly' => '1', 'hide' => '1'],
+            ['name' => 'table_link', 'label' => 'Linked table',    'type' => 'text', 'db_type' => 'TEXT',    'readonly' => '1', 'hide' => '1'],
+            ['name' => 'id_link',    'label' => 'Linked id',       'type' => 'text', 'db_type' => 'INTEGER', 'readonly' => '1', 'hide' => '1'],
+            ['name' => 'geometry',   'label' => 'Coordinates (WKT)','type' => 'text'],
+        ] as $fld) {
+            ToDB::upsertField($this->db, 'bdus_geodata', $fld);
+        }
+        array_push($this->log, "bdus_geodata config seeded in DB");
+
         @file_put_contents("projects/{$this->app}/welcome.md", "# " . strtoupper($this->app) . "\n\n# A BraDypUS database");
-        array_push($this->log, "Welcome page created!");
+        array_push($this->log, "Welcome page created");
     }
 
     /**
@@ -254,13 +192,11 @@ class CreateApp
     private function createDirs()
     {
         foreach ([
-            'backups',
-            'cfg',
-            'export',
-            'files',
-            'geodata',
-            'templates',
-            'tmp'
+            'backups',   // DB dump output
+            'cfg',       // app_data.json (DB credentials + boot settings)
+            'export',    // CSV/JSON/XML export output
+            'files',     // user-uploaded files
+            'geodata',   // custom map layers (geodata/index.json)
         ] as $dir) {
             if (!$this->createDir("projects/$this->app/$dir")){
                 throw new \Exception("Cannot create directory projects/$this->app/$dir");

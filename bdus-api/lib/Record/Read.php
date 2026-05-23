@@ -182,13 +182,20 @@ EOD;
                         $ref_val_label = $lres[0]['label'];
                     }
 
+                    $appName    = $this->cfg->get('main.name') ?? '';
+                    $tbPrefix   = $appName !== '' ? $appName . '__' : '';
+                    $tbStripped = ($tbPrefix !== '' && str_starts_with($mlt, $tbPrefix))
+                                    ? substr($mlt, strlen($tbPrefix))
+                                    : $mlt;
+
                     $manualLinks[$r['id']] = [
                         "key"         => $r['id'],
                         "tb_id"       => $mlt,
+                        "tb_stripped" => $tbStripped,
                         "tb_label"    => $this->cfg->get("tables.$mlt.label"),
                         "ref_id"      => $mli,
                         "ref_label"   => $ref_val_label,
-                        "sort"   => $r['sort']
+                        "sort"        => $r['sort'],
                     ];
                 }
             }

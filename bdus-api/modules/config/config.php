@@ -488,10 +488,17 @@ class config_ctrl extends Controller
     $names  = $this->cfg->get('tables.*.name') ?: [];
     $tables = [];
     foreach ($names as $name) {
+      // Skip built-in system tables (bdus_files, bdus_geodata, …) — they live
+      // in bdus_cfg_tables for validation purposes but must not appear in the
+      // user-facing config UI.
+      if (str_starts_with($name, 'bdus_')) continue;
+
       $tables[] = [
         'name'      => $name,
         'label'     => $this->cfg->get("tables.$name.label") ?? $name,
-        'is_plugin' => $this->cfg->get("tables.$name.is_plugin") ?: '0',
+        // Always return a string so the frontend === '1' comparison is reliable
+        // regardless of whether the config came from JSON ('0'/'1') or DB (bool).
+        'is_plugin' => (bool)$this->cfg->get("tables.$name.is_plugin") ? '1' : '0',
       ];
     }
 
@@ -549,6 +556,13 @@ class config_ctrl extends Controller
     }
 
     $tb    = $this->get['tb'] ?? '';
+
+    // Refuse to expose system tables through the config UI.
+    if ($tb && str_starts_with($tb, 'bdus_')) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_found']);
+      return;
+    }
+
     $table = $tb ? ($this->cfg->get("tables.$tb") ?: []) : [];
 
     // Apply same defaults as the legacy table_properties() Twig method
@@ -556,6 +570,11 @@ class config_ctrl extends Controller
     if (!isset($table['preview'])) $table['preview'] = [''];
     if (!isset($table['plugin']))  $table['plugin']  = [''];
     if (!isset($table['link']))    $table['link']    = [['fld' => [[]]]];
+
+    // Normalise is_plugin to '' (no) or '1' (yes) so the frontend <Select>
+    // whose options are [{value:''}, {value:'1'}] always has a matching entry,
+    // regardless of whether the config came from JSON ('0'/'1') or DB (bool).
+    $table['is_plugin'] = ($table['is_plugin'] ?? false) ? '1' : '';
 
     // Enrich each link entry with the field labels of the linked table
     foreach ($table['link'] as &$link) {

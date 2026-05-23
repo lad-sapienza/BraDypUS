@@ -1,0 +1,20 @@
+{
+    "columns": [
+        { "name": "id",           "type": "INTEGER", "pk": true,  "notnull": false },
+        { "name": "name",         "type": "TEXT",                 "notnull": true  },
+        { "name": "label",        "type": "TEXT",                 "notnull": false },
+        { "name": "order_field",  "type": "TEXT",                 "notnull": false },
+        { "name": "id_field",     "type": "TEXT",                 "notnull": false },
+        { "name": "preview",      "type": "TEXT",                 "notnull": false },
+        { "name": "is_plugin",    "type": "INTEGER",              "notnull": false },
+        { "name": "plugin_of",    "type": "TEXT",                 "notnull": false },
+        { "name": "sort",         "type": "INTEGER",              "notnull": false },
+        { "name": "links",        "type": "TEXT",                 "notnull": false },
+        { "name": "backlinks",    "type": "TEXT",                 "notnull": false },
+        { "name": "extra",        "type": "TEXT",                 "notnull": false }
+    ],
+    "indexes": [
+        { "name": "cfg_tables_name_idx", "unique": true, "columns": ["name"] }
+    ],
+    "relations": []
+}

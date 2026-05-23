@@ -14,6 +14,16 @@ use \Config\ConfigException;
 class Load
 {
 
+    /**
+     * Loads the full config (main + tables + fields) from JSON files on disk.
+     *
+     * @deprecated Since v5.1 table/field config is stored in the DB
+     *             (bdus_cfg_tables / bdus_cfg_fields via LoadFromDB).
+     *             This method is only called when LoadFromDB::isAvailable()
+     *             returns false — i.e., for apps that have not yet run the
+     *             M011_ConfigToDb migration.  Once all apps are migrated
+     *             this method (and the JSON file parsing below) can be removed.
+     */
     public static function all(string $path2cfg): array
     {
         $cfg['main'] = self::path2array($path2cfg . '/app_data.json');
@@ -22,6 +32,15 @@ class Load
             $cfg['tables'][$tb]['fields'] = self::getFields($path2cfg . '/' . $tb . '.json');
         }
         return $cfg;
+    }
+
+    /**
+     * Loads only the app-level settings from app_data.json.
+     * Used by Config when table/field definitions come from the DB instead.
+     */
+    public static function main(string $path2cfg): array
+    {
+        return self::path2array($path2cfg . '/app_data.json');
     }
 
     private static function getFields(string $path): array

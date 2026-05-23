@@ -98,8 +98,8 @@ class SearchCtrlTest extends BdusTestCase
     public function testGetUsedValuesReturnsArray(): void
     {
         $ctrl = $this->makeController('search_ctrl', [
-            'tb'    => self::TB,
-            'field' => 'status',
+            'tb'  => self::TB,
+            'fld' => 'status',
         ]);
         ob_start();
         $ctrl->getUsedValues();

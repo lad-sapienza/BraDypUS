@@ -19,6 +19,9 @@ use DB\System\Migrations\M007_RepairFileLinks;
 use DB\System\Migrations\M008_AddBdusPrefix;
 use DB\System\Migrations\M009_AddVersionOperation;
 use DB\System\Migrations\M010_FixVersionsSchema;
+use DB\System\Migrations\M011_ConfigToDb;
+use DB\System\Migrations\M012_AddCfgTablesExtra;
+use DB\System\Migrations\M013_CreateCfgRelations;
 use Monolog\Logger;
 
 /**
@@ -55,6 +58,9 @@ class Migrate
         M008_AddBdusPrefix::class,
         M009_AddVersionOperation::class,
         M010_FixVersionsSchema::class,
+        M011_ConfigToDb::class,
+        M012_AddCfgTablesExtra::class,
+        M013_CreateCfgRelations::class,
     ];
 
     /**

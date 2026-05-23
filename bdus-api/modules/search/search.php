@@ -81,8 +81,8 @@ class search_ctrl extends Controller
 
   public function getUsedValues(): void
   {
-    $tb  = $this->get['tb']    ?? null;
-    $fld = $this->get['field'] ?? null;
+    $tb  = $this->get['tb']  ?? null;
+    $fld = $this->get['fld'] ?? null;
 
     if (!$tb || !$fld) {
       $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);

@@ -25,13 +25,17 @@ class home_ctrl extends Controller
             return;
         }
 
-        $raw = $this->cfg->get('tables.*.label', 'is_plugin', null);
+        $raw = $this->cfg->get('tables.*.label', 'is_plugin', null) ?: [];
         $tables = [];
         foreach ($raw as $name => $label) {
+            // Built-in system tables (bdus_files, bdus_geodata, …) are stored in
+            // bdus_cfg_tables for validation purposes but must not appear to users.
+            if (str_starts_with($name, 'bdus_')) continue;
+            $rs = $this->cfg->get("tables.{$name}.rs");
             $tables[] = [
                 'name'     => $name,
                 'label'    => $label ?: $name,
-                'rs_field' => $this->cfg->get("tables.{$name}.rs") ?? null,
+                'rs_field' => ($rs && $rs !== false) ? $rs : null,
             ];
         }
 

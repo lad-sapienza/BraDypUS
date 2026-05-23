@@ -240,12 +240,14 @@ class ImportCtrlTest extends BdusTestCase
         $this->assertSame('parameter_missing', $res['code']);
     }
 
-    public function testImportGeoJsonTableWithoutGeoFieldReturnsError(): void
+    public function testImportGeoJsonWorksForAnyTable(): void
     {
+        // In v5 geodata is stored in bdus_geodata (table_link, id_link, geometry),
+        // so ANY user table can receive GeoJSON regardless of its field config.
+        // An empty FeatureCollection should succeed with 0 rows imported.
         $geojson = json_encode(['type' => 'FeatureCollection', 'features' => []]);
         $tempId  = $this->plantTempFile($geojson);
 
-        // tags has no geodata field in the fixture config
         $ctrl = $this->makeController('import_ctrl', [], [
             'temp_id'   => $tempId,
             'tb'        => 'tags',
@@ -254,8 +256,7 @@ class ImportCtrlTest extends BdusTestCase
         ]);
         $res = $this->callController($ctrl, 'importGeoJson');
 
-        $this->assertSame('error', $res['status']);
-        $this->assertSame('import_error_no_geo_field', $res['code']);
+        $this->assertSame('success', $res['status']);
     }
 
     public function testImportGeoJsonEmptyCollectionSucceeds(): void

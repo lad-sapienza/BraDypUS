@@ -22,6 +22,7 @@ use DB\System\Migrations\M010_FixVersionsSchema;
 use DB\System\Migrations\M011_ConfigToDb;
 use DB\System\Migrations\M012_AddCfgTablesExtra;
 use DB\System\Migrations\M013_CreateCfgRelations;
+use DB\System\Migrations\M014_GeofaceConfigToDb;
 use Monolog\Logger;
 
 /**
@@ -61,6 +62,7 @@ class Migrate
         M011_ConfigToDb::class,
         M012_AddCfgTablesExtra::class,
         M013_CreateCfgRelations::class,
+        M014_GeofaceConfigToDb::class,
     ];
 
     /**

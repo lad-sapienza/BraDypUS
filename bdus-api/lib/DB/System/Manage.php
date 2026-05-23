@@ -48,6 +48,7 @@ class Manage
     public $available_tables = [
         'bdus_api_keys',
         'bdus_cfg_fields',
+        'bdus_cfg_geoface',
         'bdus_cfg_relations',
         'bdus_cfg_tables',
         'bdus_cfg_templates',

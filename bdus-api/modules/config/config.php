@@ -397,16 +397,21 @@ class config_ctrl extends Controller
   public function save_geoface_properties()
   {
     if (!$this->requireSuperAdmin()) return;
-    $data = $this->post;
 
-    $json = json_encode(array_filter($data, function($el){
-      return in_array($el['type'], ["wms", "local", "tiles"]) && !empty($el['path']);
-    }), JSON_PRETTY_PRINT);
+    // Filter: keep only layers with a known type and a non-empty path.
+    $layers = array_values(array_filter($this->post, function($el){
+      return is_array($el)
+        && in_array($el['type'] ?? '', ["wms", "local", "tiles", "maplibre_style"], true)
+        && !empty($el['path']);
+    }));
 
     try {
-      file_put_contents(PROJ_DIR . 'geodata/index.json', $json);
-
-      $this->response('ok_geoface_updated', 'success');
+      $ok = \Config\GeofaceConfig::saveLayers($this->db, $layers);
+      if ($ok) {
+        $this->response('ok_geoface_updated', 'success');
+      } else {
+        $this->response('error_geoface_updated', 'error');
+      }
     } catch (\Throwable $th) {
       $this->response('error_geoface_updated', 'error');
     }
@@ -666,16 +671,11 @@ class config_ctrl extends Controller
       return;
     }
 
-    $layers    = [];
-    $indexFile = PROJ_DIR . 'geodata/index.json';
-    if (file_exists($indexFile)) {
-      $layers = json_decode(file_get_contents($indexFile), true) ?: [];
-    }
+    $layers = \Config\GeofaceConfig::getLayers($this->db);
 
-    $localFiles = array_values(array_diff(
-      \utils::dirContent(PROJ_DIR . 'geodata') ?: [],
-      ['index.json']
-    ));
+    $localFiles = defined('PROJ_DIR')
+      ? array_values(array_diff(\utils::dirContent(PROJ_DIR . 'geodata') ?: [], ['index.json']))
+      : [];
 
     $this->returnJson([
       'status'      => 'success',

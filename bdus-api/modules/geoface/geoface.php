@@ -116,11 +116,8 @@ class geoface_ctrl extends Controller
 
             $geojson = \utils::multiArray2GeoJSON($tb, $res ?: []);
 
-            // Load custom layers from geodata/index.json
-            $layers = [];
-            if (defined('PROJ_DIR') && file_exists(PROJ_DIR . 'geodata/index.json')) {
-                $layers = json_decode(file_get_contents(PROJ_DIR . 'geodata/index.json'), true) ?? [];
-            }
+            // Load custom layers from DB (or file fallback for pre-M014 apps).
+            $layers = \Config\GeofaceConfig::getLayers($this->db);
 
             $idField = $this->cfg->get("tables.{$tb}.id_field") ?? 'id';
 

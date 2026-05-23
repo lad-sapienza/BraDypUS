@@ -23,6 +23,7 @@ use DB\System\Migrations\M011_ConfigToDb;
 use DB\System\Migrations\M012_AddCfgTablesExtra;
 use DB\System\Migrations\M013_CreateCfgRelations;
 use DB\System\Migrations\M014_GeofaceConfigToDb;
+use DB\System\Migrations\M015_DeleteCfgJsonFiles;
 use Monolog\Logger;
 
 /**
@@ -63,6 +64,7 @@ class Migrate
         M012_AddCfgTablesExtra::class,
         M013_CreateCfgRelations::class,
         M014_GeofaceConfigToDb::class,
+        M015_DeleteCfgJsonFiles::class,
     ];
 
     /**

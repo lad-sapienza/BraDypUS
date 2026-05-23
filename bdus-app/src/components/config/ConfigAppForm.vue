@@ -37,41 +37,6 @@
           <Textarea v-model="form.definition" rows="3" style="width:100%" />
         </div>
 
-        <div class="cfg-form-row">
-          <div class="cfg-form-field">
-            <label>{{ t('virtual_keyboard') }}</label>
-            <Select
-              v-model="form.virtual_keyboard"
-              :options="[{ label: t('disabled'), value: '' }, { label: t('enabled'), value: '1' }]"
-              option-label="label"
-              option-value="value"
-              size="small"
-            />
-          </div>
-          <div class="cfg-form-field">
-            <label>{{ t('max_image_size') }}</label>
-            <InputText v-model="form.maxImageSize" size="small" placeholder="1500" />
-          </div>
-        </div>
-      </section>
-
-      <!-- ── Login options ───────────────────────────────────────── -->
-      <section class="cfg-section">
-        <div class="cfg-section-title">{{ t('login_options') }}</div>
-        <div class="cfg-form-row">
-          <div class="cfg-form-field">
-            <label>{{ t('api_login_as_user') }}</label>
-            <Select
-              v-model="form.api_login_as_user"
-              :options="userOptions"
-              option-label="label"
-              option-value="value"
-              size="small"
-            />
-          </div>
-        </div>
-      </section>
-
       <!-- ── Database ────────────────────────────────────────────── -->
       <section class="cfg-section">
         <div class="cfg-section-title">{{ t('database') }}</div>
@@ -111,7 +76,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import Button    from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import Textarea  from 'primevue/textarea'
@@ -134,12 +99,6 @@ const form          = ref(null)
 const langs         = availableLocales.map(l => l.code)
 const statusOptions = ref([])
 const dbEngines     = ref([])
-const users         = ref([])
-
-const userOptions = computed(() => [
-  { label: t('disabled'), value: '' },
-  ...users.value.map(u => ({ label: `${u.name} (${u.verbose_privilege})`, value: String(u.id) }))
-])
 
 async function load() {
   loading.value = true
@@ -151,13 +110,6 @@ async function load() {
     // PHP may return these as objects ({key:val}) if keys are non-sequential — normalise to arrays
     statusOptions.value = Array.isArray(res.status_options) ? res.status_options : Object.values(res.status_options ?? {})
     dbEngines.value     = Array.isArray(res.db_engines)    ? res.db_engines    : Object.values(res.db_engines    ?? {})
-    users.value         = res.users         ?? []
-    // normalise virtual_keyboard to string for Select
-    if (form.value.virtual_keyboard === false || form.value.virtual_keyboard == '0') {
-      form.value.virtual_keyboard = ''
-    }
-    // normalise user-ids to strings
-    form.value.api_login_as_user = form.value.api_login_as_user ? String(form.value.api_login_as_user) : ''
   } catch (e) {
     error.value = e.message
   } finally {

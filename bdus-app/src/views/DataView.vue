@@ -174,12 +174,11 @@
               <!-- Harris Matrix — only for tables with rs_field configured -->
               <Button
                 v-if="selectedTable?.rs_field"
-                :label="t('harris_matrix')"
-                icon="pi pi-share-alt"
+                icon="pi pi-sitemap"
+                :title="t('harris_matrix')"
                 size="small"
                 severity="secondary"
-                outlined
-                class="add-record-btn"
+                text
                 @click="openMatrix"
               />
 
@@ -843,9 +842,9 @@ async function loadSuggestions(row, query) {
   if (!row.fld) return
   const [tb, fld] = row.fld.split(':')
   try {
-    const values = await api.get(`/api/search/${tb}/values`, { fld })
-    row._suggestions = (Array.isArray(values) ? values : [])
-      .filter(v => v != null && String(v).toLowerCase().includes(query.toLowerCase()))
+    const res = await api.get(`/api/search/${tb}/values`, { fld })
+    row._suggestions = (Array.isArray(res.values) ? res.values : [])
+      .filter(v => v != null && v !== '' && String(v).toLowerCase().includes(query.toLowerCase()))
       .slice(0, 50)
   } catch {
     row._suggestions = []

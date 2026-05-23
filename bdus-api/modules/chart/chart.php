@@ -95,12 +95,30 @@ class chart_ctrl extends Controller
         }
 
         // ── Build WHERE clause from optional filter ───────────────────────────
-        [$whereClause, $whereValues] = $this->buildWhereFromFilter(
-            $definition['filter'] ?? null,
-            $tb
-        );
+        // Delegate entirely to QueryFromRequest so all search types (including
+        // 'advanced') work without duplication.  The module knows nothing about
+        // how the WHERE is constructed — it just asks for the predicate.
+        $filter   = $definition['filter'] ?? null;
+        $qRequest = ['tb' => $tb, 'type' => 'all'];
+        if (!empty($filter) && !empty($filter['search_type'])) {
+            $qRequest['type'] = $filter['search_type'];
+            switch ($filter['search_type']) {
+                case 'shortSql':
+                    $qRequest['where'] = $filter['where'] ?? '';
+                    break;
+                case 'sqlExpert':
+                    $qRequest['querytext'] = $filter['querytext'] ?? '';
+                    $qRequest['join']      = $filter['join']      ?? '';
+                    break;
+                case 'advanced':
+                    $qRequest['adv'] = $filter['adv'] ?? [];
+                    break;
+            }
+        }
+        [$whereClause, $whereValues] = (new \QueryFromRequest($this->db, $this->cfg, $qRequest))
+            ->getWhereClause();
 
-        $whereSql = $whereClause ? ' WHERE ' . $whereClause : '';
+        $whereSql = ' WHERE ' . $whereClause; // always non-empty (at least '1=1')
 
         try {
             if ($type === 'metric') {
@@ -379,49 +397,6 @@ class chart_ctrl extends Controller
             }
         }
         return false;
-    }
-
-    /**
-     * Builds a parameterised WHERE clause from an optional filter payload.
-     * Same pattern as geoface_ctrl::getGeoJson().
-     *
-     * @param array|null $filter  { search_type, where?, querytext?, adv? }
-     * @param string     $tb      Current table name (for ShortSQL prefix extraction)
-     * @return array  [$whereClause (string), $whereValues (array)]
-     */
-    private function buildWhereFromFilter(?array $filter, string $tb): array
-    {
-        if (empty($filter) || empty($filter['search_type'])) {
-            return ['', []];
-        }
-
-        $searchType = $filter['search_type'];
-
-        switch ($searchType) {
-            case 'shortSql':
-                $whereStr = trim($filter['where'] ?? '');
-                if ($whereStr === '' || $whereStr === '1') {
-                    return ['', []];
-                }
-                $parser = new \SQL\ShortSql\ParseShortSql($this->cfg);
-                $parser->parseAll('@' . $tb . '~?' . $whereStr, true);
-                [$whereClause, $whereValues] = $parser->getSql(true);
-                return [$whereClause, $whereValues];
-
-            case 'sqlExpert':
-                $querytext = trim($filter['querytext'] ?? '');
-                if ($querytext === '') {
-                    return ['', []];
-                }
-                return ['(' . $querytext . ')', []];
-
-            case 'advanced':
-                // TODO: implement advanced search WHERE building
-                return ['', []];
-
-            default:
-                return ['', []];
-        }
     }
 
 }

@@ -53,35 +53,39 @@ class geoface_ctrl extends Controller
         try {
             $searchType = $this->get['search_type'] ?? $this->post['search_type'] ?? null;
 
-            $userWhere  = '';
-            $userValues = [];
-
+            // Delegate WHERE-building to QueryFromRequest — same as record_ctrl.
+            // All search types (shortSql, sqlExpert, advanced, all) are handled
+            // centrally; this module knows nothing about how the predicate is built.
+            $qRequest = ['tb' => $tb, 'type' => $searchType ?? 'all'];
             switch ($searchType) {
                 case 'shortSql':
-                    $whereStr = trim($this->get['where'] ?? '');
-                    if ($whereStr !== '' && $whereStr !== '1') {
-                        $parser = new \SQL\ShortSql\ParseShortSql($this->cfg);
-                        $parser->parseAll('@' . $tb . '~?' . $whereStr, true);
-                        [$userWhere, $userValues] = $parser->getSql(true);
-                    }
+                    $qRequest['where'] = $this->get['where'] ?? '';
                     break;
-
                 case 'sqlExpert':
-                    $querytext = trim($this->get['querytext'] ?? $this->post['querytext'] ?? '');
-                    if ($querytext !== '') {
-                        $userWhere  = '(' . $querytext . ')';
-                        $userValues = [];
+                    $qRequest['querytext'] = $this->get['querytext'] ?? $this->post['querytext'] ?? '';
+                    $qRequest['join']      = $this->get['join']      ?? $this->post['join']      ?? '';
+                    break;
+                case 'advanced':
+                    // 'adv' can arrive as a POST JSON array or as a base64-encoded
+                    // JSON string in GET (same convention as getRsMatrix).
+                    $advRaw = $this->post['adv'] ?? $this->get['adv'] ?? null;
+                    if (is_string($advRaw)) {
+                        $decoded = json_decode($advRaw, true);
+                        if ($decoded === null) {
+                            $decoded = json_decode(base64_decode($advRaw), true);
+                        }
+                        $qRequest['adv'] = $decoded ?? [];
+                    } else {
+                        $qRequest['adv'] = is_array($advRaw) ? $advRaw : [];
                     }
                     break;
-
-                case 'advanced':
-                    // TODO: implement advanced search WHERE building for geoface
-                    // For now fall through to no filter (same as 'all')
-                    break;
-
-                default:
-                    // No filter — return all geometries for the table
-                    break;
+            }
+            [$userWhere, $userValues] = (new \QueryFromRequest($this->db, $this->cfg, $qRequest))
+                ->getWhereClause();
+            // '1=1' means "no user filter" — omit from the final JOIN query.
+            if ($userWhere === '1=1') {
+                $userWhere  = '';
+                $userValues = [];
             }
 
             // Build SELECT field list: id + preview fields + geo_id + geometry

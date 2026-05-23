@@ -168,6 +168,21 @@ class QueryFromRequest
     return \SQL\SafeQuery::encode($this->where, $this->values);
   }
 
+  /**
+   * Returns the resolved WHERE predicate and its bound values as a pair.
+   *
+   * Use this instead of calling getWhere() + getValues() separately when you
+   * only need the filter predicate — e.g. chart aggregations or geo JOINs
+   * that build their own SELECT statement.  QueryFromRequest always produces
+   * a non-empty WHERE string (defaults to '1=1' for type=all).
+   *
+   * @return array{0: string, 1: array}  [$whereSql, $boundValues]
+   */
+  public function getWhereClause(): array
+  {
+    return [$this->where, $this->values];
+  }
+
   public function getValues(): array
   {
     return $this->values;

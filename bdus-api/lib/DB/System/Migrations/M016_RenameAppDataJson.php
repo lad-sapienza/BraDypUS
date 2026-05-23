@@ -25,7 +25,6 @@ use DB\System\Manage;
  *   in v5.  They are stripped during the rename to keep config.json minimal:
  *     – gmapskey          (Google Maps — removed from UI, unused in v5)
  *     – googleanaytics    (Google Analytics — typo + unused in v5)
- *     – maxImageSize      (image resize — never implemented in v5)
  *     – virtual_keyboard  (on-screen keyboard — unused in v5)
  *     – api_login_as_user (anonymous API user — unused in v5)
  *     – auth_login_as_user (alias of above — unused in v5)
@@ -42,7 +41,6 @@ class M016_RenameAppDataJson
     private const OBSOLETE_FIELDS = [
         'gmapskey',
         'googleanaytics',
-        'maxImageSize',
         'virtual_keyboard',
         'api_login_as_user',
         'auth_login_as_user',

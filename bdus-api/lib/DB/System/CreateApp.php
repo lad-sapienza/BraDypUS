@@ -94,6 +94,7 @@ class CreateApp
             "db_name"      => $this->db_data['db_name'],
             "db_username"  => $this->db_data['db_username'],
             "db_password"  => $this->db_data['db_password'],
+            "maxImageSize" => "1500",
         ];
         @file_put_contents(
             "projects/$this->app/cfg/config.json",

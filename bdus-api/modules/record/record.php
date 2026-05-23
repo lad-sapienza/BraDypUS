@@ -934,6 +934,27 @@ class record_ctrl extends Controller
         throw new \RuntimeException('move_uploaded_file failed');
       }
 
+      // Resize image if maxImageSize is set and the file is a raster image.
+      $imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'tiff'];
+      if (in_array($ext, $imageExts, true)) {
+        $maxPx = (int) trim((string) ($this->cfg->get('main.maxImageSize') ?? 0));
+        if ($maxPx > 0) {
+          try {
+            $manager = new \Intervention\Image\ImageManager(
+              new \Intervention\Image\Drivers\Gd\Driver()
+            );
+            $img = $manager->read($destFile);
+            // Only downscale — never upscale.
+            if ($img->width() > $maxPx || $img->height() > $maxPx) {
+              $img->scaleDown($maxPx, $maxPx)->save($destFile);
+            }
+          } catch (\Throwable $imgErr) {
+            // Non-fatal: log and continue with the original file.
+            $this->log->warning('Image resize failed: ' . $imgErr->getMessage());
+          }
+        }
+      }
+
       // Create file link in the dedicated junction table
       $this->db->query(
         "INSERT INTO bdus_file_links (file_id, table_name, record_id) VALUES (?, ?, ?)",

@@ -46,9 +46,9 @@ class M016MigrationTest extends TestCase
         file_put_contents(static::$tmpDir . '/cfg/app_data.json', json_encode([
             'name'               => 'test',
             'lang'               => 'it',
+            'maxImageSize'       => '1500',
             'gmapskey'           => 'AIzaSy-fake',
             'googleanaytics'     => 'UA-12345',
-            'maxImageSize'       => '1500',
             'virtual_keyboard'   => '1',
             'api_login_as_user'  => '29',
             'auth_login_as_user' => '',
@@ -70,10 +70,12 @@ class M016MigrationTest extends TestCase
     public function testObsoleteFieldsAreStripped(): void
     {
         $data = json_decode(file_get_contents(static::$tmpDir . '/cfg/config.json'), true);
-        foreach (['gmapskey', 'googleanaytics', 'maxImageSize', 'virtual_keyboard',
+        foreach (['gmapskey', 'googleanaytics', 'virtual_keyboard',
                   'api_login_as_user', 'auth_login_as_user'] as $field) {
             $this->assertArrayNotHasKey($field, $data, "Field '$field' should have been removed");
         }
+        // maxImageSize is a valid v5 field — must be preserved.
+        $this->assertArrayHasKey('maxImageSize', $data, 'maxImageSize must be preserved');
     }
 
     public function testIsIdempotentWhenConfigJsonExists(): void

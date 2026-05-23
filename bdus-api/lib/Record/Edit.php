@@ -113,7 +113,10 @@ class Edit
 
     public function setFile( int $id = null, array $data = [], $file = false ) : self
     {
-        // TODO:che facciamo con i file?
+        // File deletion is handled in Persist::deleteAll() — when a record is
+        // deleted, each linked file is checked: if it has no other links it is
+        // purged (bdus_files row + physical file); otherwise only the link for
+        // this record is removed.  Nothing to do here in the Edit layer.
         // Delete
         if ($id && empty($data) && !$file) {
             if ( isset ($this->model['files'][$id]) ) {

@@ -490,10 +490,64 @@ class Persist
                 }
             }
 
+            // 5. Handle file links
+            // For each file linked to this record:
+            //   - if the file is linked to other records too → remove only this link
+            //   - if this is the only link → also purge the bdus_files row so that
+            //     the orphaned file entry and physical file can be cleaned up.
+            // Physical file deletion happens after commit (cannot roll back unlink).
+            $linkedFiles = $this->db->query(
+                "SELECT f.id, f.ext
+                 FROM bdus_files f
+                 INNER JOIN bdus_file_links fl ON fl.file_id = f.id
+                 WHERE fl.table_name = ? AND fl.record_id = ?",
+                [$this->tb, $this->id]
+            ) ?: [];
+
+            $toDeletePhysically = [];
+            foreach ($linkedFiles as $file) {
+                $fileId = (int) $file['id'];
+                $rows   = $this->db->query(
+                    "SELECT COUNT(*) AS cnt FROM bdus_file_links
+                     WHERE file_id = ? AND NOT (table_name = ? AND record_id = ?)",
+                    [$fileId, $this->tb, $this->id]
+                );
+                $otherLinks = (int) ($rows[0]['cnt'] ?? 0);
+
+                if ($otherLinks === 0) {
+                    // Exclusively linked here — purge the bdus_files row.
+                    // The link itself is removed in the bulk DELETE below.
+                    $this->db->query(
+                        "DELETE FROM bdus_files WHERE id = ?",
+                        [$fileId],
+                        'boolean'
+                    );
+                    $toDeletePhysically[] = ['id' => $fileId, 'ext' => $file['ext']];
+                }
+            }
+
+            // Remove all file links for this record (shared or exclusive).
+            $this->db->query(
+                "DELETE FROM bdus_file_links WHERE table_name = ? AND record_id = ?",
+                [$this->tb, $this->id],
+                'boolean'
+            );
+
             $this->db->commit();
         } catch (\Throwable $e) {
             $this->db->rollBack();
             throw $e;
+        }
+
+        // Delete physical files for orphaned entries — best-effort, outside the
+        // transaction so a missing file never causes a rollback.
+        if (defined('PROJ_DIR')) {
+            foreach ($toDeletePhysically as $file) {
+                $path = PROJ_DIR . 'files/' . $file['id'] . '.' . $file['ext'];
+                if (file_exists($path)) {
+                    @unlink($path);
+                }
+            }
         }
 
         return ['deleted' => 1];

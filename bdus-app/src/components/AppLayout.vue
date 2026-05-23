@@ -307,8 +307,9 @@ const navGroups = computed(() => [
   {
     labelKey: 'nav_system',
     items: [
-      { labelKey: 'app_log',           icon: 'pi-list',         to: '/log',       disabled: false },
-      { labelKey: 'info',              icon: 'pi-info-circle',  to: '/info',      disabled: false },
+      { labelKey: 'app_log',    icon: 'pi-list',           to: '/log',        disabled: false },
+      { labelKey: 'migrations', icon: 'pi-database',       to: '/migrations', disabled: false },
+      { labelKey: 'info',       icon: 'pi-info-circle',    to: '/info',       disabled: false },
     ],
   },
 ])

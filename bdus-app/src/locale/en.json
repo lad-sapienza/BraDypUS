@@ -849,5 +849,14 @@
   "copied": "Copied",
   "login": "Login",
   "app_name_hint": "3–20 characters. Lowercase letters, digits and underscores only. Must start with a letter.",
-  "ok_save": "Saved"
+  "ok_save": "Saved",
+  "migrations": "DB Migrations",
+  "migrations_hint": "Read-only overview of all schema migrations and their applied status.",
+  "migrations_status_ok": "%s / %s applied",
+  "migrations_col_name": "Migration",
+  "migrations_col_status": "Status",
+  "migrations_col_applied_at": "Applied at",
+  "migration_applied": "applied",
+  "migration_pending": "pending",
+  "migrations_all_applied": "All migrations applied"
 }

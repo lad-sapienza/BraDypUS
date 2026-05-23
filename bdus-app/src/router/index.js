@@ -100,6 +100,11 @@ const routes = [
     path: '/free-sql',
     component: () => import('@/views/FreeSqlView.vue'),
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/migrations',
+    component: () => import('@/views/MigrationsView.vue'),
+    meta: { requiresAuth: true }
   }
 ]
 

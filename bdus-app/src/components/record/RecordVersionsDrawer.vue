@@ -139,8 +139,8 @@
           </div>
         </template>
 
-        <!-- Restore button -->
-        <div class="vd-restore-bar">
+        <!-- Restore button — admin only -->
+        <div v-if="canRestore" class="vd-restore-bar">
           <Button
             v-if="diff.current.core"
             :label="t('version_restore_selected')"
@@ -161,8 +161,9 @@
     </template>
   </Drawer>
 
-  <!-- ── Confirmation dialog ─────────────────────────────────────── -->
+  <!-- ── Confirmation dialog (admin only) ────────────────────────── -->
   <Dialog
+    v-if="canRestore"
     v-model:visible="confirmVisible"
     :header="t('version_restore_confirm_title')"
     modal
@@ -201,9 +202,17 @@ import Message         from 'primevue/message'
 import ProgressSpinner from 'primevue/progressspinner'
 import { api }         from '@/api'
 import { useI18n }     from '@/i18n'
+import { useAuthStore } from '@/stores/auth'
 
 const { t } = useI18n()
 const toast = useToast()
+const auth  = useAuthStore()
+
+// Restore requires admin privilege (prv ≤ 10)
+const canRestore = computed(() => {
+  const prv = auth.user?.privilege_value
+  return prv !== undefined && prv <= 10
+})
 
 // ── Props / emits ──────────────────────────────────────────────
 const props = defineProps({

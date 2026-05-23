@@ -849,5 +849,14 @@
   "copied": "Copiato",
   "login": "Accedi",
   "app_name_hint": "3–20 caratteri. Solo lettere minuscole, cifre e trattini bassi. Deve iniziare con una lettera.",
-  "ok_save": "Salvato"
+  "ok_save": "Salvato",
+  "migrations": "Migrazioni DB",
+  "migrations_hint": "Panoramica in sola lettura di tutte le migrazioni dello schema e il loro stato di applicazione.",
+  "migrations_status_ok": "%s / %s applicate",
+  "migrations_col_name": "Migrazione",
+  "migrations_col_status": "Stato",
+  "migrations_col_applied_at": "Applicata il",
+  "migration_applied": "applicata",
+  "migration_pending": "in attesa",
+  "migrations_all_applied": "Tutte le migrazioni applicate"
 }

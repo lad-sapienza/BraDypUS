@@ -16,7 +16,7 @@ use DB\DBInterface;
  *
  * Loads table/field definitions either from the database (bdus_cfg_tables +
  * bdus_cfg_fields, preferred) or from JSON files in cfg/ (legacy fallback).
- * App-level settings (lang, gmapskey, …) always come from cfg/config.json
+ * App-level settings (lang, name, status, …) always come from cfg/config.json
  * because that file also holds the DB credentials needed to open the connection
  * in the first place.
  *

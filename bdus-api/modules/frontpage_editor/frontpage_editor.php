@@ -7,37 +7,35 @@
 
 class frontpage_editor_ctrl extends Controller
 {
-	/**
-	 * Returns the path of the welcome content file.
-	 * Supports both the legacy .html and the new .md extension.
-	 */
-	private function getFile(): string
-	{
-		$md   = PROJ_DIR . 'welcome.md';
-		$html = PROJ_DIR . 'welcome.html';
-		// Prefer the new .md file; fall back to legacy .html
-		return file_exists($md) ? $md : $html;
-	}
-
 	// ── v5 API endpoints ──────────────────────────────────────────────────────
 
 	/**
 	 * GET ?obj=frontpage_editor_ctrl&method=getWelcome
-	 * Returns the welcome text (MD or HTML) as JSON.
+	 * Returns the welcome Markdown text as JSON.
 	 * No auth required — visible on the dashboard to all logged-in users.
+	 *
+	 * Post-M019: read from bdus_cfg_app.welcome.
+	 * Pre-M019 fallback: read from welcome.md / welcome.html on disk.
 	 *
 	 * Response: { "content": "<string>" }
 	 */
 	public function getWelcome(): void
 	{
-		$file = $this->getFile();
-		$content = file_exists($file) ? file_get_contents($file) : '';
+		if (\Config\AppSettings::isAvailable($this->db)) {
+			$content = \Config\AppSettings::getWelcome($this->db);
+		} else {
+			// Legacy file fallback — removed by M019 on existing installations.
+			$md   = PROJ_DIR . 'welcome.md';
+			$html = PROJ_DIR . 'welcome.html';
+			$file = file_exists($md) ? $md : $html;
+			$content = file_exists($file) ? file_get_contents($file) : '';
+		}
 		$this->returnJson(['content' => $content]);
 	}
 
 	/**
 	 * POST ?obj=frontpage_editor_ctrl&method=saveWelcome
-	 * Saves the welcome text. Admin-only.
+	 * Saves the welcome Markdown text. Admin-only.
 	 * Body: { "content": "<string>" }
 	 *
 	 * Response: { "status": "success", "code": "ok_save" }
@@ -50,16 +48,15 @@ class frontpage_editor_ctrl extends Controller
 		}
 
 		$content = $this->post['content'] ?? '';
-		// Strip PHP tags — HTML and MD are allowed, PHP execution is not
+		// Strip PHP tags — HTML and MD are allowed, PHP execution is not.
 		$content = str_replace(['<?php', '<?', '?>'], '', $content);
 
-		$file = PROJ_DIR . 'welcome.md';
-		if (file_put_contents($file, $content) === false) {
-			$this->returnJson(['status' => 'error', 'code' => 'db_error', 'detail' => 'Cannot write welcome.md']);
-			return;
+		try {
+			\Config\AppSettings::saveWelcome($this->db, $content);
+			$this->returnJson(['status' => 'success', 'code' => 'ok_save']);
+		} catch (\Throwable $e) {
+			$this->returnJson(['status' => 'error', 'code' => 'db_error', 'detail' => $e->getMessage()]);
 		}
-
-		$this->returnJson(['status' => 'success', 'code' => 'ok_save']);
 	}
 
 }

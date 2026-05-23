@@ -47,6 +47,7 @@ class Manage
     private array $descriptor = [];
     public $available_tables = [
         'bdus_api_keys',
+        'bdus_cfg_app',
         'bdus_cfg_fields',
         'bdus_cfg_geoface',
         'bdus_cfg_relations',

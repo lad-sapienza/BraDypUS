@@ -82,29 +82,36 @@ class CreateApp
 
     private function createConfig()
     {
-        // ── 1. Write config.json at the project root ──────────────────────────────
-        $appData = [
-            "lang"         => "en",
-            "name"         => $this->app,
-            "definition"   => $this->db_data['definition'],
-            "status"       => "on",
-            "db_engine"    => $this->db_data['db_engine'],
-            "db_host"      => $this->db_data['db_host'],
-            "db_port"      => $this->db_data['db_port'],
-            "db_name"      => $this->db_data['db_name'],
-            "db_username"  => $this->db_data['db_username'],
-            "db_password"  => $this->db_data['db_password'],
-            "maxImageSize" => "1500",
+        // ── 1. Write minimal config.json at the project root ─────────────────────
+        // Only bootstrap fields needed before the DB connection is open:
+        // the project description (shown on the login screen) and DB credentials.
+        // Runtime settings (status, maxImageSize, welcome) live in bdus_cfg_app.
+        $bootstrap = [
+            "definition"  => $this->db_data['definition'],
+            "db_engine"   => $this->db_data['db_engine'],
+            "db_host"     => $this->db_data['db_host'],
+            "db_port"     => $this->db_data['db_port'],
+            "db_name"     => $this->db_data['db_name'],
+            "db_username" => $this->db_data['db_username'],
+            "db_password" => $this->db_data['db_password'],
         ];
         @file_put_contents(
             "projects/$this->app/config.json",
-            json_encode($appData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+            json_encode($bootstrap, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
         );
         array_push($this->log, "Configuration file projects/$this->app/config.json created");
 
         // Protect config.json and .jwt_secret from direct web access via <Files>.
         static::writeProjectHtaccess("projects/{$this->app}");
         array_push($this->log, "projects/{$this->app}/.htaccess protection written");
+
+        // ── 1b. Seed bdus_cfg_app with default runtime settings ──────────────────
+        $this->db->query(
+            "INSERT INTO bdus_cfg_app (id, status, max_image_size, welcome) VALUES (?, ?, ?, ?)",
+            [1, 'on', 1500, "# " . strtoupper($this->app) . "\n\nA BraDypUS database"],
+            'boolean'
+        );
+        array_push($this->log, "App settings seeded in bdus_cfg_app");
 
         // ── 2. Seed bdus_cfg_tables + bdus_cfg_fields with the two built-in system tables ──
         // bdus_files (main table — visible in file manager)
@@ -144,8 +151,7 @@ class CreateApp
         }
         array_push($this->log, "bdus_geodata config seeded in DB");
 
-        @file_put_contents("projects/{$this->app}/welcome.md", "# " . strtoupper($this->app) . "\n\n# A BraDypUS database");
-        array_push($this->log, "Welcome page created");
+        // Welcome text is seeded in bdus_cfg_app (step 1b above) — no file needed.
     }
 
     /**

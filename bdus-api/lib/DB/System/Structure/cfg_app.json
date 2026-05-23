@@ -1,0 +1,10 @@
+{
+    "columns": [
+        { "name": "id",             "type": "INTEGER", "pk": true,  "notnull": false },
+        { "name": "status",         "type": "TEXT",                 "notnull": true,  "default": "on" },
+        { "name": "max_image_size", "type": "INTEGER",              "notnull": true,  "default": "0" },
+        { "name": "welcome",        "type": "TEXT",                 "notnull": false, "default": "" }
+    ],
+    "indexes": [],
+    "relations": []
+}

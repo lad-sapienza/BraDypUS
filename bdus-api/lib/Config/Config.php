@@ -16,9 +16,12 @@ use DB\DBInterface;
  *
  * Loads table/field definitions either from the database (bdus_cfg_tables +
  * bdus_cfg_fields, preferred) or from JSON files in cfg/ (legacy fallback).
- * App-level settings (lang, name, status, …) always come from cfg/config.json
- * because that file also holds the DB credentials needed to open the connection
- * in the first place.
+ *
+ * Bootstrap fields (definition, DB credentials) always come from config.json.
+ * App-level settings (status, maxImageSize, welcome) come from bdus_cfg_app
+ * post-M019, with a transparent fallback to config.json for pre-M019 apps.
+ * The app name is always derived from the DB connection (= directory name)
+ * and never read from config.json.
  *
  * All mutating methods (setTable, setFld, …) write to the DB when available,
  * otherwise to JSON files.
@@ -30,6 +33,12 @@ class Config
     private string $path2cfg;
     private ?DBInterface $db;
     private bool $useDb;
+
+    /** Bootstrap-only keys — the only ones written back to config.json. */
+    private const BOOTSTRAP_KEYS = [
+        'definition',
+        'db_engine', 'db_host', 'db_port', 'db_name', 'db_username', 'db_password',
+    ];
 
     private array $errors = [];
 
@@ -44,8 +53,24 @@ class Config
         $this->useDb    = $db !== null && LoadFromDB::isAvailable($db);
 
         try {
-            // App-level settings always come from the JSON file (holds DB creds).
+            // Bootstrap fields come from config.json (holds DB credentials).
             $this->cfg['main'] = Load::main($path2cfg);
+
+            // App name is always the DB connection identifier (= projects/{app}/).
+            // It is never stored in config.json — derive it from the DB object.
+            if ($db !== null) {
+                $this->cfg['main']['name'] = $db->getApp();
+            }
+
+            // Post-M019: load status, max_image_size, welcome from bdus_cfg_app.
+            // Falls back silently to whatever is in config.json for pre-M019 apps
+            // (status was in config.json; maxImageSize too).
+            if ($this->useDb && AppSettings::isAvailable($db)) {
+                $appSettings = AppSettings::get($db);
+                $this->cfg['main']['status']       = $appSettings['status']         ?? ($this->cfg['main']['status']       ?? 'on');
+                $this->cfg['main']['maxImageSize']  = $appSettings['max_image_size'] ?? ($this->cfg['main']['maxImageSize']  ?? 0);
+                $this->cfg['main']['welcome']       = $appSettings['welcome']        ?? '';
+            }
 
             // Table/field definitions: DB if available, JSON otherwise.
             if ($this->useDb) {
@@ -116,11 +141,31 @@ class Config
         }
     }
 
-    /** Replaces the app-level settings (always JSON). */
+    /**
+     * Persists the app-level settings received from the config form.
+     *
+     * Post-M019: bootstrap fields (definition, DB credentials) go to config.json;
+     * runtime settings (status, maxImageSize) go to bdus_cfg_app.
+     * Pre-M019 fallback: everything goes to config.json as before.
+     */
     public function setMain(array $main): void
     {
-        $this->cfg['main'] = $main;
-        ToFiles::writeMain($this->path2cfg, $main);
+        $this->cfg['main'] = array_merge($this->cfg['main'], $main);
+
+        if ($this->useDb && AppSettings::isAvailable($this->db)) {
+            // Write only bootstrap fields to config.json.
+            $bootstrap = array_intersect_key($main, array_flip(self::BOOTSTRAP_KEYS));
+            ToFiles::writeMain($this->path2cfg, $bootstrap);
+
+            // Write runtime settings to DB.
+            AppSettings::save($this->db, [
+                'status'         => $main['status']       ?? 'on',
+                'max_image_size' => $main['maxImageSize']  ?? 0,
+            ]);
+        } else {
+            // Pre-M019: write the full array to config.json.
+            ToFiles::writeMain($this->path2cfg, $main);
+        }
     }
 
     /** Inserts or replaces a table entry (metadata only — fields managed separately). */

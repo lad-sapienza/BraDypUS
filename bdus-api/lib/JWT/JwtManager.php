@@ -107,22 +107,20 @@ class JwtManager
      */
     private static function getSecret(string $app): string
     {
-        $path = MAIN_DIR . "projects/{$app}/cfg/.jwt_secret";
+        $base = MAIN_DIR . "projects/{$app}";
 
-        if (file_exists($path)) {
-            return trim(file_get_contents($path));
+        // Post-M018: secret at project root.  Pre-M018 fallback: cfg/.jwt_secret.
+        foreach (["{$base}/.jwt_secret", "{$base}/cfg/.jwt_secret"] as $candidate) {
+            if (file_exists($candidate)) {
+                return trim(file_get_contents($candidate));
+            }
         }
 
+        // First use: generate and store at the project root (post-M018 location).
+        $path   = "{$base}/.jwt_secret";
         $secret = bin2hex(random_bytes(32));
         file_put_contents($path, $secret);
         chmod($path, 0600);
-
-        // Ensure the cfg/ directory is protected from web access.
-        // Self-healing for existing apps that pre-date this security measure.
-        $htaccess = dirname($path) . '/.htaccess';
-        if (!file_exists($htaccess)) {
-            \DB\System\CreateApp::writeCfgHtaccess(dirname($path));
-        }
 
         return $secret;
     }

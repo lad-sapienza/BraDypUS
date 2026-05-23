@@ -373,14 +373,24 @@ class DB implements DBInterface
   private function getConnectionDataFromCfg(string $app): array
   {
     $cfg = [];
-    // M016 renames app_data.json → config.json at migration time.
-    // Fall back to the legacy name for apps that haven't migrated yet.
-    $file = $this->path_to_root . "projects/{$app}/cfg/config.json";
-    if (!file_exists($file)) {
-      $file = $this->path_to_root . "projects/{$app}/cfg/app_data.json";
+    // Resolution order mirrors Load::resolveMainConfig():
+    //   1. projects/{app}/config.json          post-M018
+    //   2. projects/{app}/cfg/config.json      post-M016, pre-M018
+    //   3. projects/{app}/cfg/app_data.json    pre-M016 (legacy name)
+    $base = $this->path_to_root . "projects/{$app}";
+    $file = null;
+    foreach ([
+      "{$base}/config.json",
+      "{$base}/cfg/config.json",
+      "{$base}/cfg/app_data.json",
+    ] as $candidate) {
+      if (file_exists($candidate)) {
+        $file = $candidate;
+        break;
+      }
     }
 
-    if (!file_exists($file)) {
+    if ($file === null) {
       throw new \Exception("Missing configuration file for app '{$app}'");
     }
 

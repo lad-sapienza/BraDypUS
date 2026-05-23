@@ -139,13 +139,17 @@ class login_ctrl extends Controller
 			asort($availables_DB);
 
 			foreach ($availables_DB as $db) {
-				// M016 renames app_data.json → config.json at migration time.
-				// Fall back to the legacy name for apps that haven't migrated yet.
-				$cfg = MAIN_DIR . "projects/$db/cfg/config.json";
-				if (!file_exists($cfg)) {
-					$cfg = MAIN_DIR . "projects/$db/cfg/app_data.json";
+				// Resolution order: root (post-M018) → cfg/ (post-M016) → legacy name.
+				$base = MAIN_DIR . "projects/$db";
+				$cfg  = null;
+				foreach ([
+					"$base/config.json",
+					"$base/cfg/config.json",
+					"$base/cfg/app_data.json",
+				] as $candidate) {
+					if (file_exists($candidate)) { $cfg = $candidate; break; }
 				}
-				if (!file_exists($cfg)) {
+				if (!$cfg) {
 					continue;
 				}
 				$appl = json_decode(file_get_contents($cfg), true);

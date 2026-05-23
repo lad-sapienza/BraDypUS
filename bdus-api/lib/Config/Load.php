@@ -45,16 +45,28 @@ class Load
     }
 
     /**
-     * Returns the path to the main config file, falling back to the legacy
-     * app_data.json name for apps that have not yet run the M016 migration.
+     * Resolves the path to the main config file.
+     *
+     * Search order (handles all migration states):
+     *   1. {projDir}/config.json          — post-M018 (project root)
+     *   2. {projDir}/cfg/config.json      — post-M016, pre-M018
+     *   3. {projDir}/cfg/app_data.json    — pre-M016 (legacy name)
+     *
+     * $path2cfg is the project root (e.g. projects/{app}/).
      */
     private static function resolveMainConfig(string $path2cfg): string
     {
-        $new = $path2cfg . '/config.json';
-        if (file_exists($new)) {
-            return $new;
+        $base = rtrim($path2cfg, '/');
+        foreach ([
+            $base . '/config.json',
+            $base . '/cfg/config.json',
+            $base . '/cfg/app_data.json',
+        ] as $candidate) {
+            if (file_exists($candidate)) {
+                return $candidate;
+            }
         }
-        return $path2cfg . '/app_data.json'; // pre-M016 fallback
+        return $base . '/config.json'; // Let path2array throw a clear error.
     }
 
     private static function getFields(string $path): array

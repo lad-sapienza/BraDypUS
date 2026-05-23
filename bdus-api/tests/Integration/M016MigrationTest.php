@@ -103,13 +103,17 @@ class M016MigrationTest extends TestCase
     // These tests pin the fallback behaviour that allows login to list apps
     // even before M016 has run on a given installation.
 
-    public function testLoadMainReadsConfigJson(): void
+    // Load::main() now receives the project root (not cfg/).
+    // resolveMainConfig() searches: root/config.json → cfg/config.json → cfg/app_data.json
+
+    public function testLoadMainReadsConfigJsonInCfg(): void
     {
+        // post-M016, pre-M018: config.json still inside cfg/
         $dir = sys_get_temp_dir() . '/bdus_m016_load_' . uniqid();
         mkdir($dir . '/cfg', 0755, true);
         file_put_contents($dir . '/cfg/config.json', '{"name":"post-m016","status":"on"}');
 
-        $data = Load::main($dir . '/cfg');
+        $data = Load::main($dir);  // pass project root
         $this->assertSame('post-m016', $data['name']);
 
         @unlink($dir . '/cfg/config.json');
@@ -119,12 +123,12 @@ class M016MigrationTest extends TestCase
 
     public function testLoadMainFallsBackToAppDataJson(): void
     {
-        // Simulates a pre-M016 installation: only app_data.json exists.
+        // pre-M016: only app_data.json exists in cfg/
         $dir = sys_get_temp_dir() . '/bdus_m016_fallback_' . uniqid();
         mkdir($dir . '/cfg', 0755, true);
         file_put_contents($dir . '/cfg/app_data.json', '{"name":"pre-m016","status":"on"}');
 
-        $data = Load::main($dir . '/cfg');
+        $data = Load::main($dir);  // pass project root
         $this->assertSame('pre-m016', $data['name'],
             'Load::main must fall back to app_data.json before M016 runs');
 

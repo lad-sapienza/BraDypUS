@@ -25,6 +25,8 @@ use DB\System\Migrations\M013_CreateCfgRelations;
 use DB\System\Migrations\M014_GeofaceConfigToDb;
 use DB\System\Migrations\M015_DeleteCfgJsonFiles;
 use DB\System\Migrations\M016_RenameAppDataJson;
+use DB\System\Migrations\M017_CleanupCfgDir;
+use DB\System\Migrations\M018_MoveConfigToRoot;
 use Monolog\Logger;
 
 /**
@@ -67,6 +69,8 @@ class Migrate
         M014_GeofaceConfigToDb::class,
         M015_DeleteCfgJsonFiles::class,
         M016_RenameAppDataJson::class,
+        M017_CleanupCfgDir::class,
+        M018_MoveConfigToRoot::class,
     ];
 
     /**

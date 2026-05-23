@@ -364,25 +364,33 @@ class DB implements DBInterface
   }
 
   /**
-   * Parses connection data from configuration file
-   * and returns array of connection data:
+   * Reads DB connection parameters from the app's config file on disk.
    *
-   * @param string $app
-   * @return array
+   * The config file location has changed across the v4→v5 migration sequence
+   * (see also Load::resolveMainConfig() and JwtManager::getSecret()):
+   *
+   *   pre-M016  : projects/{app}/cfg/app_data.json   (v4 legacy name)
+   *   post-M016 : projects/{app}/cfg/config.json     (renamed by M016)
+   *   post-M018 : projects/{app}/config.json         (moved to project root by M018)
+   *
+   * The three candidates are probed newest-first so already-migrated apps pay
+   * only one extra stat() call, while legacy apps continue to work.
+   *
+   * @param string $app  Application identifier (subdirectory name under projects/).
+   * @return array       Associative connection-data array (db_engine, db_path, …).
+   *
+   * @todo Once the minimum supported installation has run M016 + M018, drop
+   *       the two legacy candidates and keep only "{base}/config.json".
    */
   private function getConnectionDataFromCfg(string $app): array
   {
     $cfg = [];
-    // Resolution order mirrors Load::resolveMainConfig():
-    //   1. projects/{app}/config.json          post-M018
-    //   2. projects/{app}/cfg/config.json      post-M016, pre-M018
-    //   3. projects/{app}/cfg/app_data.json    pre-M016 (legacy name)
     $base = $this->path_to_root . "projects/{$app}";
     $file = null;
     foreach ([
-      "{$base}/config.json",
-      "{$base}/cfg/config.json",
-      "{$base}/cfg/app_data.json",
+      "{$base}/config.json",         // post-M018: file at project root
+      "{$base}/cfg/config.json",     // post-M016, pre-M018: file in cfg/
+      "{$base}/cfg/app_data.json",   // pre-M016: v4 legacy filename
     ] as $candidate) {
       if (file_exists($candidate)) {
         $file = $candidate;

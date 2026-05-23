@@ -76,6 +76,39 @@ The PHP backend is preserved and extended with JSON endpoints consumed by the ne
 - **`welcome.md` scaffold**: a starter welcome-page file is generated inside
   `projects/{app}/cfg/` when a new application is created, giving users an
   editable landing page out of the box.
+- **Image resize on upload** (`Image\Resizer::maybeResize()`): when
+  `maxImageSize` is set in the app config, raster images (JPEG, PNG, GIF,
+  WebP, BMP, TIFF) are automatically downscaled to fit within the configured
+  pixel bound on upload. Vector formats (SVG) and non-image files are skipped.
+  Uses `intervention/image` 3.x `scaleDown()`.
+- **Migration M014 — GeoFace config to DB**: geoface layer definitions
+  previously stored in `cfg/geoface.json` are migrated to a new
+  `bdus_cfg_geoface` system table (single row: `id=1`, `layers TEXT`).
+  New `Config\GeofaceConfig` static helper provides `isAvailable()`,
+  `getLayers()`, and `saveLayers()` with a DB-first / file fallback pattern
+  for zero-downtime migration.
+- **Migration M015 — delete superseded cfg JSON files**: removes all
+  `cfg/*.json` files that are now served from the database
+  (`cfg/tables.json`, per-table field files, etc.). `cfg/config.json`
+  (main app config) is always preserved.
+- **Migration M016 — rename app_data.json → config.json**: renames
+  `cfg/app_data.json` to `cfg/config.json` for naming consistency and
+  strips the five obsolete fields (`gmapskey`, `googleanaytics`,
+  `virtual_keyboard`, `api_login_as_user`, `auth_login_as_user`) from the
+  stored JSON in the same pass.
+- **Migration M017 — cleanup stray cfg JSON files**: removes any
+  `cfg/*.json` files (excluding `config.json`) that survived on
+  installations where M015 ran before its glob logic was corrected
+  (system tables such as `files` were previously missed).
+- **Migration M018 — move config to project root**: moves `cfg/config.json`
+  and `cfg/.jwt_secret` from the `cfg/` subdirectory to the project root,
+  removes the now-empty `cfg/` directory, and replaces the blanket
+  deny-all `.htaccess` with a `<Files>`-based equivalent at the project
+  root that blocks only `config.json` and `.jwt_secret` — leaving
+  `projects/{app}/files/*` directly servable by the web server.
+- **Migrations admin endpoint** `GET /api/migrations`: returns the list of
+  all registered migrations with their applied status; accessible to
+  `admin` users only.
 
 ### Removed
 - PHP session-based authentication (`session_start()`, `$_SESSION['user']`)
@@ -93,6 +126,15 @@ The PHP backend is preserved and extended with JSON endpoints consumed by the ne
   abandoned); the debug handler stack now uses `StreamHandler` only
 - `langs` key removed from `getAppProperties` response; the list of available
   UI locales is owned by the Vue frontend, not the backend
+- **Obsolete config fields removed**: `gmapskey` (Google Maps API key),
+  `googleanaytics` (GA tracking ID), `virtual_keyboard`, `api_login_as_user`,
+  and `auth_login_as_user` are no longer read, stored, or displayed. Stripped
+  from existing configs by M016.
+- `cfg/` subdirectory removed from new app layout (post-M018); `config.json`
+  and `.jwt_secret` now live at the project root.
+- **Config form sections removed**: "External services" (Google Maps / Analytics)
+  and "Login options" (virtual keyboard, login-as-user) sections removed from
+  the ConfigAppForm Vue component.
 
 ### Security
 - `Authorization: Bearer` header is now read via `getallheaders()` as
@@ -101,6 +143,13 @@ The PHP backend is preserved and extended with JSON endpoints consumed by the ne
   workaround in `.htaccess`
 - JWT secrets are auto-generated per application, stored with chmod 0600,
   and the containing directory is .htaccess-protected against web access
+- **Project root `<Files>` htaccess** (M018): replaces the blanket
+  `Deny from all` in `cfg/` with a targeted `<Files>` block at the project
+  root that protects only `config.json` and `.jwt_secret`, so
+  `projects/{app}/files/*` remains directly web-accessible.
+- **`restoreVersion` requires admin privilege**: restoring a record to a
+  previous version is now gated at `admin` level (was `edit`), preventing
+  regular editors from silently overwriting history.
 
 ### Changed
 - All module endpoints now return JSON (`returnJson()`) instead of rendering Twig
@@ -120,6 +169,14 @@ The PHP backend is preserved and extended with JSON endpoints consumed by the ne
   returns success immediately for SQLite (native PHP/PDO dump needs no external tool)
 - Application version is now read from `composer.json` at runtime instead of
   being hardcoded; `info_ctrl::getInfo()` returns the value from the `version` key
+- **Three-step config fallback chain**: `Config\Load`, `DB\DB`, `modules/login`,
+  and `JWT\JwtManager` all resolve config paths via the ordered chain
+  `{root}/config.json` → `{root}/cfg/config.json` → `{root}/cfg/app_data.json`,
+  allowing the system to handle any migration state transparently without
+  requiring a specific migration to have already run.
+- **New-app creation writes to project root** (post-M018): `CreateApp` no longer
+  creates the `cfg/` subdirectory; `config.json`, `.jwt_secret`, and the
+  `<Files>` htaccess are written directly to `projects/{app}/`.
 - Composer dependencies updated: `adbario/php-dot-notation` 3.5,
   `monolog/monolog` 3.10, `intervention/image` 3.11, `spatie/db-dumper` 3.8;
   `intervention/image` v3 API migration applied (`ImageManager` + `Driver` class,

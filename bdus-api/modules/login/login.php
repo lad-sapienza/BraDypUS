@@ -139,13 +139,20 @@ class login_ctrl extends Controller
 			asort($availables_DB);
 
 			foreach ($availables_DB as $db) {
-				// Resolution order: root (post-M018) → cfg/ (post-M016) → legacy name.
+				// Probe config in newest-first order to handle all migration states:
+				//   post-M018 → projects/{app}/config.json        (project root)
+				//   post-M016 → projects/{app}/cfg/config.json    (inside cfg/)
+				//   pre-M016  → projects/{app}/cfg/app_data.json  (v4 legacy name)
+				// Login runs before migrations, so every app must be found regardless
+				// of which migrations have already been applied.
+				// @todo Once all installations have run M016 + M018, keep only
+				//       "$base/config.json" and remove the two legacy candidates.
 				$base = MAIN_DIR . "projects/$db";
 				$cfg  = null;
 				foreach ([
-					"$base/config.json",
-					"$base/cfg/config.json",
-					"$base/cfg/app_data.json",
+					"$base/config.json",         // post-M018: file at project root
+					"$base/cfg/config.json",     // post-M016, pre-M018: file in cfg/
+					"$base/cfg/app_data.json",   // pre-M016: v4 legacy filename
 				] as $candidate) {
 					if (file_exists($candidate)) { $cfg = $candidate; break; }
 				}

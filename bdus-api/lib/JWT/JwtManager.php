@@ -104,19 +104,33 @@ class JwtManager
 
     /**
      * Return the per-app signing secret, generating it on first call.
+     *
+     * The secret file location changed with M018 (moved from cfg/ to project root):
+     *
+     *   post-M018 : projects/{app}/.jwt_secret       (project root — canonical)
+     *   pre-M018  : projects/{app}/cfg/.jwt_secret   (legacy location)
+     *
+     * Both candidates are tried so that apps not yet migrated continue to work.
+     * When no file exists at all (first use / fresh install) the secret is generated
+     * and written to the post-M018 location with chmod 0600.
+     *
+     * @todo Once the minimum supported installation has run M018, drop the
+     *       cfg/.jwt_secret candidate and keep only {base}/.jwt_secret.
      */
     private static function getSecret(string $app): string
     {
         $base = MAIN_DIR . "projects/{$app}";
 
-        // Post-M018: secret at project root.  Pre-M018 fallback: cfg/.jwt_secret.
-        foreach (["{$base}/.jwt_secret", "{$base}/cfg/.jwt_secret"] as $candidate) {
+        foreach ([
+            "{$base}/.jwt_secret",       // post-M018: file at project root
+            "{$base}/cfg/.jwt_secret",   // pre-M018: legacy location inside cfg/
+        ] as $candidate) {
             if (file_exists($candidate)) {
                 return trim(file_get_contents($candidate));
             }
         }
 
-        // First use: generate and store at the project root (post-M018 location).
+        // First use: generate and store at the post-M018 location (project root).
         $path   = "{$base}/.jwt_secret";
         $secret = bin2hex(random_bytes(32));
         file_put_contents($path, $secret);

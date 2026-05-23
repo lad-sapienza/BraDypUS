@@ -45,22 +45,30 @@ class Load
     }
 
     /**
-     * Resolves the path to the main config file.
+     * Resolves the path to the main config file, handling all migration states.
      *
-     * Search order (handles all migration states):
-     *   1. {projDir}/config.json          — post-M018 (project root)
-     *   2. {projDir}/cfg/config.json      — post-M016, pre-M018
-     *   3. {projDir}/cfg/app_data.json    — pre-M016 (legacy name)
+     * The config file has moved twice across the v4→v5 migration sequence:
      *
-     * $path2cfg is the project root (e.g. projects/{app}/).
+     *   pre-M016  : projects/{app}/cfg/app_data.json   (v4 legacy name)
+     *   post-M016 : projects/{app}/cfg/config.json     (renamed by M016)
+     *   post-M018 : projects/{app}/config.json         (moved to project root by M018)
+     *
+     * The three candidates are tried in newest-first order so that already-migrated
+     * apps resolve in one stat() call while legacy apps still work transparently.
+     *
+     * @param string $path2cfg  Project root directory (e.g. "projects/{app}").
+     *                          Do NOT pass the cfg/ subdirectory.
+     *
+     * @todo Once the minimum supported installation has run M016 + M018, drop
+     *       the two legacy candidates and keep only "{base}/config.json".
      */
     private static function resolveMainConfig(string $path2cfg): string
     {
         $base = rtrim($path2cfg, '/');
         foreach ([
-            $base . '/config.json',
-            $base . '/cfg/config.json',
-            $base . '/cfg/app_data.json',
+            $base . '/config.json',         // post-M018: file at project root
+            $base . '/cfg/config.json',     // post-M016, pre-M018: file in cfg/
+            $base . '/cfg/app_data.json',   // pre-M016: v4 legacy filename
         ] as $candidate) {
             if (file_exists($candidate)) {
                 return $candidate;

@@ -17,7 +17,8 @@
  *      [
  *          tb: tb-name     required if subQuery not set, string
  *          fld: fld-name   required if subQuery not set, string
- *          subQuery: QueryObject, required if fld not set, Object
+ *          subQuery: string, required if fld not set — rendered SQL string produced
+ *                    by SubQuery::parse() (base64-decoded ShortSQL, already validated)
  *          alias:  alias   optional, string
  *          fn:function:    optional, string
  *      ],
@@ -43,7 +44,7 @@
  *          fld,            required, string
  *          operator:       required, string,
  *          value,          required if subQuery not set, string
- *          subQuery: QueryObject, required if value not set, Object [Not implemented: passed as string]
+ *          subQuery: string, required if value not set — rendered SQL (not implemented as nested object)
  *          close-bracket,  optional, string
  *      ]
  * ]

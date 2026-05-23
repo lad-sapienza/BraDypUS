@@ -64,8 +64,15 @@ class Validator
         foreach ($fields as $fld) {
             if ($fld['fld'] && !$fld['subQuery']) {
                 $this->isValidFld($fld['fld'], $fld['tb']);
-            } else if (!$fld['fld'] && $fld['subQuery']) {
-                // TODO: call self
+            } elseif (!$fld['fld'] && $fld['subQuery']) {
+                // The subQuery value is a rendered SQL string produced by
+                // SubQuery::parse() → ParseShortSql::getSql() → validateObject().
+                // The inner QueryObject is therefore already validated before it
+                // reaches here.  All we do is guard against an empty string,
+                // which would silently produce "SELECT ( ) ..." in the output.
+                if (trim((string) $fld['subQuery']) === '') {
+                    throw new SqlException("Subquery field must not be empty");
+                }
             }
             if ($fld['fn']) {
                 if (!in_array(strtolower($fld['fn']), $this->valid_functions)) {

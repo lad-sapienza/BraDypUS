@@ -67,6 +67,7 @@ class M015MigrationTest extends TestCase
         file_put_contents(static::$tmpDir . '/cfg/tables.json',            '{"tables":[]}');
         file_put_contents(static::$tmpDir . '/cfg/finds.json',             '[]');
         file_put_contents(static::$tmpDir . '/cfg/contexts.json',          '[]');
+        file_put_contents(static::$tmpDir . '/cfg/files.json',             '[]'); // system-table legacy
         file_put_contents(static::$tmpDir . '/template/finds.main.json',   '{}');
         file_put_contents(static::$tmpDir . '/template/contexts.list.json','{}');
 
@@ -108,6 +109,13 @@ class M015MigrationTest extends TestCase
                 "cfg/{$name}.json should have been deleted"
             );
         }
+    }
+
+    public function testSystemTableJsonIsDeleted(): void
+    {
+        // files.json is a system-table config never imported by M011,
+        // but must still be cleaned up.
+        $this->assertFileDoesNotExist(static::$tmpDir . '/cfg/files.json');
     }
 
     public function testTemplateJsonFilesAreDeleted(): void

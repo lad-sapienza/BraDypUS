@@ -82,7 +82,7 @@ class CreateApp
 
     private function createConfig()
     {
-        // ── 1. Write app_data.json (DB credentials + boot settings — must stay on fs) ──
+        // ── 1. Write config.json (DB credentials + boot settings — must stay on fs) ──
         $appData = [
             "lang"         => "en",
             "name"         => $this->app,
@@ -97,10 +97,10 @@ class CreateApp
             "maxImageSize" => "1500",
         ];
         @file_put_contents(
-            "projects/$this->app/cfg/app_data.json",
+            "projects/$this->app/cfg/config.json",
             json_encode($appData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
         );
-        array_push($this->log, "Configuration file projects/$this->app/cfg/app_data.json created");
+        array_push($this->log, "Configuration file projects/$this->app/cfg/config.json created");
 
         // Protect the cfg/ directory from direct web access.
         static::writeCfgHtaccess("projects/{$this->app}/cfg");
@@ -193,7 +193,7 @@ class CreateApp
     {
         foreach ([
             'backups',   // DB dump output
-            'cfg',       // app_data.json (DB credentials + boot settings)
+            'cfg',       // config.json (DB credentials + boot settings) + .jwt_secret
             'export',    // CSV/JSON/XML export output
             'files',     // user-uploaded files
             'geodata',   // custom map layers (geodata/index.json)

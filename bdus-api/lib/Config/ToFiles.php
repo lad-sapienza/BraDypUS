@@ -14,12 +14,12 @@ class ToFiles
 {
 
     /**
-     * Writes only the app-level settings to app_data.json.
+     * Writes only the app-level settings to config.json.
      * Used when table/field config is persisted in the DB.
      */
     public static function writeMain(string $path2cfg, array $main): void
     {
-        self::write_in_file($path2cfg . '/app_data.json', $main);
+        self::write_in_file($path2cfg . '/config.json', $main);
     }
 
     /**
@@ -33,7 +33,7 @@ class ToFiles
      */
     public static function all(array $cfg, string $path2cfg): void
     {
-        self::write_in_file($path2cfg . '/app_data.json', $cfg['main']);
+        self::write_in_file($path2cfg . '/config.json', $cfg['main']);
         self::writeTables($path2cfg . '/tables.json', $cfg['tables']);
         foreach ($cfg['tables'] as $tb => $tb_data) {
             self::writeFields($path2cfg . '/' . $tb . '.json', $cfg['tables'][$tb]['fields']);

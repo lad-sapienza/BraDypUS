@@ -13,20 +13,20 @@ use DB\System\Manage;
  * Removes the JSON config files that were superseded by M011/M013/M014.
  *
  * Files deleted:
- *   – cfg/tables.json             (table/field list → bdus_cfg_tables/bdus_cfg_fields)
- *   – cfg/{table}.json            (per-table field list → bdus_cfg_fields)
- *   – template/*.json             (record templates → bdus_cfg_templates)
+ *   – cfg/*.json  (ALL JSON files in cfg/ except app_data.json)
+ *     Includes tables.json, per-table {name}.json, and system-table JSON
+ *     files such as files.json that were not imported by M011 because they
+ *     describe system tables but are no longer read by any code.
+ *   – template/*.json  (record templates → bdus_cfg_templates)
  *
  * Files intentionally preserved:
- *   – cfg/app_data.json           (DB credentials — still needed at bootstrap)
- *   – geodata/index.json          (legacy fallback for pre-M014 tools; already superseded
- *                                  by bdus_cfg_geoface but kept for reference)
+ *   – cfg/app_data.json           (DB credentials — renamed to config.json by M016)
+ *   – cfg/.jwt_secret             (JWT signing key — moved to project root by M016)
+ *   – geodata/index.json          (legacy fallback; superseded by bdus_cfg_geoface)
  *   – geodata/*.geojson|*.kml     (user-uploaded layer files, never migrated to DB)
  *
  * Idempotency:
  *   Missing files are silently skipped; no error is thrown.
- *   Table names are read from bdus_cfg_tables so we never rely on the
- *   (potentially already-deleted) tables.json.
  *
  * Safety pre-condition:
  *   M011 must have run before this migration (guaranteed by ordering in
@@ -61,19 +61,20 @@ class M015_DeleteCfgJsonFiles
             return;
         }
 
-        // 1 — cfg/tables.json
-        self::rm($root . 'cfg/tables.json');
-
-        // 2 — cfg/{table}.json  (one per table registered in bdus_cfg_tables)
-        $tables = $db->query('SELECT name FROM bdus_cfg_tables', [], 'read') ?: [];
-        foreach ($tables as $row) {
-            $name = $row['name'] ?? null;
-            if ($name) {
-                self::rm($root . 'cfg/' . $name . '.json');
+        // 1 — All cfg/*.json except app_data.json.
+        //     Glob covers tables.json, per-user-table {name}.json, AND
+        //     system-table JSON files (e.g. files.json) that M011 excluded
+        //     from bdus_cfg_tables but that no code reads any more.
+        $cfgDir = $root . 'cfg/';
+        if (is_dir($cfgDir)) {
+            foreach (scandir($cfgDir) ?: [] as $entry) {
+                if ($entry !== 'app_data.json' && str_ends_with($entry, '.json')) {
+                    self::rm($cfgDir . $entry);
+                }
             }
         }
 
-        // 3 — template/*.json
+        // 2 — template/*.json
         $tmplDir = $root . 'template/';
         if (is_dir($tmplDir)) {
             foreach (scandir($tmplDir) ?: [] as $entry) {

@@ -24,6 +24,7 @@ use DB\System\Migrations\M012_AddCfgTablesExtra;
 use DB\System\Migrations\M013_CreateCfgRelations;
 use DB\System\Migrations\M014_GeofaceConfigToDb;
 use DB\System\Migrations\M015_DeleteCfgJsonFiles;
+use DB\System\Migrations\M016_RenameAppDataJson;
 use Monolog\Logger;
 
 /**
@@ -65,6 +66,7 @@ class Migrate
         M013_CreateCfgRelations::class,
         M014_GeofaceConfigToDb::class,
         M015_DeleteCfgJsonFiles::class,
+        M016_RenameAppDataJson::class,
     ];
 
     /**
@@ -325,7 +327,7 @@ class Migrate
     /**
      * Strips the legacy APP__ prefix from table-name references inside
      * per-table field config files (everything in cfg/ except tables.json
-     * and app_data.json).
+     * and config.json).
      *
      * Properties fixed:
      *  - id_from_tb            plain table name  → strip prefix
@@ -342,7 +344,7 @@ class Migrate
             return;
         }
 
-        $skip = ['tables.json', 'app_data.json'];
+        $skip = ['tables.json', 'config.json'];
 
         foreach (glob($cfgDir . '*.json') as $path) {
             $fname = basename($path);

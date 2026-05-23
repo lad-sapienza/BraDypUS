@@ -139,7 +139,7 @@ class login_ctrl extends Controller
 			asort($availables_DB);
 
 			foreach ($availables_DB as $db) {
-				$cfg = MAIN_DIR . "projects/$db/cfg/app_data.json";
+				$cfg = MAIN_DIR . "projects/$db/cfg/config.json";
 				if (!file_exists($cfg)) {
 					continue;
 				}

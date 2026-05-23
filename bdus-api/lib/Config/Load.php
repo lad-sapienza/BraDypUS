@@ -26,7 +26,7 @@ class Load
      */
     public static function all(string $path2cfg): array
     {
-        $cfg['main'] = self::path2array($path2cfg . '/app_data.json');
+        $cfg['main'] = self::path2array($path2cfg . '/config.json');
         $cfg['tables'] = self::getTables($path2cfg . '/tables.json');
         foreach ($cfg['tables'] as $tb => $tb_data) {
             $cfg['tables'][$tb]['fields'] = self::getFields($path2cfg . '/' . $tb . '.json');
@@ -35,12 +35,12 @@ class Load
     }
 
     /**
-     * Loads only the app-level settings from app_data.json.
+     * Loads only the app-level settings from config.json.
      * Used by Config when table/field definitions come from the DB instead.
      */
     public static function main(string $path2cfg): array
     {
-        return self::path2array($path2cfg . '/app_data.json');
+        return self::path2array($path2cfg . '/config.json');
     }
 
     private static function getFields(string $path): array

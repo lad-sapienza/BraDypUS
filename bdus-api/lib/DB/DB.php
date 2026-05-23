@@ -373,7 +373,7 @@ class DB implements DBInterface
   private function getConnectionDataFromCfg(string $app): array
   {
     $cfg = [];
-    $file = $this->path_to_root . "projects/{$app}/cfg/app_data.json";
+    $file = $this->path_to_root . "projects/{$app}/cfg/config.json";
 
     if (!file_exists($file)) {
       throw new \Exception("Missing configuration file $file");

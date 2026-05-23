@@ -43,7 +43,16 @@ class M016MigrationTest extends TestCase
 
     public function testRenamesAppDataToConfigJson(): void
     {
-        file_put_contents(static::$tmpDir . '/cfg/app_data.json', '{"name":"test"}');
+        file_put_contents(static::$tmpDir . '/cfg/app_data.json', json_encode([
+            'name'               => 'test',
+            'lang'               => 'it',
+            'gmapskey'           => 'AIzaSy-fake',
+            'googleanaytics'     => 'UA-12345',
+            'maxImageSize'       => '1500',
+            'virtual_keyboard'   => '1',
+            'api_login_as_user'  => '29',
+            'auth_login_as_user' => '',
+        ]));
 
         M016_RenameAppDataJson::run(static::$manage, static::$tmpDir);
 
@@ -55,6 +64,16 @@ class M016MigrationTest extends TestCase
     {
         $data = json_decode(file_get_contents(static::$tmpDir . '/cfg/config.json'), true);
         $this->assertSame('test', $data['name'] ?? null);
+        $this->assertSame('it',   $data['lang'] ?? null);
+    }
+
+    public function testObsoleteFieldsAreStripped(): void
+    {
+        $data = json_decode(file_get_contents(static::$tmpDir . '/cfg/config.json'), true);
+        foreach (['gmapskey', 'googleanaytics', 'maxImageSize', 'virtual_keyboard',
+                  'api_login_as_user', 'auth_login_as_user'] as $field) {
+            $this->assertArrayNotHasKey($field, $data, "Field '$field' should have been removed");
+        }
     }
 
     public function testIsIdempotentWhenConfigJsonExists(): void

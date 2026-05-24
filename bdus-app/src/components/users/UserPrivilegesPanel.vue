@@ -175,7 +175,7 @@ async function load() {
   loading.value = true
   try {
     const res = await api.get(`/api/user/${props.userId}/privileges`)
-    rows.value = Array.isArray(res) ? res : []
+    rows.value = Array.isArray(res?.data) ? res.data : []
   } catch (e) {
     toast.add({ severity: 'error', summary: t('table_privileges'), detail: String(e), life: 4000 })
   } finally {

@@ -39,6 +39,15 @@
         <i class="pi pi-key" />
         <span>{{ t('api_keys') }}</span>
       </button>
+      <button
+        class="cfg-action-btn"
+        :class="{ active: active === 'relations' }"
+        @click="$emit('select', 'relations')"
+        :title="t('cfg_relations')"
+      >
+        <i class="pi pi-sitemap" />
+        <span>{{ t('cfg_relations') }}</span>
+      </button>
     </div>
 
     <div class="cfg-sidebar-divider" />

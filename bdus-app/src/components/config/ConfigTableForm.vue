@@ -177,55 +177,36 @@
         </div>
       </section>
 
-      <!-- ── Links (existing tables) ───────────────────────────────── -->
+      <!-- ── Links (existing tables — read-only; edit via Relations panel) -->
       <section v-if="tb" class="cfg-section">
         <div class="cfg-section-title">
           {{ t('links') }}
-          <Button :label="t('add_link')" icon="pi pi-plus" size="small" outlined @click="addLink" />
+          <button class="cfg-rel-edit-link" @click="$emit('open-relations')">
+            <i class="pi pi-sitemap" />
+            {{ t('edit_in_relations') }}
+          </button>
         </div>
 
-        <div v-for="(link, li) in form.link" :key="li" class="cfg-link-card">
-          <div class="cfg-link-header">
-            <Select
-              v-model="link.other_tb"
-              :options="tableOptions"
-              option-label="label"
-              option-value="value"
-              :placeholder="t('select_table')"
-              size="small"
-              style="flex:1"
-              @change="onOtherTbChange(link)"
-            />
-            <Button icon="pi pi-trash" severity="danger" size="small" text @click="form.link.splice(li, 1)" />
-          </div>
+        <div v-if="!form.link || form.link.filter(l => l.other_tb).length === 0" class="cfg-help-text cfg-rel-empty">
+          {{ t('no_relations') }}
+        </div>
 
-          <!-- Field pairs -->
-          <div class="cfg-link-fields">
-            <div v-for="(pair, fi) in link.fld" :key="fi" class="cfg-link-pair">
-              <Select
-                v-model="pair.my"
-                :options="fieldOptions"
-                option-label="label"
-                option-value="value"
-                :placeholder="t('this_table_field')"
-                :show-clear="true"
-                size="small"
-                style="flex:1"
-              />
+        <div
+          v-for="(link, li) in form.link.filter(l => l.other_tb)"
+          :key="li"
+          class="cfg-link-card cfg-link-card--readonly"
+        >
+          <div class="cfg-link-header">
+            <span class="cfg-rel-tb-label">
+              {{ availableTables[link.other_tb] || link.other_tb }}
+            </span>
+          </div>
+          <div v-if="link.fld && link.fld.length" class="cfg-link-fields">
+            <div v-for="(pair, fi) in link.fld" :key="fi" class="cfg-link-pair cfg-link-pair--readonly">
+              <span class="cfg-rel-fld-badge">{{ pair.my }}</span>
               <i class="pi pi-arrows-h cfg-link-arrow" />
-              <Select
-                v-model="pair.other"
-                :options="otherFieldOptions(link)"
-                option-label="label"
-                option-value="value"
-                :placeholder="t('other_table_field')"
-                :show-clear="true"
-                size="small"
-                style="flex:1"
-              />
-              <Button icon="pi pi-minus" severity="danger" size="small" text @click="link.fld.splice(fi, 1)" />
+              <span class="cfg-rel-fld-badge">{{ pair.other }}</span>
             </div>
-            <Button :label="t('add')" icon="pi pi-plus" size="small" text @click="link.fld.push({ my: '', other: '' })" />
           </div>
         </div>
       </section>
@@ -277,7 +258,7 @@ import { api }        from '@/api'
 const props = defineProps({
   tb: { type: String, default: null }   // null → "add new" mode
 })
-const emit = defineEmits(['saved', 'deleted', 'renamed', 'open-fields'])
+const emit = defineEmits(['saved', 'deleted', 'renamed', 'open-fields', 'open-relations'])
 
 const { t }   = useI18n()
 const toast   = useToast()
@@ -300,8 +281,6 @@ const availableTables  = ref({})
 const renameVisible = ref(false)
 const newName       = ref('')
 
-// Cache for fetched other-table field lists
-const otherTableFields = ref({})
 
 // ── Computed helpers ───────────────────────────────────────────────────────
 const isPlugin = computed(() => form.value?.is_plugin === '1')
@@ -317,14 +296,6 @@ const pluginOptions = computed(() =>
 const tableOptions = computed(() =>
   Object.entries(availableTables.value).map(([k, v]) => ({ value: k, label: v }))
 )
-
-function otherFieldOptions(link) {
-  const tb = link.other_tb
-  if (!tb) return []
-  // Prefer freshly fetched data; fall back to initial other_fields
-  const map = otherTableFields.value[tb] ?? link._other_fields_initial ?? {}
-  return Object.entries(map).map(([k, v]) => ({ value: k, label: v }))
-}
 
 // ── Data loading ───────────────────────────────────────────────────────────
 async function load() {
@@ -342,13 +313,11 @@ async function load() {
     // Deep clone table data into form, normalising arrays
     const td = res.table ?? {}
 
-    // Stash initial other_fields per link for the dropdowns
+    // Build link list for read-only display
     const links = (td.link ?? []).map(l => ({
       other_tb: l.other_tb ?? '',
       fld: (l.fld ?? []).map(f => ({ my: f.my ?? '', other: f.other ?? '' })),
-      _other_fields_initial: l.other_fields ?? {}
     }))
-    if (links.length === 0) links.push(emptyLink())
 
     form.value = {
       name:        td.name        ?? '',
@@ -372,26 +341,6 @@ async function load() {
 }
 
 watch(() => props.tb, () => load())
-
-// ── Links helpers ──────────────────────────────────────────────────────────
-function emptyLink() {
-  return { other_tb: '', fld: [{ my: '', other: '' }], _other_fields_initial: {} }
-}
-
-function addLink() {
-  form.value.link.push(emptyLink())
-}
-
-async function onOtherTbChange(link) {
-  const tb = link.other_tb
-  if (!tb || otherTableFields.value[tb]) return
-  try {
-    const res = await api.get(`/api/config/table/${tb}/fields`)
-    if (res.status === 'success' || res.code === 'ok') {
-      otherTableFields.value = { ...otherTableFields.value, [tb]: res.fields ?? {} }
-    }
-  } catch { /* silently ignore — user can still type */ }
-}
 
 // ── Save ───────────────────────────────────────────────────────────────────
 async function save() {
@@ -419,11 +368,8 @@ async function save() {
 
 function buildPayload() {
   const f = form.value
-  // Remove the internal _other_fields_initial before sending
-  const links = f.link
-    .filter(l => l.other_tb)
-    .map(({ _other_fields_initial, ...rest }) => rest)
-
+  // Note: 'link' is intentionally omitted — relations are now managed
+  // exclusively via the Relations panel (ConfigRelations.vue).
   return {
     name:       f.name,
     label:      f.label,
@@ -434,7 +380,6 @@ function buildPayload() {
     preview:    f.preview.filter(v => v),
     plugin:     f.plugin.filter(v => v),
     backlinks:  f.backlinks.filter(v => v),
-    link:       links,
   }
 }
 
@@ -630,6 +575,49 @@ onMounted(load)
   font-size: 0.8rem;
   color: var(--p-text-muted-color);
   flex-shrink: 0;
+}
+
+/* Read-only link cards */
+.cfg-link-card--readonly {
+  opacity: 0.85;
+  pointer-events: none;
+  background: var(--p-content-hover-background);
+}
+.cfg-link-pair--readonly {
+  font-size: 0.8rem;
+  color: var(--p-text-muted-color);
+}
+.cfg-rel-tb-label {
+  font-weight: 600;
+  font-size: 0.88rem;
+}
+.cfg-rel-fld-badge {
+  font-size: 0.72rem;
+  color: var(--p-text-muted-color);
+  background: var(--bdus-bg);
+  border-radius: 3px;
+  padding: 0.1rem 0.4rem;
+  font-family: monospace;
+}
+.cfg-rel-edit-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--p-primary-color);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.cfg-rel-edit-link:hover { opacity: 0.8; }
+.cfg-rel-empty {
+  padding: 0.25rem 0;
 }
 
 /* Danger zone */

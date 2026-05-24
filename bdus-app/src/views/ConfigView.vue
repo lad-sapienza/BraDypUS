@@ -34,6 +34,7 @@
           @deleted="onDeleted"
           @renamed="onRenamed"
           @open-fields="openFields"
+          @open-relations="setPanel('relations')"
         />
 
       </div>
@@ -55,6 +56,7 @@ const ConfigAppForm    = defineAsyncComponent(() => import('@/components/config/
 const ConfigValidation = defineAsyncComponent(() => import('@/components/config/ConfigValidation.vue'))
 const ConfigGeoface    = defineAsyncComponent(() => import('@/components/config/ConfigGeoface.vue'))
 const ConfigApiKeys    = defineAsyncComponent(() => import('@/components/config/ApiKeysPanel.vue'))
+const ConfigRelations  = defineAsyncComponent(() => import('@/components/config/ConfigRelations.vue'))
 const ConfigTableForm  = defineAsyncComponent(() => import('@/components/config/ConfigTableForm.vue'))
 const ConfigFieldList  = defineAsyncComponent(() => import('@/components/config/ConfigFieldList.vue'))
 
@@ -62,7 +64,7 @@ const { t } = useI18n()
 const store = useConfigStore()
 
 // ── Navigation state ───────────────────────────────────────────────────
-// panel: 'app' | 'validation' | 'geoface' | 'apikeys' | 'table' | 'fields' | null
+// panel: 'app' | 'validation' | 'geoface' | 'apikeys' | 'relations' | 'table' | 'fields' | null
 const panel         = ref(null)
 const selectedTable = ref(null)
 const addingTable   = ref(false)   // true → ConfigTableForm in "new" mode
@@ -72,6 +74,7 @@ const activeComponent = computed(() => {
   if (panel.value === 'validation') return ConfigValidation
   if (panel.value === 'geoface')    return ConfigGeoface
   if (panel.value === 'apikeys')    return ConfigApiKeys
+  if (panel.value === 'relations')  return ConfigRelations
   if (panel.value === 'table')      return ConfigTableForm
   if (panel.value === 'fields')     return ConfigFieldList
   return null

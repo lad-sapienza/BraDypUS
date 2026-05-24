@@ -249,6 +249,20 @@ run_phase "Relations panel" "14_relations.hurl" \
   --variable "jwt=${JWT}"
 
 # ════════════════════════════════════════════════════════════════════
+# Phase 15 — Vocabularies CRUD
+# ════════════════════════════════════════════════════════════════════
+header "Phase 15 — Vocabularies"
+run_phase "Vocabularies" "15_vocabularies.hurl" \
+  --variable "jwt=${JWT}"
+
+# ════════════════════════════════════════════════════════════════════
+# Phase 16 — Welcome text + Search & Replace
+# ════════════════════════════════════════════════════════════════════
+header "Phase 16 — Welcome & Search-Replace"
+run_phase "Welcome & Search-Replace" "16_welcome_search_replace.hurl" \
+  --variable "jwt=${JWT}"
+
+# ════════════════════════════════════════════════════════════════════
 # Phase 10 — Cleanup
 # ════════════════════════════════════════════════════════════════════
 header "Phase 10 — Cleanup"

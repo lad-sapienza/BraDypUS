@@ -40,7 +40,7 @@ class vocabularies_ctrl extends Controller
 	public function edit()
 	{
 		$id = $this->get['id'];
-		$val = $this->get['val'];
+		$val = $this->request['val'];
 
 		$res = $this->getSysMng()->editRow('bdus_vocabularies', $id, [
 			'def' => $val
@@ -68,8 +68,8 @@ class vocabularies_ctrl extends Controller
 	
 	public function add()
 	{
-		$voc = $this->get['voc'];
-		$def = $this->get['def'];
+		$voc = $this->request['voc'];
+		$def = $this->request['def'];
 
 		$res = $this->getSysMng()->addRow('bdus_vocabularies', [
 			'voc' => $voc,

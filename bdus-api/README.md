@@ -129,7 +129,7 @@ docker compose exec app ./vendor/bin/phpunit --testdox
 
 ### Hurl — end-to-end API test suite
 
-14 sequential phases cover the full application lifecycle against a running server.
+16 sequential phases cover the full application lifecycle against a running server.
 Requires [hurl](https://hurl.dev) and [jq](https://jqlang.github.io/jq/) (`brew install hurl jq`).
 
 | Phase | What it tests |
@@ -148,6 +148,8 @@ Requires [hurl](https://hurl.dev) and [jq](https://jqlang.github.io/jq/) (`brew 
 | 12 | Data import (CSV / JSON / GeoJSON) |
 | 13 | DB migrations list |
 | 14 | Relations panel (bdus_cfg_relations CRUD) |
+| 15 | Vocabularies CRUD |
+| 16 | Welcome text + Search & Replace |
 
 ```bash
 # Start the server first (Docker or native), then:

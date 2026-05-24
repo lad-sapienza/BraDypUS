@@ -158,6 +158,9 @@ class Router
         'config_ctrl::delete_local_geofile'          => 'super_admin',
         'config_ctrl::getValidationReport'           => 'super_admin',
         'config_ctrl::fix'                           => 'super_admin',
+        'config_ctrl::getRelations'                  => 'super_admin',
+        'config_ctrl::saveRelation'                  => 'super_admin',
+        'config_ctrl::deleteRelation'                => 'super_admin',
         'frontpage_editor_ctrl::saveWelcome'         => 'super_admin',
         'templates_ctrl::getTableList'               => 'super_admin',
         'templates_ctrl::getTemplateList'            => 'super_admin',
@@ -280,6 +283,10 @@ class Router
             $r->addRoute('DELETE', '/api/config/geofile',     ['config_ctrl', 'delete_local_geofile']);
             $r->addRoute('GET',    '/api/config/validation',      ['config_ctrl', 'getValidationReport']);
             $r->addRoute('POST',   '/api/config/validation/fix',  ['config_ctrl', 'fix']);
+            $r->addRoute('GET',    '/api/config/relations',        ['config_ctrl', 'getRelations']);
+            $r->addRoute('POST',   '/api/config/relations',        ['config_ctrl', 'saveRelation']);
+            $r->addRoute('PUT',    '/api/config/relations/{id}',   ['config_ctrl', 'saveRelation']);
+            $r->addRoute('DELETE', '/api/config/relations/{id}',   ['config_ctrl', 'deleteRelation']);
 
             // ── Admin ─────────────────────────────────────────────────────────
             $r->addRoute('POST', '/api/admin/check-password', ['confirm_super_adm_pwd_ctrl', 'check_pwd']);

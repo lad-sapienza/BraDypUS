@@ -708,6 +708,153 @@ class config_ctrl extends Controller
     }
   }
 
+  // ── Relations (dedicated panel) ──────────────────────────────────────────
+
+  /**
+   * Returns all relations with table labels.
+   *
+   * GET /api/config/relations
+   *
+   * Response: { status, code, data: [ {id, from_tb, from_label, to_tb, to_label, fld[]} ] }
+   */
+  public function getRelations(): void
+  {
+    if (!$this->requireSuperAdmin()) return;
+
+    try {
+      $rows = $this->db->query(
+        'SELECT r.id, r.from_tb, r.to_tb, r.fld, r.sort,
+                tf.label AS from_label, tt.label AS to_label
+           FROM bdus_cfg_relations r
+      LEFT JOIN bdus_cfg_tables tf ON tf.name = r.from_tb
+      LEFT JOIN bdus_cfg_tables tt ON tt.name = r.to_tb
+          ORDER BY r.from_tb ASC, r.sort ASC, r.id ASC',
+        [],
+        'read'
+      ) ?: [];
+
+      $data = array_map(static function ($r) {
+        return [
+          'id'         => (int) $r['id'],
+          'from_tb'    => $r['from_tb'],
+          'from_label' => $r['from_label'] ?? $r['from_tb'],
+          'to_tb'      => $r['to_tb'],
+          'to_label'   => $r['to_label']   ?? $r['to_tb'],
+          'fld'        => $r['fld'] ? (json_decode($r['fld'], true) ?: []) : [],
+        ];
+      }, $rows);
+
+      $this->returnJson(['status' => 'success', 'code' => 'relations', 'data' => $data]);
+    } catch (\Throwable $e) {
+      $this->log->error($e);
+      $this->returnJson(['status' => 'error', 'code' => 'db_error', 'detail' => $e->getMessage()]);
+    }
+  }
+
+  /**
+   * Creates or updates a single relation.
+   *
+   * POST /api/config/relations        → create (no id in body)
+   * PUT  /api/config/relations/{id}   → update existing row
+   *
+   * Body: { from_tb, to_tb, fld: [{my, other}, …] }
+   * Response: { status, code, id }
+   */
+  public function saveRelation(): void
+  {
+    if (!$this->requireSuperAdmin()) return;
+
+    $id     = isset($this->get['id'])  ? (int) $this->get['id']  : null;
+    $fromTb = trim($this->post['from_tb'] ?? '');
+    $toTb   = trim($this->post['to_tb']   ?? '');
+    $fld    = $this->post['fld'] ?? [];
+
+    if (!$fromTb || !$toTb) {
+      $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
+      return;
+    }
+    if ($fromTb === $toTb) {
+      $this->returnJson(['status' => 'error', 'code' => 'relation_self_loop']);
+      return;
+    }
+
+    // Normalise: always store the alphabetically-first table as from_tb so
+    // the UNIQUE(from_tb, to_tb) index is never violated by reverse pairs.
+    if ($fromTb > $toTb) {
+      [$fromTb, $toTb] = [$toTb, $fromTb];
+      $fld = array_map(
+        static fn($p) => ['my' => $p['other'] ?? '', 'other' => $p['my'] ?? ''],
+        (array) $fld
+      );
+    }
+
+    $fldJson = json_encode(array_values((array) $fld), JSON_UNESCAPED_UNICODE);
+
+    try {
+      if ($id) {
+        $this->db->query(
+          'UPDATE bdus_cfg_relations SET from_tb=?, to_tb=?, fld=? WHERE id=?',
+          [$fromTb, $toTb, $fldJson, $id],
+          'boolean'
+        );
+        $this->returnJson(['status' => 'success', 'code' => 'relation_saved', 'id' => $id]);
+      } else {
+        // Reject if the canonical pair already exists.
+        $existing = $this->db->query(
+          'SELECT id FROM bdus_cfg_relations WHERE from_tb=? AND to_tb=?',
+          [$fromTb, $toTb],
+          'read'
+        );
+        if (!empty($existing)) {
+          $this->returnJson(['status' => 'error', 'code' => 'relation_already_exists']);
+          return;
+        }
+        $newId = $this->db->query(
+          'INSERT INTO bdus_cfg_relations (from_tb, to_tb, fld, sort) VALUES (?,?,?,0)',
+          [$fromTb, $toTb, $fldJson],
+          'id'
+        );
+        $this->returnJson(['status' => 'success', 'code' => 'relation_saved', 'id' => (int) $newId]);
+      }
+    } catch (\Throwable $e) {
+      $this->log->error($e);
+      $this->returnJson(['status' => 'error', 'code' => 'db_error', 'detail' => $e->getMessage()]);
+    }
+  }
+
+  /**
+   * Deletes a relation by id.
+   *
+   * DELETE /api/config/relations/{id}
+   * Response: { status, code }
+   */
+  public function deleteRelation(): void
+  {
+    if (!$this->requireSuperAdmin()) return;
+
+    $id = (int) ($this->get['id'] ?? 0);
+    if (!$id) {
+      $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
+      return;
+    }
+
+    try {
+      $affected = $this->db->query(
+        'DELETE FROM bdus_cfg_relations WHERE id=?',
+        [$id],
+        'affected'
+      );
+      if ($affected > 0) {
+        $this->returnJson(['status' => 'success', 'code' => 'relation_deleted']);
+      } else {
+        $this->returnJson(['status' => 'error', 'code' => 'not_found']);
+      }
+    } catch (\Throwable $e) {
+      $this->log->error($e);
+      $this->returnJson(['status' => 'error', 'code' => 'db_error', 'detail' => $e->getMessage()]);
+    }
+  }
+
   // ── Private helpers ───────────────────────────────────────────────────────
 
   /**

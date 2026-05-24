@@ -119,8 +119,13 @@ class ToDB
             );
         }
 
-        // Persist forward-link relations (replaces existing rows for this table).
-        self::upsertRelations($db, $name, $tbData['link'] ?? []);
+        // Persist forward-link relations only when 'link' is explicitly provided.
+        // After the dedicated Relations panel (v5), link editing goes through
+        // saveRelation/deleteRelation and the table-form payload no longer includes
+        // the 'link' key — so we must not wipe existing relations on every table save.
+        if (array_key_exists('link', $tbData)) {
+            self::upsertRelations($db, $name, $tbData['link']);
+        }
     }
 
     /**

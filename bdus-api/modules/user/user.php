@@ -238,13 +238,17 @@ class user_ctrl extends Controller
 	/**
 	 * Returns all per-table privilege overrides for a user.
 	 *
-	 * v5 JSON shape:
-	 * [
-	 *   { "id": int, "user_id": int, "table_name": string,
-	 *     "privilege": int, "subset": string|null }
-	 * ]
-	 *
 	 * GET ?obj=user_ctrl&method=getTablePrivileges&user_id=ID
+	 *
+	 * Success:
+	 * {
+	 *   "status": "success",
+	 *   "code":   "table_privileges",
+	 *   "data": [
+	 *     { "id": int, "user_id": int, "table_name": string,
+	 *       "privilege": int, "subset": string|null }
+	 *   ]
+	 * }
 	 */
 	public function getTablePrivileges(): void
 	{
@@ -268,8 +272,7 @@ class user_ctrl extends Controller
 				[$userId],
 				'read'
 			) ?: [];
-			// TODO: add status code and message to the response envelope
-			$this->returnJson($rows);
+			$this->returnJson(['status' => 'success', 'code' => 'table_privileges', 'data' => $rows]);
 		} catch (\Throwable $e) {
 			$this->log->error($e);
 			$this->returnJson(['status' => 'error', 'code' => 'db_error', 'detail' => $e->getMessage()]);

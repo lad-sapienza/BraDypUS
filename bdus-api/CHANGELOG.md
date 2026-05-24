@@ -363,6 +363,55 @@ The PHP backend is preserved and extended with JSON endpoints consumed by the ne
   were only used by `API\V1\Handler`; removed along with V1.
 - `/api/v1/` URI prefix intercept removed from `index.php`.
 
+### Added (cont.)
+- **Relations panel** (`ConfigView` → Relations tab): dedicated CRUD panel for
+  `bdus_cfg_relations` — lists all table-to-table links with field-mapping
+  badges, inline add/edit form with lazy field-dropdown loading, and
+  confirm-before-delete. Three new `super_admin` endpoints:
+  `GET /api/config/relations`, `POST /api/config/relations`,
+  `PUT /api/config/relations/{id}`, `DELETE /api/config/relations/{id}`.
+  `ConfigTableForm` now renders the Links section as read-only with an
+  "Edit in Relations →" shortcut; the table-save payload no longer sends
+  `link` so existing relations are never silently overwritten.
+- **Migration M020 — deduplicate bidirectional relations**: self-join removes
+  redundant `(A→B)` + `(B→A)` duplicate pairs from `bdus_cfg_relations`;
+  same-direction duplicates are also collapsed. A `UNIQUE(from_tb, to_tb)`
+  index is added afterward to prevent future duplicates. `ToDB::upsertTable()`
+  now guards the `upsertRelations` call with `array_key_exists('link', …)` so
+  saving a table form that omits the `link` key never clears existing relations.
+- **Hurl phase 13 and 14**: `13_migrations.hurl` (DB migration list endpoint)
+  and `14_relations.hurl` (13 HTTP requests covering the full relations lifecycle
+  — list, create, update, duplicate errors, self-loop error, delete) added to
+  the end-to-end API test suite and wired into `run.sh`.
+- **PHPUnit `ConfigRelationsCtrlTest`**: 15 integration tests covering
+  `getRelations`, `saveRelation` (create, canonical normalisation, duplicate
+  guards, self-loop, update), and `deleteRelation` (success, missing id,
+  non-existent id), each with a privilege guard assertion.
+
+### Fixed (cont.)
+- **`getTablePrivileges()` response envelope**: was returning a bare array;
+  now wrapped in the standard `{status, code, data}` envelope consumed by
+  `UserPrivilegesPanel.vue`.
+- **`Alter\Sqlite::renameFld()` on SQLite < 3.25.0**: the legacy rename path
+  (table rebuild) was unimplemented. Now executes: read DDL from
+  `sqlite_master`, read column order from `PRAGMA table_info`, rewrite DDL with
+  the new column name, create temp table, `INSERT … SELECT`, drop original,
+  rename temp — all inside a transaction.
+- **`ShortSql\Join` orphaned `$values`**: `$values = $parsedWhere['sql_values']`
+  was always empty (the WHERE parser runs with `noValues=true` to preserve
+  PDO-binding order) and unused; removed and replaced with a design-rationale
+  comment.
+- **Hurl phase 13 invalid template syntax**: `{{$.total}}` is not valid Hurl
+  variable syntax; fixed by capturing `total` in one request and referencing
+  `{{migrations_total}}` in the next.
+
+### Changed (cont.)
+- **Bidirectional relation loading**: `Config\LoadFromDB` tags each row from
+  `bdus_cfg_relations` as forward (`_inverted: false`) or reverse
+  (`_inverted: true`) and auto-swaps `my`↔`other` in the `fld` array for
+  reverse reads, so both sides of a relation always see the correct field
+  direction without storing duplicate rows.
+
 ## [4.4.7] - 2026-05-09
 
 ### Fixed

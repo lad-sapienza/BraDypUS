@@ -129,17 +129,32 @@ docker compose exec app ./vendor/bin/phpunit --testdox
 
 ### Hurl — end-to-end API test suite
 
-Nine sequential phases cover the full application lifecycle against a running server.
+14 sequential phases cover the full application lifecycle against a running server.
 Requires [hurl](https://hurl.dev) and [jq](https://jqlang.github.io/jq/) (`brew install hurl jq`).
+
+| Phase | What it tests |
+|---|---|
+| 01 | Create application |
+| 02 | Login / JWT capture |
+| 03 | Config — tables & fields |
+| 04 | Records CRUD |
+| 05 | Stratigraphic relations (RS) |
+| 06 | Search (simple / advanced / SQL expert) |
+| 07 | Charts |
+| 08 | Backup (create / list / delete) |
+| 09 | Users & privilege enforcement |
+| 10 | Cleanup / logout |
+| 11 | Record version history |
+| 12 | Data import (CSV / JSON / GeoJSON) |
+| 13 | DB migrations list |
+| 14 | Relations panel (bdus_cfg_relations CRUD) |
 
 ```bash
 # Start the server first (Docker or native), then:
 bash tests/api/run.sh tests/api/vars.env
 
-# Useful flags
-bash tests/api/run.sh tests/api/vars.env --from=04   # resume from phase 04
-bash tests/api/run.sh tests/api/vars.env --only=06   # run a single phase
-bash tests/api/run.sh tests/api/vars.env --list      # dry-run: show all steps
+# Dry-run: list all phases and their steps
+bash tests/api/run.sh tests/api/vars.env --list
 ```
 
 Edit `tests/api/vars.env` to point at a different server or app name.
@@ -152,12 +167,19 @@ Each application stores its data under `projects/{app_name}/`:
 
 ```
 projects/{app_name}/
-├── cfg/        JSON configuration files (tables, fields, app settings)
-├── files/      Uploaded files
-├── backups/    Database backups
-├── export/     Export output
-└── db/         SQLite database (if using SQLite engine)
+├── config.json     Application settings (DB engine, credentials, …)
+├── .jwt_secret     Per-app JWT signing secret (auto-generated, chmod 0600)
+├── .htaccess       Blocks web access to config.json and .jwt_secret
+├── files/          Uploaded files
+├── backups/        Database backups
+├── geodata/        GeoJSON / KML / GPX files for the map layer editor
+├── export/         Export output (CSV, JSON, …)
+└── db/             SQLite database file (if using the SQLite engine)
 ```
+
+Table/field/relation configuration is stored directly in the SQLite database
+(`bdus_cfg_tables`, `bdus_cfg_fields`, `bdus_cfg_relations`) — no per-table
+JSON files on disk.
 
 The `projects/` directory is bind-mounted in Docker so data persists across container restarts.
 

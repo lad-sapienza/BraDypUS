@@ -16,17 +16,35 @@ License: [GNU AGPL-3.0](LICENSE) · Docs: [docs.bdus.cloud](https://docs.bdus.cl
 bdus-app is the browser-based interface for BraDypUS. It connects to the
 bdus-api backend via a REST JSON API and provides:
 
-- Multi-app login with app selector
-- Record browsing, search (simple / advanced / free SQL), and editing
-- File and image management
-- Geodata viewer and editor (MapLibre GL)
-- Charts (bar, line, pie, doughnut, metric)
-- Stratigraphic / Harris matrix viewer
-- Saved queries and search templates
-- Full configuration panel (tables, fields, validation rules, users)
-- Dark / light mode
+- **Multi-app login** with per-tab JWT isolation — multiple apps open simultaneously in one browser
+- **Record browsing & editing** — all field types (text, date, select, multi-select, boolean, slider, link), plugin tables, file upload, unsaved-changes guard, client-side validation
+- **Search** — simple (fast), advanced (field/operator/value), SQL expert mode, ShortSQL DSL; active filter persisted in the URL
+- **Export** — CSV, XLSX, JSON streamed as download from any active search
+- **File & image management** — gallery panel, sortable attachments, drag-and-drop reorder
+- **Geodata viewer & editor** — MapLibre GL; WMS, tile, and local GeoJSON/KML/GPX layers; click-to-place / drag-to-move geometry
+- **Charts** — bar, line, pie, doughnut, metric; save and share chart definitions
+- **Stratigraphic / Harris matrix** — Cytoscape.js + cytoscape-dagre; cyclic-edge detection; filter by search
+- **Saved queries & search templates**
+- **Search & replace** across any text field
+- **Record version history** — diff view, one-click restore
+- **Deleted records** — soft-delete list with restore
+- **Data import** — CSV, JSON, GeoJSON, photo batch upload
+- **Free SQL console** — password-gated raw query runner (super_admin only)
+- **Design templates** — visual JSON editor for per-table record-view layouts
+- **Full configuration panel**
+  - App settings (DB engine, language, status, …)
+  - Table & field editor (add, rename, delete, reorder)
+  - Relations panel — manage cross-table links centrally
+  - Schema validation with one-click fixes
+  - Geoface layer editor + file upload
+  - API key management
+- **Users & privileges** — per-user role (reader / writer / admin / super_admin); per-table privilege overrides; optional row-level SQL filter
+- **Backup & restore** — list, create, download, delete, restore (super_admin)
+- **DB migration runner** — lists applied/pending migrations; version restore
+- **Dark / light mode** — PrimeVue Aura theme; all components dark-mode ready
+- **i18n** — Italian / English; locale switcher in the UI
 
-**Stack:** Vue 3 · Vite · PrimeVue 4 · Pinia · Vue Router · MapLibre GL · Chart.js · Cytoscape.js
+**Stack:** Vue 3 · Vite · PrimeVue 4 (Aura) · Pinia · Vue Router · MapLibre GL · Chart.js · Cytoscape.js · marked.js
 
 ---
 
@@ -143,8 +161,31 @@ Copy `.env.example` to `.env` and edit as needed.
 npm run build
 ```
 
-Output is in `dist/`. Serve it with any static file server and point
-`/api/`, `/index.php`, `/projects/`, `/cache/` to the bdus-api backend.
+Output is in `dist/`. Serve it with any static file server (Apache, Nginx, Caddy).
+All `/api/*` requests must be proxied to the bdus-api backend.
+
+Minimal Nginx snippet:
+
+```nginx
+server {
+    root /path/to/dist;
+    index index.html;
+
+    # SPA fallback — all non-file requests serve index.html
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # Proxy API calls to the PHP backend
+    location /api/ {
+        proxy_pass http://bdus-api:80;
+        proxy_set_header Host $host;
+    }
+}
+```
+
+For a same-origin deployment (frontend and backend served from the same domain),
+copy the `dist/` contents into the bdus-api document root and leave `VITE_API_BASE` empty.
 
 ---
 

@@ -7,7 +7,8 @@
         { "name": "sort",    "type": "INTEGER",            "notnull": false }
     ],
     "indexes": [
-        { "name": "cfg_rel_from_idx", "unique": false, "columns": ["from_tb"] }
+        { "name": "cfg_rel_from_idx",    "unique": false, "columns": ["from_tb"] },
+        { "name": "cfg_rel_unique_pair", "unique": true,  "columns": ["from_tb", "to_tb"] }
     ],
     "relations": []
 }

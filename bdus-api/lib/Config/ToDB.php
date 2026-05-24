@@ -146,12 +146,12 @@ class ToDB
             return;
         }
 
-        // Delete existing relations for this table.
-        $db->query(
-            'DELETE FROM bdus_cfg_relations WHERE from_tb=?',
-            [$fromTb],
-            'boolean'
-        );
+        // Delete existing relations for this table — both forward (from_tb = X)
+        // and reverse (to_tb = X). After M020 each pair is stored once; when the
+        // user re-saves a table's link config we must also clear any canonical row
+        // that was originally stored from the OTHER side of the relationship.
+        $db->query('DELETE FROM bdus_cfg_relations WHERE from_tb=?', [$fromTb], 'boolean');
+        $db->query('DELETE FROM bdus_cfg_relations WHERE to_tb=?',   [$fromTb], 'boolean');
 
         // Insert new relations.
         $sort = 0;

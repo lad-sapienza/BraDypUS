@@ -28,6 +28,7 @@ use DB\System\Migrations\M016_RenameAppDataJson;
 use DB\System\Migrations\M017_CleanupCfgDir;
 use DB\System\Migrations\M018_MoveConfigToRoot;
 use DB\System\Migrations\M019_AppSettingsToDB;
+use DB\System\Migrations\M020_DeduplicateRelations;
 use Monolog\Logger;
 
 /**
@@ -73,6 +74,7 @@ class Migrate
         M017_CleanupCfgDir::class,
         M018_MoveConfigToRoot::class,
         M019_AppSettingsToDB::class,
+        M020_DeduplicateRelations::class,
     ];
 
     /**

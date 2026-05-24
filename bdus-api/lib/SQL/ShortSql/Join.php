@@ -22,7 +22,14 @@ class Join
 
     /**
      * Gets array of JOIN statements and returns array of join arrays containing:
-     *      table name, table alias, on statement, on values
+     *      table name, table alias, on statement
+     *
+     * ON conditions are always rendered without PDO placeholders (noValues = true).
+     * This is intentional: JOIN clauses precede the WHERE clause in the assembled SQL,
+     * so mixing parameterised ON values with WHERE values would require the caller to
+     * split and reorder the PDO binding array. Inlining literals in JOIN ON avoids
+     * that complexity. Subqueries inside JOIN ON are an unsupported edge case — if
+     * ever needed they must be handled with a dedicated inline-binding strategy.
      *
      * @param array $join_arr
      * @return array
@@ -63,8 +70,8 @@ class Join
                 $parseShortSql
             );
             $on = $parsedWhere['sql_parts'];
-            // TODO: è giusto che $values rimanga orfana?
-            $values = $parsedWhere['sql_values'];
+            // sql_values is always empty here because noValues = true is passed to
+            // Where::parse() above — literals are inlined, not parameterised.
             unset($parsedWhere);
 
             // Add values to return list
@@ -75,8 +82,7 @@ class Join
             ]);
         }
 
-        // Return array of JOIN statements
-        // [ tb_name, tb_alias, on (where array), values (array)]
+        // Return array of JOIN statements: [ tb_name, tb_alias, on (where array) ]
         return $ret;
     }
 }

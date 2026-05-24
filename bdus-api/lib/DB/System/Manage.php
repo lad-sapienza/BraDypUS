@@ -281,9 +281,11 @@ class Manage
                 // TIMESTAMP fields are set to DATETIME on MySQL and SQLite
                 $type = $driver === 'pgsql' ? 'TIMESTAMP' : 'DATETIME';
             } else if(strtolower($clm['type']) === 'geometry'){
-                // TODO Geometry fields are set to text in non spatial databases
-                // And to geometry in spatial databases. Not yet supported!
-                // $type = $spatial ? 'GEOMETRY' : 'TEXT';
+                // FUTURE: support native GEOMETRY type for PostGIS-enabled PostgreSQL.
+                // Requires detecting whether the DB has PostGIS active and adapting
+                // geodata queries to use spatial functions (ST_Within, ST_Distance, …).
+                // For now all geometry values are stored as WKT strings in a TEXT column,
+                // which is sufficient for the current MapLibre-based geoface module.
                 $type = 'TEXT';
             } else {
                 $type = $clm['type'];

@@ -28,11 +28,75 @@ class Sqlite implements AlterInterface
 
     public function renameFld(string $tb, string $old, string $new, $fld_type = false): bool
     {
-        if( \version_compare($this->sqlite_version, '3.25.0')  === -1 ) {
-            // TODO: implement the old way
-            // https://www.sqlitetutorial.net/sqlite-rename-column/#:~:text=ALTER%20TABLE%20table_name%20RENAME%20COLUMN,name%20after%20the%20TO%20keyword.
-            throw new \Exception("Your sqlite version ({$this->sqlite_version}) does not support field rename");
-            
+        if (\version_compare($this->sqlite_version, '3.25.0') === -1) {
+            // Pre-3.25.0: RENAME COLUMN is not available, so we must rebuild the table.
+            // Strategy (mirrors dropFld):
+            //   1. Fetch the original CREATE TABLE DDL from sqlite_master.
+            //   2. Rewrite it: rename the table identifier → tmp name, rename the column.
+            //   3. Create the tmp table, copy rows, drop the original, rename tmp → original.
+            // Ref: https://www.sqlite.org/lang_altertable.html#making_other_kinds_of_table_schema_changes
+
+            // 1. Get the CREATE TABLE statement.
+            $res = $this->db->query(
+                'SELECT sql FROM sqlite_master WHERE type = ? AND name = ?',
+                ['table', $tb]
+            );
+            if (!$res || !\is_array($res) || empty($res[0]['sql'])) {
+                throw new \Exception("Cannot get CREATE SQL for table $tb");
+            }
+            $origSql = $res[0]['sql'];
+
+            // 2. Get ordered column list (needed for INSERT … SELECT).
+            $pragma = $this->db->query('PRAGMA table_info(' . $tb . ')');
+            if (!$pragma || !\is_array($pragma)) {
+                throw new \Exception("Cannot get fields for $tb");
+            }
+            $srcCols = [];
+            $dstCols = [];
+            foreach ($pragma as $row) {
+                $srcCols[] = '"' . $row['name'] . '"';
+                $dstCols[] = '"' . ($row['name'] === $old ? $new : $row['name']) . '"';
+            }
+
+            $tmpTb = uniqid($tb . '_');
+
+            // 3. Rewrite the DDL.
+            //    a) Rename CREATE TABLE identifier.
+            $newDdl = preg_replace(
+                '/CREATE\s+TABLE\s+"?' . preg_quote($tb, '/') . '"?/i',
+                'CREATE TABLE "' . $tmpTb . '"',
+                $origSql
+            );
+            //    b) Rename the column: match only at a column-definition boundary
+            //       (preceded by "(" or "," + optional whitespace, followed by whitespace
+            //       before the type), so we never accidentally rename a substring.
+            $newDdl = preg_replace(
+                '/([(,]\s*)"?' . preg_quote($old, '/') . '"?(?=\s)/im',
+                '$1"' . $new . '"',
+                $newDdl
+            );
+
+            $stmts = [
+                $newDdl,
+                'INSERT INTO "' . $tmpTb . '" (' . implode(', ', $dstCols) . ')'
+                    . ' SELECT ' . implode(', ', $srcCols) . ' FROM "' . $tb . '"',
+                'DROP TABLE "' . $tb . '"',
+                'ALTER TABLE "' . $tmpTb . '" RENAME TO "' . $tb . '"',
+            ];
+
+            try {
+                $this->db->beginTransaction();
+                foreach ($stmts as $s) {
+                    if ($this->db->exec($s) === false) {
+                        throw new \Exception("Error executing: $s");
+                    }
+                }
+                $this->db->commit();
+            } catch (\Throwable $th) {
+                $this->db->rollBack();
+                return false;
+            }
+            return true;
 
         } else {
             $sql = "ALTER TABLE {$tb} RENAME COLUMN {$old} TO {$new}";

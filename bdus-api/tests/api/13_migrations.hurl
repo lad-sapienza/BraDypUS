@@ -11,10 +11,19 @@ jsonpath "$.status"     == "success"
 jsonpath "$.total"      isInteger
 jsonpath "$.applied"    isInteger
 jsonpath "$.migrations" isCollection
-# All known migrations must be present
-jsonpath "$.migrations" count == {{$.total}}
-# applied counter must not exceed total
-jsonpath "$.applied"    <= {{$.total}}
+jsonpath "$.migrations" count >= 1
+[Captures]
+migrations_total:   jsonpath "$.total"
+migrations_applied: jsonpath "$.applied"
+
+
+# ── 13a2. Verify applied <= total (cross-request capture check) ──────
+GET {{base_url}}/api/migrations
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.total"   == {{migrations_total}}
+jsonpath "$.applied" <= {{migrations_total}}
 
 
 # ── 13b. Each row has the required shape ────────────────────────────

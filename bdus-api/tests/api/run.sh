@@ -235,6 +235,20 @@ run_phase "Data import" "12_import.hurl" \
   --variable "jwt=${JWT}"
 
 # ════════════════════════════════════════════════════════════════════
+# Phase 13 — DB migrations list
+# ════════════════════════════════════════════════════════════════════
+header "Phase 13 — DB migrations"
+run_phase "DB migrations" "13_migrations.hurl" \
+  --variable "jwt=${JWT}"
+
+# ════════════════════════════════════════════════════════════════════
+# Phase 14 — Relations panel (bdus_cfg_relations CRUD)
+# ════════════════════════════════════════════════════════════════════
+header "Phase 14 — Relations panel"
+run_phase "Relations panel" "14_relations.hurl" \
+  --variable "jwt=${JWT}"
+
+# ════════════════════════════════════════════════════════════════════
 # Phase 10 — Cleanup
 # ════════════════════════════════════════════════════════════════════
 header "Phase 10 — Cleanup"

@@ -1,0 +1,53 @@
+# Production deployment: pre-built images served via Apache (PHP) + Nginx (Vue).
+#
+# Usage:
+#   docker compose -f docker-compose.prod.yml up -d --build
+#
+# The frontend (Nginx) proxies /api/, /index.php, /projects/, /cache/ to the
+# api service, so everything is accessible on a single port (80) and no CORS
+# configuration is needed.
+#
+# Persistent data (uploaded files, SQLite databases, backups) is stored in the
+# named volume "projects_data" and survives container restarts and rebuilds.
+#
+# Environment variables you may want to override (via .env or -e):
+#   BRADYPUS_DEBUG        — set to 1 to enable debug output (default: 0)
+#   BRADYPUS_ALLOW_NEW_APP — set to 1 to enable the new-app wizard (default: 0)
+
+services:
+
+  # ── PHP / Apache backend ──────────────────────────────────────────────────
+  api:
+    build: bdus-api/
+    expose:
+      - "80"          # only reachable within the Docker network; not published
+    environment:
+      - BRADYPUS_DEBUG=0
+      - BRADYPUS_ALLOW_NEW_APP=0
+    volumes:
+      - projects_data:/var/www/html/projects
+    networks:
+      - bradypus-net
+    restart: unless-stopped
+
+  # ── Vue SPA / Nginx frontend ──────────────────────────────────────────────
+  frontend:
+    build: bdus-app/
+    ports:
+      - "80:80"
+    environment:
+      # Must match the service name + port above
+      - API_PROXY_TARGET=http://api:80
+    depends_on:
+      - api
+    networks:
+      - bradypus-net
+    restart: unless-stopped
+
+volumes:
+  projects_data:
+
+networks:
+  bradypus-net:
+    driver: bridge
+    name: bradypus-net

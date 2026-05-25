@@ -1,0 +1,27 @@
+# ── Sub-repositories ─────────────────────────────────────────────────────────
+# bdus-api and bdus-app are independent git repos cloned alongside this one.
+# They must NOT be tracked here (no submodules).
+bdus-api/
+bdus-app/
+
+# ── Local compose overrides ───────────────────────────────────────────────────
+# Create a .env file here to override compose variables locally
+# (e.g. BRADYPUS_ALLOW_NEW_APP=1) without touching the committed files.
+.env
+.env.*
+!.env.example
+
+# ── Claude Code session data ──────────────────────────────────────────────────
+.claude/
+
+# ── macOS ─────────────────────────────────────────────────────────────────────
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# ── Editors ───────────────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+*~

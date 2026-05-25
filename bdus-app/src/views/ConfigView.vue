@@ -34,7 +34,6 @@
           @deleted="onDeleted"
           @renamed="onRenamed"
           @open-fields="openFields"
-          @open-relations="setPanel('relations')"
         />
 
       </div>

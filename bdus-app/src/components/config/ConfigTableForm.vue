@@ -164,53 +164,6 @@
         </div>
       </section>
 
-      <!-- ── Backlinks (existing non-plugin tables) ────────────────── -->
-      <section v-if="tb && !isPlugin" class="cfg-section">
-        <div class="cfg-section-title">{{ t('backlinks') }}</div>
-        <small class="cfg-help-text">{{ t('backlinks_help') }}</small>
-        <div class="cfg-list-selects">
-          <div v-for="(val, idx) in form.backlinks" :key="idx" class="cfg-list-select-row">
-            <InputText v-model="form.backlinks[idx]" size="small" style="flex:1" placeholder="dest_table:plugin_table:plugin_field" />
-            <Button icon="pi pi-minus" severity="danger" size="small" text @click="form.backlinks.splice(idx, 1)" />
-          </div>
-          <Button :label="t('add')" icon="pi pi-plus" size="small" outlined @click="form.backlinks.push('')" />
-        </div>
-      </section>
-
-      <!-- ── Links (existing tables — read-only; edit via Relations panel) -->
-      <section v-if="tb" class="cfg-section">
-        <div class="cfg-section-title">
-          {{ t('links') }}
-          <button class="cfg-rel-edit-link" @click="$emit('open-relations')">
-            <i class="pi pi-sitemap" />
-            {{ t('edit_in_relations') }}
-          </button>
-        </div>
-
-        <div v-if="!form.link || form.link.filter(l => l.other_tb).length === 0" class="cfg-help-text cfg-rel-empty">
-          {{ t('no_relations') }}
-        </div>
-
-        <div
-          v-for="(link, li) in form.link.filter(l => l.other_tb)"
-          :key="li"
-          class="cfg-link-card cfg-link-card--readonly"
-        >
-          <div class="cfg-link-header">
-            <span class="cfg-rel-tb-label">
-              {{ availableTables[link.other_tb] || link.other_tb }}
-            </span>
-          </div>
-          <div v-if="link.fld && link.fld.length" class="cfg-link-fields">
-            <div v-for="(pair, fi) in link.fld" :key="fi" class="cfg-link-pair cfg-link-pair--readonly">
-              <span class="cfg-rel-fld-badge">{{ pair.my }}</span>
-              <i class="pi pi-arrows-h cfg-link-arrow" />
-              <span class="cfg-rel-fld-badge">{{ pair.other }}</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
       <!-- ── Danger zone ────────────────────────────────────────────── -->
       <section v-if="tb" class="cfg-section cfg-danger-section">
         <div class="cfg-section-title cfg-danger-title">{{ t('danger_zone') }}</div>
@@ -258,7 +211,7 @@ import { api }        from '@/api'
 const props = defineProps({
   tb: { type: String, default: null }   // null → "add new" mode
 })
-const emit = defineEmits(['saved', 'deleted', 'renamed', 'open-fields', 'open-relations'])
+const emit = defineEmits(['saved', 'deleted', 'renamed', 'open-fields'])
 
 const { t }   = useI18n()
 const toast   = useToast()
@@ -275,7 +228,6 @@ const table            = ref(null)
 const form             = ref(null)
 const fieldLabels      = ref({})
 const availablePlugins = ref({})
-const availableTables  = ref({})
 
 // Rename dialog
 const renameVisible = ref(false)
@@ -293,10 +245,6 @@ const pluginOptions = computed(() =>
   Object.entries(availablePlugins.value).map(([k, v]) => ({ value: k, label: v }))
 )
 
-const tableOptions = computed(() =>
-  Object.entries(availableTables.value).map(([k, v]) => ({ value: k, label: v }))
-)
-
 // ── Data loading ───────────────────────────────────────────────────────────
 async function load() {
   loading.value   = true
@@ -308,16 +256,9 @@ async function load() {
     table.value            = res.table
     fieldLabels.value      = res.field_labels      ?? {}
     availablePlugins.value = res.available_plugins ?? {}
-    availableTables.value  = res.available_tables  ?? {}
 
     // Deep clone table data into form, normalising arrays
     const td = res.table ?? {}
-
-    // Build link list for read-only display
-    const links = (td.link ?? []).map(l => ({
-      other_tb: l.other_tb ?? '',
-      fld: (l.fld ?? []).map(f => ({ my: f.my ?? '', other: f.other ?? '' })),
-    }))
 
     form.value = {
       name:        td.name        ?? '',
@@ -329,7 +270,6 @@ async function load() {
       preview:     Array.isArray(td.preview)   ? [...td.preview]   : [''],
       plugin:      Array.isArray(td.plugin)    ? [...td.plugin]    : [''],
       backlinks:   Array.isArray(td.backlinks) ? [...td.backlinks] : [],
-      link:        links,
     }
 
     newName.value = props.tb ?? ''
@@ -542,82 +482,6 @@ onMounted(load)
   display: flex;
   align-items: center;
   gap: 0.4rem;
-}
-
-/* Links */
-.cfg-link-card {
-  border: 1px solid var(--p-content-border-color);
-  border-radius: 6px;
-  padding: 0.75rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  background: var(--bdus-bg);
-}
-.cfg-link-header {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-.cfg-link-fields {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  padding-left: 0.5rem;
-  border-left: 2px solid var(--p-content-border-color);
-}
-.cfg-link-pair {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-.cfg-link-arrow {
-  font-size: 0.8rem;
-  color: var(--p-text-muted-color);
-  flex-shrink: 0;
-}
-
-/* Read-only link cards */
-.cfg-link-card--readonly {
-  opacity: 0.85;
-  pointer-events: none;
-  background: var(--p-content-hover-background);
-}
-.cfg-link-pair--readonly {
-  font-size: 0.8rem;
-  color: var(--p-text-muted-color);
-}
-.cfg-rel-tb-label {
-  font-weight: 600;
-  font-size: 0.88rem;
-}
-.cfg-rel-fld-badge {
-  font-size: 0.72rem;
-  color: var(--p-text-muted-color);
-  background: var(--bdus-bg);
-  border-radius: 3px;
-  padding: 0.1rem 0.4rem;
-  font-family: monospace;
-}
-.cfg-rel-edit-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  font-size: 0.72rem;
-  font-weight: 600;
-  text-transform: none;
-  letter-spacing: normal;
-  color: var(--p-primary-color);
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-.cfg-rel-edit-link:hover { opacity: 0.8; }
-.cfg-rel-empty {
-  padding: 0.25rem 0;
 }
 
 /* Danger zone */

@@ -29,6 +29,7 @@ use DB\System\Migrations\M017_CleanupCfgDir;
 use DB\System\Migrations\M018_MoveConfigToRoot;
 use DB\System\Migrations\M019_AppSettingsToDB;
 use DB\System\Migrations\M020_DeduplicateRelations;
+use DB\System\Migrations\M021_FixPluginOf;
 use Monolog\Logger;
 
 /**
@@ -75,6 +76,7 @@ class Migrate
         M018_MoveConfigToRoot::class,
         M019_AppSettingsToDB::class,
         M020_DeduplicateRelations::class,
+        M021_FixPluginOf::class,
     ];
 
     /**

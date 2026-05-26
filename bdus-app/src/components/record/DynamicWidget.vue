@@ -36,26 +36,44 @@ const container = ref(null)
 let widgetMod   = null
 
 /**
+ * Module-level cache: widget name → Promise<module default>.
+ *
+ * All DynamicWidget instances that use the same widget name share one import,
+ * which means they share the same module scope and its singleton state
+ * (e.g. the _uid counter and the CDN-load promise in quirematrix.js).
+ * Without this, each instance gets its own module scope, _uid resets to 0
+ * for every row, IDs collide, and the CDN script is injected multiple times.
+ */
+const _cache = new Map()
+
+/**
  * Fetches the widget JS with the Bearer token (dynamic import() cannot send
  * custom headers), turns the response text into a blob URL, imports from that,
- * then immediately revokes the blob URL to free memory.
+ * then revokes the blob URL.  The resolved module is cached so subsequent
+ * calls for the same name skip the network round-trip entirely.
  */
 async function fetchWidgetModule(name) {
+  if (_cache.has(name)) return _cache.get(name)
+
   const token = getToken()
   const url   = `/api/widget/${encodeURIComponent(name)}`
   const res   = await fetch(url, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   })
   if (!res.ok) throw new Error(`widget ${name} — HTTP ${res.status}`)
+
   const code    = await res.text()
   const blob    = new Blob([code], { type: 'application/javascript' })
   const blobUrl = URL.createObjectURL(blob)
-  try {
-    /* @vite-ignore — intentional dynamic import of a runtime blob URL */
-    return (await import(blobUrl)).default
-  } finally {
+
+  /* @vite-ignore — intentional dynamic import of a runtime blob URL */
+  const promise = import(blobUrl).then(mod => {
     URL.revokeObjectURL(blobUrl)
-  }
+    return mod.default
+  })
+
+  _cache.set(name, promise)
+  return promise
 }
 
 async function load() {

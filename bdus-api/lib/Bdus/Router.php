@@ -78,6 +78,8 @@ class Router
         'saved_queries_ctrl::listQueries'            => 'read',
         'myHistory_ctrl::getHistory'                 => 'read',
         'frontpage_editor_ctrl::getWelcome'          => 'read',
+        'widget_ctrl::listWidgets'                   => 'read',
+        'widget_ctrl::serveWidget'                   => 'read',
         'geoface_ctrl::getGeoJson'                   => 'read',
         'vocabularies_ctrl::list'                    => 'read',
 
@@ -367,6 +369,10 @@ class Router
             $r->addRoute('POST', '/api/import/data',         ['import_ctrl', 'importData']);
             $r->addRoute('POST', '/api/import/geojson',      ['import_ctrl', 'importGeoJson']);
             $r->addRoute('POST', '/api/import/photos',       ['import_ctrl', 'importPhotos']);
+
+            // ── Widgets ───────────────────────────────────────────────────────
+            $r->addRoute('GET', '/api/widgets',       ['widget_ctrl', 'listWidgets']);
+            $r->addRoute('GET', '/api/widget/{name}', ['widget_ctrl', 'serveWidget']);
 
             // ── New application wizard ────────────────────────────────────────
             $r->addRoute('GET',  '/api/new-app/status', ['new_app_ctrl', 'getStatus']);

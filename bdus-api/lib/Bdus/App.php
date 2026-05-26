@@ -299,6 +299,7 @@ class App
        * Run finally the method
        */
       $_aa->$method();
+
     } catch (\Throwable $e) {
       /**
        * Catch and log errors

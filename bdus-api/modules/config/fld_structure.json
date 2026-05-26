@@ -141,5 +141,13 @@
         "type": "input",
         "help": "The help text will be shown to the users, explaining them how to compile the field",
         "required": false
+    },
+    "widget": {
+        "type": "select",
+        "values": [
+            "list-of-available-widgets-here"
+        ],
+        "help": "Optional display widget for read mode. Place a .js ES-module in projects/{app}/widgets/ and it will appear here automatically. The raw value is always stored as plain text.",
+        "required": false
     }
 }

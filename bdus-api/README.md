@@ -39,11 +39,15 @@ bdus-api exposes a REST JSON API that the Vue frontend (bdus-app) consumes. It h
 
 ---
 
-## Quick start with Docker (recommended)
+## Deployment
 
-**Only Docker + Docker Compose needed on the host.**
+> Full documentation for all deployment scenarios (development, production from source,
+> Docker Hub images, manual installation) is in the
+> **[monorepo README](https://github.com/lad-sapienza/BraDypUS#deployment-scenarios)**.
 
-### Backend only
+### Backend only (development)
+
+The backend runs standalone at **http://localhost:8080**:
 
 ```bash
 git clone https://github.com/lad-sapienza/bdus-api.git
@@ -51,35 +55,37 @@ cd bdus-api
 docker compose up
 ```
 
-The API is now available at **http://localhost:8080**.  
-On first start Composer dependencies are installed automatically inside the container.
+Composer dependencies are installed automatically on first start.  
+Add `BRADYPUS_ALLOW_NEW_APP=1` to the environment to enable the new-application wizard.
 
-To create your first application, add `BRADYPUS_ALLOW_NEW_APP=1` to the
-`environment:` section of `docker-compose.yml` (or to a `.env` file), then visit
-**http://localhost:5173** from the running frontend.
+### Full stack — development (hot-reload)
 
-### Full stack (backend + frontend together)
-
-Clone both repositories side by side and use the parent compose file:
+Clone both repositories side by side, then use the root compose file:
 
 ```bash
 mkdir BraDypUS && cd BraDypUS
 git clone https://github.com/lad-sapienza/bdus-api.git
 git clone https://github.com/lad-sapienza/bdus-app.git
-
-# Write the unified compose (see bdus-app README for full content)
-# then:
-docker compose up
+docker compose up                          # Vue on :5173, PHP on :8080
 ```
 
-| Service | URL |
-|---|---|
-| PHP API | http://localhost:8080 |
-| Vue UI | http://localhost:5173 |
+### Full stack — production (from source)
 
----
+Pre-built Nginx + Apache images, everything on port 80:
 
-## Quick start without Docker
+```bash
+# (inside the BraDypUS/ monorepo directory)
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
+### Full stack — production (Docker Hub, coming soon)
+
+Once images are published at `jbogdani/bradypus-api` and `jbogdani/bradypus-app`,
+no source code is needed — see the
+[monorepo README](https://github.com/lad-sapienza/BraDypUS#c--production-from-docker-hub)
+for the ready-to-use `docker-compose.yml`.
+
+### Without Docker
 
 ```bash
 git clone https://github.com/lad-sapienza/bdus-api.git

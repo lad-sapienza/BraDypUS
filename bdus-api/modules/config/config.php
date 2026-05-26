@@ -874,10 +874,31 @@ class config_ctrl extends Controller
 
     $tableNames = array_values($this->cfg->get('tables.*.name') ?: []);
 
+    // Scan per-app widget files so the dropdown stays in sync automatically.
+    $widgetNames = [];
+    $widgetDir   = defined('PROJ_DIR') ? PROJ_DIR . 'widgets/' : null;
+    if ($widgetDir && is_dir($widgetDir)) {
+      foreach (glob($widgetDir . '*.js') as $file) {
+        $name = pathinfo($file, PATHINFO_FILENAME);
+        if (preg_match('/^[a-z0-9\-]+$/', $name)) {
+          $widgetNames[] = $name;
+        }
+      }
+      sort($widgetNames);
+    }
+
     $raw = file_get_contents(__DIR__ . '/fld_structure.json');
     $raw = str_replace(
-      ['list-of-system-defined-vocabularies-here', 'list-of-available-tables-here'],
-      [implode('","', $allVoc), implode('","', $tableNames)],
+      [
+        'list-of-system-defined-vocabularies-here',
+        'list-of-available-tables-here',
+        'list-of-available-widgets-here',
+      ],
+      [
+        implode('","', $allVoc),
+        implode('","', $tableNames),
+        implode('","', $widgetNames),
+      ],
       $raw
     );
 

@@ -458,6 +458,7 @@ class record_ctrl extends Controller
         'force_default' => !empty($fld['force_default']),
         'active_link'   => !empty($fld['active_link']),
         'direction'     => $fld['direction'] ?? null,
+        'widget'        => $fld['widget'] ?? null,
         'options_source' => null,
       ];
 

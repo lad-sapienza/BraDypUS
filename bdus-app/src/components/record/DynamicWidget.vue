@@ -38,42 +38,43 @@ let widgetMod   = null
 /**
  * Module-level cache: widget name → Promise<module default>.
  *
- * All DynamicWidget instances that use the same widget name share one import,
- * which means they share the same module scope and its singleton state
- * (e.g. the _uid counter and the CDN-load promise in quirematrix.js).
- * Without this, each instance gets its own module scope, _uid resets to 0
- * for every row, IDs collide, and the CDN script is injected multiple times.
+ * The promise is stored in the cache SYNCHRONOUSLY (before the first await)
+ * so that concurrent calls for the same name all receive the same promise
+ * and therefore the same module instance.  Without this, all DynamicWidget
+ * instances mounted at the same time would each see an empty cache, do their
+ * own fetch, and import separate blob URLs — giving each a fresh module scope
+ * with its own singleton state (_uid counter, CDN-load promise, etc.).
  */
 const _cache = new Map()
 
-/**
- * Fetches the widget JS with the Bearer token (dynamic import() cannot send
- * custom headers), turns the response text into a blob URL, imports from that,
- * then revokes the blob URL.  The resolved module is cached so subsequent
- * calls for the same name skip the network round-trip entirely.
- */
-async function fetchWidgetModule(name) {
-  if (_cache.has(name)) return _cache.get(name)
-
+/** Inner async worker — only ever called once per widget name. */
+async function _load(name) {
   const token = getToken()
-  const url   = `/api/widget/${encodeURIComponent(name)}`
-  const res   = await fetch(url, {
+  const res   = await fetch(`/api/widget/${encodeURIComponent(name)}`, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   })
   if (!res.ok) throw new Error(`widget ${name} — HTTP ${res.status}`)
-
   const code    = await res.text()
   const blob    = new Blob([code], { type: 'application/javascript' })
   const blobUrl = URL.createObjectURL(blob)
-
-  /* @vite-ignore — intentional dynamic import of a runtime blob URL */
-  const promise = import(blobUrl).then(mod => {
+  try {
+    /* @vite-ignore — intentional dynamic import of a runtime blob URL */
+    return (await import(blobUrl)).default
+  } finally {
     URL.revokeObjectURL(blobUrl)
-    return mod.default
-  })
+  }
+}
 
-  _cache.set(name, promise)
-  return promise
+/**
+ * Returns a promise that resolves to the widget's default export.
+ * The promise is cached synchronously on the first call so that every
+ * concurrent caller gets the exact same promise — and thus the same module.
+ */
+function fetchWidgetModule(name) {
+  if (!_cache.has(name)) {
+    _cache.set(name, _load(name))   // store promise BEFORE any await
+  }
+  return _cache.get(name)
 }
 
 async function load() {

@@ -74,5 +74,14 @@ export const useAuthStore = defineStore('auth', () => {
     if (user.value) user.value = { ...user.value, ...fields }
   }
 
-  return { user, login, refresh, logout, isAuthenticated, updateProfile }
+  /**
+   * Directly apply a JWT received outside the normal login flow (e.g. OAuth2
+   * callback).  Validates expiry before storing, throws if invalid.
+   */
+  function loginWithToken(token) {
+    if (!token || isExpired(token)) throw new Error('invalid_token')
+    _applyToken(token)
+  }
+
+  return { user, login, loginWithToken, refresh, logout, isAuthenticated, updateProfile }
 })

@@ -12,6 +12,11 @@ const routes = [
     component: () => import('@/views/LoginView.vue')
   },
   {
+    path: '/oauth-callback',
+    component: () => import('@/views/OAuthCallbackView.vue')
+    // no requiresAuth — this is the landing page after the provider redirect
+  },
+  {
     path: '/new-app',
     component: () => import('@/views/NewAppView.vue')
     // no requiresAuth — public route, no JWT needed

@@ -163,10 +163,20 @@ class login_ctrl extends Controller
 				if (!is_array($appl)) {
 					continue;
 				}
+				// Report which OAuth providers are configured for this app
+				$oauthProviders = [];
+				foreach (['google', 'orcid'] as $prov) {
+					$creds = $appl['oauth'][$prov] ?? null;
+					if (is_array($creds) && !empty($creds['client_id']) && !empty($creds['client_secret'])) {
+						$oauthProviders[] = $prov;
+					}
+				}
+
 				$data[] = [
 					'db'         => $db,
 					'name'       => strtoupper($appl['name'] ?? $db),
 					'definition' => $appl['definition'] ?? '',
+					'oauth'      => $oauthProviders,
 				];
 			}
 		}

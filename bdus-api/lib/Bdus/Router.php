@@ -50,13 +50,15 @@ class Router
      */
     public const ROUTE_PRIVILEGE = [
         // ── Public / no-auth ────────────────────────────────────────────────
-        'login_ctrl::listApps'   => 'none',
-        'login_ctrl::auth'       => 'none',
-        'login_ctrl::refresh'    => 'none',
-        'login_ctrl::out'        => 'none',
-        'info_ctrl::getInfo'     => 'none',
-        'new_app_ctrl::getStatus'=> 'none',
-        'new_app_ctrl::create'   => 'none',
+        'login_ctrl::listApps'    => 'none',
+        'login_ctrl::auth'        => 'none',
+        'login_ctrl::refresh'     => 'none',
+        'login_ctrl::out'         => 'none',
+        'info_ctrl::getInfo'      => 'none',
+        'new_app_ctrl::getStatus' => 'none',
+        'new_app_ctrl::create'    => 'none',
+        'oauth_ctrl::redirect'    => 'none',
+        'oauth_ctrl::callback'    => 'none',
 
         // ── Read — any authenticated principal ───────────────────────────────
         'home_ctrl::listTables'                      => 'read',
@@ -211,6 +213,10 @@ class Router
             $r->addRoute('POST', '/api/auth/login',   ['login_ctrl', 'auth']);
             $r->addRoute('GET',  '/api/auth/refresh', ['login_ctrl', 'refresh']);
             $r->addRoute('GET',  '/api/auth/logout',  ['login_ctrl', 'out']);
+
+            // ── OAuth2 ────────────────────────────────────────────────────────
+            $r->addRoute('GET', '/api/auth/oauth/{provider}/redirect', ['oauth_ctrl', 'redirect']);
+            $r->addRoute('GET', '/api/auth/oauth/{provider}/callback', ['oauth_ctrl', 'callback']);
 
             // ── Tables / home ─────────────────────────────────────────────────
             $r->addRoute('GET', '/api/tables',     ['home_ctrl', 'listTables']);

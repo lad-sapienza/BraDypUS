@@ -466,7 +466,30 @@ onUnmounted(() => {
   padding: 2rem;
 }
 
-/* MapLibre popup */
+/* MapLibre popup — theme-aware overrides */
+:global(.maplibregl-popup-content) {
+  background: var(--p-content-background);
+  color: var(--p-text-color);
+  border: 1px solid var(--p-content-border-color);
+  border-radius: var(--p-border-radius-md, 6px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 0.6rem 0.75rem;
+}
+
+/* Tip/arrow — match popup background per direction */
+:global(.maplibregl-popup-anchor-bottom .maplibregl-popup-tip) {
+  border-top-color: var(--p-content-background);
+}
+:global(.maplibregl-popup-anchor-top .maplibregl-popup-tip) {
+  border-bottom-color: var(--p-content-background);
+}
+:global(.maplibregl-popup-anchor-left .maplibregl-popup-tip) {
+  border-right-color: var(--p-content-background);
+}
+:global(.maplibregl-popup-anchor-right .maplibregl-popup-tip) {
+  border-left-color: var(--p-content-background);
+}
+
 :global(.geo-popup) {
   font-size: 0.875rem;
   max-width: 220px;
@@ -474,11 +497,22 @@ onUnmounted(() => {
 }
 
 :global(.geo-popup div) {
-  border-bottom: 1px solid rgba(0,0,0,0.06);
+  border-bottom: 1px solid var(--p-content-border-color);
   padding: 0.15rem 0;
 }
 
 :global(.geo-popup div:last-child) {
   border-bottom: none;
+}
+
+/* Close button */
+:global(.maplibregl-popup-close-button) {
+  color: var(--p-text-muted-color);
+  font-size: 1rem;
+  line-height: 1;
+}
+:global(.maplibregl-popup-close-button:hover) {
+  color: var(--p-text-color);
+  background: transparent;
 }
 </style>

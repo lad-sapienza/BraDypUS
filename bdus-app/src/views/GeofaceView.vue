@@ -229,7 +229,7 @@ function addRecordLayer() {
     id: 'records-line',
     type: 'line',
     source: 'records',
-    filter: ['in', '$type', 'LineString', 'MultiLineString'],
+    filter: ['==', '$type', 'LineString'],
     paint: { 'line-color': '#e74c3c', 'line-width': 2 }
   })
 
@@ -238,14 +238,14 @@ function addRecordLayer() {
     id: 'records-fill',
     type: 'fill',
     source: 'records',
-    filter: ['in', '$type', 'Polygon', 'MultiPolygon'],
+    filter: ['==', '$type', 'Polygon'],
     paint: { 'fill-color': '#e74c3c', 'fill-opacity': 0.25 }
   })
   map.addLayer({
     id: 'records-outline',
     type: 'line',
     source: 'records',
-    filter: ['in', '$type', 'Polygon', 'MultiPolygon'],
+    filter: ['==', '$type', 'Polygon'],
     paint: { 'line-color': '#e74c3c', 'line-width': 2 }
   })
 

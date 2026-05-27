@@ -10,6 +10,13 @@
       <!-- Empty -->
       <span v-if="displayValue === null || displayValue === ''" class="field-empty">—</span>
 
+      <!-- Custom widget served from projects/{app}/widgets/{name}.js -->
+      <DynamicWidget
+        v-else-if="schema.widget"
+        :name="schema.widget"
+        :value="String(displayValue)"
+      />
+
       <!-- long_text: preserve line breaks, auto-link URLs -->
       <div v-else-if="schema.type === 'long_text'"
            class="field-long-text"
@@ -36,6 +43,7 @@
 import { computed } from 'vue'
 import Tag from 'primevue/tag'
 import { useI18n } from '@/i18n'
+import DynamicWidget from '@/components/record/DynamicWidget.vue'
 
 const { t } = useI18n()
 

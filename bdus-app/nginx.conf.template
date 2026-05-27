@@ -1,0 +1,58 @@
+# Nginx configuration template for the bdus-app production container.
+# Processed at container start by the official nginx:alpine entrypoint:
+# files in /etc/nginx/templates/ are run through envsubst automatically.
+#
+# Required environment variable:
+#   API_PROXY_TARGET  — URL of the bdus-api backend reachable from this
+#                       container, e.g. http://api:80 (Docker Compose service)
+#                       or https://api.example.com (external host).
+#                       Default: http://api:80
+
+server {
+    listen 80;
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # ── SPA fallback ──────────────────────────────────────────────────────
+    # All paths that do not match a static file are served as index.html
+    # so that Vue Router handles client-side navigation.
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # ── Backend proxy ─────────────────────────────────────────────────────
+    # Mirrors the paths proxied by Vite in dev (see bdus-app/vite.config.js).
+    # Traffic never leaves the Docker network — no CORS headers needed.
+
+    location /api/ {
+        proxy_pass         ${API_PROXY_TARGET};
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+    }
+
+    location /index.php {
+        proxy_pass         ${API_PROXY_TARGET};
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+    }
+
+    location /projects/ {
+        proxy_pass         ${API_PROXY_TARGET};
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+    }
+
+    location /cache/ {
+        proxy_pass         ${API_PROXY_TARGET};
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+    }
+}

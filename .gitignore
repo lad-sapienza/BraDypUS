@@ -3,6 +3,7 @@
 # They must NOT be tracked here (no submodules).
 bdus-api/
 bdus-app/
+bdus-docs/
 
 # ── Local compose overrides ───────────────────────────────────────────────────
 # Create a .env file here to override compose variables locally

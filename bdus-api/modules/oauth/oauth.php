@@ -359,11 +359,13 @@ class oauth_ctrl extends Controller
     private function redirectError(string $code, string $origin): void
     {
         if (!$origin) {
-            // Last-resort: no origin available (state was invalid)
+            // Last-resort: no origin available (state was invalid or missing).
+            // Output JSON and return — the caller always follows with `return`
+            // so no further output will be generated.
             http_response_code(400);
             header('Content-Type: application/json');
             echo json_encode(['status' => 'error', 'text' => $code]);
-            exit;
+            return;
         }
         $url = rtrim($origin, '/') . '/#/oauth-callback?'
              . http_build_query(['error' => $code, 'app' => APP]);

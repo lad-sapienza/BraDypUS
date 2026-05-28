@@ -10,6 +10,19 @@ rendering to a Vue 3 SPA (Vite, Pinia, PrimeVue / Aura theme).
 The PHP backend is preserved and extended with JSON endpoints consumed by the new frontend.
 
 ### Added
+- **OAuth2 / SSO authentication** (Google + ORCID): users can log in with an
+  external identity without a local password. Provider credentials are stored
+  in `projects/{app}/config.json`; providers not configured are silently hidden
+  in the login UI. State tokens are HMAC-SHA256 signed with the per-app JWT
+  secret and carry a 10-minute TTL. Google accounts are auto-linked by email on
+  first use; ORCID requires an admin to pre-set the `oauth_sub` field (ORCID's
+  public API does not expose email). New migration M022 adds nullable
+  `oauth_provider` / `oauth_sub` columns and a partial unique index to
+  `bdus_users`. See `docs/oauth.md` for full setup instructions.
+  (`league/oauth2-google` dependency added.)
+- `GET /api/auth/oauth/{provider}/redirect` — returns provider authorization URL
+- `GET /api/auth/oauth/{provider}/callback` — exchanges code, issues JWT, redirects
+- `listApps` response now includes an `oauth` array per app listing enabled providers
 - **Stateless JWT authentication**: PHP sessions removed entirely; each
   request carries a signed `Authorization: Bearer` token stored in
   `sessionStorage` (per-tab — multiple apps open simultaneously in one

@@ -14,6 +14,7 @@ date_default_timezone_set('Europe/Rome');
 define('MAIN_DIR', $basePath);
 define('DEBUG_ON', false);
 define('PREFIX',   '');   // needed by Record\Read::getFull() and buildTableSchema()
+define('APP',      'test'); // needed by oauth_ctrl and any per-app logic in tests
 
 // PROJ_DIR is normally set per-request by constants.php (depends on the logged-in app).
 // In tests we point it to a dedicated temp tree so filesystem-touching tests

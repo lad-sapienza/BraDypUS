@@ -8,8 +8,9 @@ info:
 
     ## Authentication
     All endpoints except `GET /api/auth/apps`, `POST /api/auth/login`,
+    `GET /api/auth/oauth/{provider}/redirect`, `GET /api/auth/oauth/{provider}/callback`,
     `GET /api/new-app/status`, and `POST /api/new-app` require a JWT bearer
-    token obtained from `POST /api/auth/login`.
+    token obtained from `POST /api/auth/login` or via the OAuth2 flow.
 
     API keys (managed via `/api/api-keys`) may be used in place of a JWT for
     programmatic access. They carry an explicit privilege level
@@ -91,7 +92,11 @@ paths:
     get:
       tags: [auth]
       summary: List available applications
-      description: Returns the list of app names that exist on this server. No authentication required.
+      description: |
+        Returns the list of applications available on this server.
+        Each entry includes which OAuth2 providers are configured so the
+        login UI can display SSO buttons without a separate round-trip.
+        No authentication required.
       security: []
       responses:
         '200':
@@ -106,8 +111,30 @@ paths:
                       apps:
                         type: array
                         items:
-                          type: string
-                        example: [myapp, edu]
+                          type: object
+                          properties:
+                            db:
+                              type: string
+                              description: Internal application identifier
+                            name:
+                              type: string
+                              description: Display name (uppercase)
+                            definition:
+                              type: string
+                              description: Short description of the application
+                            oauth:
+                              type: array
+                              description: OAuth2 providers configured for this app
+                              items:
+                                type: string
+                                enum: [google, orcid]
+                              example: [google]
+                        example:
+                          apps:
+                            - db: myapp
+                              name: MYAPP
+                              definition: Excavation database
+                              oauth: [google]
 
   /api/auth/login:
     post:
@@ -182,6 +209,139 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Success'
+
+  /api/auth/oauth/{provider}/redirect:
+    get:
+      tags: [auth]
+      summary: Begin OAuth2 authorization flow
+      description: |
+        Returns the provider's authorization URL. The client must navigate
+        (window.location.href) to that URL to start the SSO flow.
+
+        Supported providers: `google`, `orcid`.
+
+        Provider credentials must be configured in `projects/{app}/config.json`
+        under the `oauth` key (see docs/oauth.md).
+
+        No authentication required.
+      security: []
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [google, orcid]
+          example: google
+        - name: app
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Application identifier
+          example: myapp
+        - name: origin
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uri
+          description: Frontend origin for the post-callback redirect (e.g. https://myapp.example.com)
+          example: https://myapp.example.com
+      responses:
+        '200':
+          description: Authorization URL
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    required: [url]
+                    properties:
+                      url:
+                        type: string
+                        format: uri
+                        description: Provider authorization URL; navigate to this
+        '400':
+          description: Unsupported provider or missing origin
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: Provider not configured for this application
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/auth/oauth/{provider}/callback:
+    get:
+      tags: [auth]
+      summary: OAuth2 authorization callback
+      description: |
+        Callback endpoint registered with the OAuth2 provider.
+        Called by the provider after the user grants access.
+
+        On success: issues a BraDypUS JWT and **redirects the browser** to
+        `{origin}/#/oauth-callback?token=JWT&app=APP`.
+
+        On failure: redirects to
+        `{origin}/#/oauth-callback?error=CODE&app=APP`.
+
+        This endpoint must be added to the provider's allowed redirect URIs
+        exactly as: `https://your-host/api/auth/oauth/{provider}/callback?app=APP`
+
+        **User must already exist** in `bdus_users`. For Google, an existing
+        account with a matching email is auto-linked on first use. For ORCID,
+        the admin must set the `oauth_sub` field in advance (ORCID's public API
+        does not expose email).
+
+        No authentication required.
+      security: []
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [google, orcid]
+        - name: app
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Application identifier (must match the redirect URI)
+        - name: code
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Authorization code from the provider
+        - name: state
+          in: query
+          required: true
+          schema:
+            type: string
+          description: HMAC-signed state token (generated by the redirect endpoint)
+      responses:
+        '302':
+          description: |
+            Browser redirect to the frontend callback route.
+            Success: `/#/oauth-callback?token=JWT&app=APP`
+            Failure: `/#/oauth-callback?error=CODE&app=APP`
+          headers:
+            Location:
+              schema:
+                type: string
+                format: uri
+        '400':
+          description: Invalid request (missing parameters; no origin available for redirect)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
   # ── System ────────────────────────────────────────────────────────────────
 
@@ -3230,6 +3390,15 @@ components:
           description: |
             Privilege level (lower = more privileged):
             1=super_admin, 5=admin, 10=adm, 20=edit, 25=create, 30=read
+        oauth_provider:
+          type: string
+          nullable: true
+          description: OAuth2 provider slug ('google', 'orcid') if the user has linked an external identity
+          example: google
+        oauth_sub:
+          type: string
+          nullable: true
+          description: Provider-issued unique subject ID (linked to oauth_provider)
 
     UserInput:
       allOf:

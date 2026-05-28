@@ -1,0 +1,19 @@
+{
+  "name": "bdus-docs",
+  "version": "1.0.0",
+  "description": "BraDypUS documentation — docs.bdus.cloud",
+  "scripts": {
+    "dev":   "vitepress dev",
+    "build": "vitepress build",
+    "preview": "vitepress preview"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lad-sapienza/bdus-docs.git"
+  },
+  "type": "module",
+  "license": "AGPL-3.0",
+  "devDependencies": {
+    "vitepress": "^1.6.4"
+  }
+}

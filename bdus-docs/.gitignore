@@ -3,3 +3,7 @@
 __*
 _site/
 site
+node_modules/
+.vitepress/cache/
+.vitepress/dist/
+dist/

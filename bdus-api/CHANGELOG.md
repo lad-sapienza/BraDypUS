@@ -425,6 +425,57 @@ The PHP backend is preserved and extended with JSON endpoints consumed by the ne
   reverse reads, so both sides of a relation always see the correct field
   direction without storing duplicate rows.
 
+### Added (cont.)
+- **Per-app widget system**: arbitrary JS display extensions can be placed in
+  `projects/{app}/widgets/{name}.js` as native ES modules and attached to any
+  field via the `widget` property in the field configuration. The backend
+  serves them through two new `read`-privilege endpoints:
+  `GET /api/widgets` (list available widgets) and
+  `GET /api/widget/{name}` (serve module source with JWT auth).
+  The Vue frontend fetches each widget with a Bearer token, imports it as a
+  blob URL, and mounts it inside a `DynamicWidget` component using a
+  `mount(container, value)` / `unmount?(container)` contract. A synchronous
+  module-level cache ensures all instances of the same widget name share a
+  single module scope (important for singleton-state widgets such as
+  quirematrix). See `docs/widget-api.md` for the full contract.
+- `GET /api/widgets` — lists `.js` filenames in `projects/{app}/widgets/`
+- `GET /api/widget/{name}` — serves widget JS source; names must be lowercase
+  letters and hyphens only; path traversal rejected with HTTP 400
+- **Hurl phase 12** — data import end-to-end tests (`12_import.hurl`)
+  covering CSV field preview, GeoJSON import, and data import; added to
+  `tests/api/run.sh`
+- **PHPUnit tests for vocabularies, search-replace, and frontpage editor**:
+  `VocabulariesCtrlTest` (32 assertions), `SearchReplaceCtrlTest`,
+  `FrontpageEditorCtrlTest`; the vocabulary controller was also fixed
+  (response-envelope contract, duplicate-check on add)
+
+### Fixed (cont.)
+- **M021 migration — `plugin_of` back-fill for v4→v5 upgrades**: databases
+  migrated from v4 via M011 had `is_plugin = 1` on plugin tables but
+  `plugin_of = NULL`, because the v4 config stored the plugin list in the
+  parent table's `extra` JSON. M021 reads that JSON, sets `plugin_of` on
+  each child table, and removes the `plugin` key from the parent's `extra`.
+  Idempotent; a no-op when `plugin_of` is already set.
+- **MapLibre GL — invalid `$type` filter with `Multi*` geometries**: MapLibre's
+  `$type` expression returns only the simplified geometry type (`Point`,
+  `LineString`, `Polygon`) — never `MultiPoint`, `MultiLineString`, or
+  `MultiPolygon`. Filters using `['in', '$type', 'LineString', 'MultiLineString']`
+  caused a runtime error. Changed to `['==', '$type', 'LineString']` and
+  `['==', '$type', 'Polygon']` in the GeoFace layer configuration; Multi*
+  geometries are now matched correctly by the simplified type.
+- **MapLibre GL — popup not respecting dark / light theme**: the
+  `.maplibregl-popup-content` element is injected by MapLibre outside Vue's
+  shadow DOM, so scoped styles had no effect. Added `:global()` CSS rules
+  that map PrimeVue design tokens (`--p-content-background`,
+  `--p-text-color`, `--p-content-border-color`) onto the popup container and
+  all four tip-anchor directions, making the popup switch correctly with the
+  application theme.
+
+### Changed (cont.)
+- **PHPUnit test suite grows from 167 to 571** tests (2 331 assertions) as
+  widget, OAuth, migration, vocabulary, search-replace, frontpage-editor, and
+  relation tests are added across multiple sessions.
+
 ## [4.4.7] - 2026-05-09
 
 ### Fixed

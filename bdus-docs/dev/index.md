@@ -7,10 +7,6 @@ title: Developer guide
 This section is for contributors, integrators, and AI agents working with
 the BraDypUS codebase.
 
-> **Work in progress** — developer docs are being written.
-> Check back or see the [migration plan](https://github.com/lad-sapienza/bdus-docs/blob/v5/MIGRATION_PLAN.md)
-> for the writing schedule.
-
 ## Quick orientation
 
 | You want to… | Read… |
@@ -20,6 +16,9 @@ the BraDypUS codebase.
 | Understand the DB layer | [Database](./database) |
 | Write a new migration | [DB migrations](./migrations) |
 | Understand the query DSL | [SQL layer](./sql-layer) |
+| Understand record read / write | [Record lifecycle](./record-lifecycle) |
+| Understand config schema & access control | [Config & UAC](./config) |
+| Work on the Vue frontend | [Frontend](./frontend) |
 | Add OAuth support | [OAuth2 / SSO](./oauth) |
 | Use the widget API | [Widget API](./widget-api) |
 | Run the test suite | [Testing](./testing) |

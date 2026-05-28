@@ -177,6 +177,18 @@ class Router
         'search_replace_ctrl::doReplace'             => 'super_admin',
         'free_sql_ctrl::verifyPassword'              => 'super_admin',
         'free_sql_ctrl::runSql'                      => 'super_admin',
+
+        // ── Zotero integration ────────────────────────────────────────────────
+        'zotero_ctrl::getLibs'                       => 'admin',
+        'zotero_ctrl::addLib'                        => 'admin',
+        'zotero_ctrl::deleteLib'                     => 'admin',
+        'zotero_ctrl::search'                        => 'edit',
+        'zotero_ctrl::getLinks'                      => 'read',
+        'zotero_ctrl::addLink'                       => 'edit',
+        'zotero_ctrl::editLink'                      => 'edit',
+        'zotero_ctrl::deleteLink'                    => 'edit',
+        'zotero_ctrl::syncRecord'                    => 'edit',
+        'zotero_ctrl::syncAll'                       => 'admin',
     ];
 
     /**
@@ -383,6 +395,18 @@ class Router
             // ── New application wizard ────────────────────────────────────────
             $r->addRoute('GET',  '/api/new-app/status', ['new_app_ctrl', 'getStatus']);
             $r->addRoute('POST', '/api/new-app',         ['new_app_ctrl', 'create']);
+
+            // ── Zotero integration ────────────────────────────────────────────
+            $r->addRoute('GET',    '/api/zotero/libs',              ['zotero_ctrl', 'getLibs']);
+            $r->addRoute('POST',   '/api/zotero/lib',               ['zotero_ctrl', 'addLib']);
+            $r->addRoute('DELETE', '/api/zotero/lib/{id:\d+}',      ['zotero_ctrl', 'deleteLib']);
+            $r->addRoute('GET',    '/api/zotero/search',            ['zotero_ctrl', 'search']);
+            $r->addRoute('GET',    '/api/zotero/links/{tb}/{id:\d+}', ['zotero_ctrl', 'getLinks']);
+            $r->addRoute('POST',   '/api/zotero/link',              ['zotero_ctrl', 'addLink']);
+            $r->addRoute('PATCH',  '/api/zotero/link/{id:\d+}',     ['zotero_ctrl', 'editLink']);
+            $r->addRoute('DELETE', '/api/zotero/link/{id:\d+}',     ['zotero_ctrl', 'deleteLink']);
+            $r->addRoute('POST',   '/api/zotero/sync/{tb}/{id:\d+}', ['zotero_ctrl', 'syncRecord']);
+            $r->addRoute('POST',   '/api/zotero/sync',              ['zotero_ctrl', 'syncAll']);
         });
 
         // ── Resolve URI ───────────────────────────────────────────────────────

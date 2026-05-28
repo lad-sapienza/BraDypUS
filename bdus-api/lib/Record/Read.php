@@ -73,14 +73,15 @@ class Read
                 'rec_id' => $core['id'],
                 'tb_label' => $this->cfg->get("tables.{$this->tb}.label")
             ],
-            'core'       => $core,
-            'plugins'    => $this->getPlugin(),
-            'links'      => $this->getLinks(),
-            'backlinks'  => $this->getBackLinks(),
+            'core'        => $core,
+            'plugins'     => $this->getPlugin(),
+            'links'       => $this->getLinks(),
+            'backlinks'   => $this->getBackLinks(),
             'manualLinks' => $this->getManualLinks(),
-            'files'      => $this->getFiles(),
-            'geodata'    => $this->getGeodata(),
-            'rs'         => $this->cfg->get("tables.{$this->tb}.rs") ? $this->getRs() : []
+            'files'       => $this->getFiles(),
+            'geodata'     => $this->getGeodata(),
+            'rs'          => $this->cfg->get("tables.{$this->tb}.rs") ? $this->getRs() : [],
+            'bibliography' => $this->getBibliography(),
         ];
     }
 
@@ -522,6 +523,70 @@ EOD;
      *    },
      *    {...}
      */
+    /**
+     * Returns Zotero bibliography links for this record.
+     *
+     * Each entry includes cached citation data plus the public Zotero URL
+     * (null for user libraries). Items marked detached are included so the
+     * UI can warn the user.
+     *
+     * @return array  Keyed by bdus_zotero_links.id
+     */
+    public function getBibliography(): array
+    {
+        if (!isset($this->cache['bibliography'])) {
+            // Check if the Zotero tables exist (they are created by M023).
+            // On installations that have not yet run the migration, return empty.
+            $tableCheck = $this->db->query(
+                "SELECT COUNT(*) AS cnt FROM sqlite_master WHERE type='table' AND name='bdus_zotero_links'",
+                [], 'read'
+            );
+            if (!$tableCheck || (int)($tableCheck[0]['cnt'] ?? 0) === 0) {
+                $this->cache['bibliography'] = [];
+                return [];
+            }
+
+            $rows = $this->db->query(
+                "SELECT l.id, l.lib_id, l.zotero_key, l.pages, l.notes, l.sort,
+                        l.author_year, l.full_citation, l.synced_at, l.detached,
+                        libs.type AS lib_type, libs.zotero_id AS lib_zotero_id,
+                        libs.name AS lib_name
+                   FROM bdus_zotero_links l
+                   JOIN bdus_zotero_libs libs ON libs.id = l.lib_id
+                  WHERE l.tb = ? AND l.record_id = ?
+                  ORDER BY l.sort, l.id",
+                [$this->tb, $this->id],
+                'read'
+            ) ?: [];
+
+            $result = [];
+            foreach ($rows as $r) {
+                $zoteroUrl = ($r['lib_type'] === 'group')
+                    ? "https://www.zotero.org/groups/{$r['lib_zotero_id']}/items/{$r['zotero_key']}"
+                    : null;
+
+                $result[$r['id']] = [
+                    'id'           => (int) $r['id'],
+                    'lib_id'       => (int) $r['lib_id'],
+                    'lib_name'     => $r['lib_name'],
+                    'zotero_key'   => $r['zotero_key'],
+                    'pages'        => $r['pages'],
+                    'notes'        => $r['notes'],
+                    'sort'         => $r['sort'],
+                    'author_year'  => $r['author_year'],
+                    'full_citation' => $r['full_citation'],
+                    'synced_at'    => $r['synced_at'],
+                    'detached'     => (bool) $r['detached'],
+                    'zotero_url'   => $zoteroUrl,
+                ];
+            }
+
+            $this->cache['bibliography'] = $result;
+        }
+
+        return $this->cache['bibliography'];
+    }
+
     private function getTbRecord(string $tb, string $sql, array $sql_val = [], bool $return_first = false, bool $return_all_fields = false): array
     {
         $cfg = $this->cfg->get("tables.$tb.fields");

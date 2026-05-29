@@ -28,6 +28,19 @@
           @change="onTemplateChange"
         />
 
+        <!-- Column count selector (read mode, default layout only) -->
+        <Select
+          v-if="mode === 'read' && record && !hasTemplate"
+          :modelValue="selectedCols"
+          :options="COL_OPTIONS"
+          optionLabel="label"
+          optionValue="value"
+          size="small"
+          class="cols-select"
+          :title="t('fields_columns')"
+          @change="e => onColsChange(e.value)"
+        />
+
         <template v-if="mode === 'read' && record">
           <!-- Version history button (only for existing records) -->
           <Button
@@ -127,7 +140,7 @@
         <!-- Core fields -->
         <fieldset class="record-section">
           <legend>{{ record.metadata.tb_label }}</legend>
-          <div class="fields-grid">
+          <div class="fields-grid" :style="fieldsGridStyle">
             <div
               v-for="fld in visibleCoreFields"
               :key="fld.name"
@@ -169,13 +182,13 @@
         <legend>{{ t('linked_records') }}</legend>
         <ul class="links-list">
           <li v-for="(link, linkTb) in record.links" :key="linkTb">
-            <router-link :to="`/data?tb=${linkTb}&where=${encodeURIComponent(link.where)}`">
+            <router-link :to="`/data?tb=${linkTb}&filter=${encodeURIComponent(JSON.stringify(link.filter))}`">
               {{ link.tb_label }}
               <Tag :value="String(link.tot)" severity="secondary" rounded />
             </router-link>
           </li>
           <li v-for="(bl, blTb) in record.backlinks" :key="'bl_' + blTb">
-            <router-link :to="`/data?tb=${bl.tb_id}&where=${encodeURIComponent(bl.where)}`">
+            <router-link :to="`/data?tb=${bl.tb_id}&filter=${encodeURIComponent(JSON.stringify(bl.filter))}`">
               ← {{ bl.tb_label }}
               <Tag :value="String(bl.tot)" severity="secondary" rounded />
             </router-link>
@@ -347,6 +360,49 @@ const geodataCount = computed(() => {
 
 /** True when the loaded record includes a valid resolved template. */
 const hasTemplate = computed(() => !!record.value?.schema?.template)
+
+// ── Column count preference ───────────────────────────────────────
+const COL_OPTIONS = [
+  { label: '2 col.',  value: 2    },
+  { label: '3 col.',  value: 3    },
+  { label: '4 col.',  value: 4    },
+  { label: 'Auto',    value: null },
+]
+
+/**
+ * When a fixed column count is selected, override grid-template-columns
+ * directly with repeat(N, 1fr) — exact and gap-safe.
+ * When Auto (null), leave blank so the CSS auto-fill rule applies.
+ */
+const fieldsGridStyle = computed(() =>
+  selectedCols.value !== null
+    ? { 'grid-template-columns': `repeat(${selectedCols.value}, 1fr)` }
+    : {}
+)
+
+function colsStorageKey(tbName) { return `bradypus:cols:${tbName}` }
+
+/** null = Auto (current browser-driven auto-fill behaviour) */
+const selectedCols = ref(3)
+
+function loadColsPreference() {
+  if (!tb.value) return
+  const saved = localStorage.getItem(colsStorageKey(tb.value))
+  if (saved === null) {
+    selectedCols.value = 3   // sensible default
+    return
+  }
+  selectedCols.value = saved === 'null' ? null : Number(saved)
+}
+
+function onColsChange(val) {
+  selectedCols.value = val
+  if (val === null) {
+    localStorage.removeItem(colsStorageKey(tb.value))
+  } else {
+    localStorage.setItem(colsStorageKey(tb.value), String(val))
+  }
+}
 
 // ── Template selection ────────────────────────────────────────────
 const availableTemplates = ref([])   // string[] — names returned by getTemplates
@@ -707,6 +763,7 @@ onBeforeRouteLeave((_to, _from, next) => {
 // ── Init ──────────────────────────────────────────────────────────
 onMounted(async () => {
   await loadAvailableTemplates()
+  loadColsPreference()
   fetchRecord()
 })
 
@@ -714,6 +771,7 @@ onMounted(async () => {
 // Re-load templates too if the table changes (tb is part of the route)
 watch(() => route.params.tb, async () => {
   await loadAvailableTemplates()
+  loadColsPreference()
   fetchRecord()
 })
 watch(() => route.params.id, fetchRecord)
@@ -766,6 +824,7 @@ watch(() => route.params.id, fetchRecord)
 }
 
 .template-select { width: 140px; }
+.cols-select      { width: 90px; }
 
 /* ── Loading / Error ── */
 .record-loading {
@@ -784,9 +843,19 @@ watch(() => route.params.id, fetchRecord)
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  /* Cap width for readability on large monitors */
+  width: 100%;
+  max-width: 1200px;
+  margin-inline: auto;
+  box-sizing: border-box;
 }
 
 /* ── Fields grid ── */
+/*
+ * Default: auto-fill at ≥280px per column.
+ * A fixed column count is applied via inline style (repeat(N, 1fr))
+ * which overrides this declaration — cleaner and gap-safe.
+ */
 .fields-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));

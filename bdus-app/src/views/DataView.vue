@@ -404,7 +404,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
-import { api, assetUrl } from '@/api'
+import { api, assetUrl, filterToSearchParams } from '@/api'
 import { useI18n } from '@/i18n'
 import { useTables } from '@/composables/useTables'
 import AppLayout from '@/components/AppLayout.vue'
@@ -561,8 +561,8 @@ const sortDir        = ref('asc')
 const openPanel      = ref(null)   // null | 'advanced' | 'expert'
 const fastSearch     = ref('')
 const expertQuery    = ref('')
-const shortSqlWhere  = ref('')     // ShortSQL WHERE from link navigation (not user-editable)
-const activeSearch   = ref(null)   // null | 'fast' | 'advanced' | 'expert' | 'shortSql'
+const activeFilter   = ref(null)   // JSON filter object from link navigation (not user-editable)
+const activeSearch   = ref(null)   // null | 'fast' | 'advanced' | 'expert' | 'filter'
 
 // ── Advanced search config (lazy-loaded per table) ───────────
 const loadingAdvConfig = ref(false)
@@ -591,7 +591,7 @@ const activeSearchLabel = computed(() => {
   if (activeSearch.value === 'fast')     return `"${fastSearch.value}"`
   if (activeSearch.value === 'advanced') return t('advanced_search')
   if (activeSearch.value === 'expert')   return t('sql_expert_search')
-  if (activeSearch.value === 'shortSql') return t('linked_records')
+  if (activeSearch.value === 'filter') return t('linked_records')
   return ''
 })
 
@@ -645,10 +645,10 @@ function onLoadQuery(payload) {
     openPanel.value    = 'expert'
     updateFilterUrl('expert', payload.querytext)
     fetchRecords()
-  } else if (payload.search_type === 'shortSql' && payload.where) {
-    shortSqlWhere.value = payload.where
-    activeSearch.value  = 'shortSql'
-    openPanel.value     = null
+  } else if (payload.filter && typeof payload.filter === 'object') {
+    activeFilter.value = payload.filter
+    activeSearch.value = 'filter'
+    openPanel.value    = null
     fetchRecords()
   }
 }
@@ -664,33 +664,22 @@ onMounted(async () => {
 })
 
 /**
- * Apply `tb` and `where` query params from the current URL.
+ * Apply `tb`, `filter`, `qt` and `q` query params from the current URL.
  *
- * Called on mount (tables freshly loaded) and whenever the route query
- * changes (user navigates from one record's links to another record's links
- * while DataView is already mounted).
+ * Called on mount (tables freshly loaded) and whenever the route query changes.
  *
- * `where` is a ShortSQL expression produced by Record\Read::getLinks() /
- * getBackLinks() — e.g. "id|=|713" or "^ctx_id|=|42||and|site|=|Rome".
- * We feed it as an expert query to record_ctrl::getRecords().
+ * `filter` is a JSON-encoded Directus-style filter object produced by
+ * Record\Read::getLinks() / getBackLinks() — e.g. {"id":{"_eq":1}}.
+ * `qt`/`q` carry fast, advanced, and expert search state.
  */
 // Track last applied params to avoid redundant fetches triggered by our own
 // router.replace() calls (filter URL persistence). The guard compares all four
 // relevant params; if all match, the change originated from updateFilterUrl()
 // and there is nothing to re-fetch.
-//
-// NOTE: we intentionally do NOT use a boolean "ignoreNextRouteChange" flag here.
-// Vue 3 batches reactive updates within the same tick, so if the user switches
-// tables immediately after a filter update, the watcher fires only once with the
-// final URL. A boolean flag would have caused that table switch to be silently
-// ignored. The lastApplied* comparison is safe in all cases:
-//   - updateFilterUrl() pre-updates lastAppliedQt/Q before router.replace(), so
-//     when the watcher fires for the replace, all four values match → skip ✓
-//   - a genuine table switch changes tbParam → mismatch → proceeds ✓
-let lastAppliedTb    = null
-let lastAppliedWhere = null
-let lastAppliedQt    = null
-let lastAppliedQ     = null
+let lastAppliedTb     = null
+let lastAppliedFilter = null   // JSON string or null (replaces lastAppliedWhere)
+let lastAppliedQt     = null
+let lastAppliedQ      = null
 
 /**
  * Push the current filter type + value into the URL (for bookmarking / back-nav).
@@ -699,7 +688,8 @@ let lastAppliedQ     = null
  */
 function updateFilterUrl(type, query) {
   const newQuery = { tb: route.query.tb }
-  if (route.query.where) newQuery.where = route.query.where
+  // Keep JSON filter in URL when switching to/from other search types
+  if (route.query.filter) newQuery.filter = route.query.filter
   if (type && query != null) { newQuery.qt = type; newQuery.q = query }
   lastAppliedQt = newQuery.qt ?? null
   lastAppliedQ  = newQuery.q  ?? null
@@ -708,19 +698,19 @@ function updateFilterUrl(type, query) {
 
 function applyRouteParams() {
 
-  const tbParam    = route.query.tb
-  const whereParam = route.query.where ?? null
-  const qtParam    = route.query.qt    ?? null
-  const qParam     = route.query.q     ?? null
+  const tbParam     = route.query.tb
+  const filterParam = route.query.filter ?? null  // JSON-encoded filter object
+  const qtParam     = route.query.qt     ?? null
+  const qParam      = route.query.q      ?? null
 
   if (!tbParam) return
 
   // Guard: skip if nothing changed
   if (
-    tbParam    === lastAppliedTb    &&
-    whereParam === lastAppliedWhere &&
-    qtParam    === lastAppliedQt    &&
-    qParam     === lastAppliedQ
+    tbParam     === lastAppliedTb     &&
+    filterParam === lastAppliedFilter &&
+    qtParam     === lastAppliedQt     &&
+    qParam      === lastAppliedQ
   ) return
 
   // Table must exist in the list (permissions or typo check)
@@ -728,10 +718,10 @@ function applyRouteParams() {
   if (!tbl) return
 
   const tableChanged = lastAppliedTb !== tbParam
-  lastAppliedTb    = tbParam
-  lastAppliedWhere = whereParam
-  lastAppliedQt    = qtParam
-  lastAppliedQ     = qParam
+  lastAppliedTb     = tbParam
+  lastAppliedFilter = filterParam
+  lastAppliedQt     = qtParam
+  lastAppliedQ      = qParam
 
   if (tableChanged) {
     advConfigFor = null
@@ -763,11 +753,11 @@ function applyRouteParams() {
     loadAdvConfig()   // eager load all fields for the column toggler
   }
 
-  if (whereParam) {
-    shortSqlWhere.value = whereParam
-    activeSearch.value  = 'shortSql'
-    openPanel.value     = null
-    page.value = 1
+  if (filterParam) {
+    try { activeFilter.value = JSON.parse(filterParam) } catch { activeFilter.value = null }
+    activeSearch.value = 'filter'
+    openPanel.value    = null
+    page.value         = 1
     fetchRecords()
     return
   }
@@ -853,14 +843,16 @@ async function loadSuggestions(row, query) {
 
 // ── Reset all search ─────────────────────────────────────────
 function resetSearch() {
-  fastSearch.value    = ''
-  expertQuery.value   = ''
-  shortSqlWhere.value = ''
-  advRows.value       = [newAdvRow()]
-  activeSearch.value  = null
-  openPanel.value     = null
-  page.value          = 1
-  updateFilterUrl(null, null)
+  fastSearch.value   = ''
+  expertQuery.value  = ''
+  activeFilter.value = null
+  advRows.value      = [newAdvRow()]
+  activeSearch.value = null
+  openPanel.value    = null
+  page.value         = 1
+  // Clear both filter and qt/q from URL
+  lastAppliedFilter = null
+  router.replace({ query: { tb: route.query.tb } })
   fetchRecords()
 }
 
@@ -946,19 +938,16 @@ async function fetchRecords() {
       if (colParam) body.columns = colParam
       res = await api.post(`/api/records/${tbName}`, body)
 
-    } else if (activeSearch.value === 'shortSql') {
-      // ShortSQL WHERE produced by Record\Read::getLinks() / getBackLinks().
-      // Sent as a GET param so the URL is bookmarkable.
+    } else if (activeSearch.value === 'filter') {
+      // JSON filter from Record\Read::getLinks() / getBackLinks() link navigation.
       const body = {
-        page:        page.value,
-        per_page:    perPage.value,
-        sort_field:  sortField.value ?? '',
-        sort_dir:    sortDir.value,
-        search_type: 'shortSql',
-        where:       shortSqlWhere.value,
+        page:       page.value,
+        per_page:   perPage.value,
+        sort_field: sortField.value ?? '',
+        sort_dir:   sortDir.value,
+        filter:     activeFilter.value,
       }
-      // columns sent as comma-separated string to avoid URL array-encoding issues
-      if (colParam) body.columns = colParam.join(',')
+      if (colParam) body.columns = colParam
       res = await api.post(`/api/records/${tbName}`, body)
 
     } else {
@@ -1037,9 +1026,8 @@ function openGeoface() {
   } else if (activeSearch.value === 'expert' && expertQuery.value) {
     query.search_type = 'sqlExpert'
     query.querytext = expertQuery.value
-  } else if (activeSearch.value === 'shortSql' && shortSqlWhere.value) {
-    query.search_type = 'shortSql'
-    query.where = shortSqlWhere.value
+  } else if (activeSearch.value === 'filter' && activeFilter.value) {
+    query.filter = JSON.stringify(activeFilter.value)
   }
   router.push({ path: `/geoface/${encodeURIComponent(tb)}`, query })
 }
@@ -1081,10 +1069,14 @@ function doExport(format) {
   const tb = selectedTable.value?.name ?? ''
   const qs = new URLSearchParams({ format })
 
-  // Pass through whichever filter params are currently in the URL
-  if (route.query.qt)    qs.set('qt',    route.query.qt)
-  if (route.query.q)     qs.set('q',     route.query.q)
-  if (route.query.where) qs.set('where', route.query.where)
+  // Pass through whichever filter params are currently active.
+  // For JSON filter, use bracket notation so PHP parses it as a nested array.
+  if (activeSearch.value === 'filter' && activeFilter.value) {
+    filterToSearchParams(activeFilter.value).forEach((v, k) => qs.set(k, v))
+  } else {
+    if (route.query.qt) qs.set('qt', route.query.qt)
+    if (route.query.q)  qs.set('q',  route.query.q)
+  }
 
   window.open(assetUrl(`api/records/${encodeURIComponent(tb)}/export`) + '?' + qs.toString(), '_blank')
 }

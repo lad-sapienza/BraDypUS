@@ -270,9 +270,8 @@ function openMatrix() {
   router.push({
     path:  `/matrix/${encodeURIComponent(props.tb)}`,
     query: {
-      search_type: 'shortSql',
-      where:       `${props.schema.rs_field}|=|${selfId.value}`,
-      highlight:   String(selfId.value),
+      filter:    JSON.stringify({ [props.schema.rs_field]: { _eq: selfId.value } }),
+      highlight: String(selfId.value),
       ...(props.record_id != null ? { from_id: String(props.record_id) } : {}),
     },
   })

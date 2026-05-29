@@ -897,5 +897,7 @@
   "user_library": "User",
   "group_library": "Group",
   "sync_all": "Sync all",
-  "zotero_sync_result": "Updated: %s · Detached: %s · Errors: %s"
+  "zotero_sync_result": "Updated: %s · Detached: %s · Errors: %s",
+
+  "fields_columns": "Fields columns per row"
 }

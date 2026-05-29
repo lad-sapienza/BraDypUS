@@ -32,13 +32,23 @@ export function assetUrl(path) {
   return API_BASE + '/' + path
 }
 
-/** Append remaining params to a URL object as query string. */
-function appendQuery(url, params) {
+/**
+ * Append params to a URL as a query string.
+ * Handles nested objects recursively using bracket notation so that
+ * { filter: { sigla: { _eq: 'IMP001' } } } becomes
+ * filter[sigla][_eq]=IMP001 — the format PHP natively parses back to a
+ * nested array via $_GET['filter']['sigla']['_eq'].
+ */
+function appendQuery(url, params, prefix = '') {
   for (const [k, v] of Object.entries(params)) {
+    if (v === null || v === undefined) continue
+    const key = prefix ? `${prefix}[${k}]` : k
     if (Array.isArray(v)) {
-      v.forEach(item => url.searchParams.append(k + '[]', item))
-    } else if (v !== null && v !== undefined) {
-      url.searchParams.set(k, v)
+      v.forEach(item => url.searchParams.append(`${key}[]`, item))
+    } else if (typeof v === 'object') {
+      appendQuery(url, v, key)
+    } else {
+      url.searchParams.set(key, v)
     }
   }
 }
@@ -208,6 +218,22 @@ function responseMessage(res, t, ...args) {
   if (!key) return ''
   if (key === 'db_error') return `${t('db_error')}: ${res.detail ?? ''}`
   return t(key, ...args)
+}
+
+/**
+ * Serialise a Directus-style filter object to a URLSearchParams with bracket
+ * notation — useful for building GET export URLs that include an active filter.
+ *
+ * filterToSearchParams({ sigla: { _eq: 'X' } })
+ * → URLSearchParams { 'filter[sigla][_eq]': 'X' }
+ */
+export function filterToSearchParams(filter, extraParams = {}) {
+  const url = new URL('http://x')
+  if (filter) appendQuery(url, { filter })
+  Object.entries(extraParams).forEach(([k, v]) => {
+    if (v !== null && v !== undefined) url.searchParams.set(k, v)
+  })
+  return url.searchParams
 }
 
 export const api = { get, post, put, delete: _delete, patch, upload, uploadMulti, responseMessage }

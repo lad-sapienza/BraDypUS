@@ -897,5 +897,7 @@
   "user_library": "Personale",
   "group_library": "Gruppo",
   "sync_all": "Sincronizza tutto",
-  "zotero_sync_result": "Aggiornati: %s · Distaccati: %s · Errori: %s"
+  "zotero_sync_result": "Aggiornati: %s · Distaccati: %s · Errori: %s",
+
+  "fields_columns": "Colonne dei campi per riga"
 }

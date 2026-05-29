@@ -218,13 +218,12 @@ const relationOptions = computed(() => buildRelationOptions(t))
 // but getRsMatrix expects search_type=<type> + type-specific params (adv, search, etc.)
 function buildMatrixApiParams() {
   const p    = { tb: tb.value }
-  const qt   = route.query.qt    ?? null
-  const q    = route.query.q     ?? null
-  const where = route.query.where ?? null
+  const qt         = route.query.qt     ?? null
+  const q          = route.query.q      ?? null
+  const filterJson = route.query.filter ?? null
 
-  if (where) {
-    p.search_type = 'shortSql'
-    p.where       = where
+  if (filterJson) {
+    try { p.filter = JSON.parse(filterJson) } catch { /* ignore malformed filter */ }
   } else if (qt === 'fast' && q) {
     p.search_type = 'fast'
     p.search      = q

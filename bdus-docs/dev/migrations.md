@@ -80,25 +80,25 @@ Add the class to the `ALL_MIGRATIONS` array in
 `lib/DB/System/Migrate.php`, **at the end**:
 
 ```php
-use DB\System\Migrations\M023_MyChange;
+use DB\System\Migrations\M024_MyChange;
 
 public const ALL_MIGRATIONS = [
     // … existing migrations …
-    M022_AddOAuthToUsers::class,
-    M023_MyChange::class,     // ← append here
+    M023_ZoteroTables::class,
+    M024_MyChange::class,     // ← append here
 ];
 ```
 
 ### 3. Write an integration test
 
 ```php
-// tests/Integration/M023MyChangeTest.php
-class M023MyChangeTest extends BdusTestCase
+// tests/Integration/M024MyChangeTest.php
+class M024MyChangeTest extends BdusTestCase
 {
     public function testColumnAdded(): void
     {
         // Run migration
-        M023_MyChange::run(new Manage(static::$db));
+        M024_MyChange::run(new Manage(static::$db));
 
         // Verify
         $cols = static::$db->query('PRAGMA table_info(bdus_users)', [], 'read');
@@ -108,8 +108,8 @@ class M023MyChangeTest extends BdusTestCase
 
     public function testIdempotent(): void
     {
-        M023_MyChange::run(new Manage(static::$db));
-        M023_MyChange::run(new Manage(static::$db));  // must not throw
+        M024_MyChange::run(new Manage(static::$db));
+        M024_MyChange::run(new Manage(static::$db));  // must not throw
         $this->assertTrue(true);
     }
 }
@@ -131,7 +131,7 @@ class M023MyChangeTest extends BdusTestCase
 
 ---
 
-## Migration history (M001–M022)
+## Migration history (M001–M023)
 
 | Migration | What it does |
 |---|---|
@@ -157,6 +157,7 @@ class M023MyChangeTest extends BdusTestCase
 | M020 | Deduplicate relation entries |
 | M021 | Back-fill `plugin_of` field in `bdus_cfg_tables` |
 | M022 | Add `oauth_provider` + `oauth_sub` columns to `bdus_users` |
+| M023 | Create `bdus_zotero_libs` and `bdus_zotero_links` for Zotero integration |
 
 ---
 

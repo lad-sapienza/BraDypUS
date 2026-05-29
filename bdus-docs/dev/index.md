@@ -21,6 +21,7 @@ the BraDypUS codebase.
 | Work on the Vue frontend | [Frontend](./frontend) |
 | Add OAuth support | [OAuth2 / SSO](./oauth) |
 | Use the widget API | [Widget API](./widget-api) |
+| Connect Zotero bibliography | [Zotero integration](./zotero) |
 | Run the test suite | [Testing](./testing) |
 
 ## Source repositories

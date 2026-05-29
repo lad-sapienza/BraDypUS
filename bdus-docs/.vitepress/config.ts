@@ -201,6 +201,7 @@ function devSidebar() {
       items: [
         { text: 'OAuth2 / SSO',        link: '/dev/oauth' },
         { text: 'Widget API',          link: '/dev/widget-api' },
+        { text: 'Zotero integration',  link: '/dev/zotero' },
       ],
     },
     {

@@ -362,12 +362,19 @@ EOD;
                     if ($r[0]['tot'] == 0) {
                         continue;
                     }
+                    // Fetch the linked IDs directly for the JSON filter.
+                    $linked_rows = $this->db->query(
+                        "SELECT DISTINCT id_link FROM {$via_plg} WHERE table_link = '{$ref_tb}' AND {$via_plg_fld} = ?",
+                        [$this->id]
+                    ) ?: [];
+                    $linked_ids = array_column($linked_rows, 'id_link');
+
                     $backlinks[$ref_tb] = [
-                        'tb_id' => $ref_tb,
-                        "tb_label" => $this->cfg->get("tables.$ref_tb.label"),
-                        'tot' => $r[0]['tot'],
-                        'where' => "id|in|{@{$via_plg}~[id_link|distinct~?table_link|=|{$ref_tb}||and|^{$via_plg_fld}|=|{$this->id}}",
-                        'data' => $this->db->query(
+                        'tb_id'    => $ref_tb,
+                        'tb_label' => $this->cfg->get("tables.$ref_tb.label"),
+                        'tot'      => $r[0]['tot'],
+                        'filter'   => ['id' => ['_in' => $linked_ids]],
+                        'data'     => $this->db->query(
                             "SELECT id, {$ref_tb_id} as label FROM {$ref_tb} WHERE id IN (SELECT DISTINCT id_link FROM {$via_plg} WHERE table_link = '{$ref_tb}' AND {$via_plg_fld} = ?)",
                             [$this->id]
                         )
@@ -400,15 +407,14 @@ EOD;
 
             if (is_array($links_data)) {
                 foreach ($links_data as $ld) {
-                    $where = [];
+                    $where  = [];
                     $values = [];
-                    $short_sql = [];
+                    $filter = [];
                     foreach ($ld['fld'] as $c) {
-                        $c['short_other'] = ($c['my'] === 'id') ? '^' . $c['other'] : $c['other'];
-                        
-                        array_push($where, " {$c['other']} = ? ");
+                        array_push($where,  " {$c['other']} = ? ");
                         array_push($values, $this->getCore($c['my'], true));
-                        array_push($short_sql, "{$c['short_other']}|=|" . $this->getCore($c['my'], true));
+                        // Directus-style filter: { field: { _eq: value } }
+                        $filter[$c['other']] = ['_eq' => $this->getCore($c['my'], true)];
                     }
 
                     $r = $this->db->query(
@@ -418,10 +424,10 @@ EOD;
                     $tot_links = (int)$r[0]['tot'];
                     if ($tot_links > 0) {
                         $links[$ld['other_tb']] = [
-                            'tb_id' => $ld['other_tb'],
-                            "tb_label" => $this->cfg->get("tables.{$ld['other_tb']}.label"),
-                            'tot' => $tot_links,
-                            'where' => implode('||and|', $short_sql)
+                            'tb_id'    => $ld['other_tb'],
+                            'tb_label' => $this->cfg->get("tables.{$ld['other_tb']}.label"),
+                            'tot'      => $tot_links,
+                            'filter'   => $filter,
                         ];
                     }
                 }

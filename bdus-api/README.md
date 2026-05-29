@@ -19,7 +19,7 @@ bdus-api exposes a REST JSON API that the Vue frontend (bdus-app) consumes. It h
 - API key authentication with per-key privilege levels (read / edit / admin)
 - Multi-tenant application management (one SQLite / MySQL / PostgreSQL database per project)
 - CRUD operations on records, with a flexible field-type system
-- Search (simple, advanced, free SQL, ShortSQL DSL)
+- Search (simple text, advanced field-level, SQL expert, Directus-style JSON filter)
 - File uploads and image management
 - Geodata (GeoJSON read/write)
 - Charts and saved queries

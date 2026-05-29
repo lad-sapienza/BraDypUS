@@ -722,9 +722,45 @@ paths:
       description: |
         Supports pagination, sorting, and filtering via query params.
 
-        **Simple filter shortcut**: any `q_{field}=value` parameter is
-        interpreted as a `WHERE field = value` clause. Multiple `q_` params
-        are AND-combined.
+        ## Search modes
+
+        Set `search_type` to choose the filter strategy:
+
+        | `search_type` | Extra params | Description |
+        |---|---|---|
+        | `all` (default) | — | Returns all records, no filter |
+        | `fast` | `search=TEXT` | Full-text search across preview fields |
+        | `advanced` | `adv=BASE64_JSON` | Structured field/operator/value rows |
+        | `sqlExpert` | `querytext=SQL` (+ optional `join=SQL`) | Raw SQL WHERE clause |
+
+        ## Directus-style JSON filter (recommended for programmatic use)
+
+        Use URL bracket notation to filter without specifying `search_type`:
+
+        ```
+        ?filter[status][_eq]=active
+        ?filter[name][_icontains]=pompeii
+        ?filter[year][_between][0]=100&filter[year][_between][1]=300
+        ?filter[_or][0][type][_eq]=site&filter[_or][1][type][_eq]=find
+        ```
+
+        Supported operators: `_eq` `_neq` `_lt` `_lte` `_gt` `_gte`
+        `_contains` `_icontains` `_ncontains` `_starts_with` `_ends_with`
+        `_in` `_nin` `_null` `_nnull` `_between`.
+        Logical: `_and` `_or` (nested arrays).
+
+        Field names are validated against the table config allow-list.
+        All values are bound via PDO prepared statements.
+
+        ## Simple equality shortcut
+
+        Any `q_{field}=value` GET param is a shorthand for `filter[field][_eq]=value`.
+        Multiple `q_` params are AND-combined.
+
+        ## Column visibility
+
+        Pass `columns=field1,field2` (comma-separated) to override the default
+        preview fields and return only the listed columns.
       parameters:
         - $ref: '#/components/parameters/tb'
         - name: page
@@ -732,36 +768,75 @@ paths:
           schema:
             type: integer
             default: 1
-        - name: limit
+        - name: per_page
           in: query
           schema:
             type: integer
             default: 30
-        - name: sort
+            maximum: 200
+        - name: sort_field
           in: query
           schema:
             type: string
-        - name: order
+          description: Field name to sort by
+        - name: sort_dir
           in: query
           schema:
             type: string
             enum: [asc, desc]
+            default: asc
         - name: search_type
           in: query
           schema:
             type: string
-            enum: [all, shortSql, advanced, sqlExpert]
-        - name: where
+            enum: [all, fast, advanced, sqlExpert]
+          description: |
+            Search mode. See description for details. Ignored when `filter` is present.
+        - name: search
           in: query
-          description: ShortSQL WHERE expression (used with `search_type=shortSql`)
+          description: Full-text search string. Required when `search_type=fast`.
           schema:
             type: string
-        - name: q_{field}
+        - name: adv
           in: query
-          description: Simple equality filter. Replace `{field}` with the actual field name.
+          description: |
+            Advanced search rows encoded as a base64 JSON array of `AdvancedSearchRow` objects.
+            Required when `search_type=advanced`.
           schema:
             type: string
-          example: q_sigla=US001
+        - name: querytext
+          in: query
+          description: Raw SQL WHERE clause. Required when `search_type=sqlExpert`.
+          schema:
+            type: string
+        - name: join
+          in: query
+          description: Optional SQL JOIN clause appended before the WHERE clause (sqlExpert mode).
+          schema:
+            type: string
+        - name: 'filter[{field}][{op}]'
+          in: query
+          description: |
+            Directus-style filter. Replace `{field}` with a table field name and
+            `{op}` with one of the supported operators (see description).
+            Takes priority over `search_type` when present.
+          schema:
+            type: string
+          example: 'filter[sigla][_eq]=US001'
+        - name: 'q_{field}'
+          in: query
+          description: |
+            Simple equality shorthand. Replace `{field}` with the actual field name.
+            Equivalent to `filter[{field}][_eq]=value`.
+          schema:
+            type: string
+          example: 'q_sigla=US001'
+        - name: columns
+          in: query
+          description: Comma-separated list of field names to return (overrides default preview columns).
+          schema:
+            type: string
+          example: 'id,sigla,periodo'
       responses:
         '200':
           description: Paginated record list
@@ -774,9 +849,12 @@ paths:
       summary: List / search records (POST)
       description: |
         Same as GET but accepts the search payload in the request body.
+        All GET search parameters (`search_type`, `search`, `adv`, `querytext`, `join`,
+        `filter`, `columns`) are accepted both as query params and as body fields.
 
-        **Shorthand body**: `{"search": [{"field","operator","value","connector"}]}`
-        is converted to the `advanced` search format automatically.
+        **Convenience shorthand**: if the body contains a `search` array
+        `[{"field", "operator", "value"}]` and no `search_type`, it is
+        auto-converted to the `advanced` format.
       parameters:
         - $ref: '#/components/parameters/tb'
       requestBody:
@@ -787,41 +865,85 @@ paths:
               properties:
                 search_type:
                   type: string
-                  enum: [all, shortSql, advanced, sqlExpert]
-                where:
-                  type: string
+                  enum: [all, fast, advanced, sqlExpert]
+                  description: |
+                    Search mode. Ignored when `filter` is present.
+                    Use `fast` with `search`, `advanced` with `adv`,
+                    `sqlExpert` with `querytext` (and optional `join`).
+                filter:
+                  $ref: '#/components/schemas/FilterObject'
+                search:
+                  description: |
+                    When `search_type=fast`: plain text string for full-text search.
+                    When `search_type` is absent: convenience shorthand array of
+                    `{field, operator, value, connector?}` objects, auto-converted
+                    to `advanced` format.
+                  oneOf:
+                    - type: string
+                      description: Full-text search string (fast mode)
+                    - type: array
+                      description: Shorthand advanced rows
+                      items:
+                        type: object
+                        required: [field, operator, value]
+                        properties:
+                          field:
+                            type: string
+                          operator:
+                            type: string
+                            example: '='
+                          value:
+                            type: string
+                          connector:
+                            type: string
+                            enum: [AND, OR]
+                            default: AND
                 adv:
                   type: array
+                  description: Advanced search rows (search_type=advanced)
                   items:
                     $ref: '#/components/schemas/AdvancedSearchRow'
                 querytext:
                   type: string
-                  description: Raw SQL WHERE clause (sqlExpert mode)
-                search:
+                  description: Raw SQL WHERE clause (search_type=sqlExpert)
+                join:
+                  type: string
+                  description: Optional SQL JOIN clause (search_type=sqlExpert)
+                columns:
                   type: array
-                  description: Shorthand advanced search
+                  description: Column names to include in the response (overrides preview fields)
                   items:
-                    type: object
-                    required: [field, operator, value]
-                    properties:
-                      field:
-                        type: string
-                      operator:
-                        type: string
-                        example: '='
-                      value:
-                        type: string
-                      connector:
-                        type: string
-                        enum: [AND, OR]
-                        default: AND
+                    type: string
             examples:
+              filter:
+                summary: Directus-style filter (POST body)
+                value:
+                  filter:
+                    periodo:
+                      _eq: Basso Medioevo
               shorthand:
+                summary: Shorthand advanced (convenience format)
                 value:
                   search:
                     - field: periodo
                       operator: '='
                       value: Basso Medioevo
+              advanced:
+                summary: Structured advanced search
+                value:
+                  search_type: advanced
+                  adv:
+                    - fld: 'us:periodo'
+                      operator: '='
+                      value: Basso Medioevo
+                      connector: AND
+                      '(': ''
+                      ')': ''
+              sqlExpert:
+                summary: Raw SQL WHERE
+                value:
+                  search_type: sqlExpert
+                  querytext: "periodo = 'Basso Medioevo' AND cronologia > 1200"
       responses:
         '200':
           description: Paginated record list
@@ -834,6 +956,17 @@ paths:
     get:
       tags: [records]
       summary: Export records as a file download
+      description: |
+        Streams the full result set (no pagination) in the requested format.
+        Filtering uses the same Directus-style `filter` or the URL-persistence
+        params that DataView encodes into the browser URL (`qt` / `q`).
+
+        | `qt` | `q` value | Description |
+        |---|---|---|
+        | `fast` | search text | Full-text search |
+        | `expert` | SQL WHERE clause | Raw SQL filter |
+        | `advanced` | base64-encoded JSON array of `AdvancedSearchRow` | Structured filter |
+        | (absent) | — | No filter — export all records |
       parameters:
         - $ref: '#/components/parameters/tb'
         - name: format
@@ -842,12 +975,22 @@ paths:
           schema:
             type: string
             enum: [csv, json, xlsx]
-        - name: search_type
+        - name: qt
           in: query
+          description: Search type for export. Use `fast`, `expert`, or `advanced` (mirrors DataView URL params).
           schema:
             type: string
-        - name: where
+            enum: [fast, expert, advanced]
+        - name: q
           in: query
+          description: Query value corresponding to the selected `qt` mode.
+          schema:
+            type: string
+        - name: 'filter[{field}][{op}]'
+          in: query
+          description: |
+            Directus-style filter (takes priority over `qt`/`q`).
+            Same syntax as `GET /api/records/{tb}`.
           schema:
             type: string
       responses:
@@ -1258,6 +1401,13 @@ paths:
     get:
       tags: [rs]
       summary: Get Harris matrix data for a table
+      description: |
+        Returns nodes and relations for the Harris matrix visualisation.
+        Accepts the same filter params as `GET /api/records/{tb}` so
+        DataView can pass its current search state directly.
+
+        Nodes not in the filtered set but connected to in-filter nodes are
+        included with `in_filter: false` and displayed with an attenuated style.
       parameters:
         - name: tb
           in: query
@@ -1268,8 +1418,31 @@ paths:
           in: query
           schema:
             type: string
-        - name: where
+            enum: [all, fast, advanced, sqlExpert]
+          description: Search mode (see `GET /api/records/{tb}` for details).
+        - name: search
           in: query
+          description: Full-text search string (search_type=fast).
+          schema:
+            type: string
+        - name: adv
+          in: query
+          description: Advanced search rows as base64-encoded JSON (search_type=advanced).
+          schema:
+            type: string
+        - name: querytext
+          in: query
+          description: Raw SQL WHERE clause (search_type=sqlExpert).
+          schema:
+            type: string
+        - name: join
+          in: query
+          description: Optional SQL JOIN clause (search_type=sqlExpert).
+          schema:
+            type: string
+        - name: 'filter[{field}][{op}]'
+          in: query
+          description: Directus-style filter (takes priority over search_type).
           schema:
             type: string
       responses:
@@ -2065,6 +2238,10 @@ paths:
     get:
       tags: [geoface]
       summary: Get geodata as GeoJSON for a table
+      description: |
+        Returns a GeoJSON `FeatureCollection` of all geometries linked to records
+        in the given table, optionally filtered by the active search.
+        Accepts the same filter params as `GET /api/records/{tb}`.
       parameters:
         - name: tb
           in: query
@@ -2075,8 +2252,26 @@ paths:
           in: query
           schema:
             type: string
-        - name: where
+            enum: [all, advanced, sqlExpert]
+          description: Search mode. Use `advanced` with `adv` or `sqlExpert` with `querytext`.
+        - name: adv
           in: query
+          description: Advanced search rows as base64-encoded JSON (search_type=advanced).
+          schema:
+            type: string
+        - name: querytext
+          in: query
+          description: Raw SQL WHERE clause (search_type=sqlExpert).
+          schema:
+            type: string
+        - name: join
+          in: query
+          description: Optional SQL JOIN clause (search_type=sqlExpert).
+          schema:
+            type: string
+        - name: 'filter[{field}][{op}]'
+          in: query
+          description: Directus-style filter (takes priority over search_type).
           schema:
             type: string
       responses:
@@ -3211,6 +3406,54 @@ components:
         ')':
           type: string
           default: ''
+
+    FilterObject:
+      type: object
+      description: |
+        Directus-compatible JSON filter object.  Accepted in POST bodies and
+        as URL bracket notation (`?filter[field][_op]=value`) in GET requests.
+
+        ## Field condition
+        ```json
+        { "status": { "_eq": "active" }, "year": { "_gt": 100 } }
+        ```
+        Root-level conditions are AND-combined.
+
+        ## Logical groups
+        ```json
+        { "_or": [ {"type": {"_eq": "site"}}, {"type": {"_eq": "find"}} ] }
+        { "_and": [ {"year": {"_gte": 100}}, {"year": {"_lte": 300}} ] }
+        ```
+
+        ## Supported operators
+        | Operator | SQL equivalent |
+        |---|---|
+        | `_eq` | `= ?` |
+        | `_neq` | `!= ?` |
+        | `_lt` | `< ?` |
+        | `_lte` | `<= ?` |
+        | `_gt` | `> ?` |
+        | `_gte` | `>= ?` |
+        | `_contains` | `LIKE '%?%'` (case-insensitive) |
+        | `_icontains` | `LIKE '%?%'` (case-insensitive) |
+        | `_ncontains` | `NOT LIKE '%?%'` |
+        | `_starts_with` | `LIKE '?%'` |
+        | `_ends_with` | `LIKE '%?'` |
+        | `_in` | `IN (…)` |
+        | `_nin` | `NOT IN (…)` |
+        | `_null` | `IS NULL` / `IS NOT NULL` (value: `true`/`false`) |
+        | `_nnull` | `IS NOT NULL` / `IS NULL` (value: `true`/`false`) |
+        | `_between` | `BETWEEN ? AND ?` (value: two-element array) |
+
+        Field names are validated against the table config allow-list.
+        All values are bound via PDO prepared statements — no SQL injection risk.
+      additionalProperties: true
+      example:
+        _and:
+          - periodo:
+              _eq: Basso Medioevo
+          - cronologia:
+              _gte: 1000
 
     # ── Tables ─────────────────────────────────────────────────────────────
 

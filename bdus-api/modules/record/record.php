@@ -26,7 +26,7 @@ class record_ctrl extends Controller
    */
   public function getRecords(): void
   {
-    if (!\utils::canUser('read')) {
+    if (!\Auth\Authorization::can('read')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
@@ -164,7 +164,7 @@ class record_ctrl extends Controller
         'total'   => $total,
         'fields'  => $fields,
         'data'    => $qObj->getResults(),
-        'can_add' => \utils::canUser('add_new'),
+        'can_add' => \Auth\Authorization::can('add_new'),
       ]);
 
     } catch (\Throwable $e) {
@@ -201,7 +201,7 @@ class record_ctrl extends Controller
    */
   public function exportRecords(): void
   {
-    if (!\utils::canUser('read')) {
+    if (!\Auth\Authorization::can('read')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
@@ -282,7 +282,7 @@ class record_ctrl extends Controller
    */
   public function getRecord(): void
   {
-    if (!\utils::canUser('read')) {
+    if (!\Auth\Authorization::can('read')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
@@ -317,8 +317,8 @@ class record_ctrl extends Controller
       $full['metadata']['tb_label']   = $this->cfg->get("tables.{$tb}.label");
       $full['metadata']['rec_id']     = $recId;
       $full['metadata']['id_field']   = $this->cfg->get("tables.{$tb}.id_field");
-      $full['metadata']['can_edit']   = \utils::canUser('edit');
-      $full['metadata']['can_delete'] = \utils::canUser('edit');
+      $full['metadata']['can_edit']   = \Auth\Authorization::can('edit');
+      $full['metadata']['can_delete'] = \Auth\Authorization::can('edit');
       $full['schema'] = $schema;
 
       // Template loading
@@ -583,7 +583,7 @@ class record_ctrl extends Controller
    */
   public function saveRecord(): void
   {
-    if (!\utils::canUser('edit')) {
+    if (!\Auth\Authorization::can('edit')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
@@ -894,7 +894,7 @@ class record_ctrl extends Controller
    */
   public function uploadFile(): void
   {
-    if (!\utils::canUser('edit')) {
+    if (!\Auth\Authorization::can('edit')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
@@ -987,7 +987,7 @@ class record_ctrl extends Controller
    */
   public function deleteFile(): void
   {
-    if (!\utils::canUser('edit')) {
+    if (!\Auth\Authorization::can('edit')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
@@ -1078,7 +1078,7 @@ class record_ctrl extends Controller
    */
   public function addRs(): void
   {
-    if (!\utils::canUser('edit')) {
+    if (!\Auth\Authorization::can('edit')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
@@ -1135,7 +1135,7 @@ class record_ctrl extends Controller
    */
   public function deleteRs(): void
   {
-    if (!\utils::canUser('edit')) {
+    if (!\Auth\Authorization::can('edit')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
@@ -1181,7 +1181,7 @@ class record_ctrl extends Controller
    */
   public function searchLinkCandidates(): void
   {
-    if (!\utils::canUser('read')) {
+    if (!\Auth\Authorization::can('read')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
@@ -1235,7 +1235,7 @@ class record_ctrl extends Controller
    */
   public function addManualLink(): void
   {
-    if (!\utils::canUser('edit')) {
+    if (!\Auth\Authorization::can('edit')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
@@ -1319,7 +1319,7 @@ class record_ctrl extends Controller
    */
   public function deleteManualLink(): void
   {
-    if (!\utils::canUser('edit')) {
+    if (!\Auth\Authorization::can('edit')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
@@ -1372,7 +1372,7 @@ class record_ctrl extends Controller
    */
   public function getRsMatrix(): void
   {
-    if (!\utils::canUser('read')) {
+    if (!\Auth\Authorization::can('read')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
@@ -1532,7 +1532,7 @@ class record_ctrl extends Controller
 
   public function erase(): void
   {
-    if (!\utils::canUser('edit')) {
+    if (!\Auth\Authorization::can('edit')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
@@ -1596,7 +1596,7 @@ class record_ctrl extends Controller
    */
   public function getDeletedRecords(): void
   {
-    if (!\utils::canUser('read')) {
+    if (!\Auth\Authorization::can('read')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
@@ -1661,7 +1661,7 @@ class record_ctrl extends Controller
    */
   public function getVersions(): void
   {
-    if (!\utils::canUser('read')) {
+    if (!\Auth\Authorization::can('read')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
@@ -1724,7 +1724,7 @@ class record_ctrl extends Controller
    */
   public function getVersionDiff(): void
   {
-    if (!\utils::canUser('read')) {
+    if (!\Auth\Authorization::can('read')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
@@ -1816,7 +1816,7 @@ class record_ctrl extends Controller
    */
   public function restoreVersion(): void
   {
-    if (!\utils::canUser('admin')) {
+    if (!\Auth\Authorization::can('admin')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }

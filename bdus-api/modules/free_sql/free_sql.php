@@ -27,7 +27,7 @@ class free_sql_ctrl extends Controller
      */
     public function verifyPassword(): void
     {
-        if (!\utils::canUser('super_admin')) {
+        if (!\Auth\Authorization::can('super_admin')) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }
@@ -45,7 +45,7 @@ class free_sql_ctrl extends Controller
         );
         $user = $rows[0] ?? null;
 
-        if (!$user || !\utils::verifyPassword($password, $user['password'] ?? '')) {
+        if (!$user || !\Auth\Password::verify($password, $user['password'] ?? '')) {
             $this->returnJson(['status' => 'error', 'code' => 'free_sql_wrong_password']);
             return;
         }
@@ -69,7 +69,7 @@ class free_sql_ctrl extends Controller
      */
     public function runSql(): void
     {
-        if (!\utils::canUser('super_admin')) {
+        if (!\Auth\Authorization::can('super_admin')) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }

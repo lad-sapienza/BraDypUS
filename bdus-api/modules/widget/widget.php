@@ -19,7 +19,7 @@ class widget_ctrl extends Controller
      */
     public function listWidgets(): void
     {
-        if (!\utils::canUser('read')) {
+        if (!\Auth\Authorization::can('read')) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }
@@ -48,7 +48,7 @@ class widget_ctrl extends Controller
      */
     public function serveWidget(): void
     {
-        if (!\utils::canUser('read')) {
+        if (!\Auth\Authorization::can('read')) {
             http_response_code(403);
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;

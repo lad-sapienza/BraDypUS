@@ -41,7 +41,7 @@ class login_ctrl extends Controller
 			$res = $sys_manager->addRow('bdus_users', [
 				'name', 
 				'email' => $post['email'], 
-				'password' => \utils::encodePwd($post['password']), 
+				'password' => \Auth\Password::hash($post['password']), 
 				'privilege' => 40
 			]);
 			
@@ -57,7 +57,7 @@ class login_ctrl extends Controller
 				// email to admins
 
 				$admins = $sys_manager->getBySQL('bdus_users', 'privilege <= ?', [
-					\utils::privilege('admin')
+					\Auth\Authorization::privilege('admin')
 				]);
 
 				foreach($admins as $adm) {
@@ -187,7 +187,7 @@ class login_ctrl extends Controller
 	public function changePwd()
 	{
 		$id = (int) $this->post['id'];
-		$password = \utils::encodePwd( $this->post['pwd'] );
+		$password = \Auth\Password::hash( $this->post['pwd'] );
 
 		$sys_manager = new Manage($this->db);
 		$res = $sys_manager->editRow('bdus_users', $id, ['password' => $password]);
@@ -243,7 +243,7 @@ class login_ctrl extends Controller
 		$rows = $sys_manager->getBySQL('bdus_users', 'email = ?', [$email]);
 		$res  = $rows[0] ?? null;
 
-		if (!$res || !\utils::verifyPassword($password, $res['password'])) {
+		if (!$res || !\Auth\Password::verify($password, $res['password'])) {
 			throw new \Exception('login_data_not_valid');
 		}
 

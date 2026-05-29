@@ -10,7 +10,7 @@ class confirm_super_adm_pwd_ctrl extends Controller
 {
     public function check_pwd()
     {
-        if (!\utils::canUser('super_admin')){
+        if (!\Auth\Authorization::can('super_admin')){
             $this->response('not_a_super_admin_user', 'error');
             return;
         }
@@ -22,7 +22,7 @@ class confirm_super_adm_pwd_ctrl extends Controller
 
         $me = $sys_manager->getById('bdus_users', $current_user_id);
 
-        if (!$me || !\utils::verifyPassword($pwd, $me['password'])) {
+        if (!$me || !\Auth\Password::verify($pwd, $me['password'])) {
             $this->response('invalid_pasword', 'error');
             return;
         } else {

@@ -18,7 +18,7 @@ class myHistory_ctrl extends Controller
    */
   public function getHistory(): void
   {
-    if (!\utils::canUser('read')) {
+    if (!\Auth\Authorization::can('read')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }

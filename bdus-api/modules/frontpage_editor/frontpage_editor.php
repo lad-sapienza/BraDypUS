@@ -42,7 +42,7 @@ class frontpage_editor_ctrl extends Controller
 	 */
 	public function saveWelcome(): void
 	{
-		if (!\utils::canUser('admin')) {
+		if (!\Auth\Authorization::can('admin')) {
 			$this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
 			return;
 		}

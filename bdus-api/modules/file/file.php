@@ -32,7 +32,7 @@ class file_ctrl extends Controller
 	 */
 	public function sortFiles(): void
 	{
-		if (!\utils::canUser('edit')) {
+		if (!\Auth\Authorization::can('edit')) {
 			$this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
 			return;
 		}

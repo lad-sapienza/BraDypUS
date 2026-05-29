@@ -16,7 +16,7 @@ class info_ctrl extends Controller
    */
   public function getAppInfo(): void
   {
-    if (!\utils::canUser('read')) {
+    if (!\Auth\Authorization::can('read')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
@@ -38,14 +38,14 @@ class info_ctrl extends Controller
    */
   public function getInfo(): void
   {
-    if (!\utils::canUser('read')) {
+    if (!\Auth\Authorization::can('read')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
 
     $this->returnJson([
       "status"       => "success",
-      'version'      => \version::current(),
+      'version'      => json_decode(file_get_contents(MAIN_DIR . 'composer.json'), true)['version'] ?? 'unknown',
       'changelog_md' => file_get_contents(MAIN_DIR . 'CHANGELOG.md') ?: '',
     ]);
   }

@@ -45,7 +45,7 @@ class geoface_ctrl extends Controller
             return;
         }
 
-        if (!\utils::canUser('read')) {
+        if (!\Auth\Authorization::can('read')) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }
@@ -132,7 +132,7 @@ class geoface_ctrl extends Controller
                 'meta'    => [
                     'tb_id'          => $tb,
                     'tb_label'       => $this->cfg->get("tables.{$tb}.label") ?? $tb,
-                    'canUserEdit'    => \utils::canUser('edit'),
+                    'canUserEdit'    => \Auth\Authorization::can('edit'),
                     'layers'         => $layers,
                     'preview_fields' => $previewFields,
                     'id_field'       => $idField,
@@ -163,7 +163,7 @@ class geoface_ctrl extends Controller
             return;
         }
 
-        if (!\utils::canUser('add_new')) {
+        if (!\Auth\Authorization::can('add_new')) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }
@@ -217,7 +217,7 @@ class geoface_ctrl extends Controller
             return;
         }
 
-        if (!\utils::canUser('edit')) {
+        if (!\Auth\Authorization::can('edit')) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }
@@ -272,7 +272,7 @@ class geoface_ctrl extends Controller
             return;
         }
 
-        if (!\utils::canUser('edit')) {
+        if (!\Auth\Authorization::can('edit')) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }

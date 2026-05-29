@@ -37,7 +37,7 @@ class zotero_ctrl extends Controller
      */
     public function getLibs(): void
     {
-        if (!\utils::canUser('admin')) {
+        if (!\Auth\Authorization::can('admin')) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }
@@ -60,7 +60,7 @@ class zotero_ctrl extends Controller
      */
     public function addLib(): void
     {
-        if (!\utils::canUser('admin')) {
+        if (!\Auth\Authorization::can('admin')) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }
@@ -94,7 +94,7 @@ class zotero_ctrl extends Controller
      */
     public function deleteLib(): void
     {
-        if (!\utils::canUser('admin')) {
+        if (!\Auth\Authorization::can('admin')) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }
@@ -120,7 +120,7 @@ class zotero_ctrl extends Controller
      */
     public function search(): void
     {
-        if (!\utils::canUser('edit')) {
+        if (!\Auth\Authorization::can('edit')) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }
@@ -179,7 +179,7 @@ class zotero_ctrl extends Controller
      */
     public function getLinks(): void
     {
-        if (!\utils::canUser('read')) {
+        if (!\Auth\Authorization::can('read')) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }
@@ -218,7 +218,7 @@ class zotero_ctrl extends Controller
      */
     public function addLink(): void
     {
-        if (!\utils::canUser('edit')) {
+        if (!\Auth\Authorization::can('edit')) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }
@@ -265,7 +265,7 @@ class zotero_ctrl extends Controller
      */
     public function editLink(): void
     {
-        if (!\utils::canUser('edit')) {
+        if (!\Auth\Authorization::can('edit')) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }
@@ -289,7 +289,7 @@ class zotero_ctrl extends Controller
      */
     public function deleteLink(): void
     {
-        if (!\utils::canUser('edit')) {
+        if (!\Auth\Authorization::can('edit')) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }
@@ -317,7 +317,7 @@ class zotero_ctrl extends Controller
      */
     public function syncRecord(): void
     {
-        if (!\utils::canUser('edit')) {
+        if (!\Auth\Authorization::can('edit')) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }
@@ -356,7 +356,7 @@ class zotero_ctrl extends Controller
      */
     public function syncAll(): void
     {
-        if (!\utils::canUser('admin')) {
+        if (!\Auth\Authorization::can('admin')) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }

@@ -29,7 +29,7 @@ class config_ctrl extends Controller
    */
   private function requireSuperAdmin(): bool
   {
-    if (!\utils::canUser('super_admin')) {
+    if (!\Auth\Authorization::can('super_admin')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return false;
     }
@@ -446,7 +446,7 @@ class config_ctrl extends Controller
    */
   public function uploadGeoFile(): void
   {
-    if (!\utils::canUser('super_admin')) {
+    if (!\Auth\Authorization::can('super_admin')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
@@ -485,7 +485,7 @@ class config_ctrl extends Controller
    */
   public function getTableList(): void
   {
-    if (!\utils::canUser('super_admin')) {
+    if (!\Auth\Authorization::can('super_admin')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
@@ -519,7 +519,7 @@ class config_ctrl extends Controller
    */
   public function getAppProperties(): void
   {
-    if (!\utils::canUser('super_admin')) {
+    if (!\Auth\Authorization::can('super_admin')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
@@ -529,7 +529,7 @@ class config_ctrl extends Controller
       $sys_manage = new Manage($this->db);
       $rows = $sys_manage->getBySQL('bdus_users', '1=1');
       foreach ($rows as $u) {
-        $u['verbose_privilege'] = \utils::privilege($u['privilege'], 1);
+        $u['verbose_privilege'] = \Auth\Authorization::privilege($u['privilege'], 1);
         $users[] = $u;
       }
     } catch (\Throwable $e) {
@@ -555,7 +555,7 @@ class config_ctrl extends Controller
    */
   public function getTableConfig(): void
   {
-    if (!\utils::canUser('super_admin')) {
+    if (!\Auth\Authorization::can('super_admin')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
@@ -622,7 +622,7 @@ class config_ctrl extends Controller
    */
   public function getFldStructure(): void
   {
-    if (!\utils::canUser('super_admin')) {
+    if (!\Auth\Authorization::can('super_admin')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
@@ -640,7 +640,7 @@ class config_ctrl extends Controller
    */
   public function getFldConfig(): void
   {
-    if (!\utils::canUser('super_admin')) {
+    if (!\Auth\Authorization::can('super_admin')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
@@ -666,7 +666,7 @@ class config_ctrl extends Controller
    */
   public function getGeoFaceConfig(): void
   {
-    if (!\utils::canUser('super_admin')) {
+    if (!\Auth\Authorization::can('super_admin')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
@@ -694,7 +694,7 @@ class config_ctrl extends Controller
    */
   public function getValidationReport(): void
   {
-    if (!\utils::canUser('super_admin')) {
+    if (!\Auth\Authorization::can('super_admin')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }

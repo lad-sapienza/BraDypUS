@@ -10,7 +10,7 @@
  * users through the Vue config UI.  The public REST API itself lives in
  * lib/API/V1/ and is completely separate from this controller.
  *
- * All endpoints require admin privilege (utils::canUser('admin')).
+ * All endpoints require admin privilege (\Auth\Authorization::can('admin')).
  * Plain-text keys are generated here and returned ONCE — they are never
  * stored.  Only the SHA-256 hash is persisted in {prefix}api_keys.
  */
@@ -28,7 +28,7 @@ class api_ctrl extends Controller
      */
     public function listKeys(): void
     {
-        if (!\utils::canUser('admin')) {
+        if (!\Auth\Authorization::can('admin')) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }
@@ -52,7 +52,7 @@ class api_ctrl extends Controller
      */
     public function createKey(): void
     {
-        if (!\utils::canUser('admin')) {
+        if (!\Auth\Authorization::can('admin')) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }
@@ -111,7 +111,7 @@ class api_ctrl extends Controller
      */
     public function revokeKey(): void
     {
-        if (!\utils::canUser('admin')) {
+        if (!\Auth\Authorization::can('admin')) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }
@@ -139,7 +139,7 @@ class api_ctrl extends Controller
      */
     public function deleteKey(): void
     {
-        if (!\utils::canUser('admin')) {
+        if (!\Auth\Authorization::can('admin')) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }

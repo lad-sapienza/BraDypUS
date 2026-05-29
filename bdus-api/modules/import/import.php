@@ -33,7 +33,7 @@ class import_ctrl extends Controller
      */
     public function getTableFields(): void
     {
-        if (!\utils::canUser('read')) {
+        if (!\Auth\Authorization::can('read')) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }
@@ -68,7 +68,7 @@ class import_ctrl extends Controller
      */
     public function previewFile(): void
     {
-        if (!\utils::canUser('edit')) {
+        if (!\Auth\Authorization::can('edit')) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }
@@ -145,7 +145,7 @@ class import_ctrl extends Controller
      */
     public function previewPhotos(): void
     {
-        if (!\utils::canUser('edit')) {
+        if (!\Auth\Authorization::can('edit')) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }
@@ -221,7 +221,7 @@ class import_ctrl extends Controller
      */
     public function importData(): void
     {
-        if (!\utils::canUser('edit')) {
+        if (!\Auth\Authorization::can('edit')) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }
@@ -350,7 +350,7 @@ class import_ctrl extends Controller
      */
     public function importGeoJson(): void
     {
-        if (!\utils::canUser('edit')) {
+        if (!\Auth\Authorization::can('edit')) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }
@@ -464,7 +464,7 @@ class import_ctrl extends Controller
      */
     public function importPhotos(): void
     {
-        if (!\utils::canUser('edit')) {
+        if (!\Auth\Authorization::can('edit')) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }

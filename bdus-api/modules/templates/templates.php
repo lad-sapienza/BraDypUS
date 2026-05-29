@@ -17,7 +17,7 @@ class templates_ctrl extends Controller
    */
   public function getTableList(): void
   {
-    if (!\utils::canUser('super_admin')) {
+    if (!\Auth\Authorization::can('super_admin')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
@@ -51,7 +51,7 @@ class templates_ctrl extends Controller
    */
   public function getTemplateList(): void
   {
-    if (!\utils::canUser('super_admin')) {
+    if (!\Auth\Authorization::can('super_admin')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
@@ -99,7 +99,7 @@ class templates_ctrl extends Controller
    */
   public function getTemplate(): void
   {
-    if (!\utils::canUser('super_admin')) {
+    if (!\Auth\Authorization::can('super_admin')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
@@ -133,7 +133,7 @@ class templates_ctrl extends Controller
    */
   public function saveTemplate(): void
   {
-    if (!\utils::canUser('super_admin')) {
+    if (!\Auth\Authorization::can('super_admin')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
@@ -180,7 +180,7 @@ class templates_ctrl extends Controller
    */
   public function deleteTemplate(): void
   {
-    if (!\utils::canUser('super_admin')) {
+    if (!\Auth\Authorization::can('super_admin')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
@@ -211,7 +211,7 @@ class templates_ctrl extends Controller
    */
   public function renameTemplate(): void
   {
-    if (!\utils::canUser('super_admin')) {
+    if (!\Auth\Authorization::can('super_admin')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }

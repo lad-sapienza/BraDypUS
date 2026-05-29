@@ -26,8 +26,8 @@ class backup_ctrl extends Controller
    * Response:
    * {
    *   engine:       string,          // current DB engine
-   *   can_delete:   bool,            // utils::canUser('admin')
-   *   can_restore:  bool,            // utils::canUser('super_admin') && engine !== 'pgsql'
+   *   can_delete:   bool,            // \Auth\Authorization::can('admin')
+   *   can_restore:  bool,            // \Auth\Authorization::can('super_admin') && engine !== 'pgsql'
    *   backups: [
    *     { file, app, engine, timestamp, formatted_time, size_mb, gz }
    *   ]
@@ -35,7 +35,7 @@ class backup_ctrl extends Controller
    */
   public function listBackups(): void
   {
-    if (!\utils::canUser('read')) {
+    if (!\Auth\Authorization::can('read')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
@@ -60,8 +60,8 @@ class backup_ctrl extends Controller
     $this->returnJson([
       "status"      => "success",
       'engine'      => $engine,
-      'can_delete'  => \utils::canUser('admin'),
-      'can_restore' => \utils::canUser('super_admin') && $engine !== 'pgsql',
+      'can_delete'  => \Auth\Authorization::can('admin'),
+      'can_restore' => \Auth\Authorization::can('super_admin') && $engine !== 'pgsql',
       'backups'     => $backups,
     ]);
   }
@@ -75,7 +75,7 @@ class backup_ctrl extends Controller
    */
   public function doBackup(): void
   {
-    if (!\utils::canUser('edit')) {
+    if (!\Auth\Authorization::can('edit')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
@@ -143,7 +143,7 @@ class backup_ctrl extends Controller
    */
   public function downloadBackup(): void
   {
-    if (!\utils::canUser('read')) {
+    if (!\Auth\Authorization::can('read')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
@@ -179,7 +179,7 @@ class backup_ctrl extends Controller
    */
   public function deleteBackup(): void
   {
-    if (!\utils::canUser('admin')) {
+    if (!\Auth\Authorization::can('admin')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
@@ -215,7 +215,7 @@ class backup_ctrl extends Controller
    */
   public function restoreBackup(): void
   {
-    if (!\utils::canUser('super_admin')) {
+    if (!\Auth\Authorization::can('super_admin')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }

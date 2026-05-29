@@ -197,7 +197,7 @@ class chart_ctrl extends Controller
      */
     public function saveChart(): void
     {
-        if (!\utils::canUser('edit')) {
+        if (!\Auth\Authorization::can('edit')) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }
@@ -362,7 +362,7 @@ class chart_ctrl extends Controller
     private function assertOwnership(array $row): bool
     {
         return (int) $row['user_id'] === \Auth\CurrentUser::id()
-            || \utils::canUser('super_admin');
+            || \Auth\Authorization::can('super_admin');
     }
 
     /**

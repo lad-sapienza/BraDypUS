@@ -22,7 +22,7 @@ class home_ctrl extends Controller
      */
     public function listTables(): void
     {
-        if (!\utils::canUser('enter')) {
+        if (!\Auth\Authorization::can('enter')) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }
@@ -62,7 +62,7 @@ class home_ctrl extends Controller
      */
     public function getMigrations(): void
     {
-        if (!\utils::canUser('admin')) {
+        if (!\Auth\Authorization::can('admin')) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }

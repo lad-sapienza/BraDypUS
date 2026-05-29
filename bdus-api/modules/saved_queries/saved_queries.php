@@ -205,7 +205,7 @@ class saved_queries_ctrl extends Controller
     private function assertOwnership(array $row): bool
     {
         return (int) $row['user_id'] === \Auth\CurrentUser::id()
-            || \utils::canUser('super_admin');
+            || \Auth\Authorization::can('super_admin');
     }
 
     /**

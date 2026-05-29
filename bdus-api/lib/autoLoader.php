@@ -38,16 +38,12 @@ class autoloader
 
         } else {
 
-            if (file_exists($this->libDir . $className . '.inc')) {
-                require_once $this->libDir . $className . '.inc';
-            } elseif (file_exists($this->libDir . $className . '.php')) {
+            if (file_exists($this->libDir . $className . '.php')) {
                 require_once $this->libDir . $className . '.php';
             } elseif (file_exists($this->libDir . str_replace('\\', '/', $className) . '.php')) {
                 require_once $this->libDir . str_replace('\\', '/', $className) . '.php';
             } elseif (file_exists($this->modDir . '/' . $className . '/' . $className . '.php')) {
                 require_once $this->modDir . '/' . $className . '/' . $className . '.php';
-            } elseif (file_exists($this->libDir . 'interfaces/' . $className . '.inc')) {
-                require_once $this->libDir . 'interfaces/' . $className . '.inc';
             } elseif (file_exists($this->libDir . 'interfaces/' . $className . '.php')) {
                 require_once $this->libDir . 'interfaces/' . $className . '.php';
             } else {

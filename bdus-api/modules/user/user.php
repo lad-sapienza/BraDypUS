@@ -32,11 +32,11 @@ class user_ctrl extends Controller
 	public function showList()
 	{
 		$data = [
-			'admin'     => \utils::canUser('admin'),
-			'can_write' => \utils::canUser('add_new'),
+			'admin'     => \Auth\Authorization::can('admin'),
+			'can_write' => \Auth\Authorization::can('add_new'),
 		];
 
-		if (\utils::canUser('admin')) {
+		if (\Auth\Authorization::can('admin')) {
 			$sys_manager = new Manage($this->db);
 			$all_users   = $sys_manager->getBySQL('bdus_users', '1=1');
 
@@ -51,9 +51,9 @@ class user_ctrl extends Controller
 					'id'              => $user['id'],
 					'name'            => $user['name'],
 					'email'           => $user['email'],
-					'privilege'       => \utils::privilege($user['privilege'], true),
+					'privilege'       => \Auth\Authorization::privilege($user['privilege'], true),
 					'privilege_value' => (int) $user['privilege'],
-					'editable'        => (\utils::canUser('admin') && $user['privilege'] >= \Auth\CurrentUser::privilege()),
+					'editable'        => (\Auth\Authorization::can('admin') && $user['privilege'] >= \Auth\CurrentUser::privilege()),
 					'override_count'  => (int) ($overrides[0]['cnt'] ?? 0),
 				];
 			}
@@ -62,7 +62,7 @@ class user_ctrl extends Controller
 				'id'              => \Auth\CurrentUser::id(),
 				'name'            => \Auth\CurrentUser::get('name'),
 				'email'           => \Auth\CurrentUser::get('email'),
-				'privilege'       => \utils::privilege(\Auth\CurrentUser::privilege(), true),
+				'privilege'       => \Auth\Authorization::privilege(\Auth\CurrentUser::privilege(), true),
 				'privilege_value' => \Auth\CurrentUser::privilege(),
 				'editable'        => true,
 				'override_count'  => 0,
@@ -124,7 +124,7 @@ class user_ctrl extends Controller
 	{
 		$id = $this->get['id'] ?? null;
 
-		if ($id && $id != \Auth\CurrentUser::id() && !\utils::canUser('admin')) {
+		if ($id && $id != \Auth\CurrentUser::id() && !\Auth\Authorization::can('admin')) {
 			$this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
 			return;
 		}
@@ -144,7 +144,7 @@ class user_ctrl extends Controller
 			'avatar'    => md5(strtolower(trim($one_user['email'] ?? ''))),
 		];
 
-		foreach (\utils::privilege('all', true) as $k => $str) {
+		foreach (\Auth\Authorization::privilege('all', true) as $k => $str) {
 			if ($k >= \Auth\CurrentUser::privilege()) {
 				$data['privileges'][] = [
 					'value'    => $k,
@@ -173,7 +173,7 @@ class user_ctrl extends Controller
 	public function saveUserData()
 	{
 		$data      = $this->post;
-		$isAdmin   = \utils::canUser('admin');
+		$isAdmin   = \Auth\Authorization::can('admin');
 		$isNewUser = empty($data['id']);
 		$isOwnUser = !$isNewUser && (int)$data['id'] === \Auth\CurrentUser::id();
 
@@ -252,7 +252,7 @@ class user_ctrl extends Controller
 	 */
 	public function getTablePrivileges(): void
 	{
-		if (!\utils::canUser('admin')) {
+		if (!\Auth\Authorization::can('admin')) {
 			$this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
 			return;
 		}
@@ -291,7 +291,7 @@ class user_ctrl extends Controller
 	 */
 	public function saveTablePrivilege(): void
 	{
-		if (!\utils::canUser('admin')) {
+		if (!\Auth\Authorization::can('admin')) {
 			$this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
 			return;
 		}
@@ -348,7 +348,7 @@ class user_ctrl extends Controller
 	 */
 	public function deleteTablePrivilege(): void
 	{
-		if (!\utils::canUser('admin')) {
+		if (!\Auth\Authorization::can('admin')) {
 			$this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
 			return;
 		}

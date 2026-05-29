@@ -33,7 +33,7 @@ abstract class BdusTestCase extends TestCase
     // ── Boot once per test class ──────────────────────────────────────────
     public static function setUpBeforeClass(): void
     {
-        // Simulate a logged-in super-admin so utils::canUser() passes.
+        // Simulate a logged-in super-admin so \Auth\Authorization::can() passes.
         // privilege = 1 satisfies every privilege level check (all are < N where N >= 2).
         \Auth\CurrentUser::set([
             'id'        => 1,

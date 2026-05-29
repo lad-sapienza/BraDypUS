@@ -48,6 +48,15 @@
         <i class="pi pi-sitemap" />
         <span>{{ t('cfg_relations') }}</span>
       </button>
+      <button
+        class="cfg-action-btn"
+        :class="{ active: active === 'zotero' }"
+        @click="$emit('select', 'zotero')"
+        :title="t('zotero_libraries')"
+      >
+        <i class="pi pi-book" />
+        <span>{{ t('zotero_libraries') }}</span>
+      </button>
     </div>
 
     <div class="cfg-sidebar-divider" />

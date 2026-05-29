@@ -63,7 +63,7 @@
       <template v-else>
         <Select
           v-if="schema.type === 'select'"
-          :modelValue="modelValue"
+          :modelValue="asyncModelValue"
           @update:modelValue="v => onInput(v)"
           :options="asyncOptions"
           optionLabel="label"
@@ -76,7 +76,7 @@
         />
         <Select
           v-else-if="schema.type === 'combo_select'"
-          :modelValue="modelValue"
+          :modelValue="asyncModelValue"
           @update:modelValue="v => onInput(v)"
           :options="asyncOptions"
           optionLabel="label"
@@ -271,7 +271,13 @@ async function loadOptions() {
     const res = await api.get(`/api/record/${props.tb}/field-options`, {
       fld: props.schema.name,
     })
-    asyncOptions.value = Array.isArray(res?.options) ? res.options : []
+    // Normalize option values to strings so PrimeVue's strict === comparison
+    // works consistently across DB engines (MySQL returns int IDs, SQLite may
+    // return strings; the stored FK column could be either type).
+    asyncOptions.value = (Array.isArray(res?.options) ? res.options : []).map(o => ({
+      ...o,
+      value: o.value !== null && o.value !== undefined ? String(o.value) : o.value,
+    }))
     optionsLoaded = true
   } catch (e) {
     toast.add({
@@ -284,6 +290,16 @@ async function loadOptions() {
     loadingOptions.value = false
   }
 }
+
+/**
+ * Coerce modelValue to string for async-select comparisons.
+ * asyncOptions values are always strings (see loadOptions normalization above),
+ * but the stored value could arrive as a number (e.g. MySQL integer FK).
+ */
+const asyncModelValue = computed(() => {
+  if (props.modelValue === null || props.modelValue === undefined) return props.modelValue
+  return String(props.modelValue)
+})
 
 // ── Boolean options ────────────────────────────────────────────
 const boolOptions = computed(() => [

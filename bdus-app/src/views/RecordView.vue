@@ -194,6 +194,17 @@
         @link-deleted="onLinkDeleted"
       />
 
+      <!-- Bibliography (Zotero) -->
+      <ZoteroSection
+        v-if="hasBibliography || mode === 'edit'"
+        :bibliography="record.bibliography ?? {}"
+        :editMode="mode === 'edit'"
+        :recordTb="record.metadata.tb_id"
+        :recordId="id"
+        @bib-added="onBibAdded"
+        @bib-deleted="onBibDeleted"
+      />
+
       <!-- Geodata -->
       <fieldset
         v-if="hasGeodata"
@@ -255,6 +266,7 @@ import TemplateSection    from '@/components/record/TemplateSection.vue'
 import FileGallery        from '@/components/record/FileGallery.vue'
 import RsSection              from '@/components/record/RsSection.vue'
 import ManualLinksSection     from '@/components/record/ManualLinksSection.vue'
+import ZoteroSection          from '@/components/record/ZoteroSection.vue'
 import RecordVersionsDrawer   from '@/components/record/RecordVersionsDrawer.vue'
 
 const { t }   = useI18n()
@@ -316,6 +328,11 @@ const hasLinks = computed(() =>
 // Manual links
 const hasManualLinks = computed(() =>
   Object.keys(record.value?.manualLinks ?? {}).length > 0
+)
+
+// Bibliography (Zotero)
+const hasBibliography = computed(() =>
+  Object.keys(record.value?.bibliography ?? {}).length > 0
 )
 
 const hasGeodata = computed(() => {
@@ -650,6 +667,24 @@ function onLinkDeleted(linkKey) {
     const updated = { ...record.value.manualLinks }
     delete updated[linkKey]
     record.value.manualLinks = updated
+  }
+}
+
+// ── Bibliography events (from ZoteroSection) ──────────────────────
+function onBibAdded(newEntry) {
+  if (record.value) {
+    record.value.bibliography = {
+      ...(record.value.bibliography ?? {}),
+      [newEntry.id]: newEntry,
+    }
+  }
+}
+
+function onBibDeleted(entryId) {
+  if (record.value?.bibliography) {
+    const updated = { ...record.value.bibliography }
+    delete updated[entryId]
+    record.value.bibliography = updated
   }
 }
 

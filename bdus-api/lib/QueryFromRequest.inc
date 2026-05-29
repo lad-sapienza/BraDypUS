@@ -327,11 +327,28 @@ class QueryFromRequest
         $this->values = $v;
         break;
 
+      case 'filter':
+        // Directus-style JSON filter: [ "field" => ["_op" => value], "_and" => [...] ]
+        // Received either from a JSON POST body or from URL bracket notation
+        //   ?filter[status][_eq]=active&filter[name][_icontains]=pompeii
+        // which PHP natively parses into the same nested array structure.
+        $filterArr = $request['filter'] ?? [];
+        if (empty($filterArr)) {
+          $this->where = '1=1';
+          break;
+        }
+        $jsonFilter = new \SQL\Filter\JsonFilter($this->cfg, $this->tb);
+        [$filterSql, $filterVals] = $jsonFilter->toSql($filterArr);
+        $this->where  = $filterSql  ?: '1=1';
+        $this->values = $filterVals ?: [];
+        break;
+
       case 'shortSql':
         // `where` is a ShortSQL WHERE expression produced by Record\Read::getLinks() /
         // getBackLinks(), e.g. "id|=|713" or "^fld|=|val||and|other|LIKE|foo".
         // We build a minimal ShortSQL string "@table~?where" and let ParseShortSql
         // handle the {subquery} encoding and Where::parse() translation to SQL.
+        // DEPRECATED: new code should use the 'filter' type above.
         $whereStr = trim($request['where'] ?? '');
         if ($whereStr === '' || $whereStr === '1') {
           $this->where = '1=1';

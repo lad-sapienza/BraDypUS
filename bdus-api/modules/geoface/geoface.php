@@ -56,8 +56,12 @@ class geoface_ctrl extends Controller
             // Delegate WHERE-building to QueryFromRequest — same as record_ctrl.
             // All search types (shortSql, sqlExpert, advanced, all) are handled
             // centrally; this module knows nothing about how the predicate is built.
-            $qRequest = ['tb' => $tb, 'type' => $searchType ?? 'all'];
-            switch ($searchType) {
+            $qRequest  = ['tb' => $tb, 'type' => $searchType ?? 'all'];
+            $filterArr = $this->get['filter'] ?? null;
+            if ($filterArr !== null && is_array($filterArr)) {
+                $qRequest['type']   = 'filter';
+                $qRequest['filter'] = $filterArr;
+            } else switch ($searchType) {
                 case 'shortSql':
                     $qRequest['where'] = $this->get['where'] ?? '';
                     break;

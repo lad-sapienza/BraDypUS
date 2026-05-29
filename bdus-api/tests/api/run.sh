@@ -263,6 +263,13 @@ run_phase "Welcome & Search-Replace" "16_welcome_search_replace.hurl" \
   --variable "jwt=${JWT}"
 
 # ════════════════════════════════════════════════════════════════════
+# Phase 18 — JSON filter (Directus-style GET bracket notation)
+# ════════════════════════════════════════════════════════════════════
+header "Phase 18 — JSON filter"
+run_phase "JSON filter" "18_json_filter.hurl" \
+  --variable "jwt=${JWT}"
+
+# ════════════════════════════════════════════════════════════════════
 # Phase 17 — Zotero library management & citation links
 # ════════════════════════════════════════════════════════════════════
 header "Phase 17 — Zotero"

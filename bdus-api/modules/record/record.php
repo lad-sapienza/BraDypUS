@@ -48,8 +48,16 @@ class record_ctrl extends Controller
     // Auto-detect search type when search_type is not provided explicitly.
     $qRequest = ['tb' => $tb, 'type' => $searchType ?? 'all'];
 
-    if ($searchType) {
-      // Explicit search_type
+    // ── JSON filter (Directus-style) — highest priority ───────────────────────
+    // Accepted as:
+    //   GET  ?filter[status][_eq]=active&filter[name][_icontains]=pompeii
+    //   POST { "filter": { "status": { "_eq": "active" } } }
+    $filterArr = $this->get['filter'] ?? $this->post['filter'] ?? null;
+    if ($filterArr !== null && is_array($filterArr)) {
+      $qRequest['type']   = 'filter';
+      $qRequest['filter'] = $filterArr;
+    } elseif ($searchType) {
+      // Explicit legacy search_type
       switch ($searchType) {
         case 'fast':
           $qRequest['string'] = $this->get['search'] ?? $this->post['search'] ?? '';
@@ -89,17 +97,16 @@ class record_ctrl extends Controller
       }
     } else {
       // Check for q_fieldname=value GET params (simple field equality filter).
-      // e.g. ?q_sigla=US001 → WHERE sigla = 'US001'
-      $qWhereParts = [];
+      // e.g. ?q_sigla=US001 → filter[sigla][_eq]=US001
+      $qFilter = [];
       foreach ($this->get as $key => $val) {
         if (str_starts_with($key, 'q_') && $val !== '' && $val !== null) {
-          $fieldName     = substr($key, 2);
-          $qWhereParts[] = $fieldName . '|=|' . $val;
+          $qFilter[substr($key, 2)] = ['_eq' => $val];
         }
       }
-      if (!empty($qWhereParts)) {
-        $qRequest['type']  = 'shortSql';
-        $qRequest['where'] = implode('||and|', $qWhereParts);
+      if (!empty($qFilter)) {
+        $qRequest['type']   = 'filter';
+        $qRequest['filter'] = $qFilter;
       }
     }
 
@@ -218,7 +225,11 @@ class record_ctrl extends Controller
 
     $qRequest = ['tb' => $tb, 'type' => 'all'];
 
-    if ($where) {
+    $filterArr = $this->get['filter'] ?? null;
+    if ($filterArr !== null && is_array($filterArr)) {
+      $qRequest['type']   = 'filter';
+      $qRequest['filter'] = $filterArr;
+    } elseif ($where) {
       $qRequest['type']  = 'shortSql';
       $qRequest['where'] = $where;
     } elseif ($qt === 'fast' && $q !== null) {
@@ -1386,37 +1397,43 @@ class record_ctrl extends Controller
 
     try {
       // ── Step 1: resolve which records to include ───────────────────────────
+      $filterArr  = $this->get['filter'] ?? null;
       $searchType = $this->get['search_type'] ?? 'all';
-      $filtered   = ($searchType !== 'all');
+      $filtered   = ($filterArr !== null && is_array($filterArr)) || ($searchType !== 'all');
 
       if ($filtered) {
         // Re-use QueryFromRequest to get matching db IDs (same logic as getRecords)
         $qRequest = ['tb' => $tb, 'type' => $searchType];
-        switch ($searchType) {
-          case 'fast':
-            $qRequest['string'] = $this->get['search'] ?? '';
-            break;
-          case 'advanced':
-            $advRaw = $this->get['adv'] ?? $this->post['adv'] ?? '';
-            if (is_string($advRaw)) {
-              // When sent as a GET param (matrix view), adv is base64-encoded JSON.
-              // When sent as a POST body (DataView), adv may already be a decoded array.
-              $decoded = json_decode($advRaw, true);
-              if ($decoded === null) {
-                $decoded = json_decode(base64_decode($advRaw), true) ?? [];
+
+        // JSON filter takes priority over legacy search_type.
+        if ($filterArr !== null && is_array($filterArr)) {
+          $qRequest['type']   = 'filter';
+          $qRequest['filter'] = $filterArr;
+        } else {
+          switch ($searchType) {
+            case 'fast':
+              $qRequest['string'] = $this->get['search'] ?? '';
+              break;
+            case 'advanced':
+              $advRaw = $this->get['adv'] ?? $this->post['adv'] ?? '';
+              if (is_string($advRaw)) {
+                $decoded = json_decode($advRaw, true);
+                if ($decoded === null) {
+                  $decoded = json_decode(base64_decode($advRaw), true) ?? [];
+                }
+                $qRequest['adv'] = $decoded;
+              } else {
+                $qRequest['adv'] = $advRaw;
               }
-              $qRequest['adv'] = $decoded;
-            } else {
-              $qRequest['adv'] = $advRaw;
-            }
-            break;
-          case 'sqlExpert':
-            $qRequest['querytext'] = $this->get['querytext'] ?? '';
-            $qRequest['join']      = $this->get['join']      ?? '';
-            break;
-          case 'shortSql':
-            $qRequest['where'] = $this->get['where'] ?? '';
-            break;
+              break;
+            case 'sqlExpert':
+              $qRequest['querytext'] = $this->get['querytext'] ?? '';
+              $qRequest['join']      = $this->get['join']      ?? '';
+              break;
+            case 'shortSql':
+              $qRequest['where'] = $this->get['where'] ?? '';
+              break;
+          }
         }
 
         $qObj = new \QueryFromRequest($this->db, $this->cfg, $qRequest, true);

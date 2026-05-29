@@ -37,6 +37,10 @@ class zotero_ctrl extends Controller
      */
     public function getLibs(): void
     {
+        if (!\utils::canUser('admin')) {
+            $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+            return;
+        }
         $manage = new Manage($this->db);
         $rows   = $manage->getBySQL('bdus_zotero_libs', '1=1 ORDER BY name') ?: [];
 
@@ -56,6 +60,10 @@ class zotero_ctrl extends Controller
      */
     public function addLib(): void
     {
+        if (!\utils::canUser('admin')) {
+            $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+            return;
+        }
         $type          = $this->post['type']           ?? '';
         $zoteroId      = trim($this->post['zotero_id'] ?? '');
         $name          = trim($this->post['name']       ?? '');
@@ -86,6 +94,10 @@ class zotero_ctrl extends Controller
      */
     public function deleteLib(): void
     {
+        if (!\utils::canUser('admin')) {
+            $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+            return;
+        }
         $id = (int) ($this->get['id'] ?? 0);
         if (!$id) {
             $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
@@ -108,6 +120,10 @@ class zotero_ctrl extends Controller
      */
     public function search(): void
     {
+        if (!\utils::canUser('edit')) {
+            $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+            return;
+        }
         $libId = (int) ($this->get['lib_id'] ?? 0);
         $q     = trim($this->get['q'] ?? '');
         $limit = min(100, max(1, (int) ($this->get['limit'] ?? 25)));
@@ -163,6 +179,10 @@ class zotero_ctrl extends Controller
      */
     public function getLinks(): void
     {
+        if (!\utils::canUser('read')) {
+            $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+            return;
+        }
         $tb       = $this->get['tb']   ?? '';
         $recordId = (int) ($this->get['id'] ?? 0);
 
@@ -198,6 +218,10 @@ class zotero_ctrl extends Controller
      */
     public function addLink(): void
     {
+        if (!\utils::canUser('edit')) {
+            $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+            return;
+        }
         $tb        = $this->post['tb']         ?? '';
         $recordId  = (int) ($this->post['record_id'] ?? 0);
         $libId     = (int) ($this->post['lib_id']    ?? 0);
@@ -241,6 +265,10 @@ class zotero_ctrl extends Controller
      */
     public function editLink(): void
     {
+        if (!\utils::canUser('edit')) {
+            $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+            return;
+        }
         $id      = (int) ($this->get['id'] ?? 0);
         $allowed = ['pages', 'notes', 'sort'];
         $data    = array_intersect_key($this->post, array_flip($allowed));
@@ -261,6 +289,10 @@ class zotero_ctrl extends Controller
      */
     public function deleteLink(): void
     {
+        if (!\utils::canUser('edit')) {
+            $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+            return;
+        }
         $id = (int) ($this->get['id'] ?? 0);
         if (!$id) {
             $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
@@ -285,6 +317,10 @@ class zotero_ctrl extends Controller
      */
     public function syncRecord(): void
     {
+        if (!\utils::canUser('edit')) {
+            $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+            return;
+        }
         $tb       = $this->get['tb']   ?? '';
         $recordId = (int) ($this->get['id'] ?? 0);
 
@@ -320,6 +356,10 @@ class zotero_ctrl extends Controller
      */
     public function syncAll(): void
     {
+        if (!\utils::canUser('admin')) {
+            $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+            return;
+        }
         // Fetch one representative row per unique item (we only need lib_id + key).
         $links = $this->db->query(
             "SELECT MIN(id) AS id, lib_id, zotero_key, MIN(zotero_version) AS zotero_version

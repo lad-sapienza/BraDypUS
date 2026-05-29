@@ -66,6 +66,8 @@ class Manage
         'bdus_user_table_privs',
         'bdus_versions',
         'bdus_vocabularies',
+        'bdus_zotero_libs',
+        'bdus_zotero_links',
     ];
 
     /**
@@ -292,13 +294,22 @@ class Manage
             }
         }
 
-        $nn = $clm['notnull'] ? 'NOT NULL' : '';
+        $nn  = $clm['notnull'] ? 'NOT NULL' : '';
+        $def = '';
+        if (array_key_exists('default', $clm) && $clm['default'] !== null) {
+            $rawDefault = $clm['default'];
+            // Quote string defaults; leave numeric and SQL-keyword defaults bare.
+            $def = is_string($rawDefault) && !is_numeric($rawDefault)
+                ? "DEFAULT '" . addslashes($rawDefault) . "'"
+                : "DEFAULT {$rawDefault}";
+        }
 
-        return implode(' ', [
+        return implode(' ', array_filter([
             $name,
             $type,
-            $nn
-        ]);
+            $nn,
+            $def,
+        ]));
     }
 
     /**

@@ -263,6 +263,13 @@ run_phase "Welcome & Search-Replace" "16_welcome_search_replace.hurl" \
   --variable "jwt=${JWT}"
 
 # ════════════════════════════════════════════════════════════════════
+# Phase 17 — Zotero library management & citation links
+# ════════════════════════════════════════════════════════════════════
+header "Phase 17 — Zotero"
+run_phase "Zotero libraries & links" "17_zotero.hurl" \
+  --variable "jwt=${JWT}"
+
+# ════════════════════════════════════════════════════════════════════
 # Phase 10 — Cleanup
 # ════════════════════════════════════════════════════════════════════
 header "Phase 10 — Cleanup"

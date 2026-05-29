@@ -25,29 +25,6 @@ class utils
     }
 
     /**
-     * Recursively empties a directory.
-     * If $delete_dir is true the directory itself is also removed.
-     *
-     * @throws \Exception
-     */
-    public static function emptyDir(string $dir, bool $delete_dir = false): bool
-    {
-        foreach (self::dirContent($dir) ?: [] as $file) {
-            if (is_dir($dir . '/' . $file)) {
-                self::emptyDir($dir . '/' . $file, true);
-            } elseif (!@unlink($dir . '/' . $file)) {
-                throw new \Exception("Cannot delete file: {$file}");
-            }
-        }
-
-        if ($delete_dir && !@rmdir($dir)) {
-            throw new \Exception("Cannot delete directory: {$dir}");
-        }
-
-        return true;
-    }
-
-    /**
      * Explodes a string by delimiter, trims each part, and removes empty elements.
      */
     public static function csv_explode(string $string, string $delimiter = ','): array
@@ -141,13 +118,4 @@ class utils
         return ($res[0]['tot'] > 0);
     }
 
-    public static function debug(mixed $d, bool $echo = false): void
-    {
-        $json = json_encode($d, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-        if ($echo) {
-            echo "<pre>{$json}</pre>";
-        } else {
-            error_log('DEBUG: ' . $json);
-        }
-    }
 }

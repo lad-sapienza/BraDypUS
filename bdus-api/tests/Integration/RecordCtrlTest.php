@@ -150,56 +150,54 @@ class RecordCtrlTest extends BdusTestCase
         $this->assertStringContainsStringIgnoringCase('no such column', $res['detail']);
     }
 
-    // ── shortSql ─────────────────────────────────────────────────────────
+    // ── JSON filter ──────────────────────────────────────────────────────
 
-    public function testGetRecordsShortSqlSimpleEquals(): void
+    public function testGetRecordsJsonFilterIdEq(): void
     {
-        // "id|=|1" should return exactly item with id=1
         $ctrl = $this->makeController('record_ctrl', [
-            'tb'          => self::TB,
-            'search_type' => 'shortSql',
-            'where'       => 'id|=|1',
+            'tb'     => self::TB,
+            'filter' => ['id' => ['_eq' => 1]],
         ]);
         $res = $this->callController($ctrl, 'getRecords');
         $this->assertSame(1, $res['total']);
         $this->assertSame(1, (int)$res['data'][0]['id']);
     }
 
-    public function testGetRecordsShortSqlIntegerField(): void
+    public function testGetRecordsJsonFilterAndCondition(): void
     {
-        // "^id|=|1" — caret prefix means integer literal, still returns item 1
         $ctrl = $this->makeController('record_ctrl', [
-            'tb'          => self::TB,
-            'search_type' => 'shortSql',
-            'where'       => '^id|=|1',
-        ]);
-        $res = $this->callController($ctrl, 'getRecords');
-        $this->assertSame(1, $res['total']);
-    }
-
-    public function testGetRecordsShortSqlAndCondition(): void
-    {
-        // In ShortSQL, LIKE is a raw SQL LIKE — wildcards must be explicit.
-        // "status|=|active||and|name|LIKE|%Alpha%" matches "Alpha item".
-        $ctrl = $this->makeController('record_ctrl', [
-            'tb'          => self::TB,
-            'search_type' => 'shortSql',
-            'where'       => 'status|=|active||and|name|LIKE|%Alpha%',
+            'tb'     => self::TB,
+            'filter' => [
+                'status' => ['_eq'        => 'active'],
+                'name'   => ['_icontains' => 'Alpha'],
+            ],
         ]);
         $res = $this->callController($ctrl, 'getRecords');
         $this->assertSame(1, $res['total']);
         $this->assertSame('Alpha item', $res['data'][0]['name']);
     }
 
-    public function testGetRecordsShortSqlEmptyWhereReturnsAll(): void
+    public function testGetRecordsJsonFilterOrCondition(): void
     {
         $ctrl = $this->makeController('record_ctrl', [
-            'tb'          => self::TB,
-            'search_type' => 'shortSql',
-            'where'       => '',
+            'tb'     => self::TB,
+            'filter' => ['_or' => [
+                ['status' => ['_eq' => 'active']],
+                ['status' => ['_eq' => 'pending']],
+            ]],
         ]);
         $res = $this->callController($ctrl, 'getRecords');
-        $this->assertSame(5, $res['total']);
+        $this->assertGreaterThan(0, $res['total']);
+    }
+
+    public function testGetRecordsJsonFilterInOperator(): void
+    {
+        $ctrl = $this->makeController('record_ctrl', [
+            'tb'     => self::TB,
+            'filter' => ['id' => ['_in' => [1, 2]]],
+        ]);
+        $res = $this->callController($ctrl, 'getRecords');
+        $this->assertSame(2, $res['total']);
     }
 
     // ── missing tb ───────────────────────────────────────────────────────

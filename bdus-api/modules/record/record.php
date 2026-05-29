@@ -69,9 +69,6 @@ class record_ctrl extends Controller
           $qRequest['querytext'] = $this->post['querytext'] ?? $this->get['querytext'] ?? '';
           $qRequest['join']      = $this->post['join']      ?? $this->get['join']      ?? '';
           break;
-        case 'shortSql':
-          $qRequest['where'] = $this->get['where'] ?? $this->post['where'] ?? '';
-          break;
         default:
           $qRequest['type'] = 'all';
       }
@@ -195,9 +192,9 @@ class record_ctrl extends Controller
    * GET ?obj=record_ctrl&method=exportRecords
    *     &tb=TABLE
    *     &format=csv|json|xlsx
-   *     &qt=fast|expert|advanced|shortSql   (optional — mirrors route.query.qt)
-   *     &q=VALUE                             (optional — mirrors route.query.q)
-   *     &where=SHORTSQL                      (optional — mirrors route.query.where)
+   *     &filter[field][_op]=value             (optional, Directus-style bracket notation)
+   *     &qt=fast|expert|advanced              (optional — mirrors route.query.qt)
+   *     &q=VALUE                              (optional — mirrors route.query.q)
    *
    * For qt=advanced, q must be a base64-encoded JSON array of search rows
    * (same encoding used by DataView when persisting filter state in the URL).
@@ -229,9 +226,6 @@ class record_ctrl extends Controller
     if ($filterArr !== null && is_array($filterArr)) {
       $qRequest['type']   = 'filter';
       $qRequest['filter'] = $filterArr;
-    } elseif ($where) {
-      $qRequest['type']  = 'shortSql';
-      $qRequest['where'] = $where;
     } elseif ($qt === 'fast' && $q !== null) {
       $qRequest['type']   = 'fast';
       $qRequest['string'] = $q;
@@ -1362,7 +1356,7 @@ class record_ctrl extends Controller
    *
    * GET ?obj=record_ctrl&method=getRsMatrix&tb=TABLE
    *     [&search_type=fast&search=TERM]
-   *     [&search_type=shortSql&where=SHORTSQL]
+   *     [&filter[field][_op]=value]
    *     [&search_type=advanced&adv=BASE64]
    *     [&search_type=sqlExpert&querytext=SQL&join=JOIN]
    *
@@ -1429,9 +1423,6 @@ class record_ctrl extends Controller
             case 'sqlExpert':
               $qRequest['querytext'] = $this->get['querytext'] ?? '';
               $qRequest['join']      = $this->get['join']      ?? '';
-              break;
-            case 'shortSql':
-              $qRequest['where'] = $this->get['where'] ?? '';
               break;
           }
         }

@@ -104,11 +104,3 @@ Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "error"
-
-# ── 18m. Legacy shortSql still works (backward compat) ────────────────
-GET {{base_url}}/api/records/us?search_type=shortSql&where=id%7C%3E%7C0
-Authorization: Bearer {{jwt}}
-HTTP 200
-[Asserts]
-jsonpath "$.status" == "success"
-jsonpath "$.total"  >= 1

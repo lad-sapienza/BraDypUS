@@ -42,9 +42,10 @@
  * 		'obj_encoded'
  * 			'obj_encoded'		    string, required, \SQL\SafeQuery encoded query string
  *
- * 		'shortSql'
- * 			'where'		string, required, ShortSQL WHERE expression (e.g. "id|=|713" or "^fld|=|val||and|other|LIKE|foo")
- * 					Parsed via SQL\ShortSql\ParseShortSql — same syntax as Record\Read::getLinks() produces.
+ * 		'filter'
+ * 			'filter'	array, required, Directus-style JSON filter object
+ * 					e.g. ['field' => ['_eq' => 'value'], '_and' => [[...], [...]]]
+ * 					Parsed via SQL\Filter\JsonFilter.
  */
 
 use DB\DBInterface;
@@ -341,24 +342,6 @@ class QueryFromRequest
         [$filterSql, $filterVals] = $jsonFilter->toSql($filterArr);
         $this->where  = $filterSql  ?: '1=1';
         $this->values = $filterVals ?: [];
-        break;
-
-      case 'shortSql':
-        // `where` is a ShortSQL WHERE expression produced by Record\Read::getLinks() /
-        // getBackLinks(), e.g. "id|=|713" or "^fld|=|val||and|other|LIKE|foo".
-        // We build a minimal ShortSQL string "@table~?where" and let ParseShortSql
-        // handle the {subquery} encoding and Where::parse() translation to SQL.
-        // DEPRECATED: new code should use the 'filter' type above.
-        $whereStr = trim($request['where'] ?? '');
-        if ($whereStr === '' || $whereStr === '1') {
-          $this->where = '1=1';
-          break;
-        }
-        $parser = new \SQL\ShortSql\ParseShortSql($this->cfg);
-        $parser->parseAll('@' . $this->tb . '~?' . $whereStr, true);
-        [$whereSql, $whereVals] = $parser->getSql(true);
-        $this->where  = $whereSql  ?: '1=1';
-        $this->values = $whereVals ?: [];
         break;
 
       default:

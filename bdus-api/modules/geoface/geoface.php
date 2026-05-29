@@ -17,8 +17,8 @@ class geoface_ctrl extends Controller
      * in a given table, optionally filtered by the active search.
      *
      * GET ?obj=geoface_ctrl&method=getGeoJson&tb=TABLE
-     *     [&search_type=shortSql|sqlExpert|advanced]
-     *     [&where=SHORTSQL_STRING]          (search_type=shortSql)
+     *     [&filter[field][_op]=value]         (Directus-style JSON filter, bracket notation)
+     *     [&search_type=sqlExpert|advanced]
      *     [&querytext=SQL_WHERE_CLAUSE]     (search_type=sqlExpert)
      *     [&adv=JSON_ENCODED_ADV_ROWS]      (search_type=advanced)
      *
@@ -54,7 +54,7 @@ class geoface_ctrl extends Controller
             $searchType = $this->get['search_type'] ?? $this->post['search_type'] ?? null;
 
             // Delegate WHERE-building to QueryFromRequest — same as record_ctrl.
-            // All search types (shortSql, sqlExpert, advanced, all) are handled
+            // All search types (filter, sqlExpert, advanced, all) are handled
             // centrally; this module knows nothing about how the predicate is built.
             $qRequest  = ['tb' => $tb, 'type' => $searchType ?? 'all'];
             $filterArr = $this->get['filter'] ?? null;
@@ -62,9 +62,6 @@ class geoface_ctrl extends Controller
                 $qRequest['type']   = 'filter';
                 $qRequest['filter'] = $filterArr;
             } else switch ($searchType) {
-                case 'shortSql':
-                    $qRequest['where'] = $this->get['where'] ?? '';
-                    break;
                 case 'sqlExpert':
                     $qRequest['querytext'] = $this->get['querytext'] ?? $this->post['querytext'] ?? '';
                     $qRequest['join']      = $this->get['join']      ?? $this->post['join']      ?? '';

@@ -229,13 +229,12 @@ class RecordCtrlRsTest extends BdusTestCase
         $this->assertContains('5', $identifiers, 'Isolated item 5 must appear as node');
     }
 
-    public function testGetRsMatrixFilteredByShortSql(): void
+    public function testGetRsMatrixFilteredByJsonFilter(): void
     {
         // Filter to item 1 only; item 2 appears via its relation but not in filter
         $ctrl = $this->makeController('record_ctrl', [
-            'tb'          => self::TB,
-            'search_type' => 'shortSql',
-            'where'       => 'id|=|1',
+            'tb'     => self::TB,
+            'filter' => ['id' => ['_eq' => 1]],
         ]);
         $res = $this->callController($ctrl, 'getRsMatrix');
 

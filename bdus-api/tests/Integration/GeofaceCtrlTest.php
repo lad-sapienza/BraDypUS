@@ -82,13 +82,12 @@ class GeofaceCtrlTest extends BdusTestCase
         $this->assertArrayHasKey('geo_id', $feature['properties']);
     }
 
-    public function testGetGeoJsonShortSqlFilter(): void
+    public function testGetGeoJsonJsonFilter(): void
     {
-        // id|=|1 should return exactly the geometry for item 1
+        // filter[id][_eq]=1 should return exactly the geometry for item 1
         $ctrl = $this->makeController('geoface_ctrl', [
-            'tb'          => self::TB,
-            'search_type' => 'shortSql',
-            'where'       => 'id|=|1',
+            'tb'     => self::TB,
+            'filter' => ['id' => ['_eq' => 1]],
         ]);
         $res = $this->callController($ctrl, 'getGeoJson');
 

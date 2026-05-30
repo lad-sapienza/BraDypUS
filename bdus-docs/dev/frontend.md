@@ -46,6 +46,7 @@ bdus-app/
 │   │   └── config.js     ← Pinia config store (app config, table list)
 │   ├── composables/
 │   │   ├── useDarkMode.js    ← Dark/light mode toggle
+│   │   ├── useAppColor.js    ← Primary colour palette + runtime theme switch
 │   │   ├── useTables.js      ← Table list loader
 │   │   └── useRsRelations.js ← RS relation type loader
 │   ├── views/            ← One component per route

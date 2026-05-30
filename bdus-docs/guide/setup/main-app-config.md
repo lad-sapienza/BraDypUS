@@ -29,6 +29,28 @@ Open it from **Config → App settings** (the first panel in the sidebar).
 
 Use `freeze` before performing a backup or migration.
 
+## Appearance
+
+The **Appearance** section lets an administrator pick the application's
+primary colour. The change takes effect immediately (live preview) and is
+applied to every user the next time they load the app.
+
+Eight palette options are available — all tested in both light and dark mode:
+
+| Swatch | Name |
+|---|---|
+| 🟣 | Indigo (default) |
+| 🔵 | Blue |
+| 🟣 | Violet |
+| 🟢 | Emerald |
+| 🩵 | Teal |
+| 🟡 | Amber |
+| 🌹 | Rose |
+| ⬜ | Slate |
+
+The selection is stored in `bdus_cfg_app.color` (added by migration M025)
+and is read at login time from `GET /api/info/app`.
+
 ## Saving
 
 Click **Save** to apply changes. A toast notification confirms success or shows

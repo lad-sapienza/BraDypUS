@@ -158,6 +158,8 @@ class M024MyChangeTest extends BdusTestCase
 | M021 | Back-fill `plugin_of` field in `bdus_cfg_tables` |
 | M022 | Add `oauth_provider` + `oauth_sub` columns to `bdus_users` |
 | M023 | Create `bdus_zotero_libs` and `bdus_zotero_links` for Zotero integration |
+| M024 | Drop legacy v4 columns (`date`, `text`, `vals` from `bdus_queries`; `sqltext`, `date` from `bdus_charts`) |
+| M025 | Add `color` column to `bdus_cfg_app` for runtime primary-colour customisation |
 
 ---
 

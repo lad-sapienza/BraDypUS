@@ -32,6 +32,7 @@ use DB\System\Migrations\M020_DeduplicateRelations;
 use DB\System\Migrations\M021_FixPluginOf;
 use DB\System\Migrations\M022_AddOAuthToUsers;
 use DB\System\Migrations\M023_ZoteroTables;
+use DB\System\Migrations\M024_DropLegacyColumns;
 use Monolog\Logger;
 
 /**
@@ -81,6 +82,7 @@ class Migrate
         M021_FixPluginOf::class,
         M022_AddOAuthToUsers::class,
         M023_ZoteroTables::class,
+        M024_DropLegacyColumns::class,
     ];
 
     /**

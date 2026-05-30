@@ -150,7 +150,6 @@ function guideSidebar() {
       collapsed: true,
       items: [
         { text: 'Overview',            link: '/guide/deploy/' },
-        { text: 'Infinityfree',        link: '/guide/deploy/infinityfree' },
       ],
     },
     {

@@ -681,7 +681,7 @@ function onLoadQuery(payload) {
     activeFilter.value = payload.filter
     activeSearch.value = 'filter'
     openPanel.value    = null
-    updateFilterUrl('filter', btoa(JSON.stringify(payload.filter)))
+    updateFilterUrl('filter', JSON.stringify(payload.filter))
     fetchRecords()
   }
 }
@@ -809,18 +809,6 @@ function applyRouteParams() {
       openPanel.value    = 'expert'
       page.value         = 1
       fetchRecords()
-    } else if (qtParam === 'filter') {
-      try {
-        const filterObj = JSON.parse(atob(qParam))
-        if (filterObj && typeof filterObj === 'object') {
-          activeFilter.value = filterObj
-          activeSearch.value = 'filter'
-          openPanel.value    = null
-          page.value         = 1
-          fetchRecords()
-          return
-        }
-      } catch { /* fall through to resetSearch */ }
     }
     return
   }
@@ -907,7 +895,7 @@ function runAdvancedSearch() {
   activeSearch.value = 'advanced'
   openPanel.value    = null
   page.value         = 1
-  updateFilterUrl('filter', btoa(JSON.stringify(filter)))
+  updateFilterUrl('filter', JSON.stringify(filter))
   fetchRecords()
 }
 
@@ -1035,8 +1023,7 @@ function openGeoface() {
   if (!tb) return
   const query = {}
   if ((activeSearch.value === 'advanced' || activeSearch.value === 'filter') && activeFilter.value) {
-    query.filter = btoa(JSON.stringify(activeFilter.value))   // base64 for geoface GET param
-    query.qt     = 'filter'
+    query.filter = JSON.stringify(activeFilter.value)
   } else if (activeSearch.value === 'expert' && expertQuery.value) {
     query.search_type = 'sqlExpert'
     query.querytext = expertQuery.value

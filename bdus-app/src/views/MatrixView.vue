@@ -213,9 +213,9 @@ const mutating   = ref(false)  // shared loading flag for add/delete
 // ── Relation options ──────────────────────────────────────────────
 const relationOptions = computed(() => buildRelationOptions(t))
 
-// ── Translate DataView URL params (qt/q/where) → getRsMatrix API params ──
-// DataView stores search state as qt=<type>&q=<payload> in the URL (URL-friendly),
-// but getRsMatrix expects search_type=<type> + type-specific params (adv, search, etc.)
+// ── Translate DataView URL params → getRsMatrix API params ──
+// filter=JSON_STRING → parsed and passed as object (api.get serialises to bracket notation)
+// qt=fast|expert + q=<value> → search_type + corresponding param
 function buildMatrixApiParams() {
   const p    = { tb: tb.value }
   const qt         = route.query.qt     ?? null
@@ -227,8 +227,6 @@ function buildMatrixApiParams() {
   } else if (qt === 'fast' && q) {
     p.search_type = 'fast'
     p.search      = q
-  } else if (qt === 'filter' && q) {
-    p.filter = q               // base64-encoded JSON filter — backend decodes it
   } else if (qt === 'expert' && q) {
     p.search_type = 'sqlExpert'
     p.querytext   = q

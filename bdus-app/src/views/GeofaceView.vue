@@ -91,8 +91,9 @@ function buildFilterParams() {
 
   if (q.search_type) params.search_type = q.search_type
   if (q.querytext)   params.querytext   = q.querytext
-  if (q.filter)      params.filter      = q.filter   // bracket notation or base64 string
-  if (q.qt === 'filter' && q.q) params.filter = q.q  // URL-persistence base64
+  if (q.filter) {
+    try { params.filter = JSON.parse(q.filter) } catch { /* ignore malformed */ }
+  }
 
   return params
 }

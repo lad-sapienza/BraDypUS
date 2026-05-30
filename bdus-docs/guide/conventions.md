@@ -1,118 +1,80 @@
 ---
-title: Some conventions
+title: Conventions
 ---
 
-Bradypus is a [relational system](https://en.wikipedia.org/wiki/Relational_database) 
-which means that at its base there are **tables**.
-
-Each table is made up of a number of **columns**, 
-each of them has its own settings and costraints.
+# Conventions
 
 ## Application name
-Bradypus is a multi-project system, it means that on the same 
-installation many applications can coexist, each being fully isolted and self-contained.
 
-{: .callout-block .callout-block-warning }
-Pay attention: when designing multi-app system based on MySQL or PostgreSQL, 
-make sure to create a separate db user for each application. This will grant full
-isolation between different projects.
+BraDypUS is a multi-application system: on the same installation many
+applications can coexist, each fully isolated and self-contained.
 
-The Application name is the unique identification name for each application,
-and must be unique in each installation. Please use a string matching the following requisites:
-- lower-case letters
-- no numbers, no diacritics, no dashes, slashes, whitespaces
-- a minimum of 3 and a a maximum of 7 characters
+The **application name** is the unique identifier for each application.
+It must match: `^[a-z][a-z0-9_-]{2,19}$`
 
-it means that the application name nust match the following regular expression:
-`^[a-z]{3,7}$`.
+Rules:
+- 3 to 20 characters
+- lowercase ASCII letters, digits, hyphens, underscores
+- must start with a letter
 
-In this guide **test** will be used as application name.
+Examples of valid names: `sites`, `paths_2024`, `my-archive`
 
-## Prefix
-
-It is a legacy constraint of Bradypus to define a prefix to append
-to all database tables, be them system or data tables (see below).
-
-At present the user cannot choose a custom prefix, since it is formed
-by the `application name` followed by `double underscore`.
-
-For our application named `test` the prefix will thus be `test__`.
+In this guide **`myapp`** is used as the example application name.
 
 ## System tables
 
-Bradypus includes **system tables**, whose structure cannot be 
-changed. The system tables serve to the overall management of the system,
-and are the following (the prefix is ommitted):
-- **charts** : manages saved charts
-- **files** : manages uploaded files
-- **geodata**: manages geometries and GIS data linked to records
-- **log**: manages system logs
-- **queries**: manages saved queries
-- **rs**: manages stratigraphic relationships
-- **userlinks**: manages manually set links between records
-- **users**: manages users
-- **versions**: manages record prevuois version
-- **vocabularies**: manages vocabularies and vocabulary items
+BraDypUS manages a set of **system tables** automatically. Their structure
+is fixed and cannot be changed. All system tables are prefixed with `bdus_`:
+
+| Table | Purpose |
+|---|---|
+| `bdus_users` | User accounts and privileges |
+| `bdus_log` | System activity log |
+| `bdus_versions` | Record version snapshots |
+| `bdus_rs` | Stratigraphic relations (Harris Matrix) |
+| `bdus_geodata` | Geographic geometries (WKT) |
+| `bdus_files` | Uploaded file metadata |
+| `bdus_file_links` | Junction between files and records |
+| `bdus_userlinks` | Manual record-to-record links |
+| `bdus_vocabularies` | Vocabulary items |
+| `bdus_cfg_app` | Application settings (persisted to DB) |
+| `bdus_cfg_geoface` | GeoFace layer configuration |
+| `bdus_cfg_relations` | Cross-table relation definitions |
+| `bdus_zotero_libs` | Zotero library connections |
+| `bdus_zotero_links` | Zotero citation links |
+| `bdus_migrations` | Migration history |
 
 ## Data tables
-Data tables are defined by users to meet their needs of data storage, management and query. 
 
-Their structure and relations depends on the research needs and can be easily
-updated anytime by a super-admin user, within Bradypus.
+**Data tables** are defined by the user in Config → Tables. Their structure
+depends entirely on research needs and can be updated at any time by a super-admin.
 
-The data tables can be of two types, `regular` and `plugin`. 
-`Regular` tables are application entities and contain records, while `plugin` tables
-are ancillary tables, usually linked in a `1-many` relationship with a `regular` table.
-`Plugin` tables do not live on their own and fully depend on one or many `regular` tables.
+### Regular tables
 
-### Data tables name
-Regular data tables are named using the prefix followed by a lower-case string 
-of ASCII, with no spaces, dashes, etc. Please avoid the usage of SQL keywords,
-like `values`, `select`, `sort`, or similar.
+Top-level tables that appear in the sidebar. Each regular table can contain
+any number of user-defined fields plus the mandatory `id` (auto-increment integer
+primary key).
 
-The following are valid regular table names for application test:
-- **test__sites**
-- **test__bibliografy**
-- **test__strigraphicunits**
+### Plugin tables
 
-The following are not valid:
-- **test__Sites** (no upper-case)
-- **sites** (missing prefix)
-- **test__strigraphic units** (no spaces)
-- **test__strigraphic_units** (no underscores)
+Sub-tables attached to a parent (regular) table. They add repeating groups of
+information to a parent record (e.g. multiple finds per context). Plugin tables
+require two mandatory FK fields: `table_link` (TEXT) and `id_link` (INT).
 
-Plugin tables include a `m_` between the prefix and the proper name.
-This is not strictly needed for the application to work properly, 
-but it is strongly recomended, because it provides a promt visual
-distinction between regular and plugin tables.
+## Privilege levels
 
-The following are valid plugin table names for application test:
-- **test__m_biblio**
-- **test__m_samples**
+See [Users & privileges](/guide/setup/users) for the full privilege table.
 
-The following are not valid:
-- **test__m_Biblio** (no upper-case)
-- **m_sites** (missing prefix)
-- **test__biblio** (missing m_)
+## JWT authentication
 
-### Data tables structure
-As already mentioned the structure of data tables depends on the user need,
-yet some few columns are must always be implemented, both for regular and plugin tables.
+BraDypUS v5 uses **stateless JWT (JSON Web Token)** authentication. There are no PHP sessions.
+Each browser tab carries its own token stored in `sessionStorage`, which means:
 
-When the tables are added via the system configuration manager, these columns are automatically set
-and can not be deleted.
+- Multiple applications can be open in different tabs simultaneously.
+- Closing a tab terminates that session immediately.
+- Tokens expire after 8 hours; silent refresh happens automatically when < 30 min remain.
 
-Required for both **regular and plugin** tables:
-- `id`: the column must be of type `INT` (integer), must be set to be a 
-primary key and must be set to be auto-incremental., and forced not to receive null values.
+## Per-application secrets
 
-Required for **regular** tables:
-- `creator`: the column must be of type `INT` (integer) and forced not to receive null values.
-
-Required for **plugin** tables:
-- `table_link`: the column must be of type `TEXT` and forced not to receive null values.
-- `id_link`: the column must be of type `INT` (integer) and forced not to receive null values.
-
-These two columns contain Foreign Keys to regular tables, in order to keep records links.
-No `ON UPDATE`, `ON DELETE`, ecc. policy is needed to be defined in the database, since Bradypus will
-take care of the correct reference actions. Yet, FK policies can be stored in the database engine.
+Each application has a signing secret stored at `projects/{app}/.jwt_secret`
+(chmod 0600, generated automatically on first login). Never commit this file to version control.

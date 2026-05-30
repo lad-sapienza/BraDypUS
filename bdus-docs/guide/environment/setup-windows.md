@@ -1,16 +1,39 @@
 ---
-title: Setup environment in Windows
+title: Setup on Windows
 ---
 
-Windows operating system does not ship usually with a PHP installation, wich 
-must be installe manually. The [official documentation](https://www.php.net/manual/en/install.windows.php) 
-is a good starting point for information.
+# Setup on Windows
 
-If a more robust and easy to use working environment is required, the following
-solutions are both easy to use and open source, and permit to install and manage 
-from a graphical interface several servers, databases and languages:
-- [XAMPP](https://www.apachefriends.org/)
-- [WampServer](http://www.wampserver.com/)
-- [WAMP](https://www.mamp.info/)
-- [Uniform Server](http://www.uniformserver.com/)
-- [Mongoose](https://github.com/cesanta/mongoose)
+## Install Docker Desktop
+
+Download and install [Docker Desktop for Windows](https://www.docker.com/products/docker-desktop/).
+It requires Windows 10/11 with WSL 2 (Windows Subsystem for Linux).
+
+Enable WSL 2 if not already done:
+
+```powershell
+wsl --install
+```
+
+Then install Docker Desktop and verify in PowerShell:
+
+```powershell
+docker --version
+docker compose version
+```
+
+## Install Git
+
+Download [Git for Windows](https://git-scm.com/download/win) and install it.
+This also installs **Git Bash**, a Unix-like terminal useful for running
+shell scripts.
+
+Verify in Git Bash or PowerShell:
+
+```bash
+git --version
+```
+
+## Clone and run
+
+Open Git Bash and follow the [installation guide](/guide/install/terminal).

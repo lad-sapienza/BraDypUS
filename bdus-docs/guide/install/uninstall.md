@@ -2,13 +2,29 @@
 title: Uninstalling BraDypUS
 ---
 
-Uninstalling BraDypUS is as easy as deleting the `BraDypus` directory
-created by the git command  or manually downloaded from the
-official repository.
+# Uninstalling BraDypUS
 
-{: .alert .alert-danger}
-Removing **BraDypUS** directory will also remove your application(s) located
-in **BraDypUS/projects** folder. If you want to save data and configurations
-make a backup of this folder before. You will be able to use your application
-with a fresh installation of BraDypUS in the future.
+## Remove the Docker containers and images
 
+```bash
+docker compose down --volumes --remove-orphans
+docker rmi bdus-api bdus-app 2>/dev/null || true
+```
+
+## Remove application data
+
+::: danger Irreversible
+This permanently deletes all your databases and uploaded files.
+Download a backup first if you need to preserve the data.
+:::
+
+```bash
+rm -rf bdus-api/projects/
+```
+
+## Remove the code
+
+```bash
+cd ..
+rm -rf BraDypUS/
+```

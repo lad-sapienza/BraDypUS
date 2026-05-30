@@ -1,32 +1,43 @@
 ---
-title: Setup environment in MacOS / Linux / Unix
+title: Setup on macOS / Linux
 ---
 
-Normally *nix operating systems (Linux, MacOS, Unix) come with a
-default installation of PHP and often also a web server (like Apache).
+# Setup on macOS / Linux
 
-To verify that PHP is available, open a Terminal / Command Line and type:
-```bash
-which php
-``` 
-and then type Enter. Something similar to the following should appear in the terminal
-```bash
-/usr/bin/php
-```
-This is the full path pf the PHP executable.
+## Install Docker Desktop
 
-To check the version of the installed PHP, type in the Terminal: 
+Download and install [Docker Desktop](https://www.docker.com/products/docker-desktop/).
+On macOS, the easiest way is via Homebrew:
+
 ```bash
-php -v
-```
-You will get an output similar to the following:
-```bash
-PHP 7.3.11 (cli) (built: Jul  5 2020 03:23:39) ( NTS )
-Copyright (c) 1997-2018 The PHP Group
-Zend Engine v3.3.11, Copyright (c) 1998-2018 Zend Technologies
+brew install --cask docker
 ```
 
-As in Windows, integrated solutions are also available, such as:
-- [XAMPP](https://www.apachefriends.org/)
-- [WAMP](https://www.mamp.info/)
-- [Mongoose](https://github.com/cesanta/mongoose)
+Start Docker Desktop from the Applications folder or launchpad, then verify:
+
+```bash
+docker --version
+docker compose version
+```
+
+## Install Git
+
+macOS and most Linux distributions include Git. Verify with:
+
+```bash
+git --version
+```
+
+If not present:
+```bash
+# macOS
+brew install git
+
+# Debian/Ubuntu
+sudo apt install git
+```
+
+## That's it
+
+With Docker and Git you have everything needed to run BraDypUS.
+Follow the [installation guide](/guide/install/terminal).

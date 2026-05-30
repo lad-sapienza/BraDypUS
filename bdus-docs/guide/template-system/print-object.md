@@ -1,98 +1,61 @@
 ---
-title: The print object
+title: Template reference
 ---
 
-The `print` object is automatically injected in templates 
-files by BraDypUS during rendering.
+# Template reference
 
-Its methods, explained in detail below, must be used
-in template files load data a UI widges.
+Templates are JSON documents. This page documents all available properties.
 
----
+## Top level
 
-### print.cell(nr)
-Utility method that outputs a Bootstrap `col-sm-nr` string
-to be used to create grids. It was created during the migration
-from Bootstrap v2 to Bootstrap v3 to facilitate future migrations.
-- `nr`: a number ranging from 1 to 12
+The template is a JSON **array** of section objects.
 
----
+## Section object
 
-### print.permalink
-
-Prints a html link to the full url of the current record
-
----
-
-### print.links
-
-Shows fieldset with both system and user links to the record
-
----
-
-### print.geodata
-Shows list of available geodata 
-and a form to enter some more (WKT) if context is edit or add new
-
----
-
-### print.rs
-
-Prints Stratigraphic relations module
-
----
-
-### print.fld(fieldname, formatting)
-
-Writes a single single field, complete with label.
-
-- `fieldname`, string, required. Field name to show
-- `formatting`, string, optional, default: null. Inline CSS formatting options
-
-Eg.:
-```html
-{{ print.fld( 'name', 'width:200') }}
-{{ print.fld( 'name') }}
+```json
+{
+  "label":    "Section heading",
+  "plugin":   null,
+  "collapse": false,
+  "rows":     [ ...row objects... ]
+}
 ```
----
 
-### print.plg_fld(fieldname, formatting)
-Writes a single single plugin field, complete with label.
+| Property | Type | Description |
+|---|---|---|
+| `label` | string | Section heading shown in RecordView |
+| `plugin` | string \| null | If set, the section displays rows from this plugin table instead of the main table |
+| `collapse` | boolean | `true` to render the section collapsed by default |
+| `rows` | array | Array of row objects |
 
-- `fieldname`, string, required. Field name to show
-- `formatting`, string, optional, default: null. Inline CSS formatting options
+## Row object
 
----
+```json
+{
+  "fields": [ ...field objects... ]
+}
+```
 
-### print.value(fieldname, isplg)
-Prints the nude value of a field
+A row is rendered as a horizontal group of fields. Field widths in a row
+should sum to 12.
 
-- `fieldname`, string, required. Column name
-- `isplg`, bool, optional, default: false. True if it is a plugin column, false if it is a data-table column
+## Field object
 
----
+```json
+{
+  "field": "field_name",
+  "width": 6
+}
+```
 
-### print.plg(plg)
+| Property | Type | Description |
+|---|---|---|
+| `field` | string | The internal field name as defined in Config → Fields |
+| `width` | integer | Display width on a 12-column grid (1–12) |
 
-Shows up the necessary frmatted HTML to display a plugin,
-with all available rows, if any. If you want to customize the
-plugin template you should create a specific template named
-after the plugin.
+## Notes
 
-- `plg`. string, required. Plugin name to show.
-
----
-
-### print.showall
-
-Print the default template, containing all columns,
-plugins, images, links etc.
-It does not make much sense to use this method in a cusàtom template.
-
----
-
-### print.image_thumbs(max)
-
-Well formatted HTML code containing linked files information with thumbnails and edit links.
-
-- `max`, int\|'all', optional, default 2. Number of images to show or string `all` for all images
+- Fields not listed in the template are hidden.
+- Fields listed but not present in the table config are silently ignored.
+- Plugin sections can only reference fields from the named plugin table.
+- A template applies to both read and edit modes in RecordView.

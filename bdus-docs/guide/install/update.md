@@ -2,17 +2,39 @@
 title: Updating BraDypUS
 ---
 
-If you installed BraDypUS via **terminal**, updating is straightforward (change the path to the current installation):
+# Updating BraDypUS
+
+## Docker Compose (recommended)
 
 ```bash
-cd /path/to/current/installation/BraDypUS && \
-git fetch origin master && \
-git reset --hard FETCH_HEAD && \
-git clean -df 
+git pull                          # update the orchestration repo
+docker compose up -d --build      # rebuild images with latest code
 ```
-If you installed BraDypUS **manually**:
 
-1. Remove every file and folder inside the BraDypUS folder **except the direcory projects**
-2. Download a fresh copy of the software
-3. Move files from the fresh folder to the previous one
-4. Make sure that the **projects** folder never gets touched
+DB migrations run automatically on the first login after an update.
+
+## Manual installation
+
+```bash
+# In bdus-api/
+git pull
+composer install --no-dev
+
+# In bdus-app/
+git pull
+npm install
+npm run build
+```
+
+After updating, copy the new `dist/` contents to your web server.
+
+::: warning Backup first
+Always [create a backup](/guide/usage/backup) before updating to protect
+against unexpected migration issues.
+:::
+
+## What happens on first login after an update
+
+BraDypUS runs any pending DB migrations automatically when a user logs in.
+Migrations are idempotent — safe to run multiple times. The migration history
+is visible in the admin-only **Migrations** view.

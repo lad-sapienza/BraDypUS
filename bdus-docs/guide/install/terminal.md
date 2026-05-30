@@ -1,109 +1,55 @@
 ---
-title: Installing with the terminal and git
+title: Install with Docker (recommended)
 ---
 
-To install Bradypus with the terminal and git you need:
-- a connection to the Internet
-- [Git](https://git-scm.com/)
-- a terminal / command line
+# Install with Docker
 
-Typically these dependecies are met by default on 
-Linux/Unix (included MacOS X) systems.
-Since the Anniversary Update also on Windows 10 
-it is posibble to 
-[enable the Bash shell of Ubuntu Linux](https://stackoverflow.com/questions/36352627/how-to-enable-bash-in-windows-10-developer-preview).
+## 1. Clone the orchestration repository
 
-## TL;DR
+The root `BraDypUS` repository contains the `docker-compose.yml` and
+the two sub-repos as directories:
 
 ```bash
-git clone -b master --single-branch https://github.com/bdus-db/BraDypUS.git && \
-cd BraDypUS && \
-mkdir projects && \
-php -S localhost:8000
+git clone https://github.com/lad-sapienza/BraDypUS.git
+cd BraDypUS
 ```
 
-## Installation
-
-Before installation, you want probably to [check your local environment](#verify-the-local-environment). 
-If you already did, we are ready to go.
-
-1. Get files from remote repository using git
-    ```bash
-    git clone -b master --single-branch https://github.com/bdus-db/BraDypUS.git
-    ```
-    Git will create a new directory named BraDypUS with all the need files. In details:
-    - `-b master` means that the **master**, i.e. the main branch will be retrived. Version 4 lives here.
-    - `--single-branch` will prevent git from cloning everything, only the requeste branch will be downloaded
-
-2. Move inside the newly created directory named BraDypUS
-    ```bash
-    cd ../BraDypUS
-    ```
-3. Make projects folder
-    ```bash
-    mkdir projects
-    ```
-
-4. Start PHP's web server (if no local web server is available). Done!
-    ```bash
-    php -S localhost:8000
-    ```
-To stop the PHP's web server type `CRL+C`.
-
-Now you are ready to create your first web database application. 
-Open the browser and go to: 
-[http://localhost:8000/](http://localhost:8000/)
-
-
-## Uninstalling
-
-By removing the BraDypus directory created by the git command will remove all the installed packages.
-Bradypus will not copy or install files in your system.
-
-## Verify the local environment
-
-Check if php is installed. Open a terminal and type:
+## 2. Start the containers
 
 ```bash
-php -v
+docker compose up -d
 ```
 
-You should see something like (version might be different, 
-but please make sure it is equalror bigger than 7.0):
+This starts two containers:
+
+| Container | Purpose | Port |
+|---|---|---|
+| `app` | PHP 8.2 + Apache (bdus-api) | 8080 |
+| `node` | Node 22 + Vite dev server (bdus-app) | 5173 |
+
+::: tip First run
+The first start takes a few minutes to build the image and install
+Composer + npm dependencies. Subsequent starts are instant.
+:::
+
+## 3. Open the application
+
+- **Frontend (Vue SPA):** http://localhost:5173
+- **Backend API directly:** http://localhost:8080
+
+## 4. Create your first application
+
+Follow the [Create application](/guide/create-app/) guide.
+
+## 5. Stop the containers
 
 ```bash
-PHP 7.3.11 (cli) (built: Feb 29 2020 02:50:36) ( NTS )
-Copyright (c) 1997-2018 The PHP Group
-Zend Engine v3.3.11, Copyright (c) 1998-2018 Zend Technologies
+docker compose down
 ```
 
-Check if php_pdo for sqlite is available
-```bash
-php -i | grep pdo_sqlite 
-```
-
-You should read something like:
+## Updating
 
 ```bash
-pdo_sqlite
-```
-
-If you are going to use MySQL or PostgreSQL, you could test using:
-```bash
-php -i | grep pdo_mysql 
-```
-or 
-```bash
-php -i | grep pdo_pgsql 
-```
-
-Check if git is available
-```bash
-git --version
-```
-
-You should read something like:
-
-```bash
-git version 2.24.2 (Apple Git-127)
+git pull
+docker compose up -d --build
 ```

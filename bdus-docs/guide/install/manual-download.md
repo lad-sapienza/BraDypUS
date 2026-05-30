@@ -1,22 +1,81 @@
 ---
-title: Manual download and installation
+title: Manual installation
 ---
 
-To install Bradypus maually you need:
-- a connection to the Internet
-- a web browser
+# Manual installation (without Docker)
 
-1. Go to official repository on GitHub [https://github.com/bdus-db/BraDypUS](https://github.com/bdus-db/BraDypUS)
-2. Click on **Code** and then on **Download ZIP**
-3. Extract the ZIP Archive in a directory served by the web server if available
-4. Create the folder `projects` inside `BraDypUS` directory
-5. If no web server is available, you need to use the terminal:
+Use this approach for shared hosting or servers where Docker is not available.
 
-    5.1. Change directory to the extracted ZIP path: `cd path/to/th/downloaded/and/unzipped/folder/BraDypUS`
-    5.2.  Start PHP's web server: `php -S localhost:8000`  
-    To stop the PHP's web server type `CRL+C`.  
+## Requirements
 
-Now you are ready to create your first web database application. 
-Open the browser and go to: [http://localhost:8000/](http://localhost:8000/) 
-if you are using PHP's web server or to your localhost address
-if you are using a locally installed web browser.
+See [System requirements](/guide/environment/system-requirements) for the
+full list of PHP extensions and server requirements.
+
+## 1. Download bdus-api
+
+```bash
+git clone https://github.com/lad-sapienza/bdus-api.git
+cd bdus-api
+composer install --no-dev
+```
+
+Or download the ZIP from GitHub Releases and unzip it.
+
+## 2. Build bdus-app (frontend)
+
+```bash
+git clone https://github.com/lad-sapienza/bdus-app.git
+cd bdus-app
+npm install
+npm run build
+```
+
+This produces a `dist/` directory with the static Vue SPA.
+
+## 3. Configure the web server
+
+The simplest approach: put `bdus-api/` under the web root and copy
+`bdus-app/dist/` contents to a subdirectory (or the same root).
+
+### Apache example (`.htaccess` in `bdus-api/`)
+
+```apache
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^ index.php [L]
+```
+
+### Nginx example
+
+```nginx
+location / {
+    try_files $uri $uri/ /index.html;
+}
+location /api/ {
+    try_files $uri $uri/ /index.php$is_args$args;
+}
+```
+
+## 4. Set environment variables
+
+Set `BRADYPUS_ALLOW_NEW_APP=1` to enable the new-application wizard,
+and `BRADYPUS_DEBUG=0` for production.
+
+For Apache, add to `.htaccess`:
+
+```apache
+SetEnv BRADYPUS_ALLOW_NEW_APP 1
+```
+
+## 5. Create the projects directory
+
+```bash
+mkdir bdus-api/projects
+chmod 755 bdus-api/projects
+```
+
+Ensure the web server user (`www-data` on Debian/Ubuntu) has write access.
+
+## 6. Open the application and create your first app
+
+Navigate to your server URL and follow the [Create application](/guide/create-app/) guide.

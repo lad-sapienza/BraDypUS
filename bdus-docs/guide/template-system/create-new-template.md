@@ -1,74 +1,78 @@
 ---
-title: Creating a new template
+title: Creating a template
 ---
 
-BraDypUS uses [Twig](https://twig.symfony.com/) as a PHP template
-engine system-wide. Twig is used to write templates, as well.
+# Creating a template
 
-Typically, you do not really need a deep knowledge of PHP or Twig
-to write a template file; in fact you do not need *any*
-knowledge of PHP or Twig to create a template.
+Templates are managed in the **Templates** view, accessible from the sidebar
+(super-admin required).
 
-What you really need is:
-- (very) good knowledge of [HTML](https://en.wikipedia.org/wiki/HTML5)
-- (very) good knowledge of [Boostrap](https://getbootstrap.com/)  
-The usage of Bootstrap is not mandatory, but it can really help,
-and Bootstrap is already available in the core of BraDypUS.
-- a very good knowledge of the `print` object made available by 
-BraDypUS.
+## 1. Select a table
 
-{: .callout-block .callout-block-success }
-Since version 4.1.0 (2021-06-24) templates can be written 
-inside Bradypus, using GUI tool named **Template manager**
+Use the **Table** dropdown at the top to select which table the template
+applies to.
 
-## Template manager
+## 2. Create a new template
 
-Template manager is used to create and edit templates. In a newly 
-created app it is typically empty and the only option to create a 
-new template is available.
+Click **New template** and enter a name (e.g. `full-detail` or `compact`).
+Names are lowercase, no spaces.
 
-![screenshot](/images/template-system/01-template-manager.png "Template manager on a new app") 
-*Template manager on a new app*
+## 3. Edit the JSON
 
+The template is a JSON array of **section** objects. Each section has a label,
+optional plugin binding, and an array of rows. Each row contains fields with widths.
 
-By clicking on the **Create a new template** button, a 
-promt will appear that can be used to insert the template name. 
-Template files **must** have `.twig` extension and will 
-be saved automatically in the template folder of the 
-project, in the test case: `projects/test/templates/`
+```json
+[
+  {
+    "label": "Identification",
+    "plugin": null,
+    "collapse": false,
+    "rows": [
+      {
+        "fields": [
+          { "field": "sigla",   "width": 4 },
+          { "field": "periodo", "width": 8 }
+        ]
+      }
+    ]
+  },
+  {
+    "label": "Description",
+    "plugin": null,
+    "collapse": true,
+    "rows": [
+      {
+        "fields": [
+          { "field": "descrizione",     "width": 12 }
+        ]
+      },
+      {
+        "fields": [
+          { "field": "interpretazione", "width": 12 }
+        ]
+      }
+    ]
+  }
+]
+```
 
-![screenshot](/images/template-system/02-create-template.png "Create a new template file") 
-*Create a new template file*
+### Field widths
 
+Widths follow a 12-column grid. Fields in one row should sum to 12 (or less).
+A single full-width field uses `"width": 12`; three equal columns use `"width": 4`.
 
-After the name of the file is entered, the new and empty 
-template file is available in the left side of th screen.
-As soon as new templates are added, these will be alphabetically listed here:
+### Plugin sections
 
-![screenshot](/images/template-system/03-edit-template.png "New template file created") 
-*New template file created*
+Set `"plugin": "table_name"` to render rows from a plugin sub-table instead
+of main-table fields.
 
-You can name your template files whatever you like, but it is 
-recommended to choose a significatve name, possibly containing 
-also a reference to te data-table they refer.
+## 4. Save
 
-{: .callout-block .callout-block-info }
-Templates named exactly after the the referenced data-table
-without prefix, eg. `sites.twig` or `su.twig` will be
-**automatically** loaded by the system for these tables.
-The same can be said for context-related template names,
-such as `sites_edit.twig` or `sites_read.twig`.
+Click **Save**. The template becomes immediately available in RecordView's
+**Templates** dropdown for that table.
 
+## 5. Applying the template
 
-![screenshot](/images/template-system/04-add-content.png "Add content to the template file") 
-*Add content to the template file*
-
-By clicking on the template name, it's content will be shown
-on the right part of the screen. The text is editable
-and HTML and Twig can be written. Database data will be injected
-into the template file on real time, and the 
-[`print` object](print-object) can be used to refer to these data.
-
-**Save** button will write the edits to the file, **Rename** can be
-used to rename the template file, and finally **Erase** will
-permanently delete the file from the disc.
+In RecordView, click the **Templates** button in the header to switch
+the display layout to this template.

@@ -1,30 +1,52 @@
 ---
-title: Deploy application
+title: Production deployment
 ---
 
-Once te application has been created, the last step is to
-publish it online so that it can be shared with collaborators
-and colleagues.
+# Production deployment
 
-Bradypus can be installed in  **shared hosting** services,
-**virtual private servers** (VPS) od **cloud solutions**. 
-You just need PHP with PDO and a database server, if you are not going 
-to use the default SQLite database.
+## Docker Compose (recommended)
 
-The choise of the platform depends on the network velocity you want
-to grant to your users, the performance, the number of connections,
-security. Ie. **budget**.
+BraDypUS ships with a production Docker Compose file that uses Nginx to serve
+the Vue SPA and proxy API requests to PHP — all on a single port 80.
 
-If you are using a SQLite database you just need to upload your files 
-to the remote server and your local application will be immediately 
-available to your collaborators. If you are using MySQL or Postgresql,
-then you need to manually setup the server, upload the backup and update
-application configuration to use the new database service.
+```bash
+docker compose -f docker-compose.prod.yml up -d --build
+```
 
-Manu hosting companies still offer FTP access to the remote server.
-This is very easy to use but [highly insecure](https://security.stackexchange.com/questions/191900/how-insecure-is-ftp).
-You should use 
-[SFTP](https://en.wikipedia.org/wiki/SSH_File_Transfer_Protocol),
-[FTPS](https://en.wikipedia.org/wiki/FTPS) or 
-[SSH](https://en.wikipedia.org/wiki/Secure_Shell) to safely
-upload and download files from the server.
+In production, the `node` container (Vite dev server) is replaced by a static
+Nginx container serving the pre-built `dist/` files.
+
+### Environment variables
+
+Set these in `docker-compose.prod.yml` or via a `.env` file:
+
+| Variable | Default | Description |
+|---|---|---|
+| `BRADYPUS_DEBUG` | `0` | Set to `1` only for debugging |
+| `BRADYPUS_ALLOW_NEW_APP` | `0` | Set to `1` temporarily to create the first app |
+| `BRADYPUS_CORS_ORIGIN` | — | Space-separated allowed origins for cross-origin API access |
+
+## Shared hosting (PHP-only)
+
+For hosts that support PHP but not Docker, follow the
+[Manual installation](/guide/install/manual-download) guide and upload the files via
+SFTP/SSH.
+
+::: tip SQLite on shared hosting
+SQLite databases are stored as files in `projects/{app}/db/`. They can be
+downloaded and uploaded like any other file, making backups and migrations trivial.
+:::
+
+## HTTPS
+
+Always run BraDypUS behind HTTPS in production. JWT tokens are transmitted in
+headers — without HTTPS they are exposed in transit.
+
+When using a reverse proxy (Nginx, Caddy, Traefik), set the `X-Forwarded-Proto`
+header so BraDypUS knows the connection is over HTTPS.
+
+## Data persistence
+
+In Docker, `projects/` is bind-mounted from the host so application data
+survives container restarts and image rebuilds. Ensure regular backups of
+`projects/` — especially the SQLite files in `projects/{app}/db/`.

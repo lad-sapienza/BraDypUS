@@ -1,54 +1,56 @@
 ---
-title: Anatomy of the newly created application
+title: Application anatomy
 ---
 
-Once the new application has been succesfully created a similar report will
-be print, giving credit for any single operation:
+# Application anatomy
 
-```txt
-Directory projects/test/backups created
-Directory projects/test/cfg created
-Directory projects/test/export created
-Directory projects/test/files created
-Directory projects/test/geodata created
-Directory projects/test/templates created
-Directory projects/test/tmp created
-Table charts created
-Table files created
-Table geodata created
-Table log created
-Table queries created
-Table rs created
-Table userlinks created
-Table users created
-Table versions created
-Table vocabularies created
-User data added
-Configuration file projects/cfg/test/app_data.json created!
-Configuration file projects/cfg/test/tables.json created!
-Configuration file projects/cfg/test/geodata.json created!
-Configuration file projects/cfg/test/files.json created!
-Welcome page created!
+After creating an application named `myapp`, the following directory structure
+is created under `projects/`:
+
+```
+projects/
+└── myapp/
+    ├── config.json          ← main application config (DB connection, settings)
+    ├── .jwt_secret          ← JWT signing secret (auto-generated, chmod 0600)
+    ├── .htaccess            ← blocks web access to config.json and .jwt_secret
+    ├── backups/             ← database backup files
+    ├── db/
+    │   └── bdus.sqlite      ← SQLite database (only for sqlite engine)
+    ├── export/              ← temporary export files
+    ├── files/               ← uploaded record attachments
+    ├── geodata/             ← local GeoJSON/KML files for GeoFace layers
+    └── welcome.md           ← editable welcome page (Markdown)
 ```
 
-Also, the `projects` folder will have the following structure (bdus.sqlite file will not
-be created for MySQL or PostgreSQL engines):
+## System tables
 
-```txt
-projects
-└── test
-    ├── backups
-    ├── cfg
-    │   ├── app_data.json
-    │   ├── files.json
-    │   ├── geodata.json
-    │   └── tables.json
-    ├── db
-    │   └── bdus.sqlite
-    ├── export
-    ├── files
-    ├── geodata
-    ├── templates
-    ├── tmp
-    └── welcome.html
+The following system tables are created automatically in the database:
+
+`bdus_users`, `bdus_log`, `bdus_versions`, `bdus_rs`, `bdus_geodata`,
+`bdus_files`, `bdus_file_links`, `bdus_userlinks`, `bdus_vocabularies`,
+`bdus_cfg_app`, `bdus_cfg_geoface`, `bdus_cfg_relations`,
+`bdus_zotero_libs`, `bdus_zotero_links`, `bdus_migrations`
+
+All system tables are prefixed with `bdus_` and managed automatically.
+User data tables have no required prefix.
+
+## config.json
+
+Stores the database engine and connection parameters.
+For SQLite it looks like:
+
+```json
+{
+  "db_engine": "sqlite",
+  "db_host": "",
+  "db_name": "",
+  "db_username": "",
+  "db_password": "",
+  "db_port": ""
+}
 ```
+
+::: warning
+`config.json` and `.jwt_secret` are protected by `.htaccess` and must
+**never** be committed to version control or served publicly.
+:::

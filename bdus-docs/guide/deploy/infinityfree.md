@@ -1,15 +1,20 @@
 ---
-title: Publishing the locally created application to Infinityfree
+title: Publishing to Infinityfree
 ---
 
-{: .callout-block .callout-block-info}
-The choise of Infinityfree for this demo is determined by
-a **non exhaustive** research of free PHP hosting solutions. 
-There are probably many equivalent or better alternatives
-that offer for free the same or more features.  
-It should be stressed out that the free plan of Infinityfree 
-**is not** the best solution for a production environment, while
-it is more than enough for testin purposes.
+::: warning Outdated guide
+This page was written for BraDypUS v4 and describes deployment to a free shared
+PHP host. The steps may still work for the PHP backend (`bdus-api`) on similar
+hosts, but the Vue frontend (`bdus-app`) must be built separately and uploaded
+as static files. Consider using the [Docker-based deployment](/guide/deploy/) instead.
+:::
+
+::: info
+The choice of Infinityfree for this demo is based on a **non-exhaustive** search
+for free PHP hosting. There are likely better alternatives.
+The free plan of Infinityfree **is not** suitable for production, but works for
+testing purposes.
+:::
 
 
 - [Create account](#create-account)

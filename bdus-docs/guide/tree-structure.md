@@ -1,57 +1,65 @@
 ---
-title: Tree structure of Bradypus
+title: Repository structure
 ---
 
-A simplified  overview of the main file and folders 
-of which Bradypus is made of might be useful for the general 
-comprehention of the entire system
+# Repository structure
 
+BraDypUS v5 is split into two separate repositories that are deployed together.
 
-```txt
-.
-├── LICENSE
-├── README.md
-├── UNSAFE_permit_app_creation
-├── cache/                              -> Application cache: can be safetely empties
-├── composer.json                       -> Composer file
-├── composer.lock                       -> Composer lock file
-├── css/                                -> Minified CSS files
-├── css-less/                           -> LESS files, for development
-├── docs/                               -> Few docs, to be migrated in this guide
-├── fonts/                              -> Icon Fonts
-├── img/                                -> System images
-├── index.php                           -> Main enter point of the system
-├── js/                                 -> Minified javascript files
-├── js-sources/                         -> Plain javascript files for development
-├── lib/                                -> System PHP libraries
-├── locale/                             -> Locales folder containin system translations in different languages
-├── logs/                               -> System logs
-├── modules/                            -> System modules (PHP and Javascript)
-├── node_modules/                       -> Node modules, for development
-├── package-lock.json                   -> Node packages lock file
-├── package.json                        -> Node packages file
-├── projects/                           -> Directory containing projectsor applications
-│   └── test/                           -> Test application home
-│       ├── backups/                    -> Contains backups
-│       ├── cfg/                        -> Contains application configuration JSON files
-│       │   ├── app_data.json
-│       │   ├── bibliography.json
-│       │   ├── files.json
-│       │   ├── geodata.json
-│       │   ├── m_citations.json
-│       │   ├── m_samples.json
-│       │   ├── sites.json
-│       │   ├── su.json
-│       │   └── tables.json
-│       ├── db/                         -> Contains SQLite database file
-│       │   └── bdus.sqlite
-│       ├── export/                     -> Contains exported files
-│       ├── files/                      -> Contains uploaded files
-│       ├── geodata/                    -> Contains GIS data to be loaded in GeoFace
-│       ├── templates/                  -> Contains project-based template files
-│       ├── tmp/                        -> Contains temporary files. It is safe to empty
-│       └── welcome.html                -> Contains welcome page, can be edited within the application
-├── sessions/                           -> Contains systemsession data
-├── vendor/                             -> Third party PHP libraries installed via Composer
-└── version                             -> Application version and change log
+## `bdus-api` — PHP backend
+
+```
+bdus-api/
+├── controllers/          ← API controllers (Bdus\Controllers\*)
+├── lib/                  ← Framework: DB, SQL, Record, Config, Auth, JWT, …
+├── projects/             ← Runtime: one subdirectory per application (not committed)
+│   └── myapp/
+│       ├── config.json
+│       ├── .jwt_secret
+│       ├── backups/
+│       ├── db/
+│       ├── files/
+│       └── …
+├── tests/
+│   ├── Integration/      ← PHPUnit controller tests
+│   ├── Unit/             ← PHPUnit unit tests
+│   ├── Support/          ← BdusTestCase base class + fixtures
+│   └── api/              ← Hurl E2E tests + run.sh
+├── vendor/               ← Composer dependencies
+├── index.php             ← Entry point
+├── composer.json
+├── Dockerfile
+├── docker-compose.yml
+└── test.sh               ← Unified test runner (PHPUnit + Hurl)
+```
+
+## `bdus-app` — Vue 3 frontend
+
+```
+bdus-app/
+├── src/
+│   ├── views/            ← Route-level components (*View.vue)
+│   ├── components/       ← Reusable components (record/, config/, users/, …)
+│   ├── stores/           ← Pinia stores (auth, …)
+│   ├── composables/      ← Reusable composition functions
+│   ├── api/              ← API client (fetch-based, JWT injected)
+│   ├── locale/           ← i18n files (en.json, it.json)
+│   └── router/           ← Vue Router (hash mode)
+├── public/
+├── dist/                 ← Built output (not committed)
+├── package.json
+├── vite.config.js
+├── Dockerfile
+└── nginx.conf.template   ← Production Nginx config
+```
+
+## Runtime layout
+
+The Vue SPA is served statically. All `/api/*` traffic is proxied to the PHP
+backend (by Vite in dev, by Nginx in production).
+
+```
+Browser
+  ├── GET / → index.html  (SPA)
+  └── /api/* → PHP backend (FastRoute dispatcher)
 ```

@@ -36,6 +36,7 @@
   "email_not_valid": "Errore. L'indirizzo %s non sembra un indirizzo email valido. Non è possibile proseguire",
   "not_enough_data": "Non ci sono abbastanza dati per continuare",
   "login_data_not_valid": "Errore. E-mail e/o password non validi!",
+  "app_not_found": "L'applicazione selezionata non è stata trovata su questo server",
   "cannot_delete_file": "Errore. Non è stato possibile cancellare il file %s",
   "cannot_delete_dir": "Errore. Non è stato possibile cancellare la cartella %s",
   "no_app_error": "Errore. Impossibile continuare senza specificare l'applicazione",

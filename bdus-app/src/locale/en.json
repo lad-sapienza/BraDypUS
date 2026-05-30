@@ -36,6 +36,7 @@
   "email_not_valid": "Error. The address %s is not a valid email. Can not continue",
   "not_enough_data": "Not enaugh data to continue",
   "login_data_not_valid": "Error. Not valid email address and/or password",
+  "app_not_found": "The selected application was not found on this server",
   "cannot_delete_file": "Error. Can not delete file %s",
   "cannot_delete_dir": "Error.  Can not delete direcotory %s",
   "no_app_error": "Error.  Can not continue without the application name",

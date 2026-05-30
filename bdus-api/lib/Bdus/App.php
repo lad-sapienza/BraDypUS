@@ -1,7 +1,7 @@
 <?php
 
 /**
- * @copyright 2007-2022 Julian Bogdani
+ * @copyright 2007-2025 Julian Bogdani
  * @license AGPL-3.0; see LICENSE
  */
 
@@ -21,291 +21,156 @@ use UAC\Loader as UACLoader;
 
 class App
 {
-  // Array of GET parameters
-  protected $get;
-  // Array of POST parameters
-  protected $post;
-  // Array of REQUEST parameters
-  protected $request;
-  // Application name
-  protected $app;
-  // Database object
-  protected $db;
-  // Log object
-  protected $log;
-  // true if debug is on
-  protected $debug;
+    protected array $get;
+    protected array $post;
+    protected array $request;
+    protected ?DB $db = null;
+    protected Logger $log;
 
-
-  public function __construct(array $get, array $post, array $request)
-  {
     /**
-     * Set $this->get to be injected in Controller
+     * Reads the current request directly from superglobals.
+     * bootstrap.php must have run before this is called so that
+     * APP / PROJ_DIR / DEBUG_ON constants and Auth\CurrentUser are set.
      */
-    $this->get = $get;
-    /**
-     * Set $this->post to be injected in Controller
-     */
-    $this->post = $post;
-    /**
-     * Set $this->request to be injected in Controller
-     */
-    $this->request = $request;
-  }
-
-  public function start(): void
-  {
-    /**
-     * Initialize Database object, if $this->app is defined
-     */
-    if ($this->app) {
-      $this->db = new DB($this->app);
+    public function __construct()
+    {
+        $this->get     = $_GET;
+        $this->post    = $_POST;
+        $this->request = $_REQUEST;
     }
 
-    /**
-     * Sets $this->log and initializes Log object
-     */
-    $this->setupLogger();
+    public function start(): void
+    {
+        if (defined('APP')) {
+            $this->db = new DB(APP);
+        }
 
-    if ($this->db) {
-      /**
-       * One-time pre-flight: rename legacy APP__* tables to unprefixed names and
-       * update tables.json, so that Config::__construct() can load cleanly even
-       * on apps that were created before the v5 prefix removal.
-       * Idempotent — no-op once the tables are already renamed.
-       */
-      \DB\System\Migrate::maybeRemovePrefix($this->db, $this->log);
+        $this->setupLogger();
 
-      /**
-       * One-time pre-flight: rename bare system tables to bdus_* names.
-       * Must run here (before routing) so that login and every other request
-       * can find bdus_users, bdus_charts, etc. immediately after a code upgrade.
-       * M008 does the same inside the migration loop, but that runs only after
-       * a successful login — too late for authentication itself.
-       * Idempotent — no-op once all tables carry the bdus_ prefix.
-       */
-      \DB\System\Migrate::maybeAddBdusPrefix($this->db, $this->log);
-
-      /**
-       * Run all pending schema migrations on every request.
-       * Each migration is idempotent (records itself in bdus_migrations so it
-       * never re-runs), so the overhead on steady-state requests is just one
-       * SELECT on the migrations table — negligible.
-       * Running here (not only at login) ensures upgrades take effect
-       * immediately even for already-authenticated sessions.
-       */
-      \DB\System\Migrate::run($this->db, $this->log);
-    }
-
-    $this->route();
-  }
-
-  /**
-   * Set $this->app to be injected in Controller
-   *
-   * @param string $app
-   * @return void
-   */
-  public function setApp(string $app): void
-  {
-    $this->app = $app;
-  }
-
-  /**
-   * Set the debug-check variable
-   *
-   * @param boolean $debug
-   * @return void
-   */
-  public function setDebug(bool $debug = false): void
-  {
-    $this->debug = $debug;
-  }
-
-  /**
-   * Initializes Log object and sets handler, depending on environment
-   * @return void
-   */
-  private function setupLogger(): void
-  {
-    try {
-      /**
-       * Initialize logger
-       */
-      $this->log = new Logger('bdus');
-
-      $log_file = __DIR__ . '/../../logs/error.log';
-
-      /**
-       * Errors are written in the database if database object is set and 
-       * environment is not in debug mode
-       * Otherwise, errors are written in the file
-       */
-      if ($this->db && !$this->debug) {
-        $this->log->pushHandler(new LogDBHandler($this->db));
-        $this->db->setLog($this->log);
-      } else {
-        $this->log->pushHandler(new StreamHandler($log_file, Logger::DEBUG));
         if ($this->db) {
-          $this->db->setLog($this->log);
+            \DB\System\Migrate::maybeRemovePrefix($this->db, $this->log);
+            \DB\System\Migrate::maybeAddBdusPrefix($this->db, $this->log);
+            \DB\System\Migrate::run($this->db, $this->log);
         }
-      }
-    } catch (\Throwable $th) {
-      /**
-       * In case of errors, logs are logged in file
-       */
-      $this->log->pushHandler(new StreamHandler($log_file, Logger::DEBUG));
-      $this->log->error($th);
+
+        $this->route();
     }
-    $handler = new ErrorHandler($this->log);
-    $handler->registerErrorHandler([], false);
-    $handler->registerExceptionHandler();
-    $handler->registerFatalHandler();
-  }
 
-  /**
-   * Map privilege-level strings to the numeric UAC threshold.
-   * A principal satisfies a level when its privilege int is <= the threshold.
-   * (Lower number = more privileged, following the UAC scale.)
-   */
-  private function apiKeyHasPrivilege(string $required): bool
-  {
-    $privilege = \Auth\CurrentUser::privilege();
-    if ($privilege === null) {
-      return false;
+    private function setupLogger(): void
+    {
+        $this->log  = new Logger('bdus');
+        $log_file   = MAIN_DIR . 'logs/error.log';
+
+        try {
+            if ($this->db && !DEBUG_ON) {
+                $this->log->pushHandler(new LogDBHandler($this->db));
+                $this->db->setLog($this->log);
+            } else {
+                $this->log->pushHandler(new StreamHandler($log_file, Logger::DEBUG));
+                if ($this->db) {
+                    $this->db->setLog($this->log);
+                }
+            }
+        } catch (\Throwable $th) {
+            $this->log->pushHandler(new StreamHandler($log_file, Logger::DEBUG));
+            $this->log->error($th);
+        }
+
+        $handler = new ErrorHandler($this->log);
+        $handler->registerErrorHandler([], false);
+        $handler->registerExceptionHandler();
+        $handler->registerFatalHandler();
     }
-    return match ($required) {
-      'read'        => $privilege <= \UAC\UAC::READ,    // <= 30
-      'edit'        => $privilege <= \UAC\UAC::CREATE,  // <= 25
-      'admin'       => $privilege <= \UAC\UAC::ADM,     // <= 10
-      'super_admin' => $privilege <= \UAC\UAC::SUPERADM, // == 1
-      default       => false,
-    };
-  }
 
-  private function route()
-  {
-    // Set object
-    $obj = $this->get['obj'] ?? 'home_ctrl';
-
-    // Set method
-    $method = $this->get['method'] ?? 'showAll';
-
-    try {
-
-      // ── Auth gate ────────────────────────────────────────────────────────
-      // Determine the minimum privilege required for this route.
-      $requiredPrivilege = \Bdus\Router::requiredPrivilege($obj, $method);
-
-      if ($requiredPrivilege !== 'none') {
-        // If not already authenticated via JWT, try API key auth.
-        if (!\Auth\CurrentUser::isAuthenticated() && $this->db) {
-          \Auth\ApiKeyAuth::attempt($this->db);
+    /**
+     * Maps an API-key privilege label to the numeric UAC threshold.
+     */
+    private function apiKeyHasPrivilege(string $required): bool
+    {
+        $privilege = \Auth\CurrentUser::privilege();
+        if ($privilege === null) {
+            return false;
         }
-
-        // Reject completely unauthenticated requests.
-        if (!\Auth\CurrentUser::isAuthenticated()) {
-          http_response_code(401);
-          header('Content-Type: application/json');
-          echo json_encode(
-            ['status' => 'error', 'code' => 'unauthenticated'],
-            JSON_UNESCAPED_UNICODE
-          );
-          return;
-        }
-
-        // For API key requests: enforce route-level privilege sandbox.
-        // JWT users are trusted — their per-controller checks remain in place.
-        if (\Auth\CurrentUser::isApiKey() && !$this->apiKeyHasPrivilege($requiredPrivilege)) {
-          http_response_code(403);
-          header('Content-Type: application/json');
-          echo json_encode(
-            ['status' => 'error', 'code' => 'not_enough_privilege'],
-            JSON_UNESCAPED_UNICODE
-          );
-          return;
-        }
-      }
-
-      /**
-       * Check if method exists in object
-       */
-      if (!method_exists($obj, $method)) {
-        throw new \Exception("Object {$obj} does not have method {$method}");
-      }
-
-      /**
-       * Check if object extends Controller
-       */
-      if (get_parent_class($obj) !== 'Controller') {
-        throw new \Exception("Called object {$obj} *must* extend Controller. No direct access is available");
-      }
-
-      /**
-       * Initializes object
-       */
-      $_aa = new $obj($this->get, $this->post, $this->request);
-
-      /**
-       * Injects DB object, if available, to object
-       */
-      if ($this->db) {
-        $_aa->setDB($this->db);
-      }
-
-      /**
-       * Injects debug variable
-       */
-      $_aa->setDebug($this->debug);
-
-      /**
-       * Injects Log to object
-       */
-      $_aa->setLog($this->log);
-
-      /**
-       * Initializes Config and injects it to object if $this->app is available
-       */
-      if ($this->app) {
-        $dot = new Dot();
-        $config = new Config($dot, __DIR__ . '/../../projects/' . $this->app . '/', $this->db);
-        $_aa->setCfg($config);
-        // Give Template\Loader access to the DB so it can read from bdus_cfg_templates.
-        \Template\Loader::setDb($this->db);
-      }
-
-      if ($this->app && $config && $this->db) {
-        $uac = new UAC(
-          $config->get('main.status'),
-          $this->db
-        );
-
-        // Load per-table privilege overrides for the authenticated user.
-        // Falls back silently to global-only UAL if the migration has not
-        // run yet (first boot before login) or if the user is not logged in.
-        if (\Auth\CurrentUser::isAuthenticated()) {
-          $ual = UACLoader::buildUAL(
-            \Auth\CurrentUser::id(),
-            \Auth\CurrentUser::privilege(),
-            $this->db
-          );
-          $uac->setUAL($ual);
-        }
-
-        $_aa->setUAC($uac);
-      }
-
-      /**
-       * Run finally the method
-       */
-      $_aa->$method();
-
-    } catch (\Throwable $e) {
-      /**
-       * Catch and log errors
-       */
-      $this->log->error($e);
-      echo "A blocking error occurred. More information are filed in the log file";
+        return match ($required) {
+            'read'        => $privilege <= \UAC\UAC::READ,
+            'edit'        => $privilege <= \UAC\UAC::CREATE,
+            'admin'       => $privilege <= \UAC\UAC::ADM,
+            'super_admin' => $privilege <= \UAC\UAC::SUPERADM,
+            default       => false,
+        };
     }
-  }
+
+    private function route(): void
+    {
+        $obj    = $this->get['obj']    ?? 'home_ctrl';
+        $method = $this->get['method'] ?? 'showAll';
+
+        try {
+            // ── Auth gate ────────────────────────────────────────────────────
+            $requiredPrivilege = Router::requiredPrivilege($obj, $method);
+
+            if ($requiredPrivilege !== 'none') {
+                if (!\Auth\CurrentUser::isAuthenticated() && $this->db) {
+                    \Auth\ApiKeyAuth::attempt($this->db);
+                }
+
+                if (!\Auth\CurrentUser::isAuthenticated()) {
+                    http_response_code(401);
+                    header('Content-Type: application/json');
+                    echo json_encode(['status' => 'error', 'code' => 'unauthenticated'], JSON_UNESCAPED_UNICODE);
+                    return;
+                }
+
+                if (\Auth\CurrentUser::isApiKey() && !$this->apiKeyHasPrivilege($requiredPrivilege)) {
+                    http_response_code(403);
+                    header('Content-Type: application/json');
+                    echo json_encode(['status' => 'error', 'code' => 'not_enough_privilege'], JSON_UNESCAPED_UNICODE);
+                    return;
+                }
+            }
+
+            if (!method_exists($obj, $method)) {
+                throw new \Exception("Object {$obj} does not have method {$method}");
+            }
+
+            if (get_parent_class($obj) !== 'Controller') {
+                throw new \Exception("Called object {$obj} must extend Controller");
+            }
+
+            $ctrl = new $obj($this->get, $this->post, $this->request);
+
+            if ($this->db) {
+                $ctrl->setDB($this->db);
+            }
+
+            $ctrl->setLog($this->log);
+
+            if (defined('APP')) {
+                $config = new Config(new Dot(), MAIN_DIR . 'projects/' . APP . '/', $this->db);
+                $ctrl->setCfg($config);
+                \Template\Loader::setDb($this->db);
+
+                if ($this->db) {
+                    $uac = new UAC($config->get('main.status'), $this->db);
+
+                    if (\Auth\CurrentUser::isAuthenticated()) {
+                        $uac->setUAL(UACLoader::buildUAL(
+                            \Auth\CurrentUser::id(),
+                            \Auth\CurrentUser::privilege(),
+                            $this->db
+                        ));
+                    }
+
+                    $ctrl->setUAC($uac);
+                }
+            }
+
+            $ctrl->$method();
+
+        } catch (\Throwable $e) {
+            $this->log->error($e);
+            header('Content-Type: application/json');
+            echo json_encode(['status' => 'error', 'code' => 'dispatch_error'], JSON_UNESCAPED_UNICODE);
+        }
+    }
 }

@@ -88,35 +88,47 @@ entirely by the browser.
 
 ### Route table
 
-| Path | View | Auth |
-|---|---|---|
-| `/` | `HomeView` | ✓ |
-| `/login` | `LoginView` | — |
-| `/oauth-callback` | `OAuthCallbackView` | — |
-| `/new-app` | `NewAppView` | — |
-| `/data` | `DataView` | ✓ |
-| `/record/:tb/:id` | `RecordView` | ✓ |
-| `/record/:tb` | redirect → `/record/:tb/new` | ✓ |
-| `/matrix/:tb` | `MatrixView` | ✓ |
-| `/geoface/:tb` | `GeofaceView` | ✓ |
-| `/config` | `ConfigView` | ✓ |
-| `/users` | `UsersView` | ✓ |
-| `/vocabularies` | `VocabulariesView` | ✓ |
-| `/templates` | `TemplatesView` | ✓ |
-| `/import` | `ImportView` | ✓ |
-| `/backups` | `BackupView` | ✓ |
-| `/history` | `HistoryView` | ✓ |
-| `/deleted-records` | `DeletedRecordsView` | ✓ |
-| `/find-replace` | `SearchReplaceView` | ✓ |
-| `/free-sql` | `FreeSqlView` | ✓ |
-| `/migrations` | `MigrationsView` | ✓ |
-| `/log` | `LogView` | ✓ |
-| `/info` | `InfoView` | ✓ |
+All authenticated routes are namespaced under `/:app` so that URLs are
+self-contained deep links — `#/myapp/record/sites/42` works as a bookmark
+or shared link without any extra context.
+
+**Public routes** (no auth, no app prefix):
+
+| Path | View |
+|---|---|
+| `/login` | `LoginView` |
+| `/oauth-callback` | `OAuthCallbackView` |
+| `/new-app` | `NewAppView` |
+
+**App routes** (require auth, prefixed with `/:app`):
+
+| Path | View |
+|---|---|
+| `/:app` | `HomeView` |
+| `/:app/data` | `DataView` |
+| `/:app/record/:tb/:id` | `RecordView` |
+| `/:app/record/:tb` | redirect → `/:app/record/:tb/new` |
+| `/:app/matrix/:tb` | `MatrixView` |
+| `/:app/geoface/:tb` | `GeofaceView` |
+| `/:app/config` | `ConfigView` |
+| `/:app/users` | `UsersView` |
+| `/:app/vocabularies` | `VocabulariesView` |
+| `/:app/templates` | `TemplatesView` |
+| `/:app/import` | `ImportView` |
+| `/:app/backups` | `BackupView` |
+| `/:app/history` | `HistoryView` |
+| `/:app/deleted-records` | `DeletedRecordsView` |
+| `/:app/find-replace` | `SearchReplaceView` |
+| `/:app/free-sql` | `FreeSqlView` |
+| `/:app/migrations` | `MigrationsView` |
+| `/:app/log` | `LogView` |
+| `/:app/info` | `InfoView` |
 
 The global navigation guard in `router/index.js` redirects unauthenticated
-requests to `/login`. The check is client-side (JWT expiry); the backend
-validates the signature on every API call and returns `401` if the token is
-invalid or expired.
+requests to `/login`. If the `:app` segment in the URL doesn't match the
+logged-in app (JWT claim), the guard silently corrects it. The check is
+client-side (JWT expiry); the backend validates the signature on every API
+call and returns `401` if the token is invalid or expired.
 
 ---
 

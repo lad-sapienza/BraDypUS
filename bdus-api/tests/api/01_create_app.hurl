@@ -12,15 +12,20 @@ HTTP 200
 jsonpath "$.status"    == "success"
 jsonpath "$.permitted" == true
 
-# 1b. Create the app with SQLite (no external DB required).
+# 1b. Create the app (engine is controlled by the --db flag in test.sh).
 POST {{base_url}}/api/new-app
 Content-Type: application/json
 {
-  "name":       "{{app_name}}",
-  "definition": "BraDypUS API test suite — auto-generated, safe to delete",
-  "email":      "{{admin_email}}",
-  "password":   "{{admin_password}}",
-  "db_engine":  "sqlite"
+  "name":        "{{app_name}}",
+  "definition":  "BraDypUS API test suite — auto-generated, safe to delete",
+  "email":       "{{admin_email}}",
+  "password":    "{{admin_password}}",
+  "db_engine":   "{{db_engine}}",
+  "db_host":     "{{db_host}}",
+  "db_port":     "{{db_port}}",
+  "db_name":     "{{db_name}}",
+  "db_username": "{{db_username}}",
+  "db_password": "{{db_password}}"
 }
 HTTP 200
 [Asserts]

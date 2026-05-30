@@ -39,26 +39,11 @@ class M013_CreateCfgRelations
     {
         $db = $manage->getDb();
 
-        // 1 — Create bdus_cfg_relations (idempotent).
-        $tables = $db->query(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name='bdus_cfg_relations'",
-            [],
-            'read'
-        ) ?: [];
+        // 1 — Create bdus_cfg_relations (idempotent: CREATE TABLE IF NOT EXISTS).
+        $manage->createTable('bdus_cfg_relations');
 
-        if (empty($tables)) {
-            $manage->createTable('bdus_cfg_relations');
-        }
-
-        // 2 — Skip if bdus_cfg_tables doesn't exist yet (app not yet migrated
-        //     through M011, so there are no JSON blobs to migrate).
-        $cfgTables = $db->query(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name='bdus_cfg_tables'",
-            [],
-            'read'
-        ) ?: [];
-
-        if (empty($cfgTables)) {
+        // 2 — Skip if bdus_cfg_tables doesn't exist yet.
+        if (!$manage->tableExists('bdus_cfg_tables')) {
             return;
         }
 

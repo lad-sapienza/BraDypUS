@@ -24,6 +24,12 @@ class M010_FixVersionsSchema
     {
         $db = $manage->getDb();
 
+        // PRAGMA is SQLite-only. PG/MySQL installs always get the correct schema
+        // from the structure JSON at creation time, so this migration is a no-op.
+        if ($db->getEngine() !== 'sqlite') {
+            return;
+        }
+
         // Check whether the table already has the correct schema:
         // operation column present AND editsql nullable.
         $info = $db->query("PRAGMA table_info(bdus_versions)", [], 'read') ?: [];

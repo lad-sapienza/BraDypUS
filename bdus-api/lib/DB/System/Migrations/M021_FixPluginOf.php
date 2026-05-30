@@ -41,13 +41,7 @@ class M021_FixPluginOf
     {
         $db = $manage->getDb();
 
-        // Guard: bdus_cfg_tables must exist.
-        $tables = $db->query(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name='bdus_cfg_tables'",
-            [],
-            'read'
-        ) ?: [];
-        if (empty($tables)) {
+        if (!$manage->tableExists('bdus_cfg_tables')) {
             return;
         }
 

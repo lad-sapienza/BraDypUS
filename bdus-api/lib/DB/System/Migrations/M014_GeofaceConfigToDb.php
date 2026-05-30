@@ -68,10 +68,10 @@ class M014_GeofaceConfigToDb
             }
         }
 
-        $manage->getDb()->query(
-            'INSERT OR IGNORE INTO bdus_cfg_geoface (id, layers) VALUES (1, ?)',
-            [$layers],
-            'boolean'
-        );
+        $db  = $manage->getDb();
+        $cnt = $db->query('SELECT COUNT(*) AS cnt FROM bdus_cfg_geoface WHERE id = 1', [], 'read');
+        if ((int)($cnt[0]['cnt'] ?? 0) === 0) {
+            $db->query('INSERT INTO bdus_cfg_geoface (id, layers) VALUES (1, ?)', [$layers], 'boolean');
+        }
     }
 }

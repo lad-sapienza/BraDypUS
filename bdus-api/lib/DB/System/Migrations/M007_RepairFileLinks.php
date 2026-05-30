@@ -38,26 +38,28 @@ class M007_RepairFileLinks
     {
         $db = $manage->getDb();
 
-        // 1. Defensive prefix strip: detect any APP__ prefix still in the data
-        //    (maybeRemovePrefix should have done this, but guard against edge cases).
-        $sample = $db->query(
-            "SELECT tb_one FROM bdus_userlinks WHERE INSTR(tb_one, '__') > 0 LIMIT 1",
-            [],
-            'read'
-        );
-        if (!empty($sample)) {
-            $raw     = $sample[0]['tb_one'];
-            $pos     = strpos($raw, '__');
-            $oldPfx  = substr($raw, 0, $pos + 2); // e.g. "paths__"
-
-            $db->query(
-                "UPDATE bdus_userlinks
-                 SET    tb_one = REPLACE(tb_one, ?, ''),
-                        tb_two = REPLACE(tb_two, ?, '')
-                 WHERE  tb_one LIKE ? OR tb_two LIKE ?",
-                [$oldPfx, $oldPfx, $oldPfx . '%', $oldPfx . '%'],
-                'boolean'
+        // 1. Defensive prefix strip: detect any APP__ prefix still in the data.
+        //    INSTR() is SQLite/MySQL-only; PG installs are always new (no old prefix data).
+        if ($db->getEngine() === 'sqlite') {
+            $sample = $db->query(
+                "SELECT tb_one FROM bdus_userlinks WHERE INSTR(tb_one, '__') > 0 LIMIT 1",
+                [],
+                'read'
             );
+            if (!empty($sample)) {
+                $raw     = $sample[0]['tb_one'];
+                $pos     = strpos($raw, '__');
+                $oldPfx  = substr($raw, 0, $pos + 2); // e.g. "paths__"
+
+                $db->query(
+                    "UPDATE bdus_userlinks
+                     SET    tb_one = REPLACE(tb_one, ?, ''),
+                            tb_two = REPLACE(tb_two, ?, '')
+                     WHERE  tb_one LIKE ? OR tb_two LIKE ?",
+                    [$oldPfx, $oldPfx, $oldPfx . '%', $oldPfx . '%'],
+                    'boolean'
+                );
+            }
         }
 
         // 2. Ensure bdus_file_links exists (idempotent).

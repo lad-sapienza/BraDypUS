@@ -1,0 +1,34 @@
+# PostgreSQL test override — used exclusively by test.sh --db=pgsql.
+#
+# docker compose -p bdus-test \
+#   -f docker-compose.yml \
+#   -f docker-compose.test.yml \
+#   -f docker-compose.test.pg.yml \
+#   up -d
+#
+# The app container connects to the postgres service by its Docker hostname
+# ("postgres"). The connection details are passed at app-creation time via
+# the Hurl create-app request (Phase 1), not via environment variables.
+services:
+  app:
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB:       bdus_test
+      POSTGRES_USER:     bdus
+      POSTGRES_PASSWORD: bdus_test_pw
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bdus -d bdus_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    networks:
+      - bradypus-net
+
+networks:
+  bradypus-net:
+    external: true

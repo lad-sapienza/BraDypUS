@@ -47,13 +47,8 @@ class LoadFromDB
     public static function isAvailable(DBInterface $db): bool
     {
         try {
-            $rows = $db->query(
-                "SELECT name FROM sqlite_master WHERE type='table' AND name='bdus_cfg_tables'",
-                [],
-                'read'
-            );
-            if (empty($rows)) return false;
-
+            // Directly count rows — works on all engines.
+            // If bdus_cfg_tables doesn't exist the query throws → caught → false.
             $cnt = $db->query('SELECT COUNT(*) AS cnt FROM bdus_cfg_tables', [], 'read');
             return ($cnt[0]['cnt'] ?? 0) > 0;
         } catch (\Throwable $e) {

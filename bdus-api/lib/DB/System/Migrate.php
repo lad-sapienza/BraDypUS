@@ -414,6 +414,10 @@ class Migrate
         string $oldPrefix,
         Logger $log = null
     ): void {
+        if ($db->getEngine() !== 'sqlite') {
+            return; // prefix-stripping applies only to legacy SQLite apps
+        }
+
         // Check whether the userlinks table exists at all (bare name — pre-M008).
         $exists = $db->query(
             "SELECT COUNT(*) AS cnt FROM sqlite_master WHERE type='table' AND name='userlinks'",

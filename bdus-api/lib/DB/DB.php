@@ -131,14 +131,19 @@ class DB implements DBInterface
     try {
       $this->pdo->beginTransaction();
       $ret = $this->pdo->exec($sql);
-      $this->pdo->commit();
+      if ($this->pdo->inTransaction()) {
+        $this->pdo->commit();
+      }
     } catch (DBException $th) {
-      $this->pdo->rollBack();
-      $this->log->error($th);
-      // Already logged
+      if ($this->pdo->inTransaction()) {
+        $this->pdo->rollBack();
+      }
+      if ($this->log) { $this->log->error($th); }
     } catch (\Throwable $th) {
-      $this->pdo->rollBack();
-      $this->log->error($th);
+      if ($this->pdo->inTransaction()) {
+        $this->pdo->rollBack();
+      }
+      if ($this->log) { $this->log->error($th); }
     }
     return ($ret !== false);
   }

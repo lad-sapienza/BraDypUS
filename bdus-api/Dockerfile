@@ -7,6 +7,9 @@ RUN apt-get update && apt-get install -y \
     libpng-dev \
     libjpeg-dev \
     libfreetype6-dev \
+    libpq-dev \
+    postgresql-client \
+    default-mysql-client \
     unzip \
     git \
     && rm -rf /var/lib/apt/lists/*
@@ -16,7 +19,7 @@ RUN a2enmod rewrite
 
 # PHP extensions: PDO + SQLite, mbstring, GD (image thumbnailing)
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install pdo pdo_sqlite mbstring gd
+    && docker-php-ext-install pdo pdo_sqlite pdo_pgsql pdo_mysql mbstring gd
 
 # Allow .htaccess overrides
 RUN sed -i '/<Directory \/var\/www\/>/,/<\/Directory>/ s/AllowOverride None/AllowOverride All/' \

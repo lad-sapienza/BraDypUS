@@ -121,22 +121,42 @@ Copy `.env.example` to `.env` and edit as needed.
 
 ## Running the tests
 
-### PHPUnit — unit and integration tests
+### One-command full run
 
-Tests use PHPUnit 11 with an in-memory SQLite database — no configuration needed.
+`test.sh` starts an isolated Docker container, runs PHPUnit + the full Hurl
+suite, and tears everything down on exit.
+Requires Docker, [hurl](https://hurl.dev) ≥ 4.0, and [jq](https://jqlang.github.io/jq/).
 
 ```bash
-# Inside Docker
-docker compose exec app ./vendor/bin/phpunit --testdox
+# SQLite (default) — PHPUnit + 18 Hurl phases
+./test.sh
 
-# Or locally (requires PHP on the host)
-./vendor/bin/phpunit --testdox
+# PostgreSQL — Hurl only against a disposable postgres:16 container
+./test.sh --db=pgsql --skip-unit
+
+# MariaDB — Hurl only against a disposable mariadb:11 container
+./test.sh --db=mysql --skip-unit
+
+# Leave the container running after the tests (useful for manual inspection)
+./test.sh --keep
+
+# Seed the app with demo data and leave the container up (screenshot workflow)
+./test.sh --seed-demo --keep
+```
+
+All three database engines pass the full suite identically.
+
+### PHPUnit — unit and integration tests
+
+PHPUnit uses an **in-memory SQLite** database — no server needed.
+
+```bash
+docker compose exec app php vendor/bin/phpunit --testdox
 ```
 
 ### Hurl — end-to-end API test suite
 
-16 sequential phases cover the full application lifecycle against a running server.
-Requires [hurl](https://hurl.dev) and [jq](https://jqlang.github.io/jq/) (`brew install hurl jq`).
+18 sequential phases cover the full application lifecycle.
 
 | Phase | What it tests |
 |---|---|
@@ -156,16 +176,18 @@ Requires [hurl](https://hurl.dev) and [jq](https://jqlang.github.io/jq/) (`brew 
 | 14 | Relations panel (bdus_cfg_relations CRUD) |
 | 15 | Vocabularies CRUD |
 | 16 | Welcome text + Search & Replace |
+| 17 | Zotero libraries & citation links |
+| 18 | JSON filter (Directus-style bracket notation) |
 
 ```bash
-# Start the server first (Docker or native), then:
+# Ad-hoc run against a running server (default vars: localhost:8080, SQLite)
 bash tests/api/run.sh tests/api/vars.env
 
 # Dry-run: list all phases and their steps
 bash tests/api/run.sh tests/api/vars.env --list
 ```
 
-Edit `tests/api/vars.env` to point at a different server or app name.
+Copy `tests/api/vars.env` to `tests/api/vars.local.env` to override host or app name.
 
 ---
 

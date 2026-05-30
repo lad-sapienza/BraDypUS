@@ -1089,12 +1089,11 @@ class Record extends \Bdus\Controller
         return;
       }
 
-      $this->db->query(
+      $newId = (int) $this->db->query(
         "INSERT INTO bdus_rs (tb, first, second, relation) VALUES (?, ?, ?, ?)",
         [$tb, $first, $second, $relation],
-        'boolean'
+        'id'
       );
-      $newId = (int) $this->db->query('SELECT last_insert_rowid() AS id', [], 'read')[0]['id'];
 
       $this->returnJson(['status' => 'success', 'code' => 'ok_relation_add', 'id' => $newId]);
 

@@ -228,11 +228,25 @@ class M011_ConfigToDb
 
     private static function tableExists($db, string $table): bool
     {
-        $rows = $db->query(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
-            [$table],
-            'read'
-        );
+        $engine = $db->getEngine();
+        if ($engine === 'sqlite') {
+            $rows = $db->query(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
+                [$table], 'read'
+            );
+        } elseif ($engine === 'pgsql') {
+            $rows = $db->query(
+                "SELECT table_name FROM information_schema.tables
+                  WHERE table_name = ? AND table_schema = 'public'",
+                [$table], 'read'
+            );
+        } else {
+            $rows = $db->query(
+                "SELECT table_name FROM information_schema.tables
+                  WHERE table_name = ? AND table_schema = DATABASE()",
+                [$table], 'read'
+            );
+        }
         return !empty($rows);
     }
 

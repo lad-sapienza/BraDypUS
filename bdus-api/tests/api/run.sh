@@ -94,6 +94,12 @@ HURL_VARS=(
   --variable "app_name=${APP_NAME}"
   --variable "admin_email=${ADMIN_EMAIL}"
   --variable "admin_password=${ADMIN_PASSWORD}"
+  --variable "db_engine=${DB_ENGINE:-sqlite}"
+  --variable "db_host=${DB_HOST:-}"
+  --variable "db_port=${DB_PORT:-}"
+  --variable "db_name=${DB_NAME:-}"
+  --variable "db_username=${DB_USERNAME:-}"
+  --variable "db_password=${DB_PASSWORD:-}"
 )
 
 # Run one hurl file; on failure print the report and exit.

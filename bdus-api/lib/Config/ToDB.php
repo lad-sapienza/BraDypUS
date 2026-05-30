@@ -140,15 +140,11 @@ class ToDB
      */
     public static function upsertRelations(DBInterface $db, string $fromTb, array $links): void
     {
-        // Check whether bdus_cfg_relations exists (may not for very old apps
-        // that have not run M013 yet — fall back to no-op).
-        $tblCheck = $db->query(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name='bdus_cfg_relations'",
-            [],
-            'read'
-        ) ?: [];
-        if (empty($tblCheck)) {
-            return;
+        // Check whether bdus_cfg_relations exists (cross-engine: direct count).
+        try {
+            $db->query('SELECT COUNT(*) AS cnt FROM bdus_cfg_relations WHERE 1=0', [], 'read');
+        } catch (\Throwable $e) {
+            return; // Table not yet created — no-op.
         }
 
         // Delete existing relations for this table — both forward (from_tb = X)

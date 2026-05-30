@@ -29,45 +29,35 @@ class M022_AddOAuthToUsers
     {
         $db = $manage->getDb();
 
-        // Guard: bdus_users must exist
-        $tables = $db->query(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name='bdus_users'",
-            [],
-            'read'
-        ) ?: [];
-        if (empty($tables)) {
+        if (!$manage->tableExists('bdus_users')) {
             return;
         }
 
-        // Check whether columns already exist (idempotent)
-        $cols = $db->query('PRAGMA table_info(bdus_users)', [], 'read') ?: [];
-        $existing = array_column($cols, 'name');
-
         foreach (['oauth_provider', 'oauth_sub'] as $col) {
-            if (!in_array($col, $existing, true)) {
-                $db->query(
-                    "ALTER TABLE bdus_users ADD COLUMN {$col} TEXT",
-                    [],
-                    'boolean'
-                );
+            if (!$manage->columnExists('bdus_users', $col)) {
+                $db->query("ALTER TABLE bdus_users ADD COLUMN {$col} TEXT", [], 'boolean');
             }
         }
 
-        // Partial unique index: only enforce uniqueness when oauth_sub is set
-        // (SQLite supports WHERE clauses on indexes since 3.8.9)
-        $indexes = $db->query(
-            "SELECT name FROM sqlite_master WHERE type='index' AND name='users_oauth_sub_idx'",
-            [],
-            'read'
-        ) ?: [];
-        if (empty($indexes)) {
-            $db->query(
-                "CREATE UNIQUE INDEX users_oauth_sub_idx
-                    ON bdus_users (oauth_provider, oauth_sub)
-                  WHERE oauth_sub IS NOT NULL",
-                [],
-                'boolean'
-            );
+        if (!$manage->indexExistsPublic('bdus_users', 'users_oauth_sub_idx')) {
+            if ($db->getEngine() === 'mysql') {
+                // MySQL does not support partial indexes (WHERE clause).
+                // A regular UNIQUE index already allows multiple NULLs (NULL != NULL in SQL).
+                // TEXT columns also need prefix lengths in MySQL.
+                $db->query(
+                    "CREATE UNIQUE INDEX users_oauth_sub_idx
+                        ON bdus_users (oauth_provider(100), oauth_sub(191))",
+                    [], 'boolean'
+                );
+            } else {
+                // SQLite and PostgreSQL support partial indexes.
+                $db->query(
+                    "CREATE UNIQUE INDEX users_oauth_sub_idx
+                        ON bdus_users (oauth_provider, oauth_sub)
+                      WHERE oauth_sub IS NOT NULL",
+                    [], 'boolean'
+                );
+            }
         }
     }
 }

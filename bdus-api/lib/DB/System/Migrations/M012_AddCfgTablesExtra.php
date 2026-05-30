@@ -28,24 +28,12 @@ class M012_AddCfgTablesExtra
     {
         $db = $manage->getDb();
 
-        // Check whether bdus_cfg_tables exists (it was created by M011;
-        // apps that skipped M011 don't need this column yet).
-        $tables = $db->query(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name='bdus_cfg_tables'",
-            [],
-            'read'
-        ) ?: [];
-
-        if (empty($tables)) {
-            return; // Table doesn't exist — nothing to alter.
+        if (!$manage->tableExists('bdus_cfg_tables')) {
+            return;
         }
 
-        // Check whether the column already exists (idempotency).
-        $cols = $db->query("PRAGMA table_info(bdus_cfg_tables)", [], 'read') ?: [];
-        foreach ($cols as $col) {
-            if ($col['name'] === 'extra') {
-                return; // Already present.
-            }
+        if ($manage->columnExists('bdus_cfg_tables', 'extra')) {
+            return;
         }
 
         $db->exec('ALTER TABLE bdus_cfg_tables ADD COLUMN extra TEXT');

@@ -46,6 +46,7 @@ class Manage
     /** @var array<string, array{columns: array, indexes: array, relations: array}> */
     private array $descriptor = [];
     public $available_tables = [
+        // no FK dependencies — can be created in any order
         'bdus_api_keys',
         'bdus_cfg_app',
         'bdus_cfg_fields',
@@ -53,20 +54,22 @@ class Manage
         'bdus_cfg_relations',
         'bdus_cfg_tables',
         'bdus_cfg_templates',
-        'bdus_charts',
-        'bdus_file_links',
-        'bdus_files',
         'bdus_geodata',
         'bdus_log',
         'bdus_migrations',
-        'bdus_queries',
         'bdus_rs',
         'bdus_userlinks',
-        'bdus_users',
-        'bdus_user_table_privs',
         'bdus_versions',
         'bdus_vocabularies',
-        'bdus_zotero_libs',
+        // referenced by other tables — must precede their dependents
+        'bdus_files',       // ← bdus_file_links.file_id
+        'bdus_users',       // ← bdus_charts.user_id, bdus_queries.user_id, bdus_user_table_privs.user_id
+        'bdus_zotero_libs', // ← bdus_zotero_links.lib_id
+        // tables with FK constraints (after their referenced tables above)
+        'bdus_file_links',
+        'bdus_charts',
+        'bdus_queries',
+        'bdus_user_table_privs',
         'bdus_zotero_links',
     ];
 
@@ -508,6 +511,22 @@ class Manage
             if ($this->indexExists($tb, $idxName)) {
                 return true;
             }
+            // MySQL cannot index TEXT columns without a prefix length.
+            // For each column, check its type and add (191) for text types.
+            // 191 chars × 4 bytes (utf8mb4) = 764 bytes, well within the 3072 limit.
+            $colParts = [];
+            foreach ($columns as $col) {
+                $typeRow = $this->db->query(
+                    "SELECT DATA_TYPE FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?",
+                    [$tb, $col], 'read'
+                );
+                $dataType = strtolower($typeRow[0]['DATA_TYPE'] ?? '');
+                $colParts[] = in_array($dataType, ['text', 'mediumtext', 'longtext', 'tinytext'])
+                    ? "{$col}(191)"
+                    : $col;
+            }
+            $cols = implode(', ', $colParts);
             $sql = "CREATE {$uniq}INDEX {$idxName} ON {$tb} ({$cols})";
         } else {
             // SQLite and PostgreSQL both support IF NOT EXISTS
@@ -574,6 +593,10 @@ class Manage
         $ref        = $refTable;
         $onDelete   = strtoupper($onDelete);
 
+        if ($this->constraintExists($constraint)) {
+            return true;  // idempotent: already present
+        }
+
         $sql = "ALTER TABLE {$tb} ADD CONSTRAINT {$constraint} " .
                "FOREIGN KEY ({$column}) REFERENCES {$ref}({$refColumn}) ON DELETE {$onDelete}";
 
@@ -603,6 +626,85 @@ class Manage
         };
 
         return (bool) $this->run($sql);
+    }
+
+    /**
+     * Checks whether a table exists (cross-engine).
+     * Used by migrations that must guard against running on missing tables.
+     */
+    public function tableExists(string $table): bool
+    {
+        $result = match ($this->driver) {
+            'sqlite' => $this->db->query(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
+                [$table], 'read'
+            ),
+            'pgsql'  => $this->db->query(
+                "SELECT table_name FROM information_schema.tables
+                  WHERE table_name = ? AND table_schema = 'public'",
+                [$table], 'read'
+            ),
+            'mysql'  => $this->db->query(
+                "SELECT table_name FROM information_schema.tables
+                  WHERE table_name = ? AND table_schema = DATABASE()",
+                [$table], 'read'
+            ),
+            default  => [],
+        };
+        return !empty($result);
+    }
+
+    /**
+     * Checks whether a column exists in a table (cross-engine).
+     * Used by migrations that add columns idempotently.
+     */
+    public function columnExists(string $table, string $column): bool
+    {
+        if ($this->driver === 'sqlite') {
+            $cols = $this->db->query("PRAGMA table_info({$table})", [], 'read') ?: [];
+            foreach ($cols as $col) {
+                if ($col['name'] === $column) return true;
+            }
+            return false;
+        }
+        $result = $this->db->query(
+            "SELECT column_name FROM information_schema.columns
+              WHERE table_name = ? AND column_name = ?",
+            [$table, $column], 'read'
+        );
+        return !empty($result);
+    }
+
+    /**
+     * Checks whether a named index exists on a table (cross-engine, public).
+     */
+    public function indexExistsPublic(string $tb, string $idxName): bool
+    {
+        return $this->indexExists($tb, $idxName);
+    }
+
+    /**
+     * Checks whether a named FK/check constraint exists (cross-engine).
+     * Used by addForeignKey() to make it idempotent.
+     */
+    private function constraintExists(string $constraintName): bool
+    {
+        $result = match ($this->driver) {
+            'mysql' => $this->db->query(
+                "SELECT COUNT(*) AS cnt FROM information_schema.TABLE_CONSTRAINTS
+                  WHERE CONSTRAINT_NAME = ? AND TABLE_SCHEMA = DATABASE()",
+                [$constraintName],
+                'read'
+            ),
+            'pgsql' => $this->db->query(
+                "SELECT COUNT(*) AS cnt FROM pg_constraint WHERE conname = ?",
+                [$constraintName],
+                'read'
+            ),
+            default => [['cnt' => 0]], // SQLite: addForeignKey throws before reaching here
+        };
+
+        return isset($result[0]['cnt']) && (int)$result[0]['cnt'] > 0;
     }
 
     /**

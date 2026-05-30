@@ -541,13 +541,10 @@ EOD;
     public function getBibliography(): array
     {
         if (!isset($this->cache['bibliography'])) {
-            // Check if the Zotero tables exist (they are created by M023).
-            // On installations that have not yet run the migration, return empty.
-            $tableCheck = $this->db->query(
-                "SELECT COUNT(*) AS cnt FROM sqlite_master WHERE type='table' AND name='bdus_zotero_links'",
-                [], 'read'
-            );
-            if (!$tableCheck || (int)($tableCheck[0]['cnt'] ?? 0) === 0) {
+            // Check if bdus_zotero_links exists (created by M023); cross-engine.
+            try {
+                $this->db->query('SELECT COUNT(*) AS cnt FROM bdus_zotero_links WHERE 1=0', [], 'read');
+            } catch (\Throwable $e) {
                 $this->cache['bibliography'] = [];
                 return [];
             }

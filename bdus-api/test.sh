@@ -47,6 +47,7 @@ KEEP=false
 SKIP_UNIT=false
 SKIP_E2E=false
 SEED_DEMO=false
+DB_ENGINE="sqlite"
 
 for arg in "$@"; do
   case "$arg" in
@@ -54,13 +55,22 @@ for arg in "$@"; do
     --skip-unit)  SKIP_UNIT=true ;;
     --skip-e2e)   SKIP_E2E=true ;;
     --seed-demo)  SEED_DEMO=true ;;
+    --db=*)       DB_ENGINE="${arg#--db=}" ;;
     *)
       echo "Unknown option: $arg" >&2
-      echo "Usage: $0 [--keep] [--seed-demo] [--skip-unit] [--skip-e2e]" >&2
+      echo "Usage: $0 [--keep] [--seed-demo] [--skip-unit] [--skip-e2e] [--db=sqlite|pgsql|mysql]" >&2
       exit 1
       ;;
   esac
 done
+
+case "$DB_ENGINE" in
+  sqlite|pgsql|mysql) ;;
+  *)
+    echo "Unknown DB engine: $DB_ENGINE (supported: sqlite, pgsql, mysql)" >&2
+    exit 1
+    ;;
+esac
 
 # ── Constants ────────────────────────────────────────────────────────
 COMPOSE_PROJECT="bdus-test"
@@ -68,7 +78,37 @@ COMPOSE_FILES=(-f docker-compose.yml -f docker-compose.test.yml)
 TEST_PORT=8081
 HEALTH_URL="http://localhost:${TEST_PORT}/"
 HEALTH_TIMEOUT=60   # seconds to wait for the server to respond
-VARS_FILE="${SCRIPT_DIR}/tests/api/vars.test.env"
+_VARS_TMP=""        # set below for non-SQLite engines; cleaned up in trap
+
+# Add engine-specific compose override and build a temp vars file with
+# the DB connection details that run.sh will forward to Hurl as variables.
+if [[ "$DB_ENGINE" == "pgsql" ]]; then
+  COMPOSE_FILES+=(-f docker-compose.test.pg.yml)
+  _VARS_TMP=$(mktemp /tmp/bdus-test-XXXXXX.env)
+  cat "${SCRIPT_DIR}/tests/api/vars.test.env" > "$_VARS_TMP"
+  cat >> "$_VARS_TMP" <<'EOF'
+DB_ENGINE=pgsql
+DB_HOST=postgres
+DB_PORT=5432
+DB_NAME=bdus_test
+DB_USERNAME=bdus
+DB_PASSWORD=bdus_test_pw
+EOF
+elif [[ "$DB_ENGINE" == "mysql" ]]; then
+  COMPOSE_FILES+=(-f docker-compose.test.mysql.yml)
+  _VARS_TMP=$(mktemp /tmp/bdus-test-XXXXXX.env)
+  cat "${SCRIPT_DIR}/tests/api/vars.test.env" > "$_VARS_TMP"
+  cat >> "$_VARS_TMP" <<'EOF'
+DB_ENGINE=mysql
+DB_HOST=mariadb
+DB_PORT=3306
+DB_NAME=bdus_test
+DB_USERNAME=bdus
+DB_PASSWORD=bdus_test_pw
+EOF
+fi
+
+VARS_FILE="${_VARS_TMP:-${SCRIPT_DIR}/tests/api/vars.test.env}"
 
 # ── Check required tools ─────────────────────────────────────────────
 header "Checking dependencies"
@@ -114,7 +154,7 @@ else
 fi
 
 # ── Step 2 — Start isolated test container ───────────────────────────
-header "Step 2 — Test container (project: ${COMPOSE_PROJECT}, port: ${TEST_PORT})"
+header "Step 2 — Test container (project: ${COMPOSE_PROJECT}, port: ${TEST_PORT}, db: ${DB_ENGINE})"
 
 # Bring down any leftover test project first (idempotent)
 if docker compose -p "$COMPOSE_PROJECT" "${COMPOSE_FILES[@]}" ps -q 2>/dev/null | grep -q .; then
@@ -128,6 +168,7 @@ docker compose -p "$COMPOSE_PROJECT" "${COMPOSE_FILES[@]}" up -d --build
 # ── Cleanup trap ─────────────────────────────────────────────────────
 cleanup() {
   local exit_code=$?
+  [[ -n "$_VARS_TMP" ]] && rm -f "$_VARS_TMP"
   if [[ "$KEEP" == true ]]; then
     warn "Container left running (--keep). Stop it with:"
     echo "  docker compose -p ${COMPOSE_PROJECT} ${COMPOSE_FILES[*]} down"

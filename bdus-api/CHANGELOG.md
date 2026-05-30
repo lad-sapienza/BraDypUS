@@ -10,6 +10,32 @@ rendering to a Vue 3 SPA (Vite, Pinia, PrimeVue / Aura theme).
 The PHP backend is preserved and extended with JSON endpoints consumed by the new frontend.
 
 ### Added
+- **`Auth\Authorization` class** (`lib/Auth/Authorization.php`): extracted from the
+  legacy `utils` class. Provides `can(string $privilege, ?int $creator): bool` (replaces
+  `utils::canUser`) and `privilege(mixed $input): mixed` (replaces `utils::privilege`).
+  Now properly namespaced under `Auth\`; all 20+ modules updated.
+- **`Auth\Password` class** (`lib/Auth/Password.php`): extracted from `utils`. Provides
+  `hash(string $password): string` and `verify(string $plain, string $stored): bool`
+  with transparent backward-compatible SHA-1 → bcrypt verification.
+- **`JsonFilter` cross-table (plugin) queries**: a second level of nesting in the
+  Directus-style filter identifies a plugin table instead of a field:
+  ```
+  ?filter[photos][description][_icontains]=amphora
+  ```
+  Generates a safe `id IN (SELECT id_link FROM photos WHERE table_link=? AND
+  description LIKE ?)` subquery with PDO bound parameters. Plugin membership and
+  field names are validated against the table config. Available for `getRecords`,
+  `exportRecords`, `getRsMatrix`, `getGeoJson`, and chart `getData`.
+- **`_empty` / `_nempty` filter operators**: convenience aliases for the common
+  "is blank" test — `_empty` → `(col IS NULL OR col = '')`,
+  `_nempty` → `(col IS NOT NULL AND col != '')`.  These replace the legacy
+  `is_empty` / `is_not_empty` pseudo-operators from the old advanced search.
+- **`openapi.yaml` updated**: removed `shortSql` / `where` params; documented all
+  active search modes (`fast`, `sqlExpert`, `filter`); added `FilterObject` schema
+  with all 17 operators, cross-table example and security notes; export endpoint
+  corrected to use `qt`/`q` params as actually implemented.
+
+
 - **OAuth2 / SSO authentication** (Google + ORCID): users can log in with an
   external identity without a local password. Provider credentials are stored
   in `projects/{app}/config.json`; providers not configured are silently hidden
@@ -124,6 +150,37 @@ The PHP backend is preserved and extended with JSON endpoints consumed by the ne
   `admin` users only.
 
 ### Removed
+- **`class version` / `lib/version.php`**: single-method class deleted; version
+  reading is now inlined in `info_ctrl::getInfo()` (`composer.json` read directly).
+- **`lib/SQL/SafeQuery.php`**: was only used by the now-deleted `obj_encoded` and
+  `getWhereAndValues` paths in `QueryFromRequest`.
+- **`lib/Template/Exceptions/TemplateException.php`**: never thrown or caught
+  anywhere outside its own definition file.
+- **Dead `QueryFromRequest` types**: `id_array`, `encoded` (v4 base64 ShortSQL),
+  `obj_encoded` (v4 SafeQuery) — zero callers in production code.
+- **Dead `QueryFromRequest` methods**: `setSubQuery()`, `setGroup()`, `getGroup()`,
+  `getWhere()`, `getWhereAndValues()` — zero callers; `$group` property removed.
+- **`QueryFromRequest::advSearch()`** (157 lines) and `case 'advanced'` in
+  `setWhere()`: the entire legacy advanced search implementation is removed.
+  All endpoints that previously accepted `search_type=advanced` / `adv` now only
+  accept the Directus-style `filter` format.
+- **`utils::emptyDir()`** and **`utils::debug()`**: no callers.
+- **`utils::recursiveFilter()`**: moved inline as `config_ctrl::filterPost()` (its
+  only caller); removed from `utils`.
+- **`utils::multiArray2GeoJSON()`**: moved inline as `geoface_ctrl::toGeoJSON()` (its
+  only caller); removed from `utils`.
+- **`utils::canUser()`, `utils::privilege()`, `utils::encodePwd()`, `utils::verifyPassword()`**:
+  moved to `Auth\Authorization` / `Auth\Password`; removed from `utils`.
+- **`.inc` autoloader fallback**: `lib/autoLoader.php` no longer looks for
+  `$className.inc` files — the three remaining `.inc` files have been renamed
+  to `.php` (`utils`, `QueryFromRequest`, `bigRestore`). The `interfaces/` `.inc`
+  fallback is also removed.
+- **ShortSQL DSL** (`lib/SQL/ShortSQL/` and related SQL classes): legacy v4
+  filter format removed; `shortSql` type and `where` param removed from all
+  endpoint documentation and backend handling.
+- **Base64 filter encoding**: the `qt=filter&q=BASE64_JSON` URL persistence scheme
+  is replaced by a plain `?filter=JSON_STRING` parameter. PHP backends no longer
+  attempt `base64_decode` as a fallback when parsing the `filter` param.
 - PHP session-based authentication (`session_start()`, `$_SESSION['user']`)
 - `cookieAuth.inc` (dead code)
 - `autolog` feature (anonymous login via configured user_id — incompatible
@@ -165,6 +222,28 @@ The PHP backend is preserved and extended with JSON endpoints consumed by the ne
   regular editors from silently overwriting history.
 
 ### Changed
+- **`search_type=advanced` retired** across the entire API: `getRecords`,
+  `exportRecords`, `getRsMatrix`, `getGeoJson`, and chart `getData` no longer
+  accept `search_type=advanced` or the `adv` array parameter. All structured
+  search is now handled by the Directus-style `filter` format.  
+  **Breaking change**: saved queries that contain `search_type: "advanced"` will
+  fail to load and must be recreated using the search form.
+- **`GET /api/search/{tb}/config` operator values** changed from legacy SQL strings
+  (`LIKE`, `=`, `NOT LIKE`, …) to filter operator keys (`_icontains`, `_eq`,
+  `_ncontains`, …). Frontend i18n keys (`contains`, `is_exactly`, …) unchanged.
+- **`filter` param accepts plain JSON string** in GET requests (e.g.
+  `?filter={"status":{"_eq":"active"}}`), in addition to the bracket notation
+  (`?filter[status][_eq]=active`) already supported. PHP backends `json_decode`
+  the string; no base64 step.
+- **URL persistence format**: the search form in DataView now persists an active
+  filter as `?filter=JSON_STRING` instead of the previous `?qt=filter&q=BASE64`.
+  MatrixView and GeofaceView pass filter objects to the API as bracket notation
+  (serialised automatically by `api.get()` via `appendQuery`).
+- **`lib/` structure**: `lib/utils.inc`, `lib/QueryFromRequest.inc`, and
+  `lib/bigRestore.inc` renamed to `.php`. `lib/autoLoader.php` updated to remove
+  the `.inc` lookup branch.
+- **`version::current()` inlined**: the one-line `json_decode(composer.json)` read
+  is now directly in `info_ctrl::getInfo()`; `lib/version.php` deleted.
 - All module endpoints now return JSON (`returnJson()`) instead of rendering Twig
 - `backup_ctrl::buildFileName()` uses `PROJ_DIR` (was a relative path)
 - `DB\Export\Export` refactored: `fromData()` factory + `streamToResponse()`;

@@ -78,19 +78,15 @@ class RecordCtrlTest extends BdusTestCase
 
     // ── advanced search ───────────────────────────────────────────────────
 
-    public function testGetRecordsAdvancedSearch(): void
+    public function testGetRecordsFilterSearch(): void
     {
         $ctrl = $this->makeController(
             'record_ctrl',
-            ['tb' => self::TB],   // tb in GET (URL param)
-            [                     // POST body
-                'search_type' => 'advanced',
-                'page'        => 1,
-                'per_page'    => 30,
-                'adv'         => [
-                    ['connector' => '', '(' => false, 'fld' => 'items:status',
-                     'operator' => '=', 'value' => 'active', ')' => false],
-                ],
+            ['tb' => self::TB],
+            [
+                'page'    => 1,
+                'per_page'=> 30,
+                'filter'  => ['status' => ['_eq' => 'active']],
             ]
         );
         $res = $this->callController($ctrl, 'getRecords');
@@ -101,15 +97,16 @@ class RecordCtrlTest extends BdusTestCase
         }
     }
 
-    public function testGetRecordsAdvancedEmptyAdvReturnsAll(): void
+    public function testGetRecordsFilterPluginCrossTable(): void
     {
+        // item 1 has tags 'tag-a' and 'tag-b' — only 1 item has any tags
         $ctrl = $this->makeController(
             'record_ctrl',
             ['tb' => self::TB],
-            ['search_type' => 'advanced', 'adv' => []]
+            ['filter' => ['tags' => ['label' => ['_icontains' => 'tag']]]]
         );
         $res = $this->callController($ctrl, 'getRecords');
-        $this->assertSame(5, $res['total']);
+        $this->assertSame(1, $res['total']);
     }
 
     // ── SQL expert ────────────────────────────────────────────────────────

@@ -53,18 +53,18 @@ class search_ctrl extends Controller
       }
     }
 
-    // Operators: value is the SQL operator (or pseudo-operator), key is the i18n locale key.
+    // Operators: value is the JsonFilter operator, key is the i18n locale key.
     // The frontend is responsible for translating key → label via t(key).
     $operators = [
-      ['value' => 'LIKE',         'key' => 'contains'],
-      ['value' => '=',            'key' => 'is_exactly'],
-      ['value' => 'NOT LIKE',     'key' => 'doesnt_contain'],
-      ['value' => 'starts_with',  'key' => 'starts_with'],
-      ['value' => 'ends_with',    'key' => 'ends_with'],
-      ['value' => 'is_empty',     'key' => 'is_empty'],
-      ['value' => 'is_not_empty', 'key' => 'is_not_empty'],
-      ['value' => '>',            'key' => 'bigger'],
-      ['value' => '<',            'key' => 'smaller'],
+      ['value' => '_icontains',  'key' => 'contains'],
+      ['value' => '_eq',         'key' => 'is_exactly'],
+      ['value' => '_ncontains',  'key' => 'doesnt_contain'],
+      ['value' => '_starts_with','key' => 'starts_with'],
+      ['value' => '_ends_with',  'key' => 'ends_with'],
+      ['value' => '_empty',      'key' => 'is_empty'],
+      ['value' => '_nempty',     'key' => 'is_not_empty'],
+      ['value' => '_gt',         'key' => 'bigger'],
+      ['value' => '_lt',         'key' => 'smaller'],
     ];
 
     // Connectors: AND/OR/XOR are language-agnostic technical terms.

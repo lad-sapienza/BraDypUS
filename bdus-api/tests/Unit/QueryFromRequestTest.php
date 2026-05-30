@@ -103,53 +103,92 @@ class QueryFromRequestTest extends BdusTestCase
     }
 
     // ══════════════════════════════════════════════════════════════════════
-    // type = advanced
+    // type = filter — main table
     // ══════════════════════════════════════════════════════════════════════
 
-    public function testAdvancedSearchSingleCondition(): void
+    public function testFilterEqMainTable(): void
     {
-        $adv = [
-            ['connector' => '', '(' => false, 'fld' => 'items:status', 'operator' => '=', 'value' => 'active', ')' => false],
-        ];
-        $q = $this->qfr(['type' => 'advanced', 'adv' => $adv]);
+        $q = $this->qfr(['type' => 'filter', 'filter' => ['status' => ['_eq' => 'active']]]);
         $this->assertSame(3, $q->getTotal());
     }
 
-    public function testAdvancedSearchMultipleConditionsAnd(): void
+    public function testFilterIcontainsMainTable(): void
     {
-        $adv = [
-            ['connector' => '',    '(' => false, 'fld' => 'items:status', 'operator' => '=',    'value' => 'active', ')' => false],
-            ['connector' => 'AND', '(' => false, 'fld' => 'items:name',   'operator' => 'LIKE', 'value' => 'item',   ')' => false],
-        ];
-        $q = $this->qfr(['type' => 'advanced', 'adv' => $adv]);
-        // active + contains "item": Alpha, Beta(inactive), Gamma → only Alpha & Gamma
-        $this->assertSame(2, $q->getTotal());
+        $q = $this->qfr(['type' => 'filter', 'filter' => ['name' => ['_icontains' => 'item']]]);
+        $this->assertSame(3, $q->getTotal()); // Alpha item, Beta item, Gamma item
     }
 
-    public function testAdvancedSearchIsEmpty(): void
+    public function testFilterAndGroup(): void
     {
-        $adv = [
-            ['connector' => '', '(' => false, 'fld' => 'items:description', 'operator' => 'is_not_empty', 'value' => '', ')' => false],
-        ];
-        $q = $this->qfr(['type' => 'advanced', 'adv' => $adv]);
+        $q = $this->qfr(['type' => 'filter', 'filter' => [
+            '_and' => [
+                ['status' => ['_eq' => 'active']],
+                ['name'   => ['_icontains' => 'item']],
+            ],
+        ]]);
+        $this->assertSame(2, $q->getTotal()); // Alpha & Gamma (both active + "item")
+    }
+
+    public function testFilterOrGroup(): void
+    {
+        $q = $this->qfr(['type' => 'filter', 'filter' => [
+            '_or' => [
+                ['status' => ['_eq' => 'inactive']],
+                ['status' => ['_eq' => 'pending']],
+            ],
+        ]]);
+        $this->assertSame(2, $q->getTotal()); // Beta (inactive) + Delta (pending)
+    }
+
+    public function testFilterEmptyOperator(): void
+    {
+        // All 5 items have a non-null non-empty description
+        $q = $this->qfr(['type' => 'filter', 'filter' => ['description' => ['_nempty' => true]]]);
         $this->assertSame(5, $q->getTotal());
     }
 
-    /** @link fix: empty adv array → empty WHERE → SQL exception */
-    public function testAdvancedSearchEmptyAdvArrayReturnsAll(): void
+    public function testFilterEmptyReturnsNone(): void
     {
-        $q = $this->qfr(['type' => 'advanced', 'adv' => []]);
-        $this->assertSame(5, $q->getTotal());
+        // No item has an empty description
+        $q = $this->qfr(['type' => 'filter', 'filter' => ['description' => ['_empty' => true]]]);
+        $this->assertSame(0, $q->getTotal());
     }
 
-    /** @link fix: all rows have empty values → skipped → empty WHERE */
-    public function testAdvancedSearchAllRowsSkippedReturnsAll(): void
+    // ══════════════════════════════════════════════════════════════════════
+    // type = filter — cross-table (plugin)
+    // ══════════════════════════════════════════════════════════════════════
+
+    public function testFilterPluginEqFindsParentRecord(): void
     {
-        $adv = [
-            ['connector' => '', '(' => false, 'fld' => 'items:name', 'operator' => 'LIKE', 'value' => '', ')' => false],
-        ];
-        $q = $this->qfr(['type' => 'advanced', 'adv' => $adv]);
-        $this->assertSame(5, $q->getTotal());
+        // Items fixture: item 1 has tags 'tag-a' and 'tag-b'
+        $q = $this->qfr(['type' => 'filter', 'filter' => [
+            'tags' => ['label' => ['_eq' => 'tag-a']],
+        ]]);
+        $this->assertSame(1, $q->getTotal());
+    }
+
+    public function testFilterPluginIcontainsFindsParentRecord(): void
+    {
+        $q = $this->qfr(['type' => 'filter', 'filter' => [
+            'tags' => ['label' => ['_icontains' => 'tag']],
+        ]]);
+        $this->assertSame(1, $q->getTotal()); // only item 1 has tags
+    }
+
+    public function testFilterPluginNoMatchReturnsZero(): void
+    {
+        $q = $this->qfr(['type' => 'filter', 'filter' => [
+            'tags' => ['label' => ['_eq' => 'nonexistent']],
+        ]]);
+        $this->assertSame(0, $q->getTotal());
+    }
+
+    public function testFilterInvalidPluginThrows(): void
+    {
+        $this->expectException(\SQL\Filter\FilterException::class);
+        $this->qfr(['type' => 'filter', 'filter' => [
+            'nonexistent_plugin' => ['label' => ['_eq' => 'x']],
+        ]]);
     }
 
     // ══════════════════════════════════════════════════════════════════════

@@ -71,8 +71,8 @@ class SearchCtrlTest extends BdusTestCase
         }
         // Spot-check a known pair
         $byValue = array_column($res['operators'], 'key', 'value');
-        $this->assertSame('contains', $byValue['LIKE']);
-        $this->assertSame('is_exactly', $byValue['=']);
+        $this->assertSame('contains',   $byValue['_icontains']);
+        $this->assertSame('is_exactly', $byValue['_eq']);
     }
 
     public function testGetAdvancedConfigConnectorsAreAndOrXor(): void

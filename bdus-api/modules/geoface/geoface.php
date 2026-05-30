@@ -56,30 +56,17 @@ class geoface_ctrl extends Controller
             // Delegate WHERE-building to QueryFromRequest — same as record_ctrl.
             // All search types (filter, sqlExpert, advanced, all) are handled
             // centrally; this module knows nothing about how the predicate is built.
-            $qRequest  = ['tb' => $tb, 'type' => $searchType ?? 'all'];
-            $filterArr = $this->get['filter'] ?? null;
-            if ($filterArr !== null && is_array($filterArr)) {
+            $filterRaw = $this->get['filter'] ?? $this->post['filter'] ?? null;
+            if (is_string($filterRaw)) {
+                $filterRaw = json_decode($filterRaw, true) ?? json_decode(base64_decode($filterRaw), true);
+            }
+            $qRequest = ['tb' => $tb, 'type' => $searchType ?? 'all'];
+            if (is_array($filterRaw)) {
                 $qRequest['type']   = 'filter';
-                $qRequest['filter'] = $filterArr;
-            } else switch ($searchType) {
-                case 'sqlExpert':
-                    $qRequest['querytext'] = $this->get['querytext'] ?? $this->post['querytext'] ?? '';
-                    $qRequest['join']      = $this->get['join']      ?? $this->post['join']      ?? '';
-                    break;
-                case 'advanced':
-                    // 'adv' can arrive as a POST JSON array or as a base64-encoded
-                    // JSON string in GET (same convention as getRsMatrix).
-                    $advRaw = $this->post['adv'] ?? $this->get['adv'] ?? null;
-                    if (is_string($advRaw)) {
-                        $decoded = json_decode($advRaw, true);
-                        if ($decoded === null) {
-                            $decoded = json_decode(base64_decode($advRaw), true);
-                        }
-                        $qRequest['adv'] = $decoded ?? [];
-                    } else {
-                        $qRequest['adv'] = is_array($advRaw) ? $advRaw : [];
-                    }
-                    break;
+                $qRequest['filter'] = $filterRaw;
+            } elseif ($searchType === 'sqlExpert') {
+                $qRequest['querytext'] = $this->get['querytext'] ?? $this->post['querytext'] ?? '';
+                $qRequest['join']      = $this->get['join']      ?? $this->post['join']      ?? '';
             }
             [$userWhere, $userValues] = (new \QueryFromRequest($this->db, $this->cfg, $qRequest))
                 ->getWhereClause();

@@ -49,21 +49,20 @@ class record_ctrl extends Controller
     $qRequest = ['tb' => $tb, 'type' => $searchType ?? 'all'];
 
     // ── JSON filter (Directus-style) — highest priority ───────────────────────
-    // Accepted as:
-    //   GET  ?filter[status][_eq]=active&filter[name][_icontains]=pompeii
-    //   POST { "filter": { "status": { "_eq": "active" } } }
-    $filterArr = $this->get['filter'] ?? $this->post['filter'] ?? null;
-    if ($filterArr !== null && is_array($filterArr)) {
+    // GET  ?filter[status][_eq]=active  (bracket notation — PHP parses to array)
+    // GET  ?filter=BASE64_JSON          (base64 string — decoded below)
+    // POST { "filter": { "status": { "_eq": "active" } } }
+    $filterRaw = $this->get['filter'] ?? $this->post['filter'] ?? null;
+    if (is_string($filterRaw)) {
+      $filterRaw = json_decode($filterRaw, true) ?? json_decode(base64_decode($filterRaw), true);
+    }
+    if (is_array($filterRaw)) {
       $qRequest['type']   = 'filter';
-      $qRequest['filter'] = $filterArr;
+      $qRequest['filter'] = $filterRaw;
     } elseif ($searchType) {
-      // Explicit legacy search_type
       switch ($searchType) {
         case 'fast':
           $qRequest['string'] = $this->get['search'] ?? $this->post['search'] ?? '';
-          break;
-        case 'advanced':
-          $qRequest['adv'] = $this->post['adv'] ?? [];
           break;
         case 'sqlExpert':
           $qRequest['querytext'] = $this->post['querytext'] ?? $this->get['querytext'] ?? '';
@@ -222,10 +221,13 @@ class record_ctrl extends Controller
 
     $qRequest = ['tb' => $tb, 'type' => 'all'];
 
-    $filterArr = $this->get['filter'] ?? null;
-    if ($filterArr !== null && is_array($filterArr)) {
+    $filterRaw = $this->get['filter'] ?? null;
+    if (is_string($filterRaw)) {
+      $filterRaw = json_decode($filterRaw, true) ?? json_decode(base64_decode($filterRaw), true);
+    }
+    if (is_array($filterRaw)) {
       $qRequest['type']   = 'filter';
-      $qRequest['filter'] = $filterArr;
+      $qRequest['filter'] = $filterRaw;
     } elseif ($qt === 'fast' && $q !== null) {
       $qRequest['type']   = 'fast';
       $qRequest['string'] = $q;
@@ -233,11 +235,11 @@ class record_ctrl extends Controller
       $qRequest['type']      = 'sqlExpert';
       $qRequest['querytext'] = $q;
       $qRequest['join']      = '';
-    } elseif ($qt === 'advanced' && $q !== null) {
-      $rows = @json_decode(@base64_decode($q), true);
-      if (is_array($rows) && count($rows) > 0) {
-        $qRequest['type'] = 'advanced';
-        $qRequest['adv']  = $rows;
+    } elseif ($qt === 'filter' && $q !== null) {
+      $decoded = json_decode(base64_decode($q), true);
+      if (is_array($decoded)) {
+        $qRequest['type']   = 'filter';
+        $qRequest['filter'] = $decoded;
       }
     }
 
@@ -1391,34 +1393,23 @@ class record_ctrl extends Controller
 
     try {
       // ── Step 1: resolve which records to include ───────────────────────────
-      $filterArr  = $this->get['filter'] ?? null;
+      $filterRaw  = $this->get['filter'] ?? null;
+      if (is_string($filterRaw)) {
+        $filterRaw = json_decode($filterRaw, true) ?? json_decode(base64_decode($filterRaw), true);
+      }
       $searchType = $this->get['search_type'] ?? 'all';
-      $filtered   = ($filterArr !== null && is_array($filterArr)) || ($searchType !== 'all');
+      $filtered   = is_array($filterRaw) || ($searchType !== 'all');
 
       if ($filtered) {
-        // Re-use QueryFromRequest to get matching db IDs (same logic as getRecords)
         $qRequest = ['tb' => $tb, 'type' => $searchType];
 
-        // JSON filter takes priority over legacy search_type.
-        if ($filterArr !== null && is_array($filterArr)) {
+        if (is_array($filterRaw)) {
           $qRequest['type']   = 'filter';
-          $qRequest['filter'] = $filterArr;
+          $qRequest['filter'] = $filterRaw;
         } else {
           switch ($searchType) {
             case 'fast':
               $qRequest['string'] = $this->get['search'] ?? '';
-              break;
-            case 'advanced':
-              $advRaw = $this->get['adv'] ?? $this->post['adv'] ?? '';
-              if (is_string($advRaw)) {
-                $decoded = json_decode($advRaw, true);
-                if ($decoded === null) {
-                  $decoded = json_decode(base64_decode($advRaw), true) ?? [];
-                }
-                $qRequest['adv'] = $decoded;
-              } else {
-                $qRequest['adv'] = $advRaw;
-              }
               break;
             case 'sqlExpert':
               $qRequest['querytext'] = $this->get['querytext'] ?? '';

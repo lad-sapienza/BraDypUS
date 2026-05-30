@@ -102,19 +102,13 @@ class chart_ctrl extends Controller
         $qRequest = ['tb' => $tb, 'type' => 'all'];
         if (!empty($filter)) {
             if (!empty($filter['filter']) && is_array($filter['filter'])) {
-                // Directus-style JSON filter (new format)
                 $qRequest['type']   = 'filter';
                 $qRequest['filter'] = $filter['filter'];
             } elseif (!empty($filter['search_type'])) {
                 $qRequest['type'] = $filter['search_type'];
-                switch ($filter['search_type']) {
-                    case 'sqlExpert':
-                        $qRequest['querytext'] = $filter['querytext'] ?? '';
-                        $qRequest['join']      = $filter['join']      ?? '';
-                        break;
-                    case 'advanced':
-                        $qRequest['adv'] = $filter['adv'] ?? [];
-                        break;
+                if ($filter['search_type'] === 'sqlExpert') {
+                    $qRequest['querytext'] = $filter['querytext'] ?? '';
+                    $qRequest['join']      = $filter['join']      ?? '';
                 }
             }
         }

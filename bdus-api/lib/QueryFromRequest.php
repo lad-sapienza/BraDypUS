@@ -13,8 +13,6 @@
  *
  *   'all'       — no filter
  *   'fast'      — 'string': text searched across preview fields via LIKE
- *   'advanced'  — 'adv': array of rows, each:
- *                   [ 'connector', '(', 'fld' (tb:field), 'operator', 'value', ')' ]
  *   'sqlExpert' — 'querytext': raw SQL WHERE clause (sanitised)
  *                 'join': optional SQL JOIN clause (sanitised)
  *   'filter'    — 'filter': Directus-style nested filter array
@@ -217,10 +215,6 @@ class QueryFromRequest
         $this->where = ' 1=1 ';
         break;
 
-      case 'advanced':
-        $this->where = $this->advSearch($request['adv']);
-        break;
-
       case 'sqlExpert':
         $this->join = $this->makeSafeStatement(urldecode($request['join']));
         $safe = trim($this->makeSafeStatement(urldecode($request['querytext'])));
@@ -270,128 +264,6 @@ class QueryFromRequest
     }
     // join partial statements
     return implode(' OR ', $array_query_core);
-  }
-
-  /**
-   *
-   * Formats query from advanced search user input
-   * @param array $dati	POST data from user input GUI
-   * @return string query to execute
-   */
-  private function advSearch($dati)
-  {
-    $where = '';
-
-    if (empty($dati)) {
-      // No criteria provided — return all records rather than an invalid empty WHERE
-      return '1=1';
-    }
-
-    foreach ($dati as $nr => $row) {
-
-      //Do not consider empty values:
-      if (!in_array($row['operator'], ['is_empty', 'is_not_empty']) && $row['value'] === '') {
-        continue;
-      }
-      // if index is order, we are not dealing with where text, continue
-      if ($nr == 'order') {
-        continue;
-      }
-
-      // connector
-      $where .= $row['connector'] && $where !== '' ? " {$row['connector']} " : " ";
-
-      // bracket
-      $where .= ($row['('] ? ' ( ' : '');
-
-      // fld is a composite string: table-name-with-prefix:fieldname
-      $fld_arr = array_filter(array_map('trim', explode(':', $row['fld'])), 'strlen');
-
-      // field name
-      $tb = $fld_arr[0];
-      $fld = $fld_arr[1];
-
-
-      // case 1: tb and this->tb are the same: checking native fields of current table
-      if ($tb === $this->tb) {
-        $format = "%s";
-
-        // case 2: queried table is not current table, it s a plugin table
-      } else {
-        // case 2.1: queried field id populated by id_from_tb
-        $third_table = $this->cfg->get("tables.$tb.fields.$fld.id_from_tb");
-
-        if ($third_table) {
-          $format = " id IN (SELECT id_link FROM {$tb} " .
-            " WHERE " .
-            "table_link = '{$this->tb}' " .
-            " AND {$fld} IN ( " .
-            "SELECT id FROM {$third_table} WHERE %s" .
-            ") " .
-            ") ";
-          $fld = $this->cfg->get("tables.$third_table.id_field");
-
-          // case 2.2: queried field is a normal field
-        } else {
-          $format = " id IN (SELECT id_link FROM {$tb} WHERE table_link = '{$this->tb}' AND %s)";
-        }
-      }
-
-      // operator
-      switch ($row['operator']) {
-        case 'LIKE':
-          $where .= sprintf($format, "{$fld} LIKE '%{$row['value']}%'");
-          break;
-
-        case 'NOT LIKE':
-          $where .= sprintf($format, $fld . " NOT LIKE '%" . $row['value'] . "%'");
-          break;
-
-        case 'starts_with':
-          $where .= sprintf($format, $fld . " LIKE '" . $row['value'] . "%'");
-          break;
-
-        case 'ends_with':
-          $where .= sprintf($format, $fld . " LIKE '%" . $row['value'] . "'");
-          break;
-
-        case 'is_empty':
-          $where .= sprintf($format, "( {$fld} = '' OR  {$fld} IS NULL) ");
-          break;
-
-        case 'is_not_empty':
-          $where .= sprintf($format, "( {$fld} != '' AND {$fld} IS NOT NULL) ");
-          break;
-
-        default:
-          $where .= sprintf($format, $fld . ' ' . $row['operator'] . "'" . $row['value'] . "'");
-          break;
-      }
-
-
-      $where .= $row[')'] ? ' ) ' : '';
-    }
-
-    $order = [];
-    if (is_array($dati['order'])) {
-      foreach ($dati['order'] as $o) {
-        $order_arr = array_filter(array_map('trim', explode(':', $o)), 'strlen');
-        array_push($order, $order_arr[1]);
-      }
-    }
-
-
-    // All rows were skipped (all values empty with non-is_empty operators):
-    // avoid an empty WHERE clause which would cause a SQL syntax error.
-    if (trim($where) === '') {
-      $where = '1=1';
-    }
-
-    if (count($order) > 0) {
-      $where .= ' ORDER BY ' . implode(', ', $order);
-    }
-
-    return $where;
   }
 
   /**

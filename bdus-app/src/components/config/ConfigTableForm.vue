@@ -164,6 +164,21 @@
         </div>
       </section>
 
+      <!-- ── System plugins (existing non-plugin tables) ─────────────── -->
+      <section v-if="tb && !isPlugin" class="cfg-section">
+        <div class="cfg-section-title">{{ t('system_plugins') }}</div>
+        <div class="cfg-form-row">
+          <div class="cfg-form-field">
+            <label>{{ t('geodata_plugin') }}</label>
+            <ToggleSwitch v-model="form.geodata" />
+          </div>
+          <div class="cfg-form-field">
+            <label>{{ t('zotero_plugin') }}</label>
+            <ToggleSwitch v-model="form.zotero" />
+          </div>
+        </div>
+      </section>
+
       <!-- ── Danger zone ────────────────────────────────────────────── -->
       <section v-if="tb" class="cfg-section cfg-danger-section">
         <div class="cfg-section-title cfg-danger-title">{{ t('danger_zone') }}</div>
@@ -198,11 +213,12 @@
 
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
-import Button    from 'primevue/button'
-import Dialog    from 'primevue/dialog'
-import InputText from 'primevue/inputtext'
-import Select    from 'primevue/select'
-import Message   from 'primevue/message'
+import Button       from 'primevue/button'
+import Dialog       from 'primevue/dialog'
+import InputText    from 'primevue/inputtext'
+import Select       from 'primevue/select'
+import Message      from 'primevue/message'
+import ToggleSwitch from 'primevue/toggleswitch'
 import { useToast }   from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import { useI18n }    from '@/i18n'
@@ -267,6 +283,8 @@ async function load() {
       order:       td.order       ?? '',
       id_field:    td.id_field    ?? '',
       rs:          td.rs          ?? '',
+      geodata:     !!td.geodata,
+      zotero:      !!td.zotero,
       preview:     Array.isArray(td.preview)   ? [...td.preview]   : [''],
       plugin:      Array.isArray(td.plugin)    ? [...td.plugin]    : [''],
       backlinks:   Array.isArray(td.backlinks) ? [...td.backlinks] : [],
@@ -317,6 +335,8 @@ function buildPayload() {
     order:      f.order,
     id_field:   f.id_field,
     rs:         f.rs,
+    geodata:    f.geodata ? 1 : 0,
+    zotero:     f.zotero  ? 1 : 0,
     preview:    f.preview.filter(v => v),
     plugin:     f.plugin.filter(v => v),
     backlinks:  f.backlinks.filter(v => v),

@@ -209,7 +209,7 @@
 
       <!-- Bibliography (Zotero) -->
       <ZoteroSection
-        v-if="hasBibliography || mode === 'edit'"
+        v-if="record.schema?.has_zotero && (hasBibliography || mode === 'edit')"
         :bibliography="record.bibliography ?? {}"
         :editMode="mode === 'edit'"
         :recordTb="record.metadata.tb_id"
@@ -220,7 +220,7 @@
 
       <!-- Geodata -->
       <fieldset
-        v-if="hasGeodata"
+        v-if="record.schema?.has_geodata && (hasGeodata || mode === 'edit')"
         class="record-section"
       >
         <legend>{{ t('geodata') }}</legend>

@@ -54,7 +54,7 @@ class record_ctrl extends Controller
     // POST { "filter": { "status": { "_eq": "active" } } }
     $filterRaw = $this->get['filter'] ?? $this->post['filter'] ?? null;
     if (is_string($filterRaw)) {
-      $filterRaw = json_decode($filterRaw, true) ?? json_decode(base64_decode($filterRaw), true);
+      $filterRaw = json_decode($filterRaw, true);
     }
     if (is_array($filterRaw)) {
       $qRequest['type']   = 'filter';
@@ -192,10 +192,9 @@ class record_ctrl extends Controller
    *     &tb=TABLE
    *     &format=csv|json|xlsx
    *     &filter[field][_op]=value             (optional, Directus-style bracket notation)
-   *     &qt=fast|expert|advanced              (optional — mirrors route.query.qt)
+   *     &filter=JSON_STRING                   (optional, URL-encoded JSON filter)
+   *     &qt=fast|expert                       (optional — mirrors route.query.qt)
    *     &q=VALUE                              (optional — mirrors route.query.q)
-   *
-   * For qt=advanced, q must be a base64-encoded JSON array of search rows
    * (same encoding used by DataView when persisting filter state in the URL).
    */
   public function exportRecords(): void
@@ -223,7 +222,7 @@ class record_ctrl extends Controller
 
     $filterRaw = $this->get['filter'] ?? null;
     if (is_string($filterRaw)) {
-      $filterRaw = json_decode($filterRaw, true) ?? json_decode(base64_decode($filterRaw), true);
+      $filterRaw = json_decode($filterRaw, true);
     }
     if (is_array($filterRaw)) {
       $qRequest['type']   = 'filter';
@@ -235,12 +234,6 @@ class record_ctrl extends Controller
       $qRequest['type']      = 'sqlExpert';
       $qRequest['querytext'] = $q;
       $qRequest['join']      = '';
-    } elseif ($qt === 'filter' && $q !== null) {
-      $decoded = json_decode(base64_decode($q), true);
-      if (is_array($decoded)) {
-        $qRequest['type']   = 'filter';
-        $qRequest['filter'] = $decoded;
-      }
     }
 
     try {
@@ -1395,7 +1388,7 @@ class record_ctrl extends Controller
       // ── Step 1: resolve which records to include ───────────────────────────
       $filterRaw  = $this->get['filter'] ?? null;
       if (is_string($filterRaw)) {
-        $filterRaw = json_decode($filterRaw, true) ?? json_decode(base64_decode($filterRaw), true);
+        $filterRaw = json_decode($filterRaw, true);
       }
       $searchType = $this->get['search_type'] ?? 'all';
       $filtered   = is_array($filterRaw) || ($searchType !== 'all');

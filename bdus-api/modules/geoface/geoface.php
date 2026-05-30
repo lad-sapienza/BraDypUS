@@ -58,7 +58,7 @@ class geoface_ctrl extends Controller
             // centrally; this module knows nothing about how the predicate is built.
             $filterRaw = $this->get['filter'] ?? $this->post['filter'] ?? null;
             if (is_string($filterRaw)) {
-                $filterRaw = json_decode($filterRaw, true) ?? json_decode(base64_decode($filterRaw), true);
+                $filterRaw = json_decode($filterRaw, true);
             }
             $qRequest = ['tb' => $tb, 'type' => $searchType ?? 'all'];
             if (is_array($filterRaw)) {

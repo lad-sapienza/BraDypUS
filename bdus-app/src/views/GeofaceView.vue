@@ -90,9 +90,9 @@ function buildFilterParams() {
   const params = { tb }
 
   if (q.search_type) params.search_type = q.search_type
-  if (q.where)       params.where       = q.where
   if (q.querytext)   params.querytext   = q.querytext
-  if (q.adv)         params.adv         = q.adv
+  if (q.filter)      params.filter      = q.filter   // bracket notation or base64 string
+  if (q.qt === 'filter' && q.q) params.filter = q.q  // URL-persistence base64
 
   return params
 }

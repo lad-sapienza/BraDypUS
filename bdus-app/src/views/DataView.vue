@@ -254,10 +254,10 @@
 
                       <!-- Value -->
                       <AutoComplete
-                        v-if="!['is_empty','is_not_empty'].includes(row.operator)"
+                        v-if="!['_empty','_nempty'].includes(row.operator)"
                         v-model="row.value"
                         :suggestions="row._suggestions ?? []"
-                        :disabled="['is_empty','is_not_empty'].includes(row.operator)"
+                        :disabled="['_empty','_nempty'].includes(row.operator)"
                         size="small"
                         class="adv-value"
                         @complete="q => loadSuggestions(row, q.query)"
@@ -579,7 +579,46 @@ const advOperatorsForDisplay = computed(() =>
 // ── Advanced search rows ─────────────────────────────────────
 let _rowId = 0
 function newAdvRow() {
-  return { _id: _rowId++, connector: 'AND', open: false, fld: '', operator: 'LIKE', value: '', close: false, _suggestions: null }
+  return { _id: _rowId++, connector: 'AND', open: false, fld: '', operator: '_icontains', value: '', close: false, _suggestions: null }
+}
+
+/**
+ * Converts the advanced-search form rows to a Directus-style filter object.
+ * Rows with an empty value (except _empty/_nempty) are silently skipped.
+ * Multiple rows are combined into { _and: [...] } / { _or: [...] } groups
+ * using standard AND-takes-precedence-over-OR evaluation order.
+ */
+function buildFilterFromRows(rows) {
+  const mainTb = selectedTable.value?.name
+  const noValueOps = ['_empty', '_nempty', '_null', '_nnull']
+
+  const active = rows.filter(r =>
+    r.fld && (r.value !== '' || noValueOps.includes(r.operator))
+  )
+  if (!active.length) return null
+
+  const toCond = r => {
+    const [tb, field] = r.fld.split(':')
+    const val = noValueOps.includes(r.operator) ? true : r.value
+    return tb === mainTb
+      ? { [field]: { [r.operator]: val } }
+      : { [tb]: { [field]: { [r.operator]: val } } }
+  }
+
+  if (active.length === 1) return toCond(active[0])
+
+  // Group consecutive AND rows; each OR connector starts a new group.
+  const groups = [[toCond(active[0])]]
+  for (let i = 1; i < active.length; i++) {
+    const cond = toCond(active[i])
+    if (active[i].connector === 'OR') {
+      groups.push([cond])
+    } else {
+      groups[groups.length - 1].push(cond)
+    }
+  }
+  const orParts = groups.map(g => g.length === 1 ? g[0] : { _and: g })
+  return orParts.length === 1 ? orParts[0] : { _or: orParts }
 }
 const advRows = ref([newAdvRow()])
 
@@ -602,11 +641,10 @@ const activeSearchLabel = computed(() => {
  */
 const currentSearch = computed(() => {
   if (activeSearch.value === 'advanced') {
-    const adv = advRows.value.filter(r => r.fld && (r.value || ['is_empty', 'is_not_empty'].includes(r.operator)))
-    if (!adv.length) return null
+    const filter = buildFilterFromRows(advRows.value)
+    if (!filter) return null
     return {
-      search_type: 'advanced',
-      adv,
+      filter,
       sort_field: sortField.value ?? '',
       sort_dir:   sortDir.value,
     }
@@ -628,18 +666,12 @@ const currentSearch = computed(() => {
  * Restores the search state from the stored payload and fetches records.
  */
 function onLoadQuery(payload) {
-  if (!payload?.search_type) return
+  if (!payload?.search_type && !payload?.filter) return
 
   savedQueriesDialog.value = false
   page.value = 1
 
-  if (payload.search_type === 'advanced' && Array.isArray(payload.adv)) {
-    advRows.value      = payload.adv.map(r => ({ _id: _rowId++, _suggestions: null, ...r }))
-    activeSearch.value = 'advanced'
-    openPanel.value    = 'advanced'
-    updateFilterUrl('advanced', btoa(JSON.stringify(payload.adv)))
-    fetchRecords()
-  } else if (payload.search_type === 'sqlExpert' && payload.querytext) {
+  if (payload.search_type === 'sqlExpert' && payload.querytext) {
     expertQuery.value  = payload.querytext
     activeSearch.value = 'expert'
     openPanel.value    = 'expert'
@@ -649,6 +681,7 @@ function onLoadQuery(payload) {
     activeFilter.value = payload.filter
     activeSearch.value = 'filter'
     openPanel.value    = null
+    updateFilterUrl('filter', btoa(JSON.stringify(payload.filter)))
     fetchRecords()
   }
 }
@@ -776,13 +809,13 @@ function applyRouteParams() {
       openPanel.value    = 'expert'
       page.value         = 1
       fetchRecords()
-    } else if (qtParam === 'advanced') {
+    } else if (qtParam === 'filter') {
       try {
-        const rows = JSON.parse(atob(qParam))
-        if (Array.isArray(rows) && rows.length) {
-          advRows.value      = rows.map(r => ({ _id: _rowId++, _suggestions: null, ...r }))
-          activeSearch.value = 'advanced'
-          openPanel.value    = 'advanced'
+        const filterObj = JSON.parse(atob(qParam))
+        if (filterObj && typeof filterObj === 'object') {
+          activeFilter.value = filterObj
+          activeSearch.value = 'filter'
+          openPanel.value    = null
           page.value         = 1
           fetchRecords()
           return
@@ -868,21 +901,13 @@ function runFastSearch() {
 
 // ── Advanced search ───────────────────────────────────────────
 function runAdvancedSearch() {
-  const adv = advRows.value
-    .filter(r => r.fld && (r.value || ['is_empty', 'is_not_empty'].includes(r.operator)))
-    .map((r, i) => ({
-      connector: i === 0 ? '' : r.connector,
-      '(':       r.open  ? true : false,
-      fld:       r.fld,
-      operator:  r.operator,
-      value:     r.value ?? '',
-      ')':       r.close ? true : false,
-    }))
-  if (adv.length === 0) { resetSearch(); return }
+  const filter = buildFilterFromRows(advRows.value)
+  if (!filter) { resetSearch(); return }
+  activeFilter.value = filter
   activeSearch.value = 'advanced'
   openPanel.value    = null
   page.value         = 1
-  updateFilterUrl('advanced', btoa(JSON.stringify(adv)))
+  updateFilterUrl('filter', btoa(JSON.stringify(filter)))
   fetchRecords()
 }
 
@@ -910,21 +935,13 @@ async function fetchRecords() {
       ? visibleColumnNames.value
       : null
 
-    if (activeSearch.value === 'advanced') {
-      const adv = advRows.value
-        .filter(r => r.fld && (r.value || ['is_empty', 'is_not_empty'].includes(r.operator)))
-        .map((r, i) => ({
-          connector: i === 0 ? '' : r.connector,
-          '(':       r.open  ? true : false,
-          fld:       r.fld,
-          operator:  r.operator,
-          value:     r.value ?? '',
-          ')':       r.close ? true : false,
-        }))
+    if (activeSearch.value === 'advanced' || activeSearch.value === 'filter') {
       const body = {
-        page: page.value, per_page: perPage.value,
-        sort_field: sortField.value ?? '', sort_dir: sortDir.value,
-        search_type: 'advanced', adv,
+        page:       page.value,
+        per_page:   perPage.value,
+        sort_field: sortField.value ?? '',
+        sort_dir:   sortDir.value,
+        filter:     activeFilter.value,
       }
       if (colParam) body.columns = colParam
       res = await api.post(`/api/records/${tbName}`, body)
@@ -1017,17 +1034,12 @@ function openGeoface() {
   const tb = selectedTable.value?.name
   if (!tb) return
   const query = {}
-  if (activeSearch.value === 'advanced') {
-    const adv = advRows.value.filter(r => r.fld)
-    if (adv.length) {
-      query.search_type = 'advanced'
-      query.adv = JSON.stringify(adv)
-    }
+  if ((activeSearch.value === 'advanced' || activeSearch.value === 'filter') && activeFilter.value) {
+    query.filter = btoa(JSON.stringify(activeFilter.value))   // base64 for geoface GET param
+    query.qt     = 'filter'
   } else if (activeSearch.value === 'expert' && expertQuery.value) {
     query.search_type = 'sqlExpert'
     query.querytext = expertQuery.value
-  } else if (activeSearch.value === 'filter' && activeFilter.value) {
-    query.filter = JSON.stringify(activeFilter.value)
   }
   router.push({ path: `/geoface/${encodeURIComponent(tb)}`, query })
 }
@@ -1035,8 +1047,8 @@ function openGeoface() {
 /**
  * Navigate to the Harris Matrix view for the current table,
  * passing the active search params from the current route URL.
- * MatrixView / getRsMatrix() accept the same search_type/search/adv/where
- * params as getRecords(), so we forward the entire current query.
+ * MatrixView / getRsMatrix() accept the same filter/search_type/search params
+ * as getRecords(), so we forward the entire current query.
  */
 function openMatrix() {
   const tb = selectedTable.value?.name

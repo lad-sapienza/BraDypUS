@@ -227,9 +227,8 @@ function buildMatrixApiParams() {
   } else if (qt === 'fast' && q) {
     p.search_type = 'fast'
     p.search      = q
-  } else if (qt === 'advanced' && q) {
-    p.search_type = 'advanced'
-    p.adv         = q          // base64-encoded JSON — same format backend expects
+  } else if (qt === 'filter' && q) {
+    p.filter = q               // base64-encoded JSON filter — backend decodes it
   } else if (qt === 'expert' && q) {
     p.search_type = 'sqlExpert'
     p.querytext   = q

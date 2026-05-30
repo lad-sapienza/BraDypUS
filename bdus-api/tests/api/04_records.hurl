@@ -102,6 +102,12 @@ HTTP 200
 jsonpath "$.core.sigla.val"           == "US001"
 jsonpath "$.core.descrizione.val"     isString
 jsonpath "$.metadata.can_edit"        == true
+# Plugin flags: us table has rs, geodata and zotero all enabled (set in 3g)
+jsonpath "$.schema.rs_field"          isString
+jsonpath "$.schema.has_geodata"       == true
+jsonpath "$.schema.has_zotero"        == true
+jsonpath "$.geodata"                  isCollection
+jsonpath "$.bibliography"             isCollection
 
 
 # ── 4g. Update US 1 — add interpretazione ───────────────────────────

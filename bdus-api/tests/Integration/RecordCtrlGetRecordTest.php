@@ -18,9 +18,50 @@ class RecordCtrlGetRecordTest extends BdusTestCase
         $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'id' => 1]);
         $res  = $this->callController($ctrl, 'getRecord');
 
-        foreach (['metadata', 'schema', 'core', 'plugins', 'links', 'backlinks', 'manualLinks', 'files', 'geodata', 'rs'] as $key) {
+        foreach (['metadata', 'schema', 'core', 'plugins', 'links', 'backlinks', 'manualLinks', 'files', 'geodata', 'rs', 'bibliography'] as $key) {
             $this->assertArrayHasKey($key, $res, "Missing top-level key: $key");
         }
+    }
+
+    public function testGetRecordSchemaHasPluginFlagsEnabledForItems(): void
+    {
+        // items fixture has geodata:1 and zotero:1 configured
+        $ctrl   = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'id' => 1]);
+        $res    = $this->callController($ctrl, 'getRecord');
+        $schema = $res['schema'];
+
+        $this->assertArrayHasKey('has_geodata', $schema);
+        $this->assertArrayHasKey('has_zotero',  $schema);
+        $this->assertTrue($schema['has_geodata'], 'items has geodata:1 in fixture');
+        $this->assertTrue($schema['has_zotero'],  'items has zotero:1 in fixture');
+    }
+
+    public function testGetRecordSchemaHasPluginFlagsDisabledForTags(): void
+    {
+        // tags fixture has no geodata or zotero configured
+        $ctrl   = $this->makeController('Bdus\\Controllers\\Record', ['tb' => 'tags', 'id' => 1]);
+        $res    = $this->callController($ctrl, 'getRecord');
+        $schema = $res['schema'];
+
+        $this->assertArrayHasKey('has_geodata', $schema);
+        $this->assertArrayHasKey('has_zotero',  $schema);
+        $this->assertFalse($schema['has_geodata'], 'tags has no geodata config');
+        $this->assertFalse($schema['has_zotero'],  'tags has no zotero config');
+    }
+
+    public function testGetRecordGeodataAndBibliographyGating(): void
+    {
+        // items (geodata:1, zotero:1) → keys present and are arrays
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'id' => 1]);
+        $res  = $this->callController($ctrl, 'getRecord');
+        $this->assertIsArray($res['geodata'],      'geodata should be array when enabled');
+        $this->assertIsArray($res['bibliography'], 'bibliography should be array when enabled');
+
+        // tags (no geodata, no zotero) → keys present but always empty arrays
+        $ctrl2 = $this->makeController('Bdus\\Controllers\\Record', ['tb' => 'tags', 'id' => 1]);
+        $res2  = $this->callController($ctrl2, 'getRecord');
+        $this->assertSame([], $res2['geodata'],      'geodata should be [] when not configured');
+        $this->assertSame([], $res2['bibliography'], 'bibliography should be [] when not configured');
     }
 
     public function testGetRecordMetadataShape(): void

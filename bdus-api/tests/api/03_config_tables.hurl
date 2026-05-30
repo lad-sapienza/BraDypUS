@@ -171,8 +171,10 @@ jsonpath "$.tables[*].name"  contains "periodi"
 jsonpath "$.tables[*].name"  contains "attivita"
 
 
-# ── 3g. Configure us table layout and rs field ───────────────────────
-# Now that fields exist, set order/id_field/preview and rs (for Harris Matrix).
+# ── 3g. Configure us: layout, RS field, system plugins, and link ─────────
+# Save everything in one step: order/id_field/preview, rs (Harris Matrix),
+# geodata and zotero system plugin flags, and the us→periodi link.
+# A second PUT without these flags would silently clear them.
 PUT {{base_url}}/api/config/table/us
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
@@ -183,7 +185,17 @@ Content-Type: application/json
   "order":     "sigla",
   "id_field":  "id",
   "preview":   ["sigla"],
-  "rs":        "sigla"
+  "rs":        "sigla",
+  "geodata":   1,
+  "zotero":    1,
+  "link": [
+    {
+      "other_tb": "periodi",
+      "fld": [
+        { "my": "periodo", "other": "nome" }
+      ]
+    }
+  ]
 }
 HTTP 200
 [Asserts]
@@ -198,40 +210,15 @@ HTTP 200
 jsonpath "$.status" == "success"
 
 
-# ── 3i. Verify full table config ────────────────────────────────────
+# ── 3i. Verify full table config: rs, plugins, and link all stored ─────
 GET {{base_url}}/api/config/table/us
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
-jsonpath "$.status" == "success"
-
-
-# ── 3j. Configure link: us → periodi ────────────────────────────────
-# A link joins two tables via field mappings (e.g. us.periodo = periodi.nome).
-# After saving, the link must be readable back from bdus_cfg_relations.
-PUT {{base_url}}/api/config/table/us
-Authorization: Bearer {{jwt}}
-Content-Type: application/json
-{
-  "name":      "us",
-  "label":     "Unità stratigrafiche",
-  "is_plugin": "0",
-  "order":     "sigla",
-  "id_field":  "id",
-  "preview":   ["sigla"],
-  "rs":        "sigla",
-  "link": [
-    {
-      "other_tb": "periodi",
-      "fld": [
-        { "my": "periodo", "other": "nome" }
-      ]
-    }
-  ]
-}
-HTTP 200
-[Asserts]
-jsonpath "$.status" == "success"
+jsonpath "$.status"            == "success"
+jsonpath "$.table.rs"          == "sigla"
+jsonpath "$.table.geodata"     not == null
+jsonpath "$.table.zotero"      not == null
 
 
 # ── 3k. Read back table config and verify link is stored ─────────────

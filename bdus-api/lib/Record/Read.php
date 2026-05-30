@@ -79,9 +79,9 @@ class Read
             'backlinks'   => $this->getBackLinks(),
             'manualLinks' => $this->getManualLinks(),
             'files'       => $this->getFiles(),
-            'geodata'     => $this->getGeodata(),
-            'rs'          => $this->cfg->get("tables.{$this->tb}.rs") ? $this->getRs() : [],
-            'bibliography' => $this->getBibliography(),
+            'geodata'      => $this->cfg->get("tables.{$this->tb}.geodata") ? $this->getGeodata()      : [],
+            'rs'           => $this->cfg->get("tables.{$this->tb}.rs")      ? $this->getRs()           : [],
+            'bibliography' => $this->cfg->get("tables.{$this->tb}.zotero")  ? $this->getBibliography() : [],
         ];
     }
 

@@ -7,7 +7,9 @@
             "id_field": "id",
             "preview": ["id", "name", "status"],
             "plugin": ["tags"],
-            "rs": "id"
+            "rs": "id",
+            "geodata": 1,
+            "zotero": 1
         },
         {
             "name": "tags",

@@ -33,9 +33,10 @@ Restoring deleted records requires admin privilege.
 
 ## Permanent deletion
 
-Soft-deleted records are automatically purged after a retention period
-(configurable in App settings). After the retention period they can no longer
-be recovered.
+There is no automatic purge. Snapshots of deleted records are kept in
+`bdus_versions` indefinitely — a deleted record remains restorable for
+as long as its snapshot row exists.
 
-To force immediate permanent deletion, contact a super-admin — there is no UI
-button for this.
+To permanently remove a deleted record and make it irrecoverable, a
+database administrator must manually delete its row(s) from `bdus_versions`.
+There is no in-app UI for this operation.

@@ -14,10 +14,12 @@ Open it from **Config → Relations**.
 
 ## What a relation does
 
-When a relation is defined, RecordView shows an extra collapsible section that
-lists all records from the *target* table whose specified field matches the current
-record's identifier. This is useful for showing reverse references: e.g. all finds
-associated with a given context.
+When a relation is defined, RecordView shows an extra collapsible section in
+**both** tables that lists the linked records from the other table. One definition
+is enough: the system automatically exposes the relation in both directions.
+
+For example, a relation between `contexts` and `finds` will add a *Finds* panel
+to the context RecordView **and** a *Contexts* panel to the finds RecordView.
 
 ## Adding a relation
 
@@ -25,25 +27,32 @@ Click **Add relation** and fill in:
 
 | Field | Description |
 |---|---|
-| **Label** | Section heading shown in RecordView (e.g. `Associated finds`) |
-| **Source table** | The table that *contains* the relation (the table whose RecordView will show the panel) |
-| **Target table** | The table whose records will be listed in the panel |
-| **Target field** | The field in the target table that holds the reference value |
-| **Reference field** | The field in the source record whose value is used to filter target records (usually `id`) |
+| **Table A** | One of the two tables to link |
+| **Table B** | The other table |
+| **Field in A** | The field in Table A that holds the reference value |
+| **Field in B** | The field in Table B that it is matched against |
+
+The order of A and B does not matter: the system stores the relation in a
+canonical form (alphabetically-first table) and automatically inverts the
+field mapping when building the panel for the other side.
 
 ## Example
 
-Table `contexts` has id-based records. Table `finds` has a field `context_id` that
-stores the id of the parent context. To show finds inside a context record:
+Table `contexts` has an `id` field. Table `finds` has a `context_id` field that
+stores the id of the parent context. Define one relation:
 
-- Source table: `contexts`
-- Target table: `finds`
-- Target field: `context_id`
-- Reference field: `id`
+- Table A: `contexts` — field: `id`
+- Table B: `finds` — field: `context_id`
 
-This will list all `finds` records where `context_id` equals the current context's `id`.
+Result:
+- The **context** RecordView shows a *Finds* panel listing all finds whose
+  `context_id` equals the current context's `id`.
+- The **find** RecordView shows a *Contexts* panel with the parent context
+  whose `id` matches the find's `context_id`.
 
 ## Bidirectional relations
 
-Relations are **unidirectional**: the panel appears only in the source table's RecordView.
-Create a second relation with swapped source/target if you want it visible from both sides.
+Relations are **bidirectional by design**. Each relation is stored once; the
+system synthesises both directions automatically when loading the config. There
+is no need to create a second "reverse" relation — doing so would be rejected
+as a duplicate.

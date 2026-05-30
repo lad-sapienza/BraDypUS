@@ -4,230 +4,192 @@ title: SQL layer
 
 # SQL layer
 
-BraDypUS never concatenates user input into SQL strings. All queries go through
-a pipeline of three classes that together guarantee safe, engine-portable SQL:
+BraDypUS never concatenates user input into SQL strings. All data queries go
+through `SQL\QueryFromRequest`, which converts a structured PHP `$request` array
+into a safe PDO-prepared statement.
 
 ```
-ShortSQL string  ─►  ParseShortSql  ─►  QueryObject  ─►  getSql()  ─►  DB\DB::query()
-  (API DSL)             (parser)        (structured            (SQL + params array)
-                                         builder)
+$request array  →  QueryFromRequest  →  getQuery(true)  →  DB\DB::query()
+  (PHP array)       (builds SQL)         [sql, values]      (executes)
+                         │
+                    SQL\Filter\JsonFilter   (for type='filter')
 ```
-
-The same `QueryObject` can also be assembled directly in PHP — without going
-through the ShortSQL parser — for internal queries that do not originate from
-user input.
 
 ---
 
-## `SQL\QueryObject` — The query builder
+## `SQL\QueryFromRequest` — the main query class
 
-`QueryObject` is a fluent builder that accumulates the parts of a `SELECT`
-statement and renders them into a `[sql_string, values_array]` pair safe for
-PDO prepared statements.
+`QueryFromRequest` is the single entry point for all data queries. It receives a
+structured request array, builds the `SELECT` statement, and provides methods to
+execute or inspect it.
 
-### Construction
+### Constructor
 
 ```php
-use SQL\QueryObject;
-use Config\Config;
+use SQL\QueryFromRequest;
 
-// With config (enables field/table validation against the app schema)
-$qo = new QueryObject($cfg);
-
-// Without config (no validation; used internally)
-$qo = new QueryObject();
+$q = new QueryFromRequest(
+    db:          $this->db,     // DB\DBInterface
+    cfg:         $this->cfg,    // Config\Config
+    request:     $request,      // array — see types below
+    use_preview: false          // true: SELECT only config preview fields
+);
 ```
 
-### Builder methods (fluent interface)
+### Request structure
 
-| Method | Effect |
-|---|---|
-| `setTb(string $tb, ?string $alias)` | Set the main FROM table |
-| `setField(string $fld, ?string $alias, ?string $tb, ?string $fn)` | Add a SELECT field |
-| `setFieldSubQuery(string $subQuery, ?string $alias, ?array $values)` | Add a sub-query as a field |
-| `setWherePart(?string $connector, ?string $openBracket, string $fld, string $op, string $val, ?string $closeBracket)` | Add a WHERE clause |
-| `setWhereValues(array $values)` | Append bound parameter values |
-| `setJoin(string $tb, ?string $alias, array $on)` | Add a LEFT JOIN |
-| `setOrderFld(string $fld, string $dir)` | Add an ORDER BY column |
-| `setGroupFld(string $fld)` | Add a GROUP BY column |
-| `setLimit(int $tot, int $offset)` | Set LIMIT / OFFSET |
-| `setAutoJoin(bool $on)` | Enable/disable auto-join (default on) |
+The `$request` array must always include `tb` (table name) and `type`. The
+remaining keys depend on the type:
 
-### `getSql(bool $onlyWhere = false): array`
+| `type` | Extra keys | Effect |
+|---|---|---|
+| `'all'` | — | `WHERE 1=1` — all records |
+| `'fast'` | `string` | `WHERE field1 LIKE '%q%' OR field2 LIKE '%q%'` across all fields |
+| `'sqlExpert'` | `querytext`, `join?` | Raw SQL WHERE predicate (DDL stripped) |
+| `'filter'` | `filter` | Directus-style nested filter array or URL bracket notation |
 
-Returns `[$sql_string, $values_array]`. Pass to `DB\DB::query()`:
+### Builder methods
 
 ```php
-[$sql, $vals] = $qo->getSql();
+$q->setOrder('name', 'asc');    // ORDER BY tb.name ASC (default: from config)
+$q->setLimit(0, 25);            // OFFSET 0 LIMIT 25
+$q->setFields(false, ['id', 'name']); // override selected columns
+```
+
+### Execution methods
+
+```php
+// Returns [sql_string, values_array] for use with DB\DB::query()
+[$sql, $vals] = $q->getQuery(true);
 $rows = $db->query($sql, $vals, 'read');
+
+// Convenience wrappers
+$rows  = $q->getResults();   // executes and returns rows
+$total = $q->getTotal();     // COUNT(*) of matching rows
+
+// WHERE predicate only (useful for sub-queries in charts, geodata, …)
+[$where, $vals] = $q->getWhereClause();
 ```
-
-Pass `true` to get only the `WHERE` clause and its values — used internally
-when composing sub-queries.
-
-### Auto-join
-
-When a `Config` object is provided and `auto_join` is enabled (default),
-`QueryObject` automatically adds `JOIN` clauses in two situations:
-
-1. **Plugin tables** — if a field or WHERE clause references a table that is
-   listed as a plugin of the main table in the config, a join on
-   `plugin_table.table_link = 'main_table' AND plugin_table.id_link = main_table.id`
-   is added automatically. A `GROUP BY main_table.id` is also added to avoid
-   duplicate rows.
-
-2. **`id_from_tb` fields** — if a field has an `id_from_tb` config property,
-   a join to the referenced table is added so the WHERE can filter by the
-   human-readable value rather than a foreign key integer.
-
-### Supported aggregate functions
-
-`setField()` accepts an optional `$fn` parameter. Supported values:
-
-| `$fn` string | SQL output |
-|---|---|
-| `count` | `COUNT(tb.fld)` |
-| `count_distinct` | `COUNT(DISTINCT tb.fld)` |
-| `distinct` | `DISTINCT tb.fld` |
-| `avg` | `AVG(tb.fld)` |
-| `sum` | `SUM(tb.fld)` |
-| `min` | `MIN(tb.fld)` |
-| `max` | `MAX(tb.fld)` |
-| `group_concat` | `GROUP_CONCAT(tb.fld)` |
 
 ---
 
-## `SQL\ShortSql\ParseShortSql` — ShortSQL parser
+## Search types in detail
 
-ShortSQL is the URL-safe query DSL exposed by the public REST API. It lets a
-client express a complete `SELECT` statement as a single URL parameter without
-risking SQL injection — because the parser converts it into a `QueryObject`,
-never into raw SQL.
-
-### Grammar
-
-A ShortSQL string is `~`-delimited clauses. Each clause starts with a
-single-character symbol that identifies its role:
-
-| Symbol | Role | Example |
-|---|---|---|
-| `@` | Table name (required) | `@sites` |
-| `[` | Fields to SELECT | `[sites.name,sites.typology` |
-| `?` | WHERE conditions | `?sites.typology\|like\|villa` |
-| `>` | ORDER BY | `>sites.name:ASC` |
-| `-` | LIMIT / OFFSET | `-25:0` |
-| `*` | GROUP BY | `*sites.typology` |
-| `]` | Explicit JOIN | `]othertable` |
-
-**Full example** — sites named like "villa", ordered by name, page 1:
-
-```
-@sites~[sites.name,sites.typology~?sites.name|like|%villa%~>sites.name:ASC~-25:0
-```
-
-Clauses are joined with `~`:
-- `@sites` — FROM sites
-- `[sites.name,sites.typology` — SELECT name, typology
-- `?sites.name|like|%villa%` — WHERE name LIKE '%villa%'
-- `>sites.name:ASC` — ORDER BY name ASC
-- `-25:0` — LIMIT 25 OFFSET 0
-
-### WHERE clause format
-
-Multiple conditions are separated by `||`. Each condition is:
-
-```
-[connector.][[open_bracket.]table.field|operator|value[.close_bracket]
-```
-
-| Part | Values |
-|---|---|
-| `connector` | `and`, `or` (omit for first condition) |
-| `operator` | `=`, `!=`, `like`, `not like`, `<`, `<=`, `>`, `>=`, `is null`, `is not null`, `in` |
-| `value` | Bound parameter value. Prefix with `^` to treat as a literal (field name, integer) |
-
-**Example with two conditions:**
-
-```
-?sites.typology|=|villa||and.sites.name|like|%roma%
-```
-
-### Sub-queries
-
-Wrap a ShortSQL sub-query in `{...}`. The parser base64-encodes the inner
-string and emits it as `< ... >` internally:
-
-```
-[{@sites~[count(sites.id)}|total_sites
-```
-
-This is valid as a SELECT sub-query field with alias `total_sites`.
-
-Add `!` immediately after `{` to prevent the sub-query value from being
-cast to a string: `{!@sites~[count(sites.id)}`.
-
-### Usage
+### `all` — no filter
 
 ```php
-use SQL\ShortSql\ParseShortSql;
+$q = new QueryFromRequest($db, $cfg, ['tb' => 'sites', 'type' => 'all']);
+$q->setOrder()->setLimit(0, 25);
+$rows = $q->getResults();
+```
 
-$parser = new ParseShortSql($cfg);          // $cfg: Config\Config or null
-$parser->parseAll('@sites~[sites.name~?sites.typology|=|villa~-25:0');
+### `fast` — full-text LIKE across all fields
 
-[$sql, $values] = $parser->getSql();
-$rows = $db->query($sql, $values, 'read');
+```php
+$q = new QueryFromRequest($db, $cfg, [
+    'tb'     => 'sites',
+    'type'   => 'fast',
+    'string' => 'pompeii',
+]);
+```
+
+Generates `WHERE (sites.name LIKE '%pompeii%' OR sites.description LIKE '%pompeii%' …)`.
+
+### `sqlExpert` — user-supplied WHERE clause
+
+```php
+$q = new QueryFromRequest($db, $cfg, [
+    'tb'        => 'sites',
+    'type'      => 'sqlExpert',
+    'querytext' => 'typology = "villa" AND period > 200',
+    'join'      => '',  // optional extra JOIN clause
+]);
+```
+
+The `querytext` value is stripped of DDL keywords (`DROP`, `DELETE`, `INSERT`,
+`ALTER`, …) by `QueryFromRequest::makeSafeStatement()` before being placed in
+the WHERE clause. It is not further parameterised — this mode is only exposed
+to super-admin users.
+
+### `filter` — Directus-style structured filter
+
+See [`SQL\Filter\JsonFilter`](#sqlfilterjsonfilter) below.
+
+```php
+$q = new QueryFromRequest($db, $cfg, [
+    'tb'     => 'sites',
+    'type'   => 'filter',
+    'filter' => ['typology' => ['_eq' => 'villa'], 'name' => ['_icontains' => 'roma']],
+]);
 ```
 
 ---
 
-## `SQL\ShortSql` clause parsers
+## `SQL\Filter\JsonFilter` — Directus-style filter
 
-`ParseShortSql` delegates each clause to a dedicated static class:
+`JsonFilter` translates a nested PHP array into a SQL `WHERE` clause and a
+bound-values array. Field names are validated against the table config
+allow-list before entering the SQL.
 
-| Class | Handles | Key method |
-|---|---|---|
-| `SQL\ShortSql\Table` | `@` — table name + alias | `Table::parse(string)` |
-| `SQL\ShortSql\Field` | Single field spec (name, alias, fn, subquery) | `Field::parse(string, string $tb)` |
-| `SQL\ShortSql\Where` | `?` — WHERE clause list | `Where::parse(Config, string, string $tb, ...)` |
-| `SQL\ShortSql\Join` | `]` — explicit JOIN clause | `Join::parse(array, Config, ...)` |
-| `SQL\ShortSql\Order` | `>` — ORDER BY | `Order::parse(?string, ?string $tb)` |
-| `SQL\ShortSql\Limit` | `-` — LIMIT / OFFSET | `Limit::parse(?string)` |
-| `SQL\ShortSql\Group` | `*` — GROUP BY | `Group::parse(?string, string $tb)` |
-| `SQL\ShortSql\SubQuery` | `{...}` inline sub-queries | `SubQuery::parse(string)` |
+### Operators
 
----
+| Operator | SQL equivalent |
+|---|---|
+| `_eq` | `= ?` |
+| `_neq` | `!= ?` |
+| `_lt` / `_lte` / `_gt` / `_gte` | `< ? ` / `<= ?` / `> ?` / `>= ?` |
+| `_contains` | `LIKE '%?%'` (case-sensitive) |
+| `_icontains` | `LIKE '%?%'` (case-insensitive) |
+| `_ncontains` | `NOT LIKE '%?%'` |
+| `_starts_with` / `_ends_with` | `LIKE '?%'` / `LIKE '%?'` |
+| `_in` / `_nin` | `IN (…)` / `NOT IN (…)` |
+| `_null` / `_nnull` | `IS NULL` / `IS NOT NULL` |
+| `_empty` / `_nempty` | `IS NULL OR = ''` / `IS NOT NULL AND != ''` |
+| `_between` | `BETWEEN ? AND ?` (value: `[low, high]`) |
 
-## `SQL\Validator` — Query safety checks
-
-When a `Config` object is passed to `QueryObject`, validation runs automatically
-inside `getSql()` via `SQL\Validator::validateQueryObject()`.
-
-The validator checks:
-
-- Table name is a known table in the config (or a system `bdus_*` table).
-- Field names exist in the table's configured field list.
-- WHERE operators are in the allow-list: `=`, `!=`, `like`, `not like`, `<`,
-  `<=`, `>`, `>=`, `is null`, `is not null`, `in`.
-- Connectors are `and` or `or`.
-- Aggregate functions are in the allow-list (see above).
-
-A failed validation throws `SQL\SqlException`.
-
----
-
-## `SQL\SafeQuery` — Low-level PDO executor
-
-`SafeQuery` is the last step: it receives a SQL string and a values array and
-executes them against a PDO connection. `DB\DB::query()` delegates to it.
-
-It is not called directly by application code — always use `DB\DB::query()`.
-
----
-
-## End-to-end example
+### Logical grouping
 
 ```php
-// Build a query programmatically (no ShortSQL)
+// Implicit AND at the top level:
+['typology' => ['_eq' => 'villa'], 'period' => ['_gt' => 200]]
+// → typology = ? AND period > ?
+
+// Explicit OR:
+['_or' => [
+    ['typology' => ['_eq' => 'villa']],
+    ['typology' => ['_eq' => 'farm']],
+]]
+// → (typology = ? OR typology = ?)
+```
+
+### Cross-table (plugin) conditions
+
+```php
+['photos' => ['description' => ['_icontains' => 'amphora']]]
+// → id IN (SELECT id_link FROM photos WHERE table_link = ? AND description LIKE ?)
+```
+
+### URL bracket notation (GET params)
+
+PHP natively parses `?filter[typology][_eq]=villa` into the same nested array
+structure, so GET and POST requests are handled identically.
+
+A `filter` GET parameter whose value is a Base64-encoded JSON string is also
+accepted (used for URL persistence in the Vue frontend):
+
+```
+?filter=eyJ0eXBvbG9neSI6eyJfZXEiOiJ2aWxsYSJ9fQ==
+```
+
+---
+
+## `SQL\QueryObject` — internal query builder
+
+`QueryObject` is the low-level fluent builder that `QueryFromRequest` uses
+internally. It is not called directly by application code, but it remains
+available for low-level use:
+
+```php
 $qo = new \SQL\QueryObject($cfg);
 $qo->setTb('sites')
    ->setField('*')
@@ -237,18 +199,43 @@ $qo->setTb('sites')
    ->setLimit(25, 0);
 
 [$sql, $vals] = $qo->getSql();
-// SELECT sites.* FROM sites WHERE sites.typology = ? ORDER BY sites.name ASC LIMIT 25 OFFSET 0
-
 $rows = $db->query($sql, $vals, 'read');
 ```
+
+When a `Config` object is supplied, `QueryObject` runs field and operator
+validation via `SQL\Validator` inside `getSql()`.
+
+---
+
+## `SQL\Validator` — query safety
+
+`SQL\Validator::validateQueryObject(QueryObject $qo)` checks:
+
+- Table name is in the app config or is a `bdus_*` system table.
+- Field names exist in the table's configured field list.
+- WHERE operators are in the allow-list.
+- Connectors are `and` or `or`.
+- Aggregate functions are in the allow-list.
+
+A failed check throws `SQL\SqlException`.
+
+---
+
+## End-to-end example
 
 ```php
-// Parse from ShortSQL (API path)
-$parser = new \SQL\ShortSql\ParseShortSql($cfg);
-$parser->parseAll('@sites~[sites.*~?sites.typology|=|villa~>sites.name:ASC~-25:0');
-[$sql, $vals] = $parser->getSql();
-$rows = $db->query($sql, $vals, 'read');
-```
+// Record list with filter (typical controller code)
+$qRequest = [
+    'tb'     => $tb,
+    'type'   => $this->request['type'] ?? 'all',  // from HTTP request
+    'filter' => $this->request['filter'] ?? [],
+    'string' => $this->request['string'] ?? '',
+];
 
-Both paths produce the same bound prepared statement — user input never reaches
-the SQL string.
+$q = new \SQL\QueryFromRequest($this->db, $this->cfg, $qRequest, true);
+$q->setOrder($this->request['order_by'] ?? null)
+  ->setLimit($this->request['offset'] ?? 0, $this->request['limit'] ?? 25);
+
+$rows  = $q->getResults();
+$total = $q->getTotal();
+```

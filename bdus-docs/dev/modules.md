@@ -1,14 +1,15 @@
 ---
-title: Modules directory
+title: Controllers
 ---
 
-# Modules directory
+# Controllers
 
-Each module lives in `modules/{name}/{name}.php` and defines a class
-`{name}_ctrl extends Controller`. The autoloader resolves `foo_ctrl` →
-`modules/foo/foo.php` automatically.
+In v5 each controller lives in `controllers/{Name}.php` and defines a
+PSR-4 class `Bdus\Controllers\{Name}` that extends `\Bdus\Controller`.
+The router (`Bdus\Router`) maps REST routes to controller::method pairs;
+Composer's autoloader resolves the class.
 
-25 modules are currently active. They are grouped below by function.
+26 controllers are currently active. They are grouped below by function.
 
 ---
 
@@ -86,8 +87,8 @@ Provides preview endpoints so the frontend can show a dry-run before committing.
 ### `myHistory` — Navigation history
 `GET /api/history`
 
-Returns the recent record history for the current user (stored in
-`bdus_history`), used by the frontend to populate the "Recent" dropdown.
+Returns the recent record history for the current user (read from
+`bdus_versions`), used by the frontend to populate the "Recent" dropdown.
 
 ### `saved_queries` — Saved searches
 `GET/POST /api/saved-queries` · share / unshare / delete
@@ -114,7 +115,7 @@ The most complex module. Super-admin only. Manages:
 `GET/POST/DELETE /api/user` · `GET/POST/DELETE /api/user/{id}/privileges`
 
 Admin CRUD for `bdus_users`. Also manages per-table privilege overrides
-(`bdus_user_table_privileges`).
+(`bdus_user_table_privs`).
 
 ### `new_app` — Application wizard
 `GET /api/new-app/status` · `POST /api/new-app`
@@ -153,8 +154,8 @@ Reads and writes geospatial features (GeoJSON) linked to records.
 ### `frontpage_editor` — Welcome page
 `GET /api/welcome` · `PUT /api/welcome`
 
-Reads and writes the HTML welcome page shown on the dashboard
-(stored in `bdus_app_settings`).
+Reads and writes the Markdown/HTML welcome page shown on the dashboard
+(stored in `bdus_cfg_app.welcome`).
 
 ### `templates` — Print templates
 `GET/POST/DELETE /api/template/{tb}/{name}` · list endpoints
@@ -186,7 +187,7 @@ Admin operations on DB dump files in `projects/{app}/backups/`.
 ### `debug` — Logs
 `GET /api/logs` · `POST /api/logs/purge`
 
-Admin access to `bdus_logs` entries.
+Admin access to `bdus_log` entries.
 
 ### `info` — Version & app info
 `GET /api/info` · `GET /api/info/app`
@@ -198,18 +199,24 @@ Admin access to `bdus_logs` entries.
 `POST /api/files/sort`
 
 Updates the display order of files attached to a record.
-File upload and deletion are handled by `record_ctrl`.
+File upload and deletion are handled by `Record`.
+
+### `zotero` — Zotero integration
+`GET/POST/DELETE /api/zotero/lib` · `GET /api/zotero/search` · link / sync endpoints
+
+Manages connections to Zotero libraries and citation links between records
+and Zotero items. Libraries are stored in `bdus_zotero_libs`; links in
+`bdus_zotero_links`. See [Zotero integration](./zotero).
 
 ---
 
-## Module file structure
+## Controller file structure
 
-A typical module:
+A typical controller (v5):
 
 ```
-modules/
-└── vocabularies/
-    └── vocabularies.php   ← class vocabularies_ctrl extends Controller
+controllers/
+└── Vocabularies.php   ← class Bdus\Controllers\Vocabularies extends \Bdus\Controller
 ```
 
 All methods of a controller live in one file — no sub-files, no separate
@@ -217,6 +224,6 @@ service classes (those belong in `lib/`).
 
 ---
 
-## Adding a module
+## Adding a controller
 
 See [Adding a new endpoint](./architecture#adding-a-new-endpoint).

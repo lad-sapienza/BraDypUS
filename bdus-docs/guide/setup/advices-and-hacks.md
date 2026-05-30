@@ -1,44 +1,48 @@
 ---
-title: Some advices and hacks
+title: Advices & hacks
 ---
 
-Follow here some advices regarding the configuration of the database
-that might help in solving practical issues. Please feel free to contribute,
-and to share your experience.
+# Advices & hacks
 
-## ID field
-As already reported multiple times each table of a Bradypus application,
-be it a system table, a plugin or a data table has a special column named
-always `id` which acts as the Primary Key. Its compilation is entrusted to 
-the database engine, and the user should never interfere.
+Practical tips for designing a robust BraDypUS application.
 
-It is thus warmly recommended to set the `readonly` setting to 1, and if
-its value is not important to the general usage of the database, from
-the users point of view, also set `hide` to 1. This will avoid unpleasant
-errors on data entry.
+## Name fields carefully
 
-## Creator
-The same can be said for column `creator`, as well, which is available only
-in data tables and not in plugin or system tables.
+Internal field names cannot be changed without a DB rename operation. Spend time
+choosing clear, lowercase, underscore-separated names before going live.
 
-## Adding a Last edited field
-It is easy to add and configure a field wich holds the timestamp of the latest
-edit. Just add a field named `lastedit` (or whatever name you prefer) with 
-the following setting:
-- def_value: %today%
-- force_default: 1
-- readonly: 1
+Good: `site_code`, `discovery_date`, `material_type`  
+Avoid: `siteCode`, `date1`, `x`
 
-Or optionally:
-- hide: 1
+## Use vocabularies for controlled fields
 
-## Adding a Last edited by field
-It is easy to add and configure a field wich holds the id of the latest
-user who edited it. Just add a field named `lasteditby` (or whatever name you prefer) 
-with the following setting:
-- def_value: %current_user%
-- force_default: 1
-- readonly: 1
+Even if a field currently has only a handful of values, using a `select` field backed
+by a vocabulary makes it easy to add values later and keeps data consistent.
 
-Or optionally:
-- hide: 1
+## Preview fields drive usability
+
+Put the most identifying fields first in your **Preview fields** list. The first
+preview field appears in FK dropdowns across the app — make it human-readable and
+unique (e.g. a site code, not an auto-increment id).
+
+## Plugin tables for repeating groups
+
+If a record can have multiple sub-items of the same type (e.g. a context can have
+multiple finds), model the sub-items as a plugin table rather than multiple fields.
+Plugin tables are shown as editable inline grids inside RecordView.
+
+## Use `link_to` to avoid data duplication
+
+Instead of typing a site name in every context record, create a `sites` table and
+use a `link_to` field in `contexts`. This makes renaming sites trivial and enables
+cross-table search.
+
+## RS / Harris Matrix requires a `sigla` field
+
+The Harris Matrix module needs a field to use as the node label. This is configured
+as the **RS field** in the table settings — typically the stratigraphic unit code.
+
+## Backup before any structural change
+
+Drop a backup from **Backup** in the sidebar before adding, renaming or removing tables
+or fields. The validation panel catches some problems, but a backup is always the safest fallback.

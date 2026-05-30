@@ -1,18 +1,24 @@
 ---
-title: Changing table order
+title: Table order
 ---
 
+# Table order
 
-It is possible to easily change the order that tables use in the main
-drop-down menu in the main page.
+The order of tables in the sidebar navigation and in all dropdowns is controlled
+by the order of tables in **Config → Tables**.
 
-![screenshot](/images/setup/table-order-01.png "Tables listed in main menu") 
-*Tables listed in main menu*
+## Reordering
 
-To change the order just drag the move icon of the table in the system configuration (left panel)
-and drop it in the desired position. On each drop the new order will be saved.
+In the Tables panel, drag rows up or down to change their position.
+Click **Save order** to persist the change.
 
-![screenshot](/images/setup/table-order-02.png "Drag and drop to change order") 
-*Drag and drop to change order*
+The new order is immediately reflected in:
+- The sidebar navigation
+- The table selector in DataView
+- The table dropdown in Import, Search & Replace, and other tools
 
+## Why order matters
 
+BraDypUS preserves config order throughout the UI — tables and fields are never
+sorted alphabetically. The order you define here is the order users see everywhere.
+Design the order with your users' workflow in mind.

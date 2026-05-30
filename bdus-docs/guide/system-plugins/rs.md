@@ -1,55 +1,66 @@
 ---
-title: Stratigraphical relationship
+title: Harris Matrix (stratigraphic relations)
 ---
 
+# Harris Matrix (stratigraphic relations)
 
-Bradypus has built-in support for stratigraphical relationships management
-and the automatic construction of the [Harris Matrix diagram](https://en.wikipedia.org/wiki/Harris_matrix).
+BraDypUS supports stratigraphic unit (US) relationship management with a built-in
+**Harris Matrix** visualisation. The feature is available for any table that has
+an **RS field** configured.
 
-The function can be activated for one or more tables, from the **System Configuration**,
-by accessing the **Main settings** of each table. The setting is called `rs` (which is Italian *relazioni stratigrafiche*).
+## Enabling the RS system
 
-From the drop-down menu chooes the column that contains the name of the context/stratum:
+In **Config → Tables**, select the target table and set the **RS field** to the
+column that stores the unit identifier (e.g. `sigla`). This enables the RS panel
+in RecordView and the Harris Matrix button in DataView.
 
-![screenshot](/images/system-plugins/rs-activate.png "Activate stratigraphical relationships") 
-*Activate Stratigraphical relationships*
+## Stratigraphic relation types
 
-After the plugin has been activated, the plugin GUI will appear in the edit mode of each record.
+| Code | Relation | Meaning |
+|---|---|---|
+| 1 | **Covers / is covered by** | Superposition |
+| 2 | **Cuts / is cut by** | Truncation |
+| 3 | **Abuts / is abutted by** | Abutment |
+| 4 | **Fills / is filled by** | Fill relationship |
+| 9 | **Is equivalent to** | Correlation (undirected) |
+| 10 | **Is contemporary with** | Contemporaneity (undirected) |
 
-**Pay attention #1**: the plugin will not be available on adding a new record form; it will appear only 
-after the recprd has been created and opened in edit mode.
+Directed relations (1–4) are stored as a single row with direction. The inverse
+is computed automatically — you do not need to enter both directions.
 
-**Pay attention #2**: if you are using custom templates, you should explicitly add the plugin to the
-template, by adding ```print.rs```
+## Managing relations in RecordView
 
-Relationships can be easily added by choosing from the drop-down menu the type of physical relationship 
-between the two contextes and by adding manually the name of the second context, the first being the
-currently opened.
+The **RS panel** in RecordView shows all relations for the current record.
 
-One a relatioship is added it can be easily deletec by clicking on the `[x]` near each context name.
+![TODO_SCREENSHOT: RS panel inside RecordView showing a table of relations with type and linked unit identifier](/images/v5/usage/rs-panel.png)
 
-![screenshot](/images/system-plugins/rs-crud.png "Editing stratigraphical relationships") 
-*Editing stratigraphical relationships*
+To add a relation:
+1. Select the **relation type** from the dropdown.
+2. Enter the **identifier** of the other unit (e.g. `US003`).
+3. Click **Add**.
 
-**Pay attention**: the relation between two contextes, eg. `10` and `11` can be defined only once
-and the system will throw an error if you try to add it again. If is not important if the relationship
-between `10` and `11` is added by editing the record of `10` or thato of `11`. It will allways appear in 
-both records. You can not edit a previously added relation. To change the relationship value, delete
-the relationship and add it again.
+To remove a relation: click the delete icon next to it.
 
-### Graphical representation
-One the relationships are aded you can automatically build a graphica representation of the Harris matrix.
+## Harris Matrix view
 
-In the results toolbar click on the matrix button: 
+Click **Harris Matrix** in the DataView toolbar to open a full-page interactive
+matrix for all records in the current table (respecting the active search filter).
 
-![screenshot](/images/system-plugins/built-matrix.png "Viewing the matrix") 
-*Viewing the matrix*
+![TODO_SCREENSHOT: Harris Matrix full-page view showing a directed acyclic graph of stratigraphic units](/images/v5/usage/harris-matrix.png)
 
-A dynamic graph will appear; you can zoom and pan it anc click on each node and the corresponding context 
-records will be opened in read mode.
+- Nodes represent individual stratigraphic units.
+- Directed arrows represent the **covers** relationship (newer → older).
+- Undirected dashed lines represent equivalences and contemporaneity.
+- Units outside the active filter are shown with a dashed border.
+- Click a node to navigate to that record.
 
-A link to a dynamic Harris Matrix will appear also in the **System links**, 
-if the plugin has been activated for the destionation table:
+### Subset matrix
 
-![screenshot](/images/system-plugins/built-matrix-2.png "Viewing the matrix") 
-*Viewing the matrix*
+Apply a search filter in DataView before opening the Harris Matrix to see only
+the selected units. Units that are *related* to the filtered set but not themselves
+in the filter are shown in a lighter style (in-context but not in-filter).
+
+### Export
+
+Click **Export PNG** in the Matrix toolbar to save the current view as a
+high-resolution PNG image.

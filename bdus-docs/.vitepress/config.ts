@@ -99,14 +99,14 @@ function guideSidebar() {
       collapsed: true,
       items: [
         { text: 'Overview',            link: '/guide/setup/' },
-        { text: 'Main app config',     link: '/guide/setup/main-app-config' },
-        { text: 'Creating a table',    link: '/guide/setup/create-table-sites' },
-        { text: 'Adding columns',      link: '/guide/setup/adding-columns' },
+        { text: 'App settings',        link: '/guide/setup/main-app-config' },
+        { text: 'Tables',              link: '/guide/setup/create-table-sites' },
+        { text: 'Fields',              link: '/guide/setup/adding-columns' },
+        { text: 'Field preview',       link: '/guide/setup/preview-config' },
+        { text: 'Table relations',     link: '/guide/setup/relations' },
         { text: 'Vocabularies',        link: '/guide/setup/vocabularies' },
-        { text: 'Other data tables',   link: '/guide/setup/other-data-tables' },
-        { text: 'Table order',         link: '/guide/setup/changing-table-order' },
-        { text: 'Finalizing',          link: '/guide/setup/finalizing-setup' },
-        { text: 'Config preview',      link: '/guide/setup/preview-config' },
+        { text: 'Users & privileges',  link: '/guide/setup/users' },
+        { text: 'Validation',          link: '/guide/setup/finalizing-setup' },
         { text: 'Advices & hacks',     link: '/guide/setup/advices-and-hacks' },
       ],
     },
@@ -115,22 +115,16 @@ function guideSidebar() {
       collapsed: true,
       items: [
         { text: 'Overview',            link: '/guide/usage/' },
-        { text: 'CRUD',                link: '/guide/usage/crud' },
-        { text: 'Find & replace',      link: '/guide/usage/find-replace' },
+        { text: 'Records (CRUD)',       link: '/guide/usage/crud' },
+        { text: 'Search & filter',     link: '/guide/usage/search' },
         { text: 'Data export',         link: '/guide/usage/export' },
+        { text: 'Find & replace',      link: '/guide/usage/find-replace' },
+        { text: 'Import data',         link: '/guide/usage/import' },
         { text: 'Database backup',     link: '/guide/usage/backup' },
-        { text: 'System translation',  link: '/guide/usage/system-translation' },
-        { text: 'User preferences',    link: '/guide/usage/user-preferences' },
-      ],
-    },
-    {
-      text: 'Template system',
-      collapsed: true,
-      items: [
-        { text: 'Overview',            link: '/guide/template-system/' },
-        { text: 'Create a template',   link: '/guide/template-system/create-new-template' },
-        { text: 'The print object',    link: '/guide/template-system/print-object' },
-        { text: 'Template example',    link: '/guide/template-system/template-example' },
+        { text: 'Version history',     link: '/guide/usage/versions' },
+        { text: 'Deleted records',     link: '/guide/usage/deleted-records' },
+        { text: 'Charts',              link: '/guide/usage/charts' },
+        { text: 'Bibliography (Zotero)', link: '/guide/usage/zotero' },
       ],
     },
     {
@@ -139,7 +133,16 @@ function guideSidebar() {
       items: [
         { text: 'Overview',            link: '/guide/system-plugins/' },
         { text: 'Geodata & GeoFace',   link: '/guide/system-plugins/geodata' },
-        { text: 'Stratigraphic RS',    link: '/guide/system-plugins/rs' },
+        { text: 'Harris Matrix (RS)',   link: '/guide/system-plugins/rs' },
+      ],
+    },
+    {
+      text: 'Print templates',
+      collapsed: true,
+      items: [
+        { text: 'Overview',            link: '/guide/template-system/' },
+        { text: 'Create a template',   link: '/guide/template-system/create-new-template' },
+        { text: 'Template example',    link: '/guide/template-system/template-example' },
       ],
     },
     {
@@ -151,13 +154,10 @@ function guideSidebar() {
       ],
     },
     {
-      text: 'ShortSQL API',
+      text: 'REST API',
       collapsed: true,
       items: [
         { text: 'Overview',            link: '/guide/api/' },
-        { text: 'ShortSQL syntax',     link: '/guide/api/shortsql' },
-        { text: 'Remarks',             link: '/guide/api/remarks-on-shortsql' },
-        { text: 'Examples',            link: '/guide/api/shortsql-examples' },
       ],
     },
     {
@@ -184,16 +184,16 @@ function devSidebar() {
       items: [
         { text: 'Bootstrapping & routing', link: '/dev/architecture' },
         { text: 'lib/ namespace map',      link: '/dev/lib-map' },
-        { text: 'Modules directory',       link: '/dev/modules' },
+        { text: 'Controllers directory',   link: '/dev/modules' },
       ],
     },
     {
       text: 'Backend layers',
       items: [
-        { text: 'Database layer',      link: '/dev/database' },
-        { text: 'SQL layer (ShortSQL)', link: '/dev/sql-layer' },
-        { text: 'Record lifecycle',    link: '/dev/record-lifecycle' },
-        { text: 'Config & UAC',        link: '/dev/config' },
+        { text: 'Database layer',       link: '/dev/database' },
+        { text: 'SQL & filter layer',   link: '/dev/sql-layer' },
+        { text: 'Record lifecycle',     link: '/dev/record-lifecycle' },
+        { text: 'Config & UAC',         link: '/dev/config' },
       ],
     },
     {

@@ -1,39 +1,45 @@
 ---
-title: Setting up the application
+title: Setting up your application
 ---
 
-Up to now we have downloaded the main software and created the new application,
-setting up the database connection, and BraDypUS took care of the rest.
+# Setting up your application
 
-We can now login in the new application, which is almost entirely disabled, because no data tables have been defined yet.
+Application setup is handled entirely through the **Config** panel, a dedicated
+administration area accessible from the sidebar. Only users with **super-admin**
+privilege can open it.
 
-![screenshot](/images/setup/empty_app.png "Login after a fresh installation") 
-*Login after a fresh installation*
+![TODO_SCREENSHOT: Config panel open with sidebar showing six panel buttons](/images/v5/setup/config-overview.png)
 
-We need to enter in the **System configuration** module, where all the configuration
-and table structure can be edited.
+## The Config panel
 
-{: .callout-block .callout-block-warning }
-System configuration is a highly dangerous functionality since data tables can be added or removed,
-deleting, with no possibility for recover entire datasets.
+The Config panel is divided into six sections, selectable from the left sidebar:
 
-This is why the super-admin password is required each time the module is opened.
+| Panel | Purpose |
+|---|---|
+| **App settings** | Name, language, status, DB engine and other global options |
+| **Validation** | Schema check — finds missing columns, broken FK references, and bad indexes |
+| **Geoface** | Configure map layers (WMS, WFS, local GeoJSON/KML files) |
+| **Tables** | Create, rename, delete and reorder tables; set layout and plugin links |
+| **Fields** | Add and configure fields for any table |
+| **Relations** | Define cross-table links displayed in RecordView |
 
-![screenshot](/images/setup/sys_config_pwd.png "System configuration requires super admin password confirmation") 
-*System configuration requires super admin password confirmation*
+## How to open Config
 
-On the left side are located the main functions, i.e:
-- Validate application
-- Main app configuration
-- Single tables configuration
+Click the **Config** item in the sidebar navigation. The first time (or after a
+session timeout) you are asked to confirm your super-admin password.
 
-![screenshot](/images/setup/sys_config.png "System configuration module") 
-*System configuration module*
+![TODO_SCREENSHOT: super-admin password confirmation dialog](/images/v5/setup/config-password.png)
 
-A special mention requires the **Validate application** utility that performs a very deep
-analysis on the database structure and configuration files, and checks for perfect match.
+::: warning Destructive operations
+Table deletion and column deletion are **permanent and irreversible**. Always create
+a [backup](/guide/usage/backup) before making structural changes.
+:::
 
-In case of discrepancies, some suggestions will be provided.
+## Typical setup workflow
 
-![screenshot](/images/setup/vaildate_app.png "System configuration validation") 
-*System configuration validation*
+1. **App settings** — set the application name, language, and status.
+2. **Tables** — create all required tables and set their preview fields.
+3. **Fields** — add columns to each table, configure types and validation rules.
+4. **Relations** — define cross-table links so RecordView shows related records.
+5. **Vocabularies** — populate controlled vocabularies for select/combo fields.
+6. **Validation** — run the schema validator and fix any reported issues.

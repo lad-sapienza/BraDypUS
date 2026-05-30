@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540">
+  <rect width="960" height="540" fill="#f0f4f8"/>
+  <rect x="1" y="1" width="958" height="538" fill="none" stroke="#cdd5e0" stroke-width="2" stroke-dasharray="8,4"/>
+  <text x="480" y="255" font-family="sans-serif" font-size="22" fill="#8899aa" text-anchor="middle">📷 Screenshot coming soon</text>
+  <text x="480" y="290" font-family="monospace" font-size="14" fill="#aabbcc" text-anchor="middle" id="label"></text>
+</svg>

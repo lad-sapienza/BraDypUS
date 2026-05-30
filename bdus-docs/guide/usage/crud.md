@@ -1,101 +1,77 @@
 ---
-title: CRUD operations - Create, read, update and delete
+title: Records (CRUD)
 ---
 
-## Create
+# Records
 
-You can use the **New** button to insert new records in the selected table
+## Browsing records
 
-![screenshot](/images/usage/create.png "Create") 
-*The New function in the Data Management screen*
+Select a table from the sidebar, then click **Data management** to open the
+record list (**DataView**). The list shows the configured [preview fields](/guide/setup/preview-config)
+in a paginated table.
 
-![screenshot](/images/usage/insert_records.png "Insert records")
-*New record edit screen*
+![TODO_SCREENSHOT: DataView showing a paginated record table with column headers and row data](/images/v5/usage/dataview-list.png)
 
-{: .callout-block .callout-block-warning }
-Pay attention: After each save, keep an eye on the alert message at the bottom right of the screen. 
-If the **alert message is green** then all data has been saved without errors,
-If the **alert message is red** then there may be problems.
-In this case **check that you have entered all the data correctly before closing the tab**, or you may
-lose the data you entered!
+Controls in the DataView toolbar:
 
----
+| Control | Action |
+|---|---|
+| **New** | Create a new record |
+| **Export** | Download visible records as CSV, XLSX or JSON |
+| **Columns** | Toggle which columns are visible |
+| **Harris Matrix** | Open the stratigraphic matrix (only for tables with RS configured) |
+| **Search bar** | Fast text search across preview fields |
+| **Advanced** | Open the advanced search panel |
 
-## Read
+Click any row to open that record in **RecordView**.
 
-You can view all your records in read mode using the **Show all function**
+## Reading a record
 
-![screenshot](/images/usage/show_all.png "Show all")
-*The Show All function in the Data Management screen*
+RecordView displays all field values for a single record, organised into sections:
 
-In the screen of this function you will have the possibility to choose the number of records that can be previewed from
-the drop-down menu **Show (10, 25, 50, 100) entries**.
+- **Core fields** — the table's own columns
+- **File gallery** — attached images and documents
+- **Plugin tables** — inline editable sub-tables
+- **Related records** — cross-table links defined in Config → Relations
+- **Stratigraphic relations** — RS panel (if configured)
+- **Bibliography** — Zotero citations (if configured)
 
-![screenshot](/images/usage/show_25_entries.png "Show all menu")
-*Show All function screen*
+![TODO_SCREENSHOT: RecordView showing a record with field values, a file gallery, and an RS panel](/images/v5/usage/record-view.png)
 
-At this point there are several ways in which you can have access to read your records:
+## Creating a record
 
-1. You can read your records by double clicking on one of them in the preview table
-1. You can read your records by selecting the one you are interested in and then clicking the eye icon (**Read**)
-in the icon menu at the top left of the screen
+Click **New** in the DataView toolbar (or the floating **+** button).
+An empty edit form opens with all fields blank (or pre-filled with defaults).
 
-![screenshot](/images/usage/read_record.png "Read")
-*Read function in the Show All screen*
+Fill in the fields and click **Save**. Required fields are marked and the form
+will not save until all required values are provided.
 
-1. You can search for the record you are interested in using the **Search toolbar** at the top right of the screen
-and then you can use on of the two methods described above to view it
+![TODO_SCREENSHOT: RecordEdit form with several fields filled in and the Save button visible](/images/v5/usage/record-edit.png)
 
-![screenshot](/images/usage/search_by_name.png "Search by name")
-*Filter search result through the search toolbar of the record Alexandria*
+## Editing a record
 
-![screenshot](/images/usage/search_by_id.png "Search by id")
-*Filter search result through the search toolbar of the record 1*
+Open a record in RecordView and click **Edit** in the header. The same form used
+for creation opens with current values pre-filled.
 
----
+- Changes are not saved until you click **Save**.
+- Navigating away with unsaved changes triggers a confirmation dialog.
+- Validation errors are shown inline next to each offending field.
 
-## Update
+## Deleting a record
 
-To find the records you want to update please have a look above the **Read**  function section
+In RecordView, click the **Delete** button in the record header. A confirmation
+dialog prevents accidental deletion.
 
-You can use two methods to edit or update a record:
+Deleted records are soft-deleted and can be recovered from
+[Deleted records](/guide/usage/deleted-records) for a configurable retention period.
 
-1. After double clicking on the record you are interested in, you will be returned to its tab
+## File attachments
 
-![screenshot](/images/usage/edit.png "Edit")
-*View of record in Read mode*
+In RecordView (edit mode), the file gallery panel allows:
+- **Upload** one or more files (images, PDFs, any format)
+- **Reorder** files by dragging
+- **Delete** individual files
 
-  From here click the **Edit**  function in the top left corner to have the possibility to modify your data
-
-![screenshot](/images/usage/edit_tab.png "Edit tab")
-*View of record in Edit mode*
-
-1. After selecting the record you are interested in editing click on the pencil icon (**Edit**) from the icon menu
-at the top left of the screen
-
-![screenshot](/images/usage/edit_icon.png "Edit icon")
-*Edit icon in the show all screen*
-
-{: .callout-block .callout-block-warning }
-Pay attention: You can edit more than one record at a time. If you are going to update more than one record
-simultaneously, remember to be very careful when saving: each time you save, your data will be overwritten!
-
----
-
-## Delete
-
-To find the records you want to delete please have a look above the **Read** function section
-
-You can use two methods to delete a record:
-
-1. To delete a record you can double click on it to open its tab and from there select the **Erase** function from
-the top left menu
-
-![screenshot](/images/usage/erase.png "Erase")
-*View of record in Read mode*
-    
-1. To delete a record you can select it and then click on the trash icon (**Erase**) from the icon menu at the top
-left of the screen
-
-![screenshot](/images/usage/trash.png "Trash")
-*Erase icon in the show all screen*
+Images are displayed as thumbnails. Non-image files show a generic icon.
+Large images are automatically downscaled on upload if **Max image size** is set
+in [App settings](/guide/setup/main-app-config).

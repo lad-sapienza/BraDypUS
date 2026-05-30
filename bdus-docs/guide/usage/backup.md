@@ -2,29 +2,50 @@
 title: Database backup
 ---
 
-{: .callout-block .callout-block-warning }
-Backups can be created by edit and above users;  
-backups can be deleted by admin and above users;  
-backups can be resored by super-admin users.
+# Database backup
 
-Backups are a very important maintainance and security feature of Bradypus
-database.
-The backup system has been re-writen from scratch in v.4 and is still going 
-to be implemennted in the future.
+The **Backup** module creates and manages snapshots of your database.
+Admin privilege is required to access it.
 
-At present, all three main database engines, SQLite, MySQL/MariaDB and PostreSQL
-are supported, via `mysqldump`, `pg_dump` and `sqlite3` executables that **must**
-be installed.
+Open **Backup** from the sidebar.
 
-Backups are gzipped SQL files containing structure and data, and are engine-dependent.
-This means that you cannot use this feature for migrations, ie. you **can not** import
-into MySQL a SQLite backup.
+![TODO_SCREENSHOT: BackupView showing a list of existing backups with date, size, and action buttons](/images/v5/usage/backup-list.png)
 
-{: .callout-block .callout-block-danger }
-At present (v. 4.0.0-alpha.174) PostgreSQL backup cannot be restored by 
-one-click procedure, like MySQL and SQLite ones.
+## Creating a backup
 
+Click **Create backup**. A timestamped `.sqlite` dump is created and stored in
+`projects/{app}/backups/`. For MySQL and PostgreSQL databases a SQL dump is created.
 
-![screenshot](/images/usage/backups.png "Backups")
-*Backups*
+The backup operation is performed with native PHP/PDO — no external tools (e.g.
+`sqlite3` CLI) are required.
 
+## Downloading a backup
+
+Click the **Download** icon next to a backup to save it to your computer.
+
+## Restoring a backup
+
+::: warning Super-admin required
+Restore requires super-admin privilege.
+:::
+
+Click **Restore** next to a backup. A confirmation dialog warns you that the
+current database will be **completely replaced** by the backup contents.
+
+After confirmation, the restore runs and you are redirected to the login page.
+Log in again to use the restored application.
+
+## Deleting a backup
+
+Click **Delete** next to a backup to permanently remove it from disk.
+
+## Backup retention
+
+BraDypUS does not automatically delete old backups. Manage disk usage by
+periodically deleting older snapshots or downloading and archiving them externally.
+
+## Recommended practice
+
+- Create a backup **before any structural change** (adding/removing tables or fields).
+- Create a backup **before a bulk import or find-and-replace** operation.
+- Download and store backups externally on a regular schedule.

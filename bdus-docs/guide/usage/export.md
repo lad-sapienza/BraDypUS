@@ -2,36 +2,38 @@
 title: Data export
 ---
 
-You can use BraDypus to export your data in various format. At present 
-(v. 4.0.0-alpha.174), the following formats are available:
-- JSON
-- XLS
-- SQL (insert statements)
-- CSV
-- HTML
-- XML
+# Data export
 
-Also you can choose to export the whole table, using the **Export** button
-in the main page:
+You can export records directly from the DataView toolbar. The export respects
+the active search filter — only matching records are exported.
 
-![screenshot](/images/usage/export-all.png "Export all")
-*Export all*
+## How to export
 
-Or you can export a subset of the table, ie. the results of a query:
+1. Open the record list for the desired table.
+2. Optionally apply a search filter to limit the export.
+3. Click the **Export** button in the toolbar.
+4. Choose the format: **CSV**, **XLSX** or **JSON**.
+5. The file downloads immediately — no temp file is created on the server.
 
-![screenshot](/images/usage/export-query.png "Export query")
-*Export query*
+![TODO_SCREENSHOT: DataView toolbar with the Export button highlighted and the format dropdown open](/images/v5/usage/export-toolbar.png)
 
-Exported files are saved in the `export/` folder of the project
-folder and can be viewed, downloaded or erased from the dashboard, by clicking
-on **Available exported files**:
+## Formats
 
-![screenshot](/images/usage/export-list.png "Available exports")
-*Available exports*
+| Format | Notes |
+|---|---|
+| **CSV** | Comma-separated values, UTF-8 encoded. Suitable for Excel, Google Sheets, R, Python. |
+| **XLSX** | Native Excel file. Column headers in row 1. |
+| **JSON** | Array of objects, one per record. Field names as keys. |
 
+## What is exported
 
-{: .callout-block .callout-block-danger }
-The Export feature will export **only the information contained in the data-tables**.
-Linked plugin data will not be exported.
+The export includes **all columns** of the main table (not plugin sub-tables).
+The column order matches the [field order](/guide/setup/adding-columns) defined in Config.
 
+Plugin table data (e.g. finds attached to a context) is not included in the main
+export. Export the plugin table separately by selecting it as the active table.
 
+## Large datasets
+
+Exports are **streamed** directly to the browser — there is no server-side temp file
+and no memory ceiling. Exports of hundreds of thousands of records are supported.

@@ -1,74 +1,142 @@
 ---
-title: API
+title: REST API
 ---
 
-Bradypus is shipped with a read-only JSON Rest API that makes it very easy to 
-query and retrieve informations programmatically.
+# REST API
 
-{: .callout-block .callout-block-warning}
-In Bradyus v3 the API was versioned, and two parallel versions were supported.
-In version 4 this is not true anymore and only the newest verion of the API is supported. 
-For consistency, the API will always follow the version of BDUS.
-You should migrate as soon as possible your v1 based applications.
+BraDypUS exposes a read-only public REST API that allows external applications to
+query records without a full authentication session.
 
-The API endpoint is available at the `/api/` relative URL, eg.:
-`https://bdus.cloud/db/api/`.
+## Authentication
 
-{: .callout-block .callout-block-warning}
-The API function must be activated in the main app configuration file in order for the API to work. The API should run as a specific user of the database
+Two authentication methods are supported:
 
-Foreach API call the **application name**  and a set of **parameters** should be provided in the URL in the form: `https://{base-url}/api/{app-name}/?parameters`, eg.: `https://bdus.cloud/dev/db/api/tests/?parameters`
+### API key (recommended for automated access)
 
-### Available parameters
-- `pretty` [bool, optional, default: 0]: if set to `1` the returned JSON will be indented for easier reading
+An API key is a long random token that acts like a service account. Keys are
+managed by admins in **Config → API Keys**.
 
-- `debug` [bool, optional, default: 0]: if set to `1` the debug will be turned on and detailed information on errorwill be returned
+Pass the key in the `Authorization` header:
 
-- `verb` [string, **required**]  
-The verb tells the API what to do. One of the following strings ca be used:
+```
+Authorization: Bearer bdus_<key>
+```
 
-  - `read` returns all available information about a record. Table namea an recordsis ust be provided
-    - `tb` [string, **required**]: table name with no prefix
-    - `id` [int, **required**]: row id  
-    Example: [https://bdus.cloud/dev/db/api/tests/?verb=read&tb=sites&id=1](https://bdus.cloud/dev/db/api/tests/?verb=read&tb=sites&id=1)
+Each key has a maximum privilege level. A key with privilege 30 (reader) can only
+read data; a key with privilege 20 (editor) can also write.
 
-  - `search` performs a search in the databases and returnes results
-    - `shortsql` [string, **required**]: string with [ShortSQL]( /guide/api/shortsql) filter
-    - `total_rows` [integer, optional, default: 0]: if provided, the database will not be queried fot total number of rows
-    - `page` [integer, optional, default: 1]: page to retrieve. Search resultsa are pagineated, for efficiency
-    - `records_per_page`  [integer, optional, default: 30]: number of records per page, default: 30
-    - `full_records` [boolean, optional, default: 0]: if true for each returned record full data will be returned, otherwize only preview fields (faster) will be returned  
-    - `geojson` [boolean, optional, default: 0]: if true and if geogata ara available for table, valid geojson will be returned
-    Example #1: [https://bdus.cloud/dev/db/api/tests/?verb=search&shortsql=@sites](https://bdus.cloud/dev/db/api/tests/?verb=search&shortsql=@sites)  
-    Example #2: [https://bdus.cloud/dev/db/api/tests/?verb=search&shortsql=@sites&total_rows=1](https://bdus.cloud/dev/db/api/tests/?verb=search&shortsql=@sites&total_rows=1)  
-    Example #3: [https://bdus.cloud/dev/db/api/tests/?verb=search&shortsql=@sites&total_rows=1&page=1](https://bdus.cloud/dev/db/api/tests/?verb=search&shortsql=@sites&total_rows=1&page=1)  
-    Example #4: [https://bdus.cloud/dev/db/api/tests/?verb=search&shortsql=@sites&total_rows=1&page=1&records_per_page=10](https://bdus.cloud/dev/db/api/tests/?verb=search&shortsql=@sites&total_rows=1&page=1&records_per_page=10)  
-    Example #5: [https://bdus.cloud/dev/db/api/tests/?verb=search&shortsql=@sites&total_rows=1&page=1&records_per_page=10&full_records=1](https://bdus.cloud/dev/db/api/tests/?verb=search&shortsql=@sites&total_rows=1&page=1&records_per_page=10&full_records=1)  
-    Example #6: [https://bdus.cloud/dev/db/api/tests/?verb=search&shortsql=@sites&geojson=1&records_per_page=1000](https://bdus.cloud/dev/db/api/tests/?verb=search&shortsql=@sites&geojson=1&records_per_page=1000)
+### JWT (user session)
 
-  - `inspect`: returns information on configuration  
-  Example: [https://bdus.cloud/dev/db/api/tests/?verb=inspect](https://bdus.cloud/dev/db/api/tests/?verb=inspect)
-    - `tb` [string, optional]: if present only data for indicated table will be returned  
-    Example: [https://bdus.cloud/dev/db/api/tests/?verb=inspect&tb=sites](https://bdus.cloud/dev/db/api/tests/?verb=inspect&tb=sites)
-  
-  - `getChart`: returns data for specific chart
-    - `id` [string, **required**]: id of the chart to output  
-    Example: [https://bdus.cloud/dev/db/api/tests/?verb=getChart&id=1](https://bdus.cloud/dev/db/api/tests/?verb=getChart&id=1)
-  
-  - `getUniqueVal`: returns list of unique values used in a specific table and field
-    - `tb` [string, **required**]: name of the table, without prefix
-    - `fld` [string, **required**]: name of the field
-    - `s` [string, optional]: filter sub-string. If present only values containing the provided substrings will be returned
-    - `w` [string, optional]: string with [ShortSQL]( /guide/api/shortsql) filter to use to limit search  
-    Example #1: [https://bdus.cloud/dev/db/api/tests/?verb=getUniqueVal&tb=sites&fld=typology](https://bdus.cloud/dev/db/api/tests/?verb=getUniqueVal&tb=sites&fld=typology)  
-    Example #2: [https://bdus.cloud/dev/db/api/tests/?verb=getUniqueVal&tb=sites&fld=typology&s=large](https://bdus.cloud/dev/db/api/tests/?verb=getUniqueVal&tb=sites&fld=typology&s=large)  
-    Example #3: [https://bdus.cloud/dev/db/api/tests/?verb=getUniqueVal&tb=sites&fld=typology&w=chronology|like|%prehistoric%](https://bdus.cloud/dev/db/api/tests/?verb=getUniqueVal&tb=sites&fld=typology&w=chronology|like|%prehistoric%)  
-    Example #4: [https://bdus.cloud/dev/db/api/tests/?verb=getUniqueVal&tb=sites&fld=typology&s=large&w=chronology|like|%prehistoric%](https://bdus.cloud/dev/db/api/tests/?verb=getUniqueVal&tb=sites&fld=typology&s=large&w=chronology|like|%prehistoric%)  
-  
-  - `getVocabulary`: returns list of vocabulary items for specific vocabulary
-    - `voc` [string, **required**]: vobaulary name  
-    Example: [https://bdus.cloud/dev/db/api/tests/?verb=getVocabulary&voc=site_typology](https://bdus.cloud/dev/db/api/tests/?verb=getVocabulary&voc=site_typology)
+The same JWT issued at login can be used in API calls:
 
-  - `getApiVersion`: returns the current version of BraDypUS
-    Example: [https://bdus.cloud/dev/db/api/tests/?verb=getApiVersion](https://bdus.cloud/dev/db/api/tests/?verb=getApiVersion)
+```
+Authorization: Bearer <jwt_token>
+```
 
+## Base URL
+
+All API endpoints are under `/api/`. The application name is NOT part of the path
+(unlike older v3/v4 versions). The active app is determined from the token.
+
+## Listing records
+
+```
+GET /api/records/{table}
+```
+
+Returns a paginated JSON response:
+
+```json
+{
+  "status": "success",
+  "total": 42,
+  "fields": [{"name": "sigla", "label": "Sigla"}, ...],
+  "data": [{"id": 1, "sigla": "US001", ...}, ...]
+}
+```
+
+### Pagination parameters
+
+| Parameter | Default | Description |
+|---|---|---|
+| `page` | 1 | Page number |
+| `per_page` | 30 | Records per page (max 200) |
+| `sort_field` | — | Column to sort by |
+| `sort_dir` | `asc` | `asc` or `desc` |
+
+## Filtering records
+
+Use the Directus-style `filter` parameter. It accepts either bracket notation
+(GET-friendly) or a JSON body (POST).
+
+### Bracket notation (GET)
+
+```
+GET /api/records/us?filter[periodo][_eq]=Basso+Medioevo
+```
+
+Multiple conditions:
+
+```
+GET /api/records/us?filter[periodo][_eq]=Basso+Medioevo&filter[sigla][_icontains]=US
+```
+
+### JSON body (POST)
+
+```http
+POST /api/records/us
+Content-Type: application/json
+
+{
+  "filter": {
+    "periodo": { "_eq": "Basso Medioevo" },
+    "sigla":   { "_icontains": "US" }
+  }
+}
+```
+
+Multiple conditions are joined with `AND` by default. For `OR`:
+
+```json
+{
+  "filter": {
+    "_or": [
+      { "periodo": { "_eq": "Basso Medioevo" } },
+      { "periodo": { "_eq": "Alto Medioevo"  } }
+    ]
+  }
+}
+```
+
+## Filter operators
+
+| Operator | Meaning |
+|---|---|
+| `_eq` | Equal |
+| `_neq` | Not equal |
+| `_icontains` | Case-insensitive contains |
+| `_ncontains` | Does not contain |
+| `_starts_with` | Starts with |
+| `_ends_with` | Ends with |
+| `_gt` | Greater than |
+| `_lt` | Less than |
+| `_gte` | Greater than or equal |
+| `_lte` | Less than or equal |
+| `_empty` | Is NULL or empty string |
+| `_nempty` | Is not NULL and not empty |
+| `_in` | Value is in the list |
+| `_nin` | Value is not in the list |
+
+## Reading a single record
+
+```
+GET /api/record/{table}/{id}
+```
+
+Returns the full record with all fields, plugin sub-tables, file list, and
+associated RS data.
+
+## Interactive API reference
+
+See the [API Reference](/api-reference/) section for an interactive OpenAPI
+explorer with all available endpoints.

@@ -1,22 +1,30 @@
 ---
-title: Find and replace
+title: Find & replace
 ---
 
+# Find & replace
 
-{: .callout-block .callout-block-warning }
-This feature is available only for edit enabled users and above
+The **Find & replace** module lets you bulk-update a field across all records
+that match a search value. It is available from the sidebar (admin privilege required).
 
-It is easy to look for a string and replace it with another string 
-in all the records of a table, without having to edit records one by one.
+![TODO_SCREENSHOT: SearchReplaceView with table selector, field selector, and find/replace fields](/images/v5/usage/find-replace.png)
 
-Dropdown menus will help selecting the table, and the column, then
-you can type the term to search for and the string to use as replacement 
-for the found term.
+## How to use
 
-{: .callout-block .callout-block-danger }
-Be aware, once the replace has been perfomed, there is no way back.
-Please make a [database backup]( /guide/usage/backup) before going through this procedure.
+1. Select the **Table** from the first dropdown.
+2. Select the **Field** to operate on from the second dropdown (the list updates based on the selected table).
+3. Enter the value to **Find**.
+4. Enter the **Replacement** value.
+5. Click **Preview** to see how many records will be affected before committing.
+6. Click **Replace** to apply the change.
 
-![screenshot](/images/usage/find-replace.png "Find and replace")
-*Find and replace*
+## Case sensitivity
 
+The search is exact (case-sensitive) by default. Partial matches within a field
+value are replaced — i.e. if the field contains `"Early medieval"` and you search
+for `"medieval"`, the entire occurrence will be replaced.
+
+::: warning
+Find & replace is a bulk operation and cannot be undone through the UI.
+Create a [backup](/guide/usage/backup) before running large replacements.
+:::

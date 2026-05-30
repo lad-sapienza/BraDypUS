@@ -11,10 +11,17 @@
 #   6. Tears down the test container (unless --keep is passed)
 #
 # Usage:
-#   ./test.sh              # run everything, clean up on exit
-#   ./test.sh --keep       # leave the container running after the tests
-#   ./test.sh --skip-unit  # skip PHPUnit, run only Hurl
-#   ./test.sh --skip-e2e   # skip Hurl, run only PHPUnit
+#   ./test.sh                # run everything, clean up on exit
+#   ./test.sh --keep         # leave the container running after the tests
+#   ./test.sh --seed-demo    # after tests, populate the app with demo data for screenshots
+#   ./test.sh --skip-unit    # skip PHPUnit, run only Hurl
+#   ./test.sh --skip-e2e     # skip Hurl, run only PHPUnit
+#
+# Screenshot workflow:
+#   ./test.sh --seed-demo --keep
+#   → container stays on port 8081, app populated with demo data
+#   → open http://localhost:8081 in browser to take screenshots
+#   → next ./test.sh run will clean up the demo app automatically
 #
 # Requirements:
 #   - docker        (Docker Desktop or Docker Engine)
@@ -39,15 +46,17 @@ header() { echo -e "\n${BOLD}${CYAN}══ $* ══${RESET}"; }
 KEEP=false
 SKIP_UNIT=false
 SKIP_E2E=false
+SEED_DEMO=false
 
 for arg in "$@"; do
   case "$arg" in
     --keep)       KEEP=true ;;
     --skip-unit)  SKIP_UNIT=true ;;
     --skip-e2e)   SKIP_E2E=true ;;
+    --seed-demo)  SEED_DEMO=true ;;
     *)
       echo "Unknown option: $arg" >&2
-      echo "Usage: $0 [--keep] [--skip-unit] [--skip-e2e]" >&2
+      echo "Usage: $0 [--keep] [--seed-demo] [--skip-unit] [--skip-e2e]" >&2
       exit 1
       ;;
   esac
@@ -172,8 +181,13 @@ if [[ "$SKIP_E2E" == true ]]; then
   warn "Hurl E2E skipped (--skip-e2e)"
 else
   header "Step 5 — Hurl E2E API suite"
-  if "${SCRIPT_DIR}/tests/api/run.sh" "$VARS_FILE"; then
+  E2E_ARGS=("$VARS_FILE")
+  [[ "$SEED_DEMO" == true ]] && E2E_ARGS+=("--seed-demo")
+  if "${SCRIPT_DIR}/tests/api/run.sh" "${E2E_ARGS[@]}"; then
     pass "Hurl E2E: all phases passed"
+    if [[ "$SEED_DEMO" == true ]]; then
+      info "Demo app available at http://localhost:${TEST_PORT} — credentials: test@bdus.test / TestBdus_2025!"
+    fi
   else
     E2E_EXIT=$?
     fail "Hurl E2E: some phases failed (exit ${E2E_EXIT})"

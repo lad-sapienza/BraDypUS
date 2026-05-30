@@ -22,12 +22,14 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LIST_ONLY=false
 FROM_PHASE=""
 ONLY_PHASE=""
+SEED_DEMO=false
 
 for arg in "$@"; do
   case "$arg" in
     --list)         LIST_ONLY=true ;;
     --from=*)       FROM_PHASE="${arg#--from=}" ;;
     --only=*)       ONLY_PHASE="${arg#--only=}" ;;
+    --seed-demo)    SEED_DEMO=true ;;
   esac
 done
 
@@ -283,10 +285,21 @@ header "Phase 10 — Cleanup"
 run_phase "Logout" "10_cleanup.hurl" \
   --variable "jwt=${JWT}"
 
-# Remove the test app from disk
-info "Removing test app directory: ${APP_DIR}"
-rm -rf "$APP_DIR"
-pass "App directory removed"
+# ════════════════════════════════════════════════════════════════════
+# Phase 19 — Demo seed (optional — only with --seed-demo)
+# ════════════════════════════════════════════════════════════════════
+if [[ "$SEED_DEMO" == true ]]; then
+  header "Phase 19 — Demo seed"
+  SEED_JSON=$(capture_phase "Demo seed" "19_seed_demo.hurl" \
+    --variable "jwt=${JWT}")
+  pass "Demo seed: app populated with realistic data"
+  echo -e "${CYAN}  App available at: ${BASE_URL} (app: ${APP_NAME})${RESET}"
+  echo -e "${CYAN}  Credentials: ${ADMIN_EMAIL} / ${ADMIN_PASSWORD}${RESET}"
+fi
+
+# NOTE: app directory is intentionally NOT deleted here.
+# The pre-flight at the start of the next run cleans it up.
+# This allows the populated app to be used for screenshots and demos.
 
 # ════════════════════════════════════════════════════════════════════
 echo -e "\n${BOLD}${GREEN}All phases passed.${RESET}\n"

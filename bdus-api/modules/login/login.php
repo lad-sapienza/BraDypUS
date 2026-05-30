@@ -16,23 +16,23 @@ class login_ctrl extends Controller
 		
 		// Check required fields
 		if (!$post['app'] || !$post['name'] || !$post['email'] || !$post['password'] || !$post['password2']) {
-			$this->response('all_fields_required', 'error');
+			$this->returnJson(['status' => 'error', 'code' => 'all_fields_required']);
 			return false;
 		}
 
 		// Check matching passwords
 		if ($post['password'] !== $post['password2']) {
-			$this->response('pass_empty_or_not_match', 'error');
+			$this->returnJson(['status' => 'error', 'code' => 'pass_empty_or_not_match']);
 			return false;
 		}
 
 		// Check valid email
 		if (filter_var($post['email'], FILTER_VALIDATE_EMAIL)) {
-			$this->response( 'email_not_valid', 'error', [$post['email']]);
+			$this->returnJson(['status' => 'error', 'code' => 'email_not_valid']);
 		}
 		
 		if (\utils::isDuplicateEmail($this->db, $post['email'])) {
-			$this->response('email_present', 'error', [$post['email']]);
+			$this->returnJson(['status' => 'error', 'code' => 'email_present']);
 		}
 		
 		try {
@@ -66,14 +66,14 @@ class login_ctrl extends Controller
 
 					@mail($to, $subject, $message, $headers);
 				}
-				$this->response( 'ok_user_add', 'success', [ $post['email'] ]);
+				$this->returnJson(['status' => 'success', 'code' => 'ok_user_add']);
 				return true;
 			} else {
-				$this->response('error_user_add', 'error');
+				$this->returnJson(['status' => 'error', 'code' => 'error_user_add']);
 				return false;
 			}
 		} catch(\Throwable $e) {
-			$this->response($e->getMessage(), 'error');
+			$this->returnJson(['status' => 'error', 'code' => $e->getMessage()]);
 			return false;
 		}
 		
@@ -87,7 +87,7 @@ class login_ctrl extends Controller
 		if ($user_id) {
 			$this->log->info("User {$user_id} logged out");
 		}
-		$this->response('ok', 'success');
+		$this->returnJson(['status' => 'success', 'code' => 'ok']);
 	}
 
 	/**
@@ -99,11 +99,11 @@ class login_ctrl extends Controller
 	{
 		if (!\Auth\CurrentUser::isAuthenticated()) {
 			http_response_code(401);
-			$this->response('unauthorized', 'error');
+			$this->returnJson(['status' => 'error', 'code' => 'unauthorized']);
 			return;
 		}
 		$token = \JWT\JwtManager::generate(\Auth\CurrentUser::get(), APP);
-		$this->response('ok', 'success', null, ['token' => $token]);
+		$this->returnJson(['status' => 'success', 'code' => 'ok', ['token' => $token]]);
 	}
 
 	public function auth(): void
@@ -113,13 +113,13 @@ class login_ctrl extends Controller
 			\DB\System\Migrate::run($this->db, $this->log);
 			$this->log->info("User {$user['id']} logged into " . APP);
 			$token = \JWT\JwtManager::generate($user, APP);
-			$this->response('ok', 'success', null, ['token' => $token]);
+			$this->returnJson(['status' => 'success', 'code' => 'ok', ['token' => $token]]);
 		} catch (\Exception $e) {
 			$this->log->error($e);
-			$this->response($e->getMessage(), 'error');
+			$this->returnJson(['status' => 'error', 'code' => $e->getMessage()]);
 		} catch (\Throwable $e) {
 			$this->log->error($e);
-			$this->response('generic_error', 'error');
+			$this->returnJson(['status' => 'error', 'code' => 'generic_error']);
 		}
 	}
 
@@ -193,9 +193,9 @@ class login_ctrl extends Controller
 		$res = $sys_manager->editRow('bdus_users', $id, ['password' => $password]);
 
 		if ( $res ) {
-			$this->response('ok_password_update', 'success');
+			$this->returnJson(['status' => 'success', 'code' => 'ok_password_update']);
 		} else {
-			$this->response('error_password_update', 'error');
+			$this->returnJson(['status' => 'error', 'code' => 'error_password_update']);
 		}
 
 	}
@@ -219,12 +219,12 @@ class login_ctrl extends Controller
 			$resp = mail($to, $subject, $message, $headers);
 
 			if ($resp) {
-				$this->response('anything', 'success');
+				$this->returnJson(['status' => 'success', 'code' => 'anything']);
 			} else {
-				$this->response('error_sending_email', 'error');
+				$this->returnJson(['status' => 'error', 'code' => 'error_sending_email']);
 			}
 		} else {
-			$this->response('email_not_found', 'error');
+			$this->returnJson(['status' => 'error', 'code' => 'email_not_found']);
 		}
 	}
 

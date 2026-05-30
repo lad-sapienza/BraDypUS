@@ -208,13 +208,13 @@ class user_ctrl extends Controller
 			if (!$isNewUser) {
 				// Edit existing user
 				if (\utils::isDuplicateEmail($this->db, $data['email'], $data['id'])) {
-					$this->response('email_present', 'error', [$data['email']]);
+					$this->returnJson(['status' => 'error', 'code' => 'email_present']);
 					return;
 				}
 				$ret = $sys_manager->editRow('bdus_users', (int) $data['id'], $data);
 			} else {
 				if (\utils::isDuplicateEmail($this->db, $data['email'])) {
-					$this->response('email_present', 'error', [$data['email']]);
+					$this->returnJson(['status' => 'error', 'code' => 'email_present']);
 					return;
 				}
 				$ret = $sys_manager->addRow('bdus_users', $data);
@@ -223,13 +223,13 @@ class user_ctrl extends Controller
 			if ($ret) {
 				// For new users, include the generated ID so callers can reference it.
 				$extra = $isNewUser ? ['id' => $ret] : [];
-				$this->response('user_data_saved', 'success', null, $extra);
+				$this->returnJson(['status' => 'success', 'code' => 'user_data_saved', $extra]);
 			} else {
 				throw new \Exception('Query returned false');
 			}
 		} catch (\Throwable $e) {
 			$this->log->error($e);
-			$this->response('user_data_not_saved', 'error');
+			$this->returnJson(['status' => 'error', 'code' => 'user_data_not_saved']);
 		}
 	}
 

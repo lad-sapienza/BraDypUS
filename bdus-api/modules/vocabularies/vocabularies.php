@@ -47,9 +47,9 @@ class vocabularies_ctrl extends Controller
 		]);
 		
 		if ( $res ) {
-			$this->response('ok_def_update', 'success');
+			$this->returnJson(['status' => 'success', 'code' => 'ok_def_update']);
 		} else {
-			$this->response('error_def_update', 'error');
+			$this->returnJson(['status' => 'error', 'code' => 'error_def_update']);
 		}
 	}
 	
@@ -60,9 +60,9 @@ class vocabularies_ctrl extends Controller
 		$res = $this->getSysMng()->deleteRow('bdus_vocabularies', $id );
 
 		if ( $res ) {
-			$this->response('ok_def_erase', 'success');
+			$this->returnJson(['status' => 'success', 'code' => 'ok_def_erase']);
 		} else {
-			$this->response('error_def_erase', 'error');
+			$this->returnJson(['status' => 'error', 'code' => 'error_def_erase']);
 		}
 	}
 	
@@ -77,9 +77,9 @@ class vocabularies_ctrl extends Controller
 		]);
 
 		if ( $res ) {
-			$this->response('ok_def_added', 'success');
+			$this->returnJson(['status' => 'success', 'code' => 'ok_def_added']);
 		} else {
-			$this->response('error_def_added', 'error');
+			$this->returnJson(['status' => 'error', 'code' => 'error_def_added']);
 		}
 	}
 	
@@ -101,7 +101,7 @@ class vocabularies_ctrl extends Controller
 			}
 		}
 		$error
-			? $this->response('error_sort_update', 'error')
-			: $this->response('ok_sort_update', 'success');
+			? $this->returnJson(['status' => 'error', 'code' => 'error_sort_update'])
+			: $this->returnJson(['status' => 'success', 'code' => 'ok_sort_update']);
 	}
 }

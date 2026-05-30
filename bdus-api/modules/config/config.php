@@ -75,10 +75,10 @@ class config_ctrl extends Controller
 
       $this->cfg->setTable($post);
 
-      $this->response('ok_cfg_data_updated');
+      $this->returnJson(['status' => 'success', 'code' => 'ok_cfg_data_updated']);
     } catch (\Throwable $e) {
       $this->log->error($e);
-      $this->response('error_cfg_data_updated', 'error');
+      $this->returnJson(['status' => 'error', 'code' => 'error_cfg_data_updated']);
     }
   }
 
@@ -113,7 +113,7 @@ class config_ctrl extends Controller
       // Reject duplicate table names before touching the config or the DB.
       $existing = array_column($this->cfg->get('tables') ?? [], 'name');
       if (in_array($new_tb_name, $existing, true)) {
-        $this->response('tb_already_available', 'error', [$new_tb_name]);
+        $this->returnJson(['status' => 'error', 'code' => 'tb_already_available']);
         return;
       }
 
@@ -157,12 +157,10 @@ class config_ctrl extends Controller
       $alter = new Alter($this->db);
       $alter->createMinimalTable($new_tb_name, ($post['is_plugin'] === '1'));
 
-      $this->response('ok_cfg_data_updated', 'success', null, [
-        'tb' => $new_tb_name
-      ]);
+      $this->returnJson(['status' => 'success', 'code' => 'ok_cfg_data_updated', 'tb' => $new_tb_name]);
     } catch (\Throwable $e) {
       $this->log->error($e);
-      $this->response('error_cfg_data_updated', 'error');
+      $this->returnJson(['status' => 'error', 'code' => 'error_cfg_data_updated']);
     }
   }
 
@@ -186,10 +184,10 @@ class config_ctrl extends Controller
 
       $this->cfg->setFld($tb, $fld, $post);
 
-      $this->response('ok_cfg_data_updated', 'success');
+      $this->returnJson(['status' => 'success', 'code' => 'ok_cfg_data_updated']);
     } catch (\Throwable $e) {
       $this->log->error($e);
-      $this->response('error_cfg_data_updated', 'error');
+      $this->returnJson(['status' => 'error', 'code' => 'error_cfg_data_updated']);
     }
   }
 
@@ -209,7 +207,7 @@ class config_ctrl extends Controller
       }
       $available_flds = array_values($this->cfg->get("tables.$tb.fields.*.name"));
       if (in_array($fld, $available_flds)) {
-        $this->response('fld_already_available', 'error', [$fld]);
+        $this->returnJson(['status' => 'error', 'code' => 'fld_already_available']);
         return;
       }
 
@@ -218,10 +216,10 @@ class config_ctrl extends Controller
       $alter = new Alter($this->db);
       $alter->addFld($tb, $fld, $post['db_type']);
 
-      $this->response('ok_cfg_data_updated', 'success', null, ["fld" => $fld]);
+      $this->returnJson(['status' => 'success', 'code' => 'ok_cfg_data_updated', 'fld' => $fld]);
     } catch (\Throwable $e) {
       $this->log->error($e);
-      $this->response('error_cfg_data_updated', 'error');
+      $this->returnJson(['status' => 'error', 'code' => 'error_cfg_data_updated']);
     }
   }
 
@@ -231,9 +229,9 @@ class config_ctrl extends Controller
     $data = $this->post;
     try {
       $this->cfg->setMain($data);
-      $this->response('ok_cfg_data_updated', 'success');
+      $this->returnJson(['status' => 'success', 'code' => 'ok_cfg_data_updated']);
     } catch (\Throwable $e) {
-      $this->response('error_cfg_data_updated', 'error');
+      $this->returnJson(['status' => 'error', 'code' => 'error_cfg_data_updated']);
     }
   }
 
@@ -247,9 +245,9 @@ class config_ctrl extends Controller
       // Drop table from database
       $alter = new Alter($this->db);
       $alter->dropTable($tb);
-      $this->response('ok_cfg_tb_delete', 'success');
+      $this->returnJson(['status' => 'success', 'code' => 'ok_cfg_tb_delete']);
     } catch (\Throwable $th) {
-      $this->response('error_cfg_tb_delete', 'error');
+      $this->returnJson(['status' => 'error', 'code' => 'error_cfg_tb_delete']);
     }
   }
 
@@ -266,9 +264,9 @@ class config_ctrl extends Controller
       $alter = new Alter($this->db);
       $alter->dropFld($tb, $fld);
 
-      $this->response('ok_cfg_column_delete', 'success');
+      $this->returnJson(['status' => 'success', 'code' => 'ok_cfg_column_delete']);
     } catch (\Throwable $th) {
-      $this->response('error_cfg_clumn_delete', 'error');
+      $this->returnJson(['status' => 'error', 'code' => 'error_cfg_clumn_delete']);
     }
   }
 
@@ -288,10 +286,10 @@ class config_ctrl extends Controller
       $alter = new Alter($this->db);
       $alter->renameTable($old_name, $new_name);
 
-      $this->response('ok_renaming_table', 'success');
+      $this->returnJson(['status' => 'success', 'code' => 'ok_renaming_table']);
     } catch (\Throwable $e) {
       $this->log->error($e);
-      $this->response('error_renaming_table', 'error');
+      $this->returnJson(['status' => 'error', 'code' => 'error_renaming_table']);
     }
   }
 
@@ -314,10 +312,10 @@ class config_ctrl extends Controller
       $type = $this->cfg->get("tables.$tb.fields.$old_name.db_type") ?: 'TEXT';
       $alter->renameFld($tb, $old_name, $new_name, $type);
 
-      $this->response('ok_renaming_column', 'success');
+      $this->returnJson(['status' => 'success', 'code' => 'ok_renaming_column']);
     } catch (\Throwable $e) {
       $this->log->error($e);
-      $this->response('error_renaming_column', 'error');
+      $this->returnJson(['status' => 'error', 'code' => 'error_renaming_column']);
     }
   }
 
@@ -335,10 +333,10 @@ class config_ctrl extends Controller
     if ($action === 'create' && !$col) {
       try {
         $sys_manage->createTable($tb);
-        $this->response('ok_creating_table', 'success');
+        $this->returnJson(['status' => 'success', 'code' => 'ok_creating_table']);
       } catch (\Throwable $th) {
         $this->log->error($th);
-        $this->response('error_creating_table', 'error');
+        $this->returnJson(['status' => 'error', 'code' => 'error_creating_table']);
       }
       return;
     }
@@ -355,32 +353,32 @@ class config_ctrl extends Controller
       }
       if ($type) {
         $alter->addFld($tb, $col, $type);
-        $this->response('ok_adding_column', 'success');
+        $this->returnJson(['status' => 'success', 'code' => 'ok_adding_column']);
       } else {
-        $this->response('col_type_not_found', 'error', [$tb, $col]);
+        $this->returnJson(['status' => 'error', 'code' => 'col_type_not_found']);
       }
       return;
 
       // Drop table: yes delete, no col
     } else if ($action === 'delete' && !$col) {
       $alter->dropTable($tb);
-      $this->response('ok_deleting_table', 'success');
+      $this->returnJson(['status' => 'success', 'code' => 'ok_deleting_table']);
       return;
 
       // Drop column: yes delete, yes column
     } else if ($action === 'delete' && $col) {
       $alter->dropFld($tb, $col);
-      $this->response('ok_deleting_column', 'success');
+      $this->returnJson(['status' => 'success', 'code' => 'ok_deleting_column']);
       return;
     }
-    $this->response('invalid_action', 'error', [$action]);
+    $this->returnJson(['status' => 'error', 'code' => 'invalid_action']);
   }
 
   public function getFldList()
   {
     if (!$this->requireSuperAdmin()) return;
     $tb = $this->get['tb'];
-    $this->response('ok', 'success', null, ["fields" => $this->cfg->get("tables.$tb.fields.*.label")]);
+    $this->returnJson(['status' => 'success', 'code' => 'ok', 'fields' => $this->cfg->get("tables.$tb.fields.*.label")]);
   }
 
   public function sortTables()
@@ -388,9 +386,9 @@ class config_ctrl extends Controller
     if (!$this->requireSuperAdmin()) return;
     $sortArray = $this->post['sort'] ?? $this->get['sort'] ?? [];
     if ($this->cfg->sortTables($sortArray)) {
-      $this->response('ok_sort_update', 'success');
+      $this->returnJson(['status' => 'success', 'code' => 'ok_sort_update']);
     } else {
-      $this->response('error_sort_update', 'error');
+      $this->returnJson(['status' => 'error', 'code' => 'error_sort_update']);
     }
   }
 
@@ -408,12 +406,12 @@ class config_ctrl extends Controller
     try {
       $ok = \Config\GeofaceConfig::saveLayers($this->db, $layers);
       if ($ok) {
-        $this->response('ok_geoface_updated', 'success');
+        $this->returnJson(['status' => 'success', 'code' => 'ok_geoface_updated']);
       } else {
-        $this->response('error_geoface_updated', 'error');
+        $this->returnJson(['status' => 'error', 'code' => 'error_geoface_updated']);
       }
     } catch (\Throwable $th) {
-      $this->response('error_geoface_updated', 'error');
+      $this->returnJson(['status' => 'error', 'code' => 'error_geoface_updated']);
     }
   }
 
@@ -429,9 +427,9 @@ class config_ctrl extends Controller
         throw new Exception("File $file not deleted");
       }
 
-      $this->response('ok_geoface_updated', 'success');
+      $this->returnJson(['status' => 'success', 'code' => 'ok_geoface_updated']);
     } catch (\Throwable $th) {
-      $this->response('error_geoface_updated', 'error');
+      $this->returnJson(['status' => 'error', 'code' => 'error_geoface_updated']);
     }
   }
 

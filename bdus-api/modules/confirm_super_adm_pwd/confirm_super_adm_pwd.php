@@ -11,7 +11,7 @@ class confirm_super_adm_pwd_ctrl extends Controller
     public function check_pwd()
     {
         if (!\Auth\Authorization::can('super_admin')){
-            $this->response('not_a_super_admin_user', 'error');
+            $this->returnJson(['status' => 'error', 'code' => 'not_a_super_admin_user']);
             return;
         }
         // Logged used is super admin. Let's check the password
@@ -23,10 +23,10 @@ class confirm_super_adm_pwd_ctrl extends Controller
         $me = $sys_manager->getById('bdus_users', $current_user_id);
 
         if (!$me || !\Auth\Password::verify($pwd, $me['password'])) {
-            $this->response('invalid_pasword', 'error');
+            $this->returnJson(['status' => 'error', 'code' => 'invalid_pasword']);
             return;
         } else {
-            $this->response('valid_pasword', 'success');
+            $this->returnJson(['status' => 'success', 'code' => 'valid_pasword']);
             return;
         }
     }

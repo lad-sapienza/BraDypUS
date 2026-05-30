@@ -15,10 +15,10 @@ class file_ctrl extends Controller
 			$image = $this->get['image'];
 			$im = new ImageManager(new Driver());
 			$im->read($image)->rotate(90)->save($image);
-			echo $this->response('img_rotated', 'success');
+			$this->returnJson(['status' => 'success', 'code' => 'img_rotated']);
 		} catch (\Throwable $th) {
 			$this->log->error($th);
-			echo $this->response('img_not_rotated', 'error');
+			$this->returnJson(['status' => 'error', 'code' => 'img_not_rotated']);
 		}
 	}
 

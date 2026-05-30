@@ -81,7 +81,7 @@
           <template v-for="item in group.items" :key="item.to">
 
             <!-- "Gestione dati" — accordion toggle, not a router link -->
-            <template v-if="item.to === '/data'">
+            <template v-if="item.labelKey === 'data_mng'">
               <button
                 class="nav-item nav-item-accordion"
                 :class="{ 'is-active': isDataRoute, disabled: item.disabled }"

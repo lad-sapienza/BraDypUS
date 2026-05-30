@@ -93,6 +93,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { marked } from 'marked'
 import AppLayout from '@/components/AppLayout.vue'
 import { useAuthStore } from '@/stores/auth'
@@ -103,6 +104,7 @@ import Card     from 'primevue/card'
 import Button   from 'primevue/button'
 import Textarea from 'primevue/textarea'
 
+const route = useRoute()
 const auth  = useAuthStore()
 const { t } = useI18n()
 const toast = useToast()
@@ -168,17 +170,20 @@ onMounted(async () => {
   }
 })
 
-const modules = [
-  { labelKey: 'data_mng',         icon: 'pi-database',   descKey: 'module_data_desc',          route: '/data'         },
-  { labelKey: 'user_mng',         icon: 'pi-users',       descKey: 'module_users_desc',         route: '/users'        },
-  { labelKey: 'sys_config',       icon: 'pi-cog',         descKey: 'module_settings_desc',      route: '/config'       },
-  { labelKey: 'design_templates', icon: 'pi-palette',     descKey: 'module_templates_desc',     route: '/templates'    },
-  { labelKey: 'vocabulary_mng',   icon: 'pi-book',        descKey: 'module_vocabularies_desc',  route: '/vocabularies' },
-  { labelKey: 'backup',           icon: 'pi-server',      descKey: 'module_backup_desc',        route: '/backups'      },
-  { labelKey: 'import_data',      icon: 'pi-upload',      descKey: 'module_import_desc',        route: '/import'       },
-  { labelKey: 'history',          icon: 'pi-clock',       descKey: 'module_history_desc',       route: '/history'      },
-  { labelKey: 'find_replace',     icon: 'pi-search-plus', descKey: 'module_find_replace_desc',  route: '/find-replace' },
-]
+const modules = computed(() => {
+  const a = `/${route.params.app}`
+  return [
+    { labelKey: 'data_mng',         icon: 'pi-database',   descKey: 'module_data_desc',          route: `${a}/data`         },
+    { labelKey: 'user_mng',         icon: 'pi-users',       descKey: 'module_users_desc',         route: `${a}/users`        },
+    { labelKey: 'sys_config',       icon: 'pi-cog',         descKey: 'module_settings_desc',      route: `${a}/config`       },
+    { labelKey: 'design_templates', icon: 'pi-palette',     descKey: 'module_templates_desc',     route: `${a}/templates`    },
+    { labelKey: 'vocabulary_mng',   icon: 'pi-book',        descKey: 'module_vocabularies_desc',  route: `${a}/vocabularies` },
+    { labelKey: 'backup',           icon: 'pi-server',      descKey: 'module_backup_desc',        route: `${a}/backups`      },
+    { labelKey: 'import_data',      icon: 'pi-upload',      descKey: 'module_import_desc',        route: `${a}/import`       },
+    { labelKey: 'history',          icon: 'pi-clock',       descKey: 'module_history_desc',       route: `${a}/history`      },
+    { labelKey: 'find_replace',     icon: 'pi-search-plus', descKey: 'module_find_replace_desc',  route: `${a}/find-replace` },
+  ]
+})
 </script>
 
 <style scoped>

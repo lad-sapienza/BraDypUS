@@ -13,7 +13,7 @@ class InfoCtrlTest extends BdusTestCase
 
     public function testGetInfoReturnsSuccess(): void
     {
-        $ctrl = $this->makeController('info_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Info');
         $res  = $this->callController($ctrl, 'getInfo');
 
         $this->assertArrayHasKey('version',      $res);
@@ -22,7 +22,7 @@ class InfoCtrlTest extends BdusTestCase
 
     public function testGetInfoVersionIsNonEmptyString(): void
     {
-        $ctrl = $this->makeController('info_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Info');
         $res  = $this->callController($ctrl, 'getInfo');
 
         $this->assertIsString($res['version']);
@@ -31,7 +31,7 @@ class InfoCtrlTest extends BdusTestCase
 
     public function testGetInfoChangelogIsMd(): void
     {
-        $ctrl = $this->makeController('info_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Info');
         $res  = $this->callController($ctrl, 'getInfo');
 
         // Raw Markdown is returned; HTML conversion is done client-side via marked.js.
@@ -42,7 +42,7 @@ class InfoCtrlTest extends BdusTestCase
     public function testGetInfoRequiresReadPrivilege(): void
     {
         $this->setPrivilege(99); // no privileges
-        $ctrl = $this->makeController('info_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Info');
         $res  = $this->callController($ctrl, 'getInfo');
         $this->setPrivilege(1);  // restore
 

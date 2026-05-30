@@ -50,7 +50,7 @@ class RecordPersistSnapshotTest extends BdusTestCase
 
     public function testInsertDoesNotCreateSnapshot(): void
     {
-        $ctrl = $this->makeController('record_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], [
             'tb'   => self::TB,
             'core' => ['name' => 'Snapshot-insert-test', 'status' => 'active', 'creator' => 'admin'],
         ]);
@@ -72,7 +72,7 @@ class RecordPersistSnapshotTest extends BdusTestCase
     {
         $beforeCount = $this->versionCount(self::TB, 1);
 
-        $ctrl = $this->makeController('record_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], [
             'tb'   => self::TB,
             'id'   => 1,
             'core' => ['description' => 'Snapshot update test'],
@@ -104,7 +104,7 @@ class RecordPersistSnapshotTest extends BdusTestCase
             [], 'boolean'
         );
 
-        $ctrl = $this->makeController('record_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], [
             'tb'   => self::TB,
             'id'   => 2,
             'core' => ['description' => 'After snapshot'],
@@ -133,7 +133,7 @@ class RecordPersistSnapshotTest extends BdusTestCase
     public function testSnapshotIncludesPlugins(): void
     {
         // Item 1 has two tags seeded (tag-a, tag-b)
-        $ctrl = $this->makeController('record_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], [
             'tb'   => self::TB,
             'id'   => 1,
             'core' => ['status' => 'inactive'],
@@ -170,7 +170,7 @@ class RecordPersistSnapshotTest extends BdusTestCase
             [], 'id'
         );
 
-        $ctrl = $this->makeController('record_ctrl', ['tb' => self::TB, 'id' => $newId]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'id' => $newId]);
         $res  = $this->callController($ctrl, 'erase');
         $this->assertSame('success', $res['status']);
 
@@ -193,7 +193,7 @@ class RecordPersistSnapshotTest extends BdusTestCase
         // Send status as the same string — must not create a snapshot.
         $countBefore = $this->versionCount(self::TB, 4);
 
-        $ctrl = $this->makeController('record_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], [
             'tb'   => self::TB,
             'id'   => 4,
             'core' => ['status' => 'pending'],  // same value already in DB
@@ -212,7 +212,7 @@ class RecordPersistSnapshotTest extends BdusTestCase
 
     public function testSnapshotOperationColumnIsUpdate(): void
     {
-        $ctrl = $this->makeController('record_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], [
             'tb'   => self::TB,
             'id'   => 3,
             'core' => ['status' => 'pending'],

@@ -57,7 +57,7 @@ class WidgetCtrlTest extends BdusTestCase
         // Remove the directory so PROJ_DIR/widgets/ does not exist.
         @rmdir(static::$widgetsDir);
 
-        $ctrl = $this->makeController('widget_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Widget');
         $res  = $this->callController($ctrl, 'listWidgets');
 
         $this->assertArrayHasKey('widgets', $res);
@@ -71,7 +71,7 @@ class WidgetCtrlTest extends BdusTestCase
 
     public function testListWidgetsReturnsEmptyWhenDirIsEmpty(): void
     {
-        $ctrl = $this->makeController('widget_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Widget');
         $res  = $this->callController($ctrl, 'listWidgets');
 
         $this->assertArrayHasKey('widgets', $res);
@@ -86,7 +86,7 @@ class WidgetCtrlTest extends BdusTestCase
         file_put_contents(static::$widgetsDir . 'alpha.js',      'export default {}');
         file_put_contents(static::$widgetsDir . 'quirematrix.js','export default {}');
 
-        $ctrl = $this->makeController('widget_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Widget');
         $res  = $this->callController($ctrl, 'listWidgets');
 
         $this->assertSame(['alpha', 'quirematrix', 'zebra'], $res['widgets']);
@@ -96,7 +96,7 @@ class WidgetCtrlTest extends BdusTestCase
     {
         file_put_contents(static::$widgetsDir . 'my-widget.js', 'export default {}');
 
-        $ctrl = $this->makeController('widget_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Widget');
         $res  = $this->callController($ctrl, 'listWidgets');
 
         $this->assertContains('my-widget', $res['widgets']);
@@ -111,7 +111,7 @@ class WidgetCtrlTest extends BdusTestCase
         file_put_contents(static::$widgetsDir . 'evil.php',    '<?php echo 1;');
         file_put_contents(static::$widgetsDir . 'style.css',   'body{}');
 
-        $ctrl = $this->makeController('widget_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Widget');
         $res  = $this->callController($ctrl, 'listWidgets');
 
         $this->assertSame(['valid'], $res['widgets'],
@@ -127,7 +127,7 @@ class WidgetCtrlTest extends BdusTestCase
         file_put_contents(static::$widgetsDir . 'has space.js',      'export default {}');
         file_put_contents(static::$widgetsDir . 'has_underscore.js', 'export default {}');
 
-        $ctrl = $this->makeController('widget_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Widget');
         $res  = $this->callController($ctrl, 'listWidgets');
 
         $this->assertSame(['valid'], $res['widgets'],
@@ -141,7 +141,7 @@ class WidgetCtrlTest extends BdusTestCase
         $content = 'export default { mount(c,v){ c.textContent = v } }';
         file_put_contents(static::$widgetsDir . 'hello.js', $content);
 
-        $ctrl = $this->makeController('widget_ctrl', ['name' => 'hello']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Widget', ['name' => 'hello']);
 
         ob_start();
         $ctrl->serveWidget();
@@ -155,7 +155,7 @@ class WidgetCtrlTest extends BdusTestCase
         $content = '/* my-widget */';
         file_put_contents(static::$widgetsDir . 'my-widget.js', $content);
 
-        $ctrl = $this->makeController('widget_ctrl', ['name' => 'my-widget']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Widget', ['name' => 'my-widget']);
 
         ob_start();
         $ctrl->serveWidget();
@@ -168,7 +168,7 @@ class WidgetCtrlTest extends BdusTestCase
 
     public function testServeWidgetReturns404ForNonexistentWidget(): void
     {
-        $ctrl = $this->makeController('widget_ctrl', ['name' => 'ghost']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Widget', ['name' => 'ghost']);
         $res  = $this->callController($ctrl, 'serveWidget');
 
         $this->assertSame('error',            $res['status']);
@@ -179,7 +179,7 @@ class WidgetCtrlTest extends BdusTestCase
 
     public function testServeWidgetReturns400ForEmptyName(): void
     {
-        $ctrl = $this->makeController('widget_ctrl', ['name' => '']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Widget', ['name' => '']);
         $res  = $this->callController($ctrl, 'serveWidget');
 
         $this->assertSame('error',               $res['status']);
@@ -188,7 +188,7 @@ class WidgetCtrlTest extends BdusTestCase
 
     public function testServeWidgetBlocksPathTraversalDotDot(): void
     {
-        $ctrl = $this->makeController('widget_ctrl', ['name' => '../../etc/passwd']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Widget', ['name' => '../../etc/passwd']);
         $res  = $this->callController($ctrl, 'serveWidget');
 
         $this->assertSame('error',               $res['status']);
@@ -197,7 +197,7 @@ class WidgetCtrlTest extends BdusTestCase
 
     public function testServeWidgetBlocksPathTraversalSlash(): void
     {
-        $ctrl = $this->makeController('widget_ctrl', ['name' => 'sub/evil']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Widget', ['name' => 'sub/evil']);
         $res  = $this->callController($ctrl, 'serveWidget');
 
         $this->assertSame('error',               $res['status']);
@@ -206,7 +206,7 @@ class WidgetCtrlTest extends BdusTestCase
 
     public function testServeWidgetBlocksUpperCaseName(): void
     {
-        $ctrl = $this->makeController('widget_ctrl', ['name' => 'MyWidget']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Widget', ['name' => 'MyWidget']);
         $res  = $this->callController($ctrl, 'serveWidget');
 
         $this->assertSame('error',               $res['status']);
@@ -216,7 +216,7 @@ class WidgetCtrlTest extends BdusTestCase
     public function testServeWidgetBlocksUnderscoreName(): void
     {
         // Underscores are not in the allowed charset [a-z0-9\-]
-        $ctrl = $this->makeController('widget_ctrl', ['name' => 'quire_matrix']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Widget', ['name' => 'quire_matrix']);
         $res  = $this->callController($ctrl, 'serveWidget');
 
         $this->assertSame('error',               $res['status']);
@@ -225,7 +225,7 @@ class WidgetCtrlTest extends BdusTestCase
 
     public function testServeWidgetBlocksNullByte(): void
     {
-        $ctrl = $this->makeController('widget_ctrl', ['name' => "hello\x00world"]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Widget', ['name' => "hello\x00world"]);
         $res  = $this->callController($ctrl, 'serveWidget');
 
         $this->assertSame('error',               $res['status']);
@@ -237,7 +237,7 @@ class WidgetCtrlTest extends BdusTestCase
     public function testListWidgetsRequiresReadPrivilege(): void
     {
         $this->setPrivilege(100);
-        $ctrl = $this->makeController('widget_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Widget');
         $res  = $this->callController($ctrl, 'listWidgets');
         $this->setPrivilege(1);
 
@@ -248,7 +248,7 @@ class WidgetCtrlTest extends BdusTestCase
     public function testServeWidgetRequiresReadPrivilege(): void
     {
         $this->setPrivilege(100);
-        $ctrl = $this->makeController('widget_ctrl', ['name' => 'anything']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Widget', ['name' => 'anything']);
         $res  = $this->callController($ctrl, 'serveWidget');
         $this->setPrivilege(1);
 

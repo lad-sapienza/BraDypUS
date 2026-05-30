@@ -58,7 +58,7 @@ class RecordCtrlValidationTest extends BdusTestCase
 
     public function testRejectsEmptyRequiredField(): void
     {
-        $ctrl = $this->makeController('record_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], [
             'tb'   => self::TB,
             'core' => ['name' => ''],
         ]);
@@ -69,7 +69,7 @@ class RecordCtrlValidationTest extends BdusTestCase
 
     public function testRejectsNullRequiredField(): void
     {
-        $ctrl = $this->makeController('record_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], [
             'tb'   => self::TB,
             'core' => ['name' => null],
         ]);
@@ -82,7 +82,7 @@ class RecordCtrlValidationTest extends BdusTestCase
 
     public function testRejectsNonIntegerForIntField(): void
     {
-        $ctrl = $this->makeController('record_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], [
             'tb'   => self::TB,
             'core' => ['score' => 'abc'],
         ]);
@@ -93,7 +93,7 @@ class RecordCtrlValidationTest extends BdusTestCase
 
     public function testRejectsDecimalForIntField(): void
     {
-        $ctrl = $this->makeController('record_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], [
             'tb'   => self::TB,
             'core' => ['score' => '3.14'],
         ]);
@@ -104,7 +104,7 @@ class RecordCtrlValidationTest extends BdusTestCase
 
     public function testAcceptsValidInteger(): void
     {
-        $ctrl = $this->makeController('record_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], [
             'tb'   => self::TB,
             'id'   => 1,
             'core' => ['score' => '42'],
@@ -118,7 +118,7 @@ class RecordCtrlValidationTest extends BdusTestCase
 
     public function testRejectsIntBelowMin(): void
     {
-        $ctrl = $this->makeController('record_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], [
             'tb'   => self::TB,
             'core' => ['score' => '-5'],
         ]);
@@ -129,7 +129,7 @@ class RecordCtrlValidationTest extends BdusTestCase
 
     public function testRejectsIntAboveMax(): void
     {
-        $ctrl = $this->makeController('record_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], [
             'tb'   => self::TB,
             'core' => ['score' => '150'],
         ]);
@@ -142,7 +142,7 @@ class RecordCtrlValidationTest extends BdusTestCase
 
     public function testRejectsDateBeforeMin(): void
     {
-        $ctrl = $this->makeController('record_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], [
             'tb'   => self::TB,
             'core' => ['birth_date' => '1850-06-15'],
         ]);
@@ -153,7 +153,7 @@ class RecordCtrlValidationTest extends BdusTestCase
 
     public function testRejectsDateAfterMax(): void
     {
-        $ctrl = $this->makeController('record_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], [
             'tb'   => self::TB,
             'core' => ['birth_date' => '2200-01-01'],
         ]);
@@ -164,7 +164,7 @@ class RecordCtrlValidationTest extends BdusTestCase
 
     public function testAcceptsDateWithinRange(): void
     {
-        $ctrl = $this->makeController('record_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], [
             'tb'   => self::TB,
             'id'   => 1,
             'core' => ['birth_date' => '1985-03-22'],
@@ -178,7 +178,7 @@ class RecordCtrlValidationTest extends BdusTestCase
 
     public function testRejectsInvalidEmail(): void
     {
-        $ctrl = $this->makeController('record_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], [
             'tb'   => self::TB,
             'core' => ['email_addr' => 'not-an-email'],
         ]);
@@ -189,7 +189,7 @@ class RecordCtrlValidationTest extends BdusTestCase
 
     public function testAcceptsValidEmail(): void
     {
-        $ctrl = $this->makeController('record_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], [
             'tb'   => self::TB,
             'id'   => 1,
             'core' => ['email_addr' => 'user@example.com'],
@@ -203,7 +203,7 @@ class RecordCtrlValidationTest extends BdusTestCase
 
     public function testRejectsInvalidWkt(): void
     {
-        $ctrl = $this->makeController('record_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], [
             'tb'   => self::TB,
             'core' => ['geo_data' => 'not a geometry'],
         ]);
@@ -214,7 +214,7 @@ class RecordCtrlValidationTest extends BdusTestCase
 
     public function testAcceptsValidWktPoint(): void
     {
-        $ctrl = $this->makeController('record_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], [
             'tb'   => self::TB,
             'id'   => 1,
             'core' => ['geo_data' => 'POINT(12.5 41.9)'],
@@ -226,7 +226,7 @@ class RecordCtrlValidationTest extends BdusTestCase
 
     public function testAcceptsValidWktPolygon(): void
     {
-        $ctrl = $this->makeController('record_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], [
             'tb'   => self::TB,
             'id'   => 1,
             'core' => ['geo_data' => 'POLYGON((0 0, 1 0, 1 1, 0 1, 0 0))'],
@@ -240,7 +240,7 @@ class RecordCtrlValidationTest extends BdusTestCase
 
     public function testRejectsPatternMismatch(): void
     {
-        $ctrl = $this->makeController('record_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], [
             'tb'   => self::TB,
             'core' => ['ref_code' => 'abc'],  // lowercase — must be [A-Z]{3}
         ]);
@@ -251,7 +251,7 @@ class RecordCtrlValidationTest extends BdusTestCase
 
     public function testRejectsPatternWrongLength(): void
     {
-        $ctrl = $this->makeController('record_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], [
             'tb'   => self::TB,
             'core' => ['ref_code' => 'ABCD'],   // 4 chars — pattern expects 3
         ]);
@@ -262,7 +262,7 @@ class RecordCtrlValidationTest extends BdusTestCase
 
     public function testAcceptsValidPattern(): void
     {
-        $ctrl = $this->makeController('record_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], [
             'tb'   => self::TB,
             'id'   => 1,
             'core' => ['ref_code' => 'ABC'],
@@ -277,7 +277,7 @@ class RecordCtrlValidationTest extends BdusTestCase
     public function testRejectsValueExceedingMaxLength(): void
     {
         $tooLong = str_repeat('x', 51);   // max_length on description is 50
-        $ctrl = $this->makeController('record_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], [
             'tb'   => self::TB,
             'core' => ['description' => $tooLong],
         ]);
@@ -289,7 +289,7 @@ class RecordCtrlValidationTest extends BdusTestCase
     public function testAcceptsValueAtMaxLength(): void
     {
         $exactly50 = str_repeat('y', 50);
-        $ctrl = $this->makeController('record_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], [
             'tb'   => self::TB,
             'id'   => 1,
             'core' => ['description' => $exactly50],
@@ -305,7 +305,7 @@ class RecordCtrlValidationTest extends BdusTestCase
     public function testRejectsDuplicateValueOnInsert(): void
     {
         // 'Alpha item' is already in the DB (seed id=1)
-        $ctrl = $this->makeController('record_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], [
             'tb'   => self::TB,
             // no id → INSERT path
             'core' => ['name' => 'Alpha item'],
@@ -318,7 +318,7 @@ class RecordCtrlValidationTest extends BdusTestCase
     public function testAllowsSameValueOnUpdateSameRecord(): void
     {
         // Updating id=1 with its own name should NOT trigger no_dupl
-        $ctrl = $this->makeController('record_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], [
             'tb'   => self::TB,
             'id'   => 1,
             'core' => ['name' => 'Alpha item'],   // same record → excluded from count
@@ -331,7 +331,7 @@ class RecordCtrlValidationTest extends BdusTestCase
     public function testRejectsDuplicateValueOnUpdateDifferentRecord(): void
     {
         // Updating id=2 with 'Alpha item' (which belongs to id=1) → duplicate
-        $ctrl = $this->makeController('record_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], [
             'tb'   => self::TB,
             'id'   => 2,
             'core' => ['name' => 'Alpha item'],
@@ -345,7 +345,7 @@ class RecordCtrlValidationTest extends BdusTestCase
 
     public function testCollectsMultipleErrorsAtOnce(): void
     {
-        $ctrl = $this->makeController('record_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], [
             'tb'   => self::TB,
             'core' => [
                 'name'       => '',              // required violation
@@ -364,7 +364,7 @@ class RecordCtrlValidationTest extends BdusTestCase
 
     public function testBuildFieldSchemaExposesCheckArray(): void
     {
-        $ctrl = $this->makeController('record_ctrl', ['tb' => self::TB, 'id' => 1]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'id' => 1]);
         $res  = $this->callController($ctrl, 'getRecord');
 
         $byName = array_column($res['schema']['fields'], null, 'name');
@@ -377,7 +377,7 @@ class RecordCtrlValidationTest extends BdusTestCase
 
     public function testBuildFieldSchemaNormalisesNotEmptyToRequired(): void
     {
-        $ctrl = $this->makeController('record_ctrl', ['tb' => self::TB, 'id' => 1]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'id' => 1]);
         $res  = $this->callController($ctrl, 'getRecord');
 
         $byName = array_column($res['schema']['fields'], null, 'name');
@@ -389,7 +389,7 @@ class RecordCtrlValidationTest extends BdusTestCase
 
     public function testBuildFieldSchemaExposesMaxLength(): void
     {
-        $ctrl = $this->makeController('record_ctrl', ['tb' => self::TB, 'id' => 1]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'id' => 1]);
         $res  = $this->callController($ctrl, 'getRecord');
 
         $byName = array_column($res['schema']['fields'], null, 'name');
@@ -402,7 +402,7 @@ class RecordCtrlValidationTest extends BdusTestCase
     public function testValidCorePayloadSavesSuccessfully(): void
     {
         // All fields sent are valid → should succeed
-        $ctrl = $this->makeController('record_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], [
             'tb'   => self::TB,
             'id'   => 1,
             'core' => [

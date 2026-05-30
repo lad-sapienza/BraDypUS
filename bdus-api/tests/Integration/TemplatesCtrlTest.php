@@ -45,7 +45,7 @@ class TemplatesCtrlTest extends BdusTestCase
 
     public function testGetTableListReturnsSuccess(): void
     {
-        $ctrl = $this->makeController('templates_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Templates');
         $res  = $this->callController($ctrl, 'getTableList');
 
         $this->assertSame('success', $res['status']);
@@ -55,7 +55,7 @@ class TemplatesCtrlTest extends BdusTestCase
 
     public function testGetTableListExcludesPluginTables(): void
     {
-        $ctrl = $this->makeController('templates_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Templates');
         $res  = $this->callController($ctrl, 'getTableList');
 
         $tbs = array_column($res['tables'], 'tb');
@@ -65,7 +65,7 @@ class TemplatesCtrlTest extends BdusTestCase
 
     public function testGetTableListItemsHaveRequiredKeys(): void
     {
-        $ctrl = $this->makeController('templates_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Templates');
         $res  = $this->callController($ctrl, 'getTableList');
 
         $item = $res['tables'][0];
@@ -76,7 +76,7 @@ class TemplatesCtrlTest extends BdusTestCase
 
     public function testGetTableListStrippedRemovesPrefix(): void
     {
-        $ctrl = $this->makeController('templates_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Templates');
         $res  = $this->callController($ctrl, 'getTableList');
 
         $row = array_values(array_filter($res['tables'], fn($t) => $t['tb'] === self::TB))[0];
@@ -86,7 +86,7 @@ class TemplatesCtrlTest extends BdusTestCase
     public function testGetTableListRequiresSuperAdmin(): void
     {
         $this->setPrivilege(99);
-        $ctrl = $this->makeController('templates_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Templates');
         $res  = $this->callController($ctrl, 'getTableList');
         $this->setPrivilege(1);
 
@@ -98,7 +98,7 @@ class TemplatesCtrlTest extends BdusTestCase
 
     public function testGetTemplateListReturnsSuccess(): void
     {
-        $ctrl = $this->makeController('templates_ctrl', ['tb' => self::TB]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Templates', ['tb' => self::TB]);
         $res  = $this->callController($ctrl, 'getTemplateList');
 
         $this->assertSame('success', $res['status']);
@@ -106,7 +106,7 @@ class TemplatesCtrlTest extends BdusTestCase
 
     public function testGetTemplateListContainsFixtureTemplate(): void
     {
-        $ctrl = $this->makeController('templates_ctrl', ['tb' => self::TB]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Templates', ['tb' => self::TB]);
         $res  = $this->callController($ctrl, 'getTemplateList');
 
         // The fixture directory contains items.default.json
@@ -115,7 +115,7 @@ class TemplatesCtrlTest extends BdusTestCase
 
     public function testGetTemplateListHasFieldsAndPlugins(): void
     {
-        $ctrl = $this->makeController('templates_ctrl', ['tb' => self::TB]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Templates', ['tb' => self::TB]);
         $res  = $this->callController($ctrl, 'getTemplateList');
 
         $this->assertArrayHasKey('fields',  $res);
@@ -126,7 +126,7 @@ class TemplatesCtrlTest extends BdusTestCase
 
     public function testGetTemplateListFieldsContainFixtureFields(): void
     {
-        $ctrl = $this->makeController('templates_ctrl', ['tb' => self::TB]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Templates', ['tb' => self::TB]);
         $res  = $this->callController($ctrl, 'getTemplateList');
 
         $fieldNames = array_column($res['fields'], 'name');
@@ -135,7 +135,7 @@ class TemplatesCtrlTest extends BdusTestCase
 
     public function testGetTemplateListPluginsContainTagsTable(): void
     {
-        $ctrl = $this->makeController('templates_ctrl', ['tb' => self::TB]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Templates', ['tb' => self::TB]);
         $res  = $this->callController($ctrl, 'getTemplateList');
 
         $pluginTbs = array_column($res['plugins'], 'tb');
@@ -144,7 +144,7 @@ class TemplatesCtrlTest extends BdusTestCase
 
     public function testGetTemplateListMissingTbReturnsError(): void
     {
-        $ctrl = $this->makeController('templates_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Templates');
         $res  = $this->callController($ctrl, 'getTemplateList');
 
         $this->assertSame('error', $res['status']);
@@ -154,7 +154,7 @@ class TemplatesCtrlTest extends BdusTestCase
     public function testGetTemplateListRequiresSuperAdmin(): void
     {
         $this->setPrivilege(99);
-        $ctrl = $this->makeController('templates_ctrl', ['tb' => self::TB]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Templates', ['tb' => self::TB]);
         $res  = $this->callController($ctrl, 'getTemplateList');
         $this->setPrivilege(1);
 
@@ -165,7 +165,7 @@ class TemplatesCtrlTest extends BdusTestCase
 
     public function testGetTemplateReturnsFixtureTemplate(): void
     {
-        $ctrl = $this->makeController('templates_ctrl', ['tb' => self::TB, 'name' => 'default']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Templates', ['tb' => self::TB, 'name' => 'default']);
         $res  = $this->callController($ctrl, 'getTemplate');
 
         $this->assertSame('success', $res['status']);
@@ -175,7 +175,7 @@ class TemplatesCtrlTest extends BdusTestCase
 
     public function testGetTemplateHasSectionsWithContent(): void
     {
-        $ctrl = $this->makeController('templates_ctrl', ['tb' => self::TB, 'name' => 'default']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Templates', ['tb' => self::TB, 'name' => 'default']);
         $res  = $this->callController($ctrl, 'getTemplate');
 
         $this->assertNotEmpty($res['template']['sections']);
@@ -185,7 +185,7 @@ class TemplatesCtrlTest extends BdusTestCase
 
     public function testGetTemplateNotFoundReturnsError(): void
     {
-        $ctrl = $this->makeController('templates_ctrl', ['tb' => self::TB, 'name' => 'no_such_template']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Templates', ['tb' => self::TB, 'name' => 'no_such_template']);
         $res  = $this->callController($ctrl, 'getTemplate');
 
         $this->assertSame('error', $res['status']);
@@ -194,7 +194,7 @@ class TemplatesCtrlTest extends BdusTestCase
 
     public function testGetTemplateMissingParamsReturnsError(): void
     {
-        $ctrl = $this->makeController('templates_ctrl', ['tb' => self::TB]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Templates', ['tb' => self::TB]);
         $res  = $this->callController($ctrl, 'getTemplate');
 
         $this->assertSame('error', $res['status']);
@@ -218,7 +218,7 @@ class TemplatesCtrlTest extends BdusTestCase
         ];
 
         $ctrl = $this->makeController(
-            'templates_ctrl',
+            'Bdus\\Controllers\\Templates',
             ['tb' => self::TB, 'name' => self::TMP_NAME],
             $payload
         );
@@ -253,7 +253,7 @@ class TemplatesCtrlTest extends BdusTestCase
         ];
 
         $ctrl = $this->makeController(
-            'templates_ctrl',
+            'Bdus\\Controllers\\Templates',
             ['tb' => self::TB, 'name' => 'should_not_exist'],
             $payload
         );
@@ -276,7 +276,7 @@ class TemplatesCtrlTest extends BdusTestCase
         ];
 
         $ctrl = $this->makeController(
-            'templates_ctrl',
+            'Bdus\\Controllers\\Templates',
             ['tb' => self::TB, 'name' => 'should_not_exist'],
             $payload
         );
@@ -287,7 +287,7 @@ class TemplatesCtrlTest extends BdusTestCase
 
     public function testSaveTemplateMissingNameReturnsError(): void
     {
-        $ctrl = $this->makeController('templates_ctrl', ['tb' => self::TB], ['sections' => []]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Templates', ['tb' => self::TB], ['sections' => []]);
         $res  = $this->callController($ctrl, 'saveTemplate');
 
         $this->assertSame('error', $res['status']);
@@ -298,7 +298,7 @@ class TemplatesCtrlTest extends BdusTestCase
     {
         $this->setPrivilege(99);
         $ctrl = $this->makeController(
-            'templates_ctrl',
+            'Bdus\\Controllers\\Templates',
             ['tb' => self::TB, 'name' => self::TMP_NAME],
             ['sections' => []]
         );
@@ -312,7 +312,7 @@ class TemplatesCtrlTest extends BdusTestCase
 
     public function testRenameTemplateRenamesFile(): void
     {
-        $ctrl = $this->makeController('templates_ctrl', [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Templates', [
             'tb'  => self::TB,
             'old' => self::TMP_NAME,
             'new' => self::TMP_NAME2,
@@ -331,7 +331,7 @@ class TemplatesCtrlTest extends BdusTestCase
     public function testRenameTemplateConflictReturnsError(): void
     {
         // 'default' already exists — renaming tmp_test_renamed → default should fail
-        $ctrl = $this->makeController('templates_ctrl', [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Templates', [
             'tb'  => self::TB,
             'old' => self::TMP_NAME2,
             'new' => 'default',
@@ -344,7 +344,7 @@ class TemplatesCtrlTest extends BdusTestCase
 
     public function testRenameTemplateInvalidNameReturnsError(): void
     {
-        $ctrl = $this->makeController('templates_ctrl', [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Templates', [
             'tb'  => self::TB,
             'old' => self::TMP_NAME2,
             'new' => 'invalid name!',
@@ -357,7 +357,7 @@ class TemplatesCtrlTest extends BdusTestCase
 
     public function testRenameTemplateNotFoundReturnsError(): void
     {
-        $ctrl = $this->makeController('templates_ctrl', [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Templates', [
             'tb'  => self::TB,
             'old' => 'no_such_template',
             'new' => 'anything',
@@ -372,7 +372,7 @@ class TemplatesCtrlTest extends BdusTestCase
 
     public function testDeleteTemplateRemovesFile(): void
     {
-        $ctrl = $this->makeController('templates_ctrl', [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Templates', [
             'tb'   => self::TB,
             'name' => self::TMP_NAME2,
         ]);
@@ -387,7 +387,7 @@ class TemplatesCtrlTest extends BdusTestCase
 
     public function testDeleteTemplateNotFoundReturnsError(): void
     {
-        $ctrl = $this->makeController('templates_ctrl', [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Templates', [
             'tb'   => self::TB,
             'name' => 'no_such_template',
         ]);
@@ -399,7 +399,7 @@ class TemplatesCtrlTest extends BdusTestCase
 
     public function testDeleteTemplateMissingParamsReturnsError(): void
     {
-        $ctrl = $this->makeController('templates_ctrl', ['tb' => self::TB]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Templates', ['tb' => self::TB]);
         $res  = $this->callController($ctrl, 'deleteTemplate');
 
         $this->assertSame('error', $res['status']);
@@ -409,7 +409,7 @@ class TemplatesCtrlTest extends BdusTestCase
     public function testDeleteTemplateRequiresSuperAdmin(): void
     {
         $this->setPrivilege(99);
-        $ctrl = $this->makeController('templates_ctrl', ['tb' => self::TB, 'name' => 'default']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Templates', ['tb' => self::TB, 'name' => 'default']);
         $res  = $this->callController($ctrl, 'deleteTemplate');
         $this->setPrivilege(1);
 

@@ -39,7 +39,7 @@ class GeofaceCtrlTest extends BdusTestCase
 
     public function testGetGeoJsonReturnsSuccess(): void
     {
-        $ctrl = $this->makeController('geoface_ctrl', ['tb' => self::TB]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Geoface', ['tb' => self::TB]);
         $res  = $this->callController($ctrl, 'getGeoJson');
 
         $this->assertSame('success', $res['status']);
@@ -47,7 +47,7 @@ class GeofaceCtrlTest extends BdusTestCase
 
     public function testGetGeoJsonHasFeatureCollection(): void
     {
-        $ctrl = $this->makeController('geoface_ctrl', ['tb' => self::TB]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Geoface', ['tb' => self::TB]);
         $res  = $this->callController($ctrl, 'getGeoJson');
 
         $this->assertArrayHasKey('geojson', $res);
@@ -58,7 +58,7 @@ class GeofaceCtrlTest extends BdusTestCase
 
     public function testGetGeoJsonHasMeta(): void
     {
-        $ctrl = $this->makeController('geoface_ctrl', ['tb' => self::TB]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Geoface', ['tb' => self::TB]);
         $res  = $this->callController($ctrl, 'getGeoJson');
 
         $this->assertArrayHasKey('meta', $res);
@@ -74,7 +74,7 @@ class GeofaceCtrlTest extends BdusTestCase
 
     public function testGetGeoJsonFeatureHasGeoId(): void
     {
-        $ctrl = $this->makeController('geoface_ctrl', ['tb' => self::TB]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Geoface', ['tb' => self::TB]);
         $res  = $this->callController($ctrl, 'getGeoJson');
 
         $feature = $res['geojson']['features'][0];
@@ -85,7 +85,7 @@ class GeofaceCtrlTest extends BdusTestCase
     public function testGetGeoJsonJsonFilter(): void
     {
         // filter[id][_eq]=1 should return exactly the geometry for item 1
-        $ctrl = $this->makeController('geoface_ctrl', [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Geoface', [
             'tb'     => self::TB,
             'filter' => ['id' => ['_eq' => 1]],
         ]);
@@ -97,7 +97,7 @@ class GeofaceCtrlTest extends BdusTestCase
 
     public function testGetGeoJsonSqlExpertFilter(): void
     {
-        $ctrl = $this->makeController('geoface_ctrl', [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Geoface', [
             'tb'          => self::TB,
             'search_type' => 'sqlExpert',
             'querytext'   => self::TB . '.id = 1',
@@ -115,7 +115,7 @@ class GeofaceCtrlTest extends BdusTestCase
         $geomJson = json_encode(['type' => 'Point', 'coordinates' => [13.0, 42.0]]);
 
         $ctrl = $this->makeController(
-            'geoface_ctrl',
+            'Bdus\\Controllers\\Geoface',
             [],
             ['tb' => self::TB, 'id' => 2, 'geometry' => $geomJson]
         );
@@ -129,7 +129,7 @@ class GeofaceCtrlTest extends BdusTestCase
 
     public function testSaveNewMissingParamsReturnsError(): void
     {
-        $ctrl = $this->makeController('geoface_ctrl', [], ['tb' => self::TB]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Geoface', [], ['tb' => self::TB]);
         $res  = $this->callController($ctrl, 'saveNew');
 
         $this->assertSame('error', $res['status']);
@@ -143,7 +143,7 @@ class GeofaceCtrlTest extends BdusTestCase
         $newGeom = json_encode(['type' => 'Point', 'coordinates' => [14.0, 43.0]]);
 
         $ctrl = $this->makeController(
-            'geoface_ctrl',
+            'Bdus\\Controllers\\Geoface',
             [],
             ['geodata' => [['id' => static::$geoId, 'geometry' => $newGeom]]]
         );
@@ -163,7 +163,7 @@ class GeofaceCtrlTest extends BdusTestCase
 
     public function testUpdateGeometryMissingParamsReturnsError(): void
     {
-        $ctrl = $this->makeController('geoface_ctrl', [], []);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Geoface', [], []);
         $res  = $this->callController($ctrl, 'updateGeometry');
 
         $this->assertSame('error', $res['status']);
@@ -184,7 +184,7 @@ class GeofaceCtrlTest extends BdusTestCase
         $tmpId = (int)($row[0]['id'] ?? 0);
         $this->assertGreaterThan(0, $tmpId);
 
-        $ctrl = $this->makeController('geoface_ctrl', [], ['ids' => [$tmpId]]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Geoface', [], ['ids' => [$tmpId]]);
         $res  = $this->callController($ctrl, 'eraseGeometry');
 
         $this->assertSame('success', $res['status']);
@@ -197,7 +197,7 @@ class GeofaceCtrlTest extends BdusTestCase
 
     public function testEraseGeometryMissingParamsReturnsError(): void
     {
-        $ctrl = $this->makeController('geoface_ctrl', [], []);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Geoface', [], []);
         $res  = $this->callController($ctrl, 'eraseGeometry');
 
         $this->assertSame('error', $res['status']);
@@ -208,7 +208,7 @@ class GeofaceCtrlTest extends BdusTestCase
     {
         $this->setPrivilege(99);   // low-privilege user — canUser('edit') will fail
 
-        $ctrl = $this->makeController('geoface_ctrl', [], ['ids' => [static::$geoId]]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Geoface', [], ['ids' => [static::$geoId]]);
         $res  = $this->callController($ctrl, 'eraseGeometry');
 
         $this->assertSame('error', $res['status']);

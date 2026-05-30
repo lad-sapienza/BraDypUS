@@ -45,6 +45,12 @@
             "php": "8.2"
         }
     },
+    "autoload": {
+        "psr-4": {
+            "": "lib/",
+            "Bdus\\Controllers\\": "controllers/"
+        }
+    },
     "autoload-dev": {
         "psr-4": {
             "Tests\\": "tests/"

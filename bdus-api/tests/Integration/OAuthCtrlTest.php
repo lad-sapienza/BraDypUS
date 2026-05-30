@@ -87,7 +87,7 @@ class OAuthCtrlTest extends BdusTestCase
 
     public function testRedirectRejectsUnsupportedProvider(): void
     {
-        $ctrl = $this->makeController('oauth_ctrl', ['provider' => 'twitter', 'origin' => 'http://localhost']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\OAuth', ['provider' => 'twitter', 'origin' => 'http://localhost']);
         $res  = $this->callController($ctrl, 'redirect');
 
         $this->assertSame('error', $res['status']);
@@ -96,7 +96,7 @@ class OAuthCtrlTest extends BdusTestCase
 
     public function testRedirectRejectsEmptyOrigin(): void
     {
-        $ctrl = $this->makeController('oauth_ctrl', ['provider' => 'google', 'origin' => '']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\OAuth', ['provider' => 'google', 'origin' => '']);
         $res  = $this->callController($ctrl, 'redirect');
 
         $this->assertSame('error', $res['status']);
@@ -106,7 +106,7 @@ class OAuthCtrlTest extends BdusTestCase
     public function testRedirectRejectsOrphanProvider(): void
     {
         // 'orcid' is supported but not configured in this app
-        $ctrl = $this->makeController('oauth_ctrl', ['provider' => 'orcid', 'origin' => 'http://localhost']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\OAuth', ['provider' => 'orcid', 'origin' => 'http://localhost']);
         $res  = $this->callController($ctrl, 'redirect');
 
         $this->assertSame('error', $res['status']);
@@ -126,7 +126,7 @@ class OAuthCtrlTest extends BdusTestCase
             ],
         ]));
 
-        $ctrl = $this->makeController('oauth_ctrl', ['provider' => 'google', 'origin' => 'http://localhost']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\OAuth', ['provider' => 'google', 'origin' => 'http://localhost']);
         $res  = $this->callController($ctrl, 'redirect');
 
         $this->assertSame('success', $res['status']);
@@ -146,7 +146,7 @@ class OAuthCtrlTest extends BdusTestCase
             ],
         ]));
 
-        $ctrl = $this->makeController('oauth_ctrl', ['provider' => 'google', 'origin' => 'http://localhost:5173']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\OAuth', ['provider' => 'google', 'origin' => 'http://localhost:5173']);
         $res  = $this->callController($ctrl, 'redirect');
 
         $this->assertSame('success', $res['status']);
@@ -173,7 +173,7 @@ class OAuthCtrlTest extends BdusTestCase
             ],
         ]));
 
-        $ctrl = $this->makeController('oauth_ctrl', ['provider' => 'orcid', 'origin' => 'http://localhost']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\OAuth', ['provider' => 'orcid', 'origin' => 'http://localhost']);
         $res  = $this->callController($ctrl, 'redirect');
 
         $this->assertSame('success', $res['status']);
@@ -189,7 +189,7 @@ class OAuthCtrlTest extends BdusTestCase
             ],
         ]));
 
-        $ctrl = $this->makeController('oauth_ctrl', ['provider' => 'google', 'origin' => 'http://localhost']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\OAuth', ['provider' => 'google', 'origin' => 'http://localhost']);
         $res  = $this->callController($ctrl, 'redirect');
 
         $this->assertSame('success', $res['status']);
@@ -219,7 +219,7 @@ class OAuthCtrlTest extends BdusTestCase
      */
     public function testCallbackRejectsMissingCodeAndState(): void
     {
-        $ctrl = $this->makeController('oauth_ctrl', [
+        $ctrl = $this->makeController('Bdus\\Controllers\\OAuth', [
             'provider' => 'google',
             'code'     => '',
             'state'    => '',
@@ -235,7 +235,7 @@ class OAuthCtrlTest extends BdusTestCase
 
     public function testCallbackRejectsUnsupportedProvider(): void
     {
-        $ctrl = $this->makeController('oauth_ctrl', [
+        $ctrl = $this->makeController('Bdus\\Controllers\\OAuth', [
             'provider' => 'facebook',
             'code'     => 'somecode',
             'state'    => 'somestate',
@@ -253,7 +253,7 @@ class OAuthCtrlTest extends BdusTestCase
     public function testListAppsIncludesEmptyOauthArrayWhenUnconfigured(): void
     {
         // The 'test' app config has no oauth section → oauth must be []
-        $ctrl = $this->makeController('login_ctrl', []);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Login', []);
         $res  = $this->callController($ctrl, 'listApps');
 
         $this->assertSame('success', $res['status']);
@@ -287,7 +287,7 @@ class OAuthCtrlTest extends BdusTestCase
             ],
         ]));
 
-        $ctrl = $this->makeController('login_ctrl', []);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Login', []);
         $res  = $this->callController($ctrl, 'listApps');
 
         $testApp = null;
@@ -317,7 +317,7 @@ class OAuthCtrlTest extends BdusTestCase
             ],
         ]));
 
-        $ctrl = $this->makeController('login_ctrl', []);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Login', []);
         $res  = $this->callController($ctrl, 'listApps');
 
         $testApp = null;

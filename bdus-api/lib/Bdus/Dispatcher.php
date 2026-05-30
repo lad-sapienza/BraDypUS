@@ -63,8 +63,8 @@ class Dispatcher
                 throw new \Exception("Object {$obj} does not have method {$method}");
             }
 
-            if (get_parent_class($obj) !== 'Controller') {
-                throw new \Exception("Called object {$obj} must extend Controller");
+            if (!is_a($obj, \Bdus\Controller::class, true)) {
+                throw new \Exception("{$obj} must extend \\Bdus\\Controller");
             }
 
             // ── DI: build and inject dependencies ─────────────────────────────

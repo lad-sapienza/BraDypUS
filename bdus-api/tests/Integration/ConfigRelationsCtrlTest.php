@@ -52,7 +52,7 @@ class ConfigRelationsCtrlTest extends BdusTestCase
 
     public function testGetRelationsReturnsSuccessWhenEmpty(): void
     {
-        $ctrl = $this->makeController('config_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config');
         $res  = $this->callController($ctrl, 'getRelations');
 
         $this->assertSame('success', $res['status']);
@@ -63,7 +63,7 @@ class ConfigRelationsCtrlTest extends BdusTestCase
     public function testGetRelationsRequiresSuperAdmin(): void
     {
         $this->setPrivilege(11);
-        $ctrl = $this->makeController('config_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config');
         $res  = $this->callController($ctrl, 'getRelations');
         $this->setPrivilege(1);
 
@@ -75,7 +75,7 @@ class ConfigRelationsCtrlTest extends BdusTestCase
 
     public function testSaveRelationCreatesNewRow(): void
     {
-        $ctrl = $this->makeController('config_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config', [], [
             'from_tb' => 'items',
             'to_tb'   => 'tags',
             'fld'     => [['my' => 'id', 'other' => 'id_link']],
@@ -91,7 +91,7 @@ class ConfigRelationsCtrlTest extends BdusTestCase
     public function testSaveRelationAppearsInGetRelations(): void
     {
         // Create
-        $ctrl = $this->makeController('config_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config', [], [
             'from_tb' => 'items',
             'to_tb'   => 'tags',
             'fld'     => [['my' => 'id', 'other' => 'id_link']],
@@ -99,7 +99,7 @@ class ConfigRelationsCtrlTest extends BdusTestCase
         $this->callController($ctrl, 'saveRelation');
 
         // List
-        $ctrl2 = $this->makeController('config_ctrl');
+        $ctrl2 = $this->makeController('Bdus\\Controllers\\Config');
         $res   = $this->callController($ctrl2, 'getRelations');
 
         $this->assertCount(1, $res['data']);
@@ -117,7 +117,7 @@ class ConfigRelationsCtrlTest extends BdusTestCase
     public function testSaveRelationNormalisesCanonicalOrder(): void
     {
         // "tags" > "items" alphabetically → backend must swap so items is from_tb
-        $ctrl = $this->makeController('config_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config', [], [
             'from_tb' => 'tags',
             'to_tb'   => 'items',
             'fld'     => [['my' => 'id_link', 'other' => 'id']],
@@ -142,7 +142,7 @@ class ConfigRelationsCtrlTest extends BdusTestCase
 
     public function testSaveRelationRejectsMissingTables(): void
     {
-        $ctrl = $this->makeController('config_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config', [], [
             'from_tb' => 'items',
             'to_tb'   => '',
         ]);
@@ -154,7 +154,7 @@ class ConfigRelationsCtrlTest extends BdusTestCase
 
     public function testSaveRelationRejectsSelfLoop(): void
     {
-        $ctrl = $this->makeController('config_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config', [], [
             'from_tb' => 'items',
             'to_tb'   => 'items',
         ]);
@@ -167,7 +167,7 @@ class ConfigRelationsCtrlTest extends BdusTestCase
     public function testSaveRelationRejectsDuplicatePair(): void
     {
         // First create
-        $ctrl = $this->makeController('config_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config', [], [
             'from_tb' => 'items',
             'to_tb'   => 'tags',
             'fld'     => [],
@@ -175,7 +175,7 @@ class ConfigRelationsCtrlTest extends BdusTestCase
         $this->callController($ctrl, 'saveRelation');
 
         // Second create with the same pair → error
-        $ctrl2 = $this->makeController('config_ctrl', [], [
+        $ctrl2 = $this->makeController('Bdus\\Controllers\\Config', [], [
             'from_tb' => 'items',
             'to_tb'   => 'tags',
             'fld'     => [],
@@ -189,7 +189,7 @@ class ConfigRelationsCtrlTest extends BdusTestCase
     public function testSaveRelationRejectsDuplicateReverseOrder(): void
     {
         // Create items→tags
-        $ctrl = $this->makeController('config_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config', [], [
             'from_tb' => 'items',
             'to_tb'   => 'tags',
             'fld'     => [],
@@ -197,7 +197,7 @@ class ConfigRelationsCtrlTest extends BdusTestCase
         $this->callController($ctrl, 'saveRelation');
 
         // Try to create tags→items (canonical form is the same pair)
-        $ctrl2 = $this->makeController('config_ctrl', [], [
+        $ctrl2 = $this->makeController('Bdus\\Controllers\\Config', [], [
             'from_tb' => 'tags',
             'to_tb'   => 'items',
             'fld'     => [],
@@ -211,7 +211,7 @@ class ConfigRelationsCtrlTest extends BdusTestCase
     public function testSaveRelationRequiresSuperAdmin(): void
     {
         $this->setPrivilege(11);
-        $ctrl = $this->makeController('config_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config', [], [
             'from_tb' => 'items',
             'to_tb'   => 'tags',
         ]);
@@ -227,7 +227,7 @@ class ConfigRelationsCtrlTest extends BdusTestCase
     public function testSaveRelationUpdateChangesFieldMapping(): void
     {
         // Create
-        $ctrl = $this->makeController('config_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config', [], [
             'from_tb' => 'items',
             'to_tb'   => 'tags',
             'fld'     => [['my' => 'id', 'other' => 'id_link']],
@@ -236,7 +236,7 @@ class ConfigRelationsCtrlTest extends BdusTestCase
         $id = $created['id'];
 
         // Update: change fld
-        $ctrl2 = $this->makeController('config_ctrl', ['id' => (string)$id], [
+        $ctrl2 = $this->makeController('Bdus\\Controllers\\Config', ['id' => (string)$id], [
             'from_tb' => 'items',
             'to_tb'   => 'tags',
             'fld'     => [['my' => 'name', 'other' => 'label']],
@@ -261,7 +261,7 @@ class ConfigRelationsCtrlTest extends BdusTestCase
     public function testDeleteRelationRemovesRow(): void
     {
         // Create
-        $ctrl = $this->makeController('config_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config', [], [
             'from_tb' => 'items',
             'to_tb'   => 'tags',
             'fld'     => [],
@@ -270,7 +270,7 @@ class ConfigRelationsCtrlTest extends BdusTestCase
         $id = $created['id'];
 
         // Delete
-        $ctrl2 = $this->makeController('config_ctrl', ['id' => (string)$id]);
+        $ctrl2 = $this->makeController('Bdus\\Controllers\\Config', ['id' => (string)$id]);
         $res   = $this->callController($ctrl2, 'deleteRelation');
 
         $this->assertSame('success',          $res['status']);
@@ -285,7 +285,7 @@ class ConfigRelationsCtrlTest extends BdusTestCase
 
     public function testDeleteRelationWithMissingId(): void
     {
-        $ctrl = $this->makeController('config_ctrl');   // no 'id' in GET
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config');   // no 'id' in GET
         $res  = $this->callController($ctrl, 'deleteRelation');
 
         $this->assertSame('error',             $res['status']);
@@ -294,7 +294,7 @@ class ConfigRelationsCtrlTest extends BdusTestCase
 
     public function testDeleteRelationWithNonExistentId(): void
     {
-        $ctrl = $this->makeController('config_ctrl', ['id' => '99999']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config', ['id' => '99999']);
         $res  = $this->callController($ctrl, 'deleteRelation');
 
         $this->assertSame('error',     $res['status']);
@@ -304,7 +304,7 @@ class ConfigRelationsCtrlTest extends BdusTestCase
     public function testDeleteRelationRequiresSuperAdmin(): void
     {
         // Create first
-        $ctrl = $this->makeController('config_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config', [], [
             'from_tb' => 'items',
             'to_tb'   => 'tags',
             'fld'     => [],
@@ -313,7 +313,7 @@ class ConfigRelationsCtrlTest extends BdusTestCase
         $id = $created['id'];
 
         $this->setPrivilege(11);
-        $ctrl2 = $this->makeController('config_ctrl', ['id' => (string)$id]);
+        $ctrl2 = $this->makeController('Bdus\\Controllers\\Config', ['id' => (string)$id]);
         $res   = $this->callController($ctrl2, 'deleteRelation');
         $this->setPrivilege(1);
 

@@ -24,7 +24,7 @@ class RecordVersionApiTest extends BdusTestCase
             [self::TB, $recordId], 'read'
         )[0]['c'] ?? 0);
 
-        $ctrl = $this->makeController('record_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], [
             'tb'   => self::TB,
             'id'   => $recordId,
             'core' => $fields,
@@ -43,7 +43,7 @@ class RecordVersionApiTest extends BdusTestCase
 
     public function testGetVersionsMissingTbReturnsError(): void
     {
-        $ctrl = $this->makeController('record_ctrl', ['id' => 1]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['id' => 1]);
         $res  = $this->callController($ctrl, 'getVersions');
         $this->assertSame('error', $res['status']);
         $this->assertSame('parameter_missing', $res['code']);
@@ -51,7 +51,7 @@ class RecordVersionApiTest extends BdusTestCase
 
     public function testGetVersionsMissingIdReturnsError(): void
     {
-        $ctrl = $this->makeController('record_ctrl', ['tb' => self::TB]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB]);
         $res  = $this->callController($ctrl, 'getVersions');
         $this->assertSame('error', $res['status']);
         $this->assertSame('parameter_missing', $res['code']);
@@ -59,7 +59,7 @@ class RecordVersionApiTest extends BdusTestCase
 
     public function testGetVersionsUnknownTableReturnsError(): void
     {
-        $ctrl = $this->makeController('record_ctrl', ['tb' => 'nonexistent', 'id' => 1]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => 'nonexistent', 'id' => 1]);
         $res  = $this->callController($ctrl, 'getVersions');
         $this->assertSame('error', $res['status']);
         $this->assertSame('unknown_table', $res['code']);
@@ -70,7 +70,7 @@ class RecordVersionApiTest extends BdusTestCase
         // Trigger at least one snapshot first
         $this->triggerUpdate(1, ['status' => 'inactive']);
 
-        $ctrl = $this->makeController('record_ctrl', ['tb' => self::TB, 'id' => 1]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'id' => 1]);
         $res  = $this->callController($ctrl, 'getVersions');
 
         $this->assertSame('success', $res['status']);
@@ -86,7 +86,7 @@ class RecordVersionApiTest extends BdusTestCase
     {
         $this->triggerUpdate(2, ['status' => 'pending']);
 
-        $ctrl = $this->makeController('record_ctrl', ['tb' => self::TB, 'id' => 2]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'id' => 2]);
         $res  = $this->callController($ctrl, 'getVersions');
 
         $entry = $res['versions'][0];
@@ -104,7 +104,7 @@ class RecordVersionApiTest extends BdusTestCase
         $v1 = $this->triggerUpdate(3, ['status' => 'inactive']);
         $v2 = $this->triggerUpdate(3, ['status' => 'active']);
 
-        $ctrl = $this->makeController('record_ctrl', ['tb' => self::TB, 'id' => 3]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'id' => 3]);
         $res  = $this->callController($ctrl, 'getVersions');
 
         $ids = array_column($res['versions'], 'id');
@@ -120,7 +120,7 @@ class RecordVersionApiTest extends BdusTestCase
 
     public function testGetVersionDiffMissingIdReturnsError(): void
     {
-        $ctrl = $this->makeController('record_ctrl', []);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', []);
         $res  = $this->callController($ctrl, 'getVersionDiff');
         $this->assertSame('error', $res['status']);
         $this->assertSame('parameter_missing', $res['code']);
@@ -128,7 +128,7 @@ class RecordVersionApiTest extends BdusTestCase
 
     public function testGetVersionDiffUnknownIdReturnsError(): void
     {
-        $ctrl = $this->makeController('record_ctrl', ['id' => 9999999]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['id' => 9999999]);
         $res  = $this->callController($ctrl, 'getVersionDiff');
         $this->assertSame('error', $res['status']);
         $this->assertSame('version_not_found', $res['code']);
@@ -140,7 +140,7 @@ class RecordVersionApiTest extends BdusTestCase
         // UPDATE is not a no-op and a snapshot is actually created.
         $vId = $this->triggerUpdate(4, ['status' => 'inactive']);
 
-        $ctrl = $this->makeController('record_ctrl', ['id' => $vId]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['id' => $vId]);
         $res  = $this->callController($ctrl, 'getVersionDiff');
 
         $this->assertSame('success', $res['status']);
@@ -174,7 +174,7 @@ class RecordVersionApiTest extends BdusTestCase
         $vId = $this->triggerUpdate($newId, ['status' => 'inactive']);
         static::$db->query("DELETE FROM items WHERE id = ?", [$newId], 'boolean');
 
-        $ctrl = $this->makeController('record_ctrl', ['id' => $vId]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['id' => $vId]);
         $res  = $this->callController($ctrl, 'getVersionDiff');
 
         $this->assertNull($res['current']['core'],
@@ -186,7 +186,7 @@ class RecordVersionApiTest extends BdusTestCase
 
     public function testRestoreVersionMissingVersionIdReturnsError(): void
     {
-        $ctrl = $this->makeController('record_ctrl', [], []);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], []);
         $res  = $this->callController($ctrl, 'restoreVersion');
         $this->assertSame('error', $res['status']);
         $this->assertSame('parameter_missing', $res['code']);
@@ -194,7 +194,7 @@ class RecordVersionApiTest extends BdusTestCase
 
     public function testRestoreVersionUnknownIdReturnsError(): void
     {
-        $ctrl = $this->makeController('record_ctrl', ['id' => 9999999], []);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['id' => 9999999], []);
         $res  = $this->callController($ctrl, 'restoreVersion');
         $this->assertSame('error', $res['status']);
         $this->assertSame('version_not_found', $res['code']);
@@ -207,7 +207,7 @@ class RecordVersionApiTest extends BdusTestCase
         $vId = $this->triggerUpdate(5, ['status' => 'inactive']); // snapshot captures 'active'
 
         // Now restore just the 'status' field back to the snapshot value
-        $ctrl = $this->makeController('record_ctrl', ['id' => $vId], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['id' => $vId], [
             'version_id'      => $vId,
             'fields'          => ['status'],
             'restore_plugins' => [],
@@ -235,7 +235,7 @@ class RecordVersionApiTest extends BdusTestCase
             [self::TB, 5], 'read'
         )[0]['c'] ?? 0);
 
-        $ctrl = $this->makeController('record_ctrl', ['id' => $vId], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['id' => $vId], [
             'version_id' => $vId,
         ]);
         $this->callController($ctrl, 'restoreVersion');
@@ -265,7 +265,7 @@ class RecordVersionApiTest extends BdusTestCase
         $this->assertEmpty($gone);
 
         // Restore it via the version
-        $ctrl = $this->makeController('record_ctrl', ['id' => $vId], ['version_id' => $vId]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['id' => $vId], ['version_id' => $vId]);
         $res  = $this->callController($ctrl, 'restoreVersion');
 
         $this->assertSame('success', $res['status']);

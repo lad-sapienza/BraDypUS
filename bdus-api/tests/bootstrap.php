@@ -38,10 +38,6 @@ $_SERVER['HTTP_ACCEPT_LANGUAGE'] = $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? 'en';
 $_SERVER['HTTP_HOST']            = $_SERVER['HTTP_HOST']            ?? 'localhost';
 $_SERVER['CONTENT_TYPE']         = $_SERVER['CONTENT_TYPE']         ?? '';
 
-// ── Composer autoloader (Monolog, Twig, Adbar\Dot, PHPUnit itself, …) ─────
+// ── Autoloader (Composer PSR-4 — covers lib/, controllers/, vendor/) ─────
 require_once $basePath . 'vendor/autoload.php';
-
-// ── BraDypUS custom autoloader ────────────────────────────────────────────
-require_once $basePath . 'lib/autoLoader.php';
-new autoloader($basePath . 'lib/', $basePath . 'modules/');
 

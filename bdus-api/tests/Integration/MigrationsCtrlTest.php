@@ -13,7 +13,7 @@ class MigrationsCtrlTest extends BdusTestCase
 
     public function testGetMigrationsReturnsSuccessShape(): void
     {
-        $ctrl = $this->makeController('home_ctrl', []);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Home', []);
         $res  = $this->callController($ctrl, 'getMigrations');
 
         $this->assertSame('success', $res['status']);
@@ -25,7 +25,7 @@ class MigrationsCtrlTest extends BdusTestCase
 
     public function testGetMigrationsTotalMatchesKnownCount(): void
     {
-        $ctrl = $this->makeController('home_ctrl', []);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Home', []);
         $res  = $this->callController($ctrl, 'getMigrations');
 
         // The total must equal the number of classes in Migrate::ALL_MIGRATIONS.
@@ -35,7 +35,7 @@ class MigrationsCtrlTest extends BdusTestCase
 
     public function testGetMigrationsRowsHaveRequiredKeys(): void
     {
-        $ctrl = $this->makeController('home_ctrl', []);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Home', []);
         $res  = $this->callController($ctrl, 'getMigrations');
 
         foreach ($res['migrations'] as $m) {
@@ -48,7 +48,7 @@ class MigrationsCtrlTest extends BdusTestCase
 
     public function testGetMigrationsAppliedCountIsConsistent(): void
     {
-        $ctrl = $this->makeController('home_ctrl', []);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Home', []);
         $res  = $this->callController($ctrl, 'getMigrations');
 
         $countedApplied = count(array_filter($res['migrations'], fn($m) => $m['applied']));
@@ -58,7 +58,7 @@ class MigrationsCtrlTest extends BdusTestCase
 
     public function testGetMigrationsNamesMatchKnownMigrations(): void
     {
-        $ctrl = $this->makeController('home_ctrl', []);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Home', []);
         $res  = $this->callController($ctrl, 'getMigrations');
 
         $expectedNames = array_map(

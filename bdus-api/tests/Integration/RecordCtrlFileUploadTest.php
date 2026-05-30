@@ -36,7 +36,7 @@ class RecordCtrlFileUploadTest extends BdusTestCase
 
     public function testUploadFileMissingTbReturnsError(): void
     {
-        $ctrl = $this->makeController('record_ctrl', ['id' => self::ID]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['id' => self::ID]);
         $res  = $this->callController($ctrl, 'uploadFile');
 
         $this->assertSame('error',             $res['status']);
@@ -45,7 +45,7 @@ class RecordCtrlFileUploadTest extends BdusTestCase
 
     public function testUploadFileMissingIdReturnsError(): void
     {
-        $ctrl = $this->makeController('record_ctrl', ['tb' => self::TB]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB]);
         $res  = $this->callController($ctrl, 'uploadFile');
 
         $this->assertSame('error',             $res['status']);
@@ -59,7 +59,7 @@ class RecordCtrlFileUploadTest extends BdusTestCase
         // Ensure $_FILES is empty
         $_FILES = [];
 
-        $ctrl = $this->makeController('record_ctrl', ['tb' => self::TB, 'id' => self::ID]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'id' => self::ID]);
         $res  = $this->callController($ctrl, 'uploadFile');
 
         $this->assertSame('error',                $res['status']);
@@ -78,7 +78,7 @@ class RecordCtrlFileUploadTest extends BdusTestCase
             ],
         ];
 
-        $ctrl = $this->makeController('record_ctrl', ['tb' => self::TB, 'id' => self::ID]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'id' => self::ID]);
         $res  = $this->callController($ctrl, 'uploadFile');
 
         $this->assertSame('error',                $res['status']);
@@ -130,7 +130,7 @@ class RecordCtrlFileUploadTest extends BdusTestCase
         );
         $maxIdBefore = (int)$before[0]['max_id'];
 
-        $ctrl = $this->makeController('record_ctrl', ['tb' => self::TB, 'id' => self::ID]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'id' => self::ID]);
         $res  = $this->callController($ctrl, 'uploadFile');
 
         // Clean up temp file

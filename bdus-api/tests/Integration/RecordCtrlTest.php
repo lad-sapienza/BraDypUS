@@ -18,7 +18,7 @@ class RecordCtrlTest extends BdusTestCase
 
     public function testGetRecordsAllReturnsExpectedShape(): void
     {
-        $ctrl = $this->makeController('record_ctrl', [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [
             'tb'          => self::TB,
             'page'        => 1,
             'per_page'    => 30,
@@ -37,7 +37,7 @@ class RecordCtrlTest extends BdusTestCase
 
     public function testGetRecordsFieldsHaveNameAndLabel(): void
     {
-        $ctrl = $this->makeController('record_ctrl', ['tb' => self::TB, 'search_type' => 'all']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'search_type' => 'all']);
         $res  = $this->callController($ctrl, 'getRecords');
 
         foreach ($res['fields'] as $f) {
@@ -48,7 +48,7 @@ class RecordCtrlTest extends BdusTestCase
 
     public function testGetRecordsPaginates(): void
     {
-        $ctrl = $this->makeController('record_ctrl', [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [
             'tb'          => self::TB,
             'page'        => 1,
             'per_page'    => 2,
@@ -63,7 +63,7 @@ class RecordCtrlTest extends BdusTestCase
 
     public function testGetRecordsFastSearchFilters(): void
     {
-        $ctrl = $this->makeController('record_ctrl', [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [
             'tb'          => self::TB,
             'search_type' => 'fast',
             'search'      => 'Alpha',
@@ -81,7 +81,7 @@ class RecordCtrlTest extends BdusTestCase
     public function testGetRecordsFilterSearch(): void
     {
         $ctrl = $this->makeController(
-            'record_ctrl',
+            'Bdus\\Controllers\\Record',
             ['tb' => self::TB],
             [
                 'page'    => 1,
@@ -101,7 +101,7 @@ class RecordCtrlTest extends BdusTestCase
     {
         // item 1 has tags 'tag-a' and 'tag-b' — only 1 item has any tags
         $ctrl = $this->makeController(
-            'record_ctrl',
+            'Bdus\\Controllers\\Record',
             ['tb' => self::TB],
             ['filter' => ['tags' => ['label' => ['_icontains' => 'tag']]]]
         );
@@ -114,7 +114,7 @@ class RecordCtrlTest extends BdusTestCase
     public function testGetRecordsSqlExpert(): void
     {
         $ctrl = $this->makeController(
-            'record_ctrl',
+            'Bdus\\Controllers\\Record',
             ['tb' => self::TB],
             ['search_type' => 'sqlExpert', 'querytext' => "name LIKE 'Alpha%'", 'join' => '']
         );
@@ -125,7 +125,7 @@ class RecordCtrlTest extends BdusTestCase
     public function testGetRecordsSqlExpertEmptyQuerytextReturnsAll(): void
     {
         $ctrl = $this->makeController(
-            'record_ctrl',
+            'Bdus\\Controllers\\Record',
             ['tb' => self::TB],
             ['search_type' => 'sqlExpert', 'querytext' => '', 'join' => '']
         );
@@ -136,7 +136,7 @@ class RecordCtrlTest extends BdusTestCase
     public function testGetRecordsSqlExpertInvalidColumnReturnsError(): void
     {
         $ctrl = $this->makeController(
-            'record_ctrl',
+            'Bdus\\Controllers\\Record',
             ['tb' => self::TB],
             ['search_type' => 'sqlExpert', 'querytext' => "nonexistent_col = 'x'", 'join' => '']
         );
@@ -151,7 +151,7 @@ class RecordCtrlTest extends BdusTestCase
 
     public function testGetRecordsJsonFilterIdEq(): void
     {
-        $ctrl = $this->makeController('record_ctrl', [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [
             'tb'     => self::TB,
             'filter' => ['id' => ['_eq' => 1]],
         ]);
@@ -162,7 +162,7 @@ class RecordCtrlTest extends BdusTestCase
 
     public function testGetRecordsJsonFilterAndCondition(): void
     {
-        $ctrl = $this->makeController('record_ctrl', [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [
             'tb'     => self::TB,
             'filter' => [
                 'status' => ['_eq'        => 'active'],
@@ -176,7 +176,7 @@ class RecordCtrlTest extends BdusTestCase
 
     public function testGetRecordsJsonFilterOrCondition(): void
     {
-        $ctrl = $this->makeController('record_ctrl', [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [
             'tb'     => self::TB,
             'filter' => ['_or' => [
                 ['status' => ['_eq' => 'active']],
@@ -189,7 +189,7 @@ class RecordCtrlTest extends BdusTestCase
 
     public function testGetRecordsJsonFilterInOperator(): void
     {
-        $ctrl = $this->makeController('record_ctrl', [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [
             'tb'     => self::TB,
             'filter' => ['id' => ['_in' => [1, 2]]],
         ]);
@@ -201,7 +201,7 @@ class RecordCtrlTest extends BdusTestCase
 
     public function testGetRecordsMissingTbReturnsError(): void
     {
-        $ctrl = $this->makeController('record_ctrl', [/* no tb */]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [/* no tb */]);
         $res  = $this->callController($ctrl, 'getRecords');
         $this->assertSame('error', $res['status']);
     }

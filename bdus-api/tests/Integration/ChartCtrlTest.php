@@ -63,7 +63,7 @@ class ChartCtrlTest extends BdusTestCase
 
     public function testGetDataMetricSuccess(): void
     {
-        $ctrl = $this->makeController('chart_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Chart', [], [
             'definition' => [
                 'tb'       => 'items',
                 'type'     => 'metric',
@@ -83,7 +83,7 @@ class ChartCtrlTest extends BdusTestCase
 
     public function testGetDataBarSuccess(): void
     {
-        $ctrl = $this->makeController('chart_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Chart', [], [
             'definition' => [
                 'tb'         => 'items',
                 'type'       => 'bar',
@@ -107,7 +107,7 @@ class ChartCtrlTest extends BdusTestCase
 
     public function testGetDataInvalidType(): void
     {
-        $ctrl = $this->makeController('chart_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Chart', [], [
             'definition' => [
                 'tb'   => 'items',
                 'type' => 'treemap', // not a valid type
@@ -123,7 +123,7 @@ class ChartCtrlTest extends BdusTestCase
 
     public function testGetDataInvalidField(): void
     {
-        $ctrl = $this->makeController('chart_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Chart', [], [
             'definition' => [
                 'tb'       => 'items',
                 'type'     => 'metric',
@@ -141,7 +141,7 @@ class ChartCtrlTest extends BdusTestCase
 
     public function testListChartsSuccess(): void
     {
-        $ctrl = $this->makeController('chart_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Chart');
         $res  = $this->callController($ctrl, 'listCharts');
 
         $this->assertSame('success', $res['status']);
@@ -151,7 +151,7 @@ class ChartCtrlTest extends BdusTestCase
 
     public function testListChartsContainsSeedRow(): void
     {
-        $ctrl = $this->makeController('chart_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Chart');
         $res  = $this->callController($ctrl, 'listCharts');
 
         $this->assertNotEmpty($res['charts']);
@@ -163,7 +163,7 @@ class ChartCtrlTest extends BdusTestCase
 
     public function testSaveChartSuccess(): void
     {
-        $ctrl = $this->makeController('chart_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Chart', [], [
             'name'       => 'Test chart',
             'definition' => [
                 'tb'       => 'items',
@@ -180,7 +180,7 @@ class ChartCtrlTest extends BdusTestCase
 
     public function testSaveChartReturnsSavedObject(): void
     {
-        $ctrl = $this->makeController('chart_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Chart', [], [
             'name'       => 'Shaped chart',
             'definition' => [
                 'tb'       => 'items',
@@ -206,7 +206,7 @@ class ChartCtrlTest extends BdusTestCase
 
     public function testSaveChartMissingName(): void
     {
-        $ctrl = $this->makeController('chart_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Chart', [], [
             'definition' => [
                 'tb'       => 'items',
                 'type'     => 'metric',
@@ -225,7 +225,7 @@ class ChartCtrlTest extends BdusTestCase
     public function testShareChartSuccess(): void
     {
         // Save a fresh chart
-        $save = $this->makeController('chart_ctrl', [], [
+        $save = $this->makeController('Bdus\\Controllers\\Chart', [], [
             'name'       => 'To share',
             'definition' => [
                 'tb'       => 'items',
@@ -237,14 +237,14 @@ class ChartCtrlTest extends BdusTestCase
         $saved = $this->callController($save, 'saveChart');
         $id    = $saved['chart']['id'];
 
-        $ctrl = $this->makeController('chart_ctrl', [], ['id' => $id]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Chart', [], ['id' => $id]);
         $res  = $this->callController($ctrl, 'shareChart');
 
         $this->assertSame('success', $res['status']);
         $this->assertSame('ok_sharing_chart', $res['code']);
 
         // Verify is_global=1 in list
-        $list = $this->callController($this->makeController('chart_ctrl'), 'listCharts');
+        $list = $this->callController($this->makeController('Bdus\\Controllers\\Chart'), 'listCharts');
         $row  = array_values(array_filter($list['charts'], fn($c) => (int)$c['id'] === (int)$id))[0] ?? null;
         $this->assertNotNull($row);
         $this->assertSame(1, (int) $row['is_global']);
@@ -255,7 +255,7 @@ class ChartCtrlTest extends BdusTestCase
     public function testDeleteChartSuccess(): void
     {
         // Save a chart to delete
-        $save = $this->makeController('chart_ctrl', [], [
+        $save = $this->makeController('Bdus\\Controllers\\Chart', [], [
             'name'       => 'To delete',
             'definition' => [
                 'tb'       => 'items',
@@ -267,21 +267,21 @@ class ChartCtrlTest extends BdusTestCase
         $saved = $this->callController($save, 'saveChart');
         $id    = $saved['chart']['id'];
 
-        $ctrl = $this->makeController('chart_ctrl', [], ['id' => $id]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Chart', [], ['id' => $id]);
         $res  = $this->callController($ctrl, 'deleteChart');
 
         $this->assertSame('success', $res['status']);
         $this->assertSame('ok_chart_erase', $res['code']);
 
         // Verify it is gone
-        $list = $this->callController($this->makeController('chart_ctrl'), 'listCharts');
+        $list = $this->callController($this->makeController('Bdus\\Controllers\\Chart'), 'listCharts');
         $ids  = array_column($list['charts'], 'id');
         $this->assertNotContains($id, $ids);
     }
 
     public function testDeleteChartNotFound(): void
     {
-        $ctrl = $this->makeController('chart_ctrl', [], ['id' => 999999]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Chart', [], ['id' => 999999]);
         $res  = $this->callController($ctrl, 'deleteChart');
 
         $this->assertSame('error', $res['status']);

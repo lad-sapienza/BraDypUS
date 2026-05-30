@@ -15,7 +15,7 @@ class RecordDeletedApiTest extends BdusTestCase
 
     private function callGetDeleted(string $tb): array
     {
-        $ctrl = $this->makeController('record_ctrl', ['tb' => $tb]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => $tb]);
         return $this->callController($ctrl, 'getDeletedRecords');
     }
 
@@ -36,7 +36,7 @@ class RecordDeletedApiTest extends BdusTestCase
             [self::TB, $id], 'read'
         )[0]['c'] ?? 0);
 
-        $ctrl = $this->makeController('record_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], [
             'tb'   => self::TB,
             'id'   => $id,
             'core' => ['status' => 'inactive'],
@@ -44,7 +44,7 @@ class RecordDeletedApiTest extends BdusTestCase
         $this->callController($ctrl, 'saveRecord');
 
         // Now erase the record (creates a 'delete' snapshot)
-        $ctrl = $this->makeController('record_ctrl', [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [
             'tb' => self::TB,
             'id' => $id,
         ]);
@@ -64,7 +64,7 @@ class RecordDeletedApiTest extends BdusTestCase
 
     public function testMissingTbReturnsError(): void
     {
-        $ctrl = $this->makeController('record_ctrl', []);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', []);
         $res  = $this->callController($ctrl, 'getDeletedRecords');
         $this->assertSame('error', $res['status']);
         $this->assertSame('parameter_missing', $res['code']);
@@ -127,7 +127,7 @@ class RecordDeletedApiTest extends BdusTestCase
         $this->assertContains($r['id'], $ids);
 
         // Restore it
-        $ctrl = $this->makeController('record_ctrl', ['id' => $r['version_id']], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['id' => $r['version_id']], [
             'version_id' => $r['version_id'],
         ]);
         $restore = $this->callController($ctrl, 'restoreVersion');

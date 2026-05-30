@@ -41,7 +41,7 @@ class ApiCtrlTest extends BdusTestCase
 
     public function testListKeysSuccess(): void
     {
-        $ctrl = $this->makeController('api_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Api');
         $res  = $this->callController($ctrl, 'listKeys');
 
         $this->assertSame('success', $res['status']);
@@ -52,10 +52,10 @@ class ApiCtrlTest extends BdusTestCase
     public function testListKeysDoesNotExposeKeyHash(): void
     {
         // Create a key first so there is at least one row
-        $create = $this->makeController('api_ctrl', [], ['label' => 'HashTest']);
+        $create = $this->makeController('Bdus\\Controllers\\Api', [], ['label' => 'HashTest']);
         $this->callController($create, 'createKey');
 
-        $ctrl = $this->makeController('api_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Api');
         $res  = $this->callController($ctrl, 'listKeys');
 
         foreach ($res['keys'] as $row) {
@@ -68,7 +68,7 @@ class ApiCtrlTest extends BdusTestCase
 
     public function testCreateKeySuccess(): void
     {
-        $ctrl = $this->makeController('api_ctrl', [], ['label' => 'My test key']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Api', [], ['label' => 'My test key']);
         $res  = $this->callController($ctrl, 'createKey');
 
         $this->assertSame('success', $res['status']);
@@ -81,7 +81,7 @@ class ApiCtrlTest extends BdusTestCase
 
     public function testCreateKeyHasPlainKey(): void
     {
-        $ctrl = $this->makeController('api_ctrl', [], ['label' => 'Hex key check']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Api', [], ['label' => 'Hex key check']);
         $res  = $this->callController($ctrl, 'createKey');
 
         $this->assertSame('success', $res['status']);
@@ -91,7 +91,7 @@ class ApiCtrlTest extends BdusTestCase
 
     public function testCreateKeyMissingLabel(): void
     {
-        $ctrl = $this->makeController('api_ctrl', [], []);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Api', [], []);
         $res  = $this->callController($ctrl, 'createKey');
 
         $this->assertSame('error', $res['status']);
@@ -104,18 +104,18 @@ class ApiCtrlTest extends BdusTestCase
     public function testRevokeKeySuccess(): void
     {
         // Create a key to revoke
-        $create = $this->makeController('api_ctrl', [], ['label' => 'To revoke']);
+        $create = $this->makeController('Bdus\\Controllers\\Api', [], ['label' => 'To revoke']);
         $created = $this->callController($create, 'createKey');
         $id = $created['id'];
 
-        $ctrl = $this->makeController('api_ctrl', [], ['id' => $id]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Api', [], ['id' => $id]);
         $res  = $this->callController($ctrl, 'revokeKey');
 
         $this->assertSame('success', $res['status']);
         $this->assertSame('ok_api_key_revoked', $res['code']);
 
         // Verify the key shows as inactive in the list
-        $list = $this->callController($this->makeController('api_ctrl'), 'listKeys');
+        $list = $this->callController($this->makeController('Bdus\\Controllers\\Api'), 'listKeys');
         $row  = array_values(array_filter($list['keys'], fn($k) => (int)$k['id'] === (int)$id))[0] ?? null;
         $this->assertNotNull($row);
         $this->assertFalse($row['is_active']);
@@ -123,7 +123,7 @@ class ApiCtrlTest extends BdusTestCase
 
     public function testRevokeKeyMissingId(): void
     {
-        $ctrl = $this->makeController('api_ctrl', [], []);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Api', [], []);
         $res  = $this->callController($ctrl, 'revokeKey');
 
         $this->assertSame('error', $res['status']);
@@ -136,25 +136,25 @@ class ApiCtrlTest extends BdusTestCase
     public function testDeleteKeySuccess(): void
     {
         // Create a key to delete
-        $create  = $this->makeController('api_ctrl', [], ['label' => 'To delete']);
+        $create  = $this->makeController('Bdus\\Controllers\\Api', [], ['label' => 'To delete']);
         $created = $this->callController($create, 'createKey');
         $id      = $created['id'];
 
-        $ctrl = $this->makeController('api_ctrl', [], ['id' => $id]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Api', [], ['id' => $id]);
         $res  = $this->callController($ctrl, 'deleteKey');
 
         $this->assertSame('success', $res['status']);
         $this->assertSame('ok_api_key_deleted', $res['code']);
 
         // Verify the key is gone from the list
-        $list = $this->callController($this->makeController('api_ctrl'), 'listKeys');
+        $list = $this->callController($this->makeController('Bdus\\Controllers\\Api'), 'listKeys');
         $ids  = array_column($list['keys'], 'id');
         $this->assertNotContains($id, $ids);
     }
 
     public function testDeleteKeyMissingId(): void
     {
-        $ctrl = $this->makeController('api_ctrl', [], []);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Api', [], []);
         $res  = $this->callController($ctrl, 'deleteKey');
 
         $this->assertSame('error', $res['status']);

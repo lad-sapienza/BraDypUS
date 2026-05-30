@@ -78,7 +78,7 @@ class BackupCtrlTest extends BdusTestCase
 
     public function testListBackupsReturnsExpectedShape(): void
     {
-        $ctrl = $this->makeController('backup_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Backup');
         $res  = $this->callController($ctrl, 'listBackups');
 
         $this->assertSame('sqlite', $res['engine'],
@@ -95,7 +95,7 @@ class BackupCtrlTest extends BdusTestCase
             @unlink($f);
         }
 
-        $ctrl = $this->makeController('backup_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Backup');
         $res  = $this->callController($ctrl, 'listBackups');
 
         $this->assertSame([], $res['backups']);
@@ -105,7 +105,7 @@ class BackupCtrlTest extends BdusTestCase
 
     public function testDoBackupCreatesGzipFile(): void
     {
-        $ctrl = $this->makeController('backup_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Backup');
         $res  = $this->callController($ctrl, 'doBackup');
 
         $this->assertSame('success', $res['status'],
@@ -120,7 +120,7 @@ class BackupCtrlTest extends BdusTestCase
         // Run a backup first (may already exist from previous test in the same class).
         $files = glob(static::$backupsDir . '*.sql.gz') ?: [];
         if (empty($files)) {
-            $ctrl = $this->makeController('backup_ctrl');
+            $ctrl = $this->makeController('Bdus\\Controllers\\Backup');
             $this->callController($ctrl, 'doBackup');
             $files = glob(static::$backupsDir . '*.sql.gz') ?: [];
         }
@@ -141,7 +141,7 @@ class BackupCtrlTest extends BdusTestCase
     {
         $files = glob(static::$backupsDir . '*.sql.gz') ?: [];
         if (empty($files)) {
-            $ctrl = $this->makeController('backup_ctrl');
+            $ctrl = $this->makeController('Bdus\\Controllers\\Backup');
             $this->callController($ctrl, 'doBackup');
             $files = glob(static::$backupsDir . '*.sql.gz') ?: [];
         }
@@ -171,7 +171,7 @@ class BackupCtrlTest extends BdusTestCase
     {
         $files = glob(static::$backupsDir . '*.sql.gz') ?: [];
         if (empty($files)) {
-            $ctrl = $this->makeController('backup_ctrl');
+            $ctrl = $this->makeController('Bdus\\Controllers\\Backup');
             $this->callController($ctrl, 'doBackup');
             $files = glob(static::$backupsDir . '*.sql.gz') ?: [];
         }
@@ -195,10 +195,10 @@ class BackupCtrlTest extends BdusTestCase
             @unlink($f);
         }
 
-        $ctrl = $this->makeController('backup_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Backup');
         $this->callController($ctrl, 'doBackup');
 
-        $ctrl2 = $this->makeController('backup_ctrl');
+        $ctrl2 = $this->makeController('Bdus\\Controllers\\Backup');
         $res   = $this->callController($ctrl2, 'listBackups');
 
         $this->assertCount(1, $res['backups'], 'One backup should appear in the list');
@@ -225,7 +225,7 @@ class BackupCtrlTest extends BdusTestCase
         $name = "bdus_test-sqlite-{$ts}.sql.gz";
         file_put_contents(static::$backupsDir . $name, gzencode('-- test'));
 
-        $ctrl = $this->makeController('backup_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Backup');
         $res  = $this->callController($ctrl, 'listBackups');
 
         $found = array_filter($res['backups'], fn($b) => $b['file'] === $name);
@@ -249,7 +249,7 @@ class BackupCtrlTest extends BdusTestCase
         file_put_contents($path, gzencode('-- dummy'));
         $this->assertFileExists($path);
 
-        $ctrl = $this->makeController('backup_ctrl', ['file' => $name]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Backup', ['file' => $name]);
         $res  = $this->callController($ctrl, 'deleteBackup');
 
         $this->assertSame('success', $res['status']);
@@ -258,7 +258,7 @@ class BackupCtrlTest extends BdusTestCase
 
     public function testDeleteBackupReturnsErrorForMissingFile(): void
     {
-        $ctrl = $this->makeController('backup_ctrl', ['file' => 'nonexistent-file.sql.gz']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Backup', ['file' => 'nonexistent-file.sql.gz']);
         $res  = $this->callController($ctrl, 'deleteBackup');
 
         $this->assertSame('error', $res['status']);
@@ -269,7 +269,7 @@ class BackupCtrlTest extends BdusTestCase
         // A path like ../../etc/passwd must be reduced to basename only.
         // The file "passwd" won't exist in backupsDir, so we get file_not_found,
         // not a successful delete of an arbitrary path.
-        $ctrl = $this->makeController('backup_ctrl', ['file' => '../../etc/passwd']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Backup', ['file' => '../../etc/passwd']);
         $res  = $this->callController($ctrl, 'deleteBackup');
 
         $this->assertSame('error', $res['status']);
@@ -283,7 +283,7 @@ class BackupCtrlTest extends BdusTestCase
         $path = static::$backupsDir . $name;
         file_put_contents($path, gzencode('-- download test'));
 
-        $ctrl = $this->makeController('backup_ctrl', ['file' => $name]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Backup', ['file' => $name]);
 
         ob_start();
         $ctrl->downloadBackup();
@@ -298,7 +298,7 @@ class BackupCtrlTest extends BdusTestCase
 
     public function testDownloadBackupReturnsErrorForMissingFile(): void
     {
-        $ctrl = $this->makeController('backup_ctrl', ['file' => 'ghost.sql.gz']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Backup', ['file' => 'ghost.sql.gz']);
         $res  = $this->callController($ctrl, 'downloadBackup');
 
         $this->assertSame('error', $res['status']);
@@ -306,7 +306,7 @@ class BackupCtrlTest extends BdusTestCase
 
     public function testDownloadBackupRejectsEmptyFileName(): void
     {
-        $ctrl = $this->makeController('backup_ctrl', ['file' => '']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Backup', ['file' => '']);
         $res  = $this->callController($ctrl, 'downloadBackup');
 
         $this->assertSame('error', $res['status']);
@@ -317,7 +317,7 @@ class BackupCtrlTest extends BdusTestCase
     public function testListBackupsRequiresReadPrivilege(): void
     {
         $this->setPrivilege(100); // no privilege
-        $ctrl = $this->makeController('backup_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Backup');
         $res  = $this->callController($ctrl, 'listBackups');
         $this->setPrivilege(1);   // restore
 
@@ -328,7 +328,7 @@ class BackupCtrlTest extends BdusTestCase
     public function testDoBackupRequiresEditPrivilege(): void
     {
         $this->setPrivilege(100);
-        $ctrl = $this->makeController('backup_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Backup');
         $res  = $this->callController($ctrl, 'doBackup');
         $this->setPrivilege(1);
 
@@ -339,7 +339,7 @@ class BackupCtrlTest extends BdusTestCase
     public function testDeleteBackupRequiresAdminPrivilege(): void
     {
         $this->setPrivilege(30); // below admin threshold
-        $ctrl = $this->makeController('backup_ctrl', ['file' => 'any.sql.gz']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Backup', ['file' => 'any.sql.gz']);
         $res  = $this->callController($ctrl, 'deleteBackup');
         $this->setPrivilege(1);
 
@@ -354,7 +354,7 @@ class BackupCtrlTest extends BdusTestCase
         // super_admin requires privilege < 2 (online) or < 11 (offline).
         // In the test environment is_online() is false, so we need >= 11 to be denied.
         $this->setPrivilege(11);
-        $ctrl = $this->makeController('backup_ctrl', ['file' => 'any.sql.gz']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Backup', ['file' => 'any.sql.gz']);
         $res  = $this->callController($ctrl, 'restoreBackup');
         $this->setPrivilege(1);
 
@@ -364,7 +364,7 @@ class BackupCtrlTest extends BdusTestCase
 
     public function testRestoreBackupRejectsMissingFileName(): void
     {
-        $ctrl = $this->makeController('backup_ctrl', ['file' => '']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Backup', ['file' => '']);
         $res  = $this->callController($ctrl, 'restoreBackup');
 
         $this->assertSame('error', $res['status']);
@@ -378,7 +378,7 @@ class BackupCtrlTest extends BdusTestCase
         $name = "bdus_test-mysql-{$ts}.sql.gz";
         file_put_contents(static::$backupsDir . $name, gzencode('-- mysql dump'));
 
-        $ctrl = $this->makeController('backup_ctrl', ['file' => $name]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Backup', ['file' => $name]);
         $res  = $this->callController($ctrl, 'restoreBackup');
 
         @unlink(static::$backupsDir . $name);
@@ -391,7 +391,7 @@ class BackupCtrlTest extends BdusTestCase
     {
         // First create a real backup via doBackup(), then restore it.
         // After restore the data must still be intact (same rows).
-        $ctrl = $this->makeController('backup_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Backup');
         $bup  = $this->callController($ctrl, 'doBackup');
         $this->assertSame('success', $bup['status'], 'Prerequisite: backup must succeed');
 
@@ -400,7 +400,7 @@ class BackupCtrlTest extends BdusTestCase
         $this->assertNotEmpty($files);
         $latest = basename(end($files));
 
-        $ctrl2 = $this->makeController('backup_ctrl', ['file' => $latest]);
+        $ctrl2 = $this->makeController('Bdus\\Controllers\\Backup', ['file' => $latest]);
         $res   = $this->callController($ctrl2, 'restoreBackup');
 
         $this->assertSame('success',           $res['status'],
@@ -415,7 +415,7 @@ class BackupCtrlTest extends BdusTestCase
 
     public function testRestoreBackupDirectoryTraversalBlocked(): void
     {
-        $ctrl = $this->makeController('backup_ctrl', ['file' => '../../etc/passwd']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Backup', ['file' => '../../etc/passwd']);
         $res  = $this->callController($ctrl, 'restoreBackup');
 
         // Must get an error (file not found or param error), never a success.

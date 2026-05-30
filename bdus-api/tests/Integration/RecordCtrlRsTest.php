@@ -21,7 +21,7 @@ class RecordCtrlRsTest extends BdusTestCase
 
     public function testGetRecordSchemaExposesRsField(): void
     {
-        $ctrl = $this->makeController('record_ctrl', ['tb' => self::TB, 'id' => 1]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'id' => 1]);
         $res  = $this->callController($ctrl, 'getRecord');
 
         $this->assertArrayHasKey('rs_field', $res['schema']);
@@ -31,7 +31,7 @@ class RecordCtrlRsTest extends BdusTestCase
 
     public function testGetRecordRsDataIncludedInResponse(): void
     {
-        $ctrl = $this->makeController('record_ctrl', ['tb' => self::TB, 'id' => 1]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'id' => 1]);
         $res  = $this->callController($ctrl, 'getRecord');
 
         $this->assertArrayHasKey('rs', $res);
@@ -52,7 +52,7 @@ class RecordCtrlRsTest extends BdusTestCase
 
     public function testAddRsInsertsRelation(): void
     {
-        $ctrl = $this->makeController('record_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], [
             'tb'       => self::TB,
             'first'    => '3',
             'relation' => 5,    // covers
@@ -82,7 +82,7 @@ class RecordCtrlRsTest extends BdusTestCase
     public function testAddRsRejectsDuplicateSameDirection(): void
     {
         // Seed entry: first='1', second='2', relation=1 already exists
-        $ctrl = $this->makeController('record_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], [
             'tb'       => self::TB,
             'first'    => '1',
             'relation' => 1,
@@ -99,7 +99,7 @@ class RecordCtrlRsTest extends BdusTestCase
         // The seeded relation is first='1', second='2', relation=1 (is_covered_by).
         // Its inverse is: first='2', second='1', relation=5 (covers).
         // Inserting the inverse must be rejected.
-        $ctrl = $this->makeController('record_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], [
             'tb'       => self::TB,
             'first'    => '2',
             'relation' => 5,    // covers — inverse of is_covered_by
@@ -113,7 +113,7 @@ class RecordCtrlRsTest extends BdusTestCase
 
     public function testAddRsRejectsMissingParams(): void
     {
-        $ctrl = $this->makeController('record_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], [
             'tb'    => self::TB,
             'first' => '1',
             // missing relation and second
@@ -129,7 +129,7 @@ class RecordCtrlRsTest extends BdusTestCase
         // Relations 9 (is_the_same_as) and 10 (is_bound_to) are self-inverse
         // (same code for both directions). Inserting (A,B,9) when (B,A,9) exists
         // should still be rejected (same inverse: 9 → 9).
-        $ctrl = $this->makeController('record_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], [
             'tb'       => self::TB,
             'first'    => '3',
             'relation' => 9,
@@ -140,7 +140,7 @@ class RecordCtrlRsTest extends BdusTestCase
         $id1 = (int)$res1['id'];
 
         // Reverse direction — must be rejected
-        $ctrl2 = $this->makeController('record_ctrl', [], [
+        $ctrl2 = $this->makeController('Bdus\\Controllers\\Record', [], [
             'tb'       => self::TB,
             'first'    => '5',
             'relation' => 9,
@@ -165,7 +165,7 @@ class RecordCtrlRsTest extends BdusTestCase
         );
         $tmpId = (int) static::$db->query('SELECT last_insert_rowid() AS id', [], 'read')[0]['id'];
 
-        $ctrl = $this->makeController('record_ctrl', ['id' => $tmpId]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['id' => $tmpId]);
         $res  = $this->callController($ctrl, 'deleteRs');
 
         $this->assertSame('success',            $res['status']);
@@ -177,7 +177,7 @@ class RecordCtrlRsTest extends BdusTestCase
 
     public function testDeleteRsUnknownIdReturnsError(): void
     {
-        $ctrl = $this->makeController('record_ctrl', ['id' => 99999]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['id' => 99999]);
         $res  = $this->callController($ctrl, 'deleteRs');
 
         $this->assertSame('error',     $res['status']);
@@ -186,7 +186,7 @@ class RecordCtrlRsTest extends BdusTestCase
 
     public function testDeleteRsMissingIdReturnsError(): void
     {
-        $ctrl = $this->makeController('record_ctrl', []);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', []);
         $res  = $this->callController($ctrl, 'deleteRs');
 
         $this->assertSame('error',             $res['status']);
@@ -198,7 +198,7 @@ class RecordCtrlRsTest extends BdusTestCase
     public function testGetRsMatrixReturnsAllNodes(): void
     {
         // No filter → all 5 seeded items must appear as nodes
-        $ctrl = $this->makeController('record_ctrl', ['tb' => self::TB]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB]);
         $res  = $this->callController($ctrl, 'getRsMatrix');
 
         $this->assertSame('id', $res['rs_field']);
@@ -220,7 +220,7 @@ class RecordCtrlRsTest extends BdusTestCase
     public function testGetRsMatrixIncludesIsolatedNodes(): void
     {
         // Items 3, 4, 5 have no RS relations — they must still appear as nodes
-        $ctrl = $this->makeController('record_ctrl', ['tb' => self::TB]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB]);
         $res  = $this->callController($ctrl, 'getRsMatrix');
 
         $identifiers = array_column($res['nodes'], 'identifier');
@@ -232,7 +232,7 @@ class RecordCtrlRsTest extends BdusTestCase
     public function testGetRsMatrixFilteredByJsonFilter(): void
     {
         // Filter to item 1 only; item 2 appears via its relation but not in filter
-        $ctrl = $this->makeController('record_ctrl', [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [
             'tb'     => self::TB,
             'filter' => ['id' => ['_eq' => 1]],
         ]);
@@ -261,7 +261,7 @@ class RecordCtrlRsTest extends BdusTestCase
 
     public function testGetRsMatrixMissingTbReturnsError(): void
     {
-        $ctrl = $this->makeController('record_ctrl', []);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', []);
         $res  = $this->callController($ctrl, 'getRsMatrix');
 
         $this->assertSame('error',             $res['status']);
@@ -271,7 +271,7 @@ class RecordCtrlRsTest extends BdusTestCase
     public function testGetRsMatrixTableWithoutRsReturnsError(): void
     {
         // tags has no "rs" config key
-        $ctrl = $this->makeController('record_ctrl', ['tb' => 'tags']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => 'tags']);
         $res  = $this->callController($ctrl, 'getRsMatrix');
 
         $this->assertSame('error',              $res['status']);

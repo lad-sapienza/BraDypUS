@@ -21,7 +21,7 @@ class RecordCtrlSaveEraseTest extends BdusTestCase
     {
         // Record id=1 has name='Alpha item'; change description
         $ctrl = $this->makeController(
-            'record_ctrl',
+            'Bdus\\Controllers\\Record',
             [],    // no GET params
             [
                 'tb'   => self::TB,
@@ -56,7 +56,7 @@ class RecordCtrlSaveEraseTest extends BdusTestCase
         // Sending the same value that's already stored should succeed (no error)
         // even if Persist treats it as noop internally.
         $ctrl = $this->makeController(
-            'record_ctrl',
+            'Bdus\\Controllers\\Record',
             [],
             [
                 'tb'   => self::TB,
@@ -71,7 +71,7 @@ class RecordCtrlSaveEraseTest extends BdusTestCase
 
     public function testSaveRecordUpdateMissingTbReturnsError(): void
     {
-        $ctrl = $this->makeController('record_ctrl', [], ['id' => 1, 'core' => ['name' => 'X']]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], ['id' => 1, 'core' => ['name' => 'X']]);
         $res  = $this->callController($ctrl, 'saveRecord');
         $this->assertSame('error', $res['status']);
         $this->assertSame('parameter_missing', $res['code']);
@@ -82,7 +82,7 @@ class RecordCtrlSaveEraseTest extends BdusTestCase
     public function testSaveRecordInsertCreatesNewRecord(): void
     {
         $ctrl = $this->makeController(
-            'record_ctrl',
+            'Bdus\\Controllers\\Record',
             [],
             [
                 'tb'   => self::TB,
@@ -114,7 +114,7 @@ class RecordCtrlSaveEraseTest extends BdusTestCase
     {
         // Insert a new item AND a plugin (tag) row at the same time
         $ctrl = $this->makeController(
-            'record_ctrl',
+            'Bdus\\Controllers\\Record',
             [],
             [
                 'tb'      => self::TB,
@@ -160,7 +160,7 @@ class RecordCtrlSaveEraseTest extends BdusTestCase
         );
         $tmpId = (int) static::$db->query('SELECT last_insert_rowid() AS id', [], 'read')[0]['id'];
 
-        $ctrl = $this->makeController('record_ctrl', ['tb' => self::TB, 'id' => $tmpId]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'id' => $tmpId]);
         $res  = $this->callController($ctrl, 'erase');
 
         $this->assertSame('success', $res['status']);
@@ -177,7 +177,7 @@ class RecordCtrlSaveEraseTest extends BdusTestCase
 
     public function testEraseMissingIdReturnsError(): void
     {
-        $ctrl = $this->makeController('record_ctrl', ['tb' => self::TB]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB]);
         $res  = $this->callController($ctrl, 'erase');
         $this->assertSame('error', $res['status']);
         $this->assertSame('no_id_provided', $res['code']);
@@ -185,7 +185,7 @@ class RecordCtrlSaveEraseTest extends BdusTestCase
 
     public function testEraseMissingTbReturnsError(): void
     {
-        $ctrl = $this->makeController('record_ctrl', ['id' => 1]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['id' => 1]);
         $res  = $this->callController($ctrl, 'erase');
         $this->assertSame('error', $res['status']);
         $this->assertSame('no_id_provided', $res['code']);

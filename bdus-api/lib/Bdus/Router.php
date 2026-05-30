@@ -50,145 +50,145 @@ class Router
      */
     public const ROUTE_PRIVILEGE = [
         // ── Public / no-auth ────────────────────────────────────────────────
-        'login_ctrl::listApps'    => 'none',
-        'login_ctrl::auth'        => 'none',
-        'login_ctrl::refresh'     => 'none',
-        'login_ctrl::out'         => 'none',
-        'info_ctrl::getInfo'      => 'none',
-        'new_app_ctrl::getStatus' => 'none',
-        'new_app_ctrl::create'    => 'none',
-        'oauth_ctrl::redirect'    => 'none',
-        'oauth_ctrl::callback'    => 'none',
+        'Bdus\\Controllers\\Login::listApps'    => 'none',
+        'Bdus\\Controllers\\Login::auth'        => 'none',
+        'Bdus\\Controllers\\Login::refresh'     => 'none',
+        'Bdus\\Controllers\\Login::out'         => 'none',
+        'Bdus\\Controllers\\Info::getInfo'      => 'none',
+        'Bdus\\Controllers\\NewApp::getStatus' => 'none',
+        'Bdus\\Controllers\\NewApp::create'    => 'none',
+        'Bdus\\Controllers\\OAuth::redirect'    => 'none',
+        'Bdus\\Controllers\\OAuth::callback'    => 'none',
 
         // ── Read — any authenticated principal ───────────────────────────────
-        'home_ctrl::listTables'                      => 'read',
-        'info_ctrl::getAppInfo'                      => 'read',
-        'record_ctrl::getRecord'                     => 'read',
-        'record_ctrl::getRecords'                    => 'read',
-        'record_ctrl::exportRecords'                 => 'read',
-        'record_ctrl::getTemplates'                  => 'read',
-        'record_ctrl::getFieldOptions'               => 'read',
-        'record_ctrl::searchLinkCandidates'          => 'read',
-        'record_ctrl::getRsMatrix'                   => 'read',
-        'record_ctrl::getDeletedRecords'             => 'read',
-        'record_ctrl::getVersions'                   => 'read',
-        'record_ctrl::getVersionDiff'                => 'read',
-        'search_ctrl::getAdvancedConfig'             => 'read',
-        'search_ctrl::getUsedValues'                 => 'read',
-        'chart_ctrl::listCharts'                     => 'read',
-        'chart_ctrl::getData'                        => 'read',
-        'saved_queries_ctrl::listQueries'            => 'read',
-        'myHistory_ctrl::getHistory'                 => 'read',
-        'frontpage_editor_ctrl::getWelcome'          => 'read',
-        'widget_ctrl::listWidgets'                   => 'read',
-        'widget_ctrl::serveWidget'                   => 'read',
-        'geoface_ctrl::getGeoJson'                   => 'read',
-        'vocabularies_ctrl::list'                    => 'read',
+        'Bdus\\Controllers\\Home::listTables'                      => 'read',
+        'Bdus\\Controllers\\Info::getAppInfo'                      => 'read',
+        'Bdus\\Controllers\\Record::getRecord'                     => 'read',
+        'Bdus\\Controllers\\Record::getRecords'                    => 'read',
+        'Bdus\\Controllers\\Record::exportRecords'                 => 'read',
+        'Bdus\\Controllers\\Record::getTemplates'                  => 'read',
+        'Bdus\\Controllers\\Record::getFieldOptions'               => 'read',
+        'Bdus\\Controllers\\Record::searchLinkCandidates'          => 'read',
+        'Bdus\\Controllers\\Record::getRsMatrix'                   => 'read',
+        'Bdus\\Controllers\\Record::getDeletedRecords'             => 'read',
+        'Bdus\\Controllers\\Record::getVersions'                   => 'read',
+        'Bdus\\Controllers\\Record::getVersionDiff'                => 'read',
+        'Bdus\\Controllers\\Search::getAdvancedConfig'             => 'read',
+        'Bdus\\Controllers\\Search::getUsedValues'                 => 'read',
+        'Bdus\\Controllers\\Chart::listCharts'                     => 'read',
+        'Bdus\\Controllers\\Chart::getData'                        => 'read',
+        'Bdus\\Controllers\\SavedQueries::listQueries'            => 'read',
+        'Bdus\\Controllers\\MyHistory::getHistory'                 => 'read',
+        'Bdus\\Controllers\\FrontpageEditor::getWelcome'          => 'read',
+        'Bdus\\Controllers\\Widget::listWidgets'                   => 'read',
+        'Bdus\\Controllers\\Widget::serveWidget'                   => 'read',
+        'Bdus\\Controllers\\Geoface::getGeoJson'                   => 'read',
+        'Bdus\\Controllers\\Vocabularies::list'                    => 'read',
 
         // ── Edit — write operations ──────────────────────────────────────────
-        'record_ctrl::saveRecord'                    => 'edit',
-        'record_ctrl::erase'                         => 'edit',
-        'record_ctrl::restoreVersion'                => 'admin',
-        'record_ctrl::uploadFile'                    => 'edit',
-        'record_ctrl::deleteFile'                    => 'edit',
-        'file_ctrl::sortFiles'                       => 'edit',
-        'record_ctrl::addRs'                         => 'edit',
-        'record_ctrl::deleteRs'                      => 'edit',
-        'record_ctrl::addManualLink'                 => 'edit',
-        'record_ctrl::deleteManualLink'              => 'edit',
-        'chart_ctrl::saveChart'                      => 'edit',
-        'chart_ctrl::shareChart'                     => 'edit',
-        'chart_ctrl::unshareChart'                   => 'edit',
-        'chart_ctrl::deleteChart'                    => 'edit',
-        'saved_queries_ctrl::saveQuery'              => 'edit',
-        'saved_queries_ctrl::shareQuery'             => 'edit',
-        'saved_queries_ctrl::unshareQuery'           => 'edit',
-        'saved_queries_ctrl::deleteQuery'            => 'edit',
-        'geoface_ctrl::saveNew'                      => 'edit',
-        'geoface_ctrl::updateGeometry'               => 'edit',
-        'geoface_ctrl::eraseGeometry'                => 'edit',
-        'vocabularies_ctrl::add'                     => 'edit',
-        'vocabularies_ctrl::sort'                    => 'edit',
-        'vocabularies_ctrl::edit'                    => 'edit',
-        'vocabularies_ctrl::erase'                   => 'edit',
-        'import_ctrl::getTableFields'                => 'edit',
-        'import_ctrl::previewFile'                   => 'edit',
-        'import_ctrl::previewPhotos'                 => 'edit',
-        'import_ctrl::importData'                    => 'edit',
-        'import_ctrl::importGeoJson'                 => 'edit',
-        'import_ctrl::importPhotos'                  => 'edit',
+        'Bdus\\Controllers\\Record::saveRecord'                    => 'edit',
+        'Bdus\\Controllers\\Record::erase'                         => 'edit',
+        'Bdus\\Controllers\\Record::restoreVersion'                => 'admin',
+        'Bdus\\Controllers\\Record::uploadFile'                    => 'edit',
+        'Bdus\\Controllers\\Record::deleteFile'                    => 'edit',
+        'Bdus\\Controllers\\File::sortFiles'                       => 'edit',
+        'Bdus\\Controllers\\Record::addRs'                         => 'edit',
+        'Bdus\\Controllers\\Record::deleteRs'                      => 'edit',
+        'Bdus\\Controllers\\Record::addManualLink'                 => 'edit',
+        'Bdus\\Controllers\\Record::deleteManualLink'              => 'edit',
+        'Bdus\\Controllers\\Chart::saveChart'                      => 'edit',
+        'Bdus\\Controllers\\Chart::shareChart'                     => 'edit',
+        'Bdus\\Controllers\\Chart::unshareChart'                   => 'edit',
+        'Bdus\\Controllers\\Chart::deleteChart'                    => 'edit',
+        'Bdus\\Controllers\\SavedQueries::saveQuery'              => 'edit',
+        'Bdus\\Controllers\\SavedQueries::shareQuery'             => 'edit',
+        'Bdus\\Controllers\\SavedQueries::unshareQuery'           => 'edit',
+        'Bdus\\Controllers\\SavedQueries::deleteQuery'            => 'edit',
+        'Bdus\\Controllers\\Geoface::saveNew'                      => 'edit',
+        'Bdus\\Controllers\\Geoface::updateGeometry'               => 'edit',
+        'Bdus\\Controllers\\Geoface::eraseGeometry'                => 'edit',
+        'Bdus\\Controllers\\Vocabularies::add'                     => 'edit',
+        'Bdus\\Controllers\\Vocabularies::sort'                    => 'edit',
+        'Bdus\\Controllers\\Vocabularies::edit'                    => 'edit',
+        'Bdus\\Controllers\\Vocabularies::erase'                   => 'edit',
+        'Bdus\\Controllers\\Import::getTableFields'                => 'edit',
+        'Bdus\\Controllers\\Import::previewFile'                   => 'edit',
+        'Bdus\\Controllers\\Import::previewPhotos'                 => 'edit',
+        'Bdus\\Controllers\\Import::importData'                    => 'edit',
+        'Bdus\\Controllers\\Import::importGeoJson'                 => 'edit',
+        'Bdus\\Controllers\\Import::importPhotos'                  => 'edit',
 
         // ── Admin (privilege ≤ 10) — user management and operational tasks ───
-        'home_ctrl::getMigrations'                   => 'admin',
-        'user_ctrl::showList'                        => 'admin',
-        'user_ctrl::showUserForm'                    => 'admin',
-        'user_ctrl::saveUserData'                    => 'admin',
-        'user_ctrl::deleteOne'                       => 'admin',
-        'user_ctrl::getTablePrivileges'              => 'admin',
-        'user_ctrl::saveTablePrivilege'              => 'admin',
-        'user_ctrl::deleteTablePrivilege'            => 'admin',
-        'confirm_super_adm_pwd_ctrl::check_pwd'      => 'admin',
-        'backup_ctrl::listBackups'                   => 'admin',
-        'backup_ctrl::doBackup'                      => 'admin',
-        'backup_ctrl::deleteBackup'                  => 'admin',
-        'backup_ctrl::restoreBackup'                 => 'admin',
-        'backup_ctrl::downloadBackup'                => 'admin',
-        'debug_ctrl::getLogs'                        => 'admin',
-        'debug_ctrl::purgeLogs'                      => 'admin',
-        'api_ctrl::listKeys'                         => 'admin',
-        'api_ctrl::createKey'                        => 'admin',
-        'api_ctrl::revokeKey'                        => 'admin',
-        'api_ctrl::deleteKey'                        => 'admin',
+        'Bdus\\Controllers\\Home::getMigrations'                   => 'admin',
+        'Bdus\\Controllers\\User::showList'                        => 'admin',
+        'Bdus\\Controllers\\User::showUserForm'                    => 'admin',
+        'Bdus\\Controllers\\User::saveUserData'                    => 'admin',
+        'Bdus\\Controllers\\User::deleteOne'                       => 'admin',
+        'Bdus\\Controllers\\User::getTablePrivileges'              => 'admin',
+        'Bdus\\Controllers\\User::saveTablePrivilege'              => 'admin',
+        'Bdus\\Controllers\\User::deleteTablePrivilege'            => 'admin',
+        'Bdus\\Controllers\\ConfirmAdminPwd::check_pwd'      => 'admin',
+        'Bdus\\Controllers\\Backup::listBackups'                   => 'admin',
+        'Bdus\\Controllers\\Backup::doBackup'                      => 'admin',
+        'Bdus\\Controllers\\Backup::deleteBackup'                  => 'admin',
+        'Bdus\\Controllers\\Backup::restoreBackup'                 => 'admin',
+        'Bdus\\Controllers\\Backup::downloadBackup'                => 'admin',
+        'Bdus\\Controllers\\Debug::getLogs'                        => 'admin',
+        'Bdus\\Controllers\\Debug::purgeLogs'                      => 'admin',
+        'Bdus\\Controllers\\Api::listKeys'                         => 'admin',
+        'Bdus\\Controllers\\Api::createKey'                        => 'admin',
+        'Bdus\\Controllers\\Api::revokeKey'                        => 'admin',
+        'Bdus\\Controllers\\Api::deleteKey'                        => 'admin',
 
         // ── Super-admin (privilege = 1) — schema config and raw SQL ──────────
-        'config_ctrl::getAppProperties'              => 'super_admin',
-        'config_ctrl::save_app_properties'           => 'super_admin',
-        'config_ctrl::getTableList'                  => 'super_admin',
-        'config_ctrl::add_new_tb'                    => 'super_admin',
-        'config_ctrl::sortTables'                    => 'super_admin',
-        'config_ctrl::getTableConfig'                => 'super_admin',
-        'config_ctrl::save_tb_data'                  => 'super_admin',
-        'config_ctrl::delete_tb'                     => 'super_admin',
-        'config_ctrl::rename_tb'                     => 'super_admin',
-        'config_ctrl::getFldStructure'               => 'super_admin',
-        'config_ctrl::getFldList'                    => 'super_admin',
-        'config_ctrl::add_new_fld'                   => 'super_admin',
-        'config_ctrl::save_fld_properties'           => 'super_admin',
-        'config_ctrl::delete_column'                 => 'super_admin',
-        'config_ctrl::rename_column'                 => 'super_admin',
-        'config_ctrl::getGeoFaceConfig'              => 'super_admin',
-        'config_ctrl::save_geoface_properties'       => 'super_admin',
-        'config_ctrl::uploadGeoFile'                 => 'super_admin',
-        'config_ctrl::delete_local_geofile'          => 'super_admin',
-        'config_ctrl::getValidationReport'           => 'super_admin',
-        'config_ctrl::fix'                           => 'super_admin',
-        'config_ctrl::getRelations'                  => 'super_admin',
-        'config_ctrl::saveRelation'                  => 'super_admin',
-        'config_ctrl::deleteRelation'                => 'super_admin',
-        'frontpage_editor_ctrl::saveWelcome'         => 'super_admin',
-        'templates_ctrl::getTableList'               => 'super_admin',
-        'templates_ctrl::getTemplateList'            => 'super_admin',
-        'templates_ctrl::getTemplate'                => 'super_admin',
-        'templates_ctrl::saveTemplate'               => 'super_admin',
-        'templates_ctrl::deleteTemplate'             => 'super_admin',
-        'templates_ctrl::renameTemplate'             => 'super_admin',
-        'search_replace_ctrl::getTableList'          => 'super_admin',
-        'search_replace_ctrl::getFieldList'          => 'super_admin',
-        'search_replace_ctrl::doReplace'             => 'super_admin',
-        'free_sql_ctrl::verifyPassword'              => 'super_admin',
-        'free_sql_ctrl::runSql'                      => 'super_admin',
+        'Bdus\\Controllers\\Config::getAppProperties'              => 'super_admin',
+        'Bdus\\Controllers\\Config::save_app_properties'           => 'super_admin',
+        'Bdus\\Controllers\\Config::getTableList'                  => 'super_admin',
+        'Bdus\\Controllers\\Config::add_new_tb'                    => 'super_admin',
+        'Bdus\\Controllers\\Config::sortTables'                    => 'super_admin',
+        'Bdus\\Controllers\\Config::getTableConfig'                => 'super_admin',
+        'Bdus\\Controllers\\Config::save_tb_data'                  => 'super_admin',
+        'Bdus\\Controllers\\Config::delete_tb'                     => 'super_admin',
+        'Bdus\\Controllers\\Config::rename_tb'                     => 'super_admin',
+        'Bdus\\Controllers\\Config::getFldStructure'               => 'super_admin',
+        'Bdus\\Controllers\\Config::getFldList'                    => 'super_admin',
+        'Bdus\\Controllers\\Config::add_new_fld'                   => 'super_admin',
+        'Bdus\\Controllers\\Config::save_fld_properties'           => 'super_admin',
+        'Bdus\\Controllers\\Config::delete_column'                 => 'super_admin',
+        'Bdus\\Controllers\\Config::rename_column'                 => 'super_admin',
+        'Bdus\\Controllers\\Config::getGeoFaceConfig'              => 'super_admin',
+        'Bdus\\Controllers\\Config::save_geoface_properties'       => 'super_admin',
+        'Bdus\\Controllers\\Config::uploadGeoFile'                 => 'super_admin',
+        'Bdus\\Controllers\\Config::delete_local_geofile'          => 'super_admin',
+        'Bdus\\Controllers\\Config::getValidationReport'           => 'super_admin',
+        'Bdus\\Controllers\\Config::fix'                           => 'super_admin',
+        'Bdus\\Controllers\\Config::getRelations'                  => 'super_admin',
+        'Bdus\\Controllers\\Config::saveRelation'                  => 'super_admin',
+        'Bdus\\Controllers\\Config::deleteRelation'                => 'super_admin',
+        'Bdus\\Controllers\\FrontpageEditor::saveWelcome'         => 'super_admin',
+        'Bdus\\Controllers\\Templates::getTableList'               => 'super_admin',
+        'Bdus\\Controllers\\Templates::getTemplateList'            => 'super_admin',
+        'Bdus\\Controllers\\Templates::getTemplate'                => 'super_admin',
+        'Bdus\\Controllers\\Templates::saveTemplate'               => 'super_admin',
+        'Bdus\\Controllers\\Templates::deleteTemplate'             => 'super_admin',
+        'Bdus\\Controllers\\Templates::renameTemplate'             => 'super_admin',
+        'Bdus\\Controllers\\SearchReplace::getTableList'          => 'super_admin',
+        'Bdus\\Controllers\\SearchReplace::getFieldList'          => 'super_admin',
+        'Bdus\\Controllers\\SearchReplace::doReplace'             => 'super_admin',
+        'Bdus\\Controllers\\FreeSql::verifyPassword'              => 'super_admin',
+        'Bdus\\Controllers\\FreeSql::runSql'                      => 'super_admin',
 
         // ── Zotero integration ────────────────────────────────────────────────
-        'zotero_ctrl::getLibs'                       => 'admin',
-        'zotero_ctrl::addLib'                        => 'admin',
-        'zotero_ctrl::deleteLib'                     => 'admin',
-        'zotero_ctrl::search'                        => 'edit',
-        'zotero_ctrl::getLinks'                      => 'read',
-        'zotero_ctrl::addLink'                       => 'edit',
-        'zotero_ctrl::editLink'                      => 'edit',
-        'zotero_ctrl::deleteLink'                    => 'edit',
-        'zotero_ctrl::syncRecord'                    => 'edit',
-        'zotero_ctrl::syncAll'                       => 'admin',
+        'Bdus\\Controllers\\Zotero::getLibs'                       => 'admin',
+        'Bdus\\Controllers\\Zotero::addLib'                        => 'admin',
+        'Bdus\\Controllers\\Zotero::deleteLib'                     => 'admin',
+        'Bdus\\Controllers\\Zotero::search'                        => 'edit',
+        'Bdus\\Controllers\\Zotero::getLinks'                      => 'read',
+        'Bdus\\Controllers\\Zotero::addLink'                       => 'edit',
+        'Bdus\\Controllers\\Zotero::editLink'                      => 'edit',
+        'Bdus\\Controllers\\Zotero::deleteLink'                    => 'edit',
+        'Bdus\\Controllers\\Zotero::syncRecord'                    => 'edit',
+        'Bdus\\Controllers\\Zotero::syncAll'                       => 'admin',
     ];
 
     /**
@@ -221,192 +221,192 @@ class Router
         $dispatcher = simpleDispatcher(function (RouteCollector $r) {
 
             // ── Auth ──────────────────────────────────────────────────────────
-            $r->addRoute('GET',  '/api/auth/apps',    ['login_ctrl', 'listApps']);
-            $r->addRoute('POST', '/api/auth/login',   ['login_ctrl', 'auth']);
-            $r->addRoute('GET',  '/api/auth/refresh', ['login_ctrl', 'refresh']);
-            $r->addRoute('GET',  '/api/auth/logout',  ['login_ctrl', 'out']);
+            $r->addRoute('GET',  '/api/auth/apps',    ['Bdus\\Controllers\\Login', 'listApps']);
+            $r->addRoute('POST', '/api/auth/login',   ['Bdus\\Controllers\\Login', 'auth']);
+            $r->addRoute('GET',  '/api/auth/refresh', ['Bdus\\Controllers\\Login', 'refresh']);
+            $r->addRoute('GET',  '/api/auth/logout',  ['Bdus\\Controllers\\Login', 'out']);
 
             // ── OAuth2 ────────────────────────────────────────────────────────
-            $r->addRoute('GET', '/api/auth/oauth/{provider}/redirect', ['oauth_ctrl', 'redirect']);
-            $r->addRoute('GET', '/api/auth/oauth/{provider}/callback', ['oauth_ctrl', 'callback']);
+            $r->addRoute('GET', '/api/auth/oauth/{provider}/redirect', ['Bdus\\Controllers\\OAuth', 'redirect']);
+            $r->addRoute('GET', '/api/auth/oauth/{provider}/callback', ['Bdus\\Controllers\\OAuth', 'callback']);
 
             // ── Tables / home ─────────────────────────────────────────────────
-            $r->addRoute('GET', '/api/tables',     ['home_ctrl', 'listTables']);
-            $r->addRoute('GET', '/api/migrations', ['home_ctrl', 'getMigrations']);
+            $r->addRoute('GET', '/api/tables',     ['Bdus\\Controllers\\Home', 'listTables']);
+            $r->addRoute('GET', '/api/migrations', ['Bdus\\Controllers\\Home', 'getMigrations']);
 
             // ── Info ──────────────────────────────────────────────────────────
-            $r->addRoute('GET', '/api/info',     ['info_ctrl', 'getInfo']);
-            $r->addRoute('GET', '/api/info/app', ['info_ctrl', 'getAppInfo']);
+            $r->addRoute('GET', '/api/info',     ['Bdus\\Controllers\\Info', 'getInfo']);
+            $r->addRoute('GET', '/api/info/app', ['Bdus\\Controllers\\Info', 'getAppInfo']);
 
             // ── Records ───────────────────────────────────────────────────────
-            $r->addRoute('GET',             '/api/record/{tb}/new',           ['record_ctrl', 'getRecord']);
-            $r->addRoute('GET',             '/api/record/{tb}/{id:\d+}',      ['record_ctrl', 'getRecord']);
-            $r->addRoute(['GET', 'POST'],   '/api/records/{tb}',              ['record_ctrl', 'getRecords']);
-            $r->addRoute('GET',             '/api/records/{tb}/export',       ['record_ctrl', 'exportRecords']);
-            $r->addRoute('POST',            '/api/record/{tb}',               ['record_ctrl', 'saveRecord']);
-            $r->addRoute('DELETE',          '/api/record/{tb}/{id:\d+}',      ['record_ctrl', 'erase']);
-            $r->addRoute('GET',             '/api/record/{tb}/templates',     ['record_ctrl', 'getTemplates']);
-            $r->addRoute('GET',             '/api/record/{tb}/field-options', ['record_ctrl', 'getFieldOptions']);
-            $r->addRoute('GET',             '/api/record/{tb}/link-candidates', ['record_ctrl', 'searchLinkCandidates']);
-            $r->addRoute('GET',             '/api/record/{tb}/deleted',           ['record_ctrl', 'getDeletedRecords']);
-            $r->addRoute('GET',             '/api/record/{tb}/{id:\d+}/versions', ['record_ctrl', 'getVersions']);
-            $r->addRoute('GET',             '/api/version/{id:\d+}',              ['record_ctrl', 'getVersionDiff']);
-            $r->addRoute('POST',            '/api/version/{id:\d+}/restore',      ['record_ctrl', 'restoreVersion']);
+            $r->addRoute('GET',             '/api/record/{tb}/new',           ['Bdus\\Controllers\\Record', 'getRecord']);
+            $r->addRoute('GET',             '/api/record/{tb}/{id:\d+}',      ['Bdus\\Controllers\\Record', 'getRecord']);
+            $r->addRoute(['GET', 'POST'],   '/api/records/{tb}',              ['Bdus\\Controllers\\Record', 'getRecords']);
+            $r->addRoute('GET',             '/api/records/{tb}/export',       ['Bdus\\Controllers\\Record', 'exportRecords']);
+            $r->addRoute('POST',            '/api/record/{tb}',               ['Bdus\\Controllers\\Record', 'saveRecord']);
+            $r->addRoute('DELETE',          '/api/record/{tb}/{id:\d+}',      ['Bdus\\Controllers\\Record', 'erase']);
+            $r->addRoute('GET',             '/api/record/{tb}/templates',     ['Bdus\\Controllers\\Record', 'getTemplates']);
+            $r->addRoute('GET',             '/api/record/{tb}/field-options', ['Bdus\\Controllers\\Record', 'getFieldOptions']);
+            $r->addRoute('GET',             '/api/record/{tb}/link-candidates', ['Bdus\\Controllers\\Record', 'searchLinkCandidates']);
+            $r->addRoute('GET',             '/api/record/{tb}/deleted',           ['Bdus\\Controllers\\Record', 'getDeletedRecords']);
+            $r->addRoute('GET',             '/api/record/{tb}/{id:\d+}/versions', ['Bdus\\Controllers\\Record', 'getVersions']);
+            $r->addRoute('GET',             '/api/version/{id:\d+}',              ['Bdus\\Controllers\\Record', 'getVersionDiff']);
+            $r->addRoute('POST',            '/api/version/{id:\d+}/restore',      ['Bdus\\Controllers\\Record', 'restoreVersion']);
 
             // ── Files ─────────────────────────────────────────────────────────
-            $r->addRoute('POST',   '/api/record/{tb}/{id:\d+}/file', ['record_ctrl', 'uploadFile']);
-            $r->addRoute('DELETE', '/api/file/{fileId:\d+}',         ['record_ctrl', 'deleteFile']);
-            $r->addRoute('POST',   '/api/files/sort',                ['file_ctrl',   'sortFiles']);
+            $r->addRoute('POST',   '/api/record/{tb}/{id:\d+}/file', ['Bdus\\Controllers\\Record', 'uploadFile']);
+            $r->addRoute('DELETE', '/api/file/{fileId:\d+}',         ['Bdus\\Controllers\\Record', 'deleteFile']);
+            $r->addRoute('POST',   '/api/files/sort',                ['Bdus\\Controllers\\File',   'sortFiles']);
 
             // ── Stratigraphic Relations (RS) ──────────────────────────────────
-            $r->addRoute('POST',   '/api/record/{tb}/rs', ['record_ctrl', 'addRs']);
-            $r->addRoute('DELETE', '/api/rs/{id:\d+}',    ['record_ctrl', 'deleteRs']);
-            $r->addRoute('GET',    '/api/rs/matrix',      ['record_ctrl', 'getRsMatrix']);
+            $r->addRoute('POST',   '/api/record/{tb}/rs', ['Bdus\\Controllers\\Record', 'addRs']);
+            $r->addRoute('DELETE', '/api/rs/{id:\d+}',    ['Bdus\\Controllers\\Record', 'deleteRs']);
+            $r->addRoute('GET',    '/api/rs/matrix',      ['Bdus\\Controllers\\Record', 'getRsMatrix']);
 
             // ── Manual links ──────────────────────────────────────────────────
-            $r->addRoute('POST',   '/api/manual-link',          ['record_ctrl', 'addManualLink']);
-            $r->addRoute('DELETE', '/api/manual-link/{id:\d+}', ['record_ctrl', 'deleteManualLink']);
+            $r->addRoute('POST',   '/api/manual-link',          ['Bdus\\Controllers\\Record', 'addManualLink']);
+            $r->addRoute('DELETE', '/api/manual-link/{id:\d+}', ['Bdus\\Controllers\\Record', 'deleteManualLink']);
 
             // ── Search ────────────────────────────────────────────────────────
-            $r->addRoute('GET', '/api/search/{tb}/config', ['search_ctrl', 'getAdvancedConfig']);
-            $r->addRoute('GET', '/api/search/{tb}/values', ['search_ctrl', 'getUsedValues']);
+            $r->addRoute('GET', '/api/search/{tb}/config', ['Bdus\\Controllers\\Search', 'getAdvancedConfig']);
+            $r->addRoute('GET', '/api/search/{tb}/values', ['Bdus\\Controllers\\Search', 'getUsedValues']);
 
             // ── Users ─────────────────────────────────────────────────────────
-            $r->addRoute('GET',    '/api/users',                       ['user_ctrl', 'showList']);
-            $r->addRoute('GET',    '/api/user',                        ['user_ctrl', 'showUserForm']);
-            $r->addRoute('GET',    '/api/user/{id:\d+}',               ['user_ctrl', 'showUserForm']);
-            $r->addRoute('POST',   '/api/user',                        ['user_ctrl', 'saveUserData']);
-            $r->addRoute('DELETE', '/api/user/{id:\d+}',               ['user_ctrl', 'deleteOne']);
-            $r->addRoute('GET',    '/api/user/{user_id:\d+}/privileges', ['user_ctrl', 'getTablePrivileges']);
-            $r->addRoute('POST',   '/api/user/{user_id:\d+}/privileges', ['user_ctrl', 'saveTablePrivilege']);
-            $r->addRoute('DELETE', '/api/privilege/{id:\d+}',           ['user_ctrl', 'deleteTablePrivilege']);
+            $r->addRoute('GET',    '/api/users',                       ['Bdus\\Controllers\\User', 'showList']);
+            $r->addRoute('GET',    '/api/user',                        ['Bdus\\Controllers\\User', 'showUserForm']);
+            $r->addRoute('GET',    '/api/user/{id:\d+}',               ['Bdus\\Controllers\\User', 'showUserForm']);
+            $r->addRoute('POST',   '/api/user',                        ['Bdus\\Controllers\\User', 'saveUserData']);
+            $r->addRoute('DELETE', '/api/user/{id:\d+}',               ['Bdus\\Controllers\\User', 'deleteOne']);
+            $r->addRoute('GET',    '/api/user/{user_id:\d+}/privileges', ['Bdus\\Controllers\\User', 'getTablePrivileges']);
+            $r->addRoute('POST',   '/api/user/{user_id:\d+}/privileges', ['Bdus\\Controllers\\User', 'saveTablePrivilege']);
+            $r->addRoute('DELETE', '/api/privilege/{id:\d+}',           ['Bdus\\Controllers\\User', 'deleteTablePrivilege']);
 
             // ── Configuration ─────────────────────────────────────────────────
-            $r->addRoute('GET', '/api/config/app',            ['config_ctrl', 'getAppProperties']);
-            $r->addRoute('PUT', '/api/config/app',            ['config_ctrl', 'save_app_properties']);
-            $r->addRoute('GET', '/api/config/tables',         ['config_ctrl', 'getTableList']);
-            $r->addRoute('POST',   '/api/config/tables',      ['config_ctrl', 'add_new_tb']);
-            $r->addRoute('POST',   '/api/config/tables/sort', ['config_ctrl', 'sortTables']);
-            $r->addRoute('GET',    '/api/config/table/{tb}',  ['config_ctrl', 'getTableConfig']);
-            $r->addRoute('PUT',    '/api/config/table/{tb}',  ['config_ctrl', 'save_tb_data']);
-            $r->addRoute('DELETE', '/api/config/table/{tb}',  ['config_ctrl', 'delete_tb']);
-            $r->addRoute('PATCH',  '/api/config/table/{tb}',  ['config_ctrl', 'rename_tb']);
-            $r->addRoute('GET',    '/api/config/field-structure', ['config_ctrl', 'getFldStructure']);
-            $r->addRoute('GET',    '/api/config/table/{tb}/fields',              ['config_ctrl', 'getFldList']);
-            $r->addRoute('POST',   '/api/config/table/{tb}/field',               ['config_ctrl', 'add_new_fld']);
-            $r->addRoute('PUT',    '/api/config/table/{tb}/field/{fld}',         ['config_ctrl', 'save_fld_properties']);
-            $r->addRoute('DELETE', '/api/config/table/{tb}/field/{fld}',         ['config_ctrl', 'delete_column']);
-            $r->addRoute('PATCH',  '/api/config/table/{tb}/field/{fld}',         ['config_ctrl', 'rename_column']);
-            $r->addRoute('GET',    '/api/config/geoface',     ['config_ctrl', 'getGeoFaceConfig']);
-            $r->addRoute('PUT',    '/api/config/geoface',     ['config_ctrl', 'save_geoface_properties']);
-            $r->addRoute('POST',   '/api/config/geofile',     ['config_ctrl', 'uploadGeoFile']);
-            $r->addRoute('DELETE', '/api/config/geofile',     ['config_ctrl', 'delete_local_geofile']);
-            $r->addRoute('GET',    '/api/config/validation',      ['config_ctrl', 'getValidationReport']);
-            $r->addRoute('POST',   '/api/config/validation/fix',  ['config_ctrl', 'fix']);
-            $r->addRoute('GET',    '/api/config/relations',        ['config_ctrl', 'getRelations']);
-            $r->addRoute('POST',   '/api/config/relations',        ['config_ctrl', 'saveRelation']);
-            $r->addRoute('PUT',    '/api/config/relations/{id}',   ['config_ctrl', 'saveRelation']);
-            $r->addRoute('DELETE', '/api/config/relations/{id}',   ['config_ctrl', 'deleteRelation']);
+            $r->addRoute('GET', '/api/config/app',            ['Bdus\\Controllers\\Config', 'getAppProperties']);
+            $r->addRoute('PUT', '/api/config/app',            ['Bdus\\Controllers\\Config', 'save_app_properties']);
+            $r->addRoute('GET', '/api/config/tables',         ['Bdus\\Controllers\\Config', 'getTableList']);
+            $r->addRoute('POST',   '/api/config/tables',      ['Bdus\\Controllers\\Config', 'add_new_tb']);
+            $r->addRoute('POST',   '/api/config/tables/sort', ['Bdus\\Controllers\\Config', 'sortTables']);
+            $r->addRoute('GET',    '/api/config/table/{tb}',  ['Bdus\\Controllers\\Config', 'getTableConfig']);
+            $r->addRoute('PUT',    '/api/config/table/{tb}',  ['Bdus\\Controllers\\Config', 'save_tb_data']);
+            $r->addRoute('DELETE', '/api/config/table/{tb}',  ['Bdus\\Controllers\\Config', 'delete_tb']);
+            $r->addRoute('PATCH',  '/api/config/table/{tb}',  ['Bdus\\Controllers\\Config', 'rename_tb']);
+            $r->addRoute('GET',    '/api/config/field-structure', ['Bdus\\Controllers\\Config', 'getFldStructure']);
+            $r->addRoute('GET',    '/api/config/table/{tb}/fields',              ['Bdus\\Controllers\\Config', 'getFldList']);
+            $r->addRoute('POST',   '/api/config/table/{tb}/field',               ['Bdus\\Controllers\\Config', 'add_new_fld']);
+            $r->addRoute('PUT',    '/api/config/table/{tb}/field/{fld}',         ['Bdus\\Controllers\\Config', 'save_fld_properties']);
+            $r->addRoute('DELETE', '/api/config/table/{tb}/field/{fld}',         ['Bdus\\Controllers\\Config', 'delete_column']);
+            $r->addRoute('PATCH',  '/api/config/table/{tb}/field/{fld}',         ['Bdus\\Controllers\\Config', 'rename_column']);
+            $r->addRoute('GET',    '/api/config/geoface',     ['Bdus\\Controllers\\Config', 'getGeoFaceConfig']);
+            $r->addRoute('PUT',    '/api/config/geoface',     ['Bdus\\Controllers\\Config', 'save_geoface_properties']);
+            $r->addRoute('POST',   '/api/config/geofile',     ['Bdus\\Controllers\\Config', 'uploadGeoFile']);
+            $r->addRoute('DELETE', '/api/config/geofile',     ['Bdus\\Controllers\\Config', 'delete_local_geofile']);
+            $r->addRoute('GET',    '/api/config/validation',      ['Bdus\\Controllers\\Config', 'getValidationReport']);
+            $r->addRoute('POST',   '/api/config/validation/fix',  ['Bdus\\Controllers\\Config', 'fix']);
+            $r->addRoute('GET',    '/api/config/relations',        ['Bdus\\Controllers\\Config', 'getRelations']);
+            $r->addRoute('POST',   '/api/config/relations',        ['Bdus\\Controllers\\Config', 'saveRelation']);
+            $r->addRoute('PUT',    '/api/config/relations/{id}',   ['Bdus\\Controllers\\Config', 'saveRelation']);
+            $r->addRoute('DELETE', '/api/config/relations/{id}',   ['Bdus\\Controllers\\Config', 'deleteRelation']);
 
             // ── Admin ─────────────────────────────────────────────────────────
-            $r->addRoute('POST', '/api/admin/check-password', ['confirm_super_adm_pwd_ctrl', 'check_pwd']);
+            $r->addRoute('POST', '/api/admin/check-password', ['Bdus\\Controllers\\ConfirmAdminPwd', 'check_pwd']);
 
             // ── Backups ───────────────────────────────────────────────────────
-            $r->addRoute('GET',    '/api/backups',                   ['backup_ctrl', 'listBackups']);
-            $r->addRoute('POST',   '/api/backups',                   ['backup_ctrl', 'doBackup']);
-            $r->addRoute('DELETE', '/api/backup/{file:.+}',          ['backup_ctrl', 'deleteBackup']);
-            $r->addRoute('POST',   '/api/backup/{file:.+}/restore',  ['backup_ctrl', 'restoreBackup']);
-            $r->addRoute('GET',    '/api/backup/{file:.+}/download', ['backup_ctrl', 'downloadBackup']);
+            $r->addRoute('GET',    '/api/backups',                   ['Bdus\\Controllers\\Backup', 'listBackups']);
+            $r->addRoute('POST',   '/api/backups',                   ['Bdus\\Controllers\\Backup', 'doBackup']);
+            $r->addRoute('DELETE', '/api/backup/{file:.+}',          ['Bdus\\Controllers\\Backup', 'deleteBackup']);
+            $r->addRoute('POST',   '/api/backup/{file:.+}/restore',  ['Bdus\\Controllers\\Backup', 'restoreBackup']);
+            $r->addRoute('GET',    '/api/backup/{file:.+}/download', ['Bdus\\Controllers\\Backup', 'downloadBackup']);
 
             // ── Logs ──────────────────────────────────────────────────────────
-            $r->addRoute('GET',  '/api/logs',       ['debug_ctrl', 'getLogs']);
-            $r->addRoute('POST', '/api/logs/purge', ['debug_ctrl', 'purgeLogs']);
+            $r->addRoute('GET',  '/api/logs',       ['Bdus\\Controllers\\Debug', 'getLogs']);
+            $r->addRoute('POST', '/api/logs/purge', ['Bdus\\Controllers\\Debug', 'purgeLogs']);
 
             // ── Charts ────────────────────────────────────────────────────────
-            $r->addRoute('GET',    '/api/charts',                  ['chart_ctrl', 'listCharts']);
-            $r->addRoute('POST',   '/api/charts',                  ['chart_ctrl', 'saveChart']);
-            $r->addRoute('POST',   '/api/chart/data',              ['chart_ctrl', 'getData']);
-            $r->addRoute('POST',   '/api/chart/{id:\d+}/share',    ['chart_ctrl', 'shareChart']);
-            $r->addRoute('POST',   '/api/chart/{id:\d+}/unshare',  ['chart_ctrl', 'unshareChart']);
-            $r->addRoute('DELETE', '/api/chart/{id:\d+}',          ['chart_ctrl', 'deleteChart']);
+            $r->addRoute('GET',    '/api/charts',                  ['Bdus\\Controllers\\Chart', 'listCharts']);
+            $r->addRoute('POST',   '/api/charts',                  ['Bdus\\Controllers\\Chart', 'saveChart']);
+            $r->addRoute('POST',   '/api/chart/data',              ['Bdus\\Controllers\\Chart', 'getData']);
+            $r->addRoute('POST',   '/api/chart/{id:\d+}/share',    ['Bdus\\Controllers\\Chart', 'shareChart']);
+            $r->addRoute('POST',   '/api/chart/{id:\d+}/unshare',  ['Bdus\\Controllers\\Chart', 'unshareChart']);
+            $r->addRoute('DELETE', '/api/chart/{id:\d+}',          ['Bdus\\Controllers\\Chart', 'deleteChart']);
 
             // ── Saved queries ─────────────────────────────────────────────────
-            $r->addRoute('GET',    '/api/saved-queries',                    ['saved_queries_ctrl', 'listQueries']);
-            $r->addRoute('POST',   '/api/saved-queries',                    ['saved_queries_ctrl', 'saveQuery']);
-            $r->addRoute('POST',   '/api/saved-query/{id:\d+}/share',      ['saved_queries_ctrl', 'shareQuery']);
-            $r->addRoute('POST',   '/api/saved-query/{id:\d+}/unshare',    ['saved_queries_ctrl', 'unshareQuery']);
-            $r->addRoute('DELETE', '/api/saved-query/{id:\d+}',            ['saved_queries_ctrl', 'deleteQuery']);
+            $r->addRoute('GET',    '/api/saved-queries',                    ['Bdus\\Controllers\\SavedQueries', 'listQueries']);
+            $r->addRoute('POST',   '/api/saved-queries',                    ['Bdus\\Controllers\\SavedQueries', 'saveQuery']);
+            $r->addRoute('POST',   '/api/saved-query/{id:\d+}/share',      ['Bdus\\Controllers\\SavedQueries', 'shareQuery']);
+            $r->addRoute('POST',   '/api/saved-query/{id:\d+}/unshare',    ['Bdus\\Controllers\\SavedQueries', 'unshareQuery']);
+            $r->addRoute('DELETE', '/api/saved-query/{id:\d+}',            ['Bdus\\Controllers\\SavedQueries', 'deleteQuery']);
 
             // ── API keys ──────────────────────────────────────────────────────
-            $r->addRoute('GET',    '/api/api-keys',                 ['api_ctrl', 'listKeys']);
-            $r->addRoute('POST',   '/api/api-keys',                 ['api_ctrl', 'createKey']);
-            $r->addRoute('POST',   '/api/api-key/{id:\d+}/revoke',  ['api_ctrl', 'revokeKey']);
-            $r->addRoute('DELETE', '/api/api-key/{id:\d+}',         ['api_ctrl', 'deleteKey']);
+            $r->addRoute('GET',    '/api/api-keys',                 ['Bdus\\Controllers\\Api', 'listKeys']);
+            $r->addRoute('POST',   '/api/api-keys',                 ['Bdus\\Controllers\\Api', 'createKey']);
+            $r->addRoute('POST',   '/api/api-key/{id:\d+}/revoke',  ['Bdus\\Controllers\\Api', 'revokeKey']);
+            $r->addRoute('DELETE', '/api/api-key/{id:\d+}',         ['Bdus\\Controllers\\Api', 'deleteKey']);
 
             // ── History ───────────────────────────────────────────────────────
-            $r->addRoute('GET', '/api/history', ['myHistory_ctrl', 'getHistory']);
+            $r->addRoute('GET', '/api/history', ['Bdus\\Controllers\\MyHistory', 'getHistory']);
 
             // ── Welcome / frontpage ───────────────────────────────────────────
-            $r->addRoute('GET', '/api/welcome', ['frontpage_editor_ctrl', 'getWelcome']);
-            $r->addRoute('PUT', '/api/welcome', ['frontpage_editor_ctrl', 'saveWelcome']);
+            $r->addRoute('GET', '/api/welcome', ['Bdus\\Controllers\\FrontpageEditor', 'getWelcome']);
+            $r->addRoute('PUT', '/api/welcome', ['Bdus\\Controllers\\FrontpageEditor', 'saveWelcome']);
 
             // ── Print templates ───────────────────────────────────────────────
-            $r->addRoute('GET',    '/api/templates',                   ['templates_ctrl', 'getTableList']);
-            $r->addRoute('GET',    '/api/templates/{tb}',              ['templates_ctrl', 'getTemplateList']);
-            $r->addRoute('GET',    '/api/template/{tb}/{name}',        ['templates_ctrl', 'getTemplate']);
-            $r->addRoute('POST',   '/api/template/{tb}/{name}',        ['templates_ctrl', 'saveTemplate']);
-            $r->addRoute('DELETE', '/api/template/{tb}/{name}',        ['templates_ctrl', 'deleteTemplate']);
-            $r->addRoute('POST',   '/api/template/{tb}/{name}/rename', ['templates_ctrl', 'renameTemplate']);
+            $r->addRoute('GET',    '/api/templates',                   ['Bdus\\Controllers\\Templates', 'getTableList']);
+            $r->addRoute('GET',    '/api/templates/{tb}',              ['Bdus\\Controllers\\Templates', 'getTemplateList']);
+            $r->addRoute('GET',    '/api/template/{tb}/{name}',        ['Bdus\\Controllers\\Templates', 'getTemplate']);
+            $r->addRoute('POST',   '/api/template/{tb}/{name}',        ['Bdus\\Controllers\\Templates', 'saveTemplate']);
+            $r->addRoute('DELETE', '/api/template/{tb}/{name}',        ['Bdus\\Controllers\\Templates', 'deleteTemplate']);
+            $r->addRoute('POST',   '/api/template/{tb}/{name}/rename', ['Bdus\\Controllers\\Templates', 'renameTemplate']);
 
             // ── Geoface ───────────────────────────────────────────────────────
-            $r->addRoute('GET',    '/api/geoface',         ['geoface_ctrl', 'getGeoJson']);
-            $r->addRoute('POST',   '/api/geoface/feature', ['geoface_ctrl', 'saveNew']);
-            $r->addRoute('PUT',    '/api/geoface/feature', ['geoface_ctrl', 'updateGeometry']);
-            $r->addRoute('DELETE', '/api/geoface/feature', ['geoface_ctrl', 'eraseGeometry']);
+            $r->addRoute('GET',    '/api/geoface',         ['Bdus\\Controllers\\Geoface', 'getGeoJson']);
+            $r->addRoute('POST',   '/api/geoface/feature', ['Bdus\\Controllers\\Geoface', 'saveNew']);
+            $r->addRoute('PUT',    '/api/geoface/feature', ['Bdus\\Controllers\\Geoface', 'updateGeometry']);
+            $r->addRoute('DELETE', '/api/geoface/feature', ['Bdus\\Controllers\\Geoface', 'eraseGeometry']);
 
             // ── Vocabularies ──────────────────────────────────────────────────
-            $r->addRoute('GET',    '/api/vocabularies',        ['vocabularies_ctrl', 'list']);
-            $r->addRoute('POST',   '/api/vocabularies',        ['vocabularies_ctrl', 'add']);
-            $r->addRoute('POST',   '/api/vocabularies/sort',   ['vocabularies_ctrl', 'sort']);
-            $r->addRoute('PATCH',  '/api/vocabulary/{id:\d+}', ['vocabularies_ctrl', 'edit']);
-            $r->addRoute('DELETE', '/api/vocabulary/{id:\d+}', ['vocabularies_ctrl', 'erase']);
+            $r->addRoute('GET',    '/api/vocabularies',        ['Bdus\\Controllers\\Vocabularies', 'list']);
+            $r->addRoute('POST',   '/api/vocabularies',        ['Bdus\\Controllers\\Vocabularies', 'add']);
+            $r->addRoute('POST',   '/api/vocabularies/sort',   ['Bdus\\Controllers\\Vocabularies', 'sort']);
+            $r->addRoute('PATCH',  '/api/vocabulary/{id:\d+}', ['Bdus\\Controllers\\Vocabularies', 'edit']);
+            $r->addRoute('DELETE', '/api/vocabulary/{id:\d+}', ['Bdus\\Controllers\\Vocabularies', 'erase']);
 
             // ── Search & replace ──────────────────────────────────────────────
-            $r->addRoute('GET',  '/api/search-replace/tables',          ['search_replace_ctrl', 'getTableList']);
-            $r->addRoute('GET',  '/api/search-replace/{tb}/fields',     ['search_replace_ctrl', 'getFieldList']);
-            $r->addRoute('POST', '/api/search-replace',                 ['search_replace_ctrl', 'doReplace']);
+            $r->addRoute('GET',  '/api/search-replace/tables',          ['Bdus\\Controllers\\SearchReplace', 'getTableList']);
+            $r->addRoute('GET',  '/api/search-replace/{tb}/fields',     ['Bdus\\Controllers\\SearchReplace', 'getFieldList']);
+            $r->addRoute('POST', '/api/search-replace',                 ['Bdus\\Controllers\\SearchReplace', 'doReplace']);
 
             // ── Free SQL ──────────────────────────────────────────────────────
-            $r->addRoute('POST', '/api/free-sql/verify', ['free_sql_ctrl', 'verifyPassword']);
-            $r->addRoute('POST', '/api/free-sql/run',    ['free_sql_ctrl', 'runSql']);
+            $r->addRoute('POST', '/api/free-sql/verify', ['Bdus\\Controllers\\FreeSql', 'verifyPassword']);
+            $r->addRoute('POST', '/api/free-sql/run',    ['Bdus\\Controllers\\FreeSql', 'runSql']);
 
             // ── Data import ───────────────────────────────────────────────────
-            $r->addRoute('GET',  '/api/import/{tb}/fields',  ['import_ctrl', 'getTableFields']);
-            $r->addRoute('POST', '/api/import/preview-file', ['import_ctrl', 'previewFile']);
-            $r->addRoute('POST', '/api/import/preview-photos', ['import_ctrl', 'previewPhotos']);
-            $r->addRoute('POST', '/api/import/data',         ['import_ctrl', 'importData']);
-            $r->addRoute('POST', '/api/import/geojson',      ['import_ctrl', 'importGeoJson']);
-            $r->addRoute('POST', '/api/import/photos',       ['import_ctrl', 'importPhotos']);
+            $r->addRoute('GET',  '/api/import/{tb}/fields',  ['Bdus\\Controllers\\Import', 'getTableFields']);
+            $r->addRoute('POST', '/api/import/preview-file', ['Bdus\\Controllers\\Import', 'previewFile']);
+            $r->addRoute('POST', '/api/import/preview-photos', ['Bdus\\Controllers\\Import', 'previewPhotos']);
+            $r->addRoute('POST', '/api/import/data',         ['Bdus\\Controllers\\Import', 'importData']);
+            $r->addRoute('POST', '/api/import/geojson',      ['Bdus\\Controllers\\Import', 'importGeoJson']);
+            $r->addRoute('POST', '/api/import/photos',       ['Bdus\\Controllers\\Import', 'importPhotos']);
 
             // ── Widgets ───────────────────────────────────────────────────────
-            $r->addRoute('GET', '/api/widgets',       ['widget_ctrl', 'listWidgets']);
-            $r->addRoute('GET', '/api/widget/{name}', ['widget_ctrl', 'serveWidget']);
+            $r->addRoute('GET', '/api/widgets',       ['Bdus\\Controllers\\Widget', 'listWidgets']);
+            $r->addRoute('GET', '/api/widget/{name}', ['Bdus\\Controllers\\Widget', 'serveWidget']);
 
             // ── New application wizard ────────────────────────────────────────
-            $r->addRoute('GET',  '/api/new-app/status', ['new_app_ctrl', 'getStatus']);
-            $r->addRoute('POST', '/api/new-app',         ['new_app_ctrl', 'create']);
+            $r->addRoute('GET',  '/api/new-app/status', ['Bdus\\Controllers\\NewApp', 'getStatus']);
+            $r->addRoute('POST', '/api/new-app',         ['Bdus\\Controllers\\NewApp', 'create']);
 
             // ── Zotero integration ────────────────────────────────────────────
-            $r->addRoute('GET',    '/api/zotero/libs',              ['zotero_ctrl', 'getLibs']);
-            $r->addRoute('POST',   '/api/zotero/lib',               ['zotero_ctrl', 'addLib']);
-            $r->addRoute('DELETE', '/api/zotero/lib/{id:\d+}',      ['zotero_ctrl', 'deleteLib']);
-            $r->addRoute('GET',    '/api/zotero/search',            ['zotero_ctrl', 'search']);
-            $r->addRoute('GET',    '/api/zotero/links/{tb}/{id:\d+}', ['zotero_ctrl', 'getLinks']);
-            $r->addRoute('POST',   '/api/zotero/link',              ['zotero_ctrl', 'addLink']);
-            $r->addRoute('PATCH',  '/api/zotero/link/{id:\d+}',     ['zotero_ctrl', 'editLink']);
-            $r->addRoute('DELETE', '/api/zotero/link/{id:\d+}',     ['zotero_ctrl', 'deleteLink']);
-            $r->addRoute('POST',   '/api/zotero/sync/{tb}/{id:\d+}', ['zotero_ctrl', 'syncRecord']);
-            $r->addRoute('POST',   '/api/zotero/sync',              ['zotero_ctrl', 'syncAll']);
+            $r->addRoute('GET',    '/api/zotero/libs',              ['Bdus\\Controllers\\Zotero', 'getLibs']);
+            $r->addRoute('POST',   '/api/zotero/lib',               ['Bdus\\Controllers\\Zotero', 'addLib']);
+            $r->addRoute('DELETE', '/api/zotero/lib/{id:\d+}',      ['Bdus\\Controllers\\Zotero', 'deleteLib']);
+            $r->addRoute('GET',    '/api/zotero/search',            ['Bdus\\Controllers\\Zotero', 'search']);
+            $r->addRoute('GET',    '/api/zotero/links/{tb}/{id:\d+}', ['Bdus\\Controllers\\Zotero', 'getLinks']);
+            $r->addRoute('POST',   '/api/zotero/link',              ['Bdus\\Controllers\\Zotero', 'addLink']);
+            $r->addRoute('PATCH',  '/api/zotero/link/{id:\d+}',     ['Bdus\\Controllers\\Zotero', 'editLink']);
+            $r->addRoute('DELETE', '/api/zotero/link/{id:\d+}',     ['Bdus\\Controllers\\Zotero', 'deleteLink']);
+            $r->addRoute('POST',   '/api/zotero/sync/{tb}/{id:\d+}', ['Bdus\\Controllers\\Zotero', 'syncRecord']);
+            $r->addRoute('POST',   '/api/zotero/sync',              ['Bdus\\Controllers\\Zotero', 'syncAll']);
         });
 
         // ── Resolve URI ───────────────────────────────────────────────────────

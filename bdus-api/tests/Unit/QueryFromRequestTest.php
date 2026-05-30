@@ -16,10 +16,10 @@ class QueryFromRequestTest extends BdusTestCase
 
     // ── Helpers ───────────────────────────────────────────────────────────
 
-    private function qfr(array $extra = [], bool $preview = true): \QueryFromRequest
+    private function qfr(array $extra = [], bool $preview = true): \SQL\QueryFromRequest
     {
         $request = array_merge(['tb' => self::TB, 'type' => 'all'], $extra);
-        return new \QueryFromRequest(static::$db, static::$cfg, $request, $preview);
+        return new \SQL\QueryFromRequest(static::$db, static::$cfg, $request, $preview);
     }
 
     // ══════════════════════════════════════════════════════════════════════

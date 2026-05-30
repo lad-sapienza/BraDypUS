@@ -20,7 +20,7 @@ class RecordCtrlManualLinksTest extends BdusTestCase
 
     public function testSearchLinkCandidatesReturnsSuccess(): void
     {
-        $ctrl = $this->makeController('record_ctrl', ['tb' => self::TB, 'q' => '']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'q' => '']);
         $res  = $this->callController($ctrl, 'searchLinkCandidates');
 
         $this->assertSame('success', $res['status']);
@@ -30,7 +30,7 @@ class RecordCtrlManualLinksTest extends BdusTestCase
 
     public function testSearchLinkCandidatesReturnsRows(): void
     {
-        $ctrl = $this->makeController('record_ctrl', ['tb' => self::TB, 'q' => '']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'q' => '']);
         $res  = $this->callController($ctrl, 'searchLinkCandidates');
 
         $this->assertNotEmpty($res['data'], 'Should return at least one candidate');
@@ -41,7 +41,7 @@ class RecordCtrlManualLinksTest extends BdusTestCase
     public function testSearchLinkCandidatesFiltersByQuery(): void
     {
         // id_field for items is 'id', so q matches by exact id
-        $ctrl = $this->makeController('record_ctrl', ['tb' => self::TB, 'q' => '3']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'q' => '3']);
         $res  = $this->callController($ctrl, 'searchLinkCandidates');
 
         $this->assertSame('success', $res['status']);
@@ -51,7 +51,7 @@ class RecordCtrlManualLinksTest extends BdusTestCase
 
     public function testSearchLinkCandidatesMissingTbReturnsError(): void
     {
-        $ctrl = $this->makeController('record_ctrl', ['q' => 'foo']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['q' => 'foo']);
         $res  = $this->callController($ctrl, 'searchLinkCandidates');
 
         $this->assertSame('error', $res['status']);
@@ -60,7 +60,7 @@ class RecordCtrlManualLinksTest extends BdusTestCase
     public function testSearchLinkCandidatesRequiresReadPrivilege(): void
     {
         $this->setPrivilege(99);
-        $ctrl = $this->makeController('record_ctrl', ['tb' => self::TB, 'q' => '']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'q' => '']);
         $res  = $this->callController($ctrl, 'searchLinkCandidates');
         $this->setPrivilege(1);
 
@@ -73,7 +73,7 @@ class RecordCtrlManualLinksTest extends BdusTestCase
     public function testAddManualLinkSuccess(): void
     {
         // Link item 1 → item 3 (no pre-existing link)
-        $ctrl = $this->makeController('record_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], [
             'tb_one' => self::TB, 'id_one' => 1,
             'tb_two' => self::TB, 'id_two' => 3,
         ]);
@@ -89,7 +89,7 @@ class RecordCtrlManualLinksTest extends BdusTestCase
 
     public function testAddManualLinkReturnedShapeIsComplete(): void
     {
-        $ctrl = $this->makeController('record_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], [
             'tb_one' => self::TB, 'id_one' => 1,
             'tb_two' => self::TB, 'id_two' => 4,
         ]);
@@ -104,7 +104,7 @@ class RecordCtrlManualLinksTest extends BdusTestCase
     public function testAddManualLinkDuplicateReturnsError(): void
     {
         // items 1 ↔ 2 already linked in seed
-        $ctrl = $this->makeController('record_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], [
             'tb_one' => self::TB, 'id_one' => 1,
             'tb_two' => self::TB, 'id_two' => 2,
         ]);
@@ -117,7 +117,7 @@ class RecordCtrlManualLinksTest extends BdusTestCase
     public function testAddManualLinkDuplicateReverseReturnsError(): void
     {
         // reverse direction of the seed link (2 → 1) must also be rejected
-        $ctrl = $this->makeController('record_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], [
             'tb_one' => self::TB, 'id_one' => 2,
             'tb_two' => self::TB, 'id_two' => 1,
         ]);
@@ -129,7 +129,7 @@ class RecordCtrlManualLinksTest extends BdusTestCase
 
     public function testAddManualLinkMissingParamsReturnsError(): void
     {
-        $ctrl = $this->makeController('record_ctrl', [], ['tb_one' => self::TB]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], ['tb_one' => self::TB]);
         $res  = $this->callController($ctrl, 'addManualLink');
 
         $this->assertSame('error', $res['status']);
@@ -139,7 +139,7 @@ class RecordCtrlManualLinksTest extends BdusTestCase
     public function testAddManualLinkRequiresEditPrivilege(): void
     {
         $this->setPrivilege(99);
-        $ctrl = $this->makeController('record_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], [
             'tb_one' => self::TB, 'id_one' => 1,
             'tb_two' => self::TB, 'id_two' => 5,
         ]);
@@ -155,14 +155,14 @@ class RecordCtrlManualLinksTest extends BdusTestCase
     public function testDeleteManualLinkSuccess(): void
     {
         // First add a link to delete
-        $add = $this->makeController('record_ctrl', [], [
+        $add = $this->makeController('Bdus\\Controllers\\Record', [], [
             'tb_one' => self::TB, 'id_one' => 2,
             'tb_two' => self::TB, 'id_two' => 5,
         ]);
         $addRes = $this->callController($add, 'addManualLink');
         $linkId = $addRes['link']['key'];
 
-        $ctrl = $this->makeController('record_ctrl', [], ['id' => $linkId]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], ['id' => $linkId]);
         $res  = $this->callController($ctrl, 'deleteManualLink');
 
         $this->assertSame('success', $res['status']);
@@ -171,7 +171,7 @@ class RecordCtrlManualLinksTest extends BdusTestCase
 
     public function testDeleteManualLinkUnknownIdReturnsError(): void
     {
-        $ctrl = $this->makeController('record_ctrl', [], ['id' => 99999]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], ['id' => 99999]);
         $res  = $this->callController($ctrl, 'deleteManualLink');
 
         $this->assertSame('error', $res['status']);
@@ -180,7 +180,7 @@ class RecordCtrlManualLinksTest extends BdusTestCase
 
     public function testDeleteManualLinkMissingIdReturnsError(): void
     {
-        $ctrl = $this->makeController('record_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record');
         $res  = $this->callController($ctrl, 'deleteManualLink');
 
         $this->assertSame('error', $res['status']);
@@ -190,7 +190,7 @@ class RecordCtrlManualLinksTest extends BdusTestCase
     public function testDeleteManualLinkRequiresEditPrivilege(): void
     {
         $this->setPrivilege(99);
-        $ctrl = $this->makeController('record_ctrl', [], ['id' => 1]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], ['id' => 1]);
         $res  = $this->callController($ctrl, 'deleteManualLink');
         $this->setPrivilege(1);
 

@@ -24,7 +24,7 @@ class SearchReplaceCtrlTest extends BdusTestCase
 
     public function testGetTableListReturnsSuccess(): void
     {
-        $ctrl = $this->makeController('search_replace_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\SearchReplace');
         $res  = $this->callController($ctrl, 'getTableList');
 
         $this->assertSame('success', $res['status']);
@@ -34,7 +34,7 @@ class SearchReplaceCtrlTest extends BdusTestCase
 
     public function testGetTableListContainsKnownTables(): void
     {
-        $ctrl  = $this->makeController('search_replace_ctrl');
+        $ctrl  = $this->makeController('Bdus\\Controllers\\SearchReplace');
         $res   = $this->callController($ctrl, 'getTableList');
         $names = array_column($res['tables'], 'name');
 
@@ -44,7 +44,7 @@ class SearchReplaceCtrlTest extends BdusTestCase
 
     public function testGetTableListRowShape(): void
     {
-        $ctrl = $this->makeController('search_replace_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\SearchReplace');
         $res  = $this->callController($ctrl, 'getTableList');
 
         $row = $res['tables'][0];
@@ -55,7 +55,7 @@ class SearchReplaceCtrlTest extends BdusTestCase
     public function testGetTableListRequiresAdminPrivilege(): void
     {
         $this->setPrivilege(99); // reader
-        $ctrl = $this->makeController('search_replace_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\SearchReplace');
         $res  = $this->callController($ctrl, 'getTableList');
         $this->setPrivilege(1);  // restore
 
@@ -67,7 +67,7 @@ class SearchReplaceCtrlTest extends BdusTestCase
 
     public function testGetFieldListReturnsSuccess(): void
     {
-        $ctrl = $this->makeController('search_replace_ctrl', ['tb' => 'items']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\SearchReplace', ['tb' => 'items']);
         $res  = $this->callController($ctrl, 'getFieldList');
 
         $this->assertSame('success', $res['status']);
@@ -77,7 +77,7 @@ class SearchReplaceCtrlTest extends BdusTestCase
 
     public function testGetFieldListReturnsOnlyTextFields(): void
     {
-        $ctrl  = $this->makeController('search_replace_ctrl', ['tb' => 'items']);
+        $ctrl  = $this->makeController('Bdus\\Controllers\\SearchReplace', ['tb' => 'items']);
         $res   = $this->callController($ctrl, 'getFieldList');
         $names = array_column($res['fields'], 'name');
 
@@ -94,7 +94,7 @@ class SearchReplaceCtrlTest extends BdusTestCase
 
     public function testGetFieldListRowShape(): void
     {
-        $ctrl = $this->makeController('search_replace_ctrl', ['tb' => 'items']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\SearchReplace', ['tb' => 'items']);
         $res  = $this->callController($ctrl, 'getFieldList');
 
         $this->assertNotEmpty($res['fields']);
@@ -105,7 +105,7 @@ class SearchReplaceCtrlTest extends BdusTestCase
 
     public function testGetFieldListMissingTbReturnsError(): void
     {
-        $ctrl = $this->makeController('search_replace_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\SearchReplace');
         $res  = $this->callController($ctrl, 'getFieldList');
 
         $this->assertSame('error',             $res['status']);
@@ -115,7 +115,7 @@ class SearchReplaceCtrlTest extends BdusTestCase
     public function testGetFieldListRequiresAdminPrivilege(): void
     {
         $this->setPrivilege(99);
-        $ctrl = $this->makeController('search_replace_ctrl', ['tb' => 'items']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\SearchReplace', ['tb' => 'items']);
         $res  = $this->callController($ctrl, 'getFieldList');
         $this->setPrivilege(1);
 
@@ -129,7 +129,7 @@ class SearchReplaceCtrlTest extends BdusTestCase
     {
         // items contains rows with name like "Alpha item", "Beta item" etc.
         $ctrl = $this->makeController(
-            'search_replace_ctrl',
+            'Bdus\\Controllers\\SearchReplace',
             [],
             ['tb' => 'items', 'fld' => 'name', 'search' => 'item', 'replace' => 'object']
         );
@@ -148,7 +148,7 @@ class SearchReplaceCtrlTest extends BdusTestCase
     {
         // Replace "thing" → "entity" in name column
         $ctrl = $this->makeController(
-            'search_replace_ctrl',
+            'Bdus\\Controllers\\SearchReplace',
             [],
             ['tb' => 'items', 'fld' => 'name', 'search' => 'thing', 'replace' => 'entity']
         );
@@ -163,7 +163,7 @@ class SearchReplaceCtrlTest extends BdusTestCase
     public function testDoReplaceMissingTbReturnsError(): void
     {
         $ctrl = $this->makeController(
-            'search_replace_ctrl',
+            'Bdus\\Controllers\\SearchReplace',
             [],
             ['fld' => 'name', 'search' => 'x']
         );
@@ -176,7 +176,7 @@ class SearchReplaceCtrlTest extends BdusTestCase
     public function testDoReplaceMissingFldReturnsError(): void
     {
         $ctrl = $this->makeController(
-            'search_replace_ctrl',
+            'Bdus\\Controllers\\SearchReplace',
             [],
             ['tb' => 'items', 'search' => 'x']
         );
@@ -189,7 +189,7 @@ class SearchReplaceCtrlTest extends BdusTestCase
     public function testDoReplaceEmptySearchReturnsError(): void
     {
         $ctrl = $this->makeController(
-            'search_replace_ctrl',
+            'Bdus\\Controllers\\SearchReplace',
             [],
             ['tb' => 'items', 'fld' => 'name', 'search' => '']
         );
@@ -203,7 +203,7 @@ class SearchReplaceCtrlTest extends BdusTestCase
     {
         // doReplace validates tb/fld against config — unknown table → not_enough_privilege
         $ctrl = $this->makeController(
-            'search_replace_ctrl',
+            'Bdus\\Controllers\\SearchReplace',
             [],
             ['tb' => 'no_such_table', 'fld' => 'name', 'search' => 'x']
         );
@@ -216,7 +216,7 @@ class SearchReplaceCtrlTest extends BdusTestCase
     public function testDoReplaceUnknownFieldReturnsError(): void
     {
         $ctrl = $this->makeController(
-            'search_replace_ctrl',
+            'Bdus\\Controllers\\SearchReplace',
             [],
             ['tb' => 'items', 'fld' => 'injected_field', 'search' => 'x']
         );
@@ -230,7 +230,7 @@ class SearchReplaceCtrlTest extends BdusTestCase
     {
         $this->setPrivilege(99);
         $ctrl = $this->makeController(
-            'search_replace_ctrl',
+            'Bdus\\Controllers\\SearchReplace',
             [],
             ['tb' => 'items', 'fld' => 'name', 'search' => 'x']
         );

@@ -48,7 +48,7 @@ class FrontpageEditorCtrlTest extends BdusTestCase
 
     public function testGetWelcomeReturnsContent(): void
     {
-        $ctrl = $this->makeController('frontpage_editor_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\FrontpageEditor');
         $res  = $this->callController($ctrl, 'getWelcome');
 
         $this->assertArrayHasKey('content', $res);
@@ -57,7 +57,7 @@ class FrontpageEditorCtrlTest extends BdusTestCase
 
     public function testGetWelcomeReturnsSeededText(): void
     {
-        $ctrl = $this->makeController('frontpage_editor_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\FrontpageEditor');
         $res  = $this->callController($ctrl, 'getWelcome');
 
         $this->assertSame('# Welcome', $res['content']);
@@ -66,7 +66,7 @@ class FrontpageEditorCtrlTest extends BdusTestCase
     public function testGetWelcomeAccessibleToReadPrivilege(): void
     {
         $this->setPrivilege(4); // reader
-        $ctrl = $this->makeController('frontpage_editor_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\FrontpageEditor');
         $res  = $this->callController($ctrl, 'getWelcome');
         $this->setPrivilege(1);
 
@@ -79,7 +79,7 @@ class FrontpageEditorCtrlTest extends BdusTestCase
     public function testSaveWelcomeSuccess(): void
     {
         $ctrl = $this->makeController(
-            'frontpage_editor_ctrl',
+            'Bdus\\Controllers\\FrontpageEditor',
             [],
             ['content' => '# Updated Welcome\n\nNew text.']
         );
@@ -93,14 +93,14 @@ class FrontpageEditorCtrlTest extends BdusTestCase
     {
         $newContent = '# New Dashboard\n\nHello world.';
         $ctrl = $this->makeController(
-            'frontpage_editor_ctrl',
+            'Bdus\\Controllers\\FrontpageEditor',
             [],
             ['content' => $newContent]
         );
         $this->callController($ctrl, 'saveWelcome');
 
         // Read back via getWelcome
-        $ctrl2 = $this->makeController('frontpage_editor_ctrl');
+        $ctrl2 = $this->makeController('Bdus\\Controllers\\FrontpageEditor');
         $res2  = $this->callController($ctrl2, 'getWelcome');
         $this->assertSame($newContent, $res2['content']);
     }
@@ -108,13 +108,13 @@ class FrontpageEditorCtrlTest extends BdusTestCase
     public function testSaveWelcomeStripsPhpTags(): void
     {
         $ctrl = $this->makeController(
-            'frontpage_editor_ctrl',
+            'Bdus\\Controllers\\FrontpageEditor',
             [],
             ['content' => 'Hello <?php echo "evil"; ?> world']
         );
         $this->callController($ctrl, 'saveWelcome');
 
-        $ctrl2 = $this->makeController('frontpage_editor_ctrl');
+        $ctrl2 = $this->makeController('Bdus\\Controllers\\FrontpageEditor');
         $res2  = $this->callController($ctrl2, 'getWelcome');
 
         $this->assertStringNotContainsString('<?php', $res2['content']);
@@ -126,7 +126,7 @@ class FrontpageEditorCtrlTest extends BdusTestCase
     {
         $this->setPrivilege(99); // reader
         $ctrl = $this->makeController(
-            'frontpage_editor_ctrl',
+            'Bdus\\Controllers\\FrontpageEditor',
             [],
             ['content' => '# Should Not Save']
         );
@@ -140,7 +140,7 @@ class FrontpageEditorCtrlTest extends BdusTestCase
     public function testSaveWelcomeWithEmptyContentAllowed(): void
     {
         $ctrl = $this->makeController(
-            'frontpage_editor_ctrl',
+            'Bdus\\Controllers\\FrontpageEditor',
             [],
             ['content' => '']
         );

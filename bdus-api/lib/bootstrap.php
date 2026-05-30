@@ -33,11 +33,9 @@ if (DEBUG_ON) {
     ini_set('error_log', MAIN_DIR . 'logs/error.log');
 }
 
-// ── Autoloaders ───────────────────────────────────────────────────────────────
+// ── Autoloader ────────────────────────────────────────────────────────────────
 
-require_once __DIR__ . '/autoLoader.php';
 require_once MAIN_DIR . 'vendor/autoload.php';
-new autoLoader(__DIR__ . '/', MAIN_DIR . 'modules/');
 
 // ── JWT / App resolution ──────────────────────────────────────────────────────
 //

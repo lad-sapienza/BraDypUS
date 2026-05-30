@@ -286,11 +286,11 @@ abstract class BdusTestCase extends TestCase
     /**
      * Instantiate a controller with injected dependencies.
      *
-     * @param string $class  e.g. 'record_ctrl', 'search_ctrl'
+     * @param string $class  FQCN e.g. 'Bdus\Controllers\Record', or legacy short name e.g. 'Bdus\\Controllers\\Record'
      * @param array  $get    Simulated $_GET params (obj/method not needed)
      * @param array  $post   Simulated $_POST params
      */
-    protected function makeController(string $class, array $get = [], array $post = []): \Controller
+    protected function makeController(string $class, array $get = [], array $post = []): \Bdus\Controller
     {
         $ctrl = new $class($get, $post, array_merge($get, $post));
         $ctrl->setDB(static::$db);
@@ -304,7 +304,7 @@ abstract class BdusTestCase extends TestCase
      *
      * @throws \JsonException on invalid JSON
      */
-    protected function callController(\Controller $ctrl, string $method): array
+    protected function callController(\Bdus\Controller $ctrl, string $method): array
     {
         ob_start();
         $ctrl->$method();

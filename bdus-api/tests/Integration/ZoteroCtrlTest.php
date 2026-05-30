@@ -104,7 +104,7 @@ class ZoteroCtrlTest extends BdusTestCase
 
     public function testGetLibsReturnsSuccessWhenEmpty(): void
     {
-        $ctrl = $this->makeController('zotero_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Zotero');
         $res  = $this->callController($ctrl, 'getLibs');
 
         $this->assertSame('success', $res['status']);
@@ -117,7 +117,7 @@ class ZoteroCtrlTest extends BdusTestCase
         $this->insertLib('group', '111', 'Lib One');
         $this->insertLib('user',  '222', 'Lib Two');
 
-        $ctrl = $this->makeController('zotero_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Zotero');
         $res  = $this->callController($ctrl, 'getLibs');
 
         $this->assertSame('success', $res['status']);
@@ -131,7 +131,7 @@ class ZoteroCtrlTest extends BdusTestCase
              VALUES ('group', '333', 'Secret Lib', 'supersecretkey')"
         );
 
-        $ctrl = $this->makeController('zotero_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Zotero');
         $res  = $this->callController($ctrl, 'getLibs');
 
         $lib = $res['libs'][0];
@@ -144,7 +144,7 @@ class ZoteroCtrlTest extends BdusTestCase
     {
         $this->insertLib();
 
-        $ctrl = $this->makeController('zotero_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Zotero');
         $res  = $this->callController($ctrl, 'getLibs');
 
         $this->assertFalse($res['libs'][0]['has_api_key']);
@@ -153,7 +153,7 @@ class ZoteroCtrlTest extends BdusTestCase
     public function testGetLibsRequiresAdminPrivilege(): void
     {
         $this->setPrivilege(25); // edit, not admin
-        $ctrl = $this->makeController('zotero_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Zotero');
         $res  = $this->callController($ctrl, 'getLibs');
         $this->setPrivilege(1);
 
@@ -165,7 +165,7 @@ class ZoteroCtrlTest extends BdusTestCase
 
     public function testAddLibSuccess(): void
     {
-        $ctrl = $this->makeController('zotero_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Zotero', [], [
             'type'      => 'group',
             'zotero_id' => '654321',
             'name'      => 'My Library',
@@ -179,7 +179,7 @@ class ZoteroCtrlTest extends BdusTestCase
 
     public function testAddLibMissingTypeReturnsError(): void
     {
-        $ctrl = $this->makeController('zotero_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Zotero', [], [
             'zotero_id' => '654321',
             'name'      => 'No Type Lib',
         ]);
@@ -191,7 +191,7 @@ class ZoteroCtrlTest extends BdusTestCase
 
     public function testAddLibInvalidTypeReturnsError(): void
     {
-        $ctrl = $this->makeController('zotero_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Zotero', [], [
             'type'      => 'institution',   // not user or group
             'zotero_id' => '654321',
             'name'      => 'Bad Type',
@@ -204,7 +204,7 @@ class ZoteroCtrlTest extends BdusTestCase
 
     public function testAddLibMissingZoteroIdReturnsError(): void
     {
-        $ctrl = $this->makeController('zotero_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Zotero', [], [
             'type' => 'group',
             'name' => 'Missing ID',
         ]);
@@ -217,7 +217,7 @@ class ZoteroCtrlTest extends BdusTestCase
     public function testAddLibRequiresAdminPrivilege(): void
     {
         $this->setPrivilege(25); // edit, not admin
-        $ctrl = $this->makeController('zotero_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Zotero', [], [
             'type'      => 'group',
             'zotero_id' => '654321',
             'name'      => 'Priv Test',
@@ -231,7 +231,7 @@ class ZoteroCtrlTest extends BdusTestCase
 
     public function testAddLibDefaultsCitationStyle(): void
     {
-        $ctrl = $this->makeController('zotero_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Zotero', [], [
             'type'      => 'group',
             'zotero_id' => '777777',
             'name'      => 'Default Style',
@@ -251,7 +251,7 @@ class ZoteroCtrlTest extends BdusTestCase
     {
         $libId = $this->insertLib();
 
-        $ctrl = $this->makeController('zotero_ctrl', ['id' => $libId]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Zotero', ['id' => $libId]);
         $res  = $this->callController($ctrl, 'deleteLib');
 
         $this->assertSame('success', $res['status']);
@@ -265,7 +265,7 @@ class ZoteroCtrlTest extends BdusTestCase
 
     public function testDeleteLibMissingIdReturnsError(): void
     {
-        $ctrl = $this->makeController('zotero_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Zotero');
         $res  = $this->callController($ctrl, 'deleteLib');
 
         $this->assertSame('error', $res['status']);
@@ -276,7 +276,7 @@ class ZoteroCtrlTest extends BdusTestCase
     {
         $libId = $this->insertLib();
         $this->setPrivilege(25);
-        $ctrl = $this->makeController('zotero_ctrl', ['id' => $libId]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Zotero', ['id' => $libId]);
         $res  = $this->callController($ctrl, 'deleteLib');
         $this->setPrivilege(1);
 
@@ -288,7 +288,7 @@ class ZoteroCtrlTest extends BdusTestCase
 
     public function testGetLinksReturnsEmptyWhenNone(): void
     {
-        $ctrl = $this->makeController('zotero_ctrl', ['tb' => 'items', 'id' => 1]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Zotero', ['tb' => 'items', 'id' => 1]);
         $res  = $this->callController($ctrl, 'getLinks');
 
         $this->assertSame('success', $res['status']);
@@ -302,7 +302,7 @@ class ZoteroCtrlTest extends BdusTestCase
         $this->insertLink($libId, 'items', 1, 'KEY001');
         $this->insertLink($libId, 'items', 1, 'KEY002');
 
-        $ctrl = $this->makeController('zotero_ctrl', ['tb' => 'items', 'id' => 1]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Zotero', ['tb' => 'items', 'id' => 1]);
         $res  = $this->callController($ctrl, 'getLinks');
 
         $this->assertSame('success', $res['status']);
@@ -314,7 +314,7 @@ class ZoteroCtrlTest extends BdusTestCase
         $libId = $this->insertLib('group', '888', 'Public Group');
         $this->insertLink($libId, 'items', 1, 'URLTEST');
 
-        $ctrl = $this->makeController('zotero_ctrl', ['tb' => 'items', 'id' => 1]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Zotero', ['tb' => 'items', 'id' => 1]);
         $res  = $this->callController($ctrl, 'getLinks');
 
         $this->assertArrayHasKey('zotero_url', $res['links'][0]);
@@ -326,7 +326,7 @@ class ZoteroCtrlTest extends BdusTestCase
         $libId = $this->insertLib('user', '9999', 'User Lib');
         $this->insertLink($libId, 'items', 1, 'USERKEY');
 
-        $ctrl = $this->makeController('zotero_ctrl', ['tb' => 'items', 'id' => 1]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Zotero', ['tb' => 'items', 'id' => 1]);
         $res  = $this->callController($ctrl, 'getLinks');
 
         $this->assertNull($res['links'][0]['zotero_url']);
@@ -334,7 +334,7 @@ class ZoteroCtrlTest extends BdusTestCase
 
     public function testGetLinksMissingTbReturnsError(): void
     {
-        $ctrl = $this->makeController('zotero_ctrl', ['id' => 1]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Zotero', ['id' => 1]);
         $res  = $this->callController($ctrl, 'getLinks');
 
         $this->assertSame('error', $res['status']);
@@ -343,7 +343,7 @@ class ZoteroCtrlTest extends BdusTestCase
 
     public function testGetLinksMissingIdReturnsError(): void
     {
-        $ctrl = $this->makeController('zotero_ctrl', ['tb' => 'items']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Zotero', ['tb' => 'items']);
         $res  = $this->callController($ctrl, 'getLinks');
 
         $this->assertSame('error', $res['status']);
@@ -357,7 +357,7 @@ class ZoteroCtrlTest extends BdusTestCase
     {
         $libId = $this->insertLib();
 
-        $ctrl = $this->makeController('zotero_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Zotero', [], [
             'tb'        => 'items',
             'record_id' => 1,
             'lib_id'    => $libId,
@@ -374,7 +374,7 @@ class ZoteroCtrlTest extends BdusTestCase
     {
         $libId = $this->insertLib();
 
-        $ctrl = $this->makeController('zotero_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Zotero', [], [
             'tb'        => 'items',
             'record_id' => 2,
             'lib_id'    => $libId,
@@ -393,7 +393,7 @@ class ZoteroCtrlTest extends BdusTestCase
 
     public function testAddLinkMissingParamsReturnsError(): void
     {
-        $ctrl = $this->makeController('zotero_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Zotero', [], [
             'tb'     => 'items',
             'lib_id' => 1,
             // record_id and zotero_key missing
@@ -406,7 +406,7 @@ class ZoteroCtrlTest extends BdusTestCase
 
     public function testAddLinkUnknownLibReturnsError(): void
     {
-        $ctrl = $this->makeController('zotero_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Zotero', [], [
             'tb'        => 'items',
             'record_id' => 1,
             'lib_id'    => 99999,
@@ -422,7 +422,7 @@ class ZoteroCtrlTest extends BdusTestCase
     {
         $libId = $this->insertLib();
         $this->setPrivilege(99);
-        $ctrl = $this->makeController('zotero_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Zotero', [], [
             'tb'        => 'items',
             'record_id' => 1,
             'lib_id'    => $libId,
@@ -442,7 +442,7 @@ class ZoteroCtrlTest extends BdusTestCase
         $libId  = $this->insertLib();
         $linkId = $this->insertLink($libId);
 
-        $ctrl = $this->makeController('zotero_ctrl', ['id' => $linkId], ['pages' => '5–6', 'notes' => 'See also']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Zotero', ['id' => $linkId], ['pages' => '5–6', 'notes' => 'See also']);
         $res  = $this->callController($ctrl, 'editLink');
 
         $this->assertSame('success', $res['status']);
@@ -454,7 +454,7 @@ class ZoteroCtrlTest extends BdusTestCase
         $libId  = $this->insertLib();
         $linkId = $this->insertLink($libId);
 
-        $ctrl = $this->makeController('zotero_ctrl', ['id' => $linkId], ['pages' => '99–100']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Zotero', ['id' => $linkId], ['pages' => '99–100']);
         $this->callController($ctrl, 'editLink');
 
         $rows = static::$db->query(
@@ -465,7 +465,7 @@ class ZoteroCtrlTest extends BdusTestCase
 
     public function testEditLinkMissingIdReturnsError(): void
     {
-        $ctrl = $this->makeController('zotero_ctrl', [], ['pages' => '1']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Zotero', [], ['pages' => '1']);
         $res  = $this->callController($ctrl, 'editLink');
 
         $this->assertSame('error', $res['status']);
@@ -477,7 +477,7 @@ class ZoteroCtrlTest extends BdusTestCase
         $libId  = $this->insertLib();
         $linkId = $this->insertLink($libId);
 
-        $ctrl = $this->makeController('zotero_ctrl', ['id' => $linkId], []);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Zotero', ['id' => $linkId], []);
         $res  = $this->callController($ctrl, 'editLink');
 
         $this->assertSame('error', $res['status']);
@@ -491,7 +491,7 @@ class ZoteroCtrlTest extends BdusTestCase
         $libId  = $this->insertLib();
         $linkId = $this->insertLink($libId);
 
-        $ctrl = $this->makeController('zotero_ctrl', ['id' => $linkId]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Zotero', ['id' => $linkId]);
         $res  = $this->callController($ctrl, 'deleteLink');
 
         $this->assertSame('success', $res['status']);
@@ -503,7 +503,7 @@ class ZoteroCtrlTest extends BdusTestCase
         $libId  = $this->insertLib();
         $linkId = $this->insertLink($libId);
 
-        $ctrl = $this->makeController('zotero_ctrl', ['id' => $linkId]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Zotero', ['id' => $linkId]);
         $this->callController($ctrl, 'deleteLink');
 
         $rows = static::$db->query(
@@ -514,7 +514,7 @@ class ZoteroCtrlTest extends BdusTestCase
 
     public function testDeleteLinkMissingIdReturnsError(): void
     {
-        $ctrl = $this->makeController('zotero_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Zotero');
         $res  = $this->callController($ctrl, 'deleteLink');
 
         $this->assertSame('error', $res['status']);
@@ -525,7 +525,7 @@ class ZoteroCtrlTest extends BdusTestCase
 
     public function testSyncRecordWithNoLinksReturnsZeroCounts(): void
     {
-        $ctrl = $this->makeController('zotero_ctrl', ['tb' => 'items', 'id' => 1]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Zotero', ['tb' => 'items', 'id' => 1]);
         $res  = $this->callController($ctrl, 'syncRecord');
 
         $this->assertSame('success', $res['status']);
@@ -535,7 +535,7 @@ class ZoteroCtrlTest extends BdusTestCase
 
     public function testSyncRecordMissingTbReturnsError(): void
     {
-        $ctrl = $this->makeController('zotero_ctrl', ['id' => 1]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Zotero', ['id' => 1]);
         $res  = $this->callController($ctrl, 'syncRecord');
 
         $this->assertSame('error', $res['status']);
@@ -544,7 +544,7 @@ class ZoteroCtrlTest extends BdusTestCase
 
     public function testSyncRecordMissingIdReturnsError(): void
     {
-        $ctrl = $this->makeController('zotero_ctrl', ['tb' => 'items']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Zotero', ['tb' => 'items']);
         $res  = $this->callController($ctrl, 'syncRecord');
 
         $this->assertSame('error', $res['status']);
@@ -555,7 +555,7 @@ class ZoteroCtrlTest extends BdusTestCase
 
     public function testSyncAllWithNoLinksReturnsZeroCounts(): void
     {
-        $ctrl = $this->makeController('zotero_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Zotero');
         $res  = $this->callController($ctrl, 'syncAll');
 
         $this->assertSame('success', $res['status']);
@@ -567,7 +567,7 @@ class ZoteroCtrlTest extends BdusTestCase
     public function testSyncAllRequiresAdminPrivilege(): void
     {
         $this->setPrivilege(25);
-        $ctrl = $this->makeController('zotero_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Zotero');
         $res  = $this->callController($ctrl, 'syncAll');
         $this->setPrivilege(1);
 
@@ -579,7 +579,7 @@ class ZoteroCtrlTest extends BdusTestCase
 
     public function testSearchMissingLibIdReturnsError(): void
     {
-        $ctrl = $this->makeController('zotero_ctrl', ['q' => 'test']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Zotero', ['q' => 'test']);
         $res  = $this->callController($ctrl, 'search');
 
         $this->assertSame('error', $res['status']);
@@ -588,7 +588,7 @@ class ZoteroCtrlTest extends BdusTestCase
 
     public function testSearchMissingQueryReturnsError(): void
     {
-        $ctrl = $this->makeController('zotero_ctrl', ['lib_id' => 1]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Zotero', ['lib_id' => 1]);
         $res  = $this->callController($ctrl, 'search');
 
         $this->assertSame('error', $res['status']);
@@ -597,7 +597,7 @@ class ZoteroCtrlTest extends BdusTestCase
 
     public function testSearchUnknownLibReturnsError(): void
     {
-        $ctrl = $this->makeController('zotero_ctrl', ['lib_id' => 99999, 'q' => 'test']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Zotero', ['lib_id' => 99999, 'q' => 'test']);
         $res  = $this->callController($ctrl, 'search');
 
         $this->assertSame('error', $res['status']);

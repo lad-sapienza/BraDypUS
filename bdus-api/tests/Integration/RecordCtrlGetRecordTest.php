@@ -15,7 +15,7 @@ class RecordCtrlGetRecordTest extends BdusTestCase
 
     public function testGetRecordReturnsExpectedTopLevelKeys(): void
     {
-        $ctrl = $this->makeController('record_ctrl', ['tb' => self::TB, 'id' => 1]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'id' => 1]);
         $res  = $this->callController($ctrl, 'getRecord');
 
         foreach (['metadata', 'schema', 'core', 'plugins', 'links', 'backlinks', 'manualLinks', 'files', 'geodata', 'rs'] as $key) {
@@ -25,7 +25,7 @@ class RecordCtrlGetRecordTest extends BdusTestCase
 
     public function testGetRecordMetadataShape(): void
     {
-        $ctrl = $this->makeController('record_ctrl', ['tb' => self::TB, 'id' => 1]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'id' => 1]);
         $res  = $this->callController($ctrl, 'getRecord');
         $meta = $res['metadata'];
 
@@ -39,7 +39,7 @@ class RecordCtrlGetRecordTest extends BdusTestCase
 
     public function testGetRecordCoreHasCorrectFields(): void
     {
-        $ctrl = $this->makeController('record_ctrl', ['tb' => self::TB, 'id' => 1]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'id' => 1]);
         $res  = $this->callController($ctrl, 'getRecord');
         $core = $res['core'];
 
@@ -53,7 +53,7 @@ class RecordCtrlGetRecordTest extends BdusTestCase
 
     public function testGetRecordSchemaContainsFields(): void
     {
-        $ctrl   = $this->makeController('record_ctrl', ['tb' => self::TB, 'id' => 1]);
+        $ctrl   = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'id' => 1]);
         $res    = $this->callController($ctrl, 'getRecord');
         $fields = $res['schema']['fields'];
 
@@ -75,7 +75,7 @@ class RecordCtrlGetRecordTest extends BdusTestCase
 
     public function testGetRecordSchemaFieldTypesAreCorrect(): void
     {
-        $ctrl   = $this->makeController('record_ctrl', ['tb' => self::TB, 'id' => 1]);
+        $ctrl   = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'id' => 1]);
         $res    = $this->callController($ctrl, 'getRecord');
         $byName = array_column($res['schema']['fields'], null, 'name');
 
@@ -88,7 +88,7 @@ class RecordCtrlGetRecordTest extends BdusTestCase
 
     public function testGetRecordAddNewReturnsNullId(): void
     {
-        $ctrl = $this->makeController('record_ctrl', ['tb' => self::TB /* no id */]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB /* no id */]);
         $res  = $this->callController($ctrl, 'getRecord');
 
         $this->assertNull($res['metadata']['rec_id']);
@@ -99,7 +99,7 @@ class RecordCtrlGetRecordTest extends BdusTestCase
 
     public function testGetRecordMissingTbReturnsError(): void
     {
-        $ctrl = $this->makeController('record_ctrl', []);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', []);
         $res  = $this->callController($ctrl, 'getRecord');
         $this->assertSame('error',             $res['status']);
         $this->assertSame('parameter_missing', $res['code']);
@@ -112,7 +112,7 @@ class RecordCtrlGetRecordTest extends BdusTestCase
         // The seed inserts a manual link between items 1 and 2 in userlinks
         // (record-to-record link, NOT a file link — those live in file_links).
         // Viewing item 1 should expose item 2 in manualLinks.
-        $ctrl = $this->makeController('record_ctrl', ['tb' => 'items', 'id' => 1]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => 'items', 'id' => 1]);
         $res  = $this->callController($ctrl, 'getRecord');
 
         $this->assertArrayHasKey('manualLinks', $res);
@@ -131,7 +131,7 @@ class RecordCtrlGetRecordTest extends BdusTestCase
 
     public function testGetRecordFilesAreEnrichedWithUrlAndIsImage(): void
     {
-        $ctrl  = $this->makeController('record_ctrl', ['tb' => self::TB, 'id' => 1]);
+        $ctrl  = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'id' => 1]);
         $res   = $this->callController($ctrl, 'getRecord');
         $files = $res['files'];
 
@@ -163,14 +163,14 @@ class RecordCtrlGetRecordTest extends BdusTestCase
     {
         // The 'status' field in items is type=select with no source configured
         // → should return empty array (no dic/vocabulary/get_values_from_tb set)
-        $ctrl = $this->makeController('record_ctrl', ['tb' => self::TB, 'fld' => 'status']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'fld' => 'status']);
         $res  = $this->callController($ctrl, 'getFieldOptions');
         $this->assertIsArray($res);
     }
 
     public function testGetFieldOptionsMissingParamsReturnsError(): void
     {
-        $ctrl = $this->makeController('record_ctrl', ['tb' => self::TB /* no fld */]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB /* no fld */]);
         $res  = $this->callController($ctrl, 'getFieldOptions');
         $this->assertSame('error',             $res['status']);
         $this->assertSame('parameter_missing', $res['code']);
@@ -180,7 +180,7 @@ class RecordCtrlGetRecordTest extends BdusTestCase
 
     public function testGetRecordWithValidTemplateIncludesSchemaTemplate(): void
     {
-        $ctrl = $this->makeController('record_ctrl', ['tb' => self::TB, 'id' => 1, 'template' => 'default']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'id' => 1, 'template' => 'default']);
         $res  = $this->callController($ctrl, 'getRecord');
 
         $this->assertArrayHasKey('schema', $res);
@@ -192,7 +192,7 @@ class RecordCtrlGetRecordTest extends BdusTestCase
 
     public function testGetRecordWithInvalidTemplateNameReturnsTemplateErrors(): void
     {
-        $ctrl = $this->makeController('record_ctrl', ['tb' => self::TB, 'id' => 1, 'template' => 'nonexistent']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'id' => 1, 'template' => 'nonexistent']);
         $res  = $this->callController($ctrl, 'getRecord');
 
         $this->assertArrayHasKey('schema', $res);
@@ -203,7 +203,7 @@ class RecordCtrlGetRecordTest extends BdusTestCase
 
     public function testGetTemplatesReturnsAvailableNames(): void
     {
-        $ctrl = $this->makeController('record_ctrl', ['tb' => self::TB]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB]);
         $res  = $this->callController($ctrl, 'getTemplates');
 
         $this->assertArrayHasKey('templates', $res);

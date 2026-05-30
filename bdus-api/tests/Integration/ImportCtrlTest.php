@@ -40,7 +40,7 @@ class ImportCtrlTest extends BdusTestCase
 
     public function testGetTableFieldsReturnsFieldList(): void
     {
-        $ctrl = $this->makeController('import_ctrl', ['tb' => self::TB]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Import', ['tb' => self::TB]);
         $res  = $this->callController($ctrl, 'getTableFields');
 
         $this->assertSame('success', $res['status']);
@@ -54,7 +54,7 @@ class ImportCtrlTest extends BdusTestCase
 
     public function testGetTableFieldsMissingTbReturnsError(): void
     {
-        $ctrl = $this->makeController('import_ctrl', []);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Import', []);
         $res  = $this->callController($ctrl, 'getTableFields');
 
         $this->assertSame('error', $res['status']);
@@ -63,7 +63,7 @@ class ImportCtrlTest extends BdusTestCase
 
     public function testGetTableFieldsUnknownTableReturnsEmptyList(): void
     {
-        $ctrl = $this->makeController('import_ctrl', ['tb' => 'nonexistent_table']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Import', ['tb' => 'nonexistent_table']);
         $res  = $this->callController($ctrl, 'getTableFields');
 
         $this->assertSame('success', $res['status']);
@@ -77,7 +77,7 @@ class ImportCtrlTest extends BdusTestCase
         $csv    = "name,description\nImport Item A,Desc A\nImport Item B,Desc B\n";
         $tempId = $this->plantTempFile($csv);
 
-        $ctrl = $this->makeController('import_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Import', [], [
             'temp_id'   => $tempId,
             'type'      => 'csv',
             'tb'        => self::TB,
@@ -108,7 +108,7 @@ class ImportCtrlTest extends BdusTestCase
         $csv    = "name,description\nImport Item A,Updated Desc\n";
         $tempId = $this->plantTempFile($csv);
 
-        $ctrl = $this->makeController('import_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Import', [], [
             'temp_id'   => $tempId,
             'type'      => 'csv',
             'tb'        => self::TB,
@@ -129,7 +129,7 @@ class ImportCtrlTest extends BdusTestCase
 
     public function testImportDataMissingParamsReturnsError(): void
     {
-        $ctrl = $this->makeController('import_ctrl', [], ['temp_id' => 'x']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Import', [], ['temp_id' => 'x']);
         $res  = $this->callController($ctrl, 'importData');
 
         $this->assertSame('error', $res['status']);
@@ -138,7 +138,7 @@ class ImportCtrlTest extends BdusTestCase
 
     public function testImportDataMissingTempFileReturnsError(): void
     {
-        $ctrl = $this->makeController('import_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Import', [], [
             'temp_id'   => 'does_not_exist_xyz',
             'type'      => 'csv',
             'tb'        => self::TB,
@@ -156,7 +156,7 @@ class ImportCtrlTest extends BdusTestCase
         $csv    = "name,description\nSome Item,Desc\n";
         $tempId = $this->plantTempFile($csv);
 
-        $ctrl = $this->makeController('import_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Import', [], [
             'temp_id'   => $tempId,
             'type'      => 'csv',
             'tb'        => self::TB,
@@ -174,7 +174,7 @@ class ImportCtrlTest extends BdusTestCase
         $csv    = "name;description\nSemicolon Item;Semicolon Desc\n";
         $tempId = $this->plantTempFile($csv);
 
-        $ctrl = $this->makeController('import_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Import', [], [
             'temp_id'   => $tempId,
             'type'      => 'csv',
             'tb'        => self::TB,
@@ -194,7 +194,7 @@ class ImportCtrlTest extends BdusTestCase
         $json   = json_encode([['name' => 'JSON Import Item', 'description' => 'From JSON']]);
         $tempId = $this->plantTempFile($json);
 
-        $ctrl = $this->makeController('import_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Import', [], [
             'temp_id'   => $tempId,
             'type'      => 'json',
             'tb'        => self::TB,
@@ -212,7 +212,7 @@ class ImportCtrlTest extends BdusTestCase
         $json   = json_encode(['data' => [['name' => 'JSON Envelope Item', 'description' => 'Envelope']]]);
         $tempId = $this->plantTempFile($json);
 
-        $ctrl = $this->makeController('import_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Import', [], [
             'temp_id'   => $tempId,
             'type'      => 'json',
             'tb'        => self::TB,
@@ -229,7 +229,7 @@ class ImportCtrlTest extends BdusTestCase
 
     public function testImportGeoJsonMissingParamsReturnsError(): void
     {
-        $ctrl = $this->makeController('import_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Import', [], [
             'temp_id' => 'x',
             'tb'      => self::TB,
             // missing geo_prop and key_field
@@ -248,7 +248,7 @@ class ImportCtrlTest extends BdusTestCase
         $geojson = json_encode(['type' => 'FeatureCollection', 'features' => []]);
         $tempId  = $this->plantTempFile($geojson);
 
-        $ctrl = $this->makeController('import_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Import', [], [
             'temp_id'   => $tempId,
             'tb'        => 'tags',
             'geo_prop'  => 'id',
@@ -265,7 +265,7 @@ class ImportCtrlTest extends BdusTestCase
         $tempId  = $this->plantTempFile($geojson);
 
         // items has geo_data with type=geodata in the fixture config
-        $ctrl = $this->makeController('import_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Import', [], [
             'temp_id'   => $tempId,
             'tb'        => self::TB,
             'geo_prop'  => 'id',
@@ -292,7 +292,7 @@ class ImportCtrlTest extends BdusTestCase
         ]);
         $tempId = $this->plantTempFile($geojson);
 
-        $ctrl = $this->makeController('import_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Import', [], [
             'temp_id'   => $tempId,
             'tb'        => self::TB,
             'geo_prop'  => 'name',
@@ -310,7 +310,7 @@ class ImportCtrlTest extends BdusTestCase
 
     public function testImportPhotosMissingParamsReturnsError(): void
     {
-        $ctrl = $this->makeController('import_ctrl', [], []);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Import', [], []);
         $res  = $this->callController($ctrl, 'importPhotos');
 
         $this->assertSame('error', $res['status']);
@@ -319,7 +319,7 @@ class ImportCtrlTest extends BdusTestCase
 
     public function testImportPhotosMissingTempFilesReturnsError(): void
     {
-        $ctrl = $this->makeController('import_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Import', [], [
             'temp_id' => 'totally_missing_id',
             'tb'      => self::TB,
         ]);
@@ -361,7 +361,7 @@ class ImportCtrlTest extends BdusTestCase
         );
         @unlink($tempZipFile);
 
-        $ctrl = $this->makeController('import_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Import', [], [
             'temp_id' => $tempId,
             'tb'      => self::TB,
         ]);
@@ -390,7 +390,7 @@ class ImportCtrlTest extends BdusTestCase
     {
         $this->setPrivilege(99);
 
-        $ctrl = $this->makeController('import_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Import', [], [
             'temp_id'   => 'x',
             'type'      => 'csv',
             'tb'        => self::TB,
@@ -407,7 +407,7 @@ class ImportCtrlTest extends BdusTestCase
     {
         $this->setPrivilege(99);
 
-        $ctrl = $this->makeController('import_ctrl', ['tb' => self::TB]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Import', ['tb' => self::TB]);
         $res  = $this->callController($ctrl, 'getTableFields');
         $this->assertSame('not_enough_privilege', $res['code']);
 

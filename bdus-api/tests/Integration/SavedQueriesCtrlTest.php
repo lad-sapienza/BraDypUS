@@ -67,7 +67,7 @@ class SavedQueriesCtrlTest extends BdusTestCase
 
     public function testListQueriesReturnsSuccess(): void
     {
-        $ctrl = $this->makeController('saved_queries_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\SavedQueries');
         $res  = $this->callController($ctrl, 'listQueries');
 
         $this->assertSame('success', $res['status']);
@@ -77,7 +77,7 @@ class SavedQueriesCtrlTest extends BdusTestCase
 
     public function testListQueriesContainsSeedRow(): void
     {
-        $ctrl = $this->makeController('saved_queries_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\SavedQueries');
         $res  = $this->callController($ctrl, 'listQueries');
 
         $this->assertNotEmpty($res['queries']);
@@ -87,7 +87,7 @@ class SavedQueriesCtrlTest extends BdusTestCase
 
     public function testListQueriesRowHasExpectedKeys(): void
     {
-        $ctrl = $this->makeController('saved_queries_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\SavedQueries');
         $res  = $this->callController($ctrl, 'listQueries');
 
         $row = $res['queries'][0];
@@ -100,7 +100,7 @@ class SavedQueriesCtrlTest extends BdusTestCase
 
     public function testSaveQuerySuccess(): void
     {
-        $ctrl = $this->makeController('saved_queries_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\SavedQueries', [], [
             'name'  => 'Test save',
             'tb'    => 'items',
             'query' => ['search_type' => 'sqlExpert', 'querytext' => 'id > 1'],
@@ -113,7 +113,7 @@ class SavedQueriesCtrlTest extends BdusTestCase
 
     public function testSaveQueryReturnsSavedObject(): void
     {
-        $ctrl = $this->makeController('saved_queries_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\SavedQueries', [], [
             'name'  => 'Shaped query',
             'tb'    => 'items',
             'query' => ['search_type' => 'sqlExpert', 'querytext' => 'id > 2'],
@@ -136,7 +136,7 @@ class SavedQueriesCtrlTest extends BdusTestCase
 
     public function testSaveQueryMissingName(): void
     {
-        $ctrl = $this->makeController('saved_queries_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\SavedQueries', [], [
             'tb'    => 'items',
             'query' => ['search_type' => 'sqlExpert', 'querytext' => 'id > 1'],
         ]);
@@ -148,7 +148,7 @@ class SavedQueriesCtrlTest extends BdusTestCase
 
     public function testSaveQueryMissingTb(): void
     {
-        $ctrl = $this->makeController('saved_queries_ctrl', [], [
+        $ctrl = $this->makeController('Bdus\\Controllers\\SavedQueries', [], [
             'name'  => 'No table query',
             'query' => ['search_type' => 'sqlExpert', 'querytext' => 'id > 1'],
         ]);
@@ -163,7 +163,7 @@ class SavedQueriesCtrlTest extends BdusTestCase
     public function testShareQuerySuccess(): void
     {
         // First save a fresh query so we have a known id
-        $save = $this->makeController('saved_queries_ctrl', [], [
+        $save = $this->makeController('Bdus\\Controllers\\SavedQueries', [], [
             'name'  => 'To share',
             'tb'    => 'items',
             'query' => ['search_type' => 'sqlExpert', 'querytext' => 'status = \'active\''],
@@ -171,14 +171,14 @@ class SavedQueriesCtrlTest extends BdusTestCase
         $saved = $this->callController($save, 'saveQuery');
         $id    = $saved['query']['id'];
 
-        $ctrl = $this->makeController('saved_queries_ctrl', [], ['id' => $id]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\SavedQueries', [], ['id' => $id]);
         $res  = $this->callController($ctrl, 'shareQuery');
 
         $this->assertSame('success', $res['status']);
         $this->assertSame('ok_sharing_query', $res['code']);
 
         // Verify it appears as global in list
-        $list = $this->callController($this->makeController('saved_queries_ctrl'), 'listQueries');
+        $list = $this->callController($this->makeController('Bdus\\Controllers\\SavedQueries'), 'listQueries');
         $row  = array_values(array_filter($list['queries'], fn($q) => (int)$q['id'] === (int)$id))[0] ?? null;
         $this->assertNotNull($row);
         $this->assertSame(1, (int) $row['is_global']);
@@ -187,7 +187,7 @@ class SavedQueriesCtrlTest extends BdusTestCase
     public function testUnshareQuerySuccess(): void
     {
         // Save and share
-        $save = $this->makeController('saved_queries_ctrl', [], [
+        $save = $this->makeController('Bdus\\Controllers\\SavedQueries', [], [
             'name'  => 'To unshare',
             'tb'    => 'items',
             'query' => ['search_type' => 'sqlExpert', 'querytext' => 'id > 0'],
@@ -195,16 +195,16 @@ class SavedQueriesCtrlTest extends BdusTestCase
         $saved = $this->callController($save, 'saveQuery');
         $id    = $saved['query']['id'];
 
-        $this->callController($this->makeController('saved_queries_ctrl', [], ['id' => $id]), 'shareQuery');
+        $this->callController($this->makeController('Bdus\\Controllers\\SavedQueries', [], ['id' => $id]), 'shareQuery');
 
-        $ctrl = $this->makeController('saved_queries_ctrl', [], ['id' => $id]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\SavedQueries', [], ['id' => $id]);
         $res  = $this->callController($ctrl, 'unshareQuery');
 
         $this->assertSame('success', $res['status']);
         $this->assertSame('ok_unsharing_query', $res['code']);
 
         // Verify is_global is back to 0
-        $list = $this->callController($this->makeController('saved_queries_ctrl'), 'listQueries');
+        $list = $this->callController($this->makeController('Bdus\\Controllers\\SavedQueries'), 'listQueries');
         $row  = array_values(array_filter($list['queries'], fn($q) => (int)$q['id'] === (int)$id))[0] ?? null;
         $this->assertNotNull($row);
         $this->assertSame(0, (int) $row['is_global']);
@@ -215,7 +215,7 @@ class SavedQueriesCtrlTest extends BdusTestCase
     public function testDeleteQuerySuccess(): void
     {
         // Save a query to delete
-        $save = $this->makeController('saved_queries_ctrl', [], [
+        $save = $this->makeController('Bdus\\Controllers\\SavedQueries', [], [
             'name'  => 'To delete',
             'tb'    => 'items',
             'query' => ['search_type' => 'sqlExpert', 'querytext' => 'id = 1'],
@@ -223,21 +223,21 @@ class SavedQueriesCtrlTest extends BdusTestCase
         $saved = $this->callController($save, 'saveQuery');
         $id    = $saved['query']['id'];
 
-        $ctrl = $this->makeController('saved_queries_ctrl', [], ['id' => $id]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\SavedQueries', [], ['id' => $id]);
         $res  = $this->callController($ctrl, 'deleteQuery');
 
         $this->assertSame('success', $res['status']);
         $this->assertSame('ok_erasing_query', $res['code']);
 
         // Verify it is gone from the list
-        $list = $this->callController($this->makeController('saved_queries_ctrl'), 'listQueries');
+        $list = $this->callController($this->makeController('Bdus\\Controllers\\SavedQueries'), 'listQueries');
         $ids  = array_column($list['queries'], 'id');
         $this->assertNotContains($id, $ids);
     }
 
     public function testDeleteQueryNotFound(): void
     {
-        $ctrl = $this->makeController('saved_queries_ctrl', [], ['id' => 999999]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\SavedQueries', [], ['id' => 999999]);
         $res  = $this->callController($ctrl, 'deleteQuery');
 
         $this->assertSame('error', $res['status']);

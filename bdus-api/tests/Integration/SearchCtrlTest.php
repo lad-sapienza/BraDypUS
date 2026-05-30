@@ -15,7 +15,7 @@ class SearchCtrlTest extends BdusTestCase
 
     public function testGetAdvancedConfigReturnsCorrectShape(): void
     {
-        $ctrl = $this->makeController('search_ctrl', ['tb' => self::TB]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Search', ['tb' => self::TB]);
         $res  = $this->callController($ctrl, 'getAdvancedConfig');
 
         $this->assertArrayHasKey('fields',     $res);
@@ -29,7 +29,7 @@ class SearchCtrlTest extends BdusTestCase
 
     public function testGetAdvancedConfigFieldsHaveValueAndLabel(): void
     {
-        $ctrl   = $this->makeController('search_ctrl', ['tb' => self::TB]);
+        $ctrl   = $this->makeController('Bdus\\Controllers\\Search', ['tb' => self::TB]);
         $res    = $this->callController($ctrl, 'getAdvancedConfig');
 
         foreach ($res['fields'] as $f) {
@@ -42,7 +42,7 @@ class SearchCtrlTest extends BdusTestCase
 
     public function testGetAdvancedConfigIncludesExpectedFields(): void
     {
-        $ctrl    = $this->makeController('search_ctrl', ['tb' => self::TB]);
+        $ctrl    = $this->makeController('Bdus\\Controllers\\Search', ['tb' => self::TB]);
         $res     = $this->callController($ctrl, 'getAdvancedConfig');
         $values  = array_column($res['fields'], 'value');
 
@@ -53,7 +53,7 @@ class SearchCtrlTest extends BdusTestCase
 
     public function testGetAdvancedConfigOperatorsCount(): void
     {
-        $ctrl = $this->makeController('search_ctrl', ['tb' => self::TB]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Search', ['tb' => self::TB]);
         $res  = $this->callController($ctrl, 'getAdvancedConfig');
         // We define 9 operators
         $this->assertCount(9, $res['operators']);
@@ -61,7 +61,7 @@ class SearchCtrlTest extends BdusTestCase
 
     public function testGetAdvancedConfigOperatorsHaveValueAndKey(): void
     {
-        $ctrl = $this->makeController('search_ctrl', ['tb' => self::TB]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Search', ['tb' => self::TB]);
         $res  = $this->callController($ctrl, 'getAdvancedConfig');
 
         foreach ($res['operators'] as $op) {
@@ -77,7 +77,7 @@ class SearchCtrlTest extends BdusTestCase
 
     public function testGetAdvancedConfigConnectorsAreAndOrXor(): void
     {
-        $ctrl = $this->makeController('search_ctrl', ['tb' => self::TB]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Search', ['tb' => self::TB]);
         $res  = $this->callController($ctrl, 'getAdvancedConfig');
 
         // connectors are now plain strings: ['AND', 'OR', 'XOR']
@@ -88,7 +88,7 @@ class SearchCtrlTest extends BdusTestCase
 
     public function testGetAdvancedConfigMissingTbReturnsError(): void
     {
-        $ctrl = $this->makeController('search_ctrl', [/* no tb */]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Search', [/* no tb */]);
         $res  = $this->callController($ctrl, 'getAdvancedConfig');
         $this->assertSame('error', $res['status']);
     }
@@ -97,7 +97,7 @@ class SearchCtrlTest extends BdusTestCase
 
     public function testGetUsedValuesReturnsArray(): void
     {
-        $ctrl = $this->makeController('search_ctrl', [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Search', [
             'tb'  => self::TB,
             'fld' => 'status',
         ]);
@@ -118,7 +118,7 @@ class SearchCtrlTest extends BdusTestCase
     public function testQueryTesterSuccessOnValidQuery(): void
     {
         $ctrl = $this->makeController(
-            'search_ctrl',
+            'Bdus\\Controllers\\Search',
             ['tb' => self::TB],
             ['type' => 'all', 'tb' => self::TB]
         );

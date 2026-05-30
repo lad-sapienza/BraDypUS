@@ -13,7 +13,7 @@ class DebugCtrlTest extends BdusTestCase
 
     public function testGetLogsReturnsExpectedShape(): void
     {
-        $ctrl = $this->makeController('debug_ctrl', ['page' => 1, 'per_page' => 50]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Debug', ['page' => 1, 'per_page' => 50]);
         $res  = $this->callController($ctrl, 'getLogs');
 
         $this->assertArrayHasKey('total', $res);
@@ -23,7 +23,7 @@ class DebugCtrlTest extends BdusTestCase
 
     public function testGetLogsRowHasRequiredKeys(): void
     {
-        $ctrl = $this->makeController('debug_ctrl', ['page' => 1, 'per_page' => 50]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Debug', ['page' => 1, 'per_page' => 50]);
         $res  = $this->callController($ctrl, 'getLogs');
 
         $row = $res['data'][0];
@@ -34,7 +34,7 @@ class DebugCtrlTest extends BdusTestCase
 
     public function testGetLogsLevelNameIsMapped(): void
     {
-        $ctrl = $this->makeController('debug_ctrl', ['page' => 1, 'per_page' => 50]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Debug', ['page' => 1, 'per_page' => 50]);
         $res  = $this->callController($ctrl, 'getLogs');
 
         $byLevel = array_column($res['data'], 'level_name', 'level');
@@ -44,7 +44,7 @@ class DebugCtrlTest extends BdusTestCase
 
     public function testGetLogsFilterByLevel(): void
     {
-        $ctrl = $this->makeController('debug_ctrl', ['page' => 1, 'per_page' => 50, 'level' => 400]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Debug', ['page' => 1, 'per_page' => 50, 'level' => 400]);
         $res  = $this->callController($ctrl, 'getLogs');
 
         $this->assertSame(1, $res['total']);
@@ -53,7 +53,7 @@ class DebugCtrlTest extends BdusTestCase
 
     public function testGetLogsFilterBySearch(): void
     {
-        $ctrl = $this->makeController('debug_ctrl', ['page' => 1, 'per_page' => 50, 'search' => 'Error']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Debug', ['page' => 1, 'per_page' => 50, 'search' => 'Error']);
         $res  = $this->callController($ctrl, 'getLogs');
 
         $this->assertSame(1, $res['total']);
@@ -62,7 +62,7 @@ class DebugCtrlTest extends BdusTestCase
 
     public function testGetLogsNewestFirst(): void
     {
-        $ctrl = $this->makeController('debug_ctrl', ['page' => 1, 'per_page' => 50]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Debug', ['page' => 1, 'per_page' => 50]);
         $res  = $this->callController($ctrl, 'getLogs');
 
         $ids = array_column($res['data'], 'id');
@@ -71,7 +71,7 @@ class DebugCtrlTest extends BdusTestCase
 
     public function testGetLogsPagination(): void
     {
-        $ctrl = $this->makeController('debug_ctrl', ['page' => 1, 'per_page' => 1]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Debug', ['page' => 1, 'per_page' => 1]);
         $res  = $this->callController($ctrl, 'getLogs');
 
         $this->assertSame(2, $res['total']); // total unchanged
@@ -83,7 +83,7 @@ class DebugCtrlTest extends BdusTestCase
     public function testPurgeLogsDeletesOldEntries(): void
     {
         // The seeded INFO entry is 3600s old — purge entries older than 30 min
-        $ctrl = $this->makeController('debug_ctrl', [], ['days' => 0]); // 0 days = all before now
+        $ctrl = $this->makeController('Bdus\\Controllers\\Debug', [], ['days' => 0]); // 0 days = all before now
         // Note: days is clamped to min 1 inside purgeLogs(), so use a short period
         // Instead: seed a very old entry and purge it
         static::$db->execInTransaction(
@@ -92,7 +92,7 @@ class DebugCtrlTest extends BdusTestCase
         );
 
         // Purge entries older than 5 days
-        $ctrl = $this->makeController('debug_ctrl', [], ['days' => 5]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Debug', [], ['days' => 5]);
         $res  = $this->callController($ctrl, 'purgeLogs');
 
         $this->assertSame('success', $res['status']);

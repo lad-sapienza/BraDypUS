@@ -38,7 +38,7 @@ class RecordCtrlFieldOptionsTest extends BdusTestCase
 
     public function testGetFieldOptionsMissingTbReturnsError(): void
     {
-        $ctrl = $this->makeController('record_ctrl', ['fld' => 'lang_code']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['fld' => 'lang_code']);
         $res  = $this->callController($ctrl, 'getFieldOptions');
 
         $this->assertSame('error',             $res['status']);
@@ -47,7 +47,7 @@ class RecordCtrlFieldOptionsTest extends BdusTestCase
 
     public function testGetFieldOptionsMissingFldReturnsError(): void
     {
-        $ctrl = $this->makeController('record_ctrl', ['tb' => self::TB]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB]);
         $res  = $this->callController($ctrl, 'getFieldOptions');
 
         $this->assertSame('error',             $res['status']);
@@ -62,7 +62,7 @@ class RecordCtrlFieldOptionsTest extends BdusTestCase
      */
     public function testGetFieldOptionsResponseShapeHasOptionsKey(): void
     {
-        $ctrl = $this->makeController('record_ctrl', [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [
             'tb'  => self::TB,
             'fld' => 'lang_code',   // dic field: ['en','fr','de']
         ]);
@@ -91,7 +91,7 @@ class RecordCtrlFieldOptionsTest extends BdusTestCase
      */
     public function testGetFieldOptionsStaticDicReturnsCorrectValues(): void
     {
-        $ctrl = $this->makeController('record_ctrl', [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [
             'tb'  => self::TB,
             'fld' => 'lang_code',
         ]);
@@ -112,7 +112,7 @@ class RecordCtrlFieldOptionsTest extends BdusTestCase
      */
     public function testGetFieldOptionsStaticDicReturnsOnlyThatFieldsOptions(): void
     {
-        $ctrl = $this->makeController('record_ctrl', [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [
             'tb'  => self::TB,
             'fld' => 'lang_code',
         ]);
@@ -124,7 +124,7 @@ class RecordCtrlFieldOptionsTest extends BdusTestCase
 
     public function testGetFieldOptionsEachOptionHasValueAndLabel(): void
     {
-        $ctrl = $this->makeController('record_ctrl', [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [
             'tb'  => self::TB,
             'fld' => 'lang_code',
         ]);
@@ -145,7 +145,7 @@ class RecordCtrlFieldOptionsTest extends BdusTestCase
      */
     public function testGetFieldOptionsVocabularyReturnsCorrectValues(): void
     {
-        $ctrl = $this->makeController('record_ctrl', [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [
             'tb'  => self::TB,
             'fld' => 'category',   // vocabulary_set: "test_cat"
         ]);
@@ -170,7 +170,7 @@ class RecordCtrlFieldOptionsTest extends BdusTestCase
      */
     public function testGetFieldOptionsVocabularyDoesNotReturnOtherSets(): void
     {
-        $ctrl = $this->makeController('record_ctrl', [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [
             'tb'  => self::TB,
             'fld' => 'category',
         ]);
@@ -186,7 +186,7 @@ class RecordCtrlFieldOptionsTest extends BdusTestCase
 
     public function testGetFieldOptionsUnknownTableReturnsEmptyOptions(): void
     {
-        $ctrl = $this->makeController('record_ctrl', [
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [
             'tb'  => 'nonexistent_table',
             'fld' => 'lang_code',
         ]);

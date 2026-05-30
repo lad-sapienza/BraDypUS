@@ -53,7 +53,7 @@ class ConfigCtrlTest extends BdusTestCase
 
     public function testGetTableListReturnsSuccess(): void
     {
-        $ctrl = $this->makeController('config_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config');
         $res  = $this->callController($ctrl, 'getTableList');
 
         $this->assertSame('success', $res['status']);
@@ -62,7 +62,7 @@ class ConfigCtrlTest extends BdusTestCase
 
     public function testGetTableListContainsFixtureTables(): void
     {
-        $ctrl  = $this->makeController('config_ctrl');
+        $ctrl  = $this->makeController('Bdus\\Controllers\\Config');
         $res   = $this->callController($ctrl, 'getTableList');
         $names = array_column($res['tables'], 'name');
 
@@ -72,7 +72,7 @@ class ConfigCtrlTest extends BdusTestCase
 
     public function testGetTableListItemsHaveRequiredKeys(): void
     {
-        $ctrl = $this->makeController('config_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config');
         $res  = $this->callController($ctrl, 'getTableList');
 
         foreach ($res['tables'] as $table) {
@@ -84,7 +84,7 @@ class ConfigCtrlTest extends BdusTestCase
 
     public function testGetTableListMarksPluginCorrectly(): void
     {
-        $ctrl   = $this->makeController('config_ctrl');
+        $ctrl   = $this->makeController('Bdus\\Controllers\\Config');
         $res    = $this->callController($ctrl, 'getTableList');
         $byName = array_column($res['tables'], null, 'name');
 
@@ -96,7 +96,7 @@ class ConfigCtrlTest extends BdusTestCase
     public function testGetTableListRequiresSuperAdmin(): void
     {
         $this->setPrivilege(11);
-        $ctrl = $this->makeController('config_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config');
         $res  = $this->callController($ctrl, 'getTableList');
         $this->setPrivilege(1);
 
@@ -108,7 +108,7 @@ class ConfigCtrlTest extends BdusTestCase
 
     public function testGetAppPropertiesReturnsSuccess(): void
     {
-        $ctrl = $this->makeController('config_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config');
         $res  = $this->callController($ctrl, 'getAppProperties');
 
         $this->assertSame('success', $res['status']);
@@ -116,7 +116,7 @@ class ConfigCtrlTest extends BdusTestCase
 
     public function testGetAppPropertiesHasMainBlock(): void
     {
-        $ctrl = $this->makeController('config_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config');
         $res  = $this->callController($ctrl, 'getAppProperties');
 
         $this->assertArrayHasKey('main', $res);
@@ -126,7 +126,7 @@ class ConfigCtrlTest extends BdusTestCase
 
     public function testGetAppPropertiesHasDbEngines(): void
     {
-        $ctrl = $this->makeController('config_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config');
         $res  = $this->callController($ctrl, 'getAppProperties');
 
         $this->assertContains('sqlite', $res['db_engines']);
@@ -136,7 +136,7 @@ class ConfigCtrlTest extends BdusTestCase
 
     public function testGetAppPropertiesHasStatusOptions(): void
     {
-        $ctrl = $this->makeController('config_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config');
         $res  = $this->callController($ctrl, 'getAppProperties');
 
         $this->assertContains('on',     $res['status_options']);
@@ -148,7 +148,7 @@ class ConfigCtrlTest extends BdusTestCase
     {
         // langs was removed from the backend response in v5: the frontend
         // owns the list of available locales (vue/src/i18n/index.js).
-        $ctrl = $this->makeController('config_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config');
         $res  = $this->callController($ctrl, 'getAppProperties');
 
         $this->assertArrayNotHasKey('langs', $res);
@@ -157,7 +157,7 @@ class ConfigCtrlTest extends BdusTestCase
     public function testGetAppPropertiesRequiresSuperAdmin(): void
     {
         $this->setPrivilege(11);
-        $ctrl = $this->makeController('config_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config');
         $res  = $this->callController($ctrl, 'getAppProperties');
         $this->setPrivilege(1);
 
@@ -169,7 +169,7 @@ class ConfigCtrlTest extends BdusTestCase
 
     public function testGetTableConfigReturnsSuccess(): void
     {
-        $ctrl = $this->makeController('config_ctrl', ['tb' => self::TB]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config', ['tb' => self::TB]);
         $res  = $this->callController($ctrl, 'getTableConfig');
 
         $this->assertSame('success', $res['status']);
@@ -177,7 +177,7 @@ class ConfigCtrlTest extends BdusTestCase
 
     public function testGetTableConfigReturnsTableData(): void
     {
-        $ctrl = $this->makeController('config_ctrl', ['tb' => self::TB]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config', ['tb' => self::TB]);
         $res  = $this->callController($ctrl, 'getTableConfig');
 
         $this->assertSame(self::TB,  $res['table']['name']);
@@ -186,7 +186,7 @@ class ConfigCtrlTest extends BdusTestCase
 
     public function testGetTableConfigHasRequiredResponseKeys(): void
     {
-        $ctrl = $this->makeController('config_ctrl', ['tb' => self::TB]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config', ['tb' => self::TB]);
         $res  = $this->callController($ctrl, 'getTableConfig');
 
         foreach (['table', 'field_labels', 'available_plugins', 'available_tables'] as $key) {
@@ -196,7 +196,7 @@ class ConfigCtrlTest extends BdusTestCase
 
     public function testGetTableConfigFieldLabelsContainFixtureFields(): void
     {
-        $ctrl = $this->makeController('config_ctrl', ['tb' => self::TB]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config', ['tb' => self::TB]);
         $res  = $this->callController($ctrl, 'getTableConfig');
 
         $this->assertArrayHasKey('name',   $res['field_labels']);
@@ -205,7 +205,7 @@ class ConfigCtrlTest extends BdusTestCase
 
     public function testGetTableConfigAvailablePluginsContainsTagsTable(): void
     {
-        $ctrl = $this->makeController('config_ctrl', ['tb' => self::TB]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config', ['tb' => self::TB]);
         $res  = $this->callController($ctrl, 'getTableConfig');
 
         // tags is a plugin table — must appear in available_plugins
@@ -214,7 +214,7 @@ class ConfigCtrlTest extends BdusTestCase
 
     public function testGetTableConfigWithoutTbReturnsDefaults(): void
     {
-        $ctrl = $this->makeController('config_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config');
         $res  = $this->callController($ctrl, 'getTableConfig');
 
         // "add new" mode: table data should have default placeholder values
@@ -226,7 +226,7 @@ class ConfigCtrlTest extends BdusTestCase
     public function testGetTableConfigRequiresSuperAdmin(): void
     {
         $this->setPrivilege(11);
-        $ctrl = $this->makeController('config_ctrl', ['tb' => self::TB]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config', ['tb' => self::TB]);
         $res  = $this->callController($ctrl, 'getTableConfig');
         $this->setPrivilege(1);
 
@@ -237,7 +237,7 @@ class ConfigCtrlTest extends BdusTestCase
 
     public function testGetFldStructureReturnsSuccess(): void
     {
-        $ctrl = $this->makeController('config_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config');
         $res  = $this->callController($ctrl, 'getFldStructure');
 
         $this->assertSame('success', $res['status']);
@@ -247,7 +247,7 @@ class ConfigCtrlTest extends BdusTestCase
 
     public function testGetFldStructureContainsAllSchemaProperties(): void
     {
-        $ctrl = $this->makeController('config_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config');
         $res  = $this->callController($ctrl, 'getFldStructure');
         $keys = array_keys($res['structure']);
 
@@ -258,7 +258,7 @@ class ConfigCtrlTest extends BdusTestCase
 
     public function testGetFldStructureTypePropertyHasCorrectValues(): void
     {
-        $ctrl = $this->makeController('config_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config');
         $res  = $this->callController($ctrl, 'getFldStructure');
 
         $typeValues = $res['structure']['type']['values'];
@@ -269,7 +269,7 @@ class ConfigCtrlTest extends BdusTestCase
 
     public function testGetFldStructureIdFromTbContainsConfiguredTables(): void
     {
-        $ctrl = $this->makeController('config_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config');
         $res  = $this->callController($ctrl, 'getFldStructure');
 
         // id_from_tb values should include at least the fixture tables
@@ -280,7 +280,7 @@ class ConfigCtrlTest extends BdusTestCase
     public function testGetFldStructureRequiresSuperAdmin(): void
     {
         $this->setPrivilege(11);
-        $ctrl = $this->makeController('config_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config');
         $res  = $this->callController($ctrl, 'getFldStructure');
         $this->setPrivilege(1);
 
@@ -291,7 +291,7 @@ class ConfigCtrlTest extends BdusTestCase
 
     public function testGetFldConfigReturnsSuccess(): void
     {
-        $ctrl = $this->makeController('config_ctrl', ['tb' => self::TB, 'fld' => self::FLD]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config', ['tb' => self::TB, 'fld' => self::FLD]);
         $res  = $this->callController($ctrl, 'getFldConfig');
 
         $this->assertSame('success', $res['status']);
@@ -299,7 +299,7 @@ class ConfigCtrlTest extends BdusTestCase
 
     public function testGetFldConfigReturnsFieldData(): void
     {
-        $ctrl = $this->makeController('config_ctrl', ['tb' => self::TB, 'fld' => self::FLD]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config', ['tb' => self::TB, 'fld' => self::FLD]);
         $res  = $this->callController($ctrl, 'getFldConfig');
 
         $this->assertSame(self::FLD, $res['field']['name']);
@@ -309,7 +309,7 @@ class ConfigCtrlTest extends BdusTestCase
 
     public function testGetFldConfigReturnsStructure(): void
     {
-        $ctrl = $this->makeController('config_ctrl', ['tb' => self::TB, 'fld' => self::FLD]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config', ['tb' => self::TB, 'fld' => self::FLD]);
         $res  = $this->callController($ctrl, 'getFldConfig');
 
         $this->assertIsArray($res['structure']);
@@ -319,7 +319,7 @@ class ConfigCtrlTest extends BdusTestCase
 
     public function testGetFldConfigWithNoFldReturnsEmptyField(): void
     {
-        $ctrl = $this->makeController('config_ctrl', ['tb' => self::TB]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config', ['tb' => self::TB]);
         $res  = $this->callController($ctrl, 'getFldConfig');
 
         $this->assertSame('success', $res['status']);
@@ -328,7 +328,7 @@ class ConfigCtrlTest extends BdusTestCase
 
     public function testGetFldConfigWithNoTbNoFldReturnsEmpty(): void
     {
-        $ctrl = $this->makeController('config_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config');
         $res  = $this->callController($ctrl, 'getFldConfig');
 
         $this->assertSame('success', $res['status']);
@@ -338,7 +338,7 @@ class ConfigCtrlTest extends BdusTestCase
     public function testGetFldConfigRequiresSuperAdmin(): void
     {
         $this->setPrivilege(11);
-        $ctrl = $this->makeController('config_ctrl', ['tb' => self::TB, 'fld' => self::FLD]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config', ['tb' => self::TB, 'fld' => self::FLD]);
         $res  = $this->callController($ctrl, 'getFldConfig');
         $this->setPrivilege(1);
 
@@ -349,7 +349,7 @@ class ConfigCtrlTest extends BdusTestCase
 
     public function testGetGeoFaceConfigReturnsSuccess(): void
     {
-        $ctrl = $this->makeController('config_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config');
         $res  = $this->callController($ctrl, 'getGeoFaceConfig');
 
         $this->assertSame('success', $res['status']);
@@ -357,7 +357,7 @@ class ConfigCtrlTest extends BdusTestCase
 
     public function testGetGeoFaceConfigReturnsLayers(): void
     {
-        $ctrl = $this->makeController('config_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config');
         $res  = $this->callController($ctrl, 'getGeoFaceConfig');
 
         $this->assertIsArray($res['layers']);
@@ -368,7 +368,7 @@ class ConfigCtrlTest extends BdusTestCase
 
     public function testGetGeoFaceConfigReturnsLocalFiles(): void
     {
-        $ctrl = $this->makeController('config_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config');
         $res  = $this->callController($ctrl, 'getGeoFaceConfig');
 
         $this->assertIsArray($res['local_files']);
@@ -382,7 +382,7 @@ class ConfigCtrlTest extends BdusTestCase
         // Temporarily hide the index file
         rename(PROJ_DIR . 'geodata/index.json', PROJ_DIR . 'geodata/index.json.bak');
 
-        $ctrl = $this->makeController('config_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config');
         $res  = $this->callController($ctrl, 'getGeoFaceConfig');
 
         rename(PROJ_DIR . 'geodata/index.json.bak', PROJ_DIR . 'geodata/index.json');
@@ -394,7 +394,7 @@ class ConfigCtrlTest extends BdusTestCase
     public function testGetGeoFaceConfigRequiresSuperAdmin(): void
     {
         $this->setPrivilege(11);
-        $ctrl = $this->makeController('config_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config');
         $res  = $this->callController($ctrl, 'getGeoFaceConfig');
         $this->setPrivilege(1);
 
@@ -405,7 +405,7 @@ class ConfigCtrlTest extends BdusTestCase
 
     public function testGetValidationReportReturnsSuccess(): void
     {
-        $ctrl = $this->makeController('config_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config');
         $res  = $this->callController($ctrl, 'getValidationReport');
 
         $this->assertSame('success', $res['status']);
@@ -415,7 +415,7 @@ class ConfigCtrlTest extends BdusTestCase
 
     public function testGetValidationReportItemsHaveRequiredKeys(): void
     {
-        $ctrl = $this->makeController('config_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config');
         $res  = $this->callController($ctrl, 'getValidationReport');
 
         foreach ($res['report'] as $item) {
@@ -426,7 +426,7 @@ class ConfigCtrlTest extends BdusTestCase
 
     public function testGetValidationReportStatusValuesAreValid(): void
     {
-        $ctrl    = $this->makeController('config_ctrl');
+        $ctrl    = $this->makeController('Bdus\\Controllers\\Config');
         $res     = $this->callController($ctrl, 'getValidationReport');
         $allowed = ['success', 'info', 'warning', 'danger', 'head'];
 
@@ -441,7 +441,7 @@ class ConfigCtrlTest extends BdusTestCase
 
     public function testGetValidationReportContainsHeadItems(): void
     {
-        $ctrl     = $this->makeController('config_ctrl');
+        $ctrl     = $this->makeController('Bdus\\Controllers\\Config');
         $res      = $this->callController($ctrl, 'getValidationReport');
         $statuses = array_column($res['report'], 'status');
 
@@ -451,7 +451,7 @@ class ConfigCtrlTest extends BdusTestCase
 
     public function testGetValidationReportFixItemsHaveCorrectShape(): void
     {
-        $ctrl = $this->makeController('config_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config');
         $res  = $this->callController($ctrl, 'getValidationReport');
 
         foreach ($res['report'] as $item) {
@@ -469,7 +469,7 @@ class ConfigCtrlTest extends BdusTestCase
     public function testGetValidationReportRequiresSuperAdmin(): void
     {
         $this->setPrivilege(11);
-        $ctrl = $this->makeController('config_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config');
         $res  = $this->callController($ctrl, 'getValidationReport');
         $this->setPrivilege(1);
 

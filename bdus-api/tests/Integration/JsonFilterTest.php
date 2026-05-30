@@ -306,7 +306,7 @@ class JsonFilterTest extends BdusTestCase
 
     public function testApiGetFilterEq(): void
     {
-        $ctrl = $this->makeController('record_ctrl',
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record',
             $this->get(['filter' => ['status' => ['_eq' => 'active']]])
         );
         $res = $this->callController($ctrl, 'getRecords');
@@ -320,7 +320,7 @@ class JsonFilterTest extends BdusTestCase
 
     public function testApiGetFilterIcontains(): void
     {
-        $ctrl = $this->makeController('record_ctrl',
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record',
             $this->get(['filter' => ['name' => ['_icontains' => 'item']]])
         );
         $res = $this->callController($ctrl, 'getRecords');
@@ -331,7 +331,7 @@ class JsonFilterTest extends BdusTestCase
 
     public function testApiGetFilterIn(): void
     {
-        $ctrl = $this->makeController('record_ctrl',
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record',
             $this->get(['filter' => ['status' => ['_in' => ['active', 'pending']]]])
         );
         $res = $this->callController($ctrl, 'getRecords');
@@ -342,7 +342,7 @@ class JsonFilterTest extends BdusTestCase
 
     public function testApiGetFilterImplicitAnd(): void
     {
-        $ctrl = $this->makeController('record_ctrl',
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record',
             $this->get(['filter' => [
                 'status' => ['_eq'        => 'active'],
                 'name'   => ['_icontains' => 'Alpha' ],
@@ -356,7 +356,7 @@ class JsonFilterTest extends BdusTestCase
 
     public function testApiGetFilterEmptyReturnsAll(): void
     {
-        $ctrl = $this->makeController('record_ctrl', $this->get());
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', $this->get());
         $res  = $this->callController($ctrl, 'getRecords');
 
         $this->assertSame('success', $res['status']);
@@ -365,7 +365,7 @@ class JsonFilterTest extends BdusTestCase
 
     public function testApiGetFilterUnknownFieldReturnsError(): void
     {
-        $ctrl = $this->makeController('record_ctrl',
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record',
             $this->get(['filter' => ['nonexistent' => ['_eq' => 'x']]])
         );
         $res = $this->callController($ctrl, 'getRecords');
@@ -376,7 +376,7 @@ class JsonFilterTest extends BdusTestCase
     public function testApiQFieldnameStillWorks(): void
     {
         // q_fieldname=value shortcut now uses the filter type internally
-        $ctrl = $this->makeController('record_ctrl',
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record',
             $this->get(['q_status' => 'active'])
         );
         $res = $this->callController($ctrl, 'getRecords');

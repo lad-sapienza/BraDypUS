@@ -19,7 +19,7 @@ class VocabulariesCtrlTest extends BdusTestCase
 
     public function testListReturnsSuccess(): void
     {
-        $ctrl = $this->makeController('vocabularies_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Vocabularies');
         $res  = $this->callController($ctrl, 'list');
 
         $this->assertSame('success', $res['status']);
@@ -29,7 +29,7 @@ class VocabulariesCtrlTest extends BdusTestCase
 
     public function testListGroupsByVocName(): void
     {
-        $ctrl = $this->makeController('vocabularies_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Vocabularies');
         $res  = $this->callController($ctrl, 'list');
 
         $names = array_column($res['vocs'], 'name');
@@ -39,7 +39,7 @@ class VocabulariesCtrlTest extends BdusTestCase
 
     public function testListItemsHaveCorrectShape(): void
     {
-        $ctrl = $this->makeController('vocabularies_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Vocabularies');
         $res  = $this->callController($ctrl, 'list');
 
         // Find the test_cat group
@@ -64,7 +64,7 @@ class VocabulariesCtrlTest extends BdusTestCase
 
     public function testListOrderedBySortWithinVoc(): void
     {
-        $ctrl = $this->makeController('vocabularies_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Vocabularies');
         $res  = $this->callController($ctrl, 'list');
 
         $group = null;
@@ -84,7 +84,7 @@ class VocabulariesCtrlTest extends BdusTestCase
 
     public function testAddEntrySuccess(): void
     {
-        $ctrl = $this->makeController('vocabularies_ctrl', ['voc' => 'test_cat', 'def' => 'Cat-D']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Vocabularies', ['voc' => 'test_cat', 'def' => 'Cat-D']);
         $res  = $this->callController($ctrl, 'add');
 
         $this->assertSame('success',     $res['status']);
@@ -93,10 +93,10 @@ class VocabulariesCtrlTest extends BdusTestCase
 
     public function testAddedEntryAppearsInList(): void
     {
-        $ctrl = $this->makeController('vocabularies_ctrl', ['voc' => 'new_set', 'def' => 'New-One']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Vocabularies', ['voc' => 'new_set', 'def' => 'New-One']);
         $this->callController($ctrl, 'add');
 
-        $ctrl = $this->makeController('vocabularies_ctrl');
+        $ctrl = $this->makeController('Bdus\\Controllers\\Vocabularies');
         $res  = $this->callController($ctrl, 'list');
 
         $names = array_column($res['vocs'], 'name');
@@ -108,7 +108,7 @@ class VocabulariesCtrlTest extends BdusTestCase
     public function testEditEntrySuccess(): void
     {
         // First, get an existing id from the seed (test_cat / Cat-A)
-        $listCtrl = $this->makeController('vocabularies_ctrl');
+        $listCtrl = $this->makeController('Bdus\\Controllers\\Vocabularies');
         $list     = $this->callController($listCtrl, 'list');
 
         $id = null;
@@ -120,7 +120,7 @@ class VocabulariesCtrlTest extends BdusTestCase
         }
         $this->assertNotNull($id, 'seed item not found');
 
-        $ctrl = $this->makeController('vocabularies_ctrl', ['id' => $id, 'val' => 'Cat-A-Edited']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Vocabularies', ['id' => $id, 'val' => 'Cat-A-Edited']);
         $res  = $this->callController($ctrl, 'edit');
 
         $this->assertSame('success',       $res['status']);
@@ -130,7 +130,7 @@ class VocabulariesCtrlTest extends BdusTestCase
     public function testEditedValuePersisted(): void
     {
         // Get id of first test_cat entry
-        $listCtrl = $this->makeController('vocabularies_ctrl');
+        $listCtrl = $this->makeController('Bdus\\Controllers\\Vocabularies');
         $list     = $this->callController($listCtrl, 'list');
 
         $id = null;
@@ -142,11 +142,11 @@ class VocabulariesCtrlTest extends BdusTestCase
         }
 
         // Edit
-        $ctrl = $this->makeController('vocabularies_ctrl', ['id' => $id, 'val' => 'Modified-Value']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Vocabularies', ['id' => $id, 'val' => 'Modified-Value']);
         $this->callController($ctrl, 'edit');
 
         // Re-list and verify
-        $ctrl2  = $this->makeController('vocabularies_ctrl');
+        $ctrl2  = $this->makeController('Bdus\\Controllers\\Vocabularies');
         $list2  = $this->callController($ctrl2, 'list');
         $defs   = [];
         foreach ($list2['vocs'] as $voc) {
@@ -162,7 +162,7 @@ class VocabulariesCtrlTest extends BdusTestCase
     public function testSortViaPostSuccess(): void
     {
         // Get the ids of the test_cat entries
-        $listCtrl = $this->makeController('vocabularies_ctrl');
+        $listCtrl = $this->makeController('Bdus\\Controllers\\Vocabularies');
         $list     = $this->callController($listCtrl, 'list');
 
         $ids = [];
@@ -177,7 +177,7 @@ class VocabulariesCtrlTest extends BdusTestCase
         // Reverse the sort order via POST { ids: [id2, id1, id0] }
         $reversedIds = array_reverse($ids);
         $ctrl = $this->makeController(
-            'vocabularies_ctrl',
+            'Bdus\\Controllers\\Vocabularies',
             [],
             ['ids' => $reversedIds]
         );
@@ -190,7 +190,7 @@ class VocabulariesCtrlTest extends BdusTestCase
     public function testSortViaGetSuccess(): void
     {
         // Get ids of test_cat entries
-        $listCtrl = $this->makeController('vocabularies_ctrl');
+        $listCtrl = $this->makeController('Bdus\\Controllers\\Vocabularies');
         $list     = $this->callController($listCtrl, 'list');
 
         $ids = [];
@@ -207,7 +207,7 @@ class VocabulariesCtrlTest extends BdusTestCase
         foreach ($ids as $i => $id) {
             $sortParam[$i] = $id;
         }
-        $ctrl = $this->makeController('vocabularies_ctrl', ['sort' => $sortParam]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Vocabularies', ['sort' => $sortParam]);
         $res  = $this->callController($ctrl, 'sort');
 
         $this->assertSame('success',        $res['status']);
@@ -219,11 +219,11 @@ class VocabulariesCtrlTest extends BdusTestCase
     public function testEraseEntrySuccess(): void
     {
         // Add a temporary entry then delete it
-        $ctrl = $this->makeController('vocabularies_ctrl', ['voc' => 'tmp_set', 'def' => 'Tmp-One']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Vocabularies', ['voc' => 'tmp_set', 'def' => 'Tmp-One']);
         $this->callController($ctrl, 'add');
 
         // Find its id
-        $listCtrl = $this->makeController('vocabularies_ctrl');
+        $listCtrl = $this->makeController('Bdus\\Controllers\\Vocabularies');
         $list     = $this->callController($listCtrl, 'list');
 
         $id = null;
@@ -235,7 +235,7 @@ class VocabulariesCtrlTest extends BdusTestCase
         }
         $this->assertNotNull($id, 'tmp_set entry not found after add');
 
-        $ctrl = $this->makeController('vocabularies_ctrl', ['id' => $id]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Vocabularies', ['id' => $id]);
         $res  = $this->callController($ctrl, 'erase');
 
         $this->assertSame('success',      $res['status']);
@@ -245,10 +245,10 @@ class VocabulariesCtrlTest extends BdusTestCase
     public function testErasedEntryDisappearsFromList(): void
     {
         // Add and immediately erase
-        $ctrl = $this->makeController('vocabularies_ctrl', ['voc' => 'erase_set', 'def' => 'Erase-Me']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Vocabularies', ['voc' => 'erase_set', 'def' => 'Erase-Me']);
         $this->callController($ctrl, 'add');
 
-        $listCtrl = $this->makeController('vocabularies_ctrl');
+        $listCtrl = $this->makeController('Bdus\\Controllers\\Vocabularies');
         $list     = $this->callController($listCtrl, 'list');
 
         $id = null;
@@ -259,11 +259,11 @@ class VocabulariesCtrlTest extends BdusTestCase
         }
         $this->assertNotNull($id);
 
-        $ctrl = $this->makeController('vocabularies_ctrl', ['id' => $id]);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Vocabularies', ['id' => $id]);
         $this->callController($ctrl, 'erase');
 
         // Re-list
-        $ctrl2 = $this->makeController('vocabularies_ctrl');
+        $ctrl2 = $this->makeController('Bdus\\Controllers\\Vocabularies');
         $list2 = $this->callController($ctrl2, 'list');
         $names = array_column($list2['vocs'], 'name');
         $this->assertNotContains('erase_set', $names);

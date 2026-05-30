@@ -97,6 +97,13 @@ The PHP backend is preserved and extended with JSON endpoints consumed by the ne
   - **Field list**: split panel with field list and inline field editor
   - **Field form**: auto-generated from `fld_structure.json`; supports input, select,
     multi_select meta-types
+- **App-scoped URL routing**: every authenticated route now lives under
+  `/:app/` (e.g. `#/myapp/data`, `#/myapp/record/sites/42`). Public routes
+  (`/login`, `/oauth-callback`, `/new-app`) remain at the root. Deep links
+  are fully self-contained — the app name in the URL is the source of truth
+  for bookmarks and shared links. The navigation guard silently corrects a
+  stale or mistyped app name so the JWT always wins. After login the browser
+  navigates to `/${app}/`; the `401` handler still redirects to `/login`.
 - **Runtime primary-colour customisation** (M025): administrators can choose the
   application's primary colour palette from 8 presets (Indigo, Blue, Violet, Emerald,
   Teal, Amber, Rose, Slate) in **Config → App settings → Appearance**.

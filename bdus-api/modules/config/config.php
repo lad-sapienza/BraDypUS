@@ -43,7 +43,7 @@ class config_ctrl extends Controller
 
     try {
 
-      $post = \utils::recursiveFilter($post);
+      $post = $this->filterPost($post);
 
       // make indexed array for links and geoface
       if ($post['link']) {
@@ -89,7 +89,7 @@ class config_ctrl extends Controller
     $post = $this->post;
 
     try {
-      $post = \utils::recursiveFilter($post);
+      $post = $this->filterPost($post);
 
       if ($post['is_plugin'] === '1') {
         $missing = $this->check_required($post, ['name', 'label']);
@@ -172,7 +172,7 @@ class config_ctrl extends Controller
     if (!$this->requireSuperAdmin()) return;
     $post = $this->post;
     try {
-      $post = \utils::recursiveFilter($post);
+      $post = $this->filterPost($post);
 
       // tb and fld come from URL path params (/api/config/table/{tb}/field/{fld})
       // No POST-body fallback: the API contract requires these in the URL.
@@ -198,7 +198,7 @@ class config_ctrl extends Controller
     if (!$this->requireSuperAdmin()) return;
     $post = $this->post;
     try {
-      $post = \utils::recursiveFilter($post);
+      $post = $this->filterPost($post);
 
       $tb  = $this->get['tb'] ?? null;
       $fld = $post['name'];
@@ -903,5 +903,16 @@ class config_ctrl extends Controller
     );
 
     return json_decode($raw, true) ?? [];
+  }
+
+  /**
+   * Recursively trims string values and removes null/empty elements from an array.
+   */
+  private function filterPost(array $arr, ?callable $callback = null): array
+  {
+    foreach ($arr as &$a) {
+      $a = is_array($a) ? $this->filterPost($a, $callback) : trim($a);
+    }
+    return is_callable($callback) ? array_filter($arr, $callback) : array_filter($arr);
   }
 }

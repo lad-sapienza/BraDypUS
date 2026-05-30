@@ -119,7 +119,7 @@ class geoface_ctrl extends Controller
 
             $res = $this->db->query($sql, $userValues);
 
-            $geojson = \utils::multiArray2GeoJSON($tb, $res ?: []);
+            $geojson = $this->toGeoJSON($tb, $res ?: []);
 
             // Load custom layers from DB (or file fallback for pre-M014 apps).
             $layers = \Config\GeofaceConfig::getLayers($this->db);
@@ -297,4 +297,40 @@ class geoface_ctrl extends Controller
         }
     }
 
+    /**
+     * Converts an array of DB rows (each containing a WKT `geometry` column)
+     * to a GeoJSON FeatureCollection.
+     */
+    private function toGeoJSON(string $tb, array $rows): array
+    {
+        $geo = ['type' => 'FeatureCollection', 'features' => []];
+
+        foreach ($rows as $r) {
+            $geom = $r['geometry'] ?? $r[$tb . '.geometry'] ?? null;
+
+            if (!$geom) {
+                error_log('No valid geometry column found in row: ' . var_export($r, true));
+                continue;
+            }
+
+            try {
+                $geoPHP = \geoPHP\geoPHP::load($geom, 'wkt');
+            } catch (\Throwable $th) {
+                error_log("WKT geometry {$geom} could not be parsed: " . var_export($r, true));
+                continue;
+            }
+
+            $feat = [
+                'type'     => 'Feature',
+                'geometry' => json_decode($geoPHP->out('geojson'), true),
+            ];
+            unset($r['geometry']);
+            if ($r) {
+                $feat['properties'] = $r;
+            }
+            $geo['features'][] = $feat;
+        }
+
+        return $geo;
+    }
 }

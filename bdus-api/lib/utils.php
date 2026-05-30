@@ -5,8 +5,6 @@
  * @license AGPL-3.0; see LICENSE
  */
 
-use \geoPHP\geoPHP;
-
 class utils
 {
     /**
@@ -30,66 +28,6 @@ class utils
     public static function csv_explode(string $string, string $delimiter = ','): array
     {
         return array_filter(array_map('trim', explode($delimiter, $string)), 'strlen');
-    }
-
-    /**
-     * Recursively filters an array, trimming string values.
-     * Without a callback, removes null/empty elements.
-     * Key–value association is maintained.
-     */
-    public static function recursiveFilter(array $arr, ?callable $callback = null): array
-    {
-        foreach ($arr as &$a) {
-            if (is_array($a)) {
-                $a = self::recursiveFilter($a, $callback);
-            } else {
-                $a = trim($a);
-            }
-        }
-        return is_callable($callback) ? array_filter($arr, $callback) : array_filter($arr);
-    }
-
-    /**
-     * Converts an array of DB rows (each containing a WKT `geometry` column)
-     * to a GeoJSON FeatureCollection.
-     *
-     * @throws \Exception if $rows is not a multidimensional array
-     */
-    public static function multiArray2GeoJSON(string $tb, array $rows): array
-    {
-        $geo = ['type' => 'FeatureCollection', 'features' => []];
-
-        foreach ($rows as $r) {
-            if (!is_array($r)) {
-                throw new \Exception('Input data is not a multidimensional array');
-            }
-
-            $geom = $r['geometry'] ?? $r[$tb . '.geometry'] ?? null;
-
-            if (!$geom) {
-                error_log('No valid geometry column found in row: ' . var_export($r, true));
-                continue;
-            }
-
-            try {
-                $geoPHP = geoPHP::load($geom, 'wkt');
-            } catch (\Throwable $th) {
-                error_log("WKT geometry {$geom} could not be parsed: " . var_export($r, true));
-                continue;
-            }
-
-            $feat = [
-                'type'       => 'Feature',
-                'geometry'   => json_decode($geoPHP->out('geojson'), true),
-            ];
-            unset($r['geometry']);
-            if ($r) {
-                $feat['properties'] = $r;
-            }
-            $geo['features'][] = $feat;
-        }
-
-        return $geo;
     }
 
     /**

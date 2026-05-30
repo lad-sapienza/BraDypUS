@@ -5,8 +5,8 @@ namespace DB\Validate;
 /**
  * Filesystem security checks.
  *
- * Verifies that sensitive directories are protected from direct web access
- * via an .htaccess file.
+ * Verifies that the project root .htaccess protects config.json and
+ * .jwt_secret from direct web access.
  *
  * @copyright 2007-2025 Julian Bogdani
  * @license AGPL-3.0; see LICENSE
@@ -21,37 +21,44 @@ class Filesystem
     }
 
     /**
-     * Check that cfg/ has a deny-all .htaccess.
-     * If it is missing, write it automatically and report the fix.
+     * Check that the project root has a <Files>-based .htaccess that blocks
+     * direct web access to config.json and .jwt_secret.
+     *
+     * In v5 the sensitive configuration lives at projects/{app}/config.json
+     * (project root), not inside cfg/.  The protection is a <Files>-based
+     * .htaccess written by CreateApp::writeProjectHtaccess().
+     *
+     * If the file is missing or stale, it is rewritten automatically.
      */
     public function cfgDirProtected(): void
     {
-        $htaccess = PROJ_DIR . 'cfg/.htaccess';
+        $projDir  = rtrim(PROJ_DIR, '/');
+        $htaccess = $projDir . '/.htaccess';
 
-        if (file_exists($htaccess)) {
+        if (file_exists($htaccess) &&
+            str_contains((string) file_get_contents($htaccess), '<Files "config.json">')) {
             $this->resp->set(
                 'success',
-                'cfg/ directory has .htaccess protection'
+                'Project root .htaccess protects config.json and .jwt_secret from web access'
             );
             return;
         }
 
-        // Attempt self-healing
-        $written = \DB\System\CreateApp::writeCfgHtaccess(PROJ_DIR . 'cfg');
+        // Attempt self-healing: write (or overwrite) the project-root .htaccess.
+        $written = \DB\System\CreateApp::writeProjectHtaccess($projDir);
 
         if ($written) {
             $this->resp->set(
                 'warning',
-                'cfg/.htaccess was missing — created automatically. '
-                . 'Verify your web server honours .htaccess files.'
+                'Project root .htaccess was missing or outdated — rewritten automatically. '
+                . 'Verify that your web server honours .htaccess files.'
             );
         } else {
             $this->resp->set(
                 'danger',
-                'cfg/.htaccess is missing and could not be written automatically. '
-                . 'Create it manually to prevent web access to sensitive configuration files.',
-                'Write cfg/.htaccess',
-                ['write_cfg_htaccess']
+                'Project root .htaccess is missing and could not be written automatically. '
+                . 'Create it manually in projects/' . basename($projDir) . '/ '
+                . 'to prevent direct web access to config.json and .jwt_secret.'
             );
         }
     }

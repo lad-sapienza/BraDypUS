@@ -40,7 +40,7 @@ class DbCfgAlign
                 } else {
                     $this->resp->set(
                         'danger',
-                        "Missind db_type for column {$cfg_tb}.{$fld}"
+                        "Missing db_type for column {$cfg_tb}.{$fld}"
                     );
                 }
             }
@@ -84,7 +84,7 @@ class DbCfgAlign
                     $this->resp->set(
                         'danger',
                         "Configuration field {$tb}.{$col} is not available in database table",
-                        "Manually add {$tb}.{$col} to the database or delete it from the configuration files"
+                        "Add column {$tb}.{$col} to the database, or remove it from the configuration"
                     );
                 } else {
                     $this->resp->set(
@@ -101,8 +101,8 @@ class DbCfgAlign
                 if (!in_array($col, array_values($cfg_cols))){
                     $this->resp->set(
                         'danger',
-                        "Database column {$tb}.{$col} is not available in configuration files",
-                        "Manually remove {$tb}.{$col} from the database or add it to the configuration files"
+                        "Database column {$tb}.{$col} is not in the configuration",
+                        "Add {$tb}.{$col} to the configuration, or drop the column from the database"
                     );
                 } else {
                     $this->resp->set(

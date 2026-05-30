@@ -27,13 +27,12 @@ class Validate
         $this->resp = new Resp();
         $this->cfg = $cfg;
         /**
-         * 1. each cfg-table must have db-table: OK
-         * 2. each db-table must have cfg-table
-         * 3. foreach table:
-         *      3.1 each cfg-field must have db-column: OK
-         *      3.2 each db-column must have cfg-field: OK
-         * 4. system tables exist
-         * 5. system tables have latest structure
+         * Checks run by all():
+         * 1. Project root .htaccess protects config.json and .jwt_secret
+         * 2. App info (name, status, engine)
+         * 3. Backup tool availability
+         * 4. System tables exist and have the expected columns
+         * 5. Config ↔ DB alignment for user tables (fields, db_type)
          */
 
     }
@@ -41,7 +40,7 @@ class Validate
     public function all(): array
     {   
         $this->resp->set('head', 'Security checks');
-        (new Filesystem($this->resp))->cfgDirProtected();
+        (new Filesystem($this->resp))->cfgDirProtected(); // checks project root .htaccess (v5)
 
         $this->resp->set('head', 'Main system information');
         Info::getInfo($this->resp, $this->cfg);

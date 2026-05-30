@@ -59,9 +59,9 @@ Constructor: `new Client(string $type, string $zoteroId, ?string $apiKey)`.
 
 Default citation style: `chicago-author-date` (`Client::DEFAULT_STYLE`).
 
-### `zotero_ctrl`
+### `Bdus\Controllers\Zotero`
 
-`modules/zotero/zotero.php` — controller with inline privilege guards.
+`controllers/Zotero.php` — controller with inline privilege guards.
 
 | Route | Privilege | Description |
 |---|---|---|

@@ -5,7 +5,9 @@ title: System plugins
 # System plugins
 
 System plugins are optional modules that add domain-specific functionality on
-top of the core record management features. They are enabled per-table in Config.
+top of the core record management features. They are enabled **per-table** in
+**Config → Tables** and appear as extra panels in RecordView only for the
+tables where they are active.
 
 ## Available plugins
 
@@ -19,11 +21,21 @@ them on an interactive MapLibre GL JS map. Supports WMS, WFS and local GeoJSON/K
 Manage stratigraphic unit relationships (covers, cuts, abuts, fills, equivalence)
 and visualise them as a directed acyclic Harris Matrix graph (Cytoscape.js).
 
+### [Zotero (bibliographic citations)](/guide/system-plugins/zotero)
+
+Link records to items in online Zotero libraries and display formatted citations
+inline. Citations are cached locally; Zotero remains the authoritative source.
+
 ## Enabling a plugin
 
-Each plugin is configured at the table level in **Config → Tables**:
+Each plugin is configured at the table level in **Config → Tables** under the
+**System plugins** section:
 
-- **Geodata**: set the `geodata` property to `true` for the table.
-- **RS/Harris Matrix**: set the **RS field** to the column that holds the unit identifier.
+| Plugin | Setting |
+|---|---|
+| Geodata | Toggle **Geodata** on |
+| RS / Harris Matrix | Set the **RS field** to the column that holds the unit identifier |
+| Zotero | Toggle **Zotero** on — requires at least one Zotero library configured in Config |
 
-Once enabled, the corresponding panels appear in RecordView for all records of that table.
+Once enabled, the corresponding panel appears in RecordView for all records of
+that table.

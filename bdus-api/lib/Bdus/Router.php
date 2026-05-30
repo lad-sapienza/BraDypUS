@@ -68,6 +68,7 @@ class Router
         'Bdus\\Controllers\\Record::exportRecords'                 => 'read',
         'Bdus\\Controllers\\Record::getTemplates'                  => 'read',
         'Bdus\\Controllers\\Record::getFieldOptions'               => 'read',
+        'Bdus\\Controllers\\Record::checkUnique'                   => 'read',
         'Bdus\\Controllers\\Record::searchLinkCandidates'          => 'read',
         'Bdus\\Controllers\\Record::getRsMatrix'                   => 'read',
         'Bdus\\Controllers\\Record::getDeletedRecords'             => 'read',
@@ -246,7 +247,8 @@ class Router
             $r->addRoute('POST',            '/api/record/{tb}',               ['Bdus\\Controllers\\Record', 'saveRecord']);
             $r->addRoute('DELETE',          '/api/record/{tb}/{id:\d+}',      ['Bdus\\Controllers\\Record', 'erase']);
             $r->addRoute('GET',             '/api/record/{tb}/templates',     ['Bdus\\Controllers\\Record', 'getTemplates']);
-            $r->addRoute('GET',             '/api/record/{tb}/field-options', ['Bdus\\Controllers\\Record', 'getFieldOptions']);
+            $r->addRoute('GET',             '/api/record/{tb}/field-options',  ['Bdus\\Controllers\\Record', 'getFieldOptions']);
+            $r->addRoute('GET',             '/api/record/{tb}/check-unique',   ['Bdus\\Controllers\\Record', 'checkUnique']);
             $r->addRoute('GET',             '/api/record/{tb}/link-candidates', ['Bdus\\Controllers\\Record', 'searchLinkCandidates']);
             $r->addRoute('GET',             '/api/record/{tb}/deleted',           ['Bdus\\Controllers\\Record', 'getDeletedRecords']);
             $r->addRoute('GET',             '/api/record/{tb}/{id:\d+}/versions', ['Bdus\\Controllers\\Record', 'getVersions']);

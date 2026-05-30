@@ -161,3 +161,48 @@ Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
 jsonpath "$.total" == 2
+
+
+# ── 4l. check-unique — value does not exist → unique: true ───────────
+GET {{base_url}}/api/record/us/check-unique?field=sigla&value=ZZ999
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+jsonpath "$.unique" == true
+
+
+# ── 4m. check-unique — value exists → unique: false ──────────────────
+GET {{base_url}}/api/record/us/check-unique?field=sigla&value=US001
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+jsonpath "$.unique" == false
+
+
+# ── 4n. check-unique — same record excluded (UPDATE self) ────────────
+GET {{base_url}}/api/record/us/check-unique?field=sigla&value=US001&id={{us_id_1}}
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+jsonpath "$.unique" == true
+
+
+# ── 4o. check-unique — missing params → error ────────────────────────
+GET {{base_url}}/api/record/us/check-unique?field=sigla
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "error"
+jsonpath "$.code"   == "parameter_missing"
+
+
+# ── 4p. check-unique — unknown field → error ─────────────────────────
+GET {{base_url}}/api/record/us/check-unique?field=nonexistent&value=x
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "error"
+jsonpath "$.code"   == "field_not_found"

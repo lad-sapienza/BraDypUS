@@ -1067,6 +1067,57 @@ paths:
                             label:
                               type: string
 
+  /api/record/{tb}/check-unique:
+    get:
+      tags: [records]
+      summary: Check whether a field value is unique in the table
+      description: |
+        Used by the frontend for live `no_dupl` validation (debounced, 600 ms).
+        When `id` is provided the current record is excluded from the count so
+        that updating a field with its existing value does not report a conflict.
+        The `field` name is validated against the table config to prevent
+        column-injection probing.
+      parameters:
+        - $ref: '#/components/parameters/tb'
+        - name: field
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Name of the field to check
+        - name: value
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Value to test for uniqueness
+        - name: id
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: Current record id — excluded from the uniqueness count (UPDATE scenario)
+      responses:
+        '200':
+          description: Uniqueness result
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      unique:
+                        type: boolean
+                        description: true if no other row has this value in the column
+              examples:
+                unique:
+                  value: { status: success, unique: true }
+                duplicate:
+                  value: { status: success, unique: false }
+      security:
+        - bearerAuth: []
+
   /api/record/{tb}/link-candidates:
     get:
       tags: [records]

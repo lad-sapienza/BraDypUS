@@ -360,6 +360,53 @@ class Record extends \Bdus\Controller
   }
 
   /**
+   * Checks whether a field value is unique in its table.
+   * Used for live `no_dupl` validation in the frontend before save.
+   *
+   * GET /api/record/{tb}/check-unique?field=FIELD&value=VALUE[&id=RECORD_ID]
+   *
+   * Response: { unique: bool }
+   */
+  public function checkUnique(): void
+  {
+    if (!\Auth\Authorization::can('read')) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+      return;
+    }
+
+    $tb    = $this->get['tb']    ?? null;
+    $field = $this->get['field'] ?? null;
+    $value = $this->get['value'] ?? null;
+    $id    = isset($this->get['id']) ? (int) $this->get['id'] : null;
+
+    if (!$tb || !$field || $value === null) {
+      $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
+      return;
+    }
+
+    // Validate field belongs to this table (prevents column-injection probing).
+    $knownFields = array_column($this->cfg->get("tables.{$tb}.fields") ?: [], 'name');
+    if (!in_array($field, $knownFields, true)) {
+      $this->returnJson(['status' => 'error', 'code' => 'field_not_found']);
+      return;
+    }
+
+    try {
+      $sql    = "SELECT COUNT(*) AS c FROM {$tb} WHERE {$field} = ?";
+      $params = [$value];
+      if ($id) {
+        $sql    .= ' AND id != ?';
+        $params[] = $id;
+      }
+      $count = (int) ($this->db->query($sql, $params, 'read')[0]['c'] ?? 0);
+      $this->returnJson(['status' => 'success', 'unique' => $count === 0]);
+    } catch (\Throwable $e) {
+      $this->log->error($e);
+      $this->returnJson(['status' => 'error', 'code' => 'db_error']);
+    }
+  }
+
+  /**
    * Returns available template names for a given table.
    *
    * GET ?obj=record_ctrl&method=getTemplates&tb=TABLE

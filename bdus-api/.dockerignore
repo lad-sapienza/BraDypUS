@@ -6,4 +6,5 @@ dist/vue
 cache/
 sessions/
 logs/
+projects/
 .DS_Store

@@ -11,7 +11,7 @@
       <div class="link-group-label">{{ group.tb_label }}</div>
       <ul class="links-list">
         <li v-for="ml in group.items" :key="ml.key" class="link-item">
-          <router-link :to="`/record/${ml.tb_id}/${ml.ref_id}`" class="link-ref">
+          <router-link :to="`/${route.params.app}/record/${ml.tb_id}/${ml.ref_id}`" class="link-ref">
             {{ ml.ref_label }}
           </router-link>
           <button
@@ -75,6 +75,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { useRoute }  from 'vue-router'
 import Button      from 'primevue/button'
 import Select      from 'primevue/select'
 import AutoComplete from 'primevue/autocomplete'
@@ -83,6 +84,7 @@ import { api }      from '@/api'
 import { useI18n }  from '@/i18n'
 import { useTables } from '@/composables/useTables'
 
+const route     = useRoute()
 const { t }     = useI18n()
 const toast     = useToast()
 const { tables } = useTables()

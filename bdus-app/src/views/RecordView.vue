@@ -182,13 +182,13 @@
         <legend>{{ t('linked_records') }}</legend>
         <ul class="links-list">
           <li v-for="(link, linkTb) in record.links" :key="linkTb">
-            <router-link :to="`/data?tb=${linkTb}&filter=${encodeURIComponent(JSON.stringify(link.filter))}`">
+            <router-link :to="`/${route.params.app}/data?tb=${linkTb}&filter=${encodeURIComponent(JSON.stringify(link.filter))}`">
               {{ link.tb_label }}
               <Tag :value="String(link.tot)" severity="secondary" rounded />
             </router-link>
           </li>
           <li v-for="(bl, blTb) in record.backlinks" :key="'bl_' + blTb">
-            <router-link :to="`/data?tb=${bl.tb_id}&filter=${encodeURIComponent(JSON.stringify(bl.filter))}`">
+            <router-link :to="`/${route.params.app}/data?tb=${bl.tb_id}&filter=${encodeURIComponent(JSON.stringify(bl.filter))}`">
               ← {{ bl.tb_label }}
               <Tag :value="String(bl.tot)" severity="secondary" rounded />
             </router-link>
@@ -302,7 +302,7 @@ const isNew = computed(() => !id.value)
 const backTarget = computed(() => {
   const back = route.query.back
   if (back) return back
-  return `/data?tb=${tb.value}`
+  return `/${route.params.app}/data?tb=${tb.value}`
 })
 
 // ── State ────────────────────────────────────────────────────────
@@ -641,7 +641,7 @@ async function saveRecord() {
 
     // If this was a new record, navigate to the saved record
     if (!id.value && res.id) {
-      router.replace(`/record/${tb.value}/${res.id}`)
+      router.replace(`/${route.params.app}/record/${tb.value}/${res.id}`)
     } else {
       // Reload to reflect server-side computed values
       await fetchRecord()

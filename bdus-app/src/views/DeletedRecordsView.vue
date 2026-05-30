@@ -233,7 +233,7 @@ async function doRestore() {
       summary:  t('deleted_restored_nav_title'),
       detail:   t('deleted_restored_nav_msg'),
       life:     6000,
-      onClick:  () => router.push(`/record/${selectedTb.value}/${restoreTarget.value.rowid}`),
+      onClick:  () => router.push(`/${route.params.app}/record/${selectedTb.value}/${restoreTarget.value.rowid}`),
     })
   } catch (e) {
     toast.add({ severity: 'error', summary: t('generic_error'), detail: e.message, life: 5000 })

@@ -224,7 +224,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { useRouter }  from 'vue-router'
+import { useRoute, useRouter }  from 'vue-router'
 import { useToast }   from 'primevue/usetoast'
 import Select         from 'primevue/select'
 import InputText      from 'primevue/inputtext'
@@ -235,6 +235,7 @@ import { REL_KEYS, buildRelationOptions } from '@/composables/useRsRelations'
 
 const { t }  = useI18n()
 const toast  = useToast()
+const route  = useRoute()
 const router = useRouter()
 
 const props = defineProps({
@@ -268,7 +269,7 @@ const selfId = computed(() => {
 function openMatrix() {
   if (!selfId.value) return
   router.push({
-    path:  `/matrix/${encodeURIComponent(props.tb)}`,
+    path:  `/${route.params.app}/matrix/${encodeURIComponent(props.tb)}`,
     query: {
       filter:    JSON.stringify({ [props.schema.rs_field]: { _eq: selfId.value } }),
       highlight: String(selfId.value),

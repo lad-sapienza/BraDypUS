@@ -2,11 +2,7 @@ import { createRouter, createWebHashHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
 const routes = [
-  {
-    path: '/',
-    component: () => import('@/views/HomeView.vue'),
-    meta: { requiresAuth: true }
-  },
+  // ── Public routes — no app prefix, no auth required ───────────────────────
   {
     path: '/login',
     component: () => import('@/views/LoginView.vue')
@@ -14,100 +10,105 @@ const routes = [
   {
     path: '/oauth-callback',
     component: () => import('@/views/OAuthCallbackView.vue')
-    // no requiresAuth — this is the landing page after the provider redirect
   },
   {
     path: '/new-app',
     component: () => import('@/views/NewAppView.vue')
-    // no requiresAuth — public route, no JWT needed
+  },
+
+  // ── App routes — all under /:app ───────────────────────────────────────────
+  {
+    path: '/:app',
+    component: () => import('@/views/HomeView.vue'),
+    meta: { requiresAuth: true }
   },
   {
-    path: '/users',
+    path: '/:app/users',
     component: () => import('@/views/UsersView.vue'),
     meta: { requiresAuth: true }
   },
   {
-    path: '/vocabularies',
+    path: '/:app/vocabularies',
     component: () => import('@/views/VocabulariesView.vue'),
     meta: { requiresAuth: true }
   },
   {
-    path: '/data',
+    path: '/:app/data',
     component: () => import('@/views/DataView.vue'),
     meta: { requiresAuth: true }
   },
   {
-    path: '/log',
+    path: '/:app/log',
     component: () => import('@/views/LogView.vue'),
     meta: { requiresAuth: true }
   },
   {
-    path: '/backups',
+    path: '/:app/backups',
     component: () => import('@/views/BackupView.vue'),
     meta: { requiresAuth: true }
   },
   {
-    path: '/info',
+    path: '/:app/info',
     component: () => import('@/views/InfoView.vue'),
     meta: { requiresAuth: true }
   },
   {
-    path: '/config',
+    path: '/:app/config',
     component: () => import('@/views/ConfigView.vue'),
     meta: { requiresAuth: true }
   },
   {
-    path: '/templates',
+    path: '/:app/templates',
     component: () => import('@/views/TemplatesView.vue'),
     meta: { requiresAuth: true }
   },
   {
-    path: '/history',
+    path: '/:app/history',
     component: () => import('@/views/HistoryView.vue'),
     meta: { requiresAuth: true }
   },
   {
-    path: '/deleted-records',
+    path: '/:app/deleted-records',
     component: () => import('@/views/DeletedRecordsView.vue'),
     meta: { requiresAuth: true }
   },
   {
-    path: '/find-replace',
+    path: '/:app/find-replace',
     component: () => import('@/views/SearchReplaceView.vue'),
     meta: { requiresAuth: true }
   },
   {
-    path: '/matrix/:tb',
+    path: '/:app/matrix/:tb',
     component: () => import('@/views/MatrixView.vue'),
     meta: { requiresAuth: true }
   },
   {
     // :id is either a numeric record id or the literal string 'new'
-    path: '/record/:tb/:id',
+    path: '/:app/record/:tb/:id',
     component: () => import('@/views/RecordView.vue'),
     meta: { requiresAuth: true }
   },
   {
-    path: '/record/:tb',
-    redirect: to => ({ path: `/record/${to.params.tb}/new` })
+    path: '/:app/record/:tb',
+    redirect: to => ({ path: `/${to.params.app}/record/${to.params.tb}/new` })
   },
   {
-    path: '/geoface/:tb',
+    path: '/:app/geoface/:tb',
     component: () => import('@/views/GeofaceView.vue'),
     meta: { requiresAuth: true }
   },
   {
-    path: '/import',
+    path: '/:app/import',
     component: () => import('@/views/ImportView.vue'),
     meta: { requiresAuth: true }
   },
   {
-    path: '/free-sql',
+    path: '/:app/free-sql',
     component: () => import('@/views/FreeSqlView.vue'),
     meta: { requiresAuth: true }
   },
   {
-    path: '/migrations',
+    path: '/:app/migrations',
     component: () => import('@/views/MigrationsView.vue'),
     meta: { requiresAuth: true }
   }
@@ -127,6 +128,13 @@ router.beforeEach((to) => {
   const auth = useAuthStore()
   if (!auth.isAuthenticated()) {
     return { path: '/login' }
+  }
+
+  // Silently correct a stale or mistyped app name in the URL so the JWT
+  // is always the source of truth for which app is active.
+  if (to.params.app && to.params.app !== auth.user?.app) {
+    const rest = to.path.slice(to.params.app.length + 1)
+    return { path: `/${auth.user.app}${rest}`, query: to.query }
   }
 
   return true

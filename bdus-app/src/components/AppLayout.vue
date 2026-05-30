@@ -105,7 +105,7 @@
                 <RouterLink
                   v-for="tbl in navTables"
                   :key="tbl.name"
-                  :to="`/data?tb=${encodeURIComponent(tbl.name)}`"
+                  :to="`/${route.params.app}/data?tb=${encodeURIComponent(tbl.name)}`"
                   class="nav-item nav-table-item"
                   :class="{ active: route.query.tb === tbl.name }"
                   :title="tbl.label"
@@ -176,7 +176,7 @@ const { tables: navTables, loading: tablesLoading, loadTables } = useTables()
 const { isDark, toggle: toggleDark } = useDarkMode()
 
 // Load table list when navigating to /data (or when already there on mount)
-const isDataRoute       = computed(() => route.path === '/data')
+const isDataRoute       = computed(() => route.path === `/${route.params.app}/data`)
 const dataAccordionOpen = ref(isDataRoute.value)
 
 watch(isDataRoute, (val) => {
@@ -285,43 +285,46 @@ function handleLogout() {
   })
 }
 
-const navGroups = computed(() => [
-  {
-    labelKey: 'nav_general',
-    items: [
-      { labelKey: 'dashboard',      icon: 'pi-home',         to: '/',             disabled: false },
-    ],
-  },
-  {
-    labelKey: 'nav_data',
-    items: [
-      { labelKey: 'data_mng',       icon: 'pi-database',     to: '/data',         disabled: false },
-      { labelKey: 'find_replace',   icon: 'pi-search-plus',  to: '/find-replace', disabled: false },
-      { labelKey: 'vocabulary_mng', icon: 'pi-book',         to: '/vocabularies', disabled: false },
-      { labelKey: 'history',          icon: 'pi-history',      to: '/history',         disabled: false },
-      { labelKey: 'deleted_records',  icon: 'pi-trash',        to: '/deleted-records', disabled: false },
-      { labelKey: 'import_data',    icon: 'pi-upload',       to: '/import',       disabled: false },
-      { labelKey: 'backup',         icon: 'pi-save',         to: '/backups'                       },
-    ],
-  },
-  {
-    labelKey: 'nav_admin',
-    items: [
-      { labelKey: 'user_mng',          icon: 'pi-users',        to: '/users',     disabled: false },
-      { labelKey: 'sys_config',        icon: 'pi-cog',          to: '/config',    disabled: false },
-      { labelKey: 'design_templates',  icon: 'pi-palette',      to: '/templates', disabled: false },
-      { labelKey: 'free_sql',          icon: 'pi-code',         to: '/free-sql',  disabled: false },
-    ],
-  },
-  {
-    labelKey: 'nav_system',
-    items: [
-      { labelKey: 'app_log',    icon: 'pi-list',           to: '/log',        disabled: false },
-      { labelKey: 'migrations', icon: 'pi-database',       to: '/migrations', disabled: false },
-      { labelKey: 'info',       icon: 'pi-info-circle',    to: '/info',       disabled: false },
-    ],
-  },
-])
+const navGroups = computed(() => {
+  const a = `/${route.params.app}`
+  return [
+    {
+      labelKey: 'nav_general',
+      items: [
+        { labelKey: 'dashboard',      icon: 'pi-home',         to: a,                      disabled: false },
+      ],
+    },
+    {
+      labelKey: 'nav_data',
+      items: [
+        { labelKey: 'data_mng',       icon: 'pi-database',     to: `${a}/data`,            disabled: false },
+        { labelKey: 'find_replace',   icon: 'pi-search-plus',  to: `${a}/find-replace`,    disabled: false },
+        { labelKey: 'vocabulary_mng', icon: 'pi-book',         to: `${a}/vocabularies`,    disabled: false },
+        { labelKey: 'history',        icon: 'pi-history',      to: `${a}/history`,         disabled: false },
+        { labelKey: 'deleted_records',icon: 'pi-trash',        to: `${a}/deleted-records`, disabled: false },
+        { labelKey: 'import_data',    icon: 'pi-upload',       to: `${a}/import`,          disabled: false },
+        { labelKey: 'backup',         icon: 'pi-save',         to: `${a}/backups`                          },
+      ],
+    },
+    {
+      labelKey: 'nav_admin',
+      items: [
+        { labelKey: 'user_mng',         icon: 'pi-users',   to: `${a}/users`,     disabled: false },
+        { labelKey: 'sys_config',       icon: 'pi-cog',     to: `${a}/config`,    disabled: false },
+        { labelKey: 'design_templates', icon: 'pi-palette', to: `${a}/templates`, disabled: false },
+        { labelKey: 'free_sql',         icon: 'pi-code',    to: `${a}/free-sql`,  disabled: false },
+      ],
+    },
+    {
+      labelKey: 'nav_system',
+      items: [
+        { labelKey: 'app_log',    icon: 'pi-list',        to: `${a}/log`,        disabled: false },
+        { labelKey: 'migrations', icon: 'pi-database',    to: `${a}/migrations`, disabled: false },
+        { labelKey: 'info',       icon: 'pi-info-circle', to: `${a}/info`,       disabled: false },
+      ],
+    },
+  ]
+})
 </script>
 
 <style scoped>

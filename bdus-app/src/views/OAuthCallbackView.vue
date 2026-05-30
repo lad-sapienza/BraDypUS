@@ -62,7 +62,7 @@ onMounted(() => {
   if (token) {
     try {
       auth.loginWithToken(token)
-      router.replace('/')
+      router.replace(`/${auth.user.app}/`)
     } catch {
       done.value     = true
       errorMsg.value = 'The authentication token is invalid or has expired.'

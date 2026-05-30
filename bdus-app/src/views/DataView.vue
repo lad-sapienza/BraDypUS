@@ -1009,7 +1009,7 @@ function onSort(event) {
 function addRecord() {
   const tb = selectedTable.value?.name
   if (tb) {
-    router.push(`/record/${encodeURIComponent(tb)}/new`)
+    router.push(`/${route.params.app}/record/${encodeURIComponent(tb)}/new`)
   }
 }
 
@@ -1028,7 +1028,7 @@ function openGeoface() {
     query.search_type = 'sqlExpert'
     query.querytext = expertQuery.value
   }
-  router.push({ path: `/geoface/${encodeURIComponent(tb)}`, query })
+  router.push({ path: `/${route.params.app}/geoface/${encodeURIComponent(tb)}`, query })
 }
 
 /**
@@ -1041,7 +1041,7 @@ function openMatrix() {
   const tb = selectedTable.value?.name
   if (!tb) return
   router.push({
-    path:  `/matrix/${encodeURIComponent(tb)}`,
+    path:  `/${route.params.app}/matrix/${encodeURIComponent(tb)}`,
     query: { ...route.query, back: route.fullPath },
   })
 }
@@ -1051,7 +1051,7 @@ function onRowClick(event) {
   const id = event.data?.id
   if (tb && id != null) {
     router.push({
-      path:  `/record/${encodeURIComponent(tb)}/${id}`,
+      path:  `/${route.params.app}/record/${encodeURIComponent(tb)}/${id}`,
       query: { back: route.fullPath },
     })
   }

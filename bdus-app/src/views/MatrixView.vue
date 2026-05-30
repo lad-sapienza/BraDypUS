@@ -263,20 +263,20 @@ async function loadMatrix() {
 // ── Node click → navigate to record (read mode only) ─────────────
 function onNodeClick({ db_id }) {
   if (!db_id) return
-  router.push(`/record/${encodeURIComponent(tb.value)}/${db_id}`)
+  router.push(`/${route.params.app}/record/${encodeURIComponent(tb.value)}/${db_id}`)
 }
 
 // ── Back navigation ───────────────────────────────────────────────
 function backToRecord() {
   if (!fromId.value) return
-  router.push(`/record/${encodeURIComponent(tb.value)}/${fromId.value}`)
+  router.push(`/${route.params.app}/record/${encodeURIComponent(tb.value)}/${fromId.value}`)
 }
 
 function backToTable() {
   if (backUrl.value) {
     router.push(backUrl.value)
   } else {
-    router.push('/data')
+    router.push(`/${route.params.app}/data`)
   }
 }
 

@@ -161,7 +161,7 @@ async function handleLogin() {
   loading.value = true
   try {
     await auth.login(form.value.email, form.value.password, form.value.app?.db)
-    router.push('/')
+    router.push(`/${auth.user.app}/`)
   } catch (e) {
     error.value = t(e.message)
   } finally {

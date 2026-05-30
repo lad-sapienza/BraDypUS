@@ -97,6 +97,13 @@ The PHP backend is preserved and extended with JSON endpoints consumed by the ne
   - **Field list**: split panel with field list and inline field editor
   - **Field form**: auto-generated from `fld_structure.json`; supports input, select,
     multi_select meta-types
+- **Runtime primary-colour customisation** (M025): administrators can choose the
+  application's primary colour palette from 8 presets (Indigo, Blue, Violet, Emerald,
+  Teal, Amber, Rose, Slate) in **Config → App settings → Appearance**.
+  The selection is persisted in `bdus_cfg_app.color` (migration M025) and applied
+  to every user at login via `GET /api/info/app`; the colour change takes effect
+  immediately in the config panel (live preview) using PrimeVue's
+  `updatePrimaryPalette` API. Works correctly in both light and dark mode.
 - **Design Templates** (`/templates`): visual editor for JSON record-view layout
   templates — create, edit, rename, delete per-table templates; section cards with
   label, plugin selector, collapsible flag, content rows (field + width)

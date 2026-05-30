@@ -98,7 +98,7 @@ class QueryFromRequestTest extends BdusTestCase
     {
         // makeSafeStatement should strip DROP/DELETE/etc.
         $q = $this->qfr(['type' => 'sqlExpert', 'querytext' => "1=1; drop table items", 'join' => '']);
-        $where = $q->getWhere();
+        [$where] = $q->getWhereClause();
         $this->assertStringNotContainsStringIgnoringCase('drop', $where);
     }
 

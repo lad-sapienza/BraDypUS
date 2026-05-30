@@ -1,51 +1,25 @@
 <?php
 
 /**
- * @copyright 2007-2022 Julian Bogdani
+ * @copyright 2007-2025 Julian Bogdani
  * @license AGPL-3.0; see LICENSE
- * @since			Apr 15, 2012
- * @uses			cfg
  *
- * $request
- * 	tb		string, required
- * type
- * 		'all'
+ * Builds a SQL SELECT from a structured $request array.
  *
- * 		'advanced'
- * 			'adv'		array of arrays:
- * 				[
- * 				'connector'	:	string, optional, AND|OR|XOR,
- * 				'('					:	boolean, optional
- * 				'fld'				:	string, required, table-name-with-prefix:fieldname
- * 				'operator'		:	string, required, LIKE|=|NOT LIKE|starts_with|ends_with|is_empty|is_not_empty|>|<
- * 				'value'			:	string, required if operator is LIKE|=|NOT LIKE|starts_with|ends_with|>|<, and not required if operator is is_empty|is_not_empty
- * 				')'					:	boolean, optional
- * 				],
- * 				[...], [...]
- * 				order: array of fieldnames following syntax: table-name-with-prefix:fieldname
- * 				[
- * 				..., ...
- * 				]
+ * Required keys: tb (string)
+ * Optional key:  type (string, default 'all')
  *
- * 		'sqlExpert'
- * 			'querytext'		string, required, not encoded query text
+ * Supported types and their extra keys:
  *
- * 		'fast'
- * 			'string'		string, required, string to search for
- *
- * 		'id_array'
- * 			'id'			array, required, array of integers (ids)
- *
- * 		'encoded'
- * 			'q_encoded'		string, required, base64_encoded query string
- *
- * 		'obj_encoded'
- * 			'obj_encoded'		    string, required, \SQL\SafeQuery encoded query string
- *
- * 		'filter'
- * 			'filter'	array, required, Directus-style JSON filter object
- * 					e.g. ['field' => ['_eq' => 'value'], '_and' => [[...], [...]]]
- * 					Parsed via SQL\Filter\JsonFilter.
+ *   'all'       — no filter
+ *   'fast'      — 'string': text searched across preview fields via LIKE
+ *   'advanced'  — 'adv': array of rows, each:
+ *                   [ 'connector', '(', 'fld' (tb:field), 'operator', 'value', ')' ]
+ *   'sqlExpert' — 'querytext': raw SQL WHERE clause (sanitised)
+ *                 'join': optional SQL JOIN clause (sanitised)
+ *   'filter'    — 'filter': Directus-style nested filter array
+ *                   e.g. ['field' => ['_eq' => 'value'], '_and' => [[...], [...]]]
+ *                   Parsed via SQL\Filter\JsonFilter.
  */
 
 use DB\DBInterface;
@@ -58,7 +32,6 @@ class QueryFromRequest
   private $fields;
   private $where;
   private $values = [];
-  private $group;
   private $order;
   private $limit;
   private $db;
@@ -86,34 +59,10 @@ class QueryFromRequest
 
     $this->cfg = $cfg;
 
-    $this->setFields($use_preview, $request['fields']);
-
-    $this->setGroup($request['group']);
-
-    $this->setLimit($request['limit_start'], $request['limit_end']);
+    $this->setFields($use_preview, $request['fields'] ?? false);
 
     $this->setWhere($request);
   }
-
-  public function setSubQuery($string, $limit2preview = false): void
-  {
-    if ($this->where) {
-      if (preg_match('/ORDER/', $this->where)) {
-        $this->where = str_replace('ORDER', 'AND (' . $this->fast($string, $limit2preview) . ') ORDER', $this->where);
-      } elseif (!preg_match('/LIMIT/', $this->where)) {
-        $this->where .= ' AND (' . $this->fast($string, $limit2preview) . ')';
-      }
-    }
-  }
-
-  public function setGroup($fld = false): void
-  {
-    if ($fld) {
-      $this->group = ' GROUP BY ' .
-        (is_array($fld) ? implode(', ', $$fld) : $fld);
-    }
-  }
-
 
   public function setOrder($fld = false, $type = false): ?QueryFromRequest
   {
@@ -155,21 +104,6 @@ class QueryFromRequest
   }
 
   /**
-   *
-   * Returns where clausole
-   * @param boolean $encoded
-   */
-  public function getWhere(bool $encoded = false): string
-  {
-    return $encoded ? base64_encode($this->where) : $this->where;
-  }
-
-  public function getWhereAndValues(): string
-  {
-    return \SQL\SafeQuery::encode($this->where, $this->values);
-  }
-
-  /**
    * Returns the resolved WHERE predicate and its bound values as a pair.
    *
    * Use this instead of calling getWhere() + getValues() separately when you
@@ -187,11 +121,6 @@ class QueryFromRequest
   public function getValues(): array
   {
     return $this->values;
-  }
-
-  private function getGroup()
-  {
-    return $this->group;
   }
 
   private function getOrder()
@@ -228,8 +157,7 @@ class QueryFromRequest
       $this->formatFields() .
       " FROM " . $this->tb . " " .
       $this->join .
-      " WHERE " . $this->getWhere() .
-      $this->getGroup() .
+      " WHERE " . $this->where .
       $this->getOrder() .
       $this->getLimit();
 
@@ -302,30 +230,6 @@ class QueryFromRequest
 
       case 'fast':
         $this->where = '(' . $this->fast($request['string']) . ')';
-        break;
-
-      case 'id_array':
-        $this->where = " ( id IN ('" . implode("', '", $request['id']) . "') ) ";
-        break;
-
-      case 'encoded':
-        $this->join = $this->makeSafeStatement(urldecode($request['join']));
-        // Decode query parameter
-        $encoded = base64_decode($request['q_encoded']);
-        // Remove new lines
-        // https://stackoverflow.com/a/3760830/586449
-        $encoded = trim(preg_replace('/\s+/', ' ', $encoded));
-        $this->where = preg_replace('/^SELECT(.+?)WHERE/i', '', $encoded);
-        break;
-
-      case 'obj_encoded':
-        $this->join = $this->makeSafeStatement(urldecode($request['join']));
-        // Decode query parameter
-        list($q, $v) = \SQL\SafeQuery::decode($request['obj_encoded']);
-        // Remove new lines
-        $encoded = trim(preg_replace('/\s+/', ' ', $q));
-        $this->where = preg_replace('/^SELECT(.+?)WHERE/i', '', $encoded);
-        $this->values = $v;
         break;
 
       case 'filter':

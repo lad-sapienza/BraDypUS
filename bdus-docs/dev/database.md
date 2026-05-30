@@ -186,6 +186,28 @@ $mgr->deleteRow('bdus_vocabularies', 12);
 $mgr->createTable('bdus_charts');
 ```
 
+### Cross-engine schema helpers
+
+These methods work identically on SQLite, MySQL, and PostgreSQL. Use them
+instead of engine-specific catalog queries (`sqlite_master`, `PRAGMA`, etc.):
+
+```php
+$mgr->tableExists('bdus_cfg_relations');          // bool
+$mgr->columnExists('bdus_users', 'oauth_sub');    // bool
+$mgr->indexExistsPublic('bdus_users', 'users_email_idx'); // bool
+$mgr->createIndex('bdus_geodata', 'geo_idx', ['table_link', 'id_link']); // idempotent
+$mgr->addForeignKey('bdus_charts', 'charts_user_fk', 'user_id', 'bdus_users', 'id', 'CASCADE'); // idempotent
+```
+
+`addForeignKey` is idempotent: if the constraint already exists it is silently
+skipped. On MySQL, `createIndex` automatically adds a prefix length `(191)`
+to TEXT columns (required by the InnoDB key-length limit).
+
+> **Engine rule:** never query `sqlite_master`, use `PRAGMA`, write
+> `INSERT OR IGNORE`, or call `last_insert_rowid()` outside of an explicit
+> `if ($db->getEngine() === 'sqlite')` guard. Use `$db->query($sql, $params, 'id')`
+> to retrieve the last inserted ID on any engine.
+
 ---
 
 ## `DB\System\CreateApp` — New application wizard

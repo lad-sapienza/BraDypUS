@@ -23,14 +23,6 @@ class utils
     }
 
     /**
-     * Explodes a string by delimiter, trims each part, and removes empty elements.
-     */
-    public static function csv_explode(string $string, string $delimiter = ','): array
-    {
-        return array_filter(array_map('trim', explode($delimiter, $string)), 'strlen');
-    }
-
-    /**
      * Returns true if another user with $email already exists in bdus_users.
      * Pass $id to exclude the current user (for updates).
      */

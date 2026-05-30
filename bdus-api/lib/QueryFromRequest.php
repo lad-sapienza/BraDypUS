@@ -401,7 +401,7 @@ class QueryFromRequest
       $where .= ($row['('] ? ' ( ' : '');
 
       // fld is a composite string: table-name-with-prefix:fieldname
-      $fld_arr = \utils::csv_explode($row['fld'], ':');
+      $fld_arr = array_filter(array_map('trim', explode(':', $row['fld'])), 'strlen');
 
       // field name
       $tb = $fld_arr[0];
@@ -471,7 +471,7 @@ class QueryFromRequest
     $order = [];
     if (is_array($dati['order'])) {
       foreach ($dati['order'] as $o) {
-        $order_arr = \utils::csv_explode($o, ':');
+        $order_arr = array_filter(array_map('trim', explode(':', $o)), 'strlen');
         array_push($order, $order_arr[1]);
       }
     }

@@ -352,7 +352,7 @@ EOD;
 
             if (is_array($bl_data)) {
                 foreach ($bl_data as $bl) {
-                    list($ref_tb, $via_plg, $via_plg_fld) = \utils::csv_explode($bl, ':');
+                    list($ref_tb, $via_plg, $via_plg_fld) = array_filter(array_map('trim', explode(':', $bl)), 'strlen');
                     $ref_tb_id = $this->cfg->get("tables.$ref_tb.id_field");
 
                     $r = $this->db->query(

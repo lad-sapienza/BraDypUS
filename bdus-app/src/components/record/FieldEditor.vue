@@ -141,10 +141,16 @@
       :class="['field-input', 'w-full', { 'p-invalid': showError }]"
     />
 
-    <!-- Inline validation error -->
+    <!-- Inline validation error (sync) -->
     <div v-if="showError" class="field-error">
       <i class="pi pi-exclamation-circle" />
       {{ validationError }}
+    </div>
+
+    <!-- Inline uniqueness error (async no_dupl) -->
+    <div v-if="uniqueError" class="field-error">
+      <i class="pi pi-exclamation-circle" />
+      {{ uniqueError }}
     </div>
 
   </div>
@@ -160,7 +166,7 @@ import Slider      from 'primevue/slider'
 import { useToast } from 'primevue/usetoast'
 import { api }     from '@/api'
 import { useI18n } from '@/i18n'
-import { onMounted } from 'vue'
+import { onMounted, watch } from 'vue'
 
 const { t } = useI18n()
 const toast = useToast()
@@ -168,8 +174,10 @@ const toast = useToast()
 const props = defineProps({
   schema:     { type: Object, required: true },
   modelValue: { type: [String, Number, null], default: null },
-  /** Full table id (needed for getFieldOptions call) */
+  /** Full table id (needed for getFieldOptions and check-unique calls) */
   tb:         { type: String, required: true },
+  /** Current record id — null for new records; needed to exclude self from no_dupl check */
+  recordId:   { type: [String, Number, null], default: null },
 })
 const emit = defineEmits(['update:modelValue'])
 
@@ -233,18 +241,39 @@ const validationError = computed(() => {
     } catch { /* invalid regex in config — ignore */ }
   }
 
-  // no_dupl and valid_wkt are backend-only checks (require DB or geometry lib)
+  // no_dupl: async — handled separately via uniqueError ref below
 
   return null
 })
 
-/** Show the error when the user has interacted OR parent forces it */
+// ── Async uniqueness check (no_dupl) ────────────────────────────
+const uniqueError = ref(null)
+let _uniqueTimer = null
+
+watch(() => props.modelValue, (val) => {
+  if (!(props.schema.check ?? []).includes('no_dupl')) return
+  uniqueError.value = null
+  clearTimeout(_uniqueTimer)
+  if (val === null || val === undefined || val === '') return
+  _uniqueTimer = setTimeout(async () => {
+    try {
+      const params = { field: props.schema.name, value: val }
+      if (props.recordId) params.id = props.recordId
+      const res = await api.get(`/api/record/${props.tb}/check-unique`, params)
+      if (res.status === 'success' && !res.unique) {
+        uniqueError.value = t('value_not_unique')
+      }
+    } catch { /* network error — silent, server will catch on save */ }
+  }, 600)
+})
+
+/** Show the sync error when the user has interacted OR parent forces it */
 const showError = computed(() =>
   (dirty.value || forceValidate.value) && !!validationError.value
 )
 
-/** True when this field currently has a validation problem */
-const hasError = computed(() => !!validationError.value)
+/** True when either sync or async validation fails (used by RecordView for pre-save gate) */
+const hasError = computed(() => !!validationError.value || !!uniqueError.value)
 
 // Let RecordView query hasError on each field editor via template ref
 defineExpose({ hasError })

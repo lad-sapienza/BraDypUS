@@ -169,6 +169,81 @@ class ImportCtrlTest extends BdusTestCase
         $this->assertSame('import_error_no_key', $res['code']);
     }
 
+    public function testImportDataInvalidDbFieldReturnsError(): void
+    {
+        $csv    = "name,description\nSome Item,Desc\n";
+        $tempId = $this->plantTempFile($csv);
+
+        $ctrl = $this->makeController('Bdus\\Controllers\\Import', [], [
+            'temp_id'   => $tempId,
+            'type'      => 'csv',
+            'tb'        => self::TB,
+            'mapping'   => ['name' => 'nonexistent_db_field'],
+            'key_field' => 'nonexistent_db_field',
+        ]);
+        $res = $this->callController($ctrl, 'importData');
+
+        $this->assertSame('error', $res['status']);
+        $this->assertSame('import_error_invalid_field', $res['code']);
+        $this->assertStringContainsString('nonexistent_db_field', $res['detail'] ?? '');
+    }
+
+    public function testImportDataNoMatchingCsvColumnsReturnsError(): void
+    {
+        $csv    = "name,description\nSome Item,Desc\n";
+        $tempId = $this->plantTempFile($csv);
+
+        $ctrl = $this->makeController('Bdus\\Controllers\\Import', [], [
+            'temp_id'   => $tempId,
+            'type'      => 'csv',
+            'tb'        => self::TB,
+            'mapping'   => ['colonna_fantasma' => 'name'], // 'colonna_fantasma' not in CSV
+            'key_field' => 'name',
+        ]);
+        $res = $this->callController($ctrl, 'importData');
+
+        $this->assertSame('error', $res['status']);
+        $this->assertSame('import_error_mapping_mismatch', $res['code']);
+        $this->assertStringContainsString('colonna_fantasma', $res['detail'] ?? '');
+    }
+
+    public function testImportDataEmptyCsvReturnsWarning(): void
+    {
+        $csv    = "name,description\n"; // header only, no data rows
+        $tempId = $this->plantTempFile($csv);
+
+        $ctrl = $this->makeController('Bdus\\Controllers\\Import', [], [
+            'temp_id'   => $tempId,
+            'type'      => 'csv',
+            'tb'        => self::TB,
+            'mapping'   => ['name' => 'name'],
+            'key_field' => 'name',
+        ]);
+        $res = $this->callController($ctrl, 'importData');
+
+        $this->assertSame('warning', $res['status']);
+        $this->assertSame('ok_import_data', $res['code']);
+        $this->assertSame(0, $res['total']);
+        $this->assertNotEmpty($res['detail']);
+    }
+
+    public function testImportDataMalformedJsonReturnsError(): void
+    {
+        $tempId = $this->plantTempFile('this is not valid JSON at all');
+
+        $ctrl = $this->makeController('Bdus\\Controllers\\Import', [], [
+            'temp_id'   => $tempId,
+            'type'      => 'json',
+            'tb'        => self::TB,
+            'mapping'   => ['name' => 'name'],
+            'key_field' => 'name',
+        ]);
+        $res = $this->callController($ctrl, 'importData');
+
+        $this->assertSame('error', $res['status']);
+        $this->assertSame('import_error_parse', $res['code']);
+    }
+
     public function testImportDataHandlesSemicolonDelimiter(): void
     {
         $csv    = "name;description\nSemicolon Item;Semicolon Desc\n";
@@ -278,6 +353,44 @@ class ImportCtrlTest extends BdusTestCase
         $this->assertSame(0, $res['total']);
     }
 
+    public function testImportGeoJsonUpdatesGeometry(): void
+    {
+        // Insert a record and immediately import a GeoJSON feature pointing to it.
+        $name = 'GeoItem_' . bin2hex(random_bytes(4));
+        static::$db->query("INSERT INTO items (name) VALUES (?)", [$name], 'id');
+
+        $geojson = json_encode([
+            'type'     => 'FeatureCollection',
+            'features' => [[
+                'type'       => 'Feature',
+                'geometry'   => ['type' => 'Point', 'coordinates' => [12.4964, 41.9028]],
+                'properties' => ['name' => $name],
+            ]],
+        ]);
+        $tempId = $this->plantTempFile($geojson);
+
+        $ctrl = $this->makeController('Bdus\\Controllers\\Import', [], [
+            'temp_id'   => $tempId,
+            'tb'        => self::TB,
+            'geo_prop'  => 'name',
+            'key_field' => 'name',
+        ]);
+        $res = $this->callController($ctrl, 'importGeoJson');
+
+        $this->assertSame('success', $res['status'], $res['code'] ?? '');
+        $this->assertSame(1, $res['updated']);
+        $this->assertSame(0, $res['not_found']);
+        $this->assertSame(1, $res['total']);
+
+        // Verify the geometry was actually written to bdus_geodata.
+        $geo = static::$db->query(
+            "SELECT geometry FROM bdus_geodata WHERE table_link = ? LIMIT 1",
+            [self::TB], 'read'
+        );
+        $this->assertNotEmpty($geo);
+        $this->assertStringContainsStringIgnoringCase('POINT', $geo[0]['geometry']);
+    }
+
     public function testImportGeoJsonNotFoundFeaturesCountedCorrectly(): void
     {
         $geojson = json_encode([
@@ -382,6 +495,48 @@ class ImportCtrlTest extends BdusTestCase
             'read'
         );
         $this->assertNotEmpty($linkRows);
+    }
+
+    public function testImportPhotosNotFoundCountedWhenPhotoMissingFromZip(): void
+    {
+        if (!extension_loaded('zip')) {
+            $this->markTestSkipped('ext-zip not available');
+        }
+
+        if (!defined('PROJ_DIR')) {
+            define('PROJ_DIR', sys_get_temp_dir() . '/bdus_test_proj/');
+        }
+        @mkdir(constant('PROJ_DIR') . 'files/', 0755, true);
+
+        $rows = static::$db->query("SELECT id FROM items LIMIT 1", [], 'read');
+        $this->assertNotEmpty($rows);
+        $recordId = $rows[0]['id'];
+
+        // ZIP contains only 'present.jpg'; index also lists 'missing.jpg'
+        $tempZip = sys_get_temp_dir() . '/bdus_build_test2.zip';
+        $zip = new \ZipArchive();
+        $zip->open($tempZip, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
+        $zip->addFromString('present.jpg', 'fake_bytes');
+        $zip->close();
+
+        $tempId = bin2hex(random_bytes(8));
+        copy($tempZip, sys_get_temp_dir() . '/bdus_import_' . $tempId . '.zip');
+        file_put_contents(
+            sys_get_temp_dir() . '/bdus_import_' . $tempId . '.csv',
+            "filename,record_id\npresent.jpg,{$recordId}\nmissing.jpg,{$recordId}\n"
+        );
+        @unlink($tempZip);
+
+        $ctrl = $this->makeController('Bdus\\Controllers\\Import', [], [
+            'temp_id' => $tempId,
+            'tb'      => self::TB,
+        ]);
+        $res = $this->callController($ctrl, 'importPhotos');
+
+        $this->assertSame('success', $res['status'], $res['code'] ?? '');
+        $this->assertSame(1, $res['linked']);
+        $this->assertSame(1, $res['not_found']);
+        $this->assertSame(2, $res['total']);
     }
 
     // ── Privilege checks ──────────────────────────────────────────────────────

@@ -147,8 +147,7 @@ jsonpath "$.geo_props"       isCollection
 geojson_temp_id: jsonpath "$.temp_id"
 
 
-# ── 12i. importGeoJson — feature matched by sigla ─────────────────────
-# IMP001 was inserted in 12d, so it should be found and geo updated.
+# ── 12i. importGeoJson — feature matched by sigla (IMP001 from 12d) ──
 POST {{base_url}}/api/import/geojson
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
@@ -160,9 +159,11 @@ Content-Type: application/json
 }
 HTTP 200
 [Asserts]
-jsonpath "$.status"  == "success"
-jsonpath "$.total"   == 1
-jsonpath "$.updated" >= 0
+jsonpath "$.status"    == "success"
+jsonpath "$.code"      == "ok_import_geojson"
+jsonpath "$.total"     == 1
+jsonpath "$.updated"   == 1
+jsonpath "$.not_found" == 0
 
 
 # ── 12j. Error: importData without required params ─────────────────────
@@ -229,3 +230,85 @@ HTTP 200
 [Asserts]
 jsonpath "$.status" == "error"
 jsonpath "$.code"   == "import_error_unknown_type"
+
+
+# ── 12n. Error: mapping value is not a valid table field ──────────────
+POST {{base_url}}/api/import/preview-file
+Authorization: Bearer {{jwt}}
+[MultipartFormData]
+type: csv
+file: file,fixtures/import_test.csv; type=text/csv
+HTTP 200
+[Captures]
+err2_temp_id: jsonpath "$.temp_id"
+
+POST {{base_url}}/api/import/data
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{
+  "temp_id":   "{{err2_temp_id}}",
+  "type":      "csv",
+  "tb":        "us",
+  "mapping":   { "sigla": "nonexistent_db_field" },
+  "key_field": "nonexistent_db_field"
+}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "error"
+jsonpath "$.code"   == "import_error_invalid_field"
+jsonpath "$.detail" isString
+
+
+# ── 12o. Error: no mapping key matches any column in the file ─────────
+POST {{base_url}}/api/import/preview-file
+Authorization: Bearer {{jwt}}
+[MultipartFormData]
+type: csv
+file: file,fixtures/import_test.csv; type=text/csv
+HTTP 200
+[Captures]
+err3_temp_id: jsonpath "$.temp_id"
+
+POST {{base_url}}/api/import/data
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{
+  "temp_id":   "{{err3_temp_id}}",
+  "type":      "csv",
+  "tb":        "us",
+  "mapping":   { "colonna_fantasma": "sigla" },
+  "key_field": "sigla"
+}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "error"
+jsonpath "$.code"   == "import_error_mapping_mismatch"
+jsonpath "$.detail" isString
+
+
+# ── 12p. Warning: CSV with only header row (0 data rows) ─────────────
+POST {{base_url}}/api/import/preview-file
+Authorization: Bearer {{jwt}}
+[MultipartFormData]
+type: csv
+file: file,fixtures/import_empty.csv; type=text/csv
+HTTP 200
+[Captures]
+empty_temp_id: jsonpath "$.temp_id"
+
+POST {{base_url}}/api/import/data
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{
+  "temp_id":   "{{empty_temp_id}}",
+  "type":      "csv",
+  "tb":        "us",
+  "mapping":   { "sigla": "sigla" },
+  "key_field": "sigla"
+}
+HTTP 200
+[Asserts]
+jsonpath "$.status"   == "warning"
+jsonpath "$.code"     == "ok_import_data"
+jsonpath "$.total"    == 0
+jsonpath "$.detail"   isString

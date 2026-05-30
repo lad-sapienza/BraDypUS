@@ -264,6 +264,42 @@ class Import extends \Bdus\Controller
             return;
         }
 
+        // Validate that all mapping VALUES are known fields of the target table.
+        // This catches typos or tampered requests before hitting the DB.
+        $knownFields = array_column($this->cfg->get("tables.{$tb}.fields") ?: [], 'name');
+        $unknownFields = [];
+        foreach ($mapping as $tableField) {
+            if ($tableField && !in_array($tableField, $knownFields, true)) {
+                $unknownFields[] = $tableField;
+            }
+        }
+        if ($unknownFields) {
+            @unlink($tempPath);
+            $this->returnJson([
+                'status' => 'error',
+                'code'   => 'import_error_invalid_field',
+                'detail' => 'Unknown field(s) in mapping: ' . implode(', ', $unknownFields),
+            ]);
+            return;
+        }
+
+        // Validate that at least one mapping KEY exists in the parsed file columns.
+        // If none match, every row would be silently skipped — tell the user instead.
+        if (!empty($rows)) {
+            $fileColumns = array_keys($rows[0]);
+            $matched = array_intersect(array_keys($mapping), $fileColumns);
+            if (empty($matched)) {
+                @unlink($tempPath);
+                $this->returnJson([
+                    'status' => 'error',
+                    'code'   => 'import_error_mapping_mismatch',
+                    'detail' => 'None of the mapped columns (' . implode(', ', array_keys($mapping)) . ')'
+                            . ' were found in the file (' . implode(', ', $fileColumns) . ')',
+                ]);
+                return;
+            }
+        }
+
         $inserted = 0;
         $updated  = 0;
 
@@ -317,12 +353,16 @@ class Import extends \Bdus\Controller
             $this->db->commit();
             @unlink($tempPath);
 
+            $total = $inserted + $updated;
             $this->returnJson([
-                'status'   => 'success',
+                'status'   => $total > 0 ? 'success' : 'warning',
                 'code'     => 'ok_import_data',
                 'inserted' => $inserted,
                 'updated'  => $updated,
-                'total'    => $inserted + $updated,
+                'total'    => $total,
+                'detail'   => $total > 0 ? null
+                    : 'No rows were imported. Verify that the file contains data rows'
+                    . ' and that the column mapping matches the file headers.',
             ]);
 
         } catch (\Throwable $e) {

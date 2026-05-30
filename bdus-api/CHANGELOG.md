@@ -206,6 +206,32 @@ The PHP backend is preserved and extended with JSON endpoints consumed by the ne
   and "Login options" (virtual keyboard, login-as-user) sections removed from
   the ConfigAppForm Vue component.
 
+### Fixed
+- **Login `TypeError` when app is not found**: if the JSON body did not
+  include an `app` field that matched an existing project directory, `APP`
+  was left undefined, `$this->db` was null, and `DB\System\Manage::__construct()`
+  threw a bare `TypeError` logged as an unhandled error. `Login::authenticate()`
+  now guards against a null DB and throws `\Exception('app_not_found')`, which
+  the `catch (\Exception)` block returns as `{"status":"error","code":"app_not_found"}`.
+- **Stale Bearer token prevents login**: when a Bearer token was present in the
+  request but its `app` claim pointed to a project directory that no longer
+  existed (e.g. a deleted test application), the bootstrap `else` branch that
+  reads `app` from the request body was never reached, leaving `APP` undefined.
+  The `if/else` structure in `bootstrap.php` is replaced by `if` + `if (!defined('APP'))`,
+  so the body fallback always runs when `APP` is still undefined after the token check.
+- **JWT response nested under index `0`**: `Login::auth()` and `Login::refresh()`
+  emitted `{"status":"success","0":{"token":"…"}}` instead of `{"status":"success","token":"…"}`
+  because an anonymous array `['token' => $token]` was appended as an array element
+  rather than merged. Fixed to `'token' => $token` (named key).
+- **`User::saveUserData()` response missing `id`**: same anonymous-array bug caused
+  the newly created user's `id` to appear at `{"0":{"id":N}}`. Fixed with the spread
+  operator (`...$extra`).
+- **Dead `search → advanced` conversion in `Record::getRecords()`**: the block
+  that converted a legacy `{ "search": [{field, operator, value}] }` POST body to
+  the `advanced` type was never reachable (the `advanced` case was removed from
+  `QueryFromRequest::setWhere()`) and threw an unhandled exception. The dead block
+  is removed; callers must use the Directus-style `filter` format instead.
+
 ### Security
 - `Authorization: Bearer` header is now read via `getallheaders()` as
   fallback, making JWT auth fully server-agnostic (Apache mod_php, nginx-FPM,

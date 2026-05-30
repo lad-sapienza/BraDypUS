@@ -226,7 +226,7 @@ class User extends \Bdus\Controller
 			if ($ret) {
 				// For new users, include the generated ID so callers can reference it.
 				$extra = $isNewUser ? ['id' => $ret] : [];
-				$this->returnJson(['status' => 'success', 'code' => 'user_data_saved', $extra]);
+				$this->returnJson(['status' => 'success', 'code' => 'user_data_saved', ...$extra]);
 			} else {
 				throw new \Exception('Query returned false');
 			}

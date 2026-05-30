@@ -35,14 +35,14 @@ jsonpath "$.total"         == 1
 jsonpath "$.data[0].sigla" == "US001"
 
 
-# ── 6d. Search via POST with ShortSQL body ───────────────────────────
+# ── 6d. Search via POST with Directus-style filter ───────────────────
 POST {{base_url}}/api/records/us
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
-  "search": [
-    { "field": "periodo", "operator": "=", "value": "Basso Medioevo" }
-  ]
+  "filter": {
+    "periodo": { "_eq": "Basso Medioevo" }
+  }
 }
 HTTP 200
 [Asserts]

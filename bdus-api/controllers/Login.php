@@ -106,7 +106,7 @@ class Login extends \Bdus\Controller
 			return;
 		}
 		$token = \JWT\JwtManager::generate(\Auth\CurrentUser::get(), APP);
-		$this->returnJson(['status' => 'success', 'code' => 'ok', ['token' => $token]]);
+		$this->returnJson(['status' => 'success', 'code' => 'ok', 'token' => $token]);
 	}
 
 	public function auth(): void
@@ -116,7 +116,7 @@ class Login extends \Bdus\Controller
 			\DB\System\Migrate::run($this->db, $this->log);
 			$this->log->info("User {$user['id']} logged into " . APP);
 			$token = \JWT\JwtManager::generate($user, APP);
-			$this->returnJson(['status' => 'success', 'code' => 'ok', ['token' => $token]]);
+			$this->returnJson(['status' => 'success', 'code' => 'ok', 'token' => $token]);
 		} catch (\Exception $e) {
 			$this->log->error($e);
 			$this->returnJson(['status' => 'error', 'code' => $e->getMessage()]);
@@ -238,6 +238,10 @@ class Login extends \Bdus\Controller
 	 */
 	private function authenticate(string $email, string $password): array
     {
+		if (!$this->db) {
+			throw new \Exception('app_not_found');
+		}
+
 		if (!filter_var($email, FILTER_VALIDATE_EMAIL) || empty($password)) {
 			throw new \Exception('email_password_needed');
 		}

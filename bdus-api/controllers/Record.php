@@ -73,26 +73,6 @@ class Record extends \Bdus\Controller
         default:
           $qRequest['type'] = 'all';
       }
-    } elseif (isset($this->post['search']) && is_array($this->post['search'])) {
-      // Convenience POST format: { "search": [{ "field", "operator", "value" }] }
-      // Converts to QueryFromRequest 'advanced' format automatically.
-      $adv = [];
-      foreach ($this->post['search'] as $row) {
-        $field = $row['field'] ?? null;
-        if (!$field) continue;
-        $adv[] = [
-          'fld'       => $tb . ':' . $field,
-          'operator'  => $row['operator'] ?? '=',
-          'value'     => $row['value']    ?? '',
-          'connector' => $row['connector'] ?? 'AND',
-          '('         => '',
-          ')'         => '',
-        ];
-      }
-      if (!empty($adv)) {
-        $qRequest['type'] = 'advanced';
-        $qRequest['adv']  = $adv;
-      }
     } else {
       // Check for q_fieldname=value GET params (simple field equality filter).
       // e.g. ?q_sigla=US001 → filter[sigla][_eq]=US001

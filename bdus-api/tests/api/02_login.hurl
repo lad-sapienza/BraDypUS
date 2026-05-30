@@ -5,7 +5,21 @@
 # its token is captured for all subsequent phases by run.sh.
 # ════════════════════════════════════════════════════════════════════
 
-# ── 2a. Invalid email format → email_password_needed ────────────────
+# ── 2a. Non-existent app → app_not_found ────────────────────────────
+POST {{base_url}}/api/auth/login
+Content-Type: application/json
+{
+  "email":    "{{admin_email}}",
+  "password": "anypassword",
+  "app":      "__nonexistent_app__"
+}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "error"
+jsonpath "$.code"   == "app_not_found"
+
+
+# ── 2b. Invalid email format → email_password_needed ────────────────
 POST {{base_url}}/api/auth/login
 Content-Type: application/json
 {

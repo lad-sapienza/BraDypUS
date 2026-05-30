@@ -85,8 +85,12 @@ if ($_bdus_token) {
             ]);
         }
     }
-} else {
-    // Unauthenticated: resolve app from query string or JSON body.
+    // Token present but app not found (deleted/renamed): fall through to body lookup.
+}
+
+// If APP is still undefined (no token, stale token, or unknown app in token),
+// resolve the app from the request body or query string.
+if (!defined('APP')) {
     $_bdus_app = $_REQUEST['app'] ?? null;
 
     if (!$_bdus_app) {

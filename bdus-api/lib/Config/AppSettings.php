@@ -51,7 +51,7 @@ class AppSettings
     {
         try {
             $rows = $db->query(
-                'SELECT status, max_image_size, welcome FROM ' . self::TABLE . ' WHERE id = ?',
+                'SELECT status, max_image_size, welcome, color FROM ' . self::TABLE . ' WHERE id = ?',
                 [self::ROW_ID],
                 'read'
             );
@@ -61,7 +61,7 @@ class AppSettings
         } catch (\Throwable) {
             // Table not yet created — migration has not run.
         }
-        return ['status' => 'on', 'max_image_size' => 0, 'welcome' => ''];
+        return ['status' => 'on', 'max_image_size' => 0, 'welcome' => '', 'color' => 'indigo'];
     }
 
     // ── Write ─────────────────────────────────────────────────────────────────
@@ -74,7 +74,7 @@ class AppSettings
      */
     public static function save(DBInterface $db, array $settings): void
     {
-        $allowed = ['status', 'max_image_size'];
+        $allowed = ['status', 'max_image_size', 'color'];
         $data    = array_intersect_key($settings, array_flip($allowed));
 
         if (empty($data)) {

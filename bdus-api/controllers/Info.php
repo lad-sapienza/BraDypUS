@@ -24,10 +24,12 @@ class Info extends \Bdus\Controller
       return;
     }
 
+    $settings = \Config\AppSettings::get($this->db);
     $this->returnJson([
       'status'     => 'success',
       'name'       => $this->cfg->get('main.name')       ?? '',
       'definition' => $this->cfg->get('main.definition') ?? '',
+      'color'      => $settings['color'] ?? 'indigo',
     ]);
   }
 

@@ -230,6 +230,11 @@ class Config extends \Bdus\Controller
     if (!$this->requireSuperAdmin()) return;
     $data = $this->post;
     try {
+      // Persist color to DB (AppSettings); keep it out of the YAML config.
+      if (array_key_exists('color', $data)) {
+        \Config\AppSettings::save($this->db, ['color' => $data['color']]);
+        unset($data['color']);
+      }
       $this->cfg->setMain($data);
       $this->returnJson(['status' => 'success', 'code' => 'ok_cfg_data_updated']);
     } catch (\Throwable $e) {
@@ -536,9 +541,14 @@ class Config extends \Bdus\Controller
       // no users table in test / fresh install — return empty list
     }
 
+    $appSettings = \Config\AppSettings::get($this->db);
+
     $this->returnJson([
       'status'         => 'success',
-      'main'           => $this->cfg->get('main'),
+      'main'           => array_merge(
+        $this->cfg->get('main') ?: [],
+        ['color' => $appSettings['color'] ?? 'indigo']
+      ),
       'users'          => $users,
       // array_values() re-indexes to 0-based so PHP encodes these as JSON arrays, not objects
       'db_engines'     => array_values(AvailableEngines::getList()),

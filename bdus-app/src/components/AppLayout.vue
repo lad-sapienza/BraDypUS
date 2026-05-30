@@ -159,8 +159,9 @@ import { useConfirm } from 'primevue/useconfirm'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from '@/i18n'
 import { api } from '@/api'
-import { useTables }   from '@/composables/useTables'
-import { useDarkMode } from '@/composables/useDarkMode'
+import { useTables }    from '@/composables/useTables'
+import { useDarkMode }  from '@/composables/useDarkMode'
+import { applyColor }   from '@/composables/useAppColor'
 import Select from 'primevue/select'
 import Button from 'primevue/button'
 import Menu from 'primevue/menu'
@@ -187,7 +188,15 @@ watch(isDataRoute, (val) => {
 
 // Also load on mount so the list is ready whenever the accordion is opened,
 // regardless of which route the user lands on.
-onMounted(loadTables)
+onMounted(async () => {
+  loadTables()
+  try {
+    const res = await api.get('/api/info/app')
+    if (res?.color) applyColor(res.color)
+  } catch {
+    // non-critical — default Aura indigo stays in place
+  }
+})
 const toast = useToast()
 const { t, locale, setLocale, availableLocales } = useI18n()
 const currentLocale = computed({

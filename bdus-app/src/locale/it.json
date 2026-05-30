@@ -146,6 +146,8 @@
   "confirm_password_to_continue": "Inserisci la password per accedere alla configurazione di sistema",
   "select_config_section": "Seleziona una sezione dal pannello a sinistra",
   "app_settings": "Impostazioni applicazione",
+  "appearance": "Aspetto",
+  "primary_color": "Colore principale",
   "validate_app": "Valida",
   "add_table": "Aggiungi tabella",
   "table_settings": "Impostazioni tabella",

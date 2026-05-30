@@ -46,6 +46,25 @@
 
       </section>
 
+      <!-- ── Appearance ────────────────────────────────────────── -->
+      <section class="cfg-section">
+        <div class="cfg-section-title">{{ t('appearance') }}</div>
+        <div class="cfg-form-field">
+          <label>{{ t('primary_color') }}</label>
+          <div class="color-swatches">
+            <button
+              v-for="c in colorPalette"
+              :key="c.name"
+              class="color-swatch"
+              :class="{ active: form.color === c.name }"
+              :title="c.label"
+              :style="{ '--swatch-bg': `var(--p-${c.name}-500)` }"
+              @click="selectColor(c.name)"
+            />
+          </div>
+        </div>
+      </section>
+
       <!-- ── Database ────────────────────────────────────────────── -->
       <section class="cfg-section">
         <div class="cfg-section-title">{{ t('database') }}</div>
@@ -95,6 +114,7 @@ import Message   from 'primevue/message'
 import { useToast } from 'primevue/usetoast'
 import { useI18n, availableLocales } from '@/i18n'
 import { api }      from '@/api'
+import { COLOR_PALETTE, applyColor } from '@/composables/useAppColor'
 
 const { t }  = useI18n()
 const toast  = useToast()
@@ -108,6 +128,12 @@ const form          = ref(null)
 const langs         = availableLocales.map(l => l.code)
 const statusOptions = ref([])
 const dbEngines     = ref([])
+const colorPalette  = COLOR_PALETTE
+
+function selectColor(name) {
+  form.value.color = name
+  applyColor(name)
+}
 
 async function load() {
   loading.value = true
@@ -223,5 +249,28 @@ onMounted(load)
   color: var(--p-text-muted-color);
   padding: 0.05rem 0.3rem;
   border-radius: 3px;
+}
+.color-swatches {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.color-swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  background: var(--swatch-bg);
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s;
+}
+.color-swatch:hover {
+  transform: scale(1.15);
+}
+.color-swatch.active {
+  border-color: var(--p-text-color);
+  transform: scale(1.15);
+  outline: 2px solid var(--p-content-background);
+  outline-offset: -3px;
 }
 </style>

@@ -399,6 +399,85 @@ class Config extends \Bdus\Controller
     }
   }
 
+  /**
+   * Activates the fuzzy-date plugin for a table.
+   * Adds the five chrono_* columns to the core table if they do not yet exist,
+   * then sets fuzzy_date=true in the table config.
+   *
+   * POST /api/config/table/{tb}/fuzzy-date
+   * Response: { status, code }
+   */
+  public function activateFuzzyDate(): void
+  {
+    if (!$this->requireSuperAdmin()) return;
+
+    $tb = $this->get['tb'] ?? '';
+    if (!$tb) {
+      $this->returnJson(['status' => 'error', 'code' => 'missing_table']);
+      return;
+    }
+
+    try {
+      $inspect = new \DB\Inspect($this->db);
+      $alter   = new \DB\Alter($this->db);
+      $existing = $inspect->tableColumns($tb);
+
+      $columns = [
+        'chrono_from'      => 'INTEGER',
+        'chrono_to'        => 'INTEGER',
+        'chrono_label'     => 'VARCHAR(200)',
+        'chrono_certainty' => 'VARCHAR(10)',
+        'chrono_period'    => 'VARCHAR(200)',
+      ];
+
+      foreach ($columns as $col => $type) {
+        if (!in_array($col, $existing, true)) {
+          $alter->addFld($tb, $col, $type);
+        }
+      }
+
+      $tbData = $this->cfg->get("tables.$tb") ?: [];
+      $tbData['name']        = $tb;
+      $tbData['fuzzy_date']  = true;
+      $this->cfg->setTable($tbData);
+
+      $this->returnJson(['status' => 'success', 'code' => 'fuzzy_date_activated']);
+
+    } catch (\Throwable $th) {
+      $this->returnJson(['status' => 'error', 'code' => 'db_error', 'detail' => $th->getMessage()]);
+    }
+  }
+
+  /**
+   * Deactivates the fuzzy-date plugin for a table.
+   * Marks fuzzy_date=false in config; columns are preserved to protect data.
+   *
+   * DELETE /api/config/table/{tb}/fuzzy-date
+   * Response: { status, code }
+   */
+  public function deactivateFuzzyDate(): void
+  {
+    if (!$this->requireSuperAdmin()) return;
+
+    $tb = $this->get['tb'] ?? '';
+    if (!$tb) {
+      $this->returnJson(['status' => 'error', 'code' => 'missing_table']);
+      return;
+    }
+
+    try {
+      $tbData = $this->cfg->get("tables.$tb") ?: [];
+      $tbData['name']       = $tb;
+      $tbData['fuzzy_date'] = false;
+      $this->cfg->setTable($tbData);
+
+      $this->returnJson(['status' => 'success', 'code' => 'fuzzy_date_deactivated']);
+
+    } catch (\Throwable $th) {
+      $this->returnJson(['status' => 'error', 'code' => 'db_error', 'detail' => $th->getMessage()]);
+    }
+  }
+
   public function save_geoface_properties()
   {
     if (!$this->requireSuperAdmin()) return;

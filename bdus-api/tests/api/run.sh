@@ -285,6 +285,14 @@ run_phase "Zotero libraries & links" "17_zotero.hurl" \
   --variable "jwt=${JWT}"
 
 # ════════════════════════════════════════════════════════════════════
+# Phase 20 — Fuzzy-date plugin (end-to-end)
+# ════════════════════════════════════════════════════════════════════
+header "Phase 20 — Fuzzy-date plugin"
+run_phase "Fuzzy-date plugin" "20_fuzzy_date.hurl" \
+  --variable "jwt=${JWT}" \
+  --variable "us_id_1=${US_ID_1}"
+
+# ════════════════════════════════════════════════════════════════════
 # Phase 10 — Cleanup
 # ════════════════════════════════════════════════════════════════════
 header "Phase 10 — Cleanup"

@@ -166,6 +166,8 @@ class Router
         'Bdus\\Controllers\\Config::getRelations'                  => 'super_admin',
         'Bdus\\Controllers\\Config::saveRelation'                  => 'super_admin',
         'Bdus\\Controllers\\Config::deleteRelation'                => 'super_admin',
+        'Bdus\\Controllers\\Config::activateFuzzyDate'             => 'super_admin',
+        'Bdus\\Controllers\\Config::deactivateFuzzyDate'           => 'super_admin',
         'Bdus\\Controllers\\FrontpageEditor::saveWelcome'         => 'super_admin',
         'Bdus\\Controllers\\Templates::getTableList'               => 'super_admin',
         'Bdus\\Controllers\\Templates::getTemplateList'            => 'super_admin',
@@ -299,6 +301,8 @@ class Router
             $r->addRoute('PUT',    '/api/config/table/{tb}/field/{fld}',         ['Bdus\\Controllers\\Config', 'save_fld_properties']);
             $r->addRoute('DELETE', '/api/config/table/{tb}/field/{fld}',         ['Bdus\\Controllers\\Config', 'delete_column']);
             $r->addRoute('PATCH',  '/api/config/table/{tb}/field/{fld}',         ['Bdus\\Controllers\\Config', 'rename_column']);
+            $r->addRoute('POST',   '/api/config/table/{tb}/fuzzy-date', ['Bdus\\Controllers\\Config', 'activateFuzzyDate']);
+            $r->addRoute('DELETE', '/api/config/table/{tb}/fuzzy-date', ['Bdus\\Controllers\\Config', 'deactivateFuzzyDate']);
             $r->addRoute('GET',    '/api/config/geoface',     ['Bdus\\Controllers\\Config', 'getGeoFaceConfig']);
             $r->addRoute('PUT',    '/api/config/geoface',     ['Bdus\\Controllers\\Config', 'save_geoface_properties']);
             $r->addRoute('POST',   '/api/config/geofile',     ['Bdus\\Controllers\\Config', 'uploadGeoFile']);

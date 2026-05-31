@@ -447,9 +447,10 @@ class Record extends \Bdus\Controller
     return [
       'fields'      => $this->buildFieldSchema($tb),
       'plugins'     => $plugins,
-      'rs_field'    => $this->cfg->get("tables.{$tb}.rs")      ?? null,
-      'has_geodata' => (bool) $this->cfg->get("tables.{$tb}.geodata"),
-      'has_zotero'  => (bool) $this->cfg->get("tables.{$tb}.zotero"),
+      'rs_field'       => $this->cfg->get("tables.{$tb}.rs")         ?? null,
+      'has_geodata'    => (bool) $this->cfg->get("tables.{$tb}.geodata"),
+      'has_zotero'     => (bool) $this->cfg->get("tables.{$tb}.zotero"),
+      'has_fuzzy_date' => (bool) $this->cfg->get("tables.{$tb}.fuzzy_date"),
     ];
   }
 

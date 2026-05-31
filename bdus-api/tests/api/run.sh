@@ -293,6 +293,13 @@ run_phase "Fuzzy-date plugin" "20_fuzzy_date.hurl" \
   --variable "us_id_1=${US_ID_1}"
 
 # ════════════════════════════════════════════════════════════════════
+# Phase 21 — Chrono filter (_chrono_overlap)
+# ════════════════════════════════════════════════════════════════════
+header "Phase 21 — Chrono filter"
+run_phase "Chrono filter" "21_chrono_filter.hurl" \
+  --variable "jwt=${JWT}"
+
+# ════════════════════════════════════════════════════════════════════
 # Phase 10 — Cleanup
 # ════════════════════════════════════════════════════════════════════
 header "Phase 10 — Cleanup"

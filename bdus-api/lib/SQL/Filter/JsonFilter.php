@@ -44,8 +44,14 @@ class JsonFilter
         '_starts_with', '_ends_with',
         '_in', '_nin',
         '_null', '_nnull',
-        '_empty', '_nempty',  // convenience: IS NULL OR = '' / IS NOT NULL AND != ''
-        '_between',           // value: [low, high]
+        '_empty', '_nempty',       // convenience: IS NULL OR = '' / IS NOT NULL AND != ''
+        '_between',                // value: [low, high]
+        '_chrono_overlap',         // fuzzy-date: [low, high] with NULL ante/post quem semantics
+    ];
+
+    /** chrono_* columns added to core tables by the fuzzy-date plugin. */
+    private const CHRONO_FIELDS = [
+        'chrono_from', 'chrono_to', 'chrono_label', 'chrono_certainty', 'chrono_period',
     ];
 
     private const LOGICAL_OPS = ['_and', '_or'];
@@ -118,9 +124,13 @@ class JsonFilter
                     $field = $this->validateField($key);
                     $col   = $this->tb . '.' . $field;
                     foreach ($valueArr as $op => $val) {
-                        [$sql, $vals] = $this->buildCondition($col, $op, $val);
-                        $parts[]      = $sql;
-                        $values       = array_merge($values, $vals);
+                        if ($op === '_chrono_overlap') {
+                            [$sql, $vals] = $this->buildChronoOverlap($field, $val);
+                        } else {
+                            [$sql, $vals] = $this->buildCondition($col, $op, $val);
+                        }
+                        $parts[]  = $sql;
+                        $values   = array_merge($values, $vals);
                     }
                 } else {
                     // Cross-table (plugin) condition: { plugin: { field: { _op: val }, ... } }
@@ -259,6 +269,46 @@ class JsonFilter
         return ["{$col} BETWEEN ? AND ?", [$val[0], $val[1]]];
     }
 
+    /**
+     * Chrono overlap: finds records whose fuzzy date intersects the range [low, high].
+     *
+     * Handles the three non-null date types:
+     *   - Normal range (from ≤ high AND to ≥ low)
+     *   - Ante quem   (from IS NULL AND to ≥ low)
+     *   - Post quem   (to IS NULL AND from ≤ high)
+     * Undated records (both NULL) never match.
+     *
+     * Must be applied to 'chrono_from'; pairs it automatically with 'chrono_to'.
+     *
+     * @param  string $field  Must be 'chrono_from'
+     * @param  mixed  $val    Two-element array [low, high] (integer year values)
+     * @return array{0: string, 1: array}
+     * @throws FilterException on wrong field or invalid value shape
+     */
+    private function buildChronoOverlap(string $field, mixed $val): array
+    {
+        if ($field !== 'chrono_from') {
+            throw new FilterException(
+                "_chrono_overlap must be applied to 'chrono_from', got '{$field}'."
+            );
+        }
+        if (!is_array($val) || count($val) !== 2) {
+            throw new FilterException(
+                "_chrono_overlap requires a two-element array [low, high]."
+            );
+        }
+        [$low, $high] = [(int) $val[0], (int) $val[1]];
+
+        $tb  = $this->tb;
+        $sql = "("
+             . "({$tb}.chrono_from <= ? AND {$tb}.chrono_to >= ?)"        // normal range overlap
+             . " OR ({$tb}.chrono_from IS NULL AND {$tb}.chrono_to >= ?)"  // ante quem
+             . " OR ({$tb}.chrono_to IS NULL AND {$tb}.chrono_from <= ?)"  // post quem
+             . ")";
+
+        return [$sql, [$high, $low, $low, $high]];
+    }
+
     // ── Field validation ───────────────────────────────────────────────────────
 
     private function validateField(string $name): string
@@ -267,6 +317,13 @@ class JsonFilter
             throw new FilterException("'{$name}' is a logical operator, not a field name.");
         }
         if ($name === 'id') {
+            return $name;
+        }
+        // Allow chrono_* columns when the fuzzy-date plugin is active for this table.
+        if (
+            in_array($name, self::CHRONO_FIELDS, true) &&
+            $this->cfg->get("tables.{$this->tb}.fuzzy_date")
+        ) {
             return $name;
         }
         $fields     = $this->cfg->get("tables.{$this->tb}.fields") ?? [];

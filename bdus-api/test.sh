@@ -48,17 +48,19 @@ SKIP_UNIT=false
 SKIP_E2E=false
 SEED_DEMO=false
 DB_ENGINE="sqlite"
+ALL_ENGINES=false
 
 for arg in "$@"; do
   case "$arg" in
-    --keep)       KEEP=true ;;
-    --skip-unit)  SKIP_UNIT=true ;;
-    --skip-e2e)   SKIP_E2E=true ;;
-    --seed-demo)  SEED_DEMO=true ;;
-    --db=*)       DB_ENGINE="${arg#--db=}" ;;
+    --keep)          KEEP=true ;;
+    --skip-unit)     SKIP_UNIT=true ;;
+    --skip-e2e)      SKIP_E2E=true ;;
+    --seed-demo)     SEED_DEMO=true ;;
+    --all-engines)   ALL_ENGINES=true ;;
+    --db=*)          DB_ENGINE="${arg#--db=}" ;;
     *)
       echo "Unknown option: $arg" >&2
-      echo "Usage: $0 [--keep] [--seed-demo] [--skip-unit] [--skip-e2e] [--db=sqlite|pgsql|mysql]" >&2
+      echo "Usage: $0 [--keep] [--seed-demo] [--skip-unit] [--skip-e2e] [--db=sqlite|pgsql|mysql] [--all-engines]" >&2
       exit 1
       ;;
   esac
@@ -71,6 +73,36 @@ case "$DB_ENGINE" in
     exit 1
     ;;
 esac
+
+# ── Multi-engine mode ─────────────────────────────────────────────────
+# --all-engines runs the full suite three times (sqlite → pgsql → mysql)
+# and exits non-zero if any engine fails.
+if [[ "$ALL_ENGINES" == true ]]; then
+  MULTI_EXIT=0
+  ENGINES_FAILED=()
+  for engine in sqlite pgsql mysql; do
+    echo -e "\n${BOLD}${CYAN}════════════════════════════════════════${RESET}"
+    echo -e "${BOLD}${CYAN}  Running suite on: ${engine}${RESET}"
+    echo -e "${BOLD}${CYAN}════════════════════════════════════════${RESET}\n"
+    if bash "$0" --db="$engine" \
+        $( [[ "$SKIP_UNIT" == true ]]  && echo "--skip-unit"  ) \
+        $( [[ "$SKIP_E2E"  == true ]]  && echo "--skip-e2e"   ) \
+        $( [[ "$SEED_DEMO" == true ]]  && echo "--seed-demo"  ); then
+      pass "Engine ${engine}: ALL PASSED"
+    else
+      fail "Engine ${engine}: FAILED"
+      ENGINES_FAILED+=("$engine")
+      MULTI_EXIT=1
+    fi
+  done
+  echo ""
+  if [[ $MULTI_EXIT -eq 0 ]]; then
+    echo -e "${BOLD}${GREEN}All engines passed: sqlite ✓  pgsql ✓  mysql ✓${RESET}\n"
+  else
+    echo -e "${BOLD}${RED}Failed engines: ${ENGINES_FAILED[*]}${RESET}\n"
+  fi
+  exit $MULTI_EXIT
+fi
 
 # ── Constants ────────────────────────────────────────────────────────
 COMPOSE_PROJECT="bdus-test"

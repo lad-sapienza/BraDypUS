@@ -32,6 +32,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the full structure of the `bdus_demo` test/demo application with `// bdus:` annotations
   for all BraDypUS-specific features (field types, population policies, validation checks,
   table-level features). Serves as the canonical source of truth for the demo schema.
+- **`test.sh --all-engines`**: new flag that runs the full suite (PHPUnit + Hurl) three
+  times in sequence — sqlite → pgsql → mysql — and reports a consolidated pass/fail per
+  engine. Default (`./test.sh`) still uses sqlite only for fast iteration.
+  All three engines pass the full suite at this commit.
+- **PHPUnit test coverage for 6 previously untested controllers**:
+  `HistoryCtrlTest` (8 tests — pagination, filters, privilege),
+  `NewAppCtrlTest` (3 tests — shape, not-permitted guard, missing params),
+  `FileCtrlTest` (5 tests — sortFiles success/edge/privilege),
+  `UserCtrlTest` (18 tests — full CRUD: showList, showUserForm, saveUserData, deleteOne,
+  getTablePrivileges, saveTablePrivilege, deleteTablePrivilege),
+  `LoginCtrlTest` (8 tests — auth happy/error paths, refresh, out, listApps),
+  `ConfirmAdminPwdCtrlTest` (4 tests — correct/wrong/empty pwd, non-super-admin).
+  Total test count: 749 → 800 (+51 tests, +141 assertions).
+- **Hurl E2E phases 29–30**: history+confirm-admin-password (`GET /api/history`,
+  `POST /api/admin/check-password`); file sort (`POST /api/files/sort`).
+  Total hurl phases: 28 → 30.
 - **OpenAPI spec fully aligned with `Router.php`**: added documentation for all previously
   undocumented routes — migrations (`GET /api/migrations`), config relations
   (`GET/POST /api/config/relations`, `PUT/DELETE /api/config/relations/{id}`), all 10 Zotero

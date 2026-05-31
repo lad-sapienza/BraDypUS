@@ -350,6 +350,21 @@ run_phase "Geoface feature ops" "28_geoface_ops.hurl" \
   --variable "us_id_1=${US_ID_1}"
 
 # ════════════════════════════════════════════════════════════════════
+# Phase 29 — Edit history + confirm-admin-password
+# ════════════════════════════════════════════════════════════════════
+header "Phase 29 — History & confirm-admin-password"
+run_phase "History & confirm-admin-pwd" "29_history_admin.hurl" \
+  --variable "jwt=${JWT}" \
+  --variable "admin_password=${ADMIN_PASSWORD}"
+
+# ════════════════════════════════════════════════════════════════════
+# Phase 30 — File sort
+# ════════════════════════════════════════════════════════════════════
+header "Phase 30 — File sort"
+run_phase "File sort" "30_file_sort.hurl" \
+  --variable "jwt=${JWT}"
+
+# ════════════════════════════════════════════════════════════════════
 # Phase 10 — Cleanup
 # ════════════════════════════════════════════════════════════════════
 header "Phase 10 — Cleanup"

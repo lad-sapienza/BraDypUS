@@ -69,6 +69,8 @@ class GeofaceCtrlTest extends BdusTestCase
         $this->assertArrayHasKey('layers',          $meta);
         $this->assertArrayHasKey('preview_fields',  $meta);
         $this->assertArrayHasKey('id_field',        $meta);
+        $this->assertArrayHasKey('has_fuzzy_date',  $meta);
+        $this->assertIsBool($meta['has_fuzzy_date']);
         $this->assertSame(self::TB, $meta['tb_id']);
     }
 

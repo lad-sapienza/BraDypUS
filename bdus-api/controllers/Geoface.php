@@ -125,6 +125,7 @@ class Geoface extends \Bdus\Controller
                     'layers'         => $layers,
                     'preview_fields' => $previewFields,
                     'id_field'       => $idField,
+                    'has_fuzzy_date' => (bool) $this->cfg->get("tables.{$tb}.fuzzy_date"),
                 ],
             ]);
         } catch (\Throwable $e) {

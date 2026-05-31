@@ -50,6 +50,26 @@
         />
       </div>
 
+      <!-- Chronological layout toggle (only when fuzzy_date plugin is active) -->
+      <div v-if="matrixData?.has_fuzzy_date" class="matrix-layout-toggle">
+        <Button
+          :label="t('matrix_layout_topological')"
+          icon="pi pi-sitemap"
+          size="small"
+          :severity="layoutMode === 'topological' ? 'primary' : 'secondary'"
+          :outlined="layoutMode !== 'topological'"
+          @click="layoutMode = 'topological'"
+        />
+        <Button
+          :label="t('matrix_layout_chronological')"
+          icon="pi pi-calendar"
+          size="small"
+          :severity="layoutMode === 'chronological' ? 'primary' : 'secondary'"
+          :outlined="layoutMode !== 'chronological'"
+          @click="layoutMode = 'chronological'"
+        />
+      </div>
+
       <!-- Reload -->
       <Button
         :label="t('reload')"
@@ -85,7 +105,9 @@
 
     <!-- ── Graph ───────────────────────────────────────────────── -->
     <div v-else-if="matrixData" class="matrix-canvas-wrap">
+      <!-- Topological (standard) layout -->
       <RsGraph
+        v-if="layoutMode === 'topological'"
         ref="graphRef"
         :nodes="matrixData.nodes"
         :relations="matrixData.relations"
@@ -94,6 +116,15 @@
         @node-click="onNodeClick"
         @relation-add-requested="onAddRequested"
         @relation-delete-requested="onDeleteRequested"
+      />
+      <!-- Chronological layout (absolute timeline) -->
+      <RsGraphChrono
+        v-else
+        ref="graphRef"
+        :nodes="matrixData.nodes"
+        :relations="matrixData.relations"
+        :highlightId="highlightId"
+        @node-click="onNodeClick"
       />
     </div>
 
@@ -176,6 +207,7 @@ import ProgressSpinner from 'primevue/progressspinner'
 import Dialog          from 'primevue/dialog'
 import Select          from 'primevue/select'
 import RsGraph         from '@/components/record/RsGraph.vue'
+import RsGraphChrono  from '@/components/record/RsGraphChrono.vue'
 import { api }         from '@/api'
 import { useI18n }     from '@/i18n'
 import { useTables }   from '@/composables/useTables'
@@ -203,10 +235,11 @@ const tableLabel = computed(() =>
 )
 
 // ── State ────────────────────────────────────────────────────────
-const matrixData = ref(null)   // { rs_field, nodes[], relations[] }
-const loading    = ref(false)
-const fetchError = ref(null)
-const graphRef   = ref(null)
+const matrixData  = ref(null)   // { rs_field, has_fuzzy_date, nodes[], relations[] }
+const loading     = ref(false)
+const fetchError  = ref(null)
+const graphRef    = ref(null)
+const layoutMode  = ref('topological')  // 'topological' | 'chronological'
 const editMode   = ref(false)
 const mutating   = ref(false)  // shared loading flag for add/delete
 
@@ -404,6 +437,11 @@ onMounted(async () => {
 }
 
 .matrix-spacer { flex: 1; }
+
+.matrix-layout-toggle {
+  display: flex;
+  gap: 0.25rem;
+}
 
 .matrix-edit-toggle :deep(.toggle-active) {
   background: var(--p-primary-color);

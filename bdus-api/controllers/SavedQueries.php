@@ -101,7 +101,7 @@ class SavedQueries extends \Bdus\Controller
      */
     public function shareQuery(): void
     {
-        $id = isset($this->post['id']) ? (int) $this->post['id'] : null;
+        $id = isset($this->request['id']) ? (int) $this->request['id'] : null;
         if (!$id) {
             $this->returnJson(['status' => 'error', 'code' => 'parameter_missing', 'detail' => 'id']);
             return;
@@ -137,7 +137,7 @@ class SavedQueries extends \Bdus\Controller
      */
     public function unshareQuery(): void
     {
-        $id = isset($this->post['id']) ? (int) $this->post['id'] : null;
+        $id = isset($this->request['id']) ? (int) $this->request['id'] : null;
         if (!$id) {
             $this->returnJson(['status' => 'error', 'code' => 'parameter_missing', 'detail' => 'id']);
             return;
@@ -173,7 +173,7 @@ class SavedQueries extends \Bdus\Controller
      */
     public function deleteQuery(): void
     {
-        $id = isset($this->post['id']) ? (int) $this->post['id'] : null;
+        $id = isset($this->request['id']) ? (int) $this->request['id'] : null;
         if (!$id) {
             $this->returnJson(['status' => 'error', 'code' => 'parameter_missing', 'detail' => 'id']);
             return;

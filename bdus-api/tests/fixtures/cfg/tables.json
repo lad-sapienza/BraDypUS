@@ -5,11 +5,18 @@
             "label": "Items",
             "order": "id",
             "id_field": "id",
-            "preview": ["id", "name", "status"],
-            "plugin": ["tags"],
+            "preview": [
+                "id",
+                "name",
+                "status"
+            ],
+            "plugin": [
+                "tags"
+            ],
             "rs": "id",
             "geodata": 1,
-            "zotero": 1
+            "zotero": 1,
+            "fuzzy_date": false
         },
         {
             "name": "tags",
@@ -17,7 +24,10 @@
             "order": "id",
             "id_field": "id",
             "is_plugin": "1",
-            "preview": ["id", "label"]
+            "preview": [
+                "id",
+                "label"
+            ]
         }
     ]
 }

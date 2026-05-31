@@ -61,7 +61,33 @@ jsonpath "$.status"  == "success"
 jsonpath "$.charts"  count == 1
 
 
-# ── 7e. Delete the chart ─────────────────────────────────────────────
+# ── 7e. Share the chart with all users ──────────────────────────────
+POST {{base_url}}/api/chart/{{chart_id}}/share
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+jsonpath "$.code"   == "ok_sharing_chart"
+
+
+# ── 7f. Shared chart appears in list with is_global flag ────────────
+GET {{base_url}}/api/charts
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.charts[0].is_global" == 1
+
+
+# ── 7g. Unshare the chart ────────────────────────────────────────────
+POST {{base_url}}/api/chart/{{chart_id}}/unshare
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+jsonpath "$.code"   == "ok_unsharing_chart"
+
+
+# ── 7h. Delete the chart ─────────────────────────────────────────────
 DELETE {{base_url}}/api/chart/{{chart_id}}
 Authorization: Bearer {{jwt}}
 HTTP 200
@@ -70,7 +96,7 @@ jsonpath "$.status" == "success"
 jsonpath "$.code"   == "ok_chart_erase"
 
 
-# ── 7f. List charts — should be empty again ─────────────────────────
+# ── 7i. List charts — should be empty again ─────────────────────────
 GET {{base_url}}/api/charts
 Authorization: Bearer {{jwt}}
 HTTP 200

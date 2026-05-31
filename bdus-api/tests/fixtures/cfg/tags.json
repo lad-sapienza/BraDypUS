@@ -1,6 +1,23 @@
 [
-    { "name": "id",       "label": "ID",       "type": "text", "readonly": "1" },
-    { "name": "label",    "label": "Label",    "type": "text" },
-    { "name": "id_link",  "label": "Item ID",  "type": "text" },
-    { "name": "table_link","label": "Table",   "type": "text" }
+    {
+        "name": "id",
+        "label": "ID",
+        "type": "text",
+        "readonly": "1"
+    },
+    {
+        "name": "label",
+        "label": "Label",
+        "type": "text"
+    },
+    {
+        "name": "id_link",
+        "label": "Item ID",
+        "type": "text"
+    },
+    {
+        "name": "table_link",
+        "label": "Table",
+        "type": "text"
+    }
 ]

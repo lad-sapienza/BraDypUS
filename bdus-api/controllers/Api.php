@@ -118,7 +118,7 @@ class Api extends \Bdus\Controller
             return;
         }
 
-        $id = (int)($this->post['id'] ?? 0);
+        $id = (int)($this->request['id'] ?? 0);
         if (!$id) {
             $this->returnJson([
                 'status' => 'error',
@@ -146,7 +146,7 @@ class Api extends \Bdus\Controller
             return;
         }
 
-        $id = (int)($this->post['id'] ?? 0);
+        $id = (int)($this->request['id'] ?? 0);
         if (!$id) {
             $this->returnJson([
                 'status' => 'error',

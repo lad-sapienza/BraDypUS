@@ -175,3 +175,13 @@ HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
 jsonpath "$.libs"   isEmpty
+
+# ── 17q. Sync-all — no libs → 0 items, graceful ──────────────────────
+POST {{base_url}}/api/zotero/sync
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.status"   == "success"
+jsonpath "$.total"    == 0
+jsonpath "$.updated"  == 0
+jsonpath "$.detached" == 0

@@ -1146,54 +1146,70 @@ Content-Type: application/json
 { "id_first": {{us_id_16}}, "id_second": {{us_id_18}}, "relation": 1 }
 HTTP 200
 
-# ── 19g. Geodata ────────────────────────────────────────────────────
-POST {{base_url}}/api/record/us/{{us_id_1}}/geodata
+# ── 19g. Geodata — POST /api/geoface/feature con GeoJSON ─────────────
+POST {{base_url}}/api/geoface/feature
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "geometry": "POINT (12.4964 41.9028)" }
+{ "tb": "us", "id": {{us_id_1}}, "geometry": {"type":"Point","coordinates":[12.4964,41.9028]} }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
-POST {{base_url}}/api/record/us/{{us_id_6}}/geodata
+POST {{base_url}}/api/geoface/feature
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "geometry": "POLYGON ((12.4960 41.9025, 12.4968 41.9025, 12.4968 41.9031, 12.4960 41.9031, 12.4960 41.9025))" }
+{ "tb": "us", "id": {{us_id_6}}, "geometry": {"type":"Polygon","coordinates":[[[12.4960,41.9025],[12.4968,41.9025],[12.4968,41.9031],[12.4960,41.9031],[12.4960,41.9025]]]} }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
-POST {{base_url}}/api/record/us/{{us_id_13}}/geodata
+POST {{base_url}}/api/geoface/feature
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "geometry": "POINT (12.4970 41.9030)" }
+{ "tb": "us", "id": {{us_id_13}}, "geometry": {"type":"Point","coordinates":[12.4970,41.9030]} }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
-POST {{base_url}}/api/record/us/{{us_id_18}}/geodata
+POST {{base_url}}/api/geoface/feature
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "geometry": "POINT (12.7320 41.6890)" }
+{ "tb": "us", "id": {{us_id_18}}, "geometry": {"type":"Point","coordinates":[12.7320,41.6890]} }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
-POST {{base_url}}/api/record/us/{{us_id_26}}/geodata
+POST {{base_url}}/api/geoface/feature
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "geometry": "POLYGON ((12.6280 41.4510, 12.6290 41.4510, 12.6290 41.4520, 12.6280 41.4520, 12.6280 41.4510))" }
+{ "tb": "us", "id": {{us_id_26}}, "geometry": {"type":"Polygon","coordinates":[[[12.6280,41.4510],[12.6290,41.4510],[12.6290,41.4520],[12.6280,41.4520],[12.6280,41.4510]]]} }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
-POST {{base_url}}/api/record/siti/{{sito_urbano}}/geodata
+POST {{base_url}}/api/geoface/feature
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "geometry": "POLYGON ((12.4955 41.9020, 12.4975 41.9020, 12.4975 41.9035, 12.4955 41.9035, 12.4955 41.9020))" }
+{ "tb": "siti", "id": {{sito_urbano}}, "geometry": {"type":"Polygon","coordinates":[[[12.4955,41.9020],[12.4975,41.9020],[12.4975,41.9035],[12.4955,41.9035],[12.4955,41.9020]]]} }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
-POST {{base_url}}/api/record/siti/{{sito_rurale}}/geodata
+POST {{base_url}}/api/geoface/feature
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "geometry": "POLYGON ((12.7310 41.6880, 12.7340 41.6880, 12.7340 41.6900, 12.7310 41.6900, 12.7310 41.6880))" }
+{ "tb": "siti", "id": {{sito_rurale}}, "geometry": {"type":"Polygon","coordinates":[[[12.7310,41.6880],[12.7340,41.6880],[12.7340,41.6900],[12.7310,41.6900],[12.7310,41.6880]]]} }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
-POST {{base_url}}/api/record/siti/{{sito_subacqueo}}/geodata
+POST {{base_url}}/api/geoface/feature
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "geometry": "POLYGON ((12.6270 41.4500, 12.6300 41.4500, 12.6300 41.4525, 12.6270 41.4525, 12.6270 41.4500))" }
+{ "tb": "siti", "id": {{sito_subacqueo}}, "geometry": {"type":"Polygon","coordinates":[[[12.6270,41.4500],[12.6300,41.4500],[12.6300,41.4525],[12.6270,41.4525],[12.6270,41.4500]]]} }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 
 # ── 19h. Reperti ────────────────────────────────────────────────────
@@ -1519,74 +1535,96 @@ HTTP 200
 
 
 # ── 19l. Geodata reperti ────────────────────────────────────────────
-POST {{base_url}}/api/record/reperti/{{rep_id_1}}/geodata
+POST {{base_url}}/api/geoface/feature
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "geometry": "POINT (12.4963 41.9027)" }
+{ "tb": "reperti", "id": {{rep_id_1}}, "geometry": {"type":"Point","coordinates":[12.4963,41.9027]} }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
-POST {{base_url}}/api/record/reperti/{{rep_id_3}}/geodata
+POST {{base_url}}/api/geoface/feature
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "geometry": "POINT (12.4965 41.9029)" }
+{ "tb": "reperti", "id": {{rep_id_3}}, "geometry": {"type":"Point","coordinates":[12.4965,41.9029]} }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
-POST {{base_url}}/api/record/reperti/{{rep_id_15}}/geodata
+POST {{base_url}}/api/geoface/feature
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "geometry": "POINT (12.7322 41.6891)" }
+{ "tb": "reperti", "id": {{rep_id_15}}, "geometry": {"type":"Point","coordinates":[12.7322,41.6891]} }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
-POST {{base_url}}/api/record/reperti/{{rep_id_20}}/geodata
+POST {{base_url}}/api/geoface/feature
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "geometry": "POINT (12.6283 41.4513)" }
+{ "tb": "reperti", "id": {{rep_id_20}}, "geometry": {"type":"Point","coordinates":[12.6283,41.4513]} }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 
-# ── 19m. Userlinks ──────────────────────────────────────────────────
+# ── 19m. Userlinks — POST /api/manual-link ──────────────────────────
 # Manual links: us ↔ reperti (interpretative associations)
-POST {{base_url}}/api/record/us/{{us_id_3}}/links
+POST {{base_url}}/api/manual-link
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "other_tb": "reperti", "other_id": {{rep_id_6}} }
+{ "tb_one": "us", "id_one": {{us_id_3}}, "tb_two": "reperti", "id_two": {{rep_id_6}} }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
-POST {{base_url}}/api/record/us/{{us_id_9}}/links
+POST {{base_url}}/api/manual-link
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "other_tb": "reperti", "other_id": {{rep_id_7}} }
+{ "tb_one": "us", "id_one": {{us_id_9}}, "tb_two": "reperti", "id_two": {{rep_id_7}} }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
-POST {{base_url}}/api/record/us/{{us_id_9}}/links
+POST {{base_url}}/api/manual-link
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "other_tb": "reperti", "other_id": {{rep_id_8}} }
+{ "tb_one": "us", "id_one": {{us_id_9}}, "tb_two": "reperti", "id_two": {{rep_id_8}} }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
-POST {{base_url}}/api/record/us/{{us_id_21}}/links
+POST {{base_url}}/api/manual-link
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "other_tb": "reperti", "other_id": {{rep_id_15}} }
+{ "tb_one": "us", "id_one": {{us_id_21}}, "tb_two": "reperti", "id_two": {{rep_id_15}} }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
-POST {{base_url}}/api/record/us/{{us_id_21}}/links
+POST {{base_url}}/api/manual-link
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "other_tb": "reperti", "other_id": {{rep_id_16}} }
+{ "tb_one": "us", "id_one": {{us_id_21}}, "tb_two": "reperti", "id_two": {{rep_id_16}} }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
-POST {{base_url}}/api/record/us/{{us_id_24}}/links
+POST {{base_url}}/api/manual-link
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "other_tb": "reperti", "other_id": {{rep_id_18}} }
+{ "tb_one": "us", "id_one": {{us_id_24}}, "tb_two": "reperti", "id_two": {{rep_id_18}} }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
-POST {{base_url}}/api/record/us/{{us_id_28}}/links
+POST {{base_url}}/api/manual-link
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "other_tb": "reperti", "other_id": {{rep_id_20}} }
+{ "tb_one": "us", "id_one": {{us_id_28}}, "tb_two": "reperti", "id_two": {{rep_id_20}} }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 
 # ── 19n. Chart ──────────────────────────────────────────────────────

@@ -307,6 +307,49 @@ run_phase "Schema structural changes" "22_schema_changes.hurl" \
   --variable "jwt=${JWT}"
 
 # ════════════════════════════════════════════════════════════════════
+# Phase 23 — Widgets
+# ════════════════════════════════════════════════════════════════════
+header "Phase 23 — Widgets"
+run_phase "Widgets" "23_widgets.hurl" \
+  --variable "jwt=${JWT}"
+
+# ════════════════════════════════════════════════════════════════════
+# Phase 24 — Application logs
+# ════════════════════════════════════════════════════════════════════
+header "Phase 24 — Logs"
+run_phase "Logs" "24_logs.hurl" \
+  --variable "jwt=${JWT}"
+
+# ════════════════════════════════════════════════════════════════════
+# Phase 25 — API key management
+# ════════════════════════════════════════════════════════════════════
+header "Phase 25 — API keys"
+run_phase "API keys" "25_api_keys.hurl" \
+  --variable "jwt=${JWT}"
+
+# ════════════════════════════════════════════════════════════════════
+# Phase 26 — Saved queries
+# ════════════════════════════════════════════════════════════════════
+header "Phase 26 — Saved queries"
+run_phase "Saved queries" "26_saved_queries.hurl" \
+  --variable "jwt=${JWT}"
+
+# ════════════════════════════════════════════════════════════════════
+# Phase 27 — Templates + field-structure
+# ════════════════════════════════════════════════════════════════════
+header "Phase 27 — Templates"
+run_phase "Templates" "27_templates.hurl" \
+  --variable "jwt=${JWT}"
+
+# ════════════════════════════════════════════════════════════════════
+# Phase 28 — Geoface feature CRUD
+# ════════════════════════════════════════════════════════════════════
+header "Phase 28 — Geoface feature operations"
+run_phase "Geoface feature ops" "28_geoface_ops.hurl" \
+  --variable "jwt=${JWT}" \
+  --variable "us_id_1=${US_ID_1}"
+
+# ════════════════════════════════════════════════════════════════════
 # Phase 10 — Cleanup
 # ════════════════════════════════════════════════════════════════════
 header "Phase 10 — Cleanup"

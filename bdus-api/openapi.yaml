@@ -82,6 +82,14 @@ tags:
     description: Record version history and point-in-time restore
   - name: system
     description: Application info, history, logs, welcome page, new-app wizard
+  - name: migrations
+    description: Database migration status (admin)
+  - name: config-relations
+    description: Cross-table relation definitions (config panel)
+  - name: zotero
+    description: Zotero bibliography integration — library config and per-record citation links
+  - name: widgets
+    description: Per-app UI widget files (vanilla ES modules)
 
 # ──────────────────────────────────────────────────────────────────────────────
 paths:
@@ -2097,9 +2105,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+
+  /api/config/geofile:
     post:
       tags: [config]
       summary: Upload a local GeoJSON / KML base-layer file
+      description: Uploads a file to `projects/{app}/geofiles/`. Super-admin only.
       requestBody:
         required: true
         content:
@@ -2121,6 +2132,7 @@ paths:
     delete:
       tags: [config]
       summary: Delete a locally uploaded geofile
+      description: Removes the file from `projects/{app}/geofiles/`. Super-admin only.
       requestBody:
         content:
           application/json:
@@ -2456,8 +2468,8 @@ paths:
                 id:
                   type: integer
                 geometry:
-                  type: string
-                  description: WKT geometry string
+                  type: object
+                  description: GeoJSON geometry object
       responses:
         '200':
           description: Feature created
@@ -2467,19 +2479,29 @@ paths:
                 $ref: '#/components/schemas/CodedResult'
     put:
       tags: [geoface]
-      summary: Update an existing geometry feature
+      summary: Update one or more geometry features
+      description: |
+        Batch-updates geometries. Each item in the `geodata` array carries
+        `id` (the `bdus_geodata` row id) and a GeoJSON geometry object.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [id, geometry]
+              required: [geodata]
               properties:
-                id:
-                  type: integer
-                geometry:
-                  type: string
+                geodata:
+                  type: array
+                  items:
+                    type: object
+                    required: [id, geometry]
+                    properties:
+                      id:
+                        type: integer
+                      geometry:
+                        type: object
+                        description: GeoJSON geometry object
       responses:
         '200':
           description: Update result
@@ -2489,16 +2511,19 @@ paths:
                 $ref: '#/components/schemas/CodedResult'
     delete:
       tags: [geoface]
-      summary: Delete a geometry feature
+      summary: Delete one or more geometry features
       requestBody:
         content:
           application/json:
             schema:
               type: object
-              required: [id]
+              required: [ids]
               properties:
-                id:
-                  type: integer
+                ids:
+                  type: array
+                  items:
+                    type: integer
+                  description: Array of `bdus_geodata` row IDs to delete
       responses:
         '200':
           description: Deletion result
@@ -3369,6 +3394,477 @@ paths:
                       affected:
                         type: integer
 
+  # ── Migrations ───────────────────────────────────────────────────────────────
+
+  /api/migrations:
+    get:
+      tags: [migrations]
+      summary: List all known migrations and their status
+      description: |
+        Returns the full ordered list of registered database migrations with their
+        applied status. Requires admin privilege.
+      responses:
+        '200':
+          description: Migration list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      total:
+                        type: integer
+                        description: Total number of known migrations
+                      applied:
+                        type: integer
+                        description: Number of migrations already applied
+                      migrations:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            name:
+                              type: string
+                              description: Migration identifier (e.g. `M001_add_user_table_privs`)
+                            applied:
+                              type: boolean
+                            applied_at:
+                              type: string
+                              nullable: true
+                              description: Timestamp (`YYYY-MM-DD HH:MM:SS`) or null if not applied
+
+  # ── Config relations ──────────────────────────────────────────────────────────
+
+  /api/config/relations:
+    get:
+      tags: [config-relations]
+      summary: List all cross-table relation definitions
+      description: Returns every row in `bdus_cfg_relations`, joined with table labels. Super-admin only.
+      responses:
+        '200':
+          description: Relation list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/CodedSuccess'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Relation'
+    post:
+      tags: [config-relations]
+      summary: Create a new relation
+      description: |
+        Creates a new cross-table relation. `from_tb` and `to_tb` are automatically
+        normalised so the alphabetically-first table name is always stored as `from_tb`
+        (UNIQUE constraint). Returns an error if the canonical pair already exists.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RelationInput'
+      responses:
+        '200':
+          description: Relation created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/CodedSuccess'
+                  - type: object
+                    properties:
+                      id:
+                        type: integer
+
+  /api/config/relations/{id}:
+    parameters:
+      - $ref: '#/components/parameters/id'
+    put:
+      tags: [config-relations]
+      summary: Update an existing relation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RelationInput'
+      responses:
+        '200':
+          description: Relation updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/CodedSuccess'
+                  - type: object
+                    properties:
+                      id:
+                        type: integer
+    delete:
+      tags: [config-relations]
+      summary: Delete a relation
+      responses:
+        '200':
+          description: Relation deleted or not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  # ── Zotero ────────────────────────────────────────────────────────────────────
+
+  /api/zotero/libs:
+    get:
+      tags: [zotero]
+      summary: List configured Zotero libraries
+      description: Returns all libraries; `api_key` is redacted (replaced by `has_api_key`). Admin only.
+      responses:
+        '200':
+          description: Library list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      libs:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ZoteroLib'
+
+  /api/zotero/lib:
+    post:
+      tags: [zotero]
+      summary: Add a Zotero library
+      description: Registers a Zotero user or group library. Admin only.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type, zotero_id, name]
+              properties:
+                type:
+                  type: string
+                  enum: [user, group]
+                zotero_id:
+                  type: string
+                  description: Numeric Zotero user/group ID
+                name:
+                  type: string
+                  description: Display name for this library
+                api_key:
+                  type: string
+                  description: Zotero API key (required for private libraries)
+                citation_style:
+                  type: string
+                  description: CSL style name (default `chicago-author-date`)
+      responses:
+        '200':
+          description: Library added
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/CodedSuccess'
+                  - type: object
+                    properties:
+                      id:
+                        type: integer
+
+  /api/zotero/lib/{id}:
+    parameters:
+      - $ref: '#/components/parameters/id'
+    delete:
+      tags: [zotero]
+      summary: Delete a Zotero library
+      description: Deletes the library and all its citation links (CASCADE). Admin only.
+      responses:
+        '200':
+          description: Library deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  /api/zotero/search:
+    get:
+      tags: [zotero]
+      summary: Proxy a full-text search to the Zotero API
+      description: Requires edit privilege.
+      parameters:
+        - name: lib_id
+          in: query
+          required: true
+          schema:
+            type: integer
+          description: ID of the configured Zotero library to search
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Full-text query string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 25
+      responses:
+        '200':
+          description: Search results (or API error)
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      results:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            key:
+                              type: string
+                            author_year:
+                              type: string
+                              description: Short author–year label
+                            full_citation:
+                              type: string
+                              description: Formatted HTML citation
+                            zotero_version:
+                              type: integer
+                              nullable: true
+                            zotero_url:
+                              type: string
+                              nullable: true
+                            title:
+                              type: string
+
+  /api/zotero/links/{tb}/{id}:
+    parameters:
+      - $ref: '#/components/parameters/tb'
+      - $ref: '#/components/parameters/id'
+    get:
+      tags: [zotero]
+      summary: Get all Zotero citation links for a record
+      description: Returns links ordered by `sort`. Requires read privilege.
+      responses:
+        '200':
+          description: Link list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      links:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ZoteroLink'
+
+  /api/zotero/link:
+    post:
+      tags: [zotero]
+      summary: Add a Zotero citation link to a record
+      description: |
+        Fetches and caches the citation from Zotero immediately on add.
+        Requires edit privilege.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tb, record_id, lib_id, zotero_key]
+              properties:
+                tb:
+                  type: string
+                record_id:
+                  type: integer
+                lib_id:
+                  type: integer
+                zotero_key:
+                  type: string
+                pages:
+                  type: string
+                  nullable: true
+                notes:
+                  type: string
+                  nullable: true
+                sort:
+                  type: integer
+                  nullable: true
+      responses:
+        '200':
+          description: Link added
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/CodedSuccess'
+                  - type: object
+                    properties:
+                      id:
+                        type: integer
+
+  /api/zotero/link/{id}:
+    parameters:
+      - $ref: '#/components/parameters/id'
+    patch:
+      tags: [zotero]
+      summary: Update pages, notes or sort order of a citation link
+      description: Requires edit privilege.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pages:
+                  type: string
+                  nullable: true
+                notes:
+                  type: string
+                  nullable: true
+                sort:
+                  type: integer
+                  nullable: true
+      responses:
+        '200':
+          description: Link updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+    delete:
+      tags: [zotero]
+      summary: Delete a citation link
+      description: Requires edit privilege.
+      responses:
+        '200':
+          description: Link deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  /api/zotero/sync/{tb}/{id}:
+    parameters:
+      - $ref: '#/components/parameters/tb'
+      - $ref: '#/components/parameters/id'
+    post:
+      tags: [zotero]
+      summary: Sync citation cache for all links on a single record
+      description: |
+        Re-fetches citations from Zotero for every link attached to this record.
+        Designed to run in the background after record load. Requires edit privilege.
+      responses:
+        '200':
+          description: Sync result
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      updated:
+                        type: integer
+                        description: Number of links whose citation was refreshed
+                      detached:
+                        type: integer
+                        description: Number of links whose Zotero item no longer exists
+
+  /api/zotero/sync:
+    post:
+      tags: [zotero]
+      summary: Bulk-sync citation cache for all libraries (admin)
+      description: |
+        Re-fetches citations for every unique `(lib_id, zotero_key)` pair referenced
+        in the database. Admin only. May be slow on large datasets.
+      responses:
+        '200':
+          description: Bulk sync result
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      total:
+                        type: integer
+                        description: Unique items evaluated
+                      updated:
+                        type: integer
+                      detached:
+                        type: integer
+
+  # ── Widgets ───────────────────────────────────────────────────────────────────
+
+  /api/widgets:
+    get:
+      tags: [widgets]
+      summary: List available widget names for the current app
+      description: |
+        Returns the sorted list of widget names found in `projects/{app}/widgets/*.js`.
+        An empty array is returned when the directory does not exist.
+        Requires read privilege.
+      responses:
+        '200':
+          description: Widget list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  widgets:
+                    type: array
+                    items:
+                      type: string
+                    description: Sorted list of widget names (filename without `.js`)
+
+  /api/widget/{name}:
+    parameters:
+      - name: name
+        in: path
+        required: true
+        description: Widget name — lowercase letters, digits and dashes only
+        schema:
+          type: string
+          pattern: '^[a-z0-9\-]+$'
+    get:
+      tags: [widgets]
+      summary: Serve a widget JS file
+      description: |
+        Returns the widget's ES module source with `Content-Type: application/javascript`.
+        Cached for 5 minutes (`Cache-Control: private, max-age=300`).
+        Requires read privilege.
+      responses:
+        '200':
+          description: Widget JS source
+          content:
+            application/javascript:
+              schema:
+                type: string
+        '400':
+          description: Invalid widget name
+        '404':
+          description: Widget not found
+
 # ──────────────────────────────────────────────────────────────────────────────
 components:
 
@@ -3884,3 +4380,114 @@ components:
             items:
               type: object
               additionalProperties: true
+
+    # ── Config relations ───────────────────────────────────────────────────
+
+    Relation:
+      type: object
+      properties:
+        id:
+          type: integer
+        from_tb:
+          type: string
+        from_label:
+          type: string
+        to_tb:
+          type: string
+        to_label:
+          type: string
+        fld:
+          type: array
+          description: Array of field-pair mappings `{my, other}`
+          items:
+            type: object
+            properties:
+              my:
+                type: string
+                description: Field name in `from_tb`
+              other:
+                type: string
+                description: Field name in `to_tb`
+
+    RelationInput:
+      type: object
+      required: [from_tb, to_tb]
+      properties:
+        from_tb:
+          type: string
+        to_tb:
+          type: string
+        fld:
+          type: array
+          items:
+            type: object
+            properties:
+              my:
+                type: string
+              other:
+                type: string
+
+    # ── Zotero ─────────────────────────────────────────────────────────────
+
+    ZoteroLib:
+      type: object
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          enum: [user, group]
+        zotero_id:
+          type: string
+        name:
+          type: string
+        citation_style:
+          type: string
+        has_api_key:
+          type: boolean
+          description: True when an API key is stored (key itself is never returned)
+
+    ZoteroLink:
+      type: object
+      properties:
+        id:
+          type: integer
+        tb:
+          type: string
+        record_id:
+          type: integer
+        lib_id:
+          type: integer
+        zotero_key:
+          type: string
+        author_year:
+          type: string
+          nullable: true
+          description: Cached short author–year label
+        full_citation:
+          type: string
+          nullable: true
+          description: Cached formatted HTML citation
+        pages:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        sort:
+          type: integer
+          nullable: true
+        zotero_version:
+          type: integer
+          nullable: true
+        synced_at:
+          type: integer
+          nullable: true
+          description: Unix timestamp of last cache sync
+        detached:
+          type: integer
+          description: 1 when the Zotero item no longer exists
+        zotero_url:
+          type: string
+          nullable: true
+          description: Public URL to the item on zotero.org (null for user libraries)

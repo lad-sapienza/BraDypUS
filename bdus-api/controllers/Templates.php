@@ -219,9 +219,9 @@ class Templates extends \Bdus\Controller
       return;
     }
 
-    $tb      = $this->get['tb']  ?? null;
-    $oldName = $this->get['old'] ?? null;
-    $newName = $this->get['new'] ?? null;
+    $tb      = $this->get['tb']    ?? null;
+    $oldName = $this->get['name']  ?? $this->get['old'] ?? null;
+    $newName = $this->post['new_name'] ?? $this->get['new'] ?? null;
     if (!$tb || !$oldName || !$newName) {
       $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
       return;

@@ -6,6 +6,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [5.0.0] - unreleased
 
 ### Fixed
+- **`POST /api/api-key/{id}/revoke` and `DELETE /api/api-key/{id}`** (`Api.php`): controllers
+  now read the path-variable `id` via `$this->request['id']` (merges URL path vars and POST body)
+  instead of `$this->post['id']`, fixing a bug where both endpoints always returned
+  `parameter_missing` when called via the REST API.
+- **`POST /api/saved-query/{id}/share|unshare` and `DELETE /api/saved-query/{id}`**
+  (`SavedQueries.php`): same fix — path-variable `id` now read via `$this->request['id']`.
+- **`POST /api/template/{tb}/{name}/rename`** (`Templates.php`): controller now reads
+  `old_name` from the URL path variable (`$this->get['name']`) and `new_name` from the
+  JSON body (`$this->post['new_name']`), aligning with the REST route.
+- **OpenAPI `POST/DELETE /api/config/geoface`**: these two operations were documented under
+  the wrong path. Corrected to `POST/DELETE /api/config/geofile` (the real PHP routes).
+- **OpenAPI geoface feature `PUT` and `DELETE`**: updated request-body schemas to match
+  the actual controller signatures — `PUT` expects `{geodata:[{id,geometry}]}` (batch array),
+  `DELETE` expects `{ids:[…]}`.
 - **`PATCH /api/config/table/{tb}` and `PATCH /api/config/table/{tb}/field/{fld}` (rename endpoints)**:
   `rename_tb` and `rename_column` now read the old name from the URL path parameter
   (`$this->get['tb']` / `$this->get['fld']`) and `new_name` from the JSON request body
@@ -18,6 +32,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the full structure of the `bdus_demo` test/demo application with `// bdus:` annotations
   for all BraDypUS-specific features (field types, population policies, validation checks,
   table-level features). Serves as the canonical source of truth for the demo schema.
+- **OpenAPI spec fully aligned with `Router.php`**: added documentation for all previously
+  undocumented routes — migrations (`GET /api/migrations`), config relations
+  (`GET/POST /api/config/relations`, `PUT/DELETE /api/config/relations/{id}`), all 10 Zotero
+  routes (`/api/zotero/*`), and widget routes (`GET /api/widgets`, `GET /api/widget/{name}`).
+  Added 4 new tags and 4 new component schemas (`Relation`, `RelationInput`, `ZoteroLib`,
+  `ZoteroLink`). OpenAPI now covers all 107 URL paths exposed by the router.
+- **Hurl E2E test suite expanded** — 6 new test phases (23–28) covering widgets, logs, API
+  keys, saved queries, templates + field-structure, and geoface feature CRUD. Existing phases
+  07 (charts) and 17 (zotero) extended with share/unshare and sync-all steps. Photo import
+  validation tests added to phase 12. All 28 phases pass on SQLite.
 - **Phase 22 — Schema structural changes** (`tests/api/22_schema_changes.hurl`): new E2E
   test phase covering the full lifecycle of a temporary table: create table, add column,
   change column type, add second column, add data, rename column, verify data survives,

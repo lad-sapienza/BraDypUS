@@ -6,6 +6,7 @@
 #   previewFile (JSON) → importData (JSON)
 #   previewFile (GeoJSON) → importGeoJson
 #   Error paths: missing params, bad temp_id, key_field not mapped
+#   Photo import: previewPhotos / importPhotos (validation only — no ZIP fixture)
 # ════════════════════════════════════════════════════════════════════
 
 # ── 12a. getTableFields — returns field list for known table ──────────
@@ -312,3 +313,25 @@ jsonpath "$.status"   == "warning"
 jsonpath "$.code"     == "ok_import_data"
 jsonpath "$.total"    == 0
 jsonpath "$.detail"   isString
+
+
+# ── 12q. previewPhotos — missing required files → error ──────────────
+# (Full photo import requires a ZIP + CSV index pair; here we only test
+#  the validation path since no binary ZIP fixture exists in the suite.)
+POST {{base_url}}/api/import/preview-photos
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "error"
+jsonpath "$.code"   == "import_error_no_file"
+
+
+# ── 12r. importPhotos — missing temp_id + tb → parameter_missing ────
+POST {{base_url}}/api/import/photos
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "error"
+jsonpath "$.code"   == "parameter_missing"

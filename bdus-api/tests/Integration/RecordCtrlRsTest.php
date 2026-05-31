@@ -277,4 +277,86 @@ class RecordCtrlRsTest extends BdusTestCase
         $this->assertSame('error',              $res['status']);
         $this->assertSame('rs_not_configured',  $res['code']);
     }
+
+    // ── has_fuzzy_date + chrono fields in nodes ───────────────────────────────
+
+    public function testGetRsMatrixHasFuzzyDateFalseByDefault(): void
+    {
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB]);
+        $res  = $this->callController($ctrl, 'getRsMatrix');
+
+        $this->assertArrayHasKey('has_fuzzy_date', $res);
+        $this->assertFalse($res['has_fuzzy_date']);
+    }
+
+    public function testGetRsMatrixHasFuzzyDateTrueWhenPluginActive(): void
+    {
+        // Activate fuzzy_date plugin
+        $alter = new \DB\Alter(static::$db);
+        $existing = (new \DB\Inspect(static::$db))->tableColumns(self::TB);
+        foreach (['chrono_from INTEGER', 'chrono_to INTEGER', 'chrono_label VARCHAR(200)'] as $colDef) {
+            [$col] = explode(' ', $colDef);
+            if (!in_array($col, $existing, true)) {
+                $alter->addFld(self::TB, $col, substr($colDef, strlen($col) + 1));
+            }
+        }
+        $tbData = static::$cfg->get('tables.' . self::TB) ?: [];
+        $tbData['name'] = self::TB;
+        $tbData['fuzzy_date'] = true;
+        static::$cfg->setTable($tbData);
+
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB]);
+        $res  = $this->callController($ctrl, 'getRsMatrix');
+
+        $this->assertTrue($res['has_fuzzy_date']);
+
+        // Each node must now carry chrono keys
+        foreach ($res['nodes'] as $node) {
+            $this->assertArrayHasKey('chrono_from',  $node);
+            $this->assertArrayHasKey('chrono_to',    $node);
+            $this->assertArrayHasKey('chrono_label', $node);
+        }
+
+        // Clean up: deactivate plugin so other tests are not affected
+        $tbData['fuzzy_date'] = false;
+        static::$cfg->setTable($tbData);
+    }
+
+    public function testGetRsMatrixChronoValuesMatchStoredData(): void
+    {
+        // Activate + seed chrono on item 1
+        $alter = new \DB\Alter(static::$db);
+        $existing = (new \DB\Inspect(static::$db))->tableColumns(self::TB);
+        foreach (['chrono_from INTEGER', 'chrono_to INTEGER', 'chrono_label VARCHAR(200)'] as $colDef) {
+            [$col] = explode(' ', $colDef);
+            if (!in_array($col, $existing, true)) {
+                $alter->addFld(self::TB, $col, substr($colDef, strlen($col) + 1));
+            }
+        }
+        static::$db->query(
+            'UPDATE ' . self::TB . ' SET chrono_from=?, chrono_to=?, chrono_label=? WHERE id=1',
+            [-350, -300, 'Late 4th cent. BCE'],
+            'boolean'
+        );
+
+        $tbData = static::$cfg->get('tables.' . self::TB) ?: [];
+        $tbData['name'] = self::TB;
+        $tbData['fuzzy_date'] = true;
+        static::$cfg->setTable($tbData);
+
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB]);
+        $res  = $this->callController($ctrl, 'getRsMatrix');
+
+        $nodeById = array_column($res['nodes'], null, 'db_id');
+        $node1 = $nodeById[1] ?? null;
+
+        $this->assertNotNull($node1);
+        $this->assertSame(-350, $node1['chrono_from']);
+        $this->assertSame(-300, $node1['chrono_to']);
+        $this->assertSame('Late 4th cent. BCE', $node1['chrono_label']);
+
+        // Deactivate
+        $tbData['fuzzy_date'] = false;
+        static::$cfg->setTable($tbData);
+    }
 }

@@ -1523,20 +1523,52 @@ class Record extends \Bdus\Controller
       }
 
       // ── Step 5: build response ─────────────────────────────────────────────
+      $hasFuzzyDate = (bool)$this->cfg->get("tables.{$tb}.fuzzy_date");
+
+      // When fuzzy_date plugin is active, attach chrono data to every node.
+      // Wrapped in try/catch: if columns don't exist (schema drift / flag without
+      // activation), fall back gracefully rather than crashing.
+      $chronoByDbId = [];
+      if ($hasFuzzyDate && !empty($allIdentifiers)) {
+        try {
+          $dbIds = array_values($allIdentifiers);
+          $ph    = implode(',', array_fill(0, count($dbIds), '?'));
+          $cRows = $this->db->query(
+            "SELECT id, chrono_from, chrono_to, chrono_label FROM {$tb} WHERE id IN ({$ph})",
+            $dbIds
+          ) ?: [];
+          foreach ($cRows as $cr) {
+            $chronoByDbId[(int)$cr['id']] = [
+              'chrono_from'  => $cr['chrono_from'] !== null ? (int)$cr['chrono_from'] : null,
+              'chrono_to'    => $cr['chrono_to']   !== null ? (int)$cr['chrono_to']   : null,
+              'chrono_label' => $cr['chrono_label'] ?? null,
+            ];
+          }
+        } catch (\Throwable $e) {
+          // Columns missing — serve nodes without chrono data
+          $hasFuzzyDate = false;
+        }
+      }
+
       $nodes = [];
       foreach ($allIdentifiers as $ident => $dbId) {
-        $nodes[] = [
+        $node = [
           'db_id'      => $dbId,
           'identifier' => (string)$ident,
           'in_filter'  => isset($filterNodes[$ident]),
         ];
+        if ($hasFuzzyDate && isset($chronoByDbId[$dbId])) {
+          $node = array_merge($node, $chronoByDbId[$dbId]);
+        }
+        $nodes[] = $node;
       }
 
       $this->returnJson([
-        "status"    => "success",
-        'rs_field'  => $rsField,
-        'nodes'     => $nodes,
-        'relations' => array_values($relations),
+        "status"         => "success",
+        'rs_field'       => $rsField,
+        'has_fuzzy_date' => $hasFuzzyDate,
+        'nodes'          => $nodes,
+        'relations'      => array_values($relations),
       ]);
 
     } catch (\Throwable $e) {

@@ -187,3 +187,19 @@ HTTP 200
 [Asserts]
 jsonpath "$.core.chrono_label.val" == "Late 4th cent. BCE"
 jsonpath "$.core.chrono_from.val"  == -325
+
+
+# ── 20o. RS matrix: has_fuzzy_date=true + chrono fields in nodes ─────
+# (us table has fuzzy_date active since step 20d, and US099 has chrono_from=-325)
+GET {{base_url}}/api/rs/matrix
+Authorization: Bearer {{jwt}}
+[QueryStringParams]
+tb: us
+HTTP 200
+[Asserts]
+jsonpath "$.status"         == "success"
+jsonpath "$.has_fuzzy_date" == true
+jsonpath "$.nodes"          isCollection
+# US099 (chrono_record_id) has from=-325; verify it appears with chrono data
+jsonpath "$.nodes[*].chrono_from"  includes -325
+jsonpath "$.nodes[*].chrono_to"    includes -301

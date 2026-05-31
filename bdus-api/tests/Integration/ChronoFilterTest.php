@@ -63,6 +63,18 @@ class ChronoFilterTest extends BdusTestCase
         self::$idPostLate  = static::insertChrono(-200, null, 'certain');
     }
 
+    public static function tearDownAfterClass(): void
+    {
+        // Since Config uses file mode in tests (useDb=false), setTable() writes to
+        // fixture JSON files. Restore fuzzy_date=false so subsequent test classes
+        // don't see a contaminated fixture with fuzzy_date=true.
+        $tbData = static::$cfg->get('tables.' . self::TB) ?: [];
+        $tbData['name']       = self::TB;
+        $tbData['fuzzy_date'] = false;
+        static::$cfg->setTable($tbData);
+        parent::tearDownAfterClass();
+    }
+
     private static function insertChrono(?int $from, ?int $to, ?string $certainty): int
     {
         return (int) static::$db->query(

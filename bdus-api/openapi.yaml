@@ -1506,15 +1506,46 @@ paths:
                   - $ref: '#/components/schemas/Success'
                   - type: object
                     properties:
+                      rs_field:
+                        type: string
+                        description: Name of the field used as stratigraphic identifier.
+                      has_fuzzy_date:
+                        type: boolean
+                        description: |
+                          True when the fuzzy-date plugin is active for this table.
+                          When true, each node carries `chrono_from`, `chrono_to`,
+                          and `chrono_label` for the chronological timeline layout.
                       nodes:
                         type: array
                         items:
                           type: object
+                          required: [db_id, identifier, in_filter]
                           properties:
-                            id:
+                            db_id:
                               type: integer
-                            label:
+                            identifier:
                               type: string
+                              description: Value of the rs_field column for this record.
+                            in_filter:
+                              type: boolean
+                              description: |
+                                False for nodes that appear only because they are
+                                connected to an in-filter node (dangling nodes).
+                            chrono_from:
+                              type: integer
+                              nullable: true
+                              description: |
+                                Start year (negative = BCE). Present only when
+                                `has_fuzzy_date` is true. Null = ante quem or undated.
+                            chrono_to:
+                              type: integer
+                              nullable: true
+                              description: |
+                                End year. Null = post quem or undated.
+                            chrono_label:
+                              type: string
+                              nullable: true
+                              description: Human-readable chronological label.
                       relations:
                         type: array
                         items:
@@ -1523,11 +1554,14 @@ paths:
                             id:
                               type: integer
                             first:
-                              type: integer
+                              type: string
+                              description: Identifier of the first stratigraphic unit.
                             second:
-                              type: integer
+                              type: string
+                              description: Identifier of the second stratigraphic unit.
                             relation:
                               type: integer
+                              description: Relation code (1-10, see RS documentation).
 
   # ── Manual Links ─────────────────────────────────────────────────────────
 
@@ -1914,6 +1948,48 @@ paths:
       responses:
         '200':
           description: Deletion result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  /api/config/table/{tb}/fuzzy-date:
+    post:
+      tags: [config]
+      summary: Activate the fuzzy-date (chronology) plugin for a table
+      description: |
+        Adds five `chrono_*` columns to the table's core SQL table
+        (`chrono_from`, `chrono_to`, `chrono_label`, `chrono_certainty`,
+        `chrono_period`) and sets `fuzzy_date: true` in the table config.
+
+        Safe to call multiple times (idempotent — columns are only added if
+        they do not yet exist).
+
+        Requires `super_admin` privilege.
+      parameters:
+        - $ref: '#/components/parameters/tb'
+      responses:
+        '200':
+          description: Activation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+    delete:
+      tags: [config]
+      summary: Deactivate the fuzzy-date plugin for a table
+      description: |
+        Sets `fuzzy_date: false` in the table config. The five `chrono_*`
+        columns are **not** dropped — existing data is preserved. The
+        chronology panel disappears from RecordView until the plugin is
+        re-activated.
+
+        Requires `super_admin` privilege.
+      parameters:
+        - $ref: '#/components/parameters/tb'
+      responses:
+        '200':
+          description: Deactivation result
           content:
             application/json:
               schema:
@@ -2337,6 +2413,31 @@ paths:
                     properties:
                       geojson:
                         type: object
+                      meta:
+                        type: object
+                        properties:
+                          tb_id:
+                            type: string
+                          tb_label:
+                            type: string
+                          canUserEdit:
+                            type: boolean
+                          id_field:
+                            type: string
+                          preview_fields:
+                            type: array
+                            items:
+                              type: string
+                          has_fuzzy_date:
+                            type: boolean
+                            description: |
+                              True when the fuzzy-date plugin is active for this table.
+                              When true, GeofaceView shows the temporal filter slider.
+                          layers:
+                            type: array
+                            items:
+                              type: object
+                              description: Background map layer configuration.
 
   /api/geoface/feature:
     post:
@@ -3495,6 +3596,9 @@ components:
         | `_null` | `IS NULL` / `IS NOT NULL` (value: `true`/`false`) |
         | `_nnull` | `IS NOT NULL` / `IS NULL` (value: `true`/`false`) |
         | `_between` | `BETWEEN ? AND ?` (value: two-element array) |
+        | `_empty` | `IS NULL OR = ''` (convenience alias) |
+        | `_nempty` | `IS NOT NULL AND != ''` (convenience alias) |
+        | `_chrono_overlap` | Fuzzy-date overlap (value: `[low, high]` integer years). Must be applied to `chrono_from`. Generates a three-branch condition covering normal ranges, ante quem (`chrono_from IS NULL`) and post quem (`chrono_to IS NULL`) records. Requires the fuzzy-date plugin to be active on the table. |
 
         Field names are validated against the table config allow-list.
         All values are bound via PDO prepared statements — no SQL injection risk.

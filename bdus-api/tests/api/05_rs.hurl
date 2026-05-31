@@ -63,3 +63,14 @@ Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
+
+
+# ── 5e. has_fuzzy_date=false when plugin not yet active ─────────────
+GET {{base_url}}/api/rs/matrix
+Authorization: Bearer {{jwt}}
+[QueryStringParams]
+tb: us
+HTTP 200
+[Asserts]
+jsonpath "$.status"         == "success"
+jsonpath "$.has_fuzzy_date" == false

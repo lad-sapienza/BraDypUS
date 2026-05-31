@@ -64,3 +64,29 @@ in the filter are shown in a lighter style (in-context but not in-filter).
 
 Click **Export PNG** in the Matrix toolbar to save the current view as a
 high-resolution PNG image.
+
+## Absolute chronological timeline
+
+When the [fuzzy-date plugin](/guide/system-plugins/fuzzy-date) is active on
+the same table, a **Chronological** toggle appears in the Matrix toolbar.
+
+| Layout | Description |
+|---|---|
+| **Stratigraphic** | Standard Harris Matrix — nodes positioned by topological depth (default). |
+| **Chronological** | Nodes positioned on a vertical year axis according to their `chrono_from` / `chrono_to` values. The horizontal columns from the stratigraphic layout are preserved, so stratigraphic position and calendar time are both visible simultaneously. |
+
+In chronological mode:
+- **Older** units appear **lower** on the axis; **newer** units appear **higher**.
+- The **vertical distance** between nodes reflects the time gap between events.
+- Nodes whose date type is ante quem or post quem are positioned at the known bound.
+- **Undated nodes** are placed below the dated zone, marked with an italic label.
+- The SVG axis on the left shows year labels calibrated to the data range.
+- Edges still connect units by their stratigraphic relationship.
+- Edit mode is not available in chronological layout (read-only view).
+
+::: tip Why is this useful?
+Traditional Harris Matrix tools show *which* unit comes before another, but
+not *by how much*. The chronological layout reveals the real time gaps — a
+stratigraphically short sequence may span centuries, while a long sequence
+may compress into decades.
+:::

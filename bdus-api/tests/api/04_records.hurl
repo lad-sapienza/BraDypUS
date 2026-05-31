@@ -75,15 +75,15 @@ jsonpath "$.status" == "success"
 us_id_3: jsonpath "$.id"
 
 
-# ── 4e. Insert periodo record ────────────────────────────────────────
-POST {{base_url}}/api/record/periodi
+# ── 4e. Insert a record in a different table (siti) ──────────────────
+POST {{base_url}}/api/record/siti
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
   "core": {
-    "nome":        "Basso Medioevo",
-    "data_inizio": "1000",
-    "data_fine":   "1400"
+    "nome":        "Sito di prova",
+    "localita":    "Roma",
+    "tipologia":   "Abitato"
   },
   "plugins": {}
 }
@@ -91,7 +91,7 @@ HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
 [Captures]
-periodo_id_1: jsonpath "$.id"
+sito_id_1: jsonpath "$.id"
 
 
 # ── 4f. Read US 1 back ──────────────────────────────────────────────

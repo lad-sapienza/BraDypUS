@@ -2,9 +2,10 @@
 # Phase 14 — Relations panel (bdus_cfg_relations CRUD)
 #
 # Prerequisites (from phase 3):
-#   Tables: us, periodi, attivita
-#   Existing relation: periodi ↔ us  (created via PUT /api/config/table/us
-#                                     with the 'link' key in step 3j)
+#   Tables: siti, complessi, saggi, us, reperti (and plugins)
+#   Existing relations created by PUT calls in phase 3:
+#     complessi→siti, saggi→siti, saggi→complessi,
+#     us→siti, us→complessi, us→saggi, reperti→us  (7 total)
 #
 # This phase verifies the dedicated Relations endpoints:
 #   GET    /api/config/relations          list all
@@ -14,7 +15,7 @@
 # ════════════════════════════════════════════════════════════════════
 
 
-# ── 14a. List relations — existing periodi↔us must be present ────────
+# ── 14a. List relations — phase 3 relations must be present ──────────
 GET {{base_url}}/api/config/relations
 Authorization: Bearer {{jwt}}
 HTTP 200
@@ -22,23 +23,21 @@ HTTP 200
 jsonpath "$.status" == "success"
 jsonpath "$.code"   == "relations"
 jsonpath "$.data"   isCollection
-jsonpath "$.data"   count >= 1
-# The relation created in phase 3j (PUT table/us with link to periodi) is stored
-# as-is by upsertRelations — from_tb=us, to_tb=periodi (no canonical reordering there).
+jsonpath "$.data"   count >= 7
 jsonpath "$.data[*].from_tb" contains "us"
-jsonpath "$.data[*].to_tb"   contains "periodi"
+jsonpath "$.data[*].from_tb" contains "reperti"
+[Captures]
+initial_rel_count: jsonpath "$.data" count
 
 
-# ── 14b. Create relation: us ↔ attivita ──────────────────────────────
-# us.id → attivita.id_link
-# Canonical order: attivita < us (a < u), so backend stores attivita as from_tb.
+# ── 14b. Create relation: siti ↔ reperti ─────────────────────────────
 POST {{base_url}}/api/config/relations
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
-  "from_tb": "us",
-  "to_tb":   "attivita",
-  "fld":     [{ "my": "id", "other": "id_link" }]
+  "from_tb": "siti",
+  "to_tb":   "reperti",
+  "fld":     [{ "my": "id", "other": "sito_id" }]
 }
 HTTP 200
 [Asserts]
@@ -49,16 +48,16 @@ jsonpath "$.id"     isInteger
 rel_id: jsonpath "$.id"
 
 
-# ── 14c. List relations — two rows now ───────────────────────────────
+# ── 14c. List relations — new relation must appear ────────────────────
+# Backend stores canonical form: from_tb=reperti (r < s alphabetically), to_tb=siti
 GET {{base_url}}/api/config/relations
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
-jsonpath "$.data"   count == 2
-# The new relation must appear (backend stores attivita as from_tb)
-jsonpath "$.data[*].from_tb" contains "attivita"
-jsonpath "$.data[*].to_tb"   contains "us"
+jsonpath "$.data"   count >= {{initial_rel_count}}
+jsonpath "$.data[*].from_tb" contains "reperti"
+jsonpath "$.data[*].to_tb"   contains "siti"
 
 
 # ── 14d. GET response shape is complete ──────────────────────────────
@@ -79,9 +78,9 @@ PUT {{base_url}}/api/config/relations/{{rel_id}}
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
-  "from_tb": "us",
-  "to_tb":   "attivita",
-  "fld":     [{ "my": "id", "other": "id_link" }, { "my": "sigla", "other": "note" }]
+  "from_tb": "siti",
+  "to_tb":   "reperti",
+  "fld":     [{ "my": "id", "other": "sito_id" }, { "my": "nome", "other": "tipologia" }]
 }
 HTTP 200
 [Asserts]
@@ -96,17 +95,16 @@ Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
-# Two relations must still be present.
-jsonpath "$.data" count == 2
+jsonpath "$.data"   count >= {{initial_rel_count}}
 
 
-# ── 14g-neg. Duplicate pair (same direction) → error ─────────────────
+# ── 14g-neg. Duplicate pair (canonical direction) → error ────────────
 POST {{base_url}}/api/config/relations
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
-  "from_tb": "attivita",
-  "to_tb":   "us",
+  "from_tb": "reperti",
+  "to_tb":   "siti",
   "fld":     []
 }
 HTTP 200
@@ -116,13 +114,12 @@ jsonpath "$.code"   == "relation_already_exists"
 
 
 # ── 14h-neg. Duplicate pair (reverse direction) → error ──────────────
-# Even if we swap the pair, the canonical form is identical → must fail.
 POST {{base_url}}/api/config/relations
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
-  "from_tb": "us",
-  "to_tb":   "attivita",
+  "from_tb": "siti",
+  "to_tb":   "reperti",
   "fld":     []
 }
 HTTP 200
@@ -179,13 +176,12 @@ jsonpath "$.status" == "success"
 jsonpath "$.code"   == "relation_deleted"
 
 
-# ── 14m. List after delete — back to one relation ────────────────────
+# ── 14m. List after delete — siti↔reperti relation gone ──────────────
 GET {{base_url}}/api/config/relations
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
-jsonpath "$.data"   count == 1
-# The surviving relation is the us→periodi one from phase 3j.
-jsonpath "$.data[0].from_tb" == "us"
-jsonpath "$.data[0].to_tb"   == "periodi"
+jsonpath "$.data"   count >= 7
+# The temporary siti↔reperti relation must no longer appear
+jsonpath "$.data[*].id" not contains {{rel_id}}

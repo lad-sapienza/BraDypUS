@@ -5,6 +5,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [5.0.0] - unreleased
 
+### Fixed
+- **`PATCH /api/config/table/{tb}` and `PATCH /api/config/table/{tb}/field/{fld}` (rename endpoints)**:
+  `rename_tb` and `rename_column` now read the old name from the URL path parameter
+  (`$this->get['tb']` / `$this->get['fld']`) and `new_name` from the JSON request body
+  (`$this->post['new_name']`), aligning with the OpenAPI spec and standard REST design.
+  Previously both parameters were incorrectly read from `$this->get` (query string),
+  making the documented body-based API non-functional.
+
+### Added
+- **Demo app schema specification** (`tests/api/demo-schema.dbml`): DBML file documenting
+  the full structure of the `bdus_demo` test/demo application with `// bdus:` annotations
+  for all BraDypUS-specific features (field types, population policies, validation checks,
+  table-level features). Serves as the canonical source of truth for the demo schema.
+- **Phase 22 — Schema structural changes** (`tests/api/22_schema_changes.hurl`): new E2E
+  test phase covering the full lifecycle of a temporary table: create table, add column,
+  change column type, add second column, add data, rename column, verify data survives,
+  delete records, delete column, rename table, verify under new name, delete table, verify
+  no config residues. Exercises every schema-modification endpoint.
+- **Rewritten phase 03** (`tests/api/03_config_tables.hurl`): demo app schema now covers
+  all field types (`text`, `textarea`, `long_text`, `boolean`, `date`, `select`,
+  `combo_select`, `multi_select`, `slider`), all population policies (`vocabulary_set`,
+  `dic`, `id_from_tb`, `get_values_from_tb`) and all validation checks (`not_empty`, `int`,
+  `email`, `no_dupl`, `range`, `regex`). Tables: `siti`, `complessi`, `saggi`, `us`,
+  `reperti`, `misure`, `m_reperti_in_us`, `m_reperti_in_complessi`.
+- **Rewritten phase 19** (`tests/api/19_seed_demo.hurl`): realistic archaeological seed
+  data — 11 vocabulary sets (71 entries), 3 siti, 8 complessi, 12 saggi, 30 US with 25 RS
+  relations (Harris Matrix), 20 reperti, plugin data, geodata (8 geometries), userlinks,
+  and 2 charts.
+
+
+
 Complete rewrite of the frontend: from jQuery + Bootstrap 3 + Twig server-side
 rendering to a Vue 3 SPA (Vite, Pinia, PrimeVue / Aura theme).
 The PHP backend is preserved and extended with JSON endpoints consumed by the new frontend.

@@ -75,7 +75,7 @@ jsonpath "$.status"  == "success"
 jsonpath "$.tables"  isCollection
 # The tables created in phase 3 must be listed
 jsonpath "$.tables[*].name" contains "us"
-jsonpath "$.tables[*].name" contains "periodi"
+jsonpath "$.tables[*].name" contains "siti"
 
 
 # ── 16g. Table list row shape ─────────────────────────────────────────

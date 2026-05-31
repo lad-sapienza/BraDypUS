@@ -280,8 +280,8 @@ class Config extends \Bdus\Controller
   public function rename_tb()
   {
     if (!$this->requireSuperAdmin()) return;
-    $old_name = $this->get['old_name'];
-    $new_name = $this->get['new_name'];
+    $old_name = $this->get['tb'];
+    $new_name = $this->post['new_name'] ?? null;
     try {
       $available_tbs = array_values($this->cfg->get('tables.*.name'));
       if (in_array($new_name, $available_tbs)) {
@@ -303,9 +303,9 @@ class Config extends \Bdus\Controller
   public function rename_column()
   {
     if (!$this->requireSuperAdmin()) return;
-    $tb = $this->get['tb'];
-    $old_name = $this->get['old_name'];
-    $new_name = $this->get['new_name'];
+    $tb       = $this->get['tb'];
+    $old_name = $this->get['fld'];
+    $new_name = $this->post['new_name'] ?? null;
 
     try {
       $available_flds = array_values($this->cfg->get("tables.$tb.fields.*.name"));

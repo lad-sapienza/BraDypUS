@@ -1,0 +1,280 @@
+// =============================================================
+// BraDypUS Demo App — Schema Specification
+// Domain: archaeological excavation (Unità Stratigrafiche)
+//
+// Format: DBML (dbdiagram.io) + // bdus: annotations
+// To visualise: paste into https://dbdiagram.io
+// =============================================================
+//
+// bdus: annotation reference (column-level, in note or comment)
+//   bdus:ui   <type>           UI field type:
+//                                text | textarea | long_text | boolean | date
+//                                select | combo_select | multi_select
+//                                slider (numeric range; use min/max annotations)
+//   bdus:voc  <set_name>       vocabulary set name (for select / combo_select / multi_select)
+//   bdus:dic  v1, v2, …        inline values (for select / combo_select — no vocabulary table)
+//   bdus:id_from_tb <table>    populate select from a table; stores the integer id of the chosen record
+//                              (future: will become a dedicated field type)
+//   bdus:get_values_from_tb <table:field>
+//                              populate select from DISTINCT values of <field> in <table>;
+//                              stores the value itself (not an id) — already implemented
+//   bdus:check not_empty       field cannot be left empty
+//   bdus:check int             only integer values allowed
+//   bdus:check email           only valid email format allowed (existence not checked)
+//   bdus:check no_dupl         value must be unique across the table (real-time DB query)
+//   bdus:check range           value must be within min–max (default 1–10)
+//   bdus:check regex           value must match the regex in bdus:pattern
+//   bdus:pattern <regex>       regex pattern (used with bdus:check regex)
+//   min <n> / max <n>          range bounds (used with bdus:check range or bdus:ui slider)
+//   bdus:readonly              read-only in the UI (not editable)
+//   bdus:hidden                hidden in the UI (present in DB, not shown to user)
+//   bdus:display               used as the preview label in record lists
+//   bdus:order                 default sort column for the table
+//   db_type <SQL_TYPE>         actual SQL column type when different from default TEXT
+//                              (BraDypUS stores ui type and db type separately)
+//   sort (field name)          when a plugin table has a `sort` INTEGER column, the backend
+//                              already sorts plugin records by it on read, and the column is
+//                              hidden from the UI. TODO: add drag-and-drop reorder in
+//                              PluginSection.vue to let users write the sort order.
+//
+// Table-level bdus: annotations (above or inside the table block)
+//   bdus:label  <human label>  display name shown in the UI
+//   bdus:rs     <col>          enable Harris Matrix; use <col> as node label
+//   bdus:geodata               enable Leaflet geodata plugin
+//   bdus:zotero                enable Zotero bibliography plugin
+//   bdus:fuzzy_date            enable fuzzy chronology plugin
+//   bdus:plugin <table>        this is a plugin table anchored to <table>
+//   bdus:preview [col, …]      columns included in the record preview list
+// =============================================================
+
+
+// ── siti — Siti Archeologici ──────────────────────────────────────
+// bdus:label      Siti Archeologici
+// bdus:geodata
+// bdus:zotero
+// bdus:fuzzy_date
+// bdus:order      nome
+// bdus:preview    [nome, localita]
+
+Table siti {
+  id          integer [pk, increment,   note: 'bdus:ui text; bdus:readonly']
+  creator     integer [not null,        note: 'bdus:ui text; bdus:readonly; bdus:hidden']
+  nome        varchar [not null,        note: 'bdus:ui text; bdus:check not_empty; bdus:display']
+  localita         varchar               [note: 'bdus:ui text']
+  tipologia        varchar               [note: 'bdus:ui select; bdus:voc sito_tipologia']
+  contatto_email   varchar               [note: 'bdus:ui text; bdus:check email']
+  descrizione      text                  [note: 'bdus:ui textarea']
+}
+
+
+// ── complessi — Complessi topografici ───────────────────────────
+// bdus:label      Complessi
+// bdus:geodata
+// bdus:order      nome
+// bdus:preview    [nome, tipo]
+Table  complessi {
+  id          integer [pk, increment,   note: 'bdus:ui text; bdus:readonly']
+  creator     integer [not null,        note: 'bdus:ui text; bdus:readonly; bdus:hidden']
+  nome        varchar [not null,        note: 'bdus:ui text; bdus:check not_empty; bdus:display']
+  tipo        varchar                   [note: 'bdus:ui select; bdus:voc complesso_tipo']
+  sito_id     integer                   [note: 'bdus:ui select; bdus:id_from_tb siti']
+  descrizione text                      [note: 'bdus:ui textarea']
+  cronologia  varchar                   [note: 'bdus:ui multi_select; bdus:voc periodi']
+}
+
+
+// ── saggi — Saggi di scavo ─────────────────────────────────────────
+// bdus:label   Saggi di scavo
+// bdus:order   nome
+// bdus:preview [nome, anno]
+Table saggi {
+  id           integer [pk, increment,  note: 'bdus:ui text; bdus:readonly']
+  creator      integer [not null,       note: 'bdus:ui text; bdus:readonly; bdus:hidden']
+  nome         varchar [not null,       note: 'bdus:ui text; bdus:check not_empty; bdus:display']
+  anno         integer                  [note: 'bdus:ui text; db_type INTEGER']
+  sito_id      integer                  [note: 'bdus:ui select; bdus:id_from_tb siti']
+  complesso_id integer                  [note: 'bdus:ui select; bdus:id_from_tb complessi']
+  descrizione  text                     [note: 'bdus:ui textarea']
+}
+
+
+// ── us — Unità Stratigrafiche ──────────────────────────────────────
+// bdus:label      Unità stratigrafiche
+// bdus:rs         sigla
+// bdus:geodata
+// bdus:zotero
+// bdus:fuzzy_date
+// bdus:order      sigla
+// bdus:preview    [sigla]
+Table us {
+  id           integer [pk, increment,  note: 'bdus:ui text; bdus:readonly']
+  creator      integer [not null,       note: 'bdus:ui text; bdus:readonly; bdus:hidden']
+  sigla        varchar [not null,       note: 'bdus:ui text; bdus:check not_empty; bdus:check no_dupl; bdus:check regex; bdus:pattern ^[A-Z]{1,3}\d{3,}$; bdus:display']
+  tipo         varchar                  [note: 'bdus:ui select; bdus:voc us_tipo']
+  sito_id      integer                  [note: 'bdus:ui select; bdus:id_from_tb siti']
+  complesso_id integer                  [note: 'bdus:ui select; bdus:id_from_tb complessi']
+  saggio_id    integer                  [note: 'bdus:ui select; bdus:id_from_tb saggi']
+  descrizione  text                     [note: 'bdus:ui textarea']
+  interpretazione varchar               [note: 'bdus:ui text']
+  affidabilita varchar                  [note: 'bdus:ui select; bdus:voc affidabilita']
+  periodo      varchar                  [note: 'bdus:ui select; bdus:voc periodi']
+  anno_scavo   integer                  [note: 'bdus:ui text; bdus:check int; db_type INTEGER']
+  nr_cassette   integer                 [note: 'bdus:ui text; db_type INTEGER']
+  profondita_cm integer                 [note: 'bdus:ui slider; min 0; max 500']
+  note          text                    [note: 'bdus:ui long_text']
+  verificata    boolean                 [note: 'bdus:ui boolean']
+}
+
+
+
+// ── reperti — Reperti mobili ───────────────────────────────────────
+// bdus:label   Reperti mobili
+// bdus:geodata
+// bdus:zotero
+// bdus:order   inventario
+// bdus:preview [inventario]
+Table reperti {
+  id             integer [pk, increment, note: 'bdus:ui text; bdus:readonly']
+  creator        integer [not null,      note: 'bdus:ui text; bdus:readonly; bdus:hidden']
+  inventario     varchar [not null,      note: 'bdus:ui text; bdus:check not_empty; bdus:check no_dupl; bdus:display']
+  sito_id           integer                [note: 'bdus:ui select; bdus:id_from_tb siti']
+  complesso_id      integer                [note: 'bdus:ui select; bdus:id_from_tb complessi']
+  saggio_id         integer                [note: 'bdus:ui select; bdus:id_from_tb saggi']
+  us_provenienza_id integer                [note: 'bdus:ui select; bdus:id_from_tb us']
+  categoria      varchar                 [note: 'bdus:ui select; bdus:voc reperto_categoria']
+  classe         varchar                 [note: 'bdus:ui select; bdus:voc reperto_classe']
+  tipologia      varchar                 [note: 'bdus:ui text']
+  stato_cons     varchar                 [note: 'bdus:ui select; bdus:voc stato_conservazione']
+  descrizione    text                    [note: 'bdus:ui textarea']
+  frammenti_conservati text                    [note: 'bdus:ui textarea']
+  decorazione    text                    [note: 'bdus:ui textarea']
+  dati_epigrafici text                    [note: 'bdus:ui textarea']
+  data_ritrovamento varchar               [note: 'bdus:ui date']
+  disegnato         boolean               [note: 'bdus:ui boolean']
+  pubblicato        boolean               [note: 'bdus:ui boolean']
+  note              text                  [note: 'bdus:ui long_text']
+}
+
+
+
+// ── misure — Misure reperti (plugin → reperti) ─────────────────────
+// bdus:label   Misure
+// bdus:plugin  reperti
+Table misure {
+  id          integer [pk, increment, note: 'bdus:ui text; bdus:readonly']
+  table_link  varchar [not null,      note: 'bdus:ui text; bdus:hidden']
+  id_link     integer [not null,      note: 'bdus:ui text; bdus:hidden']
+  tipo_misura varchar                 [note: 'bdus:ui select; bdus:voc tipo_misura']
+  valore      varchar                 [note: 'bdus:ui text']   // numeric stored as text for flexibility
+  unita       varchar                 [note: 'bdus:ui select; bdus:voc unita_misura']
+}
+
+
+// ── m_reperti_in_us — Conteggio reperti per US (plugin → us) ──────
+// bdus:label   Reperti in US (conteggio)
+// bdus:plugin  us
+Table m_reperti_in_us {
+  id                  integer [pk, increment, note: 'bdus:ui text; bdus:readonly']
+  table_link          varchar [not null,      note: 'bdus:ui text; bdus:hidden']
+  id_link             integer [not null,      note: 'bdus:ui text; bdus:hidden']
+  materiale_classe    varchar                 [note: 'bdus:ui select; bdus:voc materiale_classe']
+  forma_tipo          varchar                 [note: 'bdus:ui combo_select; bdus:dic Coppa,Piatto,Brocca,Anfora,Olla,Tegola,Mattone,Fibula,Chiodo']
+  forma_completa      boolean                 [note: 'bdus:ui boolean']
+  datazione_generica  varchar                 [note: 'bdus:ui select; bdus:voc periodi']
+  nr_totale_orli      integer                 [note: 'bdus:ui text; db_type INTEGER']
+  nr_totale_fondi     integer                 [note: 'bdus:ui text; db_type INTEGER']
+  nr_totale_pareti    integer                 [note: 'bdus:ui text; db_type INTEGER']
+  nr_totale_anse      integer                 [note: 'bdus:ui text; db_type INTEGER']
+  mni                 integer                 [note: 'bdus:ui text; bdus:check range; min 1; max 9999; db_type INTEGER']   // minimo numero di individui
+  peso_totale         varchar                 [note: 'bdus:ui text']   // e.g. "245 g"
+  note                text                    [note: 'bdus:ui textarea']
+  sort                integer                 [note: 'db_type INTEGER']  // hidden by UI; backend sorts by it; TODO: drag-and-drop reorder in PluginSection.vue
+}
+
+
+// ── m_reperti_in_complessi — Conteggio reperti per complesso (plugin → complessi) ──
+// bdus:label   Reperti in complessi (conteggio)
+// bdus:plugin  complessi
+Table m_reperti_in_complessi {
+  id                  integer [pk, increment, note: 'bdus:ui text; bdus:readonly']
+  table_link          varchar [not null,      note: 'bdus:ui text; bdus:hidden']
+  id_link             integer [not null,      note: 'bdus:ui text; bdus:hidden']
+  materiale_classe    varchar                 [note: 'bdus:ui select; bdus:voc materiale_classe']
+  forma_tipo          varchar                 [note: 'bdus:ui combo_select; bdus:dic Coppa,Piatto,Brocca,Anfora,Olla,Tegola,Mattone,Fibula,Chiodo']
+  forma_completa      boolean                 [note: 'bdus:ui boolean']
+  datazione_generica  varchar                 [note: 'bdus:ui select; bdus:voc periodi']
+  nr_totale_orli      integer                 [note: 'bdus:ui text; db_type INTEGER']
+  nr_totale_fondi     integer                 [note: 'bdus:ui text; db_type INTEGER']
+  nr_totale_pareti    integer                 [note: 'bdus:ui text; db_type INTEGER']
+  nr_totale_anse      integer                 [note: 'bdus:ui text; db_type INTEGER']
+  mni                 integer                 [note: 'bdus:ui text; bdus:check range; min 1; max 9999; db_type INTEGER']
+  peso_totale         varchar                 [note: 'bdus:ui text']
+  note                text                    [note: 'bdus:ui textarea']
+  sort                integer                 [note: 'db_type INTEGER']
+}
+
+
+// ── Cross-table references ─────────────────────────────────────────
+Ref: complessi.sito_id         > siti.id       // bdus relation: fld=[{my:"sito_id",other:"id"}]
+Ref: saggi.sito_id             > siti.id       // bdus relation: fld=[{my:"sito_id",other:"id"}]
+Ref: saggi.complesso_id        > complessi.id  // bdus relation: fld=[{my:"complesso_id",other:"id"}]
+Ref: us.sito_id                > siti.id       // bdus relation: fld=[{my:"sito_id",other:"id"}]
+Ref: us.complesso_id           > complessi.id  // bdus relation: fld=[{my:"complesso_id",other:"id"}]
+Ref: us.saggio_id              > saggi.id      // bdus relation: fld=[{my:"saggio_id",other:"id"}]
+Ref: reperti.us_provenienza_id > us.id         // bdus relation: fld=[{my:"us_provenienza_id",other:"id"}]
+Ref: reperti.sito_id           > siti.id       // bdus relation: fld=[{my:"sito_id",other:"id"}]
+Ref: reperti.complesso_id      > complessi.id  // bdus relation: fld=[{my:"complesso_id",other:"id"}]
+Ref: reperti.saggio_id         > saggi.id      // bdus relation: fld=[{my:"saggio_id",other:"id"}]
+
+
+// =============================================================
+// VOCABULARIES
+// (not a DBML concept — listed here as structured comments)
+//
+// Format:  set_name: value | value | …
+//
+// periodi:             Preistorico | Bronzo | Ferro | Greco-Ellenistico |
+//                      Romano | Tardo Antico | Alto Medioevo | Basso Medioevo
+//   (used by: us.periodo, complessi.cronologia, m_reperti_*.datazione_generica)
+// sito_tipologia:      Abitato | Necropoli | Santuario | Villa | Insediamento rurale | Sito subacqueo
+// complesso_tipo:      Edificio | Vano | Area esterna | Struttura | Ambiente
+// us_tipo:             Strato | Taglio | Struttura | Riempimento | Interfaccia | Crollo
+// affidabilita:        Certa | Probabile | Incerta
+// reperto_categoria:   Ceramica | Metallo | Litico | Organico | Vetro | Laterizio | Osso
+// reperto_classe:      Terra sigillata | Ceramica comune | Ceramica depurata | Anfora |
+//                      Bronzo | Ferro | Piombo | Selce | Ossidiana | Osso lavorato
+// stato_conservazione: Integro | Frammentario | Lacunoso | Frammentato
+// tipo_misura:         Lunghezza | Larghezza | Altezza | Spessore | Diametro
+// unita_misura:        mm | cm | m
+// materiale_classe:    Ceramica da mensa | Ceramica da cucina | Ceramica da trasporto |
+//                      Ceramica fine | Metallo ferroso | Metallo non ferroso |
+//                      Vetro | Laterizio | Litico | Osso lavorato
+// (forma_tipo uses inline dic — see field definition, no vocabulary table)
+// =============================================================
+
+
+// =============================================================
+// DATA TARGET (synthetic seed — phase 19)
+//
+// (periodi: managed as vocabulary set, not a table)
+// siti:                  3  un sito urbano, uno rurale, uno subacqueo
+// complessi:             8  2–3 per sito, vari tipi
+// saggi:                12  1–2 per complesso, anni 2018–2024
+// us:                   30  US001–US030; mix tipi; ~10 verificata=true
+// reperti:              50  REP001–REP050; su ~20 US; ~10 pubblicato=true
+// misure:               60  plugin → reperti; 1–3 per reperto
+// m_reperti_in_us:      40  plugin → us; 1–3 per US
+// m_reperti_in_complessi: 15 plugin → complessi; 1–2 per complesso
+//
+// RS relations (Harris Matrix on us):
+//               ~25 relazioni; catena con ramificazioni
+//               copre (1) / uguale (9) / contemporaneo (5)
+//
+// Geodata:
+//               siti:     3 POLYGON (perimetro sito)
+//               us:      15 mix POINT e POLYGON
+//               reperti:  8 POINT (locus preciso)
+//
+// Userlinks (collegamenti manuali cross-table):
+//               us ↔ reperti:  10 link interpretativi
+// =============================================================

@@ -300,6 +300,13 @@ run_phase "Chrono filter" "21_chrono_filter.hurl" \
   --variable "jwt=${JWT}"
 
 # ════════════════════════════════════════════════════════════════════
+# Phase 22 — Schema structural changes (tmp table lifecycle)
+# ════════════════════════════════════════════════════════════════════
+header "Phase 22 — Schema structural changes"
+run_phase "Schema structural changes" "22_schema_changes.hurl" \
+  --variable "jwt=${JWT}"
+
+# ════════════════════════════════════════════════════════════════════
 # Phase 10 — Cleanup
 # ════════════════════════════════════════════════════════════════════
 header "Phase 10 — Cleanup"

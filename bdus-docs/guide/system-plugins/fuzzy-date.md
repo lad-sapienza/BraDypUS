@@ -137,14 +137,53 @@ The **dating type is implicit** — no separate type column is needed:
 
 ## Searching by chronology
 
-Use the standard filter operators on the numeric columns:
+### `_chrono_overlap` — the primary operator
+
+Use `_chrono_overlap` on `chrono_from` to find all records whose dating
+**intersects** a given range. It correctly handles the NULL semantics of
+ante quem and post quem records:
 
 ```
-filter[chrono_from][_gte]=-400&filter[chrono_to][_lte]=-300
+filter[chrono_from][_chrono_overlap][]=-400&filter[chrono_from][_chrono_overlap][]=-300
 ```
 
-Records with `NULL` in `from` (ante quem) or `to` (post quem) require dedicated
-filter logic — see [JSON filter reference](/guide/usage/search) for details.
+Or as a JSON body:
+
+```json
+{ "chrono_from": { "_chrono_overlap": [-400, -300] } }
+```
+
+The operator generates a three-branch condition:
+
+| Record type | Included if |
+|---|---|
+| Normal range (`from` and `to` set) | range overlaps `[low, high]` |
+| Ante quem (`from` is null) | `to >= low` |
+| Post quem (`to` is null) | `from <= high` |
+| Undated (both null) | never |
+
+::: warning
+Use `_chrono_overlap` on `chrono_from` only. Applying it to any other field
+returns an error.
+:::
+
+### Filtering by other chrono fields
+
+The remaining chrono columns support all standard operators:
+
+```
+# Records with probable certainty
+filter[chrono_certainty][_eq]=probable
+
+# Records in the Hellenistic period
+filter[chrono_period][_icontains]=hellenistic
+
+# Records with a label containing "BCE"
+filter[chrono_label][_icontains]=BCE
+
+# Records that have any chrono data (not undated)
+filter[chrono_to][_nnull]=true
+```
 
 ## Integration with other plugins
 

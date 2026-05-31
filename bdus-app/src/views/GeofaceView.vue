@@ -7,6 +7,40 @@
       <span class="geoface-count">{{ featureCount }} {{ t('geometries') }}</span>
     </div>
 
+    <!-- Temporal filter panel (only when fuzzy_date plugin is active) -->
+    <div v-if="meta.has_fuzzy_date" class="geoface-chrono-bar">
+      <Button
+        :icon="chronoFilterActive ? 'pi pi-calendar-times' : 'pi pi-calendar'"
+        :label="t('temporal_filter')"
+        :severity="chronoFilterActive ? 'warn' : 'secondary'"
+        size="small"
+        outlined
+        @click="toggleChronoFilter"
+      />
+      <template v-if="chronoFilterActive">
+        <div class="geoface-chrono-slider">
+          <Slider
+            v-model="chronoRange"
+            range
+            :min="CHRONO_MIN"
+            :max="CHRONO_MAX"
+            :step="CHRONO_STEP"
+            class="chrono-slider"
+          />
+        </div>
+        <span class="geoface-chrono-label">
+          {{ chronoLabel }}
+        </span>
+        <Button
+          icon="pi pi-times"
+          text
+          size="small"
+          :title="t('temporal_filter_clear')"
+          @click="clearChronoFilter"
+        />
+      </template>
+    </div>
+
     <!-- Loading / error states -->
     <div v-if="loading" class="geoface-status">
       <i class="pi pi-spin pi-spinner" style="font-size:2rem" />
@@ -44,7 +78,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { useRoute, useRouter }  from 'vue-router'
 import { useToast }             from 'primevue/usetoast'
 import maplibregl               from 'maplibre-gl'
@@ -57,6 +91,8 @@ import Button                   from 'primevue/button'
 import Dialog                   from 'primevue/dialog'
 import AutoComplete             from 'primevue/autocomplete'
 import Message                  from 'primevue/message'
+import Slider                   from 'primevue/slider'
+import { format as chronoFormat } from '@/utils/chronoParser'
 
 const { t }    = useI18n()
 const route    = useRoute()
@@ -76,6 +112,37 @@ let draw = null
 
 const featureCount = computed(() => geojson.value?.features?.length ?? 0)
 
+// ── Temporal filter state ─────────────────────────────────────────────────
+const CHRONO_MIN  = -3000
+const CHRONO_MAX  = 2000
+const CHRONO_STEP = 25
+
+const chronoFilterActive = ref(false)
+const chronoRange        = ref([-500, 500])   // default window, updated when toggled
+
+const chronoLabel = computed(() => {
+  if (!chronoFilterActive.value) return ''
+  return chronoFormat(chronoRange.value[0], chronoRange.value[1])
+})
+
+function toggleChronoFilter() {
+  chronoFilterActive.value = !chronoFilterActive.value
+  reloadGeoJson()
+}
+
+function clearChronoFilter() {
+  chronoFilterActive.value = false
+  reloadGeoJson()
+}
+
+// Debounced reload when slider moves
+let chronoDebounce = null
+watch(chronoRange, () => {
+  if (!chronoFilterActive.value) return
+  clearTimeout(chronoDebounce)
+  chronoDebounce = setTimeout(() => reloadGeoJson(), 400)
+})
+
 // ── Link dialog state ─────────────────────────────────────────────────────
 const linkDialogVisible = ref(false)
 const pendingGeometry   = ref(null)
@@ -83,7 +150,7 @@ const pendingDrawId     = ref(null)
 const linkSearch        = ref('')
 const linkSuggestions   = ref([])
 
-// ── Build filter params from route.query ───────────────────────────────────
+// ── Build filter params from route.query + local chrono filter ────────────
 function buildFilterParams() {
   const tb = route.params.tb
   const q  = route.query
@@ -91,9 +158,21 @@ function buildFilterParams() {
 
   if (q.search_type) params.search_type = q.search_type
   if (q.querytext)   params.querytext   = q.querytext
+
+  // Start from the route's filter (DataView passes it as JSON string)
+  let filterObj = null
   if (q.filter) {
-    try { params.filter = JSON.parse(q.filter) } catch { /* ignore malformed */ }
+    try { filterObj = JSON.parse(q.filter) } catch { /* ignore malformed */ }
   }
+
+  // Merge chrono overlap when temporal filter is active
+  if (chronoFilterActive.value) {
+    filterObj = filterObj ? { ...filterObj } : {}
+    filterObj.chrono_from = { _chrono_overlap: [chronoRange.value[0], chronoRange.value[1]] }
+    params.search_type = 'filter'
+  }
+
+  if (filterObj) params.filter = filterObj
 
   return params
 }
@@ -452,6 +531,33 @@ onUnmounted(() => {
   color: var(--p-text-muted-color);
   font-size: 0.875rem;
   margin-left: auto;
+}
+
+.geoface-chrono-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.4rem 1rem;
+  background: var(--p-surface-50);
+  border-bottom: 1px solid var(--p-surface-200);
+  flex-shrink: 0;
+}
+
+.geoface-chrono-slider {
+  flex: 1;
+  padding: 0 0.5rem;
+}
+
+.chrono-slider {
+  width: 100%;
+}
+
+.geoface-chrono-label {
+  font-size: 0.8rem;
+  color: var(--p-text-muted-color);
+  white-space: nowrap;
+  min-width: 14rem;
+  text-align: center;
 }
 
 .geoface-map {

@@ -230,6 +230,14 @@
         </div>
       </fieldset>
 
+      <!-- Fuzzy date / Chronology plugin -->
+      <ChronoSection
+        v-if="record.schema?.has_fuzzy_date"
+        v-bind="chronoData"
+        :editMode="mode === 'edit'"
+        @update:chrono="v => Object.assign(editData.core, v)"
+      />
+
       <!-- Stratigraphic Relations (RS) — only when table has rs_field configured -->
       <RsSection
         v-if="record.schema?.rs_field && !isNew"
@@ -280,6 +288,7 @@ import FileGallery        from '@/components/record/FileGallery.vue'
 import RsSection              from '@/components/record/RsSection.vue'
 import ManualLinksSection     from '@/components/record/ManualLinksSection.vue'
 import ZoteroSection          from '@/components/record/ZoteroSection.vue'
+import ChronoSection          from '@/components/record/ChronoSection.vue'
 import RecordVersionsDrawer   from '@/components/record/RecordVersionsDrawer.vue'
 
 const { t }   = useI18n()
@@ -319,6 +328,22 @@ provide('forceValidate', forceValidate)
 
 // Reactive edit data: flat values only (not the full {name,label,val} objects)
 const editData = reactive({ core: {}, plugins: {} })
+
+// Chrono values: in edit mode use flat editData; in read mode unwrap record.core
+const chronoData = computed(() => {
+  const core = mode.value === 'edit'
+    ? editData.core
+    : Object.fromEntries(
+        Object.entries(record.value?.core ?? {}).map(([k, v]) => [k, v?.val ?? v])
+      )
+  return {
+    from:      core.chrono_from      ?? null,
+    to:        core.chrono_to        ?? null,
+    label:     core.chrono_label     ?? null,
+    certainty: core.chrono_certainty ?? null,
+    period:    core.chrono_period    ?? null,
+  }
+})
 
 // ── Derived ─────────────────────────────────────────────────────
 const visibleCoreFields = computed(() =>

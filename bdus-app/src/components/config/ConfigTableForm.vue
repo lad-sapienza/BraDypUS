@@ -176,6 +176,20 @@
             <label>{{ t('zotero_plugin') }}</label>
             <ToggleSwitch v-model="form.zotero" />
           </div>
+          <div class="cfg-form-field">
+            <label>{{ t('fuzzy_date_plugin') }}</label>
+            <div class="cfg-input-action">
+              <ToggleSwitch
+                :modelValue="fuzzyDateActive"
+                :disabled="fuzzyDateBusy"
+                @update:modelValue="toggleFuzzyDate"
+              />
+              <i v-if="fuzzyDateBusy" class="pi pi-spin pi-spinner" style="font-size:.9rem" />
+            </div>
+            <small v-if="fuzzyDateActive" class="cfg-hint">
+              {{ t('fuzzy_date_activated') }} — chrono_from, chrono_to, chrono_label, chrono_certainty, chrono_period
+            </small>
+          </div>
         </div>
       </section>
 
@@ -240,6 +254,9 @@ const deleting  = ref(false)
 const renaming  = ref(false)
 const loadError = ref(null)
 
+const fuzzyDateActive = ref(false)
+const fuzzyDateBusy   = ref(false)
+
 const table            = ref(null)
 const form             = ref(null)
 const fieldLabels      = ref({})
@@ -289,6 +306,8 @@ async function load() {
       plugin:      Array.isArray(td.plugin)    ? [...td.plugin]    : [''],
       backlinks:   Array.isArray(td.backlinks) ? [...td.backlinks] : [],
     }
+
+    fuzzyDateActive.value = !!td.fuzzy_date
 
     newName.value = props.tb ?? ''
   } catch (e) {
@@ -340,6 +359,27 @@ function buildPayload() {
     preview:    f.preview.filter(v => v),
     plugin:     f.plugin.filter(v => v),
     backlinks:  f.backlinks.filter(v => v),
+  }
+}
+
+// ── Fuzzy date toggle ─────────────────────────────────────────────────────
+async function toggleFuzzyDate(newVal) {
+  if (!props.tb || fuzzyDateBusy.value) return
+  fuzzyDateBusy.value = true
+  try {
+    const res = newVal
+      ? await api.post(`/api/config/table/${props.tb}/fuzzy-date`, {})
+      : await api.delete(`/api/config/table/${props.tb}/fuzzy-date`, {})
+    if (res.status === 'success') {
+      fuzzyDateActive.value = newVal
+      toast.add({ severity: 'success', summary: t(res.code), life: 3000 })
+    } else {
+      toast.add({ severity: 'error', summary: api.responseMessage(res, t), life: 5000 })
+    }
+  } catch (e) {
+    toast.add({ severity: 'error', summary: e.message, life: 4000 })
+  } finally {
+    fuzzyDateBusy.value = false
   }
 }
 

@@ -189,5 +189,5 @@ filter[chrono_to][_nnull]=true
 
 | Plugin | Integration |
 |---|---|
-| **GeoFace** | A temporal slider in GeofaceView filters map markers by `chrono_from` / `chrono_to` overlap (coming soon). |
+| **GeoFace** | When the fuzzy-date plugin is active on a table, GeofaceView shows a **Temporal filter** bar with a dual-handle year slider (range −3000 to 2000, step 25 years). Dragging the handles filters map markers in real time using `_chrono_overlap`, correctly including ante quem and post quem records that intersect the selected window. |
 | **Harris Matrix** | An absolute chronological layout positions stratigraphic units on a vertical timeline using their fuzzy date (coming soon). |

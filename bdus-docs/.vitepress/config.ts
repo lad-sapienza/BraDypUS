@@ -134,6 +134,8 @@ function guideSidebar() {
         { text: 'Overview',            link: '/guide/system-plugins/' },
         { text: 'Geodata & GeoFace',   link: '/guide/system-plugins/geodata' },
         { text: 'Harris Matrix (RS)',   link: '/guide/system-plugins/rs' },
+        { text: 'Zotero',              link: '/guide/system-plugins/zotero' },
+        { text: 'Fuzzy date',          link: '/guide/system-plugins/fuzzy-date' },
       ],
     },
     {

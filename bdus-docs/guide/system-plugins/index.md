@@ -26,6 +26,12 @@ and visualise them as a directed acyclic Harris Matrix graph (Cytoscape.js).
 Link records to items in online Zotero libraries and display formatted citations
 inline. Citations are cached locally; Zotero remains the authoritative source.
 
+### [Fuzzy date (Chronology)](/guide/system-plugins/fuzzy-date)
+
+Store uncertain, approximate or one-sided dates (ante quem / post quem) using a
+compact string grammar (`c4l BCE`, `?/c3 CE`, …). Integrates with the GeoFace
+temporal filter and the Harris Matrix absolute timeline.
+
 ## Enabling a plugin
 
 Each plugin is configured at the table level in **Config → Tables** under the
@@ -36,6 +42,7 @@ Each plugin is configured at the table level in **Config → Tables** under the
 | Geodata | Toggle **Geodata** on |
 | RS / Harris Matrix | Set the **RS field** to the column that holds the unit identifier |
 | Zotero | Toggle **Zotero** on — requires at least one Zotero library configured in Config |
+| Fuzzy date | Toggle **Chronology (fuzzy date)** on — adds five `chrono_*` columns to the table |
 
 Once enabled, the corresponding panel appears in RecordView for all records of
 that table.

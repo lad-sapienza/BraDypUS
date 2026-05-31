@@ -24,15 +24,13 @@
     />
 
     <!-- boolean -->
-    <Select
-      v-else-if="schema.type === 'boolean'"
-      :modelValue="modelValue"
-      @update:modelValue="v => onInput(v)"
-      :options="boolOptions"
-      optionLabel="label"
-      optionValue="value"
-      :class="['field-input', 'w-full', { 'p-invalid': showError }]"
-    />
+    <div v-else-if="schema.type === 'boolean'" class="bool-switch-wrap">
+      <ToggleSwitch
+        :modelValue="modelValue === '1' || modelValue === 1 || modelValue === true"
+        @update:modelValue="v => onInput(v ? '1' : '0')"
+      />
+      <span class="bool-switch-label">{{ modelValue === '1' || modelValue === 1 || modelValue === true ? t('yes') : t('no') }}</span>
+    </div>
 
     <!-- select / combo_select / multi_select with options_source -->
     <template v-else-if="['select','combo_select','multi_select'].includes(schema.type) && schema.options_source">
@@ -160,8 +158,9 @@
 import { ref, computed, inject } from 'vue'
 import InputText  from 'primevue/inputtext'
 import Textarea    from 'primevue/textarea'
-import Select      from 'primevue/select'
-import MultiSelect from 'primevue/multiselect'
+import Select        from 'primevue/select'
+import MultiSelect   from 'primevue/multiselect'
+import ToggleSwitch  from 'primevue/toggleswitch'
 import Slider      from 'primevue/slider'
 import { useToast } from 'primevue/usetoast'
 import { api }     from '@/api'
@@ -387,6 +386,16 @@ onMounted(() => {
   gap: 0.75rem;
 }
 .field-slider { flex: 1; }
+
+.bool-switch-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.35rem 0;
+}
+.bool-switch-label {
+  font-size: 0.875rem;
+}
 .slider-value { min-width: 2.5rem; text-align: right; font-size: 0.875rem; }
 
 .field-error {

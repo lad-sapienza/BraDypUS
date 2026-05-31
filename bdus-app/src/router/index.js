@@ -117,6 +117,15 @@ const routes = [
     path: '/:app/migrations',
     component: () => import('@/views/MigrationsView.vue'),
     meta: { requiresAuth: true }
+  },
+
+  // ── Catch-all — no route matched ──────────────────────────────────────────
+  {
+    path: '/:pathMatch(.*)*',
+    redirect: to => {
+      console.warn('[router] No route matched:', to.fullPath, '— redirecting to /login')
+      return '/login'
+    }
   }
 ]
 

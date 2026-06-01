@@ -34,6 +34,8 @@ use DB\System\Migrations\M022_AddOAuthToUsers;
 use DB\System\Migrations\M023_ZoteroTables;
 use DB\System\Migrations\M024_DropLegacyColumns;
 use DB\System\Migrations\M025_AddColorToCfgApp;
+use DB\System\Migrations\M026_RefactorCfgRelations;
+use DB\System\Migrations\M027_CreateCfgIndexes;
 use Monolog\Logger;
 
 /**
@@ -85,6 +87,8 @@ class Migrate
         M023_ZoteroTables::class,
         M024_DropLegacyColumns::class,
         M025_AddColorToCfgApp::class,
+        M026_RefactorCfgRelations::class,
+        M027_CreateCfgIndexes::class,
     ];
 
     /**

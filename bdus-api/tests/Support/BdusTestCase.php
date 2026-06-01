@@ -192,6 +192,34 @@ abstract class BdusTestCase extends TestCase
                 applied_at INTEGER NOT NULL
             )
         ');
+
+        static::$db->execInTransaction('
+            CREATE TABLE IF NOT EXISTS bdus_cfg_relations (
+                id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                from_tb    TEXT    NOT NULL,
+                from_col   TEXT    NOT NULL,
+                to_tb      TEXT    NOT NULL,
+                to_col     TEXT    NOT NULL,
+                on_delete  TEXT    DEFAULT \'RESTRICT\',
+                on_update  TEXT    DEFAULT \'CASCADE\'
+            )
+        ');
+        static::$db->execInTransaction(
+            'CREATE UNIQUE INDEX IF NOT EXISTS cfg_rel_from_col_unique ON bdus_cfg_relations (from_tb, from_col)'
+        );
+
+        static::$db->execInTransaction('
+            CREATE TABLE IF NOT EXISTS bdus_cfg_indexes (
+                id       INTEGER PRIMARY KEY AUTOINCREMENT,
+                tb       TEXT    NOT NULL,
+                name     TEXT    NOT NULL,
+                columns  TEXT    NOT NULL,
+                is_unique INTEGER DEFAULT 0
+            )
+        ');
+        static::$db->execInTransaction(
+            'CREATE UNIQUE INDEX IF NOT EXISTS cfg_idx_name_unique ON bdus_cfg_indexes (tb, name)'
+        );
     }
 
     // ── Seed ──────────────────────────────────────────────────────────────

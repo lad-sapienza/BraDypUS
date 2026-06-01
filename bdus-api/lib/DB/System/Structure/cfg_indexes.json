@@ -1,0 +1,14 @@
+{
+    "columns": [
+        { "name": "id",      "type": "INTEGER", "pk": true,  "notnull": false },
+        { "name": "tb",      "type": "TEXT",               "notnull": true  },
+        { "name": "name",    "type": "TEXT",               "notnull": true  },
+        { "name": "columns", "type": "TEXT",               "notnull": true  },
+        { "name": "is_unique", "type": "INTEGER",            "notnull": false, "default": 0 }
+    ],
+    "indexes": [
+        { "name": "cfg_idx_tb_idx",          "unique": false, "columns": ["tb"]   },
+        { "name": "cfg_idx_name_unique",     "unique": true,  "columns": ["tb", "name"] }
+    ],
+    "relations": []
+}

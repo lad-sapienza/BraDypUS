@@ -81,26 +81,39 @@ class LoadFromDB
             $fieldsByTable[$fld['table_name']][] = $fld;
         }
 
-        // Pre-load all relations from bdus_cfg_relations (post-M013).
-        // After M020 each relationship is stored exactly once (from_tb → to_tb).
-        // We therefore also collect rows in the REVERSE direction (to_tb = X)
-        // and mark them so buildTable() can auto-invert the fld mapping.
-        // Fall back gracefully if the table does not yet exist.
+        // Pre-load all relations from bdus_cfg_relations.
+        // New schema (M026): one row per FK column pair —
+        //   from_tb.from_col → to_tb.to_col (semantic direction; from_tb holds the FK).
+        // Each row contributes to BOTH the forward-link list of from_tb AND the
+        // reverse-link list of to_tb (with my/other swapped).
+        // Rows are pre-grouped by other_tb so buildTable() can merge multi-column FKs.
         $relationsByTable = [];
         try {
             $allRelRows = $db->query(
-                'SELECT * FROM bdus_cfg_relations ORDER BY sort ASC, id ASC',
+                'SELECT id, from_tb, from_col, to_tb, to_col
+                   FROM bdus_cfg_relations
+                  ORDER BY from_tb ASC, to_tb ASC, from_col ASC',
                 [],
                 'read'
             ) ?: [];
             foreach ($allRelRows as $rel) {
-                // Forward direction: use as-is.
-                $relationsByTable[$rel['from_tb']][] = $rel + ['_inverted' => false];
-                // Reverse direction: fld will be inverted in buildTable().
-                $relationsByTable[$rel['to_tb']][]   = $rel + ['_inverted' => true];
+                // Forward: current table holds the FK column.
+                $relationsByTable[$rel['from_tb']][] = [
+                    'other_tb' => $rel['to_tb'],
+                    'my'       => $rel['from_col'],
+                    'other'    => $rel['to_col'],
+                ];
+                // Reverse: current table is the referenced side.
+                if ($rel['from_tb'] !== $rel['to_tb']) {
+                    $relationsByTable[$rel['to_tb']][] = [
+                        'other_tb' => $rel['from_tb'],
+                        'my'       => $rel['to_col'],
+                        'other'    => $rel['from_col'],
+                    ];
+                }
             }
         } catch (\Throwable $e) {
-            // bdus_cfg_relations does not exist yet — M013 pending. Ignore.
+            // bdus_cfg_relations does not exist yet — M013/M026 pending. Ignore.
         }
 
         $result = [];
@@ -133,29 +146,19 @@ class LoadFromDB
 
     private static function buildTable(array $row, array $fieldRows, array $relRows = []): array
     {
-        // Build forward-link array from bdus_cfg_relations rows (post-M013).
-        // After M020, each relation is stored once; the reverse direction is
-        // synthesised here by swapping my↔other in every fld pair.
+        // Build forward-link array from pre-flattened relation rows.
+        // Each $rel already has 'other_tb', 'my', 'other' set by LoadFromDB::tables().
+        // Rows with the same other_tb are grouped into one link entry (multi-column FK).
         // If no relation rows exist, fall back to the legacy `links` JSON blob
-        // in bdus_cfg_tables (pre-M013 apps that have not yet been migrated).
+        // in bdus_cfg_tables (pre-M026 apps that have not yet been migrated).
         if (!empty($relRows)) {
-            $links = [];
+            $grouped = [];
             foreach ($relRows as $rel) {
-                $fldArr = $rel['fld'] ? (json_decode($rel['fld'], true) ?: []) : [];
-
-                if ($rel['_inverted'] ?? false) {
-                    // Reverse direction: swap my↔other in every field pair
-                    // so getLinks() queries the correct columns from each side.
-                    $fldArr = array_map(
-                        static fn($p) => ['my' => $p['other'] ?? '', 'other' => $p['my'] ?? ''],
-                        $fldArr
-                    );
-                    $otherTb = $rel['from_tb']; // the "other" table is the original from_tb
-                } else {
-                    $otherTb = $rel['to_tb'];
-                }
-
-                $links[] = ['other_tb' => $otherTb, 'fld' => $fldArr];
+                $grouped[$rel['other_tb']][] = ['my' => $rel['my'], 'other' => $rel['other']];
+            }
+            $links = [];
+            foreach ($grouped as $otherTb => $pairs) {
+                $links[] = ['other_tb' => $otherTb, 'fld' => $pairs];
             }
         } else {
             $links = $row['links'] ? json_decode($row['links'], true) : [];

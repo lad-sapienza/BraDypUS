@@ -85,7 +85,9 @@ tags:
   - name: migrations
     description: Database migration status (admin)
   - name: config-relations
-    description: Cross-table relation definitions (config panel)
+    description: Cross-table FK relation definitions (config panel)
+  - name: config-indexes
+    description: User-defined database indexes (config panel)
   - name: zotero
     description: Zotero bibliography integration — library config and per-record citation links
   - name: widgets
@@ -1158,6 +1160,46 @@ paths:
                           type: object
 
   # ── Deleted records ──────────────────────────────────────────────────────
+
+  /api/record/{tb}/check-plugins-before-delete:
+    get:
+      tags: [records]
+      summary: Check plugin record counts before deleting a record
+      description: |
+        Returns the list of plugin tables that contain rows referencing the
+        given record (non-zero counts only).  The frontend calls this before
+        `DELETE /api/record/{tb}/{id}` to show a confirmation dialog when
+        plugin data would be left orphaned.
+
+        Requires `edit` privilege.
+      parameters:
+        - $ref: '#/components/parameters/tb'
+        - name: id
+          in: query
+          required: true
+          schema: { type: integer }
+          description: Record id to check
+      responses:
+        '200':
+          description: Plugin count list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      plugins:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            tb:
+                              type: string
+                            label:
+                              type: string
+                            count:
+                              type: integer
 
   /api/record/{tb}/deleted:
     get:
@@ -3439,8 +3481,11 @@ paths:
   /api/config/relations:
     get:
       tags: [config-relations]
-      summary: List all cross-table relation definitions
-      description: Returns every row in `bdus_cfg_relations`, joined with table labels. Super-admin only.
+      summary: List all FK relation definitions
+      description: |
+        Returns every row in `bdus_cfg_relations`, enriched with table labels.
+        Each row represents one FK column: `from_tb.from_col → to_tb.to_col`.
+        Super-admin only.
       responses:
         '200':
           description: Relation list
@@ -3457,11 +3502,23 @@ paths:
                           $ref: '#/components/schemas/Relation'
     post:
       tags: [config-relations]
-      summary: Create a new relation
+      summary: Create a new FK relation and apply it to the database
       description: |
-        Creates a new cross-table relation. `from_tb` and `to_tb` are automatically
-        normalised so the alphabetically-first table name is always stored as `from_tb`
-        (UNIQUE constraint). Returns an error if the canonical pair already exists.
+        Creates a new FK relation.  `from_tb` is always the table that holds
+        the FK column (`from_col`); `to_tb` is the referenced table.
+
+        **No alphabetical normalisation** — direction is preserved exactly as
+        given.  UNIQUE constraint is on `(from_tb, from_col)`: one column can
+        only reference one parent.
+
+        Self-referential relations (`from_tb == to_tb`) are allowed; their
+        `on_delete` is forced to `RESTRICT` and `on_update` to `CASCADE`.
+
+        If orphan rows are found in `from_tb.from_col` the config row is still
+        saved but the DB FK constraint is **not** applied; the response status
+        is `warning` with code `relation_saved_orphans_found` and an `orphans`
+        count.  Use `POST /api/config/apply-constraints` after cleaning the
+        data to apply the constraint.
       requestBody:
         required: true
         content:
@@ -3470,7 +3527,7 @@ paths:
               $ref: '#/components/schemas/RelationInput'
       responses:
         '200':
-          description: Relation created
+          description: Relation created (or saved with orphan warning)
           content:
             application/json:
               schema:
@@ -3480,13 +3537,21 @@ paths:
                     properties:
                       id:
                         type: integer
+                      orphans:
+                        type: integer
+                        description: Number of orphan rows (present only when status=warning)
 
   /api/config/relations/{id}:
     parameters:
       - $ref: '#/components/parameters/id'
     put:
       tags: [config-relations]
-      summary: Update an existing relation
+      summary: Update to_tb, to_col, on_delete, on_update for an existing relation
+      description: |
+        `from_tb` and `from_col` are immutable (they identify the FK column).
+        Only `to_tb`, `to_col`, `on_delete`, and `on_update` may be updated.
+        The old FK constraint is dropped and re-applied with the new parameters.
+        Orphan detection applies as with POST.
       requestBody:
         required: true
         content:
@@ -3505,12 +3570,110 @@ paths:
                     properties:
                       id:
                         type: integer
+                      orphans:
+                        type: integer
     delete:
       tags: [config-relations]
-      summary: Delete a relation
+      summary: Delete a relation and drop the FK constraint from the database
       responses:
         '200':
           description: Relation deleted or not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  /api/config/apply-constraints:
+    post:
+      tags: [config-relations]
+      summary: Apply all pending FK constraints and indexes to the database
+      description: |
+        Iterates `bdus_cfg_relations` and `bdus_cfg_indexes` and applies any
+        constraints/indexes not yet present in the DB.  Rows with orphan data
+        are skipped (reported in `errors`).
+
+        Useful after a v4 migration or after cleaning up orphan records.
+        Super-admin only.
+      responses:
+        '200':
+          description: Constraints applied (partial success possible)
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/CodedSuccess'
+                  - type: object
+                    properties:
+                      applied:
+                        type: integer
+                      skipped:
+                        type: integer
+                      errors:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            from_tb:
+                              type: string
+                            from_col:
+                              type: string
+                            reason:
+                              type: string
+
+  # ── Config indexes ─────────────────────────────────────────────────────────────
+
+  /api/config/table/{tb}/indexes:
+    parameters:
+      - $ref: '#/components/parameters/tb'
+    get:
+      tags: [config-indexes]
+      summary: List user-defined indexes for a table
+      responses:
+        '200':
+          description: Index list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/IndexDef'
+    post:
+      tags: [config-indexes]
+      summary: Create a new index on a table
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IndexInput'
+      responses:
+        '200':
+          description: Index created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/CodedSuccess'
+                  - type: object
+                    properties:
+                      id:
+                        type: integer
+
+  /api/config/table/{tb}/indexes/{id}:
+    parameters:
+      - $ref: '#/components/parameters/tb'
+      - $ref: '#/components/parameters/id'
+    delete:
+      tags: [config-indexes]
+      summary: Delete an index
+      responses:
+        '200':
+          description: Index deleted or not found
           content:
             application/json:
               schema:
@@ -4383,49 +4546,90 @@ components:
 
     # ── Config relations ───────────────────────────────────────────────────
 
+    FkPolicy:
+      type: string
+      enum: [CASCADE, RESTRICT, 'SET NULL', 'NO ACTION']
+      description: FK referential action policy
+
     Relation:
       type: object
+      description: One FK relation — from_tb.from_col → to_tb.to_col
       properties:
         id:
           type: integer
         from_tb:
           type: string
+          description: Table that holds the FK column (the "child")
+        from_col:
+          type: string
+          description: FK column in from_tb
         from_label:
           type: string
         to_tb:
           type: string
+          description: Referenced table (the "parent")
+        to_col:
+          type: string
+          description: Referenced column in to_tb (usually `id`)
         to_label:
           type: string
-        fld:
-          type: array
-          description: Array of field-pair mappings `{my, other}`
-          items:
-            type: object
-            properties:
-              my:
-                type: string
-                description: Field name in `from_tb`
-              other:
-                type: string
-                description: Field name in `to_tb`
+        on_delete:
+          $ref: '#/components/schemas/FkPolicy'
+        on_update:
+          $ref: '#/components/schemas/FkPolicy'
 
     RelationInput:
       type: object
-      required: [from_tb, to_tb]
+      required: [from_tb, from_col, to_tb, to_col]
       properties:
         from_tb:
           type: string
+          description: Table holding the FK column
+        from_col:
+          type: string
+          description: FK column in from_tb
         to_tb:
           type: string
-        fld:
+          description: Referenced table
+        to_col:
+          type: string
+          description: Referenced column in to_tb
+        on_delete:
+          $ref: '#/components/schemas/FkPolicy'
+        on_update:
+          $ref: '#/components/schemas/FkPolicy'
+
+    IndexDef:
+      type: object
+      properties:
+        id:
+          type: integer
+        tb:
+          type: string
+        name:
+          type: string
+        columns:
           type: array
           items:
-            type: object
-            properties:
-              my:
-                type: string
-              other:
-                type: string
+            type: string
+        is_unique:
+          type: boolean
+
+    IndexInput:
+      type: object
+      required: [name, columns]
+      properties:
+        name:
+          type: string
+          description: Index name (must be unique per table)
+        columns:
+          type: array
+          items:
+            type: string
+          description: Ordered list of columns included in the index
+        is_unique:
+          type: boolean
+          default: false
 
     # ── Zotero ─────────────────────────────────────────────────────────────
 

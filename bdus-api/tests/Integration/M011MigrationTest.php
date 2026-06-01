@@ -150,16 +150,16 @@ class M011MigrationTest extends TestCase
 
     public function testLinksStoredInCfgRelations(): void
     {
+        // New schema (M026): one row per FK column pair.
         $rows = static::$db->query(
-            'SELECT * FROM bdus_cfg_relations WHERE from_tb=? ORDER BY sort',
+            'SELECT from_col, to_tb, to_col FROM bdus_cfg_relations WHERE from_tb=? ORDER BY from_col',
             ['items'],
             'read'
         );
         $this->assertCount(1, $rows);
-        $this->assertSame('tags', $rows[0]['to_tb']);
-        $fld = json_decode($rows[0]['fld'], true);
-        $this->assertSame('id',      $fld[0]['my']);
-        $this->assertSame('item_id', $fld[0]['other']);
+        $this->assertSame('tags',    $rows[0]['to_tb']);
+        $this->assertSame('id',      $rows[0]['from_col']);
+        $this->assertSame('item_id', $rows[0]['to_col']);
     }
 
     // ── Fields ────────────────────────────────────────────────────────────────

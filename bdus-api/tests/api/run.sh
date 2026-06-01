@@ -198,7 +198,8 @@ pass "US IDs captured: us_id_1=${US_ID_1}, us_id_2=${US_ID_2}"
 header "Phase 4b — Plugin CRUD"
 run_phase "Plugin CRUD" "04b_plugin_crud.hurl" \
   --variable "jwt=${JWT}" \
-  --variable "us_id_1=${US_ID_1}"
+  --variable "us_id_1=${US_ID_1}" \
+  --variable "us_id_2=${US_ID_2}"
 
 # ════════════════════════════════════════════════════════════════════
 # Phase 4c — File upload / attach / sort / delete
@@ -396,6 +397,13 @@ run_phase "History & confirm-admin-pwd" "29_history_admin.hurl" \
 # ════════════════════════════════════════════════════════════════════
 header "Phase 30 — File sort"
 run_phase "File sort" "30_file_sort.hurl" \
+  --variable "jwt=${JWT}"
+
+# ════════════════════════════════════════════════════════════════════
+# Phase 31 — FK indexes (user-defined DB indexes)
+# ════════════════════════════════════════════════════════════════════
+header "Phase 31 — FK indexes"
+run_phase "FK indexes" "31_fk_indexes.hurl" \
   --variable "jwt=${JWT}"
 
 # ════════════════════════════════════════════════════════════════════

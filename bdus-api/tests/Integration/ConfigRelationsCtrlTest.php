@@ -10,16 +10,12 @@ use Tests\Support\BdusTestCase;
  * Integration tests for config_ctrl relations endpoints:
  *   getRelations, saveRelation, deleteRelation
  *
- * The test DB (from BdusTestCase) needs bdus_cfg_tables + bdus_cfg_relations.
- * We create them in setUpBeforeClass and seed two tables (items / tags) that
- * match the fixture-config names already used by ConfigCtrlTest.
- *
- * All tests call the controller methods directly — no HTTP stack involved.
+ * Tests the new schema: from_tb, from_col, to_tb, to_col, on_delete, on_update.
+ * No alphabetical normalization — from_tb is always the FK holder.
+ * Self-referential relations (from_tb == to_tb) are allowed with fixed policy.
  */
 class ConfigRelationsCtrlTest extends BdusTestCase
 {
-    // ── Lifecycle ─────────────────────────────────────────────────────────
-
     public static function setUpBeforeClass(): void
     {
         parent::setUpBeforeClass();
@@ -27,37 +23,34 @@ class ConfigRelationsCtrlTest extends BdusTestCase
         $manage = new Manage(static::$db);
         $manage->createTable('bdus_cfg_tables');
         $manage->createTable('bdus_cfg_fields');
-        $manage->createTable('bdus_cfg_relations');
 
-        // Seed two table rows so labels are resolved in getRelations responses.
         ToDB::upsertTable(static::$db, ['name' => 'items', 'label' => 'Items']);
         ToDB::upsertTable(static::$db, ['name' => 'tags',  'label' => 'Tags']);
     }
 
     public static function tearDownAfterClass(): void
     {
-        // Clean up all relations inserted by tests so the shared in-memory DB
-        // is tidy for any test class that might share the process.
         static::$db->query('DELETE FROM bdus_cfg_relations', [], 'boolean');
+        static::$db->query('DELETE FROM bdus_cfg_indexes',   [], 'boolean');
         parent::tearDownAfterClass();
     }
 
-    // Helper: flush the relations table between tests that mutate it.
     protected function setUp(): void
     {
         static::$db->query('DELETE FROM bdus_cfg_relations', [], 'boolean');
+        static::$db->query('DELETE FROM bdus_cfg_indexes',   [], 'boolean');
     }
 
-    // ── getRelations — empty ──────────────────────────────────────────────
+    // ── getRelations ──────────────────────────────────────────────────────────
 
     public function testGetRelationsReturnsSuccessWhenEmpty(): void
     {
         $ctrl = $this->makeController('Bdus\\Controllers\\Config');
         $res  = $this->callController($ctrl, 'getRelations');
 
-        $this->assertSame('success', $res['status']);
+        $this->assertSame('success',   $res['status']);
         $this->assertSame('relations', $res['code']);
-        $this->assertSame([], $res['data']);
+        $this->assertSame([],          $res['data']);
     }
 
     public function testGetRelationsRequiresSuperAdmin(): void
@@ -71,80 +64,86 @@ class ConfigRelationsCtrlTest extends BdusTestCase
         $this->assertSame('not_enough_privilege', $res['code']);
     }
 
-    // ── saveRelation — create ─────────────────────────────────────────────
+    public function testGetRelationsReturnsNewSchemaFields(): void
+    {
+        static::$db->query(
+            'INSERT INTO bdus_cfg_relations (from_tb, from_col, to_tb, to_col, on_delete, on_update) VALUES (?,?,?,?,?,?)',
+            ['items', 'tag_id', 'tags', 'id', 'RESTRICT', 'CASCADE'],
+            'boolean'
+        );
+
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config');
+        $res  = $this->callController($ctrl, 'getRelations');
+
+        $this->assertCount(1, $res['data']);
+        $row = $res['data'][0];
+
+        $this->assertArrayHasKey('id',         $row);
+        $this->assertArrayHasKey('from_tb',    $row);
+        $this->assertArrayHasKey('from_col',   $row);
+        $this->assertArrayHasKey('to_tb',      $row);
+        $this->assertArrayHasKey('to_col',     $row);
+        $this->assertArrayHasKey('on_delete',  $row);
+        $this->assertArrayHasKey('on_update',  $row);
+        $this->assertArrayHasKey('from_label', $row);
+        $this->assertArrayHasKey('to_label',   $row);
+
+        $this->assertSame('items',    $row['from_tb']);
+        $this->assertSame('tag_id',   $row['from_col']);
+        $this->assertSame('tags',     $row['to_tb']);
+        $this->assertSame('id',       $row['to_col']);
+        $this->assertSame('RESTRICT', $row['on_delete']);
+        $this->assertSame('CASCADE',  $row['on_update']);
+        $this->assertSame('Items',    $row['from_label']);
+        $this->assertSame('Tags',     $row['to_label']);
+    }
+
+    // ── saveRelation — create ─────────────────────────────────────────────────
 
     public function testSaveRelationCreatesNewRow(): void
     {
         $ctrl = $this->makeController('Bdus\\Controllers\\Config', [], [
-            'from_tb' => 'items',
-            'to_tb'   => 'tags',
-            'fld'     => [['my' => 'id', 'other' => 'id_link']],
+            'from_tb'  => 'items',
+            'from_col' => 'tag_id',
+            'to_tb'    => 'tags',
+            'to_col'   => 'id',
         ]);
         $res = $this->callController($ctrl, 'saveRelation');
 
-        $this->assertSame('success', $res['status']);
-        $this->assertSame('relation_saved', $res['code']);
+        // May be success or warning (orphans) — both mean the row was saved.
+        $this->assertContains($res['status'], ['success', 'warning']);
+        $this->assertContains($res['code'], ['relation_saved', 'relation_saved_orphans_found']);
         $this->assertIsInt($res['id']);
         $this->assertGreaterThan(0, $res['id']);
     }
 
-    public function testSaveRelationAppearsInGetRelations(): void
+    public function testSaveRelationStoresCorrectDirection(): void
     {
-        // Create
         $ctrl = $this->makeController('Bdus\\Controllers\\Config', [], [
-            'from_tb' => 'items',
-            'to_tb'   => 'tags',
-            'fld'     => [['my' => 'id', 'other' => 'id_link']],
-        ]);
-        $this->callController($ctrl, 'saveRelation');
-
-        // List
-        $ctrl2 = $this->makeController('Bdus\\Controllers\\Config');
-        $res   = $this->callController($ctrl2, 'getRelations');
-
-        $this->assertCount(1, $res['data']);
-        $row = $res['data'][0];
-        $this->assertArrayHasKey('id',         $row);
-        $this->assertArrayHasKey('from_tb',    $row);
-        $this->assertArrayHasKey('to_tb',      $row);
-        $this->assertArrayHasKey('from_label', $row);
-        $this->assertArrayHasKey('to_label',   $row);
-        $this->assertArrayHasKey('fld',        $row);
-        $this->assertSame('Items', $row['from_label']);
-        $this->assertSame('Tags',  $row['to_label']);
-    }
-
-    public function testSaveRelationNormalisesCanonicalOrder(): void
-    {
-        // "tags" > "items" alphabetically → backend must swap so items is from_tb
-        $ctrl = $this->makeController('Bdus\\Controllers\\Config', [], [
-            'from_tb' => 'tags',
-            'to_tb'   => 'items',
-            'fld'     => [['my' => 'id_link', 'other' => 'id']],
+            'from_tb'  => 'tags',
+            'from_col' => 'item_ref',
+            'to_tb'    => 'items',
+            'to_col'   => 'id',
         ]);
         $this->callController($ctrl, 'saveRelation');
 
         $row = static::$db->query(
-            'SELECT from_tb, to_tb, fld FROM bdus_cfg_relations',
-            [],
-            'read'
+            'SELECT from_tb, from_col, to_tb FROM bdus_cfg_relations',
+            [], 'read'
         );
         $this->assertCount(1, $row);
-        // Canonical: alphabetically-first table must be from_tb
-        $this->assertSame('items', $row[0]['from_tb']);
-        $this->assertSame('tags',  $row[0]['to_tb']);
-
-        // fld must have been inverted: my/other swapped
-        $fld = json_decode($row[0]['fld'], true);
-        $this->assertSame('id',      $fld[0]['my']);
-        $this->assertSame('id_link', $fld[0]['other']);
+        // Direction must be preserved exactly as given — no alphabetical swap.
+        $this->assertSame('tags',     $row[0]['from_tb']);
+        $this->assertSame('item_ref', $row[0]['from_col']);
+        $this->assertSame('items',    $row[0]['to_tb']);
     }
 
-    public function testSaveRelationRejectsMissingTables(): void
+    public function testSaveRelationRejectsMissingParameters(): void
     {
         $ctrl = $this->makeController('Bdus\\Controllers\\Config', [], [
-            'from_tb' => 'items',
-            'to_tb'   => '',
+            'from_tb'  => 'items',
+            'from_col' => 'tag_id',
+            // to_tb and to_col missing
         ]);
         $res = $this->callController($ctrl, 'saveRelation');
 
@@ -152,55 +151,17 @@ class ConfigRelationsCtrlTest extends BdusTestCase
         $this->assertSame('parameter_missing', $res['code']);
     }
 
-    public function testSaveRelationRejectsSelfLoop(): void
+    public function testSaveRelationRejectsDuplicateFromTbFromCol(): void
     {
         $ctrl = $this->makeController('Bdus\\Controllers\\Config', [], [
-            'from_tb' => 'items',
-            'to_tb'   => 'items',
-        ]);
-        $res = $this->callController($ctrl, 'saveRelation');
-
-        $this->assertSame('error',                $res['status']);
-        $this->assertSame('relation_self_loop',   $res['code']);
-    }
-
-    public function testSaveRelationRejectsDuplicatePair(): void
-    {
-        // First create
-        $ctrl = $this->makeController('Bdus\\Controllers\\Config', [], [
-            'from_tb' => 'items',
-            'to_tb'   => 'tags',
-            'fld'     => [],
+            'from_tb' => 'items', 'from_col' => 'tag_id',
+            'to_tb'   => 'tags',  'to_col'   => 'id',
         ]);
         $this->callController($ctrl, 'saveRelation');
 
-        // Second create with the same pair → error
         $ctrl2 = $this->makeController('Bdus\\Controllers\\Config', [], [
-            'from_tb' => 'items',
-            'to_tb'   => 'tags',
-            'fld'     => [],
-        ]);
-        $res = $this->callController($ctrl2, 'saveRelation');
-
-        $this->assertSame('error',                    $res['status']);
-        $this->assertSame('relation_already_exists',  $res['code']);
-    }
-
-    public function testSaveRelationRejectsDuplicateReverseOrder(): void
-    {
-        // Create items→tags
-        $ctrl = $this->makeController('Bdus\\Controllers\\Config', [], [
-            'from_tb' => 'items',
-            'to_tb'   => 'tags',
-            'fld'     => [],
-        ]);
-        $this->callController($ctrl, 'saveRelation');
-
-        // Try to create tags→items (canonical form is the same pair)
-        $ctrl2 = $this->makeController('Bdus\\Controllers\\Config', [], [
-            'from_tb' => 'tags',
-            'to_tb'   => 'items',
-            'fld'     => [],
+            'from_tb' => 'items', 'from_col' => 'tag_id',
+            'to_tb'   => 'tags',  'to_col'   => 'ref',
         ]);
         $res = $this->callController($ctrl2, 'saveRelation');
 
@@ -208,12 +169,78 @@ class ConfigRelationsCtrlTest extends BdusTestCase
         $this->assertSame('relation_already_exists', $res['code']);
     }
 
+    public function testSaveRelationAllowsOppositeDirectionBetweenSameTables(): void
+    {
+        // items.tag_id → tags.id
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config', [], [
+            'from_tb' => 'items', 'from_col' => 'tag_id',
+            'to_tb'   => 'tags',  'to_col'   => 'id',
+        ]);
+        $this->callController($ctrl, 'saveRelation');
+
+        // tags.item_ref → items.id  (opposite direction — different FK column, must succeed)
+        $ctrl2 = $this->makeController('Bdus\\Controllers\\Config', [], [
+            'from_tb' => 'tags',  'from_col' => 'item_ref',
+            'to_tb'   => 'items', 'to_col'   => 'id',
+        ]);
+        $res = $this->callController($ctrl2, 'saveRelation');
+
+        $this->assertContains($res['status'], ['success', 'warning']);
+    }
+
+    public function testSaveRelationAllowsSelfReferential(): void
+    {
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config', [], [
+            'from_tb'  => 'items',
+            'from_col' => 'parent_id',
+            'to_tb'    => 'items',
+            'to_col'   => 'id',
+        ]);
+        $res = $this->callController($ctrl, 'saveRelation');
+        $this->assertContains($res['status'], ['success', 'warning']);
+    }
+
+    public function testSaveRelationForcesSelfReferentialPolicy(): void
+    {
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config', [], [
+            'from_tb'   => 'items',
+            'from_col'  => 'parent_id',
+            'to_tb'     => 'items',
+            'to_col'    => 'id',
+            'on_delete' => 'CASCADE',   // must be overridden
+            'on_update' => 'RESTRICT',  // must be overridden
+        ]);
+        $this->callController($ctrl, 'saveRelation');
+
+        $row = static::$db->query(
+            'SELECT on_delete, on_update FROM bdus_cfg_relations WHERE from_col=?',
+            ['parent_id'], 'read'
+        );
+        $this->assertSame('RESTRICT', $row[0]['on_delete']);
+        $this->assertSame('CASCADE',  $row[0]['on_update']);
+    }
+
+    public function testSaveRelationRejectsInvalidPolicy(): void
+    {
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config', [], [
+            'from_tb'   => 'items',
+            'from_col'  => 'tag_id',
+            'to_tb'     => 'tags',
+            'to_col'    => 'id',
+            'on_delete' => 'EXPLODE',
+        ]);
+        $res = $this->callController($ctrl, 'saveRelation');
+
+        $this->assertSame('error',              $res['status']);
+        $this->assertSame('invalid_on_delete',  $res['code']);
+    }
+
     public function testSaveRelationRequiresSuperAdmin(): void
     {
         $this->setPrivilege(11);
         $ctrl = $this->makeController('Bdus\\Controllers\\Config', [], [
-            'from_tb' => 'items',
-            'to_tb'   => 'tags',
+            'from_tb' => 'items', 'from_col' => 'tag_id',
+            'to_tb'   => 'tags',  'to_col'   => 'id',
         ]);
         $res = $this->callController($ctrl, 'saveRelation');
         $this->setPrivilege(1);
@@ -222,61 +249,69 @@ class ConfigRelationsCtrlTest extends BdusTestCase
         $this->assertSame('not_enough_privilege', $res['code']);
     }
 
-    // ── saveRelation — update ─────────────────────────────────────────────
+    // ── saveRelation — update ─────────────────────────────────────────────────
 
-    public function testSaveRelationUpdateChangesFieldMapping(): void
+    public function testSaveRelationUpdateChangesTargetOnly(): void
     {
         // Create
         $ctrl = $this->makeController('Bdus\\Controllers\\Config', [], [
-            'from_tb' => 'items',
-            'to_tb'   => 'tags',
-            'fld'     => [['my' => 'id', 'other' => 'id_link']],
+            'from_tb' => 'items', 'from_col' => 'tag_id',
+            'to_tb'   => 'tags',  'to_col'   => 'id',
+            'on_delete' => 'RESTRICT',
         ]);
         $created = $this->callController($ctrl, 'saveRelation');
         $id = $created['id'];
 
-        // Update: change fld
+        // Update: change on_delete
         $ctrl2 = $this->makeController('Bdus\\Controllers\\Config', ['id' => (string)$id], [
-            'from_tb' => 'items',
-            'to_tb'   => 'tags',
-            'fld'     => [['my' => 'name', 'other' => 'label']],
+            'from_tb' => 'items', 'from_col' => 'tag_id',
+            'to_tb'   => 'tags',  'to_col'   => 'id',
+            'on_delete' => 'CASCADE',
         ]);
         $updated = $this->callController($ctrl2, 'saveRelation');
 
-        $this->assertSame('success',        $updated['status']);
-        $this->assertSame('relation_saved', $updated['code']);
-        $this->assertSame($id,              $updated['id']);
+        $this->assertContains($updated['status'], ['success', 'warning']);
+        $this->assertSame($id, $updated['id']);
 
-        // Verify in DB
         $row = static::$db->query(
-            'SELECT fld FROM bdus_cfg_relations WHERE id=?', [$id], 'read'
+            'SELECT on_delete, from_tb, from_col FROM bdus_cfg_relations WHERE id=?',
+            [$id], 'read'
         );
-        $fld = json_decode($row[0]['fld'], true);
-        $this->assertSame('name',  $fld[0]['my']);
-        $this->assertSame('label', $fld[0]['other']);
+        $this->assertSame('CASCADE', $row[0]['on_delete']);
+        // from_tb / from_col must not change
+        $this->assertSame('items',  $row[0]['from_tb']);
+        $this->assertSame('tag_id', $row[0]['from_col']);
     }
 
-    // ── deleteRelation ────────────────────────────────────────────────────
+    public function testSaveRelationUpdateReturnsNotFoundForBadId(): void
+    {
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config', ['id' => '99999'], [
+            'from_tb' => 'items', 'from_col' => 'tag_id',
+            'to_tb'   => 'tags',  'to_col'   => 'id',
+        ]);
+        $res = $this->callController($ctrl, 'saveRelation');
+
+        $this->assertSame('error',     $res['status']);
+        $this->assertSame('not_found', $res['code']);
+    }
+
+    // ── deleteRelation ────────────────────────────────────────────────────────
 
     public function testDeleteRelationRemovesRow(): void
     {
-        // Create
         $ctrl = $this->makeController('Bdus\\Controllers\\Config', [], [
-            'from_tb' => 'items',
-            'to_tb'   => 'tags',
-            'fld'     => [],
+            'from_tb' => 'items', 'from_col' => 'tag_id',
+            'to_tb'   => 'tags',  'to_col'   => 'id',
         ]);
         $created = $this->callController($ctrl, 'saveRelation');
         $id = $created['id'];
 
-        // Delete
         $ctrl2 = $this->makeController('Bdus\\Controllers\\Config', ['id' => (string)$id]);
         $res   = $this->callController($ctrl2, 'deleteRelation');
 
         $this->assertSame('success',          $res['status']);
         $this->assertSame('relation_deleted', $res['code']);
 
-        // Verify gone
         $row = static::$db->query(
             'SELECT id FROM bdus_cfg_relations WHERE id=?', [$id], 'read'
         );
@@ -285,7 +320,7 @@ class ConfigRelationsCtrlTest extends BdusTestCase
 
     public function testDeleteRelationWithMissingId(): void
     {
-        $ctrl = $this->makeController('Bdus\\Controllers\\Config');   // no 'id' in GET
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config');
         $res  = $this->callController($ctrl, 'deleteRelation');
 
         $this->assertSame('error',             $res['status']);
@@ -303,11 +338,9 @@ class ConfigRelationsCtrlTest extends BdusTestCase
 
     public function testDeleteRelationRequiresSuperAdmin(): void
     {
-        // Create first
         $ctrl = $this->makeController('Bdus\\Controllers\\Config', [], [
-            'from_tb' => 'items',
-            'to_tb'   => 'tags',
-            'fld'     => [],
+            'from_tb' => 'items', 'from_col' => 'tag_id',
+            'to_tb'   => 'tags',  'to_col'   => 'id',
         ]);
         $created = $this->callController($ctrl, 'saveRelation');
         $id = $created['id'];
@@ -320,10 +353,7 @@ class ConfigRelationsCtrlTest extends BdusTestCase
         $this->assertSame('error', $res['status']);
         $this->assertSame('not_enough_privilege', $res['code']);
 
-        // Row must still be there
-        $row = static::$db->query(
-            'SELECT id FROM bdus_cfg_relations WHERE id=?', [$id], 'read'
-        );
+        $row = static::$db->query('SELECT id FROM bdus_cfg_relations WHERE id=?', [$id], 'read');
         $this->assertNotEmpty($row);
     }
 }

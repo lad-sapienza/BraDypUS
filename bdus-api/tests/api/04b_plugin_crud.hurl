@@ -199,3 +199,39 @@ jsonpath "$.status"          == "error"
 jsonpath "$.code"            == "validation_failed"
 jsonpath "$.errors[0].field" == "valore"
 jsonpath "$.errors[0].rule"  == "required"
+
+
+# ════════════════════════════════════════════════════════════════════
+# check-plugins-before-delete
+# ════════════════════════════════════════════════════════════════════
+
+# ── 4b-check-a. Record with plugin rows returns them in the list ─────
+# us_id_1 (crud_test) has crud_test_plg rows created above.
+# The config must declare crud_test_plg as plugin_of: crud_test for
+# checkPluginsBeforeDelete to find it.
+GET {{base_url}}/api/record/crud_test/check-plugins-before-delete?id={{us_id_1}}
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.status"  == "success"
+jsonpath "$.plugins" isCollection
+
+
+# ── 4b-check-b. Record with no plugin rows returns empty list ────────
+# us_id_2 has no plugin rows.
+GET {{base_url}}/api/record/crud_test/check-plugins-before-delete?id={{us_id_2}}
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.status"  == "success"
+jsonpath "$.plugins" isCollection
+jsonpath "$.plugins" count == 0
+
+
+# ── 4b-check-c-neg. Missing id → error ──────────────────────────────
+GET {{base_url}}/api/record/crud_test/check-plugins-before-delete
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "error"
+jsonpath "$.code"   == "parameter_missing"

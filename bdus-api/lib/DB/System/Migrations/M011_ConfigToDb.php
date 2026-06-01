@@ -137,19 +137,22 @@ class M011_ConfigToDb
                     'boolean'
                 );
 
-                // 4b — Import link[] → bdus_cfg_relations.
-                $linkSort = 0;
+                // 4b — Import link[] → bdus_cfg_relations (new schema: one row per FK pair).
                 foreach ($tbRow['link'] ?? [] as $link) {
                     $toTb = $link['other_tb'] ?? null;
                     if (!$toTb) continue;
-                    $fld = isset($link['fld'])
-                        ? json_encode($link['fld'], JSON_UNESCAPED_UNICODE)
-                        : null;
-                    $db->query(
-                        'INSERT INTO bdus_cfg_relations (from_tb, to_tb, fld, sort) VALUES (?,?,?,?)',
-                        [$name, $toTb, $fld, $linkSort++],
-                        'boolean'
-                    );
+                    foreach ($link['fld'] ?? [] as $pair) {
+                        $fromCol = trim($pair['my']    ?? '');
+                        $toCol   = trim($pair['other'] ?? '');
+                        if ($fromCol === '') continue;
+                        $db->query(
+                            'INSERT INTO bdus_cfg_relations
+                             (from_tb, from_col, to_tb, to_col, on_delete, on_update)
+                             VALUES (?,?,?,?,?,?)',
+                            [$name, $fromCol, $toTb, $toCol, 'RESTRICT', 'CASCADE'],
+                            'boolean'
+                        );
+                    }
                 }
 
                 // 5 — Import {tb}.json → bdus_cfg_fields.

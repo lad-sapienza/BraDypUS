@@ -1,14 +1,16 @@
 {
     "columns": [
-        { "name": "id",      "type": "INTEGER", "pk": true, "notnull": false },
-        { "name": "from_tb", "type": "TEXT",               "notnull": true  },
-        { "name": "to_tb",   "type": "TEXT",               "notnull": true  },
-        { "name": "fld",     "type": "TEXT",               "notnull": false },
-        { "name": "sort",    "type": "INTEGER",            "notnull": false }
+        { "name": "id",        "type": "INTEGER", "pk": true,  "notnull": false },
+        { "name": "from_tb",   "type": "TEXT",               "notnull": true  },
+        { "name": "from_col",  "type": "TEXT",               "notnull": true  },
+        { "name": "to_tb",     "type": "TEXT",               "notnull": true  },
+        { "name": "to_col",    "type": "TEXT",               "notnull": true  },
+        { "name": "on_delete", "type": "TEXT",               "notnull": false, "default": "RESTRICT" },
+        { "name": "on_update", "type": "TEXT",               "notnull": false, "default": "CASCADE"  }
     ],
     "indexes": [
-        { "name": "cfg_rel_from_idx",    "unique": false, "columns": ["from_tb"] },
-        { "name": "cfg_rel_unique_pair", "unique": true,  "columns": ["from_tb", "to_tb"] }
+        { "name": "cfg_rel_from_col_unique", "unique": true,  "columns": ["from_tb", "from_col"] },
+        { "name": "cfg_rel_to_tb_idx",       "unique": false, "columns": ["to_tb"] }
     ],
     "relations": []
 }

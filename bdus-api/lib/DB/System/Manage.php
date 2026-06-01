@@ -71,6 +71,8 @@ class Manage
         'bdus_queries',
         'bdus_user_table_privs',
         'bdus_zotero_links',
+        // user-defined index registry (no FK deps)
+        'bdus_cfg_indexes',
     ];
 
     /**

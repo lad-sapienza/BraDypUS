@@ -155,9 +155,10 @@ class Config extends \Bdus\Controller
         ]);
       }
 
-      // Add table to database
-      $alter = new Alter($this->db);
-      $alter->createMinimalTable($new_tb_name, ($post['is_plugin'] === '1'));
+      // Add table to database (pass plugin_of so the driver can add the FK constraint).
+      $alter    = new Alter($this->db);
+      $pluginOf = ($post['is_plugin'] === '1') ? trim($post['plugin_of'] ?? '') : '';
+      $alter->createMinimalTable($new_tb_name, ($post['is_plugin'] === '1'), $pluginOf);
 
       $this->returnJson(['status' => 'success', 'code' => 'ok_cfg_data_updated', 'tb' => $new_tb_name]);
     } catch (\Throwable $e) {
@@ -800,11 +801,13 @@ class Config extends \Bdus\Controller
   // ── Relations (dedicated panel) ──────────────────────────────────────────
 
   /**
-   * Returns all relations with table labels.
+   * Returns all FK relations with table labels.
    *
    * GET /api/config/relations
    *
-   * Response: { status, code, data: [ {id, from_tb, from_label, to_tb, to_label, fld[]} ] }
+   * Response: { status, code, data: [
+   *   { id, from_tb, from_col, from_label, to_tb, to_col, to_label, on_delete, on_update }
+   * ]}
    */
   public function getRelations(): void
   {
@@ -812,12 +815,13 @@ class Config extends \Bdus\Controller
 
     try {
       $rows = $this->db->query(
-        'SELECT r.id, r.from_tb, r.to_tb, r.fld, r.sort,
+        'SELECT r.id, r.from_tb, r.from_col, r.to_tb, r.to_col,
+                r.on_delete, r.on_update,
                 tf.label AS from_label, tt.label AS to_label
            FROM bdus_cfg_relations r
       LEFT JOIN bdus_cfg_tables tf ON tf.name = r.from_tb
       LEFT JOIN bdus_cfg_tables tt ON tt.name = r.to_tb
-          ORDER BY r.from_tb ASC, r.sort ASC, r.id ASC',
+          ORDER BY r.from_tb ASC, r.from_col ASC',
         [],
         'read'
       ) ?: [];
@@ -826,10 +830,13 @@ class Config extends \Bdus\Controller
         return [
           'id'         => (int) $r['id'],
           'from_tb'    => $r['from_tb'],
+          'from_col'   => $r['from_col'],
           'from_label' => $r['from_label'] ?? $r['from_tb'],
           'to_tb'      => $r['to_tb'],
+          'to_col'     => $r['to_col'],
           'to_label'   => $r['to_label']   ?? $r['to_tb'],
-          'fld'        => $r['fld'] ? (json_decode($r['fld'], true) ?: []) : [],
+          'on_delete'  => $r['on_delete']  ?? 'RESTRICT',
+          'on_update'  => $r['on_update']  ?? 'CASCADE',
         ];
       }, $rows);
 
@@ -841,70 +848,119 @@ class Config extends \Bdus\Controller
   }
 
   /**
-   * Creates or updates a single relation.
+   * Creates or updates a single FK relation and applies it to the database.
    *
-   * POST /api/config/relations        → create (no id in body)
-   * PUT  /api/config/relations/{id}   → update existing row
+   * POST /api/config/relations          → create
+   * PUT  /api/config/relations/{id}     → update (only to_tb, to_col, on_delete, on_update)
    *
-   * Body: { from_tb, to_tb, fld: [{my, other}, …] }
-   * Response: { status, code, id }
+   * Body: { from_tb, from_col, to_tb, to_col, on_delete?, on_update? }
+   *
+   * Self-referential relations (from_tb === to_tb) are allowed; their
+   * on_delete is forced to RESTRICT and on_update to CASCADE.
+   *
+   * Response (create/update, no orphans):
+   *   { status: 'success', code: 'relation_saved', id }
+   * Response (create/update, orphans found — config saved, FK NOT applied to DB):
+   *   { status: 'warning', code: 'relation_saved_orphans_found', id, orphans: N }
    */
   public function saveRelation(): void
   {
     if (!$this->requireSuperAdmin()) return;
 
-    $id     = isset($this->get['id'])  ? (int) $this->get['id']  : null;
-    $fromTb = trim($this->post['from_tb'] ?? '');
-    $toTb   = trim($this->post['to_tb']   ?? '');
-    $fld    = $this->post['fld'] ?? [];
+    $id      = isset($this->get['id']) ? (int) $this->get['id'] : null;
+    $fromTb  = trim($this->post['from_tb']  ?? '');
+    $fromCol = trim($this->post['from_col'] ?? '');
+    $toTb    = trim($this->post['to_tb']    ?? '');
+    $toCol   = trim($this->post['to_col']   ?? '');
+    $onDel   = strtoupper(trim($this->post['on_delete'] ?? 'RESTRICT'));
+    $onUpd   = strtoupper(trim($this->post['on_update'] ?? 'CASCADE'));
 
-    if (!$fromTb || !$toTb) {
+    $validPolicies = ['CASCADE', 'RESTRICT', 'SET NULL', 'NO ACTION'];
+
+    if (!$fromTb || !$fromCol || !$toTb || !$toCol) {
       $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
       return;
     }
-    if ($fromTb === $toTb) {
-      $this->returnJson(['status' => 'error', 'code' => 'relation_self_loop']);
+    if (!in_array($onDel, $validPolicies, true)) {
+      $this->returnJson(['status' => 'error', 'code' => 'invalid_on_delete']);
+      return;
+    }
+    if (!in_array($onUpd, $validPolicies, true)) {
+      $this->returnJson(['status' => 'error', 'code' => 'invalid_on_update']);
       return;
     }
 
-    // Normalise: always store the alphabetically-first table as from_tb so
-    // the UNIQUE(from_tb, to_tb) index is never violated by reverse pairs.
-    if ($fromTb > $toTb) {
-      [$fromTb, $toTb] = [$toTb, $fromTb];
-      $fld = array_map(
-        static fn($p) => ['my' => $p['other'] ?? '', 'other' => $p['my'] ?? ''],
-        (array) $fld
-      );
+    // Self-referential: force fixed policy (RESTRICT/CASCADE).
+    if ($fromTb === $toTb) {
+      $onDel = 'RESTRICT';
+      $onUpd = 'CASCADE';
     }
 
-    $fldJson = json_encode(array_values((array) $fld), JSON_UNESCAPED_UNICODE);
+    $alter = new \DB\Alter($this->db);
+
+    // Drop the legacy UNIQUE(from_tb, to_tb) index defensively — it blocks multiple
+    // FK columns between the same table pair, which the new schema supports.
+    $this->db->exec('DROP INDEX IF EXISTS cfg_rel_unique_pair');
 
     try {
       if ($id) {
+        // UPDATE: from_tb and from_col are immutable (they identify the FK column).
+        // Only to_tb, to_col, on_delete, on_update may change.
+        $existing = $this->db->query(
+          'SELECT from_tb, from_col FROM bdus_cfg_relations WHERE id=?',
+          [$id], 'read'
+        );
+        if (empty($existing)) {
+          $this->returnJson(['status' => 'error', 'code' => 'not_found']);
+          return;
+        }
+        $fromTb  = $existing[0]['from_tb'];
+        $fromCol = $existing[0]['from_col'];
+
+        // Drop old FK before re-applying with new params.
+        $alter->dropForeignKey($fromTb, $fromCol);
+
         $this->db->query(
-          'UPDATE bdus_cfg_relations SET from_tb=?, to_tb=?, fld=? WHERE id=?',
-          [$fromTb, $toTb, $fldJson, $id],
+          'UPDATE bdus_cfg_relations SET to_tb=?, to_col=?, on_delete=?, on_update=? WHERE id=?',
+          [$toTb, $toCol, $onDel, $onUpd, $id],
           'boolean'
         );
-        $this->returnJson(['status' => 'success', 'code' => 'relation_saved', 'id' => $id]);
       } else {
-        // Reject if the canonical pair already exists.
-        $existing = $this->db->query(
-          'SELECT id FROM bdus_cfg_relations WHERE from_tb=? AND to_tb=?',
-          [$fromTb, $toTb],
-          'read'
+        // CREATE: reject duplicate FK column.
+        $dup = $this->db->query(
+          'SELECT id FROM bdus_cfg_relations WHERE from_tb=? AND from_col=?',
+          [$fromTb, $fromCol], 'read'
         );
-        if (!empty($existing)) {
+        if (!empty($dup)) {
           $this->returnJson(['status' => 'error', 'code' => 'relation_already_exists']);
           return;
         }
-        $newId = $this->db->query(
-          'INSERT INTO bdus_cfg_relations (from_tb, to_tb, fld, sort) VALUES (?,?,?,0)',
-          [$fromTb, $toTb, $fldJson],
+        $id = (int) $this->db->query(
+          'INSERT INTO bdus_cfg_relations (from_tb, from_col, to_tb, to_col, on_delete, on_update)
+           VALUES (?,?,?,?,?,?)',
+          [$fromTb, $fromCol, $toTb, $toCol, $onDel, $onUpd],
           'id'
         );
-        $this->returnJson(['status' => 'success', 'code' => 'relation_saved', 'id' => (int) $newId]);
       }
+
+      // Pre-validate: count orphans before applying FK to DB.
+      $orphans = $alter->checkOrphans($fromTb, $fromCol, $toTb, $toCol);
+      if ($orphans > 0) {
+        // Config row is saved; DB constraint is not applied (would fail).
+        $this->returnJson([
+          'status'  => 'warning',
+          'code'    => 'relation_saved_orphans_found',
+          'id'      => $id,
+          'orphans' => $orphans,
+        ]);
+        return;
+      }
+
+      // Apply FK constraint and auto-index.
+      $alter->addForeignKey($fromTb, $fromCol, $toTb, $toCol, $onDel, $onUpd);
+      $this->saveAutoIndex($fromTb, $fromCol, $alter);
+
+      $this->returnJson(['status' => 'success', 'code' => 'relation_saved', 'id' => $id]);
     } catch (\Throwable $e) {
       $this->log->error($e);
       $this->returnJson(['status' => 'error', 'code' => 'db_error', 'detail' => $e->getMessage()]);
@@ -912,7 +968,7 @@ class Config extends \Bdus\Controller
   }
 
   /**
-   * Deletes a relation by id.
+   * Deletes a relation by id and drops the corresponding FK constraint from the DB.
    *
    * DELETE /api/config/relations/{id}
    * Response: { status, code }
@@ -928,11 +984,35 @@ class Config extends \Bdus\Controller
     }
 
     try {
-      $affected = $this->db->query(
-        'DELETE FROM bdus_cfg_relations WHERE id=?',
-        [$id],
+      $row = $this->db->query(
+        'SELECT from_tb, from_col FROM bdus_cfg_relations WHERE id=?',
+        [$id], 'read'
+      );
+      if (empty($row)) {
+        $this->returnJson(['status' => 'error', 'code' => 'not_found']);
+        return;
+      }
+
+      $fromTb  = $row[0]['from_tb'];
+      $fromCol = $row[0]['from_col'];
+      $alter   = new \DB\Alter($this->db);
+
+      // Drop FK and its auto-index from the database.
+      $alter->dropForeignKey($fromTb, $fromCol);
+      $alter->dropIndex($fromTb, "idx_{$fromTb}_{$fromCol}");
+
+      // Remove auto-index entry from bdus_cfg_indexes.
+      $this->db->query(
+        'DELETE FROM bdus_cfg_indexes WHERE tb=? AND name=?',
+        [$fromTb, "idx_{$fromTb}_{$fromCol}"],
         'affected'
       );
+
+      $affected = $this->db->query(
+        'DELETE FROM bdus_cfg_relations WHERE id=?',
+        [$id], 'affected'
+      );
+
       if ($affected > 0) {
         $this->returnJson(['status' => 'success', 'code' => 'relation_deleted']);
       } else {
@@ -944,7 +1024,252 @@ class Config extends \Bdus\Controller
     }
   }
 
+  /**
+   * Applies all FK constraints and indexes defined in bdus_cfg_relations and
+   * bdus_cfg_indexes to the current database. Useful after a v4 migration or
+   * after manually cleaning up orphan records.
+   *
+   * POST /api/config/apply-constraints
+   *
+   * Response: { status, applied: N, skipped: N, errors: [{from_tb, from_col, reason}] }
+   */
+  public function applyAllConstraints(): void
+  {
+    if (!$this->requireSuperAdmin()) return;
+
+    $alter   = new \DB\Alter($this->db);
+    $applied = 0;
+    $skipped = 0;
+    $errors  = [];
+
+    try {
+      // FK constraints from bdus_cfg_relations.
+      $relations = $this->db->query(
+        'SELECT from_tb, from_col, to_tb, to_col, on_delete, on_update FROM bdus_cfg_relations',
+        [], 'read'
+      ) ?: [];
+
+      foreach ($relations as $r) {
+        $orphans = $alter->checkOrphans($r['from_tb'], $r['from_col'], $r['to_tb'], $r['to_col']);
+        if ($orphans > 0) {
+          $skipped++;
+          $errors[] = [
+            'from_tb'  => $r['from_tb'],
+            'from_col' => $r['from_col'],
+            'reason'   => "orphans_found:{$orphans}",
+          ];
+          continue;
+        }
+        try {
+          $alter->addForeignKey(
+            $r['from_tb'], $r['from_col'],
+            $r['to_tb'],   $r['to_col'],
+            $r['on_delete'] ?? 'RESTRICT',
+            $r['on_update'] ?? 'CASCADE'
+          );
+          $this->saveAutoIndex($r['from_tb'], $r['from_col'], $alter);
+          $applied++;
+        } catch (\Throwable $e) {
+          $skipped++;
+          $errors[] = [
+            'from_tb'  => $r['from_tb'],
+            'from_col' => $r['from_col'],
+            'reason'   => $e->getMessage(),
+          ];
+        }
+      }
+
+      // Explicit indexes from bdus_cfg_indexes (skip auto-index entries).
+      $indexes = $this->db->query(
+        "SELECT tb, name, columns, is_unique FROM bdus_cfg_indexes WHERE name NOT LIKE 'idx_%_%'",
+        [], 'read'
+      ) ?: [];
+
+      foreach ($indexes as $idx) {
+        $cols = json_decode($idx['columns'], true) ?: [];
+        try {
+          $alter->createIndex($idx['tb'], $idx['name'], $cols, (bool)$idx['is_unique']);
+          $applied++;
+        } catch (\Throwable $e) {
+          $skipped++;
+          $errors[] = ['from_tb' => $idx['tb'], 'from_col' => $idx['name'], 'reason' => $e->getMessage()];
+        }
+      }
+
+      $this->returnJson([
+        'status'  => empty($errors) ? 'success' : 'warning',
+        'code'    => 'constraints_applied',
+        'applied' => $applied,
+        'skipped' => $skipped,
+        'errors'  => $errors,
+      ]);
+    } catch (\Throwable $e) {
+      $this->log->error($e);
+      $this->returnJson(['status' => 'error', 'code' => 'db_error', 'detail' => $e->getMessage()]);
+    }
+  }
+
+  // ── Indexes ───────────────────────────────────────────────────────────────
+
+  /**
+   * Returns all user-defined indexes for a table (excludes auto-generated FK indexes).
+   *
+   * GET /api/config/table/{tb}/indexes
+   *
+   * Response: { status, data: [{id, tb, name, columns[], unique}] }
+   */
+  public function getIndexes(): void
+  {
+    if (!$this->requireSuperAdmin()) return;
+
+    $tb = $this->get['tb'] ?? '';
+    if (!$tb) {
+      $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
+      return;
+    }
+
+    try {
+      $rows = $this->db->query(
+        "SELECT id, tb, name, columns, is_unique FROM bdus_cfg_indexes WHERE tb=? ORDER BY name ASC",
+        [$tb], 'read'
+      ) ?: [];
+
+      $data = array_map(static function ($r) {
+        return [
+          'id'      => (int) $r['id'],
+          'tb'      => $r['tb'],
+          'name'    => $r['name'],
+          'columns' => json_decode($r['columns'], true) ?: [],
+          'is_unique' => (bool) $r['is_unique'],
+        ];
+      }, $rows);
+
+      $this->returnJson(['status' => 'success', 'data' => $data]);
+    } catch (\Throwable $e) {
+      $this->log->error($e);
+      $this->returnJson(['status' => 'error', 'code' => 'db_error', 'detail' => $e->getMessage()]);
+    }
+  }
+
+  /**
+   * Creates a new user-defined index.
+   *
+   * POST /api/config/table/{tb}/indexes
+   *
+   * Body: { name, columns: [col1, col2, …], unique?: bool }
+   * Response: { status, code, id }
+   */
+  public function saveIndex(): void
+  {
+    if (!$this->requireSuperAdmin()) return;
+
+    $tb      = $this->get['tb'] ?? '';
+    $name    = trim($this->post['name']    ?? '');
+    $columns = $this->post['columns'] ?? [];
+    $unique  = !empty($this->post['is_unique']) ? 1 : 0;
+
+    if (!$tb || !$name || empty($columns)) {
+      $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
+      return;
+    }
+
+    $columns = array_values(array_filter(array_map('trim', (array) $columns)));
+    if (empty($columns)) {
+      $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
+      return;
+    }
+
+    try {
+      // Reject duplicate name for this table.
+      $dup = $this->db->query(
+        'SELECT id FROM bdus_cfg_indexes WHERE tb=? AND name=?',
+        [$tb, $name], 'read'
+      );
+      if (!empty($dup)) {
+        $this->returnJson(['status' => 'error', 'code' => 'index_already_exists']);
+        return;
+      }
+
+      $alter = new \DB\Alter($this->db);
+      $alter->createIndex($tb, $name, $columns, (bool)$unique);
+
+      $newId = (int) $this->db->query(
+        'INSERT INTO bdus_cfg_indexes (tb, name, columns, is_unique) VALUES (?,?,?,?)',
+        [$tb, $name, json_encode($columns, JSON_UNESCAPED_UNICODE), $unique],
+        'id'
+      );
+
+      $this->returnJson(['status' => 'success', 'code' => 'index_saved', 'id' => $newId]);
+    } catch (\Throwable $e) {
+      $this->log->error($e);
+      $this->returnJson(['status' => 'error', 'code' => 'db_error', 'detail' => $e->getMessage()]);
+    }
+  }
+
+  /**
+   * Deletes a user-defined index by id.
+   *
+   * DELETE /api/config/table/{tb}/indexes/{id}
+   * Response: { status, code }
+   */
+  public function deleteIndex(): void
+  {
+    if (!$this->requireSuperAdmin()) return;
+
+    $tb = $this->get['tb'] ?? '';
+    $id = (int)($this->get['id'] ?? 0);
+
+    if (!$tb || !$id) {
+      $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
+      return;
+    }
+
+    try {
+      $row = $this->db->query(
+        'SELECT name FROM bdus_cfg_indexes WHERE id=? AND tb=?',
+        [$id, $tb], 'read'
+      );
+      if (empty($row)) {
+        $this->returnJson(['status' => 'error', 'code' => 'not_found']);
+        return;
+      }
+
+      $name  = $row[0]['name'];
+      $alter = new \DB\Alter($this->db);
+      $alter->dropIndex($tb, $name);
+
+      $this->db->query('DELETE FROM bdus_cfg_indexes WHERE id=?', [$id], 'affected');
+
+      $this->returnJson(['status' => 'success', 'code' => 'index_deleted']);
+    } catch (\Throwable $e) {
+      $this->log->error($e);
+      $this->returnJson(['status' => 'error', 'code' => 'db_error', 'detail' => $e->getMessage()]);
+    }
+  }
+
   // ── Private helpers ───────────────────────────────────────────────────────
+
+  /**
+   * Creates the auto-index for a FK column (idx_{tb}_{col}) and records it
+   * in bdus_cfg_indexes if not already present.
+   */
+  private function saveAutoIndex(string $tb, string $col, \DB\Alter $alter): void
+  {
+    $name = "idx_{$tb}_{$col}";
+    $alter->createIndex($tb, $name, [$col], false);
+
+    $exists = $this->db->query(
+      'SELECT id FROM bdus_cfg_indexes WHERE tb=? AND name=?',
+      [$tb, $name], 'read'
+    );
+    if (empty($exists)) {
+      $this->db->query(
+        'INSERT INTO bdus_cfg_indexes (tb, name, columns, is_unique) VALUES (?,?,?,0)',
+        [$tb, $name, json_encode([$col], JSON_UNESCAPED_UNICODE)],
+        'boolean'
+      );
+    }
+  }
 
   /**
    * Builds the field meta-schema array from fld_structure.json,

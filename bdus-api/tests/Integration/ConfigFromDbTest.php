@@ -245,16 +245,16 @@ class ConfigFromDbTest extends TestCase
             ],
         ]);
 
+        // New schema: one row per FK column pair.
         $rows = static::$db->query(
-            'SELECT * FROM bdus_cfg_relations WHERE from_tb=? ORDER BY sort',
+            'SELECT from_col, to_tb, to_col FROM bdus_cfg_relations WHERE from_tb=? ORDER BY from_col',
             ['items'],
             'read'
         );
         $this->assertCount(1, $rows);
-        $this->assertSame('tags', $rows[0]['to_tb']);
-        $fld = json_decode($rows[0]['fld'], true);
-        $this->assertSame('id',      $fld[0]['my']);
-        $this->assertSame('item_id', $fld[0]['other']);
+        $this->assertSame('tags',    $rows[0]['to_tb']);
+        $this->assertSame('id',      $rows[0]['from_col']);
+        $this->assertSame('item_id', $rows[0]['to_col']);
 
         // links column in bdus_cfg_tables must be NULL.
         $tb = static::$db->query(
@@ -295,7 +295,7 @@ class ConfigFromDbTest extends TestCase
         ]);
 
         $rows = static::$db->query(
-            'SELECT * FROM bdus_cfg_relations WHERE from_tb=? ORDER BY sort',
+            'SELECT to_tb FROM bdus_cfg_relations WHERE from_tb=? ORDER BY from_col',
             ['items'],
             'read'
         );
@@ -325,14 +325,14 @@ class ConfigFromDbTest extends TestCase
 
     public function testDeleteTableRemovesRelations(): void
     {
-        // Add a temporary table with a link, then delete it.
+        // Add a temporary table with a link (must have at least one FK pair to be stored).
         static::$cfgDb->setTable([
             'name'     => 'tmp_table',
             'label'    => 'Tmp',
             'order'    => 'id',
             'id_field' => 'id',
             'preview'  => ['id'],
-            'link'     => [['other_tb' => 'items', 'fld' => []]],
+            'link'     => [['other_tb' => 'items', 'fld' => [['my' => 'item_id', 'other' => 'id']]]],
         ]);
 
         $before = static::$db->query(
@@ -361,7 +361,7 @@ class ConfigFromDbTest extends TestCase
             'order'    => 'id',
             'id_field' => 'id',
             'preview'  => ['id'],
-            'link'     => [['other_tb' => 'items', 'fld' => []]],
+            'link'     => [['other_tb' => 'items', 'fld' => [['my' => 'item_ref', 'other' => 'id']]]],
         ]);
 
         static::$cfgDb->renameTb('rename_src', 'rename_dst');

@@ -39,8 +39,24 @@ class M013_CreateCfgRelations
     {
         $db = $manage->getDb();
 
-        // 1 — Create bdus_cfg_relations (idempotent: CREATE TABLE IF NOT EXISTS).
-        $manage->createTable('bdus_cfg_relations');
+        // 1 — Create bdus_cfg_relations with the v1 schema (id, from_tb, to_tb, fld, sort).
+        // We use raw DDL here so this migration is frozen at its original design,
+        // independent of the structure JSON that M026 will later upgrade.
+        // If the table already exists (either schema), CREATE TABLE IF NOT EXISTS is a no-op.
+        $db->exec(
+            "CREATE TABLE IF NOT EXISTS bdus_cfg_relations
+             (id INTEGER PRIMARY KEY AUTOINCREMENT,
+              from_tb TEXT NOT NULL,
+              to_tb TEXT NOT NULL,
+              fld TEXT,
+              sort INTEGER)"
+        );
+
+        // If the table has already been upgraded to the v2 schema by M026,
+        // from_col will exist and this migration has nothing to migrate.
+        if ($manage->columnExists('bdus_cfg_relations', 'from_col')) {
+            return;
+        }
 
         // 2 — Skip if bdus_cfg_tables doesn't exist yet.
         if (!$manage->tableExists('bdus_cfg_tables')) {

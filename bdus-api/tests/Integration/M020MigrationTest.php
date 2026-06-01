@@ -34,7 +34,17 @@ class M020MigrationTest extends TestCase
         $this->db     = new DB('test_m020_' . uniqid(), ['db_engine' => 'sqlite', 'db_path' => ':memory:']);
         $this->db->setLog($log);
         $this->manage = new Manage($this->db);
-        $this->manage->createTable('bdus_cfg_relations');
+        // M020 tests the OLD schema (v1: from_tb, to_tb, fld, sort).
+        // We create it manually rather than via Manage so the test is independent
+        // of the structure JSON, which was updated by M026 to the v2 schema.
+        $this->db->exec(
+            'CREATE TABLE IF NOT EXISTS bdus_cfg_relations
+             (id INTEGER PRIMARY KEY AUTOINCREMENT,
+              from_tb TEXT NOT NULL,
+              to_tb TEXT NOT NULL,
+              fld TEXT,
+              sort INTEGER)'
+        );
     }
 
     private function insertRel(string $from, string $to, string $fld = '[]'): void

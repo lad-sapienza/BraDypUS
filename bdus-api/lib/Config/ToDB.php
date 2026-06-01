@@ -129,14 +129,16 @@ class ToDB
     }
 
     /**
-     * Replaces all forward-link relations for $fromTb.
+     * Replaces all FK relations originating from $fromTb.
      *
-     * Deletes existing rows for $fromTb then inserts the new set.
-     * Pass an empty array to clear all links for a table.
+     * Each element in $links has the form:
+     *   [ 'other_tb' => 'periodi', 'fld' => [ ['my'=>'col', 'other'=>'id'], … ] ]
      *
-     * @param string $fromTb  Source table name.
-     * @param array  $links   Array of link definitions:
-     *                        [ ['other_tb' => 'periodi', 'fld' => [...]], … ]
+     * The fld array is expanded into individual rows in bdus_cfg_relations
+     * (one row per FK column pair), using the new schema introduced by M026.
+     *
+     * @param string $fromTb  Source table name (holds the FK columns).
+     * @param array  $links   Link definitions.
      */
     public static function upsertRelations(DBInterface $db, string $fromTb, array $links): void
     {
@@ -147,28 +149,33 @@ class ToDB
             return; // Table not yet created — no-op.
         }
 
-        // Delete existing relations for this table — both forward (from_tb = X)
-        // and reverse (to_tb = X). After M020 each pair is stored once; when the
-        // user re-saves a table's link config we must also clear any canonical row
-        // that was originally stored from the OTHER side of the relationship.
-        $db->query('DELETE FROM bdus_cfg_relations WHERE from_tb=?', [$fromTb], 'boolean');
-        $db->query('DELETE FROM bdus_cfg_relations WHERE to_tb=?',   [$fromTb], 'boolean');
+        // Defensive: drop the legacy UNIQUE(from_tb, to_tb) index from M020 if it
+        // survived (e.g. re-applied after schema change). The new schema uses
+        // UNIQUE(from_tb, from_col) and allows multiple FK columns between the same
+        // table pair — the old index would wrongly block those inserts.
+        $db->exec('DROP INDEX IF EXISTS cfg_rel_unique_pair');
 
-        // Insert new relations.
-        $sort = 0;
+        // Delete existing relations where $fromTb holds the FK column.
+        $db->query('DELETE FROM bdus_cfg_relations WHERE from_tb=?', [$fromTb], 'boolean');
+
+        // Insert one row per FK column pair.
         foreach ($links as $link) {
             $toTb = $link['other_tb'] ?? null;
             if (!$toTb) continue;
 
-            $fld = isset($link['fld'])
-                ? json_encode($link['fld'], JSON_UNESCAPED_UNICODE)
-                : null;
+            $pairs = $link['fld'] ?? [];
+            foreach ($pairs as $pair) {
+                $fromCol = trim($pair['my']    ?? '');
+                $toCol   = trim($pair['other'] ?? '');
+                if ($fromCol === '') continue;
 
-            $db->query(
-                'INSERT INTO bdus_cfg_relations (from_tb, to_tb, fld, sort) VALUES (?,?,?,?)',
-                [$fromTb, $toTb, $fld, $sort++],
-                'boolean'
-            );
+                $db->query(
+                    'INSERT INTO bdus_cfg_relations (from_tb, from_col, to_tb, to_col, on_delete, on_update)
+                     VALUES (?,?,?,?,?,?)',
+                    [$fromTb, $fromCol, $toTb, $toCol, 'RESTRICT', 'CASCADE'],
+                    'boolean'
+                );
+            }
         }
     }
 

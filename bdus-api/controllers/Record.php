@@ -1584,6 +1584,61 @@ class Record extends \Bdus\Controller
     }
   }
 
+  /**
+   * Checks whether a record has data in any plugin tables before deletion.
+   * The frontend calls this before erase() to show a confirmation dialog.
+   *
+   * GET /api/record/{tb}/check-plugins-before-delete?id=N
+   *
+   * Response: {
+   *   status: 'success',
+   *   plugins: [ { tb, label, count } ]   // only tables with count > 0
+   * }
+   */
+  public function checkPluginsBeforeDelete(): void
+  {
+    if (!\Auth\Authorization::can('edit')) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+      return;
+    }
+
+    $tb  = $this->get['tb'] ?? null;
+    $id  = (int)($this->get['id'] ?? 0);
+
+    if (!$tb || !$id) {
+      $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
+      return;
+    }
+
+    $plugins = [];
+    foreach ($this->cfg->get('tables') ?: [] as $tbl) {
+      if (($tbl['plugin_of'] ?? '') !== $tb) continue;
+
+      $plgName = $tbl['name'] ?? '';
+      if (!$plgName) continue;
+
+      try {
+        $result = $this->db->query(
+          "SELECT COUNT(*) AS cnt FROM \"{$plgName}\" WHERE table_link = ? AND id_link = ?",
+          [$tb, $id],
+          'read'
+        );
+        $cnt = (int)($result[0]['cnt'] ?? 0);
+        if ($cnt > 0) {
+          $plugins[] = [
+            'tb'    => $plgName,
+            'label' => $tbl['label'] ?? $plgName,
+            'count' => $cnt,
+          ];
+        }
+      } catch (\Throwable $e) {
+        // Plugin table might not exist yet; skip silently.
+      }
+    }
+
+    $this->returnJson(['status' => 'success', 'plugins' => $plugins]);
+  }
+
   public function erase(): void
   {
     if (!\Auth\Authorization::can('edit')) {

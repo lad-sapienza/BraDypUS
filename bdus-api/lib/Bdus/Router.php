@@ -89,6 +89,7 @@ class Router
         // ── Edit — write operations ──────────────────────────────────────────
         'Bdus\\Controllers\\Record::saveRecord'                    => 'edit',
         'Bdus\\Controllers\\Record::erase'                         => 'edit',
+        'Bdus\\Controllers\\Record::checkPluginsBeforeDelete'      => 'edit',
         'Bdus\\Controllers\\Record::restoreVersion'                => 'admin',
         'Bdus\\Controllers\\Record::uploadFile'                    => 'edit',
         'Bdus\\Controllers\\Record::deleteFile'                    => 'edit',
@@ -166,6 +167,10 @@ class Router
         'Bdus\\Controllers\\Config::getRelations'                  => 'super_admin',
         'Bdus\\Controllers\\Config::saveRelation'                  => 'super_admin',
         'Bdus\\Controllers\\Config::deleteRelation'                => 'super_admin',
+        'Bdus\\Controllers\\Config::applyAllConstraints'           => 'super_admin',
+        'Bdus\\Controllers\\Config::getIndexes'                    => 'super_admin',
+        'Bdus\\Controllers\\Config::saveIndex'                     => 'super_admin',
+        'Bdus\\Controllers\\Config::deleteIndex'                   => 'super_admin',
         'Bdus\\Controllers\\Config::activateFuzzyDate'             => 'super_admin',
         'Bdus\\Controllers\\Config::deactivateFuzzyDate'           => 'super_admin',
         'Bdus\\Controllers\\FrontpageEditor::saveWelcome'         => 'super_admin',
@@ -252,7 +257,8 @@ class Router
             $r->addRoute('GET',             '/api/record/{tb}/field-options',  ['Bdus\\Controllers\\Record', 'getFieldOptions']);
             $r->addRoute('GET',             '/api/record/{tb}/check-unique',   ['Bdus\\Controllers\\Record', 'checkUnique']);
             $r->addRoute('GET',             '/api/record/{tb}/link-candidates', ['Bdus\\Controllers\\Record', 'searchLinkCandidates']);
-            $r->addRoute('GET',             '/api/record/{tb}/deleted',           ['Bdus\\Controllers\\Record', 'getDeletedRecords']);
+            $r->addRoute('GET',             '/api/record/{tb}/deleted',                          ['Bdus\\Controllers\\Record', 'getDeletedRecords']);
+            $r->addRoute('GET',             '/api/record/{tb}/check-plugins-before-delete',    ['Bdus\\Controllers\\Record', 'checkPluginsBeforeDelete']);
             $r->addRoute('GET',             '/api/record/{tb}/{id:\d+}/versions', ['Bdus\\Controllers\\Record', 'getVersions']);
             $r->addRoute('GET',             '/api/version/{id:\d+}',              ['Bdus\\Controllers\\Record', 'getVersionDiff']);
             $r->addRoute('POST',            '/api/version/{id:\d+}/restore',      ['Bdus\\Controllers\\Record', 'restoreVersion']);
@@ -313,6 +319,10 @@ class Router
             $r->addRoute('POST',   '/api/config/relations',        ['Bdus\\Controllers\\Config', 'saveRelation']);
             $r->addRoute('PUT',    '/api/config/relations/{id}',   ['Bdus\\Controllers\\Config', 'saveRelation']);
             $r->addRoute('DELETE', '/api/config/relations/{id}',   ['Bdus\\Controllers\\Config', 'deleteRelation']);
+            $r->addRoute('POST',   '/api/config/apply-constraints',['Bdus\\Controllers\\Config', 'applyAllConstraints']);
+            $r->addRoute('GET',    '/api/config/table/{tb}/indexes',        ['Bdus\\Controllers\\Config', 'getIndexes']);
+            $r->addRoute('POST',   '/api/config/table/{tb}/indexes',        ['Bdus\\Controllers\\Config', 'saveIndex']);
+            $r->addRoute('DELETE', '/api/config/table/{tb}/indexes/{id}',   ['Bdus\\Controllers\\Config', 'deleteIndex']);
 
             // ── Admin ─────────────────────────────────────────────────────────
             $r->addRoute('POST', '/api/admin/check-password', ['Bdus\\Controllers\\ConfirmAdminPwd', 'check_pwd']);

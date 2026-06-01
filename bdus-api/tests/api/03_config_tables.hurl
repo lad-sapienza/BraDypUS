@@ -981,19 +981,157 @@ HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
 
+# ── date ─────────────────────────────────────────────────────────────
+POST {{base_url}}/api/config/table/crud_test/field
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "name": "data_rec", "label": "Data", "type": "date", "db_type": "TEXT", "min": "1000-01-01", "max": "2999-12-31" }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+# ── integer with range ────────────────────────────────────────────────
+POST {{base_url}}/api/config/table/crud_test/field
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "name": "punteggio", "label": "Punteggio", "type": "integer", "db_type": "INTEGER", "check": ["int"], "min": 0, "max": 100 }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+# ── select (dic) ──────────────────────────────────────────────────────
+POST {{base_url}}/api/config/table/crud_test/field
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "name": "categoria", "label": "Categoria", "type": "select", "db_type": "TEXT", "dic": ["Tipo A", "Tipo B", "Tipo C"] }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+# ── combo_select (free text + dic suggestions) ────────────────────────
+POST {{base_url}}/api/config/table/crud_test/field
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "name": "periodo_libero", "label": "Periodo (libero)", "type": "combo_select", "db_type": "TEXT", "dic": ["Arcaico", "Classico", "Ellenistico", "Romano"] }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+# ── multi_select ──────────────────────────────────────────────────────
+POST {{base_url}}/api/config/table/crud_test/field
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "name": "etichette", "label": "Etichette", "type": "multi_select", "db_type": "TEXT", "dic": ["A", "B", "C", "D"] }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+# ── id_from_tb (self-reference — val_label skipped by design) ─────────
+POST {{base_url}}/api/config/table/crud_test/field
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "name": "parent_id", "label": "Record padre", "type": "id_from_tb", "db_type": "INTEGER", "id_from_tb": "crud_test" }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+# ── email ─────────────────────────────────────────────────────────────
+POST {{base_url}}/api/config/table/crud_test/field
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "name": "email_ref", "label": "Email", "type": "text", "db_type": "TEXT", "check": ["email"] }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+# ── max_length ────────────────────────────────────────────────────────
+POST {{base_url}}/api/config/table/crud_test/field
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "name": "codice_breve", "label": "Codice breve", "type": "text", "db_type": "TEXT", "max_length": 10 }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+# ── slider ────────────────────────────────────────────────────────────
+POST {{base_url}}/api/config/table/crud_test/field
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "name": "valore_slider", "label": "Valore slider", "type": "integer", "db_type": "INTEGER", "check": ["int"], "min": 0, "max": 10 }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+# ── crud_test_plg plugin table ────────────────────────────────────────
+POST {{base_url}}/api/config/tables
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "name": "crud_test_plg", "label": "Misure test", "is_plugin": "1" }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+jsonpath "$.tb"     == "crud_test_plg"
+
+POST {{base_url}}/api/config/table/crud_test_plg/field
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "name": "tipo_misura", "label": "Tipo", "type": "select", "db_type": "TEXT", "dic": ["Peso", "Lunghezza", "Larghezza"], "check": ["not_empty"] }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/api/config/table/crud_test_plg/field
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "name": "valore", "label": "Valore", "type": "integer", "db_type": "INTEGER", "check": ["int", "not_empty"] }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/api/config/table/crud_test_plg/field
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "name": "note_plg", "label": "Note", "type": "long_text", "db_type": "TEXT" }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/api/config/table/crud_test_plg/field
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "name": "data_misura", "label": "Data misura", "type": "date", "db_type": "TEXT" }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+PUT {{base_url}}/api/config/table/crud_test_plg
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{
+  "name":      "crud_test_plg",
+  "label":     "Misure test",
+  "is_plugin": "1",
+  "plugin_of": "crud_test",
+  "order":     "tipo_misura"
+}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
 PUT {{base_url}}/api/config/table/crud_test
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
-  "name":    "crud_test",
-  "label":   "CRUD Test",
+  "name":      "crud_test",
+  "label":     "CRUD Test",
   "is_plugin": "0",
-  "order":   "sigla",
-  "id_field": "id",
-  "preview": ["sigla"],
-  "rs":      "sigla",
-  "geodata": 1,
-  "zotero":  1
+  "order":     "sigla",
+  "id_field":  "sigla",
+  "preview":   ["sigla"],
+  "rs":        "sigla",
+  "geodata":   1,
+  "zotero":    1,
+  "plugin":    ["crud_test_plg"]
 }
 HTTP 200
 [Asserts]

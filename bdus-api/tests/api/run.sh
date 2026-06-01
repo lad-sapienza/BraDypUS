@@ -193,6 +193,38 @@ US_ID_2=$(capture "$RECORDS_JSON" "us_id_2")
 pass "US IDs captured: us_id_1=${US_ID_1}, us_id_2=${US_ID_2}"
 
 # ════════════════════════════════════════════════════════════════════
+# Phase 4b — Plugin row CRUD
+# ════════════════════════════════════════════════════════════════════
+header "Phase 4b — Plugin CRUD"
+run_phase "Plugin CRUD" "04b_plugin_crud.hurl" \
+  --variable "jwt=${JWT}" \
+  --variable "us_id_1=${US_ID_1}"
+
+# ════════════════════════════════════════════════════════════════════
+# Phase 4c — File upload / attach / sort / delete
+# ════════════════════════════════════════════════════════════════════
+header "Phase 4c — File upload"
+run_phase "File upload" "04c_file_upload.hurl" \
+  --variable "jwt=${JWT}" \
+  --variable "us_id_1=${US_ID_1}"
+
+# ════════════════════════════════════════════════════════════════════
+# Phase 4d — Export (CSV, JSON, XLSX)
+# ════════════════════════════════════════════════════════════════════
+header "Phase 4d — Export"
+run_phase "Export" "04d_export.hurl" \
+  --variable "jwt=${JWT}"
+
+# ════════════════════════════════════════════════════════════════════
+# Phase 4e — Manual links (userlinks)
+# ════════════════════════════════════════════════════════════════════
+header "Phase 4e — Manual links"
+run_phase "Manual links" "04e_manual_links.hurl" \
+  --variable "jwt=${JWT}" \
+  --variable "us_id_1=${US_ID_1}" \
+  --variable "us_id_2=${US_ID_2}"
+
+# ════════════════════════════════════════════════════════════════════
 # Phase 5 — Stratigraphic relations
 # ════════════════════════════════════════════════════════════════════
 header "Phase 5 — Stratigraphic relations (RS)"
@@ -369,8 +401,8 @@ run_phase "File sort" "30_file_sort.hurl" \
 # ════════════════════════════════════════════════════════════════════
 # Phase 10 — Cleanup
 # ════════════════════════════════════════════════════════════════════
-header "Phase 10 — Cleanup"
-run_phase "Logout" "10_cleanup.hurl" \
+header "Phase 10 — Cleanup (drop crud_test_plg + crud_test, logout)"
+run_phase "Cleanup" "10_cleanup.hurl" \
   --variable "jwt=${JWT}"
 
 # ════════════════════════════════════════════════════════════════════

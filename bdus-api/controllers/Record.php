@@ -200,7 +200,14 @@ class Record extends \Bdus\Controller
     $q     = $this->get['q']     ?? null;
     $where = $this->get['where'] ?? null;
 
-    $qRequest = ['tb' => $tb, 'type' => 'all'];
+    // Build the field map (name → label) for all configured columns.
+    // exportRecords always exports every field; there is no preview-subset mode.
+    $exportFields = ['id' => 'id'];
+    foreach ($this->cfg->get("tables.{$tb}.fields") ?: [] as $fld) {
+      $exportFields[$fld['name']] = $fld['label'] ?? $fld['name'];
+    }
+
+    $qRequest = ['tb' => $tb, 'type' => 'all', 'fields' => $exportFields];
 
     $filterRaw = $this->get['filter'] ?? null;
     if (is_string($filterRaw)) {
@@ -988,7 +995,7 @@ class Record extends \Bdus\Controller
         'status' => 'success',
         'code'   => 'ok_file_uploaded',
         'file'   => [
-          'id'          => $fileId,
+          'id'          => (int)$fileId,
           'ext'         => $ext,
           'filename'    => $filename,
           'description' => null,

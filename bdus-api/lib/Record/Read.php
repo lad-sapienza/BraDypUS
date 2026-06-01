@@ -470,21 +470,17 @@ EOD;
             if (!isset($this->cache['plugins'][$p])) {
                 $plg_data = $this->getTbRecord($p, "table_link = ? AND id_link = ?", [$this->tb, $this->id], false, true) ?: [];
 
-                if (empty($plg_data)) {
-                    continue;
-                }
-                $indexed_plg_data = [];
-                foreach ($plg_data as $key => $row) {
-                    $indexed_plg_data[$row['id']['val']];
-                }
-                // sort records using sort field, if available
-                if (in_array('sort', array_keys(reset($plg_data)))) {
-                    usort($plg_data, function ($a, $b) {
-                        if ($a['sort'] === $b['sort']) {
-                            return 0;
-                        }
-                        return ($a['sort'] > $b['sort']) ? 1 : -1;
-                    });
+                // Always include the plugin entry even when there are no rows.
+                // The frontend expects the key to be present (tot=0, data=[]).
+                if (!empty($plg_data)) {
+                    if (in_array('sort', array_keys(reset($plg_data)))) {
+                        usort($plg_data, function ($a, $b) {
+                            if ($a['sort'] === $b['sort']) {
+                                return 0;
+                            }
+                            return ($a['sort'] > $b['sort']) ? 1 : -1;
+                        });
+                    }
                 }
 
                 $this->cache['plugins'][$p] = [
@@ -493,7 +489,7 @@ EOD;
                         "tb_label" => $this->cfg->get("tables.$p.label"),
                         "tot" => count($plg_data)
                     ],
-                    "data" => $plg_data
+                    "data" => array_values($plg_data)
                 ];
             }
             $ret[$p] = $this->cache['plugins'][$p];

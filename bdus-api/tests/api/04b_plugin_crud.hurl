@@ -186,7 +186,8 @@ Content-Type: application/json
         "_isNew":  true,
         "_delete": false,
         "fields": {
-          "tipo_misura": "Peso"
+          "tipo_misura": "Peso",
+          "valore": null
         }
       }
     ]

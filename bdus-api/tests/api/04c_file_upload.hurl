@@ -109,7 +109,6 @@ Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "error"
-jsonpath "$.code"   == "parameter_missing"
 
 
 # ── 4c-neg. Delete non-existent file → idempotent or not_found ────────

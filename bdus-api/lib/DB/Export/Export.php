@@ -85,7 +85,7 @@ class Export
                 ];
 
             default:
-                throw new \Exception("Unknown export format: `$format`");
+                return ['text/csv; charset=utf-8', 'csv', new CSV()];
         }
     }
 }

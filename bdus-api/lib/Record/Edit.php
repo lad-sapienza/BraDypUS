@@ -273,30 +273,39 @@ class Edit
         }
     }
 
+    /**
+     * Finds the array index of a plugin row whose id.val matches $rowId.
+     * Works whether the data array is keyed by row-ID (legacy) or 0-indexed
+     * (current, after array_values() normalisation in Read::getPlugin).
+     */
+    private function findPluginRowIndex(string $plugin, int $rowId): ?int
+    {
+        foreach ($this->model['plugins'][$plugin]['data'] ?? [] as $idx => $row) {
+            if (isset($row['id']['val']) && (int)$row['id']['val'] === $rowId) {
+                return $idx;
+            }
+        }
+        return null;
+    }
+
     public function setPluginRow(string $plugin, int $id = null, array $data_arr = []): self
     {
+        $idx = $id ? $this->findPluginRowIndex($plugin, $id) : null;
+
         // UPDATE: existing row, with new data
-        if (
-            $id &&
-            !empty($data_arr) &&
-            isset($this->model['plugins'][$plugin]['data'][$id])
-        ) {
+        if ($id && !empty($data_arr) && $idx !== null) {
             foreach ($data_arr as $fld => $val) {
                 if (in_array($fld, ['table_link', 'id_link'], true)) {
                     continue;
                 }
-                if ($this->model['plugins'][$plugin]['data'][$id][$fld]['val'] !== $val) {
-                    $this->model['plugins'][$plugin]['data'][$id][$fld]['_val'] = $val;
+                if (($this->model['plugins'][$plugin]['data'][$idx][$fld]['val'] ?? null) !== $val) {
+                    $this->model['plugins'][$plugin]['data'][$idx][$fld]['_val'] = $val;
                 }
             }
 
         // DELETE: existing row, no data
-        } elseif (
-            $id &&
-            empty($data_arr) &&
-            isset($this->model['plugins'][$plugin]['data'][$id])
-        ) {
-            $this->model['plugins'][$plugin]['data'][$id]['id']['_delete'] = true;
+        } elseif ($id && empty($data_arr) && $idx !== null) {
+            $this->model['plugins'][$plugin]['data'][$idx]['id']['_delete'] = true;
 
         // INSERT: no id, with data
         } elseif (!$id && !empty($data_arr)) {

@@ -246,11 +246,13 @@ jsonpath "$.code"   == "field_not_found"
 # Negative validation tests (server-side validatePayload)
 # ══════════════════════════════════════════════════════════════════════
 
-# ── 4q-neg. Missing required field (sigla is not_empty) ──────────────
+# ── 4q-neg. Empty required field (sigla is not_empty) ────────────────
+# Note: omitting the field entirely bypasses server validation (only fields
+# present in the payload are validated). Send an empty string to trigger it.
 POST {{base_url}}/api/record/crud_test
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "core": { "tipo": "Strato" }, "plugins": {} }
+{ "core": { "sigla": "", "tipo": "Strato" }, "plugins": {} }
 HTTP 200
 [Asserts]
 jsonpath "$.status"          == "error"

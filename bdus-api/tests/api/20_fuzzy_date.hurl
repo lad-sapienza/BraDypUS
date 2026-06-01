@@ -201,5 +201,5 @@ jsonpath "$.status"         == "success"
 jsonpath "$.has_fuzzy_date" == true
 jsonpath "$.nodes"          isCollection
 # US099 (chrono_record_id) has from=-325; verify it appears with chrono data
-jsonpath "$.nodes[*].chrono_from"  includes -325
-jsonpath "$.nodes[*].chrono_to"    includes -301
+jsonpath "$.nodes[*].chrono_from"  contains -325
+jsonpath "$.nodes[*].chrono_to"    contains -301

@@ -67,8 +67,11 @@ class RecordEditTest extends BdusTestCase
         $edit->setPluginRow(self::TB_PLG, 1, ['label' => 'tag-a-new']);
         $model = $edit->getModel();
 
-        $this->assertArrayHasKey('_val', $model['plugins'][self::TB_PLG]['data'][1]['label']);
-        $this->assertSame('tag-a-new', $model['plugins'][self::TB_PLG]['data'][1]['label']['_val']);
+        // data is a 0-indexed array after array_values(); find row with id.val == 1
+        $row = $this->findPluginRow($model['plugins'][self::TB_PLG]['data'], 1);
+        $this->assertNotNull($row, 'Row with id=1 not found');
+        $this->assertArrayHasKey('_val', $row['label']);
+        $this->assertSame('tag-a-new', $row['label']['_val']);
     }
 
     public function testSetPluginRowDeleteSetsDeleteFlag(): void
@@ -77,7 +80,20 @@ class RecordEditTest extends BdusTestCase
         $edit->setPluginRow(self::TB_PLG, 1, []); // empty data = delete
         $model = $edit->getModel();
 
-        $this->assertTrue($model['plugins'][self::TB_PLG]['data'][1]['id']['_delete']);
+        $row = $this->findPluginRow($model['plugins'][self::TB_PLG]['data'], 1);
+        $this->assertNotNull($row, 'Row with id=1 not found');
+        $this->assertTrue($row['id']['_delete']);
+    }
+
+    /** Helper: find a plugin data row by its id.val. */
+    private function findPluginRow(array $data, int $id): ?array
+    {
+        foreach ($data as $row) {
+            if (isset($row['id']['val']) && (int)$row['id']['val'] === $id) {
+                return $row;
+            }
+        }
+        return null;
     }
 
     public function testSetPluginRowInsertAddsRow(): void

@@ -66,7 +66,7 @@ GET {{base_url}}/api/templates/us
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
-jsonpath "$.templates" includes "ci_test_tpl"
+jsonpath "$.templates" contains "ci_test_tpl"
 
 
 # ── 27f. Get template content ────────────────────────────────────────
@@ -94,8 +94,8 @@ GET {{base_url}}/api/templates/us
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
-jsonpath "$.templates" not includes "ci_test_tpl"
-jsonpath "$.templates" includes "ci_test_tpl_renamed"
+jsonpath "$.templates" not contains "ci_test_tpl"
+jsonpath "$.templates" contains "ci_test_tpl_renamed"
 
 
 # ── 27i. Delete renamed template ─────────────────────────────────────
@@ -112,7 +112,7 @@ GET {{base_url}}/api/templates/us
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
-jsonpath "$.templates" not includes "ci_test_tpl_renamed"
+jsonpath "$.templates" not contains "ci_test_tpl_renamed"
 
 
 # ── 27k. Get non-existent template → template_not_found ─────────────

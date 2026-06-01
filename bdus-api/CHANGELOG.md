@@ -5,6 +5,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [5.0.0] - unreleased
 
+### Added
+- **FK constraints and user-defined indexes on user tables** (M026, M027):
+  BraDypUS now enforces at database level the relationships defined in the application
+  configuration.
+
+  **Schema change (M026)** — `bdus_cfg_relations` replaces the old `(from_tb, to_tb,
+  fld JSON, sort)` layout with one row per FK column pair:
+  `(from_tb, from_col, to_tb, to_col, on_delete, on_update)`.
+  Direction is semantic (`from_tb` always holds the FK column); UNIQUE is now on
+  `(from_tb, from_col)` instead of `(from_tb, to_tb)`, allowing multiple FK columns
+  between the same table pair.
+
+  **New system table (M027)** — `bdus_cfg_indexes` tracks both auto-generated FK
+  indexes and user-defined indexes.
+
+  **`DB\Alter` — new cross-engine operations**:
+  - `addForeignKey` / `dropForeignKey` / `hasForeignKey` — SQLite via table-recreation,
+    MySQL/PG via `ALTER TABLE ADD/DROP CONSTRAINT`.
+  - `checkOrphans` — counts FK violations before applying a constraint; if > 0 the
+    config row is saved but the DB constraint is not applied (returns a `warning`).
+  - `createIndex` / `dropIndex` — B-tree, unique, and composite indexes on all engines.
+  - `createMinimalTable` extended with `pluginOf` parameter: plugin tables get
+    `FOREIGN KEY (id_link) REFERENCES parent(id) ON DELETE RESTRICT` inline in the DDL.
+
+  **New/updated config endpoints** (all super-admin):
+  - `POST /api/config/relations` — create FK relation; applies constraint + auto-index
+    to DB immediately; warns if orphans found.
+  - `PUT /api/config/relations/{id}` — update `to_tb`, `to_col`, `on_delete`,
+    `on_update`; `from_tb` and `from_col` are immutable.
+  - `DELETE /api/config/relations/{id}` — drops FK and auto-index from DB.
+  - `POST /api/config/apply-constraints` — bulk-applies all pending FK constraints
+    and explicit indexes; useful after v4 migration or orphan cleanup.
+  - `GET/POST /api/config/table/{tb}/indexes` — list and create user-defined indexes.
+  - `DELETE /api/config/table/{tb}/indexes/{id}` — drop a user-defined index.
+
+  **New record endpoint**: `GET /api/record/{tb}/check-plugins-before-delete?id=N` —
+  returns a list of plugin tables with row counts referencing the given record, so the
+  frontend can show a confirmation dialog before deletion (instead of relying on
+  silent CASCADE).
+
+  **Self-referential FKs** are allowed; `on_delete` is forced to `RESTRICT` and
+  `on_update` to `CASCADE`.
+
+  Tests: 64 new PHPUnit tests (`M026MigrationTest`, `AlterFkIndexTest`,
+  `ConfigRelationsCtrlTest`, `ConfigIndexesCtrlTest`, `RecordCtrlDeletePluginTest`);
+  2 new hurl phases (14 rewritten for new schema, 31 new for index management).
+
 ### Fixed
 - **`POST /api/api-key/{id}/revoke` and `DELETE /api/api-key/{id}`** (`Api.php`): controllers
   now read the path-variable `id` via `$this->request['id']` (merges URL path vars and POST body)

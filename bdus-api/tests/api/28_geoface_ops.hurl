@@ -16,7 +16,7 @@ POST {{base_url}}/api/geoface/feature
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
-  "tb":       "us",
+  "tb": "crud_test",
   "id":       1,
   "geometry": { "type": "Point", "coordinates": [12.48, 41.89] }
 }
@@ -45,7 +45,7 @@ jsonpath "$.code"   == "ok_update_geometry"
 
 
 # ── 28c. GeoJSON for table reflects the new geometry ─────────────────
-GET {{base_url}}/api/geoface?tb=us
+GET {{base_url}}/api/geoface?tb=crud_test
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]

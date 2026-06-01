@@ -925,3 +925,76 @@ jsonpath "$.fields.sigla"        isString
 jsonpath "$.fields.profondita_cm" isString
 jsonpath "$.fields.verificata"   isString
 jsonpath "$.fields.note"         isString
+
+
+# ── 3n. Create crud_test table (used by all CRUD test phases, dropped in phase 10) ──
+# This table is the exclusive target of generic CRUD tests so the archaeological
+# tables (siti, us, saggi, reperti, complessi) remain empty and their IDs
+# are predictable when the demo seed runs.
+
+POST {{base_url}}/api/config/tables
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "name": "crud_test", "label": "CRUD Test", "is_plugin": "0" }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+jsonpath "$.tb"     == "crud_test"
+
+POST {{base_url}}/api/config/table/crud_test/field
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "name": "sigla", "label": "Sigla", "type": "text", "db_type": "TEXT", "check": ["not_empty", "no_dupl", "regex"], "pattern": "^[A-Z]{1,3}\\d{3,}$" }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/api/config/table/crud_test/field
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "name": "descrizione", "label": "Descrizione", "type": "long_text", "db_type": "TEXT" }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/api/config/table/crud_test/field
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "name": "periodo", "label": "Periodo", "type": "text", "db_type": "TEXT" }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/api/config/table/crud_test/field
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "name": "tipo", "label": "Tipo", "type": "text", "db_type": "TEXT" }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/api/config/table/crud_test/field
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "name": "verificata", "label": "Verificata", "type": "boolean", "db_type": "INTEGER" }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+PUT {{base_url}}/api/config/table/crud_test
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{
+  "name":    "crud_test",
+  "label":   "CRUD Test",
+  "is_plugin": "0",
+  "order":   "sigla",
+  "id_field": "id",
+  "preview": ["sigla"],
+  "rs":      "sigla",
+  "geodata": 1,
+  "zotero":  1
+}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"

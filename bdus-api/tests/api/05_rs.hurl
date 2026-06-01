@@ -11,11 +11,11 @@
 # ════════════════════════════════════════════════════════════════════
 
 # ── 5a. Add relation: US001 is_covered_by US002 (relation = 1) ──────
-POST {{base_url}}/api/record/us/rs
+POST {{base_url}}/api/record/crud_test/rs
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
-  "tb":       "us",
+  "tb": "crud_test",
   "first":    {{us_id_1}},
   "relation": 1,
   "second":   {{us_id_2}}
@@ -30,11 +30,11 @@ rs_id_1: jsonpath "$.id"
 
 
 # ── 5b. Duplicate must be rejected ──────────────────────────────────
-POST {{base_url}}/api/record/us/rs
+POST {{base_url}}/api/record/crud_test/rs
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
-  "tb":       "us",
+  "tb": "crud_test",
   "first":    {{us_id_1}},
   "relation": 1,
   "second":   {{us_id_2}}
@@ -49,7 +49,7 @@ jsonpath "$.code"   == "relation_already_exist"
 GET {{base_url}}/api/rs/matrix
 Authorization: Bearer {{jwt}}
 [QueryStringParams]
-tb: us
+tb: crud_test
 HTTP 200
 [Asserts]
 jsonpath "$.status"    == "success"
@@ -69,7 +69,7 @@ jsonpath "$.status" == "success"
 GET {{base_url}}/api/rs/matrix
 Authorization: Bearer {{jwt}}
 [QueryStringParams]
-tb: us
+tb: crud_test
 HTTP 200
 [Asserts]
 jsonpath "$.status"         == "success"

@@ -23,6 +23,7 @@ LIST_ONLY=false
 FROM_PHASE=""
 ONLY_PHASE=""
 SEED_DEMO=false
+SEED_MORE=false
 
 for arg in "$@"; do
   case "$arg" in
@@ -30,6 +31,7 @@ for arg in "$@"; do
     --from=*)       FROM_PHASE="${arg#--from=}" ;;
     --only=*)       ONLY_PHASE="${arg#--only=}" ;;
     --seed-demo)    SEED_DEMO=true ;;
+    --seed-more)    SEED_DEMO=true; SEED_MORE=true ;;
   esac
 done
 
@@ -376,11 +378,17 @@ run_phase "Logout" "10_cleanup.hurl" \
 # ════════════════════════════════════════════════════════════════════
 if [[ "$SEED_DEMO" == true ]]; then
   header "Phase 19 — Demo seed"
-  SEED_JSON=$(capture_phase "Demo seed" "19_seed_demo.hurl" \
-    --variable "jwt=${JWT}")
-  pass "Demo seed: app populated with realistic data"
+  run_phase "Demo seed" "19_seed_demo.hurl" \
+    --variable "jwt=${JWT}"
   echo -e "${CYAN}  App available at: ${BASE_URL} (app: ${APP_NAME})${RESET}"
   echo -e "${CYAN}  Credentials: ${ADMIN_EMAIL} / ${ADMIN_PASSWORD}${RESET}"
+fi
+
+if [[ "$SEED_MORE" == true ]]; then
+  header "Phase 19b — Extended seed (15 siti, saggi, 15 US + matrix, 375 reperti, geodata)"
+  run_phase "Extended seed" "19b_seed_more.hurl" \
+    --variable "jwt=${JWT}"
+  pass "Extended seed: bulk data loaded via CSV import"
 fi
 
 # NOTE: app directory is intentionally NOT deleted here.

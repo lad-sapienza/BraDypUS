@@ -1,0 +1,376 @@
+inventario;sito_id;saggio_id;us_provenienza_id;categoria;classe;stato_cons;descrizione
+EXT-001;4;13;31;Ceramica;Ceramica d impasto;Frammentario;Frammento ceramico da contesto chiuso
+EXT-002;4;13;31;Metallo;Ceramica comune;Frammentato;Elemento metallico con tracce di lavorazione
+EXT-003;4;13;31;Litico;Ceramica depurata;Lacunoso;Manufatto litico su scheggia ritoccata
+EXT-004;4;13;31;Organico;Anfora;Integro;Resti organici parzialmente carbonizzati
+EXT-005;4;13;31;Vetro;Bronzo;Frammentario;Frammento vitriforme soffiato
+EXT-006;4;13;31;Laterizio;Ferro;Frammentato;Frammento laterizio con impronte digitali
+EXT-007;4;13;31;Osso;Selce;Lacunoso;Osso lavorato con incisioni decorate
+EXT-008;4;13;31;Ceramica;Ossidiana;Integro;Frammento ceramico da contesto chiuso
+EXT-009;4;13;31;Metallo;Osso lavorato;Frammentario;Elemento metallico con tracce di lavorazione
+EXT-010;4;13;31;Litico;Ceramica d impasto;Frammentato;Manufatto litico su scheggia ritoccata
+EXT-011;4;13;31;Organico;Ceramica comune;Lacunoso;Resti organici parzialmente carbonizzati
+EXT-012;4;13;31;Vetro;Ceramica depurata;Integro;Frammento vitriforme soffiato
+EXT-013;4;13;31;Laterizio;Anfora;Frammentario;Frammento laterizio con impronte digitali
+EXT-014;4;13;31;Osso;Bronzo;Frammentato;Osso lavorato con incisioni decorate
+EXT-015;4;13;31;Ceramica;Ferro;Lacunoso;Frammento ceramico da contesto chiuso
+EXT-016;4;13;31;Metallo;Selce;Integro;Elemento metallico con tracce di lavorazione
+EXT-017;4;13;31;Litico;Ossidiana;Frammentario;Manufatto litico su scheggia ritoccata
+EXT-018;4;13;31;Organico;Osso lavorato;Frammentato;Resti organici parzialmente carbonizzati
+EXT-019;4;13;31;Vetro;Ceramica d impasto;Lacunoso;Frammento vitriforme soffiato
+EXT-020;4;13;31;Laterizio;Ceramica comune;Integro;Frammento laterizio con impronte digitali
+EXT-021;4;13;31;Osso;Ceramica depurata;Frammentario;Osso lavorato con incisioni decorate
+EXT-022;4;13;31;Ceramica;Anfora;Frammentato;Frammento ceramico da contesto chiuso
+EXT-023;4;13;31;Metallo;Bronzo;Lacunoso;Elemento metallico con tracce di lavorazione
+EXT-024;4;13;31;Litico;Ferro;Integro;Manufatto litico su scheggia ritoccata
+EXT-025;4;13;31;Organico;Selce;Frammentario;Resti organici parzialmente carbonizzati
+EXT-026;4;13;32;Ceramica;Ceramica d impasto;Frammentario;Frammento ceramico da contesto chiuso
+EXT-027;4;13;32;Metallo;Ceramica comune;Frammentato;Elemento metallico con tracce di lavorazione
+EXT-028;4;13;32;Litico;Ceramica depurata;Lacunoso;Manufatto litico su scheggia ritoccata
+EXT-029;4;13;32;Organico;Anfora;Integro;Resti organici parzialmente carbonizzati
+EXT-030;4;13;32;Vetro;Bronzo;Frammentario;Frammento vitriforme soffiato
+EXT-031;4;13;32;Laterizio;Ferro;Frammentato;Frammento laterizio con impronte digitali
+EXT-032;4;13;32;Osso;Selce;Lacunoso;Osso lavorato con incisioni decorate
+EXT-033;4;13;32;Ceramica;Ossidiana;Integro;Frammento ceramico da contesto chiuso
+EXT-034;4;13;32;Metallo;Osso lavorato;Frammentario;Elemento metallico con tracce di lavorazione
+EXT-035;4;13;32;Litico;Ceramica d impasto;Frammentato;Manufatto litico su scheggia ritoccata
+EXT-036;4;13;32;Organico;Ceramica comune;Lacunoso;Resti organici parzialmente carbonizzati
+EXT-037;4;13;32;Vetro;Ceramica depurata;Integro;Frammento vitriforme soffiato
+EXT-038;4;13;32;Laterizio;Anfora;Frammentario;Frammento laterizio con impronte digitali
+EXT-039;4;13;32;Osso;Bronzo;Frammentato;Osso lavorato con incisioni decorate
+EXT-040;4;13;32;Ceramica;Ferro;Lacunoso;Frammento ceramico da contesto chiuso
+EXT-041;4;13;32;Metallo;Selce;Integro;Elemento metallico con tracce di lavorazione
+EXT-042;4;13;32;Litico;Ossidiana;Frammentario;Manufatto litico su scheggia ritoccata
+EXT-043;4;13;32;Organico;Osso lavorato;Frammentato;Resti organici parzialmente carbonizzati
+EXT-044;4;13;32;Vetro;Ceramica d impasto;Lacunoso;Frammento vitriforme soffiato
+EXT-045;4;13;32;Laterizio;Ceramica comune;Integro;Frammento laterizio con impronte digitali
+EXT-046;4;13;32;Osso;Ceramica depurata;Frammentario;Osso lavorato con incisioni decorate
+EXT-047;4;13;32;Ceramica;Anfora;Frammentato;Frammento ceramico da contesto chiuso
+EXT-048;4;13;32;Metallo;Bronzo;Lacunoso;Elemento metallico con tracce di lavorazione
+EXT-049;4;13;32;Litico;Ferro;Integro;Manufatto litico su scheggia ritoccata
+EXT-050;4;13;32;Organico;Selce;Frammentario;Resti organici parzialmente carbonizzati
+EXT-051;4;13;33;Ceramica;Ceramica d impasto;Frammentario;Frammento ceramico da contesto chiuso
+EXT-052;4;13;33;Metallo;Ceramica comune;Frammentato;Elemento metallico con tracce di lavorazione
+EXT-053;4;13;33;Litico;Ceramica depurata;Lacunoso;Manufatto litico su scheggia ritoccata
+EXT-054;4;13;33;Organico;Anfora;Integro;Resti organici parzialmente carbonizzati
+EXT-055;4;13;33;Vetro;Bronzo;Frammentario;Frammento vitriforme soffiato
+EXT-056;4;13;33;Laterizio;Ferro;Frammentato;Frammento laterizio con impronte digitali
+EXT-057;4;13;33;Osso;Selce;Lacunoso;Osso lavorato con incisioni decorate
+EXT-058;4;13;33;Ceramica;Ossidiana;Integro;Frammento ceramico da contesto chiuso
+EXT-059;4;13;33;Metallo;Osso lavorato;Frammentario;Elemento metallico con tracce di lavorazione
+EXT-060;4;13;33;Litico;Ceramica d impasto;Frammentato;Manufatto litico su scheggia ritoccata
+EXT-061;4;13;33;Organico;Ceramica comune;Lacunoso;Resti organici parzialmente carbonizzati
+EXT-062;4;13;33;Vetro;Ceramica depurata;Integro;Frammento vitriforme soffiato
+EXT-063;4;13;33;Laterizio;Anfora;Frammentario;Frammento laterizio con impronte digitali
+EXT-064;4;13;33;Osso;Bronzo;Frammentato;Osso lavorato con incisioni decorate
+EXT-065;4;13;33;Ceramica;Ferro;Lacunoso;Frammento ceramico da contesto chiuso
+EXT-066;4;13;33;Metallo;Selce;Integro;Elemento metallico con tracce di lavorazione
+EXT-067;4;13;33;Litico;Ossidiana;Frammentario;Manufatto litico su scheggia ritoccata
+EXT-068;4;13;33;Organico;Osso lavorato;Frammentato;Resti organici parzialmente carbonizzati
+EXT-069;4;13;33;Vetro;Ceramica d impasto;Lacunoso;Frammento vitriforme soffiato
+EXT-070;4;13;33;Laterizio;Ceramica comune;Integro;Frammento laterizio con impronte digitali
+EXT-071;4;13;33;Osso;Ceramica depurata;Frammentario;Osso lavorato con incisioni decorate
+EXT-072;4;13;33;Ceramica;Anfora;Frammentato;Frammento ceramico da contesto chiuso
+EXT-073;4;13;33;Metallo;Bronzo;Lacunoso;Elemento metallico con tracce di lavorazione
+EXT-074;4;13;33;Litico;Ferro;Integro;Manufatto litico su scheggia ritoccata
+EXT-075;4;13;33;Organico;Selce;Frammentario;Resti organici parzialmente carbonizzati
+EXT-076;4;13;34;Ceramica;Ceramica d impasto;Frammentario;Frammento ceramico da contesto chiuso
+EXT-077;4;13;34;Metallo;Ceramica comune;Frammentato;Elemento metallico con tracce di lavorazione
+EXT-078;4;13;34;Litico;Ceramica depurata;Lacunoso;Manufatto litico su scheggia ritoccata
+EXT-079;4;13;34;Organico;Anfora;Integro;Resti organici parzialmente carbonizzati
+EXT-080;4;13;34;Vetro;Bronzo;Frammentario;Frammento vitriforme soffiato
+EXT-081;4;13;34;Laterizio;Ferro;Frammentato;Frammento laterizio con impronte digitali
+EXT-082;4;13;34;Osso;Selce;Lacunoso;Osso lavorato con incisioni decorate
+EXT-083;4;13;34;Ceramica;Ossidiana;Integro;Frammento ceramico da contesto chiuso
+EXT-084;4;13;34;Metallo;Osso lavorato;Frammentario;Elemento metallico con tracce di lavorazione
+EXT-085;4;13;34;Litico;Ceramica d impasto;Frammentato;Manufatto litico su scheggia ritoccata
+EXT-086;4;13;34;Organico;Ceramica comune;Lacunoso;Resti organici parzialmente carbonizzati
+EXT-087;4;13;34;Vetro;Ceramica depurata;Integro;Frammento vitriforme soffiato
+EXT-088;4;13;34;Laterizio;Anfora;Frammentario;Frammento laterizio con impronte digitali
+EXT-089;4;13;34;Osso;Bronzo;Frammentato;Osso lavorato con incisioni decorate
+EXT-090;4;13;34;Ceramica;Ferro;Lacunoso;Frammento ceramico da contesto chiuso
+EXT-091;4;13;34;Metallo;Selce;Integro;Elemento metallico con tracce di lavorazione
+EXT-092;4;13;34;Litico;Ossidiana;Frammentario;Manufatto litico su scheggia ritoccata
+EXT-093;4;13;34;Organico;Osso lavorato;Frammentato;Resti organici parzialmente carbonizzati
+EXT-094;4;13;34;Vetro;Ceramica d impasto;Lacunoso;Frammento vitriforme soffiato
+EXT-095;4;13;34;Laterizio;Ceramica comune;Integro;Frammento laterizio con impronte digitali
+EXT-096;4;13;34;Osso;Ceramica depurata;Frammentario;Osso lavorato con incisioni decorate
+EXT-097;4;13;34;Ceramica;Anfora;Frammentato;Frammento ceramico da contesto chiuso
+EXT-098;4;13;34;Metallo;Bronzo;Lacunoso;Elemento metallico con tracce di lavorazione
+EXT-099;4;13;34;Litico;Ferro;Integro;Manufatto litico su scheggia ritoccata
+EXT-100;4;13;34;Organico;Selce;Frammentario;Resti organici parzialmente carbonizzati
+EXT-101;4;13;35;Ceramica;Ceramica d impasto;Frammentario;Frammento ceramico da contesto chiuso
+EXT-102;4;13;35;Metallo;Ceramica comune;Frammentato;Elemento metallico con tracce di lavorazione
+EXT-103;4;13;35;Litico;Ceramica depurata;Lacunoso;Manufatto litico su scheggia ritoccata
+EXT-104;4;13;35;Organico;Anfora;Integro;Resti organici parzialmente carbonizzati
+EXT-105;4;13;35;Vetro;Bronzo;Frammentario;Frammento vitriforme soffiato
+EXT-106;4;13;35;Laterizio;Ferro;Frammentato;Frammento laterizio con impronte digitali
+EXT-107;4;13;35;Osso;Selce;Lacunoso;Osso lavorato con incisioni decorate
+EXT-108;4;13;35;Ceramica;Ossidiana;Integro;Frammento ceramico da contesto chiuso
+EXT-109;4;13;35;Metallo;Osso lavorato;Frammentario;Elemento metallico con tracce di lavorazione
+EXT-110;4;13;35;Litico;Ceramica d impasto;Frammentato;Manufatto litico su scheggia ritoccata
+EXT-111;4;13;35;Organico;Ceramica comune;Lacunoso;Resti organici parzialmente carbonizzati
+EXT-112;4;13;35;Vetro;Ceramica depurata;Integro;Frammento vitriforme soffiato
+EXT-113;4;13;35;Laterizio;Anfora;Frammentario;Frammento laterizio con impronte digitali
+EXT-114;4;13;35;Osso;Bronzo;Frammentato;Osso lavorato con incisioni decorate
+EXT-115;4;13;35;Ceramica;Ferro;Lacunoso;Frammento ceramico da contesto chiuso
+EXT-116;4;13;35;Metallo;Selce;Integro;Elemento metallico con tracce di lavorazione
+EXT-117;4;13;35;Litico;Ossidiana;Frammentario;Manufatto litico su scheggia ritoccata
+EXT-118;4;13;35;Organico;Osso lavorato;Frammentato;Resti organici parzialmente carbonizzati
+EXT-119;4;13;35;Vetro;Ceramica d impasto;Lacunoso;Frammento vitriforme soffiato
+EXT-120;4;13;35;Laterizio;Ceramica comune;Integro;Frammento laterizio con impronte digitali
+EXT-121;4;13;35;Osso;Ceramica depurata;Frammentario;Osso lavorato con incisioni decorate
+EXT-122;4;13;35;Ceramica;Anfora;Frammentato;Frammento ceramico da contesto chiuso
+EXT-123;4;13;35;Metallo;Bronzo;Lacunoso;Elemento metallico con tracce di lavorazione
+EXT-124;4;13;35;Litico;Ferro;Integro;Manufatto litico su scheggia ritoccata
+EXT-125;4;13;35;Organico;Selce;Frammentario;Resti organici parzialmente carbonizzati
+EXT-126;4;13;36;Ceramica;Ceramica d impasto;Frammentario;Frammento ceramico da contesto chiuso
+EXT-127;4;13;36;Metallo;Ceramica comune;Frammentato;Elemento metallico con tracce di lavorazione
+EXT-128;4;13;36;Litico;Ceramica depurata;Lacunoso;Manufatto litico su scheggia ritoccata
+EXT-129;4;13;36;Organico;Anfora;Integro;Resti organici parzialmente carbonizzati
+EXT-130;4;13;36;Vetro;Bronzo;Frammentario;Frammento vitriforme soffiato
+EXT-131;4;13;36;Laterizio;Ferro;Frammentato;Frammento laterizio con impronte digitali
+EXT-132;4;13;36;Osso;Selce;Lacunoso;Osso lavorato con incisioni decorate
+EXT-133;4;13;36;Ceramica;Ossidiana;Integro;Frammento ceramico da contesto chiuso
+EXT-134;4;13;36;Metallo;Osso lavorato;Frammentario;Elemento metallico con tracce di lavorazione
+EXT-135;4;13;36;Litico;Ceramica d impasto;Frammentato;Manufatto litico su scheggia ritoccata
+EXT-136;4;13;36;Organico;Ceramica comune;Lacunoso;Resti organici parzialmente carbonizzati
+EXT-137;4;13;36;Vetro;Ceramica depurata;Integro;Frammento vitriforme soffiato
+EXT-138;4;13;36;Laterizio;Anfora;Frammentario;Frammento laterizio con impronte digitali
+EXT-139;4;13;36;Osso;Bronzo;Frammentato;Osso lavorato con incisioni decorate
+EXT-140;4;13;36;Ceramica;Ferro;Lacunoso;Frammento ceramico da contesto chiuso
+EXT-141;4;13;36;Metallo;Selce;Integro;Elemento metallico con tracce di lavorazione
+EXT-142;4;13;36;Litico;Ossidiana;Frammentario;Manufatto litico su scheggia ritoccata
+EXT-143;4;13;36;Organico;Osso lavorato;Frammentato;Resti organici parzialmente carbonizzati
+EXT-144;4;13;36;Vetro;Ceramica d impasto;Lacunoso;Frammento vitriforme soffiato
+EXT-145;4;13;36;Laterizio;Ceramica comune;Integro;Frammento laterizio con impronte digitali
+EXT-146;4;13;36;Osso;Ceramica depurata;Frammentario;Osso lavorato con incisioni decorate
+EXT-147;4;13;36;Ceramica;Anfora;Frammentato;Frammento ceramico da contesto chiuso
+EXT-148;4;13;36;Metallo;Bronzo;Lacunoso;Elemento metallico con tracce di lavorazione
+EXT-149;4;13;36;Litico;Ferro;Integro;Manufatto litico su scheggia ritoccata
+EXT-150;4;13;36;Organico;Selce;Frammentario;Resti organici parzialmente carbonizzati
+EXT-151;4;13;37;Ceramica;Ceramica d impasto;Frammentario;Frammento ceramico da contesto chiuso
+EXT-152;4;13;37;Metallo;Ceramica comune;Frammentato;Elemento metallico con tracce di lavorazione
+EXT-153;4;13;37;Litico;Ceramica depurata;Lacunoso;Manufatto litico su scheggia ritoccata
+EXT-154;4;13;37;Organico;Anfora;Integro;Resti organici parzialmente carbonizzati
+EXT-155;4;13;37;Vetro;Bronzo;Frammentario;Frammento vitriforme soffiato
+EXT-156;4;13;37;Laterizio;Ferro;Frammentato;Frammento laterizio con impronte digitali
+EXT-157;4;13;37;Osso;Selce;Lacunoso;Osso lavorato con incisioni decorate
+EXT-158;4;13;37;Ceramica;Ossidiana;Integro;Frammento ceramico da contesto chiuso
+EXT-159;4;13;37;Metallo;Osso lavorato;Frammentario;Elemento metallico con tracce di lavorazione
+EXT-160;4;13;37;Litico;Ceramica d impasto;Frammentato;Manufatto litico su scheggia ritoccata
+EXT-161;4;13;37;Organico;Ceramica comune;Lacunoso;Resti organici parzialmente carbonizzati
+EXT-162;4;13;37;Vetro;Ceramica depurata;Integro;Frammento vitriforme soffiato
+EXT-163;4;13;37;Laterizio;Anfora;Frammentario;Frammento laterizio con impronte digitali
+EXT-164;4;13;37;Osso;Bronzo;Frammentato;Osso lavorato con incisioni decorate
+EXT-165;4;13;37;Ceramica;Ferro;Lacunoso;Frammento ceramico da contesto chiuso
+EXT-166;4;13;37;Metallo;Selce;Integro;Elemento metallico con tracce di lavorazione
+EXT-167;4;13;37;Litico;Ossidiana;Frammentario;Manufatto litico su scheggia ritoccata
+EXT-168;4;13;37;Organico;Osso lavorato;Frammentato;Resti organici parzialmente carbonizzati
+EXT-169;4;13;37;Vetro;Ceramica d impasto;Lacunoso;Frammento vitriforme soffiato
+EXT-170;4;13;37;Laterizio;Ceramica comune;Integro;Frammento laterizio con impronte digitali
+EXT-171;4;13;37;Osso;Ceramica depurata;Frammentario;Osso lavorato con incisioni decorate
+EXT-172;4;13;37;Ceramica;Anfora;Frammentato;Frammento ceramico da contesto chiuso
+EXT-173;4;13;37;Metallo;Bronzo;Lacunoso;Elemento metallico con tracce di lavorazione
+EXT-174;4;13;37;Litico;Ferro;Integro;Manufatto litico su scheggia ritoccata
+EXT-175;4;13;37;Organico;Selce;Frammentario;Resti organici parzialmente carbonizzati
+EXT-176;4;13;38;Ceramica;Ceramica d impasto;Frammentario;Frammento ceramico da contesto chiuso
+EXT-177;4;13;38;Metallo;Ceramica comune;Frammentato;Elemento metallico con tracce di lavorazione
+EXT-178;4;13;38;Litico;Ceramica depurata;Lacunoso;Manufatto litico su scheggia ritoccata
+EXT-179;4;13;38;Organico;Anfora;Integro;Resti organici parzialmente carbonizzati
+EXT-180;4;13;38;Vetro;Bronzo;Frammentario;Frammento vitriforme soffiato
+EXT-181;4;13;38;Laterizio;Ferro;Frammentato;Frammento laterizio con impronte digitali
+EXT-182;4;13;38;Osso;Selce;Lacunoso;Osso lavorato con incisioni decorate
+EXT-183;4;13;38;Ceramica;Ossidiana;Integro;Frammento ceramico da contesto chiuso
+EXT-184;4;13;38;Metallo;Osso lavorato;Frammentario;Elemento metallico con tracce di lavorazione
+EXT-185;4;13;38;Litico;Ceramica d impasto;Frammentato;Manufatto litico su scheggia ritoccata
+EXT-186;4;13;38;Organico;Ceramica comune;Lacunoso;Resti organici parzialmente carbonizzati
+EXT-187;4;13;38;Vetro;Ceramica depurata;Integro;Frammento vitriforme soffiato
+EXT-188;4;13;38;Laterizio;Anfora;Frammentario;Frammento laterizio con impronte digitali
+EXT-189;4;13;38;Osso;Bronzo;Frammentato;Osso lavorato con incisioni decorate
+EXT-190;4;13;38;Ceramica;Ferro;Lacunoso;Frammento ceramico da contesto chiuso
+EXT-191;4;13;38;Metallo;Selce;Integro;Elemento metallico con tracce di lavorazione
+EXT-192;4;13;38;Litico;Ossidiana;Frammentario;Manufatto litico su scheggia ritoccata
+EXT-193;4;13;38;Organico;Osso lavorato;Frammentato;Resti organici parzialmente carbonizzati
+EXT-194;4;13;38;Vetro;Ceramica d impasto;Lacunoso;Frammento vitriforme soffiato
+EXT-195;4;13;38;Laterizio;Ceramica comune;Integro;Frammento laterizio con impronte digitali
+EXT-196;4;13;38;Osso;Ceramica depurata;Frammentario;Osso lavorato con incisioni decorate
+EXT-197;4;13;38;Ceramica;Anfora;Frammentato;Frammento ceramico da contesto chiuso
+EXT-198;4;13;38;Metallo;Bronzo;Lacunoso;Elemento metallico con tracce di lavorazione
+EXT-199;4;13;38;Litico;Ferro;Integro;Manufatto litico su scheggia ritoccata
+EXT-200;4;13;38;Organico;Selce;Frammentario;Resti organici parzialmente carbonizzati
+EXT-201;4;13;39;Ceramica;Ceramica d impasto;Frammentario;Frammento ceramico da contesto chiuso
+EXT-202;4;13;39;Metallo;Ceramica comune;Frammentato;Elemento metallico con tracce di lavorazione
+EXT-203;4;13;39;Litico;Ceramica depurata;Lacunoso;Manufatto litico su scheggia ritoccata
+EXT-204;4;13;39;Organico;Anfora;Integro;Resti organici parzialmente carbonizzati
+EXT-205;4;13;39;Vetro;Bronzo;Frammentario;Frammento vitriforme soffiato
+EXT-206;4;13;39;Laterizio;Ferro;Frammentato;Frammento laterizio con impronte digitali
+EXT-207;4;13;39;Osso;Selce;Lacunoso;Osso lavorato con incisioni decorate
+EXT-208;4;13;39;Ceramica;Ossidiana;Integro;Frammento ceramico da contesto chiuso
+EXT-209;4;13;39;Metallo;Osso lavorato;Frammentario;Elemento metallico con tracce di lavorazione
+EXT-210;4;13;39;Litico;Ceramica d impasto;Frammentato;Manufatto litico su scheggia ritoccata
+EXT-211;4;13;39;Organico;Ceramica comune;Lacunoso;Resti organici parzialmente carbonizzati
+EXT-212;4;13;39;Vetro;Ceramica depurata;Integro;Frammento vitriforme soffiato
+EXT-213;4;13;39;Laterizio;Anfora;Frammentario;Frammento laterizio con impronte digitali
+EXT-214;4;13;39;Osso;Bronzo;Frammentato;Osso lavorato con incisioni decorate
+EXT-215;4;13;39;Ceramica;Ferro;Lacunoso;Frammento ceramico da contesto chiuso
+EXT-216;4;13;39;Metallo;Selce;Integro;Elemento metallico con tracce di lavorazione
+EXT-217;4;13;39;Litico;Ossidiana;Frammentario;Manufatto litico su scheggia ritoccata
+EXT-218;4;13;39;Organico;Osso lavorato;Frammentato;Resti organici parzialmente carbonizzati
+EXT-219;4;13;39;Vetro;Ceramica d impasto;Lacunoso;Frammento vitriforme soffiato
+EXT-220;4;13;39;Laterizio;Ceramica comune;Integro;Frammento laterizio con impronte digitali
+EXT-221;4;13;39;Osso;Ceramica depurata;Frammentario;Osso lavorato con incisioni decorate
+EXT-222;4;13;39;Ceramica;Anfora;Frammentato;Frammento ceramico da contesto chiuso
+EXT-223;4;13;39;Metallo;Bronzo;Lacunoso;Elemento metallico con tracce di lavorazione
+EXT-224;4;13;39;Litico;Ferro;Integro;Manufatto litico su scheggia ritoccata
+EXT-225;4;13;39;Organico;Selce;Frammentario;Resti organici parzialmente carbonizzati
+EXT-226;4;13;40;Ceramica;Ceramica d impasto;Frammentario;Frammento ceramico da contesto chiuso
+EXT-227;4;13;40;Metallo;Ceramica comune;Frammentato;Elemento metallico con tracce di lavorazione
+EXT-228;4;13;40;Litico;Ceramica depurata;Lacunoso;Manufatto litico su scheggia ritoccata
+EXT-229;4;13;40;Organico;Anfora;Integro;Resti organici parzialmente carbonizzati
+EXT-230;4;13;40;Vetro;Bronzo;Frammentario;Frammento vitriforme soffiato
+EXT-231;4;13;40;Laterizio;Ferro;Frammentato;Frammento laterizio con impronte digitali
+EXT-232;4;13;40;Osso;Selce;Lacunoso;Osso lavorato con incisioni decorate
+EXT-233;4;13;40;Ceramica;Ossidiana;Integro;Frammento ceramico da contesto chiuso
+EXT-234;4;13;40;Metallo;Osso lavorato;Frammentario;Elemento metallico con tracce di lavorazione
+EXT-235;4;13;40;Litico;Ceramica d impasto;Frammentato;Manufatto litico su scheggia ritoccata
+EXT-236;4;13;40;Organico;Ceramica comune;Lacunoso;Resti organici parzialmente carbonizzati
+EXT-237;4;13;40;Vetro;Ceramica depurata;Integro;Frammento vitriforme soffiato
+EXT-238;4;13;40;Laterizio;Anfora;Frammentario;Frammento laterizio con impronte digitali
+EXT-239;4;13;40;Osso;Bronzo;Frammentato;Osso lavorato con incisioni decorate
+EXT-240;4;13;40;Ceramica;Ferro;Lacunoso;Frammento ceramico da contesto chiuso
+EXT-241;4;13;40;Metallo;Selce;Integro;Elemento metallico con tracce di lavorazione
+EXT-242;4;13;40;Litico;Ossidiana;Frammentario;Manufatto litico su scheggia ritoccata
+EXT-243;4;13;40;Organico;Osso lavorato;Frammentato;Resti organici parzialmente carbonizzati
+EXT-244;4;13;40;Vetro;Ceramica d impasto;Lacunoso;Frammento vitriforme soffiato
+EXT-245;4;13;40;Laterizio;Ceramica comune;Integro;Frammento laterizio con impronte digitali
+EXT-246;4;13;40;Osso;Ceramica depurata;Frammentario;Osso lavorato con incisioni decorate
+EXT-247;4;13;40;Ceramica;Anfora;Frammentato;Frammento ceramico da contesto chiuso
+EXT-248;4;13;40;Metallo;Bronzo;Lacunoso;Elemento metallico con tracce di lavorazione
+EXT-249;4;13;40;Litico;Ferro;Integro;Manufatto litico su scheggia ritoccata
+EXT-250;4;13;40;Organico;Selce;Frammentario;Resti organici parzialmente carbonizzati
+EXT-251;4;13;41;Ceramica;Ceramica d impasto;Frammentario;Frammento ceramico da contesto chiuso
+EXT-252;4;13;41;Metallo;Ceramica comune;Frammentato;Elemento metallico con tracce di lavorazione
+EXT-253;4;13;41;Litico;Ceramica depurata;Lacunoso;Manufatto litico su scheggia ritoccata
+EXT-254;4;13;41;Organico;Anfora;Integro;Resti organici parzialmente carbonizzati
+EXT-255;4;13;41;Vetro;Bronzo;Frammentario;Frammento vitriforme soffiato
+EXT-256;4;13;41;Laterizio;Ferro;Frammentato;Frammento laterizio con impronte digitali
+EXT-257;4;13;41;Osso;Selce;Lacunoso;Osso lavorato con incisioni decorate
+EXT-258;4;13;41;Ceramica;Ossidiana;Integro;Frammento ceramico da contesto chiuso
+EXT-259;4;13;41;Metallo;Osso lavorato;Frammentario;Elemento metallico con tracce di lavorazione
+EXT-260;4;13;41;Litico;Ceramica d impasto;Frammentato;Manufatto litico su scheggia ritoccata
+EXT-261;4;13;41;Organico;Ceramica comune;Lacunoso;Resti organici parzialmente carbonizzati
+EXT-262;4;13;41;Vetro;Ceramica depurata;Integro;Frammento vitriforme soffiato
+EXT-263;4;13;41;Laterizio;Anfora;Frammentario;Frammento laterizio con impronte digitali
+EXT-264;4;13;41;Osso;Bronzo;Frammentato;Osso lavorato con incisioni decorate
+EXT-265;4;13;41;Ceramica;Ferro;Lacunoso;Frammento ceramico da contesto chiuso
+EXT-266;4;13;41;Metallo;Selce;Integro;Elemento metallico con tracce di lavorazione
+EXT-267;4;13;41;Litico;Ossidiana;Frammentario;Manufatto litico su scheggia ritoccata
+EXT-268;4;13;41;Organico;Osso lavorato;Frammentato;Resti organici parzialmente carbonizzati
+EXT-269;4;13;41;Vetro;Ceramica d impasto;Lacunoso;Frammento vitriforme soffiato
+EXT-270;4;13;41;Laterizio;Ceramica comune;Integro;Frammento laterizio con impronte digitali
+EXT-271;4;13;41;Osso;Ceramica depurata;Frammentario;Osso lavorato con incisioni decorate
+EXT-272;4;13;41;Ceramica;Anfora;Frammentato;Frammento ceramico da contesto chiuso
+EXT-273;4;13;41;Metallo;Bronzo;Lacunoso;Elemento metallico con tracce di lavorazione
+EXT-274;4;13;41;Litico;Ferro;Integro;Manufatto litico su scheggia ritoccata
+EXT-275;4;13;41;Organico;Selce;Frammentario;Resti organici parzialmente carbonizzati
+EXT-276;4;13;42;Ceramica;Ceramica d impasto;Frammentario;Frammento ceramico da contesto chiuso
+EXT-277;4;13;42;Metallo;Ceramica comune;Frammentato;Elemento metallico con tracce di lavorazione
+EXT-278;4;13;42;Litico;Ceramica depurata;Lacunoso;Manufatto litico su scheggia ritoccata
+EXT-279;4;13;42;Organico;Anfora;Integro;Resti organici parzialmente carbonizzati
+EXT-280;4;13;42;Vetro;Bronzo;Frammentario;Frammento vitriforme soffiato
+EXT-281;4;13;42;Laterizio;Ferro;Frammentato;Frammento laterizio con impronte digitali
+EXT-282;4;13;42;Osso;Selce;Lacunoso;Osso lavorato con incisioni decorate
+EXT-283;4;13;42;Ceramica;Ossidiana;Integro;Frammento ceramico da contesto chiuso
+EXT-284;4;13;42;Metallo;Osso lavorato;Frammentario;Elemento metallico con tracce di lavorazione
+EXT-285;4;13;42;Litico;Ceramica d impasto;Frammentato;Manufatto litico su scheggia ritoccata
+EXT-286;4;13;42;Organico;Ceramica comune;Lacunoso;Resti organici parzialmente carbonizzati
+EXT-287;4;13;42;Vetro;Ceramica depurata;Integro;Frammento vitriforme soffiato
+EXT-288;4;13;42;Laterizio;Anfora;Frammentario;Frammento laterizio con impronte digitali
+EXT-289;4;13;42;Osso;Bronzo;Frammentato;Osso lavorato con incisioni decorate
+EXT-290;4;13;42;Ceramica;Ferro;Lacunoso;Frammento ceramico da contesto chiuso
+EXT-291;4;13;42;Metallo;Selce;Integro;Elemento metallico con tracce di lavorazione
+EXT-292;4;13;42;Litico;Ossidiana;Frammentario;Manufatto litico su scheggia ritoccata
+EXT-293;4;13;42;Organico;Osso lavorato;Frammentato;Resti organici parzialmente carbonizzati
+EXT-294;4;13;42;Vetro;Ceramica d impasto;Lacunoso;Frammento vitriforme soffiato
+EXT-295;4;13;42;Laterizio;Ceramica comune;Integro;Frammento laterizio con impronte digitali
+EXT-296;4;13;42;Osso;Ceramica depurata;Frammentario;Osso lavorato con incisioni decorate
+EXT-297;4;13;42;Ceramica;Anfora;Frammentato;Frammento ceramico da contesto chiuso
+EXT-298;4;13;42;Metallo;Bronzo;Lacunoso;Elemento metallico con tracce di lavorazione
+EXT-299;4;13;42;Litico;Ferro;Integro;Manufatto litico su scheggia ritoccata
+EXT-300;4;13;42;Organico;Selce;Frammentario;Resti organici parzialmente carbonizzati
+EXT-301;4;13;43;Ceramica;Ceramica d impasto;Frammentario;Frammento ceramico da contesto chiuso
+EXT-302;4;13;43;Metallo;Ceramica comune;Frammentato;Elemento metallico con tracce di lavorazione
+EXT-303;4;13;43;Litico;Ceramica depurata;Lacunoso;Manufatto litico su scheggia ritoccata
+EXT-304;4;13;43;Organico;Anfora;Integro;Resti organici parzialmente carbonizzati
+EXT-305;4;13;43;Vetro;Bronzo;Frammentario;Frammento vitriforme soffiato
+EXT-306;4;13;43;Laterizio;Ferro;Frammentato;Frammento laterizio con impronte digitali
+EXT-307;4;13;43;Osso;Selce;Lacunoso;Osso lavorato con incisioni decorate
+EXT-308;4;13;43;Ceramica;Ossidiana;Integro;Frammento ceramico da contesto chiuso
+EXT-309;4;13;43;Metallo;Osso lavorato;Frammentario;Elemento metallico con tracce di lavorazione
+EXT-310;4;13;43;Litico;Ceramica d impasto;Frammentato;Manufatto litico su scheggia ritoccata
+EXT-311;4;13;43;Organico;Ceramica comune;Lacunoso;Resti organici parzialmente carbonizzati
+EXT-312;4;13;43;Vetro;Ceramica depurata;Integro;Frammento vitriforme soffiato
+EXT-313;4;13;43;Laterizio;Anfora;Frammentario;Frammento laterizio con impronte digitali
+EXT-314;4;13;43;Osso;Bronzo;Frammentato;Osso lavorato con incisioni decorate
+EXT-315;4;13;43;Ceramica;Ferro;Lacunoso;Frammento ceramico da contesto chiuso
+EXT-316;4;13;43;Metallo;Selce;Integro;Elemento metallico con tracce di lavorazione
+EXT-317;4;13;43;Litico;Ossidiana;Frammentario;Manufatto litico su scheggia ritoccata
+EXT-318;4;13;43;Organico;Osso lavorato;Frammentato;Resti organici parzialmente carbonizzati
+EXT-319;4;13;43;Vetro;Ceramica d impasto;Lacunoso;Frammento vitriforme soffiato
+EXT-320;4;13;43;Laterizio;Ceramica comune;Integro;Frammento laterizio con impronte digitali
+EXT-321;4;13;43;Osso;Ceramica depurata;Frammentario;Osso lavorato con incisioni decorate
+EXT-322;4;13;43;Ceramica;Anfora;Frammentato;Frammento ceramico da contesto chiuso
+EXT-323;4;13;43;Metallo;Bronzo;Lacunoso;Elemento metallico con tracce di lavorazione
+EXT-324;4;13;43;Litico;Ferro;Integro;Manufatto litico su scheggia ritoccata
+EXT-325;4;13;43;Organico;Selce;Frammentario;Resti organici parzialmente carbonizzati
+EXT-326;4;13;44;Ceramica;Ceramica d impasto;Frammentario;Frammento ceramico da contesto chiuso
+EXT-327;4;13;44;Metallo;Ceramica comune;Frammentato;Elemento metallico con tracce di lavorazione
+EXT-328;4;13;44;Litico;Ceramica depurata;Lacunoso;Manufatto litico su scheggia ritoccata
+EXT-329;4;13;44;Organico;Anfora;Integro;Resti organici parzialmente carbonizzati
+EXT-330;4;13;44;Vetro;Bronzo;Frammentario;Frammento vitriforme soffiato
+EXT-331;4;13;44;Laterizio;Ferro;Frammentato;Frammento laterizio con impronte digitali
+EXT-332;4;13;44;Osso;Selce;Lacunoso;Osso lavorato con incisioni decorate
+EXT-333;4;13;44;Ceramica;Ossidiana;Integro;Frammento ceramico da contesto chiuso
+EXT-334;4;13;44;Metallo;Osso lavorato;Frammentario;Elemento metallico con tracce di lavorazione
+EXT-335;4;13;44;Litico;Ceramica d impasto;Frammentato;Manufatto litico su scheggia ritoccata
+EXT-336;4;13;44;Organico;Ceramica comune;Lacunoso;Resti organici parzialmente carbonizzati
+EXT-337;4;13;44;Vetro;Ceramica depurata;Integro;Frammento vitriforme soffiato
+EXT-338;4;13;44;Laterizio;Anfora;Frammentario;Frammento laterizio con impronte digitali
+EXT-339;4;13;44;Osso;Bronzo;Frammentato;Osso lavorato con incisioni decorate
+EXT-340;4;13;44;Ceramica;Ferro;Lacunoso;Frammento ceramico da contesto chiuso
+EXT-341;4;13;44;Metallo;Selce;Integro;Elemento metallico con tracce di lavorazione
+EXT-342;4;13;44;Litico;Ossidiana;Frammentario;Manufatto litico su scheggia ritoccata
+EXT-343;4;13;44;Organico;Osso lavorato;Frammentato;Resti organici parzialmente carbonizzati
+EXT-344;4;13;44;Vetro;Ceramica d impasto;Lacunoso;Frammento vitriforme soffiato
+EXT-345;4;13;44;Laterizio;Ceramica comune;Integro;Frammento laterizio con impronte digitali
+EXT-346;4;13;44;Osso;Ceramica depurata;Frammentario;Osso lavorato con incisioni decorate
+EXT-347;4;13;44;Ceramica;Anfora;Frammentato;Frammento ceramico da contesto chiuso
+EXT-348;4;13;44;Metallo;Bronzo;Lacunoso;Elemento metallico con tracce di lavorazione
+EXT-349;4;13;44;Litico;Ferro;Integro;Manufatto litico su scheggia ritoccata
+EXT-350;4;13;44;Organico;Selce;Frammentario;Resti organici parzialmente carbonizzati
+EXT-351;4;13;45;Ceramica;Ceramica d impasto;Frammentario;Frammento ceramico da contesto chiuso
+EXT-352;4;13;45;Metallo;Ceramica comune;Frammentato;Elemento metallico con tracce di lavorazione
+EXT-353;4;13;45;Litico;Ceramica depurata;Lacunoso;Manufatto litico su scheggia ritoccata
+EXT-354;4;13;45;Organico;Anfora;Integro;Resti organici parzialmente carbonizzati
+EXT-355;4;13;45;Vetro;Bronzo;Frammentario;Frammento vitriforme soffiato
+EXT-356;4;13;45;Laterizio;Ferro;Frammentato;Frammento laterizio con impronte digitali
+EXT-357;4;13;45;Osso;Selce;Lacunoso;Osso lavorato con incisioni decorate
+EXT-358;4;13;45;Ceramica;Ossidiana;Integro;Frammento ceramico da contesto chiuso
+EXT-359;4;13;45;Metallo;Osso lavorato;Frammentario;Elemento metallico con tracce di lavorazione
+EXT-360;4;13;45;Litico;Ceramica d impasto;Frammentato;Manufatto litico su scheggia ritoccata
+EXT-361;4;13;45;Organico;Ceramica comune;Lacunoso;Resti organici parzialmente carbonizzati
+EXT-362;4;13;45;Vetro;Ceramica depurata;Integro;Frammento vitriforme soffiato
+EXT-363;4;13;45;Laterizio;Anfora;Frammentario;Frammento laterizio con impronte digitali
+EXT-364;4;13;45;Osso;Bronzo;Frammentato;Osso lavorato con incisioni decorate
+EXT-365;4;13;45;Ceramica;Ferro;Lacunoso;Frammento ceramico da contesto chiuso
+EXT-366;4;13;45;Metallo;Selce;Integro;Elemento metallico con tracce di lavorazione
+EXT-367;4;13;45;Litico;Ossidiana;Frammentario;Manufatto litico su scheggia ritoccata
+EXT-368;4;13;45;Organico;Osso lavorato;Frammentato;Resti organici parzialmente carbonizzati
+EXT-369;4;13;45;Vetro;Ceramica d impasto;Lacunoso;Frammento vitriforme soffiato
+EXT-370;4;13;45;Laterizio;Ceramica comune;Integro;Frammento laterizio con impronte digitali
+EXT-371;4;13;45;Osso;Ceramica depurata;Frammentario;Osso lavorato con incisioni decorate
+EXT-372;4;13;45;Ceramica;Anfora;Frammentato;Frammento ceramico da contesto chiuso
+EXT-373;4;13;45;Metallo;Bronzo;Lacunoso;Elemento metallico con tracce di lavorazione
+EXT-374;4;13;45;Litico;Ferro;Integro;Manufatto litico su scheggia ritoccata
+EXT-375;4;13;45;Organico;Selce;Frammentario;Resti organici parzialmente carbonizzati

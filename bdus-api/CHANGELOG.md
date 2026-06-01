@@ -32,6 +32,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the full structure of the `bdus_demo` test/demo application with `// bdus:` annotations
   for all BraDypUS-specific features (field types, population policies, validation checks,
   table-level features). Serves as the canonical source of truth for the demo schema.
+- **Hurl CRUD phases migrated to dedicated `crud_test` table**: all generic CRUD
+  tests (phases 04–28) now run against a temporary `crud_test` table created in
+  phase 03 and dropped in phase 10. The archaeological tables (`siti`, `us`, `saggi`,
+  `reperti`, `complessi`) remain empty after the correctness suite, making demo-seed
+  ID predictions reliable and eliminating all table-pollution bugs.
+- **Demo seed on same app**: `--seed-demo` / `--seed-more` now populate the SAME
+  `bdus_test_suite` app instead of a separate `bdus_demo` instance. Phase 10 drops
+  `crud_test` and the real tables are clean for phase 19.
+- **Phase 19 matrix fix**: added missing `?tb=us` parameter to the RS matrix query.
+- **Phase 19 `capture_phase` → `run_phase`**: prevents the double-execution bug where
+  `hurl --json` populated the DB but exited non-zero, causing `hurl --test` to re-run
+  and fail on duplicate records.
 - **`test.sh --all-engines`**: new flag that runs the full suite (PHPUnit + Hurl) three
   times in sequence — sqlite → pgsql → mysql — and reports a consolidated pass/fail per
   engine. Default (`./test.sh`) still uses sqlite only for fast iteration.

@@ -15,7 +15,7 @@
 
 
 # ── 21a. Seed: outside window (-200 to -100) ──────────────────────────
-POST {{base_url}}/api/record/us
+POST {{base_url}}/api/record/crud_test
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -29,7 +29,7 @@ jsonpath "$.status" == "success"
 
 
 # ── 21b. Seed: undated (both null) ────────────────────────────────────
-POST {{base_url}}/api/record/us
+POST {{base_url}}/api/record/crud_test
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -43,7 +43,7 @@ jsonpath "$.status" == "success"
 
 
 # ── 21c. Seed: ante quem before window (null to -450) ─────────────────
-POST {{base_url}}/api/record/us
+POST {{base_url}}/api/record/crud_test
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -61,7 +61,7 @@ jsonpath "$.status" == "success"
 #          US101 (post quem -400/null, -400 ≤ -320)
 # Excludes: US200 (-200/-100), US201 (null/null), US202 (null/-450 < -350)
 #           us_id_1, us_id_2 (no chrono — both null → undated)
-GET {{base_url}}/api/records/us?search_type=filter&filter=%7B%22chrono_from%22%3A%7B%22_chrono_overlap%22%3A%5B-350%2C-320%5D%7D%7D
+GET {{base_url}}/api/records/crud_test?search_type=filter&filter=%7B%22chrono_from%22%3A%7B%22_chrono_overlap%22%3A%5B-350%2C-320%5D%7D%7D
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -75,7 +75,7 @@ jsonpath "$.total"  == 3
 # Non-undated: US099, US100, US101, US200, US202 + the 2 phase-04 have no chrono →
 # Actually phase-04 records have null/null → excluded
 # Non-undated with any chrono: US099, US100, US101, US200, US202 = 5
-GET {{base_url}}/api/records/us?search_type=filter&filter=%7B%22chrono_from%22%3A%7B%22_chrono_overlap%22%3A%5B-10000%2C10000%5D%7D%7D
+GET {{base_url}}/api/records/crud_test?search_type=filter&filter=%7B%22chrono_from%22%3A%7B%22_chrono_overlap%22%3A%5B-10000%2C10000%5D%7D%7D
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -85,7 +85,7 @@ jsonpath "$.total"  == 5
 
 # ── 21f. Filter by chrono_certainty = probable ────────────────────────
 # US100 (ante quem, probable) is the only probable record
-GET {{base_url}}/api/records/us?search_type=filter&filter=%7B%22chrono_certainty%22%3A%7B%22_eq%22%3A%22probable%22%7D%7D
+GET {{base_url}}/api/records/crud_test?search_type=filter&filter=%7B%22chrono_certainty%22%3A%7B%22_eq%22%3A%22probable%22%7D%7D
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -94,7 +94,7 @@ jsonpath "$.total"  == 1
 
 
 # ── 21g-neg. _chrono_overlap on chrono_to → error ─────────────────────
-GET {{base_url}}/api/records/us?search_type=filter&filter=%7B%22chrono_to%22%3A%7B%22_chrono_overlap%22%3A%5B-400%2C-300%5D%7D%7D
+GET {{base_url}}/api/records/crud_test?search_type=filter&filter=%7B%22chrono_to%22%3A%7B%22_chrono_overlap%22%3A%5B-400%2C-300%5D%7D%7D
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]

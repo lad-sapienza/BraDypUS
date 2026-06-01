@@ -73,7 +73,7 @@ reader_jwt: jsonpath "$.token"
 
 
 # ── 9d. Reader CAN list records (read allowed) ───────────────────────
-GET {{base_url}}/api/records/us
+GET {{base_url}}/api/records/crud_test
 Authorization: Bearer {{reader_jwt}}
 HTTP 200
 [Asserts]
@@ -81,7 +81,7 @@ jsonpath "$.status" == "success"
 
 
 # ── 9e. Reader CAN read a single record ─────────────────────────────
-GET {{base_url}}/api/record/us/1
+GET {{base_url}}/api/record/crud_test/1
 Authorization: Bearer {{reader_jwt}}
 HTTP 200
 [Asserts]
@@ -89,7 +89,7 @@ jsonpath "$.status" == "success"
 
 
 # ── 9f. Reader CANNOT insert a record ───────────────────────────────
-POST {{base_url}}/api/record/us
+POST {{base_url}}/api/record/crud_test
 Authorization: Bearer {{reader_jwt}}
 Content-Type: application/json
 { "sigla": "UNAUTH" }
@@ -100,7 +100,7 @@ jsonpath "$.code"   == "not_enough_privilege"
 
 
 # ── 9g. Reader CANNOT delete a record ───────────────────────────────
-DELETE {{base_url}}/api/record/us/1
+DELETE {{base_url}}/api/record/crud_test/1
 Authorization: Bearer {{reader_jwt}}
 HTTP 200
 [Asserts]
@@ -112,7 +112,7 @@ jsonpath "$.code"   == "not_enough_privilege"
 POST {{base_url}}/api/charts
 Authorization: Bearer {{reader_jwt}}
 Content-Type: application/json
-{ "name": "test", "definition": { "tb": "us", "type": "pie", "x_field": "sigla", "y_field": "id", "y_function": "COUNT" } }
+{ "name": "test", "definition": { "tb": "crud_test", "type": "pie", "x_field": "sigla", "y_field": "id", "y_function": "COUNT" } }
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "error"
@@ -197,7 +197,7 @@ writer_jwt: jsonpath "$.token"
 
 
 # ── 9m. Writer CAN list records ─────────────────────────────────────
-GET {{base_url}}/api/records/us
+GET {{base_url}}/api/records/crud_test
 Authorization: Bearer {{writer_jwt}}
 HTTP 200
 [Asserts]
@@ -205,7 +205,7 @@ jsonpath "$.status" == "success"
 
 
 # ── 9n. Writer CAN insert a record ──────────────────────────────────
-POST {{base_url}}/api/record/us
+POST {{base_url}}/api/record/crud_test
 Authorization: Bearer {{writer_jwt}}
 Content-Type: application/json
 { "sigla": "W999", "descrizione": "Inserted by writer" }
@@ -217,7 +217,7 @@ writer_record_id: jsonpath "$.id"
 
 
 # ── 9o. Writer CAN delete their own record ──────────────────────────
-DELETE {{base_url}}/api/record/us/{{writer_record_id}}
+DELETE {{base_url}}/api/record/crud_test/{{writer_record_id}}
 Authorization: Bearer {{writer_jwt}}
 HTTP 200
 [Asserts]

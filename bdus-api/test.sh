@@ -56,11 +56,12 @@ for arg in "$@"; do
     --skip-unit)     SKIP_UNIT=true ;;
     --skip-e2e)      SKIP_E2E=true ;;
     --seed-demo)     SEED_DEMO=true ;;
+    --seed-more)     SEED_DEMO=true; EXTRA_SEED="--seed-more" ;;
     --all-engines)   ALL_ENGINES=true ;;
     --db=*)          DB_ENGINE="${arg#--db=}" ;;
     *)
       echo "Unknown option: $arg" >&2
-      echo "Usage: $0 [--keep] [--seed-demo] [--skip-unit] [--skip-e2e] [--db=sqlite|pgsql|mysql] [--all-engines]" >&2
+      echo "Usage: $0 [--keep] [--seed-demo] [--seed-more] [--skip-unit] [--skip-e2e] [--db=sqlite|pgsql|mysql] [--all-engines]" >&2
       exit 1
       ;;
   esac
@@ -249,6 +250,9 @@ else
 fi
 
 # ── Step 5 — Hurl E2E ────────────────────────────────────────────────
+# The correctness phases (01-30) run first. Phase 10 drops crud_test
+# so the archaeological tables are clean. If --seed-demo, phases 19
+# (and optionally 19b) then populate the same app with demo data.
 E2E_EXIT=0
 if [[ "$SKIP_E2E" == true ]]; then
   warn "Hurl E2E skipped (--skip-e2e)"
@@ -256,16 +260,18 @@ else
   header "Step 5 — Hurl E2E API suite"
   E2E_ARGS=("$VARS_FILE")
   [[ "$SEED_DEMO" == true ]] && E2E_ARGS+=("--seed-demo")
+  [[ "${EXTRA_SEED:-}" == "--seed-more" ]] && E2E_ARGS=("$VARS_FILE" "--seed-more")
   if "${SCRIPT_DIR}/tests/api/run.sh" "${E2E_ARGS[@]}"; then
     pass "Hurl E2E: all phases passed"
     if [[ "$SEED_DEMO" == true ]]; then
-      info "Demo app available at http://localhost:${TEST_PORT} — credentials: test@bdus.test / TestBdus_2025!"
+      info "App: ${APP_NAME} at http://localhost:${TEST_PORT} — ${ADMIN_EMAIL} / ${ADMIN_PASSWORD}"
     fi
   else
     E2E_EXIT=$?
     fail "Hurl E2E: some phases failed (exit ${E2E_EXIT})"
   fi
 fi
+DEMO_EXIT=0
 
 # ── Summary ──────────────────────────────────────────────────────────
 header "Summary"
@@ -285,8 +291,8 @@ else
   fail "Hurl E2E: FAILED"
 fi
 
-# Exit non-zero if either suite failed
-OVERALL=$((UNIT_EXIT + E2E_EXIT))
+# Exit non-zero if any suite failed
+OVERALL=$((UNIT_EXIT + E2E_EXIT + DEMO_EXIT))
 if [[ $OVERALL -eq 0 ]]; then
   echo -e "\n${BOLD}${GREEN}All tests passed.${RESET}\n"
 else

@@ -30,7 +30,7 @@ jsonpath "$.status" == "error"
 
 
 # ── 20c. Activate plugin on us table ─────────────────────────────────
-POST {{base_url}}/api/config/table/us/fuzzy-date
+POST {{base_url}}/api/config/table/crud_test/fuzzy-date
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {}
@@ -41,7 +41,7 @@ jsonpath "$.code"   == "fuzzy_date_activated"
 
 
 # ── 20d. Record schema now shows has_fuzzy_date=true ─────────────────
-GET {{base_url}}/api/record/us/{{us_id_1}}
+GET {{base_url}}/api/record/crud_test/{{us_id_1}}
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -49,7 +49,7 @@ jsonpath "$.schema.has_fuzzy_date" == true
 
 
 # ── 20e. Activation is idempotent ────────────────────────────────────
-POST {{base_url}}/api/config/table/us/fuzzy-date
+POST {{base_url}}/api/config/table/crud_test/fuzzy-date
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {}
@@ -60,7 +60,7 @@ jsonpath "$.code"   == "fuzzy_date_activated"
 
 
 # ── 20f. Save a record with a full chrono range ───────────────────────
-POST {{base_url}}/api/record/us
+POST {{base_url}}/api/record/crud_test
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -84,7 +84,7 @@ chrono_record_id: jsonpath "$.id"
 
 
 # ── 20g. Fetch back and verify all chrono values ──────────────────────
-GET {{base_url}}/api/record/us/{{chrono_record_id}}
+GET {{base_url}}/api/record/crud_test/{{chrono_record_id}}
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -96,7 +96,7 @@ jsonpath "$.core.chrono_period.val"    == "Hellenistic"
 
 
 # ── 20h. Save ante-quem record (from=null) ───────────────────────────
-POST {{base_url}}/api/record/us
+POST {{base_url}}/api/record/crud_test
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -117,7 +117,7 @@ ante_quem_id: jsonpath "$.id"
 
 
 # ── 20i. Fetch ante-quem: from must be null ───────────────────────────
-GET {{base_url}}/api/record/us/{{ante_quem_id}}
+GET {{base_url}}/api/record/crud_test/{{ante_quem_id}}
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -126,7 +126,7 @@ jsonpath "$.core.chrono_to.val"   == -300
 
 
 # ── 20j. Save post-quem record (to=null) ─────────────────────────────
-POST {{base_url}}/api/record/us
+POST {{base_url}}/api/record/crud_test
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -147,7 +147,7 @@ post_quem_id: jsonpath "$.id"
 
 
 # ── 20k. Fetch post-quem: to must be null ────────────────────────────
-GET {{base_url}}/api/record/us/{{post_quem_id}}
+GET {{base_url}}/api/record/crud_test/{{post_quem_id}}
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -156,7 +156,7 @@ jsonpath "$.core.chrono_to.val"   == null
 
 
 # ── 20l. Deactivate: config flag cleared ─────────────────────────────
-DELETE {{base_url}}/api/config/table/us/fuzzy-date
+DELETE {{base_url}}/api/config/table/crud_test/fuzzy-date
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -165,7 +165,7 @@ jsonpath "$.code"   == "fuzzy_date_deactivated"
 
 
 # ── 20m. Schema shows has_fuzzy_date=false after deactivation ─────────
-GET {{base_url}}/api/record/us/{{us_id_1}}
+GET {{base_url}}/api/record/crud_test/{{us_id_1}}
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -173,7 +173,7 @@ jsonpath "$.schema.has_fuzzy_date" == false
 
 
 # ── 20n. Re-activate: saved data still intact ────────────────────────
-POST {{base_url}}/api/config/table/us/fuzzy-date
+POST {{base_url}}/api/config/table/crud_test/fuzzy-date
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {}
@@ -181,7 +181,7 @@ HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
 
-GET {{base_url}}/api/record/us/{{chrono_record_id}}
+GET {{base_url}}/api/record/crud_test/{{chrono_record_id}}
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -194,7 +194,7 @@ jsonpath "$.core.chrono_from.val"  == -325
 GET {{base_url}}/api/rs/matrix
 Authorization: Bearer {{jwt}}
 [QueryStringParams]
-tb: us
+tb: crud_test
 HTTP 200
 [Asserts]
 jsonpath "$.status"         == "success"

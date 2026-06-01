@@ -17,7 +17,7 @@ Content-Type: application/json
 {
   "name": "US per periodo",
   "definition": {
-    "tb":         "us",
+    "tb": "crud_test",
     "type":       "pie",
     "x_field":    "periodo",
     "y_field":    "id",
@@ -39,7 +39,7 @@ Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
   "definition": {
-    "tb":         "us",
+    "tb": "crud_test",
     "type":       "pie",
     "x_field":    "periodo",
     "y_field":    "id",

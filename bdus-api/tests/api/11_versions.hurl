@@ -22,7 +22,7 @@
 # ════════════════════════════════════════════════════════════════════
 
 # ── 11a. Insert a new record (no versions yet) ───────────────────────
-POST {{base_url}}/api/record/us
+POST {{base_url}}/api/record/crud_test
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -42,7 +42,7 @@ vh_id: jsonpath "$.id"
 
 
 # ── 11b. getVersions → empty immediately after insert ────────────────
-GET {{base_url}}/api/record/us/{{vh_id}}/versions
+GET {{base_url}}/api/record/crud_test/{{vh_id}}/versions
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -52,7 +52,7 @@ jsonpath "$.versions" isEmpty
 
 
 # ── 11c. Update (first edit — creates snapshot v1) ───────────────────
-POST {{base_url}}/api/record/us
+POST {{base_url}}/api/record/crud_test
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -66,7 +66,7 @@ jsonpath "$.status" == "success"
 
 
 # ── 11d. Update again (second edit — creates snapshot v2) ────────────
-POST {{base_url}}/api/record/us
+POST {{base_url}}/api/record/crud_test
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -80,7 +80,7 @@ jsonpath "$.status" == "success"
 
 
 # ── 11e. getVersions → two entries, newest first ─────────────────────
-GET {{base_url}}/api/record/us/{{vh_id}}/versions
+GET {{base_url}}/api/record/crud_test/{{vh_id}}/versions
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -151,7 +151,7 @@ jsonpath "$.created" == false
 
 
 # ── 11j. Verify the field was restored ───────────────────────────────
-GET {{base_url}}/api/record/us/{{vh_id}}
+GET {{base_url}}/api/record/crud_test/{{vh_id}}
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -159,7 +159,7 @@ jsonpath "$.core.descrizione.val" == "Test versioning record"
 
 
 # ── 11k. Versions list now contains a 'restore' entry ────────────────
-GET {{base_url}}/api/record/us/{{vh_id}}/versions
+GET {{base_url}}/api/record/crud_test/{{vh_id}}/versions
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -169,7 +169,7 @@ jsonpath "$.versions[0].operation" == "restore"
 
 
 # ── 11l. Delete the record ────────────────────────────────────────────
-DELETE {{base_url}}/api/record/us/{{vh_id}}
+DELETE {{base_url}}/api/record/crud_test/{{vh_id}}
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -200,7 +200,7 @@ jsonpath "$.created" == true
 
 
 # ── 11o. Re-created record is accessible ─────────────────────────────
-GET {{base_url}}/api/record/us/{{vh_id}}
+GET {{base_url}}/api/record/crud_test/{{vh_id}}
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -210,7 +210,7 @@ jsonpath "$.core.sigla.val" == "VH001"
 # ── 11p. Error paths ──────────────────────────────────────────────────
 
 # Missing tb parameter
-GET {{base_url}}/api/record/us/{{vh_id}}/versions
+GET {{base_url}}/api/record/crud_test/{{vh_id}}/versions
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -244,7 +244,7 @@ jsonpath "$.code"   == "unknown_table"
 
 
 # ── 11q. Cleanup: delete the re-created record ────────────────────────
-DELETE {{base_url}}/api/record/us/{{vh_id}}
+DELETE {{base_url}}/api/record/crud_test/{{vh_id}}
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]

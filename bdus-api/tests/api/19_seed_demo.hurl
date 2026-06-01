@@ -751,6 +751,8 @@ Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "core": { "sigla": "US001", "tipo": "Strato",     "sito_id": {{sito_urbano}}, "complesso_id": {{compl_edif_a}},  "saggio_id": {{sag_01}}, "descrizione": "Strato di humus superficiale con materiale moderno.",     "interpretazione": "Accumulo recente",          "affidabilita": "Certa",    "periodo": "Basso Medioevo", "anno_scavo": 2018, "nr_cassette": 2, "profondita_cm": 15, "verificata": 1 }, "plugins": {} }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 [Captures]
 us_id_1: jsonpath "$.id"
 
@@ -1664,7 +1666,7 @@ jsonpath "$.status" == "success"
 
 
 # ── 19o. Verify the Matrix has nodes ────────────────────────────────
-GET {{base_url}}/api/rs/matrix
+GET {{base_url}}/api/rs/matrix?tb=us
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]

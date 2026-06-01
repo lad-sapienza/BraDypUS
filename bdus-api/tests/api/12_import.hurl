@@ -10,7 +10,7 @@
 # ════════════════════════════════════════════════════════════════════
 
 # ── 12a. getTableFields — returns field list for known table ──────────
-GET {{base_url}}/api/import/us/fields
+GET {{base_url}}/api/import/crud_test/fields
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -55,7 +55,7 @@ Content-Type: application/json
 {
   "temp_id":   "{{csv_temp_id}}",
   "type":      "csv",
-  "tb":        "us",
+  "tb": "crud_test",
   "mapping":   { "sigla": "sigla", "descrizione": "descrizione", "periodo": "periodo" },
   "key_field": "sigla"
 }
@@ -85,7 +85,7 @@ Content-Type: application/json
 {
   "temp_id":   "{{csv_temp_id2}}",
   "type":      "csv",
-  "tb":        "us",
+  "tb": "crud_test",
   "mapping":   { "sigla": "sigla", "descrizione": "descrizione", "periodo": "periodo" },
   "key_field": "sigla"
 }
@@ -119,7 +119,7 @@ Content-Type: application/json
 {
   "temp_id":   "{{json_temp_id}}",
   "type":      "json",
-  "tb":        "us",
+  "tb": "crud_test",
   "mapping":   { "sigla": "sigla", "descrizione": "descrizione", "periodo": "periodo" },
   "key_field": "sigla"
 }
@@ -135,7 +135,7 @@ POST {{base_url}}/api/import/preview-file
 Authorization: Bearer {{jwt}}
 [MultipartFormData]
 type: geojson
-tb: us
+tb: crud_test
 file: file,fixtures/import_test.geojson; type=application/json
 HTTP 200
 [Asserts]
@@ -154,7 +154,7 @@ Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
   "temp_id":   "{{geojson_temp_id}}",
-  "tb":        "us",
+  "tb": "crud_test",
   "geo_prop":  "sigla",
   "key_field": "sigla"
 }
@@ -185,7 +185,7 @@ Content-Type: application/json
 {
   "temp_id":   "does_not_exist_xyz",
   "type":      "csv",
-  "tb":        "us",
+  "tb": "crud_test",
   "mapping":   { "sigla": "sigla" },
   "key_field": "sigla"
 }
@@ -211,7 +211,7 @@ Content-Type: application/json
 {
   "temp_id":   "{{err_temp_id}}",
   "type":      "csv",
-  "tb":        "us",
+  "tb": "crud_test",
   "mapping":   { "sigla": "sigla" },
   "key_field": "descrizione"
 }
@@ -249,7 +249,7 @@ Content-Type: application/json
 {
   "temp_id":   "{{err2_temp_id}}",
   "type":      "csv",
-  "tb":        "us",
+  "tb": "crud_test",
   "mapping":   { "sigla": "nonexistent_db_field" },
   "key_field": "nonexistent_db_field"
 }
@@ -276,7 +276,7 @@ Content-Type: application/json
 {
   "temp_id":   "{{err3_temp_id}}",
   "type":      "csv",
-  "tb":        "us",
+  "tb": "crud_test",
   "mapping":   { "colonna_fantasma": "sigla" },
   "key_field": "sigla"
 }
@@ -303,7 +303,7 @@ Content-Type: application/json
 {
   "temp_id":   "{{empty_temp_id}}",
   "type":      "csv",
-  "tb":        "us",
+  "tb": "crud_test",
   "mapping":   { "sigla": "sigla" },
   "key_field": "sigla"
 }

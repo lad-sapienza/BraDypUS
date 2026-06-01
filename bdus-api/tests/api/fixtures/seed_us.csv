@@ -1,0 +1,16 @@
+sigla;tipo;sito_id;saggio_id;periodo;affidabilita;anno_scavo;descrizione;interpretazione
+EXT-US001;Strato;4;13;Ferro;Certa;2021;Strato limoso compatto bruno-rossastro con ceramica d'impasto;Livello di frequentazione principale
+EXT-US002;Taglio;4;13;Ferro;Certa;2021;Taglio a pareti verticali e fondo piano nella roccia;Fossa di fondazione struttura
+EXT-US003;Riempimento;4;13;Ferro;Probabile;2021;Riempimento con terreno sciolto ceramica e carboni;Riempimento fossa di fondazione
+EXT-US004;Struttura;4;13;Ferro;Certa;2021;Struttura in conci di arenaria disposti a secco;Muro perimetrale edificio principale
+EXT-US005;Interfaccia;4;13;Ferro;Certa;2021;Superficie di calpestio con battuto in argilla gialla;Piano pavimentale vano principale
+EXT-US006;Strato;4;13;Ferro;Certa;2021;Strato argilloso giallo compatto con noduli calcarei;Preparazione del piano di calpestio
+EXT-US007;Taglio;4;13;Ferro;Incerta;2022;Taglio irregolare con pareti sbozzate;Spoliazione struttura muraria
+EXT-US008;Riempimento;4;13;Ferro;Probabile;2022;Riempimento di abbandono con materiale residuale misto;Crollo e abbandono vano
+EXT-US009;Struttura;4;13;Ferro;Certa;2022;Struttura in ciottoli fluviali legati da argilla;Muro divisorio interno
+EXT-US010;Interfaccia;4;13;Bronzo;Certa;2022;Interfaccia di calpestio con incrostazioni ferrosa;Piano uso fase precedente
+EXT-US011;Strato;4;13;Ferro;Certa;2022;Strato di ceneri e carboni con resti di pasto;Livello di combustione focolare
+EXT-US012;Taglio;4;13;Ferro;Certa;2022;Taglio circolare a pianta ovoidale;Fossa di deposizione votiva
+EXT-US013;Riempimento;4;13;Ferro;Certa;2022;Riempimento primario con ceramica integra e pesi da telaio;Deposito intenzionale votivo
+EXT-US014;Struttura;4;13;Ferro;Certa;2023;Struttura in lastre di arenaria infisse verticalmente;Recinto o palizzata litica
+EXT-US015;Strato;4;13;Ferro;Probabile;2023;Strato di humus moderno con materiale spurio;Accumulo post-abbandono recente

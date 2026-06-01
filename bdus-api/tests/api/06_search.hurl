@@ -3,7 +3,7 @@
 # ════════════════════════════════════════════════════════════════════
 
 # ── 6a. Get search UI config for us ─────────────────────────────────
-GET {{base_url}}/api/search/us/config
+GET {{base_url}}/api/search/crud_test/config
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -13,7 +13,7 @@ jsonpath "$.operators" isCollection
 
 
 # ── 6b. Get distinct values used in a field ─────────────────────────
-GET {{base_url}}/api/search/us/values
+GET {{base_url}}/api/search/crud_test/values
 Authorization: Bearer {{jwt}}
 [QueryStringParams]
 fld: periodo
@@ -24,19 +24,19 @@ jsonpath "$.values" isCollection
 
 
 # ── 6c. Search by field value (GET, simple) ─────────────────────────
-GET {{base_url}}/api/records/us
+GET {{base_url}}/api/records/crud_test
 Authorization: Bearer {{jwt}}
 [QueryStringParams]
-q_sigla: US001
+q_sigla: T001
 HTTP 200
 [Asserts]
 jsonpath "$.status"        == "success"
 jsonpath "$.total"         == 1
-jsonpath "$.data[0].sigla" == "US001"
+jsonpath "$.data[0].sigla" == "T001"
 
 
 # ── 6d. Search via POST with Directus-style filter ───────────────────
-POST {{base_url}}/api/records/us
+POST {{base_url}}/api/records/crud_test
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -51,7 +51,7 @@ jsonpath "$.total"  == 1
 
 
 # ── 6e. Search with no results ──────────────────────────────────────
-GET {{base_url}}/api/records/us
+GET {{base_url}}/api/records/crud_test
 Authorization: Bearer {{jwt}}
 [QueryStringParams]
 q_sigla: NONEXISTENT

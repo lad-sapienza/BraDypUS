@@ -88,20 +88,20 @@ jsonpath "$.tables[0].label" isString
 
 
 # ── 16h. GET fields for table "us" ────────────────────────────────────
-GET {{base_url}}/api/search-replace/us/fields
+GET {{base_url}}/api/search-replace/crud_test/fields
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
 jsonpath "$.status"  == "success"
 jsonpath "$.fields"  isCollection
-# sigla and interpretazione are type=text; descrizione is type=textarea — all included
+# sigla, periodo, tipo are type=text — all included; long_text is excluded
 jsonpath "$.fields[*].name" contains "sigla"
-jsonpath "$.fields[*].name" contains "interpretazione"
-jsonpath "$.fields[*].name" contains "descrizione"
+jsonpath "$.fields[*].name" contains "tipo"
+jsonpath "$.fields[*].name" contains "periodo"
 
 
 # ── 16i. Field list row shape ─────────────────────────────────────────
-GET {{base_url}}/api/search-replace/us/fields
+GET {{base_url}}/api/search-replace/crud_test/fields
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -120,17 +120,17 @@ jsonpath "$.status" == "success"
 jsonpath "$.fields" count == 0
 
 
-# ── 16k. POST search-replace — bulk replace in us.sigla ──────────────
-# Phase 4 created records with sigla values like "US001", "US002".
-# Replace "US" → "UE" to test the endpoint.
+# ── 16k. POST search-replace — bulk replace in crud_test.sigla ───────
+# Phase 11 created VH001. Rename "VH" → "VX" to test the endpoint
+# with a real match while leaving IMP* records intact for phase 18.
 POST {{base_url}}/api/search-replace
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
-  "tb":      "us",
+  "tb": "crud_test",
   "fld":     "sigla",
-  "search":  "US",
-  "replace": "UE"
+  "search":  "VH",
+  "replace": "VX"
 }
 HTTP 200
 [Asserts]
@@ -159,7 +159,7 @@ POST {{base_url}}/api/search-replace
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
-  "tb":     "us",
+  "tb": "crud_test",
   "fld":    "injected_col; DROP TABLE us;--",
   "search": "x"
 }
@@ -174,7 +174,7 @@ POST {{base_url}}/api/search-replace
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
-  "tb":  "us",
+  "tb": "crud_test",
   "fld": "sigla"
 }
 HTTP 200

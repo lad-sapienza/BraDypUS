@@ -70,6 +70,9 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
+import InputText from 'primevue/inputtext'
+import Select    from 'primevue/select'
+import Tag       from 'primevue/tag'
 import { useI18n } from '@/i18n'
 import { parse, format } from '@/utils/chronoParser'
 

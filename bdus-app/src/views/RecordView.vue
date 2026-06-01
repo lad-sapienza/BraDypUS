@@ -331,17 +331,22 @@ const editData = reactive({ core: {}, plugins: {} })
 
 // Chrono values: in edit mode use flat editData; in read mode unwrap record.core
 const chronoData = computed(() => {
-  const core = mode.value === 'edit'
-    ? editData.core
-    : Object.fromEntries(
-        Object.entries(record.value?.core ?? {}).map(([k, v]) => [k, v?.val ?? v])
-      )
+  if (mode.value === 'edit') {
+    return {
+      from:      editData.core.chrono_from      ?? null,
+      to:        editData.core.chrono_to        ?? null,
+      label:     editData.core.chrono_label     ?? null,
+      certainty: editData.core.chrono_certainty ?? null,
+      period:    editData.core.chrono_period    ?? null,
+    }
+  }
+  const c = record.value?.core ?? {}
   return {
-    from:      core.chrono_from      ?? null,
-    to:        core.chrono_to        ?? null,
-    label:     core.chrono_label     ?? null,
-    certainty: core.chrono_certainty ?? null,
-    period:    core.chrono_period    ?? null,
+    from:      c.chrono_from?.val      ?? null,
+    to:        c.chrono_to?.val        ?? null,
+    label:     c.chrono_label?.val     ?? null,
+    certainty: c.chrono_certainty?.val ?? null,
+    period:    c.chrono_period?.val    ?? null,
   }
 })
 

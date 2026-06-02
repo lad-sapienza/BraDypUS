@@ -1841,3 +1841,4 @@ HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
 jsonpath "$.nodes"  isCollection
+jsonpath "$.nodes"  count > 0

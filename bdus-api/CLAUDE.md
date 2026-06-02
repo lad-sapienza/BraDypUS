@@ -276,17 +276,26 @@ or column requires no changes to test files.
 | search_replace | SearchReplaceView | Cascading dropdowns, config order |
 | confirm_super_adm_pwd | (used in ConfigView password gate) | |
 
-### Pending migration
+### Pending / v5 closure work
 
-| Module | Priority | Notes |
+See memory file `v5_closure_plan.md` for the full prioritized roadmap.
+
+**Still open (not yet done):**
+
+| Item | Priority | Notes |
 |---|---|---|
-| file | medium | ✅ sort drag-and-drop completo (SortableJS); upload/delete già presenti |
-| geoface | medium | Leaflet map; full geodata CRUD |
-| import_geodata | low | File upload + geodata parse |
-| chart | low | jqPlot charts; likely replaced |
-| matrix (v4) | — | Superseded by RsGraph/MatrixView |
-| userlinks | ✅ | ManualLinksSection.vue; add/delete via record_ctrl endpoints |
-| new_app | low | App creation wizard |
+| `duplicate_record` | **High** | One-click record copy; `POST /api/record/:tb/:id/duplicate`; button in RecordView header |
+| Remove `@deprecated v5` methods | **High** | Strip all legacy PHP methods tagged `@deprecated v5` from all controllers |
+| `import_geodata` | Low | File upload + geodata parse; explicitly deferred |
+| `typed_manual_links` | Medium | Add `label` column to `bdus_userlinks`; config panel for relation types |
+| `graph_visualization` | Medium | Cytoscape network of typed manual links; depends on `typed_manual_links` |
+| `public_readonly_share` | Medium | Signed read-only JWT for sharing filtered views |
+
+**Completed (kept here for reference):**
+`geoface` ✅ · `chart` ✅ · `userlinks` ✅ · `new_app` ✅ · `file sort/upload/delete` ✅ · `matrix` ✅ (superseded by RsGraph/MatrixView)
+
+**v5.1 scope (not v5.0):**
+- Remove migration system entirely (`Migrate.php`, all `M0xx_*.php`, `M0xx` tests, `bdus_migrations` table)
 
 ### Deprecated (no Vue equivalent needed)
 

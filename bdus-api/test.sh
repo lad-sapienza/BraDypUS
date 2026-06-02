@@ -28,17 +28,21 @@
 #   --all-engines   Run the full suite on sqlite, pgsql, mysql
 #   --keep          Leave the Docker container running after the run
 #   --no-docker     Skip Docker; use local server at BASE_URL (:8080)
+#   --export-demo   After seed, copy the demo app from the test container
+#                   into the host projects/ dir so the dev container
+#                   (port 8080) has a persistent copy. No-op with --no-docker.
 #
 # COMMON WORKFLOWS
-#   ./test.sh --setup --tests            # create app + full test suite
-#   ./test.sh --setup --tests --seed     # tests then demo seed
-#   ./test.sh --setup --seed             # create app + seed only
-#   ./test.sh --reset --setup --tests    # clean run (auto-delete app)
-#   ./test.sh --seed-more --keep         # seed + leave container up for screenshots
-#   ./test.sh --tests --only=04          # run all phase-04 sub-phases
-#   ./test.sh --unit                     # PHPUnit only
-#   ./test.sh --list                     # list phases, exit
-#   ./test.sh --all-engines --setup --tests  # CI: test on all DB engines
+#   ./test.sh --setup --tests                        # create app + full test suite
+#   ./test.sh --setup --tests --seed                 # tests then demo seed
+#   ./test.sh --setup --seed                         # create app + seed only
+#   ./test.sh --reset --setup --tests                # clean run (auto-delete app)
+#   ./test.sh --seed-more --keep                     # seed + leave container up for screenshots
+#   ./test.sh --setup --tests --seed --export-demo   # test + persist demo in dev container
+#   ./test.sh --tests --only=04                      # run all phase-04 sub-phases
+#   ./test.sh --unit                                 # PHPUnit only
+#   ./test.sh --list                                 # list phases, exit
+#   ./test.sh --all-engines --setup --tests          # CI: test on all DB engines
 #
 # REQUIREMENTS
 #   docker   (Docker Desktop or Docker Engine) — unless --no-docker
@@ -67,6 +71,7 @@ RUN_SETUP=false
 RUN_TESTS=false
 RUN_SEED=false
 SEED_MORE=false
+EXPORT_DEMO=false
 FROM_PHASE=""
 ONLY_PHASE=""
 DB_ENGINE=sqlite
@@ -83,6 +88,7 @@ for arg in "$@"; do
     --tests)        RUN_TESTS=true ;;
     --seed)         RUN_SEED=true ;;
     --seed-more)    RUN_SEED=true; SEED_MORE=true ;;
+    --export-demo)  EXPORT_DEMO=true ;;
     --list)         LIST_ONLY=true ;;
     --from=*)       FROM_PHASE="${arg#--from=}" ;;
     --only=*)       ONLY_PHASE="${arg#--only=}" ;;
@@ -166,6 +172,11 @@ if [[ "$ANY_MODE" == false ]]; then
   if [[ "$RUN_SEED" == true ]]; then
     read -r -p "  Extended seed (phase 19b)? [y/N] " ans </dev/tty
     [[ "$ans" =~ ^[yY]$ ]] && SEED_MORE=true
+
+    if [[ "$NO_DOCKER" == false ]]; then
+      read -r -p "  Export demo app to dev container after seed? [y/N] " ans </dev/tty
+      [[ "$ans" =~ ^[yY]$ ]] && EXPORT_DEMO=true
+    fi
   fi
   echo ""
 fi
@@ -369,6 +380,22 @@ if [[ "$RUN_SEED" == true ]]; then
   echo -e "\n${CYAN}  App:   ${APP_NAME}${RESET}"
   echo -e "${CYAN}  URL:   ${BASE_URL}${RESET}"
   echo -e "${CYAN}  Login: ${ADMIN_EMAIL} / ${ADMIN_PASSWORD}${RESET}\n"
+fi
+
+if [[ "$EXPORT_DEMO" == true ]]; then
+  if [[ "$NO_DOCKER" == true ]]; then
+    warn "--export-demo has no effect with --no-docker (app already written to projects/)"
+  elif [[ "$RUN_SEED" == false ]]; then
+    warn "--export-demo requires --seed (nothing to export)"
+  else
+    header "Export demo app → dev container"
+    CONTAINER_ID=$(docker compose -p "$COMPOSE_PROJECT" "${COMPOSE_FILES[@]}" ps -q app)
+    info "Copying ${APP_NAME} from test container to ${PROJECTS_DIR}/…"
+    rm -rf "${PROJECTS_DIR:?}/${APP_NAME}"
+    docker cp "${CONTAINER_ID}:/var/www/html/projects/${APP_NAME}" "${PROJECTS_DIR}/"
+    pass "Exported to ${PROJECTS_DIR}/${APP_NAME}"
+    info "Accessible in dev container → http://localhost:8080"
+  fi
 fi
 
 # ── Summary ──────────────────────────────────────────────────────

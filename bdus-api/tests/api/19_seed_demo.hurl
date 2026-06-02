@@ -2,7 +2,8 @@
 # Phase 19 — Demo seed
 #
 # Populates the app with realistic archaeological data.
-# Requires: phases 1–18 have already run.
+# Self-contained: configures table-level plugins before inserting data,
+# so it works both after --setup and standalone (--no-docker --seed).
 #
 # Tables seeded:
 #   vocabularies (periodi, sito_tipologia, complesso_tipo, us_tipo,
@@ -15,7 +16,71 @@
 # ════════════════════════════════════════════════════════════════════
 
 
-# ── 19a. Vocabularies ────────────────────────────────────────────────
+# ── 19a. Table-level plugin configuration ───────────────────────────
+# Must run before data insertion so RS, geodata and fuzzy_date columns
+# are in place before records are created.
+
+PUT {{base_url}}/api/config/table/siti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{
+  "name": "siti", "label": "Siti Archeologici", "is_plugin": "0",
+  "order": "nome", "id_field": "id", "preview": ["nome", "localita"],
+  "geodata": 1, "zotero": 1, "fuzzy_date": 1
+}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+PUT {{base_url}}/api/config/table/complessi
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{
+  "name": "complessi", "label": "Complessi", "is_plugin": "0",
+  "order": "nome", "id_field": "id", "preview": ["nome", "tipo"],
+  "geodata": 1
+}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+PUT {{base_url}}/api/config/table/saggi
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{
+  "name": "saggi", "label": "Saggi di scavo", "is_plugin": "0",
+  "order": "nome", "id_field": "id", "preview": ["nome", "anno"]
+}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+PUT {{base_url}}/api/config/table/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{
+  "name": "us", "label": "Unità stratigrafiche", "is_plugin": "0",
+  "order": "sigla", "id_field": "id", "preview": ["sigla"],
+  "rs": "sigla", "geodata": 1, "zotero": 1, "fuzzy_date": 1
+}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+PUT {{base_url}}/api/config/table/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{
+  "name": "reperti", "label": "Reperti mobili", "is_plugin": "0",
+  "order": "inventario", "id_field": "id", "preview": ["inventario"],
+  "geodata": 1, "zotero": 1
+}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+
+# ── 19b. Vocabularies ────────────────────────────────────────────────
 
 # periodi
 POST {{base_url}}/api/vocabularies
@@ -427,7 +492,7 @@ Content-Type: application/json
 HTTP 200
 
 
-# ── 19b. Siti ────────────────────────────────────────────────────────
+# ── 19c. Siti ────────────────────────────────────────────────────────
 
 POST {{base_url}}/api/record/siti
 Authorization: Bearer {{jwt}}
@@ -487,7 +552,7 @@ jsonpath "$.status" == "success"
 sito_subacqueo: jsonpath "$.id"
 
 
-# ── 19c. Complessi ───────────────────────────────────────────────────
+# ── 19d. Complessi ───────────────────────────────────────────────────
 
 # Colle Oppio: 3 complessi
 POST {{base_url}}/api/record/complessi
@@ -645,7 +710,7 @@ jsonpath "$.status" == "success"
 compl_dep_anf: jsonpath "$.id"
 
 
-# ── 19d. Saggi ───────────────────────────────────────────────────────
+# ── 19e. Saggi ───────────────────────────────────────────────────────
 
 POST {{base_url}}/api/record/saggi
 Authorization: Bearer {{jwt}}
@@ -744,7 +809,7 @@ HTTP 200
 sag_12: jsonpath "$.id"
 
 
-# ── 19e. US records ──────────────────────────────────────────────────
+# ── 19f. US records ──────────────────────────────────────────────────
 
 POST {{base_url}}/api/record/us
 Authorization: Bearer {{jwt}}
@@ -989,7 +1054,7 @@ HTTP 200
 us_id_30: jsonpath "$.id"
 
 
-# ── 19f. RS relations — Harris Matrix (us) ──────────────────────────
+# ── 19g. RS relations — Harris Matrix (us) ──────────────────────────
 # Chain: US030→US001→US002→US003→US006→US007→US008→US009→US025
 #         ↓           ↓           ↓
 #        US004       US005      US012
@@ -1198,7 +1263,7 @@ HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
 
-# ── 19g. Geodata — POST /api/geoface/feature con GeoJSON ─────────────
+# ── 19h. Geodata US — POST /api/geoface/feature con GeoJSON ──────────
 POST {{base_url}}/api/geoface/feature
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
@@ -1264,7 +1329,7 @@ HTTP 200
 jsonpath "$.status" == "success"
 
 
-# ── 19h. Reperti ────────────────────────────────────────────────────
+# ── 19i. Reperti ────────────────────────────────────────────────────
 
 POST {{base_url}}/api/record/reperti
 Authorization: Bearer {{jwt}}
@@ -1427,7 +1492,7 @@ HTTP 200
 rep_id_20: jsonpath "$.id"
 
 
-# ── 19i. Misure (plugin → reperti) ───────────────────────────────────
+# ── 19j. Misure (plugin → reperti) ───────────────────────────────────
 
 POST {{base_url}}/api/record/misure
 Authorization: Bearer {{jwt}}
@@ -1502,7 +1567,7 @@ Content-Type: application/json
 HTTP 200
 
 
-# ── 19j. m_reperti_in_us (plugin → us) ──────────────────────────────
+# ── 19k. m_reperti_in_us (plugin → us) ──────────────────────────────
 
 POST {{base_url}}/api/record/m_reperti_in_us
 Authorization: Bearer {{jwt}}
@@ -1553,7 +1618,7 @@ Content-Type: application/json
 HTTP 200
 
 
-# ── 19k. m_reperti_in_complessi (plugin → complessi) ─────────────────
+# ── 19l. m_reperti_in_complessi (plugin → complessi) ─────────────────
 
 POST {{base_url}}/api/record/m_reperti_in_complessi
 Authorization: Bearer {{jwt}}
@@ -1586,7 +1651,7 @@ Content-Type: application/json
 HTTP 200
 
 
-# ── 19l. Geodata reperti ────────────────────────────────────────────
+# ── 19m. Geodata reperti ────────────────────────────────────────────
 POST {{base_url}}/api/geoface/feature
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
@@ -1620,7 +1685,7 @@ HTTP 200
 jsonpath "$.status" == "success"
 
 
-# ── 19m. Userlinks — POST /api/manual-link ──────────────────────────
+# ── 19n. Userlinks — POST /api/manual-link ──────────────────────────
 # Manual links with labels: 21 total
 #   10 us ↔ reperti  (interpretative/diagnostic)
 #    6 us ↔ us       (non-stratigraphic — phase, event, function)
@@ -1798,7 +1863,7 @@ HTTP 200
 jsonpath "$.status" == "success"
 
 
-# ── 19n. Chart ──────────────────────────────────────────────────────
+# ── 19o. Chart ──────────────────────────────────────────────────────
 POST {{base_url}}/api/charts
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
@@ -1834,7 +1899,7 @@ HTTP 200
 jsonpath "$.status" == "success"
 
 
-# ── 19o. Verify the Matrix has nodes ────────────────────────────────
+# ── 19p. Verify the Matrix has nodes ────────────────────────────────
 GET {{base_url}}/api/rs/matrix?tb=us
 Authorization: Bearer {{jwt}}
 HTTP 200

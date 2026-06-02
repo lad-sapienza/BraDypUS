@@ -131,7 +131,7 @@ class M024MyChangeTest extends BdusTestCase
 
 ---
 
-## Migration history (M001–M023)
+## Migration history (M001–M027)
 
 | Migration | What it does |
 |---|---|
@@ -147,19 +147,21 @@ class M024MyChangeTest extends BdusTestCase
 | M010 | Fix `bdus_versions` schema inconsistencies |
 | M011 | Move YAML config → DB (`bdus_cfg_*` tables) |
 | M012 | Add extra columns to `bdus_cfg_tables` |
-| M013 | Create `bdus_cfg_relations` |
+| M013 | Create `bdus_cfg_relations` (initial v1 schema) |
 | M014 | Move GeoFace config → DB (`bdus_cfg_geoface`) |
 | M015 | Delete now-redundant JSON config files from `cfg/` |
 | M016 | Rename `cfg/app_data.json` → `cfg/config.json` |
 | M017 | Cleanup orphaned files in `cfg/` |
 | M018 | Move `cfg/config.json` → `config.json` (project root) |
 | M019 | Move app settings → DB (`bdus_cfg_app`) |
-| M020 | Deduplicate relation entries |
+| M020 | Deduplicate relation entries; add UNIQUE(from_tb, to_tb) |
 | M021 | Back-fill `plugin_of` field in `bdus_cfg_tables` |
 | M022 | Add `oauth_provider` + `oauth_sub` columns to `bdus_users` |
 | M023 | Create `bdus_zotero_libs` and `bdus_zotero_links` for Zotero integration |
 | M024 | Drop legacy v4 columns (`date`, `text`, `vals` from `bdus_queries`; `sqltext`, `date` from `bdus_charts`) |
 | M025 | Add `color` column to `bdus_cfg_app` for runtime primary-colour customisation |
+| M026 | **Refactor `bdus_cfg_relations`** — replaces `(from_tb, to_tb, fld JSON, sort)` with `(from_tb, from_col, to_tb, to_col, on_delete, on_update)`. One row per FK column pair. UNIQUE moved to `(from_tb, from_col)`. Expands existing JSON blobs into individual rows. |
+| M027 | Create `bdus_cfg_indexes` — tracks user-defined and auto-generated (FK) indexes per table. |
 
 ---
 

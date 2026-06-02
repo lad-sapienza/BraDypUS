@@ -113,21 +113,73 @@ Engine implementations: `DB\Inspect\Mysql`, `DB\Inspect\Postgres`,
 
 ## `DB\Alter` — Schema modification
 
-`Alter` dispatches to engine-specific DDL for safe schema changes:
+`Alter` dispatches to engine-specific DDL for safe schema changes on
+**user-defined tables** (for system tables, use `DB\System\Manage`).
+
+### Column and table operations
 
 ```php
 $alter = new \DB\Alter($db);
-$alter->addColumn('sites', 'notes', 'TEXT');
-$alter->renameColumn('sites', 'notes', 'description');
-$alter->dropColumn('sites', 'description');
-$alter->addTable('measurements', $columnDefs);
+$alter->addFld('sites', 'notes', 'TEXT');
+$alter->renameFld('sites', 'notes', 'description', 'TEXT');
+$alter->dropFld('sites', 'description');
+$alter->createMinimalTable('measurements', false);   // regular table
+$alter->createMinimalTable('myplugin', true, 'sites'); // plugin + FK
 $alter->dropTable('measurements');
 $alter->renameTable('measurements', 'measures');
 ```
 
+::: info SQLite recreation
+SQLite does not support `DROP COLUMN`, `ADD CONSTRAINT`, or `DROP
+CONSTRAINT` on existing tables. `DB\Alter\Sqlite` implements these
+operations via the **copy-and-rename** pattern: a temporary table with
+the desired schema is created, data is copied, the original is dropped,
+and the temporary table is renamed. `PRAGMA foreign_keys = OFF` is set
+for the duration.
+:::
+
+### FK constraint operations
+
+Added in v5 to enforce at database level the relationships defined in
+the application configuration.
+
+```php
+// Check for orphans before applying (returns count of violating rows)
+$n = $alter->checkOrphans('sites', 'period_id', 'periods', 'id');
+
+// Add FK: sites.period_id → periods.id ON DELETE RESTRICT ON UPDATE CASCADE
+$alter->addForeignKey('sites', 'period_id', 'periods', 'id', 'RESTRICT', 'CASCADE');
+
+// Query / remove
+$alter->hasForeignKey('sites', 'period_id');   // bool
+$alter->dropForeignKey('sites', 'period_id');
+```
+
+Supported `ON DELETE` / `ON UPDATE` policies: `CASCADE`, `RESTRICT`,
+`SET NULL`, `NO ACTION`.
+
+Self-referential FKs (`from_tb === to_tb`) are allowed; by convention
+`on_delete` is forced to `RESTRICT` and `on_update` to `CASCADE`.
+
+**Plugin tables** created via `createMinimalTable($tb, true, $pluginOf)`
+automatically receive `FOREIGN KEY (id_link) REFERENCES {pluginOf}(id)
+ON DELETE RESTRICT`.
+
+### Index operations
+
+```php
+$alter->createIndex('sites', 'idx_sites_period', ['period_id'], false);  // B-tree
+$alter->createIndex('sites', 'idx_sites_name_uniq', ['name'], true);     // UNIQUE
+$alter->createIndex('sites', 'idx_sites_multi', ['period_id', 'type']);  // composite
+$alter->dropIndex('sites', 'idx_sites_period');
+```
+
+All methods are **idempotent**: `createIndex` uses `IF NOT EXISTS`
+(MySQL equivalent handled separately); `dropIndex` is a no-op if the
+index is absent.
+
 Engine implementations: `DB\Alter\Mysql`, `DB\Alter\Postgres`,
-`DB\Alter\Sqlite`. SQLite's lack of `DROP COLUMN` is handled via the
-copy-and-rename table pattern.
+`DB\Alter\Sqlite`.
 
 ---
 
@@ -144,7 +196,8 @@ bdus_api_keys          — API keys (SHA-256 hashes)
 bdus_cfg_app           — App-level config properties
 bdus_cfg_fields        — Field configurations
 bdus_cfg_geoface       — GeoFace / map layer config
-bdus_cfg_relations     — Cross-table relation definitions
+bdus_cfg_indexes       — User-defined DB indexes (name, columns, unique)
+bdus_cfg_relations     — FK relations: from_tb.from_col → to_tb.to_col
 bdus_cfg_tables        — Table configurations
 bdus_cfg_templates     — Print templates (Twig source)
 bdus_charts            — User-defined charts

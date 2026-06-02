@@ -303,6 +303,7 @@ class Record extends \Bdus\Controller
       $full['metadata']['id_field']   = $this->cfg->get("tables.{$tb}.id_field");
       $full['metadata']['can_edit']   = \Auth\Authorization::can('edit');
       $full['metadata']['can_delete'] = \Auth\Authorization::can('edit');
+      $full['metadata']['can_add']    = \Auth\Authorization::can('add_new');
       $full['schema'] = $schema;
 
       // Template loading
@@ -593,6 +594,66 @@ class Record extends \Bdus\Controller
       'links'       => [], 'backlinks' => [], 'manualLinks' => [],
       'files'       => [], 'geodata'   => [], 'rs'          => [],
     ];
+  }
+
+  // ── Duplicate ─────────────────────────────────────────────────────────────
+
+  /**
+   * Duplicates an existing record, creating a new one with the same core fields.
+   * `id` is omitted (auto-assigned); `creator` is overwritten with the current user.
+   *
+   * POST /api/record/{tb}/{id}/duplicate
+   *
+   * Response: { status, code, id: newId }
+   */
+  public function duplicateRecord(): void
+  {
+    if (!\Auth\Authorization::can('add_new')) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+      return;
+    }
+
+    $tb = $this->get['tb'] ?? null;
+    $id = (int)($this->get['id'] ?? 0);
+
+    if (!$tb || !$id) {
+      $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
+      return;
+    }
+
+    $knownTables = array_keys($this->cfg->get('tables') ?? []);
+    if (!in_array($tb, $knownTables, true)) {
+      $this->returnJson(['status' => 'error', 'code' => 'unknown_table']);
+      return;
+    }
+
+    try {
+      $rows = $this->db->query("SELECT * FROM {$tb} WHERE id = ?", [$id], 'read');
+      if (empty($rows)) {
+        $this->returnJson(['status' => 'error', 'code' => 'record_not_found']);
+        return;
+      }
+
+      $source = $rows[0];
+      unset($source['id']);
+      $source['creator'] = \Auth\CurrentUser::id() ?: 0;
+
+      $fields       = array_keys($source);
+      $placeholders = implode(', ', array_fill(0, count($fields), '?'));
+      $quotedFields = implode(', ', $fields);
+
+      $newId = (int) $this->db->query(
+        "INSERT INTO {$tb} ({$quotedFields}) VALUES ({$placeholders})",
+        array_values($source),
+        'id'
+      );
+
+      $this->returnJson(['status' => 'success', 'code' => 'success_duplicated', 'id' => $newId]);
+
+    } catch (\Throwable $e) {
+      $this->log->error($e);
+      $this->returnJson(['status' => 'error', 'code' => 'db_error', 'detail' => $e->getMessage()]);
+    }
   }
 
   // ── v5 persistence endpoint ──────────────────────────────────────────────

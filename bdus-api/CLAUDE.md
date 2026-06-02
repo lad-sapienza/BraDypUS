@@ -284,7 +284,6 @@ See memory file `v5_closure_plan.md` for the full prioritized roadmap.
 
 | Item | Priority | Notes |
 |---|---|---|
-| `duplicate_record` | **High** | One-click record copy; `POST /api/record/:tb/:id/duplicate`; button in RecordView header |
 | Remove `@deprecated v5` methods | **High** | Strip all legacy PHP methods tagged `@deprecated v5` from all controllers |
 | `import_geodata` | Low | File upload + geodata parse; explicitly deferred |
 | `typed_manual_links` | Medium | Add `label` column to `bdus_userlinks`; config panel for relation types |
@@ -292,7 +291,7 @@ See memory file `v5_closure_plan.md` for the full prioritized roadmap.
 | `public_readonly_share` | Medium | Signed read-only JWT for sharing filtered views |
 
 **Completed (kept here for reference):**
-`geoface` ✅ · `chart` ✅ · `userlinks` ✅ · `new_app` ✅ · `file sort/upload/delete` ✅ · `matrix` ✅ (superseded by RsGraph/MatrixView)
+`geoface` ✅ · `chart` ✅ · `userlinks` ✅ · `new_app` ✅ · `file sort/upload/delete` ✅ · `matrix` ✅ (superseded by RsGraph/MatrixView) · `duplicate_record` ✅
 
 **v5.1 scope (not v5.0):**
 - Remove migration system entirely (`Migrate.php`, all `M0xx_*.php`, `M0xx` tests, `bdus_migrations` table)

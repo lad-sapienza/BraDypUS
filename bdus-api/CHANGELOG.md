@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [5.0.0] - unreleased
 
 ### Added
+- **Duplicate record** (`POST /api/record/{tb}/{id}/duplicate`): one-click record copy.
+  Copies all core fields from the source record (excluding `id`); `creator` is set to the
+  current authenticated user. Returns `{ status, code: "success_duplicated", id: newId }`.
+  Requires `add_new` privilege. Frontend: "Duplica" button in `RecordView` header (visible
+  in read mode for existing records when `can_add` is true). `getRecord` now also exposes
+  `metadata.can_add` so the button can be shown/hidden without an extra request.
+  Tests: 5 new PHPUnit tests (`RecordCtrlDuplicateTest`); hurl phase 32 (6 requests).
+  Total test count: 856 → 861 (+5 tests); hurl phases: 31 → 32.
 - **FK constraints and user-defined indexes on user tables** (M026, M027):
   BraDypUS now enforces at database level the relationships defined in the application
   configuration.

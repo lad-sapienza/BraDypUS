@@ -87,6 +87,7 @@ class Router
         'Bdus\\Controllers\\Vocabularies::list'                    => 'read',
 
         // ── Edit — write operations ──────────────────────────────────────────
+        'Bdus\\Controllers\\Record::duplicateRecord'               => 'edit',
         'Bdus\\Controllers\\Record::saveRecord'                    => 'edit',
         'Bdus\\Controllers\\Record::erase'                         => 'edit',
         'Bdus\\Controllers\\Record::erasePlugins'                  => 'edit',
@@ -254,6 +255,7 @@ class Router
             $r->addRoute(['GET', 'POST'],   '/api/records/{tb}',              ['Bdus\\Controllers\\Record', 'getRecords']);
             $r->addRoute('GET',             '/api/records/{tb}/export',       ['Bdus\\Controllers\\Record', 'exportRecords']);
             $r->addRoute('POST',            '/api/record/{tb}',               ['Bdus\\Controllers\\Record', 'saveRecord']);
+            $r->addRoute('POST',            '/api/record/{tb}/{id:\d+}/duplicate', ['Bdus\\Controllers\\Record', 'duplicateRecord']);
             $r->addRoute('DELETE',          '/api/record/{tb}/{id:\d+}',      ['Bdus\\Controllers\\Record', 'erase']);
             $r->addRoute('GET',             '/api/record/{tb}/templates',     ['Bdus\\Controllers\\Record', 'getTemplates']);
             $r->addRoute('GET',             '/api/record/{tb}/field-options',  ['Bdus\\Controllers\\Record', 'getFieldOptions']);

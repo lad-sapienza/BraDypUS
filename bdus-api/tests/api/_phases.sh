@@ -361,6 +361,13 @@ run_tests() {
       --variable "jwt=${JWT}"
   fi
 
+  if should_run "32"; then
+    header "Phase 32 — Duplicate record"
+    run_phase "Duplicate record" "32_duplicate.hurl" \
+      --variable "jwt=${JWT}" \
+      --variable "us_id_1=${US_ID_1:-}"
+  fi
+
   # Phase 10 always runs: drops crud_test tables and logs out
   header "Phase 10 — Cleanup"
   run_phase "Cleanup" "10_cleanup.hurl" \

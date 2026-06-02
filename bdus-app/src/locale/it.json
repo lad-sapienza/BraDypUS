@@ -192,6 +192,7 @@
   "partial_success_saved": "Solo alcuni record (%s) sono stati salvati con successo. Gli altri (%s) hanno prodotto errore",
   "success_saved": "Tutti i dati sono stati salvati senza errori",
   "success_created": "Scheda creata con successo",
+  "link_label_placeholder": "Tipo di relazione (opzionale)",
   "duplicate": "Duplica",
   "success_duplicated": "La scheda è stata duplicata con successo",
   "error_saved": "Errore. Non è stato possibile salvare i dati",

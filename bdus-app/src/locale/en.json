@@ -192,6 +192,7 @@
   "partial_success_saved": "Only some records (%s) was successfully saved. The others (%s) produced errors",
   "success_saved": "All data was saved with no errors",
   "success_created": "Record created successfully",
+  "link_label_placeholder": "Relation type (optional)",
   "duplicate": "Duplicate",
   "success_duplicated": "Record duplicated successfully",
   "error_saved": "Error. It is not possibile to save the data",

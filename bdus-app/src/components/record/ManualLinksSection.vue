@@ -11,6 +11,7 @@
       <div class="link-group-label">{{ group.tb_label }}</div>
       <ul class="links-list">
         <li v-for="ml in group.items" :key="ml.key" class="link-item">
+          <span v-if="ml.label" class="link-label-chip">{{ ml.label }}</span>
           <router-link :to="`/${route.params.app}/record/${ml.tb_id}/${ml.ref_id}`" class="link-ref">
             {{ ml.ref_label }}
           </router-link>
@@ -68,6 +69,15 @@
           @complete="onSearch"
           @item-select="onRecordSelected"
         />
+
+        <!-- Optional relation label (shown once a record is selected) -->
+        <InputText
+          v-if="selectedRecord"
+          v-model="linkLabel"
+          :placeholder="t('link_label_placeholder')"
+          size="small"
+          class="add-link-label"
+        />
       </div>
     </div>
   </fieldset>
@@ -79,6 +89,7 @@ import { useRoute }  from 'vue-router'
 import Button      from 'primevue/button'
 import Select      from 'primevue/select'
 import AutoComplete from 'primevue/autocomplete'
+import InputText   from 'primevue/inputtext'
 import { useToast } from 'primevue/usetoast'
 import { api }      from '@/api'
 import { useI18n }  from '@/i18n'
@@ -149,6 +160,7 @@ const addPanelOpen  = ref(false)
 const selectedTable = ref(null)
 const selectedRecord = ref(null)
 const suggestions   = ref([])
+const linkLabel     = ref('')
 
 /** All non-plugin user tables, excluding the current table to avoid self-links */
 const tableOptions = computed(() =>
@@ -158,6 +170,7 @@ const tableOptions = computed(() =>
 function onTableChange() {
   selectedRecord.value = null
   suggestions.value    = []
+  linkLabel.value      = ''
 }
 
 async function onSearch(event) {
@@ -190,6 +203,7 @@ async function onRecordSelected(event) {
       id_one: props.recordId,
       tb_two: selectedTable.value,
       id_two: candidate.id,
+      label:  linkLabel.value || null,
     })
 
     if (res.status === 'error') {
@@ -201,9 +215,10 @@ async function onRecordSelected(event) {
   } catch (e) {
     toast.add({ severity: 'error', summary: t('generic_error'), detail: e.message, life: 5000 })
   } finally {
-    // Reset search field; keep table selected for chained additions
+    // Reset search and label; keep table selected for chained additions
     selectedRecord.value = null
     suggestions.value    = []
+    linkLabel.value      = ''
   }
 }
 </script>
@@ -287,5 +302,23 @@ async function onRecordSelected(event) {
 .add-link-autocomplete {
   flex: 1;
   min-width: 180px;
+}
+
+.add-link-label {
+  min-width: 140px;
+  max-width: 200px;
+}
+
+/* ── Link label chip ── */
+.link-label-chip {
+  display: inline-block;
+  background: var(--p-highlight-background);
+  color: var(--p-primary-700);
+  border-radius: 4px;
+  padding: 0.05rem 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
 }
 </style>

@@ -1585,6 +1585,49 @@ class Record extends \Bdus\Controller
   }
 
   /**
+   * Deletes all plugin rows referencing a given record across every plugin table.
+   * Called by the frontend after the user confirms the two-step delete dialog.
+   *
+   * DELETE /api/record/{tb}/{id}/plugins
+   *
+   * Response: { status: 'success', deleted: N }
+   */
+  public function erasePlugins(): void
+  {
+    if (!\Auth\Authorization::can('edit')) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+      return;
+    }
+
+    $tb  = $this->get['tb']  ?? null;
+    $id  = (int)($this->get['id'] ?? 0);
+
+    if (!$tb || !$id) {
+      $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
+      return;
+    }
+
+    $deleted = 0;
+    foreach ($this->cfg->get('tables') ?: [] as $tbl) {
+      if (($tbl['plugin_of'] ?? '') !== $tb) continue;
+      $plgName = $tbl['name'] ?? '';
+      if (!$plgName) continue;
+      try {
+        $affected = $this->db->query(
+          "DELETE FROM \"{$plgName}\" WHERE table_link = ? AND id_link = ?",
+          [$tb, $id],
+          'affected'
+        );
+        $deleted += (int)$affected;
+      } catch (\Throwable $e) {
+        // Plugin table might not exist yet; skip silently.
+      }
+    }
+
+    $this->returnJson(['status' => 'success', 'deleted' => $deleted]);
+  }
+
+  /**
    * Checks whether a record has data in any plugin tables before deletion.
    * The frontend calls this before erase() to show a confirmation dialog.
    *

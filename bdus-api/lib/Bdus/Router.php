@@ -89,6 +89,7 @@ class Router
         // ── Edit — write operations ──────────────────────────────────────────
         'Bdus\\Controllers\\Record::saveRecord'                    => 'edit',
         'Bdus\\Controllers\\Record::erase'                         => 'edit',
+        'Bdus\\Controllers\\Record::erasePlugins'                  => 'edit',
         'Bdus\\Controllers\\Record::checkPluginsBeforeDelete'      => 'edit',
         'Bdus\\Controllers\\Record::restoreVersion'                => 'admin',
         'Bdus\\Controllers\\Record::uploadFile'                    => 'edit',
@@ -259,6 +260,7 @@ class Router
             $r->addRoute('GET',             '/api/record/{tb}/link-candidates', ['Bdus\\Controllers\\Record', 'searchLinkCandidates']);
             $r->addRoute('GET',             '/api/record/{tb}/deleted',                          ['Bdus\\Controllers\\Record', 'getDeletedRecords']);
             $r->addRoute('GET',             '/api/record/{tb}/check-plugins-before-delete',    ['Bdus\\Controllers\\Record', 'checkPluginsBeforeDelete']);
+            $r->addRoute('DELETE',          '/api/record/{tb}/{id:\d+}/plugins',              ['Bdus\\Controllers\\Record', 'erasePlugins']);
             $r->addRoute('GET',             '/api/record/{tb}/{id:\d+}/versions', ['Bdus\\Controllers\\Record', 'getVersions']);
             $r->addRoute('GET',             '/api/version/{id:\d+}',              ['Bdus\\Controllers\\Record', 'getVersionDiff']);
             $r->addRoute('POST',            '/api/version/{id:\d+}/restore',      ['Bdus\\Controllers\\Record', 'restoreVersion']);

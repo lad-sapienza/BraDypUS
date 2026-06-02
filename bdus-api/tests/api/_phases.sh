@@ -19,6 +19,13 @@
 
 PHASES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# ── Colour helpers (all to stderr so they never pollute $() captures) ──
+pass()   { echo -e "${GREEN}✓${RESET} $*" >&2; }
+fail()   { echo -e "${RED}✗${RESET} $*"   >&2; }
+info()   { echo -e "${CYAN}▶${RESET} $*"  >&2; }
+warn()   { echo -e "${YELLOW}⚠${RESET} $*" >&2; }
+header() { echo -e "\n${BOLD}${CYAN}══ $* ══${RESET}" >&2; }
+
 # ── Hurl runner helpers ───────────────────────────────────────────
 
 run_phase() {

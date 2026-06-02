@@ -26,7 +26,8 @@ class UserCtrlTest extends BdusTestCase
                 privilege      INTEGER NOT NULL,
                 settings       TEXT,
                 oauth_provider TEXT,
-                oauth_sub      TEXT
+                oauth_sub      TEXT,
+                token_version  INTEGER NOT NULL DEFAULT 0
             )
         ');
 
@@ -338,5 +339,100 @@ class UserCtrlTest extends BdusTestCase
 
         $this->assertSame('error',             $res['status']);
         $this->assertSame('parameter_missing', $res['code']);
+    }
+
+    // ── revokeToken ───────────────────────────────────────────────────────────
+
+    public function testRevokeTokenSuccess(): void
+    {
+        $before = (int) static::$db->query(
+            'SELECT token_version FROM bdus_users WHERE id = 2', [], 'read'
+        )[0]['token_version'];
+
+        $ctrl = $this->makeController('Bdus\\Controllers\\User', ['id' => 2]);
+        $res  = $this->callController($ctrl, 'revokeToken');
+
+        $this->assertSame('success',        $res['status']);
+        $this->assertSame('token_revoked',  $res['code']);
+
+        $after = (int) static::$db->query(
+            'SELECT token_version FROM bdus_users WHERE id = 2', [], 'read'
+        )[0]['token_version'];
+        $this->assertSame($before + 1, $after, 'token_version must be incremented by 1');
+    }
+
+    public function testRevokeTokenCannotRevokeSelf(): void
+    {
+        // CurrentUser id is always 1 in tests (BdusTestCase default).
+        $ctrl = $this->makeController('Bdus\\Controllers\\User', ['id' => 1]);
+        $res  = $this->callController($ctrl, 'revokeToken');
+
+        $this->assertSame('error',                     $res['status']);
+        $this->assertSame('cannot_revoke_own_token',   $res['code']);
+    }
+
+    public function testRevokeTokenUserNotFound(): void
+    {
+        $ctrl = $this->makeController('Bdus\\Controllers\\User', ['id' => 99999]);
+        $res  = $this->callController($ctrl, 'revokeToken');
+
+        $this->assertSame('error',          $res['status']);
+        $this->assertSame('user_not_found', $res['code']);
+    }
+
+    public function testRevokeTokenMissingId(): void
+    {
+        $ctrl = $this->makeController('Bdus\\Controllers\\User');
+        $res  = $this->callController($ctrl, 'revokeToken');
+
+        $this->assertSame('error',      $res['status']);
+        $this->assertSame('missing_id', $res['code']);
+    }
+
+    // ── saveUserData: privilege change bumps token_version ────────────────────
+
+    public function testSaveUserDataPrivilegeChangeBumpsTokenVersion(): void
+    {
+        $before = (int) static::$db->query(
+            'SELECT token_version FROM bdus_users WHERE id = 2', [], 'read'
+        )[0]['token_version'];
+
+        $ctrl = $this->makeController('Bdus\\Controllers\\User', [], [
+            'id'        => 2,
+            'name'      => 'Regular User',
+            'email'     => 'regular@example.com',
+            'privilege' => 20, // changed from 30
+        ]);
+        $res = $this->callController($ctrl, 'saveUserData');
+
+        $this->assertSame('success',         $res['status']);
+        $this->assertSame('user_data_saved', $res['code']);
+
+        $after = (int) static::$db->query(
+            'SELECT token_version FROM bdus_users WHERE id = 2', [], 'read'
+        )[0]['token_version'];
+        $this->assertSame($before + 1, $after, 'privilege change must bump token_version');
+    }
+
+    public function testSaveUserDataNoPrivilegeChangeDoesNotBumpTokenVersion(): void
+    {
+        $before = (int) static::$db->query(
+            'SELECT token_version FROM bdus_users WHERE id = 2', [], 'read'
+        )[0]['token_version'];
+
+        // Editing only the name — no privilege key in payload.
+        $ctrl = $this->makeController('Bdus\\Controllers\\User', [], [
+            'id'    => 2,
+            'name'  => 'Renamed User',
+            'email' => 'regular@example.com',
+        ]);
+        $res = $this->callController($ctrl, 'saveUserData');
+
+        $this->assertSame('success', $res['status']);
+
+        $after = (int) static::$db->query(
+            'SELECT token_version FROM bdus_users WHERE id = 2', [], 'read'
+        )[0]['token_version'];
+        $this->assertSame($before, $after, 'name-only edit must not bump token_version');
     }
 }

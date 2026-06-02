@@ -340,8 +340,9 @@ class Manage
             if ($column['name'] === 'id'){
                 continue;
             }
-            // Columns set as not null in structure must not be empty on record add
-            if($column['notnull'] && !isset($data[$column['name']])){
+            // Columns set as not null in structure must be provided,
+            // unless they have a default value (let the DB apply it).
+            if ($column['notnull'] && !array_key_exists('default', $column) && !isset($data[$column['name']])) {
                 throw new \Exception("Missing required key `{$column['name']}` from input data");
             }
             if (isset($data[$column['name']])) {

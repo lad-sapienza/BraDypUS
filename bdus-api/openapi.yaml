@@ -2720,6 +2720,28 @@ paths:
               schema:
                 $ref: '#/components/schemas/CodedResult'
 
+  /api/user/{id}/revoke:
+    post:
+      tags: [users]
+      summary: Revoke a user's active session
+      description: |
+        Increments `token_version` for the target user, which invalidates their
+        current JWT on the next authenticated request (401 `token_invalidated`).
+        The user must log in again to obtain a fresh token.
+
+        Admins cannot revoke their own session via this endpoint.
+        Privilege changes made via `POST /api/user` automatically trigger the
+        same invalidation for the affected user.
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Revocation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
   # ── Templates ─────────────────────────────────────────────────────────────
 
   /api/templates:

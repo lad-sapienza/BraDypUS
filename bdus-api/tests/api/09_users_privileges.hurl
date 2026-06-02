@@ -364,6 +364,78 @@ jsonpath "$.code"   == "not_enough_privilege"
 
 
 # ════════════════════════════════════════════════════════════════════
+# Token revocation
+# ════════════════════════════════════════════════════════════════════
+
+# ── 9s-rev1. Admin revokes reader's session ──────────────────────────
+POST {{base_url}}/api/user/{{reader_id}}/revoke
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+jsonpath "$.code"   == "token_revoked"
+
+
+# ── 9s-rev2. Reader's old JWT is now rejected (401) ──────────────────
+GET {{base_url}}/api/records/crud_test
+Authorization: Bearer {{reader_jwt}}
+HTTP 401
+
+
+# ── 9s-rev3. Reader logs in again → gets a fresh JWT ────────────────
+POST {{base_url}}/api/auth/login
+Content-Type: application/json
+{
+  "email":    "reader@bdus.test",
+  "password": "Reader_2025!",
+  "app":      "{{app_name}}"
+}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+[Captures]
+reader_jwt_new: jsonpath "$.token"
+
+
+# ── 9s-rev4. Reader's new JWT works correctly ────────────────────────
+GET {{base_url}}/api/records/crud_test
+Authorization: Bearer {{reader_jwt_new}}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+
+# ── 9s-rev5. Admin changes writer's privilege (auto-revoke) ─────────
+POST {{base_url}}/api/user
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{
+  "id":        {{writer_id}},
+  "name":      "Writer User",
+  "email":     "writer@bdus.test",
+  "privilege": 30
+}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+
+# ── 9s-rev6. Writer's old JWT is invalidated after privilege change ──
+GET {{base_url}}/api/records/crud_test
+Authorization: Bearer {{writer_jwt}}
+HTTP 401
+
+
+# ── 9s-rev7. Revoke non-existent user → user_not_found ───────────────
+POST {{base_url}}/api/user/999999/revoke
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "error"
+jsonpath "$.code"   == "user_not_found"
+
+
+# ════════════════════════════════════════════════════════════════════
 # Cleanup (as admin)
 # ════════════════════════════════════════════════════════════════════
 

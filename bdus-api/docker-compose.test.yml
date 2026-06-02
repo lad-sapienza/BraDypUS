@@ -5,6 +5,9 @@
 # Key differences from the dev compose:
 #   - Port 8081 (avoids collision with a running dev container on 8080)
 #   - BRADYPUS_ALLOW_NEW_APP=1 required by Hurl Phase 1 (create-app)
+#   - projects/ uses a named Docker volume (bdus_test_projects) instead of
+#     the host bind-mount, so dev apps never bleed into the test run.
+#     `docker compose down --volumes` removes it automatically after each run.
 #   - bradypus-net declared external so the test project reuses the
 #     shared network without the "not created for this project" warning
 services:
@@ -15,6 +18,11 @@ services:
       - BRADYPUS_DEBUG=1
       - BRADYPUS_ALLOW_NEW_APP=1
       - BRADYPUS_CORS_ORIGIN=http://localhost:5173
+    volumes:
+      - bdus_test_projects:/var/www/html/projects
+
+volumes:
+  bdus_test_projects:
 
 networks:
   bradypus-net:

@@ -29,7 +29,8 @@ class ConfirmAdminPwdCtrlTest extends BdusTestCase
                 privilege      INTEGER NOT NULL,
                 settings       TEXT,
                 oauth_provider TEXT,
-                oauth_sub      TEXT
+                oauth_sub      TEXT,
+                token_version  INTEGER NOT NULL DEFAULT 0
             )
         ');
     }

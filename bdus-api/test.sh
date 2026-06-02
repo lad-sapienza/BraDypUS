@@ -307,12 +307,17 @@ export DB_ENGINE
 source "${SCRIPT_DIR}/tests/api/_phases.sh"
 setup_hurl_vars
 
-# ── App directory (for pre_flight) ───────────────────────────────
+# ── App directory (for pre_flight in --no-docker mode) ───────────
 PROJECTS_DIR="${SCRIPT_DIR}/projects"
 APP_DIR="${PROJECTS_DIR}/${APP_NAME}"
 
 # ── Pre-flight ───────────────────────────────────────────────────
-if [[ "$RUN_SETUP" == true || "$RUN_TESTS" == true || "$RUN_SEED" == true ]]; then
+# In Docker mode the test container uses an isolated named volume
+# (bdus_test_projects) that is wiped by `down --volumes` on each run.
+# Pre-flight is only needed for --no-docker, where the host filesystem
+# IS the app filesystem and leftover runs could interfere.
+if [[ "$NO_DOCKER" == true ]] && \
+   [[ "$RUN_SETUP" == true || "$RUN_TESTS" == true || "$RUN_SEED" == true ]]; then
   header "Pre-flight"
   pre_flight
 fi

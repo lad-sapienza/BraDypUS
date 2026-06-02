@@ -116,6 +116,27 @@ e inietta le credenziali DB per pgsql/mysql automaticamente.
 
 ---
 
+## Attenzione: schema bdus_users nei test
+
+I test PHPUnit che creano `bdus_users` lo fanno manualmente con `CREATE TABLE` hardcoded
+nel metodo `createSchema()` della singola classe. **Quando si aggiunge una colonna a
+`bdus_users` tramite migration, bisogna aggiornare tutti i `CREATE TABLE bdus_users`
+nei file di test.** File da controllare:
+
+```
+tests/Integration/LoginCtrlTest.php
+tests/Integration/ConfirmAdminPwdCtrlTest.php
+tests/Integration/FreeSqlCtrlTest.php
+tests/Integration/SavedQueriesCtrlTest.php
+tests/Integration/ChartCtrlTest.php
+tests/Integration/UserCtrlTest.php
+```
+
+`M022MigrationTest` e simili vanno lasciati invariati: testano la migration stessa,
+quindi partono intenzionalmente da uno schema precedente.
+
+---
+
 ## PHPUnit — test unit e integration
 
 PHPUnit usa un database SQLite **in-memory** creato da zero per ogni classe di test.

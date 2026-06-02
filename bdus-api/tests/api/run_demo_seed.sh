@@ -3,7 +3,10 @@
 # Demo-seed runner — creates a clean demo app and populates it.
 #
 # Usage:
-#   ./run_demo_seed.sh <vars_file> [--seed-more]
+#   ./run_demo_seed.sh [vars_file] [--seed-more]
+#
+# Default vars file: vars.demo.env  (APP_NAME=bdus_demo, port 8080)
+# Override example:  ./run_demo_seed.sh vars.test.env  (port 8081)
 #
 # Phases run (in order):
 #   01 — create demo app
@@ -13,13 +16,13 @@
 #  [19b]— extended seed (15 siti, 375 reperti, geodata) if --seed-more
 #   10 — logout
 #
-# The result is a clean populated demo app with no test junk.
+# The result is a clean populated demo app (bdus_demo) with no test junk.
 # ════════════════════════════════════════════════════════════════════
 
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-VARS_FILE="${1:-${SCRIPT_DIR}/vars.test.env}"
+VARS_FILE="${1:-${SCRIPT_DIR}/vars.demo.env}"
 SEED_MORE=false
 [[ "${2:-}" == "--seed-more" ]] && SEED_MORE=true
 

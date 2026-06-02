@@ -192,6 +192,8 @@
   "partial_success_saved": "Only some records (%s) was successfully saved. The others (%s) produced errors",
   "success_saved": "All data was saved with no errors",
   "success_created": "Record created successfully",
+  "duplicate": "Duplicate",
+  "success_duplicated": "Record duplicated successfully",
   "error_saved": "Error. It is not possibile to save the data",
   "confirm_delete": "Are you sure you want to permantly delete this record(s)? This action will be permamente and can not be undone.",
   "multiple_edit_alert": "Pay attention! You are modifying %s records simultaneously! (id: %s). The real time checks has been disabled",

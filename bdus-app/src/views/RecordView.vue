@@ -53,6 +53,16 @@
             @click="versionsDrawerOpen = true"
           />
           <Button
+            v-if="!isNew && record.metadata?.can_add"
+            :label="t('duplicate')"
+            icon="pi pi-copy"
+            size="small"
+            severity="secondary"
+            outlined
+            :loading="duplicating"
+            @click="duplicateRecord"
+          />
+          <Button
             v-if="record.metadata?.can_edit"
             :label="t('edit')"
             icon="pi pi-pencil"
@@ -353,6 +363,7 @@ const loading      = ref(false)
 const saving       = ref(false)
 const fetchError   = ref(null)
 const versionsDrawerOpen = ref(false)
+const duplicating        = ref(false)
 
 /** Set to true on a failed save attempt so all FieldEditors show their errors */
 const forceValidate = ref(false)
@@ -712,6 +723,24 @@ async function saveRecord() {
     toast.add({ severity: 'error', summary: t('generic_error'), detail: e.message, life: 5000 })
   } finally {
     saving.value = false
+  }
+}
+
+// ── Duplicate ─────────────────────────────────────────────────────
+async function duplicateRecord() {
+  duplicating.value = true
+  try {
+    const res = await api.post(`/api/record/${tb.value}/${id.value}/duplicate`)
+    if (res.status === 'error') {
+      toast.add({ severity: 'error', summary: t('generic_error'), detail: responseMessage(res, t), life: 5000 })
+      return
+    }
+    toast.add({ severity: 'success', summary: t('duplicate'), detail: t('success_duplicated'), life: 3000 })
+    router.push(`/${route.params.app}/record/${tb.value}/${res.id}`)
+  } catch (e) {
+    toast.add({ severity: 'error', summary: t('generic_error'), detail: e.message, life: 5000 })
+  } finally {
+    duplicating.value = false
   }
 }
 

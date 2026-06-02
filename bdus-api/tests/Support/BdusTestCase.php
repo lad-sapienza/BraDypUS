@@ -73,6 +73,7 @@ abstract class BdusTestCase extends TestCase
     // ── Schema ────────────────────────────────────────────────────────────
     protected static function createSchema(): void
     {
+        // Project-level test tables (not system tables)
         static::$db->execInTransaction('
             CREATE TABLE items (
                 id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -91,15 +92,6 @@ abstract class BdusTestCase extends TestCase
         ');
 
         static::$db->execInTransaction('
-            CREATE TABLE bdus_vocabularies (
-                id   INTEGER PRIMARY KEY AUTOINCREMENT,
-                voc  TEXT    NOT NULL,
-                def  TEXT    NOT NULL,
-                sort INTEGER
-            )
-        ');
-
-        static::$db->execInTransaction('
             CREATE TABLE tags (
                 id         INTEGER PRIMARY KEY AUTOINCREMENT,
                 label      TEXT,
@@ -108,118 +100,12 @@ abstract class BdusTestCase extends TestCase
             )
         ');
 
-        static::$db->execInTransaction('
-            CREATE TABLE bdus_log (
-                id      INTEGER PRIMARY KEY AUTOINCREMENT,
-                channel TEXT NOT NULL,
-                level   INTEGER NOT NULL,
-                message TEXT NOT NULL,
-                time    INTEGER NOT NULL
-            )
-        ');
-
-        static::$db->execInTransaction('
-            CREATE TABLE bdus_versions (
-                id          INTEGER PRIMARY KEY AUTOINCREMENT,
-                userid      INTEGER NOT NULL,
-                time        INTEGER NOT NULL,
-                tb          TEXT    NOT NULL,
-                rowid       INTEGER NOT NULL,
-                content     TEXT    NOT NULL,
-                editsql     TEXT,
-                editvalues  TEXT,
-                operation   TEXT    NOT NULL DEFAULT \'update\'
-            )
-        ');
-
-        // ── System tables required by Record\Read::getFull() ──────────────
-        static::$db->execInTransaction('
-            CREATE TABLE bdus_userlinks (
-                id     INTEGER PRIMARY KEY AUTOINCREMENT,
-                tb_one TEXT    NOT NULL,
-                id_one INTEGER NOT NULL,
-                tb_two TEXT    NOT NULL,
-                id_two INTEGER NOT NULL,
-                sort   INTEGER
-            )
-        ');
-
-        static::$db->execInTransaction('
-            CREATE TABLE bdus_rs (
-                id       INTEGER PRIMARY KEY AUTOINCREMENT,
-                tb       TEXT    NOT NULL,
-                first    TEXT    NOT NULL,
-                second   TEXT    NOT NULL,
-                relation INTEGER NOT NULL
-            )
-        ');
-
-        static::$db->execInTransaction('
-            CREATE TABLE bdus_geodata (
-                id         INTEGER PRIMARY KEY AUTOINCREMENT,
-                table_link TEXT    NOT NULL,
-                id_link    INTEGER NOT NULL,
-                geometry   TEXT    NOT NULL
-            )
-        ');
-
-        static::$db->execInTransaction('
-            CREATE TABLE bdus_files (
-                id          INTEGER PRIMARY KEY AUTOINCREMENT,
-                creator     TEXT    NOT NULL,
-                ext         TEXT    NOT NULL,
-                keywords    TEXT,
-                description TEXT,
-                printable   INTEGER,
-                filename    TEXT    NOT NULL
-            )
-        ');
-
-        static::$db->execInTransaction('
-            CREATE TABLE bdus_file_links (
-                id          INTEGER PRIMARY KEY AUTOINCREMENT,
-                file_id     INTEGER NOT NULL,
-                table_name  TEXT    NOT NULL,
-                record_id   INTEGER NOT NULL,
-                sort        INTEGER
-            )
-        ');
-
-        static::$db->execInTransaction('
-            CREATE TABLE bdus_migrations (
-                id         INTEGER PRIMARY KEY AUTOINCREMENT,
-                name       TEXT    NOT NULL UNIQUE,
-                applied_at INTEGER NOT NULL
-            )
-        ');
-
-        static::$db->execInTransaction('
-            CREATE TABLE IF NOT EXISTS bdus_cfg_relations (
-                id         INTEGER PRIMARY KEY AUTOINCREMENT,
-                from_tb    TEXT    NOT NULL,
-                from_col   TEXT    NOT NULL,
-                to_tb      TEXT    NOT NULL,
-                to_col     TEXT    NOT NULL,
-                on_delete  TEXT    DEFAULT \'RESTRICT\',
-                on_update  TEXT    DEFAULT \'CASCADE\'
-            )
-        ');
-        static::$db->execInTransaction(
-            'CREATE UNIQUE INDEX IF NOT EXISTS cfg_rel_from_col_unique ON bdus_cfg_relations (from_tb, from_col)'
-        );
-
-        static::$db->execInTransaction('
-            CREATE TABLE IF NOT EXISTS bdus_cfg_indexes (
-                id       INTEGER PRIMARY KEY AUTOINCREMENT,
-                tb       TEXT    NOT NULL,
-                name     TEXT    NOT NULL,
-                columns  TEXT    NOT NULL,
-                is_unique INTEGER DEFAULT 0
-            )
-        ');
-        static::$db->execInTransaction(
-            'CREATE UNIQUE INDEX IF NOT EXISTS cfg_idx_name_unique ON bdus_cfg_indexes (tb, name)'
-        );
+        // All system tables via the canonical schema registry — stays in sync
+        // automatically whenever Structure JSON files or available_tables change.
+        $manage = new \DB\System\Manage(static::$db);
+        foreach ($manage->available_tables as $table) {
+            $manage->createTable($table);
+        }
     }
 
     // ── Seed ──────────────────────────────────────────────────────────────

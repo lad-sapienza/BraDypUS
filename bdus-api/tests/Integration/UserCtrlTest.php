@@ -11,37 +11,6 @@ use Tests\Support\BdusTestCase;
  */
 class UserCtrlTest extends BdusTestCase
 {
-    // ── Schema extension ──────────────────────────────────────────────────────
-
-    protected static function createSchema(): void
-    {
-        parent::createSchema();
-
-        static::$db->execInTransaction('
-            CREATE TABLE bdus_users (
-                id             INTEGER PRIMARY KEY AUTOINCREMENT,
-                name           TEXT    NOT NULL,
-                email          TEXT    NOT NULL,
-                password       TEXT    NOT NULL,
-                privilege      INTEGER NOT NULL,
-                settings       TEXT,
-                oauth_provider TEXT,
-                oauth_sub      TEXT,
-                token_version  INTEGER NOT NULL DEFAULT 0
-            )
-        ');
-
-        static::$db->execInTransaction('
-            CREATE TABLE bdus_user_table_privs (
-                id         INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id    INTEGER NOT NULL,
-                table_name TEXT    NOT NULL,
-                privilege  INTEGER NOT NULL,
-                subset     TEXT
-            )
-        ');
-    }
-
     // ── Seed extension ────────────────────────────────────────────────────────
 
     protected static function seedData(): void

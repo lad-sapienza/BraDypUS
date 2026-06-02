@@ -8,51 +8,20 @@ use Tests\Support\BdusTestCase;
  * Integration tests for saved_queries_ctrl v5 endpoints:
  *   listQueries(), saveQuery(), shareQuery(), unshareQuery(), deleteQuery()
  *
- * The queries table is created in createSchema() and seeded in seedData().
+ * The queries table is created by BdusTestCase and seeded in seedData().
  * All v5 methods use POST bodies; they are placed in $post (and $get/$request).
  */
 class SavedQueriesCtrlTest extends BdusTestCase
 {
-    // ── Schema extension ──────────────────────────────────────────────────────
-
-    protected static function createSchema(): void
-    {
-        // Build base schema (items, tags, log, userlinks, rs, geodata, files, file_links)
-        parent::createSchema();
-
-        // bdus_users table is required by saved_queries FK (present in real DB but not in base schema)
-        static::$db->execInTransaction('
-            CREATE TABLE bdus_users (
-                id        INTEGER PRIMARY KEY AUTOINCREMENT,
-                name      TEXT    NOT NULL,
-                email     TEXT    NOT NULL,
-                privilege INTEGER NOT NULL DEFAULT 99
-            )
-        ');
-
-        // The new v5 queries table (no text/vals/date — fresh install schema)
-        static::$db->execInTransaction('
-            CREATE TABLE bdus_queries (
-                id         INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id    INTEGER NOT NULL,
-                created_at INTEGER,
-                name       TEXT    NOT NULL,
-                tb         TEXT    NOT NULL,
-                query      TEXT,
-                is_global  INTEGER
-            )
-        ');
-    }
-
     // ── Seed extension ────────────────────────────────────────────────────────
 
     protected static function seedData(): void
     {
         parent::seedData();
 
-        // Insert the test user (id=1, matches BdusTestCase::CurrentUser id=1)
+        $hash = password_hash('Test_1234!', PASSWORD_DEFAULT);
         static::$db->execInTransaction(
-            "INSERT INTO bdus_users (id, name, email, privilege) VALUES (1, 'Test Admin', 'test@example.com', 1)"
+            "INSERT INTO bdus_users (id, name, email, password, privilege) VALUES (1, 'Test Admin', 'test@example.com', '{$hash}', 1)"
         );
 
         // Seed one query owned by user 1

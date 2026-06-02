@@ -23,6 +23,16 @@ class ConfigCtrlTest extends BdusTestCase
     private const TB_PLUG  = 'tags';
     private const FLD      = 'name';
 
+    // ── Schema extension ──────────────────────────────────────────────────────
+
+    protected static function createSchema(): void
+    {
+        parent::createSchema();
+        // Add a column unknown to the model so SystemTables::latestStructure()
+        // emits at least one ['delete', ...] fix item — needed by the shape test.
+        static::$db->exec('ALTER TABLE bdus_log ADD COLUMN rogue_col TEXT');
+    }
+
     // ── Setup / teardown ──────────────────────────────────────────────────
 
     public static function setUpBeforeClass(): void

@@ -236,12 +236,15 @@ docker compose exec app php vendor/bin/phpunit --testdox
 - `callController(ctrl, method)` — captures JSON output and decodes it
 - `setPrivilege(int)` — temporarily changes the simulated user privilege
 
-**System tables in test schema** (all created in `BdusTestCase::createSchema()`):
-`test__items`, `test__tags`, `test__log`, `test__userlinks`, `test__rs`,
-`test__geodata`, `test__files`, `test__file_links`
+**System tables in test schema:** `BdusTestCase::createSchema()` calls
+`Manage::createTable()` for every entry in `Manage::$available_tables` — the schema
+is always in sync with `lib/DB/System/Structure/*.json`. Adding a new system table
+or column requires no changes to test files.
 
-**When adding a new system table:** add it to `BdusTestCase::createSchema()` too,
-or tests touching that table will fail with "no such table".
+**Project-level fixture tables** (created inline in `BdusTestCase::createSchema()`):
+`items`, `tags`
+
+**Seed data that inserts into `bdus_users` must include `password` (NOT NULL).**
 
 **Test locations:**
 - `tests/Integration/` — controller-level tests (HTTP-style: call method, assert JSON)

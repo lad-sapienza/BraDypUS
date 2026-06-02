@@ -73,6 +73,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (`$this->post['new_name']`), aligning with the OpenAPI spec and standard REST design.
   Previously both parameters were incorrectly read from `$this->get` (query string),
   making the documented body-based API non-functional.
+- **Test schema fragility** (`tests/Support/BdusTestCase.php`): `createSchema()` now
+  calls `Manage::createTable()` in a loop over `Manage::$available_tables` instead of
+  hardcoding `CREATE TABLE` DDL for every system table. Adding a column to any system
+  table no longer requires manual updates to test files. Six Integration test classes
+  (`LoginCtrlTest`, `UserCtrlTest`, `ConfirmAdminPwdCtrlTest`, `FreeSqlCtrlTest`,
+  `SavedQueriesCtrlTest`, `ChartCtrlTest`) had their redundant `createSchema()` overrides
+  removed; seed inserts into `bdus_users` were updated to include the required `password`
+  column. `ConfigCtrlTest` gains a `createSchema()` override that plants a rogue column
+  in `bdus_log`, ensuring `testGetValidationReportFixItemsHaveCorrectShape` always
+  exercises its assertion loop.
 
 ### Added
 - **Demo app schema specification** (`tests/api/demo-schema.dbml`): DBML file documenting

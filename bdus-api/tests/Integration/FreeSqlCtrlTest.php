@@ -16,23 +16,6 @@ use Tests\Support\BdusTestCase;
  */
 class FreeSqlCtrlTest extends BdusTestCase
 {
-    // ── Schema extension ──────────────────────────────────────────────────────
-
-    protected static function createSchema(): void
-    {
-        parent::createSchema();
-
-        static::$db->execInTransaction('
-            CREATE TABLE bdus_users (
-                id        INTEGER PRIMARY KEY AUTOINCREMENT,
-                name      TEXT    NOT NULL,
-                email     TEXT    NOT NULL,
-                privilege INTEGER NOT NULL DEFAULT 99,
-                password  TEXT
-            )
-        ');
-    }
-
     // ── Seed extension ────────────────────────────────────────────────────────
 
     protected static function seedData(): void

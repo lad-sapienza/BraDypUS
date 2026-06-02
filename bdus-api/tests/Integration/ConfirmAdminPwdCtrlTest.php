@@ -14,27 +14,6 @@ class ConfirmAdminPwdCtrlTest extends BdusTestCase
 {
     protected static string $adminPassword = 'Admin_1234!';
 
-    // ── Schema extension ──────────────────────────────────────────────────────
-
-    protected static function createSchema(): void
-    {
-        parent::createSchema();
-
-        static::$db->execInTransaction('
-            CREATE TABLE bdus_users (
-                id             INTEGER PRIMARY KEY AUTOINCREMENT,
-                name           TEXT    NOT NULL,
-                email          TEXT    NOT NULL,
-                password       TEXT    NOT NULL,
-                privilege      INTEGER NOT NULL,
-                settings       TEXT,
-                oauth_provider TEXT,
-                oauth_sub      TEXT,
-                token_version  INTEGER NOT NULL DEFAULT 0
-            )
-        ');
-    }
-
     // ── Seed extension ────────────────────────────────────────────────────────
 
     protected static function seedData(): void

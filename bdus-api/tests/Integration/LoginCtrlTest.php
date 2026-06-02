@@ -8,48 +8,12 @@ use Tests\Support\BdusTestCase;
  * Integration tests for Login v5 endpoints:
  *   auth(), refresh(), out(), listApps().
  *
- * auth() internally calls Migrate::run(). To prevent all migrations from
- * re-running on the lightweight in-memory DB, we pre-populate bdus_migrations
- * with every known migration name in seedData().
+ * auth() internally calls Migrate::run(). All known migrations are pre-marked
+ * as applied in seedData() so the runner skips them on the in-memory DB.
  */
 class LoginCtrlTest extends BdusTestCase
 {
     protected static string $testPassword = 'Test_1234!';
-
-    // ── Schema extension ──────────────────────────────────────────────────────
-
-    protected static function createSchema(): void
-    {
-        parent::createSchema();
-
-        static::$db->execInTransaction('
-            CREATE TABLE bdus_users (
-                id             INTEGER PRIMARY KEY AUTOINCREMENT,
-                name           TEXT    NOT NULL,
-                email          TEXT    NOT NULL,
-                password       TEXT    NOT NULL,
-                privilege      INTEGER NOT NULL,
-                settings       TEXT,
-                oauth_provider TEXT,
-                oauth_sub      TEXT,
-                token_version  INTEGER NOT NULL DEFAULT 0
-            )
-        ');
-
-        // Extra system tables that migrations may try to CREATE IF NOT EXISTS.
-        // We pre-create them as stubs so the migration runner does not error.
-        static::$db->execInTransaction('
-            CREATE TABLE IF NOT EXISTS bdus_queries (
-                id         INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id    INTEGER NOT NULL,
-                created_at INTEGER NOT NULL,
-                name       TEXT    NOT NULL,
-                tb         TEXT    NOT NULL,
-                query      TEXT,
-                is_global  INTEGER NOT NULL DEFAULT 0
-            )
-        ');
-    }
 
     // ── Seed extension ────────────────────────────────────────────────────────
 

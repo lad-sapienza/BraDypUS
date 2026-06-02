@@ -8,47 +8,20 @@ use Tests\Support\BdusTestCase;
  * Integration tests for chart_ctrl v5 endpoints:
  *   getData(), listCharts(), saveChart(), shareChart(), unshareChart(), deleteChart()
  *
- * The charts table is created in createSchema() and seeded in seedData().
+ * The charts table is created by BdusTestCase and seeded in seedData().
  * Tests use the items table (5 seeded rows) for chart data queries.
  */
 class ChartCtrlTest extends BdusTestCase
 {
-    // ── Schema extension ──────────────────────────────────────────────────────
-
-    protected static function createSchema(): void
-    {
-        parent::createSchema();
-
-        // bdus_users table required for charts FK
-        static::$db->execInTransaction('
-            CREATE TABLE bdus_users (
-                id        INTEGER PRIMARY KEY AUTOINCREMENT,
-                name      TEXT    NOT NULL,
-                email     TEXT    NOT NULL,
-                privilege INTEGER NOT NULL DEFAULT 99
-            )
-        ');
-
-        static::$db->execInTransaction('
-            CREATE TABLE bdus_charts (
-                id         INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id    INTEGER NOT NULL,
-                created_at INTEGER,
-                name       TEXT    NOT NULL,
-                definition TEXT,
-                is_global  INTEGER
-            )
-        ');
-    }
-
     // ── Seed extension ────────────────────────────────────────────────────────
 
     protected static function seedData(): void
     {
         parent::seedData();
 
+        $hash = password_hash('Test_1234!', PASSWORD_DEFAULT);
         static::$db->execInTransaction(
-            "INSERT INTO bdus_users (id, name, email, privilege) VALUES (1, 'Test Admin', 'test@example.com', 1)"
+            "INSERT INTO bdus_users (id, name, email, password, privilege) VALUES (1, 'Test Admin', 'test@example.com', '{$hash}', 1)"
         );
 
         // Seed one chart owned by user 1

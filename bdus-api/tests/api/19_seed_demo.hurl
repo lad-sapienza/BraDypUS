@@ -1001,152 +1001,202 @@ us_id_30: jsonpath "$.id"
 POST {{base_url}}/api/record/us/rs
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "id_first": {{us_id_30}}, "id_second": {{us_id_1}},  "relation": 1 }
+{ "first": {{us_id_30}}, "second": {{us_id_1}},  "relation": 1 }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 POST {{base_url}}/api/record/us/rs
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "id_first": {{us_id_1}},  "id_second": {{us_id_2}},  "relation": 1 }
+{ "first": {{us_id_1}},  "second": {{us_id_2}},  "relation": 1 }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 POST {{base_url}}/api/record/us/rs
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "id_first": {{us_id_2}},  "id_second": {{us_id_3}},  "relation": 1 }
+{ "first": {{us_id_2}},  "second": {{us_id_3}},  "relation": 1 }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 POST {{base_url}}/api/record/us/rs
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "id_first": {{us_id_2}},  "id_second": {{us_id_4}},  "relation": 1 }
+{ "first": {{us_id_2}},  "second": {{us_id_4}},  "relation": 1 }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 POST {{base_url}}/api/record/us/rs
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "id_first": {{us_id_4}},  "id_second": {{us_id_5}},  "relation": 3 }
+{ "first": {{us_id_4}},  "second": {{us_id_5}},  "relation": 3 }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 POST {{base_url}}/api/record/us/rs
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "id_first": {{us_id_3}},  "id_second": {{us_id_6}},  "relation": 1 }
+{ "first": {{us_id_3}},  "second": {{us_id_6}},  "relation": 1 }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 POST {{base_url}}/api/record/us/rs
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "id_first": {{us_id_6}},  "id_second": {{us_id_7}},  "relation": 1 }
+{ "first": {{us_id_6}},  "second": {{us_id_7}},  "relation": 1 }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 POST {{base_url}}/api/record/us/rs
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "id_first": {{us_id_7}},  "id_second": {{us_id_8}},  "relation": 1 }
+{ "first": {{us_id_7}},  "second": {{us_id_8}},  "relation": 1 }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 POST {{base_url}}/api/record/us/rs
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "id_first": {{us_id_8}},  "id_second": {{us_id_9}},  "relation": 1 }
+{ "first": {{us_id_8}},  "second": {{us_id_9}},  "relation": 1 }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 POST {{base_url}}/api/record/us/rs
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "id_first": {{us_id_9}},  "id_second": {{us_id_12}}, "relation": 1 }
+{ "first": {{us_id_9}},  "second": {{us_id_12}}, "relation": 1 }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 POST {{base_url}}/api/record/us/rs
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "id_first": {{us_id_9}},  "id_second": {{us_id_10}}, "relation": 1 }
+{ "first": {{us_id_9}},  "second": {{us_id_10}}, "relation": 1 }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 POST {{base_url}}/api/record/us/rs
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "id_first": {{us_id_10}}, "id_second": {{us_id_11}}, "relation": 3 }
+{ "first": {{us_id_10}}, "second": {{us_id_11}}, "relation": 3 }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 POST {{base_url}}/api/record/us/rs
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "id_first": {{us_id_9}},  "id_second": {{us_id_25}}, "relation": 1 }
+{ "first": {{us_id_9}},  "second": {{us_id_25}}, "relation": 1 }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 POST {{base_url}}/api/record/us/rs
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "id_first": {{us_id_22}}, "id_second": {{us_id_21}}, "relation": 1 }
+{ "first": {{us_id_22}}, "second": {{us_id_21}}, "relation": 1 }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 POST {{base_url}}/api/record/us/rs
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "id_first": {{us_id_21}}, "id_second": {{us_id_20}}, "relation": 1 }
+{ "first": {{us_id_21}}, "second": {{us_id_20}}, "relation": 1 }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 POST {{base_url}}/api/record/us/rs
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "id_first": {{us_id_22}}, "id_second": {{us_id_23}}, "relation": 5 }
+{ "first": {{us_id_22}}, "second": {{us_id_23}}, "relation": 5 }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 POST {{base_url}}/api/record/us/rs
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "id_first": {{us_id_23}}, "id_second": {{us_id_24}}, "relation": 3 }
+{ "first": {{us_id_23}}, "second": {{us_id_24}}, "relation": 3 }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 POST {{base_url}}/api/record/us/rs
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "id_first": {{us_id_20}}, "id_second": {{us_id_25}}, "relation": 1 }
+{ "first": {{us_id_20}}, "second": {{us_id_25}}, "relation": 1 }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 POST {{base_url}}/api/record/us/rs
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "id_first": {{us_id_27}}, "id_second": {{us_id_26}}, "relation": 1 }
+{ "first": {{us_id_27}}, "second": {{us_id_26}}, "relation": 1 }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 POST {{base_url}}/api/record/us/rs
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "id_first": {{us_id_29}}, "id_second": {{us_id_28}}, "relation": 1 }
+{ "first": {{us_id_29}}, "second": {{us_id_28}}, "relation": 1 }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 POST {{base_url}}/api/record/us/rs
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "id_first": {{us_id_13}}, "id_second": {{us_id_14}}, "relation": 1 }
+{ "first": {{us_id_13}}, "second": {{us_id_14}}, "relation": 1 }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 POST {{base_url}}/api/record/us/rs
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "id_first": {{us_id_15}}, "id_second": {{us_id_16}}, "relation": 1 }
+{ "first": {{us_id_15}}, "second": {{us_id_16}}, "relation": 1 }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 POST {{base_url}}/api/record/us/rs
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "id_first": {{us_id_17}}, "id_second": {{us_id_15}}, "relation": 1 }
+{ "first": {{us_id_17}}, "second": {{us_id_15}}, "relation": 1 }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 POST {{base_url}}/api/record/us/rs
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "id_first": {{us_id_18}}, "id_second": {{us_id_19}}, "relation": 9 }
+{ "first": {{us_id_18}}, "second": {{us_id_19}}, "relation": 9 }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 POST {{base_url}}/api/record/us/rs
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "id_first": {{us_id_16}}, "id_second": {{us_id_18}}, "relation": 1 }
+{ "first": {{us_id_16}}, "second": {{us_id_18}}, "relation": 1 }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 # ── 19g. Geodata — POST /api/geoface/feature con GeoJSON ─────────────
 POST {{base_url}}/api/geoface/feature

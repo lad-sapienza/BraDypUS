@@ -75,3 +75,48 @@ In RecordView (edit mode), the file gallery panel allows:
 Images are displayed as thumbnails. Non-image files show a generic icon.
 Large images are automatically downscaled on upload if **Max image size** is set
 in [App settings](/guide/setup/main-app-config).
+
+## Duplicating a record
+
+In RecordView (read mode), click **Duplicate** in the record header. A new record
+is immediately created with all the same field values. You are then taken directly
+to the new record so you can review and adjust it before saving.
+
+The `creator` field of the duplicate is automatically set to the logged-in user.
+Privilege required: **add new**.
+
+## Manual links
+
+Manual links connect any two records across any two tables without requiring a
+formal FK relation to be defined in Config. They appear in their own section in
+RecordView, grouped by target table.
+
+### Adding a manual link
+
+In RecordView (edit mode), open the **Linked records** section:
+
+1. Click **Add link**.
+2. Select the target table.
+3. Type to search for the target record.
+4. Optionally type a **relation label** — a short free-text description of what
+   the link means (e.g. `cites`, `is part of`, `parallels`). The label is shown
+   as a small chip next to the link in both records.
+5. Select the record from the autocomplete list; the link is saved immediately.
+
+::: tip Typed links
+The relation label turns a generic link into a **typed** link. You can use any
+label you like — there is no controlled vocabulary enforced by the system.
+Typed links are the foundation for the planned **graph visualisation** feature
+(C2), which will render the network of typed links as an interactive diagram.
+:::
+
+### Deleting a manual link
+
+In edit mode, click the **×** button next to the link. Links are bidirectional —
+deleting it removes it from both records.
+
+::: info
+Manual links are stored in the `bdus_userlinks` system table. They are
+**not** affected by deleting the linked record — orphaned link entries are
+cleaned up when the surviving record is next opened.
+:::

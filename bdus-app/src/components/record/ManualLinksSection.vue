@@ -1,32 +1,53 @@
 <template>
   <fieldset class="record-section">
-    <legend>{{ t('linked_records') }}</legend>
+    <legend>
+      {{ t('linked_records') }}
+      <button
+        v-if="hasLinks && !editMode"
+        class="graph-toggle-btn"
+        :title="showGraph ? t('hide_graph') : t('show_graph')"
+        @click="showGraph = !showGraph"
+      >
+        <i :class="showGraph ? 'pi pi-list' : 'pi pi-share-alt'" />
+      </button>
+    </legend>
+
+    <!-- ── Graph view ────────────────────────────────────────────── -->
+    <ManualLinksGraph
+      v-if="showGraph && hasLinks && !editMode"
+      :links="links"
+      :recordTb="recordTb"
+      :recordId="recordId"
+      :recordLabel="recordLabel"
+    />
 
     <!-- ── Existing links grouped by table ──────────────────────── -->
-    <div
-      v-for="(group, groupTb) in linksByTable"
-      :key="groupTb"
-      class="link-group"
-    >
-      <div class="link-group-label">{{ group.tb_label }}</div>
-      <ul class="links-list">
-        <li v-for="ml in group.items" :key="ml.key" class="link-item">
-          <span v-if="ml.label" class="link-label-chip">{{ ml.label }}</span>
-          <router-link :to="`/${route.params.app}/record/${ml.tb_id}/${ml.ref_id}`" class="link-ref">
-            {{ ml.ref_label }}
-          </router-link>
-          <button
-            v-if="editMode"
-            class="link-delete-btn"
-            :title="t('delete')"
-            :disabled="deletingId === ml.key"
-            @click="deleteLink(ml)"
-          >
-            <i :class="deletingId === ml.key ? 'pi pi-spin pi-spinner' : 'pi pi-times'" />
-          </button>
-        </li>
-      </ul>
-    </div>
+    <template v-if="!showGraph">
+      <div
+        v-for="(group, groupTb) in linksByTable"
+        :key="groupTb"
+        class="link-group"
+      >
+        <div class="link-group-label">{{ group.tb_label }}</div>
+        <ul class="links-list">
+          <li v-for="ml in group.items" :key="ml.key" class="link-item">
+            <span v-if="ml.label" class="link-label-chip">{{ ml.label }}</span>
+            <router-link :to="`/${route.params.app}/record/${ml.tb_id}/${ml.ref_id}`" class="link-ref">
+              {{ ml.ref_label }}
+            </router-link>
+            <button
+              v-if="editMode"
+              class="link-delete-btn"
+              :title="t('delete')"
+              :disabled="deletingId === ml.key"
+              @click="deleteLink(ml)"
+            >
+              <i :class="deletingId === ml.key ? 'pi pi-spin pi-spinner' : 'pi pi-times'" />
+            </button>
+          </li>
+        </ul>
+      </div>
+    </template>
 
     <!-- Empty state (view mode) -->
     <div v-if="!hasLinks && !editMode" class="links-empty">
@@ -91,9 +112,10 @@ import Select      from 'primevue/select'
 import AutoComplete from 'primevue/autocomplete'
 import InputText   from 'primevue/inputtext'
 import { useToast } from 'primevue/usetoast'
-import { api }      from '@/api'
-import { useI18n }  from '@/i18n'
-import { useTables } from '@/composables/useTables'
+import { api }          from '@/api'
+import { useI18n }      from '@/i18n'
+import { useTables }    from '@/composables/useTables'
+import ManualLinksGraph from '@/components/record/ManualLinksGraph.vue'
 
 const route     = useRoute()
 const { t }     = useI18n()
@@ -111,7 +133,9 @@ const props = defineProps({
   /** Full table name (with prefix) of the current record */
   recordTb: { type: String,          default: null },
   /** Numeric id of the current record */
-  recordId: { type: [String, Number], default: null },
+  recordId:    { type: [String, Number], default: null },
+  /** Human-readable label for the current record (used as self node label in graph) */
+  recordLabel: { type: String,          default: null },
 })
 
 const emit = defineEmits([
@@ -120,6 +144,9 @@ const emit = defineEmits([
   /** Payload: the deleted link key (userlinks.id) */
   'link-deleted',
 ])
+
+// ── Graph toggle ──────────────────────────────────────────────────
+const showGraph = ref(false)
 
 // ── Grouped view ──────────────────────────────────────────────────
 const hasLinks = computed(() => Object.keys(props.links).length > 0)
@@ -308,6 +335,19 @@ async function onRecordSelected(event) {
   min-width: 140px;
   max-width: 200px;
 }
+
+/* ── Graph toggle button in legend ── */
+.graph-toggle-btn {
+  background: none;
+  border: none;
+  padding: 0 0 0 0.4rem;
+  cursor: pointer;
+  color: var(--p-text-muted-color);
+  font-size: 0.8rem;
+  vertical-align: middle;
+  line-height: 1;
+}
+.graph-toggle-btn:hover { color: var(--p-primary-color); }
 
 /* ── Link label chip ── */
 .link-label-chip {

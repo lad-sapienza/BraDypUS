@@ -193,6 +193,8 @@
   "success_saved": "All data was saved with no errors",
   "success_created": "Record created successfully",
   "link_label_placeholder": "Relation type (optional)",
+  "show_graph": "Show graph",
+  "hide_graph": "Show list",
   "duplicate": "Duplicate",
   "success_duplicated": "Record duplicated successfully",
   "error_saved": "Error. It is not possibile to save the data",

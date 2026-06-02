@@ -213,6 +213,7 @@
         :editMode="mode === 'edit'"
         :recordTb="record.metadata.tb_id"
         :recordId="id"
+        :recordLabel="recordTitle"
         @link-added="onLinkAdded"
         @link-deleted="onLinkDeleted"
       />

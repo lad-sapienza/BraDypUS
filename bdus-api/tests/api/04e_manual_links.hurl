@@ -14,7 +14,7 @@ HTTP 200
 jsonpath "$.manualLinks" isCollection
 
 
-# ── 4e-b. Add manual link T001 ↔ T002 ────────────────────────────────
+# ── 4e-b. Add manual link T001 ↔ T002 with label ─────────────────────
 POST {{base_url}}/api/manual-link
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
@@ -22,15 +22,17 @@ Content-Type: application/json
   "tb_one": "crud_test",
   "id_one": {{us_id_1}},
   "tb_two": "crud_test",
-  "id_two": {{us_id_2}}
+  "id_two": {{us_id_2}},
+  "label":  "cites"
 }
 HTTP 200
 [Asserts]
-jsonpath "$.status"       == "success"
-jsonpath "$.code"         == "all_links_saved"
-jsonpath "$.link.key"     isInteger
-jsonpath "$.link.tb_id"   == "crud_test"
-jsonpath "$.link.ref_id"  == {{us_id_2}}
+jsonpath "$.status"        == "success"
+jsonpath "$.code"          == "all_links_saved"
+jsonpath "$.link.key"      isInteger
+jsonpath "$.link.tb_id"    == "crud_test"
+jsonpath "$.link.ref_id"   == {{us_id_2}}
+jsonpath "$.link.label"    == "cites"
 [Captures]
 manual_link_id: jsonpath "$.link.key"
 

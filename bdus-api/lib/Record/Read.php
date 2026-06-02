@@ -197,6 +197,7 @@ EOD;
                         "ref_id"      => $mli,
                         "ref_label"   => $ref_val_label,
                         "sort"        => $r['sort'],
+                        "label"       => $r['label'] ?? null,
                     ];
                 }
             }

@@ -95,10 +95,35 @@ class RecordCtrlManualLinksTest extends BdusTestCase
         ]);
         $res = $this->callController($ctrl, 'addManualLink');
 
-        foreach (['key', 'tb_id', 'tb_stripped', 'tb_label', 'ref_id', 'ref_label'] as $k) {
+        foreach (['key', 'tb_id', 'tb_stripped', 'tb_label', 'ref_id', 'ref_label', 'label'] as $k) {
             $this->assertArrayHasKey($k, $res['link'], "Missing key: $k");
         }
         $this->assertSame('items', $res['link']['tb_stripped']);
+        $this->assertNull($res['link']['label']);
+    }
+
+    public function testAddManualLinkWithLabelStoresAndReturnsLabel(): void
+    {
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], [
+            'tb_one' => self::TB, 'id_one' => 1,
+            'tb_two' => self::TB, 'id_two' => 5,
+            'label'  => 'cites',
+        ]);
+        $res = $this->callController($ctrl, 'addManualLink');
+
+        $this->assertSame('success', $res['status']);
+        $this->assertSame('cites', $res['link']['label']);
+
+        // Verify stored in DB
+        $row = static::$db->query(
+            'SELECT label FROM bdus_userlinks WHERE id = ?',
+            [$res['link']['key']],
+            'read'
+        );
+        $this->assertSame('cites', $row[0]['label']);
+
+        // Clean up
+        static::$db->query('DELETE FROM bdus_userlinks WHERE id = ?', [$res['link']['key']], 'boolean');
     }
 
     public function testAddManualLinkDuplicateReturnsError(): void

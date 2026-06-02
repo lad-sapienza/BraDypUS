@@ -1338,6 +1338,9 @@ class Record extends \Bdus\Controller
     $idOne = $this->post['id_one'] ?? null;
     $tbTwo = $this->post['tb_two'] ?? null;
     $idTwo = $this->post['id_two'] ?? null;
+    $label = isset($this->post['label']) && $this->post['label'] !== ''
+               ? (string)$this->post['label']
+               : null;
 
     if (!$tbOne || !$idOne || !$tbTwo || !$idTwo) {
       $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
@@ -1363,8 +1366,8 @@ class Record extends \Bdus\Controller
       }
 
       $newId = (int) $this->db->query(
-        "INSERT INTO bdus_userlinks (tb_one, id_one, tb_two, id_two) VALUES (?, ?, ?, ?)",
-        [$tbOne, $idOne, $tbTwo, $idTwo],
+        "INSERT INTO bdus_userlinks (tb_one, id_one, tb_two, id_two, label) VALUES (?, ?, ?, ?, ?)",
+        [$tbOne, $idOne, $tbTwo, $idTwo, $label],
         'id'
       );
 
@@ -1394,6 +1397,7 @@ class Record extends \Bdus\Controller
           'ref_id'     => $idTwo,
           'ref_label'  => $refLabel,
           'sort'       => null,
+          'label'      => $label,
         ],
       ]);
 

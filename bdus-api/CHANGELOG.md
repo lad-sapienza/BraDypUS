@@ -6,6 +6,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [5.0.0] - unreleased
 
 ### Added
+- **Typed manual links** — `bdus_userlinks` now has an optional `label TEXT`
+  column (migration M029). Users can assign a free-text relation type (e.g.
+  `"cites"`, `"is part of"`) when adding a manual link between two records.
+  The label is shown as a chip in the Linked records section of RecordView.
+  Backend: `addManualLink` accepts `label` in the POST body; `getRecord` returns
+  `label` in each `manualLinks` entry via `Record\Read::getManualLinks()`.
+  Frontend: optional `InputText` shown after a record is selected in the add-link
+  form; label chip displayed next to each link in read mode.
+  Tests: 2 new assertions in `RecordCtrlManualLinksTest`; hurl phase 04e updated
+  to verify `link.label == "cites"`. i18n key `link_label_placeholder` added (it/en).
+  Docs: `guide/usage/crud.md` updated with new **Manual links** and **Duplicate**
+  sections. Foundation for C2 graph visualisation.
 - **Duplicate record** (`POST /api/record/{tb}/{id}/duplicate`): one-click record copy.
   Copies all core fields from the source record (excluding `id`); `creator` is set to the
   current authenticated user. Returns `{ status, code: "success_duplicated", id: newId }`.

@@ -284,14 +284,13 @@ See memory file `v5_closure_plan.md` for the full prioritized roadmap.
 
 | Item | Priority | Notes |
 |---|---|---|
-| Remove `@deprecated v5` methods | **High** | Strip all legacy PHP methods tagged `@deprecated v5` from all controllers |
-| `import_geodata` | Low | File upload + geodata parse; explicitly deferred |
+| `import_geodata` | Low | File upload + geodata parse; explicitly deferred to v5.1 |
 | `typed_manual_links` | Medium | Add `label` column to `bdus_userlinks`; config panel for relation types |
 | `graph_visualization` | Medium | Cytoscape network of typed manual links; depends on `typed_manual_links` |
 | `public_readonly_share` | Medium | Signed read-only JWT for sharing filtered views |
 
 **Completed (kept here for reference):**
-`geoface` ✅ · `chart` ✅ · `userlinks` ✅ · `new_app` ✅ · `file sort/upload/delete` ✅ · `matrix` ✅ (superseded by RsGraph/MatrixView) · `duplicate_record` ✅
+`geoface` ✅ · `chart` ✅ · `userlinks` ✅ · `new_app` ✅ · `file sort/upload/delete` ✅ · `matrix` ✅ · `duplicate_record` ✅ · `@deprecated v5` cleanup ✅
 
 **v5.1 scope (not v5.0):**
 - Remove migration system entirely (`Migrate.php`, all `M0xx_*.php`, `M0xx` tests, `bdus_migrations` table)

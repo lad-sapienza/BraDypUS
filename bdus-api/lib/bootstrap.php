@@ -79,6 +79,7 @@ if ($_bdus_token) {
             \Auth\CurrentUser::set([
                 'id'        => (int) $claims['sub'],
                 'privilege' => (int) $claims['prv'],
+                'tkv'       => isset($claims['tkv']) ? (int) $claims['tkv'] : 0,
                 'name'      => $claims['name'] ?? '',
                 'email'     => $claims['eml']  ?? '',
                 'app'       => APP,

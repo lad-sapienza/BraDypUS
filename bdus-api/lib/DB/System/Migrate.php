@@ -36,6 +36,7 @@ use DB\System\Migrations\M024_DropLegacyColumns;
 use DB\System\Migrations\M025_AddColorToCfgApp;
 use DB\System\Migrations\M026_RefactorCfgRelations;
 use DB\System\Migrations\M027_CreateCfgIndexes;
+use DB\System\Migrations\M028_AddTokenVersionToUsers;
 use Monolog\Logger;
 
 /**
@@ -89,6 +90,7 @@ class Migrate
         M025_AddColorToCfgApp::class,
         M026_RefactorCfgRelations::class,
         M027_CreateCfgIndexes::class,
+        M028_AddTokenVersionToUsers::class,
     ];
 
     /**

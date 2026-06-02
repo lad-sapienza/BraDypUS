@@ -215,6 +215,15 @@ class User extends \Bdus\Controller
 					return;
 				}
 				$ret = $sys_manager->editRow('bdus_users', (int) $data['id'], $data);
+
+				// Privilege change → invalidate the user's current session immediately.
+				if ($ret && array_key_exists('privilege', $data) && !$isOwnUser) {
+					$this->db->query(
+						'UPDATE bdus_users SET token_version = token_version + 1 WHERE id = ?',
+						[(int) $data['id']],
+						'boolean'
+					);
+				}
 			} else {
 				if (\Bdus\Utils::isDuplicateEmail($this->db, $data['email'])) {
 					$this->returnJson(['status' => 'error', 'code' => 'email_present']);
@@ -233,6 +242,44 @@ class User extends \Bdus\Controller
 		} catch (\Throwable $e) {
 			$this->log->error($e);
 			$this->returnJson(['status' => 'error', 'code' => 'user_data_not_saved']);
+		}
+	}
+
+	/**
+	 * Revokes the active session of a user by incrementing their token_version.
+	 * The next request carrying the old token will receive a 401 token_invalidated.
+	 *
+	 * POST /api/user/{id}/revoke   (admin only; cannot revoke your own session)
+	 */
+	public function revokeToken()
+	{
+		$id = (int) ($this->get['id'] ?? 0);
+
+		if (!$id) {
+			$this->returnJson(['status' => 'error', 'code' => 'missing_id']);
+			return;
+		}
+
+		if ($id === \Auth\CurrentUser::id()) {
+			$this->returnJson(['status' => 'error', 'code' => 'cannot_revoke_own_token']);
+			return;
+		}
+
+		try {
+			$affected = $this->db->query(
+				'UPDATE bdus_users SET token_version = token_version + 1 WHERE id = ?',
+				[$id],
+				'affected'
+			);
+
+			if ($affected > 0) {
+				$this->returnJson(['status' => 'success', 'code' => 'token_revoked']);
+			} else {
+				$this->returnJson(['status' => 'error', 'code' => 'user_not_found']);
+			}
+		} catch (\Throwable $e) {
+			$this->log->error($e);
+			$this->returnJson(['status' => 'error', 'code' => 'revoke_failed']);
 		}
 	}
 

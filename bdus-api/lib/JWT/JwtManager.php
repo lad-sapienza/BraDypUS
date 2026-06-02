@@ -35,6 +35,7 @@ class JwtManager
      *   app  → application name
      *   name → display name
      *   eml  → email
+     *   tkv  → token_version snapshot (used by Dispatcher to detect revocation)
      */
     public static function generate(array $user, string $app): string
     {
@@ -46,6 +47,7 @@ class JwtManager
             'exp'  => $now + self::TTL,
             'sub'  => (int) $user['id'],
             'prv'  => (int) $user['privilege'],
+            'tkv'  => (int) ($user['token_version'] ?? 0),
             'app'  => $app,
             'name' => $user['name']  ?? '',
             'eml'  => $user['email'] ?? '',

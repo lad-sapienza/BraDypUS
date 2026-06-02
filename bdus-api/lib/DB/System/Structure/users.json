@@ -6,8 +6,9 @@
         { "name": "password",  "type": "TEXT",               "notnull": true  },
         { "name": "privilege", "type": "INTEGER",            "notnull": true  },
         { "name": "settings",       "type": "TEXT",    "notnull": false },
-        { "name": "oauth_provider", "type": "TEXT",    "notnull": false },
-        { "name": "oauth_sub",      "type": "TEXT",    "notnull": false }
+        { "name": "oauth_provider",  "type": "TEXT",    "notnull": false },
+        { "name": "oauth_sub",       "type": "TEXT",    "notnull": false },
+        { "name": "token_version",   "type": "INTEGER", "notnull": true, "default": 0 }
     ],
     "indexes": [
         { "name": "users_email_idx", "columns": ["email"], "unique": true }

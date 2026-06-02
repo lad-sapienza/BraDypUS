@@ -50,6 +50,30 @@ class Dispatcher
                     return;
                 }
 
+                // For human users: verify token_version and refresh privilege from DB.
+                // This ensures privilege changes and explicit revocations take effect
+                // immediately, without waiting for the token to expire.
+                if (!\Auth\CurrentUser::isApiKey() && $this->db) {
+                    $row = $this->db->query(
+                        'SELECT privilege, token_version FROM bdus_users WHERE id = ?',
+                        [\Auth\CurrentUser::id()],
+                        'read'
+                    )[0] ?? null;
+
+                    if (!$row || (int) $row['token_version'] !== \Auth\CurrentUser::get('tkv')) {
+                        http_response_code(401);
+                        header('Content-Type: application/json');
+                        echo json_encode(['status' => 'error', 'code' => 'token_invalidated'], JSON_UNESCAPED_UNICODE);
+                        return;
+                    }
+
+                    // Privilege is always read from the DB — the JWT value is ignored.
+                    \Auth\CurrentUser::set(array_merge(
+                        \Auth\CurrentUser::get(),
+                        ['privilege' => (int) $row['privilege']]
+                    ));
+                }
+
                 if (\Auth\CurrentUser::isApiKey() && !$this->apiKeyHasPrivilege($required)) {
                     http_response_code(403);
                     header('Content-Type: application/json');

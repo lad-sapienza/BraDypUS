@@ -11,7 +11,7 @@
 #                 materiale_classe)
 #   siti (3), complessi (8), saggi (12), us (30), reperti (50)
 #   misure (~60), m_reperti_in_us (~40), m_reperti_in_complessi (~15)
-#   RS relations (~25), geodata, userlinks, chart
+#   RS relations (~25), geodata, userlinks (21 labeled: us↔rep×10 us↔us×6 rep↔rep×5), chart
 # ════════════════════════════════════════════════════════════════════
 
 
@@ -1571,11 +1571,16 @@ jsonpath "$.status" == "success"
 
 
 # ── 19m. Userlinks — POST /api/manual-link ──────────────────────────
-# Manual links: us ↔ reperti (interpretative associations)
+# Manual links with labels: 21 total
+#   10 us ↔ reperti  (interpretative/diagnostic)
+#    6 us ↔ us       (non-stratigraphic — phase, event, function)
+#    5 reperti ↔ reperti  (typological associations)
+
+# ── us ↔ reperti ────────────────────────────────────────────────────
 POST {{base_url}}/api/manual-link
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "tb_one": "us", "id_one": {{us_id_3}}, "tb_two": "reperti", "id_two": {{rep_id_6}} }
+{ "tb_one": "us", "id_one": {{us_id_3}}, "tb_two": "reperti", "id_two": {{rep_id_6}}, "label": "ceramica diagnostica" }
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
@@ -1583,7 +1588,7 @@ jsonpath "$.status" == "success"
 POST {{base_url}}/api/manual-link
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "tb_one": "us", "id_one": {{us_id_9}}, "tb_two": "reperti", "id_two": {{rep_id_7}} }
+{ "tb_one": "us", "id_one": {{us_id_8}}, "tb_two": "reperti", "id_two": {{rep_id_1}}, "label": "elemento datante" }
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
@@ -1591,7 +1596,7 @@ jsonpath "$.status" == "success"
 POST {{base_url}}/api/manual-link
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "tb_one": "us", "id_one": {{us_id_9}}, "tb_two": "reperti", "id_two": {{rep_id_8}} }
+{ "tb_one": "us", "id_one": {{us_id_9}}, "tb_two": "reperti", "id_two": {{rep_id_7}}, "label": "rinvenuto in" }
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
@@ -1599,7 +1604,7 @@ jsonpath "$.status" == "success"
 POST {{base_url}}/api/manual-link
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "tb_one": "us", "id_one": {{us_id_21}}, "tb_two": "reperti", "id_two": {{rep_id_15}} }
+{ "tb_one": "us", "id_one": {{us_id_9}}, "tb_two": "reperti", "id_two": {{rep_id_8}}, "label": "rinvenuto in" }
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
@@ -1607,7 +1612,7 @@ jsonpath "$.status" == "success"
 POST {{base_url}}/api/manual-link
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "tb_one": "us", "id_one": {{us_id_21}}, "tb_two": "reperti", "id_two": {{rep_id_16}} }
+{ "tb_one": "us", "id_one": {{us_id_21}}, "tb_two": "reperti", "id_two": {{rep_id_15}}, "label": "corredo funerario" }
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
@@ -1615,7 +1620,7 @@ jsonpath "$.status" == "success"
 POST {{base_url}}/api/manual-link
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "tb_one": "us", "id_one": {{us_id_24}}, "tb_two": "reperti", "id_two": {{rep_id_18}} }
+{ "tb_one": "us", "id_one": {{us_id_21}}, "tb_two": "reperti", "id_two": {{rep_id_16}}, "label": "corredo funerario" }
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
@@ -1623,7 +1628,121 @@ jsonpath "$.status" == "success"
 POST {{base_url}}/api/manual-link
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "tb_one": "us", "id_one": {{us_id_28}}, "tb_two": "reperti", "id_two": {{rep_id_20}} }
+{ "tb_one": "us", "id_one": {{us_id_21}}, "tb_two": "reperti", "id_two": {{rep_id_17}}, "label": "corredo funerario" }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/api/manual-link
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "tb_one": "us", "id_one": {{us_id_24}}, "tb_two": "reperti", "id_two": {{rep_id_18}}, "label": "corredo funerario" }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/api/manual-link
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "tb_one": "us", "id_one": {{us_id_24}}, "tb_two": "reperti", "id_two": {{rep_id_19}}, "label": "elemento datante" }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/api/manual-link
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "tb_one": "us", "id_one": {{us_id_28}}, "tb_two": "reperti", "id_two": {{rep_id_20}}, "label": "carico originario" }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+# ── us ↔ us (non-stratigraphic interpretative links) ─────────────────
+POST {{base_url}}/api/manual-link
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "tb_one": "us", "id_one": {{us_id_3}}, "tb_two": "us", "id_two": {{us_id_8}}, "label": "sequenza pavimentale" }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/api/manual-link
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "tb_one": "us", "id_one": {{us_id_6}}, "tb_two": "us", "id_two": {{us_id_7}}, "label": "crollo del muro" }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/api/manual-link
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "tb_one": "us", "id_one": {{us_id_7}}, "tb_two": "us", "id_two": {{us_id_15}}, "label": "evento coevo" }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/api/manual-link
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "tb_one": "us", "id_one": {{us_id_18}}, "tb_two": "us", "id_two": {{us_id_19}}, "label": "impianto produttivo" }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/api/manual-link
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "tb_one": "us", "id_one": {{us_id_20}}, "tb_two": "us", "id_two": {{us_id_23}}, "label": "sepolture coeve" }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/api/manual-link
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "tb_one": "us", "id_one": {{us_id_21}}, "tb_two": "us", "id_two": {{us_id_24}}, "label": "corredi coevi" }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+# ── reperti ↔ reperti (typological associations) ─────────────────────
+POST {{base_url}}/api/manual-link
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "tb_one": "reperti", "id_one": {{rep_id_1}}, "tb_two": "reperti", "id_two": {{rep_id_6}}, "label": "stessa classe ceramica" }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/api/manual-link
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "tb_one": "reperti", "id_one": {{rep_id_3}}, "tb_two": "reperti", "id_two": {{rep_id_16}}, "label": "stesso tipo funzionale" }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/api/manual-link
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "tb_one": "reperti", "id_one": {{rep_id_7}}, "tb_two": "reperti", "id_two": {{rep_id_15}}, "label": "forma analoga" }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/api/manual-link
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "tb_one": "reperti", "id_one": {{rep_id_15}}, "tb_two": "reperti", "id_two": {{rep_id_18}}, "label": "ceramica miniaturistica" }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/api/manual-link
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "tb_one": "reperti", "id_one": {{rep_id_13}}, "tb_two": "reperti", "id_two": {{rep_id_20}}, "label": "ceramica da trasporto" }
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"

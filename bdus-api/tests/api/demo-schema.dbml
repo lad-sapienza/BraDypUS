@@ -275,6 +275,8 @@ Ref: reperti.saggio_id         > saggi.id      // bdus relation: fld=[{my:"saggi
 //               us:      15 mix POINT e POLYGON
 //               reperti:  8 POINT (locus preciso)
 //
-// Userlinks (collegamenti manuali cross-table):
-//               us ↔ reperti:  10 link interpretativi
+// Userlinks (collegamenti manuali etichettati):
+//               us ↔ reperti:  10 link  (corredo funerario, elemento datante, ceramica diagnostica, …)
+//               us ↔ us:        6 link  (sequenza pavimentale, evento coevo, impianto produttivo, …)
+//               reperti ↔ reperti: 5 link  (forma analoga, ceramica miniaturistica, stesso tipo funzionale, …)
 // =============================================================

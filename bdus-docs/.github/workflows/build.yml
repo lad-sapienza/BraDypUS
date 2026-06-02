@@ -27,13 +27,12 @@ jobs:
         uses: actions/checkout@v4
 
       # ── Fetch live assets from bdus-api ─────────────────────────────────────
+      # oauth.md and widget-api.md now live in bdus-docs directly (no longer fetched)
       - name: Fetch assets from bdus-api
         run: |
           BASE=https://raw.githubusercontent.com/lad-sapienza/bdus-api/main
-          curl -fsSL "$BASE/CHANGELOG.md"        -o guide/changelog.md
-          curl -fsSL "$BASE/docs/oauth.md"       -o dev/oauth.md
-          curl -fsSL "$BASE/docs/widget-api.md"  -o dev/widget-api.md
-          curl -fsSL "$BASE/openapi.yaml"        -o public/openapi.yaml
+          curl -fsSL "$BASE/CHANGELOG.md"   -o guide/changelog.md
+          curl -fsSL "$BASE/openapi.yaml"   -o public/openapi.yaml
 
       # ── Build ────────────────────────────────────────────────────────────────
       - name: Setup Node

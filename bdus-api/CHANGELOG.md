@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [5.0.0] - unreleased
 
 ### Added
+- **Graph visualisation of manual links** (`ManualLinksGraph.vue`): a toggle button
+  in the Linked records section header switches between list and an interactive
+  Cytoscape.js force-directed graph. Nodes represent records (current record
+  highlighted in orange); edges carry the relation label when present. Clicking any
+  non-self node navigates to that record. The graph is read-only; editing links
+  remains in list mode. Uses the built-in `cose` layout — no extra plugin required.
+  i18n keys `show_graph` / `hide_graph` added (it/en).
 - **Typed manual links** — `bdus_userlinks` now has an optional `label TEXT`
   column (migration M029). Users can assign a free-text relation type (e.g.
   `"cites"`, `"is part of"`) when adding a manual link between two records.

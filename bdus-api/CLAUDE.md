@@ -285,11 +285,10 @@ See memory file `v5_closure_plan.md` for the full prioritized roadmap.
 | Item | Priority | Notes |
 |---|---|---|
 | `import_geodata` | Low | File upload + geodata parse; explicitly deferred to v5.1 |
-| `graph_visualization` | Medium | Cytoscape network of typed manual links; depends on `typed_manual_links` |
 | `public_readonly_share` | Medium | Signed read-only JWT for sharing filtered views |
 
 **Completed (kept here for reference):**
-`geoface` ✅ · `chart` ✅ · `userlinks` ✅ · `new_app` ✅ · `file sort/upload/delete` ✅ · `matrix` ✅ · `duplicate_record` ✅ · `@deprecated v5` cleanup ✅ · `typed_manual_links` ✅
+`geoface` ✅ · `chart` ✅ · `userlinks` ✅ · `new_app` ✅ · `file sort/upload/delete` ✅ · `matrix` ✅ · `duplicate_record` ✅ · `@deprecated v5` cleanup ✅ · `typed_manual_links` ✅ · `graph_visualization` ✅
 
 **v5.1 scope (not v5.0):**
 - Remove migration system entirely (`Migrate.php`, all `M0xx_*.php`, `M0xx` tests, `bdus_migrations` table)

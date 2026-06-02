@@ -54,7 +54,7 @@
           </template>
         </Column>
 
-        <Column style="width:7rem">
+        <Column style="width:10rem">
           <template #body="{ data }">
             <Button
               v-if="data.editable"
@@ -62,6 +62,14 @@
               text rounded size="small"
               :title="t('edit')"
               @click="openForm(data)"
+            />
+            <Button
+              v-if="isAdmin && data.editable && data.id !== auth.user?.id"
+              icon="pi pi-ban"
+              text rounded size="small"
+              severity="warn"
+              :title="t('revoke_session')"
+              @click="confirmRevoke(data)"
             />
             <Button
               v-if="isAdmin && data.editable && data.id !== auth.user?.id"
@@ -176,6 +184,28 @@ async function saveUser(data) {
     toast.add({ severity: 'error', summary: t('users'), detail: e.message, life: 4000 })
   } finally {
     saving.value = false
+  }
+}
+
+// ── Revoke session ────────────────────────────────────────────────
+function confirmRevoke(user) {
+  confirm.require({
+    message: t('confirm_revoke_session'),
+    header:  t('revoke_session'),
+    icon:    'pi pi-ban',
+    rejectProps: { label: t('cancel'), severity: 'secondary', outlined: true },
+    acceptProps: { label: t('revoke_session'), severity: 'warn' },
+    accept: () => revokeSession(user.id),
+  })
+}
+
+async function revokeSession(id) {
+  try {
+    const res = await api.post(`/api/user/${id}/revoke`)
+    if (res.status !== 'success') throw new Error(t(res.code ?? 'error'))
+    toast.add({ severity: 'success', summary: t('revoke_session'), detail: t('session_revoked'), life: 3000 })
+  } catch (e) {
+    toast.add({ severity: 'error', summary: t('revoke_session'), detail: e.message, life: 4000 })
   }
 }
 

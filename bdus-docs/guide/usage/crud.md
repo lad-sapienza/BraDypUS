@@ -110,6 +110,21 @@ Typed links are the foundation for the planned **graph visualisation** feature
 (C2), which will render the network of typed links as an interactive diagram.
 :::
 
+### Graph view
+
+When at least one link exists, a small icon button appears in the **Linked records**
+section header. Click it to switch between the default list view and an interactive
+**graph view**:
+
+- The **current record** is shown as an orange node in the centre.
+- **Linked records** appear as blue nodes labelled with their identifier value.
+- **Edges** carry the relation label if one was assigned.
+- **Click any node** to navigate directly to that record.
+- Use the mouse wheel to zoom; drag to pan.
+
+The graph uses a force-directed layout and is read-only — add or delete links from
+the list view.
+
 ### Deleting a manual link
 
 In edit mode, click the **×** button next to the link. Links are bidirectional —

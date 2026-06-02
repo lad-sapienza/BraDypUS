@@ -391,7 +391,7 @@ run_seed() {
   do_login
 
   header "Phase 19 — Demo seed"
-  capture_phase "Demo seed" "19_seed_demo.hurl" \
+  run_phase "Demo seed" "19_seed_demo.hurl" \
     --variable "jwt=${JWT}"
 
   if [[ "${SEED_MORE:-false}" == true ]]; then

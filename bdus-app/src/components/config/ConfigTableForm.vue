@@ -193,6 +193,11 @@
         </div>
       </section>
 
+      <!-- ── Indexes ──────────────────────────────────────────────────── -->
+      <section v-if="tb" class="cfg-section">
+        <ConfigIndexes :tb="tb" />
+      </section>
+
       <!-- ── Danger zone ────────────────────────────────────────────── -->
       <section v-if="tb" class="cfg-section cfg-danger-section">
         <div class="cfg-section-title cfg-danger-title">{{ t('danger_zone') }}</div>
@@ -233,6 +238,7 @@ import InputText    from 'primevue/inputtext'
 import Select       from 'primevue/select'
 import Message      from 'primevue/message'
 import ToggleSwitch from 'primevue/toggleswitch'
+import ConfigIndexes from '@/components/config/ConfigIndexes.vue'
 import { useToast }   from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import { useI18n }    from '@/i18n'

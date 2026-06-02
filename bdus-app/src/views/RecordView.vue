@@ -254,6 +254,37 @@
 
   </div>
 
+  <!-- ── Plugin-delete confirmation dialog ───────────────────────── -->
+  <Dialog
+    v-model:visible="pluginDeleteDialog.visible"
+    :header="t('delete')"
+    :modal="true"
+    :closable="true"
+    :style="{ width: '420px' }"
+  >
+    <div class="plugin-delete-body">
+      <i class="pi pi-exclamation-triangle plugin-delete-icon" />
+      <p>{{ t('confirm_delete_record_with_plugins') }}</p>
+      <ul class="plugin-delete-list">
+        <li v-for="plg in pluginDeleteDialog.plugins" :key="plg.tb">
+          <strong>{{ plg.label }}</strong>
+          <span class="plugin-delete-count">{{ plg.count }}</span>
+        </li>
+      </ul>
+      <p class="plugin-delete-hint">{{ t('confirm_delete_plugins_hint') }}</p>
+    </div>
+    <template #footer>
+      <Button :label="t('cancel')" severity="secondary" text @click="pluginDeleteDialog.visible = false" />
+      <Button
+        :label="t('delete_plugins_and_record')"
+        icon="pi pi-trash"
+        severity="danger"
+        :loading="pluginDeleteDialog.deleting"
+        @click="doDeleteWithPlugins"
+      />
+    </template>
+  </Dialog>
+
   <!-- ── Version history drawer ──────────────────────────────────── -->
   <RecordVersionsDrawer
     v-if="record && !isNew"
@@ -274,6 +305,7 @@ import { useToast }              from 'primevue/usetoast'
 import { useConfirm }            from 'primevue/useconfirm'
 import AppLayout      from '@/components/AppLayout.vue'
 import Button         from 'primevue/button'
+import Dialog         from 'primevue/dialog'
 import Tag            from 'primevue/tag'
 import Message        from 'primevue/message'
 import ProgressSpinner from 'primevue/progressspinner'
@@ -683,15 +715,42 @@ async function saveRecord() {
   }
 }
 
-// ── Delete ────────────────────────────────────────────────────────
-function confirmDelete() {
-  confirm.require({
-    message:  t('confirm_delete_record'),
-    header:   t('delete'),
-    icon:     'pi pi-exclamation-triangle',
-    severity: 'danger',
-    accept: doDelete,
-  })
+// ── Delete (two-step: check plugins first) ────────────────────────
+const pluginDeleteDialog = reactive({
+  visible:  false,
+  plugins:  [],
+  deleting: false,
+})
+
+async function confirmDelete() {
+  try {
+    const res = await api.get(`/api/record/${tb.value}/check-plugins-before-delete`, { id: id.value })
+    if (res.status !== 'success') throw new Error()
+
+    if (!res.plugins || res.plugins.length === 0) {
+      // No plugin data → simple confirm
+      confirm.require({
+        message:  t('confirm_delete_record'),
+        header:   t('delete'),
+        icon:     'pi pi-exclamation-triangle',
+        severity: 'danger',
+        accept:   doDelete,
+      })
+    } else {
+      // Plugin rows exist → open the enhanced dialog
+      pluginDeleteDialog.plugins = res.plugins
+      pluginDeleteDialog.visible = true
+    }
+  } catch {
+    // If the check fails, fall back to simple confirm
+    confirm.require({
+      message:  t('confirm_delete_record'),
+      header:   t('delete'),
+      icon:     'pi pi-exclamation-triangle',
+      severity: 'danger',
+      accept:   doDelete,
+    })
+  }
 }
 
 async function doDelete() {
@@ -705,6 +764,27 @@ async function doDelete() {
     router.push(backTarget.value)
   } catch (e) {
     toast.add({ severity: 'error', summary: t('generic_error'), detail: e.message, life: 5000 })
+  }
+}
+
+async function doDeleteWithPlugins() {
+  pluginDeleteDialog.deleting = true
+  try {
+    // 1. Delete all plugin rows
+    await api.delete(`/api/record/${tb.value}/${id.value}/plugins`)
+    // 2. Delete the main record
+    const res = await api.delete(`/api/record/${tb.value}/${id.value}`)
+    pluginDeleteDialog.visible = false
+    if (res.status === 'error') {
+      toast.add({ severity: 'error', summary: t('generic_error'), detail: responseMessage(res, t), life: 5000 })
+      return
+    }
+    toast.add({ severity: 'success', summary: t('delete'), detail: t('all_record_deleted'), life: 3000 })
+    router.push(backTarget.value)
+  } catch (e) {
+    toast.add({ severity: 'error', summary: t('generic_error'), detail: e.message, life: 5000 })
+  } finally {
+    pluginDeleteDialog.deleting = false
   }
 }
 
@@ -926,4 +1006,45 @@ watch(() => route.params.id, fetchRecord)
 
 /* ── Geodata ── */
 .geodata-info { display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; }
+
+/* ── Plugin delete dialog ── */
+.plugin-delete-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  text-align: center;
+  padding: 0.5rem 0;
+}
+.plugin-delete-icon {
+  font-size: 2.5rem;
+  color: var(--p-orange-500);
+}
+.plugin-delete-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.plugin-delete-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.35rem 0.75rem;
+  background: var(--p-content-hover-background);
+  border-radius: 4px;
+  font-size: 0.88rem;
+}
+.plugin-delete-count {
+  font-weight: 700;
+  color: var(--p-red-500);
+}
+.plugin-delete-hint {
+  font-size: 0.8rem;
+  color: var(--p-text-muted-color);
+  margin: 0;
+}
 </style>

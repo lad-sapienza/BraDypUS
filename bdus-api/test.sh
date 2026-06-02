@@ -1,38 +1,56 @@
 #!/usr/bin/env bash
 # ════════════════════════════════════════════════════════════════════
-# BraDypUS — full local test runner
+# BraDypUS — test suite entry point
 #
-# Runs in one shot:
-#   1. Ensures the Docker daemon is running (starts Docker.app on macOS)
-#   2. Starts an isolated test container (project "bdus-test", port 8081)
-#   3. Waits until the server is healthy
-#   4. Runs PHPUnit unit + integration tests inside the container
-#   5. Runs the full Hurl E2E API suite (tests/api/run.sh)
-#   6. Tears down the test container (unless --keep is passed)
+# Single entry point for all test workflows: Docker orchestration,
+# PHPUnit, and Hurl E2E API phases.  Configuration lives in
+# tests/api/vars.env (copy to vars.local.env to override locally).
 #
-# Usage:
-#   ./test.sh                # run everything, clean up on exit
-#   ./test.sh --keep         # leave the container running after the tests
-#   ./test.sh --seed-demo    # after tests, populate the app with demo data for screenshots
-#   ./test.sh --skip-unit    # skip PHPUnit, run only Hurl
-#   ./test.sh --skip-e2e     # skip Hurl, run only PHPUnit
+# USAGE
+#   ./test.sh [OPTIONS]
 #
-# Screenshot workflow:
-#   ./test.sh --seed-demo --keep
-#   → container stays on port 8081, app populated with demo data
-#   → open http://localhost:8081 in browser to take screenshots
-#   → next ./test.sh run will clean up the demo app automatically
+# MODE FLAGS  (combinable; if none are given → interactive menu)
+#   --unit          Run PHPUnit unit + integration tests
+#   --setup         Hurl phases 01-03: create app + configure schema
+#   --tests         Hurl phases 04-31: full CRUD & feature suite
+#   --seed          Hurl phase 19: populate app with demo data
+#   --seed-more     Hurl phase 19b: extended seed (implies --seed)
 #
-# Requirements:
-#   - docker        (Docker Desktop or Docker Engine)
-#   - hurl >= 4.0   (brew install hurl)
-#   - jq  >= 1.6    (brew install jq)
+# PHASE CONTROL  (apply to --tests)
+#   --list          List all phases with their steps; do not run
+#   --from=N        Run from phase N onward  (e.g. --from=06)
+#   --only=N        Run only phases with prefix N (e.g. --only=04)
+#                   Note: phases 04b/04c/04d/04e match --only=04
+#
+# INFRASTRUCTURE
+#   --reset         Delete existing app without asking
+#   --db=ENGINE     DB engine: sqlite (default), pgsql, mysql
+#   --all-engines   Run the full suite on sqlite, pgsql, mysql
+#   --keep          Leave the Docker container running after the run
+#   --no-docker     Skip Docker; use local server at BASE_URL (:8080)
+#
+# COMMON WORKFLOWS
+#   ./test.sh --setup --tests            # create app + full test suite
+#   ./test.sh --setup --tests --seed     # tests then demo seed
+#   ./test.sh --setup --seed             # create app + seed only
+#   ./test.sh --reset --setup --tests    # clean run (auto-delete app)
+#   ./test.sh --seed-more --keep         # seed + leave container up for screenshots
+#   ./test.sh --tests --only=04          # run all phase-04 sub-phases
+#   ./test.sh --unit                     # PHPUnit only
+#   ./test.sh --list                     # list phases, exit
+#   ./test.sh --all-engines --setup --tests  # CI: test on all DB engines
+#
+# REQUIREMENTS
+#   docker   (Docker Desktop or Docker Engine) — unless --no-docker
+#   hurl  >= 4.0   (brew install hurl)
+#   jq    >= 1.6   (brew install jq)
+#   BRADYPUS_ALLOW_NEW_APP=1 is set automatically in the test container
 # ════════════════════════════════════════════════════════════════════
 
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# ── Colour helpers ──────────────────────────────────────────────────
+# ── Colour helpers ───────────────────────────────────────────────
 GREEN='\033[0;32m'; RED='\033[0;31m'; YELLOW='\033[1;33m'
 CYAN='\033[0;36m'; BOLD='\033[1m'; RESET='\033[0m'
 
@@ -42,26 +60,43 @@ info()   { echo -e "${CYAN}▶${RESET} $*"; }
 warn()   { echo -e "${YELLOW}⚠${RESET} $*"; }
 header() { echo -e "\n${BOLD}${CYAN}══ $* ══${RESET}"; }
 
-# ── Parse flags ──────────────────────────────────────────────────────
-KEEP=false
-SKIP_UNIT=false
-SKIP_E2E=false
-SEED_DEMO=false
-DB_ENGINE="sqlite"
+# ── Parse flags ──────────────────────────────────────────────────
+FORCE_RESET=false
+RUN_UNIT=false
+RUN_SETUP=false
+RUN_TESTS=false
+RUN_SEED=false
+SEED_MORE=false
+FROM_PHASE=""
+ONLY_PHASE=""
+DB_ENGINE=sqlite
 ALL_ENGINES=false
+KEEP=false
+NO_DOCKER=false
+LIST_ONLY=false
 
 for arg in "$@"; do
   case "$arg" in
-    --keep)          KEEP=true ;;
-    --skip-unit)     SKIP_UNIT=true ;;
-    --skip-e2e)      SKIP_E2E=true ;;
-    --seed-demo)     SEED_DEMO=true ;;
-    --seed-more)     SEED_DEMO=true; EXTRA_SEED="--seed-more" ;;
-    --all-engines)   ALL_ENGINES=true ;;
-    --db=*)          DB_ENGINE="${arg#--db=}" ;;
+    --reset)        FORCE_RESET=true ;;
+    --unit)         RUN_UNIT=true ;;
+    --setup)        RUN_SETUP=true ;;
+    --tests)        RUN_TESTS=true ;;
+    --seed)         RUN_SEED=true ;;
+    --seed-more)    RUN_SEED=true; SEED_MORE=true ;;
+    --list)         LIST_ONLY=true ;;
+    --from=*)       FROM_PHASE="${arg#--from=}" ;;
+    --only=*)       ONLY_PHASE="${arg#--only=}" ;;
+    --db=*)         DB_ENGINE="${arg#--db=}" ;;
+    --all-engines)  ALL_ENGINES=true ;;
+    --keep)         KEEP=true ;;
+    --no-docker)    NO_DOCKER=true ;;
+    -h|--help)
+      sed -n '/^# USAGE/,/^# REQUIREMENTS/p' "$0" | sed 's/^# \{0,1\}//'
+      exit 0
+      ;;
     *)
       echo "Unknown option: $arg" >&2
-      echo "Usage: $0 [--keep] [--seed-demo] [--seed-more] [--skip-unit] [--skip-e2e] [--db=sqlite|pgsql|mysql] [--all-engines]" >&2
+      echo "Run ./test.sh --help for usage." >&2
       exit 1
       ;;
   esac
@@ -70,29 +105,30 @@ done
 case "$DB_ENGINE" in
   sqlite|pgsql|mysql) ;;
   *)
-    echo "Unknown DB engine: $DB_ENGINE (supported: sqlite, pgsql, mysql)" >&2
+    echo "Unknown DB engine: ${DB_ENGINE} (supported: sqlite, pgsql, mysql)" >&2
     exit 1
     ;;
 esac
 
-# ── Multi-engine mode ─────────────────────────────────────────────────
-# --all-engines runs the full suite three times (sqlite → pgsql → mysql)
-# and exits non-zero if any engine fails.
+# ── --all-engines: re-invoke for each DB engine ──────────────────
 if [[ "$ALL_ENGINES" == true ]]; then
+  PASS_FLAGS=()
+  for arg in "$@"; do
+    [[ "$arg" == "--all-engines" ]] && continue
+    [[ "$arg" == --db=* ]]         && continue
+    PASS_FLAGS+=("$arg")
+  done
   MULTI_EXIT=0
-  ENGINES_FAILED=()
+  FAILED_ENGINES=()
   for engine in sqlite pgsql mysql; do
-    echo -e "\n${BOLD}${CYAN}════════════════════════════════════════${RESET}"
-    echo -e "${BOLD}${CYAN}  Running suite on: ${engine}${RESET}"
-    echo -e "${BOLD}${CYAN}════════════════════════════════════════${RESET}\n"
-    if bash "$0" --db="$engine" \
-        $( [[ "$SKIP_UNIT" == true ]]  && echo "--skip-unit"  ) \
-        $( [[ "$SKIP_E2E"  == true ]]  && echo "--skip-e2e"   ) \
-        $( [[ "$SEED_DEMO" == true ]]  && echo "--seed-demo"  ); then
-      pass "Engine ${engine}: ALL PASSED"
+    echo -e "\n${BOLD}${CYAN}════════════════════════════════════${RESET}"
+    echo -e "${BOLD}${CYAN}  Engine: ${engine}${RESET}"
+    echo -e "${BOLD}${CYAN}════════════════════════════════════${RESET}\n"
+    if bash "$0" --db="$engine" "${PASS_FLAGS[@]}"; then
+      pass "Engine ${engine}: PASSED"
     else
       fail "Engine ${engine}: FAILED"
-      ENGINES_FAILED+=("$engine")
+      FAILED_ENGINES+=("$engine")
       MULTI_EXIT=1
     fi
   done
@@ -100,202 +136,251 @@ if [[ "$ALL_ENGINES" == true ]]; then
   if [[ $MULTI_EXIT -eq 0 ]]; then
     echo -e "${BOLD}${GREEN}All engines passed: sqlite ✓  pgsql ✓  mysql ✓${RESET}\n"
   else
-    echo -e "${BOLD}${RED}Failed engines: ${ENGINES_FAILED[*]}${RESET}\n"
+    echo -e "${BOLD}${RED}Failed engines: ${FAILED_ENGINES[*]}${RESET}\n"
   fi
   exit $MULTI_EXIT
 fi
 
-# ── Constants ────────────────────────────────────────────────────────
-COMPOSE_PROJECT="bdus-test"
-COMPOSE_FILES=(-f docker-compose.yml -f docker-compose.test.yml)
-TEST_PORT=8081
-HEALTH_URL="http://localhost:${TEST_PORT}/"
-HEALTH_TIMEOUT=60   # seconds to wait for the server to respond
-_VARS_TMP=""        # set below for non-SQLite engines; cleaned up in trap
+# ── Interactive menu (no mode flags given) ───────────────────────
+ANY_MODE=false
+for v in "$RUN_UNIT" "$RUN_SETUP" "$RUN_TESTS" "$RUN_SEED" "$LIST_ONLY"; do
+  [[ "$v" == true ]] && ANY_MODE=true && break
+done
 
-# Add engine-specific compose override and build a temp vars file with
-# the DB connection details that run.sh will forward to Hurl as variables.
-if [[ "$DB_ENGINE" == "pgsql" ]]; then
-  COMPOSE_FILES+=(-f docker-compose.test.pg.yml)
-  _VARS_TMP=$(mktemp /tmp/bdus-test-XXXXXX.env)
-  cat "${SCRIPT_DIR}/tests/api/vars.test.env" > "$_VARS_TMP"
-  cat >> "$_VARS_TMP" <<'EOF'
-DB_ENGINE=pgsql
-DB_HOST=postgres
-DB_PORT=5432
-DB_NAME=bdus_test
-DB_USERNAME=bdus
-DB_PASSWORD=bdus_test_pw
-EOF
-elif [[ "$DB_ENGINE" == "mysql" ]]; then
-  COMPOSE_FILES+=(-f docker-compose.test.mysql.yml)
-  _VARS_TMP=$(mktemp /tmp/bdus-test-XXXXXX.env)
-  cat "${SCRIPT_DIR}/tests/api/vars.test.env" > "$_VARS_TMP"
-  cat >> "$_VARS_TMP" <<'EOF'
-DB_ENGINE=mysql
-DB_HOST=mariadb
-DB_PORT=3306
-DB_NAME=bdus_test
-DB_USERNAME=bdus
-DB_PASSWORD=bdus_test_pw
-EOF
+if [[ "$ANY_MODE" == false ]]; then
+  header "BraDypUS Test Suite"
+  echo ""
+
+  read -r -p "  Run PHPUnit unit + integration tests? [Y/n] " ans </dev/tty
+  [[ "$ans" =~ ^[nN]$ ]] || RUN_UNIT=true
+
+  read -r -p "  Run setup (phases 01-03: create app + schema)? [Y/n] " ans </dev/tty
+  [[ "$ans" =~ ^[nN]$ ]] || RUN_SETUP=true
+
+  read -r -p "  Run CRUD tests (phases 04-31)? [Y/n] " ans </dev/tty
+  [[ "$ans" =~ ^[nN]$ ]] || RUN_TESTS=true
+
+  read -r -p "  Run demo seed (phase 19)? [y/N] " ans </dev/tty
+  [[ "$ans" =~ ^[yY]$ ]] && RUN_SEED=true
+
+  if [[ "$RUN_SEED" == true ]]; then
+    read -r -p "  Extended seed (phase 19b)? [y/N] " ans </dev/tty
+    [[ "$ans" =~ ^[yY]$ ]] && SEED_MORE=true
+  fi
+  echo ""
 fi
 
-VARS_FILE="${_VARS_TMP:-${SCRIPT_DIR}/tests/api/vars.test.env}"
+# ── --list: print phases and exit ────────────────────────────────
+if [[ "$LIST_ONLY" == true ]]; then
+  source "${SCRIPT_DIR}/tests/api/_phases.sh"
+  list_phases
+  exit 0
+fi
 
-# ── Check required tools ─────────────────────────────────────────────
+# ── Check required tools ─────────────────────────────────────────
 header "Checking dependencies"
 MISSING=()
-for cmd in docker hurl jq; do
+NEED_DOCKER=$([[ "$NO_DOCKER" == false ]] && echo true || echo false)
+
+for cmd in hurl jq; do
   if command -v "$cmd" &>/dev/null; then
     pass "$cmd found"
   else
-    fail "$cmd not found"
+    fail "$cmd not found (brew install $cmd)"
     MISSING+=("$cmd")
   fi
 done
+
+if [[ "$NEED_DOCKER" == true ]]; then
+  if command -v docker &>/dev/null; then
+    pass "docker found"
+  else
+    fail "docker not found"
+    MISSING+=("docker")
+  fi
+fi
+
 if [[ ${#MISSING[@]} -gt 0 ]]; then
-  echo ""
   fail "Missing tools: ${MISSING[*]}"
-  echo "  brew install ${MISSING[*]}"
   exit 1
 fi
 
-# ── Step 1 — Ensure Docker daemon is running ─────────────────────────
-header "Step 1 — Docker daemon"
-if docker info &>/dev/null; then
-  pass "Docker daemon is running"
-else
-  warn "Docker daemon is not running"
-  if [[ "$(uname)" == "Darwin" ]]; then
-    info "Starting Docker.app…"
-    open -a Docker
-    info "Waiting for Docker daemon (up to 60 s)…"
-    WAIT=0
-    until docker info &>/dev/null; do
-      sleep 2; WAIT=$((WAIT + 2))
-      if [[ $WAIT -ge 60 ]]; then
-        fail "Docker daemon did not start in time"
-        exit 1
-      fi
-    done
-    pass "Docker daemon started"
-  else
-    fail "Docker daemon is not running. Please start it manually."
-    exit 1
-  fi
-fi
+# ── Docker setup ─────────────────────────────────────────────────
+DOCKER_BASE_URL="http://localhost:8081"
+COMPOSE_PROJECT="bdus-test"
+COMPOSE_FILES=(-f "${SCRIPT_DIR}/docker-compose.yml" -f "${SCRIPT_DIR}/docker-compose.test.yml")
 
-# ── Step 2 — Start isolated test container ───────────────────────────
-header "Step 2 — Test container (project: ${COMPOSE_PROJECT}, port: ${TEST_PORT}, db: ${DB_ENGINE})"
+if [[ "$NO_DOCKER" == false ]]; then
+  [[ "$DB_ENGINE" == "pgsql"  ]] && COMPOSE_FILES+=(-f "${SCRIPT_DIR}/docker-compose.test.pg.yml")
+  [[ "$DB_ENGINE" == "mysql"  ]] && COMPOSE_FILES+=(-f "${SCRIPT_DIR}/docker-compose.test.mysql.yml")
 
-# Bring down any leftover test project first (idempotent)
-if docker compose -p "$COMPOSE_PROJECT" "${COMPOSE_FILES[@]}" ps -q 2>/dev/null | grep -q .; then
-  warn "Leftover test container found — stopping it first"
-  docker compose -p "$COMPOSE_PROJECT" "${COMPOSE_FILES[@]}" down --volumes --remove-orphans 2>/dev/null || true
-fi
-
-info "Building and starting test container…"
-docker compose -p "$COMPOSE_PROJECT" "${COMPOSE_FILES[@]}" up -d --build
-
-# ── Cleanup trap ─────────────────────────────────────────────────────
-cleanup() {
-  local exit_code=$?
-  [[ -n "$_VARS_TMP" ]] && rm -f "$_VARS_TMP"
-  if [[ "$KEEP" == true ]]; then
-    warn "Container left running (--keep). Stop it with:"
-    echo "  docker compose -p ${COMPOSE_PROJECT} ${COMPOSE_FILES[*]} down"
-  else
-    header "Cleanup"
-    info "Stopping test container…"
-    docker compose -p "$COMPOSE_PROJECT" "${COMPOSE_FILES[@]}" down --volumes --remove-orphans 2>/dev/null || true
-    pass "Test container stopped"
-  fi
-  exit "$exit_code"
-}
-trap cleanup EXIT
-
-# ── Step 3 — Wait for server readiness ──────────────────────────────
-header "Step 3 — Server readiness"
-info "Waiting for ${HEALTH_URL} (timeout: ${HEALTH_TIMEOUT} s)…"
-ELAPSED=0
-until curl -s --max-time 2 -o /dev/null "$HEALTH_URL"; do
-  sleep 2; ELAPSED=$((ELAPSED + 2))
-  if [[ $ELAPSED -ge $HEALTH_TIMEOUT ]]; then
-    fail "Server did not become ready within ${HEALTH_TIMEOUT} s"
-    echo ""
-    echo "Container logs:"
-    docker compose -p "$COMPOSE_PROJECT" "${COMPOSE_FILES[@]}" logs --tail=50
-    exit 1
-  fi
-  echo -n "."
-done
-echo ""
-pass "Server is ready at ${HEALTH_URL}"
-
-# ── Step 4 — PHPUnit ─────────────────────────────────────────────────
-UNIT_EXIT=0
-if [[ "$SKIP_UNIT" == true ]]; then
-  warn "PHPUnit skipped (--skip-unit)"
-else
-  header "Step 4 — PHPUnit (unit + integration)"
-  CONTAINER_ID=$(docker compose -p "$COMPOSE_PROJECT" "${COMPOSE_FILES[@]}" ps -q app)
-  if docker exec "$CONTAINER_ID" \
-      php vendor/bin/phpunit --colors=always; then
-    pass "PHPUnit: all tests passed"
-  else
-    UNIT_EXIT=$?
-    fail "PHPUnit: some tests failed (exit ${UNIT_EXIT})"
-  fi
-fi
-
-# ── Step 5 — Hurl E2E ────────────────────────────────────────────────
-# The correctness phases (01-30) run first. Phase 10 drops crud_test
-# so the archaeological tables are clean. If --seed-demo, phases 19
-# (and optionally 19b) then populate the same app with demo data.
-E2E_EXIT=0
-if [[ "$SKIP_E2E" == true ]]; then
-  warn "Hurl E2E skipped (--skip-e2e)"
-else
-  header "Step 5 — Hurl E2E API suite"
-  E2E_ARGS=("$VARS_FILE")
-  [[ "$SEED_DEMO" == true ]] && E2E_ARGS+=("--seed-demo")
-  [[ "${EXTRA_SEED:-}" == "--seed-more" ]] && E2E_ARGS=("$VARS_FILE" "--seed-more")
-  if "${SCRIPT_DIR}/tests/api/run.sh" "${E2E_ARGS[@]}"; then
-    pass "Hurl E2E: all phases passed"
-    if [[ "$SEED_DEMO" == true ]]; then
-      info "App: ${APP_NAME} at http://localhost:${TEST_PORT} — ${ADMIN_EMAIL} / ${ADMIN_PASSWORD}"
+  # Ensure Docker daemon is running
+  header "Docker daemon"
+  if ! docker info &>/dev/null; then
+    warn "Docker daemon not running"
+    if [[ "$(uname)" == "Darwin" ]]; then
+      info "Starting Docker.app…"
+      open -a Docker
+      info "Waiting for daemon (up to 60 s)…"
+      ELAPSED=0
+      until docker info &>/dev/null; do
+        sleep 2; ELAPSED=$((ELAPSED + 2))
+        [[ $ELAPSED -ge 60 ]] && { fail "Docker did not start in time"; exit 1; }
+        echo -n "."
+      done
+      echo ""
+      pass "Docker started"
+    else
+      fail "Docker daemon is not running. Start it manually."
+      exit 1
     fi
   else
-    E2E_EXIT=$?
-    fail "Hurl E2E: some phases failed (exit ${E2E_EXIT})"
+    pass "Docker daemon is running"
   fi
-fi
-DEMO_EXIT=0
 
-# ── Summary ──────────────────────────────────────────────────────────
+  # Stop any leftover test container
+  header "Test container (project: ${COMPOSE_PROJECT}, port: 8081, db: ${DB_ENGINE})"
+  if docker compose -p "$COMPOSE_PROJECT" "${COMPOSE_FILES[@]}" ps -q 2>/dev/null | grep -q .; then
+    warn "Leftover container found — stopping"
+    docker compose -p "$COMPOSE_PROJECT" "${COMPOSE_FILES[@]}" down --volumes --remove-orphans 2>/dev/null || true
+  fi
+
+  info "Building and starting test container…"
+  docker compose -p "$COMPOSE_PROJECT" "${COMPOSE_FILES[@]}" up -d --build
+
+  # Cleanup trap
+  cleanup() {
+    local code=$?
+    if [[ "$KEEP" == true ]]; then
+      warn "Container left running (--keep). Stop with:"
+      echo "  docker compose -p ${COMPOSE_PROJECT} ${COMPOSE_FILES[*]} down"
+    else
+      header "Cleanup"
+      info "Stopping test container…"
+      docker compose -p "$COMPOSE_PROJECT" "${COMPOSE_FILES[@]}" down --volumes --remove-orphans 2>/dev/null || true
+      pass "Container stopped"
+    fi
+    exit "$code"
+  }
+  trap cleanup EXIT
+
+  # Health check
+  header "Server readiness"
+  info "Waiting for ${DOCKER_BASE_URL} (timeout: 60 s)…"
+  ELAPSED=0
+  until curl -s --max-time 2 -o /dev/null "${DOCKER_BASE_URL}"; do
+    sleep 2; ELAPSED=$((ELAPSED + 2))
+    if [[ $ELAPSED -ge 60 ]]; then
+      fail "Server did not become ready within 60 s"
+      docker compose -p "$COMPOSE_PROJECT" "${COMPOSE_FILES[@]}" logs --tail=50
+      exit 1
+    fi
+    echo -n "."
+  done
+  echo ""
+  pass "Server ready at ${DOCKER_BASE_URL}"
+fi
+
+# ── Load configuration ───────────────────────────────────────────
+VARS_FILE="${SCRIPT_DIR}/tests/api/vars.local.env"
+[[ -f "$VARS_FILE" ]] || VARS_FILE="${SCRIPT_DIR}/tests/api/vars.env"
+# shellcheck disable=SC1090
+source "$VARS_FILE"
+
+# Override BASE_URL and DB credentials when running in Docker
+if [[ "$NO_DOCKER" == false ]]; then
+  BASE_URL="$DOCKER_BASE_URL"
+fi
+
+if [[ "$DB_ENGINE" == "pgsql" ]]; then
+  DB_HOST=postgres; DB_PORT=5432; DB_NAME=bdus_test
+  DB_USERNAME=bdus; DB_PASSWORD=bdus_test_pw
+elif [[ "$DB_ENGINE" == "mysql" ]]; then
+  DB_HOST=mariadb; DB_PORT=3306; DB_NAME=bdus_test
+  DB_USERNAME=bdus; DB_PASSWORD=bdus_test_pw
+fi
+# DB_ENGINE from flag always wins over vars.env
+export DB_ENGINE
+
+# ── Source phase library ─────────────────────────────────────────
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR}/tests/api/_phases.sh"
+setup_hurl_vars
+
+# ── App directory (for pre_flight) ───────────────────────────────
+PROJECTS_DIR="${SCRIPT_DIR}/projects"
+APP_DIR="${PROJECTS_DIR}/${APP_NAME}"
+
+# ── Pre-flight ───────────────────────────────────────────────────
+if [[ "$RUN_SETUP" == true || "$RUN_TESTS" == true || "$RUN_SEED" == true ]]; then
+  header "Pre-flight"
+  pre_flight
+fi
+
+# ── PHPUnit ──────────────────────────────────────────────────────
+UNIT_EXIT=0
+if [[ "$RUN_UNIT" == true ]]; then
+  header "PHPUnit"
+  if [[ "$NO_DOCKER" == false ]]; then
+    CONTAINER_ID=$(docker compose -p "$COMPOSE_PROJECT" "${COMPOSE_FILES[@]}" ps -q app)
+    docker exec "$CONTAINER_ID" php vendor/bin/phpunit --colors=always \
+      || UNIT_EXIT=$?
+  else
+    (cd "${SCRIPT_DIR}" && php vendor/bin/phpunit --colors=always) \
+      || UNIT_EXIT=$?
+  fi
+  [[ $UNIT_EXIT -eq 0 ]] && pass "PHPUnit: all tests passed" \
+                          || fail "PHPUnit: some tests failed"
+fi
+
+# ── Hurl phases ──────────────────────────────────────────────────
+JWT=""
+US_ID_1=""
+US_ID_2=""
+
+if [[ "$RUN_SETUP" == true ]]; then
+  header "═══ Setup ═══"
+  run_setup
+fi
+
+if [[ "$RUN_TESTS" == true ]]; then
+  # Allow resuming against an already-configured app (--tests without --setup)
+  if [[ -z "$JWT" ]]; then
+    if [[ -d "$APP_DIR" ]]; then
+      header "Phase 2 — Login (resuming existing app)"
+      do_login
+    else
+      fail "--tests requires --setup or an existing app at ${APP_DIR}"
+      exit 1
+    fi
+  fi
+  header "═══ Tests ═══"
+  run_tests
+fi
+
+if [[ "$RUN_SEED" == true ]]; then
+  header "═══ Seed ═══"
+  run_seed
+  echo -e "\n${CYAN}  App:   ${APP_NAME}${RESET}"
+  echo -e "${CYAN}  URL:   ${BASE_URL}${RESET}"
+  echo -e "${CYAN}  Login: ${ADMIN_EMAIL} / ${ADMIN_PASSWORD}${RESET}\n"
+fi
+
+# ── Summary ──────────────────────────────────────────────────────
 header "Summary"
-if [[ "$SKIP_UNIT" == true ]]; then
-  warn "PHPUnit: skipped"
-elif [[ $UNIT_EXIT -eq 0 ]]; then
-  pass "PHPUnit: passed"
-else
-  fail "PHPUnit: FAILED"
+
+if [[ "$RUN_UNIT" == true ]]; then
+  [[ $UNIT_EXIT -eq 0 ]] && pass "PHPUnit:  passed" || fail "PHPUnit:  FAILED"
 fi
 
-if [[ "$SKIP_E2E" == true ]]; then
-  warn "Hurl E2E: skipped"
-elif [[ $E2E_EXIT -eq 0 ]]; then
+if [[ "$RUN_SETUP" == true || "$RUN_TESTS" == true || "$RUN_SEED" == true ]]; then
   pass "Hurl E2E: passed"
-else
-  fail "Hurl E2E: FAILED"
 fi
 
-# Exit non-zero if any suite failed
-OVERALL=$((UNIT_EXIT + E2E_EXIT + DEMO_EXIT))
+OVERALL=$((UNIT_EXIT))
 if [[ $OVERALL -eq 0 ]]; then
   echo -e "\n${BOLD}${GREEN}All tests passed.${RESET}\n"
 else
-  echo -e "\n${BOLD}${RED}One or more test suites failed.${RESET}\n"
+  echo -e "\n${BOLD}${RED}One or more suites failed.${RESET}\n"
 fi
 exit $OVERALL

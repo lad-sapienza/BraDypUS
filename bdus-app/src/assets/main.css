@@ -91,8 +91,11 @@ a:hover {
 .login-wrapper {
   min-height: 100vh;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 1rem;
+  padding: 2rem 1rem;
   background: var(--bdus-bg);
 }
 
@@ -103,6 +106,17 @@ a:hover {
   background: var(--bdus-surface);
   border-radius: var(--p-border-radius-xl);
   box-shadow: var(--p-card-shadow);
+}
+
+.login-card img {
+  display: block;
+  width: auto;
+  max-width: 200px;
+  margin: 0 auto 1.25rem;
+}
+
+.dark-mode .login-card img {
+  filter: invert(1);
 }
 
 .login-title {

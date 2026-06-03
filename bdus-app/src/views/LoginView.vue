@@ -1,6 +1,10 @@
 <template>
   <div class="login-wrapper">
+    <button class="dark-toggle" :title="isDark ? t('light_mode') : t('dark_mode')" @click="toggleDark">
+      <span :class="isDark ? 'pi pi-sun' : 'pi pi-moon'" />
+    </button>
     <div class="login-card">
+      <img src="@/assets/bdus.svg" alt="BraDypUS logo" />
       <h1 class="login-title">BraDypUS</h1>
 
       <!-- ── App selector — always visible ────────────────────────────────── -->
@@ -14,6 +18,8 @@
           placeholder="Select an application…"
           :loading="loadingApps"
           :disabled="loading || upgrading"
+          filter
+          filterPlaceholder="Search…"
           fluid
         >
           <!-- Dropdown option: show name, definition, and upgrade badge if needed -->
@@ -183,6 +189,23 @@
         <router-link to="/new-app">{{ t('create_new_app') }}</router-link>
       </div>
     </div>
+
+    <footer class="login-footer">
+      <p><strong>BraDypUS</strong> v{{ appVersion }}</p>
+      <p>
+        <a href="https://github.com/lad-sapienza/BraDypUS" target="_blank" rel="noopener">
+          Free and open source software (AGPL-3.0)
+        </a>
+        <br />
+        <a href="https://purl.org/lad" target="_blank" rel="noopener">
+          By LAD, Sapienza University of Rome
+        </a>
+        &nbsp;·&nbsp;
+        <a href="https://github.com/lad-sapienza/BraDypUS/issues" target="_blank" rel="noopener">
+          Report an issue
+        </a>
+      </p>
+    </footer>
   </div>
 </template>
 
@@ -192,6 +215,7 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { api } from '@/api'
 import { useI18n } from '@/i18n'
+import { useDarkMode } from '@/composables/useDarkMode'
 import Select from 'primevue/select'
 import InputText from 'primevue/inputtext'
 import Password from 'primevue/password'
@@ -202,6 +226,8 @@ import Tag from 'primevue/tag'
 const { t } = useI18n()
 const router = useRouter()
 const auth = useAuthStore()
+const { isDark, toggle: toggleDark } = useDarkMode()
+const appVersion = __APP_VERSION__
 
 const form = ref({ app: null, email: '', password: '' })
 const loading = ref(false)
@@ -343,6 +369,41 @@ async function handleOAuth(provider) {
 
 <style scoped>
 /* .login-wrapper / .login-card / .login-title live in main.css */
+
+/* ── Dark mode toggle (top-right corner of the wrapper) ─────────────────── */
+.dark-toggle {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--p-text-muted-color);
+  font-size: 1.1rem;
+  padding: 0.4rem;
+  border-radius: 50%;
+  transition: color 0.2s, background 0.2s;
+}
+.dark-toggle:hover {
+  color: var(--p-primary-color);
+  background: var(--p-content-hover-background);
+}
+
+/* ── Footer ─────────────────────────────────────────────────────────────── */
+.login-footer {
+  text-align: center;
+  margin-top: 1.5rem;
+  font-size: 0.78rem;
+  color: var(--p-text-muted-color);
+  line-height: 1.7;
+}
+.login-footer a {
+  color: var(--p-text-muted-color);
+  text-decoration: none;
+}
+.login-footer a:hover {
+  color: var(--p-primary-color);
+}
 
 .field {
   display: flex;

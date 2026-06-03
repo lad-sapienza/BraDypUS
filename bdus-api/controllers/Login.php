@@ -113,7 +113,30 @@ class Login extends \Bdus\Controller
 	{
 		try {
 			$user = $this->authenticate($this->post['email'], $this->post['password']);
-			\DB\System\Migrate::run($this->db, $this->log);
+
+			$pending = \DB\System\Migrate::listPending($this->db);
+
+			if (!empty($pending)) {
+				$isAdmin = (int)($user['privilege'] ?? 99) <= 10;
+				if ($isAdmin) {
+					// Admin: issue token and signal that a minor upgrade is pending.
+					// Migrations run only via POST /api/upgrade/minor (single migration point).
+					$token = \JWT\JwtManager::generate($user, APP);
+					$this->log->info("User {$user['id']} logged into " . APP . " (minor upgrade pending)");
+					$this->returnJson([
+						'status'  => 'success',
+						'code'    => 'ok',
+						'token'   => $token,
+						'upgrade' => ['type' => 'minor', 'pending' => $pending],
+					]);
+				} else {
+					// Non-admin: cannot enter the app until an admin runs the upgrade.
+					$this->returnJson(['status' => 'error', 'code' => 'upgrade_pending']);
+				}
+				return;
+			}
+
+			// No pending migrations: normal login.
 			$this->log->info("User {$user['id']} logged into " . APP);
 			$token = \JWT\JwtManager::generate($user, APP);
 			$this->returnJson(['status' => 'success', 'code' => 'ok', 'token' => $token]);
@@ -138,6 +161,8 @@ class Login extends \Bdus\Controller
 		$availables_DB = \Bdus\Utils::dirContent(MAIN_DIR . "projects");
 		$data = [];
 
+		$currentVersion = \DB\System\Migrate::readCurrentVersion();
+
 		if ($availables_DB && is_array($availables_DB)) {
 			asort($availables_DB);
 
@@ -146,16 +171,12 @@ class Login extends \Bdus\Controller
 				//   post-M018 → projects/{app}/config.json        (project root)
 				//   post-M016 → projects/{app}/cfg/config.json    (inside cfg/)
 				//   pre-M016  → projects/{app}/cfg/app_data.json  (v4 legacy name)
-				// Login runs before migrations, so every app must be found regardless
-				// of which migrations have already been applied.
-				// @todo Once all installations have run M016 + M018, keep only
-				//       "$base/config.json" and remove the two legacy candidates.
 				$base = MAIN_DIR . "projects/$db";
 				$cfg  = null;
 				foreach ([
-					"$base/config.json",         // post-M018: file at project root
-					"$base/cfg/config.json",     // post-M016, pre-M018: file in cfg/
-					"$base/cfg/app_data.json",   // pre-M016: v4 legacy filename
+					"$base/config.json",
+					"$base/cfg/config.json",
+					"$base/cfg/app_data.json",
 				] as $candidate) {
 					if (file_exists($candidate)) { $cfg = $candidate; break; }
 				}
@@ -166,7 +187,27 @@ class Login extends \Bdus\Controller
 				if (!is_array($appl)) {
 					continue;
 				}
-				// Report which OAuth providers are configured for this app
+
+				// ── Upgrade status (no DB query) ────────────────────────────────
+				// 'bdus_version' absent in config → v4 app → major upgrade required.
+				// Same major but lower minor/patch → minor migrations pending.
+				$upgrade = null;
+				if ($currentVersion !== null) {
+					$storedVersion = $appl['bdus_version'] ?? null;
+					if ($storedVersion === null) {
+						$upgrade = 'major';
+					} else {
+						$storedMajor   = (int) explode('.', (string) $storedVersion)[0];
+						$currentMajor  = (int) explode('.', $currentVersion)[0];
+						if ($storedMajor < $currentMajor) {
+							$upgrade = 'major';
+						} elseif (version_compare((string) $storedVersion, $currentVersion, '<')) {
+							$upgrade = 'minor';
+						}
+					}
+				}
+
+				// ── OAuth providers ─────────────────────────────────────────────
 				$oauthProviders = [];
 				foreach (['google', 'orcid'] as $prov) {
 					$creds = $appl['oauth'][$prov] ?? null;
@@ -179,6 +220,7 @@ class Login extends \Bdus\Controller
 					'db'         => $db,
 					'name'       => strtoupper($appl['name'] ?? $db),
 					'definition' => $appl['definition'] ?? '',
+					'upgrade'    => $upgrade,
 					'oauth'      => $oauthProviders,
 				];
 			}

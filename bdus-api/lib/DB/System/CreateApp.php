@@ -8,6 +8,7 @@ namespace DB\System;
 
 
 use DB\DB;
+use DB\System\Migrate;
 use Config\ToDB;
 
 class CreateApp
@@ -94,6 +95,9 @@ class CreateApp
             "db_name"     => $this->db_data['db_name'],
             "db_username" => $this->db_data['db_username'],
             "db_password" => $this->db_data['db_password'],
+            // Presence of this key marks the app as v5+; absence means v4.
+            // Value is updated by Migrate::run() after every upgrade.
+            "bdus_version" => Migrate::readCurrentVersion(),
         ];
         @file_put_contents(
             "projects/$this->app/config.json",

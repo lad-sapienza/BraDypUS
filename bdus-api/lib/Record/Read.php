@@ -232,7 +232,7 @@ EOD;
                     $allIds[] = (int)$row['first'];
                     $allIds[] = (int)$row['second'];
                 }
-                $allIds  = array_unique($allIds);
+                $allIds  = array_values(array_unique($allIds));
                 $idField = $this->cfg->get("tables.{$this->tb}.id_field") ?? 'id';
 
                 $labelMap = [];

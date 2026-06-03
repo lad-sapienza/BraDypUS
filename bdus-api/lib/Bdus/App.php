@@ -33,10 +33,19 @@ class App
 
         $this->setupLogger();
 
-        if ($this->db) {
+        // Prefix stripping is only needed for apps that have not yet been
+        // upgraded to v5 (config.json lacks bdus_version).  Skipping it for
+        // already-migrated apps avoids running no-op UPDATE queries and
+        // generating DEBUG noise on every request.
+        $needsMajorUpgrade = \DB\System\Migrate::isMajorUpgradeNeeded();
+
+        if ($this->db && $needsMajorUpgrade) {
             \DB\System\Migrate::maybeRemovePrefix($this->db, $this->log);
             \DB\System\Migrate::maybeAddBdusPrefix($this->db, $this->log);
-            \DB\System\Migrate::run($this->db, $this->log);
+        }
+
+        if ($needsMajorUpgrade) {
+            define('BDUS_MAJOR_UPGRADE', true);
         }
 
         (new Dispatcher($this->db, $this->log))

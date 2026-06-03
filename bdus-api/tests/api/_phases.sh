@@ -368,6 +368,13 @@ run_tests() {
       --variable "us_id_1=${US_ID_1:-}"
   fi
 
+  if should_run "33"; then
+    header "Phase 33 — Upgrade status"
+    run_phase "Upgrade status" "33_upgrade_status.hurl" \
+      --variable "jwt=${JWT}" \
+      --variable "app=${APP_NAME}"
+  fi
+
   # Phase 10 always runs: drops crud_test tables and logs out
   header "Phase 10 — Cleanup"
   run_phase "Cleanup" "10_cleanup.hurl" \

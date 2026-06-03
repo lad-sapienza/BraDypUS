@@ -91,7 +91,18 @@ jsonpath "$.token"  isString
 jwt: jsonpath "$.token"
 
 
-# ── 2f. Refresh endpoint returns a fresh token ──────────────────────
+# ── 2f. Apply pending migrations (idempotent — no-op on subsequent runs) ──
+# A fresh app has all migrations pending; the admin must explicitly apply them
+# before non-admin users can log in.  This mirrors the real-world upgrade flow.
+POST {{base_url}}/api/upgrade/minor
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+jsonpath "$.code"   == "upgrade_complete"
+
+
+# ── 2g. Refresh endpoint returns a fresh token ──────────────────────
 GET {{base_url}}/api/auth/refresh
 Authorization: Bearer {{jwt}}
 HTTP 200

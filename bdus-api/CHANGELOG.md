@@ -5,6 +5,66 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [5.0.0] - unreleased
 
+### Added
+- **Upgrade assistant** (`controllers/Upgrade.php`): guided v4→v5 and minor-version
+  upgrade flows with a clean, single migration point.
+
+  **Major upgrade (v4 → v5)**:
+  - Detected from `config.json` at request time (`bdus_version` absent = v4).
+    No DB queries needed for detection.
+  - `App::start()` sets `BDUS_MAJOR_UPGRADE` constant; the Dispatcher gates all
+    authenticated routes until the upgrade completes, while all `'none'`-privilege
+    routes (login, app list, OAuth) remain accessible.
+  - `POST /api/upgrade/major` (no JWT): superadmin authenticates directly against
+    `bdus_users` (privilege = 1); on success runs all pending migrations.
+  - After upgrade, `bdus_version` is written to **both** `bdus_cfg_app` (DB) and
+    `config.json` (file), so the next request detects the app as v5 without any DB
+    query.
+  - `listApps` response now includes `upgrade: 'major' | 'minor' | null` per app,
+    computed from `config.json` alone — no extra DB round-trip.
+  - Login page: app selector shows a colour-coded badge for apps needing upgrade;
+    selecting a v4 app replaces the login form with the upgrade panel.
+
+  **Minor upgrade (v5.x → v5.y)**:
+  - After admin login, if pending migrations exist, the login response includes
+    `upgrade: { type: 'minor', pending: [...] }` alongside the JWT.
+    Non-admin users cannot log in until an admin applies the upgrade.
+  - `POST /api/upgrade/minor` (JWT, admin): applies pending migrations and returns
+    the list of applied migration names.
+  - `Upgrade::status()` also exposes `affects_files: bool` flagging migrations that
+    touch project files (`FILE_AFFECTING_MIGRATIONS` constant in `Migrate`).
+  - `MinorUpgradeView.vue` (`/:app/upgrade`): post-login confirmation screen showing
+    pending migrations + optional "affects files" warning.
+
+  **Single migration point**: `Login::auth()` no longer calls `Migrate::run()`;
+  all schema migrations run exclusively via `Upgrade::runMajor/runMinor`.
+  Prefix stripping (`maybeRemovePrefix`, `maybeAddBdusPrefix`) runs only for apps
+  that still need it (v4 detection), eliminating per-request noise for v5 apps.
+
+  Tests: hurl phase 33 (upgrade status, minor run, no-major guard); phase 2 now
+  calls `POST /api/upgrade/minor` after admin login to initialise fresh apps before
+  non-admin tests run.
+
+### Fixed
+- **M011 `ConfigToDb`**: removed aggressive early-exit (`return if bdus_cfg_tables
+  has any rows`) that caused incomplete imports when a previous partial run had
+  already inserted some — but not all — tables. All four `INSERT` statements are
+  now `INSERT OR IGNORE`, making the migration fully idempotent at row level.
+- **M030 `RsIdsToInteger`**: replaced destructive `DROP TABLE bdus_rs` with a
+  rename-to-backup (`bdus_rs_v4_backup`) before creating the new INTEGER-column
+  table. If the process is interrupted between the rename and the INSERT commit,
+  the next run detects the backup, restores it, and re-runs the conversion safely.
+  Guard clause updated to treat "INTEGER columns + no backup" as fully migrated and
+  "INTEGER columns + backup present" as a recoverable partial run.
+- **`Record\Read::getRs()`**: `array_unique()` preserves original array keys,
+  producing non-consecutive indices that caused PDO `column index out of range`
+  when binding positional `?` parameters. Fixed with `array_values(array_unique())`.
+- **`RsGraph.vue`**: `REL_INVERSE` was used in `buildElements()` but missing from
+  the `useRsRelations` import, causing `ReferenceError` on the Harris Matrix view.
+- **`RecordView.vue` `recordTitle`**: `id_field` values that are numeric are now
+  cast to `String` before being passed as the `recordLabel` prop to
+  `ManualLinksSection`, eliminating a `type check failed` Vue prop warning.
+
 ### Changed
 - **RS (stratigraphic relations) redesigned** — breaking change vs. v4:
   - **Config**: `tables.{tb}.rs` changes from a field-name string (e.g. `"sigla"`)

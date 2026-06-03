@@ -50,15 +50,20 @@ class Router
      */
     public const ROUTE_PRIVILEGE = [
         // ── Public / no-auth ────────────────────────────────────────────────
-        'Bdus\\Controllers\\Login::listApps'    => 'none',
-        'Bdus\\Controllers\\Login::auth'        => 'none',
-        'Bdus\\Controllers\\Login::refresh'     => 'none',
-        'Bdus\\Controllers\\Login::out'         => 'none',
-        'Bdus\\Controllers\\Info::getInfo'      => 'none',
-        'Bdus\\Controllers\\NewApp::getStatus' => 'none',
-        'Bdus\\Controllers\\NewApp::create'    => 'none',
-        'Bdus\\Controllers\\OAuth::redirect'    => 'none',
-        'Bdus\\Controllers\\OAuth::callback'    => 'none',
+        'Bdus\\Controllers\\Login::listApps'     => 'none',
+        'Bdus\\Controllers\\Login::auth'         => 'none',
+        'Bdus\\Controllers\\Login::refresh'      => 'none',
+        'Bdus\\Controllers\\Login::out'          => 'none',
+        'Bdus\\Controllers\\Info::getInfo'       => 'none',
+        'Bdus\\Controllers\\NewApp::getStatus'   => 'none',
+        'Bdus\\Controllers\\NewApp::create'      => 'none',
+        'Bdus\\Controllers\\OAuth::redirect'     => 'none',
+        'Bdus\\Controllers\\OAuth::callback'     => 'none',
+        'Bdus\\Controllers\\Upgrade::status'     => 'none',
+        'Bdus\\Controllers\\Upgrade::runMajor'   => 'none',
+
+        // ── Upgrade (minor) — admin only ─────────────────────────────────────
+        'Bdus\\Controllers\\Upgrade::runMinor'   => 'admin',
 
         // ── Read — any authenticated principal ───────────────────────────────
         'Bdus\\Controllers\\Home::listTables'                      => 'read',
@@ -413,6 +418,11 @@ class Router
             // ── Widgets ───────────────────────────────────────────────────────
             $r->addRoute('GET', '/api/widgets',       ['Bdus\\Controllers\\Widget', 'listWidgets']);
             $r->addRoute('GET', '/api/widget/{name}', ['Bdus\\Controllers\\Widget', 'serveWidget']);
+
+            // ── Upgrade assistant ─────────────────────────────────────────────
+            $r->addRoute('GET',  '/api/upgrade/status', ['Bdus\\Controllers\\Upgrade', 'status']);
+            $r->addRoute('POST', '/api/upgrade/major',  ['Bdus\\Controllers\\Upgrade', 'runMajor']);
+            $r->addRoute('POST', '/api/upgrade/minor',  ['Bdus\\Controllers\\Upgrade', 'runMinor']);
 
             // ── New application wizard ────────────────────────────────────────
             $r->addRoute('GET',  '/api/new-app/status', ['Bdus\\Controllers\\NewApp', 'getStatus']);

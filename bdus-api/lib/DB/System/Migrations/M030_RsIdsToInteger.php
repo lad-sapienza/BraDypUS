@@ -42,20 +42,36 @@ class M030_RsIdsToInteger
 
         $db = $manage->getDb();
 
-        // Guard: already INTEGER on SQLite (check column type via PRAGMA)
-        if ($db->getEngine() === 'sqlite') {
-            $cols = $db->query('PRAGMA table_info(bdus_rs)', [], 'read') ?: [];
+        $isSqlite = $db->getEngine() === 'sqlite';
+
+        // ── Guard / recovery from partial previous run ────────────────────────
+        // We use a backup table (bdus_rs_v4_backup) as a safety net instead of
+        // DROP, so a crash between the table swap and the commit is recoverable.
+        if ($isSqlite) {
+            $backupExists = (int)($db->query(
+                "SELECT COUNT(*) AS cnt FROM sqlite_master WHERE type='table' AND name='bdus_rs_v4_backup'",
+                [], 'read'
+            )[0]['cnt'] ?? 0) > 0;
+
+            $cols    = $db->query('PRAGMA table_info(bdus_rs)', [], 'read') ?: [];
             $typeMap = array_column($cols, 'type', 'name');
-            if (
-                isset($typeMap['first'], $typeMap['second']) &&
-                strtoupper($typeMap['first'])  === 'INTEGER' &&
-                strtoupper($typeMap['second']) === 'INTEGER'
-            ) {
-                return;
+            $isInt   = isset($typeMap['first'], $typeMap['second'])
+                    && strtoupper($typeMap['first'])  === 'INTEGER'
+                    && strtoupper($typeMap['second']) === 'INTEGER';
+
+            if ($isInt && !$backupExists) {
+                return; // Already fully migrated.
+            }
+
+            if ($isInt && $backupExists) {
+                // Previous partial run: new table exists but inserts didn't complete.
+                // Restore original data from backup and re-run.
+                $db->exec('DROP TABLE bdus_rs');
+                $db->exec('ALTER TABLE bdus_rs_v4_backup RENAME TO bdus_rs');
             }
         }
 
-        // Read existing rows
+        // Read existing rows (TEXT first/second)
         $rows = $db->query('SELECT id, tb, first, second, relation FROM bdus_rs', [], 'read') ?: [];
 
         // Build per-tb resolution maps: text identifier → integer id
@@ -87,8 +103,12 @@ class M030_RsIdsToInteger
             ];
         }
 
-        // Rebuild table with INTEGER columns (rs.json already updated in source)
-        $db->exec('DROP TABLE IF EXISTS bdus_rs');
+        // Rename old table to backup (preserves v4 data until commit succeeds).
+        if ($isSqlite) {
+            $db->exec('ALTER TABLE bdus_rs RENAME TO bdus_rs_v4_backup');
+        } else {
+            $db->exec('DROP TABLE IF EXISTS bdus_rs');
+        }
         $manage->createTable('bdus_rs');
 
         if (!empty($converted)) {
@@ -104,7 +124,25 @@ class M030_RsIdsToInteger
                 $db->commit();
             } catch (\Throwable $e) {
                 $db->rollBack();
+                // Restore original table from backup so the migration can be retried.
+                if ($isSqlite) {
+                    try {
+                        $db->exec('DROP TABLE bdus_rs');
+                        $db->exec('ALTER TABLE bdus_rs_v4_backup RENAME TO bdus_rs');
+                    } catch (\Throwable $inner) {
+                        // Best-effort restore; log the inner error if possible.
+                    }
+                }
                 throw $e;
+            }
+        }
+
+        // Inserts committed — safe to drop the backup.
+        if ($isSqlite) {
+            try {
+                $db->exec('DROP TABLE IF EXISTS bdus_rs_v4_backup');
+            } catch (\Throwable $e) {
+                // Non-fatal: backup table stays but migration data is correct.
             }
         }
 

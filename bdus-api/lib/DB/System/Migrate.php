@@ -62,6 +62,25 @@ use Monolog\Logger;
 class Migrate
 {
     /**
+     * Migrations that modify project files on disk (cfg/, config.json, etc.).
+     *
+     * This list is used by the upgrade assistant to decide whether to show the
+     * admin a "notable changes" banner on the minor-upgrade screen.  Pure DB
+     * migrations (add a column, create a table) are not listed here.
+     *
+     * As v5 stabilises, new migrations will almost exclusively touch only the DB,
+     * so this list is expected to grow very rarely after the initial v5 release.
+     */
+    public const FILE_AFFECTING_MIGRATIONS = [
+        'M011_config_to_db',
+        'M014_geoface_config_to_db',
+        'M015_delete_cfg_json_files',
+        'M016_rename_app_data_json',
+        'M017_cleanup_cfg_dir',
+        'M018_move_config_to_root',
+    ];
+
+    /**
      * Ordered list of all migrations.
      * New migrations are appended at the end — never reorder.
      */
@@ -451,7 +470,7 @@ class Migrate
             [$oldPrefix, $oldPrefix, $oldPrefix . '%', $oldPrefix . '%'],
             'boolean'
         );
-        $log?->info("Migrate: stripped prefix '{$oldPrefix}' from userlinks.tb_one / tb_two");
+        $log?->debug("Migrate: stripped prefix '{$oldPrefix}' from userlinks.tb_one / tb_two");
     }
 
     /**
@@ -573,7 +592,117 @@ class Migrate
             );
         }
 
-        $log?->info("Migrate: stripped prefix '{$oldPrefix}' from table_link / tb data columns");
+        $log?->debug("Migrate: stripped prefix '{$oldPrefix}' from table_link / tb data columns");
+    }
+
+    /**
+     * Returns true when the app needs a major-version upgrade before it can be
+     * used normally (e.g. v4 → v5).
+     *
+     * Detection is based entirely on config.json — no DB queries required.
+     *
+     *  - No 'bdus_version' key in config → v4 app (key was never written by v4
+     *    code, and v5 writes it on every Migrate::run() call).
+     *  - stored major < current major → major upgrade required.
+     *  - Any other case (same major, or config not found) → not a major upgrade.
+     */
+    public static function isMajorUpgradeNeeded(): bool
+    {
+        if (!defined('PROJ_DIR')) {
+            return false;
+        }
+
+        // Probe config in the same order as Login::listApps() so all migration
+        // states are handled: post-M018 root, post-M016 cfg/, pre-M016 v4 name.
+        $config = null;
+        foreach ([
+            PROJ_DIR . 'config.json',
+            PROJ_DIR . 'cfg/config.json',
+            PROJ_DIR . 'cfg/app_data.json',
+        ] as $candidate) {
+            if (file_exists($candidate)) {
+                $config = json_decode(file_get_contents($candidate), true);
+                break;
+            }
+        }
+
+        if (!is_array($config)) {
+            return false; // No config found — bootstrap not yet complete.
+        }
+
+        // No bdus_version key → v4 app (key was never written by v4 code).
+        if (!array_key_exists('bdus_version', $config)) {
+            return true;
+        }
+
+        $storedVersion = $config['bdus_version'];
+        if ($storedVersion === null) {
+            return true; // Explicit null → treat as major.
+        }
+
+        $currentVersion = self::readCurrentVersion();
+        if ($currentVersion === null) {
+            return false; // Can't determine — don't block the app.
+        }
+
+        return (int) explode('.', $storedVersion)[0]
+             < (int) explode('.', $currentVersion)[0];
+    }
+
+    /**
+     * Returns an array of pending migration NAMEs (strings) for the given DB.
+     *
+     * If bdus_migrations doesn't exist (e.g. very old app on first boot) all
+     * known migrations are reported as pending.  The caller decides what to do.
+     */
+    public static function listPending(DBInterface $db): array
+    {
+        // Check whether bdus_migrations tracking table exists.
+        if ($db->getEngine() === 'sqlite') {
+            $exists = $db->query(
+                "SELECT COUNT(*) AS cnt FROM sqlite_master WHERE type='table' AND name='bdus_migrations'",
+                [], 'read'
+            );
+        } else {
+            try {
+                $exists = [['cnt' => 1]]; // Assume it exists on non-SQLite.
+            } catch (\Throwable $e) {
+                return [];
+            }
+        }
+
+        if ((int)($exists[0]['cnt'] ?? 0) === 0) {
+            // No tracking table → all migrations pending.
+            return array_map(fn($class) => $class::NAME, self::ALL_MIGRATIONS);
+        }
+
+        $applied = $db->query("SELECT name FROM bdus_migrations", [], 'read') ?: [];
+        $applied = array_column($applied, 'name');
+
+        $pending = [];
+        foreach (self::ALL_MIGRATIONS as $class) {
+            if (!in_array($class::NAME, $applied, true)) {
+                $pending[] = $class::NAME;
+            }
+        }
+
+        return $pending;
+    }
+
+    /**
+     * Reads the current application version from composer.json.
+     * Returns null if the file is missing or the version key is absent.
+     */
+    public static function readCurrentVersion(): ?string
+    {
+        if (!defined('MAIN_DIR')) {
+            return null;
+        }
+        $composerFile = MAIN_DIR . 'composer.json';
+        if (!file_exists($composerFile)) {
+            return null;
+        }
+        return json_decode(file_get_contents($composerFile), true)['version'] ?? null;
     }
 
     /**
@@ -663,17 +792,12 @@ class Migrate
      */
     private static function writeProjectVersion(DBInterface $db, ?Logger $log): void
     {
-        if (!defined('MAIN_DIR')) {
-            return;
-        }
-        $composerFile = MAIN_DIR . 'composer.json';
-        if (!file_exists($composerFile)) {
-            return;
-        }
-        $version = json_decode(file_get_contents($composerFile), true)['version'] ?? null;
+        $version = self::readCurrentVersion();
         if (!$version) {
             return;
         }
+
+        // Write to bdus_cfg_app (used by InfoView badge).
         try {
             $db->query(
                 'UPDATE bdus_cfg_app SET bdus_version = ? WHERE id = 1',
@@ -683,7 +807,28 @@ class Migrate
             $log?->debug("DB: project version set to {$version}");
         } catch (\Throwable $e) {
             // Column not yet created (M031 pending) — will be written on next login.
-            $log?->debug("DB: could not write project version — " . $e->getMessage());
+            $log?->debug("DB: could not write project version to DB — " . $e->getMessage());
+        }
+
+        // Write to config.json — this is the authoritative source for upgrade detection.
+        // The key absence means v4; its value drives major/minor upgrade logic in listApps.
+        if (!defined('PROJ_DIR')) {
+            return;
+        }
+        $configFile = PROJ_DIR . 'config.json';
+        if (!file_exists($configFile)) {
+            return;
+        }
+        try {
+            $config = json_decode(file_get_contents($configFile), true) ?? [];
+            $config['bdus_version'] = $version;
+            file_put_contents(
+                $configFile,
+                json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+            );
+            $log?->debug("config.json: bdus_version set to {$version}");
+        } catch (\Throwable $e) {
+            $log?->debug("config.json: could not write bdus_version — " . $e->getMessage());
         }
     }
 }

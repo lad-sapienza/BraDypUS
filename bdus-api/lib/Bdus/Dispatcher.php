@@ -35,8 +35,27 @@ class Dispatcher
         $method = $get['method'] ?? 'showAll';
 
         try {
-            // ── Auth gate ─────────────────────────────────────────────────────
+            // ── Major upgrade gate ────────────────────────────────────────────
+            // During a major upgrade, only 'none'-privilege routes (public,
+            // app-independent) and the Upgrade controller itself are accessible.
+            // All authenticated routes are blocked until the upgrade completes.
+            // Using the privilege level (not a hardcoded list) means any future
+            // public route is automatically allowed through.
             $required = Router::requiredPrivilege($obj, $method);
+
+            if (defined('BDUS_MAJOR_UPGRADE') && BDUS_MAJOR_UPGRADE) {
+                if ($required !== 'none' && $obj !== 'Bdus\\Controllers\\Upgrade') {
+                    http_response_code(503);
+                    header('Content-Type: application/json');
+                    echo json_encode(
+                        ['status' => 'error', 'code' => 'major_upgrade_required'],
+                        JSON_UNESCAPED_UNICODE
+                    );
+                    return;
+                }
+            }
+
+            // ── Auth gate ─────────────────────────────────────────────────────
 
             if ($required !== 'none') {
                 if (!\Auth\CurrentUser::isAuthenticated() && $this->db) {
@@ -100,7 +119,13 @@ class Dispatcher
 
             $ctrl->setLog($this->log);
 
-            if (defined('APP')) {
+            // Skip Config and UAC when:
+            //  a) a major upgrade is pending (system tables don't exist yet), or
+            //  b) this is an Upgrade endpoint (never needs Config/UAC).
+            $skipConfig = (defined('BDUS_MAJOR_UPGRADE') && BDUS_MAJOR_UPGRADE)
+                       || $obj === 'Bdus\\Controllers\\Upgrade';
+
+            if (defined('APP') && !$skipConfig) {
                 $config = new Config(new Dot(), MAIN_DIR . 'projects/' . APP . '/', $this->db);
                 $ctrl->setCfg($config);
                 \Template\Loader::setDb($this->db);

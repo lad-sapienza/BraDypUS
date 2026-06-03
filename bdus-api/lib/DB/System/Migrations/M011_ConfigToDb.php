@@ -63,11 +63,8 @@ class M011_ConfigToDb
             }
         }
 
-        // 2 — Skip import if bdus_cfg_tables already has rows.
-        $existing = $db->query('SELECT COUNT(*) AS cnt FROM bdus_cfg_tables', [], 'read');
-        if (($existing[0]['cnt'] ?? 0) > 0) {
-            return;
-        }
+        // 2 — No broad early-exit: individual INSERT OR IGNORE statements below
+        //     handle idempotency per table/field/relation row.
 
         // 3 — Locate the cfg/ directory.
         //     Caller may pass an explicit $projDir (useful in tests where the
@@ -112,7 +109,7 @@ class M011_ConfigToDb
                 }
 
                 $db->query(
-                    'INSERT INTO bdus_cfg_tables
+                    'INSERT OR IGNORE INTO bdus_cfg_tables
                         (name, label, order_field, id_field, preview,
                          is_plugin, plugin_of, sort, links, backlinks, extra)
                      VALUES (?,?,?,?,?,?,?,?,NULL,?,?)',
@@ -145,8 +142,10 @@ class M011_ConfigToDb
                         $fromCol = trim($pair['my']    ?? '');
                         $toCol   = trim($pair['other'] ?? '');
                         if ($fromCol === '') continue;
+                        // INSERT OR IGNORE: idempotent — skips rows already inserted
+                        // by a previous partial run of this migration.
                         $db->query(
-                            'INSERT INTO bdus_cfg_relations
+                            'INSERT OR IGNORE INTO bdus_cfg_relations
                              (from_tb, from_col, to_tb, to_col, on_delete, on_update)
                              VALUES (?,?,?,?,?,?)',
                             [$name, $fromCol, $toTb, $toCol, 'RESTRICT', 'CASCADE'],
@@ -173,7 +172,7 @@ class M011_ConfigToDb
                     }
 
                     $db->query(
-                        'INSERT INTO bdus_cfg_fields
+                        'INSERT OR IGNORE INTO bdus_cfg_fields
                             (table_name, name, label, type, db_type, sort, extra)
                          VALUES (?,?,?,?,?,?,?)',
                         [
@@ -207,7 +206,7 @@ class M011_ConfigToDb
                     if ($content === false) continue;
 
                     $db->query(
-                        'INSERT INTO bdus_cfg_templates (table_name, name, content, updated_at)
+                        'INSERT OR IGNORE INTO bdus_cfg_templates (table_name, name, content, updated_at)
                          VALUES (?,?,?,?)',
                         [
                             $tbName,

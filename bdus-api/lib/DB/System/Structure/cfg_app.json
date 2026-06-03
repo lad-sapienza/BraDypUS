@@ -4,7 +4,8 @@
         { "name": "status",         "type": "TEXT",                 "notnull": true,  "default": "on" },
         { "name": "max_image_size", "type": "INTEGER",              "notnull": true,  "default": "0" },
         { "name": "welcome",        "type": "TEXT",                 "notnull": false, "default": "" },
-        { "name": "color",          "type": "TEXT",                 "notnull": false, "default": "indigo" }
+        { "name": "color",          "type": "TEXT",                 "notnull": false, "default": "indigo" },
+        { "name": "bdus_version",   "type": "TEXT",                 "notnull": false, "default": null }
     ],
     "indexes": [],
     "relations": []

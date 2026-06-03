@@ -48,10 +48,12 @@ class Info extends \Bdus\Controller
       return;
     }
 
+    $settings = \Config\AppSettings::get($this->db);
     $this->returnJson([
-      "status"       => "success",
-      'version'      => json_decode(file_get_contents(MAIN_DIR . 'composer.json'), true)['version'] ?? 'unknown',
-      'changelog_md' => file_get_contents(MAIN_DIR . 'CHANGELOG.md') ?: '',
+      "status"          => "success",
+      'version'         => json_decode(file_get_contents(MAIN_DIR . 'composer.json'), true)['version'] ?? 'unknown',
+      'project_version' => $settings['bdus_version'] ?? null,
+      'changelog_md'    => file_get_contents(MAIN_DIR . 'CHANGELOG.md') ?: '',
     ]);
   }
 

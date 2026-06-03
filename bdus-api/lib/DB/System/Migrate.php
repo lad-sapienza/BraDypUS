@@ -39,6 +39,7 @@ use DB\System\Migrations\M027_CreateCfgIndexes;
 use DB\System\Migrations\M028_AddTokenVersionToUsers;
 use DB\System\Migrations\M029_AddLabelToUserlinks;
 use DB\System\Migrations\M030_RsIdsToInteger;
+use DB\System\Migrations\M031_AddProjectVersion;
 use Monolog\Logger;
 
 /**
@@ -95,6 +96,7 @@ class Migrate
         M028_AddTokenVersionToUsers::class,
         M029_AddLabelToUserlinks::class,
         M030_RsIdsToInteger::class,
+        M031_AddProjectVersion::class,
     ];
 
     /**
@@ -646,6 +648,42 @@ class Migrate
 
         if ($pending === 0) {
             $log?->debug("DB migrations: schema up to date");
+        }
+
+        // Write the current application version to bdus_cfg_app after every
+        // successful migration run, so the project always records which version
+        // of BraDypUS last touched it.
+        self::writeProjectVersion($db, $log);
+    }
+
+    /**
+     * Writes the running application version (from composer.json) to
+     * bdus_cfg_app.bdus_version.  Silently skips if the table or column
+     * is not yet available (pre-M031 apps on their first upgrade run).
+     */
+    private static function writeProjectVersion(DBInterface $db, ?Logger $log): void
+    {
+        if (!defined('MAIN_DIR')) {
+            return;
+        }
+        $composerFile = MAIN_DIR . 'composer.json';
+        if (!file_exists($composerFile)) {
+            return;
+        }
+        $version = json_decode(file_get_contents($composerFile), true)['version'] ?? null;
+        if (!$version) {
+            return;
+        }
+        try {
+            $db->query(
+                'UPDATE bdus_cfg_app SET bdus_version = ? WHERE id = 1',
+                [$version],
+                'boolean'
+            );
+            $log?->debug("DB: project version set to {$version}");
+        } catch (\Throwable $e) {
+            // Column not yet created (M031 pending) — will be written on next login.
+            $log?->debug("DB: could not write project version — " . $e->getMessage());
         }
     }
 }

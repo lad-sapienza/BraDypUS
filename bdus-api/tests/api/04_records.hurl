@@ -109,7 +109,7 @@ jsonpath "$.status"             == "success"
 jsonpath "$.core.sigla.val"     == "T001"
 jsonpath "$.core.verificata.val" == 1
 jsonpath "$.metadata.can_edit"  == true
-jsonpath "$.schema.rs_field"    isString
+jsonpath "$.schema.rs"          == true
 jsonpath "$.schema.has_geodata" == true
 jsonpath "$.schema.has_zotero"  == true
 jsonpath "$.geodata"            isCollection

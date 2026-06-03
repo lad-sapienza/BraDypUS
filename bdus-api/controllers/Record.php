@@ -455,7 +455,8 @@ class Record extends \Bdus\Controller
     return [
       'fields'      => $this->buildFieldSchema($tb),
       'plugins'     => $plugins,
-      'rs_field'       => $this->cfg->get("tables.{$tb}.rs")         ?? null,
+      'rs'             => (bool) $this->cfg->get("tables.{$tb}.rs"),
+      'id_field'       => $this->cfg->get("tables.{$tb}.id_field")    ?? 'id',
       'has_geodata'    => (bool) $this->cfg->get("tables.{$tb}.geodata"),
       'has_zotero'     => (bool) $this->cfg->get("tables.{$tb}.zotero"),
       'has_fuzzy_date' => (bool) $this->cfg->get("tables.{$tb}.fuzzy_date"),
@@ -1188,6 +1189,8 @@ class Record extends \Bdus\Controller
       return;
     }
 
+    $first    = (int) $first;
+    $second   = (int) $second;
     $relation = (int) $relation;
     $inverse  = self::rsInverse($relation);
 
@@ -1481,11 +1484,12 @@ class Record extends \Bdus\Controller
       return;
     }
 
-    $rsField = $this->cfg->get("tables.{$tb}.rs");
-    if (!$rsField) {
+    if (!$this->cfg->get("tables.{$tb}.rs")) {
       $this->returnJson(['status' => 'error', 'code' => 'rs_not_configured']);
       return;
     }
+
+    $idField = $this->cfg->get("tables.{$tb}.id_field") ?? 'id';
 
     try {
       // ── Step 1: resolve which records to include ───────────────────────────
@@ -1496,6 +1500,7 @@ class Record extends \Bdus\Controller
       $searchType = $this->get['search_type'] ?? 'all';
       $filtered   = is_array($filterRaw) || ($searchType !== 'all');
 
+      $dbIds = [];
       if ($filtered) {
         $qRequest = ['tb' => $tb, 'type' => $searchType];
 
@@ -1515,51 +1520,48 @@ class Record extends \Bdus\Controller
         }
 
         $qObj = new \SQL\QueryFromRequest($this->db, $this->cfg, $qRequest, true);
-        // Fetch all matching IDs (no pagination — full result set for the matrix)
         list($subSql, $subVals) = $qObj->getQuery(true);
         $idRows = $this->db->query(
           "SELECT id FROM ({$subSql}) AS _rs_sub",
           $subVals
         ) ?: [];
-        $dbIds = array_column($idRows, 'id');
+        $dbIds = array_map('intval', array_column($idRows, 'id'));
       }
 
-      // ── Step 2: fetch rs_field values for the filter set ──────────────────
-      $filterNodes = []; // identifier => db_id
+      // ── Step 2: fetch id_field labels for the filter set ──────────────────
+      // filterNodes: db_id (int) → identifier string (for display)
+      $filterNodes = [];
 
       if ($filtered && empty($dbIds)) {
-        // Empty result set → no nodes, no relations
-        $this->returnJson(["status" => "success", "rs_field" => $rsField, "nodes" => [], "relations" => []]);
+        $this->returnJson(["status" => "success", "has_fuzzy_date" => false, "nodes" => [], "relations" => []]);
         return;
       }
 
       if ($filtered) {
-        $placeholders = implode(',', array_fill(0, count($dbIds), '?'));
+        $ph   = implode(',', array_fill(0, count($dbIds), '?'));
         $rows = $this->db->query(
-          "SELECT id, {$rsField} AS identifier FROM {$tb} WHERE id IN ({$placeholders})",
+          "SELECT id, {$idField} AS identifier FROM {$tb} WHERE id IN ({$ph})",
           $dbIds
         ) ?: [];
       } else {
         $rows = $this->db->query(
-          "SELECT id, {$rsField} AS identifier FROM {$tb}"
+          "SELECT id, {$idField} AS identifier FROM {$tb}"
         ) ?: [];
       }
 
       foreach ($rows as $r) {
-        if ($r['identifier'] !== null && $r['identifier'] !== '') {
-          $filterNodes[(string)$r['identifier']] = (int)$r['id'];
-        }
+        $filterNodes[(int)$r['id']] = (string)($r['identifier'] ?? $r['id']);
       }
 
-      $filterIdentifiers = array_keys($filterNodes);
+      $filterDbIds = array_keys($filterNodes);
 
-      // ── Step 3: fetch RS relations ─────────────────────────────────────────
-      if ($filtered && !empty($filterIdentifiers)) {
-        $ph = implode(',', array_fill(0, count($filterIdentifiers), '?'));
+      // ── Step 3: fetch RS relations (first/second are now integer db_ids) ──
+      if ($filtered && !empty($filterDbIds)) {
+        $ph = implode(',', array_fill(0, count($filterDbIds), '?'));
         $relations = $this->db->query(
           "SELECT id, first, second, relation FROM bdus_rs
            WHERE tb = ? AND (first IN ({$ph}) OR second IN ({$ph}))",
-          array_merge([$tb], $filterIdentifiers, $filterIdentifiers)
+          array_merge([$tb], $filterDbIds, $filterDbIds)
         ) ?: [];
       } else {
         $relations = $this->db->query(
@@ -1568,46 +1570,41 @@ class Record extends \Bdus\Controller
         ) ?: [];
       }
 
-      // ── Step 4: collect all unique identifiers (including dangling) ────────
-      $allIdentifiers = $filterNodes; // identifier => db_id (in_filter=true)
+      // ── Step 4: collect all unique db_ids (including dangling from relations)
+      $allNodes    = $filterNodes; // db_id => identifier
       $danglingIds = [];
 
       foreach ($relations as $rel) {
-        foreach (['first', 'second'] as $side) {
-          $ident = (string)$rel[$side];
-          if (!isset($allIdentifiers[$ident])) {
-            $danglingIds[] = $ident;
+        foreach ([(int)$rel['first'], (int)$rel['second']] as $rId) {
+          if (!isset($allNodes[$rId])) {
+            $danglingIds[] = $rId;
           }
         }
       }
 
-      // Resolve dangling identifiers → db_id (may not exist if records were deleted)
       if (!empty($danglingIds)) {
-        $ph = implode(',', array_fill(0, count($danglingIds), '?'));
-        $dRows = $this->db->query(
-          "SELECT id, {$rsField} AS identifier FROM {$tb}
-           WHERE {$rsField} IN ({$ph})",
+        $danglingIds = array_unique($danglingIds);
+        $ph          = implode(',', array_fill(0, count($danglingIds), '?'));
+        $dRows       = $this->db->query(
+          "SELECT id, {$idField} AS identifier FROM {$tb} WHERE id IN ({$ph})",
           $danglingIds
         ) ?: [];
         foreach ($dRows as $r) {
-          $allIdentifiers[(string)$r['identifier']] = (int)$r['id'];
+          $allNodes[(int)$r['id']] = (string)($r['identifier'] ?? $r['id']);
         }
       }
 
       // ── Step 5: build response ─────────────────────────────────────────────
       $hasFuzzyDate = (bool)$this->cfg->get("tables.{$tb}.fuzzy_date");
 
-      // When fuzzy_date plugin is active, attach chrono data to every node.
-      // Wrapped in try/catch: if columns don't exist (schema drift / flag without
-      // activation), fall back gracefully rather than crashing.
       $chronoByDbId = [];
-      if ($hasFuzzyDate && !empty($allIdentifiers)) {
+      if ($hasFuzzyDate && !empty($allNodes)) {
         try {
-          $dbIds = array_values($allIdentifiers);
-          $ph    = implode(',', array_fill(0, count($dbIds), '?'));
-          $cRows = $this->db->query(
+          $allDbIds = array_keys($allNodes);
+          $ph       = implode(',', array_fill(0, count($allDbIds), '?'));
+          $cRows    = $this->db->query(
             "SELECT id, chrono_from, chrono_to, chrono_label FROM {$tb} WHERE id IN ({$ph})",
-            $dbIds
+            $allDbIds
           ) ?: [];
           foreach ($cRows as $cr) {
             $chronoByDbId[(int)$cr['id']] = [
@@ -1617,17 +1614,16 @@ class Record extends \Bdus\Controller
             ];
           }
         } catch (\Throwable $e) {
-          // Columns missing — serve nodes without chrono data
           $hasFuzzyDate = false;
         }
       }
 
       $nodes = [];
-      foreach ($allIdentifiers as $ident => $dbId) {
+      foreach ($allNodes as $dbId => $ident) {
         $node = [
           'db_id'      => $dbId,
-          'identifier' => (string)$ident,
-          'in_filter'  => isset($filterNodes[$ident]),
+          'identifier' => $ident,
+          'in_filter'  => isset($filterNodes[$dbId]),
         ];
         if ($hasFuzzyDate && isset($chronoByDbId[$dbId])) {
           $node = array_merge($node, $chronoByDbId[$dbId]);
@@ -1635,12 +1631,21 @@ class Record extends \Bdus\Controller
         $nodes[] = $node;
       }
 
+      $relationsOut = [];
+      foreach ($relations as $rel) {
+        $relationsOut[] = [
+          'id'       => (int)$rel['id'],
+          'first'    => (int)$rel['first'],
+          'second'   => (int)$rel['second'],
+          'relation' => (int)$rel['relation'],
+        ];
+      }
+
       $this->returnJson([
         "status"         => "success",
-        'rs_field'       => $rsField,
         'has_fuzzy_date' => $hasFuzzyDate,
         'nodes'          => $nodes,
-        'relations'      => array_values($relations),
+        'relations'      => $relationsOut,
       ]);
 
     } catch (\Throwable $e) {

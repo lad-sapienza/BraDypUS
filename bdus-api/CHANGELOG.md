@@ -5,6 +5,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [5.0.0] - unreleased
 
+### Changed
+- **RS (stratigraphic relations) redesigned** — breaking change vs. v4:
+  - **Config**: `tables.{tb}.rs` changes from a field-name string (e.g. `"sigla"`)
+    to a boolean flag (`1`/`true`). The config UI now shows a simple ToggleSwitch
+    alongside geodata and Zotero, instead of a field selector.
+  - **DB schema** (`bdus_rs`, M030): `first` and `second` columns migrated from
+    `TEXT` (stored the rs_field value) to `INTEGER` (store the record primary key),
+    enabling real relational integrity. Existing data is converted automatically by
+    migration M030 at first login after upgrade.
+  - **Display labels**: the table's `id_field` value is now fetched at read-time and
+    returned alongside the integer IDs (`first_label`, `second_label` in the RS
+    response). The RS panel and Harris Matrix graph show human-readable labels while
+    the DB stores clean integer foreign keys.
+  - **Add-relation UI**: replaced the free-text identifier input with an
+    `AutoComplete` search (same `link-candidates` endpoint used by geoface and
+    manual links), so users pick a record from an autocomplete list instead of
+    typing an identifier manually.
+  - **Matrix graph node IDs**: Cytoscape node IDs now use `String(db_id)` instead
+    of the old text identifier, ensuring uniqueness even when `id_field` contains
+    special characters.
+  - **Edge label fix**: when a passive relation (1–4) has its direction swapped for
+    the dagre layout (newer→older flow), the edge label now shows the inverse
+    relation name (e.g. "covers" instead of "is covered by").
+
 ### Added
 - **Graph visualisation of manual links** (`ManualLinksGraph.vue`): a toggle button
   in the Linked records section header switches between list and an interactive

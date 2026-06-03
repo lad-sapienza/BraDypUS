@@ -149,9 +149,9 @@ abstract class BdusTestCase extends TestCase
              VALUES ('items', 1, 'items', 2, 1)"
         );
 
-        // An RS entry referencing item 1 (first='1' so Read::getRs() can find it by id=1)
+        // An RS entry linking item 1 (first=1) to item 2 (second=2) — integer IDs
         static::$db->execInTransaction(
-            "INSERT INTO bdus_rs (tb, first, second, relation) VALUES ('items', '1', '2', 1)"
+            "INSERT INTO bdus_rs (tb, first, second, relation) VALUES ('items', 1, 2, 1)"
         );
 
         // Vocabulary entries for the 'test_cat' set (used by RecordCtrlFieldOptionsTest)

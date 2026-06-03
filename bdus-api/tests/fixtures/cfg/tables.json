@@ -13,7 +13,7 @@
             "plugin": [
                 "tags"
             ],
-            "rs": "id",
+            "rs": 1,
             "geodata": 1,
             "zotero": 1,
             "fuzzy_date": false

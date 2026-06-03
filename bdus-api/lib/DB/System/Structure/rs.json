@@ -2,8 +2,8 @@
     "columns": [
         { "name": "id",       "type": "INTEGER", "pk": true, "notnull": false },
         { "name": "tb",       "type": "TEXT",               "notnull": true  },
-        { "name": "first",    "type": "TEXT",               "notnull": true  },
-        { "name": "second",   "type": "TEXT",               "notnull": true  },
+        { "name": "first",    "type": "INTEGER",            "notnull": true  },
+        { "name": "second",   "type": "INTEGER",            "notnull": true  },
         { "name": "relation", "type": "INTEGER",            "notnull": true  }
     ],
     "indexes": [

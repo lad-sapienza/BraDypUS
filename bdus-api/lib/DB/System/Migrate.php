@@ -38,6 +38,7 @@ use DB\System\Migrations\M026_RefactorCfgRelations;
 use DB\System\Migrations\M027_CreateCfgIndexes;
 use DB\System\Migrations\M028_AddTokenVersionToUsers;
 use DB\System\Migrations\M029_AddLabelToUserlinks;
+use DB\System\Migrations\M030_RsIdsToInteger;
 use Monolog\Logger;
 
 /**
@@ -93,6 +94,7 @@ class Migrate
         M027_CreateCfgIndexes::class,
         M028_AddTokenVersionToUsers::class,
         M029_AddLabelToUserlinks::class,
+        M030_RsIdsToInteger::class,
     ];
 
     /**

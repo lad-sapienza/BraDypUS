@@ -208,20 +208,17 @@ EOD;
     }
 
     /**
-     * Returns array of RS data, if available
-     * @return array      array of RS data or empty array
-     * {
-     *    "id": "1",
-     *    "first": (int),
-     *    "second": (int),
-     *    "relation": (int)
-     * }
+     * Returns array of RS data for the current record.
+     * first/second are integer record IDs; first_label/second_label are the
+     * corresponding id_field values for display.
+     *
+     * @return array  [ rowId => { id, first, second, first_label, second_label, relation } ]
      */
     public function getRs(): array
     {
         if (!isset($this->cache['rs'])) {
             $res = $this->db->query(
-                "SELECT id, first, second, relation FROM bdus_rs WHERE tb = ? AND (first= ? OR second = ?)",
+                "SELECT id, first, second, relation FROM bdus_rs WHERE tb = ? AND (first = ? OR second = ?)",
                 [$this->tb, $this->id, $this->id],
                 'read'
             );
@@ -229,8 +226,46 @@ EOD;
             $ret = [];
 
             if ($res && is_array($res)) {
-                foreach ($res as $key => $value) {
-                    $ret[$value['id']] = $value;
+                // Collect all referenced IDs to fetch display labels in one query
+                $allIds = [];
+                foreach ($res as $row) {
+                    $allIds[] = (int)$row['first'];
+                    $allIds[] = (int)$row['second'];
+                }
+                $allIds  = array_unique($allIds);
+                $idField = $this->cfg->get("tables.{$this->tb}.id_field") ?? 'id';
+
+                $labelMap = [];
+                if (!empty($allIds)) {
+                    if ($idField === 'id') {
+                        foreach ($allIds as $id) {
+                            $labelMap[$id] = (string)$id;
+                        }
+                    } else {
+                        $ph    = implode(',', array_fill(0, count($allIds), '?'));
+                        $lRows = $this->db->query(
+                            "SELECT id, {$idField} AS label FROM {$this->tb} WHERE id IN ({$ph})",
+                            $allIds,
+                            'read'
+                        ) ?: [];
+                        foreach ($lRows as $r) {
+                            $labelMap[(int)$r['id']] = (string)($r['label'] ?? $r['id']);
+                        }
+                    }
+                }
+
+                foreach ($res as $row) {
+                    $rowId  = (int)$row['id'];
+                    $first  = (int)$row['first'];
+                    $second = (int)$row['second'];
+                    $ret[$rowId] = [
+                        'id'           => $rowId,
+                        'first'        => $first,
+                        'second'       => $second,
+                        'first_label'  => $labelMap[$first]  ?? (string)$first,
+                        'second_label' => $labelMap[$second] ?? (string)$second,
+                        'relation'     => (int)$row['relation'],
+                    ];
                 }
             }
 

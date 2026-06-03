@@ -25,6 +25,13 @@
               class="info-version-tag"
               v-tooltip.bottom="'bdus-app (Vue frontend)'"
             />
+            <Tag
+              v-if="projectVersion"
+              :value="`project v${projectVersion}`"
+              severity="warn"
+              class="info-version-tag"
+              v-tooltip.bottom="t('project_version_tooltip')"
+            />
           </div>
         </div>
 
@@ -44,19 +51,24 @@ import ProgressSpinner     from 'primevue/progressspinner'
 import Message             from 'primevue/message'
 import Tag                 from 'primevue/tag'
 import { api }             from '@/api'
+import { useI18n }         from '@/i18n'
 
-const loading       = ref(true)
-const error         = ref(null)
-const apiVersion    = ref('')
-const appVersion    = __APP_VERSION__   // injected at build time by vite.config.js
-const changelogHtml = ref('')
+const { t } = useI18n()
+
+const loading        = ref(true)
+const error          = ref(null)
+const apiVersion     = ref('')
+const projectVersion = ref(null)
+const appVersion     = __APP_VERSION__   // injected at build time by vite.config.js
+const changelogHtml  = ref('')
 
 onMounted(async () => {
   try {
     const res = await api.get('/api/info')
     if (res.status === 'error') throw new Error(res.code)
-    apiVersion.value    = res.version
-    changelogHtml.value = marked.parse(res.changelog_md ?? '')
+    apiVersion.value     = res.version
+    projectVersion.value = res.project_version ?? null
+    changelogHtml.value  = marked.parse(res.changelog_md ?? '')
   } catch (e) {
     error.value = e.message
   } finally {

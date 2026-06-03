@@ -143,6 +143,7 @@
   "cannot_get_ip_for_system": "Can not get the IP address for the %s OS",
   "invert_log": "Invert grep",
   "info": "Info",
+  "project_version_tooltip": "Version of BraDypUS that last ran on this project",
   "confirm_password_to_continue": "Enter your password to access system configuration",
   "select_config_section": "Select a section from the left panel",
   "app_settings": "App settings",

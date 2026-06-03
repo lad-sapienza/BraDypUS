@@ -143,6 +143,7 @@
   "cannot_get_ip_for_system": "Impossibile recuperare l'IP per il sistema operativo %s",
   "invert_log": "Inverti grep",
   "info": "Informazioni",
+  "project_version_tooltip": "Versione di BraDypUS con cui è stato aggiornato questo progetto l'ultima volta",
   "confirm_password_to_continue": "Inserisci la password per accedere alla configurazione di sistema",
   "select_config_section": "Seleziona una sezione dal pannello a sinistra",
   "app_settings": "Impostazioni applicazione",

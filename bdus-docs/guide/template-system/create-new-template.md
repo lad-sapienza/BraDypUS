@@ -19,48 +19,38 @@ Names are lowercase, no spaces.
 
 ## 3. Edit the JSON
 
-The template is a JSON array of **section** objects. Each section has a label,
-optional plugin binding, and an array of rows. Each row contains fields with widths.
+The template is a JSON object with a `sections` array. Each section has a label,
+optional plugin binding, and a `content` list of fields with widths.
 
 ```json
-[
-  {
-    "label": "Identification",
-    "plugin": null,
-    "collapse": false,
-    "rows": [
-      {
-        "fields": [
-          { "field": "sigla",   "width": 4 },
-          { "field": "periodo", "width": 8 }
-        ]
-      }
-    ]
-  },
-  {
-    "label": "Description",
-    "plugin": null,
-    "collapse": true,
-    "rows": [
-      {
-        "fields": [
-          { "field": "descrizione",     "width": 12 }
-        ]
-      },
-      {
-        "fields": [
-          { "field": "interpretazione", "width": 12 }
-        ]
-      }
-    ]
-  }
-]
+{
+  "sections": [
+    {
+      "label": "Identification",
+      "collapsible": false,
+      "content": [
+        { "field": "sigla",   "width": "1/3" },
+        { "field": "periodo", "width": "2/3" }
+      ]
+    },
+    {
+      "label": "Description",
+      "collapsible": true,
+      "collapsed": true,
+      "content": [
+        { "field": "descrizione",     "width": "1/1" },
+        { "field": "interpretazione", "width": "1/1" }
+      ]
+    }
+  ]
+}
 ```
 
 ### Field widths
 
-Widths follow a 12-column grid. Fields in one row should sum to 12 (or less).
-A single full-width field uses `"width": 12`; three equal columns use `"width": 4`.
+Valid width values: `"1/1"`, `"1/2"`, `"1/3"`, `"2/3"`, `"1/4"`, `"3/4"`.
+Fields in a section should ideally fill one row. A single full-width field uses
+`"1/1"`; two equal columns use `"1/2"`; three equal columns use `"1/3"`.
 
 ### Plugin sections
 

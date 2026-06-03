@@ -13,43 +13,39 @@ Open **Templates** from the sidebar (super-admin required).
 
 ## Structure
 
-A template is a JSON document that describes sections, each containing a list
-of fields with their display width:
+A template is a JSON object with a `sections` array. Each section contains a
+`content` list of fields with their display width:
 
 ```json
-[
-  {
-    "label": "Basic information",
-    "plugin": null,
-    "collapse": false,
-    "rows": [
-      { "fields": [
-          { "field": "sigla",   "width": 3 },
-          { "field": "periodo", "width": 9 }
-        ]
-      },
-      { "fields": [
-          { "field": "descrizione", "width": 12 }
-        ]
-      }
-    ]
-  }
-]
+{
+  "sections": [
+    {
+      "label": "Basic information",
+      "collapsible": false,
+      "content": [
+        { "field": "sigla",       "width": "1/4" },
+        { "field": "periodo",     "width": "3/4" },
+        { "field": "descrizione", "width": "1/1" }
+      ]
+    }
+  ]
+}
 ```
 
 ### Section properties
 
-| Property | Description |
-|---|---|
-| `label` | Section heading |
-| `plugin` | Set to a plugin table name to show rows from that sub-table |
-| `collapse` | `true` to render the section collapsed by default |
-| `rows` | Array of row objects; each row is an array of `{ field, width }` objects |
+| Property | Type | Description |
+|---|---|---|
+| `label` | string | Section heading |
+| `plugin` | string | Set to a plugin table name to show rows from that sub-table |
+| `collapsible` | boolean | `true` to allow the section to be collapsed |
+| `collapsed` | boolean | `true` to render the section collapsed by default |
+| `content` | array | Array of `{ field, width }` objects |
 
 ### Field width
 
-Width is a 1–12 integer following a 12-column grid. Fields in a row should sum
-to 12 (or less).
+Width is a fraction string. Valid values: `"1/1"`, `"1/2"`, `"1/3"`, `"2/3"`,
+`"1/4"`, `"3/4"`. Fields in a section should ideally sum to one full row.
 
 ## Creating a template
 

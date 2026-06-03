@@ -121,6 +121,7 @@ function guideSidebar() {
         { text: 'Find & replace',      link: '/guide/usage/find-replace' },
         { text: 'Import data',         link: '/guide/usage/import' },
         { text: 'Database backup',     link: '/guide/usage/backup' },
+        { text: 'Application log',     link: '/guide/usage/log' },
         { text: 'Version history',     link: '/guide/usage/versions' },
         { text: 'Deleted records',     link: '/guide/usage/deleted-records' },
         { text: 'Charts',              link: '/guide/usage/charts' },

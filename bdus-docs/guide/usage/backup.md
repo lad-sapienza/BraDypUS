@@ -13,11 +13,15 @@ Open **Backup** from the sidebar.
 
 ## Creating a backup
 
-Click **Create backup**. A timestamped `.sqlite` dump is created and stored in
-`projects/{app}/backups/`. For MySQL and PostgreSQL databases a SQL dump is created.
+Click **Create backup**. A timestamped dump is created and stored in
+`projects/{app}/backups/`. The filename includes the date, time, and database
+engine: `{prefix}_{YYYY-MM-DD_HH-MM-SS}_{engine}.sql`.
 
-The backup operation is performed with native PHP/PDO — no external tools (e.g.
-`sqlite3` CLI) are required.
+| Engine | How the dump is created | External tool required |
+|---|---|---|
+| SQLite | Native PHP/PDO — no CLI tools needed | No |
+| MySQL | `mysqldump` | Yes — must be in `$PATH` |
+| PostgreSQL | `pg_dump` | Yes — must be in `$PATH` |
 
 ## Downloading a backup
 

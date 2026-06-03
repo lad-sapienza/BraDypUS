@@ -8,48 +8,37 @@ A complete template for a stratigraphic unit (`us`) table with two sections
 and a plugin sub-table.
 
 ```json
-[
-  {
-    "label": "Identification & period",
-    "plugin": null,
-    "collapse": false,
-    "rows": [
-      {
-        "fields": [
-          { "field": "sigla",           "width": 3 },
-          { "field": "periodo",         "width": 5 },
-          { "field": "interpretazione", "width": 4 }
-        ]
-      }
-    ]
-  },
-  {
-    "label": "Description",
-    "plugin": null,
-    "collapse": false,
-    "rows": [
-      {
-        "fields": [
-          { "field": "descrizione", "width": 12 }
-        ]
-      }
-    ]
-  },
-  {
-    "label": "Samples",
-    "plugin": "samples",
-    "collapse": true,
-    "rows": [
-      {
-        "fields": [
-          { "field": "sample_code", "width": 4 },
-          { "field": "type",        "width": 4 },
-          { "field": "notes",       "width": 4 }
-        ]
-      }
-    ]
-  }
-]
+{
+  "sections": [
+    {
+      "label": "Identification & period",
+      "collapsible": false,
+      "content": [
+        { "field": "sigla",           "width": "1/4" },
+        { "field": "periodo",         "width": "1/2" },
+        { "field": "interpretazione", "width": "1/4" }
+      ]
+    },
+    {
+      "label": "Description",
+      "collapsible": false,
+      "content": [
+        { "field": "descrizione", "width": "1/1" }
+      ]
+    },
+    {
+      "label": "Samples",
+      "plugin": "samples",
+      "collapsible": true,
+      "collapsed": true,
+      "content": [
+        { "field": "sample_code", "width": "1/3" },
+        { "field": "type",        "width": "1/3" },
+        { "field": "notes",       "width": "1/3" }
+      ]
+    }
+  ]
+}
 ```
 
 ## What this template does

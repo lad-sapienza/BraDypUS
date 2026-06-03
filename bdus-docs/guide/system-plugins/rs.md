@@ -20,17 +20,25 @@ using the integer record `id` as a foreign key, ensuring referential integrity.
 
 ## Stratigraphic relation types
 
-| Code | Relation | Meaning |
-|---|---|---|
-| 1 | **Covers / is covered by** | Superposition |
-| 2 | **Cuts / is cut by** | Truncation |
-| 3 | **Abuts / is abutted by** | Abutment |
-| 4 | **Fills / is filled by** | Fill relationship |
-| 9 | **Is equivalent to** | Correlation (undirected) |
-| 10 | **Is contemporary with** | Contemporaneity (undirected) |
+There are ten relation types organised in five inverse pairs. Relations 9 and 10
+are symmetric (self-inverse).
 
-Directed relations (1–4) are stored as a single row with direction. The inverse
-is computed automatically — you do not need to enter both directions.
+| Code | Label | Inverse |
+|---|---|---|
+| 1 | Is covered by | 5 — Covers |
+| 2 | Is cut by | 6 — Cuts |
+| 3 | Carries | 7 — Leans against |
+| 4 | Is filled by | 8 — Fills |
+| 5 | Covers | 1 — Is covered by |
+| 6 | Cuts | 2 — Is cut by |
+| 7 | Leans against | 3 — Carries |
+| 8 | Fills | 4 — Is filled by |
+| 9 | Is the same as | 9 (symmetric) |
+| 10 | Is bound to | 10 (symmetric) |
+
+Directed relations (1–8) are stored as a single row with direction; you only need
+to enter one direction and the inverse is handled automatically. Relations 9 and 10
+have no directionality.
 
 ## Managing relations in RecordView
 

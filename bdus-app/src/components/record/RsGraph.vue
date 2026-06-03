@@ -26,7 +26,7 @@
 <script setup>
 import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useI18n } from '@/i18n'
-import { REL_KEYS, UNDIRECTED, SWAP_DIRECTION } from '@/composables/useRsRelations'
+import { REL_KEYS, REL_INVERSE, UNDIRECTED, SWAP_DIRECTION } from '@/composables/useRsRelations'
 
 const { t } = useI18n()
 

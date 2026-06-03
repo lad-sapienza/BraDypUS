@@ -118,6 +118,11 @@ const routes = [
     component: () => import('@/views/MigrationsView.vue'),
     meta: { requiresAuth: true }
   },
+  {
+    path: '/:app/upgrade',
+    component: () => import('@/views/MinorUpgradeView.vue'),
+    meta: { requiresAuth: true }
+  },
 
   // ── Catch-all — no route matched ──────────────────────────────────────────
   {

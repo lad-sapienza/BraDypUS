@@ -32,6 +32,7 @@ export const useAuthStore = defineStore('auth', () => {
     const res = await api.post('/api/auth/login', { email, password, app: appName })
     if (res.status !== 'success') throw new Error(res.code ?? 'generic_error')
     _applyToken(res.token)
+    return res.upgrade ?? null
   }
 
   // ── Silent refresh ───────────────────────────────────────────────

@@ -404,7 +404,8 @@ const recordTitle = computed(() => {
   const idFld = record.value.metadata?.id_field
   if (!idFld || !record.value.core?.[idFld]) return null
   const v = record.value.core[idFld]
-  return (v?.val_label ?? v?.val) || null
+  const raw = v?.val_label ?? v?.val
+  return raw != null ? String(raw) : null
 })
 
 const hasLinks = computed(() =>

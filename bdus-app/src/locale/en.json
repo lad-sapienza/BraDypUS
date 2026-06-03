@@ -955,5 +955,25 @@
   "sync_all": "Sync all",
   "zotero_sync_result": "Updated: %s · Detached: %s · Errors: %s",
 
-  "fields_columns": "Fields columns per row"
+  "fields_columns": "Fields columns per row",
+
+  "upgrade_tag_major": "upgrade required",
+  "upgrade_tag_minor": "update available",
+  "major_upgrade_required": "Major upgrade required (v4 → v5)",
+  "major_upgrade_hint": "This database must be upgraded before it can be used. The operation is irreversible: make a backup before proceeding.",
+  "major_upgrade_auth_hint": "Enter the superadmin credentials to authorise the upgrade.",
+  "major_upgrade_apply": "Apply upgrade",
+  "major_upgrade_sqlite_only": "Major upgrade is only supported for SQLite databases",
+  "upgrade_complete": "Upgrade complete",
+  "upgrade_complete_hint": "Migrations were applied successfully.",
+  "upgrade_complete_login": "Upgrade complete! You can now log in normally.",
+  "upgrade_failed": "Upgrade failed",
+  "superadmin_auth_failed": "Invalid superadmin credentials",
+  "upgrade_pending": "Upgrade in progress. Contact the administrator to complete the upgrade before logging in.",
+  "minor_upgrade_pending": "Upgrade available",
+  "minor_upgrade_hint": "The following schema migrations are pending. Confirming will apply them now.",
+  "minor_upgrade_affects_files": "Some migrations modify project configuration files. Make sure you have a backup before proceeding.",
+  "minor_upgrade_apply": "Apply migrations",
+  "minor_upgrade_skip": "Skip for now",
+  "enter_app": "Enter application"
 }

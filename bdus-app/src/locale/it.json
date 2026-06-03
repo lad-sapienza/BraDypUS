@@ -955,5 +955,25 @@
   "sync_all": "Sincronizza tutto",
   "zotero_sync_result": "Aggiornati: %s · Distaccati: %s · Errori: %s",
 
-  "fields_columns": "Colonne dei campi per riga"
+  "fields_columns": "Colonne dei campi per riga",
+
+  "upgrade_tag_major": "aggiornamento richiesto",
+  "upgrade_tag_minor": "update disponibile",
+  "major_upgrade_required": "Aggiornamento maggiore richiesto (v4 → v5)",
+  "major_upgrade_hint": "Questo database deve essere aggiornato prima di poter essere utilizzato. L'operazione è irreversibile: esegui un backup prima di procedere.",
+  "major_upgrade_auth_hint": "Inserisci le credenziali del superamministratore per autorizzare l'aggiornamento.",
+  "major_upgrade_apply": "Applica aggiornamento",
+  "major_upgrade_sqlite_only": "Il major upgrade è supportato solo per database SQLite",
+  "upgrade_complete": "Aggiornamento completato",
+  "upgrade_complete_hint": "Le migrazioni sono state applicate con successo.",
+  "upgrade_complete_login": "Aggiornamento completato! Puoi ora accedere normalmente.",
+  "upgrade_failed": "Aggiornamento fallito",
+  "superadmin_auth_failed": "Credenziali superamministratore non valide",
+  "upgrade_pending": "Aggiornamento in corso. Contatta l'amministratore per completare l'upgrade prima di accedere.",
+  "minor_upgrade_pending": "Aggiornamento disponibile",
+  "minor_upgrade_hint": "Le seguenti migrazioni dello schema sono in attesa di essere applicate. Confermando, verranno eseguite ora.",
+  "minor_upgrade_affects_files": "Alcune migrazioni modificano file di configurazione del progetto. Assicurati di avere un backup prima di procedere.",
+  "minor_upgrade_apply": "Applica migrazioni",
+  "minor_upgrade_skip": "Salta per ora",
+  "enter_app": "Entra nell'applicazione"
 }

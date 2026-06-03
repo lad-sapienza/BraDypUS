@@ -171,9 +171,9 @@
                 @click="openGeoface"
               />
 
-              <!-- Harris Matrix — only for tables with rs_field configured -->
+              <!-- Harris Matrix — only for tables with RS plugin enabled -->
               <Button
-                v-if="selectedTable?.rs_field"
+                v-if="selectedTable?.rs"
                 icon="pi pi-sitemap"
                 :title="t('harris_matrix')"
                 size="small"

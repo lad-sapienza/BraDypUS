@@ -249,9 +249,9 @@
         @update:chrono="v => Object.assign(editData.core, v)"
       />
 
-      <!-- Stratigraphic Relations (RS) — only when table has rs_field configured -->
+      <!-- Stratigraphic Relations (RS) — only when RS plugin is enabled -->
       <RsSection
-        v-if="record.schema?.rs_field && !isNew"
+        v-if="record.schema?.rs && !isNew"
         :rs="record.rs ?? {}"
         :schema="record.schema"
         :core="record.core"

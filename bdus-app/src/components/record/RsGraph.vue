@@ -51,19 +51,22 @@ let cy = null
 function buildElements() {
   const elements = []
 
-  // Index node identifiers for O(1) lookup when validating edges
-  const nodeIds = new Set(props.nodes.map(n => String(n.identifier)))
+  // Index nodes by db_id (string) for O(1) edge validation
+  const nodeIds = new Set(props.nodes.map(n => String(n.db_id)))
+  // db_id → identifier label (for edge display)
+  const labelById = {}
+  for (const n of props.nodes) labelById[String(n.db_id)] = String(n.identifier)
 
   for (const n of props.nodes) {
     elements.push({
       group: 'nodes',
       data: {
-        id:        String(n.identifier),
-        label:     String(n.identifier),
+        id:        String(n.db_id),       // unique Cytoscape node id = db primary key
+        label:     String(n.identifier),  // id_field value for display
         db_id:     n.db_id,
         // Store as integer (0/1) — Cytoscape selectors don't handle JS booleans
         in_filter: n.in_filter ? 1 : 0,
-        highlight: String(n.identifier) === props.highlightId ? 1 : 0,
+        highlight: String(n.db_id) === String(props.highlightId) ? 1 : 0,
       },
     })
   }
@@ -73,11 +76,11 @@ function buildElements() {
   let skipped = 0
 
   for (const r of props.relations) {
+    // first/second are now integer db_ids
     const src = String(r.first)
     const tgt = String(r.second)
 
-    // Skip orphan edges — their source or target record no longer exists
-    // (e.g. deleted record whose RS rows were not cleaned up)
+    // Skip orphan edges — referenced record no longer exists
     if (!nodeIds.has(src) || !nodeIds.has(tgt)) {
       skipped++
       continue
@@ -87,7 +90,7 @@ function buildElements() {
     const isUndir = UNDIRECTED.has(rel)
 
     // Passive relations (1,2,3,4): first = older unit, second = newer.
-    // Swap source/target so arrows flow newer→older (top→bottom in dagre TB).
+    // Swap so arrows flow newer→older (top→bottom in dagre TB).
     const needsSwap = SWAP_DIRECTION.has(rel)
     const edgeSrc = needsSwap ? tgt : src
     const edgeTgt = needsSwap ? src : tgt
@@ -104,13 +107,17 @@ function buildElements() {
     elements.push({
       group: 'edges',
       data: {
-        id:       'e' + r.id,
-        rs_id:    r.id,           // raw DB id for deleteRs
-        source:   edgeSrc,
-        target:   edgeTgt,
-        label:    REL_KEYS[rel] ? t(REL_KEYS[rel]) : String(rel),
-        relation: rel,
-        directed: isUndir ? 0 : 1,   // integer for Cytoscape selector compat
+        id:           'e' + r.id,
+        rs_id:        r.id,
+        source:       edgeSrc,
+        target:       edgeTgt,
+        source_label: labelById[edgeSrc] ?? edgeSrc,
+        target_label: labelById[edgeTgt] ?? edgeTgt,
+        // When direction is swapped, show the inverse relation label so the
+        // displayed label matches the arrow direction (e.g. "covers" not "is_covered_by")
+        label:        (() => { const lr = needsSwap ? REL_INVERSE[rel] : rel; return REL_KEYS[lr] ? t(REL_KEYS[lr]) : String(lr) })(),
+        relation:     rel,
+        directed:     isUndir ? 0 : 1,
       },
     })
   }
@@ -319,7 +326,8 @@ async function initCy() {
       // Click same node again: deselect
       clearSelection()
     } else {
-      // Second click on different node: request add
+      // Second click on different node: request add relation
+      // id = String(db_id), so MatrixView receives integer-string as first/second
       const from = { ...selectedNode.value }
       clearSelection()
       emit('relation-add-requested', { from, to: { id: data.id, label: data.label, db_id: data.db_id } })
@@ -332,8 +340,8 @@ async function initCy() {
     const data = evt.target.data()
     emit('relation-delete-requested', {
       rs_id:    data.rs_id,
-      source:   data.source,
-      target:   data.target,
+      source:   data.source_label ?? data.source,
+      target:   data.target_label ?? data.target,
       relation: data.relation,
       label:    data.label,
     })

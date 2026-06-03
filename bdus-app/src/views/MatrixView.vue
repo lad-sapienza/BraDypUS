@@ -235,7 +235,7 @@ const tableLabel = computed(() =>
 )
 
 // ── State ────────────────────────────────────────────────────────
-const matrixData  = ref(null)   // { rs_field, has_fuzzy_date, nodes[], relations[] }
+const matrixData  = ref(null)   // { has_fuzzy_date, nodes[], relations[] }
 const loading     = ref(false)
 const fetchError  = ref(null)
 const graphRef    = ref(null)

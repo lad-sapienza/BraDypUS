@@ -732,7 +732,7 @@
   "enabled": "Abilitato",
   "order_field": "Campo di ordinamento",
   "id_field": "Campo ID",
-  "rs_field": "Campo RS",
+  "rs_plugin": "Relazioni stratigrafiche (Harris Matrix)",
   "system_plugins": "Plugin di sistema",
   "geodata_plugin": "Geodata (coordinate geografiche)",
   "zotero_plugin": "Zotero (citazioni bibliografiche)",

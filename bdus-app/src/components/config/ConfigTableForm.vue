@@ -98,17 +98,6 @@
             />
           </div>
 
-          <div v-if="tb" class="cfg-form-field">
-            <label>{{ t('rs_field') }}</label>
-            <Select
-              v-model="form.rs"
-              :options="fieldOptions"
-              option-label="label"
-              option-value="value"
-              :show-clear="true"
-              size="small"
-            />
-          </div>
         </div>
 
         <!-- Preview fields (list of selects) -->
@@ -168,6 +157,10 @@
       <section v-if="tb && !isPlugin" class="cfg-section">
         <div class="cfg-section-title">{{ t('system_plugins') }}</div>
         <div class="cfg-form-row">
+          <div class="cfg-form-field">
+            <label>{{ t('rs_plugin') }}</label>
+            <ToggleSwitch v-model="form.rs" />
+          </div>
           <div class="cfg-form-field">
             <label>{{ t('geodata_plugin') }}</label>
             <ToggleSwitch v-model="form.geodata" />
@@ -305,7 +298,7 @@ async function load() {
       is_plugin:   td.is_plugin   ?? '',
       order:       td.order       ?? '',
       id_field:    td.id_field    ?? '',
-      rs:          td.rs          ?? '',
+      rs:          !!td.rs,
       geodata:     !!td.geodata,
       zotero:      !!td.zotero,
       preview:     Array.isArray(td.preview)   ? [...td.preview]   : [''],
@@ -359,7 +352,7 @@ function buildPayload() {
     is_plugin:  f.is_plugin,
     order:      f.order,
     id_field:   f.id_field,
-    rs:         f.rs,
+    rs:         f.rs ? 1 : 0,
     geodata:    f.geodata ? 1 : 0,
     zotero:     f.zotero  ? 1 : 0,
     preview:    f.preview.filter(v => v),

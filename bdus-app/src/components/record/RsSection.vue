@@ -202,18 +202,20 @@
           :placeholder="t('rs_select_relation')"
           class="rs-add-select"
         />
-        <InputText
+        <AutoComplete
           v-model="newOther"
-          :placeholder="t('rs_identifier')"
+          :suggestions="linkSuggestions"
+          optionLabel="label"
+          :placeholder="t('type_to_search')"
           class="rs-add-input"
-          @keyup.enter="addRelation"
+          @complete="onLinkSearch"
         />
         <Button
           :label="t('rs_add_relation')"
           icon="pi pi-plus"
           size="small"
           :loading="adding"
-          :disabled="!newRelation || !newOther.trim()"
+          :disabled="!newRelation || !newOther?.id"
           @click="addRelation"
         />
       </div>
@@ -227,7 +229,7 @@ import { ref, computed } from 'vue'
 import { useRoute, useRouter }  from 'vue-router'
 import { useToast }   from 'primevue/usetoast'
 import Select         from 'primevue/select'
-import InputText      from 'primevue/inputtext'
+import AutoComplete   from 'primevue/autocomplete'
 import Button         from 'primevue/button'
 import { api }                from '@/api'
 import { useI18n }           from '@/i18n'
@@ -239,68 +241,64 @@ const route  = useRoute()
 const router = useRouter()
 
 const props = defineProps({
-  /** Raw RS object from getRecord(): { "rowId": {id, first, second, relation} } */
+  /** Raw RS object from getRecord(): { rowId: {id, first, second, first_label, second_label, relation} } */
   rs:     { type: Object, default: () => ({}) },
-  /** Table schema (needs schema.rs_field) */
+  /** Table schema (needs schema.rs = true and schema.id_field) */
   schema: { type: Object, required: true },
-  /** Core data object (needs [rs_field].val for selfId) */
+  /** Core data object (needs [id_field].val for selfId display) */
   core:   { type: Object, required: true },
   /** 'read' | 'edit' */
   mode:   { type: String, default: 'read' },
   /** Full table id (e.g. 'myapp__su') */
   tb:        { type: String, required: true },
-  /** Database primary key of the current record (for "back to record" link) */
+  /** Database primary key of the current record */
   record_id: { type: [Number, String], default: null },
 })
 
 const emit = defineEmits(['rs-updated'])
 
 // ── Identity ─────────────────────────────────────────────────────
-/** The identifier value of the current record in the RS domain. */
+/** Display label of the current record (id_field value). */
 const selfId = computed(() => {
-  const fld = props.schema.rs_field
-  if (!fld) return null
-  const v = props.core[fld]
-  return (v?.val_label ?? v?.val ?? v) || null
+  if (!props.schema.rs) return null
+  const idFld = props.schema.id_field
+  if (!idFld || !props.core) return props.record_id ? String(props.record_id) : null
+  const v = props.core[idFld]
+  const display = v?.val_label ?? v?.val ?? null
+  return display != null ? String(display) : (props.record_id ? String(props.record_id) : null)
 })
 
 // ── Matrix navigation ─────────────────────────────────────────────
-/** Open MatrixView filtered to this record, with highlight and back-link. */
 function openMatrix() {
-  if (!selfId.value) return
+  if (!props.record_id) return
   router.push({
     path:  `/${route.params.app}/matrix/${encodeURIComponent(props.tb)}`,
     query: {
-      filter:    JSON.stringify({ [props.schema.rs_field]: { _eq: selfId.value } }),
-      highlight: String(selfId.value),
-      ...(props.record_id != null ? { from_id: String(props.record_id) } : {}),
+      filter:    JSON.stringify({ id: { _eq: props.record_id } }),
+      highlight: String(props.record_id),
+      from_id:   String(props.record_id),
     },
   })
 }
 
 // ── Polarity inversion ────────────────────────────────────────────
 /**
- * Given a raw RS row and the current record's identifier, return the
- * display relation slot (1-10) and the other party's identifier.
- *
- * When the current record is `first`, the relation is stored as-is.
- * When it is `second`, the relation is inverted:
- *   relations 1-4 ↔ 5-8  (each pair offset by 4)
- *   relations 9, 10 are symmetric — no inversion needed.
+ * Given an RS row, return display relation slot (1-10) and the label of the
+ * other record. first/second are integer IDs; first_label/second_label are
+ * the display values provided by the backend.
  */
 function resolveDisplay(row) {
-  const self = String(selfId.value)
-  const rel  = parseInt(row.relation, 10)
+  const selfDbId = parseInt(props.record_id, 10)
+  const rel      = parseInt(row.relation, 10)
 
-  if (String(row.first) === self) {
-    return { displayRel: rel, other: String(row.second), rowId: parseInt(row.id, 10) }
+  if (parseInt(row.first, 10) === selfDbId) {
+    return { displayRel: rel, other: row.second_label ?? String(row.second), rowId: parseInt(row.id, 10) }
   }
   // current record is `second`
   let displayRel = rel
   if (rel >= 1 && rel <= 4) displayRel = rel + 4
   else if (rel >= 5 && rel <= 8) displayRel = rel - 4
-  // 9, 10 stay as-is
-  return { displayRel, other: String(row.first), rowId: parseInt(row.id, 10) }
+  return { displayRel, other: row.first_label ?? String(row.first), rowId: parseInt(row.id, 10) }
 }
 
 /** RS rows grouped by display relation slot (1-10). */
@@ -319,21 +317,31 @@ const byRelation = computed(() => {
 const relationOptions = computed(() => buildRelationOptions(t))
 
 // ── Add relation ──────────────────────────────────────────────────
-const newRelation = ref(null)
-const newOther    = ref('')
-const adding      = ref(false)
+const newRelation    = ref(null)
+const newOther       = ref(null)   // { id, label } from AutoComplete
+const linkSuggestions = ref([])
+const adding         = ref(false)
+
+async function onLinkSearch(event) {
+  try {
+    const res = await api.get(`/api/record/${props.tb}/link-candidates`, { q: event.query })
+    linkSuggestions.value = res.status === 'success' ? (res.data ?? []) : []
+  } catch {
+    linkSuggestions.value = []
+  }
+}
 
 async function addRelation() {
-  if (!newRelation.value || !newOther.value.trim() || !selfId.value) return
+  if (!newRelation.value || !newOther.value?.id || !props.record_id) return
   adding.value = true
   try {
     const res = await api.post(`/api/record/${props.tb}/rs`, {
-      first:    String(selfId.value),
+      first:    props.record_id,
       relation: newRelation.value,
-      second:   newOther.value.trim(),
+      second:   newOther.value.id,
     })
     if (res.status === 'success') {
-      newOther.value    = ''
+      newOther.value    = null
       newRelation.value = null
       emit('rs-updated')
     } else {

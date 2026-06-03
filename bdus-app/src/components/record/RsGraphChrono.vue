@@ -46,7 +46,7 @@
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useI18n } from '@/i18n'
 import { format as chronoFormat } from '@/utils/chronoParser'
-import { REL_KEYS, UNDIRECTED, SWAP_DIRECTION } from '@/composables/useRsRelations'
+import { REL_KEYS, UNDIRECTED, SWAP_DIRECTION, REL_INVERSE } from '@/composables/useRsRelations'
 
 const { t } = useI18n()
 
@@ -134,7 +134,8 @@ const axisTicks = computed(() => {
 // ── Build Cytoscape elements ──────────────────────────────────────────────────
 function buildElements() {
   const elements = []
-  const nodeIds  = new Set(props.nodes.map(n => String(n.identifier)))
+  // Index by db_id (integer → string) since first/second are now integer IDs
+  const nodeIds  = new Set(props.nodes.map(n => String(n.db_id)))
 
   for (const n of props.nodes) {
     const label      = String(n.identifier)
@@ -148,11 +149,11 @@ function buildElements() {
     elements.push({
       group: 'nodes',
       data: {
-        id:        label,
+        id:        String(n.db_id),       // Cytoscape node id = db primary key
         label:     sublabel ? `${label}\n${sublabel}` : label,
         db_id:     n.db_id,
         in_filter: n.in_filter ? 1 : 0,
-        highlight: label === props.highlightId ? 1 : 0,
+        highlight: String(n.db_id) === String(props.highlightId) ? 1 : 0,
         undated:   isUndated ? 1 : 0,
         year:      nodeYear(n),
       },
@@ -161,6 +162,7 @@ function buildElements() {
 
   const seenUndirected = new Set()
   for (const r of props.relations) {
+    // first/second are now integer db_ids
     const src = String(r.first)
     const tgt = String(r.second)
     if (!nodeIds.has(src) || !nodeIds.has(tgt)) continue
@@ -185,7 +187,7 @@ function buildElements() {
         id:       'e' + r.id,
         source:   edgeSrc,
         target:   edgeTgt,
-        label:    REL_KEYS[rel] ? t(REL_KEYS[rel]) : String(rel),
+        label:    (() => { const lr = needSwap ? REL_INVERSE[rel] : rel; return REL_KEYS[lr] ? t(REL_KEYS[lr]) : String(lr) })(),
         directed: isUndir ? 0 : 1,
       },
     })

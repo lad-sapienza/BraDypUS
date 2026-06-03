@@ -6,13 +6,17 @@ title: Harris Matrix (stratigraphic relations)
 
 BraDypUS supports stratigraphic unit (US) relationship management with a built-in
 **Harris Matrix** visualisation. The feature is available for any table that has
-an **RS field** configured.
+the **RS plugin** enabled.
 
 ## Enabling the RS system
 
-In **Config → Tables**, select the target table and set the **RS field** to the
-column that stores the unit identifier (e.g. `sigla`). This enables the RS panel
-in RecordView and the Harris Matrix button in DataView.
+In **Config → Tables → System plugins**, toggle the **Stratigraphic relations**
+switch on. This enables the RS panel in RecordView and the Harris Matrix button in
+DataView.
+
+The table's **ID field** (configured under Layout) is used as the human-readable
+label shown in the RS panel and the matrix. The relations are stored in the database
+using the integer record `id` as a foreign key, ensuring referential integrity.
 
 ## Stratigraphic relation types
 
@@ -36,7 +40,8 @@ The **RS panel** in RecordView shows all relations for the current record.
 
 To add a relation:
 1. Select the **relation type** from the dropdown.
-2. Enter the **identifier** of the other unit (e.g. `US003`).
+2. Start typing in the search box to find the other unit — an autocomplete list
+   shows matching records from the same table. Select the desired unit.
 3. Click **Add**.
 
 To remove a relation: click the delete icon next to it.

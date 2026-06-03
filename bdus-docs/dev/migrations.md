@@ -162,6 +162,9 @@ class M024MyChangeTest extends BdusTestCase
 | M025 | Add `color` column to `bdus_cfg_app` for runtime primary-colour customisation |
 | M026 | **Refactor `bdus_cfg_relations`** — replaces `(from_tb, to_tb, fld JSON, sort)` with `(from_tb, from_col, to_tb, to_col, on_delete, on_update)`. One row per FK column pair. UNIQUE moved to `(from_tb, from_col)`. Expands existing JSON blobs into individual rows. |
 | M027 | Create `bdus_cfg_indexes` — tracks user-defined and auto-generated (FK) indexes per table. |
+| M028 | Add `token_version` column to `bdus_users` for per-user JWT invalidation. |
+| M029 | Add `label` column to `bdus_userlinks` for typed manual links. |
+| M030 | **Migrate `bdus_rs.first`/`.second` from TEXT to INTEGER** — converts stored RS identifiers (text values of the configured `rs_field`) to integer record primary keys. Also converts the per-table `rs` config from a field name string (`"sigla"`) to a boolean flag (`1`). Existing apps are migrated automatically; new apps use the INTEGER schema from creation. |
 
 ---
 

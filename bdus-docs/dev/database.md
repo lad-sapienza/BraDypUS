@@ -207,7 +207,7 @@ bdus_geodata           — Geospatial features (WKT)
 bdus_log               — Error / info log entries
 bdus_migrations        — Applied migration tracking
 bdus_queries           — Saved search queries
-bdus_rs                — Stratigraphic relation pairs
+bdus_rs                — Stratigraphic relation pairs (first/second = INTEGER record ids)
 bdus_userlinks         — Manual cross-record links
 bdus_users             — User accounts
 bdus_user_table_privs  — Per-user per-table privilege overrides

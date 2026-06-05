@@ -374,6 +374,13 @@ run_tests() {
       --variable "app=${APP_NAME}"
   fi
 
+  if should_run "34"; then
+    header "Phase 34 — File management"
+    run_phase "File management" "34_file_management.hurl" \
+      --variable "jwt=${JWT}" \
+      --variable "us_id_1=${US_ID_1:-}"
+  fi
+
   # Phase 10 always runs: drops crud_test tables and logs out
   header "Phase 10 — Cleanup"
   run_phase "Cleanup" "10_cleanup.hurl" \

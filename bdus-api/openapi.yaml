@@ -1369,6 +1369,49 @@ paths:
 
   # ── Files ────────────────────────────────────────────────────────────────
 
+  /api/files:
+    get:
+      tags: [files]
+      summary: List all files in the current app (paginated)
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 25
+        - name: orphans_only
+          in: query
+          schema:
+            type: integer
+            enum: [0, 1]
+            default: 0
+          description: When 1, return only files not linked to any record
+      responses:
+        '200':
+          description: Paginated file list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  total:
+                    type: integer
+                  page:
+                    type: integer
+                  per_page:
+                    type: integer
+                  files:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/FileItem'
+
   /api/record/{tb}/{id}/file:
     post:
       tags: [files]
@@ -1396,6 +1439,38 @@ paths:
                 $ref: '#/components/schemas/CodedResult'
 
   /api/file/{fileId}:
+    patch:
+      tags: [files]
+      summary: Update file metadata (description, keywords, printable)
+      parameters:
+        - name: fileId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                description:
+                  type: string
+                  nullable: true
+                keywords:
+                  type: string
+                  nullable: true
+                printable:
+                  type: boolean
+                  nullable: true
+      responses:
+        '200':
+          description: Update result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
     delete:
       tags: [files]
       summary: Delete an uploaded file
@@ -1412,6 +1487,51 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+
+  /api/file/{fileId}/replace:
+    post:
+      tags: [files]
+      summary: Replace a file's binary while preserving its metadata
+      description: >
+        Uploads a new file to replace the stored binary. The file's
+        `description`, `keywords`, and `printable` are kept unchanged.
+        If the new file has a different extension, the old physical file
+        is deleted.
+      parameters:
+        - name: fileId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Replace result
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - allOf:
+                      - $ref: '#/components/schemas/CodedSuccess'
+                      - type: object
+                        properties:
+                          ext:
+                            type: string
+                          filename:
+                            type: string
+                          is_image:
+                            type: boolean
+                  - $ref: '#/components/schemas/Error'
 
   /api/files/sort:
     post:
@@ -4130,6 +4250,37 @@ components:
       oneOf:
         - $ref: '#/components/schemas/CodedSuccess'
         - $ref: '#/components/schemas/Error'
+
+    FileItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        ext:
+          type: string
+        filename:
+          type: string
+        description:
+          type: string
+          nullable: true
+        keywords:
+          type: string
+          nullable: true
+        printable:
+          type: boolean
+          nullable: true
+        is_image:
+          type: boolean
+        links:
+          type: array
+          description: Records this file is attached to
+          items:
+            type: object
+            properties:
+              tb:
+                type: string
+              record_id:
+                type: integer
 
     # ── Records ────────────────────────────────────────────────────────────
 

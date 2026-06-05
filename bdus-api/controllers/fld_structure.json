@@ -72,19 +72,9 @@
         "help": "Real-time validation performed on value change and on form submission.",
         "required": false
     },
-    "active_link": {
-        "type": "boolean",
-        "help": "If enabled the field value shows a link in read mode pointing to a search for all records with the same value.",
-        "required": false
-    },
     "readonly": {
         "type": "boolean",
         "help": "If enabled the field is visible and its value is sent to the server, but users cannot edit it.",
-        "required": false
-    },
-    "disabled": {
-        "type": "boolean",
-        "help": "If enabled the field is visible like `readonly`, but its value is NOT sent to the server. Use `readonly` instead — `disabled` will be removed in a future version.",
         "required": false
     },
     "hide": {
@@ -95,11 +85,6 @@
     "def_value": {
         "type": "input",
         "help": "Default value pre-filled on new record creation. The user can change it unless `readonly` or `hide` are also enabled. Variables: %today% (current date), %current_user% (current user id).",
-        "required": false
-    },
-    "force_default": {
-        "type": "boolean",
-        "help": "If enabled the default value overwrites the stored value even in edit mode. Will be removed in a future version — use `def_value` + `readonly` instead.",
         "required": false
     },
     "max_length": {

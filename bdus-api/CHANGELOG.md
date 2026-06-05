@@ -17,6 +17,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Tests: 2 new `AlterFkIndexTest` cases + 4 new `M032MigrationTest` guard cases.
 
 ### Changed
+- **Config params refactor** (`Record.php`, `fld_structure.json`) — S2:
+  - `disabled` field parameter removed from schema output; existing YAML configs
+    using `disabled: true` are transparently treated as `readonly: true` (PHP
+    absorbs the legacy value; no YAML migration required). Removed from
+    `fld_structure.json` (no longer offered in the config UI).
+  - `force_default` removed — was never implemented in the Vue frontend; removed
+    from `Record.php` schema output and from `fld_structure.json`.
+  - `active_link` removed — was never implemented in the Vue frontend; removed
+    from `Record.php` schema output and from `fld_structure.json`.
+  - `FieldEditor.vue`, `PluginSection.vue` updated to drop references to the
+    removed `disabled` schema key.
+- **Config plugin list** (`ConfigTableForm.vue`): user-defined plugin table list
+  unified visually with the system-plugins section — compact grid layout
+  (label + toggle, `cfg-form-row` / `cfg-form-field`), replacing the full-width
+  bordered card list.
+- **Config URL routing** (`router/index.js`, `ConfigView.vue`): each config panel
+  now has a dedicated, bookmarkable URL (`/:app/config/:panel?/:tb?`):
+  - `/app/config/app` · `/app/config/validation` · `/app/config/geoface`
+  - `/app/config/apikeys` · `/app/config/relations` · `/app/config/zotero`
+  - `/app/config/table` (add new) · `/app/config/table/:tb` · `/app/config/fields/:tb`
+  Navigation uses `router.push()`; browser back/forward and deep links work.
+- **Record view two-column layout** (`RecordView.vue`) — S7 #24:
+  - When secondary sections are present (links, manual links, bibliography,
+    geodata, chronology, RS), the record view switches to a two-column grid:
+    main data (files + fields + plugins) on the left, secondary info on the right.
+  - Right column is `position: sticky` and scrolls independently, keeping related
+    data visible as the main content scrolls.
+  - Responsive: collapses to single column below 800 px.
+  - The right column is only rendered (and the grid activated) when at least one
+    secondary section is actually visible via a `hasRightColumn` computed.
+
+### Added
+- **Drag & drop file upload** (`FileGallery.vue`) — S7 #23: the upload area in
+  edit mode is now a drop zone (dashed border, highlight on hover) in addition to
+  the click-to-browse button. Dropping a file triggers the same upload pipeline.
+  New i18n keys: `drag_drop_or` (it + en).
+
 - **Config field form** (`ConfigFieldForm.vue`, `fld_structure.json`) — S5:
   - All field parameter labels are now translated via `t('fld_' + key)` instead
     of displaying the raw JSON key name.

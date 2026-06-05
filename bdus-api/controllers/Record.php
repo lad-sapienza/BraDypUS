@@ -484,8 +484,7 @@ class Record extends \Bdus\Controller
         'name'          => $fld['name'],
         'label'         => $fld['label'] ?? $fld['name'],
         'type'          => $fld['type'] ?? 'text',
-        'readonly'      => !empty($fld['readonly']),
-        'disabled'      => !empty($fld['disabled']),
+        'readonly'      => !empty($fld['readonly']) || !empty($fld['disabled']),
         'hide'          => !empty($fld['hide']),
         'help'          => $fld['help'] ?? null,
         // 'required' is normalized from either the 'required' or 'not_empty' check token
@@ -496,8 +495,6 @@ class Record extends \Bdus\Controller
         'max_length'    => $fld['max_length'] ?? null,
         'pattern'       => $fld['pattern'] ?? null,
         'def_value'     => $fld['def_value'] ?? null,
-        'force_default' => !empty($fld['force_default']),
-        'active_link'   => !empty($fld['active_link']),
         'direction'     => $fld['direction'] ?? null,
         'widget'        => $fld['widget'] ?? null,
         'options_source' => null,

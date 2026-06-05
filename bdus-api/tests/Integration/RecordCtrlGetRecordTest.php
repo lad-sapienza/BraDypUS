@@ -108,7 +108,7 @@ class RecordCtrlGetRecordTest extends BdusTestCase
 
         // Each field must have required schema keys
         foreach ($fields as $f) {
-            foreach (['name', 'label', 'type', 'readonly', 'disabled', 'hide', 'required'] as $k) {
+            foreach (['name', 'label', 'type', 'readonly', 'hide', 'required'] as $k) {
                 $this->assertArrayHasKey($k, $f, "Field schema missing key: $k");
             }
         }

@@ -28,41 +28,38 @@
       <!-- ── General ──────────────────────────────────────────────── -->
       <section class="cfg-section">
         <div class="cfg-section-title">{{ t('general') }}</div>
-        <div class="cfg-form-row">
 
-          <!-- Name -->
-          <div class="cfg-form-field">
-            <label>{{ t('name') }} <span class="cfg-req">*</span></label>
-            <div class="cfg-input-action">
-              <InputText v-model="form.name" size="small" :disabled="!!tb" style="flex:1" />
-              <Button
-                v-if="tb"
-                icon="pi pi-pencil"
-                severity="secondary"
-                size="small"
-                outlined
-                :title="t('rename_table')"
-                @click="renameVisible = true"
-              />
-            </div>
+        <!-- Name: full-width row because of the inline rename button (#19 fix) -->
+        <div class="cfg-form-field">
+          <label>{{ t('name') }} <span class="cfg-req">*</span></label>
+          <div class="cfg-input-action">
+            <InputText v-model="form.name" size="small" :disabled="!!tb" style="flex:1; min-width:0" />
+            <Button
+              v-if="tb"
+              icon="pi pi-pencil"
+              severity="secondary"
+              size="small"
+              outlined
+              :title="t('rename_table')"
+              @click="renameVisible = true"
+            />
           </div>
+          <small class="cfg-hint">{{ t('help_table_name') }}</small>
+        </div>
 
+        <div class="cfg-form-row">
           <!-- Label -->
           <div class="cfg-form-field">
             <label>{{ t('label') }} <span class="cfg-req">*</span></label>
             <InputText v-model="form.label" size="small" />
+            <small class="cfg-hint">{{ t('help_table_label') }}</small>
           </div>
 
-          <!-- Is Plugin -->
+          <!-- Is Plugin (#20: ToggleSwitch) -->
           <div class="cfg-form-field">
             <label>{{ t('is_plugin') }}</label>
-            <Select
-              v-model="form.is_plugin"
-              :options="[{ label: 'No', value: '' }, { label: 'Yes', value: '1' }]"
-              option-label="label"
-              option-value="value"
-              size="small"
-            />
+            <ToggleSwitch v-model="isPluginBool" />
+            <small class="cfg-hint">{{ t('help_table_is_plugin') }}</small>
           </div>
         </div>
       </section>
@@ -84,6 +81,7 @@
               :show-clear="true"
               size="small"
             />
+            <small class="cfg-hint">{{ t('help_table_order_field') }}</small>
           </div>
 
           <div class="cfg-form-field">
@@ -96,66 +94,47 @@
               :show-clear="true"
               size="small"
             />
+            <small class="cfg-hint">{{ t('help_table_id_field') }}</small>
           </div>
 
         </div>
 
-        <!-- Preview fields (list of selects) -->
+        <!-- Preview fields (#21: MultiSelect) -->
         <div class="cfg-form-field">
           <label>{{ t('preview_flds') }} <span class="cfg-req">*</span></label>
-          <div class="cfg-list-selects">
-            <div v-for="(val, idx) in form.preview" :key="idx" class="cfg-list-select-row">
-              <Select
-                v-model="form.preview[idx]"
-                :options="fieldOptions"
-                option-label="label"
-                option-value="value"
-                :show-clear="true"
-                size="small"
-                style="flex:1"
-              />
-              <Button
-                icon="pi pi-minus"
-                severity="danger"
-                size="small"
-                text
-                @click="form.preview.splice(idx, 1)"
-              />
-            </div>
-            <Button :label="t('add')" icon="pi pi-plus" size="small" outlined @click="form.preview.push('')" />
-          </div>
+          <MultiSelect
+            v-model="form.preview"
+            :options="fieldOptions"
+            option-label="label"
+            option-value="value"
+            display="chip"
+            size="small"
+            :placeholder="t('select_fields')"
+          />
+          <small class="cfg-hint">{{ t('help_table_preview_flds') }}</small>
         </div>
       </section>
 
-      <!-- ── Plugins (existing non-plugin tables) ─────────────────── -->
+      <!-- ── Plugins (#22: list with switches) ───────────────────── -->
       <section v-if="tb && !isPlugin" class="cfg-section">
         <div class="cfg-section-title">{{ t('plugins') }}</div>
-        <div class="cfg-list-selects">
-          <div v-for="(val, idx) in form.plugin" :key="idx" class="cfg-list-select-row">
-            <Select
-              v-model="form.plugin[idx]"
-              :options="pluginOptions"
-              option-label="label"
-              option-value="value"
-              :show-clear="true"
-              size="small"
-              style="flex:1"
-            />
-            <Button
-              icon="pi pi-minus"
-              severity="danger"
-              size="small"
-              text
-              @click="form.plugin.splice(idx, 1)"
+        <small class="cfg-hint cfg-hint-section">{{ t('help_table_plugins') }}</small>
+        <div v-if="Object.keys(availablePlugins).length" class="cfg-plugin-list">
+          <div v-for="(label, name) in availablePlugins" :key="name" class="cfg-plugin-item">
+            <span class="cfg-plugin-label">{{ label }}</span>
+            <ToggleSwitch
+              :modelValue="form.plugin.includes(name)"
+              @update:modelValue="togglePlugin(name, $event)"
             />
           </div>
-          <Button :label="t('add')" icon="pi pi-plus" size="small" outlined @click="form.plugin.push('')" />
         </div>
+        <p v-else class="cfg-hint">{{ t('no_plugins_available') }}</p>
       </section>
 
-      <!-- ── System plugins (existing non-plugin tables) ─────────────── -->
+      <!-- ── System plugins ──────────────────────────────────────── -->
       <section v-if="tb && !isPlugin" class="cfg-section">
         <div class="cfg-section-title">{{ t('system_plugins') }}</div>
+        <small class="cfg-hint cfg-hint-section">{{ t('help_table_system_plugins') }}</small>
         <div class="cfg-form-row">
           <div class="cfg-form-field">
             <label>{{ t('rs_plugin') }}</label>
@@ -186,12 +165,12 @@
         </div>
       </section>
 
-      <!-- ── Indexes ──────────────────────────────────────────────────── -->
+      <!-- ── Indexes ──────────────────────────────────────────────── -->
       <section v-if="tb" class="cfg-section">
         <ConfigIndexes :tb="tb" />
       </section>
 
-      <!-- ── Danger zone ────────────────────────────────────────────── -->
+      <!-- ── Danger zone ──────────────────────────────────────────── -->
       <section v-if="tb" class="cfg-section cfg-danger-section">
         <div class="cfg-section-title cfg-danger-title">{{ t('danger_zone') }}</div>
         <p class="cfg-danger-warn">{{ t('warning_delete_table') }}</p>
@@ -208,7 +187,7 @@
 
     </div>
 
-    <!-- ── Rename dialog ─────────────────────────────────────────────── -->
+    <!-- ── Rename dialog ──────────────────────────────────────────── -->
     <Dialog v-model:visible="renameVisible" modal :header="t('rename_table')" style="width:350px">
       <div class="cfg-rename-body">
         <label>{{ t('new_name') }}</label>
@@ -229,6 +208,7 @@ import Button       from 'primevue/button'
 import Dialog       from 'primevue/dialog'
 import InputText    from 'primevue/inputtext'
 import Select       from 'primevue/select'
+import MultiSelect  from 'primevue/multiselect'
 import Message      from 'primevue/message'
 import ToggleSwitch from 'primevue/toggleswitch'
 import ConfigIndexes from '@/components/config/ConfigIndexes.vue'
@@ -265,9 +245,14 @@ const availablePlugins = ref({})
 const renameVisible = ref(false)
 const newName       = ref('')
 
-
 // ── Computed helpers ───────────────────────────────────────────────────────
 const isPlugin = computed(() => form.value?.is_plugin === '1')
+
+// is_plugin as boolean for ToggleSwitch (#20)
+const isPluginBool = computed({
+  get: () => form.value?.is_plugin === '1',
+  set: (v) => { if (form.value) form.value.is_plugin = v ? '1' : '' }
+})
 
 const fieldOptions = computed(() =>
   Object.entries(fieldLabels.value).map(([k, v]) => ({ value: k, label: v }))
@@ -276,6 +261,16 @@ const fieldOptions = computed(() =>
 const pluginOptions = computed(() =>
   Object.entries(availablePlugins.value).map(([k, v]) => ({ value: k, label: v }))
 )
+
+// ── Plugin toggle helpers (#22) ────────────────────────────────────────────
+function togglePlugin(name, active) {
+  if (!form.value) return
+  if (active) {
+    if (!form.value.plugin.includes(name)) form.value.plugin.push(name)
+  } else {
+    form.value.plugin = form.value.plugin.filter(p => p !== name)
+  }
+}
 
 // ── Data loading ───────────────────────────────────────────────────────────
 async function load() {
@@ -289,7 +284,6 @@ async function load() {
     fieldLabels.value      = res.field_labels      ?? {}
     availablePlugins.value = res.available_plugins ?? {}
 
-    // Deep clone table data into form, normalising arrays
     const td = res.table ?? {}
 
     form.value = {
@@ -301,13 +295,12 @@ async function load() {
       rs:          !!td.rs,
       geodata:     !!td.geodata,
       zotero:      !!td.zotero,
-      preview:     Array.isArray(td.preview)   ? [...td.preview]   : [''],
-      plugin:      Array.isArray(td.plugin)    ? [...td.plugin]    : [''],
+      preview:     Array.isArray(td.preview)   ? [...td.preview]   : [],
+      plugin:      Array.isArray(td.plugin)    ? [...td.plugin]    : [],
       backlinks:   Array.isArray(td.backlinks) ? [...td.backlinks] : [],
     }
 
     fuzzyDateActive.value = !!td.fuzzy_date
-
     newName.value = props.tb ?? ''
   } catch (e) {
     loadError.value = e.message
@@ -344,8 +337,6 @@ async function save() {
 
 function buildPayload() {
   const f = form.value
-  // Note: 'link' is intentionally omitted — relations are now managed
-  // exclusively via the Relations panel (ConfigRelations.vue).
   return {
     name:       f.name,
     label:      f.label,
@@ -514,6 +505,7 @@ onMounted(load)
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
+  min-width: 0;
 }
 .cfg-form-field label {
   font-size: 0.8rem;
@@ -531,16 +523,34 @@ onMounted(load)
   align-items: center;
 }
 
-/* Dynamic list of selects */
-.cfg-list-selects {
+/* Help texts */
+.cfg-hint {
+  font-size: 0.72rem;
+  color: var(--p-text-muted-color);
+  line-height: 1.3;
+}
+.cfg-hint-section {
+  margin-top: -0.25rem;
+}
+
+/* Plugin list (#22) */
+.cfg-plugin-list {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.5rem;
 }
-.cfg-list-select-row {
+.cfg-plugin-item {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  justify-content: space-between;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--p-content-border-color);
+  border-radius: 6px;
+  background: var(--p-content-background);
+}
+.cfg-plugin-label {
+  font-size: 0.85rem;
+  color: var(--p-text-color);
 }
 
 /* Danger zone */
@@ -554,12 +564,6 @@ onMounted(load)
   font-size: 0.85rem;
   color: var(--p-red-600);
   margin: 0;
-}
-
-/* Help text */
-.cfg-help-text {
-  font-size: 0.75rem;
-  color: var(--p-text-muted-color);
 }
 
 /* Rename dialog */

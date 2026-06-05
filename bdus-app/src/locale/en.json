@@ -630,6 +630,7 @@
   "import_geodata": "Import geodata",
   "empty_or_wrong_geojson": "Error. The uploaded geojson file is empty or not well formatted",
   "upload_file": "Upload file",
+  "drag_drop_or": "Drop a file here or",
   "set_matching_fields": "Set matching id fields",
   "confirm_import_geodata": "Please confirm you want to import geodata for table <code>%s</code> merging in database field <code>%s</code>external field <code>%s</code>",
   "import_erase_previous_data": "Import and erase previously inserted geodata",

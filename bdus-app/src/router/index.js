@@ -59,7 +59,7 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
-    path: '/:app/config',
+    path: '/:app/config/:panel?/:tb?',
     component: () => import('@/views/ConfigView.vue'),
     meta: { requiresAuth: true }
   },

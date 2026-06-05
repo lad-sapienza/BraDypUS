@@ -119,9 +119,9 @@
       <section v-if="tb && !isPlugin" class="cfg-section">
         <div class="cfg-section-title">{{ t('plugins') }}</div>
         <small class="cfg-hint cfg-hint-section">{{ t('help_table_plugins') }}</small>
-        <div v-if="Object.keys(availablePlugins).length" class="cfg-plugin-list">
-          <div v-for="(label, name) in availablePlugins" :key="name" class="cfg-plugin-item">
-            <span class="cfg-plugin-label">{{ label }}</span>
+        <div v-if="Object.keys(availablePlugins).length" class="cfg-form-row">
+          <div v-for="(label, name) in availablePlugins" :key="name" class="cfg-form-field">
+            <label>{{ label }}</label>
             <ToggleSwitch
               :modelValue="form.plugin.includes(name)"
               @update:modelValue="togglePlugin(name, $event)"
@@ -531,26 +531,6 @@ onMounted(load)
 }
 .cfg-hint-section {
   margin-top: -0.25rem;
-}
-
-/* Plugin list (#22) */
-.cfg-plugin-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-.cfg-plugin-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.4rem 0.6rem;
-  border: 1px solid var(--p-content-border-color);
-  border-radius: 6px;
-  background: var(--p-content-background);
-}
-.cfg-plugin-label {
-  font-size: 0.85rem;
-  color: var(--p-text-color);
 }
 
 /* Danger zone */

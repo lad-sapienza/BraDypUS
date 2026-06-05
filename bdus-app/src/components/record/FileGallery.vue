@@ -54,15 +54,23 @@
       <!-- empty state in edit mode -->
       <div v-if="!localFiles.length" class="files-empty">—</div>
 
-      <!-- upload -->
-      <div class="upload-bar">
+      <!-- upload / drop zone -->
+      <div
+        class="upload-bar"
+        :class="{ 'drag-over': isDragOver }"
+        @dragenter.prevent="isDragOver = true"
+        @dragover.prevent="isDragOver = true"
+        @dragleave.prevent="isDragOver = false"
+        @drop.prevent="onDrop"
+      >
         <input ref="fileInput" type="file" class="hidden-input" @change="onFileSelected" />
+        <i class="pi pi-upload upload-bar-icon" />
+        <span class="upload-bar-hint">{{ t('drag_drop_or') }}</span>
         <Button
           :label="t('upload_file')"
-          icon="pi pi-upload"
           size="small"
           severity="secondary"
-          text
+          outlined
           :loading="uploading"
           @click="fileInput?.click()"
         />
@@ -230,14 +238,11 @@ async function handleSortEnd() {
 }
 
 // ── Upload ─────────────────────────────────────────────────────────
-const fileInput = ref(null)
-const uploading = ref(false)
+const fileInput  = ref(null)
+const uploading  = ref(false)
+const isDragOver = ref(false)
 
-async function onFileSelected(evt) {
-  const file = evt.target.files?.[0]
-  if (!file) return
-  evt.target.value = ''
-
+async function uploadFile(file) {
   uploading.value = true
   try {
     const res = await api.upload(
@@ -254,6 +259,19 @@ async function onFileSelected(evt) {
   } finally {
     uploading.value = false
   }
+}
+
+function onFileSelected(evt) {
+  const file = evt.target.files?.[0]
+  if (!file) return
+  evt.target.value = ''
+  uploadFile(file)
+}
+
+function onDrop(evt) {
+  isDragOver.value = false
+  const file = evt.dataTransfer.files?.[0]
+  if (file) uploadFile(file)
 }
 
 // ── Delete ─────────────────────────────────────────────────────────
@@ -480,7 +498,32 @@ function fileIcon(ext) {
   font-style: italic;
 }
 
-/* ── Upload bar ── */
-.upload-bar { margin-top: 0.25rem; }
+/* ── Upload / drop zone ── */
+.upload-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  border: 1.5px dashed var(--p-content-border-color);
+  border-radius: 6px;
+  transition: background 0.15s, border-color 0.15s;
+  cursor: default;
+}
+.upload-bar.drag-over {
+  border-color: var(--p-primary-color);
+  background: color-mix(in srgb, var(--p-primary-color) 8%, transparent);
+}
+.upload-bar-icon {
+  color: var(--p-text-muted-color);
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+.upload-bar.drag-over .upload-bar-icon { color: var(--p-primary-color); }
+.upload-bar-hint {
+  font-size: 0.8rem;
+  color: var(--p-text-muted-color);
+  flex: 1;
+}
 .hidden-input { display: none; }
 </style>

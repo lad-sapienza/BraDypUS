@@ -6,8 +6,8 @@
       <span v-if="schema.help" class="field-help pi pi-info-circle" :title="schema.help" />
     </label>
 
-    <!-- readonly / disabled: show as display -->
-    <div v-if="schema.readonly || schema.disabled" class="field-value-readonly">
+    <!-- readonly: show as display -->
+    <div v-if="schema.readonly" class="field-value-readonly">
       {{ modelValue ?? '—' }}
     </div>
 

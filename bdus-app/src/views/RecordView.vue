@@ -112,154 +112,164 @@
     </Message>
 
     <!-- ── Content ─────────────────────────────────────────────────── -->
-    <div v-else-if="record" class="record-content">
+    <div v-else-if="record" class="record-content" :class="{ 'has-sidebar': hasRightColumn }">
 
-      <!-- Files (always first, before fields, for visibility) -->
-      <fieldset
-        v-if="record.files?.length || mode === 'edit'"
-        class="record-section"
-      >
-        <legend>{{ t('files') }}</legend>
-        <FileGallery
-          :files="record.files ?? []"
+      <!-- ── Left: main data ─────────────────────────────────────── -->
+      <div class="record-main">
+
+        <!-- Files (always first, before fields, for visibility) -->
+        <fieldset
+          v-if="record.files?.length || mode === 'edit'"
+          class="record-section"
+        >
+          <legend>{{ t('files') }}</legend>
+          <FileGallery
+            :files="record.files ?? []"
+            :editMode="mode === 'edit'"
+            :recordTb="record.metadata.tb_id"
+            :recordId="id"
+            @file-uploaded="onFileUploaded"
+            @file-deleted="onFileDeleted"
+            @files-reordered="onFilesReordered"
+          />
+        </fieldset>
+
+        <!-- Template-driven layout (when a template is active) -->
+        <template v-if="hasTemplate">
+          <TemplateSection
+            v-for="(section, idx) in record.schema.template.sections"
+            :key="idx"
+            :section="section"
+            :mode="mode"
+            :tb="record.metadata.tb_id"
+            :record="record"
+            :schema="record.schema"
+            :edit-data="editData"
+          />
+        </template>
+
+        <!-- Default layout (no template) -->
+        <template v-else>
+          <!-- Core fields -->
+          <fieldset class="record-section">
+            <legend>{{ record.metadata.tb_label }}</legend>
+            <div class="fields-grid" :style="fieldsGridStyle">
+              <div
+                v-for="fld in visibleCoreFields"
+                :key="fld.name"
+                class="field-cell"
+              >
+                <FieldDisplay
+                  v-if="mode === 'read'"
+                  :schema="fld"
+                  :value="record.core[fld.name]"
+                />
+                <FieldEditor
+                  v-else
+                  :schema="fld"
+                  :tb="record.metadata.tb_id"
+                  :modelValue="editData.core[fld.name]"
+                  @update:modelValue="v => editData.core[fld.name] = v"
+                />
+              </div>
+            </div>
+          </fieldset>
+
+          <!-- Plugin sections -->
+          <PluginSection
+            v-for="(plg, plgTb) in record.plugins"
+            :key="plgTb"
+            :schema="record.schema?.plugins?.[plgTb]"
+            :plugin="plg"
+            :mode="mode"
+            :edit-rows="editData.plugins[plgTb] ?? []"
+            @update:edit-rows="v => editData.plugins[plgTb] = v"
+          />
+        </template>
+
+      </div>
+
+      <!-- ── Right: sticky secondary info ────────────────────────── -->
+      <div v-if="hasRightColumn" class="record-sidebar">
+
+        <!-- Links & Backlinks (count-based, from table config) -->
+        <fieldset
+          v-if="hasLinks"
+          class="record-section"
+        >
+          <legend>{{ t('linked_records') }}</legend>
+          <ul class="links-list">
+            <li v-for="(link, linkTb) in record.links" :key="linkTb">
+              <router-link :to="`/${route.params.app}/data?tb=${linkTb}&filter=${encodeURIComponent(JSON.stringify(link.filter))}`">
+                {{ link.tb_label }}
+                <Tag :value="String(link.tot)" severity="secondary" rounded />
+              </router-link>
+            </li>
+            <li v-for="(bl, blTb) in record.backlinks" :key="'bl_' + blTb">
+              <router-link :to="`/${route.params.app}/data?tb=${bl.tb_id}&filter=${encodeURIComponent(JSON.stringify(bl.filter))}`">
+                ← {{ bl.tb_label }}
+                <Tag :value="String(bl.tot)" severity="secondary" rounded />
+              </router-link>
+            </li>
+          </ul>
+        </fieldset>
+
+        <!-- Manual links (individual record-to-record links via userlinks table) -->
+        <ManualLinksSection
+          v-if="hasManualLinks || mode === 'edit'"
+          :links="record.manualLinks ?? {}"
           :editMode="mode === 'edit'"
           :recordTb="record.metadata.tb_id"
           :recordId="id"
-          @file-uploaded="onFileUploaded"
-          @file-deleted="onFileDeleted"
-          @files-reordered="onFilesReordered"
+          :recordLabel="recordTitle"
+          @link-added="onLinkAdded"
+          @link-deleted="onLinkDeleted"
         />
-      </fieldset>
 
-      <!-- Template-driven layout (when a template is active) -->
-      <template v-if="hasTemplate">
-        <TemplateSection
-          v-for="(section, idx) in record.schema.template.sections"
-          :key="idx"
-          :section="section"
-          :mode="mode"
-          :tb="record.metadata.tb_id"
-          :record="record"
-          :schema="record.schema"
-          :edit-data="editData"
+        <!-- Bibliography (Zotero) -->
+        <ZoteroSection
+          v-if="record.schema?.has_zotero && (hasBibliography || mode === 'edit')"
+          :bibliography="record.bibliography ?? {}"
+          :editMode="mode === 'edit'"
+          :recordTb="record.metadata.tb_id"
+          :recordId="id"
+          @bib-added="onBibAdded"
+          @bib-deleted="onBibDeleted"
         />
-      </template>
 
-      <!-- Default layout (no template) -->
-      <template v-else>
-        <!-- Core fields -->
-        <fieldset class="record-section">
-          <legend>{{ record.metadata.tb_label }}</legend>
-          <div class="fields-grid" :style="fieldsGridStyle">
-            <div
-              v-for="fld in visibleCoreFields"
-              :key="fld.name"
-              class="field-cell"
-            >
-              <FieldDisplay
-                v-if="mode === 'read'"
-                :schema="fld"
-                :value="record.core[fld.name]"
-              />
-              <FieldEditor
-                v-else
-                :schema="fld"
-                :tb="record.metadata.tb_id"
-                :modelValue="editData.core[fld.name]"
-                @update:modelValue="v => editData.core[fld.name] = v"
-              />
-            </div>
+        <!-- Geodata -->
+        <fieldset
+          v-if="record.schema?.has_geodata && (hasGeodata || mode === 'edit')"
+          class="record-section"
+        >
+          <legend>{{ t('geodata') }}</legend>
+          <div class="geodata-info">
+            <i class="pi pi-map-marker" />
+            {{ t('geodata_count', geodataCount) }}
           </div>
         </fieldset>
 
-        <!-- Plugin sections -->
-        <PluginSection
-          v-for="(plg, plgTb) in record.plugins"
-          :key="plgTb"
-          :schema="record.schema?.plugins?.[plgTb]"
-          :plugin="plg"
-          :mode="mode"
-          :edit-rows="editData.plugins[plgTb] ?? []"
-          @update:edit-rows="v => editData.plugins[plgTb] = v"
+        <!-- Fuzzy date / Chronology plugin -->
+        <ChronoSection
+          v-if="record.schema?.has_fuzzy_date"
+          v-bind="chronoData"
+          :editMode="mode === 'edit'"
+          @update:chrono="v => Object.assign(editData.core, v)"
         />
-      </template>
 
-      <!-- Links & Backlinks (count-based, from table config) -->
-      <fieldset
-        v-if="hasLinks"
-        class="record-section"
-      >
-        <legend>{{ t('linked_records') }}</legend>
-        <ul class="links-list">
-          <li v-for="(link, linkTb) in record.links" :key="linkTb">
-            <router-link :to="`/${route.params.app}/data?tb=${linkTb}&filter=${encodeURIComponent(JSON.stringify(link.filter))}`">
-              {{ link.tb_label }}
-              <Tag :value="String(link.tot)" severity="secondary" rounded />
-            </router-link>
-          </li>
-          <li v-for="(bl, blTb) in record.backlinks" :key="'bl_' + blTb">
-            <router-link :to="`/${route.params.app}/data?tb=${bl.tb_id}&filter=${encodeURIComponent(JSON.stringify(bl.filter))}`">
-              ← {{ bl.tb_label }}
-              <Tag :value="String(bl.tot)" severity="secondary" rounded />
-            </router-link>
-          </li>
-        </ul>
-      </fieldset>
+        <!-- Stratigraphic Relations (RS) — only when RS plugin is enabled -->
+        <RsSection
+          v-if="record.schema?.rs && !isNew"
+          :rs="record.rs ?? {}"
+          :schema="record.schema"
+          :core="record.core"
+          :mode="mode"
+          :tb="record.metadata.tb_id"
+          :record_id="id"
+          @rs-updated="fetchRecord"
+        />
 
-      <!-- Manual links (individual record-to-record links via userlinks table) -->
-      <ManualLinksSection
-        v-if="hasManualLinks || mode === 'edit'"
-        :links="record.manualLinks ?? {}"
-        :editMode="mode === 'edit'"
-        :recordTb="record.metadata.tb_id"
-        :recordId="id"
-        :recordLabel="recordTitle"
-        @link-added="onLinkAdded"
-        @link-deleted="onLinkDeleted"
-      />
-
-      <!-- Bibliography (Zotero) -->
-      <ZoteroSection
-        v-if="record.schema?.has_zotero && (hasBibliography || mode === 'edit')"
-        :bibliography="record.bibliography ?? {}"
-        :editMode="mode === 'edit'"
-        :recordTb="record.metadata.tb_id"
-        :recordId="id"
-        @bib-added="onBibAdded"
-        @bib-deleted="onBibDeleted"
-      />
-
-      <!-- Geodata -->
-      <fieldset
-        v-if="record.schema?.has_geodata && (hasGeodata || mode === 'edit')"
-        class="record-section"
-      >
-        <legend>{{ t('geodata') }}</legend>
-        <div class="geodata-info">
-          <i class="pi pi-map-marker" />
-          {{ t('geodata_count', geodataCount) }}
-        </div>
-      </fieldset>
-
-      <!-- Fuzzy date / Chronology plugin -->
-      <ChronoSection
-        v-if="record.schema?.has_fuzzy_date"
-        v-bind="chronoData"
-        :editMode="mode === 'edit'"
-        @update:chrono="v => Object.assign(editData.core, v)"
-      />
-
-      <!-- Stratigraphic Relations (RS) — only when RS plugin is enabled -->
-      <RsSection
-        v-if="record.schema?.rs && !isNew"
-        :rs="record.rs ?? {}"
-        :schema="record.schema"
-        :core="record.core"
-        :mode="mode"
-        :tb="record.metadata.tb_id"
-        :record_id="id"
-        @rs-updated="fetchRecord"
-      />
+      </div>
 
     </div>
 
@@ -426,6 +436,18 @@ const hasBibliography = computed(() =>
 const hasGeodata = computed(() => {
   const g = record.value?.geodata
   return g && (Array.isArray(g) ? g.length > 0 : Object.keys(g).length > 0)
+})
+
+const hasRightColumn = computed(() => {
+  if (!record.value) return false
+  const r = record.value
+  const m = mode.value
+  return hasLinks.value
+    || hasManualLinks.value || m === 'edit'
+    || (r.schema?.has_zotero  && (hasBibliography.value || m === 'edit'))
+    || (r.schema?.has_geodata && (hasGeodata.value      || m === 'edit'))
+    || !!r.schema?.has_fuzzy_date
+    || (!!r.schema?.rs && !isNew.value)
 })
 const geodataCount = computed(() => {
   const g = record.value?.geodata
@@ -981,14 +1003,51 @@ watch(() => route.params.id, fetchRecord)
   flex: 1;
   overflow-y: auto;
   padding: 1rem 1.25rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  /* Cap width for readability on large monitors */
   width: 100%;
   max-width: 1200px;
   margin-inline: auto;
   box-sizing: border-box;
+  /* Single-column default */
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: start;
+  gap: 1rem;
+}
+
+.record-content.has-sidebar {
+  grid-template-columns: 1fr 300px;
+  column-gap: 1.5rem;
+  row-gap: 0;
+}
+
+.record-main {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.record-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+  position: sticky;
+  top: 1rem;
+  max-height: calc(100dvh - 7rem);
+  overflow-y: auto;
+  padding-bottom: 1rem;
+}
+
+@media (max-width: 800px) {
+  .record-content.has-sidebar {
+    grid-template-columns: 1fr;
+  }
+  .record-sidebar {
+    position: static;
+    max-height: none;
+    overflow-y: visible;
+  }
 }
 
 /* ── Fields grid ── */

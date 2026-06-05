@@ -123,7 +123,7 @@ const visibleFields = computed(() => {
 })
 
 const editableFields = computed(() =>
-  visibleFields.value.filter(f => !f.readonly && !f.disabled)
+  visibleFields.value.filter(f => !f.readonly)
 )
 
 // ── Data rows (read mode) ──────────────────────────────────────

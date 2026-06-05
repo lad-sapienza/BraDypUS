@@ -43,7 +43,8 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, defineAsyncComponent } from 'vue'
+import { computed, watch, onMounted, defineAsyncComponent } from 'vue'
+import { useRoute, useRouter }      from 'vue-router'
 import { useI18n }                  from '@/i18n'
 import { useConfigStore }           from '@/stores/config'
 import AppLayout                    from '@/components/AppLayout.vue'
@@ -61,13 +62,14 @@ const ConfigFieldList  = defineAsyncComponent(() => import('@/components/config/
 const ConfigZotero     = defineAsyncComponent(() => import('@/components/config/ZoteroLibsPanel.vue'))
 
 const { t } = useI18n()
-const store = useConfigStore()
+const store  = useConfigStore()
+const route  = useRoute()
+const router = useRouter()
 
-// ── Navigation state ───────────────────────────────────────────────────
+// ── Navigation state derived from URL ─────────────────────────────────
 // panel: 'app' | 'validation' | 'geoface' | 'apikeys' | 'relations' | 'table' | 'fields' | null
-const panel         = ref(null)
-const selectedTable = ref(null)
-const addingTable   = ref(false)   // true → ConfigTableForm in "new" mode
+const panel         = computed(() => route.params.panel ?? null)
+const selectedTable = computed(() => route.params.tb    ?? null)
 
 const activeComponent = computed(() => {
   if (panel.value === 'app')        return ConfigAppForm
@@ -81,29 +83,22 @@ const activeComponent = computed(() => {
   return null
 })
 
-// ── Actions ────────────────────────────────────────────────────────────
+// ── Navigation ─────────────────────────────────────────────────────────
 
 function setPanel(name) {
-  panel.value         = name
-  selectedTable.value = null
-  addingTable.value   = false
+  router.push({ path: `/${route.params.app}/config/${name}` })
 }
 
 function openTable(tbName) {
-  selectedTable.value = tbName
-  addingTable.value   = false
-  panel.value         = 'table'
+  router.push({ path: `/${route.params.app}/config/table/${tbName}` })
 }
 
 function openFields(tbName) {
-  selectedTable.value = tbName
-  panel.value         = 'fields'
+  router.push({ path: `/${route.params.app}/config/fields/${tbName}` })
 }
 
 function addTable() {
-  selectedTable.value = null
-  addingTable.value   = true
-  panel.value         = 'table'
+  router.push({ path: `/${route.params.app}/config/table` })
 }
 
 // ── Events from child panels ───────────────────────────────────────────
@@ -113,14 +108,15 @@ async function onSaved() {
 }
 
 async function onDeleted() {
-  panel.value         = null
-  selectedTable.value = null
   await store.loadTables(true)
+  router.push({ path: `/${route.params.app}/config` })
 }
 
 async function onRenamed(newName) {
   await store.loadTables(true)
-  if (selectedTable.value) selectedTable.value = newName
+  if (selectedTable.value) {
+    router.push({ path: `/${route.params.app}/config/table/${newName}` })
+  }
 }
 
 // ── Load table list as soon as unlocked ───────────────────────────────

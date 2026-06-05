@@ -630,6 +630,7 @@
   "import_geodata": "Importa dati geografici",
   "empty_or_wrong_geojson": "Errore. Il file geojson caricato è vuoto o non ben formattato",
   "upload_file": "Carica file",
+  "drag_drop_or": "Trascina qui un file oppure",
   "set_matching_fields": "Definisci i campi identificativi corrispondenti",
   "confirm_import_geodata": "Si prega di confirmare l'importazione di dati geografici per la tabella <code>%s</code> unendo nel database il campo <code>%s</code>con il campo esterno <code>%s</code>",
   "import_erase_previous_data": "Importa e cancella i dati geografici preesistenti",

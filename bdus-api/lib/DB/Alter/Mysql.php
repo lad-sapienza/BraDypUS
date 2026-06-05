@@ -53,12 +53,16 @@ class Mysql implements AlterInterface
             return $ok;
         }
 
-        return $this->db->execInTransaction(
+        $ok = $this->db->execInTransaction(
             "CREATE TABLE IF NOT EXISTS `{$tb}` ("
             . "id INTEGER PRIMARY KEY AUTO_INCREMENT, "
-            . "creator INTEGER NOT NULL"
+            . "creator INTEGER NULL"
             . ")"
         );
+        if ($ok) {
+            $this->addForeignKey($tb, 'creator', 'bdus_users', 'id', 'SET NULL', 'NO ACTION');
+        }
+        return $ok;
     }
 
     public function dropTable(string $tb): bool

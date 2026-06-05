@@ -119,7 +119,7 @@ class Sqlite implements AlterInterface
         } else {
             $sql = "CREATE TABLE IF NOT EXISTS \"{$tb}\" ("
                 . "id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                . "creator INTEGER NOT NULL"
+                . "creator INTEGER REFERENCES \"bdus_users\"(id) ON DELETE SET NULL"
                 . ")";
         }
         return $this->db->execInTransaction($sql);

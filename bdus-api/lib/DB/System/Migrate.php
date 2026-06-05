@@ -40,6 +40,7 @@ use DB\System\Migrations\M028_AddTokenVersionToUsers;
 use DB\System\Migrations\M029_AddLabelToUserlinks;
 use DB\System\Migrations\M030_RsIdsToInteger;
 use DB\System\Migrations\M031_AddProjectVersion;
+use DB\System\Migrations\M032_CreatorFkNullable;
 use Monolog\Logger;
 
 /**
@@ -116,6 +117,7 @@ class Migrate
         M029_AddLabelToUserlinks::class,
         M030_RsIdsToInteger::class,
         M031_AddProjectVersion::class,
+        M032_CreatorFkNullable::class,
     ];
 
     /**

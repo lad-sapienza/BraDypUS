@@ -52,12 +52,16 @@ class Postgres implements AlterInterface
             return $ok;
         }
 
-        return $this->db->execInTransaction(
+        $ok = $this->db->execInTransaction(
             "CREATE TABLE IF NOT EXISTS \"{$tb}\" ("
             . "id SERIAL PRIMARY KEY, "
-            . "creator INTEGER NOT NULL"
+            . "creator INTEGER"
             . ")"
         );
+        if ($ok) {
+            $this->addForeignKey($tb, 'creator', 'bdus_users', 'id', 'SET NULL', 'NO ACTION');
+        }
+        return $ok;
     }
 
     public function dropTable(string $tb): bool

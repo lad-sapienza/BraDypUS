@@ -231,4 +231,46 @@ class AlterFkIndexTest extends TestCase
         $fks = static::$db->query("PRAGMA foreign_key_list(myplugin2)", [], 'read') ?: [];
         $this->assertEmpty($fks, 'Plugin table without pluginOf must have no FK');
     }
+
+    // ── createMinimalTable (non-plugin / main table) ──────────────────────────
+
+    public function testCreateMinimalMainTableCreatorIsNullable(): void
+    {
+        static::$db->exec('DROP TABLE IF EXISTS "maindata"');
+        $ok = static::$alter->createMinimalTable('maindata', false);
+        $this->assertTrue($ok);
+
+        $cols = static::$db->query("PRAGMA table_info(maindata)", [], 'read') ?: [];
+        $creatorCol = null;
+        foreach ($cols as $col) {
+            if ($col['name'] === 'creator') {
+                $creatorCol = $col;
+                break;
+            }
+        }
+        $this->assertNotNull($creatorCol, 'creator column must exist');
+        $this->assertSame(0, (int)$creatorCol['notnull'], 'creator must be nullable (notnull = 0)');
+    }
+
+    public function testCreateMinimalMainTableCreatorHasFkToBdusUsers(): void
+    {
+        static::$db->exec('DROP TABLE IF EXISTS "maindata2"');
+        $ok = static::$alter->createMinimalTable('maindata2', false);
+        $this->assertTrue($ok);
+
+        $fks = static::$db->query("PRAGMA foreign_key_list(maindata2)", [], 'read') ?: [];
+        $this->assertNotEmpty($fks, 'Non-plugin table must have a FK on creator');
+
+        $creatorFk = null;
+        foreach ($fks as $fk) {
+            if ($fk['from'] === 'creator') {
+                $creatorFk = $fk;
+                break;
+            }
+        }
+        $this->assertNotNull($creatorFk, 'FK on creator column must be present');
+        $this->assertSame('bdus_users', $creatorFk['table']);
+        $this->assertSame('id',         $creatorFk['to']);
+        $this->assertSame('SET NULL',   strtoupper($creatorFk['on_delete']));
+    }
 }

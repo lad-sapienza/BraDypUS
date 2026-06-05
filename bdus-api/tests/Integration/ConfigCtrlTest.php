@@ -355,6 +355,113 @@ class ConfigCtrlTest extends BdusTestCase
         $this->assertSame('error', $res['status']);
     }
 
+    // ── activateFuzzyDate / deactivateFuzzyDate ───────────────────────────
+
+    public function testActivateFuzzyDateReturnsSuccess(): void
+    {
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config', ['tb' => self::TB]);
+        $res  = $this->callController($ctrl, 'activateFuzzyDate');
+
+        $this->assertSame('success', $res['status']);
+        $this->assertSame('fuzzy_date_activated', $res['code']);
+
+        // cleanup
+        $this->makeController('Bdus\\Controllers\\Config', ['tb' => self::TB]);
+        $this->callController(
+            $this->makeController('Bdus\\Controllers\\Config', ['tb' => self::TB]),
+            'deactivateFuzzyDate'
+        );
+    }
+
+    public function testActivateFuzzyDateCreatesColumnsAndFieldDefs(): void
+    {
+        $this->callController(
+            $this->makeController('Bdus\\Controllers\\Config', ['tb' => self::TB]),
+            'activateFuzzyDate'
+        );
+
+        // DB columns must exist
+        $inspect = new \DB\Inspect(static::$db);
+        $cols    = array_column($inspect->tableColumns(self::TB), 'fld');
+        foreach (['chrono_from', 'chrono_to', 'chrono_label', 'chrono_certainty', 'chrono_period'] as $col) {
+            $this->assertContains($col, $cols, "Expected DB column: $col");
+        }
+
+        // Config field defs must exist with hide=true
+        $fields = static::$cfg->get('tables.' . self::TB . '.fields') ?: [];
+        foreach (['chrono_from', 'chrono_to', 'chrono_label', 'chrono_certainty', 'chrono_period'] as $fld) {
+            $this->assertArrayHasKey($fld, $fields, "Expected field def: $fld");
+            $this->assertTrue((bool)($fields[$fld]['hide'] ?? false), "$fld should have hide=true");
+        }
+
+        // cleanup
+        $this->callController(
+            $this->makeController('Bdus\\Controllers\\Config', ['tb' => self::TB]),
+            'deactivateFuzzyDate'
+        );
+    }
+
+    public function testActivateFuzzyDateIsIdempotent(): void
+    {
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config', ['tb' => self::TB]);
+        $this->callController($ctrl, 'activateFuzzyDate');
+        $ctrl2 = $this->makeController('Bdus\\Controllers\\Config', ['tb' => self::TB]);
+        $res   = $this->callController($ctrl2, 'activateFuzzyDate');
+
+        $this->assertSame('success', $res['status']);
+
+        // Field defs must not be duplicated — exactly 5 chrono_* fields
+        $fields      = static::$cfg->get('tables.' . self::TB . '.fields') ?: [];
+        $chronoCount = count(array_filter(array_keys($fields), fn($n) => str_starts_with($n, 'chrono_')));
+        $this->assertSame(5, $chronoCount, 'Double activation must not duplicate field defs');
+
+        // cleanup
+        $this->callController(
+            $this->makeController('Bdus\\Controllers\\Config', ['tb' => self::TB]),
+            'deactivateFuzzyDate'
+        );
+    }
+
+    public function testDeactivateFuzzyDateClearsFieldDefsPreservesColumns(): void
+    {
+        // Activate first
+        $this->callController(
+            $this->makeController('Bdus\\Controllers\\Config', ['tb' => self::TB]),
+            'activateFuzzyDate'
+        );
+
+        // Then deactivate
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config', ['tb' => self::TB]);
+        $res  = $this->callController($ctrl, 'deactivateFuzzyDate');
+
+        $this->assertSame('success', $res['status']);
+        $this->assertSame('fuzzy_date_deactivated', $res['code']);
+
+        // Config field defs must be removed
+        $fields = static::$cfg->get('tables.' . self::TB . '.fields') ?: [];
+        foreach (['chrono_from', 'chrono_to', 'chrono_label', 'chrono_certainty', 'chrono_period'] as $fld) {
+            $this->assertArrayNotHasKey($fld, $fields, "Field def $fld should have been removed from config");
+        }
+
+        // DB columns must be preserved (data protection)
+        $inspect = new \DB\Inspect(static::$db);
+        $cols    = array_column($inspect->tableColumns(self::TB), 'fld');
+        foreach (['chrono_from', 'chrono_to'] as $col) {
+            $this->assertContains($col, $cols, "DB column $col must be preserved on deactivation");
+        }
+    }
+
+    public function testActivateFuzzyDateRequiresSuperAdmin(): void
+    {
+        $this->setPrivilege(11);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config', ['tb' => self::TB]);
+        $res  = $this->callController($ctrl, 'activateFuzzyDate');
+        $this->setPrivilege(1);
+
+        $this->assertSame('error', $res['status']);
+        $this->assertSame('not_enough_privilege', $res['code']);
+    }
+
     // ── getGeoFaceConfig ──────────────────────────────────────────────────
 
     public function testGetGeoFaceConfigReturnsSuccess(): void

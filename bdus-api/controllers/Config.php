@@ -451,6 +451,23 @@ class Config extends \Bdus\Controller
       unset($tbData['link']);
       $this->cfg->setTable($tbData);
 
+      // Write field definitions for the chrono columns so they appear in the
+      // config field list and can be managed from the UI (hide=true: the
+      // ChronoSection handles display, not the regular FieldEditor).
+      $chronoFieldDefs = [
+        'chrono_from'      => ['name' => 'chrono_from',      'label' => 'Cronologia da',   'type' => 'text', 'hide' => true],
+        'chrono_to'        => ['name' => 'chrono_to',        'label' => 'Cronologia a',     'type' => 'text', 'hide' => true],
+        'chrono_label'     => ['name' => 'chrono_label',     'label' => 'Etichetta crono',  'type' => 'text', 'hide' => true],
+        'chrono_certainty' => ['name' => 'chrono_certainty', 'label' => 'Certezza crono',   'type' => 'text', 'hide' => true],
+        'chrono_period'    => ['name' => 'chrono_period',    'label' => 'Periodo crono',    'type' => 'text', 'hide' => true],
+      ];
+      $existingFields = array_keys($this->cfg->get("tables.$tb.fields") ?: []);
+      foreach ($chronoFieldDefs as $fldName => $fldDef) {
+        if (!in_array($fldName, $existingFields, true)) {
+          $this->cfg->setFld($tb, $fldName, $fldDef);
+        }
+      }
+
       $this->returnJson(['status' => 'success', 'code' => 'fuzzy_date_activated']);
 
     } catch (\Throwable $th) {
@@ -460,7 +477,11 @@ class Config extends \Bdus\Controller
 
   /**
    * Deactivates the fuzzy-date plugin for a table.
-   * Marks fuzzy_date=false in config; columns are preserved to protect data.
+   * Sets fuzzy_date=false in config and removes the five chrono_* field
+   * definitions so they no longer appear in the config UI.
+   * DB columns are preserved to protect existing data; they can be re-exposed
+   * by re-activating the plugin or deleted manually via the config field list
+   * after re-activation.
    *
    * DELETE /api/config/table/{tb}/fuzzy-date
    * Response: { status, code }
@@ -481,6 +502,17 @@ class Config extends \Bdus\Controller
       $tbData['fuzzy_date'] = false;
       unset($tbData['link']); // don't touch FK relations — only update the flag
       $this->cfg->setTable($tbData);
+
+      // Remove the five chrono_* field definitions from config so the fields
+      // no longer appear in the config field list or in the record schema.
+      // DB columns are intentionally left in place (data preservation).
+      $chronoNames    = ['chrono_from', 'chrono_to', 'chrono_label', 'chrono_certainty', 'chrono_period'];
+      $existingFields = array_keys($this->cfg->get("tables.$tb.fields") ?: []);
+      foreach ($chronoNames as $fldName) {
+        if (in_array($fldName, $existingFields, true)) {
+          $this->cfg->deleteFld($tb, $fldName);
+        }
+      }
 
       $this->returnJson(['status' => 'success', 'code' => 'fuzzy_date_deactivated']);
 

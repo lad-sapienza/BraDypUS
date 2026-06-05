@@ -12,8 +12,8 @@
         </div>
         <div class="chrono-meta-read">
           <Tag
-            v-if="certainty"
-            :value="t('chrono_certainty_' + certainty)"
+            v-if="normCertainty(certainty)"
+            :value="t('chrono_certainty_' + normCertainty(certainty))"
             :severity="certaintySeverity"
             class="chrono-tag"
           />
@@ -95,6 +95,15 @@ const emit = defineEmits(['update:chrono'])
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
+// Map legacy English/Italian string values to the new numeric codes (1/2/3).
+const LEGACY_CERTAINTY = { certain: 1, certa: 1, probable: 2, probabile: 2, possible: 3, incerta: 3, uncertain: 3 }
+
+function normCertainty(v) {
+  if (v == null) return null
+  if (typeof v === 'number') return v
+  return LEGACY_CERTAINTY[String(v).toLowerCase()] ?? null
+}
+
 function numbersToInput(from, to) {
   if (from == null && to == null) return '?'
   const tok = n => String(n)
@@ -107,23 +116,21 @@ function numbersToInput(from, to) {
 
 const inputStr       = ref('')
 const parseResult    = ref(null)
-const localCertainty = ref(props.certainty ?? null)
+const localCertainty = ref(normCertainty(props.certainty))
 const localPeriod    = ref(props.period    ?? '')
 
 // ── Initialise input string from stored values ─────────────────────────────
 
 watch(() => [props.from, props.to, props.label], ([f, t_, l]) => {
   if (inputStr.value !== '') return   // don't overwrite mid-edit
-  if (l) {
-    // chrono_label stores the raw parseable input (e.g. "c1 BCE/c4 CE")
+  if (l && parse(l).valid) {
     inputStr.value = l
   } else if (f != null || t_ != null) {
-    // fallback for records that have numbers but no stored input string
     inputStr.value = numbersToInput(f, t_)
   }
 }, { immediate: true })
 
-watch(() => props.certainty, v => { localCertainty.value = v ?? null })
+watch(() => props.certainty, v => { localCertainty.value = normCertainty(v) })
 watch(() => props.period,    v => { localPeriod.value    = v ?? '' })
 
 // ── Computed ──────────────────────────────────────────────────────────────────
@@ -157,7 +164,7 @@ const certaintySeverity = computed(() => ({
   1: 'success',
   2: 'warn',
   3: 'danger',
-}[props.certainty] ?? 'secondary'))
+}[normCertainty(props.certainty)] ?? 'secondary'))
 
 // ── Handlers ──────────────────────────────────────────────────────────────────
 

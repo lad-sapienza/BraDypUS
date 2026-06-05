@@ -67,6 +67,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     secondary section is actually visible via a `hasRightColumn` computed.
 
 ### Added
+- **File management view** (`FilesView.vue`) — S9: new dedicated view listing all
+  files uploaded in the current app, accessible via the "File management" nav item
+  (between "Data management" and "Find & Replace").
+  - Paginated table (25/50/100 per page) with thumbnail/icon preview, filename,
+    inline-editable description and keywords (auto-saved on blur/Enter via
+    `PATCH /api/file/{id}`), linked-record badges, and orphan indicator.
+  - "Orphans only" toggle filter — shows files not attached to any record.
+  - Per-row **Replace file** action: uploads a new binary via
+    `POST /api/file/{fileId}/replace`, preserving existing description/keywords.
+  - Per-row **Delete** action with confirmation dialog.
+  - New PHP endpoints in `File.php`:
+    - `GET /api/files` — paginated list with optional `orphans_only` filter.
+    - `PATCH /api/file/{fileId}` — update `description`, `keywords`, `printable`.
+    - `POST /api/file/{fileId}/replace` — swap the binary, keep metadata; deletes
+      the old physical file if the extension changes.
+  - New i18n keys: `files_mng`, `files_mng_title`, `files_orphans_only`,
+    `files_col_*`, `files_orphan_badge`, `files_empty`, `files_no_links`,
+    `replace_file`, `confirm_replace_file`, `ok_file_updated`, `error_file_updated`,
+    `ok_file_replaced`, `error_file_replaced` (en + it).
+
 - **Drag & drop file upload** (`FileGallery.vue`) — S7 #23: the upload area in
   edit mode is now a drop zone (dashed border, highlight on hover) in addition to
   the click-to-browse button. Dropping a file triggers the same upload pipeline.

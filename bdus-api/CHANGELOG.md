@@ -6,6 +6,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [5.0.0] - unreleased
 
 ### Added
+- **Migration M032 — `creator` FK nullable**: `creator INTEGER NOT NULL` in all
+  non-plugin user data tables is now `creator INTEGER NULL` with a foreign key to
+  `bdus_users(id) ON DELETE SET NULL`. New tables (via `createMinimalTable`) are
+  created with the correct constraint inline (all engines). Existing tables on
+  MySQL and PostgreSQL are altered by M032 at first login: orphaned creator values
+  are nullified before the constraint is added. SQLite existing tables are skipped
+  (FK constraints cannot be added to existing tables safely without full recreation;
+  new SQLite tables are already correct).
+  Tests: 2 new `AlterFkIndexTest` cases + 4 new `M032MigrationTest` guard cases.
+
+### Changed
+- **Config field form** (`ConfigFieldForm.vue`, `fld_structure.json`) — S5:
+  - All field parameter labels are now translated via `t('fld_' + key)` instead
+    of displaying the raw JSON key name.
+  - `vocabulary_set`, `get_values_from_tb`, and `id_from_tb` are hidden when the
+    field type is not `select` / `combo_select` / `multi_select`.
+  - Boolean parameters (`readonly`, `hide`, `active_link`, `disabled`,
+    `force_default`) are now rendered as ToggleSwitch instead of a one-option Select.
+  - `get_values_from_tb` replaced by a cascading two-level UI: first dropdown
+    selects the table (from the same list as `id_from_tb`), second dropdown loads
+    the table's field labels on demand via `GET /api/config/table/{tb}` and shows
+    them as options. Value stored as `{table}:{field}` (prefix-free format).
+  - `fld_structure.json`: fixed `type.help` (duplicate `get_values_from_tb` →
+    `id_from_tb`); corrected `def_value.help` typo; updated `get_values_from_tb`
+    help to remove deprecated prefix syntax; improved `db_type` description.
+- **Config table form** (`ConfigTableForm.vue`) — S6:
+  - Info/help texts added below every parameter.
+  - Name field placed in its own full-width row to eliminate visual overlap with
+    the Label field when the rename button is present.
+  - `is_plugin` replaced by a ToggleSwitch (stored value remains `''`/`'1'`).
+  - `preview_fields` replaced by a MultiSelect with chip display — one control
+    instead of a dynamic list of Select dropdowns.
+  - Plugins section replaced by a labelled list of ToggleSwitches (one per
+    available plugin table), matching the system plugins layout.
+
+### Fixed
+- **Hurl seed / config tables (`03_config_tables.hurl`, `19_seed_demo.hurl`)**:
+  - 5 archaeological tables (`siti`, `complessi`, `saggi`, `us`, `reperti`) now
+    declare a human-readable `id_field` (`nome`, `nome`, `nome`, `sigla`,
+    `inventario`) instead of the integer primary key `id`.
+  - `siti.descrizione` now has `type: long_text` (was absent).
+  - `m_reperti_in_us.forma_tipo` and `m_reperti_in_complessi.forma_tipo`: removed
+    non-functional `dic` extra (never implemented in the Vue UI); replaced with
+    `vocabulary_set: "forma_tipo"`. Vocabulary entries added to the demo seed.
+  - All `type: "textarea"` in the demo schema changed to `type: "long_text"`
+    (the correct v5 type; `textarea` is not handled in FieldEditor/FieldDisplay).
+
 - **Upgrade assistant** (`controllers/Upgrade.php`): guided v4→v5 and minor-version
   upgrade flows with a clean, single migration point.
 

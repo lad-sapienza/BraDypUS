@@ -1,14 +1,14 @@
 {
     "name": {
         "type": "input",
-        "help": "Database name of the column. Please follow the pattern: ^[a-z_]{3,15}$",
+        "help": "Database name of the column. Please follow the pattern: ^[a-z_]{2,15}$",
         "required": true,
         "readonly": true,
         "pattern": "^[a-z_]{2,15}$"
     },
     "label": {
         "type": "input",
-        "help": "The label will be shown to the users. Please stick as possible to the field name, but make this string easy to understand. No limitations on spaces, uppercase or other special charactes are defined.",
+        "help": "The label will be shown to the users. Please stick as possible to the field name, but make this string easy to understand. No limitations on spaces, uppercase or other special characters are defined.",
         "required": false
     },
     "type": {
@@ -23,7 +23,7 @@
             "boolean",
             "slider"
         ],
-        "help": "Field type. For `select`, `combo_select` and `multi_select` a source for the available values must be supplied. Fill one of the following `vocabulary_set`, `get_values_from_tb` or `get_values_from_tb`.",
+        "help": "Field type. For `select`, `combo_select` and `multi_select` a source for the available values must be supplied: fill one of `vocabulary_set`, `get_values_from_tb` or `id_from_tb`.",
         "required": true
     },
     "db_type": {
@@ -33,7 +33,7 @@
             "INTEGER",
             "TIMESTAMP"
         ],
-        "help": "Database field type. Caveat: DATETIME is MySQL (and SQLite) specific; TIMESTAMP is the equivalent in PostgreSQL",
+        "help": "Database column type. Use TEXT for strings and long texts, INTEGER for numbers and booleans, TIMESTAMP for date/time values (compatible with all engines).",
         "required": true,
         "readonly": false
     },
@@ -42,17 +42,17 @@
         "values": [
             "list-of-system-defined-vocabularies-here"
         ],
-        "help": "Select from the list the vocabulary that will be used to compile the suggested values if field type is `select`, `combo_select` or `multi_select`",
+        "help": "Select from the list the vocabulary whose values will be offered to the user. Only for `select`, `combo_select` and `multi_select` field types.",
         "required": false
     },
     "get_values_from_tb": {
         "type": "input",
-        "help": "Insert here the table and field name, whose unique values will be used to compile the suggested values if field type is `select`, `combo_select` or `multi_select`. Syntax: {prefix}__{tablename}:{fieldid}, eg.: sitarc__siti:id_sito",
+        "help": "Select the table and field whose unique values will be used as suggestions. Only for `select`, `combo_select` and `multi_select` field types.",
         "required": false
     },
     "id_from_tb": {
         "type": "select",
-        "help": "Select here the table, whose unique id values will be used to compile the suggested values if field type is `select`, `combo_select` or `multi_select`. In the database the id will be filed, but users will see the id_field",
+        "help": "Select the table whose record IDs will be stored in this field. The id_field of that table is shown to users, but the integer id is saved. Only for `select`, `combo_select` and `multi_select` field types.",
         "values": [
             "list-of-available-tables-here"
         ],
@@ -69,77 +69,62 @@
             "regex",
             "valid_wkt"
         ],
-        "help": "Real time (on value change & on form submission) data validation to perform on the enterd field value",
+        "help": "Real-time validation performed on value change and on form submission.",
         "required": false
     },
     "active_link": {
-        "type": "select",
-        "values": [
-            true
-        ],
-        "help": "If true the field value will have in read mode a link to a query showing all similar records",
+        "type": "boolean",
+        "help": "If enabled the field value shows a link in read mode pointing to a search for all records with the same value.",
         "required": false
     },
     "readonly": {
-        "type": "select",
-        "values": [
-            true
-        ],
-        "help": "If true the field value will be visible, it cannot be edited by users, and its value will be sent to the server",
+        "type": "boolean",
+        "help": "If enabled the field is visible and its value is sent to the server, but users cannot edit it.",
         "required": false
     },
     "disabled": {
-        "type": "select",
-        "values": [
-            true
-        ],
-        "help": "If true the field value will be visible (like `readonly`), it cannot be edited by users (like `readonly`), but its value will not be sen to the server (unlike `readonly`)",
+        "type": "boolean",
+        "help": "If enabled the field is visible like `readonly`, but its value is NOT sent to the server. Use `readonly` instead — `disabled` will be removed in a future version.",
         "required": false
     },
     "hide": {
-        "type": "select",
-        "values": [
-            true
-        ],
-        "help": "If true the field value will not be visible to the users (unlike `readonly` and `disabled`), it cannot be edited by users (like `readonly` and `disabled`), and its value will be sent to the server (like `readonly`)",
+        "type": "boolean",
+        "help": "If enabled the field is hidden from users. Its value is sent to the server (like `readonly`) but it is not editable.",
         "required": false
     },
     "def_value": {
         "type": "input",
-        "help": "Default value to use on new record insertion. May be changed from te user (if `readonly` or `hide` are nor defined). The following variables can be used: %today%: current date, %current_user%: current user id",
+        "help": "Default value pre-filled on new record creation. The user can change it unless `readonly` or `hide` are also enabled. Variables: %today% (current date), %current_user% (current user id).",
         "required": false
     },
     "force_default": {
-        "type": "select",
-        "values": [
-            true
-        ],
-        "help": "If true the default value will overwrite in edit mode the database value. Can be used in comination with `readonly` and `def_value` to save last edited timestamps, of last user id who edited the record",
+        "type": "boolean",
+        "help": "If enabled the default value overwrites the stored value even in edit mode. Will be removed in a future version — use `def_value` + `readonly` instead.",
         "required": false
     },
     "max_length": {
         "type": "input",
-        "help": "Maximum fields length measured in characters (included white spaces). An integer should be entered.",
+        "help": "Maximum allowed length in characters (including spaces). Enter an integer.",
         "required": false
     },
     "min": {
         "type": "input",
-        "help": "Minimum allowed value, for field type `slider` or `check` value range. An integer should be entered",
+        "help": "Minimum allowed value for `slider` type or `range` validation. Enter an integer.",
         "required": false
     },
     "max": {
         "type": "input",
-        "help": "Maximum allowed value, for field type `slider` or `check` value range. An integer should be entered",
+        "help": "Maximum allowed value for `slider` type or `range` validation. Enter an integer.",
         "required": false
     },
     "pattern": {
         "type": "input",
-        "help": "Regex pattern to use for field value validation when `check` is set to regex",
+        "help": "Regex pattern used when `check` includes `regex`.",
         "required": false
     },
     "help": {
         "type": "input",
-        "help": "The help text will be shown to the users, explaining them how to compile the field",
+        "help": "Help text shown to users explaining how to fill in this field.",
         "required": false
     },
     "widget": {
@@ -147,7 +132,7 @@
         "values": [
             "list-of-available-widgets-here"
         ],
-        "help": "Optional display widget for read mode. Place a .js ES-module in projects/{app}/widgets/ and it will appear here automatically. The raw value is always stored as plain text.",
+        "help": "Optional display widget for read mode. Place a .js ES-module in projects/{app}/widgets/ and it will appear here automatically.",
         "required": false
     }
 }

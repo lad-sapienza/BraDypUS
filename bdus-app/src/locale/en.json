@@ -492,6 +492,8 @@
   "fuzzy_date_input_placeholder": "e.g. c4l BCE, -350, ?/c3 CE",
   "fuzzy_date_certainty": "Certainty",
   "fuzzy_date_period": "Period",
+  "chrono_from": "From",
+  "chrono_to": "To",
   "certain": "Certain",
   "probable": "Probable",
   "possible": "Possible",

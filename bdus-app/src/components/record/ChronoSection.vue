@@ -90,6 +90,16 @@ const props = defineProps({
 
 const emit = defineEmits(['update:chrono'])
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function numbersToInput(from, to) {
+  if (from == null && to == null) return '?'
+  const tok = n => String(n)   // negative ints match YEAR_NEG, positive match YEAR_POS
+  if (from == null) return `?/${tok(to)}`
+  if (to   == null) return `${tok(from)}/?`
+  return `${tok(from)}/${tok(to)}`
+}
+
 // ── Local state ───────────────────────────────────────────────────────────────
 
 const inputStr      = ref('')
@@ -101,10 +111,12 @@ const localPeriod    = ref(props.period    ?? '')
 
 watch(() => [props.from, props.to, props.label], ([f, t_, l]) => {
   if (inputStr.value !== '') return   // don't overwrite mid-edit
-  if (l) {
+  if (f != null || t_ != null) {
+    // Build a parseable input string from the stored numbers.
+    // The stored label is the display output of the parser, not re-parseable input.
+    inputStr.value = numbersToInput(f, t_)
+  } else if (l) {
     inputStr.value = l
-  } else if (f != null || t_ != null) {
-    inputStr.value = format(f, t_)
   }
 }, { immediate: true })
 

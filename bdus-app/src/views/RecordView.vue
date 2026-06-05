@@ -405,8 +405,10 @@ const chronoData = computed(() => {
 })
 
 // ── Derived ─────────────────────────────────────────────────────
+const CHRONO_FIELDS = new Set(['chrono_from', 'chrono_to', 'chrono_label', 'chrono_certainty', 'chrono_period'])
+
 const visibleCoreFields = computed(() =>
-  (record.value?.schema?.fields ?? []).filter(f => !f.hide)
+  (record.value?.schema?.fields ?? []).filter(f => !f.hide && !CHRONO_FIELDS.has(f.name))
 )
 
 const recordTitle = computed(() => {
@@ -436,6 +438,30 @@ const hasBibliography = computed(() =>
 const hasGeodata = computed(() => {
   const g = record.value?.geodata
   return g && (Array.isArray(g) ? g.length > 0 : Object.keys(g).length > 0)
+})
+
+// True only when the user has actually modified at least one value since entering
+// edit mode — used to avoid false-positive "unsaved changes" warnings.
+const hasActualChanges = computed(() => {
+  if (!record.value || mode.value !== 'edit') return false
+  // Core fields
+  for (const [fld, val] of Object.entries(editData.core)) {
+    if (val !== (record.value.core[fld]?.val ?? null)) return true
+  }
+  // Plugin rows: any new/deleted row is a definite change
+  for (const [plgTb, rows] of Object.entries(editData.plugins)) {
+    if (rows.some(r => r._isNew || r._delete)) return true
+    const origData = record.value.plugins[plgTb]?.data ?? {}
+    const origRows = Array.isArray(origData) ? origData : Object.values(origData)
+    for (const row of rows) {
+      const orig = origRows.find(r => String(r.id?.val) === String(row.id))
+      if (!orig) return true
+      for (const [k, v] of Object.entries(row.fields)) {
+        if (v !== (orig[k]?.val ?? null)) return true
+      }
+    }
+  }
+  return false
 })
 
 const hasRightColumn = computed(() => {
@@ -909,7 +935,7 @@ function onBibDeleted(entryId) {
 
 // ── Unsaved changes guard ─────────────────────────────────────────
 onBeforeRouteLeave((_to, _from, next) => {
-  if (mode.value !== 'edit') {
+  if (mode.value !== 'edit' || !hasActualChanges.value) {
     next()
     return
   }

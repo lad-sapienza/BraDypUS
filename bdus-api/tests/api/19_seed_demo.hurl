@@ -10,7 +10,7 @@
 #   vocabularies (periodi, sito_tipologia, complesso_tipo, us_tipo,
 #                 affidabilita, reperto_categoria, reperto_classe,
 #                 stato_conservazione, tipo_misura, unita_misura,
-#                 materiale_classe)
+#                 materiale_classe, forma_tipo)
 #   siti (3 direct + 15 via CSV = 18 total, all with fuzzy-date data)
 #   complessi (8 direct + 3 via CSV = 11 total)
 #   saggi (12 direct + 5 via CSV = 17 total)
@@ -30,7 +30,7 @@ Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
   "name": "siti", "label": "Siti Archeologici", "is_plugin": "0",
-  "order": "nome", "id_field": "id", "preview": ["nome", "localita"],
+  "order": "nome", "id_field": "nome", "preview": ["nome", "localita"],
   "geodata": 1, "zotero": 1, "fuzzy_date": 1
 }
 HTTP 200
@@ -86,7 +86,7 @@ Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
   "name": "complessi", "label": "Complessi", "is_plugin": "0",
-  "order": "nome", "id_field": "id", "preview": ["nome", "tipo"],
+  "order": "nome", "id_field": "nome", "preview": ["nome", "tipo"],
   "geodata": 1
 }
 HTTP 200
@@ -98,7 +98,7 @@ Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
   "name": "saggi", "label": "Saggi di scavo", "is_plugin": "0",
-  "order": "nome", "id_field": "id", "preview": ["nome", "anno"]
+  "order": "nome", "id_field": "nome", "preview": ["nome", "anno"]
 }
 HTTP 200
 [Asserts]
@@ -109,7 +109,7 @@ Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
   "name": "us", "label": "Unità stratigrafiche", "is_plugin": "0",
-  "order": "sigla", "id_field": "id", "preview": ["sigla"],
+  "order": "sigla", "id_field": "sigla", "preview": ["sigla"],
   "rs": "sigla", "geodata": 1, "zotero": 1, "fuzzy_date": 1
 }
 HTTP 200
@@ -162,7 +162,7 @@ Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
   "name": "reperti", "label": "Reperti mobili", "is_plugin": "0",
-  "order": "inventario", "id_field": "id", "preview": ["inventario"],
+  "order": "inventario", "id_field": "inventario", "preview": ["inventario"],
   "geodata": 1, "zotero": 1
 }
 HTTP 200
@@ -579,6 +579,61 @@ POST {{base_url}}/api/vocabularies
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "voc": "materiale_classe", "def": "Osso lavorato" }
+HTTP 200
+
+# forma_tipo
+POST {{base_url}}/api/vocabularies
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "voc": "forma_tipo", "def": "Coppa" }
+HTTP 200
+
+POST {{base_url}}/api/vocabularies
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "voc": "forma_tipo", "def": "Piatto" }
+HTTP 200
+
+POST {{base_url}}/api/vocabularies
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "voc": "forma_tipo", "def": "Brocca" }
+HTTP 200
+
+POST {{base_url}}/api/vocabularies
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "voc": "forma_tipo", "def": "Anfora" }
+HTTP 200
+
+POST {{base_url}}/api/vocabularies
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "voc": "forma_tipo", "def": "Olla" }
+HTTP 200
+
+POST {{base_url}}/api/vocabularies
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "voc": "forma_tipo", "def": "Tegola" }
+HTTP 200
+
+POST {{base_url}}/api/vocabularies
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "voc": "forma_tipo", "def": "Mattone" }
+HTTP 200
+
+POST {{base_url}}/api/vocabularies
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "voc": "forma_tipo", "def": "Fibula" }
+HTTP 200
+
+POST {{base_url}}/api/vocabularies
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "voc": "forma_tipo", "def": "Chiodo" }
 HTTP 200
 
 

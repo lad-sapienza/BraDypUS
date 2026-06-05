@@ -5,7 +5,7 @@
 #   siti, complessi, saggi, us, reperti  (main tables)
 #   misure, m_reperti_in_us, m_reperti_in_complessi  (plugin tables)
 #
-# Field types covered: text, textarea, long_text, boolean, date,
+# Field types covered: text, long_text, boolean, date,
 #                      select, combo_select, multi_select, slider
 # Population policies: vocabulary_set, dic, id_from_tb, get_values_from_tb
 # Validation checks:   not_empty, int, email, no_dupl, range, regex
@@ -131,7 +131,7 @@ jsonpath "$.status" == "success"
 POST {{base_url}}/api/config/table/siti/field
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "name": "descrizione", "label": "Descrizione", "type": "textarea", "db_type": "TEXT" }
+{ "name": "descrizione", "label": "Descrizione", "type": "long_text", "db_type": "TEXT" }
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
@@ -177,7 +177,7 @@ jsonpath "$.status" == "success"
 POST {{base_url}}/api/config/table/complessi/field
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "name": "descrizione", "label": "Descrizione", "type": "textarea", "db_type": "TEXT" }
+{ "name": "descrizione", "label": "Descrizione", "type": "long_text", "db_type": "TEXT" }
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
@@ -223,7 +223,7 @@ jsonpath "$.status" == "success"
 POST {{base_url}}/api/config/table/saggi/field
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "name": "descrizione", "label": "Descrizione", "type": "textarea", "db_type": "TEXT" }
+{ "name": "descrizione", "label": "Descrizione", "type": "long_text", "db_type": "TEXT" }
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
@@ -289,7 +289,7 @@ jsonpath "$.status" == "success"
 POST {{base_url}}/api/config/table/us/field
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "name": "descrizione", "label": "Descrizione", "type": "textarea", "db_type": "TEXT" }
+{ "name": "descrizione", "label": "Descrizione", "type": "long_text", "db_type": "TEXT" }
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
@@ -447,7 +447,7 @@ jsonpath "$.status" == "success"
 POST {{base_url}}/api/config/table/reperti/field
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "name": "descrizione", "label": "Descrizione", "type": "textarea", "db_type": "TEXT" }
+{ "name": "descrizione", "label": "Descrizione", "type": "long_text", "db_type": "TEXT" }
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
@@ -455,7 +455,7 @@ jsonpath "$.status" == "success"
 POST {{base_url}}/api/config/table/reperti/field
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "name": "frammenti_conservati", "label": "Frammenti conservati", "type": "textarea", "db_type": "TEXT" }
+{ "name": "frammenti_conservati", "label": "Frammenti conservati", "type": "long_text", "db_type": "TEXT" }
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
@@ -463,7 +463,7 @@ jsonpath "$.status" == "success"
 POST {{base_url}}/api/config/table/reperti/field
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "name": "decorazione", "label": "Decorazione", "type": "textarea", "db_type": "TEXT" }
+{ "name": "decorazione", "label": "Decorazione", "type": "long_text", "db_type": "TEXT" }
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
@@ -471,7 +471,7 @@ jsonpath "$.status" == "success"
 POST {{base_url}}/api/config/table/reperti/field
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "name": "dati_epigrafici", "label": "Dati epigrafici", "type": "textarea", "db_type": "TEXT" }
+{ "name": "dati_epigrafici", "label": "Dati epigrafici", "type": "long_text", "db_type": "TEXT" }
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
@@ -551,7 +551,7 @@ POST {{base_url}}/api/config/table/m_reperti_in_us/field
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "name": "forma_tipo", "label": "Forma e tipo", "type": "combo_select", "db_type": "TEXT",
-  "dic": ["Coppa", "Piatto", "Brocca", "Anfora", "Olla", "Tegola", "Mattone", "Fibula", "Chiodo"] }
+  "vocabulary_set": "forma_tipo" }
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
@@ -625,7 +625,7 @@ jsonpath "$.status" == "success"
 POST {{base_url}}/api/config/table/m_reperti_in_us/field
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "name": "note", "label": "Note", "type": "textarea", "db_type": "TEXT" }
+{ "name": "note", "label": "Note", "type": "long_text", "db_type": "TEXT" }
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
@@ -653,7 +653,7 @@ POST {{base_url}}/api/config/table/m_reperti_in_complessi/field
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "name": "forma_tipo", "label": "Forma e tipo", "type": "combo_select", "db_type": "TEXT",
-  "dic": ["Coppa", "Piatto", "Brocca", "Anfora", "Olla", "Tegola", "Mattone", "Fibula", "Chiodo"] }
+  "vocabulary_set": "forma_tipo" }
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
@@ -727,7 +727,7 @@ jsonpath "$.status" == "success"
 POST {{base_url}}/api/config/table/m_reperti_in_complessi/field
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "name": "note", "label": "Note", "type": "textarea", "db_type": "TEXT" }
+{ "name": "note", "label": "Note", "type": "long_text", "db_type": "TEXT" }
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
@@ -751,7 +751,7 @@ Content-Type: application/json
   "label":     "Siti Archeologici",
   "is_plugin": "0",
   "order":     "nome",
-  "id_field":  "id",
+  "id_field":  "nome",
   "preview":   ["nome", "localita"],
   "geodata":   1,
   "zotero":    1
@@ -768,7 +768,7 @@ Content-Type: application/json
   "label":     "Complessi",
   "is_plugin": "0",
   "order":     "nome",
-  "id_field":  "id",
+  "id_field":  "nome",
   "preview":   ["nome", "tipo"],
   "geodata":   1,
   "link": [
@@ -787,7 +787,7 @@ Content-Type: application/json
   "label":     "Saggi di scavo",
   "is_plugin": "0",
   "order":     "nome",
-  "id_field":  "id",
+  "id_field":  "nome",
   "preview":   ["nome", "anno"],
   "link": [
     { "other_tb": "siti",     "fld": [{ "my": "sito_id",     "other": "id" }] },
@@ -806,7 +806,7 @@ Content-Type: application/json
   "label":     "Unità stratigrafiche",
   "is_plugin": "0",
   "order":     "sigla",
-  "id_field":  "id",
+  "id_field":  "sigla",
   "preview":   ["sigla"],
   "rs":        "sigla",
   "geodata":   1,
@@ -829,7 +829,7 @@ Content-Type: application/json
   "label":     "Reperti mobili",
   "is_plugin": "0",
   "order":     "inventario",
-  "id_field":  "id",
+  "id_field":  "inventario",
   "preview":   ["inventario"],
   "geodata":   1,
   "zotero":    1,

@@ -413,7 +413,7 @@ class Config extends \Bdus\Controller
     if (!$this->requireSuperAdmin()) return;
 
     $tb = $this->get['tb'] ?? '';
-    if (!$tb) {
+    if (!$tb || !$this->cfg->get("tables.$tb")) {
       $this->returnJson(['status' => 'error', 'code' => 'missing_table']);
       return;
     }
@@ -421,7 +421,6 @@ class Config extends \Bdus\Controller
     try {
       $inspect = new \DB\Inspect($this->db);
       $alter   = new \DB\Alter($this->db);
-      $existing = $inspect->tableColumns($tb);
 
       $columns = [
         'chrono_from'      => 'INTEGER',
@@ -431,15 +430,25 @@ class Config extends \Bdus\Controller
         'chrono_period'    => 'VARCHAR(200)',
       ];
 
-      foreach ($columns as $col => $type) {
-        if (!in_array($col, $existing, true)) {
-          $alter->addFld($tb, $col, $type);
+      // Only add columns when the physical table already exists in the DB.
+      // The seed may call activateFuzzyDate before the DB table is created
+      // (config-only mode); in that case we skip schema changes but still
+      // update the config flag below.
+      if ($inspect->tableExists($tb)) {
+        $existingNames = array_column($inspect->tableColumns($tb), 'fld');
+        foreach ($columns as $col => $type) {
+          if (!in_array($col, $existingNames, true)) {
+            $alter->addFld($tb, $col, $type);
+          }
         }
       }
 
       $tbData = $this->cfg->get("tables.$tb") ?: [];
       $tbData['name']        = $tb;
       $tbData['fuzzy_date']  = true;
+      // Drop 'link' so setTable does not call upsertRelations — this method
+      // only updates the fuzzy_date flag and must never touch FK relations.
+      unset($tbData['link']);
       $this->cfg->setTable($tbData);
 
       $this->returnJson(['status' => 'success', 'code' => 'fuzzy_date_activated']);
@@ -470,6 +479,7 @@ class Config extends \Bdus\Controller
       $tbData = $this->cfg->get("tables.$tb") ?: [];
       $tbData['name']       = $tb;
       $tbData['fuzzy_date'] = false;
+      unset($tbData['link']); // don't touch FK relations — only update the flag
       $this->cfg->setTable($tbData);
 
       $this->returnJson(['status' => 'success', 'code' => 'fuzzy_date_deactivated']);

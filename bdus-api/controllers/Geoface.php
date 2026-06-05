@@ -81,6 +81,7 @@ class Geoface extends \Bdus\Controller
             // Build SELECT field list: id + preview fields + geo_id + geometry
             $previewFields = $this->cfg->get("tables.{$tb}.preview") ?? [];
             $part = ["{$tb}.id AS id"];
+            $previewLabels = [];
 
             foreach ($previewFields as $fldId) {
                 if ($fldId === 'id') {
@@ -88,6 +89,7 @@ class Geoface extends \Bdus\Controller
                 }
                 $label = $this->cfg->get("tables.{$tb}.fields.{$fldId}.label") ?? $fldId;
                 $part[] = "{$tb}.{$fldId} AS \"{$label}\"";
+                $previewLabels[] = $label;
             }
 
             $part[] = 'bdus_geodata.id AS geo_id';
@@ -123,7 +125,7 @@ class Geoface extends \Bdus\Controller
                     'tb_label'       => $this->cfg->get("tables.{$tb}.label") ?? $tb,
                     'canUserEdit'    => \Auth\Authorization::can('edit'),
                     'layers'         => $layers,
-                    'preview_fields' => $previewFields,
+                    'preview_fields' => $previewLabels,
                     'id_field'       => $idField,
                     'has_fuzzy_date' => (bool) $this->cfg->get("tables.{$tb}.fuzzy_date"),
                 ],

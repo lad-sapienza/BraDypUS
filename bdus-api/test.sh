@@ -13,8 +13,7 @@
 #   --unit          Run PHPUnit unit + integration tests
 #   --setup         Hurl phases 01-03: create app + configure schema
 #   --tests         Hurl phases 04-31: full CRUD & feature suite
-#   --seed          Hurl phase 19: populate app with demo data
-#   --seed-more     Hurl phase 19b: extended seed (implies --seed)
+#   --seed          Hurl phase 19: populate app with full demo data
 #
 # PHASE CONTROL  (apply to --tests)
 #   --list          List all phases with their steps; do not run
@@ -37,7 +36,7 @@
 #   ./test.sh --setup --tests --seed                 # tests then demo seed
 #   ./test.sh --setup --seed                         # create app + seed only
 #   ./test.sh --reset --setup --tests                # clean run (auto-delete app)
-#   ./test.sh --seed-more --keep                     # seed + leave container up for screenshots
+#   ./test.sh --seed --keep                          # seed + leave container up for screenshots
 #   ./test.sh --setup --tests --seed --export-demo   # test + persist demo in dev container
 #   ./test.sh --tests --only=04                      # run all phase-04 sub-phases
 #   ./test.sh --unit                                 # PHPUnit only
@@ -70,7 +69,6 @@ RUN_UNIT=false
 RUN_SETUP=false
 RUN_TESTS=false
 RUN_SEED=false
-SEED_MORE=false
 EXPORT_DEMO=false
 FROM_PHASE=""
 ONLY_PHASE=""
@@ -87,7 +85,6 @@ for arg in "$@"; do
     --setup)        RUN_SETUP=true ;;
     --tests)        RUN_TESTS=true ;;
     --seed)         RUN_SEED=true ;;
-    --seed-more)    RUN_SEED=true; SEED_MORE=true ;;
     --export-demo)  EXPORT_DEMO=true ;;
     --list)         LIST_ONLY=true ;;
     --from=*)       FROM_PHASE="${arg#--from=}" ;;
@@ -166,13 +163,10 @@ if [[ "$ANY_MODE" == false ]]; then
   read -r -p "  Run CRUD tests (phases 04-31)? [Y/n] " ans </dev/tty
   [[ "$ans" =~ ^[nN]$ ]] || RUN_TESTS=true
 
-  read -r -p "  Run demo seed (phase 19)? [y/N] " ans </dev/tty
+  read -r -p "  Run demo seed (phase 19, full dataset)? [y/N] " ans </dev/tty
   [[ "$ans" =~ ^[yY]$ ]] && RUN_SEED=true
 
   if [[ "$RUN_SEED" == true ]]; then
-    read -r -p "  Extended seed (phase 19b)? [y/N] " ans </dev/tty
-    [[ "$ans" =~ ^[yY]$ ]] && SEED_MORE=true
-
     if [[ "$NO_DOCKER" == false ]]; then
       read -r -p "  Export demo app to dev container after seed? [y/N] " ans </dev/tty
       [[ "$ans" =~ ^[yY]$ ]] && EXPORT_DEMO=true

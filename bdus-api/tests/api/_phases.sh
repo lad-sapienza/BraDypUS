@@ -9,7 +9,6 @@
 #   DB_ENGINE, DB_HOST, DB_PORT, DB_NAME, DB_USERNAME, DB_PASSWORD
 #   APP_DIR        — absolute path to the app runtime directory
 #   FORCE_RESET    — true → auto-delete existing app without asking
-#   SEED_MORE      — true → run phase 19b after 19
 #   FROM_PHASE     — run from this phase prefix onward (e.g. "06")
 #   ONLY_PHASE     — run only phases with this prefix (e.g. "04")
 #
@@ -382,7 +381,7 @@ run_tests() {
   JWT=""
 }
 
-# ── run_seed: phases 19 [+ 19b] ──────────────────────────────────
+# ── run_seed: phase 19 (full demo + extended seed) ───────────────
 # Always does a fresh login (JWT may be stale after run_tests).
 # If setup ran but tests did NOT, first cleans up crud_test via
 # phase 10 (which also logs out), then re-logs in.
@@ -400,10 +399,4 @@ run_seed() {
   header "Phase 19 — Demo seed"
   run_phase "Demo seed" "19_seed_demo.hurl" \
     --variable "jwt=${JWT}"
-
-  if [[ "${SEED_MORE:-false}" == true ]]; then
-    header "Phase 19b — Extended seed"
-    run_phase "Extended seed" "19b_seed_more.hurl" \
-      --variable "jwt=${JWT}"
-  fi
 }

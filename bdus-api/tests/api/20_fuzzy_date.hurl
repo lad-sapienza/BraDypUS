@@ -69,7 +69,7 @@ Content-Type: application/json
     "sigla":            "US099",
     "chrono_from":      -325,
     "chrono_to":        -301,
-    "chrono_label":     "Late 4th cent. BCE",
+    "chrono_label":     "c4l BCE",
     "chrono_certainty": "probable",
     "chrono_period":    "Hellenistic"
   },
@@ -90,7 +90,7 @@ HTTP 200
 [Asserts]
 jsonpath "$.core.chrono_from.val"      == -325
 jsonpath "$.core.chrono_to.val"        == -301
-jsonpath "$.core.chrono_label.val"     == "Late 4th cent. BCE"
+jsonpath "$.core.chrono_label.val"     == "c4l BCE"
 jsonpath "$.core.chrono_certainty.val" == "probable"
 jsonpath "$.core.chrono_period.val"    == "Hellenistic"
 
@@ -105,7 +105,7 @@ Content-Type: application/json
     "sigla":        "US100",
     "chrono_from":  null,
     "chrono_to":    -300,
-    "chrono_label": "Ante quem: 4th cent. BCE"
+    "chrono_label": "?/-300"
   },
   "plugins": {}
 }
@@ -135,7 +135,7 @@ Content-Type: application/json
     "sigla":        "US101",
     "chrono_from":  -400,
     "chrono_to":    null,
-    "chrono_label": "Post quem: 4th cent. BCE"
+    "chrono_label": "-400/?"
   },
   "plugins": {}
 }
@@ -185,7 +185,7 @@ GET {{base_url}}/api/record/crud_test/{{chrono_record_id}}
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
-jsonpath "$.core.chrono_label.val" == "Late 4th cent. BCE"
+jsonpath "$.core.chrono_label.val" == "c4l BCE"
 jsonpath "$.core.chrono_from.val"  == -325
 
 

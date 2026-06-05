@@ -17,6 +17,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Tests: 2 new `AlterFkIndexTest` cases + 4 new `M032MigrationTest` guard cases.
 
 ### Changed
+- **`chrono_label` semantics** (`ChronoSection.vue`, test seeds): `chrono_label`
+  now stores the raw parseable input string (e.g. `c1 BCE/c4 CE`, `-100/400`)
+  instead of the human-readable display label. The display label is computed
+  on the fly by re-parsing `chrono_label` in read mode. This enables a full
+  round-trip: edit mode initialises the input field from the stored raw value,
+  which the parser can read back without loss.
+  - Read mode: shows parsed display label + raw `from`/`to` DB values + certainty/period.
+  - Edit mode: certezza and periodo stacked in single column (full width).
+  - `RecordView.vue`: `chrono_*` fields excluded from the main field grid
+    (they appear only in `ChronoSection` in the sidebar).
+  - Locale: added `chrono_from` / `chrono_to` keys (it + en).
+  - Test seeds (`19_seed_demo.hurl`, `20_fuzzy_date.hurl`): all `chrono_label`
+    values updated to raw input format.
 - **Config params refactor** (`Record.php`, `fld_structure.json`) — S2:
   - `disabled` field parameter removed from schema output; existing YAML configs
     using `disabled: true` are transparently treated as `readonly: true` (PHP

@@ -70,7 +70,7 @@ Content-Type: application/json
     "chrono_from":      -325,
     "chrono_to":        -301,
     "chrono_label":     "c4l BCE",
-    "chrono_certainty": "probable",
+    "chrono_certainty": 2,
     "chrono_period":    "Hellenistic"
   },
   "plugins": {}
@@ -91,7 +91,7 @@ HTTP 200
 jsonpath "$.core.chrono_from.val"      == -325
 jsonpath "$.core.chrono_to.val"        == -301
 jsonpath "$.core.chrono_label.val"     == "c4l BCE"
-jsonpath "$.core.chrono_certainty.val" == "probable"
+jsonpath "$.core.chrono_certainty.val" == 2
 jsonpath "$.core.chrono_period.val"    == "Hellenistic"
 
 

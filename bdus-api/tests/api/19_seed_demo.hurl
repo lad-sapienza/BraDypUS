@@ -68,7 +68,7 @@ jsonpath "$.status" == "success"
 POST {{base_url}}/api/config/table/siti/field
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "name": "chrono_certainty", "label": "Certezza", "type": "text", "db_type": "TEXT" }
+{ "name": "chrono_certainty", "label": "Certezza", "type": "text", "db_type": "INTEGER" }
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
@@ -144,7 +144,7 @@ jsonpath "$.status" == "success"
 POST {{base_url}}/api/config/table/us/field
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "name": "chrono_certainty", "label": "Certezza", "type": "text", "db_type": "TEXT" }
+{ "name": "chrono_certainty", "label": "Certezza", "type": "text", "db_type": "INTEGER" }
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
@@ -703,7 +703,7 @@ sito_subacqueo: jsonpath "$.id"
 POST {{base_url}}/api/record/siti
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "id": {{sito_urbano}}, "core": { "chrono_from": -600, "chrono_to": 1800, "chrono_label": "-600/1800", "chrono_certainty": "probabile", "chrono_period": "Romano" }, "plugins": {} }
+{ "id": {{sito_urbano}}, "core": { "chrono_from": -600, "chrono_to": 1800, "chrono_label": "-600/1800", "chrono_certainty": 2, "chrono_period": "Romano" }, "plugins": {} }
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
@@ -711,7 +711,7 @@ jsonpath "$.status" == "success"
 POST {{base_url}}/api/record/siti
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "id": {{sito_rurale}}, "core": { "chrono_from": -100, "chrono_to": 400, "chrono_label": "-100/400", "chrono_certainty": "probabile", "chrono_period": "Romano" }, "plugins": {} }
+{ "id": {{sito_rurale}}, "core": { "chrono_from": -100, "chrono_to": 400, "chrono_label": "-100/400", "chrono_certainty": 2, "chrono_period": "Romano" }, "plugins": {} }
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
@@ -719,7 +719,7 @@ jsonpath "$.status" == "success"
 POST {{base_url}}/api/record/siti
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "id": {{sito_subacqueo}}, "core": { "chrono_from": 1, "chrono_to": 300, "chrono_label": "1/300", "chrono_certainty": "incerta", "chrono_period": "Romano" }, "plugins": {} }
+{ "id": {{sito_subacqueo}}, "core": { "chrono_from": 1, "chrono_to": 300, "chrono_label": "1/300", "chrono_certainty": 3, "chrono_period": "Romano" }, "plugins": {} }
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
@@ -2142,7 +2142,7 @@ jsonpath "$.inserted" == 15
 POST {{base_url}}/api/record/siti
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "id": 4, "core": { "chrono_from": -400, "chrono_to": -200, "chrono_label": "-400/-200", "chrono_certainty": "probabile", "chrono_period": "Ferro" }, "plugins": {} }
+{ "id": 4, "core": { "chrono_from": -400, "chrono_to": -200, "chrono_label": "-400/-200", "chrono_certainty": 2, "chrono_period": "Ferro" }, "plugins": {} }
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
@@ -2151,7 +2151,7 @@ jsonpath "$.status" == "success"
 POST {{base_url}}/api/record/siti
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "id": 5, "core": { "chrono_from": -750, "chrono_to": 500, "chrono_label": "-750/500", "chrono_certainty": "probabile", "chrono_period": "Greco-Ellenistico" }, "plugins": {} }
+{ "id": 5, "core": { "chrono_from": -750, "chrono_to": 500, "chrono_label": "-750/500", "chrono_certainty": 2, "chrono_period": "Greco-Ellenistico" }, "plugins": {} }
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
@@ -2160,7 +2160,7 @@ jsonpath "$.status" == "success"
 POST {{base_url}}/api/record/siti
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "id": 6, "core": { "chrono_from": -700, "chrono_to": 100, "chrono_label": "-700/100", "chrono_certainty": "probabile", "chrono_period": "Ferro" }, "plugins": {} }
+{ "id": 6, "core": { "chrono_from": -700, "chrono_to": 100, "chrono_label": "-700/100", "chrono_certainty": 2, "chrono_period": "Ferro" }, "plugins": {} }
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
@@ -2169,7 +2169,7 @@ jsonpath "$.status" == "success"
 POST {{base_url}}/api/record/siti
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "id": 7, "core": { "chrono_from": -680, "chrono_to": 300, "chrono_label": "-680/300", "chrono_certainty": "certa", "chrono_period": "Greco-Ellenistico" }, "plugins": {} }
+{ "id": 7, "core": { "chrono_from": -680, "chrono_to": 300, "chrono_label": "-680/300", "chrono_certainty": 1, "chrono_period": "Greco-Ellenistico" }, "plugins": {} }
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
@@ -2178,7 +2178,7 @@ jsonpath "$.status" == "success"
 POST {{base_url}}/api/record/siti
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "id": 8, "core": { "chrono_from": -700, "chrono_to": -200, "chrono_label": "-700/-200", "chrono_certainty": "probabile", "chrono_period": "Greco-Ellenistico" }, "plugins": {} }
+{ "id": 8, "core": { "chrono_from": -700, "chrono_to": -200, "chrono_label": "-700/-200", "chrono_certainty": 2, "chrono_period": "Greco-Ellenistico" }, "plugins": {} }
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
@@ -2187,7 +2187,7 @@ jsonpath "$.status" == "success"
 POST {{base_url}}/api/record/siti
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "id": 9, "core": { "chrono_from": -580, "chrono_to": -100, "chrono_label": "-580/-100", "chrono_certainty": "certa", "chrono_period": "Greco-Ellenistico" }, "plugins": {} }
+{ "id": 9, "core": { "chrono_from": -580, "chrono_to": -100, "chrono_label": "-580/-100", "chrono_certainty": 1, "chrono_period": "Greco-Ellenistico" }, "plugins": {} }
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
@@ -2196,7 +2196,7 @@ jsonpath "$.status" == "success"
 POST {{base_url}}/api/record/siti
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "id": 10, "core": { "chrono_from": -400, "chrono_to": 100, "chrono_label": "-400/100", "chrono_certainty": "probabile", "chrono_period": "Romano" }, "plugins": {} }
+{ "id": 10, "core": { "chrono_from": -400, "chrono_to": 100, "chrono_label": "-400/100", "chrono_certainty": 2, "chrono_period": "Romano" }, "plugins": {} }
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
@@ -2205,7 +2205,7 @@ jsonpath "$.status" == "success"
 POST {{base_url}}/api/record/siti
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "id": 11, "core": { "chrono_from": -800, "chrono_to": -100, "chrono_label": "-800/-100", "chrono_certainty": "certa", "chrono_period": "Ferro" }, "plugins": {} }
+{ "id": 11, "core": { "chrono_from": -800, "chrono_to": -100, "chrono_label": "-800/-100", "chrono_certainty": 1, "chrono_period": "Ferro" }, "plugins": {} }
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
@@ -2214,7 +2214,7 @@ jsonpath "$.status" == "success"
 POST {{base_url}}/api/record/siti
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "id": 12, "core": { "chrono_from": -700, "chrono_to": -100, "chrono_label": "-700/-100", "chrono_certainty": "certa", "chrono_period": "Ferro" }, "plugins": {} }
+{ "id": 12, "core": { "chrono_from": -700, "chrono_to": -100, "chrono_label": "-700/-100", "chrono_certainty": 1, "chrono_period": "Ferro" }, "plugins": {} }
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
@@ -2223,7 +2223,7 @@ jsonpath "$.status" == "success"
 POST {{base_url}}/api/record/siti
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "id": 13, "core": { "chrono_from": -50, "chrono_to": 400, "chrono_label": "-50/400", "chrono_certainty": "probabile", "chrono_period": "Romano" }, "plugins": {} }
+{ "id": 13, "core": { "chrono_from": -50, "chrono_to": 400, "chrono_label": "-50/400", "chrono_certainty": 2, "chrono_period": "Romano" }, "plugins": {} }
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
@@ -2232,7 +2232,7 @@ jsonpath "$.status" == "success"
 POST {{base_url}}/api/record/siti
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "id": 14, "core": { "chrono_from": 37, "chrono_to": 200, "chrono_label": "37/200", "chrono_certainty": "probabile", "chrono_period": "Romano" }, "plugins": {} }
+{ "id": 14, "core": { "chrono_from": 37, "chrono_to": 200, "chrono_label": "37/200", "chrono_certainty": 2, "chrono_period": "Romano" }, "plugins": {} }
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
@@ -2241,7 +2241,7 @@ jsonpath "$.status" == "success"
 POST {{base_url}}/api/record/siti
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "id": 15, "core": { "chrono_from": -100, "chrono_to": 400, "chrono_label": "-100/400", "chrono_certainty": "probabile", "chrono_period": "Romano" }, "plugins": {} }
+{ "id": 15, "core": { "chrono_from": -100, "chrono_to": 400, "chrono_label": "-100/400", "chrono_certainty": 2, "chrono_period": "Romano" }, "plugins": {} }
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
@@ -2250,7 +2250,7 @@ jsonpath "$.status" == "success"
 POST {{base_url}}/api/record/siti
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "id": 16, "core": { "chrono_from": -50, "chrono_to": 79, "chrono_label": "-50/79", "chrono_certainty": "certa", "chrono_period": "Romano" }, "plugins": {} }
+{ "id": 16, "core": { "chrono_from": -50, "chrono_to": 79, "chrono_label": "-50/79", "chrono_certainty": 1, "chrono_period": "Romano" }, "plugins": {} }
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
@@ -2259,7 +2259,7 @@ jsonpath "$.status" == "success"
 POST {{base_url}}/api/record/siti
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "id": 17, "core": { "chrono_from": -100, "chrono_to": 100, "chrono_label": "-100/100", "chrono_certainty": "probabile", "chrono_period": "Romano" }, "plugins": {} }
+{ "id": 17, "core": { "chrono_from": -100, "chrono_to": 100, "chrono_label": "-100/100", "chrono_certainty": 2, "chrono_period": "Romano" }, "plugins": {} }
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
@@ -2268,7 +2268,7 @@ jsonpath "$.status" == "success"
 POST {{base_url}}/api/record/siti
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "id": 18, "core": { "chrono_from": -300, "chrono_to": 400, "chrono_label": "-300/400", "chrono_certainty": "probabile", "chrono_period": "Romano" }, "plugins": {} }
+{ "id": 18, "core": { "chrono_from": -300, "chrono_to": 400, "chrono_label": "-300/400", "chrono_certainty": 2, "chrono_period": "Romano" }, "plugins": {} }
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"

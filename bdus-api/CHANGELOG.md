@@ -17,6 +17,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Tests: 2 new `AlterFkIndexTest` cases + 4 new `M032MigrationTest` guard cases.
 
 ### Changed
+- **`chrono_certainty` numeric** (`ChronoSection.vue`, seeds, tests): certainty
+  is now stored as an integer (`1`=Certain, `2`=Probable, `3`=Uncertain) instead
+  of a locale-dependent string (`certain`/`certa`/`probabile`…). Labels are
+  resolved via i18n (`chrono_certainty_1/2/3`); colors (`success`/`warn`/`danger`)
+  map to the integer value. DB column type changed from TEXT to INTEGER.
 - **`chrono_label` semantics** (`ChronoSection.vue`, test seeds): `chrono_label`
   now stores the raw parseable input string (e.g. `c1 BCE/c4 CE`, `-100/400`)
   instead of the human-readable display label. The display label is computed

@@ -54,6 +54,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the click-to-browse button. Dropping a file triggers the same upload pipeline.
   New i18n keys: `drag_drop_or` (it + en).
 
+### Fixed (S3)
+- **Unsaved-changes false positive** (`RecordView.vue`): the "leave without
+  saving?" dialog now fires only when at least one value was actually changed.
+  A `hasActualChanges` computed deep-compares `editData` (core fields + plugin
+  rows including `_isNew`/`_delete` flags) against the original record. Entering
+  and exiting edit mode without touching anything no longer triggers the warning.
+- **Fuzzy-date activate** (`Config.php`): `activateFuzzyDate` now writes five
+  `chrono_*` field definitions (with `hide: true`) to the table config after
+  creating the DB columns. The fields appear in the admin field list and can be
+  managed from the UI; `hide: true` keeps them out of the regular record form
+  (the ChronoSection handles their display). Idempotent: calling activate twice
+  does not duplicate the definitions.
+- **Fuzzy-date deactivate** (`Config.php`): `deactivateFuzzyDate` now removes the
+  five `chrono_*` field definitions from config, keeping the admin field list
+  clean. DB columns are preserved (data protection). Tests: 5 new cases in
+  `ConfigCtrlTest` covering columns, field defs, idempotency and privilege guard.
+- **ChronoSection input** (`ChronoSection.vue`): when a record already has stored
+  `chrono_from`/`chrono_to` numbers, the edit-mode input is now reconstructed
+  from those numbers (e.g. `"-600/1800"`) rather than from the display label
+  which is not re-parseable as input.
+- **Hurl seed** (`19_seed_demo.hurl`): `chrono_label` values changed from Italian
+  notation to numeric format (`"600 BCE – 1800 CE"`) parseable by `chronoParser`.
+
 - **Config field form** (`ConfigFieldForm.vue`, `fld_structure.json`) — S5:
   - All field parameter labels are now translated via `t('fld_' + key)` instead
     of displaying the raw JSON key name.

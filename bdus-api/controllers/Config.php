@@ -426,7 +426,7 @@ class Config extends \Bdus\Controller
         'chrono_from'      => 'INTEGER',
         'chrono_to'        => 'INTEGER',
         'chrono_label'     => 'VARCHAR(200)',
-        'chrono_certainty' => 'VARCHAR(10)',
+        'chrono_certainty' => 'INTEGER',
         'chrono_period'    => 'VARCHAR(200)',
       ];
 
@@ -458,7 +458,7 @@ class Config extends \Bdus\Controller
         'chrono_from'      => ['name' => 'chrono_from',      'label' => 'Cronologia da',   'type' => 'text', 'hide' => true],
         'chrono_to'        => ['name' => 'chrono_to',        'label' => 'Cronologia a',     'type' => 'text', 'hide' => true],
         'chrono_label'     => ['name' => 'chrono_label',     'label' => 'Etichetta crono',  'type' => 'text', 'hide' => true],
-        'chrono_certainty' => ['name' => 'chrono_certainty', 'label' => 'Certezza crono',   'type' => 'text', 'hide' => true],
+        'chrono_certainty' => ['name' => 'chrono_certainty', 'label' => 'Certezza crono',   'type' => 'text', 'hide' => true, 'db_type' => 'INTEGER'],
         'chrono_period'    => ['name' => 'chrono_period',    'label' => 'Periodo crono',    'type' => 'text', 'hide' => true],
       ];
       $existingFields = array_keys($this->cfg->get("tables.$tb.fields") ?: []);

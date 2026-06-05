@@ -20,7 +20,7 @@ Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
   "id": null,
-  "core": { "sigla": "US200", "chrono_from": -200, "chrono_to": -100, "chrono_certainty": "certain" },
+  "core": { "sigla": "US200", "chrono_from": -200, "chrono_to": -100, "chrono_certainty": 1 },
   "plugins": {}
 }
 HTTP 200
@@ -48,7 +48,7 @@ Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
   "id": null,
-  "core": { "sigla": "US202", "chrono_from": null, "chrono_to": -450, "chrono_certainty": "certain" },
+  "core": { "sigla": "US202", "chrono_from": null, "chrono_to": -450, "chrono_certainty": 1 },
   "plugins": {}
 }
 HTTP 200
@@ -83,9 +83,9 @@ jsonpath "$.status" == "success"
 jsonpath "$.total"  == 5
 
 
-# ── 21f. Filter by chrono_certainty = probable ────────────────────────
-# US100 (ante quem, probable) is the only probable record
-GET {{base_url}}/api/records/crud_test?search_type=filter&filter=%7B%22chrono_certainty%22%3A%7B%22_eq%22%3A%22probable%22%7D%7D
+# ── 21f. Filter by chrono_certainty = 2 (probable) ───────────────────
+# US099 (full range, probable) is the only record with certainty=2
+GET {{base_url}}/api/records/crud_test?search_type=filter&filter=%7B%22chrono_certainty%22%3A%7B%22_eq%22%3A2%7D%7D
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]

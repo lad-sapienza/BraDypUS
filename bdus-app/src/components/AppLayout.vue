@@ -107,7 +107,7 @@
                   :key="tbl.name"
                   :to="`/${route.params.app}/data?tb=${encodeURIComponent(tbl.name)}`"
                   class="nav-item nav-table-item"
-                  :class="{ active: route.query.tb === tbl.name }"
+                  :class="{ active: route.query.tb === tbl.name || route.params.tb === tbl.name }"
                   :title="tbl.label"
                   @click="closeMobileDrawer()"
                 >
@@ -176,7 +176,13 @@ const { tables: navTables, loading: tablesLoading, loadTables } = useTables()
 const { isDark, toggle: toggleDark } = useDarkMode()
 
 // Load table list when navigating to /data (or when already there on mount)
-const isDataRoute       = computed(() => route.path === `/${route.params.app}/data`)
+const isDataRoute = computed(() => {
+  const app = route.params.app
+  return route.path === `/${app}/data` ||
+    route.path.startsWith(`/${app}/record/`) ||
+    route.path.startsWith(`/${app}/geoface/`) ||
+    route.path.startsWith(`/${app}/matrix/`)
+})
 const dataAccordionOpen = ref(isDataRoute.value)
 
 watch(isDataRoute, (val) => {

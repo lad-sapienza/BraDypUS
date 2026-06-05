@@ -48,63 +48,126 @@ const selectedNode = ref(null)   // { id: identifier, label, db_id } — first c
 let cy = null
 
 // ── Build Cytoscape elements ──────────────────────────────────────
+/**
+ * Returns { nodeEls, directedEdgeEls }.
+ *
+ * Nodes connected by undirected relations (9=same_as, 10=bound_to) are merged
+ * into a single compound node labelled "A\n= B\n= C". All directed edges that
+ * pointed to any constituent node are re-routed to the merged node; self-loops
+ * and duplicate edges (arising from the merge) are dropped.
+ * This avoids all dagre same-rank routing issues and matches the traditional
+ * Harris Matrix convention of grouping contemporaneous units in one box.
+ */
 function buildElements() {
-  const elements = []
+  const nodeEls         = []
+  const directedEdgeEls = []
 
-  // Index nodes by db_id (string) for O(1) edge validation
-  const nodeIds = new Set(props.nodes.map(n => String(n.db_id)))
-  // db_id → identifier label (for edge display)
+  const nodeIds   = new Set(props.nodes.map(n => String(n.db_id)))
   const labelById = {}
   for (const n of props.nodes) labelById[String(n.db_id)] = String(n.identifier)
 
-  for (const n of props.nodes) {
-    elements.push({
+  // ── Step 1: find contemporaneous groups via BFS on undirected relations ──
+  const adj = new Map()
+  for (const r of props.relations) {
+    const rel = parseInt(r.relation, 10)
+    if (!UNDIRECTED.has(rel)) continue
+    const s = String(r.first)
+    const t = String(r.second)
+    if (!nodeIds.has(s) || !nodeIds.has(t)) continue
+    if (!adj.has(s)) adj.set(s, new Set())
+    if (!adj.has(t)) adj.set(t, new Set())
+    adj.get(s).add(t)
+    adj.get(t).add(s)
+  }
+
+  // mergeMap: original db_id string → merged-node Cytoscape id
+  const mergeMap = new Map()
+
+  const visited = new Set()
+  for (const start of adj.keys()) {
+    if (visited.has(start)) continue
+    const group = []
+    const queue = [start]
+    while (queue.length) {
+      const id = queue.shift()
+      if (visited.has(id)) continue
+      visited.add(id)
+      group.push(id)
+      for (const nb of adj.get(id)) {
+        if (!visited.has(nb)) queue.push(nb)
+      }
+    }
+    if (group.length < 2) continue   // singletons stay as regular nodes
+
+    // Sort alphabetically on identifier label for a stable, readable label
+    const sorted     = [...group].sort((a, b) =>
+      (labelById[a] ?? a).localeCompare(labelById[b] ?? b)
+    )
+    const mergedId    = 'merged_' + sorted.join('_')
+    const mergedLabel = sorted.map(id => labelById[id] ?? id).join('\n= ')
+
+    const groupNodes  = props.nodes.filter(n => group.includes(String(n.db_id)))
+    const inFilter    = groupNodes.some(n => n.in_filter) ? 1 : 0
+    const highlight   = group.some(id => String(id) === String(props.highlightId)) ? 1 : 0
+
+    for (const id of group) mergeMap.set(id, mergedId)
+
+    nodeEls.push({
       group: 'nodes',
       data: {
-        id:        String(n.db_id),       // unique Cytoscape node id = db primary key
-        label:     String(n.identifier),  // id_field value for display
-        db_id:     n.db_id,
-        // Store as integer (0/1) — Cytoscape selectors don't handle JS booleans
-        in_filter: n.in_filter ? 1 : 0,
-        highlight: String(n.db_id) === String(props.highlightId) ? 1 : 0,
+        id:        mergedId,
+        label:     mergedLabel,
+        db_id:     sorted[0],   // primary id used for navigation on click
+        in_filter: inFilter,
+        highlight,
+        merged:    1,
       },
     })
   }
 
-  // Track undirected edges to avoid A↔B and B↔A duplicates
-  const seenUndirected = new Set()
-  let skipped = 0
+  // ── Step 2: add individual (non-merged) nodes ──────────────────────────
+  for (const n of props.nodes) {
+    const nodeId = String(n.db_id)
+    if (mergeMap.has(nodeId)) continue   // already represented by a merged node
+    nodeEls.push({
+      group: 'nodes',
+      data: {
+        id:        nodeId,
+        label:     String(n.identifier),
+        db_id:     n.db_id,
+        in_filter: n.in_filter ? 1 : 0,
+        highlight: nodeId === String(props.highlightId) ? 1 : 0,
+        merged:    0,
+      },
+    })
+  }
+
+  // ── Step 3: build directed edges, remapping endpoints through mergeMap ──
+  const validNodeIds = new Set(nodeEls.map(e => e.data.id))
+  const seenEdges    = new Set()
+  let   skipped      = 0
 
   for (const r of props.relations) {
-    // first/second are now integer db_ids
-    const src = String(r.first)
-    const tgt = String(r.second)
+    const rel = parseInt(r.relation, 10)
+    if (UNDIRECTED.has(rel)) continue   // undirected = merged, no edge needed
 
-    // Skip orphan edges — referenced record no longer exists
-    if (!nodeIds.has(src) || !nodeIds.has(tgt)) {
-      skipped++
-      continue
-    }
+    const first  = mergeMap.get(String(r.first))  ?? String(r.first)
+    const second = mergeMap.get(String(r.second)) ?? String(r.second)
 
-    const rel     = parseInt(r.relation, 10)
-    const isUndir = UNDIRECTED.has(rel)
+    if (!validNodeIds.has(first) || !validNodeIds.has(second)) { skipped++; continue }
+    if (first === second) continue   // self-loop after merging
 
-    // Passive relations (1,2,3,4): first = older unit, second = newer.
-    // Swap so arrows flow newer→older (top→bottom in dagre TB).
     const needsSwap = SWAP_DIRECTION.has(rel)
-    const edgeSrc = needsSwap ? tgt : src
-    const edgeTgt = needsSwap ? src : tgt
+    const edgeSrc   = needsSwap ? second : first
+    const edgeTgt   = needsSwap ? first  : second
 
-    const edgeKey = isUndir
-      ? [edgeSrc, edgeTgt].sort().join('|') + '|' + rel
-      : null
+    // Drop duplicate directed edges that arise from merging multiple nodes
+    const edgeKey = `${edgeSrc}→${edgeTgt}:${rel}`
+    if (seenEdges.has(edgeKey)) continue
+    seenEdges.add(edgeKey)
 
-    if (isUndir) {
-      if (seenUndirected.has(edgeKey)) continue
-      seenUndirected.add(edgeKey)
-    }
-
-    elements.push({
+    const lr = needsSwap ? REL_INVERSE[rel] : rel
+    directedEdgeEls.push({
       group: 'edges',
       data: {
         id:           'e' + r.id,
@@ -113,20 +176,18 @@ function buildElements() {
         target:       edgeTgt,
         source_label: labelById[edgeSrc] ?? edgeSrc,
         target_label: labelById[edgeTgt] ?? edgeTgt,
-        // When direction is swapped, show the inverse relation label so the
-        // displayed label matches the arrow direction (e.g. "covers" not "is_covered_by")
-        label:        (() => { const lr = needsSwap ? REL_INVERSE[rel] : rel; return REL_KEYS[lr] ? t(REL_KEYS[lr]) : String(lr) })(),
+        label:        REL_KEYS[lr] ? t(REL_KEYS[lr]) : String(lr),
         relation:     rel,
-        directed:     isUndir ? 0 : 1,
+        directed:     1,
       },
     })
   }
 
   if (skipped > 0) {
-    console.warn(`[RsGraph] Skipped ${skipped} orphan relation(s) — source or target node not in dataset`)
+    console.warn(`[RsGraph] Skipped ${skipped} orphan relation(s) — node not in dataset`)
   }
 
-  return elements
+  return { nodeEls, directedEdgeEls }
 }
 
 // ── Cytoscape style ───────────────────────────────────────────────
@@ -172,6 +233,25 @@ function buildStyle() {
       },
     },
     {
+      // Merged node (two or more contemporaneous units collapsed into one)
+      selector: 'node[merged = 1]',
+      style: {
+        'background-color': '#dbeafe',
+        'border-color':     '#2563eb',
+        'border-width':     '3px',
+        'text-wrap':        'wrap',
+        'text-max-width':   '120px',
+      },
+    },
+    {
+      // Merged node that contains the highlighted record
+      selector: 'node[merged = 1][highlight = 1]',
+      style: {
+        'background-color': '#fed7aa',
+        'border-color':     '#ea580c',
+      },
+    },
+    {
       // First-selected node in edit mode
       selector: 'node.rs-selected',
       style: {
@@ -195,14 +275,6 @@ function buildStyle() {
         'text-background-color':   '#ffffff',
         'text-background-opacity': 0.8,
         'text-background-padding': '1px',
-      },
-    },
-    {
-      // Undirected edges (relations 9=same, 10=bound) — directed=0 means undirected
-      selector: 'edge[directed = 0]',
-      style: {
-        'target-arrow-shape': 'none',
-        'line-style':         'dashed',
       },
     },
     {
@@ -263,7 +335,6 @@ function applyEditModeStyles() {
 async function initCy() {
   if (!cyEl.value) return
 
-  // Lazy-load to keep main bundle lean
   const [{ default: Cytoscape }, { default: CytoscapeDagre }] = await Promise.all([
     import('cytoscape'),
     import('cytoscape-dagre'),
@@ -274,38 +345,17 @@ async function initCy() {
   if (cy) { cy.destroy(); cy = null }
   selectedNode.value = null
 
+  const { nodeEls, directedEdgeEls } = buildElements()
+
+  // Cytoscape is initialised WITHOUT a layout option — dagre is run explicitly
+  // below so that post-layout steps run inline after the sync .run() call.
   cy = Cytoscape({
     container: cyEl.value,
-    elements:  buildElements(),
+    elements:  [...nodeEls, ...directedEdgeEls],
     style:     buildStyle(),
-    layout: {
-      name:    'dagre',
-      rankDir: 'TB',
-      ranksep: 60,
-      nodesep: 40,
-      edgeSep: 20,
-      animate: false,
-      fit:     true,
-    },
     minZoom:         0.05,
     maxZoom:         3,
     wheelSensitivity: 0.3,
-  })
-
-  // After layout: fit viewport and mark counter-flow (cyclic) edges in red.
-  // A directed edge is counter-flow when its source node sits below its target
-  // node in the TB layout — this indicates a stratigraphic cycle in the data.
-  cy.on('layoutstop', () => {
-    cy.fit(undefined, 20)
-    cy.edges('[directed = 1]').forEach(edge => {
-      const sy = edge.source().position('y')
-      const ty = edge.target().position('y')
-      if (sy > ty) {
-        edge.addClass('cyclic')
-      } else {
-        edge.removeClass('cyclic')
-      }
-    })
   })
 
   // ── Node tap ──────────────────────────────────────────────────
@@ -313,21 +363,16 @@ async function initCy() {
     const data = evt.target.data()
 
     if (!props.allowEdit) {
-      // Normal mode: navigate to record
       emit('node-click', { db_id: data.db_id, identifier: data.id })
       return
     }
 
     if (!selectedNode.value) {
-      // First click: select node
       evt.target.addClass('rs-selected')
       selectedNode.value = { id: data.id, label: data.label, db_id: data.db_id }
     } else if (selectedNode.value.id === data.id) {
-      // Click same node again: deselect
       clearSelection()
     } else {
-      // Second click on different node: request add relation
-      // id = String(db_id), so MatrixView receives integer-string as first/second
       const from = { ...selectedNode.value }
       clearSelection()
       emit('relation-add-requested', { from, to: { id: data.id, label: data.label, db_id: data.db_id } })
@@ -352,6 +397,26 @@ async function initCy() {
     if (evt.target === cy) clearSelection()
   })
 
+  // ── Run dagre synchronously (animate:false guarantees sync completion) ──
+  cy.layout({
+    name:    'dagre',
+    rankDir: 'TB',
+    ranksep: 60,
+    nodesep: 40,
+    edgeSep: 20,
+    animate: false,
+    fit:     true,
+  }).run()
+
+  // ── Post-layout steps (inline — animate:false makes .run() synchronous) ──
+  cy.fit(undefined, 20)
+  // Mark counter-flow (cyclic) directed edges in red.
+  cy.edges().forEach(edge => {
+    const sy = edge.source().position('y')
+    const ty = edge.target().position('y')
+    if (sy > ty) edge.addClass('cyclic')
+    else         edge.removeClass('cyclic')
+  })
   applyEditModeStyles()
 }
 

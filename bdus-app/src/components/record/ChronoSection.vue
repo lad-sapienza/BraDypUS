@@ -13,7 +13,7 @@
         <div class="chrono-meta-read">
           <Tag
             v-if="certainty"
-            :value="t(certainty)"
+            :value="t('chrono_certainty_' + certainty)"
             :severity="certaintySeverity"
             class="chrono-tag"
           />
@@ -86,7 +86,7 @@ const props = defineProps({
   from:      { type: Number, default: null },
   to:        { type: Number, default: null },
   label:     { type: String, default: null },
-  certainty: { type: String, default: null },
+  certainty: { type: Number, default: null },
   period:    { type: String, default: null },
   editMode:  { type: Boolean, default: false },
 })
@@ -148,15 +148,15 @@ const numericRange = computed(() => {
 })
 
 const certaintyOptions = computed(() => [
-  { value: 'certain',  label: t('certain')  },
-  { value: 'probable', label: t('probable') },
-  { value: 'possible', label: t('possible') },
+  { value: 1, label: t('chrono_certainty_1') },
+  { value: 2, label: t('chrono_certainty_2') },
+  { value: 3, label: t('chrono_certainty_3') },
 ])
 
 const certaintySeverity = computed(() => ({
-  certain:  'success',
-  probable: 'warn',
-  possible: 'danger',
+  1: 'success',
+  2: 'warn',
+  3: 'danger',
 }[props.certainty] ?? 'secondary'))
 
 // ── Handlers ──────────────────────────────────────────────────────────────────

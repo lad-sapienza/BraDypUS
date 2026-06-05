@@ -1014,5 +1014,23 @@
   "help_table_id_field": "Field shown as human-readable identifier in dropdowns and record titles.",
   "help_table_preview_flds": "Fields shown in the record list preview.",
   "help_table_plugins": "Plugin tables linked to this table.",
-  "help_table_system_plugins": "Optional system modules that can be activated for this table."
+  "help_table_system_plugins": "Optional system modules that can be activated for this table.",
+
+  "files_mng": "File management",
+  "files_mng_title": "Files",
+  "files_orphans_only": "Orphans only",
+  "files_col_preview": "Preview",
+  "files_col_filename": "Filename",
+  "files_col_description": "Description",
+  "files_col_keywords": "Keywords",
+  "files_col_links": "Linked records",
+  "files_orphan_badge": "Orphan",
+  "files_empty": "No files found",
+  "files_no_links": "No linked record",
+  "replace_file": "Replace file",
+  "confirm_replace_file": "Upload a new file to replace the binary. Metadata (description, keywords) will be preserved.",
+  "ok_file_updated": "File metadata saved",
+  "error_file_updated": "Error saving file metadata",
+  "ok_file_replaced": "File replaced successfully",
+  "error_file_replaced": "Error replacing file"
 }

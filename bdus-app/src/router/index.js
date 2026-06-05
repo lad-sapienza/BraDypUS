@@ -79,6 +79,11 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/:app/files',
+    component: () => import('@/views/FilesView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/:app/find-replace',
     component: () => import('@/views/SearchReplaceView.vue'),
     meta: { requiresAuth: true }

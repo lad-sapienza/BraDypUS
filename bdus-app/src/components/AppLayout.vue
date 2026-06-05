@@ -304,6 +304,7 @@ const navGroups = computed(() => {
       labelKey: 'nav_data',
       items: [
         { labelKey: 'data_mng',       icon: 'pi-database',     to: `${a}/data`,            disabled: false },
+        { labelKey: 'files_mng',      icon: 'pi-images',       to: `${a}/files`,            disabled: false },
         { labelKey: 'find_replace',   icon: 'pi-search-plus',  to: `${a}/find-replace`,    disabled: false },
         { labelKey: 'vocabulary_mng', icon: 'pi-book',         to: `${a}/vocabularies`,    disabled: false },
         { labelKey: 'history',        icon: 'pi-history',      to: `${a}/history`,         disabled: false },

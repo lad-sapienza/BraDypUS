@@ -1014,5 +1014,23 @@
   "help_table_id_field": "Campo mostrato come identificatore leggibile nei menu a tendina e nei titoli dei record.",
   "help_table_preview_flds": "Campi mostrati nell'anteprima della lista dei record.",
   "help_table_plugins": "Tabelle plugin collegate a questa tabella.",
-  "help_table_system_plugins": "Moduli di sistema opzionali attivabili per questa tabella."
+  "help_table_system_plugins": "Moduli di sistema opzionali attivabili per questa tabella.",
+
+  "files_mng": "Gestione file",
+  "files_mng_title": "File",
+  "files_orphans_only": "Solo orfani",
+  "files_col_preview": "Anteprima",
+  "files_col_filename": "Nome file",
+  "files_col_description": "Descrizione",
+  "files_col_keywords": "Parole chiave",
+  "files_col_links": "Record collegati",
+  "files_orphan_badge": "Orfano",
+  "files_empty": "Nessun file trovato",
+  "files_no_links": "Nessun record collegato",
+  "replace_file": "Sostituisci file",
+  "confirm_replace_file": "Carica un nuovo file per sostituire il binario. I metadati (descrizione, parole chiave) saranno mantenuti.",
+  "ok_file_updated": "Metadati del file salvati",
+  "error_file_updated": "Errore nel salvataggio dei metadati",
+  "ok_file_replaced": "File sostituito con successo",
+  "error_file_replaced": "Errore nella sostituzione del file"
 }

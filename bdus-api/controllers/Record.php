@@ -292,13 +292,8 @@ class Record extends \Bdus\Controller
         $recId = null;
       }
 
-      $appName  = $this->cfg->get('main.name') ?? '';
-      $tbPrefix = $appName !== '' ? $appName . '__' : '';
-      $full['metadata']['tb_id']      = $tb;
-      $full['metadata']['tb_stripped'] = ($tbPrefix !== '' && str_starts_with($tb, $tbPrefix))
-                                            ? substr($tb, strlen($tbPrefix))
-                                            : $tb;
-      $full['metadata']['tb_label']   = $this->cfg->get("tables.{$tb}.label");
+      $full['metadata']['tb_id']    = $tb;
+      $full['metadata']['tb_label'] = $this->cfg->get("tables.{$tb}.label");
       $full['metadata']['rec_id']     = $recId;
       $full['metadata']['id_field']   = $this->cfg->get("tables.{$tb}.id_field");
       $full['metadata']['can_edit']   = \Auth\Authorization::can('edit');
@@ -332,6 +327,9 @@ class Record extends \Bdus\Controller
         }
         unset($file);
       }
+      $full['links']       = (object)($full['links']       ?? []);
+      $full['backlinks']   = (object)($full['backlinks']   ?? []);
+      $full['manualLinks'] = (object)($full['manualLinks'] ?? []);
       $full["status"] = "success";
 
       $this->returnJson($full);
@@ -1480,20 +1478,13 @@ class Record extends \Bdus\Controller
         $refLabel = $lres[0]['label'] ?? $idTwo;
       }
 
-      $appName    = $this->cfg->get('main.name') ?? '';
-      $tbPrefix   = $appName !== '' ? $appName . '__' : '';
-      $tbStripped = ($tbPrefix !== '' && str_starts_with($tbTwo, $tbPrefix))
-                      ? substr($tbTwo, strlen($tbPrefix))
-                      : $tbTwo;
-
       $this->returnJson([
         'status' => 'success',
         'code'   => 'all_links_saved',
         'link'   => [
-          'key'        => $newId,
-          'tb_id'      => $tbTwo,
-          'tb_stripped' => $tbStripped,
-          'tb_label'   => $this->cfg->get("tables.$tbTwo.label"),
+          'key'      => $newId,
+          'tb_id'    => $tbTwo,
+          'tb_label' => $this->cfg->get("tables.$tbTwo.label"),
           'ref_id'     => $idTwo,
           'ref_label'  => $refLabel,
           'sort'       => null,

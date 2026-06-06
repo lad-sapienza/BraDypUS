@@ -68,7 +68,7 @@ class RecordPersistTest extends BdusTestCase
         // We do that by reading item 3 and then crafting the model manually
         // to simulate a new record.
         $model = [
-            'metadata'    => ['tb_id' => self::TB, 'rec_id' => null, 'tb_stripped' => 'items', 'tb_label' => 'Items'],
+            'metadata'    => ['tb_id' => self::TB, 'rec_id' => null, 'tb_label' => 'Items'],
             'core'        => [
                 'id'     => ['name' => 'id',     'val' => null],
                 'creator'=> ['name' => 'creator','val' => null],

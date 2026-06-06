@@ -1517,14 +1517,11 @@ paths:
               type: object
               properties:
                 description:
-                  type: string
-                  nullable: true
+                  type: [string, 'null']
                 keywords:
-                  type: string
-                  nullable: true
+                  type: [string, 'null']
                 printable:
-                  type: boolean
-                  nullable: true
+                  type: [boolean, 'null']
       responses:
         '200':
           description: Update result
@@ -1763,19 +1760,16 @@ paths:
                                 False for nodes that appear only because they are
                                 connected to an in-filter node (dangling nodes).
                             chrono_from:
-                              type: integer
-                              nullable: true
+                              type: [integer, 'null']
                               description: |
                                 Start year (negative = BCE). Present only when
                                 `has_fuzzy_date` is true. Null = ante quem or undated.
                             chrono_to:
-                              type: integer
-                              nullable: true
+                              type: [integer, 'null']
                               description: |
                                 End year. Null = post quem or undated.
                             chrono_label:
-                              type: string
-                              nullable: true
+                              type: [string, 'null']
                               description: Human-readable chronological label.
                       relations:
                         type: array
@@ -3675,8 +3669,7 @@ paths:
                             applied:
                               type: boolean
                             applied_at:
-                              type: string
-                              nullable: true
+                              type: [string, 'null']
                               description: Timestamp (`YYYY-MM-DD HH:MM:SS`) or null if not applied
 
   # ── Config relations ──────────────────────────────────────────────────────────
@@ -4009,11 +4002,9 @@ paths:
                               type: string
                               description: Formatted HTML citation
                             zotero_version:
-                              type: integer
-                              nullable: true
+                              type: [integer, 'null']
                             zotero_url:
-                              type: string
-                              nullable: true
+                              type: [string, 'null']
                             title:
                               type: string
 
@@ -4064,14 +4055,11 @@ paths:
                 zotero_key:
                   type: string
                 pages:
-                  type: string
-                  nullable: true
+                  type: [string, 'null']
                 notes:
-                  type: string
-                  nullable: true
+                  type: [string, 'null']
                 sort:
-                  type: integer
-                  nullable: true
+                  type: [integer, 'null']
       responses:
         '200':
           description: Link added
@@ -4100,14 +4088,11 @@ paths:
               type: object
               properties:
                 pages:
-                  type: string
-                  nullable: true
+                  type: [string, 'null']
                 notes:
-                  type: string
-                  nullable: true
+                  type: [string, 'null']
                 sort:
-                  type: integer
-                  nullable: true
+                  type: [integer, 'null']
       responses:
         '200':
           description: Link updated
@@ -4323,14 +4308,11 @@ components:
         filename:
           type: string
         description:
-          type: string
-          nullable: true
+          type: [string, 'null']
         keywords:
-          type: string
-          nullable: true
+          type: [string, 'null']
         printable:
-          type: boolean
-          nullable: true
+          type: [boolean, 'null']
         is_image:
           type: boolean
         links:
@@ -4362,14 +4344,11 @@ components:
         filename:
           type: string
         description:
-          type: string
-          nullable: true
+          type: [string, 'null']
         keywords:
-          type: string
-          nullable: true
+          type: [string, 'null']
         printable:
-          type: boolean
-          nullable: true
+          type: [boolean, 'null']
         is_image:
           type: boolean
 
@@ -4400,6 +4379,28 @@ components:
         - $ref: '#/components/schemas/Success'
         - type: object
           properties:
+            metadata:
+              type: object
+              description: Record and table identity, plus caller's permission flags
+              properties:
+                tb_id:
+                  type: string
+                  description: Full table name (including app prefix, e.g. `paths__places`)
+                rec_id:
+                  type: [integer, 'null']
+                  description: Record ID; null for an empty/new-record template
+                tb_label:
+                  type: string
+                  description: Human-readable table label
+                id_field:
+                  type: string
+                  description: Field name used as the human identifier for this table
+                can_edit:
+                  type: boolean
+                can_delete:
+                  type: boolean
+                can_add:
+                  type: boolean
             core:
               type: object
               description: Main table fields — field name → FieldValue
@@ -4407,31 +4408,160 @@ components:
                 $ref: '#/components/schemas/FieldValue'
             plugins:
               type: object
-              description: Plugin table name → array of plugin rows
+              description: |
+                Plugin tables keyed by full plugin table name.
+                Each entry contains the plugin's metadata and its rows.
               additionalProperties:
-                type: array
-                items:
-                  type: object
-            links:
-              type: array
-              description: Manual links to other records
-              items:
                 type: object
+                properties:
+                  metadata:
+                    type: object
+                    properties:
+                      tb_id:
+                        type: string
+                      tb_label:
+                        type: string
+                      tot:
+                        type: integer
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      additionalProperties:
+                        $ref: '#/components/schemas/FieldValue'
+            links:
+              type: object
+              description: |
+                Configured forward relations, keyed by the referenced table name.
+                Only tables with at least one matching record are included.
+              additionalProperties:
+                type: object
+                properties:
+                  tb_id:
+                    type: string
+                  tb_label:
+                    type: string
+                  tot:
+                    type: integer
+                    description: Number of related records
+                  filter:
+                    type: object
+                    description: Directus-style filter to retrieve the linked records
+            backlinks:
+              type: object
+              description: |
+                Reverse relations, keyed by the referencing table name.
+                Only tables with at least one matching record are included.
+              additionalProperties:
+                type: object
+                properties:
+                  tb_id:
+                    type: string
+                  tb_label:
+                    type: string
+                  tot:
+                    type: integer
+                  filter:
+                    type: object
+                    description: "Directus-style filter — `{ \"id\": { \"_in\": [...] } }`"
+                  data:
+                    type: array
+                    description: Compact list of referencing records (id + label)
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        label:
+                          type: string
+            manualLinks:
+              type: object
+              description: |
+                Manual cross-table links, keyed by the link row ID (`bdus_links.id`).
+                Empty when no manual links exist.
+              additionalProperties:
+                type: object
+                properties:
+                  key:
+                    type: integer
+                    description: Link row ID
+                  tb_id:
+                    type: string
+                    description: Full name of the linked table
+                  tb_label:
+                    type: string
+                  ref_id:
+                    type: integer
+                    description: ID of the linked record
+                  ref_label:
+                    type: string
+                    description: Human identifier of the linked record
+                  sort:
+                    type: [integer, 'null']
+                  label:
+                    type: [string, 'null']
+                    description: Optional free-text annotation on this link
             files:
               type: array
-              description: Attached files
+              description: Files attached to this record
+              items:
+                $ref: '#/components/schemas/LinkedFileItem'
+            geodata:
+              type: array
+              description: |
+                Geometry entries for this record (empty array when the table has no
+                geodata configuration).
               items:
                 type: object
-            metadata:
+                properties:
+                  id:
+                    type: integer
+                  table_link:
+                    type: string
+                  id_link:
+                    type: integer
+                  geometry:
+                    type: string
+                    description: WKT geometry string
+                  geojson:
+                    type: string
+                    description: GeoJSON geometry as a JSON-encoded string
+            rs:
+              type: array
+              description: |
+                Relative stratigraphy (Harris matrix) relations (empty array when
+                the table has no `rs` configuration).
+              items:
+                type: object
+            bibliography:
+              type: array
+              description: |
+                Zotero citation links (empty array when Zotero is not configured
+                for this table).
+              items:
+                type: object
+            schema:
               type: object
+              description: Table schema and feature flags for this record's table
               properties:
-                id:
-                  type: integer
-                tb:
-                  type: string
-                can_edit:
+                fields:
+                  type: array
+                  description: Field definitions (same order as the table config)
+                  items:
+                    type: object
+                plugins:
+                  type: object
+                  description: Plugin table configs keyed by plugin table name
+                rs:
                   type: boolean
-                can_delete:
+                  description: Whether the relative stratigraphy feature is enabled
+                id_field:
+                  type: string
+                has_geodata:
+                  type: boolean
+                has_zotero:
+                  type: boolean
+                has_fuzzy_date:
                   type: boolean
 
     RecordListResponse:
@@ -4712,13 +4842,11 @@ components:
             Privilege level (lower = more privileged):
             1=super_admin, 5=admin, 10=adm, 20=edit, 25=create, 30=read
         oauth_provider:
-          type: string
-          nullable: true
+          type: [string, 'null']
           description: OAuth2 provider slug ('google', 'orcid') if the user has linked an external identity
           example: google
         oauth_sub:
-          type: string
-          nullable: true
+          type: [string, 'null']
           description: Provider-issued unique subject ID (linked to oauth_provider)
 
     UserInput:
@@ -4929,33 +5057,25 @@ components:
         zotero_key:
           type: string
         author_year:
-          type: string
-          nullable: true
+          type: [string, 'null']
           description: Cached short author–year label
         full_citation:
-          type: string
-          nullable: true
+          type: [string, 'null']
           description: Cached formatted HTML citation
         pages:
-          type: string
-          nullable: true
+          type: [string, 'null']
         notes:
-          type: string
-          nullable: true
+          type: [string, 'null']
         sort:
-          type: integer
-          nullable: true
+          type: [integer, 'null']
         zotero_version:
-          type: integer
-          nullable: true
+          type: [integer, 'null']
         synced_at:
-          type: integer
-          nullable: true
+          type: [integer, 'null']
           description: Unix timestamp of last cache sync
         detached:
           type: integer
           description: 1 when the Zotero item no longer exists
         zotero_url:
-          type: string
-          nullable: true
+          type: [string, 'null']
           description: Public URL to the item on zotero.org (null for user libraries)

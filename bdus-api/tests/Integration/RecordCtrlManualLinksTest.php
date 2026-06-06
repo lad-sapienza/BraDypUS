@@ -95,10 +95,9 @@ class RecordCtrlManualLinksTest extends BdusTestCase
         ]);
         $res = $this->callController($ctrl, 'addManualLink');
 
-        foreach (['key', 'tb_id', 'tb_stripped', 'tb_label', 'ref_id', 'ref_label', 'label'] as $k) {
+        foreach (['key', 'tb_id', 'tb_label', 'ref_id', 'ref_label', 'label'] as $k) {
             $this->assertArrayHasKey($k, $res['link'], "Missing key: $k");
         }
-        $this->assertSame('items', $res['link']['tb_stripped']);
         $this->assertNull($res['link']['label']);
     }
 

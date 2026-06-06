@@ -71,7 +71,6 @@ class RecordCtrlGetRecordTest extends BdusTestCase
         $meta = $res['metadata'];
 
         $this->assertSame(self::TB, $meta['tb_id']);
-        $this->assertSame('items',  $meta['tb_stripped']);
         $this->assertSame('Items',  $meta['tb_label']);
         $this->assertSame(1,        $meta['rec_id']);
         $this->assertIsBool($meta['can_edit']);
@@ -160,12 +159,11 @@ class RecordCtrlGetRecordTest extends BdusTestCase
         $this->assertNotEmpty($res['manualLinks'], 'Expected at least one manual link for item 1');
 
         $link = array_values($res['manualLinks'])[0];
-        foreach (['key', 'tb_id', 'tb_stripped', 'ref_id', 'ref_label'] as $k) {
+        foreach (['key', 'tb_id', 'ref_id', 'ref_label'] as $k) {
             $this->assertArrayHasKey($k, $link, "manualLinks entry missing key: $k");
         }
         $this->assertSame('items', $link['tb_id']);
-        $this->assertSame('items',       $link['tb_stripped']);
-        $this->assertSame(2,             $link['ref_id']);
+        $this->assertSame(2,       $link['ref_id']);
     }
 
     // ── files enrichment ─────────────────────────────────────────

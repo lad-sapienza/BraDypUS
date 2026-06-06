@@ -3,7 +3,17 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [5.0.0] - unreleased
+## [5.0.1] - 2026-06-06
+
+### Fixed
+
+- **`tb_stripped` rimosso dalla risposta API** — il campo ridondante è stato eliminato da `metadata`, dagli item di `manualLinks` e dalla risposta di `POST /api/manual-link`. Le variabili PHP associate rimosse di conseguenza.
+- **`links` / `backlinks` / `manualLinks` serializzati come `{}` quando vuoti** — in PHP un array associativo vuoto veniva codificato come `[]`; il cast a oggetto ora avviene nel controller, prima di `returnJson`, senza interferire con `Edit.php` che usa queste strutture come array internamente.
+- **`id_field` nullo in `getManualLinks()`** — quando la tabella linkata non ha `id_field` configurato, la query generava `SELECT  as label …` causando un errore SQL; aggiunto fallback a `'id'`.
+- **OpenAPI `RecordResponse` riallineato alla risposta reale** — nomi corretti (`tb_id`, `rec_id`, `id_field`, `can_add`), tutti i campi top-level documentati (`backlinks`, `manualLinks`, `geodata`, `rs`, `bibliography`, `schema`), tipo di `links` corretto da `array` a `object`, `$ref: RecordFile` sostituito con il corretto `LinkedFileItem`.
+- **`nullable: true` → sintassi OpenAPI 3.1** — 34 occorrenze di `type: X` + `nullable: true` convertite in `type: [X, 'null']`.
+
+## [5.0.0] - 2026-06-06
 
 Complete rewrite of the frontend, from jQuery + Bootstrap 3 + server-side Twig
 to a **Vue 3 SPA** (Vite, PrimeVue Aura theme). The PHP backend is preserved and

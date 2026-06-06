@@ -1,0 +1,28 @@
+[
+    {
+        "name": "id",
+        "label": "ID",
+        "type": "text",
+        "readonly": "1"
+    },
+    {
+        "name": "item_ref",
+        "label": "Item",
+        "type": "text"
+    },
+    {
+        "name": "reviewer",
+        "label": "Reviewer",
+        "type": "text"
+    },
+    {
+        "name": "content",
+        "label": "Content",
+        "type": "long_text"
+    },
+    {
+        "name": "rating",
+        "label": "Rating",
+        "type": "text"
+    }
+]

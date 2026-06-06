@@ -1,7 +1,7 @@
 {
     "name": "bdus/api",
     "description": "BraDypUS — open-source web database system for archaeological and cultural-heritage research (PHP backend)",
-    "version": "5.0.1",
+    "version": "5.0.3",
     "license": "AGPL-3.0-only",
     "authors": [
         {

@@ -15,9 +15,24 @@ use Config\Config;
  * ## Main-table field condition
  *   [ "status" => ["_eq" => "active"], "name" => ["_icontains" => "pompeii"] ]
  *
- * ## Cross-table (plugin) condition
+ * ## Cross-table condition — plugin (table_link / id_link)
  *   [ "photos" => [ "description" => ["_icontains" => "amphora"] ] ]
  *   → id IN (SELECT id_link FROM photos WHERE table_link = ? AND description LIKE ?)
+ *
+ * ## Cross-table condition — backlinked table (explicit FK column)
+ *   [ "m_msplaces" => [ "type" => ["_eq" => "discovery"] ] ]
+ *   → places.id IN (SELECT place FROM m_msplaces WHERE type = ?)
+ *   (requires "manuscripts:m_msplaces:place" in cfg.tables.places.backlinks)
+ *
+ * ## Two-hop cross-table condition (backlink → plugin_of parent)
+ *   [ "m_msplaces" => [ "manuscripts" => [ "palimpsest" => ["_eq" => 1] ] ] ]
+ *   → places.id IN (
+ *        SELECT place FROM m_msplaces
+ *        WHERE table_link = 'manuscripts'
+ *          AND id_link IN (SELECT id FROM manuscripts WHERE palimpsest = ?)
+ *      )
+ *   Requires: "manuscripts:m_msplaces:place" in places.backlinks
+ *           AND cfg.tables.m_msplaces.plugin_of = 'manuscripts'
  *
  * ## Logical groups
  *   [ "_and" => [ [...], [...] ] ]
@@ -169,41 +184,228 @@ class JsonFilter
     }
 
     /**
-     * Builds an `id IN (SELECT id_link FROM plugin WHERE table_link=? AND …)` subquery.
+     * Dispatches a cross-table filter condition to the appropriate subquery builder.
      *
-     * @param string $relatedTb   Plugin table name (validated against $this->tb plugin list)
+     * Two relationship styles are supported:
+     *
+     * 1. **Plugin table** (table_link / id_link convention)
+     *    Configured via `cfg.tables.{main}.plugin[]`.
+     *    → `{main}.id IN (SELECT id_link FROM {plugin} WHERE table_link = ? AND ...)`
+     *
+     * 2. **Backlinked table** (explicit FK column)
+     *    Configured via `cfg.tables.{main}.backlinks[]` as `"{refTb}:{viaTb}:{fkCol}"`.
+     *    The filter key is matched against `viaTb`; `fkCol` is the column in `viaTb`
+     *    that points back to the current table.
+     *    → `{main}.id IN (SELECT {fkCol} FROM {viaTb} WHERE ...)`
+     *    Example: `places` backlink `manuscripts:m_msplaces:place`
+     *    → `places.id IN (SELECT place FROM m_msplaces WHERE ...)`
+     *
+     * @param string $relatedTb   Related table name as supplied in the filter key
      * @param array  $conditions  { field: { _op: val }, ... }
      * @return array{0: string, 1: array}
-     * @throws FilterException if $relatedTb is not a plugin of $this->tb
+     * @throws FilterException if $relatedTb is neither a plugin nor a backlinked table
      */
     private function buildRelatedCondition(string $relatedTb, array $conditions): array
     {
+        // Path 1: direct plugin (table_link / id_link convention)
         $plugins = (array) ($this->cfg->get("tables.{$this->tb}.plugin") ?? []);
-        if (!in_array($relatedTb, $plugins, true)) {
-            throw new FilterException("'{$relatedTb}' is not a plugin of '{$this->tb}'.");
+        if (in_array($relatedTb, $plugins, true)) {
+            return $this->buildPluginSubquery($relatedTb, $conditions);
         }
 
-        $subParts  = [];
-        $subValues = [];
-
-        foreach ($conditions as $field => $opConditions) {
-            $this->validatePluginField($relatedTb, $field);
-            foreach ((array) $opConditions as $op => $val) {
-                [$condSql, $condVals] = $this->buildCondition($field, $op, $val);
-                $subParts[]  = $condSql;
-                $subValues   = array_merge($subValues, $condVals);
-            }
+        // Path 2: backlinked table (explicit FK column)
+        $fkCol = $this->findBacklinkFkCol($relatedTb);
+        if ($fkCol !== null) {
+            return $this->buildFkSubquery($relatedTb, $fkCol, $conditions);
         }
+
+        throw new FilterException(
+            "'{$relatedTb}' is not a plugin or backlinked table of '{$this->tb}'."
+        );
+    }
+
+    /**
+     * Builds: `{main}.id IN (SELECT id_link FROM {plugin} WHERE table_link = ? AND ...)`
+     *
+     * @return array{0: string, 1: array}
+     */
+    private function buildPluginSubquery(string $pluginTb, array $conditions): array
+    {
+        [$subParts, $subValues] = $this->buildSubconditions($pluginTb, $conditions);
 
         if (empty($subParts)) {
             return ['1=1', []];
         }
 
         $sql = "{$this->tb}.id IN "
-             . "(SELECT id_link FROM {$relatedTb} "
+             . "(SELECT id_link FROM {$pluginTb} "
              . "WHERE table_link = ? AND " . implode(' AND ', $subParts) . ')';
 
         return [$sql, array_merge([$this->tb], $subValues)];
+    }
+
+    /**
+     * Builds: `{main}.id IN (SELECT {fkCol} FROM {viaTb} WHERE ...)`
+     *
+     * Used when the related table references the current table via an explicit
+     * FK column (backlink style), rather than the table_link / id_link convention.
+     *
+     * @return array{0: string, 1: array}
+     */
+    private function buildFkSubquery(string $viaTb, string $fkCol, array $conditions): array
+    {
+        [$subParts, $subValues] = $this->buildSubconditions($viaTb, $conditions);
+
+        if (empty($subParts)) {
+            return ['1=1', []];
+        }
+
+        $sql = "{$this->tb}.id IN "
+             . "(SELECT {$fkCol} FROM {$viaTb} "
+             . "WHERE " . implode(' AND ', $subParts) . ')';
+
+        return [$sql, $subValues];
+    }
+
+    /**
+     * Validates and compiles field/table conditions for a subquery on a related table.
+     *
+     * Each entry in $conditions is classified as one of:
+     *
+     * 1. **Field condition** — value's first key is a field operator (in ALLOWED_OPS):
+     *    `{ field: { _eq: val } }` → compiled directly via buildCondition.
+     *
+     * 2. **Nested table reference** — value's first key is NOT a field operator
+     *    (either a logical op `_and`/`_or`, or a bare field name):
+     *    `{ nestedTb: { field: { _op: val } } }`
+     *    `{ nestedTb: { _and: [ { field: { _op: val } }, … ] } }`
+     *    → compiled via buildNestedCondition, which delegates to a recursive JsonFilter.
+     *
+     * The distinction is: field operators (`_eq`, `_lt`, …) vs logical operators
+     * (`_and`, `_or`) vs non-operator keys (bare field/table names).
+     * Only ALLOWED_OPS keys signal a field condition; `_and`/`_or` as a first
+     * sub-key mean the enclosing key is a nested table, not a field name.
+     *
+     * @return array{0: string[], 1: array}  [sql_parts, bound_values]
+     */
+    private function buildSubconditions(string $relatedTb, array $conditions): array
+    {
+        $subParts  = [];
+        $subValues = [];
+
+        foreach ($conditions as $key => $opConditions) {
+            $opArr    = (array) $opConditions;
+            $firstKey = (string) (array_key_first($opArr) ?? '');
+
+            if ($firstKey === '') {
+                continue; // empty condition — skip
+            }
+
+            // A field condition has a field-operator (e.g. _eq, _lt) as its first key.
+            // Logical operators (_and, _or) as the first key mean $key is a nested table.
+            $isFieldOp = in_array($firstKey, self::ALLOWED_OPS, true);
+
+            if ($isFieldOp) {
+                // Field condition: { field: { _op: val } }
+                $this->validatePluginField($relatedTb, $key);
+                foreach ($opArr as $op => $val) {
+                    [$condSql, $condVals] = $this->buildCondition($key, $op, $val);
+                    $subParts[]  = $condSql;
+                    $subValues   = array_merge($subValues, $condVals);
+                }
+            } else {
+                // Nested table reference (field conditions or logical groups on a parent table).
+                // { nestedTb: { field: { _op } } }  or  { nestedTb: { _and: [ … ] } }
+                [$nestedSql, $nestedVals] = $this->buildNestedCondition($relatedTb, $key, $opArr);
+                $subParts[]  = $nestedSql;
+                $subValues   = array_merge($subValues, $nestedVals);
+            }
+        }
+
+        return [$subParts, $subValues];
+    }
+
+    /**
+     * Builds the WHERE fragments for a one-hop join from $viaTb to its plugin_of parent.
+     *
+     * This is the "second hop" when a filter traverses:
+     *   main → via backlink/plugin ($viaTb) → plugin_of parent ($nestedTb)
+     *
+     * Example (PAThs, simple):
+     *   filter[m_msplaces][manuscripts][palimpsest][_eq]=1
+     *   → table_link = 'manuscripts' AND id_link IN (SELECT id FROM manuscripts WHERE manuscripts.palimpsest = ?)
+     *
+     * Example (PAThs, with logical group):
+     *   filter[m_msplaces][manuscripts][_and][][chronofrom][_gt]=599
+     *   filter[m_msplaces][manuscripts][_and][][chronofrom][_lt]=700
+     *   → table_link = 'manuscripts' AND id_link IN (SELECT id FROM manuscripts WHERE (manuscripts.chronofrom > ? AND manuscripts.chronofrom < ?))
+     *
+     * Conditions on $nestedTb are compiled by creating a recursive JsonFilter for
+     * that table, so all operators, logical groups, and field validation work correctly.
+     *
+     * Restriction: $nestedTb MUST equal cfg.tables.{viaTb}.plugin_of.
+     * Three-or-more hops are not supported.
+     *
+     * @param string $viaTb      Intermediate table (e.g. 'm_msplaces')
+     * @param string $nestedTb   Target table (e.g. 'manuscripts'); must be viaTb's plugin_of
+     * @param array  $conditions Any filter structure valid for $nestedTb
+     * @return array{0: string, 1: array}
+     * @throws FilterException if $nestedTb is not viaTb's plugin_of parent
+     */
+    private function buildNestedCondition(string $viaTb, string $nestedTb, array $conditions): array
+    {
+        $pluginOf = $this->cfg->get("tables.{$viaTb}.plugin_of") ?: null;
+
+        if ($pluginOf !== $nestedTb) {
+            throw new FilterException(
+                "'{$nestedTb}' is not a supported nested filter table of '{$viaTb}'. "
+                . ($pluginOf
+                    ? "Only '{$pluginOf}' (plugin_of parent) is supported."
+                    : "'{$viaTb}' has no plugin_of parent configured.")
+            );
+        }
+
+        // Delegate to a recursive JsonFilter for $nestedTb.
+        // This handles all operators and logical groups (_and/_or) correctly,
+        // with full field validation against the nested table's config.
+        $nestedFilter = new self($this->cfg, $nestedTb);
+        [$nestedSql, $nestedValues] = $nestedFilter->toSql($conditions);
+
+        if ($nestedSql === '1=1') {
+            return ['1=1', []];
+        }
+
+        $idField = $this->cfg->get("tables.{$nestedTb}.id_field") ?: 'id';
+
+        // table_link = 'manuscripts' AND id_link IN (SELECT id FROM manuscripts WHERE …)
+        $sql = "table_link = ? AND id_link IN "
+             . "(SELECT {$idField} FROM {$nestedTb} WHERE {$nestedSql})";
+
+        return [$sql, array_merge([$nestedTb], $nestedValues)];
+    }
+
+    /**
+     * Returns the FK column name in $relatedTb that points back to $this->tb,
+     * by scanning the backlinks config of $this->tb.
+     *
+     * Backlink format: "{refTb}:{viaTb}:{fkCol}"
+     * We look for entries where viaTb === $relatedTb.
+     *
+     * Returns null if no matching backlink entry is found.
+     */
+    private function findBacklinkFkCol(string $relatedTb): ?string
+    {
+        $blData = (array) ($this->cfg->get("tables.{$this->tb}.backlinks") ?? []);
+        foreach ($blData as $bl) {
+            $parts = array_values(
+                array_filter(array_map('trim', explode(':', (string) $bl)), 'strlen')
+            );
+            // parts: [0 => refTb, 1 => viaTb, 2 => fkCol]
+            if (count($parts) === 3 && $parts[1] === $relatedTb) {
+                return $parts[2];
+            }
+        }
+        return null;
     }
 
     /**

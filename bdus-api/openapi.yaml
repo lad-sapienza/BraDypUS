@@ -745,7 +745,9 @@ paths:
 
         ## Directus-style JSON filter (recommended for programmatic use)
 
-        Use URL bracket notation to filter without specifying `search_type`:
+        Use URL bracket notation to filter without specifying `search_type`.
+
+        ### Main-table field conditions
 
         ```
         ?filter[status][_eq]=active
@@ -754,13 +756,64 @@ paths:
         ?filter[_or][0][type][_eq]=site&filter[_or][1][type][_eq]=find
         ```
 
-        Supported operators: `_eq` `_neq` `_lt` `_lte` `_gt` `_gte`
-        `_contains` `_icontains` `_ncontains` `_starts_with` `_ends_with`
-        `_in` `_nin` `_null` `_nnull` `_between`.
-        Logical: `_and` `_or` (nested arrays).
+        Supported operators:
+
+        | Operator | SQL | Notes |
+        |---|---|---|
+        | `_eq` | `= ?` | |
+        | `_neq` | `!= ?` | |
+        | `_lt` / `_lte` | `< ?` / `<= ?` | |
+        | `_gt` / `_gte` | `> ?` / `>= ?` | |
+        | `_contains` | `LIKE '%val%'` | case-sensitive |
+        | `_icontains` | `LIKE '%val%'` | case-insensitive |
+        | `_ncontains` | `NOT LIKE '%val%'` | |
+        | `_starts_with` | `LIKE 'val%'` | |
+        | `_ends_with` | `LIKE '%val'` | |
+        | `_in` | `IN (?,…)` | value must be an array |
+        | `_nin` | `NOT IN (?,…)` | value must be an array |
+        | `_null` | `IS NULL` / `IS NOT NULL` | value: true/false |
+        | `_nnull` | `IS NOT NULL` / `IS NULL` | value: true/false |
+        | `_empty` | `IS NULL OR = ''` | |
+        | `_nempty` | `IS NOT NULL AND != ''` | |
+        | `_between` | `BETWEEN ? AND ?` | value: two-element array |
+        | `_chrono_overlap` | fuzzy date range overlap | value: `[low, high]` years; applied to `chrono_from`; requires fuzzy-date plugin |
+
+        Logical grouping: `_and` / `_or` (nested arrays of condition objects).
 
         Field names are validated against the table config allow-list.
         All values are bound via PDO prepared statements.
+
+        ### Cross-table (relational) filter — 1 hop
+
+        Filter the main table based on conditions in a related table.
+        Two relationship styles are supported:
+
+        **Plugin table** (uses `table_link` / `id_link` convention):
+        ```
+        ?filter[photos][description][_icontains]=amphora
+        ```
+        → `main.id IN (SELECT id_link FROM photos WHERE table_link = 'main' AND description LIKE ?)`
+
+        **Backlinked table** (explicit FK column, configured in `backlinks`):
+        ```
+        ?filter[m_msplaces][type][_eq]=discovery
+        ```
+        → `places.id IN (SELECT place FROM m_msplaces WHERE type = ?)`
+
+        The backlink must be declared in the table's `backlinks` config as
+        `"{refTb}:{viaTb}:{fkCol}"` (e.g. `"manuscripts:m_msplaces:place"`).
+
+        ### Cross-table filter — 2 hops (via → plugin_of parent)
+
+        Filter via an intermediate table and then on its `plugin_of` parent:
+        ```
+        ?filter[m_msplaces][manuscripts][palimpsest][_eq]=1
+        ```
+        → `places.id IN (SELECT place FROM m_msplaces WHERE table_link = 'manuscripts' AND id_link IN (SELECT id FROM manuscripts WHERE palimpsest = ?))`
+
+        The intermediate table must be reachable from the main table (plugin or backlink),
+        and the nested table key must equal the intermediate table's configured `plugin_of`.
+        Three-or-more hops are not supported.
 
         ## Simple equality shortcut
 
@@ -827,12 +880,36 @@ paths:
         - name: 'filter[{field}][{op}]'
           in: query
           description: |
-            Directus-style filter. Replace `{field}` with a table field name and
-            `{op}` with one of the supported operators (see description).
+            Directus-style filter for **main-table fields**. Replace `{field}` with
+            a field name and `{op}` with one of the supported operators.
             Takes priority over `search_type` when present.
           schema:
             type: string
           example: 'filter[sigla][_eq]=US001'
+        - name: 'filter[{relatedTb}][{field}][{op}]'
+          in: query
+          description: |
+            Cross-table (1-hop) filter. `{relatedTb}` is either a plugin table or
+            a backlinked table of the main table. `{field}` is a field of that table.
+            See the endpoint description for the two supported relationship styles.
+          schema:
+            type: string
+          examples:
+            plugin:
+              summary: Plugin table (photos is a plugin of the main table)
+              value: 'filter[photos][description][_icontains]=amphora'
+            backlink:
+              summary: Backlinked table via explicit FK (m_msplaces → places via place column)
+              value: 'filter[m_msplaces][type][_eq]=discovery'
+        - name: 'filter[{viaTb}][{parentTb}][{field}][{op}]'
+          in: query
+          description: |
+            Cross-table (2-hop) filter. `{viaTb}` is reachable from the main table
+            (plugin or backlink); `{parentTb}` must equal `{viaTb}`'s `plugin_of`.
+            See the endpoint description for details and SQL generated.
+          schema:
+            type: string
+          example: 'filter[m_msplaces][manuscripts][palimpsest][_eq]=1'
         - name: 'q_{field}'
           in: query
           description: |
@@ -2597,7 +2674,26 @@ paths:
       description: |
         Returns a GeoJSON `FeatureCollection` of all geometries linked to records
         in the given table, optionally filtered by the active search.
-        Accepts the same filter params as `GET /api/records/{tb}`.
+
+        Accepts the same Directus-style `filter` params as `GET /api/records/{tb}`,
+        including cross-table (relational) filters — the primary use case for this
+        endpoint (e.g. show only places associated with manuscripts of a given type).
+
+        ### Relational filter examples
+
+        **1-hop — filter places by attestation type in the join table:**
+        ```
+        GET /api/geoface?tb=places&filter[m_msplaces][type][_eq]=discovery
+        ```
+        → `places.id IN (SELECT place FROM m_msplaces WHERE type = ?)`
+
+        **2-hop — filter places by a field on the linked manuscript:**
+        ```
+        GET /api/geoface?tb=places&filter[m_msplaces][manuscripts][palimpsest][_eq]=1
+        ```
+        → `places.id IN (SELECT place FROM m_msplaces WHERE table_link = 'manuscripts' AND id_link IN (SELECT id FROM manuscripts WHERE palimpsest = ?))`
+
+        See `GET /api/records/{tb}` for the full filter reference.
       parameters:
         - name: tb
           in: query
@@ -2627,9 +2723,27 @@ paths:
             type: string
         - name: 'filter[{field}][{op}]'
           in: query
-          description: Directus-style filter (takes priority over search_type).
+          description: Main-table field filter. Directus-style (takes priority over search_type).
           schema:
             type: string
+        - name: 'filter[{relatedTb}][{field}][{op}]'
+          in: query
+          description: |
+            1-hop cross-table filter. `{relatedTb}` is a plugin or backlinked table.
+            See `GET /api/records/{tb}` description for relationship styles.
+          schema:
+            type: string
+          examples:
+            backlink:
+              summary: Backlink filter (m_msplaces → places via explicit FK)
+              value: 'filter[m_msplaces][type][_eq]=discovery'
+        - name: 'filter[{viaTb}][{parentTb}][{field}][{op}]'
+          in: query
+          description: |
+            2-hop cross-table filter. `{parentTb}` must be the `plugin_of` parent of `{viaTb}`.
+          schema:
+            type: string
+          example: 'filter[m_msplaces][manuscripts][palimpsest][_eq]=1'
       responses:
         '200':
           description: GeoJSON FeatureCollection

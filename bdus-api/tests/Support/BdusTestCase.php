@@ -100,6 +100,18 @@ abstract class BdusTestCase extends TestCase
             )
         ');
 
+        // reviews: linked to items via an explicit FK column (backlink style, not plugin).
+        // Used by JsonFilterBacklinkTest to verify the buildFkSubquery path.
+        static::$db->execInTransaction('
+            CREATE TABLE reviews (
+                id       INTEGER PRIMARY KEY AUTOINCREMENT,
+                item_ref INTEGER,
+                reviewer TEXT,
+                content  TEXT,
+                rating   INTEGER
+            )
+        ');
+
         // All system tables via the canonical schema registry — stays in sync
         // automatically whenever Structure JSON files or available_tables change.
         $manage = new \DB\System\Manage(static::$db);
@@ -125,10 +137,21 @@ abstract class BdusTestCase extends TestCase
             );
         }
 
-        // A couple of tags linked to item 1
+        // A couple of tags linked to item 1 (plugin-style: id_link / table_link)
         static::$db->execInTransaction(
             "INSERT INTO tags (label, id_link, table_link)
              VALUES ('tag-a', 1, 'items'), ('tag-b', 1, 'items')"
+        );
+
+        // Reviews: linked via explicit FK (backlink-style).
+        // - item 1 (Alpha item)  reviewed by alice (rating 5) and bob (rating 4)
+        // - item 2 (Beta item)   reviewed by bob (rating 3)
+        // - item 3 (Gamma item)  no reviews
+        static::$db->execInTransaction(
+            "INSERT INTO reviews (item_ref, reviewer, content, rating)
+             VALUES (1, 'alice', 'Excellent', 5),
+                    (1, 'bob',   'Very good', 4),
+                    (2, 'bob',   'Average',   3)"
         );
 
         // A file (image) and a document linked to item 1 via bdus_file_links

@@ -3,6 +3,22 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.0.2] - 2026-06-06
+
+### Added
+
+- **Filtro cross-table a 1 hop con FK esplicita (backlink)** — `JsonFilter` supporta ora due modalità di join cross-table:
+  1. **Plugin** (`table_link` / `id_link`): comportamento invariato.
+  2. **Backlink** (colonna FK esplicita): quando la tabella richiesta nel filtro non è un plugin della tabella principale ma compare nella sua configurazione `backlinks` nel formato `"refTb:viaTb:fkCol"`, viene generata la subquery corretta: `main.id IN (SELECT fkCol FROM viaTb WHERE …)`.
+  - Esempio PAThs (Caso 1): `filter[m_msplaces][type][_eq]=discovery` → `places.id IN (SELECT place FROM m_msplaces WHERE type = ?)`
+
+- **Filtro cross-table a 2 hop (backlink → plugin_of parent)** — all'interno di una condizione su una tabella via (plugin o backlink), se compare un'ulteriore chiave non-campo che corrisponde al `plugin_of` della tabella via, viene generata una subquery annidata:
+  ```
+  main.id IN (SELECT fkCol FROM viaTb WHERE table_link = ? AND id_link IN (SELECT id FROM parentTb WHERE …))
+  ```
+  - Esempio PAThs (Caso 2): `filter[m_msplaces][manuscripts][palimpsest][_eq]=1` → `places.id IN (SELECT place FROM m_msplaces WHERE table_link = 'manuscripts' AND id_link IN (SELECT id FROM manuscripts WHERE palimpsest = ?))`.
+  - Limitazione: massimo 2 hop; catene di 3 o più livelli non sono supportate.
+
 ## [5.0.1] - 2026-06-06
 
 ### Fixed

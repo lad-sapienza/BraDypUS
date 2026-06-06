@@ -13,6 +13,9 @@
             "plugin": [
                 "tags"
             ],
+            "backlinks": [
+                "other:reviews:item_ref"
+            ],
             "rs": 1,
             "geodata": 1,
             "zotero": 1,
@@ -24,9 +27,20 @@
             "order": "id",
             "id_field": "id",
             "is_plugin": "1",
+            "plugin_of": "items",
             "preview": [
                 "id",
                 "label"
+            ]
+        },
+        {
+            "name": "reviews",
+            "label": "Reviews",
+            "order": "id",
+            "id_field": "id",
+            "preview": [
+                "id",
+                "reviewer"
             ]
         }
     ]

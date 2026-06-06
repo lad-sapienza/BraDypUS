@@ -1125,6 +1125,106 @@ class Record extends \Bdus\Controller
     }
   }
 
+  /**
+   * Links an existing file to a record (creates a bdus_file_links row without
+   * uploading a new binary).
+   *
+   * POST /api/record/{tb}/{id}/link-file
+   * Body (JSON): { fileId: int }
+   *
+   * Response: { status, code, file: { id, link_id, ext, filename, description,
+   *             keywords, printable, is_image } }
+   */
+  public function linkFile(): void
+  {
+    if (!\Auth\Authorization::can('edit')) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+      return;
+    }
+
+    $tb     = $this->get['tb'] ?? null;
+    $id     = (int)($this->get['id']      ?? 0);
+    $fileId = (int)($this->post['fileId'] ?? 0);
+
+    if (!$tb || !$id || !$fileId) {
+      $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
+      return;
+    }
+
+    try {
+      $rows = $this->db->query("SELECT * FROM bdus_files WHERE id = ?", [$fileId]);
+      if (empty($rows)) {
+        $this->returnJson(['status' => 'error', 'code' => 'record_not_found']);
+        return;
+      }
+      $f   = $rows[0];
+      $ext = $f['ext'] ?? '';
+
+      $linkId = $this->db->query(
+        "INSERT INTO bdus_file_links (file_id, table_name, record_id) VALUES (?, ?, ?)",
+        [$fileId, $tb, $id],
+        'id'
+      );
+
+      $imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'tiff', 'svg'];
+
+      $this->returnJson([
+        'status' => 'success',
+        'code'   => 'ok_file_linked',
+        'file'   => [
+          'id'          => (int)$fileId,
+          'link_id'     => (int)$linkId,
+          'ext'         => $ext,
+          'filename'    => $f['filename'] ?? '',
+          'description' => $f['description'] ?? null,
+          'keywords'    => $f['keywords']    ?? null,
+          'printable'   => $f['printable']   ?? null,
+          'is_image'    => in_array($ext, $imageExts, true),
+        ],
+      ]);
+    } catch (\Throwable $e) {
+      $this->log->error($e);
+      $this->returnJson(['status' => 'error', 'code' => 'error_file_linked', 'detail' => $e->getMessage()]);
+    }
+  }
+
+  /**
+   * Removes the link between a file and a record (deletes the bdus_file_links
+   * row only — the file binary and bdus_files record are preserved).
+   *
+   * DELETE /api/file-link/{linkId}
+   *
+   * Response: { status, code }
+   */
+  public function unlinkFile(): void
+  {
+    if (!\Auth\Authorization::can('edit')) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+      return;
+    }
+
+    $linkId = (int)($this->get['linkId'] ?? 0);
+    if (!$linkId) {
+      $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
+      return;
+    }
+
+    try {
+      $rows = $this->db->query("SELECT id FROM bdus_file_links WHERE id = ?", [$linkId]);
+      if (empty($rows)) {
+        $this->returnJson(['status' => 'error', 'code' => 'record_not_found']);
+        return;
+      }
+
+      $this->db->query("DELETE FROM bdus_file_links WHERE id = ?", [$linkId]);
+      $this->returnJson(['status' => 'success', 'code' => 'ok_file_unlinked']);
+
+    } catch (\Throwable $e) {
+      $this->log->error($e);
+      $this->returnJson(['status' => 'error', 'code' => 'error_file_unlinked', 'detail' => $e->getMessage()]);
+    }
+  }
+
   // ── v5 stratigraphic relations (RS) endpoints ────────────────────────────
 
   /**

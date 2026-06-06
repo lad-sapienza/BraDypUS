@@ -100,7 +100,9 @@ class Router
         'Bdus\\Controllers\\Record::checkPluginsBeforeDelete'      => 'edit',
         'Bdus\\Controllers\\Record::restoreVersion'                => 'admin',
         'Bdus\\Controllers\\Record::uploadFile'                    => 'edit',
+        'Bdus\\Controllers\\Record::linkFile'                      => 'edit',
         'Bdus\\Controllers\\Record::deleteFile'                    => 'edit',
+        'Bdus\\Controllers\\Record::unlinkFile'                    => 'edit',
         'Bdus\\Controllers\\File::getFiles'                        => 'read',
         'Bdus\\Controllers\\File::updateFile'                      => 'edit',
         'Bdus\\Controllers\\File::replaceFile'                     => 'edit',
@@ -278,12 +280,14 @@ class Router
             $r->addRoute('POST',            '/api/version/{id:\d+}/restore',      ['Bdus\\Controllers\\Record', 'restoreVersion']);
 
             // ── Files ─────────────────────────────────────────────────────────
-            $r->addRoute('POST',   '/api/record/{tb}/{id:\d+}/file',  ['Bdus\\Controllers\\Record', 'uploadFile']);
-            $r->addRoute('DELETE', '/api/file/{fileId:\d+}',          ['Bdus\\Controllers\\Record', 'deleteFile']);
-            $r->addRoute('GET',    '/api/files',                      ['Bdus\\Controllers\\File',   'getFiles']);
-            $r->addRoute('PATCH',  '/api/file/{fileId:\d+}',          ['Bdus\\Controllers\\File',   'updateFile']);
-            $r->addRoute('POST',   '/api/file/{fileId:\d+}/replace',  ['Bdus\\Controllers\\File',   'replaceFile']);
-            $r->addRoute('POST',   '/api/files/sort',                 ['Bdus\\Controllers\\File',   'sortFiles']);
+            $r->addRoute('POST',   '/api/record/{tb}/{id:\d+}/file',       ['Bdus\\Controllers\\Record', 'uploadFile']);
+            $r->addRoute('POST',   '/api/record/{tb}/{id:\d+}/link-file', ['Bdus\\Controllers\\Record', 'linkFile']);
+            $r->addRoute('DELETE', '/api/file/{fileId:\d+}',              ['Bdus\\Controllers\\Record', 'deleteFile']);
+            $r->addRoute('DELETE', '/api/file-link/{linkId:\d+}',         ['Bdus\\Controllers\\Record', 'unlinkFile']);
+            $r->addRoute('GET',    '/api/files',                           ['Bdus\\Controllers\\File',   'getFiles']);
+            $r->addRoute('PATCH',  '/api/file/{fileId:\d+}',              ['Bdus\\Controllers\\File',   'updateFile']);
+            $r->addRoute('POST',   '/api/file/{fileId:\d+}/replace',      ['Bdus\\Controllers\\File',   'replaceFile']);
+            $r->addRoute('POST',   '/api/files/sort',                     ['Bdus\\Controllers\\File',   'sortFiles']);
 
             // ── Stratigraphic Relations (RS) ──────────────────────────────────
             $r->addRoute('POST',   '/api/record/{tb}/rs', ['Bdus\\Controllers\\Record', 'addRs']);

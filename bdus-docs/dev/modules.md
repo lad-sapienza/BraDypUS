@@ -44,7 +44,10 @@ destructive schema operations.
 The most important module. Handles:
 - Fetching single records and paginated lists
 - Creating, updating, deleting records
-- File upload / deletion
+- File upload (`POST /api/record/{tb}/{id}/file`)
+- File link-existing (`POST /api/record/{tb}/{id}/link-file`) — attaches an already-uploaded file to a record without re-uploading
+- File unlink (`DELETE /api/file-link/{linkId}`) — removes the junction row only; file is preserved
+- File permanent delete (`DELETE /api/file/{fileId}`)
 - Stratigraphic relations (RS) — add / delete
 - Manual links between records
 - Record versions (history + restore)
@@ -195,11 +198,18 @@ Admin access to `bdus_log` entries.
 `getInfo()` returns the BraDypUS version (public, no auth).
 `getAppInfo()` returns extended app info (authenticated).
 
-### `file` — File sort
-`POST /api/files/sort`
+### `file` — File management & sort
 
-Updates the display order of files attached to a record.
-File upload and deletion are handled by `Record`.
+| Method | Path | Action |
+|---|---|---|
+| `GET` | `/api/files` | Paginated list of all app files (with orphan filter) |
+| `PATCH` | `/api/file/{fileId}` | Update file metadata (description, keywords, printable) |
+| `POST` | `/api/file/{fileId}/replace` | Replace the file binary, keep metadata |
+| `POST` | `/api/files/sort` | Update display order of files attached to a record |
+
+File upload (`POST /api/record/{tb}/{id}/file`), link-existing
+(`POST /api/record/{tb}/{id}/link-file`), unlink (`DELETE /api/file-link/{linkId}`),
+and permanent delete (`DELETE /api/file/{fileId}`) are handled by `Record`.
 
 ### `zotero` — Zotero integration
 `GET/POST/DELETE /api/zotero/lib` · `GET /api/zotero/search` · link / sync endpoints

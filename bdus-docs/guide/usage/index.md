@@ -34,6 +34,7 @@ the record list for that table.
 | View the Harris Matrix | DataView toolbar → Harris Matrix button |
 | Manage vocabularies | Sidebar → Vocabulary management |
 | Find and replace values | Sidebar → Find & replace |
+| Browse all uploaded files | Sidebar → File management |
 | Download a backup | Sidebar → Backup |
 | Manage users | Sidebar → Users |
 | Configure the application | Sidebar → Config (super-admin only) |

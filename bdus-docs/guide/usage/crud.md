@@ -67,14 +67,42 @@ Deleted records are soft-deleted and can be recovered from
 
 ## File attachments
 
-In RecordView (edit mode), the file gallery panel allows:
-- **Upload** one or more files (images, PDFs, any format)
-- **Reorder** files by dragging
-- **Delete** individual files
+### Viewing files
 
-Images are displayed as thumbnails. Non-image files show a generic icon.
-Large images are automatically downscaled on upload if **Max image size** is set
-in [App settings](/guide/setup/main-app-config).
+In RecordView (read mode), the file gallery panel shows all files attached to
+the record. Clicking any **thumbnail or filename** opens an in-app preview
+without leaving the page:
+
+- **Images** — displayed in a fullscreen lightbox overlay.
+- **Documents** (PDF, etc.) — displayed in an inline viewer panel.
+
+### Managing files (edit mode)
+
+In RecordView (edit mode), the file gallery panel allows:
+
+| Action | How |
+|---|---|
+| **Upload** | Click *Upload file* or drag & drop a file anywhere on the drop zone |
+| **Link existing** | Click *Link existing file* to pick a file already in the library — no re-upload needed |
+| **Reorder** | Drag the grip handle to change the display order |
+| **Unlink** | Click the chain icon (🔗) to remove the file from *this record only* — the file is kept in the library |
+| **Delete** | Click the trash icon to permanently delete the file from the whole application |
+
+Images are automatically downscaled on upload if **Max image size** is set in
+[App settings](/guide/setup/main-app-config).
+
+### File management view
+
+The **File management** page (sidebar → *File management*) lists all files
+uploaded to the application, regardless of which record they are attached to.
+For each file you can:
+
+- Browse thumbnails and previews (click to open inline)
+- Edit the description and keywords in-place (auto-saved on blur / Enter)
+- See which records the file is linked to
+- Filter for **orphan files** — files not linked to any record
+- **Replace** the file binary while keeping metadata
+- **Delete** the file permanently
 
 ## Duplicating a record
 

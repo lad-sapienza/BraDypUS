@@ -114,6 +114,7 @@ or shared link without any extra context.
 | `/:app/users` | `UsersView` |
 | `/:app/vocabularies` | `VocabulariesView` |
 | `/:app/templates` | `TemplatesView` |
+| `/:app/files` | `FilesView` |
 | `/:app/import` | `ImportView` |
 | `/:app/backups` | `BackupView` |
 | `/:app/history` | `HistoryView` |
@@ -220,6 +221,15 @@ Loads a single record via `GET /api/record/:tb/:id` and renders:
 
 New records use `:id = 'new'` and POST to `POST /api/record/:tb`.
 
+### `FilesView` — file management
+
+Lists all files uploaded to the current application (`GET /api/files`, lazy
+paginated). Each row shows a thumbnail/icon preview, inline-editable description
+and keywords (auto-saved on blur), linked-record badges, and an orphan
+indicator. Actions: replace binary (`POST /api/file/{id}/replace`), delete
+permanently (`DELETE /api/file/{id}`). Clicking a thumbnail or filename opens
+an in-app preview Dialog (lightbox for images, iframe for documents).
+
 ### `MatrixView` — Harris matrix
 
 Renders a directed graph of stratigraphic relations using Cytoscape + dagre.
@@ -242,7 +252,7 @@ Located in `src/components/record/`:
 | `FieldDisplay.vue` | Read-only field rendering (handles all field types) |
 | `FieldEditor.vue` | Editable field rendering (select, text, date, boolean…) |
 | `PluginSection.vue` | Plugin table rows (CRUD) |
-| `FileGallery.vue` | File list with upload, sort, delete |
+| `FileGallery.vue` | File list with upload, link-existing, sort, unlink, delete |
 | `ManualLinksSection.vue` | Free-form cross-record links |
 | `RsSection.vue` | Stratigraphic relation editor + matrix link |
 | `TemplateSection.vue` | Print template selector + preview |

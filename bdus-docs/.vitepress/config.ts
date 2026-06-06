@@ -120,6 +120,7 @@ function guideSidebar() {
         { text: 'Data export',         link: '/guide/usage/export' },
         { text: 'Find & replace',      link: '/guide/usage/find-replace' },
         { text: 'Import data',         link: '/guide/usage/import' },
+        { text: 'File management',     link: '/guide/usage/files' },
         { text: 'Database backup',     link: '/guide/usage/backup' },
         { text: 'Application log',     link: '/guide/usage/log' },
         { text: 'Version history',     link: '/guide/usage/versions' },

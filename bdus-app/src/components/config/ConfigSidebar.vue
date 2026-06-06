@@ -87,8 +87,8 @@
         @drop="onDrop($event, tbl.name)"
       >
         <i class="pi pi-bars cfg-drag-handle" />
-        <span class="cfg-table-label" :title="tbl.name">
-          {{ tbl.label }}
+        <span class="cfg-table-label" :title="tbl.label">
+          <span class="cfg-table-label-text">{{ tbl.label }}</span>
           <small v-if="tbl.is_plugin === '1'" class="cfg-plugin-badge">plugin</small>
         </span>
         <div class="cfg-table-btns">
@@ -281,12 +281,18 @@ async function onDrop(e, targetName) {
 .cfg-table-label {
   flex: 1;
   font-size: 0.82rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: 0.35rem;
+}
+
+.cfg-table-label-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
 }
 
 .cfg-plugin-badge {

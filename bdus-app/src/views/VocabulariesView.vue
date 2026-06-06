@@ -12,31 +12,54 @@
       </div>
 
       <div v-else-if="vocs.length === 0" class="empty">
-        <p>No vocabularies defined yet.</p>
+        <p>{{ t('no_vocabularies') }}</p>
       </div>
 
       <div v-else class="voc-layout">
 
-        <!-- Left: vocabulary list -->
+        <!-- Left: vocabulary list with filter -->
         <div class="voc-names">
+          <div class="voc-filter">
+            <InputText
+              v-model="filterText"
+              :placeholder="t('voc_filter_placeholder')"
+              size="small"
+              class="voc-filter-input"
+            />
+          </div>
           <div
-            v-for="voc in vocs"
+            v-for="voc in filteredVocs"
             :key="voc.name"
             class="voc-name-item"
             :class="{ active: selected?.name === voc.name }"
             @click="selected = voc"
           >
-            <span>{{ voc.name }}</span>
+            <span class="voc-name-text">{{ voc.name }}</span>
             <Badge :value="voc.items.length" severity="secondary" />
           </div>
+          <div v-if="filteredVocs.length === 0" class="voc-filter-empty">—</div>
         </div>
 
-        <!-- Right: items for selected vocabulary -->
+        <!-- Right: items + usage info for selected vocabulary -->
         <div class="voc-items" v-if="selected">
           <div class="voc-items-header">
             <h3>{{ selected.name }}</h3>
-            <Button label="Add item" icon="pi pi-plus" size="small" severity="secondary"
+            <Button :label="t('voc_add_item')" icon="pi pi-plus" size="small" severity="secondary"
                     @click="openAddItemDialog(selected.name)" />
+          </div>
+
+          <!-- Usage info -->
+          <div class="voc-usages" v-if="!usagesLoading">
+            <template v-if="selectedUsages.length">
+              <span class="voc-usages-label">{{ t('voc_used_by') }}:</span>
+              <span
+                v-for="(u, i) in selectedUsages"
+                :key="i"
+                class="voc-usage-chip"
+                :title="`${u.tb}.${u.field}`"
+              >{{ u.tb_label }} / {{ u.field_label }}</span>
+            </template>
+            <span v-else class="voc-usages-empty">{{ t('voc_no_usages') }}</span>
           </div>
 
           <DataTable
@@ -47,7 +70,7 @@
             @rowReorder="onReorder"
           >
             <Column rowReorder style="width: 2.5rem" />
-            <Column field="def" header="Definition">
+            <Column field="def" :header="t('voc_item_def')">
               <template #body="{ data }">
                 <span
                   v-if="editingId !== data.id"
@@ -78,25 +101,25 @@
         </div>
 
         <div class="voc-items voc-empty-hint" v-else>
-          <p>Select a vocabulary on the left.</p>
+          <p>{{ t('voc_select_hint') }}</p>
         </div>
 
       </div>
     </div>
 
     <!-- New vocabulary dialog -->
-    <Dialog v-model:visible="newVocDialog" header="New vocabulary" modal style="width: 360px">
+    <Dialog v-model:visible="newVocDialog" :header="t('new_voc')" modal style="width: 360px">
       <div class="field">
-        <label>Vocabulary name</label>
-        <InputText v-model="newVocName" fluid placeholder="e.g. material" @keyup.enter="createVocAndItem" />
+        <label>{{ t('voc_name_label') }}</label>
+        <InputText v-model="newVocName" fluid :placeholder="t('voc_name_placeholder')" @keyup.enter="createVocAndItem" />
       </div>
       <div class="field">
-        <label>First item</label>
-        <InputText v-model="newVocDef" fluid placeholder="First definition" @keyup.enter="createVocAndItem" />
+        <label>{{ t('voc_first_item') }}</label>
+        <InputText v-model="newVocDef" fluid :placeholder="t('voc_first_def')" @keyup.enter="createVocAndItem" />
       </div>
       <template #footer>
-        <Button label="Cancel" text @click="newVocDialog = false" />
-        <Button label="Create" icon="pi pi-check" :disabled="!newVocName || !newVocDef"
+        <Button :label="t('cancel')" text @click="newVocDialog = false" />
+        <Button :label="t('create')" icon="pi pi-check" :disabled="!newVocName || !newVocDef"
                 :loading="saving" @click="createVocAndItem" />
       </template>
     </Dialog>
@@ -104,12 +127,12 @@
     <!-- Add item dialog -->
     <Dialog v-model:visible="addItemDialog" :header="addItemHeader" modal style="width: 360px">
       <div class="field">
-        <label>Definition</label>
+        <label>{{ t('voc_item_def') }}</label>
         <InputText v-model="addItemDef" fluid autofocus @keyup.enter="addItem" />
       </div>
       <template #footer>
-        <Button label="Cancel" text @click="addItemDialog = false" />
-        <Button label="Add" icon="pi pi-check" :disabled="!addItemDef"
+        <Button :label="t('cancel')" text @click="addItemDialog = false" />
+        <Button :label="t('voc_add_item')" icon="pi pi-check" :disabled="!addItemDef"
                 :loading="saving" @click="addItem" />
       </template>
     </Dialog>
@@ -141,6 +164,21 @@ const selected = ref(null)
 const loading = ref(false)
 const saving = ref(false)
 
+// Filter
+const filterText = ref('')
+const filteredVocs = computed(() => {
+  const q = filterText.value.trim().toLowerCase()
+  return q ? vocs.value.filter(v => v.name.toLowerCase().includes(q)) : vocs.value
+})
+
+// Field usages
+const usages = ref({})
+const usagesLoading = ref(false)
+const selectedUsages = computed(() => {
+  if (!selected.value) return []
+  return usages.value[selected.value.name] ?? []
+})
+
 // Inline edit state
 const editingId = ref(null)
 const editingVal = ref('')
@@ -153,7 +191,7 @@ const newVocDef = ref('')
 const addItemDialog = ref(false)
 const addItemVoc = ref('')
 const addItemDef = ref('')
-const addItemHeader = computed(() => `Add item to '${addItemVoc.value}'`)
+const addItemHeader = computed(() => `${t('voc_add_item_to')} '${addItemVoc.value}'`)
 
 // ── Load ────────────────────────────────────────────────────
 async function load() {
@@ -161,18 +199,31 @@ async function load() {
   try {
     const res = await api.get('/api/vocabularies')
     vocs.value = res.vocs ?? []
-    // keep selection in sync after reload
     if (selected.value) {
       selected.value = vocs.value.find(v => v.name === selected.value.name) ?? null
     }
   } catch {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Could not load vocabularies', life: 3000 })
+    toast.add({ severity: 'error', summary: t('generic_error'), detail: t('generic_error'), life: 3000 })
   } finally {
     loading.value = false
   }
 }
 
-onMounted(load)
+async function loadUsages() {
+  usagesLoading.value = true
+  try {
+    const res = await api.get('/api/vocabularies/usages')
+    if (res.status === 'success') usages.value = res.usages ?? {}
+  } catch {
+    // non-critical: silently ignore
+  } finally {
+    usagesLoading.value = false
+  }
+}
+
+onMounted(async () => {
+  await Promise.all([load(), loadUsages()])
+})
 
 // ── Inline edit ──────────────────────────────────────────────
 function startEdit(item) {
@@ -193,10 +244,10 @@ async function saveEdit(item) {
       item.def = editingVal.value
       toast.add({ severity: 'success', summary: t('saved'), life: 2000 })
     } else {
-      toast.add({ severity: 'error', summary: t('error'), detail: api.responseMessage(res, t), life: 3000 })
+      toast.add({ severity: 'error', summary: t('generic_error'), detail: api.responseMessage(res, t), life: 3000 })
     }
   } catch {
-    toast.add({ severity: 'error', summary: t('error'), detail: t('generic_error'), life: 3000 })
+    toast.add({ severity: 'error', summary: t('generic_error'), detail: t('generic_error'), life: 3000 })
   } finally {
     cancelEdit()
   }
@@ -205,11 +256,11 @@ async function saveEdit(item) {
 // ── Delete ───────────────────────────────────────────────────
 function confirmErase(item) {
   confirm.require({
-    message: `Delete "${item.def}"?`,
-    header: 'Confirm deletion',
+    message: `${t('voc_confirm_delete')} "${item.def}"?`,
+    header: t('confirm'),
     icon: 'pi pi-exclamation-triangle',
-    rejectLabel: 'Cancel',
-    acceptLabel: 'Delete',
+    rejectLabel: t('cancel'),
+    acceptLabel: t('delete'),
     acceptClass: 'p-button-danger',
     accept: () => eraseItem(item),
   })
@@ -222,10 +273,10 @@ async function eraseItem(item) {
       toast.add({ severity: 'success', summary: t('deleted'), life: 2000 })
       await load()
     } else {
-      toast.add({ severity: 'error', summary: t('error'), detail: api.responseMessage(res, t), life: 3000 })
+      toast.add({ severity: 'error', summary: t('generic_error'), detail: api.responseMessage(res, t), life: 3000 })
     }
   } catch {
-    toast.add({ severity: 'error', summary: t('error'), detail: t('generic_error'), life: 3000 })
+    toast.add({ severity: 'error', summary: t('generic_error'), detail: t('generic_error'), life: 3000 })
   }
 }
 
@@ -236,7 +287,7 @@ async function onReorder(event) {
   try {
     await api.post('/api/vocabularies/sort', { ids })
   } catch {
-    toast.add({ severity: 'warn', summary: 'Sort not saved', life: 3000 })
+    toast.add({ severity: 'warn', summary: t('voc_sort_not_saved'), life: 3000 })
   }
 }
 
@@ -258,10 +309,10 @@ async function createVocAndItem() {
       await load()
       selected.value = vocs.value.find(v => v.name === newVocName.value) ?? null
     } else {
-      toast.add({ severity: 'error', summary: t('error'), detail: api.responseMessage(res, t), life: 3000 })
+      toast.add({ severity: 'error', summary: t('generic_error'), detail: api.responseMessage(res, t), life: 3000 })
     }
   } catch {
-    toast.add({ severity: 'error', summary: t('error'), detail: t('generic_error'), life: 3000 })
+    toast.add({ severity: 'error', summary: t('generic_error'), detail: t('generic_error'), life: 3000 })
   } finally {
     saving.value = false
   }
@@ -284,10 +335,10 @@ async function addItem() {
       addItemDialog.value = false
       await load()
     } else {
-      toast.add({ severity: 'error', summary: t('error'), detail: api.responseMessage(res, t), life: 3000 })
+      toast.add({ severity: 'error', summary: t('generic_error'), detail: api.responseMessage(res, t), life: 3000 })
     }
   } catch {
-    toast.add({ severity: 'error', summary: t('error'), detail: t('generic_error'), life: 3000 })
+    toast.add({ severity: 'error', summary: t('generic_error'), detail: t('generic_error'), life: 3000 })
   } finally {
     saving.value = false
   }
@@ -327,11 +378,25 @@ async function addItem() {
 
 /* Left panel */
 .voc-names {
-  width: 200px;
+  width: 220px;
   flex-shrink: 0;
   border: 1px solid var(--p-content-border-color);
   border-radius: 6px;
   overflow: hidden;
+}
+
+.voc-filter {
+  padding: 0.5rem 0.6rem;
+  border-bottom: 1px solid var(--p-content-border-color);
+}
+
+.voc-filter-input { width: 100%; }
+
+.voc-filter-empty {
+  padding: 0.6rem 0.9rem;
+  color: var(--p-text-muted-color);
+  font-style: italic;
+  font-size: 0.85rem;
 }
 
 .voc-name-item {
@@ -343,6 +408,7 @@ async function addItem() {
   border-bottom: 1px solid var(--p-content-border-color);
   font-size: 0.875rem;
   transition: background 0.15s;
+  gap: 0.5rem;
 }
 
 .voc-name-item:last-child { border-bottom: none; }
@@ -351,6 +417,14 @@ async function addItem() {
   background: var(--p-highlight-background);
   color: var(--p-primary-color);
   font-weight: 600;
+}
+
+.voc-name-text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 /* Right panel */
@@ -363,12 +437,41 @@ async function addItem() {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.5rem;
 }
 
 .voc-items-header h3 {
   font-size: 1rem;
   font-weight: 600;
+}
+
+/* Usage info */
+.voc-usages {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.78rem;
+}
+
+.voc-usages-label {
+  color: var(--p-text-muted-color);
+  font-weight: 500;
+}
+
+.voc-usage-chip {
+  background: var(--p-content-hover-background);
+  border: 1px solid var(--p-content-border-color);
+  border-radius: 12px;
+  padding: 0.1rem 0.5rem;
+  color: var(--p-text-color);
+  font-size: 0.75rem;
+}
+
+.voc-usages-empty {
+  color: var(--p-text-muted-color);
+  font-style: italic;
 }
 
 .voc-empty-hint {

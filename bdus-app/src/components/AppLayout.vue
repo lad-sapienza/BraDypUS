@@ -6,7 +6,10 @@
       <button class="topbar-btn" @click="drawerOpen = !drawerOpen" title="Menu">
         <i class="pi pi-bars" />
       </button>
-      <span class="topbar-brand">BraDypUS</span>
+      <span class="topbar-brand">
+        BraDypUS
+        <span v-if="auth.user?.app" class="topbar-app-name">· {{ auth.user.app }}</span>
+      </span>
       <!-- User menu -->
       <Button
         text
@@ -373,6 +376,19 @@ const navGroups = computed(() => {
   font-size: 1.05rem;
   color: var(--p-primary-color);
   flex: 1;
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  overflow: hidden;
+}
+
+.topbar-app-name {
+  color: var(--p-text-muted-color);
+  font-weight: 400;
+  font-size: 0.85rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .topbar-user-btn {

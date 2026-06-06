@@ -51,22 +51,24 @@
       <!-- Preview -->
       <Column :header="t('files_col_preview')" style="width: 80px; flex-shrink: 0;">
         <template #body="{ data }">
-          <img
-            v-if="data.is_image"
-            :src="fileUrl(data)"
-            :alt="data.filename"
-            class="file-thumb"
-          />
-          <i v-else :class="['file-icon-lg', fileIcon(data.ext)]" />
+          <span class="preview-trigger" @click="openPreview(data)" :title="t('files_preview_hint')">
+            <img
+              v-if="data.is_image"
+              :src="fileUrl(data)"
+              :alt="data.filename"
+              class="file-thumb"
+            />
+            <i v-else :class="['file-icon-lg', fileIcon(data.ext)]" />
+          </span>
         </template>
       </Column>
 
       <!-- Filename -->
       <Column :header="t('files_col_filename')" style="width: 160px; flex-shrink: 0;">
         <template #body="{ data }">
-          <a :href="fileUrl(data)" target="_blank" rel="noopener noreferrer" class="filename-link">
+          <span class="filename-link" @click="openPreview(data)">
             {{ data.filename }}.{{ data.ext }}
-          </a>
+          </span>
           <div v-if="!data.links.length" class="orphan-badge">{{ t('files_orphan_badge') }}</div>
         </template>
       </Column>
@@ -140,6 +142,29 @@
       @change="onReplaceFileSelected"
     />
 
+    <!-- File preview Dialog -->
+    <Dialog
+      v-model:visible="previewDialog"
+      :header="previewFile ? `${previewFile.filename}.${previewFile.ext}` : ''"
+      modal
+      :style="previewFile?.is_image ? 'width: auto; max-width: 90vw' : 'width: 80vw; max-width: 1100px'"
+      :pt="{ content: { style: 'padding: 0; overflow: hidden;' } }"
+    >
+      <template v-if="previewFile">
+        <img
+          v-if="previewFile.is_image"
+          :src="fileUrl(previewFile)"
+          :alt="previewFile.filename"
+          style="display: block; max-width: 88vw; max-height: 82vh; object-fit: contain;"
+        />
+        <iframe
+          v-else
+          :src="fileUrl(previewFile)"
+          style="width: 100%; height: 78vh; border: none; display: block;"
+        />
+      </template>
+    </Dialog>
+
   </div>
   </AppLayout>
 </template>
@@ -155,6 +180,7 @@ import Column       from 'primevue/column'
 import Button       from 'primevue/button'
 import InputText    from 'primevue/inputtext'
 import ToggleButton from 'primevue/togglebutton'
+import Dialog       from 'primevue/dialog'
 import { api, assetUrl } from '@/api'
 import { useI18n }       from '@/i18n'
 import { useAuthStore }  from '@/stores/auth'
@@ -281,6 +307,15 @@ async function onReplaceFileSelected(evt) {
   }
 }
 
+// ── Preview ────────────────────────────────────────────────────────
+const previewDialog = ref(false)
+const previewFile   = ref(null)
+
+function openPreview(file) {
+  previewFile.value  = file
+  previewDialog.value = true
+}
+
 // ── Helpers ─────────────────────────────────────────────────────────
 function fileUrl(f) {
   return assetUrl(`projects/${appName.value}/files/${f.id}.${f.ext}`)
@@ -357,12 +392,19 @@ onMounted(fetchFiles)
   text-align: center;
 }
 
+/* ── Preview trigger ─────────────────────────────────────────────── */
+.preview-trigger {
+  cursor: zoom-in;
+  display: block;
+}
+
 /* ── Filename ─────────────────────────────────────────────────── */
 .filename-link {
   color: var(--p-primary-color);
   text-decoration: none;
   font-size: 0.78rem;
   word-break: break-all;
+  cursor: pointer;
 }
 .filename-link:hover { text-decoration: underline; }
 

@@ -1047,5 +1047,16 @@
   "ok_file_updated": "File metadata saved",
   "error_file_updated": "Error saving file metadata",
   "ok_file_replaced": "File replaced successfully",
-  "error_file_replaced": "Error replacing file"
+  "error_file_replaced": "Error replacing file",
+  "files_preview_hint": "Click to preview",
+  "link_existing_file": "Link existing file",
+  "unlink_file": "Unlink",
+  "confirm_unlink_file": "Remove this file from the record? The file will not be deleted.",
+  "ok_file_linked": "File linked to record",
+  "error_file_linked": "Error linking file",
+  "ok_file_unlinked": "File unlinked from record",
+  "error_file_unlinked": "Error unlinking file",
+  "file_picker_title": "Select a file to link",
+  "file_picker_search": "Search files…",
+  "file_picker_links": "links"
 }

@@ -1047,5 +1047,16 @@
   "ok_file_updated": "Metadati del file salvati",
   "error_file_updated": "Errore nel salvataggio dei metadati",
   "ok_file_replaced": "File sostituito con successo",
-  "error_file_replaced": "Errore nella sostituzione del file"
+  "error_file_replaced": "Errore nella sostituzione del file",
+  "files_preview_hint": "Clicca per l'anteprima",
+  "link_existing_file": "Collega file esistente",
+  "unlink_file": "Scollega",
+  "confirm_unlink_file": "Rimuovere questo file dal record? Il file non verrà eliminato.",
+  "ok_file_linked": "File collegato al record",
+  "error_file_linked": "Errore nel collegamento del file",
+  "ok_file_unlinked": "File scollegato dal record",
+  "error_file_unlinked": "Errore nello scollegamento del file",
+  "file_picker_title": "Seleziona un file da collegare",
+  "file_picker_search": "Cerca file…",
+  "file_picker_links": "collegamenti"
 }

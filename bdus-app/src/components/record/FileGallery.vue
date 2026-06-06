@@ -37,6 +37,13 @@
             <i class="pi pi-download" />
           </a>
           <button
+            class="file-action file-unlink-btn"
+            :title="t('unlink_file')"
+            @click="confirmUnlinkFile(f)"
+          >
+            <i class="pi pi-link" />
+          </button>
+          <button
             class="file-action file-delete-btn"
             :title="t('delete_file')"
             @click="confirmDeleteFile(f)"
@@ -74,7 +81,70 @@
           :loading="uploading"
           @click="fileInput?.click()"
         />
+        <Button
+          :label="t('link_existing_file')"
+          icon="pi pi-link"
+          size="small"
+          severity="secondary"
+          outlined
+          @click="openFilePicker"
+        />
       </div>
+
+      <!-- File picker Dialog -->
+      <Dialog
+        v-model:visible="filePickerDialog"
+        :header="t('file_picker_title')"
+        modal
+        style="width: 680px; max-width: 96vw"
+      >
+        <div class="picker-search">
+          <InputText
+            v-model="pickerSearch"
+            :placeholder="t('file_picker_search')"
+            size="small"
+            class="picker-search-input"
+            @input="debouncedPickerLoad"
+          />
+        </div>
+        <DataTable
+          :value="pickerFiles"
+          lazy
+          paginator
+          :rows="pickerPerPage"
+          :totalRecords="pickerTotal"
+          :loading="pickerLoading"
+          size="small"
+          dataKey="id"
+          selectionMode="single"
+          @page="onPickerPage"
+          @row-click="onPickerSelect"
+          class="picker-table"
+        >
+          <template #empty>
+            <span style="color: var(--p-text-muted-color); font-style: italic">{{ t('files_empty') }}</span>
+          </template>
+          <Column style="width: 60px;">
+            <template #body="{ data }">
+              <img v-if="data.is_image" :src="fileUrl(data)" class="picker-thumb" />
+              <i v-else :class="['picker-icon', fileIcon(data.ext)]" />
+            </template>
+          </Column>
+          <Column :header="t('files_col_filename')">
+            <template #body="{ data }">
+              <span>{{ data.filename }}.{{ data.ext }}</span>
+              <div v-if="data.description" class="picker-desc">{{ data.description }}</div>
+            </template>
+          </Column>
+          <Column :header="t('files_col_links')" style="width: 120px;">
+            <template #body="{ data }">
+              <span style="font-size: 0.78rem; color: var(--p-text-muted-color)">
+                {{ data.links.length }} {{ t('file_picker_links') }}
+              </span>
+            </template>
+          </Column>
+        </DataTable>
+      </Dialog>
     </template>
 
     <!-- ── View mode: split images / docs ────────────────────────── -->
@@ -123,9 +193,13 @@
 
 <script setup>
 import { ref, computed, watch, onUnmounted, nextTick } from 'vue'
-import Sortable from 'sortablejs'
-import Image   from 'primevue/image'
-import Button  from 'primevue/button'
+import Sortable   from 'sortablejs'
+import Image      from 'primevue/image'
+import Button     from 'primevue/button'
+import Dialog     from 'primevue/dialog'
+import DataTable  from 'primevue/datatable'
+import Column     from 'primevue/column'
+import InputText  from 'primevue/inputtext'
 import { useToast }   from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import { api, assetUrl } from '@/api'
@@ -158,9 +232,9 @@ const props = defineProps({
 })
 
 const emit = defineEmits([
-  /** Emitted after a successful upload. Payload: the new file object. */
+  /** Emitted after a successful upload or link. Payload: the new file object. */
   'file-uploaded',
-  /** Emitted after a successful delete. Payload: the deleted file id. */
+  /** Emitted after a successful delete or unlink. Payload: the file id. */
   'file-deleted',
   /** Emitted after a successful sort. Payload: new ordered file array. */
   'files-reordered',
@@ -294,6 +368,98 @@ async function doDeleteFile(file) {
     }
     toast.add({ severity: 'success', summary: t('delete_file'), detail: t('ok_file_deleted'), life: 3000 })
     emit('file-deleted', file.id)
+  } catch (e) {
+    toast.add({ severity: 'error', summary: t('generic_error'), detail: e.message, life: 5000 })
+  }
+}
+
+// ── Unlink ─────────────────────────────────────────────────────────
+function confirmUnlinkFile(file) {
+  confirm.require({
+    message:  t('confirm_unlink_file'),
+    header:   t('unlink_file'),
+    icon:     'pi pi-info-circle',
+    severity: 'warn',
+    accept:   () => doUnlinkFile(file),
+  })
+}
+
+async function doUnlinkFile(file) {
+  const linkId = file.link_id
+  if (!linkId) return
+  try {
+    const res = await api.delete(`/api/file-link/${linkId}`)
+    if (res.status === 'error') {
+      toast.add({ severity: 'error', summary: t('generic_error'), detail: t(res.code), life: 5000 })
+      return
+    }
+    toast.add({ severity: 'success', summary: t('unlink_file'), detail: t('ok_file_unlinked'), life: 3000 })
+    emit('file-deleted', file.id)
+  } catch (e) {
+    toast.add({ severity: 'error', summary: t('generic_error'), detail: e.message, life: 5000 })
+  }
+}
+
+// ── File picker (link existing file) ──────────────────────────────
+const filePickerDialog = ref(false)
+const pickerFiles      = ref([])
+const pickerTotal      = ref(0)
+const pickerLoading    = ref(false)
+const pickerPage       = ref(1)
+const pickerPerPage    = ref(10)
+const pickerSearch     = ref('')
+let   pickerDebounce   = null
+
+async function loadPickerFiles() {
+  pickerLoading.value = true
+  try {
+    const params = { page: pickerPage.value, per_page: pickerPerPage.value }
+    if (pickerSearch.value.trim()) params.search = pickerSearch.value.trim()
+    const data = await api.get('/api/files', params)
+    pickerFiles.value = data.files ?? []
+    pickerTotal.value = data.total ?? 0
+  } catch {
+    // non-critical
+  } finally {
+    pickerLoading.value = false
+  }
+}
+
+function debouncedPickerLoad() {
+  clearTimeout(pickerDebounce)
+  pickerDebounce = setTimeout(() => {
+    pickerPage.value = 1
+    loadPickerFiles()
+  }, 300)
+}
+
+function onPickerPage(event) {
+  pickerPage.value    = event.page + 1
+  pickerPerPage.value = event.rows
+  loadPickerFiles()
+}
+
+function openFilePicker() {
+  pickerPage.value   = 1
+  pickerSearch.value = ''
+  filePickerDialog.value = true
+  loadPickerFiles()
+}
+
+async function onPickerSelect(event) {
+  const file = event.data
+  filePickerDialog.value = false
+  try {
+    const res = await api.post(
+      `/api/record/${props.recordTb}/${props.recordId}/link-file`,
+      { fileId: file.id }
+    )
+    if (res.status === 'error') {
+      toast.add({ severity: 'error', summary: t('generic_error'), detail: t(res.code), life: 5000 })
+      return
+    }
+    toast.add({ severity: 'success', summary: t('link_existing_file'), detail: t('ok_file_linked'), life: 3000 })
+    emit('file-uploaded', res.file)
   } catch (e) {
     toast.add({ severity: 'error', summary: t('generic_error'), detail: e.message, life: 5000 })
   }
@@ -490,7 +656,46 @@ function fileIcon(ext) {
   flex-shrink: 0;
 }
 .file-action:hover { color: var(--p-primary-color); }
+.file-unlink-btn:hover { color: var(--p-orange-500, #f97316); }
 .file-delete-btn:hover { color: var(--p-red-500); }
+
+/* ── File picker ── */
+.picker-search {
+  margin-bottom: 0.75rem;
+}
+.picker-search-input {
+  width: 100%;
+}
+.picker-table {
+  font-size: 0.82rem;
+}
+:deep(.picker-table .p-datatable-tbody > tr) {
+  cursor: pointer;
+}
+:deep(.picker-table .p-datatable-tbody > tr:hover td) {
+  background: var(--p-content-hover-background);
+}
+.picker-thumb {
+  width: 48px;
+  height: 36px;
+  object-fit: cover;
+  border-radius: 3px;
+  border: 1px solid var(--p-content-border-color);
+  display: block;
+}
+.picker-icon {
+  font-size: 1.4rem;
+  color: var(--p-text-muted-color);
+  display: block;
+  text-align: center;
+}
+.picker-desc {
+  color: var(--p-text-muted-color);
+  font-size: 0.75rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 /* ── Empty state ── */
 .files-empty {

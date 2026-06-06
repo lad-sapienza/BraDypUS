@@ -1438,6 +1438,67 @@ paths:
               schema:
                 $ref: '#/components/schemas/CodedResult'
 
+  /api/record/{tb}/{id}/link-file:
+    post:
+      tags: [files]
+      summary: Link an existing file to a record without re-uploading
+      description: >
+        Creates a `bdus_file_links` row that associates an already-uploaded
+        file with the given record. The file binary and `bdus_files` record are
+        not affected. Requires `edit` privilege.
+      parameters:
+        - $ref: '#/components/parameters/tb'
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [fileId]
+              properties:
+                fileId:
+                  type: integer
+                  description: ID of the file to link (must exist in bdus_files)
+      responses:
+        '200':
+          description: Link result
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - allOf:
+                      - $ref: '#/components/schemas/CodedSuccess'
+                      - type: object
+                        properties:
+                          file:
+                            $ref: '#/components/schemas/LinkedFileItem'
+                  - $ref: '#/components/schemas/Error'
+
+  /api/file-link/{linkId}:
+    delete:
+      tags: [files]
+      summary: Unlink a file from a record
+      description: >
+        Deletes the `bdus_file_links` row identified by `linkId`. The file
+        binary and `bdus_files` record are **not** deleted — only the
+        association between the file and the record is removed.
+        Requires `edit` privilege.
+      parameters:
+        - name: linkId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the `bdus_file_links` row to remove
+      responses:
+        '200':
+          description: Unlink result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
   /api/file/{fileId}:
     patch:
       tags: [files]
@@ -4253,6 +4314,7 @@ components:
 
     FileItem:
       type: object
+      description: A file record as returned by GET /api/files (includes linked-record list)
       properties:
         id:
           type: integer
@@ -4281,6 +4343,35 @@ components:
                 type: string
               record_id:
                 type: integer
+
+    LinkedFileItem:
+      type: object
+      description: >
+        A file object as returned by POST /api/record/{tb}/{id}/link-file.
+        Identical to the file objects inside a record's `files` array (includes
+        `link_id` for use with the unlink endpoint).
+      properties:
+        id:
+          type: integer
+          description: File ID (bdus_files.id)
+        link_id:
+          type: integer
+          description: Junction row ID (bdus_file_links.id) — pass to DELETE /api/file-link/{linkId} to unlink
+        ext:
+          type: string
+        filename:
+          type: string
+        description:
+          type: string
+          nullable: true
+        keywords:
+          type: string
+          nullable: true
+        printable:
+          type: boolean
+          nullable: true
+        is_image:
+          type: boolean
 
     # ── Records ────────────────────────────────────────────────────────────
 

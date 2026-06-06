@@ -381,6 +381,13 @@ run_tests() {
       --variable "us_id_1=${US_ID_1:-}"
   fi
 
+  if should_run "35"; then
+    header "Phase 35 — File link / unlink"
+    run_phase "File link/unlink" "35_file_link_unlink.hurl" \
+      --variable "jwt=${JWT}" \
+      --variable "us_id_1=${US_ID_1:-}"
+  fi
+
   # Phase 10 always runs: drops crud_test tables and logs out
   header "Phase 10 — Cleanup"
   run_phase "Cleanup" "10_cleanup.hurl" \

@@ -67,6 +67,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     secondary section is actually visible via a `hasRightColumn` computed.
 
 ### Added
+- **S8 UI improvements**:
+  - **Topbar — app name** (`AppLayout.vue`) #25: the current application name is
+    shown in the topbar next to "BraDypUS", making it easy to tell apps apart when
+    multiple tabs are open. Displayed in muted style with a `·` separator.
+  - **Vocabulary filter** (`VocabulariesView.vue`) #26: an InputText filter above
+    the vocabulary list allows instant filtering by name; the list narrows as you type.
+  - **Vocabulary field-usage info** (`VocabulariesView.vue` + `Vocabularies.php`) #27:
+    selecting a vocabulary now shows which table/field combinations reference it via
+    `vocabulary_set`. A new endpoint `GET /api/vocabularies/usages` scans the
+    in-memory config and returns a map of `{vocName: [{tb, tb_label, field, field_label}]}`.
+    Fields are shown as inline chips below the vocabulary header.
+  - **Plugin badge overflow fix** (`ConfigSidebar.vue`) #28: in the config sidebar,
+    table labels with long names no longer push the "plugin" badge off-screen. The
+    label text is now wrapped in its own `flex: 1; overflow: hidden` span, keeping
+    the badge always visible with `flex-shrink: 0`.
+  - **`m_` prefix removed as a requirement** #29: the `m_` naming convention for
+    plugin tables was a v4 artefact — no PHP or Vue code enforced it. Confirmed clean
+    by audit; no migration needed.
+  - New i18n keys (en + it): `voc_filter_placeholder`, `voc_used_by`, `voc_no_usages`,
+    `voc_item_def`, `voc_add_item`, `voc_add_item_to`, `voc_name_label`,
+    `voc_name_placeholder`, `voc_first_item`, `voc_first_def`, `voc_confirm_delete`,
+    `voc_select_hint`, `no_vocabularies`, `voc_sort_not_saved`.
+
 - **File management view** (`FilesView.vue`) — S9: new dedicated view listing all
   files uploaded in the current app, accessible via the "File management" nav item
   (between "Data management" and "Find & Replace").

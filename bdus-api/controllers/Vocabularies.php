@@ -22,6 +22,42 @@ class Vocabularies extends \Bdus\Controller
 		return $this->sys_manager;
 	}
 
+	/**
+	 * Returns a map of vocabulary names to the config fields that reference them.
+	 *
+	 * GET /api/vocabularies/usages
+	 *
+	 * Response: { status, usages: { vocName: [{ tb, tb_label, field, field_label }] } }
+	 */
+	public function usages(): void
+	{
+		if (!\Auth\Authorization::can('read')) {
+			$this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+			return;
+		}
+
+		$tableNames = $this->cfg->get('tables.*.name') ?: [];
+		$usages = [];
+
+		foreach ($tableNames as $tbName => $_) {
+			$tbLabel = $this->cfg->get("tables.$tbName.label") ?? $tbName;
+			$fields  = $this->cfg->get("tables.$tbName.fields") ?: [];
+			foreach ($fields as $fldKey => $fldDef) {
+				$vocSet = $fldDef['vocabulary_set'] ?? null;
+				if ($vocSet) {
+					$usages[$vocSet][] = [
+						'tb'          => $tbName,
+						'tb_label'    => $tbLabel,
+						'field'       => is_string($fldKey) ? $fldKey : ($fldDef['name'] ?? $fldKey),
+						'field_label' => $fldDef['label'] ?? $fldKey,
+					];
+				}
+			}
+		}
+
+		$this->returnJson(['status' => 'success', 'usages' => $usages]);
+	}
+
 	public function list()
 	{
 		$res = $this->getSysMng()->getBySQL('bdus_vocabularies', '1=1 ORDER BY voc, sort');

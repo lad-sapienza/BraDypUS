@@ -90,6 +90,7 @@ class Router
         'Bdus\\Controllers\\Widget::serveWidget'                   => 'read',
         'Bdus\\Controllers\\Geoface::getGeoJson'                   => 'read',
         'Bdus\\Controllers\\Vocabularies::list'                    => 'read',
+        'Bdus\\Controllers\\Vocabularies::usages'                  => 'read',
 
         // ── Edit — write operations ──────────────────────────────────────────
         'Bdus\\Controllers\\Record::duplicateRecord'               => 'edit',
@@ -398,11 +399,12 @@ class Router
             $r->addRoute('DELETE', '/api/geoface/feature', ['Bdus\\Controllers\\Geoface', 'eraseGeometry']);
 
             // ── Vocabularies ──────────────────────────────────────────────────
-            $r->addRoute('GET',    '/api/vocabularies',        ['Bdus\\Controllers\\Vocabularies', 'list']);
-            $r->addRoute('POST',   '/api/vocabularies',        ['Bdus\\Controllers\\Vocabularies', 'add']);
-            $r->addRoute('POST',   '/api/vocabularies/sort',   ['Bdus\\Controllers\\Vocabularies', 'sort']);
-            $r->addRoute('PATCH',  '/api/vocabulary/{id:\d+}', ['Bdus\\Controllers\\Vocabularies', 'edit']);
-            $r->addRoute('DELETE', '/api/vocabulary/{id:\d+}', ['Bdus\\Controllers\\Vocabularies', 'erase']);
+            $r->addRoute('GET',    '/api/vocabularies',          ['Bdus\\Controllers\\Vocabularies', 'list']);
+            $r->addRoute('GET',    '/api/vocabularies/usages',  ['Bdus\\Controllers\\Vocabularies', 'usages']);
+            $r->addRoute('POST',   '/api/vocabularies',         ['Bdus\\Controllers\\Vocabularies', 'add']);
+            $r->addRoute('POST',   '/api/vocabularies/sort',    ['Bdus\\Controllers\\Vocabularies', 'sort']);
+            $r->addRoute('PATCH',  '/api/vocabulary/{id:\d+}',  ['Bdus\\Controllers\\Vocabularies', 'edit']);
+            $r->addRoute('DELETE', '/api/vocabulary/{id:\d+}',  ['Bdus\\Controllers\\Vocabularies', 'erase']);
 
             // ── Search & replace ──────────────────────────────────────────────
             $r->addRoute('GET',  '/api/search-replace/tables',          ['Bdus\\Controllers\\SearchReplace', 'getTableList']);

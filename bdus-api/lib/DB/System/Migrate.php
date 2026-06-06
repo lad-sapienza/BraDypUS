@@ -41,6 +41,7 @@ use DB\System\Migrations\M029_AddLabelToUserlinks;
 use DB\System\Migrations\M030_RsIdsToInteger;
 use DB\System\Migrations\M031_AddProjectVersion;
 use DB\System\Migrations\M032_CreatorFkNullable;
+use DB\System\Migrations\M033_MigrateLegacyFileLinks;
 use Monolog\Logger;
 
 /**
@@ -118,6 +119,7 @@ class Migrate
         M030_RsIdsToInteger::class,
         M031_AddProjectVersion::class,
         M032_CreatorFkNullable::class,
+        M033_MigrateLegacyFileLinks::class,
     ];
 
     /**

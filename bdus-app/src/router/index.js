@@ -119,6 +119,11 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/:app/assemblages',
+    component: () => import('@/views/AssemblagesView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/:app/migrations',
     component: () => import('@/views/MigrationsView.vue'),
     meta: { requiresAuth: true }

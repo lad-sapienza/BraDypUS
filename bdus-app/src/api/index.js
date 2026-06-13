@@ -91,6 +91,16 @@ function _handle401() {
   window.location.hash = '/login'
 }
 
+// ── 409 / major_upgrade_required handler ─────────────────────────────────────
+// The server returns 409 with { status:'error', code:'major_upgrade_required' }
+// when the app needs a v4→v5 upgrade before any authenticated operation can run.
+// We clear the session and send the user back to /login, which already knows how
+// to detect the upgrade and guide them through it.
+function _handleMajorUpgrade() {
+  clearToken()
+  window.location.hash = '/login'
+}
+
 // ── Proactive refresh guard ──────────────────────────────────────────────────
 async function _guardRefresh() {
   const t = getToken()
@@ -120,7 +130,15 @@ async function _fetch(url, httpMethod, bodyData, label) {
 
   const res = await fetch(url, opts)
   if (res.status === 401) { _handle401(); throw new Error('Unauthenticated') }
-  if (!res.ok) throw new Error(`${label} — HTTP ${res.status}`)
+  if (!res.ok) {
+    let body = null
+    try { body = await res.json() } catch { /* non-JSON error body */ }
+    if (body?.code === 'major_upgrade_required') {
+      _handleMajorUpgrade()
+      throw new Error('major_upgrade_required')
+    }
+    throw new Error(`${label} — HTTP ${res.status}`)
+  }
   return res.json()
 }
 
@@ -174,7 +192,12 @@ async function upload(path, file, field = 'file') {
     body:    fd,
   })
   if (res.status === 401) { _handle401(); throw new Error('Unauthenticated') }
-  if (!res.ok) throw new Error(`${path} — HTTP ${res.status}`)
+  if (!res.ok) {
+    let body = null
+    try { body = await res.json() } catch { /* non-JSON error body */ }
+    if (body?.code === 'major_upgrade_required') { _handleMajorUpgrade(); throw new Error('major_upgrade_required') }
+    throw new Error(`${path} — HTTP ${res.status}`)
+  }
   return res.json()
 }
 
@@ -200,7 +223,12 @@ async function uploadMulti(path, files = {}, data = {}) {
     body:    fd,
   })
   if (res.status === 401) { _handle401(); throw new Error('Unauthenticated') }
-  if (!res.ok) throw new Error(`${path} — HTTP ${res.status}`)
+  if (!res.ok) {
+    let body = null
+    try { body = await res.json() } catch { /* non-JSON error body */ }
+    if (body?.code === 'major_upgrade_required') { _handleMajorUpgrade(); throw new Error('major_upgrade_required') }
+    throw new Error(`${path} — HTTP ${res.status}`)
+  }
   return res.json()
 }
 

@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **DBML import / export** — il pannello Config espone una nuova sezione DBML che permette di esportare l'intera configurazione dell'app (tabelle, campi, vocabolari) in un singolo file `.dbml` annotato e di importare nuove tabelle da un file DBML:
+  - **Export** (`GET /api/config/dbml`) — serializza cfg + `bdus_vocabularies` in DBML valido per dbdiagram.io; le tabelle di sistema (`bdus_*`) sono escluse automaticamente; i valori degli Enum sono sempre quotati per compatibilità con spazi e trattini.
+  - **Preview** (`POST /api/config/dbml/preview`) — valida il DBML senza scrivere nulla: errori bloccanti (`table_already_exists`, `pk_must_be_id`) e avvisi non bloccanti (`auto_add_id`, `auto_add_creator`).
+  - **Apply** (`POST /api/config/dbml/apply`) — crea le tabelle nel DB e scrive la configurazione; tabelle con errori vengono saltate; i vocabolari dagli Enum marcati `// bdus:vocabulary` vengono inseriti in `bdus_vocabularies`.
+  - Tre nuove classi: `Bdus\DbmlParser` (parser custom, no dipendenze esterne), `Bdus\DbmlImporter`, `Bdus\DbmlExporter`.
+  - 41 nuovi test (15 unit DbmlParser, 12 unit DbmlExporter, 14 integration DbmlImporter) + hurl phase 36.
+
 - **Traversata dei campi lookup (`id_from_tb`) in `JsonFilter`** — i campi configurati con `id_from_tb` memorizzano l'id del record referenziato; un oggetto annidato sul campo viene ora risolto con una subquery sulla tabella referenziata:
   - `filter[parent_id][sigla][_eq]=T001` → `crud_test.parent_id IN (SELECT id FROM crud_test WHERE sigla = ?)`
   - Funziona anche dentro le subquery plugin/backlink: `filter[tags][cat_ref][name][_eq]=Ceramics`

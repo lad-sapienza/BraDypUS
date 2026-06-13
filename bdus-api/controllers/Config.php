@@ -1371,4 +1371,108 @@ class Config extends \Bdus\Controller
     }
     return is_callable($callback) ? array_filter($arr, $callback) : array_filter($arr);
   }
+
+  // ── DBML import / export ──────────────────────────────────────────────────
+
+  /**
+   * GET /api/config/dbml
+   * Exports the current app configuration as an annotated DBML string.
+   * Triggers a file download in the browser.
+   */
+  public function dbml_export(): void
+  {
+    if (!$this->requireSuperAdmin()) return;
+
+    try {
+      $allTables = $this->cfg->get('tables') ?? [];
+      $tables    = array_filter($allTables, fn($n) => !str_starts_with($n, 'bdus_'), ARRAY_FILTER_USE_KEY);
+      $vocRows  = $this->db->query(
+        "SELECT voc, def, sort FROM bdus_vocabularies ORDER BY voc, sort",
+        [],
+        'read'
+      ) ?: [];
+
+      $appName = $this->cfg->get('main.name') ?? '';
+      $exporter = new \Bdus\DbmlExporter();
+      $dbml     = $exporter->export($tables, $vocRows, $appName);
+
+      $filename = preg_replace('/[^a-z0-9_-]/i', '_', $appName ?: 'export') . '.dbml';
+
+      header('Content-Type: text/plain; charset=utf-8');
+      header("Content-Disposition: attachment; filename=\"$filename\"");
+      header('Content-Length: ' . strlen($dbml));
+      echo $dbml;
+      exit;
+    } catch (\Throwable $e) {
+      $this->log->error($e);
+      $this->returnJson(['status' => 'error', 'code' => 'dbml_export_error']);
+    }
+  }
+
+  /**
+   * POST /api/config/dbml/preview
+   * Parses the submitted DBML and returns a validation preview without writing anything.
+   * Body: { dbml: "<dbml string>" }
+   */
+  public function dbml_preview(): void
+  {
+    if (!$this->requireSuperAdmin()) return;
+
+    $dbmlText = $this->post['dbml'] ?? '';
+    if (trim($dbmlText) === '') {
+      $this->returnJson(['status' => 'error', 'code' => 'dbml_empty']);
+      return;
+    }
+
+    try {
+      $parser   = new \Bdus\DbmlParser();
+      $importer = new \Bdus\DbmlImporter();
+      $parsed   = $parser->parse($dbmlText);
+      $preview  = $importer->preview($parsed, $this->cfg);
+
+      $this->returnJson(['status' => 'success', 'code' => 'ok', 'preview' => $preview]);
+    } catch (\Throwable $e) {
+      $this->log->error($e);
+      $this->returnJson(['status' => 'error', 'code' => 'dbml_parse_error']);
+    }
+  }
+
+  /**
+   * POST /api/config/dbml/apply
+   * Parses the DBML, validates it, and creates all tables with no hard errors.
+   * Body: { dbml: "<dbml string>" }
+   */
+  public function dbml_apply(): void
+  {
+    if (!$this->requireSuperAdmin()) return;
+
+    $dbmlText = $this->post['dbml'] ?? '';
+    if (trim($dbmlText) === '') {
+      $this->returnJson(['status' => 'error', 'code' => 'dbml_empty']);
+      return;
+    }
+
+    try {
+      $parser   = new \Bdus\DbmlParser();
+      $importer = new \Bdus\DbmlImporter();
+      $parsed   = $parser->parse($dbmlText);
+
+      // Pre-flight check: refuse if any table has a hard error
+      $preview = $importer->preview($parsed, $this->cfg);
+      if ($preview['has_errors']) {
+        $this->returnJson([
+          'status'  => 'error',
+          'code'    => 'dbml_has_errors',
+          'preview' => $preview,
+        ]);
+        return;
+      }
+
+      $result = $importer->apply($parsed, $this->cfg, $this->db);
+      $this->returnJson(['status' => 'success', 'code' => 'ok', 'result' => $result]);
+    } catch (\Throwable $e) {
+      $this->log->error($e);
+      $this->returnJson(['status' => 'error', 'code' => 'dbml_apply_error']);
+    }
+  }
 }

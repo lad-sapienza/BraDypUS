@@ -187,6 +187,9 @@ class Router
         'Bdus\\Controllers\\Config::deleteIndex'                   => 'super_admin',
         'Bdus\\Controllers\\Config::activateFuzzyDate'             => 'super_admin',
         'Bdus\\Controllers\\Config::deactivateFuzzyDate'           => 'super_admin',
+        'Bdus\\Controllers\\Config::dbml_export'                   => 'super_admin',
+        'Bdus\\Controllers\\Config::dbml_preview'                  => 'super_admin',
+        'Bdus\\Controllers\\Config::dbml_apply'                    => 'super_admin',
         'Bdus\\Controllers\\FrontpageEditor::saveWelcome'         => 'super_admin',
         'Bdus\\Controllers\\Templates::getTableList'               => 'super_admin',
         'Bdus\\Controllers\\Templates::getTemplateList'            => 'super_admin',
@@ -345,6 +348,9 @@ class Router
             $r->addRoute('GET',    '/api/config/table/{tb}/indexes',        ['Bdus\\Controllers\\Config', 'getIndexes']);
             $r->addRoute('POST',   '/api/config/table/{tb}/indexes',        ['Bdus\\Controllers\\Config', 'saveIndex']);
             $r->addRoute('DELETE', '/api/config/table/{tb}/indexes/{id}',   ['Bdus\\Controllers\\Config', 'deleteIndex']);
+            $r->addRoute('GET',    '/api/config/dbml',         ['Bdus\\Controllers\\Config', 'dbml_export']);
+            $r->addRoute('POST',   '/api/config/dbml/preview', ['Bdus\\Controllers\\Config', 'dbml_preview']);
+            $r->addRoute('POST',   '/api/config/dbml/apply',   ['Bdus\\Controllers\\Config', 'dbml_apply']);
 
             // ── Admin ─────────────────────────────────────────────────────────
             $r->addRoute('POST', '/api/admin/check-password', ['Bdus\\Controllers\\ConfirmAdminPwd', 'check_pwd']);

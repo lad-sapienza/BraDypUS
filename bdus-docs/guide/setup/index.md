@@ -22,6 +22,7 @@ The Config panel is divided into six sections, selectable from the left sidebar:
 | **Tables** | Create, rename, delete and reorder tables; set layout and plugin links |
 | **Fields** | Add and configure fields for any table |
 | **Relations** | Define cross-table links displayed in RecordView |
+| **DBML** | Export the full schema as an annotated `.dbml` file; import new tables from DBML |
 
 ## How to open Config
 

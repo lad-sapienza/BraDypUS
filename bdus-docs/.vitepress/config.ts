@@ -107,6 +107,7 @@ function guideSidebar() {
         { text: 'Vocabularies',        link: '/guide/setup/vocabularies' },
         { text: 'Users & privileges',  link: '/guide/setup/users' },
         { text: 'Validation',          link: '/guide/setup/finalizing-setup' },
+        { text: 'DBML import/export',  link: '/guide/setup/dbml' },
         { text: 'Advices & hacks',     link: '/guide/setup/advices-and-hacks' },
       ],
     },

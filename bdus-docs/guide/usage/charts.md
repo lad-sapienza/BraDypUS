@@ -4,8 +4,9 @@ title: Charts
 
 # Charts
 
-BraDypUS can generate charts from the data in any table. Charts are shared
-across all users in the same application.
+BraDypUS can generate charts from the data in any table. Charts are private
+to their creator by default and can be shared with all users of the
+application (see [Sharing and access](#sharing-and-access)).
 
 Open a chart from the **Charts** panel inside RecordView, or from the chart
 icon in the sidebar if a standalone chart view is available.
@@ -35,11 +36,17 @@ opened by any user.
 The chart updates in real-time from the current data. Use the **Filter** toggle
 to apply the active DataView search filter to the chart data.
 
+The saved-charts list shows **all** your charts, including those created on
+other tables: they appear dimmed, with the name of their table next to them.
+Running one executes it against its own table — the table currently open in
+DataView does not matter.
+
 ## Sharing and access
 
-Charts are visible to all authenticated users by default. A super-admin can
-mark a chart as **private** (visible only to its creator) or **shared** (visible
-to all users including read-only users).
+A new chart is **private**: only its creator sees it in the list. The owner
+can share it with all users of the application (star icon) and unshare it at
+any time. Shared charts can be run by anyone but edited or deleted only by
+their owner.
 
 ## Deleting a chart
 

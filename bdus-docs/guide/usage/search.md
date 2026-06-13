@@ -27,7 +27,7 @@ one condition:
 | **Field** | Any field from the table or its plugin tables |
 | **Operator** | How to compare (see table below) |
 | **Value** | The value to compare against |
-| **Connector** | `AND` / `OR` / `XOR` — how this row combines with the next |
+| **Connector** | `AND` / `OR` — how this row combines with the next |
 
 ![TODO_SCREENSHOT: Advanced search panel with two filter rows visible, each with a field dropdown and operator](/images/v5/usage/search-advanced.png)
 
@@ -77,3 +77,11 @@ matrix or map will show only the records that match the current filter.
 
 Advanced search lets you filter by fields in **plugin tables** as well as the main
 table. Plugin fields are listed under a labelled group in the field dropdown.
+
+## Searching reference fields
+
+Fields that point to another table (configured with `id_from_tb`) store the
+**id** of the referenced record, but you search them by the referenced table's
+display value: the autocomplete suggests those values, and the search resolves
+them through the referenced table automatically. This works for reference
+fields of the main table and of its plugin tables alike.

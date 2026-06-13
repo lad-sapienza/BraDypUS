@@ -217,18 +217,6 @@
                       />
                       <span v-else class="adv-connector-placeholder" />
 
-                      <!-- Opening bracket -->
-                      <Button
-                        :icon="row.open ? 'pi pi-circle-fill' : 'pi pi-circle'"
-                        size="small" text
-                        :severity="row.open ? 'primary' : 'secondary'"
-                        :title="'('"
-                        class="adv-bracket"
-                        @click="row.open = !row.open"
-                      >
-                        <template #default><span class="bracket-label">(</span></template>
-                      </Button>
-
                       <!-- Field -->
                       <Select
                         v-model="row.fld"
@@ -263,17 +251,6 @@
                         @complete="q => loadSuggestions(row, q.query)"
                       />
                       <span v-else class="adv-value" />
-
-                      <!-- Closing bracket -->
-                      <Button
-                        size="small" text
-                        :severity="row.close ? 'primary' : 'secondary'"
-                        :title="')'"
-                        class="adv-bracket"
-                        @click="row.close = !row.close"
-                      >
-                        <template #default><span class="bracket-label">)</span></template>
-                      </Button>
 
                       <!-- Remove row -->
                       <Button
@@ -579,7 +556,7 @@ const advOperatorsForDisplay = computed(() =>
 // ── Advanced search rows ─────────────────────────────────────
 let _rowId = 0
 function newAdvRow() {
-  return { _id: _rowId++, connector: 'AND', open: false, fld: '', operator: '_icontains', value: '', close: false, _suggestions: null }
+  return { _id: _rowId++, connector: 'AND', fld: '', operator: '_icontains', value: '', _suggestions: null }
 }
 
 /**
@@ -587,6 +564,11 @@ function newAdvRow() {
  * Rows with an empty value (except _empty/_nempty) are silently skipped.
  * Multiple rows are combined into { _and: [...] } / { _or: [...] } groups
  * using standard AND-takes-precedence-over-OR evaluation order.
+ *
+ * Lookup fields (id_from_tb): the column stores the id of the referenced
+ * record while autocomplete suggests the referenced table's display values,
+ * so the condition is wrapped in a JsonFilter traversal on ref_field —
+ * { cat_ref: { name: { _eq: 'Ceramics' } } } instead of a direct comparison.
  */
 function buildFilterFromRows(rows) {
   const mainTb = selectedTable.value?.name
@@ -600,9 +582,12 @@ function buildFilterFromRows(rows) {
   const toCond = r => {
     const [tb, field] = r.fld.split(':')
     const val = noValueOps.includes(r.operator) ? true : r.value
+    const meta = advFields.value.find(f => f.value === r.fld)
+    let cond = { [r.operator]: val }
+    if (meta?.ref_tb && meta?.ref_field) cond = { [meta.ref_field]: cond }
     return tb === mainTb
-      ? { [field]: { [r.operator]: val } }
-      : { [tb]: { [field]: { [r.operator]: val } } }
+      ? { [field]: cond }
+      : { [tb]: { [field]: cond } }
   }
 
   if (active.length === 1) return toCond(active[0])
@@ -1176,8 +1161,6 @@ function doExport(format) {
 
 .adv-connector          { width: 5rem;  flex-shrink: 0; }
 .adv-connector-placeholder { width: 5rem; flex-shrink: 0; }
-.adv-bracket            { flex-shrink: 0; padding: 0.1rem 0.25rem !important; }
-.bracket-label          { font-weight: 700; font-size: 1rem; line-height: 1; }
 .adv-field-sel          { flex: 2; min-width: 0; }
 .adv-operator           { width: 8.5rem; flex-shrink: 0; }
 .adv-value              { flex: 1.5; min-width: 0; }

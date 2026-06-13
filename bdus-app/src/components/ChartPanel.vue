@@ -332,7 +332,7 @@ const functionOptions = [
 const chartData = computed(() => ({
   labels: result.value?.labels ?? [],
   datasets: [{
-    label: selectedYField.value || 'value',
+    label: lastRunDefinition.value?.y_field || selectedYField.value || 'value',
     data: result.value?.data ?? [],
     backgroundColor: [
       '#4f81bd', '#c0504d', '#9bbb59', '#8064a2', '#4bacc6', '#f79646',
@@ -422,21 +422,32 @@ function buildDefinition() {
   return def
 }
 
-async function runChart() {
-  if (!props.currentTb) return
+/**
+ * The definition actually sent in the last successful run.
+ * Saved charts from other tables run with their own stored definition,
+ * so "save as" must persist what really ran — not the builder state,
+ * which always targets currentTb.
+ */
+const lastRunDefinition = ref(null)
+
+async function runDefinition(definition) {
   running.value = true
   result.value  = null
   try {
-    const res = await api.post('/api/chart/data', {
-      definition: buildDefinition(),
-    })
+    const res = await api.post('/api/chart/data', { definition })
     if (res.status === 'error') throw new Error(responseMessage(res, t))
-    result.value = res
+    result.value            = res
+    lastRunDefinition.value = definition
   } catch (e) {
     toast.add({ severity: 'error', summary: t('generic_error'), detail: e.message, life: 4000 })
   } finally {
     running.value = false
   }
+}
+
+async function runChart() {
+  if (!props.currentTb) return
+  await runDefinition(buildDefinition())
 }
 
 async function doSaveChart() {
@@ -446,7 +457,7 @@ async function doSaveChart() {
   try {
     const res = await api.post('/api/charts', {
       name,
-      definition: buildDefinition(),
+      definition: lastRunDefinition.value ?? buildDefinition(),
     })
     if (res.status === 'error') throw new Error(responseMessage(res, t))
     charts.value.unshift(res.chart)
@@ -462,6 +473,16 @@ async function doSaveChart() {
 function loadAndRun(c) {
   if (!c.definition) return
   const def = c.definition
+
+  // Chart saved on another table: the builder (and its field options) target
+  // currentTb, so rebuilding the definition would validate the saved fields
+  // against the wrong table ("invalid field"). Run the stored definition
+  // as-is against its own table instead.
+  if ((def.tb ?? null) !== props.currentTb) {
+    runDefinition({ ...def })
+    return
+  }
+
   selectedType.value = def.type ?? 'bar'
   if (def.type === 'metric') {
     selectedField.value    = def.field    ?? null

@@ -3,11 +3,18 @@
 
     <!-- ── Topbar (always visible) ───────────────────────── -->
     <header class="topbar app-topbar">
-      <button class="topbar-btn" @click="drawerOpen = !drawerOpen" title="Menu">
+      <button class="topbar-btn topbar-burger" @click="drawerOpen = !drawerOpen" title="Menu">
         <i class="pi pi-bars" />
       </button>
       <span class="topbar-brand">
         BraDypUS
+        <a
+          class="topbar-by-lad"
+          href="https://purl.org/lad"
+          target="_blank"
+          rel="noopener"
+          title="LAD — Laboratorio di Archeologia Digitale, Sapienza Università di Roma"
+        >by LAD</a>
         <span v-if="auth.user?.app" class="topbar-app-name">· {{ auth.user.app }}</span>
       </span>
       <!-- User menu -->
@@ -391,6 +398,19 @@ const navGroups = computed(() => {
   white-space: nowrap;
 }
 
+.topbar-by-lad {
+  color: var(--p-text-muted-color);
+  font-weight: 400;
+  font-size: 0.72rem;
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.topbar-by-lad:hover {
+  color: var(--p-primary-color);
+  text-decoration: underline;
+}
+
 .topbar-user-btn {
   display: flex;
   align-items: center;
@@ -427,6 +447,13 @@ const navGroups = computed(() => {
   inset: 0;
   background: rgba(0,0,0,0.35);
   z-index: 149;
+}
+
+/* Desktop (sidebar always visible): the burger has no function — the drawer
+   it toggles is already open — so hide it together with its overlay. */
+@media (min-width: 1024px) {
+  .topbar-burger    { display: none; }
+  .sidebar-overlay  { display: none; }
 }
 
 /* ── Sidebar ──────────────────────────────────────────────── */

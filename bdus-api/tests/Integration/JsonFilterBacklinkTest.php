@@ -206,8 +206,11 @@ class JsonFilterBacklinkTest extends BdusTestCase
     //     SELECT id_link FROM tags
     //     WHERE table_link = ?            ← 'items' (from buildPluginSubquery)
     //       AND table_link = ?            ← 'items' (from buildNestedCondition, redundant but harmless)
-    //       AND id_link IN (SELECT id FROM items WHERE status = ?)
+    //       AND id_link IN (SELECT id FROM items WHERE (items.status = ?))
     //   )
+    //
+    // The nested conditions are compiled by a recursive JsonFilter on the
+    // parent table, so columns are table-qualified and wrapped in parens.
 
     public function testNestedPluginOfGeneratesCorrectSql(): void
     {
@@ -218,7 +221,7 @@ class JsonFilterBacklinkTest extends BdusTestCase
         // Must contain the id_link IN (...) nested subquery
         $this->assertStringContainsString('SELECT id_link FROM tags', $sql);
         $this->assertStringContainsString(
-            'id_link IN (SELECT id FROM items WHERE status = ?)',
+            'id_link IN (SELECT id FROM items WHERE (items.status = ?))',
             $sql
         );
         $this->assertContains('active', $vals);
@@ -234,7 +237,7 @@ class JsonFilterBacklinkTest extends BdusTestCase
         ]);
 
         $this->assertStringContainsString('SELECT id_link FROM tags', $sql);
-        $this->assertStringContainsString('id_link IN (SELECT id FROM items WHERE score >= ?)', $sql);
+        $this->assertStringContainsString('id_link IN (SELECT id FROM items WHERE (items.score >= ?))', $sql);
         $this->assertContains('7', $vals);
     }
 

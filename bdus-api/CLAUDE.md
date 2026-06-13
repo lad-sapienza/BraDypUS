@@ -242,7 +242,8 @@ is always in sync with `lib/DB/System/Structure/*.json`. Adding a new system tab
 or column requires no changes to test files.
 
 **Project-level fixture tables** (created inline in `BdusTestCase::createSchema()`):
-`items`, `tags`
+`items`, `tags` (plugin of items), `reviews` (backlink via `item_ref`),
+`categories` (lookup referenced by `items.cat_ref` / `tags.cat_ref` via `id_from_tb`)
 
 **Seed data that inserts into `bdus_users` must include `password` (NOT NULL).**
 

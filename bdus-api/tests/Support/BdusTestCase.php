@@ -87,7 +87,8 @@ abstract class BdusTestCase extends TestCase
                 ref_code    TEXT,
                 birth_date  TEXT,
                 lang_code   TEXT,
-                category    TEXT
+                category    TEXT,
+                cat_ref     INTEGER
             )
         ');
 
@@ -96,19 +97,36 @@ abstract class BdusTestCase extends TestCase
                 id         INTEGER PRIMARY KEY AUTOINCREMENT,
                 label      TEXT,
                 id_link    INTEGER,
-                table_link TEXT
+                table_link TEXT,
+                cat_ref    INTEGER
+            )
+        ');
+
+        // categories: lookup table referenced via id_from_tb by items.cat_ref
+        // and tags.cat_ref. Used by JsonFilterLookupTest.
+        static::$db->execInTransaction('
+            CREATE TABLE categories (
+                id    INTEGER PRIMARY KEY AUTOINCREMENT,
+                name  TEXT,
+                macro TEXT
             )
         ');
 
         // reviews: linked to items via an explicit FK column (backlink style, not plugin).
         // Used by JsonFilterBacklinkTest to verify the buildFkSubquery path.
+        // id_link / table_link are required because the items backlink config
+        // ("items:reviews:item_ref") makes Record\Read::getBackLinks query them
+        // (PAThs-style via table); they stay NULL in the seed, so backlinks
+        // resolve to empty without erroring.
         static::$db->execInTransaction('
             CREATE TABLE reviews (
-                id       INTEGER PRIMARY KEY AUTOINCREMENT,
-                item_ref INTEGER,
-                reviewer TEXT,
-                content  TEXT,
-                rating   INTEGER
+                id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                item_ref   INTEGER,
+                reviewer   TEXT,
+                content    TEXT,
+                rating     INTEGER,
+                id_link    INTEGER,
+                table_link TEXT
             )
         ');
 
@@ -137,10 +155,28 @@ abstract class BdusTestCase extends TestCase
             );
         }
 
-        // A couple of tags linked to item 1 (plugin-style: id_link / table_link)
+        // Lookup values referenced by items.cat_ref / tags.cat_ref (id_from_tb)
         static::$db->execInTransaction(
-            "INSERT INTO tags (label, id_link, table_link)
-             VALUES ('tag-a', 1, 'items'), ('tag-b', 1, 'items')"
+            "INSERT INTO categories (name, macro)
+             VALUES ('Ceramics', 'Artefacts'), ('Metal', 'Artefacts'), ('Charcoal', 'Ecofacts')"
+        );
+
+        // Link items to categories:
+        // - item 1 (Alpha item) → Ceramics
+        // - item 2 (Beta item)  → Metal
+        // - items 3-5           no category
+        static::$db->execInTransaction(
+            "UPDATE items SET cat_ref = 1 WHERE id = 1"
+        );
+        static::$db->execInTransaction(
+            "UPDATE items SET cat_ref = 2 WHERE id = 2"
+        );
+
+        // A couple of tags linked to item 1 (plugin-style: id_link / table_link);
+        // tag-a also references the Ceramics category (lookup inside a plugin)
+        static::$db->execInTransaction(
+            "INSERT INTO tags (label, id_link, table_link, cat_ref)
+             VALUES ('tag-a', 1, 'items', 1), ('tag-b', 1, 'items', NULL)"
         );
 
         // Reviews: linked via explicit FK (backlink-style).

@@ -175,7 +175,7 @@ class Record extends \Bdus\Controller
    *     &format=csv|json|xlsx
    *     &filter[field][_op]=value             (optional, Directus-style bracket notation)
    *     &filter=JSON_STRING                   (optional, URL-encoded JSON filter)
-   *     &qt=fast|expert                       (optional — mirrors route.query.qt)
+   *     &qt=fast|expert|filter                (optional — mirrors route.query.qt)
    *     &q=VALUE                              (optional — mirrors route.query.q)
    * (same encoding used by DataView when persisting filter state in the URL).
    */
@@ -216,6 +216,15 @@ class Record extends \Bdus\Controller
     if (is_array($filterRaw)) {
       $qRequest['type']   = 'filter';
       $qRequest['filter'] = $filterRaw;
+    } elseif ($qt === 'filter' && $q !== null) {
+      // Advanced search persists its state as qt=filter&q=JSON (see DataView
+      // runAdvancedSearch): decode and apply, otherwise the export would
+      // silently ignore the active filter and dump the whole table.
+      $decoded = json_decode($q, true);
+      if (is_array($decoded)) {
+        $qRequest['type']   = 'filter';
+        $qRequest['filter'] = $decoded;
+      }
     } elseif ($qt === 'fast' && $q !== null) {
       $qRequest['type']   = 'fast';
       $qRequest['string'] = $q;
@@ -1546,7 +1555,6 @@ class Record extends \Bdus\Controller
    * GET ?obj=record_ctrl&method=getRsMatrix&tb=TABLE
    *     [&search_type=fast&search=TERM]
    *     [&filter[field][_op]=value]
-   *     [&search_type=advanced&adv=BASE64]
    *     [&search_type=sqlExpert&querytext=SQL&join=JOIN]
    *
    * Response:

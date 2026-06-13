@@ -97,9 +97,9 @@ class Chart extends \Bdus\Controller
         }
 
         // ── Build WHERE clause from optional filter ───────────────────────────
-        // Delegate entirely to QueryFromRequest so all search types (including
-        // 'advanced') work without duplication.  The module knows nothing about
-        // how the WHERE is constructed — it just asks for the predicate.
+        // Delegate entirely to QueryFromRequest so all search types work
+        // without duplication.  The module knows nothing about how the WHERE
+        // is constructed — it just asks for the predicate.
         $filter   = $definition['filter'] ?? null;
         $qRequest = ['tb' => $tb, 'type' => 'all'];
         if (!empty($filter)) {

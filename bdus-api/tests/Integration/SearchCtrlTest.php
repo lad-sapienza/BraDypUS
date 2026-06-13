@@ -75,15 +75,36 @@ class SearchCtrlTest extends BdusTestCase
         $this->assertSame('is_exactly', $byValue['_eq']);
     }
 
-    public function testGetAdvancedConfigConnectorsAreAndOrXor(): void
+    public function testGetAdvancedConfigConnectorsAreAndOr(): void
     {
         $ctrl = $this->makeController('Bdus\\Controllers\\Search', ['tb' => self::TB]);
         $res  = $this->callController($ctrl, 'getAdvancedConfig');
 
-        // connectors are now plain strings: ['AND', 'OR', 'XOR']
+        // connectors are plain strings; XOR was dropped in v5 (unused,
+        // unsupported by JsonFilter)
         $this->assertContains('AND', $res['connectors']);
         $this->assertContains('OR',  $res['connectors']);
-        $this->assertContains('XOR', $res['connectors']);
+        $this->assertNotContains('XOR', $res['connectors']);
+    }
+
+    public function testGetAdvancedConfigLookupFieldsCarryRefMetadata(): void
+    {
+        $ctrl   = $this->makeController('Bdus\\Controllers\\Search', ['tb' => self::TB]);
+        $res    = $this->callController($ctrl, 'getAdvancedConfig');
+        $byValue = array_column($res['fields'], null, 'value');
+
+        // items.cat_ref has id_from_tb=categories (id_field=name)
+        $this->assertArrayHasKey('items:cat_ref', $byValue);
+        $this->assertSame('categories', $byValue['items:cat_ref']['ref_tb']);
+        $this->assertSame('name',       $byValue['items:cat_ref']['ref_field']);
+
+        // plugin lookup field carries the same metadata
+        $this->assertArrayHasKey('tags:cat_ref', $byValue);
+        $this->assertSame('categories', $byValue['tags:cat_ref']['ref_tb']);
+        $this->assertSame('name',       $byValue['tags:cat_ref']['ref_field']);
+
+        // plain fields carry no ref metadata
+        $this->assertArrayNotHasKey('ref_tb', $byValue['items:name']);
     }
 
     public function testGetAdvancedConfigMissingTbReturnsError(): void

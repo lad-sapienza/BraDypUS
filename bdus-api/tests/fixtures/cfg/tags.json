@@ -19,5 +19,11 @@
         "name": "table_link",
         "label": "Table",
         "type": "text"
+    },
+    {
+        "name": "cat_ref",
+        "label": "Category ref",
+        "type": "select",
+        "id_from_tb": "categories"
     }
 ]

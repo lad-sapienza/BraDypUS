@@ -23,10 +23,13 @@ class Search extends \Bdus\Controller
    *
    * Response:
    * {
-   *   fields:     [ { value: "tb:field", label: "Field label" }, ... ],
-   *   operators:  [ { value: "LIKE", label: "contains" }, ... ],
-   *   connectors: [ { value: "AND", label: "AND" }, ... ]
+   *   fields:     [ { value: "tb:field", label: "Field label",
+   *                   ref_tb?: "categories", ref_field?: "name" }, ... ],
+   *   operators:  [ { value: "_icontains", key: "contains" }, ... ],
+   *   connectors: [ "AND", "OR" ]
    * }
+   *
+   * ref_tb / ref_field are present only on lookup fields (id_from_tb).
    */
   public function getAdvancedConfig(): void
   {
@@ -38,8 +41,8 @@ class Search extends \Bdus\Controller
 
     // Main-table fields
     $fields = [];
-    foreach ($this->cfg->get("tables.{$tb}.fields.*.label") as $name => $label) {
-      $fields[] = ['value' => "{$tb}:{$name}", 'label' => $label ?: $name];
+    foreach ((array) $this->cfg->get("tables.{$tb}.fields") as $f) {
+      $fields[] = $this->advFieldEntry($tb, $f);
     }
 
     // Plugin fields grouped by plugin label
@@ -47,11 +50,8 @@ class Search extends \Bdus\Controller
     if (is_array($plugins)) {
       foreach ($plugins as $plg) {
         $plgLabel = $this->cfg->get("tables.{$plg}.label") ?: $plg;
-        foreach ($this->cfg->get("tables.{$plg}.fields.*.label") as $name => $label) {
-          $fields[] = [
-            'value' => "{$plg}:{$name}",
-            'label' => $plgLabel . ' › ' . ($label ?: $name),
-          ];
+        foreach ((array) $this->cfg->get("tables.{$plg}.fields") as $f) {
+          $fields[] = $this->advFieldEntry($plg, $f, $plgLabel . ' › ');
         }
       }
     }
@@ -70,12 +70,36 @@ class Search extends \Bdus\Controller
       ['value' => '_lt',         'key' => 'smaller'],
     ];
 
-    // Connectors: AND/OR/XOR are language-agnostic technical terms.
-    $connectors = ['AND', 'OR', 'XOR'];
+    // Connectors: AND/OR are language-agnostic technical terms.
+    // XOR was dropped in v5: unused in practice and unsupported by JsonFilter.
+    $connectors = ['AND', 'OR'];
     $resp = compact('fields', 'operators', 'connectors');
     $resp['status'] = 'success';
 
     $this->returnJson($resp);
+  }
+
+  /**
+   * Builds one entry of the advanced-search field list.
+   *
+   * Lookup fields (id_from_tb) additionally carry ref_tb / ref_field so the
+   * frontend can emit a nested JsonFilter traversal
+   * ({ field: { ref_field: { _op: value } } }) — these fields store the id of
+   * the referenced record, while autocomplete suggests the referenced table's
+   * id_field values.
+   */
+  private function advFieldEntry(string $tb, array $f, string $labelPrefix = ''): array
+  {
+    $entry = [
+      'value' => "{$tb}:{$f['name']}",
+      'label' => $labelPrefix . (($f['label'] ?? '') ?: $f['name']),
+    ];
+    if (!empty($f['id_from_tb'])) {
+      $refTb = $f['id_from_tb'];
+      $entry['ref_tb']    = $refTb;
+      $entry['ref_field'] = $this->cfg->get("tables.{$refTb}.id_field") ?: 'id';
+    }
+    return $entry;
   }
 
   // ──────────────────────────────────────────────────────────────────────────

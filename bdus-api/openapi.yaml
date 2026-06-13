@@ -740,8 +740,11 @@ paths:
         |---|---|---|
         | `all` (default) | — | Returns all records, no filter |
         | `fast` | `search=TEXT` | Full-text search across preview fields |
-        | `advanced` | `adv=BASE64_JSON` | Structured field/operator/value rows |
         | `sqlExpert` | `querytext=SQL` (+ optional `join=SQL`) | Raw SQL WHERE clause |
+
+        The legacy `advanced` mode (`adv=BASE64_JSON` rows) was retired in v5:
+        use the Directus-style `filter` below, which covers the same use cases
+        with bound parameters and cross-table support.
 
         ## Directus-style JSON filter (recommended for programmatic use)
 
@@ -815,6 +818,22 @@ paths:
         and the nested table key must equal the intermediate table's configured `plugin_of`.
         Three-or-more hops are not supported.
 
+        ### Lookup-field traversal (id_from_tb)
+
+        Fields configured with `id_from_tb` store the id of a record in the
+        referenced table. A nested object on such a field filters on the
+        referenced table's own fields:
+        ```
+        ?filter[parent_id][sigla][_eq]=T001
+        ```
+        → `crud_test.parent_id IN (SELECT id FROM crud_test WHERE sigla = ?)`
+
+        Also works inside plugin/backlink subqueries
+        (`?filter[tags][cat_ref][name][_eq]=Ceramics`) and supports any
+        operator, `_and`/`_or` groups, and further lookup hops.
+        Direct conditions on the field (`?filter[parent_id][_eq]=3`) remain
+        plain id comparisons.
+
         ## Simple equality shortcut
 
         Any `q_{field}=value` GET param is a shorthand for `filter[field][_eq]=value`.
@@ -852,19 +871,12 @@ paths:
           in: query
           schema:
             type: string
-            enum: [all, fast, advanced, sqlExpert]
+            enum: [all, fast, sqlExpert]
           description: |
             Search mode. See description for details. Ignored when `filter` is present.
         - name: search
           in: query
           description: Full-text search string. Required when `search_type=fast`.
-          schema:
-            type: string
-        - name: adv
-          in: query
-          description: |
-            Advanced search rows encoded as a base64 JSON array of `AdvancedSearchRow` objects.
-            Required when `search_type=advanced`.
           schema:
             type: string
         - name: querytext
@@ -936,12 +948,8 @@ paths:
       summary: List / search records (POST)
       description: |
         Same as GET but accepts the search payload in the request body.
-        All GET search parameters (`search_type`, `search`, `adv`, `querytext`, `join`,
+        All GET search parameters (`search_type`, `search`, `querytext`, `join`,
         `filter`, `columns`) are accepted both as query params and as body fields.
-
-        **Convenience shorthand**: if the body contains a `search` array
-        `[{"field", "operator", "value"}]` and no `search_type`, it is
-        auto-converted to the `advanced` format.
       parameters:
         - $ref: '#/components/parameters/tb'
       requestBody:
@@ -952,44 +960,16 @@ paths:
               properties:
                 search_type:
                   type: string
-                  enum: [all, fast, advanced, sqlExpert]
+                  enum: [all, fast, sqlExpert]
                   description: |
                     Search mode. Ignored when `filter` is present.
-                    Use `fast` with `search`, `advanced` with `adv`,
+                    Use `fast` with `search`,
                     `sqlExpert` with `querytext` (and optional `join`).
                 filter:
                   $ref: '#/components/schemas/FilterObject'
                 search:
-                  description: |
-                    When `search_type=fast`: plain text string for full-text search.
-                    When `search_type` is absent: convenience shorthand array of
-                    `{field, operator, value, connector?}` objects, auto-converted
-                    to `advanced` format.
-                  oneOf:
-                    - type: string
-                      description: Full-text search string (fast mode)
-                    - type: array
-                      description: Shorthand advanced rows
-                      items:
-                        type: object
-                        required: [field, operator, value]
-                        properties:
-                          field:
-                            type: string
-                          operator:
-                            type: string
-                            example: '='
-                          value:
-                            type: string
-                          connector:
-                            type: string
-                            enum: [AND, OR]
-                            default: AND
-                adv:
-                  type: array
-                  description: Advanced search rows (search_type=advanced)
-                  items:
-                    $ref: '#/components/schemas/AdvancedSearchRow'
+                  type: string
+                  description: Full-text search string (search_type=fast)
                 querytext:
                   type: string
                   description: Raw SQL WHERE clause (search_type=sqlExpert)
@@ -1008,24 +988,13 @@ paths:
                   filter:
                     periodo:
                       _eq: Basso Medioevo
-              shorthand:
-                summary: Shorthand advanced (convenience format)
+              lookup:
+                summary: Lookup-field traversal (id_from_tb)
                 value:
-                  search:
-                    - field: periodo
-                      operator: '='
-                      value: Basso Medioevo
-              advanced:
-                summary: Structured advanced search
-                value:
-                  search_type: advanced
-                  adv:
-                    - fld: 'us:periodo'
-                      operator: '='
-                      value: Basso Medioevo
-                      connector: AND
-                      '(': ''
-                      ')': ''
+                  filter:
+                    parent_id:
+                      sigla:
+                        _eq: T001
               sqlExpert:
                 summary: Raw SQL WHERE
                 value:
@@ -1052,7 +1021,7 @@ paths:
         |---|---|---|
         | `fast` | search text | Full-text search |
         | `expert` | SQL WHERE clause | Raw SQL filter |
-        | `advanced` | base64-encoded JSON array of `AdvancedSearchRow` | Structured filter |
+        | `filter` | JSON-encoded filter object | Directus-style filter (advanced search persistence) |
         | (absent) | — | No filter — export all records |
       parameters:
         - $ref: '#/components/parameters/tb'
@@ -1064,10 +1033,10 @@ paths:
             enum: [csv, json, xlsx]
         - name: qt
           in: query
-          description: Search type for export. Use `fast`, `expert`, or `advanced` (mirrors DataView URL params).
+          description: Search type for export. Use `fast`, `expert`, or `filter` (mirrors DataView URL params).
           schema:
             type: string
-            enum: [fast, expert, advanced]
+            enum: [fast, expert, filter]
         - name: q
           in: query
           description: Query value corresponding to the selected `qt` mode.
@@ -1774,16 +1743,11 @@ paths:
           in: query
           schema:
             type: string
-            enum: [all, fast, advanced, sqlExpert]
+            enum: [all, fast, sqlExpert]
           description: Search mode (see `GET /api/records/{tb}` for details).
         - name: search
           in: query
           description: Full-text search string (search_type=fast).
-          schema:
-            type: string
-        - name: adv
-          in: query
-          description: Advanced search rows as base64-encoded JSON (search_type=advanced).
           schema:
             type: string
         - name: querytext
@@ -1933,12 +1897,17 @@ paths:
                         items:
                           type: object
                           properties:
-                            name:
+                            value:
                               type: string
+                              description: Field reference in "tb:field" form (main table or plugin)
                             label:
                               type: string
-                            type:
+                            ref_tb:
                               type: string
+                              description: Present only on lookup fields (id_from_tb) — the referenced table
+                            ref_field:
+                              type: string
+                              description: Present only on lookup fields — the referenced table's id_field
                       operators:
                         type: array
                         items:
@@ -1946,8 +1915,15 @@ paths:
                           properties:
                             value:
                               type: string
-                            label:
+                              description: JsonFilter operator (e.g. _icontains)
+                            key:
                               type: string
+                              description: i18n locale key for the label
+                      connectors:
+                        type: array
+                        items:
+                          type: string
+                          enum: [AND, OR]
 
   /api/search/{tb}/values:
     get:
@@ -2704,13 +2680,8 @@ paths:
           in: query
           schema:
             type: string
-            enum: [all, advanced, sqlExpert]
-          description: Search mode. Use `advanced` with `adv` or `sqlExpert` with `querytext`.
-        - name: adv
-          in: query
-          description: Advanced search rows as base64-encoded JSON (search_type=advanced).
-          schema:
-            type: string
+            enum: [all, sqlExpert]
+          description: Search mode. Use `sqlExpert` with `querytext`.
         - name: querytext
           in: query
           description: Raw SQL WHERE clause (search_type=sqlExpert).
@@ -4703,29 +4674,6 @@ components:
             limit:
               type: integer
 
-    AdvancedSearchRow:
-      type: object
-      required: [fld, operator, value]
-      properties:
-        fld:
-          type: string
-          description: 'Field reference in the format `table:field`'
-        operator:
-          type: string
-          example: '='
-        value:
-          type: string
-        connector:
-          type: string
-          enum: [AND, OR]
-          default: AND
-        '(':
-          type: string
-          default: ''
-        ')':
-          type: string
-          default: ''
-
     FilterObject:
       type: object
       description: |
@@ -4743,6 +4691,21 @@ components:
         { "_or": [ {"type": {"_eq": "site"}}, {"type": {"_eq": "find"}} ] }
         { "_and": [ {"year": {"_gte": 100}}, {"year": {"_lte": 300}} ] }
         ```
+
+        ## Cross-table conditions
+        ```json
+        { "photos": { "description": { "_icontains": "amphora" } } }
+        ```
+        The key is a plugin or backlinked table of the main table; see
+        `GET /api/records/{tb}` for the 1-hop and 2-hop relationship styles.
+
+        ## Lookup-field traversal (id_from_tb)
+        ```json
+        { "parent_id": { "sigla": { "_eq": "T001" } } }
+        ```
+        A nested object on a field configured with `id_from_tb` filters on the
+        referenced table's fields via an `IN (SELECT id FROM ref WHERE …)`
+        subquery. Works at root level and inside plugin/backlink conditions.
 
         ## Supported operators
         | Operator | SQL equivalent |

@@ -14,7 +14,7 @@
                 "tags"
             ],
             "backlinks": [
-                "other:reviews:item_ref"
+                "items:reviews:item_ref"
             ],
             "rs": 1,
             "geodata": 1,
@@ -41,6 +41,16 @@
             "preview": [
                 "id",
                 "reviewer"
+            ]
+        },
+        {
+            "name": "categories",
+            "label": "Categories",
+            "order": "id",
+            "id_field": "name",
+            "preview": [
+                "id",
+                "name"
             ]
         }
     ]

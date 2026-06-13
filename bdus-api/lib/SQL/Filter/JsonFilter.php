@@ -34,6 +34,14 @@ use Config\Config;
  *   Requires: "manuscripts:m_msplaces:place" in places.backlinks
  *           AND cfg.tables.m_msplaces.plugin_of = 'manuscripts'
  *
+ * ## Lookup-field condition (id_from_tb traversal)
+ *   [ "period" => [ "name" => ["_eq" => "Medieval"] ] ]
+ *   → us.period IN (SELECT id FROM periods WHERE name = ?)
+ *   (requires cfg.tables.us.fields.period.id_from_tb = 'periods';
+ *    lookup fields store the id of the referenced record)
+ *   Also works inside plugin/backlink subqueries:
+ *   [ "photos" => [ "period" => [ "name" => ["_eq" => "Medieval"] ] ] ]
+ *
  * ## Logical groups
  *   [ "_and" => [ [...], [...] ] ]
  *   [ "_or"  => [ [...], [...] ] ]
@@ -134,7 +142,13 @@ class JsonFilter
                     continue;  // empty condition — skip
                 }
 
-                if (str_starts_with((string) $firstSubKey, '_')) {
+                // A field condition has an operator-like first sub-key (_eq, _lt, …).
+                // A logical op (_and/_or) as first sub-key means the key is a lookup
+                // field or related table whose nested filter starts with a group.
+                $subKeyIsOp = str_starts_with((string) $firstSubKey, '_')
+                    && !in_array($firstSubKey, self::LOGICAL_OPS, true);
+
+                if ($subKeyIsOp) {
                     // Main-table field condition: { field: { _op: val, ... } }
                     $field = $this->validateField($key);
                     $col   = $this->tb . '.' . $field;
@@ -148,8 +162,16 @@ class JsonFilter
                         $values   = array_merge($values, $vals);
                     }
                 } else {
-                    // Cross-table (plugin) condition: { plugin: { field: { _op: val }, ... } }
-                    [$sql, $vals] = $this->buildRelatedCondition($key, $valueArr);
+                    // Nested condition. The key is either a lookup field
+                    // (id_from_tb traversal) or a related table (plugin/backlink).
+                    $refTb = $this->lookupRefTb($this->tb, $key);
+                    if ($refTb !== null) {
+                        [$sql, $vals] = $this->buildLookupCondition(
+                            $this->tb . '.' . $key, $refTb, $valueArr
+                        );
+                    } else {
+                        [$sql, $vals] = $this->buildRelatedCondition($key, $valueArr);
+                    }
                     $parts[]      = $sql;
                     $values       = array_merge($values, $vals);
                 }
@@ -220,7 +242,8 @@ class JsonFilter
         }
 
         throw new FilterException(
-            "'{$relatedTb}' is not a plugin or backlinked table of '{$this->tb}'."
+            "'{$relatedTb}' is not a plugin, backlinked table, "
+            . "or lookup (id_from_tb) field of '{$this->tb}'."
         );
     }
 
@@ -314,9 +337,15 @@ class JsonFilter
                     $subValues   = array_merge($subValues, $condVals);
                 }
             } else {
-                // Nested table reference (field conditions or logical groups on a parent table).
-                // { nestedTb: { field: { _op } } }  or  { nestedTb: { _and: [ … ] } }
-                [$nestedSql, $nestedVals] = $this->buildNestedCondition($relatedTb, $key, $opArr);
+                // Nested reference: a lookup field of $relatedTb (id_from_tb traversal)
+                // or its plugin_of parent table.
+                $refTb = $this->lookupRefTb($relatedTb, $key);
+                if ($refTb !== null) {
+                    [$nestedSql, $nestedVals] = $this->buildLookupCondition($key, $refTb, $opArr);
+                } else {
+                    // { nestedTb: { field: { _op } } }  or  { nestedTb: { _and: [ … ] } }
+                    [$nestedSql, $nestedVals] = $this->buildNestedCondition($relatedTb, $key, $opArr);
+                }
                 $subParts[]  = $nestedSql;
                 $subValues   = array_merge($subValues, $nestedVals);
             }
@@ -382,6 +411,55 @@ class JsonFilter
              . "(SELECT {$idField} FROM {$nestedTb} WHERE {$nestedSql})";
 
         return [$sql, array_merge([$nestedTb], $nestedValues)];
+    }
+
+    /**
+     * Builds: `{col} IN (SELECT id FROM {refTb} WHERE ...)`
+     *
+     * Used for lookup fields (id_from_tb): the column stores the id of a record
+     * in $refTb, so conditions on $refTb's own fields are resolved through an
+     * IN-subquery. Conditions are compiled by a recursive JsonFilter for $refTb,
+     * so all operators, logical groups, field validation — and further lookup
+     * hops — work transparently.
+     *
+     * @param string $col        Qualified column ('us.period') or bare field name
+     *                           when used inside a subquery context
+     * @param string $refTb      Referenced table from the field's id_from_tb config
+     * @param array  $conditions Any filter structure valid for $refTb
+     * @return array{0: string, 1: array}
+     */
+    private function buildLookupCondition(string $col, string $refTb, array $conditions): array
+    {
+        $refFilter = new self($this->cfg, $refTb);
+        [$refSql, $refValues] = $refFilter->toSql($conditions);
+
+        if ($refSql === '1=1') {
+            return ['1=1', []];
+        }
+
+        // Lookup fields store the referenced record's id (see Record\Read::getTbRecord:
+        // LEFT JOIN ref ON ref.id = tb.field), so the subquery selects id.
+        $sql = "{$col} IN (SELECT id FROM {$refTb} WHERE {$refSql})";
+
+        return [$sql, $refValues];
+    }
+
+    /**
+     * Returns the id_from_tb target table of $field in $tb's config,
+     * or null when $field is not a configured field or has no id_from_tb.
+     *
+     * A non-null return also guarantees $field is a valid column name of $tb
+     * (it was matched against the config allow-list), so it is safe to embed.
+     */
+    private function lookupRefTb(string $tb, string $field): ?string
+    {
+        $fields = $this->cfg->get("tables.{$tb}.fields") ?? [];
+        foreach ((is_array($fields) ? $fields : []) as $f) {
+            if (($f['name'] ?? null) === $field) {
+                return $f['id_from_tb'] ?? null;
+            }
+        }
+        return null;
     }
 
     /**

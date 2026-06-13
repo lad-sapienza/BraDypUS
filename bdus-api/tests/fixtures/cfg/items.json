@@ -76,5 +76,11 @@
         "label": "Category",
         "type": "select",
         "vocabulary_set": "test_cat"
+    },
+    {
+        "name": "cat_ref",
+        "label": "Category ref",
+        "type": "select",
+        "id_from_tb": "categories"
     }
 ]

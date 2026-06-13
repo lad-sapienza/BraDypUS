@@ -3,6 +3,31 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Traversata dei campi lookup (`id_from_tb`) in `JsonFilter`** — i campi configurati con `id_from_tb` memorizzano l'id del record referenziato; un oggetto annidato sul campo viene ora risolto con una subquery sulla tabella referenziata:
+  - `filter[parent_id][sigla][_eq]=T001` → `crud_test.parent_id IN (SELECT id FROM crud_test WHERE sigla = ?)`
+  - Funziona anche dentro le subquery plugin/backlink: `filter[tags][cat_ref][name][_eq]=Ceramics`
+  - Le condizioni annidate sono compilate da un `JsonFilter` ricorsivo sulla tabella referenziata: tutti gli operatori, i gruppi logici `_and`/`_or`, la validazione dei campi e ulteriori hop lookup funzionano in modo trasparente.
+  - Le condizioni dirette sul campo (`filter[parent_id][_eq]=3`) restano confronti per id, invariate.
+- **Metadati `ref_tb` / `ref_field` in `getAdvancedConfig`** — i campi lookup nella lista campi della ricerca avanzata dichiarano la tabella referenziata e il suo `id_field`; il frontend usa questi metadati per emettere la traversata annidata, allineando la ricerca ai valori suggeriti dall'autocomplete (che provengono dalla tabella referenziata).
+
+### Changed
+
+- **Ricerca avanzata (`DataView.vue`)** — le righe su campi lookup generano il filtro annidato `{ campo: { ref_field: { _op: valore } } }`; prima il confronto avveniva direttamente sulla colonna (che contiene id), quindi cercare per valore suggerito non trovava mai nulla.
+- **Topbar** — aggiunto il link "by LAD" accanto al nome BraDypUS (punta a `https://purl.org/lad`); il burger menu è nascosto sugli schermi ≥ 1024px, dove la sidebar è sempre visibile e il pulsante si limitava a oscurare lo schermo con l'overlay.
+
+### Fixed
+
+- **Grafici salvati di altre tabelle** (`ChartPanel.vue`) — eseguire un grafico salvato su una tabella diversa da quella corrente falliva con `invalid_field`: la definizione veniva ricostruita dal builder con la tabella corrente. Ora i grafici di altre tabelle vengono eseguiti con la definizione salvata, contro la loro tabella; "Salva come" persiste la definizione realmente eseguita.
+
+### Removed
+
+- **Connettore XOR** — rimosso da `getAdvancedConfig`: non era supportato da `JsonFilter` (il frontend lo trattava silenziosamente come AND) e non risulta usato in pratica.
+- **Pulsanti parentesi nella ricerca avanzata** — erano UI senza effetto: `buildFilterFromRows` non li ha mai considerati (il raggruppamento segue la precedenza standard AND-su-OR).
+
 ## [5.0.2] - 2026-06-06
 
 ### Added

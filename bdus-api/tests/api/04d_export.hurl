@@ -52,6 +52,18 @@ body     contains "T001"
 body not contains "T002"
 
 
+# ── 4d-d2. Export with qt=filter&q=JSON (advanced-search URL persistence) ──
+# DataView persists the advanced search as qt=filter with the JSON filter in q;
+# the export must honour it instead of dumping the whole table.
+GET {{base_url}}/api/records/crud_test/export?format=csv&qt=filter&q=%7B%22sigla%22%3A%7B%22_eq%22%3A%22T002%22%7D%7D
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+header "Content-Type" contains "text/csv"
+body     contains "T002"
+body not contains "T001"
+
+
 # ── 4d-e. Export unknown format → default CSV (no error) ─────────────
 GET {{base_url}}/api/records/crud_test/export?format=unknown
 Authorization: Bearer {{jwt}}

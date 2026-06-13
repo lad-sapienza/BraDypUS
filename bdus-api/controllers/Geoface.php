@@ -20,9 +20,8 @@ class Geoface extends \Bdus\Controller
      *
      * GET ?obj=geoface_ctrl&method=getGeoJson&tb=TABLE
      *     [&filter[field][_op]=value]         (Directus-style JSON filter, bracket notation)
-     *     [&search_type=sqlExpert|advanced]
+     *     [&search_type=sqlExpert]
      *     [&querytext=SQL_WHERE_CLAUSE]     (search_type=sqlExpert)
-     *     [&adv=JSON_ENCODED_ADV_ROWS]      (search_type=advanced)
      *
      * Response:
      * {
@@ -56,7 +55,7 @@ class Geoface extends \Bdus\Controller
             $searchType = $this->get['search_type'] ?? $this->post['search_type'] ?? null;
 
             // Delegate WHERE-building to QueryFromRequest — same as record_ctrl.
-            // All search types (filter, sqlExpert, advanced, all) are handled
+            // All search types (filter, sqlExpert, fast, all) are handled
             // centrally; this module knows nothing about how the predicate is built.
             $filterRaw = $this->get['filter'] ?? $this->post['filter'] ?? null;
             if (is_string($filterRaw)) {

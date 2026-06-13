@@ -57,6 +57,15 @@
         <i class="pi pi-book" />
         <span>{{ t('zotero_libraries') }}</span>
       </button>
+      <button
+        class="cfg-action-btn"
+        :class="{ active: active === 'dbml' }"
+        @click="$emit('select', 'dbml')"
+        :title="t('dbml_title')"
+      >
+        <i class="pi pi-file-export" />
+        <span>{{ t('dbml_title') }}</span>
+      </button>
     </div>
 
     <div class="cfg-sidebar-divider" />

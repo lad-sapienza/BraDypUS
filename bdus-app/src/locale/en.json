@@ -1058,5 +1058,27 @@
   "error_file_unlinked": "Error unlinking file",
   "file_picker_title": "Select a file to link",
   "file_picker_search": "Search files…",
-  "file_picker_links": "links"
+  "file_picker_links": "links",
+
+  "dbml_title": "DBML",
+  "dbml_export": "Export",
+  "dbml_export_hint": "Export the full app configuration (tables, fields, vocabularies) as an annotated DBML file.",
+  "dbml_download": "Download .dbml",
+  "dbml_import": "Import",
+  "dbml_import_hint": "Import new tables from a DBML file. Existing tables are never modified.",
+  "dbml_paste_placeholder": "Paste DBML content here…",
+  "dbml_open_file": "Open file",
+  "dbml_analyse": "Analyse",
+  "dbml_apply": "Apply",
+  "dbml_has_errors": "Fix errors before applying.",
+  "dbml_tables_to_import": "Tables to import",
+  "dbml_vocabularies_to_import": "Vocabularies to import",
+  "dbml_fields": "fields",
+  "dbml_created_tables": "{n} tables created ({names})",
+  "dbml_skipped_tables": "{n} skipped ({names})",
+  "dbml_warnings_count": "{n} warnings",
+  "table_already_exists": "Table '{table}' already exists.",
+  "pk_must_be_id": "Primary key must be named 'id' (found: '{field}').",
+  "auto_add_id": "Field 'id' will be added automatically.",
+  "auto_add_creator": "Field 'creator' will be added automatically."
 }

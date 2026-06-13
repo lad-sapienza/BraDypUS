@@ -1058,5 +1058,27 @@
   "error_file_unlinked": "Errore nello scollegamento del file",
   "file_picker_title": "Seleziona un file da collegare",
   "file_picker_search": "Cerca file…",
-  "file_picker_links": "collegamenti"
+  "file_picker_links": "collegamenti",
+
+  "dbml_title": "DBML",
+  "dbml_export": "Esporta",
+  "dbml_export_hint": "Esporta l'intera configurazione dell'app (tabelle, campi, vocabolari) in un file DBML annotato.",
+  "dbml_download": "Scarica .dbml",
+  "dbml_import": "Importa",
+  "dbml_import_hint": "Importa nuove tabelle da un file DBML. Le tabelle esistenti non vengono modificate.",
+  "dbml_paste_placeholder": "Incolla qui il contenuto DBML…",
+  "dbml_open_file": "Apri file",
+  "dbml_analyse": "Analizza",
+  "dbml_apply": "Applica",
+  "dbml_has_errors": "Correggi gli errori prima di applicare.",
+  "dbml_tables_to_import": "Tabelle da importare",
+  "dbml_vocabularies_to_import": "Vocabolari da importare",
+  "dbml_fields": "campi",
+  "dbml_created_tables": "{n} tabelle create ({names})",
+  "dbml_skipped_tables": "{n} saltate ({names})",
+  "dbml_warnings_count": "{n} avvisi",
+  "table_already_exists": "La tabella '{table}' esiste già.",
+  "pk_must_be_id": "La chiave primaria deve chiamarsi 'id' (trovato: '{field}').",
+  "auto_add_id": "Il campo 'id' verrà aggiunto automaticamente.",
+  "auto_add_creator": "Il campo 'creator' verrà aggiunto automaticamente."
 }

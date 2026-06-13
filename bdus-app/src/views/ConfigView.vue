@@ -34,6 +34,7 @@
           @deleted="onDeleted"
           @renamed="onRenamed"
           @open-fields="openFields"
+          @table-added="onSaved"
         />
 
       </div>
@@ -60,6 +61,7 @@ const ConfigRelations  = defineAsyncComponent(() => import('@/components/config/
 const ConfigTableForm  = defineAsyncComponent(() => import('@/components/config/ConfigTableForm.vue'))
 const ConfigFieldList  = defineAsyncComponent(() => import('@/components/config/ConfigFieldList.vue'))
 const ConfigZotero     = defineAsyncComponent(() => import('@/components/config/ZoteroLibsPanel.vue'))
+const ConfigDbml       = defineAsyncComponent(() => import('@/components/config/DbmlPanel.vue'))
 
 const { t } = useI18n()
 const store  = useConfigStore()
@@ -80,6 +82,7 @@ const activeComponent = computed(() => {
   if (panel.value === 'table')      return ConfigTableForm
   if (panel.value === 'fields')     return ConfigFieldList
   if (panel.value === 'zotero')     return ConfigZotero
+  if (panel.value === 'dbml')       return ConfigDbml
   return null
 })
 

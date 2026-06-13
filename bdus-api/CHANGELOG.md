@@ -21,12 +21,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Le condizioni dirette sul campo (`filter[parent_id][_eq]=3`) restano confronti per id, invariate.
 - **Metadati `ref_tb` / `ref_field` in `getAdvancedConfig`** — i campi lookup nella lista campi della ricerca avanzata dichiarano la tabella referenziata e il suo `id_field`; il frontend usa questi metadati per emettere la traversata annidata, allineando la ricerca ai valori suggeriti dall'autocomplete (che provengono dalla tabella referenziata).
 
+- **Analisi Assemblaggio** (`AssemblageAnalysis`, M034) — nuovo controller per la creazione e consultazione di analisi pivot su assemblaggi di materiale; le analisi vengono salvate nel DB e possono essere condivise:
+  - **9 endpoint REST**: `GET /api/assemblages` (lista), `POST /api/assemblages` (salva), `GET /api/assemblage/sources` (tabelle sorgente disponibili), `GET /api/assemblage/table-meta` (campi + FK per il path builder), `POST /api/assemblage/data` (esecuzione pivot), `POST /api/assemblage/{id}` (aggiorna), `POST /api/assemblage/{id}/share`, `POST /api/assemblage/{id}/unshare`, `DELETE /api/assemblage/{id}`.
+  - **Migrazione M034** (`CreateAssemblageAnalyses`) — crea la tabella `bdus_assemblage_analyses` con wizard-config JSON, flag di condivisione, `created_by` e timestamp.
+  - `getSources()` restituisce tabelle normali e plugin con `parent_tb`/`parent_label`; `getTableMeta()` espone campi e relazioni FK per costruire il percorso multi-hop; `getData()` computa la pivot con misura configurabile (count, sum, count_distinct) e filtri JSON.
+
 ### Changed
 
 - **Ricerca avanzata (`DataView.vue`)** — le righe su campi lookup generano il filtro annidato `{ campo: { ref_field: { _op: valore } } }`; prima il confronto avveniva direttamente sulla colonna (che contiene id), quindi cercare per valore suggerito non trovava mai nulla.
 - **Topbar** — aggiunto il link "by LAD" accanto al nome BraDypUS (punta a `https://purl.org/lad`); il burger menu è nascosto sugli schermi ≥ 1024px, dove la sidebar è sempre visibile e il pulsante si limitava a oscurare lo schermo con l'overlay.
 
 ### Fixed
+
+- **`Config::setMain()` eliminava `bdus_version` da `config.json`** — il metodo usava `array_intersect_key($main, ...)` con i dati del form (che non contengono `bdus_version`) invece di `$this->cfg['main']` (config caricata + merge con i dati del form). Ogni salvataggio di proprietà app riscriveva un `config.json` incompleto; alla richiesta successiva `isMajorUpgradeNeeded()` trovava la chiave assente e restituiva `true`, bloccando tutte le route autenticate con 503. Fix: aggiunta `bdus_version` a `BOOTSTRAP_KEYS` e corretto l'intersect a usare `$this->cfg['main']`.
+
+- **`Dispatcher` rispondeva HTTP 503 per `major_upgrade_required`** — 503 ("Service Unavailable") segnala ai tool di monitoring che il server è irraggiungibile, mentre il server è perfettamente operativo; è il client che deve eseguire un upgrade. Sostituito con **HTTP 409 Conflict** (conflitto tra lo stato corrente dell'app e la richiesta). Il body `{"status":"error","code":"major_upgrade_required"}` è invariato; il client legge il body e reindirizza al flusso di upgrade.
 
 - **Grafici salvati di altre tabelle** (`ChartPanel.vue`) — eseguire un grafico salvato su una tabella diversa da quella corrente falliva con `invalid_field`: la definizione veniva ricostruita dal builder con la tabella corrente. Ora i grafici di altre tabelle vengono eseguiti con la definizione salvata, contro la loro tabella; "Salva come" persiste la definizione realmente eseguita.
 

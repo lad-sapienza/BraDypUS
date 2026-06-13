@@ -45,7 +45,11 @@ class Dispatcher
 
             if (defined('BDUS_MAJOR_UPGRADE') && BDUS_MAJOR_UPGRADE) {
                 if ($required !== 'none' && $obj !== 'Bdus\\Controllers\\Upgrade') {
-                    http_response_code(503);
+                    // 409 Conflict: the app needs a major upgrade before this
+                    // operation can proceed. Not 503 (which signals "server down"
+                    // to monitoring/load-balancers). The client reads the body,
+                    // recognises the code, and redirects to the login/upgrade flow.
+                    http_response_code(409);
                     header('Content-Type: application/json');
                     echo json_encode(
                         ['status' => 'error', 'code' => 'major_upgrade_required'],

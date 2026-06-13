@@ -83,6 +83,10 @@ class Router
         'Bdus\\Controllers\\Search::getUsedValues'                 => 'read',
         'Bdus\\Controllers\\Chart::listCharts'                     => 'read',
         'Bdus\\Controllers\\Chart::getData'                        => 'read',
+        'Bdus\\Controllers\\AssemblageAnalysis::listAnalyses'      => 'read',
+        'Bdus\\Controllers\\AssemblageAnalysis::getSources'        => 'read',
+        'Bdus\\Controllers\\AssemblageAnalysis::getTableMeta'      => 'read',
+        'Bdus\\Controllers\\AssemblageAnalysis::getData'           => 'read',
         'Bdus\\Controllers\\SavedQueries::listQueries'            => 'read',
         'Bdus\\Controllers\\MyHistory::getHistory'                 => 'read',
         'Bdus\\Controllers\\FrontpageEditor::getWelcome'          => 'read',
@@ -115,6 +119,11 @@ class Router
         'Bdus\\Controllers\\Chart::shareChart'                     => 'edit',
         'Bdus\\Controllers\\Chart::unshareChart'                   => 'edit',
         'Bdus\\Controllers\\Chart::deleteChart'                    => 'edit',
+        'Bdus\\Controllers\\AssemblageAnalysis::save'              => 'edit',
+        'Bdus\\Controllers\\AssemblageAnalysis::update'            => 'edit',
+        'Bdus\\Controllers\\AssemblageAnalysis::share'             => 'edit',
+        'Bdus\\Controllers\\AssemblageAnalysis::unshare'           => 'edit',
+        'Bdus\\Controllers\\AssemblageAnalysis::delete'            => 'edit',
         'Bdus\\Controllers\\SavedQueries::saveQuery'              => 'edit',
         'Bdus\\Controllers\\SavedQueries::shareQuery'             => 'edit',
         'Bdus\\Controllers\\SavedQueries::unshareQuery'           => 'edit',
@@ -373,6 +382,17 @@ class Router
             $r->addRoute('POST',   '/api/chart/{id:\d+}/share',    ['Bdus\\Controllers\\Chart', 'shareChart']);
             $r->addRoute('POST',   '/api/chart/{id:\d+}/unshare',  ['Bdus\\Controllers\\Chart', 'unshareChart']);
             $r->addRoute('DELETE', '/api/chart/{id:\d+}',          ['Bdus\\Controllers\\Chart', 'deleteChart']);
+
+            // ── Assemblage Analysis ───────────────────────────────────────────
+            $r->addRoute('GET',    '/api/assemblages',                          ['Bdus\\Controllers\\AssemblageAnalysis', 'listAnalyses']);
+            $r->addRoute('POST',   '/api/assemblages',                          ['Bdus\\Controllers\\AssemblageAnalysis', 'save']);
+            $r->addRoute('GET',    '/api/assemblage/sources',                   ['Bdus\\Controllers\\AssemblageAnalysis', 'getSources']);
+            $r->addRoute('GET',    '/api/assemblage/table-meta',                ['Bdus\\Controllers\\AssemblageAnalysis', 'getTableMeta']);
+            $r->addRoute('POST',   '/api/assemblage/data',                      ['Bdus\\Controllers\\AssemblageAnalysis', 'getData']);
+            $r->addRoute('POST',   '/api/assemblage/{id:\d+}',                  ['Bdus\\Controllers\\AssemblageAnalysis', 'update']);
+            $r->addRoute('POST',   '/api/assemblage/{id:\d+}/share',            ['Bdus\\Controllers\\AssemblageAnalysis', 'share']);
+            $r->addRoute('POST',   '/api/assemblage/{id:\d+}/unshare',          ['Bdus\\Controllers\\AssemblageAnalysis', 'unshare']);
+            $r->addRoute('DELETE', '/api/assemblage/{id:\d+}',                  ['Bdus\\Controllers\\AssemblageAnalysis', 'delete']);
 
             // ── Saved queries ─────────────────────────────────────────────────
             $r->addRoute('GET',    '/api/saved-queries',                    ['Bdus\\Controllers\\SavedQueries', 'listQueries']);

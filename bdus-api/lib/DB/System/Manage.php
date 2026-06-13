@@ -68,6 +68,7 @@ class Manage
         // tables with FK constraints (after their referenced tables above)
         'bdus_file_links',
         'bdus_charts',
+        'bdus_assemblage_analyses',
         'bdus_queries',
         'bdus_user_table_privs',
         'bdus_zotero_links',

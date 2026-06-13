@@ -38,6 +38,7 @@ class Config
     private const BOOTSTRAP_KEYS = [
         'definition',
         'db_engine', 'db_host', 'db_port', 'db_name', 'db_username', 'db_password',
+        'bdus_version', // written by Migrate::run(); must survive setMain() round-trips
     ];
 
     private array $errors = [];
@@ -154,7 +155,9 @@ class Config
 
         if ($this->useDb && AppSettings::isAvailable($this->db)) {
             // Write only bootstrap fields to config.json.
-            $bootstrap = array_intersect_key($main, array_flip(self::BOOTSTRAP_KEYS));
+            // Use $this->cfg['main'] (merged result) so keys not sent in $main
+            // (e.g. bdus_version) are preserved from the previously loaded config.
+            $bootstrap = array_intersect_key($this->cfg['main'], array_flip(self::BOOTSTRAP_KEYS));
             ToFiles::writeMain($this->path2cfg, $bootstrap);
 
             // Write runtime settings to DB.

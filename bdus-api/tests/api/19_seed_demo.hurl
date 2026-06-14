@@ -163,8 +163,49 @@ Content-Type: application/json
 {
   "name": "reperti", "label": "Reperti mobili", "is_plugin": "0",
   "order": "inventario", "id_field": "inventario", "preview": ["inventario"],
-  "geodata": 1, "zotero": 1
+  "geodata": 1, "zotero": 1, "fuzzy_date": 1
 }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+# Add the five chrono_* fields to reperti (same pattern as siti and us above)
+POST {{base_url}}/api/config/table/reperti/field
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "name": "chrono_from", "label": "Dal (anno)", "type": "text", "db_type": "INTEGER", "check": ["int"] }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/api/config/table/reperti/field
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "name": "chrono_to", "label": "Al (anno)", "type": "text", "db_type": "INTEGER", "check": ["int"] }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/api/config/table/reperti/field
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "name": "chrono_label", "label": "Etichetta cronologica", "type": "text", "db_type": "TEXT" }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/api/config/table/reperti/field
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "name": "chrono_certainty", "label": "Certezza", "type": "text", "db_type": "INTEGER" }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/api/config/table/reperti/field
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "name": "chrono_period", "label": "Periodo", "type": "select", "db_type": "TEXT", "vocabulary_set": "periodi" }
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
@@ -1663,6 +1704,138 @@ Content-Type: application/json
 HTTP 200
 [Captures]
 rep_id_20: jsonpath "$.id"
+
+
+# ── 19i-bis. Chrono fuzzy-date per US e reperti ─────────────────────
+# US records: 7 US datati con certezza o probabilità
+POST {{base_url}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "id": {{us_id_3}}, "core": { "chrono_from": 300, "chrono_to": 450, "chrono_label": "300/450", "chrono_certainty": 1, "chrono_period": "Tardo Antico" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "id": {{us_id_8}}, "core": { "chrono_from": 1, "chrono_to": 200, "chrono_label": "1/200", "chrono_certainty": 1, "chrono_period": "Romano" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "id": {{us_id_12}}, "core": { "chrono_from": -700, "chrono_to": -500, "chrono_label": "-700/-500", "chrono_certainty": 2, "chrono_period": "Ferro" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "id": {{us_id_21}}, "core": { "chrono_from": -650, "chrono_to": -450, "chrono_label": "-650/-450", "chrono_certainty": 1, "chrono_period": "Ferro" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "id": {{us_id_24}}, "core": { "chrono_from": -700, "chrono_to": -500, "chrono_label": "-700/-500", "chrono_certainty": 2, "chrono_period": "Ferro" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "id": {{us_id_26}}, "core": { "chrono_from": -50, "chrono_to": 200, "chrono_label": "-50/200", "chrono_certainty": 1, "chrono_period": "Romano" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "id": {{us_id_28}}, "core": { "chrono_from": -50, "chrono_to": 100, "chrono_label": "-50/100", "chrono_certainty": 2, "chrono_period": "Romano" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+# Reperti: 9 reperti diagnostici datati
+POST {{base_url}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "id": {{rep_id_1}}, "core": { "chrono_from": -30, "chrono_to": 20, "chrono_label": "-30/20", "chrono_certainty": 1, "chrono_period": "Romano" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "id": {{rep_id_2}}, "core": { "chrono_from": -50, "chrono_to": 150, "chrono_label": "-50/150", "chrono_certainty": 2, "chrono_period": "Romano" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "id": {{rep_id_3}}, "core": { "chrono_from": -15, "chrono_to": 70, "chrono_label": "-15/70", "chrono_certainty": 1, "chrono_period": "Romano" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "id": {{rep_id_6}}, "core": { "chrono_from": 250, "chrono_to": 325, "chrono_label": "250/325", "chrono_certainty": 1, "chrono_period": "Tardo Antico" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "id": {{rep_id_11}}, "core": { "chrono_from": 350, "chrono_to": 450, "chrono_label": "350/450", "chrono_certainty": 1, "chrono_period": "Tardo Antico" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "id": {{rep_id_15}}, "core": { "chrono_from": -600, "chrono_to": -480, "chrono_label": "-600/-480", "chrono_certainty": 2, "chrono_period": "Greco-Ellenistico" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "id": {{rep_id_16}}, "core": { "chrono_from": -700, "chrono_to": -400, "chrono_label": "-700/-400", "chrono_certainty": 2, "chrono_period": "Ferro" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "id": {{rep_id_18}}, "core": { "chrono_from": -800, "chrono_to": -600, "chrono_label": "-800/-600", "chrono_certainty": 2, "chrono_period": "Ferro" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "id": {{rep_id_20}}, "core": { "chrono_from": -50, "chrono_to": 150, "chrono_label": "-50/150", "chrono_certainty": 2, "chrono_period": "Romano" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 
 # ── 19j. Misure (plugin → reperti) ───────────────────────────────────

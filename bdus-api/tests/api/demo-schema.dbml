@@ -128,11 +128,12 @@ Table us {
 
 
 // ── reperti — Reperti mobili ───────────────────────────────────────
-// bdus:label   Reperti mobili
+// bdus:label      Reperti mobili
 // bdus:geodata
 // bdus:zotero
-// bdus:order   inventario
-// bdus:preview [inventario]
+// bdus:fuzzy_date
+// bdus:order      inventario
+// bdus:preview    [inventario]
 Table reperti {
   id             integer [pk, increment, note: 'bdus:ui text; bdus:readonly']
   creator        integer [not null,      note: 'bdus:ui text; bdus:readonly; bdus:hidden']

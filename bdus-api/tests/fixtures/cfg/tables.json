@@ -41,7 +41,8 @@
             "preview": [
                 "id",
                 "reviewer"
-            ]
+            ],
+            "fuzzy_date": false
         },
         {
             "name": "categories",

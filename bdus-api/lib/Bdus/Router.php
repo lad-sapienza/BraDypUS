@@ -95,6 +95,8 @@ class Router
         'Bdus\\Controllers\\Geoface::getGeoJson'                   => 'read',
         'Bdus\\Controllers\\Vocabularies::list'                    => 'read',
         'Bdus\\Controllers\\Vocabularies::usages'                  => 'read',
+        'Bdus\\Controllers\\Chrono::timeline'                      => 'read',
+        'Bdus\\Controllers\\Chrono::related'                       => 'read',
 
         // ── Edit — write operations ──────────────────────────────────────────
         'Bdus\\Controllers\\Record::duplicateRecord'               => 'edit',
@@ -421,6 +423,10 @@ class Router
             $r->addRoute('POST',   '/api/template/{tb}/{name}',        ['Bdus\\Controllers\\Templates', 'saveTemplate']);
             $r->addRoute('DELETE', '/api/template/{tb}/{name}',        ['Bdus\\Controllers\\Templates', 'deleteTemplate']);
             $r->addRoute('POST',   '/api/template/{tb}/{name}/rename', ['Bdus\\Controllers\\Templates', 'renameTemplate']);
+
+            // ── Chrono ───────────────────────────────────────────────────────
+            $r->addRoute('GET', '/api/chrono/timeline',                ['Bdus\\Controllers\\Chrono', 'timeline']);
+            $r->addRoute('GET', '/api/chrono/related/{tb}/{id:\d+}',   ['Bdus\\Controllers\\Chrono', 'related']);
 
             // ── Geoface ───────────────────────────────────────────────────────
             $r->addRoute('GET',    '/api/geoface',         ['Bdus\\Controllers\\Geoface', 'getGeoJson']);

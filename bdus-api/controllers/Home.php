@@ -37,9 +37,10 @@ class Home extends \Bdus\Controller
             // bdus_cfg_tables for validation purposes but must not appear to users.
             if (str_starts_with($name, 'bdus_')) continue;
             $tables[] = [
-                'name'  => $name,
-                'label' => $label ?: $name,
-                'rs'    => (bool) $this->cfg->get("tables.{$name}.rs"),
+                'name'       => $name,
+                'label'      => $label ?: $name,
+                'rs'         => (bool) $this->cfg->get("tables.{$name}.rs"),
+                'fuzzy_date' => (bool) $this->cfg->get("tables.{$name}.fuzzy_date"),
             ];
         }
 

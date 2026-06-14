@@ -448,6 +448,45 @@ class AssemblageAnalysis extends \Bdus\Controller
             return;
         }
 
+        // ── Display label (human PK / preview field) ─────────────────────────
+        // When group_field is itself an FK pointing to another table (e.g.
+        // source=reperti, group_field=us_provenienza_id → us table), we want
+        // the preview field of that referenced table, not of the current table.
+        // Otherwise (group_path traversal or plain field) use current table's preview.
+        $displayField = null;
+        $displayExpr  = null;
+        $displayJoin  = '';
+
+        $groupFieldCfg = null;
+        foreach (($this->cfg->get("tables.{$currentTbName}.fields") ?? []) as $f) {
+            if (($f['name'] ?? null) === $groupField) { $groupFieldCfg = $f; break; }
+        }
+        $groupFkTb = $groupFieldCfg['id_from_tb'] ?? null;
+
+        if ($groupFkTb && $this->isValidUserTable($groupFkTb)) {
+            // group_field is an FK → label from the referenced table.
+            // FK columns always store the numeric autoincrement id, so join on 'id',
+            // not on id_field (which is the semantic/human PK like 'us', 'nome', etc.).
+            $fkPreview = $this->cfg->get("tables.{$groupFkTb}.preview") ?? [];
+            if (!empty($fkPreview) && $this->isValidField($groupFkTb, $fkPreview[0])) {
+                $lblAlias    = '_lbl';
+                $displayField = $fkPreview[0];
+                $displayJoin  = " LEFT JOIN {$groupFkTb} AS {$lblAlias} ON {$currentRefName}.{$groupField} = {$lblAlias}.id";
+                $displayExpr  = "{$lblAlias}.{$displayField}";
+            }
+        } else {
+            // group_field is a plain field (or joined via group_path) → label from current table
+            $previewCfg = $this->cfg->get("tables.{$currentTbName}.preview") ?? [];
+            if (!empty($previewCfg)) {
+                $candidate = $previewCfg[0];
+                if ($candidate !== $groupField && $this->isValidField($currentTbName, $candidate)) {
+                    $displayField = $candidate;
+                    $displayRef   = empty($groupPath) ? $sourceTb : $currentRefName;
+                    $displayExpr  = "{$displayRef}.{$displayField}";
+                }
+            }
+        }
+
         // ── Build SQL ─────────────────────────────────────────────────────────
         $measureExpr = match($measure) {
             'sum'            => "SUM({$sourceTb}.{$measureField})",
@@ -480,8 +519,9 @@ class AssemblageAnalysis extends \Bdus\Controller
             ? "{$sourceTb}.{$groupField}"
             : "{$currentRefName}.{$groupField}";
 
-        $sql = "SELECT {$charExpr} AS char_val, {$groupExpr} AS group_val, {$measureExpr} AS measure_val"
-             . " FROM {$sourceTb}{$joins}"
+        $selectExtra = $displayExpr ? ", MIN({$displayExpr}) AS display_val" : '';
+        $sql = "SELECT {$charExpr} AS char_val, {$groupExpr} AS group_val, {$measureExpr} AS measure_val{$selectExtra}"
+             . " FROM {$sourceTb}{$joins}{$displayJoin}"
              . " WHERE {$whereClause}"
              . " GROUP BY {$charExpr}, {$groupExpr}"
              . " ORDER BY {$groupExpr}, {$charExpr}";
@@ -495,9 +535,10 @@ class AssemblageAnalysis extends \Bdus\Controller
         }
 
         // ── Pivot in PHP ──────────────────────────────────────────────────────
-        $chars  = [];
-        $groups = [];
-        $data   = [];
+        $chars        = [];
+        $groups       = [];
+        $data         = [];
+        $group_labels = [];
 
         foreach ($rows as $row) {
             $char  = (string) ($row['char_val']  ?? '');
@@ -511,13 +552,19 @@ class AssemblageAnalysis extends \Bdus\Controller
                 $groups[] = $group;
             }
             $data[$group][$char] = $val;
+            if ($displayField && !isset($group_labels[$group])) {
+                $group_labels[$group] = (string) ($row['display_val'] ?? '');
+            }
         }
 
         $this->returnJson([
-            'status' => 'success',
-            'chars'  => $chars,
-            'groups' => $groups,
-            'data'   => $data,
+            'status'       => 'success',
+            'chars'        => $chars,
+            'groups'       => $groups,
+            'data'         => $data,
+            'group_labels' => $group_labels,
+            'group_tb'     => $currentTbName,
+            'group_field'  => $groupField,
         ]);
     }
 

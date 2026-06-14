@@ -136,7 +136,10 @@ class Login extends \Bdus\Controller
 				return;
 			}
 
-			// No pending migrations: normal login.
+			// No pending migrations: stamp the current version so listApps() badge
+			// stays accurate even when there is nothing to migrate.
+			// Non-fatal: a failure here must not block the login.
+			try { \DB\System\Migrate::run($this->db, $this->log); } catch (\Throwable $ignored) {}
 			$this->log->info("User {$user['id']} logged into " . APP);
 			$token = \JWT\JwtManager::generate($user, APP);
 			$this->returnJson(['status' => 'success', 'code' => 'ok', 'token' => $token]);

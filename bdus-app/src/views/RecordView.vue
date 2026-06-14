@@ -187,9 +187,47 @@
           />
         </template>
 
+        <!-- Fuzzy date / Chronology plugin -->
+        <ChronoSection
+          v-if="record.schema?.has_fuzzy_date"
+          v-bind="chronoData"
+          :editMode="mode === 'edit'"
+          @update:chrono="v => Object.assign(editData.core, v)"
+        />
+
+        <!-- Chronological distribution of related records -->
+        <ChronoDensityPanel
+          v-if="!isNew"
+          :tb="record.metadata.tb_id"
+          :id="id"
+        />
+
+        <!-- Bibliography (Zotero) -->
+        <ZoteroSection
+          v-if="record.schema?.has_zotero && (hasBibliography || mode === 'edit')"
+          :bibliography="record.bibliography ?? {}"
+          :editMode="mode === 'edit'"
+          :recordTb="record.metadata.tb_id"
+          :recordId="id"
+          @bib-added="onBibAdded"
+          @bib-deleted="onBibDeleted"
+        />
+
+        <!-- Stratigraphic Relations (RS) — only when RS plugin is enabled -->
+        <RsSection
+          v-if="record.schema?.rs && !isNew"
+          :rs="record.rs ?? {}"
+          :schema="record.schema"
+          :core="record.core"
+          :mode="mode"
+          :tb="record.metadata.tb_id"
+          :record_id="id"
+          @rs-updated="fetchRecord"
+        />
+
       </div>
 
-      <!-- ── Right: sticky secondary info ────────────────────────── -->
+      <!-- ── Right: service strip (links + geodata only) ──────────── -->
       <div v-if="hasRightColumn" class="record-sidebar">
 
         <!-- Links & Backlinks (count-based, from table config) -->
@@ -226,17 +264,6 @@
           @link-deleted="onLinkDeleted"
         />
 
-        <!-- Bibliography (Zotero) -->
-        <ZoteroSection
-          v-if="record.schema?.has_zotero && (hasBibliography || mode === 'edit')"
-          :bibliography="record.bibliography ?? {}"
-          :editMode="mode === 'edit'"
-          :recordTb="record.metadata.tb_id"
-          :recordId="id"
-          @bib-added="onBibAdded"
-          @bib-deleted="onBibDeleted"
-        />
-
         <!-- Geodata -->
         <fieldset
           v-if="record.schema?.has_geodata && (hasGeodata || mode === 'edit')"
@@ -248,26 +275,6 @@
             {{ t('geodata_count', geodataCount) }}
           </div>
         </fieldset>
-
-        <!-- Fuzzy date / Chronology plugin -->
-        <ChronoSection
-          v-if="record.schema?.has_fuzzy_date"
-          v-bind="chronoData"
-          :editMode="mode === 'edit'"
-          @update:chrono="v => Object.assign(editData.core, v)"
-        />
-
-        <!-- Stratigraphic Relations (RS) — only when RS plugin is enabled -->
-        <RsSection
-          v-if="record.schema?.rs && !isNew"
-          :rs="record.rs ?? {}"
-          :schema="record.schema"
-          :core="record.core"
-          :mode="mode"
-          :tb="record.metadata.tb_id"
-          :record_id="id"
-          @rs-updated="fetchRecord"
-        />
 
       </div>
 
@@ -342,6 +349,7 @@ import RsSection              from '@/components/record/RsSection.vue'
 import ManualLinksSection     from '@/components/record/ManualLinksSection.vue'
 import ZoteroSection          from '@/components/record/ZoteroSection.vue'
 import ChronoSection          from '@/components/record/ChronoSection.vue'
+import ChronoDensityPanel     from '@/components/record/ChronoDensityPanel.vue'
 import RecordVersionsDrawer   from '@/components/record/RecordVersionsDrawer.vue'
 
 const { t }   = useI18n()
@@ -470,10 +478,7 @@ const hasRightColumn = computed(() => {
   const m = mode.value
   return hasLinks.value
     || hasManualLinks.value || m === 'edit'
-    || (r.schema?.has_zotero  && (hasBibliography.value || m === 'edit'))
-    || (r.schema?.has_geodata && (hasGeodata.value      || m === 'edit'))
-    || !!r.schema?.has_fuzzy_date
-    || (!!r.schema?.rs && !isNew.value)
+    || (r.schema?.has_geodata && (hasGeodata.value || m === 'edit'))
 })
 const geodataCount = computed(() => {
   const g = record.value?.geodata

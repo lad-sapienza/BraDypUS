@@ -124,6 +124,11 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/:app/chrono/:tb',
+    component: () => import('@/views/ChronoTimelineView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/:app/migrations',
     component: () => import('@/views/MigrationsView.vue'),
     meta: { requiresAuth: true }

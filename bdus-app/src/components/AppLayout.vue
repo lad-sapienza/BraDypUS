@@ -318,7 +318,7 @@ const navGroups = computed(() => {
         { labelKey: 'find_replace',   icon: 'pi-search-plus',  to: `${a}/find-replace`,    disabled: false },
         { labelKey: 'vocabulary_mng',      icon: 'pi-book',         to: `${a}/vocabularies`,    disabled: false },
         { labelKey: 'assemblage_analysis', icon: 'pi-th-large',    to: `${a}/assemblages`,     disabled: false },
-        { labelKey: 'history',             icon: 'pi-history',      to: `${a}/history`,         disabled: false },
+{ labelKey: 'history',             icon: 'pi-history',      to: `${a}/history`,         disabled: false },
         { labelKey: 'deleted_records',icon: 'pi-trash',        to: `${a}/deleted-records`, disabled: false },
         { labelKey: 'import_data',    icon: 'pi-upload',       to: `${a}/import`,          disabled: false },
         { labelKey: 'backup',         icon: 'pi-save',         to: `${a}/backups`                          },

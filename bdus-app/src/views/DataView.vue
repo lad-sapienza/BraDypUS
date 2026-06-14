@@ -171,6 +171,17 @@
                 @click="openGeoface"
               />
 
+              <!-- Chronological timeline — only for tables with fuzzy_date plugin -->
+              <Button
+                v-if="selectedTable?.fuzzy_date"
+                icon="pi pi-calendar"
+                :title="t('chrono_timeline')"
+                size="small"
+                severity="secondary"
+                text
+                @click="openTimeline"
+              />
+
               <!-- Harris Matrix — only for tables with RS plugin enabled -->
               <Button
                 v-if="selectedTable?.rs"
@@ -1022,6 +1033,16 @@ function openGeoface() {
  * MatrixView / getRsMatrix() accept the same filter/search_type/search params
  * as getRecords(), so we forward the entire current query.
  */
+function openTimeline() {
+  const tb  = selectedTable.value?.name
+  const lbl = selectedTable.value?.label
+  if (!tb) return
+  router.push({
+    path:  `/${route.params.app}/chrono/${encodeURIComponent(tb)}`,
+    query: { back: route.fullPath, backLabel: lbl },
+  })
+}
+
 function openMatrix() {
   const tb = selectedTable.value?.name
   if (!tb) return

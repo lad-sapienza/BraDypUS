@@ -25,6 +25,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **9 endpoint REST**: `GET /api/assemblages` (lista), `POST /api/assemblages` (salva), `GET /api/assemblage/sources` (tabelle sorgente disponibili), `GET /api/assemblage/table-meta` (campi + FK per il path builder), `POST /api/assemblage/data` (esecuzione pivot), `POST /api/assemblage/{id}` (aggiorna), `POST /api/assemblage/{id}/share`, `POST /api/assemblage/{id}/unshare`, `DELETE /api/assemblage/{id}`.
   - **Migrazione M034** (`CreateAssemblageAnalyses`) — crea la tabella `bdus_assemblage_analyses` con wizard-config JSON, flag di condivisione, `created_by` e timestamp.
   - `getSources()` restituisce tabelle normali e plugin con `parent_tb`/`parent_label`; `getTableMeta()` espone campi e relazioni FK per costruire il percorso multi-hop; `getData()` computa la pivot con misura configurabile (count, sum, count_distinct) e filtri JSON.
+  - `getData()` restituisce anche `group_labels` (mappa id→etichetta umana via preview field), `group_tb` e `group_field`; la Vue li usa per mostrare sull'asse verticale l'etichetta leggibile invece dell'id numerico e per linkare le schede.
+
+- **Timeline cronologica comparata** (`GET /api/chrono/timeline`, `ChronoTimelineView.vue`) — vista full-page che sovrappone sullo stesso asse temporale tutti i record con dati `fuzzy_date` delle tabelle selezionate; ogni tabella è una riga, ogni record un segmento colorato per certezza; parametri `from`, `to` e `tb[]` per filtro temporale e per tabella; navigazione dalla barra degli strumenti della DataView tramite il pulsante calendario.
+
+- **Distribuzione cronologica derivata** (`GET /api/chrono/related/{tb}/{id}`, `ChronoDensityPanel.vue`) — pannello nel corpo della scheda record che mostra, per ogni tabella relata tramite FK, un istogramma a 60 bin della densità cronologica dei record collegati; evidenzia l'intervallo di picco con etichette `from`/`to`; ogni barra è un link filtrato alla lista dei record.
+
+- **Endpoint upgrade** (`Upgrade` controller) — tre endpoint per la gestione dell'aggiornamento schema:
+  - `GET /api/upgrade/status` — stato corrente (`major` / `minor` / `null`) senza autenticazione JWT.
+  - `POST /api/upgrade/major` — esegue le migrazioni major (v4→v5); autenticazione diretta superadmin.
+  - `POST /api/upgrade/minor` — esegue le migrazioni minor pendenti; richiede JWT admin.
 
 ### Changed
 
@@ -38,6 +48,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`Dispatcher` rispondeva HTTP 503 per `major_upgrade_required`** — 503 ("Service Unavailable") segnala ai tool di monitoring che il server è irraggiungibile, mentre il server è perfettamente operativo; è il client che deve eseguire un upgrade. Sostituito con **HTTP 409 Conflict** (conflitto tra lo stato corrente dell'app e la richiesta). Il body `{"status":"error","code":"major_upgrade_required"}` è invariato; il client legge il body e reindirizza al flusso di upgrade.
 
 - **Grafici salvati di altre tabelle** (`ChartPanel.vue`) — eseguire un grafico salvato su una tabella diversa da quella corrente falliva con `invalid_field`: la definizione veniva ricostruita dal builder con la tabella corrente. Ora i grafici di altre tabelle vengono eseguiti con la definizione salvata, contro la loro tabella; "Salva come" persiste la definizione realmente eseguita.
+
+- **Badge "aggiornamento disponibile" persistente in pagina login** — `listApps()` confronta `bdus_version` in `config.json` con la versione da `composer.json`; `writeProjectVersion()` veniva chiamata solo tramite `Migrate::run()`, cioè solo nel flusso di upgrade. Un login su un'app già aggiornata non scriveva mai la versione corrente → la chiave risultava assente o obsoleta → il badge compariva sempre. Fix: `Login::auth()` chiama `Migrate::run()` anche quando non ci sono migrazioni pendenti (non-fatal try/catch); la chiamata è idempotente e costa solo 2 query + 1 file write per login.
+
+- **Etichette gruppi nell'Analisi Assemblaggio sempre vuote (`—`)** (`AssemblageAnalysis::getData()`) — la JOIN per il label lookup usava `ON fkCol = _lbl.{id_field}` dove `id_field` è il campo semantico configurato (es. `'us'`), non la chiave numerica `id`; il confronto tra un intero FK e una stringa non trovava mai corrispondenza. Fix: il JOIN usa sempre `ON ... = _lbl.id` (chiave autoincrement).
+
+- **Dialogo di conferma eliminazione in `AssemblagesView` mostrava la chiave i18n letterale** — la chiave `delete_confirm_message` mancava in entrambi i file locale (`it.json`, `en.json`). Aggiunta la traduzione italiana e inglese corrispondente.
+
+- **Tooltip della Timeline cronologica completamente trasparente** (`ChronoTimelineView.vue`) — le variabili CSS PrimeVue `--p-surface-card` e `--p-surface-overlay` non sono definite su `:root` ma solo all'interno del sotto-albero del tema; gli elementi teletrasportati in `<body>` non le ereditano, risultando in `background: transparent`. Fix: sostituito con `rgba(255,255,255,0.92)` per il tema chiaro e `rgba(30,41,59,0.92)` per il tema scuro (classe `.dark-mode` su `<html>`).
 
 ### Removed
 

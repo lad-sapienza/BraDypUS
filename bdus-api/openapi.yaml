@@ -92,6 +92,14 @@ tags:
     description: Zotero bibliography integration — library config and per-record citation links
   - name: widgets
     description: Per-app UI widget files (vanilla ES modules)
+  - name: upgrade
+    description: Schema upgrade wizard (major v4→v5 and minor pending migrations)
+  - name: dbml
+    description: DBML schema export, preview and import
+  - name: assemblage
+    description: Assemblage-analysis pivot wizard — saved analyses and on-demand data
+  - name: chrono
+    description: Chronological timeline and density distribution views
 
 # ──────────────────────────────────────────────────────────────────────────────
 paths:
@@ -4301,6 +4309,623 @@ paths:
         '404':
           description: Widget not found
 
+  # ── Upgrade ───────────────────────────────────────────────────────────────
+
+  /api/upgrade/status:
+    get:
+      tags: [upgrade]
+      summary: Upgrade status
+      description: |
+        Returns whether a major (v4→v5) or minor (pending migrations) upgrade
+        is needed. No authentication required — used by the login page to display
+        the upgrade badge before the user logs in.
+      security: []
+      responses:
+        '200':
+          description: Upgrade status
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      upgrade:
+                        type: [string, 'null']
+                        enum: [major, minor, null]
+                        description: >
+                          `major` = v4→v5 schema rewrite needed;
+                          `minor` = pending incremental migrations;
+                          `null` = schema is up to date.
+
+  /api/upgrade/major:
+    post:
+      tags: [upgrade]
+      summary: Run major upgrade (v4 → v5)
+      description: |
+        Executes the v4→v5 schema migration. Requires direct super-admin
+        credentials in the request body (not a JWT, since the app may be
+        in a state where JWT auth is not yet possible).
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [user, password]
+              properties:
+                user:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Upgrade completed or already up to date
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+        '400':
+          $ref: '#/components/responses/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/upgrade/minor:
+    post:
+      tags: [upgrade]
+      summary: Run minor upgrade (pending migrations)
+      description: |
+        Executes all pending incremental migrations. Requires a JWT with
+        `admin` privilege. Called automatically during the login flow when
+        `upgrade/status` returns `minor`.
+      responses:
+        '200':
+          description: Migrations applied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+        '400':
+          $ref: '#/components/responses/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  # ── DBML ──────────────────────────────────────────────────────────────────
+
+  /api/config/dbml:
+    get:
+      tags: [dbml]
+      summary: Export schema as DBML
+      description: |
+        Serialises the entire application configuration (tables, fields,
+        vocabularies) into a single annotated `.dbml` file compatible with
+        dbdiagram.io. System tables (`bdus_*`) are excluded. Requires
+        `admin` privilege.
+      responses:
+        '200':
+          description: DBML source
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      dbml:
+                        type: string
+                        description: Full DBML source as a plain string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/config/dbml/preview:
+    post:
+      tags: [dbml]
+      summary: Validate DBML without applying
+      description: |
+        Parses the submitted DBML and returns blocking errors and
+        non-blocking warnings for each table defined in the file.
+        Nothing is written to the database or config. Requires `admin` privilege.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [dbml]
+              properties:
+                dbml:
+                  type: string
+      responses:
+        '200':
+          description: Validation result per table
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      tables:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            name:
+                              type: string
+                            errors:
+                              type: array
+                              items:
+                                type: string
+                            warnings:
+                              type: array
+                              items:
+                                type: string
+        '400':
+          $ref: '#/components/responses/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/config/dbml/apply:
+    post:
+      tags: [dbml]
+      summary: Apply DBML import
+      description: |
+        Creates the tables described in the DBML in the database and writes
+        the corresponding configuration entries. Tables with blocking errors
+        are skipped. Enum columns marked `// bdus:vocabulary` are seeded into
+        `bdus_vocabularies`. Requires `super_admin` privilege.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [dbml]
+              properties:
+                dbml:
+                  type: string
+      responses:
+        '200':
+          description: Import result per table
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      created:
+                        type: array
+                        items:
+                          type: string
+                        description: Table names successfully created
+                      skipped:
+                        type: array
+                        items:
+                          type: string
+                        description: Table names skipped due to blocking errors
+        '400':
+          $ref: '#/components/responses/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  # ── Assemblage analysis ───────────────────────────────────────────────────
+
+  /api/assemblages:
+    get:
+      tags: [assemblage]
+      summary: List saved assemblage analyses
+      description: |
+        Returns all analyses saved by the current user plus all analyses
+        marked as shared by other users.
+      responses:
+        '200':
+          description: List of saved analyses
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/AssemblageAnalysis'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags: [assemblage]
+      summary: Save a new assemblage analysis
+      description: |
+        Persists a new analysis definition (wizard config JSON, title,
+        shared flag). Returns the created row with its `id`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssemblageAnalysisInput'
+      responses:
+        '200':
+          description: Created analysis
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/AssemblageAnalysis'
+        '400':
+          $ref: '#/components/responses/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/assemblage/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    post:
+      tags: [assemblage]
+      summary: Update a saved analysis
+      description: Updates the title, config or shared flag of an existing analysis.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssemblageAnalysisInput'
+      responses:
+        '200':
+          $ref: '#/components/responses/SimpleSuccess'
+        '400':
+          $ref: '#/components/responses/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [assemblage]
+      summary: Delete a saved analysis
+      description: Permanently removes the analysis. Only the owner can delete.
+      responses:
+        '200':
+          $ref: '#/components/responses/SimpleSuccess'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/assemblage/{id}/share:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    post:
+      tags: [assemblage]
+      summary: Share an analysis
+      description: Marks the analysis as shared so other users can see it.
+      responses:
+        '200':
+          $ref: '#/components/responses/SimpleSuccess'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/assemblage/{id}/unshare:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    post:
+      tags: [assemblage]
+      summary: Unshare an analysis
+      description: Removes the shared flag from the analysis.
+      responses:
+        '200':
+          $ref: '#/components/responses/SimpleSuccess'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/assemblage/sources:
+    get:
+      tags: [assemblage]
+      summary: List available source tables
+      description: |
+        Returns all user tables (and plugin tables with their parent label)
+        that can be used as the source of an assemblage analysis.
+      responses:
+        '200':
+          description: Source table list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            name:
+                              type: string
+                            label:
+                              type: string
+                            parent_tb:
+                              type: [string, 'null']
+                            parent_label:
+                              type: [string, 'null']
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/assemblage/table-meta:
+    get:
+      tags: [assemblage]
+      summary: Field and FK metadata for pivot builder
+      description: |
+        Returns the fields of the requested table together with FK relations
+        so the wizard can build multi-hop traversal paths.
+      parameters:
+        - name: tb
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Table field and relation metadata
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      fields:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            name:
+                              type: string
+                            label:
+                              type: string
+                            id_from_tb:
+                              type: [string, 'null']
+                      relations:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            tb:
+                              type: string
+                            label:
+                              type: string
+        '400':
+          $ref: '#/components/responses/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/assemblage/data:
+    post:
+      tags: [assemblage]
+      summary: Execute an assemblage pivot
+      description: |
+        Runs the pivot computation described in the wizard config and returns
+        the pivot matrix together with display labels and chart-ready arrays.
+        Does not save the result.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Wizard config JSON (source table, path, measure, filters…)
+      responses:
+        '200':
+          description: Pivot result
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      groups:
+                        type: array
+                        items: {}
+                        description: Raw group values (IDs or plain field values)
+                      group_labels:
+                        type: object
+                        additionalProperties:
+                          type: string
+                        description: Map from raw group value to human-readable label
+                      group_tb:
+                        type: string
+                        description: Table that owns the group axis
+                      group_field:
+                        type: string
+                        description: Field used for grouping
+                      categories:
+                        type: array
+                        items: {}
+                        description: Column (category) values
+                      pivot:
+                        type: object
+                        additionalProperties:
+                          type: object
+                          additionalProperties:
+                            type: [number, 'null']
+                        description: Nested map group → category → measure value
+        '400':
+          $ref: '#/components/responses/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ── Chrono ────────────────────────────────────────────────────────────────
+
+  /api/chrono/timeline:
+    get:
+      tags: [chrono]
+      summary: Chronological timeline data
+      description: |
+        Returns all records with `fuzzy_date` data from the requested tables,
+        formatted for the comparative timeline view. Each record contributes a
+        segment `[from, to]` coloured by `chrono_certainty`. Requires read privilege.
+      parameters:
+        - name: tb[]
+          in: query
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+          description: >
+            One or more table names to include. Defaults to all tables with
+            the `fuzzy_date` plugin enabled.
+        - name: from
+          in: query
+          schema:
+            type: integer
+          description: Filter — only include records with `chrono_to >= from`
+        - name: to
+          in: query
+          schema:
+            type: integer
+          description: Filter — only include records with `chrono_from <= to`
+      responses:
+        '200':
+          description: Timeline data grouped by table
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            tb:
+                              type: string
+                            label:
+                              type: string
+                            records:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  id:
+                                    type: integer
+                                  label:
+                                    type: string
+                                  from:
+                                    type: integer
+                                  to:
+                                    type: integer
+                                  certainty:
+                                    type: [string, 'null']
+                                  period:
+                                    type: [string, 'null']
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/chrono/related/{tb}/{id}:
+    parameters:
+      - name: tb
+        in: path
+        required: true
+        schema:
+          type: string
+        description: Table name of the anchor record
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: Numeric ID of the anchor record
+    get:
+      tags: [chrono]
+      summary: Chronological density of related records
+      description: |
+        For each table related to the anchor record via FK, computes a
+        60-bin histogram of chronological density. Used by `ChronoDensityPanel.vue`
+        in the record body. Requires read privilege.
+      responses:
+        '200':
+          description: Per-table density histograms
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            tb:
+                              type: string
+                            label:
+                              type: string
+                            bins:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  from:
+                                    type: integer
+                                  to:
+                                    type: integer
+                                  count:
+                                    type: integer
+                            peak_from:
+                              type: [integer, 'null']
+                            peak_to:
+                              type: [integer, 'null']
+        '400':
+          $ref: '#/components/responses/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
 # ──────────────────────────────────────────────────────────────────────────────
 components:
 
@@ -5156,3 +5781,42 @@ components:
         zotero_url:
           type: [string, 'null']
           description: Public URL to the item on zotero.org (null for user libraries)
+
+    # ── Assemblage ─────────────────────────────────────────────────────────
+
+    AssemblageAnalysis:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        config:
+          type: object
+          description: Wizard configuration JSON (source table, path, measure, filters…)
+        shared:
+          type: integer
+          description: 1 when the analysis is shared with all users, 0 otherwise
+        created_by:
+          type: string
+          description: Username of the owner
+        created_at:
+          type: [string, 'null']
+          description: ISO-8601 creation timestamp
+        updated_at:
+          type: [string, 'null']
+          description: ISO-8601 last-update timestamp
+
+    AssemblageAnalysisInput:
+      type: object
+      required: [title, config]
+      properties:
+        title:
+          type: string
+        config:
+          type: object
+          description: Wizard configuration JSON
+        shared:
+          type: integer
+          enum: [0, 1]
+          default: 0

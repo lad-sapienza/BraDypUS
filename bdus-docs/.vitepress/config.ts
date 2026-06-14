@@ -127,6 +127,8 @@ function guideSidebar() {
         { text: 'Version history',     link: '/guide/usage/versions' },
         { text: 'Deleted records',     link: '/guide/usage/deleted-records' },
         { text: 'Charts',              link: '/guide/usage/charts' },
+        { text: 'Chronology',          link: '/guide/usage/chrono' },
+        { text: 'Assemblage analysis', link: '/guide/usage/assemblage-analysis' },
         { text: 'Bibliography (Zotero)', link: '/guide/usage/zotero' },
       ],
     },

@@ -7,26 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Traversata dei campi lookup (`id_from_tb`) in `JsonFilter`** — i campi configurati con `id_from_tb` memorizzano l'id del record referenziato; un oggetto annidato sul campo viene ora risolto con una subquery sulla tabella referenziata:
-  - `filter[parent_id][sigla][_eq]=T001` → `crud_test.parent_id IN (SELECT id FROM crud_test WHERE sigla = ?)`
-  - Funziona anche dentro le subquery plugin/backlink: `filter[tags][cat_ref][name][_eq]=Ceramics`
-  - Le condizioni annidate sono compilate da un `JsonFilter` ricorsivo sulla tabella referenziata: tutti gli operatori, i gruppi logici `_and`/`_or`, la validazione dei campi e ulteriori hop lookup funzionano in modo trasparente.
-  - Le condizioni dirette sul campo (`filter[parent_id][_eq]=3`) restano confronti per id, invariate.
-- **Metadati `ref_tb` / `ref_field` in `getAdvancedConfig`** — i campi lookup nella lista campi della ricerca avanzata dichiarano la tabella referenziata e il suo `id_field`; il frontend usa questi metadati per emettere la traversata annidata, allineando la ricerca ai valori suggeriti dall'autocomplete (che provengono dalla tabella referenziata).
+- **DBML import / export** — la sezione Config espone un pannello DBML per esportare l'intera configurazione in un file `.dbml` annotato (compatibile con dbdiagram.io) e per importare nuove tabelle da un file DBML con anteprima di errori/avvisi prima dell'applicazione. Vedi [Configurazione → DBML](../setup/config.md).
+
+- **Traversata dei campi lookup (`id_from_tb`) nei filtri** — cercare su un campo FK tramite il valore del record referenziato (es. ricerca avanzata con campo di tipo lookup) ora produce il filtro corretto; in precedenza il confronto avveniva sull'id numerico interno.
+
+- **Analisi Assemblaggio** — nuovo modulo di analisi pivot su assemblaggi di materiale. Accessibile dalla barra degli strumenti della DataView (icona griglia). Permette di scegliere tabella sorgente, percorso FK, misura (count/sum/count_distinct), categoria e raggruppamento, e di salvare/condividere le analisi. Sull'asse verticale compaiono le etichette leggibili dei record (non gli id numerici) con link diretto alla scheda. Vedi [Analisi Assemblaggio](./assemblage-analysis.md).
+
+- **Timeline cronologica comparata** — vista full-page raggiungibile dal pulsante calendario nella barra degli strumenti della DataView. Sovrappone sullo stesso asse temporale tutti i record con dati `fuzzy_date` delle tabelle selezionate; ogni record è un segmento colorato per certezza. Vedi [Timeline cronologica](./chrono.md).
+
+- **Distribuzione cronologica derivata** — pannello visualizzato nel corpo della scheda record (quando la tabella ha relazioni FK con tabelle con plugin `fuzzy_date`). Mostra un istogramma di densità cronologica dei record correlati per ogni tabella relata, con link filtrato alle liste dei record.
+
+- **Endpoint upgrade** — tre endpoint REST per la gestione dell'aggiornamento schema (`/api/upgrade/status`, `/api/upgrade/major`, `/api/upgrade/minor`). Lo stato viene mostrato nella pagina di login anche prima dell'autenticazione.
 
 ### Changed
 
-- **Ricerca avanzata (`DataView.vue`)** — le righe su campi lookup generano il filtro annidato `{ campo: { ref_field: { _op: valore } } }`; prima il confronto avveniva direttamente sulla colonna (che contiene id), quindi cercare per valore suggerito non trovava mai nulla.
-- **Topbar** — aggiunto il link "by LAD" accanto al nome BraDypUS (punta a `https://purl.org/lad`); il burger menu è nascosto sugli schermi ≥ 1024px, dove la sidebar è sempre visibile e il pulsante si limitava a oscurare lo schermo con l'overlay.
+- **Ricerca avanzata** — le righe su campi lookup generano ora il filtro per valore del record referenziato (non per id numerico), allineandosi ai valori suggeriti dall'autocomplete.
+- **Topbar** — aggiunto il link "by LAD" accanto al nome BraDypUS; il burger menu è nascosto su schermi larghi dove la sidebar è sempre visibile.
 
 ### Fixed
 
-- **Grafici salvati di altre tabelle** (`ChartPanel.vue`) — eseguire un grafico salvato su una tabella diversa da quella corrente falliva con `invalid_field`: la definizione veniva ricostruita dal builder con la tabella corrente. Ora i grafici di altre tabelle vengono eseguiti con la definizione salvata, contro la loro tabella; "Salva come" persiste la definizione realmente eseguita.
+- **Grafici salvati di altre tabelle** — eseguire un grafico salvato su una tabella diversa da quella corrente ora funziona correttamente.
+- **Badge "aggiornamento disponibile" persistente** — il badge nella pagina login ora scompare correttamente dopo aver effettuato il login su un'app già aggiornata.
+- **Etichette gruppi nell'Analisi Assemblaggio** — le etichette sull'asse verticale ora mostrano il valore leggibile del record invece di `—`.
+- **Tooltip della Timeline cronologica trasparente** — il tooltip ora ha uno sfondo visibile (con adattamento al tema scuro).
 
 ### Removed
 
-- **Connettore XOR** — rimosso da `getAdvancedConfig`: non era supportato da `JsonFilter` (il frontend lo trattava silenziosamente come AND) e non risulta usato in pratica.
-- **Pulsanti parentesi nella ricerca avanzata** — erano UI senza effetto: `buildFilterFromRows` non li ha mai considerati (il raggruppamento segue la precedenza standard AND-su-OR).
+- **Connettore XOR** — rimosso dalla ricerca avanzata: non era funzionante.
+- **Pulsanti parentesi nella ricerca avanzata** — rimossi: erano UI senza effetto reale sul filtro.
 
 ## [5.0.2] - 2026-06-06
 

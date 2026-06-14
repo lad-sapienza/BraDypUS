@@ -12,7 +12,7 @@ The sidebar on the left provides access to all modules. It is organised into
 three groups:
 
 - **Data** — tables, search, import, vocabularies, find & replace, history
-- **Analysis** — charts, geoface
+- **Analysis** — charts, geoface, assemblage analysis, chronological timeline
 - **System** — users, backup, logs, migrations, info
 
 The active table selector at the top of the sidebar lets you switch between
@@ -32,9 +32,13 @@ the record list for that table.
 | Export data | DataView toolbar → Export button |
 | Import data | Sidebar → Import data |
 | View the Harris Matrix | DataView toolbar → Harris Matrix button |
+| Visualise chronological distribution | DataView toolbar → Calendar button (Timeline view) |
+| Analyse assemblage compositions | DataView toolbar → Grid button (Assemblage analysis) |
+| View chronological density of related records | Record body → Chronological density panel |
 | Manage vocabularies | Sidebar → Vocabulary management |
 | Find and replace values | Sidebar → Find & replace |
 | Browse all uploaded files | Sidebar → File management |
 | Download a backup | Sidebar → Backup |
 | Manage users | Sidebar → Users |
 | Configure the application | Sidebar → Config (super-admin only) |
+| Import / export schema as DBML | Config → DBML panel (super-admin) |

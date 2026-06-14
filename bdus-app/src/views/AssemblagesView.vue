@@ -54,7 +54,14 @@
                       </thead>
                       <tbody>
                         <tr v-for="group in resultData.groups" :key="group">
-                          <th class="pivot-group-header">{{ group || '—' }}</th>
+                          <th class="pivot-group-header">
+                            <RouterLink
+                              v-if="resultData.group_field === 'id' && group"
+                              :to="`/${route.params.app}/record/${resultData.group_tb}/${group}`"
+                              class="group-link"
+                            >{{ (resultData.group_labels?.[group] ?? group) || '—' }}</RouterLink>
+                            <template v-else>{{ (resultData.group_labels?.[group] ?? group) || '—' }}</template>
+                          </th>
                           <td
                             v-for="char in resultData.chars"
                             :key="char"
@@ -508,6 +515,7 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { useRoute }   from 'vue-router'
 import { useToast }   from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import { useI18n }    from '@/i18n'
@@ -541,6 +549,7 @@ import {
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 
+const route   = useRoute()
 const toast   = useToast()
 const confirm = useConfirm()
 const { t }   = useI18n()
@@ -697,7 +706,7 @@ const chartData = computed(() => {
   if (!resultData.value) return { labels: [], datasets: [] }
   const { chars, groups, data } = resultData.value
   return {
-    labels: groups.map(g => g || '—'),
+    labels: groups.map(g => (resultData.value.group_labels?.[g] ?? g) || '—'),
     datasets: chars.map((char, i) => ({
       label:           char || '—',
       data:            groups.map(g => data[g]?.[char] ?? 0),
@@ -757,10 +766,9 @@ const maxCellValue = computed(() => {
 function cellBgStyle(val) {
   if (!heatmapEnabled.value || val === 0) return {}
   const ratio = val / maxCellValue.value
-  // HSL: lightness goes from 95% (near-white) down to 30% (deep blue) as ratio → 1
-  const l = Math.round(95 - ratio * 65)
+  const pct   = Math.round((0.1 + ratio * 0.85) * 100)
   return {
-    backgroundColor: `hsl(210, 65%, ${l}%)`,
+    backgroundColor: `color-mix(in srgb, var(--p-primary-color) ${pct}%, transparent)`,
     color: ratio > 0.55 ? 'white' : 'inherit',
     transition: 'background-color 0.2s',
   }
@@ -1035,8 +1043,9 @@ function exportCsv() {
   const rows = []
   rows.push(['', ...chars, 'Tot'].map(csvEscape).join(','))
   for (const g of groups) {
-    const vals = chars.map(c => data[g]?.[c] ?? 0)
-    rows.push([g, ...vals, vals.reduce((s, v) => s + v, 0)].map(csvEscape).join(','))
+    const vals  = chars.map(c => data[g]?.[c] ?? 0)
+    const label = resultData.value.group_labels?.[g] ?? g
+    rows.push([label, ...vals, vals.reduce((s, v) => s + v, 0)].map(csvEscape).join(','))
   }
   const colTots = chars.map(c => groups.reduce((s, g) => s + (data[g]?.[c] ?? 0), 0))
   rows.push(['Tot', ...colTots, colTots.reduce((s, v) => s + v, 0)].map(csvEscape).join(','))
@@ -1181,6 +1190,8 @@ onMounted(async () => {
 .pivot-corner { min-width: 6rem; }
 .pivot-char-header { font-size: 0.78rem; max-width: 8rem; overflow: hidden; text-overflow: ellipsis; }
 .pivot-group-header { font-weight: 600; }
+.group-link { color: inherit; text-decoration: underline dotted; }
+.group-link:hover { color: var(--p-primary-color); text-decoration: underline; }
 .pivot-total, .pivot-total-header { font-weight: 700; background: var(--p-surface-50); }
 .pivot-grand { background: var(--p-primary-50); }
 .pivot-footer th, .pivot-footer td { background: var(--p-surface-100); font-weight: 700; }

@@ -1,17 +1,15 @@
-# Production deployment: build from source, then serve via Apache (PHP) + Nginx (Vue).
+# Deploy BraDypUS using pre-built images from GitHub Container Registry.
+# Does NOT require the source code — suitable for end-user deployments.
 #
-# Usage (build from source):
-#   docker compose -f docker-compose.prod.yml up -d --build
-#
-# To deploy without building (pull pre-built images from Docker Hub), use instead:
+# Usage:
+#   docker compose -f docker-compose.hub.yml pull
 #   docker compose -f docker-compose.hub.yml up -d
 #
-# The frontend (Nginx) proxies /api/, /index.php, /projects/, /cache/ to the
-# api service, so everything is accessible on a single port (80) and no CORS
-# configuration is needed.
+# Pin to a specific version by setting BDUS_VERSION (default: latest):
+#   BDUS_VERSION=5.0.3 docker compose -f docker-compose.hub.yml up -d
 #
-# Persistent data (uploaded files, SQLite databases, backups) is stored in the
-# named volume "projects_data" and survives container restarts and rebuilds.
+# Persistent data (uploaded files, SQLite databases, backups) is stored in
+# the named volume "projects_data" and survives restarts and upgrades.
 #
 # Environment variables you may want to override (via .env or -e):
 #   BRADYPUS_DEBUG        — set to 1 to enable debug output (default: 0)
@@ -21,8 +19,7 @@ services:
 
   # ── PHP / Apache backend ──────────────────────────────────────────────────
   api:
-    build: bdus-api/
-    image: ghcr.io/lad-sapienza/bdus-api:latest   # tags the local build with the registry name
+    image: ghcr.io/lad-sapienza/bdus-api:${BDUS_VERSION:-latest}
     expose:
       - "80"          # only reachable within the Docker network; not published
     environment:
@@ -36,12 +33,10 @@ services:
 
   # ── Vue SPA / Nginx frontend ──────────────────────────────────────────────
   frontend:
-    build: bdus-app/
-    image: ghcr.io/lad-sapienza/bdus-app:latest   # tags the local build with the registry name
+    image: ghcr.io/lad-sapienza/bdus-app:${BDUS_VERSION:-latest}
     ports:
       - "80:80"
     environment:
-      # Must match the service name + port above
       - API_PROXY_TARGET=http://api:80
     depends_on:
       - api

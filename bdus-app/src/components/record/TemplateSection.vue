@@ -12,9 +12,50 @@
 
     <div v-show="!isCollapsed" class="section-content">
 
+      <!-- Accordion section -->
+      <div v-if="isAccordion" class="accordion-panels">
+        <div
+          v-for="(panel, pi) in section.content"
+          :key="pi"
+          class="accordion-panel"
+          :class="{ 'accordion-panel--open': openPanels[pi] }"
+        >
+          <div class="accordion-panel-header" @click="togglePanel(pi)">
+            <span class="accordion-panel-label">{{ panel.label }}</span>
+            <i
+              class="accordion-panel-icon"
+              :class="openPanels[pi] ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
+            />
+          </div>
+          <div v-show="openPanels[pi]" class="accordion-panel-body">
+            <div class="template-fields">
+              <div
+                v-for="item in (panel.fields ?? [])"
+                :key="item.field"
+                class="template-field-cell"
+                :style="{ gridColumn: 'span ' + widthToSpan(item.width ?? '1/1') }"
+              >
+                <FieldDisplay
+                  v-if="mode === 'read'"
+                  :schema="fieldSchema(item.field)"
+                  :value="record.core[item.field]"
+                />
+                <FieldEditor
+                  v-else
+                  :schema="fieldSchema(item.field)"
+                  :tb="tb"
+                  :modelValue="editData.core[item.field]"
+                  @update:modelValue="v => editData.core[item.field] = v"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Plugin section -->
       <PluginSection
-        v-if="isPlugin"
+        v-else-if="isPlugin"
         :schema="schema.plugins[section.plugin]"
         :plugin="record.plugins[section.plugin]"
         :mode="mode"
@@ -72,16 +113,25 @@ const props = defineProps({
   editData: { type: Object, required: true },
 })
 
-// Detect whether this is a plugin section
-const isPlugin = computed(() => !!props.section.plugin)
+const isPlugin    = computed(() => !!props.section.plugin)
+const isAccordion = computed(() => props.section.type === 'accordion')
 
-// Collapsed state — initialised from template definition
+// Collapsed state for the outer fieldset — initialised from template definition
 const isCollapsed = ref(!!props.section.collapsed)
 
 function toggleCollapse() {
   if (props.section.collapsible) {
     isCollapsed.value = !isCollapsed.value
   }
+}
+
+// Per-panel open state for accordion sections — initialised from panel.open (default: open)
+const openPanels = ref(
+  (props.section.content ?? []).map(panel => panel.open !== false)
+)
+
+function togglePanel(pi) {
+  openPanels.value[pi] = !openPanels.value[pi]
 }
 
 /**
@@ -124,5 +174,53 @@ function fieldSchema(name) {
 .template-field-cell {
   min-width: 0;
   box-sizing: border-box;
+}
+
+/* ── Accordion ── */
+.accordion-panels {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border: 1px solid var(--p-content-border-color);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.accordion-panel {
+  border-bottom: 1px solid var(--p-content-border-color);
+}
+.accordion-panel:last-child {
+  border-bottom: none;
+}
+
+.accordion-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.55rem 0.85rem;
+  cursor: pointer;
+  user-select: none;
+  background: color-mix(in srgb, var(--p-primary-color) 4%, transparent);
+  transition: background 0.12s;
+}
+.accordion-panel-header:hover {
+  background: color-mix(in srgb, var(--p-primary-color) 9%, transparent);
+}
+.accordion-panel--open .accordion-panel-header {
+  background: color-mix(in srgb, var(--p-primary-color) 7%, transparent);
+}
+
+.accordion-panel-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.accordion-panel-icon {
+  font-size: 0.75rem;
+  opacity: 0.6;
+}
+
+.accordion-panel-body {
+  padding: 0.75rem 0.85rem;
 }
 </style>

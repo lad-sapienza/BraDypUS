@@ -145,32 +145,46 @@
                     <InputText v-model="section.label" size="small" style="width:180px" />
                   </div>
 
-                  <!-- Plugin toggle -->
+                  <!-- Section type -->
                   <div class="tmpl-field-group">
+                    <label>{{ t('section_type') }}</label>
+                    <Select
+                      :modelValue="sectionType(section)"
+                      :options="sectionTypeOptions"
+                      optionLabel="label"
+                      optionValue="value"
+                      size="small"
+                      style="width:140px"
+                      @change="e => onSectionTypeChange(si, e.value)"
+                    />
+                  </div>
+
+                  <!-- Plugin selector (only when type = plugin) -->
+                  <div v-if="sectionType(section) === 'plugin'" class="tmpl-field-group">
                     <label>{{ t('plugin') }}</label>
                     <Select
                       v-model="section.plugin"
                       :options="pluginOptions"
                       optionLabel="label"
                       optionValue="tb"
-                      :placeholder="t('core_section')"
+                      :placeholder="t('select_plugin')"
                       :showClear="true"
                       size="small"
                       style="width:160px"
                     />
                   </div>
 
-                  <!-- Collapsible -->
-                  <div class="tmpl-field-group tmpl-checkbox-group">
-                    <Checkbox v-model="section.collapsible" :binary="true" inputId="'col-' + si" />
-                    <label :for="'col-' + si">{{ t('collapsible') }}</label>
-                  </div>
-
-                  <!-- Collapsed by default (only when collapsible) -->
-                  <div v-if="section.collapsible" class="tmpl-field-group tmpl-checkbox-group">
-                    <Checkbox v-model="section.collapsed" :binary="true" :inputId="'coldef-' + si" />
-                    <label :for="'coldef-' + si">{{ t('collapsed_by_default') }}</label>
-                  </div>
+                  <!-- Collapsible (not applicable to accordion) -->
+                  <template v-if="sectionType(section) !== 'accordion'">
+                    <div class="tmpl-field-group tmpl-checkbox-group">
+                      <Checkbox v-model="section.collapsible" :binary="true" :inputId="'col-' + si" />
+                      <label :for="'col-' + si">{{ t('collapsible') }}</label>
+                    </div>
+                    <div v-if="section.collapsible" class="tmpl-field-group tmpl-checkbox-group">
+                      <Checkbox v-model="section.collapsed" :binary="true" :inputId="'coldef-' + si" />
+                      <label :for="'coldef-' + si">{{ t('collapsed_by_default') }}</label>
+                    </div>
+                  </template>
                 </div>
 
                 <!-- Section move + remove -->
@@ -181,17 +195,16 @@
                 </div>
               </div>
 
-              <!-- Content items (fields) -->
-              <div class="tmpl-content-list">
+              <!-- Content: core fields -->
+              <div v-if="sectionType(section) === 'core'" class="tmpl-content-list">
                 <div
                   v-for="(item, ii) in section.content"
                   :key="ii"
                   class="tmpl-content-row"
                 >
-                  <!-- Field selector -->
                   <Select
                     v-model="item.field"
-                    :options="section.plugin ? pluginFieldOptions(section.plugin) : coreFieldOptions"
+                    :options="coreFieldOptions"
                     optionLabel="label"
                     optionValue="name"
                     :placeholder="t('select_field')"
@@ -199,29 +212,88 @@
                     filter
                     style="flex:1; min-width:140px"
                   />
-
-                  <!-- Width selector -->
-                  <Select
-                    v-model="item.width"
-                    :options="widthOptions"
-                    size="small"
-                    style="width:90px"
-                  />
-
-                  <!-- Row move + remove -->
+                  <Select v-model="item.width" :options="widthOptions" size="small" style="width:90px" />
                   <Button icon="pi pi-arrow-up"   size="small" text :disabled="ii === 0"                          @click="moveField(si, ii, -1)" />
                   <Button icon="pi pi-arrow-down" size="small" text :disabled="ii === section.content.length - 1" @click="moveField(si, ii,  1)" />
                   <Button icon="pi pi-times"      size="small" text severity="danger"                              @click="section.content.splice(ii, 1)" />
                 </div>
+                <Button :label="t('add_field')" icon="pi pi-plus" size="small" text class="tmpl-add-field-btn" @click="addField(si)" />
+              </div>
 
-                <Button
-                  :label="t('add_field')"
-                  icon="pi pi-plus"
-                  size="small"
-                  text
-                  class="tmpl-add-field-btn"
-                  @click="addField(si)"
-                />
+              <!-- Content: plugin (layout columns for PluginSection) -->
+              <div v-else-if="sectionType(section) === 'plugin'" class="tmpl-content-list">
+                <div
+                  v-for="(item, ii) in section.content"
+                  :key="ii"
+                  class="tmpl-content-row"
+                >
+                  <Select
+                    v-model="item.field"
+                    :options="section.plugin ? pluginFieldOptions(section.plugin) : []"
+                    optionLabel="label"
+                    optionValue="name"
+                    :placeholder="t('select_field')"
+                    size="small"
+                    filter
+                    style="flex:1; min-width:140px"
+                  />
+                  <Select v-model="item.width" :options="widthOptions" size="small" style="width:90px" />
+                  <Button icon="pi pi-arrow-up"   size="small" text :disabled="ii === 0"                          @click="moveField(si, ii, -1)" />
+                  <Button icon="pi pi-arrow-down" size="small" text :disabled="ii === section.content.length - 1" @click="moveField(si, ii,  1)" />
+                  <Button icon="pi pi-times"      size="small" text severity="danger"                              @click="section.content.splice(ii, 1)" />
+                </div>
+                <Button :label="t('add_field')" icon="pi pi-plus" size="small" text class="tmpl-add-field-btn" @click="addField(si)" />
+              </div>
+
+              <!-- Content: accordion panels -->
+              <div v-else-if="sectionType(section) === 'accordion'" class="tmpl-accordion-editor">
+                <div
+                  v-for="(panel, pi) in section.content"
+                  :key="pi"
+                  class="tmpl-accordion-panel"
+                >
+                  <!-- Panel header row -->
+                  <div class="tmpl-accordion-panel-header">
+                    <div class="tmpl-field-group" style="flex:1">
+                      <label>{{ t('panel_label') }}</label>
+                      <InputText v-model="panel.label" size="small" style="width:180px" />
+                    </div>
+                    <div class="tmpl-field-group tmpl-checkbox-group">
+                      <Checkbox v-model="panel.open" :binary="true" :inputId="'open-' + si + '-' + pi" />
+                      <label :for="'open-' + si + '-' + pi">{{ t('open_by_default') }}</label>
+                    </div>
+                    <div class="tmpl-section-actions">
+                      <Button icon="pi pi-arrow-up"   size="small" text :disabled="pi === 0"                          @click="movePanel(si, pi, -1)" />
+                      <Button icon="pi pi-arrow-down" size="small" text :disabled="pi === section.content.length - 1" @click="movePanel(si, pi,  1)" />
+                      <Button icon="pi pi-trash"      size="small" text severity="danger"                             @click="section.content.splice(pi, 1)" />
+                    </div>
+                  </div>
+                  <!-- Panel field list -->
+                  <div class="tmpl-content-list">
+                    <div
+                      v-for="(item, ii) in panel.fields"
+                      :key="ii"
+                      class="tmpl-content-row"
+                    >
+                      <Select
+                        v-model="item.field"
+                        :options="coreFieldOptions"
+                        optionLabel="label"
+                        optionValue="name"
+                        :placeholder="t('select_field')"
+                        size="small"
+                        filter
+                        style="flex:1; min-width:140px"
+                      />
+                      <Select v-model="item.width" :options="widthOptions" size="small" style="width:90px" />
+                      <Button icon="pi pi-arrow-up"   size="small" text :disabled="ii === 0"                        @click="movePanelField(si, pi, ii, -1)" />
+                      <Button icon="pi pi-arrow-down" size="small" text :disabled="ii === panel.fields.length - 1"  @click="movePanelField(si, pi, ii,  1)" />
+                      <Button icon="pi pi-times"      size="small" text severity="danger"                            @click="panel.fields.splice(ii, 1)" />
+                    </div>
+                    <Button :label="t('add_field')" icon="pi pi-plus" size="small" text class="tmpl-add-field-btn" @click="addPanelField(si, pi)" />
+                  </div>
+                </div>
+                <Button :label="t('add_panel')" icon="pi pi-plus" size="small" text class="tmpl-add-field-btn" @click="addPanel(si)" />
               </div>
             </div>
 
@@ -376,9 +448,45 @@ async function openTemplate(name) {
       s.collapsed   = s.collapsed   ?? false
       s.plugin      = s.plugin      ?? null
       s.content     = s.content     ?? []
+      if (s.type === 'accordion') {
+        for (const panel of s.content) {
+          panel.open   = panel.open   !== false
+          panel.fields = panel.fields ?? []
+        }
+      }
     }
   } catch (e) {
     toast.add({ severity: 'error', summary: e.message, life: 4000 })
+  }
+}
+
+// ── Section type helpers ────────────────────────────────────────────────
+const sectionTypeOptions = computed(() => [
+  { label: t('core_section'), value: 'core' },
+  { label: t('plugin'),       value: 'plugin' },
+  { label: 'Accordion',       value: 'accordion' },
+])
+
+function sectionType(section) {
+  if (section.plugin) return 'plugin'
+  if (section.type === 'accordion') return 'accordion'
+  return 'core'
+}
+
+function onSectionTypeChange(si, newType) {
+  const s = form.value.sections[si]
+  if (newType === 'accordion') {
+    delete s.plugin
+    s.type    = 'accordion'
+    s.content = []
+  } else if (newType === 'plugin') {
+    delete s.type
+    s.plugin  = null
+    s.content = []
+  } else {
+    delete s.plugin
+    delete s.type
+    s.content = []
   }
 }
 
@@ -415,6 +523,33 @@ function moveField(si, ii, dir) {
   arr[ii + dir] = tmp
 }
 
+// ── Accordion panel mutation ─────────────────────────────────────────────
+function addPanel(si) {
+  form.value.sections[si].content.push({
+    label:  t('new_section'),
+    open:   true,
+    fields: [],
+  })
+}
+
+function movePanel(si, pi, dir) {
+  const arr = form.value.sections[si].content
+  const tmp = arr[pi]
+  arr[pi]       = arr[pi + dir]
+  arr[pi + dir] = tmp
+}
+
+function addPanelField(si, pi) {
+  form.value.sections[si].content[pi].fields.push({ field: '', width: '1/2' })
+}
+
+function movePanelField(si, pi, ii, dir) {
+  const arr = form.value.sections[si].content[pi].fields
+  const tmp = arr[ii]
+  arr[ii]       = arr[ii + dir]
+  arr[ii + dir] = tmp
+}
+
 // ── Save ─────────────────────────────────────────────────────────────────
 async function saveTemplate() {
   saving.value = true
@@ -423,7 +558,8 @@ async function saveTemplate() {
     const payload = JSON.parse(JSON.stringify(form.value))
     for (const s of payload.sections) {
       if (!s.plugin) delete s.plugin
-      if (!s.collapsible) { delete s.collapsed }
+      if (!s.collapsible) delete s.collapsed
+      if (s.type !== 'accordion') delete s.type
     }
 
     const res = await api.post(`/api/template/${selectedTb.value}/${selectedName.value}`, payload)
@@ -769,6 +905,30 @@ async function createTemplate() {
 /* Add section button */
 .tmpl-add-section-btn {
   align-self: flex-start;
+}
+
+/* Accordion panel editor */
+.tmpl-accordion-editor {
+  padding: 0.5rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.tmpl-accordion-panel {
+  border: 1px solid var(--p-content-border-color);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.tmpl-accordion-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.45rem 0.6rem;
+  background: color-mix(in srgb, var(--p-primary-color) 4%, transparent);
+  border-bottom: 1px solid var(--p-content-border-color);
+  flex-wrap: wrap;
 }
 
 /* New template dialog */

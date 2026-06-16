@@ -254,10 +254,28 @@ class Loader
                 continue;
             }
 
-            $isPlugin = array_key_exists('plugin', $section);
+            $isPlugin    = array_key_exists('plugin', $section);
+            $isAccordion = ($section['type'] ?? '') === 'accordion';
+
             if ($isPlugin) {
                 if (!in_array($section['plugin'], $pluginNames, true)) {
                     $errors[] = "{$sectionLabel}: unknown_plugin '{$section['plugin']}'";
+                }
+            } elseif ($isAccordion) {
+                foreach ($section['content'] as $panelIdx => $panel) {
+                    $panelLabel = "{$sectionLabel}.panel[{$panelIdx}]";
+                    if (!isset($panel['fields']) || !is_array($panel['fields'])) {
+                        $errors[] = "{$panelLabel}: fields_missing_or_invalid";
+                        continue;
+                    }
+                    foreach ($panel['fields'] as $itemIdx => $item) {
+                        if (isset($item['field']) && !in_array($item['field'], $fieldNames, true)) {
+                            $errors[] = "{$panelLabel}[{$itemIdx}]: unknown_field '{$item['field']}'";
+                        }
+                        if (isset($item['width']) && !in_array($item['width'], $validWidths, true)) {
+                            $errors[] = "{$panelLabel}[{$itemIdx}]: invalid_width '{$item['width']}'";
+                        }
+                    }
                 }
             } else {
                 foreach ($section['content'] as $itemIdx => $item) {
@@ -268,9 +286,11 @@ class Loader
                 }
             }
 
-            foreach ($section['content'] as $itemIdx => $item) {
-                if (isset($item['width']) && !in_array($item['width'], $validWidths, true)) {
-                    $errors[] = "{$sectionLabel}[{$itemIdx}]: invalid_width '{$item['width']}'";
+            if (!$isAccordion) {
+                foreach ($section['content'] as $itemIdx => $item) {
+                    if (isset($item['width']) && !in_array($item['width'], $validWidths, true)) {
+                        $errors[] = "{$sectionLabel}[{$itemIdx}]: invalid_width '{$item['width']}'";
+                    }
                 }
             }
         }

@@ -31,11 +31,11 @@ If a record can have multiple sub-items of the same type (e.g. a context can hav
 multiple finds), model the sub-items as a plugin table rather than multiple fields.
 Plugin tables are shown as editable inline grids inside RecordView.
 
-## Use `link_to` to avoid data duplication
+## Use foreign key fields to avoid data duplication
 
 Instead of typing a site name in every context record, create a `sites` table and
-use a `link_to` field in `contexts`. This makes renaming sites trivial and enables
-cross-table search.
+use a `select` field with **ID from table** set to `sites` in the `contexts` table.
+This makes renaming sites trivial and enables cross-table search.
 
 ## RS / Harris Matrix requires a `sigla` field
 

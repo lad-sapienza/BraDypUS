@@ -32,4 +32,4 @@ An archaeological application might have:
 - `contexts` — main table, visible in navigation
 - `finds` — plugin table attached to `contexts`
 - `samples` — plugin table attached to `contexts`
-- `periods` — lookup table used by `link_to` fields in `contexts`
+- `periods` — lookup table referenced by `select` (ID from table) fields in `contexts`

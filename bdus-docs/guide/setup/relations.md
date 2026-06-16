@@ -6,7 +6,8 @@ title: Table relations
 
 The **Relations** panel defines cross-table links that are displayed as a
 read-only reference panel inside RecordView. This is distinct from plugin tables
-(which are editable sub-tables) and from `link_to` fields (which store a FK value).
+(which are editable sub-tables) and from `select` fields with **ID from table** set
+(which store a FK value directly on the record).
 
 Open it from **Config → Relations**.
 

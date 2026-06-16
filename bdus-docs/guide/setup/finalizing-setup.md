@@ -19,7 +19,7 @@ Open it from **Config → Validation**.
 | **Filesystem** | Verifies that `config.json` and `.jwt_secret` are not publicly web-accessible |
 | **Missing tables** | Config references a table that does not exist in the DB |
 | **Missing columns** | Config references a field that does not exist in a DB table |
-| **Orphan FK** | A `link_to` field references a table that does not exist |
+| **Orphan FK** | A `select` field with **ID from table** references a table that does not exist |
 | **Missing vocabulary** | A `select` field references a vocabulary list that is empty or missing |
 | **Plugin references** | Plugin tables listed in a parent table's config actually exist |
 

@@ -22,6 +22,11 @@
            class="field-long-text"
            v-html="linkedText(displayValue)" />
 
+      <!-- md: rendered markdown -->
+      <div v-else-if="schema.type === 'md'"
+           class="field-md"
+           v-html="marked.parse(String(displayValue))" />
+
       <!-- multi_select: comma-separated chips -->
       <div v-else-if="schema.type === 'multi_select'" class="field-chips">
         <Tag v-for="v in multiValues" :key="v" :value="v" severity="secondary" />
@@ -42,6 +47,7 @@
 <script setup>
 import { computed } from 'vue'
 import Tag from 'primevue/tag'
+import { marked } from 'marked'
 import { useI18n } from '@/i18n'
 import DynamicWidget from '@/components/record/DynamicWidget.vue'
 
@@ -120,6 +126,17 @@ function linkedText(text) {
   white-space: pre-wrap;
   line-height: 1.55;
 }
+
+.field-md {
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+.field-md :deep(p)        { margin: 0 0 0.5rem; }
+.field-md :deep(strong)   { font-weight: 600; }
+.field-md :deep(em)       { font-style: italic; }
+.field-md :deep(ul),
+.field-md :deep(ol)       { padding-left: 1.5rem; margin: 0 0 0.5rem; }
+.field-md :deep(a)        { color: var(--p-primary-color); }
 
 .field-chips {
   display: flex;

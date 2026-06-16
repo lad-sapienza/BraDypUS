@@ -118,6 +118,7 @@
   "close": "Chiudi",
   "read": "Leggi",
   "edit": "Modifica",
+  "preview": "Anteprima",
   "erase": "Cancella",
   "restore_warning": "Questa operazione sovrascriverà il database corrente. L'azione non può essere annullata.",
   "are_you_sure": "Sei sicuro?",

@@ -118,6 +118,7 @@
   "close": "Close",
   "read": "Read",
   "edit": "Edit",
+  "preview": "Preview",
   "erase": "Erase",
   "restore_warning": "This will overwrite the current database. This action cannot be undone.",
   "are_you_sure": "Are you sure?",

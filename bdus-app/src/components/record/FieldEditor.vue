@@ -11,6 +11,27 @@
       {{ modelValue ?? '—' }}
     </div>
 
+    <!-- md: Markdown textarea with live preview toggle -->
+    <div v-else-if="schema.type === 'md'" class="md-editor-wrap">
+      <div class="md-toolbar">
+        <button type="button" class="md-toggle" @click="mdPreview = !mdPreview">
+          <i :class="mdPreview ? 'pi pi-pencil' : 'pi pi-eye'" />
+          {{ mdPreview ? t('edit') : t('preview') }}
+        </button>
+      </div>
+      <Textarea
+        v-if="!mdPreview"
+        :value="modelValue"
+        @input="onInput($event.target.value)"
+        :dir="schema.direction || 'ltr'"
+        :maxlength="schema.max_length || undefined"
+        rows="6"
+        autoResize
+        :class="['field-input', 'w-full', { 'p-invalid': showError }]"
+      />
+      <div v-else class="md-preview" v-html="marked.parse(String(modelValue ?? ''))" />
+    </div>
+
     <!-- long_text -->
     <Textarea
       v-else-if="schema.type === 'long_text'"
@@ -156,6 +177,7 @@
 
 <script setup>
 import { ref, computed, inject } from 'vue'
+import { marked } from 'marked'
 import InputText  from 'primevue/inputtext'
 import Textarea    from 'primevue/textarea'
 import Select        from 'primevue/select'
@@ -179,6 +201,9 @@ const props = defineProps({
   recordId:   { type: [String, Number, null], default: null },
 })
 const emit = defineEmits(['update:modelValue'])
+
+// ── Markdown preview toggle ────────────────────────────────────
+const mdPreview = ref(false)
 
 // ── Dirty tracking (set to true on first user change) ─────────
 const dirty = ref(false)
@@ -406,4 +431,42 @@ onMounted(() => {
   color: var(--p-red-500);
   margin-top: 0.1rem;
 }
+
+.md-editor-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.md-toolbar {
+  display: flex;
+  justify-content: flex-end;
+}
+.md-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.78rem;
+  color: var(--p-primary-color);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.15rem 0.4rem;
+  border-radius: var(--p-border-radius);
+}
+.md-toggle:hover { opacity: 0.75; }
+.md-preview {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--p-text-color);
+  min-height: 6rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--p-content-border-color);
+  border-radius: var(--p-border-radius);
+}
+.md-preview :deep(p)        { margin: 0 0 0.5rem; }
+.md-preview :deep(strong)   { font-weight: 600; }
+.md-preview :deep(em)       { font-style: italic; }
+.md-preview :deep(ul),
+.md-preview :deep(ol)       { padding-left: 1.5rem; margin: 0 0 0.5rem; }
+.md-preview :deep(a)        { color: var(--p-primary-color); }
 </style>

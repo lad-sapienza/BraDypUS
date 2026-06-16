@@ -1,18 +1,19 @@
-# Deploy BraDypUS using pre-built images from GitHub Container Registry.
+# bradypus.yml — Deploy BraDypUS using pre-built images from GitHub Container Registry.
 # Does NOT require the source code — suitable for end-user deployments.
 #
 # Usage:
-#   docker compose -f docker-compose.hub.yml pull
-#   docker compose -f docker-compose.hub.yml up -d
+#   curl -O https://raw.githubusercontent.com/lad-sapienza/BraDypUS/v5/bradypus.yml
+#   docker compose -f bradypus.yml pull
+#   docker compose -f bradypus.yml up -d
 #
 # Pin to a specific version by setting BDUS_VERSION (default: latest):
-#   BDUS_VERSION=5.0.3 docker compose -f docker-compose.hub.yml up -d
+#   BDUS_VERSION=5.0.3 docker compose -f bradypus.yml up -d
 #
 # Change the host port (default: 80):
-#   BDUS_PORT=8090 docker compose -f docker-compose.hub.yml up -d
+#   BDUS_PORT=8090 docker compose -f bradypus.yml up -d
 #
 # Bind to localhost only (useful behind a reverse proxy):
-#   BDUS_PORT=127.0.0.1:8090 docker compose -f docker-compose.hub.yml up -d
+#   BDUS_PORT=127.0.0.1:8090 docker compose -f bradypus.yml up -d
 #
 # Persistent data (uploaded files, SQLite databases, backups) is stored in
 # the named volume "projects_data" and survives restarts and upgrades.

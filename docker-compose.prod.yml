@@ -4,7 +4,7 @@
 #   docker compose -f docker-compose.prod.yml up -d --build
 #
 # To deploy without building (pull pre-built images from Docker Hub), use instead:
-#   docker compose -f docker-compose.hub.yml up -d
+#   docker compose -f bradypus.yml up -d
 #
 # The frontend (Nginx) proxies /api/, /index.php, /projects/, /cache/ to the
 # api service, so everything is accessible on a single port (80) and no CORS

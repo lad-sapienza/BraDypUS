@@ -37,15 +37,55 @@ A template is a JSON object with a `sections` array. Each section contains a
 | Property | Type | Description |
 |---|---|---|
 | `label` | string | Section heading |
+| `type` | string | `"accordion"` to render sub-panels instead of fields (see below) |
 | `plugin` | string | Set to a plugin table name to show rows from that sub-table |
-| `collapsible` | boolean | `true` to allow the section to be collapsed |
+| `collapsible` | boolean | `true` to allow the section to be collapsed (not used with accordion) |
 | `collapsed` | boolean | `true` to render the section collapsed by default |
-| `content` | array | Array of `{ field, width }` objects |
+| `content` | array | For core/plugin sections: array of `{ field, width }` objects. For accordion: array of panel objects |
 
 ### Field width
 
 Width is a fraction string. Valid values: `"1/1"`, `"1/2"`, `"1/3"`, `"2/3"`,
 `"1/4"`, `"3/4"`. Fields in a section should ideally sum to one full row.
+
+### Accordion sections
+
+A section with `"type": "accordion"` renders its content as a series of
+collapsible sub-panels. Each panel has its own label and field list:
+
+```json
+{
+  "label": "Scheda tecnica",
+  "type": "accordion",
+  "content": [
+    {
+      "label": "Localizzazione",
+      "open": true,
+      "fields": [
+        { "field": "sito",     "width": "1/2" },
+        { "field": "ambiente", "width": "1/2" }
+      ]
+    },
+    {
+      "label": "Definizione",
+      "open": false,
+      "fields": [
+        { "field": "categoria", "width": "1/3" },
+        { "field": "tipo",      "width": "2/3" }
+      ]
+    }
+  ]
+}
+```
+
+| Panel property | Type | Description |
+|---|---|---|
+| `label` | string | Panel heading |
+| `open` | boolean | `true` (default) to render the panel open; `false` to render it collapsed |
+| `fields` | array | Array of `{ field, width }` objects, same format as section `content` |
+
+Accordion sections are ideal for tables with many fields: group logically related
+fields into panels so the form stays manageable without hiding data.
 
 ## Creating a template
 

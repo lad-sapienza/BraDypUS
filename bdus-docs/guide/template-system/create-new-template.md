@@ -57,6 +57,41 @@ Fields in a section should ideally fill one row. A single full-width field uses
 Set `"plugin": "table_name"` to render rows from a plugin sub-table instead
 of main-table fields.
 
+### Accordion sections
+
+Set `"type": "accordion"` to group fields into collapsible sub-panels within a
+section. Useful for tables with many fields:
+
+```json
+{
+  "label": "Scheda tecnica",
+  "type": "accordion",
+  "content": [
+    {
+      "label": "Localizzazione",
+      "open": true,
+      "fields": [
+        { "field": "sito",     "width": "1/2" },
+        { "field": "ambiente", "width": "1/2" }
+      ]
+    },
+    {
+      "label": "Definizione",
+      "open": false,
+      "fields": [
+        { "field": "categoria", "width": "1/3" },
+        { "field": "tipo",      "width": "2/3" }
+      ]
+    }
+  ]
+}
+```
+
+Each panel has a `label`, an `open` flag (default `true`), and its own `fields`
+list with the same `{ field, width }` format as a regular section. In the
+template editor, choose **Accordion** from the _Section type_ dropdown and use
+**Add panel** to create sub-panels.
+
 ## 4. Save
 
 Click **Save**. The template becomes immediately available in RecordView's

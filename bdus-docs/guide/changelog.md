@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Sezioni accordion nel template system** — nel template editor è ora disponibile un terzo tipo di sezione "Accordion", che raggruppa i campi in sotto-pannelli apribili/chiudibili individualmente. Utile per tabelle con molti campi: i pannelli si definiscono con etichetta, stato iniziale (aperto/chiuso) e lista di campi. Vedi [Template system → Sezioni accordion](../template-system/index.md).
+
+- **Scorciatoia da tastiera CMD+S / CTRL+S in modalità modifica** — premere CMD+S (macOS) o CTRL+S (Windows/Linux) mentre si modifica una scheda salva il record e mantiene la visualizzazione in modalità modifica; il pulsante "Salva" continua invece a uscire dalla modalità modifica come in precedenza.
+
 - **DBML import / export** — la sezione Config espone un pannello DBML per esportare l'intera configurazione in un file `.dbml` annotato (compatibile con dbdiagram.io) e per importare nuove tabelle da un file DBML con anteprima di errori/avvisi prima dell'applicazione. Vedi [Configurazione → DBML](../setup/config.md).
 
 - **Traversata dei campi lookup (`id_from_tb`) nei filtri** — cercare su un campo FK tramite il valore del record referenziato (es. ricerca avanzata con campo di tipo lookup) ora produce il filtro corretto; in precedenza il confronto avveniva sull'id numerico interno.
@@ -108,8 +112,8 @@ extended with a clean REST API consumed by the new frontend.
 - **RecordView** — unified view and edit mode:
   - Two-column sticky layout: main fields on the left; links, geodata, bibliography,
     chronology, and RS in a persistent right sidebar.
-  - All field types: text, long text, date, boolean, select, combo_select,
-    multi_select, slider, link_to, link_out.
+  - All field types: `text`, `long_text`, `date`, `boolean`, `select`,
+    `combo_select`, `multi_select`, `slider`; FK fields use `select` with **ID from table**.
   - Plugin tables with inline add / edit / delete rows.
   - Unsaved-changes guard on navigation — only fires when data was actually modified.
   - File gallery with drag & drop upload, sort, and delete.

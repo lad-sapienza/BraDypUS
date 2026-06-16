@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Tipo di campo `md` (Markdown)** — un campo configurato con `"type": "md"` memorizza testo Markdown. In visualizzazione il testo è reso in HTML (grassetto, corsivo, liste, link). In modifica compare una textarea standard con un pulsante toggle per l'anteprima in tempo reale.
+
 - **Sezioni accordion nel template system** — nel template editor è ora disponibile un terzo tipo di sezione "Accordion", che raggruppa i campi in sotto-pannelli apribili/chiudibili individualmente. Utile per tabelle con molti campi: i pannelli si definiscono con etichetta, stato iniziale (aperto/chiuso) e lista di campi. Vedi [Template system → Sezioni accordion](../template-system/index.md).
 
 - **Scorciatoia da tastiera CMD+S / CTRL+S in modalità modifica** — premere CMD+S (macOS) o CTRL+S (Windows/Linux) mentre si modifica una scheda salva il record e mantiene la visualizzazione in modalità modifica; il pulsante "Salva" continua invece a uscire dalla modalità modifica come in precedenza.

@@ -30,26 +30,33 @@ Click **Add field** and fill in the field form:
 | Type | Use for |
 |---|---|
 | `text` | Short single-line text |
-| `textarea` | Long multi-line text |
+| `long_text` | Long multi-line text (plain, preserves line breaks) |
+| `md` | Markdown text — rendered as formatted HTML in read mode; edit mode has a live preview toggle |
 | `date` | ISO date (`YYYY-MM-DD`) with date-picker |
 | `boolean` | Yes/No toggle |
-| `select` | Single value from a controlled vocabulary |
+| `select` | Single value from a controlled vocabulary or another table |
 | `multi_select` | Multiple values from a controlled vocabulary |
 | `combo_select` | Free text + vocabulary suggestions |
 | `slider` | Integer within a min/max range |
-| `link_to` | Foreign key — dropdown of records from another table |
-| `link_out` | External URL |
 
-## Vocabulary-backed fields
+## Value sources for select fields
 
-Fields of type `select`, `multi_select` and `combo_select` draw their options from a
-[vocabulary](/guide/setup/vocabularies). Set the **Vocabulary** property to the name
-of the vocabulary list to use.
+Fields of type `select`, `multi_select` and `combo_select` need a source for their
+available values. Set exactly one of the following:
 
-## Foreign key fields (`link_to`)
+| Property | Description |
+|---|---|
+| **Vocabulary** | Name of a [vocabulary list](/guide/setup/vocabularies) — values are managed in the Vocabularies panel |
+| **Values from table** | A table and field whose unique values are used as autocomplete suggestions |
+| **ID from table** | A table whose records appear in the dropdown; the record `id` is stored, but the preview fields are shown to users |
 
-Set **ID from table** to the table whose records should appear in the dropdown.
-The dropdown shows the preview fields of that table and stores the `id`.
+## Foreign key fields
+
+A foreign key field stores the `id` of a record from another table. Use type `select`
+and set **ID from table** to the target table.
+
+The dropdown shows the target table's preview fields; the stored value is the integer `id`.
+This is the recommended way to avoid data duplication across tables.
 
 ## Reordering fields
 

@@ -327,7 +327,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, reactive, onMounted, provide } from 'vue'
+import { ref, computed, watch, reactive, onMounted, onUnmounted, provide } from 'vue'
 import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
 import { useToast }              from 'primevue/usetoast'
 import { useConfirm }            from 'primevue/useconfirm'
@@ -381,6 +381,7 @@ const mode         = ref('read')
 const loading      = ref(false)
 const saving       = ref(false)
 const fetchError   = ref(null)
+const pendingEditMode = ref(false)
 const versionsDrawerOpen = ref(false)
 const duplicating        = ref(false)
 
@@ -600,8 +601,9 @@ async function fetchRecord() {
       })
     }
 
-    // If add_new, enter edit mode immediately
+    // If add_new, enter edit mode immediately; or re-enter after CMD+S on a new record
     if (isNew.value) enterEditMode()
+    else if (pendingEditMode.value) { pendingEditMode.value = false; enterEditMode() }
 
   } catch (e) {
     fetchError.value = e.message
@@ -709,7 +711,7 @@ function collectValidationErrors() {
 }
 
 // ── Save ─────────────────────────────────────────────────────────
-async function saveRecord() {
+async function saveRecord(keepEditMode = false) {
   // Pre-save validation
   const errors = collectValidationErrors()
   if (errors.length) {
@@ -765,14 +767,16 @@ async function saveRecord() {
 
     toast.add({ severity: 'success', summary: t('saved'), detail: t(res.code), life: 3000 })
     forceValidate.value = false
-    mode.value = 'read'
 
-    // If this was a new record, navigate to the saved record
     if (!id.value && res.id) {
+      // New record: navigate to the saved record; re-enter edit mode if requested
+      if (keepEditMode) pendingEditMode.value = true
       router.replace(`/${route.params.app}/record/${tb.value}/${res.id}`)
     } else {
-      // Reload to reflect server-side computed values
+      // Existing record: reload to reflect server-side computed values
+      if (!keepEditMode) mode.value = 'read'
       await fetchRecord()
+      if (keepEditMode) enterEditMode()
     }
   } catch (e) {
     toast.add({ severity: 'error', summary: t('generic_error'), detail: e.message, life: 5000 })
@@ -954,11 +958,24 @@ onBeforeRouteLeave((_to, _from, next) => {
   })
 })
 
+// ── Keyboard shortcut: CMD+S / CTRL+S → save and stay in edit ────
+function handleSaveShortcut(e) {
+  if ((e.metaKey || e.ctrlKey) && e.key === 's' && mode.value === 'edit' && !saving.value) {
+    e.preventDefault()
+    saveRecord(true)
+  }
+}
+
 // ── Init ──────────────────────────────────────────────────────────
 onMounted(async () => {
+  window.addEventListener('keydown', handleSaveShortcut)
   await loadAvailableTemplates()
   loadColsPreference()
   fetchRecord()
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleSaveShortcut)
 })
 
 // Reload when route params change (navigating record→record)

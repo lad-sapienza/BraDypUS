@@ -78,11 +78,12 @@ function guideSidebar() {
       text: 'Installation',
       collapsed: true,
       items: [
-        { text: 'Overview',            link: '/guide/install/' },
-        { text: 'Manual download',     link: '/guide/install/manual-download' },
-        { text: 'Via terminal / git',  link: '/guide/install/terminal' },
-        { text: 'Updating',            link: '/guide/install/update' },
-        { text: 'Uninstalling',        link: '/guide/install/uninstall' },
+        { text: 'Overview',                      link: '/guide/install/' },
+        { text: 'Pre-built images (recommended)', link: '/guide/install/containers' },
+        { text: 'Manual download',               link: '/guide/install/manual-download' },
+        { text: 'Via terminal / git',            link: '/guide/install/terminal' },
+        { text: 'Updating',                      link: '/guide/install/update' },
+        { text: 'Uninstalling',                  link: '/guide/install/uninstall' },
       ],
     },
     {

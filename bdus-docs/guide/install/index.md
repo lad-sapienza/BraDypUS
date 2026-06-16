@@ -4,17 +4,25 @@ title: Installation overview
 
 # Installation overview
 
-BraDypUS v5 consists of two repositories that run together:
+BraDypUS v5 consists of two components that run together:
 - **`bdus-api`** — PHP backend
 - **`bdus-app`** — Vue 3 frontend
 
-The easiest way to run both is with **Docker Compose**, which handles all
-dependencies automatically.
+All approaches use **Docker Compose** to manage both services.
 
-## Recommended: Docker Compose
+## Pre-built images — fastest (recommended)
 
-See [Install with Docker](/guide/install/terminal) for step-by-step instructions.
-This is the approach used for both local development and production.
+No source code required. Docker pulls the images directly from
+[GitHub Container Registry](https://ghcr.io/lad-sapienza) and starts the application.
+
+See [Deploy with pre-built images](/guide/install/containers).
+
+## Build from source — for development
+
+Clone the repository and build the images locally. Required if you want to
+modify the source code or run the Vite dev server.
+
+See [Install via terminal / git](/guide/install/terminal).
 
 ## Manual installation (advanced)
 
@@ -23,5 +31,5 @@ without Docker on a shared hosting server.
 
 ## What you'll need
 
-- [Git](https://git-scm.com/) to clone the repositories
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) for the Docker approach
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+- [Git](https://git-scm.com/) only for the build-from-source approach

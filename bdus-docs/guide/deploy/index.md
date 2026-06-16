@@ -4,10 +4,29 @@ title: Production deployment
 
 # Production deployment
 
-## Docker Compose (recommended)
+## Pre-built images from GHCR (recommended)
 
-BraDypUS ships with a production Docker Compose file that uses Nginx to serve
-the Vue SPA and proxy API requests to PHP — all on a single port 80.
+The fastest deployment path: no source code required.
+Images are published automatically on every release to
+[GitHub Container Registry](https://ghcr.io/lad-sapienza).
+
+```bash
+curl -O https://raw.githubusercontent.com/lad-sapienza/BraDypUS/v5/docker-compose.hub.yml
+docker compose -f docker-compose.hub.yml pull
+docker compose -f docker-compose.hub.yml up -d
+```
+
+To pin a specific version:
+
+```bash
+BDUS_VERSION=5.0.3 docker compose -f docker-compose.hub.yml up -d
+```
+
+See [Deploy with pre-built images](/guide/install/containers) for the full guide.
+
+## Build from source
+
+If you have cloned the repository and want to build the images locally:
 
 ```bash
 docker compose -f docker-compose.prod.yml up -d --build
@@ -47,6 +66,23 @@ header so BraDypUS knows the connection is over HTTPS.
 
 ## Data persistence
 
-In Docker, `projects/` is bind-mounted from the host so application data
-survives container restarts and image rebuilds. Ensure regular backups of
-`projects/` — especially the SQLite files in `projects/{app}/db/`.
+All application data (SQLite databases, uploaded files, configuration, backups) lives
+in the `projects/` directory inside the `bdus-api` container. Both Compose files map
+this directory to a persistent Docker **named volume** called `projects_data`, so data
+survives container restarts and image updates.
+
+To find where Docker stores the volume on disk:
+
+```bash
+docker volume inspect $(docker volume ls -q | grep projects_data)
+```
+
+For backup and restore commands, see the
+[Data persistence](/guide/install/containers#data-persistence) section of the
+pre-built images guide.
+
+::: warning
+On Docker Desktop (Mac / Windows) the volume lives inside the Docker VM and is not
+directly accessible from the host filesystem. Use `docker run --rm -v projects_data:/data alpine ...`
+to read or write files inside the volume.
+:::

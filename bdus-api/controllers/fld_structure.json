@@ -17,6 +17,7 @@
             "text",
             "date",
             "long_text",
+            "md",
             "select",
             "combo_select",
             "multi_select",

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Tipo di campo `md` (Markdown)** — nuovo tipo di campo `"md"` che memorizza testo Markdown e lo rende in HTML nel modo visualizzazione. In modalità modifica compare una textarea con un pulsante toggle "Anteprima" / "Modifica" per vedere il rendering in tempo reale. La libreria `marked` (già presente come dipendenza) è usata per il parsing.
+  - `controllers/fld_structure.json` — aggiunto `"md"` alla lista dei tipi disponibili, tra `"long_text"` e `"select"`.
+  - `FieldDisplay.vue` — ramo `v-else-if="schema.type === 'md'"` con `v-html="marked.parse()"` e stili prosa (`.field-md`).
+  - `FieldEditor.vue` — ramo `v-else-if="schema.type === 'md'"` con Textarea + toggle preview (`.md-editor-wrap`, `.md-preview`); ref locale `mdPreview` indipendente per ogni istanza del campo.
+  - `it.json` + `en.json` — nuova chiave `preview`.
+
 - **Sezioni accordion nel template system** — nuovo tipo di sezione `"type": "accordion"` nel JSON dei template. In questo tipo `content` è un array di pannelli `{ label, open, fields[] }` invece dei soliti `{ field, width }`. Ogni pannello è collassabile indipendentemente; `open: true` (default) lo rende aperto al caricamento.
   - `lib/Template/Loader.php::validate()` — aggiunto ramo `$isAccordion`: valida i campi dentro `panel.fields` con gli stessi controlli (unknown_field, invalid_width) usati per le sezioni core; salta il check di `width` sull'array `content` (che ora contiene pannelli, non field items).
   - `TemplateSection.vue` — ramo `v-if="isAccordion"` che rende `accordion-panels` con stato `openPanels[]` inizializzato da `panel.open`; click sull'header togola il pannello.

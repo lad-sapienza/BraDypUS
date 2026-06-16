@@ -11,15 +11,15 @@ Images are published automatically on every release to
 [GitHub Container Registry](https://ghcr.io/lad-sapienza).
 
 ```bash
-curl -O https://raw.githubusercontent.com/lad-sapienza/BraDypUS/v5/docker-compose.hub.yml
-docker compose -f docker-compose.hub.yml pull
-docker compose -f docker-compose.hub.yml up -d
+curl -O https://raw.githubusercontent.com/lad-sapienza/BraDypUS/v5/bradypus.yml
+docker compose -f bradypus.yml pull
+docker compose -f bradypus.yml up -d
 ```
 
 To pin a specific version:
 
 ```bash
-BDUS_VERSION=5.0.3 docker compose -f docker-compose.hub.yml up -d
+BDUS_VERSION=5.0.3 docker compose -f bradypus.yml up -d
 ```
 
 See [Deploy with pre-built images](/guide/install/containers) for the full guide.

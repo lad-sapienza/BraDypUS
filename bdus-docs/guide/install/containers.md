@@ -15,16 +15,16 @@ No source code, no build step — Docker pulls the images directly from
 ## 1. Download the Compose file
 
 ```bash
-curl -O https://raw.githubusercontent.com/lad-sapienza/BraDypUS/v5/docker-compose.hub.yml
+curl -O https://raw.githubusercontent.com/lad-sapienza/BraDypUS/v5/bradypus.yml
 ```
 
 Or create it manually — paste the content from
-[docker-compose.hub.yml](https://github.com/lad-sapienza/BraDypUS/blob/v5/docker-compose.hub.yml).
+[bradypus.yml](https://github.com/lad-sapienza/BraDypUS/blob/v5/bradypus.yml).
 
 ## 2. Pull the images
 
 ```bash
-docker compose -f docker-compose.hub.yml pull
+docker compose -f bradypus.yml pull
 ```
 
 This downloads two images:
@@ -37,7 +37,7 @@ This downloads two images:
 ## 3. Start the application
 
 ```bash
-docker compose -f docker-compose.hub.yml up -d
+docker compose -f bradypus.yml up -d
 ```
 
 The application is now available at **http://localhost**.
@@ -45,14 +45,14 @@ The application is now available at **http://localhost**.
 ## 4. Create your first application
 
 With `BRADYPUS_ALLOW_NEW_APP` enabled you can use the new-app wizard.
-Edit `docker-compose.hub.yml` to set it temporarily:
+Edit `bradypus.yml` to set it temporarily:
 
 ```yaml
 environment:
   - BRADYPUS_ALLOW_NEW_APP=1
 ```
 
-Then restart: `docker compose -f docker-compose.hub.yml up -d`
+Then restart: `docker compose -f bradypus.yml up -d`
 
 Follow the [Create application](/guide/create-app/) guide to complete the setup.
 
@@ -61,7 +61,7 @@ Follow the [Create application](/guide/create-app/) guide to complete the setup.
 By default, `latest` is used. To pin to a specific release:
 
 ```bash
-BDUS_VERSION=5.0.3 docker compose -f docker-compose.hub.yml up -d
+BDUS_VERSION=5.0.3 docker compose -f bradypus.yml up -d
 ```
 
 ## Updating
@@ -69,8 +69,8 @@ BDUS_VERSION=5.0.3 docker compose -f docker-compose.hub.yml up -d
 Pull the new images and restart:
 
 ```bash
-docker compose -f docker-compose.hub.yml pull
-docker compose -f docker-compose.hub.yml up -d
+docker compose -f bradypus.yml pull
+docker compose -f bradypus.yml up -d
 ```
 
 Data in the `projects_data` volume is never affected by updates.
@@ -88,10 +88,10 @@ Examples:
 
 ```bash
 # Run on port 8090
-BDUS_PORT=8090 docker compose -f docker-compose.hub.yml up -d
+BDUS_PORT=8090 docker compose -f bradypus.yml up -d
 
 # Bind to localhost only — ideal behind a reverse proxy (Apache, Nginx, Caddy)
-BDUS_PORT=127.0.0.1:8090 docker compose -f docker-compose.hub.yml up -d
+BDUS_PORT=127.0.0.1:8090 docker compose -f bradypus.yml up -d
 ```
 
 ## Data persistence
@@ -145,7 +145,7 @@ docker run --rm \
 
 ::: tip Bind mount instead of named volume
 If you prefer to keep data in a specific host directory (e.g. `./projects`),
-replace the volume entry in `docker-compose.hub.yml`:
+replace the volume entry in `bradypus.yml`:
 
 ```yaml
 # instead of:
@@ -163,11 +163,11 @@ Then remove the `projects_data:` entry from the top-level `volumes:` section.
 ## Stopping
 
 ```bash
-docker compose -f docker-compose.hub.yml down
+docker compose -f bradypus.yml down
 ```
 
 Data in `projects_data` is preserved. To also delete the volume (irreversible):
 
 ```bash
-docker compose -f docker-compose.hub.yml down -v
+docker compose -f bradypus.yml down -v
 ```

@@ -8,6 +8,12 @@
 # Pin to a specific version by setting BDUS_VERSION (default: latest):
 #   BDUS_VERSION=5.0.3 docker compose -f docker-compose.hub.yml up -d
 #
+# Change the host port (default: 80):
+#   BDUS_PORT=8090 docker compose -f docker-compose.hub.yml up -d
+#
+# Bind to localhost only (useful behind a reverse proxy):
+#   BDUS_PORT=127.0.0.1:8090 docker compose -f docker-compose.hub.yml up -d
+#
 # Persistent data (uploaded files, SQLite databases, backups) is stored in
 # the named volume "projects_data" and survives restarts and upgrades.
 #
@@ -35,7 +41,7 @@ services:
   frontend:
     image: ghcr.io/lad-sapienza/bdus-app:${BDUS_VERSION:-latest}
     ports:
-      - "80:80"
+      - "${BDUS_PORT:-80}:80"
     environment:
       - API_PROXY_TARGET=http://api:80
     depends_on:

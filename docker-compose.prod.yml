@@ -39,7 +39,7 @@ services:
     build: bdus-app/
     image: ghcr.io/lad-sapienza/bdus-app:latest   # tags the local build with the registry name
     ports:
-      - "80:80"
+      - "${BDUS_PORT:-80}:80"
     environment:
       # Must match the service name + port above
       - API_PROXY_TARGET=http://api:80

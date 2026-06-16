@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Sezioni accordion nel template system** — nuovo tipo di sezione `"type": "accordion"` nel JSON dei template. In questo tipo `content` è un array di pannelli `{ label, open, fields[] }` invece dei soliti `{ field, width }`. Ogni pannello è collassabile indipendentemente; `open: true` (default) lo rende aperto al caricamento.
+  - `lib/Template/Loader.php::validate()` — aggiunto ramo `$isAccordion`: valida i campi dentro `panel.fields` con gli stessi controlli (unknown_field, invalid_width) usati per le sezioni core; salta il check di `width` sull'array `content` (che ora contiene pannelli, non field items).
+  - `TemplateSection.vue` — ramo `v-if="isAccordion"` che rende `accordion-panels` con stato `openPanels[]` inizializzato da `panel.open`; click sull'header togola il pannello.
+  - `TemplatesView.vue` — sostituisce il plugin Select con un selector "Tipo sezione" (core / plugin / accordion); quando il tipo è accordion mostra un editor per pannelli annidati (label, open-by-default, lista campi). `onSectionTypeChange()` resetta `content` e imposta/rimuove `type` e `plugin` in modo consistente. `saveTemplate()` pulisce `type` se diverso da `"accordion"`.
+  - `it.json` + `en.json` — 4 nuove chiavi: `add_panel`, `open_by_default`, `panel_label`, `section_type`.
+
+- **Scorciatoia da tastiera CMD+S / CTRL+S (`RecordView.vue`)** — un listener `keydown` su `window` (montato/smontato con il componente) intercetta `metaKey+s` (macOS) e `ctrlKey+s` (Windows/Linux) solo quando `mode === 'edit'`; chiama `saveRecord(keepEditMode = true)`, che salta il passaggio a `mode = 'read'` dopo il salvataggio e ri-popola `editData` tramite `enterEditMode()` dopo il ricaricamento del record. Per i record nuovi, un flag `pendingEditMode` fa sì che `fetchRecord()` ri-entri in modalità modifica dopo la navigazione verso il nuovo URL.
+
 - **DBML import / export** — il pannello Config espone una nuova sezione DBML che permette di esportare l'intera configurazione dell'app (tabelle, campi, vocabolari) in un singolo file `.dbml` annotato e di importare nuove tabelle da un file DBML:
   - **Export** (`GET /api/config/dbml`) — serializza cfg + `bdus_vocabularies` in DBML valido per dbdiagram.io; le tabelle di sistema (`bdus_*`) sono escluse automaticamente; i valori degli Enum sono sempre quotati per compatibilità con spazi e trattini.
   - **Preview** (`POST /api/config/dbml/preview`) — valida il DBML senza scrivere nulla: errori bloccanti (`table_already_exists`, `pk_must_be_id`) e avvisi non bloccanti (`auto_add_id`, `auto_add_creator`).

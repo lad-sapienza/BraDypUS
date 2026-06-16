@@ -82,6 +82,17 @@ Data in the `projects_data` volume is never affected by updates.
 | `BRADYPUS_DEBUG` | `0` | Set to `1` for debug output |
 | `BRADYPUS_ALLOW_NEW_APP` | `0` | Set to `1` to enable the new-app wizard |
 | `BDUS_VERSION` | `latest` | Image tag to pull (`5.0.3`, `5.0`, `5`, …) |
+| `BDUS_PORT` | `80` | Host port (or `host:port` to bind to a specific interface) |
+
+Examples:
+
+```bash
+# Run on port 8090
+BDUS_PORT=8090 docker compose -f docker-compose.hub.yml up -d
+
+# Bind to localhost only — ideal behind a reverse proxy (Apache, Nginx, Caddy)
+BDUS_PORT=127.0.0.1:8090 docker compose -f docker-compose.hub.yml up -d
+```
 
 ## Data persistence
 

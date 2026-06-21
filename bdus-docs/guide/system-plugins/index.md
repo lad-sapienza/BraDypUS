@@ -32,6 +32,13 @@ Store uncertain, approximate or one-sided dates (ante quem / post quem) using a
 compact string grammar (`c4l BCE`, `?/c3 CE`, …). Integrates with the GeoFace
 temporal filter and the Harris Matrix absolute timeline.
 
+### [Osteology (bone inventory)](/guide/system-plugins/osteology)
+
+Document the bone preservation state of skeletal individuals recovered from burials.
+Supports multiple individuals per record, 51 anatomical elements in 8 body regions,
+conservation grade, anatomical certainty and laterality certainty. Data is stored as
+a JSON column; an interactive SVG skeleton viewer is provided in RecordView.
+
 ## Enabling a plugin
 
 Each plugin is configured at the table level in **Config → Tables** under the
@@ -43,6 +50,7 @@ Each plugin is configured at the table level in **Config → Tables** under the
 | RS / Harris Matrix | Set the **RS field** to the column that holds the unit identifier |
 | Zotero | Toggle **Zotero** on — requires at least one Zotero library configured in Config |
 | Fuzzy date | Toggle **Chronology (fuzzy date)** on — adds five `chrono_*` columns to the table |
+| Osteology | Toggle **Inventario osteologico** on — adds one `osteo_data` JSON column to the table |
 
 Once enabled, the corresponding panel appears in RecordView for all records of
 that table.

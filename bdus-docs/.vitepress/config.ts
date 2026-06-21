@@ -142,6 +142,7 @@ function guideSidebar() {
         { text: 'Harris Matrix (RS)',   link: '/guide/system-plugins/rs' },
         { text: 'Zotero',              link: '/guide/system-plugins/zotero' },
         { text: 'Fuzzy date',          link: '/guide/system-plugins/fuzzy-date' },
+        { text: 'Osteology',           link: '/guide/system-plugins/osteology' },
       ],
     },
     {

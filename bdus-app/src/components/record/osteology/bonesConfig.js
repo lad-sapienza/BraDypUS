@@ -1,100 +1,101 @@
 /**
  * Osteological bone inventory configuration.
- * Each key is the bone ID used in the data model and SVG element IDs.
+ * Keys are standard anatomical English terms — used in the data model and SVG element IDs.
+ * Labels are user-facing (Italian) and can be moved to i18n in the future.
  *
- * bilateral: true  → has laterality (dx/sx pair)
- * side: 'dx'|'sx' → which side this element represents
+ * bilateral: true  → has laterality (right/left pair)
+ * side: 'right'|'left' → which side this element represents
  * pairId: string  → shared key for the bilateral pair (used in UI grouping)
  * category: string → anatomical region (for grouping in the legend/list)
  */
 export const BONES = {
-  // ── Cranio ───────────────────────────────────────────────────────────────
-  cranio:    { label: 'Cranio',    bilateral: false, category: 'testa' },
-  faccia:    { label: 'Faccia',    bilateral: false, category: 'testa' },
-  mandibola: { label: 'Mandibola', bilateral: false, category: 'testa' },
+  // ── Head ─────────────────────────────────────────────────────────────────
+  cranium:  { label: 'Cranio',    bilateral: false, category: 'head' },
+  face:     { label: 'Faccia',    bilateral: false, category: 'head' },
+  mandible: { label: 'Mandibola', bilateral: false, category: 'head' },
 
-  // ── Colonna vertebrale ────────────────────────────────────────────────────
-  vertebre_cervicali:  { label: 'Vertebre cervicali',  bilateral: false, category: 'colonna' },
-  vertebre_toraciche:  { label: 'Vertebre toraciche',  bilateral: false, category: 'colonna' },
-  vertebre_lombari:    { label: 'Vertebre lombari',    bilateral: false, category: 'colonna' },
-  sacro:               { label: 'Sacro',               bilateral: false, category: 'colonna' },
-  coccige:             { label: 'Coccige',             bilateral: false, category: 'colonna' },
+  // ── Spine ─────────────────────────────────────────────────────────────────
+  cervical_vertebrae: { label: 'Vertebre cervicali',  bilateral: false, category: 'spine' },
+  thoracic_vertebrae: { label: 'Vertebre toraciche',  bilateral: false, category: 'spine' },
+  lumbar_vertebrae:   { label: 'Vertebre lombari',    bilateral: false, category: 'spine' },
+  sacrum:             { label: 'Sacro',               bilateral: false, category: 'spine' },
+  coccyx:             { label: 'Coccige',             bilateral: false, category: 'spine' },
 
-  // ── Torace ────────────────────────────────────────────────────────────────
-  sterno:    { label: 'Sterno',     bilateral: false, category: 'torace' },
-  coste_dx:  { label: 'Coste dx',   bilateral: true, side: 'dx', pairId: 'coste',  category: 'torace' },
-  coste_sx:  { label: 'Coste sx',   bilateral: true, side: 'sx', pairId: 'coste',  category: 'torace' },
+  // ── Thorax ────────────────────────────────────────────────────────────────
+  sternum:    { label: 'Sterno',   bilateral: false, category: 'thorax' },
+  ribs_right: { label: 'Coste dx', bilateral: true, side: 'right', pairId: 'ribs', category: 'thorax' },
+  ribs_left:  { label: 'Coste sx', bilateral: true, side: 'left',  pairId: 'ribs', category: 'thorax' },
 
-  // ── Cingolo scapolare ─────────────────────────────────────────────────────
-  clavicola_dx: { label: 'Clavicola dx', bilateral: true, side: 'dx', pairId: 'clavicola', category: 'spalla' },
-  clavicola_sx: { label: 'Clavicola sx', bilateral: true, side: 'sx', pairId: 'clavicola', category: 'spalla' },
-  scapola_dx:   { label: 'Scapola dx',   bilateral: true, side: 'dx', pairId: 'scapola',   category: 'spalla' },
-  scapola_sx:   { label: 'Scapola sx',   bilateral: true, side: 'sx', pairId: 'scapola',   category: 'spalla' },
+  // ── Shoulder girdle ───────────────────────────────────────────────────────
+  clavicle_right: { label: 'Clavicola dx', bilateral: true, side: 'right', pairId: 'clavicle', category: 'shoulder' },
+  clavicle_left:  { label: 'Clavicola sx', bilateral: true, side: 'left',  pairId: 'clavicle', category: 'shoulder' },
+  scapula_right:  { label: 'Scapola dx',   bilateral: true, side: 'right', pairId: 'scapula',  category: 'shoulder' },
+  scapula_left:   { label: 'Scapola sx',   bilateral: true, side: 'left',  pairId: 'scapula',  category: 'shoulder' },
 
-  // ── Arto superiore destro ─────────────────────────────────────────────────
-  omero_dx:        { label: 'Omero dx',         bilateral: true, side: 'dx', pairId: 'omero',        category: 'arto_sup' },
-  radio_dx:        { label: 'Radio dx',          bilateral: true, side: 'dx', pairId: 'radio',        category: 'arto_sup' },
-  ulna_dx:         { label: 'Ulna dx',           bilateral: true, side: 'dx', pairId: 'ulna',         category: 'arto_sup' },
-  carpali_dx:      { label: 'Carpali dx',        bilateral: true, side: 'dx', pairId: 'carpali',      category: 'arto_sup' },
-  metacarpali_dx:  { label: 'Metacarpali dx',    bilateral: true, side: 'dx', pairId: 'metacarpali',  category: 'arto_sup' },
-  falangi_mano_dx: { label: 'Falangi mano dx',   bilateral: true, side: 'dx', pairId: 'falangi_mano', category: 'arto_sup' },
+  // ── Upper limb right ──────────────────────────────────────────────────────
+  humerus_right:        { label: 'Omero dx',        bilateral: true, side: 'right', pairId: 'humerus',        category: 'upper_limb' },
+  radius_right:         { label: 'Radio dx',         bilateral: true, side: 'right', pairId: 'radius',         category: 'upper_limb' },
+  ulna_right:           { label: 'Ulna dx',          bilateral: true, side: 'right', pairId: 'ulna',           category: 'upper_limb' },
+  carpals_right:        { label: 'Carpali dx',       bilateral: true, side: 'right', pairId: 'carpals',        category: 'upper_limb' },
+  metacarpals_right:    { label: 'Metacarpali dx',   bilateral: true, side: 'right', pairId: 'metacarpals',    category: 'upper_limb' },
+  hand_phalanges_right: { label: 'Falangi mano dx',  bilateral: true, side: 'right', pairId: 'hand_phalanges', category: 'upper_limb' },
 
-  // ── Arto superiore sinistro ───────────────────────────────────────────────
-  omero_sx:        { label: 'Omero sx',          bilateral: true, side: 'sx', pairId: 'omero',        category: 'arto_sup' },
-  radio_sx:        { label: 'Radio sx',           bilateral: true, side: 'sx', pairId: 'radio',        category: 'arto_sup' },
-  ulna_sx:         { label: 'Ulna sx',            bilateral: true, side: 'sx', pairId: 'ulna',         category: 'arto_sup' },
-  carpali_sx:      { label: 'Carpali sx',         bilateral: true, side: 'sx', pairId: 'carpali',      category: 'arto_sup' },
-  metacarpali_sx:  { label: 'Metacarpali sx',     bilateral: true, side: 'sx', pairId: 'metacarpali',  category: 'arto_sup' },
-  falangi_mano_sx: { label: 'Falangi mano sx',    bilateral: true, side: 'sx', pairId: 'falangi_mano', category: 'arto_sup' },
+  // ── Upper limb left ───────────────────────────────────────────────────────
+  humerus_left:        { label: 'Omero sx',       bilateral: true, side: 'left', pairId: 'humerus',        category: 'upper_limb' },
+  radius_left:         { label: 'Radio sx',        bilateral: true, side: 'left', pairId: 'radius',         category: 'upper_limb' },
+  ulna_left:           { label: 'Ulna sx',         bilateral: true, side: 'left', pairId: 'ulna',           category: 'upper_limb' },
+  carpals_left:        { label: 'Carpali sx',      bilateral: true, side: 'left', pairId: 'carpals',        category: 'upper_limb' },
+  metacarpals_left:    { label: 'Metacarpali sx',  bilateral: true, side: 'left', pairId: 'metacarpals',    category: 'upper_limb' },
+  hand_phalanges_left: { label: 'Falangi mano sx', bilateral: true, side: 'left', pairId: 'hand_phalanges', category: 'upper_limb' },
 
-  // ── Pelvi ─────────────────────────────────────────────────────────────────
-  ileo_dx:   { label: 'Ileo dx',   bilateral: true, side: 'dx', pairId: 'ileo',   category: 'pelvi' },
-  ileo_sx:   { label: 'Ileo sx',   bilateral: true, side: 'sx', pairId: 'ileo',   category: 'pelvi' },
-  ischio_dx: { label: 'Ischio dx', bilateral: true, side: 'dx', pairId: 'ischio', category: 'pelvi' },
-  ischio_sx: { label: 'Ischio sx', bilateral: true, side: 'sx', pairId: 'ischio', category: 'pelvi' },
-  pube_dx:   { label: 'Pube dx',   bilateral: true, side: 'dx', pairId: 'pube',   category: 'pelvi' },
-  pube_sx:   { label: 'Pube sx',   bilateral: true, side: 'sx', pairId: 'pube',   category: 'pelvi' },
+  // ── Pelvis ────────────────────────────────────────────────────────────────
+  ilium_right:   { label: 'Ileo dx',   bilateral: true, side: 'right', pairId: 'ilium',   category: 'pelvis' },
+  ilium_left:    { label: 'Ileo sx',   bilateral: true, side: 'left',  pairId: 'ilium',   category: 'pelvis' },
+  ischium_right: { label: 'Ischio dx', bilateral: true, side: 'right', pairId: 'ischium', category: 'pelvis' },
+  ischium_left:  { label: 'Ischio sx', bilateral: true, side: 'left',  pairId: 'ischium', category: 'pelvis' },
+  pubis_right:   { label: 'Pube dx',   bilateral: true, side: 'right', pairId: 'pubis',   category: 'pelvis' },
+  pubis_left:    { label: 'Pube sx',   bilateral: true, side: 'left',  pairId: 'pubis',   category: 'pelvis' },
 
-  // ── Arto inferiore destro ─────────────────────────────────────────────────
-  femore_dx:        { label: 'Femore dx',         bilateral: true, side: 'dx', pairId: 'femore',        category: 'arto_inf' },
-  patella_dx:       { label: 'Patella dx',         bilateral: true, side: 'dx', pairId: 'patella',       category: 'arto_inf' },
-  tibia_dx:         { label: 'Tibia dx',           bilateral: true, side: 'dx', pairId: 'tibia',         category: 'arto_inf' },
-  fibula_dx:        { label: 'Fibula dx',          bilateral: true, side: 'dx', pairId: 'fibula',        category: 'arto_inf' },
-  astragalo_dx:     { label: 'Astragalo dx',       bilateral: true, side: 'dx', pairId: 'astragalo',     category: 'piede' },
-  calcagno_dx:      { label: 'Calcagno dx',        bilateral: true, side: 'dx', pairId: 'calcagno',      category: 'piede' },
-  tarsali_dx:       { label: 'Tarsali dx',         bilateral: true, side: 'dx', pairId: 'tarsali',       category: 'piede' },
-  metatarsali_dx:   { label: 'Metatarsali dx',     bilateral: true, side: 'dx', pairId: 'metatarsali',   category: 'piede' },
-  falangi_piede_dx: { label: 'Falangi piede dx',   bilateral: true, side: 'dx', pairId: 'falangi_piede', category: 'piede' },
+  // ── Lower limb right ──────────────────────────────────────────────────────
+  femur_right:          { label: 'Femore dx',       bilateral: true, side: 'right', pairId: 'femur',          category: 'lower_limb' },
+  patella_right:        { label: 'Patella dx',       bilateral: true, side: 'right', pairId: 'patella',        category: 'lower_limb' },
+  tibia_right:          { label: 'Tibia dx',         bilateral: true, side: 'right', pairId: 'tibia',          category: 'lower_limb' },
+  fibula_right:         { label: 'Fibula dx',        bilateral: true, side: 'right', pairId: 'fibula',         category: 'lower_limb' },
+  talus_right:          { label: 'Astragalo dx',     bilateral: true, side: 'right', pairId: 'talus',          category: 'foot' },
+  calcaneus_right:      { label: 'Calcagno dx',      bilateral: true, side: 'right', pairId: 'calcaneus',      category: 'foot' },
+  tarsals_right:        { label: 'Tarsali dx',       bilateral: true, side: 'right', pairId: 'tarsals',        category: 'foot' },
+  metatarsals_right:    { label: 'Metatarsali dx',   bilateral: true, side: 'right', pairId: 'metatarsals',    category: 'foot' },
+  foot_phalanges_right: { label: 'Falangi piede dx', bilateral: true, side: 'right', pairId: 'foot_phalanges', category: 'foot' },
 
-  // ── Arto inferiore sinistro ───────────────────────────────────────────────
-  femore_sx:        { label: 'Femore sx',          bilateral: true, side: 'sx', pairId: 'femore',        category: 'arto_inf' },
-  patella_sx:       { label: 'Patella sx',          bilateral: true, side: 'sx', pairId: 'patella',       category: 'arto_inf' },
-  tibia_sx:         { label: 'Tibia sx',            bilateral: true, side: 'sx', pairId: 'tibia',         category: 'arto_inf' },
-  fibula_sx:        { label: 'Fibula sx',           bilateral: true, side: 'sx', pairId: 'fibula',        category: 'arto_inf' },
-  astragalo_sx:     { label: 'Astragalo sx',        bilateral: true, side: 'sx', pairId: 'astragalo',     category: 'piede' },
-  calcagno_sx:      { label: 'Calcagno sx',         bilateral: true, side: 'sx', pairId: 'calcagno',      category: 'piede' },
-  tarsali_sx:       { label: 'Tarsali sx',          bilateral: true, side: 'sx', pairId: 'tarsali',       category: 'piede' },
-  metatarsali_sx:   { label: 'Metatarsali sx',      bilateral: true, side: 'sx', pairId: 'metatarsali',   category: 'piede' },
-  falangi_piede_sx: { label: 'Falangi piede sx',    bilateral: true, side: 'sx', pairId: 'falangi_piede', category: 'piede' },
+  // ── Lower limb left ───────────────────────────────────────────────────────
+  femur_left:          { label: 'Femore sx',       bilateral: true, side: 'left', pairId: 'femur',          category: 'lower_limb' },
+  patella_left:        { label: 'Patella sx',       bilateral: true, side: 'left', pairId: 'patella',        category: 'lower_limb' },
+  tibia_left:          { label: 'Tibia sx',         bilateral: true, side: 'left', pairId: 'tibia',          category: 'lower_limb' },
+  fibula_left:         { label: 'Fibula sx',        bilateral: true, side: 'left', pairId: 'fibula',         category: 'lower_limb' },
+  talus_left:          { label: 'Astragalo sx',     bilateral: true, side: 'left', pairId: 'talus',          category: 'foot' },
+  calcaneus_left:      { label: 'Calcagno sx',      bilateral: true, side: 'left', pairId: 'calcaneus',      category: 'foot' },
+  tarsals_left:        { label: 'Tarsali sx',       bilateral: true, side: 'left', pairId: 'tarsals',        category: 'foot' },
+  metatarsals_left:    { label: 'Metatarsali sx',   bilateral: true, side: 'left', pairId: 'metatarsals',    category: 'foot' },
+  foot_phalanges_left: { label: 'Falangi piede sx', bilateral: true, side: 'left', pairId: 'foot_phalanges', category: 'foot' },
 }
 
 export const CONSERVATION_OPTIONS = [
-  { value: 'completo',      label: 'Completo' },
-  { value: 'gt50',          label: '>50%' },
-  { value: 'lt50',          label: '<50%' },
-  { value: 'frammentario',  label: 'Frammentario' },
-  { value: 'tracce',        label: 'Tracce' },
+  { value: 'complete',    label: 'Completo' },
+  { value: 'gt50',        label: '>50%' },
+  { value: 'lt50',        label: '<50%' },
+  { value: 'fragmentary', label: 'Frammentario' },
+  { value: 'traces',      label: 'Tracce' },
 ]
 
 export const CERTAINTY_OPTIONS = [
-  { value: 'certa',     label: 'Certa' },
-  { value: 'probabile', label: 'Probabile' },
-  { value: 'incerta',   label: 'Incerta' },
+  { value: 'certain',   label: 'Certa' },
+  { value: 'probable',  label: 'Probabile' },
+  { value: 'uncertain', label: 'Incerta' },
 ]
 
 export const LATERALITY_OPTIONS = [
-  { value: 'certa',   label: 'Certa' },
-  { value: 'incerta', label: 'Incerta' },
+  { value: 'certain',   label: 'Certa' },
+  { value: 'uncertain', label: 'Incerta' },
 ]
 
 /** Returns the CSS class for a bone element based on its data. */

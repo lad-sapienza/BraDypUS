@@ -33,176 +33,176 @@
         :style="svgStyle"
         xmlns="http://www.w3.org/2000/svg"
       >
-        <!-- ── Colonna vertebrale (sfondo) ──────────────────────────── -->
-        <g :id="bid('vertebre_cervicali')"  v-bind="boneAttrs('vertebre_cervicali')">
+        <!-- ── Spine (background) ──────────────────────────────────────── -->
+        <g :id="bid('cervical_vertebrae')"  v-bind="boneAttrs('cervical_vertebrae')">
           <rect x="116" y="92"  width="8"  height="28" rx="2"/>
         </g>
-        <g :id="bid('vertebre_toraciche')" v-bind="boneAttrs('vertebre_toraciche')">
+        <g :id="bid('thoracic_vertebrae')" v-bind="boneAttrs('thoracic_vertebrae')">
           <rect x="113" y="120" width="14" height="90" rx="2"/>
         </g>
-        <g :id="bid('vertebre_lombari')"   v-bind="boneAttrs('vertebre_lombari')">
+        <g :id="bid('lumbar_vertebrae')"   v-bind="boneAttrs('lumbar_vertebrae')">
           <rect x="115" y="210" width="10" height="50" rx="2"/>
         </g>
-        <g :id="bid('sacro')"  v-bind="boneAttrs('sacro')">
+        <g :id="bid('sacrum')"  v-bind="boneAttrs('sacrum')">
           <rect x="112" y="260" width="16" height="42" rx="3"/>
         </g>
-        <g :id="bid('coccige')" v-bind="boneAttrs('coccige')">
+        <g :id="bid('coccyx')" v-bind="boneAttrs('coccyx')">
           <rect x="115" y="302" width="10" height="14" rx="3"/>
         </g>
 
-        <!-- ── Pelvi (ileo, ischio, pube) ─────────────────────────── -->
-        <g :id="bid('ileo_dx')" v-bind="boneAttrs('ileo_dx')">
+        <!-- ── Pelvis (ilium, ischium, pubis) ────────────────────────── -->
+        <g :id="bid('ilium_right')" v-bind="boneAttrs('ilium_right')">
           <path d="M115,262 Q100,258 80,265 Q65,275 68,295 Q80,302 115,300 Z"/>
         </g>
-        <g :id="bid('ileo_sx')" v-bind="boneAttrs('ileo_sx')">
+        <g :id="bid('ilium_left')" v-bind="boneAttrs('ilium_left')">
           <path d="M125,262 Q140,258 160,265 Q175,275 172,295 Q160,302 125,300 Z"/>
         </g>
-        <g :id="bid('ischio_dx')" v-bind="boneAttrs('ischio_dx')">
+        <g :id="bid('ischium_right')" v-bind="boneAttrs('ischium_right')">
           <path d="M68,295 Q65,308 72,320 Q85,328 115,320 L115,300 Q80,302 68,295 Z"/>
         </g>
-        <g :id="bid('ischio_sx')" v-bind="boneAttrs('ischio_sx')">
+        <g :id="bid('ischium_left')" v-bind="boneAttrs('ischium_left')">
           <path d="M172,295 Q175,308 168,320 Q155,328 125,320 L125,300 Q160,302 172,295 Z"/>
         </g>
-        <g :id="bid('pube_dx')" v-bind="boneAttrs('pube_dx')">
+        <g :id="bid('pubis_right')" v-bind="boneAttrs('pubis_right')">
           <rect x="104" y="298" width="16" height="22" rx="3"/>
         </g>
-        <g :id="bid('pube_sx')" v-bind="boneAttrs('pube_sx')">
+        <g :id="bid('pubis_left')" v-bind="boneAttrs('pubis_left')">
           <rect x="120" y="298" width="16" height="22" rx="3"/>
         </g>
 
-        <!-- ── Cranio ───────────────────────────────────────────────── -->
-        <g :id="bid('cranio')" v-bind="boneAttrs('cranio')">
+        <!-- ── Head ───────────────────────────────────────────────────── -->
+        <g :id="bid('cranium')" v-bind="boneAttrs('cranium')">
           <!-- Vault (everything above orbit line) -->
           <path d="M80,76 Q80,10 120,10 Q160,10 160,76 Z"/>
         </g>
-        <g :id="bid('faccia')" v-bind="boneAttrs('faccia')">
+        <g :id="bid('face')" v-bind="boneAttrs('face')">
           <polygon points="108,74 132,74 129,94 111,94"/>
         </g>
-        <g :id="bid('mandibola')" v-bind="boneAttrs('mandibola')">
+        <g :id="bid('mandible')" v-bind="boneAttrs('mandible')">
           <path d="M104,92 L104,104 Q120,114 136,104 L136,92 L132,92 Q132,108 120,112 Q108,108 108,92 Z"/>
         </g>
 
-        <!-- ── Cingolo scapolare ────────────────────────────────────── -->
-        <g :id="bid('scapola_dx')" v-bind="boneAttrs('scapola_dx')">
+        <!-- ── Shoulder girdle ────────────────────────────────────────── -->
+        <g :id="bid('scapula_right')" v-bind="boneAttrs('scapula_right')">
           <polygon points="50,120 66,116 70,178 50,182"/>
         </g>
-        <g :id="bid('scapola_sx')" v-bind="boneAttrs('scapola_sx')">
+        <g :id="bid('scapula_left')" v-bind="boneAttrs('scapula_left')">
           <polygon points="190,120 174,116 170,178 190,182"/>
         </g>
-        <g :id="bid('clavicola_dx')" v-bind="boneAttrs('clavicola_dx')">
+        <g :id="bid('clavicle_right')" v-bind="boneAttrs('clavicle_right')">
           <rect x="68" y="116" width="48" height="7" rx="3"/>
         </g>
-        <g :id="bid('clavicola_sx')" v-bind="boneAttrs('clavicola_sx')">
+        <g :id="bid('clavicle_left')" v-bind="boneAttrs('clavicle_left')">
           <rect x="124" y="116" width="48" height="7" rx="3"/>
         </g>
 
-        <!-- ── Torace ───────────────────────────────────────────────── -->
-        <g :id="bid('coste_dx')" v-bind="boneAttrs('coste_dx')">
+        <!-- ── Thorax ──────────────────────────────────────────────────── -->
+        <g :id="bid('ribs_right')" v-bind="boneAttrs('ribs_right')">
           <path d="M115,124 C88,132 70,162 68,196 C68,218 82,234 115,234 Z"/>
         </g>
-        <g :id="bid('coste_sx')" v-bind="boneAttrs('coste_sx')">
+        <g :id="bid('ribs_left')" v-bind="boneAttrs('ribs_left')">
           <path d="M125,124 C152,132 170,162 172,196 C172,218 158,234 125,234 Z"/>
         </g>
-        <!-- Sterno on top of thoracic vertebrae -->
-        <g :id="bid('sterno')" v-bind="boneAttrs('sterno')">
+        <!-- Sternum on top of thoracic vertebrae -->
+        <g :id="bid('sternum')" v-bind="boneAttrs('sternum')">
           <rect x="115" y="122" width="10" height="84" rx="2"/>
         </g>
 
-        <!-- ── Arto superiore destro ───────────────────────────────── -->
-        <g :id="bid('omero_dx')" v-bind="boneAttrs('omero_dx')">
+        <!-- ── Upper limb right ───────────────────────────────────────── -->
+        <g :id="bid('humerus_right')" v-bind="boneAttrs('humerus_right')">
           <rect x="51" y="126" width="14" height="118" rx="6"/>
         </g>
-        <g :id="bid('radio_dx')" v-bind="boneAttrs('radio_dx')">
+        <g :id="bid('radius_right')" v-bind="boneAttrs('radius_right')">
           <rect x="44" y="248" width="10" height="94" rx="4"/>
         </g>
-        <g :id="bid('ulna_dx')" v-bind="boneAttrs('ulna_dx')">
+        <g :id="bid('ulna_right')" v-bind="boneAttrs('ulna_right')">
           <rect x="56" y="244" width="10" height="98" rx="4"/>
         </g>
-        <g :id="bid('carpali_dx')" v-bind="boneAttrs('carpali_dx')">
+        <g :id="bid('carpals_right')" v-bind="boneAttrs('carpals_right')">
           <rect x="38" y="344" width="32" height="18" rx="3"/>
         </g>
-        <g :id="bid('metacarpali_dx')" v-bind="boneAttrs('metacarpali_dx')">
+        <g :id="bid('metacarpals_right')" v-bind="boneAttrs('metacarpals_right')">
           <rect x="34" y="362" width="36" height="22" rx="3"/>
         </g>
-        <g :id="bid('falangi_mano_dx')" v-bind="boneAttrs('falangi_mano_dx')">
+        <g :id="bid('hand_phalanges_right')" v-bind="boneAttrs('hand_phalanges_right')">
           <rect x="30" y="384" width="40" height="38" rx="5"/>
         </g>
 
-        <!-- ── Arto superiore sinistro ─────────────────────────────── -->
-        <g :id="bid('omero_sx')" v-bind="boneAttrs('omero_sx')">
+        <!-- ── Upper limb left ────────────────────────────────────────── -->
+        <g :id="bid('humerus_left')" v-bind="boneAttrs('humerus_left')">
           <rect x="175" y="126" width="14" height="118" rx="6"/>
         </g>
-        <g :id="bid('radio_sx')" v-bind="boneAttrs('radio_sx')">
+        <g :id="bid('radius_left')" v-bind="boneAttrs('radius_left')">
           <rect x="186" y="248" width="10" height="94" rx="4"/>
         </g>
-        <g :id="bid('ulna_sx')" v-bind="boneAttrs('ulna_sx')">
+        <g :id="bid('ulna_left')" v-bind="boneAttrs('ulna_left')">
           <rect x="174" y="244" width="10" height="98" rx="4"/>
         </g>
-        <g :id="bid('carpali_sx')" v-bind="boneAttrs('carpali_sx')">
+        <g :id="bid('carpals_left')" v-bind="boneAttrs('carpals_left')">
           <rect x="170" y="344" width="32" height="18" rx="3"/>
         </g>
-        <g :id="bid('metacarpali_sx')" v-bind="boneAttrs('metacarpali_sx')">
+        <g :id="bid('metacarpals_left')" v-bind="boneAttrs('metacarpals_left')">
           <rect x="170" y="362" width="36" height="22" rx="3"/>
         </g>
-        <g :id="bid('falangi_mano_sx')" v-bind="boneAttrs('falangi_mano_sx')">
+        <g :id="bid('hand_phalanges_left')" v-bind="boneAttrs('hand_phalanges_left')">
           <rect x="170" y="384" width="40" height="38" rx="5"/>
         </g>
 
-        <!-- ── Arto inferiore destro ──────────────────────────────── -->
-        <g :id="bid('femore_dx')" v-bind="boneAttrs('femore_dx')">
+        <!-- ── Lower limb right ──────────────────────────────────────── -->
+        <g :id="bid('femur_right')" v-bind="boneAttrs('femur_right')">
           <rect x="82" y="330" width="20" height="140" rx="8"/>
         </g>
-        <g :id="bid('patella_dx')" v-bind="boneAttrs('patella_dx')">
+        <g :id="bid('patella_right')" v-bind="boneAttrs('patella_right')">
           <ellipse cx="92" cy="474" rx="10" ry="9"/>
         </g>
-        <g :id="bid('fibula_dx')" v-bind="boneAttrs('fibula_dx')">
+        <g :id="bid('fibula_right')" v-bind="boneAttrs('fibula_right')">
           <rect x="72" y="486" width="9"  height="110" rx="4"/>
         </g>
-        <g :id="bid('tibia_dx')" v-bind="boneAttrs('tibia_dx')">
+        <g :id="bid('tibia_right')" v-bind="boneAttrs('tibia_right')">
           <rect x="83" y="486" width="16" height="110" rx="5"/>
         </g>
-        <g :id="bid('calcagno_dx')" v-bind="boneAttrs('calcagno_dx')">
+        <g :id="bid('calcaneus_right')" v-bind="boneAttrs('calcaneus_right')">
           <rect x="66" y="608" width="28" height="20" rx="4"/>
         </g>
-        <g :id="bid('astragalo_dx')" v-bind="boneAttrs('astragalo_dx')">
+        <g :id="bid('talus_right')" v-bind="boneAttrs('talus_right')">
           <rect x="78" y="597" width="20" height="14" rx="3"/>
         </g>
-        <g :id="bid('tarsali_dx')" v-bind="boneAttrs('tarsali_dx')">
+        <g :id="bid('tarsals_right')" v-bind="boneAttrs('tarsals_right')">
           <rect x="66" y="600" width="36" height="16" rx="3"/>
         </g>
-        <g :id="bid('metatarsali_dx')" v-bind="boneAttrs('metatarsali_dx')">
+        <g :id="bid('metatarsals_right')" v-bind="boneAttrs('metatarsals_right')">
           <rect x="62" y="616" width="40" height="18" rx="4"/>
         </g>
-        <g :id="bid('falangi_piede_dx')" v-bind="boneAttrs('falangi_piede_dx')">
+        <g :id="bid('foot_phalanges_right')" v-bind="boneAttrs('foot_phalanges_right')">
           <rect x="58" y="634" width="42" height="18" rx="4"/>
         </g>
 
-        <!-- ── Arto inferiore sinistro ─────────────────────────────── -->
-        <g :id="bid('femore_sx')" v-bind="boneAttrs('femore_sx')">
+        <!-- ── Lower limb left ────────────────────────────────────────── -->
+        <g :id="bid('femur_left')" v-bind="boneAttrs('femur_left')">
           <rect x="138" y="330" width="20" height="140" rx="8"/>
         </g>
-        <g :id="bid('patella_sx')" v-bind="boneAttrs('patella_sx')">
+        <g :id="bid('patella_left')" v-bind="boneAttrs('patella_left')">
           <ellipse cx="148" cy="474" rx="10" ry="9"/>
         </g>
-        <g :id="bid('fibula_sx')" v-bind="boneAttrs('fibula_sx')">
+        <g :id="bid('fibula_left')" v-bind="boneAttrs('fibula_left')">
           <rect x="159" y="486" width="9"  height="110" rx="4"/>
         </g>
-        <g :id="bid('tibia_sx')" v-bind="boneAttrs('tibia_sx')">
+        <g :id="bid('tibia_left')" v-bind="boneAttrs('tibia_left')">
           <rect x="141" y="486" width="16" height="110" rx="5"/>
         </g>
-        <g :id="bid('calcagno_sx')" v-bind="boneAttrs('calcagno_sx')">
+        <g :id="bid('calcaneus_left')" v-bind="boneAttrs('calcaneus_left')">
           <rect x="146" y="608" width="28" height="20" rx="4"/>
         </g>
-        <g :id="bid('astragalo_sx')" v-bind="boneAttrs('astragalo_sx')">
+        <g :id="bid('talus_left')" v-bind="boneAttrs('talus_left')">
           <rect x="142" y="597" width="20" height="14" rx="3"/>
         </g>
-        <g :id="bid('tarsali_sx')" v-bind="boneAttrs('tarsali_sx')">
+        <g :id="bid('tarsals_left')" v-bind="boneAttrs('tarsals_left')">
           <rect x="138" y="600" width="36" height="16" rx="3"/>
         </g>
-        <g :id="bid('metatarsali_sx')" v-bind="boneAttrs('metatarsali_sx')">
+        <g :id="bid('metatarsals_left')" v-bind="boneAttrs('metatarsals_left')">
           <rect x="138" y="616" width="40" height="18" rx="4"/>
         </g>
-        <g :id="bid('falangi_piede_sx')" v-bind="boneAttrs('falangi_piede_sx')">
+        <g :id="bid('foot_phalanges_left')" v-bind="boneAttrs('foot_phalanges_left')">
           <rect x="140" y="634" width="42" height="18" rx="4"/>
         </g>
       </svg>
@@ -218,11 +218,11 @@
     <div class="osteo-legend">
       <span class="osteo-legend-item legend-undocumented">Non doc.</span>
       <span class="osteo-legend-item legend-absent">Assente</span>
-      <span class="osteo-legend-item legend-tracce">Tracce</span>
-      <span class="osteo-legend-item legend-frammentario">Framment.</span>
+      <span class="osteo-legend-item legend-traces">Tracce</span>
+      <span class="osteo-legend-item legend-fragmentary">Framment.</span>
       <span class="osteo-legend-item legend-lt50">&lt;50%</span>
       <span class="osteo-legend-item legend-gt50">&gt;50%</span>
-      <span class="osteo-legend-item legend-completo">Completo</span>
+      <span class="osteo-legend-item legend-complete">Completo</span>
     </div>
   </div>
 </template>
@@ -327,7 +327,7 @@ function boneAttrs(id) {
 const tooltip = reactive({ visible: false, label: '', status: '', style: {} })
 
 function conservationLabel(c) {
-  const map = { completo: 'Completo', gt50: '>50%', lt50: '<50%', frammentario: 'Frammentario', tracce: 'Tracce' }
+  const map = { complete: 'Completo', gt50: '>50%', lt50: '<50%', fragmentary: 'Frammentario', traces: 'Tracce' }
   return map[c] ?? ''
 }
 
@@ -408,11 +408,11 @@ function hideTooltip() { tooltip.visible = false }
 }
 :deep(.bone-undocumented) { fill: var(--p-surface-100); stroke: var(--p-surface-300); }
 :deep(.bone-absent)       { fill: var(--p-surface-0);   stroke: var(--p-surface-300); stroke-dasharray: 3 2; }
-:deep(.bone-tracce)       { fill: #ef4444; stroke: #b91c1c; }
-:deep(.bone-frammentario) { fill: #f97316; stroke: #c2410c; }
+:deep(.bone-traces)       { fill: #ef4444; stroke: #b91c1c; }
+:deep(.bone-fragmentary)  { fill: #f97316; stroke: #c2410c; }
 :deep(.bone-lt50)         { fill: #eab308; stroke: #a16207; }
 :deep(.bone-gt50)         { fill: #84cc16; stroke: #4d7c0f; }
-:deep(.bone-completo)     { fill: #22c55e; stroke: #15803d; }
+:deep(.bone-complete)     { fill: #22c55e; stroke: #15803d; }
 
 :deep(.bone[role="button"]) { cursor: pointer; }
 :deep(.bone[role="button"]:hover) { opacity: 0.75; }
@@ -449,9 +449,9 @@ function hideTooltip() { tooltip.visible = false }
 }
 .legend-undocumented { background: var(--p-surface-100); border-color: var(--p-surface-300); color: var(--p-text-muted-color); }
 .legend-absent       { background: var(--p-surface-0);   border-color: var(--p-surface-300); border-style: dashed; color: var(--p-text-muted-color); }
-.legend-tracce       { background: #ef4444; color: #fff; }
-.legend-frammentario { background: #f97316; color: #fff; }
+.legend-traces       { background: #ef4444; color: #fff; }
+.legend-fragmentary  { background: #f97316; color: #fff; }
 .legend-lt50         { background: #eab308; color: #fff; }
 .legend-gt50         { background: #84cc16; color: #fff; }
-.legend-completo     { background: #22c55e; color: #fff; }
+.legend-complete     { background: #22c55e; color: #fff; }
 </style>

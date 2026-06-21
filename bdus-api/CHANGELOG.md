@@ -5,6 +5,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Plugin osteologico — ID anatomici standardizzati in inglese** — il modello dati del JSON `osteo_data` usa ora ID anatomici inglesi standard invece di nomi italiani: chiavi delle ossa (`cranium` anziché `cranio`, `femur_right` anziché `femore_dx`, ecc.), categorie corporee (`head`, `spine`, `thorax`, `shoulder`, `upper_limb`, `pelvis`, `lower_limb`, `foot`), suffissi lateralità (`_right`/`_left` anziché `_dx`/`_sx`) e valori degli attributi (`complete`/`fragmentary`/`traces` per conservazione; `certain`/`probable`/`uncertain` per certezza). Le label visualizzate agli utenti rimangono in italiano. I dati esistenti nel seed demo sono stati aggiornati di conseguenza.
+- **DBML: fix test fase 36** — corretto il test `36c` che usava `{{app_name}}_us` (nome prefissato) invece di `us` (nome breve, coerente col config); corretti `36g`/`36j` che si aspettavano `parameter_missing` invece del codice effettivo `dbml_empty`; rimosso il pre-flight check ridondante in `dbml_apply()` che impediva l'apply parziale (tabelle con errori vengono già saltate da `DbmlImporter::apply()`).
+
 ### Added
 
 - **Plugin osteologico (inventario ossa)** — nuovo plugin di sistema attivabile per tabella tramite **Config → Tabelle → Inventario osteologico**. Aggiunge una colonna `osteo_data TEXT` (JSON) al record e un pannello interattivo in RecordView:

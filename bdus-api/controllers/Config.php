@@ -1544,18 +1544,6 @@ class Config extends \Bdus\Controller
       $parser   = new \Bdus\DbmlParser();
       $importer = new \Bdus\DbmlImporter();
       $parsed   = $parser->parse($dbmlText);
-
-      // Pre-flight check: refuse if any table has a hard error
-      $preview = $importer->preview($parsed, $this->cfg);
-      if ($preview['has_errors']) {
-        $this->returnJson([
-          'status'  => 'error',
-          'code'    => 'dbml_has_errors',
-          'preview' => $preview,
-        ]);
-        return;
-      }
-
       $result = $importer->apply($parsed, $this->cfg, $this->db);
       $this->returnJson(['status' => 'success', 'code' => 'ok', 'result' => $result]);
     } catch (\Throwable $e) {

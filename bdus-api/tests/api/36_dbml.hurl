@@ -39,7 +39,7 @@ POST {{base_url}}/api/config/dbml/preview
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
-  "dbml": "Table {{app_name}}_us {\n  id integer [pk, increment]\n}"
+  "dbml": "Table us {\n  id integer [pk, increment]\n}"
 }
 HTTP 200
 [Asserts]
@@ -93,7 +93,7 @@ jsonpath "$.preview.vocabularies[0].name"        == "hurl_status"
 jsonpath "$.preview.vocabularies[0].values"      count == 2
 
 
-# ── 36g. Preview — missing dbml body → parameter_missing ─────────────
+# ── 36g. Preview — missing dbml body → dbml_empty ────────────────────
 POST {{base_url}}/api/config/dbml/preview
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
@@ -101,7 +101,7 @@ Content-Type: application/json
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "error"
-jsonpath "$.code"   == "parameter_missing"
+jsonpath "$.code"   == "dbml_empty"
 
 
 # ── 36h. Apply — create a new table ──────────────────────────────────
@@ -134,7 +134,7 @@ jsonpath "$.result.skipped"          count == 1
 jsonpath "$.result.skipped[0]"       == "hurl_applied"
 
 
-# ── 36j. Apply — missing dbml body → parameter_missing ───────────────
+# ── 36j. Apply — missing dbml body → dbml_empty ──────────────────────
 POST {{base_url}}/api/config/dbml/apply
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
@@ -142,4 +142,4 @@ Content-Type: application/json
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "error"
-jsonpath "$.code"   == "parameter_missing"
+jsonpath "$.code"   == "dbml_empty"

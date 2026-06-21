@@ -41,11 +41,11 @@ Bones are colour-coded by conservation grade:
 
 | Colour | Grade |
 |---|---|
-| Dark fill | Complete (`completo`) |
+| Dark fill | Complete (`complete`) |
 | Medium fill | > 50% (`gt50`) |
 | Light fill | < 50% (`lt50`) |
-| Hatched | Fragmentary (`frammentario`) |
-| Outline only | Traces (`tracce`) |
+| Hatched | Fragmentary (`fragmentary`) |
+| Outline only | Traces (`traces`) |
 | No fill | Absent or not documented |
 
 Hovering over a bone shows a tooltip with the anatomical name and all recorded attributes.
@@ -78,14 +78,14 @@ field.
 
 | Region | Count | Elements |
 |---|---|---|
-| Head (`testa`) | 3 | Cranio, Faccia, Mandibola |
-| Spine (`colonna`) | 5 | Vertebre cervicali, toraciche, lombari; Sacro, Coccige |
-| Thorax (`torace`) | 3 | Sterno; Coste dx/sx |
-| Shoulder (`spalla`) | 4 | Clavicola dx/sx; Scapola dx/sx |
-| Upper limb (`arto_sup`) | 12 | Omero, Radio, Ulna, Carpali, Metacarpali, Falangi mano (dx/sx each) |
-| Pelvis (`pelvi`) | 6 | Ileo, Ischio, Pube (dx/sx each) |
-| Lower limb (`arto_inf`) | 8 | Femore, Patella, Tibia, Fibula (dx/sx each) |
-| Foot (`piede`) | 10 | Astragalo, Calcagno, Tarsali, Metatarsali, Falangi piede (dx/sx each) |
+| Head (`head`) | 3 | Cranio, Faccia, Mandibola |
+| Spine (`spine`) | 5 | Vertebre cervicali, toraciche, lombari; Sacro, Coccige |
+| Thorax (`thorax`) | 3 | Sterno; Coste dx/sx |
+| Shoulder (`shoulder`) | 4 | Clavicola dx/sx; Scapola dx/sx |
+| Upper limb (`upper_limb`) | 12 | Omero, Radio, Ulna, Carpali, Metacarpali, Falangi mano (dx/sx each) |
+| Pelvis (`pelvis`) | 6 | Ileo, Ischio, Pube (dx/sx each) |
+| Lower limb (`lower_limb`) | 8 | Femore, Patella, Tibia, Fibula (dx/sx each) |
+| Foot (`foot`) | 10 | Astragalo, Calcagno, Tarsali, Metatarsali, Falangi piede (dx/sx each) |
 
 ## Data model
 
@@ -105,18 +105,18 @@ JSON structure:
       "label": "Individuo 1",
       "notes": "Scheletro in connessione anatomica parziale.",
       "bones": {
-        "cranio": {
+        "cranium": {
           "present": true,
-          "conservation": "completo",
-          "certainty": "certa"
+          "conservation": "complete",
+          "certainty": "certain"
         },
-        "omero_dx": {
+        "humerus_right": {
           "present": true,
-          "conservation": "frammentario",
-          "certainty": "probabile",
-          "laterality_certainty": "incerta"
+          "conservation": "fragmentary",
+          "certainty": "probable",
+          "laterality_certainty": "uncertain"
         },
-        "fibula_sx": {
+        "fibula_left": {
           "present": false
         }
       }
@@ -125,8 +125,8 @@ JSON structure:
 }
 ```
 
-The `bones` object uses the anatomical element ID as the key (e.g. `cranio`,
-`omero_dx`, `femore_sx`). Missing keys mean the element was not documented — distinct
+The `bones` object uses the standard anatomical English ID as the key (e.g. `cranium`,
+`humerus_right`, `femur_left`). Missing keys mean the element was not documented — distinct
 from `present: false` (explicitly absent) and `present: true` (present).
 
 ::: tip

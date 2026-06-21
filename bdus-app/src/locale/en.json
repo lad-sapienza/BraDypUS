@@ -1164,5 +1164,24 @@
   "bce": "BCE",
   "ce": "CE",
   "chrono_density": "Derived chronological distribution",
-  "chrono_density_empty": "No related tables with chronological data"
+  "chrono_density_empty": "No related tables with chronological data",
+
+  "osteo_plugin": "Osteological inventory",
+  "osteo_label": "Osteological inventory",
+  "osteo_activated": "Osteological plugin activated",
+  "osteo_deactivated": "Osteological plugin deactivated",
+  "osteology_activated": "Osteological plugin activated",
+  "osteology_deactivated": "Osteological plugin deactivated",
+  "osteo_individual": "Individual",
+  "osteo_add_individual": "Add individual",
+  "osteo_individual_label": "Individual label (optional)",
+  "osteo_individual_notes": "Individual notes (optional)",
+  "osteo_presence": "Presence",
+  "osteo_present": "Present",
+  "osteo_absent": "Absent",
+  "osteo_not_documented": "Not documented",
+  "osteo_conservation": "Conservation state",
+  "osteo_certainty": "Anatomical certainty",
+  "osteo_laterality": "Laterality certainty",
+  "osteo_notes": "Notes"
 }

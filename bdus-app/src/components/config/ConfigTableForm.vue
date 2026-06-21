@@ -162,6 +162,20 @@
               {{ t('fuzzy_date_activated') }} — chrono_from, chrono_to, chrono_label, chrono_certainty, chrono_period
             </small>
           </div>
+          <div class="cfg-form-field">
+            <label>{{ t('osteo_plugin') }}</label>
+            <div class="cfg-input-action">
+              <ToggleSwitch
+                :modelValue="osteoActive"
+                :disabled="osteoBusy"
+                @update:modelValue="toggleOsteology"
+              />
+              <i v-if="osteoBusy" class="pi pi-spin pi-spinner" style="font-size:.9rem" />
+            </div>
+            <small v-if="osteoActive" class="cfg-hint">
+              {{ t('osteo_activated') }} — osteo_data
+            </small>
+          </div>
         </div>
       </section>
 
@@ -235,6 +249,8 @@ const loadError = ref(null)
 
 const fuzzyDateActive = ref(false)
 const fuzzyDateBusy   = ref(false)
+const osteoActive     = ref(false)
+const osteoBusy       = ref(false)
 
 const table            = ref(null)
 const form             = ref(null)
@@ -301,6 +317,7 @@ async function load() {
     }
 
     fuzzyDateActive.value = !!td.fuzzy_date
+    osteoActive.value     = !!td.osteology
     newName.value = props.tb ?? ''
   } catch (e) {
     loadError.value = e.message
@@ -370,6 +387,27 @@ async function toggleFuzzyDate(newVal) {
     toast.add({ severity: 'error', summary: e.message, life: 4000 })
   } finally {
     fuzzyDateBusy.value = false
+  }
+}
+
+// ── Osteology toggle ──────────────────────────────────────────────────────
+async function toggleOsteology(newVal) {
+  if (!props.tb || osteoBusy.value) return
+  osteoBusy.value = true
+  try {
+    const res = newVal
+      ? await api.post(`/api/config/table/${props.tb}/osteology`, {})
+      : await api.delete(`/api/config/table/${props.tb}/osteology`, {})
+    if (res.status === 'success') {
+      osteoActive.value = newVal
+      toast.add({ severity: 'success', summary: t(res.code), life: 3000 })
+    } else {
+      toast.add({ severity: 'error', summary: api.responseMessage(res, t), life: 5000 })
+    }
+  } catch (e) {
+    toast.add({ severity: 'error', summary: e.message, life: 4000 })
+  } finally {
+    osteoBusy.value = false
   }
 }
 

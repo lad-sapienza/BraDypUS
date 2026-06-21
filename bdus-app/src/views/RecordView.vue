@@ -195,6 +195,14 @@
           @update:chrono="v => Object.assign(editData.core, v)"
         />
 
+        <!-- Osteology plugin -->
+        <OsteologySection
+          v-if="record.schema?.has_osteology"
+          :modelValue="osteoData"
+          :editMode="mode === 'edit'"
+          @update:modelValue="v => editData.core.osteo_data = v"
+        />
+
         <!-- Chronological distribution of related records -->
         <ChronoDensityPanel
           v-if="!isNew"
@@ -349,6 +357,7 @@ import RsSection              from '@/components/record/RsSection.vue'
 import ManualLinksSection     from '@/components/record/ManualLinksSection.vue'
 import ZoteroSection          from '@/components/record/ZoteroSection.vue'
 import ChronoSection          from '@/components/record/ChronoSection.vue'
+import OsteologySection       from '@/components/record/osteology/OsteologySection.vue'
 import ChronoDensityPanel     from '@/components/record/ChronoDensityPanel.vue'
 import RecordVersionsDrawer   from '@/components/record/RecordVersionsDrawer.vue'
 
@@ -413,11 +422,19 @@ const chronoData = computed(() => {
   }
 })
 
+// Osteology data: in edit mode use flat editData; in read mode unwrap record.core
+const osteoData = computed(() =>
+  mode.value === 'edit'
+    ? (editData.core.osteo_data ?? null)
+    : (record.value?.core?.osteo_data?.val ?? null)
+)
+
 // ── Derived ─────────────────────────────────────────────────────
 const CHRONO_FIELDS = new Set(['chrono_from', 'chrono_to', 'chrono_label', 'chrono_certainty', 'chrono_period'])
+const OSTEO_FIELDS  = new Set(['osteo_data'])
 
 const visibleCoreFields = computed(() =>
-  (record.value?.schema?.fields ?? []).filter(f => !f.hide && !CHRONO_FIELDS.has(f.name))
+  (record.value?.schema?.fields ?? []).filter(f => !f.hide && !CHRONO_FIELDS.has(f.name) && !OSTEO_FIELDS.has(f.name))
 )
 
 const recordTitle = computed(() => {

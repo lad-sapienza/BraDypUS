@@ -58,7 +58,7 @@ Content-Type: application/json
 {
   "core": {
     "sigla": "OST001",
-    "osteo_data": "{\"individuals\":[{\"id\":1,\"label\":\"Test\",\"notes\":\"round-trip\",\"bones\":{\"cranio\":{\"present\":true,\"conservation\":\"completo\",\"certainty\":\"certa\"},\"femore_dx\":{\"present\":true,\"conservation\":\"gt50\",\"certainty\":\"probabile\",\"laterality_certainty\":\"certa\"},\"fibula_sx\":{\"present\":false}}}]}"
+    "osteo_data": "{\"individuals\":[{\"id\":1,\"label\":\"Test\",\"notes\":\"round-trip\",\"bones\":{\"cranium\":{\"present\":true,\"conservation\":\"complete\",\"certainty\":\"certain\"},\"femur_right\":{\"present\":true,\"conservation\":\"gt50\",\"certainty\":\"probable\",\"laterality_certainty\":\"certain\"},\"fibula_left\":{\"present\":false}}}]}"
   },
   "plugins": {}
 }

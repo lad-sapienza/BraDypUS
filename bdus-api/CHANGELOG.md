@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Plugin osteologico (inventario ossa)** — nuovo plugin di sistema attivabile per tabella tramite **Config → Tabelle → Inventario osteologico**. Aggiunge una colonna `osteo_data TEXT` (JSON) al record e un pannello interattivo in RecordView:
+  - **51 elementi anatomici** in 9 regioni corporee (testa, colonna, torace, spalla, arto superiore, pelvi, arto inferiore, piede, denti).
+  - **Multi-individuo** — tab per individuo con label e note; il pulsante "Aggiungi individuo" aggiunge un nuovo scheletro vuoto.
+  - **SVG interattivo** — visualizzatore skeleton zoomabile (rotella mouse o pulsanti +/−) e pannable (click+drag). Tooltip on hover. Legenda colori in fondo.
+  - **BonePanel laterale** — in edit mode, click su un osso apre un pannello con quattro attributi: presenza (sì/no/non documentato), conservazione (completo / >50% / <50% / frammentario / tracce), certezza anatomica (certa/probabile/incerta), certezza lateralità (solo ossa pari).
+  - **Disattivazione non distruttiva** — il toggle off rimuove il pannello ma preserva la colonna `osteo_data` e i dati già inseriti.
+  - **Demo seed** — tabella `sepolture` nel seed demo con 3 sepolture di esempio (SEP001–SEP003, mono- e bi-individuale).
+  - **Test** — 7 test PHPUnit in `ConfigCtrlTest` + fase hurl `38_osteology.hurl`.
+  - File: `bonesConfig.js`, `BonePanel.vue`, `OsteologySvg.vue`, `OsteologySection.vue`; endpoint `POST/DELETE /api/config/table/{tb}/osteology`.
+
 - **Tipo di campo `md` (Markdown)** — nuovo tipo di campo `"md"` che memorizza testo Markdown e lo rende in HTML nel modo visualizzazione. In modalità modifica compare una textarea con un pulsante toggle "Anteprima" / "Modifica" per vedere il rendering in tempo reale. La libreria `marked` (già presente come dipendenza) è usata per il parsing.
   - `controllers/fld_structure.json` — aggiunto `"md"` alla lista dei tipi disponibili, tra `"long_text"` e `"select"`.
   - `FieldDisplay.vue` — ramo `v-else-if="schema.type === 'md'"` con `v-html="marked.parse()"` e stili prosa (`.field-md`).

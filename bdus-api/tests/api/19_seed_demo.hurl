@@ -18,6 +18,7 @@
 #   reperti (20 direct + 375 via CSV = 395 total)
 #   misure (~60), m_reperti_in_us (~40), m_reperti_in_complessi (~15)
 #   RS relations (~41), geodata, userlinks (21 labeled), chart
+#   sepolture (3 direct, osteology plugin active, multi-individual demo)
 # ════════════════════════════════════════════════════════════════════
 
 
@@ -2816,6 +2817,363 @@ POST {{base_url}}/api/geoface/feature
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {"tb":"complessi","id":11,"geometry":{"type":"Polygon","coordinates":[[[11.3435,44.3218],[11.3460,44.3218],[11.3460,44.3230],[11.3435,44.3230],[11.3435,44.3218]]]}}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+
+# ════════════════════════════════════════════════════════════════════
+# ── 19o. Sepolture — demo inventario osteologico ─────────────────
+#
+# Crea la tabella `sepolture` e attiva il plugin osteologico.
+# Inserisce 3 sepolture con inventario completo delle ossa:
+#   SEP001 — adulto, buona conservazione (27 ossa documentate)
+#   SEP002 — infante ca. 4-6 anni, conservazione scarsa
+#   SEP003 — sepoltura doppia (2 individui, uno in connessione,
+#             l'altro disarticolato)
+# ════════════════════════════════════════════════════════════════════
+
+# ── 19o-1. Crea tabella sepolture ────────────────────────────────
+POST {{base_url}}/api/config/tables
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "name": "sepolture", "label": "Sepolture", "is_plugin": "0" }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+PUT {{base_url}}/api/config/table/sepolture
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "name": "sepolture", "label": "Sepolture", "is_plugin": "0", "order": "sigla", "id_field": "sigla", "preview": ["sigla", "eta_biologica", "sesso_biologico"] }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+# ── 19o-2. Campi ─────────────────────────────────────────────────
+POST {{base_url}}/api/config/table/sepolture/field
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "name": "sigla", "label": "Sigla", "type": "text", "db_type": "TEXT", "check": ["not_empty", "no_dupl"] }
+HTTP 200
+
+POST {{base_url}}/api/config/table/sepolture/field
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "name": "sito", "label": "Sito", "type": "text", "db_type": "TEXT" }
+HTTP 200
+
+POST {{base_url}}/api/config/table/sepolture/field
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "name": "tipo_sepoltura", "label": "Tipo di sepoltura", "type": "select", "db_type": "TEXT", "vocabulary_set": "tipo_sepoltura" }
+HTTP 200
+
+POST {{base_url}}/api/config/table/sepolture/field
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "name": "posizione", "label": "Posizione scheletrica", "type": "select", "db_type": "TEXT", "vocabulary_set": "posizione_scheletrica" }
+HTTP 200
+
+POST {{base_url}}/api/config/table/sepolture/field
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "name": "orientamento", "label": "Orientamento", "type": "select", "db_type": "TEXT", "vocabulary_set": "orientamento_sepoltura" }
+HTTP 200
+
+POST {{base_url}}/api/config/table/sepolture/field
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "name": "eta_biologica", "label": "Età biologica", "type": "select", "db_type": "TEXT", "vocabulary_set": "eta_biologica" }
+HTTP 200
+
+POST {{base_url}}/api/config/table/sepolture/field
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "name": "sesso_biologico", "label": "Sesso biologico", "type": "select", "db_type": "TEXT", "vocabulary_set": "sesso_biologico" }
+HTTP 200
+
+POST {{base_url}}/api/config/table/sepolture/field
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "name": "nmi", "label": "NMI", "type": "text", "db_type": "INTEGER" }
+HTTP 200
+
+POST {{base_url}}/api/config/table/sepolture/field
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "name": "note", "label": "Note", "type": "long_text", "db_type": "TEXT" }
+HTTP 200
+
+# ── 19o-3. Vocabolari ────────────────────────────────────────────
+POST {{base_url}}/api/vocabularies
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "voc": "tipo_sepoltura", "def": "Inumazione" }
+HTTP 200
+
+POST {{base_url}}/api/vocabularies
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "voc": "tipo_sepoltura", "def": "Incinerazione" }
+HTTP 200
+
+POST {{base_url}}/api/vocabularies
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "voc": "tipo_sepoltura", "def": "Cremazione diretta" }
+HTTP 200
+
+POST {{base_url}}/api/vocabularies
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "voc": "posizione_scheletrica", "def": "Supino" }
+HTTP 200
+
+POST {{base_url}}/api/vocabularies
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "voc": "posizione_scheletrica", "def": "Prono" }
+HTTP 200
+
+POST {{base_url}}/api/vocabularies
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "voc": "posizione_scheletrica", "def": "Laterale destro" }
+HTTP 200
+
+POST {{base_url}}/api/vocabularies
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "voc": "posizione_scheletrica", "def": "Laterale sinistro" }
+HTTP 200
+
+POST {{base_url}}/api/vocabularies
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "voc": "posizione_scheletrica", "def": "Rannicchiato" }
+HTTP 200
+
+POST {{base_url}}/api/vocabularies
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "voc": "orientamento_sepoltura", "def": "N-S" }
+HTTP 200
+
+POST {{base_url}}/api/vocabularies
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "voc": "orientamento_sepoltura", "def": "S-N" }
+HTTP 200
+
+POST {{base_url}}/api/vocabularies
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "voc": "orientamento_sepoltura", "def": "E-O" }
+HTTP 200
+
+POST {{base_url}}/api/vocabularies
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "voc": "orientamento_sepoltura", "def": "O-E" }
+HTTP 200
+
+POST {{base_url}}/api/vocabularies
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "voc": "orientamento_sepoltura", "def": "NE-SO" }
+HTTP 200
+
+POST {{base_url}}/api/vocabularies
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "voc": "eta_biologica", "def": "Infante I (0-6 anni)" }
+HTTP 200
+
+POST {{base_url}}/api/vocabularies
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "voc": "eta_biologica", "def": "Infante II (7-12 anni)" }
+HTTP 200
+
+POST {{base_url}}/api/vocabularies
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "voc": "eta_biologica", "def": "Adolescente" }
+HTTP 200
+
+POST {{base_url}}/api/vocabularies
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "voc": "eta_biologica", "def": "Adulto giovane (20-35)" }
+HTTP 200
+
+POST {{base_url}}/api/vocabularies
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "voc": "eta_biologica", "def": "Adulto maturo (35-50)" }
+HTTP 200
+
+POST {{base_url}}/api/vocabularies
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "voc": "eta_biologica", "def": "Adulto senile (>50)" }
+HTTP 200
+
+POST {{base_url}}/api/vocabularies
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "voc": "eta_biologica", "def": "Indeterminata" }
+HTTP 200
+
+POST {{base_url}}/api/vocabularies
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "voc": "sesso_biologico", "def": "Maschile" }
+HTTP 200
+
+POST {{base_url}}/api/vocabularies
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "voc": "sesso_biologico", "def": "Femminile" }
+HTTP 200
+
+POST {{base_url}}/api/vocabularies
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "voc": "sesso_biologico", "def": "Probabilmente maschile" }
+HTTP 200
+
+POST {{base_url}}/api/vocabularies
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "voc": "sesso_biologico", "def": "Probabilmente femminile" }
+HTTP 200
+
+POST {{base_url}}/api/vocabularies
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "voc": "sesso_biologico", "def": "Indeterminato" }
+HTTP 200
+
+# ── 19o-4. Attiva plugin osteologico ─────────────────────────────
+POST {{base_url}}/api/config/table/sepolture/osteology
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+jsonpath "$.code"   == "osteology_activated"
+
+# ── 19o-5. SEP001 — Adulto maschio, buona conservazione ──────────
+POST {{base_url}}/api/record/sepolture
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{
+  "core": {
+    "sigla": "SEP001",
+    "sito": "Colle Oppio — Roma",
+    "tipo_sepoltura": "Inumazione",
+    "posizione": "Supino",
+    "orientamento": "N-S",
+    "eta_biologica": "Adulto maturo (35-50)",
+    "sesso_biologico": "Maschile",
+    "nmi": "1",
+    "note": "Scheletro in connessione anatomica parziale, testa verso nord. Buona conservazione generale."
+  },
+  "plugins": {}
+}
+HTTP 200
+[Captures]
+sep001_id: jsonpath "$.id"
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/api/record/sepolture
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{
+  "id": {{sep001_id}},
+  "core": {
+    "osteo_data": "{\"individuals\":[{\"id\":1,\"label\":\"Individuo 1\",\"notes\":\"Adulto, connessione anatomica parziale\",\"bones\":{\"cranio\":{\"present\":true,\"conservation\":\"gt50\",\"certainty\":\"certa\"},\"mandibola\":{\"present\":true,\"conservation\":\"completo\",\"certainty\":\"certa\"},\"vertebre_cervicali\":{\"present\":true,\"conservation\":\"gt50\",\"certainty\":\"certa\"},\"vertebre_toraciche\":{\"present\":true,\"conservation\":\"lt50\",\"certainty\":\"certa\"},\"vertebre_lombari\":{\"present\":true,\"conservation\":\"frammentario\",\"certainty\":\"certa\"},\"sacro\":{\"present\":true,\"conservation\":\"gt50\",\"certainty\":\"certa\"},\"clavicola_dx\":{\"present\":true,\"conservation\":\"completo\",\"certainty\":\"certa\",\"laterality_certainty\":\"certa\"},\"clavicola_sx\":{\"present\":true,\"conservation\":\"gt50\",\"certainty\":\"certa\",\"laterality_certainty\":\"certa\"},\"scapola_dx\":{\"present\":true,\"conservation\":\"gt50\",\"certainty\":\"certa\",\"laterality_certainty\":\"certa\"},\"scapola_sx\":{\"present\":true,\"conservation\":\"frammentario\",\"certainty\":\"probabile\",\"laterality_certainty\":\"incerta\"},\"coste_dx\":{\"present\":true,\"conservation\":\"frammentario\",\"certainty\":\"certa\",\"laterality_certainty\":\"certa\"},\"coste_sx\":{\"present\":true,\"conservation\":\"frammentario\",\"certainty\":\"certa\",\"laterality_certainty\":\"certa\"},\"omero_dx\":{\"present\":true,\"conservation\":\"completo\",\"certainty\":\"certa\",\"laterality_certainty\":\"certa\"},\"omero_sx\":{\"present\":true,\"conservation\":\"completo\",\"certainty\":\"certa\",\"laterality_certainty\":\"certa\"},\"radio_dx\":{\"present\":true,\"conservation\":\"gt50\",\"certainty\":\"certa\",\"laterality_certainty\":\"certa\"},\"radio_sx\":{\"present\":true,\"conservation\":\"gt50\",\"certainty\":\"certa\",\"laterality_certainty\":\"certa\"},\"ulna_dx\":{\"present\":true,\"conservation\":\"gt50\",\"certainty\":\"certa\",\"laterality_certainty\":\"certa\"},\"ulna_sx\":{\"present\":true,\"conservation\":\"lt50\",\"certainty\":\"certa\",\"laterality_certainty\":\"certa\"},\"ileo_dx\":{\"present\":true,\"conservation\":\"completo\",\"certainty\":\"certa\",\"laterality_certainty\":\"certa\"},\"ileo_sx\":{\"present\":true,\"conservation\":\"completo\",\"certainty\":\"certa\",\"laterality_certainty\":\"certa\"},\"femore_dx\":{\"present\":true,\"conservation\":\"completo\",\"certainty\":\"certa\",\"laterality_certainty\":\"certa\"},\"femore_sx\":{\"present\":true,\"conservation\":\"completo\",\"certainty\":\"certa\",\"laterality_certainty\":\"certa\"},\"tibia_dx\":{\"present\":true,\"conservation\":\"completo\",\"certainty\":\"certa\",\"laterality_certainty\":\"certa\"},\"tibia_sx\":{\"present\":true,\"conservation\":\"gt50\",\"certainty\":\"certa\",\"laterality_certainty\":\"certa\"},\"fibula_dx\":{\"present\":true,\"conservation\":\"lt50\",\"certainty\":\"certa\",\"laterality_certainty\":\"certa\"},\"fibula_sx\":{\"present\":true,\"conservation\":\"frammentario\",\"certainty\":\"certa\",\"laterality_certainty\":\"incerta\"},\"calcagno_dx\":{\"present\":true,\"conservation\":\"gt50\",\"certainty\":\"certa\",\"laterality_certainty\":\"certa\"},\"calcagno_sx\":{\"present\":true,\"conservation\":\"gt50\",\"certainty\":\"certa\",\"laterality_certainty\":\"certa\"}}}]}"
+  },
+  "plugins": {}
+}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+# ── 19o-6. SEP002 — Infante, conservazione scarsa ────────────────
+POST {{base_url}}/api/record/sepolture
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{
+  "core": {
+    "sigla": "SEP002",
+    "sito": "Colle Oppio — Roma",
+    "tipo_sepoltura": "Inumazione",
+    "posizione": "Laterale destro",
+    "orientamento": "E-O",
+    "eta_biologica": "Infante I (0-6 anni)",
+    "sesso_biologico": "Indeterminato",
+    "nmi": "1",
+    "note": "Non-adulto ca. 4-6 anni. Ossa molto fragili, solo elementi maggiori conservati."
+  },
+  "plugins": {}
+}
+HTTP 200
+[Captures]
+sep002_id: jsonpath "$.id"
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/api/record/sepolture
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{
+  "id": {{sep002_id}},
+  "core": {
+    "osteo_data": "{\"individuals\":[{\"id\":1,\"label\":\"Infante\",\"notes\":\"Non-adulto ca. 4-6 anni, ossa molto fragili\",\"bones\":{\"cranio\":{\"present\":true,\"conservation\":\"lt50\",\"certainty\":\"certa\"},\"mandibola\":{\"present\":true,\"conservation\":\"frammentario\",\"certainty\":\"certa\"},\"omero_dx\":{\"present\":true,\"conservation\":\"tracce\",\"certainty\":\"probabile\",\"laterality_certainty\":\"incerta\"},\"femore_dx\":{\"present\":true,\"conservation\":\"frammentario\",\"certainty\":\"probabile\",\"laterality_certainty\":\"incerta\"},\"femore_sx\":{\"present\":true,\"conservation\":\"tracce\",\"certainty\":\"incerta\",\"laterality_certainty\":\"incerta\"},\"tibia_dx\":{\"present\":false}}}]}"
+  },
+  "plugins": {}
+}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+# ── 19o-7. SEP003 — Sepoltura doppia (2 individui) ───────────────
+POST {{base_url}}/api/record/sepolture
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{
+  "core": {
+    "sigla": "SEP003",
+    "sito": "Monte Bibele — Monterenzio (BO)",
+    "tipo_sepoltura": "Inumazione",
+    "posizione": "Supino",
+    "orientamento": "NE-SO",
+    "eta_biologica": "Adulto giovane (20-35)",
+    "sesso_biologico": "Indeterminato",
+    "nmi": "2",
+    "note": "Sepoltura doppia: individuo A in connessione anatomica, individuo B disarticolato, probabilmente deposto in un secondo momento."
+  },
+  "plugins": {}
+}
+HTTP 200
+[Captures]
+sep003_id: jsonpath "$.id"
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/api/record/sepolture
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{
+  "id": {{sep003_id}},
+  "core": {
+    "osteo_data": "{\"individuals\":[{\"id\":1,\"label\":\"Individuo A\",\"notes\":\"Adulto maschio, in connessione anatomica\",\"bones\":{\"cranio\":{\"present\":true,\"conservation\":\"completo\",\"certainty\":\"certa\"},\"mandibola\":{\"present\":true,\"conservation\":\"completo\",\"certainty\":\"certa\"},\"omero_dx\":{\"present\":true,\"conservation\":\"completo\",\"certainty\":\"certa\",\"laterality_certainty\":\"certa\"},\"omero_sx\":{\"present\":true,\"conservation\":\"gt50\",\"certainty\":\"certa\",\"laterality_certainty\":\"certa\"},\"femore_dx\":{\"present\":true,\"conservation\":\"completo\",\"certainty\":\"certa\",\"laterality_certainty\":\"certa\"},\"femore_sx\":{\"present\":true,\"conservation\":\"completo\",\"certainty\":\"certa\",\"laterality_certainty\":\"certa\"},\"tibia_dx\":{\"present\":true,\"conservation\":\"completo\",\"certainty\":\"certa\",\"laterality_certainty\":\"certa\"},\"tibia_sx\":{\"present\":true,\"conservation\":\"gt50\",\"certainty\":\"certa\",\"laterality_certainty\":\"certa\"},\"ileo_dx\":{\"present\":true,\"conservation\":\"gt50\",\"certainty\":\"certa\",\"laterality_certainty\":\"certa\"},\"ileo_sx\":{\"present\":true,\"conservation\":\"gt50\",\"certainty\":\"certa\",\"laterality_certainty\":\"certa\"}}},{\"id\":2,\"label\":\"Individuo B\",\"notes\":\"Adulto, resti disarticolati deposti successivamente\",\"bones\":{\"cranio\":{\"present\":true,\"conservation\":\"frammentario\",\"certainty\":\"certa\"},\"mandibola\":{\"present\":false},\"omero_dx\":{\"present\":true,\"conservation\":\"lt50\",\"certainty\":\"probabile\",\"laterality_certainty\":\"incerta\"},\"femore_sx\":{\"present\":true,\"conservation\":\"frammentario\",\"certainty\":\"probabile\",\"laterality_certainty\":\"incerta\"},\"tibia_sx\":{\"present\":true,\"conservation\":\"lt50\",\"certainty\":\"incerta\",\"laterality_certainty\":\"incerta\"}}}]}"
+  },
+  "plugins": {}
+}
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"

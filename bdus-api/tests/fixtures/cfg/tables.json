@@ -19,7 +19,8 @@
             "rs": 1,
             "geodata": 1,
             "zotero": 1,
-            "fuzzy_date": false
+            "fuzzy_date": false,
+            "osteology": false
         },
         {
             "name": "tags",

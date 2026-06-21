@@ -394,6 +394,12 @@ run_tests() {
       --variable "jwt=${JWT}"
   fi
 
+  if should_run "38"; then
+    header "Phase 38 — Osteology plugin"
+    run_phase "Osteology plugin" "38_osteology.hurl" \
+      --variable "jwt=${JWT}"
+  fi
+
   # Phase 10 always runs: drops crud_test tables and logs out
   header "Phase 10 — Cleanup"
   run_phase "Cleanup" "10_cleanup.hurl" \

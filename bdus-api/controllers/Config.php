@@ -521,6 +521,94 @@ class Config extends \Bdus\Controller
     }
   }
 
+  /**
+   * Activates the osteology plugin for a table.
+   * Adds a single `osteo_data` TEXT column (stores JSON inventory per record),
+   * then sets osteology=true in the table config.
+   *
+   * POST /api/config/table/{tb}/osteology
+   * Response: { status, code }
+   */
+  public function activateOsteology(): void
+  {
+    if (!$this->requireSuperAdmin()) return;
+
+    $tb = $this->get['tb'] ?? '';
+    if (!$tb || !$this->cfg->get("tables.$tb")) {
+      $this->returnJson(['status' => 'error', 'code' => 'missing_table']);
+      return;
+    }
+
+    try {
+      $inspect = new \DB\Inspect($this->db);
+      $alter   = new \DB\Alter($this->db);
+
+      if ($inspect->tableExists($tb)) {
+        $existingNames = array_column($inspect->tableColumns($tb), 'fld');
+        if (!in_array('osteo_data', $existingNames, true)) {
+          $alter->addFld($tb, 'osteo_data', 'TEXT');
+        }
+      }
+
+      $tbData = $this->cfg->get("tables.$tb") ?: [];
+      $tbData['name']      = $tb;
+      $tbData['osteology'] = true;
+      unset($tbData['link']);
+      $this->cfg->setTable($tbData);
+
+      $existingFields = array_keys($this->cfg->get("tables.$tb.fields") ?: []);
+      if (!in_array('osteo_data', $existingFields, true)) {
+        $this->cfg->setFld($tb, 'osteo_data', [
+          'name'  => 'osteo_data',
+          'label' => 'Dati osteologici',
+          'type'  => 'text',
+          'hide'  => true,
+        ]);
+      }
+
+      $this->returnJson(['status' => 'success', 'code' => 'osteology_activated']);
+
+    } catch (\Throwable $th) {
+      $this->returnJson(['status' => 'error', 'code' => 'db_error', 'detail' => $th->getMessage()]);
+    }
+  }
+
+  /**
+   * Deactivates the osteology plugin for a table.
+   * Sets osteology=false in config; the `osteo_data` DB column is preserved.
+   *
+   * DELETE /api/config/table/{tb}/osteology
+   * Response: { status, code }
+   */
+  public function deactivateOsteology(): void
+  {
+    if (!$this->requireSuperAdmin()) return;
+
+    $tb = $this->get['tb'] ?? '';
+    if (!$tb) {
+      $this->returnJson(['status' => 'error', 'code' => 'missing_table']);
+      return;
+    }
+
+    try {
+      $tbData = $this->cfg->get("tables.$tb") ?: [];
+      $tbData['name']      = $tb;
+      $tbData['osteology'] = false;
+      unset($tbData['link']);
+      $this->cfg->setTable($tbData);
+
+      $existingFields = array_keys($this->cfg->get("tables.$tb.fields") ?: []);
+      if (in_array('osteo_data', $existingFields, true)) {
+        $this->cfg->deleteFld($tb, 'osteo_data');
+      }
+
+      $this->returnJson(['status' => 'success', 'code' => 'osteology_deactivated']);
+
+    } catch (\Throwable $th) {
+      $this->returnJson(['status' => 'error', 'code' => 'db_error', 'detail' => $th->getMessage()]);
+    }
+  }
+
   public function save_geoface_properties()
   {
     if (!$this->requireSuperAdmin()) return;

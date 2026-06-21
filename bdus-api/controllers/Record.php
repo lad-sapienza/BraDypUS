@@ -466,7 +466,8 @@ class Record extends \Bdus\Controller
       'id_field'       => $this->cfg->get("tables.{$tb}.id_field")    ?? 'id',
       'has_geodata'    => (bool) $this->cfg->get("tables.{$tb}.geodata"),
       'has_zotero'     => (bool) $this->cfg->get("tables.{$tb}.zotero"),
-      'has_fuzzy_date' => (bool) $this->cfg->get("tables.{$tb}.fuzzy_date"),
+      'has_fuzzy_date'  => (bool) $this->cfg->get("tables.{$tb}.fuzzy_date"),
+      'has_osteology'   => (bool) $this->cfg->get("tables.{$tb}.osteology"),
     ];
   }
 

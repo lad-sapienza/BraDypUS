@@ -593,4 +593,138 @@ class ConfigCtrlTest extends BdusTestCase
         $this->assertSame('error', $res['status']);
         $this->assertSame('not_enough_privilege', $res['code']);
     }
+
+    // ── activateOsteology / deactivateOsteology ───────────────────────────
+
+    public function testActivateOsteologyReturnsSuccess(): void
+    {
+        $res = $this->callController(
+            $this->makeController('Bdus\\Controllers\\Config', ['tb' => self::TB]),
+            'activateOsteology'
+        );
+
+        $this->assertSame('success', $res['status']);
+        $this->assertSame('osteology_activated', $res['code']);
+
+        // cleanup
+        $this->callController(
+            $this->makeController('Bdus\\Controllers\\Config', ['tb' => self::TB]),
+            'deactivateOsteology'
+        );
+    }
+
+    public function testActivateOsteologyCreatesColumnAndFieldDef(): void
+    {
+        $this->callController(
+            $this->makeController('Bdus\\Controllers\\Config', ['tb' => self::TB]),
+            'activateOsteology'
+        );
+
+        // DB column must exist
+        $inspect = new \DB\Inspect(static::$db);
+        $cols    = array_column($inspect->tableColumns(self::TB), 'fld');
+        $this->assertContains('osteo_data', $cols, 'Expected DB column: osteo_data');
+
+        // Config field def must exist with hide=true
+        $fields = static::$cfg->get('tables.' . self::TB . '.fields') ?: [];
+        $this->assertArrayHasKey('osteo_data', $fields, 'Expected field def: osteo_data');
+        $this->assertTrue((bool)($fields['osteo_data']['hide'] ?? false), 'osteo_data should have hide=true');
+
+        // Schema flag must be set
+        $this->assertTrue((bool)static::$cfg->get('tables.' . self::TB . '.osteology'), 'tables.{tb}.osteology must be true');
+
+        // cleanup
+        $this->callController(
+            $this->makeController('Bdus\\Controllers\\Config', ['tb' => self::TB]),
+            'deactivateOsteology'
+        );
+    }
+
+    public function testActivateOsteologyIsIdempotent(): void
+    {
+        $this->callController(
+            $this->makeController('Bdus\\Controllers\\Config', ['tb' => self::TB]),
+            'activateOsteology'
+        );
+        $res = $this->callController(
+            $this->makeController('Bdus\\Controllers\\Config', ['tb' => self::TB]),
+            'activateOsteology'
+        );
+
+        $this->assertSame('success', $res['status']);
+
+        // Field def must not be duplicated — exactly one osteo_data key
+        $fields     = static::$cfg->get('tables.' . self::TB . '.fields') ?: [];
+        $osteoCount = count(array_filter(array_keys($fields), fn($n) => $n === 'osteo_data'));
+        $this->assertSame(1, $osteoCount, 'Double activation must not duplicate osteo_data field def');
+
+        // cleanup
+        $this->callController(
+            $this->makeController('Bdus\\Controllers\\Config', ['tb' => self::TB]),
+            'deactivateOsteology'
+        );
+    }
+
+    public function testDeactivateOsteologyClearsFieldDefPreservesColumn(): void
+    {
+        $this->callController(
+            $this->makeController('Bdus\\Controllers\\Config', ['tb' => self::TB]),
+            'activateOsteology'
+        );
+
+        $res = $this->callController(
+            $this->makeController('Bdus\\Controllers\\Config', ['tb' => self::TB]),
+            'deactivateOsteology'
+        );
+
+        $this->assertSame('success', $res['status']);
+        $this->assertSame('osteology_deactivated', $res['code']);
+
+        // Config field def must be removed
+        $fields = static::$cfg->get('tables.' . self::TB . '.fields') ?: [];
+        $this->assertArrayNotHasKey('osteo_data', $fields, 'Field def osteo_data should be removed on deactivation');
+
+        // Schema flag must be cleared
+        $this->assertFalse((bool)static::$cfg->get('tables.' . self::TB . '.osteology'), 'tables.{tb}.osteology must be false after deactivation');
+
+        // DB column must be preserved (data protection)
+        $inspect = new \DB\Inspect(static::$db);
+        $cols    = array_column($inspect->tableColumns(self::TB), 'fld');
+        $this->assertContains('osteo_data', $cols, 'DB column osteo_data must be preserved on deactivation');
+    }
+
+    public function testDeactivateOsteologyIsIdempotent(): void
+    {
+        $res = $this->callController(
+            $this->makeController('Bdus\\Controllers\\Config', ['tb' => self::TB]),
+            'deactivateOsteology'
+        );
+
+        $this->assertSame('success', $res['status']);
+        $this->assertSame('osteology_deactivated', $res['code']);
+    }
+
+    public function testActivateOsteologyWithMissingTableReturnsError(): void
+    {
+        $res = $this->callController(
+            $this->makeController('Bdus\\Controllers\\Config', ['tb' => '__no_such_table__']),
+            'activateOsteology'
+        );
+
+        $this->assertSame('error', $res['status']);
+        $this->assertSame('missing_table', $res['code']);
+    }
+
+    public function testActivateOsteologyRequiresSuperAdmin(): void
+    {
+        $this->setPrivilege(11);
+        $res = $this->callController(
+            $this->makeController('Bdus\\Controllers\\Config', ['tb' => self::TB]),
+            'activateOsteology'
+        );
+        $this->setPrivilege(1);
+
+        $this->assertSame('error', $res['status']);
+        $this->assertSame('not_enough_privilege', $res['code']);
+    }
 }

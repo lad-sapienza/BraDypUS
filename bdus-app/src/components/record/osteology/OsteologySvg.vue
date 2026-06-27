@@ -216,20 +216,30 @@
 
     <!-- Legend -->
     <div class="osteo-legend">
-      <span class="osteo-legend-item legend-undocumented">Non doc.</span>
-      <span class="osteo-legend-item legend-absent">Assente</span>
-      <span class="osteo-legend-item legend-traces">Tracce</span>
-      <span class="osteo-legend-item legend-fragmentary">Framment.</span>
+      <span class="osteo-legend-item legend-undocumented">{{ t('osteo_not_documented') }}</span>
+      <span class="osteo-legend-item legend-absent">{{ t('osteo_absent') }}</span>
+      <span class="osteo-legend-item legend-traces">{{ t('osteo_cons_traces') }}</span>
+      <span class="osteo-legend-item legend-fragmentary">{{ t('osteo_cons_fragmentary') }}</span>
       <span class="osteo-legend-item legend-lt50">&lt;50%</span>
       <span class="osteo-legend-item legend-gt50">&gt;50%</span>
-      <span class="osteo-legend-item legend-complete">Completo</span>
+      <span class="osteo-legend-item legend-complete">{{ t('osteo_cons_complete') }}</span>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, computed } from 'vue'
-import { BONES, boneStateClass } from './bonesConfig.js'
+import { useI18n } from '@/i18n'
+import { BONES, CONSERVATION_OPTIONS, boneStateClass } from './bonesConfig.js'
+
+const { t } = useI18n()
+
+function boneLabel(id) {
+  const def = BONES[id]
+  if (!def) return id
+  const side = def.side ? ` (${t('osteo_side_' + def.side)})` : ''
+  return t(def.labelKey) + side
+}
 
 const props = defineProps({
   bones:        { type: Object,  default: () => ({}) },
@@ -327,17 +337,16 @@ function boneAttrs(id) {
 const tooltip = reactive({ visible: false, label: '', status: '', style: {} })
 
 function conservationLabel(c) {
-  const map = { complete: 'Completo', gt50: '>50%', lt50: '<50%', fragmentary: 'Frammentario', traces: 'Tracce' }
-  return map[c] ?? ''
+  const opt = CONSERVATION_OPTIONS.find(o => o.value === c)
+  return opt ? t(opt.labelKey) : ''
 }
 
 function showTooltip(id, e) {
   const data = props.bones[id] ?? {}
-  const bone = BONES[id]
-  tooltip.label  = bone?.label ?? id
+  tooltip.label  = boneLabel(id)
   tooltip.status = data.present === true
     ? conservationLabel(data.conservation)
-    : data.present === false ? 'Assente' : 'Non documentato'
+    : data.present === false ? t('osteo_absent') : t('osteo_not_documented')
   const rect = wrapEl.value?.getBoundingClientRect()
   if (rect) {
     tooltip.style = {

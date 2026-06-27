@@ -42,6 +42,20 @@
         </button>
       </div>
 
+      <!-- View toggle -->
+      <div class="osteo-view-toggle">
+        <button
+          class="osteo-toggle-btn"
+          :class="{ active: viewMode === 'svg' }"
+          @click="viewMode = 'svg'; selectedBone = null"
+        >{{ t('osteo_view_svg') }}</button>
+        <button
+          class="osteo-toggle-btn"
+          :class="{ active: viewMode === 'table' }"
+          @click="viewMode = 'table'; selectedBone = null"
+        >{{ t('osteo_view_table') }}</button>
+      </div>
+
       <!-- Active individual editor -->
       <div
         v-for="ind in individuals" :key="ind.id"
@@ -65,7 +79,7 @@
         </div>
 
         <!-- SVG + bone panel -->
-        <div class="osteo-editor-row">
+        <div v-if="viewMode === 'svg'" class="osteo-editor-row">
           <OsteologySvg
             :bones="ind.bones"
             :edit-mode="true"
@@ -80,6 +94,14 @@
             @close="selectedBone = null"
           />
         </div>
+
+        <!-- Table view -->
+        <OsteologyTable
+          v-else
+          :bones="ind.bones"
+          :edit-mode="true"
+          @update="onTableBoneUpdate(ind, $event)"
+        />
       </div>
     </template>
   </fieldset>
@@ -89,8 +111,9 @@
 import { ref, computed, watch } from 'vue'
 import { useI18n } from '@/i18n'
 import InputText from 'primevue/inputtext'
-import OsteologySvg from './OsteologySvg.vue'
-import BonePanel    from './BonePanel.vue'
+import OsteologySvg   from './OsteologySvg.vue'
+import OsteologyTable from './OsteologyTable.vue'
+import BonePanel      from './BonePanel.vue'
 import { newIndividual } from './bonesConfig.js'
 
 const props = defineProps({
@@ -105,6 +128,7 @@ const { t } = useI18n()
 const individuals  = ref([])
 const activeId     = ref(null)
 const selectedBone = ref(null)
+const viewMode     = ref('svg') // 'svg' | 'table'
 
 const activeIndividual = computed(() =>
   individuals.value.find(i => i.id === activeId.value) ?? null
@@ -164,6 +188,11 @@ function removeIndividual(id) {
 function onBoneClick(ind, boneId) {
   activeId.value     = ind.id
   selectedBone.value = boneId
+}
+
+function onTableBoneUpdate(ind, { boneId, data }) {
+  onBoneUpdate(ind, boneId, data)
+  selectedBone.value = null
 }
 
 function onBoneUpdate(ind, boneId, data) {
@@ -243,5 +272,31 @@ function onBoneUpdate(ind, boneId, data) {
   gap: 12px;
   align-items: flex-start;
   flex-wrap: wrap;
+}
+
+.osteo-view-toggle {
+  display: flex;
+  gap: 0;
+  margin-bottom: 10px;
+  border: 1px solid var(--p-surface-300);
+  border-radius: 4px;
+  width: fit-content;
+  overflow: hidden;
+}
+.osteo-toggle-btn {
+  padding: 4px 12px;
+  font-size: 0.78rem;
+  background: var(--p-surface-0);
+  border: none;
+  cursor: pointer;
+  color: var(--p-text-muted-color);
+}
+.osteo-toggle-btn + .osteo-toggle-btn {
+  border-left: 1px solid var(--p-surface-300);
+}
+.osteo-toggle-btn.active {
+  background: var(--p-primary-color);
+  color: #fff;
+  font-weight: 600;
 }
 </style>

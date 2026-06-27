@@ -1,7 +1,7 @@
 <template>
   <div class="bone-panel">
     <div class="bone-panel-header">
-      <span class="bone-panel-name">{{ boneDef?.label ?? boneId }}</span>
+      <span class="bone-panel-name">{{ boneDef ? boneLabel(boneDef) : boneId }}</span>
       <button class="bone-panel-close" @click="$emit('close')" title="Chiudi">×</button>
     </div>
 
@@ -34,7 +34,7 @@
           <label class="bone-field-label">{{ t('osteo_conservation') }}</label>
           <Select
             v-model="localData.conservation"
-            :options="CONSERVATION_OPTIONS"
+            :options="conservationOptions"
             optionValue="value"
             optionLabel="label"
             placeholder="—"
@@ -48,7 +48,7 @@
           <label class="bone-field-label">{{ t('osteo_certainty') }}</label>
           <Select
             v-model="localData.certainty"
-            :options="CERTAINTY_OPTIONS"
+            :options="certaintyOptions"
             optionValue="value"
             optionLabel="label"
             placeholder="—"
@@ -63,7 +63,7 @@
           <label class="bone-field-label">{{ t('osteo_laterality') }}</label>
           <Select
             v-model="localData.laterality_certainty"
-            :options="LATERALITY_OPTIONS"
+            :options="lateralityOptions"
             optionValue="value"
             optionLabel="label"
             placeholder="—"
@@ -102,6 +102,7 @@ import {
   LATERALITY_OPTIONS,
 } from './bonesConfig.js'
 
+
 const props = defineProps({
   boneId:   { type: String, required: true },
   boneData: { type: Object, default: () => ({}) },
@@ -110,7 +111,22 @@ const props = defineProps({
 const emit = defineEmits(['update', 'close'])
 const { t } = useI18n()
 
+function boneLabel(def) {
+  const side = def.side ? ` (${t('osteo_side_' + def.side)})` : ''
+  return t(def.labelKey) + side
+}
+
 const boneDef = computed(() => BONES[props.boneId] ?? null)
+
+const conservationOptions = computed(() =>
+  CONSERVATION_OPTIONS.map(o => ({ value: o.value, label: t(o.labelKey) }))
+)
+const certaintyOptions = computed(() =>
+  CERTAINTY_OPTIONS.map(o => ({ value: o.value, label: t(o.labelKey) }))
+)
+const lateralityOptions = computed(() =>
+  LATERALITY_OPTIONS.map(o => ({ value: o.value, label: t(o.labelKey) }))
+)
 
 const localData = reactive({
   present:              props.boneData.present,

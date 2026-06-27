@@ -52,19 +52,26 @@ Hovering over a bone shows a tooltip with the anatomical name and all recorded a
 
 ### Edit mode
 
-Clicking on any bone in the SVG opens a **BonePanel** sidebar with four fields:
+Two complementary editing views are available, toggled with the **[SVG] [Table]** buttons above the skeleton:
+
+#### SVG view
+
+Clicking on any bone opens a **BonePanel** sidebar with four fields:
 
 | Field | Options |
 |---|---|
-| **Presente** | Yes / No / Not documented |
-| **Conservazione** | Complete / >50% / <50% / Fragmentary / Traces |
-| **Certezza anatomica** | Certain / Probable / Uncertain |
-| **Certezza lateralità** | Certain / Uncertain *(only for paired elements)* |
+| **Presence** | Present / Absent / Not documented |
+| **Conservation** | Complete / >50% / <50% / Fragmentary / Traces |
+| **Anatomical certainty** | Certain / Probable / Uncertain |
+| **Laterality certainty** | Certain / Uncertain *(only for paired elements)* |
 
-Changes are reflected immediately on the SVG. Saving the record persists all bone data.
+Changes are reflected immediately on the SVG. The SVG is **zoomable** (mouse wheel or +/− buttons) and **pannable** (click and drag on the background). A reset button (↺) restores the original view.
 
-The SVG is **zoomable** (mouse wheel or +/− buttons) and **pannable** (click and drag
-on the background). A reset button (↺) restores the original view.
+#### Table view
+
+The table view shows all 65 bones in a scrollable grid organised by anatomical region. Each row exposes the same four fields inline — radio buttons for presence, dropdown selects for the other attributes — making it efficient for experts who prefer to compile the whole inventory without navigating the SVG.
+
+Both views write to the same underlying JSON; switching between them at any point is non-destructive. Saving the record persists all bone data.
 
 ### Multiple individuals
 

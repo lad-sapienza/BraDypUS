@@ -123,20 +123,50 @@ directly accessible from the host filesystem — use the commands below instead.
 docker run --rm -v projects_data:/data alpine ls /data
 ```
 
-### Backup
+### Backup and restore
+
+The repo includes two helper scripts,
+[`backup.sh`](https://github.com/lad-sapienza/BraDypUS/blob/v5/backup.sh) and
+[`restore.sh`](https://github.com/lad-sapienza/BraDypUS/blob/v5/restore.sh),
+that wrap the `docker run` commands below. They auto-detect the `projects_data`
+volume, so no configuration is needed.
+
+Download them next to `bradypus.yml`:
 
 ```bash
+curl -O https://raw.githubusercontent.com/lad-sapienza/BraDypUS/v5/backup.sh
+curl -O https://raw.githubusercontent.com/lad-sapienza/BraDypUS/v5/restore.sh
+chmod +x backup.sh restore.sh
+```
+
+**Backup:**
+
+```bash
+./backup.sh              # every app → backups/bradypus-all-<timestamp>.tar.gz
+./backup.sh siti_scavo   # single app → backups/bradypus-siti_scavo-<timestamp>.tar.gz
+```
+
+**Restore** (prompts for confirmation — pass `-y` to skip):
+
+```bash
+./restore.sh                    # restore the latest full backup
+./restore.sh siti_scavo         # restore the latest backup for one app
+./restore.sh siti_scavo my.tar.gz  # restore a specific archive
+```
+
+Stop the `api` service first (`docker compose -f bradypus.yml stop api`) to
+avoid restoring under a live writer.
+
+#### Manual equivalent (without downloading the scripts)
+
+```bash
+# Backup
 docker run --rm \
   -v projects_data:/data \
   -v "$(pwd)":/backup \
   alpine tar czf /backup/bradypus-backup.tar.gz -C /data .
-```
 
-This creates `bradypus-backup.tar.gz` in the current directory.
-
-### Restore
-
-```bash
+# Restore
 docker run --rm \
   -v projects_data:/data \
   -v "$(pwd)":/backup \

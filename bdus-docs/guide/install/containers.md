@@ -157,6 +157,30 @@ chmod +x backup.sh restore.sh
 Stop the `api` service first (`docker compose -f bradypus.yml stop api`) to
 avoid restoring under a live writer.
 
+### Demo / test data
+
+[`seed-demo.sh`](https://github.com/lad-sapienza/BraDypUS/blob/v5/seed-demo.sh)
+populates a running instance with a realistic archaeological demo dataset
+(siti, complessi, saggi, US, reperti, sepolture, RS relations, geodata,
+chart, …) — the same data used in CI and screenshots.
+
+Unlike `backup.sh`/`restore.sh` it wraps `bdus-api/test.sh`, so it needs the
+`bdus-api` source checked out next to it (not just `bradypus.yml`):
+
+```bash
+git clone https://github.com/lad-sapienza/bdus-api.git
+
+./seed-demo.sh              # creates app "bdus_demo" with the full demo dataset
+./seed-demo.sh siti_scavo   # custom app name
+./seed-demo.sh siti_scavo --reset   # auto-delete the app first if it already exists
+```
+
+By default it targets `http://localhost:8080`. To seed a remote testing
+server, set `BASE_URL` (and admin credentials) in
+`bdus-api/tests/api/vars.local.env` first — see the script's header comment.
+The target server needs `BRADYPUS_ALLOW_NEW_APP=1` enabled for the
+app-creation step.
+
 #### Manual equivalent (without downloading the scripts)
 
 ```bash

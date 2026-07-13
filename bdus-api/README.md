@@ -42,7 +42,7 @@ bdus-api exposes a REST JSON API that the Vue frontend (bdus-app) consumes. It h
 ## Deployment
 
 > Full documentation for all deployment scenarios (development, production from source,
-> Docker Hub images, manual installation) is in the
+> pre-built images, manual installation) is in the
 > **[monorepo README](https://github.com/lad-sapienza/BraDypUS#deployment-scenarios)**.
 
 ### Backend only (development)
@@ -78,12 +78,20 @@ Pre-built Nginx + Apache images, everything on port 80:
 docker compose -f docker-compose.prod.yml up -d --build
 ```
 
-### Full stack — production (Docker Hub, coming soon)
+### Full stack — production (pre-built images)
 
-Once images are published at `jbogdani/bradypus-api` and `jbogdani/bradypus-app`,
-no source code is needed — see the
-[monorepo README](https://github.com/lad-sapienza/BraDypUS#c--production-from-docker-hub)
-for the ready-to-use `docker-compose.yml`.
+Images are published to GitHub Container Registry
+(`ghcr.io/lad-sapienza/bdus-api`, `ghcr.io/lad-sapienza/bdus-app`) on every
+tagged release — no source code needed:
+
+```bash
+curl -O https://raw.githubusercontent.com/lad-sapienza/BraDypUS/v5/bradypus.yml
+docker compose -f bradypus.yml pull
+docker compose -f bradypus.yml up -d
+```
+
+See the [monorepo README](https://github.com/lad-sapienza/BraDypUS#c--production-from-pre-built-images)
+for version pinning (`BDUS_VERSION`) and port configuration (`BDUS_PORT`).
 
 ### Without Docker
 

@@ -23,6 +23,7 @@ the BraDypUS codebase.
 | Use the widget API | [Widget API](./widget-api) |
 | Connect Zotero bibliography | [Zotero integration](./zotero) |
 | Run the test suite | [Testing](./testing) |
+| Find environment variables / data directory layout | [Architecture](./architecture#environment-variables) |
 
 ## Source repositories
 

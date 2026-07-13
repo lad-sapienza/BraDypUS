@@ -25,14 +25,22 @@ bdus-api/
 │   └── …               ← lib/ namespaces (see lib/ map)
 ├── modules/             ← 37 controller modules
 │   └── {name}/{name}.php
-├── projects/            ← runtime data, one dir per application
+├── projects/            ← runtime data, one dir per application (not committed)
 │   └── {app}/
-│       ├── cfg/         ← YAML config files
-│       ├── files/       ← uploaded files
-│       ├── backups/     ← DB dumps
-│       └── db/          ← SQLite files (if SQLite engine)
+│       ├── config.json    ← app settings (DB engine, credentials, …)
+│       ├── .jwt_secret     ← per-app JWT signing secret (chmod 0600)
+│       ├── .htaccess       ← blocks web access to config.json / .jwt_secret
+│       ├── files/          ← uploaded files
+│       ├── backups/        ← DB dumps
+│       ├── geodata/        ← GeoJSON / KML / GPX for the map layer editor
+│       ├── export/         ← export output (CSV, JSON, …)
+│       └── db/              ← SQLite database file (if SQLite engine)
 └── vendor/              ← Composer dependencies
 ```
+
+Table/field/relation config (`bdus_cfg_tables`, `bdus_cfg_fields`,
+`bdus_cfg_relations`) lives **in the database itself**, not as YAML/JSON files
+on disk — there is no per-table config file to keep in sync.
 
 ---
 
@@ -254,6 +262,11 @@ the same origin — no CORS headers are added.
 |---|---|---|
 | `BRADYPUS_DEBUG` | `0` | `1` enables verbose errors, file logging |
 | `BRADYPUS_CORS_ORIGIN` | `''` | Space-separated list of allowed origins |
+| `BRADYPUS_ALLOW_NEW_APP` | `0` (unset) | `1` enables the "Create new application" wizard |
+
+Set directly in `docker-compose.yml`'s `environment:` block (there is no
+`.env`/`.env.example` mechanism on the backend) — or via `SetEnv` (Apache) /
+`fastcgi_param` (Nginx) when running without Docker.
 
 ---
 

@@ -5,9 +5,14 @@ title: Testing
 # Testing
 
 BraDypUS ha una suite PHPUnit (unit + integration) e una suite Hurl end-to-end
-che copre 31+ fasi del ciclo di vita completo dell'applicazione. Entrambe sono
+che copre 38 fasi del ciclo di vita completo dell'applicazione. Entrambe sono
 orchestrate da un unico entry point: `test.sh`, che gestisce container Docker
 usa-e-getta e supporta tutti e tre i motori DB.
+
+Per popolare rapidamente un'istanza con dati demo senza passare da `test.sh`
+direttamente, vedi anche
+[`seed-demo.sh`](https://github.com/lad-sapienza/BraDypUS/blob/v5/seed-demo.sh)
+nel repo monorepo — un wrapper sottile su `--no-docker --setup --seed`.
 
 ---
 
@@ -44,9 +49,8 @@ Se non viene passato nessun flag di modalità, `test.sh` mostra un menu interatt
 |---|---|
 | `--unit` | Esegue PHPUnit (unit + integration) |
 | `--setup` | Fasi 01–03: crea l'app e configura lo schema |
-| `--tests` | Fasi 04–31: suite CRUD e feature completa |
-| `--seed` | Fase 19: popola l'app con dati demo |
-| `--seed-more` | Fase 19b: seed esteso (implica `--seed`) |
+| `--tests` | Fasi 04–38: suite CRUD e feature completa |
+| `--seed` | Fase 19: popola l'app con il dataset demo completo |
 
 ### Controllo delle fasi
 
@@ -70,7 +74,8 @@ variabili vuote se 04 viene saltata.
 | `--db=sqlite\|pgsql\|mysql` | Motore DB (default: `sqlite`) |
 | `--all-engines` | Esegue la suite su tutti e 3 i motori in sequenza |
 | `--keep` | Lascia il container Docker in esecuzione dopo i test |
-| `--no-docker` | Salta Docker; usa il server locale all'indirizzo in `vars.env` |
+| `--no-docker` | Salta Docker; usa il server all'indirizzo `BASE_URL` in `vars.env` (locale o remoto) |
+| `--export-demo` | Dopo `--seed`, copia l'app demo dal container di test alla cartella `projects/` host, così il container di sviluppo (porta 8080) ne ha una copia persistente. No-op con `--no-docker`. |
 
 ### Workflow comuni
 
@@ -91,9 +96,12 @@ variabili vuote se 04 viene saltata.
 ./test.sh --tests --from=06
 
 # Screenshot workflow: seed + container in piedi
-./test.sh --reset --setup --tests --seed-more --keep
+./test.sh --reset --setup --seed --keep
 # → apri http://localhost:8081 nel browser per gli screenshot
 # → il prossimo ./test.sh pulisce automaticamente
+
+# Seed persistente nel container di sviluppo (porta 8080)
+./test.sh --setup --tests --seed --export-demo
 ```
 
 ---
@@ -235,13 +243,19 @@ ID record) che le fasi successive consumano. Tutte sono gestite da
 | 29 | `29_history_admin.hurl` | History + gate admin password |
 | 30 | `30_file_sort.hurl` | Ordinamento file drag-and-drop |
 | 31 | `31_fk_indexes.hurl` | Indici FK definiti dall'utente |
+| 32 | `32_duplicate.hurl` | Duplicazione record (`POST /api/record/{tb}/{id}/duplicate`) |
+| 33 | `33_upgrade_status.hurl` | Endpoint stato upgrade (`GET /api/upgrade/status`) |
+| 34 | `34_file_management.hurl` | Gestione file: list, patch, replace |
+| 35 | `35_file_link_unlink.hurl` | Link/unlink file a record |
+| 36 | `36_dbml.hurl` | Import/export schema via DBML |
+| 37 | `37_chrono_timeline.hurl` | Endpoint timeline cronologica comparata |
+| 38 | `38_osteology.hurl` | Plugin osteologico (inventario scheletrico) |
 
 ### Fasi di seed (run con `--seed`)
 
 | Fase | File | Cosa fa |
 |---|---|---|
-| 19 | `19_seed_demo.hurl` | Popola l'app con dati demo (siti, US, saggi, reperti) |
-| 19b | `19b_seed_more.hurl` | Seed esteso: 15 siti, 375 reperti, geodata *(con `--seed-more`)* |
+| 19 | `19_seed_demo.hurl` | Popola l'app con il dataset demo completo (siti, complessi, saggi, US, reperti, sepolture, RS relations, geodata, chart) |
 
 ---
 

@@ -266,7 +266,8 @@ Located in `src/components/record/`:
 
 | Variable | Default | Effect |
 |---|---|---|
-| `VITE_API_BASE` | `''` (same origin) | Base URL for all API calls and asset URLs |
+| `VITE_API_BASE` | `''` (same origin) | Public backend URL injected into the browser bundle. Only for cross-origin production deployments. |
+| `API_PROXY_TARGET` | `http://localhost:8080` | Backend URL used **only** by Vite's dev-server proxy (Node process, never sent to the browser). In Docker Compose set it to the service name, e.g. `http://app:80`. |
 
 Set in `.env`, `.env.local`, or shell before running Vite:
 
@@ -285,3 +286,24 @@ no server-side rewrite rules are needed).
 
 When the frontend and backend are served from the same origin, `VITE_API_BASE`
 can be left empty and `dist/` can be placed inside the PHP project root.
+
+When the frontend is deployed standalone and proxies to a separate bdus-api
+container, `/api/*` requests still need routing to the backend:
+
+```nginx
+server {
+    root /path/to/dist;
+    index index.html;
+
+    # SPA fallback — all non-file requests serve index.html
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # Proxy API calls to the PHP backend
+    location /api/ {
+        proxy_pass http://bdus-api:80;
+        proxy_set_header Host $host;
+    }
+}
+```

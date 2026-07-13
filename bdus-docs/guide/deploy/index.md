@@ -64,6 +64,20 @@ headers — without HTTPS they are exposed in transit.
 When using a reverse proxy (Nginx, Caddy, Traefik), set the `X-Forwarded-Proto`
 header so BraDypUS knows the connection is over HTTPS.
 
+```nginx
+# Nginx example — proxy to a BraDypUS container exposing port 80
+server {
+    server_name myapp.example.com;
+
+    location / {
+        proxy_pass         http://127.0.0.1:80;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+    }
+}
+```
+
 ## Data persistence
 
 All application data (SQLite databases, uploaded files, configuration, backups) lives

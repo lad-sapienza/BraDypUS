@@ -29,7 +29,7 @@ running both services together.
 |---|---|---|
 | [A – Development](#a--development) | Contributors / active development | Git · Docker |
 | [B – Production from source](#b--production-from-source) | Self-hosters who cloned the repo | Git · Docker |
-| [C – Production from Docker Hub](#c--production-from-docker-hub) | Self-hosters (no source needed) | Docker only |
+| [C – Production from pre-built images](#c--production-from-pre-built-images) | Self-hosters (no source needed) | Docker only |
 | [D – Manual (no Docker)](#d--manual-no-docker) | Custom servers / shared hosting | PHP 8.2+ · Node 20+ |
 
 ---
@@ -98,64 +98,45 @@ server {
 
 ---
 
-## C – Production from Docker Hub
+## C – Production from pre-built images
 
-> **Coming soon.** Docker Hub images (`jbogdani/bradypus-api` and
-> `jbogdani/bradypus-app`) will be published with each release.
-
-Once published, no source code or build tools are required. Save the following
-file as `docker-compose.yml` anywhere on your server and run it:
-
-```yaml
-# docker-compose.yml — BraDypUS production (Docker Hub images)
-services:
-  api:
-    image: jbogdani/bradypus-api:latest
-    expose:
-      - "80"
-    environment:
-      - BRADYPUS_DEBUG=0
-      - BRADYPUS_ALLOW_NEW_APP=0
-    volumes:
-      - projects_data:/var/www/html/projects
-    networks:
-      - bradypus-net
-    restart: unless-stopped
-
-  frontend:
-    image: jbogdani/bradypus-app:latest
-    ports:
-      - "80:80"
-    environment:
-      - API_PROXY_TARGET=http://api:80
-    depends_on:
-      - api
-    networks:
-      - bradypus-net
-    restart: unless-stopped
-
-volumes:
-  projects_data:
-
-networks:
-  bradypus-net:
-    driver: bridge
-    name: bradypus-net
-```
+No source code or build tools required. Images are published to the **GitHub
+Container Registry** (`ghcr.io/lad-sapienza/bdus-api` and `ghcr.io/lad-sapienza/bdus-app`)
+by CI on every tagged release. Download the ready-to-use compose file and run it:
 
 ```bash
-docker compose pull
-docker compose up -d
+curl -O https://raw.githubusercontent.com/lad-sapienza/BraDypUS/v5/bradypus.yml
+docker compose -f bradypus.yml pull
+docker compose -f bradypus.yml up -d
 ```
 
-To upgrade to a newer release:
+Open **<http://localhost>** in your browser.
+
+Pin to a specific version by setting `BDUS_VERSION` (default: `latest`):
 
 ```bash
-docker compose pull
-docker compose up -d
+BDUS_VERSION=5.0.3 docker compose -f bradypus.yml up -d
+```
+
+Change the host port with `BDUS_PORT` (default: `80`) — useful behind a reverse
+proxy, or bind to localhost only:
+
+```bash
+BDUS_PORT=8090 docker compose -f bradypus.yml up -d
+BDUS_PORT=127.0.0.1:8090 docker compose -f bradypus.yml up -d
+```
+
+Project data (files, databases, backups) is persisted in the `projects_data`
+Docker volume and survives restarts and upgrades. To upgrade:
+
+```bash
+docker compose -f bradypus.yml pull
+docker compose -f bradypus.yml up -d
 ```
 
 Docker automatically restarts containers after a reboot (`restart: unless-stopped`).
+Full details (data backup/restore, reverse proxy setup) are in the
+[deployment guide](https://docs.bdus.cloud/guide/install/containers.html).
 
 ---
 

@@ -5,7 +5,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.1.0] - 2026-07-13
+
 ### Changed
+
+- **Script di backup/restore/seed per il volume `projects_data`** (`backup.sh`, `restore.sh`, `seed-demo.sh` — root monorepo) — `backup.sh`/`restore.sh` incapsulano i comandi `docker run ... tar` per backup/restore completo o per singola app (auto-rilevano il volume, `restore.sh` chiede conferma prima di sovrascrivere); `seed-demo.sh` è un wrapper sottile su `bdus-api/test.sh --no-docker --setup --seed` per popolare rapidamente un'istanza, anche remota, col dataset demo completo senza duplicare l'infrastruttura hurl.
+- **README consolidati verso docs.bdus.cloud** — i tre README (BraDypUS, bdus-api, bdus-app) descrivevano ancora immagini "Docker Hub — coming soon" mai pubblicate (il deploy reale usa GHCR da `bradypus.yml`) ed erano andati fuori sync anche su altri fronti: `bdus-api/README.md` documentava un flag `--skip-unit` e una suite di 18 fasi hurl mai esistiti/non più veri (`test.sh` ne ha 38), `dev/architecture.md` descriveva una cartella `cfg/` con YAML per app rimossa da tempo (la config tabelle/campi vive nel DB). I tre README sono stati ridotti a quickstart + link; i contenuti corretti vivono ora solo in docs.bdus.cloud (`dev/testing`, `dev/architecture`, `guide/deploy`).
 
 - **Plugin osteologico — i18n completo e vista tabella** — tutte le label del plugin (nomi ossa, categorie, opzioni dropdown conservazione/certezza) ora usano chiavi i18n invece di testo italiano hardcoded; `bonesConfig.js` usa `labelKey` al posto di `label`. Aggiunta vista tabella alternativa all'SVG nell'editor: toggle `[SVG] [Tabella]` permette di compilare presenza, conservazione, certezza e note per tutte le ossa in una griglia compatta per categoria, senza dover cliccare sull'SVG. La vista tabella (`OsteologyTable.vue`) è affiancata alla vista SVG esistente; entrambe scrivono sullo stesso modello dati. Aggiunte ~55 nuove chiavi i18n in `it.json` e `en.json`.
 
@@ -92,6 +97,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Connettore XOR** — rimosso da `getAdvancedConfig`: non era supportato da `JsonFilter` (il frontend lo trattava silenziosamente come AND) e non risulta usato in pratica.
 - **Pulsanti parentesi nella ricerca avanzata** — erano UI senza effetto: `buildFilterFromRows` non li ha mai considerati (il raggruppamento segue la precedenza standard AND-su-OR).
+
+## [5.0.3] - 2026-06-16
+
+### Added
+
+- **Pubblicazione immagini Docker su GitHub Container Registry (GHCR)** — nuovo workflow CI (`docker-publish.yml`) in bdus-api e bdus-app pubblica `ghcr.io/lad-sapienza/bdus-api` e `ghcr.io/lad-sapienza/bdus-app` ad ogni tag `v*` (build multi-piattaforma amd64/arm64, cache GHA).
+- **`bradypus.yml`** (root monorepo, ex `docker-compose.hub.yml`) — compose file di produzione che usa le immagini GHCR anziché richiedere il sorgente; supporta `BDUS_VERSION` per il pinning della versione e `BDUS_PORT` per configurare la porta host del frontend (utile dietro reverse proxy).
 
 ## [5.0.2] - 2026-06-06
 

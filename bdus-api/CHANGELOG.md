@@ -5,6 +5,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.1.1] - 2026-07-13
+
+### Fixed
+
+- **Container API in crash loop su ogni deploy fresco** — `vendor/` è gitignored e mai incluso nell'immagine Docker; ogni container nuovo lo installa al primo avvio (`docker-entrypoint.sh`). `composer.lock` bloccava però `funiq/geophp` (`dev-master`, dichiara `php: 5.5 - 8.0`) e, tramite `spatie/db-dumper`, `symfony/process v8.0.11` (dichiara `php: >=8.4`) — entrambi incompatibili con la piattaforma dichiarata PHP 8.2, pur non essendoci reale incompatibilità di codice. `composer install` falliva ad ogni avvio → crash loop su qualunque installazione senza un `vendor/` persistito da prima. Fix: `docker-entrypoint.sh` passa `--ignore-platform-req=php` a `composer install`, che salta il controllo sulla versione PHP dichiarata dai singoli pacchetti mantenendo tutti gli altri controlli di piattaforma (estensioni, ecc.). Interessava **ogni immagine `bdus-api` pubblicata finora**, incluse quelle GHCR da `bradypus.yml`.
+
 ## [5.1.0] - 2026-07-13
 
 ### Changed

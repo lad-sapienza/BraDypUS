@@ -7,6 +7,7 @@
 namespace DB;
 
 use Monolog\Logger;
+use Monolog\LogRecord;
 use Monolog\Handler\AbstractProcessingHandler;
 use DB\DBInterface;
 
@@ -21,7 +22,7 @@ class LogDBHandler extends AbstractProcessingHandler
         parent::__construct($level, $bubble);
     }
 
-    protected function write(array $record): void
+    protected function write(LogRecord $record): void
     {
         try {
             $sys_mng = new \DB\System\Manage($this->db);
@@ -32,10 +33,10 @@ class LogDBHandler extends AbstractProcessingHandler
             }
 
             $sys_mng->addRow('bdus_log', [
-                'channel' => $record['channel'],
-                'level' => $record['level'],
-                'message' => $record['formatted'],
-                'time' => $record['datetime']->format('U')
+                'channel' => $record->channel,
+                'level' => $record->level->value,
+                'message' => $record->formatted,
+                'time' => $record->datetime->format('U')
             ]);
         } catch (\Throwable $th) {
             // Almost silently die....

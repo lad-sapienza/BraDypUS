@@ -24,7 +24,7 @@ This starts two containers:
 
 | Container | Purpose | Port |
 |---|---|---|
-| `app` | PHP 8.2 + Apache (bdus-api) | 8080 |
+| `app` | PHP 8.4 + Apache (bdus-api) | 8080 |
 | `node` | Node 22 + Vite dev server (bdus-app) | 5173 |
 
 ::: tip First run

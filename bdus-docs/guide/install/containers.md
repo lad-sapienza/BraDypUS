@@ -31,7 +31,7 @@ This downloads two images:
 
 | Image | Purpose |
 |---|---|
-| `ghcr.io/lad-sapienza/bdus-api` | PHP 8.2 + Apache backend |
+| `ghcr.io/lad-sapienza/bdus-api` | PHP 8.4 + Apache backend |
 | `ghcr.io/lad-sapienza/bdus-app` | Vue 3 SPA served by Nginx |
 
 ## 3. Start the application

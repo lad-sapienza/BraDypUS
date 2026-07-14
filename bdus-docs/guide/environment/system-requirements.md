@@ -13,7 +13,7 @@ The recommended way to run BraDypUS locally is with **Docker**.
 | [Docker Desktop](https://www.docker.com/products/docker-desktop/) | ≥ 4.x |
 | [Git](https://git-scm.com/) | ≥ 2.x |
 
-Docker provides everything else: PHP 8.2, Apache, Node 22, SQLite.
+Docker provides everything else: PHP 8.4, Apache, Node 22, SQLite.
 No local PHP or Node installation is needed.
 
 ## Production (server)
@@ -22,7 +22,7 @@ For production deployments without Docker, the server needs:
 
 | Requirement | Details |
 |---|---|
-| **PHP** | ≥ 8.1 with `pdo`, `pdo_sqlite`/`pdo_mysql`/`pdo_pgsql`, `mbstring`, `gd` |
+| **PHP** | ≥ 8.4 with `pdo`, `pdo_sqlite`/`pdo_mysql`/`pdo_pgsql`, `mbstring`, `gd` |
 | **Web server** | Apache (with `mod_rewrite`) or Nginx |
 | **Database** | SQLite 3, MySQL ≥ 5.7 / MariaDB, or PostgreSQL ≥ 12 |
 | **Node.js** | ≥ 18 (only needed to build the Vue frontend; not needed at runtime) |

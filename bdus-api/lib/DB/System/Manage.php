@@ -274,7 +274,7 @@ class Manage
     {
         $name = $clm['name'];
 
-        if ($clm['pk']){
+        if ($clm['pk'] ?? false){
             if ($driver === 'pgsql') {
                 $type = 'SERIAL PRIMARY KEY';
             } else if ($driver === 'mysql') {

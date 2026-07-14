@@ -41,6 +41,13 @@ RUN mkdir -p projects && chown www-data:www-data projects
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
+# Backup/restore helpers — invoked by overriding --entrypoint against the
+# projects_data volume, not part of normal container startup. See the
+# scripts themselves for usage.
+COPY docker-backup.sh /usr/local/bin/docker-backup.sh
+COPY docker-restore.sh /usr/local/bin/docker-restore.sh
+RUN chmod +x /usr/local/bin/docker-backup.sh /usr/local/bin/docker-restore.sh
+
 EXPOSE 80
 
 ENTRYPOINT ["docker-entrypoint.sh"]

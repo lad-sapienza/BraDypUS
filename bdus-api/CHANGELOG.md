@@ -5,6 +5,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Backup/restore ora girano dentro l'immagine `bdus-api`, non più in un container `alpine` sibling** — `docker-backup.sh`/`docker-restore.sh` sono ora inclusi nell'immagine (`/usr/local/bin/`), invocati via `docker run --entrypoint` contro il volume `projects_data`. Eliminano il riconoscimento manuale del nome del volume dentro un container generico e, soprattutto, non richiedono più il pull di un'immagine `alpine` separata: bastano l'immagine `bdus-api` (che un deployment GHCR-only ha già) e il volume, funziona anche a stack fermo. Gli script `backup.sh`/`restore.sh` alla radice del monorepo restano l'interfaccia utente invariata (stessi argomenti, stessi nomi di archivio, stesso prompt di conferma) ma delegano l'estrazione/scrittura effettiva ai nuovi script nell'immagine; l'immagine di riferimento è configurabile con `BDUS_API_IMAGE` (default `ghcr.io/lad-sapienza/bdus-api:latest`).
+
 ### Fixed
 
 - **`funiq/geophp`/`symfony/process` fissati alla piattaforma PHP dichiarata, rimosso lo stopgap `--ignore-platform-req=php`** — il flag aggiunto in 5.1.1 mascherava il problema reale invece di risolverlo. `funiq/geophp` era lockato su `dev-master` (HEAD dichiara `php: 5.5 - 8.0`) mentre esiste una release taggata `v2.0.3` che dichiara `php: 5.5 - 8.2`, compatibile con la piattaforma corrente; `composer.json` ora fissa `"funiq/geophp": "^2.0.3"`. `symfony/process`, trascinato da `spatie/db-dumper ^3.0`, era risolto in `v8.0.11` (richiede PHP ≥8.4) nonostante `config.platform.php: 8.2` in `composer.json` — `composer.lock` è stato rigenerato per davvero dentro un container `php:8.2-apache` reale (non sulla macchina locale, che non ha PHP/Composer) e ora risolve `symfony/process` in `7.4.13`. `composer install` funziona di nuovo senza bypassare la validazione di piattaforma; `--ignore-platform-req=php` è stato rimosso da `docker-entrypoint.sh`.

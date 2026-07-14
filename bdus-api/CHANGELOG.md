@@ -5,6 +5,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **`funiq/geophp`/`symfony/process` fissati alla piattaforma PHP dichiarata, rimosso lo stopgap `--ignore-platform-req=php`** — il flag aggiunto in 5.1.1 mascherava il problema reale invece di risolverlo. `funiq/geophp` era lockato su `dev-master` (HEAD dichiara `php: 5.5 - 8.0`) mentre esiste una release taggata `v2.0.3` che dichiara `php: 5.5 - 8.2`, compatibile con la piattaforma corrente; `composer.json` ora fissa `"funiq/geophp": "^2.0.3"`. `symfony/process`, trascinato da `spatie/db-dumper ^3.0`, era risolto in `v8.0.11` (richiede PHP ≥8.4) nonostante `config.platform.php: 8.2` in `composer.json` — `composer.lock` è stato rigenerato per davvero dentro un container `php:8.2-apache` reale (non sulla macchina locale, che non ha PHP/Composer) e ora risolve `symfony/process` in `7.4.13`. `composer install` funziona di nuovo senza bypassare la validazione di piattaforma; `--ignore-platform-req=php` è stato rimosso da `docker-entrypoint.sh`.
+- **Vulnerabilità di sicurezza in `guzzlehttp/guzzle`/`guzzlehttp/psr7`** (trascinati da `league/oauth2-google`) — `composer audit`, eseguito durante la rigenerazione del lock file di cui sopra, ha segnalato 3 advisory di severità media: dot-only cookie domain matching e silent HTTPS→cleartext downgrade in guzzle (< 7.12.1), CRLF injection nella serializzazione HTTP start-line in psr7 (< 2.12.1). Aggiornati a `guzzlehttp/guzzle 7.14.1` e `guzzlehttp/psr7 2.12.5`; `composer audit` ora non segnala nulla.
+
+### Changed
+
+- **GitHub Actions bump a versioni native Node 24** — `actions/checkout@v4→v5`, `docker/metadata-action@v5→v6`, `docker/setup-qemu-action@v3→v4`, `docker/setup-buildx-action@v3→v4`, `docker/login-action@v3→v4`, `docker/build-push-action@v6→v7` in `docker-publish.yml` (bdus-api e bdus-app), elimina il warning di deprecazione "Node.js 20 is deprecated". Aggiunto anche `workflow_dispatch:` al trigger per poter testare il workflow a mano senza dover taggare una release.
+
 ## [5.1.1] - 2026-07-13
 
 ### Fixed

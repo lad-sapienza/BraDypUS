@@ -14,7 +14,7 @@ This monorepo contains two independent projects that work together:
 
 | Directory | Language / Stack | Purpose |
 |---|---|---|
-| [`bdus-api/`](bdus-api/) | PHP 8.2 · Apache | REST JSON backend, multi-tenant |
+| [`bdus-api/`](bdus-api/) | PHP 8.4 · Apache | REST JSON backend, multi-tenant |
 | [`bdus-app/`](bdus-app/) | Vue 3 · Vite · PrimeVue 4 | Browser SPA |
 
 Each sub-directory has its own `README.md`, `Dockerfile`, and `docker-compose.yml`

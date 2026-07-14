@@ -23,7 +23,7 @@ See the [feature guide](https://docs.bdus.cloud/guide/usage/) for the full list.
 
 | Tool | Minimum |
 |---|---|
-| PHP | 8.2 |
+| PHP | 8.4 |
 | PHP extensions | `pdo`, `pdo_sqlite` (or `pdo_mysql` / `pdo_pgsql`), `mbstring`, `gd` |
 | Composer | 2.x |
 | Web server | Apache with `mod_rewrite`, or Nginx |

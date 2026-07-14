@@ -27,7 +27,7 @@
         "rest"
     ],
     "require": {
-        "php": ">=8.2",
+        "php": ">=8.4",
         "firebase/php-jwt": "^7.0",
         "intervention/image": "^3.0",
         "monolog/monolog": "^3.0",
@@ -41,7 +41,7 @@
     },
     "config": {
         "platform": {
-            "php": "8.2"
+            "php": "8.4"
         }
     },
     "autoload": {

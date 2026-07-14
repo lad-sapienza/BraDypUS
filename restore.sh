@@ -13,6 +13,11 @@
 # (docker compose -f bradypus.yml stop api) to avoid restoring under a live
 # writer.
 #
+# Extracted files are chowned to 33:33 (www-data in the php:8.2-apache
+# image) regardless of the ownership recorded in the archive — an archive
+# built outside a properly-permissioned container (e.g. on a dev machine)
+# would otherwise leave the api container unable to write to its own data.
+#
 # Requires: docker.
 
 set -euo pipefail
@@ -83,13 +88,15 @@ if [[ -n "$APP_NAME" ]]; then
   docker run --rm \
     -v "${VOLUME}:/data" \
     -v "${ARCHIVE_DIR}:/backup" \
-    alpine tar xzf "/backup/${ARCHIVE_BASENAME}" -C /data "${APP_NAME}"
+    alpine sh -c 'tar xzf "/backup/$1" -C /data "$2" && chown -R 33:33 "/data/$2"' \
+    _ "${ARCHIVE_BASENAME}" "${APP_NAME}"
 else
   cyan "Restoring all apps…"
   docker run --rm \
     -v "${VOLUME}:/data" \
     -v "${ARCHIVE_DIR}:/backup" \
-    alpine tar xzf "/backup/${ARCHIVE_BASENAME}" -C /data
+    alpine sh -c 'tar xzf "/backup/$1" -C /data && chown -R 33:33 /data' \
+    _ "${ARCHIVE_BASENAME}"
 fi
 
 green "Restore complete."

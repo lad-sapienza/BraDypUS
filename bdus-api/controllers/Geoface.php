@@ -2,6 +2,8 @@
 
 namespace Bdus\Controllers;
 
+use Geo\WktGeoJson;
+
 /**
  * @copyright 2007-2022 Julian Bogdani
  * @license AGPL-3.0; see LICENSE
@@ -165,7 +167,7 @@ class Geoface extends \Bdus\Controller
                 $geometry = json_decode($geometry, true);
             }
 
-            $wkt = \geoPHP\geoPHP::load(json_encode($geometry), 'geojson')->out('wkt');
+            $wkt = WktGeoJson::toWkt($geometry);
 
             $ok = $this->db->query(
                 'INSERT INTO bdus_geodata (table_link, id_link, geometry) VALUES (?, ?, ?)',
@@ -226,7 +228,7 @@ class Geoface extends \Bdus\Controller
                     $geomRaw = json_decode($geomRaw, true);
                 }
 
-                $wkt = \geoPHP\geoPHP::load(json_encode($geomRaw), 'geojson')->out('wkt');
+                $wkt = WktGeoJson::toWkt($geomRaw);
 
                 $ok = $this->db->query(
                     'UPDATE bdus_geodata SET geometry = ? WHERE id = ?',
@@ -305,7 +307,7 @@ class Geoface extends \Bdus\Controller
             }
 
             try {
-                $geoPHP = \geoPHP\geoPHP::load($geom, 'wkt');
+                $geometry = WktGeoJson::toGeoJson($geom);
             } catch (\Throwable $th) {
                 error_log("WKT geometry {$geom} could not be parsed: " . var_export($r, true));
                 continue;
@@ -313,7 +315,7 @@ class Geoface extends \Bdus\Controller
 
             $feat = [
                 'type'     => 'Feature',
-                'geometry' => json_decode($geoPHP->out('geojson'), true),
+                'geometry' => $geometry,
             ];
             unset($r['geometry']);
             if ($r) {

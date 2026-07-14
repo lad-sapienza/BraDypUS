@@ -2,6 +2,8 @@
 
 namespace Bdus\Controllers;
 
+use Geo\WktGeoJson;
+
 /**
  * @copyright 2007-2025 Julian Bogdani
  * @license AGPL-3.0; see LICENSE
@@ -440,10 +442,7 @@ class Import extends \Bdus\Controller
 
                 $recordId = (int) $existing[0]['id'];
 
-                $wkt = \geoPHP\geoPHP::load(
-                    json_encode($feature['geometry']),
-                    'geojson'
-                )->out('wkt');
+                $wkt = WktGeoJson::toWkt($feature['geometry']);
 
                 // Upsert into bdus_geodata
                 $geoRow = $this->db->query(

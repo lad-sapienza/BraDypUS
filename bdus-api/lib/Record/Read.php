@@ -9,7 +9,7 @@ namespace Record;
 
 use DB\DBInterface;
 use Config\Config;
-use \geoPHP\geoPHP;
+use Geo\WktGeoJson;
 
 class Read
 {
@@ -303,8 +303,7 @@ EOD;
                         'geometry'   => ['name' => 'geometry',   'label' => 'Coordinates',  'val' => $row['geometry']],
                     ];
                     try {
-                        $geoPHP = geoPHP::load($row['geometry'], 'wkt');
-                        $entry['geojson'] = $geoPHP->out('json');
+                        $entry['geojson'] = WktGeoJson::toGeoJson($row['geometry']);
                     } catch (\Throwable $e) {
                         $entry['geojson'] = null;
                     }

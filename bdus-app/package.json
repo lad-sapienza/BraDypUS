@@ -31,11 +31,17 @@
     "primevue": "^4.0.0",
     "vue": "^3.5.39",
     "vue-chartjs": "^5.3.4",
-    "vue-router": "^4.0.0"
+    "vue-router": "^5.0.0"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.0",
     "sortablejs": "^1.10.2",
     "vite": "^6.0.0"
+  },
+  "overrides": {
+    "vue-router": {
+      "pinia": "$pinia",
+      "vite": "$vite"
+    }
   }
 }

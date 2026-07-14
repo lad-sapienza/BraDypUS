@@ -960,18 +960,19 @@ function onBibDeleted(entryId) {
 }
 
 // ── Unsaved changes guard ─────────────────────────────────────────
-onBeforeRouteLeave((_to, _from, next) => {
+onBeforeRouteLeave((_to, _from) => {
   if (mode.value !== 'edit' || !hasActualChanges.value) {
-    next()
-    return
+    return true
   }
-  confirm.require({
-    message:  t('unsaved_changes_warning'),
-    header:   t('unsaved_changes'),
-    icon:     'pi pi-exclamation-triangle',
-    severity: 'warn',
-    accept:   () => next(),
-    reject:   () => next(false),
+  return new Promise((resolve) => {
+    confirm.require({
+      message:  t('unsaved_changes_warning'),
+      header:   t('unsaved_changes'),
+      icon:     'pi pi-exclamation-triangle',
+      severity: 'warn',
+      accept:   () => resolve(true),
+      reject:   () => resolve(false),
+    })
   })
 })
 

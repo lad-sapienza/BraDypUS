@@ -13,12 +13,15 @@
 # (docker compose -f bradypus.yml stop api) to avoid restoring under a live
 # writer.
 #
-# Extracted files are chowned to 33:33 (www-data in the php:8.2-apache
-# image) regardless of the ownership recorded in the archive — an archive
-# built outside a properly-permissioned container (e.g. on a dev machine)
-# would otherwise leave the api container unable to write to its own data.
+# The actual extraction runs inside the bdus-api image (docker-restore.sh,
+# baked in at /usr/local/bin/) via a throwaway `docker run`, not inside the
+# live api container — so this works whether or not the stack is running,
+# and needs no bdus-api/bdus-app source checked out, only the image and the
+# projects_data volume. Extracted files are chowned to www-data regardless
+# of the ownership recorded in the archive.
 #
-# Requires: docker.
+# Requires: docker. Override the image with BDUS_API_IMAGE if you're not
+# running the default ghcr.io/lad-sapienza/bdus-api:latest.
 
 set -euo pipefail
 
@@ -40,6 +43,7 @@ done
 
 APP_NAME="${ARGS[0]:-}"
 EXPLICIT_FILE="${ARGS[1]:-}"
+IMAGE="${BDUS_API_IMAGE:-ghcr.io/lad-sapienza/bdus-api:latest}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BACKUP_DIR="${SCRIPT_DIR}/backups"
@@ -80,23 +84,15 @@ if [[ "$FORCE" != true ]]; then
   [[ "$ans" =~ ^[yY]$ ]] || { cyan "Aborted."; exit 0; }
 fi
 
-ARCHIVE_DIR="$(cd "$(dirname "$ARCHIVE")" && pwd)"
-ARCHIVE_BASENAME="$(basename "$ARCHIVE")"
-
 if [[ -n "$APP_NAME" ]]; then
   cyan "Restoring app '${APP_NAME}'…"
-  docker run --rm \
-    -v "${VOLUME}:/data" \
-    -v "${ARCHIVE_DIR}:/backup" \
-    alpine sh -c 'tar xzf "/backup/$1" -C /data "$2" && chown -R 33:33 "/data/$2"' \
-    _ "${ARCHIVE_BASENAME}" "${APP_NAME}"
 else
   cyan "Restoring all apps…"
-  docker run --rm \
-    -v "${VOLUME}:/data" \
-    -v "${ARCHIVE_DIR}:/backup" \
-    alpine sh -c 'tar xzf "/backup/$1" -C /data && chown -R 33:33 /data' \
-    _ "${ARCHIVE_BASENAME}"
 fi
+
+docker run --rm -i \
+  --entrypoint /usr/local/bin/docker-restore.sh \
+  -v "${VOLUME}:/var/www/html/projects" \
+  "${IMAGE}" < "${ARCHIVE}"
 
 green "Restore complete."

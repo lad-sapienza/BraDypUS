@@ -9,8 +9,14 @@
 #   bradypus-all-<timestamp>.tar.gz          (no argument)
 #   bradypus-<app_name>-<timestamp>.tar.gz   (single app)
 #
-# Requires: docker (the bradypus.yml stack does not need to be running,
-# only the named volume must exist).
+# The actual archiving runs inside the bdus-api image (docker-backup.sh,
+# baked in at /usr/local/bin/) via a throwaway `docker run`, not inside the
+# live api container — so this works whether or not the stack is running,
+# and needs no bdus-api/bdus-app source checked out, only the image and the
+# projects_data volume.
+#
+# Requires: docker. Override the image with BDUS_API_IMAGE if you're not
+# running the default ghcr.io/lad-sapienza/bdus-api:latest.
 
 set -euo pipefail
 
@@ -21,6 +27,7 @@ cyan()  { printf '\033[0;36m%s\033[0m\n' "$*"; }
 die() { red "ERROR: $*"; exit 1; }
 
 APP_NAME="${1:-}"
+IMAGE="${BDUS_API_IMAGE:-ghcr.io/lad-sapienza/bdus-api:latest}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BACKUP_DIR="${SCRIPT_DIR}/backups"
 TIMESTAMP="$(date +%Y%m%d-%H%M%S)"
@@ -33,25 +40,21 @@ VOLUME="$(docker volume ls --format '{{.Name}}' | grep -E '(^|_)projects_data$' 
 [[ -n "$VOLUME" ]] || die "no Docker volume matching '*projects_data' found. Is the stack running? Try: docker compose -f bradypus.yml up -d"
 
 if [[ -n "$APP_NAME" ]]; then
-  docker run --rm -v "${VOLUME}:/data" alpine sh -c "test -d /data/'${APP_NAME}'" \
-    || { red "App '${APP_NAME}' not found in volume '${VOLUME}'."; \
-         cyan "Available apps:"; \
-         docker run --rm -v "${VOLUME}:/data" alpine sh -c 'ls -1 /data 2>/dev/null'; \
-         exit 1; }
-
   ARCHIVE_NAME="bradypus-${APP_NAME}-${TIMESTAMP}.tar.gz"
   cyan "Backing up app '${APP_NAME}' from volume '${VOLUME}'…"
-  docker run --rm \
-    -v "${VOLUME}:/data" \
-    -v "${BACKUP_DIR}:/backup" \
-    alpine tar czf "/backup/${ARCHIVE_NAME}" -C /data "${APP_NAME}"
 else
   ARCHIVE_NAME="bradypus-all-${TIMESTAMP}.tar.gz"
   cyan "Backing up all apps from volume '${VOLUME}'…"
-  docker run --rm \
-    -v "${VOLUME}:/data" \
-    -v "${BACKUP_DIR}:/backup" \
-    alpine tar czf "/backup/${ARCHIVE_NAME}" -C /data .
 fi
 
+TMP_ARCHIVE="${BACKUP_DIR}/.${ARCHIVE_NAME}.tmp"
+trap 'rm -f "$TMP_ARCHIVE"' EXIT
+
+docker run --rm \
+  --entrypoint /usr/local/bin/docker-backup.sh \
+  -v "${VOLUME}:/var/www/html/projects" \
+  "${IMAGE}" ${APP_NAME:+"${APP_NAME}"} > "$TMP_ARCHIVE" \
+  || die "backup failed (see error above)"
+
+mv "$TMP_ARCHIVE" "${BACKUP_DIR}/${ARCHIVE_NAME}"
 green "Done: ${BACKUP_DIR}/${ARCHIVE_NAME}"

@@ -1068,7 +1068,7 @@ watch(() => route.params.id, fetchRecord)
 .record-content {
   flex: 1;
   overflow-y: auto;
-  padding: 1rem 1.25rem;
+  padding: 1rem 1.25rem 2rem;
   width: 100%;
   max-width: 1200px;
   margin-inline: auto;

@@ -1172,6 +1172,10 @@
   "osteo_deactivated": "Osteological plugin deactivated",
   "osteology_activated": "Osteological plugin activated",
   "osteology_deactivated": "Osteological plugin deactivated",
+
+  "radiocarbon_plugin": "Radiocarbon dating",
+  "radiocarbon_activate_btn": "Activate",
+  "radiocarbon_activated": "Radiocarbon plugin activated",
   "osteo_individual": "Individual",
   "osteo_add_individual": "Add individual",
   "osteo_individual_label": "Individual label (optional)",

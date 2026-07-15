@@ -176,6 +176,22 @@
               {{ t('osteo_activated') }} — osteo_data
             </small>
           </div>
+          <div class="cfg-form-field">
+            <label>{{ t('radiocarbon_plugin') }}</label>
+            <div class="cfg-input-action">
+              <Button
+                v-if="!radiocarbonActive"
+                :label="t('radiocarbon_activate_btn')"
+                size="small"
+                :loading="radiocarbonBusy"
+                @click="activateRadiocarbon"
+              />
+              <i v-if="radiocarbonBusy" class="pi pi-spin pi-spinner" style="font-size:.9rem" />
+            </div>
+            <small v-if="radiocarbonActive" class="cfg-hint">
+              {{ t('radiocarbon_activated') }} — lab_code, bp, bp_error, material, d13c, cal_1s/cal_2s
+            </small>
+          </div>
         </div>
       </section>
 
@@ -251,6 +267,7 @@ const fuzzyDateActive = ref(false)
 const fuzzyDateBusy   = ref(false)
 const osteoActive     = ref(false)
 const osteoBusy       = ref(false)
+const radiocarbonBusy = ref(false)
 
 const table            = ref(null)
 const form             = ref(null)
@@ -269,6 +286,11 @@ const isPluginBool = computed({
   get: () => form.value?.is_plugin === '1',
   set: (v) => { if (form.value) form.value.is_plugin = v ? '1' : '' }
 })
+
+// Unlike fuzzy_date/osteology (flat boolean flags), radiocarbon activation is
+// detected via the derived plugin[] list — activating creates a real plugin
+// table ({tb}_radiocarbon) picked up automatically by LoadFromDB.
+const radiocarbonActive = computed(() => form.value?.plugin?.includes(`${props.tb}_radiocarbon`) ?? false)
 
 const fieldOptions = computed(() =>
   Object.entries(fieldLabels.value).map(([k, v]) => ({ value: k, label: v }))
@@ -408,6 +430,25 @@ async function toggleOsteology(newVal) {
     toast.add({ severity: 'error', summary: e.message, life: 4000 })
   } finally {
     osteoBusy.value = false
+  }
+}
+
+// ── Radiocarbon activation ────────────────────────────────────────────────
+async function activateRadiocarbon() {
+  if (!props.tb || radiocarbonBusy.value) return
+  radiocarbonBusy.value = true
+  try {
+    const res = await api.post(`/api/config/table/${props.tb}/radiocarbon`, {})
+    if (res.status === 'success') {
+      if (!form.value.plugin.includes(res.tb)) form.value.plugin.push(res.tb)
+      toast.add({ severity: 'success', summary: t(res.code), life: 3000 })
+    } else {
+      toast.add({ severity: 'error', summary: api.responseMessage(res, t), life: 5000 })
+    }
+  } catch (e) {
+    toast.add({ severity: 'error', summary: e.message, life: 4000 })
+  } finally {
+    radiocarbonBusy.value = false
   }
 }
 

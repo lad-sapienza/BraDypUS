@@ -1172,6 +1172,10 @@
   "osteo_deactivated": "Plugin osteologico disattivato",
   "osteology_activated": "Plugin osteologico attivato",
   "osteology_deactivated": "Plugin osteologico disattivato",
+
+  "radiocarbon_plugin": "Datazione al radiocarbonio",
+  "radiocarbon_activate_btn": "Attiva",
+  "radiocarbon_activated": "Plugin radiocarbonio attivato",
   "osteo_individual": "Individuo",
   "osteo_add_individual": "Aggiungi individuo",
   "osteo_individual_label": "Etichetta individuo (opzionale)",

@@ -101,7 +101,7 @@
       {{ t('no_bibliography') }}
     </div>
 
-    <!-- ── Add panel (edit mode) ───────────────────────────────── -->
+    <!-- ── Add panel trigger (edit mode) ───────────────────────── -->
     <div v-if="editMode" class="add-panel">
       <Button
         :label="t('add_reference')"
@@ -109,11 +109,23 @@
         size="small"
         severity="secondary"
         text
-        @click="addPanelOpen = !addPanelOpen"
+        @click="openAddDialog"
       />
+    </div>
+  </fieldset>
 
-      <div v-if="addPanelOpen" class="add-form">
-        <!-- Library selector -->
+  <!-- ── Add-reference modal ─────────────────────────────────────── -->
+  <Dialog
+    v-model:visible="addDialogVisible"
+    :header="t('add_reference')"
+    :modal="true"
+    :closable="true"
+    :style="{ width: '640px' }"
+    :breakpoints="{ '768px': '92vw' }"
+  >
+    <div class="add-form">
+      <!-- Library selector + search, side by side -->
+      <div class="add-form-controls">
         <Select
           v-model="selectedLibId"
           :options="libs"
@@ -125,50 +137,68 @@
           @change="clearSearch"
         />
 
-        <!-- Search input (shown once a library is selected) -->
-        <div v-if="selectedLibId" class="search-row">
-          <IconField>
-            <InputIcon class="pi pi-search" />
-            <InputText
-              v-model="searchQuery"
-              :placeholder="t('search_in_zotero')"
-              class="search-input"
-              @input="onSearchInput"
-            />
-          </IconField>
-          <ProgressSpinner
-            v-if="searching"
-            style="width: 1.2rem; height: 1.2rem;"
+        <IconField v-if="selectedLibId" class="search-input-wrap">
+          <InputIcon :class="searching ? 'pi pi-spin pi-spinner' : 'pi pi-search'" />
+          <InputText
+            v-model="searchQuery"
+            :placeholder="t('search_in_zotero')"
+            class="search-input"
+            autofocus
+            @input="onSearchInput"
           />
-        </div>
+        </IconField>
+      </div>
 
-        <!-- Search results -->
+      <div v-if="searching" class="searching-hint">
+        <i class="pi pi-spin pi-spinner" /> {{ t('zotero_searching') }}
+      </div>
+
+      <!-- Search results (always in a bounded, scrollable area — never off-screen) -->
+      <div v-if="selectedLibId" class="search-results-wrap">
         <div v-if="searchResults.length" class="search-results">
           <div
             v-for="r in searchResults"
             :key="r.key"
             class="search-result-item"
-            @click="selectResult(r)"
           >
             <div class="result-citation" v-html="r.full_citation || r.author_year" />
+            <Button
+              icon="pi pi-plus"
+              size="small"
+              severity="secondary"
+              text
+              rounded
+              :title="t('add_reference')"
+              :loading="addingKey === r.key"
+              :disabled="addingKey !== null"
+              class="result-add-btn"
+              @click="selectResult(r)"
+            />
           </div>
         </div>
         <div v-else-if="searchQuery.length >= 2 && !searching" class="search-empty">
           {{ t('no_results') }}
         </div>
+        <div v-else-if="!searching" class="search-hint">
+          {{ t('zotero_search_hint') }}
+        </div>
       </div>
     </div>
-  </fieldset>
+
+    <template #footer>
+      <Button :label="t('close')" severity="secondary" text @click="addDialogVisible = false" />
+    </template>
+  </Dialog>
 </template>
 
 <script setup>
 import { ref, watch, onMounted, nextTick } from 'vue'
 import Button        from 'primevue/button'
 import Select        from 'primevue/select'
+import Dialog        from 'primevue/dialog'
 import InputText     from 'primevue/inputtext'
 import InputIcon     from 'primevue/inputicon'
 import IconField     from 'primevue/iconfield'
-import ProgressSpinner from 'primevue/progressspinner'
 import { useToast }  from 'primevue/usetoast'
 import Sortable      from 'sortablejs'
 import { api }       from '@/api'
@@ -295,14 +325,15 @@ async function saveMetaField(link, field) {
   }
 }
 
-// ── Add panel ─────────────────────────────────────────────────────
-const addPanelOpen  = ref(false)
+// ── Add panel (modal) ────────────────────────────────────────────
+const addDialogVisible = ref(false)
 const libs          = ref([])
 const loadingLibs   = ref(false)
 const selectedLibId = ref(null)
 const searchQuery   = ref('')
 const searchResults = ref([])
 const searching     = ref(false)
+const addingKey     = ref(null)
 let   searchTimer   = null
 
 async function loadLibs() {
@@ -315,7 +346,10 @@ async function loadLibs() {
   finally { loadingLibs.value = false }
 }
 
-watch(addPanelOpen, (open) => { if (open) loadLibs() })
+function openAddDialog() {
+  addDialogVisible.value = true
+  loadLibs()
+}
 
 function clearSearch() {
   searchQuery.value  = ''
@@ -350,6 +384,7 @@ async function doSearch() {
 }
 
 async function selectResult(result) {
+  addingKey.value = result.key
   try {
     const res = await api.post('/api/zotero/link', {
       tb:         props.recordTb,
@@ -382,11 +417,14 @@ async function selectResult(result) {
 
     toast.add({ severity: 'success', summary: t('bibliography'), detail: t('ok_bib_added'), life: 3000 })
 
-    // Reset search but keep lib selected for chained additions
+    // Close the dialog and reset search state
+    addDialogVisible.value = false
     searchQuery.value   = ''
     searchResults.value = []
   } catch (e) {
     toast.add({ severity: 'error', summary: t('generic_error'), detail: e.message, life: 5000 })
+  } finally {
+    addingKey.value = null
   }
 }
 </script>
@@ -520,47 +558,71 @@ async function selectResult(result) {
   font-size: 0.875rem;
 }
 
-/* ── Add panel ── */
+/* ── Add panel trigger ── */
 .add-panel { margin-top: 0.75rem; }
 
+/* ── Add-reference modal ── */
 .add-form {
-  margin-top: 0.5rem;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.75rem;
 }
 
-.lib-select { max-width: 260px; }
+.add-form-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
 
-.search-row {
+.lib-select { min-width: 200px; max-width: 260px; }
+
+.search-input-wrap { flex: 1; min-width: 220px; }
+
+.search-input { width: 100%; }
+
+.searching-hint {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  color: var(--p-text-muted-color);
 }
 
-.search-input { width: 100%; max-width: 380px; }
+/* ── Search results (bounded height, always within the modal viewport) ── */
+.search-results-wrap {
+  min-height: 3rem;
+}
 
-/* ── Search results ── */
 .search-results {
   border: 1px solid var(--p-surface-300, #d1d5db);
   border-radius: 6px;
-  max-height: 320px;
+  max-height: 45vh;
   overflow-y: auto;
+  overflow-x: hidden;
   background: var(--p-surface-0, #fff);
 }
 
 .search-result-item {
-  padding: 0.5rem 0.75rem;
-  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.6rem 0.6rem 0.85rem;
   border-bottom: 1px solid var(--p-surface-100, #f3f4f6);
   font-size: 0.875rem;
 }
 .search-result-item:last-child { border-bottom: none; }
-.search-result-item:hover { background: var(--p-surface-50, #f9fafb); }
 
-.result-citation :deep(div) { margin: 0; }
+.result-citation {
+  flex: 1;
+  min-width: 0;
+}
+.result-citation :deep(div) { margin: 0; overflow-wrap: break-word; }
 
-.search-empty {
+.result-add-btn { flex-shrink: 0; }
+
+.search-empty,
+.search-hint {
   font-size: 0.875rem;
   color: var(--p-text-muted-color);
   font-style: italic;

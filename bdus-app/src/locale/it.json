@@ -938,6 +938,8 @@
   "ok_bib_added": "Riferimento aggiunto",
   "zotero_item_detached": "Questo elemento non esiste più nella libreria Zotero",
   "search_in_zotero": "Cerca in Zotero…",
+  "zotero_searching": "Ricerca in Zotero in corso…",
+  "zotero_search_hint": "Digita almeno 2 caratteri per cercare nella libreria selezionata.",
   "select_library": "Seleziona libreria",
 
   "zotero_libraries": "Librerie Zotero",

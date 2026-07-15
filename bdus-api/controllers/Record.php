@@ -733,8 +733,10 @@ class Record extends \Bdus\Controller
             if ($delete && $rowId) {
               $editor->setPluginRow($plgTb, $rowId, []);
             } elseif ($isNew && !empty($fields)) {
+              $fields = $this->maybeCalibrateRadiocarbon($plgTb, $fields);
               $editor->setPluginRow($plgTb, null, $fields);
             } elseif ($rowId && !empty($fields)) {
+              $fields = $this->maybeCalibrateRadiocarbon($plgTb, $fields);
               $editor->setPluginRow($plgTb, $rowId, $fields);
             }
           }
@@ -773,6 +775,7 @@ class Record extends \Bdus\Controller
             if (!empty($row['_delete'])) continue;       // nothing to delete on insert
             $fields = $row['fields'] ?? [];
             if (empty($fields)) continue;
+            $fields = $this->maybeCalibrateRadiocarbon($plgTb, $fields);
             $newRow = [];
             foreach ($fields as $fld => $val) {
               $newRow[$fld] = ['name' => $fld, '_val' => $val];
@@ -809,6 +812,44 @@ class Record extends \Bdus\Controller
       $this->log->error($e);
       $this->returnJson(['status' => 'error', 'code' => 'error_saved', 'detail' => $e->getMessage()]);
     }
+  }
+
+  /**
+   * If $plgTb is a radiocarbon-dating plugin table (tables.{plgTb}.radiocarbon
+   * = true in config — set by Config::activateRadiocarbon()), recomputes
+   * cal_1s_from/to and cal_2s_from/to from bp/bp_error server-side,
+   * overwriting whatever the client may have sent: the calibrated range is
+   * scientific derived data and must never be trusted from the request.
+   *
+   * @param array $fields { fld: value }
+   * @return array $fields, with cal_* overwritten when bp/bp_error are present
+   */
+  private function maybeCalibrateRadiocarbon(string $plgTb, array $fields): array
+  {
+    if (!$this->cfg->get("tables.{$plgTb}.radiocarbon")) {
+      return $fields;
+    }
+
+    $bp      = $fields['bp']       ?? null;
+    $bpError = $fields['bp_error'] ?? null;
+    if (!is_numeric($bp) || !is_numeric($bpError)) {
+      return $fields;
+    }
+
+    try {
+      $curve  = $fields['curve'] ?? 'intcal20';
+      $result = \Radiocarbon\Calibrator::calibrate((int)$bp, (int)$bpError, $curve);
+      $fields['cal_1s_from'] = $result['cal_1s'][0];
+      $fields['cal_1s_to']   = $result['cal_1s'][1];
+      $fields['cal_2s_from'] = $result['cal_2s'][0];
+      $fields['cal_2s_to']   = $result['cal_2s'][1];
+    } catch (\Throwable $e) {
+      // Leave cal_* untouched (likely null) if the value can't be calibrated
+      // (e.g. bp outside curve range) — the row itself is still saved.
+      $this->log->warning('Radiocarbon calibration failed: ' . $e->getMessage());
+    }
+
+    return $fields;
   }
 
   // ── Validation helpers ────────────────────────────────────────────────────

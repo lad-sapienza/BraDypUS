@@ -200,6 +200,7 @@ class Router
         'Bdus\\Controllers\\Config::deactivateFuzzyDate'           => 'super_admin',
         'Bdus\\Controllers\\Config::activateOsteology'             => 'super_admin',
         'Bdus\\Controllers\\Config::deactivateOsteology'           => 'super_admin',
+        'Bdus\\Controllers\\Config::activateRadiocarbon'           => 'super_admin',
         'Bdus\\Controllers\\Config::dbml_export'                   => 'super_admin',
         'Bdus\\Controllers\\Config::dbml_preview'                  => 'super_admin',
         'Bdus\\Controllers\\Config::dbml_apply'                    => 'super_admin',
@@ -349,6 +350,7 @@ class Router
             $r->addRoute('DELETE', '/api/config/table/{tb}/fuzzy-date', ['Bdus\\Controllers\\Config', 'deactivateFuzzyDate']);
             $r->addRoute('POST',   '/api/config/table/{tb}/osteology',  ['Bdus\\Controllers\\Config', 'activateOsteology']);
             $r->addRoute('DELETE', '/api/config/table/{tb}/osteology',  ['Bdus\\Controllers\\Config', 'deactivateOsteology']);
+            $r->addRoute('POST',   '/api/config/table/{tb}/radiocarbon', ['Bdus\\Controllers\\Config', 'activateRadiocarbon']);
             $r->addRoute('GET',    '/api/config/geoface',     ['Bdus\\Controllers\\Config', 'getGeoFaceConfig']);
             $r->addRoute('PUT',    '/api/config/geoface',     ['Bdus\\Controllers\\Config', 'save_geoface_properties']);
             $r->addRoute('POST',   '/api/config/geofile',     ['Bdus\\Controllers\\Config', 'uploadGeoFile']);

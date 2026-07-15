@@ -609,6 +609,116 @@ class Config extends \Bdus\Controller
     }
   }
 
+  /**
+   * Activates the radiocarbon-dating plugin for a table.
+   * Unlike fuzzy-date/osteology (which add columns to the core table), this
+   * creates a genuine plugin table ({tb}_radiocarbon, table_link/id_link)
+   * so that a record can carry multiple C14 determinations, and so the
+   * calibrated fields remain plain indexable columns for search/filter —
+   * reusing the same is_plugin/plugin_of mechanism as any user-defined
+   * plugin table (e.g. "tags").
+   *
+   * The `radiocarbon = true` flag set on the PLUGIN table's own config (not
+   * on the parent) is what lets saveRecord() recognise which plugin rows
+   * need server-side calibration recompute (see Record::saveRecord()).
+   *
+   * POST /api/config/table/{tb}/radiocarbon
+   * Response: { status, code, tb? }
+   */
+  public function activateRadiocarbon(): void
+  {
+    if (!$this->requireSuperAdmin()) return;
+
+    $tb = $this->get['tb'] ?? '';
+    if (!$tb || !$this->cfg->get("tables.$tb")) {
+      $this->returnJson(['status' => 'error', 'code' => 'missing_table']);
+      return;
+    }
+
+    $pluginTb = "{$tb}_radiocarbon";
+
+    try {
+      $inspect = new \DB\Inspect($this->db);
+      $alter   = new \DB\Alter($this->db);
+
+      // Idempotent: CREATE TABLE IF NOT EXISTS under the hood.
+      $alter->createMinimalTable($pluginTb, true, $tb);
+
+      $columns = [
+        'lab_code'    => 'VARCHAR(100)',
+        'bp'          => 'INTEGER',
+        'bp_error'    => 'INTEGER',
+        'material'    => 'VARCHAR(100)',
+        'd13c'        => 'FLOAT',
+        'curve'       => 'VARCHAR(20)',
+        'cal_1s_from' => 'INTEGER',
+        'cal_1s_to'   => 'INTEGER',
+        'cal_2s_from' => 'INTEGER',
+        'cal_2s_to'   => 'INTEGER',
+        'notes'       => 'TEXT',
+      ];
+
+      $existingNames = array_column($inspect->tableColumns($pluginTb), 'fld');
+      foreach ($columns as $col => $type) {
+        if (!in_array($col, $existingNames, true)) {
+          $alter->addFld($pluginTb, $col, $type);
+        }
+      }
+
+      // Register the plugin table itself (is_plugin/plugin_of is exactly
+      // what LoadFromDB uses to derive tables.{tb}.plugin[] automatically —
+      // no need to touch the parent table's config at all).
+      $this->cfg->setTable([
+        'name'        => $pluginTb,
+        'label'       => 'Datazione al radiocarbonio',
+        'is_plugin'   => 1,
+        'plugin_of'   => $tb,
+        'radiocarbon' => true,
+        'order'       => 'id',
+        'id_field'    => 'id',
+        'preview'     => ['lab_code'],
+      ]);
+
+      $this->cfg->setFld($pluginTb, 'id', [
+        'name' => 'id', 'label' => 'Id', 'type' => 'text', 'readonly' => true, 'db_type' => 'INTEGER',
+      ]);
+      $this->cfg->setFld($pluginTb, 'table_link', [
+        'name' => 'table_link', 'label' => 'Linked table', 'type' => 'text', 'db_type' => 'TEXT', 'hidden' => true,
+      ]);
+      $this->cfg->setFld($pluginTb, 'id_link', [
+        'name' => 'id_link', 'label' => 'Linked id', 'type' => 'text', 'db_type' => 'INTEGER', 'hidden' => true,
+      ]);
+
+      $calDisclaimer = 'Calcolato automaticamente (curva IntCal20). Range approssimato: '
+        . 'può includere intervalli a bassa probabilità nei tratti di curva più piatti. '
+        . 'Per uso in pubblicazioni scientifiche verificare con OxCal o software dedicato.';
+
+      $fieldDefs = [
+        'lab_code'    => ['label' => 'Codice laboratorio',        'type' => 'text', 'db_type' => 'VARCHAR(100)'],
+        'bp'          => ['label' => 'BP',                        'type' => 'text', 'db_type' => 'INTEGER', 'check' => ['int']],
+        'bp_error'    => ['label' => 'Errore (± anni)',           'type' => 'text', 'db_type' => 'INTEGER', 'check' => ['int'], 'min' => 0],
+        'material'    => ['label' => 'Materiale datato',          'type' => 'text', 'db_type' => 'VARCHAR(100)'],
+        'd13c'        => ['label' => 'δ13C (‰)',                  'type' => 'text', 'db_type' => 'FLOAT'],
+        'curve'       => ['label' => 'Curva di calibrazione',     'type' => 'text', 'db_type' => 'VARCHAR(20)', 'def_value' => 'intcal20'],
+        'cal_1s_from' => ['label' => 'Cal BP (68.2%) da',         'type' => 'text', 'db_type' => 'INTEGER', 'readonly' => true, 'info' => $calDisclaimer],
+        'cal_1s_to'   => ['label' => 'Cal BP (68.2%) a',          'type' => 'text', 'db_type' => 'INTEGER', 'readonly' => true, 'info' => $calDisclaimer],
+        'cal_2s_from' => ['label' => 'Cal BP (95.4%) da',         'type' => 'text', 'db_type' => 'INTEGER', 'readonly' => true, 'info' => $calDisclaimer],
+        'cal_2s_to'   => ['label' => 'Cal BP (95.4%) a',          'type' => 'text', 'db_type' => 'INTEGER', 'readonly' => true, 'info' => $calDisclaimer],
+        'notes'       => ['label' => 'Note',                      'type' => 'long_text'],
+      ];
+      foreach ($fieldDefs as $fldName => $fldDef) {
+        $fldDef['name'] = $fldName;
+        $this->cfg->setFld($pluginTb, $fldName, $fldDef);
+      }
+
+      $this->returnJson(['status' => 'success', 'code' => 'radiocarbon_activated', 'tb' => $pluginTb]);
+
+    } catch (\Throwable $th) {
+      $this->log->error($th);
+      $this->returnJson(['status' => 'error', 'code' => 'db_error', 'detail' => $th->getMessage()]);
+    }
+  }
+
   public function save_geoface_properties()
   {
     if (!$this->requireSuperAdmin()) return;

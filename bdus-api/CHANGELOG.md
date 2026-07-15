@@ -5,6 +5,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Plugin di datazione al radiocarbonio (C14)** — nuovo plugin di sistema attivabile per tabella da Config → Tables, sul modello dei plugin già esistenti (fuzzy-date, osteologia) ma con una differenza architetturale: a differenza di quelli, crea una vera tabella plugin figlia (`{tb}_radiocarbon`, collegata via `table_link`/`id_link`) invece di aggiungere colonne alla tabella principale — permette più datazioni per record e mantiene i campi calibrati come colonne indicizzabili/interrogabili via ricerca avanzata (niente colonna JSON). Calcolo di calibrazione (curva IntCal20 ufficiale, Reimer et al. 2020, bundle statico in `lib/Radiocarbon/data/intcal20.php`) sempre server-side al salvataggio — i valori calibrati eventualmente inviati dal client vengono ignorati e ricalcolati (`Record::saveRecord()`), mai attendibili come input. Restituisce il range "bounding" (min/max) a 1σ (68.2%) e 2σ (95.4%), non le vere regioni HPD disgiunte di OxCal — limite documentato sia in UI (tooltip sui campi calibrati) sia nella pagina docs dedicata. Copertura: 10 unit test sull'algoritmo di calibrazione (`RadiocarbonCalibratorTest`), 7 integration test su attivazione/salvataggio (`RadiocarbonCtrlTest`), fase hurl dedicata (39).
+- **Dataset demo arricchito** (`19_seed_demo.hurl`) — aggiunte 3 datazioni al radiocarbonio, immagini allegate a reperti/sepolture/siti, un'analisi di assemblaggio di esempio (conteggio reperti per US e categoria), una ricerca salvata condivisa, un template di stampa per Unità stratigrafiche, un secondo utente demo con privilegio ridotto per-tabella, un messaggio di benvenuto homepage personalizzato, un record eliminato (per popolare la vista "Deleted records"), e una libreria Zotero di gruppo pubblica con due citazioni reali agganciate a record di esempio.
+
+### Fixed
+
+- **Asse cronologico del grafo Harris Matrix (vista "Chronological") non seguiva pan/zoom** — `RsGraphChrono.vue` disegnava le tacche degli anni in un `<svg>` separato dal canvas Cytoscape, calcolate una sola volta in coordinate di modello; zoomando o trascinando il grafo i nodi si spostavano ma l'asse restava fermo. Un listener su `cy.on('pan zoom')` ora mantiene l'asse sincronizzato con la trasformazione live del grafo, usando la stessa formula di Cytoscape (`screenY = pan.y + modelY * zoom`).
+
 ## [5.2.0] - 2026-07-14
 
 ### Changed

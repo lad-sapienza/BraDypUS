@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.3.0] - 2026-07-15
+
 ### Added
 
 - **Plugin di datazione al radiocarbonio (C14)** — nuovo plugin di sistema attivabile per tabella da Config → Tables, sul modello dei plugin già esistenti (fuzzy-date, osteologia) ma con una differenza architetturale: a differenza di quelli, crea una vera tabella plugin figlia (`{tb}_radiocarbon`, collegata via `table_link`/`id_link`) invece di aggiungere colonne alla tabella principale — permette più datazioni per record e mantiene i campi calibrati come colonne indicizzabili/interrogabili via ricerca avanzata (niente colonna JSON). Calcolo di calibrazione (curva IntCal20 ufficiale, Reimer et al. 2020, bundle statico in `lib/Radiocarbon/data/intcal20.php`) sempre server-side al salvataggio — i valori calibrati eventualmente inviati dal client vengono ignorati e ricalcolati (`Record::saveRecord()`), mai attendibili come input. Restituisce il range "bounding" (min/max) a 1σ (68.2%) e 2σ (95.4%), non le vere regioni HPD disgiunte di OxCal — limite documentato sia in UI (tooltip sui campi calibrati) sia nella pagina docs dedicata. Copertura: 10 unit test sull'algoritmo di calibrazione (`RadiocarbonCalibratorTest`), 7 integration test su attivazione/salvataggio (`RadiocarbonCtrlTest`), fase hurl dedicata (39).

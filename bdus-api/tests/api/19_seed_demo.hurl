@@ -158,6 +158,13 @@ HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
 
+# Radiocarbon dating plugin — creates the us_radiocarbon plugin table
+POST {{base_url}}/api/config/table/us/radiocarbon
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
 PUT {{base_url}}/api/config/table/reperti
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
@@ -1839,6 +1846,46 @@ HTTP 200
 jsonpath "$.status" == "success"
 
 
+# ── 19i-ter. Datazioni al radiocarbonio (plugin us_radiocarbon) ──────
+# BP/error chosen so the server-computed calibration lands close to each
+# US's chrono_period above (see 19i-bis) — cal_1s/cal_2s are NOT sent by
+# the client, they are always recomputed server-side (Record::saveRecord).
+
+# US006 — "Romano": 1900±30 BP calibrates to ~88-203 calAD (1s)
+POST {{base_url}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "id": {{us_id_6}}, "core": {}, "plugins": { "us_radiocarbon": [
+  { "id": null, "_isNew": true, "fields": { "lab_code": "Beta-412001", "bp": 1900, "bp_error": 30, "material": "charcoal" } }
+] } }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+# US003 — "Tardo Antico" (chrono 300/450): 1700±30 BP calibrates to ~263-406 calAD (1s)
+POST {{base_url}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "id": {{us_id_3}}, "core": {}, "plugins": { "us_radiocarbon": [
+  { "id": null, "_isNew": true, "fields": { "lab_code": "Beta-412002", "bp": 1700, "bp_error": 30, "material": "bone collagen" } }
+] } }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+# US021 — "Ferro" (chrono -650/-450): 2450±40 BP, Hallstatt-plateau region —
+# deliberately a wide 2-sigma range, realistic for Iron Age C14 dates.
+POST {{base_url}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "id": {{us_id_21}}, "core": {}, "plugins": { "us_radiocarbon": [
+  { "id": null, "_isNew": true, "fields": { "lab_code": "Beta-412003", "bp": 2450, "bp_error": 40, "material": "charcoal" } }
+] } }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+
 # ── 19j. Misure (plugin → reperti) ───────────────────────────────────
 
 POST {{base_url}}/api/record/misure
@@ -3174,6 +3221,298 @@ Content-Type: application/json
   },
   "plugins": {}
 }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+
+# ── 19r. File allegati — immagini demo ────────────────────────────────
+# Riusa la stessa fixture della fase 34 (unico asset immagine disponibile
+# nel repo) su alcuni record di reperti/sepolture/siti, con descrizione
+# e keyword realistiche via PATCH /api/file/{id}. Prima di questa fase il
+# seed demo non allegava alcuna immagine.
+
+POST {{base_url}}/api/record/reperti/{{rep_id_1}}/file
+Authorization: Bearer {{jwt}}
+[MultipartFormData]
+file: file,fixtures/test_image.png;image/png
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+[Captures]
+img_rep_1: jsonpath "$.file.id"
+
+PATCH {{base_url}}/api/file/{{img_rep_1}}
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "description": "Fibula in bronzo, vista dall'alto", "keywords": "reperto, metallo, fibula" }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/api/record/reperti/{{rep_id_2}}/file
+Authorization: Bearer {{jwt}}
+[MultipartFormData]
+file: file,fixtures/test_image.png;image/png
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+[Captures]
+img_rep_2: jsonpath "$.file.id"
+
+PATCH {{base_url}}/api/file/{{img_rep_2}}
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "description": "Frammento ceramico decorato", "keywords": "reperto, ceramica" }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/api/record/reperti/{{rep_id_3}}/file
+Authorization: Bearer {{jwt}}
+[MultipartFormData]
+file: file,fixtures/test_image.png;image/png
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+[Captures]
+img_rep_3: jsonpath "$.file.id"
+
+PATCH {{base_url}}/api/file/{{img_rep_3}}
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "description": "Moneta in argento, dritto e rovescio", "keywords": "reperto, numismatica" }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/api/record/sepolture/{{sep001_id}}/file
+Authorization: Bearer {{jwt}}
+[MultipartFormData]
+file: file,fixtures/test_image.png;image/png
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+[Captures]
+img_sep_1: jsonpath "$.file.id"
+
+PATCH {{base_url}}/api/file/{{img_sep_1}}
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "description": "SEP001 — inumazione in connessione anatomica parziale", "keywords": "sepoltura, scavo, foto di scavo" }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/api/record/sepolture/{{sep002_id}}/file
+Authorization: Bearer {{jwt}}
+[MultipartFormData]
+file: file,fixtures/test_image.png;image/png
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+[Captures]
+img_sep_2: jsonpath "$.file.id"
+
+PATCH {{base_url}}/api/file/{{img_sep_2}}
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "description": "SEP002 — inumazione infantile", "keywords": "sepoltura, scavo, foto di scavo" }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/api/record/siti/{{sito_urbano}}/file
+Authorization: Bearer {{jwt}}
+[MultipartFormData]
+file: file,fixtures/test_image.png;image/png
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+[Captures]
+img_sito_1: jsonpath "$.file.id"
+
+PATCH {{base_url}}/api/file/{{img_sito_1}}
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "description": "Veduta generale dell'area di scavo", "keywords": "sito, panoramica" }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+
+# ── 19s. Assemblage Analysis — esempio di pivot ───────────────────────
+# Conteggio dei reperti per US di provenienza (righe) e categoria
+# (colonne) — usa i campi già seedati in 19i (reperti.categoria,
+# reperti.us_provenienza_id). Condivisa (is_global) così è visibile a
+# qualunque utente della demo, non solo all'autore.
+
+POST {{base_url}}/api/assemblages
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{
+  "name": "Reperti per US e categoria",
+  "definition": {
+    "source_tb": "reperti",
+    "char_field": "categoria",
+    "group_path": [],
+    "group_field": "us_provenienza_id",
+    "measure": "count",
+    "measure_field": null,
+    "filters": []
+  }
+}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+[Captures]
+assemblage_id_1: jsonpath "$.analysis.id"
+
+POST {{base_url}}/api/assemblage/{{assemblage_id_1}}/share
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+
+# ── 19t. Ricerca salvata — esempio ────────────────────────────────────
+POST {{base_url}}/api/saved-queries
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{
+  "name": "Reperti in ceramica",
+  "tb": "reperti",
+  "query": { "categoria": { "_eq": "Ceramica" } }
+}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+[Captures]
+saved_query_id_1: jsonpath "$.query.id"
+
+POST {{base_url}}/api/saved-query/{{saved_query_id_1}}/share
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+
+# ── 19u. Template di stampa — esempio (Unità stratigrafiche) ──────────
+POST {{base_url}}/api/template/us/scheda_completa
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{
+  "sections": [
+    {
+      "label": "Identificazione",
+      "content": [
+        { "field": "sigla", "width": "1/4" },
+        { "field": "tipo",  "width": "1/4" },
+        { "field": "sito_id", "width": "1/4" },
+        { "field": "complesso_id", "width": "1/4" }
+      ]
+    },
+    {
+      "label": "Descrizione e interpretazione",
+      "content": [
+        { "field": "descrizione", "width": "1/2" },
+        { "field": "interpretazione", "width": "1/2" },
+        { "field": "affidabilita", "width": "1/4" },
+        { "field": "periodo", "width": "1/4" }
+      ]
+    },
+    {
+      "label": "Dati di scavo",
+      "content": [
+        { "field": "anno_scavo", "width": "1/4" },
+        { "field": "nr_cassette", "width": "1/4" },
+        { "field": "profondita_cm", "width": "1/4" },
+        { "field": "verificata", "width": "1/4" },
+        { "field": "note", "width": "1/1" }
+      ]
+    }
+  ]
+}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+
+# ── 19v. Utente demo con privilegio ridotto ───────────────────────────
+# "writer" (20) di base, ma con override "reader" (30) su sepolture —
+# dimostra il caso d'uso principale di User Manager: privilegi diversi
+# per tabelle diverse (dati sensibili).
+POST {{base_url}}/api/user
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{
+  "name": "Editor Demo",
+  "email": "editor@example.com",
+  "password": "Editor1234!",
+  "privilege": 20
+}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+[Captures]
+editor_user_id: jsonpath "$.id"
+
+POST {{base_url}}/api/user/{{editor_user_id}}/privileges
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "user_id": {{editor_user_id}}, "table_name": "sepolture", "privilege": 30 }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+
+# ── 19w. Messaggio di benvenuto homepage ──────────────────────────────
+PUT {{base_url}}/api/welcome
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "content": "# Benvenuti in BraDypUS\n\nQuesta è un'applicazione demo con dati di scavo archeologico di esempio (siti, US, reperti, sepolture, datazioni al radiocarbonio, analisi di assemblaggio...). Esplorate liberamente — i dati sono rigenerati ad ogni seed." }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+
+# ── 19x. Record eliminato — demo "Deleted records" / restore ──────────
+# rep_id_9 non è referenziato da nessun'altra fase del seed (misure,
+# geodata, userlinks), quindi eliminarlo qui non lascia riferimenti orfani.
+DELETE {{base_url}}/api/record/reperti/{{rep_id_9}}
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+
+# ── 19y. Zotero — libreria di gruppo pubblica e citazioni ─────────────
+# Gruppo pubblico "Epirus" (https://www.zotero.org/groups/336647/epirus/library),
+# nessuna api_key necessaria (lettura pubblica). I due zotero_key sono item
+# reali della libreria: addLink() ne recupera subito la citazione via API.
+
+POST {{base_url}}/api/zotero/lib
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "type": "group", "zotero_id": "336647", "name": "Epirus (Zotero group library)" }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+[Captures]
+zotero_lib_id: jsonpath "$.id"
+
+POST {{base_url}}/api/zotero/link
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "tb": "siti", "record_id": {{sito_urbano}}, "lib_id": {{zotero_lib_id}}, "zotero_key": "6NKQX4Q8", "notes": "Inquadramento storico generale" }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/api/zotero/link
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "tb": "siti", "record_id": {{sito_rurale}}, "lib_id": {{zotero_lib_id}}, "zotero_key": "QPR8HQ62", "notes": "Confronto metodologico da scavi in area balcanica" }
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"

@@ -68,6 +68,18 @@ const cyEl    = ref(null)
 const canvasH = ref(400)      // updated after layout to drive SVG height
 let   cy      = null
 
+// Cytoscape's live pan/zoom transform. The year axis is a plain SVG rendered
+// next to the Cytoscape canvas (not inside it), so it does not automatically
+// track user pan/zoom — we mirror the transform here and apply it to the
+// axis ticks ourselves, using the same formula Cytoscape uses internally
+// for model → screen coordinates: screenY = pan.y + modelY * zoom.
+const panZoom = ref({ pan: { x: 0, y: 0 }, zoom: 1 })
+
+function syncPanZoom() {
+  if (!cy) return
+  panZoom.value = { pan: { x: cy.pan().x, y: cy.pan().y }, zoom: cy.zoom() }
+}
+
 // ── Separate dated / undated nodes ───────────────────────────────────────────
 const datedNodes = computed(() =>
   props.nodes.filter(n => n.chrono_from != null || n.chrono_to != null)
@@ -98,6 +110,12 @@ function yearToY(year) {
   return (r.max - year) * PIXELS_PER_YEAR
 }
 
+// Map a year → SVG screen Y, applying Cytoscape's current pan/zoom so the
+// axis tracks the canvas as the user pans/zooms it.
+function yearToScreenY(year) {
+  return panZoom.value.pan.y + yearToY(year) * panZoom.value.zoom
+}
+
 // Reference Y for a node (ante/post quem handled).
 function nodeYear(n) {
   if (n.chrono_from != null && n.chrono_to != null) {
@@ -124,7 +142,7 @@ const axisTicks = computed(() => {
   for (let y = start; y <= r.max; y += step) {
     ticks.push({
       year:  y,
-      cy:    yearToY(y),
+      cy:    yearToScreenY(y),
       label: y < 0 ? `${Math.abs(y)} BCE` : `${y} CE`,
     })
   }
@@ -276,6 +294,8 @@ async function initCy() {
     wheelSensitivity: 0.3,
   })
 
+  cy.on('pan zoom', syncPanZoom)
+
   // Phase 1 complete → override Y with chrono, keep dagre X
   cy.one('layoutstop', () => {
     const r = yearRange.value
@@ -283,6 +303,7 @@ async function initCy() {
     if (!r) {
       // No dated nodes: just fit the dagre result
       cy.fit(undefined, 20)
+      syncPanZoom()
       return
     }
 
@@ -307,9 +328,10 @@ async function initCy() {
       padding:   30,
     }).run()
 
-    // After preset: sync SVG axis height
+    // After preset: sync SVG axis height and initial pan/zoom (fit changes both)
     cy.one('layoutstop', () => {
       canvasH.value = cyEl.value?.offsetHeight ?? 400
+      syncPanZoom()
     })
   })
 

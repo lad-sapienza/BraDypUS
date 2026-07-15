@@ -56,7 +56,7 @@ const route = useRoute()
 
 const props = defineProps({
   tb: { type: String, required: true },
-  id: { type: Number, required: true },
+  id: { type: [Number, String], required: true },
 })
 
 const COLORS = ['#3b82f6', '#f97316', '#22c55e', '#a855f7', '#ef4444', '#14b8a6', '#eab308', '#ec4899']

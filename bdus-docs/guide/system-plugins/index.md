@@ -39,6 +39,13 @@ Supports multiple individuals per record, 51 anatomical elements in 8 body regio
 conservation grade, anatomical certainty and laterality certainty. Data is stored as
 a JSON column; an interactive SVG skeleton viewer is provided in RecordView.
 
+### [Radiocarbon dating](/guide/system-plugins/radiocarbon)
+
+Record C14 determinations (BP + error) and automatically calibrate them against the
+IntCal20 curve, server-side, on every save. Unlike the other plugins it creates a
+dedicated child table so a record can carry more than one dating, and the calibrated
+ranges stay searchable/filterable like any other field.
+
 ## Enabling a plugin
 
 Each plugin is configured at the table level in **Config → Tables** under the
@@ -51,6 +58,7 @@ Each plugin is configured at the table level in **Config → Tables** under the
 | Zotero | Toggle **Zotero** on — requires at least one Zotero library configured in Config |
 | Fuzzy date | Toggle **Chronology (fuzzy date)** on — adds five `chrono_*` columns to the table |
 | Osteology | Toggle **Inventario osteologico** on — adds one `osteo_data` JSON column to the table |
+| Radiocarbon dating | Click **Activate** — creates a `{table}_radiocarbon` child table (no toggle to disable; delete the table to remove it) |
 
 Once enabled, the corresponding panel appears in RecordView for all records of
 that table.

@@ -100,10 +100,10 @@ uses to navigate to the linked records.
 
 **`getBackLinks()`** follows `backlinks` config entries. Each backlink
 describes a plugin table that links another table back to this one via
-`table_link` / `id_link`. The ShortSQL `where` uses an inline sub-query:
+`id_link`. The ShortSQL `where` uses an inline sub-query:
 
 ```
-id|in|{@plugin_table~[id_link|distinct~?table_link|=|ref_table||and|^fld|=|value}
+id|in|{@plugin_table~[id_link|distinct~?fld|=|value}
 ```
 
 ### `id_from_tb` auto-joins
@@ -191,7 +191,7 @@ can reference it.
 1. Snapshot is saved first.
 2. `deleteAll()` runs in a single transaction:
    - Core row
-   - All plugin rows (`table_link = tb AND id_link = id`)
+   - All plugin rows (`id_link = id`)
    - All `bdus_userlinks` entries in both directions
    - All `bdus_rs` entries referencing this record's RS field value
    - `bdus_files` rows with no other links + `bdus_file_links` entries
@@ -203,7 +203,7 @@ can reference it.
 Iterates plugin rows in the model. Uses a single DB transaction for all
 plugin tables of a record. DELETE → `DELETE FROM plugin WHERE id = ?`;
 UPDATE → `UPDATE plugin SET fld = ? WHERE id = ?`; INSERT → adds
-`table_link` and `id_link` automatically if absent.
+`id_link` automatically if absent.
 
 ### `persistManualLinks(): array`
 

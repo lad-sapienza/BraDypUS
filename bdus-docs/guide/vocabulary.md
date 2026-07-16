@@ -57,7 +57,10 @@ automatically on login and are idempotent (safe to apply multiple times).
 
 A sub-table attached to a regular table, showing a one-to-many group of
 related data inside a parent record (e.g. `finds` inside a `context`).
-Plugin tables require `table_link` (TEXT) and `id_link` (INT) columns.
+Each plugin table is scoped to exactly one parent and requires an `id_link`
+(INT) column linking its rows to that parent. The system table
+`bdus_geodata` is the only exception: it is shared by every geo-enabled
+table, so it additionally keeps a `table_link` (TEXT) discriminator.
 
 ---
 

@@ -58,8 +58,14 @@ primary key).
 ### Plugin tables
 
 Sub-tables attached to a parent (regular) table. They add repeating groups of
-information to a parent record (e.g. multiple finds per context). Plugin tables
-require two mandatory FK fields: `table_link` (TEXT) and `id_link` (INT).
+information to a parent record (e.g. multiple finds per context). Each plugin
+table is scoped to exactly one parent, and its rows are linked to that parent
+via a single mandatory FK field: `id_link` (INT).
+
+The only exception is the system table `bdus_geodata`, which is genuinely
+shared by every geo-enabled table in the app and therefore still uses a
+`table_link` (TEXT) discriminator alongside `id_link` — a legacy convention
+kept for that one table only.
 
 ## Privilege levels
 

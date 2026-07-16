@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Ricerca avanzata** — le righe su campi lookup generano ora il filtro per valore del record referenziato (non per id numerico), allineandosi ai valori suggeriti dall'autocomplete.
 - **Topbar** — aggiunto il link "by LAD" accanto al nome BraDypUS; il burger menu è nascosto su schermi larghi dove la sidebar è sempre visibile.
+- **Convenzione tabelle plugin semplificata** — ogni tabella plugin è ormai legata a un solo genitore (una tabella fisica = un genitore), quindi il discriminatore `table_link` è diventato ridondante ed è stato rimosso: il collegamento al record padre avviene tramite il solo `id_link`. `bdus_geodata` resta l'unica eccezione (condivisa da tutte le tabelle geo-abilitate dell'app), dove `table_link` rimane necessario.
 
 ### Fixed
 

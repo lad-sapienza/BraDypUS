@@ -166,7 +166,7 @@ allow-list before entering the SQL.
 
 ```php
 ['photos' => ['description' => ['_icontains' => 'amphora']]]
-// → id IN (SELECT id_link FROM photos WHERE table_link = ? AND description LIKE ?)
+// → id IN (SELECT id_link FROM photos WHERE description LIKE ?)
 ```
 
 ### URL bracket notation (GET params)

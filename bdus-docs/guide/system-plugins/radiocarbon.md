@@ -80,7 +80,7 @@ Activating the plugin creates a genuine plugin table (like a user-defined one, e
 | Column | Type | Content |
 |---|---|---|
 | `id` | INTEGER | primary key |
-| `table_link` / `id_link` | TEXT / INTEGER | standard plugin-table linkage |
+| `id_link` | INTEGER | standard plugin-table linkage to the parent record |
 | `lab_code` | VARCHAR | |
 | `bp` | INTEGER | |
 | `bp_error` | INTEGER | |

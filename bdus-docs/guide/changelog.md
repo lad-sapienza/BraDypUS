@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Timeline cronologica comparata** — vista full-page raggiungibile dal pulsante calendario nella barra degli strumenti della DataView. Sovrappone sullo stesso asse temporale tutti i record con dati `fuzzy_date` delle tabelle selezionate; ogni record è un segmento colorato per certezza. Vedi [Timeline cronologica](./chrono.md).
 
-- **Distribuzione cronologica derivata** — pannello visualizzato nel corpo della scheda record (quando la tabella ha relazioni FK con tabelle con plugin `fuzzy_date`). Mostra un istogramma di densità cronologica dei record correlati per ogni tabella relata, con link filtrato alle liste dei record.
+- **Distribuzione cronologica derivata** — pannello visualizzato nel corpo della scheda record (quando la tabella ha relazioni FK con tabelle con plugin `fuzzy_date`). Mostra un istogramma di densità cronologica dei record correlati per ogni tabella relata, con link filtrato alle liste dei record. Oltre al comportamento automatico a un hop, è ora configurabile da Config → Tabelle un **percorso cronologico** più profondo (es. da un Sito, i Reperti raggiunti tramite le Unità stratigrafiche) — vedi [Cronologia](./usage/chrono.md).
 
 - **Endpoint upgrade** — tre endpoint REST per la gestione dell'aggiornamento schema (`/api/upgrade/status`, `/api/upgrade/major`, `/api/upgrade/minor`). Lo stato viene mostrato nella pagina di login anche prima dell'autenticazione.
 

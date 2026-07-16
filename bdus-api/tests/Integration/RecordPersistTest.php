@@ -110,7 +110,7 @@ class RecordPersistTest extends BdusTestCase
         $this->assertSame(1, $result['plugins']['inserted']);
 
         $rows = static::$db->query(
-            "SELECT label FROM tags WHERE id_link = 3 AND table_link = 'items'",
+            "SELECT label FROM tags WHERE id_link = 3",
             [],
             'read'
         );
@@ -146,7 +146,7 @@ class RecordPersistTest extends BdusTestCase
     {
         // First insert a temporary tag so we can delete it
         static::$db->execInTransaction(
-            "INSERT INTO tags (label, id_link, table_link) VALUES ('temp-tag', 4, 'items')"
+            "INSERT INTO tags (label, id_link) VALUES ('temp-tag', 4)"
         );
         $tempId = (int) static::$db->query(
             "SELECT id FROM tags WHERE label = 'temp-tag' AND id_link = 4",
@@ -283,7 +283,7 @@ class RecordPersistTest extends BdusTestCase
         )[0]['id'];
 
         static::$db->execInTransaction(
-            "INSERT INTO tags (label, id_link, table_link) VALUES ('temp-tag-del', {$tempItemId}, 'items')"
+            "INSERT INTO tags (label, id_link) VALUES ('temp-tag-del', {$tempItemId})"
         );
         static::$db->execInTransaction(
             "INSERT INTO bdus_userlinks (tb_one, id_one, tb_two, id_two, sort) VALUES ('items', {$tempItemId}, 'items', 2, 1)"
@@ -307,7 +307,7 @@ class RecordPersistTest extends BdusTestCase
 
         // Verify tags gone
         $tagRows = static::$db->query(
-            "SELECT id FROM tags WHERE id_link = ? AND table_link = 'items'",
+            "SELECT id FROM tags WHERE id_link = ?",
             [$tempItemId],
             'read'
         );

@@ -212,8 +212,8 @@ class AlterFkIndexTest extends TestCase
 
         $cols = static::$db->query("PRAGMA table_info(myplugin)", [], 'read') ?: [];
         $names = array_column($cols, 'name');
-        $this->assertContains('id_link',    $names);
-        $this->assertContains('table_link', $names);
+        $this->assertContains('id_link', $names);
+        $this->assertNotContains('table_link', $names);
 
         $fks = static::$db->query("PRAGMA foreign_key_list(myplugin)", [], 'read') ?: [];
         $this->assertNotEmpty($fks, 'Plugin table must have a FK on id_link');

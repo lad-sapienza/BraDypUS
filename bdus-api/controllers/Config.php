@@ -262,13 +262,6 @@ class Config extends \Bdus\Controller
         "db_type" => "INTEGER",
       ]);
       if ($post['is_plugin'] === '1') {
-        $this->cfg->setFld($new_tb_name, 'table_link', [
-          "name" => "table_link",
-          "label" => "Linked table",
-          "type" => "text",
-          "db_type" => "TEXT",
-          "hidden" => true,
-        ]);
         $this->cfg->setFld($new_tb_name, 'id_link', [
           "name" => "id_link",
           "label" => "Linked id",
@@ -765,7 +758,7 @@ class Config extends \Bdus\Controller
   /**
    * Activates the radiocarbon-dating plugin for a table.
    * Unlike fuzzy-date/osteology (which add columns to the core table), this
-   * creates a genuine plugin table ({tb}_radiocarbon, table_link/id_link)
+   * creates a genuine plugin table ({tb}_radiocarbon, id_link)
    * so that a record can carry multiple C14 determinations, and so the
    * calibrated fields remain plain indexable columns for search/filter —
    * reusing the same is_plugin/plugin_of mechanism as any user-defined
@@ -842,9 +835,6 @@ class Config extends \Bdus\Controller
       $this->cfg->setFld($pluginTb, 'id', [
         'name' => 'id', 'label' => 'Id', 'type' => 'text', 'readonly' => true, 'db_type' => 'INTEGER',
       ]);
-      $this->cfg->setFld($pluginTb, 'table_link', [
-        'name' => 'table_link', 'label' => 'Linked table', 'type' => 'text', 'db_type' => 'TEXT', 'hidden' => true,
-      ]);
       $this->cfg->setFld($pluginTb, 'id_link', [
         'name' => 'id_link', 'label' => 'Linked id', 'type' => 'text', 'db_type' => 'INTEGER', 'hidden' => true,
       ]);
@@ -883,7 +873,7 @@ class Config extends \Bdus\Controller
    * Deactivates the radiocarbon-dating plugin for a table.
    * Unlike activation, this does not touch the physical {tb}_radiocarbon
    * table or its data, and it never touches is_plugin — that flag marks
-   * the table as plugin-shaped (table_link/id_link, special CRUD handling)
+   * the table as plugin-shaped (id_link, special CRUD handling)
    * across the whole system, independently of which parent it's currently
    * attached to; flipping it would misclassify the table everywhere, not
    * just for this parent. The actual attachment lives in bdus_cfg_relations

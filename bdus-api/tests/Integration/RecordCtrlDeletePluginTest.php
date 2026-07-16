@@ -9,7 +9,7 @@ use Tests\Support\BdusTestCase;
  *
  * Uses the fixture tables already created by BdusTestCase:
  *  - items  (main table)
- *  - tags   (plugin of items: has table_link + id_link columns and pre-seeded rows)
+ *  - tags   (plugin of items: has an id_link column and pre-seeded rows)
  *
  * The fixture config (tests/fixtures/cfg/) must declare tags as a plugin of items
  * for the plugin lookup to work.  If the fixture doesn't have plugin_of set,

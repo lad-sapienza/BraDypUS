@@ -202,7 +202,7 @@ class Persist
                         $toWrite = [];
                         foreach ($row as $fld => $data) {
                             if (
-                                in_array($fld, ['id', 'table_link', 'id_link'], true)
+                                in_array($fld, ['id', 'id_link'], true)
                                 || !isset($data['_val'])
                             ) {
                                 continue;
@@ -234,9 +234,6 @@ class Persist
                         continue;
                     }
 
-                    if (!isset($toWrite['table_link'])) {
-                        $toWrite['table_link'] = $this->tb;
-                    }
                     if (!isset($toWrite['id_link'])) {
                         if (!$this->id) {
                             throw new \Exception("Cannot insert plugin row: core id not set. Persist core first.");
@@ -418,8 +415,8 @@ class Persist
 
         foreach ($pluginNames as $pluginName) {
             $rows = $this->db->query(
-                "SELECT * FROM {$pluginName} WHERE table_link = ? AND id_link = ?",
-                [$this->tb, $this->id]
+                "SELECT * FROM {$pluginName} WHERE id_link = ?",
+                [$this->id]
             ) ?: [];
             $plugins[$pluginName] = $rows;
         }
@@ -434,7 +431,7 @@ class Persist
      *
      * Handles:
      *  1. Core row
-     *  2. All plugin rows (by table_link + id_link)
+     *  2. All plugin rows (by id_link)
      *  3. All userlinks entries referencing this record
      *  4. All rs entries referencing this record (via the rs field configured in cfg)
      *
@@ -461,8 +458,8 @@ class Persist
             // 2. Delete all plugin rows
             foreach ($this->model['plugins'] as $pluginName => $pluginData) {
                 $this->db->query(
-                    "DELETE FROM {$pluginName} WHERE table_link = ? AND id_link = ?",
-                    [$this->tb, $this->id],
+                    "DELETE FROM {$pluginName} WHERE id_link = ?",
+                    [$this->id],
                     'boolean'
                 );
             }

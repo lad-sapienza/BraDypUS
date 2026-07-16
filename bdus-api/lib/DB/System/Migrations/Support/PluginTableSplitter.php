@@ -54,13 +54,19 @@ final class PluginTableSplitter
 
         $twinTb = self::availableTableName($db, $pluginTb . '_' . $parentTb);
 
-        // 1. Physical table: standard plugin shape (id/table_link/id_link),
-        //    WITHOUT the FK yet — real data can contain id_link values that no
-        //    longer exist in the parent (e.g. the parent row was deleted
-        //    without cascading its plugin rows); adding the FK inline here
-        //    would make the INSERT below throw and abort the whole migration.
-        //    The FK is added afterward, only if the copied data is orphan-free.
+        // 1. Physical table: standard plugin shape (id/id_link), WITHOUT the FK
+        //    yet — real data can contain id_link values that no longer exist in
+        //    the parent (e.g. the parent row was deleted without cascading its
+        //    plugin rows); adding the FK inline here would make the INSERT
+        //    below throw and abort the whole migration. The FK is added
+        //    afterward, only if the copied data is orphan-free.
+        //    table_link is added back explicitly: createMinimalTable() no
+        //    longer includes it (dropped from the live plugin-table shape —
+        //    see M038_DropTableLinkFromPlugins), but this step still needs to
+        //    copy the source row's table_link value verbatim; M038 (which runs
+        //    after M021/M037 in the chain) drops it from the twin too.
         $alter->createMinimalTable($twinTb, true, '');
+        $alter->addFld($twinTb, 'table_link', 'TEXT');
         foreach ($dataFields as $f) {
             $alter->addFld($twinTb, $f['name'], $f['db_type'] ?: 'TEXT');
         }

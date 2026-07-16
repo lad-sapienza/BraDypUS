@@ -128,12 +128,13 @@ class RadiocarbonCtrlTest extends BdusTestCase
         $names = array_column($cols, 'name');
 
         foreach ([
-            'id', 'table_link', 'id_link',
+            'id', 'id_link',
             'lab_code', 'bp', 'bp_error', 'material', 'd13c', 'curve',
             'cal_1s_from', 'cal_1s_to', 'cal_2s_from', 'cal_2s_to', 'notes',
         ] as $expected) {
             $this->assertContains($expected, $names, "Missing column: $expected");
         }
+        $this->assertNotContains('table_link', $names);
     }
 
     public function testActivateRegistersPluginOfAndFlag(): void

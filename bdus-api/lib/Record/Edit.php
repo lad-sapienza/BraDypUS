@@ -295,7 +295,7 @@ class Edit
         // UPDATE: existing row, with new data
         if ($id && !empty($data_arr) && $idx !== null) {
             foreach ($data_arr as $fld => $val) {
-                if (in_array($fld, ['table_link', 'id_link'], true)) {
+                if ($fld === 'id_link') {
                     continue;
                 }
                 if (($this->model['plugins'][$plugin]['data'][$idx][$fld]['val'] ?? null) !== $val) {

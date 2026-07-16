@@ -42,7 +42,6 @@ class Postgres implements AlterInterface
         if ($is_plugin) {
             $sql = "CREATE TABLE IF NOT EXISTS \"{$tb}\" ("
                 . "id SERIAL PRIMARY KEY, "
-                . "table_link TEXT NOT NULL, "
                 . "id_link INTEGER NOT NULL"
                 . ")";
             $ok = $this->db->execInTransaction($sql);

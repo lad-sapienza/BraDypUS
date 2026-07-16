@@ -115,12 +115,11 @@ class JsonFilterBacklinkTest extends BdusTestCase
             'tags' => ['label' => ['_eq' => 'tag-a']],
         ]);
 
-        // Plugin path: must use id_link / table_link convention
+        // Plugin path: must use the id_link convention, no table_link
         $this->assertStringContainsString('SELECT id_link FROM tags', $sql);
-        $this->assertStringContainsString('table_link = ?', $sql);
+        $this->assertStringNotContainsString('table_link', $sql);
         $this->assertStringContainsString('label = ?', $sql);
-        $this->assertContains('items', $vals); // table_link bind value
-        $this->assertContains('tag-a', $vals);
+        $this->assertSame(['tag-a'], $vals);
     }
 
     // ── Full round-trip via API ───────────────────────────────────────────────
@@ -197,16 +196,14 @@ class JsonFilterBacklinkTest extends BdusTestCase
 
     // ── Two-hop: plugin → plugin_of parent (Caso 2 analogue) ─────────────────
     //
-    // Fixture: tags is a plugin of items (table_link/id_link convention),
+    // Fixture: tags is a plugin of items (id_link convention),
     // AND tags.plugin_of = 'items'.  So filter[tags][items][status][_eq]=active
     // is the test-fixture analogue of filter[m_msplaces][manuscripts][palimpsest][_eq]=1.
     //
     // SQL generated (plugin path):
     //   items.id IN (
     //     SELECT id_link FROM tags
-    //     WHERE table_link = ?            ← 'items' (from buildPluginSubquery)
-    //       AND table_link = ?            ← 'items' (from buildNestedCondition, redundant but harmless)
-    //       AND id_link IN (SELECT id FROM items WHERE (items.status = ?))
+    //     WHERE id_link IN (SELECT id FROM items WHERE (items.status = ?))
     //   )
     //
     // The nested conditions are compiled by a recursive JsonFilter on the

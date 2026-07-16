@@ -97,7 +97,6 @@ abstract class BdusTestCase extends TestCase
                 id         INTEGER PRIMARY KEY AUTOINCREMENT,
                 label      TEXT,
                 id_link    INTEGER,
-                table_link TEXT,
                 cat_ref    INTEGER
             )
         ');
@@ -114,9 +113,9 @@ abstract class BdusTestCase extends TestCase
 
         // reviews: linked to items via an explicit FK column (backlink style, not plugin).
         // Used by JsonFilterBacklinkTest to verify the buildFkSubquery path.
-        // id_link / table_link are required because the items backlink config
-        // ("items:reviews:item_ref") makes Record\Read::getBackLinks query them
-        // (PAThs-style via table); they stay NULL in the seed, so backlinks
+        // id_link is required because the items backlink config
+        // ("items:reviews:item_ref") makes Record\Read::getBackLinks query it
+        // (PAThs-style via table); it stays NULL in the seed, so backlinks
         // resolve to empty without erroring.
         static::$db->execInTransaction('
             CREATE TABLE reviews (
@@ -125,8 +124,7 @@ abstract class BdusTestCase extends TestCase
                 reviewer   TEXT,
                 content    TEXT,
                 rating     INTEGER,
-                id_link    INTEGER,
-                table_link TEXT
+                id_link    INTEGER
             )
         ');
 
@@ -172,11 +170,11 @@ abstract class BdusTestCase extends TestCase
             "UPDATE items SET cat_ref = 2 WHERE id = 2"
         );
 
-        // A couple of tags linked to item 1 (plugin-style: id_link / table_link);
+        // A couple of tags linked to item 1 (plugin-style: id_link);
         // tag-a also references the Ceramics category (lookup inside a plugin)
         static::$db->execInTransaction(
-            "INSERT INTO tags (label, id_link, table_link, cat_ref)
-             VALUES ('tag-a', 1, 'items', 1), ('tag-b', 1, 'items', NULL)"
+            "INSERT INTO tags (label, id_link, cat_ref)
+             VALUES ('tag-a', 1, 1), ('tag-b', 1, NULL)"
         );
 
         // Reviews: linked via explicit FK (backlink-style).

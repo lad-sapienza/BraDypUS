@@ -15,9 +15,9 @@ use Config\Config;
  * ## Main-table field condition
  *   [ "status" => ["_eq" => "active"], "name" => ["_icontains" => "pompeii"] ]
  *
- * ## Cross-table condition — plugin (table_link / id_link)
+ * ## Cross-table condition — plugin (id_link convention)
  *   [ "photos" => [ "description" => ["_icontains" => "amphora"] ] ]
- *   → id IN (SELECT id_link FROM photos WHERE table_link = ? AND description LIKE ?)
+ *   → id IN (SELECT id_link FROM photos WHERE description LIKE ?)
  *
  * ## Cross-table condition — backlinked table (explicit FK column)
  *   [ "m_msplaces" => [ "type" => ["_eq" => "discovery"] ] ]
@@ -28,8 +28,7 @@ use Config\Config;
  *   [ "m_msplaces" => [ "manuscripts" => [ "palimpsest" => ["_eq" => 1] ] ] ]
  *   → places.id IN (
  *        SELECT place FROM m_msplaces
- *        WHERE table_link = 'manuscripts'
- *          AND id_link IN (SELECT id FROM manuscripts WHERE palimpsest = ?)
+ *        WHERE id_link IN (SELECT id FROM manuscripts WHERE palimpsest = ?)
  *      )
  *   Requires: "manuscripts:m_msplaces:place" in places.backlinks
  *           AND cfg.tables.m_msplaces.plugin_of = 'manuscripts'
@@ -210,9 +209,9 @@ class JsonFilter
      *
      * Two relationship styles are supported:
      *
-     * 1. **Plugin table** (table_link / id_link convention)
+     * 1. **Plugin table** (id_link convention)
      *    Configured via `cfg.tables.{main}.plugin[]`.
-     *    → `{main}.id IN (SELECT id_link FROM {plugin} WHERE table_link = ? AND ...)`
+     *    → `{main}.id IN (SELECT id_link FROM {plugin} WHERE ...)`
      *
      * 2. **Backlinked table** (explicit FK column)
      *    Configured via `cfg.tables.{main}.backlinks[]` as `"{refTb}:{viaTb}:{fkCol}"`.
@@ -229,7 +228,7 @@ class JsonFilter
      */
     private function buildRelatedCondition(string $relatedTb, array $conditions): array
     {
-        // Path 1: direct plugin (table_link / id_link convention)
+        // Path 1: direct plugin (id_link convention)
         $plugins = (array) ($this->cfg->get("tables.{$this->tb}.plugin") ?? []);
         if (in_array($relatedTb, $plugins, true)) {
             return $this->buildPluginSubquery($relatedTb, $conditions);
@@ -248,7 +247,7 @@ class JsonFilter
     }
 
     /**
-     * Builds: `{main}.id IN (SELECT id_link FROM {plugin} WHERE table_link = ? AND ...)`
+     * Builds: `{main}.id IN (SELECT id_link FROM {plugin} WHERE ...)`
      *
      * @return array{0: string, 1: array}
      */
@@ -262,16 +261,16 @@ class JsonFilter
 
         $sql = "{$this->tb}.id IN "
              . "(SELECT id_link FROM {$pluginTb} "
-             . "WHERE table_link = ? AND " . implode(' AND ', $subParts) . ')';
+             . "WHERE " . implode(' AND ', $subParts) . ')';
 
-        return [$sql, array_merge([$this->tb], $subValues)];
+        return [$sql, $subValues];
     }
 
     /**
      * Builds: `{main}.id IN (SELECT {fkCol} FROM {viaTb} WHERE ...)`
      *
      * Used when the related table references the current table via an explicit
-     * FK column (backlink style), rather than the table_link / id_link convention.
+     * FK column (backlink style), rather than the id_link convention.
      *
      * @return array{0: string, 1: array}
      */
@@ -362,12 +361,12 @@ class JsonFilter
      *
      * Example (PAThs, simple):
      *   filter[m_msplaces][manuscripts][palimpsest][_eq]=1
-     *   → table_link = 'manuscripts' AND id_link IN (SELECT id FROM manuscripts WHERE manuscripts.palimpsest = ?)
+     *   → id_link IN (SELECT id FROM manuscripts WHERE manuscripts.palimpsest = ?)
      *
      * Example (PAThs, with logical group):
      *   filter[m_msplaces][manuscripts][_and][][chronofrom][_gt]=599
      *   filter[m_msplaces][manuscripts][_and][][chronofrom][_lt]=700
-     *   → table_link = 'manuscripts' AND id_link IN (SELECT id FROM manuscripts WHERE (manuscripts.chronofrom > ? AND manuscripts.chronofrom < ?))
+     *   → id_link IN (SELECT id FROM manuscripts WHERE (manuscripts.chronofrom > ? AND manuscripts.chronofrom < ?))
      *
      * Conditions on $nestedTb are compiled by creating a recursive JsonFilter for
      * that table, so all operators, logical groups, and field validation work correctly.
@@ -406,11 +405,11 @@ class JsonFilter
 
         $idField = $this->cfg->get("tables.{$nestedTb}.id_field") ?: 'id';
 
-        // table_link = 'manuscripts' AND id_link IN (SELECT id FROM manuscripts WHERE …)
-        $sql = "table_link = ? AND id_link IN "
+        // id_link IN (SELECT id FROM manuscripts WHERE …)
+        $sql = "id_link IN "
              . "(SELECT {$idField} FROM {$nestedTb} WHERE {$nestedSql})";
 
-        return [$sql, array_merge([$nestedTb], $nestedValues)];
+        return [$sql, $nestedValues];
     }
 
     /**
@@ -619,7 +618,7 @@ class JsonFilter
     private function validatePluginField(string $tb, string $field): void
     {
         // Structural plugin columns are always permitted
-        if (in_array($field, ['id', 'id_link', 'table_link'], true)) {
+        if (in_array($field, ['id', 'id_link'], true)) {
             return;
         }
         $fields     = $this->cfg->get("tables.{$tb}.fields") ?? [];

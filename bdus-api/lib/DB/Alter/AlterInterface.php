@@ -23,7 +23,7 @@ interface AlterInterface
 
     /**
      * Creates a minimal table for either a regular table (with `creator`) or a
-     * plugin table (with `table_link` + `id_link`). When $pluginOf is provided
+     * plugin table (with `id_link`). When $pluginOf is provided
      * the plugin table gets a FK constraint: id_link → $pluginOf.id ON DELETE RESTRICT.
      */
     public function createMinimalTable(string $tb, bool $is_plugin, string $pluginOf = ''): bool;

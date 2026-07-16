@@ -18,8 +18,8 @@ use SQL\Filter\FilterException;
  *   → items.cat_ref IN (SELECT id FROM categories WHERE name = ?)
  *
  *   { tags: { cat_ref: { name: { _eq: 'Ceramics' } } } }
- *   → items.id IN (SELECT id_link FROM tags WHERE table_link = ?
- *                  AND cat_ref IN (SELECT id FROM categories WHERE name = ?))
+ *   → items.id IN (SELECT id_link FROM tags
+ *                  WHERE cat_ref IN (SELECT id FROM categories WHERE name = ?))
  */
 class JsonFilterLookupTest extends BdusTestCase
 {
@@ -80,9 +80,9 @@ class JsonFilterLookupTest extends BdusTestCase
         [$sql, $vals] = $this->f->toSql([
             'tags' => ['cat_ref' => ['name' => ['_eq' => 'Ceramics']]],
         ]);
-        $this->assertStringContainsString('items.id IN (SELECT id_link FROM tags WHERE table_link = ?', $sql);
+        $this->assertStringContainsString('items.id IN (SELECT id_link FROM tags WHERE', $sql);
         $this->assertStringContainsString('cat_ref IN (SELECT id FROM categories WHERE', $sql);
-        $this->assertSame(['items', 'Ceramics'], $vals);
+        $this->assertSame(['Ceramics'], $vals);
     }
 
     // ── Validation ────────────────────────────────────────────────────────────

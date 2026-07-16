@@ -384,7 +384,7 @@ EOD;
                     $ref_tb_id = $this->cfg->get("tables.$ref_tb.id_field");
 
                     $r = $this->db->query(
-                        "SELECT count(id) as tot FROM {$ref_tb} WHERE id IN (SELECT DISTINCT id_link FROM {$via_plg} WHERE table_link = '{$ref_tb}' AND {$via_plg_fld} = ?)",
+                        "SELECT count(id) as tot FROM {$ref_tb} WHERE id IN (SELECT DISTINCT id_link FROM {$via_plg} WHERE {$via_plg_fld} = ?)",
                         [$this->id]
                     );
                     if ($r[0]['tot'] == 0) {
@@ -392,7 +392,7 @@ EOD;
                     }
                     // Fetch the linked IDs directly for the JSON filter.
                     $linked_rows = $this->db->query(
-                        "SELECT DISTINCT id_link FROM {$via_plg} WHERE table_link = '{$ref_tb}' AND {$via_plg_fld} = ?",
+                        "SELECT DISTINCT id_link FROM {$via_plg} WHERE {$via_plg_fld} = ?",
                         [$this->id]
                     ) ?: [];
                     $linked_ids = array_column($linked_rows, 'id_link');
@@ -403,7 +403,7 @@ EOD;
                         'tot'      => $r[0]['tot'],
                         'filter'   => ['id' => ['_in' => $linked_ids]],
                         'data'     => $this->db->query(
-                            "SELECT id, {$ref_tb_id} as label FROM {$ref_tb} WHERE id IN (SELECT DISTINCT id_link FROM {$via_plg} WHERE table_link = '{$ref_tb}' AND {$via_plg_fld} = ?)",
+                            "SELECT id, {$ref_tb_id} as label FROM {$ref_tb} WHERE id IN (SELECT DISTINCT id_link FROM {$via_plg} WHERE {$via_plg_fld} = ?)",
                             [$this->id]
                         )
                     ];
@@ -496,7 +496,7 @@ EOD;
 
         foreach ($required as $p) {
             if (!isset($this->cache['plugins'][$p])) {
-                $plg_data = $this->getTbRecord($p, "table_link = ? AND id_link = ?", [$this->tb, $this->id], false, true) ?: [];
+                $plg_data = $this->getTbRecord($p, "id_link = ?", [$this->id], false, true) ?: [];
 
                 // Always include the plugin entry even when there are no rows.
                 // The frontend expects the key to be present (tot=0, data=[]).

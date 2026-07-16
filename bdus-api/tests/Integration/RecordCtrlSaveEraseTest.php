@@ -135,8 +135,8 @@ class RecordCtrlSaveEraseTest extends BdusTestCase
 
         // The tag should have been inserted
         $tags = static::$db->query(
-            'SELECT * FROM tags WHERE id_link = ? AND table_link = ?',
-            [$newId, self::TB],
+            'SELECT * FROM tags WHERE id_link = ?',
+            [$newId],
             'read'
         );
         $this->assertCount(1, $tags);

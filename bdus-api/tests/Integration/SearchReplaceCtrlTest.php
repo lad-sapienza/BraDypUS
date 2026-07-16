@@ -14,7 +14,7 @@ use Tests\Support\BdusTestCase;
  *
  * The fixture config (tests/fixtures/cfg/) exposes:
  *   Table "items" with text fields: id, creator, name
- *   Table "tags"  with text fields: id, label, id_link, table_link
+ *   Table "tags"  with text fields: id, label, id_link
  *
  * The fixture DB already has 5 items rows seeded by BdusTestCase::seedData().
  */

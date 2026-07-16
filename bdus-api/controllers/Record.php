@@ -1819,8 +1819,8 @@ class Record extends \Bdus\Controller
     foreach ($this->cfg->get("tables.$tb.plugin") ?: [] as $plgName) {
       try {
         $affected = $this->db->query(
-          "DELETE FROM \"{$plgName}\" WHERE table_link = ? AND id_link = ?",
-          [$tb, $id],
+          "DELETE FROM \"{$plgName}\" WHERE id_link = ?",
+          [$id],
           'affected'
         );
         $deleted += (int)$affected;
@@ -1862,8 +1862,8 @@ class Record extends \Bdus\Controller
     foreach ($this->cfg->get("tables.$tb.plugin") ?: [] as $plgName) {
       try {
         $result = $this->db->query(
-          "SELECT COUNT(*) AS cnt FROM \"{$plgName}\" WHERE table_link = ? AND id_link = ?",
-          [$tb, $id],
+          "SELECT COUNT(*) AS cnt FROM \"{$plgName}\" WHERE id_link = ?",
+          [$id],
           'read'
         );
         $cnt = (int)($result[0]['cnt'] ?? 0);
@@ -2119,8 +2119,8 @@ class Record extends \Bdus\Controller
       $currentPlugins = [];
       foreach ($pluginNames as $pluginName) {
         $currentPlugins[$pluginName] = $this->db->query(
-          "SELECT * FROM {$pluginName} WHERE table_link = ? AND id_link = ?",
-          [$tb, $rid]
+          "SELECT * FROM {$pluginName} WHERE id_link = ?",
+          [$rid]
         ) ?: [];
       }
 
@@ -2217,8 +2217,8 @@ class Record extends \Bdus\Controller
       $currentPlugins = [];
       foreach ($pluginNames as $pluginName) {
         $currentPlugins[$pluginName] = $this->db->query(
-          "SELECT * FROM {$pluginName} WHERE table_link = ? AND id_link = ?",
-          [$tb, $rid]
+          "SELECT * FROM {$pluginName} WHERE id_link = ?",
+          [$rid]
         ) ?: [];
       }
 
@@ -2250,12 +2250,11 @@ class Record extends \Bdus\Controller
           // Restore all plugin sections from the snapshot.
           foreach ($snapshotPlugins as $pluginName => $snapshotRows) {
             $this->db->query(
-              "DELETE FROM {$pluginName} WHERE table_link = ? AND id_link = ?",
-              [$tb, $rid], 'boolean'
+              "DELETE FROM {$pluginName} WHERE id_link = ?",
+              [$rid], 'boolean'
             );
             foreach ($snapshotRows as $r) {
-              unset($r['id']);
-              $r['table_link'] = $tb;
+              unset($r['id'], $r['table_link']);
               $r['id_link']    = $rid;
               $flds = array_keys($r);
               $ph   = implode(', ', array_fill(0, count($flds), '?'));
@@ -2290,12 +2289,11 @@ class Record extends \Bdus\Controller
               continue;
             }
             $this->db->query(
-              "DELETE FROM {$pluginName} WHERE table_link = ? AND id_link = ?",
-              [$tb, $rid], 'boolean'
+              "DELETE FROM {$pluginName} WHERE id_link = ?",
+              [$rid], 'boolean'
             );
             foreach ($snapshotPlugins[$pluginName] as $r) {
-              unset($r['id']);
-              $r['table_link'] = $tb;
+              unset($r['id'], $r['table_link']);
               $r['id_link']    = $rid;
               $flds = array_keys($r);
               $ph   = implode(', ', array_fill(0, count($flds), '?'));

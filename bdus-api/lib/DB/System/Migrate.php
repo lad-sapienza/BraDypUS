@@ -46,6 +46,7 @@ use DB\System\Migrations\M034_CreateAssemblageAnalyses;
 use DB\System\Migrations\M035_PluginRelationsFromPluginOf;
 use DB\System\Migrations\M036_DropPluginOfColumn;
 use DB\System\Migrations\M037_SplitMultiTenantPluginData;
+use DB\System\Migrations\M038_DropTableLinkFromPlugins;
 use Monolog\Logger;
 
 /**
@@ -128,6 +129,7 @@ class Migrate
         M035_PluginRelationsFromPluginOf::class,
         M036_DropPluginOfColumn::class,
         M037_SplitMultiTenantPluginData::class,
+        M038_DropTableLinkFromPlugins::class,
     ];
 
     /**

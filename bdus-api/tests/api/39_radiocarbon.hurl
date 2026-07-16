@@ -9,7 +9,7 @@
 #   GET    /api/records/crud_test              — filter by plugin-table field
 #
 # Unlike fuzzy-date/osteology (flag + columns on the core table), this
-# plugin creates a genuine child table (table_link/id_link), so a record
+# plugin creates a genuine child table (id_link), so a record
 # can carry more than one dating, and the calibrated range is filterable
 # via the generic JSON filter plugin-subquery mechanism. Deactivation
 # mirrors fuzzy-date/osteology's "config-only, data preserved" principle:

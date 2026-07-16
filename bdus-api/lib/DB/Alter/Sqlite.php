@@ -112,7 +112,6 @@ class Sqlite implements AlterInterface
                 : '';
             $sql = "CREATE TABLE IF NOT EXISTS \"{$tb}\" ("
                 . "id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                . "table_link TEXT NOT NULL, "
                 . "id_link INTEGER NOT NULL"
                 . $fkClause
                 . ")";

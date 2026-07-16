@@ -42,7 +42,6 @@ class Mysql implements AlterInterface
         if ($is_plugin) {
             $sql = "CREATE TABLE IF NOT EXISTS `{$tb}` ("
                 . "id INTEGER PRIMARY KEY AUTO_INCREMENT, "
-                . "table_link TEXT NOT NULL, "
                 . "id_link INTEGER NOT NULL"
                 . ")";
             $ok = $this->db->execInTransaction($sql);

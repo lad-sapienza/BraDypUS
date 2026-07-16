@@ -163,7 +163,6 @@ Table reperti {
 // bdus:plugin  reperti
 Table misure {
   id          integer [pk, increment, note: 'bdus:ui text; bdus:readonly']
-  table_link  varchar [not null,      note: 'bdus:ui text; bdus:hidden']
   id_link     integer [not null,      note: 'bdus:ui text; bdus:hidden']
   tipo_misura varchar                 [note: 'bdus:ui select; bdus:voc tipo_misura']
   valore      varchar                 [note: 'bdus:ui text']   // numeric stored as text for flexibility
@@ -176,7 +175,6 @@ Table misure {
 // bdus:plugin  us
 Table m_reperti_in_us {
   id                  integer [pk, increment, note: 'bdus:ui text; bdus:readonly']
-  table_link          varchar [not null,      note: 'bdus:ui text; bdus:hidden']
   id_link             integer [not null,      note: 'bdus:ui text; bdus:hidden']
   materiale_classe    varchar                 [note: 'bdus:ui select; bdus:voc materiale_classe']
   forma_tipo          varchar                 [note: 'bdus:ui combo_select; bdus:dic Coppa,Piatto,Brocca,Anfora,Olla,Tegola,Mattone,Fibula,Chiodo']
@@ -198,7 +196,6 @@ Table m_reperti_in_us {
 // bdus:plugin  complessi
 Table m_reperti_in_complessi {
   id                  integer [pk, increment, note: 'bdus:ui text; bdus:readonly']
-  table_link          varchar [not null,      note: 'bdus:ui text; bdus:hidden']
   id_link             integer [not null,      note: 'bdus:ui text; bdus:hidden']
   materiale_classe    varchar                 [note: 'bdus:ui select; bdus:voc materiale_classe']
   forma_tipo          varchar                 [note: 'bdus:ui combo_select; bdus:dic Coppa,Piatto,Brocca,Anfora,Olla,Tegola,Mattone,Fibula,Chiodo']

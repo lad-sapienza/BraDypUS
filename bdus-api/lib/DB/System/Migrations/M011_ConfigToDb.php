@@ -36,7 +36,13 @@ class M011_ConfigToDb
 {
     public const NAME = 'M011_config_to_db';
 
-    /** Table attributes stored as explicit columns; everything else → extra JSON. */
+    /**
+     * Table attributes stored as explicit columns; everything else → extra JSON.
+     * 'plugin_of' has no physical column (dropped by M036_DropPluginOfColumn) — it
+     * is listed here only so it doesn't leak into extra; real v4 tables.json never
+     * populated it on the child row anyway (v4 declared the attachment on the
+     * parent's 'plugin' array, handled by M021_FixPluginOf via 'extra').
+     */
     private const TABLE_COLUMNS = [
         'name', 'label', 'order', 'id_field', 'preview',
         'is_plugin', 'plugin_of', 'sort', 'link', 'backlink', 'fields',
@@ -111,8 +117,8 @@ class M011_ConfigToDb
                 $db->query(
                     'INSERT OR IGNORE INTO bdus_cfg_tables
                         (name, label, order_field, id_field, preview,
-                         is_plugin, plugin_of, sort, links, backlinks, extra)
-                     VALUES (?,?,?,?,?,?,?,?,NULL,?,?)',
+                         is_plugin, sort, links, backlinks, extra)
+                     VALUES (?,?,?,?,?,?,?,NULL,?,?)',
                     [
                         $name,
                         $tbRow['label']     ?? null,
@@ -122,7 +128,6 @@ class M011_ConfigToDb
                             ? json_encode($tbRow['preview'], JSON_UNESCAPED_UNICODE)
                             : null,
                         isset($tbRow['is_plugin']) ? (int)$tbRow['is_plugin'] : 0,
-                        $tbRow['plugin_of'] ?? null,
                         $sort++,
                         isset($tbRow['backlink'])
                             ? json_encode($tbRow['backlink'], JSON_UNESCAPED_UNICODE)

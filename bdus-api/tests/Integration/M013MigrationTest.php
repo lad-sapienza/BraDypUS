@@ -66,6 +66,10 @@ class M013MigrationTest extends TestCase
 
         // Seed bdus_cfg_tables with a legacy links blob.
         $manage->createTable('bdus_cfg_tables');
+        // M013 runs long before M036_DropPluginOfColumn, so on any real upgrading
+        // app the physical column still exists — restore it since the current
+        // Structure JSON no longer declares it (dropped by M036).
+        $db->exec('ALTER TABLE bdus_cfg_tables ADD COLUMN plugin_of TEXT');
         $db->query(
             "INSERT INTO bdus_cfg_tables
                 (name, label, order_field, id_field, preview, is_plugin, plugin_of, sort, links, backlinks)
@@ -115,6 +119,10 @@ class M013MigrationTest extends TestCase
         [$db, $manage] = $this->freshDb();
 
         $manage->createTable('bdus_cfg_tables');
+        // M013 runs long before M036_DropPluginOfColumn, so on any real upgrading
+        // app the physical column still exists — restore it since the current
+        // Structure JSON no longer declares it (dropped by M036).
+        $db->exec('ALTER TABLE bdus_cfg_tables ADD COLUMN plugin_of TEXT');
         // links is NULL
         $db->query(
             "INSERT INTO bdus_cfg_tables (name, label, order_field, id_field, preview, is_plugin, sort)
@@ -141,6 +149,10 @@ class M013MigrationTest extends TestCase
         [$db, $manage] = $this->freshDb();
 
         $manage->createTable('bdus_cfg_tables');
+        // M013 runs long before M036_DropPluginOfColumn, so on any real upgrading
+        // app the physical column still exists — restore it since the current
+        // Structure JSON no longer declares it (dropped by M036).
+        $db->exec('ALTER TABLE bdus_cfg_tables ADD COLUMN plugin_of TEXT');
         $db->query(
             "INSERT INTO bdus_cfg_tables (name, label, order_field, id_field, preview, is_plugin, sort, links)
              VALUES ('items','Items','id','id','[]',0,0,?)",

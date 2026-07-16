@@ -43,6 +43,9 @@ use DB\System\Migrations\M031_AddProjectVersion;
 use DB\System\Migrations\M032_CreatorFkNullable;
 use DB\System\Migrations\M033_MigrateLegacyFileLinks;
 use DB\System\Migrations\M034_CreateAssemblageAnalyses;
+use DB\System\Migrations\M035_PluginRelationsFromPluginOf;
+use DB\System\Migrations\M036_DropPluginOfColumn;
+use DB\System\Migrations\M037_SplitMultiTenantPluginData;
 use Monolog\Logger;
 
 /**
@@ -122,6 +125,9 @@ class Migrate
         M032_CreatorFkNullable::class,
         M033_MigrateLegacyFileLinks::class,
         M034_CreateAssemblageAnalyses::class,
+        M035_PluginRelationsFromPluginOf::class,
+        M036_DropPluginOfColumn::class,
+        M037_SplitMultiTenantPluginData::class,
     ];
 
     /**

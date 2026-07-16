@@ -24,7 +24,11 @@ class ToDB
     /**
      * Table attributes stored as explicit columns; everything else → extra JSON.
      * 'link' is listed here so it is NOT stored in extra — it is handled
-     * separately via upsertRelations().
+     * separately via upsertRelations(). 'plugin_of' has no physical column
+     * (dropped by M036_DropPluginOfColumn) — it is listed here only so callers
+     * that still pass it (e.g. DbmlImporter, activateRadiocarbon) don't leak it
+     * into extra; the real attachment lives in bdus_cfg_relations, written by
+     * Config::syncPluginRelation().
      */
     private const TABLE_COLUMNS = [
         'name', 'label', 'order', 'id_field', 'preview',
@@ -75,7 +79,7 @@ class ToDB
             $db->query(
                 'UPDATE bdus_cfg_tables
                     SET label=?, order_field=?, id_field=?, preview=?,
-                        is_plugin=?, plugin_of=?, links=NULL, backlinks=?, extra=?
+                        is_plugin=?, links=NULL, backlinks=?, extra=?
                   WHERE name=?',
                 [
                     $tbData['label']     ?? null,
@@ -83,7 +87,6 @@ class ToDB
                     $tbData['id_field']  ?? 'id',
                     $preview,
                     isset($tbData['is_plugin']) ? (int)$tbData['is_plugin'] : 0,
-                    $tbData['plugin_of'] ?? null,
                     $backlinks,
                     $extra,
                     $name,
@@ -101,8 +104,8 @@ class ToDB
             $db->query(
                 'INSERT INTO bdus_cfg_tables
                     (name, label, order_field, id_field, preview,
-                     is_plugin, plugin_of, sort, links, backlinks, extra)
-                 VALUES (?,?,?,?,?,?,?,?,NULL,?,?)',
+                     is_plugin, sort, links, backlinks, extra)
+                 VALUES (?,?,?,?,?,?,?,NULL,?,?)',
                 [
                     $name,
                     $tbData['label']     ?? null,
@@ -110,7 +113,6 @@ class ToDB
                     $tbData['id_field']  ?? 'id',
                     $preview,
                     isset($tbData['is_plugin']) ? (int)$tbData['is_plugin'] : 0,
-                    $tbData['plugin_of'] ?? null,
                     $sort,
                     $backlinks,
                     $extra,
@@ -221,6 +223,12 @@ class ToDB
         $db->query('DELETE FROM bdus_cfg_fields    WHERE table_name=?', [$name], 'boolean');
         $db->query('DELETE FROM bdus_cfg_templates WHERE table_name=?', [$name], 'boolean');
         $db->query('DELETE FROM bdus_cfg_relations WHERE from_tb=?',    [$name], 'boolean');
+        // Also clean up relations where $name is the referenced side (to_tb) —
+        // e.g. a plugin table's from_tb=plugin/to_tb=$name row, or any normal
+        // relation pointing at $name. Without this, deleting a table left
+        // dangling bdus_cfg_relations rows referencing a table that no longer
+        // exists.
+        $db->query('DELETE FROM bdus_cfg_relations WHERE to_tb=?',      [$name], 'boolean');
         $db->query('DELETE FROM bdus_cfg_tables    WHERE name=?',       [$name], 'boolean');
     }
 

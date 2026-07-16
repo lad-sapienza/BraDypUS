@@ -7,7 +7,6 @@
         { "name": "id_field",     "type": "TEXT",                 "notnull": false },
         { "name": "preview",      "type": "TEXT",                 "notnull": false },
         { "name": "is_plugin",    "type": "INTEGER",              "notnull": false },
-        { "name": "plugin_of",    "type": "TEXT",                 "notnull": false },
         { "name": "sort",         "type": "INTEGER",              "notnull": false },
         { "name": "links",        "type": "TEXT",                 "notnull": false },
         { "name": "backlinks",    "type": "TEXT",                 "notnull": false },

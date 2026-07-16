@@ -14,7 +14,14 @@
           outlined
           @click="$emit('open-fields', tb)"
         />
-        <Button :label="t('save')" icon="pi pi-save" size="small" :loading="saving" @click="save" />
+        <Button
+          :label="t('save')"
+          icon="pi pi-save"
+          size="small"
+          :loading="saving"
+          :disabled="!chronoDensityPathValid || newPluginNeedsParent"
+          @click="save"
+        />
       </div>
     </div>
 
@@ -58,8 +65,24 @@
           <!-- Is Plugin (#20: ToggleSwitch) -->
           <div class="cfg-form-field">
             <label>{{ t('is_plugin') }}</label>
-            <ToggleSwitch v-model="isPluginBool" />
+            <ToggleSwitch v-model="isPluginBool" :disabled="!!tb" />
             <small class="cfg-hint">{{ t('help_table_is_plugin') }}</small>
+          </div>
+
+          <!-- Parent table: only meaningful when creating a new plugin table.
+               An existing plugin table's attachment is changed elsewhere
+               (relations panel / system-plugin activate-deactivate), not here. -->
+          <div v-if="!tb && isPluginBool" class="cfg-form-field">
+            <label>{{ t('plugin_of') }} <span class="cfg-req">*</span></label>
+            <Select
+              v-model="form.plugin_of"
+              :options="parentTableOptions"
+              option-label="label"
+              option-value="value"
+              :show-clear="true"
+              size="small"
+            />
+            <small class="cfg-hint">{{ t('help_table_plugin_of') }}</small>
           </div>
         </div>
       </section>
@@ -115,22 +138,6 @@
         </div>
       </section>
 
-      <!-- ── Plugins (#22: list with switches) ───────────────────── -->
-      <section v-if="tb && !isPlugin" class="cfg-section">
-        <div class="cfg-section-title">{{ t('plugins') }}</div>
-        <small class="cfg-hint cfg-hint-section">{{ t('help_table_plugins') }}</small>
-        <div v-if="Object.keys(availablePlugins).length" class="cfg-form-row">
-          <div v-for="(label, name) in availablePlugins" :key="name" class="cfg-form-field">
-            <label>{{ label }}</label>
-            <ToggleSwitch
-              :modelValue="form.plugin.includes(name)"
-              @update:modelValue="togglePlugin(name, $event)"
-            />
-          </div>
-        </div>
-        <p v-else class="cfg-hint">{{ t('no_plugins_available') }}</p>
-      </section>
-
       <!-- ── System plugins ──────────────────────────────────────── -->
       <section v-if="tb && !isPlugin" class="cfg-section">
         <div class="cfg-section-title">{{ t('system_plugins') }}</div>
@@ -179,12 +186,10 @@
           <div class="cfg-form-field">
             <label>{{ t('radiocarbon_plugin') }}</label>
             <div class="cfg-input-action">
-              <Button
-                v-if="!radiocarbonActive"
-                :label="t('radiocarbon_activate_btn')"
-                size="small"
-                :loading="radiocarbonBusy"
-                @click="activateRadiocarbon"
+              <ToggleSwitch
+                :modelValue="radiocarbonActive"
+                :disabled="radiocarbonBusy"
+                @update:modelValue="toggleRadiocarbon"
               />
               <i v-if="radiocarbonBusy" class="pi pi-spin pi-spinner" style="font-size:.9rem" />
             </div>
@@ -193,6 +198,16 @@
             </small>
           </div>
         </div>
+      </section>
+
+      <!-- ── Chrono density path (only meaningful once fuzzy_date exists
+           somewhere reachable from this table) ───────────────────── -->
+      <section v-if="tb" class="cfg-section">
+        <ConfigChronoDensityPath
+          :tb="tb"
+          v-model="form.chrono_density_path"
+          :fuzzy-date-tables="fuzzyDateTables"
+        />
       </section>
 
       <!-- ── Indexes ──────────────────────────────────────────────── -->
@@ -242,6 +257,7 @@ import MultiSelect  from 'primevue/multiselect'
 import Message      from 'primevue/message'
 import ToggleSwitch from 'primevue/toggleswitch'
 import ConfigIndexes from '@/components/config/ConfigIndexes.vue'
+import ConfigChronoDensityPath from '@/components/config/ConfigChronoDensityPath.vue'
 import { useToast }   from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import { useI18n }    from '@/i18n'
@@ -272,7 +288,8 @@ const radiocarbonBusy = ref(false)
 const table            = ref(null)
 const form             = ref(null)
 const fieldLabels      = ref({})
-const availablePlugins = ref({})
+const fuzzyDateTables  = ref([])
+const parentTableOptions = ref([])
 
 // Rename dialog
 const renameVisible = ref(false)
@@ -287,6 +304,10 @@ const isPluginBool = computed({
   set: (v) => { if (form.value) form.value.is_plugin = v ? '1' : '' }
 })
 
+// A new plugin table needs a parent picked, or activation would silently
+// create an orphaned table (previously possible — see M035 migration notes).
+const newPluginNeedsParent = computed(() => !props.tb && isPluginBool.value && !form.value?.plugin_of)
+
 // Unlike fuzzy_date/osteology (flat boolean flags), radiocarbon activation is
 // detected via the derived plugin[] list — activating creates a real plugin
 // table ({tb}_radiocarbon) picked up automatically by LoadFromDB.
@@ -295,20 +316,6 @@ const radiocarbonActive = computed(() => form.value?.plugin?.includes(`${props.t
 const fieldOptions = computed(() =>
   Object.entries(fieldLabels.value).map(([k, v]) => ({ value: k, label: v }))
 )
-
-const pluginOptions = computed(() =>
-  Object.entries(availablePlugins.value).map(([k, v]) => ({ value: k, label: v }))
-)
-
-// ── Plugin toggle helpers (#22) ────────────────────────────────────────────
-function togglePlugin(name, active) {
-  if (!form.value) return
-  if (active) {
-    if (!form.value.plugin.includes(name)) form.value.plugin.push(name)
-  } else {
-    form.value.plugin = form.value.plugin.filter(p => p !== name)
-  }
-}
 
 // ── Data loading ───────────────────────────────────────────────────────────
 async function load() {
@@ -320,22 +327,31 @@ async function load() {
 
     table.value            = res.table
     fieldLabels.value      = res.field_labels      ?? {}
-    availablePlugins.value = res.available_plugins ?? {}
+    fuzzyDateTables.value  = res.fuzzy_date_tables  ?? []
+
+    // Only relevant in "add new" mode (props.tb is null) — getTableList()
+    // returns the full table list there. Nesting a plugin under another
+    // plugin table isn't supported, so only non-plugin tables are offered.
+    parentTableOptions.value = (res.tables ?? [])
+      .filter(t => t.is_plugin !== '1')
+      .map(t => ({ value: t.name, label: t.label || t.name }))
 
     const td = res.table ?? {}
 
     form.value = {
-      name:        td.name        ?? '',
-      label:       td.label       ?? '',
-      is_plugin:   td.is_plugin   ?? '',
-      order:       td.order       ?? '',
-      id_field:    td.id_field    ?? '',
-      rs:          !!td.rs,
-      geodata:     !!td.geodata,
-      zotero:      !!td.zotero,
-      preview:     Array.isArray(td.preview)   ? [...td.preview]   : [],
-      plugin:      Array.isArray(td.plugin)    ? [...td.plugin]    : [],
-      backlinks:   Array.isArray(td.backlinks) ? [...td.backlinks] : [],
+      name:                 td.name        ?? '',
+      label:                td.label       ?? '',
+      is_plugin:            td.is_plugin   ?? '',
+      plugin_of:            td.plugin_of   ?? null,
+      order:                td.order       ?? '',
+      id_field:             td.id_field    ?? '',
+      rs:                   !!td.rs,
+      geodata:              !!td.geodata,
+      zotero:               !!td.zotero,
+      preview:              Array.isArray(td.preview)              ? [...td.preview]              : [],
+      plugin:               Array.isArray(td.plugin)               ? [...td.plugin]               : [],
+      backlinks:            Array.isArray(td.backlinks)            ? [...td.backlinks]            : [],
+      chrono_density_path:  Array.isArray(td.chrono_density_path)  ? [...td.chrono_density_path]  : [],
     }
 
     fuzzyDateActive.value = !!td.fuzzy_date
@@ -377,19 +393,29 @@ async function save() {
 function buildPayload() {
   const f = form.value
   return {
-    name:       f.name,
-    label:      f.label,
-    is_plugin:  f.is_plugin,
-    order:      f.order,
-    id_field:   f.id_field,
-    rs:         f.rs ? 1 : 0,
-    geodata:    f.geodata ? 1 : 0,
-    zotero:     f.zotero  ? 1 : 0,
-    preview:    f.preview.filter(v => v),
-    plugin:     f.plugin.filter(v => v),
-    backlinks:  f.backlinks.filter(v => v),
+    name:                 f.name,
+    label:                f.label,
+    is_plugin:            f.is_plugin,
+    plugin_of:            f.plugin_of || undefined,
+    order:                f.order,
+    id_field:             f.id_field,
+    rs:                   f.rs ? 1 : 0,
+    geodata:              f.geodata ? 1 : 0,
+    zotero:               f.zotero  ? 1 : 0,
+    preview:              f.preview.filter(v => v),
+    backlinks:            f.backlinks.filter(v => v),
+    chrono_density_path:  f.chrono_density_path.filter(v => v),
   }
 }
+
+// Mirrors Config::validateChronoDensityPath()'s "last hop needs fuzzy_date"
+// rule for immediate feedback — an empty path (automatic default) is
+// always valid. The server re-validates regardless (never trust the client).
+const chronoDensityPathValid = computed(() => {
+  const path = form.value?.chrono_density_path ?? []
+  if (!path.length) return true
+  return fuzzyDateTables.value.includes(path[path.length - 1])
+})
 
 // ── Fuzzy date toggle ─────────────────────────────────────────────────────
 async function toggleFuzzyDate(newVal) {
@@ -433,14 +459,21 @@ async function toggleOsteology(newVal) {
   }
 }
 
-// ── Radiocarbon activation ────────────────────────────────────────────────
-async function activateRadiocarbon() {
+// ── Radiocarbon toggle ─────────────────────────────────────────────────────
+async function toggleRadiocarbon(newVal) {
   if (!props.tb || radiocarbonBusy.value) return
   radiocarbonBusy.value = true
   try {
-    const res = await api.post(`/api/config/table/${props.tb}/radiocarbon`, {})
+    const pluginTb = `${props.tb}_radiocarbon`
+    const res = newVal
+      ? await api.post(`/api/config/table/${props.tb}/radiocarbon`, {})
+      : await api.delete(`/api/config/table/${props.tb}/radiocarbon`, {})
     if (res.status === 'success') {
-      if (!form.value.plugin.includes(res.tb)) form.value.plugin.push(res.tb)
+      if (newVal) {
+        if (!form.value.plugin.includes(pluginTb)) form.value.plugin.push(pluginTb)
+      } else {
+        form.value.plugin = form.value.plugin.filter(p => p !== pluginTb)
+      }
       toast.add({ severity: 'success', summary: t(res.code), life: 3000 })
     } else {
       toast.add({ severity: 'error', summary: api.responseMessage(res, t), life: 5000 })

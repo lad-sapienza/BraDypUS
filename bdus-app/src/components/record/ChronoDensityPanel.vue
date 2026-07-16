@@ -150,7 +150,9 @@ function binStyle(bin, maxCount, color) {
 }
 
 function encodeFilter(src) {
-  return encodeURIComponent(JSON.stringify({ [src.fk_col]: { _eq: props.id } }))
+  // Backend always precomputes the right shape: {fk_col: {_eq: id}} for the
+  // automatic 1-hop case, {id: {_in: [...]}} for a configured multi-hop path.
+  return encodeURIComponent(JSON.stringify(src.filter))
 }
 </script>
 

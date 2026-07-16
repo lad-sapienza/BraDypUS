@@ -96,27 +96,7 @@ class Chrono extends \Bdus\Controller
 
             $records = [];
             foreach ($rows as $row) {
-                $certainty = $row['chrono_certainty'];
-                // Normalise legacy string values to integers
-                if (!is_numeric($certainty)) {
-                    $certainty = match (strtolower((string)$certainty)) {
-                        'certa', 'certain'           => 1,
-                        'probabile', 'probable'      => 2,
-                        'incerta', 'uncertain',
-                        'possible', 'possibile'      => 3,
-                        default                      => 1,
-                    };
-                }
-
-                $records[] = [
-                    'id'           => (int) $row['id'],
-                    'label'        => (string) ($row['display_label'] ?? $row['id']),
-                    'from'         => $row['chrono_from'] !== null ? (int) $row['chrono_from'] : null,
-                    'to'           => $row['chrono_to']   !== null ? (int) $row['chrono_to']   : null,
-                    'chrono_label' => $row['chrono_label'] ?? null,
-                    'certainty'    => (int) $certainty,
-                    'period'       => $row['chrono_period'] ?? null,
-                ];
+                $records[] = self::buildChronoRecord($row);
             }
 
             $result[] = [
@@ -132,9 +112,22 @@ class Chrono extends \Bdus\Controller
     /**
      * GET /api/chrono/related/{tb}/{id}
      *
-     * Returns chrono ranges of records in tables that have a FK pointing to
-     * the given record ({tb}/{id}), grouped by source table.
-     * Only tables with fuzzy_date enabled are included.
+     * Returns chrono ranges of records related to the given record ({tb}/{id}),
+     * grouped by source table.
+     *
+     * Default (no `chrono_density_path` configured on {tb}): a single automatic
+     * hop — tables that have a FK pointing directly to {tb} via bdus_cfg_relations,
+     * filtered to those with fuzzy_date enabled.
+     *
+     * Configured (`tables.{tb}.chrono_density_path` set, see Config): a fixed
+     * chain of table names, each a direct FK child of the previous one, ending
+     * on a table that must have fuzzy_date enabled. Only that last table's
+     * records are returned.
+     *
+     * Each source entry includes a `filter` object ready to be JSON-encoded for
+     * DataView's "see related records" link — `{fk_col: {_eq: id}}` for the
+     * automatic 1-hop case, `{id: {_in: [...]}}` for a configured multi-hop path
+     * (the exact set of leaf-table ids reachable from the root record).
      */
     public function related(): void
     {
@@ -148,6 +141,14 @@ class Chrono extends \Bdus\Controller
 
         if (!preg_match('/^[a-zA-Z0-9_]+$/', $tb) || $id <= 0) {
             $this->returnJson(['status' => 'error', 'code' => 'invalid_parameters']);
+            return;
+        }
+
+        $path = (array) ($this->cfg->get("tables.{$tb}.chrono_density_path") ?? []);
+        $path = array_values(array_filter($path, static fn($h) => is_string($h) && $h !== ''));
+
+        if (!empty($path)) {
+            $this->returnJson(['status' => 'success', 'sources' => $this->relatedViaPath($tb, $id, $path)]);
             return;
         }
 
@@ -190,24 +191,7 @@ class Chrono extends \Bdus\Controller
 
             $records = [];
             foreach ($this->db->query($sql, [$id], 'read') ?: [] as $row) {
-                $certainty = $row['chrono_certainty'];
-                if (!is_numeric($certainty)) {
-                    $certainty = match (strtolower((string)$certainty)) {
-                        'certa', 'certain'                          => 1,
-                        'probabile', 'probable'                     => 2,
-                        'incerta', 'uncertain', 'possible', 'possibile' => 3,
-                        default                                     => 1,
-                    };
-                }
-                $records[] = [
-                    'id'           => (int) $row['id'],
-                    'label'        => (string) ($row['display_label'] ?? $row['id']),
-                    'from'         => $row['chrono_from'] !== null ? (int) $row['chrono_from'] : null,
-                    'to'           => $row['chrono_to']   !== null ? (int) $row['chrono_to']   : null,
-                    'chrono_label' => $row['chrono_label'] ?? null,
-                    'certainty'    => (int) $certainty,
-                    'period'       => $row['chrono_period'] ?? null,
-                ];
+                $records[] = self::buildChronoRecord($row);
             }
 
             if (empty($records)) {
@@ -219,9 +203,127 @@ class Chrono extends \Bdus\Controller
                 'tb_label' => $tbLabel,
                 'fk_col'   => $fkCol,
                 'records'  => $records,
+                'filter'   => [$fkCol => ['_eq' => $id]],
             ];
         }
 
         $this->returnJson(['status' => 'success', 'sources' => $result]);
+    }
+
+    /**
+     * Walks a configured `chrono_density_path` hop by hop, resolving each FK
+     * column from bdus_cfg_relations, collecting the leaf-table ids reachable
+     * from $rootId. Returns a one-element `sources` array (or empty when the
+     * chain is broken, a hop yields no rows, or the leaf table has no chrono
+     * data) — same shape as the automatic branch of related().
+     *
+     * @param string   $rootTb Root table name (already validated by the caller)
+     * @param int      $rootId Root record id
+     * @param string[] $path   Ordered chain of table names
+     * @return array<int, array<string, mixed>>
+     */
+    private function relatedViaPath(string $rootTb, int $rootId, array $path): array
+    {
+        $ids      = [$rootId];
+        $parentTb = $rootTb;
+
+        foreach ($path as $hopTb) {
+            if (empty($ids) || !preg_match('/^[a-zA-Z0-9_]+$/', $hopTb)) {
+                return [];
+            }
+
+            $rel = $this->db->query(
+                'SELECT from_col FROM bdus_cfg_relations WHERE from_tb = ? AND to_tb = ?',
+                [$hopTb, $parentTb],
+                'read'
+            ) ?: [];
+            $fkCol = $rel[0]['from_col'] ?? null;
+
+            if (!$fkCol || !preg_match('/^[a-zA-Z0-9_]+$/', $fkCol)) {
+                return [];
+            }
+
+            $placeholders = implode(', ', array_fill(0, count($ids), '?'));
+            $rows = $this->db->query(
+                "SELECT id FROM {$hopTb} WHERE {$fkCol} IN ({$placeholders})",
+                $ids,
+                'read'
+            ) ?: [];
+            $ids      = array_map(static fn($r) => (int) $r['id'], $rows);
+            $parentTb = $hopTb;
+        }
+
+        if (empty($ids)) {
+            return [];
+        }
+
+        $leafTb = end($path);
+        if (!$this->cfg->get("tables.{$leafTb}.fuzzy_date")) {
+            return [];
+        }
+
+        $tbLabel      = $this->cfg->get("tables.{$leafTb}.label") ?? $leafTb;
+        $preview      = $this->cfg->get("tables.{$leafTb}.preview") ?? [];
+        $displayField = $preview[0] ?? 'id';
+        if (!preg_match('/^[a-zA-Z0-9_]+$/', $displayField)) {
+            $displayField = 'id';
+        }
+
+        $placeholders = implode(', ', array_fill(0, count($ids), '?'));
+        $sql = "SELECT id, {$displayField} AS display_label,
+                       chrono_from, chrono_to,
+                       chrono_label, chrono_certainty, chrono_period
+                FROM {$leafTb}
+                WHERE id IN ({$placeholders})
+                  AND (chrono_from IS NOT NULL OR chrono_to IS NOT NULL)
+                ORDER BY chrono_from ASC NULLS LAST, id ASC";
+
+        $records = [];
+        foreach ($this->db->query($sql, $ids, 'read') ?: [] as $row) {
+            $records[] = self::buildChronoRecord($row);
+        }
+
+        if (empty($records)) {
+            return [];
+        }
+
+        return [[
+            'tb_id'    => $leafTb,
+            'tb_label' => $tbLabel,
+            'records'  => $records,
+            'filter'   => ['id' => ['_in' => $ids]],
+        ]];
+    }
+
+    /**
+     * Normalises a raw chrono row (id, display_label, chrono_* columns) into
+     * the public record shape shared by timeline(), related(), and
+     * relatedViaPath(). Legacy string certainty values are mapped to integers.
+     *
+     * @param array<string, mixed> $row
+     * @return array<string, mixed>
+     */
+    private static function buildChronoRecord(array $row): array
+    {
+        $certainty = $row['chrono_certainty'];
+        if (!is_numeric($certainty)) {
+            $certainty = match (strtolower((string) $certainty)) {
+                'certa', 'certain'      => 1,
+                'probabile', 'probable' => 2,
+                'incerta', 'uncertain',
+                'possible', 'possibile' => 3,
+                default                 => 1,
+            };
+        }
+
+        return [
+            'id'           => (int) $row['id'],
+            'label'        => (string) ($row['display_label'] ?? $row['id']),
+            'from'         => $row['chrono_from'] !== null ? (int) $row['chrono_from'] : null,
+            'to'           => $row['chrono_to']   !== null ? (int) $row['chrono_to']   : null,
+            'chrono_label' => $row['chrono_label'] ?? null,
+            'certainty'    => (int) $certainty,
+            'period'       => $row['chrono_period'] ?? null,
+        ];
     }
 }

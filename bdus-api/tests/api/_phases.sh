@@ -406,6 +406,12 @@ run_tests() {
       --variable "jwt=${JWT}"
   fi
 
+  if should_run "40"; then
+    header "Phase 40 — Chrono density path (multi-hop)"
+    run_phase "Chrono density path" "40_chrono_density_path.hurl" \
+      --variable "jwt=${JWT}"
+  fi
+
   # Phase 10 always runs: drops crud_test tables and logs out
   header "Phase 10 — Cleanup"
   run_phase "Cleanup" "10_cleanup.hurl" \

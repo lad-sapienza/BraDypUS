@@ -351,6 +351,7 @@ class Router
             $r->addRoute('POST',   '/api/config/table/{tb}/osteology',  ['Bdus\\Controllers\\Config', 'activateOsteology']);
             $r->addRoute('DELETE', '/api/config/table/{tb}/osteology',  ['Bdus\\Controllers\\Config', 'deactivateOsteology']);
             $r->addRoute('POST',   '/api/config/table/{tb}/radiocarbon', ['Bdus\\Controllers\\Config', 'activateRadiocarbon']);
+            $r->addRoute('DELETE', '/api/config/table/{tb}/radiocarbon', ['Bdus\\Controllers\\Config', 'deactivateRadiocarbon']);
             $r->addRoute('GET',    '/api/config/geoface',     ['Bdus\\Controllers\\Config', 'getGeoFaceConfig']);
             $r->addRoute('PUT',    '/api/config/geoface',     ['Bdus\\Controllers\\Config', 'save_geoface_properties']);
             $r->addRoute('POST',   '/api/config/geofile',     ['Bdus\\Controllers\\Config', 'uploadGeoFile']);

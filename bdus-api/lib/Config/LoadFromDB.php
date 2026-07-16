@@ -25,7 +25,7 @@ use DB\DBInterface;
  *       'order'    => 'sigla',
  *       'id_field' => 'id',
  *       'preview'  => ['sigla', 'descrizione'],
- *       'plugin'   => ['attivita'],       // derived from plugin_of
+ *       'plugin'   => ['attivita'],       // derived from bdus_cfg_relations
  *       'link'     => [...],
  *       'fields'   => [
  *         'sigla' => ['name' => 'sigla', 'label' => '…', 'type' => 'text', …],
@@ -81,13 +81,27 @@ class LoadFromDB
             $fieldsByTable[$fld['table_name']][] = $fld;
         }
 
+        // A plugin table attaches to its parent via a relation row shaped
+        // from_tb={plugin}, from_col='id_link', to_tb={parent}, to_col='id'
+        // (see Alter::createMinimalTable). The UNIQUE(from_tb, from_col)
+        // constraint on bdus_cfg_relations already guarantees one parent per
+        // plugin table — no separate plugin_of bookkeeping needed.
+        $isPluginByName = [];
+        foreach ($tableRows as $row) {
+            $isPluginByName[$row['name']] = (bool) ($row['is_plugin'] ?? 0);
+        }
+
         // Pre-load all relations from bdus_cfg_relations.
         // New schema (M026): one row per FK column pair —
         //   from_tb.from_col → to_tb.to_col (semantic direction; from_tb holds the FK).
         // Each row contributes to BOTH the forward-link list of from_tb AND the
-        // reverse-link list of to_tb (with my/other swapped).
+        // reverse-link list of to_tb (with my/other swapped) — UNLESS from_tb is a
+        // plugin table pointing at its parent via id_link, in which case the row is
+        // routed to $pluginParentOf instead of either link list (autodiscovery: the
+        // parent loads it as an inline CRUD plugin section, not a read-only link).
         // Rows are pre-grouped by other_tb so buildTable() can merge multi-column FKs.
         $relationsByTable = [];
+        $pluginParentOf   = []; // plugin_tb => parent_tb
         try {
             $allRelRows = $db->query(
                 'SELECT id, from_tb, from_col, to_tb, to_col
@@ -97,6 +111,11 @@ class LoadFromDB
                 'read'
             ) ?: [];
             foreach ($allRelRows as $rel) {
+                if (($isPluginByName[$rel['from_tb']] ?? false) && $rel['from_col'] === 'id_link') {
+                    $pluginParentOf[$rel['from_tb']] = $rel['to_tb'];
+                    continue;
+                }
+
                 // Forward: current table holds the FK column.
                 $relationsByTable[$rel['from_tb']][] = [
                     'other_tb' => $rel['to_tb'],
@@ -126,16 +145,28 @@ class LoadFromDB
             );
         }
 
-        // Inject plugin lists: for each main table, collect plugin table names.
+        // Inject plugin lists: one linear pass, appended in table-sort order
+        // (the same order plugin_of-scan derivation used to produce), replacing
+        // the previous O(n²) scan with an O(n) walk over the already-loaded
+        // relations.
         foreach ($result as $name => $tbData) {
             if (!($tbData['is_plugin'] ?? false)) {
-                $plugins = [];
-                foreach ($result as $otherName => $otherData) {
-                    if (($otherData['is_plugin'] ?? false) && ($otherData['plugin_of'] ?? null) === $name) {
-                        $plugins[] = $otherName;
-                    }
-                }
-                $result[$name]['plugin'] = $plugins;
+                $result[$name]['plugin'] = [];
+            }
+        }
+        foreach ($result as $name => $tbData) {
+            if (!($tbData['is_plugin'] ?? false)) {
+                continue;
+            }
+            $parent = $pluginParentOf[$name] ?? null;
+            // Relation-derived, replacing the legacy plugin_of scalar column as the
+            // source of truth — every reader (JsonFilter, AssemblageAnalysis,
+            // DbmlExporter, ConfigTableForm.vue, …) keeps working unchanged since
+            // they all read this same 'plugin_of' key via cfg->get(), just now
+            // backed by bdus_cfg_relations instead of the DB column.
+            $result[$name]['plugin_of'] = $parent;
+            if ($parent !== null && isset($result[$parent])) {
+                $result[$parent]['plugin'][] = $name;
             }
         }
 
@@ -173,7 +204,8 @@ class LoadFromDB
                 ? json_decode($row['preview'], true)
                 : [],
             'is_plugin' => ($row['is_plugin'] ?? 0) ? '1' : '0',
-            'plugin_of' => $row['plugin_of'] ?? null,
+            // 'plugin_of' is set afterward in tables(), derived from
+            // bdus_cfg_relations — not read from the (legacy, unused) DB column.
             'link'      => $links,
             'backlink'  => $row['backlinks']
                 ? json_decode($row['backlinks'], true)

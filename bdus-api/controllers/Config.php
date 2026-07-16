@@ -14,6 +14,9 @@ use \DB\Alter;
 
 class Config extends \Bdus\Controller
 {
+  /** Defensive cap on chrono_density_path length — guards against pathological config. */
+  private const MAX_CHRONO_DENSITY_DEPTH = 8;
+
   private function check_required(array $data, array $indices): array
   {
     $missing = [];
@@ -75,13 +78,141 @@ class Config extends \Bdus\Controller
         }
       }
 
+      if (array_key_exists('chrono_density_path', $post)) {
+        $error = $this->validateChronoDensityPath($post['name'], (array) $post['chrono_density_path']);
+        if ($error !== null) {
+          $this->returnJson(['status' => 'error', 'code' => 'invalid_chrono_density_path', 'detail' => $error]);
+          return;
+        }
+      }
+
       $this->cfg->setTable($post);
+
+      // Keep bdus_cfg_relations in sync with plugin_of: this is the generic
+      // table-edit endpoint, also used (e.g. by the demo seed) to attach a
+      // plugin table to its parent *after* creation — Config\LoadFromDB
+      // derives tables.{parent}.plugin[] from this relation, not from
+      // plugin_of directly, so without this the table would silently never
+      // appear as a plugin anywhere.
+      if (($post['is_plugin'] ?? null) == 1) {
+        $this->syncPluginRelation($post['name'], trim($post['plugin_of'] ?? ''));
+      }
 
       $this->returnJson(['status' => 'success', 'code' => 'ok_cfg_data_updated']);
     } catch (\Throwable $e) {
       $this->log->error($e);
       $this->returnJson(['status' => 'error', 'code' => 'error_cfg_data_updated']);
     }
+  }
+
+  /**
+   * Ensures bdus_cfg_relations has exactly one from_tb=$pluginTb/from_col='id_link'
+   * row matching $parentTb (or none, when $parentTb is empty) — the relation
+   * Config\LoadFromDB actually reads to derive tables.{parent}.plugin[].
+   * No-op if already in sync. The live FK constraint is only (re)applied on
+   * MySQL/PostgreSQL — same caution as M035_PluginRelationsFromPluginOf:
+   * adding/changing a FK on an existing SQLite table requires a full table
+   * recreation, too risky to trigger from a generic settings save.
+   */
+  private function syncPluginRelation(string $pluginTb, string $parentTb): void
+  {
+    $existing = $this->db->query(
+      "SELECT to_tb FROM bdus_cfg_relations WHERE from_tb = ? AND from_col = 'id_link'",
+      [$pluginTb],
+      'read'
+    );
+    $currentParent = $existing[0]['to_tb'] ?? null;
+
+    if ($currentParent === $parentTb || ($currentParent === null && $parentTb === '')) {
+      return; // already in sync
+    }
+
+    if ($currentParent !== null) {
+      $this->db->query(
+        "DELETE FROM bdus_cfg_relations WHERE from_tb = ? AND from_col = 'id_link'",
+        [$pluginTb],
+        'boolean'
+      );
+    }
+
+    if ($parentTb === '' || !$this->cfg->get("tables.$parentTb")) {
+      return; // detaching, or parent not found — nothing further to link
+    }
+
+    $this->db->query(
+      'INSERT INTO bdus_cfg_relations (from_tb, from_col, to_tb, to_col, on_delete, on_update)
+       VALUES (?, ?, ?, ?, ?, ?)',
+      [$pluginTb, 'id_link', $parentTb, 'id', 'RESTRICT', 'CASCADE'],
+      'boolean'
+    );
+
+    if ($this->db->getEngine() !== 'sqlite') {
+      $alter = new Alter($this->db);
+      try {
+        $alter->addForeignKey($pluginTb, 'id_link', $parentTb, 'id', 'RESTRICT', 'CASCADE');
+        $this->saveAutoIndex($pluginTb, 'id_link', $alter);
+      } catch (\Throwable $e) {
+        // Best-effort — the config-level relation row above is what
+        // LoadFromDB needs; the live constraint can be reapplied later
+        // (e.g. via applyAllConstraints()) once any data issue is fixed.
+      }
+    }
+  }
+
+  /**
+   * Validates a chrono_density_path chain (see Chrono::relatedViaPath()):
+   * every hop must be a direct FK child of the previous table (the root table
+   * for the first hop, per bdus_cfg_relations), no table may repeat (root
+   * included), the chain may not exceed MAX_CHRONO_DENSITY_DEPTH, and the
+   * last table in the chain must have fuzzy_date active.
+   *
+   * @param string $rootTb Table the path is being configured on
+   * @param array  $path   Ordered list of table names
+   * @return string|null   Error detail, or null when the path is valid (an
+   *                        empty path is always valid — it means "automatic").
+   */
+  private function validateChronoDensityPath(string $rootTb, array $path): ?string
+  {
+    $path = array_values(array_filter($path, static fn($h) => is_string($h) && $h !== ''));
+
+    if (empty($path)) {
+      return null;
+    }
+
+    if (count($path) > self::MAX_CHRONO_DENSITY_DEPTH) {
+      return "path exceeds the maximum depth of " . self::MAX_CHRONO_DENSITY_DEPTH . ' hops';
+    }
+
+    $seen     = [$rootTb => true];
+    $parentTb = $rootTb;
+
+    foreach ($path as $hopTb) {
+      if (!preg_match('/^[a-zA-Z0-9_]+$/', $hopTb)) {
+        return "invalid table name '{$hopTb}' in path";
+      }
+      if (isset($seen[$hopTb])) {
+        return "table '{$hopTb}' appears more than once in the path";
+      }
+      $seen[$hopTb] = true;
+
+      $rel = $this->db->query(
+        'SELECT 1 FROM bdus_cfg_relations WHERE from_tb = ? AND to_tb = ?',
+        [$hopTb, $parentTb],
+        'read'
+      );
+      if (empty($rel)) {
+        return "no FK relation found from '{$hopTb}' to '{$parentTb}' — check Config \u{2192} Relations";
+      }
+
+      $parentTb = $hopTb;
+    }
+
+    $leafTb = end($path);
+    if (!$this->cfg->get("tables.{$leafTb}.fuzzy_date")) {
+      return "the last table in the path ('{$leafTb}') must have fuzzy_date active";
+    }
+
+    return null;
   }
 
 
@@ -159,6 +290,13 @@ class Config extends \Bdus\Controller
       $alter    = new Alter($this->db);
       $pluginOf = ($post['is_plugin'] === '1') ? trim($post['plugin_of'] ?? '') : '';
       $alter->createMinimalTable($new_tb_name, ($post['is_plugin'] === '1'), $pluginOf);
+
+      // Register the plugin→parent attachment as a genuine relation so
+      // Config\LoadFromDB can derive tables.{parent}.plugin[] from it (the FK
+      // constraint itself was already applied above, inline, by createMinimalTable).
+      if ($pluginOf !== '') {
+        $this->syncPluginRelation($new_tb_name, $pluginOf);
+      }
 
       $this->returnJson(['status' => 'success', 'code' => 'ok_cfg_data_updated', 'tb' => $new_tb_name]);
     } catch (\Throwable $e) {
@@ -249,9 +387,24 @@ class Config extends \Bdus\Controller
     if (!$this->requireSuperAdmin()) return;
     $tb = $this->get['tb'];
     try {
+      $alter = new Alter($this->db);
+
+      // Drop the live FK constraint on every table that references $tb
+      // (plugin children via id_link, or any normal relation) before
+      // dropping $tb itself — required on MySQL/PostgreSQL, where a live FK
+      // would otherwise make DROP TABLE fail. Config-level bdus_cfg_relations
+      // cleanup for both sides happens inside cfg->deleteTb() below.
+      $children = $this->db->query(
+        'SELECT from_tb, from_col FROM bdus_cfg_relations WHERE to_tb=?',
+        [$tb],
+        'read'
+      ) ?: [];
+      foreach ($children as $child) {
+        $alter->dropForeignKey($child['from_tb'], $child['from_col']);
+      }
+
       $this->cfg->deleteTb($tb);
       // Drop table from database
-      $alter = new Alter($this->db);
       $alter->dropTable($tb);
       $this->returnJson(['status' => 'success', 'code' => 'ok_cfg_tb_delete']);
     } catch (\Throwable $th) {
@@ -644,6 +797,13 @@ class Config extends \Bdus\Controller
       // Idempotent: CREATE TABLE IF NOT EXISTS under the hood.
       $alter->createMinimalTable($pluginTb, true, $tb);
 
+      // Register the plugin→parent attachment as a relation (idempotent —
+      // reactivating after a deactivateRadiocarbon() call, which deletes this
+      // row, restores it). This is what Config\LoadFromDB actually uses to
+      // derive tables.{tb}.plugin[]; the FK constraint itself was already
+      // applied above, inline, by createMinimalTable.
+      $this->syncPluginRelation($pluginTb, $tb);
+
       $columns = [
         'lab_code'    => 'VARCHAR(100)',
         'bp'          => 'INTEGER',
@@ -712,6 +872,67 @@ class Config extends \Bdus\Controller
       }
 
       $this->returnJson(['status' => 'success', 'code' => 'radiocarbon_activated', 'tb' => $pluginTb]);
+
+    } catch (\Throwable $th) {
+      $this->log->error($th);
+      $this->returnJson(['status' => 'error', 'code' => 'db_error', 'detail' => $th->getMessage()]);
+    }
+  }
+
+  /**
+   * Deactivates the radiocarbon-dating plugin for a table.
+   * Unlike activation, this does not touch the physical {tb}_radiocarbon
+   * table or its data, and it never touches is_plugin — that flag marks
+   * the table as plugin-shaped (table_link/id_link, special CRUD handling)
+   * across the whole system, independently of which parent it's currently
+   * attached to; flipping it would misclassify the table everywhere, not
+   * just for this parent. The actual attachment lives in bdus_cfg_relations
+   * (from_tb={tb}_radiocarbon, from_col='id_link'), so deactivation only
+   * deletes that row: `Config\LoadFromDB::tables()` derives a table's
+   * plugin[] list from this relation, so removing it drops {tb}_radiocarbon
+   * from {tb}'s list — it stops being loaded in view/edit — without
+   * changing anything else about the plugin table's own settings (the live
+   * FK constraint and the `plugin_of` config value are left in place; only
+   * the relation row that LoadFromDB actually reads is removed). Same
+   * "config-only, data preserved" principle as
+   * deactivateFuzzyDate()/deactivateOsteology(); reactivating restores the
+   * relation row and the data becomes visible again. If the user wants the
+   * data gone too they drop the table themselves.
+   *
+   * DELETE /api/config/table/{tb}/radiocarbon
+   * Response: { status, code }
+   */
+  public function deactivateRadiocarbon(): void
+  {
+    if (!$this->requireSuperAdmin()) return;
+
+    $tb = $this->get['tb'] ?? '';
+    if (!$tb) {
+      $this->returnJson(['status' => 'error', 'code' => 'missing_table']);
+      return;
+    }
+
+    $pluginTb = "{$tb}_radiocarbon";
+
+    try {
+      $tbData = $this->cfg->get("tables.$pluginTb") ?: [];
+      if (empty($tbData)) {
+        $this->returnJson(['status' => 'error', 'code' => 'missing_table']);
+        return;
+      }
+
+      $tbData['name']      = $pluginTb;
+      $tbData['plugin_of'] = null;
+      unset($tbData['link']); // don't touch FK relations — only update the attachment
+      $this->cfg->setTable($tbData);
+
+      $this->db->query(
+        "DELETE FROM bdus_cfg_relations WHERE from_tb = ? AND from_col = 'id_link'",
+        [$pluginTb],
+        'boolean'
+      );
+
+      $this->returnJson(['status' => 'success', 'code' => 'radiocarbon_deactivated']);
 
     } catch (\Throwable $th) {
       $this->log->error($th);
@@ -931,6 +1152,17 @@ class Config extends \Bdus\Controller
       }
     }
 
+    // fuzzy_date lives in the 'extra' JSON column (a real boolean once merged
+    // back, not the '1'/'0' string is_plugin uses) — mngTables' wildcard filter
+    // does a strict string comparison and would miss it, so check per-table
+    // instead (same pattern as Chrono::timeline()).
+    $fuzzyDateTables = [];
+    foreach ($this->cfg->get('tables.*.name') ?: [] as $tbName) {
+      if ($this->cfg->get("tables.{$tbName}.fuzzy_date")) {
+        $fuzzyDateTables[] = $tbName;
+      }
+    }
+
     // available_plugins and available_tables: cfg->get returns {tableName: label} keyed
     // by table name — that's already the right format for option dropdowns in the frontend.
     $this->returnJson([
@@ -939,6 +1171,7 @@ class Config extends \Bdus\Controller
       'field_labels'      => $fieldLabels,
       'available_plugins' => $this->cfg->get('tables.*.label', 'is_plugin', '1') ?: [],
       'available_tables'  => $this->cfg->get('tables.*.label') ?: [],
+      'fuzzy_date_tables' => $fuzzyDateTables,
     ]);
   }
 

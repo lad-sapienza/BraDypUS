@@ -1816,10 +1816,7 @@ class Record extends \Bdus\Controller
     }
 
     $deleted = 0;
-    foreach ($this->cfg->get('tables') ?: [] as $tbl) {
-      if (($tbl['plugin_of'] ?? '') !== $tb) continue;
-      $plgName = $tbl['name'] ?? '';
-      if (!$plgName) continue;
+    foreach ($this->cfg->get("tables.$tb.plugin") ?: [] as $plgName) {
       try {
         $affected = $this->db->query(
           "DELETE FROM \"{$plgName}\" WHERE table_link = ? AND id_link = ?",
@@ -1862,12 +1859,7 @@ class Record extends \Bdus\Controller
     }
 
     $plugins = [];
-    foreach ($this->cfg->get('tables') ?: [] as $tbl) {
-      if (($tbl['plugin_of'] ?? '') !== $tb) continue;
-
-      $plgName = $tbl['name'] ?? '';
-      if (!$plgName) continue;
-
+    foreach ($this->cfg->get("tables.$tb.plugin") ?: [] as $plgName) {
       try {
         $result = $this->db->query(
           "SELECT COUNT(*) AS cnt FROM \"{$plgName}\" WHERE table_link = ? AND id_link = ?",
@@ -1878,7 +1870,7 @@ class Record extends \Bdus\Controller
         if ($cnt > 0) {
           $plugins[] = [
             'tb'    => $plgName,
-            'label' => $tbl['label'] ?? $plgName,
+            'label' => $this->cfg->get("tables.$plgName.label") ?: $plgName,
             'count' => $cnt,
           ];
         }

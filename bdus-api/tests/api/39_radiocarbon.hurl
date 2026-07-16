@@ -2,15 +2,20 @@
 # Phase 39 — Radiocarbon dating plugin API
 #
 # Routes exercised:
-#   POST /api/config/table/{tb}/radiocarbon   — activate (creates {tb}_radiocarbon)
-#   POST /api/record/crud_test                — save record with a plugin row
-#   GET  /api/record/crud_test/{id}            — round-trip, cal_1s/cal_2s computed
-#   GET  /api/records/crud_test                — filter by plugin-table field
+#   POST   /api/config/table/{tb}/radiocarbon — activate (creates {tb}_radiocarbon)
+#   DELETE /api/config/table/{tb}/radiocarbon — deactivate (config-only)
+#   POST   /api/record/crud_test              — save record with a plugin row
+#   GET    /api/record/crud_test/{id}          — round-trip, cal_1s/cal_2s computed
+#   GET    /api/records/crud_test              — filter by plugin-table field
 #
 # Unlike fuzzy-date/osteology (flag + columns on the core table), this
 # plugin creates a genuine child table (table_link/id_link), so a record
 # can carry more than one dating, and the calibrated range is filterable
-# via the generic JSON filter plugin-subquery mechanism.
+# via the generic JSON filter plugin-subquery mechanism. Deactivation
+# mirrors fuzzy-date/osteology's "config-only, data preserved" principle:
+# it only unregisters the plugin table from the parent's config (so it
+# stops being loaded in view/edit) — the physical table and rows are left
+# untouched, and reactivating restores visibility of the existing data.
 #
 # Requires: phase 03 setup (crud_test table exists)
 # ════════════════════════════════════════════════════════════════════
@@ -135,3 +140,47 @@ HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
 jsonpath "$.total"  == 0
+
+
+# ── 39f. Deactivate: config-only, physical table/data untouched ────────
+DELETE {{base_url}}/api/config/table/crud_test/radiocarbon
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+jsonpath "$.code"   == "radiocarbon_deactivated"
+
+
+# ── 39g. Deactivated plugin no longer loaded in view/edit ──────────────
+GET {{base_url}}/api/record/crud_test/{{c14_rec_id}}
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.status"                        == "success"
+jsonpath "$.plugins.crud_test_radiocarbon" not exists
+
+
+# ── 39h-neg. Deactivating an unknown plugin table → error ───────────────
+DELETE {{base_url}}/api/config/table/__no_such_table__/radiocarbon
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "error"
+jsonpath "$.code"   == "missing_table"
+
+
+# ── 39i. Reactivate: data from before deactivation is still intact ─────
+POST {{base_url}}/api/config/table/crud_test/radiocarbon
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+jsonpath "$.code"   == "radiocarbon_activated"
+
+GET {{base_url}}/api/record/crud_test/{{c14_rec_id}}
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.status"                                             == "success"
+jsonpath "$.plugins.crud_test_radiocarbon.data"                 count == 2
+jsonpath "$.plugins.crud_test_radiocarbon.data[0].lab_code.val"  == "Beta-999999"

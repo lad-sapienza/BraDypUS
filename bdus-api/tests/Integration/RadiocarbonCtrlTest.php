@@ -8,11 +8,16 @@ use Tests\Support\BdusTestCase;
 
 /**
  * Integration tests for the radiocarbon-dating plugin:
- *   POST /api/config/table/{tb}/radiocarbon → Config::activateRadiocarbon()
+ *   POST   /api/config/table/{tb}/radiocarbon → Config::activateRadiocarbon()
+ *   DELETE /api/config/table/{tb}/radiocarbon → Config::deactivateRadiocarbon()
  *
  * Unlike fuzzy-date/osteology (flat boolean flag + columns on the core
  * table), activation here creates a genuine plugin table ({tb}_radiocarbon,
  * is_plugin/plugin_of) so a record can carry multiple C14 determinations.
+ * Deactivation mirrors fuzzy-date/osteology's "config-only, data preserved"
+ * principle: it only flips is_plugin=false on the plugin table's own config
+ * row (removing it from the parent's derived plugin[] list, so it stops
+ * being loaded in view/edit) — it never touches the physical table or rows.
  *
  * Side-effects tested:
  *   - {tb}_radiocarbon is created with the expected columns
@@ -20,6 +25,8 @@ use Tests\Support\BdusTestCase;
  *   - tables.{tb}.plugin[] picks up the new table automatically (derived,
  *     not written directly — see LoadFromDB)
  *   - Activation is idempotent (safe to call twice)
+ *   - Deactivation clears is_plugin and drops it from the parent's plugin[]
+ *   - Reactivating after deactivation restores visibility of prior data
  *   - Non-super-admin callers / missing table names are rejected
  *   - Saving a plugin row computes cal_1s/cal_2s server-side, ignoring any
  *     calibrated values supplied by the client
@@ -90,6 +97,23 @@ class RadiocarbonCtrlTest extends BdusTestCase
         return $res;
     }
 
+    private function deactivate(): array
+    {
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config', ['tb' => self::TB]);
+        $res  = $this->callController($ctrl, 'deactivateRadiocarbon');
+
+        // Mirror production's plugin[] re-derivation the same way activate() does.
+        $parent = static::$cfg->get('tables.' . self::TB) ?: [];
+        if (in_array(self::PLUGIN_TB, $parent['plugin'] ?? [], true)) {
+            $parent['name']   = self::TB;
+            $parent['plugin'] = array_values(array_diff($parent['plugin'] ?? [], [self::PLUGIN_TB]));
+            unset($parent['link']);
+            static::$cfg->setTable($parent);
+        }
+
+        return $res;
+    }
+
     // ── activateRadiocarbon ────────────────────────────────────────────────────
 
     public function testActivateCreatesPluginTableWithExpectedColumns(): void
@@ -149,6 +173,90 @@ class RadiocarbonCtrlTest extends BdusTestCase
 
         $this->assertSame('error',         $res['status']);
         $this->assertSame('missing_table', $res['code']);
+    }
+
+    // ── deactivateRadiocarbon ───────────────────────────────────────────────────
+
+    public function testDeactivateClearsPluginOfButKeepsIsPlugin(): void
+    {
+        $this->activate();
+        $res = $this->deactivate();
+
+        $this->assertSame('success',                 $res['status']);
+        $this->assertSame('radiocarbon_deactivated', $res['code']);
+
+        $cfgCtrl = $this->makeController('Bdus\\Controllers\\Config', ['tb' => self::PLUGIN_TB]);
+        $cfg     = $this->callController($cfgCtrl, 'getTableConfig');
+
+        // is_plugin marks the table as plugin-shaped (table_link/id_link,
+        // special CRUD handling) independently of which parent it's attached
+        // to — deactivation must never touch it, only the attachment itself.
+        $this->assertSame('1', $cfg['table']['is_plugin']);
+        $this->assertEmpty($cfg['table']['plugin_of'] ?? null);
+    }
+
+    public function testDeactivateRemovesFromParentPluginList(): void
+    {
+        $this->activate();
+        $this->deactivate();
+
+        $parentCtrl = $this->makeController('Bdus\\Controllers\\Config', ['tb' => self::TB]);
+        $parentCfg  = $this->callController($parentCtrl, 'getTableConfig');
+        $this->assertNotContains(self::PLUGIN_TB, $parentCfg['table']['plugin'] ?? []);
+    }
+
+    public function testDeactivateRequiresSuperAdmin(): void
+    {
+        $this->activate();
+        $this->setPrivilege(11);
+        $res = $this->deactivate();
+        $this->setPrivilege(1);
+
+        $this->assertSame('error',                $res['status']);
+        $this->assertSame('not_enough_privilege', $res['code']);
+    }
+
+    public function testDeactivateMissingPluginTableReturnsError(): void
+    {
+        $ctrl = $this->makeController('Bdus\\Controllers\\Config', ['tb' => 'no_such_table_xyz']);
+        $res  = $this->callController($ctrl, 'deactivateRadiocarbon');
+
+        $this->assertSame('error',         $res['status']);
+        $this->assertSame('missing_table', $res['code']);
+    }
+
+    public function testReactivateAfterDeactivatePreservesData(): void
+    {
+        $this->activate();
+
+        $saveCtrl = $this->makeController(
+            'Bdus\\Controllers\\Record',
+            ['tb' => self::TB],
+            [
+                'id'   => null,
+                'core' => ['name' => 'Survives deactivate'],
+                'plugins' => [
+                    self::PLUGIN_TB => [[
+                        'id' => null, '_isNew' => true,
+                        'fields' => ['lab_code' => 'Beta-777', 'bp' => 2000, 'bp_error' => 30],
+                    ]],
+                ],
+            ]
+        );
+        $saved = $this->callController($saveCtrl, 'saveRecord');
+        $this->assertSame('success', $saved['status']);
+        $recordId = $saved['id'];
+
+        // Deactivate (config-only) then reactivate — the row must still be there.
+        $this->deactivate();
+        $this->activate();
+
+        $getCtrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'id' => $recordId]);
+        $record  = $this->callController($getCtrl, 'getRecord');
+        $rows    = $record['plugins'][self::PLUGIN_TB]['data'];
+
+        $labCodes = array_map(fn($r) => $r['lab_code']['val'], $rows);
+        $this->assertContains('Beta-777', $labCodes);
     }
 
     // ── saveRecord: server-side calibration ────────────────────────────────────

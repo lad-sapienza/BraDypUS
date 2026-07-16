@@ -274,6 +274,19 @@ class DbmlImporter
         $alter = new Alter($db);
         $alter->createMinimalTable($tbName, $isPlugin, $pluginOf);
 
+        // Register the plugin→parent attachment as a relation — this is what
+        // Config\LoadFromDB actually reads to derive tables.{parent}.plugin[]
+        // (the FK constraint itself was already applied above, inline, by
+        // createMinimalTable).
+        if ($isPlugin && $pluginOf !== '') {
+            $db->query(
+                'INSERT INTO bdus_cfg_relations (from_tb, from_col, to_tb, to_col, on_delete, on_update)
+                 VALUES (?, ?, ?, ?, ?, ?)',
+                [$tbName, 'id_link', $pluginOf, 'id', 'RESTRICT', 'CASCADE'],
+                'boolean'
+            );
+        }
+
         // 3. Add 'id' if not in DBML (createMinimalTable already adds it, but cfg needs it)
         $fieldNames = array_column($tbEntry['fields'], 'name');
         if (!in_array('id', $fieldNames, true)) {

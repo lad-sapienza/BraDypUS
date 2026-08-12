@@ -101,24 +101,15 @@
               {{ t('free_sql_empty') }}
             </Message>
             <div v-else class="result-table-wrap">
-              <DataTable
-                :value="result.rows"
+              <ATable
+                :columns="resultColumns"
+                :dataSource="resultRows"
+                :pagination="{ pageSize: 50, position: ['bottomCenter'] }"
+                :scroll="{ y: 400 }"
                 size="small"
-                striped-rows
-                scrollable
-                scroll-height="400px"
-                paginator
-                :rows="50"
+                rowKey="__key"
                 class="result-table"
-              >
-                <Column
-                  v-for="col in result.columns"
-                  :key="col"
-                  :field="col"
-                  :header="col"
-                  sortable
-                />
-              </DataTable>
+              />
             </div>
           </template>
 
@@ -136,7 +127,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import AppLayout  from '@/components/AppLayout.vue'
 import { api }    from '@/api'
 import { useI18n } from '@/i18n'
@@ -144,10 +135,32 @@ import Button    from 'primevue/button'
 import Message   from 'primevue/message'
 import Password  from 'primevue/password'
 import Textarea  from 'primevue/textarea'
-import DataTable from 'primevue/datatable'
-import Column    from 'primevue/column'
+import { Table as ATable } from 'ant-design-vue'
 
 const { t } = useI18n()
+
+// ── SQL result table: dynamic columns, unknown ahead of time ────────────
+function compareValues(a, b) {
+  if (a == null && b == null) return 0
+  if (a == null) return -1
+  if (b == null) return 1
+  if (typeof a === 'number' && typeof b === 'number') return a - b
+  return String(a).localeCompare(String(b))
+}
+
+const resultColumns = computed(() =>
+  (result.value?.columns ?? []).map(col => ({
+    title: col,
+    dataIndex: col,
+    key: col,
+    sorter: (a, b) => compareValues(a[col], b[col]),
+    ellipsis: true,
+  }))
+)
+
+const resultRows = computed(() =>
+  (result.value?.rows ?? []).map((row, i) => ({ ...row, __key: i }))
+)
 
 // ── Password gate ──────────────────────────────────────────────────────
 const unlocked     = ref(false)

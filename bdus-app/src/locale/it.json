@@ -1036,6 +1036,8 @@
   "voc_select_hint": "Seleziona un vocabolario a sinistra.",
   "no_vocabularies": "Nessun vocabolario definito.",
   "voc_sort_not_saved": "Impossibile salvare l'ordine",
+  "move_up": "Sposta su",
+  "move_down": "Sposta giù",
 
   "files_mng": "Gestione file",
   "files_mng_title": "File",

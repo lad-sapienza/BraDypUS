@@ -35,80 +35,55 @@
       />
     </div>
 
-    <!-- ── DataTable ───────────────────────────────────────────── -->
-    <DataTable
-      :value="rows"
-      lazy
-      paginator
-      :rows="perPage"
-      :totalRecords="total"
-      :loading="loading"
-      :rowsPerPageOptions="[25, 50, 100]"
-      paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
-      :currentPageReportTemplate="`{first}–{last} / {totalRecords}`"
-      scrollable
-      scrollHeight="flex"
-      size="small"
-      class="history-table"
-      dataKey="id"
-      v-model:expandedRows="expandedRows"
-      @page="onPage"
-    >
-      <template #empty>
-        <span class="empty-msg">{{ t('history_no_entries') }}</span>
-      </template>
-
-      <!-- Expand toggle -->
-      <Column expander style="width: 2.5rem; flex-shrink: 0;" />
-
-      <!-- Time -->
-      <Column field="time"  :header="t('history_col_time')"  style="width: 10rem; flex-shrink: 0;" />
-
-      <!-- User -->
-      <Column field="user"  :header="t('history_col_user')"  style="width: 8rem;  flex-shrink: 0;" />
-
-      <!-- Table -->
-      <Column field="tb"    :header="t('history_col_tb')"    style="width: 10rem; flex-shrink: 0;" />
-
-      <!-- Row id -->
-      <Column field="rowid" :header="t('history_col_rowid')" style="width: 5rem;  flex-shrink: 0;" />
-
-      <!-- Content preview -->
-      <Column field="content" :header="t('history_col_content')" style="min-width: 0; flex: 1;">
-        <template #body="{ data }">
-          <span class="content-preview">{{ truncate(data.content) }}</span>
+    <!-- ── Table ───────────────────────────────────────────────── -->
+    <div ref="tableWrap" class="history-table">
+      <ATable
+        :columns="columns"
+        :dataSource="rows"
+        :loading="loading"
+        :pagination="pagination"
+        :scroll="{ y: tableScrollY }"
+        :locale="{ emptyText: t('history_no_entries') }"
+        size="small"
+        rowKey="id"
+        v-model:expandedRowKeys="expandedRowKeys"
+        @change="onTableChange"
+      >
+        <template #bodyCell="{ column, record }">
+          <template v-if="column.key === 'content'">
+            <span class="content-preview">{{ truncate(record.content) }}</span>
+          </template>
         </template>
-      </Column>
 
-      <!-- Expanded row: full detail -->
-      <template #expansion="{ data }">
-        <div class="history-detail">
-          <div v-if="data.content" class="detail-block">
-            <div class="detail-label">{{ t('history_col_content') }}</div>
-            <pre class="detail-pre">{{ data.content }}</pre>
+        <!-- Expanded row: full detail -->
+        <template #expandedRowRender="{ record }">
+          <div class="history-detail">
+            <div v-if="record.content" class="detail-block">
+              <div class="detail-label">{{ t('history_col_content') }}</div>
+              <pre class="detail-pre">{{ record.content }}</pre>
+            </div>
+            <div v-if="record.editsql" class="detail-block">
+              <div class="detail-label">SQL</div>
+              <pre class="detail-pre">{{ record.editsql }}</pre>
+            </div>
+            <div v-if="record.editvalues" class="detail-block">
+              <div class="detail-label">{{ t('history_col_values') }}</div>
+              <pre class="detail-pre">{{ record.editvalues }}</pre>
+            </div>
           </div>
-          <div v-if="data.editsql" class="detail-block">
-            <div class="detail-label">SQL</div>
-            <pre class="detail-pre">{{ data.editsql }}</pre>
-          </div>
-          <div v-if="data.editvalues" class="detail-block">
-            <div class="detail-label">{{ t('history_col_values') }}</div>
-            <pre class="detail-pre">{{ data.editvalues }}</pre>
-          </div>
-        </div>
-      </template>
-    </DataTable>
+        </template>
+      </ATable>
+    </div>
 
   </div>
   </AppLayout>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useToast } from '@/composables/useNotify'
 import AppLayout  from '@/components/AppLayout.vue'
-import DataTable  from 'primevue/datatable'
-import Column     from 'primevue/column'
+import { Table as ATable } from 'ant-design-vue'
 import Button     from 'primevue/button'
 import InputText  from 'primevue/inputtext'
 import { api }    from '@/api'
@@ -118,15 +93,52 @@ const { t }   = useI18n()
 const toast   = useToast()
 const { responseMessage } = api
 
+const columns = computed(() => [
+  { title: t('history_col_time'),    dataIndex: 'time',    key: 'time',    width: 160 },
+  { title: t('history_col_user'),    dataIndex: 'user',    key: 'user',    width: 128 },
+  { title: t('history_col_tb'),      dataIndex: 'tb',      key: 'tb',      width: 160 },
+  { title: t('history_col_rowid'),   dataIndex: 'rowid',   key: 'rowid',   width: 80 },
+  { title: t('history_col_content'), key: 'content' },
+])
+
 // ── State ──────────────────────────────────────────────────────
-const rows         = ref([])
-const total        = ref(0)
-const loading      = ref(false)
-const currentPage  = ref(1)
-const perPage      = ref(50)
-const filterTb     = ref('')
-const filterUser   = ref('')
-const expandedRows = ref([])
+const rows            = ref([])
+const total           = ref(0)
+const loading         = ref(false)
+const currentPage     = ref(1)
+const perPage         = ref(50)
+const filterTb        = ref('')
+const filterUser      = ref('')
+const expandedRowKeys = ref([])
+
+const pagination = computed(() => ({
+  current: currentPage.value,
+  pageSize: perPage.value,
+  total: total.value,
+  showSizeChanger: true,
+  pageSizeOptions: ['25', '50', '100'],
+  position: ['bottomCenter'],
+}))
+
+// ── AntD Table: fill available flex space (no scrollHeight="flex" equivalent) ──
+const tableWrap    = ref(null)
+const tableScrollY = ref(400)
+let resizeObs = null
+
+function measureTableHeight() {
+  if (!tableWrap.value) return
+  const total_    = tableWrap.value.clientHeight
+  const headerH   = tableWrap.value.querySelector('.ant-table-thead')?.getBoundingClientRect().height ?? 40
+  const paginationH = tableWrap.value.querySelector('.ant-pagination')?.getBoundingClientRect().height ?? 32
+  tableScrollY.value = Math.max(200, total_ - headerH - paginationH - 16)
+}
+
+onMounted(() => {
+  resizeObs = new ResizeObserver(measureTableHeight)
+  if (tableWrap.value) resizeObs.observe(tableWrap.value)
+})
+onUnmounted(() => resizeObs?.disconnect())
+watch(rows, () => { measureTableHeight() })
 
 // ── Fetch ───────────────────────────────────────────────────────
 async function fetchHistory() {
@@ -148,15 +160,15 @@ async function fetchHistory() {
 }
 
 function reload() {
-  currentPage.value  = 1
-  expandedRows.value = []
+  currentPage.value     = 1
+  expandedRowKeys.value = []
   fetchHistory()
 }
 
-function onPage(event) {
-  currentPage.value  = event.page + 1
-  perPage.value      = event.rows
-  expandedRows.value = []
+function onTableChange(paginationEvt) {
+  currentPage.value     = paginationEvt.current
+  perPage.value         = paginationEvt.pageSize
+  expandedRowKeys.value = []
   fetchHistory()
 }
 
@@ -206,11 +218,6 @@ onMounted(fetchHistory)
   flex: 1;
   overflow: hidden;
   font-size: 0.8rem;
-}
-
-:deep(.p-datatable-tbody > tr > td) {
-  vertical-align: top;
-  padding: 0.35rem 0.6rem;
 }
 
 .content-preview {

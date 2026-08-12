@@ -62,42 +62,63 @@
             <span v-else class="voc-usages-empty">{{ t('voc_no_usages') }}</span>
           </div>
 
-          <DataTable
-            :value="selected.items"
-            dataKey="id"
+          <!--
+            SPIKE: ant-design-vue eval. AntD's core Table has no built-in
+            drag-to-reorder-rows (PrimeVue's Column `rowReorder` was a single
+            prop + a `@rowReorder` event) — same gap as the dropped
+            column-reorder in DataView.vue. Replaced with up/down buttons
+            rather than pulling in a drag library for one table.
+          -->
+          <ATable
+            :columns="vocColumns"
+            :dataSource="selected.items"
+            :pagination="false"
             class="voc-table"
             size="small"
-            @rowReorder="onReorder"
+            rowKey="id"
           >
-            <Column rowReorder style="width: 2.5rem" />
-            <Column field="def" :header="t('voc_item_def')">
-              <template #body="{ data }">
+            <template #bodyCell="{ column, record, index }">
+              <template v-if="column.key === 'reorder'">
+                <div class="reorder-btns">
+                  <button
+                    class="reorder-btn"
+                    :disabled="index === 0"
+                    :title="t('move_up')"
+                    @click="moveItem(index, -1)"
+                  ><i class="pi pi-chevron-up" /></button>
+                  <button
+                    class="reorder-btn"
+                    :disabled="index === selected.items.length - 1"
+                    :title="t('move_down')"
+                    @click="moveItem(index, 1)"
+                  ><i class="pi pi-chevron-down" /></button>
+                </div>
+              </template>
+              <template v-else-if="column.key === 'def'">
                 <span
-                  v-if="editingId !== data.id"
+                  v-if="editingId !== record.id"
                   class="def-text"
-                  @dblclick="startEdit(data)"
-                >{{ data.def }}</span>
+                  @dblclick="startEdit(record)"
+                >{{ record.def }}</span>
                 <InputText
                   v-else
                   v-model="editingVal"
                   size="small"
                   fluid
                   autofocus
-                  @keyup.enter="saveEdit(data)"
+                  @keyup.enter="saveEdit(record)"
                   @keyup.escape="cancelEdit"
-                  @blur="saveEdit(data)"
+                  @blur="saveEdit(record)"
                 />
               </template>
-            </Column>
-            <Column style="width: 5rem; text-align: right">
-              <template #body="{ data }">
+              <template v-else-if="column.key === 'actions'">
                 <Button icon="pi pi-pencil" text rounded size="small"
-                        @click="startEdit(data)" :disabled="editingId !== null" />
+                        @click="startEdit(record)" :disabled="editingId !== null" />
                 <Button icon="pi pi-trash" text rounded size="small" severity="danger"
-                        @click="confirmErase(data)" :disabled="editingId !== null" />
+                        @click="confirmErase(record)" :disabled="editingId !== null" />
               </template>
-            </Column>
-          </DataTable>
+            </template>
+          </ATable>
         </div>
 
         <div class="voc-items voc-empty-hint" v-else>
@@ -146,8 +167,7 @@ import { useI18n } from '@/i18n'
 import { useToast, useConfirm } from '@/composables/useNotify'
 import { api } from '@/api'
 import AppLayout from '@/components/AppLayout.vue'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
+import { Table as ATable } from 'ant-design-vue'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import Badge from 'primevue/badge'
@@ -191,6 +211,12 @@ const addItemDialog = ref(false)
 const addItemVoc = ref('')
 const addItemDef = ref('')
 const addItemHeader = computed(() => `${t('voc_add_item_to')} '${addItemVoc.value}'`)
+
+const vocColumns = computed(() => [
+  { title: '',                key: 'reorder', width: 40 },
+  { title: t('voc_item_def'), key: 'def' },
+  { title: '',                key: 'actions', width: 80 },
+])
 
 // ── Load ────────────────────────────────────────────────────
 async function load() {
@@ -288,6 +314,16 @@ async function onReorder(event) {
   } catch {
     toast.add({ severity: 'warn', summary: t('voc_sort_not_saved'), life: 3000 })
   }
+}
+
+function moveItem(index, dir) {
+  const items = selected.value.items
+  const newIndex = index + dir
+  if (newIndex < 0 || newIndex >= items.length) return
+  const reordered = [...items]
+  const [moved] = reordered.splice(index, 1)
+  reordered.splice(newIndex, 0, moved)
+  onReorder({ value: reordered })
 }
 
 // ── New vocabulary ───────────────────────────────────────────
@@ -480,6 +516,30 @@ async function addItem() {
 
 .def-text {
   cursor: text;
+}
+
+.reorder-btns {
+  display: flex;
+  flex-direction: column;
+}
+
+.reorder-btn {
+  border: none;
+  background: transparent;
+  color: var(--p-text-muted-color);
+  cursor: pointer;
+  padding: 0.05rem 0.2rem;
+  line-height: 1;
+  font-size: 0.7rem;
+}
+
+.reorder-btn:hover:not(:disabled) {
+  color: var(--p-primary-color);
+}
+
+.reorder-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
 }
 
 .field {

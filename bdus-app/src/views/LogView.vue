@@ -47,59 +47,35 @@
       />
     </div>
 
-    <!-- ── DataTable ───────────────────────────────────────────── -->
-    <DataTable
-      :value="rows"
-      lazy
-      paginator
-      :rows="perPage"
-      :totalRecords="total"
-      :loading="loading"
-      :rowsPerPageOptions="[25, 50, 100]"
-      paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
-      :currentPageReportTemplate="`{first}–{last} / {totalRecords}`"
-      scrollable
-      scrollHeight="flex"
-      size="small"
-      class="log-table"
-      dataKey="id"
-      expandedRowIcon="pi pi-minus"
-      collapsedRowIcon="pi pi-plus"
-      v-model:expandedRows="expandedRows"
-      @page="onPage"
-    >
-      <template #empty>
-        <span class="empty-msg">{{ t('log_no_entries') }}</span>
-      </template>
-
-      <!-- Expand toggle -->
-      <Column expander style="width: 2.5rem; flex-shrink: 0;" />
-
-      <!-- Time -->
-      <Column field="time" :header="t('log_col_time')" style="width: 10rem; flex-shrink: 0;" />
-
-      <!-- Level badge -->
-      <Column field="level_name" :header="t('log_col_level')" style="width: 7rem; flex-shrink: 0;">
-        <template #body="{ data }">
-          <Tag :value="data.level_name" :severity="levelSeverity(data.level)" />
+    <!-- ── Table ───────────────────────────────────────────────── -->
+    <div ref="tableWrap" class="log-table">
+      <ATable
+        :columns="columns"
+        :dataSource="rows"
+        :loading="loading"
+        :pagination="pagination"
+        :scroll="{ y: tableScrollY }"
+        :locale="{ emptyText: t('log_no_entries') }"
+        size="small"
+        rowKey="id"
+        v-model:expandedRowKeys="expandedRowKeys"
+        @change="onTableChange"
+      >
+        <template #bodyCell="{ column, record }">
+          <template v-if="column.key === 'level_name'">
+            <Tag :value="record.level_name" :severity="levelSeverity(record.level)" />
+          </template>
+          <template v-else-if="column.key === 'message'">
+            <span class="msg-preview">{{ truncate(record.message) }}</span>
+          </template>
         </template>
-      </Column>
 
-      <!-- Channel -->
-      <Column field="channel" :header="t('log_col_channel')" style="width: 6rem; flex-shrink: 0;" />
-
-      <!-- Message (truncated) -->
-      <Column field="message" :header="t('log_col_message')" style="min-width: 0; flex: 1;">
-        <template #body="{ data }">
-          <span class="msg-preview">{{ truncate(data.message) }}</span>
+        <!-- Expanded row: full message -->
+        <template #expandedRowRender="{ record }">
+          <pre class="msg-full">{{ record.message }}</pre>
         </template>
-      </Column>
-
-      <!-- Expanded row: full message -->
-      <template #expansion="{ data }">
-        <pre class="msg-full">{{ data.message }}</pre>
-      </template>
-    </DataTable>
+      </ATable>
+    </div>
 
     <!-- ── Purge dialog ────────────────────────────────────────── -->
     <Dialog
@@ -140,11 +116,10 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useToast } from '@/composables/useNotify'
 import AppLayout from '@/components/AppLayout.vue'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
+import { Table as ATable } from 'ant-design-vue'
 import Button from 'primevue/button'
 import Select from 'primevue/select'
 import InputText from 'primevue/inputtext'
@@ -157,19 +132,55 @@ import { useI18n } from '@/i18n'
 const { t } = useI18n()
 const toast  = useToast()
 
+const columns = computed(() => [
+  { title: t('log_col_time'),    dataIndex: 'time',       key: 'time',       width: 160 },
+  { title: t('log_col_level'),   dataIndex: 'level_name',  key: 'level_name', width: 112 },
+  { title: t('log_col_channel'), dataIndex: 'channel',    key: 'channel',    width: 96 },
+  { title: t('log_col_message'), key: 'message' },
+])
+
 // ── State ──────────────────────────────────────────────────────
-const rows         = ref([])
-const total        = ref(0)
-const loading      = ref(false)
-const currentPage  = ref(1)
-const perPage      = ref(50)
-const filterLevel  = ref(0)
-const filterSearch = ref('')
-const expandedRows = ref([])
+const rows            = ref([])
+const total           = ref(0)
+const loading         = ref(false)
+const currentPage     = ref(1)
+const perPage         = ref(50)
+const filterLevel     = ref(0)
+const filterSearch    = ref('')
+const expandedRowKeys = ref([])
 
 const purgeDialogVisible = ref(false)
 const purging            = ref(false)
 const purgeDays          = ref(30)
+
+const pagination = computed(() => ({
+  current: currentPage.value,
+  pageSize: perPage.value,
+  total: total.value,
+  showSizeChanger: true,
+  pageSizeOptions: ['25', '50', '100'],
+  position: ['bottomCenter'],
+}))
+
+// ── AntD Table: fill available flex space (no scrollHeight="flex" equivalent) ──
+const tableWrap    = ref(null)
+const tableScrollY = ref(400)
+let resizeObs = null
+
+function measureTableHeight() {
+  if (!tableWrap.value) return
+  const total_      = tableWrap.value.clientHeight
+  const headerH     = tableWrap.value.querySelector('.ant-table-thead')?.getBoundingClientRect().height ?? 40
+  const paginationH = tableWrap.value.querySelector('.ant-pagination')?.getBoundingClientRect().height ?? 32
+  tableScrollY.value = Math.max(200, total_ - headerH - paginationH - 16)
+}
+
+onMounted(() => {
+  resizeObs = new ResizeObserver(measureTableHeight)
+  if (tableWrap.value) resizeObs.observe(tableWrap.value)
+})
+onUnmounted(() => resizeObs?.disconnect())
+watch(rows, () => { measureTableHeight() })
 
 // ── Level options ───────────────────────────────────────────────
 const levelOptions = computed(() => [
@@ -220,8 +231,8 @@ async function fetchLogs() {
 }
 
 function reload() {
-  currentPage.value = 1
-  expandedRows.value = []
+  currentPage.value     = 1
+  expandedRowKeys.value = []
   fetchLogs()
 }
 
@@ -229,10 +240,10 @@ function onFilterChange() {
   reload()
 }
 
-function onPage(event) {
-  currentPage.value = event.page + 1
-  perPage.value     = event.rows
-  expandedRows.value = []
+function onTableChange(paginationEvt) {
+  currentPage.value     = paginationEvt.current
+  perPage.value         = paginationEvt.pageSize
+  expandedRowKeys.value = []
   fetchLogs()
 }
 
@@ -302,10 +313,6 @@ onMounted(fetchLogs)
   font-size: 0.8rem;
 }
 
-:deep(.p-datatable-tbody > tr > td) {
-  vertical-align: top;
-  padding: 0.35rem 0.6rem;
-}
 
 .msg-preview {
   display: block;

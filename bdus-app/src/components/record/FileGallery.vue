@@ -107,43 +107,34 @@
             @input="debouncedPickerLoad"
           />
         </div>
-        <DataTable
-          :value="pickerFiles"
-          lazy
-          paginator
-          :rows="pickerPerPage"
-          :totalRecords="pickerTotal"
+        <ATable
+          :columns="pickerColumns"
+          :dataSource="pickerFiles"
           :loading="pickerLoading"
+          :pagination="pickerPagination"
+          :customRow="pickerCustomRow"
+          :locale="{ emptyText: t('files_empty') }"
           size="small"
-          dataKey="id"
-          selectionMode="single"
-          @page="onPickerPage"
-          @row-click="onPickerSelect"
-          class="picker-table"
+          rowKey="id"
+          class="picker-table clickable-rows"
+          @change="onPickerTableChange"
         >
-          <template #empty>
-            <span style="color: var(--p-text-muted-color); font-style: italic">{{ t('files_empty') }}</span>
-          </template>
-          <Column style="width: 60px;">
-            <template #body="{ data }">
-              <img v-if="data.is_image" :src="fileUrl(data)" class="picker-thumb" />
-              <i v-else :class="['picker-icon', fileIcon(data.ext)]" />
+          <template #bodyCell="{ column, record }">
+            <template v-if="column.key === 'thumb'">
+              <img v-if="record.is_image" :src="fileUrl(record)" class="picker-thumb" />
+              <i v-else :class="['picker-icon', fileIcon(record.ext)]" />
             </template>
-          </Column>
-          <Column :header="t('files_col_filename')">
-            <template #body="{ data }">
-              <span>{{ data.filename }}.{{ data.ext }}</span>
-              <div v-if="data.description" class="picker-desc">{{ data.description }}</div>
+            <template v-else-if="column.key === 'filename'">
+              <span>{{ record.filename }}.{{ record.ext }}</span>
+              <div v-if="record.description" class="picker-desc">{{ record.description }}</div>
             </template>
-          </Column>
-          <Column :header="t('files_col_links')" style="width: 120px;">
-            <template #body="{ data }">
+            <template v-else-if="column.key === 'links'">
               <span style="font-size: 0.78rem; color: var(--p-text-muted-color)">
-                {{ data.links.length }} {{ t('file_picker_links') }}
+                {{ record.links.length }} {{ t('file_picker_links') }}
               </span>
             </template>
-          </Column>
-        </DataTable>
+          </template>
+        </ATable>
       </Dialog>
     </template>
 
@@ -197,9 +188,8 @@ import Sortable   from 'sortablejs'
 import Image      from 'primevue/image'
 import Button     from 'primevue/button'
 import Dialog     from 'primevue/dialog'
-import DataTable  from 'primevue/datatable'
-import Column     from 'primevue/column'
 import InputText  from 'primevue/inputtext'
+import { Table as ATable } from 'ant-design-vue'
 import { useToast, useConfirm } from '@/composables/useNotify'
 import { api, assetUrl } from '@/api'
 import { useI18n }       from '@/i18n'
@@ -432,10 +422,27 @@ function debouncedPickerLoad() {
   }, 300)
 }
 
-function onPickerPage(event) {
-  pickerPage.value    = event.page + 1
-  pickerPerPage.value = event.rows
+const pickerColumns = computed(() => [
+  { title: '',                       key: 'thumb',    width: 60 },
+  { title: t('files_col_filename'),  key: 'filename' },
+  { title: t('files_col_links'),     key: 'links',    width: 120 },
+])
+
+const pickerPagination = computed(() => ({
+  current: pickerPage.value,
+  pageSize: pickerPerPage.value,
+  total: pickerTotal.value,
+  position: ['bottomCenter'],
+}))
+
+function onPickerTableChange(pagination) {
+  pickerPage.value    = pagination.current
+  pickerPerPage.value = pagination.pageSize
   loadPickerFiles()
+}
+
+function pickerCustomRow(record) {
+  return { onClick: () => onPickerSelect({ data: record }) }
 }
 
 function openFilePicker() {
@@ -668,12 +675,8 @@ function fileIcon(ext) {
 .picker-table {
   font-size: 0.82rem;
 }
-:deep(.picker-table .p-datatable-tbody > tr) {
-  cursor: pointer;
-}
-:deep(.picker-table .p-datatable-tbody > tr:hover td) {
-  background: var(--p-content-hover-background);
-}
+.clickable-rows :deep(.ant-table-tbody > tr) { cursor: pointer; }
+.clickable-rows :deep(.ant-table-tbody > tr:hover > td) { background: var(--p-content-hover-background) !important; }
 .picker-thumb {
   width: 48px;
   height: 36px;

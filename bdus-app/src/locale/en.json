@@ -1036,6 +1036,8 @@
   "voc_select_hint": "Select a vocabulary on the left.",
   "no_vocabularies": "No vocabularies defined yet.",
   "voc_sort_not_saved": "Sort order could not be saved",
+  "move_up": "Move up",
+  "move_down": "Move down",
 
   "files_mng": "File management",
   "files_mng_title": "Files",

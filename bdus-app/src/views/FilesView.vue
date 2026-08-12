@@ -27,112 +27,82 @@
     </div>
 
     <!-- ── Table ─────────────────────────────────────────────── -->
-    <DataTable
-      :value="files"
-      lazy
-      paginator
-      :rows="perPage"
-      :totalRecords="total"
-      :loading="loading"
-      :rowsPerPageOptions="[25, 50, 100]"
-      paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
-      :currentPageReportTemplate="`{first}–{last} / {totalRecords}`"
-      scrollable
-      scrollHeight="flex"
-      size="small"
-      class="files-table"
-      dataKey="id"
-      @page="onPage"
-    >
-      <template #empty>
-        <span class="empty-msg">{{ t('files_empty') }}</span>
-      </template>
-
-      <!-- Preview -->
-      <Column :header="t('files_col_preview')" style="width: 80px; flex-shrink: 0;">
-        <template #body="{ data }">
-          <span class="preview-trigger" @click="openPreview(data)" :title="t('files_preview_hint')">
-            <img
-              v-if="data.is_image"
-              :src="fileUrl(data)"
-              :alt="data.filename"
-              class="file-thumb"
+    <div ref="tableWrap" class="files-table">
+      <ATable
+        :columns="columns"
+        :dataSource="files"
+        :loading="loading"
+        :pagination="pagination"
+        :scroll="{ y: tableScrollY }"
+        :locale="{ emptyText: t('files_empty') }"
+        size="small"
+        rowKey="id"
+        @change="onTableChange"
+      >
+        <template #bodyCell="{ column, record }">
+          <template v-if="column.key === 'preview'">
+            <span class="preview-trigger" @click="openPreview(record)" :title="t('files_preview_hint')">
+              <img
+                v-if="record.is_image"
+                :src="fileUrl(record)"
+                :alt="record.filename"
+                class="file-thumb"
+              />
+              <i v-else :class="['file-icon-lg', fileIcon(record.ext)]" />
+            </span>
+          </template>
+          <template v-else-if="column.key === 'filename'">
+            <span class="filename-link" @click="openPreview(record)">
+              {{ record.filename }}.{{ record.ext }}
+            </span>
+            <div v-if="!record.links.length" class="orphan-badge">{{ t('files_orphan_badge') }}</div>
+          </template>
+          <template v-else-if="column.key === 'description'">
+            <InputText
+              :modelValue="record.description ?? ''"
+              size="small"
+              class="meta-input"
+              @update:modelValue="v => record.description = v || null"
+              @blur="saveMeta(record)"
+              @keyup.enter="saveMeta(record)"
             />
-            <i v-else :class="['file-icon-lg', fileIcon(data.ext)]" />
-          </span>
+          </template>
+          <template v-else-if="column.key === 'keywords'">
+            <InputText
+              :modelValue="record.keywords ?? ''"
+              size="small"
+              class="meta-input"
+              @update:modelValue="v => record.keywords = v || null"
+              @blur="saveMeta(record)"
+              @keyup.enter="saveMeta(record)"
+            />
+          </template>
+          <template v-else-if="column.key === 'links'">
+            <div v-if="record.links.length" class="links-list">
+              <RouterLink
+                v-for="(lnk, i) in record.links"
+                :key="i"
+                :to="`/${appName}/record/${lnk.tb}/${lnk.record_id}`"
+                class="record-link"
+              >
+                {{ lnk.tb }} #{{ lnk.record_id }}
+              </RouterLink>
+            </div>
+            <span v-else class="no-links">{{ t('files_no_links') }}</span>
+          </template>
+          <template v-else-if="column.key === 'actions'">
+            <div class="row-actions">
+              <button class="action-btn" :title="t('replace_file')" @click="startReplace(record)">
+                <i class="pi pi-sync" />
+              </button>
+              <button class="action-btn action-btn-danger" :title="t('delete_file')" @click="confirmDelete(record)">
+                <i class="pi pi-trash" />
+              </button>
+            </div>
+          </template>
         </template>
-      </Column>
-
-      <!-- Filename -->
-      <Column :header="t('files_col_filename')" style="width: 160px; flex-shrink: 0;">
-        <template #body="{ data }">
-          <span class="filename-link" @click="openPreview(data)">
-            {{ data.filename }}.{{ data.ext }}
-          </span>
-          <div v-if="!data.links.length" class="orphan-badge">{{ t('files_orphan_badge') }}</div>
-        </template>
-      </Column>
-
-      <!-- Description -->
-      <Column :header="t('files_col_description')" style="min-width: 0; flex: 1;">
-        <template #body="{ data }">
-          <InputText
-            :modelValue="data.description ?? ''"
-            size="small"
-            class="meta-input"
-            @update:modelValue="v => data.description = v || null"
-            @blur="saveMeta(data)"
-            @keyup.enter="saveMeta(data)"
-          />
-        </template>
-      </Column>
-
-      <!-- Keywords -->
-      <Column :header="t('files_col_keywords')" style="width: 200px; flex-shrink: 0;">
-        <template #body="{ data }">
-          <InputText
-            :modelValue="data.keywords ?? ''"
-            size="small"
-            class="meta-input"
-            @update:modelValue="v => data.keywords = v || null"
-            @blur="saveMeta(data)"
-            @keyup.enter="saveMeta(data)"
-          />
-        </template>
-      </Column>
-
-      <!-- Linked records -->
-      <Column :header="t('files_col_links')" style="width: 200px; flex-shrink: 0;">
-        <template #body="{ data }">
-          <div v-if="data.links.length" class="links-list">
-            <RouterLink
-              v-for="(lnk, i) in data.links"
-              :key="i"
-              :to="`/${appName}/record/${lnk.tb}/${lnk.record_id}`"
-              class="record-link"
-            >
-              {{ lnk.tb }} #{{ lnk.record_id }}
-            </RouterLink>
-          </div>
-          <span v-else class="no-links">{{ t('files_no_links') }}</span>
-        </template>
-      </Column>
-
-      <!-- Actions -->
-      <Column style="width: 80px; flex-shrink: 0;">
-        <template #body="{ data }">
-          <div class="row-actions">
-            <button class="action-btn" :title="t('replace_file')" @click="startReplace(data)">
-              <i class="pi pi-sync" />
-            </button>
-            <button class="action-btn action-btn-danger" :title="t('delete_file')" @click="confirmDelete(data)">
-              <i class="pi pi-trash" />
-            </button>
-          </div>
-        </template>
-      </Column>
-
-    </DataTable>
+      </ATable>
+    </div>
 
     <!-- Hidden file input for replace -->
     <input
@@ -170,12 +140,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { RouterLink, useRoute }     from 'vue-router'
 import { useToast, useConfirm } from '@/composables/useNotify'
 import AppLayout    from '@/components/AppLayout.vue'
-import DataTable    from 'primevue/datatable'
-import Column       from 'primevue/column'
+import { Table as ATable } from 'ant-design-vue'
 import Button       from 'primevue/button'
 import InputText    from 'primevue/inputtext'
 import ToggleButton from 'primevue/togglebutton'
@@ -192,6 +161,15 @@ const auth    = useAuthStore()
 
 const appName = computed(() => auth.user?.app ?? route.params.app)
 
+const columns = computed(() => [
+  { title: t('files_col_preview'),     key: 'preview',     width: 80 },
+  { title: t('files_col_filename'),    key: 'filename',    width: 160 },
+  { title: t('files_col_description'), key: 'description' },
+  { title: t('files_col_keywords'),    key: 'keywords',    width: 200 },
+  { title: t('files_col_links'),       key: 'links',       width: 200 },
+  { title: '',                         key: 'actions',     width: 80 },
+])
+
 // ── State ──────────────────────────────────────────────────────────
 const files       = ref([])
 const total       = ref(0)
@@ -199,6 +177,35 @@ const loading     = ref(false)
 const currentPage = ref(1)
 const perPage     = ref(25)
 const orphansOnly = ref(false)
+
+const pagination = computed(() => ({
+  current: currentPage.value,
+  pageSize: perPage.value,
+  total: total.value,
+  showSizeChanger: true,
+  pageSizeOptions: ['25', '50', '100'],
+  position: ['bottomCenter'],
+}))
+
+// ── AntD Table: fill available flex space (no scrollHeight="flex" equivalent) ──
+const tableWrap    = ref(null)
+const tableScrollY = ref(400)
+let resizeObs = null
+
+function measureTableHeight() {
+  if (!tableWrap.value) return
+  const total_      = tableWrap.value.clientHeight
+  const headerH     = tableWrap.value.querySelector('.ant-table-thead')?.getBoundingClientRect().height ?? 40
+  const paginationH = tableWrap.value.querySelector('.ant-pagination')?.getBoundingClientRect().height ?? 32
+  tableScrollY.value = Math.max(200, total_ - headerH - paginationH - 16)
+}
+
+onMounted(() => {
+  resizeObs = new ResizeObserver(measureTableHeight)
+  if (tableWrap.value) resizeObs.observe(tableWrap.value)
+})
+onUnmounted(() => resizeObs?.disconnect())
+watch(files, () => { measureTableHeight() })
 
 // ── Fetch ───────────────────────────────────────────────────────────
 async function fetchFiles() {
@@ -225,9 +232,9 @@ function reload() {
   fetchFiles()
 }
 
-function onPage(event) {
-  currentPage.value = event.page + 1
-  perPage.value     = event.rows
+function onTableChange(paginationEvt) {
+  currentPage.value = paginationEvt.current
+  perPage.value     = paginationEvt.pageSize
   fetchFiles()
 }
 
@@ -369,10 +376,6 @@ onMounted(fetchFiles)
   font-size: 0.82rem;
 }
 
-:deep(.p-datatable-tbody > tr > td) {
-  vertical-align: middle;
-  padding: 0.3rem 0.5rem;
-}
 
 /* ── Preview ──────────────────────────────────────────────────── */
 .file-thumb {

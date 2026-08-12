@@ -52,45 +52,32 @@
     </div>
 
     <!-- ── Table ────────────────────────────────────────────────── -->
-    <DataTable
-      v-else
-      :value="rows"
-      scrollable
-      scrollHeight="flex"
-      size="small"
-      class="deleted-table"
-      dataKey="rowid"
-    >
-      <!-- Row id -->
-      <Column field="rowid" :header="t('deleted_col_id')" style="width: 5rem; flex-shrink: 0;" />
-
-      <!-- Identifier field: first non-system core field value -->
-      <Column :header="t('deleted_col_preview')" style="min-width: 0; flex: 1;">
-        <template #body="{ data }">
-          <span class="row-preview">{{ rowPreview(data) }}</span>
+    <div v-else ref="tableWrap" class="deleted-table">
+      <ATable
+        :columns="columns"
+        :dataSource="rows"
+        :pagination="false"
+        :scroll="{ y: tableScrollY }"
+        size="small"
+        rowKey="rowid"
+      >
+        <template #bodyCell="{ column, record }">
+          <template v-if="column.key === 'preview'">
+            <span class="row-preview">{{ rowPreview(record) }}</span>
+          </template>
+          <template v-else-if="column.key === 'actions'">
+            <Button
+              :label="t('version_restore')"
+              icon="pi pi-history"
+              size="small"
+              severity="warning"
+              text
+              @click="askRestore(record)"
+            />
+          </template>
         </template>
-      </Column>
-
-      <!-- Deletion time -->
-      <Column field="time" :header="t('deleted_col_time')" style="width: 11rem; flex-shrink: 0;" />
-
-      <!-- Who deleted -->
-      <Column field="userid" :header="t('deleted_col_user')" style="width: 8rem; flex-shrink: 0;" />
-
-      <!-- Actions -->
-      <Column :header="t('deleted_col_actions')" style="width: 8rem; flex-shrink: 0;" frozen alignFrozen="right">
-        <template #body="{ data }">
-          <Button
-            :label="t('version_restore')"
-            icon="pi pi-history"
-            size="small"
-            severity="warning"
-            text
-            @click="askRestore(data)"
-          />
-        </template>
-      </Column>
-    </DataTable>
+      </ATable>
+    </div>
 
   </div>
   </AppLayout>
@@ -130,12 +117,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter }  from 'vue-router'
 import { useToast } from '@/composables/useNotify'
 import AppLayout      from '@/components/AppLayout.vue'
-import DataTable      from 'primevue/datatable'
-import Column         from 'primevue/column'
+import { Table as ATable } from 'ant-design-vue'
 import Button         from 'primevue/button'
 import Select         from 'primevue/select'
 import Message        from 'primevue/message'
@@ -151,6 +137,28 @@ const route    = useRoute()
 const router   = useRouter()
 const { tables, loadTables } = useTables()
 
+const columns = computed(() => [
+  { title: t('deleted_col_id'),      dataIndex: 'rowid',  key: 'rowid',   width: 80 },
+  { title: t('deleted_col_preview'), key: 'preview' },
+  { title: t('deleted_col_time'),    dataIndex: 'time',   key: 'time',    width: 176 },
+  { title: t('deleted_col_user'),    dataIndex: 'userid', key: 'userid',  width: 128 },
+  { title: t('deleted_col_actions'), key: 'actions',      width: 128, fixed: 'right' },
+])
+
+// ── AntD Table: fill available flex space (no scrollHeight="flex" equivalent) ──
+const tableWrap    = ref(null)
+const tableScrollY = ref(400)
+let resizeObs = null
+
+function measureTableHeight() {
+  if (!tableWrap.value) return
+  const total   = tableWrap.value.clientHeight
+  const headerH = tableWrap.value.querySelector('.ant-table-thead')?.getBoundingClientRect().height ?? 40
+  tableScrollY.value = Math.max(200, total - headerH - 2)
+}
+
+onUnmounted(() => resizeObs?.disconnect())
+
 // ── State ──────────────────────────────────────────────────────
 const selectedTb    = ref(null)
 const rows          = ref([])
@@ -159,6 +167,12 @@ const error         = ref(null)
 const confirmVisible = ref(false)
 const restoreTarget  = ref(null)
 const restoring      = ref(false)
+
+onMounted(() => {
+  resizeObs = new ResizeObserver(measureTableHeight)
+  if (tableWrap.value) resizeObs.observe(tableWrap.value)
+})
+watch(rows, () => { measureTableHeight() })
 
 // ── Tables ─────────────────────────────────────────────────────
 const tableOptions = computed(() =>
@@ -311,10 +325,6 @@ onMounted(async () => {
   flex: 1;
   overflow: hidden;
   font-size: 0.82rem;
-}
-:deep(.p-datatable-tbody > tr > td) {
-  vertical-align: middle;
-  padding: 0.35rem 0.6rem;
 }
 .row-preview {
   color: var(--p-text-muted-color);

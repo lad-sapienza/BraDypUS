@@ -26,21 +26,18 @@
       </Message>
 
       <!-- Table -->
-      <DataTable
+      <ATable
         v-else
-        :value="backups"
+        :columns="columns"
+        :dataSource="backups"
+        :pagination="false"
         class="backup-table"
         size="small"
-        striped-rows
+        rowKey="file"
       >
-        <Column field="app"            :header="t('application')" />
-        <Column field="engine"         :header="t('engine')" />
-        <Column field="formatted_time" :header="t('date')" />
-        <Column field="size_mb"        :header="t('size')">
-          <template #body="{ data }">{{ data.size_mb }} MB</template>
-        </Column>
-        <Column :header="t('actions')" style="width:14rem">
-          <template #body="{ data }">
+        <template #bodyCell="{ column, record }">
+          <template v-if="column.key === 'size_mb'">{{ record.size_mb }} MB</template>
+          <template v-else-if="column.key === 'actions'">
             <div class="row-actions">
               <Button
                 icon="pi pi-download"
@@ -48,7 +45,7 @@
                 size="small"
                 severity="secondary"
                 text
-                @click="downloadBackup(data.file)"
+                @click="downloadBackup(record.file)"
               />
               <Button
                 v-if="canDelete"
@@ -57,21 +54,21 @@
                 size="small"
                 severity="danger"
                 text
-                @click="confirmDelete(data.file)"
+                @click="confirmDelete(record.file)"
               />
               <Button
-                v-if="canRestore && data.engine === engine"
+                v-if="canRestore && record.engine === engine"
                 icon="pi pi-undo"
                 :title="t('restore')"
                 size="small"
                 severity="warn"
                 text
-                @click="confirmRestore(data.file)"
+                @click="confirmRestore(record.file)"
               />
             </div>
           </template>
-        </Column>
-      </DataTable>
+        </template>
+      </ATable>
 
     </div>
 
@@ -79,14 +76,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted }        from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useToast, useConfirm } from '@/composables/useNotify'
 import AppLayout      from '@/components/AppLayout.vue'
 import Button         from 'primevue/button'
 import Message        from 'primevue/message'
 import ProgressSpinner from 'primevue/progressspinner'
-import DataTable      from 'primevue/datatable'
-import Column         from 'primevue/column'
+import { Table as ATable } from 'ant-design-vue'
 import { api, assetUrl } from '@/api'
 import { useI18n }    from '@/i18n'
 
@@ -94,6 +90,14 @@ const { t }   = useI18n()
 const toast   = useToast()
 const confirm = useConfirm()
 const { responseMessage } = api
+
+const columns = computed(() => [
+  { title: t('application'), dataIndex: 'app',            key: 'app' },
+  { title: t('engine'),      dataIndex: 'engine',         key: 'engine' },
+  { title: t('date'),        dataIndex: 'formatted_time', key: 'formatted_time' },
+  { title: t('size'),        dataIndex: 'size_mb',        key: 'size_mb' },
+  { title: t('actions'),     key: 'actions',              width: 224 },
+])
 
 // ── State ─────────────────────────────────────────────────────────────────
 const loading    = ref(false)

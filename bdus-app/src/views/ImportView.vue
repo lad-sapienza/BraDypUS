@@ -124,21 +124,15 @@
 
           <!-- Data preview table -->
           <div class="preview-table-wrap">
-            <DataTable
-              :value="previewRows"
+            <ATable
+              :columns="previewColumns"
+              :dataSource="previewRows"
+              :pagination="false"
+              :scroll="{ y: 220 }"
               size="small"
-              striped-rows
-              scrollable
-              scroll-height="220px"
+              rowKey="__key"
               class="preview-table"
-            >
-              <Column
-                v-for="(col, i) in previewData.columns"
-                :key="col"
-                :field="String(i)"
-                :header="col"
-              />
-            </DataTable>
+            />
           </div>
 
           <!-- Field mapping -->
@@ -221,15 +215,14 @@
             {{ t('import_index_rows', previewData.total) }}
           </p>
 
-          <DataTable
-            :value="previewData.index_rows"
+          <ATable
+            :columns="photosIndexColumns"
+            :dataSource="previewData.index_rows"
+            :pagination="false"
             size="small"
-            striped-rows
+            rowKey="filename"
             class="preview-table"
-          >
-            <Column field="filename"  :header="t('import_filename')"  />
-            <Column field="record_id" :header="t('import_record_id')" />
-          </DataTable>
+          />
 
           <Message
             v-if="previewData.missing_files?.length"
@@ -320,10 +313,9 @@ import { useTables } from '@/composables/useTables'
 import Button        from 'primevue/button'
 import Select        from 'primevue/select'
 import SelectButton  from 'primevue/selectbutton'
-import Column        from 'primevue/column'
-import DataTable     from 'primevue/datatable'
 import Message       from 'primevue/message'
 import Tag           from 'primevue/tag'
+import { Table as ATable } from 'ant-design-vue'
 
 const { t } = useI18n()
 const { tables, loadTables } = useTables()
@@ -379,10 +371,22 @@ const currentStepLabels = computed(() => {
   return [base[0], t('import_step_photos'), base[2]]
 })
 
-// Preview rows: array-of-arrays → DataTable wants array-of-objects keyed by column index
+// Preview rows: array-of-arrays → Table wants array-of-objects keyed by column index
 const previewRows = computed(() =>
-  (previewData.value.rows ?? []).map(row => Object.fromEntries(row.map((v, i) => [String(i), v])))
+  (previewData.value.rows ?? []).map((row, rowIdx) => ({
+    __key: rowIdx,
+    ...Object.fromEntries(row.map((v, i) => [String(i), v])),
+  }))
 )
+
+const previewColumns = computed(() =>
+  (previewData.value.columns ?? []).map((col, i) => ({ title: col, dataIndex: String(i), key: String(i) }))
+)
+
+const photosIndexColumns = computed(() => [
+  { title: t('import_filename'),  dataIndex: 'filename',  key: 'filename' },
+  { title: t('import_record_id'), dataIndex: 'record_id', key: 'record_id' },
+])
 
 // Options for the mapping dropdowns: "— ignore —" + all table fields
 const mappingOptions = computed(() => [

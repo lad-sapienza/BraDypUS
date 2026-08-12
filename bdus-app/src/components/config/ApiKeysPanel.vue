@@ -61,40 +61,39 @@
           {{ t('no_api_keys') }}
         </div>
 
-        <DataTable v-else :value="keys" size="small" class="keys-table">
-          <Column field="label" :header="t('label')" />
-          <Column field="created_at" :header="t('created_at')">
-            <template #body="{ data }">{{ formatDate(data.created_at) }}</template>
-          </Column>
-          <Column field="last_used_at" :header="t('last_used')">
-            <template #body="{ data }">{{ data.last_used_at ? formatDate(data.last_used_at) : '—' }}</template>
-          </Column>
-          <Column field="privilege" :header="t('privilege')">
-            <template #body="{ data }">
+        <ATable
+          v-else
+          :columns="columns"
+          :dataSource="keys"
+          :pagination="false"
+          size="small"
+          rowKey="id"
+          class="keys-table"
+        >
+          <template #bodyCell="{ column, record }">
+            <template v-if="column.key === 'created_at'">{{ formatDate(record.created_at) }}</template>
+            <template v-else-if="column.key === 'last_used_at'">{{ record.last_used_at ? formatDate(record.last_used_at) : '—' }}</template>
+            <template v-else-if="column.key === 'privilege'">
               <Tag
-                :value="privilegeLabel(data.privilege)"
-                :severity="privilegeSeverity(data.privilege)"
+                :value="privilegeLabel(record.privilege)"
+                :severity="privilegeSeverity(record.privilege)"
               />
             </template>
-          </Column>
-          <Column field="is_active" :header="t('status')">
-            <template #body="{ data }">
+            <template v-else-if="column.key === 'is_active'">
               <Tag
-                :value="data.is_active ? t('active') : t('revoked')"
-                :severity="data.is_active ? 'success' : 'secondary'"
+                :value="record.is_active ? t('active') : t('revoked')"
+                :severity="record.is_active ? 'success' : 'secondary'"
               />
             </template>
-          </Column>
-          <Column :header="t('actions')">
-            <template #body="{ data }">
+            <template v-else-if="column.key === 'actions'">
               <Button
-                v-if="data.is_active"
+                v-if="record.is_active"
                 icon="pi pi-ban"
                 text
                 severity="warn"
                 size="small"
                 :title="t('revoke')"
-                @click="revokeKey(data.id)"
+                @click="revokeKey(record.id)"
               />
               <Button
                 icon="pi pi-trash"
@@ -102,11 +101,11 @@
                 severity="danger"
                 size="small"
                 :title="t('delete')"
-                @click="deleteKey(data.id)"
+                @click="deleteKey(record.id)"
               />
             </template>
-          </Column>
-        </DataTable>
+          </template>
+        </ATable>
       </section>
     </div>
   </div>
@@ -118,9 +117,8 @@ import Button    from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import Select    from 'primevue/select'
 import Message   from 'primevue/message'
-import DataTable from 'primevue/datatable'
-import Column    from 'primevue/column'
 import Tag       from 'primevue/tag'
+import { Table as ATable } from 'ant-design-vue'
 import { useToast } from '@/composables/useNotify'
 import { useI18n }  from '@/i18n'
 import { api }      from '@/api'
@@ -150,6 +148,15 @@ function privilegeSeverity(priv) {
   if (priv <= PRIV_EDIT)  return 'warn'
   return 'info'
 }
+
+const columns = computed(() => [
+  { title: t('label'),       dataIndex: 'label',        key: 'label' },
+  { title: t('created_at'),  dataIndex: 'created_at',   key: 'created_at' },
+  { title: t('last_used'),   dataIndex: 'last_used_at', key: 'last_used_at' },
+  { title: t('privilege'),   dataIndex: 'privilege',    key: 'privilege' },
+  { title: t('status'),      dataIndex: 'is_active',    key: 'is_active' },
+  { title: t('actions'),     key: 'actions' },
+])
 
 const loading      = ref(false)
 const creating     = ref(false)

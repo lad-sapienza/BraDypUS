@@ -12,47 +12,44 @@
         {{ t('no_table_overrides') }}
       </div>
 
-      <DataTable
+      <ATable
         v-else
-        :value="rows"
+        :columns="columns"
+        :dataSource="rows"
+        :pagination="false"
         size="small"
+        rowKey="id"
         class="privs-table"
       >
-        <Column :header="t('table')" style="min-width:10rem">
-          <template #body="{ data }">
-            <code class="privs-table-name">{{ data.table_name }}</code>
+        <template #bodyCell="{ column, record }">
+          <template v-if="column.key === 'table_name'">
+            <code class="privs-table-name">{{ record.table_name }}</code>
           </template>
-        </Column>
-        <Column :header="t('global_privilege')" style="min-width:8rem">
-          <template #body="{ data }">
-            <Tag :value="privilegeLabel(data.privilege)" :severity="privilegeSeverity(data.privilege)" rounded />
+          <template v-else-if="column.key === 'privilege'">
+            <Tag :value="privilegeLabel(record.privilege)" :severity="privilegeSeverity(record.privilege)" rounded />
           </template>
-        </Column>
-        <Column :header="t('privilege_subset')" style="min-width:12rem">
-          <template #body="{ data }">
-            <code v-if="data.subset" class="privs-subset">{{ data.subset }}</code>
+          <template v-else-if="column.key === 'subset'">
+            <code v-if="record.subset" class="privs-subset">{{ record.subset }}</code>
             <span v-else class="privs-empty-cell">—</span>
           </template>
-        </Column>
-        <Column style="width:5rem">
-          <template #body="{ data }">
+          <template v-else-if="column.key === 'actions'">
             <Button
               icon="pi pi-pencil"
               text rounded size="small"
               :title="t('edit')"
-              @click="startEdit(data)"
+              @click="startEdit(record)"
             />
             <Button
               icon="pi pi-trash"
               text rounded size="small"
               severity="danger"
               :title="t('delete')"
-              :loading="deleting === data.id"
-              @click="deleteRow(data.id)"
+              :loading="deleting === record.id"
+              @click="deleteRow(record.id)"
             />
           </template>
-        </Column>
-      </DataTable>
+        </template>
+      </ATable>
 
       <!-- Add / edit form -->
       <div class="privs-form">
@@ -112,8 +109,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useToast } from '@/composables/useNotify'
-import DataTable     from 'primevue/datatable'
-import Column        from 'primevue/column'
+import { Table as ATable } from 'ant-design-vue'
 import Button        from 'primevue/button'
 import Select        from 'primevue/select'
 import InputText     from 'primevue/inputtext'
@@ -159,6 +155,13 @@ function privilegeSeverity(value) {
 const tableOptions = computed(() =>
   tables.value.map(tb => ({ value: tb.name, label: tb.label ?? tb.name }))
 )
+
+const columns = computed(() => [
+  { title: t('table'),             key: 'table_name', width: 160 },
+  { title: t('global_privilege'),  key: 'privilege',   width: 130 },
+  { title: t('privilege_subset'),  key: 'subset',      width: 190 },
+  { title: '',                     key: 'actions',     width: 80 },
+])
 
 // ── State ─────────────────────────────────────────────────────────
 const rows      = ref([])

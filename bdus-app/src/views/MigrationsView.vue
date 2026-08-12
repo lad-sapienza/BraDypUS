@@ -35,45 +35,34 @@
         </div>
 
         <!-- Table -->
-        <DataTable
-          :value="migrations"
+        <ATable
+          :columns="columns"
+          :dataSource="migrations"
+          :pagination="false"
           size="small"
-          stripedRows
+          rowKey="name"
           class="mv-table"
         >
-          <!-- # -->
-          <Column header="#" style="width:3.5rem; text-align:center">
-            <template #body="{ index }">
+          <template #bodyCell="{ column, record, index }">
+            <template v-if="column.key === 'idx'">
               <span class="mv-idx">{{ index + 1 }}</span>
             </template>
-          </Column>
-
-          <!-- Name -->
-          <Column :header="t('migrations_col_name')" field="name">
-            <template #body="{ data }">
-              <code class="mv-name">{{ data.name }}</code>
+            <template v-else-if="column.key === 'name'">
+              <code class="mv-name">{{ record.name }}</code>
             </template>
-          </Column>
-
-          <!-- Status -->
-          <Column :header="t('migrations_col_status')" style="width:9rem">
-            <template #body="{ data }">
+            <template v-else-if="column.key === 'status'">
               <Tag
-                :value="data.applied ? t('migration_applied') : t('migration_pending')"
-                :severity="data.applied ? 'success' : 'warn'"
-                :icon="data.applied ? 'pi pi-check' : 'pi pi-clock'"
+                :value="record.applied ? t('migration_applied') : t('migration_pending')"
+                :severity="record.applied ? 'success' : 'warn'"
+                :icon="record.applied ? 'pi pi-check' : 'pi pi-clock'"
               />
             </template>
-          </Column>
-
-          <!-- Applied at -->
-          <Column :header="t('migrations_col_applied_at')" style="width:12rem">
-            <template #body="{ data }">
-              <span v-if="data.applied_at" class="mv-date">{{ data.applied_at }}</span>
+            <template v-else-if="column.key === 'applied_at'">
+              <span v-if="record.applied_at" class="mv-date">{{ record.applied_at }}</span>
               <span v-else class="mv-date mv-date-empty">—</span>
             </template>
-          </Column>
-        </DataTable>
+          </template>
+        </ATable>
       </template>
 
     </div>
@@ -81,17 +70,23 @@
 </template>
 
 <script setup>
-import { ref, onMounted }  from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import AppLayout           from '@/components/AppLayout.vue'
 import ProgressSpinner     from 'primevue/progressspinner'
 import Message             from 'primevue/message'
-import DataTable           from 'primevue/datatable'
-import Column              from 'primevue/column'
 import Tag                 from 'primevue/tag'
+import { Table as ATable } from 'ant-design-vue'
 import { api }             from '@/api'
 import { useI18n }         from '@/i18n'
 
 const { t } = useI18n()
+
+const columns = computed(() => [
+  { title: '#',                            key: 'idx',        width: 56 },
+  { title: t('migrations_col_name'),       dataIndex: 'name', key: 'name' },
+  { title: t('migrations_col_status'),     key: 'status',     width: 144 },
+  { title: t('migrations_col_applied_at'), key: 'applied_at', width: 192 },
+])
 
 /** Simple sprintf-style helper for locale strings with positional %s */
 function tf(key, ...args) {

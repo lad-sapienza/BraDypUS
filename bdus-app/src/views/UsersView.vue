@@ -15,81 +15,72 @@
       </div>
 
       <!-- ── Table ───────────────────────────────────────────── -->
-      <DataTable
-        :value="users"
+      <ATable
+        :columns="columns"
+        :dataSource="users"
         :loading="loading"
-        v-model:expandedRows="expandedRows"
-        dataKey="id"
-        stripedRows
+        v-model:expandedRowKeys="expandedRowKeys"
+        :showExpandColumn="isAdmin"
+        :pagination="false"
         size="small"
+        rowKey="id"
         class="users-table"
       >
-        <!-- Expand toggle (admin only, only for editable users with overrides panel) -->
-        <Column v-if="isAdmin" expander style="width: 3rem" />
-
-        <Column :header="t('name')" field="name" sortable style="min-width:9rem" />
-
-        <Column :header="t('email')" field="email" sortable style="min-width:12rem">
-          <template #body="{ data }">
-            <a :href="`mailto:${data.email}`" class="users-email">{{ data.email }}</a>
+        <template #bodyCell="{ column, record }">
+          <template v-if="column.key === 'email'">
+            <a :href="`mailto:${record.email}`" class="users-email">{{ record.email }}</a>
           </template>
-        </Column>
-
-        <Column :header="t('global_privilege')" style="min-width:9rem">
-          <template #body="{ data }">
+          <template v-else-if="column.key === 'privilege'">
             <div class="users-priv-cell">
               <Tag
-                :value="data.privilege"
-                :severity="privilegeSeverity(data.privilege_value)"
+                :value="record.privilege"
+                :severity="privilegeSeverity(record.privilege_value)"
                 rounded
               />
               <Badge
-                v-if="data.override_count > 0"
-                :value="data.override_count"
+                v-if="record.override_count > 0"
+                :value="record.override_count"
                 severity="secondary"
                 class="users-badge"
                 :title="t('table_overrides')"
               />
             </div>
           </template>
-        </Column>
-
-        <Column style="width:10rem">
-          <template #body="{ data }">
+          <template v-else-if="column.key === 'actions'">
             <Button
-              v-if="data.editable"
+              v-if="record.editable"
               icon="pi pi-pencil"
               text rounded size="small"
               :title="t('edit')"
-              @click="openForm(data)"
+              @click="openForm(record)"
             />
             <Button
-              v-if="isAdmin && data.editable && data.id !== auth.user?.id"
+              v-if="isAdmin && record.editable && record.id !== auth.user?.id"
               icon="pi pi-ban"
               text rounded size="small"
               severity="warn"
               :title="t('revoke_session')"
-              @click="confirmRevoke(data)"
+              @click="confirmRevoke(record)"
             />
             <Button
-              v-if="isAdmin && data.editable && data.id !== auth.user?.id"
+              v-if="isAdmin && record.editable && record.id !== auth.user?.id"
               icon="pi pi-trash"
               text rounded size="small"
               severity="danger"
               :title="t('delete')"
-              @click="confirmDelete(data)"
+              @click="confirmDelete(record)"
             />
           </template>
-        </Column>
+        </template>
 
         <!-- Row expansion: per-table privileges panel -->
-        <template #expansion="{ data }">
+        <template #expandedRowRender="{ record }">
           <UserPrivilegesPanel
-            :userId="data.id"
+            :userId="record.id"
             :callerPrivilege="callerPrivilege"
           />
         </template>
-      </DataTable>
+      </ATable>
 
     </div>
 
@@ -118,8 +109,7 @@ import { useToast, useConfirm } from '@/composables/useNotify'
 import AppLayout        from '@/components/AppLayout.vue'
 import UserForm         from '@/components/users/UserForm.vue'
 import UserPrivilegesPanel from '@/components/users/UserPrivilegesPanel.vue'
-import DataTable        from 'primevue/datatable'
-import Column           from 'primevue/column'
+import { Table as ATable } from 'ant-design-vue'
 import Button           from 'primevue/button'
 import Badge            from 'primevue/badge'
 import Tag              from 'primevue/tag'
@@ -137,14 +127,23 @@ const toast   = useToast()
 const SEVERITY = { 1: 'danger', 10: 'warning', 20: 'info', 25: 'info', 30: 'success', 40: 'secondary' }
 function privilegeSeverity(value) { return SEVERITY[value] ?? 'secondary' }
 
+const columns = computed(() => [
+  { title: t('name'),  dataIndex: 'name',  key: 'name',
+    sorter: (a, b) => (a.name ?? '').localeCompare(b.name ?? ''), width: 160 },
+  { title: t('email'), dataIndex: 'email', key: 'email',
+    sorter: (a, b) => (a.email ?? '').localeCompare(b.email ?? ''), width: 220 },
+  { title: t('global_privilege'), key: 'privilege', width: 170 },
+  { title: '',                    key: 'actions',   width: 170 },
+])
+
 // ── State ─────────────────────────────────────────────────────────
-const users        = ref([])
-const loading      = ref(false)
-const isAdmin      = ref(false)
-const expandedRows = ref({})
-const formVisible  = ref(false)
-const saving       = ref(false)
-const formData     = ref({})
+const users            = ref([])
+const loading          = ref(false)
+const isAdmin          = ref(false)
+const expandedRowKeys  = ref([])
+const formVisible      = ref(false)
+const saving           = ref(false)
+const formData         = ref({})
 
 /** The privilege level of the logged-in user (for gating what overrides they can assign) */
 const callerPrivilege = computed(() => auth.user?.privilege_value ?? 1)

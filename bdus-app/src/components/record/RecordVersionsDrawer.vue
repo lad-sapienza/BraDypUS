@@ -1,19 +1,19 @@
 <template>
   <!-- ── Drawer shell ─────────────────────────────────────────────── -->
-  <Drawer
-    v-model:visible="visible"
-    :header="t('version_history')"
-    position="right"
-    :style="{ width: '480px' }"
-    @hide="reset"
+  <ADrawer
+    v-model:open="visible"
+    :title="t('version_history')"
+    placement="right"
+    width="480px"
+    @close="reset"
   >
     <!-- ── Loading spinner ─────────────────────────────────────────── -->
     <div v-if="loading" class="vd-loading">
-      <ProgressSpinner />
+      <ASpin />
     </div>
 
     <!-- ── Error message ───────────────────────────────────────────── -->
-    <Message v-else-if="error" severity="error">{{ error }}</Message>
+    <AAlert v-else-if="error" type="error" :message="error" show-icon />
 
     <!-- ── Version list ────────────────────────────────────────────── -->
     <template v-else-if="!selectedVersion">
@@ -42,13 +42,10 @@
     <template v-else>
       <!-- Back nav -->
       <div class="vd-diff-nav">
-        <Button
-          :label="t('version_back_list')"
-          icon="pi pi-arrow-left"
-          text
-          size="small"
-          @click="selectedVersion = null; diff = null"
-        />
+        <AButton type="text" size="small" @click="selectedVersion = null; diff = null">
+          <template #icon><i class="pi pi-arrow-left" /></template>
+          {{ t('version_back_list') }}
+        </AButton>
       </div>
 
       <!-- Version metadata -->
@@ -62,26 +59,23 @@
 
       <!-- Diff loading -->
       <div v-if="diffLoading" class="vd-loading">
-        <ProgressSpinner />
+        <ASpin />
       </div>
 
       <template v-else-if="diff">
         <!-- Deleted record banner -->
-        <Message v-if="!diff.current.core" severity="warn" class="vd-deleted-banner">
-          {{ t('version_record_deleted') }}
-        </Message>
+        <AAlert v-if="!diff.current.core" type="warning" :message="t('version_record_deleted')" show-icon class="vd-deleted-banner" />
 
         <!-- Core fields -->
         <div class="vd-section">
           <div class="vd-section-header">
-            <Checkbox
+            <ACheckbox
               v-if="diff.current.core"
-              v-model="allCoreSelected"
-              :binary="true"
+              v-model:checked="allCoreSelected"
               :indeterminate="someCoreSelected && !allCoreSelected"
-              :inputId="`all-core`"
+              id="all-core"
             />
-            <label :for="`all-core`" class="vd-section-label">
+            <label for="all-core" class="vd-section-label">
               {{ t('version_core_fields') }}
             </label>
           </div>
@@ -91,12 +85,12 @@
             :key="field.name"
             class="vd-field-row changed"
           >
-            <Checkbox
+            <ACheckbox
               v-if="diff.current.core"
-              v-model="selectedFields"
-              :value="field.name"
-              :inputId="`f-${field.name}`"
+              :checked="selectedFields.includes(field.name)"
+              :id="`f-${field.name}`"
               :disabled="!field.changed"
+              @change="e => toggleField(field.name, e.target.checked)"
             />
             <div class="vd-field-info">
               <label :for="`f-${field.name}`" class="vd-field-name">
@@ -122,11 +116,11 @@
             class="vd-section"
           >
             <div class="vd-section-header">
-              <Checkbox
+              <ACheckbox
                 v-if="diff.current.core"
-                v-model="selectedPlugins"
-                :value="plgName"
-                :inputId="`plg-${plgName}`"
+                :checked="selectedPlugins.includes(plgName)"
+                :id="`plg-${plgName}`"
+                @change="e => togglePlugin(plgName, e.target.checked)"
               />
               <label :for="`plg-${plgName}`" class="vd-section-label">
                 {{ plgName }}
@@ -141,65 +135,56 @@
 
         <!-- Restore button — admin only -->
         <div v-if="canRestore" class="vd-restore-bar">
-          <Button
+          <AButton
             v-if="diff.current.core"
-            :label="t('version_restore_selected')"
-            icon="pi pi-history"
-            severity="warning"
+            danger
             :disabled="selectedFields.length === 0 && selectedPlugins.length === 0"
             @click="confirmRestore"
-          />
-          <Button
-            v-else
-            :label="t('version_restore_full')"
-            icon="pi pi-history"
-            severity="warning"
-            @click="confirmRestore"
-          />
+          >
+            <template #icon><i class="pi pi-history" /></template>
+            {{ t('version_restore_selected') }}
+          </AButton>
+          <AButton v-else danger @click="confirmRestore">
+            <template #icon><i class="pi pi-history" /></template>
+            {{ t('version_restore_full') }}
+          </AButton>
         </div>
       </template>
     </template>
-  </Drawer>
+  </ADrawer>
 
   <!-- ── Confirmation dialog (admin only) ────────────────────────── -->
-  <Dialog
+  <AModal
     v-if="canRestore"
-    v-model:visible="confirmVisible"
-    :header="t('version_restore_confirm_title')"
-    modal
-    :style="{ width: '400px' }"
+    v-model:open="confirmVisible"
+    :title="t('version_restore_confirm_title')"
+    width="400px"
   >
     <div class="vd-confirm-body">
       <i class="pi pi-exclamation-triangle vd-confirm-icon" />
       <p>{{ t('version_restore_confirm_msg') }}</p>
     </div>
     <template #footer>
-      <Button
-        :label="t('cancel')"
-        severity="secondary"
-        text
-        @click="confirmVisible = false"
-      />
-      <Button
-        :label="t('version_restore')"
-        severity="warning"
-        icon="pi pi-history"
-        :loading="restoring"
-        @click="doRestore"
-      />
+      <AButton @click="confirmVisible = false">{{ t('cancel') }}</AButton>
+      <AButton danger :loading="restoring" @click="doRestore">
+        <template #icon><i class="pi pi-history" /></template>
+        {{ t('version_restore') }}
+      </AButton>
     </template>
-  </Dialog>
+  </AModal>
 </template>
 
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { useToast } from '@/composables/useNotify'
-import Drawer          from 'primevue/drawer'
-import Dialog          from 'primevue/dialog'
-import Button          from 'primevue/button'
-import Checkbox        from 'primevue/checkbox'
-import Message         from 'primevue/message'
-import ProgressSpinner from 'primevue/progressspinner'
+import {
+  Drawer as ADrawer,
+  Modal as AModal,
+  Button as AButton,
+  Checkbox as ACheckbox,
+  Alert as AAlert,
+  Spin as ASpin,
+} from 'ant-design-vue'
 import { api }         from '@/api'
 import { useI18n }     from '@/i18n'
 import { useAuthStore } from '@/stores/auth'
@@ -366,6 +351,24 @@ const allCoreSelected = computed({
 const someCoreSelected = computed(() =>
   coreFields.value.some(f => f.changed && selectedFields.value.includes(f.name))
 )
+
+// AntD's Checkbox has no array-membership "group" mode like PrimeVue's
+// v-model + :value combo — toggle membership manually instead.
+function toggleField(name, checked) {
+  if (checked) {
+    if (!selectedFields.value.includes(name)) selectedFields.value.push(name)
+  } else {
+    selectedFields.value = selectedFields.value.filter(n => n !== name)
+  }
+}
+
+function togglePlugin(name, checked) {
+  if (checked) {
+    if (!selectedPlugins.value.includes(name)) selectedPlugins.value.push(name)
+  } else {
+    selectedPlugins.value = selectedPlugins.value.filter(n => n !== name)
+  }
+}
 
 // ── Restore ───────────────────────────────────────────────────
 function confirmRestore() {

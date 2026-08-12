@@ -52,15 +52,13 @@
             <!-- Conservation -->
             <td class="col-conservation">
               <template v-if="editMode && boneData(boneId).present === true">
-                <Select
-                  :modelValue="boneData(boneId).conservation ?? null"
+                <ASelect
+                  :value="boneData(boneId).conservation ?? null"
                   :options="conservationOpts"
-                  optionValue="value"
-                  optionLabel="label"
                   placeholder="—"
                   size="small"
                   class="osteo-cell-select"
-                  @change="onFieldChange(boneId, 'conservation', $event.value)"
+                  @change="v => onFieldChange(boneId, 'conservation', v)"
                 />
               </template>
               <template v-else-if="!editMode && boneData(boneId).present === true">
@@ -72,15 +70,13 @@
             <!-- Certainty -->
             <td class="col-certainty">
               <template v-if="editMode && boneData(boneId).present === true">
-                <Select
-                  :modelValue="boneData(boneId).certainty ?? null"
+                <ASelect
+                  :value="boneData(boneId).certainty ?? null"
                   :options="certaintyOpts"
-                  optionValue="value"
-                  optionLabel="label"
                   placeholder="—"
                   size="small"
                   class="osteo-cell-select"
-                  @change="onFieldChange(boneId, 'certainty', $event.value)"
+                  @change="v => onFieldChange(boneId, 'certainty', v)"
                 />
               </template>
               <template v-else-if="!editMode && boneData(boneId).present === true">
@@ -92,15 +88,13 @@
             <!-- Laterality certainty (bilateral only) -->
             <td class="col-laterality">
               <template v-if="def.bilateral && editMode && boneData(boneId).present === true">
-                <Select
-                  :modelValue="boneData(boneId).laterality_certainty ?? null"
+                <ASelect
+                  :value="boneData(boneId).laterality_certainty ?? null"
                   :options="lateralityOpts"
-                  optionValue="value"
-                  optionLabel="label"
                   placeholder="—"
                   size="small"
                   class="osteo-cell-select"
-                  @change="onFieldChange(boneId, 'laterality_certainty', $event.value)"
+                  @change="v => onFieldChange(boneId, 'laterality_certainty', v)"
                 />
               </template>
               <template v-else-if="def.bilateral && !editMode && boneData(boneId).present === true">
@@ -112,8 +106,8 @@
             <!-- Notes -->
             <td class="col-notes">
               <template v-if="editMode">
-                <InputText
-                  :modelValue="boneData(boneId).notes ?? ''"
+                <AInput
+                  :value="boneData(boneId).notes ?? ''"
                   size="small"
                   class="osteo-cell-input"
                   @blur="onFieldChange(boneId, 'notes', $event.target.value)"
@@ -133,8 +127,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useI18n } from '@/i18n'
-import Select    from 'primevue/select'
-import InputText from 'primevue/inputtext'
+import { Select as ASelect, Input as AInput } from 'ant-design-vue'
 import {
   BONES,
   BONE_CATEGORIES,

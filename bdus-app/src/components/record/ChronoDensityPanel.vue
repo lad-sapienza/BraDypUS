@@ -38,7 +38,7 @@
           </div>
         </div>
 
-        <Tag :value="String(src.records.length)" severity="secondary" rounded class="density-count" />
+        <ATag class="density-count">{{ src.records.length }}</ATag>
       </div>
     </div>
   </fieldset>
@@ -46,7 +46,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
-import Tag from 'primevue/tag'
+import { Tag as ATag } from 'ant-design-vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from '@/i18n'
 import { api } from '@/api'
@@ -188,5 +188,5 @@ function encodeFilter(src) {
 
 .density-bar       { height: 14px; display: flex; border-radius: 3px; overflow: hidden; background: var(--p-surface-100); }
 .density-bin       { flex: 1; }
-.density-count     { font-size: .65rem; flex-shrink: 0; }
+.density-count     { font-size: .65rem; flex-shrink: 0; border-radius: 999px; }
 </style>

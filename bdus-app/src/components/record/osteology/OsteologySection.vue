@@ -64,14 +64,14 @@
       >
         <!-- Individual metadata -->
         <div class="osteo-ind-meta">
-          <InputText
-            v-model="ind.label"
+          <AInput
+            v-model:value="ind.label"
             :placeholder="t('osteo_individual_label')"
             size="small"
             @blur="pushUpdate"
           />
-          <InputText
-            v-model="ind.notes"
+          <AInput
+            v-model:value="ind.notes"
             :placeholder="t('osteo_individual_notes')"
             size="small"
             @blur="pushUpdate"
@@ -110,7 +110,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { useI18n } from '@/i18n'
-import InputText from 'primevue/inputtext'
+import { Input as AInput } from 'ant-design-vue'
 import OsteologySvg   from './OsteologySvg.vue'
 import OsteologyTable from './OsteologyTable.vue'
 import BonePanel      from './BonePanel.vue'
@@ -265,7 +265,7 @@ function onBoneUpdate(ind, boneId, data) {
   margin-bottom: 10px;
   flex-wrap: wrap;
 }
-.osteo-ind-meta .p-inputtext { flex: 1; min-width: 160px; }
+.osteo-ind-meta .ant-input { flex: 1; min-width: 160px; }
 
 .osteo-editor-row {
   display: flex;

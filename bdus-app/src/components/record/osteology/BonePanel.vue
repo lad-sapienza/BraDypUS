@@ -32,11 +32,9 @@
       <template v-if="localData.present === true">
         <div class="bone-field">
           <label class="bone-field-label">{{ t('osteo_conservation') }}</label>
-          <Select
-            v-model="localData.conservation"
+          <ASelect
+            v-model:value="localData.conservation"
             :options="conservationOptions"
-            optionValue="value"
-            optionLabel="label"
             placeholder="—"
             size="small"
             class="bone-select"
@@ -46,11 +44,9 @@
 
         <div class="bone-field">
           <label class="bone-field-label">{{ t('osteo_certainty') }}</label>
-          <Select
-            v-model="localData.certainty"
+          <ASelect
+            v-model:value="localData.certainty"
             :options="certaintyOptions"
-            optionValue="value"
-            optionLabel="label"
             placeholder="—"
             size="small"
             class="bone-select"
@@ -61,11 +57,9 @@
         <!-- Certezza lateralità: solo ossa bilaterali -->
         <div v-if="boneDef?.bilateral" class="bone-field">
           <label class="bone-field-label">{{ t('osteo_laterality') }}</label>
-          <Select
-            v-model="localData.laterality_certainty"
+          <ASelect
+            v-model:value="localData.laterality_certainty"
             :options="lateralityOptions"
-            optionValue="value"
-            optionLabel="label"
             placeholder="—"
             size="small"
             class="bone-select"
@@ -77,10 +71,10 @@
       <!-- Note -->
       <div class="bone-field">
         <label class="bone-field-label">{{ t('osteo_notes') }}</label>
-        <Textarea
-          v-model="localData.notes"
-          rows="2"
-          autoResize
+        <ATextarea
+          v-model:value="localData.notes"
+          :rows="2"
+          auto-size
           size="small"
           class="bone-textarea"
           @blur="pushUpdate"
@@ -93,8 +87,8 @@
 <script setup>
 import { reactive, computed, watch } from 'vue'
 import { useI18n } from '@/i18n'
-import Select   from 'primevue/select'
-import Textarea from 'primevue/textarea'
+import { Select as ASelect, Input } from 'ant-design-vue'
+const ATextarea = Input.TextArea
 import {
   BONES,
   CONSERVATION_OPTIONS,

@@ -56,45 +56,36 @@
 
     <!-- ── Add link panel (edit mode) ──────────────────────────── -->
     <div v-if="editMode" class="add-link-panel">
-      <Button
-        :label="t('add_link')"
-        icon="pi pi-plus"
-        size="small"
-        severity="secondary"
-        text
-        @click="addPanelOpen = !addPanelOpen"
-      />
+      <AButton type="text" size="small" @click="addPanelOpen = !addPanelOpen">
+        <template #icon><i class="pi pi-plus" /></template>
+        {{ t('add_link') }}
+      </AButton>
 
       <div v-if="addPanelOpen" class="add-link-form">
         <!-- Table selector -->
-        <Select
-          v-model="selectedTable"
+        <ASelect
+          v-model:value="selectedTable"
           :options="tableOptions"
-          option-label="label"
-          option-value="name"
           :placeholder="t('select_table')"
           class="add-link-select"
           @change="onTableChange"
         />
 
         <!-- Record search (shown once a table is selected) -->
-        <AutoComplete
+        <AAutoComplete
           v-if="selectedTable"
-          v-model="selectedRecord"
-          :suggestions="suggestions"
-          option-label="label"
+          v-model:value="recordSearchText"
+          :options="autoCompleteOptions"
           :placeholder="t('type_to_search')"
-          :min-length="0"
-          force-selection
           class="add-link-autocomplete"
-          @complete="onSearch"
-          @item-select="onRecordSelected"
+          @search="onSearch"
+          @select="onRecordSelect"
         />
 
         <!-- Optional relation label (shown once a record is selected) -->
-        <InputText
+        <AInput
           v-if="selectedRecord"
-          v-model="linkLabel"
+          v-model:value="linkLabel"
           :placeholder="t('link_label_placeholder')"
           size="small"
           class="add-link-label"
@@ -107,10 +98,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRoute }  from 'vue-router'
-import Button      from 'primevue/button'
-import Select      from 'primevue/select'
-import AutoComplete from 'primevue/autocomplete'
-import InputText   from 'primevue/inputtext'
+import { Button as AButton, Select as ASelect, AutoComplete as AAutoComplete, Input as AInput } from 'ant-design-vue'
 import { useToast } from '@/composables/useNotify'
 import { api }          from '@/api'
 import { useI18n }      from '@/i18n'
@@ -191,20 +179,32 @@ const linkLabel     = ref('')
 
 /** All non-plugin user tables, excluding the current table to avoid self-links */
 const tableOptions = computed(() =>
-  (tables.value ?? []).filter(tb => tb.name !== props.recordTb)
+  (tables.value ?? [])
+    .filter(tb => tb.name !== props.recordTb)
+    .map(tb => ({ value: tb.name, label: tb.label }))
+)
+
+// AntD's AutoComplete works on a flat text value, unlike PrimeVue's
+// AutoComplete which bound directly to the selected {id, label} object —
+// carry `id` as an extra key on each option and recover it in onRecordSelect.
+const recordSearchText = ref('')
+const autoCompleteOptions = computed(() =>
+  suggestions.value.map(s => ({ value: s.label, label: s.label, id: s.id }))
 )
 
 function onTableChange() {
-  selectedRecord.value = null
+  selectedRecord.value  = null
+  recordSearchText.value = ''
   suggestions.value    = []
   linkLabel.value      = ''
 }
 
-async function onSearch(event) {
+async function onSearch(query) {
   if (!selectedTable.value) return
+  selectedRecord.value = null
   try {
     const res = await api.get(`/api/record/${selectedTable.value}/link-candidates`, {
-      q: event.query ?? '',
+      q: query ?? '',
     })
     // Exclude records already linked
     const linked = new Set(
@@ -220,8 +220,11 @@ async function onSearch(event) {
   }
 }
 
-async function onRecordSelected(event) {
-  const candidate = event.value
+function onRecordSelect(value, option) {
+  onRecordSelected({ id: option.id, label: option.label })
+}
+
+async function onRecordSelected(candidate) {
   if (!candidate || !selectedTable.value) return
 
   try {
@@ -243,7 +246,8 @@ async function onRecordSelected(event) {
     toast.add({ severity: 'error', summary: t('generic_error'), detail: e.message, life: 5000 })
   } finally {
     // Reset search and label; keep table selected for chained additions
-    selectedRecord.value = null
+    selectedRecord.value  = null
+    recordSearchText.value = ''
     suggestions.value    = []
     linkLabel.value      = ''
   }

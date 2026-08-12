@@ -45,33 +45,23 @@
               />
             </div>
           </div>
-          <Button
-            icon="pi pi-trash"
-            severity="danger"
-            text
-            size="small"
-            :title="t('remove_row')"
-            @click="removeRow(idx)"
-          />
+          <AButton type="text" danger size="small" :title="t('remove_row')" @click="removeRow(idx)">
+            <template #icon><i class="pi pi-trash" /></template>
+          </AButton>
         </div>
       </div>
 
-      <Button
-        :label="t('add_row')"
-        icon="pi pi-plus"
-        size="small"
-        severity="secondary"
-        text
-        class="add-row-btn"
-        @click="addRow"
-      />
+      <AButton type="text" size="small" class="add-row-btn" @click="addRow">
+        <template #icon><i class="pi pi-plus" /></template>
+        {{ t('add_row') }}
+      </AButton>
     </template>
   </fieldset>
 </template>
 
 <script setup>
 import { computed } from 'vue'
-import Button      from 'primevue/button'
+import { Button as AButton } from 'ant-design-vue'
 import FieldDisplay from './FieldDisplay.vue'
 import FieldEditor  from './FieldEditor.vue'
 import { useI18n }  from '@/i18n'

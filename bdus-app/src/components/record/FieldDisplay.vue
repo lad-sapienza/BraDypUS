@@ -29,7 +29,7 @@
 
       <!-- multi_select: comma-separated chips -->
       <div v-else-if="schema.type === 'multi_select'" class="field-chips">
-        <Tag v-for="v in multiValues" :key="v" :value="v" severity="secondary" />
+        <ATag v-for="v in multiValues" :key="v">{{ v }}</ATag>
       </div>
 
       <!-- boolean -->
@@ -46,7 +46,7 @@
 
 <script setup>
 import { computed } from 'vue'
-import Tag from 'primevue/tag'
+import { Tag as ATag } from 'ant-design-vue'
 import { marked } from 'marked'
 import { useI18n } from '@/i18n'
 import DynamicWidget from '@/components/record/DynamicWidget.vue'

@@ -11,12 +11,11 @@
           <span class="chrono-num-item">{{ t('chrono_to') }}: <strong>{{ to ?? '—' }}</strong></span>
         </div>
         <div class="chrono-meta-read">
-          <Tag
+          <ATag
             v-if="normCertainty(certainty)"
-            :value="t('chrono_certainty_' + normCertainty(certainty))"
-            :severity="certaintySeverity"
+            :color="certaintyColor"
             class="chrono-tag"
-          />
+          >{{ t('chrono_certainty_' + normCertainty(certainty)) }}</ATag>
           <span v-if="period" class="chrono-period">{{ period }}</span>
         </div>
       </div>
@@ -27,10 +26,11 @@
     <template v-else>
       <!-- Chronology input -->
       <div class="chrono-field">
-        <InputText
-          v-model="inputStr"
+        <AInput
+          v-model:value="inputStr"
           :placeholder="t('fuzzy_date_input_placeholder')"
-          :class="['chrono-input', { 'p-invalid': parseResult && !parseResult.valid }]"
+          class="chrono-input"
+          :status="parseResult && !parseResult.valid ? 'error' : undefined"
           @input="onInput"
         />
         <!-- Live preview -->
@@ -48,22 +48,20 @@
       <!-- Certainty -->
       <div class="chrono-field">
         <label class="field-label">{{ t('fuzzy_date_certainty') }}</label>
-        <Select
-          v-model="localCertainty"
+        <ASelect
+          v-model:value="localCertainty"
           :options="certaintyOptions"
-          optionLabel="label"
-          optionValue="value"
-          showClear
+          allow-clear
           class="w-full"
-          @update:modelValue="onMetaChange"
+          @change="onMetaChange"
         />
       </div>
 
       <!-- Period -->
       <div class="chrono-field">
         <label class="field-label">{{ t('fuzzy_date_period') }}</label>
-        <InputText
-          v-model="localPeriod"
+        <AInput
+          v-model:value="localPeriod"
           class="w-full"
           @input="onMetaChange"
         />
@@ -74,9 +72,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
-import InputText from 'primevue/inputtext'
-import Select    from 'primevue/select'
-import Tag       from 'primevue/tag'
+import { Input as AInput, Select as ASelect, Tag as ATag } from 'ant-design-vue'
 import { useI18n } from '@/i18n'
 import { parse, format } from '@/utils/chronoParser'
 
@@ -160,11 +156,11 @@ const certaintyOptions = computed(() => [
   { value: 3, label: t('chrono_certainty_3') },
 ])
 
-const certaintySeverity = computed(() => ({
+const certaintyColor = computed(() => ({
   1: 'success',
-  2: 'warn',
-  3: 'danger',
-}[normCertainty(props.certainty)] ?? 'secondary'))
+  2: 'warning',
+  3: 'error',
+}[normCertainty(props.certainty)] ?? 'default'))
 
 // ── Handlers ──────────────────────────────────────────────────────────────────
 

@@ -194,30 +194,24 @@
 
       <!-- ── Add relation form (edit mode only) ──────────────────── -->
       <div v-if="mode === 'edit'" class="rs-add-form">
-        <Select
-          v-model="newRelation"
+        <ASelect
+          v-model:value="newRelation"
           :options="relationOptions"
-          optionLabel="label"
-          optionValue="value"
           :placeholder="t('rs_select_relation')"
           class="rs-add-select"
         />
-        <AutoComplete
-          v-model="newOther"
-          :suggestions="linkSuggestions"
-          optionLabel="label"
+        <AAutoComplete
+          v-model:value="newOtherText"
+          :options="autoCompleteOptions"
           :placeholder="t('type_to_search')"
           class="rs-add-input"
-          @complete="onLinkSearch"
+          @search="onLinkSearch"
+          @select="onLinkSelect"
         />
-        <Button
-          :label="t('rs_add_relation')"
-          icon="pi pi-plus"
-          size="small"
-          :loading="adding"
-          :disabled="!newRelation || !newOther?.id"
-          @click="addRelation"
-        />
+        <AButton type="primary" size="small" :loading="adding" :disabled="!newRelation || !newOther?.id" @click="addRelation">
+          <template #icon><i class="pi pi-plus" /></template>
+          {{ t('rs_add_relation') }}
+        </AButton>
       </div>
 
     </template>
@@ -228,9 +222,7 @@
 import { ref, computed } from 'vue'
 import { useRoute, useRouter }  from 'vue-router'
 import { useToast } from '@/composables/useNotify'
-import Select         from 'primevue/select'
-import AutoComplete   from 'primevue/autocomplete'
-import Button         from 'primevue/button'
+import { Select as ASelect, AutoComplete as AAutoComplete, Button as AButton } from 'ant-design-vue'
 import { api }                from '@/api'
 import { useI18n }           from '@/i18n'
 import { REL_KEYS, buildRelationOptions } from '@/composables/useRsRelations'
@@ -317,18 +309,31 @@ const byRelation = computed(() => {
 const relationOptions = computed(() => buildRelationOptions(t))
 
 // ── Add relation ──────────────────────────────────────────────────
-const newRelation    = ref(null)
-const newOther       = ref(null)   // { id, label } from AutoComplete
+const newRelation     = ref(null)
+const newOther        = ref(null)   // { id, label } from AutoComplete selection
+const newOtherText    = ref('')     // AutoComplete's visible text
 const linkSuggestions = ref([])
-const adding         = ref(false)
+const adding          = ref(false)
 
-async function onLinkSearch(event) {
+// AntD's AutoComplete works on a flat text value, unlike PrimeVue's
+// AutoComplete which bound directly to the selected {id, label} object —
+// carry `id` as an extra key on each option and recover it in onLinkSelect.
+const autoCompleteOptions = computed(() =>
+  linkSuggestions.value.map(s => ({ value: s.label, label: s.label, id: s.id }))
+)
+
+async function onLinkSearch(query) {
+  newOther.value = null
   try {
-    const res = await api.get(`/api/record/${props.tb}/link-candidates`, { q: event.query })
+    const res = await api.get(`/api/record/${props.tb}/link-candidates`, { q: query })
     linkSuggestions.value = res.status === 'success' ? (res.data ?? []) : []
   } catch {
     linkSuggestions.value = []
   }
+}
+
+function onLinkSelect(value, option) {
+  newOther.value = { id: option.id, label: option.label }
 }
 
 async function addRelation() {
@@ -341,8 +346,9 @@ async function addRelation() {
       second:   newOther.value.id,
     })
     if (res.status === 'success') {
-      newOther.value    = null
-      newRelation.value = null
+      newOther.value     = null
+      newOtherText.value = ''
+      newRelation.value  = null
       emit('rs-updated')
     } else {
       toast.add({

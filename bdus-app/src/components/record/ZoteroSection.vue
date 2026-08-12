@@ -53,15 +53,15 @@
               </span>
             </template>
             <template v-else>
-              <InputText
-                v-model="link._pages"
+              <AInput
+                v-model:value="link._pages"
                 :placeholder="t('pages')"
                 size="small"
                 class="meta-input"
                 @blur="saveMetaField(link, 'pages')"
               />
-              <InputText
-                v-model="link._notes"
+              <AInput
+                v-model:value="link._notes"
                 :placeholder="t('notes')"
                 size="small"
                 class="meta-input meta-input--notes"
@@ -103,50 +103,40 @@
 
     <!-- ── Add panel trigger (edit mode) ───────────────────────── -->
     <div v-if="editMode" class="add-panel">
-      <Button
-        :label="t('add_reference')"
-        icon="pi pi-plus"
-        size="small"
-        severity="secondary"
-        text
-        @click="openAddDialog"
-      />
+      <AButton type="text" size="small" @click="openAddDialog">
+        <template #icon><i class="pi pi-plus" /></template>
+        {{ t('add_reference') }}
+      </AButton>
     </div>
   </fieldset>
 
   <!-- ── Add-reference modal ─────────────────────────────────────── -->
-  <Dialog
-    v-model:visible="addDialogVisible"
-    :header="t('add_reference')"
-    :modal="true"
-    :closable="true"
-    :style="{ width: '640px' }"
-    :breakpoints="{ '768px': '92vw' }"
+  <AModal
+    v-model:open="addDialogVisible"
+    :title="t('add_reference')"
+    width="640px"
   >
     <div class="add-form">
       <!-- Library selector + search, side by side -->
       <div class="add-form-controls">
-        <Select
-          v-model="selectedLibId"
-          :options="libs"
-          option-label="name"
-          option-value="id"
+        <ASelect
+          v-model:value="selectedLibId"
+          :options="libOptions"
           :placeholder="t('select_library')"
           :loading="loadingLibs"
           class="lib-select"
           @change="clearSearch"
         />
 
-        <IconField v-if="selectedLibId" class="search-input-wrap">
-          <InputIcon :class="searching ? 'pi pi-spin pi-spinner' : 'pi pi-search'" />
-          <InputText
-            v-model="searchQuery"
-            :placeholder="t('search_in_zotero')"
-            class="search-input"
-            autofocus
-            @input="onSearchInput"
-          />
-        </IconField>
+        <AInputSearch
+          v-if="selectedLibId"
+          v-model:value="searchQuery"
+          :placeholder="t('search_in_zotero')"
+          :loading="searching"
+          class="search-input-wrap"
+          autofocus
+          @input="onSearchInput"
+        />
       </div>
 
       <div v-if="searching" class="searching-hint">
@@ -162,18 +152,16 @@
             class="search-result-item"
           >
             <div class="result-citation" v-html="r.full_citation || r.author_year" />
-            <Button
-              icon="pi pi-plus"
+            <AButton
+              type="text"
+              shape="circle"
               size="small"
-              severity="secondary"
-              text
-              rounded
               :title="t('add_reference')"
               :loading="addingKey === r.key"
               :disabled="addingKey !== null"
               class="result-add-btn"
               @click="selectResult(r)"
-            />
+            ><template #icon><i class="pi pi-plus" /></template></AButton>
           </div>
         </div>
         <div v-else-if="searchQuery.length >= 2 && !searching" class="search-empty">
@@ -186,23 +174,21 @@
     </div>
 
     <template #footer>
-      <Button :label="t('close')" severity="secondary" text @click="addDialogVisible = false" />
+      <AButton @click="addDialogVisible = false">{{ t('close') }}</AButton>
     </template>
-  </Dialog>
+  </AModal>
 </template>
 
 <script setup>
-import { ref, watch, onMounted, nextTick } from 'vue'
-import Button        from 'primevue/button'
-import Select        from 'primevue/select'
-import Dialog        from 'primevue/dialog'
-import InputText     from 'primevue/inputtext'
-import InputIcon     from 'primevue/inputicon'
-import IconField     from 'primevue/iconfield'
+import { ref, computed, watch, onMounted, nextTick } from 'vue'
+import { Button as AButton, Select as ASelect, Modal as AModal, Input } from 'ant-design-vue'
 import { useToast } from '@/composables/useNotify'
 import Sortable      from 'sortablejs'
 import { api }       from '@/api'
 import { useI18n }   from '@/i18n'
+
+const AInput       = Input
+const AInputSearch = Input.Search
 
 const { t }  = useI18n()
 const toast  = useToast()
@@ -328,6 +314,7 @@ async function saveMetaField(link, field) {
 // ── Add panel (modal) ────────────────────────────────────────────
 const addDialogVisible = ref(false)
 const libs          = ref([])
+const libOptions    = computed(() => libs.value.map(l => ({ value: l.id, label: l.name })))
 const loadingLibs   = ref(false)
 const selectedLibId = ref(null)
 const searchQuery   = ref('')
@@ -578,8 +565,6 @@ async function selectResult(result) {
 .lib-select { min-width: 200px; max-width: 260px; }
 
 .search-input-wrap { flex: 1; min-width: 220px; }
-
-.search-input { width: 100%; }
 
 .searching-hint {
   display: flex;

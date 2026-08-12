@@ -2,20 +2,21 @@
   <div class="cfg-panel">
     <div class="cfg-panel-header">
       <h2><i class="pi pi-check-circle" /> {{ t('validate_app') }}</h2>
-      <Button
-        :label="t('validate_app')"
-        icon="pi pi-refresh"
+      <AButton
         size="small"
         :loading="loading"
         @click="load"
-      />
+      >
+        <template #icon><i class="pi pi-refresh" /></template>
+        {{ t('validate_app') }}
+      </AButton>
     </div>
 
     <div v-if="loading" class="cfg-loading-center">
       <i class="pi pi-spin pi-spinner" />
     </div>
 
-    <Message v-if="error" severity="error" :closable="false">{{ error }}</Message>
+    <AAlert v-if="error" type="error" :message="error" :closable="false" show-icon />
 
     <div v-if="!loading && report.length" class="cfg-validation-report">
 
@@ -38,16 +39,14 @@
         >
           <i :class="iconFor(item.status)" />
           <span class="cfg-val-text">{{ item.text }}</span>
-          <Button
+          <AButton
             v-if="item.fix"
-            :label="item.suggest"
             size="small"
-            severity="danger"
-            outlined
+            danger
             class="cfg-val-fix"
             :loading="fixing === idx"
             @click="runFix(item, idx)"
-          />
+          >{{ item.suggest }}</AButton>
         </div>
       </template>
 
@@ -61,8 +60,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import Button  from 'primevue/button'
-import Message from 'primevue/message'
+import { Button as AButton, Alert as AAlert } from 'ant-design-vue'
 import { useI18n } from '@/i18n'
 import { api }     from '@/api'
 import { useToast } from '@/composables/useNotify'

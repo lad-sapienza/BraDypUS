@@ -2,14 +2,17 @@
   <div class="cfg-panel">
     <div class="cfg-panel-header">
       <h2><i class="pi pi-map" /> {{ t('geoface') }}</h2>
-      <Button :label="t('save')" icon="pi pi-save" size="small" :loading="saving" @click="save" />
+      <AButton type="primary" size="small" :loading="saving" @click="save">
+        <template #icon><i class="pi pi-save" /></template>
+        {{ t('save') }}
+      </AButton>
     </div>
 
     <div v-if="loading" class="cfg-loading-center">
       <i class="pi pi-spin pi-spinner" />
     </div>
 
-    <Message v-if="error" severity="error" :closable="false">{{ error }}</Message>
+    <AAlert v-if="error" type="error" :message="error" :closable="false" show-icon />
 
     <div v-if="!loading" class="cfg-geoface-body">
 
@@ -17,7 +20,10 @@
       <section class="cfg-section">
         <div class="cfg-section-header">
           <span>{{ t('layers') }}</span>
-          <Button :label="t('add_layer')" icon="pi pi-plus" size="small" outlined @click="addLayer" />
+          <AButton size="small" @click="addLayer">
+            <template #icon><i class="pi pi-plus" /></template>
+            {{ t('add_layer') }}
+          </AButton>
         </div>
 
         <div v-if="layers.length === 0" class="cfg-empty-msg-sm">{{ t('no_layers') }}</div>
@@ -26,41 +32,36 @@
           <div class="cfg-layer-row">
             <div class="cfg-field-group">
               <label>{{ t('label') }}</label>
-              <InputText v-model="layer.label" size="small" />
+              <AInput v-model:value="layer.label" size="small" />
             </div>
             <div class="cfg-field-group">
               <label>{{ t('layer_type') }}</label>
-              <Select
-                v-model="layer.type"
-                :options="dataTypes"
+              <ASelect
+                v-model:value="layer.type"
+                :options="dataTypeOptions"
                 size="small"
               />
             </div>
             <div class="cfg-field-group">
               <label>{{ t('map_layer_role') }}</label>
-              <Select
-                v-model="layer.layertype"
-                :options="layerRoles"
+              <ASelect
+                v-model:value="layer.layertype"
+                :options="layerRoleOptions"
                 size="small"
               />
             </div>
-            <Button
-              icon="pi pi-trash"
-              severity="danger"
-              size="small"
-              text
-              :title="t('delete')"
-              @click="removeLayer(idx)"
-            />
+            <AButton type="text" danger size="small" :title="t('delete')" @click="removeLayer(idx)">
+              <template #icon><i class="pi pi-trash" /></template>
+            </AButton>
           </div>
 
           <!-- path / local file / wms layers -->
           <div class="cfg-layer-row" v-if="layer.type === 'local'">
             <div class="cfg-field-group" style="flex:1">
               <label>{{ t('local_geo_file') }}</label>
-              <Select
-                v-model="layer.path"
-                :options="localFiles"
+              <ASelect
+                v-model:value="layer.path"
+                :options="localFileOptions"
                 :placeholder="t('select_file')"
                 size="small"
               />
@@ -69,23 +70,23 @@
           <div class="cfg-layer-row" v-else-if="layer.type === 'wms'">
             <div class="cfg-field-group" style="flex:1">
               <label>{{ t('wms_url') }}</label>
-              <InputText v-model="layer.path" size="small" placeholder="https://..." />
+              <AInput v-model:value="layer.path" size="small" placeholder="https://..." />
             </div>
             <div class="cfg-field-group" style="flex:1">
               <label>{{ t('wms_layers') }}</label>
-              <InputText v-model="layer.wmslayers" size="small" placeholder="layer1,layer2" />
+              <AInput v-model:value="layer.wmslayers" size="small" placeholder="layer1,layer2" />
             </div>
           </div>
           <div class="cfg-layer-row" v-else-if="layer.type === 'tiles'">
             <div class="cfg-field-group" style="flex:1">
               <label>{{ t('tiles_url') }}</label>
-              <InputText v-model="layer.path" size="small" placeholder="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+              <AInput v-model:value="layer.path" size="small" placeholder="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
             </div>
           </div>
           <div class="cfg-layer-row" v-else-if="layer.type === 'maplibre_style'">
             <div class="cfg-field-group" style="flex:1">
               <label>{{ t('maplibre_style_url') }}</label>
-              <InputText v-model="layer.path" size="small" placeholder="https://..." />
+              <AInput v-model:value="layer.path" size="small" placeholder="https://..." />
             </div>
           </div>
         </div>
@@ -102,30 +103,24 @@
           <div v-for="file in localFiles" :key="file" class="cfg-file-row">
             <i class="pi pi-file" />
             <span>{{ file }}</span>
-            <Button
-              icon="pi pi-trash"
-              severity="danger"
+            <AButton
+              type="text"
+              danger
               size="small"
-              text
               :title="t('delete')"
               :loading="deletingFile === file"
               @click="deleteFile(file)"
-            />
+            ><template #icon><i class="pi pi-trash" /></template></AButton>
           </div>
         </div>
 
         <!-- Upload -->
         <div class="cfg-upload-row">
           <input ref="fileInput" type="file" accept=".json,.geojson,.kml,.gpx" style="display:none" @change="uploadFile" />
-          <Button
-            :label="t('upload_geo_file')"
-            icon="pi pi-upload"
-            size="small"
-            outlined
-            :loading="uploading"
-            @click="fileInput?.click()"
-            type="button"
-          />
+          <AButton size="small" :loading="uploading" @click="fileInput?.click()">
+            <template #icon><i class="pi pi-upload" /></template>
+            {{ t('upload_geo_file') }}
+          </AButton>
         </div>
       </section>
 
@@ -134,11 +129,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import Button    from 'primevue/button'
-import InputText from 'primevue/inputtext'
-import Select    from 'primevue/select'
-import Message   from 'primevue/message'
+import { ref, computed, onMounted } from 'vue'
+import { Button as AButton, Input as AInput, Select as ASelect, Alert as AAlert } from 'ant-design-vue'
 import { useToast } from '@/composables/useNotify'
 import { useI18n }  from '@/i18n'
 import { api }      from '@/api'
@@ -158,6 +150,9 @@ const fileInput  = ref(null)
 
 const dataTypes  = ['wms', 'tiles', 'local', 'maplibre_style']
 const layerRoles = ['overlay', 'base']
+const dataTypeOptions  = dataTypes.map(v => ({ value: v, label: v }))
+const layerRoleOptions = layerRoles.map(v => ({ value: v, label: v }))
+const localFileOptions = computed(() => localFiles.value.map(v => ({ value: v, label: v })))
 
 function addLayer() {
   layers.value.push({ label: '', type: 'tiles', path: '', wmslayers: '', layertype: 'overlay' })

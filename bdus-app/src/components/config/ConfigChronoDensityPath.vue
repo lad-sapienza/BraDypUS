@@ -2,15 +2,15 @@
   <div class="cfg-cdp-section">
     <div class="cfg-cdp-header">
       <span class="cfg-cdp-title"><i class="pi pi-share-alt" /> {{ t('chrono_density_path') }}</span>
-      <Button
+      <AButton
         v-if="modelValue.length"
-        :label="t('clear')"
-        icon="pi pi-times"
+        type="text"
         size="small"
-        text
-        severity="secondary"
         @click="emit('update:modelValue', [])"
-      />
+      >
+        <template #icon><i class="pi pi-times" /></template>
+        {{ t('clear') }}
+      </AButton>
     </div>
 
     <small class="cfg-hint">{{ t('help_chrono_density_path') }}</small>
@@ -27,39 +27,40 @@
       </div>
 
       <div v-for="(step, i) in steps" :key="i" class="cfg-cdp-step">
-        <Select
-          :modelValue="step.value"
-          :options="step.options"
-          :option-label="opt => tableLabels[opt] ?? opt"
+        <ASelect
+          :value="step.value"
+          :options="step.options.map(opt => ({ value: opt, label: tableLabels[opt] ?? opt }))"
           :placeholder="i === 0 ? t('chrono_density_path_start') : t('chrono_density_path_next')"
-          :show-clear="true"
+          allow-clear
           size="small"
-          @update:modelValue="v => selectAt(i, v)"
+          @change="v => selectAt(i, v)"
         >
-          <template #option="{ option }">
-            <span>{{ tableLabels[option] ?? option }}</span>
-            <Tag v-if="fuzzyDateTables.includes(option)" value="fuzzy_date" severity="info" class="cfg-cdp-badge" />
+          <template #option="{ value, label }">
+            <span>{{ label }}</span>
+            <Tag v-if="fuzzyDateTables.includes(value)" value="fuzzy_date" severity="info" class="cfg-cdp-badge" />
           </template>
-        </Select>
+        </ASelect>
 
         <span v-if="!step.options.length" class="cfg-cdp-dead-end">
           {{ t('chrono_density_path_dead_end') }}
         </span>
       </div>
 
-      <Message v-if="modelValue.length && !isValid" severity="warn" :closable="false">
-        {{ t('chrono_density_path_needs_fuzzy_date') }}
-      </Message>
+      <AAlert
+        v-if="modelValue.length && !isValid"
+        type="warning"
+        :message="t('chrono_density_path_needs_fuzzy_date')"
+        :closable="false"
+        show-icon
+      />
     </template>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import Button   from 'primevue/button'
-import Select   from 'primevue/select'
 import Tag      from 'primevue/tag'
-import Message  from 'primevue/message'
+import { Button as AButton, Select as ASelect, Alert as AAlert } from 'ant-design-vue'
 import { useI18n } from '@/i18n'
 import { api }      from '@/api'
 
@@ -188,7 +189,7 @@ const isValid = computed(() => {
   gap: 0.5rem;
   max-width: 320px;
 }
-.cfg-cdp-step :deep(.p-select) { flex: 1; }
+.cfg-cdp-step :deep(.ant-select) { flex: 1; }
 .cfg-cdp-badge { margin-left: auto; font-size: 0.6rem; }
 .cfg-cdp-dead-end {
   font-size: 0.72rem;

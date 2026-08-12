@@ -2,14 +2,9 @@
   <div class="cfg-idx-section">
     <div class="cfg-idx-header">
       <span class="cfg-idx-title"><i class="pi pi-database" /> {{ t('db_indexes') }}</span>
-      <Button
-        icon="pi pi-plus"
-        size="small"
-        text
-        :title="t('add_index')"
-        :disabled="showForm"
-        @click="openForm"
-      />
+      <AButton type="text" size="small" :title="t('add_index')" :disabled="showForm" @click="openForm">
+        <template #icon><i class="pi pi-plus" /></template>
+      </AButton>
     </div>
 
     <!-- ─── Add form ────────────────────────────────────────── -->
@@ -17,35 +12,35 @@
       <div class="cfg-idx-form-row">
         <div class="cfg-field-group" style="flex:1">
           <label>{{ t('idx_name') }}</label>
-          <InputText v-model="form.name" size="small" :placeholder="t('idx_name_hint')" />
+          <AInput v-model:value="form.name" size="small" :placeholder="t('idx_name_hint')" />
         </div>
         <div class="cfg-field-group" style="flex:2">
           <label>{{ t('idx_columns') }}</label>
-          <MultiSelect
-            v-model="form.columns"
+          <ASelect
+            v-model:value="form.columns"
             :options="columnOptions"
-            option-label="label"
-            option-value="value"
+            mode="multiple"
             :placeholder="t('select_columns')"
             size="small"
-            display="chip"
           />
         </div>
         <div class="cfg-field-group cfg-field-group--check">
           <label>{{ t('idx_unique') }}</label>
-          <ToggleSwitch v-model="form.is_unique" size="small" />
+          <ASwitch v-model:checked="form.is_unique" size="small" />
         </div>
       </div>
       <div class="cfg-idx-form-actions">
-        <Button :label="t('cancel')" severity="secondary" size="small" text @click="cancelForm" />
-        <Button
-          :label="t('save')"
-          icon="pi pi-save"
+        <AButton size="small" @click="cancelForm">{{ t('cancel') }}</AButton>
+        <AButton
+          type="primary"
           size="small"
           :loading="saving"
           :disabled="!form.name || !form.columns.length"
           @click="saveIndex"
-        />
+        >
+          <template #icon><i class="pi pi-save" /></template>
+          {{ t('save') }}
+        </AButton>
       </div>
     </div>
 
@@ -67,24 +62,16 @@
       <span class="cfg-idx-name">{{ idx.name }}</span>
       <span class="cfg-idx-cols">{{ (idx.columns || []).join(', ') }}</span>
       <span v-if="idx.is_unique" class="cfg-idx-unique-badge">UNIQUE</span>
-      <Button
-        icon="pi pi-trash"
-        severity="danger"
-        size="small"
-        text
-        :loading="deletingId === idx.id"
-        @click="deleteIndex(idx)"
-      />
+      <AButton type="text" danger size="small" :loading="deletingId === idx.id" @click="deleteIndex(idx)">
+        <template #icon><i class="pi pi-trash" /></template>
+      </AButton>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
-import Button      from 'primevue/button'
-import InputText   from 'primevue/inputtext'
-import MultiSelect from 'primevue/multiselect'
-import ToggleSwitch from 'primevue/toggleswitch'
+import { Button as AButton, Input as AInput, Select as ASelect, Switch as ASwitch } from 'ant-design-vue'
 import { useToast, useConfirm } from '@/composables/useNotify'
 import { useI18n }    from '@/i18n'
 import { api }        from '@/api'

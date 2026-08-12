@@ -8,26 +8,25 @@
       <p class="gate-sub">{{ t('confirm_password_to_continue') }}</p>
 
       <form class="gate-form" @submit.prevent="submit">
-        <Password
-          v-model="password"
+        <AInputPassword
+          v-model:value="password"
           :placeholder="t('password')"
-          :feedback="false"
-          toggleMask
-          fluid
+          :status="errorMsg ? 'error' : undefined"
           autofocus
-          :class="{ 'p-invalid': errorMsg }"
           @keydown.enter="submit"
         />
         <small v-if="errorMsg" class="gate-error">{{ errorMsg }}</small>
 
-        <Button
-          type="submit"
-          :label="t('confirm')"
-          icon="pi pi-unlock"
+        <AButton
+          html-type="submit"
+          type="primary"
           :loading="busy"
-          fluid
+          block
           class="gate-btn"
-        />
+        >
+          <template #icon><i class="pi pi-unlock" /></template>
+          {{ t('confirm') }}
+        </AButton>
       </form>
     </div>
   </div>
@@ -35,13 +34,13 @@
 
 <script setup>
 import { ref }            from 'vue'
-import Password           from 'primevue/password'
-import Button             from 'primevue/button'
+import { Input, Button as AButton } from 'ant-design-vue'
 import { useConfigStore } from '@/stores/config'
 import { useI18n }        from '@/i18n'
 
 const { t }   = useI18n()
 const store   = useConfigStore()
+const AInputPassword = Input.Password
 
 const password = ref('')
 const busy     = ref(false)

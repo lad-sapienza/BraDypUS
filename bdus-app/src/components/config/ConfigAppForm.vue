@@ -2,14 +2,17 @@
   <div class="cfg-panel">
     <div class="cfg-panel-header">
       <h2><i class="pi pi-cog" /> {{ t('app_settings') }}</h2>
-      <Button :label="t('save')" icon="pi pi-save" size="small" :loading="saving" @click="save" />
+      <AButton type="primary" size="small" :loading="saving" @click="save">
+        <template #icon><i class="pi pi-save" /></template>
+        {{ t('save') }}
+      </AButton>
     </div>
 
     <div v-if="loading" class="cfg-loading-center">
       <i class="pi pi-spin pi-spinner" />
     </div>
 
-    <Message v-if="error" severity="error" :closable="false">{{ error }}</Message>
+    <AAlert v-if="error" type="error" :message="error" :closable="false" show-icon />
 
     <div v-if="!loading && form" class="cfg-form-body">
 
@@ -20,27 +23,27 @@
         <div class="cfg-form-row">
           <div class="cfg-form-field">
             <label>{{ t('app_name') }} <span class="cfg-readonly-badge">readonly</span></label>
-            <InputText :value="form.name" disabled size="small" />
+            <AInput :value="form.name" disabled size="small" />
           </div>
           <div class="cfg-form-field">
             <label>{{ t('language') }}</label>
-            <Select v-model="form.lang" :options="langs" size="small" />
+            <ASelect v-model:value="form.lang" :options="langOptions" size="small" />
           </div>
           <div class="cfg-form-field">
             <label>{{ t('status') }}</label>
-            <Select v-model="form.status" :options="statusOptions" size="small" />
+            <ASelect v-model:value="form.status" :options="statusSelectOptions" size="small" />
           </div>
         </div>
 
         <div class="cfg-form-field" style="grid-column:1/-1">
           <label>{{ t('definition') }}</label>
-          <Textarea v-model="form.definition" rows="3" style="width:100%" />
+          <ATextarea v-model:value="form.definition" :rows="3" style="width:100%" />
         </div>
 
         <div class="cfg-form-row">
           <div class="cfg-form-field">
             <label>{{ t('max_image_size') }}</label>
-            <InputText v-model="form.maxImageSize" size="small" placeholder="1500" />
+            <AInput v-model:value="form.maxImageSize" size="small" placeholder="1500" />
           </div>
         </div>
 
@@ -71,29 +74,29 @@
         <div class="cfg-form-row">
           <div class="cfg-form-field">
             <label>{{ t('db_engine') }}</label>
-            <Select v-model="form.db_engine" :options="dbEngines" size="small" />
+            <ASelect v-model:value="form.db_engine" :options="dbEngineOptions" size="small" />
           </div>
           <div class="cfg-form-field">
             <label>{{ t('db_host') }}</label>
-            <InputText v-model="form.db_host" size="small" />
+            <AInput v-model:value="form.db_host" size="small" />
           </div>
           <div class="cfg-form-field">
             <label>{{ t('db_port') }}</label>
-            <InputText v-model="form.db_port" size="small" />
+            <AInput v-model:value="form.db_port" size="small" />
           </div>
         </div>
         <div class="cfg-form-row">
           <div class="cfg-form-field">
             <label>{{ t('db_name') }}</label>
-            <InputText v-model="form.db_name" size="small" />
+            <AInput v-model:value="form.db_name" size="small" />
           </div>
           <div class="cfg-form-field">
             <label>{{ t('db_username') }}</label>
-            <InputText v-model="form.db_username" size="small" />
+            <AInput v-model:value="form.db_username" size="small" />
           </div>
           <div class="cfg-form-field">
             <label>{{ t('db_password') }}</label>
-            <Password v-model="form.db_password" :feedback="false" toggleMask size="small" />
+            <AInputPassword v-model:value="form.db_password" size="small" />
           </div>
         </div>
       </section>
@@ -104,17 +107,16 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import Button    from 'primevue/button'
-import InputText from 'primevue/inputtext'
-import Textarea  from 'primevue/textarea'
-import Select    from 'primevue/select'
-import Password  from 'primevue/password'
-import Message   from 'primevue/message'
+import { ref, computed, onMounted } from 'vue'
+import { Button as AButton, Input, Select as ASelect, Alert as AAlert } from 'ant-design-vue'
 import { useToast } from '@/composables/useNotify'
 import { useI18n, availableLocales } from '@/i18n'
 import { api }      from '@/api'
 import { COLOR_PALETTE, applyColor } from '@/composables/useAppColor'
+
+const AInput         = Input
+const ATextarea      = Input.TextArea
+const AInputPassword = Input.Password
 
 const { t }  = useI18n()
 const toast  = useToast()
@@ -126,8 +128,11 @@ const form          = ref(null)
 // Available UI languages — owned by the frontend, not fetched from the backend.
 // To add a new locale: add the JSON file to src/locale/ and add an entry here.
 const langs         = availableLocales.map(l => l.code)
+const langOptions   = langs.map(v => ({ value: v, label: v }))
 const statusOptions = ref([])
 const dbEngines     = ref([])
+const statusSelectOptions = computed(() => statusOptions.value.map(v => ({ value: v, label: v })))
+const dbEngineOptions     = computed(() => dbEngines.value.map(v => ({ value: v, label: v })))
 const colorPalette  = COLOR_PALETTE
 
 function selectColor(name) {

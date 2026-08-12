@@ -32,20 +32,18 @@
           <div v-if="key === 'get_values_from_tb'" class="cfg-fld-field cfg-fld-span2">
             <label>{{ t('fld_get_values_from_tb') }}</label>
             <div class="cfg-gvft-row">
-              <Select
-                v-model="gvftTable"
+              <ASelect
+                v-model:value="gvftTable"
                 :options="gvftTableOptions"
-                :show-clear="true"
+                allow-clear
                 size="small"
                 :placeholder="t('select_table')"
                 @change="onGvftTableChange"
               />
-              <Select
-                v-model="gvftField"
+              <ASelect
+                v-model:value="gvftField"
                 :options="gvftFieldOptions"
-                option-label="label"
-                option-value="value"
-                :show-clear="true"
+                allow-clear
                 size="small"
                 :disabled="!gvftTable || gvftLoading"
                 :placeholder="gvftLoading ? t('loading') : t('select_field')"
@@ -58,7 +56,7 @@
           <!-- ── boolean (ToggleSwitch) ─────────────────────────── -->
           <div v-else-if="meta.type === 'boolean'" class="cfg-fld-field cfg-fld-bool">
             <label>{{ t('fld_' + key) }}</label>
-            <ToggleSwitch v-model="form[key]" />
+            <ASwitch v-model:checked="form[key]" />
             <small v-if="meta.help" class="cfg-fld-help">{{ meta.help }}</small>
           </div>
 
@@ -68,12 +66,12 @@
               {{ t('fld_' + key) }}
               <span v-if="meta.required" class="cfg-req">*</span>
             </label>
-            <InputText
-              v-model="form[key]"
+            <AInput
+              v-model:value="form[key]"
               size="small"
               :disabled="meta.readonly && !!origName"
               :placeholder="meta.pattern ?? ''"
-              :class="{ 'p-invalid': errors[key] }"
+              :status="errors[key] ? 'error' : undefined"
               @blur="validate(key, meta)"
             />
             <small v-if="meta.help" class="cfg-fld-help">{{ meta.help }}</small>
@@ -86,12 +84,12 @@
               {{ t('fld_' + key) }}
               <span v-if="meta.required" class="cfg-req">*</span>
             </label>
-            <Select
-              v-model="form[key]"
+            <ASelect
+              v-model:value="form[key]"
               :options="selectOptions(meta)"
-              :show-clear="!meta.required"
+              :allow-clear="!meta.required"
               size="small"
-              :class="{ 'p-invalid': errors[key] }"
+              :status="errors[key] ? 'error' : undefined"
               @change="validate(key, meta)"
             />
             <small v-if="meta.help" class="cfg-fld-help">{{ meta.help }}</small>
@@ -101,11 +99,11 @@
           <!-- ── multi select ───────────────────────────────────── -->
           <div v-else-if="meta.type === 'multi_select'" class="cfg-fld-field" :class="{ required: meta.required }">
             <label>{{ t('fld_' + key) }}</label>
-            <MultiSelect
-              v-model="form[key]"
-              :options="meta.values"
+            <ASelect
+              v-model:value="form[key]"
+              :options="(meta.values ?? []).map(v => ({ value: v, label: v }))"
+              mode="multiple"
               size="small"
-              display="chip"
             />
             <small v-if="meta.help" class="cfg-fld-help">{{ meta.help }}</small>
           </div>
@@ -115,8 +113,11 @@
     </div>
 
     <div class="cfg-fld-actions">
-      <Button type="button" :label="t('cancel')" severity="secondary" size="small" text @click="$emit('cancelled')" />
-      <Button type="submit" :label="t('save')" icon="pi pi-save" size="small" :loading="saving" />
+      <AButton size="small" @click="$emit('cancelled')">{{ t('cancel') }}</AButton>
+      <AButton html-type="submit" type="primary" size="small" :loading="saving">
+        <template #icon><i class="pi pi-save" /></template>
+        {{ t('save') }}
+      </AButton>
     </div>
 
   </form>
@@ -124,11 +125,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
-import Button       from 'primevue/button'
-import InputText    from 'primevue/inputtext'
-import Select       from 'primevue/select'
-import MultiSelect  from 'primevue/multiselect'
-import ToggleSwitch from 'primevue/toggleswitch'
+import { Button as AButton, Input as AInput, Select as ASelect, Switch as ASwitch } from 'ant-design-vue'
 import { useToast } from '@/composables/useNotify'
 import { useI18n }  from '@/i18n'
 import { api }      from '@/api'
@@ -160,7 +157,9 @@ const gvftFields  = ref({})   // { fieldname: label }
 const gvftLoading = ref(false)
 
 // Tables list comes from id_from_tb.values in the structure (already populated by PHP)
-const gvftTableOptions = computed(() => props.structure?.id_from_tb?.values ?? [])
+const gvftTableOptions = computed(() =>
+  (props.structure?.id_from_tb?.values ?? []).map(v => ({ value: v, label: v }))
+)
 
 const gvftFieldOptions = computed(() =>
   Object.entries(gvftFields.value).map(([k, v]) => ({ value: k, label: `${v} (${k})` }))
@@ -236,7 +235,10 @@ watch(() => props.field, val => initForm(val), { deep: true, immediate: true })
 
 // ── Helpers ───────────────────────────────────────────────────────────────
 function selectOptions(meta) {
-  return (meta.values ?? []).map(v => (v === true || v === false) ? String(v) : v)
+  return (meta.values ?? []).map(v => {
+    const val = (v === true || v === false) ? String(v) : v
+    return { value: val, label: val }
+  })
 }
 
 function validate(key, meta) {
@@ -353,7 +355,7 @@ async function submit() {
   display: flex;
   gap: 0.5rem;
 }
-.cfg-gvft-row .p-select {
+.cfg-gvft-row .ant-select {
   flex: 1;
   min-width: 0;
 }

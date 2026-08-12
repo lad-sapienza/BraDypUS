@@ -2,16 +2,15 @@
   <div class="cfg-panel">
     <div class="cfg-panel-header">
       <h2><i class="pi pi-book" /> {{ t('zotero_libraries') }}</h2>
-      <Button
-        :label="t('sync_all')"
-        icon="pi pi-refresh"
+      <AButton
         size="small"
-        severity="secondary"
-        outlined
         :loading="syncingAll"
         :disabled="libs.length === 0"
         @click="syncAll"
-      />
+      >
+        <template #icon><i class="pi pi-refresh" /></template>
+        {{ t('sync_all') }}
+      </AButton>
     </div>
 
     <div class="panel-body">
@@ -27,19 +26,17 @@
           <!-- type -->
           <div class="form-field">
             <label>{{ t('library_type') }}</label>
-            <SelectButton
-              v-model="form.type"
+            <ASegmented
+              v-model:value="form.type"
               :options="typeOptions"
-              option-label="label"
-              option-value="value"
             />
           </div>
 
           <!-- Zotero ID -->
           <div class="form-field">
             <label>{{ t('zotero_id') }}</label>
-            <InputText
-              v-model="form.zotero_id"
+            <AInput
+              v-model:value="form.zotero_id"
               :placeholder="form.type === 'user' ? t('zotero_user_id_hint') : t('zotero_group_id_hint')"
               class="form-input"
             />
@@ -48,8 +45,8 @@
           <!-- Display name -->
           <div class="form-field">
             <label>{{ t('name') }}</label>
-            <InputText
-              v-model="form.name"
+            <AInput
+              v-model:value="form.name"
               :placeholder="t('zotero_lib_name_hint')"
               class="form-input"
             />
@@ -58,11 +55,9 @@
           <!-- API key (optional for public groups) -->
           <div class="form-field">
             <label>{{ t('api_key') }} <span class="optional">({{ t('optional') }})</span></label>
-            <Password
-              v-model="form.api_key"
+            <AInputPassword
+              v-model:value="form.api_key"
               :placeholder="t('zotero_api_key_hint')"
-              :feedback="false"
-              toggleMask
               class="form-input"
             />
           </div>
@@ -70,8 +65,8 @@
           <!-- Citation style -->
           <div class="form-field">
             <label>{{ t('citation_style') }}</label>
-            <InputText
-              v-model="form.citation_style"
+            <AInput
+              v-model:value="form.citation_style"
               :placeholder="t('citation_style_hint')"
               class="form-input"
             />
@@ -79,12 +74,10 @@
           </div>
 
           <div class="form-actions">
-            <Button
-              :label="t('add_zotero_library')"
-              icon="pi pi-plus"
-              :loading="adding"
-              @click="addLib"
-            />
+            <AButton type="primary" :loading="adding" @click="addLib">
+              <template #icon><i class="pi pi-plus" /></template>
+              {{ t('add_zotero_library') }}
+            </AButton>
           </div>
         </div>
       </section>
@@ -99,7 +92,7 @@
           <i class="pi pi-spin pi-spinner" />
         </div>
 
-        <Message v-else-if="loadError" severity="error" :closable="false">{{ loadError }}</Message>
+        <AAlert v-else-if="loadError" type="error" :message="loadError" :closable="false" show-icon />
 
         <div v-else-if="libs.length === 0" class="cfg-empty-msg-sm">
           {{ t('no_zotero_libs') }}
@@ -137,41 +130,39 @@
             </div>
 
             <div class="lib-card-actions">
-              <Button
-                icon="pi pi-trash"
-                text
-                severity="danger"
+              <AButton
+                type="text"
+                danger
                 size="small"
                 :title="t('delete')"
                 :loading="deletingId === lib.id"
                 @click="deleteLib(lib)"
-              />
+              ><template #icon><i class="pi pi-trash" /></template></AButton>
             </div>
           </div>
         </div>
       </section>
 
       <!-- Sync result message -->
-      <Message
+      <AAlert
         v-if="syncResult"
-        :severity="syncResult.severity"
+        :type="syncResult.severity"
+        :message="syncResult.text"
         :closable="true"
+        show-icon
         @close="syncResult = null"
-      >
-        {{ syncResult.text }}
-      </Message>
+      />
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import Button       from 'primevue/button'
-import InputText    from 'primevue/inputtext'
-import Password     from 'primevue/password'
-import SelectButton from 'primevue/selectbutton'
-import Message      from 'primevue/message'
 import Tag          from 'primevue/tag'
+import { Button as AButton, Input, Segmented as ASegmented, Alert as AAlert } from 'ant-design-vue'
+
+const AInput         = Input
+const AInputPassword = Input.Password
 import { useToast } from '@/composables/useNotify'
 import { useI18n }  from '@/i18n'
 import { api }      from '@/api'
@@ -292,7 +283,7 @@ async function syncAll() {
     }
     const { updated = 0, detached = 0, errors = 0 } = res
     syncResult.value = {
-      severity: errors > 0 ? 'warn' : 'success',
+      severity: errors > 0 ? 'warning' : 'success',
       text: t('zotero_sync_result', updated, detached, errors),
     }
     toast.add({ severity: syncResult.value.severity, summary: t('sync_all'), detail: syncResult.value.text, life: 5000 })

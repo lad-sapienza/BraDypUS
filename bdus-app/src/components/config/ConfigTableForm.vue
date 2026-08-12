@@ -6,29 +6,27 @@
         {{ tb ? table?.label || tb : t('add_table') }}
       </h2>
       <div class="cfg-panel-header-actions">
-        <Button
-          v-if="tb"
-          :label="t('fields')"
-          icon="pi pi-list"
-          size="small"
-          outlined
-          @click="$emit('open-fields', tb)"
-        />
-        <Button
-          :label="t('save')"
-          icon="pi pi-save"
+        <AButton v-if="tb" size="small" @click="$emit('open-fields', tb)">
+          <template #icon><i class="pi pi-list" /></template>
+          {{ t('fields') }}
+        </AButton>
+        <AButton
+          type="primary"
           size="small"
           :loading="saving"
           :disabled="!chronoDensityPathValid || newPluginNeedsParent"
           @click="save"
-        />
+        >
+          <template #icon><i class="pi pi-save" /></template>
+          {{ t('save') }}
+        </AButton>
       </div>
     </div>
 
     <div v-if="loading" class="cfg-loading-center">
       <i class="pi pi-spin pi-spinner" />
     </div>
-    <Message v-if="loadError" severity="error" :closable="false">{{ loadError }}</Message>
+    <AAlert v-if="loadError" type="error" :message="loadError" :closable="false" show-icon />
 
     <div v-if="!loading && form" class="cfg-form-body">
 
@@ -40,16 +38,13 @@
         <div class="cfg-form-field">
           <label>{{ t('name') }} <span class="cfg-req">*</span></label>
           <div class="cfg-input-action">
-            <InputText v-model="form.name" size="small" :disabled="!!tb" style="flex:1; min-width:0" />
-            <Button
+            <AInput v-model:value="form.name" size="small" :disabled="!!tb" style="flex:1; min-width:0" />
+            <AButton
               v-if="tb"
-              icon="pi pi-pencil"
-              severity="secondary"
               size="small"
-              outlined
               :title="t('rename_table')"
               @click="renameVisible = true"
-            />
+            ><template #icon><i class="pi pi-pencil" /></template></AButton>
           </div>
           <small class="cfg-hint">{{ t('help_table_name') }}</small>
         </div>
@@ -58,14 +53,14 @@
           <!-- Label -->
           <div class="cfg-form-field">
             <label>{{ t('label') }} <span class="cfg-req">*</span></label>
-            <InputText v-model="form.label" size="small" />
+            <AInput v-model:value="form.label" size="small" />
             <small class="cfg-hint">{{ t('help_table_label') }}</small>
           </div>
 
           <!-- Is Plugin (#20: ToggleSwitch) -->
           <div class="cfg-form-field">
             <label>{{ t('is_plugin') }}</label>
-            <ToggleSwitch v-model="isPluginBool" :disabled="!!tb" />
+            <ASwitch v-model:checked="isPluginBool" :disabled="!!tb" />
             <small class="cfg-hint">{{ t('help_table_is_plugin') }}</small>
           </div>
 
@@ -74,12 +69,10 @@
                (relations panel / system-plugin activate-deactivate), not here. -->
           <div v-if="!tb && isPluginBool" class="cfg-form-field">
             <label>{{ t('plugin_of') }} <span class="cfg-req">*</span></label>
-            <Select
-              v-model="form.plugin_of"
+            <ASelect
+              v-model:value="form.plugin_of"
               :options="parentTableOptions"
-              option-label="label"
-              option-value="value"
-              :show-clear="true"
+              allow-clear
               size="small"
             />
             <small class="cfg-hint">{{ t('help_table_plugin_of') }}</small>
@@ -96,12 +89,10 @@
 
           <div class="cfg-form-field">
             <label>{{ t('order_field') }} <span class="cfg-req">*</span></label>
-            <Select
-              v-model="form.order"
+            <ASelect
+              v-model:value="form.order"
               :options="fieldOptions"
-              option-label="label"
-              option-value="value"
-              :show-clear="true"
+              allow-clear
               size="small"
             />
             <small class="cfg-hint">{{ t('help_table_order_field') }}</small>
@@ -109,12 +100,10 @@
 
           <div class="cfg-form-field">
             <label>{{ t('id_field') }} <span class="cfg-req">*</span></label>
-            <Select
-              v-model="form.id_field"
+            <ASelect
+              v-model:value="form.id_field"
               :options="fieldOptions"
-              option-label="label"
-              option-value="value"
-              :show-clear="true"
+              allow-clear
               size="small"
             />
             <small class="cfg-hint">{{ t('help_table_id_field') }}</small>
@@ -125,12 +114,10 @@
         <!-- Preview fields (#21: MultiSelect) -->
         <div class="cfg-form-field">
           <label>{{ t('preview_flds') }} <span class="cfg-req">*</span></label>
-          <MultiSelect
-            v-model="form.preview"
+          <ASelect
+            v-model:value="form.preview"
             :options="fieldOptions"
-            option-label="label"
-            option-value="value"
-            display="chip"
+            mode="multiple"
             size="small"
             :placeholder="t('select_fields')"
           />
@@ -145,23 +132,23 @@
         <div class="cfg-form-row">
           <div class="cfg-form-field">
             <label>{{ t('rs_plugin') }}</label>
-            <ToggleSwitch v-model="form.rs" />
+            <ASwitch v-model:checked="form.rs" />
           </div>
           <div class="cfg-form-field">
             <label>{{ t('geodata_plugin') }}</label>
-            <ToggleSwitch v-model="form.geodata" />
+            <ASwitch v-model:checked="form.geodata" />
           </div>
           <div class="cfg-form-field">
             <label>{{ t('zotero_plugin') }}</label>
-            <ToggleSwitch v-model="form.zotero" />
+            <ASwitch v-model:checked="form.zotero" />
           </div>
           <div class="cfg-form-field">
             <label>{{ t('fuzzy_date_plugin') }}</label>
             <div class="cfg-input-action">
-              <ToggleSwitch
-                :modelValue="fuzzyDateActive"
+              <ASwitch
+                :checked="fuzzyDateActive"
                 :disabled="fuzzyDateBusy"
-                @update:modelValue="toggleFuzzyDate"
+                @change="toggleFuzzyDate"
               />
               <i v-if="fuzzyDateBusy" class="pi pi-spin pi-spinner" style="font-size:.9rem" />
             </div>
@@ -172,10 +159,10 @@
           <div class="cfg-form-field">
             <label>{{ t('osteo_plugin') }}</label>
             <div class="cfg-input-action">
-              <ToggleSwitch
-                :modelValue="osteoActive"
+              <ASwitch
+                :checked="osteoActive"
                 :disabled="osteoBusy"
-                @update:modelValue="toggleOsteology"
+                @change="toggleOsteology"
               />
               <i v-if="osteoBusy" class="pi pi-spin pi-spinner" style="font-size:.9rem" />
             </div>
@@ -186,10 +173,10 @@
           <div class="cfg-form-field">
             <label>{{ t('radiocarbon_plugin') }}</label>
             <div class="cfg-input-action">
-              <ToggleSwitch
-                :modelValue="radiocarbonActive"
+              <ASwitch
+                :checked="radiocarbonActive"
                 :disabled="radiocarbonBusy"
-                @update:modelValue="toggleRadiocarbon"
+                @change="toggleRadiocarbon"
               />
               <i v-if="radiocarbonBusy" class="pi pi-spin pi-spinner" style="font-size:.9rem" />
             </div>
@@ -219,43 +206,42 @@
       <section v-if="tb" class="cfg-section cfg-danger-section">
         <div class="cfg-section-title cfg-danger-title">{{ t('danger_zone') }}</div>
         <p class="cfg-danger-warn">{{ t('warning_delete_table') }}</p>
-        <Button
-          :label="t('delete_table')"
-          icon="pi pi-trash"
-          severity="danger"
-          outlined
-          size="small"
-          :loading="deleting"
-          @click="deleteTable"
-        />
+        <AButton danger size="small" :loading="deleting" @click="deleteTable">
+          <template #icon><i class="pi pi-trash" /></template>
+          {{ t('delete_table') }}
+        </AButton>
       </section>
 
     </div>
 
     <!-- ── Rename dialog ──────────────────────────────────────────── -->
-    <Dialog v-model:visible="renameVisible" modal :header="t('rename_table')" style="width:350px">
+    <AModal v-model:open="renameVisible" :title="t('rename_table')" width="350px">
       <div class="cfg-rename-body">
         <label>{{ t('new_name') }}</label>
-        <InputText v-model="newName" size="small" autofocus @keyup.enter="confirmRename" />
+        <AInput v-model:value="newName" size="small" autofocus @keyup.enter="confirmRename" />
       </div>
       <template #footer>
-        <Button :label="t('cancel')" severity="secondary" size="small" text @click="renameVisible = false" />
-        <Button :label="t('rename')" icon="pi pi-check" size="small" :loading="renaming" @click="confirmRename" />
+        <AButton size="small" @click="renameVisible = false">{{ t('cancel') }}</AButton>
+        <AButton type="primary" size="small" :loading="renaming" @click="confirmRename">
+          <template #icon><i class="pi pi-check" /></template>
+          {{ t('rename') }}
+        </AButton>
       </template>
-    </Dialog>
+    </AModal>
 
   </div>
 </template>
 
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
-import Button       from 'primevue/button'
-import Dialog       from 'primevue/dialog'
-import InputText    from 'primevue/inputtext'
-import Select       from 'primevue/select'
-import MultiSelect  from 'primevue/multiselect'
-import Message      from 'primevue/message'
-import ToggleSwitch from 'primevue/toggleswitch'
+import {
+  Button as AButton,
+  Modal as AModal,
+  Input as AInput,
+  Select as ASelect,
+  Switch as ASwitch,
+  Alert as AAlert,
+} from 'ant-design-vue'
 import ConfigIndexes from '@/components/config/ConfigIndexes.vue'
 import ConfigChronoDensityPath from '@/components/config/ConfigChronoDensityPath.vue'
 import { useToast, useConfirm } from '@/composables/useNotify'

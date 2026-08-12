@@ -3,21 +3,14 @@
     <div class="cfg-panel-header">
       <h2><i class="pi pi-sitemap" /> {{ t('cfg_relations') }}</h2>
       <div class="cfg-panel-header-actions">
-        <Button
-          :label="t('apply_all_constraints')"
-          icon="pi pi-bolt"
-          size="small"
-          severity="secondary"
-          :loading="applying"
-          @click="applyAll"
-        />
-        <Button
-          :label="t('add_relation')"
-          icon="pi pi-plus"
-          size="small"
-          :disabled="showAddForm"
-          @click="openAddForm"
-        />
+        <AButton size="small" :loading="applying" @click="applyAll">
+          <template #icon><i class="pi pi-bolt" /></template>
+          {{ t('apply_all_constraints') }}
+        </AButton>
+        <AButton type="primary" size="small" :disabled="showAddForm" @click="openAddForm">
+          <template #icon><i class="pi pi-plus" /></template>
+          {{ t('add_relation') }}
+        </AButton>
       </div>
     </div>
 
@@ -25,7 +18,7 @@
       <i class="pi pi-spin pi-spinner" />
     </div>
 
-    <Message v-if="error" severity="error" :closable="false">{{ error }}</Message>
+    <AAlert v-if="error" type="error" :message="error" :closable="false" show-icon />
 
     <div v-if="!loading" class="cfg-rel-body">
       <p class="cfg-help-text">{{ t('cfg_relations_help') }}</p>
@@ -41,11 +34,9 @@
           <!-- from_tb -->
           <div class="cfg-field-group" style="flex:1">
             <label>{{ t('fk_from_table') }}</label>
-            <Select
-              v-model="formData.from_tb"
+            <ASelect
+              v-model:value="formData.from_tb"
               :options="tableOptions"
-              option-label="label"
-              option-value="value"
               :placeholder="t('select_table')"
               size="small"
               :disabled="editingId !== null"
@@ -56,11 +47,9 @@
           <!-- from_col -->
           <div class="cfg-field-group" style="flex:1">
             <label>{{ t('fk_from_col') }}</label>
-            <Select
-              v-model="formData.from_col"
+            <ASelect
+              v-model:value="formData.from_col"
               :options="fieldOptionsFor(formData.from_tb)"
-              option-label="label"
-              option-value="value"
               :placeholder="t('select_field')"
               size="small"
               :disabled="editingId !== null || !formData.from_tb"
@@ -72,11 +61,9 @@
           <!-- to_tb -->
           <div class="cfg-field-group" style="flex:1">
             <label>{{ t('fk_to_table') }}</label>
-            <Select
-              v-model="formData.to_tb"
+            <ASelect
+              v-model:value="formData.to_tb"
               :options="tableOptions"
-              option-label="label"
-              option-value="value"
               :placeholder="t('select_table')"
               size="small"
               @change="onToTbChange"
@@ -86,11 +73,9 @@
           <!-- to_col -->
           <div class="cfg-field-group" style="flex:1">
             <label>{{ t('fk_to_col') }}</label>
-            <Select
-              v-model="formData.to_col"
+            <ASelect
+              v-model:value="formData.to_col"
               :options="fieldOptionsFor(formData.to_tb)"
-              option-label="label"
-              option-value="value"
               :placeholder="t('select_field')"
               size="small"
               :disabled="!formData.to_tb"
@@ -102,22 +87,18 @@
         <div class="cfg-rel-form-row">
           <div class="cfg-field-group" style="flex:1">
             <label>{{ t('on_delete') }}</label>
-            <Select
-              v-model="formData.on_delete"
+            <ASelect
+              v-model:value="formData.on_delete"
               :options="fkPolicies"
-              option-label="label"
-              option-value="value"
               size="small"
               :disabled="isSelfRef"
             />
           </div>
           <div class="cfg-field-group" style="flex:1">
             <label>{{ t('on_update') }}</label>
-            <Select
-              v-model="formData.on_update"
+            <ASelect
+              v-model:value="formData.on_update"
               :options="fkPolicies"
-              option-label="label"
-              option-value="value"
               size="small"
               :disabled="isSelfRef"
             />
@@ -129,15 +110,17 @@
 
         <!-- Form actions -->
         <div class="cfg-rel-form-actions">
-          <Button :label="t('cancel')" severity="secondary" size="small" text @click="cancelForm" />
-          <Button
-            :label="t('save')"
-            icon="pi pi-save"
+          <AButton size="small" @click="cancelForm">{{ t('cancel') }}</AButton>
+          <AButton
+            type="primary"
             size="small"
             :loading="saving"
             :disabled="!formData.from_tb || !formData.from_col || !formData.to_tb || !formData.to_col"
             @click="saveRelation"
-          />
+          >
+            <template #icon><i class="pi pi-save" /></template>
+            {{ t('save') }}
+          </AButton>
         </div>
       </div>
 
@@ -176,25 +159,22 @@
 
         <!-- Row actions -->
         <div class="cfg-rel-card-actions">
-          <Button
-            icon="pi pi-pencil"
-            severity="secondary"
+          <AButton
+            type="text"
             size="small"
-            text
             :title="t('edit')"
             :disabled="showAddForm || (editingId !== null && editingId !== rel.id)"
             @click="startEdit(rel)"
-          />
-          <Button
-            icon="pi pi-trash"
-            severity="danger"
+          ><template #icon><i class="pi pi-pencil" /></template></AButton>
+          <AButton
+            type="text"
+            danger
             size="small"
-            text
             :title="t('delete')"
             :loading="deletingId === rel.id"
             :disabled="showAddForm || editingId !== null"
             @click="deleteRelation(rel)"
-          />
+          ><template #icon><i class="pi pi-trash" /></template></AButton>
         </div>
       </div>
 
@@ -204,9 +184,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import Button  from 'primevue/button'
-import Select  from 'primevue/select'
-import Message from 'primevue/message'
+import { Button as AButton, Select as ASelect, Alert as AAlert } from 'ant-design-vue'
 import { useToast, useConfirm } from '@/composables/useNotify'
 import { useI18n }    from '@/i18n'
 import { api }        from '@/api'

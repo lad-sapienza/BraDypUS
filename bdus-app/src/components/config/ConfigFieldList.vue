@@ -2,13 +2,16 @@
   <div class="cfg-panel">
     <div class="cfg-panel-header">
       <h2><i class="pi pi-list" /> {{ t('fields') }}: <em>{{ tb }}</em></h2>
-      <Button :label="t('add_field')" icon="pi pi-plus" size="small" outlined @click="addNew" />
+      <AButton size="small" @click="addNew">
+        <template #icon><i class="pi pi-plus" /></template>
+        {{ t('add_field') }}
+      </AButton>
     </div>
 
     <div v-if="loading" class="cfg-loading-center">
       <i class="pi pi-spin pi-spinner" />
     </div>
-    <Message v-if="loadError" severity="error" :closable="false">{{ loadError }}</Message>
+    <AAlert v-if="loadError" type="error" :message="loadError" :closable="false" show-icon />
 
     <div v-if="!loading" class="cfg-fld-shell">
 
@@ -72,26 +75,26 @@
     </div>
 
     <!-- ── Rename dialog ───────────────────────────────────────────── -->
-    <Dialog v-model:visible="renameVisible" modal :header="t('rename_column')" style="width:350px">
+    <AModal v-model:open="renameVisible" :title="t('rename_column')" width="350px">
       <div class="cfg-rename-body">
         <label>{{ t('new_name') }}</label>
-        <InputText v-model="newName" size="small" autofocus @keyup.enter="confirmRename" />
+        <AInput v-model:value="newName" size="small" autofocus @keyup.enter="confirmRename" />
       </div>
       <template #footer>
-        <Button :label="t('cancel')" severity="secondary" size="small" text @click="renameVisible = false" />
-        <Button :label="t('rename')" icon="pi pi-check" size="small" :loading="renaming" @click="confirmRename" />
+        <AButton size="small" @click="renameVisible = false">{{ t('cancel') }}</AButton>
+        <AButton type="primary" size="small" :loading="renaming" @click="confirmRename">
+          <template #icon><i class="pi pi-check" /></template>
+          {{ t('rename') }}
+        </AButton>
       </template>
-    </Dialog>
+    </AModal>
 
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, watch } from 'vue'
-import Button      from 'primevue/button'
-import Dialog      from 'primevue/dialog'
-import InputText   from 'primevue/inputtext'
-import Message     from 'primevue/message'
+import { Button as AButton, Modal as AModal, Input as AInput, Alert as AAlert } from 'ant-design-vue'
 import { useToast, useConfirm } from '@/composables/useNotify'
 import { useI18n }       from '@/i18n'
 import { api }           from '@/api'

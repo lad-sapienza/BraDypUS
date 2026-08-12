@@ -14,15 +14,11 @@
         <span>{{ t('dbml_export') }}</span>
       </div>
       <p class="hint">{{ t('dbml_export_hint') }}</p>
-      <Button
-        :label="t('dbml_download')"
-        icon="pi pi-download"
-        :loading="exporting"
-        @click="doExport"
-      />
-      <Message v-if="exportError" severity="error" :closable="false" class="mt-2">
-        {{ exportError }}
-      </Message>
+      <AButton :loading="exporting" @click="doExport">
+        <template #icon><i class="pi pi-download" /></template>
+        {{ t('dbml_download') }}
+      </AButton>
+      <AAlert v-if="exportError" type="error" :message="exportError" :closable="false" show-icon class="mt-2" />
     </section>
 
     <!-- ── Import ─────────────────────────────────────────────────────── -->
@@ -34,10 +30,10 @@
 
       <!-- Textarea + file reader -->
       <div class="dbml-input-row">
-        <Textarea
-          v-model="dbmlText"
+        <ATextarea
+          v-model:value="dbmlText"
           :placeholder="t('dbml_paste_placeholder')"
-          rows="10"
+          :rows="10"
           class="dbml-textarea"
           :disabled="previewing || applying"
         />
@@ -47,20 +43,15 @@
             <span>{{ t('dbml_open_file') }}</span>
             <input type="file" accept=".dbml,.txt" style="display:none" @change="readFile" />
           </label>
-          <Button
-            :label="t('dbml_analyse')"
-            icon="pi pi-search"
-            :loading="previewing"
-            :disabled="!dbmlText.trim()"
-            @click="doPreview"
-          />
+          <AButton :loading="previewing" :disabled="!dbmlText.trim()" @click="doPreview">
+            <template #icon><i class="pi pi-search" /></template>
+            {{ t('dbml_analyse') }}
+          </AButton>
         </div>
       </div>
 
       <!-- Parse error -->
-      <Message v-if="parseError" severity="error" :closable="false" class="mt-2">
-        {{ parseError }}
-      </Message>
+      <AAlert v-if="parseError" type="error" :message="parseError" :closable="false" show-icon class="mt-2" />
 
       <!-- ── Preview results ──────────────────────────────────────────── -->
       <template v-if="preview">
@@ -119,23 +110,22 @@
 
         <!-- Apply / result -->
         <div class="dbml-apply-row">
-          <Button
-            :label="t('dbml_apply')"
-            icon="pi pi-check"
-            severity="success"
+          <AButton
+            type="primary"
             :loading="applying"
             :disabled="preview.has_errors"
             @click="doApply"
-          />
+          >
+            <template #icon><i class="pi pi-check" /></template>
+            {{ t('dbml_apply') }}
+          </AButton>
           <span v-if="preview.has_errors" class="dbml-apply-blocked">
             {{ t('dbml_has_errors') }}
           </span>
         </div>
 
         <!-- Apply result -->
-        <Message v-if="applyResult" :severity="applyResult.severity" :closable="false" class="mt-2">
-          {{ applyResult.text }}
-        </Message>
+        <AAlert v-if="applyResult" :type="applyResult.severity" :message="applyResult.text" :closable="false" show-icon class="mt-2" />
       </template>
 
     </section>
@@ -146,9 +136,7 @@
 
 <script setup>
 import { ref }        from 'vue'
-import Button         from 'primevue/button'
-import Message        from 'primevue/message'
-import Textarea       from 'primevue/textarea'
+import { Button as AButton, Alert as AAlert, Input } from 'ant-design-vue'
 import { useI18n }    from '@/i18n'
 import { useToast } from '@/composables/useNotify'
 import { api }        from '@/api'
@@ -156,6 +144,8 @@ import { getToken }   from '@/token'
 import { useRoute }   from 'vue-router'
 
 const emit = defineEmits(['table-added'])
+
+const ATextarea = Input.TextArea
 
 const { t }   = useI18n()
 const toast   = useToast()
@@ -237,7 +227,7 @@ async function doApply() {
     if (created.length)  parts.push(t('dbml_created_tables', { n: created.length, names: created.join(', ') }))
     if (skipped.length)  parts.push(t('dbml_skipped_tables', { n: skipped.length, names: skipped.join(', ') }))
     if (warnings.length) parts.push(t('dbml_warnings_count', { n: warnings.length }))
-    applyResult.value = { severity: skipped.length ? 'warn' : 'success', text: parts.join(' · ') }
+    applyResult.value = { severity: skipped.length ? 'warning' : 'success', text: parts.join(' · ') }
     if (created.length) emit('table-added')
     toast.add({ severity: 'success', summary: t('dbml_apply'), detail: parts[0], life: 4000 })
   } catch (e) {

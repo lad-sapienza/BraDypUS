@@ -42,6 +42,7 @@
     "vue-router": {
       "pinia": "$pinia",
       "vite": "$vite"
-    }
+    },
+    "postcss": "^8.5.23"
   }
 }

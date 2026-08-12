@@ -1,17 +1,15 @@
 <template>
   <AConfigProvider :theme="antdTheme">
-    <Toast position="bottom-right" />
-    <ConfirmDialog />
-    <RouterView />
+    <AApp>
+      <RouterView />
+    </AApp>
   </AConfigProvider>
 </template>
 
 <script setup>
 import { computed } from 'vue'
-import Toast         from 'primevue/toast'
-import ConfirmDialog from 'primevue/confirmdialog'
 import { RouterView } from 'vue-router'
-import { ConfigProvider as AConfigProvider, theme } from 'ant-design-vue'
+import { ConfigProvider as AConfigProvider, App as AApp, theme } from 'ant-design-vue'
 // Importing useDarkMode here ensures the .dark-mode class is applied to <html>
 // on every page (including /login) as soon as the app boots.
 import { useDarkMode } from '@/composables/useDarkMode'

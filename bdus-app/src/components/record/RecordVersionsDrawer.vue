@@ -193,7 +193,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
-import { useToast }   from 'primevue/usetoast'
+import { useToast } from '@/composables/useNotify'
 import Drawer          from 'primevue/drawer'
 import Dialog          from 'primevue/dialog'
 import Button          from 'primevue/button'

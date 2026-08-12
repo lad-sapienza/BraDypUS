@@ -114,8 +114,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useConfirm }   from 'primevue/useconfirm'
-import { useToast }     from 'primevue/usetoast'
+import { useToast, useConfirm } from '@/composables/useNotify'
 import AppLayout        from '@/components/AppLayout.vue'
 import UserForm         from '@/components/users/UserForm.vue'
 import UserPrivilegesPanel from '@/components/users/UserPrivilegesPanel.vue'

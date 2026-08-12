@@ -172,7 +172,7 @@ import Password     from 'primevue/password'
 import SelectButton from 'primevue/selectbutton'
 import Message      from 'primevue/message'
 import Tag          from 'primevue/tag'
-import { useToast } from 'primevue/usetoast'
+import { useToast } from '@/composables/useNotify'
 import { useI18n }  from '@/i18n'
 import { api }      from '@/api'
 

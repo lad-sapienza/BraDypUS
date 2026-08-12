@@ -111,7 +111,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useToast } from 'primevue/usetoast'
+import { useToast } from '@/composables/useNotify'
 import DataTable     from 'primevue/datatable'
 import Column        from 'primevue/column'
 import Button        from 'primevue/button'

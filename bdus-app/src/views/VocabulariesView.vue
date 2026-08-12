@@ -143,8 +143,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from '@/i18n'
-import { useToast } from 'primevue/usetoast'
-import { useConfirm } from 'primevue/useconfirm'
+import { useToast, useConfirm } from '@/composables/useNotify'
 import { api } from '@/api'
 import AppLayout from '@/components/AppLayout.vue'
 import DataTable from 'primevue/datatable'

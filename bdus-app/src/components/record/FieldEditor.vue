@@ -183,7 +183,7 @@
 import { ref, computed, inject } from 'vue'
 import { marked } from 'marked'
 import { Input, Select as ASelect, Switch as ASwitch, Slider as ASlider, AutoComplete as AAutoComplete } from 'ant-design-vue'
-import { useToast } from 'primevue/usetoast'
+import { useToast } from '@/composables/useNotify'
 import { api }     from '@/api'
 import { useI18n } from '@/i18n'
 import { onMounted, watch } from 'vue'

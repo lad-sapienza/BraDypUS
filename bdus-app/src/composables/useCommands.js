@@ -18,7 +18,7 @@
  */
 import { computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useConfirm } from 'primevue/useconfirm'
+import { useConfirm } from '@/composables/useNotify'
 import { useI18n } from '@/i18n'
 import { useTables } from '@/composables/useTables'
 import { useDarkMode } from '@/composables/useDarkMode'

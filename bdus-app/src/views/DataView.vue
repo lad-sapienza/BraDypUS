@@ -331,7 +331,7 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useToast } from 'primevue/usetoast'
+import { useToast } from '@/composables/useNotify'
 import { api, assetUrl, filterToSearchParams } from '@/api'
 import { useI18n } from '@/i18n'
 import { useTables } from '@/composables/useTables'

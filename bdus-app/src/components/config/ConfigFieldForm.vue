@@ -129,7 +129,7 @@ import InputText    from 'primevue/inputtext'
 import Select       from 'primevue/select'
 import MultiSelect  from 'primevue/multiselect'
 import ToggleSwitch from 'primevue/toggleswitch'
-import { useToast } from 'primevue/usetoast'
+import { useToast } from '@/composables/useNotify'
 import { useI18n }  from '@/i18n'
 import { api }      from '@/api'
 

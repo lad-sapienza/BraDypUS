@@ -80,7 +80,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { useRoute, useRouter }  from 'vue-router'
-import { useToast }             from 'primevue/usetoast'
+import { useToast } from '@/composables/useNotify'
 import maplibregl               from 'maplibre-gl'
 import MapboxDraw               from 'maplibre-gl-draw'
 import 'maplibre-gl/dist/maplibre-gl.css'

@@ -227,7 +227,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRoute, useRouter }  from 'vue-router'
-import { useToast }   from 'primevue/usetoast'
+import { useToast } from '@/composables/useNotify'
 import Select         from 'primevue/select'
 import AutoComplete   from 'primevue/autocomplete'
 import Button         from 'primevue/button'

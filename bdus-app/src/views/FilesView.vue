@@ -172,8 +172,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { RouterLink, useRoute }     from 'vue-router'
-import { useToast }   from 'primevue/usetoast'
-import { useConfirm } from 'primevue/useconfirm'
+import { useToast, useConfirm } from '@/composables/useNotify'
 import AppLayout    from '@/components/AppLayout.vue'
 import DataTable    from 'primevue/datatable'
 import Column       from 'primevue/column'

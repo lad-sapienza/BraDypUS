@@ -516,8 +516,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRoute }   from 'vue-router'
-import { useToast }   from 'primevue/usetoast'
-import { useConfirm } from 'primevue/useconfirm'
+import { useToast, useConfirm } from '@/composables/useNotify'
 import { useI18n }    from '@/i18n'
 import { api }        from '@/api'
 import AppLayout      from '@/components/AppLayout.vue'

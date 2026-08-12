@@ -139,7 +139,7 @@ import Button    from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import Select    from 'primevue/select'
 import Message   from 'primevue/message'
-import { useToast } from 'primevue/usetoast'
+import { useToast } from '@/composables/useNotify'
 import { useI18n }  from '@/i18n'
 import { api }      from '@/api'
 

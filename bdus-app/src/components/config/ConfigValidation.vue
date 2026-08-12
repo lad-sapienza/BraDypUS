@@ -65,8 +65,7 @@ import Button  from 'primevue/button'
 import Message from 'primevue/message'
 import { useI18n } from '@/i18n'
 import { api }     from '@/api'
-import { useToast } from 'primevue/usetoast'
-
+import { useToast } from '@/composables/useNotify'
 const { t } = useI18n()
 const toast = useToast()
 

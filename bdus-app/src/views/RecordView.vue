@@ -337,8 +337,7 @@
 <script setup>
 import { ref, computed, watch, reactive, onMounted, onUnmounted, provide } from 'vue'
 import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
-import { useToast }              from 'primevue/usetoast'
-import { useConfirm }            from 'primevue/useconfirm'
+import { useToast, useConfirm } from '@/composables/useNotify'
 import AppLayout      from '@/components/AppLayout.vue'
 import Button         from 'primevue/button'
 import Dialog         from 'primevue/dialog'

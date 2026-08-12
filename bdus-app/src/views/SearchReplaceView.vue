@@ -100,8 +100,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useConfirm } from 'primevue/useconfirm'
-import { useToast }   from 'primevue/usetoast'
+import { useToast, useConfirm } from '@/composables/useNotify'
 import AppLayout      from '@/components/AppLayout.vue'
 import { useI18n }    from '@/i18n'
 import { api }        from '@/api'

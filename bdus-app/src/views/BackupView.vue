@@ -80,8 +80,7 @@
 
 <script setup>
 import { ref, onMounted }        from 'vue'
-import { useToast }              from 'primevue/usetoast'
-import { useConfirm }            from 'primevue/useconfirm'
+import { useToast, useConfirm } from '@/composables/useNotify'
 import AppLayout      from '@/components/AppLayout.vue'
 import Button         from 'primevue/button'
 import Message        from 'primevue/message'

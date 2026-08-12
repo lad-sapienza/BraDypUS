@@ -235,7 +235,7 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
-import { useToast } from 'primevue/usetoast'
+import { useToast } from '@/composables/useNotify'
 import { api } from '@/api'
 import { useI18n } from '@/i18n'
 import Button from 'primevue/button'

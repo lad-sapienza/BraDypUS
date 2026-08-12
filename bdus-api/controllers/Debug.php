@@ -29,6 +29,11 @@ class Debug extends \Bdus\Controller
    */
   public function getLogs(): void
   {
+    if (!\Auth\Authorization::can('admin')) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+      return;
+    }
+
     $tb      = 'bdus_log';
     $page    = max(1,   (int)($this->get['page']     ?? 1));
     $perPage = min(200, max(1, (int)($this->get['per_page'] ?? 50)));
@@ -89,6 +94,11 @@ class Debug extends \Bdus\Controller
    */
   public function purgeLogs(): void
   {
+    if (!\Auth\Authorization::can('admin')) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+      return;
+    }
+
     $days   = max(1, (int)($this->post['days'] ?? 30));
     $cutoff = time() - ($days * 86400);
     $tb     = 'bdus_log';

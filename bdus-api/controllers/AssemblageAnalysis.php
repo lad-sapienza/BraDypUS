@@ -20,6 +20,11 @@ class AssemblageAnalysis extends \Bdus\Controller
      */
     public function listAnalyses(): void
     {
+        if (!\Auth\Authorization::can('read')) {
+            $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+            return;
+        }
+
         $sys  = new Manage($this->db);
         $rows = $sys->getBySQL(
             'bdus_assemblage_analyses',
@@ -256,6 +261,11 @@ class AssemblageAnalysis extends \Bdus\Controller
      */
     public function getSources(): void
     {
+        if (!\Auth\Authorization::can('read')) {
+            $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+            return;
+        }
+
         $allTables = $this->cfg->get('tables.*.label') ?: [];
         $tables    = [];
         $plugins   = [];
@@ -295,6 +305,11 @@ class AssemblageAnalysis extends \Bdus\Controller
      */
     public function getTableMeta(): void
     {
+        if (!\Auth\Authorization::can('read')) {
+            $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+            return;
+        }
+
         $tb = $this->get['tb'] ?? null;
 
         if (empty($tb)) {
@@ -353,6 +368,11 @@ class AssemblageAnalysis extends \Bdus\Controller
      */
     public function getData(): void
     {
+        if (!\Auth\Authorization::can('read')) {
+            $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+            return;
+        }
+
         $definition = $this->post['definition'] ?? null;
         if (is_string($definition)) {
             $definition = json_decode($definition, true);

@@ -9,6 +9,30 @@ use Tests\Support\BdusTestCase;
  */
 class DebugCtrlTest extends BdusTestCase
 {
+    // ── privilege ────────────────────────────────────────────────────────
+
+    public function testGetLogsRequiresAdmin(): void
+    {
+        $this->setPrivilege(20); // writer — below admin (≤10)
+
+        $ctrl = $this->makeController('Bdus\\Controllers\\Debug', ['page' => 1, 'per_page' => 50]);
+        $res  = $this->callController($ctrl, 'getLogs');
+        $this->assertSame('not_enough_privilege', $res['code']);
+
+        $this->setPrivilege(1);
+    }
+
+    public function testPurgeLogsRequiresAdmin(): void
+    {
+        $this->setPrivilege(20);
+
+        $ctrl = $this->makeController('Bdus\\Controllers\\Debug', [], ['days' => 5]);
+        $res  = $this->callController($ctrl, 'purgeLogs');
+        $this->assertSame('not_enough_privilege', $res['code']);
+
+        $this->setPrivilege(1);
+    }
+
     // ── getLogs ───────────────────────────────────────────────────────────
 
     public function testGetLogsReturnsExpectedShape(): void

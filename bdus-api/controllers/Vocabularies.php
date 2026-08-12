@@ -60,6 +60,11 @@ class Vocabularies extends \Bdus\Controller
 
 	public function list()
 	{
+		if (!\Auth\Authorization::can('read')) {
+			$this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+			return;
+		}
+
 		$res = $this->getSysMng()->getBySQL('bdus_vocabularies', '1=1 ORDER BY voc, sort');
 		$grouped = [];
 		foreach ($res as $row) {
@@ -78,6 +83,11 @@ class Vocabularies extends \Bdus\Controller
 
 	public function edit()
 	{
+		if (!\Auth\Authorization::can('admin')) {
+			$this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+			return;
+		}
+
 		$id = $this->get['id'];
 		$val = $this->request['val'];
 
@@ -94,6 +104,11 @@ class Vocabularies extends \Bdus\Controller
 	
 	public function erase()
 	{
+		if (!\Auth\Authorization::can('admin')) {
+			$this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+			return;
+		}
+
 		$id = $this->get['id'];
 
 		$res = $this->getSysMng()->deleteRow('bdus_vocabularies', $id );
@@ -107,6 +122,11 @@ class Vocabularies extends \Bdus\Controller
 	
 	public function add()
 	{
+		if (!\Auth\Authorization::can('admin')) {
+			$this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+			return;
+		}
+
 		$voc = $this->request['voc'];
 		$def = $this->request['def'];
 
@@ -124,6 +144,11 @@ class Vocabularies extends \Bdus\Controller
 	
 	public function sort()
 	{
+		if (!\Auth\Authorization::can('admin')) {
+			$this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+			return;
+		}
+
 		$error = false;
 		// Accept both legacy GET sort[sort]=id and new POST { ids: [...] }
 		$ids = $this->post['ids'] ?? null;

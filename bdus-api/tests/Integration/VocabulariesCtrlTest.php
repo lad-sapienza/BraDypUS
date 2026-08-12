@@ -15,6 +15,74 @@ use Tests\Support\BdusTestCase;
  */
 class VocabulariesCtrlTest extends BdusTestCase
 {
+    // ── privilege ────────────────────────────────────────────────────────
+
+    public function testListRequiresAtLeastReader(): void
+    {
+        $this->setPrivilege(40); // waiting — fails even 'read' (≤30)
+
+        $ctrl = $this->makeController('Bdus\\Controllers\\Vocabularies');
+        $res  = $this->callController($ctrl, 'list');
+        $this->assertSame('not_enough_privilege', $res['code']);
+
+        $this->setPrivilege(1);
+    }
+
+    public function testReaderCanList(): void
+    {
+        $this->setPrivilege(30); // reader — read-only access is enough
+
+        $ctrl = $this->makeController('Bdus\\Controllers\\Vocabularies');
+        $res  = $this->callController($ctrl, 'list');
+        $this->assertSame('success', $res['status']);
+
+        $this->setPrivilege(1);
+    }
+
+    public function testAddRequiresAdminNotJustWriter(): void
+    {
+        $this->setPrivilege(20); // writer — modifying vocabularies needs admin (≤10)
+
+        $ctrl = $this->makeController('Bdus\\Controllers\\Vocabularies', ['voc' => 'test_cat', 'def' => 'Should-Fail']);
+        $res  = $this->callController($ctrl, 'add');
+        $this->assertSame('not_enough_privilege', $res['code']);
+
+        $this->setPrivilege(1);
+    }
+
+    public function testEditRequiresAdminNotJustWriter(): void
+    {
+        $this->setPrivilege(20);
+
+        $ctrl = $this->makeController('Bdus\\Controllers\\Vocabularies', ['id' => 1, 'val' => 'Should-Fail']);
+        $res  = $this->callController($ctrl, 'edit');
+        $this->assertSame('not_enough_privilege', $res['code']);
+
+        $this->setPrivilege(1);
+    }
+
+    public function testEraseRequiresAdminNotJustWriter(): void
+    {
+        $this->setPrivilege(20);
+
+        $ctrl = $this->makeController('Bdus\\Controllers\\Vocabularies', ['id' => 1]);
+        $res  = $this->callController($ctrl, 'erase');
+        $this->assertSame('not_enough_privilege', $res['code']);
+
+        $this->setPrivilege(1);
+    }
+
+    public function testSortRequiresAdminNotJustWriter(): void
+    {
+        $this->setPrivilege(20);
+
+        $ctrl = $this->makeController('Bdus\\Controllers\\Vocabularies', [], ['ids' => [1]]);
+        $res  = $this->callController($ctrl, 'sort');
+        $this->assertSame('not_enough_privilege', $res['code']);
+
+        $this->setPrivilege(1);
+    }
+
     // ── list() ────────────────────────────────────────────────────────────
 
     public function testListReturnsSuccess(): void

@@ -77,6 +77,77 @@ class RecordCtrlGetRecordTest extends BdusTestCase
         $this->assertIsBool($meta['can_delete']);
     }
 
+    public function testCanEditIsCreatorAwareForSelfWriter(): void
+    {
+        // Record id=1 is seeded with creator='admin' — self_writer (id=42) doesn't own it
+        \Auth\CurrentUser::set([
+            'id' => 42, 'name' => 'Self Writer', 'email' => 'sw@example.com',
+            'privilege' => 25, 'app' => 'test',
+        ]);
+
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'id' => 1]);
+        $res  = $this->callController($ctrl, 'getRecord');
+        $this->assertFalse($res['metadata']['can_edit'], 'self_writer does not own record id=1');
+
+        $this->setPrivilege(1);
+    }
+
+    public function testCanEditIsTrueForSelfWriterOnOwnRecord(): void
+    {
+        static::$db->query(
+            "INSERT INTO items (creator, name, description, status) VALUES ('42', 'Owned item', 'desc', 'active')",
+            [], 'boolean'
+        );
+        $ownId = (int) static::$db->query('SELECT last_insert_rowid() AS id', [], 'read')[0]['id'];
+
+        \Auth\CurrentUser::set([
+            'id' => 42, 'name' => 'Self Writer', 'email' => 'sw@example.com',
+            'privilege' => 25, 'app' => 'test',
+        ]);
+
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'id' => $ownId]);
+        $res  = $this->callController($ctrl, 'getRecord');
+        $this->assertTrue($res['metadata']['can_edit'], 'self_writer owns this record');
+
+        $this->setPrivilege(1);
+        static::$db->query('DELETE FROM items WHERE id = ?', [$ownId], 'boolean');
+    }
+
+    public function testCanDeleteIsCreatorAwareForSelfWriter(): void
+    {
+        \Auth\CurrentUser::set([
+            'id' => 42, 'name' => 'Self Writer', 'email' => 'sw@example.com',
+            'privilege' => 25, 'app' => 'test',
+        ]);
+
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'id' => 1]);
+        $res  = $this->callController($ctrl, 'getRecord');
+        $this->assertFalse($res['metadata']['can_delete'], 'self_writer does not own record id=1');
+
+        $this->setPrivilege(1);
+    }
+
+    public function testCanDeleteIsTrueForSelfWriterOnOwnRecord(): void
+    {
+        static::$db->query(
+            "INSERT INTO items (creator, name, description, status) VALUES ('42', 'Owned item', 'desc', 'active')",
+            [], 'boolean'
+        );
+        $ownId = (int) static::$db->query('SELECT last_insert_rowid() AS id', [], 'read')[0]['id'];
+
+        \Auth\CurrentUser::set([
+            'id' => 42, 'name' => 'Self Writer', 'email' => 'sw@example.com',
+            'privilege' => 25, 'app' => 'test',
+        ]);
+
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'id' => $ownId]);
+        $res  = $this->callController($ctrl, 'getRecord');
+        $this->assertTrue($res['metadata']['can_delete'], 'self_writer owns this record');
+
+        $this->setPrivilege(1);
+        static::$db->query('DELETE FROM items WHERE id = ?', [$ownId], 'boolean');
+    }
+
     public function testGetRecordCoreHasCorrectFields(): void
     {
         $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'id' => 1]);

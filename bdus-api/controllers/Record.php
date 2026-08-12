@@ -292,21 +292,26 @@ class Record extends \Bdus\Controller
       $schema = $this->buildTableSchema($tb);
 
       if ($id) {
-        $reader = new \Record\Read($id, null, $tb, $this->db, $this->cfg);
-        $full   = $reader->getFull();
+        $reader  = new \Record\Read($id, null, $tb, $this->db, $this->cfg);
+        $full    = $reader->getFull();
         // getFull() stores the full field object in metadata.rec_id — fix to int
-        $recId  = $full['core']['id']['val'] ?? $id;
+        $recId   = $full['core']['id']['val'] ?? $id;
+        // Needed so self_writer's can_edit/can_delete reflect actual ownership —
+        // saveRecord()/erase() enforce the same creator-aware check server-side.
+        $creator = (int) ($full['core']['creator']['val'] ?? 0) ?: null;
       } else {
-        $full  = $this->buildEmptyRecord($tb, $schema);
-        $recId = null;
+        $full    = $this->buildEmptyRecord($tb, $schema);
+        $recId   = null;
+        $creator = null;
       }
 
       $full['metadata']['tb_id']    = $tb;
       $full['metadata']['tb_label'] = $this->cfg->get("tables.{$tb}.label");
       $full['metadata']['rec_id']     = $recId;
       $full['metadata']['id_field']   = $this->cfg->get("tables.{$tb}.id_field");
-      $full['metadata']['can_edit']   = \Auth\Authorization::can('edit');
-      $full['metadata']['can_delete'] = \Auth\Authorization::can('edit');
+      // Both creator-aware, matching saveRecord()'s and erase()'s enforcement.
+      $full['metadata']['can_edit']   = \Auth\Authorization::can('edit', $creator);
+      $full['metadata']['can_delete'] = \Auth\Authorization::can('edit', $creator);
       $full['metadata']['can_add']    = \Auth\Authorization::can('add_new');
       $full['schema'] = $schema;
 
@@ -684,11 +689,6 @@ class Record extends \Bdus\Controller
    */
   public function saveRecord(): void
   {
-    if (!\Auth\Authorization::can('edit')) {
-      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
-      return;
-    }
-
     // Controller base class already merges JSON body into $this->post
     $tb   = $this->post['tb'] ?? ($this->get['tb'] ?? null);
     $id   = isset($this->post['id']) && $this->post['id'] !== '' && $this->post['id'] !== null
@@ -700,6 +700,27 @@ class Record extends \Bdus\Controller
     if (!$tb) {
       $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
       return;
+    }
+
+    // Creating and updating a record carry different privilege thresholds:
+    // add_new (self_writer included, ≤25) for new records, edit for existing
+    // ones — where self_writer may only edit records they themselves created
+    // (Authorization::can('edit', $creator) checks $creator against the
+    // current user's id). The reader built here for the ownership check is
+    // reused below in the UPDATE path so the record is only loaded once.
+    $reader = null;
+    if ($id) {
+      $reader  = new \Record\Read($id, null, $tb, $this->db, $this->cfg);
+      $creator = (int) ($reader->getCore('creator', true) ?? 0) ?: null;
+      if (!\Auth\Authorization::can('edit', $creator)) {
+        $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+        return;
+      }
+    } else {
+      if (!\Auth\Authorization::can('add_new')) {
+        $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+        return;
+      }
     }
 
     // Server-side validation — runs before any DB write
@@ -715,8 +736,7 @@ class Record extends \Bdus\Controller
 
     try {
       if ($id) {
-        // ── UPDATE path: load existing record, apply changes, persist ────
-        $reader = new \Record\Read($id, null, $tb, $this->db, $this->cfg);
+        // ── UPDATE path: apply changes to the already-loaded record, persist ─
         $editor = new \Record\Edit($reader);
 
         if (!empty($core)) {
@@ -1884,16 +1904,23 @@ class Record extends \Bdus\Controller
 
   public function erase(): void
   {
-    if (!\Auth\Authorization::can('edit')) {
-      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
-      return;
-    }
-
     $tb  = $this->get['tb'] ?? null;
     $raw = $this->get['id'] ?? null;
 
     if (!$tb || !$raw) {
       $this->returnJson(['status' => 'error', 'code' => 'no_id_provided']);
+      return;
+    }
+
+    // Fast path (writer and up): no per-record ownership check needed.
+    // self_writer fails this and falls through to the per-id check below,
+    // where each record's own creator decides. If even the best case —
+    // as if this user owned the record — still fails, nothing in the
+    // batch could ever be deletable, so reject upfront instead of doing
+    // a wasted Read per id.
+    $hasBlanketEdit = \Auth\Authorization::can('edit');
+    if (!$hasBlanketEdit && !\Auth\Authorization::can('edit', \Auth\CurrentUser::id())) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
 
@@ -1907,6 +1934,15 @@ class Record extends \Bdus\Controller
       if (!$id) continue;
       try {
         $reader = new \Record\Read($id, null, $tb, $this->db, $this->cfg);
+
+        if (!$hasBlanketEdit) {
+          $creator = (int) ($reader->getCore('creator', true) ?? 0) ?: null;
+          if (!\Auth\Authorization::can('edit', $creator)) {
+            $error[] = $id;
+            continue;
+          }
+        }
+
         $editor = new \Record\Edit($reader);
         $editor->delete();
         $editor->persist($this->db, $this->cfg);

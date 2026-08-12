@@ -133,10 +133,6 @@ class Router
         'Bdus\\Controllers\\Geoface::saveNew'                      => 'edit',
         'Bdus\\Controllers\\Geoface::updateGeometry'               => 'edit',
         'Bdus\\Controllers\\Geoface::eraseGeometry'                => 'edit',
-        'Bdus\\Controllers\\Vocabularies::add'                     => 'edit',
-        'Bdus\\Controllers\\Vocabularies::sort'                    => 'edit',
-        'Bdus\\Controllers\\Vocabularies::edit'                    => 'edit',
-        'Bdus\\Controllers\\Vocabularies::erase'                   => 'edit',
         'Bdus\\Controllers\\Import::getTableFields'                => 'edit',
         'Bdus\\Controllers\\Import::previewFile'                   => 'edit',
         'Bdus\\Controllers\\Import::previewPhotos'                 => 'edit',
@@ -162,6 +158,12 @@ class Router
         'Bdus\\Controllers\\Backup::downloadBackup'                => 'admin',
         'Bdus\\Controllers\\Debug::getLogs'                        => 'admin',
         'Bdus\\Controllers\\Debug::purgeLogs'                      => 'admin',
+        // Read-only for everyone (see Vocabularies::list/usages above); only an
+        // admin may modify the vocabulary set itself.
+        'Bdus\\Controllers\\Vocabularies::add'                     => 'admin',
+        'Bdus\\Controllers\\Vocabularies::sort'                    => 'admin',
+        'Bdus\\Controllers\\Vocabularies::edit'                    => 'admin',
+        'Bdus\\Controllers\\Vocabularies::erase'                   => 'admin',
         'Bdus\\Controllers\\Api::listKeys'                         => 'admin',
         'Bdus\\Controllers\\Api::createKey'                        => 'admin',
         'Bdus\\Controllers\\Api::revokeKey'                        => 'admin',
@@ -211,9 +213,12 @@ class Router
         'Bdus\\Controllers\\Templates::saveTemplate'               => 'super_admin',
         'Bdus\\Controllers\\Templates::deleteTemplate'             => 'super_admin',
         'Bdus\\Controllers\\Templates::renameTemplate'             => 'super_admin',
-        'Bdus\\Controllers\\SearchReplace::getTableList'          => 'super_admin',
-        'Bdus\\Controllers\\SearchReplace::getFieldList'          => 'super_admin',
-        'Bdus\\Controllers\\SearchReplace::doReplace'             => 'super_admin',
+        // Kept at 'admin' to match the actual controller-level enforcement
+        // (Authorization::can('admin') in SearchReplace.php) — API-key and
+        // JWT auth must agree on this threshold.
+        'Bdus\\Controllers\\SearchReplace::getTableList'          => 'admin',
+        'Bdus\\Controllers\\SearchReplace::getFieldList'          => 'admin',
+        'Bdus\\Controllers\\SearchReplace::doReplace'             => 'admin',
         'Bdus\\Controllers\\FreeSql::verifyPassword'              => 'super_admin',
         'Bdus\\Controllers\\FreeSql::runSql'                      => 'super_admin',
 

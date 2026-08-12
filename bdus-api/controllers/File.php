@@ -17,7 +17,7 @@ class File extends \Bdus\Controller
 		try {
 			$image = $this->get['image'];
 			$im = new ImageManager(new Driver());
-			$im->read($image)->rotate(90)->save($image);
+			$im->decode($image)->rotate(90)->save($image);
 			$this->returnJson(['status' => 'success', 'code' => 'img_rotated']);
 		} catch (\Throwable $th) {
 			$this->log->error($th);

@@ -52,7 +52,7 @@ class Resizer
 
         try {
             $manager = new ImageManager(new Driver());
-            $img     = $manager->read($path);
+            $img     = $manager->decode($path);
 
             if ($img->width() <= $maxPx && $img->height() <= $maxPx) {
                 return false; // Already within bounds — no resize needed.

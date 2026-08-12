@@ -117,6 +117,7 @@ function guideSidebar() {
       collapsed: true,
       items: [
         { text: 'Overview',            link: '/guide/usage/' },
+        { text: 'Command palette',     link: '/guide/usage/command-palette' },
         { text: 'Records (CRUD)',       link: '/guide/usage/crud' },
         { text: 'Search & filter',     link: '/guide/usage/search' },
         { text: 'Data export',         link: '/guide/usage/export' },

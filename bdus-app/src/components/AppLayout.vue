@@ -17,6 +17,16 @@
         >by LAD</a>
         <span v-if="auth.user?.app" class="topbar-app-name">· {{ auth.user.app }}</span>
       </span>
+
+      <!-- Command palette trigger -->
+      <button
+        class="topbar-btn"
+        :title="t('open_command_palette')"
+        @click="commandPalette?.open()"
+      >
+        <i class="pi pi-search" />
+      </button>
+
       <!-- User menu -->
       <Button
         text
@@ -94,8 +104,8 @@
             <template v-if="item.labelKey === 'data_mng'">
               <button
                 class="nav-item nav-item-accordion"
-                :class="{ 'is-active': isDataRoute, disabled: item.disabled }"
-                :disabled="item.disabled"
+                :class="{ 'is-active': isDataRoute, disabled: isDisabled(item) }"
+                :disabled="isDisabled(item)"
                 :title="t(item.labelKey)"
                 @click="() => { dataAccordionOpen = !dataAccordionOpen; if (dataAccordionOpen) loadTables() }"
               >
@@ -130,12 +140,12 @@
             <!-- All other nav items — normal RouterLink or disabled span -->
             <component
               v-else
-              :is="item.disabled ? 'span' : 'RouterLink'"
-              v-bind="item.disabled ? {} : { to: item.to }"
+              :is="isDisabled(item) ? 'span' : 'RouterLink'"
+              v-bind="isDisabled(item) ? {} : { to: item.to }"
               class="nav-item"
-              :class="{ disabled: item.disabled }"
+              :class="{ disabled: isDisabled(item) }"
               :title="t(item.labelKey)"
-              @click="!item.disabled && closeMobileDrawer()"
+              @click="!isDisabled(item) && closeMobileDrawer()"
             >
               <i :class="['pi', item.icon]" />
               <span class="nav-label">{{ t(item.labelKey) }}</span>
@@ -158,6 +168,8 @@
       <slot />
     </main>
 
+    <CommandPalette ref="commandPalette" @open-profile="openProfile" />
+
   </div>
 </template>
 
@@ -172,11 +184,14 @@ import { api } from '@/api'
 import { useTables }    from '@/composables/useTables'
 import { useDarkMode }  from '@/composables/useDarkMode'
 import { applyColor }   from '@/composables/useAppColor'
+import { buildNavGroups } from '@/commands/navItems'
+import { hasPrivilege } from '@/commands/privilege'
 import Select from 'primevue/select'
 import Button from 'primevue/button'
 import Menu from 'primevue/menu'
 import Dialog from 'primevue/dialog'
 import UserForm from '@/components/users/UserForm.vue'
+import CommandPalette from '@/components/CommandPalette.vue'
 
 const router  = useRouter()
 const route   = useRoute()
@@ -219,6 +234,9 @@ const currentLocale = computed({
   get: () => locale.value,
   set: (v) => setLocale(v)
 })
+
+// ── Command palette (topbar trigger + Cmd/Ctrl+K, handled inside the component) ──
+const commandPalette = ref()
 
 // ── User menu (topbar) ─────────────────────────────────────────
 const userMenu        = ref()
@@ -301,48 +319,11 @@ function handleLogout() {
   })
 }
 
-const navGroups = computed(() => {
-  const a = `/${route.params.app}`
-  return [
-    {
-      labelKey: 'nav_general',
-      items: [
-        { labelKey: 'dashboard',      icon: 'pi-home',         to: a,                      disabled: false },
-      ],
-    },
-    {
-      labelKey: 'nav_data',
-      items: [
-        { labelKey: 'data_mng',       icon: 'pi-database',     to: `${a}/data`,            disabled: false },
-        { labelKey: 'files_mng',      icon: 'pi-images',       to: `${a}/files`,            disabled: false },
-        { labelKey: 'find_replace',   icon: 'pi-search-plus',  to: `${a}/find-replace`,    disabled: false },
-        { labelKey: 'vocabulary_mng',      icon: 'pi-book',         to: `${a}/vocabularies`,    disabled: false },
-        { labelKey: 'assemblage_analysis', icon: 'pi-th-large',    to: `${a}/assemblages`,     disabled: false },
-{ labelKey: 'history',             icon: 'pi-history',      to: `${a}/history`,         disabled: false },
-        { labelKey: 'deleted_records',icon: 'pi-trash',        to: `${a}/deleted-records`, disabled: false },
-        { labelKey: 'import_data',    icon: 'pi-upload',       to: `${a}/import`,          disabled: false },
-        { labelKey: 'backup',         icon: 'pi-save',         to: `${a}/backups`                          },
-      ],
-    },
-    {
-      labelKey: 'nav_admin',
-      items: [
-        { labelKey: 'user_mng',         icon: 'pi-users',   to: `${a}/users`,     disabled: false },
-        { labelKey: 'sys_config',       icon: 'pi-cog',     to: `${a}/config`,    disabled: false },
-        { labelKey: 'design_templates', icon: 'pi-palette', to: `${a}/templates`, disabled: false },
-        { labelKey: 'free_sql',         icon: 'pi-code',    to: `${a}/free-sql`,  disabled: false },
-      ],
-    },
-    {
-      labelKey: 'nav_system',
-      items: [
-        { labelKey: 'app_log',    icon: 'pi-list',        to: `${a}/log`,        disabled: false },
-        { labelKey: 'migrations', icon: 'pi-database',    to: `${a}/migrations`, disabled: false },
-        { labelKey: 'info',       icon: 'pi-info-circle', to: `${a}/info`,       disabled: false },
-      ],
-    },
-  ]
-})
+const navGroups = computed(() => buildNavGroups(route.params.app))
+
+function isDisabled(item) {
+  return !hasPrivilege(auth.user?.privilege_value, item.minPrivilege)
+}
 </script>
 
 <style scoped>

@@ -1246,5 +1246,14 @@
   "osteo_cons_traces": "Traces",
   "osteo_cert_certain": "Certain",
   "osteo_cert_probable": "Probable",
-  "osteo_cert_uncertain": "Uncertain"
+  "osteo_cert_uncertain": "Uncertain",
+  "open_command_palette": "Open command palette",
+  "command_no_results": "No results",
+  "command_new_record_in": "New record in…",
+  "command_open_matrix_for": "Open Harris Matrix for…",
+  "command_open_chrono_for": "Open chronology for…",
+  "command_open_map_for": "Open map for…",
+  "command_group_navigation": "Navigation",
+  "command_group_tables": "Tables",
+  "command_group_actions": "Actions"
 }

@@ -19,36 +19,38 @@
           {{ mdPreview ? t('edit') : t('preview') }}
         </button>
       </div>
-      <Textarea
+      <ATextarea
         v-if="!mdPreview"
         :value="modelValue"
-        @input="onInput($event.target.value)"
+        @update:value="onInput"
         :dir="schema.direction || 'ltr'"
         :maxlength="schema.max_length || undefined"
-        rows="6"
-        autoResize
-        :class="['field-input', 'w-full', { 'p-invalid': showError }]"
+        :rows="6"
+        autoSize
+        :status="showError ? 'error' : undefined"
+        class="field-input w-full"
       />
       <div v-else class="md-preview" v-html="marked.parse(String(modelValue ?? ''))" />
     </div>
 
     <!-- long_text -->
-    <Textarea
+    <ATextarea
       v-else-if="schema.type === 'long_text'"
       :value="modelValue"
-      @input="onInput($event.target.value)"
+      @update:value="onInput"
       :dir="schema.direction || 'ltr'"
       :maxlength="schema.max_length || undefined"
-      rows="4"
-      autoResize
-      :class="['field-input', 'w-full', { 'p-invalid': showError }]"
+      :rows="4"
+      autoSize
+      :status="showError ? 'error' : undefined"
+      class="field-input w-full"
     />
 
     <!-- boolean -->
     <div v-else-if="schema.type === 'boolean'" class="bool-switch-wrap">
-      <ToggleSwitch
-        :modelValue="modelValue === '1' || modelValue === 1 || modelValue === true"
-        @update:modelValue="v => onInput(v ? '1' : '0')"
+      <ASwitch
+        :checked="modelValue === '1' || modelValue === 1 || modelValue === true"
+        @update:checked="v => onInput(v ? '1' : '0')"
       />
       <span class="bool-switch-label">{{ modelValue === '1' || modelValue === 1 || modelValue === true ? t('yes') : t('no') }}</span>
     </div>
@@ -57,77 +59,77 @@
     <template v-else-if="['select','combo_select','multi_select'].includes(schema.type) && schema.options_source">
 
       <!-- static options (dic) — no async needed -->
-      <Select
+      <ASelect
         v-if="schema.options_source.type === 'static' && schema.type === 'select'"
-        :modelValue="modelValue"
-        @update:modelValue="v => onInput(v)"
+        :value="modelValue"
+        @update:value="onInput"
         :options="staticOptions"
-        optionLabel="label"
-        optionValue="value"
         :placeholder="t('select_placeholder')"
-        :class="['field-input', 'w-full', { 'p-invalid': showError }]"
+        :status="showError ? 'error' : undefined"
+        class="field-input w-full"
       />
-      <MultiSelect
+      <ASelect
         v-else-if="schema.options_source.type === 'static' && schema.type === 'multi_select'"
-        :modelValue="multiSelectArray"
-        @update:modelValue="v => onInput(v.join(';'))"
+        mode="multiple"
+        :value="multiSelectArray"
+        @update:value="v => onInput(v.join(';'))"
         :options="staticOptions"
-        optionLabel="label"
-        optionValue="value"
         :placeholder="t('select_placeholder')"
-        :class="['field-input', 'w-full', { 'p-invalid': showError }]"
+        :status="showError ? 'error' : undefined"
+        class="field-input w-full"
       />
 
       <!-- async options (db / id_from_tb / vocabulary) -->
       <template v-else>
-        <Select
+        <ASelect
           v-if="schema.type === 'select'"
-          :modelValue="asyncModelValue"
-          @update:modelValue="v => onInput(v)"
+          :value="asyncModelValue"
+          @update:value="onInput"
           :options="asyncOptions"
-          optionLabel="label"
-          optionValue="value"
           :loading="loadingOptions"
           :placeholder="t('select_placeholder')"
-          filter
-          :class="['field-input', 'w-full', { 'p-invalid': showError }]"
-          @before-show="loadOptions"
+          :status="showError ? 'error' : undefined"
+          show-search
+          :filter-option="filterOption"
+          class="field-input w-full"
+          @dropdown-visible-change="open => open && loadOptions()"
         />
-        <Select
+        <!-- combo_select: PrimeVue's Select has a single `editable` flag for a
+             free-text + suggestions hybrid. AntD splits this into a separate
+             AutoComplete component — there is no "editable Select". -->
+        <AAutoComplete
           v-else-if="schema.type === 'combo_select'"
-          :modelValue="asyncModelValue"
-          @update:modelValue="v => onInput(v)"
+          :value="asyncModelValue"
+          @update:value="onInput"
           :options="asyncOptions"
-          optionLabel="label"
-          optionValue="value"
-          :loading="loadingOptions"
           :placeholder="t('select_placeholder')"
-          editable
-          filter
-          :class="['field-input', 'w-full', { 'p-invalid': showError }]"
-          @before-show="loadOptions"
+          :status="showError ? 'error' : undefined"
+          :filter-option="filterOption"
+          class="field-input w-full"
+          @dropdown-visible-change="open => open && loadOptions()"
         />
-        <MultiSelect
+        <ASelect
           v-else-if="schema.type === 'multi_select'"
-          :modelValue="multiSelectArray"
-          @update:modelValue="v => onInput(v.join(';'))"
+          mode="multiple"
+          :value="multiSelectArray"
+          @update:value="v => onInput(v.join(';'))"
           :options="asyncOptions"
-          optionLabel="label"
-          optionValue="value"
           :loading="loadingOptions"
           :placeholder="t('select_placeholder')"
-          filter
-          :class="['field-input', 'w-full', { 'p-invalid': showError }]"
-          @before-show="loadOptions"
+          :status="showError ? 'error' : undefined"
+          show-search
+          :filter-option="filterOption"
+          class="field-input w-full"
+          @dropdown-visible-change="open => open && loadOptions()"
         />
       </template>
     </template>
 
     <!-- slider -->
     <div v-else-if="schema.type === 'slider'" class="slider-wrap">
-      <Slider
-        :modelValue="Number(modelValue) || 0"
-        @update:modelValue="v => onInput(String(v))"
+      <ASlider
+        :value="Number(modelValue) || 0"
+        @update:value="v => onInput(String(v))"
         :min="schema.min != null ? Number(schema.min) : 0"
         :max="schema.max != null ? Number(schema.max) : 100"
         class="field-slider"
@@ -136,28 +138,30 @@
     </div>
 
     <!-- date -->
-    <InputText
+    <AInput
       v-else-if="schema.type === 'date'"
       type="date"
       :value="modelValue"
-      @input="onInput($event.target.value)"
+      @update:value="onInput"
       :min="schema.min || undefined"
       :max="schema.max || undefined"
-      :class="['field-input', 'w-full', { 'p-invalid': showError }]"
+      :status="showError ? 'error' : undefined"
+      class="field-input w-full"
     />
 
     <!-- text (default) — also handles number via min/max -->
-    <InputText
+    <AInput
       v-else
       :type="(schema.min != null || schema.max != null) ? 'number' : 'text'"
       :value="modelValue"
-      @input="onInput($event.target.value)"
+      @update:value="onInput"
       :dir="schema.direction || 'ltr'"
       :min="schema.min || undefined"
       :max="schema.max || undefined"
       :maxlength="schema.max_length || undefined"
       :pattern="schema.pattern || undefined"
-      :class="['field-input', 'w-full', { 'p-invalid': showError }]"
+      :status="showError ? 'error' : undefined"
+      class="field-input w-full"
     />
 
     <!-- Inline validation error (sync) -->
@@ -178,16 +182,14 @@
 <script setup>
 import { ref, computed, inject } from 'vue'
 import { marked } from 'marked'
-import InputText  from 'primevue/inputtext'
-import Textarea    from 'primevue/textarea'
-import Select        from 'primevue/select'
-import MultiSelect   from 'primevue/multiselect'
-import ToggleSwitch  from 'primevue/toggleswitch'
-import Slider      from 'primevue/slider'
+import { Input, Select as ASelect, Switch as ASwitch, Slider as ASlider, AutoComplete as AAutoComplete } from 'ant-design-vue'
 import { useToast } from 'primevue/usetoast'
 import { api }     from '@/api'
 import { useI18n } from '@/i18n'
 import { onMounted, watch } from 'vue'
+
+const AInput = Input
+const ATextarea = Input.TextArea
 
 const { t } = useI18n()
 const toast = useToast()
@@ -311,6 +313,13 @@ function onInput(value) {
 const staticOptions = computed(() =>
   (props.schema.options_source?.items ?? []).map(v => ({ value: v, label: v }))
 )
+
+/** AntD Select/AutoComplete: unlike PrimeVue's built-in optionLabel filter,
+ * filterOption must be supplied explicitly — it's given the raw option, not
+ * a pre-resolved label. */
+function filterOption(input, option) {
+  return String(option?.label ?? '').toLowerCase().includes(String(input).toLowerCase())
+}
 
 // ── Async options (db / id_from_tb / vocabulary) ──────────────
 const asyncOptions   = ref([])

@@ -1,17 +1,31 @@
 <template>
-  <Toast position="bottom-right" />
-  <ConfirmDialog />
-  <RouterView />
+  <AConfigProvider :theme="antdTheme">
+    <Toast position="bottom-right" />
+    <ConfirmDialog />
+    <RouterView />
+  </AConfigProvider>
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import Toast         from 'primevue/toast'
 import ConfirmDialog from 'primevue/confirmdialog'
 import { RouterView } from 'vue-router'
+import { ConfigProvider as AConfigProvider, theme } from 'ant-design-vue'
 // Importing useDarkMode here ensures the .dark-mode class is applied to <html>
 // on every page (including /login) as soon as the app boots.
 import { useDarkMode } from '@/composables/useDarkMode'
-useDarkMode()
+import { antdPrimaryColor } from '@/composables/useAppColor'
+const { isDark } = useDarkMode()
+
+/* SPIKE: ant-design-vue eval. Unlike PrimeVue (CSS-variable + class-selector
+ * dark mode, "just works" for anything already on the page), AntD's dark mode
+ * is opt-in per subtree via ConfigProvider's theme.algorithm — components
+ * outside a ConfigProvider (or missing this prop) silently stay light. */
+const antdTheme = computed(() => ({
+  algorithm: isDark.value ? theme.darkAlgorithm : theme.defaultAlgorithm,
+  token: { colorPrimary: antdPrimaryColor.value },
+}))
 </script>
 
 <style>

@@ -1,226 +1,164 @@
 <template>
-  <div class="layout">
+  <ALayout class="app-shell" has-sider>
 
-    <!-- ── Topbar (always visible) ───────────────────────── -->
-    <header class="topbar app-topbar">
-      <button class="topbar-btn topbar-burger" @click="drawerOpen = !drawerOpen" title="Menu">
-        <i class="pi pi-bars" />
-      </button>
-      <span class="topbar-brand">
-        BraDypUS
-        <a
-          class="topbar-by-lad"
-          href="https://purl.org/lad"
-          target="_blank"
-          rel="noopener"
-          title="LAD — Laboratorio di Archeologia Digitale, Sapienza Università di Roma"
-        >by LAD</a>
-        <span v-if="auth.user?.app" class="topbar-app-name">· {{ auth.user.app }}</span>
-      </span>
-
-      <!-- Command palette trigger -->
-      <button
-        class="topbar-btn"
-        :title="t('open_command_palette')"
-        @click="commandPalette?.open()"
-      >
-        <i class="pi pi-search" />
-      </button>
-
-      <!-- User menu -->
-      <Button
-        text
-        size="small"
-        class="topbar-user-btn"
-        :title="auth.user?.name"
-        @click="userMenu.toggle($event)"
-      >
-        <i class="pi pi-user" style="font-size:0.9rem" />
-        <span class="topbar-user-name">{{ auth.user?.name }}</span>
-        <i class="pi pi-chevron-down" style="font-size:0.65rem;opacity:0.6" />
-      </Button>
-      <Menu ref="userMenu" :model="userMenuItems" popup />
-
-      <!-- Profile dialog -->
-      <Dialog
-        v-model:visible="profileVisible"
-        :header="t('user_profile')"
-        modal
-        :style="{ width: '420px' }"
-      >
-        <UserForm
-          :initial="profileData"
-          :saving="profileSaving"
-          @save="saveProfile"
-          @cancel="profileVisible = false"
-        />
-      </Dialog>
-
-      <!-- Dark mode toggle -->
-      <button
-        class="topbar-btn"
-        :title="isDark ? t('light_mode') : t('dark_mode')"
-        @click="toggleDark"
-      >
-        <i :class="isDark ? 'pi pi-sun' : 'pi pi-moon'" />
-      </button>
-
-      <Select
-        v-model="currentLocale"
-        :options="availableLocales"
-        optionLabel="flag"
-        optionValue="code"
-        class="locale-select"
-        size="small"
-        @change="e => setLocale(e.value)"
-      >
-        <template #value="{ value }">
-          <span>{{ availableLocales.find(l => l.code === value)?.flag }}</span>
-        </template>
-        <template #option="{ option }">
-          <span>{{ option.flag }} {{ option.label }}</span>
-        </template>
-      </Select>
-    </header>
-
-    <!-- ── Overlay (mobile drawer) ───────────────────────── -->
-    <div v-if="drawerOpen" class="sidebar-overlay" @click="drawerOpen = false" />
-
-    <!-- ── Sidebar ────────────────────────────────────────── -->
-    <aside class="sidebar app-sidebar" :class="{ open: drawerOpen, collapsed: sidebarCollapsed }">
-
-      <!-- collapse toggle — desktop only -->
-      <button class="collapse-btn desktop-only" @click="sidebarCollapsed = !sidebarCollapsed"
+    <!-- ── Sidebar (desktop) ──────────────────────────────── -->
+    <ALayoutSider
+      class="app-sidebar desktop-only"
+      :collapsed="sidebarCollapsed"
+      :trigger="null"
+      collapsible
+      width="220"
+      :theme="isDark ? 'dark' : 'light'"
+    >
+      <AppNavMenu />
+      <button class="collapse-btn" @click="sidebarCollapsed = !sidebarCollapsed"
               :title="sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'">
         <i :class="['pi', sidebarCollapsed ? 'pi-chevron-right' : 'pi-chevron-left']" />
       </button>
-
-      <nav class="sidebar-nav">
-        <template v-for="group in navGroups" :key="group.labelKey">
-          <div class="nav-group-label">{{ t(group.labelKey) }}</div>
-          <template v-for="item in group.items" :key="item.to">
-
-            <!-- "Gestione dati" — accordion toggle, not a router link -->
-            <template v-if="item.labelKey === 'data_mng'">
-              <button
-                class="nav-item nav-item-accordion"
-                :class="{ 'is-active': isDataRoute, disabled: isDisabled(item) }"
-                :disabled="isDisabled(item)"
-                :title="t(item.labelKey)"
-                @click="() => { dataAccordionOpen = !dataAccordionOpen; if (dataAccordionOpen) loadTables() }"
-              >
-                <i :class="['pi', item.icon]" />
-                <span class="nav-label">{{ t(item.labelKey) }}</span>
-                <i
-                  class="pi pi-chevron-down accordion-chevron nav-label"
-                  :class="{ open: dataAccordionOpen }"
-                />
-              </button>
-
-              <!-- Table sub-list: shown when accordion is open -->
-              <template v-if="dataAccordionOpen">
-                <div v-if="tablesLoading" class="nav-tables-loading">
-                  <i class="pi pi-spin pi-spinner" />
-                </div>
-                <RouterLink
-                  v-for="tbl in navTables"
-                  :key="tbl.name"
-                  :to="`/${route.params.app}/data?tb=${encodeURIComponent(tbl.name)}`"
-                  class="nav-item nav-table-item"
-                  :class="{ active: route.query.tb === tbl.name || route.params.tb === tbl.name }"
-                  :title="tbl.label"
-                  @click="closeMobileDrawer()"
-                >
-                  <i class="pi pi-table" />
-                  <span class="nav-label nav-table-label">{{ tbl.label }}</span>
-                </RouterLink>
-              </template>
-            </template>
-
-            <!-- All other nav items — normal RouterLink or disabled span -->
-            <component
-              v-else
-              :is="isDisabled(item) ? 'span' : 'RouterLink'"
-              v-bind="isDisabled(item) ? {} : { to: item.to }"
-              class="nav-item"
-              :class="{ disabled: isDisabled(item) }"
-              :title="t(item.labelKey)"
-              @click="!isDisabled(item) && closeMobileDrawer()"
-            >
-              <i :class="['pi', item.icon]" />
-              <span class="nav-label">{{ t(item.labelKey) }}</span>
-            </component>
-
-          </template>
-        </template>
-      </nav>
-
       <div class="sidebar-footer">
-        <button class="nav-item nav-logout" @click="handleLogout" :title="t('logout')">
+        <button class="nav-logout-btn" @click="handleLogout" :title="t('logout')">
           <i class="pi pi-sign-out" />
-          <span class="nav-label">{{ t('logout') }}</span>
+          <span v-if="!sidebarCollapsed">{{ t('logout') }}</span>
         </button>
       </div>
-    </aside>
+    </ALayoutSider>
 
-    <!-- ── Page content ───────────────────────────────────── -->
-    <main class="main-content">
-      <slot />
-    </main>
+    <!-- ── Sidebar (mobile drawer) ────────────────────────── -->
+    <ADrawer
+      placement="left"
+      :open="drawerOpen"
+      @close="drawerOpen = false"
+      :closable="false"
+      width="240"
+      class="mobile-only"
+      :body-style="{ padding: '0' }"
+    >
+      <AppNavMenu @navigate="drawerOpen = false" />
+      <div class="sidebar-footer">
+        <button class="nav-logout-btn" @click="handleLogout" :title="t('logout')">
+          <i class="pi pi-sign-out" />
+          <span>{{ t('logout') }}</span>
+        </button>
+      </div>
+    </ADrawer>
+
+    <ALayout>
+      <!-- ── Topbar ───────────────────────────────────────── -->
+      <ALayoutHeader class="topbar app-topbar">
+        <button class="topbar-btn mobile-only" @click="drawerOpen = !drawerOpen" title="Menu">
+          <i class="pi pi-bars" />
+        </button>
+        <span class="topbar-brand">
+          BraDypUS
+          <a
+            class="topbar-by-lad"
+            href="https://purl.org/lad"
+            target="_blank"
+            rel="noopener"
+            title="LAD — Laboratorio di Archeologia Digitale, Sapienza Università di Roma"
+          >by LAD</a>
+          <span v-if="auth.user?.app" class="topbar-app-name">· {{ auth.user.app }}</span>
+        </span>
+
+        <button class="topbar-btn" :title="t('open_command_palette')" @click="commandPalette?.open()">
+          <i class="pi pi-search" />
+        </button>
+
+        <ADropdown trigger="click" placement="bottomRight">
+          <button class="topbar-btn topbar-user-btn" :title="auth.user?.name">
+            <i class="pi pi-user" style="font-size:0.9rem" />
+            <span class="topbar-user-name">{{ auth.user?.name }}</span>
+            <i class="pi pi-chevron-down" style="font-size:0.65rem;opacity:0.6" />
+          </button>
+          <template #overlay>
+            <AMenu>
+              <AMenuItem key="profile" @click="openProfile">
+                <i class="pi pi-user-edit" /> {{ t('user_profile') }}
+              </AMenuItem>
+              <AMenuDivider />
+              <AMenuItem key="logout" danger @click="handleLogout">
+                <i class="pi pi-sign-out" /> {{ t('logout') }}
+              </AMenuItem>
+            </AMenu>
+          </template>
+        </ADropdown>
+
+        <AModal
+          v-model:open="profileVisible"
+          :title="t('user_profile')"
+          :footer="null"
+          width="420px"
+        >
+          <UserForm
+            :initial="profileData"
+            :saving="profileSaving"
+            @save="saveProfile"
+            @cancel="profileVisible = false"
+          />
+        </AModal>
+
+        <button class="topbar-btn" :title="isDark ? t('light_mode') : t('dark_mode')" @click="toggleDark">
+          <i :class="isDark ? 'pi pi-sun' : 'pi pi-moon'" />
+        </button>
+
+        <ASelect
+          :value="currentLocale"
+          @update:value="v => setLocale(v)"
+          :options="availableLocales.map(l => ({ value: l.code, label: l.flag }))"
+          class="locale-select"
+          size="small"
+        >
+          <template #optionRender="{ option }">
+            {{ availableLocales.find(l => l.code === option.value)?.flag }}
+            {{ availableLocales.find(l => l.code === option.value)?.label }}
+          </template>
+        </ASelect>
+      </ALayoutHeader>
+
+      <!-- ── Page content ─────────────────────────────────── -->
+      <ALayoutContent class="main-content">
+        <slot />
+      </ALayoutContent>
+    </ALayout>
 
     <CommandPalette ref="commandPalette" @open-profile="openProfile" />
 
-  </div>
+  </ALayout>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { ref, computed, onMounted } from 'vue'
+import { Layout, Menu, Dropdown, Modal, Select, Drawer } from 'ant-design-vue'
+import { useRoute } from 'vue-router'
 import { useToast }   from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from '@/i18n'
 import { api } from '@/api'
-import { useTables }    from '@/composables/useTables'
 import { useDarkMode }  from '@/composables/useDarkMode'
 import { applyColor }   from '@/composables/useAppColor'
-import { buildNavGroups } from '@/commands/navItems'
-import { hasPrivilege } from '@/commands/privilege'
-import Select from 'primevue/select'
-import Button from 'primevue/button'
-import Menu from 'primevue/menu'
-import Dialog from 'primevue/dialog'
 import UserForm from '@/components/users/UserForm.vue'
 import CommandPalette from '@/components/CommandPalette.vue'
+import AppNavMenu from '@/components/AppNavMenu.vue'
 
-const router  = useRouter()
+const ALayout        = Layout
+const ALayoutHeader   = Layout.Header
+const ALayoutSider    = Layout.Sider
+const ALayoutContent  = Layout.Content
+const AMenu           = Menu
+const AMenuItem       = Menu.Item
+const AMenuDivider    = Menu.Divider
+const ADropdown       = Dropdown
+const AModal          = Modal
+const ASelect         = Select
+const ADrawer         = Drawer
+
 const route   = useRoute()
 const auth    = useAuthStore()
 const confirm = useConfirm()
-const { tables: navTables, loading: tablesLoading, loadTables } = useTables()
 const { isDark, toggle: toggleDark } = useDarkMode()
 
-// Load table list when navigating to /data (or when already there on mount)
-const isDataRoute = computed(() => {
-  const app = route.params.app
-  return route.path === `/${app}/data` ||
-    route.path.startsWith(`/${app}/record/`) ||
-    route.path.startsWith(`/${app}/geoface/`) ||
-    route.path.startsWith(`/${app}/matrix/`)
-})
-const dataAccordionOpen = ref(isDataRoute.value)
-
-watch(isDataRoute, (val) => {
-  if (val) {
-    dataAccordionOpen.value = true   // auto-open when entering /data
-    loadTables()
-  }
-}, { immediate: true })
-
-// Also load on mount so the list is ready whenever the accordion is opened,
-// regardless of which route the user lands on.
 onMounted(async () => {
-  loadTables()
   try {
     const res = await api.get('/api/info/app')
     if (res?.color) applyColor(res.color)
@@ -230,34 +168,15 @@ onMounted(async () => {
 })
 const toast = useToast()
 const { t, locale, setLocale, availableLocales } = useI18n()
-const currentLocale = computed({
-  get: () => locale.value,
-  set: (v) => setLocale(v)
-})
+const currentLocale = computed(() => locale.value)
 
 // ── Command palette (topbar trigger + Cmd/Ctrl+K, handled inside the component) ──
 const commandPalette = ref()
 
-// ── User menu (topbar) ─────────────────────────────────────────
-const userMenu        = ref()
+// ── User menu / profile dialog ───────────────────────────────────
 const profileVisible  = ref(false)
 const profileData     = ref({})
 const profileSaving   = ref(false)
-
-const userMenuItems = computed(() => [
-  {
-    label:   t('user_profile'),
-    icon:    'pi pi-user-edit',
-    command: openProfile,
-  },
-  { separator: true },
-  {
-    label:   t('logout'),
-    icon:    'pi pi-sign-out',
-    command: handleLogout,
-    class:   'menu-item-danger',
-  },
-])
 
 async function openProfile() {
   try {
@@ -276,8 +195,6 @@ async function saveProfile(data) {
     if (res.status !== 'success') throw new Error(res.code ?? 'generic_error')
     toast.add({ severity: 'success', summary: t('user_data_saved'), life: 3000 })
     profileVisible.value = false
-    // Patch local user so the topbar reflects the new name/email immediately.
-    // The JWT will carry updated claims on next login.
     if (data.name  !== undefined) auth.updateProfile({ name:  data.name  })
     if (data.email !== undefined) auth.updateProfile({ email: data.email })
   } catch (e) {
@@ -293,17 +210,6 @@ const drawerOpen = ref(false)
 // Desktop collapse (>= 1024px)
 const sidebarCollapsed = ref(false)
 
-function closeMobileDrawer() {
-  if (window.innerWidth < 1024) drawerOpen.value = false
-}
-
-// Close drawer on resize to desktop
-function onResize() {
-  if (window.innerWidth >= 1024) drawerOpen.value = false
-}
-onMounted(() => window.addEventListener('resize', onResize))
-onUnmounted(() => window.removeEventListener('resize', onResize))
-
 function handleLogout() {
   confirm.require({
     message:      t('logout_confirm_message'),
@@ -318,34 +224,89 @@ function handleLogout() {
     },
   })
 }
-
-const navGroups = computed(() => buildNavGroups(route.params.app))
-
-function isDisabled(item) {
-  return !hasPrivilege(auth.user?.privilege_value, item.minPrivilege)
-}
 </script>
 
 <style scoped>
-/* ── Shell ────────────────────────────────────────────────── */
-.layout {
-  display: flex;
-  flex-direction: column;
-  height: 100%;        /* fills #app which is 100vh; prevents body scrolling */
+.app-shell {
+  height: 100%;
   overflow: hidden;
 }
 
-/* ── Topbar ───────────────────────────────────────────────── */
+/* ── Responsive show/hide (Sider vs Drawer) ──────────────────── */
+.mobile-only { display: none; }
+@media (max-width: 1023px) {
+  .desktop-only { display: none !important; }
+  .mobile-only  { display: inline-flex; }
+}
+
+/* ── Sidebar ──────────────────────────────────────────────────── */
+.app-sidebar {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  border-right: 1px solid var(--p-content-border-color);
+}
+.app-sidebar :deep(.ant-layout-sider-children) {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+/* AntD's Sider doesn't scroll its content by default — the nav Menu must be
+   made the scroll region itself, and (classic flexbox trap) needs min-height:0
+   or a flex child refuses to shrink below its content size, defeating overflow. */
+.app-sidebar :deep(.ant-menu) {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.collapse-btn,
+.sidebar-footer {
+  flex-shrink: 0;
+}
+
+.collapse-btn {
+  margin: 0.3rem 0.5rem;
+  align-self: flex-end;
+  padding: 0.3rem 0.5rem;
+  border: none;
+  background: transparent;
+  color: var(--p-text-muted-color);
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
+.collapse-btn:hover { background: var(--p-content-hover-background); }
+
+.sidebar-footer {
+  margin-top: auto;
+  border-top: 1px solid var(--p-content-border-color);
+  padding: 0.4rem;
+}
+.nav-logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  border: none;
+  background: transparent;
+  color: var(--p-red-400);
+  cursor: pointer;
+  font-size: 0.875rem;
+  border-radius: 4px;
+}
+.nav-logout-btn:hover { background: color-mix(in srgb, var(--p-red-400) 12%, transparent); }
+
+/* ── Topbar ───────────────────────────────────────────────────── */
 .topbar {
-  position: fixed;
-  top: 0; left: 0; right: 0;
   height: 48px;
-  z-index: 200;
+  line-height: 48px;
   display: flex;
   align-items: center;
   gap: 0.75rem;
   padding: 0 1rem;
-  /* background handled globally in App.vue (.app-topbar) */
 }
 
 .topbar-btn {
@@ -357,6 +318,8 @@ function isDisabled(item) {
   padding: 0.3rem;
   border-radius: 4px;
   line-height: 1;
+  display: inline-flex;
+  align-items: center;
 }
 .topbar-btn:hover { background: var(--p-content-hover-background); }
 
@@ -399,10 +362,8 @@ function isDisabled(item) {
   gap: 0.35rem;
   font-size: 0.82rem;
   color: var(--p-text-muted-color);
-  padding: 0.25rem 0.5rem !important;
-  border-radius: 6px;
 }
-.topbar-user-btn:hover { color: var(--p-text-color) !important; }
+.topbar-user-btn:hover { color: var(--p-text-color); }
 
 .topbar-user-name {
   max-width: 120px;
@@ -411,239 +372,13 @@ function isDisabled(item) {
   white-space: nowrap;
 }
 
-/* Red tint for logout item in user menu */
-:global(.menu-item-danger > .p-menuitem-content) { color: var(--p-red-400) !important; }
-
 :deep(.locale-select) {
-  width: 60px;
-  font-size: 1.1rem;
-}
-:deep(.locale-select .p-select-label) {
-  padding: 0.25rem 0.5rem;
-  text-align: center;
+  width: 64px;
 }
 
-/* ── Overlay ──────────────────────────────────────────────── */
-.sidebar-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.35);
-  z-index: 149;
-}
-
-/* Desktop (sidebar always visible): the burger has no function — the drawer
-   it toggles is already open — so hide it together with its overlay. */
-@media (min-width: 1024px) {
-  .topbar-burger    { display: none; }
-  .sidebar-overlay  { display: none; }
-}
-
-/* ── Sidebar ──────────────────────────────────────────────── */
-.sidebar {
-  position: fixed;
-  top: 48px;
-  left: 0;
-  bottom: 0;
-  width: 220px;
-  z-index: 150;
-  /* background handled globally in App.vue (.app-sidebar) */
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  transition: transform 0.22s ease, width 0.22s ease;
-
-  /* hidden by default on mobile */
-  transform: translateX(-100%);
-}
-
-/* mobile: open drawer */
-.sidebar.open {
-  transform: translateX(0);
-}
-
-/* desktop: always visible */
-@media (min-width: 1024px) {
-  .sidebar {
-    transform: translateX(0);
-  }
-  .sidebar.collapsed {
-    width: 52px;
-  }
-}
-
-/* ── Collapse button (desktop only) ───────────────────────── */
-.collapse-btn {
-  display: none;
-  align-self: flex-end;
-  margin: 0.4rem 0.4rem 0;
-  padding: 0.3rem 0.5rem;
-  border: none;
-  background: transparent;
-  color: var(--p-text-muted-color);
-  cursor: pointer;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  flex-shrink: 0;
-}
-.collapse-btn:hover { background: var(--p-content-hover-background); }
-
-@media (min-width: 1024px) {
-  .desktop-only { display: flex; }
-}
-
-/* ── Nav ──────────────────────────────────────────────────── */
-.sidebar-nav {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 0.5rem 0;
-}
-
-.nav-group-label {
-  font-size: 0.68rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  color: var(--p-text-muted-color);
-  padding: 0.75rem 1rem 0.2rem;
-  white-space: nowrap;
-  overflow: hidden;
-  transition: opacity 0.15s, height 0.15s;
-}
-
-.nav-item {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.55rem 1rem;
-  text-decoration: none;
-  color: var(--p-text-color);
-  font-size: 0.875rem;
-  cursor: pointer;
-  border: none;
-  background: transparent;
-  width: 100%;
-  white-space: nowrap;
-  transition: background 0.15s;
-}
-
-.nav-item:hover:not(.disabled) { background: var(--p-content-hover-background); }
-
-.nav-item.router-link-active {
-  background: var(--p-highlight-background);
-  color: var(--p-primary-color);
-  font-weight: 600;
-}
-
-.nav-item.disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
-  pointer-events: none;
-}
-
-.nav-item .pi {
-  font-size: 1rem;
-  flex-shrink: 0;
-  width: 1.1rem;
-  text-align: center;
-}
-
-/* hide labels when collapsed (desktop) */
-@media (min-width: 1024px) {
-  .sidebar.collapsed .nav-group-label { opacity: 0; height: 0; padding: 0; }
-  .sidebar.collapsed .nav-label       { display: none; }
-  .sidebar.collapsed .nav-item        { justify-content: center; padding: 0.6rem; }
-}
-
-/* ── Accordion nav item (Gestione Dati) ───────────────────── */
-.nav-item-accordion {
-  width: 100%;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  text-align: left;
-}
-
-.nav-item-accordion.is-active {
-  color: var(--p-primary-color);
-  font-weight: 600;
-}
-
-.accordion-chevron {
-  margin-left: auto;
-  font-size: 0.7rem;
-  opacity: 0.6;
-  transition: transform 0.2s ease;
-  flex-shrink: 0;
-  width: auto !important;   /* override .nav-item .pi fixed width */
-}
-.accordion-chevron.open { transform: rotate(0deg); }
-.accordion-chevron:not(.open) { transform: rotate(-90deg); }
-
-/* ── Table sub-items ──────────────────────────────────────── */
-.nav-tables-loading {
-  padding: 0.4rem 1rem 0.4rem 2.5rem;
-  color: var(--p-text-muted-color);
-  font-size: 0.8rem;
-}
-
-.nav-table-item {
-  padding-left: 2.25rem;   /* indent relative to parent nav-item */
-  font-size: 0.82rem;
-  color: var(--p-text-muted-color);
-}
-
-.nav-table-item .pi {
-  font-size: 0.78rem;
-  color: var(--p-text-muted-color);
-}
-
-.nav-table-item.active,
-.nav-table-item.router-link-active {
-  background: var(--p-highlight-background);
-  color: var(--p-primary-color);
-  font-weight: 600;
-}
-.nav-table-item.active .pi,
-.nav-table-item.router-link-active .pi {
-  color: var(--p-primary-color);
-}
-
-.nav-table-label {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  line-height: 1.3;
-}
-
-/* collapsed sidebar: hide table sub-items entirely (no icons to show) */
-@media (min-width: 1024px) {
-  .sidebar.collapsed .nav-table-item { display: none; }
-}
-
-/* ── Footer ───────────────────────────────────────────────── */
-.sidebar-footer {
-  border-top: 1px solid var(--p-content-border-color);
-  padding: 0.25rem 0;
-  flex-shrink: 0;
-}
-
-.nav-logout { color: var(--p-red-400); }
-.nav-logout:hover { background: color-mix(in srgb, var(--p-red-400) 12%, transparent) !important; }
-
-/* ── Main content ─────────────────────────────────────────── */
+/* ── Main content ─────────────────────────────────────────────── */
 .main-content {
-  margin-top: 48px;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
+  overflow: auto;
   height: calc(100vh - 48px);
-  transition: margin-left 0.22s ease;
-}
-
-@media (min-width: 1024px) {
-  .main-content { margin-left: 220px; }
 }
 </style>

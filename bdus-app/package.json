@@ -20,6 +20,7 @@
   "dependencies": {
     "@primevue/themes": "^4.0.0",
     "@vue/devtools-api": "^8.1.5",
+    "ant-design-vue": "^4.2.6",
     "chart.js": "^4.5.1",
     "cytoscape": "^3.34.0",
     "cytoscape-dagre": "^4.0.0",

@@ -17,192 +17,151 @@
 
             <!-- Row 1: always visible -->
             <div class="search-bar">
-              <IconField class="search-input-wrap">
-                <InputIcon class="pi pi-search" />
-                <InputText
-                  v-model="fastSearch"
-                  :placeholder="t('fast_search')"
-                  @keyup.enter="runFastSearch"
-                  fluid
-                />
-              </IconField>
-              <Button :label="t('send')" size="small" @click="runFastSearch" />
+              <AInputSearch
+                v-model:value="fastSearch"
+                :placeholder="t('fast_search')"
+                :enter-button="t('send')"
+                class="search-input-wrap"
+                @search="runFastSearch"
+              />
 
-              <Divider layout="vertical" />
+              <ADivider type="vertical" />
 
-              <Button
-                icon="pi pi-sliders-h"
+              <AButton
+                :type="openPanel === 'advanced' ? 'primary' : 'text'"
                 :title="t('advanced_search')"
                 size="small"
-                :severity="openPanel === 'advanced' ? 'primary' : 'secondary'"
-                text
                 @click="togglePanel('advanced')"
-              />
-              <Button
-                icon="pi pi-code"
+              ><i class="pi pi-sliders-h" /></AButton>
+              <AButton
+                :type="openPanel === 'expert' ? 'primary' : 'text'"
                 :title="t('sql_expert_search')"
                 size="small"
-                :severity="openPanel === 'expert' ? 'primary' : 'secondary'"
-                text
                 @click="togglePanel('expert')"
-              />
+              ><i class="pi pi-code" /></AButton>
 
               <!-- Column visibility toggler -->
-              <Button
-                v-if="columns.length"
-                icon="pi pi-table"
-                :title="t('preview_fields')"
-                size="small"
-                severity="secondary"
-                text
-                @click="colToggler.toggle($event)"
-              />
+              <APopover v-if="columns.length" v-model:open="colTogglerOpen" trigger="click" placement="bottom">
+                <template #content>
+                  <div class="col-toggler-popover">
+                    <div class="col-toggler-header">{{ t('preview_fields') }}</div>
+                    <div class="col-toggler-list">
+                      <div
+                        v-for="col in allAvailableColumns"
+                        :key="col.name"
+                        class="col-toggler-item"
+                        @click="toggleColumn(col.name)"
+                      >
+                        <i :class="['pi', visibleColumnNames.includes(col.name) ? 'pi-check-square' : 'pi-stop']" />
+                        <span>{{ col.label }}</span>
+                      </div>
+                    </div>
+                    <div class="col-toggler-actions">
+                      <AButton type="text" size="small" @click="selectAllColumns">{{ t('select_all') }}</AButton>
+                      <AButton type="text" size="small" @click="resetColumns">{{ t('reset') }}</AButton>
+                    </div>
+                  </div>
+                </template>
+                <AButton type="text" :title="t('preview_fields')" size="small"><i class="pi pi-table" /></AButton>
+              </APopover>
 
               <!-- Export -->
-              <Button
-                v-if="totalRecords > 0"
-                icon="pi pi-download"
-                :title="t('export')"
-                size="small"
-                severity="secondary"
-                text
-                @click="exportPopover.toggle($event)"
-              />
-              <Popover ref="exportPopover" class="export-popover">
-                <div class="col-toggler-header">{{ t('export') }} ({{ totalRecords }} {{ t('records') }})</div>
-                <div class="col-toggler-list">
-                  <div class="col-toggler-item" @click="doExport('csv')">
-                    <i class="pi pi-file" />
-                    <span>CSV</span>
+              <APopover v-if="totalRecords > 0" v-model:open="exportPopoverOpen" trigger="click" placement="bottom">
+                <template #content>
+                  <div class="col-toggler-popover">
+                    <div class="col-toggler-header">{{ t('export') }} ({{ totalRecords }} {{ t('records') }})</div>
+                    <div class="col-toggler-list">
+                      <div class="col-toggler-item" @click="doExport('csv')">
+                        <i class="pi pi-file" />
+                        <span>CSV</span>
+                      </div>
+                      <div class="col-toggler-item" @click="doExport('xlsx')">
+                        <i class="pi pi-file-excel" />
+                        <span>XLSX</span>
+                      </div>
+                      <div class="col-toggler-item" @click="doExport('json')">
+                        <i class="pi pi-file-code" />
+                        <span>JSON</span>
+                      </div>
+                    </div>
                   </div>
-                  <div class="col-toggler-item" @click="doExport('xlsx')">
-                    <i class="pi pi-file-excel" />
-                    <span>XLSX</span>
-                  </div>
-                  <div class="col-toggler-item" @click="doExport('json')">
-                    <i class="pi pi-file-code" />
-                    <span>JSON</span>
-                  </div>
-                </div>
-              </Popover>
-              <Popover ref="colToggler" class="col-toggler-popover">
-                <div class="col-toggler-header">{{ t('preview_fields') }}</div>
-                <div class="col-toggler-list">
-                  <div
-                    v-for="col in allAvailableColumns"
-                    :key="col.name"
-                    class="col-toggler-item"
-                    @click="toggleColumn(col.name)"
-                  >
-                    <i :class="['pi', visibleColumnNames.includes(col.name) ? 'pi-check-square' : 'pi-stop']" />
-                    <span>{{ col.label }}</span>
-                  </div>
-                </div>
-                <div class="col-toggler-actions">
-                  <Button :label="t('select_all')" text size="small" @click="selectAllColumns" />
-                  <Button :label="t('reset')" text size="small" severity="secondary" @click="resetColumns" />
-                </div>
-              </Popover>
-
-              <Tag
-                v-if="activeSearch"
-                severity="warn"
-                class="search-active-tag"
-              >
-                <template #default>
-                  <span>{{ activeSearchLabel }}</span>
-                  <i class="pi pi-times" style="cursor:pointer;margin-left:0.4rem" @click="resetSearch" />
                 </template>
-              </Tag>
+                <AButton type="text" :title="t('export')" size="small"><i class="pi pi-download" /></AButton>
+              </APopover>
+
+              <ATag
+                v-if="activeSearch"
+                color="warning"
+                closable
+                class="search-active-tag"
+                @close="resetSearch"
+              >{{ activeSearchLabel }}</ATag>
 
               <!-- Saved searches -->
-              <Button
-                icon="pi pi-bookmark"
+              <AButton type="text" :title="t('saved_queries')" size="small" @click="savedQueriesDialog = true">
+                <i class="pi pi-bookmark" />
+              </AButton>
+              <AModal
+                v-model:open="savedQueriesDialog"
                 :title="t('saved_queries')"
-                size="small"
-                severity="secondary"
-                text
-                @click="savedQueriesDialog = true"
-              />
-              <Dialog
-                v-model:visible="savedQueriesDialog"
-                :header="t('saved_queries')"
-                :style="{ width: '36rem', maxWidth: '95vw' }"
-                :draggable="false"
-                modal
+                :footer="null"
+                width="36rem"
               >
                 <SavedQueriesPanel
                   :currentSearch="currentSearch"
                   :currentTb="selectedTable?.name ?? ''"
                   @load-query="onLoadQuery"
                 />
-              </Dialog>
+              </AModal>
 
               <!-- Charts -->
-              <Button
-                icon="pi pi-chart-bar"
+              <AButton type="text" :title="t('charts')" size="small" @click="chartDialog = true">
+                <i class="pi pi-chart-bar" />
+              </AButton>
+              <AModal
+                v-model:open="chartDialog"
                 :title="t('charts')"
-                size="small"
-                severity="secondary"
-                text
-                @click="chartDialog = true"
-              />
-              <Dialog
-                v-model:visible="chartDialog"
-                :header="t('charts')"
-                :style="{ width: '680px', maxWidth: '95vw' }"
-                :content-style="{ maxHeight: '75vh', overflowY: 'auto' }"
-                :draggable="false"
-                modal
+                :footer="null"
+                width="680px"
+                :body-style="{ maxHeight: '75vh', overflowY: 'auto' }"
               >
                 <ChartPanel
                   :currentTb="selectedTable?.name ?? ''"
                   :currentFilter="currentSearch"
                 />
-              </Dialog>
+              </AModal>
 
               <!-- View on map -->
-              <Button
-                icon="pi pi-map"
-                :title="t('view_on_map')"
-                size="small"
-                severity="secondary"
-                text
-                @click="openGeoface"
-              />
+              <AButton type="text" :title="t('view_on_map')" size="small" @click="openGeoface">
+                <i class="pi pi-map" />
+              </AButton>
 
               <!-- Chronological timeline — only for tables with fuzzy_date plugin -->
-              <Button
+              <AButton
                 v-if="selectedTable?.fuzzy_date"
-                icon="pi pi-calendar"
+                type="text"
                 :title="t('chrono_timeline')"
                 size="small"
-                severity="secondary"
-                text
                 @click="openTimeline"
-              />
+              ><i class="pi pi-calendar" /></AButton>
 
               <!-- Harris Matrix — only for tables with RS plugin enabled -->
-              <Button
+              <AButton
                 v-if="selectedTable?.rs"
-                icon="pi pi-sitemap"
+                type="text"
                 :title="t('harris_matrix')"
                 size="small"
-                severity="secondary"
-                text
                 @click="openMatrix"
-              />
+              ><i class="pi pi-sitemap" /></AButton>
 
               <!-- Add record — only for users with add_new privilege -->
-              <Button
+              <AButton
                 v-if="canAdd"
-                :label="t('new_record')"
-                icon="pi pi-plus"
+                type="primary"
                 size="small"
-                severity="primary"
                 class="add-record-btn"
                 @click="addRecord"
-              />
+              ><i class="pi pi-plus" /> {{ t('new_record') }}</AButton>
             </div>
 
             <!-- ── Advanced search panel ──────────────────────── -->
@@ -210,7 +169,7 @@
               <div v-if="openPanel === 'advanced'" class="search-panel">
 
                 <div v-if="loadingAdvConfig" class="adv-loading">
-                  <ProgressSpinner style="width:22px;height:22px" />
+                  <ASpin size="small" />
                 </div>
 
                 <template v-else>
@@ -219,80 +178,69 @@
                     <div v-for="(row, idx) in advRows" :key="row._id" class="adv-row">
 
                       <!-- Connector (hidden for first row) -->
-                      <Select
+                      <ASelect
                         v-if="idx > 0"
-                        v-model="row.connector"
-                        :options="advConnectors"
+                        v-model:value="row.connector"
+                        :options="advConnectors.map(c => ({ value: c, label: c }))"
                         size="small"
                         class="adv-connector"
                       />
                       <span v-else class="adv-connector-placeholder" />
 
                       <!-- Field -->
-                      <Select
-                        v-model="row.fld"
+                      <ASelect
+                        v-model:value="row.fld"
                         :options="advFields"
-                        optionLabel="label"
-                        optionValue="value"
                         :placeholder="t('adv_pick_field')"
                         size="small"
-                        filter
+                        show-search
+                        :filter-option="filterOption"
                         class="adv-field-sel"
                         @change="() => { row.value = ''; row._values = null }"
                       />
 
                       <!-- Operator: key is the i18n locale key, value is the SQL operator -->
-                      <Select
-                        v-model="row.operator"
+                      <ASelect
+                        v-model:value="row.operator"
                         :options="advOperatorsForDisplay"
-                        optionLabel="label"
-                        optionValue="value"
                         size="small"
                         class="adv-operator"
                       />
 
                       <!-- Value -->
-                      <AutoComplete
+                      <AAutoComplete
                         v-if="!['_empty','_nempty'].includes(row.operator)"
-                        v-model="row.value"
-                        :suggestions="row._suggestions ?? []"
+                        v-model:value="row.value"
+                        :options="(row._suggestions ?? []).map(s => ({ value: s }))"
                         :disabled="['_empty','_nempty'].includes(row.operator)"
                         size="small"
                         class="adv-value"
-                        @complete="q => loadSuggestions(row, q.query)"
+                        @search="q => loadSuggestions(row, q)"
                       />
                       <span v-else class="adv-value" />
 
                       <!-- Remove row -->
-                      <Button
-                        icon="pi pi-minus"
-                        size="small" text severity="danger"
+                      <AButton
+                        type="text"
+                        danger
+                        size="small"
                         :disabled="advRows.length === 1"
                         @click="removeAdvRow(idx)"
-                      />
+                      ><i class="pi pi-minus" /></AButton>
                     </div>
                   </div>
 
                   <!-- Actions -->
                   <div class="search-panel-actions">
-                    <Button
-                      icon="pi pi-plus"
-                      :label="t('adv_add_row')"
-                      size="small" severity="secondary" outlined
-                      @click="addAdvRow"
-                    />
-                    <Button
-                      :label="t('advanced_search')"
-                      icon="pi pi-search"
-                      size="small"
-                      @click="runAdvancedSearch"
-                    />
-                    <Button
-                      :label="t('reset')"
-                      icon="pi pi-times"
-                      size="small" severity="secondary" text
-                      @click="resetSearch"
-                    />
+                    <AButton size="small" @click="addAdvRow">
+                      <i class="pi pi-plus" /> {{ t('adv_add_row') }}
+                    </AButton>
+                    <AButton type="primary" size="small" @click="runAdvancedSearch">
+                      <i class="pi pi-search" /> {{ t('advanced_search') }}
+                    </AButton>
+                    <AButton type="text" size="small" @click="resetSearch">
+                      <i class="pi pi-times" /> {{ t('reset') }}
+                    </AButton>
                   </div>
                 </template>
               </div>
@@ -302,15 +250,18 @@
             <Transition name="slide">
               <div v-if="openPanel === 'expert'" class="search-panel">
                 <label class="expert-label">{{ t('sql_expert_search') }} — WHERE …</label>
-                <Textarea
-                  v-model="expertQuery"
-                  rows="3"
-                  fluid
+                <ATextarea
+                  v-model:value="expertQuery"
+                  :rows="3"
                   class="expert-textarea"
                 />
                 <div class="search-panel-actions">
-                  <Button :label="t('send')" icon="pi pi-search" size="small" @click="runExpertSearch" />
-                  <Button :label="t('reset')" icon="pi pi-times" size="small" severity="secondary" text @click="resetSearch" />
+                  <AButton type="primary" size="small" @click="runExpertSearch">
+                    <i class="pi pi-search" /> {{ t('send') }}
+                  </AButton>
+                  <AButton type="text" size="small" @click="resetSearch">
+                    <i class="pi pi-times" /> {{ t('reset') }}
+                  </AButton>
                 </div>
               </div>
             </Transition>
@@ -326,49 +277,38 @@
             </span>
           </div>
 
-          <!-- ── DataTable ───────────────────────────────────── -->
+          <!-- ── Table (AntD spike — see note below) ──────────── -->
           <!--
-            :key uses the SORTED column set, so:
-            • Adding/removing a column → set changes → full remount (fixes PrimeVue
-              scrollable header/body sync issue when columns are added dynamically).
-            • Reordering columns → sorted set is unchanged → no remount, PrimeVue's
-              native drag-reorder works within the existing DataTable instance.
+            SPIKE: ant-design-vue eval. AntD's core Table has no built-in
+            drag-to-reorder-columns (PrimeVue's `reorderableColumns` was a
+            single boolean prop) — it would need a custom header + a drag
+            library. Dropped for this spike rather than reimplemented; column
+            visibility toggling (separate feature, the popover above) is
+            unaffected and still works.
           -->
-          <DataTable
-            :key="visibleColumnNames.slice().sort().join(',')"
-            :value="records"
-            lazy
-            paginator
-            :rows="perPage"
-            :totalRecords="totalRecords"
-            :loading="loadingRecords"
-            :rowsPerPageOptions="[15, 30, 50, 100]"
-            sortMode="single"
-            removableSort
-            reorderableColumns
-            scrollable
-            scrollHeight="flex"
-            size="small"
-            class="records-table clickable-rows"
-            @page="onPage"
-            @sort="onSort"
-            @row-click="onRowClick"
-            @column-reorder="onColumnReorder"
-          >
-            <template #empty>{{ t('no_record_found') }}</template>
-            <Column
-              v-for="col in displayColumns"
-              :key="col.name"
-              :field="col.name"
-              :header="col.label"
-              sortable
-              style="min-width: 120px"
-            >
-              <template #body="{ data }">
-                <span class="cell-value" :title="data[col.name]">{{ data[col.name] }}</span>
-              </template>
-            </Column>
-          </DataTable>
+          <!--
+            SPIKE: ant-design-vue eval. PrimeVue's DataTable had
+            `scrollHeight="flex"` — it auto-fills whatever space its flex
+            parent gives it. AntD's Table has no such option: `scroll.y`
+            wants a concrete px number, so filling the remaining flex space
+            takes a ResizeObserver measuring the wrapper (see tableWrap /
+            measureTableHeight below) instead of a single boolean-ish prop.
+          -->
+          <div ref="tableWrap" class="records-table-wrap">
+            <ATable
+              :columns="antdColumns"
+              :dataSource="records"
+              :loading="loadingRecords"
+              :pagination="paginationConfig"
+              :customRow="customRow"
+              :locale="{ emptyText: t('no_record_found') }"
+              :scroll="{ y: tableScrollY }"
+              size="small"
+              rowKey="id"
+              class="clickable-rows"
+              @change="onTableChange"
+            />
+          </div>
 
         </template>
 
@@ -389,29 +329,30 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import { api, assetUrl, filterToSearchParams } from '@/api'
 import { useI18n } from '@/i18n'
 import { useTables } from '@/composables/useTables'
 import AppLayout from '@/components/AppLayout.vue'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import Button from 'primevue/button'
-import InputText from 'primevue/inputtext'
-import IconField from 'primevue/iconfield'
-import InputIcon from 'primevue/inputicon'
-import Textarea from 'primevue/textarea'
-import Divider from 'primevue/divider'
-import Tag from 'primevue/tag'
-import Select from 'primevue/select'
-import AutoComplete from 'primevue/autocomplete'
-import ProgressSpinner from 'primevue/progressspinner'
-import Popover from 'primevue/popover'
-import Dialog from 'primevue/dialog'
+import {
+  Table as ATable,
+  Input,
+  Divider as ADivider,
+  Tag as ATag,
+  Select as ASelect,
+  AutoComplete as AAutoComplete,
+  Spin as ASpin,
+  Popover as APopover,
+  Modal as AModal,
+  Button as AButton,
+} from 'ant-design-vue'
 import SavedQueriesPanel from '@/components/SavedQueriesPanel.vue'
 import ChartPanel from '@/components/ChartPanel.vue'
+
+const AInputSearch = Input.Search
+const ATextarea    = Input.TextArea
 
 const { t } = useI18n()
 const toast  = useToast()
@@ -428,10 +369,23 @@ const selectedTable = computed(() =>
 )
 
 // ── Column visibility & order ────────────────────────────────
-const colToggler          = ref()
-const exportPopover       = ref()
+const colTogglerOpen      = ref(false)
+const exportPopoverOpen   = ref(false)
 const savedQueriesDialog  = ref(false)
 const chartDialog         = ref(false)
+
+// SPIKE: ant-design-vue eval. Unlike PrimeVue's Popover (imperative
+// ref.toggle(), one instance implicitly closes when another opens because
+// they share the same overlay stack), AntD's Popover is a plain declarative
+// v-model per instance — two independent triggers can end up open at once
+// with no built-in mutual exclusivity. Enforce it manually.
+watch(colTogglerOpen,    v => { if (v) exportPopoverOpen.value = false })
+watch(exportPopoverOpen, v => { if (v) colTogglerOpen.value = false })
+
+/** AntD Select/AutoComplete: filter must be supplied explicitly (see FieldEditor.vue spike note). */
+function filterOption(input, option) {
+  return String(option?.label ?? '').toLowerCase().includes(String(input).toLowerCase())
+}
 
 /**
  * Ordered array of visible field names.
@@ -494,19 +448,6 @@ function toggleColumn(name) {
   visibleColumnNames.value = arr
   saveColumnPrefs(selectedTable.value?.name)
   fetchRecords()   // refetch with updated column list
-}
-
-/**
- * Called when the user drags a column header to reorder.
- * dragIndex / dropIndex are positions in the rendered displayColumns array.
- * We reorder visibleColumnNames to match and save — no refetch needed.
- */
-function onColumnReorder(event) {
-  const arr = [...visibleColumnNames.value]
-  const moved = arr.splice(event.dragIndex, 1)[0]
-  arr.splice(event.dropIndex, 0, moved)
-  visibleColumnNames.value = arr
-  saveColumnPrefs(selectedTable.value?.name)
 }
 
 function selectAllColumns() {
@@ -989,18 +930,70 @@ async function fetchRecords() {
   }
 }
 
-function onPage(event) {
-  page.value    = event.page + 1
-  perPage.value = event.rows
+// ── AntD Table: columns/pagination/row-click/sort+page (unified) ─────
+// SPIKE: ant-design-vue eval. PrimeVue split pagination (@page) and sorting
+// (@sort) into two events; AntD's Table fires one @change with pagination +
+// sorter together, so a single handler now covers what used to be two.
+const antdColumns = computed(() =>
+  displayColumns.value.map(col => ({
+    title: col.label,
+    dataIndex: col.name,
+    key: col.name,
+    sorter: true,
+    ellipsis: true,
+    sortOrder: sortField.value === col.name
+      ? (sortDir.value === 'desc' ? 'descend' : 'ascend')
+      : null,
+  }))
+)
+
+const paginationConfig = computed(() => ({
+  current: page.value,
+  pageSize: perPage.value,
+  total: totalRecords.value,
+  showSizeChanger: true,
+  pageSizeOptions: ['15', '30', '50', '100'],
+  // AntD defaults to bottomRight, which sits under the fixed FAB add-record
+  // button (bottom-right corner). PrimeVue's paginator was centered by
+  // default and never had this conflict — match that instead of moving the FAB.
+  position: ['bottomCenter'],
+}))
+
+function customRow(record) {
+  return { onClick: () => onRowClick({ data: record }) }
+}
+
+function onTableChange(pagination, _filters, sorter) {
+  const newSortField = sorter.order ? sorter.field : null
+  const newSortDir    = sorter.order === 'descend' ? 'desc' : 'asc'
+  const sortChanged   = newSortField !== sortField.value || newSortDir !== sortDir.value
+
+  sortField.value = newSortField
+  sortDir.value   = newSortDir
+  page.value      = sortChanged ? 1 : pagination.current
+  perPage.value   = pagination.pageSize
   fetchRecords()
 }
 
-function onSort(event) {
-  sortField.value = event.sortField ?? null
-  sortDir.value   = event.sortOrder === -1 ? 'desc' : 'asc'
-  page.value      = 1
-  fetchRecords()
+// ── AntD Table: fill available flex space (see template note) ────────
+const tableWrap    = ref(null)
+const tableScrollY = ref(400)
+let resizeObs = null
+
+function measureTableHeight() {
+  if (!tableWrap.value) return
+  const total      = tableWrap.value.clientHeight
+  const headerH    = tableWrap.value.querySelector('.ant-table-thead')?.getBoundingClientRect().height ?? 40
+  const paginationH = tableWrap.value.querySelector('.ant-pagination')?.getBoundingClientRect().height ?? 32
+  tableScrollY.value = Math.max(200, total - headerH - paginationH - 16)
 }
+
+onMounted(() => {
+  resizeObs = new ResizeObserver(measureTableHeight)
+  if (tableWrap.value) resizeObs.observe(tableWrap.value)
+})
+onUnmounted(() => resizeObs?.disconnect())
+watch(records, () => { measureTableHeight() })
 
 function addRecord() {
   const tb = selectedTable.value?.name
@@ -1069,7 +1062,7 @@ function onRowClick(event) {
  * The browser navigates to the URL; PHP responds with Content-Disposition: attachment.
  */
 function doExport(format) {
-  exportPopover.value?.hide()
+  exportPopoverOpen.value = false
 
   const tb = selectedTable.value?.name ?? ''
   const qs = new URLSearchParams({ format })
@@ -1186,9 +1179,6 @@ function doExport(format) {
 .adv-operator           { width: 8.5rem; flex-shrink: 0; }
 .adv-value              { flex: 1.5; min-width: 0; }
 
-:deep(.adv-value .p-autocomplete),
-:deep(.adv-value .p-autocomplete-input) { width: 100%; }
-
 /* ── Expert panel ────────────────────────────────────────── */
 .expert-label {
   font-size: 0.82rem;
@@ -1222,21 +1212,12 @@ function doExport(format) {
 .records-header h3 { font-size: 1.1rem; font-weight: 700; }
 .records-count     { font-size: 0.82rem; color: var(--p-text-muted-color); }
 
-.records-table { flex: 1; min-height: 0; }
-.clickable-rows :deep(tbody tr) { cursor: pointer; }
-.clickable-rows :deep(tbody tr:hover td) { background: var(--p-content-hover-background); }
-
-.cell-value {
-  display: block;
-  max-width: 260px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
+.records-table-wrap { flex: 1; min-height: 0; overflow: hidden; }
+.clickable-rows :deep(.ant-table-tbody > tr) { cursor: pointer; }
+.clickable-rows :deep(.ant-table-tbody > tr:hover > td) { background: var(--p-content-hover-background) !important; }
 
 /* ── Column toggler popover ──────────────────────────────── */
-:deep(.col-toggler-popover) { min-width: 200px; }
-:deep(.saved-queries-popover) { min-width: 320px; max-width: 440px; max-height: 480px; overflow-y: auto; }
+.col-toggler-popover { min-width: 200px; }
 
 .col-toggler-header {
   font-size: 0.7rem;

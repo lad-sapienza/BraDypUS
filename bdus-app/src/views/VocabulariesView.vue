@@ -4,11 +4,14 @@
 
       <div class="page-header">
         <h2>{{ t('available_vocs') }}</h2>
-        <Button :label="t('new_voc')" icon="pi pi-plus" size="small" @click="openNewVocDialog" />
+        <AButton type="primary" size="small" @click="openNewVocDialog">
+          <template #icon><i class="pi pi-plus" /></template>
+          {{ t('new_voc') }}
+        </AButton>
       </div>
 
       <div v-if="loading" class="loading">
-        <ProgressSpinner />
+        <ASpin size="large" />
       </div>
 
       <div v-else-if="vocs.length === 0" class="empty">
@@ -20,8 +23,8 @@
         <!-- Left: vocabulary list with filter -->
         <div class="voc-names">
           <div class="voc-filter">
-            <InputText
-              v-model="filterText"
+            <AInput
+              v-model:value="filterText"
               :placeholder="t('voc_filter_placeholder')"
               size="small"
               class="voc-filter-input"
@@ -35,7 +38,7 @@
             @click="selected = voc"
           >
             <span class="voc-name-text">{{ voc.name }}</span>
-            <Badge :value="voc.items.length" severity="secondary" />
+            <ABadge :count="voc.items.length" :number-style="{ backgroundColor: 'var(--p-surface-400, #94a3b8)' }" />
           </div>
           <div v-if="filteredVocs.length === 0" class="voc-filter-empty">—</div>
         </div>
@@ -44,8 +47,10 @@
         <div class="voc-items" v-if="selected">
           <div class="voc-items-header">
             <h3>{{ selected.name }}</h3>
-            <Button :label="t('voc_add_item')" icon="pi pi-plus" size="small" severity="secondary"
-                    @click="openAddItemDialog(selected.name)" />
+            <AButton size="small" @click="openAddItemDialog(selected.name)">
+              <template #icon><i class="pi pi-plus" /></template>
+              {{ t('voc_add_item') }}
+            </AButton>
           </div>
 
           <!-- Usage info -->
@@ -100,22 +105,24 @@
                   class="def-text"
                   @dblclick="startEdit(record)"
                 >{{ record.def }}</span>
-                <InputText
+                <AInput
                   v-else
-                  v-model="editingVal"
+                  v-model:value="editingVal"
                   size="small"
-                  fluid
                   autofocus
+                  style="width: 100%"
                   @keyup.enter="saveEdit(record)"
                   @keyup.escape="cancelEdit"
                   @blur="saveEdit(record)"
                 />
               </template>
               <template v-else-if="column.key === 'actions'">
-                <Button icon="pi pi-pencil" text rounded size="small"
-                        @click="startEdit(record)" :disabled="editingId !== null" />
-                <Button icon="pi pi-trash" text rounded size="small" severity="danger"
-                        @click="confirmErase(record)" :disabled="editingId !== null" />
+                <AButton type="text" shape="circle" size="small"
+                        @click="startEdit(record)" :disabled="editingId !== null"
+                ><template #icon><i class="pi pi-pencil" /></template></AButton>
+                <AButton type="text" shape="circle" danger size="small"
+                        @click="confirmErase(record)" :disabled="editingId !== null"
+                ><template #icon><i class="pi pi-trash" /></template></AButton>
               </template>
             </template>
           </ATable>
@@ -129,34 +136,40 @@
     </div>
 
     <!-- New vocabulary dialog -->
-    <Dialog v-model:visible="newVocDialog" :header="t('new_voc')" modal style="width: 360px">
+    <AModal v-model:open="newVocDialog" :title="t('new_voc')" width="360px">
       <div class="field">
         <label>{{ t('voc_name_label') }}</label>
-        <InputText v-model="newVocName" fluid :placeholder="t('voc_name_placeholder')" @keyup.enter="createVocAndItem" />
+        <AInput v-model:value="newVocName" style="width: 100%" :placeholder="t('voc_name_placeholder')" @keyup.enter="createVocAndItem" />
       </div>
       <div class="field">
         <label>{{ t('voc_first_item') }}</label>
-        <InputText v-model="newVocDef" fluid :placeholder="t('voc_first_def')" @keyup.enter="createVocAndItem" />
+        <AInput v-model:value="newVocDef" style="width: 100%" :placeholder="t('voc_first_def')" @keyup.enter="createVocAndItem" />
       </div>
       <template #footer>
-        <Button :label="t('cancel')" text @click="newVocDialog = false" />
-        <Button :label="t('create')" icon="pi pi-check" :disabled="!newVocName || !newVocDef"
-                :loading="saving" @click="createVocAndItem" />
+        <AButton type="text" @click="newVocDialog = false">{{ t('cancel') }}</AButton>
+        <AButton type="primary" :disabled="!newVocName || !newVocDef"
+                :loading="saving" @click="createVocAndItem">
+          <template #icon><i class="pi pi-check" /></template>
+          {{ t('create') }}
+        </AButton>
       </template>
-    </Dialog>
+    </AModal>
 
     <!-- Add item dialog -->
-    <Dialog v-model:visible="addItemDialog" :header="addItemHeader" modal style="width: 360px">
+    <AModal v-model:open="addItemDialog" :title="addItemHeader" width="360px">
       <div class="field">
         <label>{{ t('voc_item_def') }}</label>
-        <InputText v-model="addItemDef" fluid autofocus @keyup.enter="addItem" />
+        <AInput v-model:value="addItemDef" style="width: 100%" autofocus @keyup.enter="addItem" />
       </div>
       <template #footer>
-        <Button :label="t('cancel')" text @click="addItemDialog = false" />
-        <Button :label="t('voc_add_item')" icon="pi pi-check" :disabled="!addItemDef"
-                :loading="saving" @click="addItem" />
+        <AButton type="text" @click="addItemDialog = false">{{ t('cancel') }}</AButton>
+        <AButton type="primary" :disabled="!addItemDef"
+                :loading="saving" @click="addItem">
+          <template #icon><i class="pi pi-check" /></template>
+          {{ t('voc_add_item') }}
+        </AButton>
       </template>
-    </Dialog>
+    </AModal>
 
   </AppLayout>
 </template>
@@ -167,12 +180,7 @@ import { useI18n } from '@/i18n'
 import { useToast, useConfirm } from '@/composables/useNotify'
 import { api } from '@/api'
 import AppLayout from '@/components/AppLayout.vue'
-import { Table as ATable } from 'ant-design-vue'
-import Button from 'primevue/button'
-import InputText from 'primevue/inputtext'
-import Badge from 'primevue/badge'
-import Dialog from 'primevue/dialog'
-import ProgressSpinner from 'primevue/progressspinner'
+import { Table as ATable, Button as AButton, Input as AInput, Badge as ABadge, Modal as AModal, Spin as ASpin } from 'ant-design-vue'
 
 const { t } = useI18n()
 const toast = useToast()

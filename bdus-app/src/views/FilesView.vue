@@ -6,24 +6,19 @@
     <div class="files-toolbar">
       <span class="files-title">{{ t('files_mng_title') }}</span>
 
-      <ToggleButton
-        v-model="orphansOnly"
-        :onLabel="t('files_orphans_only')"
-        :offLabel="t('files_orphans_only')"
-        onIcon="pi pi-filter"
-        offIcon="pi pi-filter"
+      <AButton
+        :type="orphansOnly ? 'primary' : 'default'"
         size="small"
-        @change="reload"
-      />
+        @click="orphansOnly = !orphansOnly; reload()"
+      >
+        <template #icon><i class="pi pi-filter" /></template>
+        {{ t('files_orphans_only') }}
+      </AButton>
 
-      <Button
-        icon="pi pi-refresh"
-        :label="t('log_refresh')"
-        size="small"
-        severity="secondary"
-        :loading="loading"
-        @click="reload"
-      />
+      <AButton size="small" :loading="loading" @click="reload">
+        <template #icon><i class="pi pi-refresh" /></template>
+        {{ t('log_refresh') }}
+      </AButton>
     </div>
 
     <!-- ── Table ─────────────────────────────────────────────── -->
@@ -58,21 +53,21 @@
             <div v-if="!record.links.length" class="orphan-badge">{{ t('files_orphan_badge') }}</div>
           </template>
           <template v-else-if="column.key === 'description'">
-            <InputText
-              :modelValue="record.description ?? ''"
+            <AInput
+              :value="record.description ?? ''"
               size="small"
               class="meta-input"
-              @update:modelValue="v => record.description = v || null"
+              @update:value="v => record.description = v || null"
               @blur="saveMeta(record)"
               @keyup.enter="saveMeta(record)"
             />
           </template>
           <template v-else-if="column.key === 'keywords'">
-            <InputText
-              :modelValue="record.keywords ?? ''"
+            <AInput
+              :value="record.keywords ?? ''"
               size="small"
               class="meta-input"
-              @update:modelValue="v => record.keywords = v || null"
+              @update:value="v => record.keywords = v || null"
               @blur="saveMeta(record)"
               @keyup.enter="saveMeta(record)"
             />
@@ -113,12 +108,12 @@
     />
 
     <!-- File preview Dialog -->
-    <Dialog
-      v-model:visible="previewDialog"
-      :header="previewFile ? `${previewFile.filename}.${previewFile.ext}` : ''"
-      modal
-      :style="previewFile?.is_image ? 'width: auto; max-width: 90vw' : 'width: 80vw; max-width: 1100px'"
-      :pt="{ content: { style: 'padding: 0; overflow: hidden;' } }"
+    <AModal
+      v-model:open="previewDialog"
+      :title="previewFile ? `${previewFile.filename}.${previewFile.ext}` : ''"
+      :width="previewFile?.is_image ? 'auto' : '80vw'"
+      :body-style="{ padding: 0, overflow: 'hidden' }"
+      :footer="null"
     >
       <template v-if="previewFile">
         <img
@@ -133,7 +128,7 @@
           style="width: 100%; height: 78vh; border: none; display: block;"
         />
       </template>
-    </Dialog>
+    </AModal>
 
   </div>
   </AppLayout>
@@ -144,11 +139,7 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { RouterLink, useRoute }     from 'vue-router'
 import { useToast, useConfirm } from '@/composables/useNotify'
 import AppLayout    from '@/components/AppLayout.vue'
-import { Table as ATable } from 'ant-design-vue'
-import Button       from 'primevue/button'
-import InputText    from 'primevue/inputtext'
-import ToggleButton from 'primevue/togglebutton'
-import Dialog       from 'primevue/dialog'
+import { Table as ATable, Button as AButton, Input as AInput, Modal as AModal } from 'ant-design-vue'
 import { api, assetUrl } from '@/api'
 import { useI18n }       from '@/i18n'
 import { useAuthStore }  from '@/stores/auth'
@@ -367,7 +358,7 @@ onMounted(fetchFiles)
   margin-right: 0.5rem;
 }
 
-.files-toolbar .p-button:last-child { margin-left: auto; }
+.files-toolbar :deep(.ant-btn:last-child) { margin-left: auto; }
 
 /* ── Table ────────────────────────────────────────────────────── */
 .files-table {

@@ -10,28 +10,22 @@
 
       <!-- Loading -->
       <div v-if="loading" class="mv-loading">
-        <ProgressSpinner style="width:32px;height:32px" />
+        <ASpin size="large" />
       </div>
 
       <!-- Error -->
-      <Message v-else-if="error" severity="error">{{ error }}</Message>
+      <AAlert v-else-if="error" type="error" :message="error" show-icon />
 
       <!-- Content -->
       <template v-else>
         <!-- Summary badge -->
         <div class="mv-summary">
-          <Tag
-            v-if="applied === total"
-            :value="t('migrations_all_applied')"
-            severity="success"
-            icon="pi pi-check-circle"
-          />
-          <Tag
-            v-else
-            :value="tf('migrations_status_ok', applied, total)"
-            severity="warn"
-            icon="pi pi-exclamation-triangle"
-          />
+          <ATag v-if="applied === total" color="success">
+            <i class="pi pi-check-circle" style="margin-right: 0.35rem" />{{ t('migrations_all_applied') }}
+          </ATag>
+          <ATag v-else color="warning">
+            <i class="pi pi-exclamation-triangle" style="margin-right: 0.35rem" />{{ tf('migrations_status_ok', applied, total) }}
+          </ATag>
         </div>
 
         <!-- Table -->
@@ -51,11 +45,9 @@
               <code class="mv-name">{{ record.name }}</code>
             </template>
             <template v-else-if="column.key === 'status'">
-              <Tag
-                :value="record.applied ? t('migration_applied') : t('migration_pending')"
-                :severity="record.applied ? 'success' : 'warn'"
-                :icon="record.applied ? 'pi pi-check' : 'pi pi-clock'"
-              />
+              <ATag :color="record.applied ? 'success' : 'warning'">
+                <i :class="record.applied ? 'pi pi-check' : 'pi pi-clock'" style="margin-right: 0.35rem" />{{ record.applied ? t('migration_applied') : t('migration_pending') }}
+              </ATag>
             </template>
             <template v-else-if="column.key === 'applied_at'">
               <span v-if="record.applied_at" class="mv-date">{{ record.applied_at }}</span>
@@ -72,10 +64,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import AppLayout           from '@/components/AppLayout.vue'
-import ProgressSpinner     from 'primevue/progressspinner'
-import Message             from 'primevue/message'
-import Tag                 from 'primevue/tag'
-import { Table as ATable } from 'ant-design-vue'
+import { Table as ATable, Spin as ASpin, Alert as AAlert, Tag as ATag } from 'ant-design-vue'
 import { api }             from '@/api'
 import { useI18n }         from '@/i18n'
 

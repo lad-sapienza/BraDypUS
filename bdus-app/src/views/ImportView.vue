@@ -26,24 +26,21 @@
         <!-- Import type -->
         <div class="field-row">
           <label>{{ t('import_type') }}</label>
-          <SelectButton
-            v-model="importType"
+          <ASegmented
+            v-model:value="importType"
             :options="importTypeOptions"
-            optionLabel="label"
-            optionValue="value"
           />
         </div>
 
         <!-- Table selector (all types) -->
         <div class="field-row">
           <label>{{ t('table') }}</label>
-          <Select
-            v-model="selectedTable"
-            :options="tables"
-            optionLabel="label"
-            optionValue="name"
+          <ASelect
+            v-model:value="selectedTable"
+            :options="tableSelectOptions"
             :placeholder="t('select_table')"
-            filter
+            show-search
+            :filter-option="filterOption"
           />
         </div>
 
@@ -98,16 +95,13 @@
           </div>
         </template>
 
-        <Message v-if="setupError" severity="error" :closable="false">{{ setupError }}</Message>
+        <AAlert v-if="setupError" type="error" :message="setupError" show-icon />
 
         <div class="step-actions">
-          <Button
-            :label="t('preview')"
-            icon="pi pi-eye"
-            :loading="previewing"
-            :disabled="!canPreview"
-            @click="doPreview"
-          />
+          <AButton type="primary" :loading="previewing" :disabled="!canPreview" @click="doPreview">
+            <template #icon><i class="pi pi-eye" /></template>
+            {{ t('preview') }}
+          </AButton>
         </div>
       </div>
 
@@ -146,11 +140,9 @@
             class="mapping-row"
           >
             <span class="mapping-col-name">{{ col }}</span>
-            <Select
-              v-model="fieldMapping[col]"
+            <ASelect
+              v-model:value="fieldMapping[col]"
               :options="mappingOptions"
-              optionLabel="label"
-              optionValue="value"
               :placeholder="t('import_ignore')"
               class="mapping-select"
             />
@@ -159,11 +151,9 @@
           <!-- Key field selector -->
           <div class="field-row key-field-row">
             <label>{{ t('import_key_field') }}</label>
-            <Select
-              v-model="keyField"
+            <ASelect
+              v-model:value="keyField"
               :options="mappedTableFields"
-              optionLabel="label"
-              optionValue="value"
               :placeholder="t('import_select_key')"
             />
             <small class="field-hint">{{ t('import_key_field_hint') }}</small>
@@ -174,34 +164,28 @@
         <template v-if="importType === 'geojson'">
           <p class="preview-summary">
             {{ t('import_features_found', previewData.count) }}
-            <Tag
+            <ATag
               v-for="gt in previewData.geometry_types"
               :key="gt"
-              :value="gt"
-              severity="secondary"
               class="geo-type-tag"
-            />
+            >{{ gt }}</ATag>
           </p>
-          <Message v-if="!previewData.geo_field" severity="warn" :closable="false">
-            {{ t('import_error_no_geo_field') }}
-          </Message>
+          <AAlert v-if="!previewData.geo_field" type="warning" :message="t('import_error_no_geo_field')" show-icon />
           <template v-else>
             <div class="field-row">
               <label>{{ t('import_geo_prop') }}</label>
-              <Select
-                v-model="geoProp"
-                :options="previewData.geo_props"
+              <ASelect
+                v-model:value="geoProp"
+                :options="geoPropOptions"
                 :placeholder="t('import_select_geo_prop')"
               />
               <small class="field-hint">{{ t('import_geo_prop_hint') }}</small>
             </div>
             <div class="field-row">
               <label>{{ t('import_key_table_field') }}</label>
-              <Select
-                v-model="keyField"
-                :options="tableFields"
-                optionLabel="label"
-                optionValue="name"
+              <ASelect
+                v-model:value="keyField"
+                :options="tableFieldOptions"
                 :placeholder="t('import_select_key')"
               />
               <small class="field-hint">{{ t('import_key_table_field_hint') }}</small>
@@ -224,33 +208,25 @@
             class="preview-table"
           />
 
-          <Message
-            v-if="previewData.missing_files?.length"
-            severity="warn"
-            :closable="false"
-          >
-            {{ t('import_missing_files', previewData.missing_files.length) }}:
-            {{ previewData.missing_files.join(', ') }}
-          </Message>
+          <AAlert v-if="previewData.missing_files?.length" type="warning" show-icon>
+            <template #message>
+              {{ t('import_missing_files', previewData.missing_files.length) }}:
+              {{ previewData.missing_files.join(', ') }}
+            </template>
+          </AAlert>
         </template>
 
-        <Message v-if="configError" severity="error" :closable="false">{{ configError }}</Message>
+        <AAlert v-if="configError" type="error" :message="configError" show-icon />
 
         <div class="step-actions">
-          <Button
-            :label="t('back')"
-            icon="pi pi-arrow-left"
-            severity="secondary"
-            outlined
-            @click="step = 0"
-          />
-          <Button
-            :label="t('import_run')"
-            icon="pi pi-upload"
-            :loading="importing"
-            :disabled="!canImport"
-            @click="doImport"
-          />
+          <AButton @click="step = 0">
+            <template #icon><i class="pi pi-arrow-left" /></template>
+            {{ t('back') }}
+          </AButton>
+          <AButton type="primary" :loading="importing" :disabled="!canImport" @click="doImport">
+            <template #icon><i class="pi pi-upload" /></template>
+            {{ t('import_run') }}
+          </AButton>
         </div>
       </div>
 
@@ -259,13 +235,15 @@
       <!-- ══════════════════════════════════════════════════════════ -->
       <div v-else-if="step === 2" class="import-panel">
         <div v-if="importResult" class="import-result">
-          <Message
-            :severity="importResult.status === 'success' ? 'success' : 'error'"
-            :closable="false"
+          <AAlert
+            :type="importResult.status === 'success' ? 'success' : 'error'"
+            show-icon
           >
-            {{ t(importResult.code) }}
-            <span v-if="importResult.detail"> — {{ importResult.detail }}</span>
-          </Message>
+            <template #message>
+              {{ t(importResult.code) }}
+              <span v-if="importResult.detail"> — {{ importResult.detail }}</span>
+            </template>
+          </AAlert>
 
           <div v-if="importResult.status === 'success'" class="result-stats">
             <!-- CSV / JSON stats -->
@@ -290,13 +268,10 @@
         </div>
 
         <div class="step-actions">
-          <Button
-            :label="t('import_new')"
-            icon="pi pi-refresh"
-            severity="secondary"
-            outlined
-            @click="reset"
-          />
+          <AButton @click="reset">
+            <template #icon><i class="pi pi-refresh" /></template>
+            {{ t('import_new') }}
+          </AButton>
         </div>
       </div>
 
@@ -310,12 +285,11 @@ import AppLayout     from '@/components/AppLayout.vue'
 import { api }       from '@/api'
 import { useI18n }   from '@/i18n'
 import { useTables } from '@/composables/useTables'
-import Button        from 'primevue/button'
-import Select        from 'primevue/select'
-import SelectButton  from 'primevue/selectbutton'
-import Message       from 'primevue/message'
-import Tag           from 'primevue/tag'
-import { Table as ATable } from 'ant-design-vue'
+import { Table as ATable, Button as AButton, Select as ASelect, Segmented as ASegmented, Alert as AAlert, Tag as ATag } from 'ant-design-vue'
+
+function filterOption(input, option) {
+  return String(option?.label ?? '').toLowerCase().includes(String(input).toLowerCase())
+}
 
 const { t } = useI18n()
 const { tables, loadTables } = useTables()
@@ -387,6 +361,17 @@ const photosIndexColumns = computed(() => [
   { title: t('import_filename'),  dataIndex: 'filename',  key: 'filename' },
   { title: t('import_record_id'), dataIndex: 'record_id', key: 'record_id' },
 ])
+
+// AntD Select expects {value,label} — remap raw table/field lists once here
+const tableSelectOptions = computed(() =>
+  tables.value.map(tb => ({ value: tb.name, label: tb.label }))
+)
+const tableFieldOptions = computed(() =>
+  tableFields.value.map(f => ({ value: f.name, label: f.label }))
+)
+const geoPropOptions = computed(() =>
+  (previewData.value.geo_props ?? []).map(v => ({ value: v, label: v }))
+)
 
 // Options for the mapping dropdowns: "— ignore —" + all table fields
 const mappingOptions = computed(() => [

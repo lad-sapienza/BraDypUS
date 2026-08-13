@@ -7,9 +7,7 @@
           <i class="pi pi-code" style="margin-right:0.5rem" />
           {{ t('free_sql') }}
         </h2>
-        <Message severity="warn" :closable="false" class="free-sql-warning">
-          {{ t('free_sql_warning') }}
-        </Message>
+        <AAlert type="warning" :closable="false" show-icon :message="t('free_sql_warning')" class="free-sql-warning" />
       </div>
 
       <!-- ── Password gate ──────────────────────────────────────────── -->
@@ -17,35 +15,28 @@
         <p class="gate-desc">{{ t('free_sql_gate_desc') }}</p>
 
         <div class="gate-form">
-          <Password
-            v-model="gatePassword"
+          <AInputPassword
+            v-model:value="gatePassword"
             :placeholder="t('your_password')"
-            :feedback="false"
-            toggleMask
             @keyup.enter="unlock"
             class="gate-input"
           />
-          <Button
-            :label="t('free_sql_confirm')"
-            icon="pi pi-lock-open"
-            :loading="unlocking"
-            :disabled="!gatePassword"
-            @click="unlock"
-          />
+          <AButton type="primary" :loading="unlocking" :disabled="!gatePassword" @click="unlock">
+            <template #icon><i class="pi pi-lock-open" /></template>
+            {{ t('free_sql_confirm') }}
+          </AButton>
         </div>
 
-        <Message v-if="gateError" severity="error" :closable="false">
-          {{ t(gateError) }}
-        </Message>
+        <AAlert v-if="gateError" type="error" :closable="false" show-icon :message="t(gateError)" />
       </div>
 
       <!-- ── SQL editor ─────────────────────────────────────────────── -->
       <template v-else>
         <div class="free-sql-panel editor-panel">
-          <Textarea
-            v-model="sql"
+          <ATextarea
+            v-model:value="sql"
             :placeholder="t('free_sql_placeholder')"
-            rows="8"
+            :rows="8"
             class="sql-textarea"
             @keydown.ctrl.enter.prevent="runQuery"
             @keydown.meta.enter.prevent="runQuery"
@@ -54,22 +45,14 @@
           <div class="editor-actions">
             <span class="kbd-hint">Ctrl+Enter {{ t('free_sql_run_shortcut') }}</span>
             <div class="editor-btns">
-              <Button
-                :label="t('free_sql_clear')"
-                icon="pi pi-trash"
-                severity="secondary"
-                outlined
-                size="small"
-                :disabled="!sql.trim()"
-                @click="clearAll"
-              />
-              <Button
-                :label="t('free_sql_run')"
-                icon="pi pi-play"
-                :loading="running"
-                :disabled="!sql.trim()"
-                @click="runQuery"
-              />
+              <AButton size="small" :disabled="!sql.trim()" @click="clearAll">
+                <template #icon><i class="pi pi-trash" /></template>
+                {{ t('free_sql_clear') }}
+              </AButton>
+              <AButton type="primary" :loading="running" :disabled="!sql.trim()" @click="runQuery">
+                <template #icon><i class="pi pi-play" /></template>
+                {{ t('free_sql_run') }}
+              </AButton>
             </div>
           </div>
         </div>
@@ -78,28 +61,23 @@
         <div v-if="result" class="free-sql-panel result-panel">
 
           <!-- Error -->
-          <Message v-if="result.status === 'error'" severity="error" :closable="false">
-            {{ t('error_free_sql_run') }}
-            <span v-if="result.detail"> — <code>{{ result.detail }}</code></span>
-          </Message>
+          <AAlert v-if="result.status === 'error'" type="error" :closable="false" show-icon>
+            <template #message>
+              {{ t('error_free_sql_run') }}
+              <span v-if="result.detail"> — <code>{{ result.detail }}</code></span>
+            </template>
+          </AAlert>
 
           <!-- SELECT results -->
           <template v-else-if="result.rows !== undefined">
             <div class="result-header">
               <span class="result-count">{{ t('free_sql_rows', result.total) }}</span>
-              <Button
-                v-if="result.rows.length"
-                :label="t('export_csv')"
-                icon="pi pi-download"
-                size="small"
-                severity="secondary"
-                outlined
-                @click="exportCsv"
-              />
+              <AButton v-if="result.rows.length" size="small" @click="exportCsv">
+                <template #icon><i class="pi pi-download" /></template>
+                {{ t('export_csv') }}
+              </AButton>
             </div>
-            <Message v-if="!result.rows.length" severity="info" :closable="false">
-              {{ t('free_sql_empty') }}
-            </Message>
+            <AAlert v-if="!result.rows.length" type="info" :closable="false" show-icon :message="t('free_sql_empty')" />
             <div v-else class="result-table-wrap">
               <ATable
                 :columns="resultColumns"
@@ -115,9 +93,7 @@
 
           <!-- DML result -->
           <template v-else>
-            <Message severity="success" :closable="false">
-              {{ t('ok_free_sql_run', result.affected ?? 0) }}
-            </Message>
+            <AAlert type="success" :closable="false" show-icon :message="t('ok_free_sql_run', result.affected ?? 0)" />
           </template>
         </div>
       </template>
@@ -131,11 +107,10 @@ import { ref, computed } from 'vue'
 import AppLayout  from '@/components/AppLayout.vue'
 import { api }    from '@/api'
 import { useI18n } from '@/i18n'
-import Button    from 'primevue/button'
-import Message   from 'primevue/message'
-import Password  from 'primevue/password'
-import Textarea  from 'primevue/textarea'
-import { Table as ATable } from 'ant-design-vue'
+import { Table as ATable, Button as AButton, Alert as AAlert, Input } from 'ant-design-vue'
+
+const AInputPassword = Input.Password
+const ATextarea      = Input.TextArea
 
 const { t } = useI18n()
 

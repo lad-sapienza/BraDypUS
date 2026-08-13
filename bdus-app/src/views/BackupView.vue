@@ -4,26 +4,22 @@
 
       <div class="backup-header">
         <h2 class="backup-title">{{ t('backup') }}</h2>
-        <Button
-          :label="t('backup_now')"
-          icon="pi pi-save"
-          :loading="creating"
-          @click="createBackup"
-        />
+        <AButton type="primary" :loading="creating" @click="createBackup">
+          <template #icon><i class="pi pi-save" /></template>
+          {{ t('backup_now') }}
+        </AButton>
       </div>
 
       <!-- Loading -->
       <div v-if="loading" class="backup-loading">
-        <ProgressSpinner style="width:32px;height:32px" />
+        <ASpin size="large" />
       </div>
 
       <!-- Error -->
-      <Message v-else-if="fetchError" severity="error">{{ fetchError }}</Message>
+      <AAlert v-else-if="fetchError" type="error" :message="fetchError" show-icon />
 
       <!-- Empty -->
-      <Message v-else-if="!loading && backups.length === 0" severity="info">
-        {{ t('no_bup_present') }}
-      </Message>
+      <AAlert v-else-if="!loading && backups.length === 0" type="info" :message="t('no_bup_present')" show-icon />
 
       <!-- Table -->
       <ATable
@@ -39,32 +35,27 @@
           <template v-if="column.key === 'size_mb'">{{ record.size_mb }} MB</template>
           <template v-else-if="column.key === 'actions'">
             <div class="row-actions">
-              <Button
-                icon="pi pi-download"
+              <AButton
+                type="text"
                 :title="t('download')"
                 size="small"
-                severity="secondary"
-                text
                 @click="downloadBackup(record.file)"
-              />
-              <Button
+              ><template #icon><i class="pi pi-download" /></template></AButton>
+              <AButton
                 v-if="canDelete"
-                icon="pi pi-trash"
+                type="text"
+                danger
                 :title="t('erase')"
                 size="small"
-                severity="danger"
-                text
                 @click="confirmDelete(record.file)"
-              />
-              <Button
+              ><template #icon><i class="pi pi-trash" /></template></AButton>
+              <AButton
                 v-if="canRestore && record.engine === engine"
-                icon="pi pi-undo"
+                type="text"
                 :title="t('restore')"
                 size="small"
-                severity="warn"
-                text
                 @click="confirmRestore(record.file)"
-              />
+              ><template #icon><i class="pi pi-undo" /></template></AButton>
             </div>
           </template>
         </template>
@@ -79,10 +70,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useToast, useConfirm } from '@/composables/useNotify'
 import AppLayout      from '@/components/AppLayout.vue'
-import Button         from 'primevue/button'
-import Message        from 'primevue/message'
-import ProgressSpinner from 'primevue/progressspinner'
-import { Table as ATable } from 'ant-design-vue'
+import { Table as ATable, Button as AButton, Alert as AAlert, Spin as ASpin } from 'ant-design-vue'
 import { api, assetUrl } from '@/api'
 import { useI18n }    from '@/i18n'
 

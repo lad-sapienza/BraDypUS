@@ -3,7 +3,7 @@
 
     <!-- List of existing overrides -->
     <div v-if="loading" class="privs-loading">
-      <ProgressSpinner style="width:24px;height:24px" />
+      <ASpin size="small" />
     </div>
 
     <template v-else>
@@ -26,27 +26,31 @@
             <code class="privs-table-name">{{ record.table_name }}</code>
           </template>
           <template v-else-if="column.key === 'privilege'">
-            <Tag :value="privilegeLabel(record.privilege)" :severity="privilegeSeverity(record.privilege)" rounded />
+            <ATag :color="severityToTagColor(privilegeSeverity(record.privilege))">
+              {{ privilegeLabel(record.privilege) }}
+            </ATag>
           </template>
           <template v-else-if="column.key === 'subset'">
             <code v-if="record.subset" class="privs-subset">{{ record.subset }}</code>
             <span v-else class="privs-empty-cell">—</span>
           </template>
           <template v-else-if="column.key === 'actions'">
-            <Button
-              icon="pi pi-pencil"
-              text rounded size="small"
+            <AButton
+              type="text"
+              shape="circle"
+              size="small"
               :title="t('edit')"
               @click="startEdit(record)"
-            />
-            <Button
-              icon="pi pi-trash"
-              text rounded size="small"
-              severity="danger"
+            ><template #icon><i class="pi pi-pencil" /></template></AButton>
+            <AButton
+              type="text"
+              shape="circle"
+              danger
+              size="small"
               :title="t('delete')"
               :loading="deleting === record.id"
               @click="deleteRow(record.id)"
-            />
+            ><template #icon><i class="pi pi-trash" /></template></AButton>
           </template>
         </template>
       </ATable>
@@ -57,48 +61,46 @@
           {{ editingId ? t('edit') : t('add_table_privilege') }}
         </div>
         <div class="privs-form-row">
-          <Select
-            v-model="form.table_name"
+          <ASelect
+            v-model:value="form.table_name"
             :options="tableOptions"
-            optionLabel="label"
-            optionValue="value"
             :placeholder="t('table')"
             :disabled="!!editingId"
             class="privs-form-table"
-            filter
+            show-search
+            :filter-option="filterOption"
           />
-          <Select
-            v-model="form.privilege"
+          <ASelect
+            v-model:value="form.privilege"
             :options="privilegeOptions"
-            optionLabel="label"
-            optionValue="value"
             :placeholder="t('global_privilege')"
             class="privs-form-priv"
           />
         </div>
         <div class="privs-form-row">
-          <InputText
-            v-model="form.subset"
+          <AInput
+            v-model:value="form.subset"
             :placeholder="t('privilege_subset_hint')"
             class="privs-form-subset"
           />
-          <Button
-            icon="pi pi-check"
-            :label="t('save')"
+          <AButton
+            type="primary"
             size="small"
             :disabled="!form.table_name || !form.privilege"
             :loading="saving"
             @click="saveRow"
-          />
-          <Button
+          >
+            <template #icon><i class="pi pi-check" /></template>
+            {{ t('save') }}
+          </AButton>
+          <AButton
             v-if="editingId"
-            icon="pi pi-times"
-            :label="t('cancel')"
             size="small"
-            severity="secondary"
-            outlined
             @click="resetForm"
-          />
+          >
+            <template #icon><i class="pi pi-times" /></template>
+            {{ t('cancel') }}
+          </AButton>
         </div>
       </div>
     </template>
@@ -109,15 +111,15 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useToast } from '@/composables/useNotify'
-import { Table as ATable } from 'ant-design-vue'
-import Button        from 'primevue/button'
-import Select        from 'primevue/select'
-import InputText     from 'primevue/inputtext'
-import Tag           from 'primevue/tag'
-import ProgressSpinner from 'primevue/progressspinner'
+import { Table as ATable, Button as AButton, Select as ASelect, Input as AInput, Tag as ATag, Spin as ASpin } from 'ant-design-vue'
 import { api }       from '@/api'
 import { useI18n }   from '@/i18n'
 import { useTables } from '@/composables/useTables'
+import { severityToTagColor } from '@/utils/severity'
+
+function filterOption(input, option) {
+  return String(option?.label ?? '').toLowerCase().includes(String(input).toLowerCase())
+}
 
 const { t }     = useI18n()
 const toast     = useToast()

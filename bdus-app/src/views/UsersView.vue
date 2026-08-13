@@ -5,13 +5,10 @@
       <!-- ── Header ──────────────────────────────────────────── -->
       <div class="users-header">
         <h2>{{ t('users') }}</h2>
-        <Button
-          v-if="isAdmin"
-          :label="t('new_user')"
-          icon="pi pi-plus"
-          size="small"
-          @click="openForm(null)"
-        />
+        <AButton v-if="isAdmin" type="primary" size="small" @click="openForm(null)">
+          <template #icon><i class="pi pi-plus" /></template>
+          {{ t('new_user') }}
+        </AButton>
       </div>
 
       <!-- ── Table ───────────────────────────────────────────── -->
@@ -32,44 +29,45 @@
           </template>
           <template v-else-if="column.key === 'privilege'">
             <div class="users-priv-cell">
-              <Tag
-                :value="record.privilege"
-                :severity="privilegeSeverity(record.privilege_value)"
-                rounded
-              />
-              <Badge
+              <ATag :color="severityToTagColor(privilegeSeverity(record.privilege_value))">
+                {{ record.privilege }}
+              </ATag>
+              <ABadge
                 v-if="record.override_count > 0"
-                :value="record.override_count"
-                severity="secondary"
+                :count="record.override_count"
+                :number-style="{ backgroundColor: 'var(--p-surface-400, #94a3b8)' }"
                 class="users-badge"
                 :title="t('table_overrides')"
               />
             </div>
           </template>
           <template v-else-if="column.key === 'actions'">
-            <Button
+            <AButton
               v-if="record.editable"
-              icon="pi pi-pencil"
-              text rounded size="small"
+              type="text"
+              shape="circle"
+              size="small"
               :title="t('edit')"
               @click="openForm(record)"
-            />
-            <Button
+            ><template #icon><i class="pi pi-pencil" /></template></AButton>
+            <AButton
               v-if="isAdmin && record.editable && record.id !== auth.user?.id"
-              icon="pi pi-ban"
-              text rounded size="small"
-              severity="warn"
+              type="text"
+              shape="circle"
+              size="small"
+              style="color: var(--p-orange-500, #f97316)"
               :title="t('revoke_session')"
               @click="confirmRevoke(record)"
-            />
-            <Button
+            ><template #icon><i class="pi pi-ban" /></template></AButton>
+            <AButton
               v-if="isAdmin && record.editable && record.id !== auth.user?.id"
-              icon="pi pi-trash"
-              text rounded size="small"
-              severity="danger"
+              type="text"
+              shape="circle"
+              danger
+              size="small"
               :title="t('delete')"
               @click="confirmDelete(record)"
-            />
+            ><template #icon><i class="pi pi-trash" /></template></AButton>
           </template>
         </template>
 
@@ -85,12 +83,11 @@
     </div>
 
     <!-- ── User form dialog ───────────────────────────────────── -->
-    <Dialog
-      v-model:visible="formVisible"
-      :header="formData.id ? t('edit_user') : t('new_user')"
-      modal
-      :style="{ width: '420px' }"
-      :draggable="false"
+    <AModal
+      v-model:open="formVisible"
+      :title="formData.id ? t('edit_user') : t('new_user')"
+      width="420px"
+      :footer="null"
     >
       <UserForm
         :initial="formData"
@@ -98,7 +95,7 @@
         @save="saveUser"
         @cancel="formVisible = false"
       />
-    </Dialog>
+    </AModal>
 
   </AppLayout>
 </template>
@@ -109,14 +106,11 @@ import { useToast, useConfirm } from '@/composables/useNotify'
 import AppLayout        from '@/components/AppLayout.vue'
 import UserForm         from '@/components/users/UserForm.vue'
 import UserPrivilegesPanel from '@/components/users/UserPrivilegesPanel.vue'
-import { Table as ATable } from 'ant-design-vue'
-import Button           from 'primevue/button'
-import Badge            from 'primevue/badge'
-import Tag              from 'primevue/tag'
-import Dialog           from 'primevue/dialog'
+import { Table as ATable, Button as AButton, Tag as ATag, Badge as ABadge, Modal as AModal } from 'ant-design-vue'
 import { api }          from '@/api'
 import { useI18n }      from '@/i18n'
 import { useAuthStore } from '@/stores/auth'
+import { severityToTagColor } from '@/utils/severity'
 
 const { t }   = useI18n()
 const auth    = useAuthStore()

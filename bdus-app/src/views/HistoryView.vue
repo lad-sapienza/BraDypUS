@@ -7,8 +7,8 @@
       <span class="history-title">{{ t('history') }}</span>
 
       <!-- Filter by table -->
-      <InputText
-        v-model="filterTb"
+      <AInput
+        v-model:value="filterTb"
         :placeholder="t('history_filter_tb')"
         size="small"
         class="filter-input"
@@ -16,8 +16,8 @@
       />
 
       <!-- Filter by user -->
-      <InputText
-        v-model="filterUser"
+      <AInput
+        v-model:value="filterUser"
         :placeholder="t('history_filter_user')"
         size="small"
         class="filter-input"
@@ -25,14 +25,10 @@
       />
 
       <!-- Refresh -->
-      <Button
-        :label="t('log_refresh')"
-        icon="pi pi-refresh"
-        size="small"
-        severity="secondary"
-        :loading="loading"
-        @click="reload"
-      />
+      <AButton size="small" :loading="loading" @click="reload">
+        <template #icon><i class="pi pi-refresh" /></template>
+        {{ t('log_refresh') }}
+      </AButton>
     </div>
 
     <!-- ── Table ───────────────────────────────────────────────── -->
@@ -83,9 +79,7 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useToast } from '@/composables/useNotify'
 import AppLayout  from '@/components/AppLayout.vue'
-import { Table as ATable } from 'ant-design-vue'
-import Button     from 'primevue/button'
-import InputText  from 'primevue/inputtext'
+import { Table as ATable, Button as AButton, Input as AInput } from 'ant-design-vue'
 import { api }    from '@/api'
 import { useI18n } from '@/i18n'
 
@@ -211,7 +205,7 @@ onMounted(fetchHistory)
 .filter-input { width: 12rem; }
 
 /* push refresh to the right */
-.history-toolbar .p-button:last-child { margin-left: auto; }
+.history-toolbar :deep(.ant-btn:last-child) { margin-left: auto; }
 
 /* ── Table ────────────────────────────────────────────────────── */
 .history-table {

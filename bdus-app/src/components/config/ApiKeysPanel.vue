@@ -13,36 +13,36 @@
           <span>{{ t('create_api_key') }}</span>
         </div>
         <div class="create-form">
-          <InputText
-            v-model="newLabel"
+          <AInput
+            v-model:value="newLabel"
             :placeholder="t('api_key_label')"
-            fluid
+            style="flex: 1; min-width: 200px"
             @keydown.enter="createKey"
           />
-          <Select
-            v-model="newPrivilege"
+          <ASelect
+            v-model:value="newPrivilege"
             :options="privilegeOptions"
-            option-label="label"
-            option-value="value"
             :placeholder="t('privilege')"
             style="min-width: 12rem"
           />
-          <Button
-            :label="t('create_api_key')"
-            icon="pi pi-plus"
-            :loading="creating"
-            @click="createKey"
-          />
+          <AButton :loading="creating" @click="createKey">
+            <template #icon><i class="pi pi-plus" /></template>
+            {{ t('create_api_key') }}
+          </AButton>
         </div>
 
         <!-- New key shown once after creation -->
-        <Message v-if="newKey" severity="warn" :closable="false" class="new-key-box">
-          <p>{{ t('api_key_copy_now') }}</p>
-          <div class="key-row">
-            <code class="key-code">{{ newKey }}</code>
-            <Button icon="pi pi-copy" text size="small" :title="t('copy')" @click="copyKey" />
-          </div>
-        </Message>
+        <AAlert v-if="newKey" type="warning" :closable="false" show-icon class="new-key-box">
+          <template #message>
+            <p>{{ t('api_key_copy_now') }}</p>
+            <div class="key-row">
+              <code class="key-code">{{ newKey }}</code>
+              <AButton type="text" size="small" :title="t('copy')" @click="copyKey">
+                <template #icon><i class="pi pi-copy" /></template>
+              </AButton>
+            </div>
+          </template>
+        </AAlert>
       </section>
 
       <!-- ── Keys table ───────────────────────────────────────────── -->
@@ -55,7 +55,7 @@
           <i class="pi pi-spin pi-spinner" />
         </div>
 
-        <Message v-else-if="error" severity="error" :closable="false">{{ error }}</Message>
+        <AAlert v-else-if="error" type="error" :message="error" :closable="false" show-icon />
 
         <div v-else-if="keys.length === 0" class="cfg-empty-msg-sm">
           {{ t('no_api_keys') }}
@@ -74,35 +74,31 @@
             <template v-if="column.key === 'created_at'">{{ formatDate(record.created_at) }}</template>
             <template v-else-if="column.key === 'last_used_at'">{{ record.last_used_at ? formatDate(record.last_used_at) : '—' }}</template>
             <template v-else-if="column.key === 'privilege'">
-              <Tag
-                :value="privilegeLabel(record.privilege)"
-                :severity="privilegeSeverity(record.privilege)"
-              />
+              <ATag :color="severityToTagColor(privilegeSeverity(record.privilege))">
+                {{ privilegeLabel(record.privilege) }}
+              </ATag>
             </template>
             <template v-else-if="column.key === 'is_active'">
-              <Tag
-                :value="record.is_active ? t('active') : t('revoked')"
-                :severity="record.is_active ? 'success' : 'secondary'"
-              />
+              <ATag :color="record.is_active ? 'success' : 'default'">
+                {{ record.is_active ? t('active') : t('revoked') }}
+              </ATag>
             </template>
             <template v-else-if="column.key === 'actions'">
-              <Button
+              <AButton
                 v-if="record.is_active"
-                icon="pi pi-ban"
-                text
-                severity="warn"
+                type="text"
+                danger
                 size="small"
                 :title="t('revoke')"
                 @click="revokeKey(record.id)"
-              />
-              <Button
-                icon="pi pi-trash"
-                text
-                severity="danger"
+              ><template #icon><i class="pi pi-ban" /></template></AButton>
+              <AButton
+                type="text"
+                danger
                 size="small"
                 :title="t('delete')"
                 @click="deleteKey(record.id)"
-              />
+              ><template #icon><i class="pi pi-trash" /></template></AButton>
             </template>
           </template>
         </ATable>
@@ -113,15 +109,11 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import Button    from 'primevue/button'
-import InputText from 'primevue/inputtext'
-import Select    from 'primevue/select'
-import Message   from 'primevue/message'
-import Tag       from 'primevue/tag'
-import { Table as ATable } from 'ant-design-vue'
+import { Table as ATable, Button as AButton, Input as AInput, Select as ASelect, Alert as AAlert, Tag as ATag } from 'ant-design-vue'
 import { useToast } from '@/composables/useNotify'
 import { useI18n }  from '@/i18n'
 import { api }      from '@/api'
+import { severityToTagColor } from '@/utils/severity'
 
 const { t }  = useI18n()
 const toast  = useToast()

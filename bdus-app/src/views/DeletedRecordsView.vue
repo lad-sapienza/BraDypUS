@@ -6,27 +6,25 @@
     <div class="deleted-toolbar">
       <span class="deleted-title">{{ t('deleted_records') }}</span>
 
-      <Select
-        v-model="selectedTb"
+      <ASelect
+        v-model:value="selectedTb"
         :options="tableOptions"
-        optionLabel="label"
-        optionValue="value"
         :placeholder="t('deleted_select_table')"
         size="small"
         class="tb-select"
-        showClear
+        allow-clear
         @change="onTableChange"
       />
 
-      <Button
+      <AButton
         v-if="selectedTb"
-        :label="t('log_refresh')"
-        icon="pi pi-refresh"
         size="small"
-        severity="secondary"
         :loading="loading"
         @click="fetchDeleted"
-      />
+      >
+        <template #icon><i class="pi pi-refresh" /></template>
+        {{ t('log_refresh') }}
+      </AButton>
     </div>
 
     <!-- ── Placeholder (no table selected) ─────────────────────── -->
@@ -37,13 +35,11 @@
 
     <!-- ── Loading ──────────────────────────────────────────────── -->
     <div v-else-if="loading" class="deleted-loading">
-      <ProgressSpinner />
+      <ASpin size="large" />
     </div>
 
     <!-- ── Error ────────────────────────────────────────────────── -->
-    <Message v-else-if="error" severity="error" class="deleted-error">
-      {{ error }}
-    </Message>
+    <AAlert v-else-if="error" type="error" :message="error" show-icon class="deleted-error" />
 
     <!-- ── Empty ────────────────────────────────────────────────── -->
     <div v-else-if="!rows.length" class="deleted-placeholder">
@@ -66,14 +62,15 @@
             <span class="row-preview">{{ rowPreview(record) }}</span>
           </template>
           <template v-else-if="column.key === 'actions'">
-            <Button
-              :label="t('version_restore')"
-              icon="pi pi-history"
+            <AButton
+              type="text"
               size="small"
-              severity="warning"
-              text
+              style="color: var(--p-orange-500, #f97316)"
               @click="askRestore(record)"
-            />
+            >
+              <template #icon><i class="pi pi-history" /></template>
+              {{ t('version_restore') }}
+            </AButton>
           </template>
         </template>
       </ATable>
@@ -83,11 +80,10 @@
   </AppLayout>
 
   <!-- ── Restore confirmation dialog ─────────────────────────── -->
-  <Dialog
-    v-model:visible="confirmVisible"
-    :header="t('version_restore_confirm_title')"
-    modal
-    :style="{ width: '420px' }"
+  <AModal
+    v-model:open="confirmVisible"
+    :title="t('version_restore_confirm_title')"
+    width="420px"
   >
     <div class="confirm-body" v-if="restoreTarget">
       <i class="pi pi-exclamation-triangle confirm-icon" />
@@ -99,21 +95,18 @@
       </div>
     </div>
     <template #footer>
-      <Button
-        :label="t('cancel')"
-        severity="secondary"
-        text
-        @click="confirmVisible = false"
-      />
-      <Button
-        :label="t('version_restore')"
-        icon="pi pi-history"
-        severity="warning"
+      <AButton type="text" @click="confirmVisible = false">{{ t('cancel') }}</AButton>
+      <AButton
+        type="primary"
+        style="background: var(--p-orange-500, #f97316); border-color: var(--p-orange-500, #f97316)"
         :loading="restoring"
         @click="doRestore"
-      />
+      >
+        <template #icon><i class="pi pi-history" /></template>
+        {{ t('version_restore') }}
+      </AButton>
     </template>
-  </Dialog>
+  </AModal>
 </template>
 
 <script setup>
@@ -121,12 +114,7 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter }  from 'vue-router'
 import { useToast } from '@/composables/useNotify'
 import AppLayout      from '@/components/AppLayout.vue'
-import { Table as ATable } from 'ant-design-vue'
-import Button         from 'primevue/button'
-import Select         from 'primevue/select'
-import Message        from 'primevue/message'
-import ProgressSpinner from 'primevue/progressspinner'
-import Dialog          from 'primevue/dialog'
+import { Table as ATable, Button as AButton, Select as ASelect, Alert as AAlert, Spin as ASpin, Modal as AModal } from 'ant-design-vue'
 import { api }         from '@/api'
 import { useI18n }     from '@/i18n'
 import { useTables }   from '@/composables/useTables'

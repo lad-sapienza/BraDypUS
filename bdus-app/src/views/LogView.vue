@@ -7,19 +7,17 @@
       <span class="log-title">{{ t('app_log') }}</span>
 
       <!-- Level filter -->
-      <Select
-        v-model="filterLevel"
+      <ASelect
+        v-model:value="filterLevel"
         :options="levelOptions"
-        optionLabel="label"
-        optionValue="value"
         size="small"
         class="level-select"
         @change="onFilterChange"
       />
 
       <!-- Search -->
-      <InputText
-        v-model="filterSearch"
+      <AInput
+        v-model:value="filterSearch"
         :placeholder="t('log_search_placeholder')"
         size="small"
         class="search-input"
@@ -27,24 +25,16 @@
       />
 
       <!-- Refresh -->
-      <Button
-        :label="t('log_refresh')"
-        icon="pi pi-refresh"
-        size="small"
-        severity="secondary"
-        :loading="loading"
-        @click="reload"
-      />
+      <AButton size="small" :loading="loading" @click="reload">
+        <template #icon><i class="pi pi-refresh" /></template>
+        {{ t('log_refresh') }}
+      </AButton>
 
       <!-- Purge -->
-      <Button
-        :label="t('log_purge')"
-        icon="pi pi-trash"
-        size="small"
-        severity="danger"
-        outlined
-        @click="purgeDialogVisible = true"
-      />
+      <AButton danger size="small" @click="purgeDialogVisible = true">
+        <template #icon><i class="pi pi-trash" /></template>
+        {{ t('log_purge') }}
+      </AButton>
     </div>
 
     <!-- ── Table ───────────────────────────────────────────────── -->
@@ -63,7 +53,7 @@
       >
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'level_name'">
-            <Tag :value="record.level_name" :severity="levelSeverity(record.level)" />
+            <ATag :color="severityToTagColor(levelSeverity(record.level))">{{ record.level_name }}</ATag>
           </template>
           <template v-else-if="column.key === 'message'">
             <span class="msg-preview">{{ truncate(record.message) }}</span>
@@ -78,38 +68,26 @@
     </div>
 
     <!-- ── Purge dialog ────────────────────────────────────────── -->
-    <Dialog
-      v-model:visible="purgeDialogVisible"
-      modal
-      :header="t('log_purge')"
-      style="width: 28rem"
+    <AModal
+      v-model:open="purgeDialogVisible"
+      :title="t('log_purge')"
+      width="28rem"
     >
       <div class="purge-body">
-        <Select
-          v-model="purgeDays"
+        <ASelect
+          v-model:value="purgeDays"
           :options="purgeOptions"
-          optionLabel="label"
-          optionValue="value"
           style="width: 100%"
         />
       </div>
       <template #footer>
-        <Button
-          :label="t('confirm')"
-          icon="pi pi-check"
-          severity="danger"
-          :loading="purging"
-          @click="doPurge"
-        />
-        <Button
-          :label="t('cancel')"
-          icon="pi pi-times"
-          severity="secondary"
-          text
-          @click="purgeDialogVisible = false"
-        />
+        <AButton type="text" @click="purgeDialogVisible = false">{{ t('cancel') }}</AButton>
+        <AButton type="primary" danger :loading="purging" @click="doPurge">
+          <template #icon><i class="pi pi-check" /></template>
+          {{ t('confirm') }}
+        </AButton>
       </template>
-    </Dialog>
+    </AModal>
 
   </div>
   </AppLayout>
@@ -119,15 +97,11 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useToast } from '@/composables/useNotify'
 import AppLayout from '@/components/AppLayout.vue'
-import { Table as ATable } from 'ant-design-vue'
-import Button from 'primevue/button'
-import Select from 'primevue/select'
-import InputText from 'primevue/inputtext'
-import Tag from 'primevue/tag'
-import Dialog from 'primevue/dialog'
+import { Table as ATable, Button as AButton, Select as ASelect, Input as AInput, Tag as ATag, Modal as AModal } from 'ant-design-vue'
 import { api } from '@/api'
 const { responseMessage } = api
 import { useI18n } from '@/i18n'
+import { severityToTagColor } from '@/utils/severity'
 
 const { t } = useI18n()
 const toast  = useToast()
@@ -304,7 +278,7 @@ onMounted(fetchLogs)
 .search-input { width: 14rem; }
 
 /* push refresh+purge to the right */
-.log-toolbar .p-button:nth-last-child(2) { margin-left: auto; }
+.log-toolbar :deep(.ant-btn:nth-last-child(2)) { margin-left: auto; }
 
 /* ── Table ────────────────────────────────────────────────────── */
 .log-table {

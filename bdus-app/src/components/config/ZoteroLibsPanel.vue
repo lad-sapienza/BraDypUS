@@ -106,11 +106,10 @@
           >
             <div class="lib-card-info">
               <div class="lib-card-name">
-                <Tag
-                  :value="lib.type"
-                  :severity="lib.type === 'group' ? 'info' : 'secondary'"
+                <ATag
+                  :color="lib.type === 'group' ? 'processing' : 'default'"
                   class="type-tag"
-                />
+                >{{ lib.type }}</ATag>
                 {{ lib.name }}
               </div>
               <div class="lib-card-meta">
@@ -158,8 +157,7 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import Tag          from 'primevue/tag'
-import { Button as AButton, Input, Segmented as ASegmented, Alert as AAlert } from 'ant-design-vue'
+import { Button as AButton, Input, Segmented as ASegmented, Alert as AAlert, Tag as ATag } from 'ant-design-vue'
 
 const AInput         = Input
 const AInputPassword = Input.Password

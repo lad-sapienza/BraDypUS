@@ -37,7 +37,7 @@
         >
           <template #option="{ value, label }">
             <span>{{ label }}</span>
-            <Tag v-if="fuzzyDateTables.includes(value)" value="fuzzy_date" severity="info" class="cfg-cdp-badge" />
+            <ATag v-if="fuzzyDateTables.includes(value)" color="processing" class="cfg-cdp-badge">fuzzy_date</ATag>
           </template>
         </ASelect>
 
@@ -59,8 +59,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import Tag      from 'primevue/tag'
-import { Button as AButton, Select as ASelect, Alert as AAlert } from 'ant-design-vue'
+import { Button as AButton, Select as ASelect, Alert as AAlert, Tag as ATag } from 'ant-design-vue'
 import { useI18n } from '@/i18n'
 import { api }      from '@/api'
 

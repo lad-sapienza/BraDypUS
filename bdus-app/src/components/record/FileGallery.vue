@@ -17,14 +17,14 @@
           </span>
 
           <!-- thumbnail for images, icon for docs -->
-          <Image
+          <AImage
             v-if="f.is_image"
             :src="fileUrl(f)"
             :alt="f.description || f.filename || String(f.id)"
-            preview
+            :preview="true"
             :width="60"
             :height="45"
-            image-class="sort-thumb"
+            class="sort-thumb"
           />
           <i v-else :class="['doc-icon', fileIcon(f.ext)]" />
 
@@ -73,34 +73,25 @@
         <input ref="fileInput" type="file" class="hidden-input" @change="onFileSelected" />
         <i class="pi pi-upload upload-bar-icon" />
         <span class="upload-bar-hint">{{ t('drag_drop_or') }}</span>
-        <Button
-          :label="t('upload_file')"
-          size="small"
-          severity="secondary"
-          outlined
-          :loading="uploading"
-          @click="fileInput?.click()"
-        />
-        <Button
-          :label="t('link_existing_file')"
-          icon="pi pi-link"
-          size="small"
-          severity="secondary"
-          outlined
-          @click="openFilePicker"
-        />
+        <AButton size="small" :loading="uploading" @click="fileInput?.click()">
+          {{ t('upload_file') }}
+        </AButton>
+        <AButton size="small" @click="openFilePicker">
+          <template #icon><i class="pi pi-link" /></template>
+          {{ t('link_existing_file') }}
+        </AButton>
       </div>
 
       <!-- File picker Dialog -->
-      <Dialog
-        v-model:visible="filePickerDialog"
-        :header="t('file_picker_title')"
-        modal
-        style="width: 680px; max-width: 96vw"
+      <AModal
+        v-model:open="filePickerDialog"
+        :title="t('file_picker_title')"
+        width="680px"
+        :footer="null"
       >
         <div class="picker-search">
-          <InputText
-            v-model="pickerSearch"
+          <AInput
+            v-model:value="pickerSearch"
             :placeholder="t('file_picker_search')"
             size="small"
             class="picker-search-input"
@@ -135,7 +126,7 @@
             </template>
           </template>
         </ATable>
-      </Dialog>
+      </AModal>
     </template>
 
     <!-- ── View mode: split images / docs ────────────────────────── -->
@@ -143,14 +134,14 @@
       <!-- Image thumbnails -->
       <div v-if="images.length" class="images-grid">
         <div v-for="f in images" :key="f.id" class="img-thumb">
-          <Image
+          <AImage
             :src="fileUrl(f)"
             :alt="f.description || f.filename || String(f.id)"
             :title="f.description || ''"
-            preview
+            :preview="true"
             :width="120"
             :height="90"
-            image-class="thumb-img"
+            class="thumb-img"
           />
           <div v-if="f.description" class="img-caption">{{ f.description }}</div>
           <div class="img-actions">
@@ -185,11 +176,7 @@
 <script setup>
 import { ref, computed, watch, onUnmounted, nextTick } from 'vue'
 import Sortable   from 'sortablejs'
-import Image      from 'primevue/image'
-import Button     from 'primevue/button'
-import Dialog     from 'primevue/dialog'
-import InputText  from 'primevue/inputtext'
-import { Table as ATable } from 'ant-design-vue'
+import { Table as ATable, Image as AImage, Button as AButton, Modal as AModal, Input as AInput } from 'ant-design-vue'
 import { useToast, useConfirm } from '@/composables/useNotify'
 import { api, assetUrl } from '@/api'
 import { useI18n }       from '@/i18n'

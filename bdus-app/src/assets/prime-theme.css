@@ -1,0 +1,225 @@
+/* ── --p-* design tokens ──────────────────────────────────────────────────
+   Replaces PrimeVue Aura's runtime theme engine (removed together with the
+   `primevue` package in Fase 7 of the AntD migration — no PrimeVue
+   components remain, but ~1000 `var(--p-*)` references across the app's
+   own CSS still consume these token names).
+
+   Values below are the exact output Aura's `updatePrimaryPalette()` /
+   `darkModeSelector: '.dark-mode'` produced for each of the 8 brand
+   colors, captured live and hardcoded here — not re-derived — so the
+   visual result is unchanged. Tokens Aura v4 never actually defined
+   (--p-surface-card/-ground/-border, --p-card-shadow, --p-border-radius,
+   --p-warning-color) are intentionally left out; those `var()` call sites
+   already degraded to their CSS-initial value before this change too.
+   ------------------------------------------------------------------- */
+
+/* ── Auxiliary color scale: identical across brands and light/dark ──── */
+:root {
+  --p-amber-600:  #d97706;
+  --p-blue-50:    #eff6ff;
+  --p-blue-100:   #dbeafe;
+  --p-blue-200:   #bfdbfe;
+  --p-blue-400:   #60a5fa;
+  --p-blue-500:   #3b82f6;
+  --p-blue-700:   #1d4ed8;
+  --p-green-50:   #f0fdf4;
+  --p-green-100:  #dcfce7;
+  --p-green-200:  #bbf7d0;
+  --p-green-400:  #4ade80;
+  --p-green-500:  #22c55e;
+  --p-green-600:  #16a34a;
+  --p-green-700:  #15803d;
+  --p-orange-50:  #fff7ed;
+  --p-orange-100: #ffedd5;
+  --p-orange-300: #fdba74;
+  --p-orange-500: #f97316;
+  --p-orange-600: #ea580c;
+  --p-orange-700: #c2410c;
+  --p-purple-100: #f3e8ff;
+  --p-purple-700: #7e22ce;
+  --p-red-100:    #fee2e2;
+  --p-red-200:    #fecaca;
+  --p-red-400:    #f87171;
+  --p-red-500:    #ef4444;
+  --p-red-600:    #dc2626;
+  --p-red-700:    #b91c1c;
+  --p-yellow-400: #facc15;
+  --p-yellow-500: #eab308;
+  --p-yellow-600: #ca8a04;
+  --p-surface-0:  #ffffff;
+  --p-border-radius-md: 6px;
+  --p-border-radius-lg: 8px;
+  --p-border-radius-xl: 12px;
+}
+
+/* ── Surface & text tokens: flip with .dark-mode, same for every brand ── */
+:root {
+  --p-content-background:       #ffffff;
+  --p-content-border-color:     #e2e8f0;
+  --p-content-hover-background: #f1f5f9;
+  --p-text-color:               #334155;
+  --p-text-muted-color:         #64748b;
+  --p-surface-50:  #f8fafc;
+  --p-surface-100: #f1f5f9;
+  --p-surface-200: #e2e8f0;
+  --p-surface-300: #cbd5e1;
+  --p-surface-400: #94a3b8;
+  --p-surface-800: #1e293b;
+}
+
+.dark-mode {
+  --p-content-background:       #18181b;
+  --p-content-border-color:     #3f3f46;
+  --p-content-hover-background: #27272a;
+  --p-text-color:               #ffffff;
+  --p-text-muted-color:         #a1a1aa;
+  --p-surface-50:  #fafafa;
+  --p-surface-100: #f4f4f5;
+  --p-surface-200: #e4e4e7;
+  --p-surface-300: #d4d4d8;
+  --p-surface-400: #a1a1aa;
+  --p-surface-800: #27272a;
+}
+
+/* ── Brand primary color: one block per COLOR_PALETTE entry in
+   useAppColor.js, applied via [data-brand] on <html> (set by applyColor()).
+   :not([data-brand]) covers the moment before AppLayout/ConfigAppForm has
+   fetched the app's stored color (login, first paint) — defaults to indigo,
+   matching useAppColor.js's own ANTD_HEX.indigo default. ────────────── */
+:root:not([data-brand]),
+:root[data-brand="indigo"] {
+  --p-primary-color: #6366f1;
+  --p-primary-50: #eef2ff;
+  --p-primary-700: #4338ca;
+  --p-primary-contrast-color: #ffffff;
+  --p-primary-hover-color: #4f46e5;
+  --p-highlight-background: #eef2ff;
+}
+.dark-mode:not([data-brand]),
+.dark-mode[data-brand="indigo"] {
+  --p-primary-color: #818cf8;
+  --p-primary-50: #eef2ff;
+  --p-primary-700: #4338ca;
+  --p-primary-contrast-color: #18181b;
+  --p-primary-hover-color: #a5b4fc;
+  --p-highlight-background: color-mix(in srgb, #818cf8, transparent 84%);
+}
+
+:root[data-brand="blue"] {
+  --p-primary-color: #3b82f6;
+  --p-primary-50: #eff6ff;
+  --p-primary-700: #1d4ed8;
+  --p-primary-contrast-color: #ffffff;
+  --p-primary-hover-color: #2563eb;
+  --p-highlight-background: #eff6ff;
+}
+.dark-mode[data-brand="blue"] {
+  --p-primary-color: #60a5fa;
+  --p-primary-50: #eff6ff;
+  --p-primary-700: #1d4ed8;
+  --p-primary-contrast-color: #18181b;
+  --p-primary-hover-color: #93c5fd;
+  --p-highlight-background: color-mix(in srgb, #60a5fa, transparent 84%);
+}
+
+:root[data-brand="violet"] {
+  --p-primary-color: #8b5cf6;
+  --p-primary-50: #f5f3ff;
+  --p-primary-700: #6d28d9;
+  --p-primary-contrast-color: #ffffff;
+  --p-primary-hover-color: #7c3aed;
+  --p-highlight-background: #f5f3ff;
+}
+.dark-mode[data-brand="violet"] {
+  --p-primary-color: #a78bfa;
+  --p-primary-50: #f5f3ff;
+  --p-primary-700: #6d28d9;
+  --p-primary-contrast-color: #18181b;
+  --p-primary-hover-color: #c4b5fd;
+  --p-highlight-background: color-mix(in srgb, #a78bfa, transparent 84%);
+}
+
+:root[data-brand="emerald"] {
+  --p-primary-color: #10b981;
+  --p-primary-50: #ecfdf5;
+  --p-primary-700: #047857;
+  --p-primary-contrast-color: #ffffff;
+  --p-primary-hover-color: #059669;
+  --p-highlight-background: #ecfdf5;
+}
+.dark-mode[data-brand="emerald"] {
+  --p-primary-color: #34d399;
+  --p-primary-50: #ecfdf5;
+  --p-primary-700: #047857;
+  --p-primary-contrast-color: #18181b;
+  --p-primary-hover-color: #6ee7b7;
+  --p-highlight-background: color-mix(in srgb, #34d399, transparent 84%);
+}
+
+:root[data-brand="teal"] {
+  --p-primary-color: #14b8a6;
+  --p-primary-50: #f0fdfa;
+  --p-primary-700: #0f766e;
+  --p-primary-contrast-color: #ffffff;
+  --p-primary-hover-color: #0d9488;
+  --p-highlight-background: #f0fdfa;
+}
+.dark-mode[data-brand="teal"] {
+  --p-primary-color: #2dd4bf;
+  --p-primary-50: #f0fdfa;
+  --p-primary-700: #0f766e;
+  --p-primary-contrast-color: #18181b;
+  --p-primary-hover-color: #5eead4;
+  --p-highlight-background: color-mix(in srgb, #2dd4bf, transparent 84%);
+}
+
+:root[data-brand="amber"] {
+  --p-primary-color: #f59e0b;
+  --p-primary-50: #fffbeb;
+  --p-primary-700: #b45309;
+  --p-primary-contrast-color: #ffffff;
+  --p-primary-hover-color: #d97706;
+  --p-highlight-background: #fffbeb;
+}
+.dark-mode[data-brand="amber"] {
+  --p-primary-color: #fbbf24;
+  --p-primary-50: #fffbeb;
+  --p-primary-700: #b45309;
+  --p-primary-contrast-color: #18181b;
+  --p-primary-hover-color: #fcd34d;
+  --p-highlight-background: color-mix(in srgb, #fbbf24, transparent 84%);
+}
+
+:root[data-brand="rose"] {
+  --p-primary-color: #f43f5e;
+  --p-primary-50: #fff1f2;
+  --p-primary-700: #be123c;
+  --p-primary-contrast-color: #ffffff;
+  --p-primary-hover-color: #e11d48;
+  --p-highlight-background: #fff1f2;
+}
+.dark-mode[data-brand="rose"] {
+  --p-primary-color: #fb7185;
+  --p-primary-50: #fff1f2;
+  --p-primary-700: #be123c;
+  --p-primary-contrast-color: #18181b;
+  --p-primary-hover-color: #fda4af;
+  --p-highlight-background: color-mix(in srgb, #fb7185, transparent 84%);
+}
+
+:root[data-brand="slate"] {
+  --p-primary-color: #64748b;
+  --p-primary-50: #f8fafc;
+  --p-primary-700: #334155;
+  --p-primary-contrast-color: #ffffff;
+  --p-primary-hover-color: #475569;
+  --p-highlight-background: #f8fafc;
+}
+.dark-mode[data-brand="slate"] {
+  --p-primary-color: #94a3b8;
+  --p-primary-50: #f8fafc;
+  --p-primary-700: #334155;
+  --p-primary-contrast-color: #18181b;
+  --p-primary-hover-color: #cbd5e1;
+  --p-highlight-background: color-mix(in srgb, #94a3b8, transparent 84%);
+}

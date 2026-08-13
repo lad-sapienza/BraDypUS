@@ -268,6 +268,15 @@ async function loadData() {
 
 onMounted(loadData)
 
+// Vue Router reuses this component instance when only the `tb` route param
+// changes (e.g. navigating between tables via the command palette), so the
+// initial `selectedTables.value = route.params.tb ? [...] : []` above never
+// re-runs on its own — sync it explicitly and reload.
+watch(() => route.params.tb, (newTb) => {
+  selectedTables.value = newTb ? [newTb] : []
+  loadData()
+})
+
 // ── Derived ────────────────────────────────────────────────────────────
 const allTableOptions = computed(() =>
   rawTables.value.map(g => ({ label: g.tb_label, value: g.tb_id }))

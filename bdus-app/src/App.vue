@@ -1,6 +1,7 @@
 <template>
   <AConfigProvider :theme="antdTheme">
     <AApp>
+      <ThemeTokenBridge />
       <RouterView />
     </AApp>
   </AConfigProvider>
@@ -10,6 +11,7 @@
 import { computed } from 'vue'
 import { RouterView } from 'vue-router'
 import { ConfigProvider as AConfigProvider, App as AApp, theme } from 'ant-design-vue'
+import ThemeTokenBridge from '@/components/ThemeTokenBridge.vue'
 // Importing useDarkMode here ensures the .dark-mode class is applied to <html>
 // on every page (including /login) as soon as the app boots.
 import { useDarkMode } from '@/composables/useDarkMode'

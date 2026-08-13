@@ -233,10 +233,14 @@ function handleLogout() {
 }
 
 /* ── Responsive show/hide (Sider vs Drawer) ──────────────────── */
-.mobile-only { display: none; }
+/* !important on both sides: .mobile-only/.desktop-only sit alongside other
+   classes (.topbar-btn, .app-sidebar...) that also set `display`, declared
+   later in this file — without !important, plain cascade order lets those
+   win and the hamburger button stays visible on desktop widths too. */
+.mobile-only { display: none !important; }
 @media (max-width: 1023px) {
   .desktop-only { display: none !important; }
-  .mobile-only  { display: inline-flex; }
+  .mobile-only  { display: inline-flex !important; }
 }
 
 /* ── Sidebar ──────────────────────────────────────────────────── */

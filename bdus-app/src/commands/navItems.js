@@ -33,7 +33,7 @@ export function buildNavGroups(app) {
         { labelKey: 'assemblage_analysis',  icon: 'pi-th-large',    to: `${a}/assemblages`,     minPrivilege: PRIVILEGE.READER },
         { labelKey: 'history',              icon: 'pi-history',     to: `${a}/history`,         minPrivilege: PRIVILEGE.READER },
         { labelKey: 'deleted_records',      icon: 'pi-trash',       to: `${a}/deleted-records`, minPrivilege: PRIVILEGE.READER },
-        { labelKey: 'import_data',          icon: 'pi-upload',      to: `${a}/import`,          minPrivilege: PRIVILEGE.WRITER },
+        { labelKey: 'import_data',          icon: 'pi-download',    to: `${a}/import`,          minPrivilege: PRIVILEGE.WRITER },
         { labelKey: 'backup',               icon: 'pi-save',        to: `${a}/backups`,         minPrivilege: PRIVILEGE.READER },
       ],
     },

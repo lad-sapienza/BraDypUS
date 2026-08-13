@@ -16,6 +16,7 @@ import {
   CompassOutlined,
   DatabaseOutlined,
   DeleteOutlined,
+  DownloadOutlined,
   FileImageOutlined,
   GoogleOutlined,
   HistoryOutlined,
@@ -32,7 +33,6 @@ import {
   TeamOutlined,
   TranslationOutlined,
   UnorderedListOutlined,
-  UploadOutlined,
   UserOutlined,
   WarningOutlined,
 } from '@ant-design/icons-vue'
@@ -43,6 +43,7 @@ const ICONS = {
   clock: ClockCircleOutlined,
   cog: SettingOutlined,
   database: DatabaseOutlined,
+  download: DownloadOutlined,
   'exclamation-triangle': WarningOutlined,
   google: GoogleOutlined,
   history: HistoryOutlined,
@@ -67,7 +68,6 @@ const ICONS = {
   'th-large': AppstoreOutlined,
   code: CodeOutlined,
   trash: DeleteOutlined,
-  upload: UploadOutlined,
   'user-edit': UserOutlined,
   users: TeamOutlined,
 }

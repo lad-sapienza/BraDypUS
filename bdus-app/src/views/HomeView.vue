@@ -166,7 +166,7 @@ const modules = computed(() => {
     { labelKey: 'design_templates', icon: 'pi-palette',     descKey: 'module_templates_desc',     route: `${a}/templates`    },
     { labelKey: 'vocabulary_mng',   icon: 'pi-book',        descKey: 'module_vocabularies_desc',  route: `${a}/vocabularies` },
     { labelKey: 'backup',           icon: 'pi-server',      descKey: 'module_backup_desc',        route: `${a}/backups`      },
-    { labelKey: 'import_data',      icon: 'pi-upload',      descKey: 'module_import_desc',        route: `${a}/import`       },
+    { labelKey: 'import_data',      icon: 'pi-download',    descKey: 'module_import_desc',        route: `${a}/import`       },
     { labelKey: 'history',          icon: 'pi-clock',       descKey: 'module_history_desc',       route: `${a}/history`      },
     { labelKey: 'find_replace',     icon: 'pi-search-plus', descKey: 'module_find_replace_desc',  route: `${a}/find-replace` },
   ]

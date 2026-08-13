@@ -29,6 +29,19 @@ const antdTheme = computed(() => ({
 </script>
 
 <style>
+/* AntD's <a-app> renders an unstyled div (class "ant-app") between #app and
+   our own layout root. #app is `display:flex; flex-direction:column;
+   height:100%` expecting its child to fill that height, but a plain div
+   defaults to `flex: 0 1 auto` and just grows to fit its content instead —
+   breaking the height:100% chain that .app-shell, .app-sidebar and every
+   overflow-y:auto container below it rely on. Without this, content taller
+   than the viewport is silently clipped by html/body's overflow:hidden
+   instead of scrolling inside the intended containers. */
+#app > .ant-app {
+  flex: 1;
+  min-height: 0;
+}
+
 /* Fixed elements (topbar, sidebar) need global solid backgrounds
    because scoped CSS + position:fixed can break stacking/paint.
    Uses --bdus-surface defined in main.css (flips in .dark-mode). */

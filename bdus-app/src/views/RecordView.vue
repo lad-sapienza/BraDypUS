@@ -6,7 +6,7 @@
     <div class="record-header">
       <div class="record-breadcrumb">
         <router-link :to="backTarget" class="back-link">
-          <i class="pi pi-arrow-left" />
+          <ArrowLeftOutlined />
           {{ record?.metadata?.tb_label ?? t('data') }}
         </router-link>
         <span v-if="recordTitle" class="sep">/</span>
@@ -40,7 +40,7 @@
         <template v-if="mode === 'read' && record">
           <!-- Version history button (only for existing records) -->
           <AButton v-if="!isNew" size="small" @click="versionsDrawerOpen = true">
-            <template #icon><i class="pi pi-history" /></template>
+            <template #icon><HistoryOutlined /></template>
             {{ t('version_history') }}
           </AButton>
           <AButton
@@ -49,26 +49,26 @@
             :loading="duplicating"
             @click="duplicateRecord"
           >
-            <template #icon><i class="pi pi-copy" /></template>
+            <template #icon><CopyOutlined /></template>
             {{ t('duplicate') }}
           </AButton>
           <AButton v-if="record.metadata?.can_edit" type="primary" size="small" @click="enterEditMode">
-            <template #icon><i class="pi pi-pencil" /></template>
+            <template #icon><EditOutlined /></template>
             {{ t('edit') }}
           </AButton>
           <AButton v-if="record.metadata?.can_delete" danger size="small" @click="confirmDelete">
-            <template #icon><i class="pi pi-trash" /></template>
+            <template #icon><DeleteOutlined /></template>
             {{ t('delete') }}
           </AButton>
         </template>
 
         <template v-if="mode === 'edit'">
           <AButton type="primary" size="small" :loading="saving" @click="saveRecord">
-            <template #icon><i class="pi pi-check" /></template>
+            <template #icon><CheckOutlined /></template>
             {{ t('save') }}
           </AButton>
           <AButton type="text" size="small" @click="cancelEdit">
-            <template #icon><i class="pi pi-times" /></template>
+            <template #icon><CloseOutlined /></template>
             {{ t('cancel') }}
           </AButton>
         </template>
@@ -251,7 +251,7 @@
         >
           <legend>{{ t('geodata') }}</legend>
           <div class="geodata-info">
-            <i class="pi pi-map-marker" />
+            <EnvironmentOutlined />
             {{ t('geodata_count', geodataCount) }}
           </div>
         </fieldset>
@@ -269,7 +269,7 @@
     width="420px"
   >
     <div class="plugin-delete-body">
-      <i class="pi pi-exclamation-triangle plugin-delete-icon" />
+      <WarningOutlined class="plugin-delete-icon" />
       <p>{{ t('confirm_delete_record_with_plugins') }}</p>
       <ul class="plugin-delete-list">
         <li v-for="plg in pluginDeleteDialog.plugins" :key="plg.tb">
@@ -282,7 +282,7 @@
     <template #footer>
       <AButton type="text" @click="pluginDeleteDialog.visible = false">{{ t('cancel') }}</AButton>
       <AButton danger :loading="pluginDeleteDialog.deleting" @click="doDeleteWithPlugins">
-        <template #icon><i class="pi pi-trash" /></template>
+        <template #icon><DeleteOutlined /></template>
         {{ t('delete_plugins_and_record') }}
       </AButton>
     </template>
@@ -302,6 +302,7 @@
 </template>
 
 <script setup>
+import { ArrowLeftOutlined, CheckOutlined, CloseOutlined, CopyOutlined, DeleteOutlined, EditOutlined, EnvironmentOutlined, HistoryOutlined, WarningOutlined } from '@ant-design/icons-vue'
 import { ref, computed, watch, reactive, onMounted, onUnmounted, provide } from 'vue'
 import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
 import { useToast, useConfirm } from '@/composables/useNotify'

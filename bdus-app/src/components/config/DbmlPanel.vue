@@ -3,7 +3,7 @@
 
     <!-- ── Header ─────────────────────────────────────────────────────── -->
     <div class="cfg-panel-header">
-      <h2><i class="pi pi-file-export" /> {{ t('dbml_title') }}</h2>
+      <h2><ExportOutlined /> {{ t('dbml_title') }}</h2>
     </div>
 
     <div class="panel-body">
@@ -15,7 +15,7 @@
       </div>
       <p class="hint">{{ t('dbml_export_hint') }}</p>
       <AButton :loading="exporting" @click="doExport">
-        <template #icon><i class="pi pi-download" /></template>
+        <template #icon><DownloadOutlined /></template>
         {{ t('dbml_download') }}
       </AButton>
       <AAlert v-if="exportError" type="error" :message="exportError" :closable="false" show-icon class="mt-2" />
@@ -39,12 +39,12 @@
         />
         <div class="dbml-input-actions">
           <label class="cfg-action-btn" :title="t('dbml_open_file')">
-            <i class="pi pi-folder-open" />
+            <FolderOpenOutlined />
             <span>{{ t('dbml_open_file') }}</span>
             <input type="file" accept=".dbml,.txt" style="display:none" @change="readFile" />
           </label>
           <AButton :loading="previewing" :disabled="!dbmlText.trim()" @click="doPreview">
-            <template #icon><i class="pi pi-search" /></template>
+            <template #icon><SearchOutlined /></template>
             {{ t('dbml_analyse') }}
           </AButton>
         </div>
@@ -83,13 +83,13 @@
 
             <!-- Hard errors (block apply) -->
             <div v-for="err in tb.errors" :key="err.code" class="dbml-msg dbml-msg-error">
-              <i class="pi pi-times-circle" />
+              <CloseCircleOutlined />
               {{ t(err.code, err) }}
             </div>
 
             <!-- Warnings (apply continues) -->
             <div v-for="w in tb.warnings" :key="w.code" class="dbml-msg dbml-msg-warn">
-              <i class="pi pi-exclamation-triangle" />
+              <WarningOutlined />
               {{ t(w.code, w) }}
             </div>
 
@@ -116,7 +116,7 @@
             :disabled="preview.has_errors"
             @click="doApply"
           >
-            <template #icon><i class="pi pi-check" /></template>
+            <template #icon><CheckOutlined /></template>
             {{ t('dbml_apply') }}
           </AButton>
           <span v-if="preview.has_errors" class="dbml-apply-blocked">
@@ -135,6 +135,7 @@
 </template>
 
 <script setup>
+import { CheckOutlined, CloseCircleOutlined, DownloadOutlined, ExportOutlined, FolderOpenOutlined, SearchOutlined, WarningOutlined } from '@ant-design/icons-vue'
 import { ref }        from 'vue'
 import { Button as AButton, Alert as AAlert, Input } from 'ant-design-vue'
 import { useI18n }    from '@/i18n'

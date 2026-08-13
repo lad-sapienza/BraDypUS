@@ -1,21 +1,21 @@
 <template>
   <div class="cfg-panel">
     <div class="cfg-panel-header">
-      <h2><i class="pi pi-sitemap" /> {{ t('cfg_relations') }}</h2>
+      <h2><ApartmentOutlined /> {{ t('cfg_relations') }}</h2>
       <div class="cfg-panel-header-actions">
         <AButton size="small" :loading="applying" @click="applyAll">
-          <template #icon><i class="pi pi-bolt" /></template>
+          <template #icon><ThunderboltOutlined /></template>
           {{ t('apply_all_constraints') }}
         </AButton>
         <AButton type="primary" size="small" :disabled="showAddForm" @click="openAddForm">
-          <template #icon><i class="pi pi-plus" /></template>
+          <template #icon><PlusOutlined /></template>
           {{ t('add_relation') }}
         </AButton>
       </div>
     </div>
 
     <div v-if="loading" class="cfg-loading-center">
-      <i class="pi pi-spin pi-spinner" />
+      <LoadingOutlined spin />
     </div>
 
     <AAlert v-if="error" type="error" :message="error" :closable="false" show-icon />
@@ -56,7 +56,7 @@
             />
           </div>
 
-          <i class="pi pi-arrow-right cfg-rel-arrow" />
+          <ArrowRightOutlined class="cfg-rel-arrow" />
 
           <!-- to_tb -->
           <div class="cfg-field-group" style="flex:1">
@@ -104,7 +104,7 @@
             />
           </div>
           <div v-if="isSelfRef" class="cfg-self-ref-note">
-            <i class="pi pi-info-circle" /> {{ t('self_ref_policy_fixed') }}
+            <InfoCircleOutlined /> {{ t('self_ref_policy_fixed') }}
           </div>
         </div>
 
@@ -118,7 +118,7 @@
             :disabled="!formData.from_tb || !formData.from_col || !formData.to_tb || !formData.to_col"
             @click="saveRelation"
           >
-            <template #icon><i class="pi pi-save" /></template>
+            <template #icon><SaveOutlined /></template>
             {{ t('save') }}
           </AButton>
         </div>
@@ -141,7 +141,7 @@
           <div class="cfg-rel-pair">
             <span class="cfg-rel-tb">{{ rel.from_label || rel.from_tb }}</span>
             <span class="cfg-rel-col">.{{ rel.from_col }}</span>
-            <i class="pi pi-arrow-right cfg-rel-arrow-sm" />
+            <ArrowRightOutlined class="cfg-rel-arrow-sm" />
             <span class="cfg-rel-tb">{{ rel.to_label || rel.to_tb }}</span>
             <span class="cfg-rel-col">.{{ rel.to_col }}</span>
           </div>
@@ -165,7 +165,7 @@
             :title="t('edit')"
             :disabled="showAddForm || (editingId !== null && editingId !== rel.id)"
             @click="startEdit(rel)"
-          ><template #icon><i class="pi pi-pencil" /></template></AButton>
+          ><template #icon><EditOutlined /></template></AButton>
           <AButton
             type="text"
             danger
@@ -174,7 +174,7 @@
             :loading="deletingId === rel.id"
             :disabled="showAddForm || editingId !== null"
             @click="deleteRelation(rel)"
-          ><template #icon><i class="pi pi-trash" /></template></AButton>
+          ><template #icon><DeleteOutlined /></template></AButton>
         </div>
       </div>
 
@@ -183,6 +183,7 @@
 </template>
 
 <script setup>
+import { ApartmentOutlined, ArrowRightOutlined, DeleteOutlined, EditOutlined, InfoCircleOutlined, LoadingOutlined, PlusOutlined, SaveOutlined, ThunderboltOutlined } from '@ant-design/icons-vue'
 import { ref, computed, onMounted } from 'vue'
 import { Button as AButton, Select as ASelect, Alert as AAlert } from 'ant-design-vue'
 import { useToast, useConfirm } from '@/composables/useNotify'

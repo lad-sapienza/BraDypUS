@@ -1,6 +1,5 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
-import 'primeicons/primeicons.css'
 import 'ant-design-vue/dist/reset.css'
 import '@/assets/prime-theme.css'
 import '@/assets/main.css'

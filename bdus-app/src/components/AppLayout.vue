@@ -13,11 +13,11 @@
       <AppNavMenu />
       <button class="collapse-btn" @click="sidebarCollapsed = !sidebarCollapsed"
               :title="sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'">
-        <i :class="['pi', sidebarCollapsed ? 'pi-chevron-right' : 'pi-chevron-left']" />
+        <component :is="sidebarCollapsed ? RightOutlined : LeftOutlined" />
       </button>
       <div class="sidebar-footer">
         <button class="nav-logout-btn" @click="handleLogout" :title="t('logout')">
-          <i class="pi pi-sign-out" />
+          <LogoutOutlined />
           <span v-if="!sidebarCollapsed">{{ t('logout') }}</span>
         </button>
       </div>
@@ -36,7 +36,7 @@
       <AppNavMenu @navigate="drawerOpen = false" />
       <div class="sidebar-footer">
         <button class="nav-logout-btn" @click="handleLogout" :title="t('logout')">
-          <i class="pi pi-sign-out" />
+          <LogoutOutlined />
           <span>{{ t('logout') }}</span>
         </button>
       </div>
@@ -46,7 +46,7 @@
       <!-- ── Topbar ───────────────────────────────────────── -->
       <ALayoutHeader class="topbar app-topbar">
         <button class="topbar-btn mobile-only" @click="drawerOpen = !drawerOpen" title="Menu">
-          <i class="pi pi-bars" />
+          <BarsOutlined />
         </button>
         <span class="topbar-brand">
           BraDypUS
@@ -61,23 +61,23 @@
         </span>
 
         <button class="topbar-btn" :title="t('open_command_palette')" @click="commandPalette?.open()">
-          <i class="pi pi-search" />
+          <SearchOutlined />
         </button>
 
         <ADropdown trigger="click" placement="bottomRight">
           <button class="topbar-btn topbar-user-btn" :title="auth.user?.name">
-            <i class="pi pi-user" style="font-size:0.9rem" />
+            <UserOutlined style="font-size:0.9rem" />
             <span class="topbar-user-name">{{ auth.user?.name }}</span>
-            <i class="pi pi-chevron-down" style="font-size:0.65rem;opacity:0.6" />
+            <DownOutlined style="font-size:0.65rem;opacity:0.6" />
           </button>
           <template #overlay>
             <AMenu>
               <AMenuItem key="profile" @click="openProfile">
-                <i class="pi pi-user-edit" /> {{ t('user_profile') }}
+                <UserOutlined /> {{ t('user_profile') }}
               </AMenuItem>
               <AMenuDivider />
               <AMenuItem key="logout" danger @click="handleLogout">
-                <i class="pi pi-sign-out" /> {{ t('logout') }}
+                <LogoutOutlined /> {{ t('logout') }}
               </AMenuItem>
             </AMenu>
           </template>
@@ -98,7 +98,7 @@
         </AModal>
 
         <button class="topbar-btn" :title="isDark ? t('light_mode') : t('dark_mode')" @click="toggleDark">
-          <i :class="isDark ? 'pi pi-sun' : 'pi pi-moon'" />
+          <component :is="isDark ? BulbFilled : BulbOutlined" />
         </button>
 
         <ASelect
@@ -127,6 +127,7 @@
 </template>
 
 <script setup>
+import { BarsOutlined, BulbFilled, BulbOutlined, DownOutlined, LeftOutlined, LogoutOutlined, RightOutlined, SearchOutlined, UserOutlined } from '@ant-design/icons-vue'
 import { ref, computed, onMounted } from 'vue'
 import { Layout, Menu, Dropdown, Modal, Select, Drawer } from 'ant-design-vue'
 import { useRoute } from 'vue-router'

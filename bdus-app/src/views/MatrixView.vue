@@ -18,20 +18,20 @@
 
       <!-- Back to table -->
       <AButton size="small" @click="backToTable">
-        <template #icon><i class="pi pi-arrow-left" /></template>
+        <template #icon><ArrowLeftOutlined /></template>
         {{ tableLabel || t('back_to_table') }}
       </AButton>
 
       <!-- Back to record -->
       <AButton v-if="fromId" size="small" @click="backToRecord">
-        <template #icon><i class="pi pi-arrow-left" /></template>
+        <template #icon><ArrowLeftOutlined /></template>
         {{ t('back_to_record') }}
       </AButton>
 
       <!-- Edit mode toggle (only for users with write access) -->
       <div v-if="canWrite && matrixData?.nodes.length" class="matrix-edit-toggle">
         <AButton :type="editMode ? 'primary' : 'default'" size="small" @click="editMode = !editMode">
-          <template #icon><i class="pi pi-pencil" /></template>
+          <template #icon><EditOutlined /></template>
           {{ t('rs_edit_mode') }}
         </AButton>
       </div>
@@ -39,24 +39,24 @@
       <!-- Chronological layout toggle (only when fuzzy_date plugin is active) -->
       <div v-if="matrixData?.has_fuzzy_date" class="matrix-layout-toggle">
         <AButton :type="layoutMode === 'topological' ? 'primary' : 'default'" size="small" @click="layoutMode = 'topological'">
-          <template #icon><i class="pi pi-sitemap" /></template>
+          <template #icon><ApartmentOutlined /></template>
           {{ t('matrix_layout_topological') }}
         </AButton>
         <AButton :type="layoutMode === 'chronological' ? 'primary' : 'default'" size="small" @click="layoutMode = 'chronological'">
-          <template #icon><i class="pi pi-calendar" /></template>
+          <template #icon><CalendarOutlined /></template>
           {{ t('matrix_layout_chronological') }}
         </AButton>
       </div>
 
       <!-- Reload -->
       <AButton size="small" :loading="loading" @click="loadMatrix">
-        <template #icon><i class="pi pi-refresh" /></template>
+        <template #icon><ReloadOutlined /></template>
         {{ t('reload') }}
       </AButton>
 
       <!-- Export PNG -->
       <AButton size="small" :disabled="!matrixData || !matrixData.nodes.length" @click="exportPng">
-        <template #icon><i class="pi pi-image" /></template>
+        <template #icon><PictureOutlined /></template>
         {{ t('export_png') }}
       </AButton>
     </div>
@@ -106,7 +106,7 @@
     <div v-if="pendingEdge" class="add-dialog-body">
       <div class="add-dialog-nodes">
         <ATag color="var(--p-primary-color)">{{ pendingEdge.from.label }}</ATag>
-        <i class="pi pi-arrows-h add-dialog-arrow" />
+        <SwapOutlined class="add-dialog-arrow" />
         <ATag color="var(--p-primary-color)">{{ pendingEdge.to.label }}</ATag>
       </div>
       <ASelect
@@ -125,7 +125,7 @@
         :loading="mutating"
         @click="confirmAdd"
       >
-        <template #icon><i class="pi pi-plus" /></template>
+        <template #icon><PlusOutlined /></template>
         {{ t('rs_add_relation') }}
       </AButton>
     </template>
@@ -139,13 +139,13 @@
     @cancel="cancelDelete"
   >
     <div v-if="pendingDelete" class="delete-dialog-body">
-      <i class="pi pi-exclamation-triangle delete-dialog-icon" />
+      <WarningOutlined class="delete-dialog-icon" />
       <span>{{ deleteConfirmText }}</span>
     </div>
     <template #footer>
       <AButton @click="cancelDelete">{{ t('cancel') }}</AButton>
       <AButton danger :loading="mutating" @click="confirmDelete">
-        <template #icon><i class="pi pi-trash" /></template>
+        <template #icon><DeleteOutlined /></template>
         {{ t('delete') }}
       </AButton>
     </template>
@@ -155,6 +155,7 @@
 </template>
 
 <script setup>
+import { ApartmentOutlined, ArrowLeftOutlined, CalendarOutlined, DeleteOutlined, EditOutlined, PictureOutlined, PlusOutlined, ReloadOutlined, SwapOutlined, WarningOutlined } from '@ant-design/icons-vue'
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter }  from 'vue-router'
 import { useToast } from '@/composables/useNotify'

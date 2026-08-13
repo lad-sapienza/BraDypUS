@@ -33,7 +33,7 @@
             <span class="vd-time">{{ v.time }}</span>
             <span class="vd-user">{{ v.userid }}</span>
           </span>
-          <i class="pi pi-chevron-right vd-arrow" />
+          <RightOutlined class="vd-arrow" />
         </li>
       </ul>
     </template>
@@ -43,7 +43,7 @@
       <!-- Back nav -->
       <div class="vd-diff-nav">
         <AButton type="text" size="small" @click="selectedVersion = null; diff = null">
-          <template #icon><i class="pi pi-arrow-left" /></template>
+          <template #icon><ArrowLeftOutlined /></template>
           {{ t('version_back_list') }}
         </AButton>
       </div>
@@ -141,11 +141,11 @@
             :disabled="selectedFields.length === 0 && selectedPlugins.length === 0"
             @click="confirmRestore"
           >
-            <template #icon><i class="pi pi-history" /></template>
+            <template #icon><HistoryOutlined /></template>
             {{ t('version_restore_selected') }}
           </AButton>
           <AButton v-else danger @click="confirmRestore">
-            <template #icon><i class="pi pi-history" /></template>
+            <template #icon><HistoryOutlined /></template>
             {{ t('version_restore_full') }}
           </AButton>
         </div>
@@ -161,13 +161,13 @@
     width="400px"
   >
     <div class="vd-confirm-body">
-      <i class="pi pi-exclamation-triangle vd-confirm-icon" />
+      <WarningOutlined class="vd-confirm-icon" />
       <p>{{ t('version_restore_confirm_msg') }}</p>
     </div>
     <template #footer>
       <AButton @click="confirmVisible = false">{{ t('cancel') }}</AButton>
       <AButton danger :loading="restoring" @click="doRestore">
-        <template #icon><i class="pi pi-history" /></template>
+        <template #icon><HistoryOutlined /></template>
         {{ t('version_restore') }}
       </AButton>
     </template>
@@ -175,6 +175,7 @@
 </template>
 
 <script setup>
+import { ArrowLeftOutlined, HistoryOutlined, RightOutlined, WarningOutlined } from '@ant-design/icons-vue'
 import { ref, computed, watch } from 'vue'
 import { useToast } from '@/composables/useNotify'
 import {

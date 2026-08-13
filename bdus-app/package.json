@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/lad-sapienza/bdus-app",
   "dependencies": {
+    "@ant-design/icons-vue": "^7.0.1",
     "@vue/devtools-api": "^8.1.5",
     "ant-design-vue": "^4.2.6",
     "chart.js": "^4.5.1",
@@ -27,7 +28,6 @@
     "maplibre-gl-draw": "^1.6.9",
     "marked": "^18.0.6",
     "pinia": "^4.0.0",
-    "primeicons": "^7.0.0",
     "vue": "^3.5.39",
     "vue-chartjs": "^5.3.4",
     "vue-router": "^5.0.0"

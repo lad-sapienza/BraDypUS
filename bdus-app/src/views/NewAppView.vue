@@ -18,7 +18,7 @@
         </div>
         <router-link to="/login" class="back-to-login">
           <AButton type="primary" block>
-            <template #icon><i class="pi pi-sign-in" /></template>
+            <template #icon><LoginOutlined /></template>
             {{ t('login') }}
           </AButton>
         </router-link>
@@ -129,7 +129,7 @@
         <AAlert v-if="errorMsg" type="error" :message="errorMsg" :closable="false" show-icon class="form-error" />
 
         <AButton type="primary" html-type="submit" block :loading="loading">
-          <template #icon><i class="pi pi-plus" /></template>
+          <template #icon><PlusOutlined /></template>
           {{ t('app_create') }}
         </AButton>
       </form>
@@ -143,6 +143,7 @@
 </template>
 
 <script setup>
+import { LoginOutlined, PlusOutlined } from '@ant-design/icons-vue'
 import { ref, reactive, computed, onMounted } from 'vue'
 import { Input, Select as ASelect, Button as AButton, Alert as AAlert } from 'ant-design-vue'
 import { api }   from '@/api'

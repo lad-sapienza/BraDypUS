@@ -11,6 +11,7 @@
 import { h } from 'vue'
 import { App } from 'ant-design-vue'
 import { useI18n } from '@/i18n'
+import { resolveIcon } from '@/utils/icons'
 
 const MESSAGE_TYPE = {
   error:    'error',
@@ -48,7 +49,7 @@ export function useConfirm() {
       modal.confirm({
         title:       header,
         content,
-        icon:        icon ? () => h('i', { class: icon }) : undefined,
+        icon:        resolveIcon(icon) ? () => h(resolveIcon(icon)) : undefined,
         okText:      acceptProps?.label || acceptLabel || t('yes'),
         cancelText:  rejectProps?.label || rejectLabel || t('no'),
         okType:      isDanger(opts) ? 'danger' : 'primary',

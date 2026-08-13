@@ -13,12 +13,12 @@
           @keyup.enter="doSave"
         />
         <AButton type="primary" size="small" :loading="saving" :disabled="!newQueryName.trim()" @click="doSave">
-          <template #icon><i class="pi pi-save" /></template>
+          <template #icon><SaveOutlined /></template>
           {{ t('save') }}
         </AButton>
       </div>
       <div v-else class="save-hint">
-        <i class="pi pi-info-circle" />
+        <InfoCircleOutlined />
         {{ t('save_query_hint') }}
       </div>
     </div>
@@ -45,7 +45,7 @@
           <span class="query-name" :title="q.name">{{ q.name }}</span>
           <span v-if="q.tb !== currentTb" class="query-tb-label">{{ q.tb_label }}</span>
           <span v-if="q.is_global" class="query-shared-badge">
-            <i class="pi pi-share-alt" :title="t('share')" />
+            <ShareAltOutlined :title="t('share')" />
           </span>
         </div>
         <div class="query-actions">
@@ -57,7 +57,7 @@
             :disabled="!q.query"
             @click="emitLoad(q)"
           >
-            <template #icon><i class="pi pi-play" /></template>
+            <template #icon><PlayCircleOutlined /></template>
           </AButton>
           <!-- Share / Unshare (only owner) -->
           <AButton
@@ -68,7 +68,7 @@
             :loading="pendingId === q.id && pendingAction === 'share'"
             @click="toggleShare(q)"
           >
-            <template #icon><i :class="['pi', q.is_global ? 'pi-star-fill' : 'pi-star']" /></template>
+            <template #icon><component :is="q.is_global ? StarFilled : StarOutlined" /></template>
           </AButton>
           <!-- Delete (only owner, with inline confirm) -->
           <AButton
@@ -80,7 +80,7 @@
             :loading="pendingId === q.id && pendingAction === 'delete'"
             @click="confirmDelete(q)"
           >
-            <template #icon><i class="pi pi-trash" /></template>
+            <template #icon><DeleteOutlined /></template>
           </AButton>
         </div>
 
@@ -96,6 +96,7 @@
 </template>
 
 <script setup>
+import { DeleteOutlined, InfoCircleOutlined, PlayCircleOutlined, SaveOutlined, ShareAltOutlined, StarFilled, StarOutlined } from '@ant-design/icons-vue'
 import { ref, computed, onMounted } from 'vue'
 import { useToast } from '@/composables/useNotify'
 import { api } from '@/api'

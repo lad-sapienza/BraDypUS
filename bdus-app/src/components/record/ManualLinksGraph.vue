@@ -2,13 +2,14 @@
   <div class="ml-graph-wrap">
     <div ref="cyEl" class="ml-graph-canvas" />
     <div v-if="isEmpty" class="ml-graph-empty">
-      <i class="pi pi-info-circle" />
+      <InfoCircleOutlined />
       {{ t('no_user_links') }}
     </div>
   </div>
 </template>
 
 <script setup>
+import { InfoCircleOutlined } from '@ant-design/icons-vue'
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from '@/i18n'

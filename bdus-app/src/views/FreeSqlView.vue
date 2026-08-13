@@ -4,7 +4,7 @@
 
       <div class="free-sql-header">
         <h2>
-          <i class="pi pi-code" style="margin-right:0.5rem" />
+          <CodeOutlined style="margin-right:0.5rem" />
           {{ t('free_sql') }}
         </h2>
         <AAlert type="warning" :closable="false" show-icon :message="t('free_sql_warning')" class="free-sql-warning" />
@@ -22,7 +22,7 @@
             class="gate-input"
           />
           <AButton type="primary" :loading="unlocking" :disabled="!gatePassword" @click="unlock">
-            <template #icon><i class="pi pi-lock-open" /></template>
+            <template #icon><UnlockOutlined /></template>
             {{ t('free_sql_confirm') }}
           </AButton>
         </div>
@@ -46,11 +46,11 @@
             <span class="kbd-hint">Ctrl+Enter {{ t('free_sql_run_shortcut') }}</span>
             <div class="editor-btns">
               <AButton size="small" :disabled="!sql.trim()" @click="clearAll">
-                <template #icon><i class="pi pi-trash" /></template>
+                <template #icon><DeleteOutlined /></template>
                 {{ t('free_sql_clear') }}
               </AButton>
               <AButton type="primary" :loading="running" :disabled="!sql.trim()" @click="runQuery">
-                <template #icon><i class="pi pi-play" /></template>
+                <template #icon><PlayCircleOutlined /></template>
                 {{ t('free_sql_run') }}
               </AButton>
             </div>
@@ -73,7 +73,7 @@
             <div class="result-header">
               <span class="result-count">{{ t('free_sql_rows', result.total) }}</span>
               <AButton v-if="result.rows.length" size="small" @click="exportCsv">
-                <template #icon><i class="pi pi-download" /></template>
+                <template #icon><DownloadOutlined /></template>
                 {{ t('export_csv') }}
               </AButton>
             </div>
@@ -103,6 +103,7 @@
 </template>
 
 <script setup>
+import { CodeOutlined, DeleteOutlined, DownloadOutlined, PlayCircleOutlined, UnlockOutlined } from '@ant-design/icons-vue'
 import { ref, computed } from 'vue'
 import AppLayout  from '@/components/AppLayout.vue'
 import { api }    from '@/api'

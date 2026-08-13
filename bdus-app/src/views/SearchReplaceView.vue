@@ -3,7 +3,7 @@
     <div class="sr-page">
 
       <div class="page-header">
-        <h2><i class="pi pi-search-plus" /> {{ t('find_replace') }}</h2>
+        <h2><SearchOutlined /> {{ t('find_replace') }}</h2>
       </div>
 
       <div class="sr-card">
@@ -57,7 +57,7 @@
         <!-- Action -->
         <div class="sr-actions">
           <AButton type="primary" :disabled="!canSubmit" :loading="running" @click="confirmReplace">
-            <template #icon><i class="pi pi-search-plus" /></template>
+            <template #icon><SearchOutlined /></template>
             {{ t('find_replace') }}
           </AButton>
         </div>
@@ -72,10 +72,9 @@
       :style="{ width: '26rem' }"
     >
       <div class="sr-result-body">
-        <i
-          :class="result?.severity === 'success'
-            ? 'pi pi-check-circle sr-result-icon sr-result-success'
-            : 'pi pi-times-circle sr-result-icon sr-result-error'"
+        <component
+          :is="result?.severity === 'success' ? CheckCircleOutlined : CloseCircleOutlined"
+          :class="result?.severity === 'success' ? 'sr-result-icon sr-result-success' : 'sr-result-icon sr-result-error'"
         />
         <span>{{ result?.text }}</span>
       </div>
@@ -87,6 +86,7 @@
 </template>
 
 <script setup>
+import { CheckCircleOutlined, CloseCircleOutlined, SearchOutlined } from '@ant-design/icons-vue'
 import { ref, computed, onMounted } from 'vue'
 import { useToast, useConfirm } from '@/composables/useNotify'
 import AppLayout      from '@/components/AppLayout.vue'

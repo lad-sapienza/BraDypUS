@@ -26,13 +26,13 @@
 
       <!-- Refresh -->
       <AButton size="small" :loading="loading" @click="reload">
-        <template #icon><i class="pi pi-refresh" /></template>
+        <template #icon><ReloadOutlined /></template>
         {{ t('log_refresh') }}
       </AButton>
 
       <!-- Purge -->
       <AButton danger size="small" @click="purgeDialogVisible = true">
-        <template #icon><i class="pi pi-trash" /></template>
+        <template #icon><DeleteOutlined /></template>
         {{ t('log_purge') }}
       </AButton>
     </div>
@@ -83,7 +83,7 @@
       <template #footer>
         <AButton type="text" @click="purgeDialogVisible = false">{{ t('cancel') }}</AButton>
         <AButton type="primary" danger :loading="purging" @click="doPurge">
-          <template #icon><i class="pi pi-check" /></template>
+          <template #icon><CheckOutlined /></template>
           {{ t('confirm') }}
         </AButton>
       </template>
@@ -94,6 +94,7 @@
 </template>
 
 <script setup>
+import { CheckOutlined, DeleteOutlined, ReloadOutlined } from '@ant-design/icons-vue'
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useToast } from '@/composables/useNotify'
 import AppLayout from '@/components/AppLayout.vue'

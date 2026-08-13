@@ -8,7 +8,7 @@
         :title="showGraph ? t('hide_graph') : t('show_graph')"
         @click="showGraph = !showGraph"
       >
-        <i :class="showGraph ? 'pi pi-list' : 'pi pi-share-alt'" />
+        <component :is="showGraph ? UnorderedListOutlined : ShareAltOutlined" />
       </button>
     </legend>
 
@@ -42,7 +42,7 @@
               :disabled="deletingId === ml.key"
               @click="deleteLink(ml)"
             >
-              <i :class="deletingId === ml.key ? 'pi pi-spin pi-spinner' : 'pi pi-times'" />
+              <component :is="deletingId === ml.key ? LoadingOutlined : CloseOutlined" :spin="deletingId === ml.key" />
             </button>
           </li>
         </ul>
@@ -57,7 +57,7 @@
     <!-- ── Add link panel (edit mode) ──────────────────────────── -->
     <div v-if="editMode" class="add-link-panel">
       <AButton type="text" size="small" @click="addPanelOpen = !addPanelOpen">
-        <template #icon><i class="pi pi-plus" /></template>
+        <template #icon><PlusOutlined /></template>
         {{ t('add_link') }}
       </AButton>
 
@@ -96,6 +96,7 @@
 </template>
 
 <script setup>
+import { CloseOutlined, LoadingOutlined, PlusOutlined, ShareAltOutlined, UnorderedListOutlined } from '@ant-design/icons-vue'
 import { ref, computed } from 'vue'
 import { useRoute }  from 'vue-router'
 import { Button as AButton, Select as ASelect, AutoComplete as AAutoComplete, Input as AInput } from 'ant-design-vue'

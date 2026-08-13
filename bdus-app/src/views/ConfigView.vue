@@ -21,7 +21,7 @@
 
         <!-- Welcome / nothing selected -->
         <div v-if="!panel && !selectedTable" class="cfg-empty">
-          <i class="pi pi-cog cfg-empty-icon" />
+          <SettingOutlined class="cfg-empty-icon" />
           <p>{{ t('select_config_section') }}</p>
         </div>
 
@@ -44,6 +44,7 @@
 </template>
 
 <script setup>
+import { SettingOutlined } from '@ant-design/icons-vue'
 import { computed, watch, onMounted, defineAsyncComponent } from 'vue'
 import { useRoute, useRouter }      from 'vue-router'
 import { useI18n }                  from '@/i18n'

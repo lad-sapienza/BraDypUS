@@ -13,12 +13,12 @@
             v-html="renderedWelcome"
           />
           <div v-else class="welcome-empty">
-            <i class="pi pi-info-circle" />
+            <InfoCircleOutlined />
             {{ t('welcome_empty_hint') }}
           </div>
           <div v-if="isAdmin" class="welcome-actions">
             <AButton size="small" @click="startEdit">
-              <template #icon><i class="pi pi-pencil" /></template>
+              <template #icon><EditOutlined /></template>
               {{ t('edit') }}
             </AButton>
           </div>
@@ -34,13 +34,13 @@
             auto-size
           />
           <div class="welcome-editor-hint">
-            <i class="pi pi-info-circle" />
+            <InfoCircleOutlined />
             {{ t('welcome_md_hint') }}
           </div>
           <div class="welcome-editor-actions">
             <AButton size="small" @click="cancelEdit">{{ t('cancel') }}</AButton>
             <AButton type="primary" size="small" :loading="saving" @click="saveWelcome">
-              <template #icon><i class="pi pi-check" /></template>
+              <template #icon><CheckOutlined /></template>
               {{ t('save') }}
             </AButton>
           </div>
@@ -55,7 +55,7 @@
         <ACard v-for="item in modules" :key="item.labelKey">
           <template #cover>
             <div class="card-icon-header">
-              <i :class="['pi', item.icon]" />
+              <component :is="resolveIcon(item.icon)" />
             </div>
           </template>
           <ACardMeta :title="t(item.labelKey)" :description="t(item.descKey)" />
@@ -65,7 +65,7 @@
               :disabled="!item.route"
               @click="item.route && $router.push(item.route)"
             >
-              {{ t('open') }} <i class="pi pi-arrow-right" />
+              {{ t('open') }} <ArrowRightOutlined />
             </AButton>
           </template>
         </ACard>
@@ -76,6 +76,7 @@
 </template>
 
 <script setup>
+import { ArrowRightOutlined, CheckOutlined, EditOutlined, InfoCircleOutlined } from '@ant-design/icons-vue'
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { marked } from 'marked'
@@ -84,6 +85,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useI18n } from '@/i18n'
 import { api } from '@/api'
 import { useToast } from '@/composables/useNotify'
+import { resolveIcon } from '@/utils/icons'
 import { Card as ACard, Button as AButton, Input } from 'ant-design-vue'
 
 const ACardMeta = ACard.Meta
@@ -272,7 +274,7 @@ const modules = computed(() => {
   background: var(--p-highlight-background);
 }
 
-.card-icon-header .pi {
+.card-icon-header .anticon {
   font-size: 2rem;
   color: var(--p-primary-color);
 }

@@ -115,7 +115,7 @@
     <div class="cfg-fld-actions">
       <AButton size="small" @click="$emit('cancelled')">{{ t('cancel') }}</AButton>
       <AButton html-type="submit" type="primary" size="small" :loading="saving">
-        <template #icon><i class="pi pi-save" /></template>
+        <template #icon><SaveOutlined /></template>
         {{ t('save') }}
       </AButton>
     </div>
@@ -124,6 +124,7 @@
 </template>
 
 <script setup>
+import { SaveOutlined } from '@ant-design/icons-vue'
 import { ref, computed, watch } from 'vue'
 import { Button as AButton, Input as AInput, Select as ASelect, Switch as ASwitch } from 'ant-design-vue'
 import { useToast } from '@/composables/useNotify'

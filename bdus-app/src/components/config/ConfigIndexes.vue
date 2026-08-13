@@ -1,9 +1,9 @@
 <template>
   <div class="cfg-idx-section">
     <div class="cfg-idx-header">
-      <span class="cfg-idx-title"><i class="pi pi-database" /> {{ t('db_indexes') }}</span>
+      <span class="cfg-idx-title"><DatabaseOutlined /> {{ t('db_indexes') }}</span>
       <AButton type="text" size="small" :title="t('add_index')" :disabled="showForm" @click="openForm">
-        <template #icon><i class="pi pi-plus" /></template>
+        <template #icon><PlusOutlined /></template>
       </AButton>
     </div>
 
@@ -38,7 +38,7 @@
           :disabled="!form.name || !form.columns.length"
           @click="saveIndex"
         >
-          <template #icon><i class="pi pi-save" /></template>
+          <template #icon><SaveOutlined /></template>
           {{ t('save') }}
         </AButton>
       </div>
@@ -46,7 +46,7 @@
 
     <!-- ─── Loading / empty ─────────────────────────────────── -->
     <div v-if="loading" class="cfg-idx-loading">
-      <i class="pi pi-spin pi-spinner" />
+      <LoadingOutlined spin />
     </div>
 
     <div v-else-if="indexes.length === 0 && !showForm" class="cfg-idx-empty">
@@ -63,13 +63,14 @@
       <span class="cfg-idx-cols">{{ (idx.columns || []).join(', ') }}</span>
       <span v-if="idx.is_unique" class="cfg-idx-unique-badge">UNIQUE</span>
       <AButton type="text" danger size="small" :loading="deletingId === idx.id" @click="deleteIndex(idx)">
-        <template #icon><i class="pi pi-trash" /></template>
+        <template #icon><DeleteOutlined /></template>
       </AButton>
     </div>
   </div>
 </template>
 
 <script setup>
+import { DatabaseOutlined, DeleteOutlined, LoadingOutlined, PlusOutlined, SaveOutlined } from '@ant-design/icons-vue'
 import { ref, computed, onMounted, watch } from 'vue'
 import { Button as AButton, Input as AInput, Select as ASelect, Switch as ASwitch } from 'ant-design-vue'
 import { useToast, useConfirm } from '@/composables/useNotify'

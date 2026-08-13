@@ -1,7 +1,7 @@
 <template>
   <div class="login-wrapper">
     <button class="dark-toggle" :title="isDark ? t('light_mode') : t('dark_mode')" @click="toggleDark">
-      <span :class="isDark ? 'pi pi-sun' : 'pi pi-moon'" />
+      <component :is="isDark ? BulbFilled : BulbOutlined" />
     </button>
     <div class="login-card">
       <img src="@/assets/bdus.svg" alt="BraDypUS logo" />
@@ -54,7 +54,7 @@
       <!-- ── Major upgrade panel ────────────────────────────────────────────── -->
       <template v-if="upgradeState === 'major'">
         <div class="upgrade-banner">
-          <span class="pi pi-exclamation-triangle upgrade-icon" />
+          <WarningOutlined class="upgrade-icon" />
           <div>
             <strong>{{ t('major_upgrade_required') }}</strong>
             <p class="upgrade-hint">{{ t('major_upgrade_hint') }}</p>
@@ -62,7 +62,7 @@
         </div>
 
         <div v-if="upgradeDone" class="upgrade-done">
-          <span class="pi pi-check-circle" style="color:var(--p-green-500)" />
+          <CheckCircleOutlined style="color:var(--p-green-500)" />
           {{ t('upgrade_complete_login') }}
         </div>
 
@@ -98,7 +98,7 @@
             :loading="upgrading"
             :disabled="!upgradeForm.email || !upgradeForm.password"
           >
-            <template #icon><i class="pi pi-upload" /></template>
+            <template #icon><UploadOutlined /></template>
             {{ t('major_upgrade_apply') }}
           </AButton>
         </form>
@@ -130,7 +130,7 @@
           <AAlert v-if="error" type="error" :message="error" :closable="false" show-icon />
 
           <AButton type="primary" html-type="submit" block :loading="loading" :disabled="!form.email || !form.password">
-            <template #icon><i class="pi pi-sign-in" /></template>
+            <template #icon><LoginOutlined /></template>
             Login
           </AButton>
         </form>
@@ -147,7 +147,7 @@
               :disabled="!!oauthLoading"
               @click="handleOAuth(p.id)"
             >
-              <template #icon><i :class="p.icon" /></template>
+              <template #icon><component :is="resolveIcon(p.icon)" /></template>
               {{ p.label }}
             </AButton>
           </div>
@@ -179,12 +179,14 @@
 </template>
 
 <script setup>
+import { BulbFilled, BulbOutlined, CheckCircleOutlined, LoginOutlined, UploadOutlined, WarningOutlined } from '@ant-design/icons-vue'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { api } from '@/api'
 import { useI18n } from '@/i18n'
 import { useDarkMode } from '@/composables/useDarkMode'
+import { resolveIcon } from '@/utils/icons'
 import { Select as ASelect, Input, Button as AButton, Alert as AAlert, Tag as ATag } from 'ant-design-vue'
 
 const AInput         = Input

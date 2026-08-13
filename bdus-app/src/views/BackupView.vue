@@ -5,7 +5,7 @@
       <div class="backup-header">
         <h2 class="backup-title">{{ t('backup') }}</h2>
         <AButton type="primary" :loading="creating" @click="createBackup">
-          <template #icon><i class="pi pi-save" /></template>
+          <template #icon><SaveOutlined /></template>
           {{ t('backup_now') }}
         </AButton>
       </div>
@@ -40,7 +40,7 @@
                 :title="t('download')"
                 size="small"
                 @click="downloadBackup(record.file)"
-              ><template #icon><i class="pi pi-download" /></template></AButton>
+              ><template #icon><DownloadOutlined /></template></AButton>
               <AButton
                 v-if="canDelete"
                 type="text"
@@ -48,14 +48,14 @@
                 :title="t('erase')"
                 size="small"
                 @click="confirmDelete(record.file)"
-              ><template #icon><i class="pi pi-trash" /></template></AButton>
+              ><template #icon><DeleteOutlined /></template></AButton>
               <AButton
                 v-if="canRestore && record.engine === engine"
                 type="text"
                 :title="t('restore')"
                 size="small"
                 @click="confirmRestore(record.file)"
-              ><template #icon><i class="pi pi-undo" /></template></AButton>
+              ><template #icon><UndoOutlined /></template></AButton>
             </div>
           </template>
         </template>
@@ -67,6 +67,7 @@
 </template>
 
 <script setup>
+import { DeleteOutlined, DownloadOutlined, SaveOutlined, UndoOutlined } from '@ant-design/icons-vue'
 import { ref, computed, onMounted } from 'vue'
 import { useToast, useConfirm } from '@/composables/useNotify'
 import AppLayout      from '@/components/AppLayout.vue'

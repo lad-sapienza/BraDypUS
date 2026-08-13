@@ -2,12 +2,12 @@
   <div class="cfg-panel">
     <div class="cfg-panel-header">
       <h2>
-        <i class="pi pi-table" />
+        <TableOutlined />
         {{ tb ? table?.label || tb : t('add_table') }}
       </h2>
       <div class="cfg-panel-header-actions">
         <AButton v-if="tb" size="small" @click="$emit('open-fields', tb)">
-          <template #icon><i class="pi pi-list" /></template>
+          <template #icon><UnorderedListOutlined /></template>
           {{ t('fields') }}
         </AButton>
         <AButton
@@ -17,14 +17,14 @@
           :disabled="!chronoDensityPathValid || newPluginNeedsParent"
           @click="save"
         >
-          <template #icon><i class="pi pi-save" /></template>
+          <template #icon><SaveOutlined /></template>
           {{ t('save') }}
         </AButton>
       </div>
     </div>
 
     <div v-if="loading" class="cfg-loading-center">
-      <i class="pi pi-spin pi-spinner" />
+      <LoadingOutlined spin />
     </div>
     <AAlert v-if="loadError" type="error" :message="loadError" :closable="false" show-icon />
 
@@ -44,7 +44,7 @@
               size="small"
               :title="t('rename_table')"
               @click="renameVisible = true"
-            ><template #icon><i class="pi pi-pencil" /></template></AButton>
+            ><template #icon><EditOutlined /></template></AButton>
           </div>
           <small class="cfg-hint">{{ t('help_table_name') }}</small>
         </div>
@@ -150,7 +150,7 @@
                 :disabled="fuzzyDateBusy"
                 @change="toggleFuzzyDate"
               />
-              <i v-if="fuzzyDateBusy" class="pi pi-spin pi-spinner" style="font-size:.9rem" />
+              <LoadingOutlined v-if="fuzzyDateBusy" style="font-size:.9rem" spin />
             </div>
             <small v-if="fuzzyDateActive" class="cfg-hint">
               {{ t('fuzzy_date_activated') }} — chrono_from, chrono_to, chrono_label, chrono_certainty, chrono_period
@@ -164,7 +164,7 @@
                 :disabled="osteoBusy"
                 @change="toggleOsteology"
               />
-              <i v-if="osteoBusy" class="pi pi-spin pi-spinner" style="font-size:.9rem" />
+              <LoadingOutlined v-if="osteoBusy" style="font-size:.9rem" spin />
             </div>
             <small v-if="osteoActive" class="cfg-hint">
               {{ t('osteo_activated') }} — osteo_data
@@ -178,7 +178,7 @@
                 :disabled="radiocarbonBusy"
                 @change="toggleRadiocarbon"
               />
-              <i v-if="radiocarbonBusy" class="pi pi-spin pi-spinner" style="font-size:.9rem" />
+              <LoadingOutlined v-if="radiocarbonBusy" style="font-size:.9rem" spin />
             </div>
             <small v-if="radiocarbonActive" class="cfg-hint">
               {{ t('radiocarbon_activated') }} — lab_code, bp, bp_error, material, d13c, cal_1s/cal_2s
@@ -207,7 +207,7 @@
         <div class="cfg-section-title cfg-danger-title">{{ t('danger_zone') }}</div>
         <p class="cfg-danger-warn">{{ t('warning_delete_table') }}</p>
         <AButton danger size="small" :loading="deleting" @click="deleteTable">
-          <template #icon><i class="pi pi-trash" /></template>
+          <template #icon><DeleteOutlined /></template>
           {{ t('delete_table') }}
         </AButton>
       </section>
@@ -223,7 +223,7 @@
       <template #footer>
         <AButton size="small" @click="renameVisible = false">{{ t('cancel') }}</AButton>
         <AButton type="primary" size="small" :loading="renaming" @click="confirmRename">
-          <template #icon><i class="pi pi-check" /></template>
+          <template #icon><CheckOutlined /></template>
           {{ t('rename') }}
         </AButton>
       </template>
@@ -233,6 +233,7 @@
 </template>
 
 <script setup>
+import { CheckOutlined, DeleteOutlined, EditOutlined, LoadingOutlined, SaveOutlined, TableOutlined, UnorderedListOutlined } from '@ant-design/icons-vue'
 import { ref, computed, watch, onMounted } from 'vue'
 import {
   Button as AButton,

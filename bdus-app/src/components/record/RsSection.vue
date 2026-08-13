@@ -8,13 +8,13 @@
         :title="t('open_matrix')"
         @click="openMatrix"
       >
-        <i class="pi pi-share-alt" />
+        <ShareAltOutlined />
       </button>
     </legend>
 
     <!-- Empty state -->
     <div v-if="!selfId" class="rs-no-id">
-      <i class="pi pi-info-circle" />
+      <InfoCircleOutlined />
       {{ t('rs_identifier') }}: —
     </div>
 
@@ -34,7 +34,7 @@
                 class="rs-delete-btn"
                 :title="t('delete')"
                 @click="deleteRelation(item.rowId)"
-              ><i class="pi pi-times" /></button>
+              ><CloseOutlined /></button>
             </div>
             <span v-if="!byRelation[1]?.length" class="rs-empty">—</span>
           </div>
@@ -50,7 +50,7 @@
                 class="rs-delete-btn"
                 :title="t('delete')"
                 @click="deleteRelation(item.rowId)"
-              ><i class="pi pi-times" /></button>
+              ><CloseOutlined /></button>
             </div>
             <span v-if="!byRelation[2]?.length" class="rs-empty">—</span>
           </div>
@@ -66,7 +66,7 @@
                 class="rs-delete-btn"
                 :title="t('delete')"
                 @click="deleteRelation(item.rowId)"
-              ><i class="pi pi-times" /></button>
+              ><CloseOutlined /></button>
             </div>
             <span v-if="!byRelation[3]?.length" class="rs-empty">—</span>
           </div>
@@ -82,7 +82,7 @@
                 class="rs-delete-btn"
                 :title="t('delete')"
                 @click="deleteRelation(item.rowId)"
-              ><i class="pi pi-times" /></button>
+              ><CloseOutlined /></button>
             </div>
             <span v-if="!byRelation[4]?.length" class="rs-empty">—</span>
           </div>
@@ -99,7 +99,7 @@
                 class="rs-delete-btn"
                 :title="t('delete')"
                 @click="deleteRelation(item.rowId)"
-              ><i class="pi pi-times" /></button>
+              ><CloseOutlined /></button>
             </div>
             <span v-if="!byRelation[9]?.length" class="rs-empty">—</span>
           </div>
@@ -119,7 +119,7 @@
                 class="rs-delete-btn"
                 :title="t('delete')"
                 @click="deleteRelation(item.rowId)"
-              ><i class="pi pi-times" /></button>
+              ><CloseOutlined /></button>
             </div>
             <span v-if="!byRelation[10]?.length" class="rs-empty">—</span>
           </div>
@@ -136,7 +136,7 @@
                 class="rs-delete-btn"
                 :title="t('delete')"
                 @click="deleteRelation(item.rowId)"
-              ><i class="pi pi-times" /></button>
+              ><CloseOutlined /></button>
             </div>
             <span v-if="!byRelation[5]?.length" class="rs-empty">—</span>
           </div>
@@ -152,7 +152,7 @@
                 class="rs-delete-btn"
                 :title="t('delete')"
                 @click="deleteRelation(item.rowId)"
-              ><i class="pi pi-times" /></button>
+              ><CloseOutlined /></button>
             </div>
             <span v-if="!byRelation[6]?.length" class="rs-empty">—</span>
           </div>
@@ -168,7 +168,7 @@
                 class="rs-delete-btn"
                 :title="t('delete')"
                 @click="deleteRelation(item.rowId)"
-              ><i class="pi pi-times" /></button>
+              ><CloseOutlined /></button>
             </div>
             <span v-if="!byRelation[7]?.length" class="rs-empty">—</span>
           </div>
@@ -184,7 +184,7 @@
                 class="rs-delete-btn"
                 :title="t('delete')"
                 @click="deleteRelation(item.rowId)"
-              ><i class="pi pi-times" /></button>
+              ><CloseOutlined /></button>
             </div>
             <span v-if="!byRelation[8]?.length" class="rs-empty">—</span>
           </div>
@@ -209,7 +209,7 @@
           @select="onLinkSelect"
         />
         <AButton type="primary" size="small" :loading="adding" :disabled="!newRelation || !newOther?.id" @click="addRelation">
-          <template #icon><i class="pi pi-plus" /></template>
+          <template #icon><PlusOutlined /></template>
           {{ t('rs_add_relation') }}
         </AButton>
       </div>
@@ -219,6 +219,7 @@
 </template>
 
 <script setup>
+import { CloseOutlined, InfoCircleOutlined, PlusOutlined, ShareAltOutlined } from '@ant-design/icons-vue'
 import { ref, computed } from 'vue'
 import { useRoute, useRouter }  from 'vue-router'
 import { useToast } from '@/composables/useNotify'

@@ -1,19 +1,19 @@
 <template>
   <div class="cfg-panel">
     <div class="cfg-panel-header">
-      <h2><i class="pi pi-check-circle" /> {{ t('validate_app') }}</h2>
+      <h2><CheckCircleOutlined /> {{ t('validate_app') }}</h2>
       <AButton
         size="small"
         :loading="loading"
         @click="load"
       >
-        <template #icon><i class="pi pi-refresh" /></template>
+        <template #icon><ReloadOutlined /></template>
         {{ t('validate_app') }}
       </AButton>
     </div>
 
     <div v-if="loading" class="cfg-loading-center">
-      <i class="pi pi-spin pi-spinner" />
+      <LoadingOutlined spin />
     </div>
 
     <AAlert v-if="error" type="error" :message="error" :closable="false" show-icon />
@@ -37,7 +37,7 @@
           class="cfg-val-item"
           :class="`cfg-val-${item.status}`"
         >
-          <i :class="iconFor(item.status)" />
+          <component :is="iconFor(item.status)" />
           <span class="cfg-val-text">{{ item.text }}</span>
           <AButton
             v-if="item.fix"
@@ -59,6 +59,7 @@
 </template>
 
 <script setup>
+import { CheckCircleOutlined, CloseCircleOutlined, InfoCircleOutlined, LoadingOutlined, ReloadOutlined, WarningOutlined } from '@ant-design/icons-vue'
 import { ref, computed, onMounted } from 'vue'
 import { Button as AButton, Alert as AAlert } from 'ant-design-vue'
 import { useI18n } from '@/i18n'
@@ -80,10 +81,10 @@ const visibleReport = computed(() =>
 )
 
 function iconFor(status) {
-  if (status === 'success') return 'pi pi-check-circle'
-  if (status === 'warning') return 'pi pi-exclamation-triangle'
-  if (status === 'danger')  return 'pi pi-times-circle'
-  return 'pi pi-info-circle'
+  if (status === 'success') return CheckCircleOutlined
+  if (status === 'warning') return WarningOutlined
+  if (status === 'danger')  return CloseCircleOutlined
+  return InfoCircleOutlined
 }
 
 async function load() {

@@ -19,18 +19,18 @@
             @titleClick="loadTables()"
           >
             <template #title>
-              <i :class="['pi', item.icon]" />
+              <component :is="resolveIcon(item.icon)" />
               <span>{{ t(item.labelKey) }}</span>
             </template>
             <AMenuItem v-if="tablesLoading" key="__loading" disabled>
-              <i class="pi pi-spin pi-spinner" />
+              <LoadingOutlined spin />
             </AMenuItem>
             <AMenuItem
               v-for="tbl in navTables"
               :key="`tbl:${tbl.name}`"
               @click="go(`/${route.params.app}/data?tb=${encodeURIComponent(tbl.name)}`)"
             >
-              <i class="pi pi-table" />
+              <TableOutlined />
               <span>{{ tbl.label }}</span>
             </AMenuItem>
           </ASubMenu>
@@ -41,7 +41,7 @@
             :disabled="isDisabled(item)"
             @click="!isDisabled(item) && go(item.to)"
           >
-            <i :class="['pi', item.icon]" />
+            <component :is="resolveIcon(item.icon)" />
             <span>{{ t(item.labelKey) }}</span>
           </AMenuItem>
         </template>
@@ -52,6 +52,7 @@
 </template>
 
 <script setup>
+import { LoadingOutlined, TableOutlined } from '@ant-design/icons-vue'
 import { ref, computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { Menu, MenuItem, SubMenu } from 'ant-design-vue'
@@ -61,6 +62,7 @@ import { useTables } from '@/composables/useTables'
 import { useDarkMode } from '@/composables/useDarkMode'
 import { buildNavGroups } from '@/commands/navItems'
 import { hasPrivilege } from '@/commands/privilege'
+import { resolveIcon } from '@/utils/icons'
 
 const AMenu          = Menu
 const AMenuItem      = MenuItem
@@ -117,7 +119,7 @@ const selectedKeys = computed(() => {
 </script>
 
 <style scoped>
-.app-nav-menu :deep(.pi) {
+.app-nav-menu :deep(.anticon) {
   font-size: 1rem;
   margin-right: 0.6rem;
 }

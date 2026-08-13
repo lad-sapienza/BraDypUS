@@ -26,7 +26,7 @@
 
       <!-- Refresh -->
       <AButton size="small" :loading="loading" @click="reload">
-        <template #icon><i class="pi pi-refresh" /></template>
+        <template #icon><ReloadOutlined /></template>
         {{ t('log_refresh') }}
       </AButton>
     </div>
@@ -76,6 +76,7 @@
 </template>
 
 <script setup>
+import { ReloadOutlined } from '@ant-design/icons-vue'
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useToast } from '@/composables/useNotify'
 import AppLayout  from '@/components/AppLayout.vue'

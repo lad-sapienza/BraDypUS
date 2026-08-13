@@ -3,7 +3,7 @@
     <!-- Toolbar -->
     <div class="geoface-toolbar">
       <AButton type="text" @click="router.back()">
-        <template #icon><i class="pi pi-arrow-left" /></template>
+        <template #icon><ArrowLeftOutlined /></template>
       </AButton>
       <span class="geoface-title">{{ meta.tb_label ?? route.params.tb }}</span>
       <span class="geoface-count">{{ featureCount }} {{ t('geometries') }}</span>
@@ -16,7 +16,7 @@
         :danger="chronoFilterActive"
         @click="toggleChronoFilter"
       >
-        <template #icon><i :class="['pi', chronoFilterActive ? 'pi-calendar-times' : 'pi-calendar']" /></template>
+        <template #icon><CalendarOutlined /></template>
         {{ t('temporal_filter') }}
       </AButton>
       <template v-if="chronoFilterActive">
@@ -39,14 +39,14 @@
           :title="t('temporal_filter_clear')"
           @click="clearChronoFilter"
         >
-          <template #icon><i class="pi pi-times" /></template>
+          <template #icon><CloseOutlined /></template>
         </AButton>
       </template>
     </div>
 
     <!-- Loading / error states -->
     <div v-if="loading" class="geoface-status">
-      <i class="pi pi-spin pi-spinner" style="font-size:2rem" />
+      <LoadingOutlined style="font-size:2rem" spin />
     </div>
     <div v-else-if="loadError" class="geoface-status">
       <AAlert type="error" :message="loadError" :closable="false" show-icon />
@@ -80,6 +80,7 @@
 </template>
 
 <script setup>
+import { ArrowLeftOutlined, CalendarOutlined, CloseOutlined, LoadingOutlined } from '@ant-design/icons-vue'
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { useRoute, useRouter }  from 'vue-router'
 import { useToast } from '@/composables/useNotify'

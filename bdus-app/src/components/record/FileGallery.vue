@@ -13,7 +13,7 @@
         >
           <!-- drag handle -->
           <span class="drag-handle" :title="t('drag_to_sort')">
-            <i class="pi pi-bars" />
+            <BarsOutlined />
           </span>
 
           <!-- thumbnail for images, icon for docs -->
@@ -26,7 +26,7 @@
             :height="45"
             class="sort-thumb"
           />
-          <i v-else :class="['doc-icon', fileIcon(f.ext)]" />
+          <component v-else :is="fileIcon(f.ext)" class="doc-icon" />
 
           <!-- label -->
           <span class="sort-label">{{ docLabel(f) }}</span>
@@ -34,28 +34,28 @@
 
           <!-- actions -->
           <a :href="fileUrl(f)" :download="downloadName(f)" class="file-action" :title="t('download')">
-            <i class="pi pi-download" />
+            <DownloadOutlined />
           </a>
           <button
             class="file-action file-unlink-btn"
             :title="t('unlink_file')"
             @click="confirmUnlinkFile(f)"
           >
-            <i class="pi pi-link" />
+            <LinkOutlined />
           </button>
           <button
             class="file-action file-delete-btn"
             :title="t('delete_file')"
             @click="confirmDeleteFile(f)"
           >
-            <i class="pi pi-trash" />
+            <DeleteOutlined />
           </button>
         </div>
       </div>
 
       <!-- sort feedback -->
       <div v-if="sortSaving" class="sort-saving">
-        <i class="pi pi-spin pi-spinner" /> {{ t('saving') }}…
+        <LoadingOutlined spin /> {{ t('saving') }}…
       </div>
 
       <!-- empty state in edit mode -->
@@ -71,13 +71,13 @@
         @drop.prevent="onDrop"
       >
         <input ref="fileInput" type="file" class="hidden-input" @change="onFileSelected" />
-        <i class="pi pi-upload upload-bar-icon" />
+        <UploadOutlined class="upload-bar-icon" />
         <span class="upload-bar-hint">{{ t('drag_drop_or') }}</span>
         <AButton size="small" :loading="uploading" @click="fileInput?.click()">
           {{ t('upload_file') }}
         </AButton>
         <AButton size="small" @click="openFilePicker">
-          <template #icon><i class="pi pi-link" /></template>
+          <template #icon><LinkOutlined /></template>
           {{ t('link_existing_file') }}
         </AButton>
       </div>
@@ -113,7 +113,7 @@
           <template #bodyCell="{ column, record }">
             <template v-if="column.key === 'thumb'">
               <img v-if="record.is_image" :src="fileUrl(record)" class="picker-thumb" />
-              <i v-else :class="['picker-icon', fileIcon(record.ext)]" />
+              <component v-else :is="fileIcon(record.ext)" class="picker-icon" />
             </template>
             <template v-else-if="column.key === 'filename'">
               <span>{{ record.filename }}.{{ record.ext }}</span>
@@ -146,7 +146,7 @@
           <div v-if="f.description" class="img-caption">{{ f.description }}</div>
           <div class="img-actions">
             <a :href="fileUrl(f)" :download="downloadName(f)" class="file-action" :title="t('download')">
-              <i class="pi pi-download" />
+              <DownloadOutlined />
             </a>
           </div>
         </div>
@@ -155,13 +155,13 @@
       <!-- Document list -->
       <ul v-if="docs.length" class="docs-list">
         <li v-for="f in docs" :key="f.id" class="doc-item">
-          <i :class="['doc-icon', fileIcon(f.ext)]" />
+          <component :is="fileIcon(f.ext)" class="doc-icon" />
           <a :href="fileUrl(f)" target="_blank" rel="noopener noreferrer" class="doc-name">
             {{ docLabel(f) }}
           </a>
           <span v-if="f.description" class="doc-desc">{{ f.description }}</span>
           <a :href="fileUrl(f)" :download="downloadName(f)" class="file-action" :title="t('download')">
-            <i class="pi pi-download" />
+            <DownloadOutlined />
           </a>
         </li>
       </ul>
@@ -174,6 +174,7 @@
 </template>
 
 <script setup>
+import { BarsOutlined, DeleteOutlined, DownloadOutlined, EditOutlined, FileExcelOutlined, FileOutlined, FilePdfOutlined, FileWordOutlined, FileZipOutlined, LinkOutlined, LoadingOutlined, SoundOutlined, UploadOutlined, VideoCameraOutlined } from '@ant-design/icons-vue'
 import { ref, computed, watch, onUnmounted, nextTick } from 'vue'
 import Sortable   from 'sortablejs'
 import { Table as ATable, Image as AImage, Button as AButton, Modal as AModal, Input as AInput } from 'ant-design-vue'
@@ -471,14 +472,14 @@ function downloadName(f) {
 
 function fileIcon(ext) {
   const e = (ext ?? '').toLowerCase()
-  if (['pdf'].includes(e))                        return 'pi pi-file-pdf'
-  if (['doc', 'docx', 'odt', 'rtf'].includes(e)) return 'pi pi-file-word'
-  if (['xls', 'xlsx', 'ods'].includes(e))        return 'pi pi-file-excel'
-  if (['mp3', 'wav', 'ogg', 'wma'].includes(e))  return 'pi pi-volume-up'
-  if (['mp4', 'mov', 'avi', 'mkv'].includes(e))  return 'pi pi-video'
-  if (['zip', 'rar', 'tar', 'gz'].includes(e))   return 'pi pi-box'
-  if (['svg', 'ai', 'eps'].includes(e))          return 'pi pi-pen-to-square'
-  return 'pi pi-file'
+  if (['pdf'].includes(e))                       return FilePdfOutlined
+  if (['doc', 'docx', 'odt', 'rtf'].includes(e)) return FileWordOutlined
+  if (['xls', 'xlsx', 'ods'].includes(e))        return FileExcelOutlined
+  if (['mp3', 'wav', 'ogg', 'wma'].includes(e))  return SoundOutlined
+  if (['mp4', 'mov', 'avi', 'mkv'].includes(e))  return VideoCameraOutlined
+  if (['zip', 'rar', 'tar', 'gz'].includes(e))   return FileZipOutlined
+  if (['svg', 'ai', 'eps'].includes(e))          return EditOutlined
+  return FileOutlined
 }
 </script>
 

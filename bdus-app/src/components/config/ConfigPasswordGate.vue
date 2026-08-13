@@ -2,7 +2,7 @@
   <div class="gate-wrap">
     <div class="gate-card">
       <div class="gate-icon">
-        <i class="pi pi-lock" />
+        <LockOutlined />
       </div>
       <h2 class="gate-title">{{ t('sys_config') }}</h2>
       <p class="gate-sub">{{ t('confirm_password_to_continue') }}</p>
@@ -24,7 +24,7 @@
           block
           class="gate-btn"
         >
-          <template #icon><i class="pi pi-unlock" /></template>
+          <template #icon><UnlockOutlined /></template>
           {{ t('confirm') }}
         </AButton>
       </form>
@@ -33,6 +33,7 @@
 </template>
 
 <script setup>
+import { LockOutlined, UnlockOutlined } from '@ant-design/icons-vue'
 import { ref }            from 'vue'
 import { Input, Button as AButton } from 'ant-design-vue'
 import { useConfigStore } from '@/stores/config'

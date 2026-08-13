@@ -6,7 +6,7 @@
       <div class="users-header">
         <h2>{{ t('users') }}</h2>
         <AButton v-if="isAdmin" type="primary" size="small" @click="openForm(null)">
-          <template #icon><i class="pi pi-plus" /></template>
+          <template #icon><PlusOutlined /></template>
           {{ t('new_user') }}
         </AButton>
       </div>
@@ -49,7 +49,7 @@
               size="small"
               :title="t('edit')"
               @click="openForm(record)"
-            ><template #icon><i class="pi pi-pencil" /></template></AButton>
+            ><template #icon><EditOutlined /></template></AButton>
             <AButton
               v-if="isAdmin && record.editable && record.id !== auth.user?.id"
               type="text"
@@ -58,7 +58,7 @@
               style="color: var(--p-orange-500, #f97316)"
               :title="t('revoke_session')"
               @click="confirmRevoke(record)"
-            ><template #icon><i class="pi pi-ban" /></template></AButton>
+            ><template #icon><StopOutlined /></template></AButton>
             <AButton
               v-if="isAdmin && record.editable && record.id !== auth.user?.id"
               type="text"
@@ -67,7 +67,7 @@
               size="small"
               :title="t('delete')"
               @click="confirmDelete(record)"
-            ><template #icon><i class="pi pi-trash" /></template></AButton>
+            ><template #icon><DeleteOutlined /></template></AButton>
           </template>
         </template>
 
@@ -101,6 +101,7 @@
 </template>
 
 <script setup>
+import { DeleteOutlined, EditOutlined, PlusOutlined, StopOutlined } from '@ant-design/icons-vue'
 import { ref, computed, onMounted } from 'vue'
 import { useToast, useConfirm } from '@/composables/useNotify'
 import AppLayout        from '@/components/AppLayout.vue'

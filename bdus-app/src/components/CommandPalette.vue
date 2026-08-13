@@ -14,7 +14,7 @@
     <div class="cp-wrap">
       <div v-if="mode" class="cp-breadcrumb">
         <button class="cp-back" :title="t('close')" @click="exitMode">
-          <i class="pi pi-arrow-left" />
+          <ArrowLeftOutlined />
         </button>
         <span>{{ mode.label }}</span>
       </div>
@@ -25,7 +25,7 @@
           v-model:value="query"
           :placeholder="mode ? t('select_table') : t('type_to_search')"
         >
-          <template #prefix><i class="pi pi-search" /></template>
+          <template #prefix><SearchOutlined /></template>
         </AInput>
       </div>
 
@@ -40,9 +40,9 @@
             @mouseenter="activeIndex = idx"
             @click="select(item)"
           >
-            <i :class="['pi', item.icon]" />
+            <component :is="resolveIcon(item.icon)" />
             <span class="cp-item-label">{{ item.label }}</span>
-            <i v-if="item.type === 'parametric'" class="pi pi-angle-right cp-item-chevron" />
+            <RightOutlined v-if="item.type === 'parametric'" class="cp-item-chevron" />
           </li>
         </template>
       </ul>
@@ -52,10 +52,12 @@
 </template>
 
 <script setup>
+import { ArrowLeftOutlined, RightOutlined, SearchOutlined } from '@ant-design/icons-vue'
 import { ref, computed, nextTick, onMounted, onUnmounted, watch } from 'vue'
 import { Modal as AModal, Input as AInput } from 'ant-design-vue'
 import { useI18n } from '@/i18n'
 import { useCommands } from '@/composables/useCommands'
+import { resolveIcon } from '@/utils/icons'
 
 const emit = defineEmits(['open-profile'])
 
@@ -234,7 +236,7 @@ defineExpose({ open })
   cursor: pointer;
   font-size: 0.9rem;
 }
-.cp-item .pi:first-child {
+.cp-item .anticon:first-child {
   width: 1.1rem;
   text-align: center;
   color: var(--p-text-muted-color);
@@ -244,7 +246,7 @@ defineExpose({ open })
   background: var(--p-highlight-background);
   color: var(--p-primary-color);
 }
-.cp-item.active .pi:first-child { color: var(--p-primary-color); }
+.cp-item.active .anticon:first-child { color: var(--p-primary-color); }
 
 .cp-item-label {
   flex: 1;

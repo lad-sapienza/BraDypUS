@@ -1,10 +1,10 @@
 <template>
   <fieldset class="record-section">
     <legend>
-      <i class="pi pi-book" style="margin-right: 0.35rem;" />
+      <BookOutlined style="margin-right: 0.35rem;" />
       {{ t('bibliography') }}
       <span v-if="syncing" class="sync-indicator">
-        <i class="pi pi-spin pi-spinner" />
+        <LoadingOutlined spin />
       </span>
     </legend>
 
@@ -19,14 +19,14 @@
       >
         <!-- drag handle (edit mode only) -->
         <span v-if="editMode" class="drag-handle" :title="t('drag_to_sort')">
-          <i class="pi pi-bars" />
+          <BarsOutlined />
         </span>
 
         <!-- citation body -->
         <div class="zotero-body">
           <!-- detached warning -->
           <div v-if="link.detached" class="detached-badge">
-            <i class="pi pi-exclamation-triangle" />
+            <WarningOutlined />
             {{ t('zotero_item_detached') }}
           </div>
 
@@ -46,10 +46,10 @@
           <div class="link-meta">
             <template v-if="!editMode">
               <span v-if="link.pages" class="meta-chip">
-                <i class="pi pi-file-edit" /> {{ link.pages }}
+                <FileTextOutlined /> {{ link.pages }}
               </span>
               <span v-if="link.notes" class="meta-chip">
-                <i class="pi pi-comment" /> {{ link.notes }}
+                <CommentOutlined /> {{ link.notes }}
               </span>
             </template>
             <template v-else>
@@ -79,7 +79,7 @@
             class="zotero-ext-link"
             :title="t('open_in_zotero')"
           >
-            <i class="pi pi-external-link" /> Zotero
+            <ExportOutlined /> Zotero
           </a>
         </div>
 
@@ -91,7 +91,7 @@
           :disabled="deletingId === link.id"
           @click="deleteLink(link)"
         >
-          <i :class="deletingId === link.id ? 'pi pi-spin pi-spinner' : 'pi pi-times'" />
+          <component :is="deletingId === link.id ? LoadingOutlined : CloseOutlined" :spin="deletingId === link.id" />
         </button>
       </div>
     </div>
@@ -104,7 +104,7 @@
     <!-- ── Add panel trigger (edit mode) ───────────────────────── -->
     <div v-if="editMode" class="add-panel">
       <AButton type="text" size="small" @click="openAddDialog">
-        <template #icon><i class="pi pi-plus" /></template>
+        <template #icon><PlusOutlined /></template>
         {{ t('add_reference') }}
       </AButton>
     </div>
@@ -140,7 +140,7 @@
       </div>
 
       <div v-if="searching" class="searching-hint">
-        <i class="pi pi-spin pi-spinner" /> {{ t('zotero_searching') }}
+        <LoadingOutlined spin /> {{ t('zotero_searching') }}
       </div>
 
       <!-- Search results (always in a bounded, scrollable area — never off-screen) -->
@@ -161,7 +161,7 @@
               :disabled="addingKey !== null"
               class="result-add-btn"
               @click="selectResult(r)"
-            ><template #icon><i class="pi pi-plus" /></template></AButton>
+            ><template #icon><PlusOutlined /></template></AButton>
           </div>
         </div>
         <div v-else-if="searchQuery.length >= 2 && !searching" class="search-empty">
@@ -180,6 +180,7 @@
 </template>
 
 <script setup>
+import { BarsOutlined, BookOutlined, CloseOutlined, CommentOutlined, ExportOutlined, FileTextOutlined, LoadingOutlined, PlusOutlined, WarningOutlined } from '@ant-design/icons-vue'
 import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import { Button as AButton, Select as ASelect, Modal as AModal, Input } from 'ant-design-vue'
 import { useToast } from '@/composables/useNotify'

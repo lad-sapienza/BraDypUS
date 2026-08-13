@@ -32,7 +32,7 @@
     <div ref="cyEl" class="rs-chrono-canvas" />
 
     <div v-if="!nodes.length" class="rs-chrono-empty">
-      <i class="pi pi-info-circle" />
+      <InfoCircleOutlined />
       {{ t('rs_no_relations') }}
     </div>
 
@@ -43,6 +43,7 @@
 </template>
 
 <script setup>
+import { InfoCircleOutlined } from '@ant-design/icons-vue'
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useI18n } from '@/i18n'
 import { format as chronoFormat } from '@/utils/chronoParser'

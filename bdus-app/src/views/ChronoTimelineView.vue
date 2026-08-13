@@ -6,7 +6,7 @@
       <div class="page-header">
         <div class="header-left">
           <AButton v-if="backUrl" size="small" @click="router.push(backUrl)">
-            <template #icon><i class="pi pi-arrow-left" /></template>
+            <template #icon><ArrowLeftOutlined /></template>
             {{ backTableLabel || t('back_to_table') }}
           </AButton>
           <h2>{{ t('chrono_timeline') }}</h2>
@@ -40,28 +40,28 @@
           />
 
           <AButton size="small" :loading="loading" :title="t('reload')" @click="loadData">
-            <template #icon><i class="pi pi-refresh" /></template>
+            <template #icon><ReloadOutlined /></template>
           </AButton>
         </div>
       </div>
 
       <!-- ── Loading / empty states ──────────────────────────────────── -->
       <div v-if="loading" class="state-msg">
-        <i class="pi pi-spin pi-spinner" />
+        <LoadingOutlined spin />
       </div>
 
       <div v-else-if="error" class="state-msg state-error">
-        <i class="pi pi-exclamation-triangle" />
+        <WarningOutlined />
         {{ error }}
       </div>
 
       <div v-else-if="noFuzzyTables" class="state-msg state-info">
-        <i class="pi pi-info-circle" />
+        <InfoCircleOutlined />
         {{ t('chrono_timeline_empty') }}
       </div>
 
       <div v-else-if="visibleGroups.length === 0" class="state-msg state-info">
-        <i class="pi pi-calendar-times" />
+        <CalendarOutlined />
         {{ t('no_chrono_data') }}
       </div>
 
@@ -180,21 +180,21 @@
           <div class="tooltip-title">{{ tooltip.record?.label }}</div>
           <div class="tooltip-tb">{{ tooltip.group?.tb_label }}</div>
           <div v-if="tooltip.record?.chrono_label" class="tooltip-row">
-            <i class="pi pi-calendar" />
+            <CalendarOutlined />
             {{ tooltip.record.chrono_label }}
           </div>
           <div class="tooltip-row">
-            <i class="pi pi-arrows-h" />
+            <SwapOutlined />
             {{ formatYear(tooltip.record?.from ?? null) }}
             →
             {{ formatYear(tooltip.record?.to ?? null) }}
           </div>
           <div v-if="tooltip.record?.period" class="tooltip-row">
-            <i class="pi pi-tag" />
+            <TagOutlined />
             {{ tooltip.record.period }}
           </div>
           <div class="tooltip-row certainty-row">
-            <i class="pi pi-check-circle" />
+            <CheckCircleOutlined />
             {{ certLabel(tooltip.record?.certainty) }}
           </div>
         </div>
@@ -205,6 +205,7 @@
 </template>
 
 <script setup>
+import { ArrowLeftOutlined, CalendarOutlined, CheckCircleOutlined, InfoCircleOutlined, LoadingOutlined, ReloadOutlined, SwapOutlined, TagOutlined, WarningOutlined } from '@ant-design/icons-vue'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AppLayout from '@/components/AppLayout.vue'
@@ -703,7 +704,7 @@ function hideTooltip() {
   font-size: 0.78rem;
 }
 
-.chrono-tooltip .tooltip-row .pi {
+.chrono-tooltip .tooltip-row .anticon {
   font-size: 0.72rem;
   color: var(--p-text-muted-color);
   flex-shrink: 0;

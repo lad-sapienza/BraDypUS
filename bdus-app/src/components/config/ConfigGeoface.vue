@@ -1,15 +1,15 @@
 <template>
   <div class="cfg-panel">
     <div class="cfg-panel-header">
-      <h2><i class="pi pi-map" /> {{ t('geoface') }}</h2>
+      <h2><CompassOutlined /> {{ t('geoface') }}</h2>
       <AButton type="primary" size="small" :loading="saving" @click="save">
-        <template #icon><i class="pi pi-save" /></template>
+        <template #icon><SaveOutlined /></template>
         {{ t('save') }}
       </AButton>
     </div>
 
     <div v-if="loading" class="cfg-loading-center">
-      <i class="pi pi-spin pi-spinner" />
+      <LoadingOutlined spin />
     </div>
 
     <AAlert v-if="error" type="error" :message="error" :closable="false" show-icon />
@@ -21,7 +21,7 @@
         <div class="cfg-section-header">
           <span>{{ t('layers') }}</span>
           <AButton size="small" @click="addLayer">
-            <template #icon><i class="pi pi-plus" /></template>
+            <template #icon><PlusOutlined /></template>
             {{ t('add_layer') }}
           </AButton>
         </div>
@@ -51,7 +51,7 @@
               />
             </div>
             <AButton type="text" danger size="small" :title="t('delete')" @click="removeLayer(idx)">
-              <template #icon><i class="pi pi-trash" /></template>
+              <template #icon><DeleteOutlined /></template>
             </AButton>
           </div>
 
@@ -101,7 +101,7 @@
         <div v-if="localFiles.length === 0" class="cfg-empty-msg-sm">{{ t('no_local_files') }}</div>
         <div v-else class="cfg-file-list">
           <div v-for="file in localFiles" :key="file" class="cfg-file-row">
-            <i class="pi pi-file" />
+            <FileOutlined />
             <span>{{ file }}</span>
             <AButton
               type="text"
@@ -110,7 +110,7 @@
               :title="t('delete')"
               :loading="deletingFile === file"
               @click="deleteFile(file)"
-            ><template #icon><i class="pi pi-trash" /></template></AButton>
+            ><template #icon><DeleteOutlined /></template></AButton>
           </div>
         </div>
 
@@ -118,7 +118,7 @@
         <div class="cfg-upload-row">
           <input ref="fileInput" type="file" accept=".json,.geojson,.kml,.gpx" style="display:none" @change="uploadFile" />
           <AButton size="small" :loading="uploading" @click="fileInput?.click()">
-            <template #icon><i class="pi pi-upload" /></template>
+            <template #icon><UploadOutlined /></template>
             {{ t('upload_geo_file') }}
           </AButton>
         </div>
@@ -129,6 +129,7 @@
 </template>
 
 <script setup>
+import { CompassOutlined, DeleteOutlined, FileOutlined, LoadingOutlined, PlusOutlined, SaveOutlined, UploadOutlined } from '@ant-design/icons-vue'
 import { ref, computed, onMounted } from 'vue'
 import { Button as AButton, Input as AInput, Select as ASelect, Alert as AAlert } from 'ant-design-vue'
 import { useToast } from '@/composables/useNotify'

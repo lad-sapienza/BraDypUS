@@ -8,7 +8,7 @@
 
     <template v-else>
       <div v-if="!rows.length" class="privs-empty">
-        <i class="pi pi-info-circle" />
+        <InfoCircleOutlined />
         {{ t('no_table_overrides') }}
       </div>
 
@@ -41,7 +41,7 @@
               size="small"
               :title="t('edit')"
               @click="startEdit(record)"
-            ><template #icon><i class="pi pi-pencil" /></template></AButton>
+            ><template #icon><EditOutlined /></template></AButton>
             <AButton
               type="text"
               shape="circle"
@@ -50,7 +50,7 @@
               :title="t('delete')"
               :loading="deleting === record.id"
               @click="deleteRow(record.id)"
-            ><template #icon><i class="pi pi-trash" /></template></AButton>
+            ><template #icon><DeleteOutlined /></template></AButton>
           </template>
         </template>
       </ATable>
@@ -90,7 +90,7 @@
             :loading="saving"
             @click="saveRow"
           >
-            <template #icon><i class="pi pi-check" /></template>
+            <template #icon><CheckOutlined /></template>
             {{ t('save') }}
           </AButton>
           <AButton
@@ -98,7 +98,7 @@
             size="small"
             @click="resetForm"
           >
-            <template #icon><i class="pi pi-times" /></template>
+            <template #icon><CloseOutlined /></template>
             {{ t('cancel') }}
           </AButton>
         </div>
@@ -109,6 +109,7 @@
 </template>
 
 <script setup>
+import { CheckOutlined, CloseOutlined, DeleteOutlined, EditOutlined, InfoCircleOutlined } from '@ant-design/icons-vue'
 import { ref, computed, onMounted } from 'vue'
 import { useToast } from '@/composables/useNotify'
 import { Table as ATable, Button as AButton, Select as ASelect, Input as AInput, Tag as ATag, Spin as ASpin } from 'ant-design-vue'

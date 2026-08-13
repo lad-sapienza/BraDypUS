@@ -2,21 +2,21 @@
   <div class="rs-graph-wrap">
     <div ref="cyEl" class="rs-graph-canvas" />
     <div v-if="!nodes.length" class="rs-graph-empty">
-      <i class="pi pi-info-circle" />
+      <InfoCircleOutlined />
       {{ t('rs_no_relations') }}
     </div>
 
     <!-- Edit mode hint -->
     <div v-if="allowEdit && nodes.length" class="rs-graph-hint">
       <template v-if="!selectedNode">
-        <i class="pi pi-info-circle" />
+        <InfoCircleOutlined />
         {{ t('rs_edit_hint_select') }}
       </template>
       <template v-else>
-        <i class="pi pi-check-circle" />
+        <CheckCircleOutlined />
         {{ t('rs_edit_hint_second', selectedNode.label) }}
         <button class="rs-hint-cancel" @click="clearSelection">
-          <i class="pi pi-times" /> {{ t('cancel') }}
+          <CloseOutlined /> {{ t('cancel') }}
         </button>
       </template>
     </div>
@@ -24,6 +24,7 @@
 </template>
 
 <script setup>
+import { CheckCircleOutlined, CloseOutlined, InfoCircleOutlined } from '@ant-design/icons-vue'
 import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useI18n } from '@/i18n'
 import { REL_KEYS, REL_INVERSE, UNDIRECTED, SWAP_DIRECTION } from '@/composables/useRsRelations'

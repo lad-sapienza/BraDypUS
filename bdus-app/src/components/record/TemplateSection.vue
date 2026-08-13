@@ -6,7 +6,7 @@
     >
       {{ section.label }}
       <span v-if="section.collapsible" class="collapse-icon">
-        <i :class="isCollapsed ? 'pi pi-chevron-right' : 'pi pi-chevron-down'" />
+        <component :is="isCollapsed ? RightOutlined : DownOutlined" />
       </span>
     </legend>
 
@@ -22,9 +22,9 @@
         >
           <div class="accordion-panel-header" @click="togglePanel(pi)">
             <span class="accordion-panel-label">{{ panel.label }}</span>
-            <i
+            <component
+              :is="openPanels[pi] ? DownOutlined : RightOutlined"
               class="accordion-panel-icon"
-              :class="openPanels[pi] ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
             />
           </div>
           <div v-show="openPanels[pi]" class="accordion-panel-body">
@@ -92,6 +92,7 @@
 </template>
 
 <script setup>
+import { DownOutlined, RightOutlined } from '@ant-design/icons-vue'
 import { ref, computed } from 'vue'
 import FieldDisplay  from './FieldDisplay.vue'
 import FieldEditor   from './FieldEditor.vue'

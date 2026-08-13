@@ -46,13 +46,13 @@
             </div>
           </div>
           <AButton type="text" danger size="small" :title="t('remove_row')" @click="removeRow(idx)">
-            <template #icon><i class="pi pi-trash" /></template>
+            <template #icon><DeleteOutlined /></template>
           </AButton>
         </div>
       </div>
 
       <AButton type="text" size="small" class="add-row-btn" @click="addRow">
-        <template #icon><i class="pi pi-plus" /></template>
+        <template #icon><PlusOutlined /></template>
         {{ t('add_row') }}
       </AButton>
     </template>
@@ -60,6 +60,7 @@
 </template>
 
 <script setup>
+import { DeleteOutlined, PlusOutlined } from '@ant-design/icons-vue'
 import { computed } from 'vue'
 import { Button as AButton } from 'ant-design-vue'
 import FieldDisplay from './FieldDisplay.vue'

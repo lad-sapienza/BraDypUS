@@ -14,7 +14,7 @@
           :class="{ active: selectedTb === tbl.tb }"
           @click="selectTable(tbl)"
         >
-          <i class="pi pi-table" />
+          <TableOutlined />
           <span class="tmpl-table-label">{{ tbl.label }}</span>
         </div>
 
@@ -28,7 +28,7 @@
               :title="t('add_template')"
               @click="showNewDialog = true"
             >
-              <template #icon><i class="pi pi-plus" /></template>
+              <template #icon><PlusOutlined /></template>
             </AButton>
           </div>
 
@@ -43,7 +43,7 @@
             :class="{ active: selectedName === name }"
             @click="openTemplate(name)"
           >
-            <i class="pi pi-file" />
+            <FileOutlined />
             {{ name }}
           </div>
         </template>
@@ -54,11 +54,11 @@
 
         <!-- Empty state -->
         <div v-if="!selectedTb" class="tmpl-editor-empty">
-          <i class="pi pi-file-edit tmpl-empty-icon" />
+          <FileTextOutlined class="tmpl-empty-icon" />
           <p>{{ t('select_table_for_template') }}</p>
         </div>
         <div v-else-if="!selectedName" class="tmpl-editor-empty">
-          <i class="pi pi-file-edit tmpl-empty-icon" />
+          <FileTextOutlined class="tmpl-empty-icon" />
           <p>{{ t('select_or_create_template') }}</p>
         </div>
 
@@ -69,7 +69,7 @@
           <div class="tmpl-editor-header">
             <div class="tmpl-editor-title">
               <span class="tmpl-tb-label">{{ selectedTbLabel }}</span>
-              <i class="pi pi-chevron-right tmpl-sep" />
+              <RightOutlined class="tmpl-sep" />
               <span v-if="!renaming" class="tmpl-name-text">{{ selectedName }}</span>
               <AInput
                 v-else
@@ -82,18 +82,18 @@
             </div>
             <div class="tmpl-editor-actions">
               <AButton v-if="!renaming" size="small" @click="startRename">
-                <template #icon><i class="pi pi-pencil" /></template>
+                <template #icon><EditOutlined /></template>
                 {{ t('rename') }}
               </AButton>
               <AButton v-if="renaming" type="primary" size="small" :loading="renameLoading" @click="confirmRename">
-                <template #icon><i class="pi pi-check" /></template>
+                <template #icon><CheckOutlined /></template>
                 {{ t('confirm') }}
               </AButton>
               <AButton v-if="renaming" type="text" size="small" @click="renaming = false">
                 {{ t('cancel') }}
               </AButton>
               <AButton v-if="!renaming" size="small" :loading="saving" @click="saveTemplate">
-                <template #icon><i class="pi pi-save" /></template>
+                <template #icon><SaveOutlined /></template>
                 {{ t('save') }}
               </AButton>
               <AButton
@@ -104,7 +104,7 @@
                 :loading="deleting"
                 @click="confirmDelete"
               >
-                <template #icon><i class="pi pi-trash" /></template>
+                <template #icon><DeleteOutlined /></template>
               </AButton>
             </div>
           </div>
@@ -167,9 +167,9 @@
 
                 <!-- Section move + remove -->
                 <div class="tmpl-section-actions">
-                  <AButton type="text" size="small" :disabled="si === 0"                        @click="moveSection(si, -1)"><template #icon><i class="pi pi-arrow-up" /></template></AButton>
-                  <AButton type="text" size="small" :disabled="si === form.sections.length - 1" @click="moveSection(si,  1)"><template #icon><i class="pi pi-arrow-down" /></template></AButton>
-                  <AButton type="text" danger size="small" @click="removeSection(si)"><template #icon><i class="pi pi-trash" /></template></AButton>
+                  <AButton type="text" size="small" :disabled="si === 0"                        @click="moveSection(si, -1)"><template #icon><ArrowUpOutlined /></template></AButton>
+                  <AButton type="text" size="small" :disabled="si === form.sections.length - 1" @click="moveSection(si,  1)"><template #icon><ArrowDownOutlined /></template></AButton>
+                  <AButton type="text" danger size="small" @click="removeSection(si)"><template #icon><DeleteOutlined /></template></AButton>
                 </div>
               </div>
 
@@ -189,12 +189,12 @@
                     style="flex:1; min-width:140px"
                   />
                   <ASelect v-model:value="item.width" :options="widthSelectOptions" size="small" style="width:90px" />
-                  <AButton type="text" size="small" :disabled="ii === 0"                          @click="moveField(si, ii, -1)"><template #icon><i class="pi pi-arrow-up" /></template></AButton>
-                  <AButton type="text" size="small" :disabled="ii === section.content.length - 1" @click="moveField(si, ii,  1)"><template #icon><i class="pi pi-arrow-down" /></template></AButton>
-                  <AButton type="text" danger size="small" @click="section.content.splice(ii, 1)"><template #icon><i class="pi pi-times" /></template></AButton>
+                  <AButton type="text" size="small" :disabled="ii === 0"                          @click="moveField(si, ii, -1)"><template #icon><ArrowUpOutlined /></template></AButton>
+                  <AButton type="text" size="small" :disabled="ii === section.content.length - 1" @click="moveField(si, ii,  1)"><template #icon><ArrowDownOutlined /></template></AButton>
+                  <AButton type="text" danger size="small" @click="section.content.splice(ii, 1)"><template #icon><CloseOutlined /></template></AButton>
                 </div>
                 <AButton type="text" size="small" class="tmpl-add-field-btn" @click="addField(si)">
-                  <template #icon><i class="pi pi-plus" /></template>
+                  <template #icon><PlusOutlined /></template>
                   {{ t('add_field') }}
                 </AButton>
               </div>
@@ -215,12 +215,12 @@
                     style="flex:1; min-width:140px"
                   />
                   <ASelect v-model:value="item.width" :options="widthSelectOptions" size="small" style="width:90px" />
-                  <AButton type="text" size="small" :disabled="ii === 0"                          @click="moveField(si, ii, -1)"><template #icon><i class="pi pi-arrow-up" /></template></AButton>
-                  <AButton type="text" size="small" :disabled="ii === section.content.length - 1" @click="moveField(si, ii,  1)"><template #icon><i class="pi pi-arrow-down" /></template></AButton>
-                  <AButton type="text" danger size="small" @click="section.content.splice(ii, 1)"><template #icon><i class="pi pi-times" /></template></AButton>
+                  <AButton type="text" size="small" :disabled="ii === 0"                          @click="moveField(si, ii, -1)"><template #icon><ArrowUpOutlined /></template></AButton>
+                  <AButton type="text" size="small" :disabled="ii === section.content.length - 1" @click="moveField(si, ii,  1)"><template #icon><ArrowDownOutlined /></template></AButton>
+                  <AButton type="text" danger size="small" @click="section.content.splice(ii, 1)"><template #icon><CloseOutlined /></template></AButton>
                 </div>
                 <AButton type="text" size="small" class="tmpl-add-field-btn" @click="addField(si)">
-                  <template #icon><i class="pi pi-plus" /></template>
+                  <template #icon><PlusOutlined /></template>
                   {{ t('add_field') }}
                 </AButton>
               </div>
@@ -243,9 +243,9 @@
                       <label :for="'open-' + si + '-' + pi">{{ t('open_by_default') }}</label>
                     </div>
                     <div class="tmpl-section-actions">
-                      <AButton type="text" size="small" :disabled="pi === 0"                          @click="movePanel(si, pi, -1)"><template #icon><i class="pi pi-arrow-up" /></template></AButton>
-                      <AButton type="text" size="small" :disabled="pi === section.content.length - 1" @click="movePanel(si, pi,  1)"><template #icon><i class="pi pi-arrow-down" /></template></AButton>
-                      <AButton type="text" danger size="small" @click="section.content.splice(pi, 1)"><template #icon><i class="pi pi-trash" /></template></AButton>
+                      <AButton type="text" size="small" :disabled="pi === 0"                          @click="movePanel(si, pi, -1)"><template #icon><ArrowUpOutlined /></template></AButton>
+                      <AButton type="text" size="small" :disabled="pi === section.content.length - 1" @click="movePanel(si, pi,  1)"><template #icon><ArrowDownOutlined /></template></AButton>
+                      <AButton type="text" danger size="small" @click="section.content.splice(pi, 1)"><template #icon><DeleteOutlined /></template></AButton>
                     </div>
                   </div>
                   <!-- Panel field list -->
@@ -264,18 +264,18 @@
                         style="flex:1; min-width:140px"
                       />
                       <ASelect v-model:value="item.width" :options="widthSelectOptions" size="small" style="width:90px" />
-                      <AButton type="text" size="small" :disabled="ii === 0"                       @click="movePanelField(si, pi, ii, -1)"><template #icon><i class="pi pi-arrow-up" /></template></AButton>
-                      <AButton type="text" size="small" :disabled="ii === panel.fields.length - 1" @click="movePanelField(si, pi, ii,  1)"><template #icon><i class="pi pi-arrow-down" /></template></AButton>
-                      <AButton type="text" danger size="small" @click="panel.fields.splice(ii, 1)"><template #icon><i class="pi pi-times" /></template></AButton>
+                      <AButton type="text" size="small" :disabled="ii === 0"                       @click="movePanelField(si, pi, ii, -1)"><template #icon><ArrowUpOutlined /></template></AButton>
+                      <AButton type="text" size="small" :disabled="ii === panel.fields.length - 1" @click="movePanelField(si, pi, ii,  1)"><template #icon><ArrowDownOutlined /></template></AButton>
+                      <AButton type="text" danger size="small" @click="panel.fields.splice(ii, 1)"><template #icon><CloseOutlined /></template></AButton>
                     </div>
                     <AButton type="text" size="small" class="tmpl-add-field-btn" @click="addPanelField(si, pi)">
-                      <template #icon><i class="pi pi-plus" /></template>
+                      <template #icon><PlusOutlined /></template>
                       {{ t('add_field') }}
                     </AButton>
                   </div>
                 </div>
                 <AButton type="text" size="small" class="tmpl-add-field-btn" @click="addPanel(si)">
-                  <template #icon><i class="pi pi-plus" /></template>
+                  <template #icon><PlusOutlined /></template>
                   {{ t('add_panel') }}
                 </AButton>
               </div>
@@ -283,7 +283,7 @@
 
             <!-- Add section -->
             <AButton size="small" class="tmpl-add-section-btn" @click="addSection">
-              <template #icon><i class="pi pi-plus" /></template>
+              <template #icon><PlusOutlined /></template>
               {{ t('add_section') }}
             </AButton>
           </div>
@@ -308,7 +308,7 @@
       <template #footer>
         <AButton type="text" size="small" @click="showNewDialog = false">{{ t('cancel') }}</AButton>
         <AButton type="primary" size="small" :loading="creating" @click="createTemplate">
-          <template #icon><i class="pi pi-plus" /></template>
+          <template #icon><PlusOutlined /></template>
           {{ t('create') }}
         </AButton>
       </template>
@@ -318,6 +318,7 @@
 </template>
 
 <script setup>
+import { ArrowDownOutlined, ArrowUpOutlined, CheckOutlined, CloseOutlined, DeleteOutlined, EditOutlined, FileOutlined, FileTextOutlined, PlusOutlined, RightOutlined, SaveOutlined, TableOutlined } from '@ant-design/icons-vue'
 import { ref, computed, onMounted } from 'vue'
 import AppLayout   from '@/components/AppLayout.vue'
 import {

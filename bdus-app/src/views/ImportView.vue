@@ -99,7 +99,7 @@
 
         <div class="step-actions">
           <AButton type="primary" :loading="previewing" :disabled="!canPreview" @click="doPreview">
-            <template #icon><i class="pi pi-eye" /></template>
+            <template #icon><EyeOutlined /></template>
             {{ t('preview') }}
           </AButton>
         </div>
@@ -220,11 +220,11 @@
 
         <div class="step-actions">
           <AButton @click="step = 0">
-            <template #icon><i class="pi pi-arrow-left" /></template>
+            <template #icon><ArrowLeftOutlined /></template>
             {{ t('back') }}
           </AButton>
           <AButton type="primary" :loading="importing" :disabled="!canImport" @click="doImport">
-            <template #icon><i class="pi pi-upload" /></template>
+            <template #icon><UploadOutlined /></template>
             {{ t('import_run') }}
           </AButton>
         </div>
@@ -269,7 +269,7 @@
 
         <div class="step-actions">
           <AButton @click="reset">
-            <template #icon><i class="pi pi-refresh" /></template>
+            <template #icon><ReloadOutlined /></template>
             {{ t('import_new') }}
           </AButton>
         </div>
@@ -280,6 +280,7 @@
 </template>
 
 <script setup>
+import { ArrowLeftOutlined, EyeOutlined, ReloadOutlined, UploadOutlined } from '@ant-design/icons-vue'
 import { ref, computed, watch } from 'vue'
 import AppLayout     from '@/components/AppLayout.vue'
 import { api }       from '@/api'

@@ -6,7 +6,7 @@
       <div class="page-header">
         <h2>{{ t('assemblage_analysis') }}</h2>
         <AButton type="primary" size="small" @click="openWizard(null)">
-          <template #icon><i class="pi pi-plus" /></template>
+          <template #icon><PlusOutlined /></template>
           {{ t('new_analysis') }}
         </AButton>
       </div>
@@ -19,13 +19,13 @@
         <div v-if="openResult" class="result-view">
           <div class="result-header">
             <AButton type="text" size="small" @click="closeResult">
-              <template #icon><i class="pi pi-arrow-left" /></template>
+              <template #icon><ArrowLeftOutlined /></template>
             </AButton>
             <span class="result-title">{{ openResult.name }}</span>
             <ATag v-if="openResult.is_global" color="success">{{ t('shared') }}</ATag>
             <div class="result-header-actions">
               <AButton type="text" size="small" :title="t('edit_analysis')" @click="openWizard(openResult)">
-                <template #icon><i class="pi pi-pencil" /></template>
+                <template #icon><EditOutlined /></template>
               </AButton>
             </div>
           </div>
@@ -87,7 +87,7 @@
                   </div>
                   <div class="result-actions">
                     <AButton type="text" size="small" @click="exportCsv">
-                      <template #icon><i class="pi pi-download" /></template>
+                      <template #icon><DownloadOutlined /></template>
                       {{ t('export_csv') }}
                     </AButton>
                   </div>
@@ -110,7 +110,7 @@
         <!-- ── Analysis list ────────────────────────────────────────────── -->
         <template v-else>
           <div v-if="analyses.length === 0" class="empty-state">
-            <i class="pi pi-chart-bar empty-icon" />
+            <BarChartOutlined class="empty-icon" />
             <p>{{ t('no_analyses_yet') }}</p>
           </div>
 
@@ -127,11 +127,11 @@
               <ATag v-if="a.is_global" color="success" class="card-tag">{{ t('shared') }}</ATag>
               <template #actions>
                 <AButton type="text" size="small" @click="openAnalysis(a)">
-                  <template #icon><i class="pi pi-play" /></template>
+                  <template #icon><PlayCircleOutlined /></template>
                   {{ t('run') }}
                 </AButton>
                 <AButton type="text" size="small" :title="t('edit_analysis')" @click="openWizard(a)">
-                  <template #icon><i class="pi pi-pencil" /></template>
+                  <template #icon><EditOutlined /></template>
                 </AButton>
                 <AButton
                   v-if="a.owned_by_me"
@@ -140,7 +140,7 @@
                   :title="a.is_global ? t('unshare') : t('share')"
                   @click="toggleShare(a)"
                 >
-                  <template #icon><i :class="['pi', a.is_global ? 'pi-lock' : 'pi-globe']" /></template>
+                  <template #icon><component :is="a.is_global ? LockOutlined : GlobalOutlined" /></template>
                 </AButton>
                 <AButton
                   v-if="a.owned_by_me"
@@ -150,7 +150,7 @@
                   :title="t('delete')"
                   @click="confirmDelete(a)"
                 >
-                  <template #icon><i class="pi pi-trash" /></template>
+                  <template #icon><DeleteOutlined /></template>
                 </AButton>
               </template>
             </ACard>
@@ -182,7 +182,7 @@
             </div>
             <nav v-if="currentStep > 1" class="wizard-breadcrumb">
               <template v-for="s in currentStep" :key="s">
-                <i v-if="s > 1" class="pi pi-angle-right breadcrumb-sep" />
+                <RightOutlined v-if="s > 1" class="breadcrumb-sep" />
                 <button
                   v-if="s < currentStep"
                   class="breadcrumb-item breadcrumb-done"
@@ -271,7 +271,7 @@
             <div class="path-crumb">
               <span class="path-node">{{ wizard.source_tb }}</span>
               <template v-for="step in wizard.group_path" :key="step.join_tb">
-                <i class="pi pi-chevron-right path-arrow" />
+                <RightOutlined class="path-arrow" />
                 <span class="path-node">{{ step.join_tb }}</span>
               </template>
             </div>
@@ -292,12 +292,12 @@
             <!-- FK action buttons -->
             <div v-if="pathSelectedField" class="path-actions">
               <div v-if="selectedFieldIsFK" class="fk-info">
-                <i class="pi pi-link" />
+                <LinkOutlined />
                 {{ t('fk_field_info', selectedFieldFkLabel) }}
               </div>
               <div class="action-row">
                 <AButton type="primary" size="small" @click="useAsGroupField">
-                  <template #icon><i :class="['pi', wizard.group_field === pathSelectedField ? 'pi-check-circle' : 'pi-check']" /></template>
+                  <template #icon><component :is="wizard.group_field === pathSelectedField ? CheckCircleOutlined : CheckOutlined" /></template>
                   {{ t('use_as_group_field') }}
                 </AButton>
                 <AButton
@@ -305,7 +305,7 @@
                   size="small"
                   @click="addPathStep"
                 >
-                  {{ t('traverse_to', selectedFieldFkTb) }} <i class="pi pi-arrow-right" style="margin-left:0.35rem" />
+                  {{ t('traverse_to', selectedFieldFkTb) }} <ArrowRightOutlined style="margin-left:0.35rem" />
                 </AButton>
               </div>
             </div>
@@ -313,7 +313,7 @@
             <!-- Confirmation + remove step -->
             <div class="path-footer">
               <div v-if="wizard.group_field" class="group-field-selected">
-                <i class="pi pi-check-circle" style="color: var(--p-green-500)" />
+                <CheckCircleOutlined style="color: var(--p-green-500)" />
                 {{ t('group_field_selected') }}: <strong>{{ wizard.group_field }}</strong>
                 <span v-if="wizard.group_path.length > 0"> in {{ pathCurrentTb }}</span>
               </div>
@@ -323,7 +323,7 @@
                 size="small"
                 @click="removeLastStep"
               >
-                <template #icon><i class="pi pi-undo" /></template>
+                <template #icon><UndoOutlined /></template>
                 {{ t('remove_last_step') }}
               </AButton>
             </div>
@@ -395,11 +395,11 @@
                 size="small"
                 @click="wizard.filters.splice(i, 1)"
               >
-                <template #icon><i class="pi pi-times" /></template>
+                <template #icon><CloseOutlined /></template>
               </AButton>
             </div>
             <AButton type="text" size="small" @click="wizard.filters.push({ field: '', op: '_eq', value: '' })">
-              <template #icon><i class="pi pi-plus" /></template>
+              <template #icon><PlusOutlined /></template>
               {{ t('add_filter') }}
             </AButton>
           </div>
@@ -422,7 +422,7 @@
             </div>
 
             <AButton type="primary" size="small" class="preview-btn" :loading="previewLoading" @click="runPreview">
-              <template #icon><i class="pi pi-play" /></template>
+              <template #icon><PlayCircleOutlined /></template>
               {{ t('run_preview') }}
             </AButton>
 
@@ -463,15 +463,15 @@
           <ADivider />
           <div class="wizard-nav">
             <AButton v-if="currentStep > 1" type="text" size="small" @click="currentStep--">
-              <template #icon><i class="pi pi-chevron-left" /></template>
+              <template #icon><LeftOutlined /></template>
               {{ t('back') }}
             </AButton>
             <div class="nav-spacer" />
             <AButton v-if="currentStep < TOTAL_STEPS" type="primary" size="small" :disabled="!canGoNext" @click="goNext">
-              {{ t('next') }} <i class="pi pi-chevron-right" style="margin-left:0.35rem" />
+              {{ t('next') }} <RightOutlined style="margin-left:0.35rem" />
             </AButton>
             <AButton v-else type="primary" size="small" :loading="saving" :disabled="!wizard.name || !previewResult" @click="doSave">
-              <template #icon><i class="pi pi-check" /></template>
+              <template #icon><CheckOutlined /></template>
               {{ t('save_analysis') }}
             </AButton>
           </div>
@@ -483,6 +483,7 @@
 </template>
 
 <script setup>
+import { ArrowLeftOutlined, ArrowRightOutlined, BarChartOutlined, CheckCircleOutlined, CheckOutlined, CloseOutlined, DeleteOutlined, DownloadOutlined, EditOutlined, GlobalOutlined, LeftOutlined, LinkOutlined, LockOutlined, PlayCircleOutlined, PlusOutlined, RightOutlined, UndoOutlined } from '@ant-design/icons-vue'
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRoute }   from 'vue-router'
 import { useToast, useConfirm } from '@/composables/useNotify'

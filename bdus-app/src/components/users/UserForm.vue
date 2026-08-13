@@ -33,7 +33,7 @@
     <div class="form-actions">
       <AButton html-type="button" @click="$emit('cancel')">Cancel</AButton>
       <AButton type="primary" html-type="submit" :loading="saving">
-        <template #icon><i class="pi pi-check" /></template>
+        <template #icon><CheckOutlined /></template>
         Save
       </AButton>
     </div>
@@ -41,6 +41,7 @@
 </template>
 
 <script setup>
+import { CheckOutlined } from '@ant-design/icons-vue'
 import { ref, computed, watch } from 'vue'
 import { Input, Select as ASelect, Button as AButton } from 'ant-design-vue'
 const AInput = Input

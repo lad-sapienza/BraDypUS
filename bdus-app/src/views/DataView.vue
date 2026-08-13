@@ -6,7 +6,7 @@
       <div class="records-panel">
 
         <div v-if="!selectedTable" class="records-placeholder">
-          <i class="pi pi-arrow-left" />
+          <ArrowLeftOutlined />
           <p>{{ t('choose_db') }}</p>
         </div>
 
@@ -32,13 +32,13 @@
                 :title="t('advanced_search')"
                 size="small"
                 @click="togglePanel('advanced')"
-              ><i class="pi pi-sliders-h" /></AButton>
+              ><ControlOutlined /></AButton>
               <AButton
                 :type="openPanel === 'expert' ? 'primary' : 'text'"
                 :title="t('sql_expert_search')"
                 size="small"
                 @click="togglePanel('expert')"
-              ><i class="pi pi-code" /></AButton>
+              ><CodeOutlined /></AButton>
 
               <!-- Column visibility toggler -->
               <APopover v-if="columns.length" v-model:open="colTogglerOpen" trigger="click" placement="bottom">
@@ -52,7 +52,7 @@
                         class="col-toggler-item"
                         @click="toggleColumn(col.name)"
                       >
-                        <i :class="['pi', visibleColumnNames.includes(col.name) ? 'pi-check-square' : 'pi-stop']" />
+                        <component :is="visibleColumnNames.includes(col.name) ? CheckSquareOutlined : BorderOutlined" />
                         <span>{{ col.label }}</span>
                       </div>
                     </div>
@@ -62,7 +62,7 @@
                     </div>
                   </div>
                 </template>
-                <AButton type="text" :title="t('preview_fields')" size="small"><i class="pi pi-table" /></AButton>
+                <AButton type="text" :title="t('preview_fields')" size="small"><TableOutlined /></AButton>
               </APopover>
 
               <!-- Export -->
@@ -72,21 +72,21 @@
                     <div class="col-toggler-header">{{ t('export') }} ({{ totalRecords }} {{ t('records') }})</div>
                     <div class="col-toggler-list">
                       <div class="col-toggler-item" @click="doExport('csv')">
-                        <i class="pi pi-file" />
+                        <FileOutlined />
                         <span>CSV</span>
                       </div>
                       <div class="col-toggler-item" @click="doExport('xlsx')">
-                        <i class="pi pi-file-excel" />
+                        <FileExcelOutlined />
                         <span>XLSX</span>
                       </div>
                       <div class="col-toggler-item" @click="doExport('json')">
-                        <i class="pi pi-file-code" />
+                        <FileTextOutlined />
                         <span>JSON</span>
                       </div>
                     </div>
                   </div>
                 </template>
-                <AButton type="text" :title="t('export')" size="small"><i class="pi pi-download" /></AButton>
+                <AButton type="text" :title="t('export')" size="small"><DownloadOutlined /></AButton>
               </APopover>
 
               <ATag
@@ -99,7 +99,7 @@
 
               <!-- Saved searches -->
               <AButton type="text" :title="t('saved_queries')" size="small" @click="savedQueriesDialog = true">
-                <i class="pi pi-bookmark" />
+                <PushpinOutlined />
               </AButton>
               <AModal
                 v-model:open="savedQueriesDialog"
@@ -116,7 +116,7 @@
 
               <!-- Charts -->
               <AButton type="text" :title="t('charts')" size="small" @click="chartDialog = true">
-                <i class="pi pi-chart-bar" />
+                <BarChartOutlined />
               </AButton>
               <AModal
                 v-model:open="chartDialog"
@@ -133,7 +133,7 @@
 
               <!-- View on map -->
               <AButton type="text" :title="t('view_on_map')" size="small" @click="openGeoface">
-                <i class="pi pi-map" />
+                <CompassOutlined />
               </AButton>
 
               <!-- Chronological timeline — only for tables with fuzzy_date plugin -->
@@ -143,7 +143,7 @@
                 :title="t('chrono_timeline')"
                 size="small"
                 @click="openTimeline"
-              ><i class="pi pi-calendar" /></AButton>
+              ><CalendarOutlined /></AButton>
 
               <!-- Harris Matrix — only for tables with RS plugin enabled -->
               <AButton
@@ -152,7 +152,7 @@
                 :title="t('harris_matrix')"
                 size="small"
                 @click="openMatrix"
-              ><i class="pi pi-sitemap" /></AButton>
+              ><ApartmentOutlined /></AButton>
 
               <!-- Add record — only for users with add_new privilege -->
               <AButton
@@ -161,7 +161,7 @@
                 size="small"
                 class="add-record-btn"
                 @click="addRecord"
-              ><i class="pi pi-plus" /> {{ t('new_record') }}</AButton>
+              ><PlusOutlined /> {{ t('new_record') }}</AButton>
             </div>
 
             <!-- ── Advanced search panel ──────────────────────── -->
@@ -226,20 +226,20 @@
                         size="small"
                         :disabled="advRows.length === 1"
                         @click="removeAdvRow(idx)"
-                      ><i class="pi pi-minus" /></AButton>
+                      ><MinusOutlined /></AButton>
                     </div>
                   </div>
 
                   <!-- Actions -->
                   <div class="search-panel-actions">
                     <AButton size="small" @click="addAdvRow">
-                      <i class="pi pi-plus" /> {{ t('adv_add_row') }}
+                      <PlusOutlined /> {{ t('adv_add_row') }}
                     </AButton>
                     <AButton type="primary" size="small" @click="runAdvancedSearch">
-                      <i class="pi pi-search" /> {{ t('advanced_search') }}
+                      <SearchOutlined /> {{ t('advanced_search') }}
                     </AButton>
                     <AButton type="text" size="small" @click="resetSearch">
-                      <i class="pi pi-times" /> {{ t('reset') }}
+                      <CloseOutlined /> {{ t('reset') }}
                     </AButton>
                   </div>
                 </template>
@@ -257,10 +257,10 @@
                 />
                 <div class="search-panel-actions">
                   <AButton type="primary" size="small" @click="runExpertSearch">
-                    <i class="pi pi-search" /> {{ t('send') }}
+                    <SearchOutlined /> {{ t('send') }}
                   </AButton>
                   <AButton type="text" size="small" @click="resetSearch">
-                    <i class="pi pi-times" /> {{ t('reset') }}
+                    <CloseOutlined /> {{ t('reset') }}
                   </AButton>
                 </div>
               </div>
@@ -318,7 +318,7 @@
           :title="t('new_record')"
           @click="addRecord"
         >
-          <i class="pi pi-plus" />
+          <PlusOutlined />
         </button>
 
       </div>
@@ -328,6 +328,7 @@
 </template>
 
 <script setup>
+import { ApartmentOutlined, ArrowLeftOutlined, BarChartOutlined, BorderOutlined, CalendarOutlined, CheckSquareOutlined, CloseOutlined, CodeOutlined, CompassOutlined, ControlOutlined, DownloadOutlined, FileExcelOutlined, FileOutlined, FileTextOutlined, MinusOutlined, PlusOutlined, PushpinOutlined, SearchOutlined, TableOutlined } from '@ant-design/icons-vue'
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useToast } from '@/composables/useNotify'
@@ -1109,7 +1110,7 @@ function doExport(format) {
   gap: 0.75rem;
   color: var(--p-text-muted-color);
 }
-.records-placeholder .pi { font-size: 2rem; }
+.records-placeholder .anticon { font-size: 2rem; }
 
 /* ── Search area ─────────────────────────────────────────── */
 .search-area {
@@ -1244,7 +1245,7 @@ function doExport(format) {
   transition: background 0.12s;
 }
 .col-toggler-item:hover { background: var(--p-content-hover-background); }
-.col-toggler-item .pi   { color: var(--p-primary-color); font-size: 0.95rem; }
+.col-toggler-item .anticon { color: var(--p-primary-color); font-size: 0.95rem; }
 
 .col-toggler-actions {
   display: flex;
@@ -1289,5 +1290,5 @@ function doExport(format) {
   transform: scale(1.08);
   box-shadow: 0 6px 18px rgba(0,0,0,0.25);
 }
-.fab-add .pi { font-size: 1.3rem; }
+.fab-add .anticon { font-size: 1.3rem; }
 </style>

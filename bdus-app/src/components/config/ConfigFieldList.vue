@@ -1,15 +1,15 @@
 <template>
   <div class="cfg-panel">
     <div class="cfg-panel-header">
-      <h2><i class="pi pi-list" /> {{ t('fields') }}: <em>{{ tb }}</em></h2>
+      <h2><UnorderedListOutlined /> {{ t('fields') }}: <em>{{ tb }}</em></h2>
       <AButton size="small" @click="addNew">
-        <template #icon><i class="pi pi-plus" /></template>
+        <template #icon><PlusOutlined /></template>
         {{ t('add_field') }}
       </AButton>
     </div>
 
     <div v-if="loading" class="cfg-loading-center">
-      <i class="pi pi-spin pi-spinner" />
+      <LoadingOutlined spin />
     </div>
     <AAlert v-if="loadError" type="error" :message="loadError" :closable="false" show-icon />
 
@@ -36,14 +36,14 @@
               :title="t('rename_column')"
               @click.stop="startRename(fld)"
             >
-              <i class="pi pi-pencil" />
+              <EditOutlined />
             </button>
             <button
               class="cfg-icon-btn cfg-icon-btn--danger"
               :title="t('delete_column')"
               @click.stop="deleteField(fld)"
             >
-              <i class="pi pi-trash" />
+              <DeleteOutlined />
             </button>
           </div>
         </div>
@@ -52,7 +52,7 @@
       <!-- ── Right: field editor ───────────────────────────────────── -->
       <div class="cfg-fld-editor">
         <div v-if="!selectedFld && !addingNew" class="cfg-fld-editor-empty">
-          <i class="pi pi-arrow-left" />
+          <ArrowLeftOutlined />
           <span>{{ t('select_field') }}</span>
         </div>
 
@@ -83,7 +83,7 @@
       <template #footer>
         <AButton size="small" @click="renameVisible = false">{{ t('cancel') }}</AButton>
         <AButton type="primary" size="small" :loading="renaming" @click="confirmRename">
-          <template #icon><i class="pi pi-check" /></template>
+          <template #icon><CheckOutlined /></template>
           {{ t('rename') }}
         </AButton>
       </template>
@@ -93,6 +93,7 @@
 </template>
 
 <script setup>
+import { ArrowLeftOutlined, CheckOutlined, DeleteOutlined, EditOutlined, LoadingOutlined, PlusOutlined, UnorderedListOutlined } from '@ant-design/icons-vue'
 import { ref, onMounted, watch } from 'vue'
 import { Button as AButton, Modal as AModal, Input as AInput, Alert as AAlert } from 'ant-design-vue'
 import { useToast, useConfirm } from '@/composables/useNotify'

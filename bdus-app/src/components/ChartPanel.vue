@@ -83,7 +83,7 @@
 
       <!-- Run button -->
       <AButton type="primary" size="small" :loading="running" @click="runChart">
-        <template #icon><i class="pi pi-play" /></template>
+        <template #icon><PlayCircleOutlined /></template>
         {{ t('run_chart') }}
       </AButton>
     </div>
@@ -133,7 +133,7 @@
             @keyup.enter="doSaveChart"
           />
           <AButton type="primary" size="small" :loading="saving" :disabled="!newChartName.trim()" @click="doSaveChart">
-            <template #icon><i class="pi pi-save" /></template>
+            <template #icon><SaveOutlined /></template>
             {{ t('save') }}
           </AButton>
         </div>
@@ -167,13 +167,13 @@
             class="chart-tb-label"
           >{{ c.tb_label }}</span>
           <span v-if="c.is_global" class="chart-shared-badge">
-            <i class="pi pi-share-alt" :title="t('share')" />
+            <ShareAltOutlined :title="t('share')" />
           </span>
         </div>
         <div class="chart-actions">
           <!-- Run -->
           <AButton type="text" size="small" :title="t('run_chart')" @click="loadAndRun(c)">
-            <template #icon><i class="pi pi-play" /></template>
+            <template #icon><PlayCircleOutlined /></template>
           </AButton>
           <!-- Share / Unshare (owner only) -->
           <AButton
@@ -184,7 +184,7 @@
             :loading="pendingId === c.id && pendingAction === 'share'"
             @click="toggleShare(c)"
           >
-            <template #icon><i :class="['pi', c.is_global ? 'pi-star-fill' : 'pi-star']" /></template>
+            <template #icon><component :is="c.is_global ? StarFilled : StarOutlined" /></template>
           </AButton>
           <!-- Delete (owner only) -->
           <AButton
@@ -196,7 +196,7 @@
             :loading="pendingId === c.id && pendingAction === 'delete'"
             @click="confirmDelete(c)"
           >
-            <template #icon><i class="pi pi-trash" /></template>
+            <template #icon><DeleteOutlined /></template>
           </AButton>
         </div>
 
@@ -213,6 +213,7 @@
 </template>
 
 <script setup>
+import { DeleteOutlined, PlayCircleOutlined, SaveOutlined, ShareAltOutlined, StarFilled, StarOutlined } from '@ant-design/icons-vue'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useToast } from '@/composables/useNotify'
 import { api } from '@/api'

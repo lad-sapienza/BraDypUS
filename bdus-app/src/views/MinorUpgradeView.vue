@@ -11,14 +11,14 @@
       <!-- Done -->
       <template v-else-if="done">
         <div class="done-banner">
-          <span class="pi pi-check-circle done-icon" />
+          <CheckCircleOutlined class="done-icon" />
           <div>
             <strong>{{ t('upgrade_complete') }}</strong>
             <p>{{ t('upgrade_complete_hint') }}</p>
           </div>
         </div>
         <AButton type="primary" block @click="enterApp">
-          <template #icon><i class="pi pi-arrow-right" /></template>
+          <template #icon><ArrowRightOutlined /></template>
           {{ t('enter_app') }}
         </AButton>
       </template>
@@ -27,7 +27,7 @@
       <template v-else-if="loadError">
         <AAlert type="error" :message="loadError" show-icon />
         <AButton type="primary" block class="mt-2" @click="enterApp">
-          <template #icon><i class="pi pi-arrow-right" /></template>
+          <template #icon><ArrowRightOutlined /></template>
           {{ t('enter_app') }}
         </AButton>
       </template>
@@ -35,7 +35,7 @@
       <!-- Confirm screen -->
       <template v-else>
         <div class="upgrade-banner">
-          <span class="pi pi-info-circle upgrade-icon" />
+          <InfoCircleOutlined class="upgrade-icon" />
           <div>
             <strong>{{ t('minor_upgrade_pending') }}</strong>
             <p class="upgrade-hint">{{ t('minor_upgrade_hint') }}</p>
@@ -46,7 +46,7 @@
 
         <div class="pending-list">
           <div v-for="name in pending" :key="name" class="pending-item">
-            <span class="pi pi-clock pending-clock" />
+            <ClockCircleOutlined class="pending-clock" />
             <code>{{ name }}</code>
           </div>
         </div>
@@ -54,7 +54,7 @@
         <AAlert v-if="applyError" type="error" :message="applyError" :closable="false" show-icon />
 
         <AButton danger :loading="applying" block @click="applyUpgrade">
-          <template #icon><i class="pi pi-upload" /></template>
+          <template #icon><UploadOutlined /></template>
           {{ t('minor_upgrade_apply') }}
         </AButton>
 
@@ -67,6 +67,7 @@
 </template>
 
 <script setup>
+import { ArrowRightOutlined, CheckCircleOutlined, ClockCircleOutlined, InfoCircleOutlined, UploadOutlined } from '@ant-design/icons-vue'
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'

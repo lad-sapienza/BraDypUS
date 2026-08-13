@@ -1,14 +1,14 @@
 <template>
   <div class="cfg-panel">
     <div class="cfg-panel-header">
-      <h2><i class="pi pi-book" /> {{ t('zotero_libraries') }}</h2>
+      <h2><BookOutlined /> {{ t('zotero_libraries') }}</h2>
       <AButton
         size="small"
         :loading="syncingAll"
         :disabled="libs.length === 0"
         @click="syncAll"
       >
-        <template #icon><i class="pi pi-refresh" /></template>
+        <template #icon><ReloadOutlined /></template>
         {{ t('sync_all') }}
       </AButton>
     </div>
@@ -75,7 +75,7 @@
 
           <div class="form-actions">
             <AButton type="primary" :loading="adding" @click="addLib">
-              <template #icon><i class="pi pi-plus" /></template>
+              <template #icon><PlusOutlined /></template>
               {{ t('add_zotero_library') }}
             </AButton>
           </div>
@@ -89,7 +89,7 @@
         </div>
 
         <div v-if="loading" class="cfg-loading-center">
-          <i class="pi pi-spin pi-spinner" />
+          <LoadingOutlined spin />
         </div>
 
         <AAlert v-else-if="loadError" type="error" :message="loadError" :closable="false" show-icon />
@@ -114,15 +114,15 @@
               </div>
               <div class="lib-card-meta">
                 <span class="meta-item">
-                  <i class="pi pi-hashtag" />
+                  <NumberOutlined />
                   {{ lib.zotero_id }}
                 </span>
                 <span class="meta-item">
-                  <i class="pi pi-align-left" />
+                  <AlignLeftOutlined />
                   {{ lib.citation_style || 'chicago-author-date' }}
                 </span>
                 <span class="meta-item" :class="{ 'has-key': lib.has_api_key }">
-                  <i :class="lib.has_api_key ? 'pi pi-lock' : 'pi pi-lock-open'" />
+                  <component :is="lib.has_api_key ? LockOutlined : UnlockOutlined" />
                   {{ lib.has_api_key ? t('api_key_set') : t('no_api_key') }}
                 </span>
               </div>
@@ -136,7 +136,7 @@
                 :title="t('delete')"
                 :loading="deletingId === lib.id"
                 @click="deleteLib(lib)"
-              ><template #icon><i class="pi pi-trash" /></template></AButton>
+              ><template #icon><DeleteOutlined /></template></AButton>
             </div>
           </div>
         </div>
@@ -156,6 +156,7 @@
 </template>
 
 <script setup>
+import { AlignLeftOutlined, BookOutlined, DeleteOutlined, LoadingOutlined, LockOutlined, NumberOutlined, PlusOutlined, ReloadOutlined, UnlockOutlined } from '@ant-design/icons-vue'
 import { ref, reactive, onMounted } from 'vue'
 import { Button as AButton, Input, Segmented as ASegmented, Alert as AAlert, Tag as ATag } from 'ant-design-vue'
 

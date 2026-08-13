@@ -2,7 +2,7 @@
   <div class="field-display" :class="{ hidden: schema.hide }" v-if="!schema.hide">
     <label class="field-label">
       {{ schema.label }}
-      <span v-if="schema.help" class="field-help pi pi-info-circle" :title="schema.help" />
+      <InfoCircleOutlined v-if="schema.help" :title="schema.help" class="field-help" />
     </label>
 
     <div class="field-value" :dir="schema.direction || 'ltr'">
@@ -45,6 +45,7 @@
 </template>
 
 <script setup>
+import { InfoCircleOutlined } from '@ant-design/icons-vue'
 import { computed } from 'vue'
 import { Tag as ATag } from 'ant-design-vue'
 import { marked } from 'marked'

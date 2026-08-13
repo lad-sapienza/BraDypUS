@@ -5,7 +5,7 @@
       <div class="page-header">
         <h2>{{ t('available_vocs') }}</h2>
         <AButton type="primary" size="small" @click="openNewVocDialog">
-          <template #icon><i class="pi pi-plus" /></template>
+          <template #icon><PlusOutlined /></template>
           {{ t('new_voc') }}
         </AButton>
       </div>
@@ -48,7 +48,7 @@
           <div class="voc-items-header">
             <h3>{{ selected.name }}</h3>
             <AButton size="small" @click="openAddItemDialog(selected.name)">
-              <template #icon><i class="pi pi-plus" /></template>
+              <template #icon><PlusOutlined /></template>
               {{ t('voc_add_item') }}
             </AButton>
           </div>
@@ -90,13 +90,13 @@
                     :disabled="index === 0"
                     :title="t('move_up')"
                     @click="moveItem(index, -1)"
-                  ><i class="pi pi-chevron-up" /></button>
+                  ><UpOutlined /></button>
                   <button
                     class="reorder-btn"
                     :disabled="index === selected.items.length - 1"
                     :title="t('move_down')"
                     @click="moveItem(index, 1)"
-                  ><i class="pi pi-chevron-down" /></button>
+                  ><DownOutlined /></button>
                 </div>
               </template>
               <template v-else-if="column.key === 'def'">
@@ -119,10 +119,10 @@
               <template v-else-if="column.key === 'actions'">
                 <AButton type="text" shape="circle" size="small"
                         @click="startEdit(record)" :disabled="editingId !== null"
-                ><template #icon><i class="pi pi-pencil" /></template></AButton>
+                ><template #icon><EditOutlined /></template></AButton>
                 <AButton type="text" shape="circle" danger size="small"
                         @click="confirmErase(record)" :disabled="editingId !== null"
-                ><template #icon><i class="pi pi-trash" /></template></AButton>
+                ><template #icon><DeleteOutlined /></template></AButton>
               </template>
             </template>
           </ATable>
@@ -149,7 +149,7 @@
         <AButton type="text" @click="newVocDialog = false">{{ t('cancel') }}</AButton>
         <AButton type="primary" :disabled="!newVocName || !newVocDef"
                 :loading="saving" @click="createVocAndItem">
-          <template #icon><i class="pi pi-check" /></template>
+          <template #icon><CheckOutlined /></template>
           {{ t('create') }}
         </AButton>
       </template>
@@ -165,7 +165,7 @@
         <AButton type="text" @click="addItemDialog = false">{{ t('cancel') }}</AButton>
         <AButton type="primary" :disabled="!addItemDef"
                 :loading="saving" @click="addItem">
-          <template #icon><i class="pi pi-check" /></template>
+          <template #icon><CheckOutlined /></template>
           {{ t('voc_add_item') }}
         </AButton>
       </template>
@@ -175,6 +175,7 @@
 </template>
 
 <script setup>
+import { CheckOutlined, DeleteOutlined, DownOutlined, EditOutlined, PlusOutlined, UpOutlined } from '@ant-design/icons-vue'
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from '@/i18n'
 import { useToast, useConfirm } from '@/composables/useNotify'

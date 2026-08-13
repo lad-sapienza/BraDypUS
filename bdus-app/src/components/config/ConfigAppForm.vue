@@ -1,15 +1,15 @@
 <template>
   <div class="cfg-panel">
     <div class="cfg-panel-header">
-      <h2><i class="pi pi-cog" /> {{ t('app_settings') }}</h2>
+      <h2><SettingOutlined /> {{ t('app_settings') }}</h2>
       <AButton type="primary" size="small" :loading="saving" @click="save">
-        <template #icon><i class="pi pi-save" /></template>
+        <template #icon><SaveOutlined /></template>
         {{ t('save') }}
       </AButton>
     </div>
 
     <div v-if="loading" class="cfg-loading-center">
-      <i class="pi pi-spin pi-spinner" />
+      <LoadingOutlined spin />
     </div>
 
     <AAlert v-if="error" type="error" :message="error" :closable="false" show-icon />
@@ -107,6 +107,7 @@
 </template>
 
 <script setup>
+import { LoadingOutlined, SaveOutlined, SettingOutlined } from '@ant-design/icons-vue'
 import { ref, computed, onMounted } from 'vue'
 import { Button as AButton, Input, Select as ASelect, Alert as AAlert } from 'ant-design-vue'
 import { useToast } from '@/composables/useNotify'

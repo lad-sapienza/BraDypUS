@@ -21,10 +21,10 @@
         <!-- Summary badge -->
         <div class="mv-summary">
           <ATag v-if="applied === total" color="success">
-            <i class="pi pi-check-circle" style="margin-right: 0.35rem" />{{ t('migrations_all_applied') }}
+            <CheckCircleOutlined style="margin-right: 0.35rem" />{{ t('migrations_all_applied') }}
           </ATag>
           <ATag v-else color="warning">
-            <i class="pi pi-exclamation-triangle" style="margin-right: 0.35rem" />{{ tf('migrations_status_ok', applied, total) }}
+            <WarningOutlined style="margin-right: 0.35rem" />{{ tf('migrations_status_ok', applied, total) }}
           </ATag>
         </div>
 
@@ -46,7 +46,7 @@
             </template>
             <template v-else-if="column.key === 'status'">
               <ATag :color="record.applied ? 'success' : 'warning'">
-                <i :class="record.applied ? 'pi pi-check' : 'pi pi-clock'" style="margin-right: 0.35rem" />{{ record.applied ? t('migration_applied') : t('migration_pending') }}
+                <component :is="record.applied ? CheckOutlined : ClockCircleOutlined" style="margin-right: 0.35rem" />{{ record.applied ? t('migration_applied') : t('migration_pending') }}
               </ATag>
             </template>
             <template v-else-if="column.key === 'applied_at'">
@@ -62,6 +62,7 @@
 </template>
 
 <script setup>
+import { CheckCircleOutlined, CheckOutlined, ClockCircleOutlined, WarningOutlined } from '@ant-design/icons-vue'
 import { ref, computed, onMounted } from 'vue'
 import AppLayout           from '@/components/AppLayout.vue'
 import { Table as ATable, Spin as ASpin, Alert as AAlert, Tag as ATag } from 'ant-design-vue'

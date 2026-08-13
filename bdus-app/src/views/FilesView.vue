@@ -11,12 +11,12 @@
         size="small"
         @click="orphansOnly = !orphansOnly; reload()"
       >
-        <template #icon><i class="pi pi-filter" /></template>
+        <template #icon><FilterOutlined /></template>
         {{ t('files_orphans_only') }}
       </AButton>
 
       <AButton size="small" :loading="loading" @click="reload">
-        <template #icon><i class="pi pi-refresh" /></template>
+        <template #icon><ReloadOutlined /></template>
         {{ t('log_refresh') }}
       </AButton>
     </div>
@@ -43,7 +43,7 @@
                 :alt="record.filename"
                 class="file-thumb"
               />
-              <i v-else :class="['file-icon-lg', fileIcon(record.ext)]" />
+              <component v-else :is="fileIcon(record.ext)" class="file-icon-lg" />
             </span>
           </template>
           <template v-else-if="column.key === 'filename'">
@@ -88,10 +88,10 @@
           <template v-else-if="column.key === 'actions'">
             <div class="row-actions">
               <button class="action-btn" :title="t('replace_file')" @click="startReplace(record)">
-                <i class="pi pi-sync" />
+                <SyncOutlined />
               </button>
               <button class="action-btn action-btn-danger" :title="t('delete_file')" @click="confirmDelete(record)">
-                <i class="pi pi-trash" />
+                <DeleteOutlined />
               </button>
             </div>
           </template>
@@ -135,6 +135,7 @@
 </template>
 
 <script setup>
+import { DeleteOutlined, EditOutlined, FileExcelOutlined, FileOutlined, FilePdfOutlined, FilterOutlined, FileWordOutlined, FileZipOutlined, ReloadOutlined, SoundOutlined, SyncOutlined, VideoCameraOutlined } from '@ant-design/icons-vue'
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { RouterLink, useRoute }     from 'vue-router'
 import { useToast, useConfirm } from '@/composables/useNotify'
@@ -320,14 +321,14 @@ function fileUrl(f) {
 
 function fileIcon(ext) {
   const e = (ext ?? '').toLowerCase()
-  if (['pdf'].includes(e))                        return 'pi pi-file-pdf'
-  if (['doc', 'docx', 'odt', 'rtf'].includes(e)) return 'pi pi-file-word'
-  if (['xls', 'xlsx', 'ods'].includes(e))        return 'pi pi-file-excel'
-  if (['mp3', 'wav', 'ogg', 'wma'].includes(e))  return 'pi pi-volume-up'
-  if (['mp4', 'mov', 'avi', 'mkv'].includes(e))  return 'pi pi-video'
-  if (['zip', 'rar', 'tar', 'gz'].includes(e))   return 'pi pi-box'
-  if (['svg', 'ai', 'eps'].includes(e))          return 'pi pi-pen-to-square'
-  return 'pi pi-file'
+  if (['pdf'].includes(e))                       return FilePdfOutlined
+  if (['doc', 'docx', 'odt', 'rtf'].includes(e)) return FileWordOutlined
+  if (['xls', 'xlsx', 'ods'].includes(e))        return FileExcelOutlined
+  if (['mp3', 'wav', 'ogg', 'wma'].includes(e))  return SoundOutlined
+  if (['mp4', 'mov', 'avi', 'mkv'].includes(e))  return VideoCameraOutlined
+  if (['zip', 'rar', 'tar', 'gz'].includes(e))   return FileZipOutlined
+  if (['svg', 'ai', 'eps'].includes(e))          return EditOutlined
+  return FileOutlined
 }
 
 onMounted(fetchFiles)

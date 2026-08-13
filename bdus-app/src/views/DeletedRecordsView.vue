@@ -22,14 +22,14 @@
         :loading="loading"
         @click="fetchDeleted"
       >
-        <template #icon><i class="pi pi-refresh" /></template>
+        <template #icon><ReloadOutlined /></template>
         {{ t('log_refresh') }}
       </AButton>
     </div>
 
     <!-- ── Placeholder (no table selected) ─────────────────────── -->
     <div v-if="!selectedTb" class="deleted-placeholder">
-      <i class="pi pi-inbox deleted-placeholder-icon" />
+      <InboxOutlined class="deleted-placeholder-icon" />
       <p>{{ t('deleted_choose_table') }}</p>
     </div>
 
@@ -43,7 +43,7 @@
 
     <!-- ── Empty ────────────────────────────────────────────────── -->
     <div v-else-if="!rows.length" class="deleted-placeholder">
-      <i class="pi pi-check-circle deleted-placeholder-icon" style="color: var(--p-green-500)" />
+      <CheckCircleOutlined style="color: var(--p-green-500)" class="deleted-placeholder-icon" />
       <p>{{ t('deleted_no_records') }}</p>
     </div>
 
@@ -68,7 +68,7 @@
               style="color: var(--p-orange-500, #f97316)"
               @click="askRestore(record)"
             >
-              <template #icon><i class="pi pi-history" /></template>
+              <template #icon><HistoryOutlined /></template>
               {{ t('version_restore') }}
             </AButton>
           </template>
@@ -86,7 +86,7 @@
     width="420px"
   >
     <div class="confirm-body" v-if="restoreTarget">
-      <i class="pi pi-exclamation-triangle confirm-icon" />
+      <WarningOutlined class="confirm-icon" />
       <div>
         <p>{{ t('version_restore_confirm_msg') }}</p>
         <p class="confirm-detail">
@@ -102,7 +102,7 @@
         :loading="restoring"
         @click="doRestore"
       >
-        <template #icon><i class="pi pi-history" /></template>
+        <template #icon><HistoryOutlined /></template>
         {{ t('version_restore') }}
       </AButton>
     </template>
@@ -110,6 +110,7 @@
 </template>
 
 <script setup>
+import { CheckCircleOutlined, HistoryOutlined, InboxOutlined, ReloadOutlined, WarningOutlined } from '@ant-design/icons-vue'
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter }  from 'vue-router'
 import { useToast } from '@/composables/useNotify'

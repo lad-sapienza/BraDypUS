@@ -3,7 +3,7 @@
     <label class="field-label">
       {{ schema.label }}
       <span v-if="schema.required" class="required-mark">*</span>
-      <span v-if="schema.help" class="field-help pi pi-info-circle" :title="schema.help" />
+      <InfoCircleOutlined v-if="schema.help" :title="schema.help" class="field-help" />
     </label>
 
     <!-- readonly: show as display -->
@@ -15,7 +15,7 @@
     <div v-else-if="schema.type === 'md'" class="md-editor-wrap">
       <div class="md-toolbar">
         <button type="button" class="md-toggle" @click="mdPreview = !mdPreview">
-          <i :class="mdPreview ? 'pi pi-pencil' : 'pi pi-eye'" />
+          <component :is="mdPreview ? EditOutlined : EyeOutlined" />
           {{ mdPreview ? t('edit') : t('preview') }}
         </button>
       </div>
@@ -166,13 +166,13 @@
 
     <!-- Inline validation error (sync) -->
     <div v-if="showError" class="field-error">
-      <i class="pi pi-exclamation-circle" />
+      <ExclamationCircleOutlined />
       {{ validationError }}
     </div>
 
     <!-- Inline uniqueness error (async no_dupl) -->
     <div v-if="uniqueError" class="field-error">
-      <i class="pi pi-exclamation-circle" />
+      <ExclamationCircleOutlined />
       {{ uniqueError }}
     </div>
 
@@ -180,6 +180,7 @@
 </template>
 
 <script setup>
+import { EditOutlined, ExclamationCircleOutlined, EyeOutlined, InfoCircleOutlined } from '@ant-design/icons-vue'
 import { ref, computed, inject } from 'vue'
 import { marked } from 'marked'
 import { Input, Select as ASelect, Switch as ASwitch, Slider as ASlider, AutoComplete as AAutoComplete } from 'ant-design-vue'

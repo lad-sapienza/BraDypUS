@@ -1,27 +1,27 @@
 <template>
   <div class="cfg-cdp-section">
     <div class="cfg-cdp-header">
-      <span class="cfg-cdp-title"><i class="pi pi-share-alt" /> {{ t('chrono_density_path') }}</span>
+      <span class="cfg-cdp-title"><ShareAltOutlined /> {{ t('chrono_density_path') }}</span>
       <AButton
         v-if="modelValue.length"
         type="text"
         size="small"
         @click="emit('update:modelValue', [])"
       >
-        <template #icon><i class="pi pi-times" /></template>
+        <template #icon><CloseOutlined /></template>
         {{ t('clear') }}
       </AButton>
     </div>
 
     <small class="cfg-hint">{{ t('help_chrono_density_path') }}</small>
 
-    <div v-if="loading" class="cfg-cdp-loading"><i class="pi pi-spin pi-spinner" /></div>
+    <div v-if="loading" class="cfg-cdp-loading"><LoadingOutlined spin /></div>
 
     <template v-else>
       <div class="cfg-cdp-breadcrumb" v-if="modelValue.length">
         <span>{{ tb }}</span>
         <template v-for="hop in modelValue" :key="hop">
-          <i class="pi pi-angle-right" />
+          <RightOutlined />
           <span>{{ tableLabels[hop] ?? hop }}</span>
         </template>
       </div>
@@ -58,6 +58,7 @@
 </template>
 
 <script setup>
+import { CloseOutlined, LoadingOutlined, RightOutlined, ShareAltOutlined } from '@ant-design/icons-vue'
 import { ref, computed, onMounted } from 'vue'
 import { Button as AButton, Select as ASelect, Alert as AAlert, Tag as ATag } from 'ant-design-vue'
 import { useI18n } from '@/i18n'

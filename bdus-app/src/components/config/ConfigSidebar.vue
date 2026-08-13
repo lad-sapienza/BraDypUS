@@ -9,7 +9,7 @@
         @click="$emit('select', 'app')"
         :title="t('app_settings')"
       >
-        <i class="pi pi-cog" />
+        <SettingOutlined />
         <span>{{ t('app_settings') }}</span>
       </button>
       <button
@@ -18,7 +18,7 @@
         @click="$emit('select', 'validation')"
         :title="t('validate_app')"
       >
-        <i class="pi pi-check-circle" />
+        <CheckCircleOutlined />
         <span>{{ t('validate_app') }}</span>
       </button>
       <button
@@ -27,7 +27,7 @@
         @click="$emit('select', 'geoface')"
         :title="t('geoface')"
       >
-        <i class="pi pi-map" />
+        <CompassOutlined />
         <span>{{ t('geoface') }}</span>
       </button>
       <button
@@ -36,7 +36,7 @@
         @click="$emit('select', 'apikeys')"
         :title="t('api_keys')"
       >
-        <i class="pi pi-key" />
+        <KeyOutlined />
         <span>{{ t('api_keys') }}</span>
       </button>
       <button
@@ -45,7 +45,7 @@
         @click="$emit('select', 'relations')"
         :title="t('cfg_relations')"
       >
-        <i class="pi pi-sitemap" />
+        <ApartmentOutlined />
         <span>{{ t('cfg_relations') }}</span>
       </button>
       <button
@@ -54,7 +54,7 @@
         @click="$emit('select', 'zotero')"
         :title="t('zotero_libraries')"
       >
-        <i class="pi pi-book" />
+        <BookOutlined />
         <span>{{ t('zotero_libraries') }}</span>
       </button>
       <button
@@ -63,7 +63,7 @@
         @click="$emit('select', 'dbml')"
         :title="t('dbml_title')"
       >
-        <i class="pi pi-file-export" />
+        <ExportOutlined />
         <span>{{ t('dbml_title') }}</span>
       </button>
     </div>
@@ -74,12 +74,12 @@
     <div class="cfg-table-list-header">
       <span>{{ t('tables') }}</span>
       <button class="cfg-icon-btn" @click="$emit('add-table')" :title="t('add_table')">
-        <i class="pi pi-plus" />
+        <PlusOutlined />
       </button>
     </div>
 
     <div v-if="store.loading" class="cfg-loading">
-      <i class="pi pi-spin pi-spinner" />
+      <LoadingOutlined spin />
     </div>
 
     <div v-else-if="store.error" class="cfg-sidebar-error">{{ store.error }}</div>
@@ -95,7 +95,7 @@
         @dragover.prevent
         @drop="onDrop($event, tbl.name)"
       >
-        <i class="pi pi-bars cfg-drag-handle" />
+        <BarsOutlined class="cfg-drag-handle" />
         <span class="cfg-table-label" :title="tbl.label">
           <span class="cfg-table-label-text">{{ tbl.label }}</span>
           <small v-if="tbl.is_plugin === '1'" class="cfg-plugin-badge">plugin</small>
@@ -106,14 +106,14 @@
             :title="t('table_settings')"
             @click.stop="$emit('select-table', tbl.name)"
           >
-            <i class="pi pi-sliders-h" />
+            <ControlOutlined />
           </button>
           <button
             class="cfg-icon-btn"
             :title="t('fields')"
             @click.stop="$emit('select-fields', tbl.name)"
           >
-            <i class="pi pi-list" />
+            <UnorderedListOutlined />
           </button>
         </div>
       </div>
@@ -123,6 +123,7 @@
 </template>
 
 <script setup>
+import { ApartmentOutlined, BarsOutlined, BookOutlined, CheckCircleOutlined, CompassOutlined, ControlOutlined, ExportOutlined, KeyOutlined, LoadingOutlined, PlusOutlined, SettingOutlined, UnorderedListOutlined } from '@ant-design/icons-vue'
 import { ref }            from 'vue'
 import { useConfigStore } from '@/stores/config'
 import { useI18n }        from '@/i18n'
@@ -209,7 +210,7 @@ async function onDrop(e, targetName) {
   color: var(--p-primary-color);
   font-weight: 600;
 }
-.cfg-action-btn .pi { font-size: 0.95rem; width: 1rem; text-align: center; }
+.cfg-action-btn .anticon { font-size: 0.95rem; width: 1rem; text-align: center; }
 
 .cfg-sidebar-divider {
   height: 1px;

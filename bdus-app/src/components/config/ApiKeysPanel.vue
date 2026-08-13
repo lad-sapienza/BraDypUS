@@ -1,7 +1,7 @@
 <template>
   <div class="cfg-panel">
     <div class="cfg-panel-header">
-      <h2><i class="pi pi-key" /> {{ t('api_keys') }}</h2>
+      <h2><KeyOutlined /> {{ t('api_keys') }}</h2>
     </div>
 
     <div class="cfg-api-body">
@@ -26,7 +26,7 @@
             style="min-width: 12rem"
           />
           <AButton :loading="creating" @click="createKey">
-            <template #icon><i class="pi pi-plus" /></template>
+            <template #icon><PlusOutlined /></template>
             {{ t('create_api_key') }}
           </AButton>
         </div>
@@ -38,7 +38,7 @@
             <div class="key-row">
               <code class="key-code">{{ newKey }}</code>
               <AButton type="text" size="small" :title="t('copy')" @click="copyKey">
-                <template #icon><i class="pi pi-copy" /></template>
+                <template #icon><CopyOutlined /></template>
               </AButton>
             </div>
           </template>
@@ -52,7 +52,7 @@
         </div>
 
         <div v-if="loading" class="cfg-loading-center">
-          <i class="pi pi-spin pi-spinner" />
+          <LoadingOutlined spin />
         </div>
 
         <AAlert v-else-if="error" type="error" :message="error" :closable="false" show-icon />
@@ -91,14 +91,14 @@
                 size="small"
                 :title="t('revoke')"
                 @click="revokeKey(record.id)"
-              ><template #icon><i class="pi pi-ban" /></template></AButton>
+              ><template #icon><StopOutlined /></template></AButton>
               <AButton
                 type="text"
                 danger
                 size="small"
                 :title="t('delete')"
                 @click="deleteKey(record.id)"
-              ><template #icon><i class="pi pi-trash" /></template></AButton>
+              ><template #icon><DeleteOutlined /></template></AButton>
             </template>
           </template>
         </ATable>
@@ -108,6 +108,7 @@
 </template>
 
 <script setup>
+import { CopyOutlined, DeleteOutlined, KeyOutlined, LoadingOutlined, PlusOutlined, StopOutlined } from '@ant-design/icons-vue'
 import { ref, computed, onMounted } from 'vue'
 import { Table as ATable, Button as AButton, Input as AInput, Select as ASelect, Alert as AAlert, Tag as ATag } from 'ant-design-vue'
 import { useToast } from '@/composables/useNotify'

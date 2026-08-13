@@ -18,7 +18,7 @@ search, geodata, charts, Harris matrix, import/export, user & schema
 management, and more. See the [feature guide](https://docs.bdus.cloud/guide/usage/)
 for the full list.
 
-**Stack:** Vue 3 · Vite · PrimeVue 4 (Aura) · Pinia · Vue Router · MapLibre GL · Chart.js · Cytoscape.js · marked.js
+**Stack:** Vue 3 · Vite · Ant Design Vue · Pinia · Vue Router · MapLibre GL · Chart.js · Cytoscape.js · marked.js
 
 ---
 

@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.4.0] - 2026-08-13
+
 ### Added
 
 - **Percorso configurabile per la distribuzione cronologica derivata** (`chrono_density_path`) — il pannello "Distribuzione cronologica derivata" (`ChronoDensityPanel.vue`, `GET /api/chrono/related/{tb}/{id}`) prima interrogava solo `bdus_cfg_relations` per un singolo hop automatico (figli diretti con `fuzzy_date` attivo), senza modo di raggiungere un nipote (es. da `siti`, i `reperti` collegati via `us`, non direttamente). Ora è possibile configurare per tabella, da Config → Tabelle, una catena fissa di nomi tabella (`extra.chrono_density_path`, stesso meccanismo JSON già usato da `geodata`/`zotero`/`fuzzy_date`, nessuna migrazione DB) — ogni tabella della catena deve essere figlia diretta della precedente via una relazione FK reale in `bdus_cfg_relations`; solo l'ultima tabella deve avere `fuzzy_date` attivo, le intermedie no (possono fare solo da ponte). Validazione lato server in `Config::save_tb_data()` (hop coerenti con lo schema, nessuna ripetizione/tabella radice nel percorso, profondità massima 8, ultima tabella con `fuzzy_date`) più mirror lato client per feedback immediato. `Chrono::related()` riscritto per seguire la catena hop per hop quando configurata, restituendo un filtro di click-through già pronto (`{fk_col: {_eq: id}}` per il caso automatico a un hop, `{id: {_in: [...]}}` con gli id calcolati server-side per un percorso multi-hop) — comportamento automatico invariato quando nessun percorso è configurato, nessuna regressione per le app esistenti. Copertura: 9 nuovi integration test (`ChronoDensityPathTest`), fase hurl dedicata (40) sulla catena reale `siti → us → reperti`.

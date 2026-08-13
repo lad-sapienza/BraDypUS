@@ -10,60 +10,45 @@
       <!-- ── App selector — always visible ────────────────────────────────── -->
       <div class="field">
         <label for="app">Application</label>
-        <Select
+        <ASelect
           id="app"
-          v-model="form.app"
-          :options="apps"
-          optionLabel="name"
+          v-model:value="selectedAppDb"
+          :options="appOptions"
           placeholder="Select an application…"
           :loading="loadingApps"
           :disabled="loading || upgrading"
-          filter
-          filterPlaceholder="Search…"
-          fluid
+          show-search
+          style="width:100%"
         >
           <!-- Dropdown option: show name, definition, and upgrade badge if needed -->
-          <template #option="{ option }">
+          <template #option="option">
             <div class="app-option">
               <div class="app-option-row">
                 <span class="app-option-name">{{ option.name }}</span>
-                <Tag
-                  v-if="option.upgrade === 'major'"
-                  :value="t('upgrade_tag_major')"
-                  severity="danger"
-                  class="app-option-tag"
-                />
-                <Tag
-                  v-else-if="option.upgrade === 'minor'"
-                  :value="t('upgrade_tag_minor')"
-                  severity="warn"
-                  class="app-option-tag"
-                />
+                <ATag v-if="option.upgrade === 'major'" color="error" class="app-option-tag">
+                  {{ t('upgrade_tag_major') }}
+                </ATag>
+                <ATag v-else-if="option.upgrade === 'minor'" color="warning" class="app-option-tag">
+                  {{ t('upgrade_tag_minor') }}
+                </ATag>
               </div>
               <div v-if="option.definition" class="app-option-definition">{{ option.definition }}</div>
             </div>
           </template>
 
           <!-- Selected-value display: keep badge visible after selection -->
-          <template #value="{ value, placeholder }">
-            <div v-if="value" class="app-selected">
-              <span>{{ value.name }}</span>
-              <Tag
-                v-if="value.upgrade === 'major'"
-                :value="t('upgrade_tag_major')"
-                severity="danger"
-                class="app-option-tag"
-              />
-              <Tag
-                v-else-if="value.upgrade === 'minor'"
-                :value="t('upgrade_tag_minor')"
-                severity="warn"
-                class="app-option-tag"
-              />
+          <template #optionLabel="option">
+            <div class="app-selected">
+              <span>{{ option.name }}</span>
+              <ATag v-if="option.upgrade === 'major'" color="error" class="app-option-tag">
+                {{ t('upgrade_tag_major') }}
+              </ATag>
+              <ATag v-else-if="option.upgrade === 'minor'" color="warning" class="app-option-tag">
+                {{ t('upgrade_tag_minor') }}
+              </ATag>
             </div>
-            <span v-else class="p-select-placeholder">{{ placeholder }}</span>
           </template>
-        </Select>
+        </ASelect>
       </div>
 
       <!-- ── Major upgrade panel ────────────────────────────────────────────── -->
@@ -86,41 +71,36 @@
 
           <div class="field">
             <label for="upgrade-email">Email (superadmin)</label>
-            <InputText
+            <AInput
               id="upgrade-email"
-              v-model="upgradeForm.email"
+              v-model:value="upgradeForm.email"
               type="email"
               placeholder="superadmin@example.com"
               :disabled="upgrading"
-              fluid
             />
           </div>
 
           <div class="field">
             <label for="upgrade-password">Password</label>
-            <Password
+            <AInputPassword
               id="upgrade-password"
-              v-model="upgradeForm.password"
-              :feedback="false"
-              toggleMask
+              v-model:value="upgradeForm.password"
               :disabled="upgrading"
-              fluid
             />
           </div>
 
-          <Message v-if="upgradeError" severity="error" :closable="false">
-            {{ upgradeError }}
-          </Message>
+          <AAlert v-if="upgradeError" type="error" :message="upgradeError" :closable="false" show-icon />
 
-          <Button
-            type="submit"
-            :label="t('major_upgrade_apply')"
-            icon="pi pi-upload"
-            severity="warning"
+          <AButton
+            danger
+            html-type="submit"
+            block
             :loading="upgrading"
             :disabled="!upgradeForm.email || !upgradeForm.password"
-            fluid
-          />
+          >
+            <template #icon><i class="pi pi-upload" /></template>
+            {{ t('major_upgrade_apply') }}
+          </AButton>
         </form>
       </template>
 
@@ -129,58 +109,47 @@
         <form @submit.prevent="handleLogin">
           <div class="field">
             <label for="email">Email</label>
-            <InputText
+            <AInput
               id="email"
-              v-model="form.email"
+              v-model:value="form.email"
               type="email"
               placeholder="you@example.com"
               :disabled="loading"
-              fluid
             />
           </div>
 
           <div class="field">
             <label for="password">Password</label>
-            <Password
+            <AInputPassword
               id="password"
-              v-model="form.password"
-              :feedback="false"
-              toggleMask
+              v-model:value="form.password"
               :disabled="loading"
-              fluid
             />
           </div>
 
-          <Message v-if="error" severity="error" :closable="false">
-            {{ error }}
-          </Message>
+          <AAlert v-if="error" type="error" :message="error" :closable="false" show-icon />
 
-          <Button
-            type="submit"
-            label="Login"
-            icon="pi pi-sign-in"
-            :loading="loading"
-            :disabled="!form.email || !form.password"
-            fluid
-          />
+          <AButton type="primary" html-type="submit" block :loading="loading" :disabled="!form.email || !form.password">
+            <template #icon><i class="pi pi-sign-in" /></template>
+            Login
+          </AButton>
         </form>
 
         <!-- OAuth2 / SSO section -->
         <div v-if="oauthProviders.length" class="oauth-section">
           <div class="oauth-divider"><span>or sign in with</span></div>
           <div class="oauth-buttons">
-            <Button
+            <AButton
               v-for="p in oauthProviders"
               :key="p.id"
-              :label="p.label"
-              :icon="p.icon"
-              severity="secondary"
-              outlined
+              block
               :loading="oauthLoading === p.id"
               :disabled="!!oauthLoading"
-              fluid
               @click="handleOAuth(p.id)"
-            />
+            >
+              <template #icon><i :class="p.icon" /></template>
+              {{ p.label }}
+            </AButton>
           </div>
         </div>
       </template>
@@ -216,12 +185,10 @@ import { useAuthStore } from '@/stores/auth'
 import { api } from '@/api'
 import { useI18n } from '@/i18n'
 import { useDarkMode } from '@/composables/useDarkMode'
-import Select from 'primevue/select'
-import InputText from 'primevue/inputtext'
-import Password from 'primevue/password'
-import Button from 'primevue/button'
-import Message from 'primevue/message'
-import Tag from 'primevue/tag'
+import { Select as ASelect, Input, Button as AButton, Alert as AAlert, Tag as ATag } from 'ant-design-vue'
+
+const AInput         = Input
+const AInputPassword = Input.Password
 
 const { t } = useI18n()
 const router = useRouter()
@@ -249,6 +216,22 @@ const PROVIDER_META = {
   google: { id: 'google', label: 'Google', icon: 'pi pi-google' },
   orcid:  { id: 'orcid',  label: 'ORCID',  icon: 'pi pi-id-card' },
 }
+
+// AntD's Select needs a primitive `value` for reliable option matching — the
+// app's `db` id — while the rest of the component's logic keeps working with
+// the full app object (form.value.app), as before.
+const appOptions = computed(() => apps.value.map(a => ({
+  value:      a.db,
+  label:      a.name,
+  name:       a.name,
+  definition: a.definition,
+  upgrade:    a.upgrade,
+})))
+
+const selectedAppDb = computed({
+  get: () => form.value.app?.db ?? null,
+  set: (db) => { form.value.app = apps.value.find(a => a.db === db) ?? null },
+})
 
 const oauthProviders = computed(() => {
   if (!form.value.app?.db) return []

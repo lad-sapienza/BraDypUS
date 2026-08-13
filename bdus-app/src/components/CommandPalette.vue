@@ -1,15 +1,15 @@
 <template>
-  <Dialog
-    v-model:visible="visible"
-    :showHeader="false"
-    :closeOnEscape="false"
-    :dismissableMask="true"
-    modal
-    position="top"
+  <AModal
+    v-model:open="visible"
+    :title="null"
+    :closable="false"
+    :footer="null"
+    :keyboard="false"
+    :style="{ top: '12vh' }"
     class="command-palette-dialog"
-    :style="{ width: '600px' }"
-    @hide="reset"
-    @after-show="focusInput"
+    width="600px"
+    @cancel="reset"
+    @after-open-change="open => open && focusInput()"
   >
     <div class="cp-wrap">
       <div v-if="mode" class="cp-breadcrumb">
@@ -19,15 +19,15 @@
         <span>{{ mode.label }}</span>
       </div>
 
-      <IconField class="cp-input-wrap">
-        <InputIcon class="pi pi-search" />
-        <InputText
+      <div class="cp-input-wrap">
+        <AInput
           ref="inputRef"
-          v-model="query"
+          v-model:value="query"
           :placeholder="mode ? t('select_table') : t('type_to_search')"
-          fluid
-        />
-      </IconField>
+        >
+          <template #prefix><i class="pi pi-search" /></template>
+        </AInput>
+      </div>
 
       <ul v-if="filtered.length" class="cp-results">
         <template v-for="(item, idx) in filtered" :key="item.id">
@@ -48,15 +48,12 @@
       </ul>
       <div v-else class="cp-empty">{{ t('command_no_results') }}</div>
     </div>
-  </Dialog>
+  </AModal>
 </template>
 
 <script setup>
 import { ref, computed, nextTick, onMounted, onUnmounted, watch } from 'vue'
-import Dialog from 'primevue/dialog'
-import InputText from 'primevue/inputtext'
-import IconField from 'primevue/iconfield'
-import InputIcon from 'primevue/inputicon'
+import { Modal as AModal, Input as AInput } from 'ant-design-vue'
 import { useI18n } from '@/i18n'
 import { useCommands } from '@/composables/useCommands'
 
@@ -96,12 +93,12 @@ function groupLabel(type) {
 }
 
 function focusInput() {
-  nextTick(() => inputRef.value?.$el?.focus())
+  nextTick(() => inputRef.value?.focus())
 }
 
 function open() {
   visible.value = true
-  // If the dialog was already open, @after-show won't re-fire — focus directly.
+  // If the dialog was already open, @after-open-change won't re-fire — focus directly.
   focusInput()
 }
 
@@ -171,10 +168,7 @@ defineExpose({ open })
 </script>
 
 <style scoped>
-:deep(.command-palette-dialog) {
-  margin-top: 12vh;
-}
-:deep(.command-palette-dialog .p-dialog-content) {
+:deep(.command-palette-dialog .ant-modal-content) {
   padding: 0;
   overflow: hidden;
   border-radius: 8px;

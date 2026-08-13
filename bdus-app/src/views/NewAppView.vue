@@ -5,13 +5,11 @@
       <p class="login-subtitle">{{ t('create_new_app') }}</p>
 
       <!-- ── Not permitted ──────────────────────────────────────── -->
-      <Message v-if="!loading && !permitted" severity="warn" :closable="false">
-        {{ t('creation_not_permitted') }}
-      </Message>
+      <AAlert v-if="!loading && !permitted" type="warning" :message="t('creation_not_permitted')" :closable="false" show-icon />
 
       <!-- ── Success: creation log ──────────────────────────────── -->
       <template v-else-if="done">
-        <Message severity="success" :closable="false">{{ t('ok_app_created') }}</Message>
+        <AAlert type="success" :message="t('ok_app_created')" :closable="false" show-icon />
         <div class="creation-log">
           <p class="log-title">{{ t('creation_log') }}</p>
           <ul>
@@ -19,7 +17,10 @@
           </ul>
         </div>
         <router-link to="/login" class="back-to-login">
-          <Button :label="t('login')" icon="pi pi-sign-in" fluid />
+          <AButton type="primary" block>
+            <template #icon><i class="pi pi-sign-in" /></template>
+            {{ t('login') }}
+          </AButton>
         </router-link>
       </template>
 
@@ -29,12 +30,11 @@
         <!-- App info -->
         <div class="form-section-title">{{ t('app_name') }}</div>
         <div class="field">
-          <InputText
-            v-model="form.name"
+          <AInput
+            v-model:value="form.name"
             :placeholder="t('app_name')"
-            :invalid="!!errors.name"
+            :status="errors.name ? 'error' : undefined"
             :disabled="loading"
-            fluid
             @input="normalizeAppName"
           />
           <small v-if="errors.name" class="field-error">{{ errors.name }}</small>
@@ -42,36 +42,31 @@
         </div>
 
         <div class="field">
-          <InputText
-            v-model="form.definition"
+          <AInput
+            v-model:value="form.definition"
             :placeholder="t('app_definition')"
             :disabled="loading"
-            fluid
           />
         </div>
 
         <!-- Admin account -->
         <div class="form-section-title">{{ t('your_email') }}</div>
         <div class="field">
-          <InputText
-            v-model="form.email"
+          <AInput
+            v-model:value="form.email"
             type="email"
             :placeholder="t('your_email')"
-            :invalid="!!errors.email"
+            :status="errors.email ? 'error' : undefined"
             :disabled="loading"
-            fluid
           />
           <small v-if="errors.email" class="field-error">{{ errors.email }}</small>
         </div>
         <div class="field">
-          <Password
-            v-model="form.password"
+          <AInputPassword
+            v-model:value="form.password"
             :placeholder="t('your_password')"
-            :invalid="!!errors.password"
+            :status="errors.password ? 'error' : undefined"
             :disabled="loading"
-            :feedback="false"
-            toggle-mask
-            fluid
           />
           <small v-if="errors.password" class="field-error">{{ errors.password }}</small>
         </div>
@@ -79,13 +74,12 @@
         <!-- DB engine -->
         <div class="form-section-title">{{ t('db_engine') }}</div>
         <div class="field">
-          <Select
-            v-model="form.db_engine"
-            :options="engines"
+          <ASelect
+            v-model:value="form.db_engine"
+            :options="engineOptions"
             :placeholder="t('db_engine')"
-            :invalid="!!errors.db_engine"
+            :status="errors.db_engine ? 'error' : undefined"
             :disabled="loading"
-            fluid
           />
           <small v-if="errors.db_engine" class="field-error">{{ errors.db_engine }}</small>
         </div>
@@ -94,62 +88,50 @@
         <template v-if="needsDbDetails">
           <div class="field-row">
             <div class="field field-grow">
-              <InputText
-                v-model="form.db_host"
+              <AInput
+                v-model:value="form.db_host"
                 :placeholder="t('db_host')"
                 :disabled="loading"
-                fluid
               />
             </div>
             <div class="field field-narrow">
-              <InputText
-                v-model="form.db_port"
+              <AInput
+                v-model:value="form.db_port"
                 :placeholder="t('db_port')"
                 :disabled="loading"
-                fluid
               />
             </div>
           </div>
           <div class="field">
-            <InputText
-              v-model="form.db_name"
+            <AInput
+              v-model:value="form.db_name"
               :placeholder="t('db_name')"
               :disabled="loading"
-              fluid
             />
           </div>
           <div class="field">
-            <InputText
-              v-model="form.db_username"
+            <AInput
+              v-model:value="form.db_username"
               :placeholder="t('db_username')"
               :disabled="loading"
-              fluid
             />
           </div>
           <div class="field">
-            <Password
-              v-model="form.db_password"
+            <AInputPassword
+              v-model:value="form.db_password"
               :placeholder="t('db_password')"
               :disabled="loading"
-              :feedback="false"
-              toggle-mask
-              fluid
             />
           </div>
         </template>
 
         <!-- Error message -->
-        <Message v-if="errorMsg" severity="error" :closable="false" class="form-error">
-          {{ errorMsg }}
-        </Message>
+        <AAlert v-if="errorMsg" type="error" :message="errorMsg" :closable="false" show-icon class="form-error" />
 
-        <Button
-          type="submit"
-          :label="t('app_create')"
-          icon="pi pi-plus"
-          :loading="loading"
-          fluid
-        />
+        <AButton type="primary" html-type="submit" block :loading="loading">
+          <template #icon><i class="pi pi-plus" /></template>
+          {{ t('app_create') }}
+        </AButton>
       </form>
 
       <div v-if="!done" class="back-link">
@@ -162,13 +144,12 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
-import InputText from 'primevue/inputtext'
-import Password  from 'primevue/password'
-import Select    from 'primevue/select'
-import Button    from 'primevue/button'
-import Message   from 'primevue/message'
+import { Input, Select as ASelect, Button as AButton, Alert as AAlert } from 'ant-design-vue'
 import { api }   from '@/api'
 import { useI18n } from '@/i18n'
+
+const AInput         = Input
+const AInputPassword = Input.Password
 
 const { t } = useI18n()
 
@@ -199,6 +180,8 @@ const errors = reactive({
 const needsDbDetails = computed(() =>
   form.db_engine && form.db_engine !== 'sqlite'
 )
+
+const engineOptions = computed(() => engines.value.map(v => ({ value: v, label: v })))
 
 onMounted(async () => {
   try {

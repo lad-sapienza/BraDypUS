@@ -17,45 +17,32 @@
             {{ t('welcome_empty_hint') }}
           </div>
           <div v-if="isAdmin" class="welcome-actions">
-            <Button
-              :label="t('edit')"
-              icon="pi pi-pencil"
-              size="small"
-              severity="secondary"
-              outlined
-              @click="startEdit"
-            />
+            <AButton size="small" @click="startEdit">
+              <template #icon><i class="pi pi-pencil" /></template>
+              {{ t('edit') }}
+            </AButton>
           </div>
         </div>
 
         <!-- Edit mode (admin only) -->
         <div v-else class="welcome-editor">
-          <Textarea
-            v-model="editBuffer"
+          <ATextarea
+            v-model:value="editBuffer"
             :placeholder="t('welcome_placeholder')"
-            rows="8"
+            :rows="8"
             class="w-full welcome-textarea"
-            autoResize
+            auto-size
           />
           <div class="welcome-editor-hint">
             <i class="pi pi-info-circle" />
             {{ t('welcome_md_hint') }}
           </div>
           <div class="welcome-editor-actions">
-            <Button
-              :label="t('cancel')"
-              severity="secondary"
-              outlined
-              size="small"
-              @click="cancelEdit"
-            />
-            <Button
-              :label="t('save')"
-              icon="pi pi-check"
-              size="small"
-              :loading="saving"
-              @click="saveWelcome"
-            />
+            <AButton size="small" @click="cancelEdit">{{ t('cancel') }}</AButton>
+            <AButton type="primary" size="small" :loading="saving" @click="saveWelcome">
+              <template #icon><i class="pi pi-check" /></template>
+              {{ t('save') }}
+            </AButton>
           </div>
         </div>
       </div>
@@ -65,26 +52,23 @@
       </div>
 
       <div class="cards-grid">
-        <Card v-for="item in modules" :key="item.labelKey">
-          <template #header>
+        <ACard v-for="item in modules" :key="item.labelKey">
+          <template #cover>
             <div class="card-icon-header">
               <i :class="['pi', item.icon]" />
             </div>
           </template>
-          <template #title>{{ t(item.labelKey) }}</template>
-          <template #content>
-            <p>{{ t(item.descKey) }}</p>
-          </template>
-          <template #footer>
-            <Button
-              :label="t('open')"
-              icon="pi pi-arrow-right"
-              iconPos="right"
+          <ACardMeta :title="t(item.labelKey)" :description="t(item.descKey)" />
+          <template #actions>
+            <AButton
+              type="link"
               :disabled="!item.route"
               @click="item.route && $router.push(item.route)"
-            />
+            >
+              {{ t('open') }} <i class="pi pi-arrow-right" />
+            </AButton>
           </template>
-        </Card>
+        </ACard>
       </div>
 
     </div>
@@ -100,9 +84,10 @@ import { useAuthStore } from '@/stores/auth'
 import { useI18n } from '@/i18n'
 import { api } from '@/api'
 import { useToast } from '@/composables/useNotify'
-import Card     from 'primevue/card'
-import Button   from 'primevue/button'
-import Textarea from 'primevue/textarea'
+import { Card as ACard, Button as AButton, Input } from 'ant-design-vue'
+
+const ACardMeta = ACard.Meta
+const ATextarea = Input.TextArea
 
 const route = useRoute()
 const auth  = useAuthStore()

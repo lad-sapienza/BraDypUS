@@ -8,11 +8,9 @@
       <!-- Type -->
       <div class="builder-field">
         <label class="builder-field-label">{{ t('chart_type') }}</label>
-        <Select
-          v-model="selectedType"
+        <ASelect
+          v-model:value="selectedType"
           :options="chartTypeOptions"
-          optionLabel="label"
-          optionValue="value"
           size="small"
           class="builder-select"
         />
@@ -22,11 +20,9 @@
       <template v-if="selectedType === 'metric'">
         <div class="builder-field">
           <label class="builder-field-label">{{ t('field') }}</label>
-          <Select
-            v-model="selectedField"
+          <ASelect
+            v-model:value="selectedField"
             :options="tableFieldOptions"
-            optionLabel="label"
-            optionValue="value"
             :placeholder="t('select_placeholder')"
             size="small"
             class="builder-select"
@@ -35,11 +31,9 @@
         </div>
         <div class="builder-field">
           <label class="builder-field-label">{{ t('aggregate_function') }}</label>
-          <Select
-            v-model="selectedFunction"
+          <ASelect
+            v-model:value="selectedFunction"
             :options="functionOptions"
-            optionLabel="label"
-            optionValue="value"
             size="small"
             class="builder-select"
           />
@@ -50,11 +44,9 @@
       <template v-else>
         <div class="builder-field">
           <label class="builder-field-label">{{ t('x_field') }}</label>
-          <Select
-            v-model="selectedXField"
+          <ASelect
+            v-model:value="selectedXField"
             :options="tableFieldOptions"
-            optionLabel="label"
-            optionValue="value"
             :placeholder="t('select_placeholder')"
             size="small"
             class="builder-select"
@@ -63,11 +55,9 @@
         </div>
         <div class="builder-field">
           <label class="builder-field-label">{{ t('y_field') }}</label>
-          <Select
-            v-model="selectedYField"
+          <ASelect
+            v-model:value="selectedYField"
             :options="tableFieldOptions"
-            optionLabel="label"
-            optionValue="value"
             :placeholder="t('select_placeholder')"
             size="small"
             class="builder-select"
@@ -76,11 +66,9 @@
         </div>
         <div class="builder-field">
           <label class="builder-field-label">{{ t('aggregate_function') }}</label>
-          <Select
-            v-model="selectedYFunction"
+          <ASelect
+            v-model:value="selectedYFunction"
             :options="functionOptions"
-            optionLabel="label"
-            optionValue="value"
             size="small"
             class="builder-select"
           />
@@ -89,18 +77,15 @@
 
       <!-- Use current filter toggle -->
       <div v-if="currentFilter" class="builder-field builder-toggle">
-        <ToggleSwitch v-model="useCurrentFilter" inputId="useFilter" />
+        <ASwitch v-model:checked="useCurrentFilter" id="useFilter" />
         <label for="useFilter" class="builder-toggle-label">{{ t('use_current_filter') }}</label>
       </div>
 
       <!-- Run button -->
-      <Button
-        :label="t('run_chart')"
-        icon="pi pi-play"
-        size="small"
-        :loading="running"
-        @click="runChart"
-      />
+      <AButton type="primary" size="small" :loading="running" @click="runChart">
+        <template #icon><i class="pi pi-play" /></template>
+        {{ t('run_chart') }}
+      </AButton>
     </div>
 
     <!-- ── Chart output ──────────────────────────────────────────────── -->
@@ -140,32 +125,28 @@
       <div class="save-section">
         <div class="save-section-label">{{ t('save_chart_as') }}</div>
         <div class="save-row">
-          <InputText
-            v-model="newChartName"
+          <AInput
+            v-model:value="newChartName"
             :placeholder="t('chart_name')"
             size="small"
             class="save-name-input"
             @keyup.enter="doSaveChart"
           />
-          <Button
-            :label="t('save')"
-            icon="pi pi-save"
-            size="small"
-            :loading="saving"
-            :disabled="!newChartName.trim()"
-            @click="doSaveChart"
-          />
+          <AButton type="primary" size="small" :loading="saving" :disabled="!newChartName.trim()" @click="doSaveChart">
+            <template #icon><i class="pi pi-save" /></template>
+            {{ t('save') }}
+          </AButton>
         </div>
       </div>
     </div>
 
-    <Divider />
+    <ADivider />
 
     <!-- ── Section B: Saved charts list ────────────────────────────── -->
     <div class="builder-label">{{ t('saved_charts') }}</div>
 
     <div v-if="loadingCharts" class="panel-loading">
-      <ProgressSpinner style="width:24px;height:24px" />
+      <ASpin />
     </div>
 
     <div v-else-if="filteredCharts.length === 0" class="panel-empty">
@@ -191,41 +172,39 @@
         </div>
         <div class="chart-actions">
           <!-- Run -->
-          <Button
-            icon="pi pi-play"
-            size="small"
-            text
-            :title="t('run_chart')"
-            @click="loadAndRun(c)"
-          />
+          <AButton type="text" size="small" :title="t('run_chart')" @click="loadAndRun(c)">
+            <template #icon><i class="pi pi-play" /></template>
+          </AButton>
           <!-- Share / Unshare (owner only) -->
-          <Button
+          <AButton
             v-if="c.owned_by_me"
-            :icon="c.is_global ? 'pi pi-star-fill' : 'pi pi-star'"
+            type="text"
             size="small"
-            text
             :title="c.is_global ? t('unshare') : t('share')"
             :loading="pendingId === c.id && pendingAction === 'share'"
             @click="toggleShare(c)"
-          />
+          >
+            <template #icon><i :class="['pi', c.is_global ? 'pi-star-fill' : 'pi-star']" /></template>
+          </AButton>
           <!-- Delete (owner only) -->
-          <Button
+          <AButton
             v-if="c.owned_by_me"
-            icon="pi pi-trash"
+            type="text"
+            danger
             size="small"
-            text
-            severity="danger"
             :title="t('delete')"
             :loading="pendingId === c.id && pendingAction === 'delete'"
             @click="confirmDelete(c)"
-          />
+          >
+            <template #icon><i class="pi pi-trash" /></template>
+          </AButton>
         </div>
 
         <!-- Inline confirm -->
         <div v-if="confirmingId === c.id" class="chart-confirm">
           <span class="chart-confirm-text">{{ t('confirm_delete') }}</span>
-          <Button :label="t('yes')" size="small" severity="danger" @click="doDelete(c)" />
-          <Button :label="t('no')" size="small" severity="secondary" text @click="confirmingId = null" />
+          <AButton danger size="small" @click="doDelete(c)">{{ t('yes') }}</AButton>
+          <AButton type="text" size="small" @click="confirmingId = null">{{ t('no') }}</AButton>
         </div>
       </li>
     </ul>
@@ -238,12 +217,14 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useToast } from '@/composables/useNotify'
 import { api } from '@/api'
 import { useI18n } from '@/i18n'
-import Button from 'primevue/button'
-import InputText from 'primevue/inputtext'
-import Divider from 'primevue/divider'
-import ProgressSpinner from 'primevue/progressspinner'
-import Select from 'primevue/select'
-import ToggleSwitch from 'primevue/toggleswitch'
+import {
+  Button as AButton,
+  Input as AInput,
+  Divider as ADivider,
+  Spin as ASpin,
+  Select as ASelect,
+  Switch as ASwitch
+} from 'ant-design-vue'
 
 import {
   Bar as BarChart,

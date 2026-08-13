@@ -11,11 +11,9 @@
         <!-- Table -->
         <div class="sr-field">
           <label class="sr-label">{{ t('table') }}</label>
-          <Select
-            v-model="selectedTable"
-            :options="tables"
-            optionLabel="label"
-            optionValue="name"
+          <ASelect
+            v-model:value="selectedTable"
+            :options="tableOptions"
             :placeholder="t('select_table')"
             :loading="loadingTables"
             class="w-full"
@@ -26,11 +24,9 @@
         <!-- Field -->
         <div class="sr-field">
           <label class="sr-label">{{ t('field') }}</label>
-          <Select
-            v-model="selectedField"
-            :options="fields"
-            optionLabel="label"
-            optionValue="name"
+          <ASelect
+            v-model:value="selectedField"
+            :options="fieldOptions"
             :placeholder="selectedTable ? t('select_field') : t('select_table_first')"
             :loading="loadingFields"
             :disabled="!selectedTable"
@@ -41,8 +37,8 @@
         <!-- Search string -->
         <div class="sr-field">
           <label class="sr-label">{{ t('search_string') }}</label>
-          <InputText
-            v-model="searchStr"
+          <AInput
+            v-model:value="searchStr"
             :placeholder="t('search_string_placeholder')"
             class="w-full"
           />
@@ -51,8 +47,8 @@
         <!-- Replace string -->
         <div class="sr-field">
           <label class="sr-label">{{ t('replace_string') }}</label>
-          <InputText
-            v-model="replaceStr"
+          <AInput
+            v-model:value="replaceStr"
             :placeholder="t('replace_string_placeholder')"
             class="w-full"
           />
@@ -60,27 +56,19 @@
 
         <!-- Action -->
         <div class="sr-actions">
-          <Button
-            :label="t('find_replace')"
-            icon="pi pi-search-plus"
-            :disabled="!canSubmit"
-            :loading="running"
-            @click="confirmReplace"
-          />
+          <AButton type="primary" :disabled="!canSubmit" :loading="running" @click="confirmReplace">
+            <template #icon><i class="pi pi-search-plus" /></template>
+            {{ t('find_replace') }}
+          </AButton>
         </div>
 
       </div>
     </div>
 
-    <!-- Confirmation dialog -->
-    <ConfirmDialog />
-
     <!-- Result dialog -->
-    <Dialog
-      v-model:visible="showResult"
-      :header="t('find_replace')"
-      modal
-      :closable="true"
+    <AModal
+      v-model:open="showResult"
+      :title="t('find_replace')"
       :style="{ width: '26rem' }"
     >
       <div class="sr-result-body">
@@ -92,9 +80,9 @@
         <span>{{ result?.text }}</span>
       </div>
       <template #footer>
-        <Button :label="t('close')" @click="showResult = false" autofocus />
+        <AButton type="primary" @click="showResult = false">{{ t('close') }}</AButton>
       </template>
-    </Dialog>
+    </AModal>
   </AppLayout>
 </template>
 
@@ -104,11 +92,7 @@ import { useToast, useConfirm } from '@/composables/useNotify'
 import AppLayout      from '@/components/AppLayout.vue'
 import { useI18n }    from '@/i18n'
 import { api }        from '@/api'
-import Select         from 'primevue/select'
-import InputText      from 'primevue/inputtext'
-import Button         from 'primevue/button'
-import Dialog         from 'primevue/dialog'
-import ConfirmDialog  from 'primevue/confirmdialog'
+import { Select as ASelect, Input as AInput, Button as AButton, Modal as AModal } from 'ant-design-vue'
 
 const { t }   = useI18n()
 const confirm = useConfirm()
@@ -130,6 +114,9 @@ const showResult    = ref(false)
 const canSubmit = computed(() =>
   selectedTable.value && selectedField.value && searchStr.value.trim()
 )
+
+const tableOptions = computed(() => tables.value.map(t => ({ value: t.name, label: t.label })))
+const fieldOptions  = computed(() => fields.value.map(f => ({ value: f.name, label: f.label })))
 
 // ── Load tables on mount ─────────────────────────────────────────────────────
 onMounted(async () => {

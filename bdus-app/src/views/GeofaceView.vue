@@ -2,25 +2,27 @@
   <div class="geoface-view">
     <!-- Toolbar -->
     <div class="geoface-toolbar">
-      <Button icon="pi pi-arrow-left" text @click="router.back()" />
+      <AButton type="text" @click="router.back()">
+        <template #icon><i class="pi pi-arrow-left" /></template>
+      </AButton>
       <span class="geoface-title">{{ meta.tb_label ?? route.params.tb }}</span>
       <span class="geoface-count">{{ featureCount }} {{ t('geometries') }}</span>
     </div>
 
     <!-- Temporal filter panel (only when fuzzy_date plugin is active) -->
     <div v-if="meta.has_fuzzy_date" class="geoface-chrono-bar">
-      <Button
-        :icon="chronoFilterActive ? 'pi pi-calendar-times' : 'pi pi-calendar'"
-        :label="t('temporal_filter')"
-        :severity="chronoFilterActive ? 'warn' : 'secondary'"
+      <AButton
         size="small"
-        outlined
+        :danger="chronoFilterActive"
         @click="toggleChronoFilter"
-      />
+      >
+        <template #icon><i :class="['pi', chronoFilterActive ? 'pi-calendar-times' : 'pi-calendar']" /></template>
+        {{ t('temporal_filter') }}
+      </AButton>
       <template v-if="chronoFilterActive">
         <div class="geoface-chrono-slider">
-          <Slider
-            v-model="chronoRange"
+          <ASlider
+            v-model:value="chronoRange"
             range
             :min="CHRONO_MIN"
             :max="CHRONO_MAX"
@@ -31,13 +33,14 @@
         <span class="geoface-chrono-label">
           {{ chronoLabel }}
         </span>
-        <Button
-          icon="pi pi-times"
-          text
+        <AButton
+          type="text"
           size="small"
           :title="t('temporal_filter_clear')"
           @click="clearChronoFilter"
-        />
+        >
+          <template #icon><i class="pi pi-times" /></template>
+        </AButton>
       </template>
     </div>
 
@@ -46,34 +49,33 @@
       <i class="pi pi-spin pi-spinner" style="font-size:2rem" />
     </div>
     <div v-else-if="loadError" class="geoface-status">
-      <Message severity="error" :closable="false">{{ loadError }}</Message>
+      <AAlert type="error" :message="loadError" :closable="false" show-icon />
     </div>
 
     <!-- Map container — always rendered so mapEl ref is available -->
     <div ref="mapEl" class="geoface-map" :style="{ visibility: loading || loadError ? 'hidden' : 'visible' }" />
 
     <!-- Link geometry dialog (shown after drawing a new geometry) -->
-    <Dialog
-      v-model:visible="linkDialogVisible"
-      modal
-      :header="t('link_geometry_to_record')"
-      style="width: 420px"
+    <AModal
+      v-model:open="linkDialogVisible"
+      :title="t('link_geometry_to_record')"
+      width="420px"
+      @cancel="cancelLink"
     >
       <div class="field" style="padding: 0.75rem 0">
-        <AutoComplete
-          v-model="linkSearch"
-          :suggestions="linkSuggestions"
-          optionLabel="label"
+        <AAutoComplete
+          v-model:value="linkSearch"
+          :options="linkSuggestions"
           :placeholder="t('type_to_search')"
-          @complete="onLinkSearch"
-          @item-select="onLinkSelect"
-          fluid
+          style="width: 100%"
+          @search="onLinkSearch"
+          @select="(value, option) => onLinkSelect(option)"
         />
       </div>
       <template #footer>
-        <Button :label="t('cancel')" text @click="cancelLink" />
+        <AButton type="text" @click="cancelLink">{{ t('cancel') }}</AButton>
       </template>
-    </Dialog>
+    </AModal>
   </div>
 </template>
 
@@ -87,11 +89,13 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 import 'maplibre-gl-draw/dist/mapbox-gl-draw.css'
 import { api }                  from '@/api'
 import { useI18n }              from '@/i18n'
-import Button                   from 'primevue/button'
-import Dialog                   from 'primevue/dialog'
-import AutoComplete             from 'primevue/autocomplete'
-import Message                  from 'primevue/message'
-import Slider                   from 'primevue/slider'
+import {
+  Button as AButton,
+  Modal as AModal,
+  AutoComplete as AAutoComplete,
+  Alert as AAlert,
+  Slider as ASlider
+} from 'ant-design-vue'
 import { format as chronoFormat } from '@/utils/chronoParser'
 
 const { t }    = useI18n()
@@ -396,11 +400,12 @@ function onDrawCreate(e) {
   linkDialogVisible.value = true
 }
 
-async function onLinkSearch(event) {
+async function onLinkSearch(query) {
   const tb = route.params.tb
   try {
-    const res = await api.get(`/api/record/${tb}/link-candidates`, { q: event.query })
+    const res = await api.get(`/api/record/${tb}/link-candidates`, { q: query })
     linkSuggestions.value = (res.data ?? []).map(r => ({
+      value: String(r.label ?? r.id),
       label: String(r.label ?? r.id),
       id:    r.id
     }))
@@ -409,8 +414,8 @@ async function onLinkSearch(event) {
   }
 }
 
-async function onLinkSelect(event) {
-  const recordId = event.value.id
+async function onLinkSelect(option) {
+  const recordId = option.id
   try {
     const res = await api.post('/api/geoface/feature', {
       tb:       route.params.tb,

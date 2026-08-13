@@ -3,35 +3,30 @@
     <div class="info-view">
 
       <div v-if="loading" class="info-loading">
-        <ProgressSpinner style="width:32px;height:32px" />
+        <ASpin />
       </div>
 
-      <Message v-else-if="error" severity="error">{{ error }}</Message>
+      <AAlert v-else-if="error" type="error" :message="error" show-icon />
 
       <template v-else>
         <!-- Header: title + version badges -->
         <div class="info-header">
           <span class="info-title">BraDypUS</span>
           <div class="info-badges">
-            <Tag
-              :value="`api v${apiVersion}`"
-              severity="secondary"
+            <ATag
               class="info-version-tag"
               v-tooltip.bottom="'bdus-api (PHP backend)'"
-            />
-            <Tag
-              :value="`app v${appVersion}`"
-              severity="contrast"
+            >api v{{ apiVersion }}</ATag>
+            <ATag
               class="info-version-tag"
               v-tooltip.bottom="'bdus-app (Vue frontend)'"
-            />
-            <Tag
+            >app v{{ appVersion }}</ATag>
+            <ATag
               v-if="projectVersion"
-              :value="`project v${projectVersion}`"
-              severity="warn"
+              color="warning"
               class="info-version-tag"
               v-tooltip.bottom="t('project_version_tooltip')"
-            />
+            >project v{{ projectVersion }}</ATag>
           </div>
         </div>
 
@@ -47,9 +42,7 @@
 import { ref, onMounted }  from 'vue'
 import { marked }          from 'marked'
 import AppLayout           from '@/components/AppLayout.vue'
-import ProgressSpinner     from 'primevue/progressspinner'
-import Message             from 'primevue/message'
-import Tag                 from 'primevue/tag'
+import { Spin as ASpin, Alert as AAlert, Tag as ATag } from 'ant-design-vue'
 import { api }             from '@/api'
 import { useI18n }         from '@/i18n'
 

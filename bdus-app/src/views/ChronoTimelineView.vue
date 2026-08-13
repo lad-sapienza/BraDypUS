@@ -5,59 +5,43 @@
       <!-- ── Header ─────────────────────────────────────────────────── -->
       <div class="page-header">
         <div class="header-left">
-          <Button
-            v-if="backUrl"
-            :label="backTableLabel || t('back_to_table')"
-            icon="pi pi-arrow-left"
-            size="small"
-            severity="secondary"
-            outlined
-            @click="router.push(backUrl)"
-          />
+          <AButton v-if="backUrl" size="small" @click="router.push(backUrl)">
+            <template #icon><i class="pi pi-arrow-left" /></template>
+            {{ backTableLabel || t('back_to_table') }}
+          </AButton>
           <h2>{{ t('chrono_timeline') }}</h2>
         </div>
         <div class="header-filters">
           <!-- Year range -->
           <span class="filter-label">{{ t('filter_years') }}</span>
-          <InputNumber
-            v-model="filterFrom"
+          <AInputNumber
+            v-model:value="filterFrom"
             :placeholder="t('year_from')"
-            :useGrouping="false"
             style="width: 110px"
-            :inputStyle="{ width: '100%' }"
-            @update:modelValue="onFilterChange"
+            @update:value="onFilterChange"
           />
           <span class="filter-sep">→</span>
-          <InputNumber
-            v-model="filterTo"
+          <AInputNumber
+            v-model:value="filterTo"
             :placeholder="t('year_to')"
-            :useGrouping="false"
             style="width: 110px"
-            :inputStyle="{ width: '100%' }"
-            @update:modelValue="onFilterChange"
+            @update:value="onFilterChange"
           />
 
           <!-- Table selector -->
-          <MultiSelect
+          <ASelect
             v-if="allTableOptions.length > 1"
-            v-model="selectedTables"
+            v-model:value="selectedTables"
             :options="allTableOptions"
-            optionLabel="label"
-            optionValue="value"
+            mode="multiple"
             :placeholder="t('all_tables')"
             class="table-select"
-            @update:modelValue="loadData"
+            @change="loadData"
           />
 
-          <Button
-            icon="pi pi-refresh"
-            severity="secondary"
-            outlined
-            size="small"
-            :loading="loading"
-            @click="loadData"
-            :title="t('reload')"
-          />
+          <AButton size="small" :loading="loading" :title="t('reload')" @click="loadData">
+            <template #icon><i class="pi pi-refresh" /></template>
+          </AButton>
         </div>
       </div>
 
@@ -226,9 +210,7 @@ import { useRoute, useRouter } from 'vue-router'
 import AppLayout from '@/components/AppLayout.vue'
 import { useI18n } from '@/i18n'
 import { api } from '@/api'
-import Button      from 'primevue/button'
-import InputNumber from 'primevue/inputnumber'
-import MultiSelect from 'primevue/multiselect'
+import { Button as AButton, InputNumber as AInputNumber, Select as ASelect } from 'ant-design-vue'
 
 const route  = useRoute()
 const router = useRouter()

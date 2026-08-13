@@ -5,42 +5,43 @@
       <!-- ── Page header ───────────────────────────────────────────────── -->
       <div class="page-header">
         <h2>{{ t('assemblage_analysis') }}</h2>
-        <Button icon="pi pi-plus" :label="t('new_analysis')" size="small" @click="openWizard(null)" />
+        <AButton type="primary" size="small" @click="openWizard(null)">
+          <template #icon><i class="pi pi-plus" /></template>
+          {{ t('new_analysis') }}
+        </AButton>
       </div>
 
-      <ProgressSpinner v-if="loading" class="loading-spinner" />
+      <ASpin v-if="loading" size="large" class="loading-spinner" />
 
       <template v-else>
 
         <!-- ── Result view ─────────────────────────────────────────────── -->
         <div v-if="openResult" class="result-view">
           <div class="result-header">
-            <Button icon="pi pi-arrow-left" text size="small" @click="closeResult" />
+            <AButton type="text" size="small" @click="closeResult">
+              <template #icon><i class="pi pi-arrow-left" /></template>
+            </AButton>
             <span class="result-title">{{ openResult.name }}</span>
-            <Tag v-if="openResult.is_global" :value="t('shared')" severity="success" />
+            <ATag v-if="openResult.is_global" color="success">{{ t('shared') }}</ATag>
             <div class="result-header-actions">
-              <Button icon="pi pi-pencil" text size="small" :title="t('edit_analysis')" @click="openWizard(openResult)" />
+              <AButton type="text" size="small" :title="t('edit_analysis')" @click="openWizard(openResult)">
+                <template #icon><i class="pi pi-pencil" /></template>
+              </AButton>
             </div>
           </div>
 
-          <div v-if="resultLoading" class="result-loading"><ProgressSpinner /></div>
+          <div v-if="resultLoading" class="result-loading"><ASpin size="large" /></div>
           <div v-else-if="resultError" class="result-error">{{ resultError }}</div>
 
           <template v-else-if="resultData && resultData.groups.length > 0">
-            <Tabs value="table" class="result-tabs">
-              <TabList>
-                <Tab value="table">{{ t('pivot_table') }}</Tab>
-                <Tab value="chart">{{ t('bar_chart') }}</Tab>
-              </TabList>
-              <TabPanels>
-                <!-- Pivot table -->
-                <TabPanel value="table">
-                  <div class="pivot-toolbar">
-                    <label class="heatmap-toggle">
-                      <ToggleSwitch v-model="heatmapEnabled" inputId="heatmap-sw" />
-                      <span>{{ t('heatmap') }}</span>
-                    </label>
-                  </div>
+            <ATabs v-model:activeKey="resultTab" class="result-tabs">
+              <ATabPane key="table" :tab="t('pivot_table')">
+                <div class="pivot-toolbar">
+                  <label class="heatmap-toggle">
+                    <ASwitch v-model:checked="heatmapEnabled" id="heatmap-sw" />
+                    <span>{{ t('heatmap') }}</span>
+                  </label>
+                </div>
                   <div class="pivot-scroll">
                     <table class="pivot-table">
                       <thead>
@@ -85,18 +86,20 @@
                     </table>
                   </div>
                   <div class="result-actions">
-                    <Button icon="pi pi-download" :label="t('export_csv')" size="small" text @click="exportCsv" />
+                    <AButton type="text" size="small" @click="exportCsv">
+                      <template #icon><i class="pi pi-download" /></template>
+                      {{ t('export_csv') }}
+                    </AButton>
                   </div>
-                </TabPanel>
+              </ATabPane>
 
-                <!-- Stacked bar chart -->
-                <TabPanel value="chart">
-                  <div class="chart-wrapper">
-                    <Bar :data="chartData" :options="chartOptions" />
-                  </div>
-                </TabPanel>
-              </TabPanels>
-            </Tabs>
+              <!-- Stacked bar chart -->
+              <ATabPane key="chart" :tab="t('bar_chart')">
+                <div class="chart-wrapper">
+                  <Bar :data="chartData" :options="chartOptions" />
+                </div>
+              </ATabPane>
+            </ATabs>
           </template>
 
           <div v-else-if="resultData" class="result-empty">
@@ -112,49 +115,56 @@
           </div>
 
           <div v-else class="analyses-grid">
-            <Card v-for="a in analyses" :key="a.id" class="analysis-card">
-              <template #content>
-                <div class="card-title">{{ a.name }}</div>
-                <div class="card-meta">
-                  <span>{{ a.definition?.source_tb }}</span>
-                  <span class="meta-sep">·</span>
-                  <span>{{ a.definition?.char_field }}</span>
-                  <span class="meta-sep">→</span>
-                  <span>{{ a.definition?.group_field }}</span>
-                </div>
-                <Tag v-if="a.is_global" :value="t('shared')" severity="success" class="card-tag" />
+            <ACard v-for="a in analyses" :key="a.id" class="analysis-card">
+              <div class="card-title">{{ a.name }}</div>
+              <div class="card-meta">
+                <span>{{ a.definition?.source_tb }}</span>
+                <span class="meta-sep">·</span>
+                <span>{{ a.definition?.char_field }}</span>
+                <span class="meta-sep">→</span>
+                <span>{{ a.definition?.group_field }}</span>
+              </div>
+              <ATag v-if="a.is_global" color="success" class="card-tag">{{ t('shared') }}</ATag>
+              <template #actions>
+                <AButton type="text" size="small" @click="openAnalysis(a)">
+                  <template #icon><i class="pi pi-play" /></template>
+                  {{ t('run') }}
+                </AButton>
+                <AButton type="text" size="small" :title="t('edit_analysis')" @click="openWizard(a)">
+                  <template #icon><i class="pi pi-pencil" /></template>
+                </AButton>
+                <AButton
+                  v-if="a.owned_by_me"
+                  type="text"
+                  size="small"
+                  :title="a.is_global ? t('unshare') : t('share')"
+                  @click="toggleShare(a)"
+                >
+                  <template #icon><i :class="['pi', a.is_global ? 'pi-lock' : 'pi-globe']" /></template>
+                </AButton>
+                <AButton
+                  v-if="a.owned_by_me"
+                  type="text"
+                  danger
+                  size="small"
+                  :title="t('delete')"
+                  @click="confirmDelete(a)"
+                >
+                  <template #icon><i class="pi pi-trash" /></template>
+                </AButton>
               </template>
-              <template #footer>
-                <div class="card-actions">
-                  <Button icon="pi pi-play" :label="t('run')" size="small" @click="openAnalysis(a)" />
-                  <Button icon="pi pi-pencil" text size="small" :title="t('edit_analysis')" @click="openWizard(a)" />
-                  <Button
-                    v-if="a.owned_by_me"
-                    :icon="a.is_global ? 'pi pi-lock' : 'pi pi-globe'"
-                    text size="small"
-                    :title="a.is_global ? t('unshare') : t('share')"
-                    @click="toggleShare(a)"
-                  />
-                  <Button
-                    v-if="a.owned_by_me"
-                    icon="pi pi-trash" text size="small" severity="danger"
-                    :title="t('delete')"
-                    @click="confirmDelete(a)"
-                  />
-                </div>
-              </template>
-            </Card>
+            </ACard>
           </div>
         </template>
       </template>
 
       <!-- ── Wizard Dialog ─────────────────────────────────────────────── -->
-      <Dialog
-        v-model:visible="wizardVisible"
-        :header="editingId ? t('edit_analysis') : t('new_analysis')"
-        modal
-        :style="{ width: '700px', maxWidth: '95vw' }"
-        :closable="true"
+      <AModal
+        v-model:open="wizardVisible"
+        :title="editingId ? t('edit_analysis') : t('new_analysis')"
+        width="700px"
+        :style="{ maxWidth: '95vw' }"
+        :footer="null"
       >
         <div class="wizard">
 
@@ -191,8 +201,8 @@
             <h3 class="step-title">{{ t('wizard_step1_title') }}</h3>
             <div class="form-field">
               <label class="field-label">{{ t('analysis_name') }}</label>
-              <InputText
-                v-model="wizard.name"
+              <AInput
+                v-model:value="wizard.name"
                 :placeholder="t('analysis_name_placeholder')"
                 class="w-full"
                 autofocus
@@ -200,16 +210,14 @@
             </div>
             <div class="form-field">
               <label class="field-label">{{ t('source_type') }}</label>
-              <div class="radio-group">
+              <ARadioGroup v-model:value="wizard.source_type" class="radio-group">
                 <div class="radio-item">
-                  <RadioButton v-model="wizard.source_type" value="table" inputId="st-table" />
-                  <label for="st-table">{{ t('source_table') }}</label>
+                  <ARadio value="table">{{ t('source_table') }}</ARadio>
                 </div>
                 <div class="radio-item">
-                  <RadioButton v-model="wizard.source_type" value="plugin" inputId="st-plugin" />
-                  <label for="st-plugin">{{ t('source_plugin') }}</label>
+                  <ARadio value="plugin">{{ t('source_plugin') }}</ARadio>
                 </div>
-              </div>
+              </ARadioGroup>
             </div>
           </div>
 
@@ -220,23 +228,21 @@
               <label class="field-label">
                 {{ wizard.source_type === 'plugin' ? t('select_plugin') : t('select_table') }}
               </label>
-              <Select
-                v-model="wizard.source_tb"
+              <ASelect
+                v-model:value="wizard.source_tb"
                 :options="availableSourceOptions"
-                optionLabel="label"
-                optionValue="name"
                 :placeholder="t('select_placeholder')"
                 class="w-full"
                 :loading="sourcesLoading"
-                filter
+                show-search
               >
-                <template #option="{ option }">
+                <template #option="option">
                   <div>
                     <div>{{ option.label }}</div>
                     <div v-if="option.parent_label" class="option-sub">{{ option.parent_label }}</div>
                   </div>
                 </template>
-              </Select>
+              </ASelect>
             </div>
           </div>
 
@@ -245,15 +251,13 @@
             <h3 class="step-title">{{ t('wizard_step3_title') }}</h3>
             <p class="step-hint">{{ t('wizard_step3_hint') }}</p>
             <div class="form-field">
-              <Select
-                v-model="wizard.char_field"
+              <ASelect
+                v-model:value="wizard.char_field"
                 :options="sourceFieldOptions"
-                optionLabel="label"
-                optionValue="name"
                 :placeholder="t('select_field')"
                 class="w-full"
                 :loading="metaLoading"
-                filter
+                show-search
               />
             </div>
           </div>
@@ -275,15 +279,13 @@
             <!-- Field selector for current table -->
             <div class="form-field">
               <label class="field-label">{{ t('field_in_table', pathCurrentTb) }}</label>
-              <Select
-                v-model="pathSelectedField"
+              <ASelect
+                v-model:value="pathSelectedField"
                 :options="pathCurrentFieldOptions"
-                optionLabel="label"
-                optionValue="name"
                 :placeholder="t('select_field')"
                 class="w-full"
                 :loading="pathMetaLoading"
-                filter
+                show-search
               />
             </div>
 
@@ -294,22 +296,17 @@
                 {{ t('fk_field_info', selectedFieldFkLabel) }}
               </div>
               <div class="action-row">
-                <Button
-                  :label="t('use_as_group_field')"
-                  :icon="wizard.group_field === pathSelectedField ? 'pi pi-check-circle' : 'pi pi-check'"
-                  size="small"
-                  :severity="wizard.group_field === pathSelectedField ? 'success' : 'primary'"
-                  @click="useAsGroupField"
-                />
-                <Button
+                <AButton type="primary" size="small" @click="useAsGroupField">
+                  <template #icon><i :class="['pi', wizard.group_field === pathSelectedField ? 'pi-check-circle' : 'pi-check']" /></template>
+                  {{ t('use_as_group_field') }}
+                </AButton>
+                <AButton
                   v-if="selectedFieldIsFK && wizard.group_path.length < 4"
-                  :label="t('traverse_to', selectedFieldFkTb)"
-                  icon="pi pi-arrow-right"
-                  iconPos="right"
                   size="small"
-                  severity="secondary"
                   @click="addPathStep"
-                />
+                >
+                  {{ t('traverse_to', selectedFieldFkTb) }} <i class="pi pi-arrow-right" style="margin-left:0.35rem" />
+                </AButton>
               </div>
             </div>
 
@@ -320,14 +317,15 @@
                 {{ t('group_field_selected') }}: <strong>{{ wizard.group_field }}</strong>
                 <span v-if="wizard.group_path.length > 0"> in {{ pathCurrentTb }}</span>
               </div>
-              <Button
+              <AButton
                 v-if="wizard.group_path.length > 0"
-                :label="t('remove_last_step')"
-                icon="pi pi-undo"
-                text size="small"
-                severity="secondary"
+                type="text"
+                size="small"
                 @click="removeLastStep"
-              />
+              >
+                <template #icon><i class="pi pi-undo" /></template>
+                {{ t('remove_last_step') }}
+              </AButton>
             </div>
           </div>
 
@@ -335,37 +333,32 @@
           <div v-if="currentStep === 5" class="wizard-step">
             <h3 class="step-title">{{ t('wizard_step5_title') }}</h3>
             <div class="form-field">
-              <div class="radio-group">
+              <ARadioGroup v-model:value="wizard.measure" class="radio-group">
                 <div class="radio-item">
-                  <RadioButton v-model="wizard.measure" value="count" inputId="m-count" />
-                  <label for="m-count">{{ t('measure_count') }}</label>
+                  <ARadio value="count">{{ t('measure_count') }}</ARadio>
                 </div>
                 <div class="radio-item">
-                  <RadioButton v-model="wizard.measure" value="sum" inputId="m-sum" />
-                  <label for="m-sum">{{ t('measure_sum') }}</label>
+                  <ARadio value="sum">{{ t('measure_sum') }}</ARadio>
                 </div>
                 <div class="radio-item">
-                  <RadioButton v-model="wizard.measure" value="count_distinct" inputId="m-cd" />
-                  <label for="m-cd">{{ t('measure_count_distinct') }}</label>
+                  <ARadio value="count_distinct">{{ t('measure_count_distinct') }}</ARadio>
                 </div>
-              </div>
+              </ARadioGroup>
             </div>
             <div v-if="wizard.measure !== 'count'" class="form-field">
               <label class="field-label">{{ t('measure_field') }}</label>
-              <Select
-                v-model="wizard.measure_field"
+              <ASelect
+                v-model:value="wizard.measure_field"
                 :options="measureFieldOptions"
-                optionLabel="label"
-                optionValue="name"
                 :placeholder="t('select_field')"
                 class="w-full"
-                filter
+                show-search
               />
             </div>
             <div class="form-field">
               <label class="field-label">{{ t('measure_label') }}</label>
-              <InputText
-                v-model="wizard.measure_label"
+              <AInput
+                v-model:value="wizard.measure_label"
                 :placeholder="t('measure_label_placeholder')"
                 class="w-full"
               />
@@ -377,43 +370,38 @@
             <h3 class="step-title">{{ t('wizard_step6_title') }}</h3>
             <p class="step-hint">{{ t('wizard_step6_hint') }}</p>
             <div v-for="(filter, i) in wizard.filters" :key="i" class="filter-row">
-              <Select
-                v-model="filter.field"
+              <ASelect
+                v-model:value="filter.field"
                 :options="sourceFieldOptions"
-                optionLabel="label"
-                optionValue="name"
                 :placeholder="t('field')"
                 size="small"
                 class="filter-field"
               />
-              <Select
-                v-model="filter.op"
+              <ASelect
+                v-model:value="filter.op"
                 :options="filterOpOptions"
-                optionLabel="label"
-                optionValue="value"
                 size="small"
                 class="filter-op"
               />
-              <InputText
-                v-model="filter.value"
+              <AInput
+                v-model:value="filter.value"
                 :placeholder="t('value')"
                 size="small"
                 class="filter-value"
               />
-              <Button
-                icon="pi pi-times"
-                text size="small"
-                severity="danger"
+              <AButton
+                type="text"
+                danger
+                size="small"
                 @click="wizard.filters.splice(i, 1)"
-              />
+              >
+                <template #icon><i class="pi pi-times" /></template>
+              </AButton>
             </div>
-            <Button
-              icon="pi pi-plus"
-              :label="t('add_filter')"
-              size="small"
-              text
-              @click="wizard.filters.push({ field: '', op: '_eq', value: '' })"
-            />
+            <AButton type="text" size="small" @click="wizard.filters.push({ field: '', op: '_eq', value: '' })">
+              <template #icon><i class="pi pi-plus" /></template>
+              {{ t('add_filter') }}
+            </AButton>
           </div>
 
           <!-- ── Step 7: Preview + save ──────────────────────────────── -->
@@ -433,14 +421,10 @@
               </div>
             </div>
 
-            <Button
-              :label="t('run_preview')"
-              icon="pi pi-play"
-              size="small"
-              class="preview-btn"
-              :loading="previewLoading"
-              @click="runPreview"
-            />
+            <AButton type="primary" size="small" class="preview-btn" :loading="previewLoading" @click="runPreview">
+              <template #icon><i class="pi pi-play" /></template>
+              {{ t('run_preview') }}
+            </AButton>
 
             <div v-if="previewResult" class="preview-result">
               <p class="preview-stats">
@@ -476,38 +460,23 @@
           </div>
 
           <!-- ── Wizard navigation ───────────────────────────────────── -->
-          <Divider />
+          <ADivider />
           <div class="wizard-nav">
-            <Button
-              v-if="currentStep > 1"
-              :label="t('back')"
-              icon="pi pi-chevron-left"
-              size="small"
-              text
-              @click="currentStep--"
-            />
+            <AButton v-if="currentStep > 1" type="text" size="small" @click="currentStep--">
+              <template #icon><i class="pi pi-chevron-left" /></template>
+              {{ t('back') }}
+            </AButton>
             <div class="nav-spacer" />
-            <Button
-              v-if="currentStep < TOTAL_STEPS"
-              :label="t('next')"
-              icon="pi pi-chevron-right"
-              iconPos="right"
-              size="small"
-              :disabled="!canGoNext"
-              @click="goNext"
-            />
-            <Button
-              v-else
-              :label="t('save_analysis')"
-              icon="pi pi-check"
-              size="small"
-              :loading="saving"
-              :disabled="!wizard.name || !previewResult"
-              @click="doSave"
-            />
+            <AButton v-if="currentStep < TOTAL_STEPS" type="primary" size="small" :disabled="!canGoNext" @click="goNext">
+              {{ t('next') }} <i class="pi pi-chevron-right" style="margin-left:0.35rem" />
+            </AButton>
+            <AButton v-else type="primary" size="small" :loading="saving" :disabled="!wizard.name || !previewResult" @click="doSave">
+              <template #icon><i class="pi pi-check" /></template>
+              {{ t('save_analysis') }}
+            </AButton>
           </div>
         </div>
-      </Dialog>
+      </AModal>
 
     </div>
   </AppLayout>
@@ -520,21 +489,20 @@ import { useToast, useConfirm } from '@/composables/useNotify'
 import { useI18n }    from '@/i18n'
 import { api }        from '@/api'
 import AppLayout      from '@/components/AppLayout.vue'
-import Button         from 'primevue/button'
-import Card           from 'primevue/card'
-import Dialog         from 'primevue/dialog'
-import Divider        from 'primevue/divider'
-import InputText      from 'primevue/inputtext'
-import ProgressSpinner from 'primevue/progressspinner'
-import RadioButton    from 'primevue/radiobutton'
-import Select         from 'primevue/select'
-import ToggleSwitch   from 'primevue/toggleswitch'
-import Tab            from 'primevue/tab'
-import TabList        from 'primevue/tablist'
-import TabPanel       from 'primevue/tabpanel'
-import TabPanels      from 'primevue/tabpanels'
-import Tabs           from 'primevue/tabs'
-import Tag            from 'primevue/tag'
+import {
+  Button as AButton,
+  Card as ACard,
+  Modal as AModal,
+  Divider as ADivider,
+  Input as AInput,
+  Spin as ASpin,
+  Radio as ARadio,
+  Select as ASelect,
+  Switch as ASwitch,
+  Tabs as ATabs,
+  TabPane as ATabPane,
+  Tag as ATag
+} from 'ant-design-vue'
 import { Bar }        from 'vue-chartjs'
 import {
   Chart as ChartJS,
@@ -545,6 +513,8 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js'
+
+const ARadioGroup = ARadio.Group
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 
@@ -567,6 +537,7 @@ const openResult  = ref(null)
 const resultData  = ref(null)
 const resultLoading = ref(false)
 const resultError   = ref(null)
+const resultTab      = ref('table')
 
 // Wizard state
 const wizardVisible = ref(false)
@@ -605,15 +576,13 @@ const pathCurrentMeta   = ref(null)
 // ── Computed ──────────────────────────────────────────────────────────────
 
 const availableSourceOptions = computed(() => {
-  if (wizard.source_type === 'plugin') {
-    return allSources.value.plugins
-  }
-  return allSources.value.tables
+  const list = wizard.source_type === 'plugin' ? allSources.value.plugins : allSources.value.tables
+  return list.map(o => ({ value: o.name, label: o.label, parent_label: o.parent_label }))
 })
 
 const sourceFieldOptions = computed(() => {
   return (sourceMeta.value?.fields ?? []).map(f => ({
-    name:  f.name,
+    value: f.name,
     label: f.label || f.name,
   }))
 })
@@ -621,9 +590,9 @@ const sourceFieldOptions = computed(() => {
 const measureFieldOptions = computed(() => {
   const fields = sourceMeta.value?.fields ?? []
   if (wizard.measure === 'sum') {
-    return fields.filter(f => f.is_numeric).map(f => ({ name: f.name, label: f.label || f.name }))
+    return fields.filter(f => f.is_numeric).map(f => ({ value: f.name, label: f.label || f.name }))
   }
-  return fields.map(f => ({ name: f.name, label: f.label || f.name }))
+  return fields.map(f => ({ value: f.name, label: f.label || f.name }))
 })
 
 const pathCurrentTb = computed(() => {
@@ -633,7 +602,7 @@ const pathCurrentTb = computed(() => {
 
 const pathCurrentFieldOptions = computed(() => {
   return (pathCurrentMeta.value?.fields ?? []).map(f => ({
-    name:  f.name,
+    value: f.name,
     label: f.is_fk ? `${f.label || f.name} → ${f.fk_label}` : (f.label || f.name),
   }))
 })
@@ -972,6 +941,7 @@ async function doSave() {
 
 async function openAnalysis(analysis) {
   openResult.value  = analysis
+  resultTab.value   = 'table'
   resultLoading.value = true
   resultError.value   = null
   resultData.value    = null

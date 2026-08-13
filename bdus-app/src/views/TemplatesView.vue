@@ -22,13 +22,14 @@
         <template v-if="selectedTb">
           <div class="tmpl-list-header">
             <span>{{ t('templates') }}</span>
-            <Button
-              icon="pi pi-plus"
+            <AButton
+              type="text"
               size="small"
-              text
               :title="t('add_template')"
               @click="showNewDialog = true"
-            />
+            >
+              <template #icon><i class="pi pi-plus" /></template>
+            </AButton>
           </div>
 
           <div v-if="!templateNames.length" class="tmpl-empty-list">
@@ -70,9 +71,9 @@
               <span class="tmpl-tb-label">{{ selectedTbLabel }}</span>
               <i class="pi pi-chevron-right tmpl-sep" />
               <span v-if="!renaming" class="tmpl-name-text">{{ selectedName }}</span>
-              <InputText
+              <AInput
                 v-else
-                v-model="newName"
+                v-model:value="newName"
                 size="small"
                 class="tmpl-rename-input"
                 @keyup.enter="confirmRename"
@@ -80,50 +81,31 @@
               />
             </div>
             <div class="tmpl-editor-actions">
-              <Button
+              <AButton v-if="!renaming" size="small" @click="startRename">
+                <template #icon><i class="pi pi-pencil" /></template>
+                {{ t('rename') }}
+              </AButton>
+              <AButton v-if="renaming" type="primary" size="small" :loading="renameLoading" @click="confirmRename">
+                <template #icon><i class="pi pi-check" /></template>
+                {{ t('confirm') }}
+              </AButton>
+              <AButton v-if="renaming" type="text" size="small" @click="renaming = false">
+                {{ t('cancel') }}
+              </AButton>
+              <AButton v-if="!renaming" size="small" :loading="saving" @click="saveTemplate">
+                <template #icon><i class="pi pi-save" /></template>
+                {{ t('save') }}
+              </AButton>
+              <AButton
                 v-if="!renaming"
-                :label="t('rename')"
-                icon="pi pi-pencil"
+                danger
                 size="small"
-                severity="secondary"
-                outlined
-                @click="startRename"
-              />
-              <Button
-                v-if="renaming"
-                :label="t('confirm')"
-                icon="pi pi-check"
-                size="small"
-                severity="primary"
-                :loading="renameLoading"
-                @click="confirmRename"
-              />
-              <Button
-                v-if="renaming"
-                :label="t('cancel')"
-                size="small"
-                severity="secondary"
-                text
-                @click="renaming = false"
-              />
-              <Button
-                v-if="!renaming"
-                :label="t('save')"
-                icon="pi pi-save"
-                size="small"
-                :loading="saving"
-                @click="saveTemplate"
-              />
-              <Button
-                v-if="!renaming"
-                icon="pi pi-trash"
-                size="small"
-                severity="danger"
-                outlined
                 :title="t('delete_template')"
                 :loading="deleting"
                 @click="confirmDelete"
-              />
+              >
+                <template #icon><i class="pi pi-trash" /></template>
+              </AButton>
             </div>
           </div>
 
@@ -142,33 +124,29 @@
                   <!-- Label -->
                   <div class="tmpl-field-group">
                     <label>{{ t('section_label') }}</label>
-                    <InputText v-model="section.label" size="small" style="width:180px" />
+                    <AInput v-model:value="section.label" size="small" style="width:180px" />
                   </div>
 
                   <!-- Section type -->
                   <div class="tmpl-field-group">
                     <label>{{ t('section_type') }}</label>
-                    <Select
-                      :modelValue="sectionType(section)"
+                    <ASelect
+                      :value="sectionType(section)"
                       :options="sectionTypeOptions"
-                      optionLabel="label"
-                      optionValue="value"
                       size="small"
                       style="width:140px"
-                      @change="e => onSectionTypeChange(si, e.value)"
+                      @change="value => onSectionTypeChange(si, value)"
                     />
                   </div>
 
                   <!-- Plugin selector (only when type = plugin) -->
                   <div v-if="sectionType(section) === 'plugin'" class="tmpl-field-group">
                     <label>{{ t('plugin') }}</label>
-                    <Select
-                      v-model="section.plugin"
+                    <ASelect
+                      v-model:value="section.plugin"
                       :options="pluginOptions"
-                      optionLabel="label"
-                      optionValue="tb"
                       :placeholder="t('select_plugin')"
-                      :showClear="true"
+                      allow-clear
                       size="small"
                       style="width:160px"
                     />
@@ -177,11 +155,11 @@
                   <!-- Collapsible (not applicable to accordion) -->
                   <template v-if="sectionType(section) !== 'accordion'">
                     <div class="tmpl-field-group tmpl-checkbox-group">
-                      <Checkbox v-model="section.collapsible" :binary="true" :inputId="'col-' + si" />
+                      <ACheckbox v-model:checked="section.collapsible" :id="'col-' + si" />
                       <label :for="'col-' + si">{{ t('collapsible') }}</label>
                     </div>
                     <div v-if="section.collapsible" class="tmpl-field-group tmpl-checkbox-group">
-                      <Checkbox v-model="section.collapsed" :binary="true" :inputId="'coldef-' + si" />
+                      <ACheckbox v-model:checked="section.collapsed" :id="'coldef-' + si" />
                       <label :for="'coldef-' + si">{{ t('collapsed_by_default') }}</label>
                     </div>
                   </template>
@@ -189,9 +167,9 @@
 
                 <!-- Section move + remove -->
                 <div class="tmpl-section-actions">
-                  <Button icon="pi pi-arrow-up"   size="small" text :disabled="si === 0"                         @click="moveSection(si, -1)" />
-                  <Button icon="pi pi-arrow-down" size="small" text :disabled="si === form.sections.length - 1"  @click="moveSection(si,  1)" />
-                  <Button icon="pi pi-trash"       size="small" text severity="danger"                            @click="removeSection(si)"   />
+                  <AButton type="text" size="small" :disabled="si === 0"                        @click="moveSection(si, -1)"><template #icon><i class="pi pi-arrow-up" /></template></AButton>
+                  <AButton type="text" size="small" :disabled="si === form.sections.length - 1" @click="moveSection(si,  1)"><template #icon><i class="pi pi-arrow-down" /></template></AButton>
+                  <AButton type="text" danger size="small" @click="removeSection(si)"><template #icon><i class="pi pi-trash" /></template></AButton>
                 </div>
               </div>
 
@@ -202,22 +180,23 @@
                   :key="ii"
                   class="tmpl-content-row"
                 >
-                  <Select
-                    v-model="item.field"
+                  <ASelect
+                    v-model:value="item.field"
                     :options="coreFieldOptions"
-                    optionLabel="label"
-                    optionValue="name"
                     :placeholder="t('select_field')"
                     size="small"
-                    filter
+                    show-search
                     style="flex:1; min-width:140px"
                   />
-                  <Select v-model="item.width" :options="widthOptions" size="small" style="width:90px" />
-                  <Button icon="pi pi-arrow-up"   size="small" text :disabled="ii === 0"                          @click="moveField(si, ii, -1)" />
-                  <Button icon="pi pi-arrow-down" size="small" text :disabled="ii === section.content.length - 1" @click="moveField(si, ii,  1)" />
-                  <Button icon="pi pi-times"      size="small" text severity="danger"                              @click="section.content.splice(ii, 1)" />
+                  <ASelect v-model:value="item.width" :options="widthSelectOptions" size="small" style="width:90px" />
+                  <AButton type="text" size="small" :disabled="ii === 0"                          @click="moveField(si, ii, -1)"><template #icon><i class="pi pi-arrow-up" /></template></AButton>
+                  <AButton type="text" size="small" :disabled="ii === section.content.length - 1" @click="moveField(si, ii,  1)"><template #icon><i class="pi pi-arrow-down" /></template></AButton>
+                  <AButton type="text" danger size="small" @click="section.content.splice(ii, 1)"><template #icon><i class="pi pi-times" /></template></AButton>
                 </div>
-                <Button :label="t('add_field')" icon="pi pi-plus" size="small" text class="tmpl-add-field-btn" @click="addField(si)" />
+                <AButton type="text" size="small" class="tmpl-add-field-btn" @click="addField(si)">
+                  <template #icon><i class="pi pi-plus" /></template>
+                  {{ t('add_field') }}
+                </AButton>
               </div>
 
               <!-- Content: plugin (layout columns for PluginSection) -->
@@ -227,22 +206,23 @@
                   :key="ii"
                   class="tmpl-content-row"
                 >
-                  <Select
-                    v-model="item.field"
+                  <ASelect
+                    v-model:value="item.field"
                     :options="section.plugin ? pluginFieldOptions(section.plugin) : []"
-                    optionLabel="label"
-                    optionValue="name"
                     :placeholder="t('select_field')"
                     size="small"
-                    filter
+                    show-search
                     style="flex:1; min-width:140px"
                   />
-                  <Select v-model="item.width" :options="widthOptions" size="small" style="width:90px" />
-                  <Button icon="pi pi-arrow-up"   size="small" text :disabled="ii === 0"                          @click="moveField(si, ii, -1)" />
-                  <Button icon="pi pi-arrow-down" size="small" text :disabled="ii === section.content.length - 1" @click="moveField(si, ii,  1)" />
-                  <Button icon="pi pi-times"      size="small" text severity="danger"                              @click="section.content.splice(ii, 1)" />
+                  <ASelect v-model:value="item.width" :options="widthSelectOptions" size="small" style="width:90px" />
+                  <AButton type="text" size="small" :disabled="ii === 0"                          @click="moveField(si, ii, -1)"><template #icon><i class="pi pi-arrow-up" /></template></AButton>
+                  <AButton type="text" size="small" :disabled="ii === section.content.length - 1" @click="moveField(si, ii,  1)"><template #icon><i class="pi pi-arrow-down" /></template></AButton>
+                  <AButton type="text" danger size="small" @click="section.content.splice(ii, 1)"><template #icon><i class="pi pi-times" /></template></AButton>
                 </div>
-                <Button :label="t('add_field')" icon="pi pi-plus" size="small" text class="tmpl-add-field-btn" @click="addField(si)" />
+                <AButton type="text" size="small" class="tmpl-add-field-btn" @click="addField(si)">
+                  <template #icon><i class="pi pi-plus" /></template>
+                  {{ t('add_field') }}
+                </AButton>
               </div>
 
               <!-- Content: accordion panels -->
@@ -256,16 +236,16 @@
                   <div class="tmpl-accordion-panel-header">
                     <div class="tmpl-field-group" style="flex:1">
                       <label>{{ t('panel_label') }}</label>
-                      <InputText v-model="panel.label" size="small" style="width:180px" />
+                      <AInput v-model:value="panel.label" size="small" style="width:180px" />
                     </div>
                     <div class="tmpl-field-group tmpl-checkbox-group">
-                      <Checkbox v-model="panel.open" :binary="true" :inputId="'open-' + si + '-' + pi" />
+                      <ACheckbox v-model:checked="panel.open" :id="'open-' + si + '-' + pi" />
                       <label :for="'open-' + si + '-' + pi">{{ t('open_by_default') }}</label>
                     </div>
                     <div class="tmpl-section-actions">
-                      <Button icon="pi pi-arrow-up"   size="small" text :disabled="pi === 0"                          @click="movePanel(si, pi, -1)" />
-                      <Button icon="pi pi-arrow-down" size="small" text :disabled="pi === section.content.length - 1" @click="movePanel(si, pi,  1)" />
-                      <Button icon="pi pi-trash"      size="small" text severity="danger"                             @click="section.content.splice(pi, 1)" />
+                      <AButton type="text" size="small" :disabled="pi === 0"                          @click="movePanel(si, pi, -1)"><template #icon><i class="pi pi-arrow-up" /></template></AButton>
+                      <AButton type="text" size="small" :disabled="pi === section.content.length - 1" @click="movePanel(si, pi,  1)"><template #icon><i class="pi pi-arrow-down" /></template></AButton>
+                      <AButton type="text" danger size="small" @click="section.content.splice(pi, 1)"><template #icon><i class="pi pi-trash" /></template></AButton>
                     </div>
                   </div>
                   <!-- Panel field list -->
@@ -275,37 +255,37 @@
                       :key="ii"
                       class="tmpl-content-row"
                     >
-                      <Select
-                        v-model="item.field"
+                      <ASelect
+                        v-model:value="item.field"
                         :options="coreFieldOptions"
-                        optionLabel="label"
-                        optionValue="name"
                         :placeholder="t('select_field')"
                         size="small"
-                        filter
+                        show-search
                         style="flex:1; min-width:140px"
                       />
-                      <Select v-model="item.width" :options="widthOptions" size="small" style="width:90px" />
-                      <Button icon="pi pi-arrow-up"   size="small" text :disabled="ii === 0"                        @click="movePanelField(si, pi, ii, -1)" />
-                      <Button icon="pi pi-arrow-down" size="small" text :disabled="ii === panel.fields.length - 1"  @click="movePanelField(si, pi, ii,  1)" />
-                      <Button icon="pi pi-times"      size="small" text severity="danger"                            @click="panel.fields.splice(ii, 1)" />
+                      <ASelect v-model:value="item.width" :options="widthSelectOptions" size="small" style="width:90px" />
+                      <AButton type="text" size="small" :disabled="ii === 0"                       @click="movePanelField(si, pi, ii, -1)"><template #icon><i class="pi pi-arrow-up" /></template></AButton>
+                      <AButton type="text" size="small" :disabled="ii === panel.fields.length - 1" @click="movePanelField(si, pi, ii,  1)"><template #icon><i class="pi pi-arrow-down" /></template></AButton>
+                      <AButton type="text" danger size="small" @click="panel.fields.splice(ii, 1)"><template #icon><i class="pi pi-times" /></template></AButton>
                     </div>
-                    <Button :label="t('add_field')" icon="pi pi-plus" size="small" text class="tmpl-add-field-btn" @click="addPanelField(si, pi)" />
+                    <AButton type="text" size="small" class="tmpl-add-field-btn" @click="addPanelField(si, pi)">
+                      <template #icon><i class="pi pi-plus" /></template>
+                      {{ t('add_field') }}
+                    </AButton>
                   </div>
                 </div>
-                <Button :label="t('add_panel')" icon="pi pi-plus" size="small" text class="tmpl-add-field-btn" @click="addPanel(si)" />
+                <AButton type="text" size="small" class="tmpl-add-field-btn" @click="addPanel(si)">
+                  <template #icon><i class="pi pi-plus" /></template>
+                  {{ t('add_panel') }}
+                </AButton>
               </div>
             </div>
 
             <!-- Add section -->
-            <Button
-              :label="t('add_section')"
-              icon="pi pi-plus"
-              size="small"
-              outlined
-              class="tmpl-add-section-btn"
-              @click="addSection"
-            />
+            <AButton size="small" class="tmpl-add-section-btn" @click="addSection">
+              <template #icon><i class="pi pi-plus" /></template>
+              {{ t('add_section') }}
+            </AButton>
           </div>
         </template>
 
@@ -313,11 +293,11 @@
     </div>
 
     <!-- ── New template dialog ─────────────────────────────────────────── -->
-    <Dialog v-model:visible="showNewDialog" modal :header="t('add_template')" style="width:360px">
+    <AModal v-model:open="showNewDialog" :title="t('add_template')" width="360px">
       <div class="tmpl-new-body">
         <label>{{ t('template_name') }}</label>
-        <InputText
-          v-model="newTemplateName"
+        <AInput
+          v-model:value="newTemplateName"
           size="small"
           :placeholder="t('template_name_hint')"
           autofocus
@@ -326,10 +306,13 @@
         <small class="tmpl-name-hint">{{ t('template_name_chars') }}</small>
       </div>
       <template #footer>
-        <Button :label="t('cancel')" severity="secondary" size="small" text @click="showNewDialog = false" />
-        <Button :label="t('create')" icon="pi pi-plus" size="small" :loading="creating" @click="createTemplate" />
+        <AButton type="text" size="small" @click="showNewDialog = false">{{ t('cancel') }}</AButton>
+        <AButton type="primary" size="small" :loading="creating" @click="createTemplate">
+          <template #icon><i class="pi pi-plus" /></template>
+          {{ t('create') }}
+        </AButton>
       </template>
-    </Dialog>
+    </AModal>
 
   </AppLayout>
 </template>
@@ -337,11 +320,13 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import AppLayout   from '@/components/AppLayout.vue'
-import Button      from 'primevue/button'
-import InputText   from 'primevue/inputtext'
-import Select      from 'primevue/select'
-import Checkbox    from 'primevue/checkbox'
-import Dialog      from 'primevue/dialog'
+import {
+  Button as AButton,
+  Input as AInput,
+  Select as ASelect,
+  Checkbox as ACheckbox,
+  Modal as AModal
+} from 'ant-design-vue'
 import { useToast, useConfirm } from '@/composables/useNotify'
 import { useI18n }    from '@/i18n'
 import { api }        from '@/api'
@@ -374,13 +359,14 @@ const renameLoading = ref(false)
 
 // ── Computed ────────────────────────────────────────────────────────────
 const widthOptions = ['1/1', '1/2', '1/3', '2/3', '1/4', '3/4']
+const widthSelectOptions = widthOptions.map(w => ({ value: w, label: w }))
 
-const coreFieldOptions = computed(() => coreFields.value)
+const coreFieldOptions = computed(() => coreFields.value.map(f => ({ value: f.name, label: f.label })))
 
-const pluginOptions = computed(() => plugins.value)
+const pluginOptions = computed(() => plugins.value.map(p => ({ value: p.tb, label: p.label })))
 
 function pluginFieldOptions(plgTb) {
-  return pluginFieldsCache.value[plgTb] ?? []
+  return (pluginFieldsCache.value[plgTb] ?? []).map(f => ({ value: f.name, label: f.label }))
 }
 
 // ── Boot ────────────────────────────────────────────────────────────────

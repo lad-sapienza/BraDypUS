@@ -3,11 +3,9 @@
     <div class="login-card" style="text-align: center;">
       <h1 class="login-title">BraDypUS</h1>
 
-      <ProgressSpinner v-if="!done" style="width:48px; height:48px; margin: 1.5rem 0;" />
+      <ASpin v-if="!done" :size="'large'" style="margin: 1.5rem 0;" />
 
-      <Message v-if="errorMsg" severity="error" :closable="false">
-        {{ errorMsg }}
-      </Message>
+      <AAlert v-if="errorMsg" type="error" :message="errorMsg" :closable="false" show-icon />
 
       <div v-if="errorMsg" style="margin-top: 1rem;">
         <router-link to="/login">← Back to login</router-link>
@@ -31,8 +29,7 @@ import { onMounted, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from '@/i18n'
-import ProgressSpinner from 'primevue/progressspinner'
-import Message from 'primevue/message'
+import { Spin as ASpin, Alert as AAlert } from 'ant-design-vue'
 
 const router   = useRouter()
 const route    = useRoute()

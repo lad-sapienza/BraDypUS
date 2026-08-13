@@ -5,21 +5,17 @@
     <div class="save-section">
       <div class="save-section-label">{{ t('save_current_search') }}</div>
       <div v-if="currentSearch" class="save-row">
-        <InputText
-          v-model="newQueryName"
+        <AInput
+          v-model:value="newQueryName"
           :placeholder="t('name_for_query_to_save')"
           size="small"
           class="save-name-input"
           @keyup.enter="doSave"
         />
-        <Button
-          :label="t('save')"
-          icon="pi pi-save"
-          size="small"
-          :loading="saving"
-          :disabled="!newQueryName.trim()"
-          @click="doSave"
-        />
+        <AButton type="primary" size="small" :loading="saving" :disabled="!newQueryName.trim()" @click="doSave">
+          <template #icon><i class="pi pi-save" /></template>
+          {{ t('save') }}
+        </AButton>
       </div>
       <div v-else class="save-hint">
         <i class="pi pi-info-circle" />
@@ -27,11 +23,11 @@
       </div>
     </div>
 
-    <Divider />
+    <ADivider />
 
     <!-- ── Query list ───────────────────────────────────────────── -->
     <div v-if="loading" class="panel-loading">
-      <ProgressSpinner style="width:24px;height:24px" />
+      <ASpin />
     </div>
 
     <div v-else-if="filteredQueries.length === 0" class="panel-empty">
@@ -54,53 +50,45 @@
         </div>
         <div class="query-actions">
           <!-- Execute -->
-          <Button
-            icon="pi pi-play"
+          <AButton
+            type="text"
             size="small"
-            text
             :title="t('execute_query')"
             :disabled="!q.query"
             @click="emitLoad(q)"
-          />
+          >
+            <template #icon><i class="pi pi-play" /></template>
+          </AButton>
           <!-- Share / Unshare (only owner) -->
-          <Button
+          <AButton
             v-if="q.owned_by_me"
-            :icon="q.is_global ? 'pi pi-star-fill' : 'pi pi-star'"
+            type="text"
             size="small"
-            text
             :title="q.is_global ? t('unshare') : t('share')"
             :loading="pendingId === q.id && pendingAction === 'share'"
             @click="toggleShare(q)"
-          />
+          >
+            <template #icon><i :class="['pi', q.is_global ? 'pi-star-fill' : 'pi-star']" /></template>
+          </AButton>
           <!-- Delete (only owner, with inline confirm) -->
-          <Button
+          <AButton
             v-if="q.owned_by_me"
-            icon="pi pi-trash"
+            type="text"
+            danger
             size="small"
-            text
-            severity="danger"
             :title="t('delete')"
             :loading="pendingId === q.id && pendingAction === 'delete'"
             @click="confirmDelete(q)"
-          />
+          >
+            <template #icon><i class="pi pi-trash" /></template>
+          </AButton>
         </div>
 
         <!-- Inline confirm row (shown when user clicks trash) -->
         <div v-if="confirmingId === q.id" class="query-confirm">
           <span class="query-confirm-text">{{ t('confirm_delete') }}</span>
-          <Button
-            :label="t('yes')"
-            size="small"
-            severity="danger"
-            @click="doDelete(q)"
-          />
-          <Button
-            :label="t('no')"
-            size="small"
-            severity="secondary"
-            text
-            @click="confirmingId = null"
-          />
+          <AButton danger size="small" @click="doDelete(q)">{{ t('yes') }}</AButton>
+          <AButton type="text" size="small" @click="confirmingId = null">{{ t('no') }}</AButton>
         </div>
       </li>
     </ul>
@@ -112,10 +100,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useToast } from '@/composables/useNotify'
 import { api } from '@/api'
 import { useI18n } from '@/i18n'
-import Button from 'primevue/button'
-import InputText from 'primevue/inputtext'
-import Divider from 'primevue/divider'
-import ProgressSpinner from 'primevue/progressspinner'
+import { Button as AButton, Input as AInput, Divider as ADivider, Spin as ASpin } from 'ant-design-vue'
 
 // ── Props & emits ─────────────────────────────────────────────
 const props = defineProps({

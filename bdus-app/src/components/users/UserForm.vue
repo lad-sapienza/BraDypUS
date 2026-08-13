@@ -4,62 +4,47 @@
 
     <div class="field">
       <label for="name">Name</label>
-      <InputText id="name" v-model="form.name" required fluid />
+      <AInput id="name" v-model:value="form.name" required />
     </div>
 
     <div class="field">
       <label for="email">Email</label>
-      <InputText id="email" v-model="form.email" type="email" required fluid />
+      <AInput id="email" v-model:value="form.email" type="email" required />
     </div>
 
     <div class="field">
       <label for="privilege">Role</label>
-      <Select
+      <ASelect
         id="privilege"
-        v-model="form.privilege"
+        v-model:value="form.privilege"
         :options="privilegeOptions"
-        optionLabel="label"
-        optionValue="value"
-        fluid
       />
     </div>
 
     <div class="field">
       <label for="password">Password</label>
-      <Password
+      <AInputPassword
         id="password"
-        v-model="form.password"
-        :feedback="false"
-        toggleMask
+        v-model:value="form.password"
         :placeholder="form.id ? 'Leave blank to keep current' : 'Required'"
-        fluid
       />
     </div>
 
     <div class="form-actions">
-      <Button
-        type="button"
-        label="Cancel"
-        severity="secondary"
-        outlined
-        @click="$emit('cancel')"
-      />
-      <Button
-        type="submit"
-        label="Save"
-        icon="pi pi-check"
-        :loading="saving"
-      />
+      <AButton html-type="button" @click="$emit('cancel')">Cancel</AButton>
+      <AButton type="primary" html-type="submit" :loading="saving">
+        <template #icon><i class="pi pi-check" /></template>
+        Save
+      </AButton>
     </div>
   </form>
 </template>
 
 <script setup>
 import { ref, computed, watch } from 'vue'
-import InputText from 'primevue/inputtext'
-import Password from 'primevue/password'
-import Select from 'primevue/select'
-import Button from 'primevue/button'
+import { Input, Select as ASelect, Button as AButton } from 'ant-design-vue'
+const AInput = Input
+const AInputPassword = Input.Password
 
 const props = defineProps({
   initial: { type: Object, default: () => ({}) },

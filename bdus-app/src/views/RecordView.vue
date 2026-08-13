@@ -16,12 +16,10 @@
 
       <div class="header-actions">
         <!-- Template selector (read mode, when >1 template available) -->
-        <Select
+        <ASelect
           v-if="mode === 'read' && availableTemplates.length > 0"
-          v-model="selectedTemplate"
+          v-model:value="selectedTemplate"
           :options="templateOptions"
-          optionLabel="label"
-          optionValue="value"
           size="small"
           class="template-select"
           :title="t('template')"
@@ -29,87 +27,61 @@
         />
 
         <!-- Column count selector (read mode, default layout only) -->
-        <Select
+        <ASelect
           v-if="mode === 'read' && record && !hasTemplate"
-          :modelValue="selectedCols"
+          :value="selectedCols"
           :options="COL_OPTIONS"
-          optionLabel="label"
-          optionValue="value"
           size="small"
           class="cols-select"
           :title="t('fields_columns')"
-          @change="e => onColsChange(e.value)"
+          @change="onColsChange"
         />
 
         <template v-if="mode === 'read' && record">
           <!-- Version history button (only for existing records) -->
-          <Button
-            v-if="!isNew"
-            :label="t('version_history')"
-            icon="pi pi-history"
-            size="small"
-            severity="secondary"
-            outlined
-            @click="versionsDrawerOpen = true"
-          />
-          <Button
+          <AButton v-if="!isNew" size="small" @click="versionsDrawerOpen = true">
+            <template #icon><i class="pi pi-history" /></template>
+            {{ t('version_history') }}
+          </AButton>
+          <AButton
             v-if="!isNew && record.metadata?.can_add"
-            :label="t('duplicate')"
-            icon="pi pi-copy"
             size="small"
-            severity="secondary"
-            outlined
             :loading="duplicating"
             @click="duplicateRecord"
-          />
-          <Button
-            v-if="record.metadata?.can_edit"
-            :label="t('edit')"
-            icon="pi pi-pencil"
-            size="small"
-            @click="enterEditMode"
-          />
-          <Button
-            v-if="record.metadata?.can_delete"
-            :label="t('delete')"
-            icon="pi pi-trash"
-            size="small"
-            severity="danger"
-            outlined
-            @click="confirmDelete"
-          />
+          >
+            <template #icon><i class="pi pi-copy" /></template>
+            {{ t('duplicate') }}
+          </AButton>
+          <AButton v-if="record.metadata?.can_edit" type="primary" size="small" @click="enterEditMode">
+            <template #icon><i class="pi pi-pencil" /></template>
+            {{ t('edit') }}
+          </AButton>
+          <AButton v-if="record.metadata?.can_delete" danger size="small" @click="confirmDelete">
+            <template #icon><i class="pi pi-trash" /></template>
+            {{ t('delete') }}
+          </AButton>
         </template>
 
         <template v-if="mode === 'edit'">
-          <Button
-            :label="t('save')"
-            icon="pi pi-check"
-            size="small"
-            severity="primary"
-            :loading="saving"
-            @click="saveRecord"
-          />
-          <Button
-            :label="t('cancel')"
-            icon="pi pi-times"
-            size="small"
-            severity="secondary"
-            text
-            @click="cancelEdit"
-          />
+          <AButton type="primary" size="small" :loading="saving" @click="saveRecord">
+            <template #icon><i class="pi pi-check" /></template>
+            {{ t('save') }}
+          </AButton>
+          <AButton type="text" size="small" @click="cancelEdit">
+            <template #icon><i class="pi pi-times" /></template>
+            {{ t('cancel') }}
+          </AButton>
         </template>
       </div>
     </div>
 
     <!-- ── Loading ─────────────────────────────────────────────────── -->
     <div v-if="loading" class="record-loading">
-      <ProgressSpinner />
+      <ASpin size="large" />
     </div>
 
     <!-- ── Error ───────────────────────────────────────────────────── -->
-    <Message v-else-if="fetchError" severity="error" class="record-error">
-      {{ fetchError }}
-    </Message>
+    <AAlert v-else-if="fetchError" type="error" :message="fetchError" show-icon class="record-error" />
 
     <!-- ── Content ─────────────────────────────────────────────────── -->
     <div v-else-if="record" class="record-content" :class="{ 'has-sidebar': hasRightColumn }">
@@ -248,13 +220,13 @@
             <li v-for="(link, linkTb) in record.links" :key="linkTb">
               <router-link :to="`/${route.params.app}/data?tb=${linkTb}&filter=${encodeURIComponent(JSON.stringify(link.filter))}`">
                 {{ link.tb_label }}
-                <Tag :value="String(link.tot)" severity="secondary" rounded />
+                <ATag>{{ link.tot }}</ATag>
               </router-link>
             </li>
             <li v-for="(bl, blTb) in record.backlinks" :key="'bl_' + blTb">
               <router-link :to="`/${route.params.app}/data?tb=${bl.tb_id}&filter=${encodeURIComponent(JSON.stringify(bl.filter))}`">
                 ← {{ bl.tb_label }}
-                <Tag :value="String(bl.tot)" severity="secondary" rounded />
+                <ATag>{{ bl.tot }}</ATag>
               </router-link>
             </li>
           </ul>
@@ -291,12 +263,10 @@
   </div>
 
   <!-- ── Plugin-delete confirmation dialog ───────────────────────── -->
-  <Dialog
-    v-model:visible="pluginDeleteDialog.visible"
-    :header="t('delete')"
-    :modal="true"
-    :closable="true"
-    :style="{ width: '420px' }"
+  <AModal
+    v-model:open="pluginDeleteDialog.visible"
+    :title="t('delete')"
+    width="420px"
   >
     <div class="plugin-delete-body">
       <i class="pi pi-exclamation-triangle plugin-delete-icon" />
@@ -310,16 +280,13 @@
       <p class="plugin-delete-hint">{{ t('confirm_delete_plugins_hint') }}</p>
     </div>
     <template #footer>
-      <Button :label="t('cancel')" severity="secondary" text @click="pluginDeleteDialog.visible = false" />
-      <Button
-        :label="t('delete_plugins_and_record')"
-        icon="pi pi-trash"
-        severity="danger"
-        :loading="pluginDeleteDialog.deleting"
-        @click="doDeleteWithPlugins"
-      />
+      <AButton type="text" @click="pluginDeleteDialog.visible = false">{{ t('cancel') }}</AButton>
+      <AButton danger :loading="pluginDeleteDialog.deleting" @click="doDeleteWithPlugins">
+        <template #icon><i class="pi pi-trash" /></template>
+        {{ t('delete_plugins_and_record') }}
+      </AButton>
     </template>
-  </Dialog>
+  </AModal>
 
   <!-- ── Version history drawer ──────────────────────────────────── -->
   <RecordVersionsDrawer
@@ -339,12 +306,14 @@ import { ref, computed, watch, reactive, onMounted, onUnmounted, provide } from 
 import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
 import { useToast, useConfirm } from '@/composables/useNotify'
 import AppLayout      from '@/components/AppLayout.vue'
-import Button         from 'primevue/button'
-import Dialog         from 'primevue/dialog'
-import Tag            from 'primevue/tag'
-import Message        from 'primevue/message'
-import ProgressSpinner from 'primevue/progressspinner'
-import Select          from 'primevue/select'
+import {
+  Button as AButton,
+  Modal as AModal,
+  Tag as ATag,
+  Alert as AAlert,
+  Spin as ASpin,
+  Select as ASelect
+} from 'ant-design-vue'
 import { api }        from '@/api'
 import { useI18n }    from '@/i18n'
 import FieldDisplay    from '@/components/record/FieldDisplay.vue'
@@ -576,8 +545,7 @@ async function loadAvailableTemplates() {
   } catch { /* non-fatal */ }
 }
 
-function onTemplateChange(e) {
-  const val = e.value
+function onTemplateChange(val) {
   if (val) {
     localStorage.setItem(tplStorageKey(tb.value), val)
   } else {

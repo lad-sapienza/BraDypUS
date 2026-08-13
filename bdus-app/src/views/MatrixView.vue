@@ -10,98 +10,64 @@
       </span>
 
       <span class="matrix-stats" v-if="!loading && matrixData">
-        <Tag :value="`${matrixData.nodes.length} ${t('matrix_nodes')}`" severity="secondary" rounded />
-        <Tag :value="`${matrixData.relations.length} ${t('matrix_relations')}`" severity="secondary" rounded />
+        <ATag>{{ matrixData.nodes.length }} {{ t('matrix_nodes') }}</ATag>
+        <ATag>{{ matrixData.relations.length }} {{ t('matrix_relations') }}</ATag>
       </span>
 
       <span class="matrix-spacer" />
 
       <!-- Back to table -->
-      <Button
-        :label="tableLabel || t('back_to_table')"
-        icon="pi pi-arrow-left"
-        size="small"
-        severity="secondary"
-        outlined
-        @click="backToTable"
-      />
+      <AButton size="small" @click="backToTable">
+        <template #icon><i class="pi pi-arrow-left" /></template>
+        {{ tableLabel || t('back_to_table') }}
+      </AButton>
 
       <!-- Back to record -->
-      <Button
-        v-if="fromId"
-        :label="t('back_to_record')"
-        icon="pi pi-arrow-left"
-        size="small"
-        severity="secondary"
-        outlined
-        @click="backToRecord"
-      />
+      <AButton v-if="fromId" size="small" @click="backToRecord">
+        <template #icon><i class="pi pi-arrow-left" /></template>
+        {{ t('back_to_record') }}
+      </AButton>
 
       <!-- Edit mode toggle (only for users with write access) -->
       <div v-if="canWrite && matrixData?.nodes.length" class="matrix-edit-toggle">
-        <ToggleButton
-          v-model="editMode"
-          :onLabel="t('rs_edit_mode')"
-          :offLabel="t('rs_edit_mode')"
-          onIcon="pi pi-pencil"
-          offIcon="pi pi-pencil"
-          size="small"
-          :pt="{ root: { class: editMode ? 'toggle-active' : '' } }"
-        />
+        <AButton :type="editMode ? 'primary' : 'default'" size="small" @click="editMode = !editMode">
+          <template #icon><i class="pi pi-pencil" /></template>
+          {{ t('rs_edit_mode') }}
+        </AButton>
       </div>
 
       <!-- Chronological layout toggle (only when fuzzy_date plugin is active) -->
       <div v-if="matrixData?.has_fuzzy_date" class="matrix-layout-toggle">
-        <Button
-          :label="t('matrix_layout_topological')"
-          icon="pi pi-sitemap"
-          size="small"
-          :severity="layoutMode === 'topological' ? 'primary' : 'secondary'"
-          :outlined="layoutMode !== 'topological'"
-          @click="layoutMode = 'topological'"
-        />
-        <Button
-          :label="t('matrix_layout_chronological')"
-          icon="pi pi-calendar"
-          size="small"
-          :severity="layoutMode === 'chronological' ? 'primary' : 'secondary'"
-          :outlined="layoutMode !== 'chronological'"
-          @click="layoutMode = 'chronological'"
-        />
+        <AButton :type="layoutMode === 'topological' ? 'primary' : 'default'" size="small" @click="layoutMode = 'topological'">
+          <template #icon><i class="pi pi-sitemap" /></template>
+          {{ t('matrix_layout_topological') }}
+        </AButton>
+        <AButton :type="layoutMode === 'chronological' ? 'primary' : 'default'" size="small" @click="layoutMode = 'chronological'">
+          <template #icon><i class="pi pi-calendar" /></template>
+          {{ t('matrix_layout_chronological') }}
+        </AButton>
       </div>
 
       <!-- Reload -->
-      <Button
-        :label="t('reload')"
-        icon="pi pi-refresh"
-        size="small"
-        severity="secondary"
-        outlined
-        :loading="loading"
-        @click="loadMatrix"
-      />
+      <AButton size="small" :loading="loading" @click="loadMatrix">
+        <template #icon><i class="pi pi-refresh" /></template>
+        {{ t('reload') }}
+      </AButton>
 
       <!-- Export PNG -->
-      <Button
-        :label="t('export_png')"
-        icon="pi pi-image"
-        size="small"
-        severity="secondary"
-        outlined
-        :disabled="!matrixData || !matrixData.nodes.length"
-        @click="exportPng"
-      />
+      <AButton size="small" :disabled="!matrixData || !matrixData.nodes.length" @click="exportPng">
+        <template #icon><i class="pi pi-image" /></template>
+        {{ t('export_png') }}
+      </AButton>
     </div>
 
     <!-- ── Loading ─────────────────────────────────────────────── -->
     <div v-if="loading" class="matrix-loading">
-      <ProgressSpinner />
+      <ASpin size="large" />
     </div>
 
     <!-- ── Error ───────────────────────────────────────────────── -->
-    <Message v-else-if="fetchError" severity="error" class="matrix-error">
-      {{ fetchError }}
-    </Message>
+    <AAlert v-else-if="fetchError" type="error" :message="fetchError" show-icon class="matrix-error" />
 
     <!-- ── Graph ───────────────────────────────────────────────── -->
     <div v-else-if="matrixData" class="matrix-canvas-wrap">
@@ -131,64 +97,59 @@
   </div>
 
   <!-- ── Add relation dialog ────────────────────────────────────── -->
-  <Dialog
-    v-model:visible="addDialog"
-    modal
-    :header="t('rs_add_relation')"
-    style="width: 400px"
-    :draggable="false"
+  <AModal
+    v-model:open="addDialog"
+    :title="t('rs_add_relation')"
+    width="400px"
+    @cancel="cancelAdd"
   >
     <div v-if="pendingEdge" class="add-dialog-body">
       <div class="add-dialog-nodes">
-        <Tag :value="pendingEdge.from.label" severity="primary" rounded />
+        <ATag color="var(--p-primary-color)">{{ pendingEdge.from.label }}</ATag>
         <i class="pi pi-arrows-h add-dialog-arrow" />
-        <Tag :value="pendingEdge.to.label" severity="primary" rounded />
+        <ATag color="var(--p-primary-color)">{{ pendingEdge.to.label }}</ATag>
       </div>
-      <Select
-        v-model="pendingRelation"
+      <ASelect
+        v-model:value="pendingRelation"
         :options="relationOptions"
-        optionLabel="label"
-        optionValue="value"
         :placeholder="t('rs_select_relation')"
         class="w-full"
         autofocus
       />
     </div>
     <template #footer>
-      <Button :label="t('cancel')" severity="secondary" outlined @click="cancelAdd" />
-      <Button
-        :label="t('rs_add_relation')"
-        icon="pi pi-plus"
+      <AButton @click="cancelAdd">{{ t('cancel') }}</AButton>
+      <AButton
+        type="primary"
         :disabled="!pendingRelation"
         :loading="mutating"
         @click="confirmAdd"
-      />
+      >
+        <template #icon><i class="pi pi-plus" /></template>
+        {{ t('rs_add_relation') }}
+      </AButton>
     </template>
-  </Dialog>
+  </AModal>
 
   <!-- ── Delete relation dialog ─────────────────────────────────── -->
-  <Dialog
-    v-model:visible="deleteDialog"
-    modal
-    :header="t('rs_delete_relation')"
-    style="width: 380px"
-    :draggable="false"
+  <AModal
+    v-model:open="deleteDialog"
+    :title="t('rs_delete_relation')"
+    width="380px"
+    @cancel="cancelDelete"
   >
     <div v-if="pendingDelete" class="delete-dialog-body">
       <i class="pi pi-exclamation-triangle delete-dialog-icon" />
       <span>{{ deleteConfirmText }}</span>
     </div>
     <template #footer>
-      <Button :label="t('cancel')" severity="secondary" outlined @click="cancelDelete" />
-      <Button
-        :label="t('delete')"
-        icon="pi pi-trash"
-        severity="danger"
-        :loading="mutating"
-        @click="confirmDelete"
-      />
+      <AButton @click="cancelDelete">{{ t('cancel') }}</AButton>
+      <AButton danger :loading="mutating" @click="confirmDelete">
+        <template #icon><i class="pi pi-trash" /></template>
+        {{ t('delete') }}
+      </AButton>
     </template>
-  </Dialog>
+  </AModal>
 
   </AppLayout>
 </template>
@@ -199,13 +160,14 @@ import { useRoute, useRouter }  from 'vue-router'
 import { useToast } from '@/composables/useNotify'
 import { useAuthStore }         from '@/stores/auth'
 import AppLayout       from '@/components/AppLayout.vue'
-import Button          from 'primevue/button'
-import ToggleButton    from 'primevue/togglebutton'
-import Tag             from 'primevue/tag'
-import Message         from 'primevue/message'
-import ProgressSpinner from 'primevue/progressspinner'
-import Dialog          from 'primevue/dialog'
-import Select          from 'primevue/select'
+import {
+  Button as AButton,
+  Tag as ATag,
+  Alert as AAlert,
+  Spin as ASpin,
+  Modal as AModal,
+  Select as ASelect
+} from 'ant-design-vue'
 import RsGraph         from '@/components/record/RsGraph.vue'
 import RsGraphChrono  from '@/components/record/RsGraphChrono.vue'
 import { api }         from '@/api'
@@ -441,12 +403,6 @@ onMounted(async () => {
 .matrix-layout-toggle {
   display: flex;
   gap: 0.25rem;
-}
-
-.matrix-edit-toggle :deep(.toggle-active) {
-  background: var(--p-primary-color);
-  border-color: var(--p-primary-color);
-  color: #fff;
 }
 
 .matrix-loading,

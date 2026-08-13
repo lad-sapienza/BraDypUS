@@ -5,7 +5,7 @@
 
       <!-- Loading -->
       <div v-if="loading" style="text-align:center;padding:1.5rem">
-        <ProgressSpinner style="width:32px;height:32px" />
+        <ASpin />
       </div>
 
       <!-- Done -->
@@ -17,18 +17,19 @@
             <p>{{ t('upgrade_complete_hint') }}</p>
           </div>
         </div>
-        <Button
-          :label="t('enter_app')"
-          icon="pi pi-arrow-right"
-          fluid
-          @click="enterApp"
-        />
+        <AButton type="primary" block @click="enterApp">
+          <template #icon><i class="pi pi-arrow-right" /></template>
+          {{ t('enter_app') }}
+        </AButton>
       </template>
 
       <!-- Error loading status -->
       <template v-else-if="loadError">
-        <Message severity="error">{{ loadError }}</Message>
-        <Button :label="t('enter_app')" icon="pi pi-arrow-right" fluid class="mt-2" @click="enterApp" />
+        <AAlert type="error" :message="loadError" show-icon />
+        <AButton type="primary" block class="mt-2" @click="enterApp">
+          <template #icon><i class="pi pi-arrow-right" /></template>
+          {{ t('enter_app') }}
+        </AButton>
       </template>
 
       <!-- Confirm screen -->
@@ -41,9 +42,7 @@
           </div>
         </div>
 
-        <Message v-if="affectsFiles" severity="warn" :closable="false" class="mb-2">
-          {{ t('minor_upgrade_affects_files') }}
-        </Message>
+        <AAlert v-if="affectsFiles" type="warning" :message="t('minor_upgrade_affects_files')" :closable="false" show-icon class="mb-2" />
 
         <div class="pending-list">
           <div v-for="name in pending" :key="name" class="pending-item">
@@ -52,26 +51,16 @@
           </div>
         </div>
 
-        <Message v-if="applyError" severity="error" :closable="false">{{ applyError }}</Message>
+        <AAlert v-if="applyError" type="error" :message="applyError" :closable="false" show-icon />
 
-        <Button
-          :label="t('minor_upgrade_apply')"
-          icon="pi pi-upload"
-          severity="warning"
-          :loading="applying"
-          fluid
-          @click="applyUpgrade"
-        />
+        <AButton danger :loading="applying" block @click="applyUpgrade">
+          <template #icon><i class="pi pi-upload" /></template>
+          {{ t('minor_upgrade_apply') }}
+        </AButton>
 
-        <Button
-          class="mt-2"
-          :label="t('minor_upgrade_skip')"
-          severity="secondary"
-          outlined
-          fluid
-          :disabled="applying"
-          @click="enterApp"
-        />
+        <AButton class="mt-2" block :disabled="applying" @click="enterApp">
+          {{ t('minor_upgrade_skip') }}
+        </AButton>
       </template>
     </div>
   </div>
@@ -83,9 +72,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { api } from '@/api'
 import { useI18n } from '@/i18n'
-import ProgressSpinner from 'primevue/progressspinner'
-import Button from 'primevue/button'
-import Message from 'primevue/message'
+import { Spin as ASpin, Button as AButton, Alert as AAlert } from 'ant-design-vue'
 
 const { t } = useI18n()
 const router = useRouter()

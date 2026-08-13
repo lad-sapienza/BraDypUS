@@ -17,7 +17,7 @@ and never renders server-side HTML.
 | Vue 3 | ^3.5 | Reactivity, components, Composition API |
 | Vue Router 4 | ^4.0 | Client-side routing (hash history) |
 | Pinia | ^2.0 | Global state management |
-| PrimeVue 4 | ^4.0 | UI component library |
+| Ant Design Vue | ^4.2 | UI component library |
 | Vite 6 | ^6.0 | Dev server + production bundler |
 | MapLibre GL | ^5.24 | Interactive maps (GeoFace view) |
 | MapLibre GL Draw | ^1.6 | Geometry drawing on maps |
@@ -34,7 +34,7 @@ bdus-app/
 ├── index.html            ← Vite entry point (mounts #app)
 ├── vite.config.js        ← Build config; VITE_API_BASE env var support
 ├── src/
-│   ├── main.js           ← App bootstrap: Vue + PrimeVue + Pinia + Router
+│   ├── main.js           ← App bootstrap: Vue + Ant Design Vue + Pinia + Router
 │   ├── App.vue           ← Root component (router-view + global layout)
 │   ├── token.js          ← JWT read/write/decode helpers (localStorage)
 │   ├── api/

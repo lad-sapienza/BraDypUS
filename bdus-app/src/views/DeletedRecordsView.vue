@@ -165,7 +165,7 @@ watch(rows, () => { measureTableHeight() })
 
 // ── Tables ─────────────────────────────────────────────────────
 const tableOptions = computed(() =>
-  tables.value.map(tb => ({ label: tb.label ?? tb.id, value: tb.id }))
+  tables.value.map(tb => ({ label: tb.label ?? tb.name, value: tb.name }))
 )
 
 // ── Fetch deleted records ──────────────────────────────────────

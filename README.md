@@ -48,7 +48,7 @@ manual/shared-hosting install) see the
 |---|---|
 | [`backup.sh`](backup.sh) / [`restore.sh`](restore.sh) | Backup or restore the `projects_data` Docker volume — full or per-app |
 | [`seed-demo.sh`](seed-demo.sh) | Populate an instance with a realistic archaeological demo dataset |
-| [`bump-version.sh`](bump-version.sh) | Coordinated version bump across bdus-api + bdus-app |
+| [`bump-version.sh`](bump-version.sh) | Coordinated version bump + tag across bdus-api + bdus-app + this repo |
 
 Usage and options are documented in each script's header comment, and in the
 [docs site](https://docs.bdus.cloud/guide/install/containers#backup-and-restore).

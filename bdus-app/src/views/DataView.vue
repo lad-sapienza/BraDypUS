@@ -20,7 +20,7 @@
               <AInputSearch
                 v-model:value="fastSearch"
                 :placeholder="t('fast_search')"
-                :enter-button="t('send')"
+                :enter-button="true"
                 class="search-input-wrap"
                 @search="runFastSearch"
               />

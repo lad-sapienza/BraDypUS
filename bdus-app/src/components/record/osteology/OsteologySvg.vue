@@ -17,7 +17,8 @@
     <div
       class="osteo-svg-container"
       ref="containerEl"
-      @wheel.prevent="onWheel"
+      title="Ctrl/Cmd + rotellina per zoomare, trascina per spostare"
+      @wheel="onWheel"
       @mousedown="onMouseDown"
       @mousemove="onMouseMove"
       @mouseup="onMouseUp"
@@ -253,8 +254,13 @@ const emit = defineEmits(['bone-click'])
 const wrapEl      = ref(null)
 const containerEl = ref(null)
 const svgEl       = ref(null)
+// Container is 240×440 (see .osteo-svg-container below), the SVG content
+// is 240×660 tall — fit-scale shrinks it so the whole figure, feet included,
+// is visible by default instead of only the head-to-thigh area.
+const FIT_SCALE = 440 / 660
+
 const pan   = reactive({ x: 0, y: 0 })
-const scale = ref(1)
+const scale = ref(FIT_SCALE)
 const dragging  = ref(false)
 const dragStart = reactive({ x: 0, y: 0, px: 0, py: 0 })
 
@@ -263,7 +269,7 @@ const pinch = reactive({ active: false, dist: 0, scale0: 1 })
 
 const svgStyle = computed(() => ({
   transform:       `translate(${pan.x}px, ${pan.y}px) scale(${scale.value})`,
-  transformOrigin: '120px 330px',
+  transformOrigin: '120px 0px',
   cursor:          dragging.value ? 'grabbing' : (props.editMode ? 'default' : 'grab'),
 }))
 
@@ -271,9 +277,15 @@ function adjustZoom(factor) {
   scale.value = Math.min(5, Math.max(0.4, scale.value * factor))
 }
 function resetView() {
-  pan.x = 0; pan.y = 0; scale.value = 1
+  pan.x = 0; pan.y = 0; scale.value = FIT_SCALE
 }
 function onWheel(e) {
+  // Only capture the wheel for zoom when a modifier is held (Ctrl/Cmd,
+  // the usual "zoom the widget" convention) — otherwise leave the event
+  // alone so the page keeps scrolling normally when the cursor happens
+  // to be over the diagram.
+  if (!e.ctrlKey && !e.metaKey) return
+  e.preventDefault()
   adjustZoom(e.deltaY > 0 ? 0.9 : 1.1)
 }
 function onMouseDown(e) {

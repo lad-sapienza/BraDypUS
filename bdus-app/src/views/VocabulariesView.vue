@@ -68,10 +68,10 @@
           </div>
 
           <!--
-            SPIKE: ant-design-vue eval. AntD's core Table has no built-in
-            drag-to-reorder-rows (PrimeVue's Column `rowReorder` was a single
-            prop + a `@rowReorder` event) — same gap as the dropped
-            column-reorder in DataView.vue. Replaced with up/down buttons
+            AntD's core Table has no built-in drag-to-reorder-rows (PrimeVue's
+            Column `rowReorder` was a single prop + a `@rowReorder` event) —
+            same gap as the dropped column-reorder in DataView.vue. Replaced
+            with up/down buttons
             rather than pulling in a drag library for one table.
           -->
           <ATable

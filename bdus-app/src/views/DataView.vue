@@ -277,22 +277,21 @@
             </span>
           </div>
 
-          <!-- ── Table (AntD spike — see note below) ──────────── -->
+          <!-- ── Table ────────────────────────────────────────── -->
           <!--
-            SPIKE: ant-design-vue eval. AntD's core Table has no built-in
-            drag-to-reorder-columns (PrimeVue's `reorderableColumns` was a
-            single boolean prop) — it would need a custom header + a drag
-            library. Dropped for this spike rather than reimplemented; column
-            visibility toggling (separate feature, the popover above) is
-            unaffected and still works.
+            AntD's core Table has no built-in drag-to-reorder-columns
+            (PrimeVue's `reorderableColumns` was a single boolean prop) — it
+            would need a custom header + a drag library. Dropped rather than
+            reimplemented; column visibility toggling (separate feature, the
+            popover above) is unaffected and still works.
           -->
           <!--
-            SPIKE: ant-design-vue eval. PrimeVue's DataTable had
-            `scrollHeight="flex"` — it auto-fills whatever space its flex
-            parent gives it. AntD's Table has no such option: `scroll.y`
-            wants a concrete px number, so filling the remaining flex space
-            takes a ResizeObserver measuring the wrapper (see tableWrap /
-            measureTableHeight below) instead of a single boolean-ish prop.
+            PrimeVue's DataTable had `scrollHeight="flex"` — it auto-fills
+            whatever space its flex parent gives it. AntD's Table has no such
+            option: `scroll.y` wants a concrete px number, so filling the
+            remaining flex space takes a ResizeObserver measuring the wrapper
+            (see tableWrap / measureTableHeight below) instead of a single
+            boolean-ish prop.
           -->
           <div ref="tableWrap" class="records-table-wrap">
             <ATable
@@ -374,15 +373,15 @@ const exportPopoverOpen   = ref(false)
 const savedQueriesDialog  = ref(false)
 const chartDialog         = ref(false)
 
-// SPIKE: ant-design-vue eval. Unlike PrimeVue's Popover (imperative
-// ref.toggle(), one instance implicitly closes when another opens because
-// they share the same overlay stack), AntD's Popover is a plain declarative
-// v-model per instance — two independent triggers can end up open at once
-// with no built-in mutual exclusivity. Enforce it manually.
+// Unlike PrimeVue's Popover (imperative ref.toggle(), one instance
+// implicitly closes when another opens because they share the same overlay
+// stack), AntD's Popover is a plain declarative v-model per instance — two
+// independent triggers can end up open at once with no built-in mutual
+// exclusivity. Enforce it manually.
 watch(colTogglerOpen,    v => { if (v) exportPopoverOpen.value = false })
 watch(exportPopoverOpen, v => { if (v) colTogglerOpen.value = false })
 
-/** AntD Select/AutoComplete: filter must be supplied explicitly (see FieldEditor.vue spike note). */
+/** AntD Select/AutoComplete: filter must be supplied explicitly (see FieldEditor.vue). */
 function filterOption(input, option) {
   return String(option?.label ?? '').toLowerCase().includes(String(input).toLowerCase())
 }
@@ -931,9 +930,9 @@ async function fetchRecords() {
 }
 
 // ── AntD Table: columns/pagination/row-click/sort+page (unified) ─────
-// SPIKE: ant-design-vue eval. PrimeVue split pagination (@page) and sorting
-// (@sort) into two events; AntD's Table fires one @change with pagination +
-// sorter together, so a single handler now covers what used to be two.
+// PrimeVue split pagination (@page) and sorting (@sort) into two events;
+// AntD's Table fires one @change with pagination + sorter together, so a
+// single handler now covers what used to be two.
 const antdColumns = computed(() =>
   displayColumns.value.map(col => ({
     title: col.label,

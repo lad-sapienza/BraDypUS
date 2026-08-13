@@ -9,7 +9,7 @@ application or run a quick action, without navigating through the sidebar.
 Open it with **Ctrl+K** (**Cmd+K** on macOS) from any screen, or click the
 search icon in the top bar.
 
-![TODO_SCREENSHOT: Command palette open, showing grouped results (Navigation/Tables/Actions) with the search input focused](/images/v5/usage/command-palette.png)
+![Command palette open, showing grouped results (Navigation/Tables/Actions) with the search input focused](/images/v5/usage/command-palette.png)
 
 ## How to use
 

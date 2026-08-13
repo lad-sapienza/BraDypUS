@@ -7,7 +7,7 @@ title: Users & privileges
 User management is available from **Users** in the sidebar navigation.
 Admin privilege or higher is required.
 
-![TODO_SCREENSHOT: UsersView showing a table of users with name, email and privilege columns](/images/v5/setup/users-list.png)
+![UsersView showing a table of users with name, email and privilege columns](/images/v5/setup/users-list.png)
 
 ## Privilege levels
 
@@ -45,7 +45,7 @@ Expand a user row and click **Table privileges** to assign table-specific
 overrides. This allows, for example, giving a reader user write access to a
 specific table, or restricting an editor to a subset of records.
 
-![TODO_SCREENSHOT: Per-table privilege override panel expanded for a user](/images/v5/setup/user-table-privileges.png)
+![Per-table privilege override panel expanded for a user](/images/v5/setup/user-table-privileges.png)
 
 | Property | Description |
 |---|---|

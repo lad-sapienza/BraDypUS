@@ -12,7 +12,7 @@ Type in the search bar at the top of the record list. The query is matched
 against all [preview fields](/guide/setup/preview-config) using a
 case-insensitive `LIKE` search.
 
-![TODO_SCREENSHOT: DataView with text typed in the fast-search bar and filtered results in the list](/images/v5/usage/search-fast.png)
+![DataView with text typed in the fast-search bar and filtered results in the list](/images/v5/usage/search-fast.png)
 
 Fast search is designed for quick lookups. For more precise filtering use
 Advanced search.
@@ -29,7 +29,7 @@ one condition:
 | **Value** | The value to compare against |
 | **Connector** | `AND` / `OR` — how this row combines with the next |
 
-![TODO_SCREENSHOT: Advanced search panel with two filter rows visible, each with a field dropdown and operator](/images/v5/usage/search-advanced.png)
+![Advanced search panel with two filter rows visible, each with a field dropdown and operator](/images/v5/usage/search-advanced.png)
 
 ### Operators
 
@@ -57,7 +57,7 @@ This mode is available to admin users only.
 sigla LIKE 'US%' AND periodo = 'Basso Medioevo'
 ```
 
-![TODO_SCREENSHOT: SQL expert search panel with a raw SQL clause typed in the input box](/images/v5/usage/search-sql.png)
+![SQL expert search panel with a raw SQL clause typed in the input box](/images/v5/usage/search-sql.png)
 
 ::: warning
 SQL expert search is powerful but bypasses the field-level validation. Only

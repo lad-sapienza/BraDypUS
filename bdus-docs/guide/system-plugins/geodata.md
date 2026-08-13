@@ -21,7 +21,7 @@ Geodata can be imported from GeoJSON (see [Import data](/guide/usage/import)).
 Open **GeoFace** from the sidebar to see all geolocated records on an
 interactive map (MapLibre GL JS).
 
-![TODO_SCREENSHOT: GeoFace map view showing a basemap with point markers for records](/images/v5/usage/geoface-map.png)
+![GeoFace map view showing a basemap with point markers for records](/images/v5/usage/geoface-map.png)
 
 - **Points, lines and polygons** are rendered from the stored WKT geometries.
 - Click a feature to open its record.
@@ -31,7 +31,7 @@ interactive map (MapLibre GL JS).
 
 Open **Config → Geoface** to add or edit map layers.
 
-![TODO_SCREENSHOT: Geoface config panel showing a list of configured layers with type (WMS/WFS/local) and URL](/images/v5/usage/geoface-config.png)
+![Geoface config panel showing a list of configured layers with type (WMS/WFS/local) and URL](/images/v5/usage/geoface-config.png)
 
 Supported layer types:
 

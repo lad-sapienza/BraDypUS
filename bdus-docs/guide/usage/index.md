@@ -22,7 +22,7 @@ the record list for that table.
 For a faster, keyboard-first way to get anywhere, press **Ctrl+K** / **Cmd+K**
 to open the [command palette](/guide/usage/command-palette) from any screen.
 
-![TODO_SCREENSHOT: Full application layout with sidebar open, showing navigation groups and active table selector](/images/v5/usage/layout-overview.png)
+![Full application layout with sidebar open, showing navigation groups and active table selector](/images/v5/usage/layout-overview.png)
 
 ## Quick reference
 

@@ -9,7 +9,7 @@ useful for generating printable views or structured summaries of complex records
 
 Open **Templates** from the sidebar (super-admin required).
 
-![TODO_SCREENSHOT: TemplatesView showing a table selector, a template list, and the JSON editor panel](/images/v5/usage/templates-view.png)
+![TemplatesView showing a table selector, a template list, and the JSON editor panel](/images/v5/usage/templates-view.png)
 
 ## Structure
 

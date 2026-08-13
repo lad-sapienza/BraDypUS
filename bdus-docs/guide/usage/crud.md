@@ -10,7 +10,7 @@ Select a table from the sidebar, then click **Data management** to open the
 record list (**DataView**). The list shows the configured [preview fields](/guide/setup/preview-config)
 in a paginated table.
 
-![TODO_SCREENSHOT: DataView showing a paginated record table with column headers and row data](/images/v5/usage/dataview-list.png)
+![DataView showing a paginated record table with column headers and row data](/images/v5/usage/dataview-list.png)
 
 Controls in the DataView toolbar:
 
@@ -36,7 +36,7 @@ RecordView displays all field values for a single record, organised into section
 - **Stratigraphic relations** — RS panel (if configured)
 - **Bibliography** — Zotero citations (if configured)
 
-![TODO_SCREENSHOT: RecordView showing a record with field values, a file gallery, and an RS panel](/images/v5/usage/record-view.png)
+![RecordView showing a record with field values, a file gallery, and an RS panel](/images/v5/usage/record-view.png)
 
 ## Creating a record
 
@@ -46,7 +46,7 @@ An empty edit form opens with all fields blank (or pre-filled with defaults).
 Fill in the fields and click **Save**. Required fields are marked and the form
 will not save until all required values are provided.
 
-![TODO_SCREENSHOT: RecordEdit form with several fields filled in and the Save button visible](/images/v5/usage/record-edit.png)
+![RecordEdit form with several fields filled in and the Save button visible](/images/v5/usage/record-edit.png)
 
 ## Editing a record
 

@@ -7,7 +7,7 @@ title: Import data
 BraDypUS can import records from external files. Open **Import data** from the
 sidebar (editor privilege or higher required).
 
-![TODO_SCREENSHOT: ImportView showing the file upload area and table selector](/images/v5/usage/import.png)
+![ImportView showing the file upload area and table selector](/images/v5/usage/import.png)
 
 ## Supported formats
 
@@ -27,7 +27,7 @@ Click **Preview** to continue.
 
 **Step 2 — Configure:** BraDypUS reads the first rows and shows a mapping form.
 
-![TODO_SCREENSHOT: Field mapping form showing source columns and their mapped target fields](/images/v5/usage/import-mapping.png)
+![Field mapping form showing source columns and their mapped target fields](/images/v5/usage/import-mapping.png)
 
 - Map each source column to a target field (or mark it as "ignore").
 - Choose a **key field**: the table field used to match incoming rows against

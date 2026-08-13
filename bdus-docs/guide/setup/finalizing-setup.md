@@ -10,7 +10,7 @@ catch problems before they affect users.
 
 Open it from **Config → Validation**.
 
-![TODO_SCREENSHOT: Validation panel showing a list of checks with green/red status badges](/images/v5/setup/validation.png)
+![Validation panel showing a list of checks with green/red status badges](/images/v5/setup/validation.png)
 
 ## What it checks
 

@@ -9,7 +9,7 @@ A vocabulary is a controlled list of values used to populate `select`,
 
 Open **Vocabularies** from the sidebar navigation (not from Config).
 
-![TODO_SCREENSHOT: VocabulariesView showing a list selector and the values for the selected list](/images/v5/setup/vocabularies.png)
+![VocabulariesView showing a list selector and the values for the selected list](/images/v5/setup/vocabularies.png)
 
 ## Structure
 

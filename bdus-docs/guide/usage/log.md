@@ -7,7 +7,7 @@ title: Application log
 The **Application log** shows internal events and errors recorded by BraDypUS
 at runtime. Open it from the sidebar (admin privilege required).
 
-![TODO_SCREENSHOT: LogView showing a table of log entries with level badges and expandable rows](/images/v5/usage/log.png)
+![LogView showing a table of log entries with level badges and expandable rows](/images/v5/usage/log.png)
 
 ## Reading log entries
 

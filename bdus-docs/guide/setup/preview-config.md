@@ -20,7 +20,7 @@ The record list will show exactly these columns, in this order.
 The first preview field is also used as the record's display label in cross-table
 dropdowns and in the Harris Matrix node labels.
 
-![TODO_SCREENSHOT: DataView showing a record list with the configured preview columns](/images/v5/setup/preview-fields-result.png)
+![DataView showing a record list with the configured preview columns](/images/v5/setup/preview-fields-result.png)
 
 ## Column toggler
 

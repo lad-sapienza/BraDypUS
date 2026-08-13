@@ -9,7 +9,7 @@ Admin privilege is required to access it.
 
 Open **Backup** from the sidebar.
 
-![TODO_SCREENSHOT: BackupView showing a list of existing backups with date, size, and action buttons](/images/v5/usage/backup-list.png)
+![BackupView showing a list of existing backups with date, size, and action buttons](/images/v5/usage/backup-list.png)
 
 ## Creating a backup
 

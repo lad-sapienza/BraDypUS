@@ -15,7 +15,7 @@ the active search filter — only matching records are exported.
 4. Choose the format: **CSV**, **XLSX** or **JSON**.
 5. The file downloads immediately — no temp file is created on the server.
 
-![TODO_SCREENSHOT: DataView toolbar with the Export button highlighted and the format dropdown open](/images/v5/usage/export-toolbar.png)
+![DataView toolbar with the Export button highlighted and the format dropdown open](/images/v5/usage/export-toolbar.png)
 
 ## Formats
 

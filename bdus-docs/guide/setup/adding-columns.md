@@ -7,7 +7,7 @@ title: Fields
 The **Fields** panel lets you add, configure, rename and delete columns within a table.
 Open it from **Config → Fields**, then select a table from the dropdown.
 
-![TODO_SCREENSHOT: Fields panel with field list on the left and field form on the right](/images/v5/setup/fields-panel.png)
+![Fields panel with field list on the left and field form on the right](/images/v5/setup/fields-panel.png)
 
 ## Adding a field
 

@@ -11,7 +11,7 @@ read-only reference panel inside RecordView. This is distinct from plugin tables
 
 Open it from **Config → Relations**.
 
-![TODO_SCREENSHOT: Relations panel showing a list of defined relations with table and field columns](/images/v5/setup/relations-panel.png)
+![Relations panel showing a list of defined relations with table and field columns](/images/v5/setup/relations-panel.png)
 
 ## What a relation does
 

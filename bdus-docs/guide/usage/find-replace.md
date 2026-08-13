@@ -7,7 +7,7 @@ title: Find & replace
 The **Find & replace** module lets you bulk-update a field across all records
 that match a search value. It is available from the sidebar (admin privilege required).
 
-![TODO_SCREENSHOT: SearchReplaceView with table selector, field selector, and find/replace fields](/images/v5/usage/find-replace.png)
+![SearchReplaceView with table selector, field selector, and find/replace fields](/images/v5/usage/find-replace.png)
 
 ## How to use
 

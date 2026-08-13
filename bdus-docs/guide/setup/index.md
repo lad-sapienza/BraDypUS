@@ -8,7 +8,7 @@ Application setup is handled entirely through the **Config** panel, a dedicated
 administration area accessible from the sidebar. Only users with **super-admin**
 privilege can open it.
 
-![TODO_SCREENSHOT: Config panel open with sidebar showing six panel buttons](/images/v5/setup/config-overview.png)
+![Config panel open with sidebar showing six panel buttons](/images/v5/setup/config-overview.png)
 
 ## The Config panel
 
@@ -29,7 +29,7 @@ The Config panel is divided into six sections, selectable from the left sidebar:
 Click the **Config** item in the sidebar navigation. The first time (or after a
 session timeout) you are asked to confirm your super-admin password.
 
-![TODO_SCREENSHOT: super-admin password confirmation dialog](/images/v5/setup/config-password.png)
+![super-admin password confirmation dialog](/images/v5/setup/config-password.png)
 
 ::: warning Destructive operations
 Table deletion and column deletion are **permanent and irreversible**. Always create

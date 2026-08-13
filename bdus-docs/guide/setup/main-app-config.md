@@ -7,7 +7,7 @@ title: App settings
 The **App settings** panel controls the global properties of your application.
 Open it from **Config → App settings** (the first panel in the sidebar).
 
-![TODO_SCREENSHOT: App settings panel with all form fields visible](/images/v5/setup/app-settings.png)
+![App settings panel with all form fields visible](/images/v5/setup/app-settings.png)
 
 ## Fields
 

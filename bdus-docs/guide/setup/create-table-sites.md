@@ -7,7 +7,7 @@ title: Tables
 The **Tables** panel lets you create, configure, rename and delete data tables.
 Open it from **Config → Tables**.
 
-![TODO_SCREENSHOT: Tables panel showing a list of tables on the left and table settings on the right](/images/v5/setup/tables-panel.png)
+![Tables panel showing a list of tables on the left and table settings on the right](/images/v5/setup/tables-panel.png)
 
 ## Creating a table
 
@@ -35,7 +35,7 @@ Select a table to edit its settings:
 | **Cross-table links** | Tables whose records can be manually linked to records of this table |
 | **RS field** | Enable the Harris Matrix for this table; set to the field that stores the stratigraphic unit identifier |
 
-![TODO_SCREENSHOT: Table settings panel with preview fields and plugin tables configured](/images/v5/setup/table-settings.png)
+![Table settings panel with preview fields and plugin tables configured](/images/v5/setup/table-settings.png)
 
 ## Reordering tables
 

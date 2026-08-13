@@ -13,7 +13,7 @@ RecordView for any record in an application that has at least one Zotero library
 An admin must first connect a Zotero library. Open **Config → Zotero Libraries**
 from the sidebar.
 
-![TODO_SCREENSHOT: ZoteroLibsPanel showing a list of configured libraries with library type and citation style](/images/v5/usage/zotero-libraries.png)
+![ZoteroLibsPanel showing a list of configured libraries with library type and citation style](/images/v5/usage/zotero-libraries.png)
 
 Click **Add library** and fill in:
 
@@ -30,7 +30,7 @@ The API key is stored server-side and never exposed to the browser.
 
 Open a record in RecordView. Scroll to the **Bibliography** section.
 
-![TODO_SCREENSHOT: ZoteroSection inside RecordView showing attached citations with formatted bibliography strings and a search panel](/images/v5/usage/zotero-record.png)
+![ZoteroSection inside RecordView showing attached citations with formatted bibliography strings and a search panel](/images/v5/usage/zotero-record.png)
 
 To add a citation:
 1. Click **Search** and type a title, author or keyword.

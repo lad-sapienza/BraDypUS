@@ -44,7 +44,7 @@ have no directionality.
 
 The **RS panel** in RecordView shows all relations for the current record.
 
-![TODO_SCREENSHOT: RS panel inside RecordView showing a table of relations with type and linked unit identifier](/images/v5/usage/rs-panel.png)
+![RS panel inside RecordView showing a table of relations with type and linked unit identifier](/images/v5/usage/rs-panel.png)
 
 To add a relation:
 1. Select the **relation type** from the dropdown.
@@ -59,7 +59,7 @@ To remove a relation: click the delete icon next to it.
 Click **Harris Matrix** in the DataView toolbar to open a full-page interactive
 matrix for all records in the current table (respecting the active search filter).
 
-![TODO_SCREENSHOT: Harris Matrix full-page view showing a directed acyclic graph of stratigraphic units](/images/v5/usage/harris-matrix.png)
+![Harris Matrix full-page view showing a directed acyclic graph of stratigraphic units](/images/v5/usage/harris-matrix.png)
 
 - Nodes represent individual stratigraphic units.
 - Directed arrows represent the **covers** relationship (newer → older).

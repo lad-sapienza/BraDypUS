@@ -9,7 +9,7 @@ immediately erased but kept as a snapshot that can be reviewed and restored.
 
 Open **Deleted records** from the sidebar.
 
-![TODO_SCREENSHOT: DeletedRecordsView with a table selector at the top and a list of deleted records below](/images/v5/usage/deleted-records.png)
+![DeletedRecordsView with a table selector at the top and a list of deleted records below](/images/v5/usage/deleted-records.png)
 
 ## Browsing deleted records
 

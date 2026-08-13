@@ -26,11 +26,11 @@ link. Click it to open the creation form.
 On an existing installation, the link is hidden by default. An administrator
 with file-system access can temporarily enable it via the environment variable.
 
-![TODO_SCREENSHOT: Login page with the 'Create new application' link visible](/images/v5/create-app/login-with-create-link.png)
+![Login page with the 'Create new application' link visible](/images/v5/create-app/login-with-create-link.png)
 
 ## The creation form
 
-![TODO_SCREENSHOT: New application form with all fields filled in](/images/v5/create-app/new-app-form.png)
+![New application form with all fields filled in](/images/v5/create-app/new-app-form.png)
 
 | Field | Description |
 |---|---|

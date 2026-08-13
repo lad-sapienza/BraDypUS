@@ -16,7 +16,7 @@ icon in the sidebar if a standalone chart view is available.
 Inside any table's DataView, click the **Charts** button in the toolbar to
 open the chart panel. Click **New chart** and configure:
 
-![TODO_SCREENSHOT: Chart configuration form showing table, chart type, and axis field selectors](/images/v5/usage/chart-config.png)
+![Chart configuration form showing table, chart type, and axis field selectors](/images/v5/usage/chart-config.png)
 
 | Field | Description |
 |---|---|
@@ -31,7 +31,7 @@ opened by any user.
 
 ## Viewing a chart
 
-![TODO_SCREENSHOT: A rendered pie chart showing the distribution of records by period](/images/v5/usage/chart-view.png)
+![A rendered pie chart showing the distribution of records by period](/images/v5/usage/chart-view.png)
 
 The chart updates in real-time from the current data. Use the **Filter** toggle
 to apply the active DataView search filter to the chart data.

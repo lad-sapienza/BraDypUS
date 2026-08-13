@@ -18,7 +18,8 @@ and never renders server-side HTML.
 | Vue Router 4 | ^4.0 | Client-side routing (hash history) |
 | Pinia | ^2.0 | Global state management |
 | Ant Design Vue | ^4.2 | UI component library |
-| Vite 6 | ^6.0 | Dev server + production bundler |
+| @ant-design/icons-vue | ^7.0 | Icon set (replaces PrimeIcons) |
+| Vite 8 | ^8.0 | Dev server + production bundler |
 | MapLibre GL | ^5.24 | Interactive maps (GeoFace view) |
 | MapLibre GL Draw | ^1.6 | Geometry drawing on maps |
 | Cytoscape + dagre | ^3.33 | Harris matrix graph layout |

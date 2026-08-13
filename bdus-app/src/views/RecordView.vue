@@ -978,7 +978,14 @@ watch(() => route.params.id, fetchRecord)
 .record-view {
   display: flex;
   flex-direction: column;
+  /* `flex: 1` alone is a no-op here: .main-content (AppLayout.vue) isn't
+     display:flex, so this element never actually gets a flex context to
+     grow within — it was just sizing to its own content. Since main-content
+     DOES have a real, definite height (calc(100vh - 48px)), `height: 100%`
+     resolves against that directly and gives .record-content a genuine box
+     to scroll inside, leaving .record-header fixed above it. */
   flex: 1;
+  height: 100%;
   min-height: 0;
   overflow: hidden;
 }
@@ -989,9 +996,9 @@ watch(() => route.params.id, fetchRecord)
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
+  flex-shrink: 0;
   padding: 0.6rem 1.25rem;
   border-bottom: 1px solid var(--p-content-border-color);
-  flex-shrink: 0;
   flex-wrap: wrap;
 }
 
@@ -1035,6 +1042,9 @@ watch(() => route.params.id, fetchRecord)
 /* ── Content ── */
 .record-content {
   flex: 1;
+  min-height: 0; /* classic flexbox trap (see AppLayout.vue) — without this the
+                    flex item grows to fit its content instead of respecting
+                    .record-view's height, so overflow-y:auto never kicks in */
   overflow-y: auto;
   padding: 1rem 1.25rem 2rem;
   width: 100%;

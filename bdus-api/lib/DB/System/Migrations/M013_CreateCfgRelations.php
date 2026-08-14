@@ -41,11 +41,19 @@ class M013_CreateCfgRelations
 
         // 1 — Create bdus_cfg_relations with the v1 schema (id, from_tb, to_tb, fld, sort).
         // We use raw DDL here so this migration is frozen at its original design,
-        // independent of the structure JSON that M026 will later upgrade.
+        // independent of the structure JSON that M026 will later upgrade. The PK
+        // clause must still be engine-aware (mirrors Manage::getCreateColumnStatement):
+        // SQLite's AUTOINCREMENT is a parse error on Postgres/MySQL, even under
+        // CREATE TABLE IF NOT EXISTS.
         // If the table already exists (either schema), CREATE TABLE IF NOT EXISTS is a no-op.
+        $pk = match ($db->getEngine()) {
+            'pgsql' => 'SERIAL PRIMARY KEY',
+            'mysql' => 'INTEGER PRIMARY KEY AUTO_INCREMENT',
+            default => 'INTEGER PRIMARY KEY AUTOINCREMENT',
+        };
         $db->exec(
             "CREATE TABLE IF NOT EXISTS bdus_cfg_relations
-             (id INTEGER PRIMARY KEY AUTOINCREMENT,
+             (id $pk,
               from_tb TEXT NOT NULL,
               to_tb TEXT NOT NULL,
               fld TEXT,

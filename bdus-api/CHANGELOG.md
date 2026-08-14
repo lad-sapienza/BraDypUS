@@ -5,6 +5,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **`M013_CreateCfgRelations` usava DDL SQLite-only (`AUTOINCREMENT`), bloccava login/upgrade su qualunque app Postgres nuova** — la migrazione creava `bdus_cfg_relations` con `id INTEGER PRIMARY KEY AUTOINCREMENT`, sintassi non valida su Postgres/MySQL: falliva in fase di parsing anche sotto `CREATE TABLE IF NOT EXISTS`, quindi qualunque app pgsql appena creata (che parte con `bdus_migrations` vuota) restava bloccata al primo "Apply migrations". La clausola PK è ora scelta in base all'engine (`SERIAL PRIMARY KEY` / `INTEGER PRIMARY KEY AUTO_INCREMENT` / `INTEGER PRIMARY KEY AUTOINCREMENT`), stessi literal già usati da `Manage::getCreateColumnStatement()` per le tabelle di sistema.
+
 ## [5.4.0] - 2026-08-13
 
 ### Added

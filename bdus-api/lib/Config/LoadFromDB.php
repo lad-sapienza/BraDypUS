@@ -116,6 +116,17 @@ class LoadFromDB
                     continue;
                 }
 
+                // Defensive: Config::saveRelation() rejects new relations that touch a
+                // plugin table outside its id_link row (see #19), but a row created
+                // before that guard existed — or written directly to the DB — would
+                // otherwise still surface as a "Linked records" entry the frontend can
+                // never open (plugin tables are excluded from GET /api/tables). Skip
+                // any relation where either side is a plugin table, beyond the id_link
+                // case already routed to $pluginParentOf above.
+                if (($isPluginByName[$rel['from_tb']] ?? false) || ($isPluginByName[$rel['to_tb']] ?? false)) {
+                    continue;
+                }
+
                 // Forward: current table holds the FK column.
                 $relationsByTable[$rel['from_tb']][] = [
                     'other_tb' => $rel['to_tb'],

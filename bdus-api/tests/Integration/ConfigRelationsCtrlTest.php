@@ -25,7 +25,7 @@ class ConfigRelationsCtrlTest extends BdusTestCase
         $manage->createTable('bdus_cfg_fields');
 
         ToDB::upsertTable(static::$db, ['name' => 'items', 'label' => 'Items']);
-        ToDB::upsertTable(static::$db, ['name' => 'tags',  'label' => 'Tags']);
+        ToDB::upsertTable(static::$db, ['name' => 'categories',  'label' => 'Categories']);
     }
 
     public static function tearDownAfterClass(): void
@@ -68,7 +68,7 @@ class ConfigRelationsCtrlTest extends BdusTestCase
     {
         static::$db->query(
             'INSERT INTO bdus_cfg_relations (from_tb, from_col, to_tb, to_col, on_delete, on_update) VALUES (?,?,?,?,?,?)',
-            ['items', 'tag_id', 'tags', 'id', 'RESTRICT', 'CASCADE'],
+            ['items', 'tag_id', 'categories', 'id', 'RESTRICT', 'CASCADE'],
             'boolean'
         );
 
@@ -90,12 +90,12 @@ class ConfigRelationsCtrlTest extends BdusTestCase
 
         $this->assertSame('items',    $row['from_tb']);
         $this->assertSame('tag_id',   $row['from_col']);
-        $this->assertSame('tags',     $row['to_tb']);
+        $this->assertSame('categories',     $row['to_tb']);
         $this->assertSame('id',       $row['to_col']);
         $this->assertSame('RESTRICT', $row['on_delete']);
         $this->assertSame('CASCADE',  $row['on_update']);
         $this->assertSame('Items',    $row['from_label']);
-        $this->assertSame('Tags',     $row['to_label']);
+        $this->assertSame('Categories',     $row['to_label']);
     }
 
     // ── saveRelation — create ─────────────────────────────────────────────────
@@ -105,7 +105,7 @@ class ConfigRelationsCtrlTest extends BdusTestCase
         $ctrl = $this->makeController('Bdus\\Controllers\\Config', [], [
             'from_tb'  => 'items',
             'from_col' => 'tag_id',
-            'to_tb'    => 'tags',
+            'to_tb'    => 'categories',
             'to_col'   => 'id',
         ]);
         $res = $this->callController($ctrl, 'saveRelation');
@@ -120,7 +120,7 @@ class ConfigRelationsCtrlTest extends BdusTestCase
     public function testSaveRelationStoresCorrectDirection(): void
     {
         $ctrl = $this->makeController('Bdus\\Controllers\\Config', [], [
-            'from_tb'  => 'tags',
+            'from_tb'  => 'categories',
             'from_col' => 'item_ref',
             'to_tb'    => 'items',
             'to_col'   => 'id',
@@ -133,7 +133,7 @@ class ConfigRelationsCtrlTest extends BdusTestCase
         );
         $this->assertCount(1, $row);
         // Direction must be preserved exactly as given — no alphabetical swap.
-        $this->assertSame('tags',     $row[0]['from_tb']);
+        $this->assertSame('categories',     $row[0]['from_tb']);
         $this->assertSame('item_ref', $row[0]['from_col']);
         $this->assertSame('items',    $row[0]['to_tb']);
     }
@@ -155,13 +155,13 @@ class ConfigRelationsCtrlTest extends BdusTestCase
     {
         $ctrl = $this->makeController('Bdus\\Controllers\\Config', [], [
             'from_tb' => 'items', 'from_col' => 'tag_id',
-            'to_tb'   => 'tags',  'to_col'   => 'id',
+            'to_tb'   => 'categories',  'to_col'   => 'id',
         ]);
         $this->callController($ctrl, 'saveRelation');
 
         $ctrl2 = $this->makeController('Bdus\\Controllers\\Config', [], [
             'from_tb' => 'items', 'from_col' => 'tag_id',
-            'to_tb'   => 'tags',  'to_col'   => 'ref',
+            'to_tb'   => 'categories',  'to_col'   => 'ref',
         ]);
         $res = $this->callController($ctrl2, 'saveRelation');
 
@@ -171,16 +171,16 @@ class ConfigRelationsCtrlTest extends BdusTestCase
 
     public function testSaveRelationAllowsOppositeDirectionBetweenSameTables(): void
     {
-        // items.tag_id → tags.id
+        // items.tag_id → categories.id
         $ctrl = $this->makeController('Bdus\\Controllers\\Config', [], [
             'from_tb' => 'items', 'from_col' => 'tag_id',
-            'to_tb'   => 'tags',  'to_col'   => 'id',
+            'to_tb'   => 'categories',  'to_col'   => 'id',
         ]);
         $this->callController($ctrl, 'saveRelation');
 
-        // tags.item_ref → items.id  (opposite direction — different FK column, must succeed)
+        // categories.item_ref → items.id  (opposite direction — different FK column, must succeed)
         $ctrl2 = $this->makeController('Bdus\\Controllers\\Config', [], [
-            'from_tb' => 'tags',  'from_col' => 'item_ref',
+            'from_tb' => 'categories',  'from_col' => 'item_ref',
             'to_tb'   => 'items', 'to_col'   => 'id',
         ]);
         $res = $this->callController($ctrl2, 'saveRelation');
@@ -225,7 +225,7 @@ class ConfigRelationsCtrlTest extends BdusTestCase
         $ctrl = $this->makeController('Bdus\\Controllers\\Config', [], [
             'from_tb'   => 'items',
             'from_col'  => 'tag_id',
-            'to_tb'     => 'tags',
+            'to_tb'     => 'categories',
             'to_col'    => 'id',
             'on_delete' => 'EXPLODE',
         ]);
@@ -240,7 +240,7 @@ class ConfigRelationsCtrlTest extends BdusTestCase
         $this->setPrivilege(11);
         $ctrl = $this->makeController('Bdus\\Controllers\\Config', [], [
             'from_tb' => 'items', 'from_col' => 'tag_id',
-            'to_tb'   => 'tags',  'to_col'   => 'id',
+            'to_tb'   => 'categories',  'to_col'   => 'id',
         ]);
         $res = $this->callController($ctrl, 'saveRelation');
         $this->setPrivilege(1);
@@ -256,7 +256,7 @@ class ConfigRelationsCtrlTest extends BdusTestCase
         // Create
         $ctrl = $this->makeController('Bdus\\Controllers\\Config', [], [
             'from_tb' => 'items', 'from_col' => 'tag_id',
-            'to_tb'   => 'tags',  'to_col'   => 'id',
+            'to_tb'   => 'categories',  'to_col'   => 'id',
             'on_delete' => 'RESTRICT',
         ]);
         $created = $this->callController($ctrl, 'saveRelation');
@@ -265,7 +265,7 @@ class ConfigRelationsCtrlTest extends BdusTestCase
         // Update: change on_delete
         $ctrl2 = $this->makeController('Bdus\\Controllers\\Config', ['id' => (string)$id], [
             'from_tb' => 'items', 'from_col' => 'tag_id',
-            'to_tb'   => 'tags',  'to_col'   => 'id',
+            'to_tb'   => 'categories',  'to_col'   => 'id',
             'on_delete' => 'CASCADE',
         ]);
         $updated = $this->callController($ctrl2, 'saveRelation');
@@ -287,7 +287,7 @@ class ConfigRelationsCtrlTest extends BdusTestCase
     {
         $ctrl = $this->makeController('Bdus\\Controllers\\Config', ['id' => '99999'], [
             'from_tb' => 'items', 'from_col' => 'tag_id',
-            'to_tb'   => 'tags',  'to_col'   => 'id',
+            'to_tb'   => 'categories',  'to_col'   => 'id',
         ]);
         $res = $this->callController($ctrl, 'saveRelation');
 
@@ -301,7 +301,7 @@ class ConfigRelationsCtrlTest extends BdusTestCase
     {
         $ctrl = $this->makeController('Bdus\\Controllers\\Config', [], [
             'from_tb' => 'items', 'from_col' => 'tag_id',
-            'to_tb'   => 'tags',  'to_col'   => 'id',
+            'to_tb'   => 'categories',  'to_col'   => 'id',
         ]);
         $created = $this->callController($ctrl, 'saveRelation');
         $id = $created['id'];
@@ -340,7 +340,7 @@ class ConfigRelationsCtrlTest extends BdusTestCase
     {
         $ctrl = $this->makeController('Bdus\\Controllers\\Config', [], [
             'from_tb' => 'items', 'from_col' => 'tag_id',
-            'to_tb'   => 'tags',  'to_col'   => 'id',
+            'to_tb'   => 'categories',  'to_col'   => 'id',
         ]);
         $created = $this->callController($ctrl, 'saveRelation');
         $id = $created['id'];

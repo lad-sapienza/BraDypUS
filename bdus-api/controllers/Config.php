@@ -1353,6 +1353,22 @@ class Config extends \Bdus\Controller
       return;
     }
 
+    // Plugin tables are satellites of exactly one parent, reached only via
+    // their id_link relation (see syncPluginRelation()) — never independently
+    // browsable. Any other relation involving a plugin table (on either side)
+    // would produce a "Linked records" entry the frontend can never open,
+    // because plugin tables are excluded from GET /api/tables. Lookups that
+    // don't need a hard FK (dropdowns, search) should use a field's
+    // `id_from_tb` instead, which needs no row here.
+    if ((bool) $this->cfg->get("tables.{$fromTb}.is_plugin") && $fromCol !== 'id_link') {
+      $this->returnJson(['status' => 'error', 'code' => 'plugin_relation_not_allowed']);
+      return;
+    }
+    if ((bool) $this->cfg->get("tables.{$toTb}.is_plugin")) {
+      $this->returnJson(['status' => 'error', 'code' => 'plugin_relation_not_allowed']);
+      return;
+    }
+
     // Self-referential: force fixed policy (RESTRICT/CASCADE).
     if ($fromTb === $toTb) {
       $onDel = 'RESTRICT';

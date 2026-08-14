@@ -234,6 +234,11 @@ class ConfigFromDbTest extends TestCase
 
     public function testSetTableWithLinkStoresInCfgRelations(): void
     {
+        // 'categories' (not 'tags'): a plain, non-plugin table — 'tags' is
+        // is_plugin=1 in this fixture, and since #19 a plugin table other
+        // than the FK holder's own id_link relation is filtered out of
+        // Config's derived `link` (see testLinkSurvivesRoundTripThroughConfig
+        // below), which would make this generic round-trip test meaningless.
         static::$cfgDb->setTable([
             'name'     => 'items',
             'label'    => 'Items',
@@ -241,7 +246,7 @@ class ConfigFromDbTest extends TestCase
             'id_field' => 'id',
             'preview'  => ['id'],
             'link'     => [
-                ['other_tb' => 'tags', 'fld' => [['my' => 'id', 'other' => 'item_id']]],
+                ['other_tb' => 'categories', 'fld' => [['my' => 'id', 'other' => 'item_id']]],
             ],
         ]);
 
@@ -252,9 +257,9 @@ class ConfigFromDbTest extends TestCase
             'read'
         );
         $this->assertCount(1, $rows);
-        $this->assertSame('tags',    $rows[0]['to_tb']);
-        $this->assertSame('id',      $rows[0]['from_col']);
-        $this->assertSame('item_id', $rows[0]['to_col']);
+        $this->assertSame('categories', $rows[0]['to_tb']);
+        $this->assertSame('id',         $rows[0]['from_col']);
+        $this->assertSame('item_id',    $rows[0]['to_col']);
 
         // links column in bdus_cfg_tables must be NULL.
         $tb = static::$db->query(
@@ -274,7 +279,7 @@ class ConfigFromDbTest extends TestCase
         $links = $cfg->get('tables.items.link');
         $this->assertIsArray($links);
         $this->assertNotEmpty($links);
-        $this->assertSame('tags', $links[0]['other_tb']);
+        $this->assertSame('categories', $links[0]['other_tb']);
         $fld = $links[0]['fld'];
         $this->assertSame('id',      $fld[0]['my']);
         $this->assertSame('item_id', $fld[0]['other']);

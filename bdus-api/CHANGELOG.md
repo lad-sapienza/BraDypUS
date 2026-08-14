@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **`M013_CreateCfgRelations` usava DDL SQLite-only (`AUTOINCREMENT`), bloccava login/upgrade su qualunque app Postgres nuova** — la migrazione creava `bdus_cfg_relations` con `id INTEGER PRIMARY KEY AUTOINCREMENT`, sintassi non valida su Postgres/MySQL: falliva in fase di parsing anche sotto `CREATE TABLE IF NOT EXISTS`, quindi qualunque app pgsql appena creata (che parte con `bdus_migrations` vuota) restava bloccata al primo "Apply migrations". La clausola PK è ora scelta in base all'engine (`SERIAL PRIMARY KEY` / `INTEGER PRIMARY KEY AUTO_INCREMENT` / `INTEGER PRIMARY KEY AUTOINCREMENT`), stessi literal già usati da `Manage::getCreateColumnStatement()` per le tabelle di sistema.
+- **Fast search rompeva su Postgres: `LIKE` su colonne INTEGER (`id`/`creator`/`id_link`)** — `QueryFromRequest::fast()` costruiva il `LIKE` iterando su tutti i campi della tabella senza filtrare per tipo; SQLite/MySQL tollerano il confronto testo-intero con cast implicito, Postgres no (`operator does not exist: integer ~~ unknown`). Ora i campi il cui `db_type` non è testuale (INTEGER, FLOAT, TIMESTAMP, BOOLEAN, ecc.) sono esclusi dalla ricerca veloce. Nella stessa modifica, la clausola è passata da concatenazione di stringa con escaping manuale a query parametrizzata (`LIKE ?`), più sicura e corregge anche un bug di escaping su apici nel testo cercato.
 
 ## [5.4.0] - 2026-08-13
 

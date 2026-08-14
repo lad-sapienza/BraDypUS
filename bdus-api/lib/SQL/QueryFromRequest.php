@@ -261,12 +261,30 @@ class QueryFromRequest
   private function fast($string, $limit2preview = false)
   {
     $fields_to_search_in = $limit2preview ? $this->getPreviewFields($this->tb) : $this->cfg->get("tables.{$this->tb}.fields.*.label");
+    $db_types = $this->cfg->get("tables.{$this->tb}.fields.*.db_type") ?: [];
 
+    $needle = '%' . urldecode($string) . '%';
+    $array_query_core = [];
     foreach ($fields_to_search_in as $field => $label) {
-      $array_query_core[] = $this->tb . '.' . $field . " LIKE '%" . str_replace("'", "\'", urldecode($string)) . "%'";
+      if (!$this->isTextualDbType($db_types[$field] ?? 'TEXT')) {
+        continue;
+      }
+      $array_query_core[] = $this->tb . '.' . $field . ' LIKE ?';
+      $this->values[] = $needle;
     }
-    // join partial statements
-    return implode(' OR ', $array_query_core);
+    // join partial statements; no textual field at all → match nothing
+    return $array_query_core ? implode(' OR ', $array_query_core) : '1=0';
+  }
+
+  /**
+   * Whether a column's db_type is safe to include in a LIKE search.
+   * Non-textual types (INTEGER, FLOAT, TIMESTAMP, …) fail on Postgres because
+   * `~~` (LIKE) has no implicit cast from those types, unlike SQLite/MySQL.
+   */
+  private function isTextualDbType(string $dbType): bool
+  {
+    $nonText = '/^(INTEGER|INT|BIGINT|SMALLINT|TINYINT|FLOAT|DOUBLE|DECIMAL|NUMERIC|REAL|BOOLEAN|BOOL|SERIAL|TIMESTAMP|DATE|DATETIME|TIME|GEOMETRY)\b/i';
+    return !preg_match($nonText, trim($dbType));
   }
 
   /**

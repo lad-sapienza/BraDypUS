@@ -133,6 +133,10 @@ function enterApp() {
 
 .upgrade-card {
   max-width: 480px;
+  max-height: calc(100vh - 4rem);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .upgrade-banner {
@@ -164,6 +168,9 @@ function enterApp() {
   flex-direction: column;
   gap: 0.35rem;
   margin-bottom: 1.25rem;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .pending-item {

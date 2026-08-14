@@ -444,6 +444,7 @@
   "relation_deleted": "Relazione eliminata",
   "relation_already_exists": "Esiste già un vincolo FK su questa colonna.",
   "relation_self_loop": "Una tabella non può essere collegata a se stessa.",
+  "plugin_relation_not_allowed": "Una tabella plugin può avere solo la relazione verso la propria tabella genitore. Per collegare un campo a un'altra tabella (es. come tendina di selezione) usa \"id_from_tb\" nella configurazione del campo.",
   "from_table": "Tabella A",
   "to_table": "Tabella B",
   "field_mapping": "Mappatura campi",

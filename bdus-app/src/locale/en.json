@@ -444,6 +444,7 @@
   "relation_deleted": "Relation deleted",
   "relation_already_exists": "A FK constraint already exists for this column.",
   "relation_self_loop": "A table cannot be linked to itself.",
+  "plugin_relation_not_allowed": "A plugin table can only have the relation to its own parent table. To link a field to another table (e.g. as a select dropdown), use \"id_from_tb\" in the field's configuration instead.",
   "from_table": "Table A",
   "to_table": "Table B",
   "field_mapping": "Field mapping",

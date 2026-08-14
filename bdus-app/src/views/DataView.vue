@@ -511,6 +511,16 @@ function newAdvRow() {
   return { _id: _rowId++, connector: 'AND', fld: '', operator: '_icontains', value: '', _suggestions: null }
 }
 
+// Strips internal-only keys (_id, _suggestions) before persisting rows to
+// URL/storage; restoreAdvRows() re-adds them with fresh values.
+function serializeAdvRows(rows) {
+  return rows.map(({ connector, fld, operator, value }) => ({ connector, fld, operator, value }))
+}
+
+function restoreAdvRows(rows) {
+  return rows.map(r => ({ ...r, _id: _rowId++, _suggestions: null }))
+}
+
 /**
  * Converts the advanced-search form rows to a Directus-style filter object.
  * Rows with an empty value (except _empty/_nempty) are silently skipped.
@@ -746,6 +756,23 @@ function applyRouteParams() {
       openPanel.value    = 'expert'
       page.value         = 1
       fetchRecords()
+    } else if (qtParam === 'advanced') {
+      try {
+        const parsed = JSON.parse(qParam)
+        advRows.value       = restoreAdvRows(parsed.rows ?? [])
+        activeFilter.value  = parsed.filter ?? null
+      } catch { activeFilter.value = null }
+      activeSearch.value = 'advanced'
+      openPanel.value    = 'advanced'
+      page.value         = 1
+      loadAdvConfig()
+      fetchRecords()
+    } else if (qtParam === 'filter') {
+      try { activeFilter.value = JSON.parse(qParam) } catch { activeFilter.value = null }
+      activeSearch.value = 'filter'
+      openPanel.value    = null
+      page.value         = 1
+      fetchRecords()
     }
     return
   }
@@ -832,7 +859,7 @@ function runAdvancedSearch() {
   activeSearch.value = 'advanced'
   openPanel.value    = null
   page.value         = 1
-  updateFilterUrl('filter', JSON.stringify(filter))
+  updateFilterUrl('advanced', JSON.stringify({ rows: serializeAdvRows(advRows.value), filter }))
   fetchRecords()
 }
 

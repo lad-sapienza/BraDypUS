@@ -210,8 +210,10 @@ const mutating   = ref(false)  // shared loading flag for add/delete
 const relationOptions = computed(() => buildRelationOptions(t))
 
 // ── Translate DataView URL params → getRsMatrix API params ──
-// filter=JSON_STRING → parsed and passed as object (api.get serialises to bracket notation)
-// qt=fast|expert + q=<value> → search_type + corresponding param
+// filter=JSON_STRING            → parsed and passed as object (linked-records / bookmark)
+// qt=fast|expert + q=<value>    → search_type + corresponding param
+// qt=advanced + q={rows,filter} → live advanced search (current DataView format)
+// qt=filter + q=<filter JSON>   → saved queries of type filter (still written as this format)
 function buildMatrixApiParams() {
   const p    = { tb: tb.value }
   const qt         = route.query.qt     ?? null
@@ -226,6 +228,14 @@ function buildMatrixApiParams() {
   } else if (qt === 'expert' && q) {
     p.search_type = 'sqlExpert'
     p.querytext   = q
+  } else if (qt === 'advanced' && q) {
+    try {
+      const parsed = JSON.parse(q)
+      if (parsed?.filter) p.filter = parsed.filter
+      else p.search_type = 'all'
+    } catch { p.search_type = 'all' }
+  } else if (qt === 'filter' && q) {
+    try { p.filter = JSON.parse(q) } catch { p.search_type = 'all' }
   } else {
     p.search_type = 'all'
   }

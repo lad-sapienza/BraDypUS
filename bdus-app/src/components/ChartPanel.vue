@@ -94,31 +94,19 @@
         <span class="metric-value">{{ result.value }}</span>
         <span class="metric-label">{{ result.label }}</span>
       </div>
-      <template v-else-if="result.type">
-        <BarChart
-          v-if="result.type === 'bar'"
-          :data="chartData"
-          :options="chartOptions"
-          class="chart-canvas"
-        />
-        <LineChart
-          v-else-if="result.type === 'line'"
-          :data="chartData"
-          :options="chartOptions"
-          class="chart-canvas"
-        />
-        <PieChart
-          v-else-if="result.type === 'pie'"
-          :data="chartData"
-          :options="chartOptions"
-          class="chart-canvas"
-        />
-        <DoughnutChart
-          v-else-if="result.type === 'doughnut'"
-          :data="chartData"
-          :options="chartOptions"
-          class="chart-canvas"
-        />
+      <template v-else-if="chartComponent">
+        <div class="chart-canvas-row">
+          <component :is="chartComponent" :data="chartData" :options="chartOptions" class="chart-canvas" />
+          <AButton
+            type="text"
+            size="small"
+            :title="t('expand_chart')"
+            class="chart-expand-btn"
+            @click="fullscreenOpen = true"
+          >
+            <template #icon><FullscreenOutlined /></template>
+          </AButton>
+        </div>
       </template>
 
       <!-- Save section (only shown when chart ran successfully) -->
@@ -209,11 +197,28 @@
       </li>
     </ul>
 
+    <!-- ── Fullscreen chart view ────────────────────────────────────── -->
+    <AModal
+      v-model:open="fullscreenOpen"
+      :title="t('charts')"
+      :footer="null"
+      width="92vw"
+      wrap-class-name="chart-fullscreen-modal"
+    >
+      <component
+        v-if="chartComponent"
+        :is="chartComponent"
+        :data="chartData"
+        :options="chartOptions"
+        class="chart-canvas-fullscreen"
+      />
+    </AModal>
+
   </div>
 </template>
 
 <script setup>
-import { DeleteOutlined, PlayCircleOutlined, SaveOutlined, ShareAltOutlined, StarFilled, StarOutlined } from '@ant-design/icons-vue'
+import { DeleteOutlined, FullscreenOutlined, PlayCircleOutlined, SaveOutlined, ShareAltOutlined, StarFilled, StarOutlined } from '@ant-design/icons-vue'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useToast } from '@/composables/useNotify'
 import { api } from '@/api'
@@ -222,6 +227,7 @@ import {
   Button as AButton,
   Input as AInput,
   Divider as ADivider,
+  Modal as AModal,
   Spin as ASpin,
   Select as ASelect,
   Switch as ASwitch
@@ -281,6 +287,7 @@ const running           = ref(false)
 const result            = ref(null)
 const newChartName      = ref('')
 const saving            = ref(false)
+const fullscreenOpen    = ref(false)
 
 // fields
 const tableFieldOptions = ref([])
@@ -326,6 +333,9 @@ const chartOptions = {
   responsive: true,
   maintainAspectRatio: false,
 }
+
+const CHART_COMPONENTS = { bar: BarChart, line: LineChart, pie: PieChart, doughnut: DoughnutChart }
+const chartComponent = computed(() => CHART_COMPONENTS[result.value?.type] ?? null)
 
 const filteredCharts = computed(() => {
   const own   = charts.value.filter(c => (c.definition?.tb ?? null) === props.currentTb)
@@ -571,6 +581,20 @@ async function doDelete(c) {
 
 .chart-canvas {
   max-height: 260px;
+}
+
+.chart-canvas-row {
+  position: relative;
+}
+
+.chart-expand-btn {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+.chart-canvas-fullscreen {
+  height: 75vh;
 }
 
 .metric-display {

@@ -901,6 +901,7 @@
   "invalid_chart_type": "Tipo di grafico non valido",
   "invalid_chart_field": "Campo non valido",
   "run_chart": "Esegui",
+  "expand_chart": "Espandi grafico",
   "api_keys": "Chiavi API",
   "api_keys_hint": "Gestisci le chiavi di accesso all'API REST",
   "api_key_label": "Nome / descrizione della chiave",

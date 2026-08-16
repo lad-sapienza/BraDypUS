@@ -52,6 +52,7 @@
   "show_all": "Mostra tutto",
   "advanced_search": "Ricerca avanzata",
   "sql_expert_search": "Ricerca per esperti SQL",
+  "sql_expert_search_hint": "SQL letterale — i valori non vengono convertiti automaticamente al tipo reale della colonna. A differenza della ricerca avanzata, un valore numerico confrontato con una colonna testuale (es. context_id > 200) può fallire; scrivere context_id::integer > 200 oppure confrontare con una stringa tra apici.",
   "contextual_search_in": "Ricerca contestuale (%s)",
   "user_mng": "Gestione utenti",
   "add_new_user": "Aggiungi un nuovo utente",

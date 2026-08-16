@@ -52,6 +52,7 @@
   "show_all": "Show all",
   "advanced_search": "Advanced search",
   "sql_expert_search": "SQL expert search",
+  "sql_expert_search_hint": "Literal SQL — values are not automatically cast to the column's real type. Unlike Advanced search, a numeric literal compared to a text column (e.g. context_id > 200) may fail; write context_id::integer > 200 or compare against a quoted string instead.",
   "contextual_search_in": "Contextual search (%s)",
   "user_mng": "User manager",
   "add_new_user": "Add a new user",

@@ -250,6 +250,7 @@
             <Transition name="slide">
               <div v-if="openPanel === 'expert'" class="search-panel">
                 <label class="expert-label">{{ t('sql_expert_search') }} — WHERE …</label>
+                <p class="expert-hint">{{ t('sql_expert_search_hint') }}</p>
                 <ATextarea
                   v-model:value="expertQuery"
                   :rows="3"
@@ -1213,6 +1214,11 @@ function doExport(format) {
   color: var(--p-text-muted-color);
 }
 .expert-textarea { font-family: monospace; font-size: 0.85rem; }
+.expert-hint {
+  font-size: 0.78rem;
+  color: var(--p-text-muted-color);
+  margin: 0.15rem 0 0.5rem;
+}
 
 /* ── Actions row ─────────────────────────────────────────── */
 .search-panel-actions {

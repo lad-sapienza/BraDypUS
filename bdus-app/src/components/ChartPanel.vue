@@ -81,6 +81,44 @@
         <label for="useFilter" class="builder-toggle-label">{{ t('use_current_filter') }}</label>
       </div>
 
+      <!-- Style options (collapsible) -->
+      <AButton type="text" size="small" class="style-toggle" @click="showStyle = !showStyle">
+        <template #icon><BgColorsOutlined /></template>
+        {{ t('style_options') }}
+      </AButton>
+      <div v-if="showStyle" class="style-options">
+        <div v-if="selectedType !== 'metric'" class="builder-field builder-field--inline">
+          <label class="builder-field-label">{{ t('style_legend') }}</label>
+          <ASelect
+            v-model:value="styleLegendPosition"
+            :options="legendPositionOptions"
+            size="small"
+            class="builder-select"
+          />
+        </div>
+        <div v-if="!['metric', 'pie', 'doughnut'].includes(selectedType)" class="builder-field builder-field--inline">
+          <label class="builder-field-label">{{ t('style_color') }}</label>
+          <input v-model="styleColor" type="color" class="style-color-input" />
+          <AButton type="text" size="small" :title="t('reset')" @click="styleColor = ''">
+            <template #icon><CloseOutlined /></template>
+          </AButton>
+        </div>
+        <div v-if="selectedType === 'bar'" class="builder-field builder-toggle">
+          <ASwitch v-model:checked="styleHorizontal" id="styleHorizontal" />
+          <label for="styleHorizontal" class="builder-toggle-label">{{ t('style_horizontal') }}</label>
+        </div>
+        <div v-if="!['metric', 'pie', 'doughnut'].includes(selectedType)" class="builder-field builder-field--inline">
+          <label class="builder-field-label">{{ t('style_y_min') }}</label>
+          <AInputNumber v-model:value="styleYMin" size="small" class="style-number-input" />
+          <label class="builder-field-label">{{ t('style_y_max') }}</label>
+          <AInputNumber v-model:value="styleYMax" size="small" class="style-number-input" />
+        </div>
+        <div class="builder-field builder-field--inline">
+          <label class="builder-field-label">{{ t('style_decimals') }}</label>
+          <AInputNumber v-model:value="styleDecimals" size="small" :min="0" :max="10" class="style-number-input" />
+        </div>
+      </div>
+
       <!-- Run button -->
       <AButton type="primary" size="small" :loading="running" @click="runChart">
         <template #icon><PlayCircleOutlined /></template>
@@ -91,7 +129,7 @@
     <!-- ── Chart output ──────────────────────────────────────────────── -->
     <div v-if="result" class="chart-output">
       <div v-if="result.type === 'metric'" class="metric-display">
-        <span class="metric-value">{{ result.value }}</span>
+        <span class="metric-value">{{ formattedMetricValue }}</span>
         <span class="metric-label">{{ result.label }}</span>
       </div>
       <template v-else-if="chartComponent">
@@ -218,7 +256,7 @@
 </template>
 
 <script setup>
-import { DeleteOutlined, FullscreenOutlined, PlayCircleOutlined, SaveOutlined, ShareAltOutlined, StarFilled, StarOutlined } from '@ant-design/icons-vue'
+import { BgColorsOutlined, CloseOutlined, DeleteOutlined, FullscreenOutlined, PlayCircleOutlined, SaveOutlined, ShareAltOutlined, StarFilled, StarOutlined } from '@ant-design/icons-vue'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useToast } from '@/composables/useNotify'
 import { api } from '@/api'
@@ -226,6 +264,7 @@ import { useI18n } from '@/i18n'
 import {
   Button as AButton,
   Input as AInput,
+  InputNumber as AInputNumber,
   Divider as ADivider,
   Modal as AModal,
   Spin as ASpin,
@@ -289,6 +328,15 @@ const newChartName      = ref('')
 const saving            = ref(false)
 const fullscreenOpen    = ref(false)
 
+// style options
+const showStyle             = ref(false)
+const styleColor            = ref('')
+const styleLegendPosition   = ref('top')
+const styleHorizontal       = ref(false)
+const styleYMin             = ref(null)
+const styleYMax             = ref(null)
+const styleDecimals         = ref(null)
+
 // fields
 const tableFieldOptions = ref([])
 const loadingFields     = ref(false)
@@ -318,22 +366,86 @@ const functionOptions = [
   { value: 'MAX',            label: 'MAX' },
 ]
 
-// ── Computed ───────────────────────────────────────────────────────────
-const chartData = computed(() => ({
-  labels: result.value?.labels ?? [],
-  datasets: [{
-    label: lastRunDefinition.value?.y_field || selectedYField.value || 'value',
-    data: result.value?.data ?? [],
-    backgroundColor: [
-      '#4f81bd', '#c0504d', '#9bbb59', '#8064a2', '#4bacc6', '#f79646',
-    ].slice(0, result.value?.labels?.length ?? 1),
-  }],
-}))
+const legendPositionOptions = computed(() => [
+  { value: 'top',    label: t('style_legend_top') },
+  { value: 'bottom', label: t('style_legend_bottom') },
+  { value: 'left',   label: t('style_legend_left') },
+  { value: 'right',  label: t('style_legend_right') },
+  { value: 'hidden', label: t('style_legend_hidden') },
+])
 
-const chartOptions = {
-  responsive: true,
-  maintainAspectRatio: false,
+const DEFAULT_PALETTE = ['#4f81bd', '#c0504d', '#9bbb59', '#8064a2', '#4bacc6', '#f79646']
+
+// ── Computed ───────────────────────────────────────────────────────────
+
+/** Applies a fixed decimal count to a numeric value, if configured. Passes through otherwise. */
+function formatValue(val, decimals) {
+  const n = Number(val)
+  if (decimals == null || !Number.isFinite(n)) return val
+  return n.toFixed(decimals)
 }
+
+const chartData = computed(() => {
+  const style       = lastRunDefinition.value?.style ?? {}
+  const isMultiColor = ['pie', 'doughnut'].includes(result.value?.type)
+  return {
+    labels: result.value?.labels ?? [],
+    datasets: [{
+      label: lastRunDefinition.value?.y_field || selectedYField.value || 'value',
+      data: result.value?.data ?? [],
+      backgroundColor: isMultiColor
+        ? DEFAULT_PALETTE.slice(0, result.value?.labels?.length ?? 1)
+        : (style.color || DEFAULT_PALETTE[0]),
+    }],
+  }
+})
+
+const chartOptions = computed(() => {
+  const style     = lastRunDefinition.value?.style ?? {}
+  const decimals  = style.decimals != null && style.decimals !== '' ? Number(style.decimals) : null
+  const hasAxes   = ['bar', 'line'].includes(result.value?.type)
+
+  const opts = {
+    responsive: true,
+    maintainAspectRatio: false,
+    indexAxis: (style.horizontal && result.value?.type === 'bar') ? 'y' : 'x',
+    plugins: {
+      legend: {
+        display: style.legendPosition !== 'hidden',
+        position: ['top', 'bottom', 'left', 'right'].includes(style.legendPosition) ? style.legendPosition : 'top',
+      },
+      tooltip: {
+        callbacks: {
+          label: (ctx) => `${ctx.dataset.label}: ${formatValue(ctx.parsed?.y ?? ctx.parsed?.x ?? ctx.parsed, decimals)}`,
+        },
+      },
+    },
+  }
+
+  if (hasAxes) {
+    // With indexAxis:'y' (horizontal bars), Chart.js swaps which scale id
+    // holds values vs categories: 'x' becomes the value axis, 'y' the
+    // category axis. Min/max/decimals must follow the value axis, not
+    // always 'y', or they'd be misapplied to the category labels.
+    const valueAxisKey = opts.indexAxis === 'y' ? 'x' : 'y'
+    opts.scales = {
+      [valueAxisKey]: {
+        min: style.yMin != null && style.yMin !== '' ? Number(style.yMin) : undefined,
+        max: style.yMax != null && style.yMax !== '' ? Number(style.yMax) : undefined,
+        ticks: decimals != null ? { callback: (v) => formatValue(v, decimals) } : {},
+      },
+    }
+  }
+
+  return opts
+})
+
+/** Metric-type result value, formatted with the configured decimal count. */
+const formattedMetricValue = computed(() => {
+  const style = lastRunDefinition.value?.style ?? {}
+  const decimals = style.decimals != null && style.decimals !== '' ? Number(style.decimals) : null
+  return formatValue(result.value?.value, decimals)
+})
 
 const CHART_COMPONENTS = { bar: BarChart, line: LineChart, pie: PieChart, doughnut: DoughnutChart }
 const chartComponent = computed(() => CHART_COMPONENTS[result.value?.type] ?? null)
@@ -412,7 +524,33 @@ function buildDefinition() {
   if (useCurrentFilter.value && props.currentFilter) {
     def.filter = props.currentFilter
   }
+  const style = buildStyle()
+  if (style) {
+    def.style = style
+  }
   return def
+}
+
+/** Collects active style overrides into a plain object, omitting unset ones. Returns null if none are set. */
+function buildStyle() {
+  const style = {}
+  if (styleColor.value)                        style.color          = styleColor.value
+  if (styleLegendPosition.value !== 'top')      style.legendPosition = styleLegendPosition.value
+  if (styleHorizontal.value)                    style.horizontal     = true
+  if (styleYMin.value != null)                  style.yMin           = styleYMin.value
+  if (styleYMax.value != null)                  style.yMax           = styleYMax.value
+  if (styleDecimals.value != null)              style.decimals       = styleDecimals.value
+  return Object.keys(style).length ? style : null
+}
+
+/** Restores builder style refs from a saved definition's style object (or defaults if absent). */
+function restoreStyle(style) {
+  styleColor.value          = style?.color ?? ''
+  styleLegendPosition.value = style?.legendPosition ?? 'top'
+  styleHorizontal.value     = style?.horizontal ?? false
+  styleYMin.value           = style?.yMin ?? null
+  styleYMax.value           = style?.yMax ?? null
+  styleDecimals.value       = style?.decimals ?? null
 }
 
 /**
@@ -485,6 +623,7 @@ function loadAndRun(c) {
     selectedYField.value   = def.y_field    ?? null
     selectedYFunction.value = def.y_function ?? 'COUNT'
   }
+  restoreStyle(def.style)
   // Don't restore filter toggle — user decides
   runChart()
 }
@@ -572,6 +711,37 @@ async function doDelete(c) {
 .builder-toggle-label {
   font-size: 0.85rem;
 }
+
+.builder-field--inline {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+}
+.builder-field--inline .builder-field-label { flex-shrink: 0; }
+.builder-field--inline .builder-select { width: auto; flex: 1; }
+
+.style-toggle { align-self: flex-start; }
+
+.style-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border: 1px solid var(--p-content-border-color);
+  border-radius: 6px;
+}
+
+.style-color-input {
+  width: 2.2rem;
+  height: 1.7rem;
+  padding: 0;
+  border: 1px solid var(--p-content-border-color);
+  border-radius: 4px;
+  background: none;
+  cursor: pointer;
+}
+
+.style-number-input { width: 6rem; }
 
 /* ── Chart output ─────────────────────────────────────── */
 .chart-output {

@@ -5,6 +5,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.4.2] - 2026-08-16
+
+### Added
+
+- **Operatori filtro `_nstarts_with` / `_nends_with`** — negazione di `_starts_with`/`_ends_with` (già esistenti), aggiunti a `JsonFilter::ALLOWED_OPS`/`buildCondition()` (`NOT LIKE`). Disponibili nella ricerca avanzata di DataView e nel wizard filtri dell'Analisi Assemblaggio, che condivide lo stesso motore `JsonFilter` lato backend.
+- **Funzione di aggregazione `COUNT_DISTINCT` nei grafici** — `Chart.php` supporta ora `COUNT(DISTINCT campo)` accanto a COUNT/SUM/AVG/MIN/MAX (nuovo helper `renderAggregate()`, il nome non è SQL valido di per sé), selezionabile nel builder grafici (`ChartPanel.vue`).
+- **Opzioni di stile per i grafici** — nuova sezione collassabile "Style options" nel builder grafici: colore, posizione legenda, min/max asse, decimali, orientamento orizzontale. Persistite come blob opaco in `bdus_charts.definition.style`, nessuna modifica allo schema DB.
+- **Espansione a schermo intero di un grafico** — bottone "espandi" sul canvas del grafico appena eseguito/salvato in DataView; apre lo stesso grafico in un modal a piena larghezza.
+
+### Fixed
+
+- **Harris Matrix ignorava il filtro di ricerca avanzata/filtro attivo in DataView** — `buildMatrixApiParams()` in `MatrixView.vue` gestiva solo `qt=fast`/`qt=expert`; aggiunti i branch mancanti `qt=advanced` e `qt=filter` (entrambi i formati URL attualmente in uso dalla ricerca avanzata).
+- **`MatrixView` non si aggiornava navigando via SPA con parametri di route diversi** (es. cambio tabella o filtro dalla command palette, senza reload completo) — aggiunto un `watch` su `route.params`/`route.query` che ricarica la matrice, stesso pattern già in uso in `ChronoTimelineView`.
+- **Scritture di log silenziosamente perse quando condividevano una connessione/transazione con la query che aveva appena fallito (Postgres)** — una query fallita dentro una transazione applicativa lascia la connessione PDO in stato "aborted" fino al `ROLLBACK`; qualunque INSERT successivo sulla stessa connessione, incluso quello del logger, falliva a sua volta silenziosamente (catturato e mandato solo a `error_log()` PHP, mai a `bdus_log`). `LogDBHandler` ora apre una connessione PDO indipendente, dedicata solo alla scrittura dei log.
+
+### Changed
+
+- **Ricerca SQL expert** — aggiunto un hint inline nel pannello che spiega l'assenza di cast automatico al tipo reale della colonna (es. `context_id::integer > 200`), per chiarire l'incoerenza apparente rispetto alla ricerca avanzata (che casta automaticamente).
+
 ## [5.4.1] - 2026-08-14
 
 ### Fixed

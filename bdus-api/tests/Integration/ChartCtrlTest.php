@@ -52,6 +52,23 @@ class ChartCtrlTest extends BdusTestCase
         $this->assertEquals(5, (int) $res['value']); // 5 seeded items
     }
 
+    public function testGetDataMetricCountDistinctSuccess(): void
+    {
+        $ctrl = $this->makeController('Bdus\\Controllers\\Chart', [], [
+            'definition' => [
+                'tb'       => 'items',
+                'type'     => 'metric',
+                'field'    => 'status',
+                'function' => 'COUNT_DISTINCT',
+            ],
+        ]);
+        $res = $this->callController($ctrl, 'getData');
+
+        $this->assertSame('success', $res['status']);
+        // 5 seeded items, statuses: active, inactive, active, pending, active → 3 distinct
+        $this->assertEquals(3, (int) $res['value']);
+    }
+
     // ── getData: bar ──────────────────────────────────────────────────────────
 
     public function testGetDataBarSuccess(): void

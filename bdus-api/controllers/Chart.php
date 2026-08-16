@@ -49,7 +49,7 @@ class Chart extends \Bdus\Controller
             return;
         }
 
-        $allowedFunctions = ['COUNT', 'SUM', 'AVG', 'MIN', 'MAX'];
+        $allowedFunctions = ['COUNT', 'COUNT_DISTINCT', 'SUM', 'AVG', 'MIN', 'MAX'];
 
         // ── Validate fields & function per type ──────────────────────────────
         if ($type === 'metric') {
@@ -122,7 +122,7 @@ class Chart extends \Bdus\Controller
         try {
             if ($type === 'metric') {
                 // SELECT {FUNC}({field}) AS value FROM {tb} {WHERE}
-                $sql    = "SELECT {$function}({$field}) AS value FROM {$tb}{$whereSql}";
+                $sql    = "SELECT " . $this->renderAggregate($function, $field) . " AS value FROM {$tb}{$whereSql}";
                 $rows   = $this->db->query($sql, $whereValues, 'read');
                 $value  = $rows[0]['value'] ?? null;
 
@@ -136,7 +136,7 @@ class Chart extends \Bdus\Controller
             } else {
                 // SELECT {x_field} AS label, {FUNC}({y_field}) AS value
                 // FROM {tb} {WHERE} GROUP BY {x_field} ORDER BY {x_field}
-                $sql  = "SELECT {$xField} AS label, {$yFunction}({$yField}) AS value"
+                $sql  = "SELECT {$xField} AS label, " . $this->renderAggregate($yFunction, $yField) . " AS value"
                     . " FROM {$tb}{$whereSql}"
                     . " GROUP BY {$xField}"
                     . " ORDER BY {$xField}";
@@ -378,6 +378,17 @@ class Chart extends \Bdus\Controller
         $row['tb_label']    = $tbLabel;
         $row['owned_by_me'] = (int) $row['user_id'] === \Auth\CurrentUser::id();
         return $row;
+    }
+
+    /**
+     * Renders an aggregate function call for SQL. COUNT_DISTINCT has no
+     * direct SQL equivalent as a function name — it maps to COUNT(DISTINCT …).
+     */
+    private function renderAggregate(string $function, string $field): string
+    {
+        return $function === 'COUNT_DISTINCT'
+            ? "COUNT(DISTINCT {$field})"
+            : "{$function}({$field})";
     }
 
     /**

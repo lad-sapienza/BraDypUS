@@ -105,6 +105,8 @@
   "doesnt_contain": "Non contiene",
   "starts_with": "Comincia con",
   "ends_with": "Finisce con",
+  "not_starts_with": "Non comincia con",
+  "not_ends_with": "Non finisce con",
   "is_empty": "È vuoto",
   "is_not_empty": "Non è vuoto",
   "bigger": "È più grande di",

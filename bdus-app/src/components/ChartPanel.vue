@@ -310,11 +310,12 @@ const chartTypeOptions = computed(() => [
 ])
 
 const functionOptions = [
-  { value: 'COUNT', label: 'COUNT' },
-  { value: 'SUM',   label: 'SUM' },
-  { value: 'AVG',   label: 'AVG' },
-  { value: 'MIN',   label: 'MIN' },
-  { value: 'MAX',   label: 'MAX' },
+  { value: 'COUNT',          label: 'COUNT' },
+  { value: 'COUNT_DISTINCT', label: 'COUNT DISTINCT' },
+  { value: 'SUM',            label: 'SUM' },
+  { value: 'AVG',            label: 'AVG' },
+  { value: 'MIN',            label: 'MIN' },
+  { value: 'MAX',            label: 'MAX' },
 ]
 
 // ── Computed ───────────────────────────────────────────────────────────

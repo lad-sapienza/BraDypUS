@@ -4,6 +4,7 @@
 bdus-api/
 bdus-app/
 bdus-docs/
+directus2bdus/
 
 # ── Local compose overrides ───────────────────────────────────────────────────
 # Create a .env file here to override compose variables locally

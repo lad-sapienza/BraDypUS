@@ -156,7 +156,7 @@
 
 <script setup>
 import { ApartmentOutlined, ArrowLeftOutlined, CalendarOutlined, DeleteOutlined, EditOutlined, PictureOutlined, PlusOutlined, ReloadOutlined, SwapOutlined, WarningOutlined } from '@ant-design/icons-vue'
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter }  from 'vue-router'
 import { useToast } from '@/composables/useNotify'
 import { useAuthStore }         from '@/stores/auth'
@@ -373,6 +373,15 @@ onMounted(async () => {
   await loadTables()
   await loadMatrix()
 })
+
+// Vue Router reuses this component instance when only the route params/query
+// change (e.g. switching table via the command palette, or arriving here
+// with a different active search from DataView), so onMounted alone never
+// re-runs on its own — reload explicitly when any of these change.
+watch(
+  () => [route.params.tb, route.query.qt, route.query.q, route.query.filter],
+  () => { loadMatrix() },
+)
 </script>
 
 <style scoped>

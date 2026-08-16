@@ -112,6 +112,20 @@ class JsonFilterTest extends BdusTestCase
         $this->assertSame(['%pha'], $vals);
     }
 
+    public function testNstartsWith(): void
+    {
+        [$sql, $vals] = $this->f->toSql(['name' => ['_nstarts_with' => 'Al']]);
+        $this->assertStringContainsString('items.name NOT LIKE ?', $sql);
+        $this->assertSame(['Al%'], $vals);
+    }
+
+    public function testNendsWith(): void
+    {
+        [$sql, $vals] = $this->f->toSql(['name' => ['_nends_with' => 'pha']]);
+        $this->assertStringContainsString('items.name NOT LIKE ?', $sql);
+        $this->assertSame(['%pha'], $vals);
+    }
+
     // ── IN / NOT IN ───────────────────────────────────────────────────────────
 
     public function testIn(): void

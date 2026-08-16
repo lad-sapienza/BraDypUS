@@ -55,8 +55,8 @@ class SearchCtrlTest extends BdusTestCase
     {
         $ctrl = $this->makeController('Bdus\\Controllers\\Search', ['tb' => self::TB]);
         $res  = $this->callController($ctrl, 'getAdvancedConfig');
-        // We define 9 operators
-        $this->assertCount(9, $res['operators']);
+        // We define 11 operators
+        $this->assertCount(11, $res['operators']);
     }
 
     public function testGetAdvancedConfigOperatorsHaveValueAndKey(): void

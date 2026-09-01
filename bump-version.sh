@@ -1,161 +1,85 @@
 #!/usr/bin/env bash
-# bump-version.sh — Coordinated version bump for bdus-api + bdus-app + this
-#                    root repo (orchestration: bradypus.yml, compose files,
-#                    helper scripts)
+# bump-version.sh — cut a coordinated release of the BraDypUS monorepo.
 #
 # Usage:
-#   ./bump-version.sh <version>
+#   ./bump-version.sh <X.Y.Z>
 #
-# The version argument sets major.minor.patch on bdus-api/bdus-app (via their
-# composer.json/package.json) and tags this root repo the same way — all
-# three always carry the same version tag, even though the root has no
-# manifest file of its own to bump (it's just tagged directly on HEAD).
-# Use this for every coordinated release (all major and minor bumps, and any
-# patch release you want to ship as a coherent trio).
+# What it does, in one commit and one tag:
+#   1. sets the version in bdus-api/composer.json, bdus-app/package.json and
+#      bdus-app/package-lock.json
+#   2. promotes the CHANGELOG's "## [Unreleased]" section to
+#      "## [X.Y.Z] - <today>"  (skipped if there is no [Unreleased] header)
+#   3. commits as  "chore: release X.Y.Z"
+#   4. tags  vX.Y.Z  and pushes the branch + the tag
 #
-# For hotfixes that touch only one repo, edit that repo's composer.json or
-# package.json directly, commit and tag there — no need to run this script.
+# The tag triggers .github/workflows/release.yml, which builds and pushes
+# ghcr.io/lad-sapienza/bdus-api and ghcr.io/lad-sapienza/bdus-app at X.Y.Z.
 #
-# Examples:
-#   ./bump-version.sh 5.1.0    # coordinated minor release
-#   ./bump-version.sh 5.1.1    # coordinated patch (repos changed)
-#   ./bump-version.sh 6.0.0    # major release
+# Add your release notes under "## [Unreleased]" in CHANGELOG.md *before*
+# running this.
 
 set -euo pipefail
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
-
 red()   { printf '\033[0;31m%s\033[0m\n' "$*"; }
 green() { printf '\033[0;32m%s\033[0m\n' "$*"; }
-bold()  { printf '\033[1m%s\033[0m\n'   "$*"; }
-
-die() { red "ERROR: $*"; exit 1; }
-
-# ── Validate argument ─────────────────────────────────────────────────────────
+die()   { red "ERROR: $*"; exit 1; }
 
 VERSION="${1:-}"
-[[ -z "$VERSION" ]] && die "Usage: $0 <version>  (e.g. 5.1.0)"
-[[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || die "Version must be in X.Y.Z format (got: $VERSION)"
+[[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || die "Usage: $0 <X.Y.Z>  (e.g. 5.4.4)"
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$SCRIPT_DIR"
-API_DIR="$SCRIPT_DIR/bdus-api"
-APP_DIR="$SCRIPT_DIR/bdus-app"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$ROOT"
 
-[[ -d "$API_DIR" ]] || die "bdus-api directory not found: $API_DIR"
-[[ -d "$APP_DIR" ]] || die "bdus-app directory not found: $APP_DIR"
+git diff --quiet && git diff --cached --quiet || die "working tree not clean — commit or stash first"
 
-# ── Read current versions ─────────────────────────────────────────────────────
-
-cur_api=$(python3 -c "import json,sys; print(json.load(open('$API_DIR/composer.json'))['version'])")
-cur_app=$(python3 -c "import json,sys; print(json.load(open('$APP_DIR/package.json'))['version'])")
-cur_root=$(git -C "$ROOT_DIR" describe --tags --abbrev=0 2>/dev/null || echo "none")
-
-bold "Current versions:"
-echo "  bdus-api  $cur_api"
-echo "  bdus-app  $cur_app"
-echo "  root      $cur_root  (tag only, no manifest)"
-echo ""
-bold "Target version: $VERSION"
-echo ""
-
-[[ "$cur_api" == "$VERSION" && "$cur_app" == "$VERSION" && "$cur_root" == "v$VERSION" ]] && {
-  green "All three are already at $VERSION — nothing to do."
-  exit 0
-}
-
-# ── Confirm ───────────────────────────────────────────────────────────────────
-
-read -rp "Proceed? [y/N] " answer
-[[ "$(echo "$answer" | tr '[:upper:]' '[:lower:]')" == "y" ]] || { echo "Aborted."; exit 0; }
-
-# ── Check working trees are clean ─────────────────────────────────────────────
-
-for dir in "$API_DIR" "$APP_DIR" "$ROOT_DIR"; do
-  name=$(basename "$dir")
-  if ! git -C "$dir" diff --quiet || ! git -C "$dir" diff --cached --quiet; then
-    die "$name has uncommitted changes — commit or stash them first"
-  fi
-done
-
-# Each repo's manifest bump + commit is skipped if it's already at $VERSION —
-# lets you run this to just catch up a single lagging repo (e.g. root) without
-# erroring on "nothing to commit" in the ones already done.
-
-MSG="chore: bump version to $VERSION"
 TAG="v$VERSION"
+! git rev-parse "$TAG" >/dev/null 2>&1 || die "tag $TAG already exists"
 
-# ── bdus-api ───────────────────────────────────────────────────────────────────
+CUR=$(python3 -c "import json; print(json.load(open('bdus-api/composer.json'))['version'])")
+green "bdus-api / bdus-app: $CUR  ->  $VERSION"
+read -rp "Proceed? [y/N] " a; [[ "${a,,}" == "y" ]] || { echo "Aborted."; exit 0; }
 
-if [[ "$cur_api" != "$VERSION" ]]; then
-  python3 - "$API_DIR/composer.json" "$VERSION" <<'PYEOF'
+TODAY="$(date +%F)"
+
+# ── 1. manifests ────────────────────────────────────────────────────────────
+python3 - "$VERSION" <<'PY'
 import json, sys
-path, ver = sys.argv[1], sys.argv[2]
-with open(path) as f:
-    data = json.load(f)
-data['version'] = ver
-with open(path, 'w') as f:
-    json.dump(data, f, indent=4, ensure_ascii=False)
-    f.write('\n')
-PYEOF
-  git -C "$API_DIR" add composer.json
-  git -C "$API_DIR" commit -m "$MSG"
-  echo "  ✓ bdus-api/composer.json → $VERSION (committed)"
+ver = sys.argv[1]
+for path, indent in (("bdus-api/composer.json", 4),
+                     ("bdus-app/package.json", 2),
+                     ("bdus-app/package-lock.json", 2)):
+    with open(path) as f:
+        data = json.load(f)
+    data["version"] = ver
+    pkgs = data.get("packages")
+    if isinstance(pkgs, dict) and "" in pkgs:
+        pkgs[""]["version"] = ver
+    with open(path, "w") as f:
+        json.dump(data, f, indent=indent, ensure_ascii=False)
+        f.write("\n")
+PY
+
+# ── 2. CHANGELOG ───────────────────────────────────────────────────────────
+if grep -q '^## \[Unreleased\]$' CHANGELOG.md; then
+  python3 - "$VERSION" "$TODAY" <<'PY'
+import sys
+ver, today = sys.argv[1], sys.argv[2]
+txt = open("CHANGELOG.md").read()
+needle = "## [Unreleased]\n"
+i = txt.index(needle) + len(needle)
+open("CHANGELOG.md", "w").write(txt[:i] + f"\n## [{ver}] - {today}\n" + txt[i:])
+PY
+  green "CHANGELOG: [Unreleased] -> [$VERSION] - $TODAY"
 else
-  echo "  · bdus-api already at $VERSION — skipping commit"
+  red "note: no '## [Unreleased]' header in CHANGELOG.md — not promoting"
 fi
 
-# ── bdus-app ───────────────────────────────────────────────────────────────────
+# ── 3-4. commit, tag, push ─────────────────────────────────────────────────
+git add bdus-api/composer.json bdus-app/package.json bdus-app/package-lock.json CHANGELOG.md
+git commit -m "chore: release $VERSION"
+git tag "$TAG"
 
-if [[ "$cur_app" != "$VERSION" ]]; then
-  python3 - "$APP_DIR/package.json" "$VERSION" <<'PYEOF'
-import json, sys
-path, ver = sys.argv[1], sys.argv[2]
-with open(path) as f:
-    data = json.load(f)
-data['version'] = ver
-with open(path, 'w') as f:
-    json.dump(data, f, indent=2, ensure_ascii=False)
-    f.write('\n')
-PYEOF
-  git -C "$APP_DIR" add package.json
-  git -C "$APP_DIR" commit -m "$MSG"
-  echo "  ✓ bdus-app/package.json  → $VERSION (committed)"
-else
-  echo "  · bdus-app already at $VERSION — skipping commit"
-fi
+green "Pushing $TAG ..."
+git push && git push origin "$TAG"
 
-# ── Tag all three (idempotent — skip if the tag already exists locally) ────────
-
-echo ""
-bold "Tagging..."
-
-for dir in "$API_DIR" "$APP_DIR" "$ROOT_DIR"; do
-  name=$(basename "$dir")
-  if git -C "$dir" rev-parse "$TAG" >/dev/null 2>&1; then
-    echo "  · $name already tagged $TAG"
-  else
-    git -C "$dir" tag "$TAG"
-    echo "  ✓ $name tagged $TAG"
-  fi
-done
-
-# ── Push ──────────────────────────────────────────────────────────────────────
-
-echo ""
-bold "Pushing..."
-
-for dir in "$API_DIR" "$APP_DIR" "$ROOT_DIR"; do
-  name=$(basename "$dir")
-  git -C "$dir" push && git -C "$dir" push origin "$TAG"
-  echo "  ✓ $name pushed"
-done
-
-echo ""
-green "Done! All three repos are now at $TAG."
-echo ""
-echo "  Hotfix workflow (one repo only):"
-echo "    cd bdus-api  # or bdus-app"
-echo "    # edit composer.json / package.json version manually"
-echo "    git add <file> && git commit -m 'chore: bump version to X.Y.Z'"
-echo "    git tag vX.Y.Z && git push && git push origin vX.Y.Z"
+green "Done. release.yml is now building the images for $TAG."

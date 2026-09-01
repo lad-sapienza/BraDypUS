@@ -1,0 +1,74 @@
+name: Build and deploy docs
+
+# Deploys bdus-docs/ (VitePress) to GitHub Pages -> docs.bdus.lad-sapienza.it.
+# The custom domain comes from bdus-docs/public/CNAME, which VitePress copies
+# into the build output.
+
+on:
+  push:
+    branches: [v5]
+    paths:
+      - 'bdus-docs/**'
+      - 'CHANGELOG.md'          # rendered as guide/changelog.md
+      - 'bdus-api/openapi.yaml' # rendered as public/openapi.yaml
+      - '.github/workflows/docs.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: bdus-docs
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      # These two files live in the API sources; the docs render them as pages.
+      - name: Sync generated pages from the API sources
+        run: |
+          cp ../CHANGELOG.md guide/changelog.md
+          cp ../bdus-api/openapi.yaml public/openapi.yaml
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: bdus-docs/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: bdus-docs/.vitepress/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

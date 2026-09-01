@@ -1,4 +1,9 @@
-name: Build and publish Docker image
+name: Build and publish Docker images
+
+# One tag drives both images. bump-version.sh creates the tag; this workflow
+# builds ghcr.io/lad-sapienza/bdus-api and ghcr.io/lad-sapienza/bdus-app at the
+# same version. Image names are unchanged from the pre-monorepo layout, so
+# bradypus.yml keeps working as-is.
 
 on:
   push:
@@ -13,16 +18,27 @@ jobs:
       contents: read
       packages: write  # required to push to ghcr.io
 
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: api
+            image: ghcr.io/lad-sapienza/bdus-api
+            context: ./bdus-api
+          - name: app
+            image: ghcr.io/lad-sapienza/bdus-app
+            context: ./bdus-app
+
     steps:
       - name: Checkout
         uses: actions/checkout@v5
 
-      # Extract version tags from the git tag (e.g. v5.0.3 → 5.0.3, 5.0, 5, latest)
+      # Extract version tags from the git tag (e.g. v5.4.4 -> 5.4.4, 5.4, 5)
       - name: Docker metadata
         id: meta
         uses: docker/metadata-action@v6
         with:
-          images: ghcr.io/lad-sapienza/bdus-api
+          images: ${{ matrix.image }}
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
@@ -42,13 +58,13 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push
+      - name: Build and push (${{ matrix.name }})
         uses: docker/build-push-action@v7
         with:
-          context: .
+          context: ${{ matrix.context }}
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=${{ matrix.name }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.name }}

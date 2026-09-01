@@ -32,11 +32,11 @@ export default defineConfig({
     },
 
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/lad-sapienza/bdus-api' },
+      { icon: 'github', link: 'https://github.com/lad-sapienza/BraDypUS' },
     ],
 
     editLink: {
-      pattern: 'https://github.com/lad-sapienza/bdus-docs/edit/v5/:path',
+      pattern: 'https://github.com/lad-sapienza/BraDypUS/edit/v5/bdus-docs/:path',
       text: 'Edit this page on GitHub',
     },
 

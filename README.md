@@ -4,30 +4,31 @@
 
 Developed at [LAD – Laboratorio di Archeologia Digitale, Sapienza University of Rome](https://lad.saras.uniroma1.it) by [Julian Bogdani](https://orcid.org/0000-0001-5250-927X).
 
-License: [GNU AGPL-3.0](bdus-api/LICENSE) · Docs: [docs.bdus.lad-sapienza.it](https://docs.bdus.lad-sapienza.it) · Cloud: [bdus.cloud](https://bdus.cloud) · [![DOI](https://zenodo.org/badge/18011343.svg)](https://zenodo.org/badge/latestdoi/18011343)
+License: [GNU AGPL-3.0](bdus-api/LICENSE) · Docs: [docs.bdus.lad-sapienza.it](https://docs.bdus.lad-sapienza.it) · [![DOI](https://zenodo.org/badge/18011343.svg)](https://zenodo.org/badge/latestdoi/18011343)
 
 ---
 
 ## Repository layout
 
-This monorepo contains two independent projects that work together:
+This is a monorepo. The three components are developed, versioned and released
+together; each still has its own `Dockerfile` and can be built on its own.
 
 | Directory | Language / Stack | Purpose |
 |---|---|---|
-| [`bdus-api/`](bdus-api/) | PHP 8.4 · Apache | REST JSON backend, multi-tenant |
-| [`bdus-app/`](bdus-app/) | Vue 3 · Vite · Ant Design Vue | Browser SPA |
+| [`bdus-api/`](bdus-api/) | PHP 8.4 · Apache | REST JSON backend, multi-tenant → `ghcr.io/lad-sapienza/bdus-api` |
+| [`bdus-app/`](bdus-app/) | Vue 3 · Vite · Ant Design Vue | Browser SPA → `ghcr.io/lad-sapienza/bdus-app` |
+| [`bdus-docs/`](bdus-docs/) | VitePress | User & developer guide → [docs.bdus.lad-sapienza.it](https://docs.bdus.lad-sapienza.it) |
 
-Each sub-directory has its own `README.md`, `Dockerfile`, and `docker-compose.yml`
-for standalone use. This root directory holds the **combined compose files** and
-helper scripts for running both services together.
+This root directory holds the **combined compose files**, helper scripts, the
+single [`CHANGELOG.md`](CHANGELOG.md), and the CI in [`.github/workflows/`](.github/workflows/).
 
 ---
 
 ## Quickstart (development)
 
 ```bash
-git clone https://github.com/lad-sapienza/bdus-api.git
-git clone https://github.com/lad-sapienza/bdus-app.git
+git clone https://github.com/lad-sapienza/BraDypUS.git
+cd BraDypUS
 docker compose up
 ```
 
@@ -48,17 +49,17 @@ manual/shared-hosting install) see the
 |---|---|
 | [`backup.sh`](backup.sh) / [`restore.sh`](restore.sh) | Backup or restore the `projects_data` Docker volume — full or per-app |
 | [`seed-demo.sh`](seed-demo.sh) | Populate an instance with a realistic archaeological demo dataset |
-| [`bump-version.sh`](bump-version.sh) | Coordinated version bump + tag across bdus-api + bdus-app + this repo |
+| [`bump-version.sh`](bump-version.sh) | Cut a release: bump manifests + CHANGELOG, one commit, one tag `vX.Y.Z`, push. The tag builds both GHCR images. |
 
 Usage and options are documented in each script's header comment, and in the
-[docs site](https://docs.bdus.cloud/guide/install/containers#backup-and-restore).
+[docs site](https://docs.bdus.lad-sapienza.it/guide/install/containers#backup-and-restore).
 
 ---
 
 ## Contributing
 
 Architecture notes, test suite, and API internals are documented in the
-**[developer guide](https://docs.bdus.cloud/dev/)**.
+**[developer guide](https://docs.bdus.lad-sapienza.it/dev/)**.
 
 ---
 

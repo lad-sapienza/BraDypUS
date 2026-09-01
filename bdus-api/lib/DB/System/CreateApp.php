@@ -13,6 +13,20 @@ use Config\ToDB;
 
 class CreateApp
 {
+    /**
+     * Names that cannot be used for an application because the Vue SPA runs in
+     * history (clean-path) mode: the application name becomes the first URL
+     * path segment, and these segments are served by the web server / API
+     * instead of the SPA, so an app with one of these names would be
+     * unreachable. Kept in sync with bdus-app/src/router/index.js and
+     * bdus-app/nginx.conf.template.
+     */
+    private const RESERVED_NAMES = [
+        'api', 'index.php', 'projects', 'cache',   // proxied to the PHP backend
+        'assets', 'favicon.ico', 'favicon.svg',    // static files
+        'login', 'oauth-callback', 'new-app',      // public SPA routes (no /:app prefix)
+    ];
+
     private $app;
     private $db;
     private $log = [];
@@ -277,6 +291,9 @@ class CreateApp
     )
     {
         if(!$name) throw new \Exception("App name is required");
+        if (in_array(strtolower($name), self::RESERVED_NAMES, true)){
+            throw new \Exception("App name `{$name}` is reserved and cannot be used");
+        }
         if (file_exists("projects/{$name}")){
             throw new \Exception("App name `{$name}` has already been used");
         }

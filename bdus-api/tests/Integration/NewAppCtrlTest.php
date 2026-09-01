@@ -76,4 +76,32 @@ class NewAppCtrlTest extends BdusTestCase
 
         putenv('BRADYPUS_ALLOW_NEW_APP=0');
     }
+
+    /**
+     * With history-mode routing the app name is a URL path segment, so names
+     * that collide with server-handled prefixes (api, projects, cache, …) are
+     * rejected by CreateApp::validateData before anything touches the disk.
+     */
+    public function testCreateReservedNameReturnsError(): void
+    {
+        putenv('BRADYPUS_ALLOW_NEW_APP=1');
+
+        foreach (['api', 'API', 'projects', 'cache', 'login'] as $reserved) {
+            $ctrl = $this->makeController('Bdus\\Controllers\\NewApp', [], [
+                'name'       => $reserved,
+                'definition' => 'Reserved-name probe',
+                'email'      => 'admin@example.org',
+                'password'   => 'secret',
+                'db_engine'  => 'sqlite',
+            ]);
+            $res = $this->callController($ctrl, 'create');
+
+            $this->assertSame('error', $res['status'], "name `$reserved` should be rejected");
+            $this->assertSame('error_app_not_created', $res['code']);
+            $this->assertStringContainsString('reserved', strtolower($res['detail'] ?? ''));
+            $this->assertDirectoryDoesNotExist(MAIN_DIR . "projects/$reserved");
+        }
+
+        putenv('BRADYPUS_ALLOW_NEW_APP=0');
+    }
 }

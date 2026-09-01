@@ -180,7 +180,7 @@ Record-to-record manual links stay in `{prefix}userlinks` (bidirectional).
 
 ## Vue SPA (`vue/`)
 
-**Stack:** Vue 3, Vite, Pinia, PrimeVue Aura, Vue Router (hash mode), `vue-i18n`
+**Stack:** Vue 3, Vite, Pinia, PrimeVue Aura, Vue Router (history mode), `vue-i18n`
 
 ### Directory layout
 

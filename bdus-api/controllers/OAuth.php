@@ -19,9 +19,9 @@ namespace Bdus\Controllers;
  *
  * 4. PHP verifies state, exchanges code for tokens, resolves the user,
  *    issues a BraDypUS JWT, and redirects the browser to:
- *    {origin}/#/oauth-callback?token={jwt}&app={app}
+ *    {origin}/oauth-callback?token={jwt}&app={app}
  *    On error:
- *    {origin}/#/oauth-callback?error={code}&app={app}
+ *    {origin}/oauth-callback?error={code}&app={app}
  *
  * Provider credentials are read from projects/{app}/config.json under the
  * key "oauth":
@@ -102,8 +102,8 @@ class OAuth extends \Bdus\Controller
      * GET /api/auth/oauth/{provider}/callback?app=APP&code=...&state=...
      *
      * This is the redirect_uri: it must be reachable by the browser.
-     * On success  → 302 to {origin}/#/oauth-callback?token=JWT&app=APP
-     * On failure  → 302 to {origin}/#/oauth-callback?error=CODE&app=APP
+     * On success  → 302 to {origin}/oauth-callback?token=JWT&app=APP
+     * On failure  → 302 to {origin}/oauth-callback?error=CODE&app=APP
      */
     public function callback(): void
     {
@@ -352,7 +352,7 @@ class OAuth extends \Bdus\Controller
 
     private function redirectSuccess(string $token, string $app, string $origin): void
     {
-        $url = rtrim($origin, '/') . '/#/oauth-callback?'
+        $url = rtrim($origin, '/') . '/oauth-callback?'
              . http_build_query(['token' => $token, 'app' => $app]);
         header("Location: {$url}", true, 302);
         exit;
@@ -369,7 +369,7 @@ class OAuth extends \Bdus\Controller
             echo json_encode(['status' => 'error', 'text' => $code]);
             return;
         }
-        $url = rtrim($origin, '/') . '/#/oauth-callback?'
+        $url = rtrim($origin, '/') . '/oauth-callback?'
              . http_build_query(['error' => $code, 'app' => APP]);
         header("Location: {$url}", true, 302);
         exit;

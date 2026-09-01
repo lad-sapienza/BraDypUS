@@ -5,6 +5,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.4.3] - 2026-09-01
+
+### Changed
+
+- **Routing SPA da hash a history mode** — gli URL passano da `.../#/nome-app/...` a `.../nome-app/...`. `bdus-app`: `createWebHashHistory` → `createWebHistory` in `src/router/index.js`, con shim che riscrive al volo i vecchi link `#/...` (bookmark e citazioni pre-esistenti continuano a funzionare) e `scrollBehavior` che riporta in cima a ogni navigazione; i redirect a `/login` (logout, 401, `major_upgrade_required`) diventano `window.location.assign('/login')` — full reload, teardown pulito della sessione. `bdus-api`: `OAuth.php` redirige a `{origin}/oauth-callback?...` senza `#`.
+- **`nginx.conf.template`** — commento aggiornato: il fallback SPA (`try_files ... /index.html`) già serviva i deep-link history mode; chiarito che i prefissi proxati (`/api`, `/index.php`, `/projects`, `/cache`) hanno la precedenza.
+
+### Added
+
+- **Nomi-app riservati** — `CreateApp::validateData()` rifiuta i nomi che in history mode collidono con segmenti gestiti dal web server / API (`api`, `index.php`, `projects`, `cache`, `assets`, `favicon.ico`, `favicon.svg`, `login`, `oauth-callback`, `new-app`), confronto case-insensitive, prima di qualunque scrittura su disco. Nuova costante `CreateApp::RESERVED_NAMES` tenuta in sync con `bdus-app/src/router/index.js` e `nginx.conf.template`. Test: `NewAppCtrlTest::testCreateReservedNameReturnsError`.
+
 ## [5.4.2] - 2026-08-16
 
 ### Added

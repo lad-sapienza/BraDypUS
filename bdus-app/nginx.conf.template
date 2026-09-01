@@ -27,6 +27,13 @@ server {
     # file uploads are rejected here with 413 before reaching PHP.
     client_max_body_size 100m;
 
+    # Baseline security headers (the app itself sets none). Inherited by the
+    # proxied locations below — none set their own add_header. HSTS and any
+    # CSP belong on the outer TLS-terminating proxy.
+    add_header X-Content-Type-Options nosniff always;
+    add_header X-Frame-Options SAMEORIGIN always;
+    add_header Referrer-Policy strict-origin-when-cross-origin always;
+
     # ── SPA fallback ──────────────────────────────────────────────────────
     # All paths that do not match a static file are served as index.html so
     # that Vue Router (history mode) handles client-side navigation, including

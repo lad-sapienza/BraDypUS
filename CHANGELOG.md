@@ -5,6 +5,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- **Baseline response headers on the frontend.** The `bdus-app` nginx now sends `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN` and `Referrer-Policy: strict-origin-when-cross-origin` (the app set none). HSTS and CSP stay on the outer TLS-terminating proxy.
+
 ### Fixed
 
 - **File uploads capped at 2 MB in the shipped images.** The `bdus-api` image ran on PHP's stock `upload_max_filesize = 2M` / `post_max_size = 8M`, and the `bdus-app` nginx had no `client_max_body_size` (so its 1 MB default applied) — a normal photo could not be uploaded out of the box. The image now ships `docker/php-uploads.ini` (64M / 72M / `memory_limit = 256M`) and the frontend sets `client_max_body_size 100m`. See *Deploy › File uploads* for raising it further.

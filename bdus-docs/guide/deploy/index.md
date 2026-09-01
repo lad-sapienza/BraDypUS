@@ -89,6 +89,11 @@ header when building absolute URLs (e.g. the OAuth `redirect_uri`), so the proxy
 must set it explicitly and overwrite any value supplied by the client. The
 bundled `bdus-app` frontend already forwards it unchanged to the API.
 
+The frontend container also sends baseline response headers
+(`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`). Add
+`Strict-Transport-Security` — and a `Content-Security-Policy` if you maintain one —
+on the outer proxy, where TLS is terminated.
+
 ```nginx
 # Nginx example — proxy to a BraDypUS container exposing port 80
 server {

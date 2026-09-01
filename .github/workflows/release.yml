@@ -4,6 +4,11 @@ name: Build and publish Docker images
 # builds ghcr.io/lad-sapienza/bdus-api and ghcr.io/lad-sapienza/bdus-app at the
 # same version. Image names are unchanged from the pre-monorepo layout, so
 # bradypus.yml keeps working as-is.
+#
+# Each architecture is built on its own native runner (no QEMU): amd64 on
+# ubuntu-latest, arm64 on ubuntu-24.04-arm. The four build legs push by digest,
+# then a per-image merge job assembles the multi-arch manifest list with the
+# version tags.
 
 on:
   push:
@@ -12,41 +17,34 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-push:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write  # required to push to ghcr.io
-
+  build:
     strategy:
       fail-fast: false
       matrix:
         include:
-          - name: api
-            image: ghcr.io/lad-sapienza/bdus-api
-            context: ./bdus-api
-          - name: app
-            image: ghcr.io/lad-sapienza/bdus-app
-            context: ./bdus-app
+          - { name: api, image: ghcr.io/lad-sapienza/bdus-api, context: ./bdus-api, platform: linux/amd64, runner: ubuntu-latest }
+          - { name: api, image: ghcr.io/lad-sapienza/bdus-api, context: ./bdus-api, platform: linux/arm64, runner: ubuntu-24.04-arm }
+          - { name: app, image: ghcr.io/lad-sapienza/bdus-app, context: ./bdus-app, platform: linux/amd64, runner: ubuntu-latest }
+          - { name: app, image: ghcr.io/lad-sapienza/bdus-app, context: ./bdus-app, platform: linux/arm64, runner: ubuntu-24.04-arm }
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
+      packages: write
 
     steps:
       - name: Checkout
         uses: actions/checkout@v5
 
-      # Extract version tags from the git tag (e.g. v5.4.4 -> 5.4.4, 5.4, 5)
-      - name: Docker metadata
+      - name: Platform slug
+        env:
+          platform: ${{ matrix.platform }}
+        run: echo "PLATFORM_PAIR=${platform//\//-}" >> "$GITHUB_ENV"
+
+      - name: Docker metadata (labels)
         id: meta
         uses: docker/metadata-action@v6
         with:
           images: ${{ matrix.image }}
-          tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
-
-      # QEMU + Buildx enable multi-platform builds (amd64 + arm64)
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v4
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
@@ -58,13 +56,78 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push (${{ matrix.name }})
+      - name: Build and push by digest (${{ matrix.name }} · ${{ matrix.platform }})
+        id: build
         uses: docker/build-push-action@v7
         with:
           context: ${{ matrix.context }}
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
+          platforms: ${{ matrix.platform }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=${{ matrix.name }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.name }}
+          outputs: type=image,name=${{ matrix.image }},push-by-digest=true,name-canonical=true,push=true
+          cache-from: type=gha,scope=${{ matrix.name }}-${{ env.PLATFORM_PAIR }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.name }}-${{ env.PLATFORM_PAIR }}
+
+      - name: Export digest
+        run: |
+          mkdir -p "${{ runner.temp }}/digests"
+          digest="${{ steps.build.outputs.digest }}"
+          touch "${{ runner.temp }}/digests/${digest#sha256:}"
+
+      - name: Upload digest
+        uses: actions/upload-artifact@v4
+        with:
+          name: digests-${{ matrix.name }}-${{ env.PLATFORM_PAIR }}
+          path: ${{ runner.temp }}/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  merge:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: api, image: ghcr.io/lad-sapienza/bdus-api }
+          - { name: app, image: ghcr.io/lad-sapienza/bdus-app }
+
+    steps:
+      - name: Download digests (${{ matrix.name }})
+        uses: actions/download-artifact@v4
+        with:
+          path: ${{ runner.temp }}/digests
+          pattern: digests-${{ matrix.name }}-*
+          merge-multiple: true
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker metadata (tags)
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ matrix.image }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+
+      - name: Create manifest list and push
+        working-directory: ${{ runner.temp }}/digests
+        run: |
+          docker buildx imagetools create \
+            $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf '${{ matrix.image }}@sha256:%s ' *)
+
+      - name: Inspect
+        run: docker buildx imagetools inspect ${{ matrix.image }}:${{ steps.meta.outputs.version }}

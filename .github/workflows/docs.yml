@@ -32,7 +32,7 @@ jobs:
         working-directory: bdus-docs
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       # These two files live in the API sources; the docs render them as pages.
       - name: Sync generated pages from the API sources

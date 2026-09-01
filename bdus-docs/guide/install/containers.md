@@ -157,6 +157,18 @@ chmod +x backup.sh restore.sh
 Stop the `api` service first (`docker compose -f bradypus.yml stop api`) to
 avoid restoring under a live writer.
 
+::: warning Several instances on one host
+Both scripts auto-detect the `projects_data` volume only when there is exactly
+one. If you run more than one BraDypUS stack on the same host, pass
+`-p <project>` (the Compose project name, e.g. `bdus-prod`) so they target
+`<project>_projects_data` — without it they refuse to run rather than guess:
+
+```bash
+./backup.sh  -p bdus-prod
+./restore.sh -p bdus-prod -y
+```
+:::
+
 ### Demo / test data
 
 [`seed-demo.sh`](https://github.com/lad-sapienza/BraDypUS/blob/v5/seed-demo.sh)

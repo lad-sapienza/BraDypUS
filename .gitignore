@@ -8,6 +8,9 @@ directus2bdus/
 .env.*
 !.env.example
 
+# ── backup.sh / restore.sh output ────────────────────────────────────────────
+backups/
+
 # ── Claude Code session data ──────────────────────────────────────────────────
 .claude/
 

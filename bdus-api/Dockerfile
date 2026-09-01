@@ -26,6 +26,9 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
 RUN sed -i '/<Directory \/var\/www\/>/,/<\/Directory>/ s/AllowOverride None/AllowOverride All/' \
     /etc/apache2/apache2.conf
 
+# Upload limits usable for real photos/orthophotos (base image ships PHP's 2M default)
+COPY docker/php-uploads.ini /usr/local/etc/php/conf.d/zz-bradypus.ini
+
 # Composer (copied from official image — no version pinning needed)
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
@@ -33,6 +36,9 @@ WORKDIR /var/www/html
 
 # Copy source (used in production; overridden by volume mount in dev)
 COPY --chown=www-data:www-data . /var/www/html
+
+# docker/ only holds build-time config (already applied above); keep it out of the webroot
+RUN rm -rf /var/www/html/docker
 
 # Ensure projects directory exists and is writable
 RUN mkdir -p projects && chown www-data:www-data projects

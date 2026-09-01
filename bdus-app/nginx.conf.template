@@ -23,6 +23,10 @@ server {
     root /usr/share/nginx/html;
     index index.html;
 
+    # Must be >= the API's post_max_size (72M in the bdus-api image) or large
+    # file uploads are rejected here with 413 before reaching PHP.
+    client_max_body_size 100m;
+
     # ── SPA fallback ──────────────────────────────────────────────────────
     # All paths that do not match a static file are served as index.html so
     # that Vue Router (history mode) handles client-side navigation, including

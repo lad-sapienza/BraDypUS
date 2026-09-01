@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **File uploads capped at 2 MB in the shipped images.** The `bdus-api` image ran on PHP's stock `upload_max_filesize = 2M` / `post_max_size = 8M`, and the `bdus-app` nginx had no `client_max_body_size` (so its 1 MB default applied) — a normal photo could not be uploaded out of the box. The image now ships `docker/php-uploads.ini` (64M / 72M / `memory_limit = 256M`) and the frontend sets `client_max_body_size 100m`. See *Deploy › File uploads* for raising it further.
 - **Empty changelog in the *Info* view.** The monorepo consolidation moved `CHANGELOG.md` to the repo root, but `Info::getInfo()` still read it from `bdus-api/`, so `changelog_md` came back empty (in the app and in the published image). It now reads the root file, falling back to a copy bundled in the `bdus-api` image (kept in sync by `bump-version.sh`).
 - **OAuth login behind a TLS-terminating reverse proxy.** `OAuth::callbackUrl()` derived the scheme only from `$_SERVER['HTTPS']`, so behind a proxy that terminates TLS the `redirect_uri` was built as `http://` while the user was on `https://`, failing the provider's redirect-URI match. It now honours `X-Forwarded-Proto` (first token when several proxies chain), falling back to the direct connection. The bundled `bdus-app` nginx template no longer overwrites `X-Forwarded-Proto` with `$scheme` when proxying to the API — it forwards the value received from an outer proxy.
 

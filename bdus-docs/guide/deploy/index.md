@@ -45,6 +45,28 @@ Set these in `docker-compose.prod.yml` or via a `.env` file:
 | `BRADYPUS_ALLOW_NEW_APP` | `0` | Set to `1` temporarily to create the first app |
 | `BRADYPUS_CORS_ORIGIN` | — | Space-separated allowed origins for cross-origin API access |
 
+## File uploads
+
+The `bdus-api` image ships with `upload_max_filesize = 64M` / `post_max_size = 72M`
+(PHP's own defaults are 2M / 8M — too small for photos). The `bdus-app` frontend
+sets `client_max_body_size 100m` to match.
+
+To allow larger files, bind-mount your own PHP config over the shipped one and
+raise `client_max_body_size` on every proxy in front:
+
+```yaml
+# in the api service of docker-compose.prod.yml / bradypus.yml
+volumes:
+  - ./php-uploads.ini:/usr/local/etc/php/conf.d/zz-bradypus.ini:ro
+```
+
+```ini
+# php-uploads.ini
+upload_max_filesize = 256M
+post_max_size = 300M
+memory_limit = 512M
+```
+
 ## Shared hosting (PHP-only)
 
 For hosts that support PHP but not Docker, follow the

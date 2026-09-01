@@ -1,0 +1,299 @@
+<template>
+  <div class="cfg-idx-section">
+    <div class="cfg-idx-header">
+      <span class="cfg-idx-title"><DatabaseOutlined /> {{ t('db_indexes') }}</span>
+      <AButton type="text" size="small" :title="t('add_index')" :disabled="showForm" @click="openForm">
+        <template #icon><PlusOutlined /></template>
+      </AButton>
+    </div>
+
+    <!-- ─── Add form ────────────────────────────────────────── -->
+    <div v-if="showForm" class="cfg-idx-form">
+      <div class="cfg-idx-form-row">
+        <div class="cfg-field-group" style="flex:1">
+          <label>{{ t('idx_name') }}</label>
+          <AInput v-model:value="form.name" size="small" :placeholder="t('idx_name_hint')" />
+        </div>
+        <div class="cfg-field-group" style="flex:2">
+          <label>{{ t('idx_columns') }}</label>
+          <ASelect
+            v-model:value="form.columns"
+            :options="columnOptions"
+            mode="multiple"
+            :placeholder="t('select_columns')"
+            size="small"
+          />
+        </div>
+        <div class="cfg-field-group cfg-field-group--check">
+          <label>{{ t('idx_unique') }}</label>
+          <ASwitch v-model:checked="form.is_unique" size="small" />
+        </div>
+      </div>
+      <div class="cfg-idx-form-actions">
+        <AButton size="small" @click="cancelForm">{{ t('cancel') }}</AButton>
+        <AButton
+          type="primary"
+          size="small"
+          :loading="saving"
+          :disabled="!form.name || !form.columns.length"
+          @click="saveIndex"
+        >
+          <template #icon><SaveOutlined /></template>
+          {{ t('save') }}
+        </AButton>
+      </div>
+    </div>
+
+    <!-- ─── Loading / empty ─────────────────────────────────── -->
+    <div v-if="loading" class="cfg-idx-loading">
+      <LoadingOutlined spin />
+    </div>
+
+    <div v-else-if="indexes.length === 0 && !showForm" class="cfg-idx-empty">
+      {{ t('no_indexes') }}
+    </div>
+
+    <!-- ─── Index list ──────────────────────────────────────── -->
+    <div
+      v-for="idx in indexes"
+      :key="idx.id"
+      class="cfg-idx-row"
+    >
+      <span class="cfg-idx-name">{{ idx.name }}</span>
+      <span class="cfg-idx-cols">{{ (idx.columns || []).join(', ') }}</span>
+      <span v-if="idx.is_unique" class="cfg-idx-unique-badge">UNIQUE</span>
+      <AButton type="text" danger size="small" :loading="deletingId === idx.id" @click="deleteIndex(idx)">
+        <template #icon><DeleteOutlined /></template>
+      </AButton>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { DatabaseOutlined, DeleteOutlined, LoadingOutlined, PlusOutlined, SaveOutlined } from '@ant-design/icons-vue'
+import { ref, computed, onMounted, watch } from 'vue'
+import { Button as AButton, Input as AInput, Select as ASelect, Switch as ASwitch } from 'ant-design-vue'
+import { useToast, useConfirm } from '@/composables/useNotify'
+import { useI18n }    from '@/i18n'
+import { api }        from '@/api'
+
+const props = defineProps({ tb: { type: String, required: true } })
+
+const { t }   = useI18n()
+const toast   = useToast()
+const confirm = useConfirm()
+
+const loading    = ref(false)
+const saving     = ref(false)
+const deletingId = ref(null)
+const indexes    = ref([])
+const columns    = ref([])
+const showForm   = ref(false)
+const form       = ref(emptyForm())
+
+function emptyForm() {
+  return { name: '', columns: [], is_unique: false }
+}
+
+const columnOptions = computed(() =>
+  columns.value.map(c => ({ value: c, label: c }))
+)
+
+// ── Load indexes ───────────────────────────────────────────
+async function load() {
+  loading.value = true
+  try {
+    const res = await api.get(`/api/config/table/${props.tb}/indexes`)
+    indexes.value = res.data ?? []
+  } catch { /* ignore */ } finally {
+    loading.value = false
+  }
+}
+
+// ── Load available columns ─────────────────────────────────
+async function loadColumns() {
+  try {
+    const res = await api.get(`/api/config/table/${props.tb}/fields`)
+    if (res.status === 'success' || res.code === 'ok') {
+      columns.value = Object.keys(res.fields ?? {})
+    }
+  } catch { /* ignore */ }
+}
+
+// ── Form ───────────────────────────────────────────────────
+function openForm() {
+  form.value = emptyForm()
+  showForm.value = true
+}
+function cancelForm() {
+  showForm.value = false
+  form.value = emptyForm()
+}
+
+async function saveIndex() {
+  saving.value = true
+  try {
+    const res = await api.post(`/api/config/table/${props.tb}/indexes`, {
+      name:      form.value.name,
+      columns:   form.value.columns,
+      is_unique: form.value.is_unique,
+    })
+    toast.add({
+      severity: res.status === 'success' ? 'success' : 'error',
+      summary:  t(res.status === 'success' ? 'index_saved' : 'error'),
+      detail:   api.responseMessage(res, t),
+      life: 4000,
+    })
+    if (res.status === 'success') {
+      cancelForm()
+      await load()
+    }
+  } catch (e) {
+    toast.add({ severity: 'error', summary: e.message, life: 4000 })
+  } finally {
+    saving.value = false
+  }
+}
+
+// ── Delete ─────────────────────────────────────────────────
+function deleteIndex(idx) {
+  confirm.require({
+    message:  idx.name,
+    header:   t('delete'),
+    icon:     'pi pi-exclamation-triangle',
+    severity: 'danger',
+    accept:   () => doDelete(idx),
+  })
+}
+
+async function doDelete(idx) {
+  deletingId.value = idx.id
+  try {
+    const res = await api.delete(`/api/config/table/${props.tb}/indexes/${idx.id}`)
+    toast.add({
+      severity: res.status === 'success' ? 'success' : 'error',
+      summary:  t(res.status === 'success' ? 'index_deleted' : 'error'),
+      detail:   api.responseMessage(res, t),
+      life: 4000,
+    })
+    if (res.status === 'success') {
+      indexes.value = indexes.value.filter(i => i.id !== idx.id)
+    }
+  } catch (e) {
+    toast.add({ severity: 'error', summary: e.message, life: 4000 })
+  } finally {
+    deletingId.value = null
+  }
+}
+
+watch(() => props.tb, () => { load(); loadColumns() })
+onMounted(() => { load(); loadColumns() })
+</script>
+
+<style scoped>
+.cfg-idx-section {
+  border-top: 1px solid var(--p-content-border-color);
+  padding-top: 0.875rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.cfg-idx-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.cfg-idx-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--p-text-muted-color);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.cfg-idx-loading {
+  text-align: center;
+  color: var(--p-text-muted-color);
+  padding: 0.5rem;
+}
+.cfg-idx-empty {
+  font-size: 0.8rem;
+  color: var(--p-text-muted-color);
+  padding: 0.35rem 0;
+}
+
+/* Form */
+.cfg-idx-form {
+  border: 1px solid var(--p-primary-color);
+  border-radius: 6px;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  background: var(--bdus-bg);
+}
+.cfg-idx-form-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.cfg-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.cfg-field-group label {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--p-text-muted-color);
+}
+.cfg-field-group--check {
+  justify-content: flex-end;
+  padding-bottom: 0.2rem;
+  gap: 0.3rem;
+}
+.cfg-idx-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.4rem;
+  border-top: 1px solid var(--p-content-border-color);
+  padding-top: 0.4rem;
+}
+
+/* Index rows */
+.cfg-idx-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.82rem;
+  transition: background 0.12s;
+}
+.cfg-idx-row:hover { background: var(--p-content-hover-background); }
+.cfg-idx-name {
+  font-family: monospace;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.cfg-idx-cols {
+  font-size: 0.78rem;
+  color: var(--p-text-muted-color);
+  font-family: monospace;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cfg-idx-unique-badge {
+  font-size: 0.65rem;
+  background: color-mix(in srgb, var(--p-primary-color) 15%, transparent);
+  color: var(--p-primary-color);
+  padding: 0.1rem 0.4rem;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+</style>

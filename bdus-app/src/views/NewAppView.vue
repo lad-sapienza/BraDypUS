@@ -1,0 +1,369 @@
+<template>
+  <div class="login-wrapper">
+    <div class="login-card new-app-card">
+      <h1 class="login-title">BraDypUS</h1>
+      <p class="login-subtitle">{{ t('create_new_app') }}</p>
+
+      <!-- ── Not permitted ──────────────────────────────────────── -->
+      <AAlert v-if="!loading && !permitted" type="warning" :message="t('creation_not_permitted')" :closable="false" show-icon />
+
+      <!-- ── Success: creation log ──────────────────────────────── -->
+      <template v-else-if="done">
+        <AAlert type="success" :message="t('ok_app_created')" :closable="false" show-icon />
+        <div class="creation-log">
+          <p class="log-title">{{ t('creation_log') }}</p>
+          <ul>
+            <li v-for="(entry, i) in log" :key="i">{{ entry }}</li>
+          </ul>
+        </div>
+        <router-link to="/login" class="back-to-login">
+          <AButton type="primary" block>
+            <template #icon><LoginOutlined /></template>
+            {{ t('login') }}
+          </AButton>
+        </router-link>
+      </template>
+
+      <!-- ── Creation form ──────────────────────────────────────── -->
+      <form v-else-if="permitted" @submit.prevent="handleCreate">
+
+        <!-- App info -->
+        <div class="form-section-title">{{ t('app_name') }}</div>
+        <div class="field">
+          <AInput
+            v-model:value="form.name"
+            :placeholder="t('app_name')"
+            :status="errors.name ? 'error' : undefined"
+            :disabled="loading"
+            @input="normalizeAppName"
+          />
+          <small v-if="errors.name" class="field-error">{{ errors.name }}</small>
+          <small class="field-hint">{{ t('app_name_hint') }}</small>
+        </div>
+
+        <div class="field">
+          <AInput
+            v-model:value="form.definition"
+            :placeholder="t('app_definition')"
+            :disabled="loading"
+          />
+        </div>
+
+        <!-- Admin account -->
+        <div class="form-section-title">{{ t('your_email') }}</div>
+        <div class="field">
+          <AInput
+            v-model:value="form.email"
+            type="email"
+            :placeholder="t('your_email')"
+            :status="errors.email ? 'error' : undefined"
+            :disabled="loading"
+          />
+          <small v-if="errors.email" class="field-error">{{ errors.email }}</small>
+        </div>
+        <div class="field">
+          <AInputPassword
+            v-model:value="form.password"
+            :placeholder="t('your_password')"
+            :status="errors.password ? 'error' : undefined"
+            :disabled="loading"
+          />
+          <small v-if="errors.password" class="field-error">{{ errors.password }}</small>
+        </div>
+
+        <!-- DB engine -->
+        <div class="form-section-title">{{ t('db_engine') }}</div>
+        <div class="field">
+          <ASelect
+            v-model:value="form.db_engine"
+            :options="engineOptions"
+            :placeholder="t('db_engine')"
+            :status="errors.db_engine ? 'error' : undefined"
+            :disabled="loading"
+          />
+          <small v-if="errors.db_engine" class="field-error">{{ errors.db_engine }}</small>
+        </div>
+
+        <!-- MySQL / PostgreSQL extra fields -->
+        <template v-if="needsDbDetails">
+          <div class="field-row">
+            <div class="field field-grow">
+              <AInput
+                v-model:value="form.db_host"
+                :placeholder="t('db_host')"
+                :disabled="loading"
+              />
+            </div>
+            <div class="field field-narrow">
+              <AInput
+                v-model:value="form.db_port"
+                :placeholder="t('db_port')"
+                :disabled="loading"
+              />
+            </div>
+          </div>
+          <div class="field">
+            <AInput
+              v-model:value="form.db_name"
+              :placeholder="t('db_name')"
+              :disabled="loading"
+            />
+          </div>
+          <div class="field">
+            <AInput
+              v-model:value="form.db_username"
+              :placeholder="t('db_username')"
+              :disabled="loading"
+            />
+          </div>
+          <div class="field">
+            <AInputPassword
+              v-model:value="form.db_password"
+              :placeholder="t('db_password')"
+              :disabled="loading"
+            />
+          </div>
+        </template>
+
+        <!-- Error message -->
+        <AAlert v-if="errorMsg" type="error" :message="errorMsg" :closable="false" show-icon class="form-error" />
+
+        <AButton type="primary" html-type="submit" block :loading="loading">
+          <template #icon><PlusOutlined /></template>
+          {{ t('app_create') }}
+        </AButton>
+      </form>
+
+      <div v-if="!done" class="back-link">
+        <router-link to="/login">← {{ t('login') }}</router-link>
+      </div>
+
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { LoginOutlined, PlusOutlined } from '@ant-design/icons-vue'
+import { ref, reactive, computed, onMounted } from 'vue'
+import { Input, Select as ASelect, Button as AButton, Alert as AAlert } from 'ant-design-vue'
+import { api }   from '@/api'
+import { useI18n } from '@/i18n'
+
+const AInput         = Input
+const AInputPassword = Input.Password
+
+const { t } = useI18n()
+
+const loading  = ref(true)
+const permitted = ref(false)
+const engines  = ref([])
+const done     = ref(false)
+const log      = ref([])
+const errorMsg = ref('')
+
+const form = reactive({
+  name:        '',
+  definition:  '',
+  email:       '',
+  password:    '',
+  db_engine:   null,
+  db_host:     '',
+  db_port:     '',
+  db_name:     '',
+  db_username: '',
+  db_password: '',
+})
+
+const errors = reactive({
+  name: '', email: '', password: '', db_engine: '',
+})
+
+const needsDbDetails = computed(() =>
+  form.db_engine && form.db_engine !== 'sqlite'
+)
+
+const engineOptions = computed(() => engines.value.map(v => ({ value: v, label: v })))
+
+onMounted(async () => {
+  try {
+    const res = await api.get('/api/new-app/status')
+    permitted.value = res.permitted ?? false
+    engines.value   = res.engines  ?? []
+  } catch {
+    permitted.value = false
+  } finally {
+    loading.value = false
+  }
+})
+
+/**
+ * Normalize the app name on every keystroke:
+ *   1. lowercase
+ *   2. replace spaces and hyphens with underscores
+ *   3. strip anything that is not [a-z0-9_]
+ *   4. strip leading digits/underscores (name must start with a letter)
+ *
+ * The user sees the final valid slug forming in real time — no error needed
+ * until submit if the field is still empty.
+ */
+function normalizeAppName() {
+  let v = form.name
+    .toLowerCase()
+    .replace(/[\s-]+/g, '_')          // spaces / hyphens → underscore
+    .replace(/[^a-z0-9_]/g, '')       // drop everything else
+    .replace(/^[^a-z]+/, '')          // strip leading non-letter chars
+    .slice(0, 20)                     // cap at 20 characters
+  form.name = v
+  // Clear the validation error as soon as the value is valid
+  if (errors.name && /^[a-z][a-z0-9_]{2,19}$/.test(v)) {
+    errors.name = ''
+  }
+}
+
+function validate() {
+  errors.name     = ''
+  errors.email    = ''
+  errors.password = ''
+  errors.db_engine = ''
+  let ok = true
+
+  if (!form.name || !/^[a-z][a-z0-9_]{2,19}$/.test(form.name)) {
+    errors.name = t('app_name_hint')
+    ok = false
+  }
+  if (!form.email) {
+    errors.email = t('email_password_needed')
+    ok = false
+  }
+  if (!form.password) {
+    errors.password = t('email_password_needed')
+    ok = false
+  }
+  if (!form.db_engine) {
+    errors.db_engine = t('db_engine')
+    ok = false
+  }
+  return ok
+}
+
+async function handleCreate() {
+  errorMsg.value = ''
+  if (!validate()) return
+
+  loading.value = true
+  try {
+    const payload = {
+      name:       form.name,
+      definition: form.definition,
+      email:      form.email,
+      password:   form.password,
+      db_engine:  form.db_engine,
+    }
+    if (needsDbDetails.value) {
+      Object.assign(payload, {
+        db_host:     form.db_host,
+        db_port:     form.db_port,
+        db_name:     form.db_name,
+        db_username: form.db_username,
+        db_password: form.db_password,
+      })
+    }
+
+    const res = await api.post('/api/new-app', payload)
+    if (res.status === 'error') {
+      errorMsg.value = res.detail || t(res.code)
+      return
+    }
+    log.value = res.log ?? []
+    done.value = true
+  } catch (e) {
+    errorMsg.value = e.message
+  } finally {
+    loading.value = false
+  }
+}
+</script>
+
+<style scoped>
+/* Re-use login-wrapper / login-card from LoginView */
+.new-app-card {
+  max-width: 480px;
+}
+
+.login-subtitle {
+  text-align: center;
+  color: var(--p-text-muted-color);
+  margin: 0 0 1.25rem;
+  font-size: 0.95rem;
+}
+
+.form-section-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--p-text-muted-color);
+  margin: 1rem 0 0.35rem;
+}
+
+.field {
+  margin-bottom: 0.75rem;
+}
+
+.field-row {
+  display: flex;
+  gap: 0.5rem;
+}
+.field-grow  { flex: 1; }
+.field-narrow { width: 90px; flex-shrink: 0; }
+
+.field-error {
+  color: var(--p-red-500);
+  font-size: 0.78rem;
+  display: block;
+  margin-top: 0.2rem;
+}
+
+.field-hint {
+  color: var(--p-text-muted-color);
+  font-size: 0.78rem;
+  display: block;
+  margin-top: 0.2rem;
+}
+
+.form-error { margin-bottom: 0.75rem; }
+
+/* Log */
+.creation-log {
+  background: var(--p-surface-100, #f5f5f5);
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  margin: 1rem 0;
+  font-size: 0.8rem;
+  max-height: 220px;
+  overflow-y: auto;
+}
+.log-title {
+  font-weight: 600;
+  margin: 0 0 0.4rem;
+  font-size: 0.85rem;
+}
+.creation-log ul {
+  list-style: disc;
+  padding-left: 1.2rem;
+  margin: 0;
+}
+.creation-log li { margin-bottom: 0.15rem; }
+
+.back-to-login { display: block; margin-top: 0.75rem; }
+.back-link {
+  text-align: center;
+  margin-top: 1rem;
+  font-size: 0.875rem;
+}
+.back-link a {
+  color: var(--p-text-muted-color);
+  text-decoration: none;
+}
+.back-link a:hover { color: var(--p-primary-color); }
+</style>

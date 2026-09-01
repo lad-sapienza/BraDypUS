@@ -1,0 +1,369 @@
+<template>
+  <fieldset class="record-section">
+    <legend>
+      {{ t('linked_records') }}
+      <button
+        v-if="hasLinks && !editMode"
+        class="graph-toggle-btn"
+        :title="showGraph ? t('hide_graph') : t('show_graph')"
+        @click="showGraph = !showGraph"
+      >
+        <component :is="showGraph ? UnorderedListOutlined : ShareAltOutlined" />
+      </button>
+    </legend>
+
+    <!-- ── Graph view ────────────────────────────────────────────── -->
+    <ManualLinksGraph
+      v-if="showGraph && hasLinks && !editMode"
+      :links="links"
+      :recordTb="recordTb"
+      :recordId="recordId"
+      :recordLabel="recordLabel"
+    />
+
+    <!-- ── Existing links grouped by table ──────────────────────── -->
+    <template v-if="!showGraph">
+      <div
+        v-for="(group, groupTb) in linksByTable"
+        :key="groupTb"
+        class="link-group"
+      >
+        <div class="link-group-label">{{ group.tb_label }}</div>
+        <ul class="links-list">
+          <li v-for="ml in group.items" :key="ml.key" class="link-item">
+            <span v-if="ml.label" class="link-label-chip">{{ ml.label }}</span>
+            <router-link :to="`/${route.params.app}/record/${ml.tb_id}/${ml.ref_id}`" class="link-ref">
+              {{ ml.ref_label }}
+            </router-link>
+            <button
+              v-if="editMode"
+              class="link-delete-btn"
+              :title="t('delete')"
+              :disabled="deletingId === ml.key"
+              @click="deleteLink(ml)"
+            >
+              <component :is="deletingId === ml.key ? LoadingOutlined : CloseOutlined" :spin="deletingId === ml.key" />
+            </button>
+          </li>
+        </ul>
+      </div>
+    </template>
+
+    <!-- Empty state (view mode) -->
+    <div v-if="!hasLinks && !editMode" class="links-empty">
+      {{ t('no_user_links') }}
+    </div>
+
+    <!-- ── Add link panel (edit mode) ──────────────────────────── -->
+    <div v-if="editMode" class="add-link-panel">
+      <AButton type="text" size="small" @click="addPanelOpen = !addPanelOpen">
+        <template #icon><PlusOutlined /></template>
+        {{ t('add_link') }}
+      </AButton>
+
+      <div v-if="addPanelOpen" class="add-link-form">
+        <!-- Table selector -->
+        <ASelect
+          v-model:value="selectedTable"
+          :options="tableOptions"
+          :placeholder="t('select_table')"
+          class="add-link-select"
+          @change="onTableChange"
+        />
+
+        <!-- Record search (shown once a table is selected) -->
+        <AAutoComplete
+          v-if="selectedTable"
+          v-model:value="recordSearchText"
+          :options="autoCompleteOptions"
+          :placeholder="t('type_to_search')"
+          class="add-link-autocomplete"
+          @search="onSearch"
+          @select="onRecordSelect"
+        />
+
+        <!-- Optional relation label (shown once a record is selected) -->
+        <AInput
+          v-if="selectedRecord"
+          v-model:value="linkLabel"
+          :placeholder="t('link_label_placeholder')"
+          size="small"
+          class="add-link-label"
+        />
+      </div>
+    </div>
+  </fieldset>
+</template>
+
+<script setup>
+import { CloseOutlined, LoadingOutlined, PlusOutlined, ShareAltOutlined, UnorderedListOutlined } from '@ant-design/icons-vue'
+import { ref, computed } from 'vue'
+import { useRoute }  from 'vue-router'
+import { Button as AButton, Select as ASelect, AutoComplete as AAutoComplete, Input as AInput } from 'ant-design-vue'
+import { useToast } from '@/composables/useNotify'
+import { api }          from '@/api'
+import { useI18n }      from '@/i18n'
+import { useTables }    from '@/composables/useTables'
+import ManualLinksGraph from '@/components/record/ManualLinksGraph.vue'
+
+const route     = useRoute()
+const { t }     = useI18n()
+const toast     = useToast()
+const { tables } = useTables()
+
+const props = defineProps({
+  /**
+   * Manual links object as returned by record_ctrl::getRecord().
+   * Keyed by userlinks.id; each value:
+   *   { key, tb_id, tb_label, ref_id, ref_label, sort }
+   */
+  links:    { type: Object,          default: () => ({}) },
+  editMode: { type: Boolean,         default: false },
+  /** Full table name (with prefix) of the current record */
+  recordTb: { type: String,          default: null },
+  /** Numeric id of the current record */
+  recordId:    { type: [String, Number], default: null },
+  /** Human-readable label for the current record (used as self node label in graph) */
+  recordLabel: { type: String,          default: null },
+})
+
+const emit = defineEmits([
+  /** Payload: the new link object (same shape as links entries) */
+  'link-added',
+  /** Payload: the deleted link key (userlinks.id) */
+  'link-deleted',
+])
+
+// ── Graph toggle ──────────────────────────────────────────────────
+const showGraph = ref(false)
+
+// ── Grouped view ──────────────────────────────────────────────────
+const hasLinks = computed(() => Object.keys(props.links).length > 0)
+
+const linksByTable = computed(() => {
+  const groups = {}
+  for (const ml of Object.values(props.links)) {
+    if (!groups[ml.tb_id]) {
+      groups[ml.tb_id] = { tb_label: ml.tb_label, items: [] }
+    }
+    groups[ml.tb_id].items.push(ml)
+  }
+  return groups
+})
+
+// ── Delete ────────────────────────────────────────────────────────
+const deletingId = ref(null)
+
+async function deleteLink(ml) {
+  deletingId.value = ml.key
+  try {
+    const res = await api.delete(`/api/manual-link/${ml.key}`)
+    if (res.status === 'error') {
+      toast.add({ severity: 'error', summary: t('generic_error'), detail: t(res.code), life: 5000 })
+      return
+    }
+    toast.add({ severity: 'success', summary: t('linked_records'), detail: t('ok_userlink_erased'), life: 3000 })
+    emit('link-deleted', ml.key)
+  } catch (e) {
+    toast.add({ severity: 'error', summary: t('generic_error'), detail: e.message, life: 5000 })
+  } finally {
+    deletingId.value = null
+  }
+}
+
+// ── Add link ──────────────────────────────────────────────────────
+const addPanelOpen  = ref(false)
+const selectedTable = ref(null)
+const selectedRecord = ref(null)
+const suggestions   = ref([])
+const linkLabel     = ref('')
+
+/** All non-plugin user tables, excluding the current table to avoid self-links */
+const tableOptions = computed(() =>
+  (tables.value ?? [])
+    .filter(tb => tb.name !== props.recordTb)
+    .map(tb => ({ value: tb.name, label: tb.label }))
+)
+
+// AntD's AutoComplete works on a flat text value, unlike PrimeVue's
+// AutoComplete which bound directly to the selected {id, label} object —
+// carry `id` as an extra key on each option and recover it in onRecordSelect.
+const recordSearchText = ref('')
+const autoCompleteOptions = computed(() =>
+  suggestions.value.map(s => ({ value: s.label, label: s.label, id: s.id }))
+)
+
+function onTableChange() {
+  selectedRecord.value  = null
+  recordSearchText.value = ''
+  suggestions.value    = []
+  linkLabel.value      = ''
+}
+
+async function onSearch(query) {
+  if (!selectedTable.value) return
+  selectedRecord.value = null
+  try {
+    const res = await api.get(`/api/record/${selectedTable.value}/link-candidates`, {
+      q: query ?? '',
+    })
+    // Exclude records already linked
+    const linked = new Set(
+      Object.values(props.links)
+        .filter(l => l.tb_id === selectedTable.value)
+        .map(l => l.ref_id)
+    )
+    suggestions.value = (res.data ?? [])
+      .filter(r => !linked.has(r.id))
+      .map(r => ({ id: r.id, label: String(r.label ?? r.id) }))
+  } catch (e) {
+    suggestions.value = []
+  }
+}
+
+function onRecordSelect(value, option) {
+  onRecordSelected({ id: option.id, label: option.label })
+}
+
+async function onRecordSelected(candidate) {
+  if (!candidate || !selectedTable.value) return
+
+  try {
+    const res = await api.post('/api/manual-link', {
+      tb_one: props.recordTb,
+      id_one: props.recordId,
+      tb_two: selectedTable.value,
+      id_two: candidate.id,
+      label:  linkLabel.value || null,
+    })
+
+    if (res.status === 'error') {
+      toast.add({ severity: 'error', summary: t('generic_error'), detail: t(res.code), life: 5000 })
+    } else {
+      toast.add({ severity: 'success', summary: t('linked_records'), detail: t('all_links_saved'), life: 3000 })
+      emit('link-added', res.link)
+    }
+  } catch (e) {
+    toast.add({ severity: 'error', summary: t('generic_error'), detail: e.message, life: 5000 })
+  } finally {
+    // Reset search and label; keep table selected for chained additions
+    selectedRecord.value  = null
+    recordSearchText.value = ''
+    suggestions.value    = []
+    linkLabel.value      = ''
+  }
+}
+</script>
+
+<style scoped>
+/* ── Link groups ── */
+.link-group + .link-group {
+  margin-top: 0.75rem;
+}
+
+.link-group-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--p-text-muted-color);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.25rem;
+}
+
+.links-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.link-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.875rem;
+}
+
+.link-ref {
+  color: var(--p-primary-color);
+  text-decoration: none;
+  flex: 1;
+}
+.link-ref:hover { text-decoration: underline; }
+
+.link-delete-btn {
+  background: none;
+  border: none;
+  padding: 0 0.15rem;
+  cursor: pointer;
+  color: var(--p-text-muted-color);
+  font-size: 0.8rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.link-delete-btn:hover { color: var(--p-red-500); }
+.link-delete-btn:disabled { opacity: 0.5; cursor: default; }
+
+/* ── Empty ── */
+.links-empty {
+  color: var(--p-text-muted-color);
+  font-style: italic;
+  font-size: 0.875rem;
+}
+
+/* ── Add panel ── */
+.add-link-panel {
+  margin-top: 0.75rem;
+}
+
+.add-link-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  align-items: center;
+}
+
+.add-link-select {
+  min-width: 180px;
+  max-width: 220px;
+}
+
+.add-link-autocomplete {
+  flex: 1;
+  min-width: 180px;
+}
+
+.add-link-label {
+  min-width: 140px;
+  max-width: 200px;
+}
+
+/* ── Graph toggle button in legend ── */
+.graph-toggle-btn {
+  background: none;
+  border: none;
+  padding: 0 0 0 0.4rem;
+  cursor: pointer;
+  color: var(--p-text-muted-color);
+  font-size: 0.8rem;
+  vertical-align: middle;
+  line-height: 1;
+}
+.graph-toggle-btn:hover { color: var(--p-primary-color); }
+
+/* ── Link label chip ── */
+.link-label-chip {
+  display: inline-block;
+  background: var(--p-highlight-background);
+  color: var(--p-primary-700);
+  border-radius: 4px;
+  padding: 0.05rem 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
+</style>

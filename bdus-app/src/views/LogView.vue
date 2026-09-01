@@ -1,0 +1,328 @@
+<template>
+  <AppLayout>
+  <div class="log-view">
+
+    <!-- ── Toolbar ────────────────────────────────────────────── -->
+    <div class="log-toolbar">
+      <span class="log-title">{{ t('app_log') }}</span>
+
+      <!-- Level filter -->
+      <ASelect
+        v-model:value="filterLevel"
+        :options="levelOptions"
+        size="small"
+        class="level-select"
+        @change="onFilterChange"
+      />
+
+      <!-- Search -->
+      <AInput
+        v-model:value="filterSearch"
+        :placeholder="t('log_search_placeholder')"
+        size="small"
+        class="search-input"
+        @keyup.enter="onFilterChange"
+      />
+
+      <!-- Refresh -->
+      <AButton size="small" :loading="loading" @click="reload">
+        <template #icon><ReloadOutlined /></template>
+        {{ t('log_refresh') }}
+      </AButton>
+
+      <!-- Purge -->
+      <AButton danger size="small" @click="purgeDialogVisible = true">
+        <template #icon><DeleteOutlined /></template>
+        {{ t('log_purge') }}
+      </AButton>
+    </div>
+
+    <!-- ── Table ───────────────────────────────────────────────── -->
+    <div ref="tableWrap" class="log-table">
+      <ATable
+        :columns="columns"
+        :dataSource="rows"
+        :loading="loading"
+        :pagination="pagination"
+        :scroll="{ y: tableScrollY }"
+        :locale="{ emptyText: t('log_no_entries') }"
+        size="small"
+        rowKey="id"
+        v-model:expandedRowKeys="expandedRowKeys"
+        @change="onTableChange"
+      >
+        <template #bodyCell="{ column, record }">
+          <template v-if="column.key === 'level_name'">
+            <ATag :color="severityToTagColor(levelSeverity(record.level))">{{ record.level_name }}</ATag>
+          </template>
+          <template v-else-if="column.key === 'message'">
+            <span class="msg-preview">{{ truncate(record.message) }}</span>
+          </template>
+        </template>
+
+        <!-- Expanded row: full message -->
+        <template #expandedRowRender="{ record }">
+          <pre class="msg-full">{{ record.message }}</pre>
+        </template>
+      </ATable>
+    </div>
+
+    <!-- ── Purge dialog ────────────────────────────────────────── -->
+    <AModal
+      v-model:open="purgeDialogVisible"
+      :title="t('log_purge')"
+      width="28rem"
+    >
+      <div class="purge-body">
+        <ASelect
+          v-model:value="purgeDays"
+          :options="purgeOptions"
+          style="width: 100%"
+        />
+      </div>
+      <template #footer>
+        <AButton type="text" @click="purgeDialogVisible = false">{{ t('cancel') }}</AButton>
+        <AButton type="primary" danger :loading="purging" @click="doPurge">
+          <template #icon><CheckOutlined /></template>
+          {{ t('confirm') }}
+        </AButton>
+      </template>
+    </AModal>
+
+  </div>
+  </AppLayout>
+</template>
+
+<script setup>
+import { CheckOutlined, DeleteOutlined, ReloadOutlined } from '@ant-design/icons-vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { useToast } from '@/composables/useNotify'
+import AppLayout from '@/components/AppLayout.vue'
+import { Table as ATable, Button as AButton, Select as ASelect, Input as AInput, Tag as ATag, Modal as AModal } from 'ant-design-vue'
+import { api } from '@/api'
+const { responseMessage } = api
+import { useI18n } from '@/i18n'
+import { severityToTagColor } from '@/utils/severity'
+
+const { t } = useI18n()
+const toast  = useToast()
+
+const columns = computed(() => [
+  { title: t('log_col_time'),    dataIndex: 'time',       key: 'time',       width: 160 },
+  { title: t('log_col_level'),   dataIndex: 'level_name',  key: 'level_name', width: 112 },
+  { title: t('log_col_channel'), dataIndex: 'channel',    key: 'channel',    width: 96 },
+  { title: t('log_col_message'), key: 'message' },
+])
+
+// ── State ──────────────────────────────────────────────────────
+const rows            = ref([])
+const total           = ref(0)
+const loading         = ref(false)
+const currentPage     = ref(1)
+const perPage         = ref(50)
+const filterLevel     = ref(0)
+const filterSearch    = ref('')
+const expandedRowKeys = ref([])
+
+const purgeDialogVisible = ref(false)
+const purging            = ref(false)
+const purgeDays          = ref(30)
+
+const pagination = computed(() => ({
+  current: currentPage.value,
+  pageSize: perPage.value,
+  total: total.value,
+  showSizeChanger: true,
+  pageSizeOptions: ['25', '50', '100'],
+  position: ['bottomCenter'],
+}))
+
+// ── AntD Table: fill available flex space (no scrollHeight="flex" equivalent) ──
+const tableWrap    = ref(null)
+const tableScrollY = ref(400)
+let resizeObs = null
+
+function measureTableHeight() {
+  if (!tableWrap.value) return
+  const total_      = tableWrap.value.clientHeight
+  const headerH     = tableWrap.value.querySelector('.ant-table-thead')?.getBoundingClientRect().height ?? 40
+  const paginationH = tableWrap.value.querySelector('.ant-pagination')?.getBoundingClientRect().height ?? 32
+  tableScrollY.value = Math.max(200, total_ - headerH - paginationH - 16)
+}
+
+onMounted(() => {
+  resizeObs = new ResizeObserver(measureTableHeight)
+  if (tableWrap.value) resizeObs.observe(tableWrap.value)
+})
+onUnmounted(() => resizeObs?.disconnect())
+watch(rows, () => { measureTableHeight() })
+
+// ── Level options ───────────────────────────────────────────────
+const levelOptions = computed(() => [
+  { value: 0,   label: t('log_level_all') },
+  { value: 100, label: t('log_level_debug') },
+  { value: 200, label: t('log_level_info') },
+  { value: 250, label: t('log_level_notice') },
+  { value: 300, label: t('log_level_warning') },
+  { value: 400, label: t('log_level_error') },
+  { value: 500, label: t('log_level_critical') },
+  { value: 550, label: t('log_level_alert') },
+  { value: 600, label: t('log_level_emergency') },
+])
+
+const purgeOptions = computed(() => [1, 7, 14, 30, 90, 365].map(d => ({
+  value: d,
+  label: t('log_purge_days', d),
+})))
+
+// ── Severity map ────────────────────────────────────────────────
+function levelSeverity(level) {
+  if (level >= 400) return 'danger'
+  if (level >= 300) return 'warn'
+  if (level >= 200) return 'info'
+  return 'secondary'
+}
+
+// ── Fetch ───────────────────────────────────────────────────────
+async function fetchLogs() {
+  loading.value = true
+  try {
+    const params = {
+      page:     currentPage.value,
+      per_page: perPage.value,
+    }
+    if (filterLevel.value > 0) params.level  = filterLevel.value
+    if (filterSearch.value)    params.search = filterSearch.value
+
+    const data = await api.get('/api/logs', params)
+    if (data.status === 'error') throw new Error(responseMessage(data, t))
+    rows.value  = data.data  ?? []
+    total.value = data.total ?? 0
+  } catch (e) {
+    toast.add({ severity: 'error', summary: t('db_error'), detail: e.message, life: 5000 })
+  } finally {
+    loading.value = false
+  }
+}
+
+function reload() {
+  currentPage.value     = 1
+  expandedRowKeys.value = []
+  fetchLogs()
+}
+
+function onFilterChange() {
+  reload()
+}
+
+function onTableChange(paginationEvt) {
+  currentPage.value     = paginationEvt.current
+  perPage.value         = paginationEvt.pageSize
+  expandedRowKeys.value = []
+  fetchLogs()
+}
+
+// ── Purge ───────────────────────────────────────────────────────
+async function doPurge() {
+  purging.value = true
+  try {
+    const data = await api.post('/api/logs/purge', { days: purgeDays.value })
+    if (data.status === 'error') throw new Error(responseMessage(data, t))
+    toast.add({ severity: 'success', summary: t('log_purge'),
+      detail: t('log_purge_success', data.deleted, data.days), life: 4000 })
+    purgeDialogVisible.value = false
+    reload()
+  } catch (e) {
+    toast.add({ severity: 'error', summary: t('generic_error'), detail: e.message, life: 5000 })
+  } finally {
+    purging.value = false
+  }
+}
+
+// ── Helpers ─────────────────────────────────────────────────────
+function truncate(str, len = 120) {
+  if (!str) return ''
+  const first = str.split('\n')[0]
+  return first.length > len ? first.slice(0, len) + '…' : first
+}
+
+onMounted(fetchLogs)
+</script>
+
+<style scoped>
+.log-view {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ── Toolbar ──────────────────────────────────────────────────── */
+.log-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid var(--p-content-border-color);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.log-title {
+  font-weight: 700;
+  font-size: 1rem;
+  margin-right: 0.5rem;
+}
+
+.level-select { width: 9rem; }
+.search-input { width: 14rem; }
+
+/* push refresh+purge to the right */
+.log-toolbar :deep(.ant-btn:nth-last-child(2)) { margin-left: auto; }
+
+/* ── Table ────────────────────────────────────────────────────── */
+.log-table {
+  flex: 1;
+  overflow: hidden;
+  font-size: 0.8rem;
+}
+
+
+.msg-preview {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  font-family: monospace;
+  font-size: 0.78rem;
+  color: var(--p-text-muted-color);
+}
+
+/* Expanded row: full message */
+.msg-full {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  white-space: pre-wrap;
+  word-break: break-all;
+  font-size: 0.78rem;
+  font-family: monospace;
+  background: var(--bdus-bg);
+  border-radius: 6px;
+  max-height: 400px;
+  overflow-y: auto;
+  line-height: 1.5;
+}
+
+.empty-msg {
+  padding: 2rem;
+  color: var(--p-text-muted-color);
+  font-style: italic;
+}
+
+/* ── Purge dialog ─────────────────────────────────────────────── */
+.purge-body {
+  padding: 0.5rem 0;
+}
+</style>

@@ -1,0 +1,1304 @@
+<template>
+  <AppLayout>
+    <div class="assemblages-view">
+
+      <!-- ── Page header ───────────────────────────────────────────────── -->
+      <div class="page-header">
+        <h2>{{ t('assemblage_analysis') }}</h2>
+        <AButton type="primary" size="small" @click="openWizard(null)">
+          <template #icon><PlusOutlined /></template>
+          {{ t('new_analysis') }}
+        </AButton>
+      </div>
+
+      <ASpin v-if="loading" size="large" class="loading-spinner" />
+
+      <template v-else>
+
+        <!-- ── Result view ─────────────────────────────────────────────── -->
+        <div v-if="openResult" class="result-view">
+          <div class="result-header">
+            <AButton type="text" size="small" @click="closeResult">
+              <template #icon><ArrowLeftOutlined /></template>
+            </AButton>
+            <span class="result-title">{{ openResult.name }}</span>
+            <ATag v-if="openResult.is_global" color="success">{{ t('shared') }}</ATag>
+            <div class="result-header-actions">
+              <AButton type="text" size="small" :title="t('edit_analysis')" @click="openWizard(openResult)">
+                <template #icon><EditOutlined /></template>
+              </AButton>
+            </div>
+          </div>
+
+          <div v-if="resultLoading" class="result-loading"><ASpin size="large" /></div>
+          <div v-else-if="resultError" class="result-error">{{ resultError }}</div>
+
+          <template v-else-if="resultData && resultData.groups.length > 0">
+            <ATabs v-model:activeKey="resultTab" class="result-tabs">
+              <ATabPane key="table" :tab="t('pivot_table')">
+                <div class="pivot-toolbar">
+                  <label class="heatmap-toggle">
+                    <ASwitch v-model:checked="heatmapEnabled" id="heatmap-sw" />
+                    <span>{{ t('heatmap') }}</span>
+                  </label>
+                </div>
+                  <div class="pivot-scroll">
+                    <table class="pivot-table">
+                      <thead>
+                        <tr>
+                          <th class="pivot-corner"></th>
+                          <th v-for="char in resultData.chars" :key="char" class="pivot-char-header">
+                            {{ char || '—' }}
+                          </th>
+                          <th class="pivot-total-header">Tot</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr v-for="group in resultData.groups" :key="group">
+                          <th class="pivot-group-header">
+                            <RouterLink
+                              v-if="resultData.group_field === 'id' && group"
+                              :to="`/${route.params.app}/record/${resultData.group_tb}/${group}`"
+                              class="group-link"
+                            >{{ (resultData.group_labels?.[group] ?? group) || '—' }}</RouterLink>
+                            <template v-else>{{ (resultData.group_labels?.[group] ?? group) || '—' }}</template>
+                          </th>
+                          <td
+                            v-for="char in resultData.chars"
+                            :key="char"
+                            class="pivot-cell"
+                            :style="cellBgStyle(resultData.data[group]?.[char] ?? 0)"
+                          >
+                            {{ resultData.data[group]?.[char] ?? 0 }}
+                          </td>
+                          <td class="pivot-total">{{ rowTotal(group) }}</td>
+                        </tr>
+                      </tbody>
+                      <tfoot>
+                        <tr class="pivot-footer">
+                          <th>Tot</th>
+                          <td v-for="char in resultData.chars" :key="char" class="pivot-total">
+                            {{ colTotal(char) }}
+                          </td>
+                          <td class="pivot-total pivot-grand">{{ grandTotal }}</td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                  <div class="result-actions">
+                    <AButton type="text" size="small" @click="exportCsv">
+                      <template #icon><DownloadOutlined /></template>
+                      {{ t('export_csv') }}
+                    </AButton>
+                  </div>
+              </ATabPane>
+
+              <!-- Stacked bar chart -->
+              <ATabPane key="chart" :tab="t('bar_chart')">
+                <div class="chart-wrapper">
+                  <Bar :data="chartData" :options="chartOptions" />
+                </div>
+              </ATabPane>
+            </ATabs>
+          </template>
+
+          <div v-else-if="resultData" class="result-empty">
+            {{ t('no_results') }}
+          </div>
+        </div>
+
+        <!-- ── Analysis list ────────────────────────────────────────────── -->
+        <template v-else>
+          <div v-if="analyses.length === 0" class="empty-state">
+            <BarChartOutlined class="empty-icon" />
+            <p>{{ t('no_analyses_yet') }}</p>
+          </div>
+
+          <div v-else class="analyses-grid">
+            <ACard v-for="a in analyses" :key="a.id" class="analysis-card">
+              <div class="card-title">{{ a.name }}</div>
+              <div class="card-meta">
+                <span>{{ a.definition?.source_tb }}</span>
+                <span class="meta-sep">·</span>
+                <span>{{ a.definition?.char_field }}</span>
+                <span class="meta-sep">→</span>
+                <span>{{ a.definition?.group_field }}</span>
+              </div>
+              <ATag v-if="a.is_global" color="success" class="card-tag">{{ t('shared') }}</ATag>
+              <template #actions>
+                <AButton type="text" size="small" @click="openAnalysis(a)">
+                  <template #icon><PlayCircleOutlined /></template>
+                  {{ t('run') }}
+                </AButton>
+                <AButton type="text" size="small" :title="t('edit_analysis')" @click="openWizard(a)">
+                  <template #icon><EditOutlined /></template>
+                </AButton>
+                <AButton
+                  v-if="a.owned_by_me"
+                  type="text"
+                  size="small"
+                  :title="a.is_global ? t('unshare') : t('share')"
+                  @click="toggleShare(a)"
+                >
+                  <template #icon><component :is="a.is_global ? LockOutlined : GlobalOutlined" /></template>
+                </AButton>
+                <AButton
+                  v-if="a.owned_by_me"
+                  type="text"
+                  danger
+                  size="small"
+                  :title="t('delete')"
+                  @click="confirmDelete(a)"
+                >
+                  <template #icon><DeleteOutlined /></template>
+                </AButton>
+              </template>
+            </ACard>
+          </div>
+        </template>
+      </template>
+
+      <!-- ── Wizard Dialog ─────────────────────────────────────────────── -->
+      <AModal
+        v-model:open="wizardVisible"
+        :title="editingId ? t('edit_analysis') : t('new_analysis')"
+        width="700px"
+        :style="{ maxWidth: '95vw' }"
+        :footer="null"
+      >
+        <div class="wizard">
+
+          <!-- Step indicator + breadcrumb -->
+          <div class="wizard-header">
+            <div class="step-bar">
+              <div
+                v-for="s in TOTAL_STEPS"
+                :key="s"
+                class="step-dot"
+                :class="{ active: currentStep === s, done: currentStep > s }"
+                :title="s < currentStep ? stepCrumbLabels[s - 1] : undefined"
+                @click="s < currentStep ? goToStep(s) : undefined"
+              >{{ s }}</div>
+            </div>
+            <nav v-if="currentStep > 1" class="wizard-breadcrumb">
+              <template v-for="s in currentStep" :key="s">
+                <RightOutlined v-if="s > 1" class="breadcrumb-sep" />
+                <button
+                  v-if="s < currentStep"
+                  class="breadcrumb-item breadcrumb-done"
+                  @click="goToStep(s)"
+                  :title="stepCrumbLabels[s - 1]"
+                >{{ stepCrumbLabels[s - 1] }}</button>
+                <span v-else class="breadcrumb-item breadcrumb-current">
+                  {{ t(`wizard_step${s}_title`) }}
+                </span>
+              </template>
+            </nav>
+          </div>
+
+          <!-- ── Step 1: Name + source type ─────────────────────────── -->
+          <div v-if="currentStep === 1" class="wizard-step">
+            <h3 class="step-title">{{ t('wizard_step1_title') }}</h3>
+            <div class="form-field">
+              <label class="field-label">{{ t('analysis_name') }}</label>
+              <AInput
+                v-model:value="wizard.name"
+                :placeholder="t('analysis_name_placeholder')"
+                class="w-full"
+                autofocus
+              />
+            </div>
+            <div class="form-field">
+              <label class="field-label">{{ t('source_type') }}</label>
+              <ARadioGroup v-model:value="wizard.source_type" class="radio-group">
+                <div class="radio-item">
+                  <ARadio value="table">{{ t('source_table') }}</ARadio>
+                </div>
+                <div class="radio-item">
+                  <ARadio value="plugin">{{ t('source_plugin') }}</ARadio>
+                </div>
+              </ARadioGroup>
+            </div>
+          </div>
+
+          <!-- ── Step 2: Source table ────────────────────────────────── -->
+          <div v-if="currentStep === 2" class="wizard-step">
+            <h3 class="step-title">{{ t('wizard_step2_title') }}</h3>
+            <div class="form-field">
+              <label class="field-label">
+                {{ wizard.source_type === 'plugin' ? t('select_plugin') : t('select_table') }}
+              </label>
+              <ASelect
+                v-model:value="wizard.source_tb"
+                :options="availableSourceOptions"
+                :placeholder="t('select_placeholder')"
+                class="w-full"
+                :loading="sourcesLoading"
+                show-search
+              >
+                <template #option="option">
+                  <div>
+                    <div>{{ option.label }}</div>
+                    <div v-if="option.parent_label" class="option-sub">{{ option.parent_label }}</div>
+                  </div>
+                </template>
+              </ASelect>
+            </div>
+          </div>
+
+          <!-- ── Step 3: Char field ──────────────────────────────────── -->
+          <div v-if="currentStep === 3" class="wizard-step">
+            <h3 class="step-title">{{ t('wizard_step3_title') }}</h3>
+            <p class="step-hint">{{ t('wizard_step3_hint') }}</p>
+            <div class="form-field">
+              <ASelect
+                v-model:value="wizard.char_field"
+                :options="sourceFieldOptions"
+                :placeholder="t('select_field')"
+                class="w-full"
+                :loading="metaLoading"
+                show-search
+              />
+            </div>
+          </div>
+
+          <!-- ── Step 4: Group path builder ─────────────────────────── -->
+          <div v-if="currentStep === 4" class="wizard-step">
+            <h3 class="step-title">{{ t('wizard_step4_title') }}</h3>
+            <p class="step-hint">{{ t('wizard_step4_hint') }}</p>
+
+            <!-- Current path breadcrumb -->
+            <div class="path-crumb">
+              <span class="path-node">{{ wizard.source_tb }}</span>
+              <template v-for="step in wizard.group_path" :key="step.join_tb">
+                <RightOutlined class="path-arrow" />
+                <span class="path-node">{{ step.join_tb }}</span>
+              </template>
+            </div>
+
+            <!-- Field selector for current table -->
+            <div class="form-field">
+              <label class="field-label">{{ t('field_in_table', pathCurrentTb) }}</label>
+              <ASelect
+                v-model:value="pathSelectedField"
+                :options="pathCurrentFieldOptions"
+                :placeholder="t('select_field')"
+                class="w-full"
+                :loading="pathMetaLoading"
+                show-search
+              />
+            </div>
+
+            <!-- FK action buttons -->
+            <div v-if="pathSelectedField" class="path-actions">
+              <div v-if="selectedFieldIsFK" class="fk-info">
+                <LinkOutlined />
+                {{ t('fk_field_info', selectedFieldFkLabel) }}
+              </div>
+              <div class="action-row">
+                <AButton type="primary" size="small" @click="useAsGroupField">
+                  <template #icon><component :is="wizard.group_field === pathSelectedField ? CheckCircleOutlined : CheckOutlined" /></template>
+                  {{ t('use_as_group_field') }}
+                </AButton>
+                <AButton
+                  v-if="selectedFieldIsFK && wizard.group_path.length < 4"
+                  size="small"
+                  @click="addPathStep"
+                >
+                  {{ t('traverse_to', selectedFieldFkTb) }} <ArrowRightOutlined style="margin-left:0.35rem" />
+                </AButton>
+              </div>
+            </div>
+
+            <!-- Confirmation + remove step -->
+            <div class="path-footer">
+              <div v-if="wizard.group_field" class="group-field-selected">
+                <CheckCircleOutlined style="color: var(--p-green-500)" />
+                {{ t('group_field_selected') }}: <strong>{{ wizard.group_field }}</strong>
+                <span v-if="wizard.group_path.length > 0"> in {{ pathCurrentTb }}</span>
+              </div>
+              <AButton
+                v-if="wizard.group_path.length > 0"
+                type="text"
+                size="small"
+                @click="removeLastStep"
+              >
+                <template #icon><UndoOutlined /></template>
+                {{ t('remove_last_step') }}
+              </AButton>
+            </div>
+          </div>
+
+          <!-- ── Step 5: Measure ─────────────────────────────────────── -->
+          <div v-if="currentStep === 5" class="wizard-step">
+            <h3 class="step-title">{{ t('wizard_step5_title') }}</h3>
+            <div class="form-field">
+              <ARadioGroup v-model:value="wizard.measure" class="radio-group">
+                <div class="radio-item">
+                  <ARadio value="count">{{ t('measure_count') }}</ARadio>
+                </div>
+                <div class="radio-item">
+                  <ARadio value="sum">{{ t('measure_sum') }}</ARadio>
+                </div>
+                <div class="radio-item">
+                  <ARadio value="count_distinct">{{ t('measure_count_distinct') }}</ARadio>
+                </div>
+              </ARadioGroup>
+            </div>
+            <div v-if="wizard.measure !== 'count'" class="form-field">
+              <label class="field-label">{{ t('measure_field') }}</label>
+              <ASelect
+                v-model:value="wizard.measure_field"
+                :options="measureFieldOptions"
+                :placeholder="t('select_field')"
+                class="w-full"
+                show-search
+              />
+            </div>
+            <div class="form-field">
+              <label class="field-label">{{ t('measure_label') }}</label>
+              <AInput
+                v-model:value="wizard.measure_label"
+                :placeholder="t('measure_label_placeholder')"
+                class="w-full"
+              />
+            </div>
+          </div>
+
+          <!-- ── Step 6: Filters ─────────────────────────────────────── -->
+          <div v-if="currentStep === 6" class="wizard-step">
+            <h3 class="step-title">{{ t('wizard_step6_title') }}</h3>
+            <p class="step-hint">{{ t('wizard_step6_hint') }}</p>
+            <div v-for="(filter, i) in wizard.filters" :key="i" class="filter-row">
+              <ASelect
+                v-model:value="filter.field"
+                :options="sourceFieldOptions"
+                :placeholder="t('field')"
+                size="small"
+                class="filter-field"
+              />
+              <ASelect
+                v-model:value="filter.op"
+                :options="filterOpOptions"
+                size="small"
+                class="filter-op"
+              />
+              <AInput
+                v-model:value="filter.value"
+                :placeholder="t('value')"
+                size="small"
+                class="filter-value"
+              />
+              <AButton
+                type="text"
+                danger
+                size="small"
+                @click="wizard.filters.splice(i, 1)"
+              >
+                <template #icon><CloseOutlined /></template>
+              </AButton>
+            </div>
+            <AButton type="text" size="small" @click="wizard.filters.push({ field: '', op: '_eq', value: '' })">
+              <template #icon><PlusOutlined /></template>
+              {{ t('add_filter') }}
+            </AButton>
+          </div>
+
+          <!-- ── Step 7: Preview + save ──────────────────────────────── -->
+          <div v-if="currentStep === 7" class="wizard-step">
+            <h3 class="step-title">{{ t('wizard_step7_title') }}</h3>
+            <div class="preview-summary">
+              <div><strong>{{ t('analysis_name') }}:</strong> {{ wizard.name }}</div>
+              <div><strong>{{ t('source') }}:</strong> {{ wizard.source_tb }}</div>
+              <div><strong>{{ t('char_field') }}:</strong> {{ wizard.char_field }}</div>
+              <div><strong>{{ t('group_by') }}:</strong> {{ pathDescription }}</div>
+              <div>
+                <strong>{{ t('measure') }}:</strong>
+                {{ wizard.measure }}<span v-if="wizard.measure_field"> ({{ wizard.measure_field }})</span>
+              </div>
+              <div v-if="wizard.filters.length > 0">
+                <strong>{{ t('active_filters') }}:</strong> {{ wizard.filters.length }}
+              </div>
+            </div>
+
+            <AButton type="primary" size="small" class="preview-btn" :loading="previewLoading" @click="runPreview">
+              <template #icon><PlayCircleOutlined /></template>
+              {{ t('run_preview') }}
+            </AButton>
+
+            <div v-if="previewResult" class="preview-result">
+              <p class="preview-stats">
+                {{ previewResult.groups.length }} {{ t('groups') }},
+                {{ previewResult.chars.length }} {{ t('characteristics') }}
+              </p>
+              <div class="pivot-scroll small">
+                <table class="pivot-table">
+                  <thead>
+                    <tr>
+                      <th class="pivot-corner"></th>
+                      <th v-for="char in previewResult.chars.slice(0, 6)" :key="char" class="pivot-char-header">
+                        {{ char || '—' }}
+                      </th>
+                      <th v-if="previewResult.chars.length > 6" class="pivot-ellipsis">…</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="group in previewResult.groups.slice(0, 5)" :key="group">
+                      <th class="pivot-group-header">{{ group || '—' }}</th>
+                      <td v-for="char in previewResult.chars.slice(0, 6)" :key="char" class="pivot-cell">
+                        {{ previewResult.data[group]?.[char] ?? 0 }}
+                      </td>
+                      <td v-if="previewResult.chars.length > 6" class="pivot-ellipsis">…</td>
+                    </tr>
+                    <tr v-if="previewResult.groups.length > 5">
+                      <td :colspan="Math.min(previewResult.chars.length, 6) + 2" class="pivot-ellipsis">…</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Wizard navigation ───────────────────────────────────── -->
+          <ADivider />
+          <div class="wizard-nav">
+            <AButton v-if="currentStep > 1" type="text" size="small" @click="currentStep--">
+              <template #icon><LeftOutlined /></template>
+              {{ t('back') }}
+            </AButton>
+            <div class="nav-spacer" />
+            <AButton v-if="currentStep < TOTAL_STEPS" type="primary" size="small" :disabled="!canGoNext" @click="goNext">
+              {{ t('next') }} <RightOutlined style="margin-left:0.35rem" />
+            </AButton>
+            <AButton v-else type="primary" size="small" :loading="saving" :disabled="!wizard.name || !previewResult" @click="doSave">
+              <template #icon><CheckOutlined /></template>
+              {{ t('save_analysis') }}
+            </AButton>
+          </div>
+        </div>
+      </AModal>
+
+    </div>
+  </AppLayout>
+</template>
+
+<script setup>
+import { ArrowLeftOutlined, ArrowRightOutlined, BarChartOutlined, CheckCircleOutlined, CheckOutlined, CloseOutlined, DeleteOutlined, DownloadOutlined, EditOutlined, GlobalOutlined, LeftOutlined, LinkOutlined, LockOutlined, PlayCircleOutlined, PlusOutlined, RightOutlined, UndoOutlined } from '@ant-design/icons-vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { useRoute }   from 'vue-router'
+import { useToast, useConfirm } from '@/composables/useNotify'
+import { useI18n }    from '@/i18n'
+import { api }        from '@/api'
+import AppLayout      from '@/components/AppLayout.vue'
+import {
+  Button as AButton,
+  Card as ACard,
+  Modal as AModal,
+  Divider as ADivider,
+  Input as AInput,
+  Spin as ASpin,
+  Radio as ARadio,
+  Select as ASelect,
+  Switch as ASwitch,
+  Tabs as ATabs,
+  TabPane as ATabPane,
+  Tag as ATag
+} from 'ant-design-vue'
+import { Bar }        from 'vue-chartjs'
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js'
+
+const ARadioGroup = ARadio.Group
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
+
+const route   = useRoute()
+const toast   = useToast()
+const confirm = useConfirm()
+const { t }   = useI18n()
+
+const TOTAL_STEPS = 7
+const PALETTE = [
+  '#4f81bd','#c0504d','#9bbb59','#8064a2','#4bacc6','#f79646',
+  '#1f497d','#833c00','#4f6228','#3f3151','#17375e','#984807',
+]
+
+// ── State ─────────────────────────────────────────────────────────────────
+
+const loading     = ref(false)
+const analyses    = ref([])
+const openResult  = ref(null)
+const resultData  = ref(null)
+const resultLoading = ref(false)
+const resultError   = ref(null)
+const resultTab      = ref('table')
+
+// Wizard state
+const wizardVisible = ref(false)
+const editingId     = ref(null)
+const currentStep   = ref(1)
+const saving        = ref(false)
+const previewLoading = ref(false)
+const previewResult  = ref(null)
+
+const wizard = reactive({
+  name:         '',
+  source_type:  'table',
+  source_tb:    '',
+  char_field:   '',
+  group_path:   [],
+  group_field:  '',
+  measure:      'count',
+  measure_field: '',
+  measure_label: '',
+  filters:      [],
+})
+
+// Sources (for step 2)
+const sourcesLoading = ref(false)
+const allSources     = ref({ tables: [], plugins: [] })
+
+// Source table meta (for step 3 char field + step 5 measure field)
+const metaLoading  = ref(false)
+const sourceMeta   = ref(null)
+
+// Path builder (for step 4)
+const pathSelectedField = ref('')
+const pathMetaLoading   = ref(false)
+const pathCurrentMeta   = ref(null)
+
+// ── Computed ──────────────────────────────────────────────────────────────
+
+const availableSourceOptions = computed(() => {
+  const list = wizard.source_type === 'plugin' ? allSources.value.plugins : allSources.value.tables
+  return list.map(o => ({ value: o.name, label: o.label, parent_label: o.parent_label }))
+})
+
+const sourceFieldOptions = computed(() => {
+  return (sourceMeta.value?.fields ?? []).map(f => ({
+    value: f.name,
+    label: f.label || f.name,
+  }))
+})
+
+const measureFieldOptions = computed(() => {
+  const fields = sourceMeta.value?.fields ?? []
+  if (wizard.measure === 'sum') {
+    return fields.filter(f => f.is_numeric).map(f => ({ value: f.name, label: f.label || f.name }))
+  }
+  return fields.map(f => ({ value: f.name, label: f.label || f.name }))
+})
+
+const pathCurrentTb = computed(() => {
+  if (wizard.group_path.length === 0) return wizard.source_tb
+  return wizard.group_path[wizard.group_path.length - 1].join_tb
+})
+
+const pathCurrentFieldOptions = computed(() => {
+  return (pathCurrentMeta.value?.fields ?? []).map(f => ({
+    value: f.name,
+    label: f.is_fk ? `${f.label || f.name} → ${f.fk_label}` : (f.label || f.name),
+  }))
+})
+
+const selectedFieldMeta = computed(() =>
+  (pathCurrentMeta.value?.fields ?? []).find(f => f.name === pathSelectedField.value) ?? null
+)
+const selectedFieldIsFK  = computed(() => selectedFieldMeta.value?.is_fk ?? false)
+const selectedFieldFkTb  = computed(() => selectedFieldMeta.value?.fk_tb ?? '')
+const selectedFieldFkPk  = computed(() => selectedFieldMeta.value?.fk_pk ?? 'id')
+const selectedFieldFkLabel = computed(() => selectedFieldMeta.value?.fk_label ?? selectedFieldFkTb.value)
+
+const pathDescription = computed(() => {
+  const parts = [wizard.source_tb]
+  for (const s of wizard.group_path) parts.push(s.join_tb)
+  return parts.join(' → ') + (wizard.group_field ? ` : ${wizard.group_field}` : '')
+})
+
+const stepCrumbLabels = computed(() => {
+  const sourceTbLabel = wizard.source_type === 'plugin'
+    ? (allSources.value.plugins.find(p => p.name === wizard.source_tb)?.label ?? wizard.source_tb)
+    : (allSources.value.tables.find(t => t.name === wizard.source_tb)?.label ?? wizard.source_tb)
+
+  const charFieldLabel = (sourceMeta.value?.fields ?? []).find(f => f.name === wizard.char_field)?.label ?? wizard.char_field
+
+  const measureMap = {
+    count:          t('measure_count'),
+    sum:            t('measure_sum'),
+    count_distinct: t('measure_count_distinct'),
+  }
+
+  return [
+    `${wizard.name}`,
+    sourceTbLabel || '—',
+    charFieldLabel || '—',
+    pathDescription.value || '—',
+    measureMap[wizard.measure] ?? wizard.measure,
+    wizard.filters.length ? `${wizard.filters.length} ${t('active_filters').toLowerCase()}` : '—',
+    t('wizard_step7_title'),
+  ]
+})
+
+const filterOpOptions = computed(() => [
+  { value: '_eq',          label: t('is_exactly') },
+  { value: '_icontains',   label: t('contains') },
+  { value: '_ncontains',   label: t('doesnt_contain') },
+  { value: '_starts_with',  label: t('starts_with') },
+  { value: '_ends_with',    label: t('ends_with') },
+  { value: '_nstarts_with', label: t('not_starts_with') },
+  { value: '_nends_with',   label: t('not_ends_with') },
+  { value: '_empty',       label: t('is_empty') },
+  { value: '_nempty',      label: t('is_not_empty') },
+  { value: '_gt',          label: t('bigger') },
+  { value: '_lt',          label: t('smaller') },
+])
+
+const canGoNext = computed(() => {
+  switch (currentStep.value) {
+    case 1: return wizard.name.trim() !== ''
+    case 2: return wizard.source_tb !== ''
+    case 3: return wizard.char_field !== ''
+    case 4: return wizard.group_field !== ''
+    case 5: return wizard.measure === 'count' || wizard.measure_field !== ''
+    default: return true
+  }
+})
+
+// ── Chart data ────────────────────────────────────────────────────────────
+
+const chartData = computed(() => {
+  if (!resultData.value) return { labels: [], datasets: [] }
+  const { chars, groups, data } = resultData.value
+  return {
+    labels: groups.map(g => (resultData.value.group_labels?.[g] ?? g) || '—'),
+    datasets: chars.map((char, i) => ({
+      label:           char || '—',
+      data:            groups.map(g => data[g]?.[char] ?? 0),
+      backgroundColor: PALETTE[i % PALETTE.length] + 'bb',
+      borderColor:     PALETTE[i % PALETTE.length],
+      borderWidth:     1,
+    })),
+  }
+})
+
+const chartOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  scales: {
+    x: { stacked: true },
+    y: { stacked: true, beginAtZero: true },
+  },
+  plugins: {
+    legend:  { position: 'bottom' },
+    tooltip: { mode: 'index', intersect: false },
+  },
+}
+
+// ── Pivot helpers ─────────────────────────────────────────────────────────
+
+function rowTotal(group) {
+  if (!resultData.value) return 0
+  return resultData.value.chars.reduce((s, c) => s + (resultData.value.data[group]?.[c] ?? 0), 0)
+}
+
+function colTotal(char) {
+  if (!resultData.value) return 0
+  return resultData.value.groups.reduce((s, g) => s + (resultData.value.data[g]?.[char] ?? 0), 0)
+}
+
+const grandTotal = computed(() => {
+  if (!resultData.value) return 0
+  return resultData.value.groups.reduce((s, g) => s + rowTotal(g), 0)
+})
+
+// ── Heatmap ───────────────────────────────────────────────────────────────
+
+const heatmapEnabled = ref(false)
+
+const maxCellValue = computed(() => {
+  if (!resultData.value) return 1
+  let max = 0
+  for (const group of resultData.value.groups) {
+    for (const char of resultData.value.chars) {
+      const v = resultData.value.data[group]?.[char] ?? 0
+      if (v > max) max = v
+    }
+  }
+  return max || 1
+})
+
+function cellBgStyle(val) {
+  if (!heatmapEnabled.value || val === 0) return {}
+  const ratio = val / maxCellValue.value
+  const pct   = Math.round((0.1 + ratio * 0.85) * 100)
+  return {
+    backgroundColor: `color-mix(in srgb, var(--p-primary-color) ${pct}%, transparent)`,
+    color: ratio > 0.55 ? 'white' : 'inherit',
+    transition: 'background-color 0.2s',
+  }
+}
+
+// ── Data loading ──────────────────────────────────────────────────────────
+
+async function loadAnalyses() {
+  loading.value = true
+  try {
+    const res = await api.get('/api/assemblages')
+    analyses.value = res.analyses ?? []
+  } catch (e) {
+    toast.add({ severity: 'error', summary: 'Error', detail: e.message, life: 4000 })
+  } finally {
+    loading.value = false
+  }
+}
+
+async function loadSources() {
+  sourcesLoading.value = true
+  try {
+    const res = await api.get('/api/assemblage/sources')
+    allSources.value = { tables: res.tables ?? [], plugins: res.plugins ?? [] }
+  } catch { /* silent */ } finally {
+    sourcesLoading.value = false
+  }
+}
+
+async function loadSourceMeta() {
+  if (!wizard.source_tb) return
+  metaLoading.value = true
+  try {
+    const res = await api.get('/api/assemblage/table-meta', { tb: wizard.source_tb })
+    if (res?.status === 'success') sourceMeta.value = res
+  } catch { /* silent */ } finally {
+    metaLoading.value = false
+  }
+}
+
+async function loadPathMeta() {
+  if (!pathCurrentTb.value) return
+  pathMetaLoading.value = true
+  try {
+    pathCurrentMeta.value = await api.get('/api/assemblage/table-meta', { tb: pathCurrentTb.value })
+  } catch { /* silent */ } finally {
+    pathMetaLoading.value = false
+  }
+}
+
+// ── Wizard helpers ────────────────────────────────────────────────────────
+
+function resetWizard() {
+  wizard.name          = ''
+  wizard.source_type   = 'table'
+  wizard.source_tb     = ''
+  wizard.char_field    = ''
+  wizard.group_path    = []
+  wizard.group_field   = ''
+  wizard.measure       = 'count'
+  wizard.measure_field = ''
+  wizard.measure_label = ''
+  wizard.filters       = []
+  pathSelectedField.value  = ''
+  pathCurrentMeta.value    = null
+  sourceMeta.value         = null
+  previewResult.value      = null
+}
+
+async function openWizard(analysis) {
+  if (analysis) {
+    editingId.value = analysis.id
+    const def = analysis.definition ?? {}
+    wizard.name          = analysis.name
+    wizard.source_type   = def.source_type   ?? 'table'
+    wizard.source_tb     = def.source_tb     ?? ''
+    wizard.char_field    = def.char_field    ?? ''
+    wizard.group_path    = JSON.parse(JSON.stringify(def.group_path ?? []))
+    wizard.group_field   = def.group_field   ?? ''
+    wizard.measure       = def.measure       ?? 'count'
+    wizard.measure_field = def.measure_field ?? ''
+    wizard.measure_label = def.measure_label ?? ''
+    wizard.filters       = JSON.parse(JSON.stringify(def.filters ?? []))
+    pathSelectedField.value = ''
+    previewResult.value  = null
+    if (wizard.source_tb) await loadSourceMeta()
+    await loadPathMeta()
+  } else {
+    editingId.value = null
+    resetWizard()
+  }
+  currentStep.value   = 1
+  wizardVisible.value = true
+}
+
+async function goToStep(s) {
+  if (s >= currentStep.value) return
+  currentStep.value = s
+  if (s === 4) {
+    pathSelectedField.value = ''
+    if (wizard.group_path.length === 0) {
+      pathCurrentMeta.value = sourceMeta.value
+    } else {
+      await loadPathMeta()
+    }
+  }
+}
+
+async function goNext() {
+  if (currentStep.value === 2 && wizard.source_tb) {
+    await loadSourceMeta()
+  }
+  if (currentStep.value === 3) {
+    pathSelectedField.value = ''
+    // Use source meta when path is empty; otherwise load the last joined table's meta
+    if (wizard.group_path.length === 0) {
+      pathCurrentMeta.value = sourceMeta.value
+    } else {
+      await loadPathMeta()
+    }
+  }
+  currentStep.value++
+}
+
+function useAsGroupField() {
+  wizard.group_field = pathSelectedField.value
+}
+
+async function addPathStep() {
+  if (!pathSelectedField.value || !selectedFieldIsFK.value) return
+  wizard.group_path.push({
+    local_field: pathSelectedField.value,
+    join_tb:     selectedFieldFkTb.value,
+    join_pk:     selectedFieldFkPk.value,
+  })
+  wizard.group_field      = ''
+  pathSelectedField.value = ''
+  await loadPathMeta()
+}
+
+async function removeLastStep() {
+  if (wizard.group_path.length === 0) return
+  wizard.group_path.pop()
+  wizard.group_field      = ''
+  pathSelectedField.value = ''
+  await loadPathMeta()
+}
+
+function buildDefinition() {
+  return {
+    source_tb:     wizard.source_tb,
+    source_type:   wizard.source_type,
+    char_field:    wizard.char_field,
+    group_path:    wizard.group_path.map(s => ({
+      local_field: s.local_field,
+      join_tb:     s.join_tb,
+      join_pk:     s.join_pk,
+    })),
+    group_field:   wizard.group_field,
+    measure:       wizard.measure,
+    measure_field: wizard.measure !== 'count' ? wizard.measure_field : null,
+    measure_label: wizard.measure_label,
+    filters:       wizard.filters.filter(f => f.field && f.op),
+  }
+}
+
+async function runPreview() {
+  previewLoading.value = true
+  try {
+    const res = await api.post('/api/assemblage/data', { definition: buildDefinition() })
+    if (res.status !== 'success') throw new Error(res.code ?? 'generic_error')
+    previewResult.value = res
+  } catch (e) {
+    toast.add({ severity: 'error', summary: t('error_save_analysis'), detail: t(e.message) || e.message, life: 5000 })
+  } finally {
+    previewLoading.value = false
+  }
+}
+
+async function doSave() {
+  saving.value = true
+  try {
+    const payload = { name: wizard.name, definition: buildDefinition() }
+    let res
+    if (editingId.value) {
+      res = await api.post(`/api/assemblage/${editingId.value}`, payload)
+    } else {
+      res = await api.post('/api/assemblages', payload)
+    }
+    if (res.status !== 'success') throw new Error(res.code ?? 'generic_error')
+    toast.add({ severity: 'success', summary: t('ok_save_analysis'), life: 3000 })
+    wizardVisible.value = false
+    await loadAnalyses()
+  } catch (e) {
+    toast.add({ severity: 'error', summary: t('error_save_analysis'), detail: t(e.message) || e.message, life: 5000 })
+  } finally {
+    saving.value = false
+  }
+}
+
+// ── List actions ──────────────────────────────────────────────────────────
+
+async function openAnalysis(analysis) {
+  openResult.value  = analysis
+  resultTab.value   = 'table'
+  resultLoading.value = true
+  resultError.value   = null
+  resultData.value    = null
+  try {
+    const res = await api.post('/api/assemblage/data', { definition: analysis.definition })
+    if (res.status !== 'success') throw new Error(res.code ?? 'generic_error')
+    resultData.value = res
+  } catch (e) {
+    resultError.value = t(e.message) || e.message
+  } finally {
+    resultLoading.value = false
+  }
+}
+
+function closeResult() {
+  openResult.value  = null
+  resultData.value  = null
+  resultError.value = null
+}
+
+async function toggleShare(analysis) {
+  const action = analysis.is_global ? 'unshare' : 'share'
+  try {
+    const res = await api.post(`/api/assemblage/${analysis.id}/${action}`)
+    if (res.status !== 'success') throw new Error(res.code)
+    toast.add({ severity: 'success', summary: t(`ok_${action}_analysis`), life: 3000 })
+    await loadAnalyses()
+  } catch (e) {
+    toast.add({ severity: 'error', summary: 'Error', detail: e.message, life: 4000 })
+  }
+}
+
+function confirmDelete(analysis) {
+  confirm.require({
+    message:     t('delete_confirm_message'),
+    header:      t('delete'),
+    icon:        'pi pi-exclamation-triangle',
+    severity:    'danger',
+    rejectProps: { label: t('cancel'), severity: 'secondary', outlined: true },
+    acceptProps: { label: t('delete'), severity: 'danger' },
+    accept:      () => deleteAnalysis(analysis),
+  })
+}
+
+async function deleteAnalysis(analysis) {
+  try {
+    const res = await api.delete(`/api/assemblage/${analysis.id}`)
+    if (res.status !== 'success') throw new Error(res.code)
+    toast.add({ severity: 'success', summary: t('ok_delete_analysis'), life: 3000 })
+    await loadAnalyses()
+  } catch (e) {
+    toast.add({ severity: 'error', summary: t('error_delete_analysis'), detail: e.message, life: 4000 })
+  }
+}
+
+// ── Export CSV ────────────────────────────────────────────────────────────
+
+function csvEscape(val) {
+  const s = String(val ?? '')
+  return (s.includes(',') || s.includes('"') || s.includes('\n'))
+    ? '"' + s.replace(/"/g, '""') + '"'
+    : s
+}
+
+function exportCsv() {
+  if (!resultData.value) return
+  const { chars, groups, data } = resultData.value
+  const rows = []
+  rows.push(['', ...chars, 'Tot'].map(csvEscape).join(','))
+  for (const g of groups) {
+    const vals  = chars.map(c => data[g]?.[c] ?? 0)
+    const label = resultData.value.group_labels?.[g] ?? g
+    rows.push([label, ...vals, vals.reduce((s, v) => s + v, 0)].map(csvEscape).join(','))
+  }
+  const colTots = chars.map(c => groups.reduce((s, g) => s + (data[g]?.[c] ?? 0), 0))
+  rows.push(['Tot', ...colTots, colTots.reduce((s, v) => s + v, 0)].map(csvEscape).join(','))
+
+  const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' })
+  const url  = URL.createObjectURL(blob)
+  const a    = document.createElement('a')
+  a.href     = url
+  a.download = (openResult.value?.name ?? 'analysis') + '.csv'
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+// ── Watchers ──────────────────────────────────────────────────────────────
+
+watch(() => wizard.source_type, () => {
+  wizard.source_tb = ''
+  sourceMeta.value = null
+})
+
+watch(() => wizard.source_tb, async (tb) => {
+  wizard.char_field    = ''
+  wizard.group_path    = []
+  wizard.group_field   = ''
+  pathSelectedField.value = ''
+  if (tb) await loadSourceMeta()
+})
+
+watch(pathSelectedField, (field) => {
+  if (!field) {
+    wizard.group_field = ''
+    return
+  }
+  // Auto-select non-FK fields as group_field
+  if (!selectedFieldIsFK.value) {
+    wizard.group_field = field
+  } else {
+    wizard.group_field = ''
+  }
+})
+
+// ── Lifecycle ─────────────────────────────────────────────────────────────
+
+onMounted(async () => {
+  await Promise.all([loadAnalyses(), loadSources()])
+})
+</script>
+
+<style scoped>
+.assemblages-view {
+  height: 100%;
+  overflow-y: auto;
+  padding: 1rem;
+  max-width: 1200px;
+  box-sizing: border-box;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.page-header h2 { margin: 0; flex: 1; }
+
+.loading-spinner { display: block; margin: 3rem auto; }
+
+/* ── Analyses grid ── */
+.analyses-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+.analysis-card { cursor: default; }
+.card-title { font-weight: 600; margin-bottom: 0.25rem; }
+.card-meta {
+  font-size: 0.8rem;
+  color: var(--p-text-muted-color);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  align-items: center;
+}
+.meta-sep { opacity: 0.4; }
+.card-tag { margin-top: 0.5rem; }
+.card-actions { display: flex; gap: 0.25rem; flex-wrap: wrap; }
+
+/* ── Empty state ── */
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: var(--p-text-muted-color);
+}
+.empty-icon { font-size: 3rem; display: block; margin-bottom: 1rem; opacity: 0.3; }
+
+/* ── Result view ── */
+.result-view { display: flex; flex-direction: column; gap: 1rem; }
+.result-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.result-title { font-size: 1.1rem; font-weight: 600; flex: 1; }
+.result-header-actions { margin-left: auto; }
+.result-loading { text-align: center; padding: 2rem; }
+.result-error { color: var(--p-red-500); padding: 1rem; }
+.result-empty { color: var(--p-text-muted-color); padding: 2rem; text-align: center; }
+.result-tabs { margin-top: 0.5rem; }
+.result-actions { margin-top: 0.5rem; }
+
+/* ── Pivot toolbar ── */
+.pivot-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.4rem 0;
+}
+.heatmap-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* ── Pivot table ── */
+.pivot-scroll { overflow-x: auto; }
+.pivot-scroll.small { max-height: 200px; overflow-y: auto; }
+.pivot-table {
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+.pivot-table th,
+.pivot-table td {
+  border: 1px solid var(--p-content-border-color);
+  padding: 0.3rem 0.6rem;
+  text-align: right;
+}
+.pivot-table th { background: var(--p-surface-100); text-align: left; }
+.pivot-corner { min-width: 6rem; }
+.pivot-char-header { font-size: 0.78rem; max-width: 8rem; overflow: hidden; text-overflow: ellipsis; }
+.pivot-group-header { font-weight: 600; }
+.group-link { color: inherit; text-decoration: underline dotted; }
+.group-link:hover { color: var(--p-primary-color); text-decoration: underline; }
+.pivot-total, .pivot-total-header { font-weight: 700; background: var(--p-surface-50); }
+.pivot-grand { background: var(--p-primary-50); }
+.pivot-footer th, .pivot-footer td { background: var(--p-surface-100); font-weight: 700; }
+.pivot-ellipsis { color: var(--p-text-muted-color); text-align: center; }
+
+/* ── Chart ── */
+.chart-wrapper { height: 350px; position: relative; }
+
+/* ── Wizard ── */
+.wizard { display: flex; flex-direction: column; gap: 1.5rem; }
+.wizard-header { display: flex; flex-direction: column; gap: 0.6rem; }
+.step-bar {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.step-dot {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.75rem; font-weight: 600;
+  background: var(--p-surface-200);
+  color: var(--p-text-muted-color);
+  border: 2px solid transparent;
+  cursor: default;
+}
+.step-dot.active { background: var(--p-primary-color); color: white; }
+.step-dot.done { background: var(--p-green-500); color: white; cursor: pointer; }
+.step-dot.done:hover { opacity: 0.8; }
+
+/* Breadcrumb */
+.wizard-breadcrumb {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.15rem;
+  padding: 0.4rem 0.6rem;
+  background: var(--p-surface-50);
+  border: 1px solid var(--p-content-border-color);
+  border-radius: 6px;
+  font-size: 0.78rem;
+}
+.breadcrumb-sep {
+  font-size: 0.65rem;
+  color: var(--p-text-muted-color);
+  opacity: 0.5;
+  margin: 0 0.1rem;
+}
+.breadcrumb-item {
+  max-width: 12rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+.breadcrumb-done {
+  background: none;
+  border: none;
+  padding: 0.1rem 0.3rem;
+  border-radius: 4px;
+  color: var(--p-primary-color);
+  cursor: pointer;
+  font-size: inherit;
+  font-family: inherit;
+}
+.breadcrumb-done:hover {
+  background: var(--p-primary-50);
+  text-decoration: underline;
+}
+.breadcrumb-current {
+  padding: 0.1rem 0.3rem;
+  color: var(--p-text-color);
+  font-weight: 600;
+}
+
+.wizard-step { display: flex; flex-direction: column; gap: 1rem; }
+.step-title { margin: 0; font-size: 1rem; }
+.step-hint { margin: 0; font-size: 0.85rem; color: var(--p-text-muted-color); }
+
+.form-field { display: flex; flex-direction: column; gap: 0.4rem; }
+.field-label { font-size: 0.85rem; font-weight: 500; }
+.w-full { width: 100%; }
+
+.radio-group { display: flex; flex-direction: column; gap: 0.5rem; }
+.radio-item { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; }
+
+.option-sub { font-size: 0.75rem; color: var(--p-text-muted-color); }
+
+/* Path builder */
+.path-crumb {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--p-surface-100);
+  border-radius: 6px;
+}
+.path-node { font-weight: 600; }
+.path-arrow { font-size: 0.7rem; color: var(--p-text-muted-color); }
+
+.path-actions { display: flex; flex-direction: column; gap: 0.75rem; }
+.fk-info {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: var(--p-primary-color);
+}
+.action-row { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+.path-footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; }
+.group-field-selected { display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; }
+
+/* Filters */
+.filter-row { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+.filter-field { flex: 2; min-width: 120px; }
+.filter-op    { flex: 1; min-width: 100px; }
+.filter-value { flex: 2; min-width: 100px; }
+
+/* Preview */
+.preview-summary {
+  display: flex; flex-direction: column; gap: 0.25rem;
+  font-size: 0.9rem;
+  padding: 0.75rem;
+  background: var(--p-surface-100);
+  border-radius: 6px;
+}
+.preview-btn { align-self: flex-start; }
+.preview-result { display: flex; flex-direction: column; gap: 0.5rem; }
+.preview-stats { font-size: 0.85rem; color: var(--p-text-muted-color); margin: 0; }
+
+/* Navigation */
+.wizard-nav { display: flex; align-items: center; gap: 0.5rem; }
+.nav-spacer { flex: 1; }
+</style>

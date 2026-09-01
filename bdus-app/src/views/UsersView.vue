@@ -1,0 +1,271 @@
+<template>
+  <AppLayout>
+    <div class="users-view">
+
+      <!-- ── Header ──────────────────────────────────────────── -->
+      <div class="users-header">
+        <h2>{{ t('users') }}</h2>
+        <AButton v-if="isAdmin" type="primary" size="small" @click="openForm(null)">
+          <template #icon><PlusOutlined /></template>
+          {{ t('new_user') }}
+        </AButton>
+      </div>
+
+      <!-- ── Table ───────────────────────────────────────────── -->
+      <ATable
+        :columns="columns"
+        :dataSource="users"
+        :loading="loading"
+        v-model:expandedRowKeys="expandedRowKeys"
+        :showExpandColumn="isAdmin"
+        :pagination="false"
+        size="small"
+        rowKey="id"
+        class="users-table"
+      >
+        <template #bodyCell="{ column, record }">
+          <template v-if="column.key === 'email'">
+            <a :href="`mailto:${record.email}`" class="users-email">{{ record.email }}</a>
+          </template>
+          <template v-else-if="column.key === 'privilege'">
+            <div class="users-priv-cell">
+              <ATag :color="severityToTagColor(privilegeSeverity(record.privilege_value))">
+                {{ record.privilege }}
+              </ATag>
+              <ABadge
+                v-if="record.override_count > 0"
+                :count="record.override_count"
+                :number-style="{ backgroundColor: 'var(--p-surface-400, #94a3b8)' }"
+                class="users-badge"
+                :title="t('table_overrides')"
+              />
+            </div>
+          </template>
+          <template v-else-if="column.key === 'actions'">
+            <AButton
+              v-if="record.editable"
+              type="text"
+              shape="circle"
+              size="small"
+              :title="t('edit')"
+              @click="openForm(record)"
+            ><template #icon><EditOutlined /></template></AButton>
+            <AButton
+              v-if="isAdmin && record.editable && record.id !== auth.user?.id"
+              type="text"
+              shape="circle"
+              size="small"
+              style="color: var(--p-orange-500, #f97316)"
+              :title="t('revoke_session')"
+              @click="confirmRevoke(record)"
+            ><template #icon><StopOutlined /></template></AButton>
+            <AButton
+              v-if="isAdmin && record.editable && record.id !== auth.user?.id"
+              type="text"
+              shape="circle"
+              danger
+              size="small"
+              :title="t('delete')"
+              @click="confirmDelete(record)"
+            ><template #icon><DeleteOutlined /></template></AButton>
+          </template>
+        </template>
+
+        <!-- Row expansion: per-table privileges panel -->
+        <template #expandedRowRender="{ record }">
+          <UserPrivilegesPanel
+            :userId="record.id"
+            :callerPrivilege="callerPrivilege"
+          />
+        </template>
+      </ATable>
+
+    </div>
+
+    <!-- ── User form dialog ───────────────────────────────────── -->
+    <AModal
+      v-model:open="formVisible"
+      :title="formData.id ? t('edit_user') : t('new_user')"
+      width="420px"
+      :footer="null"
+    >
+      <UserForm
+        :initial="formData"
+        :saving="saving"
+        @save="saveUser"
+        @cancel="formVisible = false"
+      />
+    </AModal>
+
+  </AppLayout>
+</template>
+
+<script setup>
+import { DeleteOutlined, EditOutlined, PlusOutlined, StopOutlined } from '@ant-design/icons-vue'
+import { ref, computed, onMounted } from 'vue'
+import { useToast, useConfirm } from '@/composables/useNotify'
+import AppLayout        from '@/components/AppLayout.vue'
+import UserForm         from '@/components/users/UserForm.vue'
+import UserPrivilegesPanel from '@/components/users/UserPrivilegesPanel.vue'
+import { Table as ATable, Button as AButton, Tag as ATag, Badge as ABadge, Modal as AModal } from 'ant-design-vue'
+import { api }          from '@/api'
+import { useI18n }      from '@/i18n'
+import { useAuthStore } from '@/stores/auth'
+import { severityToTagColor } from '@/utils/severity'
+
+const { t }   = useI18n()
+const auth    = useAuthStore()
+const confirm = useConfirm()
+const toast   = useToast()
+
+// ── Privilege severity map ────────────────────────────────────────
+const SEVERITY = { 1: 'danger', 10: 'warning', 20: 'info', 25: 'info', 30: 'success', 40: 'secondary' }
+function privilegeSeverity(value) { return SEVERITY[value] ?? 'secondary' }
+
+const columns = computed(() => [
+  { title: t('name'),  dataIndex: 'name',  key: 'name',
+    sorter: (a, b) => (a.name ?? '').localeCompare(b.name ?? ''), width: 160 },
+  { title: t('email'), dataIndex: 'email', key: 'email',
+    sorter: (a, b) => (a.email ?? '').localeCompare(b.email ?? ''), width: 220 },
+  { title: t('global_privilege'), key: 'privilege', width: 170 },
+  { title: '',                    key: 'actions',   width: 170 },
+])
+
+// ── State ─────────────────────────────────────────────────────────
+const users            = ref([])
+const loading          = ref(false)
+const isAdmin          = ref(false)
+const expandedRowKeys  = ref([])
+const formVisible      = ref(false)
+const saving           = ref(false)
+const formData         = ref({})
+
+/** The privilege level of the logged-in user (for gating what overrides they can assign) */
+const callerPrivilege = computed(() => auth.user?.privilege_value ?? 1)
+
+// ── Load users ────────────────────────────────────────────────────
+async function loadUsers() {
+  loading.value = true
+  try {
+    const res = await api.get('/api/users')
+    users.value   = res.users ?? []
+    isAdmin.value = res.admin ?? false
+  } catch (e) {
+    toast.add({ severity: 'error', summary: t('users'), detail: String(e), life: 4000 })
+  } finally {
+    loading.value = false
+  }
+}
+
+// ── Open user form ────────────────────────────────────────────────
+async function openForm(user) {
+  const res = await api.get(user ? `/api/user/${user.id}` : '/api/user')
+  formData.value = res
+  formVisible.value = true
+}
+
+// ── Save user ─────────────────────────────────────────────────────
+async function saveUser(data) {
+  saving.value = true
+  try {
+    const res = await api.post('/api/user', data)
+    if (res.status !== 'success') throw new Error(t(res.code ?? 'error'))
+    toast.add({ severity: 'success', summary: t('users'), detail: t('user_data_saved'), life: 3000 })
+    formVisible.value = false
+    await loadUsers()
+  } catch (e) {
+    toast.add({ severity: 'error', summary: t('users'), detail: e.message, life: 4000 })
+  } finally {
+    saving.value = false
+  }
+}
+
+// ── Revoke session ────────────────────────────────────────────────
+function confirmRevoke(user) {
+  confirm.require({
+    message: t('confirm_revoke_session'),
+    header:  t('revoke_session'),
+    icon:    'pi pi-ban',
+    rejectProps: { label: t('cancel'), severity: 'secondary', outlined: true },
+    acceptProps: { label: t('revoke_session'), severity: 'warn' },
+    accept: () => revokeSession(user.id),
+  })
+}
+
+async function revokeSession(id) {
+  try {
+    const res = await api.post(`/api/user/${id}/revoke`)
+    if (res.status !== 'success') throw new Error(t(res.code ?? 'error'))
+    toast.add({ severity: 'success', summary: t('revoke_session'), detail: t('session_revoked'), life: 3000 })
+  } catch (e) {
+    toast.add({ severity: 'error', summary: t('revoke_session'), detail: e.message, life: 4000 })
+  }
+}
+
+// ── Delete user ───────────────────────────────────────────────────
+function confirmDelete(user) {
+  confirm.require({
+    message: t('confirm_erase_user'),
+    header:  t('confirm'),
+    icon:    'pi pi-exclamation-triangle',
+    rejectProps: { label: t('cancel'), severity: 'secondary', outlined: true },
+    acceptProps: { label: t('delete'), severity: 'danger' },
+    accept: () => deleteUser(user.id),
+  })
+}
+
+async function deleteUser(id) {
+  try {
+    const res = await api.delete(`/api/user/${id}`)
+    if (res.status !== 'success') throw new Error(t(res.code ?? 'error'))
+    toast.add({ severity: 'success', summary: t('users'), detail: t('user_deleted'), life: 3000 })
+    await loadUsers()
+  } catch (e) {
+    toast.add({ severity: 'error', summary: t('users'), detail: e.message, life: 4000 })
+  }
+}
+
+onMounted(loadUsers)
+</script>
+
+<style scoped>
+.users-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.users-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem 0.75rem;
+  flex-shrink: 0;
+}
+
+.users-header h2 {
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.users-table {
+  margin: 0 1.5rem;
+}
+
+.users-email {
+  color: var(--p-text-color);
+  text-decoration: none;
+  font-size: 0.875rem;
+}
+.users-email:hover { text-decoration: underline; }
+
+.users-priv-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.users-badge {
+  font-size: 0.7rem;
+}
+</style>

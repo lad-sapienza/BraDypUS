@@ -1,0 +1,467 @@
+<template>
+  <AppLayout>
+  <div class="files-view">
+
+    <!-- ── Toolbar ────────────────────────────────────────────── -->
+    <div class="files-toolbar">
+      <span class="files-title">{{ t('files_mng_title') }}</span>
+
+      <AButton
+        :type="orphansOnly ? 'primary' : 'default'"
+        size="small"
+        @click="orphansOnly = !orphansOnly; reload()"
+      >
+        <template #icon><FilterOutlined /></template>
+        {{ t('files_orphans_only') }}
+      </AButton>
+
+      <AButton size="small" :loading="loading" @click="reload">
+        <template #icon><ReloadOutlined /></template>
+        {{ t('log_refresh') }}
+      </AButton>
+    </div>
+
+    <!-- ── Table ─────────────────────────────────────────────── -->
+    <div ref="tableWrap" class="files-table">
+      <ATable
+        :columns="columns"
+        :dataSource="files"
+        :loading="loading"
+        :pagination="pagination"
+        :scroll="{ y: tableScrollY }"
+        :locale="{ emptyText: t('files_empty') }"
+        size="small"
+        rowKey="id"
+        @change="onTableChange"
+      >
+        <template #bodyCell="{ column, record }">
+          <template v-if="column.key === 'preview'">
+            <span class="preview-trigger" @click="openPreview(record)" :title="t('files_preview_hint')">
+              <img
+                v-if="record.is_image"
+                :src="fileUrl(record)"
+                :alt="record.filename"
+                class="file-thumb"
+              />
+              <component v-else :is="fileIcon(record.ext)" class="file-icon-lg" />
+            </span>
+          </template>
+          <template v-else-if="column.key === 'filename'">
+            <span class="filename-link" @click="openPreview(record)">
+              {{ record.filename }}.{{ record.ext }}
+            </span>
+            <div v-if="!record.links.length" class="orphan-badge">{{ t('files_orphan_badge') }}</div>
+          </template>
+          <template v-else-if="column.key === 'description'">
+            <AInput
+              :value="record.description ?? ''"
+              size="small"
+              class="meta-input"
+              @update:value="v => record.description = v || null"
+              @blur="saveMeta(record)"
+              @keyup.enter="saveMeta(record)"
+            />
+          </template>
+          <template v-else-if="column.key === 'keywords'">
+            <AInput
+              :value="record.keywords ?? ''"
+              size="small"
+              class="meta-input"
+              @update:value="v => record.keywords = v || null"
+              @blur="saveMeta(record)"
+              @keyup.enter="saveMeta(record)"
+            />
+          </template>
+          <template v-else-if="column.key === 'links'">
+            <div v-if="record.links.length" class="links-list">
+              <RouterLink
+                v-for="(lnk, i) in record.links"
+                :key="i"
+                :to="`/${appName}/record/${lnk.tb}/${lnk.record_id}`"
+                class="record-link"
+              >
+                {{ lnk.tb }} #{{ lnk.record_id }}
+              </RouterLink>
+            </div>
+            <span v-else class="no-links">{{ t('files_no_links') }}</span>
+          </template>
+          <template v-else-if="column.key === 'actions'">
+            <div class="row-actions">
+              <button class="action-btn" :title="t('replace_file')" @click="startReplace(record)">
+                <SyncOutlined />
+              </button>
+              <button class="action-btn action-btn-danger" :title="t('delete_file')" @click="confirmDelete(record)">
+                <DeleteOutlined />
+              </button>
+            </div>
+          </template>
+        </template>
+      </ATable>
+    </div>
+
+    <!-- Hidden file input for replace -->
+    <input
+      ref="replaceInput"
+      type="file"
+      style="display: none"
+      @change="onReplaceFileSelected"
+    />
+
+    <!-- File preview Dialog -->
+    <AModal
+      v-model:open="previewDialog"
+      :title="previewFile ? `${previewFile.filename}.${previewFile.ext}` : ''"
+      :width="previewFile?.is_image ? 'auto' : '80vw'"
+      :body-style="{ padding: 0, overflow: 'hidden' }"
+      :footer="null"
+    >
+      <template v-if="previewFile">
+        <img
+          v-if="previewFile.is_image"
+          :src="fileUrl(previewFile)"
+          :alt="previewFile.filename"
+          style="display: block; max-width: 88vw; max-height: 82vh; object-fit: contain;"
+        />
+        <iframe
+          v-else
+          :src="fileUrl(previewFile)"
+          style="width: 100%; height: 78vh; border: none; display: block;"
+        />
+      </template>
+    </AModal>
+
+  </div>
+  </AppLayout>
+</template>
+
+<script setup>
+import { DeleteOutlined, EditOutlined, FileExcelOutlined, FileOutlined, FilePdfOutlined, FilterOutlined, FileWordOutlined, FileZipOutlined, ReloadOutlined, SoundOutlined, SyncOutlined, VideoCameraOutlined } from '@ant-design/icons-vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { RouterLink, useRoute }     from 'vue-router'
+import { useToast, useConfirm } from '@/composables/useNotify'
+import AppLayout    from '@/components/AppLayout.vue'
+import { Table as ATable, Button as AButton, Input as AInput, Modal as AModal } from 'ant-design-vue'
+import { api, assetUrl } from '@/api'
+import { useI18n }       from '@/i18n'
+import { useAuthStore }  from '@/stores/auth'
+
+const { t }   = useI18n()
+const toast   = useToast()
+const confirm = useConfirm()
+const route   = useRoute()
+const auth    = useAuthStore()
+
+const appName = computed(() => auth.user?.app ?? route.params.app)
+
+const columns = computed(() => [
+  { title: t('files_col_preview'),     key: 'preview',     width: 80 },
+  { title: t('files_col_filename'),    key: 'filename',    width: 160 },
+  { title: t('files_col_description'), key: 'description' },
+  { title: t('files_col_keywords'),    key: 'keywords',    width: 200 },
+  { title: t('files_col_links'),       key: 'links',       width: 200 },
+  { title: '',                         key: 'actions',     width: 80 },
+])
+
+// ── State ──────────────────────────────────────────────────────────
+const files       = ref([])
+const total       = ref(0)
+const loading     = ref(false)
+const currentPage = ref(1)
+const perPage     = ref(25)
+const orphansOnly = ref(false)
+
+const pagination = computed(() => ({
+  current: currentPage.value,
+  pageSize: perPage.value,
+  total: total.value,
+  showSizeChanger: true,
+  pageSizeOptions: ['25', '50', '100'],
+  position: ['bottomCenter'],
+}))
+
+// ── AntD Table: fill available flex space (no scrollHeight="flex" equivalent) ──
+const tableWrap    = ref(null)
+const tableScrollY = ref(400)
+let resizeObs = null
+
+function measureTableHeight() {
+  if (!tableWrap.value) return
+  const total_      = tableWrap.value.clientHeight
+  const headerH     = tableWrap.value.querySelector('.ant-table-thead')?.getBoundingClientRect().height ?? 40
+  const paginationH = tableWrap.value.querySelector('.ant-pagination')?.getBoundingClientRect().height ?? 32
+  tableScrollY.value = Math.max(200, total_ - headerH - paginationH - 16)
+}
+
+onMounted(() => {
+  resizeObs = new ResizeObserver(measureTableHeight)
+  if (tableWrap.value) resizeObs.observe(tableWrap.value)
+})
+onUnmounted(() => resizeObs?.disconnect())
+watch(files, () => { measureTableHeight() })
+
+// ── Fetch ───────────────────────────────────────────────────────────
+async function fetchFiles() {
+  loading.value = true
+  try {
+    const params = {
+      page:         currentPage.value,
+      per_page:     perPage.value,
+      orphans_only: orphansOnly.value ? 1 : undefined,
+    }
+    const data = await api.get('/api/files', params)
+    if (data.status === 'error') throw new Error(t(data.code))
+    files.value = data.files ?? []
+    total.value = data.total ?? 0
+  } catch (e) {
+    toast.add({ severity: 'error', summary: t('generic_error'), detail: e.message, life: 5000 })
+  } finally {
+    loading.value = false
+  }
+}
+
+function reload() {
+  currentPage.value = 1
+  fetchFiles()
+}
+
+function onTableChange(paginationEvt) {
+  currentPage.value = paginationEvt.current
+  perPage.value     = paginationEvt.pageSize
+  fetchFiles()
+}
+
+// ── Metadata save ──────────────────────────────────────────────────
+async function saveMeta(file) {
+  try {
+    const res = await api.patch(`/api/file/${file.id}`, {
+      description: file.description,
+      keywords:    file.keywords,
+    })
+    if (res.status === 'error') {
+      toast.add({ severity: 'error', summary: t('generic_error'), detail: t(res.code), life: 4000 })
+    }
+  } catch (e) {
+    toast.add({ severity: 'error', summary: t('generic_error'), detail: e.message, life: 4000 })
+  }
+}
+
+// ── Delete ─────────────────────────────────────────────────────────
+function confirmDelete(file) {
+  confirm.require({
+    message:  t('confirm_delete_file'),
+    header:   t('delete_file'),
+    icon:     'pi pi-exclamation-triangle',
+    severity: 'danger',
+    accept:   () => doDelete(file),
+  })
+}
+
+async function doDelete(file) {
+  try {
+    const res = await api.delete(`/api/file/${file.id}`)
+    if (res.status === 'error') {
+      toast.add({ severity: 'error', summary: t('generic_error'), detail: t(res.code), life: 5000 })
+      return
+    }
+    toast.add({ severity: 'success', summary: t('delete_file'), detail: t('ok_file_deleted'), life: 3000 })
+    files.value = files.value.filter(f => f.id !== file.id)
+    total.value = Math.max(0, total.value - 1)
+  } catch (e) {
+    toast.add({ severity: 'error', summary: t('generic_error'), detail: e.message, life: 5000 })
+  }
+}
+
+// ── Replace file ───────────────────────────────────────────────────
+const replaceInput    = ref(null)
+const replacingFileId = ref(null)
+
+function startReplace(file) {
+  replacingFileId.value = file.id
+  replaceInput.value?.click()
+}
+
+async function onReplaceFileSelected(evt) {
+  const file = evt.target.files?.[0]
+  evt.target.value = ''
+  if (!file || !replacingFileId.value) return
+
+  try {
+    const res = await api.upload(`/api/file/${replacingFileId.value}/replace`, file, 'file')
+    if (res.status === 'error') {
+      toast.add({ severity: 'error', summary: t('generic_error'), detail: t(res.code), life: 5000 })
+      return
+    }
+    toast.add({ severity: 'success', summary: t('replace_file'), detail: t('ok_file_replaced'), life: 3000 })
+    const target = files.value.find(f => f.id === replacingFileId.value)
+    if (target) {
+      target.ext      = res.ext
+      target.filename = res.filename
+      target.is_image = res.is_image
+    }
+  } catch (e) {
+    toast.add({ severity: 'error', summary: t('generic_error'), detail: e.message, life: 5000 })
+  } finally {
+    replacingFileId.value = null
+  }
+}
+
+// ── Preview ────────────────────────────────────────────────────────
+const previewDialog = ref(false)
+const previewFile   = ref(null)
+
+function openPreview(file) {
+  previewFile.value  = file
+  previewDialog.value = true
+}
+
+// ── Helpers ─────────────────────────────────────────────────────────
+function fileUrl(f) {
+  return assetUrl(`projects/${appName.value}/files/${f.id}.${f.ext}`)
+}
+
+function fileIcon(ext) {
+  const e = (ext ?? '').toLowerCase()
+  if (['pdf'].includes(e))                       return FilePdfOutlined
+  if (['doc', 'docx', 'odt', 'rtf'].includes(e)) return FileWordOutlined
+  if (['xls', 'xlsx', 'ods'].includes(e))        return FileExcelOutlined
+  if (['mp3', 'wav', 'ogg', 'wma'].includes(e))  return SoundOutlined
+  if (['mp4', 'mov', 'avi', 'mkv'].includes(e))  return VideoCameraOutlined
+  if (['zip', 'rar', 'tar', 'gz'].includes(e))   return FileZipOutlined
+  if (['svg', 'ai', 'eps'].includes(e))          return EditOutlined
+  return FileOutlined
+}
+
+onMounted(fetchFiles)
+</script>
+
+<style scoped>
+.files-view {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ── Toolbar ──────────────────────────────────────────────────── */
+.files-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid var(--p-content-border-color);
+  flex-shrink: 0;
+}
+
+.files-title {
+  font-weight: 700;
+  font-size: 1rem;
+  margin-right: 0.5rem;
+}
+
+.files-toolbar :deep(.ant-btn:last-child) { margin-left: auto; }
+
+/* ── Table ────────────────────────────────────────────────────── */
+.files-table {
+  flex: 1;
+  overflow: hidden;
+  font-size: 0.82rem;
+}
+
+
+/* ── Preview ──────────────────────────────────────────────────── */
+.file-thumb {
+  width: 60px;
+  height: 45px;
+  object-fit: cover;
+  border-radius: 3px;
+  border: 1px solid var(--p-content-border-color);
+  display: block;
+}
+
+.file-icon-lg {
+  font-size: 1.6rem;
+  color: var(--p-text-muted-color);
+  display: block;
+  text-align: center;
+}
+
+/* ── Preview trigger ─────────────────────────────────────────────── */
+.preview-trigger {
+  cursor: zoom-in;
+  display: block;
+}
+
+/* ── Filename ─────────────────────────────────────────────────── */
+.filename-link {
+  color: var(--p-primary-color);
+  text-decoration: none;
+  font-size: 0.78rem;
+  word-break: break-all;
+  cursor: pointer;
+}
+.filename-link:hover { text-decoration: underline; }
+
+.orphan-badge {
+  display: inline-block;
+  margin-top: 2px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  background: var(--p-orange-100, #fef3c7);
+  color: var(--p-orange-700, #b45309);
+  white-space: nowrap;
+}
+
+/* ── Meta inputs ──────────────────────────────────────────────── */
+.meta-input {
+  width: 100%;
+}
+
+/* ── Links ────────────────────────────────────────────────────── */
+.links-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.record-link {
+  color: var(--p-primary-color);
+  text-decoration: none;
+  font-size: 0.78rem;
+}
+.record-link:hover { text-decoration: underline; }
+
+.no-links {
+  color: var(--p-text-muted-color);
+  font-style: italic;
+  font-size: 0.78rem;
+}
+
+/* ── Actions ──────────────────────────────────────────────────── */
+.row-actions {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.action-btn {
+  background: none;
+  border: none;
+  padding: 0.2rem;
+  cursor: pointer;
+  color: var(--p-text-muted-color);
+  font-size: 0.85rem;
+  line-height: 1;
+  border-radius: 3px;
+}
+.action-btn:hover { color: var(--p-primary-color); background: var(--p-content-hover-background); }
+.action-btn-danger:hover { color: var(--p-red-500); }
+
+/* ── Empty ────────────────────────────────────────────────────── */
+.empty-msg {
+  color: var(--p-text-muted-color);
+  font-style: italic;
+}
+</style>

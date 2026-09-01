@@ -1,0 +1,482 @@
+<template>
+  <div class="field-editor" v-if="!schema.hide">
+    <label class="field-label">
+      {{ schema.label }}
+      <span v-if="schema.required" class="required-mark">*</span>
+      <InfoCircleOutlined v-if="schema.help" :title="schema.help" class="field-help" />
+    </label>
+
+    <!-- readonly: show as display -->
+    <div v-if="schema.readonly" class="field-value-readonly">
+      {{ modelValue ?? '—' }}
+    </div>
+
+    <!-- md: Markdown textarea with live preview toggle -->
+    <div v-else-if="schema.type === 'md'" class="md-editor-wrap">
+      <div class="md-toolbar">
+        <button type="button" class="md-toggle" @click="mdPreview = !mdPreview">
+          <component :is="mdPreview ? EditOutlined : EyeOutlined" />
+          {{ mdPreview ? t('edit') : t('preview') }}
+        </button>
+      </div>
+      <ATextarea
+        v-if="!mdPreview"
+        :value="modelValue"
+        @update:value="onInput"
+        :dir="schema.direction || 'ltr'"
+        :maxlength="schema.max_length || undefined"
+        :rows="6"
+        autoSize
+        :status="showError ? 'error' : undefined"
+        class="field-input w-full"
+      />
+      <div v-else class="md-preview" v-html="marked.parse(String(modelValue ?? ''))" />
+    </div>
+
+    <!-- long_text -->
+    <ATextarea
+      v-else-if="schema.type === 'long_text'"
+      :value="modelValue"
+      @update:value="onInput"
+      :dir="schema.direction || 'ltr'"
+      :maxlength="schema.max_length || undefined"
+      :rows="4"
+      autoSize
+      :status="showError ? 'error' : undefined"
+      class="field-input w-full"
+    />
+
+    <!-- boolean -->
+    <div v-else-if="schema.type === 'boolean'" class="bool-switch-wrap">
+      <ASwitch
+        :checked="modelValue === '1' || modelValue === 1 || modelValue === true"
+        @update:checked="v => onInput(v ? '1' : '0')"
+      />
+      <span class="bool-switch-label">{{ modelValue === '1' || modelValue === 1 || modelValue === true ? t('yes') : t('no') }}</span>
+    </div>
+
+    <!-- select / combo_select / multi_select with options_source -->
+    <template v-else-if="['select','combo_select','multi_select'].includes(schema.type) && schema.options_source">
+
+      <!-- static options (dic) — no async needed -->
+      <ASelect
+        v-if="schema.options_source.type === 'static' && schema.type === 'select'"
+        :value="modelValue"
+        @update:value="onInput"
+        :options="staticOptions"
+        :placeholder="t('select_placeholder')"
+        :status="showError ? 'error' : undefined"
+        class="field-input w-full"
+      />
+      <ASelect
+        v-else-if="schema.options_source.type === 'static' && schema.type === 'multi_select'"
+        mode="multiple"
+        :value="multiSelectArray"
+        @update:value="v => onInput(v.join(';'))"
+        :options="staticOptions"
+        :placeholder="t('select_placeholder')"
+        :status="showError ? 'error' : undefined"
+        class="field-input w-full"
+      />
+
+      <!-- async options (db / id_from_tb / vocabulary) -->
+      <template v-else>
+        <ASelect
+          v-if="schema.type === 'select'"
+          :value="asyncModelValue"
+          @update:value="onInput"
+          :options="asyncOptions"
+          :loading="loadingOptions"
+          :placeholder="t('select_placeholder')"
+          :status="showError ? 'error' : undefined"
+          show-search
+          :filter-option="filterOption"
+          class="field-input w-full"
+          @dropdown-visible-change="open => open && loadOptions()"
+        />
+        <!-- combo_select: PrimeVue's Select has a single `editable` flag for a
+             free-text + suggestions hybrid. AntD splits this into a separate
+             AutoComplete component — there is no "editable Select". -->
+        <AAutoComplete
+          v-else-if="schema.type === 'combo_select'"
+          :value="asyncModelValue"
+          @update:value="onInput"
+          :options="asyncOptions"
+          :placeholder="t('select_placeholder')"
+          :status="showError ? 'error' : undefined"
+          :filter-option="filterOption"
+          class="field-input w-full"
+          @dropdown-visible-change="open => open && loadOptions()"
+        />
+        <ASelect
+          v-else-if="schema.type === 'multi_select'"
+          mode="multiple"
+          :value="multiSelectArray"
+          @update:value="v => onInput(v.join(';'))"
+          :options="asyncOptions"
+          :loading="loadingOptions"
+          :placeholder="t('select_placeholder')"
+          :status="showError ? 'error' : undefined"
+          show-search
+          :filter-option="filterOption"
+          class="field-input w-full"
+          @dropdown-visible-change="open => open && loadOptions()"
+        />
+      </template>
+    </template>
+
+    <!-- slider -->
+    <div v-else-if="schema.type === 'slider'" class="slider-wrap">
+      <ASlider
+        :value="Number(modelValue) || 0"
+        @update:value="v => onInput(String(v))"
+        :min="schema.min != null ? Number(schema.min) : 0"
+        :max="schema.max != null ? Number(schema.max) : 100"
+        class="field-slider"
+      />
+      <span class="slider-value">{{ modelValue ?? 0 }}</span>
+    </div>
+
+    <!-- date -->
+    <AInput
+      v-else-if="schema.type === 'date'"
+      type="date"
+      :value="modelValue"
+      @update:value="onInput"
+      :min="schema.min || undefined"
+      :max="schema.max || undefined"
+      :status="showError ? 'error' : undefined"
+      class="field-input w-full"
+    />
+
+    <!-- text (default) — also handles number via min/max -->
+    <AInput
+      v-else
+      :type="(schema.min != null || schema.max != null) ? 'number' : 'text'"
+      :value="modelValue"
+      @update:value="onInput"
+      :dir="schema.direction || 'ltr'"
+      :min="schema.min || undefined"
+      :max="schema.max || undefined"
+      :maxlength="schema.max_length || undefined"
+      :pattern="schema.pattern || undefined"
+      :status="showError ? 'error' : undefined"
+      class="field-input w-full"
+    />
+
+    <!-- Inline validation error (sync) -->
+    <div v-if="showError" class="field-error">
+      <ExclamationCircleOutlined />
+      {{ validationError }}
+    </div>
+
+    <!-- Inline uniqueness error (async no_dupl) -->
+    <div v-if="uniqueError" class="field-error">
+      <ExclamationCircleOutlined />
+      {{ uniqueError }}
+    </div>
+
+  </div>
+</template>
+
+<script setup>
+import { EditOutlined, ExclamationCircleOutlined, EyeOutlined, InfoCircleOutlined } from '@ant-design/icons-vue'
+import { ref, computed, inject } from 'vue'
+import { marked } from 'marked'
+import { Input, Select as ASelect, Switch as ASwitch, Slider as ASlider, AutoComplete as AAutoComplete } from 'ant-design-vue'
+import { useToast } from '@/composables/useNotify'
+import { api }     from '@/api'
+import { useI18n } from '@/i18n'
+import { onMounted, watch } from 'vue'
+
+const AInput = Input
+const ATextarea = Input.TextArea
+
+const { t } = useI18n()
+const toast = useToast()
+
+const props = defineProps({
+  schema:     { type: Object, required: true },
+  modelValue: { type: [String, Number, null], default: null },
+  /** Full table id (needed for getFieldOptions and check-unique calls) */
+  tb:         { type: String, required: true },
+  /** Current record id — null for new records; needed to exclude self from no_dupl check */
+  recordId:   { type: [String, Number, null], default: null },
+})
+const emit = defineEmits(['update:modelValue'])
+
+// ── Markdown preview toggle ────────────────────────────────────
+const mdPreview = ref(false)
+
+// ── Dirty tracking (set to true on first user change) ─────────
+const dirty = ref(false)
+
+/** Provided by RecordView to force-show validation errors on save attempt */
+const forceValidate = inject('forceValidate', ref(false))
+
+// ── Validation ──────────────────────────────────────────────────
+const validationError = computed(() => {
+  const v = props.modelValue
+  const s = props.schema
+  const check = s.check ?? []
+
+  const isEmpty = v === null || v === undefined || v === ''
+
+  // required / not_empty (server normalises both to s.required = true)
+  if (s.required && isEmpty) {
+    return t('field_required')
+  }
+
+  // No further checks on empty optional fields
+  if (isEmpty) return null
+
+  // int — whole numbers only
+  if (check.includes('int') && !/^-?\d+$/.test(String(v))) {
+    return t('value_must_be_integer')
+  }
+
+  // email
+  if (check.includes('email') && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v))) {
+    return t('invalid_email')
+  }
+
+  // min / max — numeric fields
+  if (s.type !== 'date' && s.min != null) {
+    if (Number(v) < Number(s.min)) return t('value_too_small', s.min)
+  }
+  if (s.type !== 'date' && s.max != null) {
+    if (Number(v) > Number(s.max)) return t('value_too_large', s.max)
+  }
+
+  // min / max — date fields (ISO string comparison: 'YYYY-MM-DD' sorts lexicographically)
+  if (s.type === 'date' && s.min && String(v) < String(s.min)) {
+    return t('value_too_small', s.min)
+  }
+  if (s.type === 'date' && s.max && String(v) > String(s.max)) {
+    return t('value_too_large', s.max)
+  }
+
+  // max_length
+  if (s.max_length && String(v).length > Number(s.max_length)) {
+    return t('value_too_long', s.max_length)
+  }
+
+  // pattern / regex
+  if (s.pattern) {
+    try {
+      if (!new RegExp(s.pattern).test(String(v))) return t('invalid_format')
+    } catch { /* invalid regex in config — ignore */ }
+  }
+
+  // no_dupl: async — handled separately via uniqueError ref below
+
+  return null
+})
+
+// ── Async uniqueness check (no_dupl) ────────────────────────────
+const uniqueError = ref(null)
+let _uniqueTimer = null
+
+watch(() => props.modelValue, (val) => {
+  if (!(props.schema.check ?? []).includes('no_dupl')) return
+  uniqueError.value = null
+  clearTimeout(_uniqueTimer)
+  if (val === null || val === undefined || val === '') return
+  _uniqueTimer = setTimeout(async () => {
+    try {
+      const params = { field: props.schema.name, value: val }
+      if (props.recordId) params.id = props.recordId
+      const res = await api.get(`/api/record/${props.tb}/check-unique`, params)
+      if (res.status === 'success' && !res.unique) {
+        uniqueError.value = t('value_not_unique')
+      }
+    } catch { /* network error — silent, server will catch on save */ }
+  }, 600)
+})
+
+/** Show the sync error when the user has interacted OR parent forces it */
+const showError = computed(() =>
+  (dirty.value || forceValidate.value) && !!validationError.value
+)
+
+/** True when either sync or async validation fails (used by RecordView for pre-save gate) */
+const hasError = computed(() => !!validationError.value || !!uniqueError.value)
+
+// Let RecordView query hasError on each field editor via template ref
+defineExpose({ hasError })
+
+function onInput(value) {
+  dirty.value = true
+  emit('update:modelValue', value)
+}
+
+// ── Static options (dic) ───────────────────────────────────────
+const staticOptions = computed(() =>
+  (props.schema.options_source?.items ?? []).map(v => ({ value: v, label: v }))
+)
+
+/** AntD Select/AutoComplete: unlike PrimeVue's built-in optionLabel filter,
+ * filterOption must be supplied explicitly — it's given the raw option, not
+ * a pre-resolved label. */
+function filterOption(input, option) {
+  return String(option?.label ?? '').toLowerCase().includes(String(input).toLowerCase())
+}
+
+// ── Async options (db / id_from_tb / vocabulary) ──────────────
+const asyncOptions   = ref([])
+const loadingOptions = ref(false)
+let   optionsLoaded  = false
+
+async function loadOptions() {
+  if (optionsLoaded || props.schema.options_source?.type === 'static') return
+  loadingOptions.value = true
+  try {
+    const res = await api.get(`/api/record/${props.tb}/field-options`, {
+      fld: props.schema.name,
+    })
+    // Normalize option values to strings so PrimeVue's strict === comparison
+    // works consistently across DB engines (MySQL returns int IDs, SQLite may
+    // return strings; the stored FK column could be either type).
+    asyncOptions.value = (Array.isArray(res?.options) ? res.options : []).map(o => ({
+      ...o,
+      value: o.value !== null && o.value !== undefined ? String(o.value) : o.value,
+    }))
+    optionsLoaded = true
+  } catch (e) {
+    toast.add({
+      severity: 'warn',
+      summary:  props.schema.label,
+      detail:   t('error_loading_options'),
+      life:     4000,
+    })
+  } finally {
+    loadingOptions.value = false
+  }
+}
+
+/**
+ * Coerce modelValue to string for async-select comparisons.
+ * asyncOptions values are always strings (see loadOptions normalization above),
+ * but the stored value could arrive as a number (e.g. MySQL integer FK).
+ */
+const asyncModelValue = computed(() => {
+  if (props.modelValue === null || props.modelValue === undefined) return props.modelValue
+  return String(props.modelValue)
+})
+
+// ── Boolean options ────────────────────────────────────────────
+const boolOptions = computed(() => [
+  { value: '1',  label: t('yes') },
+  { value: '0',  label: t('no') },
+])
+
+// ── multi_select: stored as "a;b;c", bound as array ───────────
+const multiSelectArray = computed(() => {
+  if (!props.modelValue) return []
+  return String(props.modelValue).split(';').map(v => v.trim()).filter(Boolean)
+})
+
+// Pre-load async options on mount for all select-family fields so the closed-state
+// display can resolve the current value immediately (without waiting for the user to
+// open the dropdown). The @before-show guard (optionsLoaded flag) prevents a second
+// fetch when the user actually opens the panel.
+onMounted(() => {
+  if (['select', 'combo_select', 'multi_select'].includes(props.schema.type)) {
+    loadOptions()
+  }
+})
+</script>
+
+<style scoped>
+.field-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.35rem 0;
+}
+
+.field-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--p-text-muted-color);
+  letter-spacing: 0.04em;
+}
+
+.required-mark { color: var(--p-red-500); margin-left: 0.15rem; }
+.field-help    { margin-left: 0.25rem; cursor: help; opacity: 0.6; }
+
+.field-input { font-size: 0.875rem; }
+.w-full      { width: 100%; }
+
+.field-value-readonly {
+  font-size: 0.875rem;
+  color: var(--p-text-muted-color);
+  padding: 0.35rem 0;
+}
+
+.slider-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.field-slider { flex: 1; }
+
+.bool-switch-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.35rem 0;
+}
+.bool-switch-label {
+  font-size: 0.875rem;
+}
+.slider-value { min-width: 2.5rem; text-align: right; font-size: 0.875rem; }
+
+.field-error {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  color: var(--p-red-500);
+  margin-top: 0.1rem;
+}
+
+.md-editor-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.md-toolbar {
+  display: flex;
+  justify-content: flex-end;
+}
+.md-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.78rem;
+  color: var(--p-primary-color);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.15rem 0.4rem;
+  border-radius: var(--p-border-radius);
+}
+.md-toggle:hover { opacity: 0.75; }
+.md-preview {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--p-text-color);
+  min-height: 6rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--p-content-border-color);
+  border-radius: var(--p-border-radius);
+}
+.md-preview :deep(p)        { margin: 0 0 0.5rem; }
+.md-preview :deep(strong)   { font-weight: 600; }
+.md-preview :deep(em)       { font-style: italic; }
+.md-preview :deep(ul),
+.md-preview :deep(ol)       { padding-left: 1.5rem; margin: 0 0 0.5rem; }
+.md-preview :deep(a)        { color: var(--p-primary-color); }
+</style>

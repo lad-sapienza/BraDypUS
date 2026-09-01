@@ -1,0 +1,631 @@
+<template>
+  <div class="geoface-view">
+    <!-- Toolbar -->
+    <div class="geoface-toolbar">
+      <AButton type="text" @click="router.back()">
+        <template #icon><ArrowLeftOutlined /></template>
+      </AButton>
+      <span class="geoface-title">{{ meta.tb_label ?? route.params.tb }}</span>
+      <span class="geoface-count">{{ featureCount }} {{ t('geometries') }}</span>
+    </div>
+
+    <!-- Temporal filter panel (only when fuzzy_date plugin is active) -->
+    <div v-if="meta.has_fuzzy_date" class="geoface-chrono-bar">
+      <AButton
+        size="small"
+        :danger="chronoFilterActive"
+        @click="toggleChronoFilter"
+      >
+        <template #icon><CalendarOutlined /></template>
+        {{ t('temporal_filter') }}
+      </AButton>
+      <template v-if="chronoFilterActive">
+        <div class="geoface-chrono-slider">
+          <ASlider
+            v-model:value="chronoRange"
+            range
+            :min="CHRONO_MIN"
+            :max="CHRONO_MAX"
+            :step="CHRONO_STEP"
+            class="chrono-slider"
+          />
+        </div>
+        <span class="geoface-chrono-label">
+          {{ chronoLabel }}
+        </span>
+        <AButton
+          type="text"
+          size="small"
+          :title="t('temporal_filter_clear')"
+          @click="clearChronoFilter"
+        >
+          <template #icon><CloseOutlined /></template>
+        </AButton>
+      </template>
+    </div>
+
+    <!-- Loading / error states -->
+    <div v-if="loading" class="geoface-status">
+      <LoadingOutlined style="font-size:2rem" spin />
+    </div>
+    <div v-else-if="loadError" class="geoface-status">
+      <AAlert type="error" :message="loadError" :closable="false" show-icon />
+    </div>
+
+    <!-- Map container — always rendered so mapEl ref is available -->
+    <div ref="mapEl" class="geoface-map" :style="{ visibility: loading || loadError ? 'hidden' : 'visible' }" />
+
+    <!-- Link geometry dialog (shown after drawing a new geometry) -->
+    <AModal
+      v-model:open="linkDialogVisible"
+      :title="t('link_geometry_to_record')"
+      width="420px"
+      @cancel="cancelLink"
+    >
+      <div class="field" style="padding: 0.75rem 0">
+        <AAutoComplete
+          v-model:value="linkSearch"
+          :options="linkSuggestions"
+          :placeholder="t('type_to_search')"
+          style="width: 100%"
+          @search="onLinkSearch"
+          @select="(value, option) => onLinkSelect(option)"
+        />
+      </div>
+      <template #footer>
+        <AButton type="text" @click="cancelLink">{{ t('cancel') }}</AButton>
+      </template>
+    </AModal>
+  </div>
+</template>
+
+<script setup>
+import { ArrowLeftOutlined, CalendarOutlined, CloseOutlined, LoadingOutlined } from '@ant-design/icons-vue'
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
+import { useRoute, useRouter }  from 'vue-router'
+import { useToast } from '@/composables/useNotify'
+import maplibregl               from 'maplibre-gl'
+import MapboxDraw               from 'maplibre-gl-draw'
+import 'maplibre-gl/dist/maplibre-gl.css'
+import 'maplibre-gl-draw/dist/mapbox-gl-draw.css'
+import { api }                  from '@/api'
+import { useI18n }              from '@/i18n'
+import {
+  Button as AButton,
+  Modal as AModal,
+  AutoComplete as AAutoComplete,
+  Alert as AAlert,
+  Slider as ASlider
+} from 'ant-design-vue'
+import { format as chronoFormat } from '@/utils/chronoParser'
+
+const { t }    = useI18n()
+const route    = useRoute()
+const router   = useRouter()
+const toast    = useToast()
+
+// ── State ─────────────────────────────────────────────────────────────────
+const mapEl   = ref(null)
+const loading = ref(true)
+const loadError = ref(null)
+
+const geojson = ref(null)
+const meta    = ref({})
+
+let map  = null
+let draw = null
+
+const featureCount = computed(() => geojson.value?.features?.length ?? 0)
+
+// ── Temporal filter state ─────────────────────────────────────────────────
+const CHRONO_MIN  = -3000
+const CHRONO_MAX  = 2000
+const CHRONO_STEP = 25
+
+const chronoFilterActive = ref(false)
+const chronoRange        = ref([-500, 500])   // default window, updated when toggled
+
+const chronoLabel = computed(() => {
+  if (!chronoFilterActive.value) return ''
+  return chronoFormat(chronoRange.value[0], chronoRange.value[1])
+})
+
+function toggleChronoFilter() {
+  chronoFilterActive.value = !chronoFilterActive.value
+  reloadGeoJson()
+}
+
+function clearChronoFilter() {
+  chronoFilterActive.value = false
+  reloadGeoJson()
+}
+
+// Debounced reload when slider moves
+let chronoDebounce = null
+watch(chronoRange, () => {
+  if (!chronoFilterActive.value) return
+  clearTimeout(chronoDebounce)
+  chronoDebounce = setTimeout(() => reloadGeoJson(), 400)
+})
+
+// ── Link dialog state ─────────────────────────────────────────────────────
+const linkDialogVisible = ref(false)
+const pendingGeometry   = ref(null)
+const pendingDrawId     = ref(null)
+const linkSearch        = ref('')
+const linkSuggestions   = ref([])
+
+// ── Build filter params from route.query + local chrono filter ────────────
+function buildFilterParams() {
+  const tb = route.params.tb
+  const q  = route.query
+  const params = { tb }
+
+  if (q.search_type) params.search_type = q.search_type
+  if (q.querytext)   params.querytext   = q.querytext
+
+  // Start from the route's filter (DataView passes it as JSON string)
+  let filterObj = null
+  if (q.filter) {
+    try { filterObj = JSON.parse(q.filter) } catch { /* ignore malformed */ }
+  }
+
+  // Merge chrono overlap when temporal filter is active
+  if (chronoFilterActive.value) {
+    filterObj = filterObj ? { ...filterObj } : {}
+    filterObj.chrono_from = { _chrono_overlap: [chronoRange.value[0], chronoRange.value[1]] }
+    params.search_type = 'filter'
+  }
+
+  if (filterObj) params.filter = filterObj
+
+  return params
+}
+
+// ── Load GeoJSON from server ───────────────────────────────────────────────
+async function loadGeoJson() {
+  loading.value   = true
+  loadError.value = null
+  try {
+    const res = await api.get('/api/geoface', buildFilterParams())
+    if (res.status === 'error') throw new Error(t(res.code ?? 'generic_error'))
+    geojson.value = res.geojson
+    meta.value    = res.meta ?? {}
+  } catch (e) {
+    loadError.value = e.message
+  } finally {
+    loading.value = false
+  }
+}
+
+// ── Map initialisation ─────────────────────────────────────────────────────
+async function initMap() {
+  // Determine base style — prefer a maplibre_style base layer from config
+  const maplibreStyleLayer = (meta.value.layers ?? []).find(
+    l => l.type === 'maplibre_style' && l.layertype === 'base'
+  )
+
+  const style = maplibreStyleLayer
+    ? maplibreStyleLayer.path
+    : {
+        version: 8,
+        sources: {
+          osm: {
+            type: 'raster',
+            tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+            tileSize: 256,
+            attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a>'
+          }
+        },
+        layers: [{ id: 'osm', type: 'raster', source: 'osm' }],
+        glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf'
+      }
+
+  map = new maplibregl.Map({
+    container: mapEl.value,
+    style,
+    center: [12.5, 42],
+    zoom: 6
+  })
+
+  map.addControl(new maplibregl.NavigationControl())
+  map.addControl(new maplibregl.ScaleControl())
+
+  map.on('load', () => {
+    addCustomLayers()
+    addRecordLayer()
+    if (meta.value.canUserEdit) addDrawControl()
+    fitToData()
+  })
+}
+
+// ── Custom overlay layers (XYZ, WMS, local GeoJSON) ───────────────────────
+function addCustomLayers() {
+  const overlayLayers = (meta.value.layers ?? []).filter(l => l.type !== 'maplibre_style')
+
+  for (const layer of overlayLayers) {
+    const id = 'custom-' + (layer.label ?? layer.path ?? String(Math.random())).replace(/\s/g, '-')
+
+    if (layer.type === 'tiles') {
+      map.addSource(id, { type: 'raster', tiles: [layer.path], tileSize: 256 })
+      map.addLayer({ id, type: 'raster', source: id, layout: { visibility: 'none' } })
+
+    } else if (layer.type === 'wms') {
+      const wmsUrl = `${layer.path}?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap`
+        + `&LAYERS=${encodeURIComponent(layer.wmslayers ?? '')}`
+        + `&FORMAT=image/png&TRANSPARENT=true&SRS=EPSG:3857&WIDTH=256&HEIGHT=256`
+        + `&BBOX={bbox-epsg-3857}`
+      map.addSource(id, { type: 'raster', tiles: [wmsUrl], tileSize: 256 })
+      map.addLayer({ id, type: 'raster', source: id, layout: { visibility: 'none' } })
+
+    } else if (layer.type === 'local') {
+      // Files live in the project's geodata/ directory which is web-accessible.
+      // The layer.path stores the filename; serve it relative to the app root.
+      // Full URL: same origin + /projects/{app}/geodata/{filename}
+      // We fall back to using the raw path if it is already absolute.
+      const fileUrl = layer.path.startsWith('http')
+        ? layer.path
+        : layer.path   // relative path as configured — works when served from the same origin
+
+      fetch(fileUrl)
+        .then(r => r.json())
+        .then(data => {
+          map.addSource(id, { type: 'geojson', data })
+          map.addLayer({
+            id: id + '-fill', type: 'fill', source: id,
+            paint: { 'fill-color': '#3388ff', 'fill-opacity': 0.2 },
+            layout: { visibility: 'none' }
+          })
+          map.addLayer({
+            id: id + '-line', type: 'line', source: id,
+            paint: { 'line-color': '#3388ff', 'line-width': 2 },
+            layout: { visibility: 'none' }
+          })
+        })
+        .catch(() => {
+          // Silently ignore unavailable local files
+        })
+    }
+  }
+}
+
+// ── Record GeoJSON layer ───────────────────────────────────────────────────
+function addRecordLayer() {
+  if (!geojson.value?.features?.length) return
+
+  map.addSource('records', { type: 'geojson', data: geojson.value })
+
+  // Points
+  map.addLayer({
+    id: 'records-circle',
+    type: 'circle',
+    source: 'records',
+    filter: ['==', '$type', 'Point'],
+    paint: {
+      'circle-radius': 7,
+      'circle-color': '#e74c3c',
+      'circle-stroke-width': 2,
+      'circle-stroke-color': '#fff'
+    }
+  })
+
+  // Lines
+  map.addLayer({
+    id: 'records-line',
+    type: 'line',
+    source: 'records',
+    filter: ['==', '$type', 'LineString'],
+    paint: { 'line-color': '#e74c3c', 'line-width': 2 }
+  })
+
+  // Polygons — fill + outline
+  map.addLayer({
+    id: 'records-fill',
+    type: 'fill',
+    source: 'records',
+    filter: ['==', '$type', 'Polygon'],
+    paint: { 'fill-color': '#e74c3c', 'fill-opacity': 0.25 }
+  })
+  map.addLayer({
+    id: 'records-outline',
+    type: 'line',
+    source: 'records',
+    filter: ['==', '$type', 'Polygon'],
+    paint: { 'line-color': '#e74c3c', 'line-width': 2 }
+  })
+
+  // Click popups
+  ;['records-circle', 'records-fill'].forEach(layerId => {
+    map.on('click', layerId, e => {
+      const props  = e.features[0].properties
+      const fields = meta.value.preview_fields ?? []
+      const content = fields.length
+        ? fields.map(f => `<div><strong>${f}</strong>: ${props[f] ?? ''}</div>`).join('')
+        : Object.entries(props)
+            .filter(([k]) => k !== 'geo_id')
+            .map(([k, v]) => `<div><strong>${k}</strong>: ${v}</div>`)
+            .join('')
+
+      new maplibregl.Popup()
+        .setLngLat(e.lngLat)
+        .setHTML(`<div class="geo-popup">${content}</div>`)
+        .addTo(map)
+    })
+    map.on('mouseenter', layerId, () => { map.getCanvas().style.cursor = 'pointer' })
+    map.on('mouseleave', layerId, () => { map.getCanvas().style.cursor = '' })
+  })
+}
+
+// ── Fit map to data bounds ─────────────────────────────────────────────────
+function fitToData() {
+  const features = geojson.value?.features ?? []
+  if (!features.length) return
+
+  let minLng = 180, maxLng = -180, minLat = 90, maxLat = -90
+
+  function processCoords(coords) {
+    if (typeof coords[0] === 'number') {
+      minLng = Math.min(minLng, coords[0]); maxLng = Math.max(maxLng, coords[0])
+      minLat = Math.min(minLat, coords[1]); maxLat = Math.max(maxLat, coords[1])
+    } else {
+      coords.forEach(processCoords)
+    }
+  }
+
+  features.forEach(f => f.geometry?.coordinates && processCoords(f.geometry.coordinates))
+
+  if (minLng < maxLng && minLat < maxLat) {
+    map.fitBounds([[minLng, minLat], [maxLng, maxLat]], { padding: 60 })
+  }
+}
+
+// ── Draw control (edit mode) ───────────────────────────────────────────────
+function addDrawControl() {
+  draw = new MapboxDraw({
+    displayControlsDefault: false,
+    controls: { polygon: true, line_string: true, point: true, trash: true }
+  })
+  map.addControl(draw)
+
+  map.on('draw.create', onDrawCreate)
+  map.on('draw.update', onDrawUpdate)
+  map.on('draw.delete', onDrawDelete)
+}
+
+// ── Draw event handlers ────────────────────────────────────────────────────
+function onDrawCreate(e) {
+  pendingGeometry.value = e.features[0].geometry
+  pendingDrawId.value   = e.features[0].id
+  linkSearch.value      = ''
+  linkSuggestions.value = []
+  linkDialogVisible.value = true
+}
+
+async function onLinkSearch(query) {
+  const tb = route.params.tb
+  try {
+    const res = await api.get(`/api/record/${tb}/link-candidates`, { q: query })
+    linkSuggestions.value = (res.data ?? []).map(r => ({
+      value: String(r.label ?? r.id),
+      label: String(r.label ?? r.id),
+      id:    r.id
+    }))
+  } catch {
+    linkSuggestions.value = []
+  }
+}
+
+async function onLinkSelect(option) {
+  const recordId = option.id
+  try {
+    const res = await api.post('/api/geoface/feature', {
+      tb:       route.params.tb,
+      id:       recordId,
+      geometry: pendingGeometry.value
+    })
+    if (res.status === 'error') {
+      draw?.delete(pendingDrawId.value)
+      toast.add({ severity: 'error', summary: t('generic_error'), detail: t(res.code ?? 'generic_error'), life: 4000 })
+    } else {
+      toast.add({ severity: 'success', summary: t('ok_insert_geodata'), life: 3000 })
+      await reloadGeoJson()
+    }
+  } catch {
+    draw?.delete(pendingDrawId.value)
+  }
+  linkDialogVisible.value = false
+  pendingGeometry.value   = null
+  draw?.deleteAll()
+}
+
+function cancelLink() {
+  draw?.delete(pendingDrawId.value)
+  linkDialogVisible.value = false
+  pendingGeometry.value   = null
+}
+
+async function onDrawUpdate(e) {
+  const geodata = e.features
+    .filter(f => f.properties?.geo_id)
+    .map(f => ({ id: f.properties.geo_id, geometry: f.geometry }))
+  if (!geodata.length) return
+
+  try {
+    const res = await api.put('/api/geoface/feature', { geodata })
+    if (res.status === 'error') {
+      toast.add({ severity: 'error', summary: t('generic_error'), detail: t(res.code ?? 'generic_error'), life: 4000 })
+    } else {
+      toast.add({ severity: 'success', summary: t('ok_update_geometry'), life: 3000 })
+      await reloadGeoJson()
+      draw?.deleteAll()
+    }
+  } catch (err) {
+    toast.add({ severity: 'error', summary: t('generic_error'), detail: String(err), life: 4000 })
+  }
+}
+
+async function onDrawDelete(e) {
+  const ids = e.features
+    .filter(f => f.properties?.geo_id)
+    .map(f => f.properties.geo_id)
+  if (!ids.length) return
+
+  try {
+    const res = await api.delete('/api/geoface/feature', { ids })
+    if (res.status === 'error') {
+      toast.add({ severity: 'error', summary: t('generic_error'), detail: t(res.code ?? 'generic_error'), life: 4000 })
+    } else {
+      toast.add({ severity: 'success', summary: t('ok_delete_geodata'), life: 3000 })
+      await reloadGeoJson()
+    }
+  } catch (err) {
+    toast.add({ severity: 'error', summary: t('generic_error'), detail: String(err), life: 4000 })
+  }
+}
+
+async function reloadGeoJson() {
+  try {
+    const res = await api.get('/api/geoface', buildFilterParams())
+    if (res.status !== 'error') {
+      geojson.value = res.geojson
+      const src = map?.getSource('records')
+      if (src) src.setData(geojson.value)
+    }
+  } catch { /* silently ignore reload errors */ }
+}
+
+// ── Lifecycle ──────────────────────────────────────────────────────────────
+onMounted(async () => {
+  await loadGeoJson()
+  if (!loadError.value) {
+    await initMap()
+  }
+})
+
+onUnmounted(() => {
+  map?.remove()
+  map  = null
+  draw = null
+})
+</script>
+
+<style scoped>
+.geoface-view {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.geoface-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 1rem;
+  background: var(--bdus-surface, var(--p-surface-0));
+  border-bottom: 1px solid var(--p-surface-200);
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+.geoface-title {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.geoface-count {
+  color: var(--p-text-muted-color);
+  font-size: 0.875rem;
+  margin-left: auto;
+}
+
+.geoface-chrono-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.4rem 1rem;
+  background: var(--p-surface-50);
+  border-bottom: 1px solid var(--p-surface-200);
+  flex-shrink: 0;
+}
+
+.geoface-chrono-slider {
+  flex: 1;
+  padding: 0 0.5rem;
+}
+
+.chrono-slider {
+  width: 100%;
+}
+
+.geoface-chrono-label {
+  font-size: 0.8rem;
+  color: var(--p-text-muted-color);
+  white-space: nowrap;
+  min-width: 14rem;
+  text-align: center;
+}
+
+.geoface-map {
+  flex: 1;
+  min-height: 0;
+}
+
+.geoface-status {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+/* MapLibre popup — theme-aware overrides */
+:global(.maplibregl-popup-content) {
+  background: var(--p-content-background);
+  color: var(--p-text-color);
+  border: 1px solid var(--p-content-border-color);
+  border-radius: var(--p-border-radius-md, 6px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 0.6rem 0.75rem;
+}
+
+/* Tip/arrow — match popup background per direction */
+:global(.maplibregl-popup-anchor-bottom .maplibregl-popup-tip) {
+  border-top-color: var(--p-content-background);
+}
+:global(.maplibregl-popup-anchor-top .maplibregl-popup-tip) {
+  border-bottom-color: var(--p-content-background);
+}
+:global(.maplibregl-popup-anchor-left .maplibregl-popup-tip) {
+  border-right-color: var(--p-content-background);
+}
+:global(.maplibregl-popup-anchor-right .maplibregl-popup-tip) {
+  border-left-color: var(--p-content-background);
+}
+
+:global(.geo-popup) {
+  font-size: 0.875rem;
+  max-width: 220px;
+  line-height: 1.5;
+}
+
+:global(.geo-popup div) {
+  border-bottom: 1px solid var(--p-content-border-color);
+  padding: 0.15rem 0;
+}
+
+:global(.geo-popup div:last-child) {
+  border-bottom: none;
+}
+
+/* Close button */
+:global(.maplibregl-popup-close-button) {
+  color: var(--p-text-muted-color);
+  font-size: 1rem;
+  line-height: 1;
+}
+:global(.maplibregl-popup-close-button:hover) {
+  color: var(--p-text-color);
+  background: transparent;
+}
+</style>

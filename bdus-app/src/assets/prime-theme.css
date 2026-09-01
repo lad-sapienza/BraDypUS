@@ -1,0 +1,77 @@
+/* ── --p-* design tokens ──────────────────────────────────────────────────
+   Replaces PrimeVue Aura's runtime theme engine (removed together with the
+   `primevue` package in Fase 7 of the AntD migration — no PrimeVue
+   components remain, but ~1000 `var(--p-*)` references across the app's
+   own CSS still consume these token names).
+
+   The structural tokens (content-*, text-*, primary-*, highlight-background,
+   surface-card/-ground/-border, card-shadow, warning-color, bare
+   border-radius) are NOT defined here — they're set reactively on
+   <html style="..."> by components/ThemeTokenBridge.vue from AntD's own
+   theme.useToken(), so they stay in sync with dark mode and the brand
+   color for free instead of needing a static per-brand/per-mode snapshot.
+
+   What's left here is genuinely static: an auxiliary Tailwind-style color
+   scale (badge/tag accent colors) and a neutral gray scale, both confirmed
+   brand-independent and only flipping with .dark-mode — AntD has no 1:1
+   equivalent multi-step scale for these, so hand-picked values (originally
+   extracted from PrimeVue Aura's own output) stay hardcoded.
+   ------------------------------------------------------------------- */
+
+/* ── Auxiliary color scale: identical across brands and light/dark ──── */
+:root {
+  --p-amber-600:  #d97706;
+  --p-blue-50:    #eff6ff;
+  --p-blue-100:   #dbeafe;
+  --p-blue-200:   #bfdbfe;
+  --p-blue-400:   #60a5fa;
+  --p-blue-500:   #3b82f6;
+  --p-blue-700:   #1d4ed8;
+  --p-green-50:   #f0fdf4;
+  --p-green-100:  #dcfce7;
+  --p-green-200:  #bbf7d0;
+  --p-green-400:  #4ade80;
+  --p-green-500:  #22c55e;
+  --p-green-600:  #16a34a;
+  --p-green-700:  #15803d;
+  --p-orange-50:  #fff7ed;
+  --p-orange-100: #ffedd5;
+  --p-orange-300: #fdba74;
+  --p-orange-500: #f97316;
+  --p-orange-600: #ea580c;
+  --p-orange-700: #c2410c;
+  --p-purple-100: #f3e8ff;
+  --p-purple-700: #7e22ce;
+  --p-red-100:    #fee2e2;
+  --p-red-200:    #fecaca;
+  --p-red-400:    #f87171;
+  --p-red-500:    #ef4444;
+  --p-red-600:    #dc2626;
+  --p-red-700:    #b91c1c;
+  --p-yellow-400: #facc15;
+  --p-yellow-500: #eab308;
+  --p-yellow-600: #ca8a04;
+  --p-surface-0:  #ffffff;
+  --p-border-radius-md: 6px;
+  --p-border-radius-lg: 8px;
+  --p-border-radius-xl: 12px;
+}
+
+/* ── Neutral gray scale: flips with .dark-mode, same for every brand ──── */
+:root {
+  --p-surface-50:  #f8fafc;
+  --p-surface-100: #f1f5f9;
+  --p-surface-200: #e2e8f0;
+  --p-surface-300: #cbd5e1;
+  --p-surface-400: #94a3b8;
+  --p-surface-800: #1e293b;
+}
+
+.dark-mode {
+  --p-surface-50:  #fafafa;
+  --p-surface-100: #f4f4f5;
+  --p-surface-200: #e4e4e7;
+  --p-surface-300: #d4d4d8;
+  --p-surface-400: #a1a1aa;
+  --p-surface-800: #27272a;
+}

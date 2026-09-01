@@ -1,0 +1,1327 @@
+<template>
+  <AppLayout>
+    <div class="data-layout">
+
+      <!-- ── Records panel ──────────────────────────────────── -->
+      <div class="records-panel">
+
+        <div v-if="!selectedTable" class="records-placeholder">
+          <ArrowLeftOutlined />
+          <p>{{ t('choose_db') }}</p>
+        </div>
+
+        <template v-else>
+
+          <!-- ── Search bar ──────────────────────────────────── -->
+          <div class="search-area">
+
+            <!-- Row 1: always visible -->
+            <div class="search-bar">
+              <AInputSearch
+                v-model:value="fastSearch"
+                :placeholder="t('fast_search')"
+                :enter-button="true"
+                class="search-input-wrap"
+                @search="runFastSearch"
+              />
+
+              <ADivider type="vertical" />
+
+              <AButton
+                :type="openPanel === 'advanced' ? 'primary' : 'text'"
+                :title="t('advanced_search')"
+                size="small"
+                @click="togglePanel('advanced')"
+              ><ControlOutlined /></AButton>
+              <AButton
+                :type="openPanel === 'expert' ? 'primary' : 'text'"
+                :title="t('sql_expert_search')"
+                size="small"
+                @click="togglePanel('expert')"
+              ><CodeOutlined /></AButton>
+
+              <!-- Column visibility toggler -->
+              <APopover v-if="columns.length" v-model:open="colTogglerOpen" trigger="click" placement="bottom">
+                <template #content>
+                  <div class="col-toggler-popover">
+                    <div class="col-toggler-header">{{ t('preview_fields') }}</div>
+                    <div class="col-toggler-list">
+                      <div
+                        v-for="col in allAvailableColumns"
+                        :key="col.name"
+                        class="col-toggler-item"
+                        @click="toggleColumn(col.name)"
+                      >
+                        <component :is="visibleColumnNames.includes(col.name) ? CheckSquareOutlined : BorderOutlined" />
+                        <span>{{ col.label }}</span>
+                      </div>
+                    </div>
+                    <div class="col-toggler-actions">
+                      <AButton type="text" size="small" @click="selectAllColumns">{{ t('select_all') }}</AButton>
+                      <AButton type="text" size="small" @click="resetColumns">{{ t('reset') }}</AButton>
+                    </div>
+                  </div>
+                </template>
+                <AButton type="text" :title="t('preview_fields')" size="small"><TableOutlined /></AButton>
+              </APopover>
+
+              <!-- Export -->
+              <APopover v-if="totalRecords > 0" v-model:open="exportPopoverOpen" trigger="click" placement="bottom">
+                <template #content>
+                  <div class="col-toggler-popover">
+                    <div class="col-toggler-header">{{ t('export') }} ({{ totalRecords }} {{ t('records') }})</div>
+                    <div class="col-toggler-list">
+                      <div class="col-toggler-item" @click="doExport('csv')">
+                        <FileOutlined />
+                        <span>CSV</span>
+                      </div>
+                      <div class="col-toggler-item" @click="doExport('xlsx')">
+                        <FileExcelOutlined />
+                        <span>XLSX</span>
+                      </div>
+                      <div class="col-toggler-item" @click="doExport('json')">
+                        <FileTextOutlined />
+                        <span>JSON</span>
+                      </div>
+                    </div>
+                  </div>
+                </template>
+                <AButton type="text" :title="t('export')" size="small"><DownloadOutlined /></AButton>
+              </APopover>
+
+              <ATag
+                v-if="activeSearch"
+                color="warning"
+                closable
+                class="search-active-tag"
+                @close="resetSearch"
+              >{{ activeSearchLabel }}</ATag>
+
+              <!-- Saved searches -->
+              <AButton type="text" :title="t('saved_queries')" size="small" @click="savedQueriesDialog = true">
+                <PushpinOutlined />
+              </AButton>
+              <AModal
+                v-model:open="savedQueriesDialog"
+                :title="t('saved_queries')"
+                :footer="null"
+                width="36rem"
+              >
+                <SavedQueriesPanel
+                  :currentSearch="currentSearch"
+                  :currentTb="selectedTable?.name ?? ''"
+                  @load-query="onLoadQuery"
+                />
+              </AModal>
+
+              <!-- Charts -->
+              <AButton type="text" :title="t('charts')" size="small" @click="chartDialog = true">
+                <BarChartOutlined />
+              </AButton>
+              <AModal
+                v-model:open="chartDialog"
+                :title="t('charts')"
+                :footer="null"
+                width="680px"
+                :body-style="{ maxHeight: '75vh', overflowY: 'auto' }"
+              >
+                <ChartPanel
+                  :currentTb="selectedTable?.name ?? ''"
+                  :currentFilter="currentSearch"
+                />
+              </AModal>
+
+              <!-- View on map -->
+              <AButton type="text" :title="t('view_on_map')" size="small" @click="openGeoface">
+                <CompassOutlined />
+              </AButton>
+
+              <!-- Chronological timeline — only for tables with fuzzy_date plugin -->
+              <AButton
+                v-if="selectedTable?.fuzzy_date"
+                type="text"
+                :title="t('chrono_timeline')"
+                size="small"
+                @click="openTimeline"
+              ><CalendarOutlined /></AButton>
+
+              <!-- Harris Matrix — only for tables with RS plugin enabled -->
+              <AButton
+                v-if="selectedTable?.rs"
+                type="text"
+                :title="t('harris_matrix')"
+                size="small"
+                @click="openMatrix"
+              ><ApartmentOutlined /></AButton>
+
+              <!-- Add record — only for users with add_new privilege -->
+              <AButton
+                v-if="canAdd"
+                type="primary"
+                size="small"
+                class="add-record-btn"
+                @click="addRecord"
+              ><PlusOutlined /> {{ t('new_record') }}</AButton>
+            </div>
+
+            <!-- ── Advanced search panel ──────────────────────── -->
+            <Transition name="slide">
+              <div v-if="openPanel === 'advanced'" class="search-panel">
+
+                <div v-if="loadingAdvConfig" class="adv-loading">
+                  <ASpin size="small" />
+                </div>
+
+                <template v-else>
+                  <!-- Row builder -->
+                  <div class="adv-rows">
+                    <div v-for="(row, idx) in advRows" :key="row._id" class="adv-row">
+
+                      <!-- Connector (hidden for first row) -->
+                      <ASelect
+                        v-if="idx > 0"
+                        v-model:value="row.connector"
+                        :options="advConnectors.map(c => ({ value: c, label: c }))"
+                        size="small"
+                        class="adv-connector"
+                      />
+                      <span v-else class="adv-connector-placeholder" />
+
+                      <!-- Field -->
+                      <ASelect
+                        v-model:value="row.fld"
+                        :options="advFields"
+                        :placeholder="t('adv_pick_field')"
+                        size="small"
+                        show-search
+                        :filter-option="filterOption"
+                        class="adv-field-sel"
+                        @change="() => { row.value = ''; row._values = null }"
+                      />
+
+                      <!-- Operator: key is the i18n locale key, value is the SQL operator -->
+                      <ASelect
+                        v-model:value="row.operator"
+                        :options="advOperatorsForDisplay"
+                        size="small"
+                        class="adv-operator"
+                      />
+
+                      <!-- Value -->
+                      <AAutoComplete
+                        v-if="!['_empty','_nempty'].includes(row.operator)"
+                        v-model:value="row.value"
+                        :options="(row._suggestions ?? []).map(s => ({ value: s }))"
+                        :disabled="['_empty','_nempty'].includes(row.operator)"
+                        size="small"
+                        class="adv-value"
+                        @search="q => loadSuggestions(row, q)"
+                      />
+                      <span v-else class="adv-value" />
+
+                      <!-- Remove row -->
+                      <AButton
+                        type="text"
+                        danger
+                        size="small"
+                        :disabled="advRows.length === 1"
+                        @click="removeAdvRow(idx)"
+                      ><MinusOutlined /></AButton>
+                    </div>
+                  </div>
+
+                  <!-- Actions -->
+                  <div class="search-panel-actions">
+                    <AButton size="small" @click="addAdvRow">
+                      <PlusOutlined /> {{ t('adv_add_row') }}
+                    </AButton>
+                    <AButton type="primary" size="small" @click="runAdvancedSearch">
+                      <SearchOutlined /> {{ t('advanced_search') }}
+                    </AButton>
+                    <AButton type="text" size="small" @click="resetSearch">
+                      <CloseOutlined /> {{ t('reset') }}
+                    </AButton>
+                  </div>
+                </template>
+              </div>
+            </Transition>
+
+            <!-- ── SQL Expert panel ────────────────────────────── -->
+            <Transition name="slide">
+              <div v-if="openPanel === 'expert'" class="search-panel">
+                <label class="expert-label">{{ t('sql_expert_search') }} — WHERE …</label>
+                <p class="expert-hint">{{ t('sql_expert_search_hint') }}</p>
+                <ATextarea
+                  v-model:value="expertQuery"
+                  :rows="3"
+                  class="expert-textarea"
+                />
+                <div class="search-panel-actions">
+                  <AButton type="primary" size="small" @click="runExpertSearch">
+                    <SearchOutlined /> {{ t('send') }}
+                  </AButton>
+                  <AButton type="text" size="small" @click="resetSearch">
+                    <CloseOutlined /> {{ t('reset') }}
+                  </AButton>
+                </div>
+              </div>
+            </Transition>
+
+          </div>
+          <!-- /search-area -->
+
+          <!-- ── Results header ──────────────────────────────── -->
+          <div class="records-header">
+            <h3>{{ selectedTable.label }}</h3>
+            <span class="records-count" v-if="!loadingRecords">
+              {{ t('x_record_found', String(totalRecords)) }}
+            </span>
+          </div>
+
+          <!-- ── Table ────────────────────────────────────────── -->
+          <!--
+            AntD's core Table has no built-in drag-to-reorder-columns
+            (PrimeVue's `reorderableColumns` was a single boolean prop) — it
+            would need a custom header + a drag library. Dropped rather than
+            reimplemented; column visibility toggling (separate feature, the
+            popover above) is unaffected and still works.
+          -->
+          <!--
+            PrimeVue's DataTable had `scrollHeight="flex"` — it auto-fills
+            whatever space its flex parent gives it. AntD's Table has no such
+            option: `scroll.y` wants a concrete px number, so filling the
+            remaining flex space takes a ResizeObserver measuring the wrapper
+            (see tableWrap / measureTableHeight below) instead of a single
+            boolean-ish prop.
+          -->
+          <div ref="tableWrap" class="records-table-wrap">
+            <ATable
+              :columns="antdColumns"
+              :dataSource="records"
+              :loading="loadingRecords"
+              :pagination="paginationConfig"
+              :customRow="customRow"
+              :locale="{ emptyText: t('no_record_found') }"
+              :scroll="{ y: tableScrollY }"
+              size="small"
+              rowKey="id"
+              class="clickable-rows"
+              @change="onTableChange"
+            />
+          </div>
+
+        </template>
+
+        <!-- FAB — only for users with add_new privilege -->
+        <button
+          v-if="canAdd && selectedTable"
+          class="fab-add"
+          :title="t('new_record')"
+          @click="addRecord"
+        >
+          <PlusOutlined />
+        </button>
+
+      </div>
+    </div>
+
+  </AppLayout>
+</template>
+
+<script setup>
+import { ApartmentOutlined, ArrowLeftOutlined, BarChartOutlined, BorderOutlined, CalendarOutlined, CheckSquareOutlined, CloseOutlined, CodeOutlined, CompassOutlined, ControlOutlined, DownloadOutlined, FileExcelOutlined, FileOutlined, FileTextOutlined, MinusOutlined, PlusOutlined, PushpinOutlined, SearchOutlined, TableOutlined } from '@ant-design/icons-vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useToast } from '@/composables/useNotify'
+import { api, assetUrl, filterToSearchParams } from '@/api'
+import { useI18n } from '@/i18n'
+import { useTables } from '@/composables/useTables'
+import AppLayout from '@/components/AppLayout.vue'
+import {
+  Table as ATable,
+  Input,
+  Divider as ADivider,
+  Tag as ATag,
+  Select as ASelect,
+  AutoComplete as AAutoComplete,
+  Spin as ASpin,
+  Popover as APopover,
+  Modal as AModal,
+  Button as AButton,
+} from 'ant-design-vue'
+import SavedQueriesPanel from '@/components/SavedQueriesPanel.vue'
+import ChartPanel from '@/components/ChartPanel.vue'
+
+const AInputSearch = Input.Search
+const ATextarea    = Input.TextArea
+
+const { t } = useI18n()
+const toast  = useToast()
+const route  = useRoute()
+const router = useRouter()
+const { responseMessage } = api
+
+// ── Tables (shared singleton composable) ─────────────────────
+const { tables, loadTables } = useTables()
+
+// ── Selected table: derived from route query ──────────────────
+const selectedTable = computed(() =>
+  tables.value.find(tbl => tbl.name === route.query.tb) ?? null
+)
+
+// ── Column visibility & order ────────────────────────────────
+const colTogglerOpen      = ref(false)
+const exportPopoverOpen   = ref(false)
+const savedQueriesDialog  = ref(false)
+const chartDialog         = ref(false)
+
+// Unlike PrimeVue's Popover (imperative ref.toggle(), one instance
+// implicitly closes when another opens because they share the same overlay
+// stack), AntD's Popover is a plain declarative v-model per instance — two
+// independent triggers can end up open at once with no built-in mutual
+// exclusivity. Enforce it manually.
+watch(colTogglerOpen,    v => { if (v) exportPopoverOpen.value = false })
+watch(exportPopoverOpen, v => { if (v) colTogglerOpen.value = false })
+
+/** AntD Select/AutoComplete: filter must be supplied explicitly (see FieldEditor.vue). */
+function filterOption(input, option) {
+  return String(option?.label ?? '').toLowerCase().includes(String(input).toLowerCase())
+}
+
+/**
+ * Ordered array of visible field names.
+ * Using an ordered array (not a Set) so that both visibility and column
+ * order are stored in a single structure and persisted to localStorage.
+ */
+const visibleColumnNames = ref([])
+
+/**
+ * All main-table fields available for column toggling.
+ * advFields value format: "tablename:fieldname" — for both main table
+ * and plugin tables. We keep only entries belonging to the selected table
+ * (prefix = selectedTable.name + ':') to avoid passing plugin field names
+ * to getRecords where they would cause SQL errors.
+ */
+const allAvailableColumns = computed(() => {
+  const tb = selectedTable.value?.name
+  if (!tb || !advFields.value.length) return []
+  return advFields.value
+    .filter(f => f.value.startsWith(tb + ':'))
+    .map(f => ({ name: f.value.split(':')[1], label: f.label }))
+    .filter(f => f.name && f.name !== 'id')
+})
+
+/** localStorage key for a given table's column prefs */
+function colStorageKey(tbName) { return `bradypus:columns:${tbName}` }
+
+/**
+ * Called when there are no saved prefs (initial first visit to a table).
+ * Populates visibleColumnNames from the preview columns the backend returned.
+ */
+function initVisibleColumns(tbName) {
+  const saved = localStorage.getItem(colStorageKey(tbName))
+  if (saved) {
+    try {
+      const arr = JSON.parse(saved)
+      if (Array.isArray(arr) && arr.length) {
+        visibleColumnNames.value = arr
+        return
+      }
+    } catch { /* ignore */ }
+  }
+  // No saved prefs: use whatever the backend returned as default (preview fields)
+  visibleColumnNames.value = columns.value.map(c => c.name)
+}
+
+function saveColumnPrefs(tbName) {
+  localStorage.setItem(colStorageKey(tbName), JSON.stringify(visibleColumnNames.value))
+}
+
+function toggleColumn(name) {
+  const arr = [...visibleColumnNames.value]
+  const idx = arr.indexOf(name)
+  if (idx >= 0) {
+    if (arr.length === 1) return   // keep at least one column visible
+    arr.splice(idx, 1)
+  } else {
+    arr.push(name)
+  }
+  visibleColumnNames.value = arr
+  saveColumnPrefs(selectedTable.value?.name)
+  fetchRecords()   // refetch with updated column list
+}
+
+function selectAllColumns() {
+  visibleColumnNames.value = allAvailableColumns.value.map(c => c.name)
+  saveColumnPrefs(selectedTable.value?.name)
+  fetchRecords()
+}
+
+function resetColumns() {
+  if (!selectedTable.value) return
+  localStorage.removeItem(colStorageKey(selectedTable.value.name))
+  visibleColumnNames.value = []   // empty → backend uses preview defaults
+  fetchRecords()
+}
+
+/**
+ * Columns actually rendered in the DataTable.
+ * Order follows visibleColumnNames (user's saved/drag order).
+ * Only entries that the backend actually returned are included —
+ * newly-added columns appear here after the fetch completes.
+ */
+const displayColumns = computed(() =>
+  visibleColumnNames.value
+    .map(name => columns.value.find(c => c.name === name))
+    .filter(Boolean)
+)
+
+// ── Records ──────────────────────────────────────────────────
+const records        = ref([])
+const columns        = ref([])
+const totalRecords   = ref(0)
+const loadingRecords = ref(false)
+const canAdd         = ref(false)   // backend-controlled: utils::canUser('add_new')
+const page           = ref(1)
+const perPage        = ref(30)
+const sortField      = ref(null)
+const sortDir        = ref('asc')
+
+// ── Search state ─────────────────────────────────────────────
+const openPanel      = ref(null)   // null | 'advanced' | 'expert'
+const fastSearch     = ref('')
+const expertQuery    = ref('')
+const activeFilter   = ref(null)   // JSON filter object from link navigation (not user-editable)
+const activeSearch   = ref(null)   // null | 'fast' | 'advanced' | 'expert' | 'filter'
+
+// ── Advanced search config (lazy-loaded per table) ───────────
+const loadingAdvConfig = ref(false)
+const advFields        = ref([])
+const advOperators     = ref([])   // raw from backend: [{ value, key }, ...]
+const advConnectors    = ref([])   // raw from backend: ['AND', 'OR', 'XOR']
+let   advConfigFor     = null      // track which table the config was loaded for
+
+// Operators with translated labels for the dropdown
+const advOperatorsForDisplay = computed(() =>
+  advOperators.value.map(op => ({ value: op.value, label: t(op.key) }))
+)
+
+// ── Advanced search rows ─────────────────────────────────────
+let _rowId = 0
+function newAdvRow() {
+  return { _id: _rowId++, connector: 'AND', fld: '', operator: '_icontains', value: '', _suggestions: null }
+}
+
+// Strips internal-only keys (_id, _suggestions) before persisting rows to
+// URL/storage; restoreAdvRows() re-adds them with fresh values.
+function serializeAdvRows(rows) {
+  return rows.map(({ connector, fld, operator, value }) => ({ connector, fld, operator, value }))
+}
+
+function restoreAdvRows(rows) {
+  return rows.map(r => ({ ...r, _id: _rowId++, _suggestions: null }))
+}
+
+/**
+ * Converts the advanced-search form rows to a Directus-style filter object.
+ * Rows with an empty value (except _empty/_nempty) are silently skipped.
+ * Multiple rows are combined into { _and: [...] } / { _or: [...] } groups
+ * using standard AND-takes-precedence-over-OR evaluation order.
+ *
+ * Lookup fields (id_from_tb): the column stores the id of the referenced
+ * record while autocomplete suggests the referenced table's display values,
+ * so the condition is wrapped in a JsonFilter traversal on ref_field —
+ * { cat_ref: { name: { _eq: 'Ceramics' } } } instead of a direct comparison.
+ */
+function buildFilterFromRows(rows) {
+  const mainTb = selectedTable.value?.name
+  const noValueOps = ['_empty', '_nempty', '_null', '_nnull']
+
+  const active = rows.filter(r =>
+    r.fld && (r.value !== '' || noValueOps.includes(r.operator))
+  )
+  if (!active.length) return null
+
+  const toCond = r => {
+    const [tb, field] = r.fld.split(':')
+    const val = noValueOps.includes(r.operator) ? true : r.value
+    const meta = advFields.value.find(f => f.value === r.fld)
+    let cond = { [r.operator]: val }
+    if (meta?.ref_tb && meta?.ref_field) cond = { [meta.ref_field]: cond }
+    return tb === mainTb
+      ? { [field]: cond }
+      : { [tb]: { [field]: cond } }
+  }
+
+  if (active.length === 1) return toCond(active[0])
+
+  // Group consecutive AND rows; each OR connector starts a new group.
+  const groups = [[toCond(active[0])]]
+  for (let i = 1; i < active.length; i++) {
+    const cond = toCond(active[i])
+    if (active[i].connector === 'OR') {
+      groups.push([cond])
+    } else {
+      groups[groups.length - 1].push(cond)
+    }
+  }
+  const orParts = groups.map(g => g.length === 1 ? g[0] : { _and: g })
+  return orParts.length === 1 ? orParts[0] : { _or: orParts }
+}
+const advRows = ref([newAdvRow()])
+
+function addAdvRow()        { advRows.value.push(newAdvRow()) }
+function removeAdvRow(idx)  { advRows.value.splice(idx, 1) }
+
+// ── Labels ───────────────────────────────────────────────────
+const activeSearchLabel = computed(() => {
+  if (activeSearch.value === 'fast')     return `"${fastSearch.value}"`
+  if (activeSearch.value === 'advanced') return t('advanced_search')
+  if (activeSearch.value === 'expert')   return t('sql_expert_search')
+  if (activeSearch.value === 'filter') return t('linked_records')
+  return ''
+})
+
+// ── Saved queries: current search payload ────────────────────
+/**
+ * Returns the current active search payload suitable for storing as a
+ * saved query, or null when there is no meaningful search to save.
+ */
+const currentSearch = computed(() => {
+  if (activeSearch.value === 'advanced') {
+    const filter = buildFilterFromRows(advRows.value)
+    if (!filter) return null
+    return {
+      filter,
+      sort_field: sortField.value ?? '',
+      sort_dir:   sortDir.value,
+    }
+  }
+  if (activeSearch.value === 'expert' && expertQuery.value.trim()) {
+    return {
+      search_type: 'sqlExpert',
+      querytext:   expertQuery.value,
+      join:        '',
+      sort_field:  sortField.value ?? '',
+      sort_dir:    sortDir.value,
+    }
+  }
+  return null
+})
+
+/**
+ * Called when SavedQueriesPanel emits `load-query`.
+ * Restores the search state from the stored payload and fetches records.
+ */
+function onLoadQuery(payload) {
+  if (!payload?.search_type && !payload?.filter) return
+
+  savedQueriesDialog.value = false
+  page.value = 1
+
+  if (payload.search_type === 'sqlExpert' && payload.querytext) {
+    expertQuery.value  = payload.querytext
+    activeSearch.value = 'expert'
+    openPanel.value    = 'expert'
+    updateFilterUrl('expert', payload.querytext)
+    fetchRecords()
+  } else if (payload.filter && typeof payload.filter === 'object') {
+    activeFilter.value = payload.filter
+    activeSearch.value = 'filter'
+    openPanel.value    = null
+    updateFilterUrl('filter', JSON.stringify(payload.filter))
+    fetchRecords()
+  }
+}
+
+// ── Init: load tables (from singleton) then apply URL params ──
+onMounted(async () => {
+  try {
+    await loadTables()
+    applyRouteParams()
+  } catch {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Could not load tables', life: 3000 })
+  }
+})
+
+/**
+ * Apply `tb`, `filter`, `qt` and `q` query params from the current URL.
+ *
+ * Called on mount (tables freshly loaded) and whenever the route query changes.
+ *
+ * `filter` is a JSON-encoded Directus-style filter object produced by
+ * Record\Read::getLinks() / getBackLinks() — e.g. {"id":{"_eq":1}}.
+ * `qt`/`q` carry fast, advanced, and expert search state.
+ */
+// Track last applied params to avoid redundant fetches triggered by our own
+// router.replace() calls (filter URL persistence). The guard compares all four
+// relevant params; if all match, the change originated from updateFilterUrl()
+// and there is nothing to re-fetch.
+let lastAppliedTb     = null
+let lastAppliedFilter = null   // JSON string or null (replaces lastAppliedWhere)
+let lastAppliedQt     = null
+let lastAppliedQ      = null
+
+/**
+ * Push the current filter type + value into the URL (for bookmarking / back-nav).
+ * Uses router.replace() so the URL changes without adding a history entry.
+ * Pre-updates lastAppliedQt/Q so the watcher's guard skips the resulting change.
+ */
+function updateFilterUrl(type, query) {
+  const newQuery = { tb: route.query.tb }
+  // Keep JSON filter in URL when switching to/from other search types
+  if (route.query.filter) newQuery.filter = route.query.filter
+  if (type && query != null) { newQuery.qt = type; newQuery.q = query }
+  lastAppliedQt = newQuery.qt ?? null
+  lastAppliedQ  = newQuery.q  ?? null
+  router.replace({ query: newQuery })
+}
+
+function applyRouteParams() {
+
+  const tbParam     = route.query.tb
+  const filterParam = route.query.filter ?? null  // JSON-encoded filter object
+  const qtParam     = route.query.qt     ?? null
+  const qParam      = route.query.q      ?? null
+
+  if (!tbParam) return
+
+  // Guard: skip if nothing changed
+  if (
+    tbParam     === lastAppliedTb     &&
+    filterParam === lastAppliedFilter &&
+    qtParam     === lastAppliedQt     &&
+    qParam      === lastAppliedQ
+  ) return
+
+  // Table must exist in the list (permissions or typo check)
+  const tbl = tables.value.find(t => t.name === tbParam)
+  if (!tbl) return
+
+  const tableChanged = lastAppliedTb !== tbParam
+  lastAppliedTb     = tbParam
+  lastAppliedFilter = filterParam
+  lastAppliedQt     = qtParam
+  lastAppliedQ      = qParam
+
+  if (tableChanged) {
+    advConfigFor = null
+
+    // Restore saved column preferences NOW so that the first fetchRecords()
+    // call already uses the full saved set as colParam.
+    // If we left visibleColumnNames empty here and restored only inside
+    // initVisibleColumns() (which runs after the fetch), the first fetch would
+    // use preview mode and columns.value would only contain preview fields —
+    // causing a mismatch where saved non-preview columns appear checked in the
+    // toggler but are absent from the DataTable.
+    const saved = localStorage.getItem(colStorageKey(tbParam))
+    let restoredFromStorage = false
+    if (saved) {
+      try {
+        const arr = JSON.parse(saved)
+        if (Array.isArray(arr) && arr.length) {
+          visibleColumnNames.value = arr
+          restoredFromStorage = true
+        }
+      } catch { /* ignore corrupted data */ }
+    }
+    if (!restoredFromStorage) {
+      // No saved prefs: leave empty so initVisibleColumns() can populate
+      // from the backend preview fields after the first fetch.
+      visibleColumnNames.value = []
+    }
+
+    loadAdvConfig()   // eager load all fields for the column toggler
+  }
+
+  if (filterParam) {
+    try { activeFilter.value = JSON.parse(filterParam) } catch { activeFilter.value = null }
+    activeSearch.value = 'filter'
+    openPanel.value    = null
+    page.value         = 1
+    fetchRecords()
+    return
+  }
+
+  // Restore persisted filter from URL params (e.g. when navigating back from a record)
+  if (qtParam && qParam != null) {
+    if (qtParam === 'fast') {
+      fastSearch.value   = qParam
+      activeSearch.value = 'fast'
+      openPanel.value    = null
+      page.value         = 1
+      fetchRecords()
+    } else if (qtParam === 'expert') {
+      expertQuery.value  = qParam
+      activeSearch.value = 'expert'
+      openPanel.value    = 'expert'
+      page.value         = 1
+      fetchRecords()
+    } else if (qtParam === 'advanced') {
+      try {
+        const parsed = JSON.parse(qParam)
+        advRows.value       = restoreAdvRows(parsed.rows ?? [])
+        activeFilter.value  = parsed.filter ?? null
+      } catch { activeFilter.value = null }
+      activeSearch.value = 'advanced'
+      openPanel.value    = 'advanced'
+      page.value         = 1
+      loadAdvConfig()
+      fetchRecords()
+    } else if (qtParam === 'filter') {
+      try { activeFilter.value = JSON.parse(qParam) } catch { activeFilter.value = null }
+      activeSearch.value = 'filter'
+      openPanel.value    = null
+      page.value         = 1
+      fetchRecords()
+    }
+    return
+  }
+
+  if (tableChanged) {
+    resetSearch()   // also calls fetchRecords
+  }
+}
+
+// Re-apply whenever route query changes
+watch(() => route.query, applyRouteParams)
+
+// ── Panel toggle ──────────────────────────────────────────────
+async function togglePanel(name) {
+  openPanel.value = openPanel.value === name ? null : name
+  if (openPanel.value === 'advanced') {
+    await loadAdvConfig()
+  }
+}
+
+// ── Lazy-load advanced config (fields, operators, connectors) ─
+async function loadAdvConfig() {
+  const tb = selectedTable.value?.name
+  if (!tb || advConfigFor === tb) return
+  loadingAdvConfig.value = true
+  try {
+    const res = await api.get(`/api/search/${tb}/config`)
+    if (res.status === 'error') throw new Error(responseMessage(res, t))
+    advFields.value     = res.fields     ?? []
+    advOperators.value  = res.operators  ?? []   // [{ value, key }]
+    advConnectors.value = res.connectors ?? []   // ['AND', 'OR', 'XOR']
+    advConfigFor = tb
+  } catch (e) {
+    toast.add({ severity: 'error', summary: 'Error', detail: e.message, life: 4000 })
+  } finally {
+    loadingAdvConfig.value = false
+  }
+}
+
+// ── Autocomplete: load distinct values for a field ───────────
+async function loadSuggestions(row, query) {
+  if (!row.fld) return
+  const [tb, fld] = row.fld.split(':')
+  try {
+    const res = await api.get(`/api/search/${tb}/values`, { fld })
+    row._suggestions = (Array.isArray(res.values) ? res.values : [])
+      .filter(v => v != null && v !== '' && String(v).toLowerCase().includes(query.toLowerCase()))
+      .slice(0, 50)
+  } catch {
+    row._suggestions = []
+  }
+}
+
+// ── Reset all search ─────────────────────────────────────────
+function resetSearch() {
+  fastSearch.value   = ''
+  expertQuery.value  = ''
+  activeFilter.value = null
+  advRows.value      = [newAdvRow()]
+  activeSearch.value = null
+  openPanel.value    = null
+  page.value         = 1
+  // Clear both filter and qt/q from URL
+  lastAppliedFilter = null
+  router.replace({ query: { tb: route.query.tb } })
+  fetchRecords()
+}
+
+// ── Fast search ───────────────────────────────────────────────
+function runFastSearch() {
+  if (!fastSearch.value.trim()) { resetSearch(); return }
+  activeSearch.value = 'fast'
+  openPanel.value    = null
+  page.value         = 1
+  updateFilterUrl('fast', fastSearch.value)
+  fetchRecords()
+}
+
+// ── Advanced search ───────────────────────────────────────────
+function runAdvancedSearch() {
+  const filter = buildFilterFromRows(advRows.value)
+  if (!filter) { resetSearch(); return }
+  activeFilter.value = filter
+  activeSearch.value = 'advanced'
+  openPanel.value    = null
+  page.value         = 1
+  updateFilterUrl('advanced', JSON.stringify({ rows: serializeAdvRows(advRows.value), filter }))
+  fetchRecords()
+}
+
+// ── Expert search ─────────────────────────────────────────────
+function runExpertSearch() {
+  if (!expertQuery.value.trim()) { resetSearch(); return }
+  activeSearch.value = 'expert'
+  openPanel.value    = null
+  page.value         = 1
+  updateFilterUrl('expert', expertQuery.value)
+  fetchRecords()
+}
+
+// ── Core fetch ────────────────────────────────────────────────
+async function fetchRecords() {
+  if (!selectedTable.value) return
+  loadingRecords.value = true
+  try {
+    let res
+    const tbName = selectedTable.value.name
+
+    // Custom column list (comma-separated string for GET, array for POST/JSON).
+    // Empty array means "use backend preview defaults" (no param sent).
+    const colParam = visibleColumnNames.value.length > 0
+      ? visibleColumnNames.value
+      : null
+
+    if (activeSearch.value === 'advanced' || activeSearch.value === 'filter') {
+      const body = {
+        page:       page.value,
+        per_page:   perPage.value,
+        sort_field: sortField.value ?? '',
+        sort_dir:   sortDir.value,
+        filter:     activeFilter.value,
+      }
+      if (colParam) body.columns = colParam
+      res = await api.post(`/api/records/${tbName}`, body)
+
+    } else if (activeSearch.value === 'expert') {
+      const body = {
+        page: page.value, per_page: perPage.value,
+        sort_field: sortField.value ?? '', sort_dir: sortDir.value,
+        search_type: 'sqlExpert', querytext: expertQuery.value, join: '',
+      }
+      if (colParam) body.columns = colParam
+      res = await api.post(`/api/records/${tbName}`, body)
+
+    } else if (activeSearch.value === 'filter') {
+      // JSON filter from Record\Read::getLinks() / getBackLinks() link navigation.
+      const body = {
+        page:       page.value,
+        per_page:   perPage.value,
+        sort_field: sortField.value ?? '',
+        sort_dir:   sortDir.value,
+        filter:     activeFilter.value,
+      }
+      if (colParam) body.columns = colParam
+      res = await api.post(`/api/records/${tbName}`, body)
+
+    } else {
+      const body = {
+        page:        page.value,
+        per_page:    perPage.value,
+        sort_field:  sortField.value ?? '',
+        sort_dir:    sortDir.value,
+        search_type: activeSearch.value === 'fast' ? 'fast' : 'all',
+        search:      activeSearch.value === 'fast' ? fastSearch.value : '',
+      }
+      // columns sent as comma-separated string to avoid URL array-encoding issues
+      if (colParam) body.columns = colParam.join(',')
+      res = await api.post(`/api/records/${tbName}`, body)
+    }
+
+    if (res.status === 'error') {
+      toast.add({ severity: 'error', summary: t('generic_error'),
+        detail: responseMessage(res, t), life: 6000 })
+      return
+    }
+
+    totalRecords.value = res.total ?? 0
+    canAdd.value       = res.can_add ?? false
+    if (res.fields?.length) {
+      columns.value = res.fields.filter(f => f.name !== 'id')
+      // If no saved preference yet, initialise from returned preview columns
+      if (visibleColumnNames.value.length === 0) {
+        initVisibleColumns(selectedTable.value?.name)
+      }
+    }
+    records.value = res.data ?? []
+
+  } catch (e) {
+    toast.add({ severity: 'error', summary: 'Error', detail: e.message, life: 4000 })
+  } finally {
+    loadingRecords.value = false
+  }
+}
+
+// ── AntD Table: columns/pagination/row-click/sort+page (unified) ─────
+// PrimeVue split pagination (@page) and sorting (@sort) into two events;
+// AntD's Table fires one @change with pagination + sorter together, so a
+// single handler now covers what used to be two.
+const antdColumns = computed(() =>
+  displayColumns.value.map(col => ({
+    title: col.label,
+    dataIndex: col.name,
+    key: col.name,
+    sorter: true,
+    ellipsis: true,
+    sortOrder: sortField.value === col.name
+      ? (sortDir.value === 'desc' ? 'descend' : 'ascend')
+      : null,
+  }))
+)
+
+const paginationConfig = computed(() => ({
+  current: page.value,
+  pageSize: perPage.value,
+  total: totalRecords.value,
+  showSizeChanger: true,
+  pageSizeOptions: ['15', '30', '50', '100'],
+  // AntD defaults to bottomRight, which sits under the fixed FAB add-record
+  // button (bottom-right corner). PrimeVue's paginator was centered by
+  // default and never had this conflict — match that instead of moving the FAB.
+  position: ['bottomCenter'],
+}))
+
+function customRow(record) {
+  return { onClick: () => onRowClick({ data: record }) }
+}
+
+function onTableChange(pagination, _filters, sorter) {
+  const newSortField = sorter.order ? sorter.field : null
+  const newSortDir    = sorter.order === 'descend' ? 'desc' : 'asc'
+  const sortChanged   = newSortField !== sortField.value || newSortDir !== sortDir.value
+
+  sortField.value = newSortField
+  sortDir.value   = newSortDir
+  page.value      = sortChanged ? 1 : pagination.current
+  perPage.value   = pagination.pageSize
+  fetchRecords()
+}
+
+// ── AntD Table: fill available flex space (see template note) ────────
+const tableWrap    = ref(null)
+const tableScrollY = ref(400)
+let resizeObs = null
+
+function measureTableHeight() {
+  if (!tableWrap.value) return
+  const total      = tableWrap.value.clientHeight
+  const headerH    = tableWrap.value.querySelector('.ant-table-thead')?.getBoundingClientRect().height ?? 40
+  const paginationH = tableWrap.value.querySelector('.ant-pagination')?.getBoundingClientRect().height ?? 32
+  tableScrollY.value = Math.max(200, total - headerH - paginationH - 16)
+}
+
+onMounted(() => {
+  resizeObs = new ResizeObserver(measureTableHeight)
+  if (tableWrap.value) resizeObs.observe(tableWrap.value)
+})
+onUnmounted(() => resizeObs?.disconnect())
+watch(records, () => { measureTableHeight() })
+
+function addRecord() {
+  const tb = selectedTable.value?.name
+  if (tb) {
+    router.push(`/${route.params.app}/record/${encodeURIComponent(tb)}/new`)
+  }
+}
+
+/**
+ * Navigate to the GeoFace (map) view for the current table,
+ * forwarding the current active filter as query parameters so the map
+ * shows only the records matching the current search.
+ */
+function openGeoface() {
+  const tb = selectedTable.value?.name
+  if (!tb) return
+  const query = {}
+  if ((activeSearch.value === 'advanced' || activeSearch.value === 'filter') && activeFilter.value) {
+    query.filter = JSON.stringify(activeFilter.value)
+  } else if (activeSearch.value === 'expert' && expertQuery.value) {
+    query.search_type = 'sqlExpert'
+    query.querytext = expertQuery.value
+  }
+  router.push({ path: `/${route.params.app}/geoface/${encodeURIComponent(tb)}`, query })
+}
+
+/**
+ * Navigate to the Harris Matrix view for the current table,
+ * passing the active search params from the current route URL.
+ * MatrixView / getRsMatrix() accept the same filter/search_type/search params
+ * as getRecords(), so we forward the entire current query.
+ */
+function openTimeline() {
+  const tb  = selectedTable.value?.name
+  const lbl = selectedTable.value?.label
+  if (!tb) return
+  router.push({
+    path:  `/${route.params.app}/chrono/${encodeURIComponent(tb)}`,
+    query: { back: route.fullPath, backLabel: lbl },
+  })
+}
+
+function openMatrix() {
+  const tb = selectedTable.value?.name
+  if (!tb) return
+  router.push({
+    path:  `/${route.params.app}/matrix/${encodeURIComponent(tb)}`,
+    query: { ...route.query, back: route.fullPath },
+  })
+}
+
+function onRowClick(event) {
+  const tb = selectedTable.value?.name
+  const id = event.data?.id
+  if (tb && id != null) {
+    router.push({
+      path:  `/${route.params.app}/record/${encodeURIComponent(tb)}/${id}`,
+      query: { back: route.fullPath },
+    })
+  }
+}
+
+/**
+ * Trigger a file download by building the export URL from the current
+ * route query (which already encodes the active filter via updateFilterUrl).
+ * The browser navigates to the URL; PHP responds with Content-Disposition: attachment.
+ */
+function doExport(format) {
+  exportPopoverOpen.value = false
+
+  const tb = selectedTable.value?.name ?? ''
+  const qs = new URLSearchParams({ format })
+
+  // Pass through whichever filter params are currently active.
+  // For JSON filter, use bracket notation so PHP parses it as a nested array.
+  if (activeSearch.value === 'filter' && activeFilter.value) {
+    filterToSearchParams(activeFilter.value).forEach((v, k) => qs.set(k, v))
+  } else {
+    if (route.query.qt) qs.set('qt', route.query.qt)
+    if (route.query.q)  qs.set('q',  route.query.q)
+  }
+
+  window.open(assetUrl(`api/records/${encodeURIComponent(tb)}/export`) + '?' + qs.toString(), '_blank')
+}
+</script>
+
+<style scoped>
+.data-layout {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  flex-direction: column;   /* records-panel is the only child now */
+}
+
+
+/* ── Records panel ───────────────────────────────────────── */
+.records-panel {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 1rem;
+  gap: 0.75rem;
+}
+
+.records-placeholder {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  color: var(--p-text-muted-color);
+}
+.records-placeholder .anticon { font-size: 2rem; }
+
+/* ── Search area ─────────────────────────────────────────── */
+.search-area {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border: 1px solid var(--p-content-border-color);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--bdus-surface);
+}
+
+.search-input-wrap { flex: 1; min-width: 0; }
+
+.search-active-tag {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  white-space: nowrap;
+}
+
+/* ── Collapsible panels ──────────────────────────────────── */
+.search-panel {
+  padding: 0.75rem 1rem;
+  border-top: 1px solid var(--p-content-border-color);
+  background: var(--bdus-bg);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+/* ── Advanced search rows ────────────────────────────────── */
+.adv-loading {
+  display: flex;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.adv-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.adv-row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: nowrap;
+}
+
+.adv-connector          { width: 5rem;  flex-shrink: 0; }
+.adv-connector-placeholder { width: 5rem; flex-shrink: 0; }
+.adv-field-sel          { flex: 2; min-width: 0; }
+.adv-operator           { width: 8.5rem; flex-shrink: 0; }
+.adv-value              { flex: 1.5; min-width: 0; }
+
+/* ── Expert panel ────────────────────────────────────────── */
+.expert-label {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--p-text-muted-color);
+}
+.expert-textarea { font-family: monospace; font-size: 0.85rem; }
+.expert-hint {
+  font-size: 0.78rem;
+  color: var(--p-text-muted-color);
+  margin: 0.15rem 0 0.5rem;
+}
+
+/* ── Actions row ─────────────────────────────────────────── */
+.search-panel-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+/* ── Slide transition ────────────────────────────────────── */
+.slide-enter-active, .slide-leave-active {
+  transition: max-height 0.22s ease, opacity 0.22s ease;
+  overflow: hidden;
+}
+.slide-enter-from, .slide-leave-to { max-height: 0; opacity: 0; }
+.slide-enter-to, .slide-leave-from { max-height: 380px; }
+
+/* ── Results header ──────────────────────────────────────── */
+.records-header {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  flex-shrink: 0;
+}
+.records-header h3 { font-size: 1.1rem; font-weight: 700; }
+.records-count     { font-size: 0.82rem; color: var(--p-text-muted-color); }
+
+.records-table-wrap { flex: 1; min-height: 0; overflow: hidden; }
+.clickable-rows :deep(.ant-table-tbody > tr) { cursor: pointer; }
+.clickable-rows :deep(.ant-table-tbody > tr:hover > td) { background: var(--p-content-hover-background) !important; }
+
+/* ── Column toggler popover ──────────────────────────────── */
+.col-toggler-popover { min-width: 200px; }
+
+.col-toggler-header {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--p-text-muted-color);
+  padding: 0.5rem 0.75rem 0.25rem;
+}
+
+.col-toggler-list {
+  max-height: 260px;
+  overflow-y: auto;
+  padding: 0.25rem 0;
+}
+
+.col-toggler-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.75rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  border-radius: 4px;
+  transition: background 0.12s;
+}
+.col-toggler-item:hover { background: var(--p-content-hover-background); }
+.col-toggler-item .anticon { color: var(--p-primary-color); font-size: 0.95rem; }
+
+.col-toggler-actions {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.4rem 0.5rem 0.25rem;
+  border-top: 1px solid var(--p-content-border-color);
+}
+
+/* ── Add record ──────────────────────────────────────────── */
+/* Toolbar button: pushed to the right by the active-search tag's margin-left:auto */
+.add-record-btn {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* When no active filter tag is shown, the button still needs to sit on the right */
+.search-bar:not(:has(.search-active-tag)) .add-record-btn {
+  margin-left: auto;
+}
+
+/* FAB: fixed to the viewport bottom-right corner, always reachable */
+.fab-add {
+  position: fixed;
+  bottom: 1.75rem;
+  right: 1.75rem;
+  z-index: 10;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 50%;
+  background: var(--p-primary-color);
+  color: var(--p-primary-contrast-color, #fff);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.20);
+  transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
+}
+.fab-add:hover {
+  background: var(--p-primary-hover-color, var(--p-primary-color));
+  transform: scale(1.08);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+}
+.fab-add .anticon { font-size: 1.3rem; }
+</style>

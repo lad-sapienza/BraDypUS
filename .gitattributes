@@ -1,0 +1,4 @@
+# Release-time copy of the root CHANGELOG.md, bundled into the bdus-api image
+# (its Docker build context is ./bdus-api). Kept in sync by bump-version.sh —
+# edit CHANGELOG.md at the repo root, never this copy.
+bdus-api/CHANGELOG.md linguist-generated=true

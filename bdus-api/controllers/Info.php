@@ -53,8 +53,26 @@ class Info extends \Bdus\Controller
       "status"          => "success",
       'version'         => json_decode(file_get_contents(MAIN_DIR . 'composer.json'), true)['version'] ?? 'unknown',
       'project_version' => $settings['bdus_version'] ?? null,
-      'changelog_md'    => file_get_contents(MAIN_DIR . 'CHANGELOG.md') ?: '',
+      'changelog_md'    => $this->readChangelog(),
     ]);
+  }
+
+  /**
+   * Full changelog as raw Markdown.
+   *
+   * Since the monorepo consolidation the canonical file is CHANGELOG.md at the
+   * repo root (one dir above MAIN_DIR). A copy is bundled inside the bdus-api
+   * Docker image at MAIN_DIR, where the repo root is not present — kept in sync
+   * by bump-version.sh.
+   */
+  private function readChangelog(): string
+  {
+    foreach ([MAIN_DIR . '../CHANGELOG.md', MAIN_DIR . 'CHANGELOG.md'] as $path) {
+      if (is_file($path)) {
+        return file_get_contents($path) ?: '';
+      }
+    }
+    return '';
   }
 
 }

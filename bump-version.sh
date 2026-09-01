@@ -75,8 +75,13 @@ else
   red "note: no '## [Unreleased]' header in CHANGELOG.md — not promoting"
 fi
 
+# Bundle a copy inside bdus-api: its Docker build context is ./bdus-api, so the
+# repo-root CHANGELOG.md is otherwise not shipped and the Info view reads empty.
+cp CHANGELOG.md bdus-api/CHANGELOG.md
+green "CHANGELOG: copied to bdus-api/ for the image"
+
 # ── 3-4. commit, tag, push ─────────────────────────────────────────────────
-git add bdus-api/composer.json bdus-app/package.json bdus-app/package-lock.json CHANGELOG.md
+git add bdus-api/composer.json bdus-app/package.json bdus-app/package-lock.json CHANGELOG.md bdus-api/CHANGELOG.md
 git commit -m "chore: release $VERSION"
 git tag "$TAG"
 

@@ -4,7 +4,7 @@
 
 Developed at [LAD – Laboratorio di Archeologia Digitale, Sapienza University of Rome](https://lad.saras.uniroma1.it) by [Julian Bogdani](https://orcid.org/0000-0001-5250-927X).
 
-License: [GNU AGPL-3.0](bdus-api/LICENSE) · Docs: [docs.bdus.cloud](https://docs.bdus.cloud) · Cloud: [bdus.cloud](https://bdus.cloud) · [![DOI](https://zenodo.org/badge/18011343.svg)](https://zenodo.org/badge/latestdoi/18011343)
+License: [GNU AGPL-3.0](bdus-api/LICENSE) · Docs: [docs.bdus.lad-sapienza.it](https://docs.bdus.lad-sapienza.it) · Cloud: [bdus.cloud](https://bdus.cloud) · [![DOI](https://zenodo.org/badge/18011343.svg)](https://zenodo.org/badge/latestdoi/18011343)
 
 ---
 
@@ -38,7 +38,7 @@ docker compose up
 
 For production deployment (pre-built GHCR images, build from source, or
 manual/shared-hosting install) see the
-**[deployment guide](https://docs.bdus.cloud/guide/deploy/)**.
+**[deployment guide](https://docs.bdus.lad-sapienza.it/guide/deploy/)**.
 
 ---
 

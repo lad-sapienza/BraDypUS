@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.4.4] - 2026-09-01
+
 ### Changed
 
 - **Monorepo.** `bdus-api`, `bdus-app` and `bdus-docs` are now subdirectories of this repository (full history preserved via `git filter-repo`), not sibling repos. One branch, one `CHANGELOG.md` (this file, moved up from `bdus-api/`), one tag per release. `bump-version.sh` rewritten: one commit + one tag `vX.Y.Z` → `.github/workflows/release.yml` builds both GHCR images (names unchanged, so `bradypus.yml` is untouched); `docs.yml` deploys `bdus-docs/` to Pages. The old per-repo workflows are removed.

@@ -1,0 +1,23 @@
+.claude/
+sessions/
+
+# Composer dependencies — run `composer install` to restore
+vendor/
+
+# npm/Node dependencies
+node_modules/
+
+# Vite build output
+dist/
+
+# Runtime dirs (created automatically on first run)
+projects/
+logs/
+cache/
+
+# PHPUnit cache
+.phpunit.result.cache
+
+# macOS
+.DS_Store
+UNSAFE_permit_app_creation

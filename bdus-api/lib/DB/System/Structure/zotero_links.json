@@ -1,0 +1,31 @@
+{
+    "columns": [
+        { "name": "id",              "type": "INTEGER", "pk": true,  "notnull": false },
+        { "name": "tb",              "type": "TEXT",                 "notnull": true  },
+        { "name": "record_id",       "type": "INTEGER",              "notnull": true  },
+        { "name": "lib_id",          "type": "INTEGER",              "notnull": true  },
+        { "name": "zotero_key",      "type": "TEXT",                 "notnull": true  },
+        { "name": "pages",           "type": "TEXT",                 "notnull": false },
+        { "name": "notes",           "type": "TEXT",                 "notnull": false },
+        { "name": "sort",            "type": "INTEGER",              "notnull": false },
+        { "name": "author_year",     "type": "TEXT",                 "notnull": false },
+        { "name": "full_citation",   "type": "TEXT",                 "notnull": false },
+        { "name": "zotero_version",  "type": "INTEGER",              "notnull": false },
+        { "name": "synced_at",       "type": "INTEGER",              "notnull": false },
+        { "name": "detached",        "type": "INTEGER", "default": 0,"notnull": false },
+        { "name": "created_at",      "type": "INTEGER",              "notnull": false }
+    ],
+    "indexes": [
+        { "name": "zln_record_idx",  "columns": ["tb", "record_id"] },
+        { "name": "zln_item_idx",    "columns": ["lib_id", "zotero_key"] }
+    ],
+    "relations": [
+        {
+            "name":       "zln_lib_fk",
+            "column":     "lib_id",
+            "ref_table":  "bdus_zotero_libs",
+            "ref_column": "id",
+            "on_delete":  "CASCADE"
+        }
+    ]
+}

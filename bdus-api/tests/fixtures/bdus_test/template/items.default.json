@@ -1,0 +1,17 @@
+{
+    "sections": [
+        {
+            "label": "Main",
+            "content": [
+                {
+                    "field": "name",
+                    "width": "1\/2"
+                },
+                {
+                    "field": "status",
+                    "width": "1\/4"
+                }
+            ]
+        }
+    ]
+}

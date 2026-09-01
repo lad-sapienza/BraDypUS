@@ -1,0 +1,501 @@
+# Changelog
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+## [5.4.3] - 2026-09-01
+
+### Changed
+
+- **Routing SPA da hash a history mode** — gli URL passano da `.../#/nome-app/...` a `.../nome-app/...`. `bdus-app`: `createWebHashHistory` → `createWebHistory` in `src/router/index.js`, con shim che riscrive al volo i vecchi link `#/...` (bookmark e citazioni pre-esistenti continuano a funzionare) e `scrollBehavior` che riporta in cima a ogni navigazione; i redirect a `/login` (logout, 401, `major_upgrade_required`) diventano `window.location.assign('/login')` — full reload, teardown pulito della sessione. `bdus-api`: `OAuth.php` redirige a `{origin}/oauth-callback?...` senza `#`.
+- **`nginx.conf.template`** — commento aggiornato: il fallback SPA (`try_files ... /index.html`) già serviva i deep-link history mode; chiarito che i prefissi proxati (`/api`, `/index.php`, `/projects`, `/cache`) hanno la precedenza.
+
+### Added
+
+- **Nomi-app riservati** — `CreateApp::validateData()` rifiuta i nomi che in history mode collidono con segmenti gestiti dal web server / API (`api`, `index.php`, `projects`, `cache`, `assets`, `favicon.ico`, `favicon.svg`, `login`, `oauth-callback`, `new-app`), confronto case-insensitive, prima di qualunque scrittura su disco. Nuova costante `CreateApp::RESERVED_NAMES` tenuta in sync con `bdus-app/src/router/index.js` e `nginx.conf.template`. Test: `NewAppCtrlTest::testCreateReservedNameReturnsError`.
+
+## [5.4.2] - 2026-08-16
+
+### Added
+
+- **Operatori filtro `_nstarts_with` / `_nends_with`** — negazione di `_starts_with`/`_ends_with` (già esistenti), aggiunti a `JsonFilter::ALLOWED_OPS`/`buildCondition()` (`NOT LIKE`). Disponibili nella ricerca avanzata di DataView e nel wizard filtri dell'Analisi Assemblaggio, che condivide lo stesso motore `JsonFilter` lato backend.
+- **Funzione di aggregazione `COUNT_DISTINCT` nei grafici** — `Chart.php` supporta ora `COUNT(DISTINCT campo)` accanto a COUNT/SUM/AVG/MIN/MAX (nuovo helper `renderAggregate()`, il nome non è SQL valido di per sé), selezionabile nel builder grafici (`ChartPanel.vue`).
+- **Opzioni di stile per i grafici** — nuova sezione collassabile "Style options" nel builder grafici: colore, posizione legenda, min/max asse, decimali, orientamento orizzontale. Persistite come blob opaco in `bdus_charts.definition.style`, nessuna modifica allo schema DB.
+- **Espansione a schermo intero di un grafico** — bottone "espandi" sul canvas del grafico appena eseguito/salvato in DataView; apre lo stesso grafico in un modal a piena larghezza.
+
+### Fixed
+
+- **Harris Matrix ignorava il filtro di ricerca avanzata/filtro attivo in DataView** — `buildMatrixApiParams()` in `MatrixView.vue` gestiva solo `qt=fast`/`qt=expert`; aggiunti i branch mancanti `qt=advanced` e `qt=filter` (entrambi i formati URL attualmente in uso dalla ricerca avanzata).
+- **`MatrixView` non si aggiornava navigando via SPA con parametri di route diversi** (es. cambio tabella o filtro dalla command palette, senza reload completo) — aggiunto un `watch` su `route.params`/`route.query` che ricarica la matrice, stesso pattern già in uso in `ChronoTimelineView`.
+- **Scritture di log silenziosamente perse quando condividevano una connessione/transazione con la query che aveva appena fallito (Postgres)** — una query fallita dentro una transazione applicativa lascia la connessione PDO in stato "aborted" fino al `ROLLBACK`; qualunque INSERT successivo sulla stessa connessione, incluso quello del logger, falliva a sua volta silenziosamente (catturato e mandato solo a `error_log()` PHP, mai a `bdus_log`). `LogDBHandler` ora apre una connessione PDO indipendente, dedicata solo alla scrittura dei log.
+
+### Changed
+
+- **Ricerca SQL expert** — aggiunto un hint inline nel pannello che spiega l'assenza di cast automatico al tipo reale della colonna (es. `context_id::integer > 200`), per chiarire l'incoerenza apparente rispetto alla ricerca avanzata (che casta automaticamente).
+
+## [5.4.1] - 2026-08-14
+
+### Fixed
+
+- **`M013_CreateCfgRelations` usava DDL SQLite-only (`AUTOINCREMENT`), bloccava login/upgrade su qualunque app Postgres nuova** — la migrazione creava `bdus_cfg_relations` con `id INTEGER PRIMARY KEY AUTOINCREMENT`, sintassi non valida su Postgres/MySQL: falliva in fase di parsing anche sotto `CREATE TABLE IF NOT EXISTS`, quindi qualunque app pgsql appena creata (che parte con `bdus_migrations` vuota) restava bloccata al primo "Apply migrations". La clausola PK è ora scelta in base all'engine (`SERIAL PRIMARY KEY` / `INTEGER PRIMARY KEY AUTO_INCREMENT` / `INTEGER PRIMARY KEY AUTOINCREMENT`), stessi literal già usati da `Manage::getCreateColumnStatement()` per le tabelle di sistema.
+- **Fast search rompeva su Postgres: `LIKE` su colonne INTEGER (`id`/`creator`/`id_link`)** — `QueryFromRequest::fast()` costruiva il `LIKE` iterando su tutti i campi della tabella senza filtrare per tipo; SQLite/MySQL tollerano il confronto testo-intero con cast implicito, Postgres no (`operator does not exist: integer ~~ unknown`). Ora i campi il cui `db_type` non è testuale (INTEGER, FLOAT, TIMESTAMP, BOOLEAN, ecc.) sono esclusi dalla ricerca veloce. Nella stessa modifica, la clausola è passata da concatenazione di stringa con escaping manuale a query parametrizzata (`LIKE ?`), più sicura e corregge anche un bug di escaping su apici nel testo cercato.
+- **bdus-app: schermata di upgrade (`/#/<app>/upgrade`) — con molte migrazioni pendenti i bottoni "Apply migrations"/"Skip for now" finivano fuori schermo, irraggiungibili** — `MinorUpgradeView.vue` è una card a pagina intera senza alcun vincolo di altezza; con un elenco lungo di migrazioni pendenti (es. un'app appena creata, che parte con tutte le migrazioni da applicare) la card cresceva oltre l'altezza della finestra e il contenuto in eccesso traboccava senza scrollbar. La card ora ha `max-height: calc(100vh - 4rem)` con layout flex verticale; solo l'elenco delle migrazioni scrolla internamente (`overflow-y: auto`), i bottoni restano sempre visibili in fondo.
+- **bdus-app: la ricerca avanzata non si ripristinava navigando direttamente a un URL con filtro (`qt=filter`)** — `applyRouteParams()` in DataView.vue gestiva i branch `qt=fast` e `qt=expert` ma non `qt=filter`, nonostante `runAdvancedSearch()` scrivesse esattamente quel formato in URL; navigando direttamente a un link con filtro avanzato (bookmark, condivisione) la pagina restava sulla fast search vuota. Il fix va oltre il solo ripristino dei risultati: introdotto un nuovo formato URL (`qt=advanced`) che persiste anche le righe originali del form di ricerca avanzata, non solo il filtro già compilato — al ripristino (da URL, o tornando indietro da un record) sia l'etichetta ("Advanced search") sia il form mostrano fedelmente i criteri usati, non solo i risultati.
+- **Tabelle plugin potevano ricevere relazioni extra dal pannello "Relations", generando link morti in "Linked records"** — una tabella plugin (es. un conteggio agganciato via `id_link` a una tabella) poteva ricevere anche una FK ordinaria verso una tabella diversa dal suo genitore; quella tabella mostrava poi un "Linked records" verso il plugin, ma cliccandolo falliva silenziosamente (le tabelle plugin sono escluse da `GET /api/tables`, quindi non sfogliabili). `Config::saveRelation()` ora rifiuta qualunque relazione che coinvolga una tabella plugin fuori dal suo `id_link` verso il genitore; `LoadFromDB::tables()` filtra anche difensivamente eventuali relazioni già presenti nel DB da prima di questo fix. I lookup verso altre tabelle (dropdown, ricerca) restano possibili tramite `id_from_tb` sul campo, che non richiede una relazione formale.
+
+## [5.4.0] - 2026-08-13
+
+### Added
+
+- **Percorso configurabile per la distribuzione cronologica derivata** (`chrono_density_path`) — il pannello "Distribuzione cronologica derivata" (`ChronoDensityPanel.vue`, `GET /api/chrono/related/{tb}/{id}`) prima interrogava solo `bdus_cfg_relations` per un singolo hop automatico (figli diretti con `fuzzy_date` attivo), senza modo di raggiungere un nipote (es. da `siti`, i `reperti` collegati via `us`, non direttamente). Ora è possibile configurare per tabella, da Config → Tabelle, una catena fissa di nomi tabella (`extra.chrono_density_path`, stesso meccanismo JSON già usato da `geodata`/`zotero`/`fuzzy_date`, nessuna migrazione DB) — ogni tabella della catena deve essere figlia diretta della precedente via una relazione FK reale in `bdus_cfg_relations`; solo l'ultima tabella deve avere `fuzzy_date` attivo, le intermedie no (possono fare solo da ponte). Validazione lato server in `Config::save_tb_data()` (hop coerenti con lo schema, nessuna ripetizione/tabella radice nel percorso, profondità massima 8, ultima tabella con `fuzzy_date`) più mirror lato client per feedback immediato. `Chrono::related()` riscritto per seguire la catena hop per hop quando configurata, restituendo un filtro di click-through già pronto (`{fk_col: {_eq: id}}` per il caso automatico a un hop, `{id: {_in: [...]}}` con gli id calcolati server-side per un percorso multi-hop) — comportamento automatico invariato quando nessun percorso è configurato, nessuna regressione per le app esistenti. Copertura: 9 nuovi integration test (`ChronoDensityPathTest`), fase hurl dedicata (40) sulla catena reale `siti → us → reperti`.
+- **`Config::deactivateRadiocarbon()`** (`DELETE /api/config/table/{tb}/radiocarbon`) — l'attivazione del plugin di datazione al radiocarbonio era a senso unico (nessun modo di disattivarlo da UI/API). Nuovo endpoint che rispecchia il principio "solo configurazione, dati preservati" già usato da `deactivateFuzzyDate()`/`deactivateOsteology()`: azzera `plugin_of` sulla config della tabella plugin `{tb}_radiocarbon` (mai `is_plugin`, che resta sempre `1` — quel flag marca la tabella come "a forma di plugin" indipendentemente da chi la possiede, cambiarlo la classificherebbe male ovunque nel sistema, non solo per questo genitore). Con `plugin_of` azzerato, la tabella smette di comparire nell'elenco `plugin[]` derivato della tabella padre (quindi non viene più caricata in lettura/modifica) — tabella fisica e dati restano intatti; riattivando, `plugin_of` viene ripristinato e i dati precedenti tornano visibili. Copertura: 5 nuovi integration test in `RadiocarbonCtrlTest` + estensione della fase hurl 39.
+
+- **Rimossa la colonna fisica `plugin_of` da `bdus_cfg_tables`** — resa dato morto dalla derivazione basata su `bdus_cfg_relations`, ora droppata fisicamente (`M036_DropPluginOfColumn`, guardia `columnExists` per non rompere le installazioni già a schema aggiornato). `ToDB::upsertTable()`, l'import v4 (`M011_ConfigToDb`) e il backfill (`M021_FixPluginOf`) non ci scrivono più — l'attacco genitore/figlio si registra solo in `bdus_cfg_relations`, tramite un nuovo helper condiviso (`PluginTableSplitter`) che estrae la logica di creazione delle tabelle gemelle usata da entrambe le migrazioni. Nuova migrazione `M037_SplitMultiTenantPluginData`: per le app già migrate da v4 anni fa (prima che il fix del caso multi-genitore in `M021_FixPluginOf` esistesse), ispeziona fisicamente `table_link` per ogni tabella plugin già agganciata e stacca in tabelle gemelle i tenant extra rimasti invisibili, senza toccare il genitore già configurato. Copertura: nuovi `M035MigrationTest`/`M036MigrationTest`/`M037MigrationTest`, `M021MigrationTest` riscritto per verificare `bdus_cfg_relations` invece della colonna.
+
+- **Rimossa la colonna `table_link` da ogni tabella plugin generica** — con una tabella fisica per genitore (dal lavoro sopra), `table_link` era diventata una costante ripetuta su ogni riga, ridondante con `bdus_cfg_relations`. Tutte le query/CRUD dei plugin (`Record\Read`/`Persist`/`Edit`, `controllers/Record.php`, `JsonFilter::buildPluginSubquery`/`buildNestedCondition`) usano ora il solo `id_link`; `Alter::createMinimalTable()` non crea più la colonna per le nuove tabelle plugin; `Config::add_new_tb()`/`activateRadiocarbon()` non la registrano più in config. Nuova migrazione `M038_DropTableLinkFromPlugins`: droppa la colonna fisica e la relativa riga `bdus_cfg_fields` da ogni tabella `is_plugin=1` esistente (`bdus_geodata` esplicitamente esclusa: resta multi-tenant per costruzione, condivisa da tutte le tabelle geo-abilitate dell'app). Rimosso anche `lib/SQL/QueryObject.php`/`Validator.php`: codice morto (zero chiamanti in tutto il repo) che era l'unico punto a mescolare la logica di join di plugin e geodata. Copertura: nuovo `M038MigrationTest`, test esistenti aggiornati (`JsonFilterBacklinkTest`, `JsonFilterLookupTest`, `RadiocarbonCtrlTest`, `RecordPersistTest`, `RecordCtrlSaveEraseTest`, `AlterFkIndexTest`, fixture in `BdusTestCase`).
+
+### Fixed
+
+- **Controlli di privilegio (UAC) mancanti in tre controller** — `Debug::getLogs()`/`purgeLogs()`, `Vocabularies::list()`/`add()`/`edit()`/`erase()`/`sort()` e i quattro metodi di lettura di `AssemblageAnalysis` non applicavano nessun controllo `Authorization::can()`: qualunque utente autenticato via JWT poteva leggere/svuotare il log di sistema, modificare i vocabolari, o interrogare l'elenco tabelle/metadati/pivot di Assemblage Analysis, a prescindere dal proprio livello di privilegio. Aggiunto `admin` sul log applicazione; `read` sulla lettura dei vocabolari (`admin` sulle mutazioni — non basta più essere `writer`); `read` sui quattro metodi di lettura di Assemblage Analysis. Copertura: nuovi test di privilegio in `DebugCtrlTest`, `VocabulariesCtrlTest`, nuovo `AssemblageAnalysisCtrlTest`.
+
+- **`self_writer` non poteva mai salvare, modificare o cancellare un proprio record** — `Record::saveRecord()` chiamava sempre `Authorization::can('edit')` senza passare il creator del record, quindi il ramo che permette a `self_writer` (25) di modificare solo i record che ha creato non scattava mai, nonostante `getRecords()`/`getRecord()` riportassero `can_add`/`can_edit: true` per lui. `saveRecord()` ora distingue creazione (`add_new`, include `self_writer`) da modifica (`edit` con il creator del record esistente, caricato una sola volta e riusato). `erase()` applica lo stesso trattamento, incluso per la cancellazione bulk — ogni id del batch viene valutato singolarmente, quindi un batch misto di record propri e altrui cancella solo i propri, riusando la risposta parziale già esistente (`partially_deleted_with_count`); chi non ha alcuna chance (privilegio peggiore di `self_writer`) riceve subito `not_enough_privilege` senza letture inutili. `getRecord()`: `can_edit`/`can_delete` ora riflettono la stessa logica creator-aware, così la UI non promette più un'azione che poi fallisce lato server. Copertura: nuovi test in `RecordCtrlSaveEraseTest` e `RecordCtrlGetRecordTest`.
+
+- **`lib/Bdus/Router.php` (mappa privilegi per l'autenticazione via API key) disallineato dal comportamento reale dei controller** — per gli utenti JWT il gate reale è sempre il controller, ma per le API key `Router::ROUTE_PRIVILEGE` è l'unica applicazione effettiva. Trovate due divergenze: `SearchReplace::*` documentato `super_admin` ma applicato `admin` dal controller (mantenuto `admin`, allineata la mappa); `Vocabularies::add/sort/edit/erase` documentati `edit` (soglia `writer`, ≤20) ma ora applicati `admin` dal controller (allineata la mappa, vedi fix sopra). Senza questo allineamento una API key con privilegio `writer` avrebbe avuto un accesso diverso da un utente JWT con lo stesso privilegio, per le stesse identiche azioni.
+
+- **Sezione "Plugin" (toggle generico) in Config → Tabelle era UI morta e mostrava tabelle plugin altrui** — la lista `available_plugins` restituita da `getTableConfig()` elenca tutte le tabelle `is_plugin=1` dell'app senza filtrare per `plugin_of`, quindi ogni tabella plugin auto-generata da un'altra tabella (es. `misure_radiocarbon`, creata attivando la datazione al radiocarbonio su "Misure") compariva anche nella sezione "Plugin" di tabelle non correlate (es. "Complessi"), con toggle apparentemente funzionante. In realtà quel toggle non ha mai avuto alcun effetto persistente per nessun tipo di plugin: `LoadFromDB::tables()` ricalcola sempre `plugin[]` da `is_plugin`+`plugin_of` a ogni caricamento della config, sovrascrivendo silenziosamente qualunque valore salvato tramite il toggle. Rimossa l'intera sezione lato frontend (`ConfigTableForm.vue`) insieme al codice morto associato (`availablePlugins`, `pluginOptions`, `togglePlugin`, chiave `plugin` nel payload di salvataggio) — i plugin restano gestibili solo dalla sezione "Plugin di sistema", l'unica con effetto reale.
+- **`DeletedRecordsView`: il selettore tabella non permetteva mai di scegliere una tabella** — `tableOptions` mappava `tb.id` (campo inesistente sugli oggetti tabella restituiti da `/api/tables`, che espongono solo `name`) come `value` di ogni opzione della select; con `value: undefined` su tutte le opzioni, selezionarne una non aveva alcun effetto e la vista restava sempre sul placeholder "Select a table...". Allineato al pattern già corretto di `ImportView.vue`/`SearchReplaceView.vue` (`value: tb.name`).
+- **Diff versioni (drawer "Version history"): placeholder `%d` non interpolati nel conteggio righe delle tabelle plugin collegate** — le stringhe i18n `version_plugin_snap_rows`/`version_plugin_cur_rows` usavano `%d`, ma `useI18n().t()` interpola solo `%s` (unica convenzione in uso in tutta la codebase, coerente con `tr::get` lato PHP) — il placeholder restava letterale e veniva mostrato in maiuscolo (`text-transform: uppercase` sulla label di sezione), es. `M_REPERTI_IN_US (%D ROW(S) IN SNAPSHOT → %D ROW(S) CURRENT)` invece del conteggio reale.
+- **Record `us` importati via CSV nel dataset demo permanentemente non modificabili** — il campo `sigla` ha una regex di validazione dimostrativa (`^[A-Z]{1,3}\d{3,}$`), enforced sia client sia server-side su ogni salvataggio; i 15 record demo importati con sigla "EXT-US001".."EXT-US015" (creati via `/api/import/data`, endpoint che non applica questa validazione) la violavano e diventavano quindi non più salvabili via UI. Rinominati in "EXT001".."EXT015" nel fixture di seed, formato che rispetta la regex mantenendo il prefisso "EXT" come segnale di provenienza esterna.
+
+## [5.3.0] - 2026-07-15
+
+### Added
+
+- **Plugin di datazione al radiocarbonio (C14)** — nuovo plugin di sistema attivabile per tabella da Config → Tables, sul modello dei plugin già esistenti (fuzzy-date, osteologia) ma con una differenza architetturale: a differenza di quelli, crea una vera tabella plugin figlia (`{tb}_radiocarbon`, collegata via `table_link`/`id_link`) invece di aggiungere colonne alla tabella principale — permette più datazioni per record e mantiene i campi calibrati come colonne indicizzabili/interrogabili via ricerca avanzata (niente colonna JSON). Calcolo di calibrazione (curva IntCal20 ufficiale, Reimer et al. 2020, bundle statico in `lib/Radiocarbon/data/intcal20.php`) sempre server-side al salvataggio — i valori calibrati eventualmente inviati dal client vengono ignorati e ricalcolati (`Record::saveRecord()`), mai attendibili come input. Restituisce il range "bounding" (min/max) a 1σ (68.2%) e 2σ (95.4%), non le vere regioni HPD disgiunte di OxCal — limite documentato sia in UI (tooltip sui campi calibrati) sia nella pagina docs dedicata. Copertura: 10 unit test sull'algoritmo di calibrazione (`RadiocarbonCalibratorTest`), 7 integration test su attivazione/salvataggio (`RadiocarbonCtrlTest`), fase hurl dedicata (39).
+- **Dataset demo arricchito** (`19_seed_demo.hurl`) — aggiunte 3 datazioni al radiocarbonio, immagini allegate a reperti/sepolture/siti, un'analisi di assemblaggio di esempio (conteggio reperti per US e categoria), una ricerca salvata condivisa, un template di stampa per Unità stratigrafiche, un secondo utente demo con privilegio ridotto per-tabella, un messaggio di benvenuto homepage personalizzato, un record eliminato (per popolare la vista "Deleted records"), e una libreria Zotero di gruppo pubblica con due citazioni reali agganciate a record di esempio.
+- **Favicon per bdus-app** — l'app non ne aveva nessuna (tab del browser vuota). Aggiunti `public/favicon.svg` (copiato da `bdus.svg`, già usato nel logo della schermata di login) e `public/favicon.ico` come fallback per i browser senza supporto SVG, entrambi ripresi da `bdus-docs`; collegati in `index.html` con `<link rel="icon" type="image/svg+xml">` + `<link rel="alternate icon">`.
+
+### Changed
+
+- **UX del modulo bibliografia Zotero (RecordView, modalità modifica) ridisegnata come modal** — il pannello di aggiunta era inline in fondo alla sezione: il campo di ricerca compariva sotto il selettore di libreria invece che affiancato, si perdeva a fine pagina, e i risultati (in un semplice `div` senza overlay proprio) potevano finire fuori dallo schermo scorrendo. `ZoteroSection.vue` ora apre un `Dialog` PrimeVue centrato: selettore libreria e campo di ricerca affiancati, stato di ricerca esplicito (icona a spinner nel campo + testo "Ricerca in Zotero…"), risultati sempre in un'area con altezza massima (`45vh`) e scroll proprio, mai fuori viewport. Ogni risultato ha ora un pulsante "+" dedicato invece di avere l'intera riga cliccabile (evita aggiunte accidentali scorrendo la lista), e il modal si chiude automaticamente dopo un'aggiunta riuscita invece di restare aperto. Corretto anche un overflow orizzontale nella lista risultati causato da URL lunghi non spezzabili nelle citazioni CSL restituite da Zotero (`overflow-wrap: break-word`).
+
+### Fixed
+
+- **Asse cronologico del grafo Harris Matrix (vista "Chronological") non seguiva pan/zoom** — `RsGraphChrono.vue` disegnava le tacche degli anni in un `<svg>` separato dal canvas Cytoscape, calcolate una sola volta in coordinate di modello; zoomando o trascinando il grafo i nodi si spostavano ma l'asse restava fermo. Un listener su `cy.on('pan zoom')` ora mantiene l'asse sincronizzato con la trasformazione live del grafo, usando la stessa formula di Cytoscape (`screenY = pan.y + modelY * zoom`).
+- **Padding insufficiente in fondo alle sezioni del record e alla pagina di lettura/modifica** — `.record-section` (stile condiviso da tutti i fieldset di `RecordView`) aveva `padding-bottom: 0.75rem`, che faceva sembrare il contenuto "a filo" col bordo inferiore; portato a `1.5rem`. Aumentato anche il padding-bottom del contenitore di scroll `.record-content` (`1rem` → `2rem`) perché l'ultima sezione della pagina non risultasse incollata al bordo del viewport.
+- **Warning Vue in console per il tipo della prop `id` di `ChronoDensityPanel`** — la prop era dichiarata `Number` ma `RecordView.vue` le passa `route.params.id`, sempre una stringa in Vue Router; il tipo è stato rilassato a `[Number, String]`, coerente con lo stesso pattern già usato dalle altre sezioni del record (`ZoteroSection`, `ManualLinksSection`, ecc.) per gli id passati da route.
+
+## [5.2.0] - 2026-07-14
+
+### Changed
+
+- **Migrazione runtime da PHP 8.2 a PHP 8.4** — `Dockerfile` (`php:8.2-apache` → `php:8.4-apache`), `composer.json` (`require.php`, `config.platform.php`) e documentazione (README, docs.bdus.cloud) aggiornati. Sbloccata dalla rimozione di `funiq/geophp` nella stessa sessione (nessuna sua release taggata dichiarava compatibilità oltre PHP 8.2). `composer.lock` rigenerato dentro un container `php:8.4-apache` reale: nessun conflitto, `symfony/process` risolve naturalmente in `v8.0.13` (richiede PHP ≥8.4) ora che la piattaforma dichiarata corrisponde a quella reale. Build Docker pulita verificata da zero (estensioni `pdo_sqlite`/`pdo_pgsql`/`pdo_mysql`/`mbstring`/`gd`/`zip` compilano senza modifiche), container avviato senza crash loop, suite `--all-engines --setup --tests --unit` verde su SQLite/PostgreSQL/MariaDB. PHP 8.2 è in security-only da dicembre 2024 ed esce di EOL il 31/12/2026; PHP 8.4 è supportato fino al 2028.
+- **Rimossa la dipendenza `funiq/geophp`, sostituita da un converter nativo** — la libreria era usata in soli 4 punti (`lib/Record/Read.php`, `controllers/Geoface.php` ×3, `controllers/Import.php`), esclusivamente per conversione di formato WKT↔GeoJSON (`geoPHP::load(...)->out(...)`), mai per operazioni geometriche (buffer, area, intersezioni, SRID). Nuova classe `Geo\WktGeoJson` (`lib/Geo/WktGeoJson.php`), due metodi statici `toWkt(array): string` / `toGeoJson(string): array`, supporta Point/LineString/Polygon/MultiPoint/MultiLineString/MultiPolygon (inclusi poligoni con hole); `GeometryCollection` non supportato (mai usato). 17 nuovi unit test (`tests/Unit/WktGeoJsonTest.php`) coprono il round-trip WKT→GeoJSON→WKT e GeoJSON→WKT→GeoJSON su tutti e 6 i tipi, oltre ai casi di errore. `composer.lock` rigenerato dentro un container `php:8.2-apache` reale; sblocca la migrazione a PHP 8.4 (nessuna release taggata di `funiq/geophp` dichiara compatibilità oltre PHP 8.2).
+- **Backup/restore ora girano dentro l'immagine `bdus-api`, non più in un container `alpine` sibling** — `docker-backup.sh`/`docker-restore.sh` sono ora inclusi nell'immagine (`/usr/local/bin/`), invocati via `docker run --entrypoint` contro il volume `projects_data`. Eliminano il riconoscimento manuale del nome del volume dentro un container generico e, soprattutto, non richiedono più il pull di un'immagine `alpine` separata: bastano l'immagine `bdus-api` (che un deployment GHCR-only ha già) e il volume, funziona anche a stack fermo. Gli script `backup.sh`/`restore.sh` alla radice del monorepo restano l'interfaccia utente invariata (stessi argomenti, stessi nomi di archivio, stesso prompt di conferma) ma delegano l'estrazione/scrittura effettiva ai nuovi script nell'immagine; l'immagine di riferimento è configurabile con `BDUS_API_IMAGE` (default `ghcr.io/lad-sapienza/bdus-api:latest`).
+- **bdus-app: 4 major npm aggiornati, precedentemente rimandati** — `pinia 2→4` (adottata direttamente la 4.0.0, uscita durante la sessione stessa, non la 3.0.4 originariamente pianificata; richiede `@vue/devtools-api ^8.1.5` come nuova dipendenza diretta), `cytoscape-dagre 3→4` (solo migrazione CJS→ESM/Rollup a monte, zero cambi all'algoritmo dagre), `vue-router 4→5` (nessun breaking change per chi non usa `unplugin-vue-router`; migrato il guard `onBeforeRouteLeave` di `RecordView.vue` dallo stile callback deprecato `next()` allo stile return/Promise; aggiunto un `overrides` in `package.json` per i nuovi peer opzionali `pinia`/`vite` non allineati), `vite 6→8` + `@vitejs/plugin-vue 5→6` insieme (accoppiati da peer-dependency; build ora su Rolldown/Oxc, ~5 volte più veloce). Tutti verificati con smoke test manuale completo in browser (login, record edit, Harris Matrix, ricerca, config) e build Docker di produzione pulita; nessuna breaking change visibile lato utente finale.
+- **GitHub Actions bump a versioni native Node 24** — `actions/checkout@v4→v5`, `docker/metadata-action@v5→v6`, `docker/setup-qemu-action@v3→v4`, `docker/setup-buildx-action@v3→v4`, `docker/login-action@v3→v4`, `docker/build-push-action@v6→v7` in `docker-publish.yml` (bdus-api e bdus-app), elimina il warning di deprecazione "Node.js 20 is deprecated". Aggiunto anche `workflow_dispatch:` al trigger per poter testare il workflow a mano senza dover taggare una release.
+- **Aggiornamenti di routine (minor/patch)** — bdus-api: `firebase/php-jwt 7.0.5→7.1.0`, `nikic/fast-route 1.3.0→1.3.1`, `phpunit/phpunit 11.5.55→11.5.56` (dev). bdus-app: `cytoscape 3.33.3→3.34.0`, `marked 18.0.3→18.0.6`, `vue 3.5.34→3.5.39`, `vue-chartjs 5.3.3→5.3.4`. Tutti entro i range già dichiarati.
+- **Node runtime nello stage di build di bdus-app: `node:22-alpine` → `node:24-alpine`** — Node 24 è ora la versione LTS attiva (coerente con GitHub Actions, che già gira su runner Node 24), Node 22 è in maintenance-only. Riguarda solo lo stage di build dell'immagine Docker (Vite/npm), non il runtime servito (Nginx statico) né alcun ambiente di produzione già distribuito.
+
+### Fixed
+
+- **`funiq/geophp`/`symfony/process` fissati alla piattaforma PHP dichiarata, rimosso lo stopgap `--ignore-platform-req=php`** — il flag aggiunto in 5.1.1 mascherava il problema reale invece di risolverlo. `funiq/geophp` era lockato su `dev-master` (HEAD dichiara `php: 5.5 - 8.0`) mentre esiste una release taggata `v2.0.3` che dichiara `php: 5.5 - 8.2`, compatibile con la piattaforma corrente; `composer.json` ora fissa `"funiq/geophp": "^2.0.3"`. `symfony/process`, trascinato da `spatie/db-dumper ^3.0`, era risolto in `v8.0.11` (richiede PHP ≥8.4) nonostante `config.platform.php: 8.2` in `composer.json` — `composer.lock` è stato rigenerato per davvero dentro un container `php:8.2-apache` reale (non sulla macchina locale, che non ha PHP/Composer) e ora risolve `symfony/process` in `7.4.13`. `composer install` funziona di nuovo senza bypassare la validazione di piattaforma; `--ignore-platform-req=php` è stato rimosso da `docker-entrypoint.sh`.
+- **Vulnerabilità di sicurezza in `guzzlehttp/guzzle`/`guzzlehttp/psr7`** (trascinati da `league/oauth2-google`) — `composer audit`, eseguito durante la rigenerazione del lock file di cui sopra, ha segnalato 3 advisory di severità media: dot-only cookie domain matching e silent HTTPS→cleartext downgrade in guzzle (< 7.12.1), CRLF injection nella serializzazione HTTP start-line in psr7 (< 2.12.1). Aggiornati a `guzzlehttp/guzzle 7.14.1` e `guzzlehttp/psr7 2.12.5`; `composer audit` ora non segnala nulla.
+- **Vulnerabilità di sicurezza in `vite`** (bdus-app) — `vite <=6.4.2` era vulnerabile a NTLMv2 hash disclosure via UNC path handling e a un bypass di `server.fs.deny` su Windows (severità alta). Bump a `6.4.3`, entro il range `^6.0.0` già dichiarato; `npm audit` ora non segnala nulla.
+
+### Known issues
+
+- **`bdus-docs`: vulnerabilità in `esbuild` bundlato da `vitepress`** — `npm audit` segnala 3 advisory (1 alta, 2 moderate) per una CORS misconfiguration nel dev server di `esbuild` (GHSA-67mh-4wv8-2f99), trascinata transitivamente da `vitepress@1.6.4` (ultima release disponibile) tramite `vite`. Nessun fix disponibile a monte (`npm audit fix --force` non risolve). Rischio basso: interessa solo `vitepress dev` in locale (un sito malevolo visitato mentre il dev server gira potrebbe leggerne le risposte), non la build statica pubblicata in produzione. Da ricontrollare quando `vitepress` rilascerà una versione con `esbuild` aggiornato.
+
+## [5.1.1] - 2026-07-13
+
+### Fixed
+
+- **Container API in crash loop su ogni deploy fresco** — `vendor/` è gitignored e mai incluso nell'immagine Docker; ogni container nuovo lo installa al primo avvio (`docker-entrypoint.sh`). `composer.lock` bloccava però `funiq/geophp` (`dev-master`, dichiara `php: 5.5 - 8.0`) e, tramite `spatie/db-dumper`, `symfony/process v8.0.11` (dichiara `php: >=8.4`) — entrambi incompatibili con la piattaforma dichiarata PHP 8.2, pur non essendoci reale incompatibilità di codice. `composer install` falliva ad ogni avvio → crash loop su qualunque installazione senza un `vendor/` persistito da prima. Fix: `docker-entrypoint.sh` passa `--ignore-platform-req=php` a `composer install`, che salta il controllo sulla versione PHP dichiarata dai singoli pacchetti mantenendo tutti gli altri controlli di piattaforma (estensioni, ecc.). Interessava **ogni immagine `bdus-api` pubblicata finora**, incluse quelle GHCR da `bradypus.yml`.
+
+## [5.1.0] - 2026-07-13
+
+### Changed
+
+- **Script di backup/restore/seed per il volume `projects_data`** (`backup.sh`, `restore.sh`, `seed-demo.sh` — root monorepo) — `backup.sh`/`restore.sh` incapsulano i comandi `docker run ... tar` per backup/restore completo o per singola app (auto-rilevano il volume, `restore.sh` chiede conferma prima di sovrascrivere); `seed-demo.sh` è un wrapper sottile su `bdus-api/test.sh --no-docker --setup --seed` per popolare rapidamente un'istanza, anche remota, col dataset demo completo senza duplicare l'infrastruttura hurl.
+- **README consolidati verso docs.bdus.cloud** — i tre README (BraDypUS, bdus-api, bdus-app) descrivevano ancora immagini "Docker Hub — coming soon" mai pubblicate (il deploy reale usa GHCR da `bradypus.yml`) ed erano andati fuori sync anche su altri fronti: `bdus-api/README.md` documentava un flag `--skip-unit` e una suite di 18 fasi hurl mai esistiti/non più veri (`test.sh` ne ha 38), `dev/architecture.md` descriveva una cartella `cfg/` con YAML per app rimossa da tempo (la config tabelle/campi vive nel DB). I tre README sono stati ridotti a quickstart + link; i contenuti corretti vivono ora solo in docs.bdus.cloud (`dev/testing`, `dev/architecture`, `guide/deploy`).
+
+- **Plugin osteologico — i18n completo e vista tabella** — tutte le label del plugin (nomi ossa, categorie, opzioni dropdown conservazione/certezza) ora usano chiavi i18n invece di testo italiano hardcoded; `bonesConfig.js` usa `labelKey` al posto di `label`. Aggiunta vista tabella alternativa all'SVG nell'editor: toggle `[SVG] [Tabella]` permette di compilare presenza, conservazione, certezza e note per tutte le ossa in una griglia compatta per categoria, senza dover cliccare sull'SVG. La vista tabella (`OsteologyTable.vue`) è affiancata alla vista SVG esistente; entrambe scrivono sullo stesso modello dati. Aggiunte ~55 nuove chiavi i18n in `it.json` e `en.json`.
+
+- **Plugin osteologico — ID anatomici standardizzati in inglese** — il modello dati del JSON `osteo_data` usa ora ID anatomici inglesi standard invece di nomi italiani: chiavi delle ossa (`cranium` anziché `cranio`, `femur_right` anziché `femore_dx`, ecc.), categorie corporee (`head`, `spine`, `thorax`, `shoulder`, `upper_limb`, `pelvis`, `lower_limb`, `foot`), suffissi lateralità (`_right`/`_left` anziché `_dx`/`_sx`) e valori degli attributi (`complete`/`fragmentary`/`traces` per conservazione; `certain`/`probable`/`uncertain` per certezza). Le label visualizzate agli utenti rimangono in italiano. I dati esistenti nel seed demo sono stati aggiornati di conseguenza.
+- **DBML: fix test fase 36** — corretto il test `36c` che usava `{{app_name}}_us` (nome prefissato) invece di `us` (nome breve, coerente col config); corretti `36g`/`36j` che si aspettavano `parameter_missing` invece del codice effettivo `dbml_empty`; rimosso il pre-flight check ridondante in `dbml_apply()` che impediva l'apply parziale (tabelle con errori vengono già saltate da `DbmlImporter::apply()`).
+
+### Added
+
+- **Plugin osteologico (inventario ossa)** — nuovo plugin di sistema attivabile per tabella tramite **Config → Tabelle → Inventario osteologico**. Aggiunge una colonna `osteo_data TEXT` (JSON) al record e un pannello interattivo in RecordView:
+  - **51 elementi anatomici** in 9 regioni corporee (testa, colonna, torace, spalla, arto superiore, pelvi, arto inferiore, piede, denti).
+  - **Multi-individuo** — tab per individuo con label e note; il pulsante "Aggiungi individuo" aggiunge un nuovo scheletro vuoto.
+  - **SVG interattivo** — visualizzatore skeleton zoomabile (rotella mouse o pulsanti +/−) e pannable (click+drag). Tooltip on hover. Legenda colori in fondo.
+  - **BonePanel laterale** — in edit mode, click su un osso apre un pannello con quattro attributi: presenza (sì/no/non documentato), conservazione (completo / >50% / <50% / frammentario / tracce), certezza anatomica (certa/probabile/incerta), certezza lateralità (solo ossa pari).
+  - **Disattivazione non distruttiva** — il toggle off rimuove il pannello ma preserva la colonna `osteo_data` e i dati già inseriti.
+  - **Demo seed** — tabella `sepolture` nel seed demo con 3 sepolture di esempio (SEP001–SEP003, mono- e bi-individuale).
+  - **Test** — 7 test PHPUnit in `ConfigCtrlTest` + fase hurl `38_osteology.hurl`.
+  - File: `bonesConfig.js`, `BonePanel.vue`, `OsteologySvg.vue`, `OsteologySection.vue`; endpoint `POST/DELETE /api/config/table/{tb}/osteology`.
+
+- **Tipo di campo `md` (Markdown)** — nuovo tipo di campo `"md"` che memorizza testo Markdown e lo rende in HTML nel modo visualizzazione. In modalità modifica compare una textarea con un pulsante toggle "Anteprima" / "Modifica" per vedere il rendering in tempo reale. La libreria `marked` (già presente come dipendenza) è usata per il parsing.
+  - `controllers/fld_structure.json` — aggiunto `"md"` alla lista dei tipi disponibili, tra `"long_text"` e `"select"`.
+  - `FieldDisplay.vue` — ramo `v-else-if="schema.type === 'md'"` con `v-html="marked.parse()"` e stili prosa (`.field-md`).
+  - `FieldEditor.vue` — ramo `v-else-if="schema.type === 'md'"` con Textarea + toggle preview (`.md-editor-wrap`, `.md-preview`); ref locale `mdPreview` indipendente per ogni istanza del campo.
+  - `it.json` + `en.json` — nuova chiave `preview`.
+
+- **Sezioni accordion nel template system** — nuovo tipo di sezione `"type": "accordion"` nel JSON dei template. In questo tipo `content` è un array di pannelli `{ label, open, fields[] }` invece dei soliti `{ field, width }`. Ogni pannello è collassabile indipendentemente; `open: true` (default) lo rende aperto al caricamento.
+  - `lib/Template/Loader.php::validate()` — aggiunto ramo `$isAccordion`: valida i campi dentro `panel.fields` con gli stessi controlli (unknown_field, invalid_width) usati per le sezioni core; salta il check di `width` sull'array `content` (che ora contiene pannelli, non field items).
+  - `TemplateSection.vue` — ramo `v-if="isAccordion"` che rende `accordion-panels` con stato `openPanels[]` inizializzato da `panel.open`; click sull'header togola il pannello.
+  - `TemplatesView.vue` — sostituisce il plugin Select con un selector "Tipo sezione" (core / plugin / accordion); quando il tipo è accordion mostra un editor per pannelli annidati (label, open-by-default, lista campi). `onSectionTypeChange()` resetta `content` e imposta/rimuove `type` e `plugin` in modo consistente. `saveTemplate()` pulisce `type` se diverso da `"accordion"`.
+  - `it.json` + `en.json` — 4 nuove chiavi: `add_panel`, `open_by_default`, `panel_label`, `section_type`.
+
+- **Scorciatoia da tastiera CMD+S / CTRL+S (`RecordView.vue`)** — un listener `keydown` su `window` (montato/smontato con il componente) intercetta `metaKey+s` (macOS) e `ctrlKey+s` (Windows/Linux) solo quando `mode === 'edit'`; chiama `saveRecord(keepEditMode = true)`, che salta il passaggio a `mode = 'read'` dopo il salvataggio e ri-popola `editData` tramite `enterEditMode()` dopo il ricaricamento del record. Per i record nuovi, un flag `pendingEditMode` fa sì che `fetchRecord()` ri-entri in modalità modifica dopo la navigazione verso il nuovo URL.
+
+- **DBML import / export** — il pannello Config espone una nuova sezione DBML che permette di esportare l'intera configurazione dell'app (tabelle, campi, vocabolari) in un singolo file `.dbml` annotato e di importare nuove tabelle da un file DBML:
+  - **Export** (`GET /api/config/dbml`) — serializza cfg + `bdus_vocabularies` in DBML valido per dbdiagram.io; le tabelle di sistema (`bdus_*`) sono escluse automaticamente; i valori degli Enum sono sempre quotati per compatibilità con spazi e trattini.
+  - **Preview** (`POST /api/config/dbml/preview`) — valida il DBML senza scrivere nulla: errori bloccanti (`table_already_exists`, `pk_must_be_id`) e avvisi non bloccanti (`auto_add_id`, `auto_add_creator`).
+  - **Apply** (`POST /api/config/dbml/apply`) — crea le tabelle nel DB e scrive la configurazione; tabelle con errori vengono saltate; i vocabolari dagli Enum marcati `// bdus:vocabulary` vengono inseriti in `bdus_vocabularies`.
+  - Tre nuove classi: `Bdus\DbmlParser` (parser custom, no dipendenze esterne), `Bdus\DbmlImporter`, `Bdus\DbmlExporter`.
+  - 41 nuovi test (15 unit DbmlParser, 12 unit DbmlExporter, 14 integration DbmlImporter) + hurl phase 36.
+
+- **Traversata dei campi lookup (`id_from_tb`) in `JsonFilter`** — i campi configurati con `id_from_tb` memorizzano l'id del record referenziato; un oggetto annidato sul campo viene ora risolto con una subquery sulla tabella referenziata:
+  - `filter[parent_id][sigla][_eq]=T001` → `crud_test.parent_id IN (SELECT id FROM crud_test WHERE sigla = ?)`
+  - Funziona anche dentro le subquery plugin/backlink: `filter[tags][cat_ref][name][_eq]=Ceramics`
+  - Le condizioni annidate sono compilate da un `JsonFilter` ricorsivo sulla tabella referenziata: tutti gli operatori, i gruppi logici `_and`/`_or`, la validazione dei campi e ulteriori hop lookup funzionano in modo trasparente.
+  - Le condizioni dirette sul campo (`filter[parent_id][_eq]=3`) restano confronti per id, invariate.
+- **Metadati `ref_tb` / `ref_field` in `getAdvancedConfig`** — i campi lookup nella lista campi della ricerca avanzata dichiarano la tabella referenziata e il suo `id_field`; il frontend usa questi metadati per emettere la traversata annidata, allineando la ricerca ai valori suggeriti dall'autocomplete (che provengono dalla tabella referenziata).
+
+- **Analisi Assemblaggio** (`AssemblageAnalysis`, M034) — nuovo controller per la creazione e consultazione di analisi pivot su assemblaggi di materiale; le analisi vengono salvate nel DB e possono essere condivise:
+  - **9 endpoint REST**: `GET /api/assemblages` (lista), `POST /api/assemblages` (salva), `GET /api/assemblage/sources` (tabelle sorgente disponibili), `GET /api/assemblage/table-meta` (campi + FK per il path builder), `POST /api/assemblage/data` (esecuzione pivot), `POST /api/assemblage/{id}` (aggiorna), `POST /api/assemblage/{id}/share`, `POST /api/assemblage/{id}/unshare`, `DELETE /api/assemblage/{id}`.
+  - **Migrazione M034** (`CreateAssemblageAnalyses`) — crea la tabella `bdus_assemblage_analyses` con wizard-config JSON, flag di condivisione, `created_by` e timestamp.
+  - `getSources()` restituisce tabelle normali e plugin con `parent_tb`/`parent_label`; `getTableMeta()` espone campi e relazioni FK per costruire il percorso multi-hop; `getData()` computa la pivot con misura configurabile (count, sum, count_distinct) e filtri JSON.
+  - `getData()` restituisce anche `group_labels` (mappa id→etichetta umana via preview field), `group_tb` e `group_field`; la Vue li usa per mostrare sull'asse verticale l'etichetta leggibile invece dell'id numerico e per linkare le schede.
+
+- **Timeline cronologica comparata** (`GET /api/chrono/timeline`, `ChronoTimelineView.vue`) — vista full-page che sovrappone sullo stesso asse temporale tutti i record con dati `fuzzy_date` delle tabelle selezionate; ogni tabella è una riga, ogni record un segmento colorato per certezza; parametri `from`, `to` e `tb[]` per filtro temporale e per tabella; navigazione dalla barra degli strumenti della DataView tramite il pulsante calendario.
+
+- **Distribuzione cronologica derivata** (`GET /api/chrono/related/{tb}/{id}`, `ChronoDensityPanel.vue`) — pannello nel corpo della scheda record che mostra, per ogni tabella relata tramite FK, un istogramma a 60 bin della densità cronologica dei record collegati; evidenzia l'intervallo di picco con etichette `from`/`to`; ogni barra è un link filtrato alla lista dei record.
+
+- **Endpoint upgrade** (`Upgrade` controller) — tre endpoint per la gestione dell'aggiornamento schema:
+  - `GET /api/upgrade/status` — stato corrente (`major` / `minor` / `null`) senza autenticazione JWT.
+  - `POST /api/upgrade/major` — esegue le migrazioni major (v4→v5); autenticazione diretta superadmin.
+  - `POST /api/upgrade/minor` — esegue le migrazioni minor pendenti; richiede JWT admin.
+
+### Changed
+
+- **Ricerca avanzata (`DataView.vue`)** — le righe su campi lookup generano il filtro annidato `{ campo: { ref_field: { _op: valore } } }`; prima il confronto avveniva direttamente sulla colonna (che contiene id), quindi cercare per valore suggerito non trovava mai nulla.
+- **Topbar** — aggiunto il link "by LAD" accanto al nome BraDypUS (punta a `https://purl.org/lad`); il burger menu è nascosto sugli schermi ≥ 1024px, dove la sidebar è sempre visibile e il pulsante si limitava a oscurare lo schermo con l'overlay.
+
+### Fixed
+
+- **`Config::setMain()` eliminava `bdus_version` da `config.json`** — il metodo usava `array_intersect_key($main, ...)` con i dati del form (che non contengono `bdus_version`) invece di `$this->cfg['main']` (config caricata + merge con i dati del form). Ogni salvataggio di proprietà app riscriveva un `config.json` incompleto; alla richiesta successiva `isMajorUpgradeNeeded()` trovava la chiave assente e restituiva `true`, bloccando tutte le route autenticate con 503. Fix: aggiunta `bdus_version` a `BOOTSTRAP_KEYS` e corretto l'intersect a usare `$this->cfg['main']`.
+
+- **`Dispatcher` rispondeva HTTP 503 per `major_upgrade_required`** — 503 ("Service Unavailable") segnala ai tool di monitoring che il server è irraggiungibile, mentre il server è perfettamente operativo; è il client che deve eseguire un upgrade. Sostituito con **HTTP 409 Conflict** (conflitto tra lo stato corrente dell'app e la richiesta). Il body `{"status":"error","code":"major_upgrade_required"}` è invariato; il client legge il body e reindirizza al flusso di upgrade.
+
+- **Grafici salvati di altre tabelle** (`ChartPanel.vue`) — eseguire un grafico salvato su una tabella diversa da quella corrente falliva con `invalid_field`: la definizione veniva ricostruita dal builder con la tabella corrente. Ora i grafici di altre tabelle vengono eseguiti con la definizione salvata, contro la loro tabella; "Salva come" persiste la definizione realmente eseguita.
+
+- **Badge "aggiornamento disponibile" persistente in pagina login** — `listApps()` confronta `bdus_version` in `config.json` con la versione da `composer.json`; `writeProjectVersion()` veniva chiamata solo tramite `Migrate::run()`, cioè solo nel flusso di upgrade. Un login su un'app già aggiornata non scriveva mai la versione corrente → la chiave risultava assente o obsoleta → il badge compariva sempre. Fix: `Login::auth()` chiama `Migrate::run()` anche quando non ci sono migrazioni pendenti (non-fatal try/catch); la chiamata è idempotente e costa solo 2 query + 1 file write per login.
+
+- **Etichette gruppi nell'Analisi Assemblaggio sempre vuote (`—`)** (`AssemblageAnalysis::getData()`) — la JOIN per il label lookup usava `ON fkCol = _lbl.{id_field}` dove `id_field` è il campo semantico configurato (es. `'us'`), non la chiave numerica `id`; il confronto tra un intero FK e una stringa non trovava mai corrispondenza. Fix: il JOIN usa sempre `ON ... = _lbl.id` (chiave autoincrement).
+
+- **Dialogo di conferma eliminazione in `AssemblagesView` mostrava la chiave i18n letterale** — la chiave `delete_confirm_message` mancava in entrambi i file locale (`it.json`, `en.json`). Aggiunta la traduzione italiana e inglese corrispondente.
+
+- **Tooltip della Timeline cronologica completamente trasparente** (`ChronoTimelineView.vue`) — le variabili CSS PrimeVue `--p-surface-card` e `--p-surface-overlay` non sono definite su `:root` ma solo all'interno del sotto-albero del tema; gli elementi teletrasportati in `<body>` non le ereditano, risultando in `background: transparent`. Fix: sostituito con `rgba(255,255,255,0.92)` per il tema chiaro e `rgba(30,41,59,0.92)` per il tema scuro (classe `.dark-mode` su `<html>`).
+
+### Removed
+
+- **Connettore XOR** — rimosso da `getAdvancedConfig`: non era supportato da `JsonFilter` (il frontend lo trattava silenziosamente come AND) e non risulta usato in pratica.
+- **Pulsanti parentesi nella ricerca avanzata** — erano UI senza effetto: `buildFilterFromRows` non li ha mai considerati (il raggruppamento segue la precedenza standard AND-su-OR).
+
+## [5.0.3] - 2026-06-16
+
+### Added
+
+- **Pubblicazione immagini Docker su GitHub Container Registry (GHCR)** — nuovo workflow CI (`docker-publish.yml`) in bdus-api e bdus-app pubblica `ghcr.io/lad-sapienza/bdus-api` e `ghcr.io/lad-sapienza/bdus-app` ad ogni tag `v*` (build multi-piattaforma amd64/arm64, cache GHA).
+- **`bradypus.yml`** (root monorepo, ex `docker-compose.hub.yml`) — compose file di produzione che usa le immagini GHCR anziché richiedere il sorgente; supporta `BDUS_VERSION` per il pinning della versione e `BDUS_PORT` per configurare la porta host del frontend (utile dietro reverse proxy).
+
+## [5.0.2] - 2026-06-06
+
+### Added
+
+- **Filtro cross-table a 1 hop con FK esplicita (backlink)** — `JsonFilter` supporta ora due modalità di join cross-table:
+  1. **Plugin** (`table_link` / `id_link`): comportamento invariato.
+  2. **Backlink** (colonna FK esplicita): quando la tabella richiesta nel filtro non è un plugin della tabella principale ma compare nella sua configurazione `backlinks` nel formato `"refTb:viaTb:fkCol"`, viene generata la subquery corretta: `main.id IN (SELECT fkCol FROM viaTb WHERE …)`.
+  - Esempio PAThs (Caso 1): `filter[m_msplaces][type][_eq]=discovery` → `places.id IN (SELECT place FROM m_msplaces WHERE type = ?)`
+
+- **Filtro cross-table a 2 hop (backlink → plugin_of parent)** — all'interno di una condizione su una tabella via (plugin o backlink), se compare un'ulteriore chiave non-campo che corrisponde al `plugin_of` della tabella via, viene generata una subquery annidata:
+  ```
+  main.id IN (SELECT fkCol FROM viaTb WHERE table_link = ? AND id_link IN (SELECT id FROM parentTb WHERE …))
+  ```
+  - Esempio PAThs (Caso 2): `filter[m_msplaces][manuscripts][palimpsest][_eq]=1` → `places.id IN (SELECT place FROM m_msplaces WHERE table_link = 'manuscripts' AND id_link IN (SELECT id FROM manuscripts WHERE palimpsest = ?))`.
+  - Limitazione: massimo 2 hop; catene di 3 o più livelli non sono supportate.
+
+## [5.0.1] - 2026-06-06
+
+### Fixed
+
+- **`tb_stripped` rimosso dalla risposta API** — il campo ridondante è stato eliminato da `metadata`, dagli item di `manualLinks` e dalla risposta di `POST /api/manual-link`. Le variabili PHP associate rimosse di conseguenza.
+- **`links` / `backlinks` / `manualLinks` serializzati come `{}` quando vuoti** — in PHP un array associativo vuoto veniva codificato come `[]`; il cast a oggetto ora avviene nel controller, prima di `returnJson`, senza interferire con `Edit.php` che usa queste strutture come array internamente.
+- **`id_field` nullo in `getManualLinks()`** — quando la tabella linkata non ha `id_field` configurato, la query generava `SELECT  as label …` causando un errore SQL; aggiunto fallback a `'id'`.
+- **OpenAPI `RecordResponse` riallineato alla risposta reale** — nomi corretti (`tb_id`, `rec_id`, `id_field`, `can_add`), tutti i campi top-level documentati (`backlinks`, `manualLinks`, `geodata`, `rs`, `bibliography`, `schema`), tipo di `links` corretto da `array` a `object`, `$ref: RecordFile` sostituito con il corretto `LinkedFileItem`.
+- **`nullable: true` → sintassi OpenAPI 3.1** — 34 occorrenze di `type: X` + `nullable: true` convertite in `type: [X, 'null']`.
+
+## [5.0.0] - 2026-06-06
+
+Complete rewrite of the frontend, from jQuery + Bootstrap 3 + server-side Twig
+to a **Vue 3 SPA** (Vite, PrimeVue Aura theme). The PHP backend is preserved and
+extended with a clean REST API consumed by the new frontend.
+
+---
+
+### New features
+
+#### Interface
+
+- **New design system** — PrimeVue Aura theme with full dark-mode support and
+  CSS custom-property tokens. Responsive layout with a collapsible sidebar
+  (desktop) and a slide-in drawer (mobile).
+- **Locale switcher** — toggle between 🇮🇹 Italian and 🇬🇧 English at any time;
+  the entire UI is internationalised.
+- **Per-app primary colour** — administrators can choose from 8 colour presets
+  (Indigo, Blue, Violet, Emerald, Teal, Amber, Rose, Slate) in Config → App settings.
+  The change takes effect immediately for all users.
+- **App name in topbar** — the current application name is displayed next to
+  "BraDypUS", making it easy to identify tabs when several apps are open simultaneously.
+
+#### Authentication & security
+
+- **Stateless JWT auth** — PHP sessions are gone. Each browser tab holds its own
+  signed token (`sessionStorage`), so multiple applications can be open at the same
+  time without interference. Tokens refresh silently when less than 30 minutes remain.
+- **OAuth2 / SSO** — users can sign in with Google or ORCID without a local password.
+  Providers are configured per-application; unconfigured providers are hidden.
+- **API keys** — external integrations authenticate with per-application API keys
+  carrying an explicit privilege level (read / edit / admin).
+- **Per-table privilege overrides** — admins can grant per-table read/write/admin
+  rights to individual users, with an optional SQL WHERE clause for row-level filtering.
+
+#### Data management
+
+- **DataView** — paginated record list with:
+  - Fast search, advanced search, and SQL expert mode.
+  - Active filter persisted in the URL — the Back button restores the exact search state.
+  - Sortable, togglable columns with persistent column order per table.
+  - Streaming export (CSV, XLSX, JSON) from any active search.
+  - One-click Harris Matrix button for tables with stratigraphic relations.
+- **RecordView** — unified view and edit mode:
+  - Two-column sticky layout: main fields on the left; links, geodata, bibliography,
+    chronology, and RS in a persistent right sidebar.
+  - All field types: text, long text, date, boolean, select, combo_select,
+    multi_select, slider, link_to, link_out.
+  - Plugin tables with inline add / edit / delete rows.
+  - Unsaved-changes guard on navigation — only fires when data was actually modified.
+  - File gallery with drag & drop upload, sort, and delete.
+  - Duplicate record — one click copies all core fields; `creator` is set to the
+    current user.
+  - Version history with per-field diff and one-click restore.
+- **Typed manual links** — when linking two records, an optional free-text relation
+  label can be attached (e.g. *cites*, *is part of*). Labels appear as chips in the
+  Linked records section.
+- **Manual links graph** — toggle between list and an interactive force-directed graph
+  of all linked records; clicking a node navigates to that record.
+
+#### Files
+
+- **File management view** — dedicated page (sidebar: *File management*) listing all
+  uploaded files in the application. For each file: thumbnail / icon preview,
+  filename, inline-editable description and keywords, linked-record badges, orphan
+  indicator. Filters: *Orphans only* (files not attached to any record).
+  Per-file actions: replace the binary while keeping metadata, or delete.
+- **Image auto-resize** — if `maxImageSize` is set in App settings, raster images are
+  automatically downscaled on upload. Vector formats and documents are unaffected.
+
+#### Fuzzy-date / Chronology plugin
+
+- Activate per table via Config → Table settings → Chronology toggle.
+  Five fields are created in the database (`chrono_from`, `chrono_to`,
+  `chrono_label`, `chrono_certainty`, `chrono_period`) and a dedicated
+  **ChronoSection** appears in the record's right sidebar.
+- Input: free-form chronological range (e.g. `c1 BCE/c4 CE`, `-600/1800`).
+  The parser resolves BCE/CE qualifiers, century notation, and fuzzy markers.
+- Certainty levels: Certain / Probable / Uncertain — stored as an integer,
+  displayed with colour coding.
+- Deactivating the plugin removes the section from the UI; the database
+  columns are preserved (data protection).
+
+#### Stratigraphic relations (Harris Matrix)
+
+- **Redesigned** — relations now store integer foreign keys (record primary keys)
+  instead of free-text identifiers, enabling real referential integrity.
+  Existing data is converted automatically at first login after upgrade.
+- **Add relation** — AutoComplete search replaces the manual text input; users
+  pick a record from the same search used for geodata and manual links.
+- **Harris Matrix view** — full-page interactive Cytoscape.js / dagre graph at
+  `/:app/matrix/:tb`. Stratigraphic cycles are highlighted in red; edge labels
+  use the correct relation name. Available from the DataView toolbar.
+- **Inline RS panel** in RecordView — shows direct relations with human-readable
+  labels; navigates to any related record.
+
+#### Configuration
+
+- **Bookmarkable URLs** — every config panel has its own URL
+  (`/:app/config/app`, `/table/:tb`, `/fields/:tb`, etc.); browser back/forward
+  and deep links work.
+- **Field form improvements**:
+  - All parameter labels translated (no more raw JSON key names).
+  - Boolean parameters (`readonly`, `hide`) rendered as toggles.
+  - `vocabulary_set`, `get_values_from_tb`, and `id_from_tb` are hidden unless
+    the field type is `select`, `combo_select`, or `multi_select`.
+  - `get_values_from_tb` replaced by a two-level cascading UI: pick a table,
+    then pick a field — no manual string formatting.
+- **Table form improvements**:
+  - Help text below every parameter.
+  - `is_plugin` rendered as a toggle.
+  - Preview fields replaced by a MultiSelect with chip display.
+  - Plugin tables shown as a labelled list of toggles, matching the system
+    plugins layout.
+- **FK constraints and user indexes** — define foreign key constraints between
+  tables and custom indexes directly from the Relations and Table panels.
+  Orphan-check runs before applying a constraint; the relation is saved even
+  if the constraint cannot be applied to the DB.
+- **Upgrade assistant**:
+  - *v4 → v5*: detected automatically on login; a dedicated screen guides the
+    superadmin through the one-time migration without touching the normal auth flow.
+  - *Minor upgrades (v5.x → v5.y)*: pending database migrations are shown to
+    the admin in a post-login confirmation screen before entering the application.
+
+#### Vocabularies
+
+- **Filter** — type to narrow the vocabulary list on the left.
+- **Field usage** — selecting a vocabulary shows which table/field combinations
+  reference it, so unused vocabularies are easy to identify.
+
+#### Other
+
+- **Design Templates** — visual JSON editor for record-view layouts: create,
+  edit, rename, and delete per-table templates with section cards and field rows.
+- **Per-app widget system** — drop a native ES module in
+  `projects/{app}/widgets/{name}.js` and attach it to a field via the `widget`
+  config property; the widget mounts inside RecordView and receives the live
+  field value.
+
+---
+
+### Changed (breaking)
+
+- **Frontend technology stack**: jQuery + Bootstrap 3 + Twig replaced by Vue 3
+  SPA. Custom jQuery plugins and any code that relied on server-rendered HTML are
+  no longer present. All data is exchanged as JSON.
+- **Authentication**: PHP sessions replaced by JWT Bearer tokens. Cookies are no
+  longer used. Existing passwords are transparently upgraded from SHA-1 to bcrypt
+  on first login.
+- **Search API**: the `search_type=advanced` / ShortSQL DSL is retired.
+  All structured search now uses the Directus-style `filter` format.
+  Saved queries using the old format must be recreated.
+- **Stratigraphic relations config**: `tables.{tb}.rs` changed from a field-name
+  string (e.g. `"sigla"`) to a boolean flag (`1` / `true`). Updated automatically
+  by migration M030 on first login after upgrade.
+- **Table prefix system** (`APP__`): the application-name prefix on table names is
+  removed. SQLite apps are migrated automatically at first login; no manual action
+  required.
+- **`creator` column** on user data tables: now nullable with a foreign key to
+  `bdus_users (id) ON DELETE SET NULL`. Records whose creator was deleted are
+  not affected; the `creator` field is simply set to `NULL`.
+- **Field parameters removed**: `disabled` (absorbed by `readonly`),
+  `force_default`, and `active_link` are no longer read from configs or offered
+  in the UI. Existing YAML configs using `disabled: true` are silently treated as
+  `readonly: true`; no migration required.
+- **Plugin table naming**: the `m_` prefix convention is no longer required or
+  enforced. Existing tables with the prefix continue to work unchanged.
+- **Obsolete config fields removed**: `gmapskey`, `googleanaytics`,
+  `virtual_keyboard`, `api_login_as_user`, `auth_login_as_user` are stripped from
+  stored configs by the migration runner.
+
+---
+
+## [4.4.7] - 2026-05-09
+
+### Fixed
+- Re-enabled SQL query validation (`Validator`) which was permanently disabled by a `true === false` guard. Root cause (system tables and auto-joined aliased tables triggering false exceptions) is now fixed: the Validator skips tables not present in the user config instead of throwing.
+
+## [4.4.6] - 2026-05-09
+
+### Fixed
+- Removed stale TODO comment in `geoface::saveNew()`: the referenced bug (`$new_id` undefined) had already been resolved; comment was misleading
+
+## [4.4.5] - 2026-05-09
+
+### Fixed
+- Fixed inverted condition in `GetChart` that prevented any chart from being retrieved via the API
+- Fixed wrong column reference in `GetChart` (`sql` → `sqltext`) that would have caused a DB error after the condition fix
+
+## [4.4.4] - 2026-05-09
+
+### Security
+- Upgraded password hashing from SHA1 to bcrypt (`password_hash`/`password_verify`). Existing SHA1 hashes are transparently migrated to bcrypt on next successful login.
+
+## [4.4.3] - 2024-02-06
+
+### Fixed
+- Fixed issue short_sql of links not formatting properly table name
+
+## [4.4.2] - 2022-12-22
+
+### Fixed
+- Fixed issue with line-breaks being removed from template text upon update
+
+## [4.4.1] - 2022-12-20
+
+### Fixed
+- Fixed issue with id_link type not being set correctly on new plugin table creation
+- Fixed blocking issue that prevented new vocabularies to be added
+
+## [4.4.0] - 2022-11-28
+
+### Changed
+- Updated copyright year
+
+### Added
+- Added the possibility to rotate images in the file galley view
+
+## [4.3.2] - 2022-11-26
+
+### Added
+- Fast links to other records support now strings. Spaces must be replaced with `+`. Valid examples are: `@testtable.1`, `@testtable.my+id`, `@testtable.1[One]`, `@testtable.my+id[Some text]`
+
+## [4.3.1] - 2022-11-26
+
+### Fixed
+- Fixed issue with vocabularies names not being pushed to popup when a new vocabulary item was created (issue #11).
+
+## [4.3.0] - 2022-11-24
+
+### Removed
+- DARE basemap for GeoFace was removed as a default option. It can be added as a custom Web Tile Service.
+
+### Added
+- GeoFace can be configured to use custom WMS, WTS and locally stored csv, gpx, kml, wkt, topojson, and geojson files
+
+## [4.2.5] - 2022-08-04
+
+### Fixed
+- Fixed bug menuValues not working with PostgreSQL
+
+## [4.2.4] - 2022-02-18
+
+### Fixed
+- Fixed bug with chart edit module referring sql instead of sqltext
+
+## [4.2.3] - 2022-02-18
+
+### Changed
+- Updated twig/twig from v3.3.2 to v3.3.8
+- Updated intervention/image from v2.6.1 to v2.7.1
+- Updated michelf/php-markdown from v1.9.0 to v1.9.1
+- Updated monolog/monolog from v2.3.2 to v2.3.5
+
+## [4.2.2] - 2022-02-18
+
+### Fixed
+- Updated README.md

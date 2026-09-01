@@ -1,0 +1,14 @@
+{
+    "columns": [
+        { "name": "id",             "type": "INTEGER", "pk": true,  "notnull": false },
+        { "name": "type",           "type": "TEXT",                 "notnull": true  },
+        { "name": "zotero_id",      "type": "TEXT",                 "notnull": true  },
+        { "name": "name",           "type": "TEXT",                 "notnull": true  },
+        { "name": "api_key",        "type": "TEXT",                 "notnull": false },
+        { "name": "citation_style", "type": "TEXT",                 "notnull": false },
+        { "name": "created_at",     "type": "INTEGER",              "notnull": false }
+    ],
+    "indexes": [
+        { "name": "zl_type_id_idx", "columns": ["type", "zotero_id"], "unique": true }
+    ]
+}

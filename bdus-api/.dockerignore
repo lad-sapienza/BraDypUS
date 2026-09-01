@@ -1,0 +1,10 @@
+.git
+.claude
+.github
+node_modules
+dist/vue
+cache/
+sessions/
+logs/
+projects/
+.DS_Store

@@ -1,0 +1,323 @@
+<?php
+
+namespace Tests\Integration;
+
+use Tests\Support\BdusTestCase;
+
+/**
+ * Integration tests for record_ctrl::getRecord() and ::getFieldOptions().
+ */
+class RecordCtrlGetRecordTest extends BdusTestCase
+{
+    private const TB = 'items';
+
+    // ── getRecord ─────────────────────────────────────────────────
+
+    public function testGetRecordReturnsExpectedTopLevelKeys(): void
+    {
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'id' => 1]);
+        $res  = $this->callController($ctrl, 'getRecord');
+
+        foreach (['metadata', 'schema', 'core', 'plugins', 'links', 'backlinks', 'manualLinks', 'files', 'geodata', 'rs', 'bibliography'] as $key) {
+            $this->assertArrayHasKey($key, $res, "Missing top-level key: $key");
+        }
+    }
+
+    public function testGetRecordSchemaHasPluginFlagsEnabledForItems(): void
+    {
+        // items fixture has geodata:1 and zotero:1 configured
+        $ctrl   = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'id' => 1]);
+        $res    = $this->callController($ctrl, 'getRecord');
+        $schema = $res['schema'];
+
+        $this->assertArrayHasKey('has_geodata', $schema);
+        $this->assertArrayHasKey('has_zotero',  $schema);
+        $this->assertTrue($schema['has_geodata'], 'items has geodata:1 in fixture');
+        $this->assertTrue($schema['has_zotero'],  'items has zotero:1 in fixture');
+    }
+
+    public function testGetRecordSchemaHasPluginFlagsDisabledForTags(): void
+    {
+        // tags fixture has no geodata or zotero configured
+        $ctrl   = $this->makeController('Bdus\\Controllers\\Record', ['tb' => 'tags', 'id' => 1]);
+        $res    = $this->callController($ctrl, 'getRecord');
+        $schema = $res['schema'];
+
+        $this->assertArrayHasKey('has_geodata', $schema);
+        $this->assertArrayHasKey('has_zotero',  $schema);
+        $this->assertFalse($schema['has_geodata'], 'tags has no geodata config');
+        $this->assertFalse($schema['has_zotero'],  'tags has no zotero config');
+    }
+
+    public function testGetRecordGeodataAndBibliographyGating(): void
+    {
+        // items (geodata:1, zotero:1) → keys present and are arrays
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'id' => 1]);
+        $res  = $this->callController($ctrl, 'getRecord');
+        $this->assertIsArray($res['geodata'],      'geodata should be array when enabled');
+        $this->assertIsArray($res['bibliography'], 'bibliography should be array when enabled');
+
+        // tags (no geodata, no zotero) → keys present but always empty arrays
+        $ctrl2 = $this->makeController('Bdus\\Controllers\\Record', ['tb' => 'tags', 'id' => 1]);
+        $res2  = $this->callController($ctrl2, 'getRecord');
+        $this->assertSame([], $res2['geodata'],      'geodata should be [] when not configured');
+        $this->assertSame([], $res2['bibliography'], 'bibliography should be [] when not configured');
+    }
+
+    public function testGetRecordMetadataShape(): void
+    {
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'id' => 1]);
+        $res  = $this->callController($ctrl, 'getRecord');
+        $meta = $res['metadata'];
+
+        $this->assertSame(self::TB, $meta['tb_id']);
+        $this->assertSame('Items',  $meta['tb_label']);
+        $this->assertSame(1,        $meta['rec_id']);
+        $this->assertIsBool($meta['can_edit']);
+        $this->assertIsBool($meta['can_delete']);
+    }
+
+    public function testCanEditIsCreatorAwareForSelfWriter(): void
+    {
+        // Record id=1 is seeded with creator='admin' — self_writer (id=42) doesn't own it
+        \Auth\CurrentUser::set([
+            'id' => 42, 'name' => 'Self Writer', 'email' => 'sw@example.com',
+            'privilege' => 25, 'app' => 'test',
+        ]);
+
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'id' => 1]);
+        $res  = $this->callController($ctrl, 'getRecord');
+        $this->assertFalse($res['metadata']['can_edit'], 'self_writer does not own record id=1');
+
+        $this->setPrivilege(1);
+    }
+
+    public function testCanEditIsTrueForSelfWriterOnOwnRecord(): void
+    {
+        static::$db->query(
+            "INSERT INTO items (creator, name, description, status) VALUES ('42', 'Owned item', 'desc', 'active')",
+            [], 'boolean'
+        );
+        $ownId = (int) static::$db->query('SELECT last_insert_rowid() AS id', [], 'read')[0]['id'];
+
+        \Auth\CurrentUser::set([
+            'id' => 42, 'name' => 'Self Writer', 'email' => 'sw@example.com',
+            'privilege' => 25, 'app' => 'test',
+        ]);
+
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'id' => $ownId]);
+        $res  = $this->callController($ctrl, 'getRecord');
+        $this->assertTrue($res['metadata']['can_edit'], 'self_writer owns this record');
+
+        $this->setPrivilege(1);
+        static::$db->query('DELETE FROM items WHERE id = ?', [$ownId], 'boolean');
+    }
+
+    public function testCanDeleteIsCreatorAwareForSelfWriter(): void
+    {
+        \Auth\CurrentUser::set([
+            'id' => 42, 'name' => 'Self Writer', 'email' => 'sw@example.com',
+            'privilege' => 25, 'app' => 'test',
+        ]);
+
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'id' => 1]);
+        $res  = $this->callController($ctrl, 'getRecord');
+        $this->assertFalse($res['metadata']['can_delete'], 'self_writer does not own record id=1');
+
+        $this->setPrivilege(1);
+    }
+
+    public function testCanDeleteIsTrueForSelfWriterOnOwnRecord(): void
+    {
+        static::$db->query(
+            "INSERT INTO items (creator, name, description, status) VALUES ('42', 'Owned item', 'desc', 'active')",
+            [], 'boolean'
+        );
+        $ownId = (int) static::$db->query('SELECT last_insert_rowid() AS id', [], 'read')[0]['id'];
+
+        \Auth\CurrentUser::set([
+            'id' => 42, 'name' => 'Self Writer', 'email' => 'sw@example.com',
+            'privilege' => 25, 'app' => 'test',
+        ]);
+
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'id' => $ownId]);
+        $res  = $this->callController($ctrl, 'getRecord');
+        $this->assertTrue($res['metadata']['can_delete'], 'self_writer owns this record');
+
+        $this->setPrivilege(1);
+        static::$db->query('DELETE FROM items WHERE id = ?', [$ownId], 'boolean');
+    }
+
+    public function testGetRecordCoreHasCorrectFields(): void
+    {
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'id' => 1]);
+        $res  = $this->callController($ctrl, 'getRecord');
+        $core = $res['core'];
+
+        foreach (['id', 'name', 'description', 'status'] as $fld) {
+            $this->assertArrayHasKey($fld, $core, "Missing core field: $fld");
+            $this->assertArrayHasKey('val', $core[$fld]);
+        }
+        $this->assertSame('Alpha item', $core['name']['val']);
+        $this->assertSame('active',     $core['status']['val']);
+    }
+
+    public function testGetRecordSchemaContainsFields(): void
+    {
+        $ctrl   = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'id' => 1]);
+        $res    = $this->callController($ctrl, 'getRecord');
+        $fields = $res['schema']['fields'];
+
+        $this->assertIsArray($fields);
+        $this->assertNotEmpty($fields);
+
+        $byName = array_column($fields, null, 'name');
+        $this->assertArrayHasKey('name',        $byName);
+        $this->assertArrayHasKey('description', $byName);
+        $this->assertArrayHasKey('status',      $byName);
+
+        // Each field must have required schema keys
+        foreach ($fields as $f) {
+            foreach (['name', 'label', 'type', 'readonly', 'hide', 'required'] as $k) {
+                $this->assertArrayHasKey($k, $f, "Field schema missing key: $k");
+            }
+        }
+    }
+
+    public function testGetRecordSchemaFieldTypesAreCorrect(): void
+    {
+        $ctrl   = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'id' => 1]);
+        $res    = $this->callController($ctrl, 'getRecord');
+        $byName = array_column($res['schema']['fields'], null, 'name');
+
+        $this->assertSame('text',      $byName['name']['type']);
+        $this->assertSame('long_text', $byName['description']['type']);
+        $this->assertSame('select',    $byName['status']['type']);
+        $this->assertTrue($byName['id']['readonly']);
+        $this->assertTrue($byName['creator']['hide']);
+    }
+
+    public function testGetRecordAddNewReturnsNullId(): void
+    {
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB /* no id */]);
+        $res  = $this->callController($ctrl, 'getRecord');
+
+        $this->assertNull($res['metadata']['rec_id']);
+        $this->assertIsArray($res['schema']['fields']);
+        // Core values should be null for a new record
+        $this->assertNull($res['core']['name']['val']);
+    }
+
+    public function testGetRecordMissingTbReturnsError(): void
+    {
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', []);
+        $res  = $this->callController($ctrl, 'getRecord');
+        $this->assertSame('error',             $res['status']);
+        $this->assertSame('parameter_missing', $res['code']);
+    }
+
+    // ── manualLinks ───────────────────────────────────────────────
+
+    public function testGetRecordManualLinksShapeForItemRecord(): void
+    {
+        // The seed inserts a manual link between items 1 and 2 in userlinks
+        // (record-to-record link, NOT a file link — those live in file_links).
+        // Viewing item 1 should expose item 2 in manualLinks.
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => 'items', 'id' => 1]);
+        $res  = $this->callController($ctrl, 'getRecord');
+
+        $this->assertArrayHasKey('manualLinks', $res);
+        $this->assertNotEmpty($res['manualLinks'], 'Expected at least one manual link for item 1');
+
+        $link = array_values($res['manualLinks'])[0];
+        foreach (['key', 'tb_id', 'ref_id', 'ref_label'] as $k) {
+            $this->assertArrayHasKey($k, $link, "manualLinks entry missing key: $k");
+        }
+        $this->assertSame('items', $link['tb_id']);
+        $this->assertSame(2,       $link['ref_id']);
+    }
+
+    // ── files enrichment ─────────────────────────────────────────
+
+    public function testGetRecordFilesAreEnrichedWithUrlAndIsImage(): void
+    {
+        $ctrl  = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'id' => 1]);
+        $res   = $this->callController($ctrl, 'getRecord');
+        $files = $res['files'];
+
+        $this->assertIsArray($files);
+        $this->assertCount(2, $files, 'Expected 2 files linked to item 1');
+
+        foreach ($files as $f) {
+            // url is no longer returned by the backend: the Vue frontend
+            // constructs it client-side from auth.user.app + file fields.
+            $this->assertArrayNotHasKey('url', $f, 'url should not be in file response (built client-side)');
+            $this->assertArrayHasKey('is_image', $f, 'File missing is_image key');
+            $this->assertArrayHasKey('filename', $f, 'File missing filename key');
+            $this->assertIsBool($f['is_image']);
+        }
+
+        // Identify by ext
+        $byExt = array_column($files, null, 'ext');
+        $this->assertTrue($byExt['jpg']['is_image'],  'jpg should be flagged as image');
+        $this->assertFalse($byExt['pdf']['is_image'], 'pdf should NOT be flagged as image');
+
+        // url is built client-side; verify the raw fields needed to construct it are present
+        $this->assertArrayHasKey('id',  $byExt['jpg']);
+        $this->assertArrayHasKey('ext', $byExt['jpg']);
+    }
+
+    // ── getFieldOptions ───────────────────────────────────────────
+
+    public function testGetFieldOptionsStaticDic(): void
+    {
+        // The 'status' field in items is type=select with no source configured
+        // → should return empty array (no dic/vocabulary/get_values_from_tb set)
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'fld' => 'status']);
+        $res  = $this->callController($ctrl, 'getFieldOptions');
+        $this->assertIsArray($res);
+    }
+
+    public function testGetFieldOptionsMissingParamsReturnsError(): void
+    {
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB /* no fld */]);
+        $res  = $this->callController($ctrl, 'getFieldOptions');
+        $this->assertSame('error',             $res['status']);
+        $this->assertSame('parameter_missing', $res['code']);
+    }
+
+    // ── Template loading ──────────────────────────────────────────
+
+    public function testGetRecordWithValidTemplateIncludesSchemaTemplate(): void
+    {
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'id' => 1, 'template' => 'default']);
+        $res  = $this->callController($ctrl, 'getRecord');
+
+        $this->assertArrayHasKey('schema', $res);
+        $this->assertArrayHasKey('template', $res['schema'], 'schema.template key missing');
+        $this->assertNotNull($res['schema']['template'], 'schema.template should not be null for a valid template');
+        $this->assertNull($res['schema']['template_errors'], 'schema.template_errors should be null for a valid template');
+        $this->assertArrayHasKey('sections', $res['schema']['template']);
+    }
+
+    public function testGetRecordWithInvalidTemplateNameReturnsTemplateErrors(): void
+    {
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'id' => 1, 'template' => 'nonexistent']);
+        $res  = $this->callController($ctrl, 'getRecord');
+
+        $this->assertArrayHasKey('schema', $res);
+        $this->assertNull($res['schema']['template'], 'schema.template should be null for a missing template');
+        $this->assertIsArray($res['schema']['template_errors']);
+        $this->assertContains('template_not_found', $res['schema']['template_errors']);
+    }
+
+    public function testGetTemplatesReturnsAvailableNames(): void
+    {
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB]);
+        $res  = $this->callController($ctrl, 'getTemplates');
+
+        $this->assertArrayHasKey('templates', $res);
+        $this->assertIsArray($res['templates']);
+        $this->assertContains('default', $res['templates']);
+    }
+}

@@ -1,0 +1,17 @@
+{
+    "columns": [
+        { "name": "id",          "type": "INTEGER", "pk": true, "notnull": false },
+        { "name": "table_name",  "type": "TEXT",               "notnull": true  },
+        { "name": "name",        "type": "TEXT",               "notnull": true  },
+        { "name": "label",       "type": "TEXT",               "notnull": false },
+        { "name": "type",        "type": "TEXT",               "notnull": false },
+        { "name": "db_type",     "type": "TEXT",               "notnull": false },
+        { "name": "sort",        "type": "INTEGER",            "notnull": false },
+        { "name": "extra",       "type": "TEXT",               "notnull": false }
+    ],
+    "indexes": [
+        { "name": "cfg_fields_tb_name_idx", "unique": true, "columns": ["table_name", "name"] },
+        { "name": "cfg_fields_tb_idx",                      "columns": ["table_name"] }
+    ],
+    "relations": []
+}

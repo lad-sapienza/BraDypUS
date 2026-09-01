@@ -1,0 +1,124 @@
+{
+    "name": {
+        "type": "input",
+        "help": "Database name of the column. Please follow the pattern: ^[a-z_]{2,15}$",
+        "required": true,
+        "readonly": true,
+        "pattern": "^[a-z_]{2,15}$"
+    },
+    "label": {
+        "type": "input",
+        "help": "The label will be shown to the users. Please stick as possible to the field name, but make this string easy to understand. No limitations on spaces, uppercase or other special characters are defined.",
+        "required": false
+    },
+    "type": {
+        "type": "select",
+        "values": [
+            "text",
+            "date",
+            "long_text",
+            "md",
+            "select",
+            "combo_select",
+            "multi_select",
+            "boolean",
+            "slider"
+        ],
+        "help": "Field type. For `select`, `combo_select` and `multi_select` a source for the available values must be supplied: fill one of `vocabulary_set`, `get_values_from_tb` or `id_from_tb`.",
+        "required": true
+    },
+    "db_type": {
+        "type": "select",
+        "values": [
+            "TEXT",
+            "INTEGER",
+            "TIMESTAMP"
+        ],
+        "help": "Database column type. Use TEXT for strings and long texts, INTEGER for numbers and booleans, TIMESTAMP for date/time values (compatible with all engines).",
+        "required": true,
+        "readonly": false
+    },
+    "vocabulary_set": {
+        "type": "select",
+        "values": [
+            "list-of-system-defined-vocabularies-here"
+        ],
+        "help": "Select from the list the vocabulary whose values will be offered to the user. Only for `select`, `combo_select` and `multi_select` field types.",
+        "required": false
+    },
+    "get_values_from_tb": {
+        "type": "input",
+        "help": "Select the table and field whose unique values will be used as suggestions. Only for `select`, `combo_select` and `multi_select` field types.",
+        "required": false
+    },
+    "id_from_tb": {
+        "type": "select",
+        "help": "Select the table whose record IDs will be stored in this field. The id_field of that table is shown to users, but the integer id is saved. Only for `select`, `combo_select` and `multi_select` field types.",
+        "values": [
+            "list-of-available-tables-here"
+        ],
+        "required": false
+    },
+    "check": {
+        "type": "multi_select",
+        "values": [
+            "int",
+            "email",
+            "no_dupl",
+            "not_empty",
+            "range",
+            "regex",
+            "valid_wkt"
+        ],
+        "help": "Real-time validation performed on value change and on form submission.",
+        "required": false
+    },
+    "readonly": {
+        "type": "boolean",
+        "help": "If enabled the field is visible and its value is sent to the server, but users cannot edit it.",
+        "required": false
+    },
+    "hide": {
+        "type": "boolean",
+        "help": "If enabled the field is hidden from users. Its value is sent to the server (like `readonly`) but it is not editable.",
+        "required": false
+    },
+    "def_value": {
+        "type": "input",
+        "help": "Default value pre-filled on new record creation. The user can change it unless `readonly` or `hide` are also enabled. Variables: %today% (current date), %current_user% (current user id).",
+        "required": false
+    },
+    "max_length": {
+        "type": "input",
+        "help": "Maximum allowed length in characters (including spaces). Enter an integer.",
+        "required": false
+    },
+    "min": {
+        "type": "input",
+        "help": "Minimum allowed value for `slider` type or `range` validation. Enter an integer.",
+        "required": false
+    },
+    "max": {
+        "type": "input",
+        "help": "Maximum allowed value for `slider` type or `range` validation. Enter an integer.",
+        "required": false
+    },
+    "pattern": {
+        "type": "input",
+        "help": "Regex pattern used when `check` includes `regex`.",
+        "required": false
+    },
+    "help": {
+        "type": "input",
+        "help": "Help text shown to users explaining how to fill in this field.",
+        "required": false
+    },
+    "widget": {
+        "type": "select",
+        "values": [
+            "list-of-available-widgets-here"
+        ],
+        "help": "Optional display widget for read mode. Place a .js ES-module in projects/{app}/widgets/ and it will appear here automatically.",
+        "required": false
+    }
+}

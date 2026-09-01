@@ -1,0 +1,19 @@
+services:
+  app:
+    build: .
+    environment:
+      - BRADYPUS_DEBUG=1
+      # Uncomment to enable the "Create new application" wizard:
+      # - BRADYPUS_ALLOW_NEW_APP=1
+      # Allow CORS from the Vue dev server:
+      # - BRADYPUS_CORS_ORIGIN=http://localhost:5173
+    volumes:
+      - .:/var/www/html
+      - ./projects:/var/www/html/projects
+    networks:
+      - bradypus-net
+
+networks:
+  bradypus-net:
+    driver: bridge
+    name: bradypus-net

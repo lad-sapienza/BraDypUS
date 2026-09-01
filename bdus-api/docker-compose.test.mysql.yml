@@ -1,0 +1,31 @@
+# MariaDB test override — used exclusively by test.sh --db=mysql.
+#
+# docker compose -p bdus-test \
+#   -f docker-compose.yml \
+#   -f docker-compose.test.yml \
+#   -f docker-compose.test.mysql.yml \
+#   up -d
+services:
+  app:
+    depends_on:
+      mariadb:
+        condition: service_healthy
+
+  mariadb:
+    image: mariadb:11
+    environment:
+      MARIADB_DATABASE:      bdus_test
+      MARIADB_USER:          bdus
+      MARIADB_PASSWORD:      bdus_test_pw
+      MARIADB_ROOT_PASSWORD: root_pw
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    networks:
+      - bradypus-net
+
+networks:
+  bradypus-net:
+    external: true

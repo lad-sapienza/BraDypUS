@@ -1,0 +1,13 @@
+RewriteEngine On
+
+# All routing logic lives in PHP (lib/Bdus/Router.php via FastRoute).
+# This file only needs to redirect non-existent paths to index.php.
+#
+# Nginx equivalent:
+#   location / { try_files $uri $uri/ /index.php$is_args$args; }
+#
+# Caddy equivalent:
+#   try_files {path} /index.php
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^ index.php [L]

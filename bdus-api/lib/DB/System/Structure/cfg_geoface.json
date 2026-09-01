@@ -1,0 +1,8 @@
+{
+    "columns": [
+        { "name": "id",     "type": "INTEGER", "pk": true,  "notnull": false },
+        { "name": "layers", "type": "TEXT",               "notnull": true, "default": "[]" }
+    ],
+    "indexes": [],
+    "relations": []
+}

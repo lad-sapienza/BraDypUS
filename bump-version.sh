@@ -37,7 +37,8 @@ TAG="v$VERSION"
 
 CUR=$(python3 -c "import json; print(json.load(open('bdus-api/composer.json'))['version'])")
 green "bdus-api / bdus-app: $CUR  ->  $VERSION"
-read -rp "Proceed? [y/N] " a; [[ "${a,,}" == "y" ]] || { echo "Aborted."; exit 0; }
+read -rp "Proceed? [y/N] " a
+case "$a" in [yY] | [yY][eE][sS]) ;; *) echo "Aborted."; exit 0 ;; esac
 
 TODAY="$(date +%F)"
 

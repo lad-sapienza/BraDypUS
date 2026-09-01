@@ -9,14 +9,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "github.com:lad-sapienza/bdus-app.git"
+    "url": "github.com:lad-sapienza/BraDypUS.git"
   },
   "author": "Julian Bogdani",
   "license": "AGPL-3.0",
   "bugs": {
-    "url": "https://github.com/lad-sapienza/bdus-app/issues"
+    "url": "https://github.com/lad-sapienza/BraDypUS/issues"
   },
-  "homepage": "https://github.com/lad-sapienza/bdus-app",
+  "homepage": "https://github.com/lad-sapienza/BraDypUS",
   "dependencies": {
     "@ant-design/icons-vue": "^7.0.1",
     "@vue/devtools-api": "^8.1.5",

@@ -29,5 +29,4 @@ the BraDypUS codebase.
 
 | Repo | Contents |
 |---|---|
-| [lad-sapienza/bdus-api](https://github.com/lad-sapienza/bdus-api) | PHP API + Vue 3 frontend |
-| [lad-sapienza/bdus-docs](https://github.com/lad-sapienza/bdus-docs) | This documentation site |
+| [lad-sapienza/BraDypUS](https://github.com/lad-sapienza/BraDypUS) | Monorepo: PHP API (`bdus-api/`), Vue 3 frontend (`bdus-app/`), and this documentation site (`bdus-docs/`) |

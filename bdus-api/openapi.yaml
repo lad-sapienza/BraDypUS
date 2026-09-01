@@ -3,7 +3,7 @@ openapi: 3.1.0
 info:
   title: BraDypUS API
   description: |
-    REST JSON API for [BraDypUS](https://bdus.cloud) — the open-source web
+    REST JSON API for [BraDypUS](https://docs.bdus.lad-sapienza.it) — the open-source web
     database system for archaeological and cultural-heritage research.
 
     ## Authentication

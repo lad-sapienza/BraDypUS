@@ -11,11 +11,11 @@
             "role": "Developer"
         }
     ],
-    "homepage": "https://bdus.cloud",
+    "homepage": "https://docs.bdus.lad-sapienza.it",
     "support": {
-        "issues": "https://github.com/lad-sapienza/bdus-api/issues",
-        "source": "https://github.com/lad-sapienza/bdus-api",
-        "docs": "https://docs.bdus.cloud"
+        "issues": "https://github.com/lad-sapienza/BraDypUS/issues",
+        "source": "https://github.com/lad-sapienza/BraDypUS",
+        "docs": "https://docs.bdus.lad-sapienza.it"
     },
     "keywords": [
         "archaeology",

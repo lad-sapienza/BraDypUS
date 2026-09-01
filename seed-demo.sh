@@ -23,7 +23,7 @@
 # The target server needs BRADYPUS_ALLOW_NEW_APP=1 enabled (only required
 # for the app-creation step — safe to turn off again afterwards).
 #
-# Requires: bdus-api/ cloned next to this script, hurl >= 4.0, jq.
+# Requires: a full checkout of the BraDypUS repo (uses bdus-api/), hurl >= 4.0, jq.
 
 set -euo pipefail
 
@@ -36,7 +36,7 @@ die() { red "ERROR: $*"; exit 1; }
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 API_DIR="${SCRIPT_DIR}/bdus-api"
 
-[[ -d "$API_DIR" ]] || die "bdus-api/ not found next to this script. Clone it: git clone https://github.com/lad-sapienza/bdus-api.git"
+[[ -d "$API_DIR" ]] || die "bdus-api/ not found next to this script (run from a full checkout of the BraDypUS repo)"
 [[ -x "${API_DIR}/test.sh" ]] || die "${API_DIR}/test.sh not found or not executable"
 
 for cmd in hurl jq; do

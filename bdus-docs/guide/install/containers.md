@@ -165,10 +165,11 @@ populates a running instance with a realistic archaeological demo dataset
 chart, …) — the same data used in CI and screenshots.
 
 Unlike `backup.sh`/`restore.sh` it wraps `bdus-api/test.sh`, so it needs the
-`bdus-api` source checked out next to it (not just `bradypus.yml`):
+repository checked out (not just `bradypus.yml`):
 
 ```bash
-git clone https://github.com/lad-sapienza/bdus-api.git
+git clone https://github.com/lad-sapienza/BraDypUS.git
+cd BraDypUS
 
 ./seed-demo.sh              # creates app "bdus_demo" with the full demo dataset
 ./seed-demo.sh siti_scavo   # custom app name

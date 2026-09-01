@@ -11,28 +11,34 @@ Use this approach for shared hosting or servers where Docker is not available.
 See [System requirements](/guide/environment/system-requirements) for the
 full list of PHP extensions and server requirements.
 
-## 1. Download bdus-api
+## 1. Get the source
 
 ```bash
-git clone https://github.com/lad-sapienza/bdus-api.git
-cd bdus-api
-composer install --no-dev
+git clone https://github.com/lad-sapienza/BraDypUS.git
+cd BraDypUS
 ```
 
 Or download the ZIP from GitHub Releases and unzip it.
 
-## 2. Build bdus-app (frontend)
+## 2. Install the backend (bdus-api)
 
 ```bash
-git clone https://github.com/lad-sapienza/bdus-app.git
+cd bdus-api
+composer install --no-dev
+cd ..
+```
+
+## 3. Build the frontend (bdus-app)
+
+```bash
 cd bdus-app
 npm install
 npm run build
 ```
 
-This produces a `dist/` directory with the static Vue SPA.
+This produces `bdus-app/dist/` with the static Vue SPA.
 
-## 3. Configure the web server
+## 4. Configure the web server
 
 The simplest approach: put `bdus-api/` under the web root and copy
 `bdus-app/dist/` contents to a subdirectory (or the same root).
@@ -56,7 +62,7 @@ location /api/ {
 }
 ```
 
-## 4. Set environment variables
+## 5. Set environment variables
 
 Set `BRADYPUS_ALLOW_NEW_APP=1` to enable the new-application wizard,
 and `BRADYPUS_DEBUG=0` for production.
@@ -67,7 +73,7 @@ For Apache, add to `.htaccess`:
 SetEnv BRADYPUS_ALLOW_NEW_APP 1
 ```
 
-## 5. Create the projects directory
+## 6. Create the projects directory
 
 ```bash
 mkdir bdus-api/projects
@@ -76,6 +82,6 @@ chmod 755 bdus-api/projects
 
 Ensure the web server user (`www-data` on Debian/Ubuntu) has write access.
 
-## 6. Open the application and create your first app
+## 7. Open the application and create your first app
 
 Navigate to your server URL and follow the [Create application](/guide/create-app/) guide.

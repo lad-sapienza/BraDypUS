@@ -10,8 +10,8 @@ version: 5.0.0
 doi: "10.5281/zenodo.1467904"
 date-released: 2026-05-18
 license: "AGPL-3.0"
-url: "https://github.com/lad-sapienza/bdus-api"
-repository-code: "https://github.com/lad-sapienza/bdus-api"
+url: "https://github.com/lad-sapienza/BraDypUS"
+repository-code: "https://github.com/lad-sapienza/BraDypUS"
 abstract: >
   BraDypUS is an open-source web database system for archaeological and
   cultural-heritage research. bdus-api is the PHP/Apache backend that

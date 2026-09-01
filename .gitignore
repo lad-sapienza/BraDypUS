@@ -1,9 +1,4 @@
-# ── Sub-repositories ─────────────────────────────────────────────────────────
-# bdus-api and bdus-app are independent git repos cloned alongside this one.
-# They must NOT be tracked here (no submodules).
-bdus-api/
-bdus-app/
-bdus-docs/
+# ── Sibling tools (independent repos, not part of this monorepo) ──────────────
 directus2bdus/
 
 # ── Local compose overrides ───────────────────────────────────────────────────

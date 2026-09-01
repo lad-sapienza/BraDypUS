@@ -1,4 +1,4 @@
-import { createRouter, createWebHashHistory } from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
 const routes = [
@@ -149,10 +149,25 @@ const routes = [
   }
 ]
 
+// Migrate links from the pre-history-mode (hash) era: an old URL such as
+//   https://host/#/cuka/data   is rewritten in place to   https://host/cuka/data
+// before the router initialises, so existing bookmarks and published citations
+// keep resolving.
+if (typeof window !== 'undefined' && window.location.hash.startsWith('#/')) {
+  window.history.replaceState(null, '', window.location.hash.slice(1))
+}
+
 const router = createRouter({
-  // Hash history avoids conflicts with PHP routing on the same origin
-  history: createWebHashHistory(),
-  routes
+  // Clean-path (history) routing. The SPA owns the origin root; nginx and the
+  // Vite dev server both fall back to index.html for unknown paths, and the API
+  // is reached only via the /api, /index.php, /projects and /cache prefixes —
+  // which are therefore reserved and rejected as application names
+  // (see CreateApp::validateData on the backend).
+  history: createWebHistory(import.meta.env.BASE_URL),
+  routes,
+  scrollBehavior(to, from, savedPosition) {
+    return savedPosition || { top: 0 }
+  }
 })
 
 router.beforeEach((to) => {

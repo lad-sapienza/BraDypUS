@@ -19,8 +19,8 @@
  * OAuthCallbackView — landing page for OAuth2 redirects.
  *
  * The PHP callback endpoint redirects the browser to:
- *   /#/oauth-callback?token=JWT&app=APP      (success)
- *   /#/oauth-callback?error=CODE&app=APP     (failure)
+ *   /oauth-callback?token=JWT&app=APP      (success)
+ *   /oauth-callback?error=CODE&app=APP     (failure)
  *
  * This view reads the query params, stores the token (on success), and
  * navigates to the home page — or shows an error with a back-to-login link.

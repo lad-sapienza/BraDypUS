@@ -8,7 +8,7 @@
  * calls /api/auth/refresh before the actual request so the user never
  * hits a 401 mid-session.
  *
- * On 401 the token is cleared and the page is redirected to #/login.
+ * On 401 the token is cleared and the page is redirected to /login.
  *
  * ── URL resolution ──────────────────────────────────────────────────────────
  * All public methods accept a direct REST path and optional params/body.
@@ -88,7 +88,7 @@ function _bearer() {
 // ── 401 handler ──────────────────────────────────────────────────────────────
 function _handle401() {
   clearToken()
-  window.location.hash = '/login'
+  window.location.assign('/login')
 }
 
 // ── 409 / major_upgrade_required handler ─────────────────────────────────────
@@ -98,7 +98,7 @@ function _handle401() {
 // to detect the upgrade and guide them through it.
 function _handleMajorUpgrade() {
   clearToken()
-  window.location.hash = '/login'
+  window.location.assign('/login')
 }
 
 // ── Proactive refresh guard ──────────────────────────────────────────────────

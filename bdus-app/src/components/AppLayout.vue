@@ -220,7 +220,7 @@ function handleLogout() {
     acceptProps:  { label: t('logout'), severity: 'danger' },
     accept: async () => {
       await auth.logout()
-      window.location.hash = '/login'
+      window.location.assign('/login')
     },
   })
 }

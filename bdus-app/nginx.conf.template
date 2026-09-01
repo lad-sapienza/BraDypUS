@@ -14,8 +14,11 @@ server {
     index index.html;
 
     # ── SPA fallback ──────────────────────────────────────────────────────
-    # All paths that do not match a static file are served as index.html
-    # so that Vue Router handles client-side navigation.
+    # All paths that do not match a static file are served as index.html so
+    # that Vue Router (history mode) handles client-side navigation, including
+    # deep links and hard refreshes on clean-path URLs like /myapp/data.
+    # The proxied prefixes below take precedence, so /api, /index.php,
+    # /projects and /cache can never be used as application names.
     location / {
         try_files $uri $uri/ /index.html;
     }

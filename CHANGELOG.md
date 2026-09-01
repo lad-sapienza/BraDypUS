@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.4.5] - 2026-09-01
+
 ### Changed
 
 - **`bdus-api` image installs Composer dependencies at build time** (`--no-dev --optimize-autoloader`) instead of on every container start. Fresh containers now boot straight into Apache with no runtime network dependency; `vendor/` is `.dockerignore`d and the entrypoint's `composer install` is kept only as a dev fallback for volume-mounted source.

@@ -5,8 +5,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.4.5] - 2026-09-01
+
+### Changed
+
+- **`bdus-api` image installs Composer dependencies at build time** (`--no-dev --optimize-autoloader`) instead of on every container start. Fresh containers now boot straight into Apache with no runtime network dependency; `vendor/` is `.dockerignore`d and the entrypoint's `composer install` is kept only as a dev fallback for volume-mounted source.
+
+### Security
+
+- **Baseline response headers on the frontend.** The `bdus-app` nginx now sends `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN` and `Referrer-Policy: strict-origin-when-cross-origin` (the app set none). HSTS and CSP stay on the outer TLS-terminating proxy.
+
 ### Fixed
 
+- **`backup.sh` / `restore.sh` picked a `projects_data` volume at random with several instances.** They ran `docker volume ls | grep projects_data | head -n1` — on a multi-instance host `restore.sh` could overwrite the wrong instance. They now auto-detect only when exactly one volume matches; otherwise they refuse and ask for `-p <project>` (targets `<project>_projects_data`). `backups/` is gitignored.
+- **Multiple deployments on one host shared a single Docker network.** `bradypus.yml` and `docker-compose.prod.yml` pinned `name: bradypus-net`, so two stacks in different directories joined the same bridge and their identically-named `api` / `frontend` services collided in DNS. The name is dropped: the network is now project-scoped (`<project>_bradypus-net`). Single-instance behaviour is unchanged; the dev and test compose files keep the fixed name (their tooling relies on it).
+- **File uploads capped at 2 MB in the shipped images.** The `bdus-api` image ran on PHP's stock `upload_max_filesize = 2M` / `post_max_size = 8M`, and the `bdus-app` nginx had no `client_max_body_size` (so its 1 MB default applied) — a normal photo could not be uploaded out of the box. The image now ships `docker/php-uploads.ini` (64M / 72M / `memory_limit = 256M`) and the frontend sets `client_max_body_size 100m`. See *Deploy › File uploads* for raising it further.
 - **Empty changelog in the *Info* view.** The monorepo consolidation moved `CHANGELOG.md` to the repo root, but `Info::getInfo()` still read it from `bdus-api/`, so `changelog_md` came back empty (in the app and in the published image). It now reads the root file, falling back to a copy bundled in the `bdus-api` image (kept in sync by `bump-version.sh`).
 - **OAuth login behind a TLS-terminating reverse proxy.** `OAuth::callbackUrl()` derived the scheme only from `$_SERVER['HTTPS']`, so behind a proxy that terminates TLS the `redirect_uri` was built as `http://` while the user was on `https://`, failing the provider's redirect-URI match. It now honours `X-Forwarded-Proto` (first token when several proxies chain), falling back to the direct connection. The bundled `bdus-app` nginx template no longer overwrites `X-Forwarded-Proto` with `$scheme` when proxying to the API — it forwards the value received from an outer proxy.
 

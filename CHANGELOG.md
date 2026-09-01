@@ -5,6 +5,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **`bdus-api` image installs Composer dependencies at build time** (`--no-dev --optimize-autoloader`) instead of on every container start. Fresh containers now boot straight into Apache with no runtime network dependency; `vendor/` is `.dockerignore`d and the entrypoint's `composer install` is kept only as a dev fallback for volume-mounted source.
+
 ### Security
 
 - **Baseline response headers on the frontend.** The `bdus-app` nginx now sends `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN` and `Referrer-Policy: strict-origin-when-cross-origin` (the app set none). HSTS and CSP stay on the outer TLS-terminating proxy.

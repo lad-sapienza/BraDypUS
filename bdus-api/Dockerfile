@@ -34,11 +34,22 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
+# Install PHP dependencies at build time (production: no dev deps), so a fresh
+# container starts Apache immediately instead of running composer on first boot.
+# Split in two: the download layer is cached until composer.json/lock change;
+# the optimized classmap is dumped after the source is in place. In dev the
+# source volume shadows all of this and docker-entrypoint.sh installs instead.
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --no-autoloader --no-interaction --no-progress
+
 # Copy source (used in production; overridden by volume mount in dev)
 COPY --chown=www-data:www-data . /var/www/html
 
 # docker/ only holds build-time config (already applied above); keep it out of the webroot
 RUN rm -rf /var/www/html/docker
+
+RUN composer dump-autoload --no-dev --optimize --no-interaction \
+    && chown -R www-data:www-data vendor
 
 # Ensure projects directory exists and is writable
 RUN mkdir -p projects && chown www-data:www-data projects

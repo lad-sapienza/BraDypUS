@@ -2,6 +2,7 @@
 .claude
 .github
 node_modules
+vendor/
 dist/vue
 cache/
 sessions/

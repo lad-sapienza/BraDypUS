@@ -55,6 +55,8 @@ volumes:
   projects_data:
 
 networks:
+  # Deliberately no `name:` — the network is project-scoped so several
+  # instances of this file (in different directories / with different
+  # COMPOSE_PROJECT_NAME) get isolated networks instead of sharing one.
   bradypus-net:
     driver: bridge
-    name: bradypus-net

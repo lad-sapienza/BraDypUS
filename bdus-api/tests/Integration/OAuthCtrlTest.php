@@ -81,6 +81,7 @@ class OAuthCtrlTest extends BdusTestCase
         if (file_exists($this->configFile)) {
             unlink($this->configFile);
         }
+        unset($_SERVER['HTTP_X_FORWARDED_PROTO'], $_SERVER['HTTPS']);
     }
 
     // ── redirect() ───────────────────────────────────────────────────────────
@@ -209,6 +210,52 @@ class OAuthCtrlTest extends BdusTestCase
         $this->assertArrayHasKey('ts',     $payload);
         $this->assertSame('test',              $payload['app']);
         $this->assertSame('http://localhost',  $payload['origin']);
+    }
+
+    // ── callbackUrl() scheme resolution (reverse-proxy awareness) ─────────────
+
+    /**
+     * Run redirect() for a configured Google app and return the redirect_uri
+     * parameter of the resulting provider URL (i.e. the OAuth callback URL
+     * built by callbackUrl()).
+     */
+    private function googleRedirectUri(): string
+    {
+        file_put_contents($this->configFile, json_encode([
+            'name'  => 'test',
+            'oauth' => [
+                'google' => [
+                    'client_id'     => 'test-id.apps.googleusercontent.com',
+                    'client_secret' => 'test-secret',
+                ],
+            ],
+        ]));
+
+        $ctrl = $this->makeController('Bdus\\Controllers\\OAuth', ['provider' => 'google', 'origin' => 'http://localhost']);
+        $res  = $this->callController($ctrl, 'redirect');
+
+        $this->assertSame('success', $res['status']);
+        parse_str((string) parse_url($res['url'] ?? '', PHP_URL_QUERY), $params);
+        return $params['redirect_uri'] ?? '';
+    }
+
+    public function testCallbackUrlHonoursForwardedHttpsProto(): void
+    {
+        // TLS-terminating proxy in front: PHP<->proxy hop is plain HTTP.
+        $_SERVER['HTTP_X_FORWARDED_PROTO'] = 'https';
+        $this->assertStringStartsWith('https://', $this->googleRedirectUri());
+    }
+
+    public function testCallbackUrlTakesFirstTokenOfChainedForwardedProto(): void
+    {
+        $_SERVER['HTTP_X_FORWARDED_PROTO'] = 'https, http';
+        $this->assertStringStartsWith('https://', $this->googleRedirectUri());
+    }
+
+    public function testCallbackUrlFallsBackToHttpWithoutForwardedProto(): void
+    {
+        unset($_SERVER['HTTP_X_FORWARDED_PROTO'], $_SERVER['HTTPS']);
+        $this->assertStringStartsWith('http://', $this->googleRedirectUri());
     }
 
     // ── callback() — JSON fallback path (origin empty) ────────────────────────

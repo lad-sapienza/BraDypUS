@@ -377,10 +377,32 @@ class OAuth extends \Bdus\Controller
 
     private function callbackUrl(string $provider, string $app): string
     {
-        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $scheme = $this->externalScheme();
         $host   = $_SERVER['HTTP_HOST'] ?? 'localhost';
         $base   = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/');
         return "{$scheme}://{$host}{$base}/api/auth/oauth/{$provider}/callback?app={$app}";
+    }
+
+    /**
+     * Scheme of the request as the browser sees it.
+     *
+     * BraDypUS is normally deployed behind a TLS-terminating reverse proxy, so
+     * the PHP<->proxy hop is plain HTTP and $_SERVER['HTTPS'] is unset even
+     * though the user is on https://. Trust X-Forwarded-Proto when present
+     * (the proxy must set it and strip any client-supplied copy); fall back to
+     * the direct connection otherwise.
+     */
+    private function externalScheme(): string
+    {
+        $fwd = $_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '';
+        if ($fwd !== '') {
+            // "https, http" when several proxies chain — the first hop is the browser's
+            $fwd = strtolower(trim(explode(',', $fwd)[0]));
+            if ($fwd === 'https' || $fwd === 'http') {
+                return $fwd;
+            }
+        }
+        return (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
     }
 
     // ── Config helpers ───────────────────────────────────────────────────────

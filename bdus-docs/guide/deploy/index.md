@@ -62,7 +62,10 @@ Always run BraDypUS behind HTTPS in production. JWT tokens are transmitted in
 headers — without HTTPS they are exposed in transit.
 
 When using a reverse proxy (Nginx, Caddy, Traefik), set the `X-Forwarded-Proto`
-header so BraDypUS knows the connection is over HTTPS.
+header so BraDypUS knows the connection is over HTTPS. The backend trusts this
+header when building absolute URLs (e.g. the OAuth `redirect_uri`), so the proxy
+must set it explicitly and overwrite any value supplied by the client. The
+bundled `bdus-app` frontend already forwards it unchanged to the API.
 
 ```nginx
 # Nginx example — proxy to a BraDypUS container exposing port 80

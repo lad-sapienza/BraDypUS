@@ -5,6 +5,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **OAuth login behind a TLS-terminating reverse proxy.** `OAuth::callbackUrl()` derived the scheme only from `$_SERVER['HTTPS']`, so behind a proxy that terminates TLS the `redirect_uri` was built as `http://` while the user was on `https://`, failing the provider's redirect-URI match. It now honours `X-Forwarded-Proto` (first token when several proxies chain), falling back to the direct connection. The bundled `bdus-app` nginx template no longer overwrites `X-Forwarded-Proto` with `$scheme` when proxying to the API — it forwards the value received from an outer proxy.
+
 ## [5.4.4] - 2026-09-01
 
 ### Changed

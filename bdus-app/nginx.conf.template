@@ -8,6 +8,16 @@
 #                       or https://api.example.com (external host).
 #                       Default: http://api:80
 
+# Preserve the scheme the browser used. When this container sits behind an
+# outer TLS-terminating proxy, that proxy sends X-Forwarded-Proto: https;
+# forward it unchanged (first token if several proxies chained) so the PHP
+# backend builds https:// URLs — e.g. the OAuth redirect_uri. With no such
+# header (direct access, dev) fall back to this connection's scheme.
+map $http_x_forwarded_proto $bdus_forwarded_proto {
+    default       $scheme;
+    "~*^(https?)" $1;
+}
+
 server {
     listen 80;
     root /usr/share/nginx/html;
@@ -32,7 +42,7 @@ server {
         proxy_set_header   Host              $host;
         proxy_set_header   X-Real-IP         $remote_addr;
         proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
-        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_set_header   X-Forwarded-Proto $bdus_forwarded_proto;
     }
 
     location /index.php {
@@ -40,7 +50,7 @@ server {
         proxy_set_header   Host              $host;
         proxy_set_header   X-Real-IP         $remote_addr;
         proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
-        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_set_header   X-Forwarded-Proto $bdus_forwarded_proto;
     }
 
     location /projects/ {
@@ -48,7 +58,7 @@ server {
         proxy_set_header   Host              $host;
         proxy_set_header   X-Real-IP         $remote_addr;
         proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
-        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_set_header   X-Forwarded-Proto $bdus_forwarded_proto;
     }
 
     location /cache/ {
@@ -56,6 +66,6 @@ server {
         proxy_set_header   Host              $host;
         proxy_set_header   X-Real-IP         $remote_addr;
         proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
-        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_set_header   X-Forwarded-Proto $bdus_forwarded_proto;
     }
 }

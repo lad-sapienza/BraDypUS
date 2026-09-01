@@ -44,7 +44,7 @@ bdus-app/
 │   ├── composables/      ← Reusable composition functions
 │   ├── api/              ← API client (fetch-based, JWT injected)
 │   ├── locale/           ← i18n files (en.json, it.json)
-│   └── router/           ← Vue Router (hash mode)
+│   └── router/           ← Vue Router (history mode)
 ├── public/
 ├── dist/                 ← Built output (not committed)
 ├── package.json

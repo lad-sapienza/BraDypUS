@@ -15,7 +15,7 @@ and never renders server-side HTML.
 | Library / tool | Version | Role |
 |---|---|---|
 | Vue 3 | ^3.5 | Reactivity, components, Composition API |
-| Vue Router 4 | ^4.0 | Client-side routing (hash history) |
+| Vue Router 4 | ^4.0 | Client-side routing (history mode, clean paths) |
 | Pinia | ^2.0 | Global state management |
 | Ant Design Vue | ^4.2 | UI component library |
 | @ant-design/icons-vue | ^7.0 | Icon set (replaces PrimeIcons) |
@@ -82,15 +82,19 @@ VITE_API_BASE=https://api.myapp.org npm run dev
 
 ## Routing
 
-The router uses **hash history** (`createWebHashHistory`) so that all URLs
-begin with `#/`. This avoids conflicts with PHP routing on the same origin —
-the PHP server sees only `/index.html`, and the hash fragment is handled
-entirely by the browser.
+The router uses **history mode** (`createWebHistory`), so URLs are clean paths
+like `/myapp/record/sites/42` — no `#`. The web server (nginx in production,
+Vite in dev) falls back to `index.html` for any path that is not a static file
+or one of the API prefixes (`/api`, `/index.php`, `/projects`, `/cache`), which
+are proxied to PHP and therefore **cannot be used as application names**.
+
+Links from the earlier hash-based scheme (`/#/myapp/...`) are rewritten in
+place on load, so old bookmarks and published citations keep working.
 
 ### Route table
 
 All authenticated routes are namespaced under `/:app` so that URLs are
-self-contained deep links — `#/myapp/record/sites/42` works as a bookmark
+self-contained deep links — `/myapp/record/sites/42` works as a bookmark
 or shared link without any extra context.
 
 **Public routes** (no auth, no app prefix):
@@ -154,7 +158,7 @@ Key behaviours:
   remaining, the client silently calls `/api/auth/refresh` first and stores
   the new token before making the actual request.
 - **401 handling** — on `401` the token is cleared and the browser is
-  redirected to `#/login`.
+  redirected to `/login` (full reload, so all in-memory state is discarded).
 - **Asset URLs** — `assetUrl(path)` prepends `VITE_API_BASE` for uploaded
   files and images (e.g. `assetUrl('projects/myapp/files/42.jpg')`).
 

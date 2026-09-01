@@ -21,8 +21,8 @@ User clicks "Sign in with Google"
       /api/auth/oauth/google/callback?app=APP&code=...&state=...
   → PHP verifies state, exchanges code, resolves user, issues JWT
   → PHP redirects browser to:
-      {origin}/#/oauth-callback?token=JWT&app=APP   (success)
-      {origin}/#/oauth-callback?error=CODE&app=APP  (failure)
+      {origin}/oauth-callback?token=JWT&app=APP   (success)
+      {origin}/oauth-callback?error=CODE&app=APP  (failure)
   → Frontend stores the JWT and navigates home
 ```
 

@@ -24,7 +24,7 @@
     "chart.js": "^4.5.1",
     "cytoscape": "^3.34.2",
     "cytoscape-dagre": "^4.0.1",
-    "maplibre-gl": "^5.24.0",
+    "maplibre-gl": "^6.6.0",
     "maplibre-gl-draw": "^1.6.9",
     "marked": "^18.0.11",
     "pinia": "^4.0.3",

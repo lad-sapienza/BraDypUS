@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.4.9] - 2026-09-02
+
 ### Fixed
 
 - **CLI-created apps were unusable (root-owned).** `docker compose exec` runs as root by default, so `bin/create-app.php` created `projects/<app>/` owned by root and Apache (www-data) could not write to `projects/<app>/files` — login then died with `Directory … is not writable`. `add-app.sh` now runs the CLI as `www-data`, and `bin/create-app.php` `chown`s the tree to `www-data` when it detects it is running as root. To repair an app already created this way: `docker compose exec -u root api chown -R www-data:www-data projects/<app>`.

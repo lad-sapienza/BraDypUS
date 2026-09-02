@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.4.6] - 2026-09-02
+
 ### Added
 
 - **CLI application creation.** `bdus-api/bin/create-app.php` creates an application straight from `DB\System\CreateApp` — no HTTP request, no `BRADYPUS_ALLOW_NEW_APP` gate, no container restart, no exposure window:

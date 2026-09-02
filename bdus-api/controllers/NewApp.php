@@ -32,7 +32,7 @@ class NewApp extends \Bdus\Controller
      * Returns whether app creation is currently permitted and the list of
      * available DB engines. No authentication required.
      *
-     * GET ?obj=new_app_ctrl&method=getStatus
+     * GET /api/new-app/status
      * Response: { status, permitted: bool, engines: string[] }
      */
     public function getStatus(): void
@@ -48,7 +48,7 @@ class NewApp extends \Bdus\Controller
      * Creates a new BraDypUS application. No authentication required;
      * access is controlled by isPermitted().
      *
-     * POST ?obj=new_app_ctrl&method=create
+     * POST /api/new-app
      * Body: {
      *   name, definition, email, password, db_engine,
      *   db_host?, db_port?, db_name?, db_username?, db_password?

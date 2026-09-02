@@ -678,6 +678,66 @@ paths:
               schema:
                 $ref: '#/components/schemas/CodedResult'
 
+  /api/record/{tb}/{id}/duplicate:
+    post:
+      tags: [records]
+      summary: Duplicate a record
+      description: |
+        Copies every column of the source record except `id` into a new row
+        of the same table; `creator` is set to the current user. Core fields
+        only — attached files, plugin rows, stratigraphic relations and
+        manual links are **not** copied.
+
+        Requires `add_new` privilege.
+      parameters:
+        - $ref: '#/components/parameters/tb'
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: >
+            On success `{ status: "success", code: "success_duplicated",
+            id: <new record id> }`. Error codes: `parameter_missing`,
+            `unknown_table`, `record_not_found`, `not_enough_privilege`.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/CodedResult'
+                  - type: object
+                    properties:
+                      id:
+                        type: integer
+                        description: id of the newly created record
+
+  /api/record/{tb}/{id}/plugins:
+    delete:
+      tags: [records]
+      summary: Delete all plugin rows attached to a record
+      description: |
+        Removes every plugin-table row linked to the record (`id_link = {id}`)
+        across all plugin tables configured for `{tb}`. The record itself is
+        left untouched; missing plugin tables are skipped silently.
+
+        Requires `edit` privilege.
+      parameters:
+        - $ref: '#/components/parameters/tb'
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: >
+            `{ status: "success", deleted: <number of rows removed> }`.
+            Error codes: `parameter_missing`, `not_enough_privilege`.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [success]
+                  deleted:
+                    type: integer
+
   /api/record/{tb}:
     post:
       tags: [records]
@@ -2281,6 +2341,89 @@ paths:
               schema:
                 $ref: '#/components/schemas/CodedResult'
 
+  /api/config/table/{tb}/osteology:
+    post:
+      tags: [config]
+      summary: Activate the osteology (skeletal inventory) plugin for a table
+      description: |
+        Adds an `osteo_data` `TEXT` column (holding the bone-inventory JSON)
+        to the table's core SQL table and sets `osteology: true` in the table
+        config, with a hidden `osteo_data` field entry. Idempotent — the
+        column and field are only added if absent.
+
+        Requires `super_admin` privilege.
+      parameters:
+        - $ref: '#/components/parameters/tb'
+      responses:
+        '200':
+          description: "Activation result (`code: osteology_activated`)"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+    delete:
+      tags: [config]
+      summary: Deactivate the osteology plugin for a table
+      description: |
+        Sets `osteology: false` and removes the `osteo_data` field from the
+        table config. The physical `osteo_data` column and any stored values
+        are **not** dropped — re-activating restores access to the data.
+
+        Requires `super_admin` privilege.
+      parameters:
+        - $ref: '#/components/parameters/tb'
+      responses:
+        '200':
+          description: "Deactivation result (`code: osteology_deactivated`)"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  /api/config/table/{tb}/radiocarbon:
+    post:
+      tags: [config]
+      summary: Activate the radiocarbon (C14) dating plugin for a table
+      description: |
+        Unlike fuzzy-date and osteology (which add columns to the core
+        table), this creates a genuine child plugin table `{tb}_radiocarbon`
+        (linked by `id_link`) so a record can carry multiple C14
+        determinations and the calibrated values stay plain indexable
+        columns: `lab_code`, `bp`, `bp_error`, `material`, `d13c`, `curve`,
+        `cal_1s_from`, `cal_1s_to`, `cal_2s_from`, `cal_2s_to`, `notes`.
+        Calibration is always recomputed server-side on save (IntCal20).
+        Idempotent.
+
+        Requires `super_admin` privilege.
+      parameters:
+        - $ref: '#/components/parameters/tb'
+      responses:
+        '200':
+          description: "Activation result (`code: radiocarbon_activated`)"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+    delete:
+      tags: [config]
+      summary: Deactivate the radiocarbon plugin for a table
+      description: |
+        Clears `plugin_of` on the `{tb}_radiocarbon` config and drops the
+        `id_link` relation row, so the plugin table stops loading with the
+        parent record. The physical `{tb}_radiocarbon` table and its rows
+        are preserved; re-activating restores the attachment.
+
+        Requires `super_admin` privilege.
+      parameters:
+        - $ref: '#/components/parameters/tb'
+      responses:
+        '200':
+          description: "Deactivation result (`code: radiocarbon_deactivated`)"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
   /api/config/field-structure:
     get:
       tags: [config]
@@ -3199,6 +3342,39 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+
+  /api/vocabularies/usages:
+    get:
+      tags: [vocabularies]
+      summary: List which table fields reference each vocabulary
+      description: |
+        Scans every table's field config and returns, per vocabulary set,
+        the fields whose `vocabulary_set` points at it — used by the
+        Vocabularies view to show where a vocabulary is in use.
+
+        Requires `read` privilege.
+      responses:
+        '200':
+          description: Usage map keyed by vocabulary name
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [success]
+                  usages:
+                    type: object
+                    additionalProperties:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          tb:          { type: string }
+                          tb_label:    { type: string }
+                          field:       { type: string }
+                          field_label: { type: string }
 
   /api/vocabularies/sort:
     post:

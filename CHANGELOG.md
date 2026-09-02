@@ -5,6 +5,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **CLI application creation.** `bdus-api/bin/create-app.php` creates an application straight from `DB\System\CreateApp` — no HTTP request, no `BRADYPUS_ALLOW_NEW_APP` gate, no container restart, no exposure window:
+  `docker compose exec api php bin/create-app.php --name <slug> --engine sqlite|pgsql|mysql --email <admin> --password-stdin`.
+  For pgsql/mysql the target database must already exist. The repo-root helper `add-app.sh <instance-dir> --name … --engine … --email …` wraps it end to end: reads the instance `.env`, creates the pgsql database on the compose `postgres` service if missing, then runs the CLI inside the `api` container (DB password passed via the process environment, not argv).
+
 ## [5.4.5] - 2026-09-01
 
 ### Changed

@@ -2,7 +2,7 @@
 title: Application anatomy
 ---
 
-# Application anatomy
+# Application anatomy <Badge type="tip" text="v5.0.0" />
 
 After creating an application named `myapp`, the following directory structure
 is created under `projects/`:

@@ -2,7 +2,7 @@
 title: Vocabulary
 ---
 
-# Vocabulary
+# Vocabulary <Badge type="tip" text="v5.0.0" />
 
 Key terms used throughout this documentation.
 

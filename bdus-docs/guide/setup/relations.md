@@ -2,7 +2,7 @@
 title: Table relations
 ---
 
-# Table relations
+# Table relations <Badge type="tip" text="v5.0.0" />
 
 The **Relations** panel defines cross-table links that are displayed as a
 read-only reference panel inside RecordView. This is distinct from plugin tables

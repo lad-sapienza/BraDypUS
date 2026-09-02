@@ -2,7 +2,7 @@
 title: Version history
 ---
 
-# Version history
+# Version history <Badge type="tip" text="v5.0.0" />
 
 BraDypUS keeps an automatic snapshot of every record every time it is saved or
 deleted. The **Version history** drawer lets you browse these snapshots, compare

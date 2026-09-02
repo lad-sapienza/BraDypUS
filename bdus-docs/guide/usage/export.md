@@ -2,7 +2,7 @@
 title: Data export
 ---
 
-# Data export
+# Data export <Badge type="tip" text="v5.0.0" />
 
 You can export records directly from the DataView toolbar. The export respects
 the active search filter — only matching records are exported.

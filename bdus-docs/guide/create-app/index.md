@@ -2,10 +2,10 @@
 title: Creating a new application
 ---
 
-# Creating a new application
+# Creating a new application <Badge type="tip" text="v5.0.0" />
 
-A new BraDypUS application can be created entirely through the web UI —
-no code or command line required.
+A new BraDypUS application can be created through the web UI, or from the
+command line ([see below](#from-the-command-line)) for unattended provisioning.
 
 ## Prerequisites
 
@@ -20,11 +20,13 @@ after creation to prevent unauthorised app creation.
 
 ## Creating the first application
 
-When no applications exist yet, the login page shows a **Create new application**
-link. Click it to open the creation form.
+The **Create new application** link on the login page appears only while
+`BRADYPUS_ALLOW_NEW_APP=1` is set <Badge type="tip" text="v5.4.7" /> — including
+for the very first application. Set the flag, create the app, then set it back
+to `0`. (Before v5.4.7 the link also appeared whenever `projects/` was empty,
+regardless of the flag.)
 
-On an existing installation, the link is hidden by default. An administrator
-with file-system access can temporarily enable it via the environment variable.
+Click the link to open the creation form.
 
 ![Login page with the 'Create new application' link visible](/images/v5/create-app/login-with-create-link.png)
 
@@ -47,6 +49,22 @@ For MySQL and PostgreSQL, additional connection fields appear:
 SQLite requires no external database service and is the recommended engine
 for development and single-user deployments.
 :::
+
+## From the command line <Badge type="tip" text="v5.4.6" />
+
+For unattended provisioning there is a gate-free CLI that does not need
+`BRADYPUS_ALLOW_NEW_APP`, an HTTP request, or a container restart:
+
+```bash
+docker compose exec api php bin/create-app.php \
+  --name <slug> --engine sqlite|pgsql|mysql --email <admin> --password-stdin
+```
+
+For `pgsql`/`mysql` the target database must already exist. The repo-root
+helper `add-app.sh <instance-dir> --name … --engine … --email …` wraps it
+end to end (reads the instance `.env`, creates the Postgres database and an
+isolated per-app role <Badge type="tip" text="v5.4.8" /> if missing, then runs
+the CLI inside the `api` container).
 
 ## After creation
 

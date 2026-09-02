@@ -2,7 +2,7 @@
 title: Vocabularies
 ---
 
-# Vocabularies
+# Vocabularies <Badge type="tip" text="v5.0.0" />
 
 A vocabulary is a controlled list of values used to populate `select`,
 `multi_select` and `combo_select` fields.

@@ -2,7 +2,7 @@
 title: Template reference
 ---
 
-# Template reference
+# Template reference <Badge type="tip" text="v5.0.0" />
 
 Templates are JSON documents. This page documents all available properties.
 

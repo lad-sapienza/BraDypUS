@@ -2,7 +2,7 @@
 title: Command palette
 ---
 
-# Command palette
+# Command palette <Badge type="tip" text="v5.4.0" />
 
 The **command palette** is a keyboard-first way to jump anywhere in the
 application or run a quick action, without navigating through the sidebar.

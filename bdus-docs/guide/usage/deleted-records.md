@@ -2,7 +2,7 @@
 title: Deleted records
 ---
 
-# Deleted records
+# Deleted records <Badge type="tip" text="v5.0.0" />
 
 When a record is deleted in BraDypUS, it is **soft-deleted** — the data is not
 immediately erased but kept as a snapshot that can be reviewed and restored.

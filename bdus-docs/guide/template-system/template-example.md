@@ -2,7 +2,7 @@
 title: Template example
 ---
 
-# Template example
+# Template example <Badge type="tip" text="v5.0.0" />
 
 A complete template for a stratigraphic unit (`us`) table with two sections
 and a plugin sub-table.

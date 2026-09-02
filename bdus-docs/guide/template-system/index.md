@@ -2,7 +2,7 @@
 title: Print templates
 ---
 
-# Print templates
+# Print templates <Badge type="tip" text="v5.0.0" />
 
 Print templates define custom display layouts for individual records. They are
 useful for generating printable views or structured summaries of complex records.
@@ -48,7 +48,7 @@ A template is a JSON object with a `sections` array. Each section contains a
 Width is a fraction string. Valid values: `"1/1"`, `"1/2"`, `"1/3"`, `"2/3"`,
 `"1/4"`, `"3/4"`. Fields in a section should ideally sum to one full row.
 
-### Accordion sections
+### Accordion sections <Badge type="tip" text="v5.1.0" />
 
 A section with `"type": "accordion"` renders its content as a series of
 collapsible sub-panels. Each panel has its own label and field list:

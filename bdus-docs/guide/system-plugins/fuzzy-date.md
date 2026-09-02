@@ -2,7 +2,7 @@
 title: Fuzzy date (Chronology)
 ---
 
-# Fuzzy date — uncertain chronological dating
+# Fuzzy date — uncertain chronological dating <Badge type="tip" text="v5.0.0" />
 
 The fuzzy-date plugin adds a structured chronology section to any table. It stores
 uncertain, approximate, or range-based dates in five dedicated columns directly in

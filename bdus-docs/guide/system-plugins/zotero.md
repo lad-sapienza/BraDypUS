@@ -2,7 +2,7 @@
 title: Zotero
 ---
 
-# Zotero — bibliographic citations
+# Zotero — bibliographic citations <Badge type="tip" text="v5.0.0" />
 
 The Zotero plugin links records in any table to items in online
 [Zotero](https://www.zotero.org/) libraries (personal or group). Formatted

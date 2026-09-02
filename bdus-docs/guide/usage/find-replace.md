@@ -2,7 +2,7 @@
 title: Find & replace
 ---
 
-# Find & replace
+# Find & replace <Badge type="tip" text="v5.0.0" />
 
 The **Find & replace** module lets you bulk-update a field across all records
 that match a search value. It is available from the sidebar (admin privilege required).

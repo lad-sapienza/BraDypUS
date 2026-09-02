@@ -2,7 +2,7 @@
 title: DBML import / export
 ---
 
-# DBML import / export
+# DBML import / export <Badge type="tip" text="v5.1.0" />
 
 The **DBML** panel in Config lets you export your entire application schema as a
 single annotated `.dbml` file, and import new tables from a DBML file.

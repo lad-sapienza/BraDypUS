@@ -2,7 +2,7 @@
 title: System plugins
 ---
 
-# System plugins
+# System plugins <Badge type="tip" text="v5.0.0" />
 
 System plugins are optional modules that add domain-specific functionality on
 top of the core record management features. They are enabled **per-table** in

@@ -2,7 +2,7 @@
 title: Records (CRUD)
 ---
 
-# Records
+# Records <Badge type="tip" text="v5.0.0" />
 
 ## Browsing records
 

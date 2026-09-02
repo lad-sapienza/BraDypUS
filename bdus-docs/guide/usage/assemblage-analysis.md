@@ -2,7 +2,7 @@
 title: Analisi Assemblaggio
 ---
 
-# Analisi Assemblaggio
+# Analisi Assemblaggio <Badge type="tip" text="v5.1.0" />
 
 Il modulo **Analisi Assemblaggio** permette di costruire tabelle pivot e grafici a barre per analizzare la composizione di assemblaggi di materiale (es. distribuzione tipologica per unità stratigrafica, quantità per classe ceramica per strato, ecc.).
 

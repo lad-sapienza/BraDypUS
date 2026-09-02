@@ -2,7 +2,7 @@
 title: Import data
 ---
 
-# Import data
+# Import data <Badge type="tip" text="v5.0.0" />
 
 BraDypUS can import records from external files. Open **Import data** from the
 sidebar (editor privilege or higher required).

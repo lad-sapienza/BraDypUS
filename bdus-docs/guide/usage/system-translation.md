@@ -2,7 +2,7 @@
 title: Interface language
 ---
 
-# Interface language
+# Interface language <Badge type="tip" text="v5.0.0" />
 
 BraDypUS supports **English** and **Italian** as UI languages.
 

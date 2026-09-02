@@ -2,7 +2,7 @@
 title: Search & filter
 ---
 
-# Search & filter
+# Search & filter <Badge type="tip" text="v5.0.0" />
 
 BraDypUS offers three search modes, all accessible from the DataView toolbar.
 
@@ -78,7 +78,7 @@ matrix or map will show only the records that match the current filter.
 Advanced search lets you filter by fields in **plugin tables** as well as the main
 table. Plugin fields are listed under a labelled group in the field dropdown.
 
-## Searching reference fields
+## Searching reference fields <Badge type="tip" text="v5.1.0" />
 
 Fields that point to another table (configured with `id_from_tb`) store the
 **id** of the referenced record, but you search them by the referenced table's

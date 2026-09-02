@@ -2,7 +2,7 @@
 title: Creating a template
 ---
 
-# Creating a template
+# Creating a template <Badge type="tip" text="v5.0.0" />
 
 Templates are managed in the **Templates** view, accessible from the sidebar
 (super-admin required).
@@ -57,7 +57,7 @@ Fields in a section should ideally fill one row. A single full-width field uses
 Set `"plugin": "table_name"` to render rows from a plugin sub-table instead
 of main-table fields.
 
-### Accordion sections
+### Accordion sections <Badge type="tip" text="v5.1.0" />
 
 Set `"type": "accordion"` to group fields into collapsible sub-panels within a
 section. Useful for tables with many fields:

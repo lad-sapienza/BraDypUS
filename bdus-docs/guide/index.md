@@ -16,6 +16,14 @@ Throughout this guide **BDUS** is used as a short form of **BraDypUS**; the term
 This documentation covers **BraDypUS v5**. Content is being actively updated.
 :::
 
+::: tip Version badges
+A badge such as <Badge type="tip" text="v5.3.0" /> next to a heading marks the
+BraDypUS version that first shipped that feature. Headings without a badge are
+part of the v5.0.0 rewrite (or, in the Developer section, describe internals
+that are not versioned this way). See the [changelog](/guide/changelog) for the
+full history.
+:::
+
 ### Target users
 
 This guide is written for both expert users comfortable with web technologies and

@@ -2,7 +2,7 @@
 title: Harris Matrix (stratigraphic relations)
 ---
 
-# Harris Matrix (stratigraphic relations)
+# Harris Matrix (stratigraphic relations) <Badge type="tip" text="v5.0.0" />
 
 BraDypUS supports stratigraphic unit (US) relationship management with a built-in
 **Harris Matrix** visualisation. The feature is available for any table that has

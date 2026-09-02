@@ -2,7 +2,7 @@
 title: User preferences
 ---
 
-# User preferences
+# User preferences <Badge type="tip" text="v5.0.0" />
 
 BraDypUS stores a small set of per-user preferences client-side (browser
 `sessionStorage` per tab — preferences are per-session, not persistent across

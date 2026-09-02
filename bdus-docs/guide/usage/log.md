@@ -2,7 +2,7 @@
 title: Application log
 ---
 
-# Application log
+# Application log <Badge type="tip" text="v5.0.0" />
 
 The **Application log** shows internal events and errors recorded by BraDypUS
 at runtime. Open it from the sidebar (admin privilege required).

@@ -2,7 +2,7 @@
 title: Cronologia
 ---
 
-# Cronologia
+# Cronologia <Badge type="tip" text="v5.1.0" />
 
 BraDypUS offre due strumenti di visualizzazione cronologica per le tabelle che usano il plugin **`fuzzy_date`** (date sfumate con intervallo `from/to`, certezza e periodo).
 
@@ -64,7 +64,7 @@ Per ogni tabella relata viene mostrato un **istogramma a 60 bin** della densità
 
 Senza alcuna configurazione aggiuntiva, il pannello mostra un solo hop automatico: le tabelle **figlie dirette** (relazione FK in `bdus_cfg_relations`) che hanno il plugin `fuzzy_date` abilitato. Se nessuna figlia diretta ha `fuzzy_date`, il pannello resta vuoto — anche se un discendente più lontano (es. un nipote) ne è dotato.
 
-### Percorso configurabile (per raggiungere un discendente più lontano)
+### Percorso configurabile (per raggiungere un discendente più lontano) <Badge type="tip" text="v5.4.0" />
 
 Per casi come "da un Sito, mostra i Reperti collegati tramite le Unità stratigrafiche" (un nipote, non un figlio diretto), ogni tabella può avere un **percorso di distribuzione cronologica** configurato in Config → Tabelle, sezione "Chronological distribution path":
 

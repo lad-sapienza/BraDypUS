@@ -2,7 +2,7 @@
 title: Radiocarbon dating
 ---
 
-# Radiocarbon dating (C14)
+# Radiocarbon dating (C14) <Badge type="tip" text="v5.3.0" />
 
 The radiocarbon plugin records C14 determinations (BP + error) and automatically
 calibrates them into calendar-year ranges using the IntCal20 curve. Unlike the other

@@ -2,7 +2,7 @@
 title: Osteology (bone inventory)
 ---
 
-# Osteology — skeletal bone inventory
+# Osteology — skeletal bone inventory <Badge type="tip" text="v5.1.0" />
 
 The osteology plugin adds a structured bone-inventory section to any table. It is
 designed for burial records in archaeological contexts: it stores the preservation

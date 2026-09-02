@@ -2,7 +2,7 @@
 title: REST API
 ---
 
-# REST API
+# REST API <Badge type="tip" text="v5.0.0" />
 
 BraDypUS exposes a read-only public REST API that allows external applications to
 query records without a full authentication session.

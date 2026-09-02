@@ -2,7 +2,7 @@
 title: Geodata & GeoFace
 ---
 
-# Geodata & GeoFace
+# Geodata & GeoFace <Badge type="tip" text="v5.0.0" />
 
 BraDypUS stores geographic coordinates (points, polygons, lines) for records
 that have **geodata** configured, and displays them on an interactive map via

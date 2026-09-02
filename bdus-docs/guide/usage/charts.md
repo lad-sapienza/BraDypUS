@@ -2,7 +2,7 @@
 title: Charts
 ---
 
-# Charts
+# Charts <Badge type="tip" text="v5.0.0" />
 
 BraDypUS can generate charts from the data in any table. Charts are private
 to their creator by default and can be shared with all users of the

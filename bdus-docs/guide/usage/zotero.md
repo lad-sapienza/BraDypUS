@@ -2,7 +2,7 @@
 title: Bibliography (Zotero)
 ---
 
-# Bibliography (Zotero)
+# Bibliography (Zotero) <Badge type="tip" text="v5.0.0" />
 
 BraDypUS integrates with [Zotero](https://www.zotero.org/) to attach bibliographic
 citations to individual records. A **Zotero** section appears at the bottom of

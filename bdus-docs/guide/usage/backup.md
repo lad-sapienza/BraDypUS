@@ -2,7 +2,7 @@
 title: Database backup
 ---
 
-# Database backup
+# Database backup <Badge type="tip" text="v5.0.0" />
 
 The **Backup** module creates and manages snapshots of your database.
 Admin privilege is required to access it.

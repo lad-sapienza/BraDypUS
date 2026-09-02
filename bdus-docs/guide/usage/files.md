@@ -2,7 +2,7 @@
 title: File management
 ---
 
-# File management
+# File management <Badge type="tip" text="v5.0.0" />
 
 The **File management** page (sidebar → *File management*) gives a centralised
 view of every file uploaded to the current application, independent of which

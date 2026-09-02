@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.4.7] - 2026-09-02
+
 ### Security
 
 - **App creation now always requires `BRADYPUS_ALLOW_NEW_APP=1`.** Previously a fresh instance with an empty `projects/` directory permitted app creation regardless of the flag, so anyone who could reach a brand-new instance could create the first application and become its admin before the operator ever set the flag. The empty-projects shortcut is removed: set the flag to create the first app (and set it back to `0`), or use the gate-free CLI `bin/create-app.php` added in 5.4.6. The "Create application" button appears only when the flag is `1`.

@@ -44,17 +44,37 @@ The application is now available at **http://localhost**.
 
 ## 4. Create your first application
 
-With `BRADYPUS_ALLOW_NEW_APP` enabled you can use the new-app wizard.
-Edit `bradypus.yml` to set it temporarily:
+App creation is always gated by `BRADYPUS_ALLOW_NEW_APP` — including the very
+first app. There are two ways in.
+
+**Web wizard.** Set the flag in `bradypus.yml`, restart, create the app, then
+set it back to `0`:
 
 ```yaml
 environment:
   - BRADYPUS_ALLOW_NEW_APP=1
 ```
 
-Then restart: `docker compose -f bradypus.yml up -d`
+```bash
+docker compose -f bradypus.yml up -d
+# … create the app via the wizard (see below) …
+# set BRADYPUS_ALLOW_NEW_APP back to 0, then:
+docker compose -f bradypus.yml up -d
+```
 
 Follow the [Create application](/guide/create-app/) guide to complete the setup.
+
+**CLI (no restart, no open window).** Run the creator inside the `api`
+container — it bypasses the HTTP flow and the flag entirely:
+
+```bash
+docker compose -f bradypus.yml exec api php bin/create-app.php \
+  --name myapp --engine sqlite --email admin@example.org --password-stdin
+```
+
+For pgsql/mysql pass `--db-host --db-port --db-name --db-user` (the database
+must already exist) and the DB password via `--db-pass` or the `BDUS_DB_PASS`
+environment variable.
 
 ## Pinning a specific version
 

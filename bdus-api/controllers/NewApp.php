@@ -13,17 +13,17 @@ class NewApp extends \Bdus\Controller
     // ── Access guard ─────────────────────────────────────────────────────────
 
     /**
-     * App creation is permitted when:
-     *   a) The env variable BRADYPUS_ALLOW_NEW_APP is set to '1', OR
-     *   b) The projects/ directory is empty (first-time / fresh install)
+     * App creation over HTTP is permitted only when the env variable
+     * BRADYPUS_ALLOW_NEW_APP is set to '1' — including the very first app.
+     * Set it (docker-compose.yml, .env, server config) just long enough to
+     * create the app, then set it back to '0'.
      *
-     * Set the env variable in docker-compose.yml, .env, or your server
-     * config, and remove it again once the app has been created.
+     * For an unattended path with no open window, use the CLI instead:
+     *   docker compose exec api php bin/create-app.php --name … --engine …
      */
     private function isPermitted(): bool
     {
-        return getenv('BRADYPUS_ALLOW_NEW_APP') === '1'
-            || !\Bdus\Utils::dirContent(MAIN_DIR . 'projects');
+        return getenv('BRADYPUS_ALLOW_NEW_APP') === '1';
     }
 
     // ── v5 JSON endpoints ────────────────────────────────────────────────────

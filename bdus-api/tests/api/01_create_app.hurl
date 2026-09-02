@@ -1,8 +1,8 @@
 # ════════════════════════════════════════════════════════════════════
 # Phase 1 — Create the test application
 #
-# Requires BRADYPUS_ALLOW_NEW_APP=1 in the server environment, or
-# no pre-existing apps in projects/.
+# Requires BRADYPUS_ALLOW_NEW_APP=1 in the server environment
+# (set in docker-compose.test.yml for the test container).
 # ════════════════════════════════════════════════════════════════════
 
 # 1a. Check that app creation is permitted before attempting it.

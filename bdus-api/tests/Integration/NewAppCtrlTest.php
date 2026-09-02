@@ -9,6 +9,8 @@ use Tests\Support\BdusTestCase;
  *
  * create() with valid params would write to disk and is covered by hurl phase 01.
  * Here we test the shape of getStatus() and the "not permitted" guard of create().
+ * App creation is gated solely by BRADYPUS_ALLOW_NEW_APP=1 (no empty-projects
+ * shortcut).
  */
 class NewAppCtrlTest extends BdusTestCase
 {
@@ -28,24 +30,28 @@ class NewAppCtrlTest extends BdusTestCase
         $this->assertContains('sqlite', $res['engines']);
     }
 
+    public function testGetStatusReflectsAllowFlag(): void
+    {
+        $original = getenv('BRADYPUS_ALLOW_NEW_APP');
+
+        putenv('BRADYPUS_ALLOW_NEW_APP=0');
+        $res = $this->callController($this->makeController('Bdus\\Controllers\\NewApp'), 'getStatus');
+        $this->assertFalse($res['permitted']);
+
+        putenv('BRADYPUS_ALLOW_NEW_APP=1');
+        $res = $this->callController($this->makeController('Bdus\\Controllers\\NewApp'), 'getStatus');
+        $this->assertTrue($res['permitted']);
+
+        putenv('BRADYPUS_ALLOW_NEW_APP=' . ($original ?: ''));
+    }
+
     // ── create — not permitted ────────────────────────────────────────────────
 
     public function testCreateNotPermitted(): void
     {
-        // Ensure BRADYPUS_ALLOW_NEW_APP is not '1' and the projects directory is
-        // non-empty (it always contains the bdus-api source tree) so isPermitted()
-        // returns false.
+        // Gated solely by the env flag — the projects/ directory is irrelevant.
         $original = getenv('BRADYPUS_ALLOW_NEW_APP');
         putenv('BRADYPUS_ALLOW_NEW_APP=0');
-
-        // We also need MAIN_DIR/projects/ to be non-empty. In the test environment
-        // MAIN_DIR is the project root; create a canary file if projects/ is empty.
-        $projectsDir = MAIN_DIR . 'projects/';
-        $canary = null;
-        if (!\Bdus\Utils::dirContent($projectsDir)) {
-            $canary = $projectsDir . '.canary_test';
-            file_put_contents($canary, '1');
-        }
 
         $ctrl = $this->makeController('Bdus\\Controllers\\NewApp', [], ['name' => 'testapp']);
         $res  = $this->callController($ctrl, 'create');
@@ -53,11 +59,7 @@ class NewAppCtrlTest extends BdusTestCase
         $this->assertSame('error',                  $res['status']);
         $this->assertSame('not_allowed_app_create', $res['code']);
 
-        // Restore
         putenv('BRADYPUS_ALLOW_NEW_APP=' . ($original ?: ''));
-        if ($canary && file_exists($canary)) {
-            unlink($canary);
-        }
     }
 
     public function testCreateMissingRequiredParamsReturnsError(): void

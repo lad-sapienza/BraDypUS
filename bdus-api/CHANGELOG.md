@@ -5,6 +5,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.4.10] - 2026-09-02
+
+### Changed
+
+- **Dependency maintenance** — routine minor/patch bumps, no behaviour change:
+  - `bdus-api`: `intervention/image` 4.2.1 → 4.3.2 (`composer.lock` only; the
+    `^4` constraint already allowed it — the image-resize path is covered by
+    `ImageResizerTest`).
+  - `bdus-app`: `vue` 3.5.39 → 3.5.42, `vite` 8.1.4 → 8.2.2, `vue-router`
+    5.1.x → 5.3.1, `pinia` 4.0.0 → 4.0.3, `cytoscape` 3.34.0 → 3.34.2,
+    `cytoscape-dagre` 4.0.0 → 4.0.1, `marked` 18.0.6 → 18.0.11,
+    `@vue/devtools-api` 8.1.5 → 8.2.1. Production build clean; the npm re-resolve
+    also pruned stale `@babel/*` transitives.
+  - CI actions: `actions/checkout` v5 → v7, `actions/setup-node` v4 → v7,
+    `actions/configure-pages` v4 → v6, `actions/upload-pages-artifact` v3 → v5,
+    `actions/deploy-pages` v4 → v5.
+
+  Not taken: `maplibre-gl` 5 → 6 — v6 dropped its `default` export, which
+  `GeofaceView.vue` relies on; deferred to a dedicated GeoFace pass.
+
+### Documentation
+
+- **"Available since" version badges across the guide** — every user-facing
+  feature page in `bdus-docs/guide/` now carries a `<Badge>` on its heading with
+  the BraDypUS version that first shipped it, plus inline badges on sub-sections
+  added later. The convention is explained on the guide landing page. Also
+  corrected `guide/create-app/index.md`, which still described the pre-5.4.7
+  "empty `projects/` = anyone can create the first app" behaviour and did not
+  mention the 5.4.6 CLI.
+- **OpenAPI spec: seven previously undocumented endpoints added** — a full
+  route-to-spec reconciliation (`lib/Bdus/Router.php` vs `openapi.yaml`, 171
+  method+path pairs) found seven registered but undocumented operations:
+  `POST`/`DELETE /api/config/table/{tb}/osteology`, `POST`/`DELETE
+  /api/config/table/{tb}/radiocarbon`, `GET /api/vocabularies/usages`,
+  `POST /api/record/{tb}/{id}/duplicate`, `DELETE /api/record/{tb}/{id}/plugins`.
+  Nothing in the spec was stale.
+- **`NewApp` controller docblocks** cited the retired v4 query-string routes
+  (`?obj=new_app_ctrl&method=…`); updated to `GET /api/new-app/status` and
+  `POST /api/new-app`.
+
 ## [5.4.9] - 2026-09-02
 
 ### Fixed

@@ -5,6 +5,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- **`add-app.sh` gives each Postgres app an isolated role.** It used to create the app database owned by the shared `POSTGRES_USER` superuser and hand that superuser's credentials to the app — which BraDypUS then stores in cleartext in `projects/<app>/config.json`, so one leaked config exposed every app's data plus superuser. It now creates a dedicated `CREATE ROLE "<app>" LOGIN` (no superuser, no createdb) owning `CREATE DATABASE "<app>"`, revokes `PUBLIC` `CONNECT`, and passes only that role to the app. The generated password is printed once. `--db-user <existing-role>` (+ `BDUS_DB_PASS`) reuses a self-managed role instead. The superuser stays in the instance `.env`, used only to provision and to back up (`pg_dumpall`). The database name now defaults to `<app>` (no `bdus_` prefix); `--db-name` overrides.
+
 ## [5.4.7] - 2026-09-02
 
 ### Security

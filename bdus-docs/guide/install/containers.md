@@ -72,9 +72,22 @@ docker compose -f bradypus.yml exec api php bin/create-app.php \
   --name myapp --engine sqlite --email admin@example.org --password-stdin
 ```
 
-For pgsql/mysql pass `--db-host --db-port --db-name --db-user` (the database
-must already exist) and the DB password via `--db-pass` or the `BDUS_DB_PASS`
-environment variable.
+`bin/create-app.php` connects with whatever database it is given; it does not
+create databases or roles. For a Postgres app use **`add-app.sh`** at the repo
+root instead — it provisions an isolated, non-superuser role that owns a
+single database, then calls the CLI:
+
+```bash
+./add-app.sh <instance-dir> --name myapp --engine pgsql --email admin@example.org
+```
+
+It creates `CREATE ROLE "myapp" LOGIN PASSWORD <generated>` (no superuser, no
+createdb) owning `CREATE DATABASE "myapp"`, revokes `PUBLIC` connect, and prints
+the generated password once (BraDypUS also stores it in
+`projects/myapp/config.json`). Pass `--db-name` / `--db-user` to override, or
+`--db-user <existing-role>` (+ `BDUS_DB_PASS`) to reuse a role you manage
+yourself. The superuser (`POSTGRES_USER` in the instance `.env`) is used only
+to provision the role/db and never reaches the app.
 
 ## Pinning a specific version
 

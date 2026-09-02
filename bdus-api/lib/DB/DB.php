@@ -325,6 +325,7 @@ class DB implements DBInterface
     }
 
     // Set DSN for sqlite
+    $dsn = null;
     if ($cfg['db_engine'] === 'sqlite') {
       if (!$cfg['db_path']) {
         throw new DBException('Missing SQLite file path');

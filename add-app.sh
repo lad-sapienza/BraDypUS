@@ -138,7 +138,8 @@ fi
 
 # ── run the CLI inside the api container ───────────────────────────────────
 # the DB password travels in the exec'd process environment, never in argv.
-exec_args=(exec -T)
+# run as www-data so the new projects/<name>/ tree is writable by Apache.
+exec_args=(exec -T -u www-data)
 cli_args=(--name "$NAME" --engine "$ENGINE" --email "$EMAIL" \
           --definition "${DEFN:-$NAME}" --password-stdin)
 if [ "$ENGINE" = pgsql ]; then

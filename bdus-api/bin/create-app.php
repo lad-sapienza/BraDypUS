@@ -135,6 +135,13 @@ try {
     );
     $app->createAll();
 
+    // `docker compose exec` runs as root by default, so the new projects/<name>
+    // tree would be root-owned and Apache (www-data) could not write to
+    // projects/<name>/files. Fix ownership when we are root; a no-op otherwise.
+    if (function_exists('posix_geteuid') && posix_geteuid() === 0) {
+        exec('chown -R www-data:www-data ' . escapeshellarg("projects/{$name}") . ' 2>/dev/null');
+    }
+
     foreach ($app->getLog() as $line) {
         fwrite(STDOUT, "  {$line}\n");
     }

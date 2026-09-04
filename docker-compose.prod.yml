@@ -16,6 +16,10 @@
 # Environment variables you may want to override (via .env or -e):
 #   BRADYPUS_DEBUG        — set to 1 to enable debug output (default: 0)
 #   BRADYPUS_ALLOW_NEW_APP — set to 1 to enable the new-app wizard (default: 0)
+#   RESEND_API_KEY, MAIL_FROM_ADDRESS, MAIL_FROM_NAME — password reset / self-
+#     registration emails via Resend (https://resend.com). Unset by default:
+#     those features report themselves as unavailable instead of failing
+#     silently. One key covers every app on this instance.
 
 services:
 
@@ -28,6 +32,9 @@ services:
     environment:
       - BRADYPUS_DEBUG=0
       - BRADYPUS_ALLOW_NEW_APP=0
+      - RESEND_API_KEY=
+      - MAIL_FROM_ADDRESS=
+      - MAIL_FROM_NAME=BraDypUS
     volumes:
       - projects_data:/var/www/html/projects
     networks:

@@ -15,6 +15,12 @@ services:
       - BRADYPUS_ALLOW_NEW_APP=1
       # Allow CORS from the Vite dev server:
       # - BRADYPUS_CORS_ORIGIN=http://localhost:5173
+      # Password reset / self-registration emails (Resend, https://resend.com).
+      # Unset by default — those features report themselves as unavailable
+      # instead of failing silently when RESEND_API_KEY/MAIL_FROM_ADDRESS are empty.
+      # - RESEND_API_KEY=
+      # - MAIL_FROM_ADDRESS=
+      # - MAIL_FROM_NAME=BraDypUS
     volumes:
       - ./bdus-api:/var/www/html
       - ./bdus-api/projects:/var/www/html/projects

@@ -103,6 +103,140 @@ class LoginCtrlTest extends BdusTestCase
         $this->assertSame('login_data_not_valid', $res['code']);
     }
 
+    // ── login throttling ─────────────────────────────────────────────────────
+
+    private function attemptWrongPassword(): array
+    {
+        $ctrl = $this->makeController('Bdus\\Controllers\\Login', [], [
+            'email'    => 'test@example.com',
+            'password' => 'wrongpassword',
+        ]);
+        return $this->callController($ctrl, 'auth');
+    }
+
+    private function getUserThrottleState(): array
+    {
+        $row = static::$db->query(
+            'SELECT failed_login_count, locked_until FROM bdus_users WHERE id = ?',
+            [1],
+            'read'
+        );
+        return $row[0];
+    }
+
+    // Tests in this class share one in-memory DB (recreated once per class,
+    // not per method — see project_test_conventions memory), so throttling
+    // state left by one test would otherwise leak into the next.
+    private function resetThrottleState(): void
+    {
+        static::$db->execInTransaction(
+            'UPDATE bdus_users SET failed_login_count = 0, locked_until = 0 WHERE id = 1'
+        );
+    }
+
+    public function testAuthLocksAccountAfterMaxFailedAttempts(): void
+    {
+        $this->resetThrottleState();
+        for ($i = 0; $i < 5; $i++) {
+            $res = $this->attemptWrongPassword();
+            $this->assertSame('login_data_not_valid', $res['code']);
+        }
+
+        $state = $this->getUserThrottleState();
+        $this->assertSame(5, (int)$state['failed_login_count']);
+        $this->assertGreaterThan(time(), (int)$state['locked_until']);
+
+        // The 6th attempt hits the lock before even checking the password.
+        $res = $this->attemptWrongPassword();
+        $this->assertSame('error',           $res['status']);
+        $this->assertSame('account_locked',  $res['code']);
+    }
+
+    public function testAuthLockedAccountRejectsEvenCorrectPassword(): void
+    {
+        $this->resetThrottleState();
+        static::$db->execInTransaction(
+            'UPDATE bdus_users SET failed_login_count = 5, locked_until = ' . (time() + 900) . ' WHERE id = 1'
+        );
+
+        $ctrl = $this->makeController('Bdus\\Controllers\\Login', [], [
+            'email'    => 'test@example.com',
+            'password' => static::$testPassword,
+        ]);
+        $res = $this->callController($ctrl, 'auth');
+
+        $this->assertSame('error',          $res['status']);
+        $this->assertSame('account_locked', $res['code']);
+    }
+
+    public function testAuthSuccessfulLoginResetsFailedCount(): void
+    {
+        $this->resetThrottleState();
+        $this->attemptWrongPassword();
+        $this->attemptWrongPassword();
+        $this->assertSame(2, (int)$this->getUserThrottleState()['failed_login_count']);
+
+        $ctrl = $this->makeController('Bdus\\Controllers\\Login', [], [
+            'email'    => 'test@example.com',
+            'password' => static::$testPassword,
+        ]);
+        $res = $this->callController($ctrl, 'auth');
+        $this->assertSame('success', $res['status']);
+
+        $state = $this->getUserThrottleState();
+        $this->assertSame(0,   (int)$state['failed_login_count']);
+        $this->assertSame(0, (int)$state['locked_until']);
+    }
+
+    public function testAuthExpiredLockClearsAndAllowsRetry(): void
+    {
+        static::$db->execInTransaction(
+            'UPDATE bdus_users SET failed_login_count = 5, locked_until = ' . (time() - 60) . ' WHERE id = 1'
+        );
+
+        $ctrl = $this->makeController('Bdus\\Controllers\\Login', [], [
+            'email'    => 'test@example.com',
+            'password' => static::$testPassword,
+        ]);
+        $res = $this->callController($ctrl, 'auth');
+
+        $this->assertSame('success', $res['status']);
+        $state = $this->getUserThrottleState();
+        $this->assertSame(0,   (int)$state['failed_login_count']);
+        $this->assertSame(0, (int)$state['locked_until']);
+    }
+
+    /**
+     * Simulates an app that hasn't run M039 yet: migrations only apply after
+     * a successful login, so authenticate() must keep working (throttling
+     * simply off) against a bdus_users table that doesn't have these columns
+     * — otherwise every login on that app breaks with a SQL error before the
+     * admin ever gets a chance to apply the upgrade. Regression test for a
+     * real bug caught by manual verification, not by the fixture (BdusTestCase
+     * always builds the current, fully-migrated schema).
+     */
+    public function testAuthWorksBeforeThrottlingColumnsExist(): void
+    {
+        static::$db->execInTransaction('ALTER TABLE bdus_users DROP COLUMN failed_login_count');
+        static::$db->execInTransaction('ALTER TABLE bdus_users DROP COLUMN locked_until');
+
+        try {
+            $wrong = $this->attemptWrongPassword();
+            $this->assertSame('login_data_not_valid', $wrong['code']);
+
+            $ok = $this->makeController('Bdus\\Controllers\\Login', [], [
+                'email'    => 'test@example.com',
+                'password' => static::$testPassword,
+            ]);
+            $res = $this->callController($ok, 'auth');
+            $this->assertSame('success', $res['status']);
+        } finally {
+            // Restore the schema so later tests in this class see the normal shape.
+            static::$db->execInTransaction('ALTER TABLE bdus_users ADD COLUMN failed_login_count INTEGER NOT NULL DEFAULT 0');
+            static::$db->execInTransaction('ALTER TABLE bdus_users ADD COLUMN locked_until INTEGER NOT NULL DEFAULT 0');
+        }
+    }
+
     // ── refresh ───────────────────────────────────────────────────────────────
 
     public function testRefreshReturnsNewToken(): void

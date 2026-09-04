@@ -47,6 +47,7 @@ use DB\System\Migrations\M035_PluginRelationsFromPluginOf;
 use DB\System\Migrations\M036_DropPluginOfColumn;
 use DB\System\Migrations\M037_SplitMultiTenantPluginData;
 use DB\System\Migrations\M038_DropTableLinkFromPlugins;
+use DB\System\Migrations\M039_AddLoginThrottlingToUsers;
 use Monolog\Logger;
 
 /**
@@ -130,6 +131,7 @@ class Migrate
         M036_DropPluginOfColumn::class,
         M037_SplitMultiTenantPluginData::class,
         M038_DropTableLinkFromPlugins::class,
+        M039_AddLoginThrottlingToUsers::class,
     ];
 
     /**

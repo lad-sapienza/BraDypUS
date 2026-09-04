@@ -148,7 +148,7 @@ class Login extends \Bdus\Controller
 			// app) are client errors, not server faults. Log a terse line and
 			// never pass the exception object to the logger: its stack trace
 			// captures authenticate()'s arguments, i.e. the plaintext password.
-			$expected = ['app_not_found', 'email_password_needed', 'login_data_not_valid'];
+			$expected = ['app_not_found', 'email_password_needed', 'login_data_not_valid', 'account_locked'];
 			if (in_array($e->getMessage(), $expected, true)) {
 				$this->log->info(
 					'Failed login for ' . ($this->post['email'] ?? '(no email)') . ': ' . $e->getMessage()
@@ -292,6 +292,14 @@ class Login extends \Bdus\Controller
 	 * Returns a clean user array (no password, no settings) on success,
 	 * or throws on failure.
 	 */
+	// Anti-brute-force: lock an account out after this many consecutive
+	// failed attempts, for this long. Per-email, not per-IP — the real
+	// client IP can't be trusted without a reverse proxy in front (the
+	// installs this protects are exactly the ones without one), and
+	// locking the targeted account is what actually stops a brute-force.
+	private const MAX_FAILED_LOGIN_ATTEMPTS = 5;
+	private const LOCKOUT_SECONDS           = 15 * 60;
+
 	private function authenticate(string $email, string $password): array
     {
 		if (!$this->db) {
@@ -303,11 +311,42 @@ class Login extends \Bdus\Controller
 		}
 
 		$sys_manager = new Manage($this->db);
-		$rows = $sys_manager->getBySQL('bdus_users', 'email = ?', [$email]);
+
+		// M039 (login throttling columns) may not have run yet on this app —
+		// migrations apply only after a successful login, so this SELECT must
+		// never assume they're there yet, or every login breaks with a SQL
+		// error until an admin applies the pending minor upgrade. Throttling
+		// simply stays off until then.
+		$throttlingReady = $sys_manager->columnExists('bdus_users', 'failed_login_count')
+			&& $sys_manager->columnExists('bdus_users', 'locked_until');
+
+		$columns = null;
+		if (!$throttlingReady) {
+			$columns = array_values(array_diff(
+				array_column($sys_manager->getStructure('bdus_users'), 'name'),
+				['failed_login_count', 'locked_until']
+			));
+		}
+
+		$rows = $sys_manager->getBySQL('bdus_users', 'email = ?', [$email], $columns);
 		$res  = $rows[0] ?? null;
 
+		if ($res && $throttlingReady) {
+			$res = $this->clearExpiredLock($sys_manager, $res);
+			if ((int)($res['locked_until'] ?? 0) > time()) {
+				throw new \Exception('account_locked');
+			}
+		}
+
 		if (!$res || !\Auth\Password::verify($password, $res['password'])) {
+			if ($res && $throttlingReady) {
+				$this->registerFailedLogin($sys_manager, $res);
+			}
 			throw new \Exception('login_data_not_valid');
+		}
+
+		if ($throttlingReady && (int)($res['failed_login_count'] ?? 0) !== 0) {
+			$sys_manager->editRow('bdus_users', $res['id'], ['failed_login_count' => 0, 'locked_until' => 0]);
 		}
 
 		// Silently migrate legacy SHA1 hash to bcrypt on successful login
@@ -317,6 +356,34 @@ class Login extends \Bdus\Controller
 
 		unset($res['password'], $res['settings']);
 		return $res;
+	}
+
+	// A lock that has already expired is cleared eagerly (DB + in-memory
+	// row) so the caller always evaluates the current attempt against a
+	// fresh window, instead of instantly re-locking on the first post-
+	// expiry failure.
+	//
+	// Note: cleared to 0, not null — Manage::editRow() uses isset() to
+	// decide which columns to write, which silently drops null values.
+	private function clearExpiredLock(Manage $sys_manager, array $res): array
+	{
+		$lockedUntil = (int)($res['locked_until'] ?? 0);
+		if ($lockedUntil > 0 && $lockedUntil <= time()) {
+			$sys_manager->editRow('bdus_users', $res['id'], ['failed_login_count' => 0, 'locked_until' => 0]);
+			$res['failed_login_count'] = 0;
+			$res['locked_until']       = 0;
+		}
+		return $res;
+	}
+
+	private function registerFailedLogin(Manage $sys_manager, array $res): void
+	{
+		$count = (int)($res['failed_login_count'] ?? 0) + 1;
+		$data  = ['failed_login_count' => $count];
+		if ($count >= self::MAX_FAILED_LOGIN_ATTEMPTS) {
+			$data['locked_until'] = time() + self::LOCKOUT_SECONDS;
+		}
+		$sys_manager->editRow('bdus_users', $res['id'], $data);
 	}
 	
 	private function getToken( string $app, array $user_data ) : string

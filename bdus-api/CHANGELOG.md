@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.4.11] - 2026-09-04
+
 ### Fixed
 
 - **v4 → v5 major upgrade aborted on apps with hand-written SQL views.**

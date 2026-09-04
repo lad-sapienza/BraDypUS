@@ -54,6 +54,9 @@ class Router
         'Bdus\\Controllers\\Login::auth'         => 'none',
         'Bdus\\Controllers\\Login::refresh'      => 'none',
         'Bdus\\Controllers\\Login::out'          => 'none',
+        'Bdus\\Controllers\\Login::register'              => 'none',
+        'Bdus\\Controllers\\Login::requestPasswordReset'  => 'none',
+        'Bdus\\Controllers\\Login::confirmPasswordReset'  => 'none',
         'Bdus\\Controllers\\Info::getInfo'       => 'none',
         'Bdus\\Controllers\\NewApp::getStatus'   => 'none',
         'Bdus\\Controllers\\NewApp::create'      => 'none',
@@ -269,6 +272,9 @@ class Router
             $r->addRoute('POST', '/api/auth/login',   ['Bdus\\Controllers\\Login', 'auth']);
             $r->addRoute('GET',  '/api/auth/refresh', ['Bdus\\Controllers\\Login', 'refresh']);
             $r->addRoute('GET',  '/api/auth/logout',  ['Bdus\\Controllers\\Login', 'out']);
+            $r->addRoute('POST', '/api/auth/register',              ['Bdus\\Controllers\\Login', 'register']);
+            $r->addRoute('POST', '/api/auth/password-reset/request', ['Bdus\\Controllers\\Login', 'requestPasswordReset']);
+            $r->addRoute('POST', '/api/auth/password-reset/confirm', ['Bdus\\Controllers\\Login', 'confirmPasswordReset']);
 
             // ── OAuth2 ────────────────────────────────────────────────────────
             $r->addRoute('GET', '/api/auth/oauth/{provider}/redirect', ['Bdus\\Controllers\\OAuth', 'redirect']);

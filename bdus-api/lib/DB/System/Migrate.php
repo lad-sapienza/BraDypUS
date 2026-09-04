@@ -48,6 +48,8 @@ use DB\System\Migrations\M036_DropPluginOfColumn;
 use DB\System\Migrations\M037_SplitMultiTenantPluginData;
 use DB\System\Migrations\M038_DropTableLinkFromPlugins;
 use DB\System\Migrations\M039_AddLoginThrottlingToUsers;
+use DB\System\Migrations\M040_AddPasswordResetToUsers;
+use DB\System\Migrations\M041_AddSelfRegistrationToCfgApp;
 use Monolog\Logger;
 
 /**
@@ -132,6 +134,8 @@ class Migrate
         M037_SplitMultiTenantPluginData::class,
         M038_DropTableLinkFromPlugins::class,
         M039_AddLoginThrottlingToUsers::class,
+        M040_AddPasswordResetToUsers::class,
+        M041_AddSelfRegistrationToCfgApp::class,
     ];
 
     /**

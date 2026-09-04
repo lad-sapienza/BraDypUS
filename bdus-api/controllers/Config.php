@@ -362,10 +362,12 @@ class Config extends \Bdus\Controller
     if (!$this->requireSuperAdmin()) return;
     $data = $this->post;
     try {
-      // Persist color to DB (AppSettings); keep it out of the YAML config.
-      if (array_key_exists('color', $data)) {
-        \Config\AppSettings::save($this->db, ['color' => $data['color']]);
-        unset($data['color']);
+      // Persist color/allow_self_registration to DB (AppSettings); keep them
+      // out of the YAML config, same reasoning as status/max_image_size.
+      $appSettingsData = array_intersect_key($data, array_flip(['color', 'allow_self_registration']));
+      if (!empty($appSettingsData)) {
+        \Config\AppSettings::save($this->db, $appSettingsData);
+        $data = array_diff_key($data, $appSettingsData);
       }
       $this->cfg->setMain($data);
       $this->returnJson(['status' => 'success', 'code' => 'ok_cfg_data_updated']);
@@ -1063,7 +1065,12 @@ class Config extends \Bdus\Controller
     $users = [];
     try {
       $sys_manage = new Manage($this->db);
-      $rows = $sys_manage->getBySQL('bdus_users', '1=1');
+      // getBySQLSafe: tolerates M039/M040 columns not existing yet on this
+      // app (migrations apply only after a successful login) — see
+      // Manage::getBySQLSafe() and Login::authenticate() for the same reasoning.
+      $rows = $sys_manage->getBySQLSafe('bdus_users', '1=1', [], [
+        'failed_login_count', 'locked_until', 'reset_token_hash', 'reset_token_expires',
+      ]);
       foreach ($rows as $u) {
         $u['verbose_privilege'] = \Auth\Authorization::privilege($u['privilege'], 1);
         $users[] = $u;
@@ -1078,7 +1085,11 @@ class Config extends \Bdus\Controller
       'status'         => 'success',
       'main'           => array_merge(
         $this->cfg->get('main') ?: [],
-        ['color' => $appSettings['color'] ?? 'indigo']
+        [
+          'color'                   => $appSettings['color'] ?? 'indigo',
+          'allow_self_registration' => (bool) ($appSettings['allow_self_registration'] ?? false),
+          'mail_configured'         => \Mail\Mailer::isConfigured(),
+        ]
       ),
       'users'          => $users,
       // array_values() re-indexes to 0-based so PHP encodes these as JSON arrays, not objects

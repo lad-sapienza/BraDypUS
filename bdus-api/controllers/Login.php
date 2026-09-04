@@ -13,73 +13,96 @@ namespace Bdus\Controllers;
 class Login extends \Bdus\Controller
 {
 
-	public function addUser()
+	/**
+	 * Public self-registration — gated on two independent things, both of
+	 * which the admin must have explicitly opted into:
+	 *   - Config\AppSettings.allow_self_registration for this app (M041)
+	 *   - Mail\Mailer::isConfigured() at the instance level (RESEND_API_KEY)
+	 * Either missing means the feature simply isn't offered, not a broken form.
+	 */
+	public function register(): void
 	{
-		$post = $this->post;
-		
-		// Check required fields
-		if (!$post['app'] || !$post['name'] || !$post['email'] || !$post['password'] || !$post['password2']) {
+		if (!$this->db) {
+			$this->returnJson(['status' => 'error', 'code' => 'app_not_found']);
+			return;
+		}
+
+		$post     = $this->post;
+		$app      = (string) ($post['app'] ?? '');
+		$name     = trim((string) ($post['name'] ?? ''));
+		$email    = trim((string) ($post['email'] ?? ''));
+		$password = (string) ($post['password'] ?? '');
+
+		if (!$app || !$name || !$email || !$password) {
 			$this->returnJson(['status' => 'error', 'code' => 'all_fields_required']);
-			return false;
+			return;
 		}
-
-		// Check matching passwords
-		if ($post['password'] !== $post['password2']) {
-			$this->returnJson(['status' => 'error', 'code' => 'pass_empty_or_not_match']);
-			return false;
-		}
-
-		// Check valid email
-		if (filter_var($post['email'], FILTER_VALIDATE_EMAIL)) {
+		if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
 			$this->returnJson(['status' => 'error', 'code' => 'email_not_valid']);
+			return;
 		}
-		
-		if (\Bdus\Utils::isDuplicateEmail($this->db, $post['email'])) {
+		if (strlen($password) < self::MIN_PASSWORD_LENGTH) {
+			$this->returnJson(['status' => 'error', 'code' => 'password_too_short']);
+			return;
+		}
+
+		if (empty(\Config\AppSettings::get($this->db)['allow_self_registration'])) {
+			$this->returnJson(['status' => 'error', 'code' => 'registration_not_available']);
+			return;
+		}
+		if (!\Mail\Mailer::isConfigured()) {
+			$this->returnJson(['status' => 'error', 'code' => 'email_not_configured']);
+			return;
+		}
+		if (\Bdus\Utils::isDuplicateEmail($this->db, $email)) {
 			$this->returnJson(['status' => 'error', 'code' => 'email_present']);
+			return;
 		}
-		
+
 		try {
-
 			$sys_manager = new Manage($this->db);
-			$res = $sys_manager->addRow('bdus_users', [
-				'name', 
-				'email' => $post['email'], 
-				'password' => \Auth\Password::hash($post['password']), 
-				'privilege' => 40
+			$sys_manager->addRow('bdus_users', [
+				'name'      => $name,
+				'email'     => $email,
+				'password'  => \Auth\Password::hash($password),
+				'privilege' => 40,
 			]);
-			
-			if ($res) {
-				// email to user
-				$to = $post['email'];
-				$subject = 'New user registration';
-				$message = "Your account for {$post['app']} has been created.\nThank you for registering.";
-				$headers = 'From: ' . $post['app'] . '@bdus.cloud' . "\r\n" . 'Reply-To: ' . $post['app'] . '_db@bdus.cloud' . "\r\n";
 
-				@mail($to, $subject, $message, $headers);
+			$this->sendRegistrationEmails($sys_manager, $app, $name, $email);
 
-				// email to admins
-
-				$admins = $sys_manager->getBySQL('bdus_users', 'privilege <= ?', [
-					\Auth\Authorization::privilege('admin')
-				]);
-
-				foreach($admins as $adm) {
-					$to = $adm['email'];
-					$message = "A new user {$post['name']} ({$post['email']}) has registered on {$post['app']}.";
-
-					@mail($to, $subject, $message, $headers);
-				}
-				$this->returnJson(['status' => 'success', 'code' => 'ok_user_add']);
-				return true;
-			} else {
-				$this->returnJson(['status' => 'error', 'code' => 'error_user_add']);
-				return false;
-			}
-		} catch(\Throwable $e) {
-			$this->returnJson(['status' => 'error', 'code' => $e->getMessage()]);
-			return false;
+			$this->returnJson(['status' => 'success', 'code' => 'ok_user_add']);
+		} catch (\Throwable $e) {
+			$this->log->error($e);
+			$this->returnJson(['status' => 'error', 'code' => 'error_user_add']);
 		}
-		
+	}
+
+	/**
+	 * Best-effort: the account already exists at this point, so a mail
+	 * failure here must not make registration look like it failed.
+	 */
+	private function sendRegistrationEmails(Manage $sys_manager, string $app, string $name, string $email): void
+	{
+		try {
+			$appName = $this->cfg->get('main.name') ?: $app;
+			$lang    = \Mail\Templates::langFromHeader($_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? null);
+
+			$user = \Mail\Templates::registrationConfirmation($lang, $appName);
+			\Mail\Mailer::send($email, $user['subject'], $user['html']);
+
+			$admins = $sys_manager->getBySQLSafe('bdus_users', 'privilege <= ?', [
+				\Auth\Authorization::privilege('admin'),
+			], self::MAY_BE_MISSING_COLUMNS);
+
+			$notice = \Mail\Templates::registrationAdminNotice($lang, $appName, $name, $email);
+			foreach ($admins as $adm) {
+				if (!empty($adm['email'])) {
+					\Mail\Mailer::send($adm['email'], $notice['subject'], $notice['html']);
+				}
+			}
+		} catch (\Throwable $e) {
+			$this->log->error($e);
+		}
 	}
 
 	public function out(): void
@@ -240,51 +263,171 @@ class Login extends \Bdus\Controller
 			}
 		}
 
-		$this->returnJson([ 'status' => 'success', 'apps' => $data]);
+		// Instance-wide, not per-app: whether email is configured at all
+		// (RESEND_API_KEY/MAIL_FROM_ADDRESS). Lets the frontend hide
+		// "forgot password?"/"create account" outright for the common case
+		// of a deploy that never set these — per-app self-registration
+		// gating (bdus_cfg_app.allow_self_registration) still needs a real
+		// attempt, since checking it here would mean a DB round-trip per app.
+		$this->returnJson([
+			'status'          => 'success',
+			'apps'            => $data,
+			'mail_configured' => \Mail\Mailer::isConfigured(),
+		]);
 	}
 
-	public function changePwd()
+	// Reset tokens are single-use, random, hashed at rest (never the raw
+	// token) and short-lived. TTL is also the resend cooldown window: a
+	// still-valid token is never silently replaced/re-emailed within
+	// RESET_TOKEN_COOLDOWN_SECONDS of being issued.
+	private const RESET_TOKEN_TTL_SECONDS      = 3600;
+	private const RESET_TOKEN_COOLDOWN_SECONDS = 60;
+	private const MIN_PASSWORD_LENGTH          = 8;
+
+	/** Columns that may not exist yet on this app — see Manage::getBySQLSafe(). */
+	private const MAY_BE_MISSING_COLUMNS = [
+		'failed_login_count', 'locked_until', 'reset_token_hash', 'reset_token_expires',
+	];
+
+	/**
+	 * Requests a password-reset email. Always responds with the same generic
+	 * success code regardless of whether the email matches an account, to
+	 * avoid leaking which addresses are registered.
+	 */
+	public function requestPasswordReset(): void
 	{
-		$id = (int) $this->post['id'];
-		$password = \Auth\Password::hash( $this->post['pwd'] );
+		if (!$this->db) {
+			$this->returnJson(['status' => 'error', 'code' => 'app_not_found']);
+			return;
+		}
 
-		$sys_manager = new Manage($this->db);
-		$res = $sys_manager->editRow('bdus_users', $id, ['password' => $password]);
+		$app   = (string) ($this->post['app'] ?? '');
+		$email = trim((string) ($this->post['email'] ?? ''));
 
-		if ( $res ) {
+		if (!$app || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+			$this->returnJson(['status' => 'error', 'code' => 'email_password_needed']);
+			return;
+		}
+		if (!\Mail\Mailer::isConfigured()) {
+			$this->returnJson(['status' => 'error', 'code' => 'email_not_configured']);
+			return;
+		}
+
+		$generic = ['status' => 'success', 'code' => 'password_reset_requested'];
+
+		try {
+			$sys_manager = new Manage($this->db);
+			$rows = $sys_manager->getBySQLSafe('bdus_users', 'email = ?', [$email], self::MAY_BE_MISSING_COLUMNS);
+			$user = $rows[0] ?? null;
+
+			if ($user && array_key_exists('reset_token_hash', $user)) {
+				$now              = time();
+				$currentExpiry    = (int) ($user['reset_token_expires'] ?? 0);
+				$issuedRecently   = $currentExpiry > $now + (self::RESET_TOKEN_TTL_SECONDS - self::RESET_TOKEN_COOLDOWN_SECONDS);
+
+				if (!$issuedRecently) {
+					$token = bin2hex(random_bytes(32));
+					$sys_manager->editRow('bdus_users', $user['id'], [
+						'reset_token_hash'    => hash('sha256', $token),
+						'reset_token_expires' => $now + self::RESET_TOKEN_TTL_SECONDS,
+					]);
+
+					$appName  = $this->cfg->get('main.name') ?: $app;
+					$lang     = \Mail\Templates::langFromHeader($_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? null);
+					$resetUrl = $this->frontendOrigin() . "/{$app}/reset-password?" . http_build_query([
+						'email' => $email, 'token' => $token,
+					]);
+
+					$mail = \Mail\Templates::passwordReset($lang, $appName, $resetUrl);
+					\Mail\Mailer::send($email, $mail['subject'], $mail['html']);
+				}
+			}
+		} catch (\Throwable $e) {
+			$this->log->error($e);
+			// Still fall through to the generic response below.
+		}
+
+		$this->returnJson($generic);
+	}
+
+	/**
+	 * Consumes a reset token and sets the new password. A valid reset also
+	 * lifts any anti-brute-force lock — it proves account ownership just as
+	 * well as a correct password would.
+	 */
+	public function confirmPasswordReset(): void
+	{
+		if (!$this->db) {
+			$this->returnJson(['status' => 'error', 'code' => 'app_not_found']);
+			return;
+		}
+
+		$email    = trim((string) ($this->post['email'] ?? ''));
+		$token    = (string) ($this->post['token'] ?? '');
+		$password = (string) ($this->post['password'] ?? '');
+
+		if (!$email || !$token) {
+			$this->returnJson(['status' => 'error', 'code' => 'invalid_or_expired_reset_token']);
+			return;
+		}
+		if (strlen($password) < self::MIN_PASSWORD_LENGTH) {
+			$this->returnJson(['status' => 'error', 'code' => 'password_too_short']);
+			return;
+		}
+
+		try {
+			$sys_manager = new Manage($this->db);
+			$rows = $sys_manager->getBySQLSafe('bdus_users', 'email = ?', [$email], self::MAY_BE_MISSING_COLUMNS);
+			$user = $rows[0] ?? null;
+
+			$storedHash = $user['reset_token_hash'] ?? '';
+			$expires    = (int) ($user['reset_token_expires'] ?? 0);
+
+			if (!$user || $storedHash === '' || $expires < time() || !hash_equals($storedHash, hash('sha256', $token))) {
+				$this->returnJson(['status' => 'error', 'code' => 'invalid_or_expired_reset_token']);
+				return;
+			}
+
+			$data = [
+				'password'            => \Auth\Password::hash($password),
+				'reset_token_hash'    => '',
+				'reset_token_expires' => 0,
+			];
+			if (array_key_exists('locked_until', $user)) {
+				$data['failed_login_count'] = 0;
+				$data['locked_until']       = 0;
+			}
+			$sys_manager->editRow('bdus_users', $user['id'], $data);
+
 			$this->returnJson(['status' => 'success', 'code' => 'ok_password_update']);
-		} else {
+		} catch (\Throwable $e) {
+			$this->log->error($e);
 			$this->returnJson(['status' => 'error', 'code' => 'error_password_update']);
 		}
-
 	}
 
-
-	public  function sendToken()
+	/**
+	 * Best-effort origin of the SPA making this request, used to build
+	 * absolute links in emails. Prefers the Origin header (set by the
+	 * browser on the fetch() that hit this endpoint — exactly where the
+	 * SPA is being served from); falls back to reconstructing from
+	 * X-Forwarded-Proto/Host the same way OAuth::externalScheme() does,
+	 * for the rare client that omits Origin on a same-origin POST.
+	 */
+	private function frontendOrigin(): string
 	{
-		$sys_manager = new Manage($this->db);
-		$res = $sys_manager->getBySQL('bdus_users', 'email = ?', [$this->get['email']]);
-
-		if ($res[0]) {
-			$token = $this->getToken($this->db->getApp(), $res[0]);
-
-			$to = $this->get['email'];
-			$subject = 'Password reset request';
-			$resetUrl = 'https://bdus.cloud/db/?app=' . $this->get['app'] . '&address=' . $this->get['email'] . '&token=' . $token;
-			$message = "Click the following link to reset your password: {$resetUrl}";
-			$headers = 'From: ' . $this->get['app'] . '@bdus.cloud' . "\r\n" . 'Reply-To: ' . $this->get['app'] . '@bdus.cloud' . "\r\n";
-
-
-			$resp = mail($to, $subject, $message, $headers);
-
-			if ($resp) {
-				$this->returnJson(['status' => 'success', 'code' => 'anything']);
-			} else {
-				$this->returnJson(['status' => 'error', 'code' => 'error_sending_email']);
-			}
-		} else {
-			$this->returnJson(['status' => 'error', 'code' => 'email_not_found']);
+		$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+		if ($origin !== '') {
+			return rtrim($origin, '/');
 		}
+
+		$fwd    = strtolower(trim(explode(',', $_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '')[0] ?? ''));
+		$scheme = in_array($fwd, ['http', 'https'], true)
+			? $fwd
+			: ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http');
+		$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+
+		return "{$scheme}://{$host}";
 	}
 
 	/**
@@ -312,24 +455,14 @@ class Login extends \Bdus\Controller
 
 		$sys_manager = new Manage($this->db);
 
-		// M039 (login throttling columns) may not have run yet on this app —
-		// migrations apply only after a successful login, so this SELECT must
-		// never assume they're there yet, or every login breaks with a SQL
-		// error until an admin applies the pending minor upgrade. Throttling
-		// simply stays off until then.
-		$throttlingReady = $sys_manager->columnExists('bdus_users', 'failed_login_count')
-			&& $sys_manager->columnExists('bdus_users', 'locked_until');
-
-		$columns = null;
-		if (!$throttlingReady) {
-			$columns = array_values(array_diff(
-				array_column($sys_manager->getStructure('bdus_users'), 'name'),
-				['failed_login_count', 'locked_until']
-			));
-		}
-
-		$rows = $sys_manager->getBySQL('bdus_users', 'email = ?', [$email], $columns);
+		// M039/M040 columns may not have run yet on this app — migrations
+		// apply only after a successful login, so this SELECT must tolerate
+		// them not existing yet, or every login breaks with a SQL error
+		// before an admin ever gets the chance to apply the pending upgrade.
+		// Throttling simply stays off until then.
+		$rows = $sys_manager->getBySQLSafe('bdus_users', 'email = ?', [$email], self::MAY_BE_MISSING_COLUMNS);
 		$res  = $rows[0] ?? null;
+		$throttlingReady = $res !== null && array_key_exists('locked_until', $res);
 
 		if ($res && $throttlingReady) {
 			$res = $this->clearExpiredLock($sys_manager, $res);
@@ -384,16 +517,6 @@ class Login extends \Bdus\Controller
 			$data['locked_until'] = time() + self::LOCKOUT_SECONDS;
 		}
 		$sys_manager->editRow('bdus_users', $res['id'], $data);
-	}
-	
-	private function getToken( string $app, array $user_data ) : string
-	{
-		unset($user_data['settings']);
-
-		return substr(
-			base64_encode(
-				$app . implode('', $user_data)
-			),  5,  10 );
 	}
 
 }

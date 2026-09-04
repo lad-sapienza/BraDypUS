@@ -51,7 +51,7 @@ class AppSettings
     {
         try {
             $rows = $db->query(
-                'SELECT status, max_image_size, welcome, color, bdus_version FROM ' . self::TABLE . ' WHERE id = ?',
+                'SELECT status, max_image_size, welcome, color, bdus_version, allow_self_registration FROM ' . self::TABLE . ' WHERE id = ?',
                 [self::ROW_ID],
                 'read'
             );
@@ -59,34 +59,46 @@ class AppSettings
                 return $rows[0];
             }
         } catch (\Throwable) {
-            // Table not yet created — migration has not run.
+            // Table not yet created, or allow_self_registration column not yet
+            // added by M041 — either way, fall back to the safe defaults below
+            // rather than break every caller until the admin applies the upgrade.
         }
-        return ['status' => 'on', 'max_image_size' => 0, 'welcome' => '', 'color' => 'indigo', 'bdus_version' => null];
+        return ['status' => 'on', 'max_image_size' => 0, 'welcome' => '', 'color' => 'indigo', 'bdus_version' => null, 'allow_self_registration' => 0];
     }
 
     // ── Write ─────────────────────────────────────────────────────────────────
 
     /**
-     * Persists status and max_image_size to bdus_cfg_app.
+     * Persists status, max_image_size, color and allow_self_registration to
+     * bdus_cfg_app.
      *
-     * Accepted keys: status, max_image_size.
+     * Accepted keys: status, max_image_size, color, allow_self_registration.
      * Unknown keys are silently ignored.
      */
     public static function save(DBInterface $db, array $settings): void
     {
-        $allowed = ['status', 'max_image_size', 'color'];
+        $allowed = ['status', 'max_image_size', 'color', 'allow_self_registration'];
         $data    = array_intersect_key($settings, array_flip($allowed));
+
+        if (isset($data['allow_self_registration'])) {
+            $data['allow_self_registration'] = $data['allow_self_registration'] ? 1 : 0;
+        }
 
         if (empty($data)) {
             return;
         }
 
         $setParts = array_map(fn($k) => "{$k} = ?", array_keys($data));
-        $db->query(
-            'UPDATE ' . self::TABLE . ' SET ' . implode(', ', $setParts) . ' WHERE id = ?',
-            [...array_values($data), self::ROW_ID],
-            'boolean'
-        );
+        try {
+            $db->query(
+                'UPDATE ' . self::TABLE . ' SET ' . implode(', ', $setParts) . ' WHERE id = ?',
+                [...array_values($data), self::ROW_ID],
+                'boolean'
+            );
+        } catch (\Throwable) {
+            // allow_self_registration column not yet added by M041 — no-op
+            // until the admin applies the pending upgrade, rather than error.
+        }
     }
 
     // ── Welcome text ──────────────────────────────────────────────────────────

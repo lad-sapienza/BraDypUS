@@ -144,7 +144,18 @@ class Login extends \Bdus\Controller
 			$token = \JWT\JwtManager::generate($user, APP);
 			$this->returnJson(['status' => 'success', 'code' => 'ok', 'token' => $token]);
 		} catch (\Exception $e) {
-			$this->log->error($e);
+			// Expected auth outcomes (wrong credentials, missing input, unknown
+			// app) are client errors, not server faults. Log a terse line and
+			// never pass the exception object to the logger: its stack trace
+			// captures authenticate()'s arguments, i.e. the plaintext password.
+			$expected = ['app_not_found', 'email_password_needed', 'login_data_not_valid'];
+			if (in_array($e->getMessage(), $expected, true)) {
+				$this->log->info(
+					'Failed login for ' . ($this->post['email'] ?? '(no email)') . ': ' . $e->getMessage()
+				);
+			} else {
+				$this->log->error($e);
+			}
 			$this->returnJson(['status' => 'error', 'code' => $e->getMessage()]);
 		} catch (\Throwable $e) {
 			$this->log->error($e);

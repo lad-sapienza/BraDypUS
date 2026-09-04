@@ -5,6 +5,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **v4 → v5 major upgrade aborted on apps with hand-written SQL views.**
+  `Migrate::run()` now drops every user-defined SQLite view (logging each
+  definition at warning level) via the new `Migrate::dropLegacyViews()` before
+  the migration loop. Previously a leftover v4 view referencing a column removed
+  by a table-recreation migration (M030/M032/M037/M038) made SQLite reject the
+  `DROP COLUMN` with "error in view … after drop column", failing the whole
+  upgrade with `upgrade_failed`. v5 has no user-defined views — recreate any you
+  still need against the v5 schema. Found running the first real production
+  upgrade (PAThs). New `MigrateDropLegacyViewsTest`.
+- **Migration runner logged spurious `PDOException` stack traces on every fresh
+  v4 → v5 upgrade.** `M006_AddApiKeyPrivilege` and `M019_AppSettingsToDB` relied
+  on catching a "duplicate column" / "no such table" error for idempotency, but
+  the DB layer logs the exception before the migration can swallow it. Both now
+  probe with `Manage::tableExists()` / `columnExists()` first (the M029/M031
+  idiom), so nothing is thrown.
+- **Failed logins wrote the attempted password to `logs/error.log`.**
+  `Login::auth()` passed the caught exception object to the logger, whose stack
+  trace captured `authenticate($email, $password)`'s arguments in cleartext.
+  Expected auth failures (`login_data_not_valid`, `email_password_needed`,
+  `app_not_found`) now log a terse email-only line; only unexpected throwables
+  get a full trace.
+
 ## [5.4.10] - 2026-09-02
 
 ### Changed

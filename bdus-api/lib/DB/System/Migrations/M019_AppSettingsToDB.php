@@ -53,7 +53,10 @@ class M019_AppSettingsToDB
         $db = $manage->getDb();
 
         // ── Idempotency check ────────────────────────────────────────────────
-        try {
+        // Check the table exists before querying it — a raw SELECT on a missing
+        // table throws a PDOException that the DB layer logs before we can
+        // swallow it here.
+        if ($manage->tableExists('bdus_cfg_app')) {
             $existing = $db->query(
                 'SELECT id FROM bdus_cfg_app WHERE id = 1',
                 [],
@@ -62,8 +65,6 @@ class M019_AppSettingsToDB
             if (!empty($existing)) {
                 return; // Already migrated.
             }
-        } catch (\Throwable) {
-            // Table does not exist yet — proceed with migration.
         }
 
         // ── 1. Create bdus_cfg_app table ─────────────────────────────────────

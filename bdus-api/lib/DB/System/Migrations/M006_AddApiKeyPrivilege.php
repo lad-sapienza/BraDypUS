@@ -24,24 +24,27 @@ class M006_AddApiKeyPrivilege
 
     public static function run(Manage $manage): void
     {
-        $db    = $manage->getDb();
         $table = 'bdus_api_keys';
+
+        if (!$manage->tableExists($table)) {
+            return; // M005 creates it; nothing to alter if it is not there yet.
+        }
+
+        // Idempotency: api_keys.json was updated to include `privilege` at the
+        // same time as this migration was written, so databases whose table was
+        // built from the current JSON (M005) already have the column. Check
+        // first rather than relying on catching a "duplicate column" error —
+        // the DB layer logs that PDOException before the caller can swallow it.
+        if ($manage->columnExists($table, 'privilege')) {
+            return;
+        }
 
         // ALTER TABLE ... ADD COLUMN is supported by SQLite ≥ 3.1, MySQL, and PostgreSQL.
         // The DEFAULT value ensures all existing rows are immediately valid.
-        //
-        // Idempotency note: api_keys.json was updated to include `privilege` at the
-        // same time as this migration was written. Databases created after that update
-        // will have the column already (M005 reads the JSON), so we catch the
-        // "duplicate column" error and treat it as a no-op.
-        try {
-            $db->query(
-                "ALTER TABLE {$table} ADD COLUMN privilege INTEGER DEFAULT 30",
-                [],
-                'boolean'
-            );
-        } catch (\Throwable $e) {
-            // Column already exists — nothing to do.
-        }
+        $manage->getDb()->query(
+            "ALTER TABLE {$table} ADD COLUMN privilege INTEGER DEFAULT 30",
+            [],
+            'boolean'
+        );
     }
 }

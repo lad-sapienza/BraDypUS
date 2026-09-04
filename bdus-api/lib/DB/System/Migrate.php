@@ -610,6 +610,48 @@ class Migrate
     }
 
     /**
+     * Drops every user-defined SQL view before the migration loop runs.
+     *
+     * v4 apps may carry hand-written views (typically for external GIS/BI
+     * consumers). v5 has no concept of user-defined views in its config, and
+     * such views almost always reference the pre-v5 schema (APP__ prefixes,
+     * plugin `table_link` columns). Left in place they make SQLite reject the
+     * table-recreation / DROP COLUMN migrations (M030, M032, M037, M038) with
+     * "error in view … after drop column", aborting the whole major upgrade.
+     *
+     * Each view's definition is logged (warning level) before removal so an
+     * administrator can recreate what they still need against the v5 schema.
+     *
+     * SQLite only — other engines are not auto-migrated here.
+     */
+    public static function dropLegacyViews(DBInterface $db, Logger $log = null): void
+    {
+        if ($db->getEngine() !== 'sqlite') {
+            return;
+        }
+
+        $views = $db->query(
+            "SELECT name, sql FROM sqlite_master WHERE type='view'",
+            [],
+            'read'
+        ) ?: [];
+
+        foreach ($views as $view) {
+            $name = $view['name'];
+            $ddl  = preg_replace('/\s+/', ' ', trim((string)($view['sql'] ?? '')));
+            $log?->warning(
+                "Migrate: dropping legacy SQL view '{$name}' before upgrade — "
+                . "recreate it against the v5 schema if still needed. Was: {$ddl}"
+            );
+            try {
+                $db->exec("DROP VIEW IF EXISTS \"{$name}\"");
+            } catch (\Throwable $e) {
+                $log?->error("dropLegacyViews: failed to drop view {$name}: " . $e->getMessage());
+            }
+        }
+    }
+
+    /**
      * Returns true when the app needs a major-version upgrade before it can be
      * used normally (e.g. v4 → v5).
      *
@@ -730,6 +772,11 @@ class Migrate
         // Pre-flight: if this is an existing app still using the legacy APP__ prefix,
         // rename all tables and update config before the normal migration loop starts.
         self::maybeRemovePrefix($db, $log);
+
+        // Pre-flight: remove any leftover v4 SQL views. They are not part of the
+        // v5 model and would make SQLite reject the DROP COLUMN / table-recreation
+        // migrations further down (M030/M032/M037/M038).
+        self::dropLegacyViews($db, $log);
 
         // Pre-flight: rename bare 'migrations' table to 'bdus_migrations' if needed.
         // This runs before the migration loop so the tracking table is always bdus_*.

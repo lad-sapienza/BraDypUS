@@ -29,6 +29,21 @@ Open it from **Config → App settings** (the first panel in the sidebar).
 
 Use `freeze` before performing a backup or migration.
 
+## Access <Badge type="tip" text="v5.6.0" />
+
+| Field | Description |
+|---|---|
+| **Allow self-registration** | When on, anyone with the login link can create their own account via **Create account** on the login screen (see [Login & authentication → Self-registration](/guide/usage/authentication#self-registration)). Off by default. |
+
+Self-registered accounts start at the **Pending** privilege level — no
+access to anything until an administrator reviews them in
+[Users & privileges](/guide/setup/users) and raises the privilege.
+
+This toggle is disabled, with an explanatory note, when the instance hasn't
+configured email sending at all (`RESEND_API_KEY` — see
+[Deploy → environment variables](/guide/deploy/)): turning it on wouldn't do
+anything without a way to actually notify the new user and the admins.
+
 ## Appearance
 
 The **Appearance** section lets an administrator pick the application's

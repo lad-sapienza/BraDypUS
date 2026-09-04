@@ -61,7 +61,6 @@ function guideSidebar() {
         { text: 'Overview',            link: '/guide/' },
         { text: 'Conventions',         link: '/guide/conventions' },
         { text: 'App tree structure',  link: '/guide/tree-structure' },
-        { text: 'Changelog',           link: '/guide/changelog' },
       ],
     },
     {
@@ -117,6 +116,7 @@ function guideSidebar() {
       collapsed: true,
       items: [
         { text: 'Overview',            link: '/guide/usage/' },
+        { text: 'Login & authentication', link: '/guide/usage/authentication' },
         { text: 'Command palette',     link: '/guide/usage/command-palette' },
         { text: 'Records (CRUD)',       link: '/guide/usage/crud' },
         { text: 'Search & filter',     link: '/guide/usage/search' },

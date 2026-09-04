@@ -44,6 +44,9 @@ Set these in `docker-compose.prod.yml` or via a `.env` file:
 | `BRADYPUS_DEBUG` | `0` | Set to `1` only for debugging |
 | `BRADYPUS_ALLOW_NEW_APP` | `0` | Set to `1` temporarily to create the first app |
 | `BRADYPUS_CORS_ORIGIN` | — | Space-separated allowed origins for cross-origin API access |
+| `RESEND_API_KEY` | — | API key for [Resend](https://resend.com), used to send password-reset and self-registration emails. One key covers every application on this instance. Leave unset to keep those features reported as unavailable instead of failing silently — see [Login & authentication](/guide/usage/authentication). |
+| `MAIL_FROM_ADDRESS` | — | Sender address for those emails. Must be on a domain verified in your Resend account. |
+| `MAIL_FROM_NAME` | `BraDypUS` | Sender display name. |
 
 ## File uploads <Badge type="tip" text="v5.4.5" />
 

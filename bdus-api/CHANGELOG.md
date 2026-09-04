@@ -5,6 +5,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.4.13] - 2026-09-04
+
+### Fixed
+
+- **Geoface map canvas could stay locked at ~400x300 after loading.**
+  `maplibre-gl` reads the container size once at construction; if it gets
+  the wrong size at that exact moment the canvas was locked to it forever,
+  since nothing ever told the map to re-measure. This made the map
+  render tiny inside its correctly-sized container and broke
+  click-to-draw geometries (`maplibre-gl-draw`'s hit testing followed the
+  same wrong bounds), while click-to-open-popup on existing features kept
+  working through a different code path. `GeofaceView.vue` now watches
+  the container with a `ResizeObserver` and forces `map.resize()`
+  whenever its real size changes.
+
 ## [5.4.12] - 2026-09-04
 
 ### Added

@@ -5,6 +5,13 @@
       <!-- ── Header ──────────────────────────────────────────── -->
       <div class="users-header">
         <h2>{{ t('users') }}</h2>
+        <AInput
+          v-if="users.length > 7"
+          v-model:value="filterText"
+          :placeholder="t('users_filter_placeholder')"
+          size="small"
+          class="users-filter-input"
+        />
         <AButton v-if="isAdmin" type="primary" size="small" @click="openForm(null)">
           <template #icon><PlusOutlined /></template>
           {{ t('new_user') }}
@@ -14,7 +21,7 @@
       <!-- ── Table ───────────────────────────────────────────── -->
       <ATable
         :columns="columns"
-        :dataSource="users"
+        :dataSource="filteredUsers"
         :loading="loading"
         v-model:expandedRowKeys="expandedRowKeys"
         :showExpandColumn="isAdmin"
@@ -107,7 +114,7 @@ import { useToast, useConfirm } from '@/composables/useNotify'
 import AppLayout        from '@/components/AppLayout.vue'
 import UserForm         from '@/components/users/UserForm.vue'
 import UserPrivilegesPanel from '@/components/users/UserPrivilegesPanel.vue'
-import { Table as ATable, Button as AButton, Tag as ATag, Badge as ABadge, Modal as AModal } from 'ant-design-vue'
+import { Table as ATable, Button as AButton, Tag as ATag, Badge as ABadge, Modal as AModal, Input as AInput } from 'ant-design-vue'
 import { api }          from '@/api'
 import { useI18n }      from '@/i18n'
 import { useAuthStore } from '@/stores/auth'
@@ -139,9 +146,18 @@ const expandedRowKeys  = ref([])
 const formVisible      = ref(false)
 const saving           = ref(false)
 const formData         = ref({})
+const filterText       = ref('')
 
 /** The privilege level of the logged-in user (for gating what overrides they can assign) */
 const callerPrivilege = computed(() => auth.user?.privilege_value ?? 1)
+
+const filteredUsers = computed(() => {
+  const q = filterText.value.trim().toLowerCase()
+  if (!q) return users.value
+  return users.value.filter(u =>
+    (u.name ?? '').toLowerCase().includes(q) || (u.email ?? '').toLowerCase().includes(q)
+  )
+})
 
 // ── Load users ────────────────────────────────────────────────────
 async function loadUsers() {
@@ -239,6 +255,7 @@ onMounted(loadUsers)
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 1rem;
   padding: 1.25rem 1.5rem 0.75rem;
   flex-shrink: 0;
 }
@@ -246,6 +263,12 @@ onMounted(loadUsers)
 .users-header h2 {
   font-size: 1.2rem;
   font-weight: 600;
+  flex-shrink: 0;
+}
+
+.users-filter-input {
+  flex: 1;
+  max-width: 240px;
 }
 
 .users-table {

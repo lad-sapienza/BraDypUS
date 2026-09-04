@@ -908,6 +908,7 @@
   "rs_delete_confirm": "Eliminare la relazione \"{0}\" tra {1} e {2}?",
   "users": "Utenti",
   "new_user": "Nuovo utente",
+  "users_filter_placeholder": "Filtra utenti…",
   "edit_user": "Modifica utente",
   "table": "Tabella",
   "charts": "Grafici",

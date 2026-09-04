@@ -114,6 +114,7 @@ const meta    = ref({})
 
 let map  = null
 let draw = null
+let mapResizeObserver = null
 
 const featureCount = computed(() => geojson.value?.features?.length ?? 0)
 
@@ -237,6 +238,14 @@ async function initMap() {
     if (meta.value.canUserEdit) addDrawControl()
     fitToData()
   })
+
+  // The container can report the wrong size at the exact moment the map is
+  // constructed (browser/layout timing dependent); when that happens the
+  // canvas is locked to that initial size forever, since nothing else ever
+  // tells maplibre-gl to re-measure it. Watch the container directly and
+  // force a resize whenever its real size changes.
+  mapResizeObserver = new ResizeObserver(() => map?.resize())
+  mapResizeObserver.observe(mapEl.value)
 }
 
 // ── Custom overlay layers (XYZ, WMS, local GeoJSON) ───────────────────────
@@ -503,6 +512,8 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+  mapResizeObserver?.disconnect()
+  mapResizeObserver = null
   map?.remove()
   map  = null
   draw = null

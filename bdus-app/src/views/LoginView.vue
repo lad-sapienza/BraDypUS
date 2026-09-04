@@ -62,8 +62,36 @@
         </div>
 
         <div v-if="upgradeDone" class="upgrade-done">
-          <CheckCircleOutlined style="color:var(--p-green-500)" />
-          {{ t('upgrade_complete_login') }}
+          <div>
+            <CheckCircleOutlined style="color:var(--p-green-500)" />
+            {{ t('upgrade_complete_login') }}
+          </div>
+
+          <div v-if="verifyResult" class="upgrade-verify">
+            <p class="upgrade-verify-line">
+              {{ t('verify_heading') }}:
+              <strong>{{ verifyResult.summary.passed }}</strong> {{ t('verify_passed') }} ·
+              <strong>{{ verifyResult.summary.warnings }}</strong> {{ t('verify_warnings') }} ·
+              <strong :class="{ 'verify-fail': verifyResult.summary.failed > 0 }">
+                {{ verifyResult.summary.failed }}
+              </strong> {{ t('verify_failed') }}
+            </p>
+
+            <ul v-if="verifyResult.failed.length" class="upgrade-verify-list verify-fail">
+              <li v-for="item in verifyResult.failed" :key="item">{{ item }}</li>
+            </ul>
+            <ul v-else-if="verifyResult.warnings.length" class="upgrade-verify-list">
+              <li v-for="item in verifyResult.warnings" :key="item">{{ item }}</li>
+            </ul>
+
+            <p class="upgrade-verify-hint">
+              {{ verifyResult.summary.failed > 0 ? t('verify_hint_fail') : t('verify_hint_ok') }}
+            </p>
+          </div>
+
+          <p v-if="recordDir" class="upgrade-verify-hint">
+            {{ t('verify_record_saved') }} <code>{{ recordDir }}</code>
+          </p>
         </div>
 
         <form v-else @submit.prevent="handleMajorUpgrade">
@@ -213,6 +241,8 @@ const upgradeForm = ref({ email: '', password: '' })
 const upgradeError = ref(null)
 const upgrading = ref(false)
 const upgradeDone = ref(false)
+const verifyResult = ref(null)
+const recordDir = ref(null)
 
 const PROVIDER_META = {
   google: { id: 'google', label: 'Google', icon: 'pi pi-google' },
@@ -309,6 +339,8 @@ async function handleMajorUpgrade() {
     })
     if (res.status === 'success') {
       upgradeDone.value = true
+      verifyResult.value = res.verify ?? null
+      recordDir.value = res.record_dir ?? null
       upgradeForm.value = { email: '', password: '' }
       // Refresh app list so the badge disappears on the now-upgraded app.
       try {
@@ -513,9 +545,43 @@ async function handleOAuth(provider) {
 
 .upgrade-done {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  flex-direction: column;
+  gap: 0.75rem;
   font-size: 0.9rem;
   padding: 0.75rem 0;
+}
+
+.upgrade-done > div:first-child {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.upgrade-verify {
+  border-top: 1px solid var(--p-content-border-color, #e5e7eb);
+  padding-top: 0.6rem;
+  font-size: 0.82rem;
+}
+
+.upgrade-verify-line {
+  margin: 0 0 0.4rem;
+}
+
+.upgrade-verify-list {
+  margin: 0 0 0.4rem;
+  padding-left: 1.1rem;
+}
+
+.upgrade-verify-list li {
+  margin: 0.1rem 0;
+}
+
+.upgrade-verify-hint {
+  margin: 0;
+  color: var(--p-text-muted-color, #6b7280);
+}
+
+.verify-fail {
+  color: var(--p-red-500, #ef4444);
 }
 </style>

@@ -20,6 +20,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   code is non-zero on any failure, so it can gate a production cut-over.
   New `MigrationVerifierTest` (17 cases).
 
+### Changed
+
+- **The v4 → v5 major upgrade now snapshots and self-checks.**
+  `Upgrade::runMajor()` first writes a rollback snapshot via the new
+  `DB\System\Snapshot` — `projects/<app>/backups/pre-upgrade-<ts>.tar.gz`
+  (the whole project dir minus `files/`, `cache/`, `backups/`, `export/`,
+  which the upgrade never touches) plus a raw `pre-upgrade-<ts>.sqlite` copy.
+  If the snapshot cannot be written the upgrade is **not started**
+  (`code: snapshot_failed`). It also tees the whole migration run's log
+  (prefix renames, dropped-view DDL, each M0xx, snapshot path, verification
+  summary) into `projects/<app>/migrations/v4v5/<ts>/upgrade.log`. After the
+  migrations succeed it runs `MigrationVerifier` (baseline = the snapshot's
+  SQLite copy) and writes the full report next to the log as
+  `migrations/v4v5/<ts>/verify.json`; a compact summary plus the record-dir
+  path come back in the response. Verification is advisory only — it never
+  turns a completed upgrade back into a failure; the admin decides, snapshot
+  in hand. The Login screen's "upgrade complete" panel shows the pass/warn/fail
+  counts, any failed check, and the `migrations/v4v5/<ts>/` path to archive
+  with the v4 backup. New `SnapshotTest`.
+  Note: the snapshot is taken inside `runMajor`, i.e. after `App::start()` has
+  already normalised the `<app>__` table prefix (that runs pre-dispatch on
+  every request while a major upgrade is pending, so auth can read
+  `bdus_users`). It is therefore a valid rollback-and-retry point — prefix
+  stripping is idempotent and `config.json` still lacks `bdus_version`, so the
+  app is re-detected as v4 and `Migrate::run()` restarts from M001 — but not a
+  byte-for-byte pristine v4 archive. A pristine pre-touch backup remains the
+  operator's responsibility (copy `projects/<app>/` before first access).
+
 ## [5.4.11] - 2026-09-04
 
 ### Fixed

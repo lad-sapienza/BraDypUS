@@ -109,14 +109,147 @@ class Upgrade extends \Bdus\Controller
             return;
         }
 
-        try {
-            Migrate::run($this->db, $this->log);
-            $this->log?->info("Major upgrade completed by user {$user['id']}");
-            $this->returnJson(['status' => 'success', 'code' => 'upgrade_complete']);
-        } catch (\Throwable $e) {
-            $this->log?->error("Major upgrade failed: " . $e->getMessage());
-            $this->returnJson(['status' => 'error', 'code' => 'upgrade_failed']);
+        // Migration record directory — the run log and the verification report
+        // land here so the admin can archive them alongside the v4 backup.
+        // Best-effort: if it cannot be created the upgrade still proceeds, only
+        // the persisted log is skipped.
+        $ts        = date('Ymd-His');
+        $recordRel = 'migrations/v4v5/' . $ts . '/';
+        $recordDir = PROJ_DIR . $recordRel;
+        if (!is_dir($recordDir) && !@mkdir($recordDir, 0775, true) && !is_dir($recordDir)) {
+            $this->log?->warning("Upgrade: could not create {$recordDir} — the run log will not be persisted");
+            $recordDir = null;
         }
+
+        // Tee everything the migration logs (prefix renames, dropped-view DDL,
+        // each M0xx, the snapshot path, the verification summary) into
+        // migrations/v4v5/<ts>/upgrade.log.
+        $teeHandler = null;
+        if ($recordDir !== null && $this->log) {
+            try {
+                $teeHandler = new \Monolog\Handler\StreamHandler($recordDir . 'upgrade.log', \Monolog\Logger::DEBUG);
+                $this->log->pushHandler($teeHandler);
+            } catch (\Throwable $e) {
+                $teeHandler = null;
+            }
+        }
+
+        try {
+            // Rollback snapshot BEFORE mutating anything. If it cannot be
+            // written we abort rather than upgrade with no way back.
+            try {
+                $snapshot = \DB\System\Snapshot::takeProjectSnapshot(PROJ_DIR);
+                $this->log?->info("Pre-upgrade snapshot: {$snapshot['archive']}");
+            } catch (\Throwable $e) {
+                $this->log?->error("Pre-upgrade snapshot failed: " . $e->getMessage());
+                $this->returnJson(['status' => 'error', 'code' => 'snapshot_failed']);
+                return;
+            }
+
+            try {
+                Migrate::run($this->db, $this->log);
+                $this->log?->info("Major upgrade completed by user {$user['id']}");
+            } catch (\Throwable $e) {
+                $this->log?->error("Major upgrade failed: " . $e->getMessage());
+                $this->returnJson([
+                    'status'   => 'error',
+                    'code'     => 'upgrade_failed',
+                    'snapshot' => basename($snapshot['archive']),
+                ]);
+                return;
+            }
+
+            // Post-upgrade verification is advisory: it never turns a completed
+            // upgrade back into a failure (the migrations already committed and
+            // cannot be rolled back automatically — the admin decides, snapshot
+            // in hand).
+            $verify = null;
+            try {
+                $verify = $this->verifyAfterUpgrade($snapshot['sqlite'], $recordDir, $recordRel, $ts);
+            } catch (\Throwable $e) {
+                $this->log?->error("Post-upgrade verification could not run: " . $e->getMessage());
+            }
+
+            $this->returnJson([
+                'status'     => 'success',
+                'code'       => 'upgrade_complete',
+                'snapshot'   => basename($snapshot['archive']),
+                'record_dir' => $recordDir !== null ? $recordRel : null,
+                'log'        => ($recordDir !== null && $teeHandler !== null) ? $recordRel . 'upgrade.log' : null,
+                'verify'     => $verify,
+            ]);
+        } finally {
+            if ($teeHandler !== null && $this->log) {
+                try { $this->log->popHandler(); } catch (\Throwable $e) {}
+            }
+        }
+    }
+
+    /**
+     * Runs DB\Verify\MigrationVerifier against the freshly-upgraded app, writes
+     * the full report to migrations/v4v5/<ts>/verify.json (or
+     * backups/verify-<ts>.json if the record dir is unavailable), and returns a
+     * compact summary for the client. Returns null if it could not run.
+     *
+     * @param string|null $baselinePath  pre-upgrade SQLite copy, if the
+     *                                    snapshot managed to make one
+     * @param string|null $recordDir     absolute migrations/v4v5/<ts>/ dir, or null
+     * @param string      $recordRel     the same, relative to PROJ_DIR (trailing /)
+     * @param string      $ts            timestamp used for the fallback filename
+     */
+    private function verifyAfterUpgrade(?string $baselinePath, ?string $recordDir, string $recordRel, string $ts): ?array
+    {
+        if (!defined('PROJ_DIR') || !$this->db) {
+            return null;
+        }
+
+        $baseline = null;
+        if ($baselinePath && is_file($baselinePath)) {
+            try {
+                $baseline = new \DB\DB('baseline_v4', ['db_engine' => 'sqlite', 'db_path' => $baselinePath]);
+            } catch (\Throwable $e) {
+                $this->log?->warning("verify: could not open baseline — " . $e->getMessage());
+            }
+        }
+
+        $cfg = null;
+        try {
+            $cfg = new \Config\Config(new \Adbar\Dot(), PROJ_DIR, $this->db);
+        } catch (\Throwable $e) {
+            $this->log?->debug("verify: config load skipped — " . $e->getMessage());
+        }
+
+        $report = (new \DB\Verify\MigrationVerifier($this->db, [
+            'baseline' => $baseline,
+            'cfg'      => $cfg,
+            'projDir'  => PROJ_DIR,
+        ]))->run();
+
+        [$absPath, $relPath] = $recordDir !== null
+            ? [$recordDir . 'verify.json', $recordRel . 'verify.json']
+            : [PROJ_DIR . 'backups/verify-' . $ts . '.json', 'backups/verify-' . $ts . '.json'];
+        @file_put_contents(
+            $absPath,
+            json_encode($report, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+        );
+        $this->log?->info('Post-upgrade verification: ' . json_encode($report['summary']));
+
+        $failed = [];
+        $warnings = [];
+        foreach ($report['checks'] as $c) {
+            if ($c['status'] === 'fail') {
+                $failed[] = $c['title'];
+            } elseif ($c['status'] === 'warn') {
+                $warnings[] = $c['title'];
+            }
+        }
+
+        return [
+            'summary'  => $report['summary'],
+            'failed'   => $failed,
+            'warnings' => $warnings,
+            'report'   => $relPath,
+        ];
     }
 
     /**

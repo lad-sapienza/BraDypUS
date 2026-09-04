@@ -20,8 +20,9 @@ This documentation covers **BraDypUS v5**. Content is being actively updated.
 A badge such as <Badge type="tip" text="v5.3.0" /> next to a heading marks the
 BraDypUS version that first shipped that feature. Headings without a badge are
 part of the v5.0.0 rewrite (or, in the Developer section, describe internals
-that are not versioned this way). See the [changelog](/guide/changelog) for the
-full history.
+that are not versioned this way). See the
+[project changelog](https://github.com/lad-sapienza/BraDypUS/blob/v5/CHANGELOG.md)
+for the full history.
 :::
 
 ### Target users

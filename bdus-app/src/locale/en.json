@@ -887,6 +887,7 @@
   "rs_delete_confirm": "Delete the relation \"{0}\" between {1} and {2}?",
   "users": "Users",
   "new_user": "New user",
+  "users_filter_placeholder": "Filter users…",
   "edit_user": "Edit user",
   "table": "Table",
   "charts": "Charts",

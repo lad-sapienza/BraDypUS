@@ -5,6 +5,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`bin/verify-migration.php` — read-only post-upgrade data verification.**
+  Runs `DB\Verify\MigrationVerifier` against a migrated app and reports
+  pass/warn/fail per check: every `is_plugin` table linked to exactly one
+  existing parent, no multi-tenant plugin data left unsplit, no residual
+  `<prefix>__` names in schema or data, `bdus_rs` ids INTEGER and resolvable,
+  file attachments moved out of `bdus_userlinks`, geodata links resolvable,
+  config↔DB alignment, no leftover SQL views. With
+  `--baseline <pre-upgrade.sqlite>` it also diffs row counts table-by-table
+  (data-loss and plugin-split conservation), accounting for the known
+  exceptions (M021/M037 twins, M030 dropping unresolvable `rs` rows). Exit
+  code is non-zero on any failure, so it can gate a production cut-over.
+  New `MigrationVerifierTest` (17 cases).
+
 ## [5.4.11] - 2026-09-04
 
 ### Fixed

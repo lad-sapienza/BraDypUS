@@ -5,6 +5,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.5.0] - 2026-09-04
+
+### Fixed
+
+- **No throttling on failed login attempts.** `Login::authenticate()` had no
+  limit on failed attempts; the only defense was nginx `limit_req` on the
+  reverse proxy, leaving shared-hosting/bundled-stack installs without a
+  configurable proxy fully exposed to credential brute-forcing. 5 consecutive
+  failures now lock the account for 15 minutes (per-email, not per-IP — the
+  real client IP can't be trusted without a reverse proxy in front, and
+  locking the targeted account is what actually stops a brute-force); a lock
+  that has expired is cleared on the next attempt instead of accumulating,
+  and a successful login resets the counter. New `account_locked` error
+  code, checked before the password hash so a locked account never reaches
+  `Password::verify()`.
+
+- **`bdus-app`: `maplibre-gl` bumped to 6.6.0** (from 5.24.0). v6 dropped the default
+  export — `GeofaceView.vue` imported `maplibregl` as a default export, which broke
+  `npm run build` with `[MISSING_EXPORT] "default" is not exported by
+  ".../maplibre-gl.mjs"`. Fixed to `import * as maplibregl from 'maplibre-gl'` — the
+  only default-import call site in the app (grep-confirmed). Audited the rest of the
+  v5→v6 breaking-change surface against actual usage: no `instanceof` on map events,
+  no `styleimagemissing`, no `map.transform`, no custom shaders, no double-`JSON.parse`
+  on GeoJSON properties, no CommonJS `require` — none present, so no further code
+  changes needed. `maplibre-gl-draw@1.6.9` (used for the on-map create/edit/delete
+  geometry tool) declares no peer dependency on `maplibre-gl` either way; verified live
+  in the browser against a real app (`paths`, 399 geometries) — base map, overlay
+  markers, `Popup` (click a feature), `NavigationControl`/`ScaleControl`, and the draw
+  control (mounts, no console errors, click-to-toggle mode works) all render and behave
+  identically to 5.24.0, zero console errors throughout. Resolves the maplibre-gl v6
+  compatibility item that had left Dependabot PR #22 unmergeable.
+
 ## [5.4.13] - 2026-09-04
 
 ### Fixed

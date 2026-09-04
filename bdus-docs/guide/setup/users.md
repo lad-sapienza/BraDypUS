@@ -9,6 +9,11 @@ Admin privilege or higher is required.
 
 ![UsersView showing a table of users with name, email and privilege columns](/images/v5/setup/users-list.png)
 
+::: tip <Badge type="tip" text="v5.6.0" />
+Once the list grows past 7 users, a filter box appears next to the title —
+it matches on name or email as you type.
+:::
+
 ## Privilege levels
 
 BraDypUS uses a numeric privilege system. Lower numbers mean higher access.

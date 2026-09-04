@@ -49,6 +49,18 @@
 
       </section>
 
+      <!-- ── Access ──────────────────────────────────────────────── -->
+      <section class="cfg-section">
+        <div class="cfg-section-title">{{ t('access') }}</div>
+        <div class="cfg-form-field">
+          <label>{{ t('allow_self_registration') }}</label>
+          <ASwitch v-model:checked="form.allow_self_registration" :disabled="!form.mail_configured" />
+          <small class="cfg-hint">
+            {{ form.mail_configured ? t('allow_self_registration_hint') : t('mail_not_configured_hint') }}
+          </small>
+        </div>
+      </section>
+
       <!-- ── Appearance ────────────────────────────────────────── -->
       <section class="cfg-section">
         <div class="cfg-section-title">{{ t('appearance') }}</div>
@@ -109,7 +121,7 @@
 <script setup>
 import { LoadingOutlined, SaveOutlined, SettingOutlined } from '@ant-design/icons-vue'
 import { ref, computed, onMounted } from 'vue'
-import { Button as AButton, Input, Select as ASelect, Alert as AAlert } from 'ant-design-vue'
+import { Button as AButton, Input, Select as ASelect, Alert as AAlert, Switch as ASwitch } from 'ant-design-vue'
 import { useToast } from '@/composables/useNotify'
 import { useI18n, availableLocales } from '@/i18n'
 import { api }      from '@/api'
@@ -161,7 +173,9 @@ async function load() {
 async function save() {
   saving.value = true
   try {
-    const res = await api.put('/api/config/app', form.value)
+    // mail_configured is server-derived/read-only — don't post it back.
+    const { mail_configured, ...payload } = form.value
+    const res = await api.put('/api/config/app', payload)
     toast.add({
       severity: res.status === 'success' ? 'success' : 'error',
       summary:  t('saved'),

@@ -52,12 +52,14 @@
       <!-- ── Access ──────────────────────────────────────────────── -->
       <section class="cfg-section">
         <div class="cfg-section-title">{{ t('access') }}</div>
-        <div class="cfg-form-field">
-          <label>{{ t('allow_self_registration') }}</label>
-          <ASwitch v-model:checked="form.allow_self_registration" :disabled="!form.mail_configured" />
-          <small class="cfg-hint">
-            {{ form.mail_configured ? t('allow_self_registration_hint') : t('mail_not_configured_hint') }}
-          </small>
+        <div class="cfg-form-row">
+          <div class="cfg-form-field">
+            <label>{{ t('allow_self_registration') }}</label>
+            <ASwitch v-model:checked="form.allow_self_registration" :disabled="!form.mail_configured" />
+            <small class="cfg-hint">
+              {{ form.mail_configured ? t('allow_self_registration_hint') : t('mail_not_configured_hint') }}
+            </small>
+          </div>
         </div>
       </section>
 
@@ -262,6 +264,11 @@ onMounted(load)
   display: flex;
   align-items: center;
   gap: 0.4rem;
+}
+.cfg-hint {
+  font-size: 0.72rem;
+  color: var(--p-text-muted-color);
+  line-height: 1.3;
 }
 .cfg-readonly-badge {
   font-size: 0.65rem;

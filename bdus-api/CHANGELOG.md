@@ -5,6 +5,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.6.0] - 2026-09-04
+
+### Added
+
+- **Password reset and self-registration, via a transactional email provider.**
+  Neither flow had ever actually been ported to v5 — `addUser()`/`sendToken()`/
+  `changePwd()` weren't wired into the router at all, and the v4 reset-token
+  mechanism was never verified server-side (a base64 encoding of the user's own
+  row, not a random token). Rebuilt from scratch: `RESEND_API_KEY`/
+  `MAIL_FROM_ADDRESS`/`MAIL_FROM_NAME` env vars configure one
+  [Resend](https://resend.com) account per instance (covers every app hosted on
+  it); a random 32-byte reset token, only its SHA-256 hash stored, single-use,
+  expires in one hour, resets any anti-brute-force lock (v5.5.0) on success.
+  Self-registration is an explicit per-app opt-in (**Config → App settings →
+  Allow self-registration**, off by default) and creates the account at the
+  **Pending** privilege level, same as before — no access until an admin
+  reviews it. Both features report themselves as unavailable, instead of
+  failing silently, when the instance hasn't configured email at all. See
+  [Login & authentication](https://docs.bdus.lad-sapienza.it/guide/usage/authentication)
+  in the docs guide.
+
+- **Filter box in the Users list** once it grows past 7 users — matches name
+  or email as you type, same pattern as the Vocabularies panel.
+
+- **Three-way theme mode** (light/dark/system) — `useDarkMode.js` now follows
+  the OS preference live instead of only reading it once at page load. Only
+  light/dark are reachable from the toggle button for now; `system` is what a
+  fresh install defaults to.
+
+### Fixed
+
+- **`Manage::getBySQL()` reads that assumed every column already existed**
+  could break with a SQL error on an app that hadn't applied a pending
+  migration yet — migrations only run after a successful login, so this hit
+  `Login::authenticate()`, `OAuth::resolveUser()`, and the admin user list
+  before anyone got the chance to apply the upgrade. New
+  `Manage::getBySQLSafe()` tolerates columns that don't exist yet instead of
+  failing the whole query.
+
 ## [5.5.0] - 2026-09-04
 
 ### Fixed

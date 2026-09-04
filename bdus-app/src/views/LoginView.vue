@@ -133,7 +133,7 @@
       </template>
 
       <!-- ── Normal login form ─────────────────────────────────────────────── -->
-      <template v-else-if="form.app">
+      <template v-else-if="form.app && mode === 'login'">
         <form @submit.prevent="handleLogin">
           <div class="field">
             <label for="email">Email</label>
@@ -163,6 +163,11 @@
           </AButton>
         </form>
 
+        <div v-if="mailConfigured" class="auth-mode-links">
+          <a href="#" @click.prevent="switchMode('forgot')">{{ t('forgot_password') }}</a>
+          <a href="#" @click.prevent="switchMode('register')">{{ t('create_account') }}</a>
+        </div>
+
         <!-- OAuth2 / SSO section -->
         <div v-if="oauthProviders.length" class="oauth-section">
           <div class="oauth-divider"><span>or sign in with</span></div>
@@ -179,6 +184,88 @@
               {{ p.label }}
             </AButton>
           </div>
+        </div>
+      </template>
+
+      <!-- ── Forgot password ────────────────────────────────────────────────── -->
+      <template v-else-if="form.app && mode === 'forgot'">
+        <p class="auth-mode-title">{{ t('request_password_reset_title') }}</p>
+
+        <div v-if="forgotSent" class="auth-mode-done">
+          <CheckCircleOutlined style="color:var(--p-green-500)" />
+          {{ t('password_reset_requested') }}
+        </div>
+        <form v-else @submit.prevent="handleForgotPassword">
+          <div class="field">
+            <label for="forgot-email">Email</label>
+            <AInput
+              id="forgot-email"
+              v-model:value="forgotEmail"
+              type="email"
+              placeholder="you@example.com"
+              :disabled="forgotLoading"
+            />
+          </div>
+
+          <AAlert v-if="forgotError" type="error" :message="forgotError" :closable="false" show-icon />
+
+          <AButton type="primary" html-type="submit" block :loading="forgotLoading" :disabled="!forgotEmail">
+            {{ t('send_reset_link') }}
+          </AButton>
+        </form>
+
+        <div class="auth-mode-links">
+          <a href="#" @click.prevent="switchMode('login')">{{ t('back_to_login') }}</a>
+        </div>
+      </template>
+
+      <!-- ── Self-registration ──────────────────────────────────────────────── -->
+      <template v-else-if="form.app && mode === 'register'">
+        <p class="auth-mode-title">{{ t('create_account') }}</p>
+
+        <div v-if="registerDone" class="auth-mode-done">
+          <CheckCircleOutlined style="color:var(--p-green-500)" />
+          {{ registerDoneMessage }}
+        </div>
+        <form v-else @submit.prevent="handleRegister">
+          <div class="field">
+            <label for="register-name">{{ t('name') }}</label>
+            <AInput id="register-name" v-model:value="registerForm.name" :disabled="registerLoading" />
+          </div>
+          <div class="field">
+            <label for="register-email">Email</label>
+            <AInput
+              id="register-email"
+              v-model:value="registerForm.email"
+              type="email"
+              placeholder="you@example.com"
+              :disabled="registerLoading"
+            />
+          </div>
+          <div class="field">
+            <label for="register-password">{{ t('password') }}</label>
+            <AInputPassword id="register-password" v-model:value="registerForm.password" :disabled="registerLoading" />
+          </div>
+          <div class="field">
+            <label for="register-password2">{{ t('confirm_new_password') }}</label>
+            <AInputPassword id="register-password2" v-model:value="registerForm.password2" :disabled="registerLoading" />
+          </div>
+
+          <AAlert v-if="registerError" type="error" :message="registerError" :closable="false" show-icon />
+
+          <AButton
+            type="primary"
+            html-type="submit"
+            block
+            :loading="registerLoading"
+            :disabled="!registerForm.name || !registerForm.email || !registerForm.password"
+          >
+            {{ t('register') }}
+          </AButton>
+        </form>
+
+        <div class="auth-mode-links">
+          <a href="#" @click.prevent="switchMode('login')">{{ t('already_have_account') }}</a>
         </div>
       </template>
 
@@ -244,6 +331,34 @@ const upgradeDone = ref(false)
 const verifyResult = ref(null)
 const recordDir = ref(null)
 
+// ── Forgot password / self-registration ──────────────────────────────────
+// mail_configured is instance-wide (from listApps): both flows depend on it,
+// so a deploy that never set RESEND_API_KEY just doesn't show either link.
+const mode = ref('login') // 'login' | 'forgot' | 'register'
+const mailConfigured = ref(false)
+
+const forgotEmail   = ref('')
+const forgotLoading = ref(false)
+const forgotError   = ref(null)
+const forgotSent    = ref(false)
+
+const registerForm    = ref({ name: '', email: '', password: '', password2: '' })
+const registerLoading = ref(false)
+const registerError   = ref(null)
+const registerDone    = ref(false)
+const registerDoneMessage = ref('')
+
+function switchMode(next) {
+  mode.value = next
+  error.value = null
+  forgotError.value = null
+  forgotSent.value = false
+  forgotEmail.value = ''
+  registerError.value = null
+  registerDone.value = false
+  registerForm.value = { name: '', email: '', password: '', password2: '' }
+}
+
 const PROVIDER_META = {
   google: { id: 'google', label: 'Google', icon: 'pi pi-google' },
   orcid:  { id: 'orcid',  label: 'ORCID',  icon: 'pi pi-id-card' },
@@ -286,6 +401,7 @@ onMounted(async () => {
       api.get('/api/new-app/status'),
     ])
     apps.value = appsRes.apps ?? []
+    mailConfigured.value = appsRes.mail_configured ?? false
     if (apps.value.length === 1) {
       form.value.app = apps.value[0]
     }
@@ -303,12 +419,13 @@ onMounted(async () => {
   }
 })
 
-// Reset upgrade form state on app change.
+// Reset upgrade + auth-mode form state on app change.
 watch(() => form.value.app, () => {
   upgradeError.value = null
   upgradeDone.value = false
   upgradeForm.value = { email: '', password: '' }
   error.value = null
+  switchMode('login')
 })
 
 async function handleLogin() {
@@ -325,6 +442,49 @@ async function handleLogin() {
     error.value = t(e.message)
   } finally {
     loading.value = false
+  }
+}
+
+async function handleForgotPassword() {
+  forgotError.value = null
+  forgotLoading.value = true
+  try {
+    const res = await api.post('/api/auth/password-reset/request', {
+      app: form.value.app?.db,
+      email: forgotEmail.value,
+    })
+    if (res.status !== 'success') throw new Error(res.code)
+    forgotSent.value = true
+  } catch (e) {
+    forgotError.value = t(e.message ?? 'generic_error')
+  } finally {
+    forgotLoading.value = false
+  }
+}
+
+async function handleRegister() {
+  registerError.value = null
+
+  if (registerForm.value.password !== registerForm.value.password2) {
+    registerError.value = t('passwords_dont_match')
+    return
+  }
+
+  registerLoading.value = true
+  try {
+    const res = await api.post('/api/auth/register', {
+      app:      form.value.app?.db,
+      name:     registerForm.value.name,
+      email:    registerForm.value.email,
+      password: registerForm.value.password,
+    })
+    if (res.status !== 'success') throw new Error(res.code)
+    registerDoneMessage.value = api.responseMessage(res, t, registerForm.value.email)
+    registerDone.value = true
+  } catch (e) {
+    registerError.value = t(e.message ?? 'generic_error')
+  } finally {
+    registerLoading.value = false
   }
 }
 
@@ -468,6 +628,36 @@ async function handleOAuth(provider) {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+/* ── Forgot password / self-registration ──────────────────────────── */
+.auth-mode-title {
+  font-size: 0.9rem;
+  color: var(--p-text-muted-color);
+  margin: 0 0 1rem;
+}
+
+.auth-mode-links {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.75rem;
+  font-size: 0.85rem;
+}
+
+.auth-mode-links a {
+  color: var(--p-text-muted-color);
+  text-decoration: none;
+}
+.auth-mode-links a:hover {
+  color: var(--p-primary-color);
+}
+
+.auth-mode-done {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  padding: 0.75rem 0;
 }
 
 /* ── Create app link ────────────────────────────────────────────── */

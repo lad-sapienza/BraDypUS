@@ -21,6 +21,10 @@ const routes = [
     path: '/new-app',
     component: () => import('@/views/NewAppView.vue')
   },
+  {
+    path: '/:app/reset-password',
+    component: () => import('@/views/ResetPasswordView.vue')
+  },
 
   // ── App routes — all under /:app ───────────────────────────────────────────
   {

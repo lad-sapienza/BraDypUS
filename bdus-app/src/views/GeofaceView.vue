@@ -84,7 +84,7 @@ import { ArrowLeftOutlined, CalendarOutlined, CloseOutlined, LoadingOutlined } f
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { useRoute, useRouter }  from 'vue-router'
 import { useToast } from '@/composables/useNotify'
-import maplibregl               from 'maplibre-gl'
+import * as maplibregl          from 'maplibre-gl'
 import MapboxDraw               from 'maplibre-gl-draw'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import 'maplibre-gl-draw/dist/mapbox-gl-draw.css'

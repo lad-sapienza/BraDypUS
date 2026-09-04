@@ -325,9 +325,15 @@ class OAuth extends \Bdus\Controller
     {
         $mgr = new Manage($this->db);
 
+        // getBySQLSafe: tolerates M039/M040 columns not existing yet on this
+        // app (migrations apply only after a successful login, and OAuth
+        // callback resolves the user before that gate runs) — see
+        // Manage::getBySQLSafe() and Login::authenticate().
+        $mayBeMissing = ['failed_login_count', 'locked_until', 'reset_token_hash', 'reset_token_expires'];
+
         // 1. Sub match
         if ($sub) {
-            $rows = $mgr->getBySQL('bdus_users', 'oauth_provider = ? AND oauth_sub = ?', [$provider, $sub]);
+            $rows = $mgr->getBySQLSafe('bdus_users', 'oauth_provider = ? AND oauth_sub = ?', [$provider, $sub], $mayBeMissing);
             if (!empty($rows[0])) {
                 $u = $rows[0];
                 unset($u['password'], $u['settings']);
@@ -337,7 +343,7 @@ class OAuth extends \Bdus\Controller
 
         // 2. Email match (Google only)
         if ($email && $provider === 'google') {
-            $rows = $mgr->getBySQL('bdus_users', 'email = ?', [$email]);
+            $rows = $mgr->getBySQLSafe('bdus_users', 'email = ?', [$email], $mayBeMissing);
             if (!empty($rows[0])) {
                 $u = $rows[0];
                 unset($u['password'], $u['settings']);

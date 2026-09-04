@@ -493,6 +493,33 @@ class Manage
         return $this->run($sql, $values, 'read') ?: [];
     }
 
+    /**
+     * Like getBySQL(), but tolerates columns a pending migration hasn't
+     * added yet on this app: any name in $mayBeMissingColumns that isn't
+     * actually on the table is left out of the SELECT instead of failing
+     * the whole query.
+     *
+     * Migrations only run after a successful login (single migration point,
+     * see Migrate::run()), so any read that itself gates or happens during
+     * authentication — or an admin panel that lists every column generically
+     * — must not assume a just-added column already exists, or every request
+     * on an app that hasn't applied that migration yet breaks with a SQL
+     * error instead of a normal response.
+     */
+    public function getBySQLSafe(string $table, string $where, array $values, array $mayBeMissingColumns): array
+    {
+        $missing = array_filter($mayBeMissingColumns, fn($col) => !$this->columnExists($table, $col));
+        if (empty($missing)) {
+            return $this->getBySQL($table, $where, $values);
+        }
+
+        $columns = array_values(array_diff(
+            array_column($this->getStructure($table), 'name'),
+            $missing
+        ));
+        return $this->getBySQL($table, $where, $values, $columns);
+    }
+
     // ── Public trans-engine index & FK API ───────────────────────────────────
 
     /**

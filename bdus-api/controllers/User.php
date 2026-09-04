@@ -41,7 +41,12 @@ class User extends \Bdus\Controller
 
 		if (\Auth\Authorization::can('admin')) {
 			$sys_manager = new Manage($this->db);
-			$all_users   = $sys_manager->getBySQL('bdus_users', '1=1');
+			// getBySQLSafe: tolerates M039/M040 columns not existing yet on this
+			// app (migrations apply only after a successful login) — see
+			// Manage::getBySQLSafe() and Login::authenticate().
+			$all_users   = $sys_manager->getBySQLSafe('bdus_users', '1=1', [], [
+				'failed_login_count', 'locked_until', 'reset_token_hash', 'reset_token_expires',
+			]);
 
 			foreach ($all_users as $user) {
 				// Count per-table privilege overrides for the badge indicator.

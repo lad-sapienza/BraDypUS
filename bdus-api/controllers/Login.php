@@ -80,8 +80,11 @@ class Login extends \Bdus\Controller
 	/**
 	 * Best-effort: the account already exists at this point, so a mail
 	 * failure here must not make registration look like it failed.
+	 *
+	 * Public so Controllers\OAuth can reuse it for ORCID self-signup
+	 * (same pending-approval notice as email self-registration).
 	 */
-	private function sendRegistrationEmails(Manage $sys_manager, string $app, string $name, string $email): void
+	public function sendRegistrationEmails(Manage $sys_manager, string $app, string $name, string $email): void
 	{
 		try {
 			$appName = $this->cfg->get('main.name') ?: $app;
@@ -434,6 +437,10 @@ class Login extends \Bdus\Controller
 	 * Authenticate a user by email + password.
 	 * Returns a clean user array (no password, no settings) on success,
 	 * or throws on failure.
+	 *
+	 * Public so Controllers\OAuth can reuse the throttling-aware check
+	 * (verifying a password to link an OAuth identity to an existing
+	 * account) instead of duplicating the anti-brute-force logic.
 	 */
 	// Anti-brute-force: lock an account out after this many consecutive
 	// failed attempts, for this long. Per-email, not per-IP — the real
@@ -443,7 +450,7 @@ class Login extends \Bdus\Controller
 	private const MAX_FAILED_LOGIN_ATTEMPTS = 5;
 	private const LOCKOUT_SECONDS           = 15 * 60;
 
-	private function authenticate(string $email, string $password): array
+	public function authenticate(string $email, string $password): array
     {
 		if (!$this->db) {
 			throw new \Exception('app_not_found');

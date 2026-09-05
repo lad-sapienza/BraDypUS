@@ -62,6 +62,8 @@ class Router
         'Bdus\\Controllers\\NewApp::create'      => 'none',
         'Bdus\\Controllers\\OAuth::redirect'     => 'none',
         'Bdus\\Controllers\\OAuth::callback'     => 'none',
+        'Bdus\\Controllers\\OAuth::link'         => 'none',
+        'Bdus\\Controllers\\OAuth::register'     => 'none',
         'Bdus\\Controllers\\Upgrade::status'     => 'none',
         'Bdus\\Controllers\\Upgrade::runMajor'   => 'none',
 
@@ -277,8 +279,10 @@ class Router
             $r->addRoute('POST', '/api/auth/password-reset/confirm', ['Bdus\\Controllers\\Login', 'confirmPasswordReset']);
 
             // ── OAuth2 ────────────────────────────────────────────────────────
-            $r->addRoute('GET', '/api/auth/oauth/{provider}/redirect', ['Bdus\\Controllers\\OAuth', 'redirect']);
-            $r->addRoute('GET', '/api/auth/oauth/{provider}/callback', ['Bdus\\Controllers\\OAuth', 'callback']);
+            $r->addRoute('GET',  '/api/auth/oauth/{provider}/redirect', ['Bdus\\Controllers\\OAuth', 'redirect']);
+            $r->addRoute('GET',  '/api/auth/oauth/{provider}/callback', ['Bdus\\Controllers\\OAuth', 'callback']);
+            $r->addRoute('POST', '/api/auth/oauth/link',                ['Bdus\\Controllers\\OAuth', 'link']);
+            $r->addRoute('POST', '/api/auth/oauth/register',            ['Bdus\\Controllers\\OAuth', 'register']);
 
             // ── Tables / home ─────────────────────────────────────────────────
             $r->addRoute('GET', '/api/tables',     ['Bdus\\Controllers\\Home', 'listTables']);

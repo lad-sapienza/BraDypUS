@@ -37,11 +37,18 @@ namespace Bdus\Controllers;
  * On callback the controller tries:
  *   1. Match by (oauth_provider, oauth_sub) — returning user
  *   2. For Google only: match by email — auto-links the account on first use
- *   3. No match → error 'no_account' (admin must add the user first)
+ *   3. No match → error 'no_account', with a signed one-time `pending`
+ *      token attached (see buildPendingIdentity()) so the frontend can
+ *      offer either of:
+ *        - POST /api/auth/oauth/link     — link this identity to an
+ *          existing account after verifying its password
+ *        - POST /api/auth/oauth/register — self-signup with just an email
+ *          (same allow_self_registration + Mailer gate as email
+ *          self-registration, see Controllers\Login::register())
  *
- * ORCID note: ORCID's public API does not expose the user's email; match
- * is possible only via the ORCID iD (oauth_sub).  Admins must set the
- * oauth_sub field for ORCID users in advance.
+ * ORCID note: ORCID's public API does not expose the user's email, so the
+ * email-match auto-link (step 2) never applies to it — every first-time
+ * ORCID user goes through step 3 above.
  *
  * @copyright 2007-2025 Julian Bogdani
  * @license AGPL-3.0; see LICENSE
@@ -55,6 +62,10 @@ class OAuth extends \Bdus\Controller
 
     // State token TTL in seconds (10 minutes)
     private const STATE_TTL = 600;
+
+    // Pending-identity token TTL in seconds (10 minutes) — the window a user
+    // has to complete either the link or the register step after no_account.
+    private const PENDING_TTL = 600;
 
     // ── Public endpoints ─────────────────────────────────────────────────────
 
@@ -146,7 +157,8 @@ class OAuth extends \Bdus\Controller
 
             $user = $this->resolveUser($provider, $sub, $email);
             if (!$user) {
-                $this->redirectError('no_account', $origin);
+                $pending = $this->buildPendingIdentity($provider, $sub, $name, APP);
+                $this->redirectError('no_account', $origin, ['pending' => $pending]);
                 return;
             }
 
@@ -167,6 +179,135 @@ class OAuth extends \Bdus\Controller
         } catch (\Throwable $e) {
             $this->log->error($e);
             $this->redirectError('oauth_error', $origin);
+        }
+    }
+
+    /**
+     * POST /api/auth/oauth/link
+     *
+     * Attaches the OAuth identity carried by a pending token (issued on a
+     * prior no_account redirect) to an existing account, after verifying
+     * that account's password — proves ownership rather than trusting a
+     * self-reported email, which anyone completing any OAuth flow could type.
+     */
+    public function link(): void
+    {
+        if (!$this->db) {
+            $this->returnJson(['status' => 'error', 'code' => 'app_not_found']);
+            return;
+        }
+
+        $pending  = (string) ($this->post['pending']  ?? '');
+        $email    = trim((string) ($this->post['email'] ?? ''));
+        $password = (string) ($this->post['password'] ?? '');
+
+        $identity = $this->verifyPendingIdentity($pending, APP);
+        if (!$identity) {
+            $this->returnJson(['status' => 'error', 'code' => 'invalid_or_expired_pending']);
+            return;
+        }
+
+        $loginCtrl = new Login($this->get, $this->post, $this->request);
+        $loginCtrl->setDB($this->db);
+        $loginCtrl->setCfg($this->cfg);
+        $loginCtrl->setLog($this->log);
+
+        try {
+            $user = $loginCtrl->authenticate($email, $password);
+        } catch (\Exception $e) {
+            $expected = ['app_not_found', 'email_password_needed', 'login_data_not_valid', 'account_locked'];
+            $code = in_array($e->getMessage(), $expected, true) ? $e->getMessage() : 'generic_error';
+            $this->returnJson(['status' => 'error', 'code' => $code]);
+            return;
+        }
+
+        try {
+            $mgr = new Manage($this->db);
+            $mgr->editRow('bdus_users', (int) $user['id'], [
+                'oauth_provider' => $identity['provider'],
+                'oauth_sub'      => $identity['sub'],
+            ]);
+        } catch (\Throwable $e) {
+            // Most likely the unique (oauth_provider, oauth_sub) index (M022):
+            // this identity got linked to some other account in the meantime.
+            $this->log->error($e);
+            $this->returnJson(['status' => 'error', 'code' => 'oauth_identity_already_linked']);
+            return;
+        }
+
+        $token = \JWT\JwtManager::generate($user, APP);
+        $this->log->info("OAuth2 identity ({$identity['provider']}) linked to user {$user['id']}");
+        $this->returnJson(['status' => 'success', 'code' => 'ok', 'token' => $token]);
+    }
+
+    /**
+     * POST /api/auth/oauth/register
+     *
+     * Self-signup for a first-time OAuth identity with no matching account:
+     * only an email is asked for (the provider already proved the identity —
+     * ORCID just doesn't hand back an email to auto-match on). Same
+     * allow_self_registration + Mailer gate, same pending-approval outcome
+     * (privilege 40) as Controllers\Login::register().
+     */
+    public function register(): void
+    {
+        if (!$this->db) {
+            $this->returnJson(['status' => 'error', 'code' => 'app_not_found']);
+            return;
+        }
+
+        $pending = (string) ($this->post['pending'] ?? '');
+        $email   = trim((string) ($this->post['email'] ?? ''));
+
+        $identity = $this->verifyPendingIdentity($pending, APP);
+        if (!$identity) {
+            $this->returnJson(['status' => 'error', 'code' => 'invalid_or_expired_pending']);
+            return;
+        }
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $this->returnJson(['status' => 'error', 'code' => 'email_not_valid']);
+            return;
+        }
+        if (empty(\Config\AppSettings::get($this->db)['allow_self_registration'])) {
+            $this->returnJson(['status' => 'error', 'code' => 'registration_not_available']);
+            return;
+        }
+        if (!\Mail\Mailer::isConfigured()) {
+            $this->returnJson(['status' => 'error', 'code' => 'email_not_configured']);
+            return;
+        }
+        if (\Bdus\Utils::isDuplicateEmail($this->db, $email)) {
+            $this->returnJson(['status' => 'error', 'code' => 'email_present']);
+            return;
+        }
+
+        $name = $identity['name'] ?: $email;
+
+        try {
+            $mgr = new Manage($this->db);
+            $mgr->addRow('bdus_users', [
+                'name'      => $name,
+                'email'     => $email,
+                // Inert hash: not derivable from any real password input, so
+                // password login stays impossible for an OAuth-only account
+                // until (if ever) Controllers\Login::confirmPasswordReset()
+                // replaces it with a real one.
+                'password'       => \Auth\Password::hash(bin2hex(random_bytes(32))),
+                'privilege'      => 40,
+                'oauth_provider' => $identity['provider'],
+                'oauth_sub'      => $identity['sub'],
+            ]);
+
+            $loginCtrl = new Login($this->get, $this->post, $this->request);
+            $loginCtrl->setDB($this->db);
+            $loginCtrl->setCfg($this->cfg);
+            $loginCtrl->setLog($this->log);
+            $loginCtrl->sendRegistrationEmails($mgr, APP, $name, $email);
+
+            $this->returnJson(['status' => 'success', 'code' => 'ok_user_add']);
+        } catch (\Throwable $e) {
+            $this->log->error($e);
+            $this->returnJson(['status' => 'error', 'code' => 'error_user_add']);
         }
     }
 
@@ -209,6 +350,54 @@ class OAuth extends \Bdus\Controller
 
         $data = json_decode(base64_decode($payload), true);
         if (!is_array($data) || ($data['ts'] + self::STATE_TTL) < time()) {
+            return null;
+        }
+
+        return $data;
+    }
+
+    /**
+     * Build a signed token carrying the OAuth identity that just failed to
+     * resolve to an account — {provider, sub, name, app, ts} — so a follow-up
+     * request (link or register) can trust `sub` without redoing the whole
+     * provider round-trip. Same base64+HMAC shape as buildState().
+     */
+    private function buildPendingIdentity(string $provider, string $sub, ?string $name, string $app): string
+    {
+        $payload = base64_encode(json_encode([
+            'provider' => $provider,
+            'sub'      => $sub,
+            'name'     => $name,
+            'app'      => $app,
+            'ts'       => time(),
+        ]));
+
+        $sig = hash_hmac('sha256', $payload, $this->jwtSecret($app));
+        return $payload . '.' . $sig;
+    }
+
+    /**
+     * Verify a pending-identity token; return the decoded payload or null.
+     */
+    private function verifyPendingIdentity(string $token, string $app): ?array
+    {
+        $parts = explode('.', $token, 2);
+        if (count($parts) !== 2) {
+            return null;
+        }
+
+        [$payload, $sig] = $parts;
+
+        $expected = hash_hmac('sha256', $payload, $this->jwtSecret($app));
+        if (!hash_equals($expected, $sig)) {
+            return null;
+        }
+
+        $data = json_decode(base64_decode($payload), true);
+        if (!is_array($data) || ($data['ts'] + self::PENDING_TTL) < time() || ($data['app'] ?? null) !== $app) {
+            return null;
+        }
+        if (!in_array($data['provider'] ?? '', self::SUPPORTED, true) || empty($data['sub'])) {
             return null;
         }
 
@@ -364,7 +553,7 @@ class OAuth extends \Bdus\Controller
         exit;
     }
 
-    private function redirectError(string $code, string $origin): void
+    private function redirectError(string $code, string $origin, array $extra = []): void
     {
         if (!$origin) {
             // Last-resort: no origin available (state was invalid or missing).
@@ -376,7 +565,7 @@ class OAuth extends \Bdus\Controller
             return;
         }
         $url = rtrim($origin, '/') . '/oauth-callback?'
-             . http_build_query(['error' => $code, 'app' => APP]);
+             . http_build_query(['error' => $code, 'app' => APP] + $extra);
         header("Location: {$url}", true, 302);
         exit;
     }

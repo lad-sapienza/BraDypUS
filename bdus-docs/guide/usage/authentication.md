@@ -14,10 +14,24 @@ provider.
 ## Single sign-on
 
 If an administrator has configured Google or ORCID for the selected
-application, a matching button appears below the login form. Signing in with
-SSO the first time links that identity to your BraDypUS account by email
-(Google) or requires an admin to have already linked it (ORCID, which doesn't
-expose an email address).
+application, a matching button appears below the login form. With Google,
+signing in the first time links that identity to your existing BraDypUS
+account automatically, by matching your email address.
+
+ORCID doesn't share an email address, so there's nothing to auto-match on —
+and the same screen also covers a genuinely new user on either provider. If
+no account is found, you're offered a choice instead of a dead end:
+
+![No BraDypUS account is linked to this identity yet, with two options: sign in with your password to link this account, or create a new account with this identity](/images/v5/usage/oauth-no-account.png)
+
+- **Sign in with your password to link this account** — if you already have a
+  BraDypUS account, entering its password once links this identity to it. All
+  future sign-ins can then use either method.
+- **Create a new account with this identity** — only shown when
+  self-registration is enabled for this application (see
+  [Self-registration](#self-registration) below); creates a new account from
+  just an email, at the same **Pending** privilege level, awaiting admin
+  approval.
 
 ## Forgot password <Badge type="tip" text="v5.6.0" />
 

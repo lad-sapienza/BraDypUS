@@ -5,8 +5,10 @@ title: OAuth2 / SSO
 # OAuth2 / SSO authentication
 
 BraDypUS supports OAuth2 Authorization Code flow for Google and ORCID.
-Users still need an account in `bdus_users` — OAuth handles **authentication**
-(who you are), BraDypUS handles **authorisation** (what you can do).
+OAuth handles **authentication** (who you are); BraDypUS handles
+**authorisation** (what you can do) — but unlike earlier versions, a matching
+account no longer has to already exist: see [Recovering from no_account](#recovering-from-no-account)
+below.
 
 ---
 
@@ -19,15 +21,19 @@ User clicks "Sign in with Google"
   → Frontend navigates to that URL (window.location.href)
   → Google authenticates the user and redirects to:
       /api/auth/oauth/google/callback?app=APP&code=...&state=...
-  → PHP verifies state, exchanges code, resolves user, issues JWT
-  → PHP redirects browser to:
-      {origin}/oauth-callback?token=JWT&app=APP   (success)
-      {origin}/oauth-callback?error=CODE&app=APP  (failure)
+  → PHP verifies state, exchanges code, resolves user
+  → Match found:     issues a JWT, redirects to
+                        {origin}/oauth-callback?token=JWT&app=APP
+  → No match found:   redirects to
+                        {origin}/oauth-callback?error=no_account&app=APP&pending=TOKEN
+                      (see below — the frontend offers to link or self-signup)
+  → Any other failure: {origin}/oauth-callback?error=CODE&app=APP
   → Frontend stores the JWT and navigates home
 ```
 
 The state token is HMAC-SHA256 signed with the app's JWT secret and carries a
-10-minute TTL, preventing CSRF and replay attacks.
+10-minute TTL, preventing CSRF and replay attacks. The `pending` token below
+uses the same signing scheme and TTL.
 
 ---
 
@@ -97,16 +103,56 @@ by `(oauth_provider, oauth_sub)`.
 3. Copy the Client ID (`APP-…`) and Client Secret into `config.json`.
 
 **User lookup**: ORCID's public API (`/authenticate` scope) does not expose
-the user's email. Matching is therefore only possible by ORCID iD
-(`oauth_sub`). An admin must set the `oauth_sub` field for each ORCID user
-before they can log in via ORCID:
+the user's email, so it never gets the Google-style auto-link-by-email. On
+first login it always falls through to the `no_account` recovery flow below
+— an admin no longer needs to pre-set `oauth_sub` by hand, though the fields
+below remain editable in the Users admin panel for anyone who wants to link
+an identity that way instead:
 
 | Field           | Value                                          |
 |-----------------|------------------------------------------------|
 | `oauth_provider`| `orcid`                                        |
 | `oauth_sub`     | The user's ORCID iD, e.g. `0000-0002-1825-0097`|
 
-These fields are editable in the Users admin panel.
+---
+
+## Recovering from no_account
+
+When `resolveUser()` finds no match — always the case for a first-time ORCID
+user, or any genuinely new user on either provider — the callback doesn't
+dead-end. It signs a short-lived (~10 min) `pending` token carrying
+`{provider, sub, name, app}` and redirects to:
+
+```
+{origin}/oauth-callback?error=no_account&app=APP&pending=TOKEN
+```
+
+The frontend ([`OAuthCallbackView.vue`](https://github.com/lad-sapienza/BraDypUS/blob/v5/bdus-app/src/views/OAuthCallbackView.vue))
+then offers two ways to redeem that token:
+
+**Link to an existing account** — `POST /api/auth/oauth/link`
+`{ app, pending, email, password }`. Verifies the password against an
+existing account (reusing `Login::authenticate()`, so the same anti-brute-force
+throttling applies) and, on success, sets `oauth_provider`/`oauth_sub` on that
+row. A password is required here specifically because a self-reported email
+alone proves nothing — anyone who completes any OAuth flow could type someone
+else's address.
+
+**Self-signup** — `POST /api/auth/oauth/register`
+`{ app, pending, email }`. Only an email is asked for (the provider already
+proved the identity — ORCID just doesn't hand one back). Same
+`allow_self_registration` + `Mail\Mailer::isConfigured()` gate and
+privilege-40 ("waiting") outcome as `POST /api/auth/register` — see
+[Self-registration](/guide/usage/authentication#self-registration). The new
+row gets an inert, unguessable password hash: the account is OAuth-only
+unless a future password reset ever sets a real one.
+
+The `pending` token itself is stateless (just signed, not tracked server-side),
+so it can be retried within its TTL — a wrong password on `link` doesn't burn
+it. What *is* enforced is the identity itself: once `(oauth_provider, oauth_sub)`
+is actually written to one row, any further `link`/`register` call for that
+same identity fails with `oauth_identity_already_linked` (the unique index
+from M022, see below).
 
 ---
 
@@ -134,11 +180,25 @@ The frontend receives one of these `?error=` values on callback failure:
 
 | Code                     | Meaning                                                  |
 |--------------------------|----------------------------------------------------------|
-| `no_account`             | No BraDypUS account found for this identity              |
+| `no_account`             | No BraDypUS account found for this identity — comes with a `pending` token, see above |
 | `invalid_state`          | State token expired (> 10 min) or tampered               |
 | `invalid_request`        | Missing required parameters                              |
 | `provider_not_configured`| Provider credentials missing from `config.json`          |
 | `oauth_error`            | Unexpected error during token exchange (check server log) |
+
+`POST /api/auth/oauth/link` and `POST /api/auth/oauth/register` return their
+own `code` in the JSON body (200 status either way, `status: "error"` on
+failure) rather than a redirect:
+
+| Code                             | Meaning                                                        |
+|----------------------------------|-----------------------------------------------------------------|
+| `invalid_or_expired_pending`     | `pending` token missing, tampered, or past its ~10 min TTL       |
+| `login_data_not_valid`           | (`link`) Wrong email/password                                   |
+| `account_locked`                 | (`link`) Anti-brute-force lock active — see [Too many failed attempts](/guide/usage/authentication#too-many-failed-attempts) |
+| `oauth_identity_already_linked`  | This `(provider, sub)` pair is already on a different row       |
+| `registration_not_available`     | (`register`) `allow_self_registration` is off for this app      |
+| `email_not_configured`           | (`register`) Mail\Mailer::isConfigured() is false                 |
+| `email_present`                  | (`register`) An account already has this email                  |
 
 ---
 

@@ -372,7 +372,6 @@
   "lost_password_email_subject": "Password recovery for BraDypUS database",
   "lost_password_email_text": "Hello,\r\nyou receive this message because you asked for the password recovery of this email address.\r\nTo reset your password please go to this email address:\r\n%s\r\nPay attention: if you did NOT for password recovery please IGNORE this email message.\r\n\r\nRegards\r\n",
   "error_sending_email": "Error in sendin email message. Please contact an administrator",
-  "reset_password": "Reset password",
   "new_password": "Enter the new password",
   "new_password_bis": "Repeat the new password",
   "greeting": "Hello %s",

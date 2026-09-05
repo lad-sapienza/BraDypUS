@@ -372,7 +372,6 @@
   "lost_password_email_subject": "Richiesta di recupero password per database BraDypUS",
   "lost_password_email_text": "Salve,\r\n ricevete questo messaggio perché è stato richiesto il recupero della password associato a questo indirizzo email.\r\nPer recuperare la password si prega di andare al seguente indirizzo:\r\n%s\r\nNota bene: se non avete richiesto di recuperare la password si prega di ignorare questo messaggio email.\r\n\r\nCordiali saluti\r\n",
   "error_sending_email": "Errore nell'inviare il messaggio. Si prega di contattare un amministratore",
-  "reset_password": "Ressetta la password",
   "new_password": "Inserisci la nuova password",
   "new_password_bis": "Ripeti la nuova password",
   "greeting": "Salve %s",

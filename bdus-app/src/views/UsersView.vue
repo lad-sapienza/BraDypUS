@@ -31,7 +31,16 @@
         class="users-table"
       >
         <template #bodyCell="{ column, record }">
-          <template v-if="column.key === 'email'">
+          <template v-if="column.key === 'name'">
+            {{ record.name }}
+            <component
+              :is="OAUTH_ICON[record.oauth_provider]"
+              v-if="record.oauth_provider"
+              class="users-oauth-icon"
+              :title="t('linked_via_provider', OAUTH_LABEL[record.oauth_provider] ?? record.oauth_provider)"
+            />
+          </template>
+          <template v-else-if="column.key === 'email'">
             <a :href="`mailto:${record.email}`" class="users-email">{{ record.email }}</a>
           </template>
           <template v-else-if="column.key === 'privilege'">
@@ -108,7 +117,7 @@
 </template>
 
 <script setup>
-import { DeleteOutlined, EditOutlined, PlusOutlined, StopOutlined } from '@ant-design/icons-vue'
+import { DeleteOutlined, EditOutlined, GoogleOutlined, IdcardOutlined, PlusOutlined, StopOutlined } from '@ant-design/icons-vue'
 import { ref, computed, onMounted } from 'vue'
 import { useToast, useConfirm } from '@/composables/useNotify'
 import AppLayout        from '@/components/AppLayout.vue'
@@ -128,6 +137,10 @@ const toast   = useToast()
 // ── Privilege severity map ────────────────────────────────────────
 const SEVERITY = { 1: 'danger', 10: 'warning', 20: 'info', 25: 'info', 30: 'success', 40: 'secondary' }
 function privilegeSeverity(value) { return SEVERITY[value] ?? 'secondary' }
+
+// ── OAuth identity indicator (see #40 no_account link/register) ────
+const OAUTH_ICON  = { google: GoogleOutlined, orcid: IdcardOutlined }
+const OAUTH_LABEL = { google: 'Google', orcid: 'ORCID' }
 
 const columns = computed(() => [
   { title: t('name'),  dataIndex: 'name',  key: 'name',
@@ -281,6 +294,12 @@ onMounted(loadUsers)
   font-size: 0.875rem;
 }
 .users-email:hover { text-decoration: underline; }
+
+.users-oauth-icon {
+  margin-left: 0.4rem;
+  color: var(--p-text-muted-color);
+  font-size: 0.8rem;
+}
 
 .users-priv-cell {
   display: flex;

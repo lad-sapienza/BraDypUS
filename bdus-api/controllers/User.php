@@ -63,6 +63,7 @@ class User extends \Bdus\Controller
 					'privilege_value' => (int) $user['privilege'],
 					'editable'        => (\Auth\Authorization::can('admin') && $user['privilege'] >= \Auth\CurrentUser::privilege()),
 					'override_count'  => (int) ($overrides[0]['cnt'] ?? 0),
+					'oauth_provider'  => $user['oauth_provider'] ?? null,
 				];
 			}
 		} else {

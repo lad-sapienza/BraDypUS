@@ -218,6 +218,7 @@
   "no_table_overrides": "Nessun override per tabella definito",
   "global_privilege": "Privilegio globale",
   "table_overrides": "Override per tabella",
+  "linked_via_provider": "Accesso con %s",
   "confirm": "Conferma",
   "all_fields_needed": "Tutti i campi sono obbligatori per proseguire",
   "partial_success_saved": "Solo alcuni record (%s) sono stati salvati con successo. Gli altri (%s) hanno prodotto errore",

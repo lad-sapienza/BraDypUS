@@ -218,6 +218,7 @@
   "no_table_overrides": "No per-table overrides defined",
   "global_privilege": "Global privilege",
   "table_overrides": "Table overrides",
+  "linked_via_provider": "Signed in with %s",
   "confirm": "Confirm",
   "all_fields_needed": "All fields are required to continue",
   "partial_success_saved": "Only some records (%s) was successfully saved. The others (%s) produced errors",

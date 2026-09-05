@@ -45,9 +45,25 @@ class UserCtrlTest extends BdusTestCase
         $res  = $this->callController($ctrl, 'showList');
 
         $row = $res['users'][0];
-        foreach (['id', 'name', 'email', 'privilege', 'privilege_value', 'editable', 'override_count'] as $k) {
+        foreach (['id', 'name', 'email', 'privilege', 'privilege_value', 'editable', 'override_count', 'oauth_provider'] as $k) {
             $this->assertArrayHasKey($k, $row, "Missing key: $k");
         }
+    }
+
+    public function testShowListSurfacesOauthProvider(): void
+    {
+        static::$db->execInTransaction("UPDATE bdus_users SET oauth_provider = 'orcid', oauth_sub = '0000-0002-1825-0097' WHERE id = 1");
+
+        $ctrl = $this->makeController('Bdus\\Controllers\\User');
+        $res  = $this->callController($ctrl, 'showList');
+
+        $row = current(array_filter($res['users'], fn ($u) => (int) $u['id'] === 1));
+        $this->assertSame('orcid', $row['oauth_provider']);
+
+        $unlinkedRow = current(array_filter($res['users'], fn ($u) => (int) $u['id'] !== 1));
+        $this->assertNull($unlinkedRow['oauth_provider']);
+
+        static::$db->execInTransaction("UPDATE bdus_users SET oauth_provider = NULL, oauth_sub = NULL WHERE id = 1");
     }
 
     public function testShowListNonAdminSeesOnlyOwnRecord(): void

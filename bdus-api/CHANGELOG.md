@@ -5,6 +5,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.8.0] - 2026-09-05
+
+### Added
+
+- **OAuth: recover from "no account linked" instead of a dead end.**
+  ORCID never exposes an email, so a first-time ORCID sign-in with no
+  matching account used to just fail with "contact an administrator" — even
+  Google, which auto-links by email, hit the same dead end for a genuinely
+  new user. The callback now offers two paths: sign in with an existing
+  account's password to link this identity to it, or (when self-registration
+  is enabled) create a new account with just an email, gated the same as
+  email self-registration and left password-less unless a future reset sets
+  one.
+
+### Fixed
+
+- **Login page: unreachable bottom on long forms / small screens.**
+  `.login-wrapper` relied on `min-height: 100vh` while `html`/`body` enforce
+  `overflow: hidden` app-wide, so content taller than the viewport (long
+  forms, small screens) was clipped with no way to scroll to it. The wrapper
+  is now bound to the viewport height with its own `overflow-y: auto`.
+
 ## [5.7.0] - 2026-09-05
 
 ### Added

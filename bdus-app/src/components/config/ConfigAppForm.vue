@@ -103,7 +103,7 @@
               class="color-swatch"
               :class="{ active: form.color === c.name }"
               :title="c.label"
-              :style="{ '--swatch-bg': `var(--p-${c.name}-500)` }"
+              :style="{ '--swatch-bg': ANTD_HEX[c.name] }"
               @click="selectColor(c.name)"
             />
           </div>
@@ -155,7 +155,7 @@ import { Button as AButton, Input, Select as ASelect, Alert as AAlert, Switch as
 import { useToast } from '@/composables/useNotify'
 import { useI18n, availableLocales } from '@/i18n'
 import { api, assetUrl } from '@/api'
-import { COLOR_PALETTE, applyColor } from '@/composables/useAppColor'
+import { COLOR_PALETTE, ANTD_HEX, applyColor } from '@/composables/useAppColor'
 
 const AInput         = Input
 const ATextarea      = Input.TextArea

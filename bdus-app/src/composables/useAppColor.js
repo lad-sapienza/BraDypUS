@@ -15,8 +15,15 @@ export const COLOR_PALETTE = [
  * --p-primary-* CSS custom properties (see assets/prime-theme.css) want
  * a [data-brand] attribute on <html>. Both are driven from here so the
  * brand-color feature stays a single call site regardless of which
- * system a given component reads from. */
-const ANTD_HEX = {
+ * system a given component reads from.
+ *
+ * Exported (not just used internally) because it is also the only place
+ * that knows a real hex value per palette name — assets/prime-theme.css
+ * only ever defined --p-{name}-500 for a couple of these names, so anything
+ * that rendered a swatch via var(--p-{name}-500) was invisible for the rest
+ * (e.g. ConfigAppForm.vue's colour picker). Read the hex straight from here
+ * instead of re-deriving it from CSS custom properties. */
+export const ANTD_HEX = {
   indigo:  '#6366f1',
   blue:    '#3b82f6',
   violet:  '#8b5cf6',

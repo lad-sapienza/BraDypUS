@@ -19,6 +19,7 @@
         <div class="field">
           <label for="new-password">{{ t('new_password') }}</label>
           <AInputPassword id="new-password" v-model:value="password" :disabled="loading" />
+          <small class="field-hint">{{ t('password_too_short') }}</small>
         </div>
         <div class="field">
           <label for="new-password2">{{ t('confirm_new_password') }}</label>
@@ -27,7 +28,7 @@
 
         <AAlert v-if="error" type="error" :message="error" :closable="false" show-icon />
 
-        <AButton type="primary" html-type="submit" block :loading="loading" :disabled="!password">
+        <AButton type="primary" html-type="submit" block :loading="loading" :disabled="!isPasswordValid">
           {{ t('reset_password') }}
         </AButton>
       </form>
@@ -72,6 +73,11 @@ const password2 = ref('')
 const loading   = ref(false)
 const error     = ref(null)
 const done      = ref(false)
+
+// Mirrors Controllers\Login::MIN_PASSWORD_LENGTH — the backend rejects
+// anything shorter anyway, so gate the button on it instead of just "non-empty".
+const MIN_PASSWORD_LENGTH = 8
+const isPasswordValid = computed(() => password.value.length >= MIN_PASSWORD_LENGTH)
 
 async function handleSubmit() {
   error.value = null
@@ -119,6 +125,11 @@ async function handleSubmit() {
 .field label {
   font-size: 0.9rem;
   font-weight: 500;
+  color: var(--p-text-muted-color);
+}
+
+.field-hint {
+  font-size: 0.75rem;
   color: var(--p-text-muted-color);
 }
 

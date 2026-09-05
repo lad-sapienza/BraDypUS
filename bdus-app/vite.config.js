@@ -34,6 +34,23 @@ export default defineConfig(({ mode }) => {
       }
     },
 
+    // maplibre-gl spins up its renderer/tile-parsing worker via
+    // `new Worker(url, { type: 'module' })`. Vite's dev-time optimizeDeps
+    // pre-bundling re-homes the package into node_modules/.vite/deps/ but
+    // doesn't carry the separate worker file along correctly — the browser
+    // ends up requesting node_modules/.vite/deps/maplibre-gl-worker.mjs,
+    // which Vite itself logs as missing ("The file does not exist ... Try
+    // adding it to optimizeDeps.exclude"). Reported symptom: GeoFace's base
+    // raster layer still renders, but every record/site geometry (a GeoJSON
+    // source, which does need the worker) never does.
+    // Excluding maplibre-gl from pre-bundling serves the real package straight
+    // from node_modules instead, where the worker file sits next to the file
+    // that references it and resolves correctly. Only a dev-server concern —
+    // `vite build` bundles workers through a different, unaffected path.
+    optimizeDeps: {
+      exclude: ['maplibre-gl', 'maplibre-gl-draw']
+    },
+
     server: {
       host: '0.0.0.0',
       port: 5173,

@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.7.0] - 2026-09-05
+
 ### Added
 
 - **OAuth2/SSO credential UI.** Google/ORCID `client_id`/`client_secret` were

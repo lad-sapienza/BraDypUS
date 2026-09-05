@@ -63,6 +63,34 @@
         </div>
       </section>
 
+      <!-- ── OAuth2 / SSO ────────────────────────────────────────── -->
+      <section class="cfg-section">
+        <div class="cfg-section-title">{{ t('oauth_sso') }}</div>
+        <small class="cfg-hint">{{ t('oauth_sso_hint') }}</small>
+
+        <div v-for="p in oauthProviders" :key="p.id" class="cfg-oauth-provider">
+          <div class="cfg-oauth-provider-header">
+            <span>{{ p.label }}</span>
+            <span v-if="isProviderConfigured(p.id)" class="cfg-readonly-badge">{{ t('enabled') }}</span>
+          </div>
+          <div class="cfg-form-row">
+            <div class="cfg-form-field">
+              <label>{{ t('client_id') }}</label>
+              <AInput v-model:value="form.oauth[p.id].client_id" size="small" />
+            </div>
+            <div class="cfg-form-field">
+              <label>{{ t('client_secret') }}</label>
+              <AInputPassword v-model:value="form.oauth[p.id].client_secret" size="small" />
+            </div>
+            <div class="cfg-form-field">
+              <label>{{ t('redirect_uri') }}</label>
+              <AInput :value="redirectUri(p.id)" disabled size="small" />
+              <small class="cfg-hint">{{ t('redirect_uri_hint') }}</small>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- ── Appearance ────────────────────────────────────────── -->
       <section class="cfg-section">
         <div class="cfg-section-title">{{ t('appearance') }}</div>
@@ -126,7 +154,7 @@ import { ref, computed, onMounted } from 'vue'
 import { Button as AButton, Input, Select as ASelect, Alert as AAlert, Switch as ASwitch } from 'ant-design-vue'
 import { useToast } from '@/composables/useNotify'
 import { useI18n, availableLocales } from '@/i18n'
-import { api }      from '@/api'
+import { api, assetUrl } from '@/api'
 import { COLOR_PALETTE, applyColor } from '@/composables/useAppColor'
 
 const AInput         = Input
@@ -150,6 +178,26 @@ const statusSelectOptions = computed(() => statusOptions.value.map(v => ({ value
 const dbEngineOptions     = computed(() => dbEngines.value.map(v => ({ value: v, label: v })))
 const colorPalette  = COLOR_PALETTE
 
+// Only google/orcid are supported server-side (Bdus\Controllers\OAuth::SUPPORTED).
+const oauthProviders = [
+  { id: 'google', label: 'Google' },
+  { id: 'orcid',  label: 'ORCID' },
+]
+
+function isProviderConfigured(id) {
+  const p = form.value?.oauth?.[id]
+  return !!(p?.client_id && p?.client_secret)
+}
+
+// Mirrors Controllers\OAuth::callbackUrl() — same host the frontend itself
+// was served from/talks to the API on, so it holds for both same-origin dev
+// and a separately hosted API (VITE_API_BASE).
+function redirectUri(provider) {
+  const path = assetUrl(`api/auth/oauth/${provider}/callback`)
+  const base = path.startsWith('http') ? path : window.location.origin + path
+  return `${base}?app=${form.value.name}`
+}
+
 function selectColor(name) {
   form.value.color = name
   applyColor(name)
@@ -162,6 +210,13 @@ async function load() {
     const res = await api.get('/api/config/app')
     if (res.status === 'error') throw new Error(t(res.code))
     form.value          = { ...res.main }
+    // Normalise so every provider always has both fields, even when config.json
+    // has no "oauth" section at all yet (fresh app) or only lists one provider.
+    const oauth = res.main.oauth ?? {}
+    form.value.oauth = Object.fromEntries(oauthProviders.map(p => [
+      p.id,
+      { client_id: oauth[p.id]?.client_id ?? '', client_secret: oauth[p.id]?.client_secret ?? '' },
+    ]))
     // PHP may return these as objects ({key:val}) if keys are non-sequential — normalise to arrays
     statusOptions.value = Array.isArray(res.status_options) ? res.status_options : Object.values(res.status_options ?? {})
     dbEngines.value     = Array.isArray(res.db_engines)    ? res.db_engines    : Object.values(res.db_engines    ?? {})
@@ -299,5 +354,20 @@ onMounted(load)
   transform: scale(1.15);
   outline: 2px solid var(--p-content-background);
   outline-offset: -3px;
+}
+.cfg-oauth-provider {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border: 1px solid var(--p-content-border-color);
+  border-radius: 6px;
+}
+.cfg-oauth-provider-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  font-size: 0.85rem;
 }
 </style>

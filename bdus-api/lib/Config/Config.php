@@ -17,7 +17,8 @@ use DB\DBInterface;
  * Loads table/field definitions either from the database (bdus_cfg_tables +
  * bdus_cfg_fields, preferred) or from JSON files in cfg/ (legacy fallback).
  *
- * Bootstrap fields (definition, DB credentials) always come from config.json.
+ * Bootstrap fields (definition, DB credentials, OAuth2 provider credentials)
+ * always come from config.json.
  * App-level settings (status, maxImageSize, welcome) come from bdus_cfg_app
  * post-M019, with a transparent fallback to config.json for pre-M019 apps.
  * The app name is always derived from the DB connection (= directory name)
@@ -39,6 +40,9 @@ class Config
         'definition',
         'db_engine', 'db_host', 'db_port', 'db_name', 'db_username', 'db_password',
         'bdus_version', // written by Migrate::run(); must survive setMain() round-trips
+        'oauth',        // OAuth2/SSO provider credentials — read directly from
+                         // config.json by Controllers\OAuth and Controllers\Login,
+                         // same reasoning as the DB credentials above.
     ];
 
     private array $errors = [];

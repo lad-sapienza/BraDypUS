@@ -44,6 +44,22 @@ configured email sending at all (`RESEND_API_KEY` — see
 [Deploy → environment variables](/guide/deploy/)): turning it on wouldn't do
 anything without a way to actually notify the new user and the admins.
 
+## OAuth2 SSO
+
+Lets a super-admin configure "Sign in with…" buttons on the login page for
+Google and/or ORCID, without touching `config.json` by hand. For each
+provider you get:
+
+- **Client ID** / **Client secret** — from that provider's own developer
+  console.
+- **Redirect URI** (read-only) — the exact callback URL to paste into the
+  provider's console for *this* app, computed from the current host.
+
+A provider's button only appears to users once **both** fields are filled
+in — an **Enabled** badge confirms it's active. See
+[OAuth2 / SSO](/dev/oauth) for the full Google/ORCID setup walkthrough and
+how the login flow itself works.
+
 ## Appearance
 
 The **Appearance** section lets an administrator pick the application's

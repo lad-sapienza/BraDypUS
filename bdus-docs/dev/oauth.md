@@ -33,7 +33,10 @@ The state token is HMAC-SHA256 signed with the app's JWT secret and carries a
 
 ## Configuration
 
-Add an `oauth` section to `projects/{app}/config.json`:
+The credentials live in an `oauth` section of `projects/{app}/config.json` —
+the same file that holds the app's DB credentials, and read the same way
+(`Controllers\OAuth::getCredentials()` reads the file directly on every
+request, so a saved change takes effect immediately, no restart needed):
 
 ```json
 {
@@ -54,6 +57,16 @@ Add an `oauth` section to `projects/{app}/config.json`:
 
 Only configure the providers you actually use — a provider is shown to users
 only when both `client_id` and `client_secret` are non-empty.
+
+**Editing the file by hand is no longer necessary.** A super-admin can set
+both fields per provider from **Config → App settings → OAuth2 / SSO** — see
+[App settings → OAuth2 / SSO](/guide/setup/main-app-config#oauth2-sso). The
+panel also shows the exact **Redirect URI** to paste into the provider's
+console for that app, computed from the current host — see
+[Google setup](#google-setup) / [ORCID setup](#orcid-setup) below for where it
+goes. `PUT /api/config/app` persists the section to `config.json` exactly as
+shown above; editing the file directly still works and is useful for
+scripted/bulk provisioning.
 
 ---
 

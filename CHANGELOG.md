@@ -5,6 +5,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Login page: unreachable bottom on long forms / small screens.**
+  `.login-wrapper` relied on `min-height: 100vh` while `html`/`body` enforce
+  `overflow: hidden` app-wide, so content taller than the viewport (long
+  forms, small screens) was clipped with no way to scroll to it. The wrapper
+  is now bound to the viewport height with its own `overflow-y: auto`.
+
 ## [5.7.0] - 2026-09-05
 
 ### Added

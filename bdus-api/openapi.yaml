@@ -228,6 +228,133 @@ paths:
               schema:
                 $ref: '#/components/schemas/Success'
 
+  /api/auth/register:
+    post:
+      tags: [auth]
+      summary: Public self-registration
+      description: |
+        Creates a new account at privilege 40 ("waiting") — the account
+        cannot log in until an admin grants a real privilege level.
+
+        Gated on two independent things, both opt-in per deployment:
+          - `bdus_cfg_app.allow_self_registration` for this app
+          - Mail\Mailer::isConfigured() at the instance level (RESEND_API_KEY)
+
+        Either missing means the feature isn't offered at all (`registration_not_available`
+        / `email_not_configured`), not a broken form.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [app, name, email, password]
+              properties:
+                app:
+                  type: string
+                name:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  description: Minimum 8 characters
+            example:
+              app: myapp
+              name: Jane Doe
+              email: jane@example.com
+              password: s3cr3t123
+      responses:
+        '200':
+          description: |
+            Success: `ok_user_add`.
+            Error codes: `app_not_found`, `all_fields_required`, `email_not_valid`,
+            `password_too_short`, `registration_not_available`, `email_not_configured`,
+            `email_present`, `error_user_add`.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/Success'
+                  - $ref: '#/components/schemas/Error'
+
+  /api/auth/password-reset/request:
+    post:
+      tags: [auth]
+      summary: Request a password-reset email
+      description: |
+        Always responds with the same generic success code regardless of
+        whether the email matches an account, to avoid leaking which
+        addresses are registered. Requires Mail\Mailer::isConfigured().
+
+        A still-valid, not-yet-expired token for the same account is never
+        silently replaced/re-emailed within the resend cooldown window.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [app, email]
+              properties:
+                app:
+                  type: string
+                email:
+                  type: string
+                  format: email
+      responses:
+        '200':
+          description: |
+            Success: `password_reset_requested` (always, regardless of match).
+            Error codes: `app_not_found`, `email_password_needed`, `email_not_configured`.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/Success'
+                  - $ref: '#/components/schemas/Error'
+
+  /api/auth/password-reset/confirm:
+    post:
+      tags: [auth]
+      summary: Consume a reset token and set a new password
+      description: |
+        The token is single-use and short-lived (1 hour). A successful reset
+        also clears any anti-brute-force lock on the account, since it proves
+        ownership just as well as a correct password would.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, token, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                token:
+                  type: string
+                password:
+                  type: string
+                  description: Minimum 8 characters
+      responses:
+        '200':
+          description: |
+            Success: `ok_password_update`.
+            Error codes: `app_not_found`, `invalid_or_expired_reset_token`,
+            `password_too_short`, `error_password_update`.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/Success'
+                  - $ref: '#/components/schemas/Error'
+
   /api/auth/oauth/{provider}/redirect:
     get:
       tags: [auth]
@@ -311,10 +438,12 @@ paths:
         This endpoint must be added to the provider's allowed redirect URIs
         exactly as: `https://your-host/api/auth/oauth/{provider}/callback?app=APP`
 
-        **User must already exist** in `bdus_users`. For Google, an existing
-        account with a matching email is auto-linked on first use. For ORCID,
-        the admin must set the `oauth_sub` field in advance (ORCID's public API
-        does not expose email).
+        For Google, an existing account with a matching email is auto-linked
+        on first use. For ORCID (no email in its public API) — and for a
+        genuinely new user on either provider — a non-match redirects with
+        `error=no_account` plus a signed one-time `pending` token, which the
+        frontend redeems via `POST /api/auth/oauth/link` or
+        `POST /api/auth/oauth/register` below.
 
         No authentication required.
       security: []
@@ -360,6 +489,100 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+
+  /api/auth/oauth/link:
+    post:
+      tags: [auth]
+      summary: Link an OAuth identity to an existing account
+      description: |
+        Redeems the `pending` token from a `no_account` callback redirect,
+        verifies the given account's password (throttled the same way as
+        `POST /api/auth/login`), and — on success — sets `oauth_provider`/
+        `oauth_sub` on that account so future logins can use the provider
+        directly.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [app, pending, email, password]
+              properties:
+                app:
+                  type: string
+                pending:
+                  type: string
+                  description: One-time signed token from the no_account redirect (~10 min TTL)
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        '200':
+          description: |
+            Success: `ok` (includes `token`, a JWT).
+            Error codes: `app_not_found`, `invalid_or_expired_pending`,
+            `email_password_needed`, `login_data_not_valid`, `account_locked`,
+            `oauth_identity_already_linked`, `generic_error`.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - allOf:
+                      - $ref: '#/components/schemas/Success'
+                      - type: object
+                        required: [token]
+                        properties:
+                          token:
+                            type: string
+                            description: Signed JWT, valid for 2 hours
+                  - $ref: '#/components/schemas/Error'
+
+  /api/auth/oauth/register:
+    post:
+      tags: [auth]
+      summary: Self-signup for a first-time OAuth identity
+      description: |
+        Redeems the `pending` token from a `no_account` callback redirect and
+        creates a new account with just an email (the provider already proved
+        the identity — ORCID just doesn't hand back an email to auto-match on).
+
+        Same `allow_self_registration` + Mail\Mailer::isConfigured() gate and
+        privilege-40 ("waiting") outcome as `POST /api/auth/register`. The new
+        account gets an inert, unguessable password hash — it stays
+        OAuth-only unless a future password reset sets a real one.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [app, pending, email]
+              properties:
+                app:
+                  type: string
+                pending:
+                  type: string
+                  description: One-time signed token from the no_account redirect (~10 min TTL)
+                email:
+                  type: string
+                  format: email
+      responses:
+        '200':
+          description: |
+            Success: `ok_user_add`.
+            Error codes: `app_not_found`, `invalid_or_expired_pending`,
+            `email_not_valid`, `registration_not_available`,
+            `email_not_configured`, `email_present`, `error_user_add`.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/Success'
+                  - $ref: '#/components/schemas/Error'
 
   # ── System ────────────────────────────────────────────────────────────────
 

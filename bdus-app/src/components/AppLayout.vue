@@ -133,7 +133,7 @@ import { Layout, Menu, Dropdown, Modal, Select, Drawer } from 'ant-design-vue'
 import { useRoute } from 'vue-router'
 import { useToast, useConfirm } from '@/composables/useNotify'
 import { useAuthStore } from '@/stores/auth'
-import { useI18n } from '@/i18n'
+import { useI18n, hasStoredLocale } from '@/i18n'
 import { api } from '@/api'
 import { useDarkMode }  from '@/composables/useDarkMode'
 import { applyColor }   from '@/composables/useAppColor'
@@ -162,6 +162,9 @@ onMounted(async () => {
   try {
     const res = await api.get('/api/info/app')
     if (res?.color) applyColor(res.color)
+    // Only for a browser with no explicit locale yet — never override a
+    // choice the visitor already made (flag toggle, or a prior app default).
+    if (res?.lang && !hasStoredLocale()) setLocale(res.lang)
   } catch {
     // non-critical — default Aura indigo stays in place
   }

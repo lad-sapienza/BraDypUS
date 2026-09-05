@@ -6,7 +6,8 @@
         { "name": "welcome",        "type": "TEXT",                 "notnull": false, "default": "" },
         { "name": "color",          "type": "TEXT",                 "notnull": false, "default": "indigo" },
         { "name": "bdus_version",   "type": "TEXT",                 "notnull": false, "default": null },
-        { "name": "allow_self_registration", "type": "INTEGER",     "notnull": true,  "default": 0 }
+        { "name": "allow_self_registration", "type": "INTEGER",     "notnull": true,  "default": 0 },
+        { "name": "lang",           "type": "TEXT",                 "notnull": true,  "default": "en" }
     ],
     "indexes": [],
     "relations": []

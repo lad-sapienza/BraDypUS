@@ -67,7 +67,7 @@ class Config
                 $this->cfg['main']['name'] = $db->getApp();
             }
 
-            // Post-M019: load status, max_image_size, welcome from bdus_cfg_app.
+            // Post-M019: load status, max_image_size, welcome, lang from bdus_cfg_app.
             // Falls back silently to whatever is in config.json for pre-M019 apps
             // (status was in config.json; maxImageSize too).
             if ($this->useDb && AppSettings::isAvailable($db)) {
@@ -75,6 +75,7 @@ class Config
                 $this->cfg['main']['status']       = $appSettings['status']         ?? ($this->cfg['main']['status']       ?? 'on');
                 $this->cfg['main']['maxImageSize']  = $appSettings['max_image_size'] ?? ($this->cfg['main']['maxImageSize']  ?? 0);
                 $this->cfg['main']['welcome']       = $appSettings['welcome']        ?? '';
+                $this->cfg['main']['lang']          = $appSettings['lang']          ?? ($this->cfg['main']['lang']          ?? 'en');
             }
 
             // Table/field definitions: DB if available, JSON otherwise.
@@ -150,7 +151,7 @@ class Config
      * Persists the app-level settings received from the config form.
      *
      * Post-M019: bootstrap fields (definition, DB credentials) go to config.json;
-     * runtime settings (status, maxImageSize) go to bdus_cfg_app.
+     * runtime settings (status, maxImageSize, lang) go to bdus_cfg_app.
      * Pre-M019 fallback: everything goes to config.json as before.
      */
     public function setMain(array $main): void
@@ -168,6 +169,7 @@ class Config
             AppSettings::save($this->db, [
                 'status'         => $main['status']       ?? 'on',
                 'max_image_size' => $main['maxImageSize']  ?? 0,
+                'lang'           => $main['lang']          ?? 'en',
             ]);
         } else {
             // Pre-M019: write the full array to config.json.

@@ -43,7 +43,7 @@ class AppSettings
 
     /**
      * Returns the app settings row as an associative array.
-     * Keys: status (string), max_image_size (int), welcome (string).
+     * Keys: status (string), max_image_size (int), welcome (string), lang (string).
      *
      * Falls back to sensible defaults when the row is missing.
      */
@@ -51,7 +51,7 @@ class AppSettings
     {
         try {
             $rows = $db->query(
-                'SELECT status, max_image_size, welcome, color, bdus_version, allow_self_registration FROM ' . self::TABLE . ' WHERE id = ?',
+                'SELECT status, max_image_size, welcome, color, bdus_version, allow_self_registration, lang FROM ' . self::TABLE . ' WHERE id = ?',
                 [self::ROW_ID],
                 'read'
             );
@@ -59,25 +59,25 @@ class AppSettings
                 return $rows[0];
             }
         } catch (\Throwable) {
-            // Table not yet created, or allow_self_registration column not yet
-            // added by M041 — either way, fall back to the safe defaults below
-            // rather than break every caller until the admin applies the upgrade.
+            // Table not yet created, or allow_self_registration/lang column not
+            // yet added by M041/M042 — either way, fall back to the safe defaults
+            // below rather than break every caller until the admin applies the upgrade.
         }
-        return ['status' => 'on', 'max_image_size' => 0, 'welcome' => '', 'color' => 'indigo', 'bdus_version' => null, 'allow_self_registration' => 0];
+        return ['status' => 'on', 'max_image_size' => 0, 'welcome' => '', 'color' => 'indigo', 'bdus_version' => null, 'allow_self_registration' => 0, 'lang' => 'en'];
     }
 
     // ── Write ─────────────────────────────────────────────────────────────────
 
     /**
-     * Persists status, max_image_size, color and allow_self_registration to
-     * bdus_cfg_app.
+     * Persists status, max_image_size, color, allow_self_registration and lang
+     * to bdus_cfg_app.
      *
-     * Accepted keys: status, max_image_size, color, allow_self_registration.
+     * Accepted keys: status, max_image_size, color, allow_self_registration, lang.
      * Unknown keys are silently ignored.
      */
     public static function save(DBInterface $db, array $settings): void
     {
-        $allowed = ['status', 'max_image_size', 'color', 'allow_self_registration'];
+        $allowed = ['status', 'max_image_size', 'color', 'allow_self_registration', 'lang'];
         $data    = array_intersect_key($settings, array_flip($allowed));
 
         if (isset($data['allow_self_registration'])) {
@@ -96,8 +96,8 @@ class AppSettings
                 'boolean'
             );
         } catch (\Throwable) {
-            // allow_self_registration column not yet added by M041 — no-op
-            // until the admin applies the pending upgrade, rather than error.
+            // allow_self_registration/lang column not yet added by M041/M042 —
+            // no-op until the admin applies the pending upgrade, rather than error.
         }
     }
 

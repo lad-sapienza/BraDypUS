@@ -50,6 +50,7 @@ use DB\System\Migrations\M038_DropTableLinkFromPlugins;
 use DB\System\Migrations\M039_AddLoginThrottlingToUsers;
 use DB\System\Migrations\M040_AddPasswordResetToUsers;
 use DB\System\Migrations\M041_AddSelfRegistrationToCfgApp;
+use DB\System\Migrations\M042_AddLangToCfgApp;
 use Monolog\Logger;
 
 /**
@@ -136,6 +137,7 @@ class Migrate
         M039_AddLoginThrottlingToUsers::class,
         M040_AddPasswordResetToUsers::class,
         M041_AddSelfRegistrationToCfgApp::class,
+        M042_AddLangToCfgApp::class,
     ];
 
     /**

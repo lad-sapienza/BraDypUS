@@ -18,8 +18,20 @@ export const availableLocales = [
   { code: 'it', label: 'Italiano', flag: '🇮🇹' },
 ]
 
+const STORAGE_KEY = 'bdus_locale'
+
 // Shared reactive locale — one instance for the whole app
-const locale = ref(localStorage.getItem('bdus_locale') || 'en')
+const locale = ref(localStorage.getItem(STORAGE_KEY) || 'en')
+
+/**
+ * True once the visitor has an explicit locale choice stored (the flag toggle,
+ * or a previously applied app default) — used to apply an app's configured
+ * default language (Controllers\Info::getAppInfo().lang) only the first time,
+ * without overriding a choice the visitor already made.
+ */
+export function hasStoredLocale() {
+  return localStorage.getItem(STORAGE_KEY) !== null
+}
 
 export function useI18n() {
   /**
@@ -41,7 +53,7 @@ export function useI18n() {
   function setLocale(code) {
     if (messages[code]) {
       locale.value = code
-      localStorage.setItem('bdus_locale', code)
+      localStorage.setItem(STORAGE_KEY, code)
     }
   }
 

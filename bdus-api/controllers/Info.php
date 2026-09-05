@@ -15,7 +15,7 @@ class Info extends \Bdus\Controller
    *
    * GET ?obj=info_ctrl&method=getAppInfo
    *
-   * Response: { status, name: string, definition: string }
+   * Response: { status, name: string, definition: string, color: string, lang: string }
    */
   public function getAppInfo(): void
   {
@@ -30,6 +30,9 @@ class Info extends \Bdus\Controller
       'name'       => $this->cfg->get('main.name')       ?? '',
       'definition' => $this->cfg->get('main.definition') ?? '',
       'color'      => $settings['color'] ?? 'indigo',
+      // App's configured default UI language — AppLayout.vue applies it only
+      // for a browser that hasn't picked one yet (no bdus_locale in localStorage).
+      'lang'       => $settings['lang'] ?? 'en',
     ]);
   }
 

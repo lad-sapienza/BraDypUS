@@ -42,7 +42,8 @@ access to anything until an administrator reviews them in
 This toggle is disabled, with an explanatory note, when the instance hasn't
 configured email sending at all (`RESEND_API_KEY` — see
 [Deploy → environment variables](/guide/deploy/)): turning it on wouldn't do
-anything without a way to actually notify the new user and the admins.
+anything without a way to actually notify the new user and the admins. See
+[Email (Resend)](/dev/email) for how to set that up.
 
 ## OAuth2 SSO
 

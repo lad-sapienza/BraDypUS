@@ -55,7 +55,7 @@
         <div class="cfg-form-row">
           <div class="cfg-form-field">
             <label>{{ t('allow_self_registration') }}</label>
-            <ASwitch v-model:checked="form.allow_self_registration" :disabled="!form.mail_configured" />
+            <ASwitch class="cfg-switch" v-model:checked="form.allow_self_registration" :disabled="!form.mail_configured" />
             <small class="cfg-hint">
               {{ form.mail_configured ? t('allow_self_registration_hint') : t('mail_not_configured_hint') }}
             </small>
@@ -358,6 +358,12 @@ onMounted(load)
   font-size: 0.72rem;
   color: var(--p-text-muted-color);
   line-height: 1.3;
+}
+.cfg-switch {
+  /* .cfg-form-field is a column flex container — without this the switch
+     stretches to the field's full cross-axis width instead of keeping its
+     own ~44px track (AntD sets width:auto, so it inherits stretch). */
+  align-self: flex-start;
 }
 .cfg-readonly-badge {
   font-size: 0.65rem;

@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.8.2] - 2026-09-05
+
 ### Fixed
 
 - **Postgres table lookups leaked across schemas.** `DB\Inspect\Postgres::tableExists()`

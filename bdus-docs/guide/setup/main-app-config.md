@@ -79,8 +79,14 @@ Eight palette options are available — all tested in both light and dark mode:
 | 🌹 | Rose |
 | ⬜ | Slate |
 
-The selection is stored in `bdus_cfg_app.color` (added by migration M025)
-and is read at login time from `GET /api/info/app`.
+A ninth, round colour-picker control opens the browser/OS colour picker for
+any custom colour, and the hex value underneath it can also be typed or
+pasted directly (`#rrggbb`) — useful for matching an institution's own brand
+colour exactly.
+
+The selection is stored in `bdus_cfg_app.color` (added by migration M025) as
+either one of the eight names above or a raw `#rrggbb` string, and is read at
+login time from `GET /api/info/app`.
 
 ## Saving
 

@@ -36,8 +36,22 @@ export const ANTD_HEX = {
 
 export const antdPrimaryColor = ref(ANTD_HEX.indigo)
 
-export function applyColor(colorName) {
-  const name = COLOR_PALETTE.some(c => c.name === colorName) ? colorName : 'indigo'
+const HEX_COLOR_RE = /^#[0-9a-f]{6}$/i
+
+/**
+ * Applies either a named palette entry or an arbitrary "#rrggbb" colour
+ * (from ConfigAppForm.vue's custom colour picker/hex field) as the app's
+ * brand colour. AntD's ConfigProvider (App.vue) just wants a single hex, so
+ * a custom value plugs in exactly like a named one — only the resolution
+ * step differs.
+ */
+export function applyColor(color) {
+  if (HEX_COLOR_RE.test(color ?? '')) {
+    document.documentElement.dataset.brand = 'custom'
+    antdPrimaryColor.value = color
+    return
+  }
+  const name = COLOR_PALETTE.some(c => c.name === color) ? color : 'indigo'
   document.documentElement.dataset.brand = name
   antdPrimaryColor.value = ANTD_HEX[name]
 }

@@ -171,6 +171,7 @@
   "app_settings": "Impostazioni applicazione",
   "appearance": "Aspetto",
   "primary_color": "Colore principale",
+  "custom_color": "Colore personalizzato — scegli o digita un valore hex",
   "validate_app": "Valida",
   "add_table": "Aggiungi tabella",
   "table_settings": "Impostazioni tabella",

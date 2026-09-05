@@ -106,7 +106,23 @@
               :style="{ '--swatch-bg': ANTD_HEX[c.name] }"
               @click="selectColor(c.name)"
             />
+            <input
+              type="color"
+              class="color-swatch color-swatch-custom"
+              :class="{ active: isCustomColor(form.color) }"
+              :title="t('custom_color')"
+              :value="isCustomColor(form.color) ? form.color : '#ffffff'"
+              @input="selectColor($event.target.value)"
+            />
           </div>
+          <AInput
+            :value="form.color"
+            class="color-hex-input"
+            size="small"
+            placeholder="#RRGGBB"
+            maxlength="7"
+            @change="e => onHexTyped(e.target.value)"
+          />
         </div>
       </section>
 
@@ -198,9 +214,27 @@ function redirectUri(provider) {
   return `${base}?app=${form.value.name}`
 }
 
+const HEX_COLOR_RE = /^#[0-9a-f]{6}$/i
+
+function isCustomColor(color) {
+  return HEX_COLOR_RE.test(color ?? '')
+}
+
 function selectColor(name) {
   form.value.color = name
   applyColor(name)
+}
+
+// The hex text field mirrors form.color directly (so it also shows a named
+// colour's own value); only apply it once it's a syntactically valid hex,
+// same rule the <input type="color"> swatch already satisfies by construction.
+function onHexTyped(value) {
+  const v = value.trim()
+  if (isCustomColor(v)) {
+    selectColor(v)
+  } else {
+    form.value.color = v
+  }
 }
 
 async function load() {
@@ -354,6 +388,27 @@ onMounted(load)
   transform: scale(1.15);
   outline: 2px solid var(--p-content-background);
   outline-offset: -3px;
+}
+.color-swatch-custom {
+  -webkit-appearance: none;
+  appearance: none;
+  padding: 0;
+}
+.color-swatch-custom::-webkit-color-swatch-wrapper {
+  padding: 0;
+  border-radius: 50%;
+}
+.color-swatch-custom::-webkit-color-swatch {
+  border: none;
+  border-radius: 50%;
+}
+.color-swatch-custom::-moz-color-swatch {
+  border: none;
+  border-radius: 50%;
+}
+.color-hex-input {
+  max-width: 140px;
+  margin-top: 0.5rem;
 }
 .cfg-oauth-provider {
   display: flex;

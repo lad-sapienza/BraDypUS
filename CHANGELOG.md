@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.8.1] - 2026-09-05
+
 ### Added
 
 - **Users list: show which OAuth provider a user signed in with.** Now that

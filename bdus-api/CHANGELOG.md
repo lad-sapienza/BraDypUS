@@ -5,6 +5,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.8.1] - 2026-09-05
+
+### Added
+
+- **Users list: show which OAuth provider a user signed in with.** Now that
+  an identity can be linked or self-signed-up without an admin pre-setting
+  `oauth_sub` by hand (see 5.8.0), there was no way to tell from the UI who's
+  linked to what. A small Google/ORCID icon now appears next to the name when
+  set.
+
 ## [5.8.0] - 2026-09-05
 
 ### Added

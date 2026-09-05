@@ -30,11 +30,11 @@ services:
     expose:
       - "80"          # only reachable within the Docker network; not published
     environment:
-      - BRADYPUS_DEBUG=0
-      - BRADYPUS_ALLOW_NEW_APP=0
-      - RESEND_API_KEY=
-      - MAIL_FROM_ADDRESS=
-      - MAIL_FROM_NAME=BraDypUS
+      - BRADYPUS_DEBUG=${BRADYPUS_DEBUG:-0}
+      - BRADYPUS_ALLOW_NEW_APP=${BRADYPUS_ALLOW_NEW_APP:-0}
+      - RESEND_API_KEY=${RESEND_API_KEY:-}
+      - MAIL_FROM_ADDRESS=${MAIL_FROM_ADDRESS:-}
+      - MAIL_FROM_NAME=${MAIL_FROM_NAME:-BraDypUS}
     volumes:
       - projects_data:/var/www/html/projects
     networks:

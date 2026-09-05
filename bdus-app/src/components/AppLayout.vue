@@ -97,8 +97,8 @@
           />
         </AModal>
 
-        <button class="topbar-btn" :title="isDark ? t('light_mode') : t('dark_mode')" @click="toggleDark">
-          <component :is="isDark ? BulbFilled : BulbOutlined" />
+        <button class="topbar-btn" :title="t(`${NEXT_MODE[mode]}_mode`)" @click="toggleDark">
+          <component :is="modeIcon" />
         </button>
 
         <ASelect
@@ -127,7 +127,7 @@
 </template>
 
 <script setup>
-import { BarsOutlined, BulbFilled, BulbOutlined, DownOutlined, LeftOutlined, LogoutOutlined, RightOutlined, SearchOutlined, UserOutlined } from '@ant-design/icons-vue'
+import { BarsOutlined, BulbFilled, BulbOutlined, DesktopOutlined, DownOutlined, LeftOutlined, LogoutOutlined, RightOutlined, SearchOutlined, UserOutlined } from '@ant-design/icons-vue'
 import { ref, computed, onMounted } from 'vue'
 import { Layout, Menu, Dropdown, Modal, Select, Drawer } from 'ant-design-vue'
 import { useRoute } from 'vue-router'
@@ -135,7 +135,7 @@ import { useToast, useConfirm } from '@/composables/useNotify'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n, hasStoredLocale } from '@/i18n'
 import { api } from '@/api'
-import { useDarkMode }  from '@/composables/useDarkMode'
+import { useDarkMode, NEXT_MODE }  from '@/composables/useDarkMode'
 import { applyColor }   from '@/composables/useAppColor'
 import UserForm from '@/components/users/UserForm.vue'
 import CommandPalette from '@/components/CommandPalette.vue'
@@ -156,7 +156,8 @@ const ADrawer         = Drawer
 const route   = useRoute()
 const auth    = useAuthStore()
 const confirm = useConfirm()
-const { isDark, toggle: toggleDark } = useDarkMode()
+const { isDark, mode, toggle: toggleDark } = useDarkMode()
+const modeIcon = computed(() => mode.value === 'system' ? DesktopOutlined : (isDark.value ? BulbFilled : BulbOutlined))
 
 onMounted(async () => {
   try {

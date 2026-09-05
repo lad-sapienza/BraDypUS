@@ -1,7 +1,7 @@
 <template>
   <div class="login-wrapper">
-    <button class="dark-toggle" :title="isDark ? t('light_mode') : t('dark_mode')" @click="toggleDark">
-      <component :is="isDark ? BulbFilled : BulbOutlined" />
+    <button class="dark-toggle" :title="t(`${NEXT_MODE[themeMode]}_mode`)" @click="toggleDark">
+      <component :is="modeIcon" />
     </button>
     <div class="login-card">
       <img src="@/assets/bdus.svg" alt="BraDypUS logo" />
@@ -294,13 +294,13 @@
 </template>
 
 <script setup>
-import { BulbFilled, BulbOutlined, CheckCircleOutlined, LoginOutlined, UploadOutlined, WarningOutlined } from '@ant-design/icons-vue'
+import { BulbFilled, BulbOutlined, CheckCircleOutlined, DesktopOutlined, LoginOutlined, UploadOutlined, WarningOutlined } from '@ant-design/icons-vue'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { api } from '@/api'
 import { useI18n } from '@/i18n'
-import { useDarkMode } from '@/composables/useDarkMode'
+import { useDarkMode, NEXT_MODE } from '@/composables/useDarkMode'
 import { resolveIcon } from '@/utils/icons'
 import { Select as ASelect, Input, Button as AButton, Alert as AAlert, Tag as ATag } from 'ant-design-vue'
 
@@ -310,7 +310,8 @@ const AInputPassword = Input.Password
 const { t } = useI18n()
 const router = useRouter()
 const auth = useAuthStore()
-const { isDark, toggle: toggleDark } = useDarkMode()
+const { isDark, mode: themeMode, toggle: toggleDark } = useDarkMode()
+const modeIcon = computed(() => themeMode.value === 'system' ? DesktopOutlined : (isDark.value ? BulbFilled : BulbOutlined))
 const appVersion = __APP_VERSION__
 
 const form = ref({ app: null, email: '', password: '' })

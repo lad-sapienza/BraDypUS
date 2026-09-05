@@ -808,6 +808,7 @@
   "maplibre_style_url": "MapLibre Style JSON URL",
   "dark_mode": "Switch to dark mode",
   "light_mode": "Switch to light mode",
+  "system_mode": "Switch to system default",
   "unsaved_changes": "Unsaved changes",
   "unsaved_changes_warning": "You have unsaved changes. Leave without saving?",
   "validation_error": "Validation error",

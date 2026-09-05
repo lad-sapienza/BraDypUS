@@ -806,6 +806,7 @@
   "maplibre_style_url": "URL stile MapLibre JSON",
   "dark_mode": "Passa alla modalità scura",
   "light_mode": "Passa alla modalità chiara",
+  "system_mode": "Passa alla modalità di sistema",
   "unsaved_changes": "Modifiche non salvate",
   "unsaved_changes_warning": "Hai modifiche non salvate. Uscire senza salvare?",
   "validation_error": "Errore di validazione",

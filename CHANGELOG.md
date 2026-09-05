@@ -5,6 +5,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Postgres table lookups leaked across schemas.** `DB\Inspect\Postgres::tableExists()`
+  and `tableColumns()` queried `information_schema` without filtering by
+  schema, so a project table sharing a name with something in a different
+  schema of the same database (e.g. an externally-maintained `gis` schema)
+  produced a false "already exists" instead of being created. Both now scope
+  to `current_schema()`.
+
 ## [5.8.1] - 2026-09-05
 
 ### Added

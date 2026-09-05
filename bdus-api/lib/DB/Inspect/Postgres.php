@@ -24,7 +24,7 @@ class Postgres implements InspectInterface
   public function tableExists(string $tb): bool
   {
     $res = $this->db->query(
-      "SELECT COUNT(*) as tot FROM information_schema.tables WHERE table_name = ?",
+      "SELECT COUNT(*) as tot FROM information_schema.tables WHERE table_name = ? AND table_schema = current_schema()",
       [$tb]
     );
 
@@ -35,7 +35,7 @@ class Postgres implements InspectInterface
   {
     $ret = [];
 
-    $res = $this->db->query("SELECT * FROM information_schema.columns WHERE table_name = ?", [$tb]);
+    $res = $this->db->query("SELECT * FROM information_schema.columns WHERE table_name = ? AND table_schema = current_schema()", [$tb]);
     if (!$res || empty($res)) {
       throw new \Exception("Error on getting column list for table {$tb}");
     }

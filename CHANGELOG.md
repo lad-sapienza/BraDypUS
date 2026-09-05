@@ -5,6 +5,84 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **OAuth2/SSO credential UI.** Google/ORCID `client_id`/`client_secret` were
+  only ever configurable by hand-editing `projects/{app}/config.json` — the
+  login flow itself (`Controllers\OAuth`) has existed since v5.5.0, but no
+  admin UI exposed it. **Config → App settings → OAuth2 / SSO** now has both
+  fields per provider, a read-only **Redirect URI** computed for that app (the
+  exact value to paste into the provider's console), and an **Enabled** badge
+  once both fields are filled in.
+
+- **Custom brand colour.** Alongside the eight named swatches, **Config → App
+  settings → Appearance** now has a ninth, round colour-picker control (opens
+  the browser/OS colour picker) plus a hex text field for typing or pasting a
+  value directly — useful for matching an institution's own colour exactly.
+
+### Changed
+
+- **Transactional emails redesigned.** Password-reset and registration emails
+  were bare `<p>` tags with a plain link and a blunt tone ("You requested…").
+  Rewritten around a shared, minimal header/footer layout with a proper
+  button, a plain-text fallback URL, warmer copy, and the recipient's name in
+  the greeting where available. Markup stays inline-styles-only — no external
+  images/fonts — for both email-client compatibility and because heavier
+  markup is itself a common spam-filter signal.
+
+### Fixed
+
+- **App settings: the "Language" field was never wired to anything.** It's
+  existed since the v5 config panel was first built, but neither
+  `getAppProperties()` nor `save_app_properties()` ever read or persisted it —
+  any value picked in the UI was silently discarded on save. Added
+  `bdus_cfg_app.lang` (M042) and put it to actual use: a browser with no
+  stored locale preference yet now adopts it as the app's default UI language
+  on first login.
+
+- **App settings: 7 of 8 colour swatches were invisible.** They read their
+  background from `var(--p-{name}-500)`, a CSS custom property the app only
+  ever defined for "blue" (kept for an unrelated badge/tag use) — Indigo,
+  Violet, Emerald, Teal, Amber, Rose and Slate resolved to nothing and
+  rendered as blank circles. Swatches now read the hex straight from the same
+  map that already drives the real theme colour.
+
+- **App settings: the "Allow self-registration" switch rendered stretched to
+  ~250px wide** instead of its normal ~44px track — a column-flex parent with
+  no `align-self` override on the switch. Scoped the fix to the switch itself
+  rather than the shared layout rule every other field in the form also
+  relies on.
+
+- **GeoFace: record/site geometries never rendered in local dev.**
+  maplibre-gl's tile-processing worker script wasn't served correctly by
+  Vite's dependency pre-bundling (`vite dev` itself logged the missing file
+  and suggested the fix) — the base raster layer doesn't need that worker so
+  it kept rendering, masking the failure as "just the geometries are
+  missing". Excluded maplibre-gl from `optimizeDeps`. Dev-server-only;
+  `vite build` was never affected.
+
+- **Deploy: `RESEND_API_KEY`/`MAIL_FROM_*`/`BRADYPUS_*` silently ignored
+  `.env` overrides.** `bradypus.yml` and `docker-compose.prod.yml` hardcoded
+  these as literal values in the `api` service's `environment:` block instead
+  of interpolating from `.env`, despite the file's own header comment
+  advertising them as overridable that way. A production instance with
+  `RESEND_API_KEY`/`MAIL_FROM_ADDRESS` genuinely configured still reported
+  email as unavailable, no matter how the container was restarted or
+  recreated.
+
+- **Reset-password button enabled on the first keystroke** instead of once
+  the password actually meets the 8-character minimum the backend enforces
+  anyway; the requirement is now also shown as a hint under the field. Also
+  fixed a duplicate `reset_password` locale key (left over from unused v4
+  email-template strings) that was shadowing the real translation — in
+  Italian, the shadowed value also had a typo.
+
+- **Theme toggle could never actually reach "system" mode.** `useDarkMode.js`
+  has tracked a three-way mode (light/dark/system) since v5.6.0, but the
+  toggle button only ever rendered two icons and cycled exclusively between
+  light and dark. It now cycles light → dark → system, with a distinct icon
+  for "system".
+
 ## [5.6.0] - 2026-09-04
 
 ### Added

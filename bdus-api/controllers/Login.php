@@ -87,7 +87,7 @@ class Login extends \Bdus\Controller
 			$appName = $this->cfg->get('main.name') ?: $app;
 			$lang    = \Mail\Templates::langFromHeader($_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? null);
 
-			$user = \Mail\Templates::registrationConfirmation($lang, $appName);
+			$user = \Mail\Templates::registrationConfirmation($lang, $appName, $name);
 			\Mail\Mailer::send($email, $user['subject'], $user['html']);
 
 			$admins = $sys_manager->getBySQLSafe('bdus_users', 'privilege <= ?', [
@@ -338,7 +338,7 @@ class Login extends \Bdus\Controller
 						'email' => $email, 'token' => $token,
 					]);
 
-					$mail = \Mail\Templates::passwordReset($lang, $appName, $resetUrl);
+					$mail = \Mail\Templates::passwordReset($lang, $appName, $resetUrl, $user['name'] ?? null);
 					\Mail\Mailer::send($email, $mail['subject'], $mail['html']);
 				}
 			}

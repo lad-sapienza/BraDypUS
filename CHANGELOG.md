@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.8.5] - 2026-09-06
+
 ### Fixed
 
 - **The record list could 500 with `no such column` after opening a second

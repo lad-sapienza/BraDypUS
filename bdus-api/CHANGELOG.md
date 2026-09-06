@@ -5,6 +5,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.8.5] - 2026-09-06
+
+### Fixed
+
+- **The record list could 500 with `no such column` after opening a second
+  database in the same browser.** The data view remembers each table's visible
+  columns in `localStorage`, but the key was keyed only by table name — not by
+  application. Two databases that both have, say, a `siti` table with different
+  columns would then share the preference: a column picked while looking at one
+  (`siti.nome`) was replayed against the other (whose site name field is
+  `toponimo`), the frontend sent `columns=…,nome,…` to the record endpoint, and
+  the query built `SELECT siti.nome …` → `SQLSTATE[HY000] … no such column`.
+  Two independent fixes:
+  - **Backend:** `getRecords` now drops any requested column or `sort_field`
+    that is not a real field of the table (previously only stray characters
+    were stripped, and unknown names went straight into the SQL). An unknown
+    column is ignored; an unknown sort field falls back to the table's default
+    order; `QueryFromRequest` enforces the same as a last line of defence. A
+    stale or hand-crafted request can no longer turn into a failed list.
+  - **Frontend:** every `localStorage` preference is now namespaced per
+    application — `bdus:<app>:<key>` — so column layouts, the record-view
+    column count, the chosen template, dark-mode and UI language belong to one
+    database and never leak into another opened at the same origin. The app id
+    is taken from the URL path (`/<app>/…`). Existing un-namespaced
+    preferences are not migrated: they fall back to defaults once, then persist
+    under the new key. (The JWT, already isolated per browser tab in
+    `sessionStorage`, is unchanged.)
+
 ## [5.8.4] - 2026-09-06
 
 ### Fixed

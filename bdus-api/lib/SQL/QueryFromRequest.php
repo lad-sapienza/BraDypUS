@@ -68,7 +68,19 @@ class QueryFromRequest
   public function setOrder($fld = false, $type = false): ?QueryFromRequest
   {
     if (!preg_match('/(LIMIT)/', $this->where)) {
-      !$type ? $type = 'asc' : '';
+      $type = (is_string($type) && strtolower($type) === 'desc') ? 'desc' : 'asc';
+
+      // Ignore an unknown sort column (e.g. a stale client-side preference
+      // carried over from another database) instead of building
+      // `ORDER BY tb.<garbage>` and letting the engine raise a 500.
+      if (
+        $fld
+        && !preg_match('/[.(]/', (string) $fld)
+        && !isset($this->knownFields()[$fld])
+      ) {
+        $fld = false;
+      }
+
       if (!$fld) {
         if (preg_match('/ORDER/', $this->where)) {
           return null;
@@ -297,7 +309,7 @@ class QueryFromRequest
   public function setFields($use_preview = false, $fields = false)
   {
     if (is_array($fields)) {
-      $this->fields = $fields;
+      $this->fields = $this->keepKnownFields($fields);
       return $this;
     }
 
@@ -315,8 +327,45 @@ class QueryFromRequest
       $col_names = $this->cfg->get("tables.{$this->tb}.fields.*.label");
     }
 
-    $this->fields = $col_names;
+    $this->fields = $this->keepKnownFields($col_names);
     return $this;
+  }
+
+  /**
+   * Column names that really exist for $this->tb, as a name => name map.
+   */
+  private function knownFields(): array
+  {
+    return $this->cfg->get("tables.{$this->tb}.fields.*.name") ?: [];
+  }
+
+  /**
+   * Drop map entries whose key is not a real column of $this->tb, so a stale
+   * or hand-crafted request (e.g. a localStorage column preference left over
+   * from a different database, where `siti` had a `nome` column) can never
+   * reach the SQL string as `SELECT tb.<garbage>`.
+   *
+   * `id` is always kept; dotted names ("t.col") and expressions ("count(*)")
+   * pass through untouched for the callers that build those on purpose. If
+   * nothing survives, fall back to `id` alone rather than an empty SELECT.
+   *
+   * @param array $map  field name => label
+   */
+  private function keepKnownFields(array $map): array
+  {
+    $known = $this->knownFields();
+    $out = [];
+    foreach ($map as $name => $label) {
+      if (
+        $name === 'id'
+        || isset($known[$name])
+        || strpos((string) $name, '.') !== false
+        || strpos((string) $name, '(') !== false
+      ) {
+        $out[$name] = $label;
+      }
+    }
+    return $out ?: ['id' => 'id'];
   }
 
   /**

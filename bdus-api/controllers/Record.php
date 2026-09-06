@@ -107,16 +107,21 @@ class Record extends \Bdus\Controller
     }
     if ($customColumns && count($customColumns) > 0) {
       // Build associative [fieldName => label] map, always prepend id.
+      // Unknown names are dropped here (not just character-sanitised): a stale
+      // client-side column preference — e.g. one carried over in localStorage
+      // from another database whose same-named table has different columns —
+      // must not turn into `SELECT tb.<missing_column>` and 500 the list.
+      $allFields = $this->cfg->get("tables.{$tb}.fields.*") ?? [];
       $colMap = [];
       foreach ($customColumns as $col) {
         $col = preg_replace('/[^a-zA-Z0-9_]/', '', $col);  // sanitise
-        if (!$col || $col === 'id') continue;
-        $allFields = $this->cfg->get("tables.{$tb}.fields.*") ?? [];
-        $label = $allFields[$col]['label'] ?? $col;
-        $colMap[$col] = $label;
+        if (!$col || $col === 'id' || !isset($allFields[$col])) continue;
+        $colMap[$col] = $allFields[$col]['label'] ?? $col;
       }
-      $colMap = array_merge(['id' => 'id'], $colMap);
-      $qRequest['fields'] = $colMap;
+      // Only override the preview default when at least one real column remains.
+      if ($colMap) {
+        $qRequest['fields'] = array_merge(['id' => 'id'], $colMap);
+      }
     }
 
     // use_preview=true unless we are supplying a custom column list
@@ -134,8 +139,16 @@ class Record extends \Bdus\Controller
         $fields[] = ['name' => $fldName, 'label' => $fldLabel ?: $fldName];
       }
 
+      // Ignore an unknown sort column (e.g. a stale client-side preference from
+      // another database) — QueryFromRequest::setOrder() guards too, this keeps
+      // the intent explicit and logged.
       if ($sortFld) {
-        $qObj->setOrder($sortFld, $sortDir);
+        $knownFields = $this->cfg->get("tables.{$tb}.fields.*.name") ?: [];
+        if (isset($knownFields[$sortFld])) {
+          $qObj->setOrder($sortFld, $sortDir);
+        } else {
+          $this->log->debug("getRecords: ignoring unknown sort_field '{$sortFld}' for table '{$tb}'");
+        }
       }
 
       $qObj->setLimit(($page - 1) * $perPage, $perPage);

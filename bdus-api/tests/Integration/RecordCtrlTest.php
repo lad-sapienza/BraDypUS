@@ -205,4 +205,40 @@ class RecordCtrlTest extends BdusTestCase
         $res  = $this->callController($ctrl, 'getRecords');
         $this->assertSame('error', $res['status']);
     }
+
+    // ── stale client state must not break the list ────────────────────────
+    // Regression: a localStorage column/sort preference carried over from a
+    // different database (whose same-named table has other columns) used to
+    // reach the SQL builder and 500 the whole list.
+
+    public function testGetRecordsDropsUnknownColumnFromStaleClientPref(): void
+    {
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [
+            'tb'          => self::TB,
+            'search_type' => 'all',
+            // "nome" does not exist on `items` — a leftover from another DB.
+            'columns'     => 'name,nome,status',
+        ]);
+        $res = $this->callController($ctrl, 'getRecords');
+
+        $this->assertSame('success', $res['status']);
+        $this->assertSame(5, $res['total']);
+        $names = array_column($res['fields'], 'name');
+        $this->assertContains('name', $names);
+        $this->assertNotContains('nome', $names);
+    }
+
+    public function testGetRecordsIgnoresUnknownSortFieldFromStaleClientPref(): void
+    {
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [
+            'tb'          => self::TB,
+            'search_type' => 'all',
+            'sort_field'  => 'nome',   // unknown column
+            'sort_dir'    => 'asc',
+        ]);
+        $res = $this->callController($ctrl, 'getRecords');
+
+        $this->assertSame('success', $res['status']);
+        $this->assertCount(5, $res['data']);
+    }
 }

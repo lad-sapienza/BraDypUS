@@ -242,4 +242,63 @@ class QueryFromRequestTest extends BdusTestCase
         $this->assertArrayHasKey('status', $fields);
         $this->assertArrayNotHasKey('description', $fields); // not in preview
     }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // Stale / unknown request columns must never reach the SQL string
+    // (regression: a localStorage column preference carried over from another
+    //  database whose same-named table had a column this one lacks)
+    // ══════════════════════════════════════════════════════════════════════
+
+    public function testUnknownCustomColumnIsDropped(): void
+    {
+        $q = $this->qfr(
+            ['fields' => ['id' => 'id', 'name' => 'Name', 'bogus_col' => 'bogus_col']],
+            false
+        );
+
+        $fields = $q->getFields();
+        $this->assertArrayHasKey('name', $fields);
+        $this->assertArrayNotHasKey('bogus_col', $fields);
+
+        // The query must run instead of raising "no such column: items.bogus_col".
+        $q->setLimit(0, 5);
+        $this->assertCount(5, $q->getResults());
+    }
+
+    public function testAllUnknownCustomColumnsFallBackToId(): void
+    {
+        $q = $this->qfr(['fields' => ['nope' => 'nope', 'nada' => 'nada']], false);
+
+        $this->assertSame(['id'], array_keys($q->getFields()));
+        $q->setLimit(0, 5);
+        $this->assertCount(5, $q->getResults());
+    }
+
+    public function testUnknownSortFieldFallsBackToDefaultOrder(): void
+    {
+        $q = $this->qfr();
+        $q->setOrder('bogus_col', 'asc');   // stale client preference
+        $q->setLimit(0, 5);
+
+        // No "no such column" — falls back to the table's default order.
+        $rows = $q->getResults();
+        $this->assertCount(5, $rows);
+        $this->assertSame(range(1, 5), array_map('intval', array_column($rows, 'id')));
+    }
+
+    public function testKnownSortFieldStillApplies(): void
+    {
+        // The unknown-field guard must not disturb a legitimate sort column.
+        $asc = $this->qfr();
+        $asc->setOrder('name', 'asc');
+        $asc->setLimit(0, 5);
+        $ascNames = array_column($asc->getResults(), 'name');
+
+        $desc = $this->qfr();
+        $desc->setOrder('name', 'desc');
+        $desc->setLimit(0, 5);
+        $descNames = array_column($desc->getResults(), 'name');
+
+        $this->assertSame(array_reverse($ascNames), $descNames);
+    }
 }

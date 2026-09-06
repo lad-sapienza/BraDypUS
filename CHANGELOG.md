@@ -86,6 +86,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `bdus_cfg_relations` endpoint must resolve to a real, non-system table
   (`cfg_relations_resolvable`), and every `bdus_geodata.table_link` table must
   carry the `extra.geodata` flag (folded into `geodata_integrity`).
+- **`test.sh --setup --tests --seed` in one run aborted the demo seed.** Hurl
+  phase 40 (`chrono_density_path`) activated `fuzzy_date` on the shared demo
+  table `reperti` — which auto-creates the `chrono_*` columns — and never
+  deactivated it, unlike every other phase that mutates schema. The phase 19
+  seed then re-added those fields explicitly and stopped on
+  `fld_already_available`. Phase 40 now tears the flag down again (step 40k), so
+  it leaves `reperti` exactly as phase 03 built it. Test-harness only — no CI
+  job runs this flag combination; `--setup --tests` and `--setup --seed`
+  separately were always green.
 
 ## [5.8.5] - 2026-09-06
 

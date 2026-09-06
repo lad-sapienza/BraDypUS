@@ -12,6 +12,9 @@
 # contained: activates fuzzy_date on reperti and creates its own records
 # here rather than depending on the phase 19 seed (which — like phase 37 —
 # does not run before this phase in the standard --setup --tests flow).
+# Step 40k deactivates fuzzy_date on reperti again so the schema is left
+# exactly as phase 03 created it — otherwise a later `--seed` in the same
+# run trips over the auto-created chrono_* columns (see issue #47).
 # ════════════════════════════════════════════════════════════════════
 
 
@@ -223,3 +226,24 @@ HTTP 200
 [Asserts]
 jsonpath "$.status"  == "success"
 jsonpath "$.sources" count == 0
+
+
+# ── 40k. Teardown: deactivate fuzzy_date on reperti ────────────────
+# 40a activated it (auto-creating the chrono_* columns). Undo that so
+# the demo schema is left as phase 03 built it — a subsequent phase 19
+# `--seed` in the same run re-adds those fields explicitly and would
+# otherwise abort on `fld_already_available` (issue #47).
+DELETE {{base_url}}/{{app_name}}/api/config/table/reperti/fuzzy-date
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+jsonpath "$.code"   == "fuzzy_date_deactivated"
+
+# reperti no longer advertises fuzzy_date (flag present but cleared)
+GET {{base_url}}/{{app_name}}/api/config/table/reperti
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+jsonpath "$.table.fuzzy_date" == false

@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.8.4] - 2026-09-06
+
 ### Fixed
 
 - **v4 → v5 major upgrade aborted on an orphaned file link.** Migration

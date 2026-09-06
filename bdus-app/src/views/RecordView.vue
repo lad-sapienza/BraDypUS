@@ -317,6 +317,7 @@ import {
 } from 'ant-design-vue'
 import { api }        from '@/api'
 import { useI18n }    from '@/i18n'
+import { appStorage } from '@/utils/storage'
 import FieldDisplay    from '@/components/record/FieldDisplay.vue'
 import FieldEditor     from '@/components/record/FieldEditor.vue'
 import PluginSection   from '@/components/record/PluginSection.vue'
@@ -495,14 +496,16 @@ const fieldsGridStyle = computed(() =>
     : {}
 )
 
-function colsStorageKey(tbName) { return `bradypus:cols:${tbName}` }
+// Per-app key (bdus:<app>:record:cols:<tb>) — see utils/storage.js. Keeps one
+// database's layout prefs from bleeding into another's same-named table.
+function colsStorageKey(tbName) { return `record:cols:${tbName}` }
 
 /** null = Auto (current browser-driven auto-fill behaviour) */
 const selectedCols = ref(3)
 
 function loadColsPreference() {
   if (!tb.value) return
-  const saved = localStorage.getItem(colsStorageKey(tb.value))
+  const saved = appStorage.get(colsStorageKey(tb.value))
   if (saved === null) {
     selectedCols.value = 3   // sensible default
     return
@@ -513,16 +516,16 @@ function loadColsPreference() {
 function onColsChange(val) {
   selectedCols.value = val
   if (val === null) {
-    localStorage.removeItem(colsStorageKey(tb.value))
+    appStorage.remove(colsStorageKey(tb.value))
   } else {
-    localStorage.setItem(colsStorageKey(tb.value), String(val))
+    appStorage.set(colsStorageKey(tb.value), String(val))
   }
 }
 
 // ── Template selection ────────────────────────────────────────────
 const availableTemplates = ref([])   // string[] — names returned by getTemplates
 
-function tplStorageKey(tbName) { return `bradypus:template:${tbName}` }
+function tplStorageKey(tbName) { return `record:template:${tbName}` }
 
 const selectedTemplate = ref(null)   // currently chosen template name or null
 
@@ -537,7 +540,7 @@ async function loadAvailableTemplates() {
     const res = await api.get(`/api/record/${tb.value}/templates`)
     availableTemplates.value = res.templates ?? []
     // Restore saved preference for this table
-    const saved = localStorage.getItem(tplStorageKey(tb.value))
+    const saved = appStorage.get(tplStorageKey(tb.value))
     if (saved && availableTemplates.value.includes(saved)) {
       selectedTemplate.value = saved
     } else {
@@ -548,9 +551,9 @@ async function loadAvailableTemplates() {
 
 function onTemplateChange(val) {
   if (val) {
-    localStorage.setItem(tplStorageKey(tb.value), val)
+    appStorage.set(tplStorageKey(tb.value), val)
   } else {
-    localStorage.removeItem(tplStorageKey(tb.value))
+    appStorage.remove(tplStorageKey(tb.value))
   }
   fetchRecord()
 }

@@ -14,14 +14,16 @@
  */
 
 import { ref, computed, watch } from 'vue'
+import { appStorage } from '@/utils/storage'
 
-const STORAGE_KEY = 'bdus-dark-mode'
+// Per-application key (bdus:<app>:dark-mode) — see utils/storage.js.
+const STORAGE_KEY = 'dark-mode'
 
 const media = window.matchMedia?.('(prefers-color-scheme: dark)')
 
 // ── Determine initial mode ──────────────────────────────────────────────────
 function readMode() {
-  const stored = localStorage.getItem(STORAGE_KEY)
+  const stored = appStorage.get(STORAGE_KEY)
   if (stored === 'light' || stored === 'dark' || stored === 'system') return stored
   // Legacy boolean value ('true'/'false') stored under this same key before
   // the three-way mode existed — migrate it to an explicit light/dark so
@@ -46,7 +48,7 @@ applyClass(isDark.value)
 
 // Keep the class + storage in sync whenever the resolved value changes.
 watch(isDark, applyClass)
-watch(mode, m => localStorage.setItem(STORAGE_KEY, m))
+watch(mode, m => appStorage.set(STORAGE_KEY, m))
 
 // Live-follow the OS preference while in 'system' mode.
 media?.addEventListener?.('change', e => { systemIsDark.value = e.matches })

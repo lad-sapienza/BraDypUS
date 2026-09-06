@@ -336,6 +336,7 @@ import { useToast } from '@/composables/useNotify'
 import { api, assetUrl, filterToSearchParams } from '@/api'
 import { useI18n } from '@/i18n'
 import { useTables } from '@/composables/useTables'
+import { appStorage } from '@/utils/storage'
 import AppLayout from '@/components/AppLayout.vue'
 import {
   Table as ATable,
@@ -411,30 +412,31 @@ const allAvailableColumns = computed(() => {
     .filter(f => f.name && f.name !== 'id')
 })
 
-/** localStorage key for a given table's column prefs */
-function colStorageKey(tbName) { return `bradypus:columns:${tbName}` }
+/**
+ * Per-app storage key for a table's column prefs. Namespacing by application
+ * (bdus:<app>:data:columns:<tb>, see utils/storage.js) is essential: two
+ * databases can each have a table called `siti` with different columns, and a
+ * pref saved against one must never be replayed against the other — that sent
+ * a non-existent column to getRecords and 500'd the whole list.
+ */
+function colStorageKey(tbName) { return `data:columns:${tbName}` }
 
 /**
  * Called when there are no saved prefs (initial first visit to a table).
  * Populates visibleColumnNames from the preview columns the backend returned.
  */
 function initVisibleColumns(tbName) {
-  const saved = localStorage.getItem(colStorageKey(tbName))
-  if (saved) {
-    try {
-      const arr = JSON.parse(saved)
-      if (Array.isArray(arr) && arr.length) {
-        visibleColumnNames.value = arr
-        return
-      }
-    } catch { /* ignore */ }
+  const arr = appStorage.getJSON(colStorageKey(tbName))
+  if (Array.isArray(arr) && arr.length) {
+    visibleColumnNames.value = arr
+    return
   }
   // No saved prefs: use whatever the backend returned as default (preview fields)
   visibleColumnNames.value = columns.value.map(c => c.name)
 }
 
 function saveColumnPrefs(tbName) {
-  localStorage.setItem(colStorageKey(tbName), JSON.stringify(visibleColumnNames.value))
+  appStorage.setJSON(colStorageKey(tbName), visibleColumnNames.value)
 }
 
 function toggleColumn(name) {
@@ -459,7 +461,7 @@ function selectAllColumns() {
 
 function resetColumns() {
   if (!selectedTable.value) return
-  localStorage.removeItem(colStorageKey(selectedTable.value.name))
+  appStorage.remove(colStorageKey(selectedTable.value.name))
   visibleColumnNames.value = []   // empty → backend uses preview defaults
   fetchRecords()
 }
@@ -714,16 +716,11 @@ function applyRouteParams() {
     // use preview mode and columns.value would only contain preview fields —
     // causing a mismatch where saved non-preview columns appear checked in the
     // toggler but are absent from the DataTable.
-    const saved = localStorage.getItem(colStorageKey(tbParam))
+    const saved = appStorage.getJSON(colStorageKey(tbParam))
     let restoredFromStorage = false
-    if (saved) {
-      try {
-        const arr = JSON.parse(saved)
-        if (Array.isArray(arr) && arr.length) {
-          visibleColumnNames.value = arr
-          restoredFromStorage = true
-        }
-      } catch { /* ignore corrupted data */ }
+    if (Array.isArray(saved) && saved.length) {
+      visibleColumnNames.value = saved
+      restoredFromStorage = true
     }
     if (!restoredFromStorage) {
       // No saved prefs: leave empty so initVisibleColumns() can populate

@@ -3,13 +3,14 @@
  *
  * - Reads existing locale/en.json and locale/it.json directly (no vue-i18n needed)
  * - Handles %s interpolation (same as PHP tr::get)
- * - Persists language choice in localStorage
+ * - Persists language choice in per-application localStorage
  * - Singleton: locale state is shared across all components
  */
 
 import { ref } from 'vue'
 import en from '@locale/en.json'
 import it from '@locale/it.json'
+import { appStorage } from '@/utils/storage'
 
 const messages = { en, it }
 
@@ -18,10 +19,11 @@ export const availableLocales = [
   { code: 'it', label: 'Italiano', flag: '🇮🇹' },
 ]
 
-const STORAGE_KEY = 'bdus_locale'
+// Per-application key (bdus:<app>:locale) — see utils/storage.js.
+const STORAGE_KEY = 'locale'
 
 // Shared reactive locale — one instance for the whole app
-const locale = ref(localStorage.getItem(STORAGE_KEY) || 'en')
+const locale = ref(appStorage.get(STORAGE_KEY) || 'en')
 
 /**
  * True once the visitor has an explicit locale choice stored (the flag toggle,
@@ -30,7 +32,7 @@ const locale = ref(localStorage.getItem(STORAGE_KEY) || 'en')
  * without overriding a choice the visitor already made.
  */
 export function hasStoredLocale() {
-  return localStorage.getItem(STORAGE_KEY) !== null
+  return appStorage.get(STORAGE_KEY) !== null
 }
 
 export function useI18n() {
@@ -53,7 +55,7 @@ export function useI18n() {
   function setLocale(code) {
     if (messages[code]) {
       locale.value = code
-      localStorage.setItem(STORAGE_KEY, code)
+      appStorage.set(STORAGE_KEY, code)
     }
   }
 

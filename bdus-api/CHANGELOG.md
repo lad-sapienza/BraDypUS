@@ -5,6 +5,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **v4 → v5 major upgrade aborted on an orphaned file link.** Migration
+  `M033_migrate_legacy_file_links` copies leftover file↔record links from
+  `bdus_userlinks` into `bdus_file_links`. If a v4 database contained a
+  `'files'` link whose file id no longer existed in `bdus_files` (v4 ran SQLite
+  without foreign-key enforcement, so deleted files left dangling links behind),
+  the copy hit the `bdus_file_links.file_id` foreign key and the whole upgrade
+  failed with `upgrade_failed`. The migration now skips links to a missing file
+  while still purging those dead rows from `bdus_userlinks`.
+
 ## [5.8.3] - 2026-09-06
 
 ### Fixed

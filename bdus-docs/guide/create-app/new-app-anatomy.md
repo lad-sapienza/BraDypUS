@@ -35,9 +35,11 @@ User-defined data tables have no required prefix.
 | Table | Purpose |
 |---|---|
 | `bdus_api_keys` | API key authentication |
+| `bdus_assemblage_analyses` | Saved assemblage / pivot analysis definitions |
 | `bdus_cfg_app` | App-level settings (status, max image size, welcome text) |
 | `bdus_cfg_fields` | Field configuration |
 | `bdus_cfg_geoface` | GeoFace / map layer configuration |
+| `bdus_cfg_indexes` | User-defined index definitions on data tables |
 | `bdus_cfg_relations` | Cross-table relation definitions |
 | `bdus_cfg_tables` | Table configuration |
 | `bdus_cfg_templates` | Print templates (Twig source) |

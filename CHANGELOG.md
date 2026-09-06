@@ -95,6 +95,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   it leaves `reperti` exactly as phase 03 built it. Test-harness only — no CI
   job runs this flag combination; `--setup --tests` and `--setup --seed`
   separately were always green.
+- **Docs:** the "new app anatomy" system-tables list was missing
+  `bdus_assemblage_analyses` and `bdus_cfg_indexes` — it now lists all 24
+  tables `create-app` builds.
 
 ## [5.8.5] - 2026-09-06
 

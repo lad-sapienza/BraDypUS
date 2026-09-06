@@ -5,6 +5,102 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.9.0] - 2026-09-06
+
+### Changed
+
+- **BREAKING — the API is now application-scoped in the URL: `/{app}/api/…`.**
+  The application name is the first path segment, matching the SPA
+  (`/{app}/data`, `/{app}/record/…`) and the asset trees
+  (`/projects/{app}/…`). The pre-5.9 form — a bare `/api/…` with the
+  application taken from the JWT or a `?app=` query parameter — has been
+  **removed**.
+  - **bdus-api.** New `Router::resolveRequest()` splits an optional leading
+    `/{app}` segment from the request path (memoised; also consumed by
+    `lib/bootstrap.php`, which resolves `APP` from it before anything else).
+    FastRoute still matches the bare `/api/…` path, so the route table is
+    unchanged. Only four genuinely instance-level endpoints stay bare —
+    `Router::APP_INDEPENDENT`: `GET /api/auth/apps`, `POST /api/new-app`,
+    `GET /api/new-app/status`, `GET /api/info`. The rest of `/api/auth/*` —
+    `login`, `register`, `password-reset`, `refresh`, `logout`, **oauth** — is
+    app-scoped. The router enforces the contract both ways: an app-scoped
+    endpoint without the prefix → `404 app_prefix_required`; an app-independent
+    endpoint *with* a prefix → `404 app_prefix_not_allowed`. When the URL
+    application and the Bearer token's application disagree, `lib/bootstrap.php`
+    returns `403 app_mismatch` (a token is signed with one app's secret and
+    never verifies against another).
+  - **OAuth** callback URL becomes `/{app}/api/auth/oauth/{provider}/callback`
+    (no `?app=` query — the signed `state` already carries the app). Each app's
+    OAuth client needs this redirect URI registered in the Google / ORCID
+    console; the app already needs its own client there
+    (`projects/{app}/config.json`).
+  - **bdus-app.** `src/api/index.js` prefixes every REST path with the current
+    `/{app}` (from the first URL segment) via `scopedPath()`, except the four
+    instance-level endpoints and paths a caller already scoped. Pre-app views
+    (`LoginView`, `OAuthCallbackView`) pass `/${app}/api/auth/...` explicitly.
+    New `apiUrl()` builds an app-scoped absolute URL for `window.open`
+    navigations (CSV export, backup download). A `403` whose body code is
+    `app_mismatch` is handled like a `401` (clear token → `/login`).
+  - **Proxies.** `bdus-app/nginx.conf.template` and `vite.config.js` gain a
+    `^/…/[^/]+/api/` regex rule alongside the existing `/api/` one — with a
+    negative lookahead so it never swallows Vite's own dev roots
+    (`/src/api/index.js`) or built assets.
+  - **External API consumers** must move to `https://host/{app}/api/…`. An API
+    key is bound to one application.
+  - OpenAPI `servers` now offers `/{app}` (app-scoped) and `/` (app-independent);
+    docs (`dev/frontend.md`, `dev/architecture.md`, `dev/oauth.md`,
+    `dev/widget-api.md`, `guide/api/`) updated. New tests:
+    `tests/Unit/RouterResolveRequestTest.php` and hurl phase
+    `42_app_scoped_api.hurl`; the existing hurl suite was migrated to the
+    prefixed form.
+  - **Deploy checklist:** confirm the edge reverse proxy has no `location /api/`
+    rules of its own (host-based `proxy_pass` needs no change); `grep` deployed
+    `projects/*/widgets/` for hard-coded `/api/` fetches.
+
+### Fixed
+
+- **v4→v5 upgrade: a leftover `geodata` relation broke every `places` record.**
+  An app that had a per-app `geodata` table in v4 (before geodata became the
+  shared, multi-tenant `bdus_geodata` in M037/M038) came out of the upgrade with
+  a `bdus_cfg_relations` row `geodata.id_link → places.id`, imported verbatim
+  from the v4 `data.json` by `M011`. `geodata` is no longer a real table, so
+  `Config\LoadFromDB` turned the row into `tables.places.link[]` and
+  `Record\Read::getLinks()` then ran `SELECT count(id) FROM geodata …` →
+  `no such table: geodata` → `GET /api/record/places/{id}` returned
+  `{status:error, code:db_error}` for *every* `places` record (the list and map
+  views were unaffected — they read `bdus_geodata` directly). Fixed on three
+  layers: **`M043_DropDanglingCfgRelations`** deletes any relation row whose
+  `from_tb`/`to_tb` is not a real, non-`bdus_` table (idempotent; a clean app
+  has none); `Config\LoadFromDB::tables()` now drops such a row in memory too,
+  so a hand-inserted one can never resurface as a link; and
+  `Record\Read::getLinks()` / `getBackLinks()` skip (and log) a link whose
+  target table is missing instead of letting the error abort the whole read.
+- **v4→v5 upgrade: migrated apps returned no geometry on a record.** The upgrade
+  fills `bdus_geodata` (through the geoface import) but never set
+  `bdus_cfg_tables.extra.geodata`, which `Record\Read` checks
+  (`tables.{tb}.geodata`) before attaching geometry to
+  `GET /api/record/{tb}/{id}`. A clean v5 app has `extra = {"geodata":"1", …}`;
+  a migrated one did not, so the record view always showed `geodata: []` even
+  though the map worked. **`M044_DeriveGeodataFlag`** backfills the flag for
+  every table that has rows in `bdus_geodata`, merging into `extra` without
+  touching other keys (idempotent).
+- `DB\Verify\MigrationVerifier` gained two checks for the above: every
+  `bdus_cfg_relations` endpoint must resolve to a real, non-system table
+  (`cfg_relations_resolvable`), and every `bdus_geodata.table_link` table must
+  carry the `extra.geodata` flag (folded into `geodata_integrity`).
+- **`test.sh --setup --tests --seed` in one run aborted the demo seed.** Hurl
+  phase 40 (`chrono_density_path`) activated `fuzzy_date` on the shared demo
+  table `reperti` — which auto-creates the `chrono_*` columns — and never
+  deactivated it, unlike every other phase that mutates schema. The phase 19
+  seed then re-added those fields explicitly and stopped on
+  `fld_already_available`. Phase 40 now tears the flag down again (step 40k), so
+  it leaves `reperti` exactly as phase 03 built it. Test-harness only — no CI
+  job runs this flag combination; `--setup --tests` and `--setup --seed`
+  separately were always green.
+- **Docs:** the "new app anatomy" system-tables list was missing
+  `bdus_assemblage_analyses` and `bdus_cfg_indexes` — it now lists all 24
+  tables `create-app` builds.
+
 ## [5.8.5] - 2026-09-06
 
 ### Fixed

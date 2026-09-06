@@ -529,9 +529,11 @@ class Router
 
             case \FastRoute\Dispatcher::METHOD_NOT_ALLOWED:
                 http_response_code(405);
+                header('Content-Type: application/json');
                 echo json_encode([
                     'status'  => 'error',
                     'code'    => 'method_not_allowed',
+                    'message' => 'HTTP method not allowed for this endpoint.',
                     'allowed' => $routeInfo[1],
                 ], JSON_UNESCAPED_UNICODE);
                 exit;

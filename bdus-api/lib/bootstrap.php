@@ -132,7 +132,9 @@ if (defined('APP')) {
 
     foreach ($must_exist_dirs as $dir) {
         if (!is_writable($dir)) {
-            die("Directory {$dir} is not writable. Application cannot start!");
+            // Throw rather than die(): index.php catches \Throwable and turns it
+            // into a JSON error envelope. die() would leak a raw text response.
+            throw new \RuntimeException("Runtime directory is not writable: {$dir}");
         }
     }
 

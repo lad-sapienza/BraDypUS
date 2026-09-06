@@ -153,8 +153,15 @@ class Dispatcher
 
         } catch (\Throwable $e) {
             $this->log->error($e);
-            header('Content-Type: application/json');
-            echo json_encode(['status' => 'error', 'code' => 'dispatch_error'], JSON_UNESCAPED_UNICODE);
+            if (!headers_sent()) {
+                header('Content-Type: application/json');
+            }
+            echo json_encode([
+                'status'  => 'error',
+                'code'    => 'dispatch_error',
+                'message' => 'The server was unable to complete the request.',
+                'debug'   => (defined('DEBUG_ON') && DEBUG_ON) ? $e->getMessage() : null,
+            ], JSON_UNESCAPED_UNICODE);
         }
     }
 

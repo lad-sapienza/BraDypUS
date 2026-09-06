@@ -5,6 +5,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **The API could answer with a raw error page instead of JSON.** Any failure
+  that a `try/catch` cannot intercept — `die()`/`exit()` with a message (e.g.
+  the bootstrap check for a non-writable `projects/<app>/files` directory), or a
+  true fatal such as out-of-memory or a timeout — escaped the handler in
+  `index.php` and reached the client as plain text with an HTML content type,
+  which the frontend then failed to parse. `index.php` now installs a
+  `register_shutdown_function` safety net and every exit path funnels through a
+  single emitter, so **every** response leaving the API is a JSON envelope
+  (`{ status: 'error', code, message }`) with `Content-Type: application/json`
+  and a human-readable `message`; internal detail is kept to the server log and
+  the `debug` field (only when `BRADYPUS_DEBUG=1`). The dispatcher and 405
+  responses carry a `message` too, and the frontend gains `server_error` /
+  `dispatch_error` / `method_not_allowed` locale strings. This does not change
+  *why* a directory might be unwritable — only how the API reports it.
+
+- **Docker entrypoint silently swallowed a failed `chown`.** The startup
+  `chown -R www-data` on `cache/`, `logs/` and `projects/` ended in `|| true`,
+  so when it failed (e.g. a volume mount whose ownership the container cannot
+  change) the container still started and the first symptom was a write error
+  deep inside a later request. It now logs a clear `WARNING: chown … failed`
+  line to the container log instead of hiding it.
+
 ## [5.8.2] - 2026-09-05
 
 ### Fixed

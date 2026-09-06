@@ -7,10 +7,12 @@ mkdir -p /var/www/html/cache \
 
 # Fix permissions on writable directories
 # (needed when source is volume-mounted from host)
-chown -R www-data:www-data \
+if ! chown -R www-data:www-data \
     /var/www/html/cache \
     /var/www/html/logs \
-    /var/www/html/projects 2>/dev/null || true
+    /var/www/html/projects 2>&1; then
+    echo "WARNING: chown on cache/logs/projects failed — some app directories may not be writable" >&2
+fi
 
 # Install PHP dependencies if vendor is missing.
 # The image bakes vendor/ at build time (--no-dev), so this is a dev-only

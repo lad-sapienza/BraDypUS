@@ -412,6 +412,12 @@ run_tests() {
       --variable "jwt=${JWT}"
   fi
 
+  if should_run "41"; then
+    header "Phase 41 — Error responses are always JSON"
+    run_phase "Error handling" "41_error_handling.hurl" \
+      --variable "jwt=${JWT}"
+  fi
+
   # Phase 10 always runs: drops crud_test tables and logs out
   header "Phase 10 — Cleanup"
   run_phase "Cleanup" "10_cleanup.hurl" \

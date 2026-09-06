@@ -163,10 +163,11 @@ if (typeof window !== 'undefined' && window.location.hash.startsWith('#/')) {
 
 const router = createRouter({
   // Clean-path (history) routing. The SPA owns the origin root; nginx and the
-  // Vite dev server both fall back to index.html for unknown paths, and the API
-  // is reached only via the /api, /index.php, /projects and /cache prefixes —
-  // which are therefore reserved and rejected as application names
-  // (see CreateApp::validateData on the backend).
+  // Vite dev server both fall back to index.html for unknown paths. The backend
+  // is reached via /index.php, /projects, /cache, the app-independent /api/…
+  // surface, and the app-scoped /{app}/api/… surface (v5.9.0) — all proxied,
+  // so `api`, `index.php`, `projects`, `cache` are reserved and rejected as
+  // application names (see CreateApp::RESERVED_NAMES on the backend).
   history: createWebHistory(import.meta.env.BASE_URL),
   routes,
   scrollBehavior(to, from, savedPosition) {

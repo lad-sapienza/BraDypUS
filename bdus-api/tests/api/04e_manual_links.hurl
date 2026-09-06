@@ -7,7 +7,7 @@
 
 
 # ── 4e-a. No manual links at start ───────────────────────────────────
-GET {{base_url}}/api/record/crud_test/{{us_id_1}}
+GET {{base_url}}/{{app_name}}/api/record/crud_test/{{us_id_1}}
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -15,7 +15,7 @@ jsonpath "$.manualLinks" isCollection
 
 
 # ── 4e-b. Add manual link T001 ↔ T002 with label ─────────────────────
-POST {{base_url}}/api/manual-link
+POST {{base_url}}/{{app_name}}/api/manual-link
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -38,7 +38,7 @@ manual_link_id: jsonpath "$.link.key"
 
 
 # ── 4e-c. Read T001 — manual link appears ────────────────────────────
-GET {{base_url}}/api/record/crud_test/{{us_id_1}}
+GET {{base_url}}/{{app_name}}/api/record/crud_test/{{us_id_1}}
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -46,7 +46,7 @@ jsonpath "$.manualLinks" isCollection
 
 
 # ── 4e-d. Add duplicate link → error ─────────────────────────────────
-POST {{base_url}}/api/manual-link
+POST {{base_url}}/{{app_name}}/api/manual-link
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -62,7 +62,7 @@ jsonpath "$.code"   == "link_already_exists"
 
 
 # ── 4e-e. Add reverse duplicate → also blocked ───────────────────────
-POST {{base_url}}/api/manual-link
+POST {{base_url}}/{{app_name}}/api/manual-link
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -78,7 +78,7 @@ jsonpath "$.code"   == "link_already_exists"
 
 
 # ── 4e-neg. Missing parameters ────────────────────────────────────────
-POST {{base_url}}/api/manual-link
+POST {{base_url}}/{{app_name}}/api/manual-link
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "tb_one": "crud_test", "id_one": {{us_id_1}} }
@@ -89,7 +89,7 @@ jsonpath "$.code"   == "parameter_missing"
 
 
 # ── 4e-f. Delete the manual link ─────────────────────────────────────
-DELETE {{base_url}}/api/manual-link/{{manual_link_id}}
+DELETE {{base_url}}/{{app_name}}/api/manual-link/{{manual_link_id}}
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -98,7 +98,7 @@ jsonpath "$.code"   == "ok_userlink_erased"
 
 
 # ── 4e-g. Delete non-existent link → not_found ───────────────────────
-DELETE {{base_url}}/api/manual-link/{{manual_link_id}}
+DELETE {{base_url}}/{{app_name}}/api/manual-link/{{manual_link_id}}
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]

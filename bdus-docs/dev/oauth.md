@@ -16,11 +16,11 @@ below.
 
 ```
 User clicks "Sign in with Google"
-  → Frontend calls GET /api/auth/oauth/google/redirect?app=APP&origin=ORIGIN
+  → Frontend calls GET /{app}/api/auth/oauth/google/redirect?origin=ORIGIN
   → PHP returns { url: "https://accounts.google.com/o/oauth2/auth?..." }
   → Frontend navigates to that URL (window.location.href)
-  → Google authenticates the user and redirects to:
-      /api/auth/oauth/google/callback?app=APP&code=...&state=...
+  → Google authenticates the user and redirects to the registered redirect_uri:
+      /{app}/api/auth/oauth/google/callback?code=...&state=...
   → PHP verifies state, exchanges code, resolves user
   → Match found:     issues a JWT, redirects to
                         {origin}/oauth-callback?token=JWT&app=APP
@@ -34,6 +34,14 @@ User clicks "Sign in with Google"
 The state token is HMAC-SHA256 signed with the app's JWT secret and carries a
 10-minute TTL, preventing CSRF and replay attacks. The `pending` token below
 uses the same signing scheme and TTL.
+
+::: info v5.9.0 — the app is in the callback path
+The OAuth endpoints follow the app-scoped scheme like everything else:
+`/{app}/api/auth/oauth/{provider}/callback`, no `?app=` query (the signed
+`state` carries the app). The redirect URI you register with Google / ORCID is
+**per application** — the app's own OAuth client, which each app configures
+separately in `config.json`, already needs its own console entry.
+:::
 
 ---
 
@@ -82,7 +90,7 @@ scripted/bulk provisioning.
 2. Create an **OAuth 2.0 Client ID** of type *Web application*.
 3. Add to **Authorised redirect URIs**:
    ```
-   https://your-host/api/auth/oauth/google/callback?app=YOUR_APP
+   https://your-host/YOUR_APP/api/auth/oauth/google/callback
    ```
 4. Copy the Client ID and Client Secret into `config.json`.
 
@@ -98,7 +106,7 @@ by `(oauth_provider, oauth_sub)`.
    an ORCID account).
 2. Register a new application with redirect URI:
    ```
-   https://your-host/api/auth/oauth/orcid/callback?app=YOUR_APP
+   https://your-host/YOUR_APP/api/auth/oauth/orcid/callback
    ```
 3. Copy the Client ID (`APP-…`) and Client Secret into `config.json`.
 
@@ -121,7 +129,7 @@ an identity that way instead:
 When `resolveUser()` finds no match — always the case for a first-time ORCID
 user, or any genuinely new user on either provider — the callback doesn't
 dead-end. It signs a short-lived (~10 min) `pending` token carrying
-`{provider, sub, name, app}` and redirects to:
+`{provider, sub, name, app}` and redirects (the app is also the callback path segment) to:
 
 ```
 {origin}/oauth-callback?error=no_account&app=APP&pending=TOKEN
@@ -130,19 +138,19 @@ dead-end. It signs a short-lived (~10 min) `pending` token carrying
 The frontend ([`OAuthCallbackView.vue`](https://github.com/lad-sapienza/BraDypUS/blob/v5/bdus-app/src/views/OAuthCallbackView.vue))
 then offers two ways to redeem that token:
 
-**Link to an existing account** — `POST /api/auth/oauth/link`
-`{ app, pending, email, password }`. Verifies the password against an
+**Link to an existing account** — `POST /{app}/api/auth/oauth/link`
+`{ pending, email, password }`. Verifies the password against an
 existing account (reusing `Login::authenticate()`, so the same anti-brute-force
 throttling applies) and, on success, sets `oauth_provider`/`oauth_sub` on that
 row. A password is required here specifically because a self-reported email
 alone proves nothing — anyone who completes any OAuth flow could type someone
 else's address.
 
-**Self-signup** — `POST /api/auth/oauth/register`
-`{ app, pending, email }`. Only an email is asked for (the provider already
+**Self-signup** — `POST /{app}/api/auth/oauth/register`
+`{ pending, email }`. Only an email is asked for (the provider already
 proved the identity — ORCID just doesn't hand one back). Same
 `allow_self_registration` + `Mail\Mailer::isConfigured()` gate and
-privilege-40 ("waiting") outcome as `POST /api/auth/register` — see
+privilege-40 ("waiting") outcome as `POST /{app}/api/auth/register` — see
 [Self-registration](/guide/usage/authentication#self-registration). The new
 row gets an inert, unguessable password hash: the account is OAuth-only
 unless a future password reset ever sets a real one.
@@ -186,7 +194,7 @@ The frontend receives one of these `?error=` values on callback failure:
 | `provider_not_configured`| Provider credentials missing from `config.json`          |
 | `oauth_error`            | Unexpected error during token exchange (check server log) |
 
-`POST /api/auth/oauth/link` and `POST /api/auth/oauth/register` return their
+`POST /{app}/api/auth/oauth/link` and `POST /{app}/api/auth/oauth/register` return their
 own `code` in the JSON body (200 status either way, `status: "error"` on
 failure) rather than a redirect:
 

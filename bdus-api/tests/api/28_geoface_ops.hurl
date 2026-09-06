@@ -12,7 +12,7 @@
 
 
 # ── 28a. Insert a point geometry for us record 1 ─────────────────────
-POST {{base_url}}/api/geoface/feature
+POST {{base_url}}/{{app_name}}/api/geoface/feature
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -30,7 +30,7 @@ geo_id: jsonpath "$.geo_id"
 
 
 # ── 28b. Update geometry (geodata array format) ──────────────────────
-PUT {{base_url}}/api/geoface/feature
+PUT {{base_url}}/{{app_name}}/api/geoface/feature
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -45,7 +45,7 @@ jsonpath "$.code"   == "ok_update_geometry"
 
 
 # ── 28c. GeoJSON for table reflects the new geometry ─────────────────
-GET {{base_url}}/api/geoface?tb=crud_test
+GET {{base_url}}/{{app_name}}/api/geoface?tb=crud_test
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -55,7 +55,7 @@ jsonpath "$.geojson.features" isCollection
 
 
 # ── 28d. Delete the geometry (ids array format) ──────────────────────
-DELETE {{base_url}}/api/geoface/feature
+DELETE {{base_url}}/{{app_name}}/api/geoface/feature
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "ids": [{{geo_id}}] }
@@ -66,7 +66,7 @@ jsonpath "$.code"   == "ok_delete_geodata"
 
 
 # ── 28e. Insert without tb → parameter_missing ───────────────────────
-POST {{base_url}}/api/geoface/feature
+POST {{base_url}}/{{app_name}}/api/geoface/feature
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "id": 1, "geometry": { "type": "Point", "coordinates": [0, 0] } }
@@ -77,7 +77,7 @@ jsonpath "$.code"   == "parameter_missing"
 
 
 # ── 28f. Update with empty geodata array → parameter_missing ─────────
-PUT {{base_url}}/api/geoface/feature
+PUT {{base_url}}/{{app_name}}/api/geoface/feature
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "geodata": [] }

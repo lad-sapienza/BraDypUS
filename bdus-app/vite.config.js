@@ -55,10 +55,16 @@ export default defineConfig(({ mode }) => {
       host: '0.0.0.0',
       port: 5173,
       proxy: {
-        '/api/':      { target: proxyTarget, changeOrigin: true },
-        '/index.php': { target: proxyTarget, changeOrigin: true },
-        '/projects/': { target: proxyTarget, changeOrigin: true },
-        '/cache/':    { target: proxyTarget, changeOrigin: true }
+        // Keys starting with '^' are treated as RegExp by Vite. The app-scoped
+        // rule must come first so /{app}/api/... reaches the backend instead of
+        // the SPA. The negative lookahead keeps Vite's own dev roots
+        // (notably /src/api/index.js) from being proxied. Mirrors
+        // bdus-app/nginx.conf.template.
+        '^/(?!src/|node_modules/|@)[^/]+/api/': { target: proxyTarget, changeOrigin: true },
+        '/api/':        { target: proxyTarget, changeOrigin: true },
+        '/index.php':   { target: proxyTarget, changeOrigin: true },
+        '/projects/':   { target: proxyTarget, changeOrigin: true },
+        '/cache/':      { target: proxyTarget, changeOrigin: true }
       }
     },
 

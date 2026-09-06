@@ -13,7 +13,7 @@
 
 
 # ── 41a. Unknown route, no auth → JSON 401 'unauthenticated' ───────────
-GET {{base_url}}/api/this-route-does-not-exist
+GET {{base_url}}/{{app_name}}/api/this-route-does-not-exist
 HTTP 401
 [Asserts]
 header "Content-Type" contains "json"
@@ -22,7 +22,7 @@ jsonpath "$.code"    == "unauthenticated"
 
 
 # ── 41b. Unknown route, valid JWT → JSON 'dispatch_error' + message ────
-GET {{base_url}}/api/this-route-does-not-exist
+GET {{base_url}}/{{app_name}}/api/this-route-does-not-exist
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -48,7 +48,7 @@ jsonpath "$.message" isString
 # answer with JSON. The exact code is not important here (email_password_needed
 # or generic_error depending on how far the handler gets) — only that it is a
 # structured error, never an HTML/text error page.
-POST {{base_url}}/api/auth/login
+POST {{base_url}}/{{app_name}}/api/auth/login
 Content-Type: application/json
 ```
 not-valid-json

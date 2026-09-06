@@ -16,7 +16,7 @@
 
 
 # ── 35a. Upload a file so we have a real file_id to work with ────────
-POST {{base_url}}/api/record/crud_test/{{us_id_1}}/file
+POST {{base_url}}/{{app_name}}/api/record/crud_test/{{us_id_1}}/file
 Authorization: Bearer {{jwt}}
 [MultipartFormData]
 file: file,fixtures/test_image.png;image/png
@@ -31,7 +31,7 @@ file_id_35: jsonpath "$.file.id"
 
 
 # ── 35b. POST link-file — link the existing file to the same record ──
-POST {{base_url}}/api/record/crud_test/{{us_id_1}}/link-file
+POST {{base_url}}/{{app_name}}/api/record/crud_test/{{us_id_1}}/link-file
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "fileId": {{file_id_35}} }
@@ -49,7 +49,7 @@ link_id_35: jsonpath "$.file.link_id"
 
 
 # ── 35c. DELETE /api/file-link/{linkId} — unlink (junction row only) ─
-DELETE {{base_url}}/api/file-link/{{link_id_35}}
+DELETE {{base_url}}/{{app_name}}/api/file-link/{{link_id_35}}
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -58,7 +58,7 @@ jsonpath "$.code"   == "ok_file_unlinked"
 
 
 # ── 35d. Negative: unlink non-existent link_id ───────────────────────
-DELETE {{base_url}}/api/file-link/9999999
+DELETE {{base_url}}/{{app_name}}/api/file-link/9999999
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -67,7 +67,7 @@ jsonpath "$.code"   == "record_not_found"
 
 
 # ── 35e. Negative: link non-existent file ────────────────────────────
-POST {{base_url}}/api/record/crud_test/{{us_id_1}}/link-file
+POST {{base_url}}/{{app_name}}/api/record/crud_test/{{us_id_1}}/link-file
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "fileId": 9999999 }
@@ -78,7 +78,7 @@ jsonpath "$.code"   == "record_not_found"
 
 
 # ── 35f. Clean up: delete the uploaded file ───────────────────────────
-DELETE {{base_url}}/api/file/{{file_id_35}}
+DELETE {{base_url}}/{{app_name}}/api/file/{{file_id_35}}
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]

@@ -10,7 +10,7 @@
 
 
 # ── 25a. List keys — empty at start ─────────────────────────────────
-GET {{base_url}}/api/api-keys
+GET {{base_url}}/{{app_name}}/api/api-keys
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -20,7 +20,7 @@ jsonpath "$.keys"   isEmpty
 
 
 # ── 25b. Create a read-only key (privilege 30 = UAC::READ) ───────────
-POST {{base_url}}/api/api-keys
+POST {{base_url}}/{{app_name}}/api/api-keys
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "label": "CI read key", "privilege": 30 }
@@ -37,7 +37,7 @@ api_key_id: jsonpath "$.id"
 
 
 # ── 25c. Key appears in list ─────────────────────────────────────────
-GET {{base_url}}/api/api-keys
+GET {{base_url}}/{{app_name}}/api/api-keys
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -50,7 +50,7 @@ jsonpath "$.keys[0].key_hash" not exists
 
 
 # ── 25d. Create an edit-privilege key (privilege 25 = UAC::CREATE) ───
-POST {{base_url}}/api/api-keys
+POST {{base_url}}/{{app_name}}/api/api-keys
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "label": "CI edit key", "privilege": 25 }
@@ -63,7 +63,7 @@ api_key_id2: jsonpath "$.id"
 
 
 # ── 25e. Two keys in list ────────────────────────────────────────────
-GET {{base_url}}/api/api-keys
+GET {{base_url}}/{{app_name}}/api/api-keys
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -71,7 +71,7 @@ jsonpath "$.keys" count == 2
 
 
 # ── 25f. Revoke the first key ────────────────────────────────────────
-POST {{base_url}}/api/api-key/{{api_key_id}}/revoke
+POST {{base_url}}/{{app_name}}/api/api-key/{{api_key_id}}/revoke
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -80,7 +80,7 @@ jsonpath "$.code"   == "ok_api_key_revoked"
 
 
 # ── 25g. Still two keys; first key no longer active ─────────────────
-GET {{base_url}}/api/api-keys
+GET {{base_url}}/{{app_name}}/api/api-keys
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -88,7 +88,7 @@ jsonpath "$.keys" count == 2
 
 
 # ── 25h. Delete the first key ───────────────────────────────────────
-DELETE {{base_url}}/api/api-key/{{api_key_id}}
+DELETE {{base_url}}/{{app_name}}/api/api-key/{{api_key_id}}
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -97,7 +97,7 @@ jsonpath "$.code"   == "ok_api_key_deleted"
 
 
 # ── 25i. Delete the second key ──────────────────────────────────────
-DELETE {{base_url}}/api/api-key/{{api_key_id2}}
+DELETE {{base_url}}/{{app_name}}/api/api-key/{{api_key_id2}}
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -106,7 +106,7 @@ jsonpath "$.code"   == "ok_api_key_deleted"
 
 
 # ── 25j. List empty again ────────────────────────────────────────────
-GET {{base_url}}/api/api-keys
+GET {{base_url}}/{{app_name}}/api/api-keys
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -114,7 +114,7 @@ jsonpath "$.keys" isEmpty
 
 
 # ── 25k. Missing label → parameter_missing ──────────────────────────
-POST {{base_url}}/api/api-keys
+POST {{base_url}}/{{app_name}}/api/api-keys
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "privilege": "read" }
@@ -126,7 +126,7 @@ jsonpath "$.code"   == "parameter_missing"
 
 # ── 25l. Delete non-existent key → idempotent success ───────────────
 # deleteRow does not check affected rows — delete is always successful
-DELETE {{base_url}}/api/api-key/999999
+DELETE {{base_url}}/{{app_name}}/api/api-key/999999
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]

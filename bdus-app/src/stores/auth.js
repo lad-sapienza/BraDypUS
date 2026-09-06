@@ -29,7 +29,9 @@ export const useAuthStore = defineStore('auth', () => {
   // ── Login ────────────────────────────────────────────────────────
 
   async function login(email, password, appName) {
-    const res = await api.post('/api/auth/login', { email, password, app: appName })
+    // v5.9.0: the app is the URL path segment. LoginView has no /{app} route,
+    // so pass it explicitly here; scopedPath() leaves an already-scoped path be.
+    const res = await api.post(`/${appName}/api/auth/login`, { email, password })
     if (res.status !== 'success') throw new Error(res.code ?? 'generic_error')
     _applyToken(res.token)
     return res.upgrade ?? null

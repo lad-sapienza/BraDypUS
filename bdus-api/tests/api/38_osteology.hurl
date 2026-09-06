@@ -17,7 +17,7 @@
 
 
 # ── 38a. Activate on non-existent table → error code ─────────────
-POST {{base_url}}/api/config/table/__no_such_table__/osteology
+POST {{base_url}}/{{app_name}}/api/config/table/__no_such_table__/osteology
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -26,7 +26,7 @@ jsonpath "$.code"   == "missing_table"
 
 
 # ── 38b. Activate osteology on crud_test ─────────────────────────
-POST {{base_url}}/api/config/table/crud_test/osteology
+POST {{base_url}}/{{app_name}}/api/config/table/crud_test/osteology
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -34,7 +34,7 @@ jsonpath "$.status" == "success"
 jsonpath "$.code"   == "osteology_activated"
 
 # Re-activating is idempotent (column already exists)
-POST {{base_url}}/api/config/table/crud_test/osteology
+POST {{base_url}}/{{app_name}}/api/config/table/crud_test/osteology
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -43,7 +43,7 @@ jsonpath "$.code"   == "osteology_activated"
 
 
 # ── 38c. New-record response includes has_osteology = true ────────
-GET {{base_url}}/api/record/crud_test/new
+GET {{base_url}}/{{app_name}}/api/record/crud_test/new
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -52,7 +52,7 @@ jsonpath "$.schema.has_osteology" == true
 
 
 # ── 38d. Round-trip: create record with osteo_data ────────────────
-POST {{base_url}}/api/record/crud_test
+POST {{base_url}}/{{app_name}}/api/record/crud_test
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -68,7 +68,7 @@ osteo_rec_id: jsonpath "$.id"
 [Asserts]
 jsonpath "$.status" == "success"
 
-GET {{base_url}}/api/record/crud_test/{{osteo_rec_id}}
+GET {{base_url}}/{{app_name}}/api/record/crud_test/{{osteo_rec_id}}
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -78,7 +78,7 @@ jsonpath "$.schema.has_osteology"                                  == true
 
 
 # ── 38e. Deactivate osteology ─────────────────────────────────────
-DELETE {{base_url}}/api/config/table/crud_test/osteology
+DELETE {{base_url}}/{{app_name}}/api/config/table/crud_test/osteology
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -86,7 +86,7 @@ jsonpath "$.status" == "success"
 jsonpath "$.code"   == "osteology_deactivated"
 
 # New-record response now shows has_osteology = false
-GET {{base_url}}/api/record/crud_test/new
+GET {{base_url}}/{{app_name}}/api/record/crud_test/new
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -94,7 +94,7 @@ jsonpath "$.status"               == "success"
 jsonpath "$.schema.has_osteology" == false
 
 # Re-deactivating is also idempotent
-DELETE {{base_url}}/api/config/table/crud_test/osteology
+DELETE {{base_url}}/{{app_name}}/api/config/table/crud_test/osteology
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]

@@ -14,7 +14,7 @@
 
 
 # ── 27a. GET /api/config/field-structure — returns meta-schema ───────
-GET {{base_url}}/api/config/field-structure
+GET {{base_url}}/{{app_name}}/api/config/field-structure
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -23,7 +23,7 @@ jsonpath "$.structure" isCollection
 
 
 # ── 27b. List tables — no templates yet ──────────────────────────────
-GET {{base_url}}/api/templates
+GET {{base_url}}/{{app_name}}/api/templates
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -32,7 +32,7 @@ jsonpath "$.tables" isCollection
 
 
 # ── 27c. List template names for "us" — empty ────────────────────────
-GET {{base_url}}/api/templates/us
+GET {{base_url}}/{{app_name}}/api/templates/us
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -41,7 +41,7 @@ jsonpath "$.templates" isCollection
 
 
 # ── 27d. Save a template for "us" ────────────────────────────────────
-POST {{base_url}}/api/template/us/ci_test_tpl
+POST {{base_url}}/{{app_name}}/api/template/us/ci_test_tpl
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -62,7 +62,7 @@ jsonpath "$.code"   == "template_saved"
 
 
 # ── 27e. Template appears in list ────────────────────────────────────
-GET {{base_url}}/api/templates/us
+GET {{base_url}}/{{app_name}}/api/templates/us
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -70,7 +70,7 @@ jsonpath "$.templates" contains "ci_test_tpl"
 
 
 # ── 27f. Get template content ────────────────────────────────────────
-GET {{base_url}}/api/template/us/ci_test_tpl
+GET {{base_url}}/{{app_name}}/api/template/us/ci_test_tpl
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -79,7 +79,7 @@ jsonpath "$.template" isCollection
 
 
 # ── 27g. Rename template ─────────────────────────────────────────────
-POST {{base_url}}/api/template/us/ci_test_tpl/rename
+POST {{base_url}}/{{app_name}}/api/template/us/ci_test_tpl/rename
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "new_name": "ci_test_tpl_renamed" }
@@ -90,7 +90,7 @@ jsonpath "$.code"   == "template_renamed"
 
 
 # ── 27h. Old name gone; new name present ────────────────────────────
-GET {{base_url}}/api/templates/us
+GET {{base_url}}/{{app_name}}/api/templates/us
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -99,7 +99,7 @@ jsonpath "$.templates" contains "ci_test_tpl_renamed"
 
 
 # ── 27i. Delete renamed template ─────────────────────────────────────
-DELETE {{base_url}}/api/template/us/ci_test_tpl_renamed
+DELETE {{base_url}}/{{app_name}}/api/template/us/ci_test_tpl_renamed
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -108,7 +108,7 @@ jsonpath "$.code"   == "template_deleted"
 
 
 # ── 27j. List empty again ────────────────────────────────────────────
-GET {{base_url}}/api/templates/us
+GET {{base_url}}/{{app_name}}/api/templates/us
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -116,7 +116,7 @@ jsonpath "$.templates" not contains "ci_test_tpl_renamed"
 
 
 # ── 27k. Get non-existent template → template_not_found ─────────────
-GET {{base_url}}/api/template/us/no_such_template
+GET {{base_url}}/{{app_name}}/api/template/us/no_such_template
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]

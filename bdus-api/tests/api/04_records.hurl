@@ -16,7 +16,7 @@
 
 
 # ── 4a. Fetch empty record skeleton ─────────────────────────────────
-GET {{base_url}}/api/record/crud_test/new
+GET {{base_url}}/{{app_name}}/api/record/crud_test/new
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -38,7 +38,7 @@ jsonpath "$.schema.has_fuzzy_date"  == false
 
 
 # ── 4b. Insert record 1 — basic fields ──────────────────────────────
-POST {{base_url}}/api/record/crud_test
+POST {{base_url}}/{{app_name}}/api/record/crud_test
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -61,7 +61,7 @@ us_id_1: jsonpath "$.id"
 
 
 # ── 4c. Insert record 2 — with id_from_tb (parent_id = record 1) ────
-POST {{base_url}}/api/record/crud_test
+POST {{base_url}}/{{app_name}}/api/record/crud_test
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -82,7 +82,7 @@ us_id_2: jsonpath "$.id"
 
 
 # ── 4d. Insert record 3 (will be deleted) ───────────────────────────
-POST {{base_url}}/api/record/crud_test
+POST {{base_url}}/{{app_name}}/api/record/crud_test
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -101,7 +101,7 @@ us_id_3: jsonpath "$.id"
 
 
 # ── 4e. Read record 1 — verify basic shape ───────────────────────────
-GET {{base_url}}/api/record/crud_test/{{us_id_1}}
+GET {{base_url}}/{{app_name}}/api/record/crud_test/{{us_id_1}}
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -119,7 +119,7 @@ jsonpath "$.plugins.crud_test_plg" isCollection
 
 
 # ── 4f. Read record 2 — verify id_from_tb field value ───────────────
-GET {{base_url}}/api/record/crud_test/{{us_id_2}}
+GET {{base_url}}/{{app_name}}/api/record/crud_test/{{us_id_2}}
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -129,7 +129,7 @@ jsonpath "$.core.parent_id.val" == {{us_id_1}}
 
 
 # ── 4g. Update record 1 — set ALL new field types ────────────────────
-POST {{base_url}}/api/record/crud_test
+POST {{base_url}}/{{app_name}}/api/record/crud_test
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -155,7 +155,7 @@ jsonpath "$.id"     == {{us_id_1}}
 
 
 # ── 4h. Read record 1 — verify all field types ───────────────────────
-GET {{base_url}}/api/record/crud_test/{{us_id_1}}
+GET {{base_url}}/{{app_name}}/api/record/crud_test/{{us_id_1}}
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -171,7 +171,7 @@ jsonpath "$.core.valore_slider.val"  == 7
 
 
 # ── 4i. Record list ──────────────────────────────────────────────────
-GET {{base_url}}/api/records/crud_test
+GET {{base_url}}/{{app_name}}/api/records/crud_test
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -181,7 +181,7 @@ jsonpath "$.data"   isCollection
 
 
 # ── 4j. Delete record 3 ─────────────────────────────────────────────
-DELETE {{base_url}}/api/record/crud_test/{{us_id_3}}
+DELETE {{base_url}}/{{app_name}}/api/record/crud_test/{{us_id_3}}
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -190,7 +190,7 @@ jsonpath "$.code"   == "all_record_deleted"
 
 
 # ── 4k. Verify record 3 is gone ─────────────────────────────────────
-GET {{base_url}}/api/records/crud_test
+GET {{base_url}}/{{app_name}}/api/records/crud_test
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -198,7 +198,7 @@ jsonpath "$.total" == 2
 
 
 # ── 4l. check-unique — value does not exist → unique: true ───────────
-GET {{base_url}}/api/record/crud_test/check-unique?field=sigla&value=ZZ999
+GET {{base_url}}/{{app_name}}/api/record/crud_test/check-unique?field=sigla&value=ZZ999
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -207,7 +207,7 @@ jsonpath "$.unique" == true
 
 
 # ── 4m. check-unique — value exists → unique: false ──────────────────
-GET {{base_url}}/api/record/crud_test/check-unique?field=sigla&value=T001
+GET {{base_url}}/{{app_name}}/api/record/crud_test/check-unique?field=sigla&value=T001
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -216,7 +216,7 @@ jsonpath "$.unique" == false
 
 
 # ── 4n. check-unique — self-exclusion (UPDATE) → unique: true ────────
-GET {{base_url}}/api/record/crud_test/check-unique?field=sigla&value=T001&id={{us_id_1}}
+GET {{base_url}}/{{app_name}}/api/record/crud_test/check-unique?field=sigla&value=T001&id={{us_id_1}}
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -225,7 +225,7 @@ jsonpath "$.unique" == true
 
 
 # ── 4o. check-unique — missing params → error ────────────────────────
-GET {{base_url}}/api/record/crud_test/check-unique?field=sigla
+GET {{base_url}}/{{app_name}}/api/record/crud_test/check-unique?field=sigla
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -234,7 +234,7 @@ jsonpath "$.code"   == "parameter_missing"
 
 
 # ── 4p. check-unique — unknown field → error ─────────────────────────
-GET {{base_url}}/api/record/crud_test/check-unique?field=nonexistent&value=x
+GET {{base_url}}/{{app_name}}/api/record/crud_test/check-unique?field=nonexistent&value=x
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -249,7 +249,7 @@ jsonpath "$.code"   == "field_not_found"
 # ── 4q-neg. Empty required field (sigla is not_empty) ────────────────
 # Note: omitting the field entirely bypasses server validation (only fields
 # present in the payload are validated). Send an empty string to trigger it.
-POST {{base_url}}/api/record/crud_test
+POST {{base_url}}/{{app_name}}/api/record/crud_test
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "core": { "sigla": "", "tipo": "Strato" }, "plugins": {} }
@@ -263,7 +263,7 @@ jsonpath "$.errors[0].rule"  == "required"
 
 
 # ── 4r-neg. Duplicate sigla (no_dupl) ────────────────────────────────
-POST {{base_url}}/api/record/crud_test
+POST {{base_url}}/{{app_name}}/api/record/crud_test
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "core": { "sigla": "T001", "tipo": "Strato" }, "plugins": {} }
@@ -276,7 +276,7 @@ jsonpath "$.errors[0].rule"  == "no_dupl"
 
 
 # ── 4s-neg. Sigla fails regex (^[A-Z]{1,3}\\d{3,}$) ─────────────────
-POST {{base_url}}/api/record/crud_test
+POST {{base_url}}/{{app_name}}/api/record/crud_test
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "core": { "sigla": "bad-sigla!" }, "plugins": {} }
@@ -289,7 +289,7 @@ jsonpath "$.errors[0].rule"  == "pattern"
 
 
 # ── 4t-neg. Invalid email ────────────────────────────────────────────
-POST {{base_url}}/api/record/crud_test
+POST {{base_url}}/{{app_name}}/api/record/crud_test
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "core": { "sigla": "T999", "email_ref": "not-an-email" }, "plugins": {} }
@@ -302,7 +302,7 @@ jsonpath "$.errors[0].rule"  == "email"
 
 
 # ── 4u-neg. Punteggio out of max range (> 100) ────────────────────────
-POST {{base_url}}/api/record/crud_test
+POST {{base_url}}/{{app_name}}/api/record/crud_test
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "core": { "sigla": "T999", "punteggio": 999 }, "plugins": {} }
@@ -315,7 +315,7 @@ jsonpath "$.errors[0].rule"  == "max"
 
 
 # ── 4v-neg. Codice breve exceeds max_length (> 10 chars) ─────────────
-POST {{base_url}}/api/record/crud_test
+POST {{base_url}}/{{app_name}}/api/record/crud_test
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "core": { "sigla": "T999", "codice_breve": "TOOLONGCODE123" }, "plugins": {} }
@@ -328,7 +328,7 @@ jsonpath "$.errors[0].rule"  == "max_length"
 
 
 # ── 4w-neg. Punteggio not integer (float) ─────────────────────────────
-POST {{base_url}}/api/record/crud_test
+POST {{base_url}}/{{app_name}}/api/record/crud_test
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "core": { "sigla": "T999", "punteggio": 3.14 }, "plugins": {} }
@@ -341,7 +341,7 @@ jsonpath "$.errors[0].rule"  == "int"
 
 
 # ── 4x-neg. Date out of range (before min 1000-01-01) ─────────────────
-POST {{base_url}}/api/record/crud_test
+POST {{base_url}}/{{app_name}}/api/record/crud_test
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "core": { "sigla": "T999", "data_rec": "0500-01-01" }, "plugins": {} }

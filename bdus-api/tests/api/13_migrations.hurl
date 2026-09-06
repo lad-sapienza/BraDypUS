@@ -3,7 +3,7 @@
 # ════════════════════════════════════════════════════════════════════
 
 # ── 13a. List migrations — admin JWT ────────────────────────────────
-GET {{base_url}}/api/migrations
+GET {{base_url}}/{{app_name}}/api/migrations
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -18,7 +18,7 @@ migrations_applied: jsonpath "$.applied"
 
 
 # ── 13a2. Verify applied <= total (cross-request capture check) ──────
-GET {{base_url}}/api/migrations
+GET {{base_url}}/{{app_name}}/api/migrations
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -27,7 +27,7 @@ jsonpath "$.applied" <= {{migrations_total}}
 
 
 # ── 13b. Each row has the required shape ────────────────────────────
-GET {{base_url}}/api/migrations
+GET {{base_url}}/{{app_name}}/api/migrations
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -38,7 +38,7 @@ jsonpath "$.migrations[0]"            exists
 
 
 # ── 13c. First known migration is M001 ──────────────────────────────
-GET {{base_url}}/api/migrations
+GET {{base_url}}/{{app_name}}/api/migrations
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]

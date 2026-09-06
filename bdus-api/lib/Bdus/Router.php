@@ -251,6 +251,83 @@ class Router
     }
 
     /**
+     * First-path segments that are never an application name: they are served
+     * by the web server or map to the app-independent API surface below.
+     * Kept in sync with DB\System\CreateApp::RESERVED_NAMES and
+     * bdus-app/src/router/index.js.
+     */
+    private const RESERVED_SEGMENTS = [
+        'api', 'index.php', 'projects', 'cache',
+        'assets', 'favicon.ico', 'favicon.svg',
+        'login', 'oauth-callback', 'new-app',
+    ];
+
+    /**
+     * The only endpoints reachable at a bare `/api/...` path (no `/{app}/`
+     * prefix): the genuinely instance-level ones — no application exists or is
+     * selected yet. Everything else, including the rest of `/api/auth/*`
+     * (login, register, password-reset, refresh, logout, oauth), is
+     * application-scoped and MUST be called as `/{app}/api/...` (v5.9.0 — the
+     * legacy `?app=` / JWT-only form is gone).
+     *
+     * Keys are `ShortClassName::method` (the `Bdus\Controllers\` prefix stripped).
+     */
+    private const APP_INDEPENDENT = [
+        'Login::listApps',                    // GET  /api/auth/apps    — lists every app
+        'NewApp::getStatus', 'NewApp::create', // GET/POST /api/new-app  — the app does not exist yet
+        'Info::getInfo',                      // GET  /api/info         — instance changelog
+    ];
+
+    /**
+     * Split the current request path into an optional leading application
+     * segment and the API path that FastRoute matches.
+     *
+     * Clean-path scheme (v5.9.0+):
+     *   /{app}/api/records/us  → ['{app}', '/api/records/us']  application-scoped
+     *   /api/auth/login        → [null,    '/api/auth/login']   app-independent
+     *   /{app}/data            → [null,    '/{app}/data']       not an API path
+     *
+     * Memoised: dispatch() and lib/bootstrap.php both call this and must see
+     * the same answer within one request.
+     *
+     * @return array{0: ?string, 1: string}  [app|null, path-without-app-segment]
+     */
+    public static function resolveRequest(): array
+    {
+        static $memo = [];
+        $key = ($_SERVER['REQUEST_URI'] ?? '/') . '|' . ($_SERVER['SCRIPT_NAME'] ?? '');
+        if (isset($memo[$key])) {
+            return $memo[$key];
+        }
+
+        $path = self::pathFromRequest();
+
+        if (preg_match('#^/([^/]+)(/api(?:/.*)?)$#', $path, $m)
+            && !in_array(strtolower($m[1]), self::RESERVED_SEGMENTS, true)
+        ) {
+            return $memo[$key] = [$m[1], $m[2]];
+        }
+
+        return $memo[$key] = [null, $path];
+    }
+
+    /**
+     * Current request path with the script-directory prefix stripped, so the
+     * install works both at a domain root and in a sub-directory.
+     */
+    private static function pathFromRequest(): string
+    {
+        $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
+
+        $base = rtrim(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '')), '/');
+        if ($base !== '' && str_starts_with($path, $base)) {
+            $path = substr($path, strlen($base));
+        }
+
+        return $path === '' ? '/' : $path;
+    }
+
+    /**
      * Dispatch the current HTTP request.
      *
      * Modifies $_GET, $_POST, $_REQUEST in place so that Bdus\App and all
@@ -261,9 +338,10 @@ class Router
      *   - $_GET['method']→ method name
      *
      * Returns [ctrl, method, vars] when a route is found, [null, null, []] for
-     * NOT_FOUND (let the caller fall through to legacy routing).
+     * NOT_FOUND.
      *
-     * Terminates with a 405 JSON response on METHOD_NOT_ALLOWED.
+     * Terminates with a JSON response on METHOD_NOT_ALLOWED (405) and on an
+     * application-scoped endpoint reached without the /{app}/ prefix (404).
      */
     public static function dispatch(): array
     {
@@ -508,17 +586,11 @@ class Router
         });
 
         // ── Resolve URI ───────────────────────────────────────────────────────
-        $httpMethod = $_SERVER['REQUEST_METHOD'];
-        $uri        = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-
-        // Strip script directory prefix so the app works in a subdirectory.
-        $base = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/');
-        if ($base && str_starts_with($uri, $base)) {
-            $uri = substr($uri, strlen($base));
-        }
-        if ($uri === '' || $uri === false) {
-            $uri = '/';
-        }
+        // resolveRequest() strips the script-directory prefix AND an optional
+        // leading /{app} segment; $uri is always the bare /api/... path that
+        // the route table is written against.
+        $httpMethod        = $_SERVER['REQUEST_METHOD'];
+        [$urlApp, $uri]    = self::resolveRequest();
 
         $routeInfo = $dispatcher->dispatch($httpMethod, $uri);
 
@@ -541,6 +613,21 @@ class Router
             case \FastRoute\Dispatcher::FOUND:
                 [$ctrl, $method] = $routeInfo[1];
                 $vars            = $routeInfo[2];
+
+                // Enforce the clean-path contract (v5.9.0):
+                //   application-scoped endpoints  → only at /{app}/api/…
+                //   app-independent endpoints     → only at /api/…
+                $pair          = substr($ctrl, strlen('Bdus\\Controllers\\')) . '::' . $method;
+                $isIndependent = in_array($pair, self::APP_INDEPENDENT, true);
+
+                if ($urlApp === null && !$isIndependent) {
+                    self::routeContractError('app_prefix_required',
+                        'This endpoint is application-scoped. Call it as /{app}/api/…');
+                }
+                if ($urlApp !== null && $isIndependent) {
+                    self::routeContractError('app_prefix_not_allowed',
+                        'This endpoint is application-independent. Call it as /api/…');
+                }
 
                 // Make URL path vars available to controllers via $_GET / $_REQUEST.
                 $_GET     = array_merge($_GET,     $vars);
@@ -566,6 +653,21 @@ class Router
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
+
+    /**
+     * Emit a 404 JSON envelope for a request that hit a real route but on the
+     * wrong path shape (missing or spurious /{app}/ prefix), then stop.
+     */
+    private static function routeContractError(string $code, string $message): never
+    {
+        http_response_code(404);
+        header('Content-Type: application/json');
+        echo json_encode(
+            ['status' => 'error', 'code' => $code, 'message' => $message],
+            JSON_UNESCAPED_UNICODE
+        );
+        exit;
+    }
 
     /**
      * Parse the request body and merge it into $_POST / $_REQUEST.

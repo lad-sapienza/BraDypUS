@@ -39,9 +39,14 @@ require_once MAIN_DIR . 'vendor/autoload.php';
 
 // ── JWT / App resolution ──────────────────────────────────────────────────────
 //
-// Authenticated requests carry a signed Bearer token whose 'app' claim
-// identifies the application.  Unauthenticated requests (login, app list)
-// pass 'app' in the JSON body or query string.
+// v5.9.0: the application is the first URL path segment — /{app}/api/…
+// (Router::resolveRequest()). The app-independent surface (/api/auth/*,
+// /api/new-app, /api/info) has no segment: those endpoints either need no app
+// or carry it in the request body (POST /api/auth/login) or query string
+// (GET /api/auth/oauth/{provider}/callback?app=…). Authenticated requests
+// without a segment (/api/auth/refresh, /api/auth/logout) fall back to the
+// 'app' claim inside the Bearer token, which only tells us which per-app
+// secret to load for verification.
 
 /**
  * Returns the raw Bearer token from the current request, or null if absent.
@@ -64,16 +69,40 @@ function _bdus_bearer_token(): ?string
     return null;
 }
 
-$_bdus_token = _bdus_bearer_token();
+[$_bdus_url_app] = \Bdus\Router::resolveRequest();
 
-if ($_bdus_token) {
-    $app_hint = \JWT\JwtManager::peekApp($_bdus_token);
+$_bdus_token   = _bdus_bearer_token();
+$_bdus_tok_app = $_bdus_token ? \JWT\JwtManager::peekApp($_bdus_token) : null;
 
-    if ($app_hint && is_dir(MAIN_DIR . 'projects/' . $app_hint)) {
-        define('APP',      $app_hint);
-        define('PREFIX',   '');
-        define('PROJ_DIR', MAIN_DIR . 'projects/' . APP . '/');
+// A token minted for another application will never verify against this app's
+// per-app secret. When the URL scopes the request to one app and the token
+// belongs to another, fail loudly (403) instead of a bare 401.
+if ($_bdus_url_app !== null && $_bdus_tok_app !== null && $_bdus_url_app !== $_bdus_tok_app) {
+    http_response_code(403);
+    header('Content-Type: application/json');
+    echo json_encode(['status' => 'error', 'code' => 'app_mismatch'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
 
+// Resolve the application: URL segment first, then the token hint (segment-less
+// authenticated endpoints), then an explicit hint in the query string / body.
+$_bdus_app = $_bdus_url_app ?? $_bdus_tok_app;
+
+if (!$_bdus_app) {
+    $_bdus_app = $_REQUEST['app'] ?? null;
+    if (!$_bdus_app) {
+        $raw       = file_get_contents('php://input');
+        $decoded   = $raw ? json_decode($raw, true) : null;
+        $_bdus_app = is_array($decoded) ? ($decoded['app'] ?? null) : null;
+    }
+}
+
+if ($_bdus_app && is_dir(MAIN_DIR . 'projects/' . $_bdus_app)) {
+    define('APP',      $_bdus_app);
+    define('PREFIX',   '');
+    define('PROJ_DIR', MAIN_DIR . 'projects/' . APP . '/');
+
+    if ($_bdus_token) {
         $claims = \JWT\JwtManager::decode($_bdus_token, APP);
         if ($claims) {
             \Auth\CurrentUser::set([
@@ -86,31 +115,9 @@ if ($_bdus_token) {
             ]);
         }
     }
-    // Token present but app not found (deleted/renamed): fall through to body lookup.
 }
 
-// If APP is still undefined (no token, stale token, or unknown app in token),
-// resolve the app from the request body or query string.
-if (!defined('APP')) {
-    $_bdus_app = $_REQUEST['app'] ?? null;
-
-    if (!$_bdus_app) {
-        $raw = file_get_contents('php://input');
-        if ($raw) {
-            $decoded   = json_decode($raw, true);
-            $_bdus_app = $decoded['app'] ?? null;
-        }
-    }
-
-    if ($_bdus_app && is_dir(MAIN_DIR . 'projects/' . $_bdus_app)) {
-        define('APP',      $_bdus_app);
-        define('PREFIX',   '');
-        define('PROJ_DIR', MAIN_DIR . 'projects/' . APP . '/');
-    }
-    unset($_bdus_app, $raw, $decoded);
-}
-
-unset($_bdus_token, $app_hint, $claims);
+unset($_bdus_token, $_bdus_tok_app, $_bdus_url_app, $_bdus_app, $raw, $decoded, $claims);
 
 // ── Runtime directory scaffolding ─────────────────────────────────────────────
 

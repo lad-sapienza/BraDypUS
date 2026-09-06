@@ -173,8 +173,7 @@ async function handleLink() {
   linkError.value = null
   linkLoading.value = true
   try {
-    const res = await api.post('/api/auth/oauth/link', {
-      app:      app.value,
+    const res = await api.post(`/${app.value}/api/auth/oauth/link`, {
       pending:  pending.value,
       email:    linkForm.value.email,
       password: linkForm.value.password,
@@ -193,8 +192,7 @@ async function handleRegister() {
   registerError.value = null
   registerLoading.value = true
   try {
-    const res = await api.post('/api/auth/oauth/register', {
-      app:     app.value,
+    const res = await api.post(`/${app.value}/api/auth/oauth/register`, {
       pending: pending.value,
       email:   registerForm.value.email,
     })

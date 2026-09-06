@@ -13,7 +13,7 @@
 
 
 # ── 10a. Drop crud_test_plg (plugin must be removed before parent) ────
-DELETE {{base_url}}/api/config/table/crud_test_plg
+DELETE {{base_url}}/{{app_name}}/api/config/table/crud_test_plg
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -21,7 +21,7 @@ jsonpath "$.status" == "success"
 
 
 # ── 10b. Drop crud_test ───────────────────────────────────────────────
-DELETE {{base_url}}/api/config/table/crud_test
+DELETE {{base_url}}/{{app_name}}/api/config/table/crud_test
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -29,7 +29,7 @@ jsonpath "$.status" == "success"
 
 
 # ── 10c. Verify both tables are gone ─────────────────────────────────
-GET {{base_url}}/api/config/tables
+GET {{base_url}}/{{app_name}}/api/config/tables
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -38,7 +38,7 @@ jsonpath "$.tables[*].name" not contains "crud_test_plg"
 
 
 # ── 10d. Logout ───────────────────────────────────────────────────────
-GET {{base_url}}/api/auth/logout
+GET {{base_url}}/{{app_name}}/api/auth/logout
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]

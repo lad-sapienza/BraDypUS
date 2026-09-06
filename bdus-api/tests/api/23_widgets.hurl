@@ -13,7 +13,7 @@
 
 
 # ── 23a. List widgets — no widgets directory → empty list ─────────────
-GET {{base_url}}/api/widgets
+GET {{base_url}}/{{app_name}}/api/widgets
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -22,7 +22,7 @@ jsonpath "$.widgets" isEmpty
 
 
 # ── 23b. Serve non-existent widget → 404 ─────────────────────────────
-GET {{base_url}}/api/widget/non-existent-widget
+GET {{base_url}}/{{app_name}}/api/widget/non-existent-widget
 Authorization: Bearer {{jwt}}
 HTTP 404
 [Asserts]
@@ -32,7 +32,7 @@ jsonpath "$.code"   == "widget_not_found"
 
 # ── 23c. Invalid widget name with underscore → 400 ───────────────────
 # Only [a-z0-9-] is valid; underscores, dots, uppercase are rejected.
-GET {{base_url}}/api/widget/my_widget
+GET {{base_url}}/{{app_name}}/api/widget/my_widget
 Authorization: Bearer {{jwt}}
 HTTP 400
 [Asserts]
@@ -41,7 +41,7 @@ jsonpath "$.code"   == "invalid_widget_name"
 
 
 # ── 23d. Invalid name with uppercase → 400 ───────────────────────────
-GET {{base_url}}/api/widget/MyWidget
+GET {{base_url}}/{{app_name}}/api/widget/MyWidget
 Authorization: Bearer {{jwt}}
 HTTP 400
 [Asserts]
@@ -50,5 +50,5 @@ jsonpath "$.code"   == "invalid_widget_name"
 
 
 # ── 23e. Unauthenticated request → 401 ───────────────────────────────
-GET {{base_url}}/api/widgets
+GET {{base_url}}/{{app_name}}/api/widgets
 HTTP 401

@@ -8,7 +8,7 @@
 
 
 # ── 29a. GET history — shape check ───────────────────────────────────
-GET {{base_url}}/api/history
+GET {{base_url}}/{{app_name}}/api/history
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -18,7 +18,7 @@ jsonpath "$.data"   isCollection
 
 
 # ── 29b. GET history — row shape ─────────────────────────────────────
-GET {{base_url}}/api/history?page=1&per_page=5
+GET {{base_url}}/{{app_name}}/api/history?page=1&per_page=5
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -27,7 +27,7 @@ jsonpath "$.total"      isInteger
 
 
 # ── 29c. GET history filtered by table ───────────────────────────────
-GET {{base_url}}/api/history?tb=us
+GET {{base_url}}/{{app_name}}/api/history?tb=us
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -37,7 +37,7 @@ jsonpath "$.data"   isCollection
 
 
 # ── 29d. check-password — correct password ───────────────────────────
-POST {{base_url}}/api/admin/check-password
+POST {{base_url}}/{{app_name}}/api/admin/check-password
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "pwd": "{{admin_password}}" }
@@ -48,7 +48,7 @@ jsonpath "$.code"   == "valid_pasword"
 
 
 # ── 29e. check-password — wrong password ─────────────────────────────
-POST {{base_url}}/api/admin/check-password
+POST {{base_url}}/{{app_name}}/api/admin/check-password
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "pwd": "definitely_wrong_password_xyz" }
@@ -59,7 +59,7 @@ jsonpath "$.code"   == "invalid_pasword"
 
 
 # ── 29f. check-password — empty pwd → invalid ────────────────────────
-POST {{base_url}}/api/admin/check-password
+POST {{base_url}}/{{app_name}}/api/admin/check-password
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "pwd": "" }

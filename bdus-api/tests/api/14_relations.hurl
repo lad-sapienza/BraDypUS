@@ -27,7 +27,7 @@
 
 
 # ── 14a. List — phase-3 rows present, new schema shape ──────────────
-GET {{base_url}}/api/config/relations
+GET {{base_url}}/{{app_name}}/api/config/relations
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -40,7 +40,7 @@ initial_rel_count: jsonpath "$.data" count
 
 
 # ── 14b. Response shape — new fields present, fld/sort absent ───────
-GET {{base_url}}/api/config/relations
+GET {{base_url}}/{{app_name}}/api/config/relations
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -57,7 +57,7 @@ jsonpath "$.data[0].to_label"   isString
 
 # ── 14c. Known relation from phase 3 is present ─────────────────────
 # us.sito_id → siti.id must exist
-GET {{base_url}}/api/config/relations
+GET {{base_url}}/{{app_name}}/api/config/relations
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -68,7 +68,7 @@ jsonpath "$.data[*].to_tb"    contains "siti"
 
 # ── 14d. Direction is semantic — from_tb is the FK holder ───────────
 # complessi.sito_id → siti.id: from_tb must be "complessi", not "siti"
-GET {{base_url}}/api/config/relations
+GET {{base_url}}/{{app_name}}/api/config/relations
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -81,7 +81,7 @@ jsonpath "$.data[*].to_tb"   contains "siti"
 # siti.localita is a free column not already in bdus_cfg_relations.
 # siti is empty at this point (seed is phase 19) → 0 orphans.
 # Self-referential forces on_delete=RESTRICT, on_update=CASCADE regardless of input.
-POST {{base_url}}/api/config/relations
+POST {{base_url}}/{{app_name}}/api/config/relations
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -102,7 +102,7 @@ self_rel_id: jsonpath "$.id"
 
 
 # ── 14f. Self-referential policy forced to RESTRICT / CASCADE ────────
-GET {{base_url}}/api/config/relations
+GET {{base_url}}/{{app_name}}/api/config/relations
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -114,7 +114,7 @@ jsonpath "$.data[?(@.from_tb == 'siti' && @.from_col == 'localita')].on_update" 
 # ── 14g. Create — plain FK with explicit on_delete CASCADE ──────────
 # Creates a FK from us.sigla → siti.nome (string-to-string — orphans possible,
 # but pre-seed = empty tables → no orphans → FK applied to DB successfully).
-POST {{base_url}}/api/config/relations
+POST {{base_url}}/{{app_name}}/api/config/relations
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -135,7 +135,7 @@ cascade_rel_id: jsonpath "$.id"
 
 
 # ── 14h. List — new rows appeared ───────────────────────────────────
-GET {{base_url}}/api/config/relations
+GET {{base_url}}/{{app_name}}/api/config/relations
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -145,7 +145,7 @@ jsonpath "$.data[*].id" contains {{cascade_rel_id}}
 
 
 # ── 14i. Update — change on_delete of the cascade relation ──────────
-PUT {{base_url}}/api/config/relations/{{cascade_rel_id}}
+PUT {{base_url}}/{{app_name}}/api/config/relations/{{cascade_rel_id}}
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -164,7 +164,7 @@ jsonpath "$.id"     == {{cascade_rel_id}}
 
 
 # ── 14j. Update — verify on_delete change persisted ─────────────────
-GET {{base_url}}/api/config/relations
+GET {{base_url}}/{{app_name}}/api/config/relations
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -173,7 +173,7 @@ jsonpath "$.data[?(@.id == {{cascade_rel_id}})].on_delete" contains "RESTRICT"
 
 # ── 14k. applyAllConstraints — applies all config rows to DB ────────
 # Pre-seed: empty tables → 0 orphans for all relations → all applied.
-POST {{base_url}}/api/config/apply-constraints
+POST {{base_url}}/{{app_name}}/api/config/apply-constraints
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -185,7 +185,7 @@ jsonpath "$.skipped" == 0
 
 
 # ── 14l. Delete — cascade relation ──────────────────────────────────
-DELETE {{base_url}}/api/config/relations/{{cascade_rel_id}}
+DELETE {{base_url}}/{{app_name}}/api/config/relations/{{cascade_rel_id}}
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -194,7 +194,7 @@ jsonpath "$.code"   == "relation_deleted"
 
 
 # ── 14m. Delete — self-referential ──────────────────────────────────
-DELETE {{base_url}}/api/config/relations/{{self_rel_id}}
+DELETE {{base_url}}/{{app_name}}/api/config/relations/{{self_rel_id}}
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -203,7 +203,7 @@ jsonpath "$.code"   == "relation_deleted"
 
 
 # ── 14n. List after deletes — count back to initial ─────────────────
-GET {{base_url}}/api/config/relations
+GET {{base_url}}/{{app_name}}/api/config/relations
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -218,7 +218,7 @@ jsonpath "$.data[*].id" not contains {{self_rel_id}}
 # ════════════════════════════════════════════════════════════════════
 
 # ── 14o-neg. Missing from_col → error ───────────────────────────────
-POST {{base_url}}/api/config/relations
+POST {{base_url}}/{{app_name}}/api/config/relations
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -233,7 +233,7 @@ jsonpath "$.code"   == "parameter_missing"
 
 
 # ── 14p-neg. Missing to_col → error ─────────────────────────────────
-POST {{base_url}}/api/config/relations
+POST {{base_url}}/{{app_name}}/api/config/relations
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -249,7 +249,7 @@ jsonpath "$.code"   == "parameter_missing"
 
 # ── 14q-neg. Duplicate (from_tb, from_col) → error ──────────────────
 # us.sito_id → siti.id already exists from phase 3.
-POST {{base_url}}/api/config/relations
+POST {{base_url}}/{{app_name}}/api/config/relations
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -265,7 +265,7 @@ jsonpath "$.code"   == "relation_already_exists"
 
 
 # ── 14r-neg. Invalid on_delete policy → error ───────────────────────
-POST {{base_url}}/api/config/relations
+POST {{base_url}}/{{app_name}}/api/config/relations
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -282,7 +282,7 @@ jsonpath "$.code"   == "invalid_on_delete"
 
 
 # ── 14s-neg. Invalid on_update policy → error ───────────────────────
-POST {{base_url}}/api/config/relations
+POST {{base_url}}/{{app_name}}/api/config/relations
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -300,7 +300,7 @@ jsonpath "$.code"   == "invalid_on_update"
 
 
 # ── 14t-neg. Update non-existent id → error ─────────────────────────
-PUT {{base_url}}/api/config/relations/999999
+PUT {{base_url}}/{{app_name}}/api/config/relations/999999
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -314,7 +314,7 @@ jsonpath "$.code"   == "not_found"
 
 
 # ── 14u-neg. Delete non-existent id → error ─────────────────────────
-DELETE {{base_url}}/api/config/relations/999999
+DELETE {{base_url}}/{{app_name}}/api/config/relations/999999
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]

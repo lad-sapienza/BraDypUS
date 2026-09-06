@@ -11,7 +11,7 @@
 
 
 # ── 37a. No filters — returns siti, us, reperti groups ──────────────
-GET {{base_url}}/api/chrono/timeline
+GET {{base_url}}/{{app_name}}/api/chrono/timeline
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -30,7 +30,7 @@ jsonpath "$.tables[0].records[0].certainty"    isInteger
 
 
 # ── 37b. Year-range filter: only records overlapping 0–500 CE ───────
-GET {{base_url}}/api/chrono/timeline?from=0&to=500
+GET {{base_url}}/{{app_name}}/api/chrono/timeline?from=0&to=500
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -41,7 +41,7 @@ jsonpath "$.tables[?(@.tb_id == 'siti')].records" isCollection
 
 
 # ── 37c. Table filter — only reperti ────────────────────────────────
-GET {{base_url}}/api/chrono/timeline?tb[]=reperti
+GET {{base_url}}/{{app_name}}/api/chrono/timeline?tb[]=reperti
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -53,7 +53,7 @@ jsonpath "$.tables[0].tb_id" == "reperti"
 
 
 # ── 37d. Empty range — no matching records ───────────────────────────
-GET {{base_url}}/api/chrono/timeline?from=5000&to=6000
+GET {{base_url}}/{{app_name}}/api/chrono/timeline?from=5000&to=6000
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -62,7 +62,7 @@ jsonpath "$.tables"  count == 0
 
 
 # ── 37e. Unauthenticated request returns error ───────────────────────
-GET {{base_url}}/api/chrono/timeline
+GET {{base_url}}/{{app_name}}/api/chrono/timeline
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "error"

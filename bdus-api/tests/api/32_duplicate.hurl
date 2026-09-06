@@ -13,7 +13,7 @@
 
 
 # ── 32a. Verify can_add is exposed in getRecord metadata ─────────
-GET {{base_url}}/api/record/crud_test/{{us_id_1}}
+GET {{base_url}}/{{app_name}}/api/record/crud_test/{{us_id_1}}
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -22,7 +22,7 @@ jsonpath "$.metadata.can_add"   == true
 
 
 # ── 32b. Duplicate record — happy path ──────────────────────────
-POST {{base_url}}/api/record/crud_test/{{us_id_1}}/duplicate
+POST {{base_url}}/{{app_name}}/api/record/crud_test/{{us_id_1}}/duplicate
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -35,7 +35,7 @@ dup_id: jsonpath "$.id"
 
 
 # ── 32c. New record exists and has same sigla as original ────────
-GET {{base_url}}/api/record/crud_test/{{dup_id}}
+GET {{base_url}}/{{app_name}}/api/record/crud_test/{{dup_id}}
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -44,7 +44,7 @@ jsonpath "$.core.sigla.val"   == "T001"
 
 
 # ── 32d. Error — unknown table ───────────────────────────────────
-POST {{base_url}}/api/record/nonexistent_table/1/duplicate
+POST {{base_url}}/{{app_name}}/api/record/nonexistent_table/1/duplicate
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -53,7 +53,7 @@ jsonpath "$.code"   == "unknown_table"
 
 
 # ── 32e. Error — record not found ───────────────────────────────
-POST {{base_url}}/api/record/crud_test/999999/duplicate
+POST {{base_url}}/{{app_name}}/api/record/crud_test/999999/duplicate
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -62,7 +62,7 @@ jsonpath "$.code"   == "record_not_found"
 
 
 # ── 32f. Clean up the duplicate ─────────────────────────────────
-DELETE {{base_url}}/api/record/crud_test/{{dup_id}}
+DELETE {{base_url}}/{{app_name}}/api/record/crud_test/{{dup_id}}
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]

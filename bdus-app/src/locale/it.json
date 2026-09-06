@@ -209,6 +209,7 @@
   "confirm_revoke_session": "Vuoi forzare questo utente a effettuare nuovamente il login? La sua sessione corrente verrà invalidata immediatamente.",
   "session_revoked": "Sessione invalidata",
   "token_invalidated": "La tua sessione è stata invalidata da un amministratore. Effettua nuovamente il login.",
+  "app_mismatch": "La sessione appartiene a un'altra applicazione. Effettua nuovamente il login.",
   "user_not_deleted": "Errore! Non è stato possibile cancellare l'utente",
   "table_privileges": "Privilegi per tabella",
   "add_table_privilege": "Aggiungi override",

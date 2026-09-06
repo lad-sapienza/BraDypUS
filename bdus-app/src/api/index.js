@@ -27,9 +27,56 @@ const API_BASE = import.meta.env.VITE_API_BASE ?? ''
 /**
  * Resolve a backend-relative asset path to a full URL.
  * Usage: assetUrl('projects/myapp/files/42.jpg')
+ *
+ * Asset trees (`projects/…`, `cache/…`) already carry the application in the
+ * path and are served by their own web-server prefix — they are NOT rewritten
+ * here. For backend API endpoints in a browser-native navigation use apiUrl().
  */
 export function assetUrl(path) {
   return API_BASE + '/' + path
+}
+
+// ── App-scoped path prefix (v5.9.0) ─────────────────────────────────────────
+// Application-scoped endpoints are called as `/{app}/api/…`. Only the genuinely
+// instance-level endpoints stay at a bare `/api/…` (no app exists / is chosen
+// yet). Everything else — including the rest of /api/auth/* (login, register,
+// password-reset, refresh, logout, oauth) — is app-scoped; pre-app pages
+// (LoginView, OAuthCallbackView) pass the selected app explicitly as
+// `/${app}/api/…`, which scopedPath() then leaves untouched.
+const GLOBAL_EXACT = new Set([
+  '/api/auth/apps',
+  '/api/new-app', '/api/new-app/status',
+  '/api/info',
+])
+const PUBLIC_SEGMENTS = new Set(['', 'login', 'oauth-callback', 'new-app'])
+
+function isGlobalPath(path) {
+  return GLOBAL_EXACT.has(path.split('?')[0])
+}
+
+/** Application name from the current URL, or '' on a public (app-less) route. */
+function currentApp() {
+  const seg = window.location.pathname.split('/')[1] || ''
+  return PUBLIC_SEGMENTS.has(seg) ? '' : seg
+}
+
+/** Prefix an API path with the current `/{app}` unless it is app-independent
+ *  or the caller already scoped it (`/{app}/api/…`). */
+function scopedPath(path) {
+  if (isGlobalPath(path)) return path
+  if (/^\/[^/]+\/api\//.test(path)) return path
+  const app = currentApp()
+  return app ? `/${app}${path}` : path
+}
+
+/**
+ * Absolute URL for a backend endpoint, app-scoped exactly like the api.*
+ * helpers. Use for browser-native navigations (window.open) where fetch —
+ * and therefore the Authorization header — does not apply.
+ *   apiUrl('/api/records/us/export') → `${API_BASE}/paths/api/records/us/export`
+ */
+export function apiUrl(path) {
+  return API_BASE + scopedPath(path.startsWith('/') ? path : '/' + path)
 }
 
 /**
@@ -62,7 +109,7 @@ async function _doRefresh() {
     try {
       const token = getToken()
       if (!token) return
-      const url = new URL(API_BASE + '/api/auth/refresh', window.location.origin)
+      const url = new URL(API_BASE + scopedPath('/api/auth/refresh'), window.location.origin)
       const res = await fetch(url, {
         headers: { Accept: 'application/json', ..._bearer() },
       })
@@ -137,6 +184,11 @@ async function _fetch(url, httpMethod, bodyData, label) {
       _handleMajorUpgrade()
       throw new Error('major_upgrade_required')
     }
+    if (body?.code === 'app_mismatch') {
+      // Session belongs to a different application — recover via re-login.
+      _handle401()
+      throw new Error('app_mismatch')
+    }
     throw new Error(`${label} — HTTP ${res.status}`)
   }
   return res.json()
@@ -145,7 +197,7 @@ async function _fetch(url, httpMethod, bodyData, label) {
 // ── GET ──────────────────────────────────────────────────────────────────────
 async function get(path, params = {}) {
   await _guardRefresh()
-  const url = new URL(API_BASE + path, window.location.origin)
+  const url = new URL(API_BASE + scopedPath(path), window.location.origin)
   appendQuery(url, params)
   return _fetch(url, 'GET', null, path)
 }
@@ -153,35 +205,35 @@ async function get(path, params = {}) {
 // ── POST ─────────────────────────────────────────────────────────────────────
 async function post(path, body = {}) {
   await _guardRefresh()
-  const url = new URL(API_BASE + path, window.location.origin)
+  const url = new URL(API_BASE + scopedPath(path), window.location.origin)
   return _fetch(url, 'POST', body, path)
 }
 
 // ── PUT ──────────────────────────────────────────────────────────────────────
 async function put(path, body = {}) {
   await _guardRefresh()
-  const url = new URL(API_BASE + path, window.location.origin)
+  const url = new URL(API_BASE + scopedPath(path), window.location.origin)
   return _fetch(url, 'PUT', body, path)
 }
 
 // ── DELETE ───────────────────────────────────────────────────────────────────
 async function _delete(path, body = {}) {
   await _guardRefresh()
-  const url = new URL(API_BASE + path, window.location.origin)
+  const url = new URL(API_BASE + scopedPath(path), window.location.origin)
   return _fetch(url, 'DELETE', body, path)
 }
 
 // ── PATCH ────────────────────────────────────────────────────────────────────
 async function patch(path, body = {}) {
   await _guardRefresh()
-  const url = new URL(API_BASE + path, window.location.origin)
+  const url = new URL(API_BASE + scopedPath(path), window.location.origin)
   return _fetch(url, 'PATCH', body, path)
 }
 
 // ── Upload ───────────────────────────────────────────────────────────────────
 async function upload(path, file, field = 'file') {
   await _guardRefresh()
-  const url = new URL(API_BASE + path, window.location.origin)
+  const url = new URL(API_BASE + scopedPath(path), window.location.origin)
 
   const fd = new FormData()
   fd.append(field, file)
@@ -196,6 +248,7 @@ async function upload(path, file, field = 'file') {
     let body = null
     try { body = await res.json() } catch { /* non-JSON error body */ }
     if (body?.code === 'major_upgrade_required') { _handleMajorUpgrade(); throw new Error('major_upgrade_required') }
+    if (body?.code === 'app_mismatch')          { _handle401();          throw new Error('app_mismatch') }
     throw new Error(`${path} — HTTP ${res.status}`)
   }
   return res.json()
@@ -211,7 +264,7 @@ async function upload(path, file, field = 'file') {
  */
 async function uploadMulti(path, files = {}, data = {}) {
   await _guardRefresh()
-  const url = new URL(API_BASE + path, window.location.origin)
+  const url = new URL(API_BASE + scopedPath(path), window.location.origin)
 
   const fd = new FormData()
   Object.entries(files).forEach(([k, v]) => { if (v) fd.append(k, v) })
@@ -227,6 +280,7 @@ async function uploadMulti(path, files = {}, data = {}) {
     let body = null
     try { body = await res.json() } catch { /* non-JSON error body */ }
     if (body?.code === 'major_upgrade_required') { _handleMajorUpgrade(); throw new Error('major_upgrade_required') }
+    if (body?.code === 'app_mismatch')          { _handle401();          throw new Error('app_mismatch') }
     throw new Error(`${path} — HTTP ${res.status}`)
   }
   return res.json()

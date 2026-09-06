@@ -450,8 +450,7 @@ async function handleForgotPassword() {
   forgotError.value = null
   forgotLoading.value = true
   try {
-    const res = await api.post('/api/auth/password-reset/request', {
-      app: form.value.app?.db,
+    const res = await api.post(`/${form.value.app?.db}/api/auth/password-reset/request`, {
       email: forgotEmail.value,
     })
     if (res.status !== 'success') throw new Error(res.code)
@@ -473,8 +472,7 @@ async function handleRegister() {
 
   registerLoading.value = true
   try {
-    const res = await api.post('/api/auth/register', {
-      app:      form.value.app?.db,
+    const res = await api.post(`/${form.value.app?.db}/api/auth/register`, {
       name:     registerForm.value.name,
       email:    registerForm.value.email,
       password: registerForm.value.password,
@@ -493,8 +491,7 @@ async function handleMajorUpgrade() {
   upgradeError.value = null
   upgrading.value = true
   try {
-    const res = await api.post('/api/upgrade/major', {
-      app:      form.value.app?.db,
+    const res = await api.post(`/${form.value.app?.db}/api/upgrade/major`, {
       email:    upgradeForm.value.email,
       password: upgradeForm.value.password,
     })
@@ -529,8 +526,8 @@ async function handleOAuth(provider) {
   try {
     const origin = window.location.origin
     const res = await api.get(
-      `/api/auth/oauth/${provider}/redirect`,
-      { app: form.value.app.db, origin }
+      `/${form.value.app.db}/api/auth/oauth/${provider}/redirect`,
+      { origin }
     )
     if (res.status === 'success' && res.url) {
       window.location.href = res.url

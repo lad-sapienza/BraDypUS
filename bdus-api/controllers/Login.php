@@ -28,7 +28,9 @@ class Login extends \Bdus\Controller
 		}
 
 		$post     = $this->post;
-		$app      = (string) ($post['app'] ?? '');
+		// v5.9.0: the app is the first URL path segment (bootstrap defines APP).
+		// The request body may still carry it as a legacy fallback.
+		$app      = defined('APP') ? APP : (string) ($post['app'] ?? '');
 		$name     = trim((string) ($post['name'] ?? ''));
 		$email    = trim((string) ($post['email'] ?? ''));
 		$password = (string) ($post['password'] ?? '');
@@ -304,7 +306,9 @@ class Login extends \Bdus\Controller
 			return;
 		}
 
-		$app   = (string) ($this->post['app'] ?? '');
+		// v5.9.0: the app is the first URL path segment (bootstrap defines APP);
+		// the request body may still carry it as a legacy fallback.
+		$app   = defined('APP') ? APP : (string) ($this->post['app'] ?? '');
 		$email = trim((string) ($this->post['email'] ?? ''));
 
 		if (!$app || !filter_var($email, FILTER_VALIDATE_EMAIL)) {

@@ -333,7 +333,7 @@ import { ApartmentOutlined, ArrowLeftOutlined, BarChartOutlined, BorderOutlined,
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useToast } from '@/composables/useNotify'
-import { api, assetUrl, filterToSearchParams } from '@/api'
+import { api, apiUrl, filterToSearchParams } from '@/api'
 import { useI18n } from '@/i18n'
 import { useTables } from '@/composables/useTables'
 import { appStorage } from '@/utils/storage'
@@ -1101,7 +1101,7 @@ function doExport(format) {
     if (route.query.q)  qs.set('q',  route.query.q)
   }
 
-  window.open(assetUrl(`api/records/${encodeURIComponent(tb)}/export`) + '?' + qs.toString(), '_blank')
+  window.open(apiUrl(`/api/records/${encodeURIComponent(tb)}/export`) + '?' + qs.toString(), '_blank')
 }
 </script>
 

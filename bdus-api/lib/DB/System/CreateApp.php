@@ -14,12 +14,12 @@ use Config\ToDB;
 class CreateApp
 {
     /**
-     * Names that cannot be used for an application because the Vue SPA runs in
-     * history (clean-path) mode: the application name becomes the first URL
-     * path segment, and these segments are served by the web server / API
-     * instead of the SPA, so an app with one of these names would be
-     * unreachable. Kept in sync with bdus-app/src/router/index.js and
-     * bdus-app/nginx.conf.template.
+     * Names that cannot be used for an application. The app name is the first
+     * URL path segment (clean-path SPA + the /{app}/api/… backend surface), and
+     * these segments are claimed by the web server, the app-independent /api/…
+     * surface, or public SPA routes — an app with one of these names would be
+     * unreachable. Kept in sync with bdus-app/src/router/index.js,
+     * bdus-app/nginx.conf.template and Bdus\Router::RESERVED_SEGMENTS.
      */
     private const RESERVED_NAMES = [
         'api', 'index.php', 'projects', 'cache',   // proxied to the PHP backend

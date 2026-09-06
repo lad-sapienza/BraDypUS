@@ -209,6 +209,7 @@
   "confirm_revoke_session": "Force this user to log in again? Their current session will be invalidated immediately.",
   "session_revoked": "Session revoked",
   "token_invalidated": "Your session has been revoked by an administrator. Please log in again.",
+  "app_mismatch": "This session belongs to a different application. Please log in again.",
   "user_not_deleted": "Error! can not erase the user",
   "table_privileges": "Per-table privileges",
   "add_table_privilege": "Add override",

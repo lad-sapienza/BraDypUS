@@ -11,7 +11,7 @@
 
 
 # ── 26a. List — empty at start ───────────────────────────────────────
-GET {{base_url}}/api/saved-queries
+GET {{base_url}}/{{app_name}}/api/saved-queries
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -21,7 +21,7 @@ jsonpath "$.queries" isEmpty
 
 
 # ── 26b. Save a query for table "us" ─────────────────────────────────
-POST {{base_url}}/api/saved-queries
+POST {{base_url}}/{{app_name}}/api/saved-queries
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -39,7 +39,7 @@ sq_id: jsonpath "$.query.id"
 
 
 # ── 26c. Query appears in list ───────────────────────────────────────
-GET {{base_url}}/api/saved-queries
+GET {{base_url}}/{{app_name}}/api/saved-queries
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -50,7 +50,7 @@ jsonpath "$.queries[0].tb"    isString
 
 
 # ── 26d. Save a second query ─────────────────────────────────────────
-POST {{base_url}}/api/saved-queries
+POST {{base_url}}/{{app_name}}/api/saved-queries
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -66,7 +66,7 @@ sq_id2: jsonpath "$.query.id"
 
 
 # ── 26e. Share the first query ───────────────────────────────────────
-POST {{base_url}}/api/saved-query/{{sq_id}}/share
+POST {{base_url}}/{{app_name}}/api/saved-query/{{sq_id}}/share
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -75,7 +75,7 @@ jsonpath "$.code"   == "ok_sharing_query"
 
 
 # ── 26f. Unshare the first query ─────────────────────────────────────
-POST {{base_url}}/api/saved-query/{{sq_id}}/unshare
+POST {{base_url}}/{{app_name}}/api/saved-query/{{sq_id}}/unshare
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -84,7 +84,7 @@ jsonpath "$.code"   == "ok_unsharing_query"
 
 
 # ── 26g. Delete the first query ──────────────────────────────────────
-DELETE {{base_url}}/api/saved-query/{{sq_id}}
+DELETE {{base_url}}/{{app_name}}/api/saved-query/{{sq_id}}
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -93,7 +93,7 @@ jsonpath "$.code"   == "ok_erasing_query"
 
 
 # ── 26h. Delete the second query ─────────────────────────────────────
-DELETE {{base_url}}/api/saved-query/{{sq_id2}}
+DELETE {{base_url}}/{{app_name}}/api/saved-query/{{sq_id2}}
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -102,7 +102,7 @@ jsonpath "$.code"   == "ok_erasing_query"
 
 
 # ── 26i. List empty again ────────────────────────────────────────────
-GET {{base_url}}/api/saved-queries
+GET {{base_url}}/{{app_name}}/api/saved-queries
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -110,7 +110,7 @@ jsonpath "$.queries" isEmpty
 
 
 # ── 26j. Missing name → parameter_missing ───────────────────────────
-POST {{base_url}}/api/saved-queries
+POST {{base_url}}/{{app_name}}/api/saved-queries
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "tb": "us", "query": {} }
@@ -121,7 +121,7 @@ jsonpath "$.code"   == "parameter_missing"
 
 
 # ── 26k. Missing tb → parameter_missing ─────────────────────────────
-POST {{base_url}}/api/saved-queries
+POST {{base_url}}/{{app_name}}/api/saved-queries
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "name": "No table", "query": {} }

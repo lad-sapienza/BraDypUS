@@ -7,15 +7,16 @@ namespace Bdus\Controllers;
  *
  * Supported providers: google, orcid
  *
- * Flow
+ * Flow  (v5.9.0: the application is the first URL path segment)
  * ────
- * 1. Frontend calls GET /api/auth/oauth/{provider}/redirect?app=APP&origin=ORIGIN
+ * 1. Frontend calls GET /{app}/api/auth/oauth/{provider}/redirect?origin=ORIGIN
  *    → returns JSON { url: "..." }  (the provider authorization URL)
  *
  * 2. Frontend navigates (window.location.href) to that URL.
  *
- * 3. Provider redirects back to:
- *    GET /api/auth/oauth/{provider}/callback?app=APP&code=...&state=...
+ * 3. Provider redirects back to the registered redirect_uri:
+ *    GET /{app}/api/auth/oauth/{provider}/callback?code=...&state=...
+ *    (the signed `state` carries the app; there is no `?app=` query)
  *
  * 4. PHP verifies state, exchanges code for tokens, resolves the user,
  *    issues a BraDypUS JWT, and redirects the browser to:
@@ -40,9 +41,9 @@ namespace Bdus\Controllers;
  *   3. No match → error 'no_account', with a signed one-time `pending`
  *      token attached (see buildPendingIdentity()) so the frontend can
  *      offer either of:
- *        - POST /api/auth/oauth/link     — link this identity to an
+ *        - POST /{app}/api/auth/oauth/link     — link this identity to an
  *          existing account after verifying its password
- *        - POST /api/auth/oauth/register — self-signup with just an email
+ *        - POST /{app}/api/auth/oauth/register — self-signup with just an email
  *          (same allow_self_registration + Mailer gate as email
  *          self-registration, see Controllers\Login::register())
  *
@@ -70,7 +71,7 @@ class OAuth extends \Bdus\Controller
     // ── Public endpoints ─────────────────────────────────────────────────────
 
     /**
-     * GET /api/auth/oauth/{provider}/redirect?app=APP&origin=ORIGIN
+     * GET /{app}/api/auth/oauth/{provider}/redirect?origin=ORIGIN
      *
      * Returns JSON { url: "..." } — the authorization URL to redirect to.
      * The caller (frontend) is responsible for navigating to it.
@@ -110,7 +111,7 @@ class OAuth extends \Bdus\Controller
     }
 
     /**
-     * GET /api/auth/oauth/{provider}/callback?app=APP&code=...&state=...
+     * GET /{app}/api/auth/oauth/{provider}/callback?code=...&state=...
      *
      * This is the redirect_uri: it must be reachable by the browser.
      * On success  → 302 to {origin}/oauth-callback?token=JWT&app=APP
@@ -183,7 +184,7 @@ class OAuth extends \Bdus\Controller
     }
 
     /**
-     * POST /api/auth/oauth/link
+     * POST /{app}/api/auth/oauth/link
      *
      * Attaches the OAuth identity carried by a pending token (issued on a
      * prior no_account redirect) to an existing account, after verifying
@@ -241,7 +242,7 @@ class OAuth extends \Bdus\Controller
     }
 
     /**
-     * POST /api/auth/oauth/register
+     * POST /{app}/api/auth/oauth/register
      *
      * Self-signup for a first-time OAuth identity with no matching account:
      * only an email is asked for (the provider already proved the identity —
@@ -575,7 +576,9 @@ class OAuth extends \Bdus\Controller
         $scheme = $this->externalScheme();
         $host   = $_SERVER['HTTP_HOST'] ?? 'localhost';
         $base   = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/');
-        return "{$scheme}://{$host}{$base}/api/auth/oauth/{$provider}/callback?app={$app}";
+        // v5.9.0: the application is the first path segment. The signed `state`
+        // still carries the app; no `?app=` query is needed.
+        return "{$scheme}://{$host}{$base}/{$app}/api/auth/oauth/{$provider}/callback";
     }
 
     /**

@@ -9,7 +9,7 @@
 
 
 # ── 36a. Export — returns a .dbml file download ──────────────────────
-GET {{base_url}}/api/config/dbml
+GET {{base_url}}/{{app_name}}/api/config/dbml
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -18,7 +18,7 @@ body contains "Table"
 
 
 # ── 36b. Preview — valid DBML with a brand-new table ─────────────────
-POST {{base_url}}/api/config/dbml/preview
+POST {{base_url}}/{{app_name}}/api/config/dbml/preview
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -35,7 +35,7 @@ jsonpath "$.preview.tables[0].errors"     isEmpty
 
 
 # ── 36c. Preview — table that already exists → hard error ────────────
-POST {{base_url}}/api/config/dbml/preview
+POST {{base_url}}/{{app_name}}/api/config/dbml/preview
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -49,7 +49,7 @@ jsonpath "$.preview.tables[0].errors[0].code"   == "table_already_exists"
 
 
 # ── 36d. Preview — PK not named 'id' → hard error ────────────────────
-POST {{base_url}}/api/config/dbml/preview
+POST {{base_url}}/{{app_name}}/api/config/dbml/preview
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -64,7 +64,7 @@ jsonpath "$.preview.tables[0].errors[0].field"  == "uid"
 
 
 # ── 36e. Preview — missing 'id' field emits warning (not error) ───────
-POST {{base_url}}/api/config/dbml/preview
+POST {{base_url}}/{{app_name}}/api/config/dbml/preview
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -78,7 +78,7 @@ jsonpath "$.preview.tables[0].warnings[0].code"  == "auto_add_id"
 
 
 # ── 36f. Preview — vocabulary enum included ──────────────────────────
-POST {{base_url}}/api/config/dbml/preview
+POST {{base_url}}/{{app_name}}/api/config/dbml/preview
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -94,7 +94,7 @@ jsonpath "$.preview.vocabularies[0].values"      count == 2
 
 
 # ── 36g. Preview — missing dbml body → dbml_empty ────────────────────
-POST {{base_url}}/api/config/dbml/preview
+POST {{base_url}}/{{app_name}}/api/config/dbml/preview
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {}
@@ -105,7 +105,7 @@ jsonpath "$.code"   == "dbml_empty"
 
 
 # ── 36h. Apply — create a new table ──────────────────────────────────
-POST {{base_url}}/api/config/dbml/apply
+POST {{base_url}}/{{app_name}}/api/config/dbml/apply
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -120,7 +120,7 @@ jsonpath "$.result.skipped"          isEmpty
 
 
 # ── 36i. Apply — table already exists (re-apply same DBML) → skipped ─
-POST {{base_url}}/api/config/dbml/apply
+POST {{base_url}}/{{app_name}}/api/config/dbml/apply
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -135,7 +135,7 @@ jsonpath "$.result.skipped[0]"       == "hurl_applied"
 
 
 # ── 36j. Apply — missing dbml body → dbml_empty ──────────────────────
-POST {{base_url}}/api/config/dbml/apply
+POST {{base_url}}/{{app_name}}/api/config/dbml/apply
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {}

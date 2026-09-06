@@ -16,7 +16,7 @@
 
 
 # ── 40a. Activate fuzzy_date on reperti (leaf of the chain) ──────────
-POST {{base_url}}/api/config/table/reperti/fuzzy-date
+POST {{base_url}}/{{app_name}}/api/config/table/reperti/fuzzy-date
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {}
@@ -27,7 +27,7 @@ jsonpath "$.code"   == "fuzzy_date_activated"
 
 
 # ── 40b. fuzzy_date_tables now lists reperti ─────────────────────────
-GET {{base_url}}/api/config/table/siti
+GET {{base_url}}/{{app_name}}/api/config/table/siti
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -37,7 +37,7 @@ jsonpath "$.fuzzy_date_tables" contains "reperti"
 
 # ── 40c-neg. Save rejects a hop with no FK relation to the root ─────
 # 'reperti' has no direct relation to 'siti' (only to 'us').
-PUT {{base_url}}/api/config/table/siti
+PUT {{base_url}}/{{app_name}}/api/config/table/siti
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -53,7 +53,7 @@ jsonpath "$.code"   == "invalid_chrono_density_path"
 
 # ── 40d-neg. Save rejects a chain ending on a table without fuzzy_date ─
 # 'complessi' is a valid direct child of 'siti' but has no fuzzy_date.
-PUT {{base_url}}/api/config/table/siti
+PUT {{base_url}}/{{app_name}}/api/config/table/siti
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -68,7 +68,7 @@ jsonpath "$.code"   == "invalid_chrono_density_path"
 
 
 # ── 40e. Save a valid 2-hop path: siti -> us -> reperti ──────────────
-PUT {{base_url}}/api/config/table/siti
+PUT {{base_url}}/{{app_name}}/api/config/table/siti
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -82,7 +82,7 @@ jsonpath "$.status" == "success"
 
 
 # ── 40f. Seed a dedicated site + 2 us + 3 reperti ────────────────────
-POST {{base_url}}/api/record/siti
+POST {{base_url}}/{{app_name}}/api/record/siti
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "core": { "nome": "Sito Density Test" }, "plugins": {} }
@@ -92,7 +92,7 @@ jsonpath "$.status" == "success"
 [Captures]
 density_sito_id: jsonpath "$.id"
 
-POST {{base_url}}/api/record/siti
+POST {{base_url}}/{{app_name}}/api/record/siti
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "core": { "nome": "Sito Density Empty" }, "plugins": {} }
@@ -102,7 +102,7 @@ jsonpath "$.status" == "success"
 [Captures]
 density_sito_empty_id: jsonpath "$.id"
 
-POST {{base_url}}/api/record/us
+POST {{base_url}}/{{app_name}}/api/record/us
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "core": { "sigla": "USD900", "sito_id": {{density_sito_id}} }, "plugins": {} }
@@ -112,7 +112,7 @@ jsonpath "$.status" == "success"
 [Captures]
 density_us_id_1: jsonpath "$.id"
 
-POST {{base_url}}/api/record/us
+POST {{base_url}}/{{app_name}}/api/record/us
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "core": { "sigla": "USD901", "sito_id": {{density_sito_id}} }, "plugins": {} }
@@ -122,7 +122,7 @@ jsonpath "$.status" == "success"
 [Captures]
 density_us_id_2: jsonpath "$.id"
 
-POST {{base_url}}/api/record/reperti
+POST {{base_url}}/{{app_name}}/api/record/reperti
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -139,7 +139,7 @@ jsonpath "$.status" == "success"
 [Captures]
 density_rep_id_1: jsonpath "$.id"
 
-POST {{base_url}}/api/record/reperti
+POST {{base_url}}/{{app_name}}/api/record/reperti
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -158,7 +158,7 @@ density_rep_id_2: jsonpath "$.id"
 
 # No chrono data — must count toward the click-through filter but not
 # appear in the density "records" list.
-POST {{base_url}}/api/record/reperti
+POST {{base_url}}/{{app_name}}/api/record/reperti
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "core": { "inventario": "REP-DENSITY-3", "us_provenienza_id": {{density_us_id_1}} }, "plugins": {} }
@@ -170,7 +170,7 @@ density_rep_id_3: jsonpath "$.id"
 
 
 # ── 40g. Multi-hop related(): only reperti, only the 2 dated records ─
-GET {{base_url}}/api/chrono/related/siti/{{density_sito_id}}
+GET {{base_url}}/{{app_name}}/api/chrono/related/siti/{{density_sito_id}}
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -185,7 +185,7 @@ jsonpath "$.sources[0].records[*].id"   contains {{density_rep_id_2}}
 # ── 40h. filter.id._in includes ALL 3 structurally-related reperti ──
 # (the undated REP-DENSITY-3 too — click-through shows every related
 # record, not just the dated ones, matching the automatic 1-hop shape)
-GET {{base_url}}/api/chrono/related/siti/{{density_sito_id}}
+GET {{base_url}}/{{app_name}}/api/chrono/related/siti/{{density_sito_id}}
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -196,7 +196,7 @@ jsonpath "$.sources[0].filter.id._in" contains {{density_rep_id_3}}
 
 
 # ── 40i. Site with no us children at all → empty sources ────────────
-GET {{base_url}}/api/chrono/related/siti/{{density_sito_empty_id}}
+GET {{base_url}}/{{app_name}}/api/chrono/related/siti/{{density_sito_empty_id}}
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -205,7 +205,7 @@ jsonpath "$.sources" count == 0
 
 
 # ── 40j. Clearing the path restores the automatic 1-hop default ─────
-PUT {{base_url}}/api/config/table/siti
+PUT {{base_url}}/{{app_name}}/api/config/table/siti
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -217,7 +217,7 @@ HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
 
-GET {{base_url}}/api/chrono/related/siti/{{density_sito_id}}
+GET {{base_url}}/{{app_name}}/api/chrono/related/siti/{{density_sito_id}}
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]

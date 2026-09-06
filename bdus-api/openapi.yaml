@@ -6,15 +6,33 @@ info:
     REST JSON API for [BraDypUS](https://docs.bdus.lad-sapienza.it) — the open-source web
     database system for archaeological and cultural-heritage research.
 
-    ## Authentication
-    All endpoints except `GET /api/auth/apps`, `POST /api/auth/login`,
-    `GET /api/auth/oauth/{provider}/redirect`, `GET /api/auth/oauth/{provider}/callback`,
-    `GET /api/new-app/status`, and `POST /api/new-app` require a JWT bearer
-    token obtained from `POST /api/auth/login` or via the OAuth2 flow.
+    ## URL scheme (v5.9.0)
+    Application-scoped endpoints are served under a `/{app}` path prefix, where
+    `{app}` is the application name — e.g. `GET /paths/api/records/us`. The
+    `paths` below are written without that prefix; pick the `/{app}` server and
+    fill in the `app` variable. The pre-5.9 form (a bare `/api/...` with the app
+    in a `?app=` query parameter or taken from the JWT) has been **removed**.
 
-    API keys (managed via `/api/api-keys`) may be used in place of a JWT for
-    programmatic access. They carry an explicit privilege level
-    (`read` | `edit` | `admin`) enforced per route.
+    Only four genuinely instance-level endpoints stay at a bare `/api/...` (no
+    application exists or is chosen yet): `GET /api/auth/apps`,
+    `POST /api/new-app`, `GET /api/new-app/status`, `GET /api/info`. Use the `/`
+    server for those. Everything else under `/api/auth/*` — `login`, `register`,
+    `password-reset`, `refresh`, `logout`, `oauth/*` — is app-scoped
+    (`/{app}/api/auth/...`).
+
+    ## Authentication
+    All endpoints except `GET /api/auth/apps`, `POST /{app}/api/auth/login`,
+    `GET /{app}/api/auth/oauth/{provider}/redirect`,
+    `GET /{app}/api/auth/oauth/{provider}/callback`,
+    `GET /api/new-app/status`, `POST /api/new-app`, and `GET /api/info` require a
+    JWT bearer token obtained from `POST /{app}/api/auth/login` or via the
+    OAuth2 flow.
+
+    API keys (managed via `/{app}/api/api-keys`) may be used in place of a JWT
+    for programmatic access. They carry an explicit privilege level
+    (`read` | `edit` | `admin`) enforced per route. A key is bound to one
+    application: pass it as `Authorization: Bearer <key>` against that app's
+    `/{app}/api/...` URLs.
 
     ## Common response envelope
     Every response carries a top-level `status` field (`"success"` | `"error"`).
@@ -24,7 +42,7 @@ info:
     ## Table names
     Table names are plain strings (e.g. `us`, `periodi`). The legacy `APP__`
     prefix is not used in v5.
-  version: 5.0.0
+  version: 5.9.0
   license:
     name: GNU AGPL-3.0
     url: https://www.gnu.org/licenses/agpl-3.0.html
@@ -33,10 +51,19 @@ info:
     url: https://lad.saras.uniroma1.it
 
 servers:
+  - url: /{app}
+    description: >-
+      Application-scoped. `app` is the application name; it becomes the first
+      path segment, e.g. `/paths` + `/api/records/us` → `/paths/api/records/us`.
+    variables:
+      app:
+        default: myapp
   - url: /
-    description: Same-origin (Vite dev-server proxy)
+    description: >-
+      App-independent endpoints only (`/api/auth/*`, `/api/new-app*`,
+      `/api/info`). Same-origin / Vite dev-server proxy.
   - url: http://localhost:8080
-    description: Docker dev server
+    description: Docker dev server (app-independent endpoints)
 
 security:
   - bearerAuth: []
@@ -378,13 +405,6 @@ paths:
             type: string
             enum: [google, orcid]
           example: google
-        - name: app
-          in: query
-          required: true
-          schema:
-            type: string
-          description: Application identifier
-          example: myapp
         - name: origin
           in: query
           required: true
@@ -430,20 +450,22 @@ paths:
         Called by the provider after the user grants access.
 
         On success: issues a BraDypUS JWT and **redirects the browser** to
-        `{origin}/#/oauth-callback?token=JWT&app=APP`.
+        `{origin}/oauth-callback?token=JWT&app=APP`.
 
         On failure: redirects to
-        `{origin}/#/oauth-callback?error=CODE&app=APP`.
+        `{origin}/oauth-callback?error=CODE&app=APP`.
 
         This endpoint must be added to the provider's allowed redirect URIs
-        exactly as: `https://your-host/api/auth/oauth/{provider}/callback?app=APP`
+        exactly as: `https://your-host/{app}/api/auth/oauth/{provider}/callback`
+        (v5.9.0 — the app is the path segment; the signed `state` carries it,
+        no `?app=` query).
 
         For Google, an existing account with a matching email is auto-linked
         on first use. For ORCID (no email in its public API) — and for a
         genuinely new user on either provider — a non-match redirects with
         `error=no_account` plus a signed one-time `pending` token, which the
-        frontend redeems via `POST /api/auth/oauth/link` or
-        `POST /api/auth/oauth/register` below.
+        frontend redeems via `POST /{app}/api/auth/oauth/link` or
+        `POST /{app}/api/auth/oauth/register` below.
 
         No authentication required.
       security: []
@@ -454,12 +476,6 @@ paths:
           schema:
             type: string
             enum: [google, orcid]
-        - name: app
-          in: query
-          required: true
-          schema:
-            type: string
-          description: Application identifier (must match the redirect URI)
         - name: code
           in: query
           required: true

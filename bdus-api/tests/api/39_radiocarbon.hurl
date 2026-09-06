@@ -22,7 +22,7 @@
 
 
 # ── 39a. Activate on non-existent table → error code ──────────────────
-POST {{base_url}}/api/config/table/__no_such_table__/radiocarbon
+POST {{base_url}}/{{app_name}}/api/config/table/__no_such_table__/radiocarbon
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -31,7 +31,7 @@ jsonpath "$.code"   == "missing_table"
 
 
 # ── 39b. Activate radiocarbon on crud_test ─────────────────────────────
-POST {{base_url}}/api/config/table/crud_test/radiocarbon
+POST {{base_url}}/{{app_name}}/api/config/table/crud_test/radiocarbon
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -40,7 +40,7 @@ jsonpath "$.code"   == "radiocarbon_activated"
 jsonpath "$.tb"     == "crud_test_radiocarbon"
 
 # Re-activating is idempotent (table/columns already exist)
-POST {{base_url}}/api/config/table/crud_test/radiocarbon
+POST {{base_url}}/{{app_name}}/api/config/table/crud_test/radiocarbon
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -52,7 +52,7 @@ jsonpath "$.code"   == "radiocarbon_activated"
 # cal_1s_from/to are deliberately bogus client-side values — the server
 # must recompute and overwrite them (see RadiocarbonCtrlTest PHPUnit for
 # the equivalent, exact-value regression check).
-POST {{base_url}}/api/record/crud_test
+POST {{base_url}}/{{app_name}}/api/record/crud_test
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -81,7 +81,7 @@ c14_rec_id: jsonpath "$.id"
 jsonpath "$.status" == "success"
 
 
-GET {{base_url}}/api/record/crud_test/{{c14_rec_id}}
+GET {{base_url}}/{{app_name}}/api/record/crud_test/{{c14_rec_id}}
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -97,7 +97,7 @@ jsonpath "$.plugins.crud_test_radiocarbon.data[0].cal_2s_to.val"        == 3486
 
 
 # ── 39d. A record can carry a second, independent dating ───────────────
-POST {{base_url}}/api/record/crud_test
+POST {{base_url}}/{{app_name}}/api/record/crud_test
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -117,7 +117,7 @@ HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
 
-GET {{base_url}}/api/record/crud_test/{{c14_rec_id}}
+GET {{base_url}}/{{app_name}}/api/record/crud_test/{{c14_rec_id}}
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -126,7 +126,7 @@ jsonpath "$.plugins.crud_test_radiocarbon.data"   count == 2
 
 
 # ── 39e. Filter records by calibrated range (plugin-table subquery) ────
-GET {{base_url}}/api/records/crud_test?filter[crud_test_radiocarbon][cal_2s_from][_lte]=3300&filter[crud_test_radiocarbon][cal_2s_to][_gte]=3300
+GET {{base_url}}/{{app_name}}/api/records/crud_test?filter[crud_test_radiocarbon][cal_2s_from][_lte]=3300&filter[crud_test_radiocarbon][cal_2s_to][_gte]=3300
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -134,7 +134,7 @@ jsonpath "$.status" == "success"
 jsonpath "$.total"  >= 1
 
 # A range that cannot match any stored dating → no results.
-GET {{base_url}}/api/records/crud_test?filter[crud_test_radiocarbon][cal_2s_from][_gte]=90000
+GET {{base_url}}/{{app_name}}/api/records/crud_test?filter[crud_test_radiocarbon][cal_2s_from][_gte]=90000
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -143,7 +143,7 @@ jsonpath "$.total"  == 0
 
 
 # ── 39f. Deactivate: config-only, physical table/data untouched ────────
-DELETE {{base_url}}/api/config/table/crud_test/radiocarbon
+DELETE {{base_url}}/{{app_name}}/api/config/table/crud_test/radiocarbon
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -152,7 +152,7 @@ jsonpath "$.code"   == "radiocarbon_deactivated"
 
 
 # ── 39g. Deactivated plugin no longer loaded in view/edit ──────────────
-GET {{base_url}}/api/record/crud_test/{{c14_rec_id}}
+GET {{base_url}}/{{app_name}}/api/record/crud_test/{{c14_rec_id}}
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -161,7 +161,7 @@ jsonpath "$.plugins.crud_test_radiocarbon" not exists
 
 
 # ── 39h-neg. Deactivating an unknown plugin table → error ───────────────
-DELETE {{base_url}}/api/config/table/__no_such_table__/radiocarbon
+DELETE {{base_url}}/{{app_name}}/api/config/table/__no_such_table__/radiocarbon
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -170,14 +170,14 @@ jsonpath "$.code"   == "missing_table"
 
 
 # ── 39i. Reactivate: data from before deactivation is still intact ─────
-POST {{base_url}}/api/config/table/crud_test/radiocarbon
+POST {{base_url}}/{{app_name}}/api/config/table/crud_test/radiocarbon
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
 jsonpath "$.code"   == "radiocarbon_activated"
 
-GET {{base_url}}/api/record/crud_test/{{c14_rec_id}}
+GET {{base_url}}/{{app_name}}/api/record/crud_test/{{c14_rec_id}}
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]

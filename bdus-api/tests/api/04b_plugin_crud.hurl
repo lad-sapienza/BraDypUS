@@ -10,7 +10,7 @@
 
 
 # ── 4b-a. Read record 1 — plugins section is empty at start ──────────
-GET {{base_url}}/api/record/crud_test/{{us_id_1}}
+GET {{base_url}}/{{app_name}}/api/record/crud_test/{{us_id_1}}
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -19,7 +19,7 @@ jsonpath "$.plugins.crud_test_plg.metadata.tot" == 0
 
 
 # ── 4b-b. Save record 1 with one new plugin row ──────────────────────
-POST {{base_url}}/api/record/crud_test
+POST {{base_url}}/{{app_name}}/api/record/crud_test
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -48,7 +48,7 @@ jsonpath "$.code"   == "success_saved"
 
 
 # ── 4b-c. Read back — verify plugin row appeared ─────────────────────
-GET {{base_url}}/api/record/crud_test/{{us_id_1}}
+GET {{base_url}}/{{app_name}}/api/record/crud_test/{{us_id_1}}
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -59,7 +59,7 @@ plg_row_id: jsonpath "$.plugins.crud_test_plg.data[0].id.val"
 
 
 # ── 4b-d. Verify plugin row field values ─────────────────────────────
-GET {{base_url}}/api/record/crud_test/{{us_id_1}}
+GET {{base_url}}/{{app_name}}/api/record/crud_test/{{us_id_1}}
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -70,7 +70,7 @@ jsonpath "$.plugins.crud_test_plg.data[0].data_misura.val" == "2024-03-10"
 
 
 # ── 4b-e. Add a second plugin row ────────────────────────────────────
-POST {{base_url}}/api/record/crud_test
+POST {{base_url}}/{{app_name}}/api/record/crud_test
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -96,7 +96,7 @@ jsonpath "$.status" == "success"
 
 
 # ── 4b-f. Read back — two plugin rows ────────────────────────────────
-GET {{base_url}}/api/record/crud_test/{{us_id_1}}
+GET {{base_url}}/{{app_name}}/api/record/crud_test/{{us_id_1}}
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -106,7 +106,7 @@ plg_row_id_2: jsonpath "$.plugins.crud_test_plg.data[1].id.val"
 
 
 # ── 4b-g. Update first row ───────────────────────────────────────────
-POST {{base_url}}/api/record/crud_test
+POST {{base_url}}/{{app_name}}/api/record/crud_test
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -132,7 +132,7 @@ jsonpath "$.status" == "success"
 
 
 # ── 4b-h. Verify update ──────────────────────────────────────────────
-GET {{base_url}}/api/record/crud_test/{{us_id_1}}
+GET {{base_url}}/{{app_name}}/api/record/crud_test/{{us_id_1}}
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -141,7 +141,7 @@ jsonpath "$.plugins.crud_test_plg.data[0].note_plg.val" == "Prima misura aggiorn
 
 
 # ── 4b-i. Delete second row ──────────────────────────────────────────
-POST {{base_url}}/api/record/crud_test
+POST {{base_url}}/{{app_name}}/api/record/crud_test
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -164,7 +164,7 @@ jsonpath "$.status" == "success"
 
 
 # ── 4b-j. Verify only one row remains ────────────────────────────────
-GET {{base_url}}/api/record/crud_test/{{us_id_1}}
+GET {{base_url}}/{{app_name}}/api/record/crud_test/{{us_id_1}}
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -173,7 +173,7 @@ jsonpath "$.plugins.crud_test_plg.data[0].tipo_misura.val" == "Peso"
 
 
 # ── 4b-neg. Plugin row with missing required field ────────────────────
-POST {{base_url}}/api/record/crud_test
+POST {{base_url}}/{{app_name}}/api/record/crud_test
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -209,7 +209,7 @@ jsonpath "$.errors[0].rule"  == "required"
 # us_id_1 (crud_test) has crud_test_plg rows created above.
 # The config must declare crud_test_plg as plugin_of: crud_test for
 # checkPluginsBeforeDelete to find it.
-GET {{base_url}}/api/record/crud_test/check-plugins-before-delete?id={{us_id_1}}
+GET {{base_url}}/{{app_name}}/api/record/crud_test/check-plugins-before-delete?id={{us_id_1}}
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -219,7 +219,7 @@ jsonpath "$.plugins" isCollection
 
 # ── 4b-check-b. Record with no plugin rows returns empty list ────────
 # us_id_2 has no plugin rows.
-GET {{base_url}}/api/record/crud_test/check-plugins-before-delete?id={{us_id_2}}
+GET {{base_url}}/{{app_name}}/api/record/crud_test/check-plugins-before-delete?id={{us_id_2}}
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -229,7 +229,7 @@ jsonpath "$.plugins" count == 0
 
 
 # ── 4b-check-c-neg. Missing id → error ──────────────────────────────
-GET {{base_url}}/api/record/crud_test/check-plugins-before-delete
+GET {{base_url}}/{{app_name}}/api/record/crud_test/check-plugins-before-delete
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]

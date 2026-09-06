@@ -154,13 +154,27 @@ api.delete(path, params?)       // DELETE
 Key behaviours:
 
 - **Auth header** — every request adds `Authorization: Bearer <token>`.
+- **App-scoped paths (v5.9.0)** — the client passes REST paths as `/api/…`;
+  `scopedPath()` rewrites them to `/{app}/api/…` (app taken from the first URL
+  path segment) before the request goes out, unless the caller already scoped
+  the path (`/${app}/api/…`, used by the pre-app LoginView / OAuthCallbackView).
+  Only four genuinely instance-level endpoints stay bare: `GET /api/auth/apps`,
+  `POST /api/new-app`, `GET /api/new-app/status`, `GET /api/info`. Everything
+  else — including `login`, `register`, `password-reset`, `refresh`, `logout`,
+  `oauth/*` — is app-scoped. The backend rejects the wrong shape with `404`
+  (`app_prefix_required` / `app_prefix_not_allowed`).
 - **Proactive refresh** — if the token has less than 30 minutes of validity
   remaining, the client silently calls `/api/auth/refresh` first and stores
   the new token before making the actual request.
-- **401 handling** — on `401` the token is cleared and the browser is
-  redirected to `/login` (full reload, so all in-memory state is discarded).
+- **401 / `app_mismatch` handling** — on `401`, or a `403` whose body code is
+  `app_mismatch` (the URL app and the JWT app disagree), the token is cleared
+  and the browser is redirected to `/login` (full reload).
 - **Asset URLs** — `assetUrl(path)` prepends `VITE_API_BASE` for uploaded
-  files and images (e.g. `assetUrl('projects/myapp/files/42.jpg')`).
+  files and images (e.g. `assetUrl('projects/myapp/files/42.jpg')`); asset
+  trees already carry the app in the path and are **not** rewritten.
+- **`apiUrl(path)`** — absolute, app-scoped URL for browser-native navigations
+  (`window.open` CSV export, backup download) where no `fetch` (and no auth
+  header) is involved.
 
 ---
 

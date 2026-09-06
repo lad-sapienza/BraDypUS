@@ -11,7 +11,7 @@
 # ════════════════════════════════════════════════════════════════════
 
 # ── 5a. Add relation: US001 is_covered_by US002 (relation = 1) ──────
-POST {{base_url}}/api/record/crud_test/rs
+POST {{base_url}}/{{app_name}}/api/record/crud_test/rs
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -30,7 +30,7 @@ rs_id_1: jsonpath "$.id"
 
 
 # ── 5b. Duplicate must be rejected ──────────────────────────────────
-POST {{base_url}}/api/record/crud_test/rs
+POST {{base_url}}/{{app_name}}/api/record/crud_test/rs
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -46,7 +46,7 @@ jsonpath "$.code"   == "relation_already_exist"
 
 
 # ── 5c. Get RS matrix ───────────────────────────────────────────────
-GET {{base_url}}/api/rs/matrix
+GET {{base_url}}/{{app_name}}/api/rs/matrix
 Authorization: Bearer {{jwt}}
 [QueryStringParams]
 tb: crud_test
@@ -58,7 +58,7 @@ jsonpath "$.relations" isCollection
 
 
 # ── 5d. Delete the relation ──────────────────────────────────────────
-DELETE {{base_url}}/api/rs/{{rs_id_1}}
+DELETE {{base_url}}/{{app_name}}/api/rs/{{rs_id_1}}
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -66,7 +66,7 @@ jsonpath "$.status" == "success"
 
 
 # ── 5e. has_fuzzy_date=false when plugin not yet active ─────────────
-GET {{base_url}}/api/rs/matrix
+GET {{base_url}}/{{app_name}}/api/rs/matrix
 Authorization: Bearer {{jwt}}
 [QueryStringParams]
 tb: crud_test

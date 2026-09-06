@@ -15,7 +15,7 @@
 
 
 # ── 16a. GET welcome — returns initial seeded text ───────────────────
-GET {{base_url}}/api/welcome
+GET {{base_url}}/{{app_name}}/api/welcome
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -23,7 +23,7 @@ jsonpath "$.content" isString
 
 
 # ── 16b. PUT welcome — save new content ──────────────────────────────
-PUT {{base_url}}/api/welcome
+PUT {{base_url}}/{{app_name}}/api/welcome
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -36,7 +36,7 @@ jsonpath "$.code"   == "ok_save"
 
 
 # ── 16c. GET welcome — content must match what we just saved ─────────
-GET {{base_url}}/api/welcome
+GET {{base_url}}/{{app_name}}/api/welcome
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -45,7 +45,7 @@ jsonpath "$.content" == "# Test Welcome\n\nThis is the updated dashboard text fo
 
 
 # ── 16d. PUT welcome — PHP tags must be stripped ─────────────────────
-PUT {{base_url}}/api/welcome
+PUT {{base_url}}/{{app_name}}/api/welcome
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -57,7 +57,7 @@ jsonpath "$.status" == "success"
 
 
 # ── 16e. Verify PHP tags were stripped from stored content ────────────
-GET {{base_url}}/api/welcome
+GET {{base_url}}/{{app_name}}/api/welcome
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -67,7 +67,7 @@ jsonpath "$.content" not contains "<?"
 
 
 # ── 16f. GET search-replace tables ───────────────────────────────────
-GET {{base_url}}/api/search-replace/tables
+GET {{base_url}}/{{app_name}}/api/search-replace/tables
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -79,7 +79,7 @@ jsonpath "$.tables[*].name" contains "siti"
 
 
 # ── 16g. Table list row shape ─────────────────────────────────────────
-GET {{base_url}}/api/search-replace/tables
+GET {{base_url}}/{{app_name}}/api/search-replace/tables
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -88,7 +88,7 @@ jsonpath "$.tables[0].label" isString
 
 
 # ── 16h. GET fields for table "us" ────────────────────────────────────
-GET {{base_url}}/api/search-replace/crud_test/fields
+GET {{base_url}}/{{app_name}}/api/search-replace/crud_test/fields
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -101,7 +101,7 @@ jsonpath "$.fields[*].name" contains "periodo"
 
 
 # ── 16i. Field list row shape ─────────────────────────────────────────
-GET {{base_url}}/api/search-replace/crud_test/fields
+GET {{base_url}}/{{app_name}}/api/search-replace/crud_test/fields
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -112,7 +112,7 @@ jsonpath "$.fields[0].label" isString
 # ── 16j. GET fields for non-existent table → empty field list ─────────
 # The controller does not error on unknown tables; it returns an empty list
 # (same as a table with no text fields).
-GET {{base_url}}/api/search-replace/no_such_table/fields
+GET {{base_url}}/{{app_name}}/api/search-replace/no_such_table/fields
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -123,7 +123,7 @@ jsonpath "$.fields" count == 0
 # ── 16k. POST search-replace — bulk replace in crud_test.sigla ───────
 # Phase 11 created VH001. Rename "VH" → "VX" to test the endpoint
 # with a real match while leaving IMP* records intact for phase 18.
-POST {{base_url}}/api/search-replace
+POST {{base_url}}/{{app_name}}/api/search-replace
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -140,7 +140,7 @@ jsonpath "$.affected" isInteger
 
 
 # ── 16l-neg. POST search-replace — unknown table → error ─────────────
-POST {{base_url}}/api/search-replace
+POST {{base_url}}/{{app_name}}/api/search-replace
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -155,7 +155,7 @@ jsonpath "$.code"   == "not_enough_privilege"
 
 
 # ── 16m-neg. POST search-replace — unknown field → error ─────────────
-POST {{base_url}}/api/search-replace
+POST {{base_url}}/{{app_name}}/api/search-replace
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -170,7 +170,7 @@ jsonpath "$.code"   == "not_enough_privilege"
 
 
 # ── 16n-neg. POST search-replace — missing search → error ────────────
-POST {{base_url}}/api/search-replace
+POST {{base_url}}/{{app_name}}/api/search-replace
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {

@@ -21,7 +21,7 @@ jsonpath "$.apps[0].upgrade" == null
 
 
 # ── 33b. Upgrade status endpoint — no auth, type=null for up-to-date app ──
-GET {{base_url}}/api/upgrade/status?app={{app}}
+GET {{base_url}}/{{app_name}}/api/upgrade/status
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
@@ -29,7 +29,7 @@ jsonpath "$.type"   == null
 
 
 # ── 33c. Minor upgrade — admin JWT, no pending → upgrade_complete ────────
-POST {{base_url}}/api/upgrade/minor
+POST {{base_url}}/{{app_name}}/api/upgrade/minor
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -39,7 +39,7 @@ jsonpath "$.applied"  isCollection
 
 
 # ── 33d. Status check after minor run — still null ───────────────────────
-GET {{base_url}}/api/upgrade/status?app={{app}}
+GET {{base_url}}/{{app_name}}/api/upgrade/status
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
@@ -47,7 +47,7 @@ jsonpath "$.type"   == null
 
 
 # ── 33e. runMajor while no major upgrade needed returns error ────────────
-POST {{base_url}}/api/upgrade/major
+POST {{base_url}}/{{app_name}}/api/upgrade/major
 Content-Type: application/json
 {
   "app":      "{{app}}",

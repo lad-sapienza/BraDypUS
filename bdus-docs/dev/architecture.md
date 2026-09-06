@@ -58,15 +58,19 @@ index.php
   │     ├── define MAIN_DIR, DEBUG_ON
   │     ├── register autoLoader (lib/ + modules/)
   │     ├── require vendor/autoload.php (Composer)
-  │     └── JWT / app resolution → define APP, PREFIX, PROJ_DIR
-  │                               → Auth\CurrentUser::set(…) if valid token
+  │     └── app resolution (Router::resolveRequest): first URL segment
+  │            /{app}/api/… → define APP, PREFIX, PROJ_DIR
+  │            bare /api/… only for apps, new-app*, info (instance-level)
+  │          → Auth\CurrentUser::set(…) if a valid token for that app
+  │          → 403 app_mismatch when the URL app ≠ the JWT app
   ├─ Bdus\Router::dispatch()
-  │     ├── FastRoute matches /api/… path
+  │     ├── FastRoute matches the bare /api/… path (the /{app} segment
+  │     │   is stripped by resolveRequest() before matching)
   │     │     → merges URL vars into $_GET / $_REQUEST
   │     │     → parses JSON body → $_POST / $_REQUEST
   │     │     → sets $_GET['obj'] = 'foo_ctrl', $_GET['method'] = 'bar'
-  │     └── NOT_FOUND → falls through (legacy ?obj=&method= params)
-  ├─ Legacy public REST API check (/api/{app}/… → api_ctrl::run)
+  │     ├── wrong path shape → 404 app_prefix_required / app_prefix_not_allowed
+  │     └── NOT_FOUND → falls through
   └─ new Bdus\App($_GET, $_POST, $_REQUEST)->start()
         ├── DB::__construct(APP) — opens PDO connection
         ├── Monolog logger setup
@@ -150,6 +154,15 @@ $r->addRoute('GET',    '/api/record/{tb}/{id:\d+}', ['record_ctrl', 'getRecord']
 $r->addRoute(['GET','POST'], '/api/records/{tb}',   ['record_ctrl', 'getRecords']);
 $r->addRoute('DELETE', '/api/record/{tb}/{id:\d+}', ['record_ctrl', 'erase']);
 ```
+
+The table is written against the bare `/api/…` path. Clients call these
+application-scoped endpoints as `/{app}/api/…` (v5.9.0); `Router::resolveRequest()`
+splits off the leading `/{app}` segment before FastRoute matching and
+`lib/bootstrap.php` uses it to resolve `APP`. Only four genuinely instance-level
+endpoints are reached at a bare `/api/…` (`Router::APP_INDEPENDENT`):
+`GET /api/auth/apps`, `POST /api/new-app`, `GET /api/new-app/status`,
+`GET /api/info`. Everything else under `/api/auth/*` (login, register,
+password-reset, refresh, logout, oauth) is app-scoped like the rest.
 
 URL path variables (`{tb}`, `{id}`, `{provider}`) are merged into `$_GET` so
 controllers read them via `$this->get['tb']` etc.

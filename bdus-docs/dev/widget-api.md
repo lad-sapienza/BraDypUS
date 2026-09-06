@@ -169,12 +169,13 @@ affects display.
 ## Backend API endpoints
 
 These are used internally by `DynamicWidget.vue` and are available to any
-`read`-privileged session.
+`read`-privileged session. Both are application-scoped: the client calls them
+as `/{app}/api/widgets` and `/{app}/api/widget/{name}` (v5.9.0).
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `GET` | `/api/widgets` | Returns `{ widgets: string[] }` — sorted list of available widget names for the current app |
-| `GET` | `/api/widget/{name}` | Serves the widget JS file as `application/javascript` |
+| `GET` | `/{app}/api/widgets` | Returns `{ widgets: string[] }` — sorted list of available widget names for the current app |
+| `GET` | `/{app}/api/widget/{name}` | Serves the widget JS file as `application/javascript` |
 
 ---
 

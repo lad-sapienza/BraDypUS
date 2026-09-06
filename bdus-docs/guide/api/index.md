@@ -33,15 +33,32 @@ The same JWT issued at login can be used in API calls:
 Authorization: Bearer <jwt_token>
 ```
 
-## Base URL
+## Base URL <Badge type="tip" text="changed in v5.9.0" />
 
-All API endpoints are under `/api/`. The application name is NOT part of the path
-(unlike older v3/v4 versions). The active app is determined from the token.
+Data endpoints are **application-scoped**: the application name is the first
+path segment.
+
+```
+https://your-host/{app}/api/...
+```
+
+For example, records of the `paths` application live under
+`https://your-host/paths/api/records/{table}`. A key or JWT is bound to one
+application; calling another app's URL with it returns `403 app_mismatch`.
+
+The pre-5.9 form (a bare `/api/...` with the app taken from the token or a
+`?app=` query parameter) has been **removed** — a bare `/api/records/...` now
+returns `404 app_prefix_required`.
+
+Only four instance-level endpoints stay at a bare `/api/...` (no app exists or
+is chosen yet): `GET /api/auth/apps`, `POST /api/new-app`,
+`GET /api/new-app/status`, `GET /api/info`. Everything else, sign-in included
+(`/{app}/api/auth/login`, `/{app}/api/auth/oauth/...`), is app-scoped.
 
 ## Listing records
 
 ```
-GET /api/records/{table}
+GET /{app}/api/records/{table}
 ```
 
 Returns a paginated JSON response:
@@ -72,19 +89,19 @@ Use the Directus-style `filter` parameter. It accepts either bracket notation
 ### Bracket notation (GET)
 
 ```
-GET /api/records/us?filter[periodo][_eq]=Basso+Medioevo
+GET /{app}/api/records/us?filter[periodo][_eq]=Basso+Medioevo
 ```
 
 Multiple conditions:
 
 ```
-GET /api/records/us?filter[periodo][_eq]=Basso+Medioevo&filter[sigla][_icontains]=US
+GET /{app}/api/records/us?filter[periodo][_eq]=Basso+Medioevo&filter[sigla][_icontains]=US
 ```
 
 ### JSON body (POST)
 
 ```http
-POST /api/records/us
+POST /{app}/api/records/us
 Content-Type: application/json
 
 {
@@ -130,7 +147,7 @@ Multiple conditions are joined with `AND` by default. For `OR`:
 ## Reading a single record
 
 ```
-GET /api/record/{table}/{id}
+GET /{app}/api/record/{table}/{id}
 ```
 
 Returns the full record with all fields, plugin sub-tables, file list, and

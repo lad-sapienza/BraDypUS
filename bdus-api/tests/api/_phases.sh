@@ -418,6 +418,12 @@ run_tests() {
       --variable "jwt=${JWT}"
   fi
 
+  if should_run "42"; then
+    header "Phase 42 — App-scoped API surface (/{app}/api/…)"
+    run_phase "App-scoped API surface" "42_app_scoped_api.hurl" \
+      --variable "jwt=${JWT}"
+  fi
+
   # Phase 10 always runs: drops crud_test tables and logs out
   header "Phase 10 — Cleanup"
   run_phase "Cleanup" "10_cleanup.hurl" \

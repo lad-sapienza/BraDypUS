@@ -3,7 +3,7 @@
 # ════════════════════════════════════════════════════════════════════
 
 # ── 6a. Get search UI config for us ─────────────────────────────────
-GET {{base_url}}/api/search/crud_test/config
+GET {{base_url}}/{{app_name}}/api/search/crud_test/config
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -17,7 +17,7 @@ jsonpath "$.connectors" includes "OR"
 
 
 # ── 6b. Get distinct values used in a field ─────────────────────────
-GET {{base_url}}/api/search/crud_test/values
+GET {{base_url}}/{{app_name}}/api/search/crud_test/values
 Authorization: Bearer {{jwt}}
 [QueryStringParams]
 fld: periodo
@@ -28,7 +28,7 @@ jsonpath "$.values" isCollection
 
 
 # ── 6c. Search by field value (GET, simple) ─────────────────────────
-GET {{base_url}}/api/records/crud_test
+GET {{base_url}}/{{app_name}}/api/records/crud_test
 Authorization: Bearer {{jwt}}
 [QueryStringParams]
 q_sigla: T001
@@ -40,7 +40,7 @@ jsonpath "$.data[0].sigla" == "T001"
 
 
 # ── 6d. Search via POST with Directus-style filter ───────────────────
-POST {{base_url}}/api/records/crud_test
+POST {{base_url}}/{{app_name}}/api/records/crud_test
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -55,7 +55,7 @@ jsonpath "$.total"  == 1
 
 
 # ── 6e. Search with no results ──────────────────────────────────────
-GET {{base_url}}/api/records/crud_test
+GET {{base_url}}/{{app_name}}/api/records/crud_test
 Authorization: Bearer {{jwt}}
 [QueryStringParams]
 q_sigla: NONEXISTENT
@@ -69,7 +69,7 @@ jsonpath "$.total"  == 0
 # parent_id stores the id of the referenced record; the nested filter
 # resolves it via subquery: parent_id IN (SELECT id FROM crud_test
 # WHERE sigla = 'T001'). Record T002 (created in 4c) points to T001.
-POST {{base_url}}/api/records/crud_test
+POST {{base_url}}/{{app_name}}/api/records/crud_test
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {

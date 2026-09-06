@@ -15,7 +15,7 @@
 
 
 # ── 34a. Upload a test file to a crud_test record ────────────────────
-POST {{base_url}}/api/record/crud_test/{{us_id_1}}/file
+POST {{base_url}}/{{app_name}}/api/record/crud_test/{{us_id_1}}/file
 Authorization: Bearer {{jwt}}
 [MultipartFormData]
 file: file,fixtures/test_image.png;image/png
@@ -31,7 +31,7 @@ file_id_34: jsonpath "$.file.id"
 
 
 # ── 34b. GET /api/files — our file appears in the list ──────────────
-GET {{base_url}}/api/files
+GET {{base_url}}/{{app_name}}/api/files
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -44,7 +44,7 @@ jsonpath "$.files"    isCollection
 
 
 # ── 34c. PATCH /api/file/{id} — update description and keywords ──────
-PATCH {{base_url}}/api/file/{{file_id_34}}
+PATCH {{base_url}}/{{app_name}}/api/file/{{file_id_34}}
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "description": "Test description for phase 34", "keywords": "hurl test automation" }
@@ -55,7 +55,7 @@ jsonpath "$.code"   == "ok_file_updated"
 
 
 # ── 34d. GET /api/files — verify metadata persisted ─────────────────
-GET {{base_url}}/api/files
+GET {{base_url}}/{{app_name}}/api/files
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -64,7 +64,7 @@ jsonpath "$.files"  isCollection
 
 
 # ── 34e. GET /api/files?orphans_only=1 — linked file not returned ────
-GET {{base_url}}/api/files?orphans_only=1
+GET {{base_url}}/{{app_name}}/api/files?orphans_only=1
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -73,7 +73,7 @@ jsonpath "$.files"  isCollection
 
 
 # ── 34f. POST /api/file/{id}/replace — swap binary ───────────────────
-POST {{base_url}}/api/file/{{file_id_34}}/replace
+POST {{base_url}}/{{app_name}}/api/file/{{file_id_34}}/replace
 Authorization: Bearer {{jwt}}
 [MultipartFormData]
 file: file,fixtures/test_image.png;image/png
@@ -87,7 +87,7 @@ jsonpath "$.is_image" == true
 
 
 # ── 34g. Negative: PATCH non-existent file → record_not_found ────────
-PATCH {{base_url}}/api/file/9999999
+PATCH {{base_url}}/{{app_name}}/api/file/9999999
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "description": "should fail" }
@@ -98,7 +98,7 @@ jsonpath "$.code"   == "record_not_found"
 
 
 # ── 34h. DELETE file to clean up ─────────────────────────────────────
-DELETE {{base_url}}/api/file/{{file_id_34}}
+DELETE {{base_url}}/{{app_name}}/api/file/{{file_id_34}}
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]

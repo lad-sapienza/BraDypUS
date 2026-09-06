@@ -8,7 +8,7 @@
 
 
 # ── 24a. GET logs — returns data array ───────────────────────────────
-GET {{base_url}}/api/logs
+GET {{base_url}}/{{app_name}}/api/logs
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -17,7 +17,7 @@ jsonpath "$.data"  isCollection
 
 
 # ── 24b. GET logs with limit param ───────────────────────────────────
-GET {{base_url}}/api/logs?limit=5
+GET {{base_url}}/{{app_name}}/api/logs?limit=5
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -26,7 +26,7 @@ jsonpath "$.data"  isCollection
 
 
 # ── 24c. Purge with explicit days param (minimum 1 enforced) ─────────
-POST {{base_url}}/api/logs/purge
+POST {{base_url}}/{{app_name}}/api/logs/purge
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "days": 7 }
@@ -39,7 +39,7 @@ jsonpath "$.days"    == 7
 
 
 # ── 24d. Purge with default days (no body) ───────────────────────────
-POST {{base_url}}/api/logs/purge
+POST {{base_url}}/{{app_name}}/api/logs/purge
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]

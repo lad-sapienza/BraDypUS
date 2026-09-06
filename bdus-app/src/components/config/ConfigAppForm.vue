@@ -207,11 +207,11 @@ function isProviderConfigured(id) {
 
 // Mirrors Controllers\OAuth::callbackUrl() — same host the frontend itself
 // was served from/talks to the API on, so it holds for both same-origin dev
-// and a separately hosted API (VITE_API_BASE).
+// and a separately hosted API (VITE_API_BASE). v5.9.0: the app is the first
+// path segment; the signed `state` carries it, so no `?app=` query.
 function redirectUri(provider) {
-  const path = assetUrl(`api/auth/oauth/${provider}/callback`)
-  const base = path.startsWith('http') ? path : window.location.origin + path
-  return `${base}?app=${form.value.name}`
+  const path = assetUrl(`${form.value.name}/api/auth/oauth/${provider}/callback`)
+  return path.startsWith('http') ? path : window.location.origin + path
 }
 
 const HEX_COLOR_RE = /^#[0-9a-f]{6}$/i

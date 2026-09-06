@@ -48,6 +48,20 @@ server {
     # Mirrors the paths proxied by Vite in dev (see bdus-app/vite.config.js).
     # Traffic never leaves the Docker network — no CORS headers needed.
 
+    # App-scoped API: /<app>/api/… → same backend. PHP (Router::resolveRequest)
+    # strips the leading /<app> segment before route matching. A regex location
+    # takes precedence over the `location /` SPA fallback. The negative lookahead
+    # keeps built static roots (/assets/…) out; `/projects/<x>/…` and `/cache/…`
+    # never match anyway (the segment after <x> is not `api`).
+    location ~ ^/(?!assets/)[^/]+/api/ {
+        proxy_pass         ${API_PROXY_TARGET};
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $bdus_forwarded_proto;
+    }
+
+    # App-independent API: auth, new-app, global info.
     location /api/ {
         proxy_pass         ${API_PROXY_TARGET};
         proxy_set_header   Host              $host;

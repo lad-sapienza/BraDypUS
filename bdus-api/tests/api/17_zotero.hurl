@@ -7,7 +7,7 @@
 # ════════════════════════════════════════════════════════════════════
 
 # ── 17a. List libs when empty ────────────────────────────────────────
-GET {{base_url}}/api/zotero/libs
+GET {{base_url}}/{{app_name}}/api/zotero/libs
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -16,7 +16,7 @@ jsonpath "$.libs"   isCollection
 jsonpath "$.libs"   isEmpty
 
 # ── 17b. Add a Zotero library (public group, no API key) ─────────────
-POST {{base_url}}/api/zotero/lib
+POST {{base_url}}/{{app_name}}/api/zotero/lib
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -34,7 +34,7 @@ jsonpath "$.id"     isInteger
 zotero_lib_id: jsonpath "$.id"
 
 # ── 17c. Library appears in list; api_key is redacted ────────────────
-GET {{base_url}}/api/zotero/libs
+GET {{base_url}}/{{app_name}}/api/zotero/libs
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -49,7 +49,7 @@ jsonpath "$.libs[0].has_api_key"  == false
 jsonpath "$.libs[0].api_key" not exists
 
 # ── 17d. Missing required params returns error ────────────────────────
-POST {{base_url}}/api/zotero/lib
+POST {{base_url}}/{{app_name}}/api/zotero/lib
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "type": "group" }
@@ -59,7 +59,7 @@ jsonpath "$.status" == "error"
 jsonpath "$.code"   == "parameter_missing"
 
 # ── 17e. Get links for a record (empty) ──────────────────────────────
-GET {{base_url}}/api/zotero/links/{{app_name}}_us/1
+GET {{base_url}}/{{app_name}}/api/zotero/links/{{app_name}}_us/1
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -67,7 +67,7 @@ jsonpath "$.status" == "success"
 jsonpath "$.links"  isEmpty
 
 # ── 17f. Add a link (citation fetch fails gracefully without network) ─
-POST {{base_url}}/api/zotero/link
+POST {{base_url}}/{{app_name}}/api/zotero/link
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {
@@ -88,7 +88,7 @@ jsonpath "$.id"     isInteger
 zotero_link_id: jsonpath "$.id"
 
 # ── 17g. Link appears when listing for that record ────────────────────
-GET {{base_url}}/api/zotero/links/{{app_name}}_us/1
+GET {{base_url}}/{{app_name}}/api/zotero/links/{{app_name}}_us/1
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -101,7 +101,7 @@ jsonpath "$.links[0].notes"  == "See chapter 3"
 jsonpath "$.links[0].zotero_url" contains "zotero.org"
 
 # ── 17h. Edit link metadata (pages / notes / sort) ───────────────────
-PATCH {{base_url}}/api/zotero/link/{{zotero_link_id}}
+PATCH {{base_url}}/{{app_name}}/api/zotero/link/{{zotero_link_id}}
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "pages": "12-14", "notes": "Updated note" }
@@ -111,7 +111,7 @@ jsonpath "$.status" == "success"
 jsonpath "$.code"   == "ok_link_updated"
 
 # ── 17i. Changes persisted ────────────────────────────────────────────
-GET {{base_url}}/api/zotero/links/{{app_name}}_us/1
+GET {{base_url}}/{{app_name}}/api/zotero/links/{{app_name}}_us/1
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -120,7 +120,7 @@ jsonpath "$.links[0].pages"  == "12-14"
 jsonpath "$.links[0].notes"  == "Updated note"
 
 # ── 17j. Sync record (no network → 0 updated, graceful) ──────────────
-POST {{base_url}}/api/zotero/sync/{{app_name}}_us/1
+POST {{base_url}}/{{app_name}}/api/zotero/sync/{{app_name}}_us/1
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -129,7 +129,7 @@ jsonpath "$.updated"  isInteger
 jsonpath "$.detached" isInteger
 
 # ── 17k. Search — parameter validation ───────────────────────────────
-GET {{base_url}}/api/zotero/search
+GET {{base_url}}/{{app_name}}/api/zotero/search
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -137,7 +137,7 @@ jsonpath "$.status" == "error"
 jsonpath "$.code"   == "parameter_missing"
 
 # ── 17l. Search — unknown lib ─────────────────────────────────────────
-GET {{base_url}}/api/zotero/search?lib_id=99999&q=pompeii
+GET {{base_url}}/{{app_name}}/api/zotero/search?lib_id=99999&q=pompeii
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -145,7 +145,7 @@ jsonpath "$.status" == "error"
 jsonpath "$.code"   == "lib_not_found"
 
 # ── 17m. Delete link ──────────────────────────────────────────────────
-DELETE {{base_url}}/api/zotero/link/{{zotero_link_id}}
+DELETE {{base_url}}/{{app_name}}/api/zotero/link/{{zotero_link_id}}
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -153,7 +153,7 @@ jsonpath "$.status" == "success"
 jsonpath "$.code"   == "ok_link_deleted"
 
 # ── 17n. Link gone after delete ───────────────────────────────────────
-GET {{base_url}}/api/zotero/links/{{app_name}}_us/1
+GET {{base_url}}/{{app_name}}/api/zotero/links/{{app_name}}_us/1
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -161,7 +161,7 @@ jsonpath "$.status" == "success"
 jsonpath "$.links"  isEmpty
 
 # ── 17o. Delete library ───────────────────────────────────────────────
-DELETE {{base_url}}/api/zotero/lib/{{zotero_lib_id}}
+DELETE {{base_url}}/{{app_name}}/api/zotero/lib/{{zotero_lib_id}}
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -169,7 +169,7 @@ jsonpath "$.status" == "success"
 jsonpath "$.code"   == "ok_lib_deleted"
 
 # ── 17p. Library gone after delete ────────────────────────────────────
-GET {{base_url}}/api/zotero/libs
+GET {{base_url}}/{{app_name}}/api/zotero/libs
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -177,7 +177,7 @@ jsonpath "$.status" == "success"
 jsonpath "$.libs"   isEmpty
 
 # ── 17q. Sync-all — no libs → 0 items, graceful ──────────────────────
-POST {{base_url}}/api/zotero/sync
+POST {{base_url}}/{{app_name}}/api/zotero/sync
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]

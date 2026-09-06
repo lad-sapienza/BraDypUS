@@ -39,6 +39,16 @@ and instantiates `foo_ctrl` (class in `modules/foo/foo.php`), then calls `$ctrl-
   `$this->get`, `$this->post`, `$this->request`
 - The router enforces authentication before dispatching — no module needs to re-check
   whether the user is logged in, only *what* the user can do
+- **URL scheme (v5.9.0):** application-scoped endpoints are called as
+  `/{app}/api/…`. `Router::resolveRequest()` splits the leading `/{app}` segment
+  (memoised; also read by `lib/bootstrap.php` to resolve `APP`) and FastRoute
+  matches the bare `/api/…` path. Only four genuinely instance-level endpoints
+  stay bare (`Router::APP_INDEPENDENT`): `GET /api/auth/apps`, `POST /api/new-app`,
+  `GET /api/new-app/status`, `GET /api/info`. The rest of `/api/auth/*` (login,
+  register, password-reset, refresh, logout, oauth) is app-scoped — pre-app
+  views pass `/{app}` explicitly. Wrong shape → `404` (`app_prefix_required` /
+  `app_prefix_not_allowed`); URL app ≠ JWT app → `403 app_mismatch`. The pre-5.9
+  `?app=` / JWT-only resolution is gone.
 
 ### Controller conventions
 

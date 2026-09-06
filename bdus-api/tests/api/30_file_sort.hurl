@@ -10,7 +10,7 @@
 
 
 # ── 30a. Sort with non-existent IDs → success (idempotent UPDATE) ─────
-POST {{base_url}}/api/files/sort
+POST {{base_url}}/{{app_name}}/api/files/sort
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "order": [9991, 9992, 9993] }
@@ -21,7 +21,7 @@ jsonpath "$.code"   == "ok_file_sorting_update"
 
 
 # ── 30b. Sort with empty order array → parameter_missing ─────────────
-POST {{base_url}}/api/files/sort
+POST {{base_url}}/{{app_name}}/api/files/sort
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "order": [] }
@@ -32,7 +32,7 @@ jsonpath "$.code"   == "parameter_missing"
 
 
 # ── 30c. Missing order key entirely → parameter_missing ──────────────
-POST {{base_url}}/api/files/sort
+POST {{base_url}}/{{app_name}}/api/files/sort
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 {}

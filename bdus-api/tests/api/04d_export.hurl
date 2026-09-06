@@ -8,7 +8,7 @@
 
 
 # ── 4d-a. Export CSV (default format) ────────────────────────────────
-GET {{base_url}}/api/records/crud_test/export?format=csv
+GET {{base_url}}/{{app_name}}/api/records/crud_test/export?format=csv
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -22,7 +22,7 @@ body contains "T002"
 
 
 # ── 4d-b. Export JSON ────────────────────────────────────────────────
-GET {{base_url}}/api/records/crud_test/export?format=json
+GET {{base_url}}/{{app_name}}/api/records/crud_test/export?format=json
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -34,7 +34,7 @@ body contains "T002"
 
 
 # ── 4d-c. Export XLSX ────────────────────────────────────────────────
-GET {{base_url}}/api/records/crud_test/export?format=xlsx
+GET {{base_url}}/{{app_name}}/api/records/crud_test/export?format=xlsx
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -43,7 +43,7 @@ header "Content-Disposition" contains ".xlsx"
 
 
 # ── 4d-d. Export with filter — only T001 ─────────────────────────────
-GET {{base_url}}/api/records/crud_test/export?format=csv&filter[sigla][_eq]=T001
+GET {{base_url}}/{{app_name}}/api/records/crud_test/export?format=csv&filter[sigla][_eq]=T001
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -55,7 +55,7 @@ body not contains "T002"
 # ── 4d-d2. Export with qt=filter&q=JSON (advanced-search URL persistence) ──
 # DataView persists the advanced search as qt=filter with the JSON filter in q;
 # the export must honour it instead of dumping the whole table.
-GET {{base_url}}/api/records/crud_test/export?format=csv&qt=filter&q=%7B%22sigla%22%3A%7B%22_eq%22%3A%22T002%22%7D%7D
+GET {{base_url}}/{{app_name}}/api/records/crud_test/export?format=csv&qt=filter&q=%7B%22sigla%22%3A%7B%22_eq%22%3A%22T002%22%7D%7D
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -65,7 +65,7 @@ body not contains "T001"
 
 
 # ── 4d-e. Export unknown format → default CSV (no error) ─────────────
-GET {{base_url}}/api/records/crud_test/export?format=unknown
+GET {{base_url}}/{{app_name}}/api/records/crud_test/export?format=unknown
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -73,5 +73,5 @@ header "Content-Type" contains "text/csv"
 
 
 # ── 4d-neg. Export without auth → 401 ────────────────────────────────
-GET {{base_url}}/api/records/crud_test/export?format=csv
+GET {{base_url}}/{{app_name}}/api/records/crud_test/export?format=csv
 HTTP 401

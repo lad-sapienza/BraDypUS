@@ -55,6 +55,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     rules of its own (host-based `proxy_pass` needs no change); `grep` deployed
     `projects/*/widgets/` for hard-coded `/api/` fetches.
 
+### Fixed
+
+- **v4→v5 upgrade: a leftover `geodata` relation broke every `places` record.**
+  An app that had a per-app `geodata` table in v4 (before geodata became the
+  shared, multi-tenant `bdus_geodata` in M037/M038) came out of the upgrade with
+  a `bdus_cfg_relations` row `geodata.id_link → places.id`, imported verbatim
+  from the v4 `data.json` by `M011`. `geodata` is no longer a real table, so
+  `Config\LoadFromDB` turned the row into `tables.places.link[]` and
+  `Record\Read::getLinks()` then ran `SELECT count(id) FROM geodata …` →
+  `no such table: geodata` → `GET /api/record/places/{id}` returned
+  `{status:error, code:db_error}` for *every* `places` record (the list and map
+  views were unaffected — they read `bdus_geodata` directly). Fixed on three
+  layers: **`M043_DropDanglingCfgRelations`** deletes any relation row whose
+  `from_tb`/`to_tb` is not a real, non-`bdus_` table (idempotent; a clean app
+  has none); `Config\LoadFromDB::tables()` now drops such a row in memory too,
+  so a hand-inserted one can never resurface as a link; and
+  `Record\Read::getLinks()` / `getBackLinks()` skip (and log) a link whose
+  target table is missing instead of letting the error abort the whole read.
+- **v4→v5 upgrade: migrated apps returned no geometry on a record.** The upgrade
+  fills `bdus_geodata` (through the geoface import) but never set
+  `bdus_cfg_tables.extra.geodata`, which `Record\Read` checks
+  (`tables.{tb}.geodata`) before attaching geometry to
+  `GET /api/record/{tb}/{id}`. A clean v5 app has `extra = {"geodata":"1", …}`;
+  a migrated one did not, so the record view always showed `geodata: []` even
+  though the map worked. **`M044_DeriveGeodataFlag`** backfills the flag for
+  every table that has rows in `bdus_geodata`, merging into `extra` without
+  touching other keys (idempotent).
+- `DB\Verify\MigrationVerifier` gained two checks for the above: every
+  `bdus_cfg_relations` endpoint must resolve to a real, non-system table
+  (`cfg_relations_resolvable`), and every `bdus_geodata.table_link` table must
+  carry the `extra.geodata` flag (folded into `geodata_integrity`).
+
 ## [5.8.5] - 2026-09-06
 
 ### Fixed

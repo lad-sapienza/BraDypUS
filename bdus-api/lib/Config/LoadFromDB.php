@@ -116,6 +116,16 @@ class LoadFromDB
                     continue;
                 }
 
+                // Defensive: a relation endpoint must be a table that actually has a
+                // bdus_cfg_tables row. A row whose from_tb/to_tb names something else
+                // — e.g. a stale `geodata` relation left over by an incomplete v4→v5
+                // upgrade (cleaned by M043_DropDanglingCfgRelations) — would otherwise
+                // surface as tables.{tb}.link[] and make Record\Read::getLinks() query
+                // a non-existent table, aborting the whole record read.
+                if (!isset($isPluginByName[$rel['from_tb']]) || !isset($isPluginByName[$rel['to_tb']])) {
+                    continue;
+                }
+
                 // Defensive: Config::saveRelation() rejects new relations that touch a
                 // plugin table outside its id_link row (see #19), but a row created
                 // before that guard existed — or written directly to the DB — would

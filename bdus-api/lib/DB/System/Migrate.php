@@ -51,6 +51,8 @@ use DB\System\Migrations\M039_AddLoginThrottlingToUsers;
 use DB\System\Migrations\M040_AddPasswordResetToUsers;
 use DB\System\Migrations\M041_AddSelfRegistrationToCfgApp;
 use DB\System\Migrations\M042_AddLangToCfgApp;
+use DB\System\Migrations\M043_DropDanglingCfgRelations;
+use DB\System\Migrations\M044_DeriveGeodataFlag;
 use Monolog\Logger;
 
 /**
@@ -138,6 +140,8 @@ class Migrate
         M040_AddPasswordResetToUsers::class,
         M041_AddSelfRegistrationToCfgApp::class,
         M042_AddLangToCfgApp::class,
+        M043_DropDanglingCfgRelations::class,
+        M044_DeriveGeodataFlag::class,
     ];
 
     /**

@@ -358,4 +358,69 @@ class MigrationVerifierTest extends TestCase
         $this->assertSame('warn', $c['status']);
         $this->assertStringContainsString('bdus_users', implode("\n", $c['items']));
     }
+
+    // ── #48: geodata upgrade defects ─────────────────────────────────────────
+
+    public function testHealthyAppPassesCfgRelationsResolvableCheck(): void
+    {
+        $this->seedHealthy();
+
+        $report = (new MigrationVerifier($this->db))->run();
+
+        $this->assertSame('pass', $this->check($report, 'cfg_relations_resolvable')['status']);
+    }
+
+    public function testDanglingCfgRelationEndpointFails(): void
+    {
+        $this->seedHealthy();
+        // `geodata` is not a real table — the #48 Bug A row.
+        $this->cfgRelation('geodata', 'items');
+
+        $report = (new MigrationVerifier($this->db))->run();
+
+        $c = $this->check($report, 'cfg_relations_resolvable');
+        $this->assertSame('fail', $c['status']);
+        $this->assertStringContainsString('geodata', implode("\n", $c['items']));
+        $this->assertFalse($report['summary']['ok']);
+    }
+
+    public function testCfgRelationPointingAtSystemTableFails(): void
+    {
+        $this->seedHealthy();
+        $this->cfgRelation('items', 'bdus_geodata');
+
+        $c = $this->check((new MigrationVerifier($this->db))->run(), 'cfg_relations_resolvable');
+        $this->assertSame('fail', $c['status']);
+        $this->assertStringContainsString('bdus_geodata', implode("\n", $c['items']));
+    }
+
+    public function testGeodataWithoutExtraFlagFails(): void
+    {
+        $this->seedHealthy();
+        // items has geometry rows but no extra.geodata flag (migrated-app shape).
+        $this->db->query(
+            'INSERT INTO bdus_geodata (table_link, id_link, geometry) VALUES (?, ?, ?)',
+            ['items', 1, 'POINT(0 0)'],
+            'boolean'
+        );
+
+        $c = $this->check((new MigrationVerifier($this->db))->run(), 'geodata_integrity');
+        $this->assertSame('fail', $c['status']);
+        $this->assertStringContainsString('geodata flag', implode("\n", $c['items']));
+    }
+
+    public function testGeodataWithExtraFlagPasses(): void
+    {
+        $this->seedHealthy();
+        $this->db->query('UPDATE bdus_cfg_tables SET extra = ? WHERE name = ?',
+            [json_encode(['geodata' => '1']), 'items'], 'boolean');
+        $this->db->query(
+            'INSERT INTO bdus_geodata (table_link, id_link, geometry) VALUES (?, ?, ?)',
+            ['items', 1, 'POINT(0 0)'],
+            'boolean'
+        );
+
+        $c = $this->check((new MigrationVerifier($this->db))->run(), 'geodata_integrity');
+        $this->assertSame('pass', $c['status']);
+    }
 }

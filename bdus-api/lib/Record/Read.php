@@ -8,6 +8,7 @@
 namespace Record;
 
 use DB\DBInterface;
+use DB\System\Manage;
 use Config\Config;
 use Geo\WktGeoJson;
 
@@ -20,6 +21,12 @@ class Read
     private $id_fld;
 
     private $cache = [];
+
+    /** Lazily built table-introspection helper (see tableExists()). */
+    private ?Manage $manage = null;
+
+    /** Memoised name => bool results for tableExists(). */
+    private array $tableExistsCache = [];
 
     /**
      * Initializes class
@@ -44,6 +51,28 @@ class Read
     public function getTb(): string
     {
         return $this->tb;
+    }
+
+    /**
+     * True when a physical table by this exact name exists in the current
+     * database.
+     *
+     * Used to skip a stale link / backlink target — e.g. a pre-v5 `geodata`
+     * relation left behind by an incomplete v4→v5 upgrade (cleaned for good by
+     * M043_DropDanglingCfgRelations) — instead of letting the "no such table"
+     * error abort the entire record read.
+     */
+    private function tableExists(string $tb): bool
+    {
+        if (!array_key_exists($tb, $this->tableExistsCache)) {
+            try {
+                $this->manage ??= new Manage($this->db);
+                $this->tableExistsCache[$tb] = $this->manage->tableExists($tb);
+            } catch (\Throwable $e) {
+                $this->tableExistsCache[$tb] = false;
+            }
+        }
+        return $this->tableExistsCache[$tb];
     }
 
     /**
@@ -381,6 +410,19 @@ EOD;
             if (is_array($bl_data)) {
                 foreach ($bl_data as $bl) {
                     list($ref_tb, $via_plg, $via_plg_fld) = array_filter(array_map('trim', explode(':', $bl)), 'strlen');
+
+                    // Defensive: skip a backlink whose referenced or bridge table
+                    // no longer exists (stale config from an incomplete upgrade)
+                    // instead of aborting the whole record read.
+                    if (empty($ref_tb) || empty($via_plg)
+                        || !$this->tableExists($ref_tb) || !$this->tableExists($via_plg)) {
+                        error_log(
+                            "Record\\Read::getBackLinks: skipping backlink '{$bl}' for "
+                            . "'{$this->tb}' — referenced or bridge table missing"
+                        );
+                        continue;
+                    }
+
                     $ref_tb_id = $this->cfg->get("tables.$ref_tb.id_field");
 
                     $r = $this->db->query(
@@ -435,6 +477,16 @@ EOD;
 
             if (is_array($links_data)) {
                 foreach ($links_data as $ld) {
+                    // Defensive: a stale relation row can point at a table that
+                    // no longer exists (see M043_DropDanglingCfgRelations).
+                    // Skip it rather than let "no such table" abort the read.
+                    if (empty($ld['other_tb']) || !$this->tableExists($ld['other_tb'])) {
+                        error_log(
+                            "Record\\Read::getLinks: skipping link from '{$this->tb}' to "
+                            . "unknown table '" . ($ld['other_tb'] ?? '') . "'"
+                        );
+                        continue;
+                    }
                     $where  = [];
                     $values = [];
                     $filter = [];

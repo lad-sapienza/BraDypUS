@@ -104,6 +104,7 @@ final class MigrationVerifier
         $this->checkPluginRelations();
         $this->checkResidualMultiTenant();
         $this->checkPluginOrphanRows();
+        $this->checkCfgRelationsResolvable();
         $this->checkPrefixResidue();
         $this->checkRsIntegrity();
         $this->checkFileLinks();
@@ -298,6 +299,48 @@ final class MigrationVerifier
                 $warn);
         } else {
             $this->add('pass', 'plugin_orphan_rows', 'No orphan plugin rows');
+        }
+    }
+
+    /**
+     * Every bdus_cfg_relations endpoint must be a real, non-system table.
+     *
+     * A v4→v5 upgrade of an app that once had a per-app `geodata` table leaves a
+     * relation row `geodata → places` behind (M011 imports it verbatim); `geodata`
+     * is not a real table post-M037/M038, which makes Record\Read::getLinks() query
+     * a non-existent table and abort every `places` record read.
+     * M043_DropDanglingCfgRelations removes such rows; this check flags any that
+     * survived (or were re-introduced by direct DB edits).
+     */
+    private function checkCfgRelationsResolvable(): void
+    {
+        if (!$this->tableExists($this->db, 'bdus_cfg_relations')) {
+            $this->add('skip', 'cfg_relations_resolvable',
+                'Relation endpoint check skipped', 'bdus_cfg_relations not present');
+            return;
+        }
+
+        $bad = [];
+        foreach ($this->rows($this->db, 'SELECT DISTINCT from_tb, to_tb FROM bdus_cfg_relations') as $r) {
+            foreach (['from_tb' => $r['from_tb'], 'to_tb' => $r['to_tb']] as $side => $tb) {
+                $name = (string) $tb;
+                if (str_starts_with($name, 'bdus_')) {
+                    $bad[] = "{$side}='{$name}' is a system table — not a valid relation endpoint";
+                } elseif ($name === '' || !$this->tableExists($this->db, $name)) {
+                    $bad[] = "{$side}='{$name}' does not exist as a table";
+                }
+            }
+        }
+        $bad = array_values(array_unique($bad));
+
+        if ($bad) {
+            $this->add('fail', 'cfg_relations_resolvable',
+                count($bad) . ' unresolvable relation endpoint(s)',
+                'Every bdus_cfg_relations row must connect two real, non-system tables (see M043)',
+                $bad);
+        } else {
+            $this->add('pass', 'cfg_relations_resolvable',
+                'All bdus_cfg_relations endpoints resolve to real tables');
         }
     }
 
@@ -503,6 +546,8 @@ final class MigrationVerifier
             "SELECT DISTINCT table_link FROM bdus_geodata WHERE table_link IS NOT NULL AND table_link != ''"
         ), 'table_link');
 
+        $haveCfgTables = $this->tableExists($this->db, 'bdus_cfg_tables');
+
         foreach ($links as $tl) {
             if (!$this->tableExists($this->db, $tl)) {
                 $fail[] = "bdus_geodata references table '{$tl}' which does not exist";
@@ -514,6 +559,18 @@ final class MigrationVerifier
                   WHERE g.table_link = ? AND r.id IS NULL", [$tl]);
             if ($dangling > 0) {
                 $warn[] = "bdus_geodata[{$tl}]: {$dangling} geometry row(s) with no matching record";
+            }
+
+            // A geo-enabled table must also carry extra.geodata = "1", or
+            // GET /api/record/{tb}/{id} silently returns geodata:[] even though
+            // the map view works (M044_DeriveGeodataFlag backfills this).
+            if ($haveCfgTables) {
+                $cfg = $this->rows($this->db,
+                    'SELECT extra FROM bdus_cfg_tables WHERE name = ?', [$tl]);
+                $extra = $cfg ? json_decode((string) ($cfg[0]['extra'] ?? ''), true) : null;
+                if (!is_array($extra) || (string) ($extra['geodata'] ?? '') !== '1') {
+                    $fail[] = "bdus_cfg_tables['{$tl}'].extra.geodata flag is not set — record reads return no geometry";
+                }
             }
         }
 

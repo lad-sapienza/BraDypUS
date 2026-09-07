@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.9.2] - 2026-09-07
+
 ### Fixed
 
 - **GeoFace showed the base map but no record/site geometries on any deployed

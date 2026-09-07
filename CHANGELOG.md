@@ -5,6 +5,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **GeoFace showed the base map but no record/site geometries on any deployed
+  install** (worked in local dev). `maplibre-gl` 6.x starts its GeoJSON /
+  vector-tile Web Worker at runtime from a sibling URL built as
+  `new URL('./maplibre-gl-worker.mjs', import.meta.url)`, with the filename
+  chosen dynamically — so Rollup's static worker detection never sees it and
+  `vite build` left `maplibre-gl-worker.mjs` out of the bundle. In the browser
+  the bundled maplibre chunk sits in `/assets/`, its `import.meta.url` resolves
+  there, and the follow-up request to `/assets/maplibre-gl-worker.mjs` 404'd →
+  the SPA nginx fallback returned `index.html` as `text/html` → the module
+  worker was blocked (`X-Content-Type-Options: nosniff`) → GeoJSON sources were
+  never parsed, so nothing drew, while the raster base layer (no worker) still
+  rendered. The API response was fine throughout — the data reached the browser,
+  maplibre just could not process it. Local dev was unaffected because
+  `optimizeDeps.exclude: ['maplibre-gl']` serves the package raw from
+  `node_modules`, where the worker is a real sibling of `maplibre-gl.mjs`; the
+  earlier dev-only fix (`4a0a6db4`) assumed `vite build` bundled the worker
+  through an unaffected path, which is not true for maplibre 6.x.
+  - `bdus-app/vite.config.js`: new build-only `copy-maplibre-worker` plugin
+    copies `maplibre-gl-worker.mjs` and the `maplibre-gl-shared.mjs` chunk it
+    imports (by that exact relative name) verbatim from `node_modules` into
+    `dist/assets/`, so the runtime URL resolves to a real file. No new
+    dependency; `maplibre-gl-shared.mjs` (~490 kB, ~130 kB gzip) is duplicated
+    alongside the copy already inlined in the app bundle — maplibre's own split.
+  - `bdus-app/nginx.conf.template`: `location ~ \.mjs$` forces a JS MIME type
+    regardless of the base image's `mime.types` version and returns a real
+    `404` for a missing `.mjs` instead of the SPA HTML fallback.
+
 ## [5.9.1] - 2026-09-07
 
 ### Fixed

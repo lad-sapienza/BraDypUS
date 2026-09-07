@@ -1,11 +1,46 @@
 import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { fileURLToPath, URL } from 'node:url'
-import { readFileSync } from 'node:fs'
+import { readFileSync, copyFileSync } from 'node:fs'
+import { join } from 'node:path'
+import { createRequire } from 'node:module'
+
+const require = createRequire(import.meta.url)
 
 const { version: APP_VERSION } = JSON.parse(
   readFileSync(new URL('./package.json', import.meta.url), 'utf-8')
 )
+
+// maplibre-gl 6.x starts its Web Worker (GeoJSON / vector-tile parsing) at
+// runtime from a sibling URL built as `new URL('./maplibre-gl-worker.mjs',
+// import.meta.url)`, with the filename picked dynamically. Rollup's static
+// worker detection never sees it, so `vite build` leaves the file out of the
+// bundle. At runtime the bundled maplibre chunk lands in dist/assets/, its
+// import.meta.url resolves to /assets/<chunk>.js, and the follow-up request to
+// /assets/maplibre-gl-worker.mjs 404s -> the SPA nginx fallback returns
+// index.html as text/html -> the module worker is blocked (nosniff) -> GeoJSON
+// sources are never parsed and no geometry renders, while the raster base layer
+// (no worker needed) still does. Dev is unaffected: optimizeDeps.exclude below
+// serves the package raw from node_modules, where the worker is a real sibling.
+//
+// Fix: copy the worker and the shared chunk it imports (by that exact relative
+// name) into dist/assets/ verbatim, so the runtime URL resolves to a real file.
+function copyMaplibreWorker () {
+  const files = ['maplibre-gl-worker.mjs', 'maplibre-gl-shared.mjs']
+  let assetsDir
+  return {
+    name: 'copy-maplibre-worker',
+    apply: 'build',
+    configResolved (cfg) {
+      assetsDir = join(cfg.root, cfg.build.outDir, cfg.build.assetsDir)
+    },
+    closeBundle () {
+      for (const f of files) {
+        copyFileSync(require.resolve(`maplibre-gl/dist/${f}`), join(assetsDir, f))
+      }
+    }
+  }
+}
 
 export default defineConfig(({ mode }) => {
   // loadEnv with '' prefix loads ALL env vars (not just VITE_).
@@ -25,7 +60,7 @@ export default defineConfig(({ mode }) => {
       __APP_VERSION__: JSON.stringify(APP_VERSION)
     },
 
-    plugins: [vue()],
+    plugins: [vue(), copyMaplibreWorker()],
 
     resolve: {
       alias: {

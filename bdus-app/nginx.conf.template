@@ -34,6 +34,19 @@ server {
     add_header X-Frame-Options SAMEORIGIN always;
     add_header Referrer-Policy strict-origin-when-cross-origin always;
 
+    # ── ES module assets ─────────────────────────────────────────────────
+    # maplibre-gl loads its Web Worker as `new Worker(url, { type: 'module' })`
+    # from /assets/maplibre-gl-worker.mjs (copied there by the Vite build).
+    # Force a JS MIME type regardless of the base image's mime.types version
+    # (older nginx has no .mjs mapping, and a wrong type makes the browser
+    # block the module worker just as a 404 does), and return a real 404
+    # instead of the SPA HTML fallback if one is ever missing.
+    location ~ \.mjs$ {
+        types { }
+        default_type application/javascript;
+        try_files $uri =404;
+    }
+
     # ── SPA fallback ──────────────────────────────────────────────────────
     # All paths that do not match a static file are served as index.html so
     # that Vue Router (history mode) handles client-side navigation, including

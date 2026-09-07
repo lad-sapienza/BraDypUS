@@ -5,6 +5,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Toggle switches in the table-settings panel rendered as stretched pills**
+  instead of AntD's normal ~44px track. The *Is plugin?* switch and the
+  *Stratigraphic relations*, *Geodata* and *Zotero* system-plugin switches sit
+  directly inside `.cfg-form-field`, a `flex-direction: column` container, so
+  they inherited its default `align-items: stretch` and grew to the full column
+  width (height was unaffected). Same cause and fix as the *Allow
+  self-registration* switch in App settings (5.9.x): a `.cfg-switch` class with
+  `align-self: flex-start`, scoped to those switches. The fuzzy-date, osteology
+  and radiocarbon switches were already fine — they live inside a
+  `.cfg-input-action` row flex that hosts their busy spinner.
+  - `bdus-app/src/components/config/ConfigTableForm.vue`
+
 ## [5.9.3] - 2026-09-07
 
 ### Fixed

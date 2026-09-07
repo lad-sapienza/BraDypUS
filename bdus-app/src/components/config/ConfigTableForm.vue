@@ -60,7 +60,7 @@
           <!-- Is Plugin (#20: ToggleSwitch) -->
           <div class="cfg-form-field">
             <label>{{ t('is_plugin') }}</label>
-            <ASwitch v-model:checked="isPluginBool" :disabled="!!tb" />
+            <ASwitch class="cfg-switch" v-model:checked="isPluginBool" :disabled="!!tb" />
             <small class="cfg-hint">{{ t('help_table_is_plugin') }}</small>
           </div>
 
@@ -132,15 +132,15 @@
         <div class="cfg-form-row">
           <div class="cfg-form-field">
             <label>{{ t('rs_plugin') }}</label>
-            <ASwitch v-model:checked="form.rs" />
+            <ASwitch class="cfg-switch" v-model:checked="form.rs" />
           </div>
           <div class="cfg-form-field">
             <label>{{ t('geodata_plugin') }}</label>
-            <ASwitch v-model:checked="form.geodata" />
+            <ASwitch class="cfg-switch" v-model:checked="form.geodata" />
           </div>
           <div class="cfg-form-field">
             <label>{{ t('zotero_plugin') }}</label>
-            <ASwitch v-model:checked="form.zotero" />
+            <ASwitch class="cfg-switch" v-model:checked="form.zotero" />
           </div>
           <div class="cfg-form-field">
             <label>{{ t('fuzzy_date_plugin') }}</label>
@@ -619,6 +619,15 @@ onMounted(load)
   display: flex;
   gap: 0.4rem;
   align-items: center;
+}
+
+.cfg-switch {
+  /* .cfg-form-field is a column flex container — without this the switch
+     stretches to the field's full cross-axis width instead of keeping its
+     own ~44px track (AntD sets width:auto, so it inherits stretch).
+     Switches wrapped in .cfg-input-action don't need this: that row flex
+     already keeps them at their natural width. */
+  align-self: flex-start;
 }
 
 /* Help texts */

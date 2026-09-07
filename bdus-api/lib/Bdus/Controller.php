@@ -45,13 +45,38 @@ abstract class Controller
 
     /**
      * Emits a JSON response. Injects `"status": "success"` if not already set.
+     *
+     * Never emits an empty body. json_encode() returns false on malformed UTF-8
+     * (common in text carried over from a legacy Latin-1 v4 database) and on
+     * recursion / depth overflow; left unchecked, `echo false` produces a 200
+     * with a zero-byte body and no log line, and the frontend then fails with
+     * "JSON.parse: unexpected end of data". JSON_INVALID_UTF8_SUBSTITUTE keeps
+     * the response usable by replacing bad byte sequences with U+FFFD; any other
+     * encode failure is logged and returned as a parseable error envelope.
      */
     public function returnJson(array $data): void
     {
         if (!array_key_exists('status', $data)) {
             $data = ['status' => 'success'] + $data;
         }
-        header('Content-Type: application/json');
-        echo json_encode($data);
+
+        $json = json_encode($data, JSON_INVALID_UTF8_SUBSTITUTE);
+        if ($json === false) {
+            $msg = json_last_error_msg();
+            if ($this->log !== null) {
+                $this->log->error('returnJson: json_encode failed: ' . $msg);
+            } else {
+                error_log('returnJson: json_encode failed: ' . $msg);
+            }
+            http_response_code(500);
+            $json = json_encode([
+                'status' => 'error',
+                'code'   => 'json_encode_failed',
+                'detail' => $msg,
+            ]);
+        }
+
+        header('Content-Type: application/json; charset=utf-8');
+        echo $json;
     }
 }

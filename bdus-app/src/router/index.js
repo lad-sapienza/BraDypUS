@@ -8,9 +8,17 @@ const routes = [
     redirect: '/login'
   },
 
-  // ── Public routes — no app prefix, no auth required ───────────────────────
+  // ── Public routes — no auth required ─────────────────────────────────────
   {
     path: '/login',
+    component: () => import('@/views/LoginView.vue')
+  },
+  {
+    // Same login screen, but app-scoped: the application is pre-selected in the
+    // dropdown. An unauthenticated hit on /:app (or any deep link under it) is
+    // bounced here so the visitor lands on the login for the app they wanted.
+    // Bare /login stays the "pick an application" entry point.
+    path: '/:app/login',
     component: () => import('@/views/LoginView.vue')
   },
   {
@@ -182,7 +190,9 @@ router.beforeEach((to) => {
   // happens server-side on every API call; a tampered token gets a 401.
   const auth = useAuthStore()
   if (!auth.isAuthenticated()) {
-    return { path: '/login' }
+    // Carry the app the visitor was heading for, so the login screen can
+    // pre-select it in the dropdown.
+    return { path: to.params.app ? `/${to.params.app}/login` : '/login' }
   }
 
   // Silently correct a stale or mistyped app name in the URL so the JWT

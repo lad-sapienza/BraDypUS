@@ -296,7 +296,7 @@
 <script setup>
 import { BulbFilled, BulbOutlined, CheckCircleOutlined, DesktopOutlined, LoginOutlined, UploadOutlined, WarningOutlined } from '@ant-design/icons-vue'
 import { ref, computed, onMounted, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { api } from '@/api'
 import { useI18n } from '@/i18n'
@@ -309,6 +309,7 @@ const AInputPassword = Input.Password
 
 const { t } = useI18n()
 const router = useRouter()
+const route = useRoute()
 const auth = useAuthStore()
 const { isDark, mode: themeMode, toggle: toggleDark } = useDarkMode()
 const modeIcon = computed(() => themeMode.value === 'system' ? DesktopOutlined : (isDark.value ? BulbFilled : BulbOutlined))
@@ -405,6 +406,11 @@ onMounted(async () => {
     mailConfigured.value = appsRes.mail_configured ?? false
     if (apps.value.length === 1) {
       form.value.app = apps.value[0]
+    }
+    // /:app/login — pre-select the app named in the URL, if it resolves to a
+    // real application; otherwise fall back to the empty dropdown.
+    if (!form.value.app && route.params.app) {
+      form.value.app = apps.value.find(a => a.db === route.params.app) ?? null
     }
     canCreateApp.value = statusRes.permitted ?? false
 

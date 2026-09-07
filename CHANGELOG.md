@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.9.1] - 2026-09-07
+
 ### Fixed
 
 - **A record whose stored text carries a stray non-UTF-8 byte no longer comes

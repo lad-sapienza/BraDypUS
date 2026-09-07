@@ -5,6 +5,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.9.1] - 2026-09-07
+
+### Fixed
+
+- **A record whose stored text carries a stray non-UTF-8 byte no longer comes
+  back as an empty response.** `Bdus\Controller::returnJson()` did
+  `echo json_encode($data)` unchecked; on malformed UTF-8 `json_encode()`
+  returns `false`, so the endpoint emitted a `200` with a zero-byte body and
+  **no log line** — not a fatal, so `index.php`'s shutdown safety net never saw
+  it — and the SPA failed with `JSON.parse: unexpected end of data at line 1
+  column 1`. Hit on a real v4→v5 migration: a table whose bearing column still
+  held Latin-1 `°` (`0xB0`) bytes, so every affected record was unreadable
+  while the list, the empty-record form and clean records worked. `returnJson()`
+  now encodes with `JSON_INVALID_UTF8_SUBSTITUTE` (bad byte sequences become
+  U+FFFD and the record stays readable) and, if the encode still fails
+  (recursion, depth), logs `json_last_error_msg()` and returns a
+  `{ "status": "error", "code": "json_encode_failed" }` envelope with `500` —
+  never an empty body. New `tests/Unit/ControllerReturnJsonTest.php`.
+
 ## [5.9.0] - 2026-09-06
 
 ### Changed

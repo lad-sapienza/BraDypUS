@@ -5,6 +5,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.9.3] - 2026-09-07
+
+### Fixed
+
+- **An unauthenticated visit to `/{app}` dropped the application on the way to
+  the login screen.** The redirect went to bare `/login`, so a visitor who had
+  just named the application in the URL had to find and re-select it in the
+  dropdown — an oversight in the URL design: every other app-specific page is
+  `/{app}/…`, but the login it bounced you to was not. The login route is now
+  app-scoped too: `/{app}` (and any deep link under it) redirects to
+  `/{app}/login`, which opens with that application already selected. The URL
+  is also shareable — `https://host/{app}/login` lands a colleague ready to
+  type their credentials. Bare `/login` is unchanged and still lists every
+  application; an unknown app segment falls back to it.
+  - `bdus-app/src/router/index.js`: new public route `/:app/login` (same
+    `LoginView` component); the auth guard now carries `to.params.app` into
+    the redirect target.
+  - `bdus-app/src/views/LoginView.vue`: pre-selects the app named in the route
+    (matched by `db`) once the app list has loaded.
+
 ## [5.9.2] - 2026-09-07
 
 ### Fixed

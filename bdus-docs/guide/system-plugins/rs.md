@@ -105,7 +105,7 @@ may compress into decades.
 :::
 
 ::: warning
-The chronological layout is a recent addition and is still being refined. On some
-datasets the vertical placement may not yet reflect absolute dates accurately;
-the stratigraphic layout is unaffected.
+The chronological layout is a recent addition and is still being refined —
+units close together in time can overlap on the axis. The stratigraphic layout
+is unaffected.
 :::

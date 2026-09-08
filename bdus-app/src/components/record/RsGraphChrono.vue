@@ -2,7 +2,7 @@
   <div class="rs-chrono-wrap">
     <!-- Year axis (SVG, left side) -->
     <svg
-      v-if="axisTicks.length"
+      v-if="ready && axisTicks.length"
       class="rs-chrono-axis"
       :width="AXIS_W"
       :height="canvasH"
@@ -67,7 +67,9 @@ const UNDATED_OFFSET   = 120  // units below the dated zone for undated nodes
 // ── Refs ─────────────────────────────────────────────────────────────────────
 const cyEl    = ref(null)
 const canvasH = ref(400)      // updated after layout to drive SVG height
+const ready   = ref(false)    // true once the first layout pass has run
 let   cy      = null
+let   ro      = null          // ResizeObserver on the canvas → keeps canvasH live
 
 // Cytoscape's live pan/zoom transform. The year axis is a plain SVG rendered
 // next to the Cytoscape canvas (not inside it), so it does not automatically
@@ -273,7 +275,14 @@ function buildStyle() {
   ]
 }
 
-// ── Two-phase Cytoscape layout ────────────────────────────────────────────────
+// ── Cytoscape layout ─────────────────────────────────────────────────────────
+// dagre gives the topological X columns; a synchronous `preset` pass then
+// overrides Y from each node's chrono year. Both layouts are discrete, so
+// `.run()` returns with positions (and, for the preset, the fit) already
+// applied — no `layoutstop` listener, which in the old code was registered
+// *after* dagre had already run synchronously inside the Cytoscape constructor
+// and therefore never fired (nodes stayed in topological order, the SVG axis
+// stayed at the initial ref(400) height).
 async function initCy() {
   if (!cyEl.value) return
 
@@ -283,67 +292,84 @@ async function initCy() {
   ])
   Cytoscape.use(CytoscapeDagre)
 
-  if (cy) { cy.destroy(); cy = null }
+  destroyCy()
 
   cy = Cytoscape({
     container: cyEl.value,
     elements:  buildElements(),
     style:     buildStyle(),
-    layout:    { name: 'dagre', rankDir: 'TB', ranksep: 60, nodesep: 40, animate: false },
+    layout:    { name: 'preset' },   // no auto-layout — applyLayout() runs it below
     minZoom:   0.02,
     maxZoom:   3,
     wheelSensitivity: 0.3,
   })
 
   cy.on('pan zoom', syncPanZoom)
-
-  // Phase 1 complete → override Y with chrono, keep dagre X
-  cy.one('layoutstop', () => {
-    const r = yearRange.value
-
-    if (!r) {
-      // No dated nodes: just fit the dagre result
-      cy.fit(undefined, 20)
-      syncPanZoom()
-      return
-    }
-
-    // Bottom Y of the dated zone
-    const datedBottomY = yearToY(r.min) + 60
-
-    const positions = {}
-    cy.nodes().forEach(node => {
-      const year = node.data('year')
-      positions[node.id()] = {
-        x: node.position('x'),
-        y: year != null
-          ? yearToY(year)
-          : datedBottomY + UNDATED_OFFSET,
-      }
-    })
-
-    cy.layout({
-      name:      'preset',
-      positions: n => positions[n.id()],
-      fit:       true,
-      padding:   30,
-    }).run()
-
-    // After preset: sync SVG axis height and initial pan/zoom (fit changes both)
-    cy.one('layoutstop', () => {
-      canvasH.value = cyEl.value?.offsetHeight ?? 400
-      syncPanZoom()
-    })
-  })
-
   cy.on('tap', 'node', evt => {
     const d = evt.target.data()
     emit('node-click', { db_id: d.db_id, identifier: d.id })
   })
+
+  applyLayout()
+
+  // The SVG axis lives next to the canvas, not inside it: keep its height and
+  // the mirrored pan/zoom in step with the real canvas size (initial + resize).
+  ro = new ResizeObserver(() => { updateCanvasH(); syncPanZoom() })
+  ro.observe(cyEl.value)
+}
+
+function applyLayout() {
+  if (!cy) return
+
+  // Phase 1 — dagre, for the X columns only (topological order preserved).
+  cy.layout({
+    name: 'dagre', rankDir: 'TB', ranksep: 60, nodesep: 40,
+    animate: false, fit: false,
+  }).run()
+
+  const r = yearRange.value
+
+  if (!r) {
+    // No dated nodes — keep the dagre result as-is.
+    cy.fit(undefined, 20)
+    updateCanvasH()
+    syncPanZoom()
+    ready.value = true
+    return
+  }
+
+  // Phase 2 — keep dagre X, set Y from the chrono year (undated go below).
+  const datedBottomY = yearToY(r.min) + 60
+  const positions = {}
+  cy.nodes().forEach(node => {
+    const year = node.data('year')
+    positions[node.id()] = {
+      x: node.position('x'),
+      y: year != null ? yearToY(year) : datedBottomY + UNDATED_OFFSET,
+    }
+  })
+
+  cy.layout({
+    name: 'preset',
+    positions: n => positions[n.id()],
+    fit: true,
+    padding: 30,
+  }).run()
+
+  updateCanvasH()
+  syncPanZoom()
+  ready.value = true
+}
+
+function updateCanvasH() {
+  const h = cyEl.value?.offsetHeight
+  if (h && h !== canvasH.value) canvasH.value = h
 }
 
 function destroyCy() {
+  if (ro) { ro.disconnect(); ro = null }
   if (cy) { cy.destroy(); cy = null }
+  ready.value = false
 }
 
 function exportPng() {

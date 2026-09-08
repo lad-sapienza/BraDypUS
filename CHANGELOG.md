@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **The configuration screen was unusable on phone-sized viewports.** Below
+  1024px the primary app sidebar already collapses into a drawer, but the
+  config module's own section sidebar (`ConfigSidebar`) stayed inline at its
+  fixed 220px, leaving the settings panel squeezed into what little width
+  remained — `ConfigView`'s `.cfg-shell` had no responsive rules at all. It
+  now behaves as a mobile master/detail view: with no section chosen the
+  section list fills the screen (no drawer, no bar, so the first thing you
+  see is the list rather than an empty pane); once a section is open the list
+  folds into a left drawer, a slim top bar (hamburger + current section name)
+  appears, and the settings panel takes the full width. Picking an entry
+  closes the drawer; returning to the list resets it. Desktop (≥1024px) is
+  unchanged, and no new i18n keys are needed — the bar reuses the existing
+  section labels.
+  - `bdus-app/src/views/ConfigView.vue`
+
 - **Toggle switches in the table-settings panel rendered as stretched pills**
   instead of AntD's normal ~44px track. The *Is plugin?* switch and the
   *Stratigraphic relations*, *Geodata* and *Zotero* system-plugin switches sit

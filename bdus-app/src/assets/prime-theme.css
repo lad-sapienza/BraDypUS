@@ -12,10 +12,10 @@
    color for free instead of needing a static per-brand/per-mode snapshot.
 
    What's left here is genuinely static: an auxiliary Tailwind-style color
-   scale (badge/tag accent colors) and a neutral gray scale, both confirmed
-   brand-independent and only flipping with .dark-mode — AntD has no 1:1
-   equivalent multi-step scale for these, so hand-picked values (originally
-   extracted from PrimeVue Aura's own output) stay hardcoded.
+   scale (badge/tag accent colors), confirmed brand-independent and identical
+   in light/dark. The neutral gray scale (--p-surface-*) used to live here as
+   a light-only ramp with a broken .dark-mode block that never inverted; it is
+   now driven live by ThemeTokenBridge.vue from AntD's dark-aware fill tokens.
    ------------------------------------------------------------------- */
 
 /* ── Auxiliary color scale: identical across brands and light/dark ──── */
@@ -51,27 +51,10 @@
   --p-yellow-400: #facc15;
   --p-yellow-500: #eab308;
   --p-yellow-600: #ca8a04;
-  --p-surface-0:  #ffffff;
   --p-border-radius-md: 6px;
   --p-border-radius-lg: 8px;
   --p-border-radius-xl: 12px;
 }
 
-/* ── Neutral gray scale: flips with .dark-mode, same for every brand ──── */
-:root {
-  --p-surface-50:  #f8fafc;
-  --p-surface-100: #f1f5f9;
-  --p-surface-200: #e2e8f0;
-  --p-surface-300: #cbd5e1;
-  --p-surface-400: #94a3b8;
-  --p-surface-800: #1e293b;
-}
-
-.dark-mode {
-  --p-surface-50:  #fafafa;
-  --p-surface-100: #f4f4f5;
-  --p-surface-200: #e4e4e7;
-  --p-surface-300: #d4d4d8;
-  --p-surface-400: #a1a1aa;
-  --p-surface-800: #27272a;
-}
+/* --p-surface-0 / -50 / -100 / -200 / -300 / -400 / -800 are set live by
+   ThemeTokenBridge.vue (AntD fill/bg tokens) — dark-aware, no static block. */

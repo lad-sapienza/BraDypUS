@@ -443,7 +443,7 @@ function hideTooltip() { tooltip.visible = false }
 .osteo-tooltip {
   position: absolute;
   background: var(--p-surface-800, #1e1e1e);
-  color: var(--p-surface-0, #fff);
+  color: var(--p-primary-contrast-color, #fff);
   border-radius: 4px;
   padding: 4px 8px;
   font-size: 0.75rem;

@@ -38,6 +38,17 @@ watchEffect(() => {
   s.setProperty('--p-warning-color', t.colorWarning)
   s.setProperty('--p-card-shadow', t.boxShadowTertiary)
   s.setProperty('--p-border-radius', `${t.borderRadius}px`)
+  // Neutral surface scale. Was a static light-only ramp in prime-theme.css
+  // that never inverted for dark mode; AntD's own fill scale is dark-aware.
+  // 0 = solid card surface; 50→300 = increasingly strong translucent tints;
+  // 400 = solid mid grey; 800 = "always-contrasting" (tooltip) surface.
+  s.setProperty('--p-surface-0',   t.colorBgContainer)
+  s.setProperty('--p-surface-50',  t.colorFillQuaternary)
+  s.setProperty('--p-surface-100', t.colorFillTertiary)
+  s.setProperty('--p-surface-200', t.colorFillSecondary)
+  s.setProperty('--p-surface-300', t.colorFill)
+  s.setProperty('--p-surface-400', t.colorTextTertiary)  // solid mid grey (badge fills, SVG strokes)
+  s.setProperty('--p-surface-800', t.colorBgSpotlight)
 })
 </script>
 

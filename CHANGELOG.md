@@ -7,15 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- **The Zotero bibliography panel had a fixed light background in dark mode**,
-  leaving the citation text almost unreadable. `ZoteroSection` styled its item
-  cards (and the add-reference modal's result list) with the `--p-surface-50` /
-  `--p-surface-0` / `--p-surface-100..300` tokens, whose `.dark-mode` values in
-  `prime-theme.css` are still light greys — they never invert. Those spots now
-  use the theme-aware `--bdus-raised` / `--bdus-surface` and the reactive
-  `--p-content-border-color` instead. The underlying `--p-surface-*` scale bug
-  affects other panels too and is tracked separately.
-  - `bdus-app/src/components/record/ZoteroSection.vue`
+- **Panels with a fixed light background in dark mode.** The neutral
+  `--p-surface-0 / -50 / -100 / -200 / -300 / -400 / -800` scale was a
+  static light-only ramp in `prime-theme.css` whose `.dark-mode` block never
+  actually inverted, so anything painted with it (the Zotero bibliography
+  panel, the osteology plugin's SVG + table + tooltip, the derived chrono
+  distribution track, the GeoFace temporal bar, the Assemblages pivot table,
+  Import and New App) showed light surfaces and near-invisible text on the
+  dark page. The scale is now driven live by `ThemeTokenBridge.vue` from
+  AntD's own dark-aware fill/background tokens (`colorFill*`,
+  `colorBgContainer`, `colorBgSpotlight`), and the static block is gone —
+  roughly 50 call sites across ~11 files start rendering correctly in dark
+  mode with no per-site change.
+  - `bdus-app/src/components/ThemeTokenBridge.vue`,
+    `bdus-app/src/assets/prime-theme.css`,
+    `bdus-app/src/components/record/osteology/OsteologySvg.vue`
+    (tooltip text colour), `bdus-app/src/components/record/ZoteroSection.vue`
 
 - **The Harris Matrix "Chronological" layout did not position nodes by date.**
   `RsGraphChrono` created its Cytoscape instance with a `dagre` layout in the

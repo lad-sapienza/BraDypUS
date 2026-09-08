@@ -431,13 +431,13 @@ async function selectResult(result) {
   gap: 0.5rem;
   padding: 0.5rem 0.4rem;
   border-radius: 6px;
-  background: var(--p-surface-50, #fafafa);
-  border: 1px solid var(--p-surface-200, #e5e7eb);
+  background: var(--bdus-raised);
+  border: 1px solid var(--p-content-border-color);
 }
 
 .zotero-item.is-detached {
   border-color: var(--p-orange-300, #fdba74);
-  background: var(--p-orange-50, #fff7ed);
+  background: color-mix(in srgb, var(--p-orange-500) 12%, transparent);
 }
 
 .drag-handle {
@@ -581,12 +581,12 @@ async function selectResult(result) {
 }
 
 .search-results {
-  border: 1px solid var(--p-surface-300, #d1d5db);
+  border: 1px solid var(--p-content-border-color);
   border-radius: 6px;
   max-height: 45vh;
   overflow-y: auto;
   overflow-x: hidden;
-  background: var(--p-surface-0, #fff);
+  background: var(--bdus-surface);
 }
 
 .search-result-item {
@@ -594,7 +594,7 @@ async function selectResult(result) {
   align-items: center;
   gap: 0.5rem;
   padding: 0.6rem 0.6rem 0.6rem 0.85rem;
-  border-bottom: 1px solid var(--p-surface-100, #f3f4f6);
+  border-bottom: 1px solid var(--p-content-border-color);
   font-size: 0.875rem;
 }
 .search-result-item:last-child { border-bottom: none; }

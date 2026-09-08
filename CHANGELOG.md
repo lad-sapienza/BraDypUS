@@ -34,6 +34,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `.cfg-input-action` row flex that hosts their busy spinner.
   - `bdus-app/src/components/config/ConfigTableForm.vue`
 
+### Documentation
+
+- **The fuzzy-date / chronology pages were realigned with the v5 code** after a
+  source verification done for an external article. The parser (century
+  qualifiers, grammar, "no year zero"), `_chrono_overlap` and the GeoFace year
+  slider (−3000..2000, step 25) were confirmed accurate as written; the
+  discrepancies fixed were:
+  - `guide/usage/chrono.md` — translated to English (it was the only
+    non-English page) and corrected: in the Chronological Timeline the bar
+    **colour encodes the table** and **certainty is the bar opacity** (the page
+    had it the other way round); rows are one-per-record under a table header,
+    not one-per-table; the hover tooltip also shows the table name, the
+    `chrono_label` string and the period. The *Derived chronological
+    distribution* is an intensity density band, not a variable-height 60-bin
+    histogram, and the whole band is a single link filtered by the relationship
+    (not one link per bin/time interval).
+  - `guide/system-plugins/fuzzy-date.md` — `chrono_certainty` is `INTEGER`
+    `1`/`2`/`3` shown as Certain / Probable / **Uncertain** (not a `VARCHAR`
+    with a "possible" value); `chrono_label` stores the chronology string as
+    typed, not a free-text label; the Harris Matrix absolute chronological
+    layout ships now (dropped "coming soon", linked to `rs.md`); the certainty
+    filter example uses `=2`.
+  - `guide/system-plugins/rs.md` — added a note that the chronological layout
+    is still being refined.
+  - `guide/system-plugins/geodata.md` — documented the GeoFace **Temporal
+    filter** (year slider + `_chrono_overlap`), previously undocumented on that
+    page.
+
 ## [5.9.3] - 2026-09-07
 
 ### Fixed

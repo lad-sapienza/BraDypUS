@@ -103,3 +103,9 @@ not *by how much*. The chronological layout reveals the real time gaps — a
 stratigraphically short sequence may span centuries, while a long sequence
 may compress into decades.
 :::
+
+::: warning
+The chronological layout is a recent addition and is still being refined. On some
+datasets the vertical placement may not yet reflect absolute dates accurately;
+the stratigraphic layout is unaffected.
+:::

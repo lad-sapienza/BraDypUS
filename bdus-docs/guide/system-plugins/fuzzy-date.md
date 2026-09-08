@@ -35,12 +35,13 @@ Once enabled, a **Chronology** section appears in RecordView below the regular f
 
 ### Read mode
 
-Displays the stored chronology as a formatted label, a certainty badge, and an optional
+Displays the stored chronology as a formatted label (derived from the chronology
+string, or from `chrono_from` / `chrono_to`), a certainty badge, and an optional
 period name. Examples:
 
 > **Late 4th cent. BCE** <span style="background:#f59e0b;color:#fff;padding:2px 6px;border-radius:4px;font-size:.8em">Probable</span> · Hellenistic
 
-> **Ante quem: 4th cent. BCE**
+> **Ante quem: 4th cent. BCE** <span style="background:#ef4444;color:#fff;padding:2px 6px;border-radius:4px;font-size:.8em">Uncertain</span>
 
 > **350 BCE – 300 BCE** <span style="background:#22c55e;color:#fff;padding:2px 6px;border-radius:4px;font-size:.8em">Certain</span>
 
@@ -51,12 +52,12 @@ The panel shows three inputs:
 | Input | Purpose |
 |---|---|
 | **Chronology string** | Primary input — see grammar below |
-| **Certainty** | Certain / Probable / Possible |
+| **Certainty** | Certain / Probable / Uncertain |
 | **Period** | Free text or vocabulary term (qualitative label only) |
 
-Typing in the chronology string field triggers live parsing. A preview shows the
-generated label and the numeric range (`from – to`) so you can verify the result
-before saving.
+There is **no separate label field** — the chronology string *is* the label. Typing
+in it triggers live parsing, and a preview shows the generated label and the numeric
+range (`from – to`) so you can verify the result before saving.
 
 ## Chronology string grammar
 
@@ -121,8 +122,8 @@ Five columns are added to the core table when the plugin is activated:
 |---|---|---|
 | `chrono_from` | INTEGER | Start year (negative = BCE). `NULL` for ante quem or undated. |
 | `chrono_to` | INTEGER | End year. `NULL` for post quem or undated. |
-| `chrono_label` | VARCHAR(200) | Human-readable label (auto-generated or free text). |
-| `chrono_certainty` | VARCHAR(10) | `certain` / `probable` / `possible` |
+| `chrono_label` | VARCHAR(200) | The chronology string as typed (e.g. `c4l BCE / c3m CE`, `-50/200`, `?`). The displayed label is computed from it — this is **not** a free-text field. |
+| `chrono_certainty` | INTEGER | `1` = certain · `2` = probable · `3` = uncertain. Legacy string values (`certain` / `probable` / `possible`) from older databases are still read. |
 | `chrono_period` | VARCHAR(200) | Qualitative period name (e.g. "Hellenistic"). No numeric mapping. |
 
 The **dating type is implicit** — no separate type column is needed:
@@ -172,8 +173,8 @@ returns an error.
 The remaining chrono columns support all standard operators:
 
 ```
-# Records with probable certainty
-filter[chrono_certainty][_eq]=probable
+# Records with probable certainty (1 = certain, 2 = probable, 3 = uncertain)
+filter[chrono_certainty][_eq]=2
 
 # Records in the Hellenistic period
 filter[chrono_period][_icontains]=hellenistic
@@ -190,4 +191,4 @@ filter[chrono_to][_nnull]=true
 | Plugin | Integration |
 |---|---|
 | **GeoFace** | When the fuzzy-date plugin is active on a table, GeofaceView shows a **Temporal filter** bar with a dual-handle year slider (range −3000 to 2000, step 25 years). Dragging the handles filters map markers in real time using `_chrono_overlap`, correctly including ante quem and post quem records that intersect the selected window. |
-| **Harris Matrix** | An absolute chronological layout positions stratigraphic units on a vertical timeline using their fuzzy date (coming soon). |
+| **Harris Matrix** | A **Chronological** toggle in the Matrix toolbar positions stratigraphic units on a vertical year axis using their `chrono_from` / `chrono_to`, keeping the stratigraphic columns so topology and calendar time are visible together. See [Absolute chronological timeline](/guide/system-plugins/rs#absolute-chronological-timeline). |

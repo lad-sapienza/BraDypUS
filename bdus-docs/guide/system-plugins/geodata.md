@@ -27,6 +27,15 @@ interactive map (MapLibre GL JS).
 - Click a feature to open its record.
 - The active DataView filter is inherited — only filtered records appear on the map.
 
+## Temporal filter
+
+When the table also has the [fuzzy-date plugin](/guide/system-plugins/fuzzy-date)
+active, GeoFace shows a **Temporal filter** bar above the map with a dual-handle
+year slider (range −3000 to 2000, step 25 years). Dragging the handles filters the
+markers in real time, keeping every record whose chronological window intersects
+the selected years — including open-ended *ante quem* and *post quem* records (it
+uses the `_chrono_overlap` operator internally).
+
 ## Configuring map layers
 
 Open **Config → Geoface** to add or edit map layers.

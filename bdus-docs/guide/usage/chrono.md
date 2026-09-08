@@ -1,76 +1,115 @@
 ---
-title: Cronologia
+title: Chronology
 ---
 
-# Cronologia <Badge type="tip" text="v5.1.0" />
+# Chronology <Badge type="tip" text="v5.1.0" />
 
-BraDypUS offre due strumenti di visualizzazione cronologica per le tabelle che usano il plugin **`fuzzy_date`** (date sfumate con intervallo `from/to`, certezza e periodo).
+BraDypUS provides two chronological visualisation tools for tables that use the
+**`fuzzy_date`** plugin (interval dates with `from` / `to`, a certainty level and
+a period name). For how to enable the plugin and the input grammar, see
+[Fuzzy date (Chronology)](/guide/system-plugins/fuzzy-date).
 
-## Plugin fuzzy_date
+## `fuzzy_date` plugin
 
-Per abilitare la cronologia su una tabella, aggiungi il plugin `fuzzy_date` nella configurazione. Ogni record acquisirà cinque campi:
+Enabling the plugin on a table adds five columns to that table:
 
-| Campo | Descrizione |
+| Column | Description |
 |---|---|
-| `chrono_from` | Anno di inizio (numero intero, negativo = a.C.) |
-| `chrono_to` | Anno di fine |
-| `chrono_label` | Etichetta libera inserita dall'utente (es. "IV–III sec. a.C.") |
-| `chrono_certainty` | Livello di certezza (`certain`, `probable`, `possible`) |
-| `chrono_period` | Nome del periodo di riferimento |
+| `chrono_from` | Start year (integer, negative = BCE). `NULL` for *ante quem* or undated. |
+| `chrono_to` | End year (integer). `NULL` for *post quem* or undated. |
+| `chrono_label` | The chronology **string you typed** (e.g. `c4l BCE / c3m CE` or `-50/200`). The formatted label shown in the UI ("Late 4th cent. BCE") is derived from this string — or from `chrono_from`/`chrono_to` — on the fly. There is no separate free-text label field. |
+| `chrono_certainty` | Certainty level, stored as an integer: `1` = certain, `2` = probable, `3` = uncertain. (Databases migrated from earlier builds may still hold the legacy strings `certain` / `probable` / `possible`; these are read transparently.) |
+| `chrono_period` | Qualitative period name (e.g. "Hellenistic"). Label only — no numeric mapping. |
 
 ---
 
-## Timeline cronologica comparata
+## Chronological Timeline
 
-La **Timeline cronologica** è una vista a pagina intera che sovrappone sullo stesso asse temporale tutti i record con dati `fuzzy_date` delle tabelle selezionate.
+The **Chronological Timeline** is a full-page view that overlays every record with
+`fuzzy_date` data, from the selected tables, on a single time axis.
 
-### Come aprirla
+### Opening it
 
-Dalla **DataView** (lista record di qualsiasi tabella), clicca il pulsante **Calendario** nella barra degli strumenti. La vista si apre a pagina intera.
+From the **DataView** (record list of any table) click the **Calendar** button in
+the toolbar. The view opens full-page.
 
-### Lettura della vista
+### Reading the view
 
-- Ogni **riga** corrisponde a una tabella con il plugin `fuzzy_date` attivato.
-- Ogni **segmento colorato** rappresenta un record: si estende dall'anno `chrono_from` all'anno `chrono_to`.
-- Il colore codifica la certezza:
-  - Verde → `certain`
-  - Arancio → `probable`
-  - Rosso/rosa → `possible`
-- Passando il mouse su un segmento compare un **tooltip** con il titolo del record, l'intervallo e il livello di certezza.
+- The rows are grouped by table: a **table header row**, then **one row per
+  record** (`US012`, `US024`, …) below it.
+- Each **coloured bar** is a record and spans from `chrono_from` to `chrono_to`.
+- **Colour encodes the table**, not the certainty — each table gets its own hue
+  (e.g. blue for *Stratigraphic units*, orange for *Finds*).
+- **Certainty is encoded by the bar's opacity**: solid = certain, semi-transparent
+  = probable, faint = uncertain.
+- *Ante quem* and *post quem* records are drawn with a **dashed extension** running
+  to the edge of the axis on the open side.
+- Hovering a bar shows a **tooltip** with: the record title, the table name, the
+  chronology string (`chrono_label`), the readable interval (e.g.
+  `50 BCE → 200 CE`), the period (if set) and the certainty level.
+- Clicking a row opens that record.
 
-### Filtri disponibili
+### Available filters
 
-Nella barra in cima alla vista puoi:
+The bar at the top of the view lets you:
 
-- **Selezionare le tabelle** da includere (selezione multipla).
-- **Definire un intervallo temporale** (`da` / `a` in anni) per restringere i segmenti visualizzati.
+- **Select the tables** to include (multiple selection).
+- **Set a year range** (`from` / `to`) to restrict the records shown; a record is
+  kept when its window intersects the range (open-ended *ante quem* / *post quem*
+  records are included on the matching side).
 
 ---
 
-## Distribuzione cronologica derivata
+## Derived chronological distribution
 
-Il pannello **Distribuzione cronologica** compare nel corpo della scheda record quando la tabella ha relazioni FK con altre tabelle che hanno il plugin `fuzzy_date` abilitato.
+The **Derived chronological distribution** panel appears in the RecordView body when
+the current record's table has related tables (FK children, or a configured path —
+see below) that have the `fuzzy_date` plugin enabled.
 
-### Lettura del pannello
+### Reading the panel
 
-Per ogni tabella relata viene mostrato un **istogramma a 60 bin** della densità cronologica dei record collegati al record corrente:
+For each related table the panel draws **one horizontal density band** along a
+shared time axis:
 
-- L'asse orizzontale è l'asse temporale.
-- L'altezza di ogni barra indica quanti record correlati hanno la loro finestra cronologica (`chrono_from`–`chrono_to`) che include quel bin.
-- Il **picco** (bin con il maggior numero di record) è evidenziato con le etichette `from` e `to`.
-- Ogni barra è un **link** che apre la lista dei record correlati filtrata per quell'intervallo temporale.
+- The band is divided internally into **60 equal segments (bins)**.
+- A bin's **opacity** (not its height) reflects how many related records have a
+  chronological window (`chrono_from`–`chrono_to`) overlapping that bin. The band
+  has a fixed height throughout — it is a density strip, not a bar histogram.
+- The **peak** — the run of bins with the highest count — is marked below the band
+  with its `from` and `to` years (e.g. `700 BCE – 489 BCE`).
+- A **count badge** shows the total number of related records that carry
+  chronological data.
+- The whole band is a **link** that opens the related records in DataView,
+  filtered by the relationship itself (all records reachable from the current one),
+  not by any single time bin.
 
-### Comportamento automatico (default)
+### Automatic behaviour (default)
 
-Senza alcuna configurazione aggiuntiva, il pannello mostra un solo hop automatico: le tabelle **figlie dirette** (relazione FK in `bdus_cfg_relations`) che hanno il plugin `fuzzy_date` abilitato. Se nessuna figlia diretta ha `fuzzy_date`, il pannello resta vuoto — anche se un discendente più lontano (es. un nipote) ne è dotato.
+With no extra configuration the panel shows a single automatic hop: the **direct
+child tables** (FK relation in `bdus_cfg_relations`) that have `fuzzy_date` enabled.
+If no direct child has `fuzzy_date`, the panel stays hidden — even if a more distant
+descendant (e.g. a grandchild) does.
 
-### Percorso configurabile (per raggiungere un discendente più lontano) <Badge type="tip" text="v5.4.0" />
+### Configurable path (to reach a more distant descendant) <Badge type="tip" text="v5.4.0" />
 
-Per casi come "da un Sito, mostra i Reperti collegati tramite le Unità stratigrafiche" (un nipote, non un figlio diretto), ogni tabella può avere un **percorso di distribuzione cronologica** configurato in Config → Tabelle, sezione "Chronological distribution path":
+For cases such as "from a Site, show the Finds linked through the Stratigraphic
+units" (a grandchild, not a direct child), each table can have a **chronological
+distribution path** configured in Config → Tables, section
+"Chronological distribution path":
 
-1. Ogni passo della cascata elenca le tabelle **figlie dirette** della precedente (via `bdus_cfg_relations`), senza filtrare per `fuzzy_date` — le tabelle intermedie possono fare da semplice ponte (es. le Unità stratigrafiche non hanno necessariamente una propria cronologia).
-2. Solo l'**ultima** tabella del percorso deve avere `fuzzy_date` attivo: un badge nel selettore la segnala a colpo d'occhio, e il salvataggio viene bloccato (sia lato client sia lato server) se la condizione non è soddisfatta.
-3. Se in un punto della cascata non compare più nessuna tabella selezionabile, significa che manca una relazione FK — vai su Config → Relazioni per aggiungerla.
-4. Un percorso vuoto equivale al comportamento automatico descritto sopra (nessuna migrazione o effetto collaterale su app esistenti).
+1. Each step of the cascade lists the **direct child tables** of the previous one
+   (via `bdus_cfg_relations`), without filtering by `fuzzy_date` — intermediate
+   tables can act as a simple bridge (Stratigraphic units need not have their own
+   chronology).
+2. Only the **last** table in the path must have `fuzzy_date` active: a badge in the
+   selector flags it at a glance, and saving is blocked (both client- and
+   server-side) if the condition is not met.
+3. If at some point in the cascade no selectable table appears, an FK relation is
+   missing — go to Config → Relations to add it.
+4. An empty path is equivalent to the automatic behaviour above (no migration or
+   side effect on existing apps).
 
-Quando è configurato un percorso, il pannello mostra **solo** l'ultima tabella della catena (non più i figli diretti), e il link di ogni barra filtra sull'intero insieme di record raggiungibili lungo il percorso — non solo quelli con dati cronologici, come nel comportamento automatico a un hop.
+When a path is configured the panel shows **only** the last table in the chain (no
+longer the direct children), and the band's link filters on the whole set of
+records reachable along the path — not only those that carry chronological data, as
+in the automatic single-hop behaviour.

@@ -1094,7 +1094,7 @@ us_id_7: jsonpath "$.id"
 POST {{base_url}}/{{app_name}}/api/record/us
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "core": { "sigla": "US008", "tipo": "Strato",     "sito_id": {{sito_urbano}}, "complesso_id": {{compl_edif_a}},  "saggio_id": {{sag_02}}, "descrizione": "Pavimento in opus sectile lacunoso.",                   "interpretazione": "Piano di calpestio romano", "affidabilita": "Certa",    "periodo": "Romano",         "anno_scavo": 2019, "nr_cassette": 1, "profondita_cm": 100, "verificata": 1 }, "plugins": {} }
+{ "core": { "sigla": "US008", "tipo": "Strato",     "sito_id": {{sito_urbano}}, "complesso_id": {{compl_edif_a}},  "saggio_id": {{sag_02}}, "descrizione": "Pavimento in opus sectile lacunoso.",                   "interpretazione": "Piano di calpestio romano", "affidabilita": "Certa",    "periodo": "Tardo Antico",   "anno_scavo": 2019, "nr_cassette": 1, "profondita_cm": 100, "verificata": 1 }, "plugins": {} }
 HTTP 200
 [Captures]
 us_id_8: jsonpath "$.id"
@@ -1126,7 +1126,7 @@ us_id_11: jsonpath "$.id"
 POST {{base_url}}/{{app_name}}/api/record/us
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "core": { "sigla": "US012", "tipo": "Strato",     "sito_id": {{sito_urbano}}, "complesso_id": {{compl_vano_b1}}, "saggio_id": {{sag_04}}, "descrizione": "Piano di frequentazione con impronte di pali.",        "interpretazione": "Pavimento capanna",        "affidabilita": "Certa",    "periodo": "Ferro",          "anno_scavo": 2021, "nr_cassette": 3, "profondita_cm": 120, "verificata": 1 }, "plugins": {} }
+{ "core": { "sigla": "US012", "tipo": "Strato",     "sito_id": {{sito_urbano}}, "complesso_id": {{compl_vano_b1}}, "saggio_id": {{sag_04}}, "descrizione": "Piano di frequentazione con impronte di pali.",        "interpretazione": "Pavimento capanna",        "affidabilita": "Certa",    "periodo": "Tardo Antico",   "anno_scavo": 2021, "nr_cassette": 3, "profondita_cm": 120, "verificata": 1 }, "plugins": {} }
 HTTP 200
 [Captures]
 us_id_12: jsonpath "$.id"
@@ -1727,7 +1727,7 @@ jsonpath "$.status" == "success"
 POST {{base_url}}/{{app_name}}/api/record/us
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "id": {{us_id_8}}, "core": { "chrono_from": 1, "chrono_to": 200, "chrono_label": "1/200", "chrono_certainty": 1, "chrono_period": "Romano" }, "plugins": {} }
+{ "id": {{us_id_8}}, "core": { "chrono_from": 340, "chrono_to": 460, "chrono_label": "340/460", "chrono_certainty": 1, "chrono_period": "Tardo Antico" }, "plugins": {} }
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
@@ -1735,7 +1735,7 @@ jsonpath "$.status" == "success"
 POST {{base_url}}/{{app_name}}/api/record/us
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "id": {{us_id_12}}, "core": { "chrono_from": -700, "chrono_to": -500, "chrono_label": "-700/-500", "chrono_certainty": 2, "chrono_period": "Ferro" }, "plugins": {} }
+{ "id": {{us_id_12}}, "core": { "chrono_from": 400, "chrono_to": 520, "chrono_label": "400/520", "chrono_certainty": 2, "chrono_period": "Tardo Antico" }, "plugins": {} }
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"

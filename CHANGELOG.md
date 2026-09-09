@@ -104,6 +104,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     filter** (year slider + `_chrono_overlap`), previously undocumented on that
     page.
 
+### Tests
+
+- **The demo seed's `us` chronology contradicted its own stratigraphy**, so
+  the new Harris Matrix "Chronological" layout could not be checked against
+  real data. On the Colle Oppio chain `US003 → US008 → US012` (oldest to
+  newest, read from the `rs/relation` blocks via `useRsRelations`' swap rules)
+  the dated units ran 300/450, 1/200, −700/−500 — fully reversed, so every
+  covering relation was violated. `US003` is left as it was (300/450 "Tardo
+  Antico" — its radiocarbon sample in 19i-ter and the Aucissa brooch REP003
+  anchor it late Roman) and the two younger units are moved after it: `US008`
+  1/200 "Romano" → 340/460 "Tardo Antico", `US012` −700/−500 "Ferro" →
+  400/520 "Tardo Antico", with the core `periodo` of both realigned to match
+  `chrono_period`. Midpoints are now monotonic (375 ≤ 400 ≤ 460), the
+  `chrono_certainty` mix is unchanged, and the other dated units (US021,
+  US024, US026, US028) and the dated finds already satisfied their edges. No
+  schema, endpoint or hurl-assertion change.
+  - `bdus-api/tests/api/19_seed_demo.hurl`
+
 ## [5.9.3] - 2026-09-07
 
 ### Fixed

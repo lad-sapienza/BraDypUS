@@ -86,26 +86,29 @@ the same table, a **Chronological** toggle appears in the Matrix toolbar.
 | Layout | Description |
 |---|---|
 | **Stratigraphic** | Standard Harris Matrix — nodes positioned by topological depth (default). |
-| **Chronological** | Nodes positioned on a vertical year axis according to their `chrono_from` / `chrono_to` values. The horizontal columns from the stratigraphic layout are preserved, so stratigraphic position and calendar time are both visible simultaneously. |
+| **Chronological** | The stratigraphic layout is **kept exactly as-is and only stretched or squashed vertically**: the dated units are moved onto their year on the axis, and every other node keeps its stratigraphic rank, just spaced to sit between the dated units above and below it. Stratigraphic order and calendar time are both readable at once. |
 
 In chronological mode:
 - **Older** units appear **lower** on the axis; **newer** units appear **higher**.
-- The **vertical distance** between nodes reflects the time gap between events.
-- Nodes whose date type is ante quem or post quem are positioned at the known bound.
-- **Undated nodes** are placed below the dated zone, marked with an italic label.
+- The **vertical distance** between nodes reflects the time gap between events — a
+  long stratigraphic sequence can compress into a thin band, a short one can
+  stretch across centuries.
+- The reference year for a dated unit is the **midpoint** of its `chrono_from` /
+  `chrono_to` range (the known bound for an *ante quem* / *post quem* date).
+- **Dated** units are outlined **green**; every other unit is outlined **amber**
+  and keeps only its topological position.
+- A dated unit whose date runs **against** the stratigraphy (older than a unit it
+  covers) is not pinned to the axis — it stays in its stratigraphic place so the
+  matrix never folds. Fix the date, or the relation.
+- Where several dated units fall in a very tight time span they are spread just
+  enough to stay legible, so their axis position there is approximate.
 - The SVG axis on the left shows year labels calibrated to the data range.
-- Edges still connect units by their stratigraphic relationship.
+- Edges still connect units by their stratigraphic relationship (relation labels
+  are hidden in this view to keep the long vertical edges readable).
 - Edit mode is not available in chronological layout (read-only view).
 
 ::: tip Why is this useful?
 Traditional Harris Matrix tools show *which* unit comes before another, but
-not *by how much*. The chronological layout reveals the real time gaps — a
-stratigraphically short sequence may span centuries, while a long sequence
-may compress into decades.
-:::
-
-::: warning
-The chronological layout is a recent addition and is still being refined —
-units close together in time can overlap on the axis. The stratigraphic layout
-is unaffected.
+not *by how much*. The chronological layout reveals the real time gaps while
+keeping the matrix you already know.
 :::

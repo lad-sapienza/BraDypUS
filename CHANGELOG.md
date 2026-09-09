@@ -98,8 +98,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     typed, not a free-text label; the Harris Matrix absolute chronological
     layout ships now (dropped "coming soon", linked to `rs.md`); the certainty
     filter example uses `=2`.
-  - `guide/system-plugins/rs.md` — added a note that the chronological layout
-    is still being refined.
+  - `guide/system-plugins/rs.md` — the "Absolute chronological timeline"
+    section rewritten to match the shipped behaviour (the stratigraphic layout
+    is stretched/squashed, not rebuilt; dated units green / others amber;
+    contradictory dates are left unpinned; relation labels hidden).
   - `guide/system-plugins/geodata.md` — documented the GeoFace **Temporal
     filter** (year slider + `_chrono_overlap`), previously undocumented on that
     page.

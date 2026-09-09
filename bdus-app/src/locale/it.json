@@ -912,7 +912,7 @@
   "matrix_relations": "Relazioni",
   "matrix_layout_topological": "Stratigrafico",
   "matrix_layout_chronological": "Cronologico",
-  "chrono_undated_section": "%s nodo/i non datato/i posizionato/i in basso",
+  "chrono_undated_section": "%s nodo/i non datato/i posizionato/i per topologia",
   "rs_add_relation": "Aggiungi relazione",
   "rs_no_relations": "Nessuna relazione stratigrafica definita",
   "rs_identifier": "Identificativo unità",

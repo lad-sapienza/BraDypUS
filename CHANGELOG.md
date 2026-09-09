@@ -24,21 +24,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `bdus-app/src/components/record/osteology/OsteologySvg.vue`
     (tooltip text colour), `bdus-app/src/components/record/ZoteroSection.vue`
 
-- **The Harris Matrix "Chronological" layout did not position nodes by date.**
-  `RsGraphChrono` created its Cytoscape instance with a `dagre` layout in the
-  constructor; `cytoscape-dagre` runs synchronously there, so `layoutstop`
-  fired *before* the code that listens for it — the whole second pass (override
-  each node's Y with its chrono year, re-fit, sync the SVG axis) was registered
-  too late and never ran. Nodes stayed in topological order, the year axis
-  stayed at its initial 400 px height with an identity pan/zoom, and the two
-  drifted apart. The layout now runs explicitly: a discrete `dagre` pass for
-  the X columns, then a synchronous `preset` pass placing each node at
-  `y = f(chrono_from/chrono_to)` (undated nodes below the dated band) with a
-  fit. The SVG axis height and the mirrored pan/zoom are updated straight after
-  the layout and kept live by a `ResizeObserver` on the canvas; the axis is
-  hidden until the first pass completes to avoid a mis-scaled flash. The
-  stratigraphic layout is unaffected. Node overlap for close-in-time units is a
-  separate, known refinement.
+- **The Harris Matrix "Chronological" layout was unusable.** It repositioned
+  *every* node onto an absolute year axis, so undated nodes collapsed together
+  and the readable stratigraphic structure was lost; the `dagre` layout also
+  ran synchronously inside the Cytoscape constructor, so the `layoutstop`
+  handler that carried the second pass never fired, the SVG year axis stayed at
+  its initial 400 px height, and edge labels piled up on the long vertical
+  edges. The mode now leaves the dagre layout intact and only **stretches or
+  squashes it vertically**: a monotone piecewise-linear map `f(dagreY) →
+  finalY` is pinned at the dated nodes (`f(dagreY) = yearToY(midpoint(from,
+  to))`, or the known bound for ante/post quem) and applied to every node, so
+  rank order is preserved and no two ranks coincide. Dated nodes whose year
+  runs backwards against the stratigraphy are dropped from the anchor set
+  (their nodes float with the topology); a minimum segment slope keeps a tight
+  cluster of dated nodes from overlapping (they drift slightly off their exact
+  year instead). Dated nodes are outlined green, undated amber; edge labels are
+  dropped in this view; the SVG axis is driven by a `ResizeObserver` and gated
+  on a `ready` flag. The stratigraphic layout is untouched.
   - `bdus-app/src/components/record/RsGraphChrono.vue`
 
 - **Three Harris Matrix strings showed a literal `{0}` / `{1}` / `{2}`.** The

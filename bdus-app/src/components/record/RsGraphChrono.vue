@@ -60,14 +60,18 @@ const props = defineProps({
 const emit = defineEmits(['node-click'])
 
 // ── Constants ────────────────────────────────────────────────────────────────
-const AXIS_W           = 64   // px — SVG left axis width
-const PIXELS_PER_YEAR  = 1    // Cytoscape coordinate units per year
-const UNDATED_OFFSET   = 120  // units below the dated zone for undated nodes
+const AXIS_W         = 72    // px — SVG left axis width (fits "3000 BCE")
+const MIN_SLOPE_FRAC = 0.5   // floor on the stretch slope, as a fraction of the
+                             // natural dagre spacing — keeps adjacent ranks
+                             // apart even where dated anchors sit in a tight
+                             // year cluster (they then drift slightly off their
+                             // exact year rather than overlap)
 
 // ── Refs ─────────────────────────────────────────────────────────────────────
 const cyEl    = ref(null)
 const canvasH = ref(400)      // updated after layout to drive SVG height
 const ready   = ref(false)    // true once the first layout pass has run
+const yBand   = ref(null)     // { top, bottom } — model-Y span the year scale maps onto
 let   cy      = null
 let   ro      = null          // ResizeObserver on the canvas → keeps canvasH live
 
@@ -105,12 +109,16 @@ const yearRange = computed(() => {
   return { min: Math.min(...years), max: Math.max(...years) }
 })
 
-// Map a year → Cytoscape Y coordinate.
-// Newer (higher year number) = smaller Y (top); older = larger Y (bottom).
+// Map a year → Cytoscape model Y. The dated year range [min,max] is mapped
+// linearly onto the vertical span the dagre pass produced (yBand), so dated and
+// undated nodes share one coordinate space. Newer year = smaller Y (top).
 function yearToY(year) {
   const r = yearRange.value
-  if (!r) return 0
-  return (r.max - year) * PIXELS_PER_YEAR
+  const b = yBand.value
+  if (!r || !b) return 0
+  const span = r.max - r.min
+  if (span <= 0) return (b.top + b.bottom) / 2
+  return b.top + ((r.max - year) / span) * (b.bottom - b.top)
 }
 
 // Map a year → SVG screen Y, applying Cytoscape's current pan/zoom so the
@@ -176,6 +184,7 @@ function buildElements() {
         in_filter: n.in_filter ? 1 : 0,
         highlight: String(n.db_id) === String(props.highlightId) ? 1 : 0,
         undated:   isUndated ? 1 : 0,
+        dated:     isUndated ? 0 : 1,
         year:      nodeYear(n),
       },
     })
@@ -240,17 +249,23 @@ function buildStyle() {
         'color':            '#1e293b',
       },
     },
-    {
-      selector: 'node[highlight = 1]',
-      style: { 'background-color': '#f97316', 'border-color': '#ea580c', 'color': '#ffffff' },
-    },
+    // Out-of-filter first, then the dated/undated accent, then highlight last
+    // so a highlighted node always reads as orange.
     {
       selector: 'node[in_filter = 0]',
       style: { 'border-style': 'dashed', 'border-color': '#94a3b8', 'color': '#64748b', 'background-color': '#f8fafc' },
     },
     {
+      selector: 'node[dated = 1]',
+      style: { 'border-color': '#16a34a' },   // green — pinned to its year
+    },
+    {
       selector: 'node[undated = 1]',
-      style: { 'border-color': '#d1d5db', 'background-color': '#f9fafb', 'color': '#9ca3af', 'font-style': 'italic' },
+      style: { 'border-color': '#d97706', 'background-color': '#fffbeb', 'color': '#92400e', 'font-style': 'italic' },  // amber — placed by topology
+    },
+    {
+      selector: 'node[highlight = 1]',
+      style: { 'background-color': '#f97316', 'border-color': '#ea580c', 'color': '#ffffff' },
     },
     {
       selector: 'edge',
@@ -260,12 +275,6 @@ function buildStyle() {
         'target-arrow-color': '#94a3b8',
         'target-arrow-shape': 'triangle',
         'curve-style':        'bezier',
-        'label':              'data(label)',
-        'font-size':          '9px',
-        'color':              '#64748b',
-        'text-background-color':   '#ffffff',
-        'text-background-opacity': 0.8,
-        'text-background-padding': '1px',
       },
     },
     {
@@ -276,13 +285,11 @@ function buildStyle() {
 }
 
 // ── Cytoscape layout ─────────────────────────────────────────────────────────
-// dagre gives the topological X columns; a synchronous `preset` pass then
-// overrides Y from each node's chrono year. Both layouts are discrete, so
-// `.run()` returns with positions (and, for the preset, the fit) already
-// applied — no `layoutstop` listener, which in the old code was registered
-// *after* dagre had already run synchronously inside the Cytoscape constructor
-// and therefore never fired (nodes stayed in topological order, the SVG axis
-// stayed at the initial ref(400) height).
+// The Harris matrix keeps its dagre layout untouched; chronological mode only
+// stretches/squashes it vertically. A monotone piecewise-linear map f(dagreY)
+// → finalY is pinned at the dated nodes (f(dagreY) = yearToY(year)) and applied
+// to *every* node, so rank order is preserved and no two ranks ever coincide.
+// See applyLayout() + buildAnchors() / makeStretch().
 async function initCy() {
   if (!cyEl.value) return
 
@@ -318,47 +325,128 @@ async function initCy() {
   ro.observe(cyEl.value)
 }
 
+// Longest non-decreasing subsequence of `arr` by the `t` key (arr already
+// sorted by `d`). Drops the dated anchors whose year runs backwards against
+// the stratigraphy so the stretch map can stay monotone.
+function longestNonDecreasing(arr) {
+  const m = arr.length
+  if (m <= 1) return arr.slice()
+  const prev = new Array(m).fill(-1)
+  const tails = []                    // indices into arr
+  for (let i = 0; i < m; i++) {
+    let lo = 0, hi = tails.length
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1
+      if (arr[tails[mid]].t <= arr[i].t) lo = mid + 1
+      else hi = mid
+    }
+    prev[i] = lo > 0 ? tails[lo - 1] : -1
+    if (lo === tails.length) tails.push(i)
+    else tails[lo] = i
+  }
+  const out = []
+  for (let i = tails[tails.length - 1]; i >= 0; i = prev[i]) out.push(arr[i])
+  return out.reverse()
+}
+
+// Dated nodes → clean anchor list for the stretch map. Sorted by dagre Y,
+// equal ranks merged (mean target), contradictory ones dropped, then nudged so
+// every segment has slope ≥ minSlopeFrac (adjacent ranks can't coincide; where
+// the data demands more compression than that, later anchors drift slightly
+// below their exact year).
+function buildAnchors(dated, minSlopeFrac) {
+  const sorted = dated.slice().sort((a, b) => a.d - b.d)
+
+  const merged = []
+  for (const a of sorted) {
+    const last = merged[merged.length - 1]
+    if (last && Math.abs(last.d - a.d) < 1e-6) {
+      last.t = (last.t * last.n + a.t) / (last.n + 1)
+      last.n++
+    } else {
+      merged.push({ d: a.d, t: a.t, n: 1 })
+    }
+  }
+  if (merged.length <= 1) return merged.map(({ d, t }) => ({ d, t }))
+
+  const keep = longestNonDecreasing(merged).map(({ d, t }) => ({ d, t }))
+  for (let i = 1; i < keep.length; i++) {
+    const floor = keep[i - 1].t + minSlopeFrac * (keep[i].d - keep[i - 1].d)
+    if (keep[i].t < floor) keep[i].t = floor
+  }
+  return keep
+}
+
+// Monotone piecewise-linear map through `anchors` (≥1, strictly increasing in
+// both d and t). Slope 1 (natural dagre spacing) beyond the outer anchors.
+function makeStretch(anchors) {
+  const last = anchors.length - 1
+  return (yv) => {
+    if (last === 0) return anchors[0].t + (yv - anchors[0].d)
+    if (yv <= anchors[0].d)    return anchors[0].t + (yv - anchors[0].d)
+    if (yv >= anchors[last].d) return anchors[last].t + (yv - anchors[last].d)
+    let i = 0
+    while (i < last && anchors[i + 1].d <= yv) i++
+    const a = anchors[i], b = anchors[i + 1]
+    return a.t + ((yv - a.d) * (b.t - a.t)) / (b.d - a.d)
+  }
+}
+
 function applyLayout() {
   if (!cy) return
 
-  // Phase 1 — dagre, for the X columns only (topological order preserved).
+  // Phase 1 — the full dagre layout. We only stretch/squash it vertically;
+  // ranks are never reordered or merged.
   cy.layout({
     name: 'dagre', rankDir: 'TB', ranksep: 60, nodesep: 40,
     animate: false, fit: false,
   }).run()
 
-  const r = yearRange.value
+  const nodes = cy.nodes()
+  const pos = {}
+  nodes.forEach(n => { pos[n.id()] = { x: n.position('x'), y: n.position('y') } })
 
+  const r = yearRange.value
   if (!r) {
-    // No dated nodes — keep the dagre result as-is.
+    // No dated nodes — plain dagre, no year scale, no axis.
+    yBand.value = null
     cy.fit(undefined, 20)
-    updateCanvasH()
-    syncPanZoom()
-    ready.value = true
+    updateCanvasH(); syncPanZoom(); ready.value = true
     return
   }
 
-  // Phase 2 — keep dagre X, set Y from the chrono year (undated go below).
-  const datedBottomY = yearToY(r.min) + 60
-  const positions = {}
-  cy.nodes().forEach(node => {
-    const year = node.data('year')
-    positions[node.id()] = {
-      x: node.position('x'),
-      y: year != null ? yearToY(year) : datedBottomY + UNDATED_OFFSET,
-    }
-  })
+  // yearToY() maps [minYear, maxYear] onto dagre's own vertical extent, so an
+  // unwarped node would sit at ~its dagre Y and the axis reads in those units.
+  const ys = nodes.map(n => pos[n.id()].y)
+  const top = Math.min(...ys)
+  let   bottom = Math.max(...ys)
+  if (bottom - top < 1) bottom = top + Math.max(1, nodes.length) * 80
+  yBand.value = { top, bottom }
+
+  // Dated nodes → anchors (dagreY, yearY); build the monotone stretch map.
+  const dated = nodes
+    .filter(n => n.data('dated') === 1)
+    .map(n => ({ d: pos[n.id()].y, t: yearToY(n.data('year')) }))
+  const anchors = buildAnchors(dated, MIN_SLOPE_FRAC)
+
+  if (!anchors.length) {
+    // Every dated node contradicted the stratigraphy — leave dagre as-is.
+    yBand.value = null
+    cy.fit(undefined, 20)
+    updateCanvasH(); syncPanZoom(); ready.value = true
+    return
+  }
+
+  const f = makeStretch(anchors)
 
   cy.layout({
     name: 'preset',
-    positions: n => positions[n.id()],
+    positions: n => ({ x: pos[n.id()].x, y: f(pos[n.id()].y) }),
     fit: true,
     padding: 30,
   }).run()
 
-  updateCanvasH()
-  syncPanZoom()
-  ready.value = true
+  updateCanvasH(); syncPanZoom(); ready.value = true
 }
 
 function updateCanvasH() {

@@ -5,6 +5,127 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.9.4] - 2026-09-09
+
+### Fixed
+
+- **Panels with a fixed light background in dark mode.** The neutral
+  `--p-surface-0 / -50 / -100 / -200 / -300 / -400 / -800` scale was a
+  static light-only ramp in `prime-theme.css` whose `.dark-mode` block never
+  actually inverted, so anything painted with it (the Zotero bibliography
+  panel, the osteology plugin's SVG + table + tooltip, the derived chrono
+  distribution track, the GeoFace temporal bar, the Assemblages pivot table,
+  Import and New App) showed light surfaces and near-invisible text on the
+  dark page. The scale is now driven live by `ThemeTokenBridge.vue` from
+  AntD's own dark-aware fill/background tokens (`colorFill*`,
+  `colorBgContainer`, `colorBgSpotlight`), and the static block is gone —
+  roughly 50 call sites across ~11 files start rendering correctly in dark
+  mode with no per-site change.
+  - `bdus-app/src/components/ThemeTokenBridge.vue`,
+    `bdus-app/src/assets/prime-theme.css`,
+    `bdus-app/src/components/record/osteology/OsteologySvg.vue`
+    (tooltip text colour), `bdus-app/src/components/record/ZoteroSection.vue`
+
+- **The Harris Matrix "Chronological" layout was unusable.** It repositioned
+  *every* node onto an absolute year axis, so undated nodes collapsed together
+  and the readable stratigraphic structure was lost; the `dagre` layout also
+  ran synchronously inside the Cytoscape constructor, so the `layoutstop`
+  handler that carried the second pass never fired, the SVG year axis stayed at
+  its initial 400 px height, and edge labels piled up on the long vertical
+  edges. The mode now leaves the dagre layout intact and only **stretches or
+  squashes it vertically**: a monotone piecewise-linear map `f(dagreY) →
+  finalY` is pinned at the dated nodes (`f(dagreY) = yearToY(midpoint(from,
+  to))`, or the known bound for ante/post quem) and applied to every node, so
+  rank order is preserved and no two ranks coincide. Dated nodes whose year
+  runs backwards against the stratigraphy are dropped from the anchor set
+  (their nodes float with the topology); a minimum segment slope keeps a tight
+  cluster of dated nodes from overlapping (they drift slightly off their exact
+  year instead). Dated nodes are outlined green, undated amber; edge labels are
+  dropped in this view; the SVG axis is driven by a `ResizeObserver` and gated
+  on a `ready` flag. The stratigraphic layout is untouched.
+  - `bdus-app/src/components/record/RsGraphChrono.vue`
+
+- **Three Harris Matrix strings showed a literal `{0}` / `{1}` / `{2}`.** The
+  `t()` helper only interpolates `%s`, but `chrono_undated_section`,
+  `rs_edit_hint_second` and `rs_delete_confirm` used `{n}` placeholders, so the
+  count / node label / relation names were never substituted.
+  - `bdus-app/src/locale/en.json`, `bdus-app/src/locale/it.json`
+
+- **The configuration screen was unusable on phone-sized viewports.** Below
+  1024px the primary app sidebar already collapses into a drawer, but the
+  config module's own section sidebar (`ConfigSidebar`) stayed inline at its
+  fixed 220px, leaving the settings panel squeezed into what little width
+  remained — `ConfigView`'s `.cfg-shell` had no responsive rules at all. It
+  now behaves as a mobile master/detail view: with no section chosen the
+  section list fills the screen (no drawer, no bar, so the first thing you
+  see is the list rather than an empty pane); once a section is open the list
+  folds into a left drawer, a slim top bar (hamburger + current section name)
+  appears, and the settings panel takes the full width. Picking an entry
+  closes the drawer; returning to the list resets it. Desktop (≥1024px) is
+  unchanged, and no new i18n keys are needed — the bar reuses the existing
+  section labels.
+  - `bdus-app/src/views/ConfigView.vue`
+
+- **Toggle switches in the table-settings panel rendered as stretched pills**
+  instead of AntD's normal ~44px track. The *Is plugin?* switch and the
+  *Stratigraphic relations*, *Geodata* and *Zotero* system-plugin switches sit
+  directly inside `.cfg-form-field`, a `flex-direction: column` container, so
+  they inherited its default `align-items: stretch` and grew to the full column
+  width (height was unaffected). Same cause and fix as the *Allow
+  self-registration* switch in App settings (5.9.x): a `.cfg-switch` class with
+  `align-self: flex-start`, scoped to those switches. The fuzzy-date, osteology
+  and radiocarbon switches were already fine — they live inside a
+  `.cfg-input-action` row flex that hosts their busy spinner.
+  - `bdus-app/src/components/config/ConfigTableForm.vue`
+
+### Documentation
+
+- **The fuzzy-date / chronology pages were realigned with the v5 code** after a
+  source verification done for an external article. The parser (century
+  qualifiers, grammar, "no year zero"), `_chrono_overlap` and the GeoFace year
+  slider (−3000..2000, step 25) were confirmed accurate as written; the
+  discrepancies fixed were:
+  - `guide/usage/chrono.md` — translated to English (it was the only
+    non-English page) and corrected: in the Chronological Timeline the bar
+    **colour encodes the table** and **certainty is the bar opacity** (the page
+    had it the other way round); rows are one-per-record under a table header,
+    not one-per-table; the hover tooltip also shows the table name, the
+    `chrono_label` string and the period. The *Derived chronological
+    distribution* is an intensity density band, not a variable-height 60-bin
+    histogram, and the whole band is a single link filtered by the relationship
+    (not one link per bin/time interval).
+  - `guide/system-plugins/fuzzy-date.md` — `chrono_certainty` is `INTEGER`
+    `1`/`2`/`3` shown as Certain / Probable / **Uncertain** (not a `VARCHAR`
+    with a "possible" value); `chrono_label` stores the chronology string as
+    typed, not a free-text label; the Harris Matrix absolute chronological
+    layout ships now (dropped "coming soon", linked to `rs.md`); the certainty
+    filter example uses `=2`.
+  - `guide/system-plugins/rs.md` — the "Absolute chronological timeline"
+    section rewritten to match the shipped behaviour (the stratigraphic layout
+    is stretched/squashed, not rebuilt; dated units green / others amber;
+    contradictory dates are left unpinned; relation labels hidden).
+  - `guide/system-plugins/geodata.md` — documented the GeoFace **Temporal
+    filter** (year slider + `_chrono_overlap`), previously undocumented on that
+    page.
+
+### Tests
+
+- **The demo seed's `us` chronology contradicted its own stratigraphy**, so
+  the new Harris Matrix "Chronological" layout could not be checked against
+  real data. On the Colle Oppio chain `US003 → US008 → US012` (oldest to
+  newest, read from the `rs/relation` blocks via `useRsRelations`' swap rules)
+  the dated units ran 300/450, 1/200, −700/−500 — fully reversed, so every
+  covering relation was violated. `US003` is left as it was (300/450 "Tardo
+  Antico" — its radiocarbon sample in 19i-ter and the Aucissa brooch REP003
+  anchor it late Roman) and the two younger units are moved after it: `US008`
+  1/200 "Romano" → 340/460 "Tardo Antico", `US012` −700/−500 "Ferro" →
+  400/520 "Tardo Antico", with the core `periodo` of both realigned to match
+  `chrono_period`. Midpoints are now monotonic (375 ≤ 400 ≤ 460), the
+  `chrono_certainty` mix is unchanged, and the other dated units (US021,
+  US024, US026, US028) and the dated finds already satisfied their edges. No
+  schema, endpoint or hurl-assertion change.
+  - `bdus-api/tests/api/19_seed_demo.hurl`
+
 ## [5.9.3] - 2026-09-07
 
 ### Fixed

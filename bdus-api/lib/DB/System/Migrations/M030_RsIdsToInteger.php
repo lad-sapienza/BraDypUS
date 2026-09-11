@@ -84,8 +84,14 @@ class M030_RsIdsToInteger
             $map = $resolveMaps[$tb] ?? null;
 
             if ($map !== null) {
-                $first  = $map[(string)$row['first']]  ?? (is_numeric($row['first'])  ? (int)$row['first']  : null);
-                $second = $map[(string)$row['second']] ?? (is_numeric($row['second']) ? (int)$row['second'] : null);
+                // rs_field is a custom column (e.g. "us_number"): the raw value is a
+                // label, not a record id — even when it happens to look numeric. If it
+                // isn't in the resolution map, no record currently carries that label,
+                // so the reference is unresolvable and must be dropped, not reinterpreted
+                // as if it were already a database id (that previously produced dangling
+                // bdus_rs rows pointing at unrelated/non-existent ids).
+                $first  = $map[(string)$row['first']]  ?? null;
+                $second = $map[(string)$row['second']] ?? null;
             } else {
                 $first  = is_numeric($row['first'])  ? (int)$row['first']  : null;
                 $second = is_numeric($row['second']) ? (int)$row['second'] : null;

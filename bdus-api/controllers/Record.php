@@ -1754,7 +1754,10 @@ class Record extends \Bdus\Controller
       }
 
       if (!empty($danglingIds)) {
-        $danglingIds = array_unique($danglingIds);
+        // array_unique() keeps the original (non-sequential) keys of the first
+        // occurrence of each value; PDO's positional binding requires a plain
+        // sequential array, so re-index before using it as query params.
+        $danglingIds = array_values(array_unique($danglingIds));
         $ph          = implode(',', array_fill(0, count($danglingIds), '?'));
         $dRows       = $this->db->query(
           "SELECT id, {$idField} AS identifier FROM {$tb} WHERE id IN ({$ph})",
@@ -1802,12 +1805,21 @@ class Record extends \Bdus\Controller
         $nodes[] = $node;
       }
 
+      // Skip relations pointing at a record id that doesn't resolve to any
+      // existing row (e.g. a stratigraphic unit renumbered/deleted long ago,
+      // still referenced by a stale bdus_rs row) — a dangling endpoint here
+      // would otherwise reach the frontend graph as an edge with no node.
       $relationsOut = [];
       foreach ($relations as $rel) {
+        $first  = (int)$rel['first'];
+        $second = (int)$rel['second'];
+        if (!isset($allNodes[$first]) || !isset($allNodes[$second])) {
+          continue;
+        }
         $relationsOut[] = [
           'id'       => (int)$rel['id'],
-          'first'    => (int)$rel['first'],
-          'second'   => (int)$rel['second'],
+          'first'    => $first,
+          'second'   => $second,
           'relation' => (int)$rel['relation'],
         ];
       }

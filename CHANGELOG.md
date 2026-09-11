@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.9.5] - 2026-09-11
+
 ### Fixed
 
 - **The Harris Matrix showed a generic "Database error" on any v4→v5-migrated

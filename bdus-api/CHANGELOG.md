@@ -5,6 +5,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.9.5] - 2026-09-11
+
+### Fixed
+
+- **The Harris Matrix showed a generic "Database error" on any v4→v5-migrated
+  app with an orphaned stratigraphic relation.** `getRsMatrix()` resolves
+  dangling `bdus_rs` endpoints (relation rows whose `first`/`second` no
+  longer match an existing record) through `array_unique()`, which keeps the
+  original, non-sequential array keys of the first occurrence of each value;
+  PDO's positional parameter binding requires a plain 0-indexed array, so any
+  table with **two or more** relations pointing at the same missing id threw
+  `SQLSTATE[HY000]: General error: 25 column index out of range` instead of
+  rendering. Traced to the actual source: `M030_RsIdsToInteger` — when the
+  legacy `rs_field` was a custom column (not the bare `id`) and a stored
+  label had no match in the live table, the migration fell back to casting
+  the label itself to an integer id instead of dropping the unresolved row,
+  silently turning an already-orphaned v4 stratigraphic reference (e.g. a
+  renumbered or deleted US) into a `bdus_rs` row dangling off an unrelated or
+  non-existent id. `getRsMatrix()` now re-indexes before binding and drops
+  any relation whose endpoint doesn't resolve to a real record; the
+  migration now drops genuinely unresolvable rows instead of guessing.
+  Found on the `suasa` v4→v5 migration.
+  - `bdus-api/controllers/Record.php`,
+    `bdus-api/lib/DB/System/Migrations/M030_RsIdsToInteger.php`
+
 ## [5.9.4] - 2026-09-09
 
 ### Fixed

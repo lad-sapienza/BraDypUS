@@ -46,7 +46,7 @@ class File extends \Bdus\Controller
 		$orphansOnly= !empty($this->get['orphans_only']);
 		$offset     = ($page - 1) * $perPage;
 
-		$imageExts  = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'tiff', 'svg'];
+		$imageExts  = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif', 'bmp', 'ico', 'tif', 'tiff', 'svg'];
 
 		try {
 			if ($orphansOnly) {
@@ -248,7 +248,7 @@ class File extends \Bdus\Controller
 				'boolean'
 			);
 
-			$imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'tiff', 'svg'];
+			$imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif', 'bmp', 'ico', 'tif', 'tiff', 'svg'];
 			$this->returnJson([
 				'status'   => 'success',
 				'code'     => 'ok_file_replaced',

@@ -47,6 +47,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `bdus-app/src/views/GeofaceView.vue`
   - Docs: `bdus-docs/guide/system-plugins/geodata.md`
 
+### Fixed
+
+- **WebP files (and a few other common formats) showed up in the record file
+  gallery as generic file links instead of inline image previews.** The
+  `is_image` flag computed when a record is loaded used a narrower,
+  out-of-sync extension list (`png, jpeg, jpg, bmp, ico, tif, tiff`) than the
+  one used everywhere else (upload, replace, file manager list), which
+  already included `gif`/`webp`/`svg`. All five copies of this list across
+  `Record.php`/`File.php` are now aligned and extended with `avif` (modern,
+  widely supported) and the missing `ico`/`tif`/`tiff` variants.
+  - `bdus-api/controllers/Record.php`, `bdus-api/controllers/File.php`
+
 ## [5.9.5] - 2026-09-11
 
 ### Fixed

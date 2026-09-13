@@ -348,7 +348,7 @@ class Record extends \Bdus\Controller
       // Mark each file with is_image so the frontend can pick the right renderer.
       // URL is reconstructed on the frontend using assetUrl() + app name from JWT.
       if (!empty($full['files']) && \is_array($full['files'])) {
-        $imageExts = ['png', 'jpeg', 'jpg', 'bmp', 'ico', 'tif', 'tiff'];
+        $imageExts = ['png', 'jpeg', 'jpg', 'gif', 'webp', 'avif', 'bmp', 'ico', 'tif', 'tiff', 'svg'];
         foreach ($full['files'] as &$file) {
           $file['is_image'] = \in_array(\strtolower($file['ext'] ?? ''), $imageExts, true);
         }
@@ -1137,7 +1137,7 @@ class Record extends \Bdus\Controller
         [$fileId, $tb, (int)$id]
       );
 
-      $imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'tiff', 'svg'];
+      $imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif', 'bmp', 'ico', 'tif', 'tiff', 'svg'];
 
       $this->returnJson([
         'status' => 'success',
@@ -1255,7 +1255,7 @@ class Record extends \Bdus\Controller
         'id'
       );
 
-      $imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'tiff', 'svg'];
+      $imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif', 'bmp', 'ico', 'tif', 'tiff', 'svg'];
 
       $this->returnJson([
         'status' => 'success',

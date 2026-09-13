@@ -12,13 +12,20 @@
 #                 stato_conservazione, tipo_misura, unita_misura,
 #                 materiale_classe, forma_tipo)
 #   siti (3 direct + 15 via CSV = 18 total, all with fuzzy-date data)
-#   complessi (8 direct + 3 via CSV = 11 total)
-#   saggi (12 direct + 5 via CSV = 17 total)
-#   us (30 direct + 15 via CSV = 45 total)
-#   reperti (20 direct + 375 via CSV = 395 total)
-#   misure (~60), m_reperti_in_us (~40), m_reperti_in_complessi (~15)
-#   RS relations (~41), geodata, userlinks (21 labeled), chart
+#   complessi (9 direct + 3 via CSV = 12 total)
+#   saggi (16 direct + 5 via CSV = 21 total)
+#   us (88 direct + 15 via CSV = 103 total)
+#   reperti (93 direct + 375 via CSV = 468 total)
+#   misure (~62), m_reperti_in_us (~41), m_reperti_in_complessi (~15)
+#   RS relations (~56), geodata, userlinks (21 labeled), chart
 #   sepolture (3 direct, osteology plugin active, multi-individual demo)
+#
+# Richest-record convention (see 19z below): for each of the 3 "direct"
+# siti (Colle Oppio, Casale Selva Rotonda, Porto Nerone) — >=3 complessi;
+# the 1st complesso has >=3 saggi; the 1st saggio has 20 us; the 1st us
+# has 25 reperti. Every field type (incl. md, added in 19z) and every
+# cross-cutting feature (RS, geodata, chrono, radiocarbon, zotero, files,
+# misure) has at least one example within this subtree on all 3 sites.
 # ════════════════════════════════════════════════════════════════════
 
 
@@ -2868,8 +2875,6 @@ HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
 
-
-# ════════════════════════════════════════════════════════════════════
 # ── 19o. Sepolture — demo inventario osteologico ─────────────────
 #
 # Crea la tabella `sepolture` e attiva il plugin osteologico.
@@ -3513,6 +3518,1517 @@ POST {{base_url}}/{{app_name}}/api/zotero/link
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "tb": "siti", "record_id": {{sito_rurale}}, "lib_id": {{zotero_lib_id}}, "zotero_key": "QPR8HQ62", "notes": "Confronto metodologico da scavi in area balcanica" }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+
+# ── 19z. Arricchimento gerarchico dei 3 siti principali (convenzione demo) ───
+
+# Regola: i dati più completi vivono nei primi 1-3 elementi di ogni tabella.
+# Per ciascuno dei 3 siti "diretti" (Colle Oppio, Casale Selva Rotonda, Porto
+# Nerone): >=3 complessi; il 1° complesso ha >=3 saggi; il 1° saggio ha 20 us;
+# la 1° us ha 25 reperti. Questo blocco vive alla fine del file, dopo 19y,
+# per due motivi: (1) l'import CSV di Monte Bibele e affini (sopra) usa ID
+# numerici hardcoded (siti 4-18, complessi 9-11, us 31-45) che dipendono
+# dall'ordine di inserimento — un record diretto inserito prima di quel
+# blocco li sposterebbe e lo romperebbe; (2) l'esempio Zotero qui sotto
+# riusa {{zotero_lib_id}}, catturato in 19y. Tutto ciò che segue usa solo
+# variabili già catturate sopra (sito_urbano, compl_edif_a, sag_01,
+# us_id_1, zotero_lib_id, ecc.), mai ID letterali.
+
+# ── 19z-1. Porto Nerone: 3° complesso ─────────────────────────────────────
+
+POST {{base_url}}/{{app_name}}/api/record/complessi
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "nome": "Relitto minore", "tipo": "Struttura", "sito_id": {{sito_subacqueo}}, "cronologia": "Romano", "descrizione": "Nucleo disperso di anfore e resti lignei a nord del molo, riferibile a una piccola imbarcazione naufragata in prossimita' dell'approdo." }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+[Captures]
+compl_relitto: jsonpath "$.id"
+
+# ── 19z-2. Nuovi saggi per raggiungere >=3 nel 1° complesso di ogni sito ───
+
+POST {{base_url}}/{{app_name}}/api/record/saggi
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "nome": "Saggio VI", "anno": 2024, "sito_id": {{sito_urbano}}, "complesso_id": {{compl_edif_a}}, "descrizione": "Estensione sud-ovest dell'edificio, verso il limite del saggio I." }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+[Captures]
+sag_vi: jsonpath "$.id"
+
+POST {{base_url}}/{{app_name}}/api/record/saggi
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "nome": "Saggio E", "anno": 2024, "sito_id": {{sito_rurale}}, "complesso_id": {{compl_pars_urb}}, "descrizione": "Settore ovest delle terme, con canalizzazioni di scarico." }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+[Captures]
+sag_e: jsonpath "$.id"
+
+POST {{base_url}}/{{app_name}}/api/record/saggi
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "nome": "Saggio Sub-3", "anno": 2024, "sito_id": {{sito_subacqueo}}, "complesso_id": {{compl_molo}}, "descrizione": "Prosecuzione del filare di pilae verso il largo, quota -6/-7 m." }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+[Captures]
+sag_sub3: jsonpath "$.id"
+
+POST {{base_url}}/{{app_name}}/api/record/saggi
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "nome": "Saggio Sub-4", "anno": 2024, "sito_id": {{sito_subacqueo}}, "complesso_id": {{compl_molo}}, "descrizione": "Settore sud del molo, area di accumulo di massi di crollo." }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+[Captures]
+sag_sub4: jsonpath "$.id"
+
+# ── 19z-3. US aggiuntive: Saggio I / Colle Oppio (target 20) ──────────────
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US031", "tipo": "Strato", "sito_id": {{sito_urbano}}, "complesso_id": {{compl_edif_a}}, "saggio_id": {{sag_01}}, "descrizione": "Livello di preparazione del piano in cocciopesto, ghiaia e frammenti fittili pressati.", "interpretazione": "Sottofondo pavimentale", "affidabilita": "Certa", "periodo": "Tardo Antico", "anno_scavo": 2018, "profondita_cm": 110 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+[Captures]
+us_id_31: jsonpath "$.id"
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US032", "tipo": "Crollo", "sito_id": {{sito_urbano}}, "complesso_id": {{compl_edif_a}}, "saggio_id": {{sag_01}}, "descrizione": "Crollo localizzato di tegole e coppi con tracce di incendio.", "interpretazione": "Evento distruttivo puntuale", "affidabilita": "Probabile", "periodo": "Tardo Antico", "anno_scavo": 2018, "nr_cassette": 2, "profondita_cm": 115 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+[Captures]
+us_id_32: jsonpath "$.id"
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US033", "tipo": "Struttura", "sito_id": {{sito_urbano}}, "complesso_id": {{compl_edif_a}}, "saggio_id": {{sag_01}}, "descrizione": "Risega di fondazione in blocchetti di tufo legati con malta pozzolanica.", "interpretazione": "Fondazione muro perimetrale", "affidabilita": "Certa", "periodo": "Romano", "anno_scavo": 2018, "profondita_cm": 130, "verificata": 1 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+[Captures]
+us_id_33: jsonpath "$.id"
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US034", "tipo": "Taglio", "sito_id": {{sito_urbano}}, "complesso_id": {{compl_edif_a}}, "saggio_id": {{sag_01}}, "descrizione": "Taglio della trincea di fondazione, pareti a scarpa e fondo piano.", "interpretazione": "Trincea di fondazione", "affidabilita": "Certa", "periodo": "Romano", "anno_scavo": 2018, "profondita_cm": 132 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+[Captures]
+us_id_34: jsonpath "$.id"
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US035", "tipo": "Riempimento", "sito_id": {{sito_urbano}}, "complesso_id": {{compl_edif_a}}, "saggio_id": {{sag_01}}, "descrizione": "Riempimento della trincea con terreno di scarico e frammenti laterizi.", "interpretazione": "Reinterro post-costruzione", "affidabilita": "Certa", "periodo": "Romano", "anno_scavo": 2018, "nr_cassette": 1, "profondita_cm": 128 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+[Captures]
+us_id_35: jsonpath "$.id"
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US036", "tipo": "Strato", "sito_id": {{sito_urbano}}, "complesso_id": {{compl_edif_a}}, "saggio_id": {{sag_01}}, "descrizione": "Strato di vita con battuto in terra e piccole buche di palo periferiche.", "interpretazione": "Piano di frequentazione domestico", "affidabilita": "Probabile", "periodo": "Romano", "anno_scavo": 2019, "profondita_cm": 140 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US037", "tipo": "Interfaccia", "sito_id": {{sito_urbano}}, "complesso_id": {{compl_edif_a}}, "saggio_id": {{sag_01}}, "descrizione": "Superficie livellata con inclusi ceramici abbondanti, leggermente inclinata verso ovest.", "interpretazione": "Piano di cantiere", "affidabilita": "Probabile", "periodo": "Romano", "anno_scavo": 2019, "profondita_cm": 145 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US038", "tipo": "Strato", "sito_id": {{sito_urbano}}, "complesso_id": {{compl_edif_a}}, "saggio_id": {{sag_01}}, "descrizione": "Accumulo cineroso con carboni sparsi e frammenti di impasto grezzo.", "interpretazione": "Livello di frequentazione protostorica", "affidabilita": "Certa", "periodo": "Ferro", "anno_scavo": 2019, "nr_cassette": 3, "profondita_cm": 165 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US039", "tipo": "Taglio", "sito_id": {{sito_urbano}}, "complesso_id": {{compl_edif_a}}, "saggio_id": {{sag_01}}, "descrizione": "Buca circolare di piccole dimensioni con pareti concave.", "interpretazione": "Buca di scarico", "affidabilita": "Probabile", "periodo": "Ferro", "anno_scavo": 2019, "profondita_cm": 168 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US040", "tipo": "Riempimento", "sito_id": {{sito_urbano}}, "complesso_id": {{compl_edif_a}}, "saggio_id": {{sag_01}}, "descrizione": "Riempimento della buca con cenere, ossa animali combuste e ceramica d'impasto.", "interpretazione": "Scarico domestico", "affidabilita": "Certa", "periodo": "Ferro", "anno_scavo": 2019, "nr_cassette": 2, "profondita_cm": 170, "verificata": 1 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US041", "tipo": "Strato", "sito_id": {{sito_urbano}}, "complesso_id": {{compl_edif_a}}, "saggio_id": {{sag_01}}, "descrizione": "Strato limoso bruno con rari inclusi antropici, probabile suolo di vita diffuso.", "interpretazione": "Suolo di occupazione diffusa", "affidabilita": "Incerta", "periodo": "Ferro", "anno_scavo": 2019, "profondita_cm": 180 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US042", "tipo": "Strato", "sito_id": {{sito_urbano}}, "complesso_id": {{compl_edif_a}}, "saggio_id": {{sag_01}}, "descrizione": "Livello sabbioso-limoso con sporadici manufatti litici in selce.", "interpretazione": "Frequentazione sporadica preistorica", "affidabilita": "Incerta", "periodo": "Preistorico", "anno_scavo": 2020, "profondita_cm": 195 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US043", "tipo": "Interfaccia", "sito_id": {{sito_urbano}}, "complesso_id": {{compl_edif_a}}, "saggio_id": {{sag_01}}, "descrizione": "Superficie irregolare di contatto con il banco geologico, tracce di dilavamento.", "interpretazione": "Paleosuperficie", "affidabilita": "Probabile", "periodo": "Preistorico", "anno_scavo": 2020, "profondita_cm": 198 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US044", "tipo": "Strato", "sito_id": {{sito_urbano}}, "complesso_id": {{compl_edif_a}}, "saggio_id": {{sag_01}}, "descrizione": "Banco di sabbie e argille alluvionali sterili, privo di reperti.", "interpretazione": "Substrato geologico", "affidabilita": "Certa", "periodo": "Preistorico", "anno_scavo": 2020, "profondita_cm": 205, "note": "Chiude la sequenza del saggio I; scavo sospeso al raggiungimento del banco naturale." }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+# ── 19z-4. US aggiuntive: Saggio A / Casale Selva Rotonda (target 20) ─────
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US045", "tipo": "Struttura", "sito_id": {{sito_rurale}}, "complesso_id": {{compl_pars_urb}}, "saggio_id": {{sag_06}}, "descrizione": "Canale di smaltimento in laterizi con copertura a cappuccina.", "interpretazione": "Sistema di scarico delle terme", "affidabilita": "Certa", "periodo": "Romano", "anno_scavo": 2019, "profondita_cm": 75, "verificata": 1 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+[Captures]
+us_id_45: jsonpath "$.id"
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US046", "tipo": "Riempimento", "sito_id": {{sito_rurale}}, "complesso_id": {{compl_pars_urb}}, "saggio_id": {{sag_06}}, "descrizione": "Riempimento del canale con concrezioni calcaree e frammenti ceramici.", "interpretazione": "Colmatura post-uso", "affidabilita": "Certa", "periodo": "Romano", "anno_scavo": 2019, "nr_cassette": 1, "profondita_cm": 78 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+[Captures]
+us_id_46: jsonpath "$.id"
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US047", "tipo": "Strato", "sito_id": {{sito_rurale}}, "complesso_id": {{compl_pars_urb}}, "saggio_id": {{sag_06}}, "descrizione": "Battuto in opus signinum con inserti litici, superficie usurata al centro.", "interpretazione": "Pavimento del frigidarium", "affidabilita": "Certa", "periodo": "Romano", "anno_scavo": 2019, "profondita_cm": 68, "verificata": 1 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+[Captures]
+us_id_47: jsonpath "$.id"
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US048", "tipo": "Struttura", "sito_id": {{sito_rurale}}, "complesso_id": {{compl_pars_urb}}, "saggio_id": {{sag_06}}, "descrizione": "Praefurnium con bocca di alimentazione rivestita in laterizi refrattari.", "interpretazione": "Focolare di riscaldamento ipocausto", "affidabilita": "Certa", "periodo": "Romano", "anno_scavo": 2019, "nr_cassette": 2, "profondita_cm": 82 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+[Captures]
+us_id_48: jsonpath "$.id"
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US049", "tipo": "Strato", "sito_id": {{sito_rurale}}, "complesso_id": {{compl_pars_urb}}, "saggio_id": {{sag_06}}, "descrizione": "Accumulo di cenere e carboni davanti alla bocca del praefurnium.", "interpretazione": "Scarico di combustione", "affidabilita": "Certa", "periodo": "Romano", "anno_scavo": 2019, "profondita_cm": 84 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+[Captures]
+us_id_49: jsonpath "$.id"
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US050", "tipo": "Crollo", "sito_id": {{sito_rurale}}, "complesso_id": {{compl_pars_urb}}, "saggio_id": {{sag_06}}, "descrizione": "Crollo delle suspensurae con pile di bipedales rovesciate.", "interpretazione": "Cedimento del piano di calpestio riscaldato", "affidabilita": "Probabile", "periodo": "Romano", "anno_scavo": 2020, "nr_cassette": 3, "profondita_cm": 72 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US051", "tipo": "Struttura", "sito_id": {{sito_rurale}}, "complesso_id": {{compl_pars_urb}}, "saggio_id": {{sag_06}}, "descrizione": "Condotto per fistula plumbea, ancora in situ per un tratto di 1,2 m.", "interpretazione": "Adduzione idrica alle terme", "affidabilita": "Certa", "periodo": "Romano", "anno_scavo": 2020, "profondita_cm": 60, "verificata": 1 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US052", "tipo": "Strato", "sito_id": {{sito_rurale}}, "complesso_id": {{compl_pars_urb}}, "saggio_id": {{sag_06}}, "descrizione": "Intonaco dipinto crollato in frammenti, tracce di rosso pompeiano e giallo ocra.", "interpretazione": "Crollo della decorazione parietale", "affidabilita": "Probabile", "periodo": "Romano", "anno_scavo": 2020, "nr_cassette": 4, "profondita_cm": 65 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US053", "tipo": "Strato", "sito_id": {{sito_rurale}}, "complesso_id": {{compl_pars_urb}}, "saggio_id": {{sag_06}}, "descrizione": "Massetto di preparazione musiva in cocciopesto fine.", "interpretazione": "Sottofondo del mosaico del tepidarium", "affidabilita": "Certa", "periodo": "Romano", "anno_scavo": 2020, "profondita_cm": 70 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US054", "tipo": "Interfaccia", "sito_id": {{sito_rurale}}, "complesso_id": {{compl_pars_urb}}, "saggio_id": {{sag_06}}, "descrizione": "Superficie di spoliazione con solchi di asportazione delle lastre marmoree.", "interpretazione": "Spoliazione del rivestimento marmoreo", "affidabilita": "Probabile", "periodo": "Alto Medioevo", "anno_scavo": 2020, "profondita_cm": 55 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US055", "tipo": "Taglio", "sito_id": {{sito_rurale}}, "complesso_id": {{compl_pars_urb}}, "saggio_id": {{sag_06}}, "descrizione": "Fossa irregolare che intacca il mosaico, pareti a strapiombo.", "interpretazione": "Fossa di spoliazione", "affidabilita": "Certa", "periodo": "Alto Medioevo", "anno_scavo": 2020, "profondita_cm": 58 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US056", "tipo": "Riempimento", "sito_id": {{sito_rurale}}, "complesso_id": {{compl_pars_urb}}, "saggio_id": {{sag_06}}, "descrizione": "Riempimento eterogeneo con frammenti musivi, malta e terreno bruno.", "interpretazione": "Colmatura della fossa di spoliazione", "affidabilita": "Certa", "periodo": "Alto Medioevo", "anno_scavo": 2021, "nr_cassette": 2, "profondita_cm": 56 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US057", "tipo": "Strato", "sito_id": {{sito_rurale}}, "complesso_id": {{compl_pars_urb}}, "saggio_id": {{sag_06}}, "descrizione": "Livello di dilavamento con ciottoli fluitati e rari embrici.", "interpretazione": "Fase di abbandono e degrado post-terme", "affidabilita": "Probabile", "periodo": "Alto Medioevo", "anno_scavo": 2021, "profondita_cm": 50 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US058", "tipo": "Struttura", "sito_id": {{sito_rurale}}, "complesso_id": {{compl_pars_urb}}, "saggio_id": {{sag_06}}, "descrizione": "Muretto a secco di reimpiego con blocchetti di spoglio.", "interpretazione": "Struttura altomedievale di reimpiego", "affidabilita": "Certa", "periodo": "Alto Medioevo", "anno_scavo": 2021, "nr_cassette": 1, "profondita_cm": 48, "verificata": 1 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US059", "tipo": "Riempimento", "sito_id": {{sito_rurale}}, "complesso_id": {{compl_pars_urb}}, "saggio_id": {{sag_06}}, "descrizione": "Riempimento a ridosso del muretto con terreno organico e ossa animali.", "interpretazione": "Scarico domestico altomedievale", "affidabilita": "Certa", "periodo": "Alto Medioevo", "anno_scavo": 2021, "profondita_cm": 45 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US060", "tipo": "Strato", "sito_id": {{sito_rurale}}, "complesso_id": {{compl_pars_urb}}, "saggio_id": {{sag_06}}, "descrizione": "Strato humico bruno scuro con radici e bioturbazione diffusa.", "interpretazione": "Livello di abbandono definitivo", "affidabilita": "Probabile", "periodo": "Alto Medioevo", "anno_scavo": 2021, "profondita_cm": 30 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US061", "tipo": "Strato", "sito_id": {{sito_rurale}}, "complesso_id": {{compl_pars_urb}}, "saggio_id": {{sag_06}}, "descrizione": "Argilla compatta verde-grigia priva di inclusi antropici.", "interpretazione": "Sedimento alluvionale sterile", "affidabilita": "Certa", "periodo": "Preistorico", "anno_scavo": 2022, "profondita_cm": 20 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US062", "tipo": "Interfaccia", "sito_id": {{sito_rurale}}, "complesso_id": {{compl_pars_urb}}, "saggio_id": {{sag_06}}, "descrizione": "Contatto diretto con il substrato geologico argilloso, superficie piana.", "interpretazione": "Substrato naturale, fine della sequenza", "affidabilita": "Certa", "periodo": "Preistorico", "anno_scavo": 2022, "profondita_cm": 15, "note": "Chiude la sequenza del saggio A." }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+# ── 19z-5. US aggiuntive: Saggio Sub-1 / Porto Nerone (target 20) ─────────
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US063", "tipo": "Struttura", "sito_id": {{sito_subacqueo}}, "complesso_id": {{compl_molo}}, "saggio_id": {{sag_11}}, "descrizione": "Secondo filare di pilae parallelo al primo, blocchi legati con malta pozzolanica idraulica.", "interpretazione": "Ampliamento della fondazione del molo", "affidabilita": "Certa", "periodo": "Romano", "anno_scavo": 2022, "profondita_cm": 310, "verificata": 1 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+[Captures]
+us_id_63: jsonpath "$.id"
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US064", "tipo": "Strato", "sito_id": {{sito_subacqueo}}, "complesso_id": {{compl_molo}}, "saggio_id": {{sag_11}}, "descrizione": "Sabbia grossolana con ciottoli e frammenti di intonaco idraulico (opus signinum).", "interpretazione": "Sedimento di cantiere subacqueo", "affidabilita": "Probabile", "periodo": "Romano", "anno_scavo": 2022, "profondita_cm": 305 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+[Captures]
+us_id_64: jsonpath "$.id"
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US065", "tipo": "Struttura", "sito_id": {{sito_subacqueo}}, "complesso_id": {{compl_molo}}, "saggio_id": {{sag_11}}, "descrizione": "Palificata lignea infissa nel fondale, pali in quercia ben conservati per anossia.", "interpretazione": "Sostegno strutturale della banchina", "affidabilita": "Certa", "periodo": "Romano", "anno_scavo": 2022, "nr_cassette": 1, "profondita_cm": 320, "verificata": 1, "note": "Legno prelevato per campionatura C14 (v. datazione radiocarbonio collegata)." }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+[Captures]
+us_id_65_rc: jsonpath "$.id"
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US066", "tipo": "Strato", "sito_id": {{sito_subacqueo}}, "complesso_id": {{compl_molo}}, "saggio_id": {{sag_11}}, "descrizione": "Concentrazione di zavorra litica eterogenea (basalto, calcare).", "interpretazione": "Zavorra di imbarcazione da carico", "affidabilita": "Probabile", "periodo": "Romano", "anno_scavo": 2022, "profondita_cm": 330 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+[Captures]
+us_id_66: jsonpath "$.id"
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US067", "tipo": "Strato", "sito_id": {{sito_subacqueo}}, "complesso_id": {{compl_molo}}, "saggio_id": {{sag_11}}, "descrizione": "Sabbia fine con abbondanti valve di mollusco e concrezioni bioincrostanti.", "interpretazione": "Sedimentazione marina in ambiente calmo", "affidabilita": "Certa", "periodo": "Romano", "anno_scavo": 2023, "profondita_cm": 340 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+[Captures]
+us_id_67: jsonpath "$.id"
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US068", "tipo": "Crollo", "sito_id": {{sito_subacqueo}}, "complesso_id": {{compl_molo}}, "saggio_id": {{sag_11}}, "descrizione": "Crollo di blocchi squadrati dal filare superiore, disposti caoticamente.", "interpretazione": "Cedimento strutturale del molo", "affidabilita": "Probabile", "periodo": "Romano", "anno_scavo": 2023, "nr_cassette": 2, "profondita_cm": 315 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US069", "tipo": "Struttura", "sito_id": {{sito_subacqueo}}, "complesso_id": {{compl_molo}}, "saggio_id": {{sag_11}}, "descrizione": "Anello di ormeggio in ferro murato in un blocco di ancoraggio.", "interpretazione": "Punto di ormeggio per imbarcazioni minori", "affidabilita": "Certa", "periodo": "Romano", "anno_scavo": 2023, "profondita_cm": 300, "verificata": 1 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US070", "tipo": "Strato", "sito_id": {{sito_subacqueo}}, "complesso_id": {{compl_molo}}, "saggio_id": {{sag_11}}, "descrizione": "Sabbia scura con abbondante materiale organico e frammenti di corda vegetale mineralizzata.", "interpretazione": "Accumulo organico da attività portuale", "affidabilita": "Probabile", "periodo": "Romano", "anno_scavo": 2023, "profondita_cm": 325 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US071", "tipo": "Strato", "sito_id": {{sito_subacqueo}}, "complesso_id": {{compl_molo}}, "saggio_id": {{sag_11}}, "descrizione": "Concentrazione di ceppi d'ancora in piombo dispersi in un'area di 3x2 m.", "interpretazione": "Area di perdita accidentale di ancore", "affidabilita": "Certa", "periodo": "Romano", "anno_scavo": 2023, "nr_cassette": 3, "profondita_cm": 335, "verificata": 1 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US072", "tipo": "Strato", "sito_id": {{sito_subacqueo}}, "complesso_id": {{compl_molo}}, "saggio_id": {{sag_11}}, "descrizione": "Sabbia con laminazioni sottili alternate a livelli fangosi.", "interpretazione": "Sequenza deposizionale stagionale", "affidabilita": "Probabile", "periodo": "Romano", "anno_scavo": 2023, "profondita_cm": 350 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US073", "tipo": "Struttura", "sito_id": {{sito_subacqueo}}, "complesso_id": {{compl_molo}}, "saggio_id": {{sag_11}}, "descrizione": "Basamento in cementizio idraulico per una possibile struttura di segnalazione.", "interpretazione": "Base di torre o fanale portuale", "affidabilita": "Incerta", "periodo": "Romano", "anno_scavo": 2023, "profondita_cm": 295 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US074", "tipo": "Riempimento", "sito_id": {{sito_subacqueo}}, "complesso_id": {{compl_molo}}, "saggio_id": {{sag_11}}, "descrizione": "Riempimento di una cavità tra i blocchi del filare con detrito misto.", "interpretazione": "Colmatura di interstizio strutturale", "affidabilita": "Certa", "periodo": "Romano", "anno_scavo": 2024, "profondita_cm": 318 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US075", "tipo": "Strato", "sito_id": {{sito_subacqueo}}, "complesso_id": {{compl_molo}}, "saggio_id": {{sag_11}}, "descrizione": "Fango grigio-verde compatto con rara fauna marina bentonica.", "interpretazione": "Sedimento di bacino portuale in fase di interramento", "affidabilita": "Probabile", "periodo": "Romano", "anno_scavo": 2024, "profondita_cm": 360 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US076", "tipo": "Taglio", "sito_id": {{sito_subacqueo}}, "complesso_id": {{compl_molo}}, "saggio_id": {{sag_11}}, "descrizione": "Depressione naturale nel banco roccioso, margini erosi.", "interpretazione": "Conca naturale preesistente all'impianto portuale", "affidabilita": "Incerta", "periodo": "Romano", "anno_scavo": 2024, "profondita_cm": 370 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US077", "tipo": "Riempimento", "sito_id": {{sito_subacqueo}}, "complesso_id": {{compl_molo}}, "saggio_id": {{sag_11}}, "descrizione": "Riempimento della conca con sabbia e detrito antropico misto.", "interpretazione": "Colmatura della depressione naturale", "affidabilita": "Probabile", "periodo": "Romano", "anno_scavo": 2024, "profondita_cm": 365 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US078", "tipo": "Strato", "sito_id": {{sito_subacqueo}}, "complesso_id": {{compl_molo}}, "saggio_id": {{sag_11}}, "descrizione": "Sabbia grossolana pulita, priva di inclusi antropici.", "interpretazione": "Sedimento marino pre-portuale", "affidabilita": "Certa", "periodo": "Preistorico", "anno_scavo": 2024, "profondita_cm": 385 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US079", "tipo": "Interfaccia", "sito_id": {{sito_subacqueo}}, "complesso_id": {{compl_molo}}, "saggio_id": {{sag_11}}, "descrizione": "Superficie del banco roccioso naturale, con tracce di bioerosione.", "interpretazione": "Substrato geologico sommerso", "affidabilita": "Certa", "periodo": "Preistorico", "anno_scavo": 2024, "profondita_cm": 400 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US080", "tipo": "Strato", "sito_id": {{sito_subacqueo}}, "complesso_id": {{compl_molo}}, "saggio_id": {{sag_11}}, "descrizione": "Roccia calcarenitica compatta, base della sequenza subacquea.", "interpretazione": "Substrato geologico, fine della sequenza", "affidabilita": "Certa", "periodo": "Preistorico", "anno_scavo": 2024, "profondita_cm": 410, "note": "Chiude la sequenza del saggio Sub-1." }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+# ── 19z-6. US di cornice sui nuovi saggi (2 ciascuno, per non lasciarli vuoti) ───
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US081", "tipo": "Strato", "sito_id": {{sito_urbano}}, "complesso_id": {{compl_edif_a}}, "saggio_id": {{sag_vi}}, "descrizione": "Livello di macerie edilizie miste, laterizi frantumati e malta polverosa.", "interpretazione": "Accumulo di demolizione recente", "affidabilita": "Probabile", "periodo": "Basso Medioevo", "anno_scavo": 2024, "profondita_cm": 20 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US082", "tipo": "Strato", "sito_id": {{sito_urbano}}, "complesso_id": {{compl_edif_a}}, "saggio_id": {{sag_vi}}, "descrizione": "Strato argilloso compatto simile a US002, probabile prosecuzione verso sud.", "interpretazione": "Livello di abbandono, prosecuzione di US002", "affidabilita": "Probabile", "periodo": "Basso Medioevo", "anno_scavo": 2024, "profondita_cm": 32 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US083", "tipo": "Strato", "sito_id": {{sito_rurale}}, "complesso_id": {{compl_pars_urb}}, "saggio_id": {{sag_e}}, "descrizione": "Crollo di tegole frammentarie analogo a US015, con minore densità.", "interpretazione": "Margine occidentale del crollo delle terme", "affidabilita": "Probabile", "periodo": "Tardo Antico", "anno_scavo": 2024, "profondita_cm": 33 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US084", "tipo": "Struttura", "sito_id": {{sito_rurale}}, "complesso_id": {{compl_pars_urb}}, "saggio_id": {{sag_e}}, "descrizione": "Tratto di canaletta di scarico in laterizi, sezione a U.", "interpretazione": "Prosecuzione del sistema di drenaggio", "affidabilita": "Certa", "periodo": "Romano", "anno_scavo": 2024, "profondita_cm": 70, "verificata": 1 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US085", "tipo": "Struttura", "sito_id": {{sito_subacqueo}}, "complesso_id": {{compl_molo}}, "saggio_id": {{sag_sub3}}, "descrizione": "Prosecuzione del filare di pilae verso il largo, 3 blocchi conservati.", "interpretazione": "Estensione della fondazione del molo", "affidabilita": "Probabile", "periodo": "Romano", "anno_scavo": 2024, "profondita_cm": 315 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US086", "tipo": "Strato", "sito_id": {{sito_subacqueo}}, "complesso_id": {{compl_molo}}, "saggio_id": {{sag_sub3}}, "descrizione": "Sabbia con frammenti anforari dispersi, bassa densità.", "interpretazione": "Sedimentazione marina periferica", "affidabilita": "Incerta", "periodo": "Romano", "anno_scavo": 2024, "profondita_cm": 340 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US087", "tipo": "Strato", "sito_id": {{sito_subacqueo}}, "complesso_id": {{compl_molo}}, "saggio_id": {{sag_sub4}}, "descrizione": "Accumulo di massi di crollo di grandi dimensioni, disposti caoticamente.", "interpretazione": "Area di collasso strutturale del molo", "affidabilita": "Probabile", "periodo": "Romano", "anno_scavo": 2024, "nr_cassette": 1, "profondita_cm": 320 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "US088", "tipo": "Strato", "sito_id": {{sito_subacqueo}}, "complesso_id": {{compl_molo}}, "saggio_id": {{sag_sub4}}, "descrizione": "Sabbia grossolana con rari frammenti ceramici rotolati.", "interpretazione": "Sedimentazione periferica di bassa energia", "affidabilita": "Incerta", "periodo": "Romano", "anno_scavo": 2024, "profondita_cm": 345 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+# ── 19z-7. Harris Matrix: prosecuzione della sequenza sotto le 3 us capostipite ───
+
+POST {{base_url}}/{{app_name}}/api/record/us/rs
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "first": {{us_id_1}}, "second": {{us_id_31}}, "relation": 1 }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/us/rs
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "first": {{us_id_31}}, "second": {{us_id_32}}, "relation": 1 }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/us/rs
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "first": {{us_id_32}}, "second": {{us_id_33}}, "relation": 1 }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/us/rs
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "first": {{us_id_33}}, "second": {{us_id_34}}, "relation": 1 }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/us/rs
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "first": {{us_id_34}}, "second": {{us_id_35}}, "relation": 1 }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/us/rs
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "first": {{us_id_15}}, "second": {{us_id_45}}, "relation": 1 }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/us/rs
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "first": {{us_id_45}}, "second": {{us_id_46}}, "relation": 1 }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/us/rs
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "first": {{us_id_46}}, "second": {{us_id_47}}, "relation": 1 }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/us/rs
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "first": {{us_id_47}}, "second": {{us_id_48}}, "relation": 1 }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/us/rs
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "first": {{us_id_48}}, "second": {{us_id_49}}, "relation": 1 }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/us/rs
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "first": {{us_id_26}}, "second": {{us_id_63}}, "relation": 1 }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/us/rs
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "first": {{us_id_63}}, "second": {{us_id_64}}, "relation": 1 }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/us/rs
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "first": {{us_id_64}}, "second": {{us_id_65_rc}}, "relation": 1 }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/us/rs
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "first": {{us_id_65_rc}}, "second": {{us_id_66}}, "relation": 1 }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/us/rs
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "first": {{us_id_66}}, "second": {{us_id_67}}, "relation": 1 }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+# ── 19z-8. Reperti aggiuntivi: 25 da US001 (Colle Oppio) ──────────────────
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP021", "sito_id": {{sito_urbano}}, "complesso_id": {{compl_edif_a}}, "saggio_id": {{sag_01}}, "us_provenienza_id": {{us_id_1}}, "categoria": "Ceramica", "classe": "Terra sigillata", "stato_cons": "Frammentario", "descrizione": "Frammento di parete di coppa in sigillata italica con bollo di fondo parzialmente leggibile.", "data_ritrovamento": "2018-06-18", "tipologia": "Coppa", "disegnato": 1, "pubblicato": 1, "frammenti_conservati": "Parete e attacco del fondo, ca. 1/4 del vaso", "decorazione": "Ingobbio rosso-arancio lucido, priva di decorazione plastica", "dati_epigrafici": "Bollo in planta pedis, cartiglio rettangolare, lettura incerta", "note": "Confrontabile con produzioni aretine di fine I sec. a.C." }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+[Captures]
+rep_id_21: jsonpath "$.id"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP022", "sito_id": {{sito_urbano}}, "complesso_id": {{compl_edif_a}}, "saggio_id": {{sag_01}}, "us_provenienza_id": {{us_id_1}}, "categoria": "Ceramica", "classe": "Anfora", "stato_cons": "Frammentato", "descrizione": "Ansa di anfora Dressel 2-4 con impronta digitale sull'attacco superiore.", "data_ritrovamento": "2018-06-18", "disegnato": 1 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP023", "sito_id": {{sito_urbano}}, "complesso_id": {{compl_edif_a}}, "saggio_id": {{sag_01}}, "us_provenienza_id": {{us_id_1}}, "categoria": "Metallo", "classe": "Bronzo", "stato_cons": "Integro", "descrizione": "Moneta in bronzo di modulo piccolo, conservazione buona ma legenda illeggibile per usura.", "data_ritrovamento": "2018-06-19", "tipologia": "Moneta", "pubblicato": 1 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP024", "sito_id": {{sito_urbano}}, "complesso_id": {{compl_edif_a}}, "saggio_id": {{sag_01}}, "us_provenienza_id": {{us_id_1}}, "categoria": "Vetro", "classe": "Ceramica comune", "stato_cons": "Frammentario", "descrizione": "Fondo di unguentario in vetro verdastro soffiato a stampo.", "data_ritrovamento": "2018-06-19" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP025", "sito_id": {{sito_urbano}}, "complesso_id": {{compl_edif_a}}, "saggio_id": {{sag_01}}, "us_provenienza_id": {{us_id_1}}, "categoria": "Metallo", "classe": "Ferro", "stato_cons": "Lacunoso", "descrizione": "Chiodo da carpenteria a sezione quadrata, punta piegata.", "data_ritrovamento": "2018-06-20" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP026", "sito_id": {{sito_urbano}}, "complesso_id": {{compl_edif_a}}, "saggio_id": {{sag_01}}, "us_provenienza_id": {{us_id_1}}, "categoria": "Osso", "classe": "Osso lavorato", "stato_cons": "Integro", "descrizione": "Ago crinale in osso con capocchia sagomata a globetto.", "data_ritrovamento": "2018-06-20", "disegnato": 1 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP027", "sito_id": {{sito_urbano}}, "complesso_id": {{compl_edif_a}}, "saggio_id": {{sag_01}}, "us_provenienza_id": {{us_id_1}}, "categoria": "Litico", "classe": "Selce", "stato_cons": "Frammentato", "descrizione": "Scheggia in selce con ritocco marginale, residuale in strato disturbato.", "data_ritrovamento": "2018-06-21", "note": "Materiale residuale, non pertinente al periodo dello strato." }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP028", "sito_id": {{sito_urbano}}, "complesso_id": {{compl_edif_a}}, "saggio_id": {{sag_01}}, "us_provenienza_id": {{us_id_1}}, "categoria": "Ceramica", "classe": "Ceramica comune", "stato_cons": "Frammentario", "descrizione": "Orlo di brocca monoansata con decorazione a pettine sull'ansa.", "data_ritrovamento": "2018-06-21" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP029", "sito_id": {{sito_urbano}}, "complesso_id": {{compl_edif_a}}, "saggio_id": {{sag_01}}, "us_provenienza_id": {{us_id_1}}, "categoria": "Metallo", "classe": "Bronzo", "stato_cons": "Frammentato", "descrizione": "Frammento di fibula a balestra con arco decorato a tacche.", "data_ritrovamento": "2018-06-22", "disegnato": 1 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP030", "sito_id": {{sito_urbano}}, "complesso_id": {{compl_edif_a}}, "saggio_id": {{sag_01}}, "us_provenienza_id": {{us_id_1}}, "categoria": "Ceramica", "classe": "Ceramica depurata", "stato_cons": "Frammentario", "descrizione": "Parete di lucerna a canale con traccia di rivestimento ingobbiato.", "data_ritrovamento": "2018-06-22" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP031", "sito_id": {{sito_urbano}}, "complesso_id": {{compl_edif_a}}, "saggio_id": {{sag_01}}, "us_provenienza_id": {{us_id_1}}, "categoria": "Laterizio", "classe": "Ceramica comune", "stato_cons": "Frammentario", "descrizione": "Frammento di tegola con impronta di zampa di cane impressa prima della cottura.", "data_ritrovamento": "2018-06-23", "note": "Reperto curioso, spesso richiesto per attività didattiche." }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP032", "sito_id": {{sito_urbano}}, "complesso_id": {{compl_edif_a}}, "saggio_id": {{sag_01}}, "us_provenienza_id": {{us_id_1}}, "categoria": "Metallo", "classe": "Ferro", "stato_cons": "Frammentato", "descrizione": "Coltello con lama frammentaria e resti del codolo.", "data_ritrovamento": "2018-06-23" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP033", "sito_id": {{sito_urbano}}, "complesso_id": {{compl_edif_a}}, "saggio_id": {{sag_01}}, "us_provenienza_id": {{us_id_1}}, "categoria": "Ceramica", "classe": "Anfora", "stato_cons": "Lacunoso", "descrizione": "Puntale di anfora africana da olio, tipo Africana II.", "data_ritrovamento": "2018-06-24" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP034", "sito_id": {{sito_urbano}}, "complesso_id": {{compl_edif_a}}, "saggio_id": {{sag_01}}, "us_provenienza_id": {{us_id_1}}, "categoria": "Vetro", "classe": "Ceramica comune", "stato_cons": "Integro", "descrizione": "Piccola perla vitrea blu cobalto, forse elemento di collana.", "data_ritrovamento": "2018-06-24", "disegnato": 1, "pubblicato": 1 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP035", "sito_id": {{sito_urbano}}, "complesso_id": {{compl_edif_a}}, "saggio_id": {{sag_01}}, "us_provenienza_id": {{us_id_1}}, "categoria": "Osso", "classe": "Osso lavorato", "stato_cons": "Frammentario", "descrizione": "Manico di coltello in osso con decorazione incisa a losanghe.", "data_ritrovamento": "2018-06-25" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP036", "sito_id": {{sito_urbano}}, "complesso_id": {{compl_edif_a}}, "saggio_id": {{sag_01}}, "us_provenienza_id": {{us_id_1}}, "categoria": "Metallo", "classe": "Bronzo", "stato_cons": "Integro", "descrizione": "Anello digitale in bronzo con castone privo di gemma.", "data_ritrovamento": "2018-06-25" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP037", "sito_id": {{sito_urbano}}, "complesso_id": {{compl_edif_a}}, "saggio_id": {{sag_01}}, "us_provenienza_id": {{us_id_1}}, "categoria": "Ceramica", "classe": "Terra sigillata", "stato_cons": "Frammentario", "descrizione": "Fondo di piatto in sigillata africana con bollo di fondo illeggibile.", "data_ritrovamento": "2018-06-26" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP038", "sito_id": {{sito_urbano}}, "complesso_id": {{compl_edif_a}}, "saggio_id": {{sag_01}}, "us_provenienza_id": {{us_id_1}}, "categoria": "Litico", "classe": "Ossidiana", "stato_cons": "Frammentato", "descrizione": "Lama in ossidiana, verosimilmente residuale da contesti più antichi.", "data_ritrovamento": "2018-06-26", "note": "Ossidiana non locale; possibile importazione da Lipari o Pantelleria." }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP039", "sito_id": {{sito_urbano}}, "complesso_id": {{compl_edif_a}}, "saggio_id": {{sag_01}}, "us_provenienza_id": {{us_id_1}}, "categoria": "Metallo", "classe": "Ferro", "stato_cons": "Lacunoso", "descrizione": "Elemento di serratura con resti di chiave a mandata semplice.", "data_ritrovamento": "2018-06-27" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP040", "sito_id": {{sito_urbano}}, "complesso_id": {{compl_edif_a}}, "saggio_id": {{sag_01}}, "us_provenienza_id": {{us_id_1}}, "categoria": "Ceramica", "classe": "Ceramica comune", "stato_cons": "Frammentario", "descrizione": "Coperchio troncoconico con presa a bottone.", "data_ritrovamento": "2018-06-27" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP041", "sito_id": {{sito_urbano}}, "complesso_id": {{compl_edif_a}}, "saggio_id": {{sag_01}}, "us_provenienza_id": {{us_id_1}}, "categoria": "Osso", "classe": "Osso lavorato", "stato_cons": "Integro", "descrizione": "Dado da gioco in osso con numeri incisi a occhio di dado.", "data_ritrovamento": "2018-06-28", "disegnato": 1 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP042", "sito_id": {{sito_urbano}}, "complesso_id": {{compl_edif_a}}, "saggio_id": {{sag_01}}, "us_provenienza_id": {{us_id_1}}, "categoria": "Metallo", "classe": "Bronzo", "stato_cons": "Frammentato", "descrizione": "Frammento di specchio in bronzo con superficie riflettente ossidata.", "data_ritrovamento": "2018-06-28" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP043", "sito_id": {{sito_urbano}}, "complesso_id": {{compl_edif_a}}, "saggio_id": {{sag_01}}, "us_provenienza_id": {{us_id_1}}, "categoria": "Ceramica", "classe": "Ceramica depurata", "stato_cons": "Frammentario", "descrizione": "Parete decorata a rotellatura con motivo a spina di pesce.", "data_ritrovamento": "2018-06-29" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP044", "sito_id": {{sito_urbano}}, "complesso_id": {{compl_edif_a}}, "saggio_id": {{sag_01}}, "us_provenienza_id": {{us_id_1}}, "categoria": "Metallo", "classe": "Ferro", "stato_cons": "Lacunoso", "descrizione": "Punta di freccia da caccia a losanga, verosimilmente intrusiva e moderna.", "data_ritrovamento": "2018-06-29", "note": "Oggetto verosimilmente moderno, coerente con la matrice disturbata di US001." }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP045", "sito_id": {{sito_urbano}}, "complesso_id": {{compl_edif_a}}, "saggio_id": {{sag_01}}, "us_provenienza_id": {{us_id_1}}, "categoria": "Ceramica", "classe": "Ceramica comune", "stato_cons": "Integro", "descrizione": "Piccola olletta miniaturistica intera, forse giocattolo infantile.", "data_ritrovamento": "2018-06-30", "disegnato": 1, "pubblicato": 1 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+# ── 19z-9. Reperti aggiuntivi: 23 da US015 (Casale Selva Rotonda, totale 25 con REP011-012) ───
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP046", "sito_id": {{sito_rurale}}, "complesso_id": {{compl_pars_urb}}, "saggio_id": {{sag_06}}, "us_provenienza_id": {{us_id_15}}, "categoria": "Ceramica", "classe": "Terra sigillata", "stato_cons": "Frammentario", "descrizione": "Parete di coppa in sigillata africana A con ingobbio rosso corallino.", "data_ritrovamento": "2019-07-10" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP047", "sito_id": {{sito_rurale}}, "complesso_id": {{compl_pars_urb}}, "saggio_id": {{sag_06}}, "us_provenienza_id": {{us_id_15}}, "categoria": "Vetro", "classe": "Ceramica comune", "stato_cons": "Frammentario", "descrizione": "Frammento di lastra di vetro da finestra, colore verdastro, spessore 4 mm.", "data_ritrovamento": "2019-07-10" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP048", "sito_id": {{sito_rurale}}, "complesso_id": {{compl_pars_urb}}, "saggio_id": {{sag_06}}, "us_provenienza_id": {{us_id_15}}, "categoria": "Litico", "classe": "Selce", "stato_cons": "Integro", "descrizione": "Tessera musiva in marmo bianco, forma cubica regolare.", "data_ritrovamento": "2019-07-11", "tipologia": "Tessera musiva" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP049", "sito_id": {{sito_rurale}}, "complesso_id": {{compl_pars_urb}}, "saggio_id": {{sag_06}}, "us_provenienza_id": {{us_id_15}}, "categoria": "Metallo", "classe": "Bronzo", "stato_cons": "Frammentato", "descrizione": "Cardine di porta in bronzo con perno superstite.", "data_ritrovamento": "2019-07-11" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP050", "sito_id": {{sito_rurale}}, "complesso_id": {{compl_pars_urb}}, "saggio_id": {{sag_06}}, "us_provenienza_id": {{us_id_15}}, "categoria": "Laterizio", "classe": "Ceramica comune", "stato_cons": "Frammentario", "descrizione": "Frammento di tubulo fittile da intercapedine di riscaldamento.", "data_ritrovamento": "2019-07-12" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP051", "sito_id": {{sito_rurale}}, "complesso_id": {{compl_pars_urb}}, "saggio_id": {{sag_06}}, "us_provenienza_id": {{us_id_15}}, "categoria": "Metallo", "classe": "Ferro", "stato_cons": "Lacunoso", "descrizione": "Grappa da fissaggio di lastre di rivestimento parietale.", "data_ritrovamento": "2019-07-12" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP052", "sito_id": {{sito_rurale}}, "complesso_id": {{compl_pars_urb}}, "saggio_id": {{sag_06}}, "us_provenienza_id": {{us_id_15}}, "categoria": "Ceramica", "classe": "Ceramica depurata", "stato_cons": "Frammentario", "descrizione": "Orlo di coppa carenata con vernice nera residua.", "data_ritrovamento": "2019-07-13" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP053", "sito_id": {{sito_rurale}}, "complesso_id": {{compl_pars_urb}}, "saggio_id": {{sag_06}}, "us_provenienza_id": {{us_id_15}}, "categoria": "Vetro", "classe": "Ceramica comune", "stato_cons": "Integro", "descrizione": "Balsamario fusiforme in vetro azzurrino, integro.", "data_ritrovamento": "2019-07-13", "disegnato": 1, "pubblicato": 1 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP054", "sito_id": {{sito_rurale}}, "complesso_id": {{compl_pars_urb}}, "saggio_id": {{sag_06}}, "us_provenienza_id": {{us_id_15}}, "categoria": "Metallo", "classe": "Bronzo", "stato_cons": "Integro", "descrizione": "Ago crinale in bronzo con capocchia sferica.", "data_ritrovamento": "2019-07-14" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP055", "sito_id": {{sito_rurale}}, "complesso_id": {{compl_pars_urb}}, "saggio_id": {{sag_06}}, "us_provenienza_id": {{us_id_15}}, "categoria": "Litico", "classe": "Selce", "stato_cons": "Frammentato", "descrizione": "Frammento di lastra di rivestimento in marmo cipollino.", "data_ritrovamento": "2019-07-14" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP056", "sito_id": {{sito_rurale}}, "complesso_id": {{compl_pars_urb}}, "saggio_id": {{sag_06}}, "us_provenienza_id": {{us_id_15}}, "categoria": "Ceramica", "classe": "Anfora", "stato_cons": "Lacunoso", "descrizione": "Ansa di anfora vinaria con bollo circolare poco leggibile.", "data_ritrovamento": "2019-07-15" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP057", "sito_id": {{sito_rurale}}, "complesso_id": {{compl_pars_urb}}, "saggio_id": {{sag_06}}, "us_provenienza_id": {{us_id_15}}, "categoria": "Osso", "classe": "Osso lavorato", "stato_cons": "Frammentario", "descrizione": "Spillone in osso con testa sagomata a oliva.", "data_ritrovamento": "2019-07-15" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP058", "sito_id": {{sito_rurale}}, "complesso_id": {{compl_pars_urb}}, "saggio_id": {{sag_06}}, "us_provenienza_id": {{us_id_15}}, "categoria": "Metallo", "classe": "Ferro", "stato_cons": "Frammentato", "descrizione": "Chiave a doppia mandata con anello di sospensione.", "data_ritrovamento": "2019-07-16", "disegnato": 1 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP059", "sito_id": {{sito_rurale}}, "complesso_id": {{compl_pars_urb}}, "saggio_id": {{sag_06}}, "us_provenienza_id": {{us_id_15}}, "categoria": "Ceramica", "classe": "Terra sigillata", "stato_cons": "Frammentario", "descrizione": "Fondo di piatto in sigillata italica con bollo planta pedis illeggibile.", "data_ritrovamento": "2019-07-16" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP060", "sito_id": {{sito_rurale}}, "complesso_id": {{compl_pars_urb}}, "saggio_id": {{sag_06}}, "us_provenienza_id": {{us_id_15}}, "categoria": "Laterizio", "classe": "Ceramica comune", "stato_cons": "Integro", "descrizione": "Bollo laterizio circolare su frammento di bipedalis, officina non identificata.", "data_ritrovamento": "2019-07-17", "tipologia": "Bollo laterizio", "dati_epigrafici": "Cartiglio circolare, lettura parziale ...OFF..." }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP061", "sito_id": {{sito_rurale}}, "complesso_id": {{compl_pars_urb}}, "saggio_id": {{sag_06}}, "us_provenienza_id": {{us_id_15}}, "categoria": "Vetro", "classe": "Ceramica comune", "stato_cons": "Frammentario", "descrizione": "Frammento di coppa in vetro soffiato con costolature.", "data_ritrovamento": "2019-07-17" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP062", "sito_id": {{sito_rurale}}, "complesso_id": {{compl_pars_urb}}, "saggio_id": {{sag_06}}, "us_provenienza_id": {{us_id_15}}, "categoria": "Metallo", "classe": "Bronzo", "stato_cons": "Lacunoso", "descrizione": "Elemento decorativo a foglia di bronzo, forse applique.", "data_ritrovamento": "2019-07-18" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP063", "sito_id": {{sito_rurale}}, "complesso_id": {{compl_pars_urb}}, "saggio_id": {{sag_06}}, "us_provenienza_id": {{us_id_15}}, "categoria": "Ceramica", "classe": "Ceramica comune", "stato_cons": "Frammentario", "descrizione": "Parete di dolio con decorazione a cordone plastico.", "data_ritrovamento": "2019-07-18" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP064", "sito_id": {{sito_rurale}}, "complesso_id": {{compl_pars_urb}}, "saggio_id": {{sag_06}}, "us_provenienza_id": {{us_id_15}}, "categoria": "Osso", "classe": "Osso lavorato", "stato_cons": "Integro", "descrizione": "Ago da cucito in osso, punta integra.", "data_ritrovamento": "2019-07-19" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP065", "sito_id": {{sito_rurale}}, "complesso_id": {{compl_pars_urb}}, "saggio_id": {{sag_06}}, "us_provenienza_id": {{us_id_15}}, "categoria": "Metallo", "classe": "Ferro", "stato_cons": "Frammentato", "descrizione": "Anello di sospensione per lucerna a sospensione.", "data_ritrovamento": "2019-07-19" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP066", "sito_id": {{sito_rurale}}, "complesso_id": {{compl_pars_urb}}, "saggio_id": {{sag_06}}, "us_provenienza_id": {{us_id_15}}, "categoria": "Ceramica", "classe": "Ceramica depurata", "stato_cons": "Integro", "descrizione": "Piccola coppa miniaturistica votiva.", "data_ritrovamento": "2019-07-20", "disegnato": 1 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP067", "sito_id": {{sito_rurale}}, "complesso_id": {{compl_pars_urb}}, "saggio_id": {{sag_06}}, "us_provenienza_id": {{us_id_15}}, "categoria": "Litico", "classe": "Selce", "stato_cons": "Integro", "descrizione": "Peso da telaio in pietra calcarea forato.", "data_ritrovamento": "2019-07-20" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP068", "sito_id": {{sito_rurale}}, "complesso_id": {{compl_pars_urb}}, "saggio_id": {{sag_06}}, "us_provenienza_id": {{us_id_15}}, "categoria": "Metallo", "classe": "Bronzo", "stato_cons": "Frammentato", "descrizione": "Frammento di specchio circolare in bronzo con manico.", "data_ritrovamento": "2019-07-21" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+# ── 19z-10. Reperti aggiuntivi: 25 da US026 (Porto Nerone) ────────────────
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP069", "sito_id": {{sito_subacqueo}}, "complesso_id": {{compl_molo}}, "saggio_id": {{sag_11}}, "us_provenienza_id": {{us_id_26}}, "categoria": "Ceramica", "classe": "Anfora", "stato_cons": "Integro", "descrizione": "Anfora Dressel 6A integra, ancora chiusa da opercolo fittile.", "data_ritrovamento": "2022-08-10", "tipologia": "Anfora", "disegnato": 1, "pubblicato": 1, "frammenti_conservati": "Integra, opercolo conservato in situ", "note": "Contenuto interno campionato per analisi archeometriche." }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP070", "sito_id": {{sito_subacqueo}}, "complesso_id": {{compl_molo}}, "saggio_id": {{sag_11}}, "us_provenienza_id": {{us_id_26}}, "categoria": "Ceramica", "classe": "Anfora", "stato_cons": "Frammentato", "descrizione": "Collo di anfora Dressel 20 con bollo su ansa.", "data_ritrovamento": "2022-08-10", "dati_epigrafici": "Bollo ovale, sigla QIVL parzialmente leggibile" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP071", "sito_id": {{sito_subacqueo}}, "complesso_id": {{compl_molo}}, "saggio_id": {{sag_11}}, "us_provenienza_id": {{us_id_26}}, "categoria": "Metallo", "classe": "Ferro", "stato_cons": "Lacunoso", "descrizione": "Ceppo d'ancora in ferro con concrezioni calcaree spesse.", "data_ritrovamento": "2022-08-11" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP072", "sito_id": {{sito_subacqueo}}, "complesso_id": {{compl_molo}}, "saggio_id": {{sag_11}}, "us_provenienza_id": {{us_id_26}}, "categoria": "Metallo", "classe": "Bronzo", "stato_cons": "Integro", "descrizione": "Moneta in bronzo (sesterzio?) con patina marina verde.", "data_ritrovamento": "2022-08-11", "pubblicato": 1 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP073", "sito_id": {{sito_subacqueo}}, "complesso_id": {{compl_molo}}, "saggio_id": {{sag_11}}, "us_provenienza_id": {{us_id_26}}, "categoria": "Ceramica", "classe": "Ceramica comune", "stato_cons": "Frammentario", "descrizione": "Olla da cambusa con annerimento da fuoco sul fondo.", "data_ritrovamento": "2022-08-12" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP074", "sito_id": {{sito_subacqueo}}, "complesso_id": {{compl_molo}}, "saggio_id": {{sag_11}}, "us_provenienza_id": {{us_id_26}}, "categoria": "Metallo", "classe": "Ferro", "stato_cons": "Frammentato", "descrizione": "Chiodo navale a testa larga, tipico del fasciame.", "data_ritrovamento": "2022-08-12" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP075", "sito_id": {{sito_subacqueo}}, "complesso_id": {{compl_molo}}, "saggio_id": {{sag_11}}, "us_provenienza_id": {{us_id_26}}, "categoria": "Ceramica", "classe": "Terra sigillata", "stato_cons": "Frammentario", "descrizione": "Coppa in sigillata africana C, con usura di bordo.", "data_ritrovamento": "2022-08-13" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP076", "sito_id": {{sito_subacqueo}}, "complesso_id": {{compl_molo}}, "saggio_id": {{sag_11}}, "us_provenienza_id": {{us_id_26}}, "categoria": "Metallo", "classe": "Ferro", "stato_cons": "Lacunoso", "descrizione": "Grappa di collegamento tra madieri, fortemente concrezionata.", "data_ritrovamento": "2022-08-13" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP077", "sito_id": {{sito_subacqueo}}, "complesso_id": {{compl_molo}}, "saggio_id": {{sag_11}}, "us_provenienza_id": {{us_id_26}}, "categoria": "Osso", "classe": "Osso lavorato", "stato_cons": "Frammentario", "descrizione": "Manico di utensile in osso, forse posata da bordo.", "data_ritrovamento": "2022-08-14" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP078", "sito_id": {{sito_subacqueo}}, "complesso_id": {{compl_molo}}, "saggio_id": {{sag_11}}, "us_provenienza_id": {{us_id_26}}, "categoria": "Ceramica", "classe": "Anfora", "stato_cons": "Frammentato", "descrizione": "Puntale di anfora orientale, forse tipo Kapitan II.", "data_ritrovamento": "2022-08-14" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP079", "sito_id": {{sito_subacqueo}}, "complesso_id": {{compl_molo}}, "saggio_id": {{sag_11}}, "us_provenienza_id": {{us_id_26}}, "categoria": "Metallo", "classe": "Bronzo", "stato_cons": "Frammentato", "descrizione": "Gancio o rebbio in bronzo, funzione non determinata.", "data_ritrovamento": "2022-08-15" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP080", "sito_id": {{sito_subacqueo}}, "complesso_id": {{compl_molo}}, "saggio_id": {{sag_11}}, "us_provenienza_id": {{us_id_26}}, "categoria": "Ceramica", "classe": "Ceramica comune", "stato_cons": "Integro", "descrizione": "Boccale monoansato intero, forse dotazione dell'equipaggio.", "data_ritrovamento": "2022-08-15", "disegnato": 1 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP081", "sito_id": {{sito_subacqueo}}, "complesso_id": {{compl_molo}}, "saggio_id": {{sag_11}}, "us_provenienza_id": {{us_id_26}}, "categoria": "Metallo", "classe": "Bronzo", "stato_cons": "Lacunoso", "descrizione": "Sonda da scandaglio in piombo, forma troncoconica con base concava per il grasso di segnalazione.", "data_ritrovamento": "2022-08-16", "tipologia": "Scandaglio da sonda" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP082", "sito_id": {{sito_subacqueo}}, "complesso_id": {{compl_molo}}, "saggio_id": {{sag_11}}, "us_provenienza_id": {{us_id_26}}, "categoria": "Ceramica", "classe": "Anfora", "stato_cons": "Frammentato", "descrizione": "Ansa di anfora con impronta digitale sull'attacco.", "data_ritrovamento": "2022-08-16" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP083", "sito_id": {{sito_subacqueo}}, "complesso_id": {{compl_molo}}, "saggio_id": {{sag_11}}, "us_provenienza_id": {{us_id_26}}, "categoria": "Metallo", "classe": "Ferro", "stato_cons": "Lacunoso", "descrizione": "Frammento di catena, verosimilmente di ormeggio.", "data_ritrovamento": "2022-08-17" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP084", "sito_id": {{sito_subacqueo}}, "complesso_id": {{compl_molo}}, "saggio_id": {{sag_11}}, "us_provenienza_id": {{us_id_26}}, "categoria": "Ceramica", "classe": "Ceramica depurata", "stato_cons": "Frammentario", "descrizione": "Piatto da mensa con orlo estroflesso, uso di bordo.", "data_ritrovamento": "2022-08-17" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP085", "sito_id": {{sito_subacqueo}}, "complesso_id": {{compl_molo}}, "saggio_id": {{sag_11}}, "us_provenienza_id": {{us_id_26}}, "categoria": "Osso", "classe": "Osso lavorato", "stato_cons": "Frammentario", "descrizione": "Frammento di pettine in osso a doppia dentatura.", "data_ritrovamento": "2022-08-18" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP086", "sito_id": {{sito_subacqueo}}, "complesso_id": {{compl_molo}}, "saggio_id": {{sag_11}}, "us_provenienza_id": {{us_id_26}}, "categoria": "Metallo", "classe": "Bronzo", "stato_cons": "Frammentato", "descrizione": "Fibbia di cinturone militare in bronzo.", "data_ritrovamento": "2022-08-18", "disegnato": 1, "pubblicato": 1 }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP087", "sito_id": {{sito_subacqueo}}, "complesso_id": {{compl_molo}}, "saggio_id": {{sag_11}}, "us_provenienza_id": {{us_id_26}}, "categoria": "Ceramica", "classe": "Anfora", "stato_cons": "Integro", "descrizione": "Anfora Dressel 2-4 integra con residuo di pece impermeabilizzante interna.", "data_ritrovamento": "2022-08-19" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP088", "sito_id": {{sito_subacqueo}}, "complesso_id": {{compl_molo}}, "saggio_id": {{sag_11}}, "us_provenienza_id": {{us_id_26}}, "categoria": "Metallo", "classe": "Ferro", "stato_cons": "Lacunoso", "descrizione": "Frammento di ancora ammiragliata, ceppo mancante.", "data_ritrovamento": "2022-08-19" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP089", "sito_id": {{sito_subacqueo}}, "complesso_id": {{compl_molo}}, "saggio_id": {{sag_11}}, "us_provenienza_id": {{us_id_26}}, "categoria": "Ceramica", "classe": "Ceramica comune", "stato_cons": "Frammentario", "descrizione": "Coperchio biconico con presa a disco.", "data_ritrovamento": "2022-08-20" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP090", "sito_id": {{sito_subacqueo}}, "complesso_id": {{compl_molo}}, "saggio_id": {{sag_11}}, "us_provenienza_id": {{us_id_26}}, "categoria": "Metallo", "classe": "Bronzo", "stato_cons": "Integro", "descrizione": "Peso da stadera in bronzo a forma di ghianda.", "data_ritrovamento": "2022-08-20" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP091", "sito_id": {{sito_subacqueo}}, "complesso_id": {{compl_molo}}, "saggio_id": {{sag_11}}, "us_provenienza_id": {{us_id_26}}, "categoria": "Ceramica", "classe": "Terra sigillata", "stato_cons": "Frammentario", "descrizione": "Fondo di coppa in sigillata orientale con bollo circolare.", "data_ritrovamento": "2022-08-21" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP092", "sito_id": {{sito_subacqueo}}, "complesso_id": {{compl_molo}}, "saggio_id": {{sag_11}}, "us_provenienza_id": {{us_id_26}}, "categoria": "Osso", "classe": "Osso lavorato", "stato_cons": "Integro", "descrizione": "Ago da rammendo in osso, punta integra.", "data_ritrovamento": "2022-08-21" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "inventario": "REP093", "sito_id": {{sito_subacqueo}}, "complesso_id": {{compl_molo}}, "saggio_id": {{sag_11}}, "us_provenienza_id": {{us_id_26}}, "categoria": "Ceramica", "classe": "Anfora", "stato_cons": "Frammentato", "descrizione": "Collo di anfora con traccia di titulus pictus illeggibile.", "data_ritrovamento": "2022-08-22", "note": "Chiude il lotto di reperti dalla US026; materiale in corso di studio archeometrico." }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+# ── 19z-11. Campo Markdown (unico tipo mai usato finora) su siti ──────────
+
+POST {{base_url}}/{{app_name}}/api/config/table/siti/field
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "name": "presentazione", "label": "Presentazione (markdown)", "type": "md", "db_type": "TEXT" }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/siti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "id": {{sito_urbano}}, "core": { "presentazione": "## Colle Oppio\n\nSito **urbano** con stratificazione ininterrotta dal VI sec. a.C. all'età moderna.\n\n- Edificio pubblico in opus sectile\n- Riuso altomedievale con fosse di scarico\n- Area esterna lastricata\n\nCfr. [scheda di inquadramento storico](https://www.zotero.org/groups/336647/epirus/library)." }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/siti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "id": {{sito_rurale}}, "core": { "presentazione": "## Casale Selva Rotonda\n\nVilla *rustica* tardorepubblicana con impianto vinicolo e settore termale.\n\n- **Pars urbana**: terme con ipocausto e mosaici\n- **Pars rustica**: torcularium e dolia\n- Necropoli di fondazione della prima età del Ferro" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/siti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "id": {{sito_subacqueo}}, "core": { "presentazione": "## Porto Nerone\n\nFondali con resti di strutture **portuali** di età imperiale, quota -3/-5 m.\n\n- Molo in opus pilarum con palificata lignea datata al radiocarbonio\n- Deposito anforario da un possibile relitto\n- Relitto minore con carico disperso" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+# ── 19z-12. Radiocarbonio: parità su Porto Nerone (già presente su siti 1 e 2) ───
+
+POST {{base_url}}/{{app_name}}/api/record/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "id": {{us_id_65_rc}}, "core": {}, "plugins": { "us_radiocarbon": [ { "id": null, "_isNew": true, "fields": { "lab_code": "Beta-412004", "bp": 1920, "bp_error": 30, "material": "waterlogged oak wood" } } ] } }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+# ── 19z-13. Zotero: parità su Porto Nerone + primo esempio su us e reperti ───
+
+POST {{base_url}}/{{app_name}}/api/zotero/link
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "tb": "siti", "record_id": {{sito_subacqueo}}, "lib_id": {{zotero_lib_id}}, "zotero_key": "QPR8HQ62", "notes": "Confronto per le strutture portuali sommerse" }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/zotero/link
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "tb": "us", "record_id": {{us_id_1}}, "lib_id": {{zotero_lib_id}}, "zotero_key": "6NKQX4Q8", "notes": "Confronto stratigrafico per la sequenza tardoantica" }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/zotero/link
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "tb": "reperti", "record_id": {{rep_id_21}}, "lib_id": {{zotero_lib_id}}, "zotero_key": "6NKQX4Q8", "notes": "Confronto tipologico per il bollo in planta pedis" }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+# ── 19z-14. Foto: parità su Porto Nerone (già presente su Colle Oppio) ────
+
+POST {{base_url}}/{{app_name}}/api/record/siti/{{sito_subacqueo}}/file
+Authorization: Bearer {{jwt}}
+[MultipartFormData]
+file: file,fixtures/test_image.png;image/png
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+[Captures]
+img_sito_3: jsonpath "$.file.id"
+
+PATCH {{base_url}}/{{app_name}}/api/file/{{img_sito_3}}
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "description": "Immersione di ricognizione sul relitto minore", "keywords": "sito, subacqueo, immersione" }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+# ── 19z-15. Geodata: colma il vuoto sulla us capostipite di Casale Selva Rotonda ───
+
+POST {{base_url}}/{{app_name}}/api/geoface/feature
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "tb": "us", "id": {{us_id_15}}, "geometry": {"type":"Point","coordinates":[12.7325,41.6892]} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+# ── 19z-16. combo_select: un valore libero fuori vocabolario forma_tipo ───
+# NOTA: come i m_reperti_in_us/misure/m_reperti_in_complessi di 19j-19l, questo
+# insert non asserisce $.status perche' fallisce silenziosamente (HTTP 200 ma
+# {"status":"error"}) su tutte le tabelle plugin generiche (is_plugin=1): manca
+# la colonna "creator" nello schema creato da Manage per queste tabelle, quindi
+# Record\Persist non riesce a fare l'INSERT. Bug preesistente, non introdotto
+# da questa modifica; segnalato in project_issue_tracker (#61), non risolto qui
+# perche' e' una modifica di struttura/codice, fuori scope per questa sessione
+# di soli dati demo. Il payload resta pronto per quando verra' corretto.
+
+POST {{base_url}}/{{app_name}}/api/record/m_reperti_in_us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "id_link": {{us_id_65_rc}}, "materiale_classe": "Metallo non ferroso", "forma_tipo": "Ceppo d'ancora in piombo", "forma_completa": 0, "datazione_generica": "Romano", "nr_totale_orli": 0, "nr_totale_fondi": 0, "nr_totale_pareti": 0, "nr_totale_anse": 0, "mni": 1, "peso_totale": "38000 g", "note": "forma_tipo valorizzato con testo libero non presente nel vocabolario, a dimostrazione del combo_select." }, "plugins": {} }
+HTTP 200
+
+# ── 19z-17. Misure sui reperti più ricchi delle nuove 3 us capostipite ────
+# Stesso bug preesistente di 19z-16 (tabella plugin senza colonna creator).
+
+POST {{base_url}}/{{app_name}}/api/record/misure
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "id_link": {{rep_id_21}}, "tipo_misura": "Diametro", "valore": "9.4", "unita": "cm" }, "plugins": {} }
+HTTP 200
+
+POST {{base_url}}/{{app_name}}/api/record/misure
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "id_link": {{rep_id_21}}, "tipo_misura": "Altezza", "valore": "4.1", "unita": "cm" }, "plugins": {} }
+HTTP 200
+
+# ── 19z-18. Reperti già esistenti: valorizza i campi finora mai usati sui primi 3 ───
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "id": {{rep_id_1}}, "core": { "tipologia": "Coppa", "frammenti_conservati": "Orlo e parte della vasca, ca. 1/3 del vaso", "decorazione": "Bollo in planta pedis leggibile ATEI, ingobbio rosso brillante", "dati_epigrafici": "ATEI, retrograde, cartiglio rettangolare", "note": "Uno dei pochi bolli completamente leggibili del sito." }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "id": {{rep_id_2}}, "core": { "tipologia": "Anfora", "frammenti_conservati": "Orlo e parte del collo", "dati_epigrafici": "Titulus pictus in caratteri capitali, lettura parziale" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/record/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "id": {{rep_id_3}}, "core": { "tipologia": "Fibula", "decorazione": "Arco a sezione romboidale con incisioni a spina di pesce", "note": "Confrontabile con esemplari da contesti augustei." }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+
+# ── 19z-19. Ordina le liste per id, non per nome/sigla ──────────────
+# Di default order="nome"/"sigla"/"inventario" (alfabetico) fa sì che i
+# record CSV con sigla "EXT..."/nomi come "Baia" precedano in lista i
+# record diretti più ricchi (US001, REP001, Colle Oppio...), vanificando
+# la convenzione "i primi record sono i più completi". Stessi payload di
+# PUT config/table/{tb} già usati in 19a, con solo "order" cambiato a
+# "id" — nessun'altra impostazione (geodata/zotero/fuzzy_date/rs/preview)
+# viene toccata. Deciso con l'utente il 2026-09-13 dopo verifica dal vivo.
+
+PUT {{base_url}}/{{app_name}}/api/config/table/siti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{
+  "name": "siti", "label": "Siti Archeologici", "is_plugin": "0",
+  "order": "id", "id_field": "nome", "preview": ["nome", "localita"],
+  "geodata": 1, "zotero": 1, "fuzzy_date": 1
+}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+PUT {{base_url}}/{{app_name}}/api/config/table/complessi
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{
+  "name": "complessi", "label": "Complessi", "is_plugin": "0",
+  "order": "id", "id_field": "nome", "preview": ["nome", "tipo"],
+  "geodata": 1
+}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+PUT {{base_url}}/{{app_name}}/api/config/table/saggi
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{
+  "name": "saggi", "label": "Saggi di scavo", "is_plugin": "0",
+  "order": "id", "id_field": "nome", "preview": ["nome", "anno"]
+}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+PUT {{base_url}}/{{app_name}}/api/config/table/us
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{
+  "name": "us", "label": "Unità stratigrafiche", "is_plugin": "0",
+  "order": "id", "id_field": "sigla", "preview": ["sigla"],
+  "rs": "sigla", "geodata": 1, "zotero": 1, "fuzzy_date": 1
+}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+PUT {{base_url}}/{{app_name}}/api/config/table/reperti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{
+  "name": "reperti", "label": "Reperti mobili", "is_plugin": "0",
+  "order": "id", "id_field": "inventario", "preview": ["inventario"],
+  "geodata": 1, "zotero": 1, "fuzzy_date": 1
+}
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"

@@ -15,12 +15,8 @@
           <div class="info-badges">
             <ATag
               class="info-version-tag"
-              v-tooltip.bottom="'bdus-api (PHP backend)'"
-            >api v{{ apiVersion }}</ATag>
-            <ATag
-              class="info-version-tag"
-              v-tooltip.bottom="'bdus-app (Vue frontend)'"
-            >app v{{ appVersion }}</ATag>
+              v-tooltip.bottom="'bdus-api + bdus-app — always released together from the same version'"
+            >v{{ apiVersion }}</ATag>
             <ATag
               v-if="projectVersion"
               color="warning"
@@ -52,7 +48,6 @@ const loading        = ref(true)
 const error          = ref(null)
 const apiVersion     = ref('')
 const projectVersion = ref(null)
-const appVersion     = __APP_VERSION__   // injected at build time by vite.config.js
 const changelogHtml  = ref('')
 
 onMounted(async () => {

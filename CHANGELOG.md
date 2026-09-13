@@ -5,6 +5,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Info screen: collapsed the api/app version badges into one.** Since the
+  monorepo consolidation, `bump-version.sh` always sets `bdus-api` and
+  `bdus-app` to the same version number in one commit/tag — showing them as
+  two separate badges was leftover from the polyrepo era, when they really
+  could drift apart. The "project version" badge (the version this specific
+  app/database was last upgraded to, which can genuinely lag behind until a
+  pending migration is applied) is unchanged.
+  - `bdus-app/src/views/InfoView.vue`
+
 ### Added
 
 - **Image settings extended beyond max size**: App settings now optionally

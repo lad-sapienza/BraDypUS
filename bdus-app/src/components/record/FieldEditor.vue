@@ -11,9 +11,30 @@
       {{ modelValue ?? '—' }}
     </div>
 
-    <!-- md: Markdown textarea with live preview toggle -->
+    <!-- md: Markdown textarea with formatting toolbar + live preview toggle -->
     <div v-else-if="schema.type === 'md'" class="md-editor-wrap">
       <div class="md-toolbar">
+        <template v-if="!mdPreview">
+          <button type="button" class="md-tool" :title="t('md_bold')" @click="mdBold">
+            <BoldOutlined />
+          </button>
+          <button type="button" class="md-tool" :title="t('md_italic')" @click="mdItalic">
+            <ItalicOutlined />
+          </button>
+          <button type="button" class="md-tool" :title="t('md_link')" @click="mdLink">
+            <LinkOutlined />
+          </button>
+          <button type="button" class="md-tool" :title="t('md_bullet_list')" @click="mdBulletList">
+            <UnorderedListOutlined />
+          </button>
+          <button type="button" class="md-tool" :title="t('md_numbered_list')" @click="mdNumberedList">
+            <OrderedListOutlined />
+          </button>
+          <button type="button" class="md-tool" :title="t('md_code')" @click="mdCode">
+            <CodeOutlined />
+          </button>
+          <span class="md-toolbar-spacer" />
+        </template>
         <button type="button" class="md-toggle" @click="mdPreview = !mdPreview">
           <component :is="mdPreview ? EditOutlined : EyeOutlined" />
           {{ mdPreview ? t('edit') : t('preview') }}
@@ -21,12 +42,12 @@
       </div>
       <ATextarea
         v-if="!mdPreview"
+        ref="mdTextareaRef"
         :value="modelValue"
         @update:value="onInput"
         :dir="schema.direction || 'ltr'"
         :maxlength="schema.max_length || undefined"
-        :rows="6"
-        autoSize
+        :autoSize="{ minRows: 5 }"
         :status="showError ? 'error' : undefined"
         class="field-input w-full"
       />
@@ -40,8 +61,7 @@
       @update:value="onInput"
       :dir="schema.direction || 'ltr'"
       :maxlength="schema.max_length || undefined"
-      :rows="4"
-      autoSize
+      :autoSize="{ minRows: 3 }"
       :status="showError ? 'error' : undefined"
       class="field-input w-full"
     />
@@ -180,8 +200,11 @@
 </template>
 
 <script setup>
-import { EditOutlined, ExclamationCircleOutlined, EyeOutlined, InfoCircleOutlined } from '@ant-design/icons-vue'
-import { ref, computed, inject } from 'vue'
+import {
+  BoldOutlined, CodeOutlined, EditOutlined, ExclamationCircleOutlined, EyeOutlined,
+  InfoCircleOutlined, ItalicOutlined, LinkOutlined, OrderedListOutlined, UnorderedListOutlined,
+} from '@ant-design/icons-vue'
+import { ref, computed, inject, nextTick } from 'vue'
 import { marked } from 'marked'
 import { Input, Select as ASelect, Switch as ASwitch, Slider as ASlider, AutoComplete as AAutoComplete } from 'ant-design-vue'
 import { useToast } from '@/composables/useNotify'
@@ -207,6 +230,72 @@ const emit = defineEmits(['update:modelValue'])
 
 // ── Markdown preview toggle ────────────────────────────────────
 const mdPreview = ref(false)
+
+// ── Markdown formatting toolbar ─────────────────────────────────
+const mdTextareaRef = ref(null)
+
+function mdTextareaEl() {
+  return mdTextareaRef.value?.resizableTextArea?.textArea ?? null
+}
+
+/** Commit the edited value, then restore focus and selection so typing can continue right away. */
+function mdApplyEdit(newValue, selStart, selEnd) {
+  onInput(newValue)
+  nextTick(() => {
+    const el = mdTextareaEl()
+    if (!el) return
+    el.focus()
+    el.setSelectionRange(selStart, selEnd)
+  })
+}
+
+/** Wrap the current selection in `before`/`after` markers, or insert a placeholder if nothing is selected. */
+function mdWrapSelection(before, after, placeholder) {
+  const el = mdTextareaEl()
+  const value = String(props.modelValue ?? '')
+  const start = el ? el.selectionStart : value.length
+  const end   = el ? el.selectionEnd   : value.length
+  const selected = value.slice(start, end) || placeholder
+  const newValue = value.slice(0, start) + before + selected + after + value.slice(end)
+  const selStart = start + before.length
+  mdApplyEdit(newValue, selStart, selStart + selected.length)
+}
+
+function mdBold()   { mdWrapSelection('**', '**', t('md_bold_placeholder')) }
+function mdItalic()  { mdWrapSelection('*', '*', t('md_italic_placeholder')) }
+function mdCode()   { mdWrapSelection('`', '`', t('md_code_placeholder')) }
+
+function mdLink() {
+  const el = mdTextareaEl()
+  const value = String(props.modelValue ?? '')
+  const start = el ? el.selectionStart : value.length
+  const end   = el ? el.selectionEnd   : value.length
+  const label = value.slice(start, end) || t('md_link_placeholder')
+  const insert = `[${label}](url)`
+  const newValue = value.slice(0, start) + insert + value.slice(end)
+  // Select the "url" placeholder so the user can type the real address right away.
+  const urlStart = start + label.length + 3
+  mdApplyEdit(newValue, urlStart, urlStart + 3)
+}
+
+/** Prefix every line touched by the current selection (or the current line, if empty). */
+function mdPrefixLines(makePrefix) {
+  const el = mdTextareaEl()
+  const value = String(props.modelValue ?? '')
+  const start = el ? el.selectionStart : value.length
+  const end   = el ? el.selectionEnd   : value.length
+
+  const lineStart = value.lastIndexOf('\n', start - 1) + 1
+  let lineEnd = value.indexOf('\n', end)
+  if (lineEnd === -1) lineEnd = value.length
+
+  const prefixed = value.slice(lineStart, lineEnd).split('\n').map(makePrefix).join('\n')
+  const newValue = value.slice(0, lineStart) + prefixed + value.slice(lineEnd)
+  mdApplyEdit(newValue, lineStart, lineStart + prefixed.length)
+}
+
+function mdBulletList()   { mdPrefixLines(line => `- ${line}`) }
+function mdNumberedList() { let n = 1; mdPrefixLines(line => `${n++}. ${line}`) }
 
 // ── Dirty tracking (set to true on first user change) ─────────
 const dirty = ref(false)
@@ -449,8 +538,24 @@ onMounted(() => {
 }
 .md-toolbar {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  gap: 0.1rem;
 }
+.md-toolbar-spacer { flex: 1; }
+.md-tool {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  color: var(--p-text-muted-color);
+  background: none;
+  border: none;
+  cursor: pointer;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: var(--p-border-radius);
+}
+.md-tool:hover { color: var(--p-primary-color); background: var(--p-content-hover-background); }
 .md-toggle {
   display: inline-flex;
   align-items: center;

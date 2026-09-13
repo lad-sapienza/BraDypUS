@@ -18,6 +18,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `bdus-app/src/components/config/ConfigRelations.vue`,
     `bdus-app/src/locale/en.json`, `bdus-app/src/locale/it.json`
 
+- **`md`/`long_text` fields opened as a single-line box that only grew once
+  you started typing.** `autoSize` was passed to ant-design-vue's
+  `Input.TextArea` as a bare boolean instead of `{ minRows, maxRows }` —
+  with no explicit row counts, the component collapses to the content's own
+  scroll height on mount, silently ignoring the `rows` attribute next to it.
+  Both field types now start at a sensible multi-line height (`minRows: 5`
+  for `md`, `3` for `long_text`) and still grow further as content is
+  typed. `md` fields also gained a minimal formatting toolbar (bold,
+  italic, link, bulleted/numbered list, inline code) that wraps the
+  current selection or prefixes the current line(s) and restores
+  focus/selection afterwards, next to the existing edit/preview toggle.
+  - `bdus-app/src/components/record/FieldEditor.vue`,
+    `bdus-app/src/locale/en.json`, `bdus-app/src/locale/it.json`
+
 ## [5.10.0] - 2026-09-13
 
 ### Changed

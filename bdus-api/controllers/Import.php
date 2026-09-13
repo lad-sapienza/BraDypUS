@@ -572,21 +572,41 @@ class Import extends \Bdus\Controller
                 );
                 if (!$rec) { $notFound++; continue; }
 
-                // Write file with a collision-safe name
+                // Insert into system files table first — the auto-increment id
+                // IS the physical filename ({id}.{ext}, same convention as
+                // Record::uploadFile()/File.php). `filename` stores the clean
+                // original basename as metadata only, never used to build a
+                // path. Previously this wrote the physical file under a
+                // random-suffixed name *before* knowing the id, and stored
+                // that same suffixed name in `filename` — but every consumer
+                // (FileGallery.vue, FilesView.vue) builds the file URL as
+                // {id}.{ext}, so imported photos silently 404'd.
                 $ext      = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
                 $baseName = pathinfo($filename, PATHINFO_FILENAME);
-                $destName = $baseName . '_' . bin2hex(random_bytes(4));
-                $destPath = $filesDir . $destName . '.' . $ext;
 
-                file_put_contents($destPath, $zip->getFromIndex($zipIdx));
-
-                // Insert into system files table
                 $fileId = $this->db->query(
                     "INSERT INTO bdus_files (ext, filename, creator) VALUES (?, ?, ?)",
-                    [$ext, $destName, 'import'],
+                    [$ext, $baseName, 'import'],
                     'id'
                 );
                 if (!$fileId) { $notFound++; continue; }
+
+                $destPath = $filesDir . $fileId . '.' . $ext;
+                file_put_contents($destPath, $zip->getFromIndex($zipIdx));
+
+                // Resize / convert format if configured — same as a normal
+                // upload (Record::uploadFile()) — bulk-imported images were
+                // previously never resized/converted at all.
+                $processed = \Image\Resizer::process($destPath, [
+                    'maxPx'   => (int) ($this->cfg->get('main.maxImageSize') ?? 0),
+                    'convert' => (bool) ($this->cfg->get('main.imageConvert') ?? false),
+                    'format'  => (string) ($this->cfg->get('main.imageFormat') ?? 'webp'),
+                    'quality' => (int) ($this->cfg->get('main.imageQuality') ?? 85),
+                    'dpi'     => (int) ($this->cfg->get('main.imageDpi') ?? 72),
+                ]);
+                if ($processed['ext'] !== $ext) {
+                    $this->db->query("UPDATE bdus_files SET ext = ? WHERE id = ?", [$processed['ext'], $fileId], 'boolean');
+                }
 
                 // Link file to record
                 $this->db->query(

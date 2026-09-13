@@ -60,6 +60,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Bulk photo import (#58): imported photos were saved under the wrong
+  filename and 404'd for every viewer.** `Import::importPhotos()` wrote each
+  photo to disk under `{original-basename}_{random-hex}.{ext}` *before*
+  knowing the new `bdus_files` row's id, then stored that same
+  random-suffixed name in the `filename` column — but every consumer
+  (`FileGallery.vue`, `FilesView.vue`) builds the file URL as `{id}.{ext}`,
+  the same convention every other upload path in the app already follows.
+  The file the URL pointed at was never the file that got written, so every
+  bulk-imported photo was broken on open, and its `filename` metadata carried
+  a meaningless random suffix. Reported by the user against production
+  v5.9.5 (a pre-existing bug, not introduced by recent work). Fixed by
+  inserting the `bdus_files` row first (to get the real id) before writing
+  the physical file, matching `Record::uploadFile()`. While in there: bulk
+  photo import now also goes through `Image\Resizer::process()` — the
+  configured max-size/format-conversion settings previously applied to every
+  other upload path but silently skipped bulk-imported photos entirely.
+  - `bdus-api/controllers/Import.php`
+
 - **WebP files (and a few other common formats) showed up in the record file
   gallery as generic file links instead of inline image previews.** The
   `is_image` flag computed when a record is loaded used a narrower,

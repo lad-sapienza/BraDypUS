@@ -62,6 +62,9 @@ CSV delimiter (comma, semicolon, tab) is detected automatically from the file.
 3. Upload both files. BraDypUS validates the index, warns about any missing
    filenames, and links each photo to its record.
 
+Imported photos go through the same [max size / format conversion
+settings](/guide/setup/main-app-config#images) as a normal file upload.
+
 ## Error handling
 
 If the import transaction fails, no data is written. The error report shows

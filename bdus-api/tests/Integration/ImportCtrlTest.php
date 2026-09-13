@@ -485,9 +485,21 @@ class ImportCtrlTest extends BdusTestCase
         $this->assertSame(0, $res['not_found']);
 
         $fileRows = static::$db->query(
-            "SELECT id FROM bdus_files WHERE creator = 'import'", [], 'read'
+            "SELECT id, ext, filename FROM bdus_files WHERE creator = 'import'", [], 'read'
         );
         $this->assertNotEmpty($fileRows);
+        $file = $fileRows[0];
+
+        // Regression: the physical file must be named {id}.{ext} — every
+        // consumer (FileGallery.vue, FilesView.vue) builds the URL that way.
+        // A prior bug wrote it under "{basename}_{random suffix}.{ext}" instead,
+        // so the {id}.{ext} URL 404'd for every bulk-imported photo.
+        $expectedPath = constant('PROJ_DIR') . 'files/' . $file['id'] . '.' . $file['ext'];
+        $this->assertFileExists($expectedPath, 'Physical file must be saved as {id}.{ext}');
+
+        // `filename` is metadata only and must stay the clean original
+        // basename — the same prior bug also stored the random-suffixed name here.
+        $this->assertSame('photo1', $file['filename']);
 
         $linkRows = static::$db->query(
             "SELECT * FROM bdus_file_links WHERE table_name = ? AND record_id = ?",
@@ -495,6 +507,8 @@ class ImportCtrlTest extends BdusTestCase
             'read'
         );
         $this->assertNotEmpty($linkRows);
+
+        @unlink($expectedPath);
     }
 
     public function testImportPhotosNotFoundCountedWhenPhotoMissingFromZip(): void

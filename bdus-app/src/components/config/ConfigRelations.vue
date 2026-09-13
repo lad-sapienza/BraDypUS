@@ -93,6 +93,9 @@
               size="small"
               :disabled="isSelfRef"
             />
+            <small v-if="onDeleteHint" class="cfg-fk-policy-hint">
+              <InfoCircleOutlined /> {{ onDeleteHint }}
+            </small>
           </div>
           <div class="cfg-field-group" style="flex:1">
             <label>{{ t('on_update') }}</label>
@@ -102,6 +105,9 @@
               size="small"
               :disabled="isSelfRef"
             />
+            <small v-if="onUpdateHint" class="cfg-fk-policy-hint">
+              <InfoCircleOutlined /> {{ onUpdateHint }}
+            </small>
           </div>
           <div v-if="isSelfRef" class="cfg-self-ref-note">
             <InfoCircleOutlined /> {{ t('self_ref_policy_fixed') }}
@@ -225,6 +231,40 @@ const tableOptions = computed(() =>
 const isSelfRef = computed(() =>
   !!formData.value.from_tb && formData.value.from_tb === formData.value.to_tb
 )
+
+const policyHintKeys = {
+  delete: {
+    RESTRICT:    'fk_on_delete_hint_restrict',
+    CASCADE:     'fk_on_delete_hint_cascade',
+    'SET NULL':  'fk_on_delete_hint_setnull',
+    'NO ACTION': 'fk_on_delete_hint_noaction',
+  },
+  update: {
+    RESTRICT:    'fk_on_update_hint_restrict',
+    CASCADE:     'fk_on_update_hint_cascade',
+    'SET NULL':  'fk_on_update_hint_setnull',
+    'NO ACTION': 'fk_on_update_hint_noaction',
+  },
+}
+
+function tbLabel(tbName) {
+  return tableOptions.value.find(o => o.value === tbName)?.label || tbName
+}
+
+// Plain-language explanation of what the selected policy actually does,
+// phrased in terms of the two chosen tables — shown under each dropdown
+// so whoever configures the relation sees the real-world consequence.
+const onDeleteHint = computed(() => {
+  if (isSelfRef.value || !formData.value.from_tb || !formData.value.to_tb) return ''
+  const key = policyHintKeys.delete[formData.value.on_delete]
+  return key ? t(key, tbLabel(formData.value.to_tb), tbLabel(formData.value.from_tb)) : ''
+})
+
+const onUpdateHint = computed(() => {
+  if (isSelfRef.value || !formData.value.from_tb || !formData.value.to_tb) return ''
+  const key = policyHintKeys.update[formData.value.on_update]
+  return key ? t(key, tbLabel(formData.value.to_tb), tbLabel(formData.value.from_tb)) : ''
+})
 
 function fieldOptionsFor(tbName) {
   return tableFields.value[tbName] ?? []
@@ -499,6 +539,18 @@ onMounted(load)
   font-size: 0.78rem;
   font-weight: 500;
   color: var(--p-text-muted-color);
+}
+.cfg-fk-policy-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: var(--p-text-muted-color);
+}
+.cfg-fk-policy-hint :deep(svg) {
+  flex-shrink: 0;
+  margin-top: 0.15rem;
 }
 .cfg-self-ref-note {
   font-size: 0.78rem;

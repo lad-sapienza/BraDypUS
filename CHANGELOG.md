@@ -5,6 +5,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Config → Relations: the on_delete/on_update policy dropdowns (RESTRICT,
+  CASCADE, SET NULL, NO ACTION) gave no indication of what they actually do**,
+  so it was easy to pick one without realizing its real-world consequence. A
+  short explanation now appears under each dropdown, naming the two actual
+  tables involved — e.g. "Deleting a record in Siti Archeologici will
+  automatically and permanently delete every related record in Saggi di
+  scavo." — so whoever configures a relation can see what will happen before
+  saving.
+  - `bdus-app/src/components/config/ConfigRelations.vue`,
+    `bdus-app/src/locale/en.json`, `bdus-app/src/locale/it.json`
+
 ## [5.10.0] - 2026-09-13
 
 ### Changed

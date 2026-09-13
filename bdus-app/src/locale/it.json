@@ -517,6 +517,8 @@
   "ok_geoface_updated": "La configurazione di GeoFace è stata salvata",
   "error_geoface_updated": "Errore: non è stato possibile salvare la configurazione di GeoFace",
   "temporal_filter": "Filtro temporale",
+  "color_by_field": "Colora per",
+  "none": "Nessuno",
   "temporal_filter_range": "Intervallo cronologico",
   "temporal_filter_clear": "Rimuovi filtro temporale",
   "fuzzy_date_activated": "Plugin cronologia attivato",

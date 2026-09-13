@@ -36,6 +36,29 @@ markers in real time, keeping every record whose chronological window intersects
 the selected years — including open-ended *ante quem* and *post quem* records (it
 uses the `_chrono_overlap` operator internally).
 
+## Coloring geometries by field value
+
+The **Color by** dropdown above the map lets you theme every geometry by the
+value of one field of the table, instead of the default flat color:
+
+- **Categorical fields** (text, vocabulary, select…) get a distinct color per
+  unique value, with a legend listing each value and its swatch. Datasets
+  with many unique values only show the 12 most frequent ones individually —
+  everything else (including records with no value at all) is grouped into a
+  single **Other** entry.
+- **Numeric fields** get a continuous color gradient from the lowest to the
+  highest value in the current view, with a gradient bar legend showing the
+  range.
+- Whether a field is treated as categorical or numeric is detected
+  automatically from the values actually returned — there is no need to mark
+  a field as "numeric" in its configuration.
+- Fields that reference another table (a foreign key) are not offered in the
+  dropdown — coloring by a raw internal id wouldn't be meaningful.
+
+If you have edit rights on the table, your choice is remembered as the
+table's default and applied automatically the next time anyone opens this
+map; pick **None** to go back to the default flat color.
+
 ## Configuring map layers
 
 Open **Config → Geoface** to add or edit map layers.

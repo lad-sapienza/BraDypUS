@@ -27,6 +27,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Docs: `bdus-docs/guide/setup/main-app-config.md` (new "Images" section),
     `bdus-docs/guide/usage/crud.md`, `bdus-docs/dev/config.md`
 
+- **GeoFace: theme geometries by field value** (#53). A new "Color by"
+  dropdown above the map lets you pick a field to theme every geometry
+  instead of the flat default color: categorical fields (text, vocabulary,
+  select…) get a distinct color per unique value (top 12 by frequency,
+  everything else grouped into "Other") with a swatch legend; numeric fields
+  get a continuous gradient from the lowest to the highest value in view,
+  with a gradient-bar legend. Categorical vs. numeric is auto-detected from
+  the actual returned values — no field-type metadata needed. Foreign-key
+  fields are excluded from the dropdown (a raw internal id isn't a
+  meaningful category). Animated behavior aside, this only recolors point
+  circles, lines and polygon fills — polygon outlines stay a neutral border
+  for legibility. The choice is persisted per table (in the same `extra`
+  config JSON that already holds `fuzzy_date`/`geodata`, no migration) when
+  the user has edit rights on that table, and re-applied automatically the
+  next time anyone opens that table's map.
+  - `bdus-api/controllers/Geoface.php` (`getGeoJson()` `colorBy` param +
+    `saveColorField()`), `bdus-api/lib/Bdus/Router.php`,
+    `bdus-app/src/views/GeofaceView.vue`
+  - Docs: `bdus-docs/guide/system-plugins/geodata.md`
+
 ## [5.9.5] - 2026-09-11
 
 ### Fixed

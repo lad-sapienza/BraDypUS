@@ -519,6 +519,8 @@
   "temporal_filter": "Temporal filter",
   "temporal_filter_range": "Date range",
   "temporal_filter_clear": "Clear temporal filter",
+  "color_by_field": "Color by",
+  "none": "None",
   "fuzzy_date_activated": "Chronology plugin activated",
   "fuzzy_date_deactivated": "Chronology plugin deactivated",
   "fuzzy_date_plugin": "Chronology (fuzzy date)",

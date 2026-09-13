@@ -137,6 +137,7 @@ class Router
         'Bdus\\Controllers\\SavedQueries::deleteQuery'            => 'edit',
         'Bdus\\Controllers\\Geoface::saveNew'                      => 'edit',
         'Bdus\\Controllers\\Geoface::updateGeometry'               => 'edit',
+        'Bdus\\Controllers\\Geoface::saveColorField'               => 'edit',
         'Bdus\\Controllers\\Geoface::eraseGeometry'                => 'edit',
         'Bdus\\Controllers\\Import::getTableFields'                => 'edit',
         'Bdus\\Controllers\\Import::previewFile'                   => 'edit',
@@ -533,6 +534,7 @@ class Router
             $r->addRoute('POST',   '/api/geoface/feature', ['Bdus\\Controllers\\Geoface', 'saveNew']);
             $r->addRoute('PUT',    '/api/geoface/feature', ['Bdus\\Controllers\\Geoface', 'updateGeometry']);
             $r->addRoute('DELETE', '/api/geoface/feature', ['Bdus\\Controllers\\Geoface', 'eraseGeometry']);
+            $r->addRoute('PUT',    '/api/geoface/color-field', ['Bdus\\Controllers\\Geoface', 'saveColorField']);
 
             // ── Vocabularies ──────────────────────────────────────────────────
             $r->addRoute('GET',    '/api/vocabularies',          ['Bdus\\Controllers\\Vocabularies', 'list']);

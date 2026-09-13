@@ -44,6 +44,20 @@
       </template>
     </div>
 
+    <!-- Field-based theming (issue #53) -->
+    <div class="geoface-theme-bar">
+      <span class="geoface-theme-label">{{ t('color_by_field') }}</span>
+      <ASelect
+        v-model:value="colorByField"
+        :options="colorByOptions"
+        :placeholder="t('none')"
+        allow-clear
+        size="small"
+        style="min-width: 220px"
+        @change="onColorByChange"
+      />
+    </div>
+
     <!-- Loading / error states -->
     <div v-if="loading" class="geoface-status">
       <LoadingOutlined style="font-size:2rem" spin />
@@ -53,7 +67,32 @@
     </div>
 
     <!-- Map container — always rendered so mapEl ref is available -->
-    <div ref="mapEl" class="geoface-map" :style="{ visibility: loading || loadError ? 'hidden' : 'visible' }" />
+    <div class="geoface-map-wrap">
+      <div ref="mapEl" class="geoface-map" :style="{ visibility: loading || loadError ? 'hidden' : 'visible' }" />
+
+      <!-- Legend for the active theming field (issue #53) -->
+      <div v-if="legendEntries.length" class="geoface-legend">
+        <div class="geoface-legend-title">{{ colorByLabel }}</div>
+
+        <template v-if="legendType === 'numeric'">
+          <div
+            class="geoface-legend-gradient"
+            :style="{ background: `linear-gradient(to right, ${legendEntries[0].color}, ${legendEntries[1].color})` }"
+          />
+          <div class="geoface-legend-gradient-labels">
+            <span>{{ legendEntries[0].label }}</span>
+            <span>{{ legendEntries[1].label }}</span>
+          </div>
+        </template>
+
+        <template v-else>
+          <div v-for="entry in legendEntries" :key="entry.label" class="geoface-legend-row">
+            <span class="geoface-legend-swatch" :style="{ background: entry.color }" />
+            <span class="geoface-legend-label">{{ entry.label }}</span>
+          </div>
+        </template>
+      </div>
+    </div>
 
     <!-- Link geometry dialog (shown after drawing a new geometry) -->
     <AModal
@@ -95,7 +134,8 @@ import {
   Modal as AModal,
   AutoComplete as AAutoComplete,
   Alert as AAlert,
-  Slider as ASlider
+  Slider as ASlider,
+  Select as ASelect
 } from 'ant-design-vue'
 import { format as chronoFormat } from '@/utils/chronoParser'
 
@@ -117,6 +157,120 @@ let draw = null
 let mapResizeObserver = null
 
 const featureCount = computed(() => geojson.value?.features?.length ?? 0)
+
+// ── Field-based theming state (issue #53) ──────────────────────────────────
+const DEFAULT_COLOR = '#e74c3c'
+const OTHER_COLOR    = '#999999'
+const CATEGORY_CAP   = 12
+// Distinct, colorblind-reasonable hues — assigned in frequency order, so the
+// mapping is deterministic for a given dataset (not literally random on
+// every render, which would be visually jarring).
+const CATEGORICAL_PALETTE = [
+  '#4e79a7', '#f28e2b', '#e15759', '#76b7b2', '#59a14f', '#edc948',
+  '#b07aa1', '#ff9da7', '#9c755f', '#bab0ac', '#1b998b', '#a463f2',
+]
+
+const colorByOptions = ref([])   // [{value, label}] — main-table fields only, FKs excluded
+const colorByField   = ref(null) // currently active field name, or null/undefined = flat color
+const legendType     = ref(null) // 'categorical' | 'numeric' | null
+const legendEntries  = ref([])   // [{label, color}] (numeric: exactly 2 entries, min/max)
+
+const colorByLabel = computed(() =>
+  colorByOptions.value.find(o => o.value === colorByField.value)?.label ?? ''
+)
+
+async function fetchColorByOptions() {
+  const tb = route.params.tb
+  try {
+    const res = await api.get(`/api/search/${tb}/config`)
+    if (res.status === 'error') return
+    const tbPrefix = tb + ':'
+    // FK lookup fields (id_from_tb) are excluded: theming by a raw foreign
+    // id would show meaningless numbers in the legend instead of labels.
+    colorByOptions.value = (res.fields ?? [])
+      .filter(f => f.value.startsWith(tbPrefix) && !f.ref_tb)
+      .map(f => ({ value: f.value.split(':')[1], label: f.label }))
+  } catch { /* ignore — theming dropdown just stays empty */ }
+}
+
+/** Applies (or resets) the MapLibre paint expression for the active colorByField. */
+function applyTheme() {
+  if (!map || !map.getLayer('records-circle')) return
+
+  // records-outline (polygon border) is deliberately left at the flat default
+  // color in both branches below — a neutral border keeps themed fills
+  // legible, standard cartographic practice.
+  if (!colorByField.value) {
+    map.setPaintProperty('records-circle', 'circle-color', DEFAULT_COLOR)
+    map.setPaintProperty('records-line', 'line-color', DEFAULT_COLOR)
+    map.setPaintProperty('records-fill', 'fill-color', DEFAULT_COLOR)
+    legendType.value = null
+    legendEntries.value = []
+    return
+  }
+
+  const key = '__geoface_color'
+  const features = geojson.value?.features ?? []
+  const rawValues = features
+    .map(f => f.properties?.[key])
+    .filter(v => v !== null && v !== undefined && v !== '')
+
+  const isNumeric = rawValues.length > 0 && rawValues.every(v => !isNaN(Number(v)))
+
+  if (isNumeric) {
+    const nums = rawValues.map(Number)
+    const min = Math.min(...nums)
+    const max = Math.max(...nums)
+    const colorMin = '#fee5d9'
+    const colorMax = '#a50f15'
+    const expr = min === max
+      ? colorMax
+      : ['interpolate', ['linear'], ['to-number', ['get', key]], min, colorMin, max, colorMax]
+
+    map.setPaintProperty('records-circle', 'circle-color', expr)
+    map.setPaintProperty('records-line', 'line-color', expr)
+    map.setPaintProperty('records-fill', 'fill-color', expr)
+    legendType.value = 'numeric'
+    legendEntries.value = [
+      { label: String(min), color: colorMin },
+      { label: String(max), color: colorMax },
+    ]
+    return
+  }
+
+  // Categorical: top N most frequent values get a distinct color, anything
+  // else (including missing values) falls into a single neutral "Other".
+  const counts = new Map()
+  for (const v of rawValues) {
+    const label = String(v)
+    counts.set(label, (counts.get(label) ?? 0) + 1)
+  }
+  const sorted = [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+  const top = sorted.slice(0, CATEGORY_CAP)
+  const hasOther = sorted.length > top.length || rawValues.length < features.length
+
+  const expr = ['match', ['to-string', ['get', key]]]
+  top.forEach(([val], i) => expr.push(val, CATEGORICAL_PALETTE[i % CATEGORICAL_PALETTE.length]))
+  expr.push(OTHER_COLOR) // fallback: anything not explicitly listed above
+
+  map.setPaintProperty('records-circle', 'circle-color', expr)
+  map.setPaintProperty('records-line', 'line-color', expr)
+  map.setPaintProperty('records-fill', 'fill-color', expr)
+  legendType.value = 'categorical'
+  legendEntries.value = [
+    ...top.map(([val], i) => ({ label: val, color: CATEGORICAL_PALETTE[i % CATEGORICAL_PALETTE.length] })),
+    ...(hasOther ? [{ label: t('other'), color: OTHER_COLOR }] : []),
+  ]
+}
+
+async function onColorByChange() {
+  await reloadGeoJson()
+  if (meta.value.canUserEdit) {
+    try {
+      await api.put('/api/geoface/color-field', { tb: route.params.tb, field: colorByField.value ?? '' })
+    } catch { /* non-fatal — local theming still works even if the save fails */ }
+  }
+}
 
 // ── Temporal filter state ─────────────────────────────────────────────────
 const CHRONO_MIN  = -3000
@@ -157,13 +311,18 @@ const linkSearch        = ref('')
 const linkSuggestions   = ref([])
 
 // ── Build filter params from route.query + local chrono filter ────────────
-function buildFilterParams() {
+// `includeColorBy=false` on the very first load lets the server apply the
+// table's persisted default; every subsequent call passes the frontend's
+// current choice explicitly, so it stays authoritative for this session even
+// if the persisted default changes elsewhere (or the user clears it to "none").
+function buildFilterParams(includeColorBy = true) {
   const tb = route.params.tb
   const q  = route.query
   const params = { tb }
 
   if (q.search_type) params.search_type = q.search_type
   if (q.querytext)   params.querytext   = q.querytext
+  if (includeColorBy) params.colorBy    = colorByField.value ?? ''
 
   // Start from the route's filter (DataView passes it as JSON string)
   let filterObj = null
@@ -188,10 +347,11 @@ async function loadGeoJson() {
   loading.value   = true
   loadError.value = null
   try {
-    const res = await api.get('/api/geoface', buildFilterParams())
+    const res = await api.get('/api/geoface', buildFilterParams(false))
     if (res.status === 'error') throw new Error(t(res.code ?? 'generic_error'))
     geojson.value = res.geojson
     meta.value    = res.meta ?? {}
+    colorByField.value = meta.value.colorByField ?? null
   } catch (e) {
     loadError.value = e.message
   } finally {
@@ -235,6 +395,7 @@ async function initMap() {
   map.on('load', () => {
     addCustomLayers()
     addRecordLayer()
+    applyTheme()
     if (meta.value.canUserEdit) addDrawControl()
     fitToData()
   })
@@ -499,13 +660,14 @@ async function reloadGeoJson() {
       geojson.value = res.geojson
       const src = map?.getSource('records')
       if (src) src.setData(geojson.value)
+      applyTheme()
     }
   } catch { /* silently ignore reload errors */ }
 }
 
 // ── Lifecycle ──────────────────────────────────────────────────────────────
 onMounted(async () => {
-  await loadGeoJson()
+  await Promise.all([loadGeoJson(), fetchColorByOptions()])
   if (!loadError.value) {
     await initMap()
   }
@@ -577,9 +739,85 @@ onUnmounted(() => {
   text-align: center;
 }
 
-.geoface-map {
+.geoface-theme-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.4rem 1rem;
+  background: var(--p-surface-50);
+  border-bottom: 1px solid var(--p-surface-200);
+  flex-shrink: 0;
+}
+
+.geoface-theme-label {
+  font-size: 0.8rem;
+  color: var(--p-text-muted-color);
+  white-space: nowrap;
+}
+
+.geoface-map-wrap {
+  position: relative;
   flex: 1;
   min-height: 0;
+}
+
+.geoface-map {
+  position: absolute;
+  inset: 0;
+}
+
+.geoface-legend {
+  position: absolute;
+  bottom: 1rem;
+  left: 1rem;
+  z-index: 5;
+  background: var(--p-content-background);
+  border: 1px solid var(--p-content-border-color);
+  border-radius: var(--p-border-radius-md, 6px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  padding: 0.6rem 0.75rem;
+  font-size: 0.8rem;
+  max-width: 220px;
+}
+
+.geoface-legend-title {
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+  color: var(--p-text-color);
+}
+
+.geoface-legend-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.1rem 0;
+}
+
+.geoface-legend-swatch {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.geoface-legend-label {
+  color: var(--p-text-color);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.geoface-legend-gradient {
+  height: 0.75rem;
+  border-radius: 3px;
+  margin: 0.2rem 0;
+}
+
+.geoface-legend-gradient-labels {
+  display: flex;
+  justify-content: space-between;
+  color: var(--p-text-muted-color);
+  font-size: 0.75rem;
 }
 
 .geoface-status {

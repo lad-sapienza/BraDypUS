@@ -24,6 +24,10 @@ class Geoface extends \Bdus\Controller
      *     [&filter[field][_op]=value]         (Directus-style JSON filter, bracket notation)
      *     [&search_type=sqlExpert]
      *     [&querytext=SQL_WHERE_CLAUSE]     (search_type=sqlExpert)
+     *     [&colorBy=fieldname]     (issue #53 — field to theme geometries by;
+     *                               omit to use the table's persisted default,
+     *                               pass an empty string to explicitly disable
+     *                               theming even when a default is set)
      *
      * Response:
      * {
@@ -35,7 +39,8 @@ class Geoface extends \Bdus\Controller
      *     "canUserEdit": true|false,
      *     "layers": [...],
      *     "preview_fields": ["field1", "field2"],
-     *     "id_field": "fieldname"
+     *     "id_field": "fieldname",
+     *     "colorByField": "fieldname"|null
      *   }
      * }
      */
@@ -93,6 +98,24 @@ class Geoface extends \Bdus\Controller
                 $previewLabels[] = $label;
             }
 
+            // Field to theme geometries by (issue #53). An explicitly-sent
+            // colorBy (even empty) always wins over the persisted default —
+            // only its *absence* triggers the fallback. Validated against the
+            // table's own field list so it can never be used to inject
+            // arbitrary SQL or reference a column that doesn't exist.
+            if (array_key_exists('colorBy', $this->get) || array_key_exists('colorBy', $this->post)) {
+                $colorField = trim((string) ($this->get['colorBy'] ?? $this->post['colorBy'] ?? ''));
+                $colorField = $colorField === '' ? null : $colorField;
+            } else {
+                $colorField = $this->cfg->get("tables.{$tb}.geoface_color_field") ?: null;
+            }
+            if ($colorField && !$this->cfg->get("tables.{$tb}.fields.{$colorField}")) {
+                $colorField = null;
+            }
+            if ($colorField) {
+                $part[] = "{$tb}.{$colorField} AS \"__geoface_color\"";
+            }
+
             $part[] = 'bdus_geodata.id AS geo_id';
             $part[] = 'geometry';
 
@@ -129,6 +152,7 @@ class Geoface extends \Bdus\Controller
                     'preview_fields' => $previewLabels,
                     'id_field'       => $idField,
                     'has_fuzzy_date' => (bool) $this->cfg->get("tables.{$tb}.fuzzy_date"),
+                    'colorByField'   => $colorField,
                 ],
             ]);
         } catch (\Throwable $e) {
@@ -287,6 +311,59 @@ class Geoface extends \Bdus\Controller
         } catch (\Throwable $e) {
             $this->log->error($e);
             $this->returnJson(['status' => 'error', 'code' => 'error_delete_geodata']);
+        }
+    }
+
+    /**
+     * Persists (or clears) the default field to theme GeoFace geometries by
+     * for a table (issue #53). Stored in the table's `extra` config JSON
+     * (same mechanism as `fuzzy_date`/`geodata`), so it survives without a
+     * schema migration and is re-applied automatically the next time
+     * getGeoJson() is called without an explicit `colorBy` override.
+     *
+     * PUT ?obj=geoface_ctrl&method=saveColorField
+     * Body: { tb, field }  — field null/empty clears the setting
+     *
+     * Response: { status, code }
+     */
+    public function saveColorField(): void
+    {
+        $tb    = $this->post['tb']    ?? $this->get['tb']    ?? null;
+        $field = $this->post['field'] ?? $this->get['field'] ?? null;
+        $field = trim((string) $field) === '' ? null : trim((string) $field);
+
+        if (!$tb) {
+            $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
+            return;
+        }
+
+        if (!\Auth\Authorization::can('edit')) {
+            $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+            return;
+        }
+
+        $tbData = $this->cfg->get("tables.{$tb}");
+        if (!$tbData) {
+            $this->returnJson(['status' => 'error', 'code' => 'unknown_table']);
+            return;
+        }
+
+        if ($field !== null && !isset($tbData['fields'][$field])) {
+            $this->returnJson(['status' => 'error', 'code' => 'unknown_field']);
+            return;
+        }
+
+        try {
+            if ($field === null) {
+                unset($tbData['geoface_color_field']);
+            } else {
+                $tbData['geoface_color_field'] = $field;
+            }
+            $this->cfg->setTable($tbData);
+            $this->returnJson(['status' => 'success', 'code' => 'ok_cfg_data_updated']);
+        } catch (\Throwable $e) {
+            $this->log->error($e);
+            $this->returnJson(['status' => 'error', 'code' => 'error_cfg_data_updated']);
         }
     }
 

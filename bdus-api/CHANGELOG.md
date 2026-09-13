@@ -5,6 +5,114 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.10.0] - 2026-09-13
+
+### Changed
+
+- **Info screen: collapsed the api/app version badges into one.** Since the
+  monorepo consolidation, `bump-version.sh` always sets `bdus-api` and
+  `bdus-app` to the same version number in one commit/tag — showing them as
+  two separate badges was leftover from the polyrepo era, when they really
+  could drift apart. The "project version" badge (the version this specific
+  app/database was last upgraded to, which can genuinely lag behind until a
+  pending migration is applied) is unchanged.
+  - `bdus-app/src/views/InfoView.vue`
+
+### Added
+
+- **Config → Tables: Preview fields are now reorderable by drag** (#60). The
+  multi-select still adds/removes fields; a new row of chips below it (drag
+  handle, same pattern as the record file gallery) lets you drag them into
+  the order they should appear in the record list, instead of having to
+  clear the whole selection and re-pick every field in the right order.
+  - `bdus-app/src/components/config/ConfigTableForm.vue`
+  - Docs: `bdus-docs/guide/setup/preview-config.md`,
+    `bdus-docs/guide/setup/create-table-sites.md` (both described a
+    comma-separated text field that hasn't existed for a while — corrected
+    while in there), re-shot `table-settings.png`
+
+- **Image settings extended beyond max size**: App settings now optionally
+  convert uploaded raster images to a standard web format (WebP or JPG) at a
+  configurable quality (1-100, default 85) and DPI (default 72), alongside
+  the existing max-size resize. Off by default. Animated GIFs are never
+  converted (would collapse the animation) but are still resized if
+  oversized. Applies to both new uploads and file replacement; the physical
+  file and `bdus_files.ext` stay in sync when conversion changes the
+  extension. Note: with the GD driver (the only one available), EXIF/GPS
+  metadata is not preserved across a resize or conversion — this already
+  applied to the existing max-size resize and is not a regression.
+  - `bdus-api/lib/Image/Resizer.php` (`process()`), `bdus-api/lib/Config/AppSettings.php`,
+    `bdus-api/lib/Config/Config.php`, `bdus-api/lib/DB/System/Migrations/M045_AddImageConversionSettings.php`,
+    `bdus-api/controllers/Record.php`, `bdus-api/controllers/File.php`,
+    `bdus-app/src/components/config/ConfigAppForm.vue`
+  - `bdus-api/Dockerfile`: GD did not have WebP support compiled in
+    (`libwebp-dev` + `--with-webp` were missing) — added, since WebP is the
+    recommended target format above
+  - Docs: `bdus-docs/guide/setup/main-app-config.md` (new "Images" section),
+    `bdus-docs/guide/usage/crud.md`, `bdus-docs/dev/config.md`
+
+- **GeoFace: theme geometries by field value** (#53). A new "Color by"
+  dropdown above the map lets you pick a field to theme every geometry
+  instead of the flat default color: categorical fields (text, vocabulary,
+  select…) get a distinct color per unique value (top 12 by frequency,
+  everything else grouped into "Other") with a swatch legend; numeric fields
+  get a continuous gradient from the lowest to the highest value in view,
+  with a gradient-bar legend. Categorical vs. numeric is auto-detected from
+  the actual returned values — no field-type metadata needed. Foreign-key
+  fields are excluded from the dropdown (a raw internal id isn't a
+  meaningful category). Animated behavior aside, this only recolors point
+  circles, lines and polygon fills — polygon outlines stay a neutral border
+  for legibility. The choice is persisted per table (in the same `extra`
+  config JSON that already holds `fuzzy_date`/`geodata`, no migration) when
+  the user has edit rights on that table, and re-applied automatically the
+  next time anyone opens that table's map.
+  - `bdus-api/controllers/Geoface.php` (`getGeoJson()` `colorBy` param +
+    `saveColorField()`), `bdus-api/lib/Bdus/Router.php`,
+    `bdus-app/src/views/GeofaceView.vue`
+  - Docs: `bdus-docs/guide/system-plugins/geodata.md`
+
+- **File management: rename files, and search by name/id/description/keywords**
+  (#59). The **Filename** column is now editable inline, same pattern as
+  Description/Keywords — renaming only ever changes this DB label, never the
+  physical file (which always lives at `{id}.{ext}`, unaffected by the
+  filename), so it's a pure metadata edit with no risk to existing links or
+  URLs. A new search box in the toolbar filters the file list by filename,
+  description, keywords, or an exact file id, and combines with the existing
+  "Orphans only" toggle.
+  - `bdus-api/controllers/File.php` (`getFiles()` `search` param,
+    `updateFile()` accepts `filename`), `bdus-app/src/views/FilesView.vue`
+  - Docs: `bdus-docs/guide/usage/files.md`
+
+### Fixed
+
+- **Bulk photo import (#58): imported photos were saved under the wrong
+  filename and 404'd for every viewer.** `Import::importPhotos()` wrote each
+  photo to disk under `{original-basename}_{random-hex}.{ext}` *before*
+  knowing the new `bdus_files` row's id, then stored that same
+  random-suffixed name in the `filename` column — but every consumer
+  (`FileGallery.vue`, `FilesView.vue`) builds the file URL as `{id}.{ext}`,
+  the same convention every other upload path in the app already follows.
+  The file the URL pointed at was never the file that got written, so every
+  bulk-imported photo was broken on open, and its `filename` metadata carried
+  a meaningless random suffix. Reported by the user against production
+  v5.9.5 (a pre-existing bug, not introduced by recent work). Fixed by
+  inserting the `bdus_files` row first (to get the real id) before writing
+  the physical file, matching `Record::uploadFile()`. While in there: bulk
+  photo import now also goes through `Image\Resizer::process()` — the
+  configured max-size/format-conversion settings previously applied to every
+  other upload path but silently skipped bulk-imported photos entirely.
+  - `bdus-api/controllers/Import.php`
+
+- **WebP files (and a few other common formats) showed up in the record file
+  gallery as generic file links instead of inline image previews.** The
+  `is_image` flag computed when a record is loaded used a narrower,
+  out-of-sync extension list (`png, jpeg, jpg, bmp, ico, tif, tiff`) than the
+  one used everywhere else (upload, replace, file manager list), which
+  already included `gif`/`webp`/`svg`. All five copies of this list across
+  `Record.php`/`File.php` are now aligned and extended with `avif` (modern,
+  widely supported) and the missing `ico`/`tif`/`tiff` variants.
+  - `bdus-api/controllers/Record.php`, `bdus-api/controllers/File.php`
+
 ## [5.9.5] - 2026-09-11
 
 ### Fixed

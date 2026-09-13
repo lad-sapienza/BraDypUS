@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.10.1] - 2026-09-13
+
 ### Fixed
 
 - **Every INSERT into a generic plugin table (`is_plugin=1`, e.g. `misure`,

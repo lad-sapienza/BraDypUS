@@ -5,6 +5,77 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.10.1] - 2026-09-13
+
+### Fixed
+
+- **Every INSERT into a generic plugin table (`is_plugin=1`, e.g. `misure`,
+  `m_reperti_in_us`) failed silently with a "Database error" (HTTP 200,
+  `status: error`), and self_writer ownership on such tables was silently
+  broken across the entire CRUD surface — read, update, delete, duplicate.**
+  Plugin tables have no `creator` column by design — ownership is inherited
+  from the host record via `id_link` — but `saveRecord()` (INSERT),
+  `duplicateRecord()`, `getRecord()`'s `can_edit`/`can_delete` metadata, and
+  the self_writer ownership checks in `saveRecord()` (UPDATE) and `erase()`
+  (DELETE) all assumed every table has its own `creator`. Every plugin-table
+  INSERT/duplicate hit a real DB-level "no such column" exception, hidden
+  behind the generic error envelope; every self_writer ownership check (and
+  the UI's own can_edit/can_delete hints) read `creator` directly off the
+  plugin row (always null there) instead of resolving it through the host
+  record, so a self_writer could never edit or delete a plugin row of a
+  record they actually owned, and wouldn't even see the option in the UI.
+  `saveRecord()` and `duplicateRecord()` now skip writing `creator` on
+  plugin tables entirely, and a shared `resolveOwnerCreator()` helper
+  resolves self_writer ownership via `plugin_of` → `id_link` → the host
+  record's own `creator`, used by `saveRecord()` (UPDATE), `erase()` and
+  `getRecord()`.
+  - `bdus-api/controllers/Record.php`,
+    `bdus-api/tests/Integration/RecordCtrlSaveEraseTest.php`,
+    `bdus-api/tests/Integration/RecordCtrlDuplicateTest.php`,
+    `bdus-api/tests/Integration/RecordCtrlGetRecordTest.php`,
+    `bdus-api/tests/api/19_seed_demo.hurl`
+
+- **Config → Relations: the on_delete/on_update policy dropdowns (RESTRICT,
+  CASCADE, SET NULL, NO ACTION) gave no indication of what they actually do**,
+  so it was easy to pick one without realizing its real-world consequence. A
+  short explanation now appears under each dropdown, naming the two actual
+  tables involved — e.g. "Deleting a record in Siti Archeologici will
+  automatically and permanently delete every related record in Saggi di
+  scavo." — so whoever configures a relation can see what will happen before
+  saving.
+  - `bdus-app/src/components/config/ConfigRelations.vue`,
+    `bdus-app/src/locale/en.json`, `bdus-app/src/locale/it.json`
+
+- **`md`/`long_text` fields opened as a single-line box that only grew once
+  you started typing.** `autoSize` was passed to ant-design-vue's
+  `Input.TextArea` as a bare boolean instead of `{ minRows, maxRows }` —
+  with no explicit row counts, the component collapses to the content's own
+  scroll height on mount, silently ignoring the `rows` attribute next to it.
+  Both field types now start at a sensible multi-line height (`minRows: 5`
+  for `md`, `3` for `long_text`) and still grow further as content is
+  typed. `md` fields also gained a minimal formatting toolbar (bold,
+  italic, link, bulleted/numbered list, inline code) that wraps the
+  current selection or prefixes the current line(s) and restores
+  focus/selection afterwards, next to the existing edit/preview toggle.
+  - `bdus-app/src/components/record/FieldEditor.vue`,
+    `bdus-app/src/locale/en.json`, `bdus-app/src/locale/it.json`
+
+- **Some toasts showed literal `{count}`/`{applied}`/`{skipped}` text instead
+  of real numbers** — e.g. Config → Relations → "Apply all" read "Constraints
+  applied: {applied} applied, {skipped} skipped (orphans or errors)". The
+  `t()` i18n helper only ever substituted positional `%s` placeholders, but
+  a handful of call sites (and their locale strings) had been written
+  against `{name}`-style placeholders instead, which were silently never
+  replaced. `t()` now also accepts a single plain-object argument for
+  `{name}` substitution — needed by the DBML import preview, which renders
+  a generic list of heterogeneous `{code, ...fields}` error/warning objects
+  where each code has different dynamic fields — while the other affected
+  call sites were converted to the existing `%s` convention used
+  everywhere else.
+  - `bdus-app/src/i18n/index.js`, `bdus-app/src/components/config/ConfigRelations.vue`,
+    `bdus-app/src/components/config/DbmlPanel.vue`,
+    `bdus-app/src/locale/en.json`, `bdus-app/src/locale/it.json`
+
 ## [5.10.0] - 2026-09-13
 
 ### Changed

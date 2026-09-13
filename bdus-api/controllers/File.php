@@ -28,7 +28,11 @@ class File extends \Bdus\Controller
 	/**
 	 * Returns paginated list of all files in the app.
 	 *
-	 * GET /api/files?page=1&per_page=25&orphans_only=1
+	 * GET /api/files?page=1&per_page=25&orphans_only=1&search=foo
+	 *
+	 * `search` matches (case-insensitively, via LIKE) against filename,
+	 * description and keywords; if it's a plain integer it also matches the
+	 * file id exactly.
 	 *
 	 * Response: { status, total, page, per_page, files: [{ id, ext, filename,
 	 *   description, keywords, printable, is_image,
@@ -41,31 +45,45 @@ class File extends \Bdus\Controller
 			return;
 		}
 
-		$page       = max(1, (int)($this->get['page']     ?? 1));
-		$perPage    = max(5, min(100, (int)($this->get['per_page'] ?? 25)));
-		$orphansOnly= !empty($this->get['orphans_only']);
-		$offset     = ($page - 1) * $perPage;
+		$page        = max(1, (int)($this->get['page']     ?? 1));
+		$perPage     = max(5, min(100, (int)($this->get['per_page'] ?? 25)));
+		$orphansOnly = !empty($this->get['orphans_only']);
+		$search      = trim((string)($this->get['search'] ?? ''));
+		$offset      = ($page - 1) * $perPage;
 
 		$imageExts  = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif', 'bmp', 'ico', 'tif', 'tiff', 'svg'];
 
 		try {
+			$conditions = [];
+			$params     = [];
+
 			if ($orphansOnly) {
-				$countSql  = "SELECT COUNT(*) AS cnt FROM bdus_files f
-				              WHERE NOT EXISTS (SELECT 1 FROM bdus_file_links fl WHERE fl.file_id = f.id)";
-				$fetchSql  = "SELECT f.id, f.ext, f.filename, f.description, f.keywords, f.printable
-				              FROM bdus_files f
-				              WHERE NOT EXISTS (SELECT 1 FROM bdus_file_links fl WHERE fl.file_id = f.id)
-				              ORDER BY f.id DESC LIMIT ? OFFSET ?";
-			} else {
-				$countSql  = "SELECT COUNT(*) AS cnt FROM bdus_files";
-				$fetchSql  = "SELECT id, ext, filename, description, keywords, printable
-				              FROM bdus_files ORDER BY id DESC LIMIT ? OFFSET ?";
+				$conditions[] = 'NOT EXISTS (SELECT 1 FROM bdus_file_links fl WHERE fl.file_id = f.id)';
 			}
 
-			$countRow  = $this->db->query($countSql, [], 'read');
+			if ($search !== '') {
+				$needle    = '%' . $search . '%';
+				$searchOr  = ['f.filename LIKE ?', 'f.description LIKE ?', 'f.keywords LIKE ?'];
+				$searchVal = [$needle, $needle, $needle];
+				if (ctype_digit($search)) {
+					$searchOr[]  = 'f.id = ?';
+					$searchVal[] = (int) $search;
+				}
+				$conditions[] = '(' . implode(' OR ', $searchOr) . ')';
+				$params = array_merge($params, $searchVal);
+			}
+
+			$whereSql = $conditions ? ('WHERE ' . implode(' AND ', $conditions)) : '';
+
+			$countSql = "SELECT COUNT(*) AS cnt FROM bdus_files f {$whereSql}";
+			$fetchSql = "SELECT f.id, f.ext, f.filename, f.description, f.keywords, f.printable
+			             FROM bdus_files f {$whereSql}
+			             ORDER BY f.id DESC LIMIT ? OFFSET ?";
+
+			$countRow  = $this->db->query($countSql, $params, 'read');
 			$total     = (int)($countRow[0]['cnt'] ?? 0);
 
-			$rows      = $this->db->query($fetchSql, [$perPage, $offset], 'read') ?: [];
+			$rows      = $this->db->query($fetchSql, [...$params, $perPage, $offset], 'read') ?: [];
 
 			if (empty($rows)) {
 				$this->returnJson([
@@ -122,10 +140,15 @@ class File extends \Bdus\Controller
 	}
 
 	/**
-	 * Updates file metadata (description, keywords, printable).
+	 * Updates file metadata (filename, description, keywords, printable).
+	 *
+	 * Renaming only ever touches this DB column — the physical file keeps
+	 * living at `{id}.{ext}` regardless of `filename` (see uploadFile()/
+	 * replaceFile()), so a rename is a pure metadata edit, no filesystem or
+	 * URL implications.
 	 *
 	 * PATCH /api/file/{fileId}
-	 * Body: { description?, keywords?, printable? }
+	 * Body: { filename?, description?, keywords?, printable? }
 	 *
 	 * Response: { status, code }
 	 */
@@ -148,12 +171,19 @@ class File extends \Bdus\Controller
 			return;
 		}
 
+		if (array_key_exists('filename', $this->post) && trim((string) $this->post['filename']) === '') {
+			$this->returnJson(['status' => 'error', 'code' => 'filename_required']);
+			return;
+		}
+
+		$filename    = isset($this->post['filename']) ? trim((string) $this->post['filename']) : null;
 		$description = $this->post['description'] ?? null;
 		$keywords    = $this->post['keywords']    ?? null;
 		$printable   = isset($this->post['printable']) ? (int)(bool)$this->post['printable'] : null;
 
 		$sets  = [];
 		$vals  = [];
+		if (array_key_exists('filename',    $this->post)) { $sets[] = 'filename    = ?'; $vals[] = $filename;    }
 		if (array_key_exists('description', $this->post)) { $sets[] = 'description = ?'; $vals[] = $description; }
 		if (array_key_exists('keywords',    $this->post)) { $sets[] = 'keywords    = ?'; $vals[] = $keywords;    }
 		if (array_key_exists('printable',   $this->post)) { $sets[] = 'printable   = ?'; $vals[] = $printable;   }

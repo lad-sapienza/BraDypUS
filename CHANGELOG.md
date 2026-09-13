@@ -58,6 +58,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `bdus-app/src/views/GeofaceView.vue`
   - Docs: `bdus-docs/guide/system-plugins/geodata.md`
 
+- **File management: rename files, and search by name/id/description/keywords**
+  (#59). The **Filename** column is now editable inline, same pattern as
+  Description/Keywords — renaming only ever changes this DB label, never the
+  physical file (which always lives at `{id}.{ext}`, unaffected by the
+  filename), so it's a pure metadata edit with no risk to existing links or
+  URLs. A new search box in the toolbar filters the file list by filename,
+  description, keywords, or an exact file id, and combines with the existing
+  "Orphans only" toggle.
+  - `bdus-api/controllers/File.php` (`getFiles()` `search` param,
+    `updateFile()` accepts `filename`), `bdus-app/src/views/FilesView.vue`
+  - Docs: `bdus-docs/guide/usage/files.md`
+
 ### Fixed
 
 - **Bulk photo import (#58): imported photos were saved under the wrong

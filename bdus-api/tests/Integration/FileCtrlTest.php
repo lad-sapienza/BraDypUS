@@ -81,6 +81,68 @@ class FileCtrlTest extends BdusTestCase
         $this->assertCount(0, $res['files']);
     }
 
+    // ── getFiles: search ──────────────────────────────────────────────────────
+
+    public function testGetFilesSearchMatchesFilename(): void
+    {
+        $ctrl = $this->makeController('Bdus\\Controllers\\File', ['search' => 'photo'], []);
+        $res  = $this->callController($ctrl, 'getFiles');
+
+        $this->assertSame('success', $res['status']);
+        $this->assertSame(1, $res['total']);
+        $this->assertSame(1, (int) $res['files'][0]['id']);
+    }
+
+    public function testGetFilesSearchMatchesDescription(): void
+    {
+        $ctrl = $this->makeController('Bdus\\Controllers\\File', ['search' => 'A document'], []);
+        $res  = $this->callController($ctrl, 'getFiles');
+
+        $this->assertSame('success', $res['status']);
+        $this->assertSame(1, $res['total']);
+        $this->assertSame(2, (int) $res['files'][0]['id']);
+    }
+
+    public function testGetFilesSearchMatchesIdExactly(): void
+    {
+        // Neither seeded file has a "1" anywhere in filename/description/keywords,
+        // so a match here can only come from the id = 1 branch.
+        $ctrl = $this->makeController('Bdus\\Controllers\\File', ['search' => '1'], []);
+        $res  = $this->callController($ctrl, 'getFiles');
+
+        $this->assertSame('success', $res['status']);
+        $this->assertSame(1, $res['total']);
+        $this->assertSame(1, (int) $res['files'][0]['id']);
+    }
+
+    public function testGetFilesSearchNoMatchReturnsEmpty(): void
+    {
+        $ctrl = $this->makeController('Bdus\\Controllers\\File', ['search' => 'no_such_thing_zzz'], []);
+        $res  = $this->callController($ctrl, 'getFiles');
+
+        $this->assertSame('success', $res['status']);
+        $this->assertSame(0, $res['total']);
+        $this->assertCount(0, $res['files']);
+    }
+
+    public function testGetFilesSearchCombinesWithOrphansOnly(): void
+    {
+        static::$db->execInTransaction(
+            "INSERT INTO bdus_files (id, creator, ext, filename) VALUES (98, 'admin', 'txt', 'photo_orphan')"
+        );
+
+        $ctrl = $this->makeController('Bdus\\Controllers\\File', ['search' => 'photo', 'orphans_only' => '1'], []);
+        $res  = $this->callController($ctrl, 'getFiles');
+
+        // File 1 ("photo") matches the search but is linked (not orphan); only
+        // the newly inserted orphan matches both conditions.
+        $this->assertSame('success', $res['status']);
+        $this->assertSame(1, $res['total']);
+        $this->assertSame(98, (int) $res['files'][0]['id']);
+
+        static::$db->execInTransaction("DELETE FROM bdus_files WHERE id = 98");
+    }
+
     public function testGetFilesNotEnoughPrivilege(): void
     {
         $this->setPrivilege(99);
@@ -115,6 +177,45 @@ class FileCtrlTest extends BdusTestCase
         );
         $this->assertSame('Updated desc', $rows[0]['description']);
         $this->assertSame('kw1 kw2',      $rows[0]['keywords']);
+    }
+
+    public function testUpdateFileRenameSuccess(): void
+    {
+        $ctrl = $this->makeController(
+            'Bdus\\Controllers\\File',
+            ['fileId' => 1],
+            ['filename' => 'renamed-photo']
+        );
+        $res = $this->callController($ctrl, 'updateFile');
+
+        $this->assertSame('success',         $res['status']);
+        $this->assertSame('ok_file_updated', $res['code']);
+
+        $rows = static::$db->query("SELECT filename, ext FROM bdus_files WHERE id = 1", [], 'read');
+        $this->assertSame('renamed-photo', $rows[0]['filename']);
+        // The extension (and by extension the physical {id}.{ext} filesystem
+        // path) is never touched by a rename — only the DB label changes.
+        $this->assertSame('jpg', $rows[0]['ext']);
+
+        // Restore for other tests in this class
+        static::$db->execInTransaction("UPDATE bdus_files SET filename = 'photo' WHERE id = 1");
+    }
+
+    public function testUpdateFileRenameRejectsEmptyFilename(): void
+    {
+        $ctrl = $this->makeController(
+            'Bdus\\Controllers\\File',
+            ['fileId' => 1],
+            ['filename' => '   ']
+        );
+        $res = $this->callController($ctrl, 'updateFile');
+
+        $this->assertSame('error',             $res['status']);
+        $this->assertSame('filename_required', $res['code']);
+
+        // Unchanged
+        $rows = static::$db->query("SELECT filename FROM bdus_files WHERE id = 1", [], 'read');
+        $this->assertSame('photo', $rows[0]['filename']);
     }
 
     public function testUpdateFileNotFound(): void

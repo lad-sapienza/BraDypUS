@@ -1129,6 +1129,8 @@
   "confirm_replace_file": "Carica un nuovo file per sostituire il binario. I metadati (descrizione, parole chiave) saranno mantenuti.",
   "ok_file_updated": "Metadati del file salvati",
   "error_file_updated": "Errore nel salvataggio dei metadati",
+  "filename_required": "Il nome del file non può essere vuoto",
+  "files_search_placeholder": "Cerca per nome, id, descrizione…",
   "ok_file_replaced": "File sostituito con successo",
   "error_file_replaced": "Errore nella sostituzione del file",
   "files_preview_hint": "Clicca per l'anteprima",

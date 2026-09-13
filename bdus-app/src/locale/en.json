@@ -1129,6 +1129,8 @@
   "confirm_replace_file": "Upload a new file to replace the binary. Metadata (description, keywords) will be preserved.",
   "ok_file_updated": "File metadata saved",
   "error_file_updated": "Error saving file metadata",
+  "filename_required": "Filename cannot be empty",
+  "files_search_placeholder": "Search by name, id, description…",
   "ok_file_replaced": "File replaced successfully",
   "error_file_replaced": "Error replacing file",
   "files_preview_hint": "Click to preview",

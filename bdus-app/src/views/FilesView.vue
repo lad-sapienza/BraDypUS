@@ -15,6 +15,17 @@
         {{ t('files_orphans_only') }}
       </AButton>
 
+      <AInput
+        v-model:value="searchQuery"
+        size="small"
+        allow-clear
+        :placeholder="t('files_search_placeholder')"
+        class="files-search"
+        @update:value="onSearchInput"
+      >
+        <template #prefix><SearchOutlined /></template>
+      </AInput>
+
       <AButton size="small" :loading="loading" @click="reload">
         <template #icon><ReloadOutlined /></template>
         {{ t('log_refresh') }}
@@ -47,9 +58,17 @@
             </span>
           </template>
           <template v-else-if="column.key === 'filename'">
-            <span class="filename-link" @click="openPreview(record)">
-              {{ record.filename }}.{{ record.ext }}
-            </span>
+            <div class="filename-edit-row">
+              <AInput
+                :value="record.filename"
+                size="small"
+                class="meta-input filename-input"
+                @update:value="v => record.filename = v"
+                @blur="saveMeta(record)"
+                @keyup.enter="saveMeta(record)"
+              />
+              <span class="filename-ext">.{{ record.ext }}</span>
+            </div>
             <div v-if="!record.links.length" class="orphan-badge">{{ t('files_orphan_badge') }}</div>
           </template>
           <template v-else-if="column.key === 'description'">
@@ -135,7 +154,7 @@
 </template>
 
 <script setup>
-import { DeleteOutlined, EditOutlined, FileExcelOutlined, FileOutlined, FilePdfOutlined, FilterOutlined, FileWordOutlined, FileZipOutlined, ReloadOutlined, SoundOutlined, SyncOutlined, VideoCameraOutlined } from '@ant-design/icons-vue'
+import { DeleteOutlined, EditOutlined, FileExcelOutlined, FileOutlined, FilePdfOutlined, FilterOutlined, FileWordOutlined, FileZipOutlined, ReloadOutlined, SearchOutlined, SoundOutlined, SyncOutlined, VideoCameraOutlined } from '@ant-design/icons-vue'
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { RouterLink, useRoute }     from 'vue-router'
 import { useToast, useConfirm } from '@/composables/useNotify'
@@ -169,6 +188,8 @@ const loading     = ref(false)
 const currentPage = ref(1)
 const perPage     = ref(25)
 const orphansOnly = ref(false)
+const searchQuery = ref('')
+let searchDebounce = null
 
 const pagination = computed(() => ({
   current: currentPage.value,
@@ -207,6 +228,7 @@ async function fetchFiles() {
       page:         currentPage.value,
       per_page:     perPage.value,
       orphans_only: orphansOnly.value ? 1 : undefined,
+      search:       searchQuery.value || undefined,
     }
     const data = await api.get('/api/files', params)
     if (data.status === 'error') throw new Error(t(data.code))
@@ -224,6 +246,11 @@ function reload() {
   fetchFiles()
 }
 
+function onSearchInput() {
+  clearTimeout(searchDebounce)
+  searchDebounce = setTimeout(reload, 350)
+}
+
 function onTableChange(paginationEvt) {
   currentPage.value = paginationEvt.current
   perPage.value     = paginationEvt.pageSize
@@ -234,6 +261,7 @@ function onTableChange(paginationEvt) {
 async function saveMeta(file) {
   try {
     const res = await api.patch(`/api/file/${file.id}`, {
+      filename:    file.filename,
       description: file.description,
       keywords:    file.keywords,
     })
@@ -361,6 +389,10 @@ onMounted(fetchFiles)
 
 .files-toolbar :deep(.ant-btn:last-child) { margin-left: auto; }
 
+.files-search {
+  width: 260px;
+}
+
 /* ── Table ────────────────────────────────────────────────────── */
 .files-table {
   flex: 1;
@@ -393,14 +425,22 @@ onMounted(fetchFiles)
 }
 
 /* ── Filename ─────────────────────────────────────────────────── */
-.filename-link {
-  color: var(--p-primary-color);
-  text-decoration: none;
-  font-size: 0.78rem;
-  word-break: break-all;
-  cursor: pointer;
+.filename-edit-row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
 }
-.filename-link:hover { text-decoration: underline; }
+
+.filename-input {
+  min-width: 0;
+  flex: 1;
+}
+
+.filename-ext {
+  color: var(--p-text-muted-color);
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
 
 .orphan-badge {
   display: inline-block;

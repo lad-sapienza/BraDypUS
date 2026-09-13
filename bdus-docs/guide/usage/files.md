@@ -15,25 +15,34 @@ Files are listed in a paginated table. Each row shows:
 | Column | Description |
 |---|---|
 | Preview | Thumbnail for images, file-type icon for documents |
-| Filename | The original filename and extension |
+| Filename | The filename (without extension) — editable inline |
 | Description | Free-text description — editable inline |
 | Keywords | Comma-separated keywords — editable inline |
 | Linked records | Badges linking to each record the file is attached to |
 | Actions | Replace binary, delete permanently |
 
-Click a thumbnail or filename to open an **in-app preview**:
+Click a thumbnail to open an **in-app preview**:
 - **Images** → fullscreen lightbox
 - **Documents / PDFs** → inline iframe viewer
 
-## Filtering orphan files
+## Filtering and searching
 
 Toggle **Orphans only** in the toolbar to show only files that are not linked
-to any record. This is useful for cleaning up the library after deleting records.
+to any record — useful for cleaning up the library after deleting records.
+
+The search box filters by filename, description, keywords, or an exact file
+id, and can be combined with **Orphans only**.
 
 ## Editing metadata
 
-Click any cell in the **Description** or **Keywords** column to edit its value.
-Changes are saved automatically when you press Enter or click outside the cell.
+Click any cell in the **Filename**, **Description** or **Keywords** column to
+edit its value. Changes are saved automatically when you press Enter or click
+outside the cell.
+
+Renaming a file only changes this label — the file's actual location on the
+server is always based on its internal id, never on the filename, so renaming
+never breaks a link, an embedded image, or a download URL. An empty filename
+is rejected.
 
 ## Replacing a file
 

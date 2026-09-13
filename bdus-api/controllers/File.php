@@ -230,11 +230,17 @@ class File extends \Bdus\Controller
 				}
 			}
 
-			// Resize if configured
-			$maxPx = (int) trim((string) ($this->cfg->get('main.maxImageSize') ?? 0));
-			if ($maxPx > 0) {
-				\Image\Resizer::maybeResize($newPath, $maxPx);
-			}
+			// Resize / convert format if configured — may change the extension,
+			// which bdus_files.ext must follow (see Record::uploadFile() for the
+			// same pattern).
+			$processed = \Image\Resizer::process($newPath, [
+				'maxPx'   => (int) ($this->cfg->get('main.maxImageSize') ?? 0),
+				'convert' => (bool) ($this->cfg->get('main.imageConvert') ?? false),
+				'format'  => (string) ($this->cfg->get('main.imageFormat') ?? 'webp'),
+				'quality' => (int) ($this->cfg->get('main.imageQuality') ?? 85),
+				'dpi'     => (int) ($this->cfg->get('main.imageDpi') ?? 72),
+			]);
+			$newExt = $processed['ext'];
 
 			$this->db->query(
 				"UPDATE bdus_files SET ext = ?, filename = ? WHERE id = ?",

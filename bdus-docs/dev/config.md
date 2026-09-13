@@ -22,7 +22,7 @@ Configuration has migrated across versions:
 | Data | Storage (post-M019) | Legacy |
 |---|---|---|
 | Bootstrap (DB engine, credentials, `definition`) | `config.json` | same |
-| App-level settings (status, `maxImageSize`, welcome) | `bdus_cfg_app` table | `config.json` |
+| App-level settings (status, `maxImageSize`, image conversion, welcome) | `bdus_cfg_app` table | `config.json` |
 | Table definitions | `bdus_cfg_tables` | JSON files in `cfg/` |
 | Field definitions | `bdus_cfg_fields` | JSON files in `cfg/` |
 | Relation definitions | `bdus_cfg_relations` | inline in table JSON |
@@ -42,7 +42,11 @@ cfg
 ├── main
 │   ├── name          ← app name (always = DB connection identifier)
 │   ├── status        ← 'on' | 'off' | 'frozen'
-│   ├── maxImageSize  ← max upload size in MB (0 = unlimited)
+│   ├── maxImageSize  ← downscale uploaded images above this px bound (0 = off)
+│   ├── imageConvert  ← convert uploaded images to imageFormat (bool, default false)
+│   ├── imageFormat   ← 'webp' | 'jpg', target format when imageConvert is on
+│   ├── imageQuality  ← 1-100, default 85, used when imageConvert is on
+│   ├── imageDpi      ← resolution to embed, default 72, used when imageConvert is on
 │   ├── welcome       ← HTML string for dashboard welcome page
 │   ├── db_engine     ← 'sqlite' | 'mysql' | 'pgsql'
 │   └── definition    ← free-text description of the application

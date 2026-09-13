@@ -49,6 +49,36 @@
 
       </section>
 
+      <!-- ── Images ──────────────────────────────────────────────── -->
+      <section class="cfg-section">
+        <div class="cfg-section-title">{{ t('images') }}</div>
+
+        <div class="cfg-form-row">
+          <div class="cfg-form-field">
+            <label>{{ t('image_convert') }}</label>
+            <ASwitch class="cfg-switch" v-model:checked="form.imageConvert" />
+            <small class="cfg-hint">{{ t('image_convert_hint') }}</small>
+          </div>
+        </div>
+
+        <div v-if="form.imageConvert" class="cfg-form-row">
+          <div class="cfg-form-field">
+            <label>{{ t('image_format') }}</label>
+            <ASelect v-model:value="form.imageFormat" :options="imageFormatOptions" size="small" />
+          </div>
+          <div class="cfg-form-field">
+            <label>{{ t('image_quality') }}</label>
+            <AInputNumber v-model:value="form.imageQuality" :min="1" :max="100" size="small" />
+          </div>
+          <div class="cfg-form-field">
+            <label>{{ t('image_dpi') }}</label>
+            <AInputNumber v-model:value="form.imageDpi" :min="1" size="small" />
+          </div>
+        </div>
+        <small v-if="form.imageConvert" class="cfg-hint">{{ t('image_convert_exif_hint') }}</small>
+
+      </section>
+
       <!-- ── Access ──────────────────────────────────────────────── -->
       <section class="cfg-section">
         <div class="cfg-section-title">{{ t('access') }}</div>
@@ -167,7 +197,7 @@
 <script setup>
 import { LoadingOutlined, SaveOutlined, SettingOutlined } from '@ant-design/icons-vue'
 import { ref, computed, onMounted } from 'vue'
-import { Button as AButton, Input, Select as ASelect, Alert as AAlert, Switch as ASwitch } from 'ant-design-vue'
+import { Button as AButton, Input, Select as ASelect, Alert as AAlert, Switch as ASwitch, InputNumber as AInputNumber } from 'ant-design-vue'
 import { useToast } from '@/composables/useNotify'
 import { useI18n, availableLocales } from '@/i18n'
 import { api, assetUrl } from '@/api'
@@ -193,6 +223,10 @@ const dbEngines     = ref([])
 const statusSelectOptions = computed(() => statusOptions.value.map(v => ({ value: v, label: v })))
 const dbEngineOptions     = computed(() => dbEngines.value.map(v => ({ value: v, label: v })))
 const colorPalette  = COLOR_PALETTE
+const imageFormatOptions = [
+  { value: 'webp', label: 'WebP' },
+  { value: 'jpg',  label: 'JPG' },
+]
 
 // Only google/orcid are supported server-side (Bdus\Controllers\OAuth::SUPPORTED).
 const oauthProviders = [

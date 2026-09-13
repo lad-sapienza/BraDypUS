@@ -1115,13 +1115,20 @@ class Record extends \Bdus\Controller
         throw new \RuntimeException('move_uploaded_file failed');
       }
 
-      // Resize image in-place if maxImageSize is configured.
-      $maxPx = (int) trim((string) ($this->cfg->get('main.maxImageSize') ?? 0));
-      if ($maxPx > 0 && !\Image\Resizer::maybeResize($destFile, $maxPx)) {
-        // maybeResize returns false for skips (non-image, already small) AND
-        // for errors.  We cannot distinguish here, but errors are non-fatal:
-        // the original file remains usable.  Log at debug level to avoid noise.
-        $this->log->debug("Image resize skipped or failed for {$destFile}");
+      // Resize / convert format in-place if configured (main.maxImageSize,
+      // main.imageConvert & friends — see Config::__construct()). When
+      // conversion changes the extension, bdus_files.ext must follow it.
+      $processed = \Image\Resizer::process($destFile, [
+        'maxPx'   => (int) ($this->cfg->get('main.maxImageSize') ?? 0),
+        'convert' => (bool) ($this->cfg->get('main.imageConvert') ?? false),
+        'format'  => (string) ($this->cfg->get('main.imageFormat') ?? 'webp'),
+        'quality' => (int) ($this->cfg->get('main.imageQuality') ?? 85),
+        'dpi'     => (int) ($this->cfg->get('main.imageDpi') ?? 72),
+      ]);
+      if ($processed['ext'] !== $ext) {
+        $ext      = $processed['ext'];
+        $destFile = $processed['path'];
+        $this->db->query("UPDATE bdus_files SET ext = ? WHERE id = ?", [$ext, $fileId], 'boolean');
       }
 
       // Create file link in the dedicated junction table

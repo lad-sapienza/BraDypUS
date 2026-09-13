@@ -7,7 +7,11 @@
         { "name": "color",          "type": "TEXT",                 "notnull": false, "default": "indigo" },
         { "name": "bdus_version",   "type": "TEXT",                 "notnull": false, "default": null },
         { "name": "allow_self_registration", "type": "INTEGER",     "notnull": true,  "default": 0 },
-        { "name": "lang",           "type": "TEXT",                 "notnull": true,  "default": "en" }
+        { "name": "lang",           "type": "TEXT",                 "notnull": true,  "default": "en" },
+        { "name": "image_convert",  "type": "INTEGER",              "notnull": true,  "default": 0 },
+        { "name": "image_format",   "type": "TEXT",                 "notnull": true,  "default": "webp" },
+        { "name": "image_quality",  "type": "INTEGER",              "notnull": true,  "default": 85 },
+        { "name": "image_dpi",      "type": "INTEGER",              "notnull": true,  "default": 72 }
     ],
     "indexes": [],
     "relations": []

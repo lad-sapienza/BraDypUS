@@ -89,7 +89,8 @@ In RecordView (edit mode), the file gallery panel allows:
 | **Delete** | Click the trash icon to permanently delete the file from the whole application |
 
 Images are automatically downscaled on upload if **Max image size** is set in
-[App settings](/guide/setup/main-app-config).
+[App settings](/guide/setup/main-app-config), and optionally converted to a
+standard web format (WebP/JPG) if format conversion is enabled there too.
 
 ### File management view
 

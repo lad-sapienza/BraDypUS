@@ -5,6 +5,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Image settings extended beyond max size**: App settings now optionally
+  convert uploaded raster images to a standard web format (WebP or JPG) at a
+  configurable quality (1-100, default 85) and DPI (default 72), alongside
+  the existing max-size resize. Off by default. Animated GIFs are never
+  converted (would collapse the animation) but are still resized if
+  oversized. Applies to both new uploads and file replacement; the physical
+  file and `bdus_files.ext` stay in sync when conversion changes the
+  extension. Note: with the GD driver (the only one available), EXIF/GPS
+  metadata is not preserved across a resize or conversion — this already
+  applied to the existing max-size resize and is not a regression.
+  - `bdus-api/lib/Image/Resizer.php` (`process()`), `bdus-api/lib/Config/AppSettings.php`,
+    `bdus-api/lib/Config/Config.php`, `bdus-api/lib/DB/System/Migrations/M045_AddImageConversionSettings.php`,
+    `bdus-api/controllers/Record.php`, `bdus-api/controllers/File.php`,
+    `bdus-app/src/components/config/ConfigAppForm.vue`
+  - `bdus-api/Dockerfile`: GD did not have WebP support compiled in
+    (`libwebp-dev` + `--with-webp` were missing) — added, since WebP is the
+    recommended target format above
+  - Docs: `bdus-docs/guide/setup/main-app-config.md` (new "Images" section),
+    `bdus-docs/guide/usage/crud.md`, `bdus-docs/dev/config.md`
+
 ## [5.9.5] - 2026-09-11
 
 ### Fixed

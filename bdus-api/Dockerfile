@@ -6,6 +6,7 @@ RUN apt-get update && apt-get install -y \
     libonig-dev \
     libpng-dev \
     libjpeg-dev \
+    libwebp-dev \
     libfreetype6-dev \
     libpq-dev \
     libzip-dev \
@@ -18,8 +19,9 @@ RUN apt-get update && apt-get install -y \
 # Enable mod_rewrite for .htaccess routing
 RUN a2enmod rewrite
 
-# PHP extensions: PDO + SQLite, mbstring, GD (image thumbnailing)
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+# PHP extensions: PDO + SQLite, mbstring, GD (image thumbnailing/conversion,
+# --with-webp needed for the optional webp conversion in Image\Resizer)
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-install pdo pdo_sqlite pdo_pgsql pdo_mysql mbstring gd zip
 
 # Allow .htaccess overrides

@@ -53,6 +53,7 @@ use DB\System\Migrations\M041_AddSelfRegistrationToCfgApp;
 use DB\System\Migrations\M042_AddLangToCfgApp;
 use DB\System\Migrations\M043_DropDanglingCfgRelations;
 use DB\System\Migrations\M044_DeriveGeodataFlag;
+use DB\System\Migrations\M045_AddImageConversionSettings;
 use Monolog\Logger;
 
 /**
@@ -142,6 +143,7 @@ class Migrate
         M042_AddLangToCfgApp::class,
         M043_DropDanglingCfgRelations::class,
         M044_DeriveGeodataFlag::class,
+        M045_AddImageConversionSettings::class,
     ];
 
     /**

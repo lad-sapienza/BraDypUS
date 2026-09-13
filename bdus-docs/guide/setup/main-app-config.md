@@ -29,6 +29,33 @@ Open it from **Config → App settings** (the first panel in the sidebar).
 
 Use `freeze` before performing a backup or migration.
 
+## Images
+
+Beyond **Max image size** (in the Fields table above), an **Images** section
+lets you optionally standardize the format of every uploaded image:
+
+| Field | Description |
+|---|---|
+| **Convert format on upload** | Off by default. When on, every uploaded raster image is re-encoded to the target format below, at the given quality and DPI. |
+| **Target format** | **WebP** (recommended — better compression, keeps transparency) or **JPG** (for maximum compatibility; transparent areas are flattened onto a white background). |
+| **Quality** | 1–100, default 85. Only used when conversion is on. |
+| **DPI** | Default 72 (the standard for on-screen display). Only used when conversion is on. |
+
+Animated GIFs are **never** converted — collapsing them to a single-frame
+format would destroy the animation — but they are still downscaled if they
+exceed **Max image size**.
+
+::: warning EXIF/GPS metadata is not preserved
+Whenever an image is resized or converted, the metadata embedded by cameras
+and phones (including GPS coordinates) is lost — this already applies to the
+plain **Max image size** downscale, not only to format conversion. If you
+need to keep this data (e.g. for provenance), disable both settings for that
+upload, or check the location before uploading.
+:::
+
+Both settings apply only to new uploads and file replacements, never
+retroactively to files already stored.
+
 ## Access <Badge type="tip" text="v5.6.0" />
 
 | Field | Description |

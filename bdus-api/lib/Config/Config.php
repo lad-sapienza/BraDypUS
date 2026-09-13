@@ -76,6 +76,10 @@ class Config
                 $this->cfg['main']['maxImageSize']  = $appSettings['max_image_size'] ?? ($this->cfg['main']['maxImageSize']  ?? 0);
                 $this->cfg['main']['welcome']       = $appSettings['welcome']        ?? '';
                 $this->cfg['main']['lang']          = $appSettings['lang']          ?? ($this->cfg['main']['lang']          ?? 'en');
+                $this->cfg['main']['imageConvert']  = (bool) ($appSettings['image_convert'] ?? false);
+                $this->cfg['main']['imageFormat']   = $appSettings['image_format']   ?? 'webp';
+                $this->cfg['main']['imageQuality']  = (int) ($appSettings['image_quality'] ?? 85);
+                $this->cfg['main']['imageDpi']      = (int) ($appSettings['image_dpi']     ?? 72);
             }
 
             // Table/field definitions: DB if available, JSON otherwise.
@@ -170,6 +174,10 @@ class Config
                 'status'         => $main['status']       ?? 'on',
                 'max_image_size' => $main['maxImageSize']  ?? 0,
                 'lang'           => $main['lang']          ?? 'en',
+                'image_convert'  => $main['imageConvert']  ?? false,
+                'image_format'   => $main['imageFormat']   ?? 'webp',
+                'image_quality'  => $main['imageQuality']  ?? 85,
+                'image_dpi'      => $main['imageDpi']      ?? 72,
             ]);
         } else {
             // Pre-M019: write the full array to config.json.

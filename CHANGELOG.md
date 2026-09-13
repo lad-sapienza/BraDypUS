@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Every INSERT into a generic plugin table (`is_plugin=1`, e.g. `misure`,
+  `m_reperti_in_us`) failed silently with a "Database error" (HTTP 200,
+  `status: error`), and self_writer ownership on such tables was silently
+  broken across the entire CRUD surface — read, update, delete, duplicate.**
+  Plugin tables have no `creator` column by design — ownership is inherited
+  from the host record via `id_link` — but `saveRecord()` (INSERT),
+  `duplicateRecord()`, `getRecord()`'s `can_edit`/`can_delete` metadata, and
+  the self_writer ownership checks in `saveRecord()` (UPDATE) and `erase()`
+  (DELETE) all assumed every table has its own `creator`. Every plugin-table
+  INSERT/duplicate hit a real DB-level "no such column" exception, hidden
+  behind the generic error envelope; every self_writer ownership check (and
+  the UI's own can_edit/can_delete hints) read `creator` directly off the
+  plugin row (always null there) instead of resolving it through the host
+  record, so a self_writer could never edit or delete a plugin row of a
+  record they actually owned, and wouldn't even see the option in the UI.
+  `saveRecord()` and `duplicateRecord()` now skip writing `creator` on
+  plugin tables entirely, and a shared `resolveOwnerCreator()` helper
+  resolves self_writer ownership via `plugin_of` → `id_link` → the host
+  record's own `creator`, used by `saveRecord()` (UPDATE), `erase()` and
+  `getRecord()`.
+  - `bdus-api/controllers/Record.php`,
+    `bdus-api/tests/Integration/RecordCtrlSaveEraseTest.php`,
+    `bdus-api/tests/Integration/RecordCtrlDuplicateTest.php`,
+    `bdus-api/tests/Integration/RecordCtrlGetRecordTest.php`,
+    `bdus-api/tests/api/19_seed_demo.hurl`
+
 - **Config → Relations: the on_delete/on_update policy dropdowns (RESTRICT,
   CASCADE, SET NULL, NO ACTION) gave no indication of what they actually do**,
   so it was easy to pick one without realizing its real-world consequence. A

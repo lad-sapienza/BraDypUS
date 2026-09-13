@@ -1900,72 +1900,96 @@ Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "core": { "id_link": {{rep_id_1}}, "tipo_misura": "Diametro",  "valore": "18.5", "unita": "cm" }, "plugins": {} }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 POST {{base_url}}/{{app_name}}/api/record/misure
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "core": { "id_link": {{rep_id_1}}, "tipo_misura": "Altezza",   "valore": "5.2",  "unita": "cm" }, "plugins": {} }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 POST {{base_url}}/{{app_name}}/api/record/misure
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "core": { "id_link": {{rep_id_3}}, "tipo_misura": "Lunghezza", "valore": "42",   "unita": "mm" }, "plugins": {} }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 POST {{base_url}}/{{app_name}}/api/record/misure
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "core": { "id_link": {{rep_id_3}}, "tipo_misura": "Larghezza", "valore": "12",   "unita": "mm" }, "plugins": {} }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 POST {{base_url}}/{{app_name}}/api/record/misure
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "core": { "id_link": {{rep_id_6}}, "tipo_misura": "Diametro",  "valore": "22",   "unita": "cm" }, "plugins": {} }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 POST {{base_url}}/{{app_name}}/api/record/misure
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "core": { "id_link": {{rep_id_8}}, "tipo_misura": "Lunghezza", "valore": "35",   "unita": "mm" }, "plugins": {} }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 POST {{base_url}}/{{app_name}}/api/record/misure
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "core": { "id_link": {{rep_id_8}}, "tipo_misura": "Larghezza", "valore": "8",    "unita": "mm" }, "plugins": {} }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 POST {{base_url}}/{{app_name}}/api/record/misure
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "core": { "id_link": {{rep_id_15}}, "tipo_misura": "Altezza",  "valore": "7.8",  "unita": "cm" }, "plugins": {} }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 POST {{base_url}}/{{app_name}}/api/record/misure
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "core": { "id_link": {{rep_id_15}}, "tipo_misura": "Diametro", "valore": "9.2",  "unita": "cm" }, "plugins": {} }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 POST {{base_url}}/{{app_name}}/api/record/misure
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "core": { "id_link": {{rep_id_16}}, "tipo_misura": "Lunghezza","valore": "58",   "unita": "mm" }, "plugins": {} }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 POST {{base_url}}/{{app_name}}/api/record/misure
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "core": { "id_link": {{rep_id_20}}, "tipo_misura": "Altezza",  "valore": "52",   "unita": "cm" }, "plugins": {} }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 POST {{base_url}}/{{app_name}}/api/record/misure
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "core": { "id_link": {{rep_id_20}}, "tipo_misura": "Diametro", "valore": "14",   "unita": "cm" }, "plugins": {} }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 
 # ── 19k. m_reperti_in_us (plugin → us) ──────────────────────────────
@@ -1975,48 +1999,64 @@ Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "core": { "id_link": {{us_id_2}},  "materiale_classe": "Ceramica da mensa",    "forma_tipo": "Coppa",  "forma_completa": 0, "datazione_generica": "Romano",       "nr_totale_orli": 12, "nr_totale_fondi": 8,  "nr_totale_pareti": 145, "nr_totale_anse": 4,  "mni": 5, "peso_totale": "1240 g" }, "plugins": {} }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 POST {{base_url}}/{{app_name}}/api/record/m_reperti_in_us
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "core": { "id_link": {{us_id_2}},  "materiale_classe": "Ceramica da trasporto", "forma_tipo": "Anfora", "forma_completa": 0, "datazione_generica": "Romano",       "nr_totale_orli": 6,  "nr_totale_fondi": 3,  "nr_totale_pareti": 220, "nr_totale_anse": 12, "mni": 3, "peso_totale": "3680 g" }, "plugins": {} }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 POST {{base_url}}/{{app_name}}/api/record/m_reperti_in_us
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "core": { "id_link": {{us_id_5}},  "materiale_classe": "Ceramica da cucina",    "forma_tipo": "Olla",   "forma_completa": 0, "datazione_generica": "Basso Medioevo","nr_totale_orli": 8,  "nr_totale_fondi": 6,  "nr_totale_pareti": 98,  "nr_totale_anse": 0,  "mni": 4, "peso_totale": "980 g" }, "plugins": {} }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 POST {{base_url}}/{{app_name}}/api/record/m_reperti_in_us
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "core": { "id_link": {{us_id_9}},  "materiale_classe": "Ceramica depurata",     "forma_tipo": "Coppa",  "forma_completa": 1, "datazione_generica": "Ferro",        "nr_totale_orli": 3,  "nr_totale_fondi": 2,  "nr_totale_pareti": 41,  "nr_totale_anse": 0,  "mni": 2, "peso_totale": "320 g" }, "plugins": {} }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 POST {{base_url}}/{{app_name}}/api/record/m_reperti_in_us
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "core": { "id_link": {{us_id_12}}, "materiale_classe": "Ceramica depurata",     "forma_tipo": "Piatto", "forma_completa": 0, "datazione_generica": "Ferro",        "nr_totale_orli": 5,  "nr_totale_fondi": 4,  "nr_totale_pareti": 67,  "nr_totale_anse": 0,  "mni": 3, "peso_totale": "560 g" }, "plugins": {} }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 POST {{base_url}}/{{app_name}}/api/record/m_reperti_in_us
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "core": { "id_link": {{us_id_19}}, "materiale_classe": "Ceramica da trasporto", "forma_tipo": "Anfora", "forma_completa": 0, "datazione_generica": "Romano",       "nr_totale_orli": 24, "nr_totale_fondi": 15, "nr_totale_pareti": 530, "nr_totale_anse": 48, "mni": 12, "peso_totale": "18500 g" }, "plugins": {} }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 POST {{base_url}}/{{app_name}}/api/record/m_reperti_in_us
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "core": { "id_link": {{us_id_21}}, "materiale_classe": "Ceramica da mensa",    "forma_tipo": "Coppa",  "forma_completa": 1, "datazione_generica": "Ferro",        "nr_totale_orli": 2,  "nr_totale_fondi": 2,  "nr_totale_pareti": 18,  "nr_totale_anse": 2,  "mni": 1, "peso_totale": "145 g" }, "plugins": {} }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 POST {{base_url}}/{{app_name}}/api/record/m_reperti_in_us
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "core": { "id_link": {{us_id_28}}, "materiale_classe": "Ceramica da trasporto", "forma_tipo": "Anfora", "forma_completa": 0, "datazione_generica": "Romano",       "nr_totale_orli": 42, "nr_totale_fondi": 38, "nr_totale_pareti": 820, "nr_totale_anse": 84, "mni": 21, "peso_totale": "65000 g" }, "plugins": {} }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 
 # ── 19l. m_reperti_in_complessi (plugin → complessi) ─────────────────
@@ -2026,30 +2066,40 @@ Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "core": { "id_link": {{compl_edif_a}},   "materiale_classe": "Ceramica da mensa",    "forma_tipo": "Coppa",  "forma_completa": 0, "datazione_generica": "Romano",       "nr_totale_orli": 45, "nr_totale_fondi": 32, "nr_totale_pareti": 680, "nr_totale_anse": 12, "mni": 18, "peso_totale": "8400 g" }, "plugins": {} }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 POST {{base_url}}/{{app_name}}/api/record/m_reperti_in_complessi
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "core": { "id_link": {{compl_edif_a}},   "materiale_classe": "Ceramica da trasporto","forma_tipo": "Anfora", "forma_completa": 0, "datazione_generica": "Romano",       "nr_totale_orli": 18, "nr_totale_fondi": 12, "nr_totale_pareti": 340, "nr_totale_anse": 36, "mni": 9, "peso_totale": "22000 g" }, "plugins": {} }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 POST {{base_url}}/{{app_name}}/api/record/m_reperti_in_complessi
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "core": { "id_link": {{compl_pars_rust}}, "materiale_classe": "Ceramica da trasporto","forma_tipo": "Anfora", "forma_completa": 0, "datazione_generica": "Romano",       "nr_totale_orli": 86, "nr_totale_fondi": 71, "nr_totale_pareti": 1840,"nr_totale_anse": 172,"mni": 43, "peso_totale": "145000 g" }, "plugins": {} }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 POST {{base_url}}/{{app_name}}/api/record/m_reperti_in_complessi
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "core": { "id_link": {{compl_necr}},      "materiale_classe": "Ceramica da mensa",    "forma_tipo": "Coppa",  "forma_completa": 1, "datazione_generica": "Ferro",        "nr_totale_orli": 12, "nr_totale_fondi": 10, "nr_totale_pareti": 89,  "nr_totale_anse": 8,  "mni": 6, "peso_totale": "1250 g" }, "plugins": {} }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 POST {{base_url}}/{{app_name}}/api/record/m_reperti_in_complessi
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "core": { "id_link": {{compl_dep_anf}},   "materiale_classe": "Ceramica da trasporto","forma_tipo": "Anfora", "forma_completa": 0, "datazione_generica": "Romano",       "nr_totale_orli": 156,"nr_totale_fondi": 148,"nr_totale_pareti": 3200,"nr_totale_anse": 312,"mni": 78, "peso_totale": "380000 g" }, "plugins": {} }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 
 # ── 19m. Geodata reperti ────────────────────────────────────────────
@@ -4908,35 +4958,32 @@ HTTP 200
 jsonpath "$.status" == "success"
 
 # ── 19z-16. combo_select: un valore libero fuori vocabolario forma_tipo ───
-# NOTA: come i m_reperti_in_us/misure/m_reperti_in_complessi di 19j-19l, questo
-# insert non asserisce $.status perche' fallisce silenziosamente (HTTP 200 ma
-# {"status":"error"}) su tutte le tabelle plugin generiche (is_plugin=1): manca
-# la colonna "creator" nello schema creato da Manage per queste tabelle, quindi
-# Record\Persist non riesce a fare l'INSERT. Bug preesistente, non introdotto
-# da questa modifica; segnalato in project_issue_tracker (#61), non risolto qui
-# perche' e' una modifica di struttura/codice, fuori scope per questa sessione
-# di soli dati demo. Il payload resta pronto per quando verra' corretto.
 
 POST {{base_url}}/{{app_name}}/api/record/m_reperti_in_us
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "core": { "id_link": {{us_id_65_rc}}, "materiale_classe": "Metallo non ferroso", "forma_tipo": "Ceppo d'ancora in piombo", "forma_completa": 0, "datazione_generica": "Romano", "nr_totale_orli": 0, "nr_totale_fondi": 0, "nr_totale_pareti": 0, "nr_totale_anse": 0, "mni": 1, "peso_totale": "38000 g", "note": "forma_tipo valorizzato con testo libero non presente nel vocabolario, a dimostrazione del combo_select." }, "plugins": {} }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 # ── 19z-17. Misure sui reperti più ricchi delle nuove 3 us capostipite ────
-# Stesso bug preesistente di 19z-16 (tabella plugin senza colonna creator).
 
 POST {{base_url}}/{{app_name}}/api/record/misure
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "core": { "id_link": {{rep_id_21}}, "tipo_misura": "Diametro", "valore": "9.4", "unita": "cm" }, "plugins": {} }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 POST {{base_url}}/{{app_name}}/api/record/misure
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 { "core": { "id_link": {{rep_id_21}}, "tipo_misura": "Altezza", "valore": "4.1", "unita": "cm" }, "plugins": {} }
 HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 # ── 19z-18. Reperti già esistenti: valorizza i campi finora mai usati sui primi 3 ───
 

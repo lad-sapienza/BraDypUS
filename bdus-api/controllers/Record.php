@@ -305,13 +305,19 @@ class Record extends \Bdus\Controller
       $schema = $this->buildTableSchema($tb);
 
       if ($id) {
+        $isPlugin = (bool) $this->cfg->get("tables.{$tb}.is_plugin");
         $reader  = new \Record\Read($id, null, $tb, $this->db, $this->cfg);
         $full    = $reader->getFull();
         // getFull() stores the full field object in metadata.rec_id — fix to int
         $recId   = $full['core']['id']['val'] ?? $id;
         // Needed so self_writer's can_edit/can_delete reflect actual ownership —
         // saveRecord()/erase() enforce the same creator-aware check server-side.
-        $creator = (int) ($full['core']['creator']['val'] ?? 0) ?: null;
+        // Plugin tables have no `creator` of their own (issue #64) — reading it
+        // straight from $full['core'] as before always resolved to null for
+        // them, hiding Edit/Delete for a self_writer who legitimately owns the
+        // host record even though the backend now allows the actual edit/erase.
+        // getCore() is cached, so this reuses the query getFull() already ran.
+        $creator = $this->resolveOwnerCreator($tb, $reader, $isPlugin);
       } else {
         $full    = $this->buildEmptyRecord($tb, $schema);
         $recId   = null;
@@ -660,7 +666,16 @@ class Record extends \Bdus\Controller
 
       $source = $rows[0];
       unset($source['id']);
-      $source['creator'] = \Auth\CurrentUser::id() ?: 0;
+
+      // Plugin tables (is_plugin=1) have no `creator` column by design —
+      // see resolveOwnerCreator() / issue #64. `SELECT *` above wouldn't
+      // have included one either, but the unconditional set below used to
+      // add it anyway, breaking the INSERT with "no such column".
+      if ((bool) $this->cfg->get("tables.{$tb}.is_plugin")) {
+        unset($source['creator']);
+      } else {
+        $source['creator'] = \Auth\CurrentUser::id() ?: 0;
+      }
 
       $fields       = array_keys($source);
       $placeholders = implode(', ', array_fill(0, count($fields), '?'));
@@ -681,6 +696,34 @@ class Record extends \Bdus\Controller
   }
 
   // ── v5 persistence endpoint ──────────────────────────────────────────────
+
+  /**
+   * Resolves the "owner" user id used by self_writer ownership checks.
+   *
+   * Plugin tables (is_plugin=1) never have their own `creator` column by
+   * design — ownership is inherited from the host record via `id_link`, not
+   * stored locally (see issue #64). For a plugin table this reads `id_link`
+   * off the given row, loads the host record (`tables.{tb}.plugin_of`), and
+   * returns *its* creator instead. Any failure to resolve (missing
+   * plugin_of, dangling id_link) returns null, which denies self_writer but
+   * leaves writer/admin unaffected — Authorization::can() only consults the
+   * returned value for the self_writer bracket.
+   */
+  private function resolveOwnerCreator(string $tb, \Record\Read $reader, bool $isPlugin): ?int
+  {
+    if (!$isPlugin) {
+      return (int) ($reader->getCore('creator', true) ?? 0) ?: null;
+    }
+
+    $hostTb = $this->cfg->get("tables.{$tb}.plugin_of");
+    $idLink = (int) ($reader->getCore('id_link', true) ?? 0) ?: null;
+    if (!$hostTb || !$idLink) {
+      return null;
+    }
+
+    $hostReader = new \Record\Read($idLink, null, $hostTb, $this->db, $this->cfg);
+    return (int) ($hostReader->getCore('creator', true) ?? 0) ?: null;
+  }
 
   /**
    * Save (create or update) a single record.
@@ -715,6 +758,13 @@ class Record extends \Bdus\Controller
       return;
     }
 
+    // Plugin tables (is_plugin=1) never have their own `creator` column by
+    // design — ownership is inherited from the host record via id_link, not
+    // stored locally. Resolved once here and reused below: the INSERT path
+    // skips writing `creator` entirely, the UPDATE path resolves it through
+    // the host table for the self_writer ownership check.
+    $isPlugin = (bool) $this->cfg->get("tables.{$tb}.is_plugin");
+
     // Creating and updating a record carry different privilege thresholds:
     // add_new (self_writer included, ≤25) for new records, edit for existing
     // ones — where self_writer may only edit records they themselves created
@@ -724,7 +774,8 @@ class Record extends \Bdus\Controller
     $reader = null;
     if ($id) {
       $reader  = new \Record\Read($id, null, $tb, $this->db, $this->cfg);
-      $creator = (int) ($reader->getCore('creator', true) ?? 0) ?: null;
+      $creator = $this->resolveOwnerCreator($tb, $reader, $isPlugin);
+
       if (!\Auth\Authorization::can('edit', $creator)) {
         $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
         return;
@@ -784,10 +835,16 @@ class Record extends \Bdus\Controller
         // and hand-craft the model with _val markers for every submitted field.
 
         // Server-side system fields: always override client-supplied values.
-        // `creator` is NOT NULL in the DB and must be the authenticated user's id.
         // `id` must never be supplied on insert (auto-assigned by DB).
         unset($core['id']);
-        if (array_key_exists('creator', $core)) {
+
+        // `creator` is NOT NULL and must be the authenticated user's id — but
+        // only for real tables. Plugin tables (is_plugin=1) have no `creator`
+        // column by design (ownership is inherited from the host record via
+        // id_link), so any client-supplied value is dropped instead.
+        if ($isPlugin) {
+          unset($core['creator']);
+        } elseif (array_key_exists('creator', $core)) {
           $core['creator'] = \Auth\CurrentUser::id() ?: 0;
         }
 
@@ -796,8 +853,9 @@ class Record extends \Bdus\Controller
           $coreModel[$fld] = ['name' => $fld, '_val' => $val];
         }
 
-        // Ensure creator is always written, even if frontend omitted it entirely.
-        if (!isset($coreModel['creator'])) {
+        // Ensure creator is always written for real tables, even if the
+        // frontend omitted it entirely.
+        if (!$isPlugin && !isset($coreModel['creator'])) {
           $coreModel['creator'] = ['name' => 'creator', '_val' => \Auth\CurrentUser::id() ?: 0];
         }
 
@@ -1959,6 +2017,12 @@ class Record extends \Bdus\Controller
     // Accept both a single id and an array of ids
     $ids = is_array($raw) ? array_map('intval', $raw) : [(int)$raw];
 
+    // Plugin tables (is_plugin=1) have no `creator` of their own — see
+    // resolveOwnerCreator() / issue #64. Resolved once here, outside the
+    // loop, since it's the same for every id in this batch (all deleted
+    // from the same $tb).
+    $isPlugin = (bool) $this->cfg->get("tables.{$tb}.is_plugin");
+
     $ok    = [];
     $error = [];
 
@@ -1968,7 +2032,7 @@ class Record extends \Bdus\Controller
         $reader = new \Record\Read($id, null, $tb, $this->db, $this->cfg);
 
         if (!$hasBlanketEdit) {
-          $creator = (int) ($reader->getCore('creator', true) ?? 0) ?: null;
+          $creator = $this->resolveOwnerCreator($tb, $reader, $isPlugin);
           if (!\Auth\Authorization::can('edit', $creator)) {
             $error[] = $id;
             continue;

@@ -85,4 +85,24 @@ class RecordCtrlDuplicateTest extends BdusTestCase
         // Restore
         $this->setPrivilege(1);
     }
+
+    public function testDuplicateRecordOnPluginTableSucceeds(): void
+    {
+        // Regression test for issue #64 (duplicate path): `tags` (is_plugin=1,
+        // plugin_of='items') has no `creator` column by design — the
+        // unconditional `$source['creator'] = ...` used to add one anyway,
+        // breaking the INSERT with "no such column".
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => 'tags', 'id' => 1], []);
+        $res  = $this->callController($ctrl, 'duplicateRecord');
+
+        $this->assertSame('success', $res['status']);
+        $this->assertSame('success_duplicated', $res['code']);
+        $newId = (int) $res['id'];
+        $this->assertGreaterThan(0, $newId);
+
+        $copy = static::$db->query('SELECT label, id_link FROM tags WHERE id = ?', [$newId], 'read');
+        $this->assertSame('tag-a', $copy[0]['label']);
+
+        static::$db->query('DELETE FROM tags WHERE id = ?', [$newId], 'boolean');
+    }
 }

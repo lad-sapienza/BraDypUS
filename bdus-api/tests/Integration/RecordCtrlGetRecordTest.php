@@ -148,6 +148,57 @@ class RecordCtrlGetRecordTest extends BdusTestCase
         static::$db->query('DELETE FROM items WHERE id = ?', [$ownId], 'boolean');
     }
 
+    public function testCanEditAndCanDeleteAreTrueForSelfWriterOnOwnPluginRow(): void
+    {
+        // Regression test for issue #64 (read path): `tags` (is_plugin=1,
+        // plugin_of='items') has no `creator` column of its own — ownership
+        // must resolve through the host `items` row via id_link, exactly like
+        // saveRecord()/erase() already enforce server-side. Before the fix,
+        // getRecord() read `creator` straight off the plugin row (always
+        // null there), so can_edit/can_delete were always false here even
+        // though the backend allowed the actual edit/erase.
+        static::$db->query(
+            "INSERT INTO items (creator, name, description, status) VALUES ('42', 'Owner of tag', 'x', 'active')",
+            [], 'boolean'
+        );
+        $ownItemId = (int) static::$db->query('SELECT last_insert_rowid() AS id', [], 'read')[0]['id'];
+        static::$db->query(
+            'INSERT INTO tags (label, id_link) VALUES (?, ?)',
+            ['own-tag-read', $ownItemId], 'boolean'
+        );
+        $ownTagId = (int) static::$db->query('SELECT last_insert_rowid() AS id', [], 'read')[0]['id'];
+
+        \Auth\CurrentUser::set([
+            'id' => 42, 'name' => 'Self Writer', 'email' => 'sw@example.com',
+            'privilege' => 25, 'app' => 'test',
+        ]);
+
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => 'tags', 'id' => $ownTagId]);
+        $res  = $this->callController($ctrl, 'getRecord');
+        $this->assertTrue($res['metadata']['can_edit'],   'self_writer owns the host item behind this tag');
+        $this->assertTrue($res['metadata']['can_delete'], 'self_writer owns the host item behind this tag');
+
+        $this->setPrivilege(1);
+        static::$db->query('DELETE FROM tags WHERE id = ?', [$ownTagId], 'boolean');
+        static::$db->query('DELETE FROM items WHERE id = ?', [$ownItemId], 'boolean');
+    }
+
+    public function testCanEditAndCanDeleteAreFalseForSelfWriterOnPluginRowOfOthersRecord(): void
+    {
+        // tag id=1 ('tag-a') is linked to item id=1, creator='admin' — not user 42.
+        \Auth\CurrentUser::set([
+            'id' => 42, 'name' => 'Self Writer', 'email' => 'sw@example.com',
+            'privilege' => 25, 'app' => 'test',
+        ]);
+
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => 'tags', 'id' => 1]);
+        $res  = $this->callController($ctrl, 'getRecord');
+        $this->assertFalse($res['metadata']['can_edit'],   'self_writer does not own the host item behind tag id=1');
+        $this->assertFalse($res['metadata']['can_delete'], 'self_writer does not own the host item behind tag id=1');
+
+        $this->setPrivilege(1);
+    }
+
     public function testGetRecordCoreHasCorrectFields(): void
     {
         $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'id' => 1]);

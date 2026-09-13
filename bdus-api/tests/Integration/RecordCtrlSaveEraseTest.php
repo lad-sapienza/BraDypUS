@@ -254,6 +254,111 @@ class RecordCtrlSaveEraseTest extends BdusTestCase
         static::$db->query('DELETE FROM tags WHERE id_link = ?', [$newId], 'boolean');
     }
 
+    // ── saveRecord — plugin tables (is_plugin=1, no local `creator`) ──────
+    //
+    // Regression tests for issue #64: `tags` is the fixture's plugin table
+    // (is_plugin=1, plugin_of='items', no `creator` column by design —
+    // ownership is inherited from the host `items` row via id_link).
+    // saveRecord() must never force a `creator` write on such tables, and
+    // must resolve self_writer ownership through the host record instead.
+
+    public function testSaveRecordInsertOnPluginTableOmittingCreatorSucceeds(): void
+    {
+        // Client omits `creator` entirely — the "ensure always written" branch
+        // used to add it unconditionally, breaking every plugin-table INSERT.
+        $ctrl = $this->makeController(
+            'Bdus\\Controllers\\Record',
+            [],
+            ['tb' => 'tags', 'core' => ['id_link' => 1, 'label' => 'plugin-insert-no-creator']]
+        );
+        $res = $this->callController($ctrl, 'saveRecord');
+
+        $this->assertSame('success', $res['status']);
+        $newId = (int) $res['id'];
+        $this->assertGreaterThan(0, $newId);
+
+        $row = static::$db->query('SELECT label FROM tags WHERE id = ?', [$newId], 'read');
+        $this->assertSame('plugin-insert-no-creator', $row[0]['label']);
+
+        static::$db->query('DELETE FROM tags WHERE id = ?', [$newId], 'boolean');
+    }
+
+    public function testSaveRecordInsertOnPluginTableWithClientSuppliedCreatorIsStripped(): void
+    {
+        // Client explicitly sends `creator` — the other branch used to
+        // overwrite it with the current user id and still include it in the
+        // INSERT, which fails just the same on a table with no such column.
+        $ctrl = $this->makeController(
+            'Bdus\\Controllers\\Record',
+            [],
+            ['tb' => 'tags', 'core' => ['id_link' => 1, 'label' => 'plugin-insert-with-creator', 'creator' => 'sneaky']]
+        );
+        $res = $this->callController($ctrl, 'saveRecord');
+
+        $this->assertSame('success', $res['status']);
+        $newId = (int) $res['id'];
+
+        static::$db->query('DELETE FROM tags WHERE id = ?', [$newId], 'boolean');
+    }
+
+    public function testSelfWriterCanEditPluginRowOfOwnRecord(): void
+    {
+        // Item owned by user 42, with a tag linked to it — ownership of the
+        // tag must resolve through items.creator via id_link, not a local
+        // (non-existent) `creator` column on `tags`.
+        static::$db->query(
+            "INSERT INTO items (creator, name, description, status) VALUES ('42', 'Owner of tag', 'x', 'active')",
+            [], 'boolean'
+        );
+        $ownItemId = (int) static::$db->query('SELECT last_insert_rowid() AS id', [], 'read')[0]['id'];
+        static::$db->query(
+            'INSERT INTO tags (label, id_link) VALUES (?, ?)',
+            ['own-tag', $ownItemId], 'boolean'
+        );
+        $ownTagId = (int) static::$db->query('SELECT last_insert_rowid() AS id', [], 'read')[0]['id'];
+
+        \Auth\CurrentUser::set([
+            'id' => 42, 'name' => 'Self Writer', 'email' => 'sw@example.com',
+            'privilege' => 25, 'app' => 'test',
+        ]);
+
+        $ctrl = $this->makeController(
+            'Bdus\\Controllers\\Record',
+            [],
+            ['tb' => 'tags', 'id' => $ownTagId, 'core' => ['label' => 'own-tag-edited']]
+        );
+        $res = $this->callController($ctrl, 'saveRecord');
+
+        $this->assertSame('success', $res['status']);
+
+        $this->setPrivilege(1);
+        static::$db->query('DELETE FROM tags WHERE id = ?', [$ownTagId], 'boolean');
+        static::$db->query('DELETE FROM items WHERE id = ?', [$ownItemId], 'boolean');
+    }
+
+    public function testSelfWriterCannotEditPluginRowOfOthersRecord(): void
+    {
+        // tag id=1 (fixture 'tag-a') is linked to item id=1, creator='admin' — not user 42.
+        \Auth\CurrentUser::set([
+            'id' => 42, 'name' => 'Self Writer', 'email' => 'sw@example.com',
+            'privilege' => 25, 'app' => 'test',
+        ]);
+
+        $ctrl = $this->makeController(
+            'Bdus\\Controllers\\Record',
+            [],
+            ['tb' => 'tags', 'id' => 1, 'core' => ['label' => 'should-not-be-saved']]
+        );
+        $res = $this->callController($ctrl, 'saveRecord');
+
+        $this->assertSame('not_enough_privilege', $res['code']);
+
+        $row = static::$db->query('SELECT label FROM tags WHERE id = ?', [1], 'read');
+        $this->assertSame('tag-a', $row[0]['label']);
+
+        $this->setPrivilege(1);
+    }
+
     // ── erase ─────────────────────────────────────────────────────────────
 
     public function testEraseDeletesRecord(): void
@@ -342,6 +447,58 @@ class RecordCtrlSaveEraseTest extends BdusTestCase
         // Confirm id=1 is untouched
         $row = static::$db->query('SELECT id FROM items WHERE id = ?', [1], 'read');
         $this->assertNotEmpty($row);
+
+        $this->setPrivilege(1);
+    }
+
+    public function testSelfWriterCanErasePluginRowOfOwnRecord(): void
+    {
+        // Regression test for issue #64 (erase path): ownership of a plugin
+        // row must resolve through the host record's creator via id_link,
+        // not a local (non-existent) `creator` column on `tags`.
+        static::$db->query(
+            "INSERT INTO items (creator, name, description, status) VALUES ('42', 'Owner of tag to erase', 'x', 'active')",
+            [], 'boolean'
+        );
+        $ownItemId = (int) static::$db->query('SELECT last_insert_rowid() AS id', [], 'read')[0]['id'];
+        static::$db->query(
+            'INSERT INTO tags (label, id_link) VALUES (?, ?)',
+            ['own-tag-to-erase', $ownItemId], 'boolean'
+        );
+        $ownTagId = (int) static::$db->query('SELECT last_insert_rowid() AS id', [], 'read')[0]['id'];
+
+        \Auth\CurrentUser::set([
+            'id' => 42, 'name' => 'Self Writer', 'email' => 'sw@example.com',
+            'privilege' => 25, 'app' => 'test',
+        ]);
+
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => 'tags', 'id' => $ownTagId]);
+        $res  = $this->callController($ctrl, 'erase');
+
+        $this->assertSame('success', $res['status']);
+        $this->assertSame('all_record_deleted', $res['code']);
+
+        $this->assertEmpty(static::$db->query('SELECT id FROM tags WHERE id = ?', [$ownTagId], 'read'));
+
+        $this->setPrivilege(1);
+        static::$db->query('DELETE FROM items WHERE id = ?', [$ownItemId], 'boolean');
+    }
+
+    public function testSelfWriterCannotErasePluginRowOfOthersRecord(): void
+    {
+        // tag id=1 ('tag-a') is linked to item id=1, creator='admin' — not user 42.
+        \Auth\CurrentUser::set([
+            'id' => 42, 'name' => 'Self Writer', 'email' => 'sw@example.com',
+            'privilege' => 25, 'app' => 'test',
+        ]);
+
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => 'tags', 'id' => 1]);
+        $res  = $this->callController($ctrl, 'erase');
+
+        $this->assertSame('error', $res['status']);
+        $this->assertSame('no_record_deleted', $res['code']);
+
+        $this->assertNotEmpty(static::$db->query('SELECT id FROM tags WHERE id = ?', [1], 'read'));
 
         $this->setPrivilege(1);
     }

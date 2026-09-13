@@ -29,7 +29,7 @@ Select a table to edit its settings:
 |---|---|
 | **Label** | Display name |
 | **Order field** | Default sort column (e.g. `id` or `date`) |
-| **Preview fields** | Comma-separated column names shown in the record list; also used by fast search |
+| **Preview fields** | Columns shown in the record list (also used by fast search) — pick them from the dropdown, then drag the chips below to set their order |
 | **Plugin tables** | Sub-tables attached inline inside RecordView |
 | **Backlink tables** | Tables that reference this table; shown as a read-only panel in RecordView |
 | **Cross-table links** | Tables whose records can be manually linked to records of this table |

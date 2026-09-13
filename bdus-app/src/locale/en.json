@@ -1086,6 +1086,7 @@
   "select_table": "Select table",
   "select_field": "Select field",
   "select_fields": "Select fields",
+  "remove_field": "Remove",
   "loading": "Loading…",
 
   "help_table_name": "Internal database name. Only lowercase letters and underscores.",

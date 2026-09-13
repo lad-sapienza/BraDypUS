@@ -18,6 +18,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Config → Tables: Preview fields are now reorderable by drag** (#60). The
+  multi-select still adds/removes fields; a new row of chips below it (drag
+  handle, same pattern as the record file gallery) lets you drag them into
+  the order they should appear in the record list, instead of having to
+  clear the whole selection and re-pick every field in the right order.
+  - `bdus-app/src/components/config/ConfigTableForm.vue`
+  - Docs: `bdus-docs/guide/setup/preview-config.md`,
+    `bdus-docs/guide/setup/create-table-sites.md` (both described a
+    comma-separated text field that hasn't existed for a while — corrected
+    while in there), re-shot `table-settings.png`
+
 - **Image settings extended beyond max size**: App settings now optionally
   convert uploaded raster images to a standard web format (WebP or JPG) at a
   configurable quality (1-100, default 85) and DPI (default 72), alongside

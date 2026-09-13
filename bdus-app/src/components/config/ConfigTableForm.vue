@@ -111,7 +111,7 @@
 
         </div>
 
-        <!-- Preview fields (#21: MultiSelect) -->
+        <!-- Preview fields (#21: MultiSelect; #reorder: drag handle chips) -->
         <div class="cfg-form-field">
           <label>{{ t('preview_flds') }} <span class="cfg-req">*</span></label>
           <ASelect
@@ -121,6 +121,23 @@
             size="small"
             :placeholder="t('select_fields')"
           />
+          <div v-if="form.preview.length" ref="previewSortableEl" class="preview-chip-list">
+            <span
+              v-for="fld in form.preview"
+              :key="fld"
+              :data-field="fld"
+              class="preview-chip"
+            >
+              <span class="drag-handle" :title="t('drag_to_sort')"><BarsOutlined /></span>
+              <span class="preview-chip-label">{{ fieldLabels[fld] ?? fld }}</span>
+              <button
+                type="button"
+                class="preview-chip-remove"
+                :title="t('remove_field')"
+                @click="removePreviewField(fld)"
+              ><CloseOutlined /></button>
+            </span>
+          </div>
           <small class="cfg-hint">{{ t('help_table_preview_flds') }}</small>
         </div>
       </section>
@@ -233,8 +250,9 @@
 </template>
 
 <script setup>
-import { CheckOutlined, DeleteOutlined, EditOutlined, LoadingOutlined, SaveOutlined, TableOutlined, UnorderedListOutlined } from '@ant-design/icons-vue'
-import { ref, computed, watch, onMounted } from 'vue'
+import { BarsOutlined, CheckOutlined, CloseOutlined, DeleteOutlined, EditOutlined, LoadingOutlined, SaveOutlined, TableOutlined, UnorderedListOutlined } from '@ant-design/icons-vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import Sortable from 'sortablejs'
 import {
   Button as AButton,
   Modal as AModal,
@@ -302,6 +320,39 @@ const radiocarbonActive = computed(() => form.value?.plugin?.includes(`${props.t
 const fieldOptions = computed(() =>
   Object.entries(fieldLabels.value).map(([k, v]) => ({ value: k, label: v }))
 )
+
+// ── Preview fields: drag-to-reorder (mirrors FileGallery.vue's pattern) ────
+const previewSortableEl = ref(null)
+let   previewSortable    = null
+
+function initPreviewSortable() {
+  if (!previewSortableEl.value) return
+  previewSortable = Sortable.create(previewSortableEl.value, {
+    handle:    '.drag-handle',
+    animation: 150,
+    onEnd:     () => {
+      form.value.preview = [...previewSortableEl.value.children].map(el => el.dataset.field)
+    },
+  })
+}
+
+function destroyPreviewSortable() {
+  previewSortable?.destroy()
+  previewSortable = null
+}
+
+// The chip list only exists in the DOM while form.preview.length > 0 (v-if) —
+// (re)create/destroy Sortable whenever that toggles.
+watch(previewSortableEl, (el) => {
+  destroyPreviewSortable()
+  if (el) initPreviewSortable()
+})
+
+function removePreviewField(fld) {
+  form.value.preview = form.value.preview.filter(f => f !== fld)
+}
+
+onUnmounted(destroyPreviewSortable)
 
 // ── Data loading ───────────────────────────────────────────────────────────
 async function load() {
@@ -652,6 +703,55 @@ onMounted(load)
   color: var(--p-red-600);
   margin: 0;
 }
+
+/* Preview fields: reorderable chips */
+.preview-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.preview-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.15rem 0.4rem;
+  border: 1px solid var(--p-content-border-color);
+  border-radius: 4px;
+  background: var(--p-content-background);
+  font-size: 0.78rem;
+}
+
+.preview-chip.sortable-ghost {
+  opacity: 0.4;
+  background: var(--p-primary-50, #e8f0fe);
+}
+
+.preview-chip .drag-handle {
+  color: var(--p-text-muted-color);
+  cursor: grab;
+  font-size: 0.85rem;
+  line-height: 1;
+}
+.preview-chip .drag-handle:active { cursor: grabbing; }
+
+.preview-chip-label {
+  white-space: nowrap;
+}
+
+.preview-chip-remove {
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  padding: 0;
+  margin-left: 0.1rem;
+  color: var(--p-text-muted-color);
+  cursor: pointer;
+  font-size: 0.72rem;
+  line-height: 1;
+}
+.preview-chip-remove:hover { color: var(--p-red-500); }
 
 /* Rename dialog */
 .cfg-rename-body {

@@ -1086,6 +1086,7 @@
   "select_table": "Seleziona tabella",
   "select_field": "Seleziona campo",
   "select_fields": "Seleziona campi",
+  "remove_field": "Rimuovi",
   "loading": "Caricamento…",
 
   "help_table_name": "Nome interno nel database. Solo lettere minuscole e underscore.",

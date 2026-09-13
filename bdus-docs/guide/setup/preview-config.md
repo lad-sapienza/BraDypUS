@@ -9,18 +9,15 @@ which fields are searched by the fast-search box.
 
 ## Setting preview fields
 
-In **Config → Tables**, select a table and edit the **Preview fields** property.
-Enter a comma-separated list of field names in the order you want them to appear:
+In **Config → Tables**, select a table (**Table settings** icon) and edit the
+**Preview fields** property: pick the fields from the dropdown, then drag the
+chips below it (using the ☰ handle) into the order you want them to appear.
 
-```
-sigla, descrizione, periodo
-```
+![DataView showing a record list with the configured preview columns](/images/v5/setup/preview-fields-result.png)
 
 The record list will show exactly these columns, in this order.
 The first preview field is also used as the record's display label in cross-table
 dropdowns and in the Harris Matrix node labels.
-
-![DataView showing a record list with the configured preview columns](/images/v5/setup/preview-fields-result.png)
 
 ## Column toggler
 

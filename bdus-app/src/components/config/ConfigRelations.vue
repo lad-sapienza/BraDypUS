@@ -371,7 +371,7 @@ async function saveRelation() {
       toast.add({
         severity: 'warn',
         summary:  t('relation_saved'),
-        detail:   t('relation_orphans_warning', { count: res.orphans }),
+        detail:   t('relation_orphans_warning', res.orphans),
         life: 6000,
       })
       cancelForm()
@@ -406,7 +406,7 @@ async function applyAll() {
     toast.add({
       severity: sev,
       summary:  t('constraints_applied'),
-      detail:   t('constraints_applied_detail', { applied: res.applied, skipped: res.skipped }),
+      detail:   t('constraints_applied_detail', res.applied, res.skipped),
       life: 5000,
     })
   } catch (e) {

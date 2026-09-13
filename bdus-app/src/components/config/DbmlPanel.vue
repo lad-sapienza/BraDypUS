@@ -225,9 +225,9 @@ async function doApply() {
     if (res.status === 'error') throw new Error(t(res.code))
     const { created, skipped, warnings } = res.result
     const parts = []
-    if (created.length)  parts.push(t('dbml_created_tables', { n: created.length, names: created.join(', ') }))
-    if (skipped.length)  parts.push(t('dbml_skipped_tables', { n: skipped.length, names: skipped.join(', ') }))
-    if (warnings.length) parts.push(t('dbml_warnings_count', { n: warnings.length }))
+    if (created.length)  parts.push(t('dbml_created_tables', created.length, created.join(', ')))
+    if (skipped.length)  parts.push(t('dbml_skipped_tables', skipped.length, skipped.join(', ')))
+    if (warnings.length) parts.push(t('dbml_warnings_count', warnings.length))
     applyResult.value = { severity: skipped.length ? 'warning' : 'success', text: parts.join(' · ') }
     if (created.length) emit('table-added')
     toast.add({ severity: 'success', summary: t('dbml_apply'), detail: parts[0], life: 4000 })

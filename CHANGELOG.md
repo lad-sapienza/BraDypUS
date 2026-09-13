@@ -32,6 +32,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `bdus-app/src/components/record/FieldEditor.vue`,
     `bdus-app/src/locale/en.json`, `bdus-app/src/locale/it.json`
 
+- **Some toasts showed literal `{count}`/`{applied}`/`{skipped}` text instead
+  of real numbers** — e.g. Config → Relations → "Apply all" read "Constraints
+  applied: {applied} applied, {skipped} skipped (orphans or errors)". The
+  `t()` i18n helper only ever substituted positional `%s` placeholders, but
+  a handful of call sites (and their locale strings) had been written
+  against `{name}`-style placeholders instead, which were silently never
+  replaced. `t()` now also accepts a single plain-object argument for
+  `{name}` substitution — needed by the DBML import preview, which renders
+  a generic list of heterogeneous `{code, ...fields}` error/warning objects
+  where each code has different dynamic fields — while the other affected
+  call sites were converted to the existing `%s` convention used
+  everywhere else.
+  - `bdus-app/src/i18n/index.js`, `bdus-app/src/components/config/ConfigRelations.vue`,
+    `bdus-app/src/components/config/DbmlPanel.vue`,
+    `bdus-app/src/locale/en.json`, `bdus-app/src/locale/it.json`
+
 ## [5.10.0] - 2026-09-13
 
 ### Changed

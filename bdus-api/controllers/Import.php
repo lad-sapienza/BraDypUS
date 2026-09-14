@@ -339,8 +339,13 @@ class Import extends \Bdus\Controller
                     $this->db->query("UPDATE {$tb} SET {$sets} WHERE id = ?", $vals, 'boolean');
                     $updated++;
                 } else {
-                    // Always set creator to the authenticated user
-                    $data['creator'] = \Auth\CurrentUser::id() ?: 0;
+                    // Always set creator to the authenticated user. `creator`
+                    // is a nullable FK to bdus_users(id) (ON DELETE SET NULL),
+                    // never a plain integer — 0 is never a valid user id, so a
+                    // falsy CurrentUser::id() (API key auth, no human identity
+                    // by design — see issue #56) must map to null, not 0, or
+                    // the INSERT violates the FK constraint.
+                    $data['creator'] = \Auth\CurrentUser::id() ?: null;
                     $cols = implode(', ', array_keys($data));
                     $phs  = implode(', ', array_fill(0, count($data), '?'));
                     $this->db->query(

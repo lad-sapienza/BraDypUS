@@ -60,6 +60,7 @@ jsonpath "$.status" == "success"
 jsonpath "$.code"   == "ok_api_key_created"
 [Captures]
 api_key_id2: jsonpath "$.id"
+api_key_raw: jsonpath "$.key"
 
 
 # ── 25e. Two keys in list ────────────────────────────────────────────
@@ -68,6 +69,27 @@ Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
 jsonpath "$.keys" count == 2
+
+
+# ── 25e-bis. Regression test for issue #56 ────────────────────────────
+# API-key auth has no human identity (Auth\CurrentUser::id() == 0), but
+# `creator` is a nullable FK to bdus_users(id) — writing the literal 0
+# (never a valid user id) used to violate the FK constraint on every
+# INSERT made via an API key, on any table, failing with a generic
+# "Database error" (HTTP 200, status: error). Use the raw key captured
+# above as a real Bearer token against a real Manage/Alter-created table
+# (siti — crud_test no longer exists at this point, dropped in phase 10)
+# — the in-memory PHPUnit fixture tables have no such FK, so only an
+# end-to-end request against a real app can catch this.
+POST {{base_url}}/{{app_name}}/api/record/siti
+Authorization: Bearer {{api_key_raw}}
+Content-Type: application/json
+{ "core": { "nome": "Inserted via API key (issue #56 regression)" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+jsonpath "$.code"   == "success_created"
+jsonpath "$.id"     isInteger
 
 
 # ── 25f. Revoke the first key ────────────────────────────────────────

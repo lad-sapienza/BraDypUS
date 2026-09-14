@@ -217,6 +217,50 @@ class RecordCtrlSaveEraseTest extends BdusTestCase
         static::$db->query('DELETE FROM items WHERE id = ?', [$newId], 'boolean');
     }
 
+    public function testSaveRecordInsertViaApiKeyStoresNullCreatorNotZero(): void
+    {
+        // Regression test for issue #56: API-key auth has no human identity —
+        // Auth\CurrentUser::id() returns 0 for it — but `creator` is a
+        // nullable FK to bdus_users(id) on real (Manage/Alter-created)
+        // tables, and 0 is never a valid user id. The fixture `items` table
+        // here is plain TEXT with no FK, so this can't reproduce the actual
+        // FK-violation crash (see 25_api_keys.hurl 25e-bis for that, against
+        // a real app) — but it does verify the code writes null, not 0/'0',
+        // both for the "client omits creator" and "client sends creator"
+        // branches (two distinct code paths before the #64 refactor, and
+        // still two distinct `?: null` call sites today).
+        \Auth\CurrentUser::set([
+            'id' => 0, 'name' => 'API Key: CI key', 'privilege' => 25, 'is_api_key' => true,
+        ]);
+
+        $ctrl = $this->makeController(
+            'Bdus\\Controllers\\Record',
+            [],
+            ['tb' => self::TB, 'core' => ['name' => 'Via API key, no creator sent', 'status' => 'active']]
+        );
+        $res = $this->callController($ctrl, 'saveRecord');
+        $this->assertSame('success', $res['status'], $res['code'] ?? '');
+        $newId1 = (int) $res['id'];
+
+        $ctrl2 = $this->makeController(
+            'Bdus\\Controllers\\Record',
+            [],
+            ['tb' => self::TB, 'core' => ['name' => 'Via API key, creator sent', 'status' => 'active', 'creator' => 'sneaky']]
+        );
+        $res2 = $this->callController($ctrl2, 'saveRecord');
+        $this->assertSame('success', $res2['status'], $res2['code'] ?? '');
+        $newId2 = (int) $res2['id'];
+
+        $this->setPrivilege(1);
+
+        foreach ([$newId1, $newId2] as $id) {
+            $row = static::$db->query('SELECT creator FROM items WHERE id = ?', [$id], 'read');
+            $this->assertNull($row[0]['creator'], "id=$id: creator must be null, not 0/'0', for API-key inserts");
+        }
+
+        static::$db->query('DELETE FROM items WHERE id IN (?, ?)', [$newId1, $newId2], 'boolean');
+    }
+
     public function testSaveRecordInsertWithPluginRow(): void
     {
         // Insert a new item AND a plugin (tag) row at the same time

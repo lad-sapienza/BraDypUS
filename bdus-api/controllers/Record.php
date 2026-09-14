@@ -674,7 +674,11 @@ class Record extends \Bdus\Controller
       if ((bool) $this->cfg->get("tables.{$tb}.is_plugin")) {
         unset($source['creator']);
       } else {
-        $source['creator'] = \Auth\CurrentUser::id() ?: 0;
+        // `creator` is a nullable FK to bdus_users(id) (ON DELETE SET NULL) —
+        // 0 is never a valid user id, so a falsy CurrentUser::id() (API key
+        // auth, which has no human identity by design — see issue #56) must
+        // map to null, not 0, or the INSERT violates the FK constraint.
+        $source['creator'] = \Auth\CurrentUser::id() ?: null;
       }
 
       $fields       = array_keys($source);
@@ -838,14 +842,20 @@ class Record extends \Bdus\Controller
         // `id` must never be supplied on insert (auto-assigned by DB).
         unset($core['id']);
 
-        // `creator` is NOT NULL and must be the authenticated user's id — but
-        // only for real tables. Plugin tables (is_plugin=1) have no `creator`
-        // column by design (ownership is inherited from the host record via
-        // id_link), so any client-supplied value is dropped instead.
+        // `creator` must be the authenticated user's id — but only for real
+        // tables. Plugin tables (is_plugin=1) have no `creator` column by
+        // design (ownership is inherited from the host record via id_link),
+        // so any client-supplied value is dropped instead.
+        //
+        // `creator` is a nullable FK to bdus_users(id) (ON DELETE SET NULL),
+        // never a plain NOT NULL integer — 0 is never a valid user id, so a
+        // falsy CurrentUser::id() (API key auth, which has no human identity
+        // by design — see issue #56) must map to null, not 0, or the INSERT
+        // violates the FK constraint on every engine.
         if ($isPlugin) {
           unset($core['creator']);
         } elseif (array_key_exists('creator', $core)) {
-          $core['creator'] = \Auth\CurrentUser::id() ?: 0;
+          $core['creator'] = \Auth\CurrentUser::id() ?: null;
         }
 
         $coreModel = [];
@@ -856,7 +866,7 @@ class Record extends \Bdus\Controller
         // Ensure creator is always written for real tables, even if the
         // frontend omitted it entirely.
         if (!$isPlugin && !isset($coreModel['creator'])) {
-          $coreModel['creator'] = ['name' => 'creator', '_val' => \Auth\CurrentUser::id() ?: 0];
+          $coreModel['creator'] = ['name' => 'creator', '_val' => \Auth\CurrentUser::id() ?: null];
         }
 
         $pluginsModel = [];

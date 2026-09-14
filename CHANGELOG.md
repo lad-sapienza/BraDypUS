@@ -5,6 +5,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **`POST /api/record/{tb}` (insert), duplicate and bulk CSV import all failed
+  with a generic "Database error" when authenticated via an API key, on any
+  table** (#56). API-key auth has no human identity by design
+  (`Auth\CurrentUser::id()` returns `0` for it), but `creator` is a nullable
+  FK to `bdus_users(id)` (`ON DELETE SET NULL`) — `0` is never a valid user
+  id, so writing it violated the FK constraint on every engine, regardless
+  of any other field in the payload. The three call sites that defaulted a
+  falsy `CurrentUser::id()` to `0` now default to `null` instead, which is
+  the column's actual "no human creator" value.
+  - `bdus-api/controllers/Record.php` (`saveRecord()` INSERT,
+    `duplicateRecord()`), `bdus-api/controllers/Import.php` (`importData()`)
+  - `bdus-api/tests/Integration/RecordCtrlSaveEraseTest.php`,
+    `RecordCtrlDuplicateTest.php`, `ImportCtrlTest.php`,
+    `bdus-api/tests/api/25_api_keys.hurl` (end-to-end: create an API key,
+    use its raw value as a Bearer token to insert a real record)
+
 ## [5.10.1] - 2026-09-13
 
 ### Fixed

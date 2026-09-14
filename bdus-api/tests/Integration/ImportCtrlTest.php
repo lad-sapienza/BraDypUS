@@ -93,6 +93,48 @@ class ImportCtrlTest extends BdusTestCase
         $this->assertSame(2, $res['total']);
     }
 
+    public function testImportDataCsvInsertViaApiKeyStoresNullCreatorNotZero(): void
+    {
+        // Regression test for issue #56: `creator` is a nullable FK to
+        // bdus_users(id) on real tables — a falsy CurrentUser::id() (API-key
+        // auth, which has no human identity by design) must map to null,
+        // not 0, or the INSERT violates the FK constraint on every engine.
+        // The `items` fixture here is plain TEXT with no FK (see
+        // 25_api_keys.hurl 25e-bis for the real end-to-end FK check), but
+        // this still verifies the code writes the intended value.
+        // importData() requires a blanket 'edit' (writer, <=20) — self_writer
+        // (25) doesn't satisfy it (no per-row ownership concept for a bulk
+        // import), so the privilege here must match, not the 25 used for
+        // saveRecord()/duplicateRecord()'s 'add_new' check elsewhere.
+        \Auth\CurrentUser::set([
+            'id' => 0, 'name' => 'API Key: CI key', 'privilege' => 20, 'is_api_key' => true,
+        ]);
+
+        $csv    = "name,description\nImport via API key,Desc\n";
+        $tempId = $this->plantTempFile($csv);
+
+        $ctrl = $this->makeController('Bdus\\Controllers\\Import', [], [
+            'temp_id'   => $tempId,
+            'type'      => 'csv',
+            'tb'        => self::TB,
+            'mapping'   => ['name' => 'name', 'description' => 'description'],
+            'key_field' => 'name',
+        ]);
+        $res = $this->callController($ctrl, 'importData');
+
+        $this->setPrivilege(1);
+
+        $this->assertSame('success', $res['status'], $res['code'] ?? '');
+        $this->assertSame(1, $res['inserted']);
+
+        $row = static::$db->query(
+            "SELECT creator FROM items WHERE name = 'Import via API key'", [], 'read'
+        );
+        $this->assertNull($row[0]['creator'], "creator must be null, not 0, for an API-key CSV import");
+
+        static::$db->query("DELETE FROM items WHERE name = 'Import via API key'", [], 'boolean');
+    }
+
     public function testImportDataCsvUpsertUpdatesExistingRow(): void
     {
         // Ensure "Import Item A" exists (may have been inserted by the previous test).

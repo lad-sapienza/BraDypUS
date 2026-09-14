@@ -40,6 +40,29 @@ class RecordCtrlDuplicateTest extends BdusTestCase
         static::$db->query('DELETE FROM items WHERE id = ?', [$newId], 'boolean');
     }
 
+    public function testDuplicateRecordViaApiKeyStoresNullCreatorNotZero(): void
+    {
+        // Regression test for issue #56 — see the equivalent saveRecord()
+        // test in RecordCtrlSaveEraseTest for why this fixture can't
+        // reproduce the actual FK-violation crash (real tables only,
+        // covered end-to-end in 25_api_keys.hurl 25e-bis), only the value.
+        \Auth\CurrentUser::set([
+            'id' => 0, 'name' => 'API Key: CI key', 'privilege' => 25, 'is_api_key' => true,
+        ]);
+
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'id' => 1], []);
+        $res  = $this->callController($ctrl, 'duplicateRecord');
+        $this->assertSame('success', $res['status'], $res['code'] ?? '');
+        $newId = (int) $res['id'];
+
+        $this->setPrivilege(1);
+
+        $row = static::$db->query('SELECT creator FROM items WHERE id = ?', [$newId], 'read');
+        $this->assertNull($row[0]['creator'], 'creator must be null, not 0, for an API-key duplicate');
+
+        static::$db->query('DELETE FROM items WHERE id = ?', [$newId], 'boolean');
+    }
+
     public function testDuplicateMissingTbReturnsError(): void
     {
         $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['id' => 1], []);

@@ -63,7 +63,7 @@
         </template>
 
         <template v-if="mode === 'edit'">
-          <AButton type="primary" size="small" :loading="saving" @click="saveRecord">
+          <AButton type="primary" size="small" :loading="saving" @click="saveRecord(true)">
             <template #icon><CheckOutlined /></template>
             {{ t('save') }}
           </AButton>
@@ -165,6 +165,14 @@
           v-bind="chronoData"
           :editMode="mode === 'edit'"
           @update:chrono="v => Object.assign(editData.core, v)"
+        />
+
+        <!-- Pleiades gazetteer-linking plugin -->
+        <PleiadesSection
+          v-if="record.schema?.has_pleiades"
+          v-bind="pleiadesData"
+          :editMode="mode === 'edit'"
+          @update:pleiades="onPleiadesUpdate"
         />
 
         <!-- Osteology plugin -->
@@ -327,6 +335,7 @@ import RsSection              from '@/components/record/RsSection.vue'
 import ManualLinksSection     from '@/components/record/ManualLinksSection.vue'
 import ZoteroSection          from '@/components/record/ZoteroSection.vue'
 import ChronoSection          from '@/components/record/ChronoSection.vue'
+import PleiadesSection        from '@/components/record/PleiadesSection.vue'
 import OsteologySection       from '@/components/record/osteology/OsteologySection.vue'
 import ChronoDensityPanel     from '@/components/record/ChronoDensityPanel.vue'
 import RecordVersionsDrawer   from '@/components/record/RecordVersionsDrawer.vue'
@@ -399,12 +408,86 @@ const osteoData = computed(() =>
     : (record.value?.core?.osteo_data?.val ?? null)
 )
 
+// Pleiades values: in edit mode use flat editData; in read mode unwrap record.core
+const pleiadesData = computed(() => {
+  if (mode.value === 'edit') {
+    return {
+      pleiadesId: editData.core.pleiades_id        ?? null,
+      label:      editData.core.pleiades_label     ?? null,
+      altLabel:   editData.core.pleiades_alt_label ?? null,
+    }
+  }
+  const c = record.value?.core ?? {}
+  return {
+    pleiadesId: c.pleiades_id?.val        ?? null,
+    label:      c.pleiades_label?.val     ?? null,
+    altLabel:   c.pleiades_alt_label?.val ?? null,
+  }
+})
+
+// Pleiades geometry: transient state, never a persisted column — set when the
+// user selects/removes a place in PleiadesSection, consumed once by
+// savePleiadesGeometry() right after the record itself is saved (only then
+// is the record's real id known for a brand-new record — same two-step
+// pattern FileGallery/ManualLinksSection already use).
+const pleiadesReprPoint    = ref(null)
+const pleiadesGeometryDirty = ref(false)
+
+function onPleiadesUpdate(v) {
+  const { _reprPoint, _removed, ...core } = v
+  Object.assign(editData.core, core)
+  if (_removed) {
+    pleiadesReprPoint.value     = null
+    pleiadesGeometryDirty.value = true
+  } else if (_reprPoint) {
+    pleiadesReprPoint.value     = _reprPoint
+    pleiadesGeometryDirty.value = true
+  }
+}
+
+async function savePleiadesGeometry(recordId) {
+  if (!record.value?.schema?.has_pleiades || !pleiadesGeometryDirty.value) return
+
+  try {
+    const geoId = editData.core.pleiades_geo_id || null
+
+    if (!editData.core.pleiades_id) {
+      // Link removed — "pulizia totale": erase the geometry, then null out
+      // the bookkeeping column (fields themselves were already nulled by
+      // PleiadesSection into editData.core before the main save happened).
+      if (geoId) {
+        await api.delete('/api/geoface/feature', { ids: [geoId] })
+        editData.core.pleiades_geo_id = null
+        await api.post(`/api/record/${tb.value}`, { id: recordId, core: { pleiades_geo_id: null }, plugins: {} })
+      }
+    } else if (pleiadesReprPoint.value) {
+      const geometry = { type: 'Point', coordinates: pleiadesReprPoint.value }
+      if (geoId) {
+        await api.put('/api/geoface/feature', { geodata: [{ id: geoId, geometry }] })
+      } else {
+        const res = await api.post('/api/geoface/feature', { tb: tb.value, id: recordId, geometry })
+        if (res.geo_id) {
+          editData.core.pleiades_geo_id = res.geo_id
+          await api.post(`/api/record/${tb.value}`, { id: recordId, core: { pleiades_geo_id: res.geo_id }, plugins: {} })
+        }
+      }
+    }
+
+    pleiadesGeometryDirty.value = false
+  } catch (e) {
+    toast.add({ severity: 'error', summary: t('generic_error'), detail: t('pleiades_api_error'), life: 5000 })
+  }
+}
+
 // ── Derived ─────────────────────────────────────────────────────
-const CHRONO_FIELDS = new Set(['chrono_from', 'chrono_to', 'chrono_label', 'chrono_certainty', 'chrono_period'])
-const OSTEO_FIELDS  = new Set(['osteo_data'])
+const CHRONO_FIELDS    = new Set(['chrono_from', 'chrono_to', 'chrono_label', 'chrono_certainty', 'chrono_period'])
+const OSTEO_FIELDS     = new Set(['osteo_data'])
+const PLEIADES_FIELDS  = new Set(['pleiades_id', 'pleiades_label', 'pleiades_alt_label', 'pleiades_geo_id'])
 
 const visibleCoreFields = computed(() =>
-  (record.value?.schema?.fields ?? []).filter(f => !f.hide && !CHRONO_FIELDS.has(f.name) && !OSTEO_FIELDS.has(f.name))
+  (record.value?.schema?.fields ?? []).filter(f =>
+    !f.hide && !CHRONO_FIELDS.has(f.name) && !OSTEO_FIELDS.has(f.name) && !PLEIADES_FIELDS.has(f.name)
+  )
 )
 
 const recordTitle = computed(() => {
@@ -609,6 +692,10 @@ function enterEditMode() {
     editData.core[fld] = record.value.core[fld]?.val ?? null
   })
 
+  // Discard any leftover transient Pleiades geometry state from a previous edit
+  pleiadesReprPoint.value     = null
+  pleiadesGeometryDirty.value = false
+
   // Populate editData.plugins
   Object.keys(record.value.plugins).forEach(plgTb => {
     const plgData = record.value.plugins[plgTb]?.data ?? {}
@@ -757,11 +844,15 @@ async function saveRecord(keepEditMode = false) {
     forceValidate.value = false
 
     if (!id.value && res.id) {
-      // New record: navigate to the saved record; re-enter edit mode if requested
+      // New record: the id is only known now — resolve any pending Pleiades
+      // geometry write before navigating away (same reason FileGallery/
+      // ManualLinksSection wait for res.id before their own follow-up calls).
+      await savePleiadesGeometry(res.id)
       if (keepEditMode) pendingEditMode.value = true
       router.replace(`/${route.params.app}/record/${tb.value}/${res.id}`)
     } else {
       // Existing record: reload to reflect server-side computed values
+      await savePleiadesGeometry(id.value)
       if (!keepEditMode) mode.value = 'read'
       await fetchRecord()
       if (keepEditMode) enterEditMode()

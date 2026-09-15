@@ -758,6 +758,123 @@ class Config extends \Bdus\Controller
   }
 
   /**
+   * Activates the Pleiades gazetteer-linking plugin for a table.
+   * Adds four columns to the core table if they do not yet exist, then sets
+   * pleiades=true in the table config. pleiades_geo_id is bookkeeping only
+   * (tracks the bdus_geodata row this plugin itself created, so cleanup never
+   * touches a manually-drawn Geoface geometry on the same record) and is
+   * never shown in the UI.
+   *
+   * POST /api/config/table/{tb}/pleiades
+   * Response: { status, code }
+   */
+  public function activatePleiades(): void
+  {
+    if (!$this->requireSuperAdmin()) return;
+
+    $tb = $this->get['tb'] ?? '';
+    if (!$tb || !$this->cfg->get("tables.$tb")) {
+      $this->returnJson(['status' => 'error', 'code' => 'missing_table']);
+      return;
+    }
+
+    try {
+      $inspect = new \DB\Inspect($this->db);
+      $alter   = new \DB\Alter($this->db);
+
+      $columns = [
+        'pleiades_id'        => 'INTEGER',
+        'pleiades_label'     => 'VARCHAR(200)',
+        'pleiades_alt_label' => 'VARCHAR(200)',
+        'pleiades_geo_id'    => 'INTEGER',
+      ];
+
+      // Only add columns when the physical table already exists in the DB.
+      // The seed may call activatePleiades before the DB table is created
+      // (config-only mode); in that case we skip schema changes but still
+      // update the config flag below.
+      if ($inspect->tableExists($tb)) {
+        $existingNames = array_column($inspect->tableColumns($tb), 'fld');
+        foreach ($columns as $col => $type) {
+          if (!in_array($col, $existingNames, true)) {
+            $alter->addFld($tb, $col, $type);
+          }
+        }
+      }
+
+      $tbData = $this->cfg->get("tables.$tb") ?: [];
+      $tbData['name']     = $tb;
+      $tbData['pleiades'] = true;
+      // Drop 'link' so setTable does not call upsertRelations — this method
+      // only updates the pleiades flag and must never touch FK relations.
+      unset($tbData['link']);
+      $this->cfg->setTable($tbData);
+
+      // Write field definitions so the columns appear in the config field
+      // list (hide=true: PleiadesSection handles display, not FieldEditor).
+      $pleiadesFieldDefs = [
+        'pleiades_id'        => ['name' => 'pleiades_id',        'label' => 'ID Pleiades',              'type' => 'text', 'hide' => true, 'db_type' => 'INTEGER'],
+        'pleiades_label'     => ['name' => 'pleiades_label',     'label' => 'Toponimo Pleiades',         'type' => 'text', 'hide' => true],
+        'pleiades_alt_label' => ['name' => 'pleiades_alt_label', 'label' => 'Toponimo alternativo',      'type' => 'text', 'hide' => true],
+        'pleiades_geo_id'    => ['name' => 'pleiades_geo_id',    'label' => 'Geometria Pleiades (id)',   'type' => 'text', 'hide' => true, 'db_type' => 'INTEGER'],
+      ];
+      $existingFields = array_keys($this->cfg->get("tables.$tb.fields") ?: []);
+      foreach ($pleiadesFieldDefs as $fldName => $fldDef) {
+        if (!in_array($fldName, $existingFields, true)) {
+          $this->cfg->setFld($tb, $fldName, $fldDef);
+        }
+      }
+
+      $this->returnJson(['status' => 'success', 'code' => 'pleiades_activated']);
+
+    } catch (\Throwable $th) {
+      $this->returnJson(['status' => 'error', 'code' => 'db_error', 'detail' => $th->getMessage()]);
+    }
+  }
+
+  /**
+   * Deactivates the Pleiades plugin for a table.
+   * Sets pleiades=false in config and removes the four pleiades_* field
+   * definitions so they no longer appear in the config UI.
+   * DB columns are preserved to protect existing data; they can be re-exposed
+   * by re-activating the plugin.
+   *
+   * DELETE /api/config/table/{tb}/pleiades
+   * Response: { status, code }
+   */
+  public function deactivatePleiades(): void
+  {
+    if (!$this->requireSuperAdmin()) return;
+
+    $tb = $this->get['tb'] ?? '';
+    if (!$tb) {
+      $this->returnJson(['status' => 'error', 'code' => 'missing_table']);
+      return;
+    }
+
+    try {
+      $tbData = $this->cfg->get("tables.$tb") ?: [];
+      $tbData['name']     = $tb;
+      $tbData['pleiades'] = false;
+      unset($tbData['link']); // don't touch FK relations — only update the flag
+      $this->cfg->setTable($tbData);
+
+      $pleiadesNames  = ['pleiades_id', 'pleiades_label', 'pleiades_alt_label', 'pleiades_geo_id'];
+      $existingFields = array_keys($this->cfg->get("tables.$tb.fields") ?: []);
+      foreach ($pleiadesNames as $fldName) {
+        if (in_array($fldName, $existingFields, true)) {
+          $this->cfg->deleteFld($tb, $fldName);
+        }
+      }
+
+      $this->returnJson(['status' => 'success', 'code' => 'pleiades_deactivated']);
+
+    } catch (\Throwable $th) {
+      $this->returnJson(['status' => 'error', 'code' => 'db_error', 'detail' => $th->getMessage()]);
+    }
+  }
+
+  /**
    * Activates the radiocarbon-dating plugin for a table.
    * Unlike fuzzy-date/osteology (which add columns to the core table), this
    * creates a genuine plugin table ({tb}_radiocarbon, id_link)

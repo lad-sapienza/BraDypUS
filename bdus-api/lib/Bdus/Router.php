@@ -208,6 +208,8 @@ class Router
         'Bdus\\Controllers\\Config::deactivateFuzzyDate'           => 'super_admin',
         'Bdus\\Controllers\\Config::activateOsteology'             => 'super_admin',
         'Bdus\\Controllers\\Config::deactivateOsteology'           => 'super_admin',
+        'Bdus\\Controllers\\Config::activatePleiades'              => 'super_admin',
+        'Bdus\\Controllers\\Config::deactivatePleiades'            => 'super_admin',
         'Bdus\\Controllers\\Config::activateRadiocarbon'           => 'super_admin',
         'Bdus\\Controllers\\Config::dbml_export'                   => 'super_admin',
         'Bdus\\Controllers\\Config::dbml_preview'                  => 'super_admin',
@@ -239,6 +241,10 @@ class Router
         'Bdus\\Controllers\\Zotero::deleteLink'                    => 'edit',
         'Bdus\\Controllers\\Zotero::syncRecord'                    => 'edit',
         'Bdus\\Controllers\\Zotero::syncAll'                       => 'admin',
+
+        // ── Pleiades gazetteer integration ──────────────────────────────────────
+        'Bdus\\Controllers\\Pleiades::search'                      => 'edit',
+        'Bdus\\Controllers\\Pleiades::getPlace'                    => 'edit',
     ];
 
     /**
@@ -446,6 +452,8 @@ class Router
             $r->addRoute('DELETE', '/api/config/table/{tb}/osteology',  ['Bdus\\Controllers\\Config', 'deactivateOsteology']);
             $r->addRoute('POST',   '/api/config/table/{tb}/radiocarbon', ['Bdus\\Controllers\\Config', 'activateRadiocarbon']);
             $r->addRoute('DELETE', '/api/config/table/{tb}/radiocarbon', ['Bdus\\Controllers\\Config', 'deactivateRadiocarbon']);
+            $r->addRoute('POST',   '/api/config/table/{tb}/pleiades',   ['Bdus\\Controllers\\Config', 'activatePleiades']);
+            $r->addRoute('DELETE', '/api/config/table/{tb}/pleiades',   ['Bdus\\Controllers\\Config', 'deactivatePleiades']);
             $r->addRoute('GET',    '/api/config/geoface',     ['Bdus\\Controllers\\Config', 'getGeoFaceConfig']);
             $r->addRoute('PUT',    '/api/config/geoface',     ['Bdus\\Controllers\\Config', 'save_geoface_properties']);
             $r->addRoute('POST',   '/api/config/geofile',     ['Bdus\\Controllers\\Config', 'uploadGeoFile']);
@@ -585,6 +593,9 @@ class Router
             $r->addRoute('DELETE', '/api/zotero/link/{id:\d+}',     ['Bdus\\Controllers\\Zotero', 'deleteLink']);
             $r->addRoute('POST',   '/api/zotero/sync/{tb}/{id:\d+}', ['Bdus\\Controllers\\Zotero', 'syncRecord']);
             $r->addRoute('POST',   '/api/zotero/sync',              ['Bdus\\Controllers\\Zotero', 'syncAll']);
+
+            $r->addRoute('GET',    '/api/pleiades/search',           ['Bdus\\Controllers\\Pleiades', 'search']);
+            $r->addRoute('GET',    '/api/pleiades/place/{id:\d+}',   ['Bdus\\Controllers\\Pleiades', 'getPlace']);
         });
 
         // ── Resolve URI ───────────────────────────────────────────────────────

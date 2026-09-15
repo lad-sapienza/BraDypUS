@@ -174,6 +174,20 @@
             </small>
           </div>
           <div class="cfg-form-field">
+            <label>{{ t('pleiades_plugin') }}</label>
+            <div class="cfg-input-action">
+              <ASwitch
+                :checked="pleiadesActive"
+                :disabled="pleiadesBusy"
+                @change="togglePleiades"
+              />
+              <LoadingOutlined v-if="pleiadesBusy" style="font-size:.9rem" spin />
+            </div>
+            <small v-if="pleiadesActive" class="cfg-hint">
+              {{ t('pleiades_activated') }} — pleiades_id, pleiades_label, pleiades_alt_label
+            </small>
+          </div>
+          <div class="cfg-form-field">
             <label>{{ t('osteo_plugin') }}</label>
             <div class="cfg-input-action">
               <ASwitch
@@ -285,6 +299,8 @@ const loadError = ref(null)
 
 const fuzzyDateActive = ref(false)
 const fuzzyDateBusy   = ref(false)
+const pleiadesActive  = ref(false)
+const pleiadesBusy    = ref(false)
 const osteoActive     = ref(false)
 const osteoBusy       = ref(false)
 const radiocarbonBusy = ref(false)
@@ -392,6 +408,7 @@ async function load() {
     }
 
     fuzzyDateActive.value = !!td.fuzzy_date
+    pleiadesActive.value  = !!td.pleiades
     osteoActive.value     = !!td.osteology
     newName.value = props.tb ?? ''
   } catch (e) {
@@ -472,6 +489,27 @@ async function toggleFuzzyDate(newVal) {
     toast.add({ severity: 'error', summary: e.message, life: 4000 })
   } finally {
     fuzzyDateBusy.value = false
+  }
+}
+
+// ── Pleiades toggle ────────────────────────────────────────────────────────
+async function togglePleiades(newVal) {
+  if (!props.tb || pleiadesBusy.value) return
+  pleiadesBusy.value = true
+  try {
+    const res = newVal
+      ? await api.post(`/api/config/table/${props.tb}/pleiades`, {})
+      : await api.delete(`/api/config/table/${props.tb}/pleiades`, {})
+    if (res.status === 'success') {
+      pleiadesActive.value = newVal
+      toast.add({ severity: 'success', summary: t(res.code), life: 3000 })
+    } else {
+      toast.add({ severity: 'error', summary: api.responseMessage(res, t), life: 5000 })
+    }
+  } catch (e) {
+    toast.add({ severity: 'error', summary: e.message, life: 4000 })
+  } finally {
+    pleiadesBusy.value = false
   }
 }
 

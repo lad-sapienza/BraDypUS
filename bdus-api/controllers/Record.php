@@ -492,6 +492,7 @@ class Record extends \Bdus\Controller
       'has_zotero'     => (bool) $this->cfg->get("tables.{$tb}.zotero"),
       'has_fuzzy_date'  => (bool) $this->cfg->get("tables.{$tb}.fuzzy_date"),
       'has_osteology'   => (bool) $this->cfg->get("tables.{$tb}.osteology"),
+      'has_pleiades'    => (bool) $this->cfg->get("tables.{$tb}.pleiades"),
     ];
   }
 
@@ -2031,7 +2032,8 @@ class Record extends \Bdus\Controller
     // resolveOwnerCreator() / issue #64. Resolved once here, outside the
     // loop, since it's the same for every id in this batch (all deleted
     // from the same $tb).
-    $isPlugin = (bool) $this->cfg->get("tables.{$tb}.is_plugin");
+    $isPlugin    = (bool) $this->cfg->get("tables.{$tb}.is_plugin");
+    $hasPleiades = (bool) $this->cfg->get("tables.{$tb}.pleiades");
 
     $ok    = [];
     $error = [];
@@ -2046,6 +2048,17 @@ class Record extends \Bdus\Controller
           if (!\Auth\Authorization::can('edit', $creator)) {
             $error[] = $id;
             continue;
+          }
+        }
+
+        // Pleiades "pulizia totale": the plugin's own bdus_geodata row (if
+        // any — tracked via pleiades_geo_id so a manually-drawn Geoface
+        // geometry on the same record is never touched) has no FK/cascade
+        // of its own, so it must be cleaned up explicitly on record delete.
+        if ($hasPleiades) {
+          $geoId = (int) ($reader->getCore('pleiades_geo_id', true) ?? 0);
+          if ($geoId) {
+            $this->db->query('DELETE FROM bdus_geodata WHERE id = ?', [$geoId], 'boolean');
           }
         }
 

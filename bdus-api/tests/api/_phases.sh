@@ -424,6 +424,12 @@ run_tests() {
       --variable "jwt=${JWT}"
   fi
 
+  if should_run "43"; then
+    header "Phase 43 — Pleiades gazetteer-linking plugin"
+    run_phase "Pleiades plugin" "43_pleiades.hurl" \
+      --variable "jwt=${JWT}"
+  fi
+
   # Phase 10 always runs: drops crud_test tables and logs out
   header "Phase 10 — Cleanup"
   run_phase "Cleanup" "10_cleanup.hurl" \

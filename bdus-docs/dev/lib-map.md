@@ -75,6 +75,8 @@ without going through a lib/ abstraction.
 | `Image\Resizer` | `lib/Image/Resizer.php` | Image resize / thumbnail (Intervention) |
 | `Zotero\Client` | `lib/Zotero/Client.php` | Zotero API HTTP client |
 | `Zotero\ZoteroException` | `lib/Zotero/ZoteroException.php` | Zotero-specific exception |
+| `Pleiades\Client` | `lib/Pleiades/Client.php` | Pleiades gazetteer API HTTP client |
+| `Pleiades\PleiadesException` | `lib/Pleiades/PleiadesException.php` | Pleiades-specific exception |
 | — | `lib/bootstrap.php` | Constants, DB connection, auth setup |
 | — | `lib/version.php` | `BDUS_VERSION` constant |
 

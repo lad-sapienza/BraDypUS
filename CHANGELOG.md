@@ -5,6 +5,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **New system plugin: Pleiades gazetteer place-name linking.** Links a record to a
+  toponym in the [Pleiades](https://pleiades.stoa.org) ancient-places gazetteer —
+  search-as-you-type against a server-proxied Pleiades API, select a place to fill
+  `pleiades_id`/`pleiades_label` plus a free-text `pleiades_alt_label`, and drop its
+  representative point into GeoFace. Removing the link, or deleting the record,
+  cleans up both the fields and the geometry. One toponym per record: plain
+  `pleiades_*` columns on the host table, activated per table exactly like
+  fuzzy-date/osteology, not a satellite plugin table. Geometry reuses the existing
+  GeoFace endpoints as-is — a `pleiades_geo_id` bookkeeping column tracks the
+  plugin's own geometry so cleanup never touches an unrelated, manually-drawn one on
+  the same record.
+  - `bdus-api/lib/Pleiades/Client.php`, `PleiadesException.php`,
+    `bdus-api/controllers/Pleiades.php`, `Config.php` (`activatePleiades`/
+    `deactivatePleiades`), `Record.php` (`has_pleiades` flag, `erase()` cleanup
+    hook), `lib/Bdus/Router.php`
+  - `bdus-app/src/components/record/PleiadesSection.vue`, `RecordView.vue`,
+    `components/config/ConfigTableForm.vue`, `locale/{it,en}.json`
+  - Tests: `tests/Unit/PleiadesClientTest.php`, `tests/Integration/PleiadesCtrlTest.php`,
+    `tests/api/43_pleiades.hurl`
+  - Docs: `bdus-docs/guide/system-plugins/pleiades.md`
+
+### Fixed
+
+- **Clearing a field to `null` on an existing record's UPDATE never actually cleared
+  it, for any table** — silently dropped instead, leaving the old value in place.
+  `Persist.php` used `isset($data['_val'])` to collect changed fields;
+  PHP's `isset()` treats an explicitly-null value as "not set". INSERT was
+  unaffected in practice (an omitted nullable column just defaults to `NULL`),
+  which is why this went unnoticed until the Pleiades plugin's "remove the link"
+  flow (an UPDATE that nulls four fields) exposed it. Fixed in three spots (core
+  fields, plugin-row update, plugin-row insert) by switching to
+  `array_key_exists('_val', $data)`.
+  - `bdus-api/lib/Record/Persist.php`, `tests/Integration/RecordPersistTest.php`
+
 ## [5.10.2] - 2026-09-14
 
 ### Fixed

@@ -145,6 +145,7 @@ function guideSidebar() {
         { text: 'Fuzzy date',          link: '/guide/system-plugins/fuzzy-date' },
         { text: 'Osteology',           link: '/guide/system-plugins/osteology' },
         { text: 'Radiocarbon dating',  link: '/guide/system-plugins/radiocarbon' },
+        { text: 'Pleiades',            link: '/guide/system-plugins/pleiades' },
       ],
     },
     {

@@ -218,6 +218,18 @@ Manages connections to Zotero libraries and citation links between records
 and Zotero items. Libraries are stored in `bdus_zotero_libs`; links in
 `bdus_zotero_links`. See [Zotero integration](./zotero).
 
+### `pleiades` — Pleiades gazetteer integration
+`GET /api/pleiades/search?q=` · `GET /api/pleiades/place/{id}`
+
+Server-side proxy to the public [Pleiades](https://pleiades.stoa.org) API —
+`search()` wraps `search_rss` (RSS 1.0 / RDF, no coordinates in results),
+`getPlace()` wraps `places/{id}/json` (full record, including `reprPoint`).
+No local persistence of its own: the linking record's `pleiades_*` columns
+are written through the normal `record` save path like any other field, and
+the geometry it attaches goes through the existing `geoface` endpoints —
+see [Pleiades](/guide/system-plugins/pleiades). Both methods require `edit`
+privilege (same threshold as Zotero's own search proxy).
+
 ---
 
 ## Controller file structure

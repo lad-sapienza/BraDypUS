@@ -46,6 +46,13 @@ IntCal20 curve, server-side, on every save. Unlike the other plugins it creates 
 dedicated child table so a record can carry more than one dating, and the calibrated
 ranges stay searchable/filterable like any other field.
 
+### [Pleiades](/guide/system-plugins/pleiades)
+
+Link a record to a toponym in the Pleiades gazetteer of ancient places via
+search-as-you-type against the live Pleiades API. Fills the place id and official
+name, plus a free-text alternative name, and drops a point marker into GeoFace when
+the place has coordinates.
+
 ## Enabling a plugin
 
 Each plugin is configured at the table level in **Config → Tables** under the
@@ -59,6 +66,7 @@ Each plugin is configured at the table level in **Config → Tables** under the
 | Fuzzy date | Toggle **Chronology (fuzzy date)** on — adds five `chrono_*` columns to the table |
 | Osteology | Toggle **Inventario osteologico** on — adds one `osteo_data` JSON column to the table |
 | Radiocarbon dating | Click **Activate** — creates a `{table}_radiocarbon` child table (no toggle to disable; delete the table to remove it) |
+| Pleiades | Toggle **Pleiades (place-name gazetteer)** on — adds four `pleiades_*` columns to the table |
 
 Once enabled, the corresponding panel appears in RecordView for all records of
 that table.

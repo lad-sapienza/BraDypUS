@@ -96,10 +96,15 @@ class Persist
             return $this->deleteAll();
         }
 
-        // Collect changed fields
+        // Collect changed fields. array_key_exists (not isset): a field
+        // explicitly cleared to null must still reach the UPDATE/INSERT —
+        // isset() treats a null _val as "not set" and would silently drop it,
+        // leaving the old value in place on UPDATE (harmless on INSERT, where
+        // an omitted nullable column just defaults to NULL anyway — that
+        // masked this for years).
         $changed = [];
         foreach ($this->model['core'] as $fld => $data) {
-            if (isset($data['_val'])) {
+            if (array_key_exists('_val', $data)) {
                 $changed[$data['name']] = $data['_val'];
             }
         }
@@ -203,7 +208,7 @@ class Persist
                         foreach ($row as $fld => $data) {
                             if (
                                 in_array($fld, ['id', 'id_link'], true)
-                                || !isset($data['_val'])
+                                || !array_key_exists('_val', $data)
                             ) {
                                 continue;
                             }
@@ -225,7 +230,7 @@ class Persist
                     // INSERT (no existing id)
                     $toWrite = [];
                     foreach ($row as $fld => $data) {
-                        if (isset($data['_val'])) {
+                        if (array_key_exists('_val', $data)) {
                             $toWrite[$fld] = $data['_val'];
                         }
                     }

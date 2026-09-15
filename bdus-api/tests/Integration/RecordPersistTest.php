@@ -60,6 +60,30 @@ class RecordPersistTest extends BdusTestCase
         $this->assertSame('Beta item UPDATED', $rows[0]['name']);
     }
 
+    // Regression: array_key_exists, not isset(), must gate _val collection —
+    // isset() treats an explicitly-null _val as "not set" and silently drops
+    // the field from the UPDATE, leaving the old value in place. Found via
+    // the Pleiades plugin's "remove the link" flow (clearing pleiades_id on
+    // an existing record never actually cleared it before this fix).
+    public function testPersistCoreUpdateCanClearFieldToNull(): void
+    {
+        $original = static::$db->query("SELECT description FROM items WHERE id = 2", [], 'read')[0]['description'];
+        $this->assertNotNull($original, 'fixture assumption: item 2 has a non-null description');
+
+        $read  = $this->makeRead(2);
+        $edit  = new Edit($read);
+        $edit->setCore(['description' => null]);
+        $result = $edit->persist(static::$db, static::$cfg);
+
+        $this->assertSame(1, $result['core']['affected']);
+
+        $rows = static::$db->query("SELECT description FROM items WHERE id = 2", [], 'read');
+        $this->assertNull($rows[0]['description']);
+
+        // Restore original value
+        static::$db->query("UPDATE items SET description = ? WHERE id = 2", [$original], 'boolean');
+    }
+
     // ── Core: INSERT ─────────────────────────────────────────────────────
 
     public function testPersistCoreInsertCreatesNewRecord(): void
@@ -138,6 +162,32 @@ class RecordPersistTest extends BdusTestCase
 
         // Restore original value
         static::$db->execInTransaction("UPDATE tags SET label = 'tag-a' WHERE id = 1");
+    }
+
+    // Regression: same array_key_exists fix, plugin-row UPDATE branch.
+    public function testPersistPluginUpdateCanClearFieldToNull(): void
+    {
+        static::$db->execInTransaction(
+            "INSERT INTO tags (label, id_link, cat_ref) VALUES ('temp-tag-null-test', 4, 1)"
+        );
+        $tempId = (int) static::$db->query(
+            "SELECT id FROM tags WHERE label = 'temp-tag-null-test' AND id_link = 4",
+            [],
+            'read'
+        )[0]['id'];
+
+        $read  = $this->makeRead(4);
+        $edit  = new Edit($read);
+        $edit->setPluginRow(self::TB_PLG, $tempId, ['cat_ref' => null]);
+        $result = $edit->persist(static::$db, static::$cfg);
+
+        $this->assertSame(1, $result['plugins']['updated']);
+
+        $rows = static::$db->query("SELECT cat_ref FROM tags WHERE id = ?", [$tempId], 'read');
+        $this->assertNull($rows[0]['cat_ref']);
+
+        // Clean up
+        static::$db->query("DELETE FROM tags WHERE id = ?", [$tempId], 'boolean');
     }
 
     // ── Plugin: DELETE ────────────────────────────────────────────────────

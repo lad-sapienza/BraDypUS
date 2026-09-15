@@ -136,6 +136,11 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/:app/charts',
+    component: () => import('@/views/ChartsView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/:app/chrono/:tb',
     component: () => import('@/views/ChronoTimelineView.vue'),
     meta: { requiresAuth: true }

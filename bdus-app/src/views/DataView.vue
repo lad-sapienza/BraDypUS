@@ -114,22 +114,10 @@
                 />
               </AModal>
 
-              <!-- Charts -->
-              <AButton type="text" :title="t('charts')" size="small" @click="chartDialog = true">
+              <!-- Create chart from this view/search -->
+              <AButton type="text" :title="t('create_chart_from_search')" size="small" @click="createChartFromSearch">
                 <BarChartOutlined />
               </AButton>
-              <AModal
-                v-model:open="chartDialog"
-                :title="t('charts')"
-                :footer="null"
-                width="680px"
-                :body-style="{ maxHeight: '75vh', overflowY: 'auto' }"
-              >
-                <ChartPanel
-                  :currentTb="selectedTable?.name ?? ''"
-                  :currentFilter="currentSearch"
-                />
-              </AModal>
 
               <!-- View on map -->
               <AButton type="text" :title="t('view_on_map')" size="small" @click="openGeoface">
@@ -351,7 +339,6 @@ import {
   Button as AButton,
 } from 'ant-design-vue'
 import SavedQueriesPanel from '@/components/SavedQueriesPanel.vue'
-import ChartPanel from '@/components/ChartPanel.vue'
 
 const AInputSearch = Input.Search
 const ATextarea    = Input.TextArea
@@ -374,7 +361,6 @@ const selectedTable = computed(() =>
 const colTogglerOpen      = ref(false)
 const exportPopoverOpen   = ref(false)
 const savedQueriesDialog  = ref(false)
-const chartDialog         = ref(false)
 
 // Unlike PrimeVue's Popover (imperative ref.toggle(), one instance
 // implicitly closes when another opens because they share the same overlay
@@ -1043,6 +1029,22 @@ function openGeoface() {
     query.querytext = expertQuery.value
   }
   router.push({ path: `/${route.params.app}/geoface/${encodeURIComponent(tb)}`, query })
+}
+
+/**
+ * Navigate to the chart wizard, pre-filled with the current table and — when
+ * an advanced/expert search is active — the same filter shape already sent
+ * to Chart.php::getData() (see currentSearch), so the new chart runs over
+ * exactly what's currently on screen instead of the whole table.
+ */
+function createChartFromSearch() {
+  const tb = selectedTable.value?.name
+  if (!tb) return
+  const query = { tb }
+  if (currentSearch.value) {
+    query.filter = JSON.stringify(currentSearch.value)
+  }
+  router.push({ path: `/${route.params.app}/charts`, query })
 }
 
 /**

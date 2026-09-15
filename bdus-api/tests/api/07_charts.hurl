@@ -87,7 +87,29 @@ jsonpath "$.status" == "success"
 jsonpath "$.code"   == "ok_unsharing_chart"
 
 
-# ── 7h. Delete the chart ─────────────────────────────────────────────
+# ── 7h. Update the chart's name and definition ──────────────────────
+POST {{base_url}}/{{app_name}}/api/chart/{{chart_id}}
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{
+  "name": "US per periodo (bar)",
+  "definition": {
+    "tb": "crud_test",
+    "type":       "bar",
+    "x_field":    "periodo",
+    "y_field":    "id",
+    "y_function": "COUNT"
+  }
+}
+HTTP 200
+[Asserts]
+jsonpath "$.status"               == "success"
+jsonpath "$.code"                 == "ok_update_chart"
+jsonpath "$.chart.name"           == "US per periodo (bar)"
+jsonpath "$.chart.definition.type" == "bar"
+
+
+# ── 7i. Delete the chart ─────────────────────────────────────────────
 DELETE {{base_url}}/{{app_name}}/api/chart/{{chart_id}}
 Authorization: Bearer {{jwt}}
 HTTP 200
@@ -96,7 +118,7 @@ jsonpath "$.status" == "success"
 jsonpath "$.code"   == "ok_chart_erase"
 
 
-# ── 7i. List charts — should be empty again ─────────────────────────
+# ── 7j. List charts — should be empty again ─────────────────────────
 GET {{base_url}}/{{app_name}}/api/charts
 Authorization: Bearer {{jwt}}
 HTTP 200

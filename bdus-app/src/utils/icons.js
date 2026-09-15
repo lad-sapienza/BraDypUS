@@ -6,6 +6,7 @@
 import {
   ApartmentOutlined,
   AppstoreOutlined,
+  BarChartOutlined,
   BgColorsOutlined,
   BookOutlined,
   BulbFilled,
@@ -40,6 +41,7 @@ import {
 const ICONS = {
   ban: StopOutlined,
   book: BookOutlined,
+  'chart-bar': BarChartOutlined,
   clock: ClockCircleOutlined,
   cog: SettingOutlined,
   database: DatabaseOutlined,

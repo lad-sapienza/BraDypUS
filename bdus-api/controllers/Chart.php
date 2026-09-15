@@ -243,6 +243,64 @@ class Chart extends \Bdus\Controller
     }
 
     /**
+     * POST { name?, definition? } — updates an existing chart's name and/or definition.
+     *
+     * Only the owner or a super_admin may update.
+     *
+     * Response: { status:'success', code:'ok_update_chart', chart:{...} }
+     */
+    public function updateChart(): void
+    {
+        $id = (int) ($this->get['id'] ?? 0) ?: null;
+        if (!$id) {
+            $this->returnJson(['status' => 'error', 'code' => 'parameter_missing', 'detail' => 'id']);
+            return;
+        }
+
+        $sys_manager = new Manage($this->db);
+        $row = $sys_manager->getById('bdus_charts', $id);
+
+        if (empty($row)) {
+            $this->returnJson(['status' => 'error', 'code' => 'chart_not_found']);
+            return;
+        }
+        if (!$this->assertOwnership($row)) {
+            $this->returnJson(['status' => 'error', 'code' => 'chart_access_denied']);
+            return;
+        }
+
+        $updates = [];
+        if (isset($this->post['name'])) {
+            $updates['name'] = $this->post['name'];
+        }
+        if (isset($this->post['definition'])) {
+            $definition = $this->post['definition'];
+            if (is_string($definition)) {
+                $definition = json_decode($definition, true);
+            }
+            $updates['definition'] = json_encode($definition);
+        }
+
+        if (empty($updates)) {
+            $this->returnJson(['status' => 'error', 'code' => 'nothing_to_update']);
+            return;
+        }
+
+        try {
+            $sys_manager->editRow('bdus_charts', $id, $updates);
+            $updated = $sys_manager->getById('bdus_charts', $id);
+            $this->returnJson([
+                'status' => 'success',
+                'code'   => 'ok_update_chart',
+                'chart'  => $this->enrichRow($updated),
+            ]);
+        } catch (\Throwable $e) {
+            $this->log->error($e);
+            $this->returnJson(['status' => 'error', 'code' => 'error_update_chart']);
+        }
+    }
+
+    /**
      * POST { id } — sets is_global = 1 for a chart.
      *
      * Only the owner or a super_admin may share.

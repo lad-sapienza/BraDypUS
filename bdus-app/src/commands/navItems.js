@@ -31,6 +31,7 @@ export function buildNavGroups(app) {
         { labelKey: 'find_replace',         icon: 'pi-search-plus', to: `${a}/find-replace`,    minPrivilege: PRIVILEGE.ADMIN },
         { labelKey: 'vocabulary_mng',       icon: 'pi-book',        to: `${a}/vocabularies`,    minPrivilege: PRIVILEGE.READER },
         { labelKey: 'assemblage_analysis',  icon: 'pi-th-large',    to: `${a}/assemblages`,     minPrivilege: PRIVILEGE.READER },
+        { labelKey: 'charts',               icon: 'pi-chart-bar',   to: `${a}/charts`,          minPrivilege: PRIVILEGE.READER },
         { labelKey: 'history',              icon: 'pi-history',     to: `${a}/history`,         minPrivilege: PRIVILEGE.READER },
         { labelKey: 'deleted_records',      icon: 'pi-trash',       to: `${a}/deleted-records`, minPrivilege: PRIVILEGE.READER },
         { labelKey: 'import_data',          icon: 'pi-download',    to: `${a}/import`,          minPrivilege: PRIVILEGE.WRITER },

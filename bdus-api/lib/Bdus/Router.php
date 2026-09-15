@@ -123,6 +123,7 @@ class Router
         'Bdus\\Controllers\\Record::addManualLink'                 => 'edit',
         'Bdus\\Controllers\\Record::deleteManualLink'              => 'edit',
         'Bdus\\Controllers\\Chart::saveChart'                      => 'edit',
+        'Bdus\\Controllers\\Chart::updateChart'                    => 'edit',
         'Bdus\\Controllers\\Chart::shareChart'                     => 'edit',
         'Bdus\\Controllers\\Chart::unshareChart'                   => 'edit',
         'Bdus\\Controllers\\Chart::deleteChart'                    => 'edit',
@@ -490,6 +491,7 @@ class Router
             $r->addRoute('GET',    '/api/charts',                  ['Bdus\\Controllers\\Chart', 'listCharts']);
             $r->addRoute('POST',   '/api/charts',                  ['Bdus\\Controllers\\Chart', 'saveChart']);
             $r->addRoute('POST',   '/api/chart/data',              ['Bdus\\Controllers\\Chart', 'getData']);
+            $r->addRoute('POST',   '/api/chart/{id:\d+}',          ['Bdus\\Controllers\\Chart', 'updateChart']);
             $r->addRoute('POST',   '/api/chart/{id:\d+}/share',    ['Bdus\\Controllers\\Chart', 'shareChart']);
             $r->addRoute('POST',   '/api/chart/{id:\d+}/unshare',  ['Bdus\\Controllers\\Chart', 'unshareChart']);
             $r->addRoute('DELETE', '/api/chart/{id:\d+}',          ['Bdus\\Controllers\\Chart', 'deleteChart']);

@@ -210,6 +210,100 @@ class ChartCtrlTest extends BdusTestCase
         $this->assertSame('parameter_missing', $res['code']);
     }
 
+    // ── updateChart ──────────────────────────────────────────────────────────
+
+    public function testUpdateChartSuccess(): void
+    {
+        $save = $this->makeController('Bdus\\Controllers\\Chart', [], [
+            'name'       => 'Original name',
+            'definition' => [
+                'tb'       => 'items',
+                'type'     => 'metric',
+                'field'    => 'id',
+                'function' => 'COUNT',
+            ],
+        ]);
+        $saved = $this->callController($save, 'saveChart');
+        $id    = $saved['chart']['id'];
+
+        $ctrl = $this->makeController('Bdus\\Controllers\\Chart', ['id' => $id], [
+            'name'       => 'Updated name',
+            'definition' => [
+                'tb'       => 'items',
+                'type'     => 'bar',
+                'x_field'  => 'name',
+                'y_field'  => 'id',
+                'y_function' => 'COUNT',
+            ],
+        ]);
+        $res = $this->callController($ctrl, 'updateChart');
+
+        $this->assertSame('success', $res['status']);
+        $this->assertSame('ok_update_chart', $res['code']);
+        $this->assertSame('Updated name', $res['chart']['name']);
+        $this->assertSame('bar', $res['chart']['definition']['type']);
+    }
+
+    public function testUpdateChartMissingId(): void
+    {
+        $ctrl = $this->makeController('Bdus\\Controllers\\Chart', [], ['name' => 'x']);
+        $res  = $this->callController($ctrl, 'updateChart');
+
+        $this->assertSame('error', $res['status']);
+        $this->assertSame('parameter_missing', $res['code']);
+    }
+
+    public function testUpdateChartNotFound(): void
+    {
+        $ctrl = $this->makeController('Bdus\\Controllers\\Chart', ['id' => 999999], ['name' => 'x']);
+        $res  = $this->callController($ctrl, 'updateChart');
+
+        $this->assertSame('error', $res['status']);
+        $this->assertSame('chart_not_found', $res['code']);
+    }
+
+    public function testUpdateChartNothingToUpdate(): void
+    {
+        $save = $this->makeController('Bdus\\Controllers\\Chart', [], [
+            'name'       => 'Untouched',
+            'definition' => [
+                'tb' => 'items', 'type' => 'metric', 'field' => 'id', 'function' => 'COUNT',
+            ],
+        ]);
+        $saved = $this->callController($save, 'saveChart');
+        $id    = $saved['chart']['id'];
+
+        $ctrl = $this->makeController('Bdus\\Controllers\\Chart', ['id' => $id], []);
+        $res  = $this->callController($ctrl, 'updateChart');
+
+        $this->assertSame('error', $res['status']);
+        $this->assertSame('nothing_to_update', $res['code']);
+    }
+
+    public function testUpdateChartDeniedForNonOwner(): void
+    {
+        $save = $this->makeController('Bdus\\Controllers\\Chart', [], [
+            'name'       => 'Owned by user 1',
+            'definition' => [
+                'tb' => 'items', 'type' => 'metric', 'field' => 'id', 'function' => 'COUNT',
+            ],
+        ]);
+        $saved = $this->callController($save, 'saveChart');
+        $id    = $saved['chart']['id'];
+
+        \Auth\CurrentUser::set([
+            'id' => 2, 'name' => 'Other user', 'email' => 'other@example.com', 'privilege' => 20, 'app' => 'test',
+        ]);
+
+        $ctrl = $this->makeController('Bdus\\Controllers\\Chart', ['id' => $id], ['name' => 'Hijacked']);
+        $res  = $this->callController($ctrl, 'updateChart');
+
+        $this->setPrivilege(1);
+
+        $this->assertSame('error', $res['status']);
+        $this->assertSame('chart_access_denied', $res['code']);
+    }
+
     // ── shareChart ────────────────────────────────────────────────────────────
 
     public function testShareChartSuccess(): void

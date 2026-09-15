@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.11.0] - 2026-09-15
+
 ### Added
 
 - **New system plugin: Pleiades gazetteer place-name linking.** Links a record to a

@@ -69,6 +69,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `bdus-app/src/router/index.js`, `bdus-app/src/views/ChartsView.vue`,
     `bdus-app/src/views/DataView.vue`
 
+- **GeoFace map popups showed a record's preview fields but no way to open
+  the record itself**, breaking the loop back from map to data — the popup
+  correctly summarized the record but the trip back into it required
+  finding it again by hand in the data table. Popups now include an "Open
+  record" link to the record's read view, navigated via the SPA router
+  (no full page reload).
+  - `bdus-app/src/views/GeofaceView.vue`
+
 ## [5.12.0] - 2026-09-16
 
 ### Changed

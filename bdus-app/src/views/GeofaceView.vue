@@ -516,10 +516,24 @@ function addRecordLayer() {
             .map(([k, v]) => `<div><strong>${k}</strong>: ${v}</div>`)
             .join('')
 
-      new maplibregl.Popup()
+      const recordPath = `/${route.params.app}/record/${route.params.tb}/${props.id}`
+
+      const popup = new maplibregl.Popup()
         .setLngLat(e.lngLat)
-        .setHTML(`<div class="geo-popup">${content}</div>`)
+        .setHTML(`
+          <div class="geo-popup">${content}</div>
+          <a class="geo-popup-link" href="${recordPath}">${t('open_record')}</a>
+        `)
         .addTo(map)
+
+      // Route via the SPA router (full navigation would reload the whole
+      // app) — the link stays a real <a href> so it still works if JS is
+      // slow to attach, and for middle-click / open-in-new-tab.
+      popup.getElement()?.querySelector('.geo-popup-link')?.addEventListener('click', evt => {
+        evt.preventDefault()
+        popup.remove()
+        router.push(recordPath)
+      })
     })
     map.on('mouseenter', layerId, () => { map.getCanvas().style.cursor = 'pointer' })
     map.on('mouseleave', layerId, () => { map.getCanvas().style.cursor = '' })
@@ -865,6 +879,18 @@ onUnmounted(() => {
 
 :global(.geo-popup div:last-child) {
   border-bottom: none;
+}
+
+:global(.geo-popup-link) {
+  display: block;
+  margin-top: 0.4rem;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--p-primary-color);
+  text-decoration: none;
+}
+:global(.geo-popup-link:hover) {
+  text-decoration: underline;
 }
 
 /* Close button */

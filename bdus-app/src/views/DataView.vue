@@ -1048,7 +1048,7 @@ function createChartFromSearch() {
   if (currentSearch.value) {
     query.filter = JSON.stringify(currentSearch.value)
   }
-  router.push({ path: `/${route.params.app}/charts`, query })
+  router.push({ path: `/${route.params.app}/charts/new`, query })
 }
 
 /**

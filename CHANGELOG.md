@@ -58,6 +58,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Assemblage Analysis, for a clearer and more consistent affordance.
   - `bdus-app/src/views/ChartsView.vue`
 
+- **Charts: viewing or editing a chart never changed the URL** — everything
+  happened behind `/{app}/charts` as local component state, so the browser
+  back/forward buttons did nothing useful, a reload always landed back on
+  the list, and a chart couldn't be bookmarked or linked to directly. Chart
+  view and edit now have their own URLs (`/{app}/charts/:id`,
+  `/{app}/charts/:id/edit`, `/{app}/charts/new`), with `ChartsView.vue`
+  deriving its state from the route (and a route watcher) instead of from
+  button click handlers directly mutating local refs.
+  - `bdus-app/src/router/index.js`, `bdus-app/src/views/ChartsView.vue`,
+    `bdus-app/src/views/DataView.vue`
+
 ## [5.12.0] - 2026-09-16
 
 ### Changed

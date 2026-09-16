@@ -141,6 +141,24 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/:app/charts/new',
+    component: () => import('@/views/ChartsView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    // Dedicated read (view/run) and edit URLs so a saved chart is
+    // bookmarkable/shareable and the browser back/forward history works,
+    // instead of both living behind the same /charts URL as component state.
+    path: '/:app/charts/:id(\\d+)/edit',
+    component: () => import('@/views/ChartsView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/:app/charts/:id(\\d+)',
+    component: () => import('@/views/ChartsView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/:app/chrono/:tb',
     component: () => import('@/views/ChronoTimelineView.vue'),
     meta: { requiresAuth: true }

@@ -167,7 +167,7 @@ import {
   FilterOutlined, GlobalOutlined, LockOutlined, PlayCircleOutlined,
   PlusOutlined, ShareAltOutlined,
 } from '@ant-design/icons-vue'
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useToast } from '@/composables/useNotify'
 import { useI18n } from '@/i18n'
@@ -229,24 +229,61 @@ const tableOptions = computed(() => tables.value.map(tb => ({ value: tb.name, la
 const tableLocked = computed(() => !!editingChart.value || fromSearch.value)
 
 // ── Lifecycle ──────────────────────────────────────────────────────────
+// mode/editingChart/resultChart/wizardTb/originalFilter are all derived from
+// the URL (see router/index.js: /charts, /charts/new, /charts/:id,
+// /charts/:id/edit) rather than being pure component state, so a saved
+// chart is bookmarkable/shareable and the browser back/forward buttons work.
 onMounted(async () => {
   await loadTables()
-  fetchCharts()
+  await syncFromRoute()
+  watch(() => route.fullPath, syncFromRoute)
+})
 
-  // Arrived from DataView's "create chart from this search" — pre-fill the
-  // wizard with the table + filter already built there, matching what
-  // Chart.php::getData() already accepts (search_type/querytext/join, or a
-  // Directus-style filter array) — no new backend shape involved.
-  const tb = route.query.tb
-  if (tb && tables.value.some(entry => entry.name === tb)) {
+async function syncFromRoute() {
+  const id = route.params.id ? Number(route.params.id) : null
+
+  if (id) {
+    if (!charts.value.length) await fetchCharts()
+    const chart = charts.value.find(c => c.id === id)
+    if (!chart) {
+      router.replace({ path: `/${appName.value}/charts` })
+      return
+    }
+    if (route.path.endsWith('/edit')) {
+      if (!chart.owned_by_me) {
+        // Not the owner — no edit rights; fall back to the read-only view.
+        router.replace({ path: `/${appName.value}/charts/${id}` })
+        return
+      }
+      applyWizardState(chart)
+    } else {
+      applyResultState(chart)
+    }
+    return
+  }
+
+  if (route.path.endsWith('/charts/new')) {
+    // Arrived plain, or from DataView's "create chart from this search"
+    // (?tb=&filter=, matching what Chart.php::getData() already accepts).
     let filter = null
     if (route.query.filter) {
       try { filter = JSON.parse(route.query.filter) } catch { filter = null }
     }
-    openWizard(null, { tb, filter })
-    router.replace({ path: route.path })
+    applyWizardState(null, { tb: route.query.tb, filter })
+    return
   }
-})
+
+  // Plain /charts — the list.
+  mode.value            = 'list'
+  editingChart.value    = null
+  fromSearch.value      = false
+  wizardTb.value        = ''
+  originalFilter.value  = null
+  showFilterJson.value  = false
+  resultChart.value     = null
+  resultData.value      = null
+  fetchCharts()
+}
 
 // ── List ───────────────────────────────────────────────────────────────
 async function fetchCharts() {
@@ -300,13 +337,19 @@ async function doDelete(c) {
 }
 
 // ── Result ─────────────────────────────────────────────────────────────
-async function runSavedChart(c) {
-  resultChart.value   = c
+// Navigates to the chart's own URL; syncFromRoute() (via the route watcher)
+// does the actual data fetch — see applyResultState().
+function runSavedChart(c) {
+  router.push({ path: `/${appName.value}/charts/${c.id}` })
+}
+
+async function applyResultState(chart) {
+  resultChart.value   = chart
   resultData.value    = null
   resultLoading.value = true
   mode.value           = 'result'
   try {
-    const res = await api.post('/api/chart/data', { definition: c.definition })
+    const res = await api.post('/api/chart/data', { definition: chart.definition })
     if (res.status === 'error') throw new Error(responseMessage(res, t))
     resultData.value = res
   } catch (e) {
@@ -317,12 +360,21 @@ async function runSavedChart(c) {
 }
 
 // ── Wizard ─────────────────────────────────────────────────────────────
+// Navigates to the chart's own edit URL, or /charts/new for a blank one;
+// syncFromRoute() applies the actual wizard state — see applyWizardState().
+function openWizard(chart) {
+  const path = chart
+    ? `/${appName.value}/charts/${chart.id}/edit`
+    : `/${appName.value}/charts/new`
+  router.push({ path })
+}
+
 /**
- * Opens the wizard either to edit an existing chart (`chart` set) or to
- * create one — plain (`chart`/`context` both null) or pre-filled from a
+ * Applies the wizard state, either editing an existing chart (`chart` set)
+ * or creating one — plain (`chart`/`context` both null) or pre-filled from a
  * DataView search (`context = { tb, filter }`, `chart` null).
  */
-function openWizard(chart, context = null) {
+function applyWizardState(chart, context = null) {
   editingChart.value = chart
   fromSearch.value   = !chart && !!context
   wizardTb.value      = chart?.definition?.tb ?? context?.tb ?? ''
@@ -332,15 +384,7 @@ function openWizard(chart, context = null) {
 }
 
 function backToList() {
-  mode.value          = 'list'
-  editingChart.value  = null
-  fromSearch.value    = false
-  wizardTb.value      = ''
-  originalFilter.value = null
-  showFilterJson.value = false
-  resultChart.value   = null
-  resultData.value    = null
-  fetchCharts()
+  router.push({ path: `/${appName.value}/charts` })
 }
 
 async function onSaveChart({ name, definition }) {

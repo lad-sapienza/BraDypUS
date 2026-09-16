@@ -5,6 +5,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.12.0] - 2026-09-16
+
+### Changed
+
+- **Chart management moved to a dedicated full-page view.** Charts used to be
+  reachable only via an icon in the record-list toolbar, opening a modal that
+  mixed the builder with a list of charts from *every* table, not just the one
+  the icon was clicked from. Replaced with a new "Charts" entry in the main
+  menu (`/:app/charts`, `bdus-app/src/views/ChartsView.vue`): a full-page list
+  of all charts (click the title to run one full-width), a "New chart" wizard,
+  and per-chart edit/share/delete actions. No modals involved.
+  - Building a *filtered* chart is now guided rather than free-text SQL: a new
+    "Create chart from this view" action in `DataView.vue`'s toolbar hands off
+    the table and the currently active advanced/expert search filter — via
+    the same shape `Chart.php::getData()` already accepts — into the wizard,
+    which starts pre-filled and locked to that table. The plain "New chart"
+    entry from the menu still works standalone, just without a filter (all
+    rows) — building one from scratch requires DataView's existing, familiar
+    filter UI rather than reinventing a second one inside the wizard.
+  - New `bdus-app/src/components/ChartBuilder.vue` (the type/fields/style
+    builder, extracted from the removed `ChartPanel.vue`) and
+    `ChartResult.vue` (chart.js rendering, shared by the wizard preview and
+    the full-page run view).
+  - Backend gains `Chart::updateChart()` (`POST /api/chart/{id}`) — charts
+    could previously only be created or deleted, never edited in place.
+  - `bdus-app/src/router/index.js`, `commands/navItems.js`, `utils/icons.js`
+    (new `chart-bar` icon), `locale/{it,en}.json`.
+  - Tests: `tests/Integration/ChartCtrlTest.php`, `tests/api/07_charts.hurl`.
+
 ## [5.11.0] - 2026-09-15
 
 ### Added

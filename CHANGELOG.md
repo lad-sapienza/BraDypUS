@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.12.0] - 2026-09-16
+
 ### Changed
 
 - **Chart management moved to a dedicated full-page view.** Charts used to be

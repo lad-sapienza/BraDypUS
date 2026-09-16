@@ -50,6 +50,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `bdus-app/src/views/ChartsView.vue`, `bdus-app/src/locale/en.json`,
     `bdus-app/src/locale/it.json`
 
+- **Charts list: no way to run a chart except clicking its title, and the
+  share/unshare toggle used a star icon that reads as "add to favourites"
+  rather than "share."** Added a dedicated Run button to each card's action
+  row (the title click still works too), and swapped the star for the
+  globe/lock pair already used for the same share/unshare toggle in
+  Assemblage Analysis, for a clearer and more consistent affordance.
+  - `bdus-app/src/views/ChartsView.vue`
+
 ## [5.12.0] - 2026-09-16
 
 ### Changed

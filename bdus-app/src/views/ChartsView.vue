@@ -32,6 +32,14 @@
 
               <template #actions>
                 <AButton
+                  type="text"
+                  size="small"
+                  :title="t('execute_query')"
+                  @click="runSavedChart(c)"
+                >
+                  <template #icon><PlayCircleOutlined /></template>
+                </AButton>
+                <AButton
                   v-if="c.owned_by_me"
                   type="text"
                   size="small"
@@ -48,7 +56,7 @@
                   :loading="pendingId === c.id && pendingAction === 'share'"
                   @click="toggleShare(c)"
                 >
-                  <template #icon><component :is="c.is_global ? StarFilled : StarOutlined" /></template>
+                  <template #icon><component :is="c.is_global ? LockOutlined : GlobalOutlined" /></template>
                 </AButton>
                 <AButton
                   v-if="c.owned_by_me"
@@ -156,7 +164,8 @@
 <script setup>
 import {
   ArrowLeftOutlined, BarChartOutlined, DeleteOutlined, EditOutlined,
-  FilterOutlined, PlusOutlined, ShareAltOutlined, StarFilled, StarOutlined,
+  FilterOutlined, GlobalOutlined, LockOutlined, PlayCircleOutlined,
+  PlusOutlined, ShareAltOutlined,
 } from '@ant-design/icons-vue'
 import { ref, computed, onMounted } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'

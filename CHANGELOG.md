@@ -33,6 +33,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   last-saved values and the save is skipped when nothing differs from it.
   - `bdus-app/src/views/FilesView.vue`
 
+- **File management: the preview modal left a narrower-than-usual image
+  pinned to the left, with a lot of empty space to its right.** The modal
+  body now centers its content, so the image sits in the middle regardless
+  of how much wider the modal is than the image itself.
+  - `bdus-app/src/views/FilesView.vue`
+
 ## [5.12.0] - 2026-09-16
 
 ### Changed

@@ -131,7 +131,7 @@
       v-model:open="previewDialog"
       :title="previewFile ? `${previewFile.filename}.${previewFile.ext}` : ''"
       :width="previewFile?.is_image ? 'auto' : '80vw'"
-      :body-style="{ padding: 0, overflow: 'hidden' }"
+      :body-style="{ padding: 0, overflow: 'hidden', display: 'flex', justifyContent: 'center', alignItems: 'center' }"
       :footer="null"
     >
       <template v-if="previewFile">

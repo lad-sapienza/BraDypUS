@@ -21,6 +21,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the raw id when that column's header is clicked. `DataView.vue` prefers the
   resolved value, falling back to the raw id for an unresolved/broken FK.
 
+- **File management: renaming a file could show the extension twice** —
+  baked into the stored `filename` (e.g. carried over from data older than
+  this UI) inside the editable name field, and once more in the grey `.ext`
+  suffix rendered right next to it. `FilesView.vue` now strips a trailing
+  `.{ext}` from `filename` defensively wherever it's read (list load, save,
+  replace-file), so already-affected records self-heal on next load instead
+  of needing a manual data fix. While in there: blur/Enter on the
+  filename/description/keywords fields fired a `PATCH /api/file/{id}` even
+  when nothing had actually changed; each file now keeps a snapshot of its
+  last-saved values and the save is skipped when nothing differs from it.
+  - `bdus-app/src/views/FilesView.vue`
+
 ## [5.12.0] - 2026-09-16
 
 ### Changed

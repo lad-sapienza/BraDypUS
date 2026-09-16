@@ -232,7 +232,10 @@ async function fetchFiles() {
     }
     const data = await api.get('/api/files', params)
     if (data.status === 'error') throw new Error(t(data.code))
-    files.value = data.files ?? []
+    files.value = (data.files ?? []).map(f => {
+      const filename = stripExt(f.filename, f.ext)
+      return { ...f, filename, _meta: { filename, description: f.description, keywords: f.keywords } }
+    })
     total.value = data.total ?? 0
   } catch (e) {
     toast.add({ severity: 'error', summary: t('generic_error'), detail: e.message, life: 5000 })
@@ -258,16 +261,36 @@ function onTableChange(paginationEvt) {
 }
 
 // ── Metadata save ──────────────────────────────────────────────────
+// The extension is shown separately (see .filename-ext) and must never be
+// part of the editable value — strip it defensively in case it was typed
+// or pasted in, or already baked into legacy data.
+function stripExt(name, ext) {
+  const suffix = '.' + (ext ?? '')
+  return ext && (name ?? '').toLowerCase().endsWith(suffix.toLowerCase())
+    ? name.slice(0, -suffix.length)
+    : (name ?? '')
+}
+
 async function saveMeta(file) {
+  file.filename = stripExt(file.filename, file.ext)
+
+  const meta = { filename: file.filename, description: file.description, keywords: file.keywords }
+  // blur/enter fire on every focus-out or keypress regardless of whether the
+  // value actually changed — comparing against the last-saved snapshot (not
+  // switching to a native change event, which wouldn't fire on Enter anyway)
+  // is what actually skips the no-op API calls.
+  if (file._meta && file._meta.filename === meta.filename &&
+      file._meta.description === meta.description && file._meta.keywords === meta.keywords) {
+    return
+  }
+
   try {
-    const res = await api.patch(`/api/file/${file.id}`, {
-      filename:    file.filename,
-      description: file.description,
-      keywords:    file.keywords,
-    })
+    const res = await api.patch(`/api/file/${file.id}`, meta)
     if (res.status === 'error') {
       toast.add({ severity: 'error', summary: t('generic_error'), detail: t(res.code), life: 4000 })
+      return
     }
+    file._meta = meta
   } catch (e) {
     toast.add({ severity: 'error', summary: t('generic_error'), detail: e.message, life: 4000 })
   }
@@ -323,8 +346,9 @@ async function onReplaceFileSelected(evt) {
     const target = files.value.find(f => f.id === replacingFileId.value)
     if (target) {
       target.ext      = res.ext
-      target.filename = res.filename
+      target.filename = stripExt(res.filename, res.ext)
       target.is_image = res.is_image
+      if (target._meta) target._meta.filename = target.filename
     }
   } catch (e) {
     toast.add({ severity: 'error', summary: t('generic_error'), detail: e.message, life: 5000 })

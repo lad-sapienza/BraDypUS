@@ -88,7 +88,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   stale MapLibre event-object reference (`e.features[0]` read after the
   library had already reused the object), and mixing legacy `$type` filter
   syntax with an expression-style `get()` condition in the same `all`,
-  which silently zeroes out the whole layer instead of erroring.
+  which silently zeroes out the whole layer instead of erroring. The "Edit
+  geometry" link and draw controls follow the same `canUserEdit`
+  (`Authorization::can('edit')`) gating as the rest of GeoFace, both in the
+  UI and independently re-checked server-side on every write endpoint.
   - `bdus-app/src/views/GeofaceView.vue`, `bdus-app/src/locale/en.json`,
     `bdus-app/src/locale/it.json`
 

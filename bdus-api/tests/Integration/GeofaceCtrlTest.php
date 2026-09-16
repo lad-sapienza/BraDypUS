@@ -138,6 +138,36 @@ class GeofaceCtrlTest extends BdusTestCase
         $this->assertSame('parameter_missing', $res['code']);
     }
 
+    /** The record-view WKT editor sends a raw WKT string, not GeoJSON. */
+    public function testSaveNewAcceptsRawWkt(): void
+    {
+        $ctrl = $this->makeController(
+            'Bdus\\Controllers\\Geoface',
+            [],
+            ['tb' => self::TB, 'id' => 2, 'geometry' => 'POINT (13.0 42.0)']
+        );
+        $res = $this->callController($ctrl, 'saveNew');
+
+        $this->assertSame('success', $res['status']);
+        $this->assertSame('ok_insert_geodata', $res['code']);
+
+        $row = static::$db->query('SELECT geometry FROM bdus_geodata WHERE id = ?', [$res['geo_id']]);
+        $this->assertStringContainsString('POINT', strtoupper($row[0]['geometry']));
+    }
+
+    public function testSaveNewInvalidWktReturnsError(): void
+    {
+        $ctrl = $this->makeController(
+            'Bdus\\Controllers\\Geoface',
+            [],
+            ['tb' => self::TB, 'id' => 2, 'geometry' => 'NOT A GEOMETRY']
+        );
+        $res = $this->callController($ctrl, 'saveNew');
+
+        $this->assertSame('error', $res['status']);
+        $this->assertSame('invalid_geometry', $res['code']);
+    }
+
     // ── updateGeometry ────────────────────────────────────────────────────
 
     public function testUpdateGeometrySuccess(): void
@@ -170,6 +200,36 @@ class GeofaceCtrlTest extends BdusTestCase
 
         $this->assertSame('error', $res['status']);
         $this->assertSame('parameter_missing', $res['code']);
+    }
+
+    /** The record-view WKT editor sends a raw WKT string, not GeoJSON. */
+    public function testUpdateGeometryAcceptsRawWkt(): void
+    {
+        $ctrl = $this->makeController(
+            'Bdus\\Controllers\\Geoface',
+            [],
+            ['geodata' => [['id' => static::$geoId, 'geometry' => 'POINT (15.0 44.0)']]]
+        );
+        $res = $this->callController($ctrl, 'updateGeometry');
+
+        $this->assertSame('success', $res['status']);
+        $this->assertSame('ok_update_geometry', $res['code']);
+
+        $row = static::$db->query('SELECT geometry FROM bdus_geodata WHERE id = ?', [static::$geoId]);
+        $this->assertStringContainsString('15', $row[0]['geometry']);
+    }
+
+    public function testUpdateGeometryInvalidWktReturnsError(): void
+    {
+        $ctrl = $this->makeController(
+            'Bdus\\Controllers\\Geoface',
+            [],
+            ['geodata' => [['id' => static::$geoId, 'geometry' => 'NOT A GEOMETRY']]]
+        );
+        $res = $this->callController($ctrl, 'updateGeometry');
+
+        $this->assertSame('error', $res['status']);
+        $this->assertSame('invalid_geometry', $res['code']);
     }
 
     // ── eraseGeometry ─────────────────────────────────────────────────────

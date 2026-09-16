@@ -162,10 +162,36 @@ class Geoface extends \Bdus\Controller
     }
 
     /**
+     * Normalizes user-supplied geometry input to a WKT string ready for
+     * storage. Accepts a GeoJSON geometry (array, or JSON-encoded string —
+     * the map-drawing flow) or a raw WKT string (e.g. pasted by hand into
+     * the record-view geodata editor) — whichever form the caller has,
+     * round-tripping through WktGeoJson so the stored value is always
+     * canonically formatted and validated either way.
+     *
+     * @throws \InvalidArgumentException on malformed input
+     */
+    private function geometryToWkt(mixed $geometry): string
+    {
+        if (is_array($geometry)) {
+            return WktGeoJson::toWkt($geometry);
+        }
+
+        $decoded = is_string($geometry) ? json_decode($geometry, true) : null;
+        if (is_array($decoded) && isset($decoded['type'], $decoded['coordinates'])) {
+            return WktGeoJson::toWkt($decoded);
+        }
+
+        // Not JSON — treat as raw WKT.
+        return WktGeoJson::toWkt(WktGeoJson::toGeoJson((string) $geometry));
+    }
+
+    /**
      * Saves a new geometry linked to a specific record.
      *
      * POST ?obj=geoface_ctrl&method=saveNew
-     * Body: { tb, id, geometry }  — geometry is a GeoJSON geometry object (JSON string or array)
+     * Body: { tb, id, geometry }  — geometry is a GeoJSON geometry object
+     * (JSON string or array) or a raw WKT string
      *
      * Response: { status, code, geo_id }
      */
@@ -186,13 +212,13 @@ class Geoface extends \Bdus\Controller
         }
 
         try {
-            // Accept geometry as JSON string or already-decoded array
-            if (is_string($geometry)) {
-                $geometry = json_decode($geometry, true);
-            }
+            $wkt = $this->geometryToWkt($geometry);
+        } catch (\Throwable $e) {
+            $this->returnJson(['status' => 'error', 'code' => 'invalid_geometry']);
+            return;
+        }
 
-            $wkt = WktGeoJson::toWkt($geometry);
-
+        try {
             $ok = $this->db->query(
                 'INSERT INTO bdus_geodata (table_link, id_link, geometry) VALUES (?, ?, ?)',
                 [$tb, (int)$id, $wkt],
@@ -221,7 +247,8 @@ class Geoface extends \Bdus\Controller
      * Updates one or more existing geometries in the geodata table.
      *
      * POST ?obj=geoface_ctrl&method=updateGeometry
-     * Body: { geodata: [ { id, geometry }, ... ] }  — geometry is a GeoJSON geometry object
+     * Body: { geodata: [ { id, geometry }, ... ] }  — geometry is a GeoJSON
+     * geometry object or a raw WKT string
      *
      * Response: { status, code }
      */
@@ -248,11 +275,12 @@ class Geoface extends \Bdus\Controller
                     continue;
                 }
 
-                if (is_string($geomRaw)) {
-                    $geomRaw = json_decode($geomRaw, true);
+                try {
+                    $wkt = $this->geometryToWkt($geomRaw);
+                } catch (\Throwable $e) {
+                    $this->returnJson(['status' => 'error', 'code' => 'invalid_geometry']);
+                    return;
                 }
-
-                $wkt = WktGeoJson::toWkt($geomRaw);
 
                 $ok = $this->db->query(
                     'UPDATE bdus_geodata SET geometry = ? WHERE id = ?',

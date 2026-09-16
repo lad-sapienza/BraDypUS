@@ -63,6 +63,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (no full page reload).
   - `bdus-app/src/views/GeofaceView.vue`
 
+- **A record's geographic data was read-only from the record view** — a
+  "1 geometry" count and nothing else, even in edit mode. Restoring what a
+  pre-v5 version had: each geometry now shows its WKT coordinates in an
+  editable field (useful for pasting coordinates from GPS/Google Maps/etc.),
+  with a delete button and an "add geometry" panel for a record with none
+  yet. `Geoface::saveNew()`/`updateGeometry()` now accept a raw WKT string
+  in addition to GeoJSON, so the record-view editor doesn't need its own
+  WKT→GeoJSON parser — it sends the text as typed and the backend validates
+  it via the existing `WktGeoJson::toGeoJson()`.
+  - `bdus-app/src/components/record/GeodataSection.vue` (new),
+    `bdus-app/src/views/RecordView.vue`,
+    `bdus-api/controllers/Geoface.php`,
+    `bdus-api/tests/Integration/GeofaceCtrlTest.php`,
+    `bdus-app/src/locale/en.json`, `bdus-app/src/locale/it.json`
+
 ## [5.12.1] - 2026-09-16
 
 ### Fixed

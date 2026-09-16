@@ -253,16 +253,14 @@
         />
 
         <!-- Geodata -->
-        <fieldset
+        <GeodataSection
           v-if="record.schema?.has_geodata && (hasGeodata || mode === 'edit')"
-          class="record-section"
-        >
-          <legend>{{ t('geodata') }}</legend>
-          <div class="geodata-info">
-            <EnvironmentOutlined />
-            {{ t('geodata_count', geodataCount) }}
-          </div>
-        </fieldset>
+          :geodata="record.geodata ?? {}"
+          :editMode="mode === 'edit'"
+          :recordTb="record.metadata.tb_id"
+          :recordId="id"
+          @geodata-changed="fetchRecord"
+        />
 
       </div>
 
@@ -310,7 +308,7 @@
 </template>
 
 <script setup>
-import { ArrowLeftOutlined, CheckOutlined, CloseOutlined, CopyOutlined, DeleteOutlined, EditOutlined, EnvironmentOutlined, HistoryOutlined, WarningOutlined } from '@ant-design/icons-vue'
+import { ArrowLeftOutlined, CheckOutlined, CloseOutlined, CopyOutlined, DeleteOutlined, EditOutlined, HistoryOutlined, WarningOutlined } from '@ant-design/icons-vue'
 import { ref, computed, watch, reactive, onMounted, onUnmounted, provide } from 'vue'
 import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
 import { useToast, useConfirm } from '@/composables/useNotify'
@@ -333,6 +331,7 @@ import TemplateSection    from '@/components/record/TemplateSection.vue'
 import FileGallery        from '@/components/record/FileGallery.vue'
 import RsSection              from '@/components/record/RsSection.vue'
 import ManualLinksSection     from '@/components/record/ManualLinksSection.vue'
+import GeodataSection         from '@/components/record/GeodataSection.vue'
 import ZoteroSection          from '@/components/record/ZoteroSection.vue'
 import ChronoSection          from '@/components/record/ChronoSection.vue'
 import PleiadesSection        from '@/components/record/PleiadesSection.vue'
@@ -551,12 +550,6 @@ const hasRightColumn = computed(() => {
     || hasManualLinks.value || m === 'edit'
     || (r.schema?.has_geodata && (hasGeodata.value || m === 'edit'))
 })
-const geodataCount = computed(() => {
-  const g = record.value?.geodata
-  if (!g) return 0
-  return Array.isArray(g) ? g.length : Object.keys(g).length
-})
-
 /** True when the loaded record includes a valid resolved template. */
 const hasTemplate = computed(() => !!record.value?.schema?.template)
 
@@ -1231,9 +1224,7 @@ watch(() => route.params.id, fetchRecord)
 }
 
 /* ── Files: rendered by FileGallery.vue ── */
-
-/* ── Geodata ── */
-.geodata-info { display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; }
+/* ── Geodata: rendered by GeodataSection.vue ── */
 
 /* ── Plugin delete dialog ── */
 .plugin-delete-body {

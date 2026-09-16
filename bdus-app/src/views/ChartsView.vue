@@ -123,9 +123,19 @@
               class="w-full"
             />
           </div>
-          <p v-if="originalFilter" class="step-hint">
-            <FilterOutlined /> {{ t('chart_filter_inherited') }}
-          </p>
+          <div v-if="originalFilter" class="filter-hint">
+            <p class="step-hint">
+              <FilterOutlined /> {{ t('chart_filter_inherited') }}
+              <a href="#" @click.prevent="showFilterJson = !showFilterJson">
+                {{ showFilterJson ? t('hide_filter_json') : t('show_filter_json') }}
+              </a>
+              ·
+              <RouterLink :to="filterPreviewLink" target="_blank">
+                {{ t('view_matching_records') }}
+              </RouterLink>
+            </p>
+            <pre v-if="showFilterJson" class="filter-json">{{ JSON.stringify(originalFilter, null, 2) }}</pre>
+          </div>
         </div>
 
         <ChartBuilder
@@ -149,11 +159,12 @@ import {
   FilterOutlined, PlusOutlined, ShareAltOutlined, StarFilled, StarOutlined,
 } from '@ant-design/icons-vue'
 import { ref, computed, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useToast } from '@/composables/useNotify'
 import { useI18n } from '@/i18n'
 import { api } from '@/api'
 import { useTables } from '@/composables/useTables'
+import { useAuthStore } from '@/stores/auth'
 import AppLayout from '@/components/AppLayout.vue'
 import {
   Button as AButton,
@@ -169,8 +180,10 @@ const { t }               = useI18n()
 const toast               = useToast()
 const route               = useRoute()
 const router              = useRouter()
+const auth                = useAuthStore()
 const { responseMessage } = api
 const { tables, loadTables } = useTables()
+const appName = computed(() => auth.user?.app ?? route.params.app)
 
 // ── State ──────────────────────────────────────────────────────────────
 const mode          = ref('list') // 'list' | 'result' | 'wizard'
@@ -188,6 +201,16 @@ const editingChart     = ref(null)
 const fromSearch       = ref(false) // arrived via DataView's "create chart from this search"
 const wizardTb          = ref('')
 const originalFilter    = ref(null)
+const showFilterJson    = ref(false)
+
+// Lets the user check the inherited filter against real data — opens DataView
+// on the same table with this filter applied, reusing its own filter-URL
+// contract (see DataView.vue applyRouteParams()) instead of building a
+// second, separate results table just for this.
+const filterPreviewLink = computed(() => ({
+  path:  `/${appName.value}/data`,
+  query: { tb: wizardTb.value, filter: JSON.stringify(originalFilter.value) },
+}))
 
 // ── Computed ───────────────────────────────────────────────────────────
 const tableOptions = computed(() => tables.value.map(tb => ({ value: tb.name, label: tb.label })))
@@ -295,6 +318,7 @@ function openWizard(chart, context = null) {
   fromSearch.value   = !chart && !!context
   wizardTb.value      = chart?.definition?.tb ?? context?.tb ?? ''
   originalFilter.value = chart?.definition?.filter ?? context?.filter ?? null
+  showFilterJson.value = false
   mode.value = 'wizard'
 }
 
@@ -304,6 +328,7 @@ function backToList() {
   fromSearch.value    = false
   wizardTb.value      = ''
   originalFilter.value = null
+  showFilterJson.value = false
   resultChart.value   = null
   resultData.value    = null
   fetchCharts()
@@ -422,5 +447,18 @@ async function onSaveChart({ name, definition }) {
 }
 .field-label { font-size: 0.85rem; font-weight: 500; }
 .step-hint { font-size: 0.78rem; color: var(--p-text-muted-color); margin: 0; }
+.step-hint a { margin-left: 0.35rem; }
+.filter-json {
+  margin: 0.4rem 0 0;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.75rem;
+  background: var(--p-content-hover-background, #f5f5f5);
+  border: 1px solid var(--p-content-border-color);
+  border-radius: 4px;
+  max-height: 200px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
 .w-full { width: 100%; }
 </style>

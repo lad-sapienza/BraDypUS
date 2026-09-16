@@ -39,6 +39,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   of how much wider the modal is than the image itself.
   - `bdus-app/src/views/FilesView.vue`
 
+- **Chart wizard: the inherited filter hint gave no way to see or verify
+  what was actually being filtered.** Creating or editing a chart from a
+  filtered search showed only a static "Uses the filter from the search you
+  created it from" line, with the filter itself invisible — unsafe to leave
+  opaque next to a stored chart title that describes it. Added a "Show
+  filter (JSON)" toggle plus a "View matching records" link that opens
+  DataView with the exact same filter applied, so the data behind the chart
+  can be checked directly instead of taken on faith.
+  - `bdus-app/src/views/ChartsView.vue`, `bdus-app/src/locale/en.json`,
+    `bdus-app/src/locale/it.json`
+
 ## [5.12.0] - 2026-09-16
 
 ### Changed

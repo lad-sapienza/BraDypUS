@@ -955,6 +955,10 @@ const antdColumns = computed(() =>
     sortOrder: sortField.value === col.name
       ? (sortDir.value === 'desc' ? 'descend' : 'ascend')
       : null,
+    // FK (id_from_tb) fields carry the resolved target label under "@name"
+    // alongside the raw id (see Record.php::getRecords) — prefer it, same
+    // as the single-record view and the guided search already do.
+    customRender: ({ record, text }) => record['@' + col.name] ?? text,
   }))
 )
 

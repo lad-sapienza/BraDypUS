@@ -37,19 +37,28 @@ class QueryFromRequest
   private $limit;
   private $db;
   private $cfg;
+  private string $fkJoin = '';
+  private array $fkSelectExtra = [];
+  private array $fkOrderBy = [];
 
   /**
    *
    * Initializes class setting table, preview fields and where statement
    * @param array $request	array of request data
    * @param boolean $use_preview	use preview fields or all fields
+   * @param boolean $resolve_fk_labels	LEFT JOIN every selected `id_from_tb`
+   *   field to its referenced table's `id_field` and expose it as an
+   *   aliased "@field" column (same convention as \Record\Read::getTbRecord,
+   *   the single-record view) — opt-in, so callers that consume raw rows
+   *   as-is (exportRecords, Chart, Geoface, AssemblageAnalysis) are unaffected.
    * @throws \Exception
    */
   public function __construct(
     DBInterface $db,
     Config $cfg,
     array $request,
-    bool $use_preview = false
+    bool $use_preview = false,
+    bool $resolve_fk_labels = false
   ) {
     if (!$request['tb']) {
       throw new \Exception('Missing required parameter: tb');
@@ -63,6 +72,38 @@ class QueryFromRequest
     $this->setFields($use_preview, $request['fields'] ?? false);
 
     $this->setWhere($request);
+
+    if ($resolve_fk_labels) {
+      $this->buildFkJoins();
+    }
+  }
+
+  /**
+   * For every selected field configured as a lookup (`id_from_tb`), LEFT
+   * JOINs the referenced table and exposes its `id_field` as an aliased
+   * "@field" column, and records the alias so setOrder() can sort on the
+   * resolved label instead of the raw id.
+   */
+  private function buildFkJoins(): void
+  {
+    $fkMap = $this->cfg->get("tables.{$this->tb}.fields.*.id_from_tb") ?: [];
+
+    foreach (array_keys($this->fields) as $fld) {
+      $refTb = $fkMap[$fld] ?? null;
+      if (!$refTb || $refTb === $this->tb) {
+        continue;
+      }
+
+      $refIdField = $this->cfg->get("tables.{$refTb}.id_field");
+      if (!$refIdField) {
+        continue;
+      }
+
+      $alias = uniqid('fk');
+      $this->fkJoin .= " LEFT JOIN {$refTb} AS {$alias} ON {$alias}.id = {$this->tb}.{$fld} ";
+      $this->fkSelectExtra[] = "{$alias}.{$refIdField} AS \"@{$fld}\"";
+      $this->fkOrderBy[$fld] = "{$alias}.{$refIdField}";
+    }
   }
 
   public function setOrder($fld = false, $type = false): ?QueryFromRequest
@@ -91,7 +132,9 @@ class QueryFromRequest
           $fld = $this->tb . '.id';
         }
       } else {
-        $fld = $this->tb . '.' . $fld;
+        // Sort on the resolved FK label (the same value now shown on screen)
+        // rather than the raw id, when this field was joined by buildFkJoins().
+        $fld = $this->fkOrderBy[$fld] ?? ($this->tb . '.' . $fld);
       }
 
       $this->order = $fld ? " ORDER BY $fld $type " : '';
@@ -168,8 +211,9 @@ class QueryFromRequest
 
     $sql = "SELECT " .
       $this->formatFields() .
+      ($this->fkSelectExtra ? ', ' . implode(', ', $this->fkSelectExtra) : '') .
       " FROM " . $this->tb . " " .
-      $this->join .
+      $this->join . $this->fkJoin .
       " WHERE " . $this->where .
       $this->getOrder() .
       $this->getLimit();

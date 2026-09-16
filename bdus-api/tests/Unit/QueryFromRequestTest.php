@@ -301,4 +301,63 @@ class QueryFromRequestTest extends BdusTestCase
 
         $this->assertSame(array_reverse($ascNames), $descNames);
     }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // FK (id_from_tb) label resolution — opt-in $resolve_fk_labels (#66)
+    // ══════════════════════════════════════════════════════════════════════
+
+    private function qfrFk(array $extra, bool $resolveFk): \SQL\QueryFromRequest
+    {
+        $request = array_merge(['tb' => self::TB, 'type' => 'all'], $extra);
+        return new \SQL\QueryFromRequest(static::$db, static::$cfg, $request, false, $resolveFk);
+    }
+
+    public function testFkLabelIsOffByDefault(): void
+    {
+        // Chart/Geoface/AssemblageAnalysis/exportRecords must see raw rows
+        // unchanged — only record_ctrl::getRecords() opts in.
+        $q = $this->qfrFk(['fields' => ['id' => 'id', 'cat_ref' => 'cat_ref']], false);
+        $q->setLimit(0, 5);
+        $row = $q->getResults()[0];
+        $this->assertArrayNotHasKey('@cat_ref', $row);
+    }
+
+    public function testFkLabelResolvedWhenOptedIn(): void
+    {
+        $q = $this->qfrFk(['fields' => ['id' => 'id', 'cat_ref' => 'cat_ref']], true);
+        $q->setLimit(0, 5);
+        $byId = [];
+        foreach ($q->getResults() as $r) {
+            $byId[(int) $r['id']] = $r;
+        }
+
+        $this->assertSame('Ceramics', $byId[1]['@cat_ref']); // seeded: item 1 → categories.id 1
+        $this->assertSame('Metal',    $byId[2]['@cat_ref']); // item 2 → categories.id 2
+
+        // Item 3 has no category — LEFT JOIN resolves to null, not an error.
+        $this->assertArrayHasKey('@cat_ref', $byId[3]);
+        $this->assertNull($byId[3]['@cat_ref']);
+    }
+
+    public function testFkOrderBySortsOnResolvedLabelNotRawId(): void
+    {
+        // categories seed: id 1 "Ceramics", id 2 "Metal" — same relative order
+        // whether sorted by id or by label, so assert on the generated SQL
+        // (what setOrder() actually targets) rather than on row order.
+        $q = $this->qfrFk(['fields' => ['id' => 'id', 'cat_ref' => 'cat_ref']], true);
+        $q->setOrder('cat_ref', 'asc');
+
+        $sql = $q->getQuery();
+        $this->assertMatchesRegularExpression('/ORDER BY fk\w+\.name asc/', $sql);
+        $this->assertStringNotContainsString('ORDER BY items.cat_ref', $sql);
+    }
+
+    public function testFkJoinSkippedWithoutOptInEvenIfFieldRequested(): void
+    {
+        // Without the opt-in, setOrder() must fall back to the raw column —
+        // no join was built, so there is no alias to sort on.
+        $q = $this->qfrFk(['fields' => ['id' => 'id', 'cat_ref' => 'cat_ref']], false);
+        $q->setOrder('cat_ref', 'asc');
+        $this->assertStringContainsString('ORDER BY items.cat_ref asc', $q->getQuery());
+    }
 }

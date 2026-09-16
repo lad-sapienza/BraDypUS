@@ -5,6 +5,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Record list: FK fields now show the referenced record's label, not its
+  raw id.** The results table in `DataView.vue` used to display the raw
+  numeric id for any lookup field (`id_from_tb`), while the single-record
+  view and the guided search already resolved it to the target table's
+  `id_field`. `SQL\QueryFromRequest` gains an opt-in `$resolve_fk_labels`
+  constructor flag (used only by `Record::getRecords()`, so exports/charts/
+  geoface/assemblage-analysis are unaffected) that `LEFT JOIN`s each selected
+  lookup field's referenced table — same convention as
+  `Record\Read::getTbRecord()` — and sorts on the resolved label instead of
+  the raw id when that column's header is clicked. `DataView.vue` prefers the
+  resolved value, falling back to the raw id for an unresolved/broken FK.
+
 ## [5.12.0] - 2026-09-16
 
 ### Changed

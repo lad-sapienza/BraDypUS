@@ -23,8 +23,12 @@ class Record extends \Bdus\Controller
    * {
    *   total:  int,
    *   fields: [ { name: string, label: string }, ... ],
-   *   data:   [ { id, field1, field2, ... }, ... ]
+   *   data:   [ { id, field1, field2, ..., "@field1"?: string, ... }, ... ]
    * }
+   *
+   * A lookup field (`id_from_tb`) carries its resolved target label
+   * alongside the raw id, under an "@field" key (same convention as
+   * \Record\Read::getTbRecord) — the frontend prefers it when rendering.
    */
   public function getRecords(): void
   {
@@ -128,7 +132,7 @@ class Record extends \Bdus\Controller
     $usePreview = !isset($qRequest['fields']);
 
     try {
-      $qObj = new \SQL\QueryFromRequest($this->db, $this->cfg, $qRequest, $usePreview);
+      $qObj = new \SQL\QueryFromRequest($this->db, $this->cfg, $qRequest, $usePreview, true);
 
       $total = $qObj->getTotal();
 

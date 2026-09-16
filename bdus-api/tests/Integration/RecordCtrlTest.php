@@ -241,4 +241,38 @@ class RecordCtrlTest extends BdusTestCase
         $this->assertSame('success', $res['status']);
         $this->assertCount(5, $res['data']);
     }
+
+    // ── FK (id_from_tb) fields resolve to the target's label (#66) ────────
+    // Regression: the list used to show the raw id of a lookup field while
+    // the single-record view and the guided search already resolved it to
+    // the referenced table's id_field — see the "@field" convention shared
+    // with \Record\Read::getTbRecord().
+
+    public function testGetRecordsResolvesFkFieldToTargetLabel(): void
+    {
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [
+            'tb'          => self::TB,
+            'search_type' => 'all',
+            // cat_ref isn't in the default preview ([id, name, status]) —
+            // request it explicitly, same as the frontend's column toggler.
+            'columns'     => 'id,name,cat_ref',
+        ]);
+        $res = $this->callController($ctrl, 'getRecords');
+
+        $this->assertSame('success', $res['status']);
+        $byId = [];
+        foreach ($res['data'] as $row) {
+            $byId[(int) $row['id']] = $row;
+        }
+
+        // item 1 → categories.id 1 ("Ceramics"), seeded in BdusTestCase::seedData()
+        $this->assertSame(1, (int) $byId[1]['cat_ref'], 'raw id must still be present too');
+        $this->assertSame('Ceramics', $byId[1]['@cat_ref']);
+
+        // item 3 has no category (cat_ref is NULL) — LEFT JOIN resolves to null,
+        // not an error, and the raw (null) value is still there for fallback.
+        $this->assertArrayHasKey('@cat_ref', $byId[3]);
+        $this->assertNull($byId[3]['@cat_ref']);
+        $this->assertNull($byId[3]['cat_ref']);
+    }
 }

@@ -307,6 +307,12 @@ watch(chronoRange, () => {
 const linkDialogVisible = ref(false)
 const pendingGeometry   = ref(null)
 const pendingDrawId     = ref(null)
+
+// bdus_geodata.id of the marker currently handed to the Draw control for
+// dragging/vertex-editing (see startEditingExisting()) — null the rest of
+// the time. Guards onDrawModeChange so it never touches the unrelated
+// "draw a brand new geometry" flow, which shares the same Draw instance.
+const editingGeoId = ref(null)
 const linkSearch        = ref('')
 const linkSuggestions   = ref([])
 
@@ -507,7 +513,12 @@ function addRecordLayer() {
   // Click popups
   ;['records-circle', 'records-fill'].forEach(layerId => {
     map.on('click', layerId, e => {
-      const props  = e.features[0].properties
+      // Captured synchronously: MapLibre reuses/clears its event object after
+      // the handler returns, so e.features[0] is no longer safe to read from
+      // the popup's link listeners below, which only run later on a real
+      // user click.
+      const feature = e.features[0]
+      const props   = feature.properties
       const fields = meta.value.preview_fields ?? []
       const content = fields.length
         ? fields.map(f => `<div><strong>${f}</strong>: ${props[f] ?? ''}</div>`).join('')
@@ -523,16 +534,25 @@ function addRecordLayer() {
         .setHTML(`
           <div class="geo-popup">${content}</div>
           <a class="geo-popup-link" href="${recordPath}">${t('open_record')}</a>
+          ${meta.value.canUserEdit
+            ? `<a class="geo-popup-link geo-popup-edit-link" href="#">${t('edit_geometry')}</a>`
+            : ''}
         `)
         .addTo(map)
 
       // Route via the SPA router (full navigation would reload the whole
       // app) — the link stays a real <a href> so it still works if JS is
       // slow to attach, and for middle-click / open-in-new-tab.
-      popup.getElement()?.querySelector('.geo-popup-link')?.addEventListener('click', evt => {
+      popup.getElement()?.querySelector('.geo-popup-link:not(.geo-popup-edit-link)')?.addEventListener('click', evt => {
         evt.preventDefault()
         popup.remove()
         router.push(recordPath)
+      })
+
+      popup.getElement()?.querySelector('.geo-popup-edit-link')?.addEventListener('click', evt => {
+        evt.preventDefault()
+        popup.remove()
+        startEditingExisting(feature)
       })
     })
     map.on('mouseenter', layerId, () => { map.getCanvas().style.cursor = 'pointer' })
@@ -574,6 +594,109 @@ function addDrawControl() {
   map.on('draw.create', onDrawCreate)
   map.on('draw.update', onDrawUpdate)
   map.on('draw.delete', onDrawDelete)
+  map.on('draw.modechange', onDrawModeChange)
+}
+
+// MapboxDraw's default vertex/point handles (radius 3-7px) are too small to
+// reliably grab on a touchpad/touchscreen — bump them up on the layers used
+// while dragging a point or reshaping a line/polygon's vertices.
+function enlargeDrawHandles() {
+  const radii = {
+    'gl-draw-point-point-stroke-inactive':          9,
+    'gl-draw-point-inactive':                       7,
+    'gl-draw-point-stroke-active':                 12,
+    'gl-draw-point-active':                          9,
+    'gl-draw-polygon-and-line-vertex-stroke-inactive': 10,
+    'gl-draw-polygon-and-line-vertex-inactive':      7,
+  }
+  // This maplibre-gl-draw build splits every style layer into `.hot`/`.cold`
+  // variants (a repaint-frequency optimization) — the bare ids from the
+  // theme source never exist on the map, only the suffixed ones.
+  for (const [layerId, radius] of Object.entries(radii)) {
+    for (const suffix of ['.hot', '.cold']) {
+      if (map.getLayer(layerId + suffix)) map.setPaintProperty(layerId + suffix, 'circle-radius', radius)
+    }
+  }
+}
+
+// MapboxDraw (re)builds these same handle layers asynchronously as part of
+// its own mode-change lifecycle, which silently overwrites a one-shot call
+// to enlargeDrawHandles() made right after changeMode() — neither a
+// setTimeout nor map's 'idle' event reliably lands after that internal
+// work finishes. Reapplying on a handful of render ticks instead guarantees
+// our values win the race, then unsubscribes itself.
+function enlargeDrawHandlesPersistently() {
+  let ticks = 0
+  const onRender = () => {
+    enlargeDrawHandles()
+    if (++ticks >= 10) map.off('render', onRender)
+  }
+  map.on('render', onRender)
+}
+
+// ── Editing an existing marker (drag / reshape vertices) ───────────────────
+// Hands the clicked feature to the Draw control — a Point becomes draggable
+// as a whole (simple_select), a LineString/Polygon gets its individual
+// vertices made draggable (direct_select) — draw.update (below) persists the
+// result the same way it already does for a freshly-drawn geometry.
+function startEditingExisting(feature) {
+  editingGeoId.value = feature.properties?.geo_id ?? null
+  if (editingGeoId.value === null) return
+
+  setEditingFilter(editingGeoId.value)
+  draw.deleteAll()
+  const [addedId] = draw.add({
+    type: 'Feature',
+    properties: { geo_id: editingGeoId.value },
+    geometry: feature.geometry,
+  })
+  // direct_select edits the individual vertices of a line/polygon — this
+  // mapbox-gl-draw build outright rejects it for a Point (throws "direct_select
+  // mode doesn't handle point features"), so a point is just made draggable
+  // as a whole feature via simple_select instead.
+  if (feature.geometry.type === 'Point') {
+    draw.changeMode('simple_select', { featureIds: [addedId] })
+  } else {
+    draw.changeMode('direct_select', { featureId: addedId })
+  }
+  enlargeDrawHandlesPersistently()
+}
+
+/** Hides the given geo_id from the static record layers — the Draw overlay
+ *  takes over showing/dragging it, so it would otherwise be rendered twice. */
+function setEditingFilter(geoId) {
+  // Legacy filter syntax (bare field name, no `get` wrapper) — mixed with
+  // the layers' existing legacy `$type` filter, an expression-style
+  // `['!=', ['get', 'geo_id'], id]` here makes MapLibre's dialect
+  // auto-detection misfire and the whole layer silently renders nothing.
+  const exclude = ['!=', 'geo_id', geoId]
+  map.setFilter('records-circle',  ['all', ['==', '$type', 'Point'],      exclude])
+  map.setFilter('records-line',    ['all', ['==', '$type', 'LineString'], exclude])
+  map.setFilter('records-fill',    ['all', ['==', '$type', 'Polygon'],    exclude])
+  map.setFilter('records-outline', ['all', ['==', '$type', 'Polygon'],    exclude])
+}
+
+function clearEditingFilter() {
+  map.setFilter('records-circle',  ['==', '$type', 'Point'])
+  map.setFilter('records-line',    ['==', '$type', 'LineString'])
+  map.setFilter('records-fill',    ['==', '$type', 'Polygon'])
+  map.setFilter('records-outline', ['==', '$type', 'Polygon'])
+}
+
+function finishEditingExisting() {
+  draw?.deleteAll()
+  clearEditingFilter()
+  editingGeoId.value = null
+}
+
+// Cleans up when the user backs out of editing an existing marker without
+// changing it (Escape, or clicking empty map space) — draw.update (a real
+// change) already cleans up on its own success path. Guarded on
+// editingGeoId so this never touches the unrelated "draw a brand new
+// geometry" flow, which fires the same mode-change events.
+function onDrawModeChange(e) {
+  if (editingGeoId.value === null || e.mode === 'direct_select') return
+  finishEditingExisting()
 }
 
 // ── Draw event handlers ────────────────────────────────────────────────────
@@ -637,11 +760,12 @@ async function onDrawUpdate(e) {
   try {
     const res = await api.put('/api/geoface/feature', { geodata })
     if (res.status === 'error') {
+      // Leave the feature in Draw so the user can retry rather than losing the edit.
       toast.add({ severity: 'error', summary: t('generic_error'), detail: t(res.code ?? 'generic_error'), life: 4000 })
     } else {
       toast.add({ severity: 'success', summary: t('ok_update_geometry'), life: 3000 })
       await reloadGeoJson()
-      draw?.deleteAll()
+      finishEditingExisting()
     }
   } catch (err) {
     toast.add({ severity: 'error', summary: t('generic_error'), detail: String(err), life: 4000 })
@@ -661,6 +785,7 @@ async function onDrawDelete(e) {
     } else {
       toast.add({ severity: 'success', summary: t('ok_delete_geodata'), life: 3000 })
       await reloadGeoJson()
+      finishEditingExisting()
     }
   } catch (err) {
     toast.add({ severity: 'error', summary: t('generic_error'), detail: String(err), life: 4000 })

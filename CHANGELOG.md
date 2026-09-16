@@ -78,6 +78,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `bdus-api/tests/Integration/GeofaceCtrlTest.php`,
     `bdus-app/src/locale/en.json`, `bdus-app/src/locale/it.json`
 
+- **GeoFace's map lost the ability to move an existing marker or reshape a
+  line/polygon's vertices** — the drawing tools could only create new
+  geometries; an already-placed one could only be viewed. A marker's popup
+  now has an "Edit geometry" link that hands it to the draw control (a
+  point becomes draggable as a whole, a line/polygon's vertices become
+  individually draggable), reusing the existing update/delete persistence
+  the draw-new flow already had. Two real bugs surfaced building this: a
+  stale MapLibre event-object reference (`e.features[0]` read after the
+  library had already reused the object), and mixing legacy `$type` filter
+  syntax with an expression-style `get()` condition in the same `all`,
+  which silently zeroes out the whole layer instead of erroring.
+  - `bdus-app/src/views/GeofaceView.vue`, `bdus-app/src/locale/en.json`,
+    `bdus-app/src/locale/it.json`
+
 ## [5.12.1] - 2026-09-16
 
 ### Fixed

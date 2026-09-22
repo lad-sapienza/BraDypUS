@@ -5,6 +5,98 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.12.2] - 2026-09-22
+
+### Fixed
+
+- **File management: renaming a file could show the extension twice** —
+  baked into the stored `filename` (e.g. carried over from data older than
+  this UI) inside the editable name field, and once more in the grey `.ext`
+  suffix rendered right next to it. `FilesView.vue` now strips a trailing
+  `.{ext}` from `filename` defensively wherever it's read (list load, save,
+  replace-file), so already-affected records self-heal on next load instead
+  of needing a manual data fix. While in there: blur/Enter on the
+  filename/description/keywords fields fired a `PATCH /api/file/{id}` even
+  when nothing had actually changed; each file now keeps a snapshot of its
+  last-saved values and the save is skipped when nothing differs from it.
+  - `bdus-app/src/views/FilesView.vue`
+
+- **File management: the preview modal left a narrower-than-usual image
+  pinned to the left, with a lot of empty space to its right.** The modal
+  body now centers its content, so the image sits in the middle regardless
+  of how much wider the modal is than the image itself.
+  - `bdus-app/src/views/FilesView.vue`
+
+- **Chart wizard: the inherited filter hint gave no way to see or verify
+  what was actually being filtered.** Creating or editing a chart from a
+  filtered search showed only a static "Uses the filter from the search you
+  created it from" line, with the filter itself invisible — unsafe to leave
+  opaque next to a stored chart title that describes it. Added a "Show
+  filter (JSON)" toggle plus a "View matching records" link that opens
+  DataView with the exact same filter applied, so the data behind the chart
+  can be checked directly instead of taken on faith.
+  - `bdus-app/src/views/ChartsView.vue`, `bdus-app/src/locale/en.json`,
+    `bdus-app/src/locale/it.json`
+
+- **Charts list: no way to run a chart except clicking its title, and the
+  share/unshare toggle used a star icon that reads as "add to favourites"
+  rather than "share."** Added a dedicated Run button to each card's action
+  row (the title click still works too), and swapped the star for the
+  globe/lock pair already used for the same share/unshare toggle in
+  Assemblage Analysis, for a clearer and more consistent affordance.
+  - `bdus-app/src/views/ChartsView.vue`
+
+- **Charts: viewing or editing a chart never changed the URL** — everything
+  happened behind `/{app}/charts` as local component state, so the browser
+  back/forward buttons did nothing useful, a reload always landed back on
+  the list, and a chart couldn't be bookmarked or linked to directly. Chart
+  view and edit now have their own URLs (`/{app}/charts/:id`,
+  `/{app}/charts/:id/edit`, `/{app}/charts/new`), with `ChartsView.vue`
+  deriving its state from the route (and a route watcher) instead of from
+  button click handlers directly mutating local refs.
+  - `bdus-app/src/router/index.js`, `bdus-app/src/views/ChartsView.vue`,
+    `bdus-app/src/views/DataView.vue`
+
+- **GeoFace map popups showed a record's preview fields but no way to open
+  the record itself**, breaking the loop back from map to data — the popup
+  correctly summarized the record but the trip back into it required
+  finding it again by hand in the data table. Popups now include an "Open
+  record" link to the record's read view, navigated via the SPA router
+  (no full page reload).
+  - `bdus-app/src/views/GeofaceView.vue`
+
+- **A record's geographic data was read-only from the record view** — a
+  "1 geometry" count and nothing else, even in edit mode. Restoring what a
+  pre-v5 version had: each geometry now shows its WKT coordinates in an
+  editable field (useful for pasting coordinates from GPS/Google Maps/etc.),
+  with a delete button and an "add geometry" panel for a record with none
+  yet. `Geoface::saveNew()`/`updateGeometry()` now accept a raw WKT string
+  in addition to GeoJSON, so the record-view editor doesn't need its own
+  WKT→GeoJSON parser — it sends the text as typed and the backend validates
+  it via the existing `WktGeoJson::toGeoJson()`.
+  - `bdus-app/src/components/record/GeodataSection.vue` (new),
+    `bdus-app/src/views/RecordView.vue`,
+    `bdus-api/controllers/Geoface.php`,
+    `bdus-api/tests/Integration/GeofaceCtrlTest.php`,
+    `bdus-app/src/locale/en.json`, `bdus-app/src/locale/it.json`
+
+- **GeoFace's map lost the ability to move an existing marker or reshape a
+  line/polygon's vertices** — the drawing tools could only create new
+  geometries; an already-placed one could only be viewed. A marker's popup
+  now has an "Edit geometry" link that hands it to the draw control (a
+  point becomes draggable as a whole, a line/polygon's vertices become
+  individually draggable), reusing the existing update/delete persistence
+  the draw-new flow already had. Two real bugs surfaced building this: a
+  stale MapLibre event-object reference (`e.features[0]` read after the
+  library had already reused the object), and mixing legacy `$type` filter
+  syntax with an expression-style `get()` condition in the same `all`,
+  which silently zeroes out the whole layer instead of erroring. The "Edit
+  geometry" link and draw controls follow the same `canUserEdit`
+  (`Authorization::can('edit')`) gating as the rest of GeoFace, both in the
+  UI and independently re-checked server-side on every write endpoint.
+  - `bdus-app/src/views/GeofaceView.vue`, `bdus-app/src/locale/en.json`,
+    `bdus-app/src/locale/it.json`
+
 ## [5.12.1] - 2026-09-16
 
 ### Fixed

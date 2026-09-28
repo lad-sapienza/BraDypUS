@@ -10,9 +10,11 @@ the **GeoFace** module.
 
 ## Enabling geodata for a table
 
-In **Config → Fields**, add a field of type… geodata fields are not regular
-fields but are enabled per-table. When records have geodata, the total count
-appears in RecordView.
+Geodata is not a regular field: it is enabled per table. In **Config → Tables**,
+open the table and turn on the **Geodata (geographic coordinates)** switch. Once
+enabled, records of that table get a **Geographic data** section in the record
+view (see [Adding and editing geodata on a record](#adding-and-editing-geodata-on-a-record))
+and their geometries appear on the GeoFace map.
 
 Geodata can be imported from GeoJSON (see [Import data](/guide/usage/import)).
 
@@ -24,8 +26,11 @@ interactive map (MapLibre GL JS).
 ![GeoFace map view showing a basemap with point markers for records](/images/v5/usage/geoface-map.png)
 
 - **Points, lines and polygons** are rendered from the stored WKT geometries.
-- Click a feature to open its record.
+- Click a feature to open a popup with the record's preview fields and an
+  **Open record** link that takes you to the record's read view.
 - The active DataView filter is inherited — only filtered records appear on the map.
+
+![A GeoFace popup showing a record's preview field, an "Open record" link and an "Edit geometry" link](/images/v5/usage/geoface-popup.png)
 
 ## Temporal filter
 
@@ -83,9 +88,49 @@ For each layer configure:
 | **Attribution** | Copyright/attribution text shown on the map |
 | **Visible by default** | Whether the layer is on when the map opens |
 
-## Adding geodata to a record
+## Editing geometries on the map
 
-In RecordEdit, the geodata panel shows a mini-map. Click to place a point,
-or draw a polygon/line with the drawing tools. The geometry is stored as WKT.
+If you have edit rights on the table, the map also lets you create and change
+geometries directly. The drawing toolbar (point, line, polygon and trash
+buttons) and the **Edit geometry** popup link described below are only shown
+to users with edit rights, and the server checks the same permission again on
+every write, so they cannot be used by anyone else.
 
-To remove geodata from a record, click **Clear geometry** in the geodata panel.
+**Drawing a new geometry.** Pick a drawing tool and draw on the map. When you
+finish, a **Link geometry to record** dialog asks which record the new
+geometry belongs to: search for it and select it to save.
+
+**Moving or reshaping an existing geometry.** Click a feature and choose
+**Edit geometry** in its popup:
+
+- a **point** can be dragged as a whole to a new position;
+- for a **line** or **polygon**, every vertex becomes individually draggable.
+
+![A polygon in edit mode on the map, with a draggable handle on each vertex](/images/v5/usage/geoface-edit-geometry.png)
+
+The change is saved as soon as you release the mouse — there is no separate
+Save button — and a confirmation message appears. Press **Esc** or click an
+empty area of the map to leave edit mode without changing anything.
+
+## Adding and editing geodata on a record
+
+Geometries can also be edited from the record itself, without opening the map.
+In the record view, the **Geographic data** section lists every geometry
+linked to the record as its WKT text, for example `POINT (12.4964 41.9028)`
+(longitude first, then latitude). This is handy for pasting coordinates
+copied from a GPS device or another tool. In read mode the text is read-only;
+in edit mode you can:
+
+![The Geographic data section of a record in edit mode: an edited WKT field with its save and delete buttons, and the Add geometry box open](/images/v5/usage/geodata-record-edit.png)
+
+- **Change a geometry** — edit its WKT text. A ✓ button appears next to the
+  field as soon as the text differs from the saved one; click it to save
+  that geometry.
+- **Delete a geometry** — click the trash icon next to it.
+- **Add a geometry** — click **Add geometry**, paste or type a WKT string in
+  the box that opens (a placeholder shows the expected format), then click
+  **Save**. This also works for a record that has no geometry yet.
+
+These actions are saved immediately and independently: they do not wait for
+the record's own **Save** button. If the WKT text is not valid, the change is
+rejected with an *Invalid geometry* message and nothing is stored.

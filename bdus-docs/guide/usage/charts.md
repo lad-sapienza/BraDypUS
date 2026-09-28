@@ -12,10 +12,22 @@ Open the **Charts** entry in the main menu to see every chart available to
 you, run one, or create a new one — it's a full page of its own, not a panel
 tucked inside a table view.
 
-![Full-page list of saved charts, with a "New chart" button and per-chart edit/share/delete actions](/images/v5/usage/chart-list.png)
+![Full-page list of saved charts, with a "New chart" button and per-chart run/edit/share/delete actions](/images/v5/usage/chart-list.png)
 
-Click a chart's **name** to run it full-width. Owners get three extra
-actions on their own charts: edit, share/unshare, and delete.
+To run a chart full-width, click its **name** or the ▶ (**Run query**) button
+on its card. Owners get three extra actions on their own charts: edit,
+share/unshare, and delete.
+
+Every view has its own address, so a chart can be bookmarked or linked to
+directly, a page reload keeps you where you were, and the browser's back and
+forward buttons work as expected:
+
+| Page | Address |
+|---|---|
+| Chart list | `/{app}/charts` |
+| A chart, run full-width | `/{app}/charts/{id}` |
+| Editing a chart | `/{app}/charts/{id}/edit` |
+| Creating a chart | `/{app}/charts/new` |
 
 ## Creating a chart
 
@@ -45,7 +57,7 @@ every other search: open the table in **Data management**, run a fast,
 advanced, or SQL-expert search, then click the chart icon
 (**Create chart from this view**) in the search toolbar.
 
-![The wizard opened from a search: the table is locked and a note confirms the chart uses that search's filter](/images/v5/usage/chart-from-search.png)
+![The wizard opened from a search: the table is locked, a note confirms the chart uses that search's filter, and the filter itself is shown as JSON](/images/v5/usage/chart-from-search.png)
 
 The wizard opens pre-filled: the table is locked (it's implied by the search
 you came from) and a note confirms the chart will run against that same
@@ -53,6 +65,14 @@ filter. Everything else — type, fields, style — works exactly as for an
 unfiltered chart. A chart created this way keeps its filter for good; to
 change it, create a new chart from a different search rather than editing
 the filter in place.
+
+Because the filter is not editable, the wizard lets you check exactly what
+it does. Next to the note (and again when you later edit the saved chart):
+
+- **Show filter (JSON)** reveals the filter itself, as stored with the chart
+  (**Hide filter (JSON)** collapses it again);
+- **View matching records** opens Data management, in a new tab, with the same
+  filter applied, so you can see the records the chart is built from.
 
 A chart created without an active search (or via the plain **New chart**
 button) runs over every row of its table.
@@ -67,13 +87,15 @@ runs — nothing is cached from when it was saved.
 ## Sharing and access
 
 A new chart is **private**: only its creator sees it in the list. The owner
-can share it with all users of the application (star icon) and unshare it at
-any time. Shared charts can be run by anyone but edited or deleted only by
-their owner.
+can share it with all users of the application and unshare it at any time,
+using the toggle on the chart's card: a globe icon (**Share**) on a private
+chart, a lock icon (**Stop sharing**) on a shared one. Shared charts are
+marked with a share icon next to their name in the list and can be run by
+anyone, but edited or deleted only by their owner.
 
 ## Editing and deleting a chart
 
 Click the pencil icon on a chart you own to reopen the wizard, pre-filled
 with its current name, type, fields, and style — everything except the
-table and filter, which stay fixed from creation. Click **Delete** to remove
-a chart's definition; no record data is ever affected.
+table and filter, which stay fixed from creation. Click the trash icon and
+confirm to remove a chart's definition; no record data is ever affected.

@@ -22,8 +22,9 @@ Files are listed in a paginated table. Each row shows:
 | Actions | Replace binary, delete permanently |
 
 Click a thumbnail to open an **in-app preview**:
-- **Images** → fullscreen lightbox
-- **Documents / PDFs** → inline iframe viewer
+- **Images** → a preview window sized to the image and centered on screen,
+  titled with the file's name and extension
+- **Documents / PDFs** → inline viewer in a wider preview window
 
 ## Filtering and searching
 

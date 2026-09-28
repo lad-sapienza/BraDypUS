@@ -1945,7 +1945,7 @@ class Record extends \Bdus\Controller
     foreach ($this->cfg->get("tables.$tb.plugin") ?: [] as $plgName) {
       try {
         $affected = $this->db->query(
-          "DELETE FROM \"{$plgName}\" WHERE id_link = ?",
+          "DELETE FROM {$plgName} WHERE id_link = ?",
           [$id],
           'affected'
         );
@@ -1988,7 +1988,7 @@ class Record extends \Bdus\Controller
     foreach ($this->cfg->get("tables.$tb.plugin") ?: [] as $plgName) {
       try {
         $result = $this->db->query(
-          "SELECT COUNT(*) AS cnt FROM \"{$plgName}\" WHERE id_link = ?",
+          "SELECT COUNT(*) AS cnt FROM {$plgName} WHERE id_link = ?",
           [$id],
           'read'
         );

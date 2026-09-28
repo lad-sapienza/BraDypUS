@@ -21,6 +21,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `second`. Relations orphaned by earlier deletions are not cleaned up.
   - `bdus-api/lib/Record/Persist.php`, `bdus-api/tests/Integration/RecordPersistTest.php`
 
+- **MySQL / MariaDB: three pieces of SQL that the engine rejects.** Found by
+  running the API suite against a real MariaDB for the first time.
+  - Saving a relation (or a table with links) failed: the legacy-index cleanup
+    sent `DROP INDEX IF EXISTS name`, valid on SQLite/PostgreSQL only. It now
+    looks the index up and drops it with `DROP INDEX name ON table` on MySQL.
+    (`bdus-api/lib/Config/ToDB.php`, `bdus-api/controllers/Config.php`)
+  - "Check plugin data before delete" and "erase plugin data" quoted the
+    plugin table with `"…"`, which MySQL reads as a string, not an identifier.
+    (`bdus-api/controllers/Record.php`)
+  - The chronological timeline / density queries used `ORDER BY … NULLS
+    LAST`, which MySQL lacks; they now sort on `(chrono_from IS NULL)` first,
+    same order on every engine. (`bdus-api/controllers/Chrono.php`)
+
 - **PostgreSQL: text searches were case-sensitive, unlike SQLite and MySQL.**
   A search for `imp` found `imp002` but not `IMP001` on PostgreSQL, while both
   were found on the other engines. Every text search compiled to a plain

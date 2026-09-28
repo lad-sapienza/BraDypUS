@@ -1507,7 +1507,7 @@ class Config extends \Bdus\Controller
 
     // Drop the legacy UNIQUE(from_tb, to_tb) index defensively — it blocks multiple
     // FK columns between the same table pair, which the new schema supports.
-    $this->db->exec('DROP INDEX IF EXISTS cfg_rel_unique_pair');
+    \Config\ToDB::dropLegacyPairIndex($this->db);   // engine-aware: MySQL has no bare `DROP INDEX IF EXISTS`
 
     try {
       if ($id) {

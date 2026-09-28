@@ -155,7 +155,7 @@ class ToDB
         // survived (e.g. re-applied after schema change). The new schema uses
         // UNIQUE(from_tb, from_col) and allows multiple FK columns between the same
         // table pair — the old index would wrongly block those inserts.
-        $db->exec('DROP INDEX IF EXISTS cfg_rel_unique_pair');
+        self::dropLegacyPairIndex($db);
 
         // Delete existing relations where $fromTb holds the FK column.
         $db->query('DELETE FROM bdus_cfg_relations WHERE from_tb=?', [$fromTb], 'boolean');
@@ -178,6 +178,34 @@ class ToDB
                     'boolean'
                 );
             }
+        }
+    }
+
+    /**
+     * Drops the legacy UNIQUE(from_tb, to_tb) index from M020, if it is still there.
+     *
+     * `DROP INDEX IF EXISTS name` is SQLite/PostgreSQL syntax: MySQL needs
+     * `DROP INDEX name ON table` and has no IF EXISTS for it (MariaDB accepts it
+     * only in the `ON table` form), so a bare `IF EXISTS` made every relation
+     * save fail on MySQL/MariaDB with a syntax error. There the index is looked
+     * up first and dropped only when present.
+     */
+    public static function dropLegacyPairIndex(DBInterface $db): void
+    {
+        if ($db->getEngine() !== 'mysql') {
+            $db->exec('DROP INDEX IF EXISTS cfg_rel_unique_pair');
+            return;
+        }
+
+        $found = $db->query(
+            "SELECT COUNT(*) AS cnt FROM information_schema.statistics
+             WHERE table_schema = DATABASE() AND table_name = 'bdus_cfg_relations'
+               AND index_name = 'cfg_rel_unique_pair'",
+            [],
+            'read'
+        );
+        if ((int) ($found[0]['cnt'] ?? 0) > 0) {
+            $db->exec('DROP INDEX cfg_rel_unique_pair ON bdus_cfg_relations');
         }
     }
 

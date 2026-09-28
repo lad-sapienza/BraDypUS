@@ -86,7 +86,7 @@ class Chrono extends \Bdus\Controller
                            chrono_label, chrono_certainty, chrono_period
                     FROM {$table}
                     WHERE {$where}
-                    ORDER BY chrono_from ASC NULLS LAST, id ASC";
+                    ORDER BY (chrono_from IS NULL), chrono_from ASC, id ASC";
 
             $rows = $this->db->query($sql, $params, 'read');
 
@@ -187,7 +187,7 @@ class Chrono extends \Bdus\Controller
                     FROM {$linkedTb}
                     WHERE {$fkCol} = ?
                       AND (chrono_from IS NOT NULL OR chrono_to IS NOT NULL)
-                    ORDER BY chrono_from ASC NULLS LAST, id ASC";
+                    ORDER BY (chrono_from IS NULL), chrono_from ASC, id ASC";
 
             $records = [];
             foreach ($this->db->query($sql, [$id], 'read') ?: [] as $row) {
@@ -276,7 +276,7 @@ class Chrono extends \Bdus\Controller
                 FROM {$leafTb}
                 WHERE id IN ({$placeholders})
                   AND (chrono_from IS NOT NULL OR chrono_to IS NOT NULL)
-                ORDER BY chrono_from ASC NULLS LAST, id ASC";
+                ORDER BY (chrono_from IS NULL), chrono_from ASC, id ASC";
 
         $records = [];
         foreach ($this->db->query($sql, $ids, 'read') ?: [] as $row) {

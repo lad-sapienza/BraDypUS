@@ -16,6 +16,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the data export and backup download use.
   - `bdus-app/src/components/config/DbmlPanel.vue`
 
+- **Custom field widgets never loaded — the field silently showed its plain
+  value instead.** `DynamicWidget.vue` fetched the widget module from a bare
+  `/api/widget/{name}`, which the app-scoped API of 5.9.0 rejects, and its
+  catch-all fallback (render the raw value as text) hid the failure, so no
+  error ever surfaced. Same root cause as the DBML export fix above; it now
+  builds the URL with `apiUrl()`.
+  - `bdus-app/src/components/record/DynamicWidget.vue`
+
 - **Chart wizard: "View matching records" showed 0 records for a chart
   created from a search** (introduced with the filter-inspection link in
   5.12.2). The wizard holds the search payload DataView handed over — a

@@ -6,7 +6,7 @@
 /**
  * Loads and mounts a per-app widget served by the backend.
  *
- * The widget JS is fetched from /api/widget/{name} as a native ES module.
+ * The widget JS is fetched from /{app}/api/widget/{name} as a native ES module.
  * It must export a default object with:
  *   mount(container: HTMLElement, value: string): void
  *   unmount?(container: HTMLElement): void   // optional cleanup
@@ -23,6 +23,7 @@
  *   }
  */
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
+import { apiUrl } from '@/api'
 import { getToken } from '@/token'
 
 const props = defineProps({
@@ -50,7 +51,7 @@ const _cache = new Map()
 /** Inner async worker — only ever called once per widget name. */
 async function _load(name) {
   const token = getToken()
-  const res   = await fetch(`/api/widget/${encodeURIComponent(name)}`, {
+  const res   = await fetch(apiUrl(`/api/widget/${encodeURIComponent(name)}`), {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   })
   if (!res.ok) throw new Error(`widget ${name} — HTTP ${res.status}`)

@@ -1076,11 +1076,13 @@ paths:
         | `_neq` | `!= ?` | |
         | `_lt` / `_lte` | `< ?` / `<= ?` | |
         | `_gt` / `_gte` | `> ?` / `>= ?` | |
-        | `_contains` | `LIKE '%val%'` | case-sensitive |
-        | `_icontains` | `LIKE '%val%'` | case-insensitive |
+        | `_contains` | `LIKE '%val%'` | same SQL as `_icontains` — see note below |
+        | `_icontains` | `LIKE '%val%'` | same SQL as `_contains` — see note below |
         | `_ncontains` | `NOT LIKE '%val%'` | |
         | `_starts_with` | `LIKE 'val%'` | |
         | `_ends_with` | `LIKE '%val'` | |
+        | `_nstarts_with` | `NOT LIKE 'val%'` | |
+        | `_nends_with` | `NOT LIKE '%val'` | |
         | `_in` | `IN (?,…)` | value must be an array |
         | `_nin` | `NOT IN (?,…)` | value must be an array |
         | `_null` | `IS NULL` / `IS NOT NULL` | value: true/false |
@@ -1089,6 +1091,11 @@ paths:
         | `_nempty` | `IS NOT NULL AND != ''` | |
         | `_between` | `BETWEEN ? AND ?` | value: two-element array |
         | `_chrono_overlap` | fuzzy date range overlap | value: `[low, high]` years; applied to `chrono_from`; requires fuzzy-date plugin |
+
+        `_contains` and `_icontains` compile to the same plain `LIKE`; neither
+        adds `LOWER()` or `ILIKE`, so case sensitivity is whatever the
+        database engine's `LIKE` does (e.g. ASCII case-insensitive on SQLite,
+        case-sensitive on PostgreSQL).
 
         Logical grouping: `_and` / `_or` (nested arrays of condition objects).
 
@@ -2910,6 +2917,15 @@ paths:
     post:
       tags: [charts]
       summary: Compute chart data without saving
+      description: |
+        Runs the aggregate query described by `definition` and returns data
+        ready for rendering. Fields must be `id` or belong to the table's
+        config. `style` is not used here.
+
+        Errors: `parameter_missing` (`detail` names the missing key:
+        `definition`, `tb`, `field`, `function`, `x_field`, `y_field` or
+        `y_function`), `invalid_chart_type`, `invalid_chart_field` (`detail`
+        is the rejected field), `generic_error`.
       requestBody:
         required: true
         content:
@@ -5962,11 +5978,13 @@ components:
         | `_lte` | `<= ?` |
         | `_gt` | `> ?` |
         | `_gte` | `>= ?` |
-        | `_contains` | `LIKE '%?%'` (case-insensitive) |
-        | `_icontains` | `LIKE '%?%'` (case-insensitive) |
+        | `_contains` | `LIKE '%?%'` (same SQL as `_icontains`; see note below the table) |
+        | `_icontains` | `LIKE '%?%'` (same SQL as `_contains`; see note below the table) |
         | `_ncontains` | `NOT LIKE '%?%'` |
         | `_starts_with` | `LIKE '?%'` |
         | `_ends_with` | `LIKE '%?'` |
+        | `_nstarts_with` | `NOT LIKE '?%'` |
+        | `_nends_with` | `NOT LIKE '%?'` |
         | `_in` | `IN (…)` |
         | `_nin` | `NOT IN (…)` |
         | `_null` | `IS NULL` / `IS NOT NULL` (value: `true`/`false`) |
@@ -5975,6 +5993,11 @@ components:
         | `_empty` | `IS NULL OR = ''` (convenience alias) |
         | `_nempty` | `IS NOT NULL AND != ''` (convenience alias) |
         | `_chrono_overlap` | Fuzzy-date overlap (value: `[low, high]` integer years). Must be applied to `chrono_from`. Generates a three-branch condition covering normal ranges, ante quem (`chrono_from IS NULL`) and post quem (`chrono_to IS NULL`) records. Requires the fuzzy-date plugin to be active on the table. |
+
+        `_contains` and `_icontains` compile to the same plain `LIKE` (no
+        `LOWER()`/`ILIKE`), so case sensitivity is whatever the database
+        engine's `LIKE` does — e.g. ASCII case-insensitive on SQLite,
+        case-sensitive on PostgreSQL.
 
         Field names are validated against the table config allow-list.
         All values are bound via PDO prepared statements — no SQL injection risk.
@@ -6096,24 +6119,81 @@ components:
           enum: [metric, bar, line, pie, doughnut]
         field:
           type: string
-          description: Aggregate field (metric charts only)
+          description: Aggregate field (metric charts only) — `id` or a field of the table's config
         function:
           type: string
-          enum: [COUNT, SUM, AVG, MIN, MAX]
-          description: Aggregate function (metric charts only)
+          enum: [COUNT, COUNT_DISTINCT, SUM, AVG, MIN, MAX]
+          description: |
+            Aggregate function (metric charts only); case-insensitive.
+            `COUNT_DISTINCT` counts the distinct non-null values of the field
+            (`COUNT(DISTINCT field)`).
         x_field:
           type: string
-          description: Group-by field (non-metric charts)
+          description: Group-by field (non-metric charts) — `id` or a field of the table's config
         y_field:
           type: string
-          description: Aggregate field (non-metric charts)
+          description: Aggregate field (non-metric charts) — `id` or a field of the table's config
         y_function:
           type: string
-          enum: [COUNT, SUM, AVG, MIN, MAX]
-          description: Aggregate function (non-metric charts)
+          enum: [COUNT, COUNT_DISTINCT, SUM, AVG, MIN, MAX]
+          description: Aggregate function (non-metric charts); same values as `function`
         filter:
           type: object
-          description: Optional WHERE filter in the same search-type format used by getRecords()
+          description: |
+            Optional restriction of the rows the chart runs over — the search
+            payload DataView hands to the chart wizard ("Create chart from this
+            view"). Two shapes are understood; anything else is ignored and the
+            chart runs over the whole table:
+
+            - advanced search: `{ filter: { …JSON filter… } }`
+            - SQL-expert search: `{ search_type: "sqlExpert", querytext, join? }`
+
+            `sort_field` / `sort_dir` may accompany either (kept from the
+            search) and do not affect the chart.
+          properties:
+            filter:
+              $ref: '#/components/schemas/FilterObject'
+            search_type:
+              type: string
+              description: "`sqlExpert` is the only value the web UI produces"
+            querytext:
+              type: string
+              description: Raw SQL condition (SQL-expert search)
+            join:
+              type: string
+            sort_field:
+              type: string
+            sort_dir:
+              type: string
+              enum: [asc, desc]
+        style:
+          type: object
+          description: |
+            Presentation options chosen in the wizard's "Style options". They
+            are stored with the chart definition and used only when
+            rendering; `POST /api/chart/data` ignores them.
+          properties:
+            color:
+              type: string
+              description: Series colour (CSS hex, e.g. `#3366cc`); the default palette is used when absent
+            legendPosition:
+              type: string
+              enum: [top, bottom, left, right, hidden]
+              default: top
+            horizontal:
+              type: boolean
+              description: Horizontal bars (bar charts only)
+            yMin:
+              type: number
+              description: Y-axis minimum
+            yMax:
+              type: number
+              description: Y-axis maximum
+            decimals:
+              type: integer
+              minimum: 0
+              maximum: 10
+              description: Decimal places shown for values
       examples:
         - tb: us
           type: pie

@@ -1563,7 +1563,8 @@ class Record extends \Bdus\Controller
         }
       } else {
         if ($q !== null && $q !== '') {
-          $sql    = "SELECT id, {$idFld} AS label FROM {$tb} WHERE {$idFld} LIKE ? LIMIT 20";
+          $like   = \SQL\Like::operator($this->db->getEngine());
+          $sql    = "SELECT id, {$idFld} AS label FROM {$tb} WHERE {$idFld} {$like} ? LIMIT 20";
           $values = ["%$q%"];
         } else {
           $sql    = "SELECT id, {$idFld} AS label FROM {$tb} ORDER BY id DESC LIMIT 20";

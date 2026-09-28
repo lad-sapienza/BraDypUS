@@ -76,6 +76,51 @@ class QueryFromRequestTest extends BdusTestCase
         $this->assertSame(5, $q->getTotal());
     }
 
+    // ── DB-engine-specific LIKE (issue #73) ──────────────────────────────────
+    // PostgreSQL's LIKE is case-sensitive, so searches must use ILIKE there to
+    // match SQLite/MySQL. Only the WHERE clause is built here, so a stub DB that
+    // merely reports its engine is enough.
+
+    private function qfrOnEngine(string $engine, array $extra): \SQL\QueryFromRequest
+    {
+        $db = $this->createStub(\DB\DBInterface::class);
+        $db->method('getEngine')->willReturn($engine);
+
+        return new \SQL\QueryFromRequest($db, static::$cfg, array_merge(['tb' => self::TB], $extra), true);
+    }
+
+    public function testFastSearchUsesIlikeOnPostgres(): void
+    {
+        [$where] = $this->qfrOnEngine('pgsql', ['type' => 'fast', 'string' => 'imp'])->getWhereClause();
+
+        $this->assertStringContainsString('items.name ILIKE ?', $where);
+        $this->assertDoesNotMatchRegularExpression('/(?<!I)LIKE \?/', $where);
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('plainLikeEngines')]
+    public function testFastSearchKeepsPlainLikeOnSqliteAndMysql(string $engine): void
+    {
+        [$where] = $this->qfrOnEngine($engine, ['type' => 'fast', 'string' => 'imp'])->getWhereClause();
+
+        $this->assertStringContainsString('items.name LIKE ?', $where);
+        $this->assertStringNotContainsString('ILIKE', $where);
+    }
+
+    public static function plainLikeEngines(): array
+    {
+        return ['sqlite' => ['sqlite'], 'mysql' => ['mysql']];
+    }
+
+    public function testJsonFilterReceivesTheEngine(): void
+    {
+        $pg = $this->qfrOnEngine('pgsql', ['type' => 'filter', 'filter' => ['name' => ['_icontains' => 'imp']]]);
+        $my = $this->qfrOnEngine('mysql', ['type' => 'filter', 'filter' => ['name' => ['_icontains' => 'imp']]]);
+
+        $this->assertStringContainsString('items.name ILIKE ?', $pg->getWhereClause()[0]);
+        $this->assertStringContainsString('items.name LIKE ?', $my->getWhereClause()[0]);
+        $this->assertStringNotContainsString('ILIKE', $my->getWhereClause()[0]);
+    }
+
     // ══════════════════════════════════════════════════════════════════════
     // type = sqlExpert
     // ══════════════════════════════════════════════════════════════════════

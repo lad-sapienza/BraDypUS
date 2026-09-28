@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **PostgreSQL: text searches were case-sensitive, unlike SQLite and MySQL.**
+  A search for `imp` found `imp002` but not `IMP001` on PostgreSQL, while both
+  were found on the other engines. Every text search compiled to a plain
+  `LIKE`, which is case-insensitive on SQLite (ASCII) and MySQL (per
+  collation) but case-sensitive on PostgreSQL — so the advanced-search
+  operators (`_contains`, `_icontains`, `_ncontains`, `_starts_with`,
+  `_ends_with`, `_nstarts_with`, `_nends_with`; the "Contains" default among
+  them), the fast search in the main bar, the record-link autocomplete and the
+  file search by name/description/keywords all behaved differently there.
+  They now use `ILIKE` / `NOT ILIKE` on PostgreSQL through a new
+  `SQL\Like::operator()`; the SQL sent to SQLite and MySQL is unchanged.
+  `JsonFilter` takes the engine as an optional third constructor argument
+  (default: plain `LIKE`). `_contains` is now case-insensitive on PostgreSQL
+  too, as it already was elsewhere. The OpenAPI notes and the SQL-layer dev
+  page, which described the operators as engine-dependent or `_contains` as
+  case-sensitive, are updated.
+  - `bdus-api/lib/SQL/Like.php` (new), `bdus-api/lib/SQL/Filter/JsonFilter.php`,
+    `bdus-api/lib/SQL/QueryFromRequest.php`, `bdus-api/controllers/Record.php`,
+    `bdus-api/controllers/File.php`
+  - tests: `LikeTest`, `JsonFilterTest`, `QueryFromRequestTest`, hurl phases
+    18, 19 and 34 (lower-case needle against upper-case data, on every engine)
+
 - **Config → DBML: "Download .dbml" failed with `app_prefix_required`.** The
   export button built its URL by hand as a bare `/api/config/dbml` and called
   `fetch()` directly, bypassing the `api.*` helpers that prefix every request

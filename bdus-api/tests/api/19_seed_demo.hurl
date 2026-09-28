@@ -5079,3 +5079,26 @@ Content-Type: application/json
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
+
+
+# ── 19z-20. Ricerca testuale: minuscolo vs dati maiuscoli (US001…) su ogni engine (#73) ──
+# Ricerca veloce (barra principale) e candidati per i link tra record: su PostgreSQL
+# un LIKE semplice non troverebbe "US001" cercando "us001".
+GET {{base_url}}/{{app_name}}/api/records/us
+Authorization: Bearer {{jwt}}
+[QueryStringParams]
+search_type: fast
+search: us001
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+jsonpath "$.total"  >= 1
+
+GET {{base_url}}/{{app_name}}/api/record/us/link-candidates
+Authorization: Bearer {{jwt}}
+[QueryStringParams]
+q: us001
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+jsonpath "$.data"   count >= 1

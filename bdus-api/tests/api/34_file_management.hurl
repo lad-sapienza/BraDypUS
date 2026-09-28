@@ -54,6 +54,19 @@ jsonpath "$.status" == "success"
 jsonpath "$.code"   == "ok_file_updated"
 
 
+# ── 34c2. GET /api/files?search= — case-insensitive on every engine (#73) ──
+# The description set in 34c is "Test description for phase 34"; an all-caps
+# needle must still find it (PostgreSQL's plain LIKE would not).
+GET {{base_url}}/{{app_name}}/api/files
+Authorization: Bearer {{jwt}}
+[QueryStringParams]
+search: TEST DESCRIPTION FOR PHASE 34
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+jsonpath "$.total"  >= 1
+
+
 # ── 34d. GET /api/files — verify metadata persisted ─────────────────
 GET {{base_url}}/{{app_name}}/api/files
 Authorization: Bearer {{jwt}}

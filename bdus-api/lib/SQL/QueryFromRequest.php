@@ -295,7 +295,7 @@ class QueryFromRequest
           $this->where = '1=1';
           break;
         }
-        $jsonFilter = new \SQL\Filter\JsonFilter($this->cfg, $this->tb);
+        $jsonFilter = new \SQL\Filter\JsonFilter($this->cfg, $this->tb, $this->db->getEngine());
         [$filterSql, $filterVals] = $jsonFilter->toSql($filterArr);
         $this->where  = $filterSql  ?: '1=1';
         $this->values = $filterVals ?: [];
@@ -320,12 +320,13 @@ class QueryFromRequest
     $db_types = $this->cfg->get("tables.{$this->tb}.fields.*.db_type") ?: [];
 
     $needle = '%' . urldecode($string) . '%';
+    $like   = \SQL\Like::operator($this->db->getEngine());
     $array_query_core = [];
     foreach ($fields_to_search_in as $field => $label) {
       if (!$this->isTextualDbType($db_types[$field] ?? 'TEXT')) {
         continue;
       }
-      $array_query_core[] = $this->tb . '.' . $field . ' LIKE ?';
+      $array_query_core[] = $this->tb . '.' . $field . ' ' . $like . ' ?';
       $this->values[] = $needle;
     }
     // join partial statements; no textual field at all → match nothing

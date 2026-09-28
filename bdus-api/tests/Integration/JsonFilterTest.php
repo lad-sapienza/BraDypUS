@@ -2,6 +2,7 @@
 
 namespace Tests\Integration;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Support\BdusTestCase;
 use SQL\Filter\JsonFilter;
 use SQL\Filter\FilterException;
@@ -124,6 +125,59 @@ class JsonFilterTest extends BdusTestCase
         [$sql, $vals] = $this->f->toSql(['name' => ['_nends_with' => 'pha']]);
         $this->assertStringContainsString('items.name NOT LIKE ?', $sql);
         $this->assertSame(['%pha'], $vals);
+    }
+
+    // ── LIKE operators per DB engine (issue #73) ──────────────────────────────
+    //
+    // PostgreSQL's LIKE is case-sensitive, SQLite's and MySQL's are not; on
+    // PostgreSQL the whole family must use ILIKE to behave the same. The other
+    // engines (and the default, engine-less filter used by the tests above)
+    // must keep emitting the plain LIKE, byte for byte.
+
+    #[DataProvider('likeOperatorsPerEngine')]
+    public function testLikeOperatorsPerEngine(string $engine, string $op, string $sqlOperator, string $bound): void
+    {
+        $f = new JsonFilter(static::$cfg, 'items', $engine);
+
+        [$sql, $vals] = $f->toSql(['name' => [$op => 'imp']]);
+
+        $this->assertSame("(items.name {$sqlOperator} ?)", $sql);
+        $this->assertSame([$bound], $vals);
+    }
+
+    public static function likeOperatorsPerEngine(): array
+    {
+        // op => [SQL comparison on a plain engine, on PostgreSQL, bound value]
+        $ops = [
+            '_contains'     => ['LIKE',     'ILIKE',     '%imp%'],
+            '_icontains'    => ['LIKE',     'ILIKE',     '%imp%'],
+            '_ncontains'    => ['NOT LIKE', 'NOT ILIKE', '%imp%'],
+            '_starts_with'  => ['LIKE',     'ILIKE',     'imp%'],
+            '_ends_with'    => ['LIKE',     'ILIKE',     '%imp'],
+            '_nstarts_with' => ['NOT LIKE', 'NOT ILIKE', 'imp%'],
+            '_nends_with'   => ['NOT LIKE', 'NOT ILIKE', '%imp'],
+        ];
+
+        $cases = [];
+        foreach (['sqlite', 'mysql', 'pgsql', ''] as $engine) {
+            foreach ($ops as $op => [$plain, $pg, $bound]) {
+                $cases["{$op} on " . ($engine ?: 'no engine')] = [
+                    $engine, $op, $engine === 'pgsql' ? $pg : $plain, $bound,
+                ];
+            }
+        }
+        return $cases;
+    }
+
+    public function testIlikeAlsoAppliesInsideCrossTableSubqueries(): void
+    {
+        $f = new JsonFilter(static::$cfg, 'items', 'pgsql');
+
+        [$sql, ] = $f->toSql(['tags' => ['label' => ['_icontains' => 'imp']]]);
+
+        $this->assertStringContainsString('label ILIKE ?', $sql);
+        // no plain (case-sensitive) LIKE left anywhere in the generated query
+        $this->assertDoesNotMatchRegularExpression('/(?<!I)LIKE \?/', $sql);
     }
 
     // ── IN / NOT IN ───────────────────────────────────────────────────────────

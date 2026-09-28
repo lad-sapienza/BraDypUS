@@ -8,6 +8,7 @@
 namespace SQL\Filter;
 
 use Config\Config;
+use SQL\Like;
 
 /**
  * Converts a Directus-compatible JSON filter array to a SQL WHERE clause + bound values.
@@ -78,9 +79,16 @@ class JsonFilter
 
     private const LOGICAL_OPS = ['_and', '_or'];
 
+    /**
+     * @param string $engine  DB engine ('sqlite' | 'mysql' | 'pgsql'), used to
+     *                        make the LIKE-based operators case-insensitive on
+     *                        PostgreSQL too — see \SQL\Like. Empty (the
+     *                        default) keeps the plain LIKE.
+     */
     public function __construct(
         private readonly Config $cfg,
-        private readonly string $tb
+        private readonly string $tb,
+        private readonly string $engine = ''
     ) {}
 
     // ── Public API ─────────────────────────────────────────────────────────────
@@ -499,6 +507,9 @@ class JsonFilter
             throw new FilterException("Unknown filter operator: {$op}");
         }
 
+        $like  = Like::operator($this->engine);
+        $nlike = Like::operator($this->engine, true);
+
         return match ($op) {
             '_eq'          => ["{$col} = ?",          [$val]],
             '_neq'         => ["{$col} != ?",          [$val]],
@@ -506,13 +517,13 @@ class JsonFilter
             '_lte'         => ["{$col} <= ?",          [$val]],
             '_gt'          => ["{$col} > ?",           [$val]],
             '_gte'         => ["{$col} >= ?",          [$val]],
-            '_contains'    => ["{$col} LIKE ?",        ['%' . $val . '%']],
-            '_icontains'   => ["{$col} LIKE ?",        ['%' . $val . '%']],
-            '_ncontains'   => ["{$col} NOT LIKE ?",    ['%' . $val . '%']],
-            '_starts_with'  => ["{$col} LIKE ?",       [$val . '%']],
-            '_ends_with'    => ["{$col} LIKE ?",       ['%' . $val]],
-            '_nstarts_with' => ["{$col} NOT LIKE ?",   [$val . '%']],
-            '_nends_with'   => ["{$col} NOT LIKE ?",   ['%' . $val]],
+            '_contains'    => ["{$col} {$like} ?",     ['%' . $val . '%']],
+            '_icontains'   => ["{$col} {$like} ?",     ['%' . $val . '%']],
+            '_ncontains'   => ["{$col} {$nlike} ?",    ['%' . $val . '%']],
+            '_starts_with'  => ["{$col} {$like} ?",    [$val . '%']],
+            '_ends_with'    => ["{$col} {$like} ?",    ['%' . $val]],
+            '_nstarts_with' => ["{$col} {$nlike} ?",   [$val . '%']],
+            '_nends_with'   => ["{$col} {$nlike} ?",   ['%' . $val]],
             '_in'          => $this->buildIn($col, (array) $val, false),
             '_nin'         => $this->buildIn($col, (array) $val, true),
             '_null'        => $this->isTruthy($val) ? ["{$col} IS NULL",     []] : ["{$col} IS NOT NULL", []],

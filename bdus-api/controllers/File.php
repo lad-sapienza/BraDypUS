@@ -63,7 +63,8 @@ class File extends \Bdus\Controller
 
 			if ($search !== '') {
 				$needle    = '%' . $search . '%';
-				$searchOr  = ['f.filename LIKE ?', 'f.description LIKE ?', 'f.keywords LIKE ?'];
+				$like      = \SQL\Like::operator($this->db->getEngine());
+				$searchOr  = ["f.filename {$like} ?", "f.description {$like} ?", "f.keywords {$like} ?"];
 				$searchVal = [$needle, $needle, $needle];
 				if (ctype_digit($search)) {
 					$searchOr[]  = 'f.id = ?';

@@ -34,7 +34,9 @@ jsonpath "$.status" == "success"
 jsonpath "$.total"  >= 1
 
 # ── 18d. _icontains ───────────────────────────────────────────────────
-GET {{base_url}}/{{app_name}}/api/records/crud_test?filter[sigla][_icontains]=IMP
+# Lower-case needle against upper-case data (IMP001…): must match on every
+# engine — PostgreSQL's plain LIKE would not (#73), so the filter uses ILIKE there.
+GET {{base_url}}/{{app_name}}/api/records/crud_test?filter[sigla][_icontains]=imp
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
@@ -42,7 +44,8 @@ jsonpath "$.status" == "success"
 jsonpath "$.total"  >= 2
 
 # ── 18e. _starts_with ─────────────────────────────────────────────────
-GET {{base_url}}/{{app_name}}/api/records/crud_test?filter[sigla][_starts_with]=IMP
+# Same case-mismatch as 18d (#73).
+GET {{base_url}}/{{app_name}}/api/records/crud_test?filter[sigla][_starts_with]=imp
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]

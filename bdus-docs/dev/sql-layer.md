@@ -138,14 +138,21 @@ allow-list before entering the SQL.
 | `_eq` | `= ?` |
 | `_neq` | `!= ?` |
 | `_lt` / `_lte` / `_gt` / `_gte` | `< ? ` / `<= ?` / `> ?` / `>= ?` |
-| `_contains` | `LIKE '%?%'` (case-sensitive) |
-| `_icontains` | `LIKE '%?%'` (case-insensitive) |
-| `_ncontains` | `NOT LIKE '%?%'` |
-| `_starts_with` / `_ends_with` | `LIKE '?%'` / `LIKE '%?'` |
+| `_contains` / `_icontains` | `LIKE '%?%'` (`ILIKE` on PostgreSQL) |
+| `_ncontains` | `NOT LIKE '%?%'` (`NOT ILIKE` on PostgreSQL) |
+| `_starts_with` / `_ends_with` | `LIKE '?%'` / `LIKE '%?'` (`ILIKE` on PostgreSQL) |
+| `_nstarts_with` / `_nends_with` | `NOT LIKE '?%'` / `NOT LIKE '%?'` (`NOT ILIKE` on PostgreSQL) |
 | `_in` / `_nin` | `IN (…)` / `NOT IN (…)` |
 | `_null` / `_nnull` | `IS NULL` / `IS NOT NULL` |
 | `_empty` / `_nempty` | `IS NULL OR = ''` / `IS NOT NULL AND != ''` |
 | `_between` | `BETWEEN ? AND ?` (value: `[low, high]`) |
+
+All the `LIKE`-based operators are **case-insensitive on every supported
+engine**. SQLite and MySQL already compare that way with a plain `LIKE` (ASCII
+on SQLite, per collation on MySQL); PostgreSQL's `LIKE` is case-sensitive, so
+`JsonFilter` — given the engine as its third constructor argument — emits
+`ILIKE` / `NOT ILIKE` there. The choice lives in `SQL\Like::operator()`, which
+the fast search and the record-link and file searches use too.
 
 ### Logical grouping
 

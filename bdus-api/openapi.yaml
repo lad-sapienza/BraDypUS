@@ -1076,8 +1076,8 @@ paths:
         | `_neq` | `!= ?` | |
         | `_lt` / `_lte` | `< ?` / `<= ?` | |
         | `_gt` / `_gte` | `> ?` / `>= ?` | |
-        | `_contains` | `LIKE '%val%'` | same SQL as `_icontains` — see note below |
-        | `_icontains` | `LIKE '%val%'` | same SQL as `_contains` — see note below |
+        | `_contains` | `LIKE '%val%'` | case-insensitive — see note below |
+        | `_icontains` | `LIKE '%val%'` | case-insensitive — see note below |
         | `_ncontains` | `NOT LIKE '%val%'` | |
         | `_starts_with` | `LIKE 'val%'` | |
         | `_ends_with` | `LIKE '%val'` | |
@@ -1092,10 +1092,12 @@ paths:
         | `_between` | `BETWEEN ? AND ?` | value: two-element array |
         | `_chrono_overlap` | fuzzy date range overlap | value: `[low, high]` years; applied to `chrono_from`; requires fuzzy-date plugin |
 
-        `_contains` and `_icontains` compile to the same plain `LIKE`; neither
-        adds `LOWER()` or `ILIKE`, so case sensitivity is whatever the
-        database engine's `LIKE` does (e.g. ASCII case-insensitive on SQLite,
-        case-sensitive on PostgreSQL).
+        Every `LIKE`-based operator (`_contains`, `_icontains`, `_ncontains`,
+        `_starts_with`, `_ends_with`, `_nstarts_with`, `_nends_with`) is
+        case-insensitive on all supported engines: SQLite and MySQL compare
+        case-insensitively with a plain `LIKE` (ASCII on SQLite, per collation
+        on MySQL), and on PostgreSQL the same operators use `ILIKE`.
+        `_contains` and `_icontains` are therefore equivalent.
 
         Logical grouping: `_and` / `_or` (nested arrays of condition objects).
 
@@ -5978,8 +5980,8 @@ components:
         | `_lte` | `<= ?` |
         | `_gt` | `> ?` |
         | `_gte` | `>= ?` |
-        | `_contains` | `LIKE '%?%'` (same SQL as `_icontains`; see note below the table) |
-        | `_icontains` | `LIKE '%?%'` (same SQL as `_contains`; see note below the table) |
+        | `_contains` | `LIKE '%?%'` (case-insensitive; see note below the table) |
+        | `_icontains` | `LIKE '%?%'` (case-insensitive; see note below the table) |
         | `_ncontains` | `NOT LIKE '%?%'` |
         | `_starts_with` | `LIKE '?%'` |
         | `_ends_with` | `LIKE '%?'` |
@@ -5994,10 +5996,11 @@ components:
         | `_nempty` | `IS NOT NULL AND != ''` (convenience alias) |
         | `_chrono_overlap` | Fuzzy-date overlap (value: `[low, high]` integer years). Must be applied to `chrono_from`. Generates a three-branch condition covering normal ranges, ante quem (`chrono_from IS NULL`) and post quem (`chrono_to IS NULL`) records. Requires the fuzzy-date plugin to be active on the table. |
 
-        `_contains` and `_icontains` compile to the same plain `LIKE` (no
-        `LOWER()`/`ILIKE`), so case sensitivity is whatever the database
-        engine's `LIKE` does — e.g. ASCII case-insensitive on SQLite,
-        case-sensitive on PostgreSQL.
+        Every `LIKE`-based operator (`_contains`, `_icontains`, `_ncontains`,
+        `_starts_with`, `_ends_with`, `_nstarts_with`, `_nends_with`) is
+        case-insensitive on all supported engines: a plain `LIKE` on SQLite
+        (ASCII) and MySQL (per collation), `ILIKE` on PostgreSQL. `_contains`
+        and `_icontains` are therefore equivalent.
 
         Field names are validated against the table config allow-list.
         All values are bound via PDO prepared statements — no SQL injection risk.

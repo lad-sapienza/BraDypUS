@@ -5,6 +5,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **A test that fails when `openapi.yaml` and the router disagree.**
+  `OpenApiParityTest` compares the method + path of every `Router::addRoute()`
+  with the operations under `paths:` in `bdus-api/openapi.yaml`, in both
+  directions, and lists the offenders. The spec had drifted silently twice in a
+  week (#68). It reads both files as text (the route table sits inside
+  `Router::dispatch()`; no YAML parser is a dependency) and has a sanity test so
+  it cannot pass vacuously. It checks which operations exist, not their
+  request/response schemas. Runs with `phpunit` / `bdus-api/test.sh`.
+  - `bdus-api/tests/Unit/OpenApiParityTest.php`
+
+### Changed
+
+- **OpenAPI spec brought back in sync with the router.** It now documents the
+  six operations added since the last reconciliation — the four Pleiades
+  routes (search, place lookup, table activate/deactivate),
+  `PUT /api/geoface/color-field` and `POST /api/chart/{id}` — plus
+  `COUNT_DISTINCT` and the `style` options of a chart definition, the two
+  payload shapes of a chart's `filter`, the error codes of
+  `POST /api/chart/data`, and the `_nstarts_with` / `_nends_with` filter
+  operators. Router and spec: 182 = 182. Its two operator tables, which
+  contradicted each other on `_contains`, now agree.
+  - `bdus-api/openapi.yaml`
+
+- **User guides brought up to date with 5.12.2** (#70). *Geodata & GeoFace*:
+  the WKT editor in the record view (edit / delete / add), the popup's "Open
+  record" link, drag/reshape of existing geometries on the map and who may do
+  it; the switch that enables geodata is in Config → Tables, not Config →
+  Fields. *Charts*: the Run button, the globe/lock share icons, the dedicated
+  chart URLs, "Show filter (JSON)" and "View matching records". *Files*: the
+  preview window. Three screenshots are new and two re-shot.
+  - `bdus-docs/guide/system-plugins/geodata.md`, `bdus-docs/guide/usage/charts.md`,
+    `bdus-docs/guide/usage/files.md`, `bdus-docs/dev/sql-layer.md`
+
 ### Fixed
 
 - **PostgreSQL: deleting a record from a table with stratigraphic relations

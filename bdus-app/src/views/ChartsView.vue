@@ -216,10 +216,27 @@ const showFilterJson    = ref(false)
 // on the same table with this filter applied, reusing its own filter-URL
 // contract (see DataView.vue applyRouteParams()) instead of building a
 // second, separate results table just for this.
-const filterPreviewLink = computed(() => ({
-  path:  `/${appName.value}/data`,
-  query: { tb: wizardTb.value, filter: JSON.stringify(originalFilter.value) },
-}))
+//
+// `originalFilter` is the search payload DataView handed over (see
+// DataView.vue currentSearch / Chart.php::getData()), not a bare filter:
+//   { filter: {...}, sort_field, sort_dir }          — advanced search
+//   { search_type: 'sqlExpert', querytext, ... }     — SQL-expert search
+// whereas DataView's `?filter=` wants the bare filter object, and an
+// expert search is restored through `?qt=expert&q=<sql>`. Passing the
+// wrapper straight through made DataView filter on a field literally named
+// "filter" and show 0 records. A bare filter (older saved charts) still
+// passes through untouched.
+const filterPreviewLink = computed(() => {
+  const f = originalFilter.value ?? {}
+  const query = { tb: wizardTb.value }
+  if (f.search_type === 'sqlExpert') {
+    query.qt = 'expert'
+    query.q  = f.querytext ?? ''
+  } else {
+    query.filter = JSON.stringify(f.filter ?? f)
+  }
+  return { path: `/${appName.value}/data`, query }
+})
 
 // ── Computed ───────────────────────────────────────────────────────────
 const tableOptions = computed(() => tables.value.map(tb => ({ value: tb.name, label: tb.label })))

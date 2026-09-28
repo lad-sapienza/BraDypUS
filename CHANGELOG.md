@@ -5,6 +5,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Chart wizard: "View matching records" showed 0 records for a chart
+  created from a search** (introduced with the filter-inspection link in
+  5.12.2). The wizard holds the search payload DataView handed over — a
+  `{ filter, sort_field, sort_dir }` wrapper for an advanced search, or
+  `{ search_type: 'sqlExpert', querytext, … }` for an SQL-expert one — and
+  passed it unchanged as DataView's `?filter=`, which expects the bare filter
+  object, so DataView filtered on a field literally named "filter". The link
+  now unwraps the advanced-search filter and opens an SQL-expert search
+  through `?qt=expert&q=`; a bare filter (charts saved before the wrapper
+  existed) still passes through untouched. The chart itself was never
+  affected — only the preview link.
+  - `bdus-app/src/views/ChartsView.vue`
+
 ## [5.12.2] - 2026-09-22
 
 ### Fixed

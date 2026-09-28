@@ -34,6 +34,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     LAST`, which MySQL lacks; they now sort on `(chrono_from IS NULL)` first,
     same order on every engine. (`bdus-api/controllers/Chrono.php`)
 
+- **Test suite: `test.sh --db=pgsql|mysql` and `--all-engines` ran on SQLite.**
+  `vars.env` (`DB_ENGINE=sqlite`) was loaded after the flag was parsed and
+  overrode it, so only the containers changed while the app under test was
+  always SQLite. An explicit `--db` now wins. With the suite genuinely on
+  PostgreSQL and MariaDB it passes on all three engines after the fixes above.
+  - `bdus-api/test.sh`, `bdus-api/tests/api/vars.env`
+
 - **PostgreSQL: text searches were case-sensitive, unlike SQLite and MySQL.**
   A search for `imp` found `imp002` but not `IMP001` on PostgreSQL, while both
   were found on the other engines. Every text search compiled to a plain

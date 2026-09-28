@@ -73,6 +73,7 @@ EXPORT_DEMO=false
 FROM_PHASE=""
 ONLY_PHASE=""
 DB_ENGINE=sqlite
+DB_ENGINE_FLAG=""   # set only when --db= is given explicitly (see the vars.env load below)
 ALL_ENGINES=false
 KEEP=false
 NO_DOCKER=false
@@ -89,7 +90,7 @@ for arg in "$@"; do
     --list)         LIST_ONLY=true ;;
     --from=*)       FROM_PHASE="${arg#--from=}" ;;
     --only=*)       ONLY_PHASE="${arg#--only=}" ;;
-    --db=*)         DB_ENGINE="${arg#--db=}" ;;
+    --db=*)         DB_ENGINE="${arg#--db=}"; DB_ENGINE_FLAG="$DB_ENGINE" ;;
     --all-engines)  ALL_ENGINES=true ;;
     --keep)         KEEP=true ;;
     --no-docker)    NO_DOCKER=true ;;
@@ -291,6 +292,10 @@ VARS_FILE="${SCRIPT_DIR}/tests/api/vars.local.env"
 [[ -f "$VARS_FILE" ]] || VARS_FILE="${SCRIPT_DIR}/tests/api/vars.env"
 # shellcheck disable=SC1090
 source "$VARS_FILE"
+# vars.env carries a default DB_ENGINE=sqlite that would silently override the
+# --db flag (the flag only picked the compose files, so --db=pgsql / mysql /
+# --all-engines ran the whole suite on SQLite — issue #74). An explicit flag wins.
+[[ -n "$DB_ENGINE_FLAG" ]] && DB_ENGINE="$DB_ENGINE_FLAG"
 
 # Override BASE_URL and DB credentials when running in Docker
 if [[ "$NO_DOCKER" == false ]]; then

@@ -5,6 +5,131 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.12.3] - 2026-09-28
+
+### Added
+
+- **A test that fails when `openapi.yaml` and the router disagree.**
+  `OpenApiParityTest` compares the method + path of every `Router::addRoute()`
+  with the operations under `paths:` in `bdus-api/openapi.yaml`, in both
+  directions, and lists the offenders. The spec had drifted silently twice in a
+  week (#68). It reads both files as text (the route table sits inside
+  `Router::dispatch()`; no YAML parser is a dependency) and has a sanity test so
+  it cannot pass vacuously. It checks which operations exist, not their
+  request/response schemas. Runs with `phpunit` / `bdus-api/test.sh`.
+  - `bdus-api/tests/Unit/OpenApiParityTest.php`
+
+### Changed
+
+- **OpenAPI spec brought back in sync with the router.** It now documents the
+  six operations added since the last reconciliation — the four Pleiades
+  routes (search, place lookup, table activate/deactivate),
+  `PUT /api/geoface/color-field` and `POST /api/chart/{id}` — plus
+  `COUNT_DISTINCT` and the `style` options of a chart definition, the two
+  payload shapes of a chart's `filter`, the error codes of
+  `POST /api/chart/data`, and the `_nstarts_with` / `_nends_with` filter
+  operators. Router and spec: 182 = 182. Its two operator tables, which
+  contradicted each other on `_contains`, now agree.
+  - `bdus-api/openapi.yaml`
+
+- **User guides brought up to date with 5.12.2** (#70). *Geodata & GeoFace*:
+  the WKT editor in the record view (edit / delete / add), the popup's "Open
+  record" link, drag/reshape of existing geometries on the map and who may do
+  it; the switch that enables geodata is in Config → Tables, not Config →
+  Fields. *Charts*: the Run button, the globe/lock share icons, the dedicated
+  chart URLs, "Show filter (JSON)" and "View matching records". *Files*: the
+  preview window. Three screenshots are new and two re-shot.
+  - `bdus-docs/guide/system-plugins/geodata.md`, `bdus-docs/guide/usage/charts.md`,
+    `bdus-docs/guide/usage/files.md`, `bdus-docs/dev/sql-layer.md`
+
+### Fixed
+
+- **PostgreSQL: deleting a record from a table with stratigraphic relations
+  (RS) always failed; on SQLite and MySQL it left the record's RS rows
+  behind.** `Record\Persist::deleteAll()` removed a record's `bdus_rs` rows by
+  the value of the table's configured `rs` field (e.g. a sigla such as
+  `US003`), but `bdus_rs.first` / `second` are `INTEGER` record ids (see
+  `Record\Read::getRs()` and the RS endpoints). PostgreSQL refuses to compare
+  an integer column with `'US003'`, so the whole delete was rolled back and the
+  API answered `no_record_deleted`; SQLite and MySQL simply never matched, so the
+  relations of a deleted record were left dangling (the Harris Matrix later had
+  to tolerate them, 5.9.5) — or, for a numeric `rs` field, matched another
+  record's id. It now deletes the rows where the record's id is `first` or
+  `second`. Relations orphaned by earlier deletions are not cleaned up.
+  - `bdus-api/lib/Record/Persist.php`, `bdus-api/tests/Integration/RecordPersistTest.php`
+
+- **MySQL / MariaDB: three pieces of SQL that the engine rejects.** Found by
+  running the API suite against a real MariaDB for the first time.
+  - Saving a relation (or a table with links) failed: the legacy-index cleanup
+    sent `DROP INDEX IF EXISTS name`, valid on SQLite/PostgreSQL only. It now
+    looks the index up and drops it with `DROP INDEX name ON table` on MySQL.
+    (`bdus-api/lib/Config/ToDB.php`, `bdus-api/controllers/Config.php`)
+  - "Check plugin data before delete" and "erase plugin data" quoted the
+    plugin table with `"…"`, which MySQL reads as a string, not an identifier.
+    (`bdus-api/controllers/Record.php`)
+  - The chronological timeline / density queries used `ORDER BY … NULLS
+    LAST`, which MySQL lacks; they now sort on `(chrono_from IS NULL)` first,
+    same order on every engine. (`bdus-api/controllers/Chrono.php`)
+
+- **Test suite: `test.sh --db=pgsql|mysql` and `--all-engines` ran on SQLite.**
+  `vars.env` (`DB_ENGINE=sqlite`) was loaded after the flag was parsed and
+  overrode it, so only the containers changed while the app under test was
+  always SQLite. An explicit `--db` now wins. With the suite genuinely on
+  PostgreSQL and MariaDB it passes on all three engines after the fixes above.
+  - `bdus-api/test.sh`, `bdus-api/tests/api/vars.env`
+
+- **PostgreSQL: text searches were case-sensitive, unlike SQLite and MySQL.**
+  A search for `imp` found `imp002` but not `IMP001` on PostgreSQL, while both
+  were found on the other engines. Every text search compiled to a plain
+  `LIKE`, which is case-insensitive on SQLite (ASCII) and MySQL (per
+  collation) but case-sensitive on PostgreSQL — so the advanced-search
+  operators (`_contains`, `_icontains`, `_ncontains`, `_starts_with`,
+  `_ends_with`, `_nstarts_with`, `_nends_with`; the "Contains" default among
+  them), the fast search in the main bar, the record-link autocomplete and the
+  file search by name/description/keywords all behaved differently there.
+  They now use `ILIKE` / `NOT ILIKE` on PostgreSQL through a new
+  `SQL\Like::operator()`; the SQL sent to SQLite and MySQL is unchanged.
+  `JsonFilter` takes the engine as an optional third constructor argument
+  (default: plain `LIKE`). `_contains` is now case-insensitive on PostgreSQL
+  too, as it already was elsewhere. The OpenAPI notes and the SQL-layer dev
+  page, which described the operators as engine-dependent or `_contains` as
+  case-sensitive, are updated.
+  - `bdus-api/lib/SQL/Like.php` (new), `bdus-api/lib/SQL/Filter/JsonFilter.php`,
+    `bdus-api/lib/SQL/QueryFromRequest.php`, `bdus-api/controllers/Record.php`,
+    `bdus-api/controllers/File.php`
+  - tests: `LikeTest`, `JsonFilterTest`, `QueryFromRequestTest`, hurl phases
+    18, 19 and 34 (lower-case needle against upper-case data, on every engine)
+
+- **Config → DBML: "Download .dbml" failed with `app_prefix_required`.** The
+  export button built its URL by hand as a bare `/api/config/dbml` and called
+  `fetch()` directly, bypassing the `api.*` helpers that prefix every request
+  with the current app since the app-scoped API of 5.9.0 — so the server
+  rejected it (the sibling Preview and Apply calls go through `api.post` and
+  were unaffected). It now builds the URL with `apiUrl()`, the same helper
+  the data export and backup download use.
+  - `bdus-app/src/components/config/DbmlPanel.vue`
+
+- **Custom field widgets never loaded — the field silently showed its plain
+  value instead.** `DynamicWidget.vue` fetched the widget module from a bare
+  `/api/widget/{name}`, which the app-scoped API of 5.9.0 rejects, and its
+  catch-all fallback (render the raw value as text) hid the failure, so no
+  error ever surfaced. Same root cause as the DBML export fix above; it now
+  builds the URL with `apiUrl()`.
+  - `bdus-app/src/components/record/DynamicWidget.vue`
+
+- **Chart wizard: "View matching records" showed 0 records for a chart
+  created from a search** (introduced with the filter-inspection link in
+  5.12.2). The wizard holds the search payload DataView handed over — a
+  `{ filter, sort_field, sort_dir }` wrapper for an advanced search, or
+  `{ search_type: 'sqlExpert', querytext, … }` for an SQL-expert one — and
+  passed it unchanged as DataView's `?filter=`, which expects the bare filter
+  object, so DataView filtered on a field literally named "filter". The link
+  now unwraps the advanced-search filter and opens an SQL-expert search
+  through `?qt=expert&q=`; a bare filter (charts saved before the wrapper
+  existed) still passes through untouched. The chart itself was never
+  affected — only the preview link.
+  - `bdus-app/src/views/ChartsView.vue`
+
 ## [5.12.2] - 2026-09-22
 
 ### Fixed

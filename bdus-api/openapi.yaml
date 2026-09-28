@@ -117,6 +117,8 @@ tags:
     description: User-defined database indexes (config panel)
   - name: zotero
     description: Zotero bibliography integration — library config and per-record citation links
+  - name: pleiades
+    description: Pleiades gazetteer proxy — place search and lookup for the Pleiades plugin
   - name: widgets
     description: Per-app UI widget files (vanilla ES modules)
   - name: upgrade
@@ -2663,6 +2665,53 @@ paths:
               schema:
                 $ref: '#/components/schemas/CodedResult'
 
+  /api/config/table/{tb}/pleiades:
+    post:
+      tags: [config]
+      summary: Activate the Pleiades gazetteer-linking plugin for a table
+      description: |
+        Adds four columns to the core table when they are absent —
+        `pleiades_id` (INTEGER), `pleiades_label` and `pleiades_alt_label`
+        (VARCHAR(200)), and `pleiades_geo_id` (INTEGER, bookkeeping only: it
+        tracks the `bdus_geodata` row this plugin itself created, so cleanup
+        never touches a geometry drawn by hand on the same record) — sets
+        `pleiades: true` on the table config and registers the four fields as
+        hidden (the record view's Pleiades section renders them, not the
+        generic field editor). Columns are only added when the physical
+        table already exists; the config flag is set regardless. Idempotent.
+
+        Errors: `missing_table` (unknown table), `db_error`.
+        Requires `super_admin` privilege.
+      parameters:
+        - $ref: '#/components/parameters/tb'
+      responses:
+        '200':
+          description: "Activation result (`code: pleiades_activated`)"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+    delete:
+      tags: [config]
+      summary: Deactivate the Pleiades plugin for a table
+      description: |
+        Sets `pleiades: false` and removes the four `pleiades_*` field
+        definitions from the table config. The physical columns and any
+        stored values are **not** dropped — re-activating restores access to
+        the data. Foreign-key relations are never touched.
+
+        Errors: `missing_table`, `db_error`.
+        Requires `super_admin` privilege.
+      parameters:
+        - $ref: '#/components/parameters/tb'
+      responses:
+        '200':
+          description: "Deactivation result (`code: pleiades_deactivated`)"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
   /api/config/field-structure:
     get:
       tags: [config]
@@ -2936,6 +2985,43 @@ paths:
                 $ref: '#/components/schemas/CodedResult'
 
   /api/chart/{id}:
+    post:
+      tags: [charts]
+      summary: Update a saved chart's name and/or definition
+      description: |
+        Send `name`, `definition`, or both; a body with neither fails with
+        `nothing_to_update`. Only the chart's owner or a `super_admin` may
+        update it (`chart_access_denied` otherwise); an unknown id gives
+        `chart_not_found`. The API does not stop you changing the
+        definition's table or filter — the web UI simply keeps both fixed
+        after creation.
+
+        Requires edit privilege.
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                definition:
+                  $ref: '#/components/schemas/ChartDefinition'
+      responses:
+        '200':
+          description: "Update result (`code: ok_update_chart`)"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/CodedResult'
+                  - type: object
+                    properties:
+                      chart:
+                        $ref: '#/components/schemas/Chart'
     delete:
       tags: [charts]
       summary: Delete a saved chart
@@ -3219,6 +3305,41 @@ paths:
       responses:
         '200':
           description: Deletion result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  /api/geoface/color-field:
+    put:
+      tags: [geoface]
+      summary: Save (or clear) a table's default GeoFace colour-by field
+      description: |
+        Stores the field GeoFace uses to theme that table's geometries (flat
+        colour when unset). Kept in the table's config, so the choice is
+        re-applied for everyone the next time the map opens without an
+        explicit `colorBy` override. Send an empty or null `field` to clear it.
+
+        Errors: `parameter_missing` (no `tb`), `not_enough_privilege`,
+        `unknown_table`, `unknown_field`, `error_cfg_data_updated`.
+        Requires edit privilege.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tb]
+              properties:
+                tb:
+                  type: string
+                  description: Table name (unprefixed)
+                field:
+                  type: [string, 'null']
+                  description: Field to colour by; empty or null clears the setting
+      responses:
+        '200':
+          description: "Save result (`code: ok_cfg_data_updated`)"
           content:
             application/json:
               schema:
@@ -4671,6 +4792,91 @@ paths:
                         type: integer
                       detached:
                         type: integer
+
+  # ── Pleiades ──────────────────────────────────────────────────────────────────
+
+  /api/pleiades/search:
+    get:
+      tags: [pleiades]
+      summary: Search the Pleiades gazetteer by place name
+      description: |
+        Read-only proxy of the public Pleiades name search, so the frontend
+        never calls the third-party API directly. Nothing is stored; the
+        chosen place is saved on the record through the normal record-save
+        endpoint (`pleiades_id`, `pleiades_label`, `pleiades_alt_label`).
+
+        Errors: `parameter_missing` (empty `q`), `not_enough_privilege`,
+        `pleiades_api_error` (upstream failure; `detail` carries the reason).
+        Requires edit privilege.
+      parameters:
+        - name: q
+          in: query
+          required: true
+          description: Place name (or part of one) to search for
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Matching places (search results carry no coordinates)
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      results:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              description: Pleiades place id
+                            title:
+                              type: string
+                            snippet:
+                              type: [string, 'null']
+                              description: Short description, when Pleiades provides one
+
+  /api/pleiades/place/{id}:
+    get:
+      tags: [pleiades]
+      summary: Look up one Pleiades place, including its representative point
+      description: |
+        Read-only proxy of a single Pleiades place record, normalised to
+        `{id, title, reprPoint}`.
+
+        Errors: `parameter_missing` (invalid id), `not_enough_privilege`,
+        `pleiades_api_error`. Requires edit privilege.
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Place record
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      place:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                          title:
+                            type: string
+                          reprPoint:
+                            type: [array, 'null']
+                            description: |
+                              Representative point as `[longitude, latitude]`
+                              (GeoJSON order), or null when Pleiades has none
+                            minItems: 2
+                            maxItems: 2
+                            items:
+                              type: number
 
   # ── Widgets ───────────────────────────────────────────────────────────────────
 

@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **PostgreSQL: deleting a record from a table with stratigraphic relations
+  (RS) always failed; on SQLite and MySQL it left the record's RS rows
+  behind.** `Record\Persist::deleteAll()` removed a record's `bdus_rs` rows by
+  the value of the table's configured `rs` field (e.g. a sigla such as
+  `US003`), but `bdus_rs.first` / `second` are `INTEGER` record ids (see
+  `Record\Read::getRs()` and the RS endpoints). PostgreSQL refuses to compare
+  an integer column with `'US003'`, so the whole delete was rolled back and the
+  API answered `no_record_deleted`; SQLite and MySQL simply never matched, so the
+  relations of a deleted record were left dangling (the Harris Matrix later had
+  to tolerate them, 5.9.5) — or, for a numeric `rs` field, matched another
+  record's id. It now deletes the rows where the record's id is `first` or
+  `second`. Relations orphaned by earlier deletions are not cleaned up.
+  - `bdus-api/lib/Record/Persist.php`, `bdus-api/tests/Integration/RecordPersistTest.php`
+
 - **PostgreSQL: text searches were case-sensitive, unlike SQLite and MySQL.**
   A search for `imp` found `imp002` but not `IMP001` on PostgreSQL, while both
   were found on the other engines. Every text search compiled to a plain

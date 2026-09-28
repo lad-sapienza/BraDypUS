@@ -371,4 +371,48 @@ class RecordPersistTest extends BdusTestCase
         );
         $this->assertEmpty($ulRows, "Userlinks should have been deleted");
     }
+
+    /**
+     * bdus_rs.first/second are record ids: deleting a record must remove the RS
+     * rows that touch it — and only those. (Before the fix the delete matched
+     * on the value of the configured rs field instead: on PostgreSQL that made
+     * the whole delete fail, elsewhere it left orphaned RS rows behind.)
+     */
+    public function testDeleteRemovesTheRsRowsOfTheDeletedRecordOnly(): void
+    {
+        foreach (['RsA', 'RsB', 'RsC'] as $name) {
+            static::$db->execInTransaction(
+                "INSERT INTO items (creator, name, description, status) VALUES ('admin', '{$name}', 'rs test', 'active')"
+            );
+        }
+        $ids = [];
+        foreach (['RsA', 'RsB', 'RsC'] as $name) {
+            $ids[$name] = (int) static::$db->query("SELECT id FROM items WHERE name = ?", [$name], 'read')[0]['id'];
+        }
+        [$a, $b, $c] = [$ids['RsA'], $ids['RsB'], $ids['RsC']];
+
+        // A→B, C→A (A is first in one row, second in the other) and B→C (does not touch A)
+        static::$db->execInTransaction(
+            "INSERT INTO bdus_rs (tb, first, second, relation) VALUES
+                ('items', {$a}, {$b}, 1), ('items', {$c}, {$a}, 2), ('items', {$b}, {$c}, 1)"
+        );
+
+        $edit = new Edit(new Read($a, null, self::TB, static::$db, static::$cfg));
+        $edit->delete();
+        $edit->persist(static::$db, static::$cfg);
+
+        $left = static::$db->query(
+            "SELECT first, second FROM bdus_rs WHERE tb = 'items' AND first IN (?, ?, ?) AND second IN (?, ?, ?)",
+            [$a, $b, $c, $a, $b, $c],
+            'read'
+        );
+        $this->assertSame([['first' => $b, 'second' => $c]], array_map(
+            static fn ($r) => ['first' => (int) $r['first'], 'second' => (int) $r['second']],
+            $left
+        ), 'Only the RS row that does not involve the deleted record should remain');
+
+        // cleanup
+        static::$db->execInTransaction("DELETE FROM bdus_rs WHERE tb = 'items' AND first IN ({$b}, {$c})");
+        static::$db->execInTransaction("DELETE FROM items WHERE id IN ({$b}, {$c})");
+    }
 }

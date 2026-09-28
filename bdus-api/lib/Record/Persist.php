@@ -477,19 +477,19 @@ class Persist
             );
 
             // 4. Delete RS entries
-            // The rs field configured in cfg determines which core field's value is
-            // used as first/second in the rs table.
-            $rsFld = $this->cfg->get("tables.{$this->tb}.rs");
-            if ($rsFld) {
-                // Retrieve the value of the rs field from the core data
-                $rsFldVal = $this->model['core'][$rsFld]['val'] ?? null;
-                if ($rsFldVal !== null) {
-                    $this->db->query(
-                        "DELETE FROM bdus_rs WHERE tb = ? AND (first = ? OR second = ?)",
-                        [$this->tb, $rsFldVal, $rsFldVal],
-                        'boolean'
-                    );
-                }
+            // bdus_rs.first / second hold record ids (see Read::getRs() and the
+            // RS endpoints), so match on this record's id. The old code matched
+            // on the value of the configured rs field (e.g. a sigla): a text
+            // value against an INTEGER column, which PostgreSQL rejects — making
+            // the whole delete fail — and which on SQLite/MySQL never matched
+            // anything, leaving orphaned RS rows behind (or, for a numeric field,
+            // matching another record's id).
+            if ($this->cfg->get("tables.{$this->tb}.rs")) {
+                $this->db->query(
+                    "DELETE FROM bdus_rs WHERE tb = ? AND (first = ? OR second = ?)",
+                    [$this->tb, $this->id, $this->id],
+                    'boolean'
+                );
             }
 
             // 5. Handle file links

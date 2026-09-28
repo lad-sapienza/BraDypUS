@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Config → DBML: "Download .dbml" failed with `app_prefix_required`.** The
+  export button built its URL by hand as a bare `/api/config/dbml` and called
+  `fetch()` directly, bypassing the `api.*` helpers that prefix every request
+  with the current app since the app-scoped API of 5.9.0 — so the server
+  rejected it (the sibling Preview and Apply calls go through `api.post` and
+  were unaffected). It now builds the URL with `apiUrl()`, the same helper
+  the data export and backup download use.
+  - `bdus-app/src/components/config/DbmlPanel.vue`
+
 - **Chart wizard: "View matching records" showed 0 records for a chart
   created from a search** (introduced with the filter-inspection link in
   5.12.2). The wizard holds the search payload DataView handed over — a

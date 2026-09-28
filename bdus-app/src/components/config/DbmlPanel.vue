@@ -140,7 +140,7 @@ import { ref }        from 'vue'
 import { Button as AButton, Alert as AAlert, Input } from 'ant-design-vue'
 import { useI18n }    from '@/i18n'
 import { useToast } from '@/composables/useNotify'
-import { api }        from '@/api'
+import { api, apiUrl } from '@/api'
 import { getToken }   from '@/token'
 import { useRoute }   from 'vue-router'
 
@@ -162,7 +162,7 @@ async function doExport() {
   try {
     const app   = route.params.app
     const token = getToken()
-    const url   = `/api/config/dbml`
+    const url   = apiUrl('/api/config/dbml')   // app-scoped, like api.*: a bare /api/… is rejected
     const res   = await fetch(url, {
       headers: { Authorization: `Bearer ${token}` },
     })

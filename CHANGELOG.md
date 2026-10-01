@@ -5,6 +5,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Record lists sorted on a non-unique column now have a stable order.**
+  `QueryFromRequest::setOrder()` emitted `ORDER BY <field>` with no tie-breaker,
+  so rows sharing the sort value (a status, a type, a site…) came back in an
+  engine-defined order that could differ between two `LIMIT`/`OFFSET` requests:
+  a record could show on two pages, or on none. It now appends the primary key
+  in the same direction (`ORDER BY items.status desc, items.id desc`), so `desc`
+  is the exact reverse of `asc`. A hand-written `ORDER BY` inside an expert SQL
+  query is left untouched.
+  - `bdus-api/lib/SQL/QueryFromRequest.php`
+
 ## [5.12.3] - 2026-09-28
 
 ### Added

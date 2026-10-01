@@ -275,6 +275,21 @@ class QueryFromRequestTest extends BdusTestCase
         $this->assertSame(array_reverse($asc), $desc);
     }
 
+    public function testSortAddsPrimaryKeyTieBreaker(): void
+    {
+        $q = $this->qfr();
+        $q->setOrder('name', 'desc');
+        $this->assertStringContainsString('ORDER BY items.name desc, items.id desc', $q->getQuery());
+    }
+
+    public function testSortOnIdHasNoRedundantTieBreaker(): void
+    {
+        $q = $this->qfr();
+        $q->setOrder('id', 'asc');
+        $this->assertStringContainsString('ORDER BY items.id asc ', $q->getQuery());
+        $this->assertStringNotContainsString('items.id asc, items.id', $q->getQuery());
+    }
+
     // ══════════════════════════════════════════════════════════════════════
     // getFields
     // ══════════════════════════════════════════════════════════════════════
@@ -393,7 +408,7 @@ class QueryFromRequestTest extends BdusTestCase
         $q->setOrder('cat_ref', 'asc');
 
         $sql = $q->getQuery();
-        $this->assertMatchesRegularExpression('/ORDER BY fk\w+\.name asc/', $sql);
+        $this->assertMatchesRegularExpression('/ORDER BY fk\w+\.name asc, items\.id asc/', $sql);
         $this->assertStringNotContainsString('ORDER BY items.cat_ref', $sql);
     }
 
@@ -403,6 +418,6 @@ class QueryFromRequestTest extends BdusTestCase
         // no join was built, so there is no alias to sort on.
         $q = $this->qfrFk(['fields' => ['id' => 'id', 'cat_ref' => 'cat_ref']], false);
         $q->setOrder('cat_ref', 'asc');
-        $this->assertStringContainsString('ORDER BY items.cat_ref asc', $q->getQuery());
+        $this->assertStringContainsString('ORDER BY items.cat_ref asc, items.id asc', $q->getQuery());
     }
 }

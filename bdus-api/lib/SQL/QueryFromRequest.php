@@ -137,7 +137,14 @@ class QueryFromRequest
         $fld = $this->fkOrderBy[$fld] ?? ($this->tb . '.' . $fld);
       }
 
-      $this->order = $fld ? " ORDER BY $fld $type " : '';
+      // Tie-break on the primary key (same direction, so DESC is the exact
+      // reverse of ASC). Without it, rows sharing the sort value come back in
+      // an engine-defined order that can differ between two LIMIT/OFFSET
+      // pages — duplicates/gaps in pagination, and an id list that disagrees
+      // with the visible page.
+      $tieBreak = ($fld && $fld !== $this->tb . '.id') ? ", {$this->tb}.id $type" : '';
+
+      $this->order = $fld ? " ORDER BY $fld $type{$tieBreak} " : '';
 
       if (preg_match('/ORDER/', $this->where)) {
         $this->where = preg_replace('/order\sby\s([a-z_\.]+)\s?(?:asc|desc)?/i', '', $this->where);

@@ -1262,6 +1262,9 @@
   "ok_share_analysis": "Analysis shared",
   "ok_unshare_analysis": "Analysis made private",
   "next": "Next",
+  "record_nav_prev": "Previous record",
+  "record_nav_next": "Next record",
+  "record_nav_position": "{n} of {total}",
   "back": "Back",
   "heatmap": "Heat map",
 

@@ -15,6 +15,17 @@
       </div>
 
       <div class="header-actions">
+        <!-- Previous / Next within the list the record was opened from -->
+        <div v-if="nav && mode === 'read'" class="record-nav">
+          <AButton size="small" :disabled="nav.prev === null" :title="t('record_nav_prev')" @click="goToNeighbour(nav.prev)">
+            <template #icon><LeftOutlined /></template>
+          </AButton>
+          <span class="record-nav-pos">{{ t('record_nav_position', { n: nav.index + 1, total: nav.total + (nav.truncated ? '+' : '') }) }}</span>
+          <AButton size="small" :disabled="nav.next === null" :title="t('record_nav_next')" @click="goToNeighbour(nav.next)">
+            <template #icon><RightOutlined /></template>
+          </AButton>
+        </div>
+
         <!-- Template selector (read mode, when >1 template available) -->
         <ASelect
           v-if="mode === 'read' && availableTemplates.length > 0"
@@ -308,7 +319,7 @@
 </template>
 
 <script setup>
-import { ArrowLeftOutlined, CheckOutlined, CloseOutlined, CopyOutlined, DeleteOutlined, EditOutlined, HistoryOutlined, WarningOutlined } from '@ant-design/icons-vue'
+import { ArrowLeftOutlined, CheckOutlined, CloseOutlined, CopyOutlined, DeleteOutlined, EditOutlined, HistoryOutlined, LeftOutlined, RightOutlined, WarningOutlined } from '@ant-design/icons-vue'
 import { ref, computed, watch, reactive, onMounted, onUnmounted, provide } from 'vue'
 import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
 import { useToast, useConfirm } from '@/composables/useNotify'
@@ -324,6 +335,7 @@ import {
 import { api }        from '@/api'
 import { useI18n }    from '@/i18n'
 import { appStorage } from '@/utils/storage'
+import { useListNavigation } from '@/stores/listNavigation'
 import FieldDisplay    from '@/components/record/FieldDisplay.vue'
 import FieldEditor     from '@/components/record/FieldEditor.vue'
 import PluginSection   from '@/components/record/PluginSection.vue'
@@ -361,6 +373,41 @@ const backTarget = computed(() => {
   if (back) return back
   return `/${route.params.app}/data?tb=${tb.value}`
 })
+
+// ── Previous / Next (list the record was opened from) ───────────
+const listNav = useListNavigation()
+
+// Context is tied to the list URL in ?back=, so a record opened from anywhere
+// else (a link, a map popup, a bookmark) shows no bar.
+const nav = computed(() =>
+  id.value ? listNav.recordNeighbours(tb.value, route.query.back ?? null, id.value) : null
+)
+
+function loadListNavigation() {
+  if (id.value && route.query.back) listNav.ensureRecordIds(tb.value, route.query.back)
+}
+
+// replace, not push: browser Back and the "back to list" link keep returning
+// to the list instead of stepping through every record visited.
+function goToNeighbour(targetId) {
+  if (targetId === null || mode.value !== 'read') return
+  router.replace({
+    path:  `/${route.params.app}/record/${encodeURIComponent(tb.value)}/${targetId}`,
+    query: route.query,
+  })
+}
+
+// ← / → only when nothing is being typed or focused (the page body, or the
+// Previous/Next buttons themselves) — never steals arrows from a field/slider.
+function handleNavShortcut(e) {
+  if (e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return
+  if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return
+  if (!nav.value || mode.value !== 'read') return
+  const el = e.target
+  if (el !== document.body && !(el instanceof Element && el.closest('.record-nav'))) return
+  e.preventDefault()
+  goToNeighbour(e.key === 'ArrowLeft' ? nav.value.prev : nav.value.next)
+}
 
 // ── State ────────────────────────────────────────────────────────
 const record       = ref(null)
@@ -1042,6 +1089,8 @@ function handleSaveShortcut(e) {
 // ── Init ──────────────────────────────────────────────────────────
 onMounted(async () => {
   window.addEventListener('keydown', handleSaveShortcut)
+  window.addEventListener('keydown', handleNavShortcut)
+  loadListNavigation()
   await loadAvailableTemplates()
   loadColsPreference()
   fetchRecord()
@@ -1049,11 +1098,13 @@ onMounted(async () => {
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleSaveShortcut)
+  window.removeEventListener('keydown', handleNavShortcut)
 })
 
 // Reload when route params change (navigating record→record)
 // Re-load templates too if the table changes (tb is part of the route)
 watch(() => route.params.tb, async () => {
+  loadListNavigation()
   await loadAvailableTemplates()
   loadColsPreference()
   fetchRecord()
@@ -1062,6 +1113,19 @@ watch(() => route.params.id, fetchRecord)
 </script>
 
 <style scoped>
+.record-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: 8px;
+}
+.record-nav-pos {
+  font-size: 12px;
+  color: var(--ant-color-text-secondary, #666);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 .record-view {
   display: flex;
   flex-direction: column;

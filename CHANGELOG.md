@@ -18,6 +18,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `bdus-api/openapi.yaml`, `bdus-api/tests/Integration/IdsOnlyTest.php`,
     `bdus-api/tests/api/44_ids_only.hurl`
 
+- **Previous / Next in the record view.** A record opened from a list now
+  shows "← 61 of 103 →": step through the list's records in the order the list
+  shows them (its sort, search and filter), without going back to the list each
+  time. Works across pages of the list. `←` / `→` do the same when no field has
+  focus; the bar is hidden while editing. It only appears when you arrive from
+  a list (not from a link, a map popup or a bookmark), and survives a page
+  refresh. Navigation replaces the history entry, so the browser's Back button
+  and the "back to list" link still return to the list (#67).
+  - `bdus-app/src/stores/listNavigation.js` (new),
+    `bdus-app/src/views/DataView.vue`, `bdus-app/src/views/RecordView.vue`,
+    `bdus-app/src/locale/{en,it}.json`
+
 ### Fixed
 
 - **Record lists sorted on a non-unique column now have a stable order.**

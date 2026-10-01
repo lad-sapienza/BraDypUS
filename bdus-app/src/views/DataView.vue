@@ -325,6 +325,7 @@ import { api, apiUrl, filterToSearchParams } from '@/api'
 import { useI18n } from '@/i18n'
 import { useTables } from '@/composables/useTables'
 import { appStorage } from '@/utils/storage'
+import { useListNavigation } from '@/stores/listNavigation'
 import AppLayout from '@/components/AppLayout.vue'
 import {
   Table as ATable,
@@ -347,6 +348,7 @@ const { t } = useI18n()
 const toast  = useToast()
 const route  = useRoute()
 const router = useRouter()
+const listNav = useListNavigation()
 const { responseMessage } = api
 
 // ── Tables (shared singleton composable) ─────────────────────
@@ -858,11 +860,16 @@ function runExpertSearch() {
 }
 
 // ── Core fetch ────────────────────────────────────────────────
+// Body of the last successful list request — handed to the list-navigation
+// store on row click so the record view can offer Previous/Next in this list.
+let lastListBody = null   // { tb, body }
+
 async function fetchRecords() {
   if (!selectedTable.value) return
   loadingRecords.value = true
   try {
     let res
+    let body
     const tbName = selectedTable.value.name
 
     // Custom column list (comma-separated string for GET, array for POST/JSON).
@@ -872,7 +879,7 @@ async function fetchRecords() {
       : null
 
     if (activeSearch.value === 'advanced' || activeSearch.value === 'filter') {
-      const body = {
+      body = {
         page:       page.value,
         per_page:   perPage.value,
         sort_field: sortField.value ?? '',
@@ -880,20 +887,18 @@ async function fetchRecords() {
         filter:     activeFilter.value,
       }
       if (colParam) body.columns = colParam
-      res = await api.post(`/api/records/${tbName}`, body)
 
     } else if (activeSearch.value === 'expert') {
-      const body = {
+      body = {
         page: page.value, per_page: perPage.value,
         sort_field: sortField.value ?? '', sort_dir: sortDir.value,
         search_type: 'sqlExpert', querytext: expertQuery.value, join: '',
       }
       if (colParam) body.columns = colParam
-      res = await api.post(`/api/records/${tbName}`, body)
 
     } else if (activeSearch.value === 'filter') {
       // JSON filter from Record\Read::getLinks() / getBackLinks() link navigation.
-      const body = {
+      body = {
         page:       page.value,
         per_page:   perPage.value,
         sort_field: sortField.value ?? '',
@@ -901,10 +906,9 @@ async function fetchRecords() {
         filter:     activeFilter.value,
       }
       if (colParam) body.columns = colParam
-      res = await api.post(`/api/records/${tbName}`, body)
 
     } else {
-      const body = {
+      body = {
         page:        page.value,
         per_page:    perPage.value,
         sort_field:  sortField.value ?? '',
@@ -914,8 +918,9 @@ async function fetchRecords() {
       }
       // columns sent as comma-separated string to avoid URL array-encoding issues
       if (colParam) body.columns = colParam.join(',')
-      res = await api.post(`/api/records/${tbName}`, body)
     }
+
+    res = await api.post(`/api/records/${tbName}`, body)
 
     if (res.status === 'error') {
       toast.add({ severity: 'error', summary: t('generic_error'),
@@ -923,6 +928,7 @@ async function fetchRecords() {
       return
     }
 
+    lastListBody = { tb: tbName, body }
     totalRecords.value = res.total ?? 0
     canAdd.value       = res.can_add ?? false
     if (res.fields?.length) {
@@ -1080,6 +1086,9 @@ function onRowClick(event) {
   const tb = selectedTable.value?.name
   const id = event.data?.id
   if (tb && id != null) {
+    // Only if the captured request belongs to the table being opened.
+    if (lastListBody?.tb === tb) listNav.rememberRecordList(tb, lastListBody.body, route.fullPath)
+    else listNav.clearRecordList()
     router.push({
       path:  `/${route.params.app}/record/${encodeURIComponent(tb)}/${id}`,
       query: { back: route.fullPath },

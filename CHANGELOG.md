@@ -5,6 +5,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`ids_only=1` on the record and file lists.** `GET /api/records/{tb}` and
+  `GET /api/files` can return the ordered ids of the *whole* result set
+  (records: `{ total, ids, truncated }`; files: `{ total, files: [{id, ext,
+  filename, is_image}], truncated }`) instead of one page. Same filter, columns
+  and sort as the paginated list, capped at 5000. It is the backend for the
+  upcoming Previous/Next navigation in the record view and the file preview
+  (#67). `openapi.yaml` documents the parameter and the response.
+  - `bdus-api/controllers/Record.php`, `bdus-api/controllers/File.php`,
+    `bdus-api/openapi.yaml`, `bdus-api/tests/Integration/IdsOnlyTest.php`,
+    `bdus-api/tests/api/44_ids_only.hurl`
+
 ### Fixed
 
 - **Record lists sorted on a non-unique column now have a stable order.**

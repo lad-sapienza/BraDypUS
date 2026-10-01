@@ -12,6 +12,9 @@ use \Record\Read;
 
 class Record extends \Bdus\Controller
 {
+  /** Max ids returned by getRecords(ids_only=1). */
+  private const IDS_ONLY_CAP = 5000;
+
   /**
    * Returns a paginated JSON list of records for a given table.
    * Used by the Vue data module.
@@ -29,6 +32,10 @@ class Record extends \Bdus\Controller
    * A lookup field (`id_from_tb`) carries its resolved target label
    * alongside the raw id, under an "@field" key (same convention as
    * \Record\Read::getTbRecord) — the frontend prefers it when rendering.
+   *
+   * With `ids_only=1` the response is instead
+   * { total: int, ids: int[], truncated: bool } — the ordered ids of the whole
+   * result set (capped at IDS_ONLY_CAP), for Previous/Next navigation.
    */
   public function getRecords(): void
   {
@@ -153,6 +160,28 @@ class Record extends \Bdus\Controller
         } else {
           $this->log->debug("getRecords: ignoring unknown sort_field '{$sortFld}' for table '{$tb}'");
         }
+      }
+
+      // ids_only: the ordered id list of the WHOLE result set (not one page),
+      // used by the record view's Previous/Next navigation. Same query, filter,
+      // columns and ORDER BY as the paginated list — columns matter because a
+      // FK column is sorted on its resolved label — so the order is identical to
+      // what the user saw. Capped; `truncated` tells the client it is partial.
+      if (!empty($this->get['ids_only'] ?? $this->post['ids_only'] ?? null)) {
+        $qObj->setLimit(0, self::IDS_ONLY_CAP);
+        $ids = [];
+        foreach ($qObj->getResults() as $row) {
+          $id = $row['id'] ?? null;
+          $ids[] = (int) (is_array($id) ? ($id['val'] ?? 0) : $id);
+        }
+        $ids = array_slice($ids, 0, self::IDS_ONLY_CAP);
+        $this->returnJson([
+          'status'    => 'success',
+          'total'     => $total,
+          'ids'       => $ids,
+          'truncated' => $total > count($ids),
+        ]);
+        return;
       }
 
       $qObj->setLimit(($page - 1) * $perPage, $perPage);

@@ -1254,13 +1254,28 @@ paths:
           schema:
             type: string
           example: 'id,sigla,periodo'
+        - name: ids_only
+          in: query
+          description: |
+            When `1`, return only the ordered ids of the **whole** result set
+            instead of one page of records (`page` / `per_page` are ignored).
+            Same filter, `columns` and sort as the list, so the order is exactly
+            the one the paginated list shows. Capped at 5000 ids — `truncated`
+            is `true` when more match. Used by the record view's
+            Previous/Next navigation.
+          schema:
+            type: integer
+            enum: [0, 1]
+            default: 0
       responses:
         '200':
-          description: Paginated record list
+          description: Paginated record list, or the id list when `ids_only=1`
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RecordListResponse'
+                oneOf:
+                  - $ref: '#/components/schemas/RecordListResponse'
+                  - $ref: '#/components/schemas/RecordIdsResponse'
     post:
       tags: [records]
       summary: List / search records (POST)
@@ -1299,6 +1314,12 @@ paths:
                   description: Column names to include in the response (overrides preview fields)
                   items:
                     type: string
+                ids_only:
+                  type: integer
+                  enum: [0, 1]
+                  description: |
+                    When `1`, return only the ordered ids of the whole result set
+                    (see `GET /api/records/{tb}`).
             examples:
               filter:
                 summary: Directus-style filter (POST body)
@@ -1320,11 +1341,13 @@ paths:
                   querytext: "periodo = 'Basso Medioevo' AND cronologia > 1200"
       responses:
         '200':
-          description: Paginated record list
+          description: Paginated record list, or the id list when `ids_only=1`
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RecordListResponse'
+                oneOf:
+                  - $ref: '#/components/schemas/RecordListResponse'
+                  - $ref: '#/components/schemas/RecordIdsResponse'
 
   /api/records/{tb}/export:
     get:
@@ -1755,9 +1778,26 @@ paths:
             enum: [0, 1]
             default: 0
           description: When 1, return only files not linked to any record
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: Match on file name, description, keywords (or exact id when numeric)
+        - name: ids_only
+          in: query
+          schema:
+            type: integer
+            enum: [0, 1]
+            default: 0
+          description: |
+            When 1, return a minimal descriptor (`id`, `ext`, `filename`,
+            `is_image`) of **every** matching file instead of one page
+            (`page` / `per_page` are ignored). Same filter and order as the
+            list; capped at 5000 — `truncated` is true when more match. Used by
+            the file preview's Previous/Next navigation.
       responses:
         '200':
-          description: Paginated file list
+          description: Paginated file list, or the minimal file list when `ids_only=1`
           content:
             application/json:
               schema:
@@ -1769,12 +1809,18 @@ paths:
                     type: integer
                   page:
                     type: integer
+                    description: Absent when `ids_only=1`
                   per_page:
                     type: integer
+                    description: Absent when `ids_only=1`
+                  truncated:
+                    type: boolean
+                    description: Only with `ids_only=1`
                   files:
                     type: array
                     items:
                       $ref: '#/components/schemas/FileItem'
+                    description: With `ids_only=1` only `id`, `ext`, `filename` and `is_image` are present
 
   /api/record/{tb}/{id}/file:
     post:
@@ -5937,6 +5983,25 @@ components:
               type: integer
             limit:
               type: integer
+
+    RecordIdsResponse:
+      description: Response of `ids_only=1` — the ordered ids of the whole result set.
+      allOf:
+        - $ref: '#/components/schemas/Success'
+        - type: object
+          required: [total, ids, truncated]
+          properties:
+            total:
+              type: integer
+              description: Total matching records
+            ids:
+              type: array
+              description: Record ids in list order, at most 5000
+              items:
+                type: integer
+            truncated:
+              type: boolean
+              description: true when `total` exceeds the number of ids returned
 
     FilterObject:
       type: object

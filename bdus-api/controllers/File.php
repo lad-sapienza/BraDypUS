@@ -12,6 +12,9 @@ use \Intervention\Image\Drivers\Gd\Driver;
 
 class File extends \Bdus\Controller
 {
+	/** Max files returned by getFiles(ids_only=1). */
+	private const IDS_ONLY_CAP = 5000;
+
 	public function rotate(): void
 	{
 		try {
@@ -83,6 +86,35 @@ class File extends \Bdus\Controller
 
 			$countRow  = $this->db->query($countSql, $params, 'read');
 			$total     = (int)($countRow[0]['cnt'] ?? 0);
+
+			// ids_only: the minimal descriptor of EVERY matching file (not one
+			// page), same filter and order as the list — for the preview's
+			// Previous/Next navigation. Capped; `truncated` flags a partial list.
+			if (!empty($this->get['ids_only'])) {
+				$cap  = self::IDS_ONLY_CAP;
+				$rows = $this->db->query(
+					"SELECT f.id, f.ext, f.filename FROM bdus_files f {$whereSql} ORDER BY f.id DESC LIMIT ?",
+					[...$params, $cap],
+					'read'
+				) ?: [];
+				$files = [];
+				foreach ($rows as $r) {
+					$ext     = $r['ext'] ?? '';
+					$files[] = [
+						'id'       => (int)$r['id'],
+						'ext'      => $ext,
+						'filename' => $r['filename'] ?? '',
+						'is_image' => in_array(strtolower($ext), $imageExts, true),
+					];
+				}
+				$this->returnJson([
+					'status'    => 'success',
+					'total'     => $total,
+					'files'     => $files,
+					'truncated' => $total > count($files),
+				]);
+				return;
+			}
 
 			$rows      = $this->db->query($fetchSql, [...$params, $perPage, $offset], 'read') ?: [];
 

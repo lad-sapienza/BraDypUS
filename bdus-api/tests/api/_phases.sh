@@ -430,6 +430,12 @@ run_tests() {
       --variable "jwt=${JWT}"
   fi
 
+  if should_run "44"; then
+    header "Phase 44 — ids_only (Previous/Next id lists)"
+    run_phase "ids_only id lists" "44_ids_only.hurl" \
+      --variable "jwt=${JWT}"
+  fi
+
   # Phase 10 always runs: drops crud_test tables and logs out
   header "Phase 10 — Cleanup"
   run_phase "Cleanup" "10_cleanup.hurl" \

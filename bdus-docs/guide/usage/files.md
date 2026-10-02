@@ -26,6 +26,17 @@ Click a thumbnail to open an **in-app preview**:
   titled with the file's name and extension
 - **Documents / PDFs** → inline viewer in a wider preview window
 
+### Previous / Next <Badge type="tip" text="v5.13.0" />
+
+The preview window has **‹ 3 / 7 ›** buttons at the bottom, and the **←** and
+**→** keys do the same: they step through **every file the list matches** —
+the current search and **Orphans only** filter included — not just the page
+on screen. The files follow the order of the table (newest first), and **Esc**
+closes the preview at any time.
+
+With more than **5000** matching files, the navigation stops at the 5000th
+and the counter shows it (**‹ 12 / 5000+ ›**).
+
 ## Filtering and searching
 
 Toggle **Orphans only** in the toolbar to show only files that are not linked

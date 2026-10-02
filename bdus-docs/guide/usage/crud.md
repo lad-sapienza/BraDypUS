@@ -38,6 +38,31 @@ RecordView displays all field values for a single record, organised into section
 
 ![RecordView showing a record with field values, a file gallery, and an RS panel](/images/v5/usage/record-view.png)
 
+### Previous / Next <Badge type="tip" text="v5.13.0" />
+
+When you open a record by clicking a row in the record list, the header shows
+a small navigation bar — **‹ 61 / 103 ›** — that lets you step through the
+records of *that list* without going back to it each time.
+
+- The order is exactly the one the list was showing: its **sort**, **fast
+  search**, **advanced search / filter** and **expert query**. The bar reaches
+  every matching record, not only the ones on the page you clicked from.
+- The **←** and **→** keys do the same, as long as no field has the focus.
+- The bar is hidden while you are **editing** a record: save or cancel first.
+- It appears only when you arrive **from the list**. A record opened from a
+  link (a related record, a map popup, the Harris Matrix) or from a bookmark
+  has no list to walk through, so no bar is shown.
+- It survives a page refresh, but it is remembered per browser tab: close the
+  tab and it is gone.
+- The browser's **Back** button and the *back to list* link at the top still
+  return to the list, whatever number of records you stepped through.
+- Lists with more than **5000** matching records are walked only up to the
+  5000th, and the counter shows it (**‹ 12 / 5000+ ›**).
+
+The position is computed when you open the first record: if other users add or
+delete records meanwhile, the order you are walking does not change until you
+return to the list and open a record again.
+
 ## Creating a record
 
 Click **New** in the DataView toolbar (or the floating **+** button).

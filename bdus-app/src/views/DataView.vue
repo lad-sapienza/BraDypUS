@@ -344,6 +344,7 @@ import {
 } from 'ant-design-vue'
 import SavedQueriesPanel from '@/components/SavedQueriesPanel.vue'
 import FilterBuilder from '@/components/query/FilterBuilder.vue'
+import { listBody, searchParams, geofaceQuery } from '@/utils/recordQuery'
 import { emptyTree, cloneTree, countActive, formula, treeToFilter, serializeTree, restoreTree } from '@/utils/filterTree'
 
 const AInput       = Input
@@ -941,59 +942,23 @@ async function fetchRecords() {
   const seq = ++fetchSeq
   loadingRecords.value = true
   try {
-    let res
-    let body
     const tbName = selectedTable.value.name
 
-    // Custom column list (comma-separated string for GET, array for POST/JSON).
-    // Empty array means "use backend preview defaults" (no param sent).
-    const colParam = visibleColumnNames.value.length > 0
-      ? visibleColumnNames.value
-      : null
+    const body = listBody({
+      page:      page.value,
+      perPage:   perPage.value,
+      sortField: sortField.value,
+      sortDir:   sortDir.value,
+      search:    searchParams({
+        activeSearch: activeSearch.value,
+        fastSearch:   fastSearch.value,
+        expertQuery:  expertQuery.value,
+        activeFilter: activeFilter.value,
+      }),
+      columns: visibleColumnNames.value,   // empty → the backend's preview defaults
+    })
 
-    if (activeSearch.value === 'advanced' || activeSearch.value === 'filter') {
-      body = {
-        page:       page.value,
-        per_page:   perPage.value,
-        sort_field: sortField.value ?? '',
-        sort_dir:   sortDir.value,
-        filter:     activeFilter.value,
-      }
-      if (colParam) body.columns = colParam
-
-    } else if (activeSearch.value === 'expert') {
-      body = {
-        page: page.value, per_page: perPage.value,
-        sort_field: sortField.value ?? '', sort_dir: sortDir.value,
-        search_type: 'sqlExpert', querytext: expertQuery.value, join: '',
-      }
-      if (colParam) body.columns = colParam
-
-    } else if (activeSearch.value === 'filter') {
-      // JSON filter from Record\Read::getLinks() / getBackLinks() link navigation.
-      body = {
-        page:       page.value,
-        per_page:   perPage.value,
-        sort_field: sortField.value ?? '',
-        sort_dir:   sortDir.value,
-        filter:     activeFilter.value,
-      }
-      if (colParam) body.columns = colParam
-
-    } else {
-      body = {
-        page:        page.value,
-        per_page:    perPage.value,
-        sort_field:  sortField.value ?? '',
-        sort_dir:    sortDir.value,
-        search_type: activeSearch.value === 'fast' ? 'fast' : 'all',
-        search:      activeSearch.value === 'fast' ? fastSearch.value : '',
-      }
-      // columns sent as comma-separated string to avoid URL array-encoding issues
-      if (colParam) body.columns = colParam.join(',')
-    }
-
-    res = await api.post(`/api/records/${tbName}`, body, { signal })
+    const res = await api.post(`/api/records/${tbName}`, body, { signal })
     if (seq !== fetchSeq) return   // superseded while waiting
 
     if (res.status === 'error') {
@@ -1110,13 +1075,11 @@ function addRecord() {
 function openGeoface() {
   const tb = selectedTable.value?.name
   if (!tb) return
-  const query = {}
-  if ((activeSearch.value === 'advanced' || activeSearch.value === 'filter') && activeFilter.value) {
-    query.filter = JSON.stringify(activeFilter.value)
-  } else if (activeSearch.value === 'expert' && expertQuery.value) {
-    query.search_type = 'sqlExpert'
-    query.querytext = expertQuery.value
-  }
+  const query = geofaceQuery({
+    activeSearch: activeSearch.value,
+    activeFilter: activeFilter.value,
+    expertQuery:  expertQuery.value,
+  })
   router.push({ path: `/${route.params.app}/geoface/${encodeURIComponent(tb)}`, query })
 }
 

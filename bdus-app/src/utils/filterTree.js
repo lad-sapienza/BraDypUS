@@ -255,7 +255,7 @@ export function rowsToTree(rows) {
   for (let i = 1; i < active.length; i++) {
     const r = active[i]
     const leaf = condition(r.fld, r.operator, r.value)
-    // Only OR splits; anything else (AND, the retired XOR…) joins the run.
+    // Only OR splits; anything else (AND, or a connector this version no longer offers) joins the run.
     if (r.connector === 'OR') runs.push([leaf])
     else runs[runs.length - 1].push(leaf)
   }

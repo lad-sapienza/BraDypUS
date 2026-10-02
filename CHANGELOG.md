@@ -26,8 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the row above (⇥) or take it out of its group (⇤); a group left with one row
   dissolves by itself, up to three levels deep. Under the tree an *Equivalent
   to* line shows the query with its parentheses. Existing bookmarks and links
-  with the previous format keep working and open as the same query. The retired
-  `XOR` connector is gone (it was treated as AND). No change to the API.
+  with the previous format keep working and open as the same query. No change
+  to the API.
   - `bdus-app/src/utils/filterTree.js`, `bdus-app/src/components/query/`,
     `bdus-app/src/views/DataView.vue`, `bdus-app/tests/filterTree.test.mjs`
 
@@ -77,6 +77,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `bdus-api/lib/SQL/ExportSearch.php`, `bdus-api/controllers/Record.php`,
     `bdus-api/openapi.yaml`, `bdus-api/tests/Unit/ExportSearchTest.php`,
     `bdus-api/tests/api/04d_export.hurl`
+- **The SQL tab's help text named a button that no longer exists** ("Unlike
+  Advanced search…"); it now says the Builder, and tells you that the words
+  `update`, `delete`, `insert`, `create`, `drop`, `alter`, `truncate`,
+  `execute`, `file` and `index`, and `;`, are removed from the query wherever
+  they appear — quoted text included.
+  - `bdus-app/src/locale/{en,it}.json`
+- **Two labels in the record view showed their raw translation key** (the
+  layout picker's default entry, `default_layout`, and the template picker's
+  tooltip, `template`), in English and Italian.
+  - `bdus-app/src/locale/{en,it}.json`
 - **Record list toolbar on small screens.** Below 640 px the row of 11 buttons
   squeezed the search box to almost nothing. The secondary actions (advanced and
   SQL search, saved searches, columns, export, chart, map, timeline, Harris

@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.14.0] - 2026-10-02
+
 ### Added
 
 - **One place to query the record list.** The text box, the advanced search and

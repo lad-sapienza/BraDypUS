@@ -5,6 +5,123 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.14.0] - 2026-10-02
+
+### Added
+
+- **One place to query the record list.** The text box, the advanced search and
+  the SQL search are now a single bar: type in the box and the results follow;
+  the **Filters** button opens a panel with two tabs, *Builder* and *SQL*. They
+  are alternatives: opening the filters empties and disables the text box, and
+  it stays disabled while a filter is applied (a badge on Filters counts the
+  conditions). What is applied shows as removable chips under the bar — a group
+  is one chip, with its parentheses — and *Remove filters* clears them. *Apply*
+  closes the panel. Sorting and the visible columns are untouched, saved
+  searches stay with the other actions (the pin icon, or the "⋯" menu on small
+  screens), and old links (`qt=fast`, `qt=expert`, `qt=advanced`) still open.
+  - `bdus-app/src/views/DataView.vue`
+- **Advanced search: nested AND / OR groups.** The query builder is now a tree:
+  each group says whether *all* or *at least one* of its conditions must match,
+  and a group can contain sub-groups, so `Site = Colle Oppio AND (Type = Fill OR
+  Type = Layer)` can be built — something the flat list of per-row connectors
+  could not express (the v4 parentheses). The arrows on each row group it with
+  the row above (⇥) or take it out of its group (⇤); a group left with one row
+  dissolves by itself, up to three levels deep. Under the tree an *Equivalent
+  to* line shows the query with its parentheses. Existing bookmarks and links
+  with the previous format keep working and open as the same query. No change
+  to the API.
+  - `bdus-app/src/utils/filterTree.js`, `bdus-app/src/components/query/`,
+    `bdus-app/src/views/DataView.vue`, `bdus-app/tests/filterTree.test.mjs`
+
+### Changed
+
+- **Record list code split up, no change in behaviour.** `DataView.vue` went from
+  about 1400 lines to about 270: the search lives in `useRecordQuery` and the
+  `QueryBar` component, the fetch in `useRecordList`, the visible columns in
+  `useColumnPrefs`, the result actions (export, map, chart, timeline, matrix) in
+  `useResultActions` and `ResultActions`. The request body is built in one
+  place (`utils/recordQuery.js`, with tests) instead of four near-copies, and
+  the visible columns are always sent as a list.
+  - `bdus-app/src/composables/`, `bdus-app/src/components/query/`,
+    `bdus-app/src/utils/recordQuery.js`, `bdus-app/tests/recordQuery.test.mjs`
+- **Record list: search as you type.** The fast-search box now runs the search
+  while you type (after a 300 ms pause, from 2 characters), like the search in
+  most tools; Enter runs it at once and clearing the box clears the search. The
+  blue search button is gone (a magnifier now sits inside the box). A newer
+  search cancels the one still running, so a slow older response can never
+  overwrite the newer results.
+  - `bdus-app/src/views/DataView.vue`, `bdus-app/src/api/index.js`
+
+### Fixed
+
+- **Export with an unknown `format` no longer falls back to CSV.** `format=pdf`
+  (or any value other than `csv`, `json`, `xlsx`) now answers
+  `invalid_parameters` instead of silently handing back a file in a format that
+  was not asked for.
+  - `bdus-api/controllers/Record.php`, `bdus-api/lib/DB/Export/Export.php`
+- **The SQL search is restricted to administrators (#76).** Its only guard was
+  a keyword stripper that mangled legitimate values (`LIKE '%file%'` matched
+  everything), could be bypassed with nested keywords, and let any reader
+  `SELECT` from any table. Raw SQL now requires the `admin` privilege, enforced
+  in the one place every search goes through (list, export, charts, GeoFace,
+  stratigraphic series); the **SQL** tab is hidden from everyone else.
+  - `bdus-api/lib/SQL/QueryFromRequest.php`,
+    `bdus-app/src/composables/useRecordQuery.js`, `bdus-app/src/stores/auth.js`
+- **The record list did not fill the page.** The table grew only to its own
+  content: a screen of empty space under five visible rows, and the pagination
+  floating halfway up the page. The list now takes the full height (the same
+  fix the record view already had) and its table scrolls inside it. Making that
+  visible exposed two flaws in how the table's height is worked out, also fixed:
+  it ignored the pagination's margins (so the page numbers were cut off at the
+  bottom), and it never followed its container — opening the filter panel or
+  adding chips left the table overflowing the page.
+  - `bdus-app/src/views/DataView.vue`, `bdus-app/src/composables/useFlexTableHeight.js`
+- **Exporting a list narrowed with the advanced search exported the whole
+  table.** The export understood the text search, SQL and ready-made filters but
+  not the query builder's own URL state (`qt=advanced`), so a list showing 48
+  records downloaded all 103. It now applies the builder's filter — including
+  nested groups and links saved in the older `rows` format. Found while
+  reworking the search bar.
+- **The export no longer falls back to "everything" on a parameter it cannot
+  read.** A malformed `filter` or `q`, an unknown `qt`, `qt` without `q` (or
+  `q` without `qt`), or a `qt=advanced` payload without a `filter` now answers
+  `{"status": "error", "code": "invalid_parameters", "detail": "…"}` naming the
+  parameter, instead of quietly exporting the whole table. Empty values count as
+  absent. The reading of these parameters moved into `SQL\ExportSearch`, with
+  20 unit tests.
+  - `bdus-api/lib/SQL/ExportSearch.php`, `bdus-api/controllers/Record.php`,
+    `bdus-api/openapi.yaml`, `bdus-api/tests/Unit/ExportSearchTest.php`,
+    `bdus-api/tests/api/04d_export.hurl`
+- **The SQL tab's help text named a button that no longer exists** ("Unlike
+  Advanced search…"); it now says the Builder, and tells you that the words
+  `update`, `delete`, `insert`, `create`, `drop`, `alter`, `truncate`,
+  `execute`, `file` and `index`, and `;`, are removed from the query wherever
+  they appear — quoted text included.
+  - `bdus-app/src/locale/{en,it}.json`
+- **Two labels in the record view showed their raw translation key** (the
+  layout picker's default entry, `default_layout`, and the template picker's
+  tooltip, `template`), in English and Italian.
+  - `bdus-app/src/locale/{en,it}.json`
+- **Record list toolbar on small screens.** Below 640 px the row of 11 buttons
+  squeezed the search box to almost nothing. The secondary actions (advanced and
+  SQL search, saved searches, columns, export, chart, map, timeline, Harris
+  matrix) now sit behind one "⋯" menu, "New record" is left to the floating +
+  button, and the active-search tag wraps to its own line. Wider screens are
+  unchanged.
+  - `bdus-app/src/views/DataView.vue`, `bdus-app/src/composables/useMediaQuery.js`
+- **"Visible columns" showed its raw translation key** (`preview_fields`) in the
+  record list's column picker, in English and Italian.
+  - `bdus-app/src/locale/{en,it}.json`
+- **The file preview no longer runs off the bottom of the screen.** The preview
+  window sat 100px from the top with the image capped at `82vh` plus header and
+  footer around it, so any tall image pushed the bottom (and the new
+  Previous/Next buttons) 70–95px below the viewport, with empty space above.
+  The preview now opens almost full screen and the image fits whatever is left
+  after the header and footer — shrinking to fit, never enlarged, so a small
+  image keeps its natural size, centred. PDFs and other documents fill the same
+  area.
+  - `bdus-app/src/views/FilesView.vue`
+
 ## [5.13.0] - 2026-10-02
 
 ### Added

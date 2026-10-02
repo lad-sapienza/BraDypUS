@@ -1374,10 +1374,14 @@ paths:
             enum: [csv, json, xlsx]
         - name: qt
           in: query
-          description: Search type for export. Use `fast`, `expert`, or `filter` (mirrors DataView URL params).
+          description: |
+            Search type for export (mirrors the DataView URL params). `fast`: text;
+            `expert`: raw SQL condition; `filter`: a JsonFilter object as JSON;
+            `advanced`: the query builder's state as JSON `{"tree": …, "filter": <JsonFilter>}`
+            (older links carry `rows` instead of `tree`) — the export applies its `filter`.
           schema:
             type: string
-            enum: [fast, expert, filter]
+            enum: [fast, expert, filter, advanced]
         - name: q
           in: query
           description: Query value corresponding to the selected `qt` mode.

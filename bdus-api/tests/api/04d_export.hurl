@@ -64,6 +64,29 @@ body     contains "T002"
 body not contains "T001"
 
 
+# ── 4d-d3. Export with qt=advanced (the query builder's URL state) ───────
+# DataView persists the builder as qt=advanced&q={tree, filter}; the ready-made
+# JsonFilter is under "filter". Before this was honoured the export silently
+# dumped the whole table (#75).
+GET {{base_url}}/{{app_name}}/api/records/crud_test/export?format=csv&qt=advanced&q=%7B%22tree%22%3A%7B%22t%22%3A%22g%22%2C%22op%22%3A%22AND%22%2C%22c%22%3A%5B%7B%22t%22%3A%22c%22%2C%22fld%22%3A%22crud_test%3Asigla%22%2C%22operator%22%3A%22_eq%22%2C%22value%22%3A%22T002%22%7D%5D%7D%2C%22filter%22%3A%7B%22sigla%22%3A%7B%22_eq%22%3A%22T002%22%7D%7D%7D
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+header "Content-Type" contains "text/csv"
+body     contains "T002"
+body not contains "T001"
+
+
+# ── 4d-d4. Same, with the previous {rows, filter} payload (old bookmarks) ──
+GET {{base_url}}/{{app_name}}/api/records/crud_test/export?format=csv&qt=advanced&q=%7B%22rows%22%3A%5B%7B%22connector%22%3A%22AND%22%2C%22fld%22%3A%22crud_test%3Asigla%22%2C%22operator%22%3A%22_eq%22%2C%22value%22%3A%22T002%22%7D%5D%2C%22filter%22%3A%7B%22sigla%22%3A%7B%22_eq%22%3A%22T002%22%7D%7D%7D
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+header "Content-Type" contains "text/csv"
+body     contains "T002"
+body not contains "T001"
+
+
 # ── 4d-e. Export unknown format → default CSV (no error) ─────────────
 GET {{base_url}}/{{app_name}}/api/records/crud_test/export?format=unknown
 Authorization: Bearer {{jwt}}

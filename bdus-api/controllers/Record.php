@@ -221,7 +221,7 @@ class Record extends \Bdus\Controller
    *     &format=csv|json|xlsx
    *     &filter[field][_op]=value             (optional, Directus-style bracket notation)
    *     &filter=JSON_STRING                   (optional, URL-encoded JSON filter)
-   *     &qt=fast|expert|filter                (optional — mirrors route.query.qt)
+   *     &qt=fast|expert|filter|advanced       (optional — mirrors route.query.qt)
    *     &q=VALUE                              (optional — mirrors route.query.q)
    * (same encoding used by DataView when persisting filter state in the URL).
    */
@@ -263,13 +263,23 @@ class Record extends \Bdus\Controller
       $qRequest['type']   = 'filter';
       $qRequest['filter'] = $filterRaw;
     } elseif ($qt === 'filter' && $q !== null) {
-      // Advanced search persists its state as qt=filter&q=JSON (see DataView
-      // runAdvancedSearch): decode and apply, otherwise the export would
-      // silently ignore the active filter and dump the whole table.
+      // Links from a record and saved searches persist as qt=filter&q=<JsonFilter>:
+      // decode and apply, otherwise the export would silently ignore the active
+      // filter and dump the whole table.
       $decoded = json_decode($q, true);
       if (is_array($decoded)) {
         $qRequest['type']   = 'filter';
         $qRequest['filter'] = $decoded;
+      }
+    } elseif ($qt === 'advanced' && $q !== null) {
+      // The query builder persists qt=advanced&q={"tree": …, "filter": <JsonFilter>}
+      // (older links carry "rows" instead of "tree"): the ready-made filter is the
+      // "filter" key. Without this the export ignored the builder and dumped the
+      // whole table (#75).
+      $decoded = json_decode($q, true);
+      if (is_array($decoded) && is_array($decoded['filter'] ?? null)) {
+        $qRequest['type']   = 'filter';
+        $qRequest['filter'] = $decoded['filter'];
       }
     } elseif ($qt === 'fast' && $q !== null) {
       $qRequest['type']   = 'fast';

@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **One place to query the record list.** The text box, the advanced search and
+  the SQL search are now a single bar: type in the box and the results follow;
+  the **Filters** button opens a panel with two tabs, *Builder* and *SQL*. They
+  are alternatives: opening the filters empties and disables the text box, and
+  it stays disabled while a filter is applied (a badge on Filters counts the
+  conditions). What is applied shows as removable chips under the bar — a group
+  is one chip, with its parentheses — and *Remove filters* clears them. *Apply*
+  closes the panel. Sorting and the visible columns are untouched, saved
+  searches stay with the other actions (the pin icon, or the "⋯" menu on small
+  screens), and old links (`qt=fast`, `qt=expert`, `qt=advanced`) still open.
+  - `bdus-app/src/views/DataView.vue`
 - **Advanced search: nested AND / OR groups.** The query builder is now a tree:
   each group says whether *all* or *at least one* of its conditions must match,
   and a group can contain sub-groups, so `Site = Colle Oppio AND (Type = Fill OR

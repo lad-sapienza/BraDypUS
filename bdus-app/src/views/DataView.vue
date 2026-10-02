@@ -20,7 +20,9 @@
               <!-- Live search: runs as you type (debounced); Enter runs it at once -->
               <AInput
                 v-model:value="fastSearch"
-                :placeholder="t('fast_search')"
+                :placeholder="inputPlaceholder"
+                :disabled="inputLocked"
+                :title="inputLocked && !filtersOpen ? t('qb_remove_to_type') : undefined"
                 allow-clear
                 class="search-input-wrap"
                 @change="onFastInput"
@@ -29,15 +31,26 @@
                 <template #prefix><SearchOutlined /></template>
               </AInput>
 
+              <!-- Filters: the builder and SQL live behind this one button -->
+              <ABadge :count="appliedCount" :offset="[-2, 2]" :number-style="{ backgroundColor: 'var(--p-primary-color)' }">
+                <AButton
+                  :type="filtersOpen ? 'primary' : 'default'"
+                  :size="compact ? 'middle' : 'small'"
+                  :title="t('qb_filters')"
+                  :aria-expanded="filtersOpen"
+                  class="filters-btn"
+                  @click="toggleFilters"
+                >
+                  <ControlOutlined />
+                  <span v-if="!compact">{{ t('qb_filters') }}</span>
+                </AButton>
+              </ABadge>
+
               <!-- Small screens: every secondary action behind one menu -->
               <ADropdown v-if="compact" :trigger="['click']" placement="bottomRight">
-                <ABadge :dot="openPanel === 'advanced' || openPanel === 'expert'">
-                  <AButton type="text" :title="t('more_actions')"><EllipsisOutlined /></AButton>
-                </ABadge>
+                <AButton type="text" :title="t('more_actions')"><EllipsisOutlined /></AButton>
                 <template #overlay>
                   <AMenu @click="onCompactMenu">
-                    <AMenuItem key="advanced"><ControlOutlined /> {{ t('advanced_search') }}</AMenuItem>
-                    <AMenuItem key="expert"><CodeOutlined /> {{ t('sql_expert_search') }}</AMenuItem>
                     <AMenuItem key="saved"><PushpinOutlined /> {{ t('saved_queries') }}</AMenuItem>
                     <AMenuDivider />
                     <AMenuItem v-if="columns.length" key="columns"><TableOutlined /> {{ t('preview_fields') }}</AMenuItem>
@@ -58,19 +71,6 @@
 
               <template v-else>
               <ADivider type="vertical" />
-
-              <AButton
-                :type="openPanel === 'advanced' ? 'primary' : 'text'"
-                :title="t('advanced_search')"
-                size="small"
-                @click="togglePanel('advanced')"
-              ><ControlOutlined /></AButton>
-              <AButton
-                :type="openPanel === 'expert' ? 'primary' : 'text'"
-                :title="t('sql_expert_search')"
-                size="small"
-                @click="togglePanel('expert')"
-              ><CodeOutlined /></AButton>
 
               <!-- Column visibility toggler -->
               <APopover v-if="columns.length" v-model:open="colTogglerOpen" trigger="click" placement="bottom">
@@ -122,14 +122,6 @@
               </APopover>
               </template>
 
-              <ATag
-                v-if="activeSearch"
-                color="warning"
-                closable
-                class="search-active-tag"
-                @close="resetSearch"
-              >{{ activeSearchLabel }}</ATag>
-
               <template v-if="!compact">
               <!-- Saved searches -->
               <AButton type="text" :title="t('saved_queries')" size="small" @click="savedQueriesDialog = true">
@@ -176,6 +168,20 @@
               </template>
             </div>
 
+            <!-- What is applied, as removable chips (a group is one chip) -->
+            <div v-if="queryChips.length" class="query-chips">
+              <template v-for="(chip, k) in queryChips" :key="chip.key">
+                <span v-if="k > 0" class="chip-join">{{ chipJoin }}</span>
+                <ATag
+                  color="warning"
+                  closable
+                  class="query-chip"
+                  @close="e => { e.preventDefault(); removeChip(chip) }"
+                >{{ chip.label }}</ATag>
+              </template>
+              <AButton type="link" size="small" @click="resetSearch">{{ t('qb_remove_filters') }}</AButton>
+            </div>
+
             <!-- Modals live outside the toolbar so they work from both layouts -->
             <AModal
               v-model:open="savedQueriesDialog"
@@ -212,52 +218,39 @@
               </div>
             </AModal>
 
-            <!-- ── Advanced search panel ──────────────────────── -->
+            <!-- ── Filters panel: builder or SQL (alternatives to the text box) ── -->
             <Transition name="slide">
-              <div v-if="openPanel === 'advanced'" class="search-panel">
+              <div v-if="filtersOpen" class="search-panel">
+                <ASegmented :value="openPanel" :options="filtersTabs" size="small" class="filters-tabs" @change="setFiltersTab" />
 
-                <div v-if="loadingAdvConfig" class="adv-loading">
-                  <ASpin size="small" />
-                </div>
-
-                <template v-else>
+                <template v-if="openPanel === 'advanced'">
+                  <div v-if="loadingAdvConfig" class="adv-loading">
+                    <ASpin size="small" />
+                  </div>
                   <!-- Query builder: a tree of groups and conditions -->
                   <FilterBuilder
+                    v-else
                     :tree="advTree"
                     :fields="advFields"
                     :operators="advOperatorsForDisplay"
                   />
-
-                  <!-- Actions -->
-                  <div class="search-panel-actions">
-                    <AButton type="primary" size="small" @click="runAdvancedSearch">
-                      <SearchOutlined /> {{ t('advanced_search') }}
-                    </AButton>
-                    <AButton type="text" size="small" @click="resetSearch">
-                      <CloseOutlined /> {{ t('reset') }}
-                    </AButton>
-                  </div>
                 </template>
-              </div>
-            </Transition>
 
-            <!-- ── SQL Expert panel ────────────────────────────── -->
-            <Transition name="slide">
-              <div v-if="openPanel === 'expert'" class="search-panel">
-                <label class="expert-label">{{ t('sql_expert_search') }} — WHERE …</label>
-                <p class="expert-hint">{{ t('sql_expert_search_hint') }}</p>
-                <ATextarea
-                  v-model:value="expertQuery"
-                  :rows="3"
-                  class="expert-textarea"
-                />
+                <template v-else>
+                  <label class="expert-label">{{ t('sql_expert_search') }} — WHERE …</label>
+                  <p class="expert-hint">{{ t('sql_expert_search_hint') }}</p>
+                  <ATextarea
+                    v-model:value="expertQuery"
+                    :rows="3"
+                    class="expert-textarea"
+                  />
+                </template>
+
                 <div class="search-panel-actions">
-                  <AButton type="primary" size="small" @click="runExpertSearch">
-                    <SearchOutlined /> {{ t('send') }}
+                  <AButton type="primary" size="small" @click="openPanel === 'advanced' ? runAdvancedSearch() : runExpertSearch()">
+                    <SearchOutlined /> {{ t('qb_apply') }}
                   </AButton>
-                  <AButton type="text" size="small" @click="resetSearch">
-                    <CloseOutlined /> {{ t('reset') }}
-                  </AButton>
+                  <AButton size="small" @click="closeFilters">{{ t('qb_close') }}</AButton>
                 </div>
               </div>
             </Transition>
@@ -324,7 +317,7 @@
 </template>
 
 <script setup>
-import { ApartmentOutlined, ArrowLeftOutlined, BarChartOutlined, BorderOutlined, CalendarOutlined, CheckSquareOutlined, CloseOutlined, CodeOutlined, CompassOutlined, ControlOutlined, DownloadOutlined, EllipsisOutlined, FileExcelOutlined, FileOutlined, FileTextOutlined, PlusOutlined, PushpinOutlined, SearchOutlined, TableOutlined } from '@ant-design/icons-vue'
+import { ApartmentOutlined, ArrowLeftOutlined, BarChartOutlined, BorderOutlined, CalendarOutlined, CheckSquareOutlined, CloseOutlined, CompassOutlined, ControlOutlined, DownloadOutlined, EllipsisOutlined, FileExcelOutlined, FileOutlined, FileTextOutlined, PlusOutlined, PushpinOutlined, SearchOutlined, TableOutlined } from '@ant-design/icons-vue'
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useToast } from '@/composables/useNotify'
@@ -345,12 +338,13 @@ import {
   Modal as AModal,
   Button as AButton,
   Badge as ABadge,
+  Segmented as ASegmented,
   Dropdown as ADropdown,
   Menu as AMenu,
 } from 'ant-design-vue'
 import SavedQueriesPanel from '@/components/SavedQueriesPanel.vue'
 import FilterBuilder from '@/components/query/FilterBuilder.vue'
-import { emptyTree, treeToFilter, serializeTree, restoreTree } from '@/utils/filterTree'
+import { emptyTree, cloneTree, countActive, formula, treeToFilter, serializeTree, restoreTree } from '@/utils/filterTree'
 
 const AInput       = Input
 const ATextarea    = Input.TextArea
@@ -511,7 +505,8 @@ const advOperatorsForDisplay = computed(() =>
 )
 
 // ── Advanced search: the builder's tree (see utils/filterTree.js) ─────────────
-const advTree = ref(emptyTree())
+const advTree     = ref(emptyTree())   // the draft being edited in the panel
+const appliedTree = ref(null)          // the tree the current results come from (null: none)
 
 /**
  * The builder's tree as a Directus-style filter object (null when no condition
@@ -526,14 +521,61 @@ function buildAdvFilter() {
   })
 }
 
-// ── Labels ───────────────────────────────────────────────────
-const activeSearchLabel = computed(() => {
-  if (activeSearch.value === 'fast')     return `"${fastSearch.value}"`
-  if (activeSearch.value === 'advanced') return t('advanced_search')
-  if (activeSearch.value === 'expert')   return t('sql_expert_search')
-  if (activeSearch.value === 'filter') return t('linked_records')
-  return ''
+// ── Unified query bar ───────────────────────────────────────
+// One entry point: the text box searches as you type; the Filters button opens
+// a panel with the builder (openPanel 'advanced') or raw SQL ('expert'). They
+// are alternatives — opening the filters empties and disables the text box, and
+// it stays disabled while a filter is applied (remove the filter to type again).
+const filtersOpen = computed(() => openPanel.value !== null)
+const inputLocked = computed(() =>
+  filtersOpen.value || ['advanced', 'expert', 'filter'].includes(activeSearch.value)
+)
+
+/** Conditions behind the current results — the badge on the Filters button. */
+const appliedCount = computed(() => {
+  if (activeSearch.value === 'advanced') return appliedTree.value ? countActive(appliedTree.value) : 0
+  if (activeSearch.value === 'expert' || activeSearch.value === 'filter') return 1
+  return 0
 })
+
+const inputPlaceholder = computed(() => {
+  if (filtersOpen.value) return t('qb_use_filters')
+  if (activeSearch.value === 'advanced') {
+    return appliedCount.value === 1 ? t('qb_active_condition') : t('qb_active_conditions', { n: appliedCount.value })
+  }
+  if (activeSearch.value === 'expert')   return t('qb_active_sql')
+  if (activeSearch.value === 'filter')   return t('qb_active_linked')
+  return t('fast_search')
+})
+
+const filtersTabs = computed(() => [
+  { value: 'advanced', label: t('qb_tab_builder') },
+  { value: 'expert',   label: t('qb_tab_sql') },
+])
+
+/** Removable chips for what is applied; a group is one chip, with parentheses. */
+const queryChips = computed(() => {
+  if (activeSearch.value === 'expert') {
+    return [{ key: 'sql', label: `SQL: ${expertQuery.value}` }]
+  }
+  if (activeSearch.value === 'filter') {
+    return [{ key: 'filter', label: t('linked_records') }]
+  }
+  if (activeSearch.value !== 'advanced' || !appliedTree.value) return []
+  const ctx = {
+    fieldLabel:    fld => advFields.value.find(f => f.value === fld)?.label ?? fld,
+    operatorLabel: op  => (advOperatorsForDisplay.value.find(o => o.value === op)?.label ?? op).toLowerCase(),
+    and: t('qb_and'), or: t('qb_or'),
+  }
+  return appliedTree.value.c
+    .map((child, index) => ({ child, index }))
+    .filter(({ child }) => countActive(child) > 0)
+    .map(({ child, index }) => {
+      const text = formula(child, ctx)
+      return { key: `n${index}`, index, label: child.t === 'g' && countActive(child) > 1 ? `(${text})` : text }
+    })
+})
+const chipJoin = computed(() => (appliedTree.value?.op === 'OR' ? t('qb_or') : t('qb_and')))
 
 // ── Saved queries: current search payload ────────────────────
 /**
@@ -542,7 +584,7 @@ const activeSearchLabel = computed(() => {
  */
 const currentSearch = computed(() => {
   if (activeSearch.value === 'advanced') {
-    const filter = buildAdvFilter()
+    const filter = activeFilter.value   // what is applied, not the draft being edited
     if (!filter) return null
     return {
       filter,
@@ -574,12 +616,14 @@ function onLoadQuery(payload) {
 
   if (payload.search_type === 'sqlExpert' && payload.querytext) {
     expertQuery.value  = payload.querytext
+    fastSearch.value   = ''
     activeSearch.value = 'expert'
-    openPanel.value    = 'expert'
+    openPanel.value    = null
     updateFilterUrl('expert', payload.querytext)
     fetchRecords()
   } else if (payload.filter && typeof payload.filter === 'object') {
     activeFilter.value = payload.filter
+    fastSearch.value   = ''
     activeSearch.value = 'filter'
     openPanel.value    = null
     updateFilterUrl('filter', JSON.stringify(payload.filter))
@@ -701,18 +745,21 @@ function applyRouteParams() {
       fetchRecords()
     } else if (qtParam === 'expert') {
       expertQuery.value  = qParam
+      fastSearch.value   = ''
       activeSearch.value = 'expert'
-      openPanel.value    = 'expert'
+      openPanel.value    = null
       page.value         = 1
       fetchRecords()
     } else if (qtParam === 'advanced') {
       try {
         const parsed = JSON.parse(qParam)
         advTree.value       = restoreTree(parsed)   // new { tree } or the previous { rows }
+        appliedTree.value   = cloneTree(advTree.value)
         activeFilter.value  = parsed.filter ?? null
-      } catch { activeFilter.value = null }
+      } catch { activeFilter.value = null; appliedTree.value = null }
+      fastSearch.value   = ''
       activeSearch.value = 'advanced'
-      openPanel.value    = 'advanced'
+      openPanel.value    = null
       page.value         = 1
       loadAdvConfig()
       fetchRecords()
@@ -734,12 +781,39 @@ function applyRouteParams() {
 // Re-apply whenever route query changes
 watch(() => route.query, applyRouteParams)
 
-// ── Panel toggle ──────────────────────────────────────────────
-async function togglePanel(name) {
-  openPanel.value = openPanel.value === name ? null : name
-  if (openPanel.value === 'advanced') {
-    await loadAdvConfig()
-  }
+// ── Filters panel ─────────────────────────────────────────────
+async function openFilters() {
+  // The text box and the filters are alternatives: a running text search ends.
+  if (activeSearch.value === 'fast') { clearTimeout(fastTimer); resetSearch() }
+  fastSearch.value = ''
+  // Start from what is applied, dropping an abandoned draft.
+  if (appliedTree.value) advTree.value = cloneTree(appliedTree.value)
+  openPanel.value = activeSearch.value === 'expert' ? 'expert' : 'advanced'
+  if (openPanel.value === 'advanced') await loadAdvConfig()
+}
+
+function closeFilters() {
+  openPanel.value = null
+  if (appliedTree.value) advTree.value = cloneTree(appliedTree.value)
+}
+
+function toggleFilters() {
+  return filtersOpen.value ? closeFilters() : openFilters()
+}
+
+async function setFiltersTab(tab) {
+  openPanel.value = tab
+  if (tab === 'advanced') await loadAdvConfig()
+}
+
+/** Chip × : drop one top-level condition or group, and run what is left. */
+function removeChip(chip) {
+  if (chip.index === undefined) return resetSearch()   // SQL / linked-records chips
+  const tree = cloneTree(appliedTree.value)
+  tree.c.splice(chip.index, 1)
+  if (countActive(tree) === 0) return resetSearch()
+  advTree.value = tree
+  runAdvancedSearch()
 }
 
 // ── Lazy-load advanced config (fields, operators, connectors) ─
@@ -766,6 +840,7 @@ function resetSearch() {
   expertQuery.value  = ''
   activeFilter.value = null
   advTree.value      = emptyTree()
+  appliedTree.value  = null
   activeSearch.value = null
   openPanel.value    = null
   page.value         = 1
@@ -802,8 +877,6 @@ function onFastEnter() {
 
 function onCompactMenu({ key }) {
   switch (key) {
-    case 'advanced': togglePanel('advanced'); break
-    case 'expert':   togglePanel('expert');   break
     case 'saved':    savedQueriesDialog.value = true; break
     case 'columns':  columnsDialog.value = true; break
     case 'chart':    createChartFromSearch(); break
@@ -829,6 +902,8 @@ function runAdvancedSearch() {
   const filter = buildAdvFilter()
   if (!filter) { resetSearch(); return }
   activeFilter.value = filter
+  appliedTree.value  = cloneTree(advTree.value)
+  fastSearch.value   = ''
   activeSearch.value = 'advanced'
   openPanel.value    = null
   page.value         = 1
@@ -839,6 +914,7 @@ function runAdvancedSearch() {
 // ── Expert search ─────────────────────────────────────────────
 function runExpertSearch() {
   if (!expertQuery.value.trim()) { resetSearch(); return }
+  fastSearch.value   = ''
   activeSearch.value = 'expert'
   openPanel.value    = null
   page.value         = 1
@@ -1176,13 +1252,18 @@ function doExport(format) {
 
 .search-input-wrap { flex: 1; min-width: 0; }
 
-.search-active-tag {
-  margin-left: auto;
+.query-chips {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 0.3rem;
-  white-space: nowrap;
+  gap: 0.35rem;
+  padding: 0 0.75rem 0.5rem;
+  background: var(--bdus-surface);
 }
+.query-chip { margin-inline-end: 0; max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+.chip-join { font-size: 0.75rem; opacity: 0.7; }
+.filters-btn { display: inline-flex; align-items: center; gap: 0.35rem; }
+.filters-tabs { align-self: flex-start; }
 
 /* ── Collapsible panels ──────────────────────────────────── */
 .search-panel {
@@ -1287,22 +1368,12 @@ function doExport(format) {
 
 /* ── Compact toolbar (≤ 640px) ───────────────────────────── */
 .search-bar.is-compact { flex-wrap: wrap; }
-.search-bar.is-compact .search-active-tag {
-  flex: 1 0 100%;
-  margin-left: 0;
-  white-space: normal;
-}
 
 /* ── Add record ──────────────────────────────────────────── */
 /* Toolbar button: pushed to the right by the active-search tag's margin-left:auto */
 .add-record-btn {
   margin-left: auto;
   flex-shrink: 0;
-}
-
-/* When no active filter tag is shown, the button still needs to sit on the right */
-.search-bar:not(:has(.search-active-tag)) .add-record-btn {
-  margin-left: auto;
 }
 
 /* FAB: fixed to the viewport bottom-right corner, always reachable */

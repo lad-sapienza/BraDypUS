@@ -5,6 +5,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.13.0] - 2026-10-02
+
+### Added
+
+- **`ids_only=1` on the record and file lists.** `GET /api/records/{tb}` and
+  `GET /api/files` can return the ordered ids of the *whole* result set
+  (records: `{ total, ids, truncated }`; files: `{ total, files: [{id, ext,
+  filename, is_image}], truncated }`) instead of one page. Same filter, columns
+  and sort as the paginated list, capped at 5000. It is the backend for the
+  upcoming Previous/Next navigation in the record view and the file preview
+  (#67). `openapi.yaml` documents the parameter and the response.
+  - `bdus-api/controllers/Record.php`, `bdus-api/controllers/File.php`,
+    `bdus-api/openapi.yaml`, `bdus-api/tests/Integration/IdsOnlyTest.php`,
+    `bdus-api/tests/api/44_ids_only.hurl`
+
+- **Previous / Next in the record view.** A record opened from a list now
+  shows "← 61 of 103 →": step through the list's records in the order the list
+  shows them (its sort, search and filter), without going back to the list each
+  time. Works across pages of the list. `←` / `→` do the same when no field has
+  focus; the bar is hidden while editing. It only appears when you arrive from
+  a list (not from a link, a map popup or a bookmark), and survives a page
+  refresh. Navigation replaces the history entry, so the browser's Back button
+  and the "back to list" link still return to the list (#67).
+  - `bdus-app/src/stores/listNavigation.js` (new),
+    `bdus-app/src/views/DataView.vue`, `bdus-app/src/views/RecordView.vue`,
+    `bdus-app/src/locale/{en,it}.json`
+
+- **Previous / Next in the file preview.** The preview of a file in File
+  management now has "‹ 3 / 7 ›" buttons and `←` / `→` keys that step through
+  *every* file the list matches (its search and "orphans only" filter), not just
+  the page on screen. `Esc` closes the preview even right after reaching the
+  first or last file (#67).
+  - `bdus-app/src/views/FilesView.vue`, `bdus-app/src/locale/{en,it}.json`
+
+### Fixed
+
+- **Record lists sorted on a non-unique column now have a stable order.**
+  `QueryFromRequest::setOrder()` emitted `ORDER BY <field>` with no tie-breaker,
+  so rows sharing the sort value (a status, a type, a site…) came back in an
+  engine-defined order that could differ between two `LIMIT`/`OFFSET` requests:
+  a record could show on two pages, or on none. It now appends the primary key
+  in the same direction (`ORDER BY items.status desc, items.id desc`), so `desc`
+  is the exact reverse of `asc`. A hand-written `ORDER BY` inside an expert SQL
+  query is left untouched.
+  - `bdus-api/lib/SQL/QueryFromRequest.php`
+
 ## [5.12.3] - 2026-09-28
 
 ### Added

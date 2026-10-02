@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.13.0] - 2026-10-02
+
 ### Added
 
 - **`ids_only=1` on the record and file lists.** `GET /api/records/{tb}` and

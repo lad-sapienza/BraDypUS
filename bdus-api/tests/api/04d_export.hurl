@@ -133,12 +133,14 @@ jsonpath "$.status" == "error"
 jsonpath "$.code"   == "invalid_parameters"
 
 
-# ── 4d-e. Export unknown format → default CSV (no error) ─────────────
+# ── 4d-e. Export unknown format → error, no silent CSV fallback ──────
 GET {{base_url}}/{{app_name}}/api/records/crud_test/export?format=unknown
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
-header "Content-Type" contains "text/csv"
+header "Content-Type" contains "application/json"
+jsonpath "$.status" == "error"
+jsonpath "$.code"   == "invalid_parameters"
 
 
 # ── 4d-neg. Export without auth → 401 ────────────────────────────────

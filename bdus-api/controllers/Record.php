@@ -240,6 +240,16 @@ class Record extends \Bdus\Controller
       return;
     }
 
+    // An unknown format is an error, never a silent fallback to another one.
+    if (!in_array(strtolower((string) $format), \DB\Export\Export::FORMATS, true)) {
+      $this->returnJson([
+        'status' => 'error',
+        'code'   => 'invalid_parameters',
+        'detail' => "Unknown export format '{$format}' (expected: " . implode(', ', \DB\Export\Export::FORMATS) . ')',
+      ]);
+      return;
+    }
+
     // Translate URL-persistence params (qt/q/where) into QueryFromRequest shape.
     // This mirrors the mapping that DataView::applyRouteParams does on the frontend.
     $qt    = $this->get['qt']    ?? null;

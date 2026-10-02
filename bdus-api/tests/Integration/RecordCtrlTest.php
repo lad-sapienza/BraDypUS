@@ -147,6 +147,29 @@ class RecordCtrlTest extends BdusTestCase
         $this->assertStringContainsStringIgnoringCase('no such column', $res['detail']);
     }
 
+    public function testExportRecordsUnknownFormatIsAnError(): void
+    {
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'format' => 'pdf']);
+        $res  = $this->callController($ctrl, 'exportRecords');
+        $this->assertSame('error', $res['status']);
+        $this->assertSame('invalid_parameters', $res['code']);
+        $this->assertStringContainsString("'pdf'", $res['detail']);
+    }
+
+    public function testGetRecordsSqlExpertDeniedToWriter(): void
+    {
+        $this->setPrivilege(20);
+        $ctrl = $this->makeController(
+            'Bdus\\Controllers\\Record',
+            ['tb' => self::TB],
+            ['search_type' => 'sqlExpert', 'querytext' => 'id > 0', 'join' => '']
+        );
+        $res = $this->callController($ctrl, 'getRecords');
+        $this->setPrivilege(1);
+        $this->assertSame('error', $res['status']);
+        $this->assertStringContainsString('not_enough_privilege', $res['detail']);
+    }
+
     // ── JSON filter ──────────────────────────────────────────────────────
 
     public function testGetRecordsJsonFilterIdEq(): void

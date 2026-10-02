@@ -12,6 +12,9 @@ use DB\Export\XLSX;
 
 class Export
 {
+    /** Formats resolveFormatter() understands. */
+    public const FORMATS = ['csv', 'json', 'xlsx'];
+
     private array $data;
     private array $metadata;
 
@@ -66,7 +69,7 @@ class Export
     /**
      * Returns [mimeType, extension, formatterInstance] for a given format key.
      *
-     * @throws \Exception on unknown format
+     * @throws \InvalidArgumentException on unknown format
      */
     private function resolveFormatter(string $format): array
     {
@@ -85,7 +88,9 @@ class Export
                 ];
 
             default:
-                return ['text/csv; charset=utf-8', 'csv', new CSV()];
+                throw new \InvalidArgumentException(
+                    "Unknown export format '{$format}' (expected: " . implode(', ', self::FORMATS) . ')'
+                );
         }
     }
 }

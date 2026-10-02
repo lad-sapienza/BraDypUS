@@ -196,6 +196,11 @@ const { wrap: tableWrap, scrollY: tableScrollY } = useFlexTableHeight(records)
 .data-layout {
   display: flex;
   flex: 1;
+  /* `flex: 1` alone is a no-op: .main-content (AppLayout.vue) is a plain block,
+     so this element only ever grew to its content — a 5-row table under a
+     screen of empty space. main-content has a definite height, so `height: 100%`
+     resolves against it (the same fix RecordView needed). */
+  height: 100%;
   min-height: 0;
   overflow: hidden;
   flex-direction: column;   /* records-panel is the only child now */

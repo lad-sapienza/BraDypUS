@@ -22,9 +22,11 @@ Files are listed in a paginated table. Each row shows:
 | Actions | Replace binary, delete permanently |
 
 Click a thumbnail to open an **in-app preview**:
-- **Images** → a preview window sized to the image and centered on screen,
-  titled with the file's name and extension
-- **Documents / PDFs** → inline viewer in a wider preview window
+- **Images** → a near-full-screen preview titled with the file's name and
+  extension. The image is scaled down to fit the available height and width
+  (keeping its proportions); a small image is never enlarged and stays
+  centered at its natural size
+- **Documents / PDFs** → inline viewer filling the same preview area
 
 ### Previous / Next <Badge type="tip" text="v5.13.0" />
 

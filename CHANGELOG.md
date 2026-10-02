@@ -5,6 +5,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **The file preview no longer runs off the bottom of the screen.** The preview
+  window sat 100px from the top with the image capped at `82vh` plus header and
+  footer around it, so any tall image pushed the bottom (and the new
+  Previous/Next buttons) 70–95px below the viewport, with empty space above.
+  The preview now opens almost full screen and the image fits whatever is left
+  after the header and footer — shrinking to fit, never enlarged, so a small
+  image keeps its natural size, centred. PDFs and other documents fill the same
+  area.
+  - `bdus-app/src/views/FilesView.vue`
+
 ## [5.13.0] - 2026-10-02
 
 ### Added

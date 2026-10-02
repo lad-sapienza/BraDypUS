@@ -130,8 +130,9 @@
     <AModal
       v-model:open="previewDialog"
       :title="previewFile ? `${previewFile.filename}.${previewFile.ext}` : ''"
-      :width="previewFile?.is_image ? 'auto' : '80vw'"
-      :body-style="{ padding: 0, overflow: 'hidden', display: 'flex', justifyContent: 'center', alignItems: 'center' }"
+      width="calc(100vw - 32px)"
+      :style="{ top: '16px' }"
+      wrap-class-name="file-preview-modal"
       :footer="previewNav ? undefined : null"
     >
       <!-- Previous / Next across every file the list matches, not just this page -->
@@ -151,12 +152,12 @@
           v-if="previewFile.is_image"
           :src="fileUrl(previewFile)"
           :alt="previewFile.filename"
-          style="display: block; max-width: 88vw; max-height: 82vh; object-fit: contain;"
+          class="file-preview-img"
         />
         <iframe
           v-else
           :src="fileUrl(previewFile)"
-          style="width: 100%; height: 78vh; border: none; display: block;"
+          class="file-preview-frame"
         />
       </template>
     </AModal>
@@ -611,5 +612,44 @@ onMounted(fetchFiles)
 .empty-msg {
   color: var(--p-text-muted-color);
   font-style: italic;
+}
+</style>
+
+<!-- Not scoped: the modal is teleported to <body>, outside this component. -->
+<style>
+/* The preview always opens (almost) full screen; the body takes whatever is
+   left after the header/footer, so a tall image can never push the footer
+   off-screen and the image fits the space instead of a guessed vh. */
+.file-preview-modal .ant-modal {
+  max-width: none;
+  margin: 0 auto;
+  padding-bottom: 0;
+}
+.file-preview-modal .ant-modal-content {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 32px);
+}
+.file-preview-modal .ant-modal-body {
+  flex: 1;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+/* Shrinks to fit, never enlarges: a small image keeps its natural size. */
+.file-preview-modal .file-preview-img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+.file-preview-modal .file-preview-frame {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: none;
 }
 </style>

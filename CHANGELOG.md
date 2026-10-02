@@ -55,8 +55,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **The record list did not fill the page.** The table grew only to its own
   content: a screen of empty space under five visible rows, and the pagination
   floating halfway up the page. The list now takes the full height (the same
-  fix the record view already had), and its table scrolls inside it.
-  - `bdus-app/src/views/DataView.vue`
+  fix the record view already had) and its table scrolls inside it. Making that
+  visible exposed two flaws in how the table's height is worked out, also fixed:
+  it ignored the pagination's margins (so the page numbers were cut off at the
+  bottom), and it never followed its container — opening the filter panel or
+  adding chips left the table overflowing the page.
+  - `bdus-app/src/views/DataView.vue`, `bdus-app/src/composables/useFlexTableHeight.js`
 - **Exporting a list narrowed with the advanced search exported the whole
   table.** The export understood the text search, SQL and ready-made filters but
   not the query builder's own URL state (`qt=advanced`), so a list showing 48

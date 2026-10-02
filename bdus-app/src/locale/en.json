@@ -898,6 +898,7 @@
   "validation_error": "Validation error",
   "required_fields_missing": "Required fields are missing",
   "field_required": "This field is required",
+  "invalid_parameters": "Invalid parameters",
   "invalid_format": "Invalid format",
   "value_too_small": "Value must be at least %s",
   "value_too_large": "Value must be at most %s",

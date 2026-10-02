@@ -255,39 +255,14 @@ class Record extends \Bdus\Controller
 
     $qRequest = ['tb' => $tb, 'type' => 'all', 'fields' => $exportFields];
 
-    $filterRaw = $this->get['filter'] ?? null;
-    if (is_string($filterRaw)) {
-      $filterRaw = json_decode($filterRaw, true);
-    }
-    if (is_array($filterRaw)) {
-      $qRequest['type']   = 'filter';
-      $qRequest['filter'] = $filterRaw;
-    } elseif ($qt === 'filter' && $q !== null) {
-      // Links from a record and saved searches persist as qt=filter&q=<JsonFilter>:
-      // decode and apply, otherwise the export would silently ignore the active
-      // filter and dump the whole table.
-      $decoded = json_decode($q, true);
-      if (is_array($decoded)) {
-        $qRequest['type']   = 'filter';
-        $qRequest['filter'] = $decoded;
-      }
-    } elseif ($qt === 'advanced' && $q !== null) {
-      // The query builder persists qt=advanced&q={"tree": …, "filter": <JsonFilter>}
-      // (older links carry "rows" instead of "tree"): the ready-made filter is the
-      // "filter" key. Without this the export ignored the builder and dumped the
-      // whole table (#75).
-      $decoded = json_decode($q, true);
-      if (is_array($decoded) && is_array($decoded['filter'] ?? null)) {
-        $qRequest['type']   = 'filter';
-        $qRequest['filter'] = $decoded['filter'];
-      }
-    } elseif ($qt === 'fast' && $q !== null) {
-      $qRequest['type']   = 'fast';
-      $qRequest['string'] = $q;
-    } elseif ($qt === 'expert' && $q !== null) {
-      $qRequest['type']      = 'sqlExpert';
-      $qRequest['querytext'] = $q;
-      $qRequest['join']      = '';
+    // What narrows the export: the same shapes the list's URL carries, and
+    // nothing else — a parameter we cannot read is an error, not "the whole
+    // table" (#75). See SQL\ExportSearch.
+    try {
+      $qRequest = array_merge($qRequest, \SQL\ExportSearch::fromParams($this->get['filter'] ?? null, $qt, $q));
+    } catch (\InvalidArgumentException $e) {
+      $this->returnJson(['status' => 'error', 'code' => 'invalid_parameters', 'detail' => $e->getMessage()]);
+      return;
     }
 
     try {

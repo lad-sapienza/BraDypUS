@@ -56,10 +56,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   table.** The export understood the text search, SQL and ready-made filters but
   not the query builder's own URL state (`qt=advanced`), so a list showing 48
   records downloaded all 103. It now applies the builder's filter — including
-  nested groups and links saved in the older `rows` format. A `q` that cannot be
-  read is still ignored, as for the other modes. Found while reworking the
-  search bar.
-  - `bdus-api/controllers/Record.php`, `bdus-api/openapi.yaml`,
+  nested groups and links saved in the older `rows` format. Found while
+  reworking the search bar.
+- **The export no longer falls back to "everything" on a parameter it cannot
+  read.** A malformed `filter` or `q`, an unknown `qt`, `qt` without `q` (or
+  `q` without `qt`), or a `qt=advanced` payload without a `filter` now answers
+  `{"status": "error", "code": "invalid_parameters", "detail": "…"}` naming the
+  parameter, instead of quietly exporting the whole table. Empty values count as
+  absent. The reading of these parameters moved into `SQL\ExportSearch`, with
+  20 unit tests.
+  - `bdus-api/lib/SQL/ExportSearch.php`, `bdus-api/controllers/Record.php`,
+    `bdus-api/openapi.yaml`, `bdus-api/tests/Unit/ExportSearchTest.php`,
     `bdus-api/tests/api/04d_export.hurl`
 - **Record list toolbar on small screens.** Below 640 px the row of 11 buttons
   squeezed the search box to almost nothing. The secondary actions (advanced and

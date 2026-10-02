@@ -1384,19 +1384,28 @@ paths:
             enum: [fast, expert, filter, advanced]
         - name: q
           in: query
-          description: Query value corresponding to the selected `qt` mode.
+          description: |
+            Query value corresponding to the selected `qt` mode. Required (and not
+            empty) whenever `qt` is given, and not accepted without `qt`.
           schema:
             type: string
         - name: 'filter[{field}][{op}]'
           in: query
           description: |
             Directus-style filter (takes priority over `qt`/`q`).
-            Same syntax as `GET /api/records/{tb}`.
+            Same syntax as `GET /api/records/{tb}`. May also be given as one JSON
+            object (`filter={"field":{"_eq":"x"}}`).
           schema:
             type: string
       responses:
         '200':
-          description: File download (streamed)
+          description: |
+            File download (streamed). A search parameter that cannot be read —
+            malformed JSON, an unknown `qt`, `qt` without `q` (or the reverse), a
+            `qt=advanced` payload without a `filter` — is an error, never a
+            silent export of the whole table: the response is then JSON
+            `{"status": "error", "code": "invalid_parameters", "detail": "…"}`
+            naming the offending parameter.
           content:
             text/csv:
               schema:
@@ -1404,8 +1413,11 @@ paths:
                 format: binary
             application/json:
               schema:
-                type: string
-                format: binary
+                oneOf:
+                  - type: string
+                    format: binary
+                    description: The exported records, when `format=json`.
+                  - $ref: '#/components/schemas/CodedResult'
             application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
               schema:
                 type: string

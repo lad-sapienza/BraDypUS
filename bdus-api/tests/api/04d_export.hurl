@@ -87,6 +87,52 @@ body     contains "T002"
 body not contains "T001"
 
 
+# ── 4d-d5. A search parameter that cannot be read is an error, not "everything" ──
+# (#75: silently exporting the whole table is far more data than the list shows)
+GET {{base_url}}/{{app_name}}/api/records/crud_test/export?format=csv&qt=advanced&q=not-json
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+header "Content-Type" contains "application/json"
+jsonpath "$.status" == "error"
+jsonpath "$.code"   == "invalid_parameters"
+jsonpath "$.detail" contains "qt=advanced"
+
+
+GET {{base_url}}/{{app_name}}/api/records/crud_test/export?format=csv&qt=filter&q=not-json
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "error"
+jsonpath "$.code"   == "invalid_parameters"
+
+
+GET {{base_url}}/{{app_name}}/api/records/crud_test/export?format=csv&qt=bogus&q=x
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "error"
+jsonpath "$.code"   == "invalid_parameters"
+jsonpath "$.detail" contains "qt: unknown value"
+
+
+GET {{base_url}}/{{app_name}}/api/records/crud_test/export?format=csv&qt=fast
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "error"
+jsonpath "$.code"   == "invalid_parameters"
+jsonpath "$.detail" contains "q is required"
+
+
+GET {{base_url}}/{{app_name}}/api/records/crud_test/export?format=csv&filter=not-json
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "error"
+jsonpath "$.code"   == "invalid_parameters"
+
+
 # ── 4d-e. Export unknown format → default CSV (no error) ─────────────
 GET {{base_url}}/{{app_name}}/api/records/crud_test/export?format=unknown
 Authorization: Bearer {{jwt}}

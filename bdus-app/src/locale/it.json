@@ -896,6 +896,7 @@
   "validation_error": "Errore di validazione",
   "required_fields_missing": "Campi obbligatori mancanti",
   "field_required": "Questo campo è obbligatorio",
+  "invalid_parameters": "Parametri non validi",
   "invalid_format": "Formato non valido",
   "value_too_small": "Il valore deve essere almeno %s",
   "value_too_large": "Il valore deve essere al massimo %s",

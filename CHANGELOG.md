@@ -30,6 +30,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `bdus-app/src/views/DataView.vue`, `bdus-app/src/views/RecordView.vue`,
     `bdus-app/src/locale/{en,it}.json`
 
+- **Previous / Next in the file preview.** The preview of a file in File
+  management now has "‹ 3 / 7 ›" buttons and `←` / `→` keys that step through
+  *every* file the list matches (its search and "orphans only" filter), not just
+  the page on screen. `Esc` closes the preview even right after reaching the
+  first or last file (#67).
+  - `bdus-app/src/views/FilesView.vue`, `bdus-app/src/locale/{en,it}.json`
+
 ### Fixed
 
 - **Record lists sorted on a non-unique column now have a stable order.**

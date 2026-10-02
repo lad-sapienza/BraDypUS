@@ -1262,6 +1262,8 @@
   "ok_share_analysis": "Analisi condivisa",
   "ok_unshare_analysis": "Analisi resa privata",
   "next": "Avanti",
+  "file_nav_prev": "File precedente",
+  "file_nav_next": "File successivo",
   "record_nav_prev": "Record precedente",
   "record_nav_next": "Record successivo",
   "record_nav_position": "{n} di {total}",

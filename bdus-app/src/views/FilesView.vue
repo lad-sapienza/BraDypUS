@@ -132,8 +132,20 @@
       :title="previewFile ? `${previewFile.filename}.${previewFile.ext}` : ''"
       :width="previewFile?.is_image ? 'auto' : '80vw'"
       :body-style="{ padding: 0, overflow: 'hidden', display: 'flex', justifyContent: 'center', alignItems: 'center' }"
-      :footer="null"
+      :footer="previewNav ? undefined : null"
     >
+      <!-- Previous / Next across every file the list matches, not just this page -->
+      <template v-if="previewNav" #footer>
+        <div class="preview-nav">
+          <AButton size="small" :disabled="!previewNav.prev" :title="t('file_nav_prev')" @click="goToPreview(previewNav.prev)">
+            <template #icon><LeftOutlined /></template>
+          </AButton>
+          <span class="preview-nav-pos">{{ t('record_nav_position', { n: previewNav.index + 1, total: previewNav.total + (previewTruncated ? '+' : '') }) }}</span>
+          <AButton size="small" :disabled="!previewNav.next" :title="t('file_nav_next')" @click="goToPreview(previewNav.next)">
+            <template #icon><RightOutlined /></template>
+          </AButton>
+        </div>
+      </template>
       <template v-if="previewFile">
         <img
           v-if="previewFile.is_image"
@@ -154,7 +166,7 @@
 </template>
 
 <script setup>
-import { DeleteOutlined, EditOutlined, FileExcelOutlined, FileOutlined, FilePdfOutlined, FilterOutlined, FileWordOutlined, FileZipOutlined, ReloadOutlined, SearchOutlined, SoundOutlined, SyncOutlined, VideoCameraOutlined } from '@ant-design/icons-vue'
+import { DeleteOutlined, EditOutlined, FileExcelOutlined, FileOutlined, FilePdfOutlined, FilterOutlined, FileWordOutlined, FileZipOutlined, LeftOutlined, ReloadOutlined, RightOutlined, SearchOutlined, SoundOutlined, SyncOutlined, VideoCameraOutlined } from '@ant-design/icons-vue'
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { RouterLink, useRoute }     from 'vue-router'
 import { useToast, useConfirm } from '@/composables/useNotify'
@@ -361,10 +373,71 @@ async function onReplaceFileSelected(evt) {
 const previewDialog = ref(false)
 const previewFile   = ref(null)
 
-function openPreview(file) {
+// Every file the current list matches (same search / orphans filter), minimal
+// descriptors in list order — fetched once per opening so Previous/Next can
+// step past the visible page.
+const previewList      = ref([])
+const previewTruncated = ref(false)
+let previewListToken   = 0
+
+async function openPreview(file) {
   previewFile.value  = file
   previewDialog.value = true
+  previewList.value  = []
+  previewTruncated.value = false
+
+  const token = ++previewListToken
+  try {
+    const data = await api.get('/api/files', {
+      ids_only:     1,
+      orphans_only: orphansOnly.value ? 1 : undefined,
+      search:       searchQuery.value || undefined,
+    })
+    // Closed, or reopened on another file, while the request was in flight.
+    if (token !== previewListToken || data.status !== 'success') return
+    previewList.value      = data.files ?? []
+    previewTruncated.value = !!data.truncated
+  } catch {
+    // No list → no Previous/Next; the preview itself still works.
+  }
 }
+
+const previewNav = computed(() => {
+  if (!previewFile.value) return null
+  const list  = previewList.value
+  const index = list.findIndex(f => f.id === previewFile.value.id)
+  if (index < 0) return null
+  return {
+    index,
+    total: list.length,
+    prev:  index > 0 ? list[index - 1] : null,
+    next:  index < list.length - 1 ? list[index + 1] : null,
+  }
+})
+
+function goToPreview(f) {
+  if (!f) return
+  previewFile.value = { ...f, filename: stripExt(f.filename, f.ext) }
+}
+
+// ← / → while the preview is open (not while typing in a field).
+function onPreviewKey(e) {
+  if (!previewDialog.value) return
+  // Ant only hears Esc while focus is inside the modal; a Previous/Next button
+  // that just became disabled (first/last file) drops focus to <body>.
+  if (e.key === 'Escape') { previewDialog.value = false; return }
+  if (!previewNav.value) return
+  if (e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return
+  if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return
+  const el = e.target
+  if (el instanceof Element && el.closest('input, textarea, select, [contenteditable="true"]')) return
+  e.preventDefault()
+  goToPreview(e.key === 'ArrowLeft' ? previewNav.value.prev : previewNav.value.next)
+}
+onMounted(() => window.addEventListener('keydown', onPreviewKey))
+onUnmounted(() => window.removeEventListener('keydown', onPreviewKey))
+
+watch(previewDialog, open => { if (!open) previewListToken++ })
 
 // ── Helpers ─────────────────────────────────────────────────────────
 function fileUrl(f) {
@@ -443,6 +516,17 @@ onMounted(fetchFiles)
 }
 
 /* ── Preview trigger ─────────────────────────────────────────────── */
+.preview-nav {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+.preview-nav-pos {
+  font-size: 12px;
+  color: var(--ant-color-text-secondary, #666);
+  font-variant-numeric: tabular-nums;
+}
 .preview-trigger {
   cursor: zoom-in;
   display: block;

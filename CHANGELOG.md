@@ -33,6 +33,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Record list code split up, no change in behaviour.** `DataView.vue` went from
+  about 1400 lines to about 270: the search lives in `useRecordQuery` and the
+  `QueryBar` component, the fetch in `useRecordList`, the visible columns in
+  `useColumnPrefs`, the result actions (export, map, chart, timeline, matrix) in
+  `useResultActions` and `ResultActions`. The request body is built in one
+  place (`utils/recordQuery.js`, with tests) instead of four near-copies, and
+  the visible columns are always sent as a list.
+  - `bdus-app/src/composables/`, `bdus-app/src/components/query/`,
+    `bdus-app/src/utils/recordQuery.js`, `bdus-app/tests/recordQuery.test.mjs`
 - **Record list: search as you type.** The fast-search box now runs the search
   while you type (after a 300 ms pause, from 2 characters), like the search in
   most tools; Enter runs it at once and clearing the box clears the search. The

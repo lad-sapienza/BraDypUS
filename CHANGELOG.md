@@ -5,6 +5,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Advanced search: nested AND / OR groups.** The query builder is now a tree:
+  each group says whether *all* or *at least one* of its conditions must match,
+  and a group can contain sub-groups, so `Site = Colle Oppio AND (Type = Fill OR
+  Type = Layer)` can be built — something the flat list of per-row connectors
+  could not express (the v4 parentheses). The arrows on each row group it with
+  the row above (⇥) or take it out of its group (⇤); a group left with one row
+  dissolves by itself, up to three levels deep. Under the tree an *Equivalent
+  to* line shows the query with its parentheses. Existing bookmarks and links
+  with the previous format keep working and open as the same query. The retired
+  `XOR` connector is gone (it was treated as AND). No change to the API.
+  - `bdus-app/src/utils/filterTree.js`, `bdus-app/src/components/query/`,
+    `bdus-app/src/views/DataView.vue`, `bdus-app/tests/filterTree.test.mjs`
+
 ### Changed
 
 - **Record list: search as you type.** The fast-search box now runs the search

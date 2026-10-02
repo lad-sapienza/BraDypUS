@@ -221,68 +221,15 @@
                 </div>
 
                 <template v-else>
-                  <!-- Row builder -->
-                  <div class="adv-rows">
-                    <div v-for="(row, idx) in advRows" :key="row._id" class="adv-row">
-
-                      <!-- Connector (hidden for first row) -->
-                      <ASelect
-                        v-if="idx > 0"
-                        v-model:value="row.connector"
-                        :options="advConnectors.map(c => ({ value: c, label: c }))"
-                        size="small"
-                        class="adv-connector"
-                      />
-                      <span v-else class="adv-connector-placeholder" />
-
-                      <!-- Field -->
-                      <ASelect
-                        v-model:value="row.fld"
-                        :options="advFields"
-                        :placeholder="t('adv_pick_field')"
-                        size="small"
-                        show-search
-                        :filter-option="filterOption"
-                        class="adv-field-sel"
-                        @change="() => { row.value = ''; row._values = null }"
-                      />
-
-                      <!-- Operator: key is the i18n locale key, value is the SQL operator -->
-                      <ASelect
-                        v-model:value="row.operator"
-                        :options="advOperatorsForDisplay"
-                        size="small"
-                        class="adv-operator"
-                      />
-
-                      <!-- Value -->
-                      <AAutoComplete
-                        v-if="!['_empty','_nempty'].includes(row.operator)"
-                        v-model:value="row.value"
-                        :options="(row._suggestions ?? []).map(s => ({ value: s }))"
-                        :disabled="['_empty','_nempty'].includes(row.operator)"
-                        size="small"
-                        class="adv-value"
-                        @search="q => loadSuggestions(row, q)"
-                      />
-                      <span v-else class="adv-value" />
-
-                      <!-- Remove row -->
-                      <AButton
-                        type="text"
-                        danger
-                        size="small"
-                        :disabled="advRows.length === 1"
-                        @click="removeAdvRow(idx)"
-                      ><MinusOutlined /></AButton>
-                    </div>
-                  </div>
+                  <!-- Query builder: a tree of groups and conditions -->
+                  <FilterBuilder
+                    :tree="advTree"
+                    :fields="advFields"
+                    :operators="advOperatorsForDisplay"
+                  />
 
                   <!-- Actions -->
                   <div class="search-panel-actions">
-                    <AButton size="small" @click="addAdvRow">
-                      <PlusOutlined /> {{ t('adv_add_row') }}
-                    </AButton>
                     <AButton type="primary" size="small" @click="runAdvancedSearch">
                       <SearchOutlined /> {{ t('advanced_search') }}
                     </AButton>
@@ -377,7 +324,7 @@
 </template>
 
 <script setup>
-import { ApartmentOutlined, ArrowLeftOutlined, BarChartOutlined, BorderOutlined, CalendarOutlined, CheckSquareOutlined, CloseOutlined, CodeOutlined, CompassOutlined, ControlOutlined, DownloadOutlined, EllipsisOutlined, FileExcelOutlined, FileOutlined, FileTextOutlined, MinusOutlined, PlusOutlined, PushpinOutlined, SearchOutlined, TableOutlined } from '@ant-design/icons-vue'
+import { ApartmentOutlined, ArrowLeftOutlined, BarChartOutlined, BorderOutlined, CalendarOutlined, CheckSquareOutlined, CloseOutlined, CodeOutlined, CompassOutlined, ControlOutlined, DownloadOutlined, EllipsisOutlined, FileExcelOutlined, FileOutlined, FileTextOutlined, PlusOutlined, PushpinOutlined, SearchOutlined, TableOutlined } from '@ant-design/icons-vue'
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useToast } from '@/composables/useNotify'
@@ -393,8 +340,6 @@ import {
   Input,
   Divider as ADivider,
   Tag as ATag,
-  Select as ASelect,
-  AutoComplete as AAutoComplete,
   Spin as ASpin,
   Popover as APopover,
   Modal as AModal,
@@ -404,6 +349,8 @@ import {
   Menu as AMenu,
 } from 'ant-design-vue'
 import SavedQueriesPanel from '@/components/SavedQueriesPanel.vue'
+import FilterBuilder from '@/components/query/FilterBuilder.vue'
+import { emptyTree, treeToFilter, serializeTree, restoreTree } from '@/utils/filterTree'
 
 const AInput       = Input
 const ATextarea    = Input.TextArea
@@ -445,10 +392,6 @@ watch(colTogglerOpen,    v => { if (v) exportPopoverOpen.value = false })
 watch(exportPopoverOpen, v => { if (v) colTogglerOpen.value = false })
 
 /** AntD Select/AutoComplete: filter must be supplied explicitly (see FieldEditor.vue). */
-function filterOption(input, option) {
-  return String(option?.label ?? '').toLowerCase().includes(String(input).toLowerCase())
-}
-
 /**
  * Ordered array of visible field names.
  * Using an ordered array (not a Set) so that both visibility and column
@@ -560,7 +503,6 @@ const activeSearch   = ref(null)   // null | 'fast' | 'advanced' | 'expert' | 'f
 const loadingAdvConfig = ref(false)
 const advFields        = ref([])
 const advOperators     = ref([])   // raw from backend: [{ value, key }, ...]
-const advConnectors    = ref([])   // raw from backend: ['AND', 'OR', 'XOR']
 let   advConfigFor     = null      // track which table the config was loaded for
 
 // Operators with translated labels for the dropdown
@@ -568,72 +510,21 @@ const advOperatorsForDisplay = computed(() =>
   advOperators.value.map(op => ({ value: op.value, label: t(op.key) }))
 )
 
-// ── Advanced search rows ─────────────────────────────────────
-let _rowId = 0
-function newAdvRow() {
-  return { _id: _rowId++, connector: 'AND', fld: '', operator: '_icontains', value: '', _suggestions: null }
-}
-
-// Strips internal-only keys (_id, _suggestions) before persisting rows to
-// URL/storage; restoreAdvRows() re-adds them with fresh values.
-function serializeAdvRows(rows) {
-  return rows.map(({ connector, fld, operator, value }) => ({ connector, fld, operator, value }))
-}
-
-function restoreAdvRows(rows) {
-  return rows.map(r => ({ ...r, _id: _rowId++, _suggestions: null }))
-}
+// ── Advanced search: the builder's tree (see utils/filterTree.js) ─────────────
+const advTree = ref(emptyTree())
 
 /**
- * Converts the advanced-search form rows to a Directus-style filter object.
- * Rows with an empty value (except _empty/_nempty) are silently skipped.
- * Multiple rows are combined into { _and: [...] } / { _or: [...] } groups
- * using standard AND-takes-precedence-over-OR evaluation order.
- *
- * Lookup fields (id_from_tb): the column stores the id of the referenced
- * record while autocomplete suggests the referenced table's display values,
- * so the condition is wrapped in a JsonFilter traversal on ref_field —
- * { cat_ref: { name: { _eq: 'Ceramics' } } } instead of a direct comparison.
+ * The builder's tree as a Directus-style filter object (null when no condition
+ * is complete). Lookup fields (id_from_tb) are wrapped in a traversal on
+ * ref_field: the column stores the referenced record's id while the user types
+ * the referenced table's display value.
  */
-function buildFilterFromRows(rows) {
-  const mainTb = selectedTable.value?.name
-  const noValueOps = ['_empty', '_nempty', '_null', '_nnull']
-
-  const active = rows.filter(r =>
-    r.fld && (r.value !== '' || noValueOps.includes(r.operator))
-  )
-  if (!active.length) return null
-
-  const toCond = r => {
-    const [tb, field] = r.fld.split(':')
-    const val = noValueOps.includes(r.operator) ? true : r.value
-    const meta = advFields.value.find(f => f.value === r.fld)
-    let cond = { [r.operator]: val }
-    if (meta?.ref_tb && meta?.ref_field) cond = { [meta.ref_field]: cond }
-    return tb === mainTb
-      ? { [field]: cond }
-      : { [tb]: { [field]: cond } }
-  }
-
-  if (active.length === 1) return toCond(active[0])
-
-  // Group consecutive AND rows; each OR connector starts a new group.
-  const groups = [[toCond(active[0])]]
-  for (let i = 1; i < active.length; i++) {
-    const cond = toCond(active[i])
-    if (active[i].connector === 'OR') {
-      groups.push([cond])
-    } else {
-      groups[groups.length - 1].push(cond)
-    }
-  }
-  const orParts = groups.map(g => g.length === 1 ? g[0] : { _and: g })
-  return orParts.length === 1 ? orParts[0] : { _or: orParts }
+function buildAdvFilter() {
+  return treeToFilter(advTree.value, {
+    mainTb: selectedTable.value?.name,
+    fieldMeta: fld => advFields.value.find(f => f.value === fld),
+  })
 }
-const advRows = ref([newAdvRow()])
-
-function addAdvRow()        { advRows.value.push(newAdvRow()) }
-function removeAdvRow(idx)  { advRows.value.splice(idx, 1) }
 
 // ── Labels ───────────────────────────────────────────────────
 const activeSearchLabel = computed(() => {
@@ -651,7 +542,7 @@ const activeSearchLabel = computed(() => {
  */
 const currentSearch = computed(() => {
   if (activeSearch.value === 'advanced') {
-    const filter = buildFilterFromRows(advRows.value)
+    const filter = buildAdvFilter()
     if (!filter) return null
     return {
       filter,
@@ -817,7 +708,7 @@ function applyRouteParams() {
     } else if (qtParam === 'advanced') {
       try {
         const parsed = JSON.parse(qParam)
-        advRows.value       = restoreAdvRows(parsed.rows ?? [])
+        advTree.value       = restoreTree(parsed)   // new { tree } or the previous { rows }
         activeFilter.value  = parsed.filter ?? null
       } catch { activeFilter.value = null }
       activeSearch.value = 'advanced'
@@ -861,7 +752,6 @@ async function loadAdvConfig() {
     if (res.status === 'error') throw new Error(responseMessage(res, t))
     advFields.value     = res.fields     ?? []
     advOperators.value  = res.operators  ?? []   // [{ value, key }]
-    advConnectors.value = res.connectors ?? []   // ['AND', 'OR', 'XOR']
     advConfigFor = tb
   } catch (e) {
     toast.add({ severity: 'error', summary: 'Error', detail: e.message, life: 4000 })
@@ -870,26 +760,12 @@ async function loadAdvConfig() {
   }
 }
 
-// ── Autocomplete: load distinct values for a field ───────────
-async function loadSuggestions(row, query) {
-  if (!row.fld) return
-  const [tb, fld] = row.fld.split(':')
-  try {
-    const res = await api.get(`/api/search/${tb}/values`, { fld })
-    row._suggestions = (Array.isArray(res.values) ? res.values : [])
-      .filter(v => v != null && v !== '' && String(v).toLowerCase().includes(query.toLowerCase()))
-      .slice(0, 50)
-  } catch {
-    row._suggestions = []
-  }
-}
-
 // ── Reset all search ─────────────────────────────────────────
 function resetSearch() {
   fastSearch.value   = ''
   expertQuery.value  = ''
   activeFilter.value = null
-  advRows.value      = [newAdvRow()]
+  advTree.value      = emptyTree()
   activeSearch.value = null
   openPanel.value    = null
   page.value         = 1
@@ -950,13 +826,13 @@ function runFastSearch() {
 
 // ── Advanced search ───────────────────────────────────────────
 function runAdvancedSearch() {
-  const filter = buildFilterFromRows(advRows.value)
+  const filter = buildAdvFilter()
   if (!filter) { resetSearch(); return }
   activeFilter.value = filter
   activeSearch.value = 'advanced'
   openPanel.value    = null
   page.value         = 1
-  updateFilterUrl('advanced', JSON.stringify({ rows: serializeAdvRows(advRows.value), filter }))
+  updateFilterUrl('advanced', JSON.stringify({ tree: serializeTree(advTree.value), filter }))
   fetchRecords()
 }
 
@@ -1316,7 +1192,8 @@ function doExport(format) {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  max-height: 360px;
+  /* A nested query tree can run long: leave room for it and Apply below. */
+  max-height: min(70vh, 560px);
   overflow-y: auto;
 }
 
@@ -1327,24 +1204,6 @@ function doExport(format) {
   padding: 1rem;
 }
 
-.adv-rows {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-
-.adv-row {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  flex-wrap: nowrap;
-}
-
-.adv-connector          { width: 5rem;  flex-shrink: 0; }
-.adv-connector-placeholder { width: 5rem; flex-shrink: 0; }
-.adv-field-sel          { flex: 2; min-width: 0; }
-.adv-operator           { width: 8.5rem; flex-shrink: 0; }
-.adv-value              { flex: 1.5; min-width: 0; }
 
 /* ── Expert panel ────────────────────────────────────────── */
 .expert-label {

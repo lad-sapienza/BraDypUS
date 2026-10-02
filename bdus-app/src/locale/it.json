@@ -1264,6 +1264,8 @@
   "next": "Avanti",
   "file_nav_prev": "File precedente",
   "file_nav_next": "File successivo",
+  "preview_fields": "Colonne visibili",
+  "more_actions": "Altre azioni",
   "record_nav_prev": "Record precedente",
   "record_nav_next": "Record successivo",
   "record_nav_position": "{n} di {total}",

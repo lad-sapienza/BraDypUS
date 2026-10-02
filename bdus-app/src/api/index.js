@@ -162,10 +162,12 @@ async function _guardRefresh() {
  * @param {string}     httpMethod  e.g. 'GET', 'POST', 'DELETE'
  * @param {Object}     [bodyData]  Plain object for the request body (non-GET)
  * @param {string}     label       Used in error messages, e.g. the path
+ * @param {AbortSignal} [signal]   Lets the caller cancel the request
  */
-async function _fetch(url, httpMethod, bodyData, label) {
+async function _fetch(url, httpMethod, bodyData, label, signal) {
   const headers = { Accept: 'application/json', ..._bearer() }
   const opts    = { method: httpMethod, headers }
+  if (signal) opts.signal = signal
 
   if (httpMethod !== 'GET' && bodyData && Object.keys(bodyData).length > 0) {
     // Always send JSON — PHP's mergeRequestBody() handles it for all verbs.
@@ -203,10 +205,10 @@ async function get(path, params = {}) {
 }
 
 // ── POST ─────────────────────────────────────────────────────────────────────
-async function post(path, body = {}) {
+async function post(path, body = {}, { signal } = {}) {
   await _guardRefresh()
   const url = new URL(API_BASE + scopedPath(path), window.location.origin)
-  return _fetch(url, 'POST', body, path)
+  return _fetch(url, 'POST', body, path, signal)
 }
 
 // ── PUT ──────────────────────────────────────────────────────────────────────

@@ -1264,6 +1264,8 @@
   "next": "Next",
   "file_nav_prev": "Previous file",
   "file_nav_next": "Next file",
+  "preview_fields": "Visible columns",
+  "more_actions": "More actions",
   "record_nav_prev": "Previous record",
   "record_nav_next": "Next record",
   "record_nav_position": "{n} of {total}",

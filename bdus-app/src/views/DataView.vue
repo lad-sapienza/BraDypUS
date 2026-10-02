@@ -16,15 +16,47 @@
           <div class="search-area">
 
             <!-- Row 1: always visible -->
-            <div class="search-bar">
-              <AInputSearch
+            <div class="search-bar" :class="{ 'is-compact': compact }">
+              <!-- Live search: runs as you type (debounced); Enter runs it at once -->
+              <AInput
                 v-model:value="fastSearch"
                 :placeholder="t('fast_search')"
-                :enter-button="true"
+                allow-clear
                 class="search-input-wrap"
-                @search="runFastSearch"
-              />
+                @change="onFastInput"
+                @press-enter="onFastEnter"
+              >
+                <template #prefix><SearchOutlined /></template>
+              </AInput>
 
+              <!-- Small screens: every secondary action behind one menu -->
+              <ADropdown v-if="compact" :trigger="['click']" placement="bottomRight">
+                <ABadge :dot="openPanel === 'advanced' || openPanel === 'expert'">
+                  <AButton type="text" :title="t('more_actions')"><EllipsisOutlined /></AButton>
+                </ABadge>
+                <template #overlay>
+                  <AMenu @click="onCompactMenu">
+                    <AMenuItem key="advanced"><ControlOutlined /> {{ t('advanced_search') }}</AMenuItem>
+                    <AMenuItem key="expert"><CodeOutlined /> {{ t('sql_expert_search') }}</AMenuItem>
+                    <AMenuItem key="saved"><PushpinOutlined /> {{ t('saved_queries') }}</AMenuItem>
+                    <AMenuDivider />
+                    <AMenuItem v-if="columns.length" key="columns"><TableOutlined /> {{ t('preview_fields') }}</AMenuItem>
+                    <ASubMenu v-if="totalRecords > 0" key="export">
+                      <template #title><DownloadOutlined /> {{ t('export') }}</template>
+                      <AMenuItem key="export-csv">CSV</AMenuItem>
+                      <AMenuItem key="export-xlsx">XLSX</AMenuItem>
+                      <AMenuItem key="export-json">JSON</AMenuItem>
+                    </ASubMenu>
+                    <AMenuDivider />
+                    <AMenuItem key="chart"><BarChartOutlined /> {{ t('create_chart_from_search') }}</AMenuItem>
+                    <AMenuItem key="map"><CompassOutlined /> {{ t('view_on_map') }}</AMenuItem>
+                    <AMenuItem v-if="selectedTable?.fuzzy_date" key="timeline"><CalendarOutlined /> {{ t('chrono_timeline') }}</AMenuItem>
+                    <AMenuItem v-if="selectedTable?.rs" key="matrix"><ApartmentOutlined /> {{ t('harris_matrix') }}</AMenuItem>
+                  </AMenu>
+                </template>
+              </ADropdown>
+
+              <template v-else>
               <ADivider type="vertical" />
 
               <AButton
@@ -88,6 +120,7 @@
                 </template>
                 <AButton type="text" :title="t('export')" size="small"><DownloadOutlined /></AButton>
               </APopover>
+              </template>
 
               <ATag
                 v-if="activeSearch"
@@ -97,22 +130,11 @@
                 @close="resetSearch"
               >{{ activeSearchLabel }}</ATag>
 
+              <template v-if="!compact">
               <!-- Saved searches -->
               <AButton type="text" :title="t('saved_queries')" size="small" @click="savedQueriesDialog = true">
                 <PushpinOutlined />
               </AButton>
-              <AModal
-                v-model:open="savedQueriesDialog"
-                :title="t('saved_queries')"
-                :footer="null"
-                width="36rem"
-              >
-                <SavedQueriesPanel
-                  :currentSearch="currentSearch"
-                  :currentTb="selectedTable?.name ?? ''"
-                  @load-query="onLoadQuery"
-                />
-              </AModal>
 
               <!-- Create chart from this view/search -->
               <AButton type="text" :title="t('create_chart_from_search')" size="small" @click="createChartFromSearch">
@@ -142,7 +164,8 @@
                 @click="openMatrix"
               ><ApartmentOutlined /></AButton>
 
-              <!-- Add record — only for users with add_new privilege -->
+              <!-- Add record — only for users with add_new privilege; below the
+                   compact breakpoint the floating + button covers it. -->
               <AButton
                 v-if="canAdd"
                 type="primary"
@@ -150,7 +173,44 @@
                 class="add-record-btn"
                 @click="addRecord"
               ><PlusOutlined /> {{ t('new_record') }}</AButton>
+              </template>
             </div>
+
+            <!-- Modals live outside the toolbar so they work from both layouts -->
+            <AModal
+              v-model:open="savedQueriesDialog"
+              :title="t('saved_queries')"
+              :footer="null"
+              width="36rem"
+            >
+              <SavedQueriesPanel
+                :currentSearch="currentSearch"
+                :currentTb="selectedTable?.name ?? ''"
+                @load-query="onLoadQuery"
+              />
+            </AModal>
+            <AModal
+              v-model:open="columnsDialog"
+              :title="t('preview_fields')"
+              :footer="null"
+              width="28rem"
+            >
+              <div class="col-toggler-list">
+                <div
+                  v-for="col in allAvailableColumns"
+                  :key="col.name"
+                  class="col-toggler-item"
+                  @click="toggleColumn(col.name)"
+                >
+                  <component :is="visibleColumnNames.includes(col.name) ? CheckSquareOutlined : BorderOutlined" />
+                  <span>{{ col.label }}</span>
+                </div>
+              </div>
+              <div class="col-toggler-actions">
+                <AButton type="text" size="small" @click="selectAllColumns">{{ t('select_all') }}</AButton>
+                <AButton type="text" size="small" @click="resetColumns">{{ t('reset') }}</AButton>
+              </div>
+            </AModal>
 
             <!-- ── Advanced search panel ──────────────────────── -->
             <Transition name="slide">
@@ -317,13 +377,14 @@
 </template>
 
 <script setup>
-import { ApartmentOutlined, ArrowLeftOutlined, BarChartOutlined, BorderOutlined, CalendarOutlined, CheckSquareOutlined, CloseOutlined, CodeOutlined, CompassOutlined, ControlOutlined, DownloadOutlined, FileExcelOutlined, FileOutlined, FileTextOutlined, MinusOutlined, PlusOutlined, PushpinOutlined, SearchOutlined, TableOutlined } from '@ant-design/icons-vue'
+import { ApartmentOutlined, ArrowLeftOutlined, BarChartOutlined, BorderOutlined, CalendarOutlined, CheckSquareOutlined, CloseOutlined, CodeOutlined, CompassOutlined, ControlOutlined, DownloadOutlined, EllipsisOutlined, FileExcelOutlined, FileOutlined, FileTextOutlined, MinusOutlined, PlusOutlined, PushpinOutlined, SearchOutlined, TableOutlined } from '@ant-design/icons-vue'
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useToast } from '@/composables/useNotify'
 import { api, apiUrl, filterToSearchParams } from '@/api'
 import { useI18n } from '@/i18n'
 import { useTables } from '@/composables/useTables'
+import { useMediaQuery } from '@/composables/useMediaQuery'
 import { appStorage } from '@/utils/storage'
 import { useListNavigation } from '@/stores/listNavigation'
 import AppLayout from '@/components/AppLayout.vue'
@@ -338,11 +399,17 @@ import {
   Popover as APopover,
   Modal as AModal,
   Button as AButton,
+  Badge as ABadge,
+  Dropdown as ADropdown,
+  Menu as AMenu,
 } from 'ant-design-vue'
 import SavedQueriesPanel from '@/components/SavedQueriesPanel.vue'
 
-const AInputSearch = Input.Search
+const AInput       = Input
 const ATextarea    = Input.TextArea
+const AMenuItem    = AMenu.Item
+const ASubMenu     = AMenu.SubMenu
+const AMenuDivider = AMenu.Divider
 
 const { t } = useI18n()
 const toast  = useToast()
@@ -360,6 +427,11 @@ const selectedTable = computed(() =>
 )
 
 // ── Column visibility & order ────────────────────────────────
+// Below this width the toolbar collapses its secondary actions into one menu
+// and the floating + button replaces the "New record" button.
+const compact             = useMediaQuery('(max-width: 640px)')
+const columnsDialog       = ref(false)
+watch(compact, v => { if (!v) columnsDialog.value = false })   // that dialog only exists in the compact layout
 const colTogglerOpen      = ref(false)
 const exportPopoverOpen   = ref(false)
 const savedQueriesDialog  = ref(false)
@@ -828,6 +900,45 @@ function resetSearch() {
 }
 
 // ── Fast search ───────────────────────────────────────────────
+// Live search: runs while typing, after a short pause and once at least
+// FAST_MIN_CHARS are typed (the query is a LIKE over every preview field — no
+// point firing it for one letter). Enter runs it immediately; emptying the
+// input clears the search.
+const FAST_MIN_CHARS = 2
+const FAST_DEBOUNCE_MS = 300
+let fastTimer = null
+
+function onFastInput() {
+  clearTimeout(fastTimer)
+  const v = (fastSearch.value ?? '').trim()
+  if (!v) {
+    if (activeSearch.value === 'fast') resetSearch()
+    return
+  }
+  if (v.length < FAST_MIN_CHARS) return
+  fastTimer = setTimeout(runFastSearch, FAST_DEBOUNCE_MS)
+}
+
+function onFastEnter() {
+  clearTimeout(fastTimer)
+  runFastSearch()
+}
+
+function onCompactMenu({ key }) {
+  switch (key) {
+    case 'advanced': togglePanel('advanced'); break
+    case 'expert':   togglePanel('expert');   break
+    case 'saved':    savedQueriesDialog.value = true; break
+    case 'columns':  columnsDialog.value = true; break
+    case 'chart':    createChartFromSearch(); break
+    case 'map':      openGeoface(); break
+    case 'timeline': openTimeline(); break
+    case 'matrix':   openMatrix(); break
+    default:
+      if (key.startsWith('export-')) doExport(key.slice('export-'.length))
+  }
+}
+
 function runFastSearch() {
   if (!fastSearch.value.trim()) { resetSearch(); return }
   activeSearch.value = 'fast'
@@ -864,8 +975,18 @@ function runExpertSearch() {
 // store on row click so the record view can offer Previous/Next in this list.
 let lastListBody = null   // { tb, body }
 
+// Only the latest list request may update the screen: a new one (typing,
+// paging, sorting) cancels the one still in flight, and the sequence number is
+// a second guard against a response that slipped past the abort.
+let fetchCtrl = null
+let fetchSeq  = 0
+
 async function fetchRecords() {
   if (!selectedTable.value) return
+  fetchCtrl?.abort()
+  fetchCtrl = new AbortController()
+  const { signal } = fetchCtrl
+  const seq = ++fetchSeq
   loadingRecords.value = true
   try {
     let res
@@ -920,7 +1041,8 @@ async function fetchRecords() {
       if (colParam) body.columns = colParam.join(',')
     }
 
-    res = await api.post(`/api/records/${tbName}`, body)
+    res = await api.post(`/api/records/${tbName}`, body, { signal })
+    if (seq !== fetchSeq) return   // superseded while waiting
 
     if (res.status === 'error') {
       toast.add({ severity: 'error', summary: t('generic_error'),
@@ -941,9 +1063,10 @@ async function fetchRecords() {
     records.value = res.data ?? []
 
   } catch (e) {
+    if (e.name === 'AbortError' || seq !== fetchSeq) return   // cancelled by a newer request
     toast.add({ severity: 'error', summary: 'Error', detail: e.message, life: 4000 })
   } finally {
-    loadingRecords.value = false
+    if (seq === fetchSeq) loadingRecords.value = false
   }
 }
 
@@ -1013,7 +1136,11 @@ onMounted(() => {
   resizeObs = new ResizeObserver(measureTableHeight)
   if (tableWrap.value) resizeObs.observe(tableWrap.value)
 })
-onUnmounted(() => resizeObs?.disconnect())
+onUnmounted(() => {
+  resizeObs?.disconnect()
+  clearTimeout(fastTimer)
+  fetchCtrl?.abort()
+})
 watch(records, () => { measureTableHeight() })
 
 function addRecord() {
@@ -1297,6 +1424,14 @@ function doExport(format) {
   gap: 0.25rem;
   padding: 0.4rem 0.5rem 0.25rem;
   border-top: 1px solid var(--p-content-border-color);
+}
+
+/* ── Compact toolbar (≤ 640px) ───────────────────────────── */
+.search-bar.is-compact { flex-wrap: wrap; }
+.search-bar.is-compact .search-active-tag {
+  flex: 1 0 100%;
+  margin-left: 0;
+  white-space: normal;
 }
 
 /* ── Add record ──────────────────────────────────────────── */

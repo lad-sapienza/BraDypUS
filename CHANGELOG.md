@@ -5,8 +5,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Record list: search as you type.** The fast-search box now runs the search
+  while you type (after a 300 ms pause, from 2 characters), like the search in
+  most tools; Enter runs it at once and clearing the box clears the search. The
+  blue search button is gone (a magnifier now sits inside the box). A newer
+  search cancels the one still running, so a slow older response can never
+  overwrite the newer results.
+  - `bdus-app/src/views/DataView.vue`, `bdus-app/src/api/index.js`
+
 ### Fixed
 
+- **Record list toolbar on small screens.** Below 640 px the row of 11 buttons
+  squeezed the search box to almost nothing. The secondary actions (advanced and
+  SQL search, saved searches, columns, export, chart, map, timeline, Harris
+  matrix) now sit behind one "⋯" menu, "New record" is left to the floating +
+  button, and the active-search tag wraps to its own line. Wider screens are
+  unchanged.
+  - `bdus-app/src/views/DataView.vue`, `bdus-app/src/composables/useMediaQuery.js`
+- **"Visible columns" showed its raw translation key** (`preview_fields`) in the
+  record list's column picker, in English and Italian.
+  - `bdus-app/src/locale/{en,it}.json`
 - **The file preview no longer runs off the bottom of the screen.** The preview
   window sat 100px from the top with the image capped at `82vh` plus header and
   footer around it, so any tall image pushed the bottom (and the new

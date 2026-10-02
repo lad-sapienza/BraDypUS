@@ -282,6 +282,12 @@ class QueryFromRequest
         break;
 
       case 'sqlExpert':
+        // Raw SQL fragments cannot be made safe by keyword stripping (#76):
+        // the mode is for administrators only. Every entry point (list, export,
+        // charts, geoface, RS) builds its WHERE here, so this is the one gate.
+        if (!\Auth\Authorization::can('admin')) {
+          throw new \Exception('not_enough_privilege: the SQL expert search is restricted to administrators');
+        }
         $this->join = $this->makeSafeStatement(urldecode($request['join']));
         $safe = trim($this->makeSafeStatement(urldecode($request['querytext'])));
         // An empty querytext would produce WHERE () — a syntax error; fall back to all records

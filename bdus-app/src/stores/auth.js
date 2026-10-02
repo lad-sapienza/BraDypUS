@@ -17,6 +17,7 @@ function userFromPayload(p) {
     app:             p.app   ?? '',
     privilege_value: p.prv,
     can_write:       p.prv <= 25,
+    can_admin:       p.prv <= 10,
   }
 }
 

@@ -1049,7 +1049,7 @@ paths:
         |---|---|---|
         | `all` (default) | — | Returns all records, no filter |
         | `fast` | `search=TEXT` | Full-text search across preview fields |
-        | `sqlExpert` | `querytext=SQL` (+ optional `join=SQL`) | Raw SQL WHERE clause |
+        | `sqlExpert` | `querytext=SQL` (+ optional `join=SQL`) | Raw SQL WHERE clause — **administrators only** (`not_enough_privilege` otherwise) |
 
         The legacy `advanced` mode (`adv=BASE64_JSON` rows) was retired in v5:
         use the Directus-style `filter` below, which covers the same use cases
@@ -1361,7 +1361,7 @@ paths:
         | `qt` | `q` value | Description |
         |---|---|---|
         | `fast` | search text | Full-text search |
-        | `expert` | SQL WHERE clause | Raw SQL filter |
+        | `expert` | SQL WHERE clause | Raw SQL filter — administrators only |
         | `filter` | JSON-encoded filter object | Directus-style filter (advanced search persistence) |
         | (absent) | — | No filter — export all records |
       parameters:
@@ -1372,6 +1372,7 @@ paths:
           schema:
             type: string
             enum: [csv, json, xlsx]
+          description: Any other value is rejected with `invalid_parameters` (no fallback to CSV).
         - name: qt
           in: query
           description: |

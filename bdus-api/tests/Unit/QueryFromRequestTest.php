@@ -147,6 +147,26 @@ class QueryFromRequestTest extends BdusTestCase
         $this->assertStringNotContainsStringIgnoringCase('drop', $where);
     }
 
+    /** #76: raw SQL is administrators-only; writers/readers get an error, not a filtered list. */
+    public function testSqlExpertIsRestrictedToAdmins(): void
+    {
+        foreach ([20, 30] as $priv) {
+            $this->setPrivilege($priv);
+            try {
+                $this->qfr(['type' => 'sqlExpert', 'querytext' => "status = 'active'", 'join' => '']);
+                $this->fail("privilege $priv must not run sqlExpert");
+            } catch (\Exception $e) {
+                $this->assertStringContainsString('not_enough_privilege', $e->getMessage());
+            } finally {
+                $this->setPrivilege(1);
+            }
+        }
+
+        $this->setPrivilege(10);
+        $this->assertSame(3, $this->qfr(['type' => 'sqlExpert', 'querytext' => "status = 'active'", 'join' => ''])->getTotal());
+        $this->setPrivilege(1);
+    }
+
     // ══════════════════════════════════════════════════════════════════════
     // type = filter — main table
     // ══════════════════════════════════════════════════════════════════════

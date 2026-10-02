@@ -1,6 +1,7 @@
 import { ref, computed, onScopeDispose } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from '@/i18n'
+import { useAuthStore } from '@/stores/auth'
 import { SEARCH, searchParams as buildSearchParams } from '@/utils/recordQuery'
 import { emptyTree, cloneTree, countActive, formula, treeToFilter, serializeTree, restoreTree } from '@/utils/filterTree'
 
@@ -69,9 +70,11 @@ export function useRecordQuery({ table, config, onApply, getSort }) {
     return t('fast_search')
   })
 
+  // Raw SQL is for administrators only: the API refuses it to anyone else (#76).
+  const auth = useAuthStore()
   const filtersTabs = computed(() => [
     { value: 'advanced', label: t('qb_tab_builder') },
-    { value: 'expert',   label: t('qb_tab_sql') },
+    ...(auth.user?.can_admin ? [{ value: 'expert', label: t('qb_tab_sql') }] : []),
   ])
 
   /** Removable chips for what is applied; a group is one chip, with parentheses. */

@@ -52,6 +52,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Export with an unknown `format` no longer falls back to CSV.** `format=pdf`
+  (or any value other than `csv`, `json`, `xlsx`) now answers
+  `invalid_parameters` instead of silently handing back a file in a format that
+  was not asked for.
+  - `bdus-api/controllers/Record.php`, `bdus-api/lib/DB/Export/Export.php`
+- **The SQL search is restricted to administrators (#76).** Its only guard was
+  a keyword stripper that mangled legitimate values (`LIKE '%file%'` matched
+  everything), could be bypassed with nested keywords, and let any reader
+  `SELECT` from any table. Raw SQL now requires the `admin` privilege, enforced
+  in the one place every search goes through (list, export, charts, GeoFace,
+  stratigraphic series); the **SQL** tab is hidden from everyone else.
+  - `bdus-api/lib/SQL/QueryFromRequest.php`,
+    `bdus-app/src/composables/useRecordQuery.js`, `bdus-app/src/stores/auth.js`
 - **The record list did not fill the page.** The table grew only to its own
   content: a screen of empty space under five visible rows, and the pagination
   floating halfway up the page. The list now takes the full height (the same

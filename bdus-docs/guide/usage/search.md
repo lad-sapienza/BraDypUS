@@ -121,8 +121,9 @@ sigla LIKE 'US%' AND periodo = 'Basso Medioevo'
 
 ![The SQL tab of the Filters panel with a condition typed in](/images/v5/usage/search-sql.png)
 
-It is available to every user who can read the table. Because the text goes to
-the database as it is:
+The **SQL** tab is available to administrators only: the text goes to the
+database almost as it is, so it can read any table. For everyone else the tab
+is not shown, and the API refuses SQL searches. Because of this:
 
 - values are **not** converted to the column's real type: comparing a number
   with a text column may fail on PostgreSQL (write `context_id::integer > 200`,

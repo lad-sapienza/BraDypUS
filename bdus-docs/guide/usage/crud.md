@@ -16,12 +16,16 @@ Controls in the DataView toolbar:
 
 | Control | Action |
 |---|---|
-| **New** | Create a new record |
-| **Export** | Download visible records as CSV, XLSX or JSON |
+| **Query bar** | Type to search the preview fields; the list follows as you type |
+| **Filters** | Open the Builder (nested AND / OR conditions) or the SQL tab — see [Search & filter](/guide/usage/search) |
 | **Columns** | Toggle which columns are visible |
-| **Harris Matrix** | Open the stratigraphic matrix (only for tables with RS configured) |
-| **Search bar** | Fast text search across preview fields |
-| **Advanced** | Open the advanced search panel |
+| **Export** | Download the matching records as CSV, XLSX or JSON |
+| **Saved searches** | Run, save or share a search |
+| **Chart**, **Map**, **Timeline**, **Harris Matrix** | Open the matching view over the records of the current search (the last two only for tables that have the plugin) |
+| **New record** | Create a new record |
+
+On small screens everything but the query bar and **Filters** moves into a
+**⋯** menu, and **New record** is the round **+** button.
 
 Click any row to open that record in **RecordView**.
 
@@ -44,9 +48,9 @@ When you open a record by clicking a row in the record list, the header shows
 a small navigation bar — **‹ 61 / 103 ›** — that lets you step through the
 records of *that list* without going back to it each time.
 
-- The order is exactly the one the list was showing: its **sort**, **fast
-  search**, **advanced search / filter** and **expert query**. The bar reaches
-  every matching record, not only the ones on the page you clicked from.
+- The order is exactly the one the list was showing: its **sort** and its
+  **search** (text, Builder, SQL or a link's filter). The bar reaches every
+  matching record, not only the ones on the page you clicked from.
 - The **←** and **→** keys do the same, as long as no field has the focus.
 - The bar is hidden while you are **editing** a record: save or cancel first.
 - It appears only when you arrive **from the list**. A record opened from a
@@ -58,6 +62,8 @@ records of *that list* without going back to it each time.
   return to the list, whatever number of records you stepped through.
 - Lists with more than **5000** matching records are walked only up to the
   5000th, and the counter shows it (**‹ 12 / 5000+ ›**).
+
+![A record opened from a filtered list: the header shows ‹ 3 of 48 › and the arrows](/images/v5/usage/record-nav.png)
 
 The position is computed when you open the first record: if other users add or
 delete records meanwhile, the order you are walking does not change until you

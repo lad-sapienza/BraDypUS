@@ -17,6 +17,21 @@ the active search filter — only matching records are exported.
 
 ![DataView toolbar with the Export button highlighted and the format dropdown open](/images/v5/usage/export-toolbar.png)
 
+### What "the active filter" covers
+
+The export takes exactly what the list is showing: a text search, a Builder
+search (nested groups included), an SQL search, or the filter a link from
+another record opened. Sorting and which columns are shown do not matter — the
+file always has every column of the table.
+
+::: warning Errors are errors
+If the search cannot be read — a hand-edited link with broken JSON, an unknown
+`qt` value, a `qt` without its `q` — the export does not guess: it stops with
+`invalid_parameters` and names the offending parameter, instead of quietly
+downloading the whole table. The same applies to the API
+(`GET /api/records/{tb}/export`).
+:::
+
 ## Formats
 
 | Format | Notes |

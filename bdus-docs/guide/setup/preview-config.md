@@ -25,8 +25,9 @@ In DataView the user can show or hide individual columns using the **column togg
 button in the toolbar. The toggler starts with the preview fields visible but the
 user's selection is remembered per session.
 
-## Fast search scope
+## Text search scope
 
-The fast-search input searches all preview fields using a case-insensitive `LIKE`
-query. Fields not in the preview list are not searched by fast search (but are
-searchable in the advanced search panel).
+The text box of the query bar searches all preview fields using a
+case-insensitive `LIKE` query. Fields not in the preview list are not searched
+by the text box (but can be searched in the Builder: see
+[Search & filter](/guide/usage/search)).

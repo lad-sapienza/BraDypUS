@@ -32,7 +32,7 @@ to open the [command palette](/guide/usage/command-palette) from any screen.
 | Browse and search records | DataView (Data → Data management) |
 | Create a new record | DataView → **New** button, or the FAB |
 | Edit a record | RecordView → **Edit** button |
-| Search with filters | DataView → search bar or Advanced search |
+| Search with filters | DataView → query bar, or **Filters** (Builder / SQL) |
 | Export data | DataView toolbar → Export button |
 | Import data | Sidebar → Import data |
 | View the Harris Matrix | DataView toolbar → Harris Matrix button |

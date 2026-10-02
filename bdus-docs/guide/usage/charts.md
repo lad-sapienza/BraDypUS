@@ -53,9 +53,11 @@ name and click **Save**.
 The wizard itself doesn't build filters — a chart's table is fixed once
 created, and picking a filter from scratch there would just duplicate
 DataView's own search UI. Instead, build the filter where you already build
-every other search: open the table in **Data management**, run a fast,
-advanced, or SQL-expert search, then click the chart icon
-(**Create chart from this view**) in the search toolbar.
+every other search: open the table in **Data management**, run a Builder or
+SQL search from **Filters**, then click the chart icon
+(**Create chart from this view**) in the search toolbar (or in the **⋯** menu
+on a small screen). A plain text search is not carried over to the chart: use
+the Builder to make a search a chart can start from.
 
 ![The wizard opened from a search: the table is locked, a note confirms the chart uses that search's filter, and the filter itself is shown as JSON](/images/v5/usage/chart-from-search.png)
 

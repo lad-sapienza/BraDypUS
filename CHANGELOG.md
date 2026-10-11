@@ -5,6 +5,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Dependency maintenance** — routine minor/patch bumps, no behaviour change:
+  - `bdus-api`: `firebase/php-jwt` 7.1.0 → 7.2.1, `intervention/image` 4.3.2 →
+    4.3.3, `monolog/monolog` 3.10.0 → 3.12.1 (`composer.lock` only; the existing
+    constraints already allowed them). Full PHPUnit + hurl suite green.
+  - `bdus-app`: `maplibre-gl` 6.6.0 → 6.13.0, `vue` 3.5.42 → 3.5.43,
+    `vue-router` 5.3.1 → 5.4.0, `vite` 8.2.2 → 8.3.4, `@vitejs/plugin-vue`
+    6.0.8 → 6.0.9, `cytoscape` 3.34.2 → 3.34.3, `marked` 18.0.11 → 18.1.0.
+    Production build clean; GeoFace checked in the built app (geometries render,
+    popup and geometry editing work). From `maplibre-gl` 6.13 the worker is
+    self-contained and `maplibre-gl-shared.mjs` is an empty, deprecated file
+    (removed in the next major): the copy step in `bdus-app/vite.config.js`
+    still works, and can drop it when `maplibre-gl` 7 is adopted.
+  - `bdus-docs`: `vue` / `@vue/server-renderer` 3.5.35 → 3.5.43 (docs build
+    clean).
+  - `source-map-js` 1.2.1 → 1.2.2 in `bdus-app` and `bdus-docs` (transitive,
+    build-time only; fixes a DoS on malicious indexed source maps).
+  - CI actions: `actions/upload-artifact` v4 → v7, `actions/download-artifact`
+    v4 → v8 in `release.yml` (digest hand-off between the image build and
+    merge jobs; first exercised by the next release).
+
 ## [5.14.0] - 2026-10-02
 
 ### Added

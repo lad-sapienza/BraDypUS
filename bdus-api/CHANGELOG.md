@@ -5,6 +5,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.15.1] - 2026-10-15
+
+### Added
+
+- **Template editor: JSON code mode** — a Visual / JSON code switch lets you
+  paste and edit the whole template. Server-side validation errors are shown
+  above the editor instead of only in the console.
+- **Plugin fields in core sections** — core sections can include plugin tables
+  (`{ "plugin": "tb", "field": "*" | "name", "width": ... }`), rendered as a
+  multi-row table in place. The field picker groups core and plugin fields and
+  prefixes plugin fields with the plugin name; plugin sections carry a badge.
+
+### Fixed
+
+- **Plugin section with empty `content` showed no columns** — an empty list now
+  means "all plugin fields".
+- **Templates sidebar** — the template list and the add button sit under the
+  selected table.
+
 ## [5.15.0] - 2026-10-15
 
 ### Added

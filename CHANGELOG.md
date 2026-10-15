@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.15.1] - 2026-10-15
+
 ### Added
 
 - **Template editor: JSON code mode** — a Visual / JSON code switch lets you

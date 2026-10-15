@@ -15,32 +15,33 @@ flow is the prerequisite for working on any part of the backend.
 ```
 bdus-api/
 ├── index.php            ← single entry point (all requests)
+├── controllers/         ← one class per module: Bdus\Controllers\{Name}
+│   ├── Record.php, Config.php, Search.php, Templates.php, …
 ├── lib/
-│   ├── constants.php    ← bootstrap: constants, autoloaders, JWT auth
-│   ├── autoLoader.php   ← custom PSR-4-like resolver
-│   ├── Controller.php   ← abstract base class for all modules
+│   ├── bootstrap.php    ← constants, autoload, app + JWT resolution
 │   ├── Bdus/
-│   │   ├── App.php      ← orchestrator (DB, logger, migrations, routing)
-│   │   └── Router.php   ← FastRoute dispatcher + ROUTE_PRIVILEGE map
-│   └── …               ← lib/ namespaces (see lib/ map)
-├── modules/             ← 37 controller modules
-│   └── {name}/{name}.php
+│   │   ├── App.php         ← kernel: DB, logger, major-upgrade pre-flight
+│   │   ├── Router.php      ← FastRoute table + ROUTE_PRIVILEGE map
+│   │   ├── Dispatcher.php  ← auth gate, DI, controller invocation
+│   │   └── Controller.php  ← abstract base class for controllers
+│   ├── Auth/ JWT/ UAC/ Config/ DB/ Record/ Template/ …
+│   └── …                  ← see the lib/ map
 ├── projects/            ← runtime data, one dir per application (not committed)
 │   └── {app}/
 │       ├── config.json    ← app settings (DB engine, credentials, …)
-│       ├── .jwt_secret     ← per-app JWT signing secret (chmod 0600)
-│       ├── .htaccess       ← blocks web access to config.json / .jwt_secret
-│       ├── files/          ← uploaded files
-│       ├── backups/        ← DB dumps
-│       ├── geodata/        ← GeoJSON / KML / GPX for the map layer editor
-│       ├── export/         ← export output (CSV, JSON, …)
-│       └── db/              ← SQLite database file (if SQLite engine)
+│       ├── .jwt_secret    ← per-app JWT signing secret
+│       ├── files/         ← uploaded files
+│       ├── backups/       ← DB dumps
+│       ├── export/        ← export output
+│       └── db/            ← SQLite database file (SQLite engine only)
+├── tests/               ← Unit/, Integration/, api/ (hurl)
+├── openapi.yaml         ← API contract
 └── vendor/              ← Composer dependencies
 ```
 
 Table/field/relation config (`bdus_cfg_tables`, `bdus_cfg_fields`,
-`bdus_cfg_relations`) lives **in the database itself**, not as YAML/JSON files
-on disk — there is no per-table config file to keep in sync.
+`bdus_cfg_relations`) and print templates (`bdus_cfg_templates`) live **in the
+database itself**, not as files on disk.
 
 ---
 
@@ -53,131 +54,127 @@ Browser / Vue frontend
   ▼
 index.php
   ├─ CORS preflight handling (env BRADYPUS_CORS_ORIGIN)
+  ├─ registers a last-resort handler: any fatal error → JSON envelope
   ├─ ob_start()
-  ├─ require lib/constants.php
-  │     ├── define MAIN_DIR, DEBUG_ON
-  │     ├── register autoLoader (lib/ + modules/)
-  │     ├── require vendor/autoload.php (Composer)
-  │     └── app resolution (Router::resolveRequest): first URL segment
-  │            /{app}/api/… → define APP, PREFIX, PROJ_DIR
-  │            bare /api/… only for apps, new-app*, info (instance-level)
-  │          → Auth\CurrentUser::set(…) if a valid token for that app
-  │          → 403 app_mismatch when the URL app ≠ the JWT app
+  ├─ require lib/bootstrap.php
+  │     ├── MAIN_DIR, DEBUG_ON, error reporting
+  │     ├── Composer autoload (vendor/autoload.php)
+  │     ├── Router::resolveRequest(): first URL segment
+  │     │     /{app}/api/…   → application-scoped
+  │     │     /api/…         → instance-level (see below)
+  │     ├── Bearer token peeked → app claim; 403 app_mismatch if URL app ≠ token app
+  │     ├── define APP, PREFIX, PROJ_DIR (when the project dir exists)
+  │     ├── JwtManager::decode() → Auth\CurrentUser::set(…) when valid
+  │     └── runtime dirs ensured (cache/, files/, backups/, export/, db/)
   ├─ Bdus\Router::dispatch()
-  │     ├── FastRoute matches the bare /api/… path (the /{app} segment
-  │     │   is stripped by resolveRequest() before matching)
-  │     │     → merges URL vars into $_GET / $_REQUEST
-  │     │     → parses JSON body → $_POST / $_REQUEST
-  │     │     → sets $_GET['obj'] = 'foo_ctrl', $_GET['method'] = 'bar'
+  │     ├── FastRoute matches the bare /api/… path
   │     ├── wrong path shape → 404 app_prefix_required / app_prefix_not_allowed
-  │     └── NOT_FOUND → falls through
-  └─ new Bdus\App($_GET, $_POST, $_REQUEST)->start()
-        ├── DB::__construct(APP) — opens PDO connection
-        ├── Monolog logger setup
-        ├── Migrate::maybeRemovePrefix()   ─┐
-        ├── Migrate::maybeAddBdusPrefix()   ├─ idempotent pre-flight
-        ├── Migrate::run()                 ─┘
-        └── App::route()
-              ├── $obj    = $_GET['obj']    (default: 'home_ctrl')
-              ├── $method = $_GET['method'] (default: 'showAll')
-              ├── Router::requiredPrivilege($obj, $method)
-              │     → 'none' | 'read' | 'edit' | 'admin' | 'super_admin'
-              ├── Auth gate
+  │     ├── METHOD_NOT_ALLOWED → 405 method_not_allowed (exits)
+  │     ├── FOUND → merges URL vars + JSON body into $_GET / $_POST / $_REQUEST
+  │     │           sets $_GET['obj'] = controller FQCN, $_GET['method']
+  │     └── NOT_FOUND → returns, request continues with defaults
+  └─ (new Bdus\App())->start()
+        ├── new DB(APP)  — PDO connection (when APP is defined)
+        ├── Monolog logger (bdus_logs table in production, file in debug)
+        ├── pre-v5 apps only: Migrate::maybeRemovePrefix / maybeAddBdusPrefix,
+        │   and BDUS_MAJOR_UPGRADE is defined
+        └── Bdus\Dispatcher::dispatch($_GET, $_POST, $_REQUEST)
+              ├── $required = Router::requiredPrivilege($obj, $method)
+              ├── major-upgrade gate → 409 major_upgrade_required
+              ├── auth gate
               │     ├── 'none' → skip
-              │     ├── not authenticated → 401
-              │     └── API key + insufficient privilege → 403
-              ├── method_exists($obj, $method) check
-              ├── get_parent_class($obj) === 'Controller' check
+              │     ├── no JWT user → try API key (Bearer {key}) → else 401
+              │     ├── human user: token_version + privilege re-read from DB
+              │     │     (revoked token → 401 token_invalidated)
+              │     └── API key below required tier → 403 not_enough_privilege
+              ├── method_exists + is_a($obj, Bdus\Controller) checks
               ├── new $obj($get, $post, $request)
-              ├── inject: DB · logger · Config · UAC · debug flag
+              ├── inject DB · logger · Config · UAC
               └── $controller->$method()   ← runs the actual logic
 ```
 
+Migrations are **not** run on every request: since v5 they run from the
+upgrade endpoints (`Upgrade::runMajor`, `Upgrade::runMinor`) and the
+instance/app creation flow. A pending major upgrade makes every authenticated
+route answer `409 major_upgrade_required`.
+
 ---
 
-## lib/constants.php — Bootstrap in detail
+## lib/bootstrap.php — in detail
 
-`constants.php` runs before any application logic and sets up three things:
+`bootstrap.php` runs before any application logic.
 
 ### 1. Autoloading
 
-Two autoloaders are registered in sequence:
+Only Composer's PSR-4 autoloader is used (`composer.json`):
 
-**`autoLoader`** (custom, `lib/autoLoader.php`) resolves:
-
-| Class pattern | Resolution |
+| Namespace | Directory |
 |---|---|
-| `Foo_ctrl` (ends in `_ctrl`) | `modules/foo/foo.php` |
-| `Namespace\ClassName` | `lib/Namespace/ClassName.php` |
-| `ClassName` (no namespace) | `lib/ClassName.php` or `lib/ClassName.inc` |
+| `Bdus\Controllers\` | `controllers/` |
+| everything else (`Bdus\`, `Auth\`, `DB\`, …) | `lib/` |
 
-**Composer's PSR-4 autoloader** (`vendor/autoload.php`) handles all
-third-party packages (league/oauth2-*, monolog, nikic/fast-route, etc.).
+So `Bdus\Controllers\Record` is `controllers/Record.php` and `DB\DB` is
+`lib/DB/DB.php`. There is no custom autoloader and no `*_ctrl` naming.
 
-### 2. JWT resolution (app context)
+### 2. App and JWT resolution
 
-Every authenticated request carries an `Authorization: Bearer <token>` header.
-`constants.php` extracts it, peeks at the unverified `app` claim to know which
-per-app secret to use, then fully verifies the signature.
+The application is the **first URL path segment** (`/{app}/api/…`, v5.9.0).
+When there is no segment, the app comes from the `app` claim of the Bearer
+token (only used to select the per-app secret), then from `?app=` or the JSON
+body (login, OAuth callback).
 
-On success:
-- `APP`, `PREFIX`, `PROJ_DIR` constants are defined.
-- `Auth\CurrentUser::set(…)` stores the authenticated user for the request.
-
-For **unauthenticated** requests (login, app list) the app is resolved from
-`$_REQUEST['app']` or the raw JSON body — no token required.
+When the project directory exists, `APP`, `PREFIX` (always empty in v5) and
+`PROJ_DIR` are defined, and a valid token populates `Auth\CurrentUser`.
+Privilege and `token_version` are re-checked against the database by the
+Dispatcher, so the privilege inside the JWT is never trusted on its own.
 
 ### 3. Runtime directories
 
-If `APP` is defined, `constants.php` ensures these directories exist and are
-writable, creating them with `mkdir(0777, true)` if absent:
+If `APP` is defined, these directories are created (mode 0777) when missing,
+and a `RuntimeException` is thrown if one is not writable:
 
 ```
-cache/
-cache/img/
-projects/{app}/files/
-projects/{app}/backups/
-projects/{app}/export/
-projects/{app}/db/
+cache/  cache/img/
+projects/{app}/files/  backups/  export/  db/
 ```
 
 ---
 
 ## Bdus\Router — FastRoute dispatcher
 
-`Router::dispatch()` is a static method that runs **before** `Bdus\App`.
-It maps REST paths to `[ctrl, method]` pairs:
+`Router::dispatch()` runs **before** `Bdus\App`. It maps REST paths to
+`[Controller FQCN, method]`:
 
 ```php
-// Route definition examples:
-$r->addRoute('GET',    '/api/record/{tb}/{id:\d+}', ['record_ctrl', 'getRecord']);
-$r->addRoute(['GET','POST'], '/api/records/{tb}',   ['record_ctrl', 'getRecords']);
-$r->addRoute('DELETE', '/api/record/{tb}/{id:\d+}', ['record_ctrl', 'erase']);
+$r->addRoute('GET',    '/api/record/{tb}/{id:\d+}', ['Bdus\\Controllers\\Record', 'getRecord']);
+$r->addRoute('DELETE', '/api/file/{fileId:\d+}',    ['Bdus\\Controllers\\Record', 'deleteFile']);
 ```
 
-The table is written against the bare `/api/…` path. Clients call these
-application-scoped endpoints as `/{app}/api/…` (v5.9.0); `Router::resolveRequest()`
-splits off the leading `/{app}` segment before FastRoute matching and
-`lib/bootstrap.php` uses it to resolve `APP`. Only four genuinely instance-level
-endpoints are reached at a bare `/api/…` (`Router::APP_INDEPENDENT`):
-`GET /api/auth/apps`, `POST /api/new-app`, `GET /api/new-app/status`,
-`GET /api/info`. Everything else under `/api/auth/*` (login, register,
-password-reset, refresh, logout, oauth) is app-scoped like the rest.
+The table is written against the bare `/api/…` path; clients call it as
+`/{app}/api/…`. Only the genuinely instance-level endpoints (`Router::APP_INDEPENDENT`)
+live at a bare `/api/…`:
 
-URL path variables (`{tb}`, `{id}`, `{provider}`) are merged into `$_GET` so
-controllers read them via `$this->get['tb']` etc.
+| Endpoint | Controller |
+|---|---|
+| `GET /api/auth/apps` | `Login::listApps` |
+| `GET /api/new-app/status`, `POST /api/new-app` | `NewApp` |
+| `GET /api/info` | `Info::getInfo` |
 
-JSON request bodies (Vue sends `Content-Type: application/json`) are parsed
-and merged into `$_POST` / `$_REQUEST`. PHP only auto-populates `$_POST` for
-form-encoded bodies.
+Everything else, including login, register, password reset, refresh, logout
+and OAuth, is application-scoped. Calling a scoped endpoint without the
+prefix (or an independent one with it) returns a `404` with a contract error.
 
-`NOT_FOUND` from FastRoute is **not** an error — it falls through to the legacy
-`?obj=&method=` routing still used by some internal requests.
+URL variables (`{tb}`, `{id}`, `{provider}`) are merged into `$_GET`, so
+controllers read them through `$this->get['tb']`. JSON bodies are parsed
+and merged into `$_POST` / `$_REQUEST`.
+
+Other path segments are never an application name: see
+`Router::RESERVED_SEGMENTS` (`api`, `login`, `new-app`, `assets`, …).
 
 ### ROUTE_PRIVILEGE map
 
 `Router::ROUTE_PRIVILEGE` is the **single source of truth** for access control.
-It maps `'ctrl::method'` to a privilege tier:
+It maps `'Bdus\\Controllers\\Name::method'` to a privilege tier:
 
 | Tier | Meaning | Numeric threshold |
 |---|---|---|
@@ -187,85 +184,86 @@ It maps `'ctrl::method'` to a privilege tier:
 | `admin` | User management, backups, logs | privilege ≤ 10 |
 | `super_admin` | Schema config, raw SQL | privilege = 1 |
 
-Any `ctrl::method` **not** listed in the map defaults to `super_admin` — the
-safest possible fallback.
+Any `Controller::method` **not** listed in the map defaults to `super_admin`
+(`Router::requiredPrivilege()`), the safest fallback. Controllers may enforce
+further, finer checks with `Auth\Authorization::can()` and the UAC.
 
 ---
 
-## Bdus\App — Orchestrator
+## Bdus\App and Bdus\Dispatcher
 
-`App::start()` wires the request together:
-
-1. **Opens the DB connection** (`DB\DB` → PDO wrapper, auto-selects
-   MySQL / PostgreSQL / SQLite based on `config.json`).
-2. **Sets up Monolog** — writes to the `bdus_logs` system table in
-   production; writes to `logs/error.log` in debug mode.
-3. **Runs migrations** — `Migrate::run()` checks `bdus_migrations` and applies
-   any pending `Mxxx` class. Idempotent; negligible overhead on steady state.
-4. **Routes the request** — `App::route()` instantiates the controller and
-   calls the method.
+`App::start()` is the kernel: it opens the database, configures Monolog and,
+for apps that have not yet been migrated to v5, runs the prefix pre-flight and
+defines `BDUS_MAJOR_UPGRADE`. It then hands off to `Dispatcher`, which is
+independent of the superglobals (it receives `$get`, `$post`, `$request`) and
+therefore easy to unit-test.
 
 ### Dependency injection into controllers
 
-`App::route()` injects all dependencies via setters before calling the method:
+`Dispatcher::dispatch()` instantiates the controller and injects:
 
 ```php
-$ctrl = new foo_ctrl($get, $post, $request);  // constructor
-$ctrl->setDB($this->db);       // PDO wrapper
-$ctrl->setDebug($this->debug); // bool
-$ctrl->setLog($this->log);     // Monolog\Logger
-$ctrl->setCfg($config);        // Config\Config (YAML)
-$ctrl->setUAC($uac);           // UAC\UAC (privilege enforcement)
-$ctrl->theMethod();            // the actual call
+$ctrl = new $obj($get, $post, $request);
+$ctrl->setDB($db);      // DB\DB (PDO wrapper)
+$ctrl->setLog($log);    // Monolog\Logger
+$ctrl->setCfg($config); // Config\Config — skipped during a major upgrade
+$ctrl->setUAC($uac);    // UAC\UAC, with the user's access list when authenticated
+$ctrl->$method();
 ```
+
+`Config` and `UAC` are not built when a major upgrade is pending or for the
+`Upgrade` controller (the system tables may not exist yet).
 
 ---
 
-## abstract Controller — Base class
+## Bdus\Controller — base class
 
-Every module PHP file defines a class `foo_ctrl extends Controller`.
-The abstract base class provides:
+Every controller in `controllers/` extends `Bdus\Controller`.
 
 | Property / method | Type | Description |
 |---|---|---|
-| `$this->get` | `array` | URL path vars + `$_GET` params |
-| `$this->post` | `array` | JSON body + `$_POST` params |
-| `$this->request` | `array` | merged get + post |
+| `$this->get` | `array` | URL path variables + query parameters |
+| `$this->post` | `array` | form body, with the JSON body merged in |
+| `$this->request` | `array` | `get` + `post` merged |
 | `$this->db` | `DB\DBInterface` | injected PDO wrapper |
 | `$this->log` | `Monolog\Logger` | injected logger |
-| `$this->cfg` | `Config\Config` | injected YAML config |
-| `$this->uac` | `UAC\UAC` | injected UAC instance |
-| `$this->debug` | `bool` | injected debug flag |
-| `returnJson(array)` | method | sets JSON header + echoes `json_encode` |
-| `response(text, status, …)` | method | normalised `{status, code, …}` response |
+| `$this->cfg` | `Config\Config` | injected app config |
+| `$this->uac` | `UAC\UAC` | injected privilege enforcement |
+| `returnJson(array)` | method | JSON response; adds `status: success` when missing; never emits an empty body |
 
-**Security invariant enforced in `App::route()`:**
+**Security invariant** enforced in `Dispatcher`:
 
 ```php
-// Both checks must pass or the request is rejected.
-method_exists($obj, $method)              // method must exist
-get_parent_class($obj) === 'Controller'   // class must extend Controller
+method_exists($obj, $method)                 // the method must exist
+is_a($obj, \Bdus\Controller::class, true)    // the class must extend Controller
 ```
 
-This prevents calling arbitrary PHP functions or classes via the `?obj=` param.
+and, since every route is in the FastRoute table, only listed
+`[controller, method]` pairs can be reached from outside.
+
+---
+
+## Error envelope
+
+Errors are HTTP 200 with `{ "status": "error", "code": "…" }` (the frontend
+translates `code`); exceptions are `401`/`403`/`404`/`405`/`409` only for the
+gates described above. Any uncaught exception or fatal error is converted to
+`{ status: 'error', code: 'server_error' | 'dispatch_error', … }`; the detail
+is included in `debug` only when `BRADYPUS_DEBUG=1`.
 
 ---
 
 ## CORS
 
-CORS is handled at the very top of `index.php`, before any PHP class is
-loaded. Configure it with the environment variable:
+CORS is handled at the very top of `index.php`, before any class is loaded:
 
 ```bash
 BRADYPUS_CORS_ORIGIN=https://myapp.github.io https://localhost:5173
 ```
 
-When the request `Origin` header matches an allowed origin, the appropriate
-`Access-Control-Allow-*` headers are emitted. Preflight `OPTIONS` requests are
-answered immediately with `204` and no further processing.
-
-Leave `BRADYPUS_CORS_ORIGIN` unset (or empty) when frontend and backend share
-the same origin — no CORS headers are added.
+When the request `Origin` matches an allowed origin, the `Access-Control-Allow-*`
+headers are emitted; preflight `OPTIONS` requests are answered with `204`.
+Leave it unset when frontend and backend share the same origin.
 
 ---
 
@@ -273,27 +271,29 @@ the same origin — no CORS headers are added.
 
 | Variable | Default | Effect |
 |---|---|---|
-| `BRADYPUS_DEBUG` | `0` | `1` enables verbose errors, file logging |
+| `BRADYPUS_DEBUG` | `0` | `1` enables verbose errors and file logging (`logs/error.log`) |
 | `BRADYPUS_CORS_ORIGIN` | `''` | Space-separated list of allowed origins |
-| `BRADYPUS_ALLOW_NEW_APP` | `0` (unset) | `1` enables the "Create new application" wizard |
+| `BRADYPUS_ALLOW_NEW_APP` | `0` | `1` enables the "Create new application" wizard |
 
-Set directly in `docker-compose.yml`'s `environment:` block (there is no
-`.env`/`.env.example` mechanism on the backend) — or via `SetEnv` (Apache) /
-`fastcgi_param` (Nginx) when running without Docker.
+Set them in `docker-compose.yml`'s `environment:` block, or via `SetEnv`
+(Apache) / `fastcgi_param` (Nginx) when running without Docker.
 
 ---
 
 ## Adding a new endpoint
 
-1. Create `modules/mything/mything.php` with `class mything_ctrl extends Controller`.
-2. Add a public method (e.g. `doStuff(): void`) that ends with `$this->returnJson(…)`.
+1. Create `controllers/MyThing.php` with
+   `class MyThing extends \Bdus\Controller` in the `Bdus\Controllers` namespace.
+2. Add a public method (e.g. `doStuff(): void`) that ends with
+   `$this->returnJson(…)`.
 3. Register the route in `Router::dispatch()`:
    ```php
-   $r->addRoute('POST', '/api/mything', ['mything_ctrl', 'doStuff']);
+   $r->addRoute('POST', '/api/mything', ['Bdus\\Controllers\\MyThing', 'doStuff']);
    ```
-4. Add the privilege level in `Router::ROUTE_PRIVILEGE`:
+4. Add the privilege tier in `Router::ROUTE_PRIVILEGE`:
    ```php
-   'mything_ctrl::doStuff' => 'edit',
+   'Bdus\\Controllers\\MyThing::doStuff' => 'edit',
    ```
 5. Document it in `openapi.yaml`.
-6. Add integration tests in `tests/Integration/`.
+6. Add tests in `tests/Unit/` or `tests/Integration/`, and an hurl case in
+   `tests/api/` if it is part of the public contract.

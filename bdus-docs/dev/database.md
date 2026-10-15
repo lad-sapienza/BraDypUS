@@ -27,6 +27,8 @@ The engine is configured in `projects/{app}/config.json`:
 }
 ```
 
+`db_engine` is required for non-SQLite apps; a legacy app without it is
+auto-detected from `projects/{app}/db/bdus.sqlite` and the file is updated once.
 For SQLite the DB file is always at `projects/{app}/db/bdus.sqlite`.
 For MySQL / PostgreSQL the connection parameters (`db_host`, `db_name`,
 `db_username`, `db_password`, optional `db_port`) are also in `config.json`.
@@ -35,8 +37,9 @@ For MySQL / PostgreSQL the connection parameters (`db_host`, `db_name`,
 
 ## `DB\DB` — PDO wrapper
 
-`DB` is the central class every controller and lib class uses for all
-database access. It wraps PDO with:
+`DB` (implementing `DB\DBInterface`) is the central class every controller and
+lib class uses for all database access. It is built once per request by
+`Bdus\App` and injected into controllers. It wraps PDO with:
 
 - Automatic engine detection and DSN construction.
 - `ERRMODE_EXCEPTION` — all errors throw `DBException`.
@@ -58,6 +61,9 @@ $db->query(string $sql, array $params = [], string $type = null): mixed
 | `'id'` | last insert ID (string) |
 | `'affected'` | row count (int) |
 | integer (0, 1, …) | value of column N from the first row |
+
+A fourth argument, `$fetch_style`, returns numeric instead of associative rows
+when `true`.
 
 All user-supplied values go through prepared statement binding — never
 string-concatenated into SQL.
@@ -100,10 +106,9 @@ uniform interface for reading the live schema:
 
 ```php
 $inspect = new \DB\Inspect($db);
-$inspect->getColumns('sites');          // ['id', 'name', 'typology', …]
-$inspect->getColumnTypes('sites');      // ['id' => 'INTEGER', 'name' => 'TEXT', …]
+$inspect->tableColumns('sites');        // column names / definitions of the table
 $inspect->tableExists('bdus_users');    // bool
-$inspect->listTables();                 // all table names in the DB
+$inspect->getAllTables();               // all table names in the DB
 ```
 
 Engine implementations: `DB\Inspect\Mysql`, `DB\Inspect\Postgres`,
@@ -199,12 +204,13 @@ bdus_cfg_geoface       — GeoFace / map layer config
 bdus_cfg_indexes       — User-defined DB indexes (name, columns, unique)
 bdus_cfg_relations     — FK relations: from_tb.from_col → to_tb.to_col
 bdus_cfg_tables        — Table configurations
-bdus_cfg_templates     — Print templates (Twig source)
+bdus_cfg_templates     — Print templates (JSON, one row per table + name)
+bdus_assemblage_analyses — Saved assemblage analyses
 bdus_charts            — User-defined charts
 bdus_file_links        — File ↔ record associations
 bdus_files             — Uploaded file metadata
 bdus_geodata           — Geospatial features (WKT)
-bdus_log               — Error / info log entries
+bdus_log               — Error / info log entries (written by LogDBHandler)
 bdus_migrations        — Applied migration tracking
 bdus_queries           — Saved search queries
 bdus_rs                — Stratigraphic relation pairs (first/second = INTEGER record ids)
@@ -213,6 +219,8 @@ bdus_users             — User accounts
 bdus_user_table_privs  — Per-user per-table privilege overrides
 bdus_versions          — Record version snapshots
 bdus_vocabularies      — Controlled vocabulary items
+bdus_zotero_libs       — Zotero libraries configured for the app
+bdus_zotero_links      — Record ↔ Zotero item links
 ```
 
 ### CRUD interface
@@ -273,7 +281,7 @@ to TEXT columns (required by the InnoDB key-length limit).
 4. Seeds `config.json` with the connection data and app name.
 5. Creates the required directory structure under `projects/{app}/`.
 
-Called by `new_app_ctrl::create()`.
+Called by `Bdus\Controllers\NewApp::create()`.
 
 ---
 
@@ -287,7 +295,8 @@ Called by `new_app_ctrl::create()`.
 | `DB\Export\JSON` | JSON array |
 | `DB\Export\XLSX` | Excel workbook (via PhpSpreadsheet) |
 
-Called by `record_ctrl::exportRecords()`.
+Called by `Bdus\Controllers\Record::exportRecords()`. The accepted formats are
+listed in `DB\Export\Export::FORMATS`.
 
 ---
 
@@ -301,7 +310,20 @@ Called by `record_ctrl::exportRecords()`.
 - **`DumpExists`** — verifies at least one backup exists.
 - **`Info`** — collects app metadata for display.
 
-Called by `config_ctrl::getValidationReport()` and `config_ctrl::fix()`.
+Called by `Bdus\Controllers\Config` (validation report and fixes).
+
+---
+
+## `DB\System\Snapshot` and `DB\Verify\MigrationVerifier`
+
+Two helpers used by the v4 → v5 **major upgrade**:
+
+- `Snapshot` takes a pre-upgrade copy of the project directory (a tar.gz of
+  everything except `files/`, `cache/`, `backups/`, `export/`, and a raw copy of
+  the SQLite file) into `projects/{app}/backups/`, so a failed upgrade can be
+  rolled back by extracting the archive over the project.
+- `MigrationVerifier` runs read-only integrity checks after the upgrade
+  (`pass | warn | fail | skip` per check) against that baseline, e.g. row counts.
 
 ---
 

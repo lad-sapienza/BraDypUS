@@ -34,8 +34,14 @@ represents a single record together with all its associated data.
   'files'       => [...],   // attached files (bdus_files + bdus_file_links)
   'geodata'     => [...],   // geospatial features (bdus_geodata)
   'rs'          => [...],   // stratigraphic relations (bdus_rs)
+  'bibliography'=> [...],   // Zotero links (bdus_zotero_links)
 ]
 ```
+
+`geodata`, `rs` and `bibliography` are filled only when the table config
+enables them (`tables.{tb}.geodata`, `.rs`, `.zotero`); otherwise they are `[]`.
+A `Read` model carries the `metadata` key too: `tb_label` comes from
+`tables.{tb}.label`.
 
 ### Core field structure
 
@@ -65,10 +71,14 @@ $record = new \Record\Read(
     id:     42,
     id_fld: null,       // alternative: lookup by id_field value instead of PK
     tb:     'sites',
-    db:     $db,
-    cfg:    $cfg
+    db:     $db,        // DB\DBInterface
+    cfg:    $cfg        // Config\Config
 );
 ```
+
+`getTb()` returns the table name; `getCore('fld', true)` returns the raw
+`val` of a single field and `getPlugin('plg', $index, 'fld')` narrows a plugin
+lookup the same way.
 
 Pass `id_fld` instead of `id` to look up the record by its configured
 `id_field` (the human-readable identifier column) rather than the PK.
@@ -87,6 +97,7 @@ Assembles the complete model by calling all sub-loaders:
 | `getFiles()` | `bdus_files` joined with `bdus_file_links` |
 | `getGeodata()` | `bdus_geodata` rows + GeoJSON representation |
 | `getRs()` | `bdus_rs` pairs where `first` or `second` = this record |
+| `getBibliography()` | `bdus_zotero_links` for this record, keyed by link id (`[]` if the table does not exist) |
 
 All results are **cached** on the `Read` instance — repeated calls to
 `getCore()` etc. within the same request hit no additional queries.
@@ -117,7 +128,8 @@ integer is in `val`.
 
 ## `Record\Edit` — mutate
 
-`Edit` wraps a model loaded by `Read::getFull()` and provides setter methods
+`Edit` wraps a model loaded by `Read::getFull()` (the constructor calls it) and
+provides setter methods
 that stage changes using `_val` / `_delete` markers. Nothing is written to the
 DB until `persist()` is called.
 
@@ -141,9 +153,13 @@ $edit = new \Record\Edit($record);   // $record: a Record\Read instance
 `setCore()` ignores the `id` field and silently skips fields where the new
 value equals the existing `val` (to avoid spurious history entries).
 
+All setters return `$this`, so calls can be chained. `getModel(bool $json,
+bool $pretty)` returns the staged model (array or JSON) and `getLog()` the
+messages collected while staging.
+
 ### `persist($db, $cfg): array`
 
-Delegates to `Persist::all()` and returns the result:
+Delegates to `Persist::all($this->getModel(), $db, $cfg)` and returns the result:
 
 ```php
 $result = $edit->persist($db, $cfg);
@@ -160,7 +176,9 @@ factory `Persist::all()` or by instantiating and calling individual
 
 ### `Persist::all(array $model, DB $db, Config $cfg): array`
 
-The canonical entry point. Runs all sections in order and returns counts:
+The canonical entry point. Runs core, plugins, manual links and RS, in this
+order, and returns counts. Files are handled by the controller, not by
+`Persist`.
 
 ```php
 [
@@ -256,13 +274,20 @@ $result = $edit->persist($db, $cfg);
 
 ## Where the controller fits in
 
-`record_ctrl` in `modules/record/record.php` is the HTTP boundary. It:
+`Bdus\Controllers\Record` (`controllers/Record.php`) is the HTTP boundary. It:
 
 1. Reads `$this->get['tb']` and `$this->get['id']` from the request.
 2. Instantiates `Record\Read`.
-3. For write operations, instantiates `Record\Edit`, calls the appropriate
-   setter(s), then calls `$edit->persist($this->db, $this->cfg)`.
+3. For updates, instantiates `Record\Edit`, calls the appropriate setter(s),
+   then calls `$edit->persist($this->db, $this->cfg)`. For a **new** record it
+   builds the model directly (with `rec_id => null`) and calls
+   `Record\Persist::all()`.
 4. Calls `$this->returnJson([...])` with the result.
 
-All UAC checks happen in the controller **before** `Record\Read` /
-`Record\Edit` are called.
+Privilege tiers come from `Router::ROUTE_PRIVILEGE` (see
+[Bootstrapping & routing](./architecture)); finer, per-table checks
+(`UAC`, owner/creator rules) happen in the controller **before**
+`Record\Read` / `Record\Edit` write anything.
+
+Further reading: `lib/Record/DataStructure.md` in the API repository describes
+the model fields in detail.

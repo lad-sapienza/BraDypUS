@@ -93,10 +93,12 @@ index.php
               └── $controller->$method()   ← runs the actual logic
 ```
 
-Migrations are **not** run on every request: since v5 they run from the
-upgrade endpoints (`Upgrade::runMajor`, `Upgrade::runMinor`) and the
-instance/app creation flow. A pending major upgrade makes every authenticated
-route answer `409 major_upgrade_required`.
+Migrations are **not** run on every request. At login, `Login::auth` lists the
+pending ones: an admin gets a token plus an `upgrade` hint and applies them with
+`POST /api/upgrade/minor`; other users get `upgrade_pending`. When nothing is
+pending `Migrate::run()` only stamps the current version. A pending **major**
+(v4 → v5) upgrade makes every authenticated route answer
+`409 major_upgrade_required` until `Upgrade::runMajor` completes.
 
 ---
 

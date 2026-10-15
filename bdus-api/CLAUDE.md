@@ -1,349 +1,223 @@
 # BraDypUS — Technical Reference for Developers & AI Agents
 
 BraDypUS is a PHP + Vue 3 web application for managing relational databases in the
-humanities/archaeology domain. It is currently undergoing a **v5 migration**: the
-entire frontend is being rewritten from jQuery + Bootstrap 3 + server-side Twig to a
-Vue 3 SPA, while the PHP backend is extended with new JSON endpoints.
+humanities/archaeology domain. This repository is a monorepo:
 
-> **If you are an AI agent starting a new session**: read this file first, then check
-> `CHANGELOG.md` for the latest changes. The memory files in
-> `~/.claude/projects/-Users-jbogdani-dev-BraDypUS/memory/` contain deeper historical
-> context across sessions.
+| Directory | Content |
+|---|---|
+| `bdus-api/` | PHP 8.4 JSON API (no framework; FastRoute + Composer libraries) |
+| `bdus-app/` | Vue 3 SPA (Vite, Pinia, Vue Router, Ant Design Vue) |
+| `bdus-docs/` | VitePress documentation (user guide, developer docs, API reference) |
 
----
-
-## Repository Layout
-
-```
-lib/               PHP framework layer (namespaced, no framework)
-modules/           37 feature modules ({name}_ctrl extends Controller)
-vue/               Vue 3 SPA (Vite + PrimeVue Aura)
-tests/             PHPUnit integration + unit tests
-projects/          Runtime: per-app data (NOT committed)
-  {app}/cfg/       YAML config files
-  {app}/files/     Uploaded files
-  {app}/db/        SQLite DB files (if SQLite engine)
-```
+> **If you are an AI agent starting a new session**: read this file, then
+> `CHANGELOG.md` (repo root) for recent changes, and the developer docs in
+> `bdus-docs/dev/` (architecture, database, record lifecycle, lib map, testing)
+> for the details this file only summarises.
 
 ---
 
-## PHP Architecture
+## API layout (`bdus-api/`)
 
-### Routing
+```
+index.php          single entry point: CORS, error envelope, bootstrap, dispatch
+controllers/       Bdus\Controllers\{Name} — one class per module, extends Bdus\Controller
+lib/               everything else, PSR-4 under the root namespace (Auth\, DB\, Record\, …)
+  bootstrap.php    constants, autoload, app + JWT resolution
+  Bdus/            App (kernel), Router (routes + privilege map), Dispatcher, Controller
+openapi.yaml       API contract — keep in sync with the routes
+projects/{app}/    runtime data per application (NOT committed): config.json,
+                   .jwt_secret, files/, backups/, export/, db/
+tests/             Unit/, Integration/, api/ (hurl phases), Support/, fixtures/
+```
 
-All requests hit `index.php`. The router reads `?obj=foo_ctrl&method=bar&param=…`
-and instantiates `foo_ctrl` (class in `modules/foo/foo.php`), then calls `$ctrl->bar()`.
+### Routing and request flow
 
-- Controllers **must** extend `Controller` (abstract base in `lib/Controller.inc`)
-- The base class injects `$this->db`, `$this->cfg`, `$this->log`, `$this->prefix`,
-  `$this->get`, `$this->post`, `$this->request`
-- The router enforces authentication before dispatching — no module needs to re-check
-  whether the user is logged in, only *what* the user can do
-- **URL scheme (v5.9.0):** application-scoped endpoints are called as
-  `/{app}/api/…`. `Router::resolveRequest()` splits the leading `/{app}` segment
-  (memoised; also read by `lib/bootstrap.php` to resolve `APP`) and FastRoute
-  matches the bare `/api/…` path. Only four genuinely instance-level endpoints
-  stay bare (`Router::APP_INDEPENDENT`): `GET /api/auth/apps`, `POST /api/new-app`,
-  `GET /api/new-app/status`, `GET /api/info`. The rest of `/api/auth/*` (login,
-  register, password-reset, refresh, logout, oauth) is app-scoped — pre-app
-  views pass `/{app}` explicitly. Wrong shape → `404` (`app_prefix_required` /
-  `app_prefix_not_allowed`); URL app ≠ JWT app → `403 app_mismatch`. The pre-5.9
-  `?app=` / JWT-only resolution is gone.
+All requests hit `index.php`. `Bdus\Router::dispatch()` matches the path with
+FastRoute and sets `$_GET['obj']` (controller class) / `$_GET['method']`;
+`Bdus\Dispatcher` then applies the auth gate, injects dependencies and calls the
+method. See `bdus-docs/dev/architecture.md` for the full trace.
+
+- **URL scheme (v5.9.0):** application-scoped endpoints are `/{app}/api/…`;
+  only `GET /api/auth/apps`, `POST /api/new-app`, `GET /api/new-app/status` and
+  `GET /api/info` are bare (`Router::APP_INDEPENDENT`). Wrong shape → `404`
+  (`app_prefix_required` / `app_prefix_not_allowed`); URL app ≠ JWT app →
+  `403 app_mismatch`.
+- **Privilege tiers:** `Router::ROUTE_PRIVILEGE` (`'Bdus\\Controllers\\X::method'`
+  → `none | read | edit | admin | super_admin`). A route not listed defaults to
+  `super_admin`. Always add the entry when adding a route.
+- **Auth:** `Authorization: Bearer <JWT>` (per-app secret in
+  `projects/{app}/.jwt_secret`) or an API key (hash in `bdus_api_keys`). The
+  Dispatcher re-reads `privilege` and `token_version` from `bdus_users`, so the
+  JWT value is never trusted alone. No PHP sessions.
 
 ### Controller conventions
 
 ```php
-class foo_ctrl extends Controller {
-    // v5 endpoints: return JSON via $this->returnJson([...])
-    public function getThings(): void {
-        if (!\utils::canUser('read')) {
+namespace Bdus\Controllers;
+
+class Thing extends \Bdus\Controller
+{
+    public function getThings(): void
+    {
+        if (!\Auth\Authorization::can('read')) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }
-        // ...
         $this->returnJson(['status' => 'success', 'data' => $result]);
     }
-
-    // Deprecated v4 methods are tagged @deprecated v5 but not deleted yet
 }
 ```
 
-**Privilege strings** (exact — typos silently fail to false):
-`'enter'` `'read'` `'preview'` `'add_new'` `'edit'` `'multiple_edit'` `'admin'`
-`'super_admin'`
+- Injected: `$this->db` (`DB\DBInterface`), `$this->cfg` (`Config\Config`),
+  `$this->uac` (`UAC\UAC`), `$this->log`; request data in `$this->get`,
+  `$this->post` (JSON body merged), `$this->request`.
+- `Authorization::can()` strings (exact; a typo silently yields `false`):
+  `'enter'` `'read'` `'preview'` `'add_new'` `'edit'` `'multiple_edit'`
+  `'admin'` `'super_admin'`. Numeric thresholds are the `UAC\UAC` constants
+  (`SUPERADM=1`, `ADM=10`, `UPDATE/DELETE=20`, `CREATE=25`, `READ=30`, `ENTER=39`).
+- **Errors are HTTP 200 with `{status:'error', code}`**; the frontend translates
+  `code`. Only the gates (401/403/404/405/409) use HTTP status codes.
 
 ### i18n convention (critical)
 
-- **PHP endpoints return code strings, never translated text**:
-  `['status' => 'error', 'code' => 'not_enough_privilege']`
-- **Vue translates** with `t('not_enough_privilege')` from the locale JSON
-- Locale files: `vue/src/locales/it.json` and `en.json`
-- Adding a new message: add to both locale files, return the key from PHP
+- API endpoints return **code strings, never translated text**.
+- The SPA translates with `t(code)` from `bdus-app/src/locale/{en,it}.json`.
+- A new message: add the key to **both** locale files and return the key.
 
 ### Config access
 
+Application config (tables, fields, relations, templates, geoface, app settings)
+lives in the database (`bdus_cfg_*`); only DB credentials stay in
+`projects/{app}/config.json`.
+
 ```php
-// Correct — dot notation on a specific key
 $this->cfg->get('main.name');
 $this->cfg->get('tables.mytb.label');
-$this->cfg->get('tables.*.name');  // all table names (preserves config order!)
-
-// Wrong — returns null
-$this->cfg->get('tables');
+$this->cfg->get('tables.*.name');   // all table names, in config order
 ```
 
-**Config order is meaningful.** Tables and fields appear in the order defined in the
-YAML config files. Never sort alphabetically; always iterate in config order.
+`get('tables')` alone is not valid. **Config order is meaningful**: tables and
+fields appear in the order defined in the config; never sort them.
 
 ---
 
-## DB Layer (`lib/DB/`)
+## DB layer (`lib/DB/`)
 
-### `DB\DB`
+- `DB\DB` — PDO wrapper (SQLite / MySQL / PostgreSQL), native prepared
+  statements, exceptions on error. `query($sql, $params, $type)` with `$type`
+  = `'read'` (default) | `'boolean'` | `'id'` | `'affected'` | int (column N of
+  first row). `exec`, `execInTransaction`, `beginTransaction/commit/rollBack`,
+  `saveSnapshot()` (record versioning), `getEngine()`.
+- `DB\System\Manage` — CRUD and DDL helpers for `bdus_*` system tables, driven by
+  `lib/DB/System/Structure/*.json`. `createTable()` is idempotent; trans-engine
+  `createIndex`, `addForeignKey`, `tableExists`, `columnExists`.
+- `DB\Inspect`, `DB\Alter` — engine dispatch for schema introspection / changes
+  on user tables. Never query `sqlite_master`, use `PRAGMA`, or write
+  `INSERT OR IGNORE` outside an engine guard; use `$db->query($sql, $p, 'id')` for
+  the last inserted id.
 
-PDO wrapper supporting SQLite, MySQL, PostgreSQL. Main query methods:
+**Adding a system table:** add `lib/DB/System/Structure/{name}.json` (file name
+without the `bdus_` prefix; `columns`, `indexes`, `relations` — `ref_table` is the
+full table name, e.g. `bdus_files`), register `{name}` in
+`Manage::$available_tables`, add a migration so existing apps call
+`createTable()` once.
 
-```php
-$db->query(string $sql, array $values, string $return): mixed
-// $return: 'read' (array of rows) | 'boolean' | 'id' | 'affected'
+### Migrations (`DB\System\Migrate`)
 
-$db->execInTransaction(string $sql): bool
-$db->exec(string $sql): bool
-```
+Idempotent, tracked by name in `bdus_migrations`. To add one:
 
-### `DB\System\Manage`
+1. Create `lib/DB/System/Migrations/M0NN_Description.php` with
+   `public const NAME` (never change after first deploy) and
+   `public static function run(Manage $manage)`.
+2. **Append** the class to `Migrate::ALL_MIGRATIONS` (never reorder).
+3. If it touches files on disk, add its `NAME` to `FILE_AFFECTING_MIGRATIONS`.
 
-Orchestrates system table CRUD. All system tables are described in
-`lib/DB/System/Structure/*.json` with the format:
-
-```json
-{
-    "columns":   [ { "name": "…", "type": "…", "pk": bool, "notnull": bool } ],
-    "indexes":   [ { "name": "…", "columns": ["…"], "unique": bool } ],
-    "relations": [ { "name": "…", "column": "…", "ref_table": "…",
-                     "ref_column": "id", "on_delete": "CASCADE" } ]
-}
-```
-
-`ref_table` and index/constraint names are **without prefix** — Manage adds
-`$this->prefix` at runtime.
-
-**`createTable(name)`** is idempotent: `CREATE TABLE IF NOT EXISTS`, then applies
-indexes on all engines; on SQLite, FK constraints are included inline in the DDL;
-on MySQL/PG they are applied via `ALTER TABLE ADD CONSTRAINT`.
-
-**Public trans-engine API:**
-
-```php
-$manage->createIndex(table, name, columns[], unique)  // idempotent
-$manage->dropIndex(table, name)
-$manage->addForeignKey(table, name, column, refTable, refColumn, onDelete)
-// SQLite: throws BadMethodCallException — use structure JSON instead
-$manage->dropForeignKey(table, name)
-```
-
-**Adding a new system table:**
-1. Create `lib/DB/System/Structure/{name}.json` with columns, indexes, relations
-2. Add `'{name}'` to `Manage::$available_tables`
-3. Add a migration (see below) — existing apps need `createTable()` called once
-
-### `DB\System\Migrate` — migration runner
-
-Runs on every login, tracked in `{prefix}migrations`. Idempotent.
-
-**Adding a migration:**
-1. Create `lib/DB/System/Migrations/M00N_Description.php`:
-   ```php
-   class M00N_Description {
-       public const NAME = 'M00N_description';  // never change after first deploy
-       public static function run(Manage $manage): void { … }
-   }
-   ```
-2. Add `M00N_Description::class` to `Migrate::ALL_MIGRATIONS` (append — never reorder)
-
-### `DB\Inspect\*` and `DB\Alter\*`
-
-Engine-specific schema introspection and column/table operations. Used by the `config`
-module for user-facing schema management. Three implementations each:
-`Sqlite`, `Mysql`, `Postgres`.
+Pending minor migrations are listed at login and applied by an admin via
+`POST /api/upgrade/minor`; the v4 → v5 major upgrade has its own flow
+(`Upgrade::runMajor`, with `Snapshot` and `MigrationVerifier`).
 
 ---
 
-## Record Layer (`lib/Record/`)
+## Record layer (`lib/Record/`)
 
 ```
-Record\Read    — fetches full record data (core fields + plugins + files + links + geodata)
-Record\Edit    — validates and prepares changes
-Record\Persist — executes INSERT / UPDATE
+Record\Read    — loads the full model: core, plugins, links, backlinks, manual links,
+                 files, geodata, rs, bibliography
+Record\Edit    — stages changes on the model (_val / _delete markers)
+Record\Persist — writes: persistCore / persistPlugins / persistManualLinks / persistRs
 ```
 
-`Record` (the public class, `lib/Record.inc`) is the façade: `new Record($tb, $id, $db, $cfg)`.
+New records are built by `Bdus\Controllers\Record` and written with
+`Persist::all()`. File attachments live in `bdus_file_links`
+(`file_id`, `table_name`, `record_id`, `sort`); record-to-record manual links in
+`bdus_userlinks` (bidirectional). Details: `bdus-docs/dev/record-lifecycle.md`.
 
-**File attachments** live in `{prefix}file_links` (unidirectional junction):
-```
-file_links.file_id  → files.id
-file_links.table_name + record_id → the attached record
-```
-Record-to-record manual links stay in `{prefix}userlinks` (bidirectional).
+Print templates (`bdus_cfg_templates`, JSON) are loaded/validated by
+`Template\Loader` and edited through `Bdus\Controllers\Templates`.
 
 ---
 
-## Vue SPA (`vue/`)
+## Frontend (`bdus-app/`)
 
-**Stack:** Vue 3, Vite, Pinia, PrimeVue Aura, Vue Router (history mode), `vue-i18n`
-
-### Directory layout
+**Stack:** Vue 3, Vite, Pinia, Vue Router, Ant Design Vue (+ a small token bridge
+for dark mode), Cytoscape (+ dagre) for Harris matrix / graphs, MapLibre for maps,
+Chart.js.
 
 ```
-vue/src/
-  views/           One *View.vue per major page (route-level component)
-  components/
-    record/        RecordView sub-components (FieldDisplay, FieldEditor,
-                   FileGallery, PluginSection, RsSection, RsGraph, TemplateSection)
-    config/        ConfigView panels
-    users/         UsersView sub-components
-  composables/     useRsRelations.js, useTables.js, useDarkMode.js
-  locales/         it.json, en.json
-  stores/          Pinia stores
+src/
+  views/        route-level *View.vue
+  components/   record/, config/, … feature components
+  composables/  useTables, useRecordQuery, useRsRelations, useDarkMode, …
+  stores/       Pinia: auth, config, listNavigation
+  api/index.js  fetch client: JWT, proactive refresh, `/{app}/api/…` prefixing
+  token.js      JWT in sessionStorage (per-tab isolation)
+  locale/       en.json, it.json
+tests/          node:test unit tests (`npm test`)
 ```
 
-### API calls
-
-All PHP endpoints are called with:
-```js
-// GET
-const res = await axios.get('index.php', { params: { obj: 'foo_ctrl', method: 'bar', … } })
-// POST
-const res = await axios.post('index.php?obj=foo_ctrl&method=bar', formData)
-```
-
-JWT token is injected automatically by an Axios request interceptor.
-
-### Harris Matrix / RS relations
-
-`RsGraph.vue` uses Cytoscape.js + cytoscape-dagre.
-
-- Boolean data **must** be stored as integers in Cytoscape elements (0/1) — `[attr = false]`
-  is not a valid Cytoscape selector
-- `min-width: 'label'` not `width: 'label'` (deprecated since Cytoscape ≥3.23)
-- Passive stratigraphic relations (1–4) have source/target swapped so arrows flow
-  newer→older (top→bottom in dagre layout). See `SWAP_DIRECTION` in `useRsRelations.js`
+- API calls go through `api.get/post/put/delete('/api/…')`; the client adds the
+  `/{app}` prefix and the Bearer token, and refreshes the token when < 30 min
+  remain. On `401` it clears the token and redirects to `/login`.
+- Harris matrix (`RsGraph.vue`): booleans in Cytoscape elements must be 0/1;
+  passive stratigraphic relations are swapped (`SWAP_DIRECTION` in
+  `useRsRelations.js`).
 
 ---
 
-## Test Infrastructure
+## Tests
 
-**Run tests:**
 ```bash
-docker compose exec app php vendor/bin/phpunit --testdox
+docker compose exec app php vendor/bin/phpunit --testdox   # PHP unit + integration
+./test.sh --setup --tests                                  # hurl E2E phases (tests/api)
+cd bdus-app && npm test                                    # frontend unit tests
 ```
 
-**Base class:** `Tests\Support\BdusTestCase` (in `tests/Support/`)
-
-- In-memory SQLite DB, re-created once per test *class* (fast; classes are isolated)
-- Fixtures in `tests/fixtures/cfg/`
-- `makeController(class, get, post)` — instantiates and injects dependencies
-- `callController(ctrl, method)` — captures JSON output and decodes it
-- `setPrivilege(int)` — temporarily changes the simulated user privilege
-
-**System tables in test schema:** `BdusTestCase::createSchema()` calls
-`Manage::createTable()` for every entry in `Manage::$available_tables` — the schema
-is always in sync with `lib/DB/System/Structure/*.json`. Adding a new system table
-or column requires no changes to test files.
-
-**Project-level fixture tables** (created inline in `BdusTestCase::createSchema()`):
-`items`, `tags` (plugin of items), `reviews` (backlink via `item_ref`),
-`categories` (lookup referenced by `items.cat_ref` / `tags.cat_ref` via `id_from_tb`)
-
-**Seed data that inserts into `bdus_users` must include `password` (NOT NULL).**
-
-**Test locations:**
-- `tests/Integration/` — controller-level tests (HTTP-style: call method, assert JSON)
-- `tests/Unit/`        — unit tests for lib classes
+- `Tests\Support\BdusTestCase`: in-memory SQLite re-created per test class;
+  fixtures in `tests/fixtures/`; helpers `makeController()`, `callController()`,
+  `setPrivilege()`. The schema calls `Manage::createTable()` for every
+  `available_tables` entry, so new system tables need no test changes.
+- Fixture tables: `items`, `tags` (plugin of items), `reviews` (backlink),
+  `categories` (lookup). Seed data inserted into `bdus_users` needs `password`.
+- Hurl phases are numbered (`01_`…`36_`); add a phase file for new public routes.
 
 ---
 
-## v5 Migration Status
+## Releasing
 
-### Migrated (Vue views + PHP JSON endpoints)
-
-| Module | Vue view | Notes |
-|---|---|---|
-| login | LoginView | JWT auth, per-app secret |
-| home | HomeView | Welcome MD/HTML editor for admins |
-| record | RecordView + RecordEdit | All field types, plugins, files, links, geodata |
-| search | DataView | fast/advanced/SQL search, URL-persisted state |
-| rs | RsSection + RsGraph + MatrixView | Harris Matrix full-page view |
-| config | ConfigView | 6 panels: app settings, validation, geoface, tables, fields |
-| templates | TemplatesView | JSON layout editor |
-| user | UsersView | Per-table privilege overrides |
-| backup | BackupView | Native PDO SQLite dump |
-| myExport | (DataView toolbar) | CSV, XLSX, JSON streaming |
-| info | InfoView | Changelog |
-| log | LogView | |
-| vocabularies | VocabulariesView | |
-| history | HistoryView | |
-| frontpage_editor | HomeView (inline) | |
-| search_replace | SearchReplaceView | Cascading dropdowns, config order |
-| confirm_super_adm_pwd | (used in ConfigView password gate) | |
-
-### Pending / v5 closure work
-
-See memory file `v5_closure_plan.md` for the full prioritized roadmap.
-
-**Still open (not yet done):**
-
-| Item | Priority | Notes |
-|---|---|---|
-| `import_geodata` | Low | File upload + geodata parse; explicitly deferred to v5.1 |
-| `public_readonly_share` | Medium | Signed read-only JWT for sharing filtered views |
-
-**Completed (kept here for reference):**
-`geoface` ✅ · `chart` ✅ · `userlinks` ✅ · `new_app` ✅ · `file sort/upload/delete` ✅ · `matrix` ✅ · `duplicate_record` ✅ · `@deprecated v5` cleanup ✅ · `typed_manual_links` ✅ · `graph_visualization` ✅
-
-**v5.1 scope (not v5.0):**
-- Remove migration system entirely (`Migrate.php`, all `M0xx_*.php`, `M0xx` tests, `bdus_migrations` table)
-
-### Deprecated (no Vue equivalent needed)
-
-- `empty_cache` — no Twig cache in v5
-- `menuValues` — no longer needed
-- `free_sql` — replaced by SQL expert search in DataView
-- `myTmpl` — template preview superseded by TemplatesView
-- `preview_flds` — field visibility per record list superseded by DataView column toggler (pref:: system also deprecated)
+Add notes under `## [Unreleased]` in the root `CHANGELOG.md`, then
+`./bump-version.sh X.Y.Z` (commits, tags `vX.Y.Z`, pushes; the tag triggers the
+image build). Default branch: `v5`.
 
 ---
 
-## Architectural Decisions
+## Architectural decisions (still relevant)
 
-### Why `{prefix}file_links` instead of `{prefix}userlinks` for files
-
-`userlinks` is a bidirectional junction (`tb_one/id_one` ↔ `tb_two/id_two`) designed
-for record-to-record manual links. File attachments need a unidirectional model:
-a file belongs to a record, not the other way around. The new `file_links` table
-(`file_id`, `table_name`, `record_id`, `sort`) makes queries simpler, supports
-`ON DELETE CASCADE`, and aligns with the Directus pattern. Existing data is migrated
-automatically by `M002_CreateFileLinks` on first login.
-
-### Why no Doctrine DBAL
-
-Doctrine DBAL would be a large dependency (~3 MB, 200+ files) and would create a
-parallel query interface alongside the existing `DB\DB` wrapper. The custom DB layer
-is small, well-tested, and covers all three engines. Index/FK management (the main
-gap) has been added natively to `DB\System\Manage` with a consistent trans-engine API.
-
-### Why config order is preserved (never sort tables/fields)
-
-The YAML config files are the source of truth for the logical order of tables and
-fields in every UI: dropdowns, column lists, search forms, export headers. Alphabetical
-sorting would break this contract. Any code that enumerates tables or fields must
-iterate in config order (i.e., preserve the order from `cfg->get('tables.*.name')`).
-
-### JWT auth design
-
-One JWT secret per application (not per user), stored at
-`projects/{app}/cfg/.jwt_secret` (chmod 0600, htaccess-protected). Tokens live in
-`sessionStorage` (per-tab isolation: multiple apps can be open simultaneously).
-Silent proactive refresh when < 30 min remain. The `Authorization: Bearer` header
-is read via `getallheaders()` fallback, making it server-agnostic (Apache, nginx,
-Caddy, CLI).
+- **`bdus_file_links` for files, `bdus_userlinks` for record links:** a file
+  belongs to a record (unidirectional); manual links are bidirectional.
+- **No Doctrine DBAL:** the small `DB\DB` wrapper covers the three engines and
+  index/FK management lives in `DB\System\Manage`.
+- **Config order is preserved:** the config order is the UI order everywhere
+  (dropdowns, columns, search forms, exports).
+- **One JWT secret per application**, tokens in `sessionStorage` (several apps
+  can be open in different tabs); the `Authorization` header is read via the
+  `getallheaders()` fallback so it works on Apache, nginx and Caddy.

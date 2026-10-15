@@ -87,18 +87,52 @@ collapsible sub-panels. Each panel has its own label and field list:
 Accordion sections are ideal for tables with many fields: group logically related
 fields into panels so the form stays manageable without hiding data.
 
+### Plugin fields in core sections <Badge type="tip" text="v5.15.1" />
+
+A core section can also include plugin tables, in the position where you want
+them among the core fields. A plugin item carries the plugin table name in
+`plugin`:
+
+```json
+{
+  "label": "Quires",
+  "content": [
+    { "field": "quirenotes", "width": "1/1" },
+    { "plugin": "m_quires", "field": "*", "width": "1/1" }
+  ]
+}
+```
+
+| Property | Description |
+|---|---|
+| `plugin` | Plugin table name (must be a plugin of the template's table) |
+| `field` | A plugin field name, or `"*"` for all plugin fields |
+| `width` | Width of the field inside the plugin table row (ignored for `"*"`) |
+
+Plugin fields are multiple-entry: consecutive items of the same plugin are
+rendered together as **one multi-row table**, full width, at that position.
+With `"*"` all columns are shown; otherwise only the listed fields, in the
+listed order and widths. Two groups of the same plugin separated by core fields
+show the same data twice.
+
+In the template editor the field picker groups core fields and plugin fields
+(`Plugin › field`, and `Plugin › * (all fields)`); plugin sections and items are
+marked with an orange badge and border to tell them apart from core fields.
+Plugin items are not available inside accordion panels.
+
 ### Plugin sections
 
 With `"plugin": "table_name"` the section shows the rows of that sub-table.
 `content` is required but may be an empty array: in that case **all** plugin
 fields are shown. List fields in `content` to choose their order and width.
 
-## JSON editor
+## JSON editor <Badge type="tip" text="v5.15.1" />
 
 The template editor has a **Visual / JSON code** switch. In JSON mode you can
 paste or edit the whole template (sections, accordions and plugin sections).
 Switching back to Visual requires valid JSON; field names and widths are
-validated by the server on save.
+validated by the server on save; if validation fails, the errors are listed
+above the editor and nothing is saved.
 
 ## Creating a template
 

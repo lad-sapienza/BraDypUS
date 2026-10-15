@@ -57,6 +57,13 @@ Fields in a section should ideally fill one row. A single full-width field uses
 Set `"plugin": "table_name"` to render rows from a plugin sub-table instead
 of main-table fields.
 
+### Plugin fields in core sections <Badge type="tip" text="v5.15.1" />
+
+Plugin tables can be placed among core fields with
+`{ "plugin": "table_name", "field": "*", "width": "1/1" }` (`"*"` = all
+plugin fields, or a single plugin field name). They are rendered as a
+multi-row table. See [Print templates](./index.md#plugin-fields-in-core-sections).
+
 ### Accordion sections <Badge type="tip" text="v5.1.0" />
 
 Set `"type": "accordion"` to group fields into collapsible sub-panels within a
@@ -92,9 +99,15 @@ list with the same `{ field, width }` format as a regular section. In the
 template editor, choose **Accordion** from the _Section type_ dropdown and use
 **Add panel** to create sub-panels.
 
+### Editing the JSON directly
+
+Use the **Visual / JSON code** switch in the editor header to paste or edit the
+whole template as JSON. Switching back to Visual requires valid JSON.
+
 ## 4. Save
 
-Click **Save**. The template becomes immediately available in RecordView's
+Click **Save**. The server validates field names, plugin names and widths; any
+errors are listed above the editor. The template becomes immediately available in RecordView's
 **Templates** dropdown for that table.
 
 ## 5. Applying the template

@@ -288,6 +288,37 @@ async function uploadMulti(path, files = {}, data = {}) {
   return res.json()
 }
 
+// ── Authenticated file download ──────────────────────────────────────────────
+/**
+ * Download a file from an endpoint that answers with Content-Disposition.
+ * A browser-native navigation (window.open) cannot send the Authorization
+ * header, so the file is fetched with the Bearer token and saved from a blob.
+ *
+ * @param {string} path      REST path, optionally with a query string
+ * @param {string} [fallbackName] used when the response has no filename
+ */
+async function download(path, fallbackName = 'download') {
+  await _guardRefresh()
+  const res = await fetch(apiUrl(path), { headers: { ..._bearer() } })
+  if (res.status === 401) { _handle401(); throw new Error('Unauthenticated') }
+  if (!res.ok) {
+    let body = null
+    try { body = await res.json() } catch { /* non-JSON error body */ }
+    throw new Error(body?.code ?? `${path} — HTTP ${res.status}`)
+  }
+  const blob = await res.blob()
+  const name = (res.headers.get('Content-Disposition') ?? '')
+    .match(/filename\*?=(?:UTF-8'')?"?([^";\r\n]+)"?/i)?.[1]
+  const objUrl = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = objUrl
+  a.download = name ? decodeURIComponent(name) : fallbackName
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  setTimeout(() => URL.revokeObjectURL(objUrl), 1000)
+}
+
 // ── Response helper ──────────────────────────────────────────────────────────
 /**
  * Canonical way to turn any API response into a translated human string.
@@ -320,4 +351,4 @@ export function filterToSearchParams(filter, extraParams = {}) {
   return url.searchParams
 }
 
-export const api = { get, post, put, delete: _delete, patch, upload, uploadMulti, responseMessage }
+export const api = { get, post, put, delete: _delete, patch, upload, uploadMulti, download, responseMessage }

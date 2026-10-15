@@ -5,6 +5,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Export and backup download returned `unauthenticated`** — the Export button
+  and the backup download opened the endpoint in a new tab with `window.open`,
+  which cannot send the `Authorization: Bearer` header (the JWT lives in
+  `sessionStorage`). Both now go through the new `api.download()` helper, which
+  fetches with the token and saves the response as a blob.
+
 ### Changed
 
 - **Dependency maintenance** — routine minor/patch bumps, no behaviour change:

@@ -72,7 +72,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useToast, useConfirm } from '@/composables/useNotify'
 import AppLayout      from '@/components/AppLayout.vue'
 import { Table as ATable, Button as AButton, Alert as AAlert, Spin as ASpin } from 'ant-design-vue'
-import { api, apiUrl } from '@/api'
+import { api } from '@/api'
 import { useI18n }    from '@/i18n'
 
 const { t }   = useI18n()
@@ -138,8 +138,12 @@ async function createBackup() {
 }
 
 // ── Download ──────────────────────────────────────────────────────────────
-function downloadBackup(file) {
-  window.open(apiUrl(`/api/backup/${encodeURIComponent(file)}/download`), '_blank')
+async function downloadBackup(file) {
+  try {
+    await api.download(`/api/backup/${encodeURIComponent(file)}/download`, file)
+  } catch (e) {
+    toast.add({ severity: 'error', summary: t('error'), detail: e.message, life: 5000 })
+  }
 }
 
 // ── Delete ────────────────────────────────────────────────────────────────

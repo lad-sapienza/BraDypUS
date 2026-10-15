@@ -1,5 +1,5 @@
 import { useRoute, useRouter } from 'vue-router'
-import { apiUrl, filterToSearchParams } from '@/api'
+import { api, filterToSearchParams } from '@/api'
 import { useListNavigation } from '@/stores/listNavigation'
 import { SEARCH, geofaceQuery } from '@/utils/recordQuery'
 
@@ -94,7 +94,11 @@ export function useResultActions({ table, query, list }) {
       if (route.query.qt) qs.set('qt', route.query.qt)
       if (route.query.q)  qs.set('q',  route.query.q)
     }
-    window.open(apiUrl(`/api/records/${encodeURIComponent(tb() ?? '')}/export`) + '?' + qs.toString(), '_blank')
+    // fetch + blob: a new tab would not carry the Authorization header.
+    return api.download(
+      `/api/records/${encodeURIComponent(tb() ?? '')}/export?${qs.toString()}`,
+      `${tb() ?? 'export'}.${format}`,
+    ).catch(e => { console.error('export failed', e) })
   }
 
   return { addRecord, openRecord, openGeoface, createChart, openTimeline, openMatrix, exportAs }

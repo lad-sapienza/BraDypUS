@@ -2310,14 +2310,39 @@ paths:
     get:
       tags: [search]
       summary: Get distinct values used in a field
-      description: Used to populate suggestion dropdowns in the advanced search form.
+      description: |
+        Used to populate suggestion dropdowns in the advanced search form.
+        With neither `q` nor `limit` every distinct value is returned (legacy
+        behaviour). When either is sent, NULL and empty values are excluded,
+        results are ordered (numeric columns numerically, text alphabetically,
+        values starting with `q` first) and capped. JSON value types are
+        preserved (integers stay integers).
       parameters:
         - $ref: '#/components/parameters/tb'
-        - name: field
+        - name: fld
           in: query
           required: true
+          description: Field name
           schema:
             type: string
+        - name: q
+          in: query
+          required: false
+          description: >
+            Case-insensitive substring match on the value (`%`, `_` are
+            literal). Numeric columns are matched as text.
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          description: >
+            Maximum number of values. Default 50 when `q` or `limit` is sent,
+            hard cap 500. No limit when neither is sent.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 500
       responses:
         '200':
           description: Distinct values
@@ -2331,7 +2356,9 @@ paths:
                       values:
                         type: array
                         items:
-                          type: string
+                          oneOf:
+                            - type: string
+                            - type: number
 
   # ── Config ───────────────────────────────────────────────────────────────
 

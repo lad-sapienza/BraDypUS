@@ -134,6 +134,70 @@ class SearchCtrlTest extends BdusTestCase
         $this->assertContains('pending',  $values['values']);
     }
 
+    private function usedValues(array $get): array
+    {
+        $ctrl = $this->makeController('Bdus\\Controllers\\Search', ['tb' => self::TB] + $get);
+        return $this->callController($ctrl, 'getUsedValues');
+    }
+
+    public function testGetUsedValuesNoParamsIsUnfiltered(): void
+    {
+        $res = $this->usedValues(['fld' => 'name']);
+        $this->assertSame('success', $res['status']);
+        $this->assertCount(5, $res['values']);
+    }
+
+    public function testGetUsedValuesQFiltersCaseInsensitiveStartsFirst(): void
+    {
+        $res = $this->usedValues(['fld' => 'name', 'q' => 'ITEM']);
+        $this->assertSame('success', $res['status']);
+        $this->assertSame(['Alpha item', 'Beta item', 'Gamma item'], $res['values']);
+
+        $res = $this->usedValues(['fld' => 'name', 'q' => 'a']);
+        $this->assertSame('Alpha item', $res['values'][0]);
+    }
+
+    public function testGetUsedValuesLimit(): void
+    {
+        $res = $this->usedValues(['fld' => 'name', 'q' => 'item', 'limit' => '2']);
+        $this->assertCount(2, $res['values']);
+    }
+
+    public function testGetUsedValuesIntegerColumnMatchesAsText(): void
+    {
+        $res = $this->usedValues(['fld' => 'id', 'q' => '3']);
+        $this->assertSame([3], $res['values']);
+    }
+
+    public function testGetUsedValuesExcludesNulls(): void
+    {
+        $res = $this->usedValues(['fld' => 'cat_ref', 'limit' => '50']);
+        $this->assertSame('success', $res['status']);
+        $this->assertNotContains(null, $res['values']);
+    }
+
+    public function testGetUsedValuesWildcardsAreLiteral(): void
+    {
+        foreach (['%', '_'] as $q) {
+            $res = $this->usedValues(['fld' => 'name', 'q' => $q]);
+            $this->assertSame('success', $res['status']);
+            $this->assertSame([], $res['values']);
+        }
+    }
+
+    public function testGetUsedValuesNoMatchIsEmptySuccess(): void
+    {
+        $res = $this->usedValues(['fld' => 'name', 'q' => 'zzzz']);
+        $this->assertSame('success', $res['status']);
+        $this->assertSame([], $res['values']);
+    }
+
+    public function testGetUsedValuesRejectsBadIdentifier(): void
+    {
+        $res = $this->usedValues(['fld' => 'name FROM items; --']);
+        $this->assertSame('error', $res['status']);
+    }
+
     // ── test (query tester) ───────────────────────────────────────────────
 
     public function testQueryTesterSuccessOnValidQuery(): void

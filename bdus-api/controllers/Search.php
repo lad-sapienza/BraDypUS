@@ -123,13 +123,58 @@ class Search extends \Bdus\Controller
       $second_table = $this->cfg->get("tables.{$tb}.fields.{$fld}.id_from_tb");
 
       if ($second_table) {
-        $second_field = $this->cfg->get("tables.{$second_table}.id_field");
-        $q = "SELECT {$second_field} AS val FROM {$second_table} WHERE 1=1 GROUP BY {$second_field}";
+        $srcTb  = $second_table;
+        $srcFld = $this->cfg->get("tables.{$second_table}.id_field");
       } else {
-        $q = "SELECT {$fld} AS val FROM {$tb} WHERE {$fld} IS NOT NULL GROUP BY {$fld}";
+        $srcTb  = $tb;
+        $srcFld = $fld;
       }
 
-      $rows   = $this->db->query($q);
+      // Identifiers are interpolated into SQL: accept plain names only.
+      foreach ([$srcTb, $srcFld] as $ident) {
+        if (!is_string($ident) || !preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $ident)) {
+          $this->returnJson(['status' => 'error', 'code' => 'parameter_invalid']);
+          return;
+        }
+      }
+
+      $search = isset($this->get['q']) && is_string($this->get['q']) ? $this->get['q'] : '';
+      $hasLimit = isset($this->get['limit']) && $this->get['limit'] !== '';
+
+      if ($search === '' && !$hasLimit) {
+        // Legacy behaviour: every distinct value, unfiltered.
+        $q = $second_table
+          ? "SELECT {$srcFld} AS val FROM {$srcTb} WHERE 1=1 GROUP BY {$srcFld}"
+          : "SELECT {$srcFld} AS val FROM {$srcTb} WHERE {$srcFld} IS NOT NULL GROUP BY {$srcFld}";
+        $params = [];
+      } else {
+        $engine = $this->db->getEngine();
+        $text   = 'CAST(' . $srcFld . ' AS ' . ($engine === 'mysql' ? 'CHAR' : 'TEXT') . ')';
+        $limit  = $hasLimit ? (int) $this->get['limit'] : 0;
+        if ($limit < 1) {
+          $limit = 50;
+        }
+        $limit = min($limit, 500);
+
+        $where  = "{$srcFld} IS NOT NULL AND {$text} <> ''";
+        $order  = '';
+        $params = [];
+        $outerParams = [];
+        if ($search !== '') {
+          $like    = \SQL\Like::operator($engine);
+          $escaped = str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $search);
+          $where  .= " AND {$text} {$like} ? ESCAPE '!'";
+          $params[] = '%' . $escaped . '%';
+          // Values that start with q rank before those that merely contain it.
+          $order = "CASE WHEN CAST(val AS " . ($engine === 'mysql' ? 'CHAR' : 'TEXT') . ") {$like} ? ESCAPE '!' THEN 0 ELSE 1 END, ";
+          $outerParams[] = $escaped . '%';
+        }
+        $q = "SELECT val FROM (SELECT DISTINCT {$srcFld} AS val FROM {$srcTb} WHERE {$where}) s "
+          . "ORDER BY {$order}val LIMIT {$limit}";
+        $params = array_merge($params, $outerParams);
+      }
+
+      $rows   = $this->db->query($q, $params);
       $values = array_column($rows ?? [], 'val');
 
       $this->returnJson(['status' => 'success', 'values' => $values]);

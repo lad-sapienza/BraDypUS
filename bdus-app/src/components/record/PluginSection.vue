@@ -31,11 +31,11 @@
           :key="row._uid"
           class="plugin-edit-row"
         >
-          <div class="plugin-row-fields" :class="{ 'has-layout': columnLayout }">
+          <div class="plugin-row-fields" :class="{ 'has-layout': layout }">
             <div
               v-for="col in editableFields"
               :key="col.name"
-              :style="columnLayout ? { gridColumn: 'span ' + (columnWidthMap[col.name] ?? 12) } : {}"
+              :style="layout ? { gridColumn: 'span ' + (columnWidthMap[col.name] ?? 12) } : {}"
             >
               <FieldEditor
                 :schema="col"
@@ -89,11 +89,14 @@ const emit = defineEmits(['update:editRows'])
 
 // ── Fields ─────────────────────────────────────────────────────
 
-/** Map of field name → grid column span number, built from columnLayout (if any). */
+/** Effective layout: an empty list means "all fields", same as no layout. */
+const layout = computed(() => props.columnLayout?.length ? props.columnLayout : null)
+
+/** Map of field name → grid column span number, built from layout (if any). */
 const columnWidthMap = computed(() => {
-  if (!props.columnLayout) return {}
+  if (!layout.value) return {}
   const map = {}
-  for (const item of props.columnLayout) {
+  for (const item of layout.value) {
     map[item.field] = widthToSpan(item.width ?? '1/1')
   }
   return map
@@ -103,12 +106,12 @@ const visibleFields = computed(() => {
   const allFields = (props.schema?.fields ?? []).filter(
     f => !f.hide && !['id', 'table_link', 'id_link', 'sort'].includes(f.name)
   )
-  if (!props.columnLayout) {
+  if (!layout.value) {
     return allFields
   }
   // Respect order and filter from columnLayout — skip fields not in schema
   const byName = Object.fromEntries(allFields.map(f => [f.name, f]))
-  return props.columnLayout
+  return layout.value
     .filter(item => item.field in byName)
     .map(item => byName[item.field])
 })

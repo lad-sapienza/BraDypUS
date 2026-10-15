@@ -64,27 +64,43 @@
         @update:edit-rows="v => editData.plugins[section.plugin] = v"
       />
 
-      <!-- Core fields section -->
+      <!-- Core fields section (core fields and plugin blocks, in declared order) -->
       <div v-else class="template-fields">
-        <div
-          v-for="item in section.content"
-          :key="item.field"
-          class="template-field-cell"
-          :style="{ gridColumn: 'span ' + widthToSpan(item.width ?? '1/1') }"
-        >
-          <FieldDisplay
-            v-if="mode === 'read'"
-            :schema="fieldSchema(item.field)"
-            :value="record.core[item.field]"
-          />
-          <FieldEditor
+        <template v-for="(block, bi) in blocks" :key="bi">
+          <div
+            v-if="block.plugin"
+            class="template-field-cell template-plugin-block"
+            style="grid-column: span 12"
+          >
+            <PluginSection
+              v-if="schema.plugins?.[block.plugin]"
+              :schema="schema.plugins[block.plugin]"
+              :plugin="record.plugins[block.plugin]"
+              :mode="mode"
+              :edit-rows="editData.plugins[block.plugin] ?? []"
+              :column-layout="block.layout"
+              @update:edit-rows="v => editData.plugins[block.plugin] = v"
+            />
+          </div>
+          <div
             v-else
-            :schema="fieldSchema(item.field)"
-            :tb="tb"
-            :modelValue="editData.core[item.field]"
-            @update:modelValue="v => editData.core[item.field] = v"
-          />
-        </div>
+            class="template-field-cell"
+            :style="{ gridColumn: 'span ' + widthToSpan(block.item.width ?? '1/1') }"
+          >
+            <FieldDisplay
+              v-if="mode === 'read'"
+              :schema="fieldSchema(block.item.field)"
+              :value="record.core[block.item.field]"
+            />
+            <FieldEditor
+              v-else
+              :schema="fieldSchema(block.item.field)"
+              :tb="tb"
+              :modelValue="editData.core[block.item.field]"
+              @update:modelValue="v => editData.core[block.item.field] = v"
+            />
+          </div>
+        </template>
       </div>
 
     </div>
@@ -115,6 +131,33 @@ const props = defineProps({
 })
 
 const isPlugin    = computed(() => !!props.section.plugin)
+
+/**
+ * Core-section content may mix core fields ({ field, width }) and plugin
+ * fields ({ plugin, field, width }; field "*" = all plugin fields).
+ * Consecutive items of the same plugin are rendered as one plugin table.
+ */
+const blocks = computed(() => {
+  const out = []
+  for (const item of props.section.content ?? []) {
+    if (!item.plugin) {
+      out.push({ item })
+      continue
+    }
+    const last = out[out.length - 1]
+    let block = last && last.plugin === item.plugin ? last : null
+    if (!block) {
+      block = { plugin: item.plugin, layout: [] }
+      out.push(block)
+    }
+    if (item.field === '*' || block.layout === null) {
+      block.layout = null
+    } else {
+      block.layout.push({ field: item.field, width: item.width ?? '1/1' })
+    }
+  }
+  return out
+})
 const isAccordion = computed(() => props.section.type === 'accordion')
 
 // Collapsed state for the outer fieldset — initialised from template definition

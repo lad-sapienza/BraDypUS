@@ -279,6 +279,12 @@ class Loader
                 }
             } else {
                 foreach ($section['content'] as $itemIdx => $item) {
+                    if (isset($item['plugin'])) {
+                        if (!in_array($item['plugin'], $pluginNames, true)) {
+                            $errors[] = "{$sectionLabel}[{$itemIdx}]: unknown_plugin '{$item['plugin']}'";
+                        }
+                        continue;
+                    }
                     if (!isset($item['field'])) continue;
                     if (!in_array($item['field'], $fieldNames, true)) {
                         $errors[] = "{$sectionLabel}[{$itemIdx}]: unknown_field '{$item['field']}'";

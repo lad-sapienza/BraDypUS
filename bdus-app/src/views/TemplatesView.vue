@@ -6,47 +6,46 @@
       <div class="tmpl-sidebar">
         <div class="tmpl-sidebar-title">{{ t('design_templates') }}</div>
 
-        <!-- Table list -->
-        <div
-          v-for="tbl in tables"
-          :key="tbl.tb"
-          class="tmpl-table-item"
-          :class="{ active: selectedTb === tbl.tb }"
-          @click="selectTable(tbl)"
-        >
-          <TableOutlined />
-          <span class="tmpl-table-label">{{ tbl.label }}</span>
-        </div>
-
-        <!-- Template list for selected table -->
-        <template v-if="selectedTb">
-          <div class="tmpl-list-header">
-            <span>{{ t('templates') }}</span>
-            <AButton
-              type="text"
-              size="small"
-              :title="t('add_template')"
-              @click="showNewDialog = true"
-            >
-              <template #icon><PlusOutlined /></template>
-            </AButton>
-          </div>
-
-          <div v-if="!templateNames.length" class="tmpl-empty-list">
-            {{ t('no_templates') }}
-          </div>
-
+        <!-- Table list, each table followed by its own templates -->
+        <div v-for="tbl in tables" :key="tbl.tb" class="tmpl-table-group">
           <div
-            v-for="name in templateNames"
-            :key="name"
-            class="tmpl-name-item"
-            :class="{ active: selectedName === name }"
-            @click="openTemplate(name)"
+            class="tmpl-table-item"
+            :class="{ active: selectedTb === tbl.tb }"
+            @click="selectTable(tbl)"
           >
-            <FileOutlined />
-            {{ name }}
+            <TableOutlined />
+            <span class="tmpl-table-label">{{ tbl.label }}</span>
           </div>
-        </template>
+
+          <div v-if="selectedTb === tbl.tb" class="tmpl-table-templates">
+            <div class="tmpl-list-header">
+              <span>{{ t('templates') }}</span>
+              <AButton
+                type="text"
+                size="small"
+                :title="t('add_template')"
+                @click="showNewDialog = true"
+              >
+                <template #icon><PlusOutlined /></template>
+              </AButton>
+            </div>
+
+            <div v-if="!templateNames.length" class="tmpl-empty-list">
+              {{ t('no_templates') }}
+            </div>
+
+            <div
+              v-for="name in templateNames"
+              :key="name"
+              class="tmpl-name-item"
+              :class="{ active: selectedName === name }"
+              @click="openTemplate(name)"
+            >
+              <FileOutlined />
+              {{ name }}
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- ── Right editor ──────────────────────────────────────────────── -->
@@ -81,6 +80,16 @@
               />
             </div>
             <div class="tmpl-editor-actions">
+              <ARadioGroup
+                v-if="!renaming"
+                v-model:value="editMode"
+                size="small"
+                button-style="solid"
+                @change="onModeChange"
+              >
+                <ARadioButton value="visual">{{ t('template_visual') }}</ARadioButton>
+                <ARadioButton value="json">{{ t('template_json') }}</ARadioButton>
+              </ARadioGroup>
               <AButton v-if="!renaming" size="small" @click="startRename">
                 <template #icon><EditOutlined /></template>
                 {{ t('rename') }}
@@ -109,17 +118,42 @@
             </div>
           </div>
 
+          <!-- Server-side validation errors -->
+          <div v-if="serverErrors.length" class="tmpl-errors">
+            <div class="tmpl-errors-title">{{ t('template_validation_failed') }}</div>
+            <ul>
+              <li v-for="(err, i) in serverErrors" :key="i">{{ err }}</li>
+            </ul>
+          </div>
+
+          <!-- JSON code editor -->
+          <div v-if="editMode === 'json'" class="tmpl-json">
+            <ATextarea
+              v-model:value="jsonText"
+              class="tmpl-json-area"
+              spellcheck="false"
+              :auto-size="false"
+            />
+            <div v-if="jsonError" class="tmpl-json-error">{{ jsonError }}</div>
+          </div>
+
           <!-- Sections -->
-          <div class="tmpl-sections">
+          <div v-else class="tmpl-sections">
 
             <div
               v-for="(section, si) in form.sections"
               :key="si"
               class="tmpl-section-card"
+              :class="'tmpl-section-card--' + sectionType(section)"
             >
               <!-- Section header row -->
               <div class="tmpl-section-header">
                 <div class="tmpl-section-meta">
+
+                  <!-- Kind badge: plugin sections hold multiple rows -->
+                  <span class="tmpl-kind-badge" :class="'tmpl-kind-badge--' + sectionType(section)">
+                    {{ t('kind_' + sectionType(section)) }}
+                  </span>
 
                   <!-- Label -->
                   <div class="tmpl-field-group">
@@ -181,14 +215,17 @@
                   class="tmpl-content-row"
                 >
                   <ASelect
-                    v-model:value="item.field"
-                    :options="coreFieldOptions"
+                    :value="itemValue(item)"
+                    :options="mixedFieldOptions"
                     :placeholder="t('select_field')"
                     size="small"
                     show-search
+                    option-filter-prop="label"
+                    :class="{ 'tmpl-select--plugin': item.plugin }"
                     style="flex:1; min-width:140px"
+                    @change="v => setItemValue(item, v)"
                   />
-                  <ASelect v-model:value="item.width" :options="widthSelectOptions" size="small" style="width:90px" />
+                  <ASelect v-model:value="item.width" :options="widthSelectOptions" size="small" style="width:90px" :disabled="item.field === '*'" />
                   <AButton type="text" size="small" :disabled="ii === 0"                          @click="moveField(si, ii, -1)"><template #icon><ArrowUpOutlined /></template></AButton>
                   <AButton type="text" size="small" :disabled="ii === section.content.length - 1" @click="moveField(si, ii,  1)"><template #icon><ArrowDownOutlined /></template></AButton>
                   <AButton type="text" danger size="small" @click="section.content.splice(ii, 1)"><template #icon><CloseOutlined /></template></AButton>
@@ -206,6 +243,7 @@
                   :key="ii"
                   class="tmpl-content-row"
                 >
+                  <span class="tmpl-parent-tag" :title="section.plugin">{{ pluginLabel(section.plugin) }} ›</span>
                   <ASelect
                     v-model:value="item.field"
                     :options="section.plugin ? pluginFieldOptions(section.plugin) : []"
@@ -219,6 +257,7 @@
                   <AButton type="text" size="small" :disabled="ii === section.content.length - 1" @click="moveField(si, ii,  1)"><template #icon><ArrowDownOutlined /></template></AButton>
                   <AButton type="text" danger size="small" @click="section.content.splice(ii, 1)"><template #icon><CloseOutlined /></template></AButton>
                 </div>
+                <div v-if="!section.content.length" class="tmpl-hint">{{ t('plugin_all_fields_hint') }}</div>
                 <AButton type="text" size="small" class="tmpl-add-field-btn" @click="addField(si)">
                   <template #icon><PlusOutlined /></template>
                   {{ t('add_field') }}
@@ -326,11 +365,16 @@ import {
   Input as AInput,
   Select as ASelect,
   Checkbox as ACheckbox,
-  Modal as AModal
+  Modal as AModal,
+  Radio
 } from 'ant-design-vue'
 import { useToast, useConfirm } from '@/composables/useNotify'
 import { useI18n }    from '@/i18n'
 import { api }        from '@/api'
+
+const ATextarea    = AInput.TextArea
+const ARadioGroup  = Radio.Group
+const ARadioButton = Radio.Button
 
 const { t }   = useI18n()
 const toast   = useToast()
@@ -347,6 +391,10 @@ const plugins       = ref([])   // [{ tb, label }]
 const pluginFieldsCache = ref({}) // tb → [{ name, label }]
 
 const form    = ref(null)   // { sections: [...] }
+const editMode  = ref('visual')   // 'visual' | 'json'
+const jsonText  = ref('')
+const jsonError = ref('')
+const serverErrors = ref([])
 const saving  = ref(false)
 const deleting = ref(false)
 
@@ -366,8 +414,41 @@ const coreFieldOptions = computed(() => coreFields.value.map(f => ({ value: f.na
 
 const pluginOptions = computed(() => plugins.value.map(p => ({ value: p.tb, label: p.label })))
 
+// Core sections may also hold plugin fields: encoded as "tb::field" in the select
+const mixedFieldOptions = computed(() => [
+  { label: t('kind_core'), options: coreFieldOptions.value },
+  ...plugins.value.map(p => ({
+    label: `${t('kind_plugin')}: ${p.label}`,
+    options: [
+      { value: `${p.tb}::*`, label: `${p.label} › * (${t('all_fields')})` },
+      ...pluginFieldOptions(p.tb).map(o => ({ ...o, value: `${p.tb}::${o.value}` })),
+    ],
+  })),
+])
+
+function itemValue(item) {
+  return item.plugin ? `${item.plugin}::${item.field}` : item.field
+}
+
+function setItemValue(item, v) {
+  const i = typeof v === 'string' ? v.indexOf('::') : -1
+  if (i === -1) {
+    delete item.plugin
+    item.field = v
+  } else {
+    item.plugin = v.slice(0, i)
+    item.field  = v.slice(i + 2)
+    if (item.field === '*') item.width = '1/1'
+  }
+}
+
+function pluginLabel(plgTb) {
+  return plugins.value.find(p => p.tb === plgTb)?.label ?? plgTb ?? ''
+}
+
 function pluginFieldOptions(plgTb) {
-  return (pluginFieldsCache.value[plgTb] ?? []).map(f => ({ value: f.name, label: f.label }))
+  const parent = pluginLabel(plgTb)
+  return (pluginFieldsCache.value[plgTb] ?? []).map(f => ({ value: f.name, label: `${parent} › ${f.label}` }))
 }
 
 // ── Boot ────────────────────────────────────────────────────────────────
@@ -427,23 +508,77 @@ async function openTemplate(name) {
     const res = await api.get(`/api/template/${selectedTb.value}/${name}`)
     if (res.status === 'error') throw new Error(t(res.code))
     // Deep-clone so edits don't alias the fetched object
-    form.value = JSON.parse(JSON.stringify(res.template))
-    // Ensure every section has the keys we depend on
-    for (const s of form.value.sections) {
-      s.collapsible = s.collapsible ?? false
-      s.collapsed   = s.collapsed   ?? false
-      s.plugin      = s.plugin      ?? null
-      s.content     = s.content     ?? []
-      if (s.type === 'accordion') {
-        for (const panel of s.content) {
-          panel.open   = panel.open   !== false
-          panel.fields = panel.fields ?? []
-        }
-      }
-    }
+    form.value = normalizeForm(JSON.parse(JSON.stringify(res.template)))
+    jsonError.value = ''
+    serverErrors.value = []
+    if (editMode.value === 'json') jsonText.value = serializeForm()
   } catch (e) {
     toast.add({ severity: 'error', summary: e.message, life: 4000 })
   }
+}
+
+/** Ensure every section has the keys the visual editor depends on. */
+function normalizeForm(tpl) {
+  tpl.sections = tpl.sections ?? []
+  for (const s of tpl.sections) {
+    s.collapsible = s.collapsible ?? false
+    s.collapsed   = s.collapsed   ?? false
+    s.plugin      = s.plugin      ?? null
+    s.content     = s.content     ?? []
+    if (s.type === 'accordion') {
+      for (const panel of s.content) {
+        panel.open   = panel.open   !== false
+        panel.fields = panel.fields ?? []
+      }
+    }
+  }
+  return tpl
+}
+
+/** Strip editor-only keys, as sent to the API. */
+function cleanPayload(tpl) {
+  const payload = JSON.parse(JSON.stringify(tpl))
+  for (const s of payload.sections) {
+    if (!s.plugin) delete s.plugin
+    if (!s.collapsible) delete s.collapsed
+    if (s.type !== 'accordion') delete s.type
+  }
+  return payload
+}
+
+function serializeForm() {
+  return JSON.stringify(cleanPayload(form.value), null, 2)
+}
+
+/** Parse the JSON textarea. Returns the template object, or null (and sets jsonError). */
+function parseJson() {
+  try {
+    const obj = JSON.parse(jsonText.value)
+    if (!obj || typeof obj !== 'object' || Array.isArray(obj) || !Array.isArray(obj.sections)) {
+      jsonError.value = t('template_json_structure')
+      return null
+    }
+    jsonError.value = ''
+    return obj
+  } catch (e) {
+    jsonError.value = t('template_json_invalid', { msg: e.message })
+    return null
+  }
+}
+
+function onModeChange() {
+  if (editMode.value === 'json') {
+    jsonText.value = serializeForm()
+    jsonError.value = ''
+    return
+  }
+  // json → visual: only switch if the code parses
+  const obj = parseJson()
+  if (!obj) {
+    editMode.value = 'json'
+    return
+  }
+  form.value = normalizeForm(obj)
 }
 
 // ── Section type helpers ────────────────────────────────────────────────
@@ -540,12 +675,15 @@ function movePanelField(si, pi, ii, dir) {
 async function saveTemplate() {
   saving.value = true
   try {
-    // Strip null plugin key before sending (Loader.validate expects absence, not null)
-    const payload = JSON.parse(JSON.stringify(form.value))
-    for (const s of payload.sections) {
-      if (!s.plugin) delete s.plugin
-      if (!s.collapsible) delete s.collapsed
-      if (s.type !== 'accordion') delete s.type
+    let payload
+    if (editMode.value === 'json') {
+      const obj = parseJson()
+      if (!obj) return
+      form.value = normalizeForm(JSON.parse(JSON.stringify(obj)))
+      payload = obj
+    } else {
+      // Strip null plugin key before sending (Loader.validate expects absence, not null)
+      payload = cleanPayload(form.value)
     }
 
     const res = await api.post(`/api/template/${selectedTb.value}/${selectedName.value}`, payload)
@@ -555,9 +693,7 @@ async function saveTemplate() {
       detail:   api.responseMessage(res, t),
       life: 4000,
     })
-    if (res.status === 'error' && res.errors) {
-      console.warn('Template validation errors:', res.errors)
-    }
+    serverErrors.value = res.status === 'error' && Array.isArray(res.errors) ? res.errors : []
   } catch (e) {
     toast.add({ severity: 'error', summary: e.message, life: 4000 })
   } finally {
@@ -666,6 +802,14 @@ async function createTemplate() {
 </script>
 
 <style scoped>
+.tmpl-json { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 0.75rem 1rem; gap: 0.5rem; }
+.tmpl-json-area { flex: 1; min-height: 320px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; resize: none; }
+.tmpl-json-error { color: var(--p-red-500, #d33); font-size: 0.8rem; }
+.tmpl-errors { margin: 0.75rem 1rem 0; padding: 0.5rem 0.75rem; border: 1px solid var(--p-red-500, #d33); border-radius: 6px; background: color-mix(in srgb, var(--p-red-500, #d33) 8%, transparent); font-size: 0.8rem; }
+.tmpl-errors-title { font-weight: 700; margin-bottom: 0.25rem; }
+.tmpl-errors ul { margin: 0; padding-left: 1.2rem; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.tmpl-hint { font-size: 0.75rem; color: var(--p-text-muted-color); padding: 0.25rem 0; }
+
 /* ── Shell ─────────────────────────────────────────────────────────── */
 .tmpl-shell {
   display: flex;
@@ -716,6 +860,11 @@ async function createTemplate() {
   white-space: nowrap;
 }
 
+.tmpl-table-templates {
+  margin: 0 0 0.4rem 1.1rem;
+  border-left: 1px solid var(--p-content-border-color);
+}
+
 .tmpl-list-header {
   display: flex;
   align-items: center;
@@ -728,6 +877,12 @@ async function createTemplate() {
   color: var(--p-text-muted-color);
   border-top: 1px solid var(--p-content-border-color);
   margin-top: 0.25rem;
+}
+
+.tmpl-table-templates .tmpl-list-header {
+  border-top: none;
+  margin-top: 0;
+  padding-left: 0.75rem;
 }
 
 .tmpl-empty-list {
@@ -816,6 +971,38 @@ async function createTemplate() {
   border: 1px solid var(--p-content-border-color);
   border-radius: 6px;
   overflow: hidden;
+}
+
+.tmpl-section-card--plugin {
+  border-left: 4px solid var(--p-orange-500, #f59e0b);
+}
+.tmpl-section-card--plugin .tmpl-section-header {
+  background: color-mix(in srgb, var(--p-orange-500, #f59e0b) 8%, transparent);
+}
+.tmpl-select--plugin :deep(.ant-select-selector) {
+  border-color: var(--p-orange-500, #f59e0b) !important;
+}
+.tmpl-parent-tag {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--p-orange-600, #d97706);
+  white-space: nowrap;
+}
+.tmpl-kind-badge {
+  align-self: flex-end;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.15rem 0.5rem;
+  border-radius: 10px;
+  background: var(--p-content-hover-background);
+  color: var(--p-text-muted-color);
+}
+.tmpl-kind-badge--plugin {
+  background: color-mix(in srgb, var(--p-orange-500, #f59e0b) 20%, transparent);
+  color: var(--p-orange-600, #d97706);
 }
 
 .tmpl-section-header {

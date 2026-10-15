@@ -87,6 +87,19 @@ collapsible sub-panels. Each panel has its own label and field list:
 Accordion sections are ideal for tables with many fields: group logically related
 fields into panels so the form stays manageable without hiding data.
 
+### Plugin sections
+
+With `"plugin": "table_name"` the section shows the rows of that sub-table.
+`content` is required but may be an empty array: in that case **all** plugin
+fields are shown. List fields in `content` to choose their order and width.
+
+## JSON editor
+
+The template editor has a **Visual / JSON code** switch. In JSON mode you can
+paste or edit the whole template (sections, accordions and plugin sections).
+Switching back to Visual requires valid JSON; field names and widths are
+validated by the server on save.
+
 ## Creating a template
 
 1. Select the target table from the **Table** dropdown.

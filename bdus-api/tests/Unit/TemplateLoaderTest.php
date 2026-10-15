@@ -112,4 +112,54 @@ class TemplateLoaderTest extends TestCase
         $allErrors = implode(' ', $errors);
         $this->assertStringContainsString('no_such', $allErrors);
     }
+
+    public function testValidateAcceptsPluginItemsInCoreSection(): void
+    {
+        $tpl = [
+            'sections' => [
+                [
+                    'label'   => 'Mixed',
+                    'content' => [
+                        ['field' => $this->fieldNames[0], 'width' => '1/2'],
+                        ['plugin' => 'tags', 'field' => '*', 'width' => '1/1'],
+                        ['plugin' => 'tags', 'field' => 'any_plugin_field', 'width' => '1/2'],
+                    ],
+                ],
+            ],
+        ];
+
+        $this->assertSame([], Loader::validate($tpl, $this->fieldNames, ['tags']));
+    }
+
+    public function testValidateRejectsUnknownPluginItemInCoreSection(): void
+    {
+        $tpl = [
+            'sections' => [
+                [
+                    'label'   => 'Mixed',
+                    'content' => [
+                        ['plugin' => 'no_such', 'field' => '*', 'width' => '1/1'],
+                    ],
+                ],
+            ],
+        ];
+
+        $errors = Loader::validate($tpl, $this->fieldNames, ['tags']);
+        $this->assertStringContainsString('unknown_plugin', implode(' ', $errors));
+    }
+
+    public function testValidateAcceptsPluginSectionWithEmptyContent(): void
+    {
+        $tpl = ['sections' => [['label' => 'P', 'plugin' => 'tags', 'content' => []]]];
+
+        $this->assertSame([], Loader::validate($tpl, $this->fieldNames, ['tags']));
+    }
+
+    public function testValidateRejectsPluginSectionWithoutContent(): void
+    {
+        $tpl = ['sections' => [['label' => 'P', 'plugin' => 'tags']]];
+
+        $errors = Loader::validate($tpl, $this->fieldNames, ['tags']);
+        $this->assertStringContainsString('content_missing_or_invalid', implode(' ', $errors));
+    }
 }

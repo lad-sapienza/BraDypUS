@@ -23,6 +23,20 @@ class Authorization
         40 => 'waiting',
     ];
 
+    /** Application status for this request: 'on' | 'frozen' | 'off'. */
+    private static string $appStatus = 'on';
+
+    /**
+     * Sets the application status used by can(). Called by the Dispatcher once
+     * the app config is loaded (status lives in bdus_cfg_app since v5.1; it used
+     * to be read from cfg/app_data.json, which no longer exists). Unknown or
+     * empty values fall back to 'on'.
+     */
+    public static function setAppStatus(?string $status): void
+    {
+        self::$appStatus = in_array($status, ['on', 'frozen', 'off'], true) ? $status : 'on';
+    }
+
     /**
      * Checks whether the current user has at least the given privilege level.
      *
@@ -31,12 +45,7 @@ class Authorization
      */
     public static function can(string $privilege = 'edit', ?int $creator = null): bool
     {
-        if (defined('PROJ_DIR')) {
-            $app_data   = json_decode(file_get_contents(PROJ_DIR . 'cfg/app_data.json'), true);
-            $app_status = $app_data['status'];
-        } else {
-            $app_status = 'on';
-        }
+        $app_status = self::$appStatus;
 
         $user_priv = CurrentUser::privilege();
 
@@ -44,9 +53,12 @@ class Authorization
             return false;
         }
 
+        // 'off' locks everyone out except super admins (same rule as UAC::can_enter).
+        $locked = $app_status === 'off' && $user_priv > 1;
+
         return match ($privilege) {
-            'enter'                 => $app_status !== 'off'    && $user_priv < 39,
-            'read', 'preview'       => $app_status !== 'off'    && $user_priv < 31,
+            'enter'                 => !$locked && $user_priv < 39,
+            'read', 'preview'       => !$locked && $user_priv < 31,
             'add_new'               => $app_status !== 'frozen' && $user_priv < 26,
             'edit'                  => $app_status !== 'frozen' && (
                                            $user_priv < 21 ||

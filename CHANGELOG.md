@@ -5,6 +5,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Application status (`on` / `frozen` / `off`) was not enforced by
+  `Authorization::can()`** — it read `cfg/app_data.json`, which no longer exists
+  since the config moved into the database, so the status was always treated as
+  `on`. The Dispatcher now injects the status from `bdus_cfg_app`: `frozen`
+  blocks add/edit/multiple-edit/admin checks, `off` blocks enter/read/preview
+  for everyone except super admins (same rule as `UAC`). Apps that were set to
+  `frozen` or `off` will start behaving as configured.
+
 ## [5.15.1] - 2026-10-15
 
 ### Added

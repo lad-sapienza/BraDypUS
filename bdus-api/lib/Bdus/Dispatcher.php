@@ -132,6 +132,7 @@ class Dispatcher
             if (defined('APP') && !$skipConfig) {
                 $config = new Config(new Dot(), MAIN_DIR . 'projects/' . APP . '/', $this->db);
                 $ctrl->setCfg($config);
+                \Auth\Authorization::setAppStatus($config->get('main.status'));
                 \Template\Loader::setDb($this->db);
 
                 if ($this->db) {

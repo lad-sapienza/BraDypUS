@@ -5,6 +5,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.15.0] - 2026-10-15
+
+### Added
+
+- **`GET /{app}/api/search/{tb}/values`: optional `q` and `limit`** — server-side
+  case-insensitive substring filter (`%`/`_` literal, numeric columns matched as
+  text) and result cap (default 50 when either is sent, max 500), with values
+  starting with `q` ranked first. Without them the response is unchanged. Field
+  and table identifiers are now validated (`parameter_invalid`). OpenAPI
+  documents the parameter as `fld` (it previously said `field`).
+
 ## [5.14.1] - 2026-10-15
 
 ### Fixed

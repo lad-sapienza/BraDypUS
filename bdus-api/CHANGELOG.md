@@ -5,6 +5,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.15.3] - 2026-10-16
+
+### Fixed
+
+- **Renaming a template always failed with `parameter_missing`** —
+  `POST /api/template/{tb}/{name}/rename` read the new name from a body key
+  (`new_name`) that no caller, including the template editor itself, ever
+  sends; the endpoint now reads `new` from the request body, matching what
+  the UI actually posts.
+
 ## [5.15.2] - 2026-10-15
 
 ### Fixed

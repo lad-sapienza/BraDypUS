@@ -28,11 +28,13 @@ class TemplatesCtrlTest extends BdusTestCase
     /** Name used for templates created/renamed during tests */
     private const TMP_NAME  = 'tmp_test';
     private const TMP_NAME2 = 'tmp_test_renamed';
+    private const TMP_NAME3 = 'tmp_test_post_body';
+    private const TMP_NAME4 = 'tmp_test_post_body_renamed';
 
     public static function tearDownAfterClass(): void
     {
         // Clean up any leftover test template files
-        foreach ([self::TMP_NAME, self::TMP_NAME2] as $name) {
+        foreach ([self::TMP_NAME, self::TMP_NAME2, self::TMP_NAME3, self::TMP_NAME4] as $name) {
             $path = \Template\Loader::getPath('bdus_test', self::STRIPPED, $name);
             if (file_exists($path)) {
                 @unlink($path);
@@ -366,6 +368,36 @@ class TemplatesCtrlTest extends BdusTestCase
 
         $this->assertSame('error', $res['status']);
         $this->assertSame('template_not_found', $res['code']);
+    }
+
+    public function testRenameTemplateAcceptsOldNewFromPostBody(): void
+    {
+        // Mirrors the real HTTP contract used by TemplatesView.vue and the
+        // public route (POST /api/template/{tb}/{name}/rename): tb/name come
+        // from the route into $get, old/new come from the JSON body into
+        // $post. A prior regression only matched $get['new'], so this never
+        // worked when called the way the frontend actually calls it.
+        $saveCtrl = $this->makeController(
+            'Bdus\\Controllers\\Templates',
+            ['tb' => self::TB, 'name' => self::TMP_NAME3],
+            ['sections' => []]
+        );
+        $this->callController($saveCtrl, 'saveTemplate');
+
+        $ctrl = $this->makeController(
+            'Bdus\\Controllers\\Templates',
+            ['tb' => self::TB, 'name' => self::TMP_NAME3],
+            ['old' => self::TMP_NAME3, 'new' => self::TMP_NAME4]
+        );
+        $res = $this->callController($ctrl, 'renameTemplate');
+
+        $this->assertSame('success', $res['status']);
+        $this->assertSame('template_renamed', $res['code']);
+
+        $oldPath = \Template\Loader::getPath('bdus_test', self::STRIPPED, self::TMP_NAME3);
+        $newPath = \Template\Loader::getPath('bdus_test', self::STRIPPED, self::TMP_NAME4);
+        $this->assertFileDoesNotExist($oldPath);
+        $this->assertFileExists($newPath);
     }
 
     // ── deleteTemplate ───────────────────────────────────────────────────

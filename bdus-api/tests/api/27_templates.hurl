@@ -82,7 +82,7 @@ jsonpath "$.template" isCollection
 POST {{base_url}}/{{app_name}}/api/template/us/ci_test_tpl/rename
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "new_name": "ci_test_tpl_renamed" }
+{ "old": "ci_test_tpl", "new": "ci_test_tpl_renamed" }
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"

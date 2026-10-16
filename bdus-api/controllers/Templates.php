@@ -208,7 +208,8 @@ class Templates extends \Bdus\Controller
   /**
    * Renames a template file.
    *
-   * GET ?obj=templates_ctrl&method=renameTemplate&tb=TABLE&old=OLD&new=NEW
+   * POST /api/template/TABLE/OLD/rename
+   * Body: { old: OLD, new: NEW }
    *
    * Response: { status, code }
    */
@@ -221,7 +222,7 @@ class Templates extends \Bdus\Controller
 
     $tb      = $this->get['tb']    ?? null;
     $oldName = $this->get['name']  ?? $this->get['old'] ?? null;
-    $newName = $this->post['new_name'] ?? $this->get['new'] ?? null;
+    $newName = $this->post['new']  ?? $this->get['new']  ?? null;
     if (!$tb || !$oldName || !$newName) {
       $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
       return;

@@ -60,6 +60,8 @@
         "tb_stripped": (referenced table name without prefix),
         "tb_label": (referenced table Label),
         "tot": (total number of links found),
+        "filter": (filter selecting those records: {plugin: {fk: {_eq: id}}}, or {id: {_in: [..]}} fallback),
+        "filter_truncated": (true only if the fallback id list was capped at 200),
         "data": [
             {
                 "id": (int),

@@ -5902,7 +5902,18 @@ components:
                     type: integer
                   filter:
                     type: object
-                    description: "Directus-style filter — `{ \"id\": { \"_in\": [...] } }`"
+                    description: |
+                      Directus-style filter selecting exactly the `tot` referencing records;
+                      pass it as-is to `GET /api/records/{tb}?filter=`.
+                      When the bridge table is a plugin of the referencing table the filter is
+                      relational and short, e.g. `{ "m_msplaces": { "place": { "_eq": 53 } } }`.
+                      Otherwise it falls back to `{ "id": { "_in": [...] } }` (deduplicated,
+                      numeric ids only, at most 200).
+                  filter_truncated:
+                    type: boolean
+                    description: |
+                      Present (`true`) only when the `{ "id": { "_in": [...] } }` fallback was
+                      capped at 200 ids, so the filter selects fewer records than `tot`.
                   data:
                     type: array
                     description: Compact list of referencing records (id + label)

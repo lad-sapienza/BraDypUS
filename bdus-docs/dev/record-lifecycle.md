@@ -117,6 +117,18 @@ describes a plugin table that links another table back to this one via
 id|in|{@plugin_table~[id_link|distinct~?fld|=|value}
 ```
 
+The `filter` returned with each backlink (and passed unchanged by clients to
+`/records/{tb}?filter=`) selects exactly the `tot` records. When the bridge table
+is a plugin of the referenced table it is relational and constant-size:
+
+```json
+{ "m_msplaces": { "place": { "_eq": 53 } } }
+```
+
+Otherwise it falls back to `{ "id": { "_in": [...] } }` with deduplicated
+numeric ids, capped at 200; a capped list adds `"filter_truncated": true`.
+Direct `links.<tb>.filter` entries are already relational (`{ fk: { _eq: v } }`).
+
 ### `id_from_tb` auto-joins
 
 `getTbRecord()` (the private fetch kernel) detects fields with an

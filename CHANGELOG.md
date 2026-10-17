@@ -5,25 +5,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed
-
-- **Backlink `filter` is now relational instead of an id list** —
-  `GET /{app}/api/record/{tb}/{id}` used to return
-  `backlinks.<tb>.filter = { id: { _in: [every linked id] } }`, which grew with
-  the number of linked records. When the bridge table is a plugin of the
-  referenced table (e.g. `places ← manuscripts` via `m_msplaces.place`) it now
-  returns `{ m_msplaces: { place: { _eq: 53 } } }`, which selects exactly the
-  `tot` records when passed to `/records/{tb}?filter=`. Direct links
-  (`links.<tb>.filter`) are unchanged. Keys (`tb_id`, `tb_label`, `tot`,
-  `filter`, `data`) are unchanged.
-
 ### Fixed
 
-- **Backlink id-list fallback contained empty ids** — when the filter cannot be
-  expressed relationally, `{ id: { _in: [...] } }` is now deduplicated, drops
-  null / empty / non-numeric values, and is capped at 200 ids; a capped list is
-  flagged with `filter_truncated: true` (the filter then no longer matches
-  `tot`).
+- **Backlink `filter` grew with the number of linked records** —
+  `GET /{app}/api/record/{tb}/{id}` returned
+  `backlinks.<tb>.filter = { id: { _in: [every linked id] } }`, unbounded and
+  sometimes containing an empty id. When the bridge table is a plugin of the
+  referenced table (e.g. `places ← manuscripts` via `m_msplaces.place`) it now
+  returns `{ m_msplaces: { place: { _eq: 53 } } }`, which selects exactly the
+  `tot` records when passed to `/records/{tb}?filter=`. Keys (`tb_id`,
+  `tb_label`, `tot`, `filter`, `data`) and direct `links.<tb>.filter` are
+  unchanged.
+- **Backlink id-list fallback is now clean and bounded** — when the filter
+  cannot be expressed relationally, `{ id: { _in: [...] } }` is deduplicated,
+  drops null / empty / non-numeric values and is capped at 200 ids; a capped
+  list is flagged with `filter_truncated: true` (the filter then no longer
+  matches `tot`).
 
 ## [5.15.3] - 2026-10-16
 

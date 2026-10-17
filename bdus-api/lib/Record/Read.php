@@ -386,6 +386,54 @@ EOD;
         return $this->cache['files'];
     }
 
+    /** Max ids in the `{id: {_in: [...]}}` fallback filter before it is truncated. */
+    private const BACKLINK_IDS_LIMIT = 200;
+
+    /**
+     * Builds the filter that selects the records counted by a backlink's `tot`.
+     *
+     * - When the bridge table is a plugin of the referenced table, a short
+     *   relational 1-hop filter is emitted: `{ via: { fld: { _eq: id } } }`
+     *   (same set as `ref.id IN (SELECT id_link FROM via WHERE fld = ?)`).
+     * - Otherwise falls back to `{ id: { _in: [...] } }` with deduplicated,
+     *   numeric-only ids, capped at BACKLINK_IDS_LIMIT; when capped the extra
+     *   `filter_truncated: true` key is returned alongside.
+     *
+     * @return array{0: array, 1: array} [filter, extra keys to merge in the backlink]
+     */
+    private function buildBacklinkFilter(string $ref_tb, string $via_plg, string $via_plg_fld): array
+    {
+        $plugins = (array) ($this->cfg->get("tables.{$ref_tb}.plugin") ?? []);
+        // The relational form is only usable if JsonFilter will accept it: the
+        // bridge must be a plugin of the referenced table and the FK column a
+        // configured field of the bridge.
+        $viaFields = $this->cfg->get("tables.{$via_plg}.fields") ?? [];
+        $viaFields = array_column(is_array($viaFields) ? $viaFields : [], 'name');
+        if (in_array($via_plg, $plugins, true) && in_array($via_plg_fld, $viaFields, true)) {
+            return [[$via_plg => [$via_plg_fld => ['_eq' => $this->id]]], []];
+        }
+
+        $rows = $this->db->query(
+            "SELECT DISTINCT id_link FROM {$via_plg} WHERE {$via_plg_fld} = ?",
+            [$this->id]
+        ) ?: [];
+        $ids = [];
+        foreach (array_column($rows, 'id_link') as $v) {
+            if (is_int($v) || (is_string($v) && ctype_digit($v))) {
+                $ids[(int) $v] = (int) $v;
+            }
+        }
+        $ids = array_values($ids);
+
+        if (count($ids) > self::BACKLINK_IDS_LIMIT) {
+            return [
+                ['id' => ['_in' => array_slice($ids, 0, self::BACKLINK_IDS_LIMIT)]],
+                ['filter_truncated' => true],
+            ];
+        }
+        return [['id' => ['_in' => $ids]], []];
+    }
+
     /**
      * Returns array of backlinks data
      * @return array      Array with backlink data
@@ -395,6 +443,8 @@ EOD;
      *        "tb_id": (referenced table full name),
      *        "tb_label": (referenced table Label),
      *        "tot": (total number of links found),
+     *        "filter": (relational filter, or {id:{_in:[..]}} fallback, see buildBacklinkFilter),
+     *        "filter_truncated": true (only when the fallback id list was capped),
      *        "data": [
      *          {
      *            "id": (int),
@@ -432,23 +482,18 @@ EOD;
                     if ($r[0]['tot'] == 0) {
                         continue;
                     }
-                    // Fetch the linked IDs directly for the JSON filter.
-                    $linked_rows = $this->db->query(
-                        "SELECT DISTINCT id_link FROM {$via_plg} WHERE {$via_plg_fld} = ?",
-                        [$this->id]
-                    ) ?: [];
-                    $linked_ids = array_column($linked_rows, 'id_link');
+                    [$filter, $extra] = $this->buildBacklinkFilter($ref_tb, $via_plg, $via_plg_fld);
 
                     $backlinks[$ref_tb] = [
                         'tb_id'    => $ref_tb,
                         'tb_label' => $this->cfg->get("tables.$ref_tb.label"),
                         'tot'      => $r[0]['tot'],
-                        'filter'   => ['id' => ['_in' => $linked_ids]],
+                        'filter'   => $filter,
                         'data'     => $this->db->query(
                             "SELECT id, {$ref_tb_id} as label FROM {$ref_tb} WHERE id IN (SELECT DISTINCT id_link FROM {$via_plg} WHERE {$via_plg_fld} = ?)",
                             [$this->id]
                         )
-                    ];
+                    ] + $extra;
                 }
             }
             $this->cache['backlinks'] = $backlinks;

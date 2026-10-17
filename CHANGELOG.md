@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.15.4] - 2026-10-17
+
 ### Fixed
 
 - **Backlink `filter` grew with the number of linked records** —

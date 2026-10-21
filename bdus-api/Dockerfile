@@ -1,4 +1,4 @@
-FROM php:8.4-apache
+FROM php:8.4.27-apache
 
 # System dependencies for PHP extensions
 RUN apt-get update && apt-get install -y \

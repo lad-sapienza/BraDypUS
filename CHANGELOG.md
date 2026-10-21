@@ -5,6 +5,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- **PHP 8.4.27 — fixes CVE-2026-109618 / CVE-2026-109619** — the Docker image
+  base is now pinned to `php:8.4.27-apache`, which contains the upstream fix for
+  both critical PHP core flaws (unauthenticated RCE via the multipart upload
+  parser and stale request state). This completes the partial mitigation shipped
+  in 5.15.5. Redeploy the image (`bdus update`) to be protected.
+
 ## [5.15.5] - 2026-10-21
 
 ### Security

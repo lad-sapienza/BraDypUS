@@ -5,6 +5,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- **PHP core CVE-2026-109618 / CVE-2026-109619 (partial mitigation)** — the
+  Docker image now sets `session.upload_progress.enabled = 0` (BraDypUS does not
+  use it), which reduces CVE-2026-109619. The real fix is PHP 8.4.27; the
+  official `php:8.4.27-apache` image was not yet published at release time, so
+  the base image will be pinned in a follow-up patch. Rebuild with `--pull`.
+
 ## [5.15.4] - 2026-10-17
 
 ### Fixed

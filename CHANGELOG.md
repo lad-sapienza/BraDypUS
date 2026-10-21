@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.15.6] - 2026-10-21
+
 ### Security
 
 - **PHP 8.4.27 — fixes CVE-2026-109618 / CVE-2026-109619** — the Docker image

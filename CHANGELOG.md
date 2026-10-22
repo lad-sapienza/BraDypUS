@@ -5,6 +5,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Dependency maintenance** — routine minor/patch bumps, no behaviour change:
+  - `bdus-api`: `intervention/image` 4.3.3 → 4.3.5 (`composer.lock` only).
+    Full PHPUnit + hurl suite green (SQLite).
+  - `bdus-app`: `maplibre-gl` 6.13.0 → 6.15.0, `vue` 3.5.43 → 3.5.44, `pinia`
+    4.0.3 → 4.1.0, `cytoscape` 3.34.3 → 3.34.4, `marked` 18.1.0 → 18.1.1,
+    `@vitejs/plugin-vue` 6.0.9 → 6.0.10. Unit tests and production build
+    clean; GeoFace checked in the dev app (geometries render, popup and
+    geometry editing work).
+
 ## [5.15.6] - 2026-10-21
 
 ### Security

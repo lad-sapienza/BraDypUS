@@ -1,6 +1,6 @@
 {
   "name": "bdus-app",
-  "version": "5.15.6",
+  "version": "5.15.7",
   "description": "BraDypUS web frontend",
   "scripts": {
     "dev": "vite",

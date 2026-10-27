@@ -3493,10 +3493,11 @@ HTTP 200
 jsonpath "$.status" == "success"
 
 
-# ── 19v. Utente demo con privilegio ridotto ───────────────────────────
-# "writer" (20) di base, ma con override "reader" (30) su sepolture —
-# dimostra il caso d'uso principale di User Manager: privilegi diversi
-# per tabelle diverse (dati sensibili).
+# ── 19v. Utenti, gruppo di revisori e blocco — demo di "Gruppi e permessi" ─
+# Un "Editor Demo" (writer) e un "Revisore Demo" di livello Enter, senza
+# accesso proprio: vede solo ciò che il gruppo "Revisori" gli concede (le
+# sepolture e le US verificate). Un blocco congela le US verificate:
+# non le modifica nessuno tranne gli admin.
 POST {{base_url}}/{{app_name}}/api/user
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
@@ -3512,10 +3513,56 @@ jsonpath "$.status" == "success"
 [Captures]
 editor_user_id: jsonpath "$.id"
 
-POST {{base_url}}/{{app_name}}/api/user/{{editor_user_id}}/privileges
+POST {{base_url}}/{{app_name}}/api/user
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "user_id": {{editor_user_id}}, "table_name": "sepolture", "privilege": 30 }
+{
+  "name": "Revisore Demo",
+  "email": "revisore@example.com",
+  "password": "Revisore1234!",
+  "privilege": 39
+}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+[Captures]
+reviewer_user_id: jsonpath "$.id"
+
+POST {{base_url}}/{{app_name}}/api/groups
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "name": "Revisori", "description": "Leggono le sepolture e le US verificate" }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+[Captures]
+reviewers_group_id: jsonpath "$.id"
+
+PUT {{base_url}}/{{app_name}}/api/group/{{reviewers_group_id}}/rules
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{
+  "rules": [
+    { "table": "sepolture", "action": "read" },
+    { "table": "us",        "action": "read", "filter": { "verificata": { "_eq": "1" } } }
+  ]
+}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+PUT {{base_url}}/{{app_name}}/api/group/{{reviewers_group_id}}/members
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "user_ids": [ {{reviewer_user_id}} ] }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/locks
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "table": "us", "filter": { "verificata": { "_eq": "1" } }, "note": "US verificate e pubblicate" }
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"

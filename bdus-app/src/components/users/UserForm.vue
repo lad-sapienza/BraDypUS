@@ -21,6 +21,18 @@
       />
     </div>
 
+    <div v-if="groupOptions" class="field">
+      <label for="groups">{{ t('grp_groups') }}</label>
+      <ASelect
+        id="groups"
+        v-model:value="form.groups"
+        mode="multiple"
+        :options="groupOptions"
+        option-filter-prop="label"
+      />
+      <small v-if="Number(form.privilege) === 39" class="field-hint">{{ t('grp_enter_hint') }}</small>
+    </div>
+
     <div class="field">
       <label for="password">Password</label>
       <AInputPassword
@@ -44,12 +56,15 @@
 import { CheckOutlined } from '@ant-design/icons-vue'
 import { ref, computed, watch } from 'vue'
 import { Input, Select as ASelect, Button as AButton } from 'ant-design-vue'
+import { useI18n } from '@/i18n'
 const AInput = Input
+const { t } = useI18n()
 const AInputPassword = Input.Password
 
 const props = defineProps({
   initial: { type: Object, default: () => ({}) },
-  saving: { type: Boolean, default: false }
+  saving: { type: Boolean, default: false },
+  groupOptions: { type: Array, default: null },   // [{ value, label }] — admins only; null hides the field
 })
 
 const emit = defineEmits(['save', 'cancel'])
@@ -85,6 +100,10 @@ function handleSave() {
 .field label {
   font-size: 0.9rem;
   font-weight: 500;
+  color: var(--p-text-muted-color);
+}
+
+.field-hint {
   color: var(--p-text-muted-color);
 }
 

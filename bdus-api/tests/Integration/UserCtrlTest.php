@@ -44,9 +44,35 @@ class UserCtrlTest extends BdusTestCase
         $res  = $this->callController($ctrl, 'showList');
 
         $row = $res['users'][0];
-        foreach (['id', 'name', 'email', 'privilege', 'privilege_value', 'editable', 'oauth_provider'] as $k) {
+        foreach (['id', 'name', 'email', 'privilege', 'privilege_value', 'editable', 'oauth_provider', 'groups'] as $k) {
             $this->assertArrayHasKey($k, $row, "Missing key: $k");
         }
+    }
+
+    public function testShowListCarriesEachUsersGroups(): void
+    {
+        static::$db->exec("INSERT INTO bdus_groups (id, name) VALUES (71, 'A'), (72, 'B')");
+        static::$db->exec("INSERT INTO bdus_user_groups (user_id, group_id) VALUES (1, 71), (1, 72)");
+        try {
+            $res = $this->callController($this->makeController('Bdus\\Controllers\\User'), 'showList');
+
+            $byId = array_column($res['users'], null, 'id');
+            $this->assertSame([71, 72], $byId[1]['groups']);
+            $this->assertSame([], $byId[2]['groups']);
+        } finally {
+            static::$db->exec('DELETE FROM bdus_user_groups');
+            static::$db->exec('DELETE FROM bdus_groups');
+        }
+    }
+
+    public function testEnterTierIsALabelledLevelOfTheUserForm(): void
+    {
+        $res    = $this->callController($this->makeController('Bdus\\Controllers\\User'), 'showUserForm');
+        $levels = array_column($res['privileges'], 'label', 'value');
+
+        $this->assertSame('enter', $levels[39] ?? null);
+        $this->assertSame('enter', \Auth\Authorization::privilege(39));
+        $this->assertSame(39, \Auth\Authorization::privilege('enter'));
     }
 
     public function testShowListSurfacesOauthProvider(): void

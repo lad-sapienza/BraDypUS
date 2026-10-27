@@ -12,6 +12,10 @@
         <span v-if="recordTitle" class="sep">/</span>
         <span v-if="recordTitle" class="record-title-text">{{ recordTitle }}</span>
         <span v-if="isNew" class="record-title-text new-badge">{{ t('new_record') }}</span>
+        <!-- Frozen by a table lock: only admins can still change it -->
+        <ATag v-if="record?.metadata?.locked" color="orange" class="locked-tag" :title="t('grp_locked_hint')">
+          <LockOutlined /> {{ t('grp_locked') }}
+        </ATag>
       </div>
 
       <div class="header-actions">
@@ -319,7 +323,7 @@
 </template>
 
 <script setup>
-import { ArrowLeftOutlined, CheckOutlined, CloseOutlined, CopyOutlined, DeleteOutlined, EditOutlined, HistoryOutlined, LeftOutlined, RightOutlined, WarningOutlined } from '@ant-design/icons-vue'
+import { ArrowLeftOutlined, CheckOutlined, CloseOutlined, CopyOutlined, DeleteOutlined, EditOutlined, HistoryOutlined, LeftOutlined, LockOutlined, RightOutlined, WarningOutlined } from '@ant-design/icons-vue'
 import { ref, computed, watch, reactive, onMounted, onUnmounted, provide } from 'vue'
 import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
 import { useToast, useConfirm } from '@/composables/useNotify'

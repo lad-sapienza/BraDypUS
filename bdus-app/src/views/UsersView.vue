@@ -2,6 +2,17 @@
   <AppLayout>
     <div class="users-view">
 
+      <!-- Admins also manage groups and locks -->
+      <ATabs v-if="isAdmin" v-model:activeKey="tab" class="users-tabs">
+        <ATabPane key="users"  :tab="t('users')" />
+        <ATabPane key="groups" :tab="t('grp_groups')" />
+        <ATabPane key="locks"  :tab="t('grp_locks')" />
+      </ATabs>
+
+      <GroupsPanel v-if="tab === 'groups' && isAdmin" :users="users" @changed="loadUsers" />
+      <LocksPanel v-else-if="tab === 'locks' && isAdmin" />
+
+      <template v-else>
       <!-- ── Header ──────────────────────────────────────────── -->
       <div class="users-header">
         <h2>{{ t('users') }}</h2>
@@ -46,6 +57,9 @@
               {{ record.privilege }}
             </ATag>
           </template>
+          <template v-else-if="column.key === 'groups'">
+            <ATag v-for="gid in record.groups" :key="gid" class="users-group-tag">{{ groupName(gid) }}</ATag>
+          </template>
           <template v-else-if="column.key === 'actions'">
             <AButton
               v-if="record.editable"
@@ -76,6 +90,7 @@
           </template>
         </template>
       </ATable>
+      </template>
 
     </div>
 
@@ -88,6 +103,7 @@
     >
       <UserForm
         :initial="formData"
+        :group-options="isAdmin ? groupOptions : null"
         :saving="saving"
         @save="saveUser"
         @cancel="formVisible = false"
@@ -103,8 +119,11 @@ import { ref, computed, onMounted } from 'vue'
 import { useToast, useConfirm } from '@/composables/useNotify'
 import AppLayout        from '@/components/AppLayout.vue'
 import UserForm         from '@/components/users/UserForm.vue'
-import { Table as ATable, Button as AButton, Tag as ATag, Modal as AModal, Input as AInput } from 'ant-design-vue'
+import GroupsPanel      from '@/components/users/GroupsPanel.vue'
+import LocksPanel       from '@/components/users/LocksPanel.vue'
+import { Table as ATable, Button as AButton, Tag as ATag, Modal as AModal, Input as AInput, Tabs as ATabs, TabPane as ATabPane } from 'ant-design-vue'
 import { api }          from '@/api'
+import { useGroups }    from '@/composables/useGroups'
 import { useI18n }      from '@/i18n'
 import { useAuthStore } from '@/stores/auth'
 import { severityToTagColor } from '@/utils/severity'
@@ -128,8 +147,18 @@ const columns = computed(() => [
   { title: t('email'), dataIndex: 'email', key: 'email',
     sorter: (a, b) => (a.email ?? '').localeCompare(b.email ?? ''), width: 220 },
   { title: t('global_privilege'), key: 'privilege', width: 170 },
+  ...(isAdmin.value ? [{ title: t('grp_groups'), key: 'groups' }] : []),
   { title: '',                    key: 'actions',   width: 170 },
 ])
+
+// ── Tabs (admins) ─────────────────────────────────────────────────
+const tab = ref('users')
+
+// ── Groups, for the column and the user form ──────────────────────
+const groupsApi  = useGroups()
+const groupList  = ref([])
+const groupName  = id => groupList.value.find(g => g.id === id)?.name ?? `#${id}`
+const groupOptions = computed(() => groupList.value.map(g => ({ value: g.id, label: g.name })))
 
 // ── State ─────────────────────────────────────────────────────────
 const users            = ref([])
@@ -154,6 +183,10 @@ async function loadUsers() {
   loading.value = true
   try {
     const res = await api.get('/api/users')
+    // Group names first, so the Groups column never flashes bare ids.
+    if (res.admin) {
+      try { groupList.value = await groupsApi.listGroups() } catch { groupList.value = [] }
+    }
     users.value   = res.users ?? []
     isAdmin.value = res.admin ?? false
   } catch (e) {
@@ -166,7 +199,7 @@ async function loadUsers() {
 // ── Open user form ────────────────────────────────────────────────
 async function openForm(user) {
   const res = await api.get(user ? `/api/user/${user.id}` : '/api/user')
-  formData.value = res
+  formData.value = { ...res, groups: user?.groups ?? [] }
   formVisible.value = true
 }
 
@@ -174,8 +207,13 @@ async function openForm(user) {
 async function saveUser(data) {
   saving.value = true
   try {
-    const res = await api.post('/api/user', data)
+    const { groups, ...userData } = data
+    const res = await api.post('/api/user', userData)
     if (res.status !== 'success') throw new Error(t(res.code ?? 'error'))
+    // Memberships are their own endpoint; only admins see (and send) them.
+    if (isAdmin.value && Array.isArray(groups)) {
+      await groupsApi.saveUserGroups(data.id ?? res.id, groups)
+    }
     toast.add({ severity: 'success', summary: t('users'), detail: t('user_data_saved'), life: 3000 })
     formVisible.value = false
     await loadUsers()
@@ -255,6 +293,9 @@ onMounted(loadUsers)
   font-weight: 600;
   flex-shrink: 0;
 }
+
+.users-tabs { padding: 0 1.5rem; flex-shrink: 0; }
+.users-group-tag { margin-bottom: 2px; }
 
 .users-filter-input {
   flex: 1;

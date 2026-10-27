@@ -24,8 +24,18 @@
             :options="privilegeOptions"
             :placeholder="t('privilege')"
             style="min-width: 12rem"
+            @change="onPrivilegeChange"
           />
-          <AButton :loading="creating" @click="createKey">
+          <!-- A group scopes the key to tables and rows; level Enter has nothing without one -->
+          <ASelect
+            v-if="newPrivilege !== PRIV_ADMIN"
+            v-model:value="newGroup"
+            :options="groupOptions"
+            :placeholder="newPrivilege === PRIV_ENTER ? t('grp_key_group_required') : t('grp_key_group_optional')"
+            :allow-clear="newPrivilege !== PRIV_ENTER"
+            style="min-width: 14rem"
+          />
+          <AButton :loading="creating" :disabled="newPrivilege === PRIV_ENTER && !newGroup" @click="createKey">
             <template #icon><PlusOutlined /></template>
             {{ t('create_api_key') }}
           </AButton>
@@ -78,6 +88,10 @@
                 {{ privilegeLabel(record.privilege) }}
               </ATag>
             </template>
+            <template v-else-if="column.key === 'group'">
+              <ATag v-if="record.group_name" color="blue">{{ record.group_name }}</ATag>
+              <span v-else>—</span>
+            </template>
             <template v-else-if="column.key === 'is_active'">
               <ATag :color="record.is_active ? 'success' : 'default'">
                 {{ record.is_active ? t('active') : t('revoked') }}
@@ -114,6 +128,7 @@ import { Table as ATable, Button as AButton, Input as AInput, Select as ASelect,
 import { useToast } from '@/composables/useNotify'
 import { useI18n }  from '@/i18n'
 import { api }      from '@/api'
+import { useGroups } from '@/composables/useGroups'
 import { severityToTagColor } from '@/utils/severity'
 
 const { t }  = useI18n()
@@ -123,17 +138,20 @@ const toast  = useToast()
 const PRIV_ADMIN = 10
 const PRIV_EDIT  = 25
 const PRIV_READ  = 30
+const PRIV_ENTER = 39   // no access of its own: everything comes from the key's group
 
 const privilegeOptions = computed(() => [
   { value: PRIV_READ,  label: t('priv_read')  },
   { value: PRIV_EDIT,  label: t('priv_edit')  },
   { value: PRIV_ADMIN, label: t('priv_admin') },
+  { value: PRIV_ENTER, label: t('priv_enter') },
 ])
 
 function privilegeLabel(priv) {
   if (priv <= PRIV_ADMIN) return t('priv_admin')
   if (priv <= PRIV_EDIT)  return t('priv_edit')
-  return t('priv_read')
+  if (priv <= PRIV_READ)  return t('priv_read')
+  return t('priv_enter')
 }
 
 function privilegeSeverity(priv) {
@@ -142,11 +160,22 @@ function privilegeSeverity(priv) {
   return 'info'
 }
 
+// ── Groups (they scope a key) ─────────────────────────────────────────────
+const groupsApi    = useGroups()
+const groups       = ref([])
+const groupOptions = computed(() => groups.value.map(g => ({ value: g.id, label: g.name })))
+const newGroup     = ref(null)
+
+function onPrivilegeChange(value) {
+  if (value === PRIV_ADMIN) newGroup.value = null   // an admin key bypasses the rules
+}
+
 const columns = computed(() => [
   { title: t('label'),       dataIndex: 'label',        key: 'label' },
   { title: t('created_at'),  dataIndex: 'created_at',   key: 'created_at' },
   { title: t('last_used'),   dataIndex: 'last_used_at', key: 'last_used_at' },
   { title: t('privilege'),   dataIndex: 'privilege',    key: 'privilege' },
+  { title: t('grp_key_group'), key: 'group' },
   { title: t('status'),      dataIndex: 'is_active',    key: 'is_active' },
   { title: t('actions'),     key: 'actions' },
 ])
@@ -184,7 +213,9 @@ async function createKey() {
   creating.value = true
   newKey.value   = null
   try {
-    const res = await api.post('/api/api-keys', { label, privilege: newPrivilege.value })
+    const body = { label, privilege: newPrivilege.value }
+    if (newGroup.value) body.group_id = newGroup.value
+    const res = await api.post('/api/api-keys', body)
     if (res.status === 'error') {
       toast.add({ severity: 'error', summary: t(res.code) || res.code, life: 5000 })
       return
@@ -192,6 +223,7 @@ async function createKey() {
     newKey.value      = res.key
     newLabel.value    = ''
     newPrivilege.value = PRIV_READ
+    newGroup.value     = null
     toast.add({ severity: 'success', summary: t('ok_api_key_created'), life: 4000 })
     await load()
   } catch (e) {
@@ -249,7 +281,10 @@ async function copyKey() {
   }
 }
 
-onMounted(load)
+onMounted(async () => {
+  try { groups.value = await groupsApi.listGroups() } catch { groups.value = [] }
+  await load()
+})
 </script>
 
 <style scoped>

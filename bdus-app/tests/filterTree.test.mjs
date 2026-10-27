@@ -4,7 +4,7 @@ import assert from 'node:assert/strict'
 import {
   MAX_DEPTH, NO_VALUE_OPS, group, condition, emptyTree, cloneTree, isActive, countActive,
   nodeAt, normalize, addCondition, addGroup, canAddGroup, setOperator, remove, ungroup,
-  canIndent, indent, canOutdent, outdent, treeToFilter, formula, serializeTree, rowsToTree, restoreTree,
+  canIndent, indent, canOutdent, outdent, treeToFilter, filterToTree, formula, serializeTree, rowsToTree, restoreTree,
 } from '../src/utils/filterTree.js'
 
 const leaf = (fld, value, operator = '_eq') => condition(fld, operator, value)
@@ -194,4 +194,78 @@ test('serialize / restore round trip, legacy rows, and untrusted input', () => {
     assert.equal(restoreTree(bad).t, 'g')
     assert.ok(restoreTree(bad).c.length >= 1)
   }
+})
+
+
+// ── filterToTree: a stored filter back into the builder ──────────────────
+
+test('filterToTree: whatever the builder writes comes back as the same filter (1000 random trees)', () => {
+  const rand = rng(20261027)
+  const pick = a => a[Math.floor(rand() * a.length)]
+  const FIELDS = ['us:site', 'us:type', 'us:cat_ref', 'sites:code']
+  const OPS = ['_eq', '_icontains', '_neq', '_empty', '_nempty', '_null', '_gt']
+  const VALUES = ['a', 'Romano', '12', '$CURRENT_USER']
+  const make = depth => {
+    if (depth >= MAX_DEPTH || rand() < 0.55) {
+      const op = pick(OPS)
+      return condition(pick(FIELDS), op, NO_VALUE_OPS.includes(op) ? '' : pick(VALUES))
+    }
+    return group(pick(['AND', 'OR']), Array.from({ length: 2 + Math.floor(rand() * 2) }, () => make(depth + 1)))
+  }
+  let shown = 0
+  for (let n = 0; n < 1000; n++) {
+    const tree = normalize(group(pick(['AND', 'OR']), [make(1), make(1)]))
+    const filter = treeToFilter(tree, ctx)
+    const back = filterToTree(filter, ctx)
+    if (back === null) continue               // not representable is allowed, wrong is not
+    shown++
+    assert.deepEqual(treeToFilter(back, ctx), filter, `case ${n}: ${JSON.stringify(filter)}`)
+  }
+  assert.ok(shown > 800, `only ${shown} of 1000 filters were shown in the builder`)
+})
+
+test('filterToTree: simple, nested, lookup and related-table filters', () => {
+  assert.deepEqual(filterToTree({ site: { _eq: 'A' } }, ctx), group('AND', [leaf('us:site', 'A')]))
+  assert.deepEqual(
+    filterToTree({ _or: [{ site: { _eq: 'A' } }, { _and: [{ type: { _eq: 'B' } }, { site: { _empty: true } }] }] }, ctx),
+    group('OR', [leaf('us:site', 'A'), group('AND', [leaf('us:type', 'B'), condition('us:site', '_empty', '')])])
+  )
+  // lookup field: the condition is on the referenced field
+  assert.deepEqual(filterToTree({ cat_ref: { name: { _eq: 'Ceramics' } } }, ctx), group('AND', [leaf('us:cat_ref', 'Ceramics')]))
+  // related table
+  assert.deepEqual(filterToTree({ sites: { code: { _eq: 'X' } } }, ctx), group('AND', [leaf('sites:code', 'X')]))
+  // the builder writes an AND group as `_and`; the same meaning written as two keys is shown as JSON
+  assert.deepEqual(
+    filterToTree({ _and: [{ site: { _eq: 'A' } }, { type: { _eq: 'B' } }] }, ctx),
+    group('AND', [leaf('us:site', 'A'), leaf('us:type', 'B')])
+  )
+  assert.equal(filterToTree({ site: { _eq: 'A' }, type: { _eq: 'B' } }, ctx), null)
+  // only the operators the builder offers, when it says which
+  assert.equal(filterToTree({ site: { _neq: 'A' } }, { ...ctx, operators: ['_eq'] }), null)
+})
+
+test('filterToTree: nothing → the empty tree; what the builder cannot show → null', () => {
+  assert.deepEqual(filterToTree(null, ctx), emptyTree())
+  assert.deepEqual(filterToTree({}, ctx), emptyTree())
+  assert.deepEqual(filterToTree([], ctx), emptyTree())   // how PHP encodes an empty filter
+
+  for (const filter of [
+    { site: { _in: ['a', 'b'] } },                 // list
+    { site: { _eq: 5 } },                          // not a string
+    { site: { _eq: true } },
+    { site: { _between: ['1', '9'] } },
+    { site: { _null: false } },                    // no-value operators only mean true
+    { site: { _oops: 'x' } },                      // not an operator
+    { _and: [{ site: { _eq: 'a' } }] },            // a group the builder would collapse
+    { _or: 'nope' },
+    { cat_ref: { _eq: '3' } },                     // a lookup is written through its referenced field
+    'site',
+    [{ site: { _eq: 'a' } }],
+  ]) {
+    assert.equal(filterToTree(filter, ctx), null, JSON.stringify(filter))
+  }
+  // nested deeper than the builder allows
+  let deep = { site: { _eq: 'a' } }
+  for (let i = 0; i < MAX_DEPTH + 2; i++) deep = { _or: [deep, { type: { _eq: 'b' } }] }
+  assert.equal(filterToTree(deep, ctx), null)
 })

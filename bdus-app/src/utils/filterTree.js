@@ -21,6 +21,14 @@ export const MAX_DEPTH = 3
 /** Operators that need no value (the condition is complete without one). */
 export const NO_VALUE_OPS = ['_empty', '_nempty', '_null', '_nnull']
 
+/** Operators the backend filter takes with a single plain value (what a condition can hold). */
+export const SCALAR_OPS = [
+  '_eq', '_neq', '_lt', '_lte', '_gt', '_gte',
+  '_contains', '_icontains', '_ncontains',
+  '_starts_with', '_ends_with', '_nstarts_with', '_nends_with',
+  '_null', '_nnull', '_empty', '_nempty',
+]
+
 const OPPOSITE = { AND: 'OR', OR: 'AND' }
 
 // ── Builders ──────────────────────────────────────────────────────────────
@@ -195,6 +203,107 @@ export function treeToFilter(root, ctx) {
   }
 
   return walk(root)
+}
+
+/**
+ * The inverse of treeToFilter: the builder tree that produces exactly this
+ * backend filter, so a filter saved elsewhere (a group rule, a table lock) can
+ * be shown and edited in the builder.
+ *
+ * Returns null when the filter is not something the builder can show — values
+ * that are not plain strings (`_in` lists, numbers), unknown shapes, groups
+ * nested deeper than MAX_DEPTH. The check is a round trip: a tree is only
+ * returned if treeToFilter(tree) gives back the same filter, so what the user
+ * sees is exactly what is stored. null/empty gives the empty tree.
+ *
+ * @param {object|null} filter
+ * @param {{ mainTb: string,
+ *           fieldMeta?: (fld: string) => ({ref_tb?: string, ref_field?: string}|undefined),
+ *           operators?: string[] }} ctx  `operators`: the ones the builder offers (default: SCALAR_OPS)
+ */
+export function filterToTree(filter, ctx) {
+  if (filter == null || (typeof filter === 'object' && Object.keys(filter).length === 0)) {
+    return emptyTree()
+  }
+  const { mainTb, fieldMeta = () => undefined } = ctx
+  const isObj = v => v !== null && typeof v === 'object' && !Array.isArray(v)
+  const known = new Set(ctx.operators ?? SCALAR_OPS)
+  const isOp = k => known.has(k)
+
+  // { _op: value, … } → conditions on one field (null when a value is not representable)
+  const conditionsOf = (fld, ops) => {
+    const out = []
+    for (const [op, val] of Object.entries(ops)) {
+      if (!isOp(op)) return null
+      if (NO_VALUE_OPS.includes(op)) {
+        if (val !== true) return null
+        out.push(condition(fld, op, ''))
+      } else if (typeof val === 'string') {
+        out.push(condition(fld, op, val))
+      } else {
+        return null
+      }
+    }
+    return out
+  }
+
+  // One filter object (several keys = implicit AND) → a list of nodes, or null.
+  const parse = node => {
+    if (!isObj(node)) return null
+    const parts = []
+    for (const [key, val] of Object.entries(node)) {
+      if (key === '_and' || key === '_or') {
+        if (!Array.isArray(val)) return null
+        const kids = []
+        for (const item of val) {
+          const sub = parse(item)
+          if (!sub) return null
+          kids.push(sub.length === 1 ? sub[0] : group('AND', sub))
+        }
+        parts.push(group(key === '_and' ? 'AND' : 'OR', kids))
+      } else if (isObj(val)) {
+        const subKeys = Object.keys(val)
+        let conds
+        if (subKeys.length && subKeys.every(isOp)) {
+          // field condition on the main table
+          const fld = `${mainTb}:${key}`
+          conds = fieldMeta(fld)?.ref_field ? null : conditionsOf(fld, val)
+        } else if (fieldMeta(`${mainTb}:${key}`)?.ref_field) {
+          // lookup traversal: { field: { ref_field: { _op: v } } }
+          const ref = fieldMeta(`${mainTb}:${key}`).ref_field
+          conds = isObj(val[ref]) && Object.keys(val).length === 1 ? conditionsOf(`${mainTb}:${key}`, val[ref]) : null
+        } else {
+          // related table: { table: { field: { _op: v } } } (one field per key, as the builder writes it)
+          const entries = Object.entries(val)
+          if (entries.length !== 1 || !isObj(entries[0][1])) return null
+          const [field, inner] = entries[0]
+          const fld = `${key}:${field}`
+          const ref = fieldMeta(fld)?.ref_field
+          conds = ref
+            ? (isObj(inner[ref]) && Object.keys(inner).length === 1 ? conditionsOf(fld, inner[ref]) : null)
+            : conditionsOf(fld, inner)
+        }
+        if (!conds || conds.length === 0) return null
+        parts.push(...(conds.length === 1 ? conds : [group('AND', conds)]))
+      } else {
+        return null
+      }
+    }
+    return parts
+  }
+
+  const parts = parse(filter)
+  if (!parts || parts.length === 0) return null
+
+  let root = parts.length === 1 && parts[0].t === 'g' ? parts[0] : group('AND', parts)
+  const tooDeep = (n, d) => n.t === 'g' && (d > MAX_DEPTH || n.c.some(c => tooDeep(c, d + 1)))
+  if (tooDeep(root, 0)) return null
+  root = normalize(root)
+
+  // Round trip: show only what would be saved back unchanged.
+  const canon = v => JSON.stringify(v, (_k, x) =>
+    isObj(x) ? Object.fromEntries(Object.keys(x).sort().map(k => [k, x[k]])) : x)
+  return canon(treeToFilter(root, ctx)) === canon(filter) ? root : null
 }
 
 // ── Readable form ─────────────────────────────────────────────────────────

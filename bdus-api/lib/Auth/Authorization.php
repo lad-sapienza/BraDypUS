@@ -28,6 +28,7 @@ class Authorization
         20 => 'writer',
         25 => 'self_writer',
         30 => 'reader',
+        39 => 'enter',
         40 => 'waiting',
     ];
 

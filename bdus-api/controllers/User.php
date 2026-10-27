@@ -26,7 +26,8 @@ class User extends \Bdus\Controller
 	 *       "email":           string,
 	 *       "privilege":       string,   // translated label
 	 *       "privilege_value": int,      // raw numeric level
-	 *       "editable":        bool
+	 *       "editable":        bool,
+	 *       "groups":          int[]     // ids of the groups the user belongs to
 	 *     }
 	 *   ]
 	 * }
@@ -47,6 +48,16 @@ class User extends \Bdus\Controller
 				'failed_login_count', 'locked_until', 'reset_token_hash', 'reset_token_expires',
 			]);
 
+			// Group memberships, one query for the whole list (none before M046).
+			$groupsOf = [];
+			try {
+				foreach ($this->db->query('SELECT user_id, group_id FROM bdus_user_groups ORDER BY group_id', [], 'read') ?: [] as $m) {
+					$groupsOf[(int) $m['user_id']][] = (int) $m['group_id'];
+				}
+			} catch (\Throwable $e) {
+				// table missing: migration pending
+			}
+
 			foreach ($all_users as $user) {
 				$data['users'][] = [
 					'id'              => $user['id'],
@@ -55,6 +66,7 @@ class User extends \Bdus\Controller
 					'privilege'       => \Auth\Authorization::privilege($user['privilege'], true),
 					'privilege_value' => (int) $user['privilege'],
 					'editable'        => (\Auth\Authorization::can('admin') && $user['privilege'] >= \Auth\CurrentUser::privilege()),
+					'groups'          => $groupsOf[(int) $user['id']] ?? [],
 					'oauth_provider'  => $user['oauth_provider'] ?? null,
 				];
 			}
@@ -66,6 +78,7 @@ class User extends \Bdus\Controller
 				'privilege'       => \Auth\Authorization::privilege(\Auth\CurrentUser::privilege(), true),
 				'privilege_value' => \Auth\CurrentUser::privilege(),
 				'editable'        => true,
+				'groups'          => [],
 			];
 		}
 		$data["status"] = "success";

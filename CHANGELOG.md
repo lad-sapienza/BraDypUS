@@ -64,8 +64,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   endpoints enforce (group rules, row scope, locks) and adds `locked`, which
   admins also see. `Authorization::can('delete')` is new (same tiers as `edit`).
 
+- **Groups & permissions — interface (#78)** — the Users view gets two tabs for
+  admins. **Groups**: the built-in levels (read only), then each group with its
+  details, members and a permissions grid (one row per table; Create on/off;
+  Read/Update/Delete off, all rows, or the rows a filter selects, edited with the
+  query builder or as JSON). **Locks**: the frozen row sets, with how many records
+  each freezes right now. The user form assigns groups, the API-key form takes a
+  group (required for level *Enter*, which `GET /api/users` and the user form now
+  list), and a frozen record shows a *Frozen* badge. English and Italian.
+- The users list (`GET /api/users`) returns each user's `groups`.
+
 ### Fixed
 
+- **The demo seed called an endpoint removed with the per-table privileges** and
+  stopped half-way; it now builds a reviewers group, a level-*Enter* user and a
+  lock instead.
 - **The test stack no longer shares the dev stack's Docker network.** `test.sh`
   attached its `app` container to `bradypus-net` (declared external) under the
   same service name as the development backend, so the dev Vite proxy

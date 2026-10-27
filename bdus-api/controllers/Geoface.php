@@ -195,6 +195,26 @@ class Geoface extends \Bdus\Controller
      *
      * Response: { status, code, geo_id }
      */
+    /**
+     * May the principal change every one of these geometries? Each belongs to a
+     * record (table_link / id_link) and is judged with it; all are checked
+     * before anything is written.
+     *
+     * @param array $geoIds ids of bdus_geodata rows
+     */
+    private function mayChangeGeometries(array $geoIds): bool
+    {
+        foreach ($geoIds as $geoId) {
+            $row = $this->db->query(
+                'SELECT table_link, id_link FROM bdus_geodata WHERE id = ?', [(int) $geoId], 'read'
+            )[0] ?? null;
+            if ($row && !$this->mayChange('update', (string) $row['table_link'], (int) $row['id_link'])) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public function saveNew(): void
     {
         $tb       = $this->post['tb']       ?? $this->get['tb']       ?? null;
@@ -206,7 +226,8 @@ class Geoface extends \Bdus\Controller
             return;
         }
 
-        if (!\Auth\Authorization::can('add_new')) {
+        // A geometry is part of its record: the record must be open to this change.
+        if (!$this->mayAttach((string) $tb, (int) $id)) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }
@@ -261,7 +282,8 @@ class Geoface extends \Bdus\Controller
             return;
         }
 
-        if (!\Auth\Authorization::can('edit')) {
+        if (!\Auth\Authorization::canOnSomeTable('edit')
+            || !$this->mayChangeGeometries(array_column($geodata, 'id'))) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }
@@ -317,7 +339,7 @@ class Geoface extends \Bdus\Controller
             return;
         }
 
-        if (!\Auth\Authorization::can('edit')) {
+        if (!\Auth\Authorization::canOnSomeTable('edit') || !$this->mayChangeGeometries($ids)) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }

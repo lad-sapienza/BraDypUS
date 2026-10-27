@@ -38,7 +38,7 @@ class Import extends \Bdus\Controller
      */
     public function getTableFields(): void
     {
-        if (!\Auth\Authorization::can('read')) {
+        if (!\Auth\Authorization::canOnSomeTable('read')) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }
@@ -73,7 +73,7 @@ class Import extends \Bdus\Controller
      */
     public function previewFile(): void
     {
-        if (!\Auth\Authorization::can('edit')) {
+        if (!\Auth\Authorization::canOnSomeTable('edit')) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }
@@ -150,7 +150,7 @@ class Import extends \Bdus\Controller
      */
     public function previewPhotos(): void
     {
-        if (!\Auth\Authorization::can('edit')) {
+        if (!\Auth\Authorization::canOnSomeTable('edit')) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }
@@ -226,16 +226,16 @@ class Import extends \Bdus\Controller
      */
     public function importData(): void
     {
-        if (!\Auth\Authorization::can('edit')) {
-            $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
-            return;
-        }
-
         $tempId   = $this->post['temp_id']   ?? null;
         $type     = $this->post['type']      ?? 'csv';
         $tb       = $this->post['tb']        ?? null;
         $mapping  = $this->post['mapping']   ?? [];   // {fileCol: tableField}
         $keyField = $this->post['key_field'] ?? null; // table field used as upsert key
+
+        if (!\Auth\Authorization::can('edit', table: $tb)) {
+            $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+            return;
+        }
 
         if (!$tempId || !$tb || !$keyField || empty($mapping)) {
             $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
@@ -329,6 +329,11 @@ class Import extends \Bdus\Controller
 
                 if ($existing) {
                     $id = $existing[0]['id'];
+                    // Updating an existing record: it must be inside the principal's scope and not frozen.
+                    // Any refusal cancels the whole import (the transaction is rolled back below).
+                    if (!$this->mayChange('update', $tb, (int) $id)) {
+                        throw new \DomainException('not_enough_privilege');
+                    }
                     $updateData = $data;
                     unset($updateData[$keyField]); // never overwrite the match key
                     if (empty($updateData)) { $updated++; continue; }
@@ -339,6 +344,9 @@ class Import extends \Bdus\Controller
                     $this->db->query("UPDATE {$tb} SET {$sets} WHERE id = ?", $vals, 'boolean');
                     $updated++;
                 } else {
+                    if (!\Auth\Authorization::can('add_new', table: $tb)) {
+                        throw new \DomainException('not_enough_privilege');
+                    }
                     // Always set creator to the authenticated user. `creator`
                     // is a nullable FK to bdus_users(id) (ON DELETE SET NULL),
                     // never a plain integer — 0 is never a valid user id, so a
@@ -375,6 +383,10 @@ class Import extends \Bdus\Controller
         } catch (\Throwable $e) {
             $this->db->rollBack();
             @unlink($tempPath);
+            if ($e instanceof \DomainException) {
+                $this->returnJson(['status' => 'error', 'code' => $e->getMessage()]);
+                return;
+            }
             $this->log->error($e);
             $this->returnJson([
                 'status' => 'error',
@@ -400,15 +412,15 @@ class Import extends \Bdus\Controller
      */
     public function importGeoJson(): void
     {
-        if (!\Auth\Authorization::can('edit')) {
-            $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
-            return;
-        }
-
         $tempId   = $this->post['temp_id']   ?? null;
         $tb       = $this->post['tb']        ?? null;
         $geoProp  = $this->post['geo_prop']  ?? null; // GeoJSON property used as key
         $keyField = $this->post['key_field'] ?? null; // matching table field
+
+        if (!\Auth\Authorization::can('edit', table: $tb)) {
+            $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+            return;
+        }
 
         if (!$tempId || !$tb || !$geoProp || !$keyField) {
             $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
@@ -446,6 +458,11 @@ class Import extends \Bdus\Controller
                 if (!$existing) { $notFound++; continue; }
 
                 $recordId = (int) $existing[0]['id'];
+
+                // A geometry is part of its record; one refusal cancels the whole import.
+                if (!$this->mayChange('update', $tb, $recordId)) {
+                    throw new \DomainException('not_enough_privilege');
+                }
 
                 $wkt = WktGeoJson::toWkt($feature['geometry']);
 
@@ -486,6 +503,10 @@ class Import extends \Bdus\Controller
         } catch (\Throwable $e) {
             $this->db->rollBack();
             @unlink($tempPath);
+            if ($e instanceof \DomainException) {
+                $this->returnJson(['status' => 'error', 'code' => $e->getMessage()]);
+                return;
+            }
             $this->log->error($e);
             $this->returnJson([
                 'status' => 'error',
@@ -511,13 +532,13 @@ class Import extends \Bdus\Controller
      */
     public function importPhotos(): void
     {
-        if (!\Auth\Authorization::can('edit')) {
+        $tempId = $this->post['temp_id'] ?? null;
+        $tb     = $this->post['tb']      ?? null;
+
+        if (!\Auth\Authorization::can('edit', table: $tb)) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }
-
-        $tempId = $this->post['temp_id'] ?? null;
-        $tb     = $this->post['tb']      ?? null;
 
         if (!$tempId || !$tb) {
             $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
@@ -538,6 +559,16 @@ class Import extends \Bdus\Controller
         }
 
         $index  = $this->parseCsvIndex($idxPath);
+
+        // Every target record must be open to this change before any file is
+        // written: a refusal cancels the whole import and leaves nothing behind.
+        foreach ($index as $row) {
+            $targetId = isset($row['record_id']) ? (int) $row['record_id'] : 0;
+            if ($targetId && !$this->mayChange('update', $tb, $targetId)) {
+                $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+                return;
+            }
+        }
 
         $zip = new \ZipArchive();
         if ($zip->open($zipPath) !== true) {

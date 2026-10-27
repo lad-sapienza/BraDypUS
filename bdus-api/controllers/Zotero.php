@@ -181,15 +181,21 @@ class Zotero extends \Bdus\Controller
      */
     public function getLinks(): void
     {
-        if (!\Auth\Authorization::can('read')) {
-            $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
-            return;
-        }
         $tb       = $this->get['tb']   ?? '';
         $recordId = (int) ($this->get['id'] ?? 0);
 
+        if (!\Auth\Authorization::can('read', table: $tb ?: null)) {
+            $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+            return;
+        }
+
         if (!$tb || !$recordId) {
             $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
+            return;
+        }
+
+        if (!$this->mayReadRecord($tb, $recordId)) {
+            $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }
 
@@ -220,7 +226,7 @@ class Zotero extends \Bdus\Controller
      */
     public function addLink(): void
     {
-        if (!\Auth\Authorization::can('edit')) {
+        if (!\Auth\Authorization::canOnSomeTable('edit')) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }
@@ -234,6 +240,11 @@ class Zotero extends \Bdus\Controller
 
         if (!$tb || !$recordId || !$libId || !$zoteroKey) {
             $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
+            return;
+        }
+
+        if (!$this->mayChange('update', $tb, $recordId)) {
+            $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }
 
@@ -267,7 +278,7 @@ class Zotero extends \Bdus\Controller
      */
     public function editLink(): void
     {
-        if (!\Auth\Authorization::can('edit')) {
+        if (!\Auth\Authorization::canOnSomeTable('edit')) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }
@@ -277,6 +288,11 @@ class Zotero extends \Bdus\Controller
 
         if (!$id || empty($data)) {
             $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
+            return;
+        }
+
+        if (!$this->mayChangeLinkedRecord($id)) {
+            $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }
 
@@ -291,13 +307,18 @@ class Zotero extends \Bdus\Controller
      */
     public function deleteLink(): void
     {
-        if (!\Auth\Authorization::can('edit')) {
+        if (!\Auth\Authorization::canOnSomeTable('edit')) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }
         $id = (int) ($this->get['id'] ?? 0);
         if (!$id) {
             $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
+            return;
+        }
+
+        if (!$this->mayChangeLinkedRecord($id)) {
+            $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }
 
@@ -319,7 +340,7 @@ class Zotero extends \Bdus\Controller
      */
     public function syncRecord(): void
     {
-        if (!\Auth\Authorization::can('edit')) {
+        if (!\Auth\Authorization::canOnSomeTable('edit')) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }
@@ -328,6 +349,13 @@ class Zotero extends \Bdus\Controller
 
         if (!$tb || !$recordId) {
             $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
+            return;
+        }
+
+        // Refreshing the citation cache changes no record data, so a lock does
+        // not stop it; the record must still be inside the principal's scope.
+        if (!$this->mayReadRecord($tb, $recordId)) {
+            $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }
 
@@ -510,6 +538,15 @@ class Zotero extends \Bdus\Controller
     }
 
     /** Loads a library row (with api_key). Returns null if not found. */
+    /** May the principal change the record a Zotero link belongs to? (a missing link passes: nothing to protect) */
+    private function mayChangeLinkedRecord(int $linkId): bool
+    {
+        $link = $this->db->query(
+            'SELECT tb, record_id FROM bdus_zotero_links WHERE id = ?', [$linkId], 'read'
+        )[0] ?? null;
+        return !$link || $this->mayChange('update', (string) $link['tb'], (int) $link['record_id']);
+    }
+
     private function getLib(int $id): ?array
     {
         $manage = new Manage($this->db);

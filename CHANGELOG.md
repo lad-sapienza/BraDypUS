@@ -35,8 +35,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (`bdus_table_locks`; admins are never blocked). Plugin rows follow their host
   record, relations and links need both ends to be changeable. Creating a record
   needs the tier or a `create` rule; duplicating one also needs to read the
-  source. GeoFace geometries, Zotero links, import and search & replace follow
-  in the next change.
+  source. The same gate covers GeoFace geometries, Zotero links and the three
+  imports (data, GeoJSON, photos): an import that touches a frozen or
+  out-of-scope record is refused as a whole and writes nothing. Search &
+  replace is admin-only and, like every admin action, ignores locks.
 
 ### Security
 

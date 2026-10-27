@@ -107,6 +107,31 @@ abstract class Controller
     }
 
     /**
+     * May the principal add something that belongs to record $id of $tb (a
+     * geometry, say)? Principals whose tier already allows adding keep that, but
+     * not on a frozen record; those relying on group rules need the right to
+     * change the record.
+     */
+    protected function mayAttach(string $tb, int $id): bool
+    {
+        if (\Auth\Authorization::can('add_new')) {
+            [$gateTb, $gateId] = $this->writeTarget($tb, $id);
+            return $gateTb !== null && !$this->access()->isLocked($gateTb, $gateId);
+        }
+        return $this->mayChange('update', $tb, $id);
+    }
+
+    /** May the principal read record $id of $tb? (table access plus the row scope) */
+    protected function mayReadRecord(string $tb, int $id): bool
+    {
+        if (!\Auth\Authorization::can('read', table: $tb)) {
+            return false;
+        }
+        $access = $this->access();
+        return $access->unrestricted('read', $tb) || $access->rowAllowed('read', $tb, $id);
+    }
+
+    /**
      * Emits a JSON response. Injects `"status": "success"` if not already set.
      *
      * Never emits an empty body. json_encode() returns false on malformed UTF-8

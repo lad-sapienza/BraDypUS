@@ -63,6 +63,50 @@ abstract class Controller
     }
 
     /**
+     * The record whose rules govern a write to record $id of $tb: the record
+     * itself, or for a plugin table the host record its row belongs to (plugin
+     * rows follow their record). [null, 0] when a plugin row has no resolvable host.
+     *
+     * @return array{0: ?string, 1: int}
+     */
+    protected function writeTarget(string $tb, int $id): array
+    {
+        if (!$this->cfg->get("tables.{$tb}.is_plugin")) {
+            return [$tb, $id];
+        }
+        $host = $this->cfg->get("tables.{$tb}.plugin_of");
+        if (!$host || !preg_match('/^[A-Za-z0-9_]+$/', $tb)) {
+            return [null, 0];
+        }
+        $row    = $this->db->query("SELECT id_link FROM {$tb} WHERE id = ?", [$id], 'read');
+        $idLink = (int) ($row[0]['id_link'] ?? 0);
+        return $idLink ? [$host, $idLink] : [null, 0];
+    }
+
+    /**
+     * May the principal change (`update` or `delete`) record $id of $tb? The
+     * single gate for writes to existing records: the tier or a group rule must
+     * grant it (table level, $creator lets a self writer act on their own
+     * records), and the row must be inside the principal's scope and outside
+     * every lock. A plugin row is judged by its host record, always as an update.
+     */
+    protected function mayChange(string $action, string $tb, int $id, ?int $creator = null): bool
+    {
+        if ($this->cfg->get("tables.{$tb}.is_plugin")) {
+            $action = 'update';
+        }
+        [$gateTb, $gateId] = $this->writeTarget($tb, $id);
+        if ($gateTb === null) {
+            return false;
+        }
+        if (!\Auth\Authorization::can('edit', $creator, $gateTb)) {
+            return false;
+        }
+        $access = $this->access();
+        return $access->unrestricted($action, $gateTb) || $access->rowAllowed($action, $gateTb, $gateId);
+    }
+
+    /**
      * Emits a JSON response. Injects `"status": "success"` if not already set.
      *
      * Never emits an empty body. json_encode() returns false on malformed UTF-8

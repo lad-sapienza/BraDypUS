@@ -28,6 +28,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   read. `Authorization::can('enter')` now accepts tier 39 (`ENTER`), as
   documented: it used to refuse it, which made that tier unusable.
 
+- **Groups & permissions — writes to records (#78)** — changing or deleting a
+  record (save, erase, plugin rows, attached files, RS relations, manual links)
+  now goes through one gate: the tier or a group rule must allow it, the record
+  must be inside the user's row scope, and it must not be frozen by a table lock
+  (`bdus_table_locks`; admins are never blocked). Plugin rows follow their host
+  record, relations and links need both ends to be changeable. Creating a record
+  needs the tier or a `create` rule; duplicating one also needs to read the
+  source. GeoFace geometries, Zotero links, import and search & replace follow
+  in the next change.
+
 ### Security
 
 - `Record::getFieldOptions` and `Search::getUsedValues` had no privilege check:

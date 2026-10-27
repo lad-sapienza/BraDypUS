@@ -509,6 +509,27 @@ class Record extends \Bdus\Controller
   // ── Private helpers ───────────────────────────────────────────────────────
 
   /**
+   * May the principal add a row to plugin table $tb? A plugin row belongs to its
+   * host record: a principal whose tier already allows adding keeps that, but
+   * not on a frozen host; one that relies on group rules needs the right to
+   * change the host record.
+   */
+  private function mayAddPluginRow(string $tb, array $core): bool
+  {
+    $hostTb = $this->cfg->get("tables.{$tb}.plugin_of");
+    $link   = $core['id_link'] ?? 0;
+    $hostId = (int) (is_array($link) ? ($link['val'] ?? $link['_val'] ?? 0) : $link);
+
+    if (!$hostTb || !$hostId) {
+      return \Auth\Authorization::can('add_new', table: $tb);
+    }
+    if (\Auth\Authorization::can('add_new')) {
+      return !$this->access()->isLocked($hostTb, $hostId);
+    }
+    return $this->mayChange('update', $hostTb, $hostId);
+  }
+
+  /**
    * May the principal see the history of record $id of $tb? Needs read access
    * to the table; when the table's rows are filtered, the record must still
    * exist and be readable (a deleted row cannot be matched against the filter).
@@ -778,13 +799,22 @@ class Record extends \Bdus\Controller
    */
   public function duplicateRecord(): void
   {
-    if (!\Auth\Authorization::can('add_new')) {
+    $tb = $this->get['tb'] ?? null;
+    $id = (int)($this->get['id'] ?? 0);
+
+    // A copy is a new record: it needs the create grant, and the source must be readable.
+    // (A plugin row is a change to its host record and is judged as one.)
+    $isPluginTb = $tb && $this->cfg->get("tables.{$tb}.is_plugin");
+    $allowed    = $isPluginTb
+      ? \Auth\Authorization::can('add_new') && $id && $this->mayChange('update', $tb, $id)
+      : \Auth\Authorization::can('add_new', table: $tb);
+    if ($allowed && $tb && $id && !$this->access()->unrestricted('read', $tb)) {
+      $allowed = $this->access()->rowAllowed('read', $tb, $id);
+    }
+    if (!$allowed) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
-
-    $tb = $this->get['tb'] ?? null;
-    $id = (int)($this->get['id'] ?? 0);
 
     if (!$tb || !$id) {
       $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
@@ -920,12 +950,18 @@ class Record extends \Bdus\Controller
       $reader  = new \Record\Read($id, null, $tb, $this->db, $this->cfg);
       $creator = $this->resolveOwnerCreator($tb, $reader, $isPlugin);
 
-      if (!\Auth\Authorization::can('edit', $creator)) {
+      // The one gate for changing an existing record: tier or group rule, row
+      // scope and locks. The record's plugin rows, links, RS and geodata are
+      // written by this same call, so they follow the verdict.
+      if (!$this->mayChange('update', $tb, $id, $creator)) {
         $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
         return;
       }
     } else {
-      if (!\Auth\Authorization::can('add_new')) {
+      $mayCreate = $isPlugin
+        ? $this->mayAddPluginRow($tb, is_array($core) ? $core : [])
+        : \Auth\Authorization::can('add_new', table: $tb);
+      if (!$mayCreate) {
         $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
         return;
       }
@@ -1277,7 +1313,7 @@ class Record extends \Bdus\Controller
    */
   public function uploadFile(): void
   {
-    if (!\Auth\Authorization::can('edit')) {
+    if (!\Auth\Authorization::canOnSomeTable('edit')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
@@ -1287,6 +1323,11 @@ class Record extends \Bdus\Controller
 
     if (!$tb || !$id) {
       $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
+      return;
+    }
+
+    if (!$this->mayChange('update', $tb, (int) $id)) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
 
@@ -1377,7 +1418,7 @@ class Record extends \Bdus\Controller
    */
   public function deleteFile(): void
   {
-    if (!\Auth\Authorization::can('edit')) {
+    if (!\Auth\Authorization::canOnSomeTable('edit')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
@@ -1386,6 +1427,16 @@ class Record extends \Bdus\Controller
     if (!$fileId) {
       $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
       return;
+    }
+
+    // Deleting a file removes it from every record it is attached to: all of them must be changeable.
+    foreach ($this->db->query(
+      "SELECT table_name, record_id FROM bdus_file_links WHERE file_id = ?", [$fileId], 'read'
+    ) ?: [] as $link) {
+      if (!$this->mayChange('update', (string) $link['table_name'], (int) $link['record_id'])) {
+        $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+        return;
+      }
     }
 
     $appName = $this->cfg->get('main.name') ?? '';
@@ -1434,7 +1485,7 @@ class Record extends \Bdus\Controller
    */
   public function linkFile(): void
   {
-    if (!\Auth\Authorization::can('edit')) {
+    if (!\Auth\Authorization::canOnSomeTable('edit')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
@@ -1445,6 +1496,11 @@ class Record extends \Bdus\Controller
 
     if (!$tb || !$id || !$fileId) {
       $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
+      return;
+    }
+
+    if (!$this->mayChange('update', $tb, $id)) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
 
@@ -1495,7 +1551,7 @@ class Record extends \Bdus\Controller
    */
   public function unlinkFile(): void
   {
-    if (!\Auth\Authorization::can('edit')) {
+    if (!\Auth\Authorization::canOnSomeTable('edit')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
@@ -1507,9 +1563,13 @@ class Record extends \Bdus\Controller
     }
 
     try {
-      $rows = $this->db->query("SELECT id FROM bdus_file_links WHERE id = ?", [$linkId]);
+      $rows = $this->db->query("SELECT id, table_name, record_id FROM bdus_file_links WHERE id = ?", [$linkId]);
       if (empty($rows)) {
         $this->returnJson(['status' => 'error', 'code' => 'record_not_found']);
+        return;
+      }
+      if (!$this->mayChange('update', (string) $rows[0]['table_name'], (int) $rows[0]['record_id'])) {
+        $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
         return;
       }
 
@@ -1568,7 +1628,7 @@ class Record extends \Bdus\Controller
    */
   public function addRs(): void
   {
-    if (!\Auth\Authorization::can('edit')) {
+    if (!\Auth\Authorization::canOnSomeTable('edit')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
@@ -1587,6 +1647,12 @@ class Record extends \Bdus\Controller
     $second   = (int) $second;
     $relation = (int) $relation;
     $inverse  = self::rsInverse($relation);
+
+    // A relation is part of both records it joins.
+    if (!$this->mayChange('update', $tb, $first) || !$this->mayChange('update', $tb, $second)) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+      return;
+    }
 
     try {
       // Deduplication: check both A→B (with this relation) and B→A (with inverse)
@@ -1626,7 +1692,7 @@ class Record extends \Bdus\Controller
    */
   public function deleteRs(): void
   {
-    if (!\Auth\Authorization::can('edit')) {
+    if (!\Auth\Authorization::canOnSomeTable('edit')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
@@ -1634,6 +1700,13 @@ class Record extends \Bdus\Controller
     $id = $this->post['id'] ?? ($this->get['id'] ?? null);
     if (!$id) {
       $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
+      return;
+    }
+
+    $rel = $this->db->query("SELECT tb, first, second FROM bdus_rs WHERE id = ?", [(int) $id], 'read')[0] ?? null;
+    if ($rel && (!$this->mayChange('update', (string) $rel['tb'], (int) $rel['first'])
+              || !$this->mayChange('update', (string) $rel['tb'], (int) $rel['second']))) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
 
@@ -1728,7 +1801,7 @@ class Record extends \Bdus\Controller
    */
   public function addManualLink(): void
   {
-    if (!\Auth\Authorization::can('edit')) {
+    if (!\Auth\Authorization::canOnSomeTable('edit')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
@@ -1748,6 +1821,12 @@ class Record extends \Bdus\Controller
 
     $idOne  = (int)$idOne;
     $idTwo  = (int)$idTwo;
+
+    // A link shows on both records: both must be changeable.
+    if (!$this->mayChange('update', (string) $tbOne, $idOne) || !$this->mayChange('update', (string) $tbTwo, $idTwo)) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+      return;
+    }
 
     try {
       // Dedup: check both directions
@@ -1809,7 +1888,7 @@ class Record extends \Bdus\Controller
    */
   public function deleteManualLink(): void
   {
-    if (!\Auth\Authorization::can('edit')) {
+    if (!\Auth\Authorization::canOnSomeTable('edit')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
@@ -1817,6 +1896,13 @@ class Record extends \Bdus\Controller
     $id = $this->post['id'] ?? ($this->get['id'] ?? null);
     if (!$id) {
       $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
+      return;
+    }
+
+    $link = $this->db->query("SELECT tb_one, id_one, tb_two, id_two FROM bdus_userlinks WHERE id = ?", [(int) $id], 'read')[0] ?? null;
+    if ($link && (!$this->mayChange('update', (string) $link['tb_one'], (int) $link['id_one'])
+               || !$this->mayChange('update', (string) $link['tb_two'], (int) $link['id_two']))) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
 
@@ -2069,16 +2155,21 @@ class Record extends \Bdus\Controller
    */
   public function erasePlugins(): void
   {
-    if (!\Auth\Authorization::can('edit')) {
+    $tb  = $this->get['tb']  ?? null;
+    $id  = (int)($this->get['id'] ?? 0);
+
+    if (!\Auth\Authorization::canOnSomeTable('edit')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
 
-    $tb  = $this->get['tb']  ?? null;
-    $id  = (int)($this->get['id'] ?? 0);
-
     if (!$tb || !$id) {
       $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
+      return;
+    }
+
+    if (!$this->mayChange('delete', $tb, $id)) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
 
@@ -2112,16 +2203,21 @@ class Record extends \Bdus\Controller
    */
   public function checkPluginsBeforeDelete(): void
   {
-    if (!\Auth\Authorization::can('edit')) {
+    $tb  = $this->get['tb'] ?? null;
+    $id  = (int)($this->get['id'] ?? 0);
+
+    if (!\Auth\Authorization::canOnSomeTable('edit')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
 
-    $tb  = $this->get['tb'] ?? null;
-    $id  = (int)($this->get['id'] ?? 0);
-
     if (!$tb || !$id) {
       $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
+      return;
+    }
+
+    if (!$this->mayChange('delete', $tb, $id)) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
 
@@ -2165,8 +2261,8 @@ class Record extends \Bdus\Controller
     // as if this user owned the record — still fails, nothing in the
     // batch could ever be deletable, so reject upfront instead of doing
     // a wasted Read per id.
-    $hasBlanketEdit = \Auth\Authorization::can('edit');
-    if (!$hasBlanketEdit && !\Auth\Authorization::can('edit', \Auth\CurrentUser::id())) {
+    $hasBlanketEdit = \Auth\Authorization::can('edit', table: $tb);
+    if (!$hasBlanketEdit && !\Auth\Authorization::can('edit', \Auth\CurrentUser::id(), $tb)) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
@@ -2189,12 +2285,10 @@ class Record extends \Bdus\Controller
       try {
         $reader = new \Record\Read($id, null, $tb, $this->db, $this->cfg);
 
-        if (!$hasBlanketEdit) {
-          $creator = $this->resolveOwnerCreator($tb, $reader, $isPlugin);
-          if (!\Auth\Authorization::can('edit', $creator)) {
-            $error[] = $id;
-            continue;
-          }
+        $creator = $hasBlanketEdit ? null : $this->resolveOwnerCreator($tb, $reader, $isPlugin);
+        if (!$this->mayChange('delete', $tb, $id, $creator)) {
+          $error[] = $id;
+          continue;
         }
 
         // Pleiades "pulizia totale": the plugin's own bdus_geodata row (if

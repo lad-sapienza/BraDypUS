@@ -183,21 +183,68 @@ class Access
         $values = $grantsAll ? [] : $grantValues;
 
         // ── Locks (AND NOT) ──────────────────────────────────────────────────
-        // `id NOT IN (SELECT id … WHERE lock)` is NULL-safe: a row whose filtered
-        // column is NULL does not match the lock and is not locked, whereas a bare
-        // `NOT (col = x)` would evaluate to NULL and silently hide the row.
         if ($action === 'update' || $action === 'delete') {
-            foreach ($this->locks()[$table] ?? [] as $filter) {
-                $compiled = $filter === null ? null : $this->compile($table, $filter);
-                if ($compiled === null) {
-                    return ['1=0', []]; // bad lock: the whole table is locked
-                }
-                $parts[]  = "{$table}.id NOT IN (SELECT id FROM {$table} WHERE {$compiled[0]})";
-                $values   = array_merge($values, $compiled[1]);
+            $locks = $this->lockParts($table);
+            if ($locks === null) {
+                return ['1=0', []]; // bad lock: the whole table is locked
             }
+            $parts  = array_merge($parts, $locks[0]);
+            $values = array_merge($values, $locks[1]);
         }
 
         return [$parts ? implode(' AND ', $parts) : '1=1', $values];
+    }
+
+    /**
+     * The conditions a row must meet to be outside every lock of $table, as
+     * [sql parts to AND, values]; null when a lock cannot be compiled (the whole
+     * table counts as locked).
+     *
+     * `id NOT IN (SELECT id … WHERE lock)` is NULL-safe: a row whose filtered
+     * column is NULL does not match the lock and is not locked, whereas a bare
+     * `NOT (col = x)` would evaluate to NULL and silently hide the row.
+     *
+     * @return array{0: string[], 1: array}|null
+     */
+    private function lockParts(string $table): ?array
+    {
+        $parts  = [];
+        $values = [];
+        foreach ($this->locks()[$table] ?? [] as $filter) {
+            $compiled = $filter === null ? null : $this->compile($table, $filter);
+            if ($compiled === null) {
+                return null;
+            }
+            $parts[]  = "{$table}.id NOT IN (SELECT id FROM {$table} WHERE {$compiled[0]})";
+            $values   = array_merge($values, $compiled[1]);
+        }
+        return [$parts, $values];
+    }
+
+    /**
+     * Is record $id of $table frozen by a lock for this principal? Admins are
+     * never locked out. Says nothing about grants: it is the lock alone, for
+     * callers that keep the tier's own check (e.g. adding a plugin row).
+     */
+    public function isLocked(string $table, int $id): bool
+    {
+        if ($this->isAdmin() || !$this->isUsable($table)) {
+            return false;
+        }
+        $locks = $this->lockParts($table);
+        if ($locks === null) {
+            return true;
+        }
+        if (empty($locks[0])) {
+            return false;
+        }
+
+        $res = $this->db->query(
+            "SELECT COUNT(*) AS n FROM {$table} WHERE {$table}.id = ? AND NOT (" . implode(' AND ', $locks[0]) . ')',
+            array_merge([$id], $locks[1]),
+            'read'
+        );
+        return (int) ($res[0]['n'] ?? 0) > 0;
     }
 
     /**

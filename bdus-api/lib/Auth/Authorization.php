@@ -34,6 +34,18 @@ class Authorization
     /** Application status for this request: 'on' | 'frozen' | 'off'. */
     private static string $appStatus = 'on';
 
+    /** Supplies the current principal's Access (group rules and locks); set by the Dispatcher. */
+    private static ?\Closure $accessProvider = null;
+
+    /** Maps the privilege strings of can() to the actions of Access. */
+    private const ACCESS_ACTION = [
+        'read'          => 'read',
+        'preview'       => 'read',
+        'add_new'       => 'create',
+        'edit'          => 'update',
+        'multiple_edit' => 'update',
+    ];
+
     /**
      * Sets the application status used by can(). Called by the Dispatcher once
      * the app config is loaded (status lives in bdus_cfg_app since v5.1; it used
@@ -46,12 +58,52 @@ class Authorization
     }
 
     /**
+     * Registers the provider of the current principal's Access, used by can()
+     * when a table is given. Without a provider only the global tier counts.
+     */
+    public static function setAccessProvider(?\Closure $provider): void
+    {
+        self::$accessProvider = $provider;
+    }
+
+    /**
      * Checks whether the current user has at least the given privilege level.
      *
-     * @param string   $privilege One of: enter|read|preview|add_new|edit|multiple_edit|admin|super_admin
-     * @param int|null $creator   Record creator id — enables self_writer to edit their own records
+     * With a $table the answer is "may the user do this on at least some rows of
+     * that table": the global tier decides first, and group rules (see Access) can
+     * grant more. Row-level restrictions are applied where the queries are built.
+     *
+     * @param string      $privilege One of: enter|read|preview|add_new|edit|multiple_edit|admin|super_admin
+     * @param int|null    $creator   Record creator id — enables self_writer to edit their own records
+     * @param string|null $table     Table the action is about (enables group rules)
      */
-    public static function can(string $privilege = 'edit', ?int $creator = null): bool
+    public static function can(string $privilege = 'edit', ?int $creator = null, ?string $table = null): bool
+    {
+        if (self::canByTier($privilege, $creator)) {
+            return true;
+        }
+
+        $action = self::ACCESS_ACTION[$privilege] ?? null;
+        if ($table === null || $action === null || self::$accessProvider === null) {
+            return false;
+        }
+
+        $user_priv = CurrentUser::privilege();
+        if (!$user_priv) {
+            return false;
+        }
+        // Same application-status rules as the tier path.
+        if (self::$appStatus === 'off' && $user_priv > 1) {
+            return false;
+        }
+        if ($action !== 'read' && self::$appStatus === 'frozen') {
+            return false;
+        }
+
+        return (self::$accessProvider)()->can($action, $table, false);
+    }
+
+    private static function canByTier(string $privilege, ?int $creator): bool
     {
         $app_status = self::$appStatus;
 

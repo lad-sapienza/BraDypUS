@@ -38,6 +38,11 @@ class Chart extends \Bdus\Controller
         $tb   = $definition['tb']   ?? null;
         $type = $definition['type'] ?? null;
 
+        if (!\Auth\Authorization::can('read', table: $tb)) {
+            $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+            return;
+        }
+
         if (empty($tb)) {
             $this->returnJson(['status' => 'error', 'code' => 'parameter_missing', 'detail' => 'tb']);
             return;

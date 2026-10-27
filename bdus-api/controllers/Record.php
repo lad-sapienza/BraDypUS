@@ -39,12 +39,13 @@ class Record extends \Bdus\Controller
    */
   public function getRecords(): void
   {
-    if (!\Auth\Authorization::can('read')) {
+    $tb = $this->get['tb'] ?? null;
+
+    if (!\Auth\Authorization::can('read', table: $tb)) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
 
-    $tb = $this->get['tb'] ?? null;
     if (!$tb) {
       $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
       return;
@@ -227,13 +228,13 @@ class Record extends \Bdus\Controller
    */
   public function exportRecords(): void
   {
-    if (!\Auth\Authorization::can('read')) {
+    $tb     = $this->get['tb']     ?? null;
+    $format = $this->get['format'] ?? 'csv';
+
+    if (!\Auth\Authorization::can('read', table: $tb)) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
-
-    $tb     = $this->get['tb']     ?? null;
-    $format = $this->get['format'] ?? 'csv';
 
     if (!$tb) {
       $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);

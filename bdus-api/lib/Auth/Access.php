@@ -50,16 +50,18 @@ class Access
     private ?array $locks = null;
 
     /**
-     * @param int   $tier     Global privilege tier of the principal
-     * @param int   $userId   User id (0 for API keys)
-     * @param int[] $groupIds Groups the principal belongs to
+     * @param int            $tier     Global privilege tier of the principal
+     * @param int            $userId   User id (0 for API keys)
+     * @param int[]|\Closure $groupIds Groups the principal belongs to, or a closure
+     *                                 returning them (called at most once, and only
+     *                                 when rules are actually needed — admins never load them)
      */
     public function __construct(
         private readonly DBInterface $db,
         private readonly Config $cfg,
         private readonly int $tier,
         private readonly int $userId,
-        private readonly array $groupIds = []
+        private array|\Closure $groupIds = []
     ) {}
 
     /**
@@ -79,7 +81,7 @@ class Access
             $groupId  = CurrentUser::get('group_id');
             $groupIds = $groupId ? [(int) $groupId] : [];
         } else {
-            $groupIds = self::loadUserGroups($db, $userId);
+            $groupIds = fn(): array => self::loadUserGroups($db, $userId);
         }
 
         return new self($db, $cfg, $tier, $userId, $groupIds);
@@ -96,8 +98,11 @@ class Access
     /**
      * Table-level gate: may the principal perform $action on at least some rows
      * of $table? Row-level restrictions (filters, locks) are not considered.
+     *
+     * $includeOwn = false leaves out the self writer's "own records" grant, for
+     * callers that already evaluated the tier (and the record's creator) themselves.
      */
-    public function can(string $action, string $table): bool
+    public function can(string $action, string $table, bool $includeOwn = true): bool
     {
         if (!in_array($action, self::ACTIONS, true) || !$this->isUsable($table)) {
             return false;
@@ -110,7 +115,7 @@ class Access
         }
 
         return $this->tierGrantsAll($action)
-            || $this->tierGrantsOwn($action)
+            || ($includeOwn && $this->tierGrantsOwn($action))
             || !empty($this->rules()[$table][$action]);
     }
 
@@ -274,6 +279,9 @@ class Access
         }
         $this->rules = [];
 
+        if ($this->groupIds instanceof \Closure) {
+            $this->groupIds = ($this->groupIds)();
+        }
         if (empty($this->groupIds)) {
             return $this->rules;
         }

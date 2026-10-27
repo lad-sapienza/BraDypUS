@@ -305,12 +305,12 @@ class AssemblageAnalysis extends \Bdus\Controller
      */
     public function getTableMeta(): void
     {
-        if (!\Auth\Authorization::can('read')) {
+        $tb = $this->get['tb'] ?? null;
+
+        if (!\Auth\Authorization::can('read', table: $tb)) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }
-
-        $tb = $this->get['tb'] ?? null;
 
         if (empty($tb)) {
             $this->returnJson(['status' => 'error', 'code' => 'parameter_missing', 'detail' => 'tb']);
@@ -368,11 +368,6 @@ class AssemblageAnalysis extends \Bdus\Controller
      */
     public function getData(): void
     {
-        if (!\Auth\Authorization::can('read')) {
-            $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
-            return;
-        }
-
         $definition = $this->post['definition'] ?? null;
         if (is_string($definition)) {
             $definition = json_decode($definition, true);
@@ -389,6 +384,11 @@ class AssemblageAnalysis extends \Bdus\Controller
         $measure      = $definition['measure']        ?? 'count';
         $measureField = $definition['measure_field']  ?? null;
         $filters      = $definition['filters']        ?? [];
+
+        if (!\Auth\Authorization::can('read', table: $sourceTb)) {
+            $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+            return;
+        }
 
         // ── Validate ──────────────────────────────────────────────────────────
         if (empty($sourceTb)) {

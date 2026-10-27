@@ -14,6 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (table/row conditions from tier, group rules and locks) is in place and
   unit-tested but not yet called by any controller. See the design note in
   `bdus-docs/dev/groups-permissions-design.md`.
+- **Groups & permissions — read enforcement (#78)** — `Authorization::can()`
+  accepts a `table:` argument, and `SQL\QueryFromRequest` applies the row-level
+  read condition of the current principal to every list, search, export, chart,
+  GeoFace and assemblage query. `Chart::getData` now checks read access (it had
+  no check at all). With no groups or rules nothing changes.
 
 ### Removed
 

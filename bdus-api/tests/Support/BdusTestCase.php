@@ -70,6 +70,11 @@ abstract class BdusTestCase extends TestCase
         static::seedData();
     }
 
+    public static function tearDownAfterClass(): void
+    {
+        \Auth\Authorization::setAccessProvider(null);
+    }
+
     // ── Schema ────────────────────────────────────────────────────────────
     protected static function createSchema(): void
     {
@@ -267,6 +272,11 @@ abstract class BdusTestCase extends TestCase
         $ctrl->setDB(static::$db);
         $ctrl->setCfg(static::$cfg);
         $ctrl->setLog(static::$log);
+
+        // Mirror the Dispatcher: group rules and locks of the current principal.
+        \Auth\Authorization::setAccessProvider(
+            fn() => \Auth\Access::forCurrentUser(static::$db, static::$cfg)
+        );
         return $ctrl;
     }
 

@@ -172,6 +172,19 @@ everything that `20`, `25`, `30`, `39` allow, plus admin operations.
 
 Any other string returns `false`.
 
+`can()` takes a third argument, `table:`. With it the answer is "may the user do
+this on at least some rows of that table": the tier decides first, and the
+user's group rules (`Auth\Access`, see the
+[groups & permissions design note](./groups-permissions-design)) can grant
+more. The row-level part is enforced where queries are built:
+`SQL\QueryFromRequest` ANDs the user's read condition into the WHERE clause of
+every list, search, export, chart, GeoFace and assemblage query. Admins and
+super admins bypass rules and locks.
+
+```php
+if (!\Auth\Authorization::can('read', table: $tb)) { … }
+```
+
 > **Note**: the `ROUTE_PRIVILEGE` map in `Router.php` uses string tiers
 > (`'read'`, `'edit'`, `'admin'`, `'super_admin'`) and is the single source of
 > truth for API-key access. `Authorization::can()` is the one for JWT users.

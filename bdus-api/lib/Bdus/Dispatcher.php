@@ -132,6 +132,16 @@ class Dispatcher
                 $ctrl->setCfg($config);
                 \Auth\Authorization::setAppStatus($config->get('main.status'));
                 \Template\Loader::setDb($this->db);
+
+                if ($this->db) {
+                    $db     = $this->db;
+                    $access = null;
+                    \Auth\Authorization::setAccessProvider(
+                        function () use ($db, $config, &$access): \Auth\Access {
+                            return $access ??= \Auth\Access::forCurrentUser($db, $config);
+                        }
+                    );
+                }
             }
 
             $ctrl->$method();

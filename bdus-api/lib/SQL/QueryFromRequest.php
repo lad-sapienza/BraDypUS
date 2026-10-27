@@ -86,7 +86,8 @@ class QueryFromRequest
    */
   private function buildFkJoins(): void
   {
-    $fkMap = $this->cfg->get("tables.{$this->tb}.fields.*.id_from_tb") ?: [];
+    $fkMap      = $this->cfg->get("tables.{$this->tb}.fields.*.id_from_tb") ?: [];
+    $readAccess = \Auth\Access::forCurrentUser($this->db, $this->cfg);
 
     foreach (array_keys($this->fields) as $fld) {
       $refTb = $fkMap[$fld] ?? null;
@@ -96,6 +97,12 @@ class QueryFromRequest
 
       $refIdField = $this->cfg->get("tables.{$refTb}.id_field");
       if (!$refIdField) {
+        continue;
+      }
+
+      // The label comes from the referenced table: skip it (the raw id stays)
+      // when the principal cannot read that table at all.
+      if (!$readAccess->can('read', $refTb)) {
         continue;
       }
 
@@ -318,7 +325,29 @@ class QueryFromRequest
         throw new \Exception('Missing required parameter: type');
         break;
     }
+
+    $this->restrictToReadableRows();
     return;
+  }
+
+  /**
+   * ANDs the current principal's row-level read condition (group rules, see
+   * \Auth\Access) into the WHERE clause. Every list, search, export, chart,
+   * GeoFace and assemblage query builds its predicate here, so this is the one
+   * place where row visibility is enforced. Admins and users whose tier reads
+   * everything get '1=1', and the clause is left untouched.
+   */
+  private function restrictToReadableRows(): void
+  {
+    [$cond, $condValues] = \Auth\Access::forCurrentUser($this->db, $this->cfg)
+      ->rowCondition('read', $this->tb);
+
+    if ($cond === '1=1') {
+      return;
+    }
+
+    $this->where  = '(' . $this->where . ') AND (' . $cond . ')';
+    $this->values = array_merge($this->values, $condValues);
   }
 
   /**

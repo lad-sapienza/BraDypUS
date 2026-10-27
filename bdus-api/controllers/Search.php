@@ -34,6 +34,13 @@ class Search extends \Bdus\Controller
   public function getAdvancedConfig(): void
   {
     $tb = $this->get['tb'] ?? null;
+
+    // The field list is the table's schema: only for tables the user may read.
+    if (!\Auth\Authorization::can('read', table: $tb)) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+      return;
+    }
+
     if (!$tb) {
       $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
       return;

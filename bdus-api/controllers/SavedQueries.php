@@ -26,6 +26,11 @@ class SavedQueries extends \Bdus\Controller
      */
     public function listQueries(): void
     {
+        if (!\Auth\Authorization::canOnSomeTable('read')) {
+            $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+            return;
+        }
+
         $sys_manager = new Manage($this->db);
         $rows = $sys_manager->getBySQL(
             'bdus_queries',

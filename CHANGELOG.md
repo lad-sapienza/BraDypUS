@@ -74,6 +74,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   list), and a frozen record shows a *Frozen* badge. English and Italian.
 - The users list (`GET /api/users`) returns each user's `groups`.
 
+- **Phase 46 of the API tests: deny by default.** A person and an API key with no
+  access of their own, in a group that reads some rows of one table, are thrown at
+  73 entry points on every engine: tables without a rule, rows outside it, every
+  write, and the administration, configuration and system routes. A refused key
+  gets 403, a refused person the usual 200 with an error code. Their own access
+  is checked first, so the refusals cannot come from a principal that is simply
+  broken.
+
 ### Fixed
 
 - **The demo seed called an endpoint removed with the per-table privileges** and
@@ -84,12 +92,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   same service name as the development backend, so the dev Vite proxy
   (`http://app:80`) could reach the test container while tests ran. The test
   project now creates and removes its own network, `bdus-test-net`.
-
-### Security
-
-- `Record::getFieldOptions` and `Search::getUsedValues` had no privilege check:
-  any authenticated user, whatever the tier, could list values and lookup labels
-  of any table. Both now require read access to the table the values come from.
 
 ### Removed
 
@@ -102,6 +104,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   The numeric privilege constants moved to `Auth\Authorization`. Access control
   is unchanged (global tiers). The `bdus_user_table_privs` table is dropped by
   migration `M046`; it is replaced by groups and permissions (#78).
+
+### Security
+
+- `GET /api/search/{tb}/config`, `/api/record/{tb}/templates`,
+  `/api/import/{tb}/fields`, `/api/charts` and `/api/saved-queries` now need read
+  access to the table (or to some table, for the two lists). The first one
+  checked nothing: any signed-in user could list the fields of any table.
+
+- `Record::getFieldOptions` and `Search::getUsedValues` had no privilege check:
+  any authenticated user, whatever the tier, could list values and lookup labels
+  of any table. Both now require read access to the table the values come from.
 
 ## [5.15.8] - 2026-10-27
 

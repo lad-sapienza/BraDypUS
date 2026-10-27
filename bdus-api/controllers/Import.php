@@ -38,12 +38,13 @@ class Import extends \Bdus\Controller
      */
     public function getTableFields(): void
     {
-        if (!\Auth\Authorization::canOnSomeTable('read')) {
+        $tb = $this->get['tb'] ?? null;
+
+        if (!\Auth\Authorization::can('read', table: $tb)) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }
 
-        $tb = $this->get['tb'] ?? null;
         if (!$tb) {
             $this->returnJson(['status' => 'error', 'code' => 'parameter_missing', 'detail' => 'tb']);
             return;

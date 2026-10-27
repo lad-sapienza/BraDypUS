@@ -506,6 +506,12 @@ class Record extends \Bdus\Controller
   public function getTemplates(): void
   {
     $tb = $this->get['tb'] ?? null;
+
+    if (!\Auth\Authorization::can('read', table: $tb)) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+      return;
+    }
+
     if (!$tb) {
       $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
       return;

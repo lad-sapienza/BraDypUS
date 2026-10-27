@@ -5,6 +5,133 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.16.0] - 2026-10-27
+
+### Added
+
+- **Groups & permissions — database groundwork (#78)** — migration `M046` creates
+  `bdus_groups`, `bdus_user_groups`, `bdus_group_rules` and `bdus_table_locks`
+  and adds `bdus_api_keys.group_id`. The tables are empty and nothing reads
+  them yet: access control is unchanged. The evaluation engine `Auth\Access`
+  (table/row conditions from tier, group rules and locks) is in place and
+  unit-tested but not yet called by any controller. See the design note in
+  `bdus-docs/dev/groups-permissions-design.md`.
+- **Groups & permissions — read enforcement (#78)** — `Authorization::can()`
+  accepts a `table:` argument, and `SQL\QueryFromRequest` applies the row-level
+  read condition of the current principal to every list, search, export, chart,
+  GeoFace and assemblage query. `Chart::getData` now checks read access (it had
+  no check at all). With no groups or rules nothing changes.
+- **Groups & permissions — single records and satellites (#78)** — a record
+  outside the user's row scope is refused like a forbidden one; links,
+  backlinks, manual links and RS relations to hidden records, and lookup labels
+  from unreadable tables, are left out of the record view; version history,
+  deleted-record list, link candidates, field options, used values, the RS
+  matrix, the chrono timeline and the table list only show what the user may
+  read. `Authorization::can('enter')` now accepts tier 39 (`ENTER`), as
+  documented: it used to refuse it, which made that tier unusable.
+
+- **Groups & permissions — writes to records (#78)** — changing or deleting a
+  record (save, erase, plugin rows, attached files, RS relations, manual links)
+  now goes through one gate: the tier or a group rule must allow it, the record
+  must be inside the user's row scope, and it must not be frozen by a table lock
+  (`bdus_table_locks`; admins are never blocked). Plugin rows follow their host
+  record, relations and links need both ends to be changeable. Creating a record
+  needs the tier or a `create` rule; duplicating one also needs to read the
+  source. The same gate covers GeoFace geometries, Zotero links and the three
+  imports (data, GeoJSON, photos): an import that touches a frozen or
+  out-of-scope record is refused as a whole and writes nothing. Search &
+  replace is admin-only and, like every admin action, ignores locks.
+
+- **Groups & permissions — API keys with a group (#78)** — `POST /api/api-keys`
+  accepts `group_id` (and privilege `39`, which requires it): the group's rules
+  scope the key to tables and rows, so a public key can read, say, only
+  published records. Such keys reach the data routes only (records, search,
+  export, charts, GeoFace, assemblage, chrono and their writes), and a refusal
+  to a key is now an HTTP `403`. `GET /api/api-keys` returns `group_id` and
+  `group_name`. Keys without a group behave exactly as before.
+
+- **Groups & permissions — admin API (#78)** — new admin-only endpoints to manage
+  groups (`/api/groups`, `/api/group/{id}`), their members
+  (`/api/group/{id}/members`, `/api/user/{id}/groups`), their rules
+  (`PUT /api/group/{id}/rules`, replace-all, validated before anything is
+  saved) and table locks (`/api/locks`, `/api/lock/{id}`). Documented in
+  `openapi.yaml`. No interface yet: groups, rules and locks are managed through
+  the API until the Users view gets its Groups tab.
+
+- **Groups & permissions — what the interface is told (#78)** — `GET /api/tables`
+  returns `can: {create, read, update, delete}` for each table (and lists only
+  the tables the user may read), `GET /api/info/app` the same flags over all
+  tables, `GET /api/records/{tb}` `can` next to `can_add`, and the record view
+  computes `can_edit` / `can_delete` with the same rule the save and erase
+  endpoints enforce (group rules, row scope, locks) and adds `locked`, which
+  admins also see. `Authorization::can('delete')` is new (same tiers as `edit`).
+
+- **Groups & permissions — interface (#78)** — the Users view gets two tabs for
+  admins. **Groups**: the built-in levels (read only), then each group with its
+  details, members and a permissions grid (one row per table; Create on/off;
+  Read/Update/Delete off, all rows, or the rows a filter selects, edited with the
+  query builder or as JSON). **Locks**: the frozen row sets, with how many records
+  each freezes right now. The user form assigns groups, the API-key form takes a
+  group (required for level *Enter*, which `GET /api/users` and the user form now
+  list), and a frozen record shows a *Frozen* badge. English and Italian.
+- The users list (`GET /api/users`) returns each user's `groups`.
+
+- **Phase 47 of the API tests: the demo profiles on the demo data.** It runs with
+  the demo seed (`--seed`) and logs in as *Editor Demo* (writer), *Revisore Demo*
+  (level Enter in the Revisori group, with the lock on verified units), an API
+  key in that group, and — created for the phase — a self writer and a pending
+  user. For each: what it sees, what it can change, what it is refused, on the
+  seeded records. It also covers the two levels no other phase exercised.
+- **Phase 46 of the API tests: deny by default.** A person and an API key with no
+  access of their own, in a group that reads some rows of one table, are thrown at
+  73 entry points on every engine: tables without a rule, rows outside it, every
+  write, and the administration, configuration and system routes. A refused key
+  gets 403, a refused person the usual 200 with an error code. Their own access
+  is checked first, so the refusals cannot come from a principal that is simply
+  broken.
+
+### Changed
+
+- **Documentation for groups, permissions and locks** — a user-guide page
+  (*Groups, permissions & locks*, with screenshots), the privilege-level table of
+  *Users & privileges* corrected and the removed per-table overrides taken out, the
+  API guide extended with keys that belong to a group, and the design note turned
+  into the developer reference *Groups & permissions*.
+
+### Fixed
+
+- **The demo seed called an endpoint removed with the per-table privileges** and
+  stopped half-way; it now builds a reviewers group, a level-*Enter* user and a
+  lock instead.
+- **The test stack no longer shares the dev stack's Docker network.** `test.sh`
+  attached its `app` container to `bradypus-net` (declared external) under the
+  same service name as the development backend, so the dev Vite proxy
+  (`http://app:80`) could reach the test container while tests ran. The test
+  project now creates and removes its own network, `bdus-test-net`.
+
+### Removed
+
+- **Per-user, per-table privilege overrides** — the feature was stored and
+  editable (Users view → row expansion) but never enforced: the `UAC\UAC`
+  object injected into controllers was never consulted, so no override ever had
+  any effect. Removed the dead code: `UAC\UAC` and `UAC\Loader`, the endpoints
+  `GET/POST /api/user/{user_id}/privileges` and `DELETE /api/privilege/{id}`, the
+  `override_count` field of `GET /api/users`, and the panel in the Users view.
+  The numeric privilege constants moved to `Auth\Authorization`. Access control
+  is unchanged (global tiers). The `bdus_user_table_privs` table is dropped by
+  migration `M046`; it is replaced by groups and permissions (#78).
+
+### Security
+
+- `GET /api/search/{tb}/config`, `/api/record/{tb}/templates`,
+  `/api/import/{tb}/fields`, `/api/charts` and `/api/saved-queries` now need read
+  access to the table (or to some table, for the two lists). The first one
+  checked nothing: any signed-in user could list the fields of any table.
+
+- `Record::getFieldOptions` and `Search::getUsedValues` had no privilege check:
+  any authenticated user, whatever the tier, could list values and lookup labels
+  of any table. Both now require read access to the table the values come from.
+
 ## [5.15.8] - 2026-10-27
 
 ### Security

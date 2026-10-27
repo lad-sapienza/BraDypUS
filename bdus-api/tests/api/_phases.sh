@@ -473,4 +473,10 @@ run_seed() {
   header "Phase 19 — Demo seed"
   run_phase "Demo seed" "19_seed_demo.hurl" \
     --variable "jwt=${JWT}"
+
+  # The demo profiles (Editor, Revisore, an API key in their group, plus a self
+  # writer and a pending user) checked on the data the seed just created.
+  header "Phase 47 — Demo profiles on the demo data"
+  run_phase "Demo profiles" "47_seed_profiles.hurl" \
+    --variable "jwt=${JWT}"
 }

@@ -74,6 +74,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   list), and a frozen record shows a *Frozen* badge. English and Italian.
 - The users list (`GET /api/users`) returns each user's `groups`.
 
+- **Phase 47 of the API tests: the demo profiles on the demo data.** It runs with
+  the demo seed (`--seed`) and logs in as *Editor Demo* (writer), *Revisore Demo*
+  (level Enter in the Revisori group, with the lock on verified units), an API
+  key in that group, and — created for the phase — a self writer and a pending
+  user. For each: what it sees, what it can change, what it is refused, on the
+  seeded records. It also covers the two levels no other phase exercised.
 - **Phase 46 of the API tests: deny by default.** A person and an API key with no
   access of their own, in a group that reads some rows of one table, are thrown at
   73 entry points on every engine: tables without a rule, rows outside it, every

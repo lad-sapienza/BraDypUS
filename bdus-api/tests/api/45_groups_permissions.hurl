@@ -80,6 +80,18 @@ jsonpath "$.group.rules[0].table"   == "crud_test"
 jsonpath "$.group.rules[0].action"  == "read"
 
 
+# The list, with the counts (its SQL uses sub-selects: run on every engine)
+GET {{base_url}}/{{app_name}}/api/groups
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.status"            == "success"
+jsonpath "$.groups[0].name"    == "g45 Public"
+jsonpath "$.groups[0].rules"   == 1
+jsonpath "$.groups[0].members" == 0
+jsonpath "$.groups[0].keys"    == 0
+
+
 POST {{base_url}}/{{app_name}}/api/api-keys
 Authorization: Bearer {{jwt}}
 Content-Type: application/json

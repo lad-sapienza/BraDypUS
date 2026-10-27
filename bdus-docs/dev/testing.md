@@ -50,7 +50,7 @@ Se non viene passato nessun flag di modalità, `test.sh` mostra un menu interatt
 | `--unit` | Esegue PHPUnit (unit + integration) |
 | `--setup` | Fasi 01–03: crea l'app e configura lo schema |
 | `--tests` | Fasi 04–38: suite CRUD e feature completa |
-| `--seed` | Fase 19: popola l'app con il dataset demo completo |
+| `--seed` | Fase 19: popola l'app con il dataset demo completo; poi la fase 47 verifica i profili demo (editor, revisore, chiave del gruppo, self writer, pending) sui dati del seed |
 
 ### Controllo delle fasi
 

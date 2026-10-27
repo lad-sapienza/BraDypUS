@@ -35,9 +35,9 @@ class Groups extends \Bdus\Controller
 
         $rows = $this->db->query(
             'SELECT g.id, g.name, g.description,
-                    (SELECT COUNT(*) FROM bdus_user_groups ug WHERE ug.group_id = g.id)  AS members,
-                    (SELECT COUNT(*) FROM bdus_group_rules r  WHERE r.group_id  = g.id)  AS rules,
-                    (SELECT COUNT(*) FROM bdus_api_keys k     WHERE k.group_id  = g.id AND k.revoked_at IS NULL) AS keys
+                    (SELECT COUNT(*) FROM bdus_user_groups ug WHERE ug.group_id = g.id)  AS member_count,
+                    (SELECT COUNT(*) FROM bdus_group_rules r  WHERE r.group_id  = g.id)  AS rule_count,
+                    (SELECT COUNT(*) FROM bdus_api_keys k     WHERE k.group_id  = g.id AND k.revoked_at IS NULL) AS key_count
                FROM bdus_groups g ORDER BY g.name',
             [], 'read'
         ) ?: [];
@@ -46,9 +46,9 @@ class Groups extends \Bdus\Controller
             'id'          => (int) $r['id'],
             'name'        => $r['name'],
             'description' => $r['description'],
-            'members'     => (int) $r['members'],
-            'rules'       => (int) $r['rules'],
-            'keys'        => (int) $r['keys'],
+            'members'     => (int) $r['member_count'],
+            'rules'       => (int) $r['rule_count'],
+            'keys'        => (int) $r['key_count'],
         ], $rows)]);
     }
 

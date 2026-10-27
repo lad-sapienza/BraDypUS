@@ -40,6 +40,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   out-of-scope record is refused as a whole and writes nothing. Search &
   replace is admin-only and, like every admin action, ignores locks.
 
+- **Groups & permissions — API keys with a group (#78)** — `POST /api/api-keys`
+  accepts `group_id` (and privilege `39`, which requires it): the group's rules
+  scope the key to tables and rows, so a public key can read, say, only
+  published records. Such keys reach the data routes only (records, search,
+  export, charts, GeoFace, assemblage, chrono and their writes), and a refusal
+  to a key is now an HTTP `403`. `GET /api/api-keys` returns `group_id` and
+  `group_name`. Keys without a group behave exactly as before.
+
 ### Security
 
 - `Record::getFieldOptions` and `Search::getUsedValues` had no privilege check:

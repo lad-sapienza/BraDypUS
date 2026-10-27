@@ -246,6 +246,77 @@ class Router
     ];
 
     /**
+     * Routes a key scoped by a group may reach even when its tier is below the
+     * route's level (a public key is typically tier 39 plus a group). They are
+     * the data routes whose controllers check the table, and the row, against
+     * the key's group rules; everything else stays out of reach of such keys.
+     * Only 'read' and 'edit' routes qualify. See Router::apiKeyMayReach().
+     */
+    public const GROUP_KEY_ROUTES = [
+        'Bdus\\Controllers\\Home::listTables',
+        'Bdus\\Controllers\\Record::getRecord',
+        'Bdus\\Controllers\\Record::getRecords',
+        'Bdus\\Controllers\\Record::exportRecords',
+        'Bdus\\Controllers\\Record::getFieldOptions',
+        'Bdus\\Controllers\\Record::checkUnique',
+        'Bdus\\Controllers\\Record::searchLinkCandidates',
+        'Bdus\\Controllers\\Record::getRsMatrix',
+        'Bdus\\Controllers\\Record::getDeletedRecords',
+        'Bdus\\Controllers\\Record::getVersions',
+        'Bdus\\Controllers\\Record::getVersionDiff',
+        'Bdus\\Controllers\\Search::getUsedValues',
+        'Bdus\\Controllers\\Chart::getData',
+        'Bdus\\Controllers\\AssemblageAnalysis::getSources',
+        'Bdus\\Controllers\\AssemblageAnalysis::getTableMeta',
+        'Bdus\\Controllers\\AssemblageAnalysis::getData',
+        'Bdus\\Controllers\\Geoface::getGeoJson',
+        'Bdus\\Controllers\\Chrono::timeline',
+        'Bdus\\Controllers\\Chrono::related',
+        'Bdus\\Controllers\\Record::saveRecord',
+        'Bdus\\Controllers\\Record::erase',
+        'Bdus\\Controllers\\Record::duplicateRecord',
+        'Bdus\\Controllers\\Record::erasePlugins',
+        'Bdus\\Controllers\\Record::checkPluginsBeforeDelete',
+        'Bdus\\Controllers\\Record::uploadFile',
+        'Bdus\\Controllers\\Record::linkFile',
+        'Bdus\\Controllers\\Record::deleteFile',
+        'Bdus\\Controllers\\Record::unlinkFile',
+        'Bdus\\Controllers\\Record::addRs',
+        'Bdus\\Controllers\\Record::deleteRs',
+        'Bdus\\Controllers\\Record::addManualLink',
+        'Bdus\\Controllers\\Record::deleteManualLink',
+        'Bdus\\Controllers\\Geoface::saveNew',
+        'Bdus\\Controllers\\Geoface::updateGeometry',
+        'Bdus\\Controllers\\Geoface::eraseGeometry',
+    ];
+
+    /**
+     * Can an API key with this tier (and optional group) pass the route gate for
+     * $ctrl::$method? The tier decides first; failing that, a key with a group
+     * reaches the GROUP_KEY_ROUTES whose level is 'read' or 'edit', and the
+     * controller then applies the group's rules to the table and row at hand.
+     */
+    public static function apiKeyMayReach(string $ctrl, string $method, string $required, ?int $tier, ?int $groupId): bool
+    {
+        if ($tier !== null) {
+            $byTier = match ($required) {
+                'read'        => $tier <= \Auth\Authorization::READ,
+                'edit'        => $tier <= \Auth\Authorization::CREATE,
+                'admin'       => $tier <= \Auth\Authorization::ADM,
+                'super_admin' => $tier <= \Auth\Authorization::SUPERADM,
+                default       => false,
+            };
+            if ($byTier) {
+                return true;
+            }
+        }
+
+        return !empty($groupId)
+            && in_array($required, ['read', 'edit'], true)
+            && in_array($ctrl . '::' . $method, self::GROUP_KEY_ROUTES, true);
+    }
+
+    /**
      * Look up the minimum privilege required for a given controller::method.
      *
      * Returns 'super_admin' (safest) for any pair not explicitly listed in ROUTE_PRIVILEGE.

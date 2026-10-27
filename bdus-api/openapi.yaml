@@ -30,9 +30,13 @@ info:
 
     API keys (managed via `/{app}/api/api-keys`) may be used in place of a JWT
     for programmatic access. They carry an explicit privilege level
-    (`read` | `edit` | `admin`) enforced per route. A key is bound to one
-    application: pass it as `Authorization: Bearer <key>` against that app's
-    `/{app}/api/...` URLs.
+    (10 admin, 25 edit, 30 read) enforced per route. A key may also belong to a
+    group: the group's rules then grant it access to specific tables and rows
+    (for example a public key that reads only published records), and a key
+    with tier 39 has no access except what its group grants. Requests a key's
+    rules refuse get HTTP `403` with `not_enough_privilege`. A key is bound to
+    one application: pass it as `Authorization: Bearer <key>` against that
+    app's `/{app}/api/...` URLs.
 
     ## Common response envelope
     Every response carries a top-level `status` field (`"success"` | `"error"`).
@@ -3959,13 +3963,23 @@ paths:
           application/json:
             schema:
               type: object
-              required: [label, privilege]
+              required: [label]
               properties:
                 label:
                   type: string
                 privilege:
-                  type: string
-                  enum: [read, edit, admin]
+                  type: integer
+                  enum: [10, 25, 30, 39]
+                  default: 30
+                  description: >
+                    Tier of the key: 10 admin, 25 edit, 30 read, 39 enter (no access of
+                    its own — requires `group_id`).
+                group_id:
+                  type: integer
+                  description: >
+                    Optional group whose rules scope the key to tables and rows.
+                    Required with privilege 39, not allowed with 10. Errors:
+                    `group_required`, `group_not_found`, `invalid_privilege`.
       responses:
         '200':
           description: Key created — the raw key is returned only once
@@ -6333,8 +6347,13 @@ components:
         label:
           type: string
         privilege:
-          type: string
-          enum: [read, edit, admin]
+          type: integer
+          enum: [10, 25, 30, 39]
+        group_id:
+          type: [integer, "null"]
+          description: Group whose rules scope the key; null = the tier alone decides.
+        group_name:
+          type: [string, "null"]
         is_active:
           type: integer
           enum: [0, 1]

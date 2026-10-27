@@ -40,14 +40,25 @@ class ApiKeyAuth
 
         try {
             $rows = $db->query(
-                "SELECT id, label, privilege FROM bdus_api_keys
+                "SELECT id, label, privilege, group_id FROM bdus_api_keys
                   WHERE key_hash = ? AND revoked_at IS NULL LIMIT 1",
                 [$keyHash],
                 'read'
             );
         } catch (\Throwable $e) {
-            // Table may not exist yet (migrations not run) — treat as no key.
-            return false;
+            // `group_id` is added by M046: before that migration has run, keys
+            // keep working on their tier alone.
+            try {
+                $rows = $db->query(
+                    "SELECT id, label, privilege FROM bdus_api_keys
+                      WHERE key_hash = ? AND revoked_at IS NULL LIMIT 1",
+                    [$keyHash],
+                    'read'
+                );
+            } catch (\Throwable $e2) {
+                // Table may not exist yet (migrations not run) — treat as no key.
+                return false;
+            }
         }
 
         if (empty($rows)) {
@@ -80,6 +91,8 @@ class ApiKeyAuth
             'name'       => 'API Key: ' . ($row['label'] ?? 'unknown'),
             'privilege'  => $privilege,
             'is_api_key' => true,
+            // Group whose rules scope this key (bdus_group_rules); null = tier only.
+            'group_id'   => !empty($row['group_id']) ? (int) $row['group_id'] : null,
         ]);
 
         return true;

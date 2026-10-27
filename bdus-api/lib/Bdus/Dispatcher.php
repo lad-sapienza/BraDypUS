@@ -95,7 +95,11 @@ class Dispatcher
                     ));
                 }
 
-                if (\Auth\CurrentUser::isApiKey() && !$this->apiKeyHasPrivilege($required)) {
+                if (\Auth\CurrentUser::isApiKey() && !Router::apiKeyMayReach(
+                    $obj, $method, $required,
+                    \Auth\CurrentUser::privilege(),
+                    \Auth\CurrentUser::get('group_id') ? (int) \Auth\CurrentUser::get('group_id') : null
+                )) {
                     http_response_code(403);
                     header('Content-Type: application/json');
                     echo json_encode(['status' => 'error', 'code' => 'not_enough_privilege'], JSON_UNESCAPED_UNICODE);
@@ -160,21 +164,4 @@ class Dispatcher
         }
     }
 
-    /**
-     * Returns true if the current API-key user satisfies the required privilege level.
-     */
-    private function apiKeyHasPrivilege(string $required): bool
-    {
-        $privilege = \Auth\CurrentUser::privilege();
-        if ($privilege === null) {
-            return false;
-        }
-        return match ($required) {
-            'read'        => $privilege <= \Auth\Authorization::READ,
-            'edit'        => $privilege <= \Auth\Authorization::CREATE,
-            'admin'       => $privilege <= \Auth\Authorization::ADM,
-            'super_admin' => $privilege <= \Auth\Authorization::SUPERADM,
-            default       => false,
-        };
-    }
 }

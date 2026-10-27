@@ -154,3 +154,25 @@ HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
 jsonpath "$.code"   == "ok_api_key_deleted"
+
+
+# ── 25z. Keys scoped by a group (#78) ────────────────────────────────
+# A tier-39 key has no access of its own: it needs a group.
+POST {{base_url}}/{{app_name}}/api/api-keys
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "label": "scoped, no group", "privilege": 39 }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "error"
+jsonpath "$.code"   == "group_required"
+
+
+POST {{base_url}}/{{app_name}}/api/api-keys
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "label": "scoped, ghost group", "privilege": 39, "group_id": 999999 }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "error"
+jsonpath "$.code"   == "group_not_found"

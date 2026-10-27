@@ -164,6 +164,12 @@ abstract class Controller
             ]);
         }
 
+        // API-key clients get a real 403 when a group's rules refuse them a table
+        // or row (people keep the 200 + code envelope the SPA translates).
+        if (($data['code'] ?? null) === 'not_enough_privilege' && \Auth\CurrentUser::isApiKey()) {
+            http_response_code(403);
+        }
+
         header('Content-Type: application/json; charset=utf-8');
         echo $json;
     }

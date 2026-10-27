@@ -10,7 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Groups & permissions — database groundwork (#78)** — migration `M046` creates
   `bdus_groups`, `bdus_user_groups`, `bdus_group_rules` and `bdus_table_locks`
   and adds `bdus_api_keys.group_id`. The tables are empty and nothing reads
-  them yet: access control is unchanged. See the design note in
+  them yet: access control is unchanged. The evaluation engine `Auth\Access`
+  (table/row conditions from tier, group rules and locks) is in place and
+  unit-tested but not yet called by any controller. See the design note in
   `bdus-docs/dev/groups-permissions-design.md`.
 
 ### Removed

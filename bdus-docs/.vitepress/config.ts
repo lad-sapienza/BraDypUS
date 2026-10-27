@@ -106,6 +106,7 @@ function guideSidebar() {
         { text: 'Table relations',     link: '/guide/setup/relations' },
         { text: 'Vocabularies',        link: '/guide/setup/vocabularies' },
         { text: 'Users & privileges',  link: '/guide/setup/users' },
+        { text: 'Groups & locks',      link: '/guide/setup/groups' },
         { text: 'Validation',          link: '/guide/setup/finalizing-setup' },
         { text: 'DBML import/export',  link: '/guide/setup/dbml' },
         { text: 'Advices & hacks',     link: '/guide/setup/advices-and-hacks' },
@@ -205,6 +206,7 @@ function devSidebar() {
         { text: 'SQL & filter layer',   link: '/dev/sql-layer' },
         { text: 'Record lifecycle',     link: '/dev/record-lifecycle' },
         { text: 'Config & access control',         link: '/dev/config' },
+        { text: 'Groups & permissions',            link: '/dev/groups-permissions' },
       ],
     },
     {

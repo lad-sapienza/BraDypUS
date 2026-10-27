@@ -18,6 +18,7 @@ the BraDypUS codebase.
 | Understand the query DSL | [SQL layer](./sql-layer) |
 | Understand record read / write | [Record lifecycle](./record-lifecycle) |
 | Understand config schema & access control | [Config & access control](./config) |
+| Understand groups, row-level rules and locks | [Groups & permissions](./groups-permissions) |
 | Work on the Vue frontend | [Frontend](./frontend) |
 | Add OAuth support | [OAuth2 / SSO](./oauth) |
 | Set up transactional email (password reset, self-registration) | [Email (Resend)](./email) |

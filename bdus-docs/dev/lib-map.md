@@ -22,6 +22,7 @@ without going through a lib/ abstraction.
 | `Auth\CurrentUser` | `lib/Auth/CurrentUser.php` | Request-scoped authenticated user |
 | `Auth\ApiKeyAuth` | `lib/Auth/ApiKeyAuth.php` | API key authentication |
 | `Auth\Authorization` | `lib/Auth/Authorization.php` | Privilege check helpers |
+| `Auth\Access` | `lib/Auth/Access.php` | Table- and row-level access: group rules and locks ([Groups & permissions](./groups-permissions)) |
 | `Auth\Password` | `lib/Auth/Password.php` | bcrypt hash / verify |
 | `JWT\JwtManager` | `lib/JWT/JwtManager.php` | JWT issue / verify / peek |
 | `Config\Config` | `lib/Config/Config.php` | Config facade (dot-notation access) |

@@ -138,7 +138,7 @@ atomically — no stale-cache issues.
 Access is decided by a single **tier** (privilege level) per principal: a
 column of `bdus_users` for people, of `bdus_api_keys` for API keys. There is
 no per-table or per-record access control yet (see the
-[groups & permissions design note](./groups-permissions-design)).
+[Groups & permissions](./groups-permissions)).
 
 ### Privilege constants
 
@@ -176,7 +176,7 @@ Any other string returns `false`.
 `can()` takes a third argument, `table:`. With it the answer is "may the user do
 this on at least some rows of that table": the tier decides first, and the
 user's group rules (`Auth\Access`, see the
-[groups & permissions design note](./groups-permissions-design)) can grant
+[Groups & permissions](./groups-permissions)) can grant
 more. The row-level part is enforced where queries are built:
 `SQL\QueryFromRequest` ANDs the user's read condition into the WHERE clause of
 every list, search, export, chart, GeoFace and assemblage query. Admins and

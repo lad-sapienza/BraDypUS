@@ -22,8 +22,27 @@ Pass the key in the `Authorization` header:
 Authorization: Bearer bdus_<key>
 ```
 
-Each key has a maximum privilege level. A key with privilege 30 (reader) can only
-read data; a key with privilege 20 (editor) can also write.
+Each key has a privilege level: 30 (reader) keys can only read data, 25 keys can
+also create and write, 10 keys are admin keys. A key can also belong to a
+[group](../setup/groups) — see below.
+
+#### API keys with a group <Badge type="tip" text="new" />
+
+A key at level **Enter** (39) has no access of its own; its **group** decides
+what it can reach: which tables, and which rows of them (for example only the
+records whose `status` is `published`), and whether it can write. A key at level
+25 or 30 can also take a group, to be allowed more than its level on specific
+tables.
+
+Such a key reaches only the *data* endpoints — records, search, export, charts,
+GeoFace, assemblage analysis, chrono, and their writes. Everything else (users,
+keys, configuration, backups…) is out of reach whatever the group says.
+
+When the group's rules refuse a request — another table, a row outside the
+filter, a write the group does not grant — the response is **HTTP 403** with
+`{"status": "error", "code": "not_enough_privilege"}`. Rules and locks are
+described in [Groups, permissions & locks](../setup/groups); keys are created
+with `POST /{app}/api/api-keys` (`privilege` and `group_id`).
 
 ### JWT (user session)
 

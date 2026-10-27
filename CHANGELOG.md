@@ -82,6 +82,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   is checked first, so the refusals cannot come from a principal that is simply
   broken.
 
+### Changed
+
+- **Documentation for groups, permissions and locks** — a user-guide page
+  (*Groups, permissions & locks*, with screenshots), the privilege-level table of
+  *Users & privileges* corrected and the removed per-table overrides taken out, the
+  API guide extended with keys that belong to a group, and the design note turned
+  into the developer reference *Groups & permissions*.
+
 ### Fixed
 
 - **The demo seed called an endpoint removed with the per-table privileges** and

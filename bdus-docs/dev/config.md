@@ -1,11 +1,11 @@
 ---
-title: Config & UAC
+title: Config & access control
 ---
 
-# Config & UAC
+# Config & access control
 
 Two injected objects reach every controller: `Config\Config` (application
-configuration) and `UAC\UAC` (access control). This page documents their
+configuration) and `Auth\Authorization` (access control). This page documents their
 structure, APIs, and how they interact.
 
 ---
@@ -133,69 +133,49 @@ atomically — no stale-cache issues.
 
 ---
 
-## `UAC\UAC` — access control
+## `Auth\Authorization` — access control
 
-`UAC` enforces privilege levels on a per-action, per-table, and optionally
-per-record basis. It is injected into every controller via `$this->uac`.
+Access is decided by a single **tier** (privilege level) per principal: a
+column of `bdus_users` for people, of `bdus_api_keys` for API keys. There is
+no per-table or per-record access control yet (see the
+[groups & permissions design note](./groups-permissions-design)).
 
 ### Privilege constants
 
 | Constant | Value | Meaning |
 |---|---|---|
-| `UAC::SUPERADM` | 1 | Super admin — full access including schema changes |
-| `UAC::ADM` | 10 | Admin — user management, backups, logs |
-| `UAC::UPDATE` / `UAC::DELETE` | 20 | Can update and delete records |
-| `UAC::CREATE` | 25 | Editor — can create and edit own records |
-| `UAC::READ` | 30 | Reader — read-only |
-| `UAC::ENTER` | 39 | Can log in but has no data access |
+| `Authorization::SUPERADM` | 1 | Super admin — full access including schema changes |
+| `Authorization::ADM` | 10 | Admin — user management, backups, logs |
+| `Authorization::UPDATE` | 20 | Can update and delete records |
+| `Authorization::CREATE` | 25 | Editor — can create and edit own records |
+| `Authorization::READ` | 30 | Reader — read-only |
+| `Authorization::ENTER` | 39 | Can log in but has no data access |
 
 Lower numeric value = higher privilege. A user with `privilege = 10` can do
 everything that `20`, `25`, `30`, `39` allow, plus admin operations.
 
-> **Note**: The `ROUTE_PRIVILEGE` map in `Router.php` uses string tiers
-> (`'read'`, `'edit'`, `'admin'`, `'super_admin'`). `UAC::can()` uses the
-> granular action strings below. Both systems are independent layers of
-> the same privilege model.
-
-### Actions
+### Checking a privilege
 
 ```php
-$uac->can(string $action, ?string $onTable, ?int $onRecId, bool $user_owns): bool
+\Auth\Authorization::can(string $privilege = 'edit', ?int $creator = null): bool
 ```
 
-| Action string | Allowed when |
+| Privilege string | Allowed when |
 |---|---|
-| `'enter'` | `privilege ≤ ENTER` and app not `'off'` (superadmins bypass `'off'`) |
-| `'read'` | `privilege ≤ READ` (global, or table-based, or record-subset-based) |
-| `'create'` | `privilege ≤ CREATE` and app is `'on'` |
-| `'update'` / `'delete'` | `privilege ≤ UPDATE`, or (`≤ CREATE` and `user_owns_record`) |
-| `'multiple_edit'` | `privilege ≤ UPDATE` |
-| `'admin'` | `privilege ≤ ADM` and app not `'frozen'` |
-| `'super_admin'` | `privilege ≤ SUPERADM` (always allowed, even if app is `'off'`) |
+| `'enter'` | `privilege < 39` and app not `'off'` (super admins bypass `'off'`) |
+| `'read'`, `'preview'` | `privilege ≤ 30` and app not `'off'` |
+| `'add_new'` | `privilege ≤ 25` and app not `'frozen'` |
+| `'edit'` | `privilege ≤ 20`, or (`≤ 25` and `$creator` is the current user); app not `'frozen'` |
+| `'multiple_edit'` | `privilege ≤ 20` and app not `'frozen'` |
+| `'admin'` | `privilege ≤ 10` and app not `'frozen'` |
+| `'super_admin'` | `privilege = 1` (always allowed, even if app is `'off'`) |
 
-### User Access Level (UAL)
+Any other string returns `false`.
 
-Before `can()` can be called, the UAL must be set:
-
-```php
-$uac->setUAL([
-    'global'  => UAC::READ,       // base privilege for all tables
-    'sites'   => UAC::CREATE,     // table override
-    'contexts'=> [UAC::UPDATE, 'creator = 5'],  // record-subset override
-]);
-```
-
-Three granularities:
-
-1. **Global** (`ual['global']`) — applies to every table.
-2. **Table-based** (`ual['tablename']` = int) — overrides global for that table.
-3. **Record-subset-based** (`ual['tablename']` = `[int, sql_condition]`) —
-   applies the privilege only to records matching the raw SQL condition.
-   `UAC` runs `SELECT count(*) FROM table WHERE (sql) AND id = rec_id` to
-   check membership.
-
-The UAL is built from `bdus_users` (global privilege) and
-`bdus_user_table_privs` (per-table overrides) by `UAC\Loader`.
+> **Note**: the `ROUTE_PRIVILEGE` map in `Router.php` uses string tiers
+> (`'read'`, `'edit'`, `'admin'`, `'super_admin'`) and is the single source of
+> truth for API-key access. `Authorization::can()` is the one for JWT users.
+> The two are independent layers of the same model and can diverge.
 
 ### Application status
 
@@ -210,42 +190,28 @@ The app `status` field further restricts access:
 ### Usage in controllers
 
 ```php
-// Check before reading
-if (!$this->uac->can('read', $tb)) {
-    return $this->response('error', 403, 'Forbidden');
+if (!\Auth\Authorization::can('read')) {
+    $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+    return;
 }
 
-// Check before writing
-if (!$this->uac->can('update', $tb, $id, $isOwner)) {
-    return $this->response('error', 403, 'Forbidden');
-}
-
-// Check for admin operations
-if (!$this->uac->can('admin')) {
-    return $this->response('error', 403, 'Forbidden');
-}
+// Owner-aware edit (self_writer may edit their own records)
+if (!\Auth\Authorization::can('edit', $record['creator'])) { … }
 ```
 
 ---
 
-## How Config and UAC are wired together
+## How Config and access control are wired together
 
-`App::route()` constructs both objects before calling the controller method:
+`Dispatcher::dispatch()` builds `Config` and tells `Authorization` the app
+status before calling the controller method:
 
 ```php
-// Config
-$config = new Config\Config(new \Adbar\Dot(), PROJ_DIR . 'cfg/', $this->db);
-
-// UAC — reads status from config, privilege from DB
-$uac = new UAC\UAC($config->get('main.status'), $this->db);
-$ual = (new UAC\Loader($this->db))->load(Auth\CurrentUser::id());
-$uac->setUAL($ual);
-
-// Inject into controller
+$config = new Config(new Dot(), MAIN_DIR . 'projects/' . APP . '/', $this->db);
 $ctrl->setCfg($config);
-$ctrl->setUAC($uac);
+\Auth\Authorization::setAppStatus($config->get('main.status'));
 ```
 
 The privilege tier map in `Router::ROUTE_PRIVILEGE` is checked first (coarse
-HTTP-level gate); `UAC::can()` is called inside controller methods for
-fine-grained table- and record-level checks.
+HTTP-level gate); `Authorization::can()` is called inside controller methods
+for the finer checks.

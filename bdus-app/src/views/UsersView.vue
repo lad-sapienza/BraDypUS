@@ -23,8 +23,6 @@
         :columns="columns"
         :dataSource="filteredUsers"
         :loading="loading"
-        v-model:expandedRowKeys="expandedRowKeys"
-        :showExpandColumn="isAdmin"
         :pagination="false"
         size="small"
         rowKey="id"
@@ -44,18 +42,9 @@
             <a :href="`mailto:${record.email}`" class="users-email">{{ record.email }}</a>
           </template>
           <template v-else-if="column.key === 'privilege'">
-            <div class="users-priv-cell">
-              <ATag :color="severityToTagColor(privilegeSeverity(record.privilege_value))">
-                {{ record.privilege }}
-              </ATag>
-              <ABadge
-                v-if="record.override_count > 0"
-                :count="record.override_count"
-                :number-style="{ backgroundColor: 'var(--p-surface-400, #94a3b8)' }"
-                class="users-badge"
-                :title="t('table_overrides')"
-              />
-            </div>
+            <ATag :color="severityToTagColor(privilegeSeverity(record.privilege_value))">
+              {{ record.privilege }}
+            </ATag>
           </template>
           <template v-else-if="column.key === 'actions'">
             <AButton
@@ -86,14 +75,6 @@
             ><template #icon><DeleteOutlined /></template></AButton>
           </template>
         </template>
-
-        <!-- Row expansion: per-table privileges panel -->
-        <template #expandedRowRender="{ record }">
-          <UserPrivilegesPanel
-            :userId="record.id"
-            :callerPrivilege="callerPrivilege"
-          />
-        </template>
       </ATable>
 
     </div>
@@ -122,8 +103,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useToast, useConfirm } from '@/composables/useNotify'
 import AppLayout        from '@/components/AppLayout.vue'
 import UserForm         from '@/components/users/UserForm.vue'
-import UserPrivilegesPanel from '@/components/users/UserPrivilegesPanel.vue'
-import { Table as ATable, Button as AButton, Tag as ATag, Badge as ABadge, Modal as AModal, Input as AInput } from 'ant-design-vue'
+import { Table as ATable, Button as AButton, Tag as ATag, Modal as AModal, Input as AInput } from 'ant-design-vue'
 import { api }          from '@/api'
 import { useI18n }      from '@/i18n'
 import { useAuthStore } from '@/stores/auth'
@@ -155,14 +135,11 @@ const columns = computed(() => [
 const users            = ref([])
 const loading          = ref(false)
 const isAdmin          = ref(false)
-const expandedRowKeys  = ref([])
 const formVisible      = ref(false)
 const saving           = ref(false)
 const formData         = ref({})
 const filterText       = ref('')
 
-/** The privilege level of the logged-in user (for gating what overrides they can assign) */
-const callerPrivilege = computed(() => auth.user?.privilege_value ?? 1)
 
 const filteredUsers = computed(() => {
   const q = filterText.value.trim().toLowerCase()
@@ -299,15 +276,5 @@ onMounted(loadUsers)
   margin-left: 0.4rem;
   color: var(--p-text-muted-color);
   font-size: 0.8rem;
-}
-
-.users-priv-cell {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.users-badge {
-  font-size: 0.7rem;
 }
 </style>

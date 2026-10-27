@@ -8,7 +8,6 @@
 namespace Bdus;
 
 use DB\DBInterface;
-use UAC\UAC;
 use Config\Config;
 use Monolog\Logger;
 
@@ -20,7 +19,6 @@ abstract class Controller
     protected ?DBInterface $db  = null;
     protected ?Logger      $log = null;
     protected ?Config      $cfg = null;
-    protected ?UAC         $uac = null;
 
     public function __construct(array $get, array $post, array $request)
     {
@@ -41,7 +39,6 @@ abstract class Controller
     public function setDB(DBInterface $db): void   { $this->db  = $db;  }
     public function setCfg(Config $cfg): void       { $this->cfg = $cfg; }
     public function setLog(Logger $log): void       { $this->log = $log; }
-    public function setUAC(UAC $uac): void          { $this->uac = $uac; }
 
     /**
      * Emits a JSON response. Injects `"status": "success"` if not already set.

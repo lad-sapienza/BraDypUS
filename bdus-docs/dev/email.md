@@ -38,7 +38,7 @@ Two callers use `Mail\Mailer::send()`, both in `Controllers\Login`:
 
 Email language is picked per-request from the `Accept-Language` header
 (`Templates::langFromHeader()`) — it is **not** the app's configured default
-language (see [Config & UAC](/dev/config)) or the recipient's own locale
+language (see [Config & access control](/dev/config)) or the recipient's own locale
 preference, since neither is known at the point these emails are sent.
 
 ---

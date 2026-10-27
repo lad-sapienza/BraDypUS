@@ -24,7 +24,7 @@ bdus-api/
 │   │   ├── Router.php      ← FastRoute table + ROUTE_PRIVILEGE map
 │   │   ├── Dispatcher.php  ← auth gate, DI, controller invocation
 │   │   └── Controller.php  ← abstract base class for controllers
-│   ├── Auth/ JWT/ UAC/ Config/ DB/ Record/ Template/ …
+│   ├── Auth/ JWT/ Config/ DB/ Record/ Template/ …
 │   └── …                  ← see the lib/ map
 ├── projects/            ← runtime data, one dir per application (not committed)
 │   └── {app}/
@@ -89,7 +89,7 @@ index.php
               │     └── API key below required tier → 403 not_enough_privilege
               ├── method_exists + is_a($obj, Bdus\Controller) checks
               ├── new $obj($get, $post, $request)
-              ├── inject DB · logger · Config · UAC
+              ├── inject DB · logger · Config
               └── $controller->$method()   ← runs the actual logic
 ```
 
@@ -188,7 +188,7 @@ It maps `'Bdus\\Controllers\\Name::method'` to a privilege tier:
 
 Any `Controller::method` **not** listed in the map defaults to `super_admin`
 (`Router::requiredPrivilege()`), the safest fallback. Controllers may enforce
-further, finer checks with `Auth\Authorization::can()` and the UAC.
+further, finer checks with `Auth\Authorization::can()`.
 
 ---
 
@@ -209,11 +209,10 @@ $ctrl = new $obj($get, $post, $request);
 $ctrl->setDB($db);      // DB\DB (PDO wrapper)
 $ctrl->setLog($log);    // Monolog\Logger
 $ctrl->setCfg($config); // Config\Config — skipped during a major upgrade
-$ctrl->setUAC($uac);    // UAC\UAC, with the user's access list when authenticated
 $ctrl->$method();
 ```
 
-`Config` and `UAC` are not built when a major upgrade is pending or for the
+`Config` is not built when a major upgrade is pending or for the
 `Upgrade` controller (the system tables may not exist yet).
 
 ---
@@ -230,7 +229,6 @@ Every controller in `controllers/` extends `Bdus\Controller`.
 | `$this->db` | `DB\DBInterface` | injected PDO wrapper |
 | `$this->log` | `Monolog\Logger` | injected logger |
 | `$this->cfg` | `Config\Config` | injected app config |
-| `$this->uac` | `UAC\UAC` | injected privilege enforcement |
 | `returnJson(array)` | method | JSON response; adds `status: success` when missing; never emits an empty body |
 
 **Security invariant** enforced in `Dispatcher`:

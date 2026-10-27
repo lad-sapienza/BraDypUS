@@ -204,7 +204,7 @@ function devSidebar() {
         { text: 'Database layer',       link: '/dev/database' },
         { text: 'SQL & filter layer',   link: '/dev/sql-layer' },
         { text: 'Record lifecycle',     link: '/dev/record-lifecycle' },
-        { text: 'Config & UAC',         link: '/dev/config' },
+        { text: 'Config & access control',         link: '/dev/config' },
       ],
     },
     {

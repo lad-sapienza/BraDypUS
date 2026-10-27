@@ -119,7 +119,7 @@ import { severityToTagColor } from '@/utils/severity'
 const { t }  = useI18n()
 const toast  = useToast()
 
-// Privilege levels mirror UAC constants (lower = more privileged)
+// Privilege levels mirror Authorization constants (lower = more privileged)
 const PRIV_ADMIN = 10
 const PRIV_EDIT  = 25
 const PRIV_READ  = 30

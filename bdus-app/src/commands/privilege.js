@@ -1,5 +1,5 @@
 /**
- * UAC privilege thresholds — mirrors lib/Auth/Authorization.php's PRIVILEGE_MAP
+ * Privilege thresholds — mirrors lib/Auth/Authorization.php's PRIVILEGE_MAP
  * (bdus-api). Lower numeric value = higher privilege. A user passes a
  * threshold when their privilege_value is <= the threshold.
  *

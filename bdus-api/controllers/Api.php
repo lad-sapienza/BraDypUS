@@ -71,10 +71,10 @@ class Api extends \Bdus\Controller
 
         // Validate privilege: must be one of the three allowed levels.
         // Default to READ (30) when not supplied.
-        $allowedPrivileges = [\UAC\UAC::ADM, \UAC\UAC::CREATE, \UAC\UAC::READ]; // 10, 25, 30
+        $allowedPrivileges = [\Auth\Authorization::ADM, \Auth\Authorization::CREATE, \Auth\Authorization::READ]; // 10, 25, 30
         $privilege = isset($this->post['privilege'])
             ? (int) $this->post['privilege']
-            : \UAC\UAC::READ;
+            : \Auth\Authorization::READ;
         if (!in_array($privilege, $allowedPrivileges, true)) {
             $this->returnJson([
                 'status' => 'error',

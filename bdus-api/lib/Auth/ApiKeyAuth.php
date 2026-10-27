@@ -71,7 +71,7 @@ class ApiKeyAuth
         // that were created before M006 added the column.
         $privilege = isset($row['privilege']) && $row['privilege'] !== null
             ? (int) $row['privilege']
-            : \UAC\UAC::READ;
+            : Authorization::READ;
 
         // Populate CurrentUser so all existing privilege checks work unchanged.
         // id=0 is intentional — API keys have no user identity.

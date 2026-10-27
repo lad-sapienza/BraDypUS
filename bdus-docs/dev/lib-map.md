@@ -69,8 +69,6 @@ without going through a lib/ abstraction.
 | `Record\Read` | `lib/Record/Read.php` | Fetches record + plugins + links + files |
 | `Record\Edit` | `lib/Record/Edit.php` | Validates + prepares record edits |
 | `Record\Persist` | `lib/Record/Persist.php` | Low-level persistence (INSERT/UPDATE/DELETE) |
-| `UAC\UAC` | `lib/UAC/UAC.php` | Privilege enforcement |
-| `UAC\Loader` | `lib/UAC/Loader.php` | Builds per-table UAL from DB |
 | `Template\Loader` | `lib/Template/Loader.php` | Loads Twig print templates from DB |
 | `Image\Resizer` | `lib/Image/Resizer.php` | Image resize / thumbnail (Intervention) |
 | `Zotero\Client` | `lib/Zotero/Client.php` | Zotero API HTTP client |
@@ -132,7 +130,7 @@ $cfg->get('geoface.layers.0.url')  // first map layer URL
 Config is stored in DB (since M011) in `bdus_cfg_*` tables.
 `Config\Load` reads from DB; `Config\ToDB` / `Config\ToFiles` persist changes.
 
-See [Config & UAC](./config) for the full schema.
+See [Config & access control](./config) for the full schema.
 
 ---
 
@@ -196,19 +194,21 @@ See [Record lifecycle](./record-lifecycle).
 
 ---
 
-### `UAC\` — Access control
+### `Auth\` — Access control
 
-**`UAC\UAC`** enforces privilege levels per-table. Privilege levels:
+**`Auth\Authorization`** holds the numeric privilege constants and
+`can()`, the single check used by controllers. Privilege levels:
 
 | Level | Constant | Meaning |
 |---|---|---|
-| 1 | `UAC::SUPERADM` | Super admin — full access including schema changes |
-| 10 | `UAC::ADM` | Admin — user management, backups, logs |
-| 25 | `UAC::CREATE` | Editor — read + write records |
-| 30 | `UAC::READ` | Reader — read-only |
+| 1 | `Authorization::SUPERADM` | Super admin — full access including schema changes |
+| 10 | `Authorization::ADM` | Admin — user management, backups, logs |
+| 20 | `Authorization::UPDATE` | Writer — read + update records |
+| 25 | `Authorization::CREATE` | Self writer — read + create, edit own records |
+| 30 | `Authorization::READ` | Reader — read-only |
+| 39 | `Authorization::ENTER` | Can log in, no data access |
 
-**`UAC\Loader`** builds the per-user, per-table privilege list (UAL) from
-`bdus_user_table_privs`. See [Config & UAC](./config).
+See [Config & access control](./config).
 
 ---
 

@@ -69,11 +69,11 @@ class Thing extends \Bdus\Controller
 ```
 
 - Injected: `$this->db` (`DB\DBInterface`), `$this->cfg` (`Config\Config`),
-  `$this->uac` (`UAC\UAC`), `$this->log`; request data in `$this->get`,
+  `$this->log`; request data in `$this->get`,
   `$this->post` (JSON body merged), `$this->request`.
 - `Authorization::can()` strings (exact; a typo silently yields `false`):
   `'enter'` `'read'` `'preview'` `'add_new'` `'edit'` `'multiple_edit'`
-  `'admin'` `'super_admin'`. Numeric thresholds are the `UAC\UAC` constants
+  `'admin'` `'super_admin'`. Numeric thresholds are the `Auth\Authorization` constants
   (`SUPERADM=1`, `ADM=10`, `UPDATE/DELETE=20`, `CREATE=25`, `READ=30`, `ENTER=39`).
 - **Errors are HTTP 200 with `{status:'error', code}`**; the frontend translates
   `code`. Only the gates (401/403/404/405/409) use HTTP status codes.

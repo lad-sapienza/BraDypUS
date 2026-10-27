@@ -115,10 +115,9 @@ The most complex module. Super-admin only. Manages:
 - Schema validation and auto-fix
 
 ### `user` — User management (admin)
-`GET/POST/DELETE /api/user` · `GET/POST/DELETE /api/user/{id}/privileges`
+`GET/POST/DELETE /api/user`
 
-Admin CRUD for `bdus_users`. Also manages per-table privilege overrides
-(`bdus_user_table_privs`).
+Admin CRUD for `bdus_users`.
 
 ### `new_app` — Application wizard
 `GET /api/new-app/status` · `POST /api/new-app`

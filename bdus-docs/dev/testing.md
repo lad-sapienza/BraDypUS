@@ -177,7 +177,7 @@ tests/
 **Helper chiave:**
 
 ```php
-// Instanzia un controller con DI completo (DB, Config, UAC, logger)
+// Instanzia un controller con DI completo (DB, Config, logger)
 $ctrl = $this->makeController(RecordController::class, get: ['tb' => 'us', 'id' => 1]);
 
 // Chiama un metodo e cattura il JSON che produce
@@ -188,8 +188,8 @@ $result = $this->callController(LoginController::class, 'auth', post: [
 ]);
 
 // Imposta il privilegio utente simulato
-$this->setPrivilege(\UAC\UAC::SUPERADM);   // 1
-$this->setPrivilege(\UAC\UAC::READ);       // 30
+$this->setPrivilege(\Auth\Authorization::SUPERADM);   // 1
+$this->setPrivilege(\Auth\Authorization::READ);       // 30
 ```
 
 ---
@@ -287,7 +287,7 @@ class MyFeatureTest extends BdusTestCase
 {
     public function testItWorks(): void
     {
-        $this->setPrivilege(\UAC\UAC::SUPERADM);
+        $this->setPrivilege(\Auth\Authorization::SUPERADM);
 
         $result = $this->callController(
             \Bdus\Controllers\MyController::class,

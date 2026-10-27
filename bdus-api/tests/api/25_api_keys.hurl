@@ -19,7 +19,7 @@ jsonpath "$.keys"   isCollection
 jsonpath "$.keys"   isEmpty
 
 
-# ── 25b. Create a read-only key (privilege 30 = UAC::READ) ───────────
+# ── 25b. Create a read-only key (privilege 30 = Authorization::READ) ───────────
 POST {{base_url}}/{{app_name}}/api/api-keys
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
@@ -49,7 +49,7 @@ jsonpath "$.keys[0].privilege" == 30
 jsonpath "$.keys[0].key_hash" not exists
 
 
-# ── 25d. Create an edit-privilege key (privilege 25 = UAC::CREATE) ───
+# ── 25d. Create an edit-privilege key (privilege 25 = Authorization::CREATE) ───
 POST {{base_url}}/{{app_name}}/api/api-keys
 Authorization: Bearer {{jwt}}
 Content-Type: application/json

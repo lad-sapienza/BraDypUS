@@ -17,7 +17,7 @@ the BraDypUS codebase.
 | Write a new migration | [DB migrations](./migrations) |
 | Understand the query DSL | [SQL layer](./sql-layer) |
 | Understand record read / write | [Record lifecycle](./record-lifecycle) |
-| Understand config schema & access control | [Config & UAC](./config) |
+| Understand config schema & access control | [Config & access control](./config) |
 | Work on the Vue frontend | [Frontend](./frontend) |
 | Add OAuth support | [OAuth2 / SSO](./oauth) |
 | Set up transactional email (password reset, self-registration) | [Email (Resend)](./email) |

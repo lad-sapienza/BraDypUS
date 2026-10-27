@@ -153,9 +153,6 @@ class Router
         'Bdus\\Controllers\\User::showUserForm'                    => 'admin',
         'Bdus\\Controllers\\User::saveUserData'                    => 'admin',
         'Bdus\\Controllers\\User::deleteOne'                       => 'admin',
-        'Bdus\\Controllers\\User::getTablePrivileges'              => 'admin',
-        'Bdus\\Controllers\\User::saveTablePrivilege'              => 'admin',
-        'Bdus\\Controllers\\User::deleteTablePrivilege'            => 'admin',
         'Bdus\\Controllers\\User::revokeToken'                    => 'admin',
         'Bdus\\Controllers\\ConfirmAdminPwd::check_pwd'      => 'admin',
         'Bdus\\Controllers\\Backup::listBackups'                   => 'admin',
@@ -426,9 +423,6 @@ class Router
             $r->addRoute('GET',    '/api/user/{id:\d+}',               ['Bdus\\Controllers\\User', 'showUserForm']);
             $r->addRoute('POST',   '/api/user',                        ['Bdus\\Controllers\\User', 'saveUserData']);
             $r->addRoute('DELETE', '/api/user/{id:\d+}',               ['Bdus\\Controllers\\User', 'deleteOne']);
-            $r->addRoute('GET',    '/api/user/{user_id:\d+}/privileges', ['Bdus\\Controllers\\User', 'getTablePrivileges']);
-            $r->addRoute('POST',   '/api/user/{user_id:\d+}/privileges', ['Bdus\\Controllers\\User', 'saveTablePrivilege']);
-            $r->addRoute('DELETE', '/api/privilege/{id:\d+}',           ['Bdus\\Controllers\\User', 'deleteTablePrivilege']);
             $r->addRoute('POST',   '/api/user/{id:\d+}/revoke',         ['Bdus\\Controllers\\User', 'revokeToken']);
 
             // ── Configuration ─────────────────────────────────────────────────

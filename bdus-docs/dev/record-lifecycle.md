@@ -298,7 +298,7 @@ $result = $edit->persist($db, $cfg);
 
 Privilege tiers come from `Router::ROUTE_PRIVILEGE` (see
 [Bootstrapping & routing](./architecture)); finer, per-table checks
-(`UAC`, owner/creator rules) happen in the controller **before**
+(`Authorization::can()`, owner/creator rules) happen in the controller **before**
 `Record\Read` / `Record\Edit` write anything.
 
 Further reading: `lib/Record/DataStructure.md` in the API repository describes

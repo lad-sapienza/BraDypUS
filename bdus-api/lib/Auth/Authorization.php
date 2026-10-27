@@ -13,6 +13,14 @@ namespace Auth;
  */
 class Authorization
 {
+    /** Numeric privilege thresholds (lower = more privileged). */
+    public const SUPERADM = 1;
+    public const ADM      = 10;
+    public const UPDATE   = 20;
+    public const CREATE   = 25;
+    public const READ     = 30;
+    public const ENTER    = 39;
+
     /** Maps privilege codes to their string keys. */
     private const PRIVILEGE_MAP = [
         1  => 'super_admin',
@@ -53,7 +61,7 @@ class Authorization
             return false;
         }
 
-        // 'off' locks everyone out except super admins (same rule as UAC::can_enter).
+        // 'off' locks everyone out except super admins (login is still allowed to super admins).
         $locked = $app_status === 'off' && $user_priv > 1;
 
         return match ($privilege) {

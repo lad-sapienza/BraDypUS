@@ -90,7 +90,7 @@ tags:
   - name: geoface
     description: Geodata (GeoJSON read/write)
   - name: users
-    description: User management and per-table privileges
+    description: User management
   - name: templates
     description: Record-view layout templates
   - name: vocabularies
@@ -3538,67 +3538,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/CodedResult'
 
-  /api/user/{user_id}/privileges:
-    get:
-      tags: [users]
-      summary: Get per-table privilege overrides for a user
-      parameters:
-        - name: user_id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: Privilege list
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/Success'
-                  - type: object
-                    properties:
-                      privileges:
-                        type: array
-                        items:
-                          $ref: '#/components/schemas/TablePrivilege'
-    post:
-      tags: [users]
-      summary: Create or update a per-table privilege override
-      parameters:
-        - name: user_id
-          in: path
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TablePrivilege'
-      responses:
-        '200':
-          description: Save result
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CodedResult'
-
-  /api/privilege/{id}:
-    delete:
-      tags: [users]
-      summary: Delete a per-table privilege override
-      parameters:
-        - $ref: '#/components/parameters/id'
-      responses:
-        '200':
-          description: Deletion result
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CodedResult'
-
   /api/user/{id}/revoke:
     post:
       tags: [users]
@@ -6383,20 +6322,6 @@ components:
             password:
               type: string
               description: Required when creating; omit to keep existing password
-
-    TablePrivilege:
-      type: object
-      required: [tb, privilege]
-      properties:
-        id:
-          type: integer
-        tb:
-          type: string
-        privilege:
-          type: integer
-        where_sql:
-          type: string
-          description: Optional row-level SQL WHERE clause
 
     # ── API Keys ───────────────────────────────────────────────────────────
 

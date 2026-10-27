@@ -5,6 +5,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- **Per-user, per-table privilege overrides** — the feature was stored and
+  editable (Users view → row expansion) but never enforced: the `UAC\UAC`
+  object injected into controllers was never consulted, so no override ever had
+  any effect. Removed the dead code: `UAC\UAC` and `UAC\Loader`, the endpoints
+  `GET/POST /api/user/{user_id}/privileges` and `DELETE /api/privilege/{id}`, the
+  `override_count` field of `GET /api/users`, and the panel in the Users view.
+  The numeric privilege constants moved to `Auth\Authorization`. Access control
+  is unchanged (global tiers). The `bdus_user_table_privs` table is dropped in a
+  following change; it will be replaced by groups and permissions (#78).
+
 ## [5.15.8] - 2026-10-27
 
 ### Security

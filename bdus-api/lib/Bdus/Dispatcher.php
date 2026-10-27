@@ -11,12 +11,10 @@ use Monolog\Logger;
 use DB\DB;
 use Config\Config;
 use Adbar\Dot;
-use UAC\UAC;
-use UAC\Loader as UACLoader;
 
 /**
  * Resolves the controller and method from the current request, enforces the
- * auth gate, injects dependencies (DB, Config, UAC, Log), and calls the method.
+ * auth gate, injects dependencies (DB, Config, Log), and calls the method.
  *
  * Receives DB and Logger from App after they have been initialised and
  * migrations have run. The request arrays come in via dispatch() so the
@@ -123,9 +121,9 @@ class Dispatcher
 
             $ctrl->setLog($this->log);
 
-            // Skip Config and UAC when:
+            // Skip Config when:
             //  a) a major upgrade is pending (system tables don't exist yet), or
-            //  b) this is an Upgrade endpoint (never needs Config/UAC).
+            //  b) this is an Upgrade endpoint (never needs Config).
             $skipConfig = (defined('BDUS_MAJOR_UPGRADE') && BDUS_MAJOR_UPGRADE)
                        || $obj === 'Bdus\\Controllers\\Upgrade';
 
@@ -134,20 +132,6 @@ class Dispatcher
                 $ctrl->setCfg($config);
                 \Auth\Authorization::setAppStatus($config->get('main.status'));
                 \Template\Loader::setDb($this->db);
-
-                if ($this->db) {
-                    $uac = new UAC($config->get('main.status'), $this->db);
-
-                    if (\Auth\CurrentUser::isAuthenticated()) {
-                        $uac->setUAL(UACLoader::buildUAL(
-                            \Auth\CurrentUser::id(),
-                            \Auth\CurrentUser::privilege(),
-                            $this->db
-                        ));
-                    }
-
-                    $ctrl->setUAC($uac);
-                }
             }
 
             $ctrl->$method();
@@ -176,10 +160,10 @@ class Dispatcher
             return false;
         }
         return match ($required) {
-            'read'        => $privilege <= \UAC\UAC::READ,
-            'edit'        => $privilege <= \UAC\UAC::CREATE,
-            'admin'       => $privilege <= \UAC\UAC::ADM,
-            'super_admin' => $privilege <= \UAC\UAC::SUPERADM,
+            'read'        => $privilege <= \Auth\Authorization::READ,
+            'edit'        => $privilege <= \Auth\Authorization::CREATE,
+            'admin'       => $privilege <= \Auth\Authorization::ADM,
+            'super_admin' => $privilege <= \Auth\Authorization::SUPERADM,
             default       => false,
         };
     }

@@ -26,8 +26,7 @@ class User extends \Bdus\Controller
 	 *       "email":           string,
 	 *       "privilege":       string,   // translated label
 	 *       "privilege_value": int,      // raw numeric level
-	 *       "editable":        bool,
-	 *       "override_count":  int       // number of per-table overrides
+	 *       "editable":        bool
 	 *     }
 	 *   ]
 	 * }
@@ -49,12 +48,6 @@ class User extends \Bdus\Controller
 			]);
 
 			foreach ($all_users as $user) {
-				// Count per-table privilege overrides for the badge indicator.
-				$overrides = $this->db->query(
-					"SELECT COUNT(*) AS cnt FROM bdus_user_table_privs WHERE user_id = ?",
-					[(int) $user['id']],
-					'read'
-				);
 				$data['users'][] = [
 					'id'              => $user['id'],
 					'name'            => $user['name'],
@@ -62,7 +55,6 @@ class User extends \Bdus\Controller
 					'privilege'       => \Auth\Authorization::privilege($user['privilege'], true),
 					'privilege_value' => (int) $user['privilege'],
 					'editable'        => (\Auth\Authorization::can('admin') && $user['privilege'] >= \Auth\CurrentUser::privilege()),
-					'override_count'  => (int) ($overrides[0]['cnt'] ?? 0),
 					'oauth_provider'  => $user['oauth_provider'] ?? null,
 				];
 			}
@@ -74,7 +66,6 @@ class User extends \Bdus\Controller
 				'privilege'       => \Auth\Authorization::privilege(\Auth\CurrentUser::privilege(), true),
 				'privilege_value' => \Auth\CurrentUser::privilege(),
 				'editable'        => true,
-				'override_count'  => 0,
 			];
 		}
 		$data["status"] = "success";
@@ -96,8 +87,7 @@ class User extends \Bdus\Controller
 	}
 
 	/**
-	 * Deletes a user and all their per-table privilege overrides (admins only,
-	 * not users more privileged than the caller).
+	 * Deletes a user (admins only, not users more privileged than the caller).
 	 *
 	 * DELETE /api/user/{id}
 	 */
@@ -115,13 +105,6 @@ class User extends \Bdus\Controller
 
 		try {
 			$sys_manager = new Manage($this->db);
-
-			// Cascade: remove per-table overrides before deleting the user.
-			$this->db->query(
-				"DELETE FROM bdus_user_table_privs WHERE user_id = ?",
-				[$id],
-				'boolean'
-			);
 
 			$ret = $sys_manager->deleteRow('bdus_users', $id);
 
@@ -317,150 +300,6 @@ class User extends \Bdus\Controller
 		} catch (\Throwable $e) {
 			$this->log->error($e);
 			$this->returnJson(['status' => 'error', 'code' => 'revoke_failed']);
-		}
-	}
-
-	// ── Per-table privilege overrides ─────────────────────────────────────────
-
-	/**
-	 * Returns all per-table privilege overrides for a user.
-	 *
-	 * GET ?obj=user_ctrl&method=getTablePrivileges&user_id=ID
-	 *
-	 * Success:
-	 * {
-	 *   "status": "success",
-	 *   "code":   "table_privileges",
-	 *   "data": [
-	 *     { "id": int, "user_id": int, "table_name": string,
-	 *       "privilege": int, "subset": string|null }
-	 *   ]
-	 * }
-	 */
-	public function getTablePrivileges(): void
-	{
-		if (!\Auth\Authorization::can('admin')) {
-			$this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
-			return;
-		}
-
-		$userId = (int) ($this->get['user_id'] ?? 0);
-		if (!$userId) {
-			$this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
-			return;
-		}
-
-		try {
-			$rows = $this->db->query(
-				"SELECT id, user_id, table_name, privilege, subset
-				 FROM bdus_user_table_privs
-				 WHERE user_id = ?
-				 ORDER BY table_name",
-				[$userId],
-				'read'
-			) ?: [];
-			$this->returnJson(['status' => 'success', 'code' => 'table_privileges', 'data' => $rows]);
-		} catch (\Throwable $e) {
-			$this->log->error($e);
-			$this->returnJson(['status' => 'error', 'code' => 'db_error', 'detail' => $e->getMessage()]);
-		}
-	}
-
-	/**
-	 * Upserts a per-table privilege override for a user.
-	 * If a row for (user_id, table_name) already exists it is updated;
-	 * otherwise a new row is inserted.
-	 *
-	 * POST ?obj=user_ctrl&method=saveTablePrivilege
-	 * Body: { user_id, table_name, privilege, subset? }
-	 *
-	 * Success: { "status": "success", "code": "privilege_saved", "id": int }
-	 */
-	public function saveTablePrivilege(): void
-	{
-		if (!\Auth\Authorization::can('admin')) {
-			$this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
-			return;
-		}
-
-		$userId    = (int)   ($this->post['user_id']    ?? 0);
-		$tableName = trim(    $this->post['table_name'] ?? '');
-		$privilege = (int)   ($this->post['privilege']  ?? 0);
-		$subset    = trim(    $this->post['subset']      ?? '') ?: null;
-
-		if (!$userId || !$tableName || !$privilege) {
-			$this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
-			return;
-		}
-
-		try {
-			// Check for existing row (upsert by application logic — no UNIQUE constraint in DB).
-			$existing = $this->db->query(
-				"SELECT id FROM bdus_user_table_privs
-				 WHERE user_id = ? AND table_name = ?",
-				[$userId, $tableName],
-				'read'
-			);
-
-			if (!empty($existing)) {
-				$rowId = (int) $existing[0]['id'];
-				$this->db->query(
-					"UPDATE bdus_user_table_privs
-					 SET privilege = ?, subset = ?
-					 WHERE id = ?",
-					[$privilege, $subset, $rowId],
-					'boolean'
-				);
-				$this->returnJson(['status' => 'success', 'code' => 'privilege_saved', 'id' => $rowId]);
-			} else {
-				$rowId = $this->db->query(
-					"INSERT INTO bdus_user_table_privs
-					 (user_id, table_name, privilege, subset) VALUES (?, ?, ?, ?)",
-					[$userId, $tableName, $privilege, $subset],
-					'id'
-				);
-				$this->returnJson(['status' => 'success', 'code' => 'privilege_saved', 'id' => (int) $rowId]);
-			}
-		} catch (\Throwable $e) {
-			$this->log->error($e);
-			$this->returnJson(['status' => 'error', 'code' => 'db_error', 'detail' => $e->getMessage()]);
-		}
-	}
-
-	/**
-	 * Deletes a per-table privilege override by its id.
-	 *
-	 * GET ?obj=user_ctrl&method=deleteTablePrivilege&id=ID
-	 * Success: { "status": "success", "code": "privilege_deleted" }
-	 */
-	public function deleteTablePrivilege(): void
-	{
-		if (!\Auth\Authorization::can('admin')) {
-			$this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
-			return;
-		}
-
-		$id = (int) ($this->get['id'] ?? 0);
-		if (!$id) {
-			$this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
-			return;
-		}
-
-		try {
-			$affected = $this->db->query(
-				"DELETE FROM bdus_user_table_privs WHERE id = ?",
-				[$id],
-				'affected'
-			);
-
-			if ($affected > 0) {
-				$this->returnJson(['status' => 'success', 'code' => 'privilege_deleted']);
-			} else {
-				$this->returnJson(['status' => 'error', 'code' => 'not_found']);
-			}
-		} catch (\Throwable $e) {
-			$this->log->error($e);
-			$this->returnJson(['status' => 'error', 'code' => 'db_error', 'detail' => $e->getMessage()]);
 		}
 	}
 }

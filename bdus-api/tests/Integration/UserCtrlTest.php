@@ -6,8 +6,7 @@ use Tests\Support\BdusTestCase;
 
 /**
  * Integration tests for User controller:
- *   showList, showUserForm, saveUserData, deleteOne,
- *   getTablePrivileges, saveTablePrivilege, deleteTablePrivilege.
+ *   showList, showUserForm, saveUserData, deleteOne, revokeToken.
  */
 class UserCtrlTest extends BdusTestCase
 {
@@ -45,7 +44,7 @@ class UserCtrlTest extends BdusTestCase
         $res  = $this->callController($ctrl, 'showList');
 
         $row = $res['users'][0];
-        foreach (['id', 'name', 'email', 'privilege', 'privilege_value', 'editable', 'override_count', 'oauth_provider'] as $k) {
+        foreach (['id', 'name', 'email', 'privilege', 'privilege_value', 'editable', 'oauth_provider'] as $k) {
             $this->assertArrayHasKey($k, $row, "Missing key: $k");
         }
     }
@@ -209,121 +208,6 @@ class UserCtrlTest extends BdusTestCase
 
         $this->assertSame('error',            $res['status']);
         $this->assertSame('user_not_deleted', $res['code']);
-    }
-
-    // ── getTablePrivileges ────────────────────────────────────────────────────
-
-    public function testGetTablePrivilegesEmptyList(): void
-    {
-        $ctrl = $this->makeController('Bdus\\Controllers\\User', ['user_id' => 2]);
-        $res  = $this->callController($ctrl, 'getTablePrivileges');
-
-        $this->assertSame('success',            $res['status']);
-        $this->assertSame('table_privileges',   $res['code']);
-        $this->assertIsArray($res['data']);
-        $this->assertEmpty($res['data']);
-    }
-
-    public function testGetTablePrivilegesMissingUserIdReturnsError(): void
-    {
-        $ctrl = $this->makeController('Bdus\\Controllers\\User');
-        $res  = $this->callController($ctrl, 'getTablePrivileges');
-
-        $this->assertSame('error',             $res['status']);
-        $this->assertSame('parameter_missing', $res['code']);
-    }
-
-    public function testGetTablePrivilegesNotEnoughPrivilege(): void
-    {
-        $this->setPrivilege(30);
-
-        $ctrl = $this->makeController('Bdus\\Controllers\\User', ['user_id' => 2]);
-        $res  = $this->callController($ctrl, 'getTablePrivileges');
-
-        $this->assertSame('error',                $res['status']);
-        $this->assertSame('not_enough_privilege', $res['code']);
-
-        $this->setPrivilege(1);
-    }
-
-    // ── saveTablePrivilege ────────────────────────────────────────────────────
-
-    public function testSaveTablePrivilegeInsertNew(): void
-    {
-        $ctrl = $this->makeController('Bdus\\Controllers\\User', [], [
-            'user_id'    => 2,
-            'table_name' => 'items',
-            'privilege'  => 30,
-        ]);
-        $res = $this->callController($ctrl, 'saveTablePrivilege');
-
-        $this->assertSame('success',          $res['status']);
-        $this->assertSame('privilege_saved',  $res['code']);
-        $this->assertIsInt($res['id']);
-    }
-
-    public function testSaveTablePrivilegeUpdateExisting(): void
-    {
-        // Insert first
-        static::$db->execInTransaction(
-            "INSERT INTO bdus_user_table_privs (user_id, table_name, privilege)
-             VALUES (2, 'tags', 20)"
-        );
-
-        $ctrl = $this->makeController('Bdus\\Controllers\\User', [], [
-            'user_id'    => 2,
-            'table_name' => 'tags',
-            'privilege'  => 10,
-        ]);
-        $res = $this->callController($ctrl, 'saveTablePrivilege');
-
-        $this->assertSame('success',         $res['status']);
-        $this->assertSame('privilege_saved', $res['code']);
-    }
-
-    public function testSaveTablePrivilegeMissingParamsReturnsError(): void
-    {
-        $ctrl = $this->makeController('Bdus\\Controllers\\User', [], ['user_id' => 2]);
-        $res  = $this->callController($ctrl, 'saveTablePrivilege');
-
-        $this->assertSame('error',             $res['status']);
-        $this->assertSame('parameter_missing', $res['code']);
-    }
-
-    // ── deleteTablePrivilege ──────────────────────────────────────────────────
-
-    public function testDeleteTablePrivilegeSuccess(): void
-    {
-        $newId = static::$db->query(
-            "INSERT INTO bdus_user_table_privs (user_id, table_name, privilege)
-             VALUES (2, 'items', 30)",
-            [],
-            'id'
-        );
-
-        $ctrl = $this->makeController('Bdus\\Controllers\\User', ['id' => (int) $newId]);
-        $res  = $this->callController($ctrl, 'deleteTablePrivilege');
-
-        $this->assertSame('success',            $res['status']);
-        $this->assertSame('privilege_deleted',  $res['code']);
-    }
-
-    public function testDeleteTablePrivilegeNotFound(): void
-    {
-        $ctrl = $this->makeController('Bdus\\Controllers\\User', ['id' => 99999]);
-        $res  = $this->callController($ctrl, 'deleteTablePrivilege');
-
-        $this->assertSame('error',     $res['status']);
-        $this->assertSame('not_found', $res['code']);
-    }
-
-    public function testDeleteTablePrivilegeMissingIdReturnsError(): void
-    {
-        $ctrl = $this->makeController('Bdus\\Controllers\\User');
-        $res  = $this->callController($ctrl, 'deleteTablePrivilege');
-
-        $this->assertSame('error',             $res['status']);
-        $this->assertSame('parameter_missing', $res['code']);
     }
 
     public function testDeleteOneIsForAdminsOnly(): void

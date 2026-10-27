@@ -162,7 +162,7 @@ everything that `20`, `25`, `30`, `39` allow, plus admin operations.
 
 | Privilege string | Allowed when |
 |---|---|
-| `'enter'` | `privilege < 39` and app not `'off'` (super admins bypass `'off'`) |
+| `'enter'` | `privilege ≤ 39` and app not `'off'` (super admins bypass `'off'`) |
 | `'read'`, `'preview'` | `privilege ≤ 30` and app not `'off'` |
 | `'add_new'` | `privilege ≤ 25` and app not `'frozen'` |
 | `'edit'` | `privilege ≤ 20`, or (`≤ 25` and `$creator` is the current user); app not `'frozen'` |

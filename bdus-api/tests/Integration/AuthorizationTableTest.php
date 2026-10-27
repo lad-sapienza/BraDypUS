@@ -64,7 +64,26 @@ class AuthorizationTableTest extends BdusTestCase
     {
         $this->assertFalse(Authorization::can('admin', table: 'items'));
         $this->assertFalse(Authorization::can('super_admin', table: 'items'));
-        $this->assertFalse(Authorization::can('enter', table: 'items'));
+    }
+
+    public function testEnterTierMayEnterButWaitingUsersMayNot(): void
+    {
+        $this->assertTrue(Authorization::can('enter'));
+
+        $this->actAs(40);
+        $this->assertFalse(Authorization::can('enter'));
+    }
+
+    public function testCanOnSomeTable(): void
+    {
+        $this->assertTrue(Authorization::canOnSomeTable('read'));
+        $this->assertTrue(Authorization::canOnSomeTable('edit'));
+
+        static::$db->exec('DELETE FROM bdus_group_rules');
+        $this->assertFalse(Authorization::canOnSomeTable('read'));
+
+        $this->actAs(40);
+        $this->assertFalse(Authorization::canOnSomeTable('read'));
     }
 
     public function testWithoutAProviderRulesAreIgnored(): void

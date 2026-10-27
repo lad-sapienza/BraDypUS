@@ -138,15 +138,22 @@ class Search extends \Bdus\Controller
         }
       }
 
+      // The values come from $srcTb: only rows the principal may read contribute.
+      if (!\Auth\Authorization::can('read', table: $srcTb)) {
+        $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+        return;
+      }
+      [$andReadable, $readableValues] = $this->andReadable($srcTb);
+
       $search = isset($this->get['q']) && is_string($this->get['q']) ? $this->get['q'] : '';
       $hasLimit = isset($this->get['limit']) && $this->get['limit'] !== '';
 
       if ($search === '' && !$hasLimit) {
         // Legacy behaviour: every distinct value, unfiltered.
         $q = $second_table
-          ? "SELECT {$srcFld} AS val FROM {$srcTb} WHERE 1=1 GROUP BY {$srcFld}"
-          : "SELECT {$srcFld} AS val FROM {$srcTb} WHERE {$srcFld} IS NOT NULL GROUP BY {$srcFld}";
-        $params = [];
+          ? "SELECT {$srcFld} AS val FROM {$srcTb} WHERE 1=1{$andReadable} GROUP BY {$srcFld}"
+          : "SELECT {$srcFld} AS val FROM {$srcTb} WHERE {$srcFld} IS NOT NULL{$andReadable} GROUP BY {$srcFld}";
+        $params = $readableValues;
       } else {
         $engine = $this->db->getEngine();
         $text   = 'CAST(' . $srcFld . ' AS ' . ($engine === 'mysql' ? 'CHAR' : 'TEXT') . ')';
@@ -156,9 +163,9 @@ class Search extends \Bdus\Controller
         }
         $limit = min($limit, 500);
 
-        $where  = "{$srcFld} IS NOT NULL AND {$text} <> ''";
+        $where  = "{$srcFld} IS NOT NULL AND {$text} <> ''{$andReadable}";
         $order  = '';
-        $params = [];
+        $params = $readableValues;
         $outerParams = [];
         if ($search !== '') {
           $like    = \SQL\Like::operator($engine);

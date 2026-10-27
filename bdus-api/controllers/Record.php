@@ -317,16 +317,22 @@ class Record extends \Bdus\Controller
    */
   public function getRecord(): void
   {
-    if (!\Auth\Authorization::can('read')) {
+    $tb = $this->get['tb'] ?? null;
+    $id = isset($this->get['id']) ? (int)$this->get['id'] : null;
+
+    if (!\Auth\Authorization::can('read', table: $tb)) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
 
-    $tb = $this->get['tb'] ?? null;
-    $id = isset($this->get['id']) ? (int)$this->get['id'] : null;
-
     if (!$tb) {
       $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
+      return;
+    }
+
+    // A record outside the principal's row scope looks exactly like a forbidden one.
+    if ($id && !$this->access()->unrestricted('read', $tb) && !$this->access()->rowAllowed('read', $tb, $id)) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
 
@@ -389,6 +395,8 @@ class Record extends \Bdus\Controller
         }
         unset($file);
       }
+      $this->hideUnreadableRelations($full, $tb);
+
       $full['links']       = (object)($full['links']       ?? []);
       $full['backlinks']   = (object)($full['backlinks']   ?? []);
       $full['manualLinks'] = (object)($full['manualLinks'] ?? []);
@@ -437,12 +445,15 @@ class Record extends \Bdus\Controller
    */
   public function checkUnique(): void
   {
-    if (!\Auth\Authorization::can('read')) {
+    $tb    = $this->get['tb']    ?? null;
+
+    // Uniqueness is checked against every row, whatever the caller may read:
+    // the answer is a bare boolean and must reflect the real constraint.
+    if (!\Auth\Authorization::can('read', table: $tb)) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
 
-    $tb    = $this->get['tb']    ?? null;
     $field = $this->get['field'] ?? null;
     $value = $this->get['value'] ?? null;
     $id    = isset($this->get['id']) ? (int) $this->get['id'] : null;
@@ -496,6 +507,95 @@ class Record extends \Bdus\Controller
   }
 
   // ── Private helpers ───────────────────────────────────────────────────────
+
+  /**
+   * May the principal see the history of record $id of $tb? Needs read access
+   * to the table; when the table's rows are filtered, the record must still
+   * exist and be readable (a deleted row cannot be matched against the filter).
+   */
+  private function mayReadHistory(?string $tb, int $id): bool
+  {
+    if (!\Auth\Authorization::can('read', table: $tb) || !$tb) {
+      return false;
+    }
+    return $this->access()->unrestricted('read', $tb)
+        || ($id > 0 && $this->access()->rowAllowed('read', $tb, $id));
+  }
+
+  /**
+   * Removes from a record model what points at records the principal may not
+   * read: links, backlinks and manual links to hidden records, RS relations
+   * to hidden neighbours, and the label of a lookup value whose table is out
+   * of reach. Applied to the response only, never to the model used for saving.
+   */
+  private function hideUnreadableRelations(array &$full, string $tb): void
+  {
+    $access = $this->access();
+
+    // Lookup labels come from the referenced table.
+    foreach ($full['core'] ?? [] as $name => $field) {
+      $ref = $this->cfg->get("tables.{$tb}.fields.{$name}.id_from_tb");
+      if ($ref && is_array($field) && isset($field['val_label']) && !$access->can('read', $ref)) {
+        $full['core'][$name]['val_label'] = null;
+      }
+    }
+
+    // Summary of a link: a count and a filter that DataView turns into a (row-filtered) list.
+    foreach ($full['links'] ?? [] as $refTb => $link) {
+      if (!$access->can('read', $refTb)) {
+        unset($full['links'][$refTb]);
+      } elseif (!$access->unrestricted('read', $refTb)) {
+        $total = (new \SQL\QueryFromRequest(
+          $this->db, $this->cfg, ['tb' => $refTb, 'type' => 'filter', 'filter' => $link['filter'] ?? []]
+        ))->getTotal();
+        if ($total > 0) {
+          $full['links'][$refTb]['tot'] = $total;
+        } else {
+          unset($full['links'][$refTb]);
+        }
+      }
+    }
+
+    foreach ($full['backlinks'] ?? [] as $refTb => $back) {
+      if (!$access->can('read', $refTb)) {
+        unset($full['backlinks'][$refTb]);
+        continue;
+      }
+      $ids   = $access->readableIds($refTb, array_column($back['data'] ?? [], 'id'));
+      $data  = array_values(array_filter($back['data'] ?? [], fn($r) => in_array((int) $r['id'], $ids, true)));
+      if (empty($data)) {
+        unset($full['backlinks'][$refTb]);
+        continue;
+      }
+      $full['backlinks'][$refTb]['data'] = $data;
+      $full['backlinks'][$refTb]['tot']  = count($data);
+      if (isset($back['filter']['id']['_in'])) {
+        $full['backlinks'][$refTb]['filter'] = ['id' => ['_in' => $ids]];
+      }
+    }
+
+    foreach ($full['manualLinks'] ?? [] as $key => $link) {
+      $refTb = $link['tb_id'] ?? null;
+      if (!$refTb || !$access->can('read', $refTb)
+          || !$access->readableIds($refTb, [(int) ($link['ref_id'] ?? 0)])) {
+        unset($full['manualLinks'][$key]);
+      }
+    }
+
+    if (!empty($full['rs']) && !$access->unrestricted('read', $tb)) {
+      $ids = [];
+      foreach ($full['rs'] as $rel) {
+        $ids[] = (int) $rel['first'];
+        $ids[] = (int) $rel['second'];
+      }
+      $ok = $access->readableIds($tb, $ids);
+      foreach ($full['rs'] as $key => $rel) {
+        if (!in_array((int) $rel['first'], $ok, true) || !in_array((int) $rel['second'], $ok, true)) {
+          unset($full['rs'][$key]);
+        }
+      }
+    }
+  }
 
   /**
    * Builds { fields: [...], plugins: { tb: { tb_id, label, fields } } }
@@ -595,17 +695,27 @@ class Record extends \Bdus\Controller
 
     if (!empty($cfg['get_values_from_tb'])) {
       [$refTb, $refFld] = array_pad(explode(':', $cfg['get_values_from_tb'], 2), 2, null);
+      if (!\Auth\Authorization::can('read', table: $refTb)) {
+        return [];
+      }
+      [$andReadable, $readableValues] = $this->andReadable($refTb);
       $rows = $this->db->query(
-        "SELECT DISTINCT {$refFld} as v FROM {$refTb} WHERE {$refFld} IS NOT NULL AND {$refFld} != '' ORDER BY {$refFld}"
+        "SELECT DISTINCT {$refFld} as v FROM {$refTb} WHERE {$refFld} IS NOT NULL AND {$refFld} != ''{$andReadable} ORDER BY {$refFld}",
+        $readableValues
       ) ?: [];
       return array_map(fn($r) => ['value' => $r['v'], 'label' => $r['v']], $rows);
     }
 
     if (!empty($cfg['id_from_tb'])) {
       $refTb  = $cfg['id_from_tb'];
+      if (!\Auth\Authorization::can('read', table: $refTb)) {
+        return [];
+      }
       $idFld  = $this->cfg->get("tables.{$refTb}.id_field") ?: 'id';
+      [$andReadable, $readableValues] = $this->andReadable($refTb);
       $rows   = $this->db->query(
-        "SELECT id, {$idFld} as lbl FROM {$refTb} ORDER BY {$idFld}"
+        "SELECT id, {$idFld} as lbl FROM {$refTb} WHERE 1=1{$andReadable} ORDER BY {$idFld}",
+        $readableValues
       ) ?: [];
       return array_map(fn($r) => ['value' => $r['id'], 'label' => $r['lbl']], $rows);
     }
@@ -1562,13 +1672,13 @@ class Record extends \Bdus\Controller
    */
   public function searchLinkCandidates(): void
   {
-    if (!\Auth\Authorization::can('read')) {
+    $tb = $this->get['tb'] ?? null;
+    $q  = $this->get['q']  ?? null;
+
+    if (!\Auth\Authorization::can('read', table: $tb)) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
-
-    $tb = $this->get['tb'] ?? null;
-    $q  = $this->get['q']  ?? null;
 
     if (!$tb || !$this->cfg->get("tables.$tb")) {
       $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
@@ -1576,24 +1686,25 @@ class Record extends \Bdus\Controller
     }
 
     $idFld = $this->cfg->get("tables.$tb.id_field") ?? 'id';
+    [$andReadable, $readableValues] = $this->andReadable($tb);
 
     try {
       if ($idFld === 'id') {
         if ($q !== null && $q !== '') {
-          $sql    = "SELECT id, id AS label FROM {$tb} WHERE id = ? LIMIT 20";
-          $values = [(int)$q];
+          $sql    = "SELECT id, id AS label FROM {$tb} WHERE id = ?{$andReadable} LIMIT 20";
+          $values = array_merge([(int)$q], $readableValues);
         } else {
-          $sql    = "SELECT id, id AS label FROM {$tb} ORDER BY id DESC LIMIT 20";
-          $values = [];
+          $sql    = "SELECT id, id AS label FROM {$tb} WHERE 1=1{$andReadable} ORDER BY id DESC LIMIT 20";
+          $values = $readableValues;
         }
       } else {
         if ($q !== null && $q !== '') {
           $like   = \SQL\Like::operator($this->db->getEngine());
-          $sql    = "SELECT id, {$idFld} AS label FROM {$tb} WHERE {$idFld} {$like} ? LIMIT 20";
-          $values = ["%$q%"];
+          $sql    = "SELECT id, {$idFld} AS label FROM {$tb} WHERE {$idFld} {$like} ?{$andReadable} LIMIT 20";
+          $values = array_merge(["%$q%"], $readableValues);
         } else {
-          $sql    = "SELECT id, {$idFld} AS label FROM {$tb} ORDER BY id DESC LIMIT 20";
-          $values = [];
+          $sql    = "SELECT id, {$idFld} AS label FROM {$tb} WHERE 1=1{$andReadable} ORDER BY id DESC LIMIT 20";
+          $values = $readableValues;
         }
       }
 
@@ -1750,12 +1861,13 @@ class Record extends \Bdus\Controller
    */
   public function getRsMatrix(): void
   {
-    if (!\Auth\Authorization::can('read')) {
+    $tb = $this->get['tb'] ?? null;
+
+    if (!\Auth\Authorization::can('read', table: $tb)) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
 
-    $tb = $this->get['tb'] ?? null;
     if (!$tb) {
       $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
       return;
@@ -1767,6 +1879,7 @@ class Record extends \Bdus\Controller
     }
 
     $idField = $this->cfg->get("tables.{$tb}.id_field") ?? 'id';
+    [$andReadable, $readableValues] = $this->andReadable($tb);
 
     try {
       // ── Step 1: resolve which records to include ───────────────────────────
@@ -1822,7 +1935,8 @@ class Record extends \Bdus\Controller
         ) ?: [];
       } else {
         $rows = $this->db->query(
-          "SELECT id, {$idField} AS identifier FROM {$tb}"
+          "SELECT id, {$idField} AS identifier FROM {$tb} WHERE 1=1{$andReadable}",
+          $readableValues
         ) ?: [];
       }
 
@@ -1865,9 +1979,11 @@ class Record extends \Bdus\Controller
         // sequential array, so re-index before using it as query params.
         $danglingIds = array_values(array_unique($danglingIds));
         $ph          = implode(',', array_fill(0, count($danglingIds), '?'));
+        // Neighbours outside the principal's row scope are not shown; the
+        // relations that point at them are dropped below with the dangling ones.
         $dRows       = $this->db->query(
-          "SELECT id, {$idField} AS identifier FROM {$tb} WHERE id IN ({$ph})",
-          $danglingIds
+          "SELECT id, {$idField} AS identifier FROM {$tb} WHERE id IN ({$ph}){$andReadable}",
+          array_merge($danglingIds, $readableValues)
         ) ?: [];
         foreach ($dRows as $r) {
           $allNodes[(int)$r['id']] = (string)($r['identifier'] ?? $r['id']);
@@ -2133,12 +2249,15 @@ class Record extends \Bdus\Controller
    */
   public function getDeletedRecords(): void
   {
-    if (!\Auth\Authorization::can('read')) {
+    $tb = $this->get['tb'] ?? null;
+
+    // A deleted row cannot be matched against a row filter, so the list is
+    // limited to principals who may read the whole table.
+    if (!\Auth\Authorization::can('read', table: $tb)
+        || ($tb && !$this->access()->unrestricted('read', $tb))) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
-
-    $tb = $this->get['tb'] ?? null;
 
     if (!$tb) {
       $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
@@ -2198,13 +2317,13 @@ class Record extends \Bdus\Controller
    */
   public function getVersions(): void
   {
-    if (!\Auth\Authorization::can('read')) {
+    $tb  = $this->get['tb']  ?? null;
+    $id  = (int)($this->get['id'] ?? 0);
+
+    if (!\Auth\Authorization::can('read', table: $tb)) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
-
-    $tb  = $this->get['tb']  ?? null;
-    $id  = (int)($this->get['id'] ?? 0);
 
     if (!$tb || !$id) {
       $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
@@ -2215,6 +2334,11 @@ class Record extends \Bdus\Controller
     $knownTables = array_keys($this->cfg->get('tables') ?? []);
     if (!in_array($tb, $knownTables, true)) {
       $this->returnJson(['status' => 'error', 'code' => 'unknown_table']);
+      return;
+    }
+
+    if (!$this->mayReadHistory($tb, $id)) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
 
@@ -2261,7 +2385,8 @@ class Record extends \Bdus\Controller
    */
   public function getVersionDiff(): void
   {
-    if (!\Auth\Authorization::can('read')) {
+    // Before touching the version (its existence must not leak): can this principal read anything?
+    if (!\Auth\Authorization::canOnSomeTable('read')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
@@ -2287,6 +2412,11 @@ class Record extends \Bdus\Controller
       $ver     = $rows[0];
       $tb      = $ver['tb'];
       $rid     = (int)$ver['rowid'];
+
+      if (!$this->mayReadHistory($tb, $rid)) {
+        $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+        return;
+      }
       $content = json_decode($ver['content'], true) ?? ['core' => [], 'plugins' => []];
 
       if ($ver['time']) {

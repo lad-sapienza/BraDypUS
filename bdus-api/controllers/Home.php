@@ -36,6 +36,8 @@ class Home extends \Bdus\Controller
             // Built-in system tables (bdus_files, bdus_geodata, …) are stored in
             // bdus_cfg_tables for validation purposes but must not appear to users.
             if (str_starts_with($name, 'bdus_')) continue;
+            // Users who may enter see only the tables they can read.
+            if (!\Auth\Authorization::can('read', table: $name)) continue;
             $tables[] = [
                 'name'       => $name,
                 'label'      => $label ?: $name,

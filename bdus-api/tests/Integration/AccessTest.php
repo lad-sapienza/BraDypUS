@@ -146,13 +146,25 @@ class AccessTest extends BdusTestCase
 
     public function testUnknownTableActionAndUnsafeNamesAreDenied(): void
     {
-        $a = $this->access(self::ADM);
+        $g = $this->group('G');
+        $this->rule($g, 'items', 'read');
+        $a = $this->access(self::ENTER, [$g]);
 
         $this->assertFalse($a->can('read', 'no_such_table'));
         $this->assertFalse($a->can('read', 'items; DROP TABLE items'));
         $this->assertFalse($a->can('explode', 'items'));
         $this->assertSame(['1=0', []], $a->rowCondition('read', 'no_such_table'));
+        $this->assertSame(['1=0', []], $a->rowCondition('update', 'items; DROP TABLE items'));
         $this->assertFalse($a->rowAllowed('read', 'no_such_table', 1));
+    }
+
+    public function testRowAllowedNeverInterpolatesAnUnusableTableName(): void
+    {
+        foreach ([self::ADM, self::WRITER, self::ENTER] as $tier) {
+            $this->assertFalse($this->access($tier)->rowAllowed('read', 'items; DROP TABLE items', 1), "tier $tier");
+            $this->assertFalse($this->access($tier)->rowAllowed('read', 'no_such_table', 1), "tier $tier");
+        }
+        $this->assertSame(5, (int) static::$db->query('SELECT COUNT(*) AS n FROM items', [], 'read')[0]['n']);
     }
 
     // ── Group rules ───────────────────────────────────────────────────────────

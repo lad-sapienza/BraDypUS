@@ -36,9 +36,31 @@ abstract class Controller
         $this->request = array_merge($get, $post);
     }
 
+    /** Access of the current principal (group rules, locks), built on first use. */
+    private ?\Auth\Access $access = null;
+
     public function setDB(DBInterface $db): void   { $this->db  = $db;  }
     public function setCfg(Config $cfg): void       { $this->cfg = $cfg; }
     public function setLog(Logger $log): void       { $this->log = $log; }
+
+    protected function access(): \Auth\Access
+    {
+        return $this->access ??= \Auth\Access::forCurrentUser($this->db, $this->cfg);
+    }
+
+    /**
+     * SQL to append (with AND) to a query over $tb so it only sees the rows the
+     * principal may read: [' AND (cond)', values], or ['', []] when nothing is withheld.
+     * The condition refers to columns as `{$tb}.col`, so the query must use the
+     * table name unaliased.
+     *
+     * @return array{0: string, 1: array}
+     */
+    protected function andReadable(string $tb): array
+    {
+        [$cond, $values] = $this->access()->rowCondition('read', $tb);
+        return $cond === '1=1' ? ['', []] : [' AND (' . $cond . ')', $values];
+    }
 
     /**
      * Emits a JSON response. Injects `"status": "success"` if not already set.

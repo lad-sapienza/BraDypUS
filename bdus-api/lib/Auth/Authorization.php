@@ -83,8 +83,23 @@ class Authorization
             return true;
         }
 
+        return $table !== null && self::canByRules($privilege, $table);
+    }
+
+    /**
+     * Like can(), for endpoints that span several tables and filter them one by
+     * one: true when the tier or a group rule grants $privilege on at least one table.
+     */
+    public static function canOnSomeTable(string $privilege): bool
+    {
+        return self::canByTier($privilege, null) || self::canByRules($privilege, null);
+    }
+
+    /** Group-rule part of can(); $table = null means "any table". */
+    private static function canByRules(string $privilege, ?string $table): bool
+    {
         $action = self::ACCESS_ACTION[$privilege] ?? null;
-        if ($table === null || $action === null || self::$accessProvider === null) {
+        if ($action === null || self::$accessProvider === null) {
             return false;
         }
 
@@ -100,7 +115,10 @@ class Authorization
             return false;
         }
 
-        return (self::$accessProvider)()->can($action, $table, false);
+        $access = (self::$accessProvider)();
+        return $table === null
+            ? $access->canAnyTable($action)
+            : $access->can($action, $table, false);
     }
 
     private static function canByTier(string $privilege, ?int $creator): bool
@@ -117,7 +135,7 @@ class Authorization
         $locked = $app_status === 'off' && $user_priv > 1;
 
         return match ($privilege) {
-            'enter'                 => !$locked && $user_priv < 39,
+            'enter'                 => !$locked && $user_priv <= self::ENTER,
             'read', 'preview'       => !$locked && $user_priv < 31,
             'add_new'               => $app_status !== 'frozen' && $user_priv < 26,
             'edit'                  => $app_status !== 'frozen' && (

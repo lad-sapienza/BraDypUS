@@ -22,7 +22,7 @@ class Chrono extends \Bdus\Controller
      */
     public function timeline(): void
     {
-        if (!\Auth\Authorization::can('read')) {
+        if (!\Auth\Authorization::canOnSomeTable('read')) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }
@@ -56,6 +56,10 @@ class Chrono extends \Bdus\Controller
                 continue;
             }
 
+            if (!\Auth\Authorization::can('read', table: $tbName)) {
+                continue;
+            }
+
             $tbLabel = $this->cfg->get("tables.{$tbName}.label") ?? $tbName;
 
             $preview      = $this->cfg->get("tables.{$tbName}.preview") ?? [];
@@ -78,7 +82,9 @@ class Chrono extends \Bdus\Controller
                 $params[]     = $toYear;
             }
 
-            $where      = implode(' AND ', $conditions);
+            [$andReadable, $readableValues] = $this->andReadable($tbName);
+            $params     = array_merge($params, $readableValues);
+            $where      = implode(' AND ', $conditions) . $andReadable;
             $labelExpr  = $displayField !== 'id' ? $displayField : 'id';
 
             $sql = "SELECT id, {$labelExpr} AS display_label,
@@ -131,7 +137,7 @@ class Chrono extends \Bdus\Controller
      */
     public function related(): void
     {
-        if (!\Auth\Authorization::can('read')) {
+        if (!\Auth\Authorization::canOnSomeTable('read')) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }
@@ -174,6 +180,11 @@ class Chrono extends \Bdus\Controller
                 continue;
             }
 
+            if (!\Auth\Authorization::can('read', table: $linkedTb)) {
+                continue;
+            }
+            [$andReadable, $readableValues] = $this->andReadable($linkedTb);
+
             $tbLabel = $this->cfg->get("tables.{$linkedTb}.label") ?? $linkedTb;
             $preview      = $this->cfg->get("tables.{$linkedTb}.preview") ?? [];
             $displayField = $preview[0] ?? 'id';
@@ -186,11 +197,11 @@ class Chrono extends \Bdus\Controller
                            chrono_label, chrono_certainty, chrono_period
                     FROM {$linkedTb}
                     WHERE {$fkCol} = ?
-                      AND (chrono_from IS NOT NULL OR chrono_to IS NOT NULL)
+                      AND (chrono_from IS NOT NULL OR chrono_to IS NOT NULL){$andReadable}
                     ORDER BY (chrono_from IS NULL), chrono_from ASC, id ASC";
 
             $records = [];
-            foreach ($this->db->query($sql, [$id], 'read') ?: [] as $row) {
+            foreach ($this->db->query($sql, array_merge([$id], $readableValues), 'read') ?: [] as $row) {
                 $records[] = self::buildChronoRecord($row);
             }
 
@@ -259,6 +270,16 @@ class Chrono extends \Bdus\Controller
 
         $leafTb = end($path);
         if (!$this->cfg->get("tables.{$leafTb}.fuzzy_date")) {
+            return [];
+        }
+
+        // Only leaf records the principal may read are returned, and only their
+        // ids go into the filter handed back to the client.
+        if (!\Auth\Authorization::can('read', table: $leafTb)) {
+            return [];
+        }
+        $ids = $this->access()->readableIds($leafTb, $ids);
+        if (empty($ids)) {
             return [];
         }
 

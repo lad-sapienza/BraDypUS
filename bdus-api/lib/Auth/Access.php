@@ -104,7 +104,7 @@ class Access
      */
     public function can(string $action, string $table, bool $includeOwn = true): bool
     {
-        if (!in_array($action, self::ACTIONS, true) || !$this->isUsable($table)) {
+        if (!in_array($action, self::ACTIONS, true)) {
             return false;
         }
         if ($this->isAdmin()) {
@@ -113,10 +113,11 @@ class Access
         if (!$this->mayEnter()) {
             return false;
         }
+        if ($this->tierGrantsAll($action) || ($includeOwn && $this->tierGrantsOwn($action))) {
+            return true;
+        }
 
-        return $this->tierGrantsAll($action)
-            || ($includeOwn && $this->tierGrantsOwn($action))
-            || !empty($this->rules()[$table][$action]);
+        return $this->isUsable($table) && !empty($this->rules()[$table][$action]);
     }
 
     /**
@@ -129,7 +130,7 @@ class Access
      */
     public function rowCondition(string $action, string $table): array
     {
-        if (!in_array($action, self::ACTIONS, true) || !$this->isUsable($table)) {
+        if (!in_array($action, self::ACTIONS, true)) {
             return ['1=0', []];
         }
         if ($this->isAdmin()) {
@@ -140,6 +141,14 @@ class Access
         }
         if ($action === 'create') {
             return $this->can('create', $table) ? ['1=1', []] : ['1=0', []];
+        }
+        // Nothing withheld and nothing interpolated: no need for a configured table.
+        if ($action === 'read' && $this->tierGrantsAll('read')) {
+            return ['1=1', []];
+        }
+        // From here the table name ends up in SQL.
+        if (!$this->isUsable($table)) {
+            return ['1=0', []];
         }
 
         // ── Grants (OR) ──────────────────────────────────────────────────────
@@ -191,9 +200,82 @@ class Access
         return [$parts ? implode(' AND ', $parts) : '1=1', $values];
     }
 
+    /**
+     * Does the principal have a grant for $action on at least one table, through
+     * its tier or a group rule? For endpoints that span several tables and
+     * filter them one by one.
+     */
+    public function canAnyTable(string $action): bool
+    {
+        if (!in_array($action, self::ACTIONS, true)) {
+            return false;
+        }
+        if ($this->isAdmin()) {
+            return true;
+        }
+        if (!$this->mayEnter()) {
+            return false;
+        }
+        if ($this->tierGrantsAll($action) || $this->tierGrantsOwn($action)) {
+            return true;
+        }
+        foreach ($this->rules() as $byAction) {
+            if (!empty($byAction[$action])) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** True when no row of $table is withheld from the principal for $action (no query needed). */
+    public function unrestricted(string $action, string $table): bool
+    {
+        return $this->rowCondition($action, $table) === ['1=1', []];
+    }
+
+    /**
+     * The subset of $ids (records of $table) on which the principal may read.
+     *
+     * @param  int[] $ids
+     * @return int[]
+     */
+    public function readableIds(string $table, array $ids): array
+    {
+        $ids = array_values(array_unique(array_map('intval', $ids)));
+        if (empty($ids)) {
+            return [];
+        }
+
+        [$sql, $values] = $this->rowCondition('read', $table);
+        if ($sql === '1=0') {
+            return [];
+        }
+        if ($sql === '1=1') {
+            return $ids;
+        }
+
+        $readable = [];
+        foreach (array_chunk($ids, 500) as $chunk) {
+            $marks = implode(',', array_fill(0, count($chunk), '?'));
+            $rows  = $this->db->query(
+                "SELECT {$table}.id AS id FROM {$table} WHERE {$table}.id IN ({$marks}) AND ({$sql})",
+                array_merge($chunk, $values),
+                'read'
+            ) ?: [];
+            foreach ($rows as $r) {
+                $readable[] = (int) $r['id'];
+            }
+        }
+        return $readable;
+    }
+
     /** Row-level check: may the principal perform $action on record $id of $table? */
     public function rowAllowed(string $action, string $table, int $id): bool
     {
+        if (!$this->isUsable($table)) {
+            return false;
+        }
+
         [$sql, $values] = $this->rowCondition($action, $table);
 
         if ($sql === '1=0') {

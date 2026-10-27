@@ -19,6 +19,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   read condition of the current principal to every list, search, export, chart,
   GeoFace and assemblage query. `Chart::getData` now checks read access (it had
   no check at all). With no groups or rules nothing changes.
+- **Groups & permissions — single records and satellites (#78)** — a record
+  outside the user's row scope is refused like a forbidden one; links,
+  backlinks, manual links and RS relations to hidden records, and lookup labels
+  from unreadable tables, are left out of the record view; version history,
+  deleted-record list, link candidates, field options, used values, the RS
+  matrix, the chrono timeline and the table list only show what the user may
+  read. `Authorization::can('enter')` now accepts tier 39 (`ENTER`), as
+  documented: it used to refuse it, which made that tier unusable.
+
+### Security
+
+- `Record::getFieldOptions` and `Search::getUsedValues` had no privilege check:
+  any authenticated user, whatever the tier, could list values and lookup labels
+  of any table. Both now require read access to the table the values come from.
 
 ### Removed
 

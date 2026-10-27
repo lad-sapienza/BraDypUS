@@ -20,7 +20,7 @@ class AssemblageAnalysis extends \Bdus\Controller
      */
     public function listAnalyses(): void
     {
-        if (!\Auth\Authorization::can('read')) {
+        if (!\Auth\Authorization::canOnSomeTable('read')) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }
@@ -261,7 +261,7 @@ class AssemblageAnalysis extends \Bdus\Controller
      */
     public function getSources(): void
     {
-        if (!\Auth\Authorization::can('read')) {
+        if (!\Auth\Authorization::canOnSomeTable('read')) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }
@@ -272,6 +272,9 @@ class AssemblageAnalysis extends \Bdus\Controller
 
         foreach ($allTables as $name => $label) {
             if (str_starts_with($name, 'bdus_')) {
+                continue;
+            }
+            if (!\Auth\Authorization::can('read', table: $name)) {
                 continue;
             }
             $isPlugin = $this->cfg->get("tables.{$name}.is_plugin");

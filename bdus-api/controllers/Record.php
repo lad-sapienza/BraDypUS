@@ -192,7 +192,8 @@ class Record extends \Bdus\Controller
         'total'   => $total,
         'fields'  => $fields,
         'data'    => $qObj->getResults(),
-        'can_add' => \Auth\Authorization::can('add_new'),
+        'can_add' => \Auth\Authorization::can('add_new', table: $tb),
+        'can'     => \Auth\Authorization::tableAbilities($tb),
       ]);
 
     } catch (\Throwable $e) {
@@ -363,10 +364,20 @@ class Record extends \Bdus\Controller
       $full['metadata']['tb_label'] = $this->cfg->get("tables.{$tb}.label");
       $full['metadata']['rec_id']     = $recId;
       $full['metadata']['id_field']   = $this->cfg->get("tables.{$tb}.id_field");
-      // Both creator-aware, matching saveRecord()'s and erase()'s enforcement.
-      $full['metadata']['can_edit']   = \Auth\Authorization::can('edit', $creator);
-      $full['metadata']['can_delete'] = \Auth\Authorization::can('edit', $creator);
-      $full['metadata']['can_add']    = \Auth\Authorization::can('add_new');
+      // Exactly what saveRecord() and erase() will enforce: tier or group rule,
+      // row scope, ownership for a self writer, and locks. `locked` says the
+      // record is frozen (admins can still change it).
+      if ($id) {
+        $full['metadata']['can_edit']   = $this->mayChange('update', $tb, $id, $creator);
+        $full['metadata']['can_delete'] = $this->mayChange('delete', $tb, $id, $creator);
+        [$gateTb, $gateId] = $this->writeTarget($tb, $id);
+        $full['metadata']['locked']     = $gateTb !== null && $this->access()->isLocked($gateTb, $gateId, true);
+      } else {
+        $full['metadata']['can_edit']   = \Auth\Authorization::can('edit', $creator, $tb);
+        $full['metadata']['can_delete'] = \Auth\Authorization::can('edit', $creator, $tb);
+        $full['metadata']['locked']     = false;
+      }
+      $full['metadata']['can_add']    = \Auth\Authorization::can('add_new', table: $tb);
       $full['schema'] = $schema;
 
       // Template loading

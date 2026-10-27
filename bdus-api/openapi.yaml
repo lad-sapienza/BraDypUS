@@ -654,6 +654,8 @@ paths:
                       status:
                         type: string
                         enum: [on, off]
+                      can:
+                        $ref: '#/components/schemas/Abilities'
 
   /api/tables:
     get:
@@ -6059,10 +6061,19 @@ components:
                   description: Field name used as the human identifier for this table
                 can_edit:
                   type: boolean
+                  description: >
+                    May the user save changes to this record: tier or group rule,
+                    row scope, ownership for a self writer, and no lock in the way
+                    (what `POST /api/record/{tb}` will enforce).
                 can_delete:
                   type: boolean
                 can_add:
                   type: boolean
+                locked:
+                  type: boolean
+                  description: >
+                    The record is frozen by a table lock. Admins can still change it
+                    (`can_edit` stays true for them); everyone else cannot.
             core:
               type: object
               description: Main table fields — field name → FieldValue
@@ -6261,6 +6272,11 @@ components:
               type: integer
             limit:
               type: integer
+            can_add:
+              type: boolean
+              description: May the user create records in this table
+            can:
+              $ref: '#/components/schemas/Abilities'
 
     RecordIdsResponse:
       description: Response of `ids_only=1` — the ordered ids of the whole result set.
@@ -6368,6 +6384,27 @@ components:
         is_plugin:
           type: string
           enum: ['0', '1']
+        can:
+          $ref: '#/components/schemas/Abilities'
+          description: >
+            Only in `GET /api/tables`: what the current user may do on this table.
+            That list only contains the tables the user may read.
+
+    Abilities:
+      type: object
+      description: >
+        What the current user may do, true when they may on at least some rows
+        (tier or group rules; row-level limits are applied by the queries). Under
+        `GET /api/info/app` the flags cover "at least one table".
+      properties:
+        create:
+          type: boolean
+        read:
+          type: boolean
+        update:
+          type: boolean
+        delete:
+          type: boolean
 
     TableConfig:
       allOf:

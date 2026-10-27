@@ -56,6 +56,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `openapi.yaml`. No interface yet: groups, rules and locks are managed through
   the API until the Users view gets its Groups tab.
 
+- **Groups & permissions — what the interface is told (#78)** — `GET /api/tables`
+  returns `can: {create, read, update, delete}` for each table (and lists only
+  the tables the user may read), `GET /api/info/app` the same flags over all
+  tables, `GET /api/records/{tb}` `can` next to `can_add`, and the record view
+  computes `can_edit` / `can_delete` with the same rule the save and erase
+  endpoints enforce (group rules, row scope, locks) and adds `locked`, which
+  admins also see. `Authorization::can('delete')` is new (same tiers as `edit`).
+
 ### Security
 
 - `Record::getFieldOptions` and `Search::getUsedValues` had no privilege check:

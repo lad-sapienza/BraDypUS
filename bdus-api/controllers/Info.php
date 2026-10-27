@@ -19,7 +19,7 @@ class Info extends \Bdus\Controller
    */
   public function getAppInfo(): void
   {
-    if (!\Auth\Authorization::can('read')) {
+    if (!\Auth\Authorization::canOnSomeTable('read')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
@@ -33,6 +33,14 @@ class Info extends \Bdus\Controller
       // App's configured default UI language — AppLayout.vue applies it only
       // for a browser that hasn't picked one yet (no bdus_locale in localStorage).
       'lang'       => $settings['lang'] ?? 'en',
+      // What the user may do on at least one table (tier or group rules); per-table
+      // answers are in the table list and in each records response.
+      'can'        => [
+        'read'   => \Auth\Authorization::canOnSomeTable('read'),
+        'create' => \Auth\Authorization::canOnSomeTable('add_new'),
+        'update' => \Auth\Authorization::canOnSomeTable('edit'),
+        'delete' => \Auth\Authorization::canOnSomeTable('delete'),
+      ],
     ]);
   }
 

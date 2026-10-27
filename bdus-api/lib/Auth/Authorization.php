@@ -43,6 +43,7 @@ class Authorization
         'preview'       => 'read',
         'add_new'       => 'create',
         'edit'          => 'update',
+        'delete'        => 'delete',
         'multiple_edit' => 'update',
     ];
 
@@ -84,6 +85,25 @@ class Authorization
         }
 
         return $table !== null && self::canByRules($privilege, $table);
+    }
+
+    /**
+     * What the current user may do on $table, as the interface needs it:
+     * [create, read, update, delete], each true when they may do it on at least
+     * some rows (row-level limits are applied by the queries themselves). A self
+     * writer counts as able to update and delete: they may on their own records.
+     *
+     * @return array{create: bool, read: bool, update: bool, delete: bool}
+     */
+    public static function tableAbilities(string $table): array
+    {
+        $uid = CurrentUser::id();
+        return [
+            'create' => self::can('add_new', null, $table),
+            'read'   => self::can('read', null, $table),
+            'update' => self::can('edit', $uid, $table),
+            'delete' => self::can('delete', $uid, $table),
+        ];
     }
 
     /**
@@ -138,7 +158,9 @@ class Authorization
             'enter'                 => !$locked && $user_priv <= self::ENTER,
             'read', 'preview'       => !$locked && $user_priv < 31,
             'add_new'               => $app_status !== 'frozen' && $user_priv < 26,
-            'edit'                  => $app_status !== 'frozen' && (
+            // 'delete' has the tier thresholds of 'edit' (a self writer deletes their own records);
+            // they differ only for group rules, which grant 'delete' separately.
+            'edit', 'delete'        => $app_status !== 'frozen' && (
                                            $user_priv < 21 ||
                                            ($creator && $creator == CurrentUser::id() && $user_priv < 26)
                                        ),

@@ -41,6 +41,7 @@ class Home extends \Bdus\Controller
             $tables[] = [
                 'name'       => $name,
                 'label'      => $label ?: $name,
+                'can'        => \Auth\Authorization::tableAbilities($name),
                 'rs'         => (bool) $this->cfg->get("tables.{$name}.rs"),
                 'fuzzy_date' => (bool) $this->cfg->get("tables.{$name}.fuzzy_date"),
             ];

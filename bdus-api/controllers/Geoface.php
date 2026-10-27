@@ -147,7 +147,7 @@ class Geoface extends \Bdus\Controller
                 'meta'    => [
                     'tb_id'          => $tb,
                     'tb_label'       => $this->cfg->get("tables.{$tb}.label") ?? $tb,
-                    'canUserEdit'    => \Auth\Authorization::can('edit'),
+                    'canUserEdit'    => \Auth\Authorization::can('edit', table: $tb),
                     'layers'         => $layers,
                     'preview_fields' => $previewLabels,
                     'id_field'       => $idField,

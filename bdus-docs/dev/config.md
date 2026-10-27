@@ -166,6 +166,7 @@ everything that `20`, `25`, `30`, `39` allow, plus admin operations.
 | `'read'`, `'preview'` | `privilege ≤ 30` and app not `'off'` |
 | `'add_new'` | `privilege ≤ 25` and app not `'frozen'` |
 | `'edit'` | `privilege ≤ 20`, or (`≤ 25` and `$creator` is the current user); app not `'frozen'` |
+| `'delete'` | as `'edit'` for the tier (a self writer deletes their own); group rules grant it separately |
 | `'multiple_edit'` | `privilege ≤ 20` and app not `'frozen'` |
 | `'admin'` | `privilege ≤ 10` and app not `'frozen'` |
 | `'super_admin'` | `privilege = 1` (always allowed, even if app is `'off'`) |

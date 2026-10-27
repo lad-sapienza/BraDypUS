@@ -223,12 +223,13 @@ class Access
 
     /**
      * Is record $id of $table frozen by a lock for this principal? Admins are
-     * never locked out. Says nothing about grants: it is the lock alone, for
-     * callers that keep the tier's own check (e.g. adding a plugin row).
+     * never locked out (unless $includeAdmins asks whether the record is frozen
+     * at all, e.g. to show a badge). Says nothing about grants: it is the lock
+     * alone, for callers that keep the tier's own check (e.g. adding a plugin row).
      */
-    public function isLocked(string $table, int $id): bool
+    public function isLocked(string $table, int $id, bool $includeAdmins = false): bool
     {
-        if ($this->isAdmin() || !$this->isUsable($table)) {
+        if (($this->isAdmin() && !$includeAdmins) || !$this->isUsable($table)) {
             return false;
         }
         $locks = $this->lockParts($table);

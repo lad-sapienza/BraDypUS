@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.15.8] - 2026-10-27
+
 ### Security
 
 - **Any signed-in user could delete any other user, the super admin included.**

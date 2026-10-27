@@ -103,6 +103,8 @@ tags:
     description: Saved search queries
   - name: api-keys
     description: API key management
+  - name: groups
+    description: User groups, group rules and table locks (admin only)
   - name: import
     description: Bulk data and geodata import
   - name: search-replace
@@ -4022,6 +4024,274 @@ paths:
               schema:
                 $ref: '#/components/schemas/CodedResult'
 
+  # ── Groups & permissions ──────────────────────────────────────────────────
+  # A rule grants create/read/update/delete on one table to a group, optionally
+  # limited to the rows matching a JSON filter. A lock freezes the rows matching
+  # a filter against update/delete for everyone but admins. All admin only.
+
+  /api/groups:
+    get:
+      tags: [groups]
+      summary: List groups with member, rule and active-key counts
+      responses:
+        '200':
+          description: Group list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      groups:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/GroupSummary'
+    post:
+      tags: [groups]
+      summary: Create a group
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupInput'
+      responses:
+        '200':
+          description: Created (`group_created`, `id`) or error (`group_name_taken`, `parameter_missing`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  /api/group/{id}:
+    get:
+      tags: [groups]
+      summary: Get a group with its members and rules
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: The group, or `group_not_found`
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      group:
+                        $ref: '#/components/schemas/Group'
+    put:
+      tags: [groups]
+      summary: Rename a group / change its description
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupInput'
+      responses:
+        '200':
+          description: Result (`group_updated`, `group_not_found`, `group_name_taken`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+    delete:
+      tags: [groups]
+      summary: Delete a group
+      description: >
+        Removes the group with its memberships and rules. API keys that belonged
+        to it lose their group but keep their tier.
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Result (`group_deleted`, `group_not_found`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  /api/group/{id}/members:
+    put:
+      tags: [groups]
+      summary: Replace the members of a group
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [user_ids]
+              properties:
+                user_ids:
+                  type: array
+                  items:
+                    type: integer
+      responses:
+        '200':
+          description: Result (`members_saved`, `group_not_found`, `user_not_found`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  /api/group/{id}/rules:
+    put:
+      tags: [groups]
+      summary: Replace the rules of a group
+      description: >
+        Takes the whole rule set (what the permissions grid sends). At most one
+        rule per table and action. `filter` uses the record filter syntax (see
+        `GET /api/records/{tb}`) with `$CURRENT_USER` as the only variable;
+        `null` means all rows; `create` takes no filter. Nothing is saved when a
+        rule is invalid.
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [rules]
+              properties:
+                rules:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/GroupRule'
+      responses:
+        '200':
+          description: >
+            Result (`rules_saved`) or error (`group_not_found`, `unknown_table`,
+            `invalid_rule`, `invalid_filter`, `duplicate_rule`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  /api/user/{id}/groups:
+    get:
+      tags: [groups]
+      summary: Ids of the groups a user belongs to
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Group ids, or `user_not_found`
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      groups:
+                        type: array
+                        items:
+                          type: integer
+    put:
+      tags: [groups]
+      summary: Replace the groups of a user
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [group_ids]
+              properties:
+                group_ids:
+                  type: array
+                  items:
+                    type: integer
+      responses:
+        '200':
+          description: Result (`groups_saved`, `user_not_found`, `group_not_found`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  /api/locks:
+    get:
+      tags: [groups]
+      summary: List table locks
+      responses:
+        '200':
+          description: Lock list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      locks:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/TableLock'
+    post:
+      tags: [groups]
+      summary: Create a table lock
+      description: >
+        Freezes the rows of `table` matching `filter` against update and delete
+        (also through their plugin rows, files, relations, links and geometries)
+        for everyone except admins. The filter must not be empty.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TableLockInput'
+      responses:
+        '200':
+          description: Created (`lock_created`, `id`) or error (`unknown_table`, `invalid_filter`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
+  /api/lock/{id}:
+    put:
+      tags: [groups]
+      summary: Change a table lock
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TableLockInput'
+      responses:
+        '200':
+          description: Result (`lock_updated`, `lock_not_found`, `unknown_table`, `invalid_filter`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+    delete:
+      tags: [groups]
+      summary: Remove a table lock
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Result (`lock_deleted`, `lock_not_found`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+
   # ── Import ────────────────────────────────────────────────────────────────
 
   /api/import/{tb}/fields:
@@ -6336,6 +6606,95 @@ components:
             password:
               type: string
               description: Required when creating; omit to keep existing password
+
+    # ── Groups & permissions ───────────────────────────────────────────────
+
+    GroupInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        description:
+          type: [string, "null"]
+
+    GroupSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: [string, "null"]
+        members:
+          type: integer
+        rules:
+          type: integer
+        keys:
+          type: integer
+          description: Active API keys that belong to the group
+
+    GroupRule:
+      type: object
+      required: [table, action]
+      properties:
+        table:
+          type: string
+        action:
+          type: string
+          enum: [create, read, update, delete]
+        filter:
+          type: [object, "null"]
+          description: Record filter limiting the rows; null = all rows. Not allowed for `create`.
+          additionalProperties: true
+
+    Group:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: [string, "null"]
+        members:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              name:
+                type: string
+              email:
+                type: string
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/GroupRule'
+
+    TableLockInput:
+      type: object
+      required: [table, filter]
+      properties:
+        table:
+          type: string
+        filter:
+          type: object
+          description: Record filter selecting the frozen rows (must not be empty)
+          additionalProperties: true
+        note:
+          type: [string, "null"]
+
+    TableLock:
+      allOf:
+        - $ref: '#/components/schemas/TableLockInput'
+        - type: object
+          properties:
+            id:
+              type: integer
 
     # ── API Keys ───────────────────────────────────────────────────────────
 

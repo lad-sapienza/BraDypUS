@@ -381,11 +381,34 @@ class Access
 
     private function resolveVariables(array $node): array
     {
+        return self::replaceVariables($node, $this->userId);
+    }
+
+    /**
+     * Checks that a rule or lock filter can be compiled for $table (known
+     * fields and operators, well-formed structure). Used when filters are saved:
+     * a filter that fails here would fail closed at run time.
+     *
+     * @return string|null  null when valid, else why it is not
+     */
+    public static function checkFilter(DBInterface $db, Config $cfg, string $table, array $filter): ?string
+    {
+        try {
+            $filter = self::replaceVariables($filter, 0);
+            (new JsonFilter($cfg, $table, $db->getEngine()))->toSql($filter);
+            return null;
+        } catch (\Throwable $e) {
+            return $e->getMessage();
+        }
+    }
+
+    private static function replaceVariables(array $node, int $userId): array
+    {
         foreach ($node as $k => $v) {
             if (is_array($v)) {
-                $node[$k] = $this->resolveVariables($v);
+                $node[$k] = self::replaceVariables($v, $userId);
             } elseif ($v === self::VAR_CURRENT_USER) {
-                $node[$k] = $this->userId;
+                $node[$k] = $userId;
             }
         }
         return $node;

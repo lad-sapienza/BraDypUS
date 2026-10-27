@@ -48,6 +48,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   to a key is now an HTTP `403`. `GET /api/api-keys` returns `group_id` and
   `group_name`. Keys without a group behave exactly as before.
 
+- **Groups & permissions — admin API (#78)** — new admin-only endpoints to manage
+  groups (`/api/groups`, `/api/group/{id}`), their members
+  (`/api/group/{id}/members`, `/api/user/{id}/groups`), their rules
+  (`PUT /api/group/{id}/rules`, replace-all, validated before anything is
+  saved) and table locks (`/api/locks`, `/api/lock/{id}`). Documented in
+  `openapi.yaml`. No interface yet: groups, rules and locks are managed through
+  the API until the Users view gets its Groups tab.
+
 ### Security
 
 - `Record::getFieldOptions` and `Search::getUsedValues` had no privilege check:

@@ -173,6 +173,21 @@ class Router
         'Bdus\\Controllers\\Api::revokeKey'                        => 'admin',
         'Bdus\\Controllers\\Api::deleteKey'                        => 'admin',
 
+        // ── Groups & permissions (#78) — admin only ──────────────────────────
+        'Bdus\\Controllers\\Groups::listGroups'                    => 'admin',
+        'Bdus\\Controllers\\Groups::getGroup'                      => 'admin',
+        'Bdus\\Controllers\\Groups::createGroup'                   => 'admin',
+        'Bdus\\Controllers\\Groups::updateGroup'                   => 'admin',
+        'Bdus\\Controllers\\Groups::deleteGroup'                   => 'admin',
+        'Bdus\\Controllers\\Groups::setMembers'                    => 'admin',
+        'Bdus\\Controllers\\Groups::setRules'                      => 'admin',
+        'Bdus\\Controllers\\Groups::getUserGroups'                 => 'admin',
+        'Bdus\\Controllers\\Groups::setUserGroups'                 => 'admin',
+        'Bdus\\Controllers\\Groups::listLocks'                     => 'admin',
+        'Bdus\\Controllers\\Groups::createLock'                    => 'admin',
+        'Bdus\\Controllers\\Groups::updateLock'                    => 'admin',
+        'Bdus\\Controllers\\Groups::deleteLock'                    => 'admin',
+
         // ── Super-admin (privilege = 1) — schema config and raw SQL ──────────
         'Bdus\\Controllers\\Config::getAppProperties'              => 'super_admin',
         'Bdus\\Controllers\\Config::save_app_properties'           => 'super_admin',
@@ -584,6 +599,21 @@ class Router
             $r->addRoute('POST',   '/api/api-keys',                 ['Bdus\\Controllers\\Api', 'createKey']);
             $r->addRoute('POST',   '/api/api-key/{id:\d+}/revoke',  ['Bdus\\Controllers\\Api', 'revokeKey']);
             $r->addRoute('DELETE', '/api/api-key/{id:\d+}',         ['Bdus\\Controllers\\Api', 'deleteKey']);
+
+            // Groups & permissions (#78)
+            $r->addRoute('GET',    '/api/groups',                   ['Bdus\\Controllers\\Groups', 'listGroups']);
+            $r->addRoute('POST',   '/api/groups',                   ['Bdus\\Controllers\\Groups', 'createGroup']);
+            $r->addRoute('GET',    '/api/group/{id:\d+}',           ['Bdus\\Controllers\\Groups', 'getGroup']);
+            $r->addRoute('PUT',    '/api/group/{id:\d+}',           ['Bdus\\Controllers\\Groups', 'updateGroup']);
+            $r->addRoute('DELETE', '/api/group/{id:\d+}',           ['Bdus\\Controllers\\Groups', 'deleteGroup']);
+            $r->addRoute('PUT',    '/api/group/{id:\d+}/members',   ['Bdus\\Controllers\\Groups', 'setMembers']);
+            $r->addRoute('PUT',    '/api/group/{id:\d+}/rules',     ['Bdus\\Controllers\\Groups', 'setRules']);
+            $r->addRoute('GET',    '/api/user/{id:\d+}/groups',     ['Bdus\\Controllers\\Groups', 'getUserGroups']);
+            $r->addRoute('PUT',    '/api/user/{id:\d+}/groups',     ['Bdus\\Controllers\\Groups', 'setUserGroups']);
+            $r->addRoute('GET',    '/api/locks',                    ['Bdus\\Controllers\\Groups', 'listLocks']);
+            $r->addRoute('POST',   '/api/locks',                    ['Bdus\\Controllers\\Groups', 'createLock']);
+            $r->addRoute('PUT',    '/api/lock/{id:\d+}',            ['Bdus\\Controllers\\Groups', 'updateLock']);
+            $r->addRoute('DELETE', '/api/lock/{id:\d+}',            ['Bdus\\Controllers\\Groups', 'deleteLock']);
 
             // ── History ───────────────────────────────────────────────────────
             $r->addRoute('GET', '/api/history', ['Bdus\\Controllers\\MyHistory', 'getHistory']);

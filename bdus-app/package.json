@@ -22,7 +22,7 @@
     "@ant-design/icons-vue": "^7.0.1",
     "@vue/devtools-api": "^8.2.1",
     "ant-design-vue": "^4.2.6",
-    "chart.js": "^4.5.1",
+    "chart.js": "^4.6.1",
     "cytoscape": "^3.34.4",
     "cytoscape-dagre": "^4.0.1",
     "maplibre-gl": "^6.15.0",
@@ -36,7 +36,7 @@
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.10",
     "sortablejs": "^1.10.2",
-    "vite": "^8.3.4"
+    "vite": "^8.3.5"
   },
   "overrides": {
     "vue-router": {

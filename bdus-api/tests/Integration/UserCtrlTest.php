@@ -326,7 +326,60 @@ class UserCtrlTest extends BdusTestCase
         $this->assertSame('parameter_missing', $res['code']);
     }
 
+    public function testDeleteOneIsForAdminsOnly(): void
+    {
+        // Security: DELETE /api/user/{id} used to run for any signed-in user,
+        // whatever their level, and could delete the super admin.
+        static::$db->execInTransaction(
+            "INSERT INTO bdus_users (id, name, email, password, privilege)
+             VALUES (98, 'Victim', 'victim@example.com', 'hash', 30)"
+        );
+
+        foreach ([20, 25, 30, 39, 40] as $tier) {
+            $this->setPrivilege($tier);
+            $res = $this->callController($this->makeController('Bdus\\Controllers\\User', ['id' => 98]), 'deleteOne');
+            $this->assertSame('not_enough_privilege', $res['code'], "tier $tier");
+        }
+        $this->setPrivilege(1);
+
+        $this->assertSame(1, (int) static::$db->query('SELECT COUNT(*) AS n FROM bdus_users WHERE id = 98', [], 'read')[0]['n']);
+        static::$db->exec('DELETE FROM bdus_users WHERE id = 98');
+    }
+
+    public function testAnAdminCannotDeleteAMorePrivilegedUser(): void
+    {
+        $this->setPrivilege(10);
+
+        // user 1 is the super admin (privilege 1)
+        $res = $this->callController($this->makeController('Bdus\\Controllers\\User', ['id' => 1]), 'deleteOne');
+
+        $this->assertSame('not_enough_privilege', $res['code']);
+        $this->assertSame(1, (int) static::$db->query('SELECT COUNT(*) AS n FROM bdus_users WHERE id = 1', [], 'read')[0]['n']);
+        $this->setPrivilege(1);
+    }
+
     // ── revokeToken ───────────────────────────────────────────────────────────
+
+    public function testRevokeTokenIsForAdminsOnly(): void
+    {
+        $before = (int) static::$db->query('SELECT token_version FROM bdus_users WHERE id = 2', [], 'read')[0]['token_version'];
+
+        foreach ([20, 30, 39, 40] as $tier) {
+            $this->setPrivilege($tier);
+            $res = $this->callController($this->makeController('Bdus\\Controllers\\User', ['id' => 2]), 'revokeToken');
+            $this->assertSame('not_enough_privilege', $res['code'], "tier $tier");
+        }
+        // an admin may not end the session of someone more privileged either
+        $this->setPrivilege(10);
+        static::$db->exec("UPDATE bdus_users SET privilege = 1 WHERE id = 2");
+        $res = $this->callController($this->makeController('Bdus\\Controllers\\User', ['id' => 2]), 'revokeToken');
+        $this->assertSame('not_enough_privilege', $res['code']);
+        static::$db->exec("UPDATE bdus_users SET privilege = 30 WHERE id = 2");
+        $this->setPrivilege(1);
+
+        $after = (int) static::$db->query('SELECT token_version FROM bdus_users WHERE id = 2', [], 'read')[0]['token_version'];
+        $this->assertSame($before, $after, 'no refused call may change the token version');
+    }
 
     public function testRevokeTokenSuccess(): void
     {

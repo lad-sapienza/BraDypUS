@@ -108,6 +108,24 @@ jsonpath "$.status" == "error"
 jsonpath "$.code"   == "not_enough_privilege"
 
 
+# ── 9g2. Reader CANNOT delete a user, nor end another user's session ─
+# (both used to run for any signed-in user)
+DELETE {{base_url}}/{{app_name}}/api/user/{{writer_id}}
+Authorization: Bearer {{reader_jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "error"
+jsonpath "$.code"   == "not_enough_privilege"
+
+
+POST {{base_url}}/{{app_name}}/api/user/{{writer_id}}/revoke
+Authorization: Bearer {{reader_jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "error"
+jsonpath "$.code"   == "not_enough_privilege"
+
+
 # ── 9h. Reader CANNOT save a chart ──────────────────────────────────
 POST {{base_url}}/{{app_name}}/api/charts
 Authorization: Bearer {{reader_jwt}}

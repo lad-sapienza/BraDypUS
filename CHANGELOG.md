@@ -5,6 +5,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- **Any signed-in user could delete any other user, the super admin included.**
+  `DELETE /api/user/{id}` (`User::deleteOne`) checked nothing: the SPA hides the
+  button from non-admins, but the API did not refuse the call, whatever the level
+  of the caller. `POST /api/user/{id}/revoke` (ending another user's session) was
+  open in the same way. Both now require an admin, and an admin cannot act on
+  someone more privileged than themselves. API keys were never affected (they
+  were refused by the route table). Found by testing every entry point as a
+  user with no access of their own. **Update as soon as possible.**
+
 ## [5.15.7] - 2026-10-22
 
 ### Changed

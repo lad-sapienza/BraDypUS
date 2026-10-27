@@ -82,9 +82,24 @@ class User extends \Bdus\Controller
 	}
 
 	/**
-	 * Deletes a user and all their per-table privilege overrides.
+	 * Is the current user allowed to act on user $id's account (delete it, end its
+	 * session)? Admins only, and never on someone more privileged than themselves.
+	 * An id that does not exist passes: the caller reports it as it always did.
+	 */
+	private function mayManageUser(int $id): bool
+	{
+		if (!\Auth\Authorization::can('admin')) {
+			return false;
+		}
+		$target = $this->db->query('SELECT privilege FROM bdus_users WHERE id = ?', [$id], 'read')[0] ?? null;
+		return !$target || (int) $target['privilege'] >= (int) \Auth\CurrentUser::privilege();
+	}
+
+	/**
+	 * Deletes a user and all their per-table privilege overrides (admins only,
+	 * not users more privileged than the caller).
 	 *
-	 * GET ?obj=user_ctrl&method=deleteOne&id=ID
+	 * DELETE /api/user/{id}
 	 */
 	public function deleteOne($id = false)
 	{
@@ -92,6 +107,12 @@ class User extends \Bdus\Controller
 			$id = $this->get['id'];
 		}
 		$id = (int) $id;
+
+		if (!$this->mayManageUser($id)) {
+			$this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+			return;
+		}
+
 		try {
 			$sys_manager = new Manage($this->db);
 
@@ -261,8 +282,18 @@ class User extends \Bdus\Controller
 	{
 		$id = (int) ($this->get['id'] ?? 0);
 
+		if (!\Auth\Authorization::can('admin')) {
+			$this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+			return;
+		}
+
 		if (!$id) {
 			$this->returnJson(['status' => 'error', 'code' => 'missing_id']);
+			return;
+		}
+
+		if (!$this->mayManageUser($id)) {
+			$this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
 			return;
 		}
 

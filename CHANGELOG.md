@@ -64,6 +64,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   endpoints enforce (group rules, row scope, locks) and adds `locked`, which
   admins also see. `Authorization::can('delete')` is new (same tiers as `edit`).
 
+### Fixed
+
+- **The test stack no longer shares the dev stack's Docker network.** `test.sh`
+  attached its `app` container to `bradypus-net` (declared external) under the
+  same service name as the development backend, so the dev Vite proxy
+  (`http://app:80`) could reach the test container while tests ran. The test
+  project now creates and removes its own network, `bdus-test-net`.
+
 ### Security
 
 - `Record::getFieldOptions` and `Search::getUsedValues` had no privilege check:

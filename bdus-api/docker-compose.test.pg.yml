@@ -28,7 +28,3 @@ services:
       retries: 12
     networks:
       - bradypus-net
-
-networks:
-  bradypus-net:
-    external: true

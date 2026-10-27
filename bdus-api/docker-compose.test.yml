@@ -8,8 +8,11 @@
 #   - projects/ uses a named Docker volume (bdus_test_projects) instead of
 #     the host bind-mount, so dev apps never bleed into the test run.
 #     `docker compose down --volumes` removes it automatically after each run.
-#   - bradypus-net declared external so the test project reuses the
-#     shared network without the "not created for this project" warning
+#   - The network is the test project's own (bdus-test-net), created and
+#     removed with it. It used to be the dev stack's bradypus-net, declared
+#     external: the test `app` then shared the dev network under the same
+#     service name, so the dev Vite proxy (http://app:80) could reach the test
+#     container, and tearing the project down could touch the dev network.
 services:
   app:
     ports:
@@ -26,4 +29,4 @@ volumes:
 
 networks:
   bradypus-net:
-    external: true
+    name: bdus-test-net

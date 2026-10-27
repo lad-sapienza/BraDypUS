@@ -46,14 +46,17 @@ User-defined data tables have no required prefix.
 | `bdus_charts` | User-defined charts |
 | `bdus_file_links` | File ↔ record associations |
 | `bdus_files` | Uploaded file metadata |
+| `bdus_group_rules` | Per-group, per-table access rules |
+| `bdus_groups` | User groups |
 | `bdus_geodata` | Geospatial features (WKT geometry) |
 | `bdus_log` | Application log entries |
 | `bdus_migrations` | Applied migration tracking |
 | `bdus_queries` | Saved search queries |
+| `bdus_table_locks` | Row subsets frozen against modification |
 | `bdus_rs` | Stratigraphic relation pairs |
 | `bdus_userlinks` | Manual cross-record links |
 | `bdus_users` | User accounts |
-| `bdus_user_table_privs` | Per-user per-table privilege overrides |
+| `bdus_user_groups` | User ↔ group membership |
 | `bdus_versions` | Record version snapshots |
 | `bdus_vocabularies` | Controlled vocabulary items |
 | `bdus_zotero_libs` | Zotero library connections |

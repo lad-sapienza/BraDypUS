@@ -43,3 +43,11 @@ Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
 jsonpath "$.migrations[0].name" == "M001_add_user_table_privs"
+
+
+# ── 13d. Groups & permissions migration (M046) is applied ───────────
+GET {{base_url}}/{{app_name}}/api/migrations
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.migrations[?(@.name=='M046_add_groups_and_permissions')].applied" == true

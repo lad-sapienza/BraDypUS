@@ -1,0 +1,21 @@
+{
+    "columns": [
+        { "name": "id",         "type": "INTEGER", "pk": true, "notnull": false },
+        { "name": "group_id",   "type": "INTEGER",             "notnull": true  },
+        { "name": "table_name", "type": "TEXT",                "notnull": true  },
+        { "name": "action",     "type": "TEXT",                "notnull": true  },
+        { "name": "filter",     "type": "TEXT",                "notnull": false }
+    ],
+    "indexes": [
+        { "name": "gr_rule_idx", "columns": ["group_id", "table_name", "action"], "unique": true }
+    ],
+    "relations": [
+        {
+            "name":       "gr_group_fk",
+            "column":     "group_id",
+            "ref_table":  "bdus_groups",
+            "ref_column": "id",
+            "on_delete":  "CASCADE"
+        }
+    ]
+}

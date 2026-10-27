@@ -165,6 +165,7 @@ class M024MyChangeTest extends BdusTestCase
 | M028 | Add `token_version` column to `bdus_users` for per-user JWT invalidation. |
 | M029 | Add `label` column to `bdus_userlinks` for typed manual links. |
 | M030 | **Migrate `bdus_rs.first`/`.second` from TEXT to INTEGER** — converts stored RS identifiers (text values of the configured `rs_field`) to integer record primary keys. Also converts the per-table `rs` config from a field name string (`"sigla"`) to a boolean flag (`1`). Existing apps are migrated automatically; new apps use the INTEGER schema from creation. |
+| M046 | **Groups & permissions groundwork (#78)** — creates `bdus_groups`, `bdus_user_groups`, `bdus_group_rules`, `bdus_table_locks`; adds `bdus_api_keys.group_id`; drops `bdus_user_table_privs` (its overrides were never enforced). Tables start empty: no behaviour change. |
 
 ---
 

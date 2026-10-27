@@ -45,9 +45,18 @@ class Manage
     private $spatial;
     /** @var array<string, array{columns: array, indexes: array, relations: array}> */
     private array $descriptor = [];
+    /**
+     * Tables no longer part of the schema but still created by old migrations
+     * (M001 creates bdus_user_table_privs, M046 drops it). Their descriptors
+     * stay loadable so the migration chain keeps working on any database.
+     */
+    private const LEGACY_TABLES = ['bdus_user_table_privs'];
+
     public $available_tables = [
         // no FK dependencies — can be created in any order
         'bdus_api_keys',
+        'bdus_groups',
+        'bdus_table_locks',
         'bdus_cfg_app',
         'bdus_cfg_fields',
         'bdus_cfg_geoface',
@@ -63,14 +72,15 @@ class Manage
         'bdus_vocabularies',
         // referenced by other tables — must precede their dependents
         'bdus_files',       // ← bdus_file_links.file_id
-        'bdus_users',       // ← bdus_charts.user_id, bdus_queries.user_id, bdus_user_table_privs.user_id
+        'bdus_users',       // ← bdus_charts.user_id, bdus_queries.user_id, bdus_user_groups.user_id
         'bdus_zotero_libs', // ← bdus_zotero_links.lib_id
         // tables with FK constraints (after their referenced tables above)
         'bdus_file_links',
         'bdus_charts',
         'bdus_assemblage_analyses',
         'bdus_queries',
-        'bdus_user_table_privs',
+        'bdus_user_groups',
+        'bdus_group_rules',
         'bdus_zotero_links',
         // user-defined index registry (no FK deps)
         'bdus_cfg_indexes',
@@ -110,7 +120,7 @@ class Manage
             return $this->descriptor[$table];
         }
 
-        if (!in_array($table, $this->available_tables)) {
+        if (!in_array($table, $this->available_tables) && !in_array($table, self::LEGACY_TABLES, true)) {
             throw new \Exception("Table $table is not a valid system table");
         }
 

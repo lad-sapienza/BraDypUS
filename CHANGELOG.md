@@ -5,6 +5,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Groups & permissions — database groundwork (#78)** — migration `M046` creates
+  `bdus_groups`, `bdus_user_groups`, `bdus_group_rules` and `bdus_table_locks`
+  and adds `bdus_api_keys.group_id`. The tables are empty and nothing reads
+  them yet: access control is unchanged. See the design note in
+  `bdus-docs/dev/groups-permissions-design.md`.
+
 ### Removed
 
 - **Per-user, per-table privilege overrides** — the feature was stored and
@@ -14,8 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `GET/POST /api/user/{user_id}/privileges` and `DELETE /api/privilege/{id}`, the
   `override_count` field of `GET /api/users`, and the panel in the Users view.
   The numeric privilege constants moved to `Auth\Authorization`. Access control
-  is unchanged (global tiers). The `bdus_user_table_privs` table is dropped in a
-  following change; it will be replaced by groups and permissions (#78).
+  is unchanged (global tiers). The `bdus_user_table_privs` table is dropped by
+  migration `M046`; it is replaced by groups and permissions (#78).
 
 ## [5.15.8] - 2026-10-27
 

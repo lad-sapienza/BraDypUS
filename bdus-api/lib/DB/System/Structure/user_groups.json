@@ -1,0 +1,27 @@
+{
+    "columns": [
+        { "name": "id",       "type": "INTEGER", "pk": true, "notnull": false },
+        { "name": "user_id",  "type": "INTEGER",             "notnull": true  },
+        { "name": "group_id", "type": "INTEGER",             "notnull": true  }
+    ],
+    "indexes": [
+        { "name": "ug_member_idx", "columns": ["user_id", "group_id"], "unique": true },
+        { "name": "ug_group_idx",  "columns": ["group_id"] }
+    ],
+    "relations": [
+        {
+            "name":       "ug_user_fk",
+            "column":     "user_id",
+            "ref_table":  "bdus_users",
+            "ref_column": "id",
+            "on_delete":  "CASCADE"
+        },
+        {
+            "name":       "ug_group_fk",
+            "column":     "group_id",
+            "ref_table":  "bdus_groups",
+            "ref_column": "id",
+            "on_delete":  "CASCADE"
+        }
+    ]
+}

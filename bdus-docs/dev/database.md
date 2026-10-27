@@ -209,6 +209,9 @@ bdus_assemblage_analyses — Saved assemblage analyses
 bdus_charts            — User-defined charts
 bdus_file_links        — File ↔ record associations
 bdus_files             — Uploaded file metadata
+bdus_group_rules       — Per-group, per-table CRUD grants (optional JSON row filter)
+bdus_groups            — User groups
+bdus_table_locks       — Row subsets frozen against update/delete
 bdus_geodata           — Geospatial features (WKT)
 bdus_log               — Error / info log entries (written by LogDBHandler)
 bdus_migrations        — Applied migration tracking
@@ -216,7 +219,7 @@ bdus_queries           — Saved search queries
 bdus_rs                — Stratigraphic relation pairs (first/second = INTEGER record ids)
 bdus_userlinks         — Manual cross-record links
 bdus_users             — User accounts
-bdus_user_table_privs  — Per-user per-table privilege overrides
+bdus_user_groups       — User ↔ group membership
 bdus_versions          — Record version snapshots
 bdus_vocabularies      — Controlled vocabulary items
 bdus_zotero_libs       — Zotero libraries configured for the app

@@ -1,0 +1,11 @@
+{
+    "columns": [
+        { "name": "id",          "type": "INTEGER", "pk": true, "notnull": false },
+        { "name": "name",        "type": "TEXT",               "notnull": true  },
+        { "name": "description", "type": "TEXT",               "notnull": false }
+    ],
+    "indexes": [
+        { "name": "groups_name_idx", "columns": ["name"], "unique": true }
+    ],
+    "relations": []
+}

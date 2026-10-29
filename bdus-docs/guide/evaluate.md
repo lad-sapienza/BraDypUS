@@ -61,7 +61,7 @@ versions of every record, files, maps and print templates on top of them.
 |---|---|
 | A table per kind of thing | One sheet or file per entity; mixed sheets must be split first |
 | Primary key `id` on every table | Created automatically if missing; your own identifier becomes a normal field |
-| Relations between tables | Stored as an `id` of the other table (a *select* field "from table"), or declared in **Relations** to see linked records on both sides |
+| Relations between tables | Stored as an `id` of the other table; a `ref:` in the DBML (or **Config → Relations**) creates the foreign key and the linked-records panel on both sides, and a *select* field "from table" lists the other table's records |
 | Controlled values | Vocabularies (lists) for `select` / `multi_select` / `combo_select` fields |
 | Text, long text, Markdown, date, yes/no, select | The field types; numbers are stored as text or integer and validated with rules, not as a separate numeric type |
 | Geometry as WKT / GeoJSON | Enabled per table with the Geodata plugin; GeoJSON is imported onto existing records |

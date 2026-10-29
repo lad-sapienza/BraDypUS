@@ -202,6 +202,22 @@ cd bdus-app && npm test                                    # frontend unit tests
 
 ---
 
+## Definition of done: features and important fixes
+
+A new feature, or a fix that changes what users, integrators or assistants can rely on,
+is not done until **all** of these are updated in the same change (or the same release):
+
+1. `CHANGELOG.md` (`[Unreleased]`), and `openapi.yaml` if an endpoint changes.
+2. The user guide / developer docs in `bdus-docs/` (with the version badge), and `README.md` if the pitch or the quick start changes.
+3. **The assistant entry points**: `bdus-docs/public/llms.txt`, the fit-assessment page
+   `bdus-docs/guide/evaluate.md`, and the skill `skills/bradypus-bootstrap/SKILL.md`
+   whenever the change touches schema design, DBML import/export, data import, app
+   creation, permissions or limits that a person or an assistant needs to know to
+   judge, design or load an application.
+4. Tests (PHPUnit; hurl phase when a route changes), run on all three engines.
+
+---
+
 ## Releasing
 
 Add notes under `## [Unreleased]` in the root `CHANGELOG.md`, then

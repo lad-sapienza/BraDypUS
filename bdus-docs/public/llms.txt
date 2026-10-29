@@ -1,0 +1,33 @@
+# BraDypUS
+
+> BraDypUS is free, self-hosted software (AGPL-3.0) for managing relational data in
+> the humanities and cultural heritage: archaeology, museums, archives, bibliographies.
+> You define tables, fields, vocabularies and relations; it provides forms, search,
+> import/export, users/groups/permissions, record versions, files, maps and print
+> templates. PHP API + Vue app, on SQLite, MySQL/MariaDB or PostgreSQL, from Docker images.
+> Current major version: v5.
+
+Start here to judge whether a dataset is worth moving into BraDypUS, then go deeper
+only as far as the task needs.
+
+## Level 1 — decide
+
+- [Is BraDypUS right for your data?](https://raw.githubusercontent.com/lad-sapienza/BraDypUS/v5/bdus-docs/guide/evaluate.md): fit checklist, what the data must look like, how much work a migration is (Markdown, ~5 KB)
+
+## Level 2 — build
+
+- [DBML import/export](https://raw.githubusercontent.com/lad-sapienza/BraDypUS/v5/bdus-docs/guide/setup/dbml.md): describe a whole schema as text and import it in one step
+- [Import data](https://raw.githubusercontent.com/lad-sapienza/BraDypUS/v5/bdus-docs/guide/usage/import.md): CSV, JSON, GeoJSON and photo imports, with key-field upsert
+- [Creating an application](https://raw.githubusercontent.com/lad-sapienza/BraDypUS/v5/bdus-docs/guide/create-app/index.md): web form or command line
+- [Field types](https://raw.githubusercontent.com/lad-sapienza/BraDypUS/v5/bdus-docs/guide/setup/adding-columns.md), [relations](https://raw.githubusercontent.com/lad-sapienza/BraDypUS/v5/bdus-docs/guide/setup/relations.md), [vocabularies](https://raw.githubusercontent.com/lad-sapienza/BraDypUS/v5/bdus-docs/guide/setup/vocabularies.md)
+- [Groups, permissions & locks](https://raw.githubusercontent.com/lad-sapienza/BraDypUS/v5/bdus-docs/guide/setup/groups.md): who sees and changes which rows; freezing published records
+- Ready-made skill that starts a new application from existing data with an assistant: [skills/bradypus-bootstrap/SKILL.md](https://raw.githubusercontent.com/lad-sapienza/BraDypUS/v5/skills/bradypus-bootstrap/SKILL.md)
+
+## Level 3 — reference
+
+- [User guide (HTML)](https://docs.bdus.lad-sapienza.it/guide/): every feature, with screenshots
+- [System plugins](https://raw.githubusercontent.com/lad-sapienza/BraDypUS/v5/bdus-docs/guide/system-plugins/index.md): geodata, Harris matrix, fuzzy dates, radiocarbon, osteology, Zotero, Pleiades
+- [REST API](https://raw.githubusercontent.com/lad-sapienza/BraDypUS/v5/bdus-api/openapi.yaml): OpenAPI 3 contract (the same endpoints the app uses)
+- [Developer documentation](https://docs.bdus.lad-sapienza.it/dev/): architecture, database, record lifecycle
+- [Changelog](https://raw.githubusercontent.com/lad-sapienza/BraDypUS/v5/CHANGELOG.md)
+- Source: https://github.com/lad-sapienza/BraDypUS

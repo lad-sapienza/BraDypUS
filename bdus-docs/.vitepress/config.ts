@@ -59,6 +59,7 @@ function guideSidebar() {
       text: 'Introduction',
       items: [
         { text: 'Overview',            link: '/guide/' },
+        { text: 'Is it right for your data?', link: '/guide/evaluate' },
         { text: 'Conventions',         link: '/guide/conventions' },
         { text: 'App tree structure',  link: '/guide/tree-structure' },
       ],

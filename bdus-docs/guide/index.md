@@ -25,6 +25,14 @@ that are not versioned this way). See the
 for the full history.
 :::
 
+### Is BraDypUS right for your data?
+
+If you are still deciding, or an assistant is helping you decide, start from
+[Is BraDypUS right for your data?](/guide/evaluate). For assistants there is also an
+[`llms.txt`](https://docs.bdus.lad-sapienza.it/llms.txt) index and a ready-made skill
+that starts an application from existing data
+([`skills/bradypus-bootstrap`](https://github.com/lad-sapienza/BraDypUS/tree/v5/skills/bradypus-bootstrap)).
+
 ### Target users
 
 This guide is written for both expert users comfortable with web technologies and

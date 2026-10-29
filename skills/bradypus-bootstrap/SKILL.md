@@ -1,0 +1,172 @@
+---
+name: bradypus-bootstrap
+description: Start a new BraDypUS application from existing data (spreadsheets, CSV, a legacy database) with an assistant, without following the step-by-step guide. Use when the user wants to move a dataset into BraDypUS, design its tables, or load it. Also use first, in "evaluate" mode, when the question is only whether BraDypUS is a good fit.
+---
+
+# Bootstrapping a BraDypUS application from existing data
+
+BraDypUS is free, self-hosted software for relational data in the humanities and
+cultural heritage. This skill takes you from "I have these files" to "the data is in a
+running application", driving the same API the web app uses. Docs:
+https://docs.bdus.lad-sapienza.it (index for assistants: `/llms.txt`).
+
+Work in the order below and **stop at the checkpoints**: the user approves the schema
+before anything is created, and the load before it is final.
+
+## 0. Evaluate (cheap, do this first)
+
+Read https://raw.githubusercontent.com/lad-sapienza/BraDypUS/v5/bdus-docs/guide/evaluate.md.
+Look at the user's files and answer: how many tables, how are they linked, what is the
+natural identifier of each, which columns are closed lists, is there geometry, vague
+dates, stratigraphy, bibliography? Say plainly if BraDypUS is a poor fit (one flat table,
+huge analytical data, public website needed). Stop here if the user only asked for an
+assessment.
+
+## 1. Design the schema (checkpoint: user approves)
+
+Profile every file first: row count, distinct values per column, empty cells, duplicate
+identifiers. Then propose, in plain words and **before writing any DBML**:
+
+- one table per entity; each table's natural identifier;
+- which columns become **vocabularies** (few distinct values, repeated) and which stay
+  free text;
+- which columns are **links** to another table (stored as that table's `id`);
+- which tables need a plugin (geometry, stratigraphy, fuzzy dates, radiocarbon…);
+- data problems to fix in the source (duplicates, mixed formats, non-unique ids).
+
+Do not import dirty keys and hope: fix or flag them now.
+
+## 2. Write the DBML
+
+Tables and vocabularies are created from one DBML text
+(guide: `bdus-docs/guide/setup/dbml.md`). Rules the importer enforces or relies on:
+
+- Table and column names: lowercase ASCII, digits, underscore. Application name
+  (step 3): `^[a-z][a-z0-9_-]{2,19}$`.
+- **The primary key must be named `id`**: `id integer [pk, increment]`. Without it an
+  `id` is added; with a different pk name the table is rejected (`pk_must_be_id`).
+  Your own identifier (site code, inventory number) is a normal text column; mark it
+  with `bdus:id_field`.
+- `creator integer` is added automatically to every non-plugin table.
+- **Only new tables are created.** Existing tables are never altered (skipped with
+  `table_already_exists`). To change a table later, use Config → Fields, not DBML.
+- DBML types map as: `varchar/text` short text or long text, `date`, `boolean`;
+  integers and decimals are stored as text/integer fields and validated by rules.
+  Override with `bdus:type=long_text|md|date|boolean|select|multi_select|combo_select`.
+- Table note: `Note: 'bdus:label=Sites bdus:preview=id,name bdus:order=name bdus:id_field=name'`
+  (`preview` = columns shown in lists; label may contain spaces).
+- Plugins on a table: `bdus:rs=1` (stratigraphic relations), `bdus:geodata=1`,
+  `bdus:fuzzy_date=1`.
+- Vocabulary: an `Enum` whose last line is the comment `// bdus:vocabulary`; a column
+  uses it with `[note: 'bdus:voc=<enum_name>']`. Enums without the marker are ignored.
+- Link to another table: `site_id integer [ref: > sites.id, note: 'bdus:id_from_tb']`
+  makes a select field that stores the other record's `id`. **A plain `ref:` does not
+  create the "linked records" panel** shown on both sides in the record view; that is
+  Config → Relations (step 5).
+
+```dbml
+Enum material {
+  "ceramic"
+  "bone"
+  "stone"
+  // bdus:vocabulary
+}
+
+Table sites {
+  id   integer [pk, increment]
+  name varchar
+  Note: 'bdus:label=Sites bdus:preview=id,name bdus:id_field=name bdus:geodata=1'
+}
+
+Table finds {
+  id       integer [pk, increment]
+  creator  integer
+  inv      varchar
+  material varchar [note: 'bdus:voc=material']
+  site_id  integer [ref: > sites.id, note: 'bdus:id_from_tb']
+  notes    text
+  Note: 'bdus:label=Finds bdus:preview=id,inv,material bdus:id_field=inv'
+}
+```
+
+Show the DBML to the user (an ER sketch helps) and wait for approval.
+
+## 3. Create the application and apply the schema
+
+**Create the app.** Use the web form at the login page (needs `BRADYPUS_ALLOW_NEW_APP=1`),
+or, in a Docker Compose instance:
+
+```bash
+docker compose exec -T api php bin/create-app.php \
+  --name <slug> --engine sqlite --email <admin-email> --password-stdin
+```
+
+(`pgsql`/`mysql`: the database must exist; `add-app.sh <instance-dir> …` at the
+repository root also creates the Postgres database and role.) **Never put the admin
+password on a command line or in chat: pass it on stdin, let the user type it.**
+SQLite needs nothing else and is right for trying things out.
+
+**Log in** (the user's super-admin account; ask the user to run this or provide a token,
+do not handle their password if you can avoid it):
+
+```
+POST {base}/{app}/api/auth/login      {"email": "...", "password": "..."}   → {"token": "..."}
+```
+
+**Preview, then apply.** Both need the super-admin token (`Authorization: Bearer …`):
+
+```
+POST {base}/{app}/api/config/dbml/preview   {"dbml": "<text>"}   → check preview.has_errors
+POST {base}/{app}/api/config/dbml/apply     {"dbml": "<text>"}
+```
+
+Fix every red error and read every warning in the preview before applying.
+`GET {base}/{app}/api/config/dbml` exports the current schema as DBML: use it to confirm
+what was created.
+
+## 4. Load the data (checkpoint: user approves the result)
+
+Load **parents before children**: vocabularies exist already; load `sites` before
+`finds`, because a link stores the target's `id`. For a link column in a CSV, either
+export the target's `id` into the file or load with a key field and resolve afterwards.
+
+For each table, with the data CSV or JSON (comma, semicolon or tab delimiter are
+detected):
+
+```
+POST {base}/{app}/api/import/preview-file   multipart: type=csv|json, file=@data.csv
+   → {"temp_id": "...", "columns": [...], "count": N, "rows": [...]}
+POST {base}/{app}/api/import/data
+   {"temp_id": "...", "type": "csv", "tb": "finds",
+    "mapping": {"<csv column>": "<field>", ...}, "key_field": "inv"}
+   → {"inserted": n, "updated": n, "total": n}
+```
+
+- `key_field` is the field used to match existing rows: a match is **updated**, a new
+  value is **inserted**. Re-running an import is therefore safe and idempotent.
+- The import is **one transaction**: any bad row rolls everything back and writes
+  nothing. Fix the file and run it again.
+- GeoJSON (`/api/import/geojson`) replaces the geometry of records already present;
+  photos (`/api/import/photos`) take a ZIP and an index CSV `filename,record_id`.
+- Needs editor privilege or higher.
+
+Then check, do not assume: counts per table against the source, a few records opened in
+the app, the schema validator (Config → Validation).
+
+## 5. What is still done in the interface
+
+- **Relations** panel (Config → Relations) for linked-records panels on both sides.
+- Users, groups, permissions and locks (the Users view, guide: `guide/setup/groups.md`):
+  decide with the user who reads, edits and sees which rows; create accounts yourself
+  only if the user asks.
+- Print templates, map layers (GeoFace), Zotero, Pleiades, backups.
+
+## Ground rules
+
+- The user's data and credentials are theirs: no passwords in logs or chat, no uploading
+  their files anywhere but their own BraDypUS instance.
+- Ask before **destructive** actions (deleting tables or records). Table deletion cannot
+  be undone; make a backup first (`guide/usage/backup.md`).
+- When something is not covered here, read the page named above (raw Markdown on GitHub,
+  `https://raw.githubusercontent.com/lad-sapienza/BraDypUS/v5/bdus-docs/…`) rather than
+  guessing, and report the gap to the user.

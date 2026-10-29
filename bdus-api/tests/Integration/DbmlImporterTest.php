@@ -318,4 +318,205 @@ DBML;
         $this->assertSame('long_text', static::$cfg->get('tables.field_test.fields.body.type'));
         $this->assertSame('boolean',   static::$cfg->get('tables.field_test.fields.active.type'));
     }
+
+    // ── refs → relations ──────────────────────────────────────────────────────
+
+    private function previewEntry(array $preview, string $name): array
+    {
+        foreach ($preview['tables'] as $t) {
+            if ($t['name'] === $name) {
+                return $t;
+            }
+        }
+        $this->fail("table $name not in preview");
+    }
+
+    private function warningCodes(array $entry): array
+    {
+        return array_values(array_filter(
+            array_column($entry['warnings'], 'code'),
+            fn($c) => str_starts_with($c, 'ref_') || str_starts_with($c, 'invalid_')
+        ));
+    }
+
+    private function relationRow(string $fromTb, string $fromCol): ?array
+    {
+        $rows = static::$db->query(
+            'SELECT * FROM bdus_cfg_relations WHERE from_tb = ? AND from_col = ?',
+            [$fromTb, $fromCol],
+            'read'
+        );
+        return $rows[0] ?? null;
+    }
+
+    public function testPreviewListsRelationForRefWithoutIdFromTb(): void
+    {
+        $parsed = $this->parser->parse(<<<'DBML'
+Table rel_site {
+  id integer [pk, increment]
+  name varchar
+}
+Table rel_find {
+  id integer [pk, increment]
+  site_id integer [ref: > rel_site.id]
+}
+DBML);
+        $entry = $this->previewEntry($this->importer->preview($parsed, static::$cfg), 'rel_find');
+
+        $this->assertSame([[
+            'from_col' => 'site_id', 'to_tb' => 'rel_site', 'to_col' => 'id',
+            'on_delete' => 'RESTRICT', 'on_update' => 'CASCADE',
+        ]], $entry['relations']);
+        // A plain ref does not turn the column into a select
+        $this->assertSame('text', $entry['fields'][1]['type']);
+    }
+
+    public function testPreviewReadsPolicyAnnotationsAndRejectsBadOnes(): void
+    {
+        $parsed = $this->parser->parse(<<<'DBML'
+Table pol_a {
+  id integer [pk, increment]
+}
+Table pol_b {
+  id integer [pk, increment]
+  a_id integer [ref: > pol_a.id, note: 'bdus:on_delete=SET NULL bdus:on_update=no action']
+  a2_id integer [ref: > pol_a.id, note: 'bdus:on_delete=EXPLODE']
+}
+DBML);
+        $entry = $this->previewEntry($this->importer->preview($parsed, static::$cfg), 'pol_b');
+
+        $this->assertSame('SET NULL',  $entry['relations'][0]['on_delete']);
+        $this->assertSame('NO ACTION', $entry['relations'][0]['on_update']);
+        $this->assertSame('RESTRICT',  $entry['relations'][1]['on_delete']);
+        $this->assertContains('invalid_on_delete', $this->warningCodes($entry));
+    }
+
+    public function testPreviewSkipsRefsItCannotApply(): void
+    {
+        $parsed = $this->parser->parse(<<<'DBML'
+Table skip_main {
+  id integer [pk, increment]
+  ghost_id integer [ref: > nowhere.id]
+  bad_col integer [ref: > skip_main.nope]
+  reverse_id integer [ref: < skip_other.id]
+  into_plugin integer [ref: > skip_plug.id]
+}
+Table skip_other {
+  id integer [pk, increment]
+}
+Table skip_plug {
+  id integer [pk, increment]
+  id_link integer
+  Note: 'bdus:is_plugin=skip_main'
+}
+DBML);
+        $preview = $this->importer->preview($parsed, static::$cfg);
+        $main    = $this->previewEntry($preview, 'skip_main');
+
+        $this->assertSame([], $main['relations']);
+        $this->assertSame(
+            ['ref_target_missing', 'ref_target_missing', 'ref_direction_unsupported', 'ref_plugin_not_allowed'],
+            $this->warningCodes($main)
+        );
+    }
+
+    public function testApplyCreatesRelationAndForeignKey(): void
+    {
+        // The target is defined AFTER the table that refers to it
+        $parsed = $this->parser->parse(<<<'DBML'
+Table ap_find {
+  id integer [pk, increment]
+  site_id integer [ref: > ap_site.id, note: 'bdus:on_delete=CASCADE']
+}
+Table ap_site {
+  id integer [pk, increment]
+  name varchar
+}
+DBML);
+        $result = $this->importer->apply($parsed, static::$cfg, static::$db);
+
+        $this->assertEqualsCanonicalizing(['ap_find', 'ap_site'], $result['created']);
+        $this->assertSame([], array_filter($result['warnings'], fn($w) => str_starts_with($w, 'relation_skipped')));
+
+        $row = $this->relationRow('ap_find', 'site_id');
+        $this->assertNotNull($row);
+        $this->assertSame('ap_site', $row['to_tb']);
+        $this->assertSame('id', $row['to_col']);
+        $this->assertSame('CASCADE', $row['on_delete']);
+        $this->assertSame('CASCADE', $row['on_update']);
+
+        $alter = new \DB\Alter(static::$db);
+        $this->assertTrue($alter->hasForeignKey('ap_find', 'site_id'));
+    }
+
+    public function testApplyDoesNotTouchExistingTables(): void
+    {
+        $before = static::$db->query('SELECT COUNT(*) AS n FROM bdus_cfg_relations WHERE from_tb = ?', ['items'], 'read')[0]['n'];
+
+        // A new table may refer to an existing one; nothing is written on the old one
+        $parsed = $this->parser->parse(<<<'DBML'
+Table ex_new {
+  id integer [pk, increment]
+  item_id integer [ref: > items.id]
+}
+DBML);
+        $result = $this->importer->apply($parsed, static::$cfg, static::$db);
+
+        $this->assertSame(['ex_new'], $result['created']);
+        $this->assertNotNull($this->relationRow('ex_new', 'item_id'));
+        $after = static::$db->query('SELECT COUNT(*) AS n FROM bdus_cfg_relations WHERE from_tb = ?', ['items'], 'read')[0]['n'];
+        $this->assertSame($before, $after);
+    }
+
+    public function testApplyReportsSkippedRelationWithoutLeavingARow(): void
+    {
+        $parsed = $this->parser->parse(<<<'DBML'
+Table sk_find {
+  id integer [pk, increment]
+  site_id integer [ref: > sk_site.id]
+}
+Table sk_site {
+  pk_wrong integer [pk, increment]
+}
+DBML);
+        $result = $this->importer->apply($parsed, static::$cfg, static::$db);
+
+        $this->assertSame(['sk_find'], $result['created']);
+        $this->assertContains('sk_site', $result['skipped']);
+        $this->assertNull($this->relationRow('sk_find', 'site_id'));
+    }
+
+    public function testRelationRoundTripThroughExportAndImport(): void
+    {
+        $parsed = $this->parser->parse(<<<'DBML'
+Table rt_a {
+  id integer [pk, increment]
+}
+Table rt_b {
+  id integer [pk, increment]
+  a_id integer [ref: > rt_a.id, note: 'bdus:on_delete=SET NULL']
+}
+DBML);
+        $this->importer->apply($parsed, static::$cfg, static::$db);
+
+        $tables = array_filter(
+            static::$cfg->get('tables'),
+            fn($name) => in_array($name, ['rt_a', 'rt_b'], true),
+            ARRAY_FILTER_USE_KEY
+        );
+        $rels = static::$db->query(
+            "SELECT from_tb, from_col, to_tb, to_col, on_delete, on_update FROM bdus_cfg_relations WHERE from_tb = 'rt_b'",
+            [], 'read'
+        );
+        $dbml = (new \Bdus\DbmlExporter())->export($tables, [], '', $rels);
+
+        $this->assertStringContainsString('ref: > rt_a.id', $dbml);
+        $this->assertStringContainsString('bdus:on_delete=SET NULL', $dbml);
+
+        // The exported text, read back against an app that has neither table, yields the same relation
+        $again = $this->parser->parse(str_replace(['rt_a', 'rt_b'], ['rt2_a', 'rt2_b'], $dbml));
+        $entry = $this->previewEntry($this->importer->preview($again, static::$cfg), 'rt2_b');
+        $this->assertSame('SET NULL', $entry['relations'][0]['on_delete']);
+        $this->assertSame('rt2_a',    $entry['relations'][0]['to_tb']);
+    }
 }

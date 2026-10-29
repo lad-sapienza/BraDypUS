@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Bdus;
 
 use Config\Config;
+use Config\Relations;
 use DB\Alter;
 use DB\DB;
 
@@ -70,6 +71,8 @@ class DbmlImporter
             $tables[] = $entry;
         }
 
+        $this->previewRelations($tables, $parsed, $cfg);
+
         $vocabularies = $this->previewVocabularies($parsed['enums']);
 
         return [
@@ -88,6 +91,7 @@ class DbmlImporter
     public function apply(array $parsed, Config $cfg, DB $db): array
     {
         $preview = $this->preview($parsed, $cfg);
+        $existingTables = array_keys($cfg->get('tables') ?? []);
 
         $created  = [];
         $skipped  = [];
@@ -109,6 +113,10 @@ class DbmlImporter
                 $warnings[] = "Error creating table $tbName: " . $e->getMessage();
             }
         }
+
+        // Relations (FK constraints) come after ALL tables exist: a ref may point to
+        // a table defined later in the same DBML.
+        $this->applyRelations($preview['tables'], $created, $existingTables, $cfg, $db, $warnings);
 
         // Insert vocabulary rows
         foreach ($preview['vocabularies'] as $voc) {
@@ -247,6 +255,141 @@ class DbmlImporter
             }
         }
         return $vocs;
+    }
+
+    /**
+     * Decides which `ref:` of the NEW tables become relations (Config → Relations rows
+     * with their FOREIGN KEY), and says why the others are skipped. Never touches a
+     * table that already exists: a ref goes from a new table to any table.
+     *
+     * Adds to each preview entry `relations` (to create) and appends `warnings`.
+     * Annotations on the column note: bdus:on_delete / bdus:on_update
+     * (CASCADE | RESTRICT | SET NULL | NO ACTION; default RESTRICT / CASCADE).
+     */
+    private function previewRelations(array &$tables, array $parsed, Config $cfg): void
+    {
+        $existing = $cfg->get('tables') ?? [];
+        $batch    = [];
+        foreach ($tables as $entry) {
+            if (empty($entry['errors'])) {
+                $batch[$entry['name']] = $entry;
+            }
+        }
+
+        foreach ($tables as &$entry) {
+            $entry['relations'] = [];
+            if (empty($entry['errors'])) {
+                $tbData = $parsed['tables'][$entry['name']];
+                foreach ($tbData['columns'] as $colName => $col) {
+                    if ($col['ref'] === null || in_array($colName, ['id', 'creator', 'table_link', 'id_link'], true)) {
+                        continue;
+                    }
+                    $warn = static function (string $code, array $extra = []) use (&$entry, $colName): void {
+                        $entry['warnings'][] = ['code' => $code, 'field' => $colName] + $extra;
+                    };
+
+                    $toTb  = $col['ref']['table'];
+                    $toCol = $col['ref']['col'];
+
+                    if ($col['ref']['type'] === '<') {
+                        // "this column is the one-side": the FK would live on the OTHER table.
+                        $warn('ref_direction_unsupported', ['to' => "$toTb.$toCol"]);
+                        continue;
+                    }
+                    if ($entry['is_plugin']) {
+                        $warn('ref_plugin_not_allowed', ['to' => "$toTb.$toCol"]);
+                        continue;
+                    }
+
+                    if (isset($batch[$toTb])) {
+                        $targetIsPlugin = $batch[$toTb]['is_plugin'];
+                        $targetHasCol   = $toCol === 'id' || isset($parsed['tables'][$toTb]['columns'][$toCol]);
+                    } elseif (isset($existing[$toTb])) {
+                        $targetIsPlugin = (bool) ($existing[$toTb]['is_plugin'] ?? false);
+                        $targetHasCol   = isset($existing[$toTb]['fields'][$toCol]);
+                    } else {
+                        $warn('ref_target_missing', ['to' => "$toTb.$toCol"]);
+                        continue;
+                    }
+                    if ($targetIsPlugin) {
+                        $warn('ref_plugin_not_allowed', ['to' => "$toTb.$toCol"]);
+                        continue;
+                    }
+                    if (!$targetHasCol) {
+                        $warn('ref_target_missing', ['to' => "$toTb.$toCol"]);
+                        continue;
+                    }
+
+                    $ann      = $this->parseAnnotations($col['note']);
+                    $policies = ['on_delete' => 'RESTRICT', 'on_update' => 'CASCADE'];
+                    foreach ($policies as $key => $default) {
+                        $value = $ann[$key] ?? null;
+                        if (!is_string($value)) {
+                            continue;
+                        }
+                        if (in_array(strtoupper($value), Relations::POLICIES, true)) {
+                            $policies[$key] = strtoupper($value);
+                        } else {
+                            $warn('invalid_' . $key, ['value' => $value]);
+                        }
+                    }
+
+                    $entry['relations'][] = [
+                        'from_col'  => $colName,
+                        'to_tb'     => $toTb,
+                        'to_col'    => $toCol,
+                        'on_delete' => $policies['on_delete'],
+                        'on_update' => $policies['on_update'],
+                    ];
+                }
+            }
+        }
+        unset($entry);
+    }
+
+    /**
+     * Creates the relations decided by previewRelations(), through the same code as
+     * Config → Relations (config row + FOREIGN KEY + index). A relation that cannot be
+     * applied is reported in $warnings as "relation_skipped:table.column:code" and does
+     * not stop the import: the tables and fields are already there.
+     *
+     * @param list<array> $tables         preview()['tables']
+     * @param list<string> $created       tables created by this apply()
+     * @param list<string> $existingTables tables that existed before apply()
+     */
+    private function applyRelations(array $tables, array $created, array $existingTables, Config $cfg, DB $db, array &$warnings): void
+    {
+        foreach ($tables as $entry) {
+            if (!in_array($entry['name'], $created, true)) {
+                continue;
+            }
+            foreach ($entry['relations'] ?? [] as $rel) {
+                $label = "{$entry['name']}.{$rel['from_col']}";
+                if (!in_array($rel['to_tb'], $created, true) && !in_array($rel['to_tb'], $existingTables, true)) {
+                    $warnings[] = "relation_skipped:$label:ref_target_missing";
+                    continue;
+                }
+                try {
+                    $res = Relations::save(
+                        $db, $cfg, null,
+                        $entry['name'], $rel['from_col'], $rel['to_tb'], $rel['to_col'],
+                        $rel['on_delete'], $rel['on_update']
+                    );
+                    if (($res['status'] ?? '') !== 'success') {
+                        $warnings[] = "relation_skipped:$label:" . ($res['code'] ?? 'error');
+                    }
+                } catch (\Throwable $e) {
+                    // The config row is written before the constraint: do not leave a
+                    // relation behind that has no FK in the database.
+                    $db->query(
+                        'DELETE FROM bdus_cfg_relations WHERE from_tb = ? AND from_col = ?',
+                        [$entry['name'], $rel['from_col']],
+                        'boolean'
+                    );
+                    $warnings[] = "relation_skipped:$label:db_error";
+                }
+            }
+        }
     }
 
     private function applyTable(array $tbEntry, Config $cfg, DB $db, array &$warnings): void

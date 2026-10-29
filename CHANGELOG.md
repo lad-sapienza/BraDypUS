@@ -5,6 +5,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **DBML import ignored `ref:` — and export dropped relations.** A column with
+  `ref: > table.column` in an imported DBML did not create the relation (the
+  *Linked records* panel on both tables, and the FOREIGN KEY) unless it was a
+  plugin attachment; only `bdus:id_from_tb` made a select. Now every `ref:` of a
+  **new** table creates the relation through the same code as Config → Relations
+  (config row, FOREIGN KEY, index), after all tables exist, so the referred table
+  can be defined later in the file or already exist; existing tables are never
+  modified. Policies via `bdus:on_delete` / `bdus:on_update` on the column note
+  (`CASCADE`, `RESTRICT`, `SET NULL`, `NO ACTION`; defaults `RESTRICT` /
+  `CASCADE`). A ref that cannot become a relation (unknown table or column, plugin
+  table, `<` direction, bad policy) is a preview warning, never an error:
+  `ref_target_missing`, `ref_plugin_not_allowed`, `ref_direction_unsupported`,
+  `invalid_on_delete`, `invalid_on_update`; if the database refuses the constraint
+  the apply result carries `relation_skipped:table.column:code`. The preview lists
+  the `relations` it would create. The export writes a `ref:` for every relation
+  (plugin attachments stay `bdus:is_plugin`), so export → import into a new app
+  keeps them. `POST /api/config/relations` now shares its code with the import
+  (`Config\Relations`), behaviour unchanged. `openapi.yaml`: the DBML export is a
+  `text/plain` download, and the preview and apply responses are described as they
+  are (`preview.*`, `result.*`).
+
 ## [5.16.0] - 2026-10-27
 
 ### Added

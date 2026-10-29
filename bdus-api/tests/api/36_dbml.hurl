@@ -5,6 +5,7 @@
 #   GET    /api/config/dbml           export full app schema as .dbml file
 #   POST   /api/config/dbml/preview   parse & validate DBML (dry-run)
 #   POST   /api/config/dbml/apply     create tables from validated DBML
+#   (refs → relations: 36k–36o)
 # ════════════════════════════════════════════════════════════════════
 
 
@@ -143,3 +144,71 @@ HTTP 200
 [Asserts]
 jsonpath "$.status" == "error"
 jsonpath "$.code"   == "dbml_empty"
+
+
+# ── 36k. Preview — a ref becomes a relation to create ────────────────
+# The referred table is defined AFTER the one that refers to it.
+POST {{base_url}}/{{app_name}}/api/config/dbml/preview
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{
+  "dbml": "Table hurl_rel_find {\n  id integer [pk, increment]\n  site_id integer [ref: > hurl_rel_site.id, note: 'bdus:on_delete=CASCADE']\n  ghost_id integer [ref: > hurl_no_such_table.id]\n}\n\nTable hurl_rel_site {\n  id integer [pk, increment]\n}"
+}
+HTTP 200
+[Asserts]
+jsonpath "$.status"                                 == "success"
+jsonpath "$.preview.has_errors"                     == false
+jsonpath "$.preview.tables[0].relations"            count == 1
+jsonpath "$.preview.tables[0].relations[0].from_col"  == "site_id"
+jsonpath "$.preview.tables[0].relations[0].to_tb"     == "hurl_rel_site"
+jsonpath "$.preview.tables[0].relations[0].on_delete" == "CASCADE"
+jsonpath "$.preview.tables[0].relations[0].on_update" == "CASCADE"
+jsonpath "$.preview.tables[0].warnings[?(@.code == 'ref_target_missing')].field" contains "ghost_id"
+
+
+# ── 36l. Apply — tables and the relation are created ─────────────────
+# The relation comes with its FOREIGN KEY: if the engine refused it the
+# importer would report relation_skipped and leave no relation row.
+POST {{base_url}}/{{app_name}}/api/config/dbml/apply
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{
+  "dbml": "Table hurl_rel_find {\n  id integer [pk, increment]\n  site_id integer [ref: > hurl_rel_site.id, note: 'bdus:on_delete=CASCADE']\n}\n\nTable hurl_rel_site {\n  id integer [pk, increment]\n}"
+}
+HTTP 200
+[Asserts]
+jsonpath "$.status"            == "success"
+jsonpath "$.result.created"    count == 2
+jsonpath "$.result.skipped"    isEmpty
+
+
+# ── 36m. The relation is listed in Config → Relations ────────────────
+GET {{base_url}}/{{app_name}}/api/config/relations
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.data[?(@.from_tb == 'hurl_rel_find' && @.from_col == 'site_id')].to_tb"      contains "hurl_rel_site"
+jsonpath "$.data[?(@.from_tb == 'hurl_rel_find' && @.from_col == 'site_id')].on_delete"  contains "CASCADE"
+
+
+# ── 36n. Export carries the ref and the non-default policy ───────────
+GET {{base_url}}/{{app_name}}/api/config/dbml
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+body contains "ref: > hurl_rel_site.id"
+body contains "bdus:on_delete=CASCADE"
+
+
+# ── 36o. Re-applying the same DBML skips the tables and adds no relation ─
+POST {{base_url}}/{{app_name}}/api/config/dbml/apply
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{
+  "dbml": "Table hurl_rel_find {\n  id integer [pk, increment]\n  site_id integer [ref: > hurl_rel_site.id]\n}"
+}
+HTTP 200
+[Asserts]
+jsonpath "$.status"            == "success"
+jsonpath "$.result.created"    isEmpty
+jsonpath "$.result.skipped"    count == 1

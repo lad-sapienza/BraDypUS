@@ -1458,116 +1458,22 @@ class Config extends \Bdus\Controller
   {
     if (!$this->requireSuperAdmin()) return;
 
-    $id      = isset($this->get['id']) ? (int) $this->get['id'] : null;
-    $fromTb  = trim($this->post['from_tb']  ?? '');
-    $fromCol = trim($this->post['from_col'] ?? '');
-    $toTb    = trim($this->post['to_tb']    ?? '');
-    $toCol   = trim($this->post['to_col']   ?? '');
-    $onDel   = strtoupper(trim($this->post['on_delete'] ?? 'RESTRICT'));
-    $onUpd   = strtoupper(trim($this->post['on_update'] ?? 'CASCADE'));
-
-    $validPolicies = ['CASCADE', 'RESTRICT', 'SET NULL', 'NO ACTION'];
-
-    if (!$fromTb || !$fromCol || !$toTb || !$toCol) {
-      $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
-      return;
-    }
-    if (!in_array($onDel, $validPolicies, true)) {
-      $this->returnJson(['status' => 'error', 'code' => 'invalid_on_delete']);
-      return;
-    }
-    if (!in_array($onUpd, $validPolicies, true)) {
-      $this->returnJson(['status' => 'error', 'code' => 'invalid_on_update']);
-      return;
-    }
-
-    // Plugin tables are satellites of exactly one parent, reached only via
-    // their id_link relation (see syncPluginRelation()) — never independently
-    // browsable. Any other relation involving a plugin table (on either side)
-    // would produce a "Linked records" entry the frontend can never open,
-    // because plugin tables are excluded from GET /api/tables. Lookups that
-    // don't need a hard FK (dropdowns, search) should use a field's
-    // `id_from_tb` instead, which needs no row here.
-    if ((bool) $this->cfg->get("tables.{$fromTb}.is_plugin") && $fromCol !== 'id_link') {
-      $this->returnJson(['status' => 'error', 'code' => 'plugin_relation_not_allowed']);
-      return;
-    }
-    if ((bool) $this->cfg->get("tables.{$toTb}.is_plugin")) {
-      $this->returnJson(['status' => 'error', 'code' => 'plugin_relation_not_allowed']);
-      return;
-    }
-
-    // Self-referential: force fixed policy (RESTRICT/CASCADE).
-    if ($fromTb === $toTb) {
-      $onDel = 'RESTRICT';
-      $onUpd = 'CASCADE';
-    }
-
-    $alter = new \DB\Alter($this->db);
-
-    // Drop the legacy UNIQUE(from_tb, to_tb) index defensively — it blocks multiple
-    // FK columns between the same table pair, which the new schema supports.
-    \Config\ToDB::dropLegacyPairIndex($this->db);   // engine-aware: MySQL has no bare `DROP INDEX IF EXISTS`
+    $id = isset($this->get['id']) ? (int) $this->get['id'] : null;
 
     try {
-      if ($id) {
-        // UPDATE: from_tb and from_col are immutable (they identify the FK column).
-        // Only to_tb, to_col, on_delete, on_update may change.
-        $existing = $this->db->query(
-          'SELECT from_tb, from_col FROM bdus_cfg_relations WHERE id=?',
-          [$id], 'read'
-        );
-        if (empty($existing)) {
-          $this->returnJson(['status' => 'error', 'code' => 'not_found']);
-          return;
-        }
-        $fromTb  = $existing[0]['from_tb'];
-        $fromCol = $existing[0]['from_col'];
-
-        // Drop old FK before re-applying with new params.
-        $alter->dropForeignKey($fromTb, $fromCol);
-
-        $this->db->query(
-          'UPDATE bdus_cfg_relations SET to_tb=?, to_col=?, on_delete=?, on_update=? WHERE id=?',
-          [$toTb, $toCol, $onDel, $onUpd, $id],
-          'boolean'
-        );
-      } else {
-        // CREATE: reject duplicate FK column.
-        $dup = $this->db->query(
-          'SELECT id FROM bdus_cfg_relations WHERE from_tb=? AND from_col=?',
-          [$fromTb, $fromCol], 'read'
-        );
-        if (!empty($dup)) {
-          $this->returnJson(['status' => 'error', 'code' => 'relation_already_exists']);
-          return;
-        }
-        $id = (int) $this->db->query(
-          'INSERT INTO bdus_cfg_relations (from_tb, from_col, to_tb, to_col, on_delete, on_update)
-           VALUES (?,?,?,?,?,?)',
-          [$fromTb, $fromCol, $toTb, $toCol, $onDel, $onUpd],
-          'id'
-        );
-      }
-
-      // Pre-validate: count orphans before applying FK to DB.
-      $orphans = $alter->checkOrphans($fromTb, $fromCol, $toTb, $toCol);
-      if ($orphans > 0) {
-        // Config row is saved; DB constraint is not applied (would fail).
-        $this->returnJson([
-          'status'  => 'warning',
-          'code'    => 'relation_saved_orphans_found',
-          'id'      => $id,
-          'orphans' => $orphans,
-        ]);
-        return;
-      }
-
-      // Apply FK constraint and auto-index.
-      $alter->addForeignKey($fromTb, $fromCol, $toTb, $toCol, $onDel, $onUpd);
-      $this->saveAutoIndex($fromTb, $fromCol, $alter);
-
-      $this->returnJson(['status' => 'success', 'code' => 'relation_saved', 'id' => $id]);
+      // Validation, config row, FK constraint and auto-index live in
+      // \Config\Relations so the DBML import applies the very same rules.
+      $this->returnJson(\Config\Relations::save(
+        $this->db,
+        $this->cfg,
+        $id,
+        trim($this->post['from_tb']  ?? ''),
+        trim($this->post['from_col'] ?? ''),
+        trim($this->post['to_tb']    ?? ''),
+        trim($this->post['to_col']   ?? ''),
+        trim($this->post['on_delete'] ?? 'RESTRICT'),
+        trim($this->post['on_update'] ?? 'CASCADE')
+      ));
     } catch (\Throwable $e) {
       $this->log->error($e);
       $this->returnJson(['status' => 'error', 'code' => 'db_error', 'detail' => $e->getMessage()]);
@@ -1862,20 +1768,7 @@ class Config extends \Bdus\Controller
    */
   private function saveAutoIndex(string $tb, string $col, \DB\Alter $alter): void
   {
-    $name = "idx_{$tb}_{$col}";
-    $alter->createIndex($tb, $name, [$col], false);
-
-    $exists = $this->db->query(
-      'SELECT id FROM bdus_cfg_indexes WHERE tb=? AND name=?',
-      [$tb, $name], 'read'
-    );
-    if (empty($exists)) {
-      $this->db->query(
-        'INSERT INTO bdus_cfg_indexes (tb, name, columns, is_unique) VALUES (?,?,?,0)',
-        [$tb, $name, json_encode([$col], JSON_UNESCAPED_UNICODE)],
-        'boolean'
-      );
-    }
+    \Config\Relations::saveAutoIndex($this->db, $tb, $col, $alter);
   }
 
   /**
@@ -1957,9 +1850,15 @@ class Config extends \Bdus\Controller
         'read'
       ) ?: [];
 
+      $relations = $this->db->query(
+        "SELECT from_tb, from_col, to_tb, to_col, on_delete, on_update FROM bdus_cfg_relations ORDER BY id",
+        [],
+        'read'
+      ) ?: [];
+
       $appName = $this->cfg->get('main.name') ?? '';
       $exporter = new \Bdus\DbmlExporter();
-      $dbml     = $exporter->export($tables, $vocRows, $appName);
+      $dbml     = $exporter->export($tables, $vocRows, $appName, $relations);
 
       $filename = preg_replace('/[^a-z0-9_-]/i', '_', $appName ?: 'export') . '.dbml';
 

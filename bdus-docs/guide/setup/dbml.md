@@ -25,6 +25,8 @@ current application. The file contains:
 - One `Enum` block for every vocabulary list (values, `// bdus:vocabulary` marker).
 - One `Table` block for every user-defined table with all its fields and a `Note`
   carrying the BraDypUS annotations (`bdus:label`, `bdus:preview`, `bdus:rs`, …).
+- A `ref:` on every column that has a [relation](./relations) <Badge type="tip" text="v5.16.1" />,
+  with `bdus:on_delete` / `bdus:on_update` when they are not the defaults.
 
 The exported file is valid DBML: paste it into [dbdiagram.io](https://dbdiagram.io)
 to visualise the schema as an entity-relationship diagram.
@@ -103,6 +105,45 @@ Place these inside the column's inline `note: '...'` constraint:
 | `bdus:type` | `bdus:type=long_text` | Override the default type mapping |
 | `bdus:voc` | `bdus:voc=periodi` | Link column to a vocabulary list |
 | `bdus:id_from_tb` | (with a DBML `ref:`) | Populate select from a related table |
+| `bdus:on_delete` | `bdus:on_delete=SET NULL` | Policy of the relation created by a `ref:` <Badge type="tip" text="v5.16.1" /> — `CASCADE`, `RESTRICT` (default), `SET NULL`, `NO ACTION` |
+| `bdus:on_update` | `bdus:on_update=RESTRICT` | Same, for updates (default `CASCADE`) <Badge type="tip" text="v5.16.1" /> |
+
+### Relations <Badge type="tip" text="v5.16.1" />
+
+A column with a `ref:` creates a [relation](./relations) — the *Linked records* panel on
+both tables, backed by a real FOREIGN KEY and an index — exactly as if you had added it
+in **Config → Relations**:
+
+```dbml
+Table finds {
+  id      integer [pk, increment]
+  site_id integer [ref: > sites.id, note: 'bdus:on_delete=CASCADE']
+}
+```
+
+- `ref:` and `bdus:id_from_tb` are independent. With only `ref:` the column stays a
+  plain field and you get the panel; add `bdus:id_from_tb` to make it a select that
+  lists the records of the other table.
+- The referred table may be defined **later in the same file**, or already exist. An
+  existing table is never modified: the relation belongs to the new table.
+- Only `>` (this column holds the id of the other table) is supported. A `<` ref would
+  put the foreign key on the other table, and is reported as `ref_direction_unsupported`.
+- Plugin tables cannot take part in a relation other than their attachment to the parent
+  (`bdus:is_plugin`); a table that refers to a plugin table, or the other way round, gets
+  `ref_plugin_not_allowed`.
+
+A ref that cannot become a relation never blocks the import: the table is created, the
+warning appears in the preview (and, if the database refuses the constraint, as
+`relation_skipped:table.column:code` after **Apply**), and you can add the relation by hand.
+
+| Warning | Meaning |
+|---|---|
+| `ref_target_missing` | The table or the column the ref points to does not exist |
+| `ref_plugin_not_allowed` | The ref involves a plugin table |
+| `ref_direction_unsupported` | `<` refs are not imported |
+| `invalid_on_delete`, `invalid_on_update` | Unknown policy: the default is used |
+
+Self-references are allowed; their policy is always `RESTRICT` / `CASCADE`.
 
 ### Vocabulary Enums
 
@@ -134,7 +175,7 @@ Table items {
   creator integer
   name    varchar
   status  varchar  [note: 'bdus:voc=item_status']
-  cat_ref integer  [ref: > categories.id, note: 'bdus:id_from_tb']
+  cat_ref integer  [ref: > categories.id, note: 'bdus:id_from_tb']  // select + relation
   Note: 'bdus:label=Items bdus:preview=id,name,status bdus:rs=1'
 }
 

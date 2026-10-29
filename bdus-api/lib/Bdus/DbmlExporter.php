@@ -55,10 +55,21 @@ class DbmlExporter
      * @param array $tables    Value of cfg->get('tables') — keyed by table name
      * @param array $vocItems  Rows from bdus_vocabularies: list of {voc, def, sort}
      * @param string $appName  Human-readable app name (used in header comment)
+     * @param array $relations Rows from bdus_cfg_relations: list of
+     *                         {from_tb, from_col, to_tb, to_col, on_delete, on_update};
+     *                         each becomes a `ref:` on its column. The plugin → parent
+     *                         attachment (`id_link`) is skipped: `bdus:is_plugin` carries it.
      */
-    public function export(array $tables, array $vocItems, string $appName = ''): string
+    public function export(array $tables, array $vocItems, string $appName = '', array $relations = []): string
     {
         $parts = [];
+
+        $relByColumn = [];
+        foreach ($relations as $rel) {
+            if ($rel['from_col'] !== 'id_link') {
+                $relByColumn[$rel['from_tb']][$rel['from_col']] = $rel;
+            }
+        }
 
         // Header
         $parts[] = "// BraDypUS DBML export" . ($appName ? " — $appName" : '');
@@ -73,7 +84,7 @@ class DbmlExporter
 
         // Tables
         foreach ($tables as $tbName => $tbData) {
-            $parts[] = $this->renderTable($tbName, $tbData, $vocsByName);
+            $parts[] = $this->renderTable($tbName, $tbData, $vocsByName, $relByColumn[$tbName] ?? []);
         }
 
         return implode("\n", $parts);
@@ -94,14 +105,15 @@ class DbmlExporter
         return implode("\n", $lines);
     }
 
-    private function renderTable(string $tbName, array $tbData, array $vocsByName): string
+    /** @param array<string, array> $relations relations of this table, by FK column */
+    private function renderTable(string $tbName, array $tbData, array $vocsByName, array $relations = []): string
     {
         $lines = [];
         $lines[] = "Table $tbName {";
 
         $fields = $tbData['fields'] ?? [];
         foreach ($fields as $fldName => $fld) {
-            $lines[] = '  ' . $this->renderColumn($fldName, $fld);
+            $lines[] = '  ' . $this->renderColumn($fldName, $fld, $relations[$fldName] ?? null);
         }
 
         $tableNote = $this->buildTableNote($tbName, $tbData, $vocsByName);
@@ -115,10 +127,10 @@ class DbmlExporter
         return implode("\n", $lines);
     }
 
-    private function renderColumn(string $name, array $fld): string
+    private function renderColumn(string $name, array $fld, ?array $relation = null): string
     {
         $dbmlType    = $this->resolveDbmlType($fld);
-        $constraints = $this->buildColumnConstraints($name, $fld);
+        $constraints = $this->buildColumnConstraints($name, $fld, $relation);
 
         $line = "$name $dbmlType";
         if ($constraints !== '') {
@@ -144,7 +156,7 @@ class DbmlExporter
     }
 
     /** Builds the inline constraint string for a column (without surrounding []). */
-    private function buildColumnConstraints(string $name, array $fld): string
+    private function buildColumnConstraints(string $name, array $fld, ?array $relation = null): string
     {
         $parts = [];
 
@@ -154,8 +166,10 @@ class DbmlExporter
             $parts[] = 'increment';
         }
 
-        // FK ref for id_from_tb
-        if (!empty($fld['id_from_tb'])) {
+        // FK ref: the relation if the column has one, else the lookup table of id_from_tb
+        if ($relation !== null) {
+            $parts[] = "ref: > {$relation['to_tb']}.{$relation['to_col']}";
+        } elseif (!empty($fld['id_from_tb'])) {
             $parts[] = "ref: > {$fld['id_from_tb']}.id";
         }
 
@@ -176,6 +190,16 @@ class DbmlExporter
         // id_from_tb marker
         if (!empty($fld['id_from_tb'])) {
             $noteParts[] = 'bdus:id_from_tb';
+        }
+
+        // Relation policies, only when they differ from the defaults
+        if ($relation !== null) {
+            if (strtoupper((string) $relation['on_delete']) !== 'RESTRICT') {
+                $noteParts[] = 'bdus:on_delete=' . strtoupper((string) $relation['on_delete']);
+            }
+            if (strtoupper((string) $relation['on_update']) !== 'CASCADE') {
+                $noteParts[] = 'bdus:on_update=' . strtoupper((string) $relation['on_update']);
+            }
         }
 
         // get_values_from_tb

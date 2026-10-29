@@ -5355,22 +5355,21 @@ paths:
       summary: Export schema as DBML
       description: |
         Serialises the entire application configuration (tables, fields,
-        vocabularies) into a single annotated `.dbml` file compatible with
-        dbdiagram.io. System tables (`bdus_*`) are excluded. Requires
-        `admin` privilege.
+        vocabularies, relations) into a single annotated `.dbml` file
+        compatible with dbdiagram.io. Every relation (Config → Relations) is
+        written as a `ref: > table.column` on its column, with
+        `bdus:on_delete` / `bdus:on_update` when they differ from the defaults
+        (`RESTRICT` / `CASCADE`); the plugin → parent attachment is carried by
+        `bdus:is_plugin`. System tables (`bdus_*`) are excluded. Requires
+        `super_admin` privilege. The response is the `.dbml` file itself
+        (`text/plain`, as an attachment).
       responses:
         '200':
-          description: DBML source
+          description: The DBML source, as a file download
           content:
-            application/json:
+            text/plain:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/Success'
-                  - type: object
-                    properties:
-                      dbml:
-                        type: string
-                        description: Full DBML source as a plain string
+                type: string
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -5382,8 +5381,23 @@ paths:
       summary: Validate DBML without applying
       description: |
         Parses the submitted DBML and returns blocking errors and
-        non-blocking warnings for each table defined in the file.
-        Nothing is written to the database or config. Requires `admin` privilege.
+        non-blocking warnings for each table defined in the file, the
+        vocabularies it would create and the relations it would create.
+        Nothing is written to the database or config. Requires `super_admin`
+        privilege.
+
+        **Relations.** A `ref: > table.column` on a column of a *new* table
+        becomes a relation (a row of Config → Relations, with its FOREIGN KEY
+        and index) whether or not the column also has `bdus:id_from_tb`. The
+        target may be a table of the same DBML (in any order) or an existing
+        table; an existing table is never modified. Policies come from the
+        column note: `bdus:on_delete` / `bdus:on_update` = `CASCADE`,
+        `RESTRICT`, `SET NULL` or `NO ACTION` (default `RESTRICT` / `CASCADE`).
+        A ref that cannot become a relation is reported as a warning and the
+        table is still imported: `ref_target_missing` (unknown table or column),
+        `ref_plugin_not_allowed` (plugin table on either side),
+        `ref_direction_unsupported` (`<`: the foreign key would live on the other
+        table), `invalid_on_delete` / `invalid_on_update` (policy ignored).
       requestBody:
         required: true
         content:
@@ -5396,7 +5410,7 @@ paths:
                   type: string
       responses:
         '200':
-          description: Validation result per table
+          description: Validation result
           content:
             application/json:
               schema:
@@ -5404,21 +5418,51 @@ paths:
                   - $ref: '#/components/schemas/Success'
                   - type: object
                     properties:
-                      tables:
-                        type: array
-                        items:
-                          type: object
-                          properties:
-                            name:
-                              type: string
-                            errors:
-                              type: array
-                              items:
-                                type: string
-                            warnings:
-                              type: array
-                              items:
-                                type: string
+                      preview:
+                        type: object
+                        properties:
+                          has_errors:
+                            type: boolean
+                          tables:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                name:
+                                  type: string
+                                errors:
+                                  type: array
+                                  items:
+                                    type: object
+                                    properties:
+                                      code: { type: string }
+                                warnings:
+                                  type: array
+                                  items:
+                                    type: object
+                                    properties:
+                                      code: { type: string }
+                                      field: { type: string }
+                                relations:
+                                  type: array
+                                  description: Relations that apply would create from this table
+                                  items:
+                                    type: object
+                                    properties:
+                                      from_col: { type: string }
+                                      to_tb: { type: string }
+                                      to_col: { type: string }
+                                      on_delete: { type: string }
+                                      on_update: { type: string }
+                          vocabularies:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                name: { type: string }
+                                values:
+                                  type: array
+                                  items: { type: string }
         '400':
           $ref: '#/components/responses/Error'
         '401':
@@ -5434,7 +5478,12 @@ paths:
         Creates the tables described in the DBML in the database and writes
         the corresponding configuration entries. Tables with blocking errors
         are skipped. Enum columns marked `// bdus:vocabulary` are seeded into
-        `bdus_vocabularies`. Requires `super_admin` privilege.
+        `bdus_vocabularies`. Once every table exists, the relations listed by
+        the preview are created through the same code as
+        `POST /api/config/relations` (config row, FOREIGN KEY, index); one that
+        cannot be applied is reported in `result.warnings` as
+        `relation_skipped:{table}.{column}:{code}` and does not stop the import.
+        Requires `super_admin` privilege.
       requestBody:
         required: true
         content:
@@ -5447,7 +5496,7 @@ paths:
                   type: string
       responses:
         '200':
-          description: Import result per table
+          description: Import result
           content:
             application/json:
               schema:
@@ -5455,16 +5504,23 @@ paths:
                   - $ref: '#/components/schemas/Success'
                   - type: object
                     properties:
-                      created:
-                        type: array
-                        items:
-                          type: string
-                        description: Table names successfully created
-                      skipped:
-                        type: array
-                        items:
-                          type: string
-                        description: Table names skipped due to blocking errors
+                      result:
+                        type: object
+                        properties:
+                          created:
+                            type: array
+                            items:
+                              type: string
+                            description: Table names successfully created
+                          skipped:
+                            type: array
+                            items:
+                              type: string
+                            description: Table names skipped due to blocking errors
+                          warnings:
+                            type: array
+                            items:
+                              type: string
         '400':
           $ref: '#/components/responses/Error'
         '401':

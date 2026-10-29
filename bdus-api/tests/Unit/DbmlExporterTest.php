@@ -217,4 +217,64 @@ class DbmlExporterTest extends TestCase
         $out = $this->exporter->export($tables, []);
         $this->assertStringContainsString('bdus:geodata=1', $out);
     }
+
+    // ── Relations ─────────────────────────────────────────────────────────────
+
+    private function relTables(): array
+    {
+        $id = ['name' => 'id', 'label' => 'Id', 'type' => 'text', 'db_type' => 'INTEGER'];
+        return [
+            'sites' => ['label' => 'Sites', 'fields' => ['id' => $id]],
+            'finds' => ['label' => 'Finds', 'fields' => [
+                'id'      => $id,
+                'site_id' => ['name' => 'site_id', 'label' => 'Site', 'type' => 'text', 'db_type' => 'INTEGER'],
+                'lookup'  => ['name' => 'lookup', 'label' => 'Lookup', 'type' => 'select', 'db_type' => 'INTEGER', 'id_from_tb' => 'sites'],
+            ]],
+        ];
+    }
+
+    public function testRelationBecomesRefWithoutIdFromTb(): void
+    {
+        $rels = [['from_tb' => 'finds', 'from_col' => 'site_id', 'to_tb' => 'sites', 'to_col' => 'id',
+                  'on_delete' => 'RESTRICT', 'on_update' => 'CASCADE']];
+        $out = $this->exporter->export($this->relTables(), [], '', $rels);
+
+        $this->assertStringContainsString("site_id integer [ref: > sites.id]", $out);
+        $this->assertStringNotContainsString('bdus:on_delete', $out);
+    }
+
+    public function testRelationPoliciesAreExportedOnlyWhenNotDefault(): void
+    {
+        $rels = [['from_tb' => 'finds', 'from_col' => 'site_id', 'to_tb' => 'sites', 'to_col' => 'id',
+                  'on_delete' => 'SET NULL', 'on_update' => 'RESTRICT']];
+        $out = $this->exporter->export($this->relTables(), [], '', $rels);
+
+        $this->assertStringContainsString("note: 'bdus:on_delete=SET NULL bdus:on_update=RESTRICT'", $out);
+    }
+
+    public function testRelationAndIdFromTbEmitOneRef(): void
+    {
+        $rels = [['from_tb' => 'finds', 'from_col' => 'lookup', 'to_tb' => 'sites', 'to_col' => 'id',
+                  'on_delete' => 'RESTRICT', 'on_update' => 'CASCADE']];
+        $out = $this->exporter->export($this->relTables(), [], '', $rels);
+
+        $this->assertSame(1, substr_count($out, 'ref: > sites.id'));
+        $this->assertStringContainsString('bdus:id_from_tb', $out);
+    }
+
+    public function testPluginAttachmentIsNotExportedAsRef(): void
+    {
+        $tables = $this->relTables();
+        unset($tables['finds']['fields']['lookup']);
+        $tables['plug'] = ['label' => 'Plug', 'is_plugin' => true, 'plugin_of' => 'sites', 'fields' => [
+            'id'      => ['name' => 'id', 'label' => 'Id', 'type' => 'text', 'db_type' => 'INTEGER'],
+            'id_link' => ['name' => 'id_link', 'label' => 'Link', 'type' => 'text', 'db_type' => 'INTEGER'],
+        ]];
+        $rels = [['from_tb' => 'plug', 'from_col' => 'id_link', 'to_tb' => 'sites', 'to_col' => 'id',
+                  'on_delete' => 'RESTRICT', 'on_update' => 'CASCADE']];
+        $out = $this->exporter->export($tables, [], '', $rels);
+
+        $this->assertStringNotContainsString('ref:', $out);
+        $this->assertStringContainsString('bdus:is_plugin=sites', $out);
+    }
 }

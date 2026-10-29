@@ -59,10 +59,14 @@ Tables and vocabularies are created from one DBML text
   `bdus:fuzzy_date=1`.
 - Vocabulary: an `Enum` whose last line is the comment `// bdus:vocabulary`; a column
   uses it with `[note: 'bdus:voc=<enum_name>']`. Enums without the marker are ignored.
-- Link to another table: `site_id integer [ref: > sites.id, note: 'bdus:id_from_tb']`
-  makes a select field that stores the other record's `id`. **A plain `ref:` does not
-  create the "linked records" panel** shown on both sides in the record view; that is
-  Config → Relations (step 5).
+- Link to another table: `site_id integer [ref: > sites.id]` creates the **relation**
+  (the "linked records" panel on both tables, a real FOREIGN KEY and an index; the
+  target may be defined later in the file). Add `note: 'bdus:id_from_tb'` as well to
+  make the column a select that lists the other table's records. Only `>` refs are
+  imported (a `<` ref is reported and skipped); policies with
+  `bdus:on_delete` / `bdus:on_update` (`CASCADE`, `RESTRICT` default, `SET NULL`,
+  `NO ACTION`). Needs BraDypUS ≥ 5.16.1; on older versions a plain `ref:` is ignored
+  and the panel is added by hand in Config → Relations.
 
 ```dbml
 Enum material {
@@ -155,7 +159,8 @@ the app, the schema validator (Config → Validation).
 
 ## 5. What is still done in the interface
 
-- **Relations** panel (Config → Relations) for linked-records panels on both sides.
+- **Relations** panel (Config → Relations) for relations the DBML could not express
+  (a `<` ref, or a table that already existed).
 - Users, groups, permissions and locks (the Users view, guide: `guide/setup/groups.md`):
   decide with the user who reads, edits and sees which rows; create accounts yourself
   only if the user asks.

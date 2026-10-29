@@ -12,15 +12,23 @@ an idempotent PHP class that runs exactly once per database and is tracked in
 
 ## How migrations run
 
-`DB\System\Migrate::run()` is called from `Bdus\App::start()` on **every
-request** (not only at login). Each migration:
+Pending migrations are **not** run on every request. The single migration point
+is `POST /api/upgrade/minor` (`Upgrade::runMinor`), reached through the login flow:
 
-1. Is checked against `bdus_migrations` — if already applied, skipped.
-2. Calls `Mxxx::run($manage)` if pending.
+1. `Login::auth()` calls `Migrate::listPending()` after a successful authentication.
+2. Pending and the user is an admin (privilege ≤ 10): the login succeeds and the
+   response carries `upgrade: {type: 'minor', pending: [...]}`; the app asks the
+   admin to confirm and calls `POST /api/upgrade/minor`.
+3. Pending and the user is not an admin: `upgrade_pending` error, no token.
+4. Nothing pending: `Migrate::run()` only stamps the version.
+
+For each pending migration `Migrate::run()`:
+
+1. Checks `bdus_migrations` — if already applied, skips it.
+2. Calls `Mxxx::run($manage)`.
 3. Records its `NAME` in `bdus_migrations` so it never runs again.
 
-The overhead on steady-state requests is one `SELECT` on `bdus_migrations` —
-negligible.
+The v4 → v5 major upgrade has its own flow (`Upgrade::runMajor`).
 
 **Order matters** — `ALL_MIGRATIONS` in `Migrate.php` is the canonical
 ordered list. Never reorder existing entries.

@@ -2,7 +2,7 @@
 title: Groups, permissions & locks
 ---
 
-# Groups, permissions & locks <Badge type="tip" text="new" />
+# Groups, permissions & locks <Badge type="tip" text="v5.16.0" />
 
 Privilege levels say what a user can do on **every** table. Groups say what
 someone can do on **some** tables, or on **some rows** of a table — and locks

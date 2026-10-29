@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.16.1] - 2026-10-29
+
 ### Fixed
 
 - **DBML import ignored `ref:` — and export dropped relations.** A column with

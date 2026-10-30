@@ -5,6 +5,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.16.2] - 2026-10-30
+
+### Fixed
+
+- **DBML import ignored `bdus:geodata=1` and `bdus:fuzzy_date=1`.** The preview
+  listed them, but the tables were created without the plugin: a GeoJSON import
+  wrote its geometries to `bdus_geodata` and the record view and the map never
+  showed them, and a `fuzzy_date` table had no `chrono_*` columns. The import now
+  switches the plugins on exactly as Config → Tables does (`bdus:rs=1` already
+  worked): `geodata` sets the table flag; `fuzzy_date` adds the five `chrono_*`
+  columns with their hidden field definitions, and does not add them twice when
+  the DBML lists them as plain columns (as an export of such a table does). The
+  activation code is shared with `POST /api/config/table/{tb}/fuzzy-date`
+  (`Config\FuzzyDate`), behaviour unchanged.
+
 ## [5.16.1] - 2026-10-29
 
 ### Fixed

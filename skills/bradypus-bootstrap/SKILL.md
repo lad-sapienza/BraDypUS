@@ -105,6 +105,10 @@ docker compose exec -T api php bin/create-app.php \
   --name <slug> --engine sqlite --email <admin-email> --password-stdin
 ```
 
+(`api` is the service of the production `bradypus.yml`; in the development
+`docker-compose.yml` it is called `app`.) On a hosted instance without shell access, use
+the web form: you become the application's super admin and everything below works the same.
+
 (`pgsql`/`mysql`: the database must exist; `add-app.sh <instance-dir> …` at the
 repository root also creates the Postgres database and role.) **Never put the admin
 password on a command line or in chat: pass it on stdin, let the user type it.**
@@ -131,8 +135,11 @@ what was created.
 ## 4. Load the data (checkpoint: user approves the result)
 
 Load **parents before children**: vocabularies exist already; load `sites` before
-`finds`, because a link stores the target's `id`. For a link column in a CSV, either
-export the target's `id` into the file or load with a key field and resolve afterwards.
+`finds`, because a link stores the target's `id`. To fill a link column from a CSV that
+only knows the parent's code, load the parent first, read its ids back
+(`GET {base}/{app}/api/records/{tb}?limit=500` → `data[].id` and the identifier field),
+and write a copy of the child CSV where the code is replaced by the id. Keep that copy:
+it is the file you load, and re-running the import is safe.
 
 For each table, with the data CSV or JSON (comma, semicolon or tab delimiter are
 detected):
@@ -150,8 +157,12 @@ POST {base}/{app}/api/import/data
   value is **inserted**. Re-running an import is therefore safe and idempotent.
 - The import is **one transaction**: any bad row rolls everything back and writes
   nothing. Fix the file and run it again.
-- GeoJSON (`/api/import/geojson`) replaces the geometry of records already present;
-  photos (`/api/import/photos`) take a ZIP and an index CSV `filename,record_id`.
+- GeoJSON replaces the geometry of records already present (the table needs
+  `bdus:geodata=1`): `POST /api/import/preview-file` with multipart `type=geojson`,
+  `tb=<table>`, `file=@features.geojson` → `temp_id`, `geo_props`; then
+  `POST /api/import/geojson {"temp_id", "tb", "geo_prop": "<property>", "key_field": "<field>"}`
+  matches each feature's property to the table field. Photos (`/api/import/photos`)
+  take a ZIP and an index CSV `filename,record_id`.
 - Needs editor privilege or higher.
 
 Then check, do not assume: counts per table against the source, a few records opened in

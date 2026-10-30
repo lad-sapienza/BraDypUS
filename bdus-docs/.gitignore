@@ -10,3 +10,4 @@ dist/
 
 # generated at build time by .github/workflows/docs.yml
 public/openapi.yaml
+public/bradypus-bootstrap.zip

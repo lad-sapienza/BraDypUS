@@ -31,7 +31,8 @@ If you are still deciding, or an assistant is helping you decide, start from
 [Is BraDypUS right for your data?](/guide/evaluate). For assistants there is also an
 [`llms.txt`](https://docs.bdus.lad-sapienza.it/llms.txt) index and a ready-made skill
 that starts an application from existing data
-([`skills/bradypus-bootstrap`](https://github.com/lad-sapienza/BraDypUS/tree/v5/skills/bradypus-bootstrap)).
+([download the archive](/bradypus-bootstrap.zip), or see
+[`skills/bradypus-bootstrap`](https://github.com/lad-sapienza/BraDypUS/tree/v5/skills/bradypus-bootstrap)).
 
 ### Target users
 

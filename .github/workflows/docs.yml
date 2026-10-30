@@ -11,6 +11,7 @@ on:
       - 'bdus-docs/**'
       - 'CHANGELOG.md'          # rendered as guide/changelog.md
       - 'bdus-api/openapi.yaml' # rendered as public/openapi.yaml
+      - 'skills/**'             # packed as public/bradypus-bootstrap.zip
       - '.github/workflows/docs.yml'
   workflow_dispatch:
 
@@ -39,6 +40,12 @@ jobs:
         run: |
           cp ../CHANGELOG.md guide/changelog.md
           cp ../bdus-api/openapi.yaml public/openapi.yaml
+
+      # The assistant skill, ready to download (and install) as one archive:
+      # https://docs.bdus.lad-sapienza.it/bradypus-bootstrap.zip
+      - name: Pack the bradypus-bootstrap skill
+        run: |
+          (cd ../skills && zip -X -r ../bdus-docs/public/bradypus-bootstrap.zip bradypus-bootstrap)
 
       - name: Setup Node
         uses: actions/setup-node@v7

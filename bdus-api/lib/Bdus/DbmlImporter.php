@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Bdus;
 
 use Config\Config;
+use Config\FuzzyDate;
 use Config\Relations;
 use DB\Alter;
 use DB\DB;
@@ -411,6 +412,11 @@ class DbmlImporter
         if ($tbEntry['rs']) {
             $tbData['rs'] = true;
         }
+        // bdus:geodata=1 — a flag in the table config, as set from Config → Tables
+        // (the geometries live in bdus_geodata, which exists in every app).
+        if ($tbEntry['geodata']) {
+            $tbData['geodata'] = true;
+        }
         $cfg->setTable($tbData);
 
         // 2. Create minimal DB table
@@ -459,8 +465,15 @@ class DbmlImporter
         }
 
         // 5. Write user-defined fields (skip id and creator — already handled above)
+        // With bdus:fuzzy_date=1 the five chrono_* columns are created by the plugin
+        // activation below (hidden fields, as in Config → Tables); an export of such a
+        // table lists them as plain columns, which must not be added a second time.
+        $reserved = ['id', 'creator', 'table_link', 'id_link'];
+        if ($tbEntry['fuzzy_date']) {
+            $reserved = array_merge($reserved, array_keys(FuzzyDate::COLUMNS));
+        }
         foreach ($tbEntry['fields'] as $fldData) {
-            if (in_array($fldData['name'], ['id', 'creator', 'table_link', 'id_link'], true)) {
+            if (in_array($fldData['name'], $reserved, true)) {
                 continue;
             }
             $fld = [
@@ -477,6 +490,11 @@ class DbmlImporter
             }
             $cfg->setFld($tbName, $fldData['name'], $fld);
             $alter->addFld($tbName, $fldData['name'], $fldData['db_type']);
+        }
+
+        // bdus:fuzzy_date=1 — same activation as Config → Tables (columns + hidden fields + flag)
+        if ($tbEntry['fuzzy_date']) {
+            FuzzyDate::activate($db, $cfg, $tbName);
         }
     }
 

@@ -96,6 +96,8 @@ Place these inside the table's `Note: '...'` string:
 | `bdus:geodata` | `bdus:geodata=1` | Enable Geodata plugin |
 | `bdus:fuzzy_date` | `bdus:fuzzy_date=1` | Enable Fuzzy date plugin |
 
+On import these three flags switch the plugin on exactly as **Config → Tables** does (<Badge type="tip" text="v5.16.2" /> — before that version `bdus:geodata` and `bdus:fuzzy_date` were read but not applied). `bdus:fuzzy_date=1` adds the five `chrono_*` columns for you: do not list them in the DBML. An exported file does list them; importing it back is fine, they are not created twice.
+
 ### Column-level annotations
 
 Place these inside the column's inline `note: '...'` constraint:

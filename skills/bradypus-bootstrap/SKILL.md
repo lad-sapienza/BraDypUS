@@ -56,7 +56,9 @@ Tables and vocabularies are created from one DBML text
 - Table note: `Note: 'bdus:label=Sites bdus:preview=id,name bdus:order=name bdus:id_field=name'`
   (`preview` = columns shown in lists; label may contain spaces).
 - Plugins on a table: `bdus:rs=1` (stratigraphic relations), `bdus:geodata=1`,
-  `bdus:fuzzy_date=1`.
+  `bdus:fuzzy_date=1` (adds its `chrono_*` columns itself: do not declare them). Needs
+  BraDypUS ≥ 5.16.2; on older versions `geodata` and `fuzzy_date` were ignored and the
+  plugin is switched on by hand in Config → Tables.
 - Vocabulary: an `Enum` whose last line is the comment `// bdus:vocabulary`; a column
   uses it with `[note: 'bdus:voc=<enum_name>']`. Enums without the marker are ignored.
 - Link to another table: `site_id integer [ref: > sites.id]` creates the **relation**

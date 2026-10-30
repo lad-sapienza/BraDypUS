@@ -5,7 +5,7 @@
 #   GET    /api/config/dbml           export full app schema as .dbml file
 #   POST   /api/config/dbml/preview   parse & validate DBML (dry-run)
 #   POST   /api/config/dbml/apply     create tables from validated DBML
-#   (refs → relations: 36k–36o)
+#   (refs → relations: 36k–36o; plugin flags: 36p–36q)
 # ════════════════════════════════════════════════════════════════════
 
 
@@ -212,3 +212,26 @@ HTTP 200
 jsonpath "$.status"            == "success"
 jsonpath "$.result.created"    isEmpty
 jsonpath "$.result.skipped"    count == 1
+
+
+# ── 36p. Apply — bdus:geodata / bdus:fuzzy_date / bdus:rs switch the plugins on ─
+POST {{base_url}}/{{app_name}}/api/config/dbml/apply
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{
+  "dbml": "Table hurl_flags {\n  id integer [pk, increment]\n  name varchar\n  Note: 'bdus:label=Hurl Flags bdus:geodata=1 bdus:fuzzy_date=1 bdus:rs=1'\n}"
+}
+HTTP 200
+[Asserts]
+jsonpath "$.status"            == "success"
+jsonpath "$.result.created"    count == 1
+jsonpath "$.result.skipped"    isEmpty
+
+
+# ── 36q. The flags are really in the config: the export writes them back ─
+GET {{base_url}}/{{app_name}}/api/config/dbml
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+body matches "Table hurl_flags \\{[^}]*bdus:rs=1 bdus:geodata=1 bdus:fuzzy_date=1"
+body matches "Table hurl_flags \\{[^}]*chrono_label"

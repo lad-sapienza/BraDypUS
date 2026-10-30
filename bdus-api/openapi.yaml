@@ -5478,7 +5478,10 @@ paths:
         Creates the tables described in the DBML in the database and writes
         the corresponding configuration entries. Tables with blocking errors
         are skipped. Enum columns marked `// bdus:vocabulary` are seeded into
-        `bdus_vocabularies`. Once every table exists, the relations listed by
+        `bdus_vocabularies`. The table annotations `bdus:rs=1`, `bdus:geodata=1`
+        and `bdus:fuzzy_date=1` switch the corresponding plugin on, as Config →
+        Tables does (`fuzzy_date` also adds the five `chrono_*` columns). Once
+        every table exists, the relations listed by
         the preview are created through the same code as
         `POST /api/config/relations` (config row, FOREIGN KEY, index); one that
         cannot be applied is reported in `result.warnings` as

@@ -519,4 +519,92 @@ DBML);
         $this->assertSame('SET NULL', $entry['relations'][0]['on_delete']);
         $this->assertSame('rt2_a',    $entry['relations'][0]['to_tb']);
     }
+
+    // ── plugin flags: bdus:geodata / bdus:fuzzy_date / bdus:rs ─────────────────
+
+    public function testApplyEnablesGeodataFlag(): void
+    {
+        $this->importer->apply($this->parser->parse(<<<'DBML'
+Table flag_geo {
+  id integer [pk, increment]
+  Note: 'bdus:geodata=1'
+}
+Table flag_plain {
+  id integer [pk, increment]
+}
+DBML), static::$cfg, static::$db);
+
+        $this->assertTrue((bool) static::$cfg->get('tables.flag_geo.geodata'));
+        $this->assertFalse((bool) static::$cfg->get('tables.flag_plain.geodata'));
+    }
+
+    public function testApplyEnablesRsFlag(): void
+    {
+        $this->importer->apply($this->parser->parse(<<<'DBML'
+Table flag_rs {
+  id integer [pk, increment]
+  Note: 'bdus:rs=1'
+}
+DBML), static::$cfg, static::$db);
+
+        $this->assertTrue((bool) static::$cfg->get('tables.flag_rs.rs'));
+    }
+
+    public function testApplyActivatesFuzzyDateLikeConfigTables(): void
+    {
+        $this->importer->apply($this->parser->parse(<<<'DBML'
+Table flag_fuzzy {
+  id integer [pk, increment]
+  name varchar
+  Note: 'bdus:fuzzy_date=1'
+}
+DBML), static::$cfg, static::$db);
+
+        $this->assertTrue((bool) static::$cfg->get('tables.flag_fuzzy.fuzzy_date'));
+
+        $columns = array_column((new \DB\Inspect(static::$db))->tableColumns('flag_fuzzy'), 'fld');
+        foreach (['chrono_from', 'chrono_to', 'chrono_label', 'chrono_certainty', 'chrono_period'] as $col) {
+            $this->assertSame(1, count(array_keys($columns, $col, true)), "$col exists once");
+            $this->assertTrue((bool) static::$cfg->get("tables.flag_fuzzy.fields.$col.hide"), "$col is a hidden field");
+        }
+    }
+
+    public function testFuzzyDateColumnsListedInTheDbmlAreNotAddedTwice(): void
+    {
+        // What an export of a fuzzy_date table looks like: the chrono_* columns are listed as plain columns
+        $this->importer->apply($this->parser->parse(<<<'DBML'
+Table flag_fuzzy2 {
+  id integer [pk, increment]
+  chrono_from integer
+  chrono_to integer
+  chrono_label varchar
+  chrono_certainty integer
+  chrono_period varchar
+  Note: 'bdus:fuzzy_date=1'
+}
+DBML), static::$cfg, static::$db);
+
+        $columns = array_column((new \DB\Inspect(static::$db))->tableColumns('flag_fuzzy2'), 'fld');
+        $this->assertSame(1, count(array_keys($columns, 'chrono_from', true)));
+        $this->assertTrue((bool) static::$cfg->get('tables.flag_fuzzy2.fields.chrono_from.hide'));
+    }
+
+    public function testPluginFlagsRoundTripThroughExport(): void
+    {
+        $this->importer->apply($this->parser->parse(<<<'DBML'
+Table flag_rt {
+  id integer [pk, increment]
+  Note: 'bdus:geodata=1 bdus:fuzzy_date=1 bdus:rs=1'
+}
+DBML), static::$cfg, static::$db);
+
+        $dbml = (new \Bdus\DbmlExporter())->export(
+            ['flag_rt' => static::$cfg->get('tables.flag_rt')],
+            []
+        );
+
+        $this->assertStringContainsString('bdus:rs=1', $dbml);
+        $this->assertStringContainsString('bdus:geodata=1', $dbml);
+        $this->assertStringContainsString('bdus:fuzzy_date=1', $dbml);
+    }
 }

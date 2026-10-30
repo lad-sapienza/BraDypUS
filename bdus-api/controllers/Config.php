@@ -567,57 +567,8 @@ class Config extends \Bdus\Controller
     }
 
     try {
-      $inspect = new \DB\Inspect($this->db);
-      $alter   = new \DB\Alter($this->db);
-
-      $columns = [
-        'chrono_from'      => 'INTEGER',
-        'chrono_to'        => 'INTEGER',
-        'chrono_label'     => 'VARCHAR(200)',
-        'chrono_certainty' => 'INTEGER',
-        'chrono_period'    => 'VARCHAR(200)',
-      ];
-
-      // Only add columns when the physical table already exists in the DB.
-      // The seed may call activateFuzzyDate before the DB table is created
-      // (config-only mode); in that case we skip schema changes but still
-      // update the config flag below.
-      if ($inspect->tableExists($tb)) {
-        $existingNames = array_column($inspect->tableColumns($tb), 'fld');
-        foreach ($columns as $col => $type) {
-          if (!in_array($col, $existingNames, true)) {
-            $alter->addFld($tb, $col, $type);
-          }
-        }
-      }
-
-      $tbData = $this->cfg->get("tables.$tb") ?: [];
-      $tbData['name']        = $tb;
-      $tbData['fuzzy_date']  = true;
-      // Drop 'link' so setTable does not call upsertRelations — this method
-      // only updates the fuzzy_date flag and must never touch FK relations.
-      unset($tbData['link']);
-      $this->cfg->setTable($tbData);
-
-      // Write field definitions for the chrono columns so they appear in the
-      // config field list and can be managed from the UI (hide=true: the
-      // ChronoSection handles display, not the regular FieldEditor).
-      $chronoFieldDefs = [
-        'chrono_from'      => ['name' => 'chrono_from',      'label' => 'Cronologia da',   'type' => 'text', 'hide' => true],
-        'chrono_to'        => ['name' => 'chrono_to',        'label' => 'Cronologia a',     'type' => 'text', 'hide' => true],
-        'chrono_label'     => ['name' => 'chrono_label',     'label' => 'Etichetta crono',  'type' => 'text', 'hide' => true],
-        'chrono_certainty' => ['name' => 'chrono_certainty', 'label' => 'Certezza crono',   'type' => 'text', 'hide' => true, 'db_type' => 'INTEGER'],
-        'chrono_period'    => ['name' => 'chrono_period',    'label' => 'Periodo crono',    'type' => 'text', 'hide' => true],
-      ];
-      $existingFields = array_keys($this->cfg->get("tables.$tb.fields") ?: []);
-      foreach ($chronoFieldDefs as $fldName => $fldDef) {
-        if (!in_array($fldName, $existingFields, true)) {
-          $this->cfg->setFld($tb, $fldName, $fldDef);
-        }
-      }
-
+      \Config\FuzzyDate::activate($this->db, $this->cfg, $tb);
       $this->returnJson(['status' => 'success', 'code' => 'fuzzy_date_activated']);
-
     } catch (\Throwable $th) {
       $this->returnJson(['status' => 'error', 'code' => 'db_error', 'detail' => $th->getMessage()]);
     }

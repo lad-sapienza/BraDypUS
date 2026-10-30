@@ -177,6 +177,26 @@ the app, the schema validator (Config → Validation).
   only if the user asks.
 - Print templates, map layers (GeoFace), Zotero, Pleiades, backups.
 
+## If you cannot call the API (plain chat, no shell, no HTTP)
+
+Most users will be in this situation, and it is fine: you prepare the files, they click.
+Do steps 0–2 as written, then give them, one at a time:
+
+1. **The DBML** to paste in *Config → DBML* (super admin; password asked again), then
+   **Analyse** (read the preview together: red = errors, yellow = warnings) and **Apply**.
+2. **One CSV per table, parents first**, saved as UTF-8, to load from *Import data* in the
+   sidebar: choose the table, upload, map each column to its field, set the key field,
+   run. For link columns the CSV must hold the parent's `id`: the *Id* column of the
+   parent's list shows it (a table loaded empty, from file order, gets 1, 2, 3…, but ask
+   the user to confirm from the list, never assume).
+3. **Checks** to do by eye: record counts per table against the source, one record opened
+   with its linked-records panel.
+
+Same checkpoints and same ground rules; just say clearly what the user has to click and
+what they should see after each click.
+
+---
+
 ## Ground rules
 
 - The user's data and credentials are theirs: no passwords in logs or chat, no uploading

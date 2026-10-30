@@ -5,6 +5,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Dark mode: the "Upgrade available" and "Upgrade complete" screens were
+  unreadable.** The two banners had a pale background that does not change with the
+  theme and white text (about 1:1 contrast). They are now a tint of the accent colour
+  over the card, with theme-aware text (about 11:1 for the title and 7:1 for the hint,
+  in both themes).
+
 ## [5.16.2] - 2026-10-30
 
 ### Fixed

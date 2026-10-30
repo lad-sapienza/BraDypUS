@@ -143,17 +143,25 @@ function enterApp() {
   display: flex;
   align-items: flex-start;
   gap: 0.75rem;
-  background: var(--p-blue-50);
-  border: 1px solid var(--p-blue-200);
+  /* Tints of the accent colour over the card, not the light-only --p-*-50 swatches:
+     those stay pale in dark mode while the text turns white. */
+  background: color-mix(in srgb, var(--p-blue-500) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--p-blue-500) 40%, transparent);
   border-radius: 6px;
   padding: 0.9rem 1rem;
   margin-bottom: 1.25rem;
 }
 
+.upgrade-banner strong,
+.done-banner strong {
+  color: var(--p-text-color);
+}
+
 .upgrade-banner p {
   margin: 0.25rem 0 0;
   font-size: 0.82rem;
-  color: var(--p-text-muted-color);
+  /* The muted token is ~3-4:1 on the tinted box, in both themes */
+  color: color-mix(in srgb, var(--p-text-color) 75%, transparent);
 }
 
 .upgrade-icon {
@@ -197,8 +205,8 @@ function enterApp() {
   display: flex;
   align-items: flex-start;
   gap: 0.75rem;
-  background: var(--p-green-50);
-  border: 1px solid var(--p-green-200);
+  background: color-mix(in srgb, var(--p-green-500) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--p-green-500) 40%, transparent);
   border-radius: 6px;
   padding: 0.9rem 1rem;
   margin-bottom: 1.25rem;
@@ -207,7 +215,8 @@ function enterApp() {
 .done-banner p {
   margin: 0.25rem 0 0;
   font-size: 0.82rem;
-  color: var(--p-text-muted-color);
+  /* The muted token is ~3-4:1 on the tinted box, in both themes */
+  color: color-mix(in srgb, var(--p-text-color) 75%, transparent);
 }
 
 .done-icon {

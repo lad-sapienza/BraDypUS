@@ -5,6 +5,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Docs
+
+- **New guide page "SQL views as tables"** (`guide/setup/views.md`): how to get
+  columns hidden by role, rows per role and a draft → review → validated flow with
+  SQL views registered as tables plus triggers on the base table, with a complete
+  example, the limits, and a table of what was proven (MariaDB 10.11) and what was
+  not. No new feature: it documents what the application already allows. Related
+  pages updated: fit assessment (`evaluate`), groups, DBML, the developer pages on
+  the database layer, config/API keys, record lifecycle and permissions, and
+  `llms.txt`. Documented limits include: on SQLite views are dropped at the next
+  login; a rejected save still writes a `bdus_versions` row; trigger messages do not
+  reach the user.
+
 ### Fixed
 
 - **Dark mode: the "Upgrade available" and "Upgrade complete" screens were

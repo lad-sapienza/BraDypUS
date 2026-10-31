@@ -137,6 +137,16 @@ A lock needs a filter: an empty one would silently freeze the whole table.
 A convenient pattern is a field such as `status` or `published`, and a lock on
 `status is published`: setting the field marks the record as done, the lock keeps
 it that way. An admin can still correct a published record, or remove the lock.
+
+### Workflow states
+
+A status field plus a lock gives two states: open and frozen. For more (draft →
+submitted → reviewed → validated, each role acting on its own step) rules and locks
+are not enough on their own, because they select **which rows** can be read or
+changed, never **which values** can be written. The database can close the gap: a
+**view per role** (own columns, own states) and a **trigger** on the table that
+admits only the legal state changes. See
+[SQL views as tables](./views).
 :::
 
 ## API keys with a group
@@ -156,7 +166,10 @@ reads only what the group allows. Create it at level **Enter** and pick the grou
   apply to the *link* between a file and a record, not to the file list itself.
 - **Frozen application.** When the application status is *Frozen* nobody writes,
   groups or not.
-- **No field-level rules.** A rule covers whole rows; hiding single columns is not
-  available.
+- **No field-level rules.** A rule covers whole rows. Hiding single columns is done
+  outside the rules, with a [SQL view](./views) registered as a table.
+- **Rules do not check the values written.** A row filter decides which rows a group
+  can read or change, not what it may write into them; use a trigger for that
+  ([SQL views as tables](./views)).
 - **Admins act with care.** An admin is never stopped by a rule or a lock; to
   freeze data against admins too, use the application status.

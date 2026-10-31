@@ -21,6 +21,7 @@ only as far as the task needs.
 - [Creating an application](https://raw.githubusercontent.com/lad-sapienza/BraDypUS/v5/bdus-docs/guide/create-app/index.md): web form or command line
 - [Field types](https://raw.githubusercontent.com/lad-sapienza/BraDypUS/v5/bdus-docs/guide/setup/adding-columns.md), [relations](https://raw.githubusercontent.com/lad-sapienza/BraDypUS/v5/bdus-docs/guide/setup/relations.md), [vocabularies](https://raw.githubusercontent.com/lad-sapienza/BraDypUS/v5/bdus-docs/guide/setup/vocabularies.md)
 - [Groups, permissions & locks](https://raw.githubusercontent.com/lad-sapienza/BraDypUS/v5/bdus-docs/guide/setup/groups.md): who sees and changes which rows; freezing published records
+- [SQL views as tables](https://raw.githubusercontent.com/lad-sapienza/BraDypUS/v5/bdus-docs/guide/setup/views.md): hidden columns, rows per role and draft → review → validated flows are obtained with SQL views plus triggers, not with the permission screens (MariaDB/MySQL; views are dropped on SQLite)
 - Ready-made skill that starts a new application from existing data with an assistant: [skills/bradypus-bootstrap/SKILL.md](https://raw.githubusercontent.com/lad-sapienza/BraDypUS/v5/skills/bradypus-bootstrap/SKILL.md); installable archive: [bradypus-bootstrap.zip](https://docs.bdus.lad-sapienza.it/bradypus-bootstrap.zip)
 
 ## Level 3 — reference

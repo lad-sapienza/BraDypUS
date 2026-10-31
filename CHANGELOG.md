@@ -5,6 +5,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **SQLite: SQL views were dropped at the next login.** `Migrate::run()` removed
+  every view first (meant for v4 leftovers) and `run()` also runs at login when
+  nothing is pending, so a view an administrator had registered as a table
+  disappeared. The removal now happens only in the v4 → v5 major upgrade
+  (`Migrate::run($db, $log, true)`); login and the minor upgrade leave views alone.
+  MySQL and PostgreSQL were not affected (the method returns immediately there).
+
 ### Docs
 
 - **New guide page "SQL views as tables"** (`guide/setup/views.md`): how to get

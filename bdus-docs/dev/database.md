@@ -141,12 +141,11 @@ Consequences to keep in mind when changing this layer:
   `DELETE /api/config/table/{tb}` removes the configuration and leaves the view.
 - **`DB\Validate\DbCfgAlign`** compares configured fields with `tableColumns()`,
   so a registered view is validated like a table.
-- **Migrations.** Migrations never recreate a view. On **SQLite**,
-  `Migrate::run()` calls `dropLegacyViews()` first, and `run()` is invoked by
-  `Login` when there is nothing pending, by `Upgrade::runMinor` and by
-  `Upgrade::runMajor`: every view is dropped at the next login (proven).
-  On MySQL and PostgreSQL the method returns immediately and views are left alone.
-  A migration that alters a base table (`ALTER TABLE … DROP/RENAME COLUMN`) can
+- **Migrations.** Migrations never recreate a view. `Migrate::run()` drops the SQL
+  views (SQLite only) just when called with `$dropLegacyViews = true`, which only
+  `Upgrade::runMajor` does, for the v4 leftovers. Up to 5.16.2 every `run()` did
+  it, so on SQLite any login dropped the views. On MySQL and PostgreSQL the method
+  returns immediately. A migration that alters a base table (`ALTER TABLE … DROP/RENAME COLUMN`) can
   still break a view that references the column.
 
 ---

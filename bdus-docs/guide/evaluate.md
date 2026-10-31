@@ -55,7 +55,7 @@ versions of every record, files, maps and print templates on top of them.
   rows; there is nothing finer. Hidden columns, rows per role and a draft → review →
   validated flow can still be had with **SQL views and triggers** in the database
   ([SQL views as tables](/guide/setup/views)), at the price of writing that SQL and
-  of the limits that page lists (MariaDB/MySQL only so far; no notifications).
+  of the limits that page lists (proven on MariaDB/MySQL only; no notifications).
 - You cannot host and back up a small web application.
 
 ## What your data must look like

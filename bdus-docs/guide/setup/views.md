@@ -215,10 +215,11 @@ let rows leave. `CHECK OPTION` suits a view where leaving is always an error.
 
 These are the things that surprise people. Read them before you plan.
 
-1. **SQLite: views do not survive.** On SQLite every login that finds no pending
-   migrations, and every upgrade, runs `Migrate::run()`, which drops all SQL views
-   (it was written for v4 leftovers). Proven: a view created in a SQLite app was
-   gone after the next login. Use MariaDB/MySQL; PostgreSQL is not tested.
+1. **Engine.** Proven on MariaDB 10.11 only. On SQLite, versions up to 5.16.2
+   dropped every SQL view at the next login; from the next release views are kept
+   (and removed only by the v4 → v5 major upgrade, for v4 leftovers). The fix is
+   covered by a test, but the whole pattern was not run on SQLite. PostgreSQL is
+   not tested.
 2. **Only simple views are proven for writing** (one table, no `JOIN`, no
    aggregates). Read-only views with joins should work for reading, but were not tested.
 3. **Columns left out must accept `NULL` or have a default**, or inserts through
@@ -260,7 +261,7 @@ These are the things that surprise people. Read them before you plan.
 | Registering by creating the table, then swapping it for a view | Proven |
 | Config panel field changes on a view do not change the view | Proven (the view is unchanged; the configuration side was not inspected) |
 | Registered view appears as a table in DBML export | Proven |
-| SQLite drops views at the next login | Proven |
+| SQLite (up to 5.16.2) drops views at the next login | Proven; fixed afterwards, covered by a test, pattern not re-run on SQLite |
 | `WITH CHECK OPTION` refuses a row leaving the view | Reported by the original test; not repeated here |
 | 20 concurrent inserts give consecutive numbers | Reported by the original test; not repeated here |
 | CSV export of a view omits hidden columns | Reported by the original test; not repeated here |

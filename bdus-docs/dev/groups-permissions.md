@@ -149,6 +149,9 @@ What the interface needs to know comes with existing endpoints: `can` per table 
 - **Locks are not rules**: "deny" inside groups would be a second semantic in every
   group, and a lock is easier to read and covers the freeze use case.
 - **No field-level rules**: filtering or sorting on a hidden field leaks its values.
+  Hidden columns, and rules on the *values* written, are obtained outside this
+  mechanism with [SQL views and triggers](/guide/setup/views); rules and locks are
+  keyed by table name, so each view needs its own.
 - **Files are not filtered** (`bdus_files` is not a configured table); the *link*
   between a file and a record follows the record.
 - **Plugin tables** are read through their record; read on their own (a chart, an

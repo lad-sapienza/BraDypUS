@@ -5,6 +5,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.16.3] - 2026-10-31
+
+### Fixed
+
+- **SQLite: SQL views were dropped at the next login.** `Migrate::run()` removed
+  every view first (meant for v4 leftovers) and `run()` also runs at login when
+  nothing is pending, so a view an administrator had registered as a table
+  disappeared. The removal now happens only in the v4 → v5 major upgrade
+  (`Migrate::run($db, $log, true)`); login and the minor upgrade leave views alone.
+  MySQL and PostgreSQL were not affected (the method returns immediately there).
+
+### Docs
+
+- **New guide page "SQL views as tables"** (`guide/setup/views.md`): how to get
+  columns hidden by role, rows per role and a draft → review → validated flow with
+  SQL views registered as tables plus triggers on the base table, with a complete
+  example, the limits, and a table of what was proven (MariaDB 10.11, PostgreSQL 16) and what was
+  not. No new feature: it documents what the application already allows. Related
+  pages updated: fit assessment (`evaluate`), groups, DBML, the developer pages on
+  the database layer, config/API keys, record lifecycle and permissions, and
+  `llms.txt`. Documented limits include: on SQLite views are dropped at the next
+  login; a rejected save still writes a `bdus_versions` row; trigger messages do not
+  reach the user.
+
+### Fixed
+
+- **Dark mode: the "Upgrade available" and "Upgrade complete" screens were
+  unreadable.** The two banners had a pale background that does not change with the
+  theme and white text (about 1:1 contrast). They are now a tint of the accent colour
+  over the card, with theme-aware text (about 11:1 for the title and 7:1 for the hint,
+  in both themes).
+
 ## [5.16.2] - 2026-10-30
 
 ### Fixed

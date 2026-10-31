@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.16.3] - 2026-10-31
+
 ### Fixed
 
 - **SQLite: SQL views were dropped at the next login.** `Migrate::run()` removed

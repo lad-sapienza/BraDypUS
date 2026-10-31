@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.16.4] - 2026-10-31
+
 ### Fixed
 
 - **Profile page: non-administrators could not save their own profile.** The form

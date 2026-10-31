@@ -20,7 +20,7 @@ features:
   - title: Multi-table data model
     details: Define tables, fields, relations, and plugin tables through a visual config panel — no SQL required.
   - title: Flexible access control
-    details: Privilege levels, groups with per-table and per-row rules, and locks that freeze published records give you fine-grained control over who can see and edit what.
+    details: Privilege levels, groups with per-table and per-row rules, and locks that freeze published records give you fine-grained control over who can see and edit what. Hidden columns and review states per role are possible with [SQL views](/guide/setup/views).
   - title: Built-in versioning
     details: Every record change is snapshotted automatically. Browse history, diff versions, and restore any previous state from the record detail view.
   - title: Geospatial support

@@ -3509,11 +3509,23 @@ paths:
               $ref: '#/components/schemas/UserInput'
       responses:
         '200':
-          description: Save result
+          description: |
+            Save result. When the caller changed their own password the success
+            response also carries `token`, a fresh JWT replacing the one just
+            revoked; a created user's `id` is included on creation.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CodedResult'
+                oneOf:
+                  - allOf:
+                      - $ref: '#/components/schemas/CodedSuccess'
+                      - type: object
+                        properties:
+                          id:
+                            type: integer
+                          token:
+                            type: string
+                  - $ref: '#/components/schemas/Error'
 
   /api/user/{id}:
     get:
@@ -6701,7 +6713,17 @@ components:
           properties:
             password:
               type: string
-              description: Required when creating; omit to keep existing password
+              minLength: 8
+              description: |
+                Required when creating; omit to keep existing password. Shorter than
+                8 characters is rejected (`password_too_short`). Changing a password
+                revokes the user's already-issued tokens (`token_version` bump).
+            current_password:
+              type: string
+              description: |
+                Required when a non-administrator changes their OWN password
+                (`current_password_required` / `current_password_wrong`). Ignored
+                otherwise (e.g. an admin resetting another user's password).
 
     # ── Groups & permissions ───────────────────────────────────────────────
 

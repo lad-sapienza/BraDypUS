@@ -432,4 +432,118 @@ class UserCtrlTest extends BdusTestCase
 
         $this->assertSame('success', $res['status']);
     }
+
+    // ── saveUserData: own password change ─────────────────────────────────────
+
+    private function actAsRegularUser(): void
+    {
+        // Earlier tests may have changed user 2's password.
+        static::$db->query(
+            'UPDATE bdus_users SET password = ? WHERE id = 2',
+            [password_hash('Test_1234!', PASSWORD_DEFAULT)],
+            'boolean'
+        );
+        \Auth\CurrentUser::set([
+            'id' => 2, 'name' => 'Regular User', 'email' => 'regular@example.com',
+            'privilege' => 30, 'app' => 'test',
+        ]);
+    }
+
+    private function tokenVersion(int $id): int
+    {
+        return (int) static::$db->query(
+            "SELECT token_version FROM bdus_users WHERE id = $id", [], 'read'
+        )[0]['token_version'];
+    }
+
+    private function ownPasswordPost(array $extra): array
+    {
+        return array_merge([
+            'id' => 2, 'name' => 'Regular User', 'email' => 'regular@example.com',
+        ], $extra);
+    }
+
+    public function testOwnPasswordChangeRequiresCurrentPassword(): void
+    {
+        $this->actAsRegularUser();
+        try {
+            $before = static::$db->query('SELECT password FROM bdus_users WHERE id = 2', [], 'read')[0]['password'];
+            $res = $this->callController(
+                $this->makeController('Bdus\\Controllers\\User', [], $this->ownPasswordPost(['password' => 'New_pass_123'])),
+                'saveUserData'
+            );
+            $this->assertSame('current_password_required', $res['code']);
+            $this->assertSame($before, static::$db->query('SELECT password FROM bdus_users WHERE id = 2', [], 'read')[0]['password']);
+        } finally {
+            $this->setPrivilege(1);
+        }
+    }
+
+    public function testOwnPasswordChangeRejectsWrongCurrentPassword(): void
+    {
+        $this->actAsRegularUser();
+        try {
+            $res = $this->callController(
+                $this->makeController('Bdus\\Controllers\\User', [], $this->ownPasswordPost([
+                    'password' => 'New_pass_123', 'current_password' => 'not-the-password',
+                ])),
+                'saveUserData'
+            );
+            $this->assertSame('current_password_wrong', $res['code']);
+        } finally {
+            $this->setPrivilege(1);
+        }
+    }
+
+    public function testOwnPasswordChangeBumpsTokenVersionAndReturnsNewToken(): void
+    {
+        $this->actAsRegularUser();
+        try {
+            $before = $this->tokenVersion(2);
+            $res = $this->callController(
+                $this->makeController('Bdus\\Controllers\\User', [], $this->ownPasswordPost([
+                    'password' => 'New_pass_123', 'current_password' => 'Test_1234!',
+                ])),
+                'saveUserData'
+            );
+            $this->assertSame('success', $res['status']);
+            $this->assertSame($before + 1, $this->tokenVersion(2));
+
+            $this->assertNotEmpty($res['token']);
+            $payload = \JWT\JwtManager::decode($res['token'], APP);
+            $this->assertSame(2, (int) $payload['sub']);
+            $this->assertSame($before + 1, (int) $payload['tkv'], 'returned token carries the new version');
+        } finally {
+            $this->setPrivilege(1);
+        }
+    }
+
+    public function testOwnProfileEditWithoutPasswordNeedsNoCurrentPasswordAndNoToken(): void
+    {
+        $this->actAsRegularUser();
+        try {
+            $before = $this->tokenVersion(2);
+            $res = $this->callController(
+                $this->makeController('Bdus\\Controllers\\User', [], $this->ownPasswordPost(['name' => 'Renamed'])),
+                'saveUserData'
+            );
+            $this->assertSame('success', $res['status']);
+            $this->assertArrayNotHasKey('token', $res);
+            $this->assertSame($before, $this->tokenVersion(2));
+        } finally {
+            $this->setPrivilege(1);
+        }
+    }
+
+    public function testAdminResettingAnotherUsersPasswordNeedsNoCurrentPassword(): void
+    {
+        $before = $this->tokenVersion(2);
+        $res = $this->callController(
+            $this->makeController('Bdus\\Controllers\\User', [], $this->ownPasswordPost(['password' => 'Reset_by_admin1'])),
+            'saveUserData'
+        );
+        $this->assertSame('success', $res['status']);
+        $this->assertArrayNotHasKey('token', $res, 'the admin keeps their own token');
+        $this->assertSame($before + 1, $this->tokenVersion(2), 'target user sessions are revoked');
+    }
 }

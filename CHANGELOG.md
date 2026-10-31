@@ -12,6 +12,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (`password_too_short`); the user form endpoint (new users and password changes,
   including a user changing their own) accepted any length. It now applies the same
   constant (`Login::MIN_PASSWORD_LENGTH`) and the same error code.
+- **Changing your own password now requires the current one.** A non-administrator
+  sending `password` for their own account in `POST /api/user` must also send
+  `current_password` (`current_password_required` / `current_password_wrong`), so a
+  stolen token alone no longer takes over the account. Administrators and admins
+  resetting another user's password are exempt.
+- **A password change revokes already-issued tokens.** `token_version` is now bumped
+  after any password change through `POST /api/user`; when the user changed their
+  own password the response carries a fresh `token`, which the profile form stores
+  so the user stays logged in.
 
 ## [5.16.3] - 2026-10-31
 

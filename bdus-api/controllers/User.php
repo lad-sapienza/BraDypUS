@@ -193,6 +193,9 @@ class User extends \Bdus\Controller
 	 *  - Only admins (privilege <= 10) can create users or edit other users.
 	 *  - Non-admins may update their own name/email/password but cannot
 	 *    change their privilege level.
+	 *  - A non-admin changing their own password must send `current_password`.
+	 *  - A password change bumps token_version (old tokens stop working); when
+	 *    the user changed their own, a fresh `token` is returned.
 	 *  - Nobody can set a user's privilege to a value lower (= more powerful)
 	 *    than their own, preventing admins from escalating to super_admin.
 	 */
@@ -214,6 +217,30 @@ class User extends \Bdus\Controller
 		if (array_key_exists('privilege', $data)) {
 			if (!$isAdmin || (int)$data['privilege'] < \Auth\CurrentUser::privilege()) {
 				$this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+				return;
+			}
+		}
+
+		// Never a column: consumed here only.
+		$currentPassword = (string) ($data['current_password'] ?? '');
+		unset($data['current_password']);
+
+		$passwordChanged = !$isNewUser && !empty($data['password']);
+
+		// A user changing their own password must prove they know the current
+		// one (a stolen token alone is not enough). Admins are exempt.
+		if ($passwordChanged && $isOwnUser && !$isAdmin) {
+			if ($currentPassword === '') {
+				$this->returnJson(['status' => 'error', 'code' => 'current_password_required']);
+				return;
+			}
+			$rows = $this->db->query(
+				'SELECT password FROM bdus_users WHERE id = ?',
+				[\Auth\CurrentUser::id()],
+				'read'
+			);
+			if (!$rows || !\Auth\Password::verify($currentPassword, (string) ($rows[0]['password'] ?? ''))) {
+				$this->returnJson(['status' => 'error', 'code' => 'current_password_wrong']);
 				return;
 			}
 		}
@@ -243,8 +270,9 @@ class User extends \Bdus\Controller
 				}
 				$ret = $sys_manager->editRow('bdus_users', (int) $data['id'], $data);
 
-				// Privilege change → invalidate the user's current session immediately.
-				if ($ret && array_key_exists('privilege', $data) && !$isOwnUser) {
+				// Privilege change (on another user) or password change → invalidate
+				// the user's already-issued tokens immediately.
+				if ($ret && ((array_key_exists('privilege', $data) && !$isOwnUser) || $passwordChanged)) {
 					$this->db->query(
 						'UPDATE bdus_users SET token_version = token_version + 1 WHERE id = ?',
 						[(int) $data['id']],
@@ -262,6 +290,13 @@ class User extends \Bdus\Controller
 			if ($ret) {
 				// For new users, include the generated ID so callers can reference it.
 				$extra = $isNewUser ? ['id' => $ret] : [];
+
+				// The caller just invalidated their own tokens by changing their
+				// password: hand them a fresh one so they stay logged in.
+				if ($passwordChanged && $isOwnUser) {
+					$rows = $this->db->query('SELECT * FROM bdus_users WHERE id = ?', [(int) $data['id']], 'read');
+					$extra['token'] = \JWT\JwtManager::generate($rows[0], APP);
+				}
 				$this->returnJson(['status' => 'success', 'code' => 'user_data_saved', ...$extra]);
 			} else {
 				throw new \Exception('Query returned false');

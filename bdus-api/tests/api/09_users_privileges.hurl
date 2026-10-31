@@ -354,7 +354,8 @@ Content-Type: application/json
   "id":       {{writer_id}},
   "name":     "Writer User (updated)",
   "email":    "writer@bdus.test",
-  "password": "x"
+  "password": "x",
+  "current_password": "Writer_2025!"
 }
 HTTP 200
 [Asserts]
@@ -434,6 +435,87 @@ reader_jwt_new: jsonpath "$.token"
 # ── 9s-rev4. Reader's new JWT works correctly ────────────────────────
 GET {{base_url}}/{{app_name}}/api/records/crud_test
 Authorization: Bearer {{reader_jwt_new}}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+
+# ── 9s-pwd1. Own password change without current_password is refused ─
+POST {{base_url}}/{{app_name}}/api/user
+Authorization: Bearer {{reader_jwt_new}}
+Content-Type: application/json
+{
+  "id":    {{reader_id}},
+  "name":  "Reader User",
+  "email": "reader@bdus.test",
+  "password": "Changed_2025!"
+}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "error"
+jsonpath "$.code"   == "current_password_required"
+
+
+# ── 9s-pwd2. ...and with a wrong current_password ───────────────────
+POST {{base_url}}/{{app_name}}/api/user
+Authorization: Bearer {{reader_jwt_new}}
+Content-Type: application/json
+{
+  "id":    {{reader_id}},
+  "name":  "Reader User",
+  "email": "reader@bdus.test",
+  "password": "Changed_2025!",
+  "current_password": "nope-nope-nope"
+}
+HTTP 200
+[Asserts]
+jsonpath "$.code" == "current_password_wrong"
+
+
+# ── 9s-pwd3. Correct current_password: success + fresh token ────────
+POST {{base_url}}/{{app_name}}/api/user
+Authorization: Bearer {{reader_jwt_new}}
+Content-Type: application/json
+{
+  "id":    {{reader_id}},
+  "name":  "Reader User",
+  "email": "reader@bdus.test",
+  "password": "Changed_2025!",
+  "current_password": "Reader_2025!"
+}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+jsonpath "$.token"  exists
+[Captures]
+reader_jwt_pwd: jsonpath "$.token"
+
+
+# ── 9s-pwd4. The token issued before the change is revoked ──────────
+GET {{base_url}}/{{app_name}}/api/records/crud_test
+Authorization: Bearer {{reader_jwt_new}}
+HTTP 401
+
+
+# ── 9s-pwd5. The returned token works ───────────────────────────────
+GET {{base_url}}/{{app_name}}/api/records/crud_test
+Authorization: Bearer {{reader_jwt_pwd}}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+
+# ── 9s-pwd6. Restore the original password (also uses new token) ────
+POST {{base_url}}/{{app_name}}/api/user
+Authorization: Bearer {{reader_jwt_pwd}}
+Content-Type: application/json
+{
+  "id":    {{reader_id}},
+  "name":  "Reader User",
+  "email": "reader@bdus.test",
+  "password": "Reader_2025!",
+  "current_password": "Changed_2025!"
+}
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"

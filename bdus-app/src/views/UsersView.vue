@@ -210,6 +210,7 @@ async function saveUser(data) {
     const { groups, ...userData } = data
     const res = await api.post('/api/user', userData)
     if (res.status !== 'success') throw new Error(t(res.code ?? 'error'))
+    if (res.token && Number(data.id) === Number(auth.user?.id)) auth.loginWithToken(res.token)
     // Memberships are their own endpoint; only admins see (and send) them.
     if (isAdmin.value && Array.isArray(groups)) {
       await groupsApi.saveUserGroups(data.id ?? res.id, groups)

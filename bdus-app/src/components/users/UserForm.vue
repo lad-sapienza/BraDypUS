@@ -42,6 +42,15 @@
       />
     </div>
 
+    <div v-if="needsCurrentPassword" class="field">
+      <label for="current_password">{{ t('current_password') }}</label>
+      <AInputPassword
+        id="current_password"
+        v-model:value="form.current_password"
+        autocomplete="current-password"
+      />
+    </div>
+
     <div class="form-actions">
       <AButton html-type="button" @click="$emit('cancel')">Cancel</AButton>
       <AButton type="primary" html-type="submit" :loading="saving">
@@ -57,8 +66,10 @@ import { CheckOutlined } from '@ant-design/icons-vue'
 import { ref, computed, watch } from 'vue'
 import { Input, Select as ASelect, Button as AButton } from 'ant-design-vue'
 import { useI18n } from '@/i18n'
+import { useAuthStore } from '@/stores/auth'
 const AInput = Input
 const { t } = useI18n()
+const auth = useAuthStore()
 const AInputPassword = Input.Password
 
 const props = defineProps({
@@ -69,10 +80,10 @@ const props = defineProps({
 
 const emit = defineEmits(['save', 'cancel'])
 
-const form = ref({ ...props.initial, password: '' })
+const form = ref({ ...props.initial, password: '', current_password: '' })
 
 watch(() => props.initial, (val) => {
-  form.value = { ...val, password: '' }
+  form.value = { ...val, password: '', current_password: '' }
 })
 
 const privilegeOptions = computed(() =>
@@ -82,9 +93,15 @@ const privilegeOptions = computed(() =>
   }))
 )
 
+// Non-admins changing their own password must confirm the current one.
+const needsCurrentPassword = computed(() =>
+  !!form.value.password && !auth.user?.can_admin && Number(form.value.id) === Number(auth.user?.id)
+)
+
 function handleSave() {
   const data = { ...form.value }
   if (!data.password) delete data.password
+  if (!data.password || !needsCurrentPassword.value) delete data.current_password
   emit('save', data)
 }
 </script>

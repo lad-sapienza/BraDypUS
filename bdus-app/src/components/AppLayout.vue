@@ -196,7 +196,9 @@ async function saveProfile(data) {
   profileSaving.value = true
   try {
     const res = await api.post('/api/user', data)
-    if (res.status !== 'success') throw new Error(res.code ?? 'generic_error')
+    if (res.status !== 'success') throw new Error(t(res.code ?? 'generic_error'))
+    // Password changed: the old token was revoked, store the fresh one.
+    if (res.token) auth.loginWithToken(res.token)
     toast.add({ severity: 'success', summary: t('user_data_saved'), life: 3000 })
     profileVisible.value = false
     if (data.name  !== undefined) auth.updateProfile({ name:  data.name  })

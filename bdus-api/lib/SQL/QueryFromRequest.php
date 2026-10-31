@@ -265,6 +265,16 @@ class QueryFromRequest
   }
 
   /**
+   * Same rows as getResults(), yielded one at a time (large exports).
+   *
+   * @return \Generator<int, array>
+   */
+  public function iterateResults(): \Generator
+  {
+    return $this->db->queryIterate($this->getQuery(), $this->getValues());
+  }
+
+  /**
    *
    * Returns array of requested (preview) fields
    */

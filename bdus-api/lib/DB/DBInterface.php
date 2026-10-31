@@ -24,6 +24,9 @@ interface DBInterface
 
     public function query(string $query, array $values = null, string $type = null, bool $fetch_style = false );
 
+    /** Yields the rows of a read query one at a time (see DB::queryIterate). */
+    public function queryIterate(string $query, array $values = null): \Generator;
+
     public function beginTransaction();
 
     public function commit();

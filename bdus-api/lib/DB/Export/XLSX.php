@@ -14,17 +14,36 @@ class XLSX implements ExportInterface
 {
     // ── Public API ────────────────────────────────────────────────────────────
 
-    public function render(array $data, array $metadata): string
-    {
-        if (empty($data)) {
-            throw new \Exception('Empty dataset');
-        }
+    use RenderViaWrite;
 
-        $tmp = tempnam(sys_get_temp_dir(), 'bdus_xlsx_');
+    /** Rows a worksheet can hold (header included). */
+    public const MAX_ROWS = 1048576;
+
+    public function requiresRows(): bool
+    {
+        return true;
+    }
+
+    /** The zip is built in a temp file; limit errors must surface before any output. */
+    public function streamsDirectly(): bool
+    {
+        return false;
+    }
+
+    /**
+     * The sheet XML goes to a temporary file row by row and ZipArchive adds it
+     * from disk, so memory does not depend on the number of rows.
+     */
+    public function write(iterable $rows, array $metadata, $out): void
+    {
+        $zipPath   = tempnam(sys_get_temp_dir(), 'bdus_xlsx_');
+        $sheetPath = tempnam(sys_get_temp_dir(), 'bdus_xlsx_sheet_');
 
         try {
+            $this->writeSheet($rows, $sheetPath);
+
             $zip = new \ZipArchive();
-            if ($zip->open($tmp, \ZipArchive::OVERWRITE) !== true) {
+            if ($zip->open($zipPath, \ZipArchive::OVERWRITE) !== true) {
                 throw new \Exception('Cannot create XLSX temporary file');
             }
 
@@ -33,15 +52,22 @@ class XLSX implements ExportInterface
             $zip->addFromString('xl/workbook.xml',           $this->workbook());
             $zip->addFromString('xl/_rels/workbook.xml.rels', $this->workbookRels());
             $zip->addFromString('xl/styles.xml',             $this->styles());
-            $zip->addFromString('xl/worksheets/sheet1.xml',  $this->sheet($data));
-            $zip->close();
+            // addFile reads the file at close(): keep it until then.
+            $zip->addFile($sheetPath, 'xl/worksheets/sheet1.xml');
+            if (!$zip->close()) {
+                throw new \Exception('Cannot write XLSX file');
+            }
 
-            $content = file_get_contents($tmp);
+            $in = fopen($zipPath, 'rb');
+            try {
+                stream_copy_to_stream($in, $out);
+            } finally {
+                fclose($in);
+            }
         } finally {
-            @unlink($tmp);
+            @unlink($zipPath);
+            @unlink($sheetPath);
         }
-
-        return $content;
     }
 
     // ── OOXML parts ───────────────────────────────────────────────────────────
@@ -106,22 +132,35 @@ class XLSX implements ExportInterface
             '</styleSheet>';
     }
 
-    private function sheet(array $data): string
+    private function writeSheet(iterable $rows, string $path): void
     {
-        $xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' . "\n" .
-            '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' .
-            '<sheetData>';
+        $fh = fopen($path, 'wb');
+        try {
+            fwrite($fh, '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' . "\n" .
+                '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' .
+                '<sheetData>');
 
-        // Header row (bold, style index 1)
-        $xml .= $this->xmlRow(1, array_keys($data[0]), 1);
+            $rowNum = 0;
+            foreach ($rows as $row) {
+                if ($rowNum === 0) {
+                    // Header row (bold, style index 1)
+                    fwrite($fh, $this->xmlRow(++$rowNum, array_keys($row), 1));
+                }
+                if ($rowNum >= self::MAX_ROWS) {
+                    throw new \Exception('Too many rows for XLSX (maximum ' . (self::MAX_ROWS - 1) . '); export as CSV instead');
+                }
+                // Data rows (normal, style index 0)
+                fwrite($fh, $this->xmlRow(++$rowNum, array_values($row), 0));
+            }
 
-        // Data rows (normal, style index 0)
-        foreach ($data as $i => $row) {
-            $xml .= $this->xmlRow($i + 2, array_values($row), 0);
+            if ($rowNum === 0) {
+                throw new \Exception('Empty dataset');
+            }
+
+            fwrite($fh, '</sheetData></worksheet>');
+        } finally {
+            fclose($fh);
         }
-
-        $xml .= '</sheetData></worksheet>';
-        return $xml;
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

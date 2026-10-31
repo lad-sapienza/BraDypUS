@@ -279,7 +279,6 @@ class Record extends \Bdus\Controller
 
     try {
       $qObj  = new \SQL\QueryFromRequest($this->db, $this->cfg, $qRequest, false);
-      $rows  = $qObj->getResults();  // no setLimit() → full result set
 
       $metadata = [
         'table'  => $tb,
@@ -290,7 +289,8 @@ class Record extends \Bdus\Controller
       $filename = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $tb)
                 . '_' . date('Ymd_His');
 
-      $exp = \DB\Export\Export::fromData($rows ?: [], $metadata);
+      // Rows are read and written one at a time: no full result set in memory.
+      $exp = \DB\Export\Export::fromIterable($qObj->iterateResults(), $metadata);
       $exp->streamToResponse($format, $filename);
 
     } catch (\Throwable $e) {

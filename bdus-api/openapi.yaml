@@ -1409,7 +1409,11 @@ paths:
       responses:
         '200':
           description: |
-            File download (streamed). A search parameter that cannot be read —
+            File download. CSV and JSON are streamed row by row; XLSX is built in
+            a temporary file and then sent (at most 1,048,575 records). A failed
+            query, an empty CSV/XLSX result or an XLSX over the row limit is a
+            JSON `{"status": "error", "code": "db_error", "detail": "…"}`
+            sent before any file byte. A search parameter that cannot be read —
             malformed JSON, an unknown `qt`, `qt` without `q` (or the reverse), a
             `qt=advanced` payload without a `filter` — is an error, never a
             silent export of the whole table: the response is then JSON

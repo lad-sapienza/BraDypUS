@@ -15,7 +15,8 @@ class Export
     /** Formats resolveFormatter() understands. */
     public const FORMATS = ['csv', 'json', 'xlsx'];
 
-    private array $data;
+    /** @var iterable<array> */
+    private iterable $data;
     private array $metadata;
 
     // ── Constructors / factories ──────────────────────────────────────────────
@@ -39,29 +40,79 @@ class Export
     // ── v5 API ────────────────────────────────────────────────────────────────
 
     /**
-     * Stream the export directly to the HTTP response and terminate execution.
+     * Build an Export instance from rows fetched lazily (a generator, e.g.
+     * QueryFromRequest::iterateResults()). Memory use stays flat however many
+     * rows the query returns. The generator is consumed once.
      *
-     * Sets Content-Type, Content-Disposition and outputs the file bytes.
-     * Must be called before any other output is sent.
+     * @param iterable<array> $rows
+     */
+    public static function fromIterable(iterable $rows, array $metadata): self
+    {
+        $exp           = new self();
+        $exp->data     = $rows;
+        $exp->metadata = $metadata;
+        return $exp;
+    }
+
+    // ── v5 API ────────────────────────────────────────────────────────────────
+
+    /**
+     * Stream the export directly to the HTTP response.
+     *
+     * Everything that can fail before the first byte (the SQL, an empty
+     * result, the XLSX row limit) is raised as an exception before any header
+     * is sent, so the caller can still answer with a JSON error. CSV and JSON
+     * are then written row by row to the output; XLSX is built in a temporary
+     * file and copied.
      *
      * @param string $format   'csv' | 'json' | 'xlsx'
      * @param string $filename Base filename without extension (e.g. "manuscripts_1715000000")
+     * @throws \Exception before any output is sent
      */
     public function streamToResponse(string $format, string $filename): void
     {
         [$mimeType, $ext, $formatter] = $this->resolveFormatter($format);
 
-        $content = $formatter->render($this->data, $this->metadata);
+        // Run the query now (a generator executes on first advance).
+        $rows = $this->data;
+        if ($rows instanceof \Generator) {
+            $rows->current();
+            $empty = !$rows->valid();
+        } else {
+            $empty = empty($rows);
+        }
+        if ($empty && $formatter->requiresRows()) {
+            throw new \Exception('Empty dataset');
+        }
 
-        header('Content-Type: '        . $mimeType);
-        header('Content-Disposition: attachment; filename="' . $filename . '.' . $ext . '"');
-        header('Cache-Control: no-cache, no-store, must-revalidate');
-        header('Pragma: no-cache');
-        header('Expires: 0');
-        // Content-Length omitted intentionally: PHP gzip output compression
-        // (zlib.output_compression) would change the actual byte count.
+        $sendHeaders = function () use ($mimeType, $filename, $ext): void {
+            header('Content-Type: '        . $mimeType);
+            header('Content-Disposition: attachment; filename="' . $filename . '.' . $ext . '"');
+            header('Cache-Control: no-cache, no-store, must-revalidate');
+            header('Pragma: no-cache');
+            header('Expires: 0');
+            // Content-Length omitted intentionally: PHP gzip output compression
+            // (zlib.output_compression) would change the actual byte count.
+        };
 
-        echo $content;
+        $out = fopen('php://output', 'wb');
+
+        if ($formatter->streamsDirectly()) {
+            $sendHeaders();
+            $formatter->write($rows, $this->metadata, $out);
+        } else {
+            $tmp = fopen('php://temp/maxmemory:1048576', 'w+b');
+            try {
+                $formatter->write($rows, $this->metadata, $tmp);
+                rewind($tmp);
+                $sendHeaders();
+                stream_copy_to_stream($tmp, $out);
+            } finally {
+                fclose($tmp);
+            }
+        }
+
+        fclose($out);
     }
 
     // ── Private ───────────────────────────────────────────────────────────────

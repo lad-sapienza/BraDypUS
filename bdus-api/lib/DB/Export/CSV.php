@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright 2007-2022 Julian Bogdani
+ * @copyright 2007-2026 Julian Bogdani
  * @license AGPL-3.0; see LICENSE
  */
 
@@ -8,28 +8,34 @@ namespace DB\Export;
 
 class CSV implements ExportInterface
 {
+    use RenderViaWrite;
+
     private string $delimiter = ',';
     private string $enclosure = '"';
 
-    public function render(array $data, array $metadata): string
+    public function requiresRows(): bool
     {
-        if (empty($data)) {
-            throw new \Exception('Empty dataset');
-        }
-
-        $fh = fopen('php://temp', 'r+');
-
-        fputcsv($fh, array_keys($data[0]), $this->delimiter, $this->enclosure);
-
-        foreach ($data as $row) {
-            fputcsv($fh, $row, $this->delimiter, $this->enclosure);
-        }
-
-        rewind($fh);
-        $content = stream_get_contents($fh);
-        fclose($fh);
-
-        return $content;
+        return true;
     }
 
+    public function streamsDirectly(): bool
+    {
+        return true;
+    }
+
+    public function write(iterable $rows, array $metadata, $out): void
+    {
+        $first = true;
+        foreach ($rows as $row) {
+            if ($first) {
+                fputcsv($out, array_keys($row), $this->delimiter, $this->enclosure);
+                $first = false;
+            }
+            fputcsv($out, $row, $this->delimiter, $this->enclosure);
+        }
+
+        if ($first) {
+            throw new \Exception('Empty dataset');
+        }
+    }
 }

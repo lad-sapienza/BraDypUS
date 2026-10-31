@@ -278,6 +278,96 @@ class DB implements DBInterface
   }
 
   /**
+   * Like query() with type 'read', but yields the rows one at a time instead
+   * of building the whole result in memory (large exports).
+   *
+   * Per engine: SQLite fetches row by row natively; MySQL/MariaDB run the
+   * statement unbuffered; PostgreSQL (whose PDO driver always buffers the whole
+   * result client-side) reads through a server-side cursor in chunks.
+   *
+   * The statement is executed when the generator is first advanced, so call
+   * current() before sending output to surface SQL errors early. Do not run
+   * other queries on this connection while iterating (MySQL unbuffered mode
+   * forbids it).
+   *
+   * @return \Generator<int, array>  associative rows
+   * @throws DBException
+   */
+  public function queryIterate(string $query, array $values = null): \Generator
+  {
+    $query  = trim($query);
+    $values = $values ?: [];
+
+    try {
+      if ($this->db_engine === 'pgsql') {
+        yield from $this->iteratePgsql($query, $values);
+        return;
+      }
+
+      $buffered = null;
+      if ($this->db_engine === 'mysql') {
+        $buffered = $this->pdo->getAttribute(\PDO::MYSQL_ATTR_USE_BUFFERED_QUERY);
+        $this->pdo->setAttribute(\PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
+      }
+
+      $stmt = null;
+      try {
+        $stmt = $this->pdo->prepare($query);
+        $stmt->execute($values);
+        while (($row = $stmt->fetch(\PDO::FETCH_ASSOC)) !== false) {
+          yield $row;
+        }
+      } finally {
+        if ($stmt) {
+          $stmt->closeCursor();
+        }
+        if ($buffered !== null) {
+          $this->pdo->setAttribute(\PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, $buffered);
+        }
+      }
+    } catch (\PDOException $e) {
+      if ($this->log) {
+        $this->log->error($e, [$query, $values, 'iterate']);
+      }
+      throw new DBException('Database error', 0, $e);
+    }
+  }
+
+  /** Rows fetched per round trip from the PostgreSQL cursor. */
+  private const CURSOR_CHUNK = 1000;
+
+  private function iteratePgsql(string $query, array $values): \Generator
+  {
+    $ownTransaction = !$this->pdo->inTransaction();
+    if ($ownTransaction) {
+      $this->pdo->beginTransaction();
+    }
+    $cursor = 'bdus_iter_' . bin2hex(random_bytes(4));
+    $opened = false;
+
+    try {
+      $this->pdo->prepare("DECLARE {$cursor} NO SCROLL CURSOR FOR {$query}")->execute($values);
+      $opened = true;
+
+      do {
+        $stmt = $this->pdo->query('FETCH FORWARD ' . self::CURSOR_CHUNK . " FROM {$cursor}");
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        foreach ($rows as $row) {
+          yield $row;
+        }
+      } while (count($rows) === self::CURSOR_CHUNK);
+    } finally {
+      if ($ownTransaction && $this->pdo->inTransaction()) {
+        // Read-only: rolling back also closes the cursor, and is the only
+        // option once the transaction is aborted by an error.
+        $this->pdo->rollBack();
+      } elseif ($opened && $this->pdo->inTransaction()) {
+        $this->pdo->exec("CLOSE {$cursor}");
+      }
+    }
+  }
+
+  /**
    *
    * Starts a transaction
    * 

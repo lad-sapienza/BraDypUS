@@ -5,6 +5,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- **`POST /api/user` now enforces the minimum password length.** Registration and
+  password reset already rejected passwords under 8 characters
+  (`password_too_short`); the user form endpoint (new users and password changes,
+  including a user changing their own) accepted any length. It now applies the same
+  constant (`Login::MIN_PASSWORD_LENGTH`) and the same error code.
+
 ## [5.16.3] - 2026-10-31
 
 ### Fixed

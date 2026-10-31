@@ -287,7 +287,7 @@ class Login extends \Bdus\Controller
 	// RESET_TOKEN_COOLDOWN_SECONDS of being issued.
 	private const RESET_TOKEN_TTL_SECONDS      = 3600;
 	private const RESET_TOKEN_COOLDOWN_SECONDS = 60;
-	private const MIN_PASSWORD_LENGTH          = 8;
+	public const MIN_PASSWORD_LENGTH           = 8;
 
 	/** Columns that may not exist yet on this app — see Manage::getBySQLSafe(). */
 	private const MAY_BE_MISSING_COLUMNS = [

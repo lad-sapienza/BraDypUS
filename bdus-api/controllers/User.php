@@ -224,6 +224,10 @@ class User extends \Bdus\Controller
 			foreach ($data as $key => &$value) {
 				if ($key === 'password') {
 					if ($value && $value !== '') {
+						if (strlen((string) $value) < Login::MIN_PASSWORD_LENGTH) {
+							$this->returnJson(['status' => 'error', 'code' => 'password_too_short']);
+							return;
+						}
 						$value = password_hash($value, PASSWORD_DEFAULT);
 					} else {
 						unset($data[$key]);

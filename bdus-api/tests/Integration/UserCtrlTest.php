@@ -383,4 +383,53 @@ class UserCtrlTest extends BdusTestCase
         )[0]['token_version'];
         $this->assertSame($before, $after, 'name-only edit must not bump token_version');
     }
+
+    // ── saveUserData: password rules ──────────────────────────────────────────
+
+    public function testSaveUserDataRejectsShortPasswordForNewUser(): void
+    {
+        $ctrl = $this->makeController('Bdus\\Controllers\\User', [], [
+            'name'      => 'Short Pass',
+            'email'     => 'shortpass@example.com',
+            'password'  => 'abc',
+            'privilege' => 30,
+        ]);
+        $res = $this->callController($ctrl, 'saveUserData');
+
+        $this->assertSame('error',              $res['status']);
+        $this->assertSame('password_too_short', $res['code']);
+        $this->assertSame([], static::$db->query(
+            "SELECT id FROM bdus_users WHERE email = 'shortpass@example.com'", [], 'read'
+        ) ?: []);
+    }
+
+    public function testSaveUserDataRejectsShortPasswordOnChange(): void
+    {
+        $before = static::$db->query('SELECT password FROM bdus_users WHERE id = 2', [], 'read')[0]['password'];
+
+        $ctrl = $this->makeController('Bdus\\Controllers\\User', [], [
+            'id'       => 2,
+            'name'     => 'Regular User',
+            'email'    => 'regular@example.com',
+            'password' => '1234567', // 7 chars
+        ]);
+        $res = $this->callController($ctrl, 'saveUserData');
+
+        $this->assertSame('password_too_short', $res['code']);
+        $after = static::$db->query('SELECT password FROM bdus_users WHERE id = 2', [], 'read')[0]['password'];
+        $this->assertSame($before, $after, 'a rejected password must not be stored');
+    }
+
+    public function testSaveUserDataAcceptsMinimumLengthPassword(): void
+    {
+        $ctrl = $this->makeController('Bdus\\Controllers\\User', [], [
+            'id'       => 2,
+            'name'     => 'Regular User',
+            'email'    => 'regular@example.com',
+            'password' => '12345678', // exactly 8
+        ]);
+        $res = $this->callController($ctrl, 'saveUserData');
+
+        $this->assertSame('success', $res['status']);
+    }
 }

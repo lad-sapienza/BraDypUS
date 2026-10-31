@@ -346,6 +346,22 @@ HTTP 200
 jsonpath "$.status" == "success"
 
 
+# ── 9s-pw. Writer CANNOT set a too-short own password ────────────────
+POST {{base_url}}/{{app_name}}/api/user
+Authorization: Bearer {{writer_jwt}}
+Content-Type: application/json
+{
+  "id":       {{writer_id}},
+  "name":     "Writer User (updated)",
+  "email":    "writer@bdus.test",
+  "password": "x"
+}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "error"
+jsonpath "$.code"   == "password_too_short"
+
+
 # ════════════════════════════════════════════════════════════════════
 # Mid-admin (privilege = 10): config and free-sql are super_admin-only
 # ════════════════════════════════════════════════════════════════════

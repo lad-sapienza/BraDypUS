@@ -5,6 +5,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Profile page: non-administrators could not save their own profile.** The form
+  always sent `privilege`, which the API rejects for non-admins
+  (`not_enough_privilege`), so name, email and password edits failed. The form now
+  omits it for non-admins.
+
 ### Security
 
 - **`POST /api/user` now enforces the minimum password length.** Registration and

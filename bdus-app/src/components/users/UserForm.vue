@@ -101,6 +101,9 @@ const needsCurrentPassword = computed(() =>
 function handleSave() {
   const data = { ...form.value }
   if (!data.password) delete data.password
+  // Privilege is admin-only on the server: a non-admin editing their own
+  // profile must not send it (even unchanged) or the save is rejected.
+  if (!auth.user?.can_admin) { delete data.privilege; delete data.privileges }
   if (!data.password || !needsCurrentPassword.value) delete data.current_password
   emit('save', data)
 }

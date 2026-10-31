@@ -260,6 +260,12 @@ $db->saveSnapshot(
 This inserts a row into `bdus_versions` with the full pre-write state as JSON,
 enabling unlimited undo / diff history accessible from the record detail view.
 
+The snapshot is taken **before** the `UPDATE` runs and is not rolled back if the
+`UPDATE` fails: a save rejected by the database (a constraint, or a trigger) still
+leaves a `bdus_versions` row (proven). `tb` and the snapshot's columns are those of
+the table name used in the request; for a [SQL view registered as a
+table](/guide/setup/views) that is the view name and the view's columns only.
+
 ---
 
 ## Complete read–edit–write example

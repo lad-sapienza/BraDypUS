@@ -5,6 +5,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.16.5] - 2026-10-31
+
+### Fixed
+
+- **Large exports no longer exhaust memory (streamed row by row).** `GET /api/records/{tb}/export` used to load
+  the whole result into one PHP array and render the whole file as a string, so a
+  table of ~120,000 records with long texts exhausted a 256 MB `memory_limit` (and
+  the XLSX failed even with 1 GB). Rows are now read through a new
+  `DB::queryIterate()` (SQLite row by row, MySQL/MariaDB unbuffered, PostgreSQL
+  server-side cursor) and written as they come: CSV and JSON go straight to the
+  response, XLSX is built in a temporary file (sheet XML on disk, no new
+  dependency). The files are byte-identical to before. An XLSX with more than
+  1,048,575 records (the worksheet limit) now stops with an error instead of
+  producing an invalid file. A failing query or an empty result is still reported
+  as an error before any byte is sent.
+- **A save refused by the database no longer leaves a snapshot in the history.**
+  `Record\Persist` wrote the `bdus_versions` snapshot before the `UPDATE`, outside
+  any transaction, so a constraint or trigger rejecting the change still added a
+  phantom version. Snapshot and `UPDATE` now share one transaction, and the delete
+  snapshot moves inside `deleteAll()`'s transaction.
+
 ## [5.16.4] - 2026-10-31
 
 ### Fixed

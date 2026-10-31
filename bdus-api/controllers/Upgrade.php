@@ -147,7 +147,7 @@ class Upgrade extends \Bdus\Controller
             }
 
             try {
-                Migrate::run($this->db, $this->log);
+                Migrate::run($this->db, $this->log, true);
                 $this->log?->info("Major upgrade completed by user {$user['id']}");
             } catch (\Throwable $e) {
                 $this->log?->error("Major upgrade failed: " . $e->getMessage());

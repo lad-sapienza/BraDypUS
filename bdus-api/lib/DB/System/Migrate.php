@@ -779,20 +779,28 @@ class Migrate
 
     /**
      * Runs all pending migrations.
-     * Called once after successful login.
+     * Called after successful login, by the minor upgrade and by the major one.
      *
      * @param DBInterface $db
+     * @param bool        $dropLegacyViews  true only for the v4 → v5 major upgrade:
+     *                                      the SQL views of a v4 app are removed
+     *                                      first. Every other caller leaves views
+     *                                      alone (they can be registered as tables
+     *                                      by the administrator, see the guide).
      */
-    public static function run(DBInterface $db, Logger $log = null): void
+    public static function run(DBInterface $db, Logger $log = null, bool $dropLegacyViews = false): void
     {
         // Pre-flight: if this is an existing app still using the legacy APP__ prefix,
         // rename all tables and update config before the normal migration loop starts.
         self::maybeRemovePrefix($db, $log);
 
-        // Pre-flight: remove any leftover v4 SQL views. They are not part of the
-        // v5 model and would make SQLite reject the DROP COLUMN / table-recreation
-        // migrations further down (M030/M032/M037/M038).
-        self::dropLegacyViews($db, $log);
+        // Pre-flight, major upgrade only: remove the SQL views of the v4 app. They
+        // reference the v4 schema and would make SQLite reject the DROP COLUMN /
+        // table-recreation migrations further down (M030/M032/M037/M038). Never on
+        // login or on a minor upgrade: a v5 view is the administrator's.
+        if ($dropLegacyViews) {
+            self::dropLegacyViews($db, $log);
+        }
 
         // Pre-flight: rename bare 'migrations' table to 'bdus_migrations' if needed.
         // This runs before the migration loop so the tracking table is always bdus_*.

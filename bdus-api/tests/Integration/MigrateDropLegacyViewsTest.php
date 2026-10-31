@@ -98,6 +98,41 @@ class MigrateDropLegacyViewsTest extends TestCase
         $this->assertSame([], $this->viewNames());
     }
 
+    public function testRunKeepsViewsByDefault(): void
+    {
+        $this->db->exec('CREATE TABLE t (id INTEGER PRIMARY KEY)');
+        $this->db->exec('CREATE VIEW v_role AS SELECT id FROM t');
+        $this->markAllMigrationsApplied();
+
+        // What login and the minor upgrade do.
+        Migrate::run($this->db, $this->log);
+
+        $this->assertSame(['v_role'], $this->viewNames());
+    }
+
+    public function testRunDropsViewsOnlyWhenAskedForTheMajorUpgrade(): void
+    {
+        $this->db->exec('CREATE TABLE t (id INTEGER PRIMARY KEY)');
+        $this->db->exec('CREATE VIEW v_old AS SELECT id FROM t');
+        $this->markAllMigrationsApplied();
+
+        Migrate::run($this->db, $this->log, true);
+
+        $this->assertSame([], $this->viewNames());
+    }
+
+    private function markAllMigrationsApplied(): void
+    {
+        $this->manage->createTable('bdus_migrations');
+        foreach (Migrate::ALL_MIGRATIONS as $class) {
+            $this->db->query(
+                'INSERT INTO bdus_migrations (name, applied_at) VALUES (?, ?)',
+                [$class::NAME, time()],
+                'boolean'
+            );
+        }
+    }
+
     private function viewNames(): array
     {
         return array_column(

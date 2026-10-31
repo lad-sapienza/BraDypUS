@@ -129,6 +129,9 @@ When the project directory exists, `APP`, `PREFIX` (always empty in v5) and
 `PROJ_DIR` are defined, and a valid token populates `Auth\CurrentUser`.
 Privilege and `token_version` are re-checked against the database by the
 Dispatcher, so the privilege inside the JWT is never trusted on its own.
+`token_version` is bumped when an admin changes another user's privilege, on
+revoke, and on any password change through `POST /api/user`; a user changing their
+own password gets a fresh token in the response.
 
 ### 3. Runtime directories
 

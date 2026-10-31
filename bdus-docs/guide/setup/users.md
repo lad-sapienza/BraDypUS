@@ -51,7 +51,7 @@ To change a password, enter a new value in the **Password** field. Leave it
 blank to keep the existing password. Passwords must be at least 8 characters
 long.
 
-A user who changes **their own** password from the profile page (non-administrators)
+<Badge type="tip" text="v5.16.4" /> A user who changes **their own** password from the profile page (non-administrators)
 must also enter their **current password**. Changing a password signs the user out of
 every other session; the person who made the change stays logged in.
 

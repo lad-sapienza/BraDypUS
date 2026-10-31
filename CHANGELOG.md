@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **New guide page "SQL views as tables"** (`guide/setup/views.md`): how to get
   columns hidden by role, rows per role and a draft → review → validated flow with
   SQL views registered as tables plus triggers on the base table, with a complete
-  example, the limits, and a table of what was proven (MariaDB 10.11) and what was
+  example, the limits, and a table of what was proven (MariaDB 10.11, PostgreSQL 16) and what was
   not. No new feature: it documents what the application already allows. Related
   pages updated: fit assessment (`evaluate`), groups, DBML, the developer pages on
   the database layer, config/API keys, record lifecycle and permissions, and

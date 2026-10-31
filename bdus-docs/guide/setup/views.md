@@ -13,7 +13,7 @@ changes are legal.
 
 ::: warning This is a database-level pattern, not a feature
 Nothing in BraDypUS creates or manages views. You write the SQL, and the
-application only sees the result. It is **proven on MariaDB 10.11 only**; read
+application only sees the result. It is proven on **MariaDB 10.11** and **PostgreSQL 16**; read
 [What is proven](#what-is-proven-and-what-is-not) and [Limits](#limits) before you
 rely on it.
 :::
@@ -133,6 +133,10 @@ reads `v_public` and nothing else ([API keys with a group](../api/#api-keys-with
 
 ### 5. Triggers on the base table
 
+The code below is MariaDB/MySQL. On PostgreSQL the same logic is a PL/pgSQL
+function (`RAISE EXCEPTION` instead of `SIGNAL`, `nextval` or a counter row for the
+number) attached with `CREATE TRIGGER … BEFORE INSERT/UPDATE … EXECUTE FUNCTION`.
+
 The views decide what each role *sees*. The triggers decide what each role may
 *write*, because a rule on a table or a row does not look at the values written.
 
@@ -196,7 +200,7 @@ Two ways to stop a save that would take the row out of its view.
 For a workflow use the trigger and **no** `CHECK OPTION` on the views that must
 let rows leave. `CHECK OPTION` suits a view where leaving is always an error.
 
-## Behaviour you can rely on (proven, MariaDB)
+## Behaviour you can rely on (proven)
 
 - The view is in `/api/config/tables`, in lists, record view, search, filters and
   export.
@@ -215,13 +219,17 @@ let rows leave. `CHECK OPTION` suits a view where leaving is always an error.
 
 These are the things that surprise people. Read them before you plan.
 
-1. **Engine.** Proven on MariaDB 10.11 only. On SQLite, versions up to 5.16.2
-   dropped every SQL view at the next login; from the next release views are kept
-   (and removed only by the v4 → v5 major upgrade, for v4 leftovers). The fix is
-   covered by a test, but the whole pattern was not run on SQLite. PostgreSQL is
-   not tested.
-2. **Only simple views are proven for writing** (one table, no `JOIN`, no
-   aggregates). Read-only views with joins should work for reading, but were not tested.
+1. **Engine.** The pattern was tried on MariaDB 10.11 and PostgreSQL 16 (triggers are
+   written in each engine's own language: `SIGNAL` on MariaDB, PL/pgSQL on
+   PostgreSQL). On SQLite, versions up to 5.16.2 dropped every SQL view at the next
+   login; from 5.16.3 views are kept (and removed only by the v4 → v5 major upgrade,
+   for v4 leftovers). That fix is covered by a test, but the whole pattern was not
+   run on SQLite. PostGIS was not tried.
+2. **Simple views (one table) write directly.** A view that joins several tables
+   is not updatable by itself. On PostgreSQL, with `INSTEAD OF` triggers, it was
+   written to successfully (insert returning the id, update across tables, cascading
+   delete, search on a field of the second table). Not tried on MariaDB, which has no
+   `INSTEAD OF` triggers.
 3. **Columns left out must accept `NULL` or have a default**, or inserts through
    the view fail.
 4. **A rejected save is a generic error.** A trigger's `MESSAGE_TEXT` does not
@@ -233,9 +241,9 @@ These are the things that surprise people. Read them before you plan.
    the hidden columns. A save that the database then rejects still leaves a version
    row behind (the copy is taken before the update).
 6. **Locks and rules are per table name.** A [lock](./groups#locks) on `v_author`
-   does not freeze the same record when it is edited through `card` (proven); by the
-   same logic a lock on `card` does not reach edits made through a view (deduced
-   from the code, not tried). Put every rule and lock on every name that can reach the data.
+   does not freeze the same record when it is edited through `card`, and a lock on `card`
+   does not stop edits made through a view (both seen: the first on MariaDB, the
+   second reported on PostgreSQL). Put every rule and lock on every name that can reach the data.
 7. **Rule and lock filters use the view's fields.** A filter on a column that the
    view does not contain is refused when you save it.
 8. **Hidden columns are hidden from the app, not from the database.** Anyone with
@@ -247,24 +255,28 @@ These are the things that surprise people. Read them before you plan.
 
 ## What is proven and what is not
 
-| Statement | Status |
-|---|---|
-| View in table list, records, search, filters, record view | Proven (MariaDB 10.11, v5.16.2) |
-| Insert/update through a simple view, `creator`, UTF-8 | Proven |
-| Hidden column unreadable, unsearchable | Proven |
-| Rules per view; 200 with JWT, 403 with API key | Proven |
-| Trigger rejects a transition; generic error | Proven |
-| Save rejected by trigger still writes a `bdus_versions` row | Proven |
-| Versions record the view name and the view's columns | Proven |
-| Restore through a view (update and deleted record) | Proven |
-| Lock on a view does not lock the base table | Proven |
-| Registering by creating the table, then swapping it for a view | Proven |
-| Config panel field changes on a view do not change the view | Proven (the view is unchanged; the configuration side was not inspected) |
-| Registered view appears as a table in DBML export | Proven |
-| SQLite (up to 5.16.2) drops views at the next login | Proven; fixed afterwards, covered by a test, pattern not re-run on SQLite |
-| `WITH CHECK OPTION` refuses a row leaving the view | Reported by the original test; not repeated here |
-| 20 concurrent inserts give consecutive numbers | Reported by the original test; not repeated here |
-| CSV export of a view omits hidden columns | Reported by the original test; not repeated here |
-| PostgreSQL | Not proven (views and triggers use other syntax) |
-| Views with `JOIN` for writing | Not proven |
-| Large data volumes, graphical interface | Not proven |
+*Proven here* = run again while writing this page (MariaDB 10.11, v5.16.2).
+*Reported* = seen by the people who first tried the pattern, not repeated here.
+
+| Statement | MariaDB 10.11 | PostgreSQL 16 |
+|---|---|---|
+| View in table list, records, search, filters, record view | Proven here | Reported |
+| Insert/update through a simple view, `creator`, UTF-8 | Proven here | Reported |
+| Hidden column unreadable, unsearchable | Proven here | Reported |
+| Rules per view; 200 with JWT, 403 with API key | Proven here | Reported |
+| Trigger rejects a transition; generic error | Proven here | Reported |
+| A save rejected by a trigger still writes a `bdus_versions` row | Proven here | Not checked |
+| Versions record the view name and the view's columns | Proven here | Reported |
+| Restore through a view (update and deleted record) | Proven here | Reported (a trigger can refuse a restored state) |
+| Lock on a view does not lock the base table, and the other way round | Proven here (view → base) | Reported (both ways) |
+| Registering by creating the table, then swapping it for a view | Proven here | Not checked |
+| Registered view appears as a table in DBML export | Proven here | Not checked |
+| Config panel field changes on a view do not change the view | Proven here (view unchanged; configuration not inspected) | Not checked |
+| `WITH CHECK OPTION` refuses a row leaving the view | Reported | Not tried |
+| 20 concurrent inserts give consecutive numbers (counter table) | Reported | Not checked |
+| CSV export of a view omits hidden columns | Reported | Reported |
+| Multi-table view written through `INSTEAD OF` triggers | Not available | Reported |
+| A large real dataset and the graphical interface (list, record, edit, save as a group user) | Not checked | Reported |
+| SQLite up to 5.16.2 drops views at the next login | Fixed in 5.16.3; fix covered by a test, pattern not run on SQLite | |
+| Alter of a view's fields from the interface | Does not alter the view (see tip) | Not checked |
+| PostGIS, performance under concurrent load on real data | | Not tried |

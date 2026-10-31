@@ -179,7 +179,7 @@ the app, the schema validator (Config → Validation).
   only if the user asks. Rules work on whole rows and never check written values: if some
   roles must not see some columns, or records must move through states (draft → review →
   validated), say it needs SQL views plus triggers in the database
-  (`guide/setup/views.md`; proven on MariaDB/MySQL only), not these screens.
+  (`guide/setup/views.md`; tried on MariaDB and PostgreSQL), not these screens.
 - Print templates, map layers (GeoFace), Zotero, Pleiades, backups.
 
 ## If you cannot call the API (plain chat, no shell, no HTTP)

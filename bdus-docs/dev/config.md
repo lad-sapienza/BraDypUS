@@ -137,8 +137,18 @@ atomically — no stale-cache issues.
 
 Access is decided by a single **tier** (privilege level) per principal: a
 column of `bdus_users` for people, of `bdus_api_keys` for API keys. There is
-no per-table or per-record access control yet (see the
-[Groups & permissions](./groups-permissions)).
+no per-table or per-record access control in this class: that lives in
+`Auth\Access` ([Groups & permissions](./groups-permissions)).
+
+### API keys and groups
+
+`Auth\ApiKeyAuth` reads `privilege` and, since M046, `group_id` from
+`bdus_api_keys` and puts them in `CurrentUser`; a key at level 39 (*Enter*) has no
+data access of its own, so its group's rules (`bdus_group_rules`, per table name)
+decide what it reaches. A refused request answers HTTP 403, whereas a user's JWT
+gets HTTP 200 with `{"status":"error","code":"not_enough_privilege"}`. Rule and
+lock table names are the names in the configuration, so they apply to a
+[SQL view registered as a table](/guide/setup/views) exactly as to a table.
 
 ### Privilege constants
 

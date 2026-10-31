@@ -97,6 +97,11 @@ $db->saveSnapshot(
 This inserts a row into `bdus_versions` with the full record state as JSON,
 enabling unlimited undo / diff history.
 
+`tb` is the name of the table **as the request addressed it**, and `content` holds
+the columns that table has: for a record edited through a registered
+[view](/guide/setup/views), `bdus_versions.tb` is the view name and the snapshot
+contains only the view's columns. History is therefore per name, not per base table.
+
 ---
 
 ## `DB\Inspect` — Schema introspection
@@ -113,6 +118,36 @@ $inspect->getAllTables();               // all table names in the DB
 
 Engine implementations: `DB\Inspect\Mysql`, `DB\Inspect\Postgres`,
 `DB\Inspect\Sqlite`.
+
+### Views are tables to `Inspect` (MySQL, PostgreSQL)
+
+On MySQL/MariaDB `tableExists()` queries `information_schema.TABLES` and
+`tableColumns()` runs `DESCRIBE`; both include **views**. `getAllTables()` uses
+`SHOW TABLES`, which lists views too. On PostgreSQL `tableExists()` and
+`tableColumns()` use `information_schema.tables` / `columns`, which include views,
+but `getAllTables()` reads `pg_catalog.pg_tables`, which does not (deduced from the
+code, not run). SQLite filters on `type='table'`, so a view is not a table there.
+
+That is what lets an administrator register a view in `bdus_cfg_tables` /
+`bdus_cfg_fields` and have the rest of the application treat it as a table: the
+record layer only runs `SELECT`, `INSERT`, `UPDATE`, `DELETE` on the name in the
+configuration. The guide is [SQL views as tables](/guide/setup/views).
+
+Consequences to keep in mind when changing this layer:
+
+- **`DB\Alter` is not view-aware.** Adding, renaming or dropping a *field* of a
+  registered view through `/api/config/table/{tb}/field…` answers success but the
+  view is unchanged (proven on MariaDB); only the configuration changes.
+  `DELETE /api/config/table/{tb}` removes the configuration and leaves the view.
+- **`DB\Validate\DbCfgAlign`** compares configured fields with `tableColumns()`,
+  so a registered view is validated like a table.
+- **Migrations.** Migrations never recreate a view. On **SQLite**,
+  `Migrate::run()` calls `dropLegacyViews()` first, and `run()` is invoked by
+  `Login` when there is nothing pending, by `Upgrade::runMinor` and by
+  `Upgrade::runMajor`: every view is dropped at the next login (proven).
+  On MySQL and PostgreSQL the method returns immediately and views are left alone.
+  A migration that alters a base table (`ALTER TABLE … DROP/RENAME COLUMN`) can
+  still break a view that references the column.
 
 ---
 

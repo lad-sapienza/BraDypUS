@@ -5,6 +5,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **A save refused by the database no longer leaves a snapshot in the history.**
+  `Record\Persist` wrote the `bdus_versions` snapshot before the `UPDATE`, outside
+  any transaction, so a constraint or trigger rejecting the change still added a
+  phantom version. Snapshot and `UPDATE` now share one transaction, and the delete
+  snapshot moves inside `deleteAll()`'s transaction.
+
 ## [5.16.4] - 2026-10-31
 
 ### Fixed

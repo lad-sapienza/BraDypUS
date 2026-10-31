@@ -84,15 +84,8 @@ class Persist
     {
         // Full record deletion requested
         if (isset($this->model['core']['id']['_delete'])) {
-            // Snapshot the full record before deleting so it can be recovered later.
-            if ($this->id) {
-                $this->db->saveSnapshot(
-                    $this->tb,
-                    $this->id,
-                    $this->buildSnapshotContent(),
-                    'delete'
-                );
-            }
+            // deleteAll() snapshots the record inside its own transaction, so a
+            // refused delete leaves no history entry behind.
             return $this->deleteAll();
         }
 
@@ -136,21 +129,29 @@ class Persist
                 return ['affected' => 0];
             }
 
-            // Snapshot the record as it is NOW, before the UPDATE is applied.
-            $this->db->saveSnapshot(
-                $this->tb,
-                $this->id,
-                $this->buildSnapshotContent(),
-                'update'
-            );
-
-            // UPDATE
             $setParts = array_map(fn($k) => "{$k} = ?", array_keys($changed));
             $sql      = "UPDATE {$this->tb} SET " . implode(', ', $setParts) . " WHERE id = ?";
             $values   = array_values($changed);
             $values[] = $this->id;
 
-            $this->db->query($sql, $values, 'boolean');
+            // Snapshot and UPDATE in one transaction: if the database refuses
+            // the UPDATE (constraint, trigger) the snapshot is rolled back too,
+            // so a rejected save leaves no phantom history entry.
+            $this->db->beginTransaction();
+            try {
+                // Snapshot the record as it is NOW, before the UPDATE is applied.
+                $this->db->saveSnapshot(
+                    $this->tb,
+                    $this->id,
+                    $this->buildSnapshotContent(),
+                    'update'
+                );
+                $this->db->query($sql, $values, 'boolean');
+                $this->db->commit();
+            } catch (\Throwable $e) {
+                $this->db->rollBack();
+                throw $e;
+            }
 
             return ['affected' => 1, 'id' => $this->id];
         } else {
@@ -453,6 +454,14 @@ class Persist
         $this->db->beginTransaction();
 
         try {
+            // 0. Snapshot the full record so it can be recovered later.
+            $this->db->saveSnapshot(
+                $this->tb,
+                $this->id,
+                $this->buildSnapshotContent(),
+                'delete'
+            );
+
             // 1. Delete core row
             $this->db->query(
                 "DELETE FROM {$this->tb} WHERE id = ?",

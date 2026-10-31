@@ -228,4 +228,41 @@ class RecordPersistSnapshotTest extends BdusTestCase
             [], 'boolean'
         );
     }
+
+    // ── Refused write → no phantom snapshot ───────────────────────────────────
+
+    public function testRefusedUpdateLeavesNoSnapshot(): void
+    {
+        if (static::$db->getEngine() !== 'sqlite') {
+            $this->markTestSkipped('Trigger is SQLite syntax.');
+        }
+
+        static::$db->query(
+            "CREATE TRIGGER snap_refuse BEFORE UPDATE ON items
+             WHEN NEW.description = 'REFUSED'
+             BEGIN SELECT RAISE(ABORT, 'refused by trigger'); END",
+            [],
+            'boolean'
+        );
+
+        try {
+            $before = $this->versionCount(self::TB, 1);
+
+            $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], [
+                'tb'   => self::TB,
+                'id'   => 1,
+                'core' => ['description' => 'REFUSED'],
+            ]);
+            $res = $this->callController($ctrl, 'saveRecord');
+
+            $this->assertSame('error', $res['status']);
+            $this->assertSame(
+                $before,
+                $this->versionCount(self::TB, 1),
+                'A save refused by the database must not leave a snapshot behind.'
+            );
+        } finally {
+            static::$db->query('DROP TRIGGER IF EXISTS snap_refuse', [], 'boolean');
+        }
+    }
 }

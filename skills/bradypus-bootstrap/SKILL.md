@@ -176,7 +176,10 @@ the app, the schema validator (Config → Validation).
   (a `<` ref, or a table that already existed).
 - Users, groups, permissions and locks (the Users view, guide: `guide/setup/groups.md`):
   decide with the user who reads, edits and sees which rows; create accounts yourself
-  only if the user asks.
+  only if the user asks. Rules work on whole rows and never check written values: if some
+  roles must not see some columns, or records must move through states (draft → review →
+  validated), say it needs SQL views plus triggers in the database
+  (`guide/setup/views.md`; MariaDB/MySQL only, SQLite drops views at login), not these screens.
 - Print templates, map layers (GeoFace), Zotero, Pleiades, backups.
 
 ## If you cannot call the API (plain chat, no shell, no HTTP)

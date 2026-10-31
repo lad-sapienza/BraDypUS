@@ -50,9 +50,12 @@ versions of every record, files, maps and print templates on top of them.
   descriptive records next to it.
 - You need a **public, hosted website** out of the box: BraDypUS is the editing and
   research database; publishing is done through its [API](/guide/api/) or exports.
-- You need **permissions per field** or a **workflow engine** (draft → review →
-  publish states with notifications): rules are per table and per row, and locks freeze
-  rows; there is nothing finer.
+- You need **permissions per field** or a **workflow engine** with notifications:
+  BraDypUS's own permission engine works per table and per row, and locks freeze
+  rows; there is nothing finer. Hidden columns, rows per role and a draft → review →
+  validated flow can still be had with **SQL views and triggers** in the database
+  ([SQL views as tables](/guide/setup/views)), at the price of writing that SQL and
+  of the limits that page lists (MariaDB/MySQL only so far; no notifications).
 - You cannot host and back up a small web application.
 
 ## What your data must look like
@@ -74,7 +77,10 @@ Checklist before deciding, answer these about your data:
 4. Are there geometries, uncertain dates, stratigraphic relations, bibliographic references?
 5. Who edits, who only reads, who must see only part of the data?
 6. Do some records have to become read-only once validated?
-7. Where do files live, and how are they named so they can be linked to records?
+7. Must some roles not see some *columns*, or move records through states
+   (draft → review → validated)? That is possible with SQL views, not with the
+   permission screens: [SQL views as tables](/guide/setup/views).
+8. Where do files live, and how are they named so they can be linked to records?
 
 ## How much work is a move
 

@@ -33,6 +33,17 @@ to visualise the schema as an entity-relationship diagram.
 
 System tables (`bdus_*`) are never included.
 
+### Views {#views}
+
+DBML has no notion of [SQL views registered as tables](./views), and the export is
+built from the BraDypUS configuration, not from the database. A registered view
+therefore comes out as an **ordinary `Table` block**; importing that file in
+another application creates a real table with that name, not a view. Views are not
+exported as views and are never imported: recreate them with SQL after the import
+and keep their `CREATE VIEW` statements with your deployment scripts. In an
+application created by an import, views coexist as in any other: the import only
+adds new tables and skips names that already exist in the configuration.
+
 ---
 
 ## Import

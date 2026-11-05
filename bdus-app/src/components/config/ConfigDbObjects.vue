@@ -22,21 +22,19 @@
         <div v-for="o in objects" :key="o.name" class="dbo-row" :data-name="o.name">
           <div class="dbo-main">
             <span class="dbo-name">{{ o.name }}</span>
-            <ATag v-if="o.kind !== 'missing'" :color="o.kind === 'view' ? 'purple' : 'blue'">{{ t(o.kind === 'view' ? 'db_kind_view' : 'db_kind_table') }}</ATag>
-            <ATag v-if="o.inactive" color="orange">{{ t('db_inactive') }}</ATag>
-            <ATag v-if="o.kind === 'view'" :color="o.view_writable === 'none' ? 'default' : 'green'">
-              {{ o.view_writable === 'none' ? t('view_read_only_badge') : t('view_writable_badge') }}
-            </ATag>
+            <ATag v-if="act(o).kindTag" :color="o.kind === 'view' ? 'purple' : 'blue'">{{ t(act(o).kindTag) }}</ATag>
+            <ATag v-if="act(o).inactiveTag" color="orange">{{ t('db_inactive') }}</ATag>
+            <ATag v-if="act(o).writableTag" :color="o.view_writable === 'none' ? 'default' : 'green'">{{ t(act(o).writableTag) }}</ATag>
             <small class="dbo-cols">{{ o.columns }} {{ t('fields').toLowerCase() }}</small>
           </div>
           <div class="dbo-status">
-            <small v-if="!o.activatable" class="dbo-reason">{{ t('dbo_reason_' + o.reason) }}</small>
-            <AButton v-if="o.kind !== 'missing'" size="small" :type="o.activatable ? 'primary' : 'default'" @click="openPreview(o.name)">
-              {{ o.inactive ? t('dbo_reactivate') : (o.activatable ? t('dbo_preview_activate') : t('dbo_details')) }}
+            <small v-if="act(o).reasonKey" class="dbo-reason">{{ t(act(o).reasonKey) }}</small>
+            <AButton v-if="act(o).preview" size="small" :type="act(o).primary ? 'primary' : 'default'" @click="openPreview(o.name)">
+              {{ t(act(o).previewLabel) }}
             </AButton>
-            <template v-if="o.inactive">
+            <template v-if="act(o).removeConfig">
               <AButton size="small" danger @click="removeConfig(o.name)">{{ t('remove_from_config') }}</AButton>
-              <AButton v-if="o.kind === 'table'" size="small" danger @click="openDrop(o.name)">
+              <AButton v-if="act(o).drop" size="small" danger @click="openDrop(o.name)">
                 <template #icon><DeleteOutlined /></template>
                 {{ t('delete_table') }}
               </AButton>
@@ -60,7 +58,7 @@
         <AAlert
           v-else-if="!preview.activatable"
           type="warning" show-icon :closable="false" class="dbo-block"
-          :message="t('dbo_reason_' + preview.reason)"
+          :message="t(dboReasonKey(preview.reason))"
         />
         <AAlert
           v-else-if="preview.kind === 'view'"
@@ -130,6 +128,7 @@ import { useConfirm } from '@/composables/useNotify'
 import { useI18n }  from '@/i18n'
 import { useToast } from '@/composables/useNotify'
 import { api }      from '@/api'
+import { dbObjectActions as act, dboReasonKey } from '@/utils/dbObjects'
 
 const emit = defineEmits(['table-added'])
 

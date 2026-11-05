@@ -8,11 +8,11 @@ Application setup is handled entirely through the **Config** panel, a dedicated
 administration area accessible from the sidebar. Only users with **super-admin**
 privilege can open it.
 
-![Config panel open with sidebar showing six panel buttons](/images/v5/setup/config-overview.png)
+![Config panel open with sidebar showing the panel buttons](/images/v5/setup/config-overview.png)
 
 ## The Config panel
 
-The Config panel is divided into six sections, selectable from the left sidebar:
+The Config panel is divided into sections, selectable from the left sidebar:
 
 | Panel | Purpose |
 |---|---|

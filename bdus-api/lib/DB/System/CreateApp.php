@@ -93,6 +93,14 @@ class CreateApp
         $this->createTables();
         $this->addUser();
         $this->createConfig();
+
+        // A new app is created at the current structure, but bdus_migrations is
+        // empty: without this, every migration is reported pending and non-admin
+        // users get `upgrade_pending` at login until an admin applies a minor
+        // upgrade by hand (#42). The migrations are idempotent, so running them
+        // here only records them (and fills in anything createTables skips).
+        Migrate::run($this->db);
+        array_push($this->log, "Database migrations applied");
     }
 
     private function createConfig()

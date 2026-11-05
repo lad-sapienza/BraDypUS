@@ -74,6 +74,12 @@ class CreateAppCliTest extends BdusTestCase
         $this->assertSame('sqlite', $cfg['db_engine'] ?? null);
         $this->assertFileExists($this->root() . "/projects/{$name}/db/bdus.sqlite");
 
+        // No migration is left pending (#42): non-admin users could not log in otherwise.
+        $pdo     = new \PDO('sqlite:' . $this->root() . "/projects/{$name}/db/bdus.sqlite");
+        $applied = $pdo->query('SELECT name FROM bdus_migrations')->fetchAll(\PDO::FETCH_COLUMN);
+        $known   = array_map(fn($c) => $c::NAME, \DB\System\Migrate::ALL_MIGRATIONS);
+        $this->assertSame([], array_values(array_diff($known, $applied)));
+
         // A second create with the same name must be rejected.
         [$rc2, $out2] = $this->runCli(
             "S3cret-pw\n",

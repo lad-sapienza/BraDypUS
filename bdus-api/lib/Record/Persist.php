@@ -40,12 +40,23 @@ class Persist
         $this->db     = $db;
         $this->cfg    = $cfg;
         $this->tb     = $this->model['metadata']['tb_id'];
+        // Persist only ever writes: a read-only view must not even get there.
+        if ($this->isReadOnlyView()) {
+            throw new ViewReadOnlyException($this->tb);
+        }
         // rec_id may be an int, a string, or the full field array ['name'=>'id','val'=>N]
         $recId        = $this->model['metadata']['rec_id'];
         if (is_array($recId)) {
             $recId = $recId['val'] ?? null;
         }
         $this->id     = $recId ? (int) $recId : null;
+    }
+
+    /** True for a registered SQL view that cannot be written (view_writable = none). */
+    private function isReadOnlyView(): bool
+    {
+        return (bool) $this->cfg->get("tables.{$this->tb}.is_view")
+            && ($this->cfg->get("tables.{$this->tb}.view_writable") ?: 'none') === 'none';
     }
 
     /**
@@ -161,7 +172,27 @@ class Persist
             $sql      = "INSERT INTO {$this->tb} (" . implode(', ', $fields) . ") VALUES ({$placeholders})";
             $values   = array_values($changed);
 
-            $newId    = (int) $this->db->query($sql, $values, 'id');
+            if ($this->cfg->get("tables.{$this->tb}.is_view") && $this->db->getEngine() === 'sqlite') {
+                // SQLite: after an INSERT through a view (INSTEAD OF trigger),
+                // last_insert_rowid() reverts to its value from before the
+                // trigger fired, so PDO::lastInsertId() would hand back the id
+                // of some other row. Read the new id inside the same write
+                // transaction instead: no other writer can get in between.
+                $this->db->beginTransaction();
+                try {
+                    $this->db->query($sql, $values, 'boolean');
+                    $row   = $this->db->query("SELECT MAX(id) AS m FROM {$this->tb}", [], 'read');
+                    $newId = (int) ($row[0]['m'] ?? 0);
+                    $this->db->commit();
+                } catch (\Throwable $e) {
+                    $this->db->rollBack();
+                    throw $e;
+                }
+            } else {
+                // Other engines: lastInsertId() is right through an updatable view
+                // (checked on PostgreSQL and MariaDB — see ViewInsertIdEngineTest).
+                $newId = (int) $this->db->query($sql, $values, 'id');
+            }
             $this->id = $newId;
 
             return ['affected' => 1, 'id' => $this->id];

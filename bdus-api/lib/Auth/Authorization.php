@@ -35,6 +35,9 @@ class Authorization
     /** Application status for this request: 'on' | 'frozen' | 'off'. */
     private static string $appStatus = 'on';
 
+    /** Tables nobody may write to (read-only SQL views), by name. Set by the Dispatcher. */
+    private static array $readOnlyTables = [];
+
     /** Supplies the current principal's Access (group rules and locks); set by the Dispatcher. */
     private static ?\Closure $accessProvider = null;
 
@@ -60,6 +63,19 @@ class Authorization
     }
 
     /**
+     * Registers the tables that cannot be written by anyone — SQL views that are
+     * not updatable. can() then answers false for create/update/delete on them,
+     * whatever the privilege, so the interface hides the buttons (the write is
+     * refused anyway by Record\Persist).
+     *
+     * @param string[] $tables
+     */
+    public static function setReadOnlyTables(array $tables): void
+    {
+        self::$readOnlyTables = array_fill_keys($tables, true);
+    }
+
+    /**
      * Registers the provider of the current principal's Access, used by can()
      * when a table is given. Without a provider only the global tier counts.
      */
@@ -81,6 +97,11 @@ class Authorization
      */
     public static function can(string $privilege = 'edit', ?int $creator = null, ?string $table = null): bool
     {
+        if ($table !== null && isset(self::$readOnlyTables[$table])
+            && in_array(self::ACCESS_ACTION[$privilege] ?? null, ['create', 'update', 'delete'], true)) {
+            return false;
+        }
+
         if (self::canByTier($privilege, $creator)) {
             return true;
         }

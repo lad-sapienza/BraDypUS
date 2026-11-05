@@ -949,6 +949,14 @@ class Record extends \Bdus\Controller
       return;
     }
 
+    // A SQL view that cannot be written: say so, instead of the generic
+    // "not enough privilege" the ability gate below would answer.
+    if ($this->cfg->get("tables.{$tb}.is_view")
+        && ($this->cfg->get("tables.{$tb}.view_writable") ?: 'none') === 'none') {
+      $this->returnJson(['status' => 'error', 'code' => 'view_read_only']);
+      return;
+    }
+
     // Plugin tables (is_plugin=1) never have their own `creator` column by
     // design — ownership is inherited from the host record via id_link, not
     // stored locally. Resolved once here and reused below: the INSERT path
@@ -1106,6 +1114,10 @@ class Record extends \Bdus\Controller
       $this->log->error($e);
       // A message raised on purpose by a trigger (SIGNAL / RAISE EXCEPTION) is
       // meant for the user; every other database error stays generic.
+      if ($e instanceof \Record\ViewReadOnlyException) {
+        $this->returnJson(['status' => 'error', 'code' => 'view_read_only']);
+        return;
+      }
       $rule = $e instanceof \DB\DBException ? $e->getRuleMessage() : null;
       if ($rule !== null) {
         $this->returnJson(['status' => 'error', 'code' => 'db_rule_violation', 'detail' => $rule]);

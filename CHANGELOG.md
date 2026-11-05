@@ -16,6 +16,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   a registered view is flagged `is_view` and cannot be altered (`view_not_alterable`).
   `getTableList` / `getTableConfig` expose `is_view` (and `view_sql`). The user interface
   comes in a later release. (#53)
+- **Writing through SQL views.** A registered view that the database cannot write
+  (`view_writable = none`) refuses `saveRecord` with `view_read_only`, and `can()` /
+  `tableAbilities()` report no create/update/delete on it for anyone, so the interface can
+  hide the buttons. A writable view works like a table, history and locks under the view's own
+  name; on SQLite the id of a record created through the view is read inside the write
+  transaction, because `lastInsertId` is stale there (PostgreSQL and MariaDB checked on live
+  servers). Foreign keys, indexes and the fuzzy-date / osteology / Pleiades / radiocarbon plugins are
+  refused on views (`view_not_alterable`). (#53)
 - `Inspect::listObjects()` and `Inspect::foreignKeys()` on SQLite, MySQL/MariaDB and PostgreSQL,
   tested against live PostgreSQL and MariaDB. (#53)
 

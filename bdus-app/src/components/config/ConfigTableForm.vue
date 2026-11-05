@@ -245,11 +245,21 @@
       <!-- ── Danger zone ──────────────────────────────────────────── -->
       <section v-if="tb" class="cfg-section cfg-danger-section">
         <div class="cfg-section-title cfg-danger-title">{{ t('danger_zone') }}</div>
-        <p class="cfg-danger-warn">{{ isView ? t('warning_unregister_view') : t('warning_delete_table') }}</p>
-        <AButton danger size="small" :loading="deleting" @click="deleteTable">
-          <template #icon><DeleteOutlined /></template>
-          {{ isView ? t('unregister_view') : t('delete_table') }}
-        </AButton>
+        <div class="cfg-danger-row">
+          <p class="cfg-danger-warn">{{ t('deactivate_table_hint') }}</p>
+          <AButton size="small" :loading="deactivating" :disabled="cannotDeactivate" :title="cannotDeactivate ? t('table_not_deactivable') : ''" @click="deactivateTable">
+            <template #icon><PauseCircleOutlined /></template>
+            {{ t('deactivate_table') }}
+          </AButton>
+        </div>
+        <div class="cfg-danger-row">
+          <p class="cfg-danger-warn">{{ isView ? t('warning_unregister_view') : t('warning_remove_from_config') }}</p>
+          <AButton danger size="small" :loading="deleting" @click="deleteTable">
+            <template #icon><DeleteOutlined /></template>
+            {{ isView ? t('unregister_view') : t('remove_from_config') }}
+          </AButton>
+        </div>
+        <small class="cfg-hint">{{ t('delete_table_where') }}</small>
       </section>
 
     </div>
@@ -273,7 +283,7 @@
 </template>
 
 <script setup>
-import { BarsOutlined, CheckOutlined, CloseOutlined, DeleteOutlined, EditOutlined, LoadingOutlined, SaveOutlined, TableOutlined, UnorderedListOutlined } from '@ant-design/icons-vue'
+import { BarsOutlined, CheckOutlined, CloseOutlined, DeleteOutlined, EditOutlined, LoadingOutlined, PauseCircleOutlined, SaveOutlined, TableOutlined, UnorderedListOutlined } from '@ant-design/icons-vue'
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import Sortable from 'sortablejs'
 import {
@@ -303,6 +313,7 @@ const confirm = useConfirm()
 const loading   = ref(false)
 const saving    = ref(false)
 const deleting  = ref(false)
+const deactivating = ref(false)
 const renaming  = ref(false)
 const loadError = ref(null)
 
@@ -329,6 +340,9 @@ const isPlugin = computed(() => form.value?.is_plugin === '1')
 
 // A registered SQL view: configurable, but its structure belongs to the database.
 const isView = computed(() => !!table.value?.is_view)
+
+// Plugin tables, and tables that have plugins, cannot be switched off on their own.
+const cannotDeactivate = computed(() => isPlugin.value || (table.value?.plugin ?? []).filter(Boolean).length > 0)
 
 // is_plugin as boolean for ToggleSwitch (#20)
 const isPluginBool = computed({
@@ -573,10 +587,41 @@ async function toggleRadiocarbon(newVal) {
 }
 
 // ── Delete ─────────────────────────────────────────────────────────────────
+function deactivateTable() {
+  confirm.require({
+    message:  t('deactivate_table_hint'),
+    header:   t('deactivate_table'),
+    icon:     'pi pi-exclamation-triangle',
+    severity: 'warn',
+    accept:   doDeactivate,
+  })
+}
+
+async function doDeactivate() {
+  deactivating.value = true
+  try {
+    const res = await api.put(`/api/config/table/${props.tb}/active`, { active: false })
+    toast.add({
+      severity: res.status === 'success' ? 'success' : 'error',
+      summary:  t('saved'),
+      detail:   api.responseMessage(res, t),
+      life: 4000
+    })
+    if (res.status === 'success') emit('deleted')
+  } catch (e) {
+    toast.add({ severity: 'error', summary: e.message, life: 4000 })
+  } finally {
+    deactivating.value = false
+  }
+}
+
+// "Delete": the configuration only. The table and its data stay in the database
+// (Database objects lists them again); dropping a table is done there, and only
+// for a table that has been deactivated first.
 function deleteTable() {
   confirm.require({
-    message:  isView.value ? t('warning_unregister_view') : t('warning_delete_table'),
-    header:   isView.value ? t('unregister_view') : t('delete_table'),
+    message:  isView.value ? t('warning_unregister_view') : t('warning_remove_from_config'),
+    header:   isView.value ? t('unregister_view') : t('remove_from_config'),
     icon:     'pi pi-exclamation-triangle',
     severity: 'danger',
     accept:   doDelete,
@@ -586,7 +631,7 @@ function deleteTable() {
 async function doDelete() {
   deleting.value = true
   try {
-    const res = await api.delete(`/api/config/table/${props.tb}`)
+    const res = await api.delete(`/api/config/table/${props.tb}?keep_data=1`)
     toast.add({
       severity: res.status === 'success' ? 'success' : 'error',
       summary:  t('saved'),
@@ -740,6 +785,10 @@ onMounted(load)
 .cfg-hint-section {
   margin-top: -0.25rem;
 }
+
+/* Danger zone rows */
+.cfg-danger-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 0.75rem; flex-wrap: wrap; }
+.cfg-danger-row .cfg-danger-warn { margin: 0; flex: 1 1 280px; }
 
 /* SQL view definition */
 .cfg-view-sql { margin-top: 0.75rem; }

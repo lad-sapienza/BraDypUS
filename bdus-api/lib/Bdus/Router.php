@@ -195,6 +195,7 @@ class Router
         'Bdus\\Controllers\\Config::listDbObjects'                 => 'super_admin',
         'Bdus\\Controllers\\Config::getDbObject'                   => 'super_admin',
         'Bdus\\Controllers\\Config::activateDbObject'              => 'super_admin',
+        'Bdus\\Controllers\\Config::setTableActive'                => 'super_admin',
         'Bdus\\Controllers\\Config::add_new_tb'                    => 'super_admin',
         'Bdus\\Controllers\\Config::sortTables'                    => 'super_admin',
         'Bdus\\Controllers\\Config::getTableConfig'                => 'super_admin',
@@ -526,6 +527,7 @@ class Router
             $r->addRoute('GET',    '/api/config/table/{tb}',  ['Bdus\\Controllers\\Config', 'getTableConfig']);
             $r->addRoute('PUT',    '/api/config/table/{tb}',  ['Bdus\\Controllers\\Config', 'save_tb_data']);
             $r->addRoute('DELETE', '/api/config/table/{tb}',  ['Bdus\\Controllers\\Config', 'delete_tb']);
+            $r->addRoute('PUT',    '/api/config/table/{tb}/active', ['Bdus\\Controllers\\Config', 'setTableActive']);
             $r->addRoute('PATCH',  '/api/config/table/{tb}',  ['Bdus\\Controllers\\Config', 'rename_tb']);
             $r->addRoute('GET',    '/api/config/field-structure', ['Bdus\\Controllers\\Config', 'getFldStructure']);
             $r->addRoute('GET',    '/api/config/table/{tb}/fields',              ['Bdus\\Controllers\\Config', 'getFldList']);

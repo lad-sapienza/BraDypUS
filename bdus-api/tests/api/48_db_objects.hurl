@@ -12,6 +12,8 @@
 #   GET  /api/config/db-objects
 #   GET  /api/config/db-objects/{name}
 #   POST /api/config/db-objects/{name}/activate
+#   PUT  /api/config/table/{tb}/active              (48f: deactivate → reactivate → remove
+#   DELETE /api/config/table/{tb}[?keep_data=1]      from config → activate → delete)
 # ════════════════════════════════════════════════════════════════════
 
 
@@ -22,10 +24,10 @@ HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
 jsonpath "$.objects" isCollection
-jsonpath "$.objects[*].name" not includes "bdus_users"
-jsonpath "$.objects[*].name" not includes "bdus_cfg_tables"
+jsonpath "$.objects[?(@.name=='bdus_users')]" not exists
+jsonpath "$.objects[?(@.name=='bdus_cfg_tables')]" not exists
 # configured tables are not offered again
-jsonpath "$.objects[*].name" not includes "crud_test"
+jsonpath "$.objects[?(@.name=='crud_test')]" not exists
 
 
 # ── 48b. Preview / activate of something that is not there ────────────
@@ -60,6 +62,94 @@ HTTP 200
 [Asserts]
 jsonpath "$.status" == "error"
 jsonpath "$.code"   == "already_configured"
+
+
+# ── 48f. Life cycle: deactivate → reactivate → remove from config → activate → delete ─
+POST {{base_url}}/{{app_name}}/api/config/tables
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "name": "tmp_lifecycle", "label": "Lifecycle", "is_plugin": "0" }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+# soft: configuration kept, table behaves as if it were not there
+PUT {{base_url}}/{{app_name}}/api/config/table/tmp_lifecycle/active
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "active": false }
+HTTP 200
+[Asserts]
+jsonpath "$.code" == "table_deactivated"
+
+GET {{base_url}}/{{app_name}}/api/config/tables
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.tables[?(@.name=='tmp_lifecycle')]" not exists
+
+GET {{base_url}}/{{app_name}}/api/config/db-objects
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.objects[?(@.name=='tmp_lifecycle')]" exists
+jsonpath "$.objects[?(@.name=='tmp_lifecycle' && @.inactive==true)]" exists
+
+# the name is taken while it is only switched off
+POST {{base_url}}/{{app_name}}/api/config/tables
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "name": "tmp_lifecycle", "label": "Again", "is_plugin": "0" }
+HTTP 200
+[Asserts]
+jsonpath "$.code" == "tb_already_available"
+
+# reactivation brings the saved configuration back
+POST {{base_url}}/{{app_name}}/api/config/db-objects/tmp_lifecycle/activate
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.code" == "table_reactivated"
+
+GET {{base_url}}/{{app_name}}/api/config/tables
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.tables[?(@.name=='tmp_lifecycle')]" exists
+
+# hard: configuration removed, table stays and can be activated again
+DELETE {{base_url}}/{{app_name}}/api/config/table/tmp_lifecycle?keep_data=1
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+GET {{base_url}}/{{app_name}}/api/config/db-objects
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.objects[?(@.name=='tmp_lifecycle' && @.inactive==false)]" exists
+jsonpath "$.objects[?(@.name=='tmp_lifecycle' && @.activatable==true)]" exists
+
+POST {{base_url}}/{{app_name}}/api/config/db-objects/tmp_lifecycle/activate
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+jsonpath "$.kind"   == "table"
+
+# delete: the table is dropped
+DELETE {{base_url}}/{{app_name}}/api/config/table/tmp_lifecycle
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+GET {{base_url}}/{{app_name}}/api/config/db-objects
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.objects[?(@.name=='tmp_lifecycle')]" not exists
 
 
 # ── 48e. No token → no access ─────────────────────────────────────────

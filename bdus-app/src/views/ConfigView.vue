@@ -101,6 +101,7 @@ const ConfigTableForm  = defineAsyncComponent(() => import('@/components/config/
 const ConfigFieldList  = defineAsyncComponent(() => import('@/components/config/ConfigFieldList.vue'))
 const ConfigZotero     = defineAsyncComponent(() => import('@/components/config/ZoteroLibsPanel.vue'))
 const ConfigDbml       = defineAsyncComponent(() => import('@/components/config/DbmlPanel.vue'))
+const ConfigDbObjects  = defineAsyncComponent(() => import('@/components/config/ConfigDbObjects.vue'))
 
 const { t } = useI18n()
 const store  = useConfigStore()
@@ -137,6 +138,7 @@ const PANEL_LABEL_KEY = {
   relations:  'cfg_relations',
   zotero:     'zotero_libraries',
   dbml:       'dbml_title',
+  dbobjects:  'db_objects',
 }
 const currentSectionLabel = computed(() => {
   const p = panel.value
@@ -158,6 +160,7 @@ const activeComponent = computed(() => {
   if (panel.value === 'fields')     return ConfigFieldList
   if (panel.value === 'zotero')     return ConfigZotero
   if (panel.value === 'dbml')       return ConfigDbml
+  if (panel.value === 'dbobjects')  return ConfigDbObjects
   return null
 })
 

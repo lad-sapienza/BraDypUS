@@ -30,6 +30,15 @@
 
     <div v-if="!loading && form" class="cfg-form-body">
 
+      <!-- ── SQL view: what it is, and its definition (read-only) ──── -->
+      <section v-if="isView" class="cfg-section" data-test="view-info">
+        <AAlert type="info" show-icon :closable="false" :message="t('view_cfg_note')" />
+        <details v-if="table?.view_sql" class="cfg-view-sql">
+          <summary>{{ t('view_sql') }}</summary>
+          <pre>{{ table.view_sql }}</pre>
+        </details>
+      </section>
+
       <!-- ── General ──────────────────────────────────────────────── -->
       <section class="cfg-section">
         <div class="cfg-section-title">{{ t('general') }}</div>
@@ -40,7 +49,7 @@
           <div class="cfg-input-action">
             <AInput v-model:value="form.name" size="small" :disabled="!!tb" style="flex:1; min-width:0" />
             <AButton
-              v-if="tb"
+              v-if="tb && !isView"
               size="small"
               :title="t('rename_table')"
               @click="renameVisible = true"
@@ -143,7 +152,7 @@
       </section>
 
       <!-- ── System plugins ──────────────────────────────────────── -->
-      <section v-if="tb && !isPlugin" class="cfg-section">
+      <section v-if="tb && !isPlugin && !isView" class="cfg-section">
         <div class="cfg-section-title">{{ t('system_plugins') }}</div>
         <small class="cfg-hint cfg-hint-section">{{ t('help_table_system_plugins') }}</small>
         <div class="cfg-form-row">
@@ -229,17 +238,17 @@
       </section>
 
       <!-- ── Indexes ──────────────────────────────────────────────── -->
-      <section v-if="tb" class="cfg-section">
+      <section v-if="tb && !isView" class="cfg-section">
         <ConfigIndexes :tb="tb" />
       </section>
 
       <!-- ── Danger zone ──────────────────────────────────────────── -->
       <section v-if="tb" class="cfg-section cfg-danger-section">
         <div class="cfg-section-title cfg-danger-title">{{ t('danger_zone') }}</div>
-        <p class="cfg-danger-warn">{{ t('warning_delete_table') }}</p>
+        <p class="cfg-danger-warn">{{ isView ? t('warning_unregister_view') : t('warning_delete_table') }}</p>
         <AButton danger size="small" :loading="deleting" @click="deleteTable">
           <template #icon><DeleteOutlined /></template>
-          {{ t('delete_table') }}
+          {{ isView ? t('unregister_view') : t('delete_table') }}
         </AButton>
       </section>
 
@@ -317,6 +326,9 @@ const newName       = ref('')
 
 // ── Computed helpers ───────────────────────────────────────────────────────
 const isPlugin = computed(() => form.value?.is_plugin === '1')
+
+// A registered SQL view: configurable, but its structure belongs to the database.
+const isView = computed(() => !!table.value?.is_view)
 
 // is_plugin as boolean for ToggleSwitch (#20)
 const isPluginBool = computed({
@@ -563,8 +575,8 @@ async function toggleRadiocarbon(newVal) {
 // ── Delete ─────────────────────────────────────────────────────────────────
 function deleteTable() {
   confirm.require({
-    message:  t('warning_delete_table'),
-    header:   t('delete_table'),
+    message:  isView.value ? t('warning_unregister_view') : t('warning_delete_table'),
+    header:   isView.value ? t('unregister_view') : t('delete_table'),
     icon:     'pi pi-exclamation-triangle',
     severity: 'danger',
     accept:   doDelete,
@@ -727,6 +739,13 @@ onMounted(load)
 }
 .cfg-hint-section {
   margin-top: -0.25rem;
+}
+
+/* SQL view definition */
+.cfg-view-sql { margin-top: 0.75rem; }
+.cfg-view-sql pre {
+  max-height: 220px; overflow: auto; padding: 0.6rem; border-radius: 6px;
+  background: var(--p-content-hover-background, rgba(127,127,127,.12)); white-space: pre-wrap; font-size: 0.8rem;
 }
 
 /* Danger zone */

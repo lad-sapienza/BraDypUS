@@ -14,8 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the database, the SQL of a view), `POST …/{name}/activate` writes the configuration —
   never any DDL. A view needs an `id` column, and a writable one also a `creator` column;
   a registered view is flagged `is_view` and cannot be altered (`view_not_alterable`).
-  `getTableList` / `getTableConfig` expose `is_view` (and `view_sql`). The user interface
-  comes in a later release. (#53)
+  `getTableList` / `getTableConfig` expose `is_view` (and `view_sql`).
+  In the app: a new *Database objects* section in the system configuration lists them,
+  previews what would be created and activates them; a registered view shows a *view* badge,
+  its SQL (read-only) and no longer offers rename, add/rename/delete field, indexes or the
+  system plugins, and its *delete* becomes *Remove from configuration*. (#53)
 - **Writing through SQL views.** A registered view that the database cannot write
   (`view_writable = none`) refuses `saveRecord` with `view_read_only`, and `can()` /
   `tableAbilities()` report no create/update/delete on it for anyone, so the interface can

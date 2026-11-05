@@ -135,6 +135,11 @@ class Dispatcher
                 $config = new Config(new Dot(), MAIN_DIR . 'projects/' . APP . '/', $this->db);
                 $ctrl->setCfg($config);
                 \Auth\Authorization::setAppStatus($config->get('main.status'));
+                \Auth\Authorization::setReadOnlyTables(array_values(array_filter(
+                    $config->get('tables.*.name') ?: [],
+                    fn($t) => $config->get("tables.$t.is_view")
+                        && ($config->get("tables.$t.view_writable") ?: 'none') === 'none'
+                )));
                 \Template\Loader::setDb($this->db);
 
                 if ($this->db) {

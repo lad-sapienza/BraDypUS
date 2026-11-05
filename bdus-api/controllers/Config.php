@@ -672,6 +672,7 @@ class Config extends \Bdus\Controller
       $this->returnJson(['status' => 'error', 'code' => 'missing_table']);
       return;
     }
+    if ($this->rejectIfView($tb)) return;
 
     try {
       \Config\FuzzyDate::activate($this->db, $this->cfg, $tb);
@@ -744,6 +745,7 @@ class Config extends \Bdus\Controller
       $this->returnJson(['status' => 'error', 'code' => 'missing_table']);
       return;
     }
+    if ($this->rejectIfView($tb)) return;
 
     try {
       $inspect = new \DB\Inspect($this->db);
@@ -835,6 +837,7 @@ class Config extends \Bdus\Controller
       $this->returnJson(['status' => 'error', 'code' => 'missing_table']);
       return;
     }
+    if ($this->rejectIfView($tb)) return;
 
     try {
       $inspect = new \DB\Inspect($this->db);
@@ -957,6 +960,7 @@ class Config extends \Bdus\Controller
       $this->returnJson(['status' => 'error', 'code' => 'missing_table']);
       return;
     }
+    if ($this->rejectIfView($tb)) return;
 
     $pluginTb = "{$tb}_radiocarbon";
 
@@ -1530,6 +1534,12 @@ class Config extends \Bdus\Controller
 
     $id = isset($this->get['id']) ? (int) $this->get['id'] : null;
 
+    // A foreign key can neither start from nor point to a view.
+    if ($this->rejectIfView(trim($this->post['from_tb'] ?? ''))
+        || $this->rejectIfView(trim($this->post['to_tb'] ?? ''))) {
+      return;
+    }
+
     try {
       // Validation, config row, FK constraint and auto-index live in
       // \Config\Relations so the DBML import applies the very same rules.
@@ -1632,7 +1642,13 @@ class Config extends \Bdus\Controller
         [], 'read'
       ) ?: [];
 
+      $inspect = new \DB\Inspect($this->db);
       foreach ($relations as $r) {
+        if ($inspect->isView($r['from_tb']) || $inspect->isView($r['to_tb'])) {
+          $skipped++;
+          $errors[] = ['from_tb' => $r['from_tb'], 'from_col' => $r['from_col'], 'reason' => 'view_not_alterable'];
+          continue;
+        }
         $orphans = $alter->checkOrphans($r['from_tb'], $r['from_col'], $r['to_tb'], $r['to_col']);
         if ($orphans > 0) {
           $skipped++;
@@ -1747,6 +1763,7 @@ class Config extends \Bdus\Controller
     if (!$this->requireSuperAdmin()) return;
 
     $tb      = $this->get['tb'] ?? '';
+    if ($this->rejectIfView($tb)) return;
     $name    = trim($this->post['name']    ?? '');
     $columns = $this->post['columns'] ?? [];
     $unique  = !empty($this->post['is_unique']) ? 1 : 0;

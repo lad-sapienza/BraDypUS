@@ -163,4 +163,15 @@ class InspectObjectsEngineTest extends TestCase
         $this->assertNotContains('io_fts_data', $names);
         $this->assertContains('io_t_plain', $names);
     }
+
+    /** SQLite-only: an object whose name contains an apostrophe must not break the introspection. */
+    public function testSqliteNameWithAnApostropheDoesNotBreakIntrospection(): void
+    {
+        $db = $this->connect(['db_engine' => 'sqlite', 'db_path' => ':memory:']);
+        $db->exec('CREATE TABLE "io_o\'brien" (id INTEGER PRIMARY KEY, x TEXT)');
+        $i = new Inspect($db);
+        $names = array_column($i->listObjects(), 'name');
+        $this->assertContains("io_o'brien", $names);
+        $this->assertSame([], $i->foreignKeys("io_o'brien"));
+    }
 }

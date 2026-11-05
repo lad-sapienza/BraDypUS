@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.16.6] - 2026-11-05
+
 ### Fixed
 
 - **Record links redirected to `/charts` after visiting the charts page.** The route

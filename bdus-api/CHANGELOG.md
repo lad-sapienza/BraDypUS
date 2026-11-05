@@ -5,6 +5,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.16.6] - 2026-11-05
+
+### Fixed
+
+- **Record links redirected to `/charts` after visiting the charts page.** The route
+  watcher in `ChartsView` was created after an `await`, so it outlived the component
+  and treated the record id of `/:app/record/:tb/:id` as a chart id. It is now
+  registered synchronously and ignores non-charts routes.
+- **Deleting an already-deleted record no longer reports success.** `DELETE
+  /api/record/{tb}/{id}` answered `all_record_deleted, deleted: 1` for an id that no
+  longer existed; it now answers `no_record_deleted` (or counts it as failed in a
+  batch). Unknown table names are rejected too. (#45)
+- **Database rule messages reach the user.** A message raised on purpose by a
+  trigger (`SIGNAL SQLSTATE '45000'` on MySQL/MariaDB, `RAISE EXCEPTION` on
+  PostgreSQL) is returned by record save as `code: db_rule_violation` with the
+  message in `detail`; the app shows it (translating it when it is a known
+  locale key). Every other database error, e.g. constraint violations, stays the
+  generic `error_saved` with no SQL text. SQLite trigger errors are not covered. (#43)
+- **A freshly created app no longer has pending migrations.** `CreateApp::createAll()`
+  (used by `bin/create-app.php` and `POST /api/new-app`) now runs `Migrate::run()`
+  at the end, so non-admin users can log in right away instead of getting
+  `upgrade_pending` until an administrator applies a minor upgrade. (#42)
+
 ## [5.16.5] - 2026-10-31
 
 ### Fixed

@@ -33,6 +33,23 @@ no account is found, you're offered a choice instead of a dead end:
   just an email, at the same **Pending** privilege level, awaiting admin
   approval.
 
+## Is email sending required?
+
+No. An account's **email address** is always required — it is the login name and
+must be unique — but the **sending of emails** is an optional, instance-wide service
+(Resend, configured with environment variables, see
+[Deploy → environment variables](/guide/deploy/)). Without it:
+
+| Still works | Not available |
+|---|---|
+| Sign in with email and password | **Forgot password?** (the link is hidden) |
+| Sign in with SSO (Google, GitHub, ORCID…) and linking an identity to an existing account | **Create account**, including the "create a new account" choice after an SSO sign-in; the *Allow self-registration* setting cannot be turned on |
+| Users created, edited and given a new password by an administrator | Any notification email to the user or to the administrators |
+
+With no email service, a user who forgets the password asks an administrator, who
+sets a new one from **Users**. Nothing sends credentials to a new user either: the
+administrator tells them the password.
+
 ## Forgot password <Badge type="tip" text="v5.6.0" />
 
 The **Forgot password?** link only appears when the instance has email

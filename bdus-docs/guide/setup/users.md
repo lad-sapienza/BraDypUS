@@ -40,7 +40,10 @@ them in a group that grants what they need.
 
 Click **New user** and fill in name, email, password and privilege level; admins
 also choose the user's **groups**. The new user can immediately log in with those
-credentials.
+credentials. The email address is the login name, so it is required and unique even
+when the instance cannot send emails (see
+[Login & authentication](/guide/usage/authentication#is-email-sending-required));
+no email is sent to the new user, so give them the password yourself.
 
 ## Editing a user
 

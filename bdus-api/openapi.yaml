@@ -249,6 +249,8 @@ paths:
                     properties:
                       token:
                         type: string
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/auth/logout:
     get:
@@ -262,6 +264,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Success'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/auth/register:
     post:
@@ -630,6 +634,8 @@ paths:
                       changelog:
                         type: string
                         description: Changelog content as Markdown
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/info/app:
     get:
@@ -656,6 +662,8 @@ paths:
                         enum: [on, off]
                       can:
                         $ref: '#/components/schemas/Abilities'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/tables:
     get:
@@ -675,6 +683,8 @@ paths:
                         type: array
                         items:
                           $ref: '#/components/schemas/TableMeta'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/history:
     get:
@@ -703,6 +713,8 @@ paths:
                               type: string
                             time:
                               type: integer
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/welcome:
     get:
@@ -721,6 +733,8 @@ paths:
                       content:
                         type: string
                         description: Raw Markdown
+        '403':
+          $ref: '#/components/responses/Forbidden'
     put:
       tags: [system]
       summary: Save the welcome-page Markdown content
@@ -741,6 +755,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Success'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/logs:
     get:
@@ -771,6 +787,8 @@ paths:
                         type: array
                         items:
                           type: object
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/logs/purge:
     post:
@@ -792,6 +810,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedSuccess'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/new-app/status:
     get:
@@ -881,6 +901,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   # ── Records ───────────────────────────────────────────────────────────────
 
@@ -897,6 +919,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RecordResponse'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/record/{tb}/{id}:
     get:
@@ -912,12 +936,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RecordResponse'
+        '403':
+          $ref: '#/components/responses/Forbidden'
     delete:
       tags: [records]
       summary: Delete one or more records
-      description: Pass a single integer id in the path. To delete multiple records at once, pass `id` as a repeated query-string parameter.
-        An id that no longer exists is not counted as deleted: a single missing id gives
-        `error` / `no_record_deleted`, in a batch it is counted in `failed`
+      description: |
+        Pass a single integer id in the path. To delete multiple records at once, pass `id` as a repeated query-string parameter.
+
+        An id that no longer exists is not counted as deleted. A single missing id gives
+        `error` / `no_record_deleted`; in a batch it is counted in `failed`
         (`partially_deleted_with_count`).
       parameters:
         - $ref: '#/components/parameters/tb'
@@ -929,6 +957,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/record/{tb}/{id}/duplicate:
     post:
@@ -960,6 +990,8 @@ paths:
                       id:
                         type: integer
                         description: id of the newly created record
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/record/{tb}/{id}/plugins:
     delete:
@@ -989,6 +1021,8 @@ paths:
                     enum: [success]
                   deleted:
                     type: integer
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/record/{tb}:
     post:
@@ -1044,6 +1078,8 @@ paths:
                     properties:
                       id:
                         type: integer
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/records/{tb}:
     get:
@@ -1287,6 +1323,8 @@ paths:
                 oneOf:
                   - $ref: '#/components/schemas/RecordListResponse'
                   - $ref: '#/components/schemas/RecordIdsResponse'
+        '403':
+          $ref: '#/components/responses/Forbidden'
     post:
       tags: [records]
       summary: List / search records (POST)
@@ -1359,6 +1397,8 @@ paths:
                 oneOf:
                   - $ref: '#/components/schemas/RecordListResponse'
                   - $ref: '#/components/schemas/RecordIdsResponse'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/records/{tb}/export:
     get:
@@ -1438,6 +1478,8 @@ paths:
               schema:
                 type: string
                 format: binary
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/record/{tb}/templates:
     get:
@@ -1459,6 +1501,8 @@ paths:
                         type: array
                         items:
                           type: string
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/record/{tb}/field-options:
     get:
@@ -1495,6 +1539,8 @@ paths:
                               type: string
                             label:
                               type: string
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/record/{tb}/check-unique:
     get:
@@ -1544,6 +1590,8 @@ paths:
                   value: { status: success, unique: true }
                 duplicate:
                   value: { status: success, unique: false }
+        '403':
+          $ref: '#/components/responses/Forbidden'
       security:
         - bearerAuth: []
 
@@ -1577,6 +1625,8 @@ paths:
                         type: array
                         items:
                           type: object
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   # ── Deleted records ──────────────────────────────────────────────────────
 
@@ -1619,6 +1669,8 @@ paths:
                               type: string
                             count:
                               type: integer
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/record/{tb}/deleted:
     get:
@@ -1653,6 +1705,8 @@ paths:
                         time:       { type: string }
                         content:
                           $ref: '#/components/schemas/VersionContent'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   # ── Version history ──────────────────────────────────────────────────────
 
@@ -1681,6 +1735,8 @@ paths:
                         type: array
                         items:
                           $ref: '#/components/schemas/VersionEntry'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/version/{id}:
     get:
@@ -1712,6 +1768,8 @@ paths:
                                 $ref: '#/components/schemas/VersionContent'
                       current:
                         $ref: '#/components/schemas/VersionContent'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/version/{id}/restore:
     post:
@@ -1785,6 +1843,8 @@ paths:
                         description: >
                           `true` when the record did not exist and was
                           re-inserted (deleted-record recovery path).
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   # ── Files ────────────────────────────────────────────────────────────────
 
@@ -1853,6 +1913,8 @@ paths:
                     items:
                       $ref: '#/components/schemas/FileItem'
                     description: With `ids_only=1` only `id`, `ext`, `filename` and `is_image` are present
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/record/{tb}/{id}/file:
     post:
@@ -1879,6 +1941,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/record/{tb}/{id}/link-file:
     post:
@@ -1916,6 +1980,8 @@ paths:
                           file:
                             $ref: '#/components/schemas/LinkedFileItem'
                   - $ref: '#/components/schemas/Error'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/file-link/{linkId}:
     delete:
@@ -1940,6 +2006,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/file/{fileId}:
     patch:
@@ -1971,6 +2039,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
     delete:
       tags: [files]
       summary: Delete an uploaded file
@@ -1987,6 +2057,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/file/{fileId}/replace:
     post:
@@ -2032,6 +2104,8 @@ paths:
                           is_image:
                             type: boolean
                   - $ref: '#/components/schemas/Error'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/files/sort:
     post:
@@ -2057,6 +2131,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   # ── Stratigraphic Relations (RS) ─────────────────────────────────────────
 
@@ -2103,6 +2179,8 @@ paths:
                     properties:
                       id:
                         type: integer
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/rs/{id}:
     delete:
@@ -2117,6 +2195,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/rs/matrix:
     get:
@@ -2224,6 +2304,8 @@ paths:
                             relation:
                               type: integer
                               description: Relation code (1-10, see RS documentation).
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   # ── Manual Links ─────────────────────────────────────────────────────────
 
@@ -2254,6 +2336,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/manual-link/{id}:
     delete:
@@ -2268,6 +2352,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   # ── Search ────────────────────────────────────────────────────────────────
 
@@ -2320,6 +2406,8 @@ paths:
                         items:
                           type: string
                           enum: [AND, OR]
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/search/{tb}/values:
     get:
@@ -2374,6 +2462,8 @@ paths:
                           oneOf:
                             - type: string
                             - type: number
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   # ── Config ───────────────────────────────────────────────────────────────
 
@@ -2393,6 +2483,8 @@ paths:
                     properties:
                       properties:
                         type: object
+        '403':
+          $ref: '#/components/responses/Forbidden'
     put:
       tags: [config]
       summary: Save application-level properties
@@ -2409,6 +2501,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/config/tables:
     get:
@@ -2428,6 +2522,8 @@ paths:
                         type: array
                         items:
                           $ref: '#/components/schemas/TableMeta'
+        '403':
+          $ref: '#/components/responses/Forbidden'
     post:
       tags: [config]
       summary: Create a new table
@@ -2460,6 +2556,8 @@ paths:
                     properties:
                       tb:
                         type: string
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/config/tables/sort:
     post:
@@ -2484,6 +2582,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/config/table/{tb}:
     get:
@@ -2503,6 +2603,8 @@ paths:
                     properties:
                       table:
                         $ref: '#/components/schemas/TableConfig'
+        '403':
+          $ref: '#/components/responses/Forbidden'
     put:
       tags: [config]
       summary: Save table-level properties (label, order, preview, rs, links…)
@@ -2521,6 +2623,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
     patch:
       tags: [config]
       summary: Rename a table
@@ -2543,6 +2647,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
     delete:
       tags: [config]
       summary: Delete a table and its data
@@ -2555,6 +2661,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/config/table/{tb}/fields:
     get:
@@ -2576,6 +2684,8 @@ paths:
                         type: array
                         items:
                           $ref: '#/components/schemas/FieldConfig'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/config/table/{tb}/field:
     post:
@@ -2596,6 +2706,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/config/table/{tb}/field/{fld}:
     put:
@@ -2617,6 +2729,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
     patch:
       tags: [config]
       summary: Rename a field
@@ -2640,6 +2754,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
     delete:
       tags: [config]
       summary: Delete a field
@@ -2653,6 +2769,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/config/table/{tb}/fuzzy-date:
     post:
@@ -2676,6 +2794,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
     delete:
       tags: [config]
       summary: Deactivate the fuzzy-date plugin for a table
@@ -2695,6 +2815,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/config/table/{tb}/osteology:
     post:
@@ -2716,6 +2838,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
     delete:
       tags: [config]
       summary: Deactivate the osteology plugin for a table
@@ -2734,6 +2858,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/config/table/{tb}/radiocarbon:
     post:
@@ -2759,6 +2885,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
     delete:
       tags: [config]
       summary: Deactivate the radiocarbon plugin for a table
@@ -2778,6 +2906,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/config/table/{tb}/pleiades:
     post:
@@ -2805,6 +2935,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
     delete:
       tags: [config]
       summary: Deactivate the Pleiades plugin for a table
@@ -2825,6 +2957,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/config/field-structure:
     get:
@@ -2845,6 +2979,8 @@ paths:
                         type: array
                         items:
                           type: object
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/config/validation:
     get:
@@ -2872,6 +3008,8 @@ paths:
                               enum: [ok, warning, error]
                             message:
                               type: string
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/config/validation/fix:
     post:
@@ -2895,6 +3033,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/config/geoface:
     get:
@@ -2912,6 +3052,8 @@ paths:
                     properties:
                       config:
                         type: object
+        '403':
+          $ref: '#/components/responses/Forbidden'
     put:
       tags: [config]
       summary: Save GeoFace configuration
@@ -2928,6 +3070,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/config/geofile:
     post:
@@ -2952,6 +3096,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
     delete:
       tags: [config]
       summary: Delete a locally uploaded geofile
@@ -2971,6 +3117,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   # ── Charts ───────────────────────────────────────────────────────────────
 
@@ -2992,6 +3140,8 @@ paths:
                         type: array
                         items:
                           $ref: '#/components/schemas/Chart'
+        '403':
+          $ref: '#/components/responses/Forbidden'
     post:
       tags: [charts]
       summary: Save a new chart
@@ -3019,6 +3169,8 @@ paths:
                     properties:
                       chart:
                         $ref: '#/components/schemas/Chart'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/chart/data:
     post:
@@ -3078,6 +3230,8 @@ paths:
                             type: array
                             items:
                               type: number
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/chart/{id}/share:
     post:
@@ -3092,6 +3246,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/chart/{id}/unshare:
     post:
@@ -3106,6 +3262,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/chart/{id}:
     post:
@@ -3145,6 +3303,8 @@ paths:
                     properties:
                       chart:
                         $ref: '#/components/schemas/Chart'
+        '403':
+          $ref: '#/components/responses/Forbidden'
     delete:
       tags: [charts]
       summary: Delete a saved chart
@@ -3157,6 +3317,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   # ── Backup ───────────────────────────────────────────────────────────────
 
@@ -3186,6 +3348,8 @@ paths:
                             date:
                               type: string
                               format: date-time
+        '403':
+          $ref: '#/components/responses/Forbidden'
     post:
       tags: [backup]
       summary: Create a new backup
@@ -3196,6 +3360,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/backup/{file}/download:
     get:
@@ -3211,6 +3377,8 @@ paths:
               schema:
                 type: string
                 format: binary
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/backup/{file}/restore:
     post:
@@ -3225,6 +3393,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/backup/{file}:
     delete:
@@ -3239,6 +3409,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   # ── Geoface ───────────────────────────────────────────────────────────────
 
@@ -3351,6 +3523,8 @@ paths:
                             items:
                               type: object
                               description: Background map layer configuration.
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/geoface/feature:
     post:
@@ -3378,6 +3552,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
     put:
       tags: [geoface]
       summary: Update one or more geometry features
@@ -3410,6 +3586,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
     delete:
       tags: [geoface]
       summary: Delete one or more geometry features
@@ -3432,6 +3610,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/geoface/color-field:
     put:
@@ -3467,6 +3647,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   # ── Users ─────────────────────────────────────────────────────────────────
 
@@ -3488,6 +3670,8 @@ paths:
                         type: array
                         items:
                           $ref: '#/components/schemas/User'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/user:
     get:
@@ -3505,6 +3689,8 @@ paths:
                     properties:
                       user:
                         $ref: '#/components/schemas/User'
+        '403':
+          $ref: '#/components/responses/Forbidden'
     post:
       tags: [users]
       summary: Create or update a user
@@ -3533,6 +3719,8 @@ paths:
                           token:
                             type: string
                   - $ref: '#/components/schemas/Error'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/user/{id}:
     get:
@@ -3552,6 +3740,8 @@ paths:
                     properties:
                       user:
                         $ref: '#/components/schemas/User'
+        '403':
+          $ref: '#/components/responses/Forbidden'
     delete:
       tags: [users]
       summary: Delete a user
@@ -3564,6 +3754,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/user/{id}/revoke:
     post:
@@ -3586,6 +3778,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   # ── Templates ─────────────────────────────────────────────────────────────
 
@@ -3607,6 +3801,8 @@ paths:
                         type: array
                         items:
                           type: string
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/templates/{tb}:
     get:
@@ -3628,6 +3824,8 @@ paths:
                         type: array
                         items:
                           type: string
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/template/{tb}/{name}:
     get:
@@ -3652,6 +3850,8 @@ paths:
                     properties:
                       content:
                         type: object
+        '403':
+          $ref: '#/components/responses/Forbidden'
     post:
       tags: [templates]
       summary: Save (create or overwrite) a template
@@ -3676,6 +3876,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
     delete:
       tags: [templates]
       summary: Delete a template
@@ -3693,6 +3895,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/template/{tb}/{name}/rename:
     post:
@@ -3722,6 +3926,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   # ── Vocabularies ──────────────────────────────────────────────────────────
 
@@ -3752,6 +3958,8 @@ paths:
                         type: array
                         items:
                           type: object
+        '403':
+          $ref: '#/components/responses/Forbidden'
     post:
       tags: [vocabularies]
       summary: Add a vocabulary entry
@@ -3776,6 +3984,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/vocabularies/usages:
     get:
@@ -3809,6 +4019,8 @@ paths:
                           tb_label:    { type: string }
                           field:       { type: string }
                           field_label: { type: string }
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/vocabularies/sort:
     post:
@@ -3833,6 +4045,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/vocabulary/{id}:
     patch:
@@ -3857,6 +4071,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
     delete:
       tags: [vocabularies]
       summary: Delete a vocabulary entry
@@ -3869,6 +4085,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   # ── Saved Queries ─────────────────────────────────────────────────────────
 
@@ -3890,6 +4108,8 @@ paths:
                         type: array
                         items:
                           type: object
+        '403':
+          $ref: '#/components/responses/Forbidden'
     post:
       tags: [saved-queries]
       summary: Save a new query
@@ -3914,6 +4134,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/saved-query/{id}/share:
     post:
@@ -3928,6 +4150,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/saved-query/{id}/unshare:
     post:
@@ -3942,6 +4166,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/saved-query/{id}:
     delete:
@@ -3956,6 +4182,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   # ── API Keys ──────────────────────────────────────────────────────────────
 
@@ -3977,6 +4205,8 @@ paths:
                         type: array
                         items:
                           $ref: '#/components/schemas/ApiKey'
+        '403':
+          $ref: '#/components/responses/Forbidden'
     post:
       tags: [api-keys]
       summary: Create a new API key
@@ -4016,6 +4246,8 @@ paths:
                       key:
                         type: string
                         description: The raw API key value (shown once; store it securely)
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/api-key/{id}/revoke:
     post:
@@ -4030,6 +4262,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/api-key/{id}:
     delete:
@@ -4044,6 +4278,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   # ── Groups & permissions ──────────────────────────────────────────────────
   # A rule grants create/read/update/delete on one table to a group, optionally
@@ -4068,6 +4304,8 @@ paths:
                         type: array
                         items:
                           $ref: '#/components/schemas/GroupSummary'
+        '403':
+          $ref: '#/components/responses/Forbidden'
     post:
       tags: [groups]
       summary: Create a group
@@ -4084,6 +4322,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/group/{id}:
     get:
@@ -4103,6 +4343,8 @@ paths:
                     properties:
                       group:
                         $ref: '#/components/schemas/Group'
+        '403':
+          $ref: '#/components/responses/Forbidden'
     put:
       tags: [groups]
       summary: Rename a group / change its description
@@ -4121,6 +4363,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
     delete:
       tags: [groups]
       summary: Delete a group
@@ -4136,6 +4380,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/group/{id}/members:
     put:
@@ -4162,6 +4408,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/group/{id}/rules:
     put:
@@ -4196,6 +4444,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/user/{id}/groups:
     get:
@@ -4217,6 +4467,8 @@ paths:
                         type: array
                         items:
                           type: integer
+        '403':
+          $ref: '#/components/responses/Forbidden'
     put:
       tags: [groups]
       summary: Replace the groups of a user
@@ -4241,6 +4493,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/locks:
     get:
@@ -4260,6 +4514,8 @@ paths:
                         type: array
                         items:
                           $ref: '#/components/schemas/TableLock'
+        '403':
+          $ref: '#/components/responses/Forbidden'
     post:
       tags: [groups]
       summary: Create a table lock
@@ -4280,6 +4536,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/lock/{id}:
     put:
@@ -4300,6 +4558,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
     delete:
       tags: [groups]
       summary: Remove a table lock
@@ -4312,6 +4572,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   # ── Import ────────────────────────────────────────────────────────────────
 
@@ -4335,6 +4597,8 @@ paths:
                         type: array
                         items:
                           type: object
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/import/preview-file:
     post:
@@ -4369,6 +4633,8 @@ paths:
                         type: array
                         items:
                           type: object
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/import/preview-photos:
     post:
@@ -4392,6 +4658,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/import/data:
     post:
@@ -4420,6 +4688,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/import/geojson:
     post:
@@ -4447,6 +4717,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/import/photos:
     post:
@@ -4473,6 +4745,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   # ── Search & Replace ─────────────────────────────────────────────────────
 
@@ -4494,6 +4768,8 @@ paths:
                         type: array
                         items:
                           $ref: '#/components/schemas/TableMeta'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/search-replace/{tb}/fields:
     get:
@@ -4520,6 +4796,8 @@ paths:
                               type: string
                             label:
                               type: string
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/search-replace:
     post:
@@ -4557,6 +4835,8 @@ paths:
                       affected:
                         type: integer
                         description: Number of rows updated
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   # ── Free SQL ──────────────────────────────────────────────────────────────
 
@@ -4581,6 +4861,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/free-sql/run:
     post:
@@ -4613,6 +4895,8 @@ paths:
                           type: object
                       affected:
                         type: integer
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   # ── Migrations ───────────────────────────────────────────────────────────────
 
@@ -4652,6 +4936,8 @@ paths:
                             applied_at:
                               type: [string, 'null']
                               description: Timestamp (`YYYY-MM-DD HH:MM:SS`) or null if not applied
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   # ── Config relations ──────────────────────────────────────────────────────────
 
@@ -4677,6 +4963,8 @@ paths:
                         type: array
                         items:
                           $ref: '#/components/schemas/Relation'
+        '403':
+          $ref: '#/components/responses/Forbidden'
     post:
       tags: [config-relations]
       summary: Create a new FK relation and apply it to the database
@@ -4717,6 +5005,8 @@ paths:
                       orphans:
                         type: integer
                         description: Number of orphan rows (present only when status=warning)
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/config/relations/{id}:
     parameters:
@@ -4749,6 +5039,8 @@ paths:
                         type: integer
                       orphans:
                         type: integer
+        '403':
+          $ref: '#/components/responses/Forbidden'
     delete:
       tags: [config-relations]
       summary: Delete a relation and drop the FK constraint from the database
@@ -4759,6 +5051,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/config/apply-constraints:
     post:
@@ -4796,6 +5090,8 @@ paths:
                               type: string
                             reason:
                               type: string
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   # ── Config indexes ─────────────────────────────────────────────────────────────
 
@@ -4819,6 +5115,8 @@ paths:
                         type: array
                         items:
                           $ref: '#/components/schemas/IndexDef'
+        '403':
+          $ref: '#/components/responses/Forbidden'
     post:
       tags: [config-indexes]
       summary: Create a new index on a table
@@ -4840,6 +5138,8 @@ paths:
                     properties:
                       id:
                         type: integer
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/config/table/{tb}/indexes/{id}:
     parameters:
@@ -4855,6 +5155,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   # ── Zotero ────────────────────────────────────────────────────────────────────
 
@@ -4877,6 +5179,8 @@ paths:
                         type: array
                         items:
                           $ref: '#/components/schemas/ZoteroLib'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/zotero/lib:
     post:
@@ -4918,6 +5222,8 @@ paths:
                     properties:
                       id:
                         type: integer
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/zotero/lib/{id}:
     parameters:
@@ -4933,6 +5239,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/zotero/search:
     get:
@@ -4988,6 +5296,8 @@ paths:
                               type: [string, 'null']
                             title:
                               type: string
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/zotero/links/{tb}/{id}:
     parameters:
@@ -5011,6 +5321,8 @@ paths:
                         type: array
                         items:
                           $ref: '#/components/schemas/ZoteroLink'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/zotero/link:
     post:
@@ -5053,6 +5365,8 @@ paths:
                     properties:
                       id:
                         type: integer
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/zotero/link/{id}:
     parameters:
@@ -5081,6 +5395,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
     delete:
       tags: [zotero]
       summary: Delete a citation link
@@ -5092,6 +5408,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/zotero/sync/{tb}/{id}:
     parameters:
@@ -5119,6 +5437,8 @@ paths:
                       detached:
                         type: integer
                         description: Number of links whose Zotero item no longer exists
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/zotero/sync:
     post:
@@ -5144,6 +5464,8 @@ paths:
                         type: integer
                       detached:
                         type: integer
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   # ── Pleiades ──────────────────────────────────────────────────────────────────
 
@@ -5190,6 +5512,8 @@ paths:
                             snippet:
                               type: [string, 'null']
                               description: Short description, when Pleiades provides one
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/pleiades/place/{id}:
     get:
@@ -5229,6 +5553,8 @@ paths:
                             maxItems: 2
                             items:
                               type: number
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   # ── Widgets ───────────────────────────────────────────────────────────────────
 
@@ -5253,6 +5579,8 @@ paths:
                     items:
                       type: string
                     description: Sorted list of widget names (filename without `.js`)
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/widget/{name}:
     parameters:
@@ -5281,6 +5609,8 @@ paths:
           description: Invalid widget name
         '404':
           description: Widget not found
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   # ── Upgrade ───────────────────────────────────────────────────────────────
 
@@ -5575,6 +5905,8 @@ paths:
                           $ref: '#/components/schemas/AssemblageAnalysis'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
     post:
       tags: [assemblage]
       summary: Save a new assemblage analysis
@@ -5603,6 +5935,8 @@ paths:
           $ref: '#/components/responses/Error'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/assemblage/{id}:
     parameters:
@@ -5720,6 +6054,8 @@ paths:
                               type: [string, 'null']
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/assemblage/table-meta:
     get:
@@ -5768,6 +6104,8 @@ paths:
           $ref: '#/components/responses/Error'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/assemblage/data:
     post:
@@ -5824,6 +6162,8 @@ paths:
           $ref: '#/components/responses/Error'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   # ── Chrono ────────────────────────────────────────────────────────────────
 
@@ -5895,6 +6235,8 @@ paths:
                                     type: [string, 'null']
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/chrono/related/{tb}/{id}:
     parameters:
@@ -5957,6 +6299,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
 # ──────────────────────────────────────────────────────────────────────────────
 components:
@@ -5998,6 +6342,48 @@ components:
       description: Backup filename (may contain path separators)
       schema:
         type: string
+
+  responses:
+    Error:
+      description: >-
+        Application error. HTTP 200 with `status: "error"` and a `code` (i18n key);
+        only the auth and privilege gates use other HTTP statuses.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: >-
+        Missing, invalid or expired token (`unauthenticated`), or a token revoked by
+        a password change / explicit revocation (`token_invalidated`).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: >-
+        The request was authenticated with an **API key** that lacks the privilege
+        (its tier, or its group's rules) for this operation: HTTP `403` with
+        `{ status: "error", code: "not_enough_privilege" }`. The same refusal for a
+        user authenticated with a **JWT** is HTTP `200` with that body, like every other
+        application error, so it is documented under the operation's `200` response.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: >-
+        The requested item does not exist (an error response with a `code`).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    SimpleSuccess:
+      description: Operation succeeded.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Success'
 
   schemas:
 

@@ -65,6 +65,21 @@ class OpenApiParityTest extends TestCase
         $this->assertGreaterThan(100, count($this->specOperations()), 'Suspiciously few operations parsed from openapi.yaml.');
     }
 
+    /** Every `$ref: '#/components/responses/X'` must be defined (they were dangling until #47). */
+    public function testReferencedResponsesAreDefined(): void
+    {
+        $spec = file_get_contents(self::SPEC);
+
+        preg_match_all('~\$ref:\s*[\'"]#/components/responses/(\w+)[\'"]~', $spec, $m);
+        $used = array_unique($m[1]);
+
+        // Definitions: 4-space-indented keys between "  responses:" and "  schemas:".
+        $this->assertSame(1, preg_match('~^  responses:\n(.*?)^  schemas:~ms', $spec, $block), 'components/responses not found.');
+        preg_match_all('~^    (\w+):\s*$~m', $block[1], $d);
+
+        $this->assertSame([], array_values(array_diff($used, $d[1])), 'Undefined components/responses referenced.');
+    }
+
     // ── Router.php ───────────────────────────────────────────────────────────
 
     /** @return list<string> sorted "METHOD /path" pairs, path params normalised to {name} */

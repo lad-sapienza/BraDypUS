@@ -109,6 +109,7 @@ function guideSidebar() {
         { text: 'Users & privileges',  link: '/guide/setup/users' },
         { text: 'Groups & locks',      link: '/guide/setup/groups' },
         { text: 'SQL views as tables', link: '/guide/setup/views' },
+        { text: 'Accents, case and indexes', link: '/guide/setup/text-search' },
         { text: 'Validation',          link: '/guide/setup/finalizing-setup' },
         { text: 'DBML import/export',  link: '/guide/setup/dbml' },
         { text: 'Advices & hacks',     link: '/guide/setup/advices-and-hacks' },

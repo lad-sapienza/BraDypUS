@@ -19,6 +19,8 @@ waiting, and clear the box (the **×** in it) to see every record again.
 
 The text is matched against all the table's
 [preview fields](/guide/setup/preview-config), ignoring upper and lower case.
+Whether accents are ignored too depends on the database engine — see
+[Accents, case and indexes](/guide/setup/text-search).
 
 ![Text typed in the query bar and the list narrowed to the matching records](/images/v5/usage/search-fast.png)
 

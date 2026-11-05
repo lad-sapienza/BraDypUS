@@ -5,6 +5,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **`openapi.yaml` was not valid YAML and referenced responses that did not exist.**
+  A description with an unquoted `: ` (added in 5.16.6) made the file unparseable;
+  `#/components/responses/{Error,Unauthorized,Forbidden,NotFound,SimpleSuccess}` were
+  referenced 42 times but never defined. They are defined now.
+
+### Documentation
+
+- `openapi.yaml`: every authenticated operation (179) declares the `403` an API key
+  gets when it lacks the privilege (the same refusal is HTTP 200 with a JWT). Before,
+  only 8 did. `OpenApiParityTest` now fails on a referenced but undefined response. (#47)
+- New guide page *Accents, case and indexes*: what text search ignores on SQLite,
+  MySQL/MariaDB and PostgreSQL, accent-insensitive search with `unaccent`, indexes
+  for long texts (`pg_trgm`). (#47)
+- *Login & authentication* and *Users*: the email address of an account is always
+  required, but email **sending** is optional; what works and what does not without
+  it. (#47)
+
 ### Changed
 
 - **Admin screens are no longer reachable by URL without the privilege.** Typing e.g.

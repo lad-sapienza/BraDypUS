@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   watcher in `ChartsView` was created after an `await`, so it outlived the component
   and treated the record id of `/:app/record/:tb/:id` as a chart id. It is now
   registered synchronously and ignores non-charts routes.
+- **Deleting an already-deleted record no longer reports success.** `DELETE
+  /api/record/{tb}/{id}` answered `all_record_deleted, deleted: 1` for an id that no
+  longer existed; it now answers `no_record_deleted` (or counts it as failed in a
+  batch). Unknown table names are rejected too. (#45)
 
 ## [5.16.5] - 2026-10-31
 

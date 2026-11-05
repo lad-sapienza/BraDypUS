@@ -2284,6 +2284,11 @@ class Record extends \Bdus\Controller
       return;
     }
 
+    if (!in_array($tb, $this->cfg->get('tables.*.name') ?? [], true)) {
+      $this->returnJson(['status' => 'error', 'code' => 'no_record_deleted']);
+      return;
+    }
+
     // Accept both a single id and an array of ids
     $ids = is_array($raw) ? array_map('intval', $raw) : [(int)$raw];
 
@@ -2300,6 +2305,13 @@ class Record extends \Bdus\Controller
     foreach ($ids as $id) {
       if (!$id) continue;
       try {
+        // Already gone (e.g. deleted meanwhile by another user): nothing to
+        // delete, so it must not be reported as a successful deletion (#45).
+        if (!$this->db->query("SELECT 1 FROM {$tb} WHERE id = ?", [$id], 'read')) {
+          $error[] = $id;
+          continue;
+        }
+
         $reader = new \Record\Read($id, null, $tb, $this->db, $this->cfg);
 
         $creator = $hasBlanketEdit ? null : $this->resolveOwnerCreator($tb, $reader, $isPlugin);

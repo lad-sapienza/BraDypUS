@@ -474,6 +474,15 @@ class RecordCtrlSaveEraseTest extends BdusTestCase
         $this->setPrivilege(1);
     }
 
+    public function testEraseOfAlreadyDeletedRecordIsNotReportedAsDeleted(): void
+    {
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => self::TB, 'id' => 987654]);
+        $res  = $this->callController($ctrl, 'erase');
+
+        $this->assertSame('error', $res['status']);
+        $this->assertSame('no_record_deleted', $res['code']);
+    }
+
     public function testSelfWriterCannotEraseOthersRecord(): void
     {
         // Record id=1 is seeded with creator='admin' — not user 42

@@ -34,7 +34,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   configuration back untouched. `DELETE /api/config/table/{tb}?keep_data=1` removes only the
   configuration — the table, its rows and its foreign keys stay in the database and can be
   activated again; without `keep_data` the table is dropped, as before. Plugin tables and
-  tables that have plugins cannot be deactivated on their own (`table_not_deactivable`). (#53)
+  tables that have plugins cannot be deactivated on their own (`table_not_deactivable`).
+  In the app: a table's danger zone offers *Deactivate* and *Remove from configuration*; a
+  deactivated table appears in *Database objects* with *Reactivate*, *Remove from configuration*
+  and — the only irreversible step, asking for the table name — *Delete table*. (#53)
 - `Inspect::listObjects()` and `Inspect::foreignKeys()` on SQLite, MySQL/MariaDB and PostgreSQL,
   tested against live PostgreSQL and MariaDB. (#53)
 

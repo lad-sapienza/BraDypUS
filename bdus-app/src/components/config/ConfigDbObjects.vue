@@ -22,7 +22,8 @@
         <div v-for="o in objects" :key="o.name" class="dbo-row" :data-name="o.name">
           <div class="dbo-main">
             <span class="dbo-name">{{ o.name }}</span>
-            <ATag :color="o.kind === 'view' ? 'purple' : 'blue'">{{ t(o.kind === 'view' ? 'db_kind_view' : 'db_kind_table') }}</ATag>
+            <ATag v-if="o.kind !== 'missing'" :color="o.kind === 'view' ? 'purple' : 'blue'">{{ t(o.kind === 'view' ? 'db_kind_view' : 'db_kind_table') }}</ATag>
+            <ATag v-if="o.inactive" color="orange">{{ t('db_inactive') }}</ATag>
             <ATag v-if="o.kind === 'view'" :color="o.view_writable === 'none' ? 'default' : 'green'">
               {{ o.view_writable === 'none' ? t('view_read_only_badge') : t('view_writable_badge') }}
             </ATag>
@@ -30,9 +31,16 @@
           </div>
           <div class="dbo-status">
             <small v-if="!o.activatable" class="dbo-reason">{{ t('dbo_reason_' + o.reason) }}</small>
-            <AButton size="small" :type="o.activatable ? 'primary' : 'default'" @click="openPreview(o.name)">
-              {{ o.activatable ? t('dbo_preview_activate') : t('dbo_details') }}
+            <AButton v-if="o.kind !== 'missing'" size="small" :type="o.activatable ? 'primary' : 'default'" @click="openPreview(o.name)">
+              {{ o.inactive ? t('dbo_reactivate') : (o.activatable ? t('dbo_preview_activate') : t('dbo_details')) }}
             </AButton>
+            <template v-if="o.inactive">
+              <AButton size="small" danger @click="removeConfig(o.name)">{{ t('remove_from_config') }}</AButton>
+              <AButton v-if="o.kind === 'table'" size="small" danger @click="openDrop(o.name)">
+                <template #icon><DeleteOutlined /></template>
+                {{ t('delete_table') }}
+              </AButton>
+            </template>
           </div>
         </div>
       </div>
@@ -45,7 +53,12 @@
 
       <template v-else-if="preview">
         <AAlert
-          v-if="!preview.activatable"
+          v-if="preview.inactive"
+          type="info" show-icon :closable="false" class="dbo-block"
+          :message="t('dbo_inactive_note')"
+        />
+        <AAlert
+          v-else-if="!preview.activatable"
           type="warning" show-icon :closable="false" class="dbo-block"
           :message="t('dbo_reason_' + preview.reason)"
         />
@@ -56,8 +69,8 @@
         />
         <p v-else class="hint">{{ t('dbo_table_note') }}</p>
 
-        <h4>{{ t('dbo_proposed_fields') }}</h4>
-        <div class="dbo-fields">
+        <h4 v-if="!preview.inactive">{{ t('dbo_proposed_fields') }}</h4>
+        <div v-if="!preview.inactive" class="dbo-fields">
           <div v-for="f in preview.fields" :key="f.name" class="dbo-field">
             <code>{{ f.name }}</code>
             <span>{{ f.type }}</span>
@@ -65,7 +78,7 @@
           </div>
         </div>
 
-        <template v-if="preview.relations.length">
+        <template v-if="!preview.inactive && preview.relations.length">
           <h4>{{ t('dbo_relations_found') }}</h4>
           <div v-for="r in preview.relations" :key="r.from_col" class="dbo-rel">
             <code>{{ r.from_col }}</code> → <code>{{ r.to_tb }}.{{ r.to_col }}</code>
@@ -86,19 +99,34 @@
             @click="activate"
           >
             <template #icon><CheckOutlined /></template>
-            {{ t('dbo_activate') }}
+            {{ preview.inactive ? t('dbo_reactivate') : t('dbo_activate') }}
           </AButton>
         </div>
       </template>
+    </AModal>
+
+    <!-- ── Drop a deactivated table: type its name ─────────────────────── -->
+    <AModal v-model:open="dropVisible" :title="t('delete_table') + ': ' + dropName" width="460px" :footer="null">
+      <AAlert type="error" show-icon :closable="false" :message="t('dbo_drop_warning')" class="dbo-block" />
+      <label class="dbo-drop-label">{{ t('dbo_drop_type_name') }} <code>{{ dropName }}</code></label>
+      <AInput v-model:value="dropTyped" size="small" autofocus @keyup.enter="confirmDrop" />
+      <div class="dbo-footer">
+        <AButton size="small" @click="dropVisible = false">{{ t('cancel') }}</AButton>
+        <AButton danger type="primary" size="small" :disabled="dropTyped !== dropName" :loading="dropping" @click="confirmDrop">
+          <template #icon><DeleteOutlined /></template>
+          {{ t('delete_table') }}
+        </AButton>
+      </div>
     </AModal>
 
   </div>
 </template>
 
 <script setup>
-import { CheckOutlined, DatabaseOutlined, LoadingOutlined, ReloadOutlined } from '@ant-design/icons-vue'
+import { CheckOutlined, DatabaseOutlined, DeleteOutlined, LoadingOutlined, ReloadOutlined } from '@ant-design/icons-vue'
 import { ref, onMounted } from 'vue'
-import { Button as AButton, Alert as AAlert, Modal as AModal, Tag as ATag } from 'ant-design-vue'
+import { Button as AButton, Alert as AAlert, Input as AInput, Modal as AModal, Tag as ATag } from 'ant-design-vue'
+import { useConfirm } from '@/composables/useNotify'
 import { useI18n }  from '@/i18n'
 import { useToast } from '@/composables/useNotify'
 import { api }      from '@/api'
@@ -107,6 +135,7 @@ const emit = defineEmits(['table-added'])
 
 const { t }  = useI18n()
 const toast  = useToast()
+const confirm = useConfirm()
 
 const objects   = ref([])
 const loading   = ref(false)
@@ -156,7 +185,9 @@ async function activate() {
     toast.add({
       severity: res.status === 'success' ? 'success' : 'error',
       summary:  t('saved'),
-      detail:   res.status === 'success' ? t('db_object_activated') : api.responseMessage(res, t),
+      detail:   res.status === 'success'
+        ? t(res.code === 'table_reactivated' ? 'table_reactivated' : 'db_object_activated')
+        : api.responseMessage(res, t),
       life: 4000,
     })
     if (res.status === 'success') {
@@ -168,6 +199,51 @@ async function activate() {
     toast.add({ severity: 'error', summary: e.message, life: 4000 })
   } finally {
     activating.value = false
+  }
+}
+
+// ── Remove the configuration of a deactivated table (data stays) ─────────
+function removeConfig(name) {
+  confirm.require({
+    message:  t('warning_remove_from_config'),
+    header:   t('remove_from_config'),
+    icon:     'pi pi-exclamation-triangle',
+    severity: 'danger',
+    accept:   async () => {
+      try {
+        const res = await api.delete(`/api/config/table/${encodeURIComponent(name)}?keep_data=1`)
+        toast.add({ severity: res.status === 'success' ? 'success' : 'error', summary: t('saved'), detail: api.responseMessage(res, t), life: 4000 })
+        if (res.status === 'success') { emit('table-added'); await load() }
+      } catch (e) {
+        toast.add({ severity: 'error', summary: e.message, life: 4000 })
+      }
+    },
+  })
+}
+
+// ── Drop a deactivated table: the one irreversible action, name to be typed ─
+const dropVisible = ref(false)
+const dropName    = ref('')
+const dropTyped   = ref('')
+const dropping    = ref(false)
+
+function openDrop(name) {
+  dropName.value    = name
+  dropTyped.value   = ''
+  dropVisible.value = true
+}
+
+async function confirmDrop() {
+  if (dropTyped.value !== dropName.value) return
+  dropping.value = true
+  try {
+    const res = await api.delete(`/api/config/table/${encodeURIComponent(dropName.value)}`)
+    toast.add({ severity: res.status === 'success' ? 'success' : 'error', summary: t('saved'), detail: api.responseMessage(res, t), life: 4000 })
+    if (res.status === 'success') { dropVisible.value = false; emit('table-added'); await load() }
+  } catch (e) {
+    toast.add({ severity: 'error', summary: e.message, life: 4000 })
+  } finally {
+    dropping.value = false
   }
 }
 
@@ -205,6 +281,7 @@ onMounted(load)
   max-height: 220px; overflow: auto; padding: 0.6rem; border-radius: 6px;
   background: var(--p-content-hover-background, rgba(127,127,127,.12)); white-space: pre-wrap; font-size: 0.8rem;
 }
+.dbo-drop-label { display: block; margin-bottom: 0.4rem; }
 .dbo-footer { display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1rem; }
 @media (max-width: 640px) { .panel-body { padding: 0.75rem 1rem; } }
 </style>

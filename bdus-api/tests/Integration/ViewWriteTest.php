@@ -129,4 +129,26 @@ class ViewWriteTest extends BdusTestCase
             $this->assertSame('view_not_alterable', $res['code'] ?? null, $method);
         }
     }
+
+    public function testWritableViewDeletes(): void
+    {
+        $res = $this->save('vw_rw', ['name' => 'to be erased']);
+        $id  = (int) $res['id'];
+        $this->assertGreaterThan(0, $id);
+
+        $ctrl = $this->makeController(self::REC, ['tb' => 'vw_rw', 'id' => $id], []);
+        $del  = $this->callController($ctrl, 'erase');
+        $this->assertSame('all_record_deleted', $del['code'], json_encode($del));
+        $this->assertSame([], static::$db->query('SELECT id FROM vw_base WHERE id = ?', [$id], 'read'));
+    }
+
+    public function testReadOnlyViewCannotBeErased(): void
+    {
+        static::$db->query("INSERT INTO vw_base (name) VALUES ('keep')", [], 'boolean');
+        $id   = (int) static::$db->query('SELECT MAX(id) AS m FROM vw_base', [], 'read')[0]['m'];
+        $ctrl = $this->makeController(self::REC, ['tb' => 'vw_ro', 'id' => $id], []);
+        $del  = $this->callController($ctrl, 'erase');
+        $this->assertNotSame('all_record_deleted', $del['code']);
+        $this->assertNotSame([], static::$db->query('SELECT id FROM vw_base WHERE id = ?', [$id], 'read'), 'the row is still there');
+    }
 }

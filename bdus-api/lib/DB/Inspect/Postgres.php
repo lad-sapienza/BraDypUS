@@ -41,6 +41,82 @@ class Postgres implements InspectInterface
     return $res && !empty($res) && $res[0]['tot'] > 0;
   }
 
+  public function listObjects(): array
+  {
+    $objs = $this->db->query(
+      "SELECT table_name AS name, table_type AS ttype
+       FROM information_schema.tables
+       WHERE table_schema = current_schema()
+         AND table_type IN ('BASE TABLE','VIEW')
+         AND table_name NOT LIKE 'bdus\_%'"
+    ) ?: [];
+
+    $cols = $this->db->query(
+      "SELECT table_name AS tb, column_name AS fld, data_type AS type
+       FROM information_schema.columns
+       WHERE table_schema = current_schema()
+       ORDER BY table_name, ordinal_position"
+    ) ?: [];
+    $byTb = [];
+    foreach ($cols as $c) {
+      $byTb[$c['tb']][] = ['fld' => $c['fld'], 'type' => $c['type'], 'pk' => false];
+    }
+
+    $pks = $this->db->query(
+      "SELECT kcu.table_name AS tb, kcu.column_name AS fld
+       FROM information_schema.table_constraints tc
+       JOIN information_schema.key_column_usage kcu
+         ON kcu.constraint_name = tc.constraint_name AND kcu.table_schema = tc.table_schema
+       WHERE tc.constraint_type = 'PRIMARY KEY' AND tc.table_schema = current_schema()"
+    ) ?: [];
+    foreach ($pks as $p) {
+      foreach ($byTb[$p['tb']] ?? [] as $i => $c) {
+        if ($c['fld'] === $p['fld']) {
+          $byTb[$p['tb']][$i]['pk'] = true;
+        }
+      }
+    }
+
+    $updatable = [];
+    foreach ($this->db->query(
+      "SELECT table_name AS name, is_updatable AS upd, is_insertable_into AS ins
+       FROM information_schema.views WHERE table_schema = current_schema()"
+    ) ?: [] as $v) {
+      $updatable[$v['name']] = ($v['upd'] === 'YES' || $v['ins'] === 'YES');
+    }
+    $instead = [];
+    foreach ($this->db->query(
+      "SELECT DISTINCT event_object_table AS name FROM information_schema.triggers
+       WHERE event_object_schema = current_schema() AND action_timing = 'INSTEAD OF'"
+    ) ?: [] as $t) {
+      $instead[$t['name']] = true;
+    }
+
+    $ret = [];
+    foreach ($objs as $o) {
+      $isView = $o['ttype'] === 'VIEW';
+      $sql = null;
+      $writable = null;
+      if ($isView) {
+        $d = $this->db->query(
+          "SELECT pg_get_viewdef((quote_ident(current_schema()) || '.' || quote_ident(?))::regclass, true) AS def",
+          [$o['name']]
+        );
+        $sql = $d[0]['def'] ?? null;
+        $writable = isset($instead[$o['name']]) ? 'trigger'
+          : (($updatable[$o['name']] ?? false) ? 'probe' : 'none');
+      }
+      $ret[] = [
+        'name'          => $o['name'],
+        'kind'          => $isView ? 'view' : 'table',
+        'columns'       => $byTb[$o['name']] ?? [],
+        'sql'           => $sql,
+        'view_writable' => $writable,
+      ];
+    }
+    return $ret;
+  }
+
   public function tableColumns(string $tb): array
   {
     $ret = [];

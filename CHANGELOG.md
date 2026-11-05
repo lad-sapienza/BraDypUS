@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.16.8] - 2026-11-05
+
 ### Fixed
 
 - **Schema changes on a registered SQL view reported success but changed nothing.**

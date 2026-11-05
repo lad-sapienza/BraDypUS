@@ -916,6 +916,9 @@ paths:
       tags: [records]
       summary: Delete one or more records
       description: Pass a single integer id in the path. To delete multiple records at once, pass `id` as a repeated query-string parameter.
+        An id that no longer exists is not counted as deleted: a single missing id gives
+        `error` / `no_record_deleted`, in a batch it is counted in `failed`
+        (`partially_deleted_with_count`).
       parameters:
         - $ref: '#/components/parameters/tb'
         - $ref: '#/components/parameters/id'

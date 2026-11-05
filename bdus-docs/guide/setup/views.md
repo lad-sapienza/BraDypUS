@@ -180,6 +180,12 @@ DELIMITER ;
 with a one-row table `counter (id INT PRIMARY KEY, n INT NOT NULL)` seeded with
 `(1, 0)`. In the test, 20 concurrent inserts got distinct, consecutive numbers.
 
+The text of `SIGNAL SQLSTATE '45000'` (MariaDB/MySQL) or `RAISE EXCEPTION`
+(PostgreSQL) reaches the user: when a record save is refused by a trigger, the
+message is shown as it is. If it is the key of a translation known to the app, it is
+translated. Any other database error, such as a constraint violation, only
+shows a generic message, without SQL text. Triggers on SQLite are not covered.
+
 Because each role sees only rows in the states it acts on, it can only make the
 transitions that start from there: the author never sees a `submitted` card, so
 cannot move it; the supervisor sees only `submitted` cards, so cannot validate a

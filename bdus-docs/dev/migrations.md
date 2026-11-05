@@ -22,6 +22,10 @@ is `POST /api/upgrade/minor` (`Upgrade::runMinor`), reached through the login fl
 3. Pending and the user is not an admin: `upgrade_pending` error, no token.
 4. Nothing pending: `Migrate::run()` only stamps the version.
 
+A new application is created with all migrations applied: `CreateApp::createAll()`
+(`bin/create-app.php`, `POST /api/new-app`) ends with `Migrate::run()`, so non-admin
+users can log in immediately.
+
 For each pending migration `Migrate::run()`:
 
 1. Checks `bdus_migrations` — if already applied, skips it.

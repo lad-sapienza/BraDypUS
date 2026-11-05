@@ -2559,6 +2559,130 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
 
+  /api/config/db-objects:
+    get:
+      tags: [config]
+      summary: Tables and views of the database that are not in the configuration
+      description: |
+        Everything `Inspect` finds in the database that is not yet a BraDypUS table,
+        with whether it can be activated (`POST /api/config/db-objects/{name}/activate`)
+        and, when it cannot, why. System objects (`bdus_*`) are never listed.
+      responses:
+        '200':
+          description: Database objects
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      objects:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            name: { type: string }
+                            kind: { type: string, enum: [table, view] }
+                            view_writable:
+                              type: string
+                              nullable: true
+                              enum: [none, probe, trigger]
+                              description: Views only. `none` = not writable, `probe` = the engine says it is updatable, `trigger` = writable through INSTEAD OF triggers.
+                            has_id: { type: boolean }
+                            has_creator: { type: boolean }
+                            columns: { type: integer }
+                            activatable: { type: boolean }
+                            reason:
+                              type: string
+                              nullable: true
+                              enum: [already_configured, invalid_name, missing_id_column, missing_creator_column]
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/config/db-objects/{name}:
+    get:
+      tags: [config]
+      summary: Preview the activation of a database table or view
+      description: |
+        What `activate` would create: proposed fields (types deduced from the SQL
+        types), foreign keys already present in the database, the SQL of a view
+        and whether activation is possible. Nothing is written.
+      parameters:
+        - { name: name, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Activation preview, or `not_found`
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, enum: [success, error] }
+                  code: { type: string }
+                  name: { type: string }
+                  kind: { type: string, enum: [table, view] }
+                  sql: { type: string, nullable: true }
+                  view_writable: { type: string, nullable: true, enum: [none, probe, trigger] }
+                  has_id: { type: boolean }
+                  has_creator: { type: boolean }
+                  fields:
+                    type: array
+                    items: { type: object, additionalProperties: true }
+                  relations:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        from_col: { type: string }
+                        to_tb: { type: string }
+                        to_col: { type: string }
+                        on_delete: { type: string }
+                        on_update: { type: string }
+                        configured: { type: boolean }
+                  activatable: { type: boolean }
+                  reason: { type: string, nullable: true }
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/config/db-objects/{name}/activate:
+    post:
+      tags: [config]
+      summary: Register an existing database table or view as a BraDypUS table
+      description: |
+        Writes configuration only (table, fields, relations already declared as
+        foreign keys); the table or view itself is never altered. Requires an `id`
+        column; a writable view also requires `creator`. A view is flagged
+        `is_view` and cannot be altered from BraDypUS (`view_not_alterable`).
+        Errors: `not_found`, `already_configured`, `invalid_name`,
+        `missing_id_column`, `missing_creator_column`, `db_error`.
+      parameters:
+        - { name: name, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Activated, or an error code
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, enum: [success, error] }
+                  code: { type: string }
+                  tb: { type: string }
+                  kind: { type: string, enum: [table, view] }
+                  fields: { type: integer }
+                  relations_created: { type: integer }
+                  relations_skipped:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        from_col: { type: string }
+                        to_tb: { type: string }
+                        reason: { type: string }
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
   /api/config/tables/sort:
     post:
       tags: [config]
@@ -6848,6 +6972,9 @@ components:
         is_plugin:
           type: string
           enum: ['0', '1']
+        is_view:
+          type: boolean
+          description: Only in `GET /api/config/tables`. True for a registered SQL view.
         can:
           $ref: '#/components/schemas/Abilities'
           description: >

@@ -49,6 +49,14 @@ interface InspectInterface
   public function listObjects(): array;
 
   /**
+   * Single-column FOREIGN KEYs declared on a table, as the database knows them.
+   * Composite keys are skipped (BraDypUS relations are single-column).
+   *
+   * @return array<int, array{from_col: string, to_tb: string, to_col: string, on_delete: string, on_update: string}>
+   */
+  public function foreignKeys(string $tb): array;
+
+  /**
    * Returns the list of base tables contained in database
    * (views are NOT included, on any engine).
    *

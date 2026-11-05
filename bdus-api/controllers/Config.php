@@ -86,6 +86,15 @@ class Config extends \Bdus\Controller
         }
       }
 
+      // `is_view` / `view_writable` are set by the activation of a database view
+      // and are not editable here: carry the stored values over, whatever the
+      // form posted (the table form does not know about them and would drop them).
+      unset($post['is_view'], $post['view_writable']);
+      if ($this->cfg->get("tables.{$post['name']}.is_view")) {
+        $post['is_view']       = true;
+        $post['view_writable'] = $this->cfg->get("tables.{$post['name']}.view_writable") ?: 'none';
+      }
+
       $this->cfg->setTable($post);
 
       // Keep bdus_cfg_relations in sync with plugin_of: this is the generic
@@ -229,6 +238,77 @@ class Config extends \Bdus\Controller
     }
     $this->returnJson(['status' => 'error', 'code' => 'view_not_alterable']);
     return true;
+  }
+
+  /**
+   * Tables and views that exist in the database but are not in the
+   * configuration, with whether (and why not) each can be activated.
+   *
+   * GET /api/config/db-objects
+   * Response: { status, objects: [{name, kind, view_writable, has_id, has_creator,
+   *             columns, activatable, reason}] }
+   */
+  public function listDbObjects(): void
+  {
+    if (!$this->requireSuperAdmin()) return;
+
+    try {
+      $configured = $this->cfg->get('tables.*.name') ?: [];
+      $objects    = [];
+      foreach ((new \DB\Inspect($this->db))->listObjects() as $o) {
+        if (in_array($o['name'], $configured, true)) continue;
+        $reason = \Config\Activate::reason($o, $configured);
+        $objects[] = [
+          'name'          => $o['name'],
+          'kind'          => $o['kind'],
+          'view_writable' => $o['view_writable'],
+          'has_id'        => $o['has_id'],
+          'has_creator'   => $o['has_creator'],
+          'columns'       => count($o['columns']),
+          'activatable'   => $reason === null,
+          'reason'        => $reason,
+        ];
+      }
+      $this->returnJson(['status' => 'success', 'objects' => $objects]);
+    } catch (\Throwable $e) {
+      $this->log->error($e);
+      $this->returnJson(['status' => 'error', 'code' => 'db_error']);
+    }
+  }
+
+  /**
+   * What activating one database object would create (fields, relations, view SQL).
+   *
+   * GET /api/config/db-objects/{name}
+   */
+  public function getDbObject(): void
+  {
+    if (!$this->requireSuperAdmin()) return;
+
+    try {
+      $this->returnJson(\Config\Activate::analyse($this->db, $this->cfg, (string) ($this->get['name'] ?? '')));
+    } catch (\Throwable $e) {
+      $this->log->error($e);
+      $this->returnJson(['status' => 'error', 'code' => 'db_error']);
+    }
+  }
+
+  /**
+   * Registers a table or view that already exists in the database. Writes
+   * configuration only — no DDL.
+   *
+   * POST /api/config/db-objects/{name}/activate
+   */
+  public function activateDbObject(): void
+  {
+    if (!$this->requireSuperAdmin()) return;
+
+    try {
+      $this->returnJson(\Config\Activate::activate($this->db, $this->cfg, (string) ($this->get['name'] ?? '')));
+    } catch (\Throwable $e) {
+      $this->log->error($e);
+      $this->returnJson(['status' => 'error', 'code' => 'db_error']);
+    }
   }
 
   public function add_new_tb()
@@ -1137,6 +1217,7 @@ class Config extends \Bdus\Controller
         // Always return a string so the frontend === '1' comparison is reliable
         // regardless of whether the config came from JSON ('0'/'1') or DB (bool).
         'is_plugin' => (bool)$this->cfg->get("tables.$name.is_plugin") ? '1' : '0',
+        'is_view'   => (bool)$this->cfg->get("tables.$name.is_view"),
       ];
     }
 
@@ -1227,6 +1308,17 @@ class Config extends \Bdus\Controller
     // whose options are [{value:''}, {value:'1'}] always has a matching entry,
     // regardless of whether the config came from JSON ('0'/'1') or DB (bool).
     $table['is_plugin'] = ($table['is_plugin'] ?? false) ? '1' : '';
+
+    // For a registered view: the live definition, read-only, for the UI.
+    $table['is_view'] = (bool) ($table['is_view'] ?? false);
+    if ($table['is_view']) {
+      foreach ((new \DB\Inspect($this->db))->listObjects() as $o) {
+        if ($o['name'] === $tb) {
+          $table['view_sql'] = $o['sql'];
+          break;
+        }
+      }
+    }
 
     // Enrich each link entry with the field labels of the linked table
     foreach ($table['link'] as &$link) {

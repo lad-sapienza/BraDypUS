@@ -41,6 +41,43 @@ class Postgres implements InspectInterface
     return $res && !empty($res) && $res[0]['tot'] > 0;
   }
 
+  public function foreignKeys(string $tb): array
+  {
+    $rows = $this->db->query(
+      "SELECT con.conname AS cname,
+              att.attname AS from_col,
+              rcl.relname AS to_tb,
+              ratt.attname AS to_col,
+              con.confdeltype AS del,
+              con.confupdtype AS upd,
+              cardinality(con.conkey) AS ncols
+       FROM pg_constraint con
+       JOIN pg_class cl   ON cl.oid  = con.conrelid
+       JOIN pg_namespace ns ON ns.oid = cl.relnamespace
+       JOIN pg_class rcl  ON rcl.oid = con.confrelid
+       JOIN pg_attribute att  ON att.attrelid  = con.conrelid  AND att.attnum  = con.conkey[1]
+       JOIN pg_attribute ratt ON ratt.attrelid = con.confrelid AND ratt.attnum = con.confkey[1]
+       WHERE con.contype = 'f' AND cl.relname = ? AND ns.nspname = current_schema()",
+      [$tb]
+    ) ?: [];
+
+    $rule = ['a' => 'NO ACTION', 'r' => 'RESTRICT', 'c' => 'CASCADE', 'n' => 'SET NULL', 'd' => 'SET DEFAULT'];
+    $ret = [];
+    foreach ($rows as $r) {
+      if ((int) $r['ncols'] !== 1) {
+        continue;
+      }
+      $ret[] = [
+        'from_col'  => $r['from_col'],
+        'to_tb'     => $r['to_tb'],
+        'to_col'    => $r['to_col'],
+        'on_delete' => $rule[$r['del']] ?? 'NO ACTION',
+        'on_update' => $rule[$r['upd']] ?? 'NO ACTION',
+      ];
+    }
+    return $ret;
+  }
+
   public function listObjects(): array
   {
     $objs = $this->db->query(

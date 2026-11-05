@@ -41,6 +41,44 @@ class Mysql implements InspectInterface
     return $res && !empty($res) && $res[0]['tot'] > 0;
   }
 
+  public function foreignKeys(string $tb): array
+  {
+    $rows = $this->db->query(
+      "SELECT k.CONSTRAINT_NAME AS cname, k.COLUMN_NAME AS from_col,
+              k.REFERENCED_TABLE_NAME AS to_tb, k.REFERENCED_COLUMN_NAME AS to_col,
+              rc.DELETE_RULE AS del, rc.UPDATE_RULE AS upd
+       FROM information_schema.KEY_COLUMN_USAGE k
+       JOIN information_schema.REFERENTIAL_CONSTRAINTS rc
+         ON rc.CONSTRAINT_SCHEMA = k.TABLE_SCHEMA
+        AND rc.CONSTRAINT_NAME = k.CONSTRAINT_NAME
+        AND rc.TABLE_NAME = k.TABLE_NAME
+       WHERE k.TABLE_SCHEMA = DATABASE() AND k.TABLE_NAME = ?
+         AND k.REFERENCED_TABLE_NAME IS NOT NULL",
+      [$tb]
+    ) ?: [];
+
+    // Composite keys: several rows with the same constraint name — skip them.
+    $perName = [];
+    foreach ($rows as $r) {
+      $perName[$r['cname']] = ($perName[$r['cname']] ?? 0) + 1;
+    }
+
+    $ret = [];
+    foreach ($rows as $r) {
+      if ($perName[$r['cname']] !== 1) {
+        continue;
+      }
+      $ret[] = [
+        'from_col'  => $r['from_col'],
+        'to_tb'     => $r['to_tb'],
+        'to_col'    => $r['to_col'],
+        'on_delete' => strtoupper($r['del']),
+        'on_update' => strtoupper($r['upd']),
+      ];
+    }
+    return $ret;
+  }
+
   public function listObjects(): array
   {
     $objs = $this->db->query(

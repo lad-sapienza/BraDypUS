@@ -30,7 +30,8 @@ tabella normale, alterabile.
 | vista attivata | sì, `is_view=1` | badge "vista" | bloccata (`view_not_alterable`) | RW |
 
 Non servono nuove tabelle di sistema: basta un flag `is_view` in `bdus_cfg_tables`
-(nuove colonne `is_view`, `view_writable`, `active` → **migrazione M047**, minore, additiva; default 0 / `none` / 1). Il flag evita un round-trip
+(`is_view` e `view_writable` stanno nel JSON `extra` di `bdus_cfg_tables`, **senza migrazione**: `save_tb_data` li preserva lato server.
+Una migrazione M047 con la colonna `active` servirà solo alla fase 4, se il filtro per `active` si rivela da fare in SQL). Il flag evita un round-trip
 a `information_schema` a ogni richiesta, ma resta **derivato**: la verità è `Inspect::isView()`;
 il flag cache e viene riallineato dal controllo di deriva (§5).
 
@@ -54,8 +55,8 @@ uguale sui tre motori. `sql` solo per le viste (`sqlite_master.sql`, `pg_get_vie
 2. **Gate `id`**: se manca la colonna `id` → rifiuto con `missing_id_column` (e per le tabelle orfane
    senza PK → proposta esplicita, mai silenziosa; vedi §6.2).
 3. Deduzione campi: `tableColumns` → `db_type` + `type` BraDypUS (INTEGER→`text` con `db_type`, TEXT→`text`,
-   `*DATE*`→`date`, ecc.), `id` `readonly`, `creator` se presente. Colonne FK reali (`PRAGMA foreign_key_list`,
-   `information_schema`) → `bdus_cfg_relations` + `id_from_tb`: sono la parte più utile e meno ovvia.
+   `*DATE*`→`date`, ecc.), `id` `readonly`, `creator` se presente. Colonne FK reali (`Inspect::foreignKeys`) → righe di `bdus_cfg_relations` (solo config, nessun DDL; verso tabelle non configurate
+   → `relations_skipped`). `id_from_tb` sui campi **non** viene impostato: scelta dell'utente, a posteriori.
 4. Default layout: `id_field='id'`, `order='id'`, `preview=['id', primo campo testo]`.
 5. Transazione unica: o tutta la config o niente.
 6. Zero DDL: l'attivazione **non tocca mai** l'oggetto DB.

@@ -41,6 +41,32 @@ class Sqlite implements InspectInterface
     return $res && !empty($res) && $res[0]['tot'] > 0;
   }
 
+  public function foreignKeys(string $tb): array
+  {
+    $rows = $this->db->query("PRAGMA foreign_key_list('{$tb}')") ?: [];
+
+    // Composite keys share an `id`, with one row per column: skip them.
+    $perId = [];
+    foreach ($rows as $r) {
+      $perId[$r['id']] = ($perId[$r['id']] ?? 0) + 1;
+    }
+
+    $ret = [];
+    foreach ($rows as $r) {
+      if ($perId[$r['id']] !== 1 || $r['to'] === null || $r['to'] === '') {
+        continue;
+      }
+      $ret[] = [
+        'from_col'  => $r['from'],
+        'to_tb'     => $r['table'],
+        'to_col'    => $r['to'],
+        'on_delete' => strtoupper($r['on_delete']),
+        'on_update' => strtoupper($r['on_update']),
+      ];
+    }
+    return $ret;
+  }
+
   public function listObjects(): array
   {
     $rows = $this->db->query(

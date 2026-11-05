@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Bdus;
 
+use Config\Activate;
 use Config\Config;
 use Config\FuzzyDate;
+use Config\LoadFromDB;
 use Config\Relations;
 use DB\Alter;
 use DB\DB;
@@ -58,14 +60,18 @@ class DbmlImporter
      *   has_errors: bool
      * }
      */
-    public function preview(array $parsed, Config $cfg): array
+    public function preview(array $parsed, Config $cfg, ?DB $db = null): array
     {
         $existingTables = array_keys($cfg->get('tables') ?? []);
+        // A deactivated table keeps its name (and its configuration) too.
+        if ($db !== null) {
+            $existingTables = array_merge($existingTables, array_keys(LoadFromDB::inactiveTables($db)));
+        }
         $tables         = [];
         $hasErrors      = false;
 
         foreach ($parsed['tables'] as $tbName => $tbData) {
-            $entry = $this->previewTable($tbName, $tbData, $existingTables);
+            $entry = $this->previewTable($tbName, $tbData, $existingTables, $cfg, $db);
             if (!empty($entry['errors'])) {
                 $hasErrors = true;
             }
@@ -91,7 +97,7 @@ class DbmlImporter
      */
     public function apply(array $parsed, Config $cfg, DB $db): array
     {
-        $preview = $this->preview($parsed, $cfg);
+        $preview = $this->preview($parsed, $cfg, $db);
         $existingTables = array_keys($cfg->get('tables') ?? []);
 
         $created  = [];
@@ -129,7 +135,7 @@ class DbmlImporter
 
     // ── Private helpers ──────────────────────────────────────────────────────
 
-    private function previewTable(string $tbName, array $tbData, array $existingTables): array
+    private function previewTable(string $tbName, array $tbData, array $existingTables, ?Config $cfg = null, ?DB $db = null): array
     {
         $entry = [
             'name'      => $tbName,
@@ -142,6 +148,8 @@ class DbmlImporter
             'rs'        => false,
             'geodata'   => false,
             'fuzzy_date'=> false,
+            'is_view'   => false,
+            'annotations' => [],
             'fields'    => [],
             'warnings'  => [],
             'errors'    => [],
@@ -151,6 +159,12 @@ class DbmlImporter
         if (in_array($tbName, $existingTables, true)) {
             $entry['errors'][] = ['code' => 'table_already_exists', 'table' => $tbName];
             return $entry;
+        }
+
+        // bdus:view=1 — a SQL view that must already exist in the database.
+        $viewAnn = $this->parseAnnotations($tbData['note']);
+        if (($viewAnn['view'] ?? '0') === '1') {
+            return $this->previewView($entry, $viewAnn, $cfg, $db);
         }
 
         // Hard stop: PK field is not named 'id'
@@ -196,6 +210,51 @@ class DbmlImporter
             $entry['fields'][] = $this->previewField($colName, $tbData['columns'][$colName]);
         }
 
+        return $entry;
+    }
+
+    /**
+     * A table marked `bdus:view=1`: it is not created, it is activated. It must exist in
+     * the database as a view and satisfy the activation rules (id column, and creator when
+     * it can be written); its fields come from the database, not from the DBML.
+     */
+    private function previewView(array $entry, array $ann, ?Config $cfg, ?DB $db): array
+    {
+        $entry['is_view']     = true;
+        $entry['annotations'] = $ann;
+        foreach (['label', 'order', 'id_field'] as $k) {
+            if (isset($ann[$k])) {
+                $entry[$k] = $ann[$k];
+            }
+        }
+        if (isset($ann['preview'])) {
+            $entry['preview'] = array_map('trim', explode(',', $ann['preview']));
+        }
+        if (($ann['fuzzy_date'] ?? '0') === '1') {
+            $entry['warnings'][] = ['code' => 'view_flag_ignored', 'flag' => 'fuzzy_date'];
+        }
+        if (isset($ann['is_plugin'])) {
+            $entry['errors'][] = ['code' => 'view_cannot_be_plugin'];
+            return $entry;
+        }
+        if ($db === null || $cfg === null) {
+            $entry['errors'][] = ['code' => 'view_check_unavailable'];
+            return $entry;
+        }
+
+        $plan = Activate::analyse($db, $cfg, $entry['name']);
+        if (($plan['status'] ?? '') !== 'success') {
+            $entry['errors'][] = ['code' => 'view_not_found'];
+        } elseif ($plan['kind'] !== 'view') {
+            $entry['errors'][] = ['code' => 'not_a_view'];
+        } elseif (!$plan['activatable']) {
+            $entry['errors'][] = ['code' => $plan['reason']];
+        } else {
+            $entry['fields'] = array_map(
+                static fn(array $f) => ['name' => $f['name'], 'label' => $f['label'], 'type' => $f['type'], 'db_type' => $f['db_type']],
+                $plan['fields']
+            );
+        }
         return $entry;
     }
 
@@ -289,6 +348,12 @@ class DbmlImporter
                         $entry['warnings'][] = ['code' => $code, 'field' => $colName] + $extra;
                     };
 
+                    // A FOREIGN KEY can neither start from nor point to a SQL view.
+                    if ($entry['is_view']) {
+                        $warn('ref_view_not_allowed', ['to' => $col['ref']['table'] . '.' . $col['ref']['col']]);
+                        continue;
+                    }
+
                     $toTb  = $col['ref']['table'];
                     $toCol = $col['ref']['col'];
 
@@ -302,11 +367,14 @@ class DbmlImporter
                         continue;
                     }
 
+                    $targetIsView = false;
                     if (isset($batch[$toTb])) {
                         $targetIsPlugin = $batch[$toTb]['is_plugin'];
+                        $targetIsView   = $batch[$toTb]['is_view'] ?? false;
                         $targetHasCol   = $toCol === 'id' || isset($parsed['tables'][$toTb]['columns'][$toCol]);
                     } elseif (isset($existing[$toTb])) {
                         $targetIsPlugin = (bool) ($existing[$toTb]['is_plugin'] ?? false);
+                        $targetIsView   = (bool) ($existing[$toTb]['is_view'] ?? false);
                         $targetHasCol   = isset($existing[$toTb]['fields'][$toCol]);
                     } else {
                         $warn('ref_target_missing', ['to' => "$toTb.$toCol"]);
@@ -314,6 +382,10 @@ class DbmlImporter
                     }
                     if ($targetIsPlugin) {
                         $warn('ref_plugin_not_allowed', ['to' => "$toTb.$toCol"]);
+                        continue;
+                    }
+                    if ($targetIsView) {
+                        $warn('ref_view_not_allowed', ['to' => "$toTb.$toCol"]);
                         continue;
                     }
                     if (!$targetHasCol) {
@@ -393,8 +465,43 @@ class DbmlImporter
         }
     }
 
+    /**
+     * A `bdus:view=1` table: activate the existing view (fields from the database),
+     * then apply the table-level settings the DBML states explicitly.
+     */
+    private function applyView(array $tbEntry, Config $cfg, DB $db): void
+    {
+        $name = $tbEntry['name'];
+        $res  = Activate::activate($db, $cfg, $name);
+        if (($res['status'] ?? '') !== 'success') {
+            throw new \RuntimeException((string) ($res['code'] ?? 'activation_failed'));
+        }
+
+        $ann = $tbEntry['annotations'];
+        $set = array_intersect_key($tbEntry, array_flip(array_filter(['label', 'order', 'id_field', 'preview'], fn($k) => isset($ann[$k]))));
+        if ($set) {
+            // Only what the DBML states, on top of what the activation wrote.
+            $tbData = [
+                'name'          => $name,
+                'label'         => $cfg->get("tables.$name.label"),
+                'order'         => $cfg->get("tables.$name.order"),
+                'id_field'      => $cfg->get("tables.$name.id_field"),
+                'preview'       => $cfg->get("tables.$name.preview"),
+                'is_plugin'     => 0,
+                'is_view'       => true,
+                'view_writable' => $cfg->get("tables.$name.view_writable"),
+            ];
+            $cfg->setTable($set + $tbData);
+        }
+    }
+
     private function applyTable(array $tbEntry, Config $cfg, DB $db, array &$warnings): void
     {
+        if (!empty($tbEntry['is_view'])) {
+            $this->applyView($tbEntry, $cfg, $db);
+            return;
+        }
+
         $tbName   = $tbEntry['name'];
         $isPlugin = $tbEntry['is_plugin'];
         $pluginOf = $tbEntry['plugin_of'];

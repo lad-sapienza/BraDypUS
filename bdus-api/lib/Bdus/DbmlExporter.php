@@ -249,6 +249,11 @@ class DbmlExporter
             $parts[] = "bdus:id_field=$idField";
         }
 
+        // A SQL view: only the flag travels. The import checks that the view exists in the
+        // target database and activates it; it never creates a view.
+        if (!empty($tbData['is_view'])) {
+            $parts[] = 'bdus:view=1';
+        }
         if (!empty($tbData['rs'])) {
             $parts[] = 'bdus:rs=1';
         }

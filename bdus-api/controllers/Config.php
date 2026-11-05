@@ -2063,7 +2063,7 @@ class Config extends \Bdus\Controller
       $parser   = new \Bdus\DbmlParser();
       $importer = new \Bdus\DbmlImporter();
       $parsed   = $parser->parse($dbmlText);
-      $preview  = $importer->preview($parsed, $this->cfg);
+      $preview  = $importer->preview($parsed, $this->cfg, $this->db);
 
       $this->returnJson(['status' => 'success', 'code' => 'ok', 'preview' => $preview]);
     } catch (\Throwable $e) {

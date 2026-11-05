@@ -38,6 +38,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   In the app: a table's danger zone offers *Deactivate* and *Remove from configuration*; a
   deactivated table appears in *Database objects* with *Reactivate*, *Remove from configuration*
   and — the only irreversible step, asking for the table name — *Delete table*. (#53)
+- **SQL views in DBML.** A table marked `bdus:view=1` is *activated*, never created: the view must
+  already exist in the database (`view_not_found` / `not_a_view` / the activation rules otherwise),
+  its fields come from the database, and only the table-level settings the DBML states
+  (`bdus:label`, `bdus:preview`, `bdus:order`, `bdus:id_field`) are applied on top. A `ref:` from
+  or to a view is skipped with `ref_view_not_allowed`. The export writes `bdus:view=1` for views.
+  A table that was deactivated keeps its name: DBML import refuses to reuse it. (#53)
+- **Validation report: tables and SQL views.** A registered view must still be a view (and a table
+  still a table), keep its `id` column, and the way it can be written (`view_writable`) is compared
+  with the database; the field alignment hints for a view say what to do about a changed view. (#53)
 - `Inspect::listObjects()` and `Inspect::foreignKeys()` on SQLite, MySQL/MariaDB and PostgreSQL,
   tested against live PostgreSQL and MariaDB. (#53)
 

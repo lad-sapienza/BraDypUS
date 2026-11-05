@@ -66,6 +66,57 @@ class DbCfgAlign
         }
     }
 
+    /**
+     * Tables vs views: what the configuration says (`is_view`) must match what the
+     * database has, a view must keep its `id` column, and the way a view can be
+     * written (`view_writable`, probed when it was activated) may have changed.
+     */
+    public function cfgViewFlags(): void
+    {
+        $objects = null;
+        foreach ($this->cfg->get('tables.*') ?: [] as $tb => $tbData) {
+            if (!$this->inspect->tableExists($tb)) {
+                continue;                                  // reported by cfgHasDb()
+            }
+            $cfgView    = (bool) ($tbData['is_view'] ?? false);
+            $actualView = $this->inspect->isView($tb);
+
+            if ($cfgView && !$actualView) {
+                $this->resp->set('danger', "{$tb} is configured as a SQL view but is a table in the database",
+                    "Remove {$tb} from the configuration and activate it again from Database objects");
+                continue;
+            }
+            if (!$cfgView && $actualView) {
+                $this->resp->set('danger', "{$tb} is a SQL view in the database but is configured as a table",
+                    "Remove {$tb} from the configuration and activate it again from Database objects, so it is treated as a view");
+                continue;
+            }
+            if (!$cfgView) {
+                continue;
+            }
+
+            if ($objects === null) {
+                $objects = array_column($this->inspect->listObjects(), null, 'name');
+            }
+            $o = $objects[$tb] ?? null;
+            if ($o === null) {
+                continue;
+            }
+            if (!$o['has_id']) {
+                $this->resp->set('danger', "SQL view {$tb} has no id column any more",
+                    "BraDypUS needs an id column in every table and view: add it back to the view, or remove the view from the configuration");
+            } else {
+                $this->resp->set('success', "SQL view {$tb} has an id column");
+            }
+            $saved = $tbData['view_writable'] ?? 'none';
+            if ($o['view_writable'] !== $saved) {
+                $this->resp->set('warning',
+                    "SQL view {$tb}: writable as '{$o['view_writable']}' in the database, configured as '{$saved}'",
+                    "Remove the view from the configuration and activate it again to update how it can be written");
+            }
+        }
+    }
+
     public function cfgColsHasDb()
     {
         $cfg = $this->cfg->get('tables.*');
@@ -77,6 +128,7 @@ class DbCfgAlign
                 return $el['fld'];
             }, $this->inspect->tableColumns($tb));
 
+            $isView = !empty($tb_data['is_view']);
             $this->resp->set('head', "Checking $tb from configuration to database");
 
             foreach ($cfg_cols as $col) {
@@ -84,7 +136,9 @@ class DbCfgAlign
                     $this->resp->set(
                         'danger',
                         "Configuration field {$tb}.{$col} is not available in database table",
-                        "Add column {$tb}.{$col} to the database, or remove it from the configuration"
+                        $isView
+                            ? "The SQL view {$tb} no longer has this column: restore it in the view, or remove the view from the configuration and activate it again"
+                            : "Add column {$tb}.{$col} to the database, or remove it from the configuration"
                     );
                 } else {
                     $this->resp->set(
@@ -102,7 +156,9 @@ class DbCfgAlign
                     $this->resp->set(
                         'danger',
                         "Database column {$tb}.{$col} is not in the configuration",
-                        "Add {$tb}.{$col} to the configuration, or drop the column from the database"
+                        $isView
+                            ? "The SQL view {$tb} has a new column: remove the view from the configuration and activate it again to pick it up"
+                            : "Add {$tb}.{$col} to the configuration, or drop the column from the database"
                     );
                 } else {
                     $this->resp->set(

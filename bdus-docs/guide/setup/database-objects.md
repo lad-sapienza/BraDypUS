@@ -27,6 +27,8 @@ activated says why:
 
 System tables (`bdus_*`) are never listed.
 
+![Config → Database objects: two tables, two views (one read-only, one writable) and a table without an id column, which says why it cannot be activated](/images/v5/setup/db-objects-list.png)
+
 ## Activating
 
 Click **Preview and activate**. The preview shows what will be created before anything
@@ -43,6 +45,10 @@ is written:
   is skipped and reported: activate that table first, then this one.
 - **For a view**, its SQL, read-only.
 
+![Activation preview of a table: the fields that will be created and the foreign key found in the database](/images/v5/setup/db-objects-preview.png)
+
+![Activation preview of a SQL view, with its definition expanded](/images/v5/setup/db-objects-view-preview.png)
+
 Labels start as the table name. Edit them in **Config → Tables** like for any table.
 
 ::: tip Order matters for relations
@@ -57,6 +63,11 @@ badge and its SQL (read-only) in the table settings; you can configure labels, f
 and the preview, but **not** add, rename or delete fields, rename the view, drop it, add
 indexes or relations, or switch on system plugins. Those answer `view_not_alterable`:
 the structure of a view belongs to the database.
+
+
+![Settings of a registered SQL view: a note, the SQL definition, no rename button](/images/v5/setup/view-table-settings.png)
+
+![Fields of a SQL view: they can be configured, but there is no button to add, rename or delete one](/images/v5/setup/view-fields.png)
 
 Read-only views have no *Edit*, *Delete* or *New* in the interface, and the server refuses
 writes with `view_read_only`. How a view is written, the history it keeps and the limits
@@ -73,12 +84,19 @@ work for every table, not only for the ones you activated.
 | **Remove from configuration** | deleted | kept, with its foreign keys | Activate it again: it is a new configuration, labels and field settings are lost |
 | **Delete table** | deleted | **dropped, with all its data** | None. Restore a backup |
 
+
+![The danger zone of a table: Deactivate and Remove from configuration](/images/v5/setup/table-danger-zone.png)
+
 - **Deactivate** and **Remove from configuration** are in the *Danger zone* of the table
   settings. A deactivated table is in **Database objects** with a *deactivated* tag, and
   **Reactivate** switches it back on.
 - **Delete table** is offered only in **Database objects**, only for a table that was
   deactivated first, and asks you to type the table name.
 - A view is never dropped by BraDypUS: for a view there are only the first two.
+
+![A deactivated table in Database objects, with Reactivate, Remove from configuration and Delete table](/images/v5/setup/db-objects-deactivated.png)
+
+![Deleting a table asks for its name to be typed; the button stays disabled until it matches](/images/v5/setup/db-objects-delete-confirm.png)
 
 ### What deactivating does to the rest
 

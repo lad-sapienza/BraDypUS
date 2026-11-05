@@ -414,4 +414,6 @@ onMounted(load)
   font-size: 0.82rem;
   color: var(--p-text-muted-color);
 }
+
+.cfg-view-note { margin: 0.75rem 1.25rem 0; }
 </style>

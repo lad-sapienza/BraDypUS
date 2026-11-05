@@ -110,6 +110,14 @@ the new `id` from the base table inside the same transaction (SQLite's own "last
 is stale after an insert through a view). On **PostgreSQL**, an `INSTEAD OF` trigger that inserts
 with explicit ids can make the new id come back wrong: let the sequence of the base table assign it.
 
+A read-only view shows the record with no *Edit*, *Duplicate* or *Delete*, and no *New* in the list:
+
+![A record of a read-only view: only Version history is offered](/images/v5/setup/view-readonly-record.png)
+
+A writable view looks like any table to the person using it:
+
+![A record of a writable view: Edit, Duplicate and Delete are there](/images/v5/setup/view-writable-record.png)
+
 If you change how a view can be written, **Config → Validation** warns that the saved value is
 out of date; remove the view from the configuration and activate it again.
 
@@ -244,9 +252,11 @@ These are the things that surprise people. Read them before you plan.
    `INSTEAD OF` triggers.
 3. **Columns left out must accept `NULL` or have a default**, or inserts through
    the view fail.
-4. **A rejected save is a generic error.** A trigger's `MESSAGE_TEXT` does not
-   reach the user: the app answers `error_saved` / "Database error". Name your
-   states and transitions in the user documentation, not in the trigger message.
+4. **Only a trigger's own message reaches the user.** The text of a `SIGNAL` (MariaDB/MySQL)
+   or `RAISE EXCEPTION` (PostgreSQL) is shown as it is, and translated if it is the key of a
+   translation the app knows; any other database error, such as a constraint violation, is a
+   generic message without SQL text (`error_saved`). Name your states and transitions in the
+   user documentation too, not only in the trigger message.
 5. **The history is split by view.** `bdus_versions` stores the name of the
    *view* and only its *columns*: a record's history is fragmented across the views
    it was edited through, and a version made through `v_public` knows nothing about
@@ -280,7 +290,7 @@ These are the things that surprise people. Read them before you plan.
 | Insert/update through a simple view, `creator`, UTF-8 | Proven here | Reported |
 | Hidden column unreadable, unsearchable | Proven here | Reported |
 | Rules per view; 200 with JWT, 403 with API key | Proven here | Reported |
-| Trigger rejects a transition; generic error | Proven here | Reported |
+| Trigger rejects a transition; its message is shown, a constraint violation stays generic | Covered by a test (`DBExceptionRuleMessageTest`) | Reported |
 | A save rejected by a trigger still writes a `bdus_versions` row | Proven here | Not checked |
 | Versions record the view name and the view's columns | Proven here | Reported |
 | Restore through a view (update and deleted record) | Proven here | Reported (a trigger can refuse a restored state) |

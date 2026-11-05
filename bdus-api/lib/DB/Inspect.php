@@ -65,6 +65,23 @@ class Inspect implements Inspect\InspectInterface
         return $this->driver->tableColumns($tb);
     }
 
+    /**
+     * Tables and views of the database, see InspectInterface::listObjects().
+     * Adds `has_id` / `has_creator`, computed the same way for every engine.
+     */
+    public function listObjects(): array
+    {
+        $objects = $this->driver->listObjects();
+        foreach ($objects as &$o) {
+            $names = array_column($o['columns'], 'fld');
+            $o['has_id']      = in_array('id', $names, true);
+            $o['has_creator'] = in_array('creator', $names, true);
+        }
+        unset($o);
+        usort($objects, fn($a, $b) => strcmp($a['name'], $b['name']));
+        return $objects;
+    }
+
     public function getAllTables() : array
     {
         return $this->driver->getAllTables();

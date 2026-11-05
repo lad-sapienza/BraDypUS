@@ -41,6 +41,49 @@ class Mysql implements InspectInterface
     return $res && !empty($res) && $res[0]['tot'] > 0;
   }
 
+  public function listObjects(): array
+  {
+    $objs = $this->db->query(
+      "SELECT TABLE_NAME AS name, TABLE_TYPE AS ttype
+       FROM information_schema.TABLES
+       WHERE TABLE_SCHEMA = DATABASE()
+         AND TABLE_TYPE IN ('BASE TABLE','VIEW')
+         AND TABLE_NAME NOT LIKE 'bdus\\_%'"
+    ) ?: [];
+
+    $byTb = [];
+    foreach ($this->db->query(
+      "SELECT TABLE_NAME AS tb, COLUMN_NAME AS fld, DATA_TYPE AS type, COLUMN_KEY AS ckey
+       FROM information_schema.COLUMNS
+       WHERE TABLE_SCHEMA = DATABASE()
+       ORDER BY TABLE_NAME, ORDINAL_POSITION"
+    ) ?: [] as $c) {
+      $byTb[$c['tb']][] = ['fld' => $c['fld'], 'type' => $c['type'], 'pk' => $c['ckey'] === 'PRI'];
+    }
+
+    $views = [];
+    foreach ($this->db->query(
+      "SELECT TABLE_NAME AS name, VIEW_DEFINITION AS def, IS_UPDATABLE AS upd
+       FROM information_schema.VIEWS WHERE TABLE_SCHEMA = DATABASE()"
+    ) ?: [] as $v) {
+      $views[$v['name']] = $v;
+    }
+
+    $ret = [];
+    foreach ($objs as $o) {
+      $isView = $o['ttype'] === 'VIEW';
+      $ret[] = [
+        'name'          => $o['name'],
+        'kind'          => $isView ? 'view' : 'table',
+        'columns'       => $byTb[$o['name']] ?? [],
+        'sql'           => $isView ? ($views[$o['name']]['def'] ?? null) : null,
+        // MySQL has no INSTEAD OF triggers: a view is writable or it is not.
+        'view_writable' => $isView ? (($views[$o['name']]['upd'] ?? 'NO') === 'YES' ? 'probe' : 'none') : null,
+      ];
+    }
+    return $ret;
+  }
+
   public function tableColumns(string $tb): array
   {
     $ret = [];

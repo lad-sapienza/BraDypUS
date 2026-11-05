@@ -33,6 +33,22 @@ interface InspectInterface
   public function tableColumns(string $tb): array;
 
   /**
+   * Every table and view of the current database/schema, with what is needed
+   * to decide whether (and how) it can be activated as a BraDypUS table.
+   * System objects (`bdus_*`, engine internals, SQLite virtual tables and
+   * their shadow tables) are left out.
+   *
+   * @return array<int, array{
+   *   name: string,
+   *   kind: 'table'|'view',
+   *   columns: array<int, array{fld: string, type: string, pk: bool}>,
+   *   sql: ?string,           view definition (null for tables)
+   *   view_writable: ?string  'none'|'probe'|'trigger' (null for tables)
+   * }>
+   */
+  public function listObjects(): array;
+
+  /**
    * Returns the list of base tables contained in database
    * (views are NOT included, on any engine).
    *

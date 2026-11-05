@@ -105,6 +105,7 @@ function guideSidebar() {
         { text: 'Fields',              link: '/guide/setup/adding-columns' },
         { text: 'Field preview',       link: '/guide/setup/preview-config' },
         { text: 'Table relations',     link: '/guide/setup/relations' },
+        { text: 'Database objects',    link: '/guide/setup/database-objects' },
         { text: 'Vocabularies',        link: '/guide/setup/vocabularies' },
         { text: 'Users & privileges',  link: '/guide/setup/users' },
         { text: 'Groups & locks',      link: '/guide/setup/groups' },

@@ -50,6 +50,13 @@ Tables and vocabularies are created from one DBML text
 - `creator integer` is added automatically to every non-plugin table.
 - **Only new tables are created.** Existing tables are never altered (skipped with
   `table_already_exists`). To change a table later, use Config → Fields, not DBML.
+- **Tables and views that already exist in the database** are not created by DBML but
+  *registered*: `GET {base}/{app}/api/config/db-objects` lists them (with `activatable` and
+  `reason`), `GET …/db-objects/{name}` previews what would be created, and
+  `POST …/db-objects/{name}/activate` writes the configuration (no DDL). Each needs an `id`
+  column; a view that can be written also needs `creator`. In DBML a view is a table with
+  `bdus:view=1`: it must already exist in the target database, and the import only activates it.
+  Activate the tables that others point to first, so their foreign keys become relations.
 - DBML types map as: `varchar/text` short text or long text, `date`, `boolean`;
   integers and decimals are stored as text/integer fields and validated by rules.
   Override with `bdus:type=long_text|md|date|boolean|select|multi_select|combo_select`.
@@ -208,6 +215,13 @@ what they should see after each click.
   their files anywhere but their own BraDypUS instance.
 - Ask before **destructive** actions (deleting tables or records). Table deletion cannot
   be undone; make a backup first (`guide/usage/backup.md`).
+- **Never call `DELETE {base}/{app}/api/config/table/{tb}` without the user's explicit
+  consent**: without `?keep_data=1` it drops the table and its data at once (the web app makes
+  a person deactivate first and type the name; the API does not). To take a table out of use
+  without losing anything, deactivate it (`PUT …/table/{tb}/active {"active": false}`) or remove
+  only its configuration (`DELETE …/table/{tb}?keep_data=1`); both leave the data in the database.
+- A registered SQL view cannot be altered from BraDypUS (`view_not_alterable`) and may be
+  read-only (`view_read_only`): change the view in SQL, never by retrying the call.
 - When something is not covered here, read the page named above (raw Markdown on GitHub,
   `https://raw.githubusercontent.com/lad-sapienza/BraDypUS/v5/bdus-docs/…`) rather than
   guessing, and report the gap to the user.

@@ -68,6 +68,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Documentation
 
+- New guide page *Database objects* (activating existing tables and views, and the three ways to
+  take a table out of use); *SQL views as tables* rewritten around the registration from the
+  interface, the read-only / writable distinction and the history kept under the view's name;
+  *DBML* (`bdus:view=1`), *Validation* and the developer pages (`Inspect`, table life cycle, the
+  limits of `--db=` for PHPUnit, the `Config` file fallback). `llms.txt`, `guide/evaluate.md` and
+  the `bradypus-bootstrap` skill know about it, and tell an assistant never to call the dropping
+  `DELETE /api/config/table/{tb}` without the user's consent. (#53)
 - `openapi.yaml`: every authenticated operation (179) declares the `403` an API key
   gets when it lacks the privilege (the same refusal is HTTP 200 with a JWT). Before,
   only 8 did. `OpenApiParityTest` now fails on a referenced but undefined response. (#47)

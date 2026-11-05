@@ -56,6 +56,7 @@ versions of every record, files, maps and print templates on top of them.
   validated flow can still be had with **SQL views and triggers** in the database
   ([SQL views as tables](/guide/setup/views)), at the price of writing that SQL and
   of the limits that page lists (tried on MariaDB and PostgreSQL; no notifications).
+  BraDypUS registers such views and knows whether they can be written, but never creates them.
 - You cannot host and back up a small web application.
 
 ## What your data must look like
@@ -67,6 +68,7 @@ versions of every record, files, maps and print templates on top of them.
 | Relations between tables | Stored as an `id` of the other table; a `ref:` in the DBML (or **Config → Relations**) creates the foreign key and the linked-records panel on both sides, and a *select* field "from table" lists the other table's records |
 | Controlled values | Vocabularies (lists) for `select` / `multi_select` / `combo_select` fields |
 | Text, long text, Markdown, date, yes/no, select | The field types; numbers are stored as text or integer and validated with rules, not as a separate numeric type |
+| Tables that already exist in a database | They are **registered**, not copied: **Config → [Database objects](/guide/setup/database-objects)** lists the tables and SQL views the database has and BraDypUS does not know, and activates them. Each needs an `id` column; a view that can be written needs a `creator` column too |
 | Geometry as WKT / GeoJSON | Enabled per table with the Geodata plugin; GeoJSON is imported onto existing records |
 
 Checklist before deciding, answer these about your data:

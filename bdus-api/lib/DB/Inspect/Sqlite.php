@@ -43,7 +43,7 @@ class Sqlite implements InspectInterface
 
   public function foreignKeys(string $tb): array
   {
-    $rows = $this->db->query("PRAGMA foreign_key_list('{$tb}')") ?: [];
+    $rows = $this->db->query("PRAGMA foreign_key_list('" . str_replace("'", "''", $tb) . "')") ?: [];
 
     // Composite keys share an `id`, with one row per column: skip them.
     $perId = [];
@@ -99,7 +99,7 @@ class Sqlite implements InspectInterface
       }
       $isView  = $r['type'] === 'view';
       $columns = [];
-      foreach ($this->db->query("PRAGMA table_info('{$r['name']}')") ?: [] as $c) {
+      foreach ($this->db->query("PRAGMA table_info('" . str_replace("'", "''", $r['name']) . "')") ?: [] as $c) {
         $columns[] = ['fld' => $c['name'], 'type' => (string) $c['type'], 'pk' => (int) $c['pk'] > 0];
       }
 
@@ -128,7 +128,7 @@ class Sqlite implements InspectInterface
   {
     $ret = [];
 
-    $res = $this->db->query("PRAGMA table_info('{$tb}')");
+    $res = $this->db->query("PRAGMA table_info('" . str_replace("'", "''", $tb) . "')");
     if (!$res || empty($res)) {
       throw new \Exception("Error on getting column list for table {$tb}");
     }

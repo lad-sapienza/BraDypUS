@@ -1,0 +1,41 @@
+name: Bug report
+description: Something does not work as documented
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. **Do not report security problems here**: use the private advisory link on the issue chooser.
+        Do not paste passwords, tokens, host names, or data from a real database.
+  - type: input
+    id: version
+    attributes:
+      label: BraDypUS version
+      placeholder: "5.16.5"
+    validations:
+      required: true
+  - type: dropdown
+    id: engine
+    attributes:
+      label: Database engine
+      options: [SQLite, MySQL / MariaDB, PostgreSQL, Not sure]
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: The smallest sequence that shows the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected and actual behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else
+      description: Error codes, API responses, screenshots (remove private data).

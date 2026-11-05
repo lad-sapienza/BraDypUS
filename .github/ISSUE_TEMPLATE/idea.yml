@@ -1,0 +1,25 @@
+name: Idea or feature proposal
+description: Suggest an improvement. Ideas are discussed, not promised.
+labels: [idea]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        BraDypUS is in a consolidation phase: bug fixes come first. An idea here is a place to discuss
+        a need, not a commitment to build it.
+  - type: textarea
+    id: need
+    attributes:
+      label: What do you need to do that you cannot do today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed approach
+      description: Optional. Prefer declarative configuration over code, and keep existing applications working.
+  - type: textarea
+    id: criteria
+    attributes:
+      label: How would we know it works?
+      description: Optional. Verifiable acceptance criteria.

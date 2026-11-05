@@ -128,6 +128,8 @@
   "ip": "IP",
   "fast_search": "Ricerca veloce",
   "not_enough_privilege": "Siamo spiacenti, ma non disponi dei privilegi sufficienti per accedere a questa funzione",
+  "not_authorized_title": "Accesso negato",
+  "back_to_dashboard": "Torna alla dashboard",
   "tb_missing": "Errore. Manca il nome della tabella di riferimento. Impossibile proseguire",
   "parameter_missing": "Errore! Mancano i seguenti parametri: %s",
   "no_record_found": "Nessun record trovato",

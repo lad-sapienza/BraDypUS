@@ -5,6 +5,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Admin screens are no longer reachable by URL without the privilege.** Typing e.g.
+  `/{app}/users` or `/{app}/config` as a lower-privileged user used to show the
+  screen (the API refused every call anyway). The router now applies the same
+  `minPrivilege` as the navigation menu (`commands/navItems.js`) and redirects to a
+  new "Access denied" page. UX only, not a data exposure. (#46)
+
 ## [5.16.7] - 2026-11-05
 
 ### Fixed

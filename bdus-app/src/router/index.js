@@ -1,6 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { syncDarkModeWithApp } from '@/composables/useDarkMode'
+import { buildNavGroups } from '@/commands/navItems'
+import { hasPrivilege } from '@/commands/privilege'
 
 const routes = [
   // ── Root redirect ──────────────────────────────────────────────────────────
@@ -39,6 +41,11 @@ const routes = [
   {
     path: '/:app',
     component: () => import('@/views/HomeView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/:app/not-authorized',
+    component: () => import('@/views/NotAuthorizedView.vue'),
     meta: { requiresAuth: true }
   },
   {
@@ -226,8 +233,30 @@ router.beforeEach((to) => {
     return { path: `/${auth.user.app}${rest}`, query: to.query }
   }
 
+  // Screens listed in the navigation menu need the same privilege as their menu
+  // entry (commands/navItems.js is the single source). UX only: the API refuses
+  // the calls anyway, this just avoids showing a screen that cannot work.
+  const app = to.params.app
+  if (app && to.path !== `/${app}/not-authorized`) {
+    const required = requiredPrivilege(app, to.path)
+    if (required !== null && !hasPrivilege(auth.user?.privilege_value, required)) {
+      return { path: `/${app}/not-authorized` }
+    }
+  }
+
   return true
 })
+
+/** Privilege needed for a path, from the navigation items; null when none listed. */
+function requiredPrivilege(app, path) {
+  for (const group of buildNavGroups(app)) {
+    for (const item of group.items) {
+      if (item.to === `/${app}`) continue // dashboard: any logged-in user
+      if (path === item.to || path.startsWith(item.to + '/')) return item.minPrivilege
+    }
+  }
+  return null
+}
 
 router.afterEach(syncDarkModeWithApp)
 

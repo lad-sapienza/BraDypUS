@@ -128,6 +128,8 @@
   "ip": "IP",
   "fast_search": "Fast search",
   "not_enough_privilege": "Sorry, you do not have sufficient privileges to access this function",
+  "not_authorized_title": "Access denied",
+  "back_to_dashboard": "Back to dashboard",
   "tb_missing": "Error. Reference table name is missing. Can not proceed",
   "parameter_missing": "Error. the following parameters are missing: %s",
   "no_record_found": "No record found",

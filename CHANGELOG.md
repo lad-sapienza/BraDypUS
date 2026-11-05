@@ -5,6 +5,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Activate tables and views that already exist in the database (API).** Three new
+  super-admin routes: `GET /api/config/db-objects` lists the tables and views that are not
+  in the configuration (and why one cannot be activated), `GET /api/config/db-objects/{name}`
+  previews the activation (fields with types deduced from the SQL types, foreign keys already
+  in the database, the SQL of a view), `POST …/{name}/activate` writes the configuration —
+  never any DDL. A view needs an `id` column, and a writable one also a `creator` column;
+  a registered view is flagged `is_view` and cannot be altered (`view_not_alterable`).
+  `getTableList` / `getTableConfig` expose `is_view` (and `view_sql`). The user interface
+  comes in a later release. (#53)
+- `Inspect::listObjects()` and `Inspect::foreignKeys()` on SQLite, MySQL/MariaDB and PostgreSQL,
+  tested against live PostgreSQL and MariaDB. (#53)
+
 ## [5.16.8] - 2026-11-05
 
 ### Fixed

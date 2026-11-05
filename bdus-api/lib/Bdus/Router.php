@@ -192,6 +192,9 @@ class Router
         'Bdus\\Controllers\\Config::getAppProperties'              => 'super_admin',
         'Bdus\\Controllers\\Config::save_app_properties'           => 'super_admin',
         'Bdus\\Controllers\\Config::getTableList'                  => 'super_admin',
+        'Bdus\\Controllers\\Config::listDbObjects'                 => 'super_admin',
+        'Bdus\\Controllers\\Config::getDbObject'                   => 'super_admin',
+        'Bdus\\Controllers\\Config::activateDbObject'              => 'super_admin',
         'Bdus\\Controllers\\Config::add_new_tb'                    => 'super_admin',
         'Bdus\\Controllers\\Config::sortTables'                    => 'super_admin',
         'Bdus\\Controllers\\Config::getTableConfig'                => 'super_admin',
@@ -517,6 +520,9 @@ class Router
             $r->addRoute('GET', '/api/config/tables',         ['Bdus\\Controllers\\Config', 'getTableList']);
             $r->addRoute('POST',   '/api/config/tables',      ['Bdus\\Controllers\\Config', 'add_new_tb']);
             $r->addRoute('POST',   '/api/config/tables/sort', ['Bdus\\Controllers\\Config', 'sortTables']);
+            $r->addRoute('GET',    '/api/config/db-objects',  ['Bdus\\Controllers\\Config', 'listDbObjects']);
+            $r->addRoute('GET',    '/api/config/db-objects/{name}',          ['Bdus\\Controllers\\Config', 'getDbObject']);
+            $r->addRoute('POST',   '/api/config/db-objects/{name}/activate', ['Bdus\\Controllers\\Config', 'activateDbObject']);
             $r->addRoute('GET',    '/api/config/table/{tb}',  ['Bdus\\Controllers\\Config', 'getTableConfig']);
             $r->addRoute('PUT',    '/api/config/table/{tb}',  ['Bdus\\Controllers\\Config', 'save_tb_data']);
             $r->addRoute('DELETE', '/api/config/table/{tb}',  ['Bdus\\Controllers\\Config', 'delete_tb']);

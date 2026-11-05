@@ -65,6 +65,12 @@ class Inspect implements Inspect\InspectInterface
         return $this->driver->tableColumns($tb);
     }
 
+    /** Single-column FKs declared on $tb, see InspectInterface::foreignKeys(). */
+    public function foreignKeys(string $tb): array
+    {
+        return $this->driver->foreignKeys($tb);
+    }
+
     /**
      * Tables and views of the database, see InspectInterface::listObjects().
      * Adds `has_id` / `has_creator`, computed the same way for every engine.

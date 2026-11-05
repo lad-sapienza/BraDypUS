@@ -43,9 +43,11 @@ class InspectObjectsEngineTest extends TestCase
             $this->markTestSkipped("{$cfg['db_engine']} not reachable — run via test.sh --unit --db=...");
         }
         foreach (['io_v_plain', 'io_v_nopk'] as $v) { $db->exec("DROP VIEW IF EXISTS $v"); }
-        foreach (['io_t_plain', 'io_t_other'] as $t) { $db->exec("DROP TABLE IF EXISTS $t"); }
+        foreach (['io_t_child', 'io_t_plain', 'io_t_other'] as $t) { $db->exec("DROP TABLE IF EXISTS $t"); }
         $db->exec('CREATE TABLE io_t_plain (id INTEGER PRIMARY KEY, creator INTEGER, name VARCHAR(50))');
         $db->exec('CREATE TABLE io_t_other (code VARCHAR(10), note VARCHAR(50))');
+        $db->exec('CREATE TABLE io_t_child (id INTEGER PRIMARY KEY, parent_id INTEGER, other VARCHAR(5),
+                   CONSTRAINT io_fk_parent FOREIGN KEY (parent_id) REFERENCES io_t_plain(id) ON DELETE CASCADE)');
         $db->exec('CREATE VIEW io_v_plain AS SELECT id, creator, name FROM io_t_plain');
         $db->exec('CREATE VIEW io_v_nopk AS SELECT code, note FROM io_t_other');
         return $db;
@@ -54,7 +56,7 @@ class InspectObjectsEngineTest extends TestCase
     private function cleanup(DB $db): void
     {
         foreach (['io_v_plain', 'io_v_nopk'] as $v) { $db->exec("DROP VIEW IF EXISTS $v"); }
-        foreach (['io_t_plain', 'io_t_other'] as $t) { $db->exec("DROP TABLE IF EXISTS $t"); }
+        foreach (['io_t_child', 'io_t_plain', 'io_t_other'] as $t) { $db->exec("DROP TABLE IF EXISTS $t"); }
     }
 
     #[DataProvider('engines')]
@@ -107,6 +109,26 @@ class InspectObjectsEngineTest extends TestCase
             $n = $objs['io_v_nopk'];
             $this->assertFalse($n['has_id']);
             $this->assertFalse($n['has_creator']);
+        } finally {
+            $this->cleanup($db);
+        }
+    }
+
+    #[DataProvider('engines')]
+    public function testForeignKeysAreReadFromTheDatabase(array $cfg): void
+    {
+        $db = $this->connect($cfg);
+        try {
+            $i  = new Inspect($db);
+            $fk = $i->foreignKeys('io_t_child');
+            $this->assertCount(1, $fk);
+            $this->assertSame('parent_id', $fk[0]['from_col']);
+            $this->assertSame('io_t_plain', $fk[0]['to_tb']);
+            $this->assertSame('id', $fk[0]['to_col']);
+            $this->assertSame('CASCADE', $fk[0]['on_delete']);
+            $this->assertContains($fk[0]['on_update'], ['NO ACTION', 'RESTRICT']);
+            $this->assertSame([], $i->foreignKeys('io_t_plain'));
+            $this->assertSame([], $i->foreignKeys('io_v_plain'), 'views have no FKs');
         } finally {
             $this->cleanup($db);
         }

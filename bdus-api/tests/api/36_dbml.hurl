@@ -235,3 +235,31 @@ HTTP 200
 [Asserts]
 body matches "Table hurl_flags \\{[^}]*bdus:rs=1 bdus:geodata=1 bdus:fuzzy_date=1"
 body matches "Table hurl_flags \\{[^}]*chrono_label"
+
+
+# ── 36r. A SQL view in DBML is activated, never created (#53) ─────────
+# A view that does not exist in the database is a hard error…
+POST {{base_url}}/{{app_name}}/api/config/dbml/preview
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{
+  "dbml": "Table hurl_no_such_view {\n  id integer [pk]\n  Note: 'bdus:view=1'\n}"
+}
+HTTP 200
+[Asserts]
+jsonpath "$.status"                             == "success"
+jsonpath "$.preview.has_errors"                 == true
+jsonpath "$.preview.tables[0].is_view"          == true
+jsonpath "$.preview.tables[0].errors[0].code"   == "view_not_found"
+
+# …and so is a real table that is claimed to be a view (crud_test is a table).
+POST {{base_url}}/{{app_name}}/api/config/dbml/preview
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{
+  "dbml": "Table crud_test {\n  id integer [pk]\n  Note: 'bdus:view=1'\n}"
+}
+HTTP 200
+[Asserts]
+jsonpath "$.preview.has_errors"                 == true
+jsonpath "$.preview.tables[0].errors[0].code"   == "table_already_exists"

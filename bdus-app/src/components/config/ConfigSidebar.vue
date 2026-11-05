@@ -59,6 +59,15 @@
       </button>
       <button
         class="cfg-action-btn"
+        :class="{ active: active === 'dbobjects' }"
+        @click="$emit('select', 'dbobjects')"
+        :title="t('db_objects')"
+      >
+        <DatabaseOutlined />
+        <span>{{ t('db_objects') }}</span>
+      </button>
+      <button
+        class="cfg-action-btn"
         :class="{ active: active === 'dbml' }"
         @click="$emit('select', 'dbml')"
         :title="t('dbml_title')"
@@ -99,6 +108,7 @@
         <span class="cfg-table-label" :title="tbl.label">
           <span class="cfg-table-label-text">{{ tbl.label }}</span>
           <small v-if="tbl.is_plugin === '1'" class="cfg-plugin-badge">plugin</small>
+          <small v-if="tbl.is_view" class="cfg-plugin-badge">{{ t('db_kind_view') }}</small>
         </span>
         <div class="cfg-table-btns">
           <button
@@ -123,7 +133,7 @@
 </template>
 
 <script setup>
-import { ApartmentOutlined, BarsOutlined, BookOutlined, CheckCircleOutlined, CompassOutlined, ControlOutlined, ExportOutlined, KeyOutlined, LoadingOutlined, PlusOutlined, SettingOutlined, UnorderedListOutlined } from '@ant-design/icons-vue'
+import { ApartmentOutlined, BarsOutlined, BookOutlined, CheckCircleOutlined, CompassOutlined, ControlOutlined, DatabaseOutlined, ExportOutlined, KeyOutlined, LoadingOutlined, PlusOutlined, SettingOutlined, UnorderedListOutlined } from '@ant-design/icons-vue'
 import { ref }            from 'vue'
 import { useConfigStore } from '@/stores/config'
 import { useI18n }        from '@/i18n'

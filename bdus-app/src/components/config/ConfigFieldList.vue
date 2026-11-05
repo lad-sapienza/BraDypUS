@@ -2,7 +2,7 @@
   <div class="cfg-panel">
     <div class="cfg-panel-header">
       <h2><UnorderedListOutlined /> {{ t('fields') }}: <em>{{ tb }}</em></h2>
-      <AButton size="small" @click="addNew">
+      <AButton v-if="!isView" size="small" @click="addNew">
         <template #icon><PlusOutlined /></template>
         {{ t('add_field') }}
       </AButton>
@@ -12,6 +12,7 @@
       <LoadingOutlined spin />
     </div>
     <AAlert v-if="loadError" type="error" :message="loadError" :closable="false" show-icon />
+    <AAlert v-if="isView" type="info" :message="t('view_fields_note')" :closable="false" show-icon class="cfg-view-note" />
 
     <div v-if="!loading" class="cfg-fld-shell">
 
@@ -30,7 +31,7 @@
             <span class="cfg-fld-label">{{ fld.label }}</span>
           </div>
           <span class="cfg-fld-type">{{ fld.type }}</span>
-          <div class="cfg-fld-item-actions">
+          <div v-if="!isView" class="cfg-fld-item-actions">
             <button
               class="cfg-icon-btn"
               :title="t('rename_column')"
@@ -94,7 +95,8 @@
 
 <script setup>
 import { ArrowLeftOutlined, CheckOutlined, DeleteOutlined, EditOutlined, LoadingOutlined, PlusOutlined, UnorderedListOutlined } from '@ant-design/icons-vue'
-import { ref, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useConfigStore } from '@/stores/config'
 import { Button as AButton, Modal as AModal, Input as AInput, Alert as AAlert } from 'ant-design-vue'
 import { useToast, useConfirm } from '@/composables/useNotify'
 import { useI18n }       from '@/i18n'
@@ -104,6 +106,9 @@ import ConfigFieldForm   from '@/components/config/ConfigFieldForm.vue'
 const props = defineProps({
   tb: { type: String, required: true }
 })
+
+const configStore = useConfigStore()
+const isView = computed(() => !!configStore.tables.find(x => x.name === props.tb)?.is_view)
 
 const { t }   = useI18n()
 const toast   = useToast()

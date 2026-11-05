@@ -299,6 +299,7 @@ import ConfigChronoDensityPath from '@/components/config/ConfigChronoDensityPath
 import { useToast, useConfirm } from '@/composables/useNotify'
 import { useI18n }    from '@/i18n'
 import { api }        from '@/api'
+import { cannotDeactivate as cannotDeactivateTable } from '@/utils/dbObjects'
 
 const props = defineProps({
   tb: { type: String, default: null }   // null → "add new" mode
@@ -342,7 +343,7 @@ const isPlugin = computed(() => form.value?.is_plugin === '1')
 const isView = computed(() => !!table.value?.is_view)
 
 // Plugin tables, and tables that have plugins, cannot be switched off on their own.
-const cannotDeactivate = computed(() => isPlugin.value || (table.value?.plugin ?? []).filter(Boolean).length > 0)
+const cannotDeactivate = computed(() => cannotDeactivateTable(table.value) || isPlugin.value)
 
 // is_plugin as boolean for ToggleSwitch (#20)
 const isPluginBool = computed({

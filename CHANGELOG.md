@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.16.7] - 2026-11-05
+
 ### Fixed
 
 - **Saved dark/light preference ignored right after login.** The theme was read once

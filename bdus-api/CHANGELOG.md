@@ -5,6 +5,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.16.7] - 2026-11-05
+
+### Fixed
+
+- **Saved dark/light preference ignored right after login.** The theme was read once
+  at page load, from the neutral bucket of `/login`; the application's own saved
+  choice only applied after a full reload. It is now re-read when the application in
+  the URL changes.
+
+### Changed
+
+- **Dependency maintenance** — routine minor/patch bumps, no behaviour change:
+  - `bdus-api`: `intervention/image` 4.3.5 → 4.4.0 (`composer.lock` only).
+  - `bdus-app`: `chart.js` 4.5.1 → 4.6.1, `maplibre-gl` 6.15 → 6.16, `marked` 18.1.1 → 18.1.2,
+    `vite` 8.3.4 → 8.3.5 (and their transitive dependencies). Charts and GeoFace checked by hand.
+
 ## [5.16.6] - 2026-11-05
 
 ### Fixed

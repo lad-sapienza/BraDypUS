@@ -31,6 +31,16 @@ class Postgres implements InspectInterface
     return $res && !empty($res) && $res[0]['tot'] > 0;
   }
 
+  public function isView(string $tb): bool
+  {
+    $res = $this->db->query(
+      "SELECT COUNT(*) as tot FROM information_schema.tables WHERE table_name = ? AND table_schema = current_schema() AND table_type = 'VIEW'",
+      [$tb]
+    );
+
+    return $res && !empty($res) && $res[0]['tot'] > 0;
+  }
+
   public function tableColumns(string $tb): array
   {
     $ret = [];

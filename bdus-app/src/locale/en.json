@@ -584,6 +584,7 @@
   "rename_column": "Rename field",
   "warning_rename_column": "Pay attention. By renaming the field cross references in configuration files to this field will be lost and these should be fixed manually. Also the database column will be renamed",
   "error_renaming_column": "Error on renaming column",
+  "view_not_alterable": "The object is a SQL view: its structure cannot be changed from here",
   "ok_renaming_column": "The column was successfully renamed",
   "cfg_add_column": "Add new field",
   "cfg_new_column_setting": "New field configuration",

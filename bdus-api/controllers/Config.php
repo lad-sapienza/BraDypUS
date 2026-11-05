@@ -216,6 +216,21 @@ class Config extends \Bdus\Controller
   }
 
 
+  /**
+   * Schema changes are meaningless on a SQL view: the DDL would fail or, worse,
+   * be reported as done while nothing changes. Answers with `view_not_alterable`
+   * and returns true when $tb is a view, so callers can bail out before touching
+   * configuration or database.
+   */
+  private function rejectIfView(?string $tb): bool
+  {
+    if (!$tb || !(new \DB\Inspect($this->db))->isView($tb)) {
+      return false;
+    }
+    $this->returnJson(['status' => 'error', 'code' => 'view_not_alterable']);
+    return true;
+  }
+
   public function add_new_tb()
   {
     if (!$this->requireSuperAdmin()) return;
@@ -336,6 +351,8 @@ class Config extends \Bdus\Controller
       $fld = $post['name'];
       unset($post['tb_name']);
 
+      if ($this->rejectIfView($tb)) return;
+
       if (!$post['name'] || !$post['type']) {
         throw new \Exception('Both field name and field type are required');
       }
@@ -383,6 +400,9 @@ class Config extends \Bdus\Controller
     $tb = $this->get['tb'];
     try {
       $alter = new Alter($this->db);
+      // A registered view is only *unregistered*: configuration goes, the view
+      // itself stays in the database (it is not ours to drop).
+      $isView = (new \DB\Inspect($this->db))->isView($tb);
 
       // Drop the live FK constraint on every table that references $tb
       // (plugin children via id_link, or any normal relation) before
@@ -400,7 +420,9 @@ class Config extends \Bdus\Controller
 
       $this->cfg->deleteTb($tb);
       // Drop table from database
-      $alter->dropTable($tb);
+      if (!$isView) {
+        $alter->dropTable($tb);
+      }
       $this->returnJson(['status' => 'success', 'code' => 'ok_cfg_tb_delete']);
     } catch (\Throwable $th) {
       $this->returnJson(['status' => 'error', 'code' => 'error_cfg_tb_delete']);
@@ -413,6 +435,8 @@ class Config extends \Bdus\Controller
     if (!$this->requireSuperAdmin()) return;
     $tb = $this->get['tb'];
     $fld = $this->get['fld'];
+
+    if ($this->rejectIfView($tb)) return;
 
     try {
       $this->cfg->deleteFld($tb, $fld);
@@ -431,6 +455,7 @@ class Config extends \Bdus\Controller
     if (!$this->requireSuperAdmin()) return;
     $old_name = $this->get['tb'];
     $new_name = $this->post['new_name'] ?? null;
+    if ($this->rejectIfView($old_name)) return;
     try {
       $available_tbs = array_values($this->cfg->get('tables.*.name'));
       if (in_array($new_name, $available_tbs)) {
@@ -455,6 +480,8 @@ class Config extends \Bdus\Controller
     $tb       = $this->get['tb'];
     $old_name = $this->get['fld'];
     $new_name = $this->post['new_name'] ?? null;
+
+    if ($this->rejectIfView($tb)) return;
 
     try {
       $available_flds = array_values($this->cfg->get("tables.$tb.fields.*.name"));

@@ -24,7 +24,17 @@ class Mysql implements InspectInterface
   public function tableExists(string $tb): bool
   {
     $res = $this->db->query(
-      "SELECT COUNT(*) as tot FROM information_schema.TABLES WHERE TABLE_NAME = ?",
+      "SELECT COUNT(*) as tot FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?",
+      [$tb]
+    );
+
+    return $res && !empty($res) && $res[0]['tot'] > 0;
+  }
+
+  public function isView(string $tb): bool
+  {
+    $res = $this->db->query(
+      "SELECT COUNT(*) as tot FROM information_schema.VIEWS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?",
       [$tb]
     );
 
@@ -51,7 +61,7 @@ class Mysql implements InspectInterface
 
   public function getAllTables(): array
   {
-    $res = $this->db->query("SHOW TABLES");
+    $res = $this->db->query("SHOW FULL TABLES WHERE Table_type = 'BASE TABLE'");
 
     $ret = [];
     foreach ($res as $row) {

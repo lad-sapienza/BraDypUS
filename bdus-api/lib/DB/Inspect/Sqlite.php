@@ -24,7 +24,17 @@ class Sqlite implements InspectInterface
   public function tableExists(string $tb): bool
   {
     $res = $this->db->query(
-      "SELECT count(name) as tot FROM sqlite_master WHERE type='table' AND name = ?",
+      "SELECT count(name) as tot FROM sqlite_master WHERE type IN ('table','view') AND name = ?",
+      [$tb]
+    );
+
+    return $res && !empty($res) && $res[0]['tot'] > 0;
+  }
+
+  public function isView(string $tb): bool
+  {
+    $res = $this->db->query(
+      "SELECT count(name) as tot FROM sqlite_master WHERE type='view' AND name = ?",
       [$tb]
     );
 

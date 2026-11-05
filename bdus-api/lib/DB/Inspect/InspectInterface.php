@@ -13,9 +13,15 @@ namespace DB\Inspect;
 interface InspectInterface
 {
   /**
-   * Checks if table exists
+   * Checks if a table OR a view with this name exists in the current
+   * database/schema (same semantics on every engine).
    */
   public function tableExists(string $tb): bool;
+
+  /**
+   * True when $tb exists and is a (non-materialised) SQL view.
+   */
+  public function isView(string $tb): bool;
 
   /**
    * Gets list of table columns 
@@ -27,7 +33,8 @@ interface InspectInterface
   public function tableColumns(string $tb): array;
 
   /**
-   * Returns full list of tables contained in database
+   * Returns the list of base tables contained in database
+   * (views are NOT included, on any engine).
    *
    * @return array
    */

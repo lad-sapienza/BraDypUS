@@ -46,6 +46,14 @@ class Inspect implements Inspect\InspectInterface
     }
 
     /**
+     * True when $tb is a SQL view
+     */
+    public function isView(string $tb): bool
+    {
+        return $this->driver->isView($tb);
+    }
+
+    /**
      * Gets list of table columns 
      *
      * @param string $tb    Table name

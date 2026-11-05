@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Schema changes on a registered SQL view reported success but changed nothing.**
+  Add / rename / delete field and rename table on a view now answer
+  `view_not_alterable` before touching configuration or database; deleting a registered
+  view only removes its configuration and leaves the view in the database.
+  `Inspect` gains `isView()`, and is now consistent across engines: `tableExists()` is
+  true for tables *and* views (SQLite used to ignore views, MySQL did not filter on the
+  current schema), `getAllTables()` lists base tables only (MySQL used to include views). (#44)
 - **`openapi.yaml` was not valid YAML and referenced responses that did not exist.**
   A description with an unquoted `: ` (added in 5.16.6) made the file unparseable;
   `#/components/responses/{Error,Unauthorized,Forbidden,NotFound,SimpleSuccess}` were

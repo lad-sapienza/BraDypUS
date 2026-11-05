@@ -584,6 +584,7 @@
   "rename_column": "Cambia il nome del campo",
   "warning_rename_column": "Attenzione! Cambiando il nome del campo, i riferimenti incrociati nelle configurazioni andranno perduti e dovranno essere sistemati manualmente. Anche il campo nel database verrà rinominato",
   "error_renaming_column": "Errore nel cambiare il nome del campo",
+  "view_not_alterable": "L'oggetto è una vista SQL: la sua struttura non può essere modificata da qui",
   "ok_renaming_column": "Il nome del campo è stato cambiato",
   "cfg_add_column": "Aggiungi un nuovo campo",
   "cfg_new_column_setting": "Configurazione del nuovo campo",

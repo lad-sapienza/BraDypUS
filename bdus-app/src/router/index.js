@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { syncDarkModeWithApp } from '@/composables/useDarkMode'
 
 const routes = [
   // ── Root redirect ──────────────────────────────────────────────────────────
@@ -227,5 +228,7 @@ router.beforeEach((to) => {
 
   return true
 })
+
+router.afterEach(syncDarkModeWithApp)
 
 export default router

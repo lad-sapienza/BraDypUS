@@ -5,6 +5,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Saved dark/light preference ignored right after login.** The theme was read once
+  at page load, from the neutral bucket of `/login`; the application's own saved
+  choice only applied after a full reload. It is now re-read when the application in
+  the URL changes.
+
 ## [5.16.6] - 2026-11-05
 
 ### Fixed

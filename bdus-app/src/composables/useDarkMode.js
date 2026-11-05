@@ -14,7 +14,7 @@
  */
 
 import { ref, computed, watch } from 'vue'
-import { appStorage } from '@/utils/storage'
+import { appStorage, currentApp } from '@/utils/storage'
 
 // Per-application key (bdus:<app>:dark-mode) — see utils/storage.js.
 const STORAGE_KEY = 'dark-mode'
@@ -32,6 +32,11 @@ function readMode() {
   if (stored === 'false') return 'light'
   return 'system'
 }
+
+// App whose bucket `mode` was last read from. The module loads once, on whatever
+// URL the visitor first opened (typically /login → the neutral bucket), while the
+// preference is stored per application: see syncDarkModeWithApp().
+let loadedApp = currentApp()
 
 // ── Module-level singletons (shared across all component instances) ────────
 const mode      = ref(readMode())
@@ -63,4 +68,18 @@ export function useDarkMode() {
   }
 
   return { isDark, mode, toggle }
+}
+
+/**
+ * Re-reads the stored mode when the application in the URL changed since the
+ * last read (e.g. /login → /<app>/… after signing in, which is an SPA navigation
+ * and does not reload this module). Without it the app's saved preference only
+ * took effect after a full page reload. If the new application has no saved
+ * choice, the current mode is kept. Called from router.afterEach.
+ */
+export function syncDarkModeWithApp() {
+  const app = currentApp()
+  if (app === loadedApp) return
+  loadedApp = app
+  if (appStorage.get(STORAGE_KEY) !== null) mode.value = readMode()
 }

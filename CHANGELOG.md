@@ -15,6 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   /api/record/{tb}/{id}` answered `all_record_deleted, deleted: 1` for an id that no
   longer existed; it now answers `no_record_deleted` (or counts it as failed in a
   batch). Unknown table names are rejected too. (#45)
+- **Database rule messages reach the user.** A message raised on purpose by a
+  trigger (`SIGNAL SQLSTATE '45000'` on MySQL/MariaDB, `RAISE EXCEPTION` on
+  PostgreSQL) is returned by record save as `code: db_rule_violation` with the
+  message in `detail`; the app shows it (translating it when it is a known
+  locale key). Every other database error, e.g. constraint violations, stays the
+  generic `error_saved` with no SQL text. SQLite trigger errors are not covered. (#43)
 
 ## [5.16.5] - 2026-10-31
 

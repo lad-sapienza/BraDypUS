@@ -332,6 +332,9 @@ function responseMessage(res, t, ...args) {
   const key = res?.code
   if (!key) return ''
   if (key === 'db_error') return `${t('db_error')}: ${res.detail ?? ''}`
+  // Message raised on purpose by a database trigger (SIGNAL / RAISE EXCEPTION):
+  // `detail` is either a translation key the app knows or plain text.
+  if (key === 'db_rule_violation') return res.detail ? t(res.detail) : t(key)
   return t(key, ...args)
 }
 

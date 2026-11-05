@@ -273,7 +273,7 @@ class DB implements DBInterface
         $this->log->error($e, [$query, $values, $type, $fetch_style]);
       }
       // Pass PDOException as $previous so callers can inspect the original message
-      throw new DBException('Database error', 0, $e);
+      throw DBException::fromPdo($e);
     }
   }
 
@@ -329,7 +329,7 @@ class DB implements DBInterface
       if ($this->log) {
         $this->log->error($e, [$query, $values, 'iterate']);
       }
-      throw new DBException('Database error', 0, $e);
+      throw DBException::fromPdo($e);
     }
   }
 

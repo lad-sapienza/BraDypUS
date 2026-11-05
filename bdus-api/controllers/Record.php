@@ -1104,6 +1104,13 @@ class Record extends \Bdus\Controller
 
     } catch (\Throwable $e) {
       $this->log->error($e);
+      // A message raised on purpose by a trigger (SIGNAL / RAISE EXCEPTION) is
+      // meant for the user; every other database error stays generic.
+      $rule = $e instanceof \DB\DBException ? $e->getRuleMessage() : null;
+      if ($rule !== null) {
+        $this->returnJson(['status' => 'error', 'code' => 'db_rule_violation', 'detail' => $rule]);
+        return;
+      }
       $this->returnJson(['status' => 'error', 'code' => 'error_saved', 'detail' => $e->getMessage()]);
     }
   }

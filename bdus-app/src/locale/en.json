@@ -34,6 +34,7 @@
   "missing_sqlite_file": "Missing database SQLite file",
   "db_generic_error": "Generic database error. Please check error log for detailed information",
   "db_error": "Database error",
+  "db_rule_violation": "Operation refused by a database rule",
   "send": "Send",
   "email_present": "Error. The email address %s is already present in the database",
   "email_not_valid": "Error. The address %s is not a valid email. Can not continue",

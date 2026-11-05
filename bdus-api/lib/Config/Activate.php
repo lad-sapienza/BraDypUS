@@ -141,7 +141,8 @@ class Activate
             }
         }
 
-        $reason = self::reason($object, $configured);
+        $inactive = in_array($name, array_keys(LoadFromDB::inactiveTables($db)), true);
+        $reason   = self::reason($object, $configured);
 
         return [
             'status'      => 'success',
@@ -155,6 +156,8 @@ class Activate
             'relations'   => $relations,
             'activatable' => $reason === null,
             'reason'      => $reason,
+            // Deactivated earlier: activating switches the saved configuration back on.
+            'inactive'    => $inactive,
         ];
     }
 
@@ -172,6 +175,12 @@ class Activate
         }
         if (!$plan['activatable']) {
             return ['status' => 'error', 'code' => $plan['reason']];
+        }
+
+        // A table that was deactivated keeps its whole configuration: switch it back on.
+        if ($plan['inactive']) {
+            ToDB::setActive($db, $name, true);
+            return ['status' => 'success', 'code' => 'table_reactivated', 'tb' => $name, 'kind' => $plan['kind']];
         }
 
         $isView = $plan['kind'] === 'view';

@@ -69,6 +69,12 @@ class LoadFromDB
             'read'
         ) ?: [];
 
+        // A deactivated table (extra.active === false) keeps its configuration in
+        // the database but is not part of the application: leaving it out here makes
+        // every reader — and the relation guard below — see it as a table that does
+        // not exist, which is exactly what deactivating means.
+        $tableRows = array_values(array_filter($tableRows, static fn(array $r) => !self::isInactiveRow($r)));
+
         // Pre-load all fields indexed by table_name for efficient lookup.
         $allFieldRows = $db->query(
             'SELECT * FROM bdus_cfg_fields ORDER BY table_name ASC, sort ASC, id ASC',
@@ -192,6 +198,32 @@ class LoadFromDB
         }
 
         return $result;
+    }
+
+    /**
+     * The deactivated tables (their configuration is kept, they are not loaded by
+     * tables()), as [name => label], in configuration order.
+     *
+     * @return array<string, string>
+     */
+    public static function inactiveTables(DBInterface $db): array
+    {
+        $out = [];
+        foreach ($db->query('SELECT name, label, extra FROM bdus_cfg_tables ORDER BY sort ASC, id ASC', [], 'read') ?: [] as $r) {
+            if (self::isInactiveRow($r)) {
+                $out[$r['name']] = (string) ($r['label'] ?? $r['name']);
+            }
+        }
+        return $out;
+    }
+
+    private static function isInactiveRow(array $row): bool
+    {
+        if (empty($row['extra'])) {
+            return false;
+        }
+        $extra = json_decode((string) $row['extra'], true);
+        return is_array($extra) && array_key_exists('active', $extra) && $extra['active'] === false;
     }
 
     // ── Private helpers ───────────────────────────────────────────────────────

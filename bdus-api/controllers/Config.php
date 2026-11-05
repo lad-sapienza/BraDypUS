@@ -254,11 +254,16 @@ class Config extends \Bdus\Controller
 
     try {
       $configured = $this->cfg->get('tables.*.name') ?: [];
+      $inactive   = \Config\LoadFromDB::inactiveTables($this->db);
       $objects    = [];
+      $seen       = [];
       foreach ((new \DB\Inspect($this->db))->listObjects() as $o) {
         if (in_array($o['name'], $configured, true)) continue;
+        $seen[$o['name']] = true;
         $reason = \Config\Activate::reason($o, $configured);
         $objects[] = [
+          'inactive'      => isset($inactive[$o['name']]),
+          'label'         => $inactive[$o['name']] ?? null,
           'name'          => $o['name'],
           'kind'          => $o['kind'],
           'view_writable' => $o['view_writable'],
@@ -268,6 +273,17 @@ class Config extends \Bdus\Controller
           'activatable'   => $reason === null,
           'reason'        => $reason,
         ];
+      }
+      // A deactivated table whose database object is gone: still listed, so its
+      // configuration can be removed.
+      foreach ($inactive as $name => $label) {
+        if (!isset($seen[$name])) {
+          $objects[] = [
+            'name' => $name, 'label' => $label, 'kind' => 'missing', 'inactive' => true,
+            'view_writable' => null, 'has_id' => false, 'has_creator' => false, 'columns' => 0,
+            'activatable' => false, 'reason' => 'missing_in_database',
+          ];
+        }
       }
       $this->returnJson(['status' => 'success', 'objects' => $objects]);
     } catch (\Throwable $e) {
@@ -311,6 +327,67 @@ class Config extends \Bdus\Controller
     }
   }
 
+  /**
+   * Switches a table on or off. Off = deactivated: its configuration is kept, but
+   * the application behaves as if the table were not there (see LoadFromDB).
+   * Plugin tables and tables that have plugins cannot be switched off on their own.
+   *
+   * PUT /api/config/table/{tb}/active   body: { active: bool }
+   */
+  public function setTableActive(): void
+  {
+    if (!$this->requireSuperAdmin()) return;
+
+    $tb     = (string) ($this->get['tb'] ?? '');
+    // filter_var(null, FILTER_VALIDATE_BOOLEAN) is false, not null: a missing key must be caught first.
+    $active = array_key_exists('active', $this->post)
+      ? filter_var($this->post['active'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE)
+      : null;
+    if ($tb === '' || $active === null) {
+      $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
+      return;
+    }
+    if (str_starts_with($tb, 'bdus_')) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_found']);
+      return;
+    }
+
+    try {
+      if ($active) {
+        if (!array_key_exists($tb, \Config\LoadFromDB::inactiveTables($this->db))) {
+          $this->returnJson(['status' => 'error', 'code' => 'not_found']);
+          return;
+        }
+        $this->requireObjectInDatabase($tb);
+        \Config\ToDB::setActive($this->db, $tb, true);
+        $this->returnJson(['status' => 'success', 'code' => 'table_reactivated']);
+        return;
+      }
+
+      if (!$this->cfg->get("tables.$tb.name")) {
+        $this->returnJson(['status' => 'error', 'code' => 'not_found']);
+        return;
+      }
+      if ($this->cfg->get("tables.$tb.is_plugin") || !empty($this->cfg->get("tables.$tb.plugin"))) {
+        $this->returnJson(['status' => 'error', 'code' => 'table_not_deactivable']);
+        return;
+      }
+      \Config\ToDB::setActive($this->db, $tb, false);
+      $this->returnJson(['status' => 'success', 'code' => 'table_deactivated']);
+    } catch (\Throwable $e) {
+      $this->log->error($e);
+      $this->returnJson(['status' => 'error', 'code' => 'db_error']);
+    }
+  }
+
+  /** Throws unless $tb still exists in the database (a table cannot be switched on without it). */
+  private function requireObjectInDatabase(string $tb): void
+  {
+    if (!(new \DB\Inspect($this->db))->tableExists($tb)) {
+      throw new \RuntimeException("{$tb} does not exist in the database");
+    }
+  }
+
   public function add_new_tb()
   {
     if (!$this->requireSuperAdmin()) return;
@@ -340,7 +417,8 @@ class Config extends \Bdus\Controller
 
       // Reject duplicate table names before touching the config or the DB.
       $existing = array_column($this->cfg->get('tables') ?? [], 'name');
-      if (in_array($new_tb_name, $existing, true)) {
+      if (in_array($new_tb_name, $existing, true)
+          || array_key_exists($new_tb_name, \Config\LoadFromDB::inactiveTables($this->db))) {
         $this->returnJson(['status' => 'error', 'code' => 'tb_already_available']);
         return;
       }
@@ -483,6 +561,10 @@ class Config extends \Bdus\Controller
       // A registered view is only *unregistered*: configuration goes, the view
       // itself stays in the database (it is not ours to drop).
       $isView = (new \DB\Inspect($this->db))->isView($tb);
+      // keep_data=1: remove the configuration only. The table, its rows and its
+      // foreign keys stay in the database, and it goes back to the list of
+      // database objects that can be activated again.
+      $keepData = filter_var($this->get['keep_data'] ?? false, FILTER_VALIDATE_BOOLEAN);
 
       // Drop the live FK constraint on every table that references $tb
       // (plugin children via id_link, or any normal relation) before
@@ -494,13 +576,15 @@ class Config extends \Bdus\Controller
         [$tb],
         'read'
       ) ?: [];
-      foreach ($children as $child) {
-        $alter->dropForeignKey($child['from_tb'], $child['from_col']);
+      if (!$keepData) {
+        foreach ($children as $child) {
+          $alter->dropForeignKey($child['from_tb'], $child['from_col']);
+        }
       }
 
       $this->cfg->deleteTb($tb);
       // Drop table from database
-      if (!$isView) {
+      if (!$isView && !$keepData) {
         $alter->dropTable($tb);
       }
       $this->returnJson(['status' => 'success', 'code' => 'ok_cfg_tb_delete']);

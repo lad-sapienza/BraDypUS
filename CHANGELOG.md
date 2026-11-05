@@ -27,6 +27,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   transaction, because `lastInsertId` is stale there (PostgreSQL and MariaDB checked on live
   servers). Foreign keys, indexes and the fuzzy-date / osteology / Pleiades / radiocarbon plugins are
   refused on views (`view_not_alterable`). (#53)
+- **Table life cycle (API).** `PUT /api/config/table/{tb}/active` switches a table off or on:
+  a deactivated table keeps its configuration but the application behaves as if it were not
+  there (it is left out when the configuration is loaded, so relations to it are ignored too);
+  it is listed in `GET /api/config/db-objects` as `inactive`, and activating it brings the saved
+  configuration back untouched. `DELETE /api/config/table/{tb}?keep_data=1` removes only the
+  configuration — the table, its rows and its foreign keys stay in the database and can be
+  activated again; without `keep_data` the table is dropped, as before. Plugin tables and
+  tables that have plugins cannot be deactivated on their own (`table_not_deactivable`). (#53)
 - `Inspect::listObjects()` and `Inspect::foreignKeys()` on SQLite, MySQL/MariaDB and PostgreSQL,
   tested against live PostgreSQL and MariaDB. (#53)
 

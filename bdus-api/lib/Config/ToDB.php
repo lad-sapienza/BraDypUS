@@ -261,6 +261,32 @@ class ToDB
     }
 
     /**
+     * Switches a table on or off without touching the rest of its configuration:
+     * `extra.active` is false while it is off (and absent while it is on).
+     * Returns false when there is no such configuration row.
+     */
+    public static function setActive(DBInterface $db, string $name, bool $active): bool
+    {
+        $rows = $db->query('SELECT extra FROM bdus_cfg_tables WHERE name = ?', [$name], 'read');
+        if (empty($rows)) {
+            return false;
+        }
+        $extra = json_decode((string) ($rows[0]['extra'] ?? ''), true);
+        $extra = is_array($extra) ? $extra : [];
+        if ($active) {
+            unset($extra['active']);
+        } else {
+            $extra['active'] = false;
+        }
+        $db->query(
+            'UPDATE bdus_cfg_tables SET extra = ? WHERE name = ?',
+            [$extra ? json_encode($extra, JSON_UNESCAPED_UNICODE) : null, $name],
+            'boolean'
+        );
+        return true;
+    }
+
+    /**
      * Sets the sort order of all tables at once.
      * $sortedNames is an ordered array of table names (first = sort 0).
      */

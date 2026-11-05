@@ -2583,12 +2583,16 @@ paths:
                           type: object
                           properties:
                             name: { type: string }
-                            kind: { type: string, enum: [table, view] }
+                            kind: { type: string, enum: [table, view, missing], description: '`missing` = a deactivated table whose database object no longer exists.' }
                             view_writable:
                               type: string
                               nullable: true
                               enum: [none, probe, trigger]
                               description: Views only. `none` = not writable, `probe` = the engine says it is updatable, `trigger` = writable through INSTEAD OF triggers.
+                            inactive:
+                              type: boolean
+                              description: Deactivated earlier; activating it switches its saved configuration back on.
+                            label: { type: string, nullable: true, description: Label of a deactivated table. }
                             has_id: { type: boolean }
                             has_creator: { type: boolean }
                             columns: { type: integer }
@@ -2596,7 +2600,7 @@ paths:
                             reason:
                               type: string
                               nullable: true
-                              enum: [already_configured, invalid_name, missing_id_column, missing_creator_column]
+                              enum: [already_configured, invalid_name, missing_id_column, missing_creator_column, missing_in_database]
         '403':
           $ref: '#/components/responses/Forbidden'
 
@@ -2775,12 +2779,54 @@ paths:
           $ref: '#/components/responses/Forbidden'
     delete:
       tags: [config]
-      summary: Delete a table and its data
+      summary: Delete a table (and its data), or only remove it from the configuration
+      description: |
+        Without `keep_data` the table is **dropped from the database** together with its data
+        (not for a SQL view: a view is never dropped, only its configuration is removed).
+        With `keep_data=1` only the configuration is removed: the table, its rows and its
+        foreign keys stay in the database, and it can be activated again from
+        `GET /api/config/db-objects`.
       parameters:
         - $ref: '#/components/parameters/tb'
+        - name: keep_data
+          in: query
+          required: false
+          schema: { type: boolean, default: false }
       responses:
         '200':
           description: Deletion result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/config/table/{tb}/active:
+    put:
+      tags: [config]
+      summary: Deactivate or reactivate a table
+      description: |
+        A deactivated table keeps its configuration but the application behaves as if it
+        did not exist (it is left out of the loaded configuration). It shows up again in
+        `GET /api/config/db-objects` as `inactive`, and activating it there (or `active: true`
+        here) switches the saved configuration back on. Plugin tables and tables that have
+        plugins cannot be deactivated on their own (`table_not_deactivable`).
+        Codes: `table_deactivated`, `table_reactivated`, `not_found`, `parameter_missing`.
+      parameters:
+        - $ref: '#/components/parameters/tb'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [active]
+              properties:
+                active: { type: boolean }
+      responses:
+        '200':
+          description: Result
           content:
             application/json:
               schema:

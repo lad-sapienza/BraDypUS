@@ -128,6 +128,11 @@ Returns `false` if the key does not exist.
 | `sortTables(array $order)` | Reorder tables by name array |
 | `save()` | Flush full in-memory state to the storage backend |
 
+Table attributes that are not columns of `bdus_cfg_tables` live in its `extra` JSON and come
+back as `tables.{tb}.{key}`: among them `is_view` / `view_writable` (a registered SQL view) and
+`active` (`false` = deactivated; such a table is not loaded at all, see
+[Database layer → Table life cycle](/dev/database#table-life-cycle)).
+
 All write methods update both the in-memory state and the DB / JSON files
 atomically — no stale-cache issues.
 

@@ -113,40 +113,61 @@ uniform interface for reading the live schema:
 $inspect = new \DB\Inspect($db);
 $inspect->tableColumns('sites');        // column names / definitions of the table
 $inspect->tableExists('bdus_users');    // bool
-$inspect->getAllTables();               // all table names in the DB
+$inspect->getAllTables();               // base table names (views excluded)
 ```
 
 Engine implementations: `DB\Inspect\Mysql`, `DB\Inspect\Postgres`,
 `DB\Inspect\Sqlite`.
 
-### Views are tables to `Inspect` (MySQL, PostgreSQL)
+### Tables and views
 
-On MySQL/MariaDB `tableExists()` queries `information_schema.TABLES` and
-`tableColumns()` runs `DESCRIBE`; both include **views**. `getAllTables()` uses
-`SHOW TABLES`, which lists views too. On PostgreSQL `tableExists()` and
-`tableColumns()` use `information_schema.tables` / `columns`, which include views,
-but `getAllTables()` reads `pg_catalog.pg_tables`, which does not (deduced from the
-code, not run). SQLite filters on `type='table'`, so a view is not a table there.
+`Inspect` treats tables and views the same way on every engine, and can tell them apart
+(<Badge type="tip" text="v5.17.0" />):
 
-That is what lets an administrator register a view in `bdus_cfg_tables` /
-`bdus_cfg_fields` and have the rest of the application treat it as a table: the
-record layer only runs `SELECT`, `INSERT`, `UPDATE`, `DELETE` on the name in the
-configuration. The guide is [SQL views as tables](/guide/setup/views).
+| Method | Result |
+|---|---|
+| `tableExists($tb)` | true for a table **or a view** (SQLite and MySQL used to differ; MySQL now filters on the current schema) |
+| `isView($tb)` | true for a view (materialised views excluded) |
+| `getAllTables()` | **base tables only**, on all engines |
+| `tableColumns($tb)` | columns of a table or view |
+| `listObjects()` | every table and view with `columns` (`fld`, `type`, `pk`), `sql` (views), `view_writable` (`none` / `probe` / `trigger`), `has_id`, `has_creator`. `bdus_*`, `sqlite_*` and SQLite virtual/shadow tables are left out |
+| `foreignKeys($tb)` | single-column FOREIGN KEYs as the database declares them (`from_col`, `to_tb`, `to_col`, `on_delete`, `on_update`) |
 
-Consequences to keep in mind when changing this layer:
+`view_writable` is a probe, not a promise: SQLite = `trigger` if an `INSTEAD OF` trigger exists,
+PostgreSQL = `trigger` or, if `information_schema.views` says updatable, `probe`, MariaDB/MySQL =
+`probe` when `IS_UPDATABLE = 'YES'`. The user guide is [Database objects](/guide/setup/database-objects)
+and [SQL views as tables](/guide/setup/views).
 
-- **`DB\Alter` is not view-aware.** Adding, renaming or dropping a *field* of a
-  registered view through `/api/config/table/{tb}/field…` answers success but the
-  view is unchanged (proven on MariaDB); only the configuration changes.
-  `DELETE /api/config/table/{tb}` removes the configuration and leaves the view.
-- **`DB\Validate\DbCfgAlign`** compares configured fields with `tableColumns()`,
-  so a registered view is validated like a table.
-- **Migrations.** Migrations never recreate a view. `Migrate::run()` drops the SQL
-  views (SQLite only) just when called with `$dropLegacyViews = true`, which only
-  `Upgrade::runMajor` does, for the v4 leftovers. Up to 5.16.2 every `run()` did
-  it, so on SQLite any login dropped the views. On MySQL and PostgreSQL the method
-  returns immediately. A migration that alters a base table (`ALTER TABLE … DROP/RENAME COLUMN`) can
-  still break a view that references the column.
+What the rest of the code does with it:
+
+- **`Config\Activate`** registers a table or view from `listObjects()` (configuration only, no DDL):
+  `analyse()` is the dry run, `activate()` writes. A view is flagged `is_view` and `view_writable`
+  in the table's `extra` JSON, which `save_tb_data` preserves server-side.
+- **`Config::rejectIfView()`** answers `view_not_alterable` for add/rename/delete field, rename,
+  indexes, relations on either side and the system plugins. `DELETE /api/config/table/{tb}` on a view
+  only removes its configuration (a view is never dropped by BraDypUS).
+- **Writes.** `Record\Persist` refuses a read-only view (`ViewReadOnlyException` → `view_read_only`);
+  `Auth\Authorization::setReadOnlyTables()` (set by the `Dispatcher`) makes `can()` say no for
+  create/update/delete on it. On **SQLite**, `PDO::lastInsertId()` is stale after an INSERT through a
+  view with an `INSTEAD OF` trigger, so `Persist` reads the new id with `MAX(id)` inside the same
+  write transaction; PostgreSQL and MariaDB return the right id (`ViewInsertIdEngineTest`).
+- **`DB\Validate\DbCfgAlign::cfgViewFlags()`** reports a view that became a table (or the reverse),
+  lost its `id`, or whose writability changed.
+- **Migrations.** Migrations never recreate a view. `Migrate::run()` drops the SQL views (SQLite only)
+  just when called with `$dropLegacyViews = true`, which only `Upgrade::runMajor` does, for the v4
+  leftovers. A migration that alters a base table (`ALTER TABLE … DROP/RENAME COLUMN`) can still break
+  a view that references the column.
+
+### Table life cycle
+
+A table can be **deactivated** (`extra.active = false` in `bdus_cfg_tables`): `Config\LoadFromDB::tables()`
+leaves it out, so every reader, and the relation guard that skips relations to an unknown table, see a
+table that does not exist, while its configuration (fields, relations, templates) stays in the
+database. `LoadFromDB::inactiveTables()` lists them; `ToDB::setActive()` flips the flag.
+`DELETE /api/config/table/{tb}?keep_data=1` removes only the configuration (no `DROP`, FKs kept);
+without it the table is dropped. Plugin tables and tables that have plugins cannot be deactivated.
+Things that name a table without being part of its configuration (saved queries, charts, group rules)
+are not touched and simply stop working while it is off.
 
 ---
 

@@ -11,11 +11,12 @@ it like any other table. Each role gets a view that contains only the columns an
 rows that role may see, and a trigger on the real table decides which state
 changes are legal.
 
-::: warning This is a database-level pattern, not a feature
-Nothing in BraDypUS creates or manages views. You write the SQL, and the
-application only sees the result. It is proven on **MariaDB 10.11** and **PostgreSQL 16**; read
-[What is proven](#what-is-proven-and-what-is-not) and [Limits](#limits) before you
-rely on it.
+::: warning You write the SQL; BraDypUS registers it
+BraDypUS does not create or edit views: you write the SQL. Since <Badge type="tip" text="v5.17.0" />
+it can **register** an existing view from **Config → Database objects**, without touching
+`bdus_cfg_*` by hand, and it knows whether the view can be written. It is proven on
+**MariaDB 10.11** and **PostgreSQL 16**; read
+[What is proven](#what-is-proven-and-what-is-not) and [Limits](#limits) before you rely on it.
 :::
 
 ## When to use it
@@ -68,50 +69,55 @@ CREATE VIEW v_public AS
 Keep `id` (and `creator`, when you want the record to remember who created it) in
 every view that can write: BraDypUS addresses every record by `id`.
 
-### 3. Register each view as a table
+### 3. Register each view as a table <Badge type="tip" text="v5.17.0" />
 
-BraDypUS only knows what is in its configuration (`bdus_cfg_tables`,
-`bdus_cfg_fields`). There are two ways to put a view there.
+Open **Config → Database objects**: the views are listed with a *view* badge and, next to
+it, *read-only* or *writable*. Click **Preview and activate**, check the fields and the SQL
+and **Activate**. Nothing is written to the view; only the configuration is created. The
+full description is in [Database objects](./database-objects).
 
-**A. Let BraDypUS write the configuration, then swap the table for the view**
-(proven). In **Config → Tables** create a table named `v_public` with the label
-you want, add one field for each column of the view with the right type, then in
-the database:
+A view can be activated only if it has an **`id`** column, and, when it can be written, a
+**`creator`** column too. Both must come from a base table: BraDypUS addresses every record
+by `id`, and stores in `creator` who created it.
 
-```sql
-DROP TABLE v_public;
-CREATE VIEW v_public AS SELECT id, number, text FROM card WHERE state = 'validated';
-```
-
-The configuration stays; the name now points to a view. Do it before anyone enters
-data in the placeholder table (it is dropped).
-
-**B. Copy the configuration in SQL** (proven; this is what the original test did).
-Copy the base table's row in `bdus_cfg_tables` under the new name and label, and
-the rows of `bdus_cfg_fields` for the columns the view contains:
-
-```sql
-INSERT INTO bdus_cfg_tables
-  (name, label, order_field, id_field, preview, is_plugin, sort, links, backlinks, extra)
-SELECT 'v_public', 'Card (public)', order_field, id_field, preview,
-       is_plugin, sort, links, backlinks, extra
-FROM bdus_cfg_tables WHERE name = 'card';
-
-INSERT INTO bdus_cfg_fields (table_name, name, label, type, db_type, sort, extra)
-SELECT 'v_public', name, label, type, db_type, sort, extra
-FROM bdus_cfg_fields
-WHERE table_name = 'card' AND name IN ('id', 'number', 'text');
-```
-
-After either, the view appears in **Config → Tables** and in the table lists, and
-behaves like a table for search, filters, list, record view and export.
-
-::: tip Do not change the view from the Config panel
-Adding, renaming or deleting a *field* of a registered view from the Config panel
-reports success but does **not** change the view (only the configuration moves, and
-they drift apart). Change the view in SQL (`CREATE OR REPLACE VIEW`) and edit the
-configuration to match. See [Limits](#limits).
+::: details Before 5.17.0 (kept for older installations)
+Registration meant creating a table in **Config → Tables** with the fields of the view and then
+`DROP TABLE` / `CREATE VIEW` under the same name, or copying rows of `bdus_cfg_tables` and
+`bdus_cfg_fields` in SQL. Both still work, but the view is then not flagged as a view, so the
+protections below do not apply to it. Remove it from the configuration and activate it again.
 :::
+
+::: tip What you cannot change on a registered view
+From the Config panel you can set labels, field types and the preview, but adding, renaming or
+deleting a *field*, renaming the view, adding indexes or relations, and switching on system
+plugins are refused (`view_not_alterable`). Change the view in SQL (`CREATE OR REPLACE VIEW`), then
+**Config → Validation** shows what no longer matches. See [Limits](#limits).
+:::
+
+### Writing through a view <Badge type="tip" text="v5.17.0" />
+
+When a view is activated, BraDypUS records how it can be written (`view_writable`):
+
+| | Meaning |
+|---|---|
+| `none` | **Read-only.** The interface hides *Edit*, *Delete* and *New*; the server answers `view_read_only` |
+| `probe` | The database says the view is updatable (PostgreSQL and MariaDB: a simple view on one table) |
+| `trigger` | SQLite, or any engine with `INSTEAD OF` triggers: writable through the triggers |
+
+On **SQLite** a view is writable only if you defined `INSTEAD OF` triggers for it, and the
+trigger that inserts should not invent the `id`: let the base table assign it, and BraDypUS reads
+the new `id` from the base table inside the same transaction (SQLite's own "last inserted id"
+is stale after an insert through a view). On **PostgreSQL**, an `INSTEAD OF` trigger that inserts
+with explicit ids can make the new id come back wrong: let the sequence of the base table assign it.
+
+If you change how a view can be written, **Config → Validation** warns that the saved value is
+out of date; remove the view from the configuration and activate it again.
+
+The history (`bdus_versions`), [locks](./groups#locks) and group rules of a view are kept **under
+the view's name**, exactly as for a table. This is by design: a person working through a view
+should not notice that it is not a table. The consequence is that a change made on the base table
+does not appear in the history of the view, and a lock on the view does not block the base table
+(and the other way round): put every rule and lock on every name that can reach the data.
 
 ### 4. One group per view
 
@@ -244,7 +250,7 @@ These are the things that surprise people. Read them before you plan.
 5. **The history is split by view.** `bdus_versions` stores the name of the
    *view* and only its *columns*: a record's history is fragmented across the views
    it was edited through, and a version made through `v_public` knows nothing about
-   the hidden columns. A save that the database then rejects still leaves a version
+   the hidden columns. This is intended (see *Writing through a view*). A save that the database then rejects still leaves a version
    row behind (the copy is taken before the update).
 6. **Locks and rules are per table name.** A [lock](./groups#locks) on `v_author`
    does not freeze the same record when it is edited through `card`, and a lock on `card`
@@ -254,10 +260,14 @@ These are the things that surprise people. Read them before you plan.
    view does not contain is refused when you save it.
 8. **Hidden columns are hidden from the app, not from the database.** Anyone with
    database access, and every backup, sees everything.
-9. **Changing a registered view from Config is not supported** (see the tip above).
-   Adding a field to the base table does not add it to the views.
-10. **Registered views are exported to DBML as ordinary tables.** Importing that
-    DBML in another app creates real tables, not views (see [DBML](./dbml#views)).
+9. **A registered view cannot be altered from Config** (`view_not_alterable`, since
+   5.17.0; before, it reported success and changed nothing). Adding a field to the base
+   table does not add it to the views: change the view in SQL, then remove it from the
+   configuration and activate it again to pick up the new column.
+10. **DBML.** Since 5.17.0 a registered view is exported with `bdus:view=1`, and
+    importing it *activates* the view of the same name that must already exist in
+    the target database; it never creates a view (see [DBML](./dbml#views)). Before,
+    a view was exported as an ordinary table and the import created a real table.
 
 ## What is proven and what is not
 
@@ -275,14 +285,25 @@ These are the things that surprise people. Read them before you plan.
 | Versions record the view name and the view's columns | Proven here | Reported |
 | Restore through a view (update and deleted record) | Proven here | Reported (a trigger can refuse a restored state) |
 | Lock on a view does not lock the base table, and the other way round | Proven here (view → base) | Reported (both ways) |
-| Registering by creating the table, then swapping it for a view | Proven here | Not checked |
-| Registered view appears as a table in DBML export | Proven here | Not checked |
-| Config panel field changes on a view do not change the view | Proven here (view unchanged; configuration not inspected) | Not checked |
+| Registering by creating the table, then swapping it for a view (before 5.17.0) | Proven here | Not checked |
+| Registered view appears as a table in DBML export (before 5.17.0) | Proven here | Not checked |
+| Config panel field changes on a view do not change the view (before 5.17.0) | Proven here (view unchanged; configuration not inspected) | Not checked |
 | `WITH CHECK OPTION` refuses a row leaving the view | Reported | Not tried |
 | 20 concurrent inserts give consecutive numbers (counter table) | Reported | Not checked |
 | CSV export of a view omits hidden columns | Reported | Reported |
 | Multi-table view written through `INSTEAD OF` triggers | Not available | Reported |
 | A large real dataset and the graphical interface (list, record, edit, save as a group user) | Not checked | Reported |
 | SQLite up to 5.16.2 drops views at the next login | Fixed in 5.16.3; fix covered by a test, pattern not run on SQLite | |
-| Alter of a view's fields from the interface | Does not alter the view (see tip) | Not checked |
+| Alter of a view's fields from the interface | Refused with `view_not_alterable` since 5.17.0 | Same code, run on SQLite |
 | PostGIS, performance under concurrent load on real data | | Not tried |
+
+### Since 5.17.0 (automated tests, not a hand run)
+
+| Statement | SQLite | MariaDB 11 | PostgreSQL 16 |
+|---|---|---|---|
+| Views, columns, SQL and writability are read from the database | Test | Test | Test |
+| Foreign keys are read from the database | Test | Test | Test |
+| New `id` after an insert through a view is right | Handled in the code (`MAX(id)` in the transaction), tested | Test | Test |
+| Activation, `is_view` flag, `view_read_only`, `view_not_alterable`, DBML `bdus:view` | Test | Routes only (HTTP) | Routes only (HTTP) |
+| Activation of a view run end to end (SQL → configuration → record) | Test and by hand in the interface | Not run | Not run |
+| Writable view updated and deleted through triggers | Test (`INSTEAD OF`) | Not run | Not run |

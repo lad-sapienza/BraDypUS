@@ -35,16 +35,22 @@ System tables (`bdus_*`) are never included.
 
 ### Views {#views}
 
-DBML has no notion of [SQL views registered as tables](./views), and the export is
-built from the BraDypUS configuration, not from the database. A registered view
-therefore comes out as an **ordinary `Table` block**; importing that file in
-another application creates a real table with that name, not a view. Views are not
-exported as views and are never imported: recreate them with SQL after the import
-and keep their `CREATE VIEW` statements with your deployment scripts. In an
-application created by an import, views coexist as in any other: the import only
-adds new tables and skips names that already exist in the configuration.
+A SQL view registered as a table (see [SQL views as tables](./views)) is exported with
+`bdus:view=1` in its `Note`. DBML cannot say what the view *is*, so the export does not
+write its SQL and **the import never creates a view**: a table marked `bdus:view=1` is
+*activated*, like from **Config → Database objects**. <Badge type="tip" text="v5.17.0" />
 
----
+- The view must already exist in the target database, with the same name. If it does not:
+  `view_not_found`. If the name is a table, not a view: `not_a_view`. If it breaks the
+  activation rules (no `id` column, or writable without `creator`) the preview says so.
+- Its **fields come from the database**, not from the DBML. Only the table-level settings
+  the DBML states (`bdus:label`, `bdus:preview`, `bdus:order`, `bdus:id_field`) are applied.
+- A `ref:` from or to a view is skipped with a warning (`ref_view_not_allowed`): a foreign key
+  cannot involve a view.
+- A view cannot be a plugin (`bdus:is_plugin`) and the plugin flags are ignored on it.
+
+Recreate the views with SQL **before** importing a DBML that mentions them, and keep their
+`CREATE VIEW` statements with your deployment scripts.
 
 ## Import
 
@@ -106,6 +112,7 @@ Place these inside the table's `Note: '...'` string:
 | `bdus:rs` | `bdus:rs=1` | Enable Harris Matrix (stratigraphic relations) |
 | `bdus:geodata` | `bdus:geodata=1` | Enable Geodata plugin |
 | `bdus:fuzzy_date` | `bdus:fuzzy_date=1` | Enable Fuzzy date plugin |
+| `bdus:view` | `bdus:view=1` | The table is a SQL view that already exists in the database: it is activated, never created (<Badge type="tip" text="v5.17.0" />) |
 
 On import these three flags switch the plugin on exactly as **Config → Tables** does (<Badge type="tip" text="v5.16.2" /> — before that version `bdus:geodata` and `bdus:fuzzy_date` were read but not applied). `bdus:fuzzy_date=1` adds the five `chrono_*` columns for you: do not list them in the DBML. An exported file does list them; importing it back is fine, they are not created twice.
 

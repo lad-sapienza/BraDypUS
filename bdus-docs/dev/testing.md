@@ -161,6 +161,22 @@ php vendor/bin/phpunit --testsuite Integration
 
 Configurazione: `phpunit.xml`. Bootstrap: `tests/bootstrap.php`.
 
+::: warning `--db=pgsql|mysql` non cambia il motore di PHPUnit
+PHPUnit usa **sempre** SQLite in-memory. `test.sh --unit --db=pgsql` (o `mysql`) si limita ad avviare
+il container del database e a eseguire i test che si collegano da soli all'host `postgres` / `mariadb`
+(`PostgresInspectSchemaTest`, `InspectObjectsEngineTest`, `ViewInsertIdEngineTest`), che altrimenti si
+saltano da soli. Una modifica a un driver di `Inspect` o di `Alter` va quindi coperta con un test di
+questo tipo, e provata con `--db=`: una suite verde su SQLite non dice nulla sugli altri due motori.
+:::
+
+::: warning `Config` ricade sui file se `bdus_cfg_tables` è vuota
+`Config\Config` legge e scrive il database solo se `bdus_cfg_tables` ha almeno una riga; altrimenti
+torna ai JSON di `tests/fixtures/cfg/` e **riscrive le fixture committate**. Un test che costruisce una
+`Config` su database deve prima inserire una riga (`ToDB::upsertTable(...)`); vedi l'issue
+[#59](https://github.com/lad-sapienza/BraDypUS/issues/59). Dopo una suite, `git status` non deve
+mostrare modifiche in `tests/fixtures/`.
+:::
+
 ### `BdusTestCase` — classe base condivisa
 
 Tutti i test di integrazione estendono `Tests\Support\BdusTestCase`.

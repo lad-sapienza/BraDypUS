@@ -22,6 +22,7 @@ Open it from **Config → Validation**.
 | **Orphan FK** | A `select` field with **ID from table** references a table that does not exist |
 | **Missing vocabulary** | A `select` field references a vocabulary list that is empty or missing |
 | **Plugin references** | Plugin tables listed in a parent table's config actually exist |
+| **Tables and SQL views** | A registered view is still a view (and a table still a table), keeps its `id` column, and the way it can be written matches what was found when it was activated; columns added to or removed from a view are reported <Badge type="tip" text="v5.17.0" /> |
 
 ## Fix button
 

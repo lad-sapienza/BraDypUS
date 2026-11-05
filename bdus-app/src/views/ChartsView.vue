@@ -253,10 +253,23 @@ const tableLocked = computed(() => !!editingChart.value || fromSearch.value)
 onMounted(async () => {
   await loadTables()
   await syncFromRoute()
-  watch(() => route.fullPath, syncFromRoute)
 })
 
+// Registered synchronously in setup (NOT after an `await` in onMounted): a
+// watcher created after an await is no longer bound to the component, so it is
+// never stopped on unmount and keeps firing on every later navigation. There
+// it saw e.g. /:app/record/:tb/:id, read `params.id` as a chart id, found no
+// such chart and redirected to /charts — breaking every record link.
+watch(() => route.fullPath, () => {
+  if (isChartsRoute()) syncFromRoute()
+})
+
+function isChartsRoute() {
+  return /^\/[^/]+\/charts(\/|$)/.test(route.path)
+}
+
 async function syncFromRoute() {
+  if (!isChartsRoute()) return
   const id = route.params.id ? Number(route.params.id) : null
 
   if (id) {

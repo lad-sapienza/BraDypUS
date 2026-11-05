@@ -5,6 +5,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Record links redirected to `/charts` after visiting the charts page.** The route
+  watcher in `ChartsView` was created after an `await`, so it outlived the component
+  and treated the record id of `/:app/record/:tb/:id` as a chart id. It is now
+  registered synchronously and ignores non-charts routes.
+
 ## [5.16.5] - 2026-10-31
 
 ### Fixed

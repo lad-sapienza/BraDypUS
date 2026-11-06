@@ -25,6 +25,23 @@ Click **Add field** and fill in the field form:
 | **Min / Max** | Numeric or date bounds |
 | **Regex pattern** | Validation pattern (e.g. `^[A-Z]{2}\d+$` for a site code) |
 
+### Validation checks
+
+The **Check** property of a field selects one or more validation rules. They run while the
+user types and again on the server when the record is saved.
+
+| Check | Accepts |
+|---|---|
+| `int` | Whole numbers only: `10`, `-3` (not `10.5`) |
+| `real` | Whole or decimal numbers, with a **dot** as the decimal separator: `10`, `10.5`, `-0.25` (not `10,5`, not `1e3`) |
+| `email` | A valid email address |
+| `not_empty` | Any non-empty value (same as **Required**) |
+| `no_dupl` | A value not already used in another record (same as **No duplicates**) |
+| `valid_wkt` | A geometry in Well Known Text format |
+
+Use `int` for counts and identifiers, `real` for measurements (weights, lengths, coordinates
+stored as numbers). The two are alternatives: do not combine them on the same field.
+
 ## Field types
 
 | Type | Use for |

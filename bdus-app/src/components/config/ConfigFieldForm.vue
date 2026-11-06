@@ -24,8 +24,16 @@
 
     <div v-if="error" class="cfg-fld-error">{{ error }}</div>
 
-    <div class="cfg-fld-grid">
-      <template v-for="(meta, key) in structure" :key="key">
+    <div class="cfg-fld-sections">
+      <component
+        :is="section.group ? 'fieldset' : 'div'"
+        v-for="(section, i) in sections"
+        :key="i"
+        class="cfg-fld-grid"
+        :class="{ 'cfg-fld-group': section.group }"
+      >
+        <legend v-if="section.group" class="cfg-fld-legend">{{ t('fld_group_' + section.group) }}</legend>
+      <template v-for="[key, meta] in section.items" :key="key">
         <template v-if="shouldShow(key)">
 
           <!-- ── get_values_from_tb: cascading two-level select ── -->
@@ -110,6 +118,7 @@
 
         </template>
       </template>
+      </component>
     </div>
 
     <div class="cfg-fld-actions">
@@ -135,6 +144,11 @@ import { api }      from '@/api'
 const SELECT_TYPES     = ['select', 'combo_select', 'multi_select']
 const SELECT_ONLY_KEYS = ['vocabulary_set', 'get_values_from_tb', 'id_from_tb']
 
+// Keys rendered together in a titled fieldset (consecutive keys of the structure)
+const FIELD_GROUPS = {
+  check: 'validation', max_length: 'validation', min: 'validation', max: 'validation', pattern: 'validation',
+}
+
 const props = defineProps({
   tb:        { type: String,  required: true },
   field:     { type: Object,  default: () => ({}) },
@@ -144,6 +158,19 @@ const emit = defineEmits(['saved', 'cancelled'])
 
 const { t }  = useI18n()
 const toast  = useToast()
+
+// Structure split into sections: runs of keys in the same group share a fieldset,
+// everything else goes in plain grids. The order is the one of fld_structure.json.
+const sections = computed(() => {
+  const out = []
+  for (const [key, meta] of Object.entries(props.structure)) {
+    const group = FIELD_GROUPS[key] ?? null
+    const last  = out[out.length - 1]
+    if (last && last.group === group) last.items.push([key, meta])
+    else out.push({ group, items: [[key, meta]] })
+  }
+  return out
+})
 
 const origName = ref('')
 const form     = ref({})
@@ -309,6 +336,26 @@ async function submit() {
   color: var(--p-red-500);
   border-radius: 6px;
   font-size: 0.85rem;
+}
+
+.cfg-fld-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.cfg-fld-group {
+  margin: 0;
+  padding: 0.75rem;
+  border: 1px solid var(--p-content-border-color);
+  border-radius: 6px;
+  min-width: 0;
+}
+.cfg-fld-legend {
+  padding: 0 0.4rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--p-text-muted-color);
 }
 
 .cfg-fld-grid {

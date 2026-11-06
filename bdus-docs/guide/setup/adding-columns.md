@@ -21,19 +21,30 @@ shown in the form:
 | **Type** | See field types below. Required |
 | **Database type** | Column type: `TEXT` (strings, long texts), `INTEGER` (numbers, booleans) or `TIMESTAMP` (dates and times). Required |
 | **Vocabulary**, **Values from table**, **FK table** | Source of the values of `select`, `multi_select` and `combo_select` fields, see below |
-| **Validation** | One or more checks, see below. Mandatory and no-duplicates rules are set here |
 | **Read-only** | The field is visible and its value is sent to the server, but users cannot edit it |
 | **Hidden** | The field is not shown to users; its value is still sent to the server and cannot be edited |
 | **Default value** | Pre-filled value for new records. Variables: `%today%` (current date), `%current_user%` (id of the current user) |
+
+The **Validation** group of the form collects everything that limits the accepted values.
+Each rule is checked as soon as it is filled in:
+
+| Property | Description |
+|---|---|
+| **Checks** | One or more checks, see below. The mandatory and no-duplicates rules are set here |
 | **Max length** | Maximum number of characters, spaces included |
-| **Min value** / **Max value** | Lower and upper bound. Used by `slider` fields and as a numeric (or ISO date) bound on any other field as soon as they are filled in |
-| **Regex pattern** | Pattern the value must match, e.g. `^[A-Z]{2}\d+$` for a site code. Applied as soon as it is filled in |
+| **Min value** / **Max value** | Lower and upper bound: numbers, or ISO dates on `date` fields. Also the range of a `slider` field |
+| **Regex pattern** | Pattern the value must match, e.g. `^[A-Z]{2}\d+$` for a site code |
+
+Below the group, two more properties:
+
+| Property | Description |
+|---|---|
 | **Help text** | Text shown to users explaining how to fill in the field |
 | **Widget** | Optional display widget for read mode: put a `.js` ES module in `projects/{app}/widgets/` and it appears in the list |
 
 ### Validation checks
 
-The **Validation** property selects one or more checks. They run while the user types and
+The **Checks** property selects one or more checks. They run while the user types and
 again on the server when the record is saved.
 
 | Check | Accepts |
@@ -48,8 +59,7 @@ again on the server when the record is saved.
 Use `int` for counts and identifiers, `real` for measurements (weights, lengths). The two
 are alternatives: do not combine them on the same field.
 
-`range` and `regex` also appear in the list, but they are not needed: **Min value** /
-**Max value** and **Regex pattern** are checked whenever they are filled in.
+Min / Max value and Regex pattern need no check: they apply as soon as they are filled in.
 
 ## Field types
 

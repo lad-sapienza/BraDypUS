@@ -59,21 +59,6 @@
         ],
         "required": false
     },
-    "check": {
-        "type": "multi_select",
-        "values": [
-            "int",
-            "real",
-            "email",
-            "no_dupl",
-            "not_empty",
-            "range",
-            "regex",
-            "valid_wkt"
-        ],
-        "help": "Real-time validation performed on value change and on form submission. `int` accepts whole numbers only (10); `real` accepts whole or decimal numbers with a dot as separator (10.5). The server enforces the same rules on save.",
-        "required": false
-    },
     "readonly": {
         "type": "boolean",
         "help": "If enabled the field is visible and its value is sent to the server, but users cannot edit it.",
@@ -89,6 +74,19 @@
         "help": "Default value pre-filled on new record creation. The user can change it unless `readonly` or `hide` are also enabled. Variables: %today% (current date), %current_user% (current user id).",
         "required": false
     },
+    "check": {
+        "type": "multi_select",
+        "values": [
+            "int",
+            "real",
+            "email",
+            "no_dupl",
+            "not_empty",
+            "valid_wkt"
+        ],
+        "help": "Real-time validation performed on value change and on form submission. `int` accepts whole numbers only (10); `real` accepts whole or decimal numbers with a dot as separator (10.5). The server enforces the same rules on save.",
+        "required": false
+    },
     "max_length": {
         "type": "input",
         "help": "Maximum allowed length in characters (including spaces). Enter an integer.",
@@ -96,17 +94,17 @@
     },
     "min": {
         "type": "input",
-        "help": "Minimum allowed value for `slider` type or `range` validation. Enter an integer.",
+        "help": "Minimum allowed value (numbers, or ISO dates for `date` fields). Also the lower end of a `slider`. Checked as soon as it is filled in.",
         "required": false
     },
     "max": {
         "type": "input",
-        "help": "Maximum allowed value for `slider` type or `range` validation. Enter an integer.",
+        "help": "Maximum allowed value (numbers, or ISO dates for `date` fields). Also the upper end of a `slider`. Checked as soon as it is filled in.",
         "required": false
     },
     "pattern": {
         "type": "input",
-        "help": "Regex pattern used when `check` includes `regex`.",
+        "help": "Regular expression the value must match. Checked as soon as it is filled in.",
         "required": false
     },
     "help": {

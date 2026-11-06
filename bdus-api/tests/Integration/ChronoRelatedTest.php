@@ -56,13 +56,7 @@ class ChronoRelatedTest extends BdusTestCase
         $tbData['fuzzy_date'] = true;
         static::$cfg->setTable($tbData);
 
-        // Register FK relation: reviews.item_ref → items.id
-        static::$db->query(
-            'INSERT INTO bdus_cfg_relations (from_tb, from_col, to_tb, to_col, on_delete)
-             VALUES (?, ?, ?, ?, ?)',
-            [self::RELATED_TB, 'item_ref', self::PARENT_TB, 'id', 'RESTRICT'],
-            'boolean'
-        );
+        // reviews.item_ref → items.id is already registered by BdusTestCase's config seed.
 
         // Two parent records
         self::$parentId1 = (int) static::$db->query(

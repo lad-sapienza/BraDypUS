@@ -22,31 +22,14 @@ class ChronoDensityPathTest extends BdusTestCase
     private const MID_TB  = 'reviews';
     private const LEAF_TB = 'review_notes';
 
-    /** @var array<string,string> path => original content, for fixture cleanup */
-    private static array $fixtureSnapshot = [];
-    private static string $fixtureDir;
-
     private static int $reviewId1;
     private static int $reviewId2;
     private static int $noteId1;
     private static int $noteId2;
 
-    /**
-     * review_notes is a brand-new table name (not just new columns on an
-     * existing fixture table) — the file-based test Config persists every
-     * setTable() straight to tests/fixtures/cfg/*.json (see
-     * project_test_conventions.md pitfall #8 / RadiocarbonCtrlTest). Snapshot
-     * and restore so this class's fixtures don't leak into other test classes.
-     */
     public static function setUpBeforeClass(): void
     {
         parent::setUpBeforeClass();
-
-        self::$fixtureDir      = __DIR__ . '/../fixtures/cfg';
-        self::$fixtureSnapshot = [];
-        foreach (glob(self::$fixtureDir . '/*.json') as $file) {
-            self::$fixtureSnapshot[$file] = file_get_contents($file);
-        }
 
         // review_notes: leaf table, one hop past 'reviews'.
         static::$db->execInTransaction('
@@ -62,13 +45,7 @@ class ChronoDensityPathTest extends BdusTestCase
             )
         ');
 
-        // FK relations: reviews -> items, review_notes -> reviews
-        static::$db->query(
-            'INSERT INTO bdus_cfg_relations (from_tb, from_col, to_tb, to_col, on_delete)
-             VALUES (?, ?, ?, ?, ?)',
-            [self::MID_TB, 'item_ref', self::ROOT_TB, 'id', 'RESTRICT'],
-            'boolean'
-        );
+        // FK relation review_notes -> reviews (reviews -> items comes from BdusTestCase's config seed)
         static::$db->query(
             'INSERT INTO bdus_cfg_relations (from_tb, from_col, to_tb, to_col, on_delete)
              VALUES (?, ?, ?, ?, ?)',
@@ -108,19 +85,6 @@ class ChronoDensityPathTest extends BdusTestCase
             [self::$reviewId2, 'note-b', 100, 200, 2],
             'id'
         );
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        foreach (glob(self::$fixtureDir . '/*.json') as $file) {
-            if (!isset(self::$fixtureSnapshot[$file])) {
-                unlink($file);
-            }
-        }
-        foreach (self::$fixtureSnapshot as $file => $content) {
-            file_put_contents($file, $content);
-        }
-        parent::tearDownAfterClass();
     }
 
     private function setPath(array $path): void

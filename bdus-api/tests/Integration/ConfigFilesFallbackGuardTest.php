@@ -19,8 +19,10 @@ class ConfigFilesFallbackGuardTest extends BdusTestCase
     {
         $before = md5_file(self::FIXTURES . 'tables.json');
 
-        // static::$db has the bdus_cfg_* tables but no row in bdus_cfg_tables
-        $cfg = new Config(new Dot(), self::FIXTURES, static::$db);
+        // A DB that has the bdus_cfg_* tables but no row in bdus_cfg_tables
+        $db = new \DB\DB('guard', ['db_engine' => 'sqlite', 'db_path' => ':memory:']);
+        (new \DB\System\Manage($db))->createTable('bdus_cfg_tables');
+        $cfg = new Config(new Dot(), self::FIXTURES, $db);
 
         try {
             $cfg->setTable(['name' => 'guard_probe', 'label' => 'x', 'fields' => []]);

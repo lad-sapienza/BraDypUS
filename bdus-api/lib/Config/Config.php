@@ -378,20 +378,20 @@ class Config
     /**
      * Legacy files-mode write of the whole configuration (tables + fields).
      *
-     * Safety net (#59): a Config given a DB but finding no row in bdus_cfg_tables falls back
-     * to files mode. In production that is the v4 → v5 upgrade, before M011–M016; in a test it
-     * is almost always a mistake (forgotten seed row) and would silently rewrite the committed
-     * fixtures. A fixture Config built on purpose has no DB and is not affected.
+     * Safety net (#59): in files mode, never write under tests/fixtures. In production files
+     * mode is only the v4 → v5 upgrade, before M011–M016; in a test it is a mistake (a Config
+     * with no DB, or a forgotten row in bdus_cfg_tables) and would silently rewrite the
+     * committed fixtures. The tests' Config is database-backed (BdusTestCase).
      * Removable together with ToFiles once upgrading from v4 is no longer supported.
      */
     private function writeAllFiles(): void
     {
-        if ($this->db !== null && !$this->useDb) {
+        if (!$this->useDb) {
             $dir = realpath($this->path2cfg);
             if ($dir !== false && preg_match('#[/\\\\]tests[/\\\\]fixtures([/\\\\]|$)#', $dir . '/')) {
                 throw new ConfigException(
                     "Refusing to write the file-based configuration under tests/fixtures: "
-                    . "the Config has a DB but fell back to files mode (is there a row in bdus_cfg_tables?)."
+                    . "the Config is in files mode (database-backed Config needs a row in bdus_cfg_tables)."
                 );
             }
         }

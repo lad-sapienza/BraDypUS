@@ -37,44 +37,6 @@ class RadiocarbonCtrlTest extends BdusTestCase
     private const TB        = 'items';
     private const PLUGIN_TB = 'items_radiocarbon';
 
-    /** @var array<string,string> path => original content, for fixture cleanup */
-    private static array $fixtureSnapshot = [];
-    private static string $fixtureDir;
-
-    /**
-     * Unlike fuzzy-date/osteology (which only add columns to an existing
-     * table), activating radiocarbon registers a brand-new table NAME in
-     * config. The test-only file-based Config (see BdusTestCase) persists
-     * every setTable()/setFld() call straight to tests/fixtures/cfg/*.json —
-     * so without cleanup this class would leave a table name in the shared
-     * fixtures that no other test class's in-memory schema actually has,
-     * breaking unrelated test classes that run later in the same PHPUnit
-     * process. Snapshot the fixture files here and restore them in
-     * tearDownAfterClass() so this class's side effects stay contained.
-     */
-    public static function setUpBeforeClass(): void
-    {
-        parent::setUpBeforeClass();
-
-        self::$fixtureDir      = __DIR__ . '/../fixtures/cfg';
-        self::$fixtureSnapshot = [];
-        foreach (glob(self::$fixtureDir . '/*.json') as $file) {
-            self::$fixtureSnapshot[$file] = file_get_contents($file);
-        }
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        foreach (glob(self::$fixtureDir . '/*.json') as $file) {
-            if (!isset(self::$fixtureSnapshot[$file])) {
-                unlink($file);
-            }
-        }
-        foreach (self::$fixtureSnapshot as $file => $content) {
-            file_put_contents($file, $content);
-        }
-    }
-
     private function activate(): array
     {
         $ctrl = $this->makeController('Bdus\\Controllers\\Config', ['tb' => self::TB]);

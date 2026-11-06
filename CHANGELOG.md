@@ -66,12 +66,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `error_free_sql_run` and executes nothing. A trailing `;`, semicolons inside strings, comments,
   `$$ … $$` bodies and the `BEGIN … END` body of a trigger are not counted as statement ends
   (`DB\SqlStatements`). (#60)
-- **Tests can no longer rewrite `tests/fixtures` by mistake.** A `Config` built with a database
-  but finding no row in `bdus_cfg_tables` falls back to the legacy file-based configuration; under
-  `tests/fixtures/` that used to overwrite the committed fixtures silently and now fails with a
-  `ConfigException`. A fixture `Config` built on purpose (no database) is not affected. The
-  file-based configuration (`Config\ToFiles`, `Config\Load`, the `useDb` branches and this guard)
-  is marked as legacy in the code: it can go when upgrading from v4 is no longer supported. (#59, partial)
+- **Tests now run on a database-backed configuration, like production.** `BdusTestCase` imports
+  the JSON files of `tests/fixtures/cfg/` into the `bdus_cfg_*` tables (as migration M011 does) and
+  never writes them again; the snapshot/restore workarounds of some test classes are gone. As a
+  safety net, `Config` in files mode refuses to write under `tests/fixtures/` (`ConfigException`).
+  The file-based configuration (`Config\ToFiles`, `Config\Load`, the `useDb` branches and that
+  guard) is marked as legacy in the code: it can go when upgrading from v4 is no longer supported.
+  (#59, partial)
 
 ## [5.16.8] - 2026-11-05
 

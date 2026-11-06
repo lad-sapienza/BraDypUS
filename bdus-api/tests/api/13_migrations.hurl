@@ -51,3 +51,10 @@ Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
 jsonpath "$.migrations[?(@.name=='M046_add_groups_and_permissions')].applied" == true
+
+# ── 13e. Attribution on files (M047) is applied ─────────────────────
+GET {{base_url}}/{{app_name}}/api/migrations
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.migrations[?(@.name=='M047_add_attribution_to_files')].applied" == true

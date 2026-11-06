@@ -156,6 +156,7 @@ class CreateApp
             ['name' => 'keywords',    'label' => 'Keywords',                 'type' => 'text',     'db_type' => 'TEXT'],
             ['name' => 'description', 'label' => 'Description',              'type' => 'long_text','db_type' => 'TEXT'],
             ['name' => 'printable',   'label' => 'Printable',                'type' => 'boolean',  'db_type' => 'INTEGER'],
+            ['name' => 'attribution', 'label' => 'Attribution',              'type' => 'text',     'db_type' => 'TEXT'],
         ] as $fld) {
             ToDB::upsertField($this->db, 'bdus_files', $fld);
         }

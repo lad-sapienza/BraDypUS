@@ -1350,7 +1350,7 @@ class Record extends \Bdus\Controller
    * POST ?obj=record_ctrl&method=uploadFile&tb=TABLE&id=RECORD_ID
    * Multipart body: file=<binary>
    *
-   * Response: { status, code, file: { id, ext, filename, url, is_image, description, keywords, printable } }
+   * Response: { status, code, file: { id, ext, filename, url, is_image, description, keywords, attribution, printable } }
    */
   public function uploadFile(): void
   {
@@ -1438,6 +1438,7 @@ class Record extends \Bdus\Controller
           'filename'    => $filename,
           'description' => null,
           'keywords'    => null,
+          'attribution' => null,
           'printable'   => null,
           'is_image'    => in_array($ext, $imageExts, true),
         ],
@@ -1522,7 +1523,7 @@ class Record extends \Bdus\Controller
    * Body (JSON): { fileId: int }
    *
    * Response: { status, code, file: { id, link_id, ext, filename, description,
-   *             keywords, printable, is_image } }
+   *             keywords, attribution, printable, is_image } }
    */
   public function linkFile(): void
   {
@@ -1572,6 +1573,7 @@ class Record extends \Bdus\Controller
           'filename'    => $f['filename'] ?? '',
           'description' => $f['description'] ?? null,
           'keywords'    => $f['keywords']    ?? null,
+          'attribution' => $f['attribution'] ?? null,
           'printable'   => $f['printable']   ?? null,
           'is_image'    => in_array($ext, $imageExts, true),
         ],

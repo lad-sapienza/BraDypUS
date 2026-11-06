@@ -1874,7 +1874,7 @@ paths:
           in: query
           schema:
             type: string
-          description: Match on file name, description, keywords (or exact id when numeric)
+          description: Match on file name, description, keywords, attribution (or exact id when numeric)
         - name: ids_only
           in: query
           schema:
@@ -2012,7 +2012,7 @@ paths:
   /api/file/{fileId}:
     patch:
       tags: [files]
-      summary: Update file metadata (description, keywords, printable)
+      summary: Update file metadata (description, keywords, attribution, printable)
       parameters:
         - name: fileId
           in: path
@@ -2029,6 +2029,8 @@ paths:
                 description:
                   type: [string, 'null']
                 keywords:
+                  type: [string, 'null']
+                attribution:
                   type: [string, 'null']
                 printable:
                   type: [boolean, 'null']
@@ -2066,7 +2068,7 @@ paths:
       summary: Replace a file's binary while preserving its metadata
       description: >
         Uploads a new file to replace the stored binary. The file's
-        `description`, `keywords`, and `printable` are kept unchanged.
+        `description`, `keywords`, `attribution`, and `printable` are kept unchanged.
         If the new file has a different extension, the old physical file
         is deleted.
       parameters:
@@ -6636,6 +6638,8 @@ components:
           type: [string, 'null']
         keywords:
           type: [string, 'null']
+        attribution:
+          type: [string, 'null']
         printable:
           type: [boolean, 'null']
         is_image:
@@ -6671,6 +6675,8 @@ components:
         description:
           type: [string, 'null']
         keywords:
+          type: [string, 'null']
+        attribution:
           type: [string, 'null']
         printable:
           type: [boolean, 'null']

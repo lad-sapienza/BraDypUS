@@ -6,7 +6,8 @@
         { "name": "keywords",    "type": "TEXT",               "notnull": false },
         { "name": "description", "type": "TEXT",               "notnull": false },
         { "name": "printable",   "type": "INTEGER",            "notnull": false },
-        { "name": "filename",    "type": "TEXT",               "notnull": true  }
+        { "name": "filename",    "type": "TEXT",               "notnull": true  },
+        { "name": "attribution", "type": "TEXT",               "notnull": false }
     ],
     "indexes": [],
     "relations": []

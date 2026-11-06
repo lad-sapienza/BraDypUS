@@ -43,6 +43,7 @@ class FileCtrlTest extends BdusTestCase
         $this->assertArrayHasKey('filename',    $file);
         $this->assertArrayHasKey('description', $file);
         $this->assertArrayHasKey('keywords',    $file);
+        $this->assertArrayHasKey('attribution', $file);
         $this->assertArrayHasKey('is_image',    $file);
         $this->assertArrayHasKey('links',       $file);
         $this->assertIsArray($file['links']);
@@ -177,6 +178,26 @@ class FileCtrlTest extends BdusTestCase
         );
         $this->assertSame('Updated desc', $rows[0]['description']);
         $this->assertSame('kw1 kw2',      $rows[0]['keywords']);
+    }
+
+    public function testUpdateFileSavesAndSearchesAttribution(): void
+    {
+        $ctrl = $this->makeController(
+            'Bdus\\Controllers\\File',
+            ['fileId' => 1],
+            ['attribution' => '(c) Jane Doe, CC BY 4.0']
+        );
+        $res = $this->callController($ctrl, 'updateFile');
+        $this->assertSame('ok_file_updated', $res['code']);
+
+        $rows = static::$db->query("SELECT attribution FROM bdus_files WHERE id = 1", [], 'read');
+        $this->assertSame('(c) Jane Doe, CC BY 4.0', $rows[0]['attribution']);
+
+        // The list returns it and the text search matches it
+        $ctrl = $this->makeController('Bdus\\Controllers\\File', ['search' => 'jane doe'], []);
+        $res  = $this->callController($ctrl, 'getFiles');
+        $this->assertSame(1, $res['total']);
+        $this->assertSame('(c) Jane Doe, CC BY 4.0', $res['files'][0]['attribution']);
     }
 
     public function testUpdateFileRenameSuccess(): void

@@ -352,6 +352,7 @@ EOD;
      *    "creator": (int),
      *    "ext": (string),
      *    "keywords": (string)
+     *    "attribution": (string|null)
      *    "description": (string)
      *    "printable": (boolean)
      *    "filename": (string)

@@ -54,6 +54,27 @@ jsonpath "$.status" == "success"
 jsonpath "$.code"   == "ok_file_updated"
 
 
+# ── 34c1. PATCH /api/file/{id} — attribution is saved and returned ───
+PATCH {{base_url}}/{{app_name}}/api/file/{{file_id_34}}
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "attribution": "Photo: Phase 34 Tester, CC BY 4.0" }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+jsonpath "$.code"   == "ok_file_updated"
+
+GET {{base_url}}/{{app_name}}/api/files
+Authorization: Bearer {{jwt}}
+[QueryStringParams]
+search: phase 34 tester
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+jsonpath "$.total"  >= 1
+jsonpath "$.files[0].attribution" == "Photo: Phase 34 Tester, CC BY 4.0"
+
+
 # ── 34c2. GET /api/files?search= — case-insensitive on every engine (#73) ──
 # The description set in 34c is "Test description for phase 34"; an all-caps
 # needle must still find it (PostgreSQL's plain LIKE would not).

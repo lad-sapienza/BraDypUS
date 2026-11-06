@@ -67,8 +67,8 @@ class File extends \Bdus\Controller
 			if ($search !== '') {
 				$needle    = '%' . $search . '%';
 				$like      = \SQL\Like::operator($this->db->getEngine());
-				$searchOr  = ["f.filename {$like} ?", "f.description {$like} ?", "f.keywords {$like} ?"];
-				$searchVal = [$needle, $needle, $needle];
+				$searchOr  = ["f.filename {$like} ?", "f.description {$like} ?", "f.keywords {$like} ?", "f.attribution {$like} ?"];
+				$searchVal = [$needle, $needle, $needle, $needle];
 				if (ctype_digit($search)) {
 					$searchOr[]  = 'f.id = ?';
 					$searchVal[] = (int) $search;
@@ -80,7 +80,7 @@ class File extends \Bdus\Controller
 			$whereSql = $conditions ? ('WHERE ' . implode(' AND ', $conditions)) : '';
 
 			$countSql = "SELECT COUNT(*) AS cnt FROM bdus_files f {$whereSql}";
-			$fetchSql = "SELECT f.id, f.ext, f.filename, f.description, f.keywords, f.printable
+			$fetchSql = "SELECT f.id, f.ext, f.filename, f.description, f.keywords, f.attribution, f.printable
 			             FROM bdus_files f {$whereSql}
 			             ORDER BY f.id DESC LIMIT ? OFFSET ?";
 
@@ -152,6 +152,7 @@ class File extends \Bdus\Controller
 					'filename'    => $r['filename'] ?? '',
 					'description' => $r['description'],
 					'keywords'    => $r['keywords'],
+					'attribution' => $r['attribution'],
 					'printable'   => isset($r['printable']) ? (bool)$r['printable'] : null,
 					'is_image'    => in_array(strtolower($ext), $imageExts, true),
 					'links'       => $linkMap[$id] ?? [],
@@ -173,7 +174,7 @@ class File extends \Bdus\Controller
 	}
 
 	/**
-	 * Updates file metadata (filename, description, keywords, printable).
+	 * Updates file metadata (filename, description, keywords, attribution, printable).
 	 *
 	 * Renaming only ever touches this DB column — the physical file keeps
 	 * living at `{id}.{ext}` regardless of `filename` (see uploadFile()/
@@ -181,7 +182,7 @@ class File extends \Bdus\Controller
 	 * URL implications.
 	 *
 	 * PATCH /api/file/{fileId}
-	 * Body: { filename?, description?, keywords?, printable? }
+	 * Body: { filename?, description?, keywords?, attribution?, printable? }
 	 *
 	 * Response: { status, code }
 	 */
@@ -212,6 +213,7 @@ class File extends \Bdus\Controller
 		$filename    = isset($this->post['filename']) ? trim((string) $this->post['filename']) : null;
 		$description = $this->post['description'] ?? null;
 		$keywords    = $this->post['keywords']    ?? null;
+		$attribution = $this->post['attribution'] ?? null;
 		$printable   = isset($this->post['printable']) ? (int)(bool)$this->post['printable'] : null;
 
 		$sets  = [];
@@ -219,6 +221,7 @@ class File extends \Bdus\Controller
 		if (array_key_exists('filename',    $this->post)) { $sets[] = 'filename    = ?'; $vals[] = $filename;    }
 		if (array_key_exists('description', $this->post)) { $sets[] = 'description = ?'; $vals[] = $description; }
 		if (array_key_exists('keywords',    $this->post)) { $sets[] = 'keywords    = ?'; $vals[] = $keywords;    }
+		if (array_key_exists('attribution', $this->post)) { $sets[] = 'attribution = ?'; $vals[] = $attribution; }
 		if (array_key_exists('printable',   $this->post)) { $sets[] = 'printable   = ?'; $vals[] = $printable;   }
 
 		if (empty($sets)) {

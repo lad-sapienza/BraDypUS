@@ -607,6 +607,7 @@
   "invalid_action": "L'azione %s non è valida",
   "ok_cfg_data_updated": "I dati di configurazione sono stati aggiornati",
   "error_cfg_data_updated": "Errore. Non è stato possibile aggiornare i dati di configurazione",
+  "invalid_image_presets": "Configurazione dei preset immagine non valida",
   "system_email": "Email di sistema",
   "recipients": "Destinatari",
   "sender": "Mittente",

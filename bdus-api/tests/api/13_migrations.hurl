@@ -58,3 +58,10 @@ Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
 jsonpath "$.migrations[?(@.name=='M047_add_attribution_to_files')].applied" == true
+
+# ── 13f. Derived-image presets column (M048) is applied ─────────────
+GET {{base_url}}/{{app_name}}/api/migrations
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.migrations[?(@.name=='M048_add_image_presets_to_cfg_app')].applied" == true

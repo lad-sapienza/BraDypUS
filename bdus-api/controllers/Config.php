@@ -609,6 +609,14 @@ class Config extends \Bdus\Controller
         \Config\AppSettings::save($this->db, $appSettingsData);
         $data = array_diff_key($data, $appSettingsData);
       }
+      if (array_key_exists('imagePresets', $data)) {
+        try {
+          $data['imagePresets'] = \Image\Presets::normalize(is_array($data['imagePresets']) ? $data['imagePresets'] : []);
+        } catch (\InvalidArgumentException $e) {
+          $this->returnJson(['status' => 'error', 'code' => 'invalid_image_presets', 'detail' => $e->getMessage()]);
+          return;
+        }
+      }
       $this->cfg->setMain($data);
       $this->returnJson(['status' => 'success', 'code' => 'ok_cfg_data_updated']);
     } catch (\Throwable $e) {

@@ -80,6 +80,7 @@ class Config
                 $this->cfg['main']['imageFormat']   = $appSettings['image_format']   ?? 'webp';
                 $this->cfg['main']['imageQuality']  = (int) ($appSettings['image_quality'] ?? 85);
                 $this->cfg['main']['imageDpi']      = (int) ($appSettings['image_dpi']     ?? 72);
+                $this->cfg['main']['imagePresets']  = AppSettings::getImagePresets($db);
             }
 
             // Table/field definitions: DB if available, JSON otherwise.
@@ -179,6 +180,13 @@ class Config
                 'image_quality'  => $main['imageQuality']  ?? 85,
                 'image_dpi'      => $main['imageDpi']      ?? 72,
             ]);
+
+            // Presets are written only when sent: the other settings above fall
+            // back to defaults when absent, which would silently wipe them.
+            // The caller validates with Image\Presets::normalize() first.
+            if (array_key_exists('imagePresets', $main)) {
+                AppSettings::saveImagePresets($this->db, $main['imagePresets']);
+            }
         } else {
             // Pre-M019: write the full array to config.json.
             ToFiles::writeMain($this->path2cfg, $main);

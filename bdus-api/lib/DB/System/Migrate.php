@@ -56,6 +56,7 @@ use DB\System\Migrations\M044_DeriveGeodataFlag;
 use DB\System\Migrations\M045_AddImageConversionSettings;
 use DB\System\Migrations\M046_AddGroupsAndPermissions;
 use DB\System\Migrations\M047_AddAttributionToFiles;
+use DB\System\Migrations\M048_AddImagePresetsToCfgApp;
 use Monolog\Logger;
 
 /**
@@ -148,6 +149,7 @@ class Migrate
         M045_AddImageConversionSettings::class,
         M046_AddGroupsAndPermissions::class,
         M047_AddAttributionToFiles::class,
+        M048_AddImagePresetsToCfgApp::class,
     ];
 
     /**

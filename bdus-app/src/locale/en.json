@@ -607,6 +607,7 @@
   "invalid_action": "Not valid acrion %",
   "ok_cfg_data_updated": "The configuration data were saved",
   "error_cfg_data_updated": "Error. The configuration data were not saved",
+  "invalid_image_presets": "Invalid image preset configuration",
   "system_email": "System email",
   "recipients": "Recipients",
   "sender": "Sender",

@@ -83,6 +83,47 @@ class AppSettings
         ];
     }
 
+    /**
+     * The stored derived-image presets (raw, normalised list; [] when none).
+     *
+     * Read with its own query on purpose: before M048 is applied the column
+     * does not exist, and bundling it into get() would make every other setting
+     * fall back to its default until the upgrade is applied.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public static function getImagePresets(DBInterface $db): array
+    {
+        try {
+            $rows = $db->query(
+                'SELECT image_presets FROM ' . self::TABLE . ' WHERE id = ?',
+                [self::ROW_ID],
+                'read'
+            );
+            $decoded = json_decode((string) ($rows[0]['image_presets'] ?? ''), true);
+            return is_array($decoded) ? array_values($decoded) : [];
+        } catch (\Throwable) {
+            return []; // column not yet added by M048
+        }
+    }
+
+    /**
+     * Persists the derived-image presets. The list must already be validated
+     * (Image\Presets::normalize()). No-op until M048 has been applied.
+     */
+    public static function saveImagePresets(DBInterface $db, array $presets): void
+    {
+        try {
+            $db->query(
+                'UPDATE ' . self::TABLE . ' SET image_presets = ? WHERE id = ?',
+                [json_encode(array_values($presets), JSON_UNESCAPED_UNICODE), self::ROW_ID],
+                'boolean'
+            );
+        } catch (\Throwable) {
+            // column not yet added by M048
+        }
+    }
+
     // ── Write ─────────────────────────────────────────────────────────────────
 
     /**

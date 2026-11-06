@@ -380,6 +380,71 @@ class Config extends \Bdus\Controller
     }
   }
 
+  /**
+   * Re-reads how a registered SQL view can be written and stores it, without
+   * touching the rest of its configuration. The writability is probed once, when
+   * the view is activated; use this after changing the view (for instance after
+   * adding INSTEAD OF triggers on SQLite) instead of removing and activating it
+   * again. A view that can now be written needs the same `creator` column as at
+   * activation.
+   *
+   * POST /api/config/table/{tb}/view-writable
+   * Response: { status, code: view_writable_updated, view_writable, changed }
+   */
+  public function refreshViewWritable(): void
+  {
+    if (!$this->requireSuperAdmin()) return;
+
+    $tb = (string) ($this->get['tb'] ?? '');
+    if ($tb === '' || !$this->cfg->get("tables.$tb.name")) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_found']);
+      return;
+    }
+    if (!$this->cfg->get("tables.$tb.is_view")) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_a_view']);
+      return;
+    }
+
+    try {
+      $object = null;
+      foreach ((new \DB\Inspect($this->db))->listObjects() as $o) {
+        if ($o['name'] === $tb) {
+          $object = $o;
+          break;
+        }
+      }
+      if ($object === null) {
+        $this->returnJson(['status' => 'error', 'code' => 'view_not_found']);
+        return;
+      }
+      if ($object['kind'] !== 'view') {
+        $this->returnJson(['status' => 'error', 'code' => 'not_a_view']);
+        return;
+      }
+      if (!$object['has_id']) {
+        $this->returnJson(['status' => 'error', 'code' => 'missing_id_column']);
+        return;
+      }
+      $level = $object['view_writable'];
+      if ($level !== 'none' && !$object['has_creator']) {
+        $this->returnJson(['status' => 'error', 'code' => 'missing_creator_column']);
+        return;
+      }
+
+      $before = $this->cfg->get("tables.$tb.view_writable") ?: 'none';
+      \Config\ToDB::setViewWritable($this->db, $tb, $level);
+      $this->returnJson([
+        'status'        => 'success',
+        'code'          => 'view_writable_updated',
+        'view_writable' => $level,
+        'changed'       => $level !== $before,
+      ]);
+    } catch (\Throwable $e) {
+      $this->log->error($e);
+      $this->returnJson(['status' => 'error', 'code' => 'db_error']);
+    }
+  }
+
   /** Throws unless $tb still exists in the database (a table cannot be switched on without it). */
   private function requireObjectInDatabase(string $tb): void
   {

@@ -33,6 +33,16 @@
       <!-- ── SQL view: what it is, and its definition (read-only) ──── -->
       <section v-if="isView" class="cfg-section" data-test="view-info">
         <AAlert type="info" show-icon :closable="false" :message="t('view_cfg_note')" />
+        <div class="cfg-view-write">
+          <span>{{ t('view_write_state') }}</span>
+          <ATag :color="viewWrite.writable ? 'green' : 'default'">{{ t(viewWrite.badgeKey) }}</ATag>
+          <AButton size="small" :loading="rechecking" @click="recheckView">
+            <template #icon><ReloadOutlined /></template>
+            {{ t('view_recheck') }}
+          </AButton>
+        </div>
+        <small class="cfg-hint">{{ t('view_recheck_hint') }}</small>
+        <AAlert v-if="!viewWrite.writable" class="cfg-view-why" type="warning" show-icon :closable="false" :message="t('view_ro_why')" />
         <details v-if="table?.view_sql" class="cfg-view-sql">
           <summary>{{ t('view_sql') }}</summary>
           <pre>{{ table.view_sql }}</pre>
@@ -283,7 +293,7 @@
 </template>
 
 <script setup>
-import { BarsOutlined, CheckOutlined, CloseOutlined, DeleteOutlined, EditOutlined, LoadingOutlined, PauseCircleOutlined, SaveOutlined, TableOutlined, UnorderedListOutlined } from '@ant-design/icons-vue'
+import { BarsOutlined, CheckOutlined, CloseOutlined, DeleteOutlined, EditOutlined, LoadingOutlined, PauseCircleOutlined, ReloadOutlined, SaveOutlined, TableOutlined, UnorderedListOutlined } from '@ant-design/icons-vue'
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import Sortable from 'sortablejs'
 import {
@@ -293,13 +303,14 @@ import {
   Select as ASelect,
   Switch as ASwitch,
   Alert as AAlert,
+  Tag as ATag,
 } from 'ant-design-vue'
 import ConfigIndexes from '@/components/config/ConfigIndexes.vue'
 import ConfigChronoDensityPath from '@/components/config/ConfigChronoDensityPath.vue'
 import { useToast, useConfirm } from '@/composables/useNotify'
 import { useI18n }    from '@/i18n'
 import { api }        from '@/api'
-import { cannotDeactivate as cannotDeactivateTable } from '@/utils/dbObjects'
+import { cannotDeactivate as cannotDeactivateTable, viewWriteState } from '@/utils/dbObjects'
 
 const props = defineProps({
   tb: { type: String, default: null }   // null → "add new" mode
@@ -343,6 +354,27 @@ const isPlugin = computed(() => form.value?.is_plugin === '1')
 const isView = computed(() => !!table.value?.is_view)
 
 // Plugin tables, and tables that have plugins, cannot be switched off on their own.
+const viewWrite = computed(() => viewWriteState(table.value))
+const rechecking = ref(false)
+
+async function recheckView() {
+  rechecking.value = true
+  try {
+    const res = await api.post(`/api/config/table/${props.tb}/view-writable`, {})
+    toast.add({
+      severity: res.status === 'success' ? 'success' : 'error',
+      summary:  t('saved'),
+      detail:   res.status === 'success' ? t(res.changed ? 'view_recheck_changed' : 'view_recheck_unchanged') : api.responseMessage(res, t),
+      life: 5000
+    })
+    if (res.status === 'success') await load()
+  } catch (e) {
+    toast.add({ severity: 'error', summary: e.message, life: 4000 })
+  } finally {
+    rechecking.value = false
+  }
+}
+
 const cannotDeactivate = computed(() => cannotDeactivateTable(table.value) || isPlugin.value)
 
 // is_plugin as boolean for ToggleSwitch (#20)
@@ -790,6 +822,9 @@ onMounted(load)
 /* Danger zone rows */
 .cfg-danger-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 0.75rem; flex-wrap: wrap; }
 .cfg-danger-row .cfg-danger-warn { margin: 0; flex: 1 1 280px; }
+
+.cfg-view-write { display: flex; align-items: center; gap: 0.6rem; margin-top: 0.75rem; flex-wrap: wrap; }
+.cfg-view-why { margin-top: 0.6rem; }
 
 /* SQL view definition */
 .cfg-view-sql { margin-top: 0.75rem; }

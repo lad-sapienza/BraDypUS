@@ -112,7 +112,7 @@ class DbCfgAlign
             if ($o['view_writable'] !== $saved) {
                 $this->resp->set('warning',
                     "SQL view {$tb}: writable as '{$o['view_writable']}' in the database, configured as '{$saved}'",
-                    "Remove the view from the configuration and activate it again to update how it can be written");
+                    "Open the view's settings and press 'Re-check how it can be written'");
             }
         }
     }

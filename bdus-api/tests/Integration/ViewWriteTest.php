@@ -151,4 +151,66 @@ class ViewWriteTest extends BdusTestCase
         $this->assertNotSame('all_record_deleted', $del['code']);
         $this->assertNotSame([], static::$db->query('SELECT id FROM vw_base WHERE id = ?', [$id], 'read'), 'the row is still there');
     }
+
+    // ── re-check how a view can be written ────────────────────────────────────
+
+    private function recheck(string $tb): array
+    {
+        static::$cfg = new Config(new Dot(), __DIR__ . '/../fixtures/cfg/', static::$db);
+        return $this->callController($this->makeController(self::CFG, ['tb' => $tb], []), 'refreshViewWritable');
+    }
+
+    public function testRecheckPicksUpTriggersAddedAfterActivation(): void
+    {
+        static::$db->exec('CREATE VIEW vw_late AS SELECT id, creator, name FROM vw_base');
+        $this->assertSame('success', \Config\Activate::activate(static::$db, static::$cfg, 'vw_late')['status']);
+        $this->assertSame('none', (new Config(new Dot(), __DIR__ . '/../fixtures/cfg/', static::$db))->get('tables.vw_late.view_writable'));
+
+        // nothing changed yet: the answer says so
+        $res = $this->recheck('vw_late');
+        $this->assertSame('view_writable_updated', $res['code']);
+        $this->assertFalse($res['changed']);
+
+        // the user adds a trigger, as the guide shows; the saved level is stale until re-checked
+        static::$db->exec('CREATE TRIGGER vw_late_i INSTEAD OF INSERT ON vw_late BEGIN INSERT INTO vw_base (id,creator,name) VALUES (NEW.id,NEW.creator,NEW.name); END');
+        $res = $this->recheck('vw_late');
+        $this->assertSame('trigger', $res['view_writable']);
+        $this->assertTrue($res['changed']);
+        $cfg = new Config(new Dot(), __DIR__ . '/../fixtures/cfg/', static::$db);
+        $this->assertSame('trigger', $cfg->get('tables.vw_late.view_writable'));
+        $this->assertTrue((bool) $cfg->get('tables.vw_late.is_view'), 'the rest of the configuration is untouched');
+        $this->assertSame('id', $cfg->get('tables.vw_late.id_field'));
+
+        // and back, when the trigger is dropped
+        static::$db->exec('DROP TRIGGER vw_late_i');
+        $this->assertSame('none', $this->recheck('vw_late')['view_writable']);
+    }
+
+    public function testRecheckRefusesWhatIsNotARegisteredView(): void
+    {
+        $this->assertSame('not_found', $this->recheck('no_such')['code']);
+        // a configured table is not a view
+        \Config\ToDB::upsertTable(static::$db, ['name' => 'items', 'label' => 'Items']);
+        $this->assertSame('not_a_view', $this->recheck('items')['code']);
+    }
+
+    public function testRecheckKeepsTheCreatorRule(): void
+    {
+        static::$db->exec('CREATE VIEW vw_nocreator AS SELECT id, name FROM vw_base');
+        $this->assertSame('success', \Config\Activate::activate(static::$db, static::$cfg, 'vw_nocreator')['status'], 'read-only: no creator needed');
+        static::$db->exec('CREATE TRIGGER vw_nocreator_i INSTEAD OF INSERT ON vw_nocreator BEGIN INSERT INTO vw_base (id,name) VALUES (NEW.id,NEW.name); END');
+        $this->assertSame('missing_creator_column', $this->recheck('vw_nocreator')['code']);
+        $cfg = new Config(new Dot(), __DIR__ . '/../fixtures/cfg/', static::$db);
+        $this->assertSame('none', $cfg->get('tables.vw_nocreator.view_writable'), 'refused: the saved level does not change');
+    }
+
+    public function testRecheckRequiresSuperAdmin(): void
+    {
+        $this->setPrivilege(30);
+        try {
+            $this->assertSame('not_enough_privilege', $this->recheck('vw_rw')['code']);
+        } finally {
+            $this->setPrivilege(1);
+        }
+    }
 }

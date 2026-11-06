@@ -287,6 +287,28 @@ class ToDB
     }
 
     /**
+     * Stores how a registered SQL view can be written (`none` | `probe` | `trigger`)
+     * in the table's `extra`, leaving the rest of its configuration alone.
+     * Returns false when there is no such configuration row.
+     */
+    public static function setViewWritable(DBInterface $db, string $name, string $level): bool
+    {
+        $rows = $db->query('SELECT extra FROM bdus_cfg_tables WHERE name = ?', [$name], 'read');
+        if (empty($rows)) {
+            return false;
+        }
+        $extra = json_decode((string) ($rows[0]['extra'] ?? ''), true);
+        $extra = is_array($extra) ? $extra : [];
+        $extra['view_writable'] = $level;
+        $db->query(
+            'UPDATE bdus_cfg_tables SET extra = ? WHERE name = ?',
+            [json_encode($extra, JSON_UNESCAPED_UNICODE), $name],
+            'boolean'
+        );
+        return true;
+    }
+
+    /**
      * Sets the sort order of all tables at once.
      * $sortedNames is an ordered array of table names (first = sort 0).
      */

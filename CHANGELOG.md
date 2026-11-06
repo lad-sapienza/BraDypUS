@@ -27,6 +27,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   transaction, because `lastInsertId` is stale there (PostgreSQL and MariaDB checked on live
   servers). Foreign keys, indexes and the fuzzy-date / osteology / Pleiades / radiocarbon plugins are
   refused on views (`view_not_alterable`). (#53)
+- **Re-check how a SQL view can be written.** The way a registered view can be written is probed when it
+  is activated, so adding `INSTEAD OF` triggers afterwards left it read-only until it was removed and
+  activated again. `POST /api/config/table/{tb}/view-writable` re-reads it and updates `view_writable`,
+  leaving the rest of the configuration alone (a writable view still needs `creator`). In the view's
+  settings: its state (read-only / writable), why a view is read-only, and a *Re-check how it can be
+  written* button. The guide now states the support per engine (SQLite: read-only unless the user adds
+  triggers; PostgreSQL and MariaDB: simple views are writable natively) and gives an example of the
+  triggers. (#53)
 - **Table life cycle (API).** `PUT /api/config/table/{tb}/active` switches a table off or on:
   a deactivated table keeps its configuration but the application behaves as if it were not
   there (it is left out when the configuration is loaded, so relations to it are ignored too);

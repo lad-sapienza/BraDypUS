@@ -96,30 +96,76 @@ plugins are refused (`view_not_alterable`). Change the view in SQL (`CREATE OR R
 
 ### Writing through a view <Badge type="tip" text="v5.17.0" />
 
+What a registered view can do depends on the engine. BraDypUS does not write SQL for you: the view
+is created by hand, and so is whatever makes it writable.
+
+| Engine | Reading, charts, [API](../api/) | Creating, changing, deleting records |
+|---|---|---|
+| **SQLite** | Always | Only if **you** add `INSTEAD OF` triggers (example below). Without them the view is read-only |
+| **PostgreSQL**, **MariaDB / MySQL** | Always | Natively, for the views the engine itself considers updatable: in practice a view on **one table**, without `DISTINCT`, `GROUP BY`, aggregates or `UNION`. Other views are read-only, or, on PostgreSQL, writable through `INSTEAD OF` triggers |
+
 When a view is activated, BraDypUS records how it can be written (`view_writable`):
 
 | | Meaning |
 |---|---|
-| `none` | **Read-only.** The interface hides *Edit*, *Delete* and *New*; the server answers `view_read_only` |
-| `probe` | The database says the view is updatable (PostgreSQL and MariaDB: a simple view on one table) |
-| `trigger` | SQLite, or any engine with `INSTEAD OF` triggers: writable through the triggers |
+| `none` | **Read-only.** The interface hides *Edit*, *Duplicate*, *Delete* and *New*; the server answers `view_read_only` |
+| `probe` | The database says the view is updatable (PostgreSQL, MariaDB) |
+| `trigger` | Writable through `INSTEAD OF` triggers |
 
-On **SQLite** a view is writable only if you defined `INSTEAD OF` triggers for it, and the
-trigger that inserts should not invent the `id`: let the base table assign it, and BraDypUS reads
-the new `id` from the base table inside the same transaction (SQLite's own "last inserted id"
-is stale after an insert through a view). On **PostgreSQL**, an `INSTEAD OF` trigger that inserts
-with explicit ids can make the new id come back wrong: let the sequence of the base table assign it.
+A read-only view is not a lesser one: it is the usual way to give charts, searches and the API a
+flat, prepared version of the data.
 
-A read-only view shows the record with no *Edit*, *Duplicate* or *Delete*, and no *New* in the list:
+#### SQLite: making a view writable
 
-![A record of a read-only view: only Version history is offered](/images/v5/setup/view-readonly-record.png)
+On SQLite a view is writable only through `INSTEAD OF` triggers. For a view on one table the three
+triggers below are all that is needed. Adapt the names and the column lists: this example is a view
+`v_site` over a table `site` that exposes `id`, `creator`, `name` and `place`.
 
-A writable view looks like any table to the person using it:
+```sql
+CREATE TRIGGER v_site_ins INSTEAD OF INSERT ON v_site
+BEGIN
+  INSERT INTO site (id, creator, name, place)
+  VALUES (NEW.id, NEW.creator, NEW.name, NEW.place);
+END;
 
-![A record of a writable view: Edit, Duplicate and Delete are there](/images/v5/setup/view-writable-record.png)
+CREATE TRIGGER v_site_upd INSTEAD OF UPDATE ON v_site
+BEGIN
+  UPDATE site SET name = NEW.name, place = NEW.place
+  WHERE id = OLD.id;
+END;
 
-If you change how a view can be written, **Config → Validation** warns that the saved value is
-out of date; remove the view from the configuration and activate it again.
+CREATE TRIGGER v_site_del INSTEAD OF DELETE ON v_site
+BEGIN
+  DELETE FROM site WHERE id = OLD.id;
+END;
+```
+
+- **Do not invent the `id`** in the insert trigger: leave `NEW.id` as it comes (empty) and let the base
+  table assign it. BraDypUS reads the new `id` from the base table inside the same transaction, because
+  SQLite's own "last inserted id" is stale after an insert through a view.
+- **`creator` is written on insert and never updated**, so a record keeps the person who created it.
+- **Columns of the base table that the view leaves out** must accept `NULL` or have a default, or every
+  insert fails.
+- A view with a `WHERE` can make a row disappear from the view as soon as it is saved (a new or changed
+  row that no longer matches). That is how the triggers behave, not a BraDypUS rule.
+- **Recreating the view drops its triggers** (SQLite drops them with the view): run the three statements again.
+
+After adding or dropping triggers, open the view's settings (**Config → Tables**) and press
+**Re-check how it can be written**: BraDypUS reads it again and updates `view_writable`, without touching
+labels or field settings. The view needs a `creator` column to be writable; without it the button refuses.
+
+![Settings of a read-only SQL view: its state, why it is read-only, the Re-check button, and the SQL definition](/images/v5/setup/view-table-settings.png)
+
+#### PostgreSQL and MariaDB
+
+A simple view works as it is, with no triggers. Two things to know:
+- The new record gets its `id` from the base table, so the base table must assign it (a sequence or
+  `AUTO_INCREMENT`); an `INSTEAD OF` trigger on PostgreSQL that inserts with an explicit id can make the
+  new id come back wrong.
+- `probe` says the engine considers the view updatable, not that every save will succeed: a constraint
+  of the base table can still refuse it, and the user sees a generic error.
+
+#### History, locks and rules
 
 The history (`bdus_versions`), [locks](./groups#locks) and group rules of a view are kept **under
 the view's name**, exactly as for a table. This is by design: a person working through a view
@@ -273,7 +319,8 @@ These are the things that surprise people. Read them before you plan.
 9. **A registered view cannot be altered from Config** (`view_not_alterable`, since
    5.17.0; before, it reported success and changed nothing). Adding a field to the base
    table does not add it to the views: change the view in SQL, then remove it from the
-   configuration and activate it again to pick up the new column.
+   configuration and activate it again to pick up the new column (the
+   *Re-check how it can be written* button only updates how the view is written, not its columns).
 10. **DBML.** Since 5.17.0 a registered view is exported with `bdus:view=1`, and
     importing it *activates* the view of the same name that must already exist in
     the target database; it never creates a view (see [DBML](./dbml#views)). Before,

@@ -56,7 +56,7 @@ versions of every record, files, maps and print templates on top of them.
   validated flow can still be had with **SQL views and triggers** in the database
   ([SQL views as tables](/guide/setup/views)), at the price of writing that SQL and
   of the limits that page lists (tried on MariaDB and PostgreSQL; no notifications).
-  BraDypUS registers such views and knows whether they can be written, but never creates them.
+  BraDypUS registers such views and knows whether they can be written, but never creates them or writes their SQL: on PostgreSQL and MariaDB a view on one table is writable as it is; on SQLite it is read-only (fine for charts and the API) unless you add `INSTEAD OF` triggers yourself.
 - You cannot host and back up a small web application.
 
 ## What your data must look like

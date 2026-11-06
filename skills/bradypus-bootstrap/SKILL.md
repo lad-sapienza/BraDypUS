@@ -221,7 +221,10 @@ what they should see after each click.
   without losing anything, deactivate it (`PUT …/table/{tb}/active {"active": false}`) or remove
   only its configuration (`DELETE …/table/{tb}?keep_data=1`); both leave the data in the database.
 - A registered SQL view cannot be altered from BraDypUS (`view_not_alterable`) and may be
-  read-only (`view_read_only`): change the view in SQL, never by retrying the call.
+  read-only (`view_read_only`): change the view in SQL, never by retrying the call. On SQLite
+  a view is read-only (fine for reading, charts, the API) unless the user adds `INSTEAD OF`
+  triggers (example in `guide/setup/views.md`); do not write them for the user unasked. After
+  they change a view, `POST …/api/config/table/{tb}/view-writable` re-reads how it can be written.
 - When something is not covered here, read the page named above (raw Markdown on GitHub,
   `https://raw.githubusercontent.com/lad-sapienza/BraDypUS/v5/bdus-docs/…`) rather than
   guessing, and report the gap to the user.

@@ -65,12 +65,14 @@ indexes or relations, or switch on system plugins. Those answer `view_not_altera
 the structure of a view belongs to the database.
 
 
-![Settings of a registered SQL view: a note, the SQL definition, no rename button](/images/v5/setup/view-table-settings.png)
+![Settings of a read-only SQL view: its state, why it is read-only, the Re-check button, and the SQL definition](/images/v5/setup/view-table-settings.png)
 
 ![Fields of a SQL view: they can be configured, but there is no button to add, rename or delete one](/images/v5/setup/view-fields.png)
 
 Read-only views have no *Edit*, *Delete* or *New* in the interface, and the server refuses
-writes with `view_read_only`. How a view is written, the history it keeps and the limits
+writes with `view_read_only`. The settings of a view say whether it is read-only or writable, why,
+and have a **Re-check how it can be written** button for after you change the view (on SQLite, after
+adding the triggers that make it writable). How a view is written, the history it keeps and the limits
 are in [SQL views as tables](./views).
 
 ## Deactivate, remove from configuration, delete <Badge type="tip" text="v5.17.0" />
@@ -121,6 +123,7 @@ All routes need the super-admin token.
 | `GET /api/config/db-objects` | The list above, with `activatable`, `reason`, `inactive` |
 | `GET /api/config/db-objects/{name}` | The preview: fields, foreign keys, view SQL. Writes nothing |
 | `POST /api/config/db-objects/{name}/activate` | Activates, or reactivates a deactivated table |
+| `POST /api/config/table/{tb}/view-writable` | Re-reads how a registered view can be written (`none` / `probe` / `trigger`), nothing else changes |
 | `PUT /api/config/table/{tb}/active` `{"active": false}` | Deactivate / reactivate |
 | `DELETE /api/config/table/{tb}?keep_data=1` | Remove from configuration, keep the table |
 | `DELETE /api/config/table/{tb}` | **Drop the table and its data** |
@@ -137,5 +140,6 @@ The same names appear in the [OpenAPI description](/api-reference/).
 
 **Config → Validation** checks the registered views against the database: a view must still
 be a view (and a table still a table), keep its `id` column, and the way it can be written is
-compared with what was found when it was activated. A column added to or removed from a view
-is reported with what to do: remove the view from the configuration and activate it again.
+compared with what was found when it was activated (fix it with **Re-check how it can be written**). A
+column added to or removed from a view is reported with what to do: remove the view from the
+configuration and activate it again.

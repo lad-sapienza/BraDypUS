@@ -5,10 +5,92 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.17.0] - 2026-11-06
+
+### Added
+
+- **Activate tables and views that already exist in the database (API).** Three new
+  super-admin routes: `GET /api/config/db-objects` lists the tables and views that are not
+  in the configuration (and why one cannot be activated), `GET /api/config/db-objects/{name}`
+  previews the activation (fields with types deduced from the SQL types, foreign keys already
+  in the database, the SQL of a view), `POST …/{name}/activate` writes the configuration —
+  never any DDL. A view needs an `id` column, and a writable one also a `creator` column;
+  a registered view is flagged `is_view` and cannot be altered (`view_not_alterable`).
+  `getTableList` / `getTableConfig` expose `is_view` (and `view_sql`).
+  In the app: a new *Database objects* section in the system configuration lists them,
+  previews what would be created and activates them; a registered view shows a *view* badge,
+  its SQL (read-only) and no longer offers rename, add/rename/delete field, indexes or the
+  system plugins, and its *delete* becomes *Remove from configuration*. (#53)
+- **Writing through SQL views.** A registered view that the database cannot write
+  (`view_writable = none`) refuses `saveRecord` with `view_read_only`, and `can()` /
+  `tableAbilities()` report no create/update/delete on it for anyone, so the interface can
+  hide the buttons. A writable view works like a table, history and locks under the view's own
+  name; on SQLite the id of a record created through the view is read inside the write
+  transaction, because `lastInsertId` is stale there (PostgreSQL and MariaDB checked on live
+  servers). Foreign keys, indexes and the fuzzy-date / osteology / Pleiades / radiocarbon plugins are
+  refused on views (`view_not_alterable`). (#53)
+- **Re-check how a SQL view can be written.** The way a registered view can be written is probed when it
+  is activated, so adding `INSTEAD OF` triggers afterwards left it read-only until it was removed and
+  activated again. `POST /api/config/table/{tb}/view-writable` re-reads it and updates `view_writable`,
+  leaving the rest of the configuration alone (a writable view still needs `creator`). In the view's
+  settings: its state (read-only / writable), why a view is read-only, and a *Re-check how it can be
+  written* button. The guide now states the support per engine (SQLite: read-only unless the user adds
+  triggers; PostgreSQL and MariaDB: simple views are writable natively) and gives an example of the
+  triggers. (#53)
+- **Table life cycle (API).** `PUT /api/config/table/{tb}/active` switches a table off or on:
+  a deactivated table keeps its configuration but the application behaves as if it were not
+  there (it is left out when the configuration is loaded, so relations to it are ignored too);
+  it is listed in `GET /api/config/db-objects` as `inactive`, and activating it brings the saved
+  configuration back untouched. `DELETE /api/config/table/{tb}?keep_data=1` removes only the
+  configuration — the table, its rows and its foreign keys stay in the database and can be
+  activated again; without `keep_data` the table is dropped, as before. Plugin tables and
+  tables that have plugins cannot be deactivated on their own (`table_not_deactivable`).
+  In the app: a table's danger zone offers *Deactivate* and *Remove from configuration*; a
+  deactivated table appears in *Database objects* with *Reactivate*, *Remove from configuration*
+  and — the only irreversible step, asking for the table name — *Delete table*. (#53)
+- **SQL views in DBML.** A table marked `bdus:view=1` is *activated*, never created: the view must
+  already exist in the database (`view_not_found` / `not_a_view` / the activation rules otherwise),
+  its fields come from the database, and only the table-level settings the DBML states
+  (`bdus:label`, `bdus:preview`, `bdus:order`, `bdus:id_field`) are applied on top. A `ref:` from
+  or to a view is skipped with `ref_view_not_allowed`. The export writes `bdus:view=1` for views.
+  A table that was deactivated keeps its name: DBML import refuses to reuse it. (#53)
+- **Validation report: tables and SQL views.** A registered view must still be a view (and a table
+  still a table), keep its `id` column, and the way it can be written (`view_writable`) is compared
+  with the database; the field alignment hints for a view say what to do about a changed view. (#53)
+- `Inspect::listObjects()` and `Inspect::foreignKeys()` on SQLite, MySQL/MariaDB and PostgreSQL,
+  tested against live PostgreSQL and MariaDB. (#53)
+
+### Fixed
+
+- **Run SQL no longer drops statements silently on SQLite.** A string with more than one statement
+  (`CREATE VIEW a …; CREATE VIEW b …`) ran the first one and ignored the rest, with a "success"
+  answer; PostgreSQL and MySQL/MariaDB already refused it. Now every engine answers
+  `error_free_sql_run` and executes nothing. A trailing `;`, semicolons inside strings, comments,
+  `$$ … $$` bodies and the `BEGIN … END` body of a trigger are not counted as statement ends
+  (`DB\SqlStatements`). (#60)
+- **Tests now run on a database-backed configuration, like production.** `BdusTestCase` imports
+  the JSON files of `tests/fixtures/cfg/` into the `bdus_cfg_*` tables (as migration M011 does) and
+  never writes them again; the snapshot/restore workarounds of some test classes are gone. As a
+  safety net, `Config` in files mode refuses to write under `tests/fixtures/` (`ConfigException`).
+  The file-based configuration (`Config\ToFiles`, `Config\Load`, the `useDb` branches and that
+  guard) is marked as legacy in the code: it can go when upgrading from v4 is no longer supported.
+  (#59, partial)
+- **Removed the dead `backlink` (singular) configuration path.** The config loaded `tables.{tb}.backlink`
+  from the `bdus_cfg_tables.backlinks` column, but nothing ever read it: the code and the UI use
+  `backlinks` (plural), which has always been stored in the `extra` JSON. Config loading, saving
+  and migration M011 no longer touch the column (left in the schema, unused); no data migration
+  and no change in behaviour. (#59)
+
 ## [5.16.8] - 2026-11-05
 
 ### Fixed
 
+- **Run SQL on MySQL / MariaDB answered an error for a statement that had worked.** `CREATE VIEW`,
+  `CREATE TRIGGER`, `DROP VIEW` and the other DDL statements commit by themselves on these engines,
+  so the final `commit` of the wrapping transaction failed with "There is no active transaction" and
+  the module reported `error_free_sql_run` although the view or trigger had been created. It now
+  commits only if a transaction is still open (`DB::inTransaction()`). Covered by a test on SQLite,
+  PostgreSQL and MariaDB and by the hurl phase 48. (#53)
 - **Schema changes on a registered SQL view reported success but changed nothing.**
   Add / rename / delete field and rename table on a view now answer
   `view_not_alterable` before touching configuration or database; deleting a registered
@@ -23,6 +105,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Documentation
 
+- New guide page *Database objects* (activating existing tables and views, and the three ways to
+  take a table out of use); *SQL views as tables* rewritten around the registration from the
+  interface, the read-only / writable distinction and the history kept under the view's name;
+  *DBML* (`bdus:view=1`), *Validation* and the developer pages (`Inspect`, table life cycle, the
+  limits of `--db=` for PHPUnit, the `Config` file fallback). `llms.txt`, `guide/evaluate.md` and
+  the `bradypus-bootstrap` skill know about it, and tell an assistant never to call the dropping
+  `DELETE /api/config/table/{tb}` without the user's consent. (#53)
 - `openapi.yaml`: every authenticated operation (179) declares the `403` an API key
   gets when it lacks the privilege (the same refusal is HTTP 200 with a JWT). Before,
   only 8 did. `OpenApiParityTest` now fails on a referenced but undefined response. (#47)

@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.17.0] - 2026-11-06
+
 ### Added
 
 - **Activate tables and views that already exist in the database (API).** Three new

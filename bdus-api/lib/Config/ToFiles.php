@@ -10,6 +10,14 @@ declare(strict_types=1);
 namespace Config;
 
 
+/**
+ * LEGACY — file-based configuration (pre-v5 JSON files).
+ *
+ * Kept only for the v4 → v5 upgrade path, where Config still runs in "files" mode until
+ * M011–M016 have filled the bdus_cfg_* tables. When support for upgrading from v4 is dropped,
+ * this class, Config\Load, the `useDb` branches of Config\Config and the guard
+ * Config::writeAllFiles() can be removed (#59).
+ */
 class ToFiles
 {
 

@@ -147,7 +147,7 @@ class Config
                 }
             }
         } else {
-            ToFiles::all($this->cfg, $this->path2cfg);
+            $this->writeAllFiles();
         }
     }
 
@@ -196,7 +196,7 @@ class Config
         if ($this->useDb) {
             ToDB::upsertTable($this->db, $tbData);
         } else {
-            ToFiles::all($this->cfg, $this->path2cfg);
+            $this->writeAllFiles();
         }
     }
 
@@ -208,7 +208,7 @@ class Config
         if ($this->useDb) {
             ToDB::upsertField($this->db, $tb, $post_data);
         } else {
-            ToFiles::all($this->cfg, $this->path2cfg);
+            $this->writeAllFiles();
         }
     }
 
@@ -228,7 +228,7 @@ class Config
         if ($this->useDb) {
             ToDB::renameField($this->db, $tb, $old_name, $new_name);
         } else {
-            ToFiles::all($this->cfg, $this->path2cfg);
+            $this->writeAllFiles();
         }
     }
 
@@ -240,7 +240,7 @@ class Config
         if ($this->useDb) {
             ToDB::deleteField($this->db, $tb, $fld);
         } else {
-            ToFiles::all($this->cfg, $this->path2cfg);
+            $this->writeAllFiles();
         }
     }
 
@@ -259,7 +259,7 @@ class Config
         if ($this->useDb) {
             ToDB::renameTable($this->db, $old_name, $new_name);
         } else {
-            ToFiles::all($this->cfg, $this->path2cfg);
+            $this->writeAllFiles();
             rename(
                 $this->path2cfg . $old_name . '.json',
                 $this->path2cfg . $new_name . '.json'
@@ -275,7 +275,7 @@ class Config
         if ($this->useDb) {
             ToDB::deleteTable($this->db, $tb);
         } else {
-            ToFiles::all($this->cfg, $this->path2cfg);
+            $this->writeAllFiles();
             @unlink($this->path2cfg . $tb . '.json');
         }
     }
@@ -290,7 +290,7 @@ class Config
         if ($this->useDb) {
             ToDB::sortTables($this->db, $sort);
         } else {
-            ToFiles::all($this->cfg, $this->path2cfg);
+            $this->writeAllFiles();
         }
         return true;
     }
@@ -373,5 +373,28 @@ class Config
     private function addError(string $error, string $type = 'error'): void
     {
         $this->errors[] = strtoupper($type) . ': ' . $error;
+    }
+
+    /**
+     * Legacy files-mode write of the whole configuration (tables + fields).
+     *
+     * Safety net (#59): a Config given a DB but finding no row in bdus_cfg_tables falls back
+     * to files mode. In production that is the v4 → v5 upgrade, before M011–M016; in a test it
+     * is almost always a mistake (forgotten seed row) and would silently rewrite the committed
+     * fixtures. A fixture Config built on purpose has no DB and is not affected.
+     * Removable together with ToFiles once upgrading from v4 is no longer supported.
+     */
+    private function writeAllFiles(): void
+    {
+        if ($this->db !== null && !$this->useDb) {
+            $dir = realpath($this->path2cfg);
+            if ($dir !== false && preg_match('#[/\\\\]tests[/\\\\]fixtures([/\\\\]|$)#', $dir . '/')) {
+                throw new ConfigException(
+                    "Refusing to write the file-based configuration under tests/fixtures: "
+                    . "the Config has a DB but fell back to files mode (is there a row in bdus_cfg_tables?)."
+                );
+            }
+        }
+        ToFiles::all($this->cfg, $this->path2cfg);
     }
 }

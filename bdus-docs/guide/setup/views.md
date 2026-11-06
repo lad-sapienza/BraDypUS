@@ -69,6 +69,26 @@ CREATE VIEW v_public AS
 Keep `id` (and `creator`, when you want the record to remember who created it) in
 every view that can write: BraDypUS addresses every record by `id`.
 
+#### Where to run this SQL <Badge type="tip" text="v5.17.0" />
+
+The easiest place is **Run SQL** in the sidebar (super admin only; it asks for the password
+again). It runs `CREATE VIEW`, `DROP VIEW`, `CREATE TRIGGER` and the like on the application's own
+database, on SQLite, PostgreSQL and MariaDB alike (checked by automated tests on all three). A
+database client works just as well. Three things to know about **Run SQL**:
+
+- **One statement per run.** On PostgreSQL and MariaDB a second statement in the same run is an
+  error and nothing is executed. On **SQLite the first statement runs and the rest is silently
+  ignored**, with a "success" answer: run the statements one at a time and check the result.
+- **No `DELIMITER`.** That is a keyword of the `mysql` command-line client, not of SQL. Give a
+  trigger as a single `CREATE TRIGGER … BEGIN … END` statement; the semicolons inside the body
+  are fine. On PostgreSQL a trigger is two statements: first `CREATE FUNCTION … LANGUAGE plpgsql`
+  (with its body in `$$ … $$`), then `CREATE TRIGGER … EXECUTE FUNCTION …`.
+- **MariaDB and MySQL commit DDL by themselves.** A `CREATE VIEW` that succeeds cannot be rolled
+  back, and if a later part of your plan fails the view stays. (Before 5.17.0 Run SQL answered
+  an error for a `CREATE VIEW` on these two engines even though the view had been created.)
+
+Run SQL does not register anything in BraDypUS: after creating the view, go on to step 3.
+
 ### 3. Register each view as a table <Badge type="tip" text="v5.17.0" />
 
 Open **Config → Database objects**: the views are listed with a *view* badge and, next to
@@ -201,7 +221,7 @@ The views decide what each role *sees*. The triggers decide what each role may
 *write*, because a rule on a table or a row does not look at the values written.
 
 ```sql
-DELIMITER //
+DELIMITER //   -- mysql command-line client only: in Run SQL give each trigger as one statement, without DELIMITER
 
 -- Initial state and an automatic, sequential number.
 CREATE TRIGGER card_bi BEFORE INSERT ON card FOR EACH ROW

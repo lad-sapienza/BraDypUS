@@ -9,6 +9,9 @@ another tool, a table you took out of the configuration, a SQL view you wrote. *
 Database objects** lists everything that is in the database but **not** in the
 configuration, and lets you *activate* it, that is, register it as a BraDypUS table.
 
+The tables and views come from your database (created by another tool, by hand, or from **Run SQL**
+in the sidebar: see [SQL views as tables](./views#where-to-run-this-sql)).
+
 Activation writes **configuration only** (`bdus_cfg_tables`, `bdus_cfg_fields`,
 `bdus_cfg_relations`). The table or view itself is never altered.
 

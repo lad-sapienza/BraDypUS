@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.17.1] - 2026-11-06
+
 ### Added
 
 - **`real` field check.** A field with `check: real` accepts whole and decimal numbers

@@ -389,6 +389,16 @@ class DB implements DBInterface
   }
 
   /**
+   * Whether a transaction is open. MySQL and MariaDB commit by themselves after a
+   * DDL statement (CREATE VIEW, CREATE TRIGGER, DROP…), so the transaction a caller
+   * began may already be gone when it comes to commit.
+   */
+  public function inTransaction(): bool
+  {
+    return $this->pdo->inTransaction();
+  }
+
+  /**
    * Rolls back a started transaction
    * 
    * @return void

@@ -14,6 +14,7 @@
 #   POST /api/config/db-objects/{name}/activate
 #   PUT  /api/config/table/{tb}/active              (48f: deactivate → reactivate → remove
 #   DELETE /api/config/table/{tb}[?keep_data=1]      from config → activate → delete)
+#   POST /api/free-sql/run, POST /api/config/table/{tb}/view-writable   (48g: a view, end to end)
 # ════════════════════════════════════════════════════════════════════
 
 
@@ -150,6 +151,63 @@ Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
 jsonpath "$.objects[?(@.name=='tmp_lifecycle')]" not exists
+
+
+# ── 48g. Run SQL is where views are created; BraDypUS then registers them ────
+# (on MySQL/MariaDB a CREATE VIEW commits by itself: Run SQL must still say success)
+POST {{base_url}}/{{app_name}}/api/free-sql/run
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "sql": "CREATE VIEW hurl_view_sql AS SELECT id, creator, sigla, tipo FROM crud_test" }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+jsonpath "$.code"   == "ok_free_sql_run"
+
+GET {{base_url}}/{{app_name}}/api/config/db-objects
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.objects[?(@.name=='hurl_view_sql' && @.kind=='view' && @.activatable==true)]" exists
+
+POST {{base_url}}/{{app_name}}/api/config/db-objects/hurl_view_sql/activate
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+jsonpath "$.kind"   == "view"
+
+# a registered view cannot be altered from the Config panel
+POST {{base_url}}/{{app_name}}/api/config/table/hurl_view_sql/field
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "name": "extra_col", "label": "Extra", "type": "text", "db_type": "TEXT" }
+HTTP 200
+[Asserts]
+jsonpath "$.code" == "view_not_alterable"
+
+# the writability can be re-read (no change: nothing happened to the view)
+POST {{base_url}}/{{app_name}}/api/config/table/hurl_view_sql/view-writable
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.status"  == "success"
+jsonpath "$.changed" == false
+
+# remove it from the configuration (a view is never dropped by BraDypUS), then drop it ourselves
+DELETE {{base_url}}/{{app_name}}/api/config/table/hurl_view_sql
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+POST {{base_url}}/{{app_name}}/api/free-sql/run
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "sql": "DROP VIEW hurl_view_sql" }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 
 # ── 48e. No token → no access ─────────────────────────────────────────

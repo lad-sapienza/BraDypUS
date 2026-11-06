@@ -62,6 +62,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Run SQL on MySQL / MariaDB answered an error for a statement that had worked.** `CREATE VIEW`,
+  `CREATE TRIGGER`, `DROP VIEW` and the other DDL statements commit by themselves on these engines,
+  so the final `commit` of the wrapping transaction failed with "There is no active transaction" and
+  the module reported `error_free_sql_run` although the view or trigger had been created. It now
+  commits only if a transaction is still open (`DB::inTransaction()`). Covered by a test on SQLite,
+  PostgreSQL and MariaDB and by the hurl phase 48. (#53)
 - **Schema changes on a registered SQL view reported success but changed nothing.**
   Add / rename / delete field and rename table on a view now answer
   `view_not_alterable` before touching configuration or database; deleting a registered

@@ -98,7 +98,12 @@ class FreeSql extends \Bdus\Controller
             } else {
                 $this->db->beginTransaction();
                 $affected = $this->db->query($sql, [], 'affected') ?: 0;
-                $this->db->commit();
+                // MySQL/MariaDB commit by themselves after DDL (CREATE VIEW, CREATE TRIGGER…):
+                // committing again would fail with "no active transaction" although the
+                // statement worked.
+                if ($this->db->inTransaction()) {
+                    $this->db->commit();
+                }
                 $this->returnJson([
                     'status'   => 'success',
                     'code'     => 'ok_free_sql_run',
@@ -106,7 +111,7 @@ class FreeSql extends \Bdus\Controller
                 ]);
             }
         } catch (\Throwable $e) {
-            if (!$isRead) {
+            if (!$isRead && $this->db->inTransaction()) {
                 try { $this->db->rollBack(); } catch (\Throwable $re) {}
             }
             $this->log->error($e);

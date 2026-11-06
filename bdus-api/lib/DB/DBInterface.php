@@ -33,6 +33,9 @@ interface DBInterface
 
     public function rollBack();
 
+    /** True while a transaction is open (MySQL/MariaDB close it themselves after DDL). */
+    public function inTransaction(): bool;
+
     public function hasSpatialExtension(): bool;
 
 }

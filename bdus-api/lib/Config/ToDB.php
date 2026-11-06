@@ -32,7 +32,7 @@ class ToDB
      */
     private const TABLE_COLUMNS = [
         'name', 'label', 'order', 'id_field', 'preview',
-        'is_plugin', 'plugin_of', 'sort', 'link', 'backlink', 'fields',
+        'is_plugin', 'plugin_of', 'sort', 'link', 'fields',
     ];
 
     /** Field attributes stored as explicit columns; everything else → extra JSON. */
@@ -62,10 +62,6 @@ class ToDB
         $preview   = isset($tbData['preview'])
             ? json_encode($tbData['preview'],  JSON_UNESCAPED_UNICODE)
             : null;
-        $backlinks = isset($tbData['backlink'])
-            ? json_encode($tbData['backlink'], JSON_UNESCAPED_UNICODE)
-            : null;
-
         // Collect all non-standard attributes into the extra JSON column.
         $extraArr = [];
         foreach ($tbData as $k => $v) {
@@ -79,7 +75,7 @@ class ToDB
             $db->query(
                 'UPDATE bdus_cfg_tables
                     SET label=?, order_field=?, id_field=?, preview=?,
-                        is_plugin=?, links=NULL, backlinks=?, extra=?
+                        is_plugin=?, links=NULL, extra=?
                   WHERE name=?',
                 [
                     $tbData['label']     ?? null,
@@ -87,7 +83,6 @@ class ToDB
                     $tbData['id_field']  ?? 'id',
                     $preview,
                     isset($tbData['is_plugin']) ? (int)$tbData['is_plugin'] : 0,
-                    $backlinks,
                     $extra,
                     $name,
                 ],
@@ -104,8 +99,8 @@ class ToDB
             $db->query(
                 'INSERT INTO bdus_cfg_tables
                     (name, label, order_field, id_field, preview,
-                     is_plugin, sort, links, backlinks, extra)
-                 VALUES (?,?,?,?,?,?,?,NULL,?,?)',
+                     is_plugin, sort, links, extra)
+                 VALUES (?,?,?,?,?,?,?,NULL,?)',
                 [
                     $name,
                     $tbData['label']     ?? null,
@@ -114,7 +109,6 @@ class ToDB
                     $preview,
                     isset($tbData['is_plugin']) ? (int)$tbData['is_plugin'] : 0,
                     $sort,
-                    $backlinks,
                     $extra,
                 ],
                 'boolean'

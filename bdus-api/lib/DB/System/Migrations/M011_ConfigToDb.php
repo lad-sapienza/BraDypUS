@@ -45,7 +45,7 @@ class M011_ConfigToDb
      */
     private const TABLE_COLUMNS = [
         'name', 'label', 'order', 'id_field', 'preview',
-        'is_plugin', 'plugin_of', 'sort', 'link', 'backlink', 'fields',
+        'is_plugin', 'plugin_of', 'sort', 'link', 'fields',
     ];
 
     /** Field attributes stored as explicit columns; everything else → extra JSON. */
@@ -117,8 +117,8 @@ class M011_ConfigToDb
                 $db->query(
                     'INSERT OR IGNORE INTO bdus_cfg_tables
                         (name, label, order_field, id_field, preview,
-                         is_plugin, sort, links, backlinks, extra)
-                     VALUES (?,?,?,?,?,?,?,NULL,?,?)',
+                         is_plugin, sort, links, extra)
+                     VALUES (?,?,?,?,?,?,?,NULL,?)',
                     [
                         $name,
                         $tbRow['label']     ?? null,
@@ -129,9 +129,6 @@ class M011_ConfigToDb
                             : null,
                         isset($tbRow['is_plugin']) ? (int)$tbRow['is_plugin'] : 0,
                         $sort++,
-                        isset($tbRow['backlink'])
-                            ? json_encode($tbRow['backlink'], JSON_UNESCAPED_UNICODE)
-                            : null,
                         empty($tbExtra)
                             ? null
                             : json_encode($tbExtra, JSON_UNESCAPED_UNICODE),

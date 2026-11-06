@@ -387,4 +387,17 @@ class ConfigFromDbTest extends TestCase
         // Clean up.
         static::$cfgDb->deleteTb('rename_dst');
     }
+
+    public function testBacklinksRoundTripThroughTheDatabase(): void
+    {
+        // `backlinks` (plural) is what Record\Read, JsonFilter and the config UI use.
+        $tb = static::$cfgDb->get('tables.items');
+        $tb['name']      = 'items';
+        $tb['backlinks'] = ['items:reviews:item_ref'];
+        static::$cfgDb->setTable($tb);
+
+        $fresh = new Config(new Dot(), __DIR__ . '/../fixtures/cfg/', static::$db);
+        $this->assertSame(['items:reviews:item_ref'], $fresh->get('tables.items.backlinks'));
+        $this->assertEmpty($fresh->get('tables.items.backlink'), 'the dead singular key is gone');
+    }
 }

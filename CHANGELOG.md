@@ -73,6 +73,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   The file-based configuration (`Config\ToFiles`, `Config\Load`, the `useDb` branches and that
   guard) is marked as legacy in the code: it can go when upgrading from v4 is no longer supported.
   (#59, partial)
+- **Removed the dead `backlink` (singular) configuration path.** The config loaded `tables.{tb}.backlink`
+  from the `bdus_cfg_tables.backlinks` column, but nothing ever read it: the code and the UI use
+  `backlinks` (plural), which has always been stored in the `extra` JSON. Config loading, saving
+  and migration M011 no longer touch the column (left in the schema, unused); no data migration
+  and no change in behaviour. (#59)
 
 ## [5.16.8] - 2026-11-05
 

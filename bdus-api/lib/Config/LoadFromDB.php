@@ -260,11 +260,11 @@ class LoadFromDB
             // 'plugin_of' is set afterward in tables(), derived from
             // bdus_cfg_relations — not read from the (legacy, unused) DB column.
             'link'      => $links,
-            'backlink'  => $row['backlinks']
-                ? json_decode($row['backlinks'], true)
-                : [],
             'fields'    => self::buildFields($fieldRows),
         ];
+        // `backlinks` ("{refTb}:{viaTb}:{fkCol}" strings, plural: what Record\Read, JsonFilter and
+        // the config UI use) is not a column: it travels in `extra`, merged back just below.
+        // The bdus_cfg_tables.backlinks column is vestigial and no longer read nor written (#59).
 
         // Merge extra JSON attributes back in (e.g. 'rs', future properties).
         if (!empty($row['extra'])) {

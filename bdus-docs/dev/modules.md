@@ -202,7 +202,7 @@ Admin access to `bdus_log` entries.
 | Method | Path | Action |
 |---|---|---|
 | `GET` | `/api/files` | Paginated list of all app files (with orphan filter) |
-| `PATCH` | `/api/file/{fileId}` | Update file metadata (description, keywords, printable) |
+| `PATCH` | `/api/file/{fileId}` | Update file metadata (description, keywords, attribution, printable) |
 | `POST` | `/api/file/{fileId}/replace` | Replace the file binary, keep metadata |
 | `POST` | `/api/files/sort` | Update display order of files attached to a record |
 

@@ -118,6 +118,7 @@
             <template v-else-if="column.key === 'filename'">
               <span>{{ record.filename }}.{{ record.ext }}</span>
               <div v-if="record.description" class="picker-desc">{{ record.description }}</div>
+              <div v-if="record.attribution" class="picker-desc picker-attribution">{{ record.attribution }}</div>
             </template>
             <template v-else-if="column.key === 'links'">
               <span style="font-size: 0.78rem; color: var(--p-text-muted-color)">
@@ -588,6 +589,10 @@ function fileIcon(ext) {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.picker-attribution {
+  font-style: italic;
 }
 
 .img-attribution {

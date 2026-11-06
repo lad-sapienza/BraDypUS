@@ -3300,7 +3300,7 @@ img_rep_1: jsonpath "$.file.id"
 PATCH {{base_url}}/{{app_name}}/api/file/{{img_rep_1}}
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "description": "Fibula in bronzo, vista dall'alto", "keywords": "reperto, metallo, fibula" }
+{ "description": "Fibula in bronzo, vista dall'alto", "keywords": "reperto, metallo, fibula", "attribution": "Foto: LAD Sapienza, CC BY 4.0" }
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
@@ -3318,7 +3318,7 @@ img_rep_2: jsonpath "$.file.id"
 PATCH {{base_url}}/{{app_name}}/api/file/{{img_rep_2}}
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "description": "Frammento ceramico decorato", "keywords": "reperto, ceramica" }
+{ "description": "Frammento ceramico decorato", "keywords": "reperto, ceramica", "attribution": "Foto: LAD Sapienza, CC BY 4.0" }
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
@@ -3336,7 +3336,7 @@ img_rep_3: jsonpath "$.file.id"
 PATCH {{base_url}}/{{app_name}}/api/file/{{img_rep_3}}
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "description": "Moneta in argento, dritto e rovescio", "keywords": "reperto, numismatica" }
+{ "description": "Moneta in argento, dritto e rovescio", "keywords": "reperto, numismatica", "attribution": "Foto: M. Rossi, CC BY-NC 4.0" }
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"

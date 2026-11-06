@@ -2,6 +2,7 @@
 
 namespace Tests\Integration;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Support\BdusTestCase;
 
 /**
@@ -187,5 +188,72 @@ class FreeSqlCtrlTest extends BdusTestCase
         // Should be treated as SELECT (read), not DML
         $this->assertSame('success', $res['status']);
         $this->assertArrayHasKey('rows', $res);
+    }
+
+    // ── one statement per run (#60) ───────────────────────────────────────────
+
+    public function testRunSqlRefusesMoreThanOneStatement(): void
+    {
+        $ctrl = $this->makeController('Bdus\\Controllers\\FreeSql', [], [
+            'sql' => 'CREATE VIEW v60a AS SELECT 1 AS id; CREATE VIEW v60b AS SELECT 2 AS id',
+        ]);
+        $res = $this->callController($ctrl, 'runSql');
+
+        $this->assertSame('error', $res['status']);
+        $this->assertSame('error_free_sql_run', $res['code']);
+        $views = static::$db->query("SELECT name FROM sqlite_master WHERE type='view' AND name LIKE 'v60%'", [], 'read');
+        $this->assertSame([], $views, 'nothing must be executed');
+    }
+
+    public function testRunSqlAcceptsTrailingSemicolon(): void
+    {
+        $ctrl = $this->makeController('Bdus\\Controllers\\FreeSql', [], ['sql' => 'SELECT 1 AS n; ']);
+        $res = $this->callController($ctrl, 'runSql');
+
+        $this->assertSame('success', $res['status']);
+    }
+
+    public function testRunSqlAcceptsTriggerWithSeveralInnerStatements(): void
+    {
+        $ctrl = $this->makeController('Bdus\\Controllers\\FreeSql', [], [
+            'sql' => "CREATE TRIGGER t60 AFTER INSERT ON items BEGIN\n"
+                   . "  UPDATE items SET id = id WHERE id = NEW.id;\n"
+                   . "  SELECT CASE WHEN 1 THEN 1 ELSE 2 END;\n"
+                   . "END;",
+        ]);
+        $res = $this->callController($ctrl, 'runSql');
+
+        $this->assertSame('success', $res['status']);
+        static::$db->exec('DROP TRIGGER t60');
+    }
+
+    #[DataProvider('statementCounts')]
+    public function testSqlStatementsCount(string $sql, int $expected): void
+    {
+        $this->assertSame($expected, \DB\SqlStatements::count($sql));
+    }
+
+    public static function statementCounts(): array
+    {
+        return [
+            'one'                  => ['SELECT 1', 1],
+            'trailing ;'           => ['SELECT 1;', 1],
+            'two'                  => ['SELECT 1; SELECT 2', 2],
+            'two + trailing'       => ["SELECT 1;\nSELECT 2;\n", 2],
+            'empty statements'     => [';; SELECT 1;;', 1],
+            'only comment after'   => ['SELECT 1; -- done', 1],
+            'block comment ;'      => ['SELECT 1 /* a; b */', 1],
+            'line comment ;'       => ["-- a; b\nSELECT 1", 1],
+            'string ;'             => ["SELECT 'a;b'", 1],
+            'escaped quote'        => ["SELECT 'it''s; ok'", 1],
+            'quoted identifier ;'  => ['SELECT 1 AS "a;b"', 1],
+            'dollar body'          => ['CREATE FUNCTION f() RETURNS int AS $$ BEGIN RETURN 1; END; $$ LANGUAGE plpgsql', 1],
+            'tagged dollar body'   => ['CREATE FUNCTION f() RETURNS int AS $f$ SELECT 1; $f$ LANGUAGE sql; SELECT 2', 2],
+            'sqlite trigger'       => ['CREATE TRIGGER t AFTER INSERT ON a BEGIN INSERT INTO b VALUES (1); INSERT INTO b VALUES (2); END', 1],
+            'trigger + next'       => ['CREATE TRIGGER t AFTER INSERT ON a BEGIN SELECT 1; END; SELECT 2', 2],
+            'mysql trigger if'     => ['CREATE TRIGGER t BEFORE INSERT ON a FOR EACH ROW BEGIN IF NEW.x IS NULL THEN SET NEW.x = 1; END IF; SET NEW.y = 2; END', 1],
+            'trigger with CASE'    => ['CREATE TRIGGER t AFTER INSERT ON a BEGIN SELECT CASE WHEN 1 THEN 2 END; SELECT 3; END; SELECT 4', 2],
+            'BEGIN outside trigger' => ['BEGIN; SELECT 1; COMMIT', 3],
+        ];
     }
 }

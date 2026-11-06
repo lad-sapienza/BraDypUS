@@ -58,6 +58,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Inspect::listObjects()` and `Inspect::foreignKeys()` on SQLite, MySQL/MariaDB and PostgreSQL,
   tested against live PostgreSQL and MariaDB. (#53)
 
+### Fixed
+
+- **Run SQL no longer drops statements silently on SQLite.** A string with more than one statement
+  (`CREATE VIEW a …; CREATE VIEW b …`) ran the first one and ignored the rest, with a "success"
+  answer; PostgreSQL and MySQL/MariaDB already refused it. Now every engine answers
+  `error_free_sql_run` and executes nothing. A trailing `;`, semicolons inside strings, comments,
+  `$$ … $$` bodies and the `BEGIN … END` body of a trigger are not counted as statement ends
+  (`DB\SqlStatements`). (#60)
+
 ## [5.16.8] - 2026-11-05
 
 ### Fixed

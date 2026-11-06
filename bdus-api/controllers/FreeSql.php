@@ -83,6 +83,17 @@ class FreeSql extends \Bdus\Controller
             return;
         }
 
+        // One statement per run. PostgreSQL and MySQL refuse more; SQLite would run the
+        // first and silently drop the rest, so refuse here, the same way on every engine.
+        if (\DB\SqlStatements::count($sql) > 1) {
+            $this->returnJson([
+                'status' => 'error',
+                'code'   => 'error_free_sql_run',
+                'detail' => 'Only one SQL statement can be run at a time; nothing was executed.',
+            ]);
+            return;
+        }
+
         $isRead = $this->isReadStatement($sql);
 
         try {

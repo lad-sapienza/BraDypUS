@@ -76,9 +76,8 @@ again). It runs `CREATE VIEW`, `DROP VIEW`, `CREATE TRIGGER` and the like on the
 database, on SQLite, PostgreSQL and MariaDB alike (checked by automated tests on all three). A
 database client works just as well. Three things to know about **Run SQL**:
 
-- **One statement per run.** On PostgreSQL and MariaDB a second statement in the same run is an
-  error and nothing is executed. On **SQLite the first statement runs and the rest is silently
-  ignored**, with a "success" answer: run the statements one at a time and check the result.
+- **One statement per run.** A second statement in the same run is an error on every engine and
+  nothing is executed (a trailing `;` is fine). Run the statements one at a time.
 - **No `DELIMITER`.** That is a keyword of the `mysql` command-line client, not of SQL. Give a
   trigger as a single `CREATE TRIGGER … BEGIN … END` statement; the semicolons inside the body
   are fine. On PostgreSQL a trigger is two statements: first `CREATE FUNCTION … LANGUAGE plpgsql`

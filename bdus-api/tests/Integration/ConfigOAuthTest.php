@@ -23,11 +23,10 @@ class ConfigOAuthTest extends BdusTestCase
     private static string $fixtureDir;
 
     /**
-     * The test-only file-based Config (see BdusTestCase) writes save_app_properties()
-     * straight to tests/fixtures/cfg/config.json — shared by every test class in the
-     * same PHPUnit run. Snapshot it here and restore in tearDownAfterClass() so this
-     * class's writes don't leak into other test classes. See RadiocarbonCtrlTest for
-     * the same pattern applied to table/field fixtures.
+     * config.json (bootstrap: DB credentials, OAuth providers) is a real file in production
+     * too, so save_app_properties() writes tests/fixtures/cfg/config.json — shared by every
+     * test class in the same PHPUnit run. Snapshot it here and restore in
+     * tearDownAfterClass() so this class's writes don't leak into other test classes.
      */
     public static function setUpBeforeClass(): void
     {

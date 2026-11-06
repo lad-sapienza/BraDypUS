@@ -5,7 +5,6 @@ namespace Tests\Support;
 use PHPUnit\Framework\TestCase;
 use DB\DB;
 use Config\Config;
-use Config\ToDB;
 use DB\System\Manage;
 use DB\System\Migrations\M011_ConfigToDb;
 use Adbar\Dot;
@@ -75,10 +74,6 @@ abstract class BdusTestCase extends TestCase
         // tests/fixtures/cfg/ are only the seed imported here (like migration M011 does) and are
         // never written. static::$cfg is rebuilt on top of the freshly filled bdus_cfg_* tables.
         M011_ConfigToDb::run(new Manage(static::$db), __DIR__ . '/../fixtures/');
-        // The fixtures are written in the v4 format (`plugin`, `plugin_of`, `backlinks`);
-        // in the database the same links are rows of bdus_cfg_relations (FK column -> target).
-        ToDB::upsertRelations(static::$db, 'tags',    [['other_tb' => 'items', 'fld' => [['my' => 'id_link',  'other' => 'id']]]]);
-        ToDB::upsertRelations(static::$db, 'reviews', [['other_tb' => 'items', 'fld' => [['my' => 'item_ref', 'other' => 'id']]]]);
         static::$cfg = new Config(new Dot(), __DIR__ . '/../fixtures/cfg/', static::$db);
 
         static::seedData();

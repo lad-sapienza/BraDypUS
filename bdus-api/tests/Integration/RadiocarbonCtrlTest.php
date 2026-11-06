@@ -41,21 +41,7 @@ class RadiocarbonCtrlTest extends BdusTestCase
     {
         $ctrl = $this->makeController('Bdus\\Controllers\\Config', ['tb' => self::TB]);
         $res  = $this->callController($ctrl, 'activateRadiocarbon');
-
-        // In production, tables.{tb}.plugin[] is derived fresh from is_plugin/
-        // plugin_of on every Config load (Config\LoadFromDB::load()). This test
-        // harness uses a single file-based fixture Config loaded once for the
-        // whole test class, which does not re-derive on writes — so we mirror
-        // that derivation here, matching what a fresh HTTP request would see in
-        // production, to keep Record\Read::getPlugin() working within the test.
-        $parent = static::$cfg->get('tables.' . self::TB) ?: [];
-        if (!in_array(self::PLUGIN_TB, $parent['plugin'] ?? [], true)) {
-            $parent['name']   = self::TB;
-            $parent['plugin'] = array_merge($parent['plugin'] ?? [], [self::PLUGIN_TB]);
-            unset($parent['link']);
-            static::$cfg->setTable($parent);
-        }
-
+        $this->reloadConfig();
         return $res;
     }
 
@@ -63,17 +49,17 @@ class RadiocarbonCtrlTest extends BdusTestCase
     {
         $ctrl = $this->makeController('Bdus\\Controllers\\Config', ['tb' => self::TB]);
         $res  = $this->callController($ctrl, 'deactivateRadiocarbon');
-
-        // Mirror production's plugin[] re-derivation the same way activate() does.
-        $parent = static::$cfg->get('tables.' . self::TB) ?: [];
-        if (in_array(self::PLUGIN_TB, $parent['plugin'] ?? [], true)) {
-            $parent['name']   = self::TB;
-            $parent['plugin'] = array_values(array_diff($parent['plugin'] ?? [], [self::PLUGIN_TB]));
-            unset($parent['link']);
-            static::$cfg->setTable($parent);
-        }
-
+        $this->reloadConfig();
         return $res;
+    }
+
+    /**
+     * Like the next HTTP request would: tables.{tb}.plugin[] is derived from the stored
+     * relations every time the Config is loaded (Config\LoadFromDB::load()).
+     */
+    private function reloadConfig(): void
+    {
+        static::$cfg = new \Config\Config(new \Adbar\Dot(), __DIR__ . '/../fixtures/cfg/', static::$db);
     }
 
     // ── activateRadiocarbon ────────────────────────────────────────────────────

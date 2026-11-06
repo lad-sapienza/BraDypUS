@@ -114,6 +114,40 @@ class RecordCtrlValidationTest extends BdusTestCase
         $this->assertSame('success', $res['status'], 'Valid integer should save without error');
     }
 
+    // ── real ──────────────────────────────────────────────────────────────────
+
+    public function testRejectsNonNumberForRealField(): void
+    {
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], []);
+        $m = new \ReflectionMethod($ctrl, 'validateFieldValue');
+        $cfg = ['name' => 'weight', 'check' => 'real'];
+
+        foreach (['abc', '10,5', '1e3', '10.', '.5'] as $bad) {
+            $errs = $m->invoke($ctrl, 'weight', $bad, $cfg, self::TB, null);
+            $this->assertSame('real', $errs[0]['rule'] ?? null, "value $bad");
+        }
+    }
+
+    public function testRealFieldAcceptsIntegersAndDecimals(): void
+    {
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], []);
+        $m = new \ReflectionMethod($ctrl, 'validateFieldValue');
+        $cfg = ['name' => 'weight', 'check' => 'real'];
+
+        foreach (['10', '10.5', '-0.25', 3, 2.5] as $ok) {
+            $this->assertSame([], $m->invoke($ctrl, 'weight', $ok, $cfg, self::TB, null), "value " . var_export($ok, true));
+        }
+    }
+
+    public function testIntFieldStillRejectsDecimals(): void
+    {
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], []);
+        $m = new \ReflectionMethod($ctrl, 'validateFieldValue');
+        $errs = $m->invoke($ctrl, 'n', '10.5', ['name' => 'n', 'check' => 'int'], self::TB, null);
+
+        $this->assertSame('int', $errs[0]['rule']);
+    }
+
     // ── min / max (numeric) ───────────────────────────────────────────────────
 
     public function testRejectsIntBelowMin(): void

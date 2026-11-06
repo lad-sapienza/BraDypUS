@@ -354,6 +354,7 @@ import PleiadesSection        from '@/components/record/PleiadesSection.vue'
 import OsteologySection       from '@/components/record/osteology/OsteologySection.vue'
 import ChronoDensityPanel     from '@/components/record/ChronoDensityPanel.vue'
 import RecordVersionsDrawer   from '@/components/record/RecordVersionsDrawer.vue'
+import { validateField }      from '@/utils/fieldValidation'
 
 const { t }   = useI18n()
 const route   = useRoute()
@@ -771,32 +772,9 @@ function cancelEdit() {
 
 // ── Validation ────────────────────────────────────────────────────
 
-/**
- * Returns true if the given value fails the field's client-side rules.
- * Mirrors the logic in FieldEditor.vue — keep in sync.
- */
+/** True if the value fails the field's client-side rules (shared with FieldEditor). */
 function fieldHasClientError(fld, value) {
-  const check   = fld.check ?? []
-  const isEmpty = value === null || value === undefined || value === ''
-
-  if (fld.required && isEmpty)   return true
-  if (isEmpty)                   return false
-
-  if (check.includes('int')   && !/^-?\d+$/.test(String(value)))            return true
-  if (check.includes('email') && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value))) return true
-
-  if (fld.type !== 'date' && fld.min != null && Number(value) < Number(fld.min)) return true
-  if (fld.type !== 'date' && fld.max != null && Number(value) > Number(fld.max)) return true
-  if (fld.type === 'date'  && fld.min        && String(value) < String(fld.min))  return true
-  if (fld.type === 'date'  && fld.max        && String(value) > String(fld.max))  return true
-
-  if (fld.max_length && String(value).length > Number(fld.max_length)) return true
-
-  if (fld.pattern) {
-    try { if (!new RegExp(fld.pattern).test(String(value))) return true } catch {}
-  }
-
-  return false
+  return validateField(fld, value) !== null
 }
 
 /**

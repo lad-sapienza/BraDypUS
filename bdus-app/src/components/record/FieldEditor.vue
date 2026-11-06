@@ -210,6 +210,7 @@ import { Input, Select as ASelect, Switch as ASwitch, Slider as ASlider, AutoCom
 import { useToast } from '@/composables/useNotify'
 import { api }     from '@/api'
 import { useI18n } from '@/i18n'
+import { validateField } from '@/utils/fieldValidation'
 import { onMounted, watch } from 'vue'
 
 const AInput = Input
@@ -305,62 +306,11 @@ const forceValidate = inject('forceValidate', ref(false))
 
 // ── Validation ──────────────────────────────────────────────────
 const validationError = computed(() => {
-  const v = props.modelValue
-  const s = props.schema
-  const check = s.check ?? []
-
-  const isEmpty = v === null || v === undefined || v === ''
-
-  // required / not_empty (server normalises both to s.required = true)
-  if (s.required && isEmpty) {
-    return t('field_required')
-  }
-
-  // No further checks on empty optional fields
-  if (isEmpty) return null
-
-  // int — whole numbers only
-  if (check.includes('int') && !/^-?\d+$/.test(String(v))) {
-    return t('value_must_be_integer')
-  }
-
-  // email
-  if (check.includes('email') && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v))) {
-    return t('invalid_email')
-  }
-
-  // min / max — numeric fields
-  if (s.type !== 'date' && s.min != null) {
-    if (Number(v) < Number(s.min)) return t('value_too_small', s.min)
-  }
-  if (s.type !== 'date' && s.max != null) {
-    if (Number(v) > Number(s.max)) return t('value_too_large', s.max)
-  }
-
-  // min / max — date fields (ISO string comparison: 'YYYY-MM-DD' sorts lexicographically)
-  if (s.type === 'date' && s.min && String(v) < String(s.min)) {
-    return t('value_too_small', s.min)
-  }
-  if (s.type === 'date' && s.max && String(v) > String(s.max)) {
-    return t('value_too_large', s.max)
-  }
-
-  // max_length
-  if (s.max_length && String(v).length > Number(s.max_length)) {
-    return t('value_too_long', s.max_length)
-  }
-
-  // pattern / regex
-  if (s.pattern) {
-    try {
-      if (!new RegExp(s.pattern).test(String(v))) return t('invalid_format')
-    } catch { /* invalid regex in config — ignore */ }
-  }
-
-  // no_dupl: async — handled separately via uniqueError ref below
-
-  return null
+  const err = validateField(props.schema, props.modelValue)
+  return err ? t(...err) : null
 })
+
+// no_dupl: async — handled separately via uniqueError ref below
 
 // ── Async uniqueness check (no_dupl) ────────────────────────────
 const uniqueError = ref(null)

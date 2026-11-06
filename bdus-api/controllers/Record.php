@@ -1262,6 +1262,11 @@ class Record extends \Bdus\Controller
       $errors[] = ['field' => $fldName, 'label' => $label, 'rule' => 'int'];
     }
 
+    // real — whole or decimal number, dot as separator (no comma, no exponent)
+    if (in_array('real', $check, true) && !preg_match('/^-?\d+(\.\d+)?$/', (string)$value)) {
+      $errors[] = ['field' => $fldName, 'label' => $label, 'rule' => 'real'];
+    }
+
     // email
     if (in_array('email', $check, true) && !filter_var($value, FILTER_VALIDATE_EMAIL)) {
       $errors[] = ['field' => $fldName, 'label' => $label, 'rule' => 'email'];

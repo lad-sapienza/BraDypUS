@@ -5,6 +5,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`real` field check.** A field with `check: real` accepts whole and decimal numbers
+  (`10`, `10.5`, `-0.25`; dot as separator, no comma, no exponent), while `int` stays
+  strictly whole numbers. Enforced in the form and on the server, listed in the field
+  configuration and documented in *Fields*.
+
+### Changed
+
+- The record form had two copies of the same field-validation rules (`FieldEditor.vue` for
+  the inline message, `RecordView.vue` for the pre-save gate). They now share
+  `utils/fieldValidation.js`. The server-side validation stays authoritative.
+- The generic `int` message now says "whole numbers" instead of "numeric values".
+
 ## [5.17.0] - 2026-11-06
 
 ### Added

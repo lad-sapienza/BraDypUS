@@ -63,6 +63,7 @@
         "type": "multi_select",
         "values": [
             "int",
+            "real",
             "email",
             "no_dupl",
             "not_empty",
@@ -70,7 +71,7 @@
             "regex",
             "valid_wkt"
         ],
-        "help": "Real-time validation performed on value change and on form submission.",
+        "help": "Real-time validation performed on value change and on form submission. `int` accepts whole numbers only (10); `real` accepts whole or decimal numbers with a dot as separator (10.5). The server enforces the same rules on save.",
         "required": false
     },
     "readonly": {

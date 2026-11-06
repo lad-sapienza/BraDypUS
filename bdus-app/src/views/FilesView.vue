@@ -91,6 +91,16 @@
               @keyup.enter="saveMeta(record)"
             />
           </template>
+          <template v-else-if="column.key === 'attribution'">
+            <AInput
+              :value="record.attribution ?? ''"
+              size="small"
+              class="meta-input"
+              @update:value="v => record.attribution = v || null"
+              @blur="saveMeta(record)"
+              @keyup.enter="saveMeta(record)"
+            />
+          </template>
           <template v-else-if="column.key === 'links'">
             <div v-if="record.links.length" class="links-list">
               <RouterLink
@@ -190,6 +200,7 @@ const columns = computed(() => [
   { title: t('files_col_filename'),    key: 'filename',    width: 160 },
   { title: t('files_col_description'), key: 'description' },
   { title: t('files_col_keywords'),    key: 'keywords',    width: 200 },
+  { title: t('files_col_attribution'), key: 'attribution', width: 200 },
   { title: t('files_col_links'),       key: 'links',       width: 200 },
   { title: '',                         key: 'actions',     width: 80 },
 ])
@@ -247,7 +258,7 @@ async function fetchFiles() {
     if (data.status === 'error') throw new Error(t(data.code))
     files.value = (data.files ?? []).map(f => {
       const filename = stripExt(f.filename, f.ext)
-      return { ...f, filename, _meta: { filename, description: f.description, keywords: f.keywords } }
+      return { ...f, filename, _meta: { filename, description: f.description, keywords: f.keywords, attribution: f.attribution } }
     })
     total.value = data.total ?? 0
   } catch (e) {
@@ -287,13 +298,14 @@ function stripExt(name, ext) {
 async function saveMeta(file) {
   file.filename = stripExt(file.filename, file.ext)
 
-  const meta = { filename: file.filename, description: file.description, keywords: file.keywords }
+  const meta = { filename: file.filename, description: file.description, keywords: file.keywords, attribution: file.attribution }
   // blur/enter fire on every focus-out or keypress regardless of whether the
   // value actually changed — comparing against the last-saved snapshot (not
   // switching to a native change event, which wouldn't fire on Enter anyway)
   // is what actually skips the no-op API calls.
   if (file._meta && file._meta.filename === meta.filename &&
-      file._meta.description === meta.description && file._meta.keywords === meta.keywords) {
+      file._meta.description === meta.description && file._meta.keywords === meta.keywords &&
+      file._meta.attribution === meta.attribution) {
     return
   }
 

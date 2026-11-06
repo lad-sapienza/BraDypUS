@@ -130,7 +130,7 @@ uploaded to the application, regardless of which record they are attached to.
 For each file you can:
 
 - Browse thumbnails and previews (click to open inline)
-- Edit the description and keywords in-place (auto-saved on blur / Enter)
+- Edit the description, keywords and attribution in-place (auto-saved on blur / Enter)
 - See which records the file is linked to
 - Filter for **orphan files** — files not linked to any record
 - **Replace** the file binary while keeping metadata

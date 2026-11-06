@@ -5,6 +5,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Files, attribution.** Each file has a new optional *Attribution* field (credit or licence
+  line, e.g. "© Jane Doe, CC BY 4.0"), editable in the file manager, searchable, and shown
+  under the image in the record's file gallery. Schema migration M047 adds a nullable
+  `bdus_files.attribution` column (minor upgrade, applied at the next admin login); existing
+  data is untouched.
+
 ## [5.17.2] - 2026-11-06
 
 ### Changed

@@ -137,13 +137,14 @@
           <AImage
             :src="fileUrl(f)"
             :alt="f.description || f.filename || String(f.id)"
-            :title="f.description || ''"
+            :title="[f.description, f.attribution].filter(Boolean).join(' — ')"
             :preview="true"
             :width="120"
             :height="90"
             class="thumb-img"
           />
           <div v-if="f.description" class="img-caption">{{ f.description }}</div>
+          <div v-if="f.attribution" class="img-caption img-attribution">{{ f.attribution }}</div>
           <div class="img-actions">
             <a :href="fileUrl(f)" :download="downloadName(f)" class="file-action" :title="t('download')">
               <DownloadOutlined />
@@ -197,7 +198,7 @@ const props = defineProps({
   /**
    * Array of file objects as returned by record_ctrl::getRecord().
    * Each: { id, link_id, link_sort, ext, filename, description,
-   *         keywords, printable, is_image }
+   *         keywords, attribution, printable, is_image }
    */
   files:    { type: Array,           default: () => [] },
   /** When true, shows sort handles, delete buttons and upload button */
@@ -587,6 +588,10 @@ function fileIcon(ext) {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.img-attribution {
+  font-style: italic;
 }
 
 .img-actions {

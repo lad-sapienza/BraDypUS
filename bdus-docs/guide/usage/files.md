@@ -18,6 +18,7 @@ Files are listed in a paginated table. Each row shows:
 | Filename | The filename (without extension) — editable inline |
 | Description | Free-text description — editable inline |
 | Keywords | Comma-separated keywords — editable inline |
+| Attribution | Credit or licence line, e.g. `© Jane Doe, CC BY 4.0` — editable inline; shown under the image in the record's file gallery |
 | Linked records | Badges linking to each record the file is attached to |
 | Actions | Replace binary, delete permanently |
 
@@ -44,12 +45,12 @@ and the counter shows it (**‹ 12 / 5000+ ›**).
 Toggle **Orphans only** in the toolbar to show only files that are not linked
 to any record — useful for cleaning up the library after deleting records.
 
-The search box filters by filename, description, keywords, or an exact file
+The search box filters by filename, description, keywords, attribution, or an exact file
 id, and can be combined with **Orphans only**.
 
 ## Editing metadata
 
-Click any cell in the **Filename**, **Description** or **Keywords** column to
+Click any cell in the **Filename**, **Description**, **Keywords** or **Attribution** column to
 edit its value. Changes are saved automatically when you press Enter or click
 outside the cell.
 
@@ -61,7 +62,7 @@ is rejected.
 ## Replacing a file
 
 Click the **sync** icon (↺) in the Actions column to upload a new binary for an
-existing file. The original description, keywords, and all record links are
+existing file. The original description, keywords, attribution, and all record links are
 preserved. If the new file has a different extension, the old physical file is
 deleted.
 

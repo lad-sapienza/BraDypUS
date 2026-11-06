@@ -20,7 +20,7 @@
   - type help text fixed in fld_structure.json                    (#16)
 -->
 <template>
-  <form class="cfg-fld-form" @submit.prevent="submit">
+  <form :id="formId" class="cfg-fld-form" @submit.prevent="submit">
 
     <div v-if="error" class="cfg-fld-error">{{ error }}</div>
 
@@ -121,13 +121,18 @@
       </component>
     </div>
 
-    <div class="cfg-fld-actions">
-      <AButton size="small" @click="$emit('cancelled')">{{ t('cancel') }}</AButton>
-      <AButton html-type="submit" type="primary" size="small" :loading="saving">
-        <template #icon><SaveOutlined /></template>
-        {{ t('save') }}
-      </AButton>
-    </div>
+    <!-- Save / Cancel: shown where the parent asks (its title row, always visible) via
+         `actionsTarget`; inline below the form when no target is given. The submit
+         button stays tied to this form through the `form` attribute. -->
+    <Teleport :to="actionsTarget || 'body'" :disabled="!actionsTarget" defer>
+      <div :class="actionsTarget ? 'cfg-fld-actions-top' : 'cfg-fld-actions'">
+        <AButton size="small" @click="$emit('cancelled')">{{ t('cancel') }}</AButton>
+        <AButton html-type="submit" :form="formId" type="primary" size="small" :loading="saving">
+          <template #icon><SaveOutlined /></template>
+          {{ t('save') }}
+        </AButton>
+      </div>
+    </Teleport>
 
   </form>
 </template>
@@ -153,7 +158,10 @@ const props = defineProps({
   tb:        { type: String,  required: true },
   field:     { type: Object,  default: () => ({}) },
   structure: { type: Object,  default: () => ({}) },
+  /** CSS selector of an element (in the parent) that receives Save / Cancel; null = inline */
+  actionsTarget: { type: String, default: null },
 })
+const formId = 'cfg-fld-form'
 const emit = defineEmits(['saved', 'cancelled'])
 
 const { t }  = useI18n()
@@ -419,6 +427,11 @@ async function submit() {
 .cfg-fld-err-msg {
   font-size: 0.72rem;
   color: var(--p-red-500);
+}
+
+.cfg-fld-actions-top {
+  display: flex;
+  gap: 0.5rem;
 }
 
 .cfg-fld-actions {

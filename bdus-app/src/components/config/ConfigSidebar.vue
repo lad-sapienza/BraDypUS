@@ -105,19 +105,16 @@
         @drop="onDrop($event, tbl.name)"
       >
         <BarsOutlined class="cfg-drag-handle" />
-        <span class="cfg-table-label" :title="tbl.label">
+        <span
+          class="cfg-table-label"
+          :title="t('table_settings')"
+          @click="$emit('select-table', tbl.name)"
+        >
           <span class="cfg-table-label-text">{{ tbl.label }}</span>
           <small v-if="tbl.is_plugin === '1'" class="cfg-plugin-badge">plugin</small>
           <small v-if="tbl.is_view" class="cfg-plugin-badge">{{ t('db_kind_view') }}</small>
         </span>
         <div class="cfg-table-btns">
-          <button
-            class="cfg-icon-btn"
-            :title="t('table_settings')"
-            @click.stop="$emit('select-table', tbl.name)"
-          >
-            <ControlOutlined />
-          </button>
           <button
             class="cfg-icon-btn"
             :title="t('fields')"
@@ -133,7 +130,7 @@
 </template>
 
 <script setup>
-import { ApartmentOutlined, BarsOutlined, BookOutlined, CheckCircleOutlined, CompassOutlined, ControlOutlined, DatabaseOutlined, ExportOutlined, KeyOutlined, LoadingOutlined, PlusOutlined, SettingOutlined, UnorderedListOutlined } from '@ant-design/icons-vue'
+import { ApartmentOutlined, BarsOutlined, BookOutlined, CheckCircleOutlined, CompassOutlined, DatabaseOutlined, ExportOutlined, KeyOutlined, LoadingOutlined, PlusOutlined, SettingOutlined, UnorderedListOutlined } from '@ant-design/icons-vue'
 import { ref }            from 'vue'
 import { useConfigStore } from '@/stores/config'
 import { useI18n }        from '@/i18n'
@@ -300,6 +297,7 @@ async function onDrop(e, targetName) {
 
 .cfg-table-label {
   flex: 1;
+  cursor: pointer;
   font-size: 0.82rem;
   min-width: 0;
   display: flex;

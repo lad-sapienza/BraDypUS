@@ -5,6 +5,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **System configuration, field editor.** Read-only, hidden and default value now come
+  before a *Validation* fieldset (Checks, Max length, Min/Max value, Regex pattern), then help
+  text and widget. `range` and `regex` are no longer offered as checks: Min/Max value and
+  Regex pattern apply as soon as they are filled in (they always did). The *Fields* guide
+  now matches the form.
+- **System configuration, layout.** The page no longer scrolls as a whole: the section/table
+  list, the field list, the field editor and the table settings scroll independently, so
+  opening a field far down the list shows its form from the top. Save / Cancel of the field
+  editor sit in its title row and stay visible.
+- Clicking a table name in the configuration sidebar opens its settings (the settings icon
+  is gone; the fields icon stays).
+
+### Fixed
+
+- The "is required" message of the field form was shown as the raw key (`is_required`).
+
 ## [5.17.1] - 2026-11-06
 
 ### Added

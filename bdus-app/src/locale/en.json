@@ -1139,6 +1139,7 @@
   "minor_upgrade_skip": "Skip for now",
   "enter_app": "Enter application",
 
+  "is_required": "is required",
   "fld_name": "Field name",
   "fld_label": "Label",
   "fld_type": "Type",

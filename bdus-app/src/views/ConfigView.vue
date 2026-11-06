@@ -215,6 +215,10 @@ watch(() => store.unlocked, (unlocked) => {
 .cfg-shell {
   display: flex;
   flex: 1;
+  /* The layout content area is not a flex container, so `flex: 1` alone lets the shell
+     grow with its content and the whole page scrolls. Bound it to the content area:
+     sidebar, field list, field editor and panel bodies then scroll on their own. */
+  height: 100%;
   min-height: 0;
   overflow: hidden;
 }

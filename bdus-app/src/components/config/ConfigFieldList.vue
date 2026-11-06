@@ -58,12 +58,16 @@
         </div>
 
         <template v-else>
-          <div class="cfg-fld-editor-title">
-            {{ addingNew ? t('new_field') : selectedFld?.name }}
+          <div class="cfg-fld-editor-head">
+            <div class="cfg-fld-editor-title">
+              {{ addingNew ? t('new_field') : selectedFld?.name }}
+            </div>
+            <div id="cfg-fld-editor-actions" />
           </div>
           <div class="cfg-fld-editor-scroll">
             <ConfigFieldForm
               :tb="tb"
+              actions-target="#cfg-fld-editor-actions"
               :field="addingNew ? {} : selectedFld"
               :structure="structure"
               @saved="onSaved"
@@ -380,8 +384,9 @@ onMounted(load)
 .cfg-fld-editor {
   flex: 1;
   min-width: 0;
-  overflow-y: auto;
-  padding: 1rem 1.25rem;
+  min-height: 0;
+  overflow: hidden;           /* the form scrolls, title + Save/Cancel stay in view */
+  padding: 1rem 1.25rem 0;
   display: flex;
   flex-direction: column;
 }
@@ -394,14 +399,26 @@ onMounted(load)
   color: var(--p-text-muted-color);
   font-size: 0.9rem;
 }
+.cfg-fld-editor-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-shrink: 0;
+  padding-bottom: 0.6rem;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid var(--p-content-border-color);
+}
 .cfg-fld-editor-title {
   font-weight: 700;
   font-size: 0.9rem;
-  margin-bottom: 0.75rem;
   color: var(--p-primary-color);
 }
 .cfg-fld-editor-scroll {
   flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: 1rem;
 }
 
 /* ── Rename dialog ───────────── */

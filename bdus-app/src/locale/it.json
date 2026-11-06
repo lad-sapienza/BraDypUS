@@ -1139,6 +1139,7 @@
   "minor_upgrade_skip": "Salta per ora",
   "enter_app": "Entra nell'applicazione",
 
+  "is_required": "è obbligatorio",
   "fld_name": "Nome campo",
   "fld_label": "Etichetta",
   "fld_type": "Tipo",

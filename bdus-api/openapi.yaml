@@ -2834,6 +2834,33 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
 
+  /api/config/table/{tb}/view-writable:
+    post:
+      tags: [config]
+      summary: Re-check how a registered SQL view can be written
+      description: |
+        The way a view can be written (`none`, `probe`, `trigger`) is probed once, when it is
+        activated. After changing the view (on SQLite: adding or dropping `INSTEAD OF` triggers)
+        this reads it again and stores it, leaving the rest of the configuration untouched.
+        Codes: `view_writable_updated`, `not_found`, `not_a_view`, `view_not_found`,
+        `missing_id_column`, `missing_creator_column` (a writable view needs `creator`), `db_error`.
+      parameters:
+        - $ref: '#/components/parameters/tb'
+      responses:
+        '200':
+          description: Result
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/CodedResult'
+                  - type: object
+                    properties:
+                      view_writable: { type: string, enum: [none, probe, trigger] }
+                      changed: { type: boolean }
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
   /api/config/table/{tb}/fields:
     get:
       tags: [config]

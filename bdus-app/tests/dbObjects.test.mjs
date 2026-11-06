@@ -2,7 +2,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import { DBO_REASONS, dboReasonKey, dbObjectActions, cannotDeactivate, viewRestrictions } from '../src/utils/dbObjects.js'
+import { DBO_REASONS, dboReasonKey, dbObjectActions, cannotDeactivate, viewRestrictions, viewWriteState } from '../src/utils/dbObjects.js'
 
 const table = (over = {}) => ({ name: 'sites', kind: 'table', activatable: true, inactive: false, reason: null, view_writable: null, ...over })
 const view  = (over = {}) => ({ name: 'v', kind: 'view', activatable: true, inactive: false, reason: null, view_writable: 'none', ...over })
@@ -66,6 +66,14 @@ test('a view hides what the database owns', () => {
   for (const k of Object.keys(t)) assert.equal(t[k], true, k)
 })
 
+test('how a view is written: only `none` is read-only', () => {
+  assert.deepEqual(viewWriteState({ view_writable: 'none' }), { level: 'none', writable: false, badgeKey: 'view_read_only_badge' })
+  assert.equal(viewWriteState({ view_writable: 'probe' }).writable, true)
+  assert.equal(viewWriteState({ view_writable: 'trigger' }).badgeKey, 'view_writable_badge')
+  assert.equal(viewWriteState({}).writable, false, 'a missing value is read-only')
+  assert.equal(viewWriteState(null).writable, false)
+})
+
 // ── every string the new screens show exists in both languages ───────────
 const locale = lang => JSON.parse(readFileSync(new URL(`../src/locale/${lang}.json`, import.meta.url), 'utf8'))
 const en = locale('en')
@@ -91,6 +99,8 @@ test('every locale key used by the new/changed config screens exists in en and i
     // keys returned by dbObjectActions()
     'dbo_reactivate', 'dbo_preview_activate', 'dbo_details', 'db_kind_view', 'db_kind_table',
     'view_read_only_badge', 'view_writable_badge',
+    // re-check of a view's writability
+    'view_writable_updated', 'missing_creator_column', 'view_not_found', 'not_a_view',
   ])
   const missing = lang => [...keys].filter(k => !(k in locale(lang)))
   assert.deepEqual(missing('en'), [], 'missing in en.json')

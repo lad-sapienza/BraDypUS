@@ -59,3 +59,13 @@ export function viewRestrictions(isView) {
     showSystemPlugins: !isView,
   }
 }
+
+/**
+ * How a registered SQL view can be written, from its table config (`view_writable`
+ * is `none` | `probe` | `trigger`). Anything but `none` means the database can write it.
+ */
+export function viewWriteState(table) {
+  const level    = table?.view_writable || 'none'
+  const writable = level !== 'none'
+  return { level, writable, badgeKey: writable ? 'view_writable_badge' : 'view_read_only_badge' }
+}

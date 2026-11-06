@@ -11,36 +11,45 @@ Open it from **Config → Fields**, then select a table from the dropdown.
 
 ## Adding a field
 
-Click **Add field** and fill in the field form:
+Click **Add field** and fill in the field form. The property names below are the labels
+shown in the form:
 
 | Property | Description |
 |---|---|
-| **Name** | Internal column name (lowercase, underscores; e.g. `site_name`) |
-| **Label** | Display label shown to users |
-| **Type** | See field types below |
-| **Required** | Prevent saving if this field is empty |
-| **No duplicates** | Reject values already present in another record |
-| **Default** | Pre-filled value for new records |
-| **Max length** | Character limit for text fields |
-| **Min / Max** | Numeric or date bounds |
-| **Regex pattern** | Validation pattern (e.g. `^[A-Z]{2}\d+$` for a site code) |
+| **Field name** | Database name of the column: 2 to 15 lowercase letters and underscores (`^[a-z_]{2,15}$`, e.g. `site_name`). Required; cannot be changed afterwards except with **Rename** |
+| **Label** | Display label shown to users (spaces, uppercase and special characters allowed) |
+| **Type** | See field types below. Required |
+| **Database type** | Column type: `TEXT` (strings, long texts), `INTEGER` (numbers, booleans) or `TIMESTAMP` (dates and times). Required |
+| **Vocabulary**, **Values from table**, **FK table** | Source of the values of `select`, `multi_select` and `combo_select` fields, see below |
+| **Validation** | One or more checks, see below. Mandatory and no-duplicates rules are set here |
+| **Read-only** | The field is visible and its value is sent to the server, but users cannot edit it |
+| **Hidden** | The field is not shown to users; its value is still sent to the server and cannot be edited |
+| **Default value** | Pre-filled value for new records. Variables: `%today%` (current date), `%current_user%` (id of the current user) |
+| **Max length** | Maximum number of characters, spaces included |
+| **Min value** / **Max value** | Lower and upper bound. Used by `slider` fields and as a numeric (or ISO date) bound on any other field as soon as they are filled in |
+| **Regex pattern** | Pattern the value must match, e.g. `^[A-Z]{2}\d+$` for a site code. Applied as soon as it is filled in |
+| **Help text** | Text shown to users explaining how to fill in the field |
+| **Widget** | Optional display widget for read mode: put a `.js` ES module in `projects/{app}/widgets/` and it appears in the list |
 
 ### Validation checks
 
-The **Check** property of a field selects one or more validation rules. They run while the
-user types and again on the server when the record is saved.
+The **Validation** property selects one or more checks. They run while the user types and
+again on the server when the record is saved.
 
 | Check | Accepts |
 |---|---|
+| `not_empty` | Mandatory field: it cannot be saved empty |
+| `no_dupl` | A value not already used in another record |
 | `int` | Whole numbers only: `10`, `-3` (not `10.5`) |
 | `real` | Whole or decimal numbers, with a **dot** as the decimal separator: `10`, `10.5`, `-0.25` (not `10,5`, not `1e3`) |
 | `email` | A valid email address |
-| `not_empty` | Any non-empty value (same as **Required**) |
-| `no_dupl` | A value not already used in another record (same as **No duplicates**) |
 | `valid_wkt` | A geometry in Well Known Text format |
 
-Use `int` for counts and identifiers, `real` for measurements (weights, lengths, coordinates
-stored as numbers). The two are alternatives: do not combine them on the same field.
+Use `int` for counts and identifiers, `real` for measurements (weights, lengths). The two
+are alternatives: do not combine them on the same field.
+
+`range` and `regex` also appear in the list, but they are not needed: **Min value** /
+**Max value** and **Regex pattern** are checked whenever they are filled in.
 
 ## Field types
 
@@ -65,12 +74,12 @@ available values. Set exactly one of the following:
 |---|---|
 | **Vocabulary** | Name of a [vocabulary list](/guide/setup/vocabularies) — values are managed in the Vocabularies panel |
 | **Values from table** | A table and field whose unique values are used as autocomplete suggestions |
-| **ID from table** | A table whose records appear in the dropdown; the record `id` is stored, but the preview fields are shown to users |
+| **FK table** | A table whose records appear in the dropdown; the record `id` is stored, but the preview fields are shown to users |
 
 ## Foreign key fields
 
 A foreign key field stores the `id` of a record from another table. Use type `select`
-and set **ID from table** to the target table.
+and set **FK table** to the target table.
 
 The dropdown shows the target table's preview fields; the stored value is the integer `id`.
 This is the recommended way to avoid data duplication across tables.

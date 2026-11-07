@@ -57,8 +57,9 @@ versions of every record, files, maps and print templates on top of them.
   and reachable by sequential id: material that must stay private does not belong there
   (access control for files is not available yet).
 - You need **permissions per field** or a **workflow engine** with notifications:
-  BraDypUS's own permission engine works per table and per row, and locks freeze
-  rows; there is nothing finer. Hidden columns, rows per role and a draft → review →
+  BraDypUS's own permission engine works per table and per row (a rule can use group
+  attributes, e.g. "the records of my site", and pin the value a field may take when
+  records are created or saved), and locks freeze rows; there is nothing finer. Hidden columns, rows per role and a draft → review →
   validated flow can still be had with **SQL views and triggers** in the database
   ([SQL views as tables](/guide/setup/views)), at the price of writing that SQL and
   of the limits that page lists (tried on MariaDB and PostgreSQL; no notifications).

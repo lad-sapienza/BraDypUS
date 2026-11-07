@@ -82,14 +82,53 @@ for the id of the user who is asking, so a rule can say "the records I created":
 creator  is exactly  $CURRENT_USER
 ```
 
+Besides `$CURRENT_USER` a filter can use `$CURRENT_GROUPS` (the ids of the user's
+groups) and `$GROUP.name` (the value of a group [attribute](#attributes-and-pinned-values)).
+
 Filters can also be edited as **JSON** — the escape hatch for anything the builder
 cannot show. A filter is checked when you save: an unknown field or operator is
 refused, and nothing is saved until the grid is valid.
 
 ::: tip Create has no filter
 A new record does not exist yet, so there is no row to test. **Create** is a
-plain switch.
+plain switch. To control the *values* a new record may carry, use
+[pinned values](#attributes-and-pinned-values).
 :::
+
+### Attributes and pinned values <Badge type="tip" text="v5.19.0" />
+
+When many groups need the same rule with a different value (one team per site,
+one office per region), do not make one rule per group: give each group an
+**attribute** and write the rule once.
+
+1. In the group's details, **Attributes**: add `site` = `Ostia` (several values:
+   `Ostia, Cuma`).
+2. In the rules, use it in the filter: `site` is exactly `$GROUP.site`.
+3. To stop the client choosing the value on its own, click the **shield** next to
+   Create (and Update) and pin it: field `site`, value `$GROUP.site`.
+
+From then on a member of the group sees and changes only the records of their
+site, and a record they create or save can only carry their site:
+
+| What the client sends | Create | Update |
+|---|---|---|
+| a value of the group (`Ostia`) | accepted | accepted |
+| another value (`Pompei`) | refused: *This value is not allowed for your group* | refused |
+| nothing / empty | filled in with `Ostia` | field left as it is |
+
+Details worth knowing:
+
+- A user in **several groups** can use the values of any of their groups. If a new
+  record leaves the field empty and more than one value is possible, it is refused:
+  the server never guesses.
+- Pinned values also apply to **duplicating** a record (the copy gets the group's
+  value) and to **imports** (an import with a forbidden value is refused as a whole).
+- They restrict only where the group rule is what grants the action: administrators,
+  and a level that already allows the action on every table, are not restricted. A
+  rule with no pinned values restricts nothing.
+- If a variable is unknown, or no group of the user has that attribute, the rule
+  grants nothing (a typo never opens access).
+- Values can be literals too (`status` = `draft`), or a list.
 
 ### Example: a reviewer for one site
 

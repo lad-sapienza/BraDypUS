@@ -25,7 +25,26 @@ JSON filters).
 | **App status** | `bdus_cfg_app.status` | `on` / `frozen` / `off`, unchanged: `frozen` blocks all writes whatever the groups say. |
 
 Filters use the record filter syntax (`SQL\Filter\JsonFilter`), never raw SQL.
-The only variable is `$CURRENT_USER` (the id of the principal; `0` for an API key).
+Variables (`Access::substitute`): `$CURRENT_USER` (the id of the principal; `0` for an API
+key), `$CURRENT_GROUPS` (ids of the principal's groups) and `$GROUP.<key>` (the values of
+the group attribute `<key>`, `bdus_groups.attrs` JSON, united over the principal's groups).
+A list-valued variable turns `_eq`/`_neq` into `_in`/`_nin` and is spliced into `_in`/`_nin`
+lists; under any other operator, an unknown variable (`$GROUP…`/`$CURRENT_…`) or an attribute
+nobody sets, the filter throws and the rule fails closed (grants nothing).
+
+### Enforced values (#51)
+
+`create` and `update` rules have an optional `enforce` column (JSON `{field: value|variable|list}`).
+`Access::enforceValues($action, $table, $values, $recordId, $coerce)` is called by
+`Record::saveRecord`, `Record::duplicateRecord` (`$coerce`: a copy's value outside the allowed
+set is replaced when exactly one value is allowed) and `Import::importData`, after the
+capability gate and before validation. Among the rules that grant the action on the table
+(for update only those whose filter matches the record) one is enough: a rule without
+`enforce` — or a self writer's own record — lifts the restriction. Not applied to admins, to
+a tier that grants the action on every table, or to plugin tables. A field must be one of the
+allowed values; left empty on create it is filled in when exactly one is possible and the
+write is refused otherwise; on update an unsent field is left alone. Refusal:
+`value_not_allowed`.
 
 ## Evaluation
 
@@ -116,7 +135,9 @@ whose controllers check table and row. A refusal to a key is HTTP 403
 Groups: `GET/POST /api/groups`, `GET/PUT/DELETE /api/group/{id}`,
 `PUT /api/group/{id}/members`, `GET/PUT /api/user/{id}/groups`.
 Rules: `PUT /api/group/{id}/rules` replaces the whole set (what the permissions
-grid sends); filters are validated before anything is saved.
+grid sends); filters and `enforce` maps are validated before anything is saved.
+Group attributes: `attrs` on `POST /api/groups` and `PUT /api/group/{id}` (left out on
+update = unchanged).
 Locks: `GET/POST /api/locks`, `PUT/DELETE /api/lock/{id}`.
 Keys: `POST /api/api-keys` takes `group_id` (required with privilege 39).
 See `openapi.yaml`; the interface is `components/users/` in `bdus-app`.
@@ -133,6 +154,7 @@ What the interface needs to know comes with existing endpoints: `can` per table 
   and each entry point against a scoped principal, with the filter or the gate
   removed to check the test notices.
 - Hurl phase 45 — rules, locks and keys end to end, on every engine.
+- Hurl phase 50 and `GroupVariablesTest` — group variables and enforced values (#51).
 - Hurl phase 46 — **deny by default**: a level-Enter person and a level-Enter key,
   in a group that reads a slice of one table, against every data and every
   administrative entry point. When you add an endpoint, add it there.
@@ -149,9 +171,11 @@ What the interface needs to know comes with existing endpoints: `can` per table 
 - **Locks are not rules**: "deny" inside groups would be a second semantic in every
   group, and a lock is easier to read and covers the freeze use case.
 - **No field-level rules**: filtering or sorting on a hidden field leaks its values.
-  Hidden columns, and rules on the *values* written, are obtained outside this
-  mechanism with [SQL views and triggers](/guide/setup/views); rules and locks are
-  keyed by table name, so each view needs its own.
+  Hidden columns are obtained outside this mechanism with
+  [SQL views and triggers](/guide/setup/views); rules and locks are keyed by table
+  name, so each view needs its own. The *values* written can be pinned per field
+  with `enforce` (see above), but only on the table's own columns: not on plugin
+  tables, and not as a transition rule (draft → review → validated).
 - **Files are not filtered** (`bdus_files` is not a configured table); the *link*
   between a file and a record follows the record.
 - **Plugin tables** are read through their record; read on their own (a chart, an

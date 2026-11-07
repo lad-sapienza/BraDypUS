@@ -5,6 +5,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Groups, parametrised rules (#51).** Rule filters now know `$CURRENT_GROUPS` (ids of the
+  user's groups) and `$GROUP.<name>` (the value(s) of a group *attribute*, united over the
+  user's groups); a list turns `_eq`/`_neq` into `_in`/`_nin`. One rule such as
+  `site = $GROUP.site` replaces a near-identical rule per group. An unknown variable, or an
+  attribute no group of the user sets, makes the rule grant nothing.
+- **Groups, server-enforced values.** `create` and `update` rules can carry an `enforce` map
+  (`{field: value | variable | list}`): the server accepts only those values for those fields
+  (`value_not_allowed` otherwise), whatever the client sends, on record save, duplicate and
+  import. On create an empty field is filled in when a single value is possible. A user in
+  several groups may use any of their groups' values, never an invented one. Admins and a
+  level that already grants the action on every table are not restricted; a rule without
+  `enforce` restricts nothing.
+- Groups have optional *attributes* (Users → Groups); the permissions grid has a "pinned
+  values" button on Create and Update. Schema migration M049 adds the nullable
+  `bdus_groups.attrs` and `bdus_group_rules.enforce` columns (minor upgrade, applied at the
+  next admin login); until then rules keep working as before.
+
 ## [5.18.0] - 2026-11-07
 
 ### Added

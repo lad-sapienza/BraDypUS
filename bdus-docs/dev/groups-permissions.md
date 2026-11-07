@@ -40,7 +40,14 @@ the rules of the table itself, and enforce candidates do the same (`*` rules can
 `enforce`). Migration M050 (`M050_AddDefaultGroups`) creates Reader, Writer and Self writer
 from such rules, skipping a name that already exists; `DefaultGroupsTest` asserts that, for
 each, the table gates and the rows of every action equal those of the matching level
-(30, 20, 25) for a user at level Enter. The three are system groups (`bdus_groups.is_system = 1`): the Groups controller
+(30, 20, 25) for a user at level Enter. `LevelGroupParityTest` runs about forty operations through the real controllers as the
+level and as the same user at Enter in the group, from the same database state, and requires
+the same answer and the same rows; every scenario also states what the level is declared to
+do. Reader and Writer match in all of them. For Self writer the group matches the declared
+behaviour in all of them and level 25 does not in 12 (`SELF_WRITER_LEVEL_DEVIATIONS`, each
+tagged lax/strict; a listed scenario must still differ, so the list shrinks when the level is
+fixed). Hurl phase 51 repeats the declared outcomes over HTTP for six users, on every
+engine. The three are system groups (`bdus_groups.is_system = 1`): the Groups controller
 refuses to delete, rename, change the attributes or the rules of such a group with
 `system_group`, whoever asks (only `setMembers` is allowed; Run SQL, being raw SQL, is not
 covered). Their `*` rules are the only source of what they grant: a future version changes

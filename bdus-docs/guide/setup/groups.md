@@ -142,12 +142,26 @@ Three groups come with every application and can be used instead of a level for 
 | **Self writer** | read and create; update and delete only the records they created |
 
 They are **system groups** (shown with a padlock): they cannot be renamed, changed or
-deleted, not even by a super admin; you can only choose their members. Put a user at level **Enter** in one of them and they get exactly what the level of the
-same name gives on the data. The advantage is that the group is a normal group: you can
+deleted, not even by a super admin; you can only choose their members. Put a user at level **Enter** in one of them and they get what the level of the same
+name gives on the data: for **Reader** and **Writer** exactly the same, in every operation
+tested. For **Self writer** the group does what the table above says (their own records,
+including everything attached to them: plugin rows, relations, links, files, geometries,
+imports; never another person's), while level 25 is inconsistent in a dozen operations, so
+moving a self writer to the group can allow a few things the level refused and refuse a few
+it allowed by mistake. The advantage is that the group is a normal group: you can
 add attributes and [pinned values](#attributes-and-pinned-values) to it, or combine it
 with other groups. Nobody is in these groups until you add them, and levels keep working
 as before. **Admin** and **super admin** remain levels: they also decide who can configure
 the application, manage users and backups, and are not affected by locks.
+
+::: warning The levels they replace are deprecated
+Writer, Self writer and Reader (levels 20, 25, 30) are kept working and unchanged, but
+they are deprecated: new users should get level **Enter** plus the group. The levels will
+be removed only when all of this holds: the groups have been compared with the levels on
+real data without differences (`bin/groups-equivalence.php`), there is a tool to move users
+with a way back, and at least one release has shipped with both. Admin and super admin
+stay levels for now.
+:::
 
 ### Example: a reviewer for one site
 

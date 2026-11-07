@@ -30,6 +30,16 @@ access on specific tables and rows, never take it away.
 | 39 | **Enter** | Sign in, but see no data: access comes only from [groups](./groups) |
 | 40 | **Pending** | Nothing until an admin changes the level |
 
+::: warning Deprecated: levels 20, 25 and 30
+The data side of levels **Writer**, **Self writer** and **Reader** is replaced by the
+[system groups](./groups#default-groups) of the same name: give the user level
+**Enter** and add them to the group. Both work today and nothing changes for existing
+users; the levels will be removed once the groups have been checked against them on real
+data. **Super admin** and **Admin** are not affected. Adding a user who has level 20, 25
+or 30 to one of these groups changes nothing: the level already gives that access, so
+set the level to Enter when you move them.
+:::
+
 ::: tip <Badge type="tip" text="new" />
 Level **Enter** is for people who should reach only a slice of the data — an
 external reviewer, a student working on one trench. Give them the level and put

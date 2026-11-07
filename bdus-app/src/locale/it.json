@@ -1546,6 +1546,7 @@
   "grp_system": "Gruppo di sistema",
   "grp_system_hint": "Un gruppo di sistema appartiene a BraDypUS: non può essere rinominato, modificato o eliminato, nemmeno da un super amministratore. Puoi solo scegliere i suoi membri.",
   "system_group": "I gruppi di sistema non possono essere modificati o eliminati",
+  "grp_level_deprecated_hint": "Questo livello è deprecato: preferisci il livello Enter più il gruppo di sistema con lo stesso nome (Writer, Self writer o Reader). Aggiungere l'utente al gruppo lasciando il livello non cambia nulla.",
   "grp_filter_empty": "Aggiungi almeno una condizione.",
   "grp_filter_invalid_json": "Questo non è JSON valido.",
   "grp_delete_confirm": "Eliminare questo gruppo? Membri e regole vengono rimossi e %s chiave/i API perdono il gruppo.",

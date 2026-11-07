@@ -31,6 +31,7 @@
         option-filter-prop="label"
       />
       <small v-if="Number(form.privilege) === 39" class="field-hint">{{ t('grp_enter_hint') }}</small>
+      <small v-else-if="[20, 25, 30].includes(Number(form.privilege))" class="field-hint">{{ t('grp_level_deprecated_hint') }}</small>
     </div>
 
     <div class="field">

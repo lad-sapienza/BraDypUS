@@ -1546,6 +1546,7 @@
   "grp_system": "System group",
   "grp_system_hint": "A system group belongs to BraDypUS: it cannot be renamed, changed or deleted, not even by a super admin. You can only choose its members.",
   "system_group": "System groups cannot be changed or deleted",
+  "grp_level_deprecated_hint": "This level is deprecated: prefer level Enter plus the system group of the same name (Writer, Self writer or Reader). Adding the user to the group and leaving the level changes nothing.",
   "grp_filter_empty": "Add at least one condition.",
   "grp_filter_invalid_json": "This is not valid JSON.",
   "grp_delete_confirm": "Delete this group? Its members and rules are removed, and %s API key(s) lose the group.",

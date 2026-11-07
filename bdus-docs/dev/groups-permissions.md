@@ -40,7 +40,17 @@ the rules of the table itself, and enforce candidates do the same (`*` rules can
 `enforce`). Migration M050 (`M050_AddDefaultGroups`) creates Reader, Writer and Self writer
 from such rules, skipping a name that already exists; `DefaultGroupsTest` asserts that, for
 each, the table gates and the rows of every action equal those of the matching level
-(30, 20, 25) for a user at level Enter. Admin and super admin are not expressible as
+(30, 20, 25) for a user at level Enter. The three are system groups (`bdus_groups.is_system = 1`): the Groups controller
+refuses to delete, rename, change the attributes or the rules of such a group with
+`system_group`, whoever asks (only `setMembers` is allowed; Run SQL, being raw SQL, is not
+covered). Their `*` rules are the only source of what they grant: a future version changes
+them with a migration. `bin/groups-equivalence.php --app <slug>` (class
+`Auth\Verify\LevelGroupComparison`, read-only) compares each user at level 30/25/20 with the
+same user at Enter in the equivalent group, table by table and action by action (gate and
+rows), and lists differences, missing groups and API keys with a level and no group. Cells
+that cannot be compared (a creator test on a table without a `creator` column, e.g. plugin
+tables, whose owner the level takes from the host record) are reported as notes: check them
+before moving self writers to the group. Admin and super admin are not expressible as
 groups: `Router::ROUTE_PRIVILEGE`, configuration, users, backups and the lock bypass read the
 level. The grid keeps the rules it has no row for (`*`) when it saves.
 

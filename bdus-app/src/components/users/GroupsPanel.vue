@@ -12,7 +12,8 @@
           <LockOutlined /> <span>{{ t('grp_builtin_levels') }}</span>
         </li>
         <li v-for="g in groups" :key="g.id" :class="{ active: selected === g.id }" @click="select(g.id)">
-          <TeamOutlined />
+          <LockOutlined v-if="g.system" :title="t('grp_system')" />
+          <TeamOutlined v-else />
           <span class="gp-name">{{ g.name }}</span>
           <small :title="t('grp_counts', g.members, g.rules)">{{ g.members }}·{{ g.rules }}</small>
         </li>
@@ -25,18 +26,20 @@
       <BuiltinTiers v-if="selected === 'builtin'" />
 
       <div v-else-if="isNew || group" class="gp-form">
+        <AAlert v-if="isSystem" type="info" show-icon :message="t('grp_system_hint')" class="gp-system" />
+
         <!-- Details -->
         <div class="gp-row">
           <label>{{ t('grp_name') }}
-            <AInput v-model:value="draft.name" :maxlength="100" />
+            <AInput v-model:value="draft.name" :maxlength="100" :disabled="isSystem" />
           </label>
           <label class="gp-grow">{{ t('grp_description') }}
-            <AInput v-model:value="draft.description" />
+            <AInput v-model:value="draft.description" :disabled="isSystem" />
           </label>
         </div>
 
         <!-- Attributes: read by the rules as $GROUP.<name> -->
-        <div class="gp-attrs">
+        <div v-if="!isSystem" class="gp-attrs">
           <label class="gp-attrs-title">{{ t('grp_attrs') }}</label>
           <small>{{ t('grp_attrs_hint') }}</small>
           <div v-for="(row, i) in attrRows" :key="i" class="gp-row gp-attr">
@@ -52,7 +55,7 @@
           </AButton>
         </div>
 
-        <div class="gp-actions">
+        <div v-if="!isSystem" class="gp-actions">
           <AButton type="primary" :disabled="!draft.name.trim()" :loading="busy.details" @click="saveDetails">
             {{ isNew ? t('grp_create_group') : t('save') }}
           </AButton>
@@ -84,6 +87,7 @@
           <GroupPermissionsGrid
             :tables="dataTables"
             :rules="group.rules"
+            :readonly="isSystem"
             :saving="busy.rules"
             :error="rulesError"
             @save="saveRules"
@@ -102,7 +106,7 @@
 // right — its details, members and the permissions grid.
 import { computed, onMounted, reactive, ref } from 'vue'
 import { DeleteOutlined, LockOutlined, PlusOutlined, TeamOutlined } from '@ant-design/icons-vue'
-import { Button as AButton, Empty as AEmpty, Input as AInput, Select as ASelect } from 'ant-design-vue'
+import { Alert as AAlert, Button as AButton, Empty as AEmpty, Input as AInput, Select as ASelect } from 'ant-design-vue'
 import { useI18n } from '@/i18n'
 import { useConfirm, useToast } from '@/composables/useNotify'
 import { useGroups } from '@/composables/useGroups'
@@ -134,6 +138,7 @@ const rulesError = ref('')
 const busy = reactive({ details: false, members: false, rules: false })
 
 const isNew = computed(() => selected.value === 'new')
+const isSystem = computed(() => !!group.value?.system)   // Reader, Writer, Self writer: only the members can change
 const dataTables = computed(() => tables.value.map(tb => ({ name: tb.name, label: tb.label })))
 const userOptions = computed(() => props.users.map(u => ({ value: u.id, label: `${u.name} (${u.email})` })))
 const membersDirty = computed(() => JSON.stringify([...memberIds.value].sort((a, b) => a - b)) !== memberBaseline.value)
@@ -266,6 +271,7 @@ onMounted(async () => {
 .gp-row label { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.85rem; }
 .gp-grow { flex: 1; min-width: 180px; }
 .gp-actions { display: flex; gap: 0.5rem; }
+.gp-system { margin: 0; }
 .gp-attrs { display: flex; flex-direction: column; gap: 0.4rem; align-items: flex-start; }
 .gp-attrs-title { font-size: 0.85rem; }
 .gp-attrs small { color: var(--p-text-muted-color); }

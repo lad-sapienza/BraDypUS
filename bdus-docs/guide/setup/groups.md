@@ -141,7 +141,8 @@ Three groups come with every application and can be used instead of a level for 
 | **Writer** | read, create, update, delete |
 | **Self writer** | read and create; update and delete only the records they created |
 
-Put a user at level **Enter** in one of them and they get exactly what the level of the
+They are **system groups** (shown with a padlock): they cannot be renamed, changed or
+deleted, not even by a super admin; you can only choose their members. Put a user at level **Enter** in one of them and they get exactly what the level of the
 same name gives on the data. The advantage is that the group is a normal group: you can
 add attributes and [pinned values](#attributes-and-pinned-values) to it, or combine it
 with other groups. Nobody is in these groups until you add them, and levels keep working

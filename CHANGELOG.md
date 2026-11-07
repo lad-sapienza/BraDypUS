@@ -28,6 +28,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   levels are untouched, so nothing changes until an admin puts a user in one of them. Admin
   and super admin stay levels: they also gate configuration, users, backups and the lock
   bypass. The permissions grid keeps (and shows a note for) the rules it has no row for.
+  The three groups are **system groups** (`bdus_groups.is_system`, added by M049): they cannot
+  be renamed, changed or deleted by anyone, super admins included (`system_group`); only their
+  members can be chosen. New read-only tool `bin/groups-equivalence.php --app <slug>`: for every
+  user at level 30, 25 or 20 it checks that the same user at level *Enter* in the equivalent
+  group would see and change the same rows on every table, and lists differences, missing
+  groups and API keys without a group. Nothing is written.
 - Groups have optional *attributes* (Users → Groups); the permissions grid has a "pinned
   values" button on Create and Update. Schema migration M049 adds the nullable
   `bdus_groups.attrs` and `bdus_group_rules.enforce` columns (minor upgrade, applied at the

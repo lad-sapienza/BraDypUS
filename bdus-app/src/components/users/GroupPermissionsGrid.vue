@@ -7,7 +7,7 @@
     </p>
 
     <div class="gpg-scroll">
-      <table class="gpg-table">
+      <table class="gpg-table" :class="{ 'gpg-readonly': readonly }">
         <thead>
           <tr>
             <th class="gpg-tb">{{ t('grp_table') }}</th>
@@ -24,6 +24,7 @@
             <td class="gpg-cell">
               <ASwitch
                 size="small"
+                :disabled="readonly"
                 :checked="cells[tb.name].create.mode === 'all'"
                 :aria-label="`${tb.name} ${t('grp_action_create')}`"
                 @change="on => setMode(tb.name, 'create', on ? 'all' : 'off')"
@@ -43,6 +44,7 @@
               <ASegmented
                 :key="`${tb.name}-${a}-${revision}`"
                 size="small"
+                :disabled="readonly"
                 :value="cells[tb.name][a].mode"
                 :options="modeOptions"
                 :aria-label="`${tb.name} ${t(`grp_action_${a}`)}`"
@@ -72,7 +74,7 @@
       </table>
     </div>
 
-    <div class="gpg-actions">
+    <div v-if="!readonly" class="gpg-actions">
       <span v-if="dirty" class="gpg-dirty">{{ t('grp_unsaved') }}</span>
       <AButton :disabled="!dirty || saving" @click="reset">{{ t('grp_discard') }}</AButton>
       <AButton type="primary" :disabled="!dirty" :loading="saving" @click="$emit('save', toRules())">
@@ -117,6 +119,7 @@ const props = defineProps({
   tables: { type: Array, default: () => [] },   // [{ name, label }]
   rules:  { type: Array, default: () => [] },   // [{ table, action, filter, enforce? }]
   saving: { type: Boolean, default: false },
+  readonly: { type: Boolean, default: false },   // a system group: shown, not editable
   error:  { type: String, default: '' },
 })
 defineEmits(['save', 'clear-error'])
@@ -246,6 +249,7 @@ watch(() => [props.tables, props.rules], build, { immediate: true })
 .gpg-table .gpg-tb { text-align: left; }
 .gpg-tb small { color: var(--p-text-muted-color); margin-left: 0.35rem; }
 .gpg-cell { white-space: nowrap; }
+.gpg-readonly .gpg-cell :deep(.ant-btn) { pointer-events: none; }
 .gpg-all { margin: 0; color: var(--p-text-muted-color); font-size: 0.85rem; }
 .gpg-empty { color: var(--p-text-muted-color); }
 .gpg-on { color: var(--p-primary-color, #1677ff); }

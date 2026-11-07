@@ -74,7 +74,7 @@ class Import extends \Bdus\Controller
      */
     public function previewFile(): void
     {
-        if (!\Auth\Authorization::canOnSomeTable('edit')) {
+        if (!\Auth\Authorization::canOnSomeTable('edit') && !\Auth\Authorization::canOnSomeTable('add_new')) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }
@@ -151,7 +151,7 @@ class Import extends \Bdus\Controller
      */
     public function previewPhotos(): void
     {
-        if (!\Auth\Authorization::canOnSomeTable('edit')) {
+        if (!\Auth\Authorization::canOnSomeTable('edit') && !\Auth\Authorization::canOnSomeTable('add_new')) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }
@@ -233,7 +233,9 @@ class Import extends \Bdus\Controller
         $mapping  = $this->post['mapping']   ?? [];   // {fileCol: tableField}
         $keyField = $this->post['key_field'] ?? null; // table field used as upsert key
 
-        if (!\Auth\Authorization::can('edit', table: $tb)) {
+        // Table-level gate only: each existing record is then judged by mayChange() (a self writer: own
+        // records), each new one by the create right.
+        if (!\Auth\Authorization::can('edit', table: $tb) && !\Auth\Authorization::can('add_new', table: $tb)) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }
@@ -431,7 +433,9 @@ class Import extends \Bdus\Controller
         $geoProp  = $this->post['geo_prop']  ?? null; // GeoJSON property used as key
         $keyField = $this->post['key_field'] ?? null; // matching table field
 
-        if (!\Auth\Authorization::can('edit', table: $tb)) {
+        // Table-level gate only: each existing record is then judged by mayChange() (a self writer: own
+        // records), each new one by the create right.
+        if (!\Auth\Authorization::can('edit', table: $tb) && !\Auth\Authorization::can('add_new', table: $tb)) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }
@@ -549,7 +553,9 @@ class Import extends \Bdus\Controller
         $tempId = $this->post['temp_id'] ?? null;
         $tb     = $this->post['tb']      ?? null;
 
-        if (!\Auth\Authorization::can('edit', table: $tb)) {
+        // Table-level gate only: each existing record is then judged by mayChange() (a self writer: own
+        // records), each new one by the create right.
+        if (!\Auth\Authorization::can('edit', table: $tb) && !\Auth\Authorization::can('add_new', table: $tb)) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }

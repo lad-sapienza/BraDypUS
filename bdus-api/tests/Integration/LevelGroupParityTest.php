@@ -17,6 +17,11 @@ use Tests\Support\BdusTestCase;
  * what the level is declared to do, so a pair that agreed on the wrong thing
  * would still fail.
  *
+ * (Until 5.19 level 25 differed from its group in 12 operations: it let a self
+ * writer add plugin rows and geometries to other people's records, and refused
+ * them the dependants of their own. The level was fixed; this test keeps them
+ * together.)
+ *
  * Items 1 and 3 were created by user 52 (their own); 2, 4 and 5 by 'admin'.
  * Item 1 has two tags (plugin rows), files, an RS relation and a manual link,
  * both to item 2. Item 2 has a tag and a file link of its own.
@@ -26,35 +31,6 @@ class LevelGroupParityTest extends BdusTestCase
     private const TABLES = [
         'items', 'tags', 'categories', 'reviews', 'bdus_userlinks', 'bdus_rs',
         'bdus_file_links', 'bdus_files', 'bdus_geodata',
-    ];
-
-    /**
-     * Where level 25 (Self writer) and the group of the same name differ, and why. Both
-     * were checked against the declared behaviour ("read and create; edit and delete
-     * only what you created"): the group does it in every scenario, the level does not.
-     *
-     *  - the level is too lax: a self writer adds a plugin row or a geometry to
-     *    someone else's record;
-     *  - the level is too strict: the checks that guard what hangs off a record
-     *    (erasing its plugin rows, stratigraphic relations, manual links, file
-     *    links, geometries, imports) do not pass the record's creator on, so a self
-     *    writer is refused even on their own records.
-     *
-     * A scenario listed here must still differ: once the level is fixed, remove it.
-     */
-    private const SELF_WRITER_LEVEL_DEVIATIONS = [
-        'add plugin row, other host'            => 'level lax',
-        'add geometry, other record'            => 'level lax',
-        'erase plugins, own host'               => 'level strict',
-        'rs between own records'                => 'level strict',
-        'link between own records'              => 'level strict',
-        'attach file to own record'             => 'level strict',
-        'detach file, own record'               => 'level strict',
-        'delete file linked to own record only' => 'level strict',
-        'move geometry, own record'             => 'level strict',
-        'erase geometry, own record'            => 'level strict',
-        'import new rows'                       => 'level strict',
-        'import over own record'                => 'level strict',
     ];
 
     /** @var array<string, array> */
@@ -287,12 +263,7 @@ class LevelGroupParityTest extends BdusTestCase
             $this->restore($this->baseline);
             $ran++;
 
-            $known = $level === 25 && isset(self::SELF_WRITER_LEVEL_DEVIATIONS[$name]);
-            if ($known) {
-                if ($byLevel === $byGroup) {
-                    $problems[] = "{$name}: listed as a known deviation of the level, but level and group now agree: remove it from the list";
-                }
-            } elseif ($byLevel !== $byGroup) {
+            if ($byLevel !== $byGroup) {
                 $problems[] = "{$name}: level " . json_encode($byLevel) . ' ≠ group ' . json_encode($byGroup);
             } elseif ($levelState !== $groupState) {
                 $problems[] = "{$name}: same answer, different rows in the database";

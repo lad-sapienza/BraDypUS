@@ -89,6 +89,11 @@ abstract class Controller
      * grant it (table level, $creator lets a self writer act on their own
      * records), and the row must be inside the principal's scope and outside
      * every lock. A plugin row is judged by its host record, always as an update.
+     *
+     * Without $creator the owner of the record (of the host, for a plugin row) is
+     * looked up, so that a self writer can change what hangs off their own
+     * records — its plugin rows, relations, links, files, geometries — and nothing
+     * that hangs off someone else's.
      */
     protected function mayChange(string $action, string $tb, int $id, ?int $creator = null): bool
     {
@@ -99,25 +104,40 @@ abstract class Controller
         if ($gateTb === null) {
             return false;
         }
-        if (!\Auth\Authorization::can('edit', $creator, $gateTb)) {
+        $allowed = \Auth\Authorization::can('edit', $creator, $gateTb);
+        if (!$allowed && $creator === null) {
+            $owner   = $this->ownerOf($gateTb, $gateId);
+            $allowed = $owner !== null && \Auth\Authorization::can('edit', $owner, $gateTb);
+        }
+        if (!$allowed) {
             return false;
         }
         $access = $this->access();
         return $access->unrestricted($action, $gateTb) || $access->rowAllowed($action, $gateTb, $gateId);
     }
 
+    /** User id that created record $id of $tb; null when unknown (no creator column, no such record). */
+    private function ownerOf(string $tb, int $id): ?int
+    {
+        if (preg_match('/^[A-Za-z0-9_]+$/', $tb) !== 1 || empty($this->cfg->get("tables.{$tb}"))) {
+            return null;
+        }
+        try {
+            $row = $this->db->query("SELECT creator FROM {$tb} WHERE id = ?", [$id], 'read');
+        } catch (\Throwable $e) {
+            return null;
+        }
+        return (int) ($row[0]['creator'] ?? 0) ?: null;
+    }
+
     /**
      * May the principal add something that belongs to record $id of $tb (a
-     * geometry, say)? Principals whose tier already allows adding keep that, but
-     * not on a frozen record; those relying on group rules need the right to
-     * change the record.
+     * geometry, say)? Attaching changes the record, so it needs the right to
+     * change it: a self writer can do it on their own records only, and nobody
+     * on a frozen one.
      */
     protected function mayAttach(string $tb, int $id): bool
     {
-        if (\Auth\Authorization::can('add_new')) {
-            [$gateTb, $gateId] = $this->writeTarget($tb, $id);
-            return $gateTb !== null && !$this->access()->isLocked($gateTb, $gateId);
-        }
         return $this->mayChange('update', $tb, $id);
     }
 

@@ -540,9 +540,8 @@ class Record extends \Bdus\Controller
     if (!$hostTb || !$hostId) {
       return \Auth\Authorization::can('add_new', table: $tb);
     }
-    if (\Auth\Authorization::can('add_new')) {
-      return !$this->access()->isLocked($hostTb, $hostId);
-    }
+    // Adding a row changes the host record: same right as changing it (a self writer: own
+    // records only; nobody: a frozen one).
     return $this->mayChange('update', $hostTb, $hostId);
   }
 

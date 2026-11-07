@@ -4613,7 +4613,7 @@ paths:
               $ref: '#/components/schemas/GroupInput'
       responses:
         '200':
-          description: Result (`group_updated`, `group_not_found`, `group_name_taken`, `invalid_attrs`)
+          description: Result (`group_updated`, `group_not_found`, `group_name_taken`, `invalid_attrs`, `system_group`)
           content:
             application/json:
               schema:
@@ -4630,7 +4630,7 @@ paths:
         - $ref: '#/components/parameters/id'
       responses:
         '200':
-          description: Result (`group_deleted`, `group_not_found`)
+          description: Result (`group_deleted`, `group_not_found`, `system_group`)
           content:
             application/json:
               schema:
@@ -4699,7 +4699,7 @@ paths:
         '200':
           description: >
             Result (`rules_saved`) or error (`group_not_found`, `unknown_table`,
-            `invalid_rule`, `invalid_filter`, `invalid_enforce`, `duplicate_rule`)
+            `invalid_rule`, `invalid_filter`, `invalid_enforce`, `duplicate_rule`, `system_group`)
           content:
             application/json:
               schema:
@@ -7420,6 +7420,12 @@ components:
           type: integer
         name:
           type: string
+        system:
+          type: boolean
+          description: >
+            System group (Reader, Writer, Self writer): it cannot be renamed, changed
+            or deleted by anyone, super admins included (`system_group`); only its
+            members can be set.
         description:
           type: [string, "null"]
         members:
@@ -7470,6 +7476,9 @@ components:
           type: integer
         name:
           type: string
+        system:
+          type: boolean
+          description: See `GroupSummary.system`.
         description:
           type: [string, "null"]
         members:

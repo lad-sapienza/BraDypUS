@@ -30,19 +30,20 @@ class Groups extends \Bdus\Controller
 
     // ── Groups ────────────────────────────────────────────────────────────────
 
-    /** GET /api/groups → { groups: [{ id, name, description, members, rules, keys }] } */
+    /** GET /api/groups → { groups: [{ id, name, description, system, members, rules, keys }] } */
     public function listGroups(): void
     {
         if (!$this->isAdmin()) {
             return;
         }
 
+        $system = $this->hasColumn('bdus_groups', 'is_system') ? 'g.is_system' : '0';
         $rows = $this->db->query(
-            'SELECT g.id, g.name, g.description,
+            "SELECT g.id, g.name, g.description, {$system} AS is_system,
                     (SELECT COUNT(*) FROM bdus_user_groups ug WHERE ug.group_id = g.id)  AS member_count,
                     (SELECT COUNT(*) FROM bdus_group_rules r  WHERE r.group_id  = g.id)  AS rule_count,
                     (SELECT COUNT(*) FROM bdus_api_keys k     WHERE k.group_id  = g.id AND k.revoked_at IS NULL) AS key_count
-               FROM bdus_groups g ORDER BY g.name',
+               FROM bdus_groups g ORDER BY g.name",
             [], 'read'
         ) ?: [];
 
@@ -50,6 +51,7 @@ class Groups extends \Bdus\Controller
             'id'          => (int) $r['id'],
             'name'        => $r['name'],
             'description' => $r['description'],
+            'system'      => !empty($r['is_system']),
             'members'     => (int) $r['member_count'],
             'rules'       => (int) $r['rule_count'],
             'keys'        => (int) $r['key_count'],
@@ -90,6 +92,7 @@ class Groups extends \Bdus\Controller
             'name'        => $group['name'],
             'description' => $group['description'],
             'attrs'       => !empty($group['attrs']) ? json_decode($group['attrs'], true) : null,
+            'system'      => !empty($group['is_system']),
             'members'     => array_map(fn($m) => ['id' => (int) $m['id'], 'name' => $m['name'], 'email' => $m['email']], $members),
             'rules'       => $rules,
         ]]);
@@ -128,6 +131,9 @@ class Groups extends \Bdus\Controller
         if (!$group) {
             return;
         }
+        if ($this->refuseSystem($group)) {
+            return;
+        }
         [$name, $description, $attrs] = $this->groupFields((int) $group['id']) ?? [null, null, null];
         if ($name === null) {
             return;
@@ -158,6 +164,9 @@ class Groups extends \Bdus\Controller
         }
         $group = $this->loadGroup();
         if (!$group) {
+            return;
+        }
+        if ($this->refuseSystem($group)) {
             return;
         }
         $id = (int) $group['id'];
@@ -259,6 +268,9 @@ class Groups extends \Bdus\Controller
         }
         $group = $this->loadGroup();
         if (!$group) {
+            return;
+        }
+        if ($this->refuseSystem($group)) {
             return;
         }
         $rules = $this->post['rules'] ?? null;
@@ -386,6 +398,20 @@ class Groups extends \Bdus\Controller
         }
         $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
         return false;
+    }
+
+    /**
+     * A system group (Reader, Writer, Self writer) belongs to BraDypUS: it cannot be
+     * renamed, changed or deleted by anyone, super admins included. Only its members
+     * can be chosen. Emits `system_group` and returns true for such a group.
+     */
+    private function refuseSystem(array $group): bool
+    {
+        if (empty($group['is_system'])) {
+            return false;
+        }
+        $this->returnJson(['status' => 'error', 'code' => 'system_group']);
+        return true;
     }
 
     /** The group named by the {id} URL variable, or null after emitting `group_not_found`. */

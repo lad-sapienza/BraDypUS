@@ -93,6 +93,36 @@ jsonpath "$.groups[?(@.name=='g45 Public')].keys"    == 0
 jsonpath "$.groups[?(@.name=='Reader')].rules"      == 1
 jsonpath "$.groups[?(@.name=='Writer')].rules"      == 4
 jsonpath "$.groups[?(@.name=='Self writer')].rules" == 4
+jsonpath "$.groups[?(@.name=='Writer')].system" == true
+jsonpath "$.groups[?(@.name=='g45 Public')].system" == false
+[Captures]
+writer_group: jsonpath "$.groups[?(@.name=='Writer')].id"
+
+
+# A system group cannot be deleted, renamed or have its rules changed (super admin included)
+DELETE {{base_url}}/{{app_name}}/api/group/{{writer_group}}
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.code" == "system_group"
+
+
+PUT {{base_url}}/{{app_name}}/api/group/{{writer_group}}
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "name": "Renamed" }
+HTTP 200
+[Asserts]
+jsonpath "$.code" == "system_group"
+
+
+PUT {{base_url}}/{{app_name}}/api/group/{{writer_group}}/rules
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "rules": [] }
+HTTP 200
+[Asserts]
+jsonpath "$.code" == "system_group"
 
 
 POST {{base_url}}/{{app_name}}/api/api-keys

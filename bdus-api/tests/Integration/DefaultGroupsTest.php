@@ -172,4 +172,68 @@ class DefaultGroupsTest extends BdusTestCase
         $this->assertSame('invalid_filter', $this->setRules($g, [['table' => '*', 'action' => 'read', 'filter' => ['no_such_field_anywhere' => ['_eq' => 1]]]])['code'] ?? null);
         $this->assertSame('unknown_table', $this->setRules($g, [['table' => 'bdus_users', 'action' => 'read']])['code'] ?? null);
     }
+
+    // ── System groups: nobody can change or delete them ───────────────────────
+
+    private function ctrl(string $method, array $get = [], array $post = []): array
+    {
+        $this->setPrivilege(1);   // super admin: even they are refused
+        return $this->callController($this->makeController('Bdus\\Controllers\\Groups', $get, $post), $method);
+    }
+
+    public function testDefaultGroupsAreSystemGroups(): void
+    {
+        $this->seed();
+        $this->assertSame(3, (int) static::$db->query('SELECT COUNT(*) AS n FROM bdus_groups WHERE is_system = 1', [], 'read')[0]['n']);
+
+        $list = $this->ctrl('listGroups')['groups'];
+        $this->assertSame(['Reader', 'Self writer', 'Writer'], array_column(array_filter($list, fn($g) => $g['system']), 'name'));
+        $id = $this->groupId('Writer');
+        $this->assertTrue($this->ctrl('getGroup', ['id' => $id])['group']['system']);
+    }
+
+    public function testNobodyChangesOrDeletesASystemGroup_SuperAdminIncluded(): void
+    {
+        $this->seed();
+        $id = $this->groupId('Writer');
+
+        $this->assertSame('system_group', $this->ctrl('deleteGroup', ['id' => $id])['code'] ?? null);
+        $this->assertSame('system_group', $this->ctrl('updateGroup', ['id' => $id], ['name' => 'Renamed'])['code'] ?? null);
+        $this->assertSame('system_group', $this->ctrl('setRules', ['id' => $id], ['rules' => []])['code'] ?? null);
+
+        $this->assertSame('Writer', static::$db->query('SELECT name FROM bdus_groups WHERE id = ?', [$id], 'read')[0]['name']);
+        $this->assertSame(4, (int) static::$db->query('SELECT COUNT(*) AS n FROM bdus_group_rules WHERE group_id = ?', [$id], 'read')[0]['n']);
+    }
+
+    public function testMembersOfASystemGroupCanBeChosen(): void
+    {
+        static::$db->exec("INSERT INTO bdus_users (id, name, email, password, privilege) VALUES (71, 'm', 'm@example.com', 'x', 39)");
+        try {
+            $this->seed();
+            $id  = $this->groupId('Reader');
+            $res = $this->ctrl('setMembers', ['id' => $id], ['user_ids' => [71]]);
+
+            $this->assertSame('members_saved', $res['code'] ?? null, json_encode($res));
+            $this->assertSame(1, (int) static::$db->query('SELECT COUNT(*) AS n FROM bdus_user_groups WHERE group_id = ?', [$id], 'read')[0]['n']);
+        } finally {
+            static::$db->exec('DELETE FROM bdus_user_groups');
+            static::$db->exec('DELETE FROM bdus_users WHERE id = 71');
+        }
+    }
+
+    public function testOrdinaryGroupsStayEditable(): void
+    {
+        $id = (int) $this->ctrl('createGroup', [], ['name' => 'Mine'])['id'];
+
+        $this->assertSame('group_updated', $this->ctrl('updateGroup', ['id' => $id], ['name' => 'Mine 2'])['code'] ?? null);
+        $this->assertSame('group_deleted', $this->ctrl('deleteGroup', ['id' => $id])['code'] ?? null);
+    }
+
+    public function testAGroupCreatedBeforeTheMigrationWithTheSameNameStaysOrdinary(): void
+    {
+        static::$db->exec("INSERT INTO bdus_groups (name) VALUES ('Reader')");
+        $this->seed();
+
+        $this->assertSame(0, (int) static::$db->query("SELECT COALESCE(is_system, 0) AS s FROM bdus_groups WHERE name = 'Reader'", [], 'read')[0]['s']);
+    }
 }

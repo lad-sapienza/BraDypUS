@@ -14,6 +14,8 @@ use DB\System\Manage;
  *  - `bdus_groups.attrs`: a JSON object of group attributes
  *    ({"site": "Ostia"} or {"site": ["Ostia", "Cuma"]}) read by the access rules
  *    through `$GROUP.<key>`;
+ *  - `bdus_groups.is_system`: 1 for the groups BraDypUS owns (see M050): they
+ *    cannot be renamed, changed or deleted, even by a super admin;
  *  - `bdus_group_rules.enforce`: a JSON object `{field: value|variable|list}` on
  *    create/update rules: the values the server accepts (or fills in) for those
  *    fields. See Auth\Access.
@@ -28,6 +30,9 @@ class M049_AddAttrsToGroups
     {
         if ($manage->tableExists('bdus_groups') && !$manage->columnExists('bdus_groups', 'attrs')) {
             $manage->getDb()->exec("ALTER TABLE bdus_groups ADD COLUMN attrs TEXT");
+        }
+        if ($manage->tableExists('bdus_groups') && !$manage->columnExists('bdus_groups', 'is_system')) {
+            $manage->getDb()->exec("ALTER TABLE bdus_groups ADD COLUMN is_system INTEGER");
         }
         if ($manage->tableExists('bdus_group_rules') && !$manage->columnExists('bdus_group_rules', 'enforce')) {
             $manage->getDb()->exec("ALTER TABLE bdus_group_rules ADD COLUMN enforce TEXT");

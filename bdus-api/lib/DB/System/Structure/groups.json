@@ -3,7 +3,8 @@
         { "name": "id",          "type": "INTEGER", "pk": true, "notnull": false },
         { "name": "name",        "type": "TEXT",               "notnull": true  },
         { "name": "description", "type": "TEXT",               "notnull": false },
-        { "name": "attrs",       "type": "TEXT",               "notnull": false }
+        { "name": "attrs",       "type": "TEXT",               "notnull": false },
+        { "name": "is_system",   "type": "INTEGER",            "notnull": false }
     ],
     "indexes": [
         { "name": "groups_name_idx", "columns": ["name"], "unique": true }

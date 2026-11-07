@@ -19,8 +19,11 @@ use DB\System\Manage;
  * Nobody is assigned to them and the levels are untouched, so nothing changes
  * until an admin puts a user in one of them (typically a user at level Enter).
  * Admin and super admin stay levels: they also gate configuration, users,
- * backups and lock bypass, which are not data rules. A group that already has
- * one of these names is left alone.
+ * backups and lock bypass, which are not data rules.
+ *
+ * They are system groups (`bdus_groups.is_system = 1`): they cannot be
+ * renamed, changed or deleted, not even by a super admin; only their members
+ * can be chosen. A group that already has one of these names is left alone.
  */
 class M050_AddDefaultGroups
 {
@@ -52,13 +55,16 @@ class M050_AddDefaultGroups
             return;
         }
         $db = $manage->getDb();
+        if (!$manage->columnExists('bdus_groups', 'is_system')) {
+            $db->exec('ALTER TABLE bdus_groups ADD COLUMN is_system INTEGER');   // M049 normally did
+        }
 
         foreach (self::GROUPS as $name => [$description, $rules]) {
             if (!empty($db->query('SELECT id FROM bdus_groups WHERE name = ?', [$name], 'read'))) {
                 continue;
             }
             $id = (int) $db->query(
-                'INSERT INTO bdus_groups (name, description) VALUES (?, ?)',
+                'INSERT INTO bdus_groups (name, description, is_system) VALUES (?, ?, 1)',
                 [$name, $description], 'id'
             );
             foreach ($rules as [$action, $filter]) {

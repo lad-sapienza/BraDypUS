@@ -330,6 +330,82 @@ class File extends \Bdus\Controller
 	}
 
 	/**
+	 * Serves a derived (resized) version of an image, creating it on first request.
+	 *
+	 * GET /{app}/api/file/{preset}/{id}.{ext}   — public, like the originals.
+	 *
+	 * Only names that match a defined preset are ever generated, so the set of
+	 * possible versions is finite. Every failure (unknown preset, missing file,
+	 * extension not matching the preset format, original not processable) is a
+	 * plain 404: no fallback to the original.
+	 */
+	public function serveDerived(): void
+	{
+		$name = (string) ($this->get['preset'] ?? '');
+		$id   = (int) ($this->get['fileId'] ?? 0);
+		$ext  = strtolower((string) ($this->get['ext'] ?? ''));
+
+		$notFound = static function (): void {
+			http_response_code(404);
+			header('Content-Type: text/plain; charset=utf-8');
+			echo 'Not found';
+		};
+
+		try {
+			$preset = \Image\Presets::find(
+				\Image\Presets::resolve((array) ($this->cfg->get('main.imagePresets') ?? [])),
+				$name
+			);
+			if (!$preset || $id < 1 || $ext !== \Image\Presets::extension($preset)) {
+				$notFound();
+				return;
+			}
+
+			$rows = $this->db->query('SELECT ext FROM bdus_files WHERE id = ?', [$id], 'read');
+			$src  = $rows ? strtolower((string) $rows[0]['ext']) : '';
+			if ($src === '' || !\Image\Derivative::isSupportedSource($src)) {
+				$notFound();
+				return;
+			}
+
+			$srcPath = PROJ_DIR . 'files/' . $id . '.' . $src;
+			if (!is_file($srcPath)) {
+				$notFound();
+				return;
+			}
+
+			$dest = \Image\Derivative::cachePath(PROJ_DIR, $preset['name'], $id, $ext);
+
+			// Regenerate when missing or older than the original (safety net for
+			// manual replacement outside the app).
+			if (!is_file($dest) || filemtime($dest) < filemtime($srcPath)) {
+				\Image\Derivative::generate($srcPath, $dest, $preset);
+				clearstatcache(true, $dest);
+			}
+
+			$mtime = (int) filemtime($dest);
+			$size  = (int) filesize($dest);
+			$etag  = '"' . dechex($mtime) . '-' . dechex($size) . '"';
+
+			header('ETag: ' . $etag);
+			header('Last-Modified: ' . gmdate('D, d M Y H:i:s', $mtime) . ' GMT');
+			header('Cache-Control: public, no-cache');
+
+			if (($_SERVER['HTTP_IF_NONE_MATCH'] ?? '') === $etag) {
+				http_response_code(304);
+				return;
+			}
+
+			header('Content-Type: ' . ($ext === 'jpg' ? 'image/jpeg' : 'image/webp'));
+			header('Content-Length: ' . $size);
+			readfile($dest);
+		} catch (\Throwable $e) {
+			$this->log->error($e);
+			$notFound();
+		}
+	}
+
+	/**
 	 * Updates the sort order of file_links for a record's file gallery.
 	 *
 	 * POST ?obj=file_ctrl&method=sortFiles

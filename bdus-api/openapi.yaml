@@ -2062,6 +2062,59 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
 
+  /api/file/{preset}/{fileId}.{ext}:
+    get:
+      tags: [files]
+      summary: Derived (resized) version of an image, created on first request
+      description: >
+        Public, like the original files. `preset` must match a preset defined in
+        the app settings (the system preset `thumb` always exists) and `ext` must be
+        the preset's output format (`webp` or `jpg`). The version is generated on the
+        first request and cached under `projects/{app}/cache/{preset}/`; it is
+        removed whenever the original file or its metadata changes. Every failure
+        (unknown preset, missing file, wrong extension, original not an image that
+        can be processed) is a plain-text `404`; there is no fallback to the original.
+        Supports `ETag` / `If-None-Match` revalidation.
+      security: []
+      parameters:
+        - name: preset
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^[a-z0-9][a-z0-9_-]*$'
+        - name: fileId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: ext
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [webp, jpg]
+      responses:
+        '200':
+          description: The derived image
+          content:
+            image/webp:
+              schema:
+                type: string
+                format: binary
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+        '304':
+          description: Not modified (matching `If-None-Match`)
+        '404':
+          description: Unknown preset, file or extension, or original not processable
+          content:
+            text/plain:
+              schema:
+                type: string
+
   /api/file/{fileId}/replace:
     post:
       tags: [files]

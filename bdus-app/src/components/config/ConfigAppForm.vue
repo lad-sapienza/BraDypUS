@@ -81,7 +81,8 @@
         <div class="cfg-form-field" style="margin-top:1rem">
           <label>{{ t('image_presets') }}</label>
           <small class="cfg-hint">{{ t('image_presets_hint') }}</small>
-          <div v-for="(p, i) in form.imagePresets" :key="i" class="cfg-form-row" style="align-items:flex-end">
+          <div v-for="(p, i) in form.imagePresets" :key="i" class="cfg-preset">
+          <div class="cfg-form-row" style="align-items:flex-end">
             <div class="cfg-form-field">
               <label>{{ t('preset_name') }}</label>
               <AInput v-model:value="p.name" size="small" placeholder="thumb-large" :maxlength="32" />
@@ -106,7 +107,47 @@
               <label>{{ t('image_quality') }}</label>
               <AInputNumber v-model:value="p.quality" :min="1" :max="100" size="small" />
             </div>
+            <div class="cfg-form-field">
+              <label>{{ t('preset_watermark') }}</label>
+              <ASwitch class="cfg-switch" :checked="!!p.watermark" @change="on => toggleWatermark(p, on)" />
+            </div>
             <AButton size="small" danger @click="form.imagePresets.splice(i, 1)">{{ t('delete') }}</AButton>
+          </div>
+          <div v-if="p.watermark" class="cfg-form-row" style="align-items:flex-end; margin-left:1rem">
+            <div class="cfg-form-field" style="flex:2; min-width:14rem">
+              <label>{{ t('wm_text') }}</label>
+              <AInput v-model:value="p.watermark.text" size="small" :maxlength="200" placeholder="© {{attribution}}" />
+            </div>
+            <div class="cfg-form-field">
+              <label>{{ t('wm_position') }}</label>
+              <ASelect v-model:value="p.watermark.position" :options="watermarkPositionOptions" size="small" />
+            </div>
+            <div class="cfg-form-field">
+              <label>{{ t('wm_color') }}</label>
+              <input type="color" v-model="p.watermark.color" />
+            </div>
+            <div class="cfg-form-field">
+              <label>{{ t('wm_background') }}</label>
+              <span>
+                <ASwitch class="cfg-switch" :checked="!!p.watermark.background"
+                  @change="on => p.watermark.background = on ? '#000000' : null" />
+                <input v-if="p.watermark.background" type="color" v-model="p.watermark.background" style="margin-left:.5rem" />
+              </span>
+            </div>
+            <div class="cfg-form-field">
+              <label>{{ t('wm_opacity') }}</label>
+              <AInputNumber v-model:value="p.watermark.opacity" :min="0" :max="100" size="small" />
+            </div>
+            <div class="cfg-form-field">
+              <label>{{ t('wm_size') }}</label>
+              <AInputNumber v-model:value="p.watermark.size" :min="1" :max="20" size="small" />
+            </div>
+            <div class="cfg-form-field">
+              <label>{{ t('wm_margin') }}</label>
+              <AInputNumber v-model:value="p.watermark.margin" :min="0" :max="25" size="small" />
+            </div>
+          </div>
+          <small v-if="p.watermark" class="cfg-hint" style="margin-left:1rem">{{ t('wm_hint') }}</small>
           </div>
           <div>
             <AButton size="small" :disabled="form.imagePresets.length >= 20" @click="addPreset">{{ t('add_preset') }}</AButton>
@@ -264,6 +305,15 @@ const presetFitOptions = computed(() => [
   { value: 'cover',  label: t('preset_fit_cover') },
   { value: 'inside', label: t('preset_fit_inside') },
 ])
+const WM_POSITIONS = ['top-left', 'top', 'top-right', 'left', 'center', 'right', 'bottom-left', 'bottom', 'bottom-right']
+const watermarkPositionOptions = computed(() => WM_POSITIONS.map(v => ({ value: v, label: t('wm_pos_' + v.replace('-', '_')) })))
+function toggleWatermark(p, on) {
+  if (on) {
+    p.watermark = { text: '© {{attribution}}', position: 'bottom-right', color: '#ffffff', background: '#000000', opacity: 60, margin: 2, size: 4 }
+  } else {
+    delete p.watermark
+  }
+}
 const imageFormatOptions = [
   { value: 'webp', label: 'WebP' },
   { value: 'jpg',  label: 'JPG' },
@@ -323,7 +373,9 @@ async function load() {
     const res = await api.get('/api/config/app')
     if (res.status === 'error') throw new Error(t(res.code))
     form.value          = { ...res.main }
-    form.value.imagePresets = Array.isArray(res.main.imagePresets) ? res.main.imagePresets.map(p => ({ ...p })) : []
+    form.value.imagePresets = Array.isArray(res.main.imagePresets)
+      ? res.main.imagePresets.map(p => ({ ...p, ...(p.watermark ? { watermark: { ...p.watermark } } : {}) }))
+      : []
     // Normalise so every provider always has both fields, even when config.json
     // has no "oauth" section at all yet (fresh app) or only lists one provider.
     const oauth = res.main.oauth ?? {}

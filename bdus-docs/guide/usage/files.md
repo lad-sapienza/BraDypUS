@@ -104,6 +104,8 @@ e.g. /myapp/api/file/thumb/42.webp
   backups. They are deleted automatically when the file is replaced or deleted, when its
   metadata (e.g. the attribution) is edited, or when the preset is changed or removed, and
   rebuilt on demand. You can also delete the `cache/` folder at any time.
+  A file that cannot be processed leaves a small `.fail` marker in the cache and is not
+  retried (nor logged again) until the file changes.
 
 The gallery and this page show the `thumb` version; clicking an image opens the original.
 

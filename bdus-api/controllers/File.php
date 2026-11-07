@@ -384,7 +384,21 @@ class File extends \Bdus\Controller
 			// Regenerate when missing or older than the original (safety net for
 			// manual replacement outside the app).
 			if (!is_file($dest) || filemtime($dest) < filemtime($srcPath)) {
-				\Image\Derivative::generate($srcPath, $dest, $preset);
+				// A source that failed to process is not retried (nor logged again)
+				// until it changes: the marker is purged with the file's other versions.
+				$fail = $dest . '.fail';
+				if (is_file($fail) && filemtime($fail) >= filemtime($srcPath)) {
+					$notFound();
+					return;
+				}
+				try {
+					\Image\Derivative::generate($srcPath, $dest, $preset);
+				} catch (\Throwable $e) {
+					@mkdir(dirname($dest), 0775, true);
+					@touch($fail);
+					throw $e;
+				}
+				@unlink($fail);
 				clearstatcache(true, $dest);
 			}
 

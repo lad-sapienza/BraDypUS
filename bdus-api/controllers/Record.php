@@ -866,6 +866,13 @@ class Record extends \Bdus\Controller
         // auth, which has no human identity by design — see issue #56) must
         // map to null, not 0, or the INSERT violates the FK constraint.
         $source['creator'] = \Auth\CurrentUser::id() ?: null;
+
+        // Group rules may pin the value of some fields (#51): the copy is a new record.
+        $source = $this->access()->enforceValues('create', $tb, $source, null, true);
+        if ($source === null) {
+          $this->returnJson(['status' => 'error', 'code' => 'value_not_allowed']);
+          return;
+        }
       }
 
       $fields       = array_keys($source);
@@ -990,6 +997,18 @@ class Record extends \Bdus\Controller
         $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
         return;
       }
+    }
+
+    // Group rules may pin the value of some fields (`enforce`, #51): refuse a value
+    // outside the allowed ones; on create, fill in a field left empty. Runs before
+    // validation so that the filled-in values are validated like any other.
+    if (!$isPlugin && is_array($core)) {
+      $enforced = $this->access()->enforceValues($id ? 'update' : 'create', $tb, $core, $id);
+      if ($enforced === null) {
+        $this->returnJson(['status' => 'error', 'code' => 'value_not_allowed']);
+        return;
+      }
+      $core = $enforced;
     }
 
     // Server-side validation — runs before any DB write

@@ -14,8 +14,12 @@ use Auth\Access;
  *
  * A rule grants one action (create | read | update | delete) on one table to a
  * group, optionally limited to the rows matching a JSON filter (same syntax as
- * the record filters; `$CURRENT_USER` is the only variable). A lock freezes the
- * rows matching a filter against update and delete for everyone but admins.
+ * the record filters; variables: `$CURRENT_USER`, `$CURRENT_GROUPS`, `$GROUP.<key>`).
+ * Create and update rules can also carry an `enforce` map {field: value|variable|list}:
+ * the values the server accepts for those fields (#51). A group has optional
+ * `attrs` (key => value or list of values) that `$GROUP.<key>` reads.
+ * A lock freezes the rows matching a filter against update and delete for
+ * everyone but admins.
  * See bdus-docs/dev/groups-permissions-design.md.
  *
  * Errors follow the usual envelope: HTTP 200, `status: error`, i18n `code`.
@@ -52,7 +56,7 @@ class Groups extends \Bdus\Controller
         ], $rows)]);
     }
 
-    /** GET /api/group/{id} → { group: { id, name, description, members: [...], rules: [...] } } */
+    /** GET /api/group/{id} → { group: { id, name, description, attrs, members: [...], rules: [...] } } */
     public function getGroup(): void
     {
         if (!$this->isAdmin()) {
@@ -71,12 +75,13 @@ class Groups extends \Bdus\Controller
             [$id], 'read'
         ) ?: [];
 
+        // `enforce` is only present on rules that have one.
         $rules = array_map(fn($r) => [
             'table'  => $r['table_name'],
             'action' => $r['action'],
             'filter' => ($r['filter'] !== null && $r['filter'] !== '') ? json_decode($r['filter'], true) : null,
-        ], $this->db->query(
-            'SELECT table_name, action, filter FROM bdus_group_rules WHERE group_id = ? ORDER BY table_name, action',
+        ] + (!empty($r['enforce']) ? ['enforce' => json_decode($r['enforce'], true)] : []), $this->db->query(
+            'SELECT * FROM bdus_group_rules WHERE group_id = ? ORDER BY table_name, action',
             [$id], 'read'
         ) ?: []);
 
@@ -84,30 +89,36 @@ class Groups extends \Bdus\Controller
             'id'          => $id,
             'name'        => $group['name'],
             'description' => $group['description'],
+            'attrs'       => !empty($group['attrs']) ? json_decode($group['attrs'], true) : null,
             'members'     => array_map(fn($m) => ['id' => (int) $m['id'], 'name' => $m['name'], 'email' => $m['email']], $members),
             'rules'       => $rules,
         ]]);
     }
 
-    /** POST /api/groups { name, description? } → { id } */
+    /** POST /api/groups { name, description?, attrs? } → { id } */
     public function createGroup(): void
     {
         if (!$this->isAdmin()) {
             return;
         }
-        [$name, $description] = $this->groupFields() ?? [null, null];
+        [$name, $description, $attrs] = $this->groupFields() ?? [null, null, null];
         if ($name === null) {
             return;
         }
 
-        $id = (int) $this->db->query(
-            'INSERT INTO bdus_groups (name, description) VALUES (?, ?)',
-            [$name, $description], 'id'
-        );
+        $id = $this->hasColumn('bdus_groups', 'attrs')
+            ? (int) $this->db->query(
+                'INSERT INTO bdus_groups (name, description, attrs) VALUES (?, ?, ?)',
+                [$name, $description, $attrs ?? null], 'id'
+            )
+            : (int) $this->db->query(
+                'INSERT INTO bdus_groups (name, description) VALUES (?, ?)',
+                [$name, $description], 'id'
+            );
         $this->returnJson(['status' => 'success', 'code' => 'group_created', 'id' => $id]);
     }
 
-    /** PUT /api/group/{id} { name, description? } */
+    /** PUT /api/group/{id} { name, description?, attrs? } — `attrs` left out = unchanged */
     public function updateGroup(): void
     {
         if (!$this->isAdmin()) {
@@ -117,7 +128,7 @@ class Groups extends \Bdus\Controller
         if (!$group) {
             return;
         }
-        [$name, $description] = $this->groupFields((int) $group['id']) ?? [null, null];
+        [$name, $description, $attrs] = $this->groupFields((int) $group['id']) ?? [null, null, null];
         if ($name === null) {
             return;
         }
@@ -126,6 +137,12 @@ class Groups extends \Bdus\Controller
             'UPDATE bdus_groups SET name = ?, description = ? WHERE id = ?',
             [$name, $description, (int) $group['id']], 'boolean'
         );
+        if ($attrs !== false && $this->hasColumn('bdus_groups', 'attrs')) {
+            $this->db->query(
+                'UPDATE bdus_groups SET attrs = ? WHERE id = ?',
+                [$attrs, (int) $group['id']], 'boolean'
+            );
+        }
         $this->returnJson(['status' => 'success', 'code' => 'group_updated']);
     }
 
@@ -266,13 +283,22 @@ class Groups extends \Bdus\Controller
         }
 
         $id = (int) $group['id'];
-        $this->replace(function () use ($id, $rows) {
+        // Looked up before the transaction opens: on PostgreSQL a failed statement inside it aborts it.
+        $withEnforce = $this->hasColumn('bdus_group_rules', 'enforce');
+        $this->replace(function () use ($id, $rows, $withEnforce) {
             $this->db->query('DELETE FROM bdus_group_rules WHERE group_id = ?', [$id], 'boolean');
-            foreach ($rows as [$table, $action, $filter]) {
-                $this->db->query(
-                    'INSERT INTO bdus_group_rules (group_id, table_name, action, filter) VALUES (?, ?, ?, ?)',
-                    [$id, $table, $action, $filter], 'boolean'
-                );
+            foreach ($rows as [$table, $action, $filter, $enforce]) {
+                if ($withEnforce) {
+                    $this->db->query(
+                        'INSERT INTO bdus_group_rules (group_id, table_name, action, filter, enforce) VALUES (?, ?, ?, ?, ?)',
+                        [$id, $table, $action, $filter, $enforce], 'boolean'
+                    );
+                } else {
+                    $this->db->query(
+                        'INSERT INTO bdus_group_rules (group_id, table_name, action, filter) VALUES (?, ?, ?, ?)',
+                        [$id, $table, $action, $filter], 'boolean'
+                    );
+                }
             }
         }, 'rules_saved');
     }
@@ -366,7 +392,7 @@ class Groups extends \Bdus\Controller
     private function loadGroup(): ?array
     {
         $id  = (int) ($this->get['id'] ?? 0);
-        $row = $id ? ($this->db->query('SELECT id, name, description FROM bdus_groups WHERE id = ?', [$id], 'read')[0] ?? null) : null;
+        $row = $id ? ($this->db->query('SELECT * FROM bdus_groups WHERE id = ?', [$id], 'read')[0] ?? null) : null;
         if (!$row) {
             $this->returnJson(['status' => 'error', 'code' => 'group_not_found']);
         }
@@ -374,7 +400,8 @@ class Groups extends \Bdus\Controller
     }
 
     /**
-     * Validated [name, description] from the request, or null after emitting the error.
+     * Validated [name, description, attrs] from the request, or null after emitting the error.
+     * attrs is the JSON to store, null to clear, or false when the request leaves it out.
      *
      * @param int $selfId group being renamed (its own name is not a clash)
      */
@@ -391,7 +418,64 @@ class Groups extends \Bdus\Controller
             return null;
         }
         $description = trim((string) ($this->post['description'] ?? ''));
-        return [$name, $description === '' ? null : $description];
+
+        $attrs = false;
+        if (array_key_exists('attrs', $this->post)) {
+            $attrs = $this->attrsJson($this->post['attrs']);
+            if ($attrs === false) {
+                $this->returnJson(['status' => 'error', 'code' => 'invalid_attrs']);
+                return null;
+            }
+        }
+        return [$name, $description === '' ? null : $description, $attrs];
+    }
+
+    /**
+     * Group attributes as JSON: an object key => text/number or non-empty list of
+     * those. null (stored as NULL) for none, false when invalid.
+     */
+    private function attrsJson(mixed $attrs): string|false|null
+    {
+        if ($attrs === null || $attrs === [] || $attrs === '') {
+            return null;
+        }
+        if (!is_array($attrs) || array_is_list($attrs)) {
+            return false;
+        }
+        $clean = [];
+        foreach ($attrs as $key => $value) {
+            if (!is_string($key) || preg_match('/^[A-Za-z0-9_]{1,50}$/', $key) !== 1) {
+                return false;
+            }
+            $items = is_array($value) ? $value : [$value];
+            if (empty($items) || !array_is_list($items) || count($items) > 100) {
+                return false;
+            }
+            $list = [];
+            foreach ($items as $item) {
+                if (!is_scalar($item) || is_bool($item)) {
+                    return false;
+                }
+                if (is_string($item)) {
+                    $item = trim($item);
+                    if ($item === '' || mb_strlen($item) > 200) {
+                        return false;
+                    }
+                }
+                $list[] = $item;
+            }
+            $clean[$key] = is_array($value) ? $list : $list[0];
+        }
+        return json_encode($clean, JSON_UNESCAPED_UNICODE);
+    }
+
+    private function hasColumn(string $table, string $column): bool
+    {
+        try {
+            return (new \DB\System\Manage($this->db))->columnExists($table, $column);
+        } catch (\Throwable $e) {
+            return false;
+        }
     }
 
     /**
@@ -435,8 +519,28 @@ class Groups extends \Bdus\Controller
         if (!in_array($action, Access::ACTIONS, true)) {
             return ['code' => 'invalid_rule', 'detail' => "action '{$action}'"];
         }
+        $enforce = $rule['enforce'] ?? null;
+        if ($enforce === [] || $enforce === '') {
+            $enforce = null;
+        }
+        if ($enforce !== null) {
+            if ($action !== 'create' && $action !== 'update') {
+                return ['code' => 'invalid_rule', 'detail' => 'enforce only applies to create and update'];
+            }
+            if ($this->cfg->get("tables.{$table}.is_plugin")) {
+                return ['code' => 'invalid_rule', 'detail' => 'enforce is not available on plugin tables'];
+            }
+            if (!is_array($enforce) || array_is_list($enforce)) {
+                return ['code' => 'invalid_enforce', 'detail' => "{$table} {$action}"];
+            }
+            if (($why = Access::checkEnforce($this->cfg, $table, $enforce)) !== null) {
+                return ['code' => 'invalid_enforce', 'detail' => "{$table} {$action}: {$why}"];
+            }
+            $enforce = json_encode($enforce, JSON_UNESCAPED_UNICODE);
+        }
+
         if ($filter === null || $filter === [] || $filter === '') {
-            return [$table, $action, null];
+            return [$table, $action, null, $enforce];
         }
         if ($action === 'create') {
             return ['code' => 'invalid_rule', 'detail' => 'create takes no filter'];
@@ -447,10 +551,9 @@ class Groups extends \Bdus\Controller
         if (($why = Access::checkFilter($this->db, $this->cfg, $table, $filter)) !== null) {
             return ['code' => 'invalid_filter', 'detail' => "{$table} {$action}: {$why}"];
         }
-        return [$table, $action, json_encode($filter, JSON_UNESCAPED_UNICODE)];
+        return [$table, $action, json_encode($filter, JSON_UNESCAPED_UNICODE), $enforce];
     }
 
-    /** A table of the application's data (not a system table). */
     private function isDataTable(string $table): bool
     {
         return $table !== ''

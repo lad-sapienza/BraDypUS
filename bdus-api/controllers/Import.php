@@ -339,6 +339,12 @@ class Import extends \Bdus\Controller
                     unset($updateData[$keyField]); // never overwrite the match key
                     if (empty($updateData)) { $updated++; continue; }
 
+                    // Group rules may pin the value of some fields (#51).
+                    $updateData = $this->access()->enforceValues('update', $tb, $updateData, (int) $id);
+                    if ($updateData === null) {
+                        throw new \DomainException('value_not_allowed');
+                    }
+
                     $sets = implode(', ', array_map(fn($f) => "{$f} = ?", array_keys($updateData)));
                     $vals = array_values($updateData);
                     $vals[] = $id;
@@ -355,6 +361,13 @@ class Import extends \Bdus\Controller
                     // by design — see issue #56) must map to null, not 0, or
                     // the INSERT violates the FK constraint.
                     $data['creator'] = \Auth\CurrentUser::id() ?: null;
+
+                    // Group rules may pin the value of some fields (#51); an
+                    // empty one is filled in when a single value is allowed.
+                    $data = $this->access()->enforceValues('create', $tb, $data);
+                    if ($data === null) {
+                        throw new \DomainException('value_not_allowed');
+                    }
                     $cols = implode(', ', array_keys($data));
                     $phs  = implode(', ', array_fill(0, count($data), '?'));
                     $this->db->query(

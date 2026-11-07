@@ -1028,7 +1028,10 @@ paths:
     post:
       tags: [records]
       summary: Create or update a record
-      description: Omit `id` to create; include `id` to update.
+      description: >
+        Omit `id` to create; include `id` to update. Error `value_not_allowed`:
+        a group rule pins the value of a field (`enforce`) and the value sent is
+        not an allowed one (also returned by the duplicate and import endpoints).
       parameters:
         - $ref: '#/components/parameters/tb'
       requestBody:
@@ -4569,7 +4572,7 @@ paths:
               $ref: '#/components/schemas/GroupInput'
       responses:
         '200':
-          description: Created (`group_created`, `id`) or error (`group_name_taken`, `parameter_missing`)
+          description: Created (`group_created`, `id`) or error (`group_name_taken`, `parameter_missing`, `invalid_attrs`)
           content:
             application/json:
               schema:
@@ -4610,7 +4613,7 @@ paths:
               $ref: '#/components/schemas/GroupInput'
       responses:
         '200':
-          description: Result (`group_updated`, `group_not_found`, `group_name_taken`)
+          description: Result (`group_updated`, `group_not_found`, `group_name_taken`, `invalid_attrs`)
           content:
             application/json:
               schema:
@@ -4670,9 +4673,14 @@ paths:
       description: >
         Takes the whole rule set (what the permissions grid sends). At most one
         rule per table and action. `filter` uses the record filter syntax (see
-        `GET /api/records/{tb}`) with `$CURRENT_USER` as the only variable;
-        `null` means all rows; `create` takes no filter. Nothing is saved when a
-        rule is invalid.
+        `GET /api/records/{tb}`) with these variables: `$CURRENT_USER` (the user
+        id), `$CURRENT_GROUPS` (ids of the user's groups) and `$GROUP.<key>`
+        (the values of the group attribute `<key>`, united over the user's
+        groups; see `attrs` on the group). A list-valued variable turns `_eq` /
+        `_neq` into `_in` / `_nin`; under other operators the rule is invalid.
+        An unknown variable, or an attribute no group of the user sets, makes
+        the rule grant nothing. `null` means all rows; `create` takes no filter
+        but may carry `enforce`. Nothing is saved when a rule is invalid.
       parameters:
         - $ref: '#/components/parameters/id'
       requestBody:
@@ -4691,7 +4699,7 @@ paths:
         '200':
           description: >
             Result (`rules_saved`) or error (`group_not_found`, `unknown_table`,
-            `invalid_rule`, `invalid_filter`, `duplicate_rule`)
+            `invalid_rule`, `invalid_filter`, `invalid_enforce`, `duplicate_rule`)
           content:
             application/json:
               schema:
@@ -7388,6 +7396,22 @@ components:
           maxLength: 100
         description:
           type: [string, "null"]
+        attrs:
+          $ref: '#/components/schemas/GroupAttrs'
+
+    GroupAttrs:
+      type: [object, "null"]
+      description: >
+        Attributes of the group, read by the rules as `$GROUP.<key>`. Keys are
+        `[A-Za-z0-9_]{1,50}`; a value is a text/number or a non-empty list of
+        them. On `PUT /api/group/{id}` leave the field out to keep the current
+        attributes, send `null` or `{}` to clear them. Invalid: `invalid_attrs`.
+      additionalProperties:
+        oneOf:
+          - type: [string, number]
+          - type: array
+            items:
+              type: [string, number]
 
     GroupSummary:
       type: object
@@ -7418,6 +7442,20 @@ components:
         filter:
           type: [object, "null"]
           description: Record filter limiting the rows; null = all rows. Not allowed for `create`.
+          additionalProperties: true
+        enforce:
+          type: [object, "null"]
+          description: >
+            Only for `create` and `update` rules (not on plugin tables): a map
+            `{field: value | variable | list}` of the values the server accepts
+            for those fields. A value outside the allowed ones is refused with
+            `value_not_allowed`; on create a field left empty is filled in when
+            exactly one value is allowed (and refused when several are). On
+            update a field that is not sent is left alone. A rule without
+            `enforce` restricts nothing; admins and a tier that already grants
+            the action on every table are never restricted. Invalid:
+            `invalid_enforce`. Read back by `GET /api/group/{id}` only on the
+            rules that have one.
           additionalProperties: true
 
     Group:

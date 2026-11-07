@@ -5,6 +5,78 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.19.0] - 2026-11-07
+
+### Added
+
+- **Text watermark on derived images (#62).** A preset can carry an optional `watermark`: a text
+  template (`© {{attribution}}` — the placeholder is the file's attribution, so one record can hold
+  images with different credits; plain text is allowed too), position (3×3 grid), text colour,
+  background box (or none), opacity, margin and font size as percentages of the shorter side. It is
+  burnt into the derived versions only; the original is never touched. Files without attribution get
+  no watermark when the template uses the placeholder. The text is validated when the preset is saved
+  (≤ 200 characters, no control characters, only `{{attribution}}` as placeholder) and sanitised again
+  at render time. One bundled font (DejaVu Sans, licence in `lib/Image/fonts/`); custom fonts are out of
+  scope. Editing the file's attribution or the preset's watermark regenerates the versions. Config UI:
+  *System configuration → App settings → Images*. A watermark does not protect the original when the
+  original is public.
+- **Groups, parametrised rules (#51).** Rule filters now know `$CURRENT_GROUPS` (ids of the
+  user's groups) and `$GROUP.<name>` (the value(s) of a group *attribute*, united over the
+  user's groups); a list turns `_eq`/`_neq` into `_in`/`_nin`. One rule such as
+  `site = $GROUP.site` replaces a near-identical rule per group. An unknown variable, or an
+  attribute no group of the user sets, makes the rule grant nothing.
+- **Groups, server-enforced values.** `create` and `update` rules can carry an `enforce` map
+  (`{field: value | variable | list}`): the server accepts only those values for those fields
+  (`value_not_allowed` otherwise), whatever the client sends, on record save, duplicate and
+  import. On create an empty field is filled in when a single value is possible. A user in
+  several groups may use any of their groups' values, never an invented one. Admins and a
+  level that already grants the action on every table are not restricted; a rule without
+  `enforce` restricts nothing.
+- **Default groups, and rules for every table.** A group rule can now be written for `*`: every
+  data table, new ones included. Migration M050 creates three groups made of such rules —
+  **Reader** (reads everything), **Writer** (reads, creates, updates, deletes everything) and
+  **Self writer** (reads and creates everything, updates and deletes only the records the user
+  created) — which give a user at level *Enter* what the data side of levels Reader, Writer and Self
+  writer gives. The three behave identically to their levels in every operation tested
+  (records, plugin rows, relations, links, files, geometries, import; same answers and same
+  rows, on a differential test and over HTTP on all three engines). The same test found
+  **12 operations where level 25 (Self writer) did not do what it documents**, now fixed:
+  a self writer could add plugin rows or geometries to *other people's* records, and was
+  refused the dependants of their *own* records (erasing plugin rows, stratigraphic
+  relations, manual links, file links and files, geometries, import). Nobody is assigned and
+  levels are untouched, so nothing changes until an admin puts a user in one of them. Admin
+  and super admin stay levels: they also gate configuration, users, backups and the lock
+  bypass. The permissions grid keeps (and shows a note for) the rules it has no row for.
+  The three groups are **system groups** (`bdus_groups.is_system`, added by M049): they cannot
+  be renamed, changed or deleted by anyone, super admins included (`system_group`); only their
+  members can be chosen. New read-only tool `bin/groups-equivalence.php --app <slug>`: for every
+  user at level 30, 25 or 20 it checks that the same user at level *Enter* in the equivalent
+  group would see and change the same rows on every table, and lists differences, missing
+  groups and API keys without a group. Nothing is written.
+- **Deprecated:** the data side of privilege levels 20 (Writer), 25 (Self writer) and 30 (Reader)
+  in favour of the system groups of the same name (level *Enter* + group). Nothing changes
+  and nothing is removed; removal needs a clean comparison on real data, a tool to move users
+  with a way back, and a release with both. Super admin and Admin are not affected.
+- Groups have optional *attributes* (Users → Groups); the permissions grid has a "pinned
+  values" button on Create and Update. Schema migration M049 adds the nullable
+  `bdus_groups.attrs` and `bdus_group_rules.enforce` columns (minor upgrade, applied at the
+  next admin login); until then rules keep working as before.
+
+### Changed
+
+- **OpenAPI spec cleaned up (#49, partial).** `openapi.yaml` now lints clean (`redocly lint`: 0 errors,
+  0 warnings, down from 6 errors and 210 warnings). Every one of the 198 operations has a unique
+  `operationId` (`<method><CamelCasePath>`, e.g. `postAuthLogin`; client generators will use these
+  names, so they should not change), the OpenAPI 3.0 `nullable` is replaced by the 3.1
+  `type: [..., "null"]`, the public operations document the `404` for a wrong URL shape
+  (`WrongPathShape`), and the `localhost` server entry became a note. The one remaining exception, the
+  OAuth callback that answers with a redirect, is declared in `.redocly.lint-ignore.yaml`. A new
+  `OpenApiHygieneTest` keeps it that way (unique ids, a 2xx and a 4xx per operation, no `nullable`).
+  The field-by-field audit of request and response schemas against the controllers is still open.
+- `tests/api/demo-schema.dbml` now starts with a notice: it is a historical design specification, read
+  by no code, and several of its annotations (`bdus:ui`, `check`, `readonly`, `hidden`, …) are not
+  imported by the DBML importer; `guide/setup/dbml.md` is the reference. Closes #48.
+
 ## [5.18.0] - 2026-11-07
 
 ### Added

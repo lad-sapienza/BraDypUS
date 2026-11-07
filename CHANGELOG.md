@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.19.0] - 2026-11-07
+
 ### Added
 
 - **Text watermark on derived images (#62).** A preset can carry an optional `watermark`: a text

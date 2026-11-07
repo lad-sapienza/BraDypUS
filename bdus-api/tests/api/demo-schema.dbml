@@ -1,4 +1,20 @@
 // =============================================================
+// NOTE (2026-11): HISTORICAL DESIGN SPECIFICATION — not read by any code.
+//
+// This file describes the intended shape of the demo app. Nothing imports it
+// (the demo is built by the hurl phases in tests/api), and the annotations below
+// are NOT all supported by the DBML importer/exporter. What is actually read and
+// written is documented in bdus-docs/guide/setup/dbml.md:
+//   tables : bdus:label, preview, order, id_field, is_plugin, rs, geodata, fuzzy_date, view
+//   columns: bdus:type, voc, id_from_tb, on_delete, on_update
+// In particular `bdus:ui` (used here for field types) is ignored: the importer
+// reads `bdus:type`; and `check`, `pattern`, `dic`, `readonly`, `hidden`,
+// `get_values_from_tb`, `display`, `zotero` and min/max are not imported at all,
+// nor written by the export. Do not use this file as input for the DBML import,
+// and do not read it as a list of what BraDypUS can import (#48).
+// =============================================================
+//
+// =============================================================
 // BraDypUS Demo App — Schema Specification
 // Domain: archaeological excavation (Unità Stratigrafiche)
 //

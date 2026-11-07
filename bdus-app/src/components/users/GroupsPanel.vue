@@ -34,6 +34,24 @@
             <AInput v-model:value="draft.description" />
           </label>
         </div>
+
+        <!-- Attributes: read by the rules as $GROUP.<name> -->
+        <div class="gp-attrs">
+          <label class="gp-attrs-title">{{ t('grp_attrs') }}</label>
+          <small>{{ t('grp_attrs_hint') }}</small>
+          <div v-for="(row, i) in attrRows" :key="i" class="gp-row gp-attr">
+            <AInput v-model:value="row.key" class="gp-attr-key" :placeholder="t('grp_attr_key')" />
+            <AInput v-model:value="row.values" class="gp-grow" :placeholder="t('grp_attr_values')" />
+            <AButton type="text" danger :title="t('delete')" @click="attrRows.splice(i, 1)">
+              <template #icon><DeleteOutlined /></template>
+            </AButton>
+          </div>
+          <AButton size="small" class="gp-attr-add" @click="attrRows.push({ key: '', values: '' })">
+            <template #icon><PlusOutlined /></template>
+            {{ t('grp_attr_add') }}
+          </AButton>
+        </div>
+
         <div class="gp-actions">
           <AButton type="primary" :disabled="!draft.name.trim()" :loading="busy.details" @click="saveDetails">
             {{ isNew ? t('grp_create_group') : t('save') }}
@@ -89,6 +107,7 @@ import { useI18n } from '@/i18n'
 import { useConfirm, useToast } from '@/composables/useNotify'
 import { useGroups } from '@/composables/useGroups'
 import { useTables } from '@/composables/useTables'
+import { attrsToRows, rowsToAttrs } from '@/utils/groupAttrs'
 import BuiltinTiers from './BuiltinTiers.vue'
 import GroupPermissionsGrid from './GroupPermissionsGrid.vue'
 
@@ -108,6 +127,7 @@ const loading  = ref(false)
 const selected = ref('builtin')     // 'builtin' | group id | 'new'
 const group    = ref(null)          // the selected group, with members and rules
 const draft    = reactive({ name: '', description: '' })
+const attrRows = ref([])            // [{ key, values }] — the group's attributes, as typed
 const memberIds = ref([])
 const memberBaseline = ref('[]')
 const rulesError = ref('')
@@ -139,6 +159,7 @@ async function select(id) {
     group.value = await api.getGroup(id)
     draft.name = group.value.name
     draft.description = group.value.description ?? ''
+    attrRows.value = attrsToRows(group.value.attrs)
     memberIds.value = group.value.members.map(m => m.id)
     memberBaseline.value = JSON.stringify([...memberIds.value].sort((a, b) => a - b))
   } catch (e) { fail(e) }
@@ -149,18 +170,24 @@ function startNew() {
   group.value = null
   draft.name = ''
   draft.description = ''
+  attrRows.value = []
 }
 
 async function saveDetails() {
+  const parsed = rowsToAttrs(attrRows.value)
+  if (parsed.error) {
+    toast.add({ severity: 'error', summary: t('grp_groups'), detail: t(parsed.error), life: 5000 })
+    return
+  }
   busy.details = true
   try {
     if (isNew.value) {
-      const res = await api.createGroup(draft.name.trim(), draft.description.trim())
+      const res = await api.createGroup(draft.name.trim(), draft.description.trim(), parsed.attrs)
       ok('group_created')
       await loadList()
       await select(res.id)
     } else {
-      await api.updateGroup(group.value.id, draft.name.trim(), draft.description.trim())
+      await api.updateGroup(group.value.id, draft.name.trim(), draft.description.trim(), parsed.attrs)
       ok('group_updated')
       await loadList()
       await select(group.value.id)
@@ -239,6 +266,11 @@ onMounted(async () => {
 .gp-row label { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.85rem; }
 .gp-grow { flex: 1; min-width: 180px; }
 .gp-actions { display: flex; gap: 0.5rem; }
+.gp-attrs { display: flex; flex-direction: column; gap: 0.4rem; align-items: flex-start; }
+.gp-attrs-title { font-size: 0.85rem; }
+.gp-attrs small { color: var(--p-text-muted-color); }
+.gp-attr { width: 100%; flex-wrap: nowrap; align-items: center; }
+.gp-attr-key { flex: 0 0 30%; }
 
 @media (max-width: 760px) {
   .gp { flex-direction: column; padding: 0 1rem 1rem; }

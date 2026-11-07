@@ -24,8 +24,8 @@ export function useGroups() {
   return {
     listGroups:   async ()               => unwrap(await api.get('/api/groups')).groups ?? [],
     getGroup:     async id               => unwrap(await api.get(`/api/group/${id}`)).group,
-    createGroup:  async (name, description) => unwrap(await api.post('/api/groups', { name, description })),
-    updateGroup:  async (id, name, description) => unwrap(await api.put(`/api/group/${id}`, { name, description })),
+    createGroup:  async (name, description, attrs = null) => unwrap(await api.post('/api/groups', { name, description, attrs })),
+    updateGroup:  async (id, name, description, attrs = null) => unwrap(await api.put(`/api/group/${id}`, { name, description, attrs })),
     deleteGroup:  async id               => unwrap(await api.delete(`/api/group/${id}`)),
     saveMembers:  async (id, userIds)    => unwrap(await api.put(`/api/group/${id}/members`, { user_ids: userIds })),
     saveRules:    async (id, rules)      => unwrap(await api.put(`/api/group/${id}/rules`, { rules })),

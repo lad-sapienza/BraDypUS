@@ -5,6 +5,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.18.0] - 2026-11-07
+
+### Added
+
+- **Files, attribution.** Each file has a new optional *Attribution* field (credit or licence
+  line, e.g. "© Jane Doe, CC BY 4.0"), editable in the file manager, searchable, and shown
+  under the image in the record's file gallery. Schema migration M047 adds a nullable
+  `bdus_files.attribution` column (minor upgrade, applied at the next admin login); existing
+  data is untouched.
+
+- **Files, derived images (presets).** Smaller versions of images, generated the first time
+  they are requested and then cached in `projects/{app}/cache/`. Presets (name, width and/or height,
+  *cover* = exact crop or *inside*, WebP/JPG, quality) are defined in *System configuration → App settings → Images*; `thumb`
+  (200 × 200 *inside*, WebP) always exists and is used by the file gallery and the file manager. Public
+  route `GET /{app}/api/file/{preset}/{id}.{webp|jpg}`; any failure is a plain 404. Versions are
+  deleted when the file is replaced or deleted, its metadata changes, or the preset changes;
+  `cache/` is excluded from backups. Schema migration M048 adds `bdus_cfg_app.image_presets`
+  (minor upgrade, applied at the next admin login). Closes #57.
+
 ## [5.17.2] - 2026-11-06
 
 ### Changed

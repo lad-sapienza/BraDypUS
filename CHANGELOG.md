@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.18.0] - 2026-11-07
+
 ### Added
 
 - **Files, attribution.** Each file has a new optional *Attribution* field (credit or licence

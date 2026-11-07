@@ -10,7 +10,11 @@ namespace Image;
 /**
  * Derived-image presets: validation, normalisation and lookup.
  *
- * A preset is {name, max_px, format, quality}. The list is stored as JSON in
+ * A preset is {name, width, height, fit, format, quality}: `width` and `height` are
+ * optional but at least one is required; `fit` is `cover` (crop to exactly
+ * width×height, enlarging when needed; needs both) or `inside` (keep the whole
+ * image, proportions kept, never enlarged; a missing side is free). Omitted `fit`
+ * means `cover` when both sides are given, `inside` otherwise. The list is stored as JSON in
  * bdus_cfg_app.image_presets (see Config\AppSettings). One preset, `thumb`, is
  * always available: when the stored list does not define it, the built-in
  * default is used, and it can be redefined but never removed.
@@ -27,11 +31,14 @@ final class Presets
     public const MAX_PRESETS = 20;
     public const MIN_PX      = 16;
     public const MAX_PX      = 10000;
+    public const FITS        = ['cover', 'inside'];
+    /** Largest width×height a preset may ask for (GD keeps the whole bitmap in memory). */
+    public const MAX_AREA    = 25_000_000;
 
     /** The built-in `thumb` preset. */
     public static function defaultThumb(): array
     {
-        return ['name' => self::SYSTEM, 'max_px' => 200, 'format' => 'webp', 'quality' => 80];
+        return ['name' => self::SYSTEM, 'width' => 200, 'height' => 200, 'fit' => 'inside', 'format' => 'webp', 'quality' => 80];
     }
 
     /** True when $name is an acceptable preset name (does not imply it is defined). */
@@ -45,7 +52,7 @@ final class Presets
      * defaults applied). Strict: nothing is silently corrected.
      *
      * @param  array $list Raw list, e.g. decoded from the request or from JSON.
-     * @return array<int, array{name: string, max_px: int, format: string, quality: int}>
+     * @return array<int, array{name: string, width: ?int, height: ?int, fit: string, format: string, quality: int}>
      * @throws \InvalidArgumentException With a message naming the problem.
      */
     public static function normalize(array $list): array
@@ -69,15 +76,38 @@ final class Presets
             }
             $seen[$name] = true;
 
-            $maxPx = $p['max_px'] ?? null;
-            if (!is_int($maxPx) && !(is_string($maxPx) && ctype_digit($maxPx))) {
-                throw new \InvalidArgumentException("preset '{$name}': max_px must be an integer");
+            $dims = [];
+            foreach (['width', 'height'] as $side) {
+                $v = $p[$side] ?? null;
+                if ($v === null || $v === '') {
+                    $dims[$side] = null;
+                    continue;
+                }
+                if (!is_int($v) && !(is_string($v) && ctype_digit($v))) {
+                    throw new \InvalidArgumentException("preset '{$name}': {$side} must be an integer");
+                }
+                $v = (int) $v;
+                if ($v < self::MIN_PX || $v > self::MAX_PX) {
+                    throw new \InvalidArgumentException(
+                        "preset '{$name}': {$side} must be between " . self::MIN_PX . ' and ' . self::MAX_PX
+                    );
+                }
+                $dims[$side] = $v;
             }
-            $maxPx = (int) $maxPx;
-            if ($maxPx < self::MIN_PX || $maxPx > self::MAX_PX) {
-                throw new \InvalidArgumentException(
-                    "preset '{$name}': max_px must be between " . self::MIN_PX . ' and ' . self::MAX_PX
-                );
+            if ($dims['width'] === null && $dims['height'] === null) {
+                throw new \InvalidArgumentException("preset '{$name}': give a width, a height or both");
+            }
+            if ($dims['width'] !== null && $dims['height'] !== null && $dims['width'] * $dims['height'] > self::MAX_AREA) {
+                throw new \InvalidArgumentException("preset '{$name}': width × height is too large");
+            }
+
+            $both = $dims['width'] !== null && $dims['height'] !== null;
+            $fit  = $p['fit'] ?? ($both ? 'cover' : 'inside');
+            if (!in_array($fit, self::FITS, true)) {
+                throw new \InvalidArgumentException("preset '{$name}': fit must be one of " . implode(', ', self::FITS));
+            }
+            if ($fit === 'cover' && !$both) {
+                throw new \InvalidArgumentException("preset '{$name}': fit 'cover' needs both width and height");
             }
 
             $format = $p['format'] ?? 'webp';
@@ -94,7 +124,10 @@ final class Presets
                 throw new \InvalidArgumentException("preset '{$name}': quality must be between 1 and 100");
             }
 
-            $out[] = ['name' => $name, 'max_px' => $maxPx, 'format' => $format, 'quality' => $quality];
+            $out[] = [
+                'name' => $name, 'width' => $dims['width'], 'height' => $dims['height'],
+                'fit' => $fit, 'format' => $format, 'quality' => $quality,
+            ];
         }
 
         return $out;
@@ -105,7 +138,7 @@ final class Presets
      * `thumb` when the list does not define it.
      *
      * @param  array $stored Already-normalised stored list.
-     * @return array<string, array{name: string, max_px: int, format: string, quality: int}>
+     * @return array<string, array{name: string, width: ?int, height: ?int, fit: string, format: string, quality: int}>
      */
     public static function resolve(array $stored): array
     {

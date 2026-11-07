@@ -13,14 +13,26 @@ class ImagePresetsTest extends TestCase
 {
     private function p(array $over = []): array
     {
-        return array_merge(['name' => 'medium', 'max_px' => 800, 'format' => 'webp', 'quality' => 80], $over);
+        return array_merge(['name' => 'medium', 'width' => 800, 'height' => 600, 'fit' => 'cover', 'format' => 'webp', 'quality' => 80], $over);
     }
 
     public function testNormalizeAppliesDefaultsAndDropsUnknownKeys(): void
     {
-        $out = Presets::normalize([['name' => 'small', 'max_px' => '300', 'evil' => 'x']]);
+        $out = Presets::normalize([['name' => 'small', 'width' => '300', 'evil' => 'x']]);
 
-        $this->assertSame([['name' => 'small', 'max_px' => 300, 'format' => 'webp', 'quality' => 80]], $out);
+        $this->assertSame([[
+            'name' => 'small', 'width' => 300, 'height' => null, 'fit' => 'inside', 'format' => 'webp', 'quality' => 80,
+        ]], $out);
+    }
+
+    public function testFitDefaultsToCoverWithBothSidesAndInsideOtherwise(): void
+    {
+        $out = Presets::normalize([
+            ['name' => 'a', 'width' => 200, 'height' => 100],
+            ['name' => 'b', 'height' => 100],
+            ['name' => 'c', 'width' => 200, 'height' => 100, 'fit' => 'inside'],
+        ]);
+        $this->assertSame(['cover', 'inside', 'inside'], array_column($out, 'fit'));
     }
 
     #[DataProvider('invalidNames')]
@@ -69,10 +81,13 @@ class ImagePresetsTest extends TestCase
     public static function invalidValues(): array
     {
         return [
-            'max_px too small' => [['max_px' => 15]],
-            'max_px too big'   => [['max_px' => 10001]],
-            'max_px text'      => [['max_px' => 'big']],
-            'max_px missing'   => [['max_px' => null]],
+            'width too small'  => [['width' => 15]],
+            'width too big'    => [['width' => 10001]],
+            'height text'      => [['height' => 'big']],
+            'no side at all'   => [['width' => null, 'height' => null]],
+            'cover needs both' => [['width' => 300, 'height' => null, 'fit' => 'cover']],
+            'unknown fit'      => [['fit' => 'stretch']],
+            'area too large'   => [['width' => 10000, 'height' => 10000]],
             'format png'       => [['format' => 'png']],
             'quality 0'        => [['quality' => 0]],
             'quality 101'      => [['quality' => 101]],
@@ -107,11 +122,11 @@ class ImagePresetsTest extends TestCase
 
     public function testStoredThumbOverridesTheDefaultAndIsNotDuplicated(): void
     {
-        $custom = $this->p(['name' => 'thumb', 'max_px' => 120, 'format' => 'jpg']);
+        $custom = $this->p(['name' => 'thumb', 'width' => 120, 'height' => 120, 'format' => 'jpg']);
         $map    = Presets::resolve([$custom]);
 
         $this->assertSame(['thumb'], array_keys($map));
-        $this->assertSame(120, $map['thumb']['max_px']);
+        $this->assertSame(120, $map['thumb']['width']);
     }
 
     public function testFindReturnsNullForUndefinedName(): void

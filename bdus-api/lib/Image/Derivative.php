@@ -49,10 +49,11 @@ final class Derivative
      * $dest is written to a temporary file in the same directory and then
      * renamed, so a concurrent reader never sees a partial file.
      *
-     * Downscale only (a smaller original is not enlarged); aspect ratio kept;
-     * animated sources are reduced to their first frame.
+     * `cover` crops (centred) to exactly width×height, enlarging when the original is
+     * smaller; `inside` keeps the whole image within the given sides, proportions
+     * kept, never enlarged. Animated sources are reduced to their first frame.
      *
-     * @param  array{max_px: int, format: string, quality: int} $preset A normalised preset.
+     * @param  array{width: ?int, height: ?int, fit: string, format: string, quality: int} $preset A normalised preset.
      * @throws \RuntimeException When the source is unusable or encoding fails.
      */
     public static function generate(string $src, string $dest, array $preset): void
@@ -83,8 +84,13 @@ final class Derivative
             if ($img->isAnimated()) {
                 $img->removeAnimation();
             }
-            $max = (int) $preset['max_px'];
-            $img->scaleDown($max, $max);
+            $w = isset($preset['width'])  ? (int) $preset['width']  : null;
+            $h = isset($preset['height']) ? (int) $preset['height'] : null;
+            if (($preset['fit'] ?? 'inside') === 'cover' && $w && $h) {
+                $img->cover($w, $h, 'center');
+            } else {
+                $img->scaleDown($w, $h);
+            }
 
             $quality = max(1, min(100, (int) $preset['quality']));
             $encoder = ($preset['format'] ?? 'webp') === 'jpg'

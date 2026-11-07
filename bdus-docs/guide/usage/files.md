@@ -97,7 +97,9 @@ e.g. /myapp/api/file/thumb/42.webp
 - The extension must match the preset's format. Only names defined as presets are ever
   generated; an unknown preset, a missing file, a wrong extension or a file that is not a
   JPG, PNG, GIF or WebP image gives a plain **404** — there is no fallback to the original.
-- Small images are never enlarged; an animated GIF yields its first frame.
+- Depending on the preset's *fit*, the image is cropped to exactly width × height (*Cover*,
+  enlarging small images) or kept whole within the sides and never enlarged (*Inside*). An
+  animated GIF yields its first frame.
 - Cached versions live in `projects/{app}/cache/{preset}/` and are **not** included in
   backups. They are deleted automatically when the file is replaced or deleted, when its
   metadata (e.g. the attribution) is edited, or when the preset is changed or removed, and

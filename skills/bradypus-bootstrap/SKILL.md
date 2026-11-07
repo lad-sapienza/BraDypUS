@@ -173,8 +173,9 @@ POST {base}/{app}/api/import/data
   matches each feature's property to the table field. Photos (`/api/import/photos`)
   take a ZIP and an index CSV `filename,record_id`.
 - Image sizes for a frontend or website: define **presets** (`name` `[a-z0-9_-]` up to 32
-  chars, `max_px` 16–10000, `format` `webp`|`jpg`, `quality` 1–100, max 20; `thumb`, 200 px
-  WebP, always exists) in the app settings (super-admin: `GET`/`PUT /api/config/app`, send the
+  chars, `width` and/or `height` 16–10000, `fit` `cover` (exact width×height, crops centred, enlarges; needs both;
+  default when both given) or `inside` (whole image, never enlarged), `format` `webp`|`jpg`, `quality` 1–100, max 20;
+  `thumb`, 200×200 inside WebP, always exists) in the app settings (super-admin: `GET`/`PUT /api/config/app`, send the
   whole `imagePresets` array). Each image is then served, generated on first request and
   cached, at the public URL `GET /{app}/api/file/{preset}/{file_id}.{webp|jpg}`; unknown preset,
   wrong extension or non-image is a plain 404. Originals and derived files are public and

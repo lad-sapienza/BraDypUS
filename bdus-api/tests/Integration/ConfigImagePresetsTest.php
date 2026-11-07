@@ -49,8 +49,8 @@ class ConfigImagePresetsTest extends BdusTestCase
             return $this->callController($ctrl, 'save_app_properties');
         };
 
-        $a = ['name' => 'pa', 'max_px' => 100, 'format' => 'webp', 'quality' => 80];
-        $b = ['name' => 'pb', 'max_px' => 200, 'format' => 'webp', 'quality' => 80];
+        $a = ['name' => 'pa', 'width' => 100, 'height' => 100, 'format' => 'webp', 'quality' => 80];
+        $b = ['name' => 'pb', 'width' => 200, 'height' => 200, 'format' => 'webp', 'quality' => 80];
         $this->assertSame('success', $save([$a, $b])['status']);
 
         $fa = $mk('pa');
@@ -58,13 +58,13 @@ class ConfigImagePresetsTest extends BdusTestCase
         $ft = $mk('thumb');
 
         // pa unchanged, pb changed, thumb untouched (built in)
-        $this->assertSame('success', $save([$a, array_merge($b, ['max_px' => 300])])['status']);
+        $this->assertSame('success', $save([$a, array_merge($b, ['width' => 300, 'height' => 300])])['status']);
         $this->assertFileExists($fa);
         $this->assertFileDoesNotExist($fb);
         $this->assertFileExists($ft);
 
         // pa removed
-        $this->assertSame('success', $save([array_merge($b, ['max_px' => 300])])['status']);
+        $this->assertSame('success', $save([array_merge($b, ['width' => 300, 'height' => 300])])['status']);
         $this->assertFileDoesNotExist($fa);
 
         @unlink($ft);
@@ -74,7 +74,7 @@ class ConfigImagePresetsTest extends BdusTestCase
     public function testInvalidPresetsAreRejectedWithACode(): void
     {
         $ctrl = $this->makeController('Bdus\\Controllers\\Config', [], [
-            'imagePresets' => [['name' => 'Bad Name', 'max_px' => 100]],
+            'imagePresets' => [['name' => 'Bad Name', 'width' => 100]],
         ]);
         $res = $this->callController($ctrl, 'save_app_properties');
 

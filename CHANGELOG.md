@@ -14,9 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   data is untouched.
 
 - **Files, derived images (presets).** Smaller versions of images, generated the first time
-  they are requested and then cached in `projects/{app}/cache/`. Presets (name, longest side,
-  WebP/JPG, quality) are defined in *System configuration → App settings → Images*; `thumb`
-  (200 px, WebP) always exists and is used by the file gallery and the file manager. Public
+  they are requested and then cached in `projects/{app}/cache/`. Presets (name, width and/or height,
+  *cover* = exact crop or *inside*, WebP/JPG, quality) are defined in *System configuration → App settings → Images*; `thumb`
+  (200 × 200 *inside*, WebP) always exists and is used by the file gallery and the file manager. Public
   route `GET /{app}/api/file/{preset}/{id}.{webp|jpg}`; any failure is a plain 404. Versions are
   deleted when the file is replaced or deleted, its metadata changes, or the preset changes;
   `cache/` is excluded from backups. Schema migration M048 adds `bdus_cfg_app.image_presets`

@@ -63,8 +63,8 @@ class M048MigrationTest extends BdusTestCase
     {
         M048_AddImagePresetsToCfgApp::run(new Manage(static::$db));
         $list = Presets::normalize([
-            ['name' => 'medium', 'max_px' => 800],
-            ['name' => '200x200', 'max_px' => 200, 'format' => 'jpg', 'quality' => 70],
+            ['name' => 'medium', 'width' => 800],
+            ['name' => '200x200', 'width' => 200, 'height' => 200, 'format' => 'jpg', 'quality' => 70],
         ]);
 
         AppSettings::saveImagePresets(static::$db, $list);

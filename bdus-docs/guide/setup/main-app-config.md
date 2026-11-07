@@ -60,13 +60,21 @@ retroactively to files already stored.
 
 Below the settings above, **Derived images (presets)** defines smaller versions of
 your images (thumbnails, previews). Each preset has a **name** (lowercase letters,
-digits, `_` and `-`, up to 32 characters, e.g. `thumb` or `200x200`), the **longest side**
-in pixels (16–10000), a **format** (WebP or JPG) and a **quality**. Up to 20 presets can be
-defined. See [File management](../usage/files.md#derived-images) for how they are served.
+digits, `_` and `-`, up to 32 characters, e.g. `thumb` or `200x200`), a **width** and/or a
+**height** in pixels (16–10000 each), a **fit**, a **format** (WebP or JPG) and a **quality**.
+Up to 20 presets can be defined.
 
-The preset `thumb` (200 px, WebP) always exists, even if you define nothing: the
+| Fit | Result |
+|---|---|
+| **Cover** (default when width and height are both given) | Cropped, centred, to **exactly** width × height. Small images are enlarged to fill it. Needs both sides. |
+| **Inside** | The whole image, proportions kept, within the given sides; never enlarged. With only a width (or only a height) the other side is free. |
+
+Use *Cover* for a grid of identical tiles (a `200x200` square thumbnail), *Inside* when
+the image must not be cut. See [File management](../usage/files.md#derived-images) for how they are served.
+
+The preset `thumb` (200 × 200 *Inside*, WebP) always exists, even if you define nothing: the
 file gallery and the file manager use it for their thumbnails. Define a preset named
-`thumb` to change its size. Saving a changed or removed preset deletes the cached versions
+`thumb` to change its size or fit. Saving a changed or removed preset deletes the cached versions
 generated from it; they are rebuilt on the next request.
 
 ## Access <Badge type="tip" text="v5.6.0" />

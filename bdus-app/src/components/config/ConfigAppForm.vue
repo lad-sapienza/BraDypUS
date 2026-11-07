@@ -87,8 +87,16 @@
               <AInput v-model:value="p.name" size="small" placeholder="thumb-large" :maxlength="32" />
             </div>
             <div class="cfg-form-field">
-              <label>{{ t('preset_max_px') }}</label>
-              <AInputNumber v-model:value="p.max_px" :min="16" :max="10000" size="small" />
+              <label>{{ t('preset_width') }}</label>
+              <AInputNumber v-model:value="p.width" :min="16" :max="10000" size="small" />
+            </div>
+            <div class="cfg-form-field">
+              <label>{{ t('preset_height') }}</label>
+              <AInputNumber v-model:value="p.height" :min="16" :max="10000" size="small" />
+            </div>
+            <div class="cfg-form-field">
+              <label>{{ t('preset_fit') }}</label>
+              <ASelect v-model:value="p.fit" :options="presetFitOptions" size="small" />
             </div>
             <div class="cfg-form-field">
               <label>{{ t('image_format') }}</label>
@@ -252,6 +260,10 @@ const dbEngines     = ref([])
 const statusSelectOptions = computed(() => statusOptions.value.map(v => ({ value: v, label: v })))
 const dbEngineOptions     = computed(() => dbEngines.value.map(v => ({ value: v, label: v })))
 const colorPalette  = COLOR_PALETTE
+const presetFitOptions = computed(() => [
+  { value: 'cover',  label: t('preset_fit_cover') },
+  { value: 'inside', label: t('preset_fit_inside') },
+])
 const imageFormatOptions = [
   { value: 'webp', label: 'WebP' },
   { value: 'jpg',  label: 'JPG' },
@@ -301,7 +313,7 @@ function onHexTyped(value) {
 }
 
 function addPreset() {
-  form.value.imagePresets.push({ name: '', max_px: 800, format: 'webp', quality: 80 })
+  form.value.imagePresets.push({ name: '', width: 800, height: 600, fit: 'cover', format: 'webp', quality: 80 })
 }
 
 async function load() {

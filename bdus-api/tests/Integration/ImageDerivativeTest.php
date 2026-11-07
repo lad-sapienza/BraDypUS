@@ -43,7 +43,7 @@ class ImageDerivativeTest extends TestCase
 
     private function preset(array $over = []): array
     {
-        return array_merge(['name' => 'thumb', 'max_px' => 100, 'format' => 'webp', 'quality' => 80], $over);
+        return array_merge(['name' => 'thumb', 'width' => 100, 'height' => 100, 'fit' => 'inside', 'format' => 'webp', 'quality' => 80], $over);
     }
 
     public function testGeneratesDownscaledWebpKeepingAspectAndOriginal(): void
@@ -78,10 +78,34 @@ class ImageDerivativeTest extends TestCase
         $src  = $this->makeJpeg(9, 40, 30);
         $dest = Derivative::cachePath($this->proj, 'thumb', 9, 'webp');
 
-        Derivative::generate($src, $dest, $this->preset(['max_px' => 100]));
+        Derivative::generate($src, $dest, $this->preset());
 
         [$w, $h] = getimagesize($dest);
         $this->assertSame([40, 30], [$w, $h]);
+    }
+
+    public function testCoverGivesExactSizeCroppingAndEnlargingWhenNeeded(): void
+    {
+        $big   = $this->makeJpeg(20, 400, 200);
+        $small = $this->makeJpeg(21, 40, 30);
+
+        foreach ([$big, $small] as $i => $src) {
+            $dest = Derivative::cachePath($this->proj, 'sq', 20 + $i, 'webp');
+            Derivative::generate($src, $dest, $this->preset(['fit' => 'cover', 'width' => 120, 'height' => 90]));
+            $this->assertSame([120, 90], array_slice(getimagesize($dest), 0, 2));
+        }
+    }
+
+    public function testInsideWithOneSideOnlyScalesToThatSide(): void
+    {
+        $src  = $this->makeJpeg(22, 400, 200);
+        $dest = Derivative::cachePath($this->proj, 'w', 22, 'webp');
+        Derivative::generate($src, $dest, $this->preset(['width' => 50, 'height' => null]));
+        $this->assertSame([50, 25], array_slice(getimagesize($dest), 0, 2));
+
+        $dest = Derivative::cachePath($this->proj, 'h', 22, 'webp');
+        Derivative::generate($src, $dest, $this->preset(['width' => null, 'height' => 40]));
+        $this->assertSame([80, 40], array_slice(getimagesize($dest), 0, 2));
     }
 
     public function testRejectsMissingNonImageAndUnsupportedSources(): void

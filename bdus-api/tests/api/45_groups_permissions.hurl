@@ -86,10 +86,13 @@ Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
 jsonpath "$.status"            == "success"
-jsonpath "$.groups[0].name"    == "g45 Public"
-jsonpath "$.groups[0].rules"   == 1
-jsonpath "$.groups[0].members" == 0
-jsonpath "$.groups[0].keys"    == 0
+jsonpath "$.groups[?(@.name=='g45 Public')].rules"   == 1
+jsonpath "$.groups[?(@.name=='g45 Public')].members" == 0
+jsonpath "$.groups[?(@.name=='g45 Public')].keys"    == 0
+# The default groups (M050) are there, with their rules for every table
+jsonpath "$.groups[?(@.name=='Reader')].rules"      == 1
+jsonpath "$.groups[?(@.name=='Writer')].rules"      == 4
+jsonpath "$.groups[?(@.name=='Self writer')].rules" == 4
 
 
 POST {{base_url}}/{{app_name}}/api/api-keys

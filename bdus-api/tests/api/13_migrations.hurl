@@ -72,3 +72,10 @@ Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
 jsonpath "$.migrations[?(@.name=='M049_add_attrs_to_groups')].applied" == true
+
+# ── 13h. Default groups (M050) are applied ──────────────────────────
+GET {{base_url}}/{{app_name}}/api/migrations
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.migrations[?(@.name=='M050_add_default_groups')].applied" == true

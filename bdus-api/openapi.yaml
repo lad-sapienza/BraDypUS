@@ -7436,6 +7436,11 @@ components:
       properties:
         table:
           type: string
+          description: >
+            A data table, or `*` for every data table (configured tables only,
+            never `bdus_*`; tables added later are included). `*` rules cannot
+            carry `enforce`. The default groups Reader, Writer and Self writer
+            are made of `*` rules.
         action:
           type: string
           enum: [create, read, update, delete]

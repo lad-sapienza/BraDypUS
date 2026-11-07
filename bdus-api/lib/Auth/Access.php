@@ -52,6 +52,13 @@ class Access
     /** Variable replaced, in rule and lock filters only, by the principal's user id. */
     public const VAR_CURRENT_USER = '$CURRENT_USER';
 
+    /**
+     * `table_name` of a rule that applies to every data table (a configured
+     * table, never a `bdus_*` one). Lets a group stand for a whole privilege
+     * level ("read everything") without a rule per table, new tables included.
+     */
+    public const ALL_TABLES = '*';
+
     /** Variable replaced by the list of the principal's group ids. */
     public const VAR_CURRENT_GROUPS = '$CURRENT_GROUPS';
 
@@ -140,7 +147,7 @@ class Access
             return true;
         }
 
-        return $this->isUsable($table) && !empty($this->rules()[$table][$action]);
+        return $this->isUsable($table) && !empty($this->rulesFor($table, $action));
     }
 
     /**
@@ -184,7 +191,7 @@ class Access
                 $grantParts[]  = "({$table}.creator = ?)";
                 $grantValues[] = $this->userId;
             }
-            foreach ($this->rules()[$table][$action] ?? [] as $filter) {
+            foreach ($this->rulesFor($table, $action) as $filter) {
                 if ($filter === null) {
                     $grantsAll = true;
                     break;
@@ -396,7 +403,10 @@ class Access
         }
 
         $this->rules();
-        $candidates = $this->enforceRules[$table][$action] ?? [];
+        $candidates = array_merge(
+            $this->enforceRules[$table][$action] ?? [],
+            $this->enforceRules[self::ALL_TABLES][$action] ?? []
+        );
         if (empty($candidates)) {
             return $values; // not granted by a rule: the caller's gate decides
         }
@@ -736,6 +746,18 @@ class Access
     }
 
     // ── Loading ───────────────────────────────────────────────────────────────
+
+    /**
+     * Filters of the rules that grant $action on $table: the ones written for the
+     * table itself and the ones written for every table (`*`). null = all rows.
+     *
+     * @return list<?array>
+     */
+    private function rulesFor(string $table, string $action): array
+    {
+        $rules = $this->rules();
+        return array_merge($rules[$table][$action] ?? [], $rules[self::ALL_TABLES][$action] ?? []);
+    }
 
     /** @return int[] */
     private function groupIds(): array

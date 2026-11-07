@@ -513,7 +513,8 @@ class Groups extends \Bdus\Controller
         $action = (string) ($rule['action'] ?? '');
         $filter = $rule['filter'] ?? null;
 
-        if (!$this->isDataTable($table)) {
+        $allTables = $table === Access::ALL_TABLES;
+        if (!$allTables && !$this->isDataTable($table)) {
             return ['code' => 'unknown_table', 'detail' => $table];
         }
         if (!in_array($action, Access::ACTIONS, true)) {
@@ -526,6 +527,9 @@ class Groups extends \Bdus\Controller
         if ($enforce !== null) {
             if ($action !== 'create' && $action !== 'update') {
                 return ['code' => 'invalid_rule', 'detail' => 'enforce only applies to create and update'];
+            }
+            if ($allTables) {
+                return ['code' => 'invalid_rule', 'detail' => 'enforce needs a table'];
             }
             if ($this->cfg->get("tables.{$table}.is_plugin")) {
                 return ['code' => 'invalid_rule', 'detail' => 'enforce is not available on plugin tables'];
@@ -548,10 +552,28 @@ class Groups extends \Bdus\Controller
         if (!is_array($filter)) {
             return ['code' => 'invalid_filter', 'detail' => "{$table} {$action}"];
         }
-        if (($why = Access::checkFilter($this->db, $this->cfg, $table, $filter)) !== null) {
+        // A rule for every table must be valid on at least one of them; where a field is
+        // missing it fails closed (grants nothing on that table).
+        $why = null;
+        foreach ($allTables ? $this->dataTableNames() : [$table] as $candidate) {
+            $why = Access::checkFilter($this->db, $this->cfg, $candidate, $filter);
+            if ($why === null) {
+                break;
+            }
+        }
+        if ($why !== null) {
             return ['code' => 'invalid_filter', 'detail' => "{$table} {$action}: {$why}"];
         }
         return [$table, $action, json_encode($filter, JSON_UNESCAPED_UNICODE), $enforce];
+    }
+
+    /** @return string[] names of the configured data tables */
+    private function dataTableNames(): array
+    {
+        return array_values(array_filter(
+            (array) ($this->cfg->get('tables.*.name') ?: []),
+            fn($t) => $this->isDataTable((string) $t)
+        ));
     }
 
     private function isDataTable(string $table): bool

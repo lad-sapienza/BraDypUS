@@ -60,7 +60,7 @@ HTTP 200
 [Asserts]
 jsonpath "$.groups" count >= 1
 [Captures]
-reviewers_group: jsonpath "$.groups[0].id"
+reviewers_group: jsonpath "$.groups[?(@.name=='Revisori')].id"
 
 
 # ── 47b. The profiles log in (and the two new ones are created) ─────

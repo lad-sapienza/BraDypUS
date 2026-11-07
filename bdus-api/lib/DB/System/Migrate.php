@@ -58,6 +58,7 @@ use DB\System\Migrations\M046_AddGroupsAndPermissions;
 use DB\System\Migrations\M047_AddAttributionToFiles;
 use DB\System\Migrations\M048_AddImagePresetsToCfgApp;
 use DB\System\Migrations\M049_AddAttrsToGroups;
+use DB\System\Migrations\M050_AddDefaultGroups;
 use Monolog\Logger;
 
 /**
@@ -152,6 +153,7 @@ class Migrate
         M047_AddAttributionToFiles::class,
         M048_AddImagePresetsToCfgApp::class,
         M049_AddAttrsToGroups::class,
+        M050_AddDefaultGroups::class,
     ];
 
     /**

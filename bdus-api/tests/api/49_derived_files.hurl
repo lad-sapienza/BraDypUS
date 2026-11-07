@@ -64,6 +64,80 @@ GET {{base_url}}/{{app_name}}/api/file/thumb/99999999.webp
 HTTP 404
 
 
+# ── 49f2. Metadata change: version rebuilt, still served ─────────────
+PATCH {{base_url}}/{{app_name}}/api/file/{{file_49}}
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "attribution": "(c) phase 49" }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+
+GET {{base_url}}/{{app_name}}/api/file/thumb/{{file_49}}.webp
+HTTP 200
+Content-Type: image/webp
+
+
+# ── 49f3. Replace the binary: the version follows (different shape → different size)
+POST {{base_url}}/{{app_name}}/api/file/{{file_49}}/replace
+Authorization: Bearer {{jwt}}
+[MultipartFormData]
+file: file,fixtures/derived_wide.png;image/png
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+
+GET {{base_url}}/{{app_name}}/api/file/thumb/{{file_49}}.webp
+HTTP 200
+[Asserts]
+header "ETag" != "{{etag_49}}"
+
+
+# ── 49f4. Guard: a file that is not an image is a 404, never served ──
+POST {{base_url}}/{{app_name}}/api/record/crud_test/{{rec_49}}/file
+Authorization: Bearer {{jwt}}
+[MultipartFormData]
+file: file,fixtures/import_test.csv;text/csv
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+[Captures]
+file_49_csv: jsonpath "$.file.id"
+
+
+GET {{base_url}}/{{app_name}}/api/file/thumb/{{file_49_csv}}.webp
+HTTP 404
+
+
+# ── 49f5. Guard: an image extension whose bytes are not decodable → 404
+# (test_image.png is a 70-byte file GD cannot decode)
+POST {{base_url}}/{{app_name}}/api/record/crud_test/{{rec_49}}/file
+Authorization: Bearer {{jwt}}
+[MultipartFormData]
+file: file,fixtures/test_image.png;image/png
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+[Captures]
+file_49_bad: jsonpath "$.file.id"
+
+
+GET {{base_url}}/{{app_name}}/api/file/thumb/{{file_49_bad}}.webp
+HTTP 404
+
+
+# ── 49f6. Deleted file: its version is gone too (404) ────────────────
+DELETE {{base_url}}/{{app_name}}/api/file/{{file_49_csv}}
+Authorization: Bearer {{jwt}}
+HTTP 200
+
+DELETE {{base_url}}/{{app_name}}/api/file/{{file_49_bad}}
+Authorization: Bearer {{jwt}}
+HTTP 200
+
+
 # ── 49g. Cleanup ─────────────────────────────────────────────────────
 DELETE {{base_url}}/{{app_name}}/api/file/{{file_49}}
 Authorization: Bearer {{jwt}}

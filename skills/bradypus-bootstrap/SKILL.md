@@ -172,6 +172,14 @@ POST {base}/{app}/api/import/data
   `POST /api/import/geojson {"temp_id", "tb", "geo_prop": "<property>", "key_field": "<field>"}`
   matches each feature's property to the table field. Photos (`/api/import/photos`)
   take a ZIP and an index CSV `filename,record_id`.
+- Image sizes for a frontend or website: define **presets** (`name` `[a-z0-9_-]` up to 32
+  chars, `max_px` 16–10000, `format` `webp`|`jpg`, `quality` 1–100, max 20; `thumb`, 200 px
+  WebP, always exists) in the app settings (super-admin: `GET`/`PUT /api/config/app`, send the
+  whole `imagePresets` array). Each image is then served, generated on first request and
+  cached, at the public URL `GET /{app}/api/file/{preset}/{file_id}.{webp|jpg}`; unknown preset,
+  wrong extension or non-image is a plain 404. Originals and derived files are public and
+  reachable by sequential id (no access control yet): tell the user before loading
+  anything private. Ask which sizes the frontend needs *before* the photo import.
 - Needs editor privilege or higher.
 
 Then check, do not assume: counts per table against the source, a few records opened in

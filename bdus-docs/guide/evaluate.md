@@ -40,7 +40,10 @@ versions of every record, files, maps and print templates on top of them.
   bibliographies or Pleiades places: these are built in
   ([system plugins](/guide/system-plugins/)).
 - Files (photos, documents) have to be **attached to records**, in bulk if needed
-  ([files](/guide/usage/files), [import](/guide/usage/import)).
+  ([files](/guide/usage/files), [import](/guide/usage/import)). A separate frontend or
+  website can ask for them in **smaller sizes** (thumbnails, previews): you define named
+  *presets* in the app settings and the images are generated on first request and cached
+  ([derived images](/guide/usage/files#derived-images)).
 
 ## It is probably not the right tool when
 
@@ -50,6 +53,9 @@ versions of every record, files, maps and print templates on top of them.
   descriptive records next to it.
 - You need a **public, hosted website** out of the box: BraDypUS is the editing and
   research database; publishing is done through its [API](/guide/api/) or exports.
+  Note that uploaded files, and their derived sizes, are served **without authentication**
+  and reachable by sequential id: material that must stay private does not belong there
+  (access control for files is not available yet).
 - You need **permissions per field** or a **workflow engine** with notifications:
   BraDypUS's own permission engine works per table and per row, and locks freeze
   rows; there is nothing finer. Hidden columns, rows per role and a draft → review →
@@ -83,6 +89,9 @@ Checklist before deciding, answer these about your data:
    (draft → review → validated)? That is possible with SQL views, not with the
    permission screens: [SQL views as tables](/guide/setup/views).
 8. Where do files live, and how are they named so they can be linked to records?
+   Will a frontend or website show the images? Then decide the sizes it needs: they become
+   *presets* (e.g. `thumb`, `medium`) and each is a stable URL per image
+   ([derived images](/guide/usage/files#derived-images)).
 
 ## How much work is a move
 

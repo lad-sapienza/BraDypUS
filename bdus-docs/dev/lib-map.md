@@ -71,7 +71,9 @@ without going through a lib/ abstraction.
 | `Record\Edit` | `lib/Record/Edit.php` | Validates + prepares record edits |
 | `Record\Persist` | `lib/Record/Persist.php` | Low-level persistence (INSERT/UPDATE/DELETE) |
 | `Template\Loader` | `lib/Template/Loader.php` | Loads Twig print templates from DB |
-| `Image\Resizer` | `lib/Image/Resizer.php` | Image resize / thumbnail (Intervention) |
+| `Image\Resizer` | `lib/Image/Resizer.php` | Resize / convert an uploaded image in place (Intervention) |
+| `Image\Presets` | `lib/Image/Presets.php` | Derived-image presets: validation, built-in `thumb`, lookup |
+| `Image\Derivative` | `lib/Image/Derivative.php` | Generates a preset version into `cache/`, purges it |
 | `Zotero\Client` | `lib/Zotero/Client.php` | Zotero API HTTP client |
 | `Zotero\ZoteroException` | `lib/Zotero/ZoteroException.php` | Zotero-specific exception |
 | `Pleiades\Client` | `lib/Pleiades/Client.php` | Pleiades gazetteer API HTTP client |
@@ -222,5 +224,27 @@ See [Config & access control](./config).
 
 ### `Image\` — Image handling
 
-**`Image\Resizer`** uses `intervention/image` to resize uploads to thumbnails
-and to serve resized versions on demand from `cache/img/`.
+**`Image\Resizer`** uses `intervention/image` (GD) to downscale and/or convert an
+uploaded image in place, according to the app settings (`maxImageSize`, `imageConvert`, …).
+
+**`Image\Presets`** validates and normalises the derived-image presets
+(`{name, width, height, fit, format, quality}`; `fit` is `cover` or `inside`), resolves
+the effective list (the built-in `thumb` is added when not defined) and finds one by name.
+The list is stored as JSON in `bdus_cfg_app.image_presets` (read and written by
+`Config\AppSettings`, exposed as `main.imagePresets`, saved by `Config::save_app_properties`).
+
+**`Image\Derivative`** builds one version of one file: `generate($src, $dest, $preset)`
+decodes, crops (`cover`) or scales down (`inside`), encodes WebP/JPG into a hidden temp file
+and renames it into place. It refuses unreadable sources, unsupported types and sources over
+100 megapixels. `purgeFile($projDir, $id)` removes every version of a file
+(`projects/{app}/cache/*/{id}.*`, failure markers included); `purgePreset()` empties a
+preset's folder.
+
+**Serving and lifecycle.** `File::serveDerived` (`GET /api/file/{preset}/{id}.{ext}`, public)
+looks the preset up, generates on first request into `cache/{preset}/{id}.{ext}` and answers
+with `ETag` revalidation. A failure is a plain 404; a source that failed leaves
+`{id}.{ext}.fail` and is not retried until it changes. The versions are a rebuildable mirror:
+`purgeFile` is called wherever a file or its metadata changes (`File::replaceFile`,
+`File::updateFile`, `Record::deleteFile`, `Persist` record delete, and the id-reuse guard in
+`Record::uploadFile` and `Import::importPhotos`), and `Config::save_app_properties` purges the
+folder of a preset that was changed or removed. `cache/` is excluded from `docker-backup.sh`.

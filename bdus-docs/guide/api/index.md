@@ -172,6 +172,25 @@ GET /{app}/api/record/{table}/{id}
 Returns the full record with all fields, plugin sub-tables, file list, and
 associated RS data.
 
+## Images in several sizes <Badge type="tip" text="v5.18.0" />
+
+For a website or frontend that shows the images, define **presets** in the app settings (name,
+width and/or height, *cover* or *inside*, WebP/JPG, quality) and use
+
+```
+GET /{app}/api/file/{preset}/{file id}.{webp|jpg}
+```
+
+The URL is public (no token), like the original file, and stable per file and preset. The
+version is generated on the first request and cached; an unknown preset, a missing file, a wrong
+extension or a file that is not a JPG, PNG, GIF or WebP image gives a plain `404`. The response
+carries an `ETag`, so clients and CDNs can revalidate. The `file` objects returned with a record
+give the file `id` (and `ext`, `attribution`). See [Derived images](../usage/files.md#derived-images).
+
+::: warning Files are public by id
+Originals and derived versions are served without authentication and ids are sequential.
+:::
+
 ## Interactive API reference
 
 See the [API Reference](/api-reference/) section for an interactive OpenAPI

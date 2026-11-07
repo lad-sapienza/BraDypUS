@@ -179,6 +179,8 @@ chmod +x backup.sh restore.sh
 ./backup.sh siti_scavo   # single app → backups/bradypus-siti_scavo-<timestamp>.tar.gz
 ```
 
+The derived-image cache (`projects/{app}/cache/`) is **not** archived: it is rebuilt on demand.
+
 **Restore** (prompts for confirmation — pass `-y` to skip):
 
 ```bash

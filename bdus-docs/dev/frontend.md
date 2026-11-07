@@ -247,7 +247,9 @@ paginated). Each row shows a thumbnail/icon preview, inline-editable description
 keywords and attribution (auto-saved on blur), linked-record badges, and an orphan
 indicator. Actions: replace binary (`POST /api/file/{id}/replace`), delete
 permanently (`DELETE /api/file/{id}`). Clicking a thumbnail or filename opens
-an in-app preview Dialog (lightbox for images, iframe for documents).
+an in-app preview Dialog (lightbox for images, iframe for documents). Thumbnails use the
+`thumb` derived version (`utils/thumbUrl.js`; types that cannot be derived, such as SVG, keep the
+original); the preview and downloads always use the original.
 
 ### `MatrixView` — Harris matrix
 

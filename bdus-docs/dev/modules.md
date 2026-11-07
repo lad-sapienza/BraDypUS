@@ -205,6 +205,7 @@ Admin access to `bdus_log` entries.
 | `PATCH` | `/api/file/{fileId}` | Update file metadata (description, keywords, attribution, printable) |
 | `POST` | `/api/file/{fileId}/replace` | Replace the file binary, keep metadata |
 | `POST` | `/api/files/sort` | Update display order of files attached to a record |
+| `GET` | `/api/file/{preset}/{id}.{ext}` | **Public.** Derived (resized) version of an image, generated on first request and cached; plain 404 on any failure |
 
 File upload (`POST /api/record/{tb}/{id}/file`), link-existing
 (`POST /api/record/{tb}/{id}/link-file`), unlink (`DELETE /api/file-link/{linkId}`),

@@ -628,6 +628,7 @@ class Import extends \Bdus\Controller
                 );
                 if (!$fileId) { $notFound++; continue; }
 
+                \Image\Derivative::purgeFile(PROJ_DIR, (int) $fileId);
                 $destPath = $filesDir . $fileId . '.' . $ext;
                 file_put_contents($destPath, $zip->getFromIndex($zipIdx));
 

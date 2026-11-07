@@ -617,7 +617,19 @@ class Config extends \Bdus\Controller
           return;
         }
       }
+      $before = array_key_exists('imagePresets', $data)
+        ? \Image\Presets::resolve((array) ($this->cfg->get('main.imagePresets') ?? []))
+        : null;
       $this->cfg->setMain($data);
+      if ($before !== null) {
+        // A changed or removed preset invalidates every version generated from it
+        $after = \Image\Presets::resolve($data['imagePresets']);
+        foreach ($before as $name => $def) {
+          if (!isset($after[$name]) || $after[$name] != $def) {
+            \Image\Derivative::purgePreset(PROJ_DIR, (string) $name);
+          }
+        }
+      }
       $this->returnJson(['status' => 'success', 'code' => 'ok_cfg_data_updated']);
     } catch (\Throwable $e) {
       $this->returnJson(['status' => 'error', 'code' => 'error_cfg_data_updated']);

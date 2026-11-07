@@ -26,7 +26,8 @@ if [ -n "$APP_NAME" ]; then
         echo "App '$APP_NAME' not found. Available: $(ls -1 | tr '\n' ' ')" >&2
         exit 1
     }
-    exec tar czf - "$APP_NAME"
+    # cache/ holds rebuildable derived images: not worth archiving
+    exec tar czf - --exclude="$APP_NAME/cache" "$APP_NAME"
 fi
 
-exec tar czf - .
+exec tar czf - --exclude="./*/cache" .

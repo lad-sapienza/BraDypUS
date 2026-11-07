@@ -585,6 +585,7 @@ class Persist
         // transaction so a missing file never causes a rollback.
         if (defined('PROJ_DIR')) {
             foreach ($toDeletePhysically as $file) {
+                \Image\Derivative::purgeFile(PROJ_DIR, (int) $file['id']);
                 $path = PROJ_DIR . 'files/' . $file['id'] . '.' . $file['ext'];
                 if (file_exists($path)) {
                     @unlink($path);

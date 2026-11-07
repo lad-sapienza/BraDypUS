@@ -1391,6 +1391,9 @@ class Record extends \Bdus\Controller
         'id'
       );
 
+      // A reused id (e.g. SQLite after deleting the last row) must not inherit stale derived versions
+      \Image\Derivative::purgeFile(PROJ_DIR, (int) $fileId);
+
       // Move file to projects/{app}/files/{id}.{ext}
       $destDir  = PROJ_DIR . 'files/';
       $destFile = $destDir . $fileId . '.' . $ext;
@@ -1500,6 +1503,9 @@ class Record extends \Bdus\Controller
 
       // Delete the file record
       $this->db->query("DELETE FROM bdus_files WHERE id = ?", [$fileId]);
+
+      // Derived versions die with their parent
+      \Image\Derivative::purgeFile(PROJ_DIR, (int) $fileId);
 
       // Delete physical file (best-effort: ignore if already missing)
       $physicalPath = PROJ_DIR . 'files/' . $fileId . '.' . $ext;

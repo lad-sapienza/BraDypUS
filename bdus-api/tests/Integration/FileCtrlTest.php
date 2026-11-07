@@ -200,6 +200,24 @@ class FileCtrlTest extends BdusTestCase
         $this->assertSame('(c) Jane Doe, CC BY 4.0', $res['files'][0]['attribution']);
     }
 
+    public function testUpdateFileMetadataPurgesDerivedVersions(): void
+    {
+        $dir = \Image\Derivative::cacheDir(PROJ_DIR, 'thumb');
+        @mkdir($dir, 0775, true);
+        $mine  = $dir . '/1.webp';
+        $other = $dir . '/2.webp';
+        file_put_contents($mine, 'x');
+        file_put_contents($other, 'x');
+
+        $ctrl = $this->makeController('Bdus\\Controllers\\File', ['fileId' => 1], ['attribution' => 'Purge test']);
+        $res  = $this->callController($ctrl, 'updateFile');
+
+        $this->assertSame('ok_file_updated', $res['code']);
+        $this->assertFileDoesNotExist($mine, 'derived versions die with their parent');
+        $this->assertFileExists($other, 'other files are untouched');
+        @unlink($other);
+    }
+
     public function testUpdateFileRenameSuccess(): void
     {
         $ctrl = $this->makeController(

@@ -237,6 +237,8 @@ class File extends \Bdus\Controller
 		);
 
 		if ($ok) {
+			// Metadata (e.g. attribution) may feed derived versions: they die with their parent
+			\Image\Derivative::purgeFile(PROJ_DIR, $fileId);
 			$this->returnJson(['status' => 'success', 'code' => 'ok_file_updated']);
 		} else {
 			$this->returnJson(['status' => 'error', 'code' => 'error_file_updated']);
@@ -283,6 +285,9 @@ class File extends \Bdus\Controller
 
 			$destDir  = PROJ_DIR . 'files/';
 			$newPath  = $destDir . $fileId . '.' . $newExt;
+
+			// The binary changes: derived versions die with their parent
+			\Image\Derivative::purgeFile(PROJ_DIR, $fileId);
 
 			if (!move_uploaded_file($_FILES['file']['tmp_name'], $newPath)) {
 				throw new \RuntimeException('move_uploaded_file failed');

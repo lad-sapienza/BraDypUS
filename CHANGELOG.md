@@ -60,6 +60,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `bdus_groups.attrs` and `bdus_group_rules.enforce` columns (minor upgrade, applied at the
   next admin login); until then rules keep working as before.
 
+### Changed
+
+- **OpenAPI spec cleaned up (#49, partial).** `openapi.yaml` now lints clean (`redocly lint`: 0 errors,
+  0 warnings, down from 6 errors and 210 warnings). Every one of the 198 operations has a unique
+  `operationId` (`<method><CamelCasePath>`, e.g. `postAuthLogin`; client generators will use these
+  names, so they should not change), the OpenAPI 3.0 `nullable` is replaced by the 3.1
+  `type: [..., "null"]`, the public operations document the `404` for a wrong URL shape
+  (`WrongPathShape`), and the `localhost` server entry became a note. The one remaining exception, the
+  OAuth callback that answers with a redirect, is declared in `.redocly.lint-ignore.yaml`. A new
+  `OpenApiHygieneTest` keeps it that way (unique ids, a 2xx and a 4xx per operation, no `nullable`).
+  The field-by-field audit of request and response schemas against the controllers is still open.
+- `tests/api/demo-schema.dbml` now starts with a notice: it is a historical design specification, read
+  by no code, and several of its annotations (`bdus:ui`, `check`, `readonly`, `hidden`, …) are not
+  imported by the DBML importer; `guide/setup/dbml.md` is the reference. Closes #48.
+
 ## [5.18.0] - 2026-11-07
 
 ### Added

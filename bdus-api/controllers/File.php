@@ -366,8 +366,9 @@ class File extends \Bdus\Controller
 				return;
 			}
 
-			$rows = $this->db->query('SELECT ext FROM bdus_files WHERE id = ?', [$id], 'read');
+			$rows = $this->db->query('SELECT ext, attribution FROM bdus_files WHERE id = ?', [$id], 'read');
 			$src  = $rows ? strtolower((string) $rows[0]['ext']) : '';
+			$attribution = $rows ? ($rows[0]['attribution'] ?? null) : null;
 			if ($src === '' || !\Image\Derivative::isSupportedSource($src)) {
 				$notFound();
 				return;
@@ -392,7 +393,7 @@ class File extends \Bdus\Controller
 					return;
 				}
 				try {
-					\Image\Derivative::generate($srcPath, $dest, $preset);
+					\Image\Derivative::generate($srcPath, $dest, $preset, $attribution);
 				} catch (\Throwable $e) {
 					@mkdir(dirname($dest), 0775, true);
 					@touch($fail);

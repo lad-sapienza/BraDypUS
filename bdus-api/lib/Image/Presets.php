@@ -124,10 +124,21 @@ final class Presets
                 throw new \InvalidArgumentException("preset '{$name}': quality must be between 1 and 100");
             }
 
-            $out[] = [
+            $entry = [
                 'name' => $name, 'width' => $dims['width'], 'height' => $dims['height'],
                 'fit' => $fit, 'format' => $format, 'quality' => $quality,
             ];
+
+            // Optional text watermark (see Watermark); the key is absent when not set.
+            $wm = $p['watermark'] ?? null;
+            if ($wm !== null && $wm !== [] && $wm !== '') {
+                if (!is_array($wm)) {
+                    throw new \InvalidArgumentException("preset '{$name}': watermark must be an object");
+                }
+                $entry['watermark'] = Watermark::normalize($wm, $name);
+            }
+
+            $out[] = $entry;
         }
 
         return $out;

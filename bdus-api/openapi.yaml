@@ -2077,6 +2077,9 @@ paths:
         removed whenever the original file or its metadata changes. Every failure
         (unknown preset, missing file, wrong extension, original not an image that
         can be processed) is a plain-text `404`; there is no fallback to the original.
+        When the preset has a `watermark`, its text (the file's attribution for
+        `{{attribution}}`) is drawn on the derived version only; editing the attribution
+        or the watermark regenerates it.
         Supports `ETag` / `If-None-Match` revalidation.
       security: []
       parameters:

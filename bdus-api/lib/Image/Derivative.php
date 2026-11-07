@@ -53,10 +53,14 @@ final class Derivative
      * smaller; `inside` keeps the whole image within the given sides, proportions
      * kept, never enlarged. Animated sources are reduced to their first frame.
      *
+     * With a `watermark` in the preset, its text (using $attribution for the
+     * `{{attribution}}` placeholder) is drawn on the resized image.
+     *
      * @param  array{width: ?int, height: ?int, fit: string, format: string, quality: int} $preset A normalised preset.
+     * @param  ?string $attribution The file's attribution, for the watermark text.
      * @throws \RuntimeException When the source is unusable or encoding fails.
      */
-    public static function generate(string $src, string $dest, array $preset): void
+    public static function generate(string $src, string $dest, array $preset, ?string $attribution = null): void
     {
         if (!is_file($src)) {
             throw new \RuntimeException('source file not found');
@@ -90,6 +94,12 @@ final class Derivative
                 $img->cover($w, $h, 'center');
             } else {
                 $img->scaleDown($w, $h);
+            }
+
+            // Text watermark: derived versions only, after resizing so its size is
+            // relative to the delivered image.
+            if (!empty($preset['watermark']) && is_array($preset['watermark'])) {
+                Watermark::apply($img, $preset['watermark'], $attribution);
             }
 
             $quality = max(1, min(100, (int) $preset['quality']));

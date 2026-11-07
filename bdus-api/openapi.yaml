@@ -65,9 +65,8 @@ servers:
   - url: /
     description: >-
       App-independent endpoints only (`/api/auth/*`, `/api/new-app*`,
-      `/api/info`). Same-origin / Vite dev-server proxy.
-  - url: http://localhost:8080
-    description: Docker dev server (app-independent endpoints)
+      `/api/info`). Same-origin / Vite dev-server proxy. The Docker dev server
+      answers on `http://localhost:8080`.
 
 security:
   - bearerAuth: []
@@ -143,6 +142,7 @@ paths:
 
   /api/auth/apps:
     get:
+      operationId: getAuthApps
       tags: [auth]
       summary: List available applications
       description: |
@@ -188,9 +188,12 @@ paths:
                               name: MYAPP
                               definition: Excavation database
                               oauth: [google]
+        '404':
+          $ref: '#/components/responses/WrongPathShape'
 
   /api/auth/login:
     post:
+      operationId: postAuthLogin
       tags: [auth]
       summary: Authenticate and obtain a JWT
       security: []
@@ -230,9 +233,12 @@ paths:
                             type: string
                             description: Signed JWT, valid for 2 hours
                   - $ref: '#/components/schemas/Error'
+        '404':
+          $ref: '#/components/responses/WrongPathShape'
 
   /api/auth/refresh:
     get:
+      operationId: getAuthRefresh
       tags: [auth]
       summary: Refresh the current JWT
       description: Issues a fresh token with a new expiry. The current token must still be valid.
@@ -254,6 +260,7 @@ paths:
 
   /api/auth/logout:
     get:
+      operationId: getAuthLogout
       tags: [auth]
       summary: Logout (server-side acknowledgement)
       description: JWT auth is stateless; this endpoint exists as a server-side signal. The client clears its token from sessionStorage.
@@ -269,6 +276,7 @@ paths:
 
   /api/auth/register:
     post:
+      operationId: postAuthRegister
       tags: [auth]
       summary: Public self-registration
       description: |
@@ -318,9 +326,12 @@ paths:
                 oneOf:
                   - $ref: '#/components/schemas/Success'
                   - $ref: '#/components/schemas/Error'
+        '404':
+          $ref: '#/components/responses/WrongPathShape'
 
   /api/auth/password-reset/request:
     post:
+      operationId: postAuthPasswordResetRequest
       tags: [auth]
       summary: Request a password-reset email
       description: |
@@ -355,9 +366,12 @@ paths:
                 oneOf:
                   - $ref: '#/components/schemas/Success'
                   - $ref: '#/components/schemas/Error'
+        '404':
+          $ref: '#/components/responses/WrongPathShape'
 
   /api/auth/password-reset/confirm:
     post:
+      operationId: postAuthPasswordResetConfirm
       tags: [auth]
       summary: Consume a reset token and set a new password
       description: |
@@ -393,9 +407,12 @@ paths:
                 oneOf:
                   - $ref: '#/components/schemas/Success'
                   - $ref: '#/components/schemas/Error'
+        '404':
+          $ref: '#/components/responses/WrongPathShape'
 
   /api/auth/oauth/{provider}/redirect:
     get:
+      operationId: getAuthOauthRedirectByProvider
       tags: [auth]
       summary: Begin OAuth2 authorization flow
       description: |
@@ -455,6 +472,7 @@ paths:
 
   /api/auth/oauth/{provider}/callback:
     get:
+      operationId: getAuthOauthCallbackByProvider
       tags: [auth]
       summary: OAuth2 authorization callback
       description: |
@@ -520,6 +538,7 @@ paths:
 
   /api/auth/oauth/link:
     post:
+      operationId: postAuthOauthLink
       tags: [auth]
       summary: Link an OAuth identity to an existing account
       description: |
@@ -567,9 +586,12 @@ paths:
                             type: string
                             description: Signed JWT, valid for 2 hours
                   - $ref: '#/components/schemas/Error'
+        '404':
+          $ref: '#/components/responses/WrongPathShape'
 
   /api/auth/oauth/register:
     post:
+      operationId: postAuthOauthRegister
       tags: [auth]
       summary: Self-signup for a first-time OAuth identity
       description: |
@@ -611,11 +633,14 @@ paths:
                 oneOf:
                   - $ref: '#/components/schemas/Success'
                   - $ref: '#/components/schemas/Error'
+        '404':
+          $ref: '#/components/responses/WrongPathShape'
 
   # ── System ────────────────────────────────────────────────────────────────
 
   /api/info:
     get:
+      operationId: getInfo
       tags: [system]
       summary: Server version and changelog
       responses:
@@ -639,6 +664,7 @@ paths:
 
   /api/info/app:
     get:
+      operationId: getInfoApp
       tags: [system]
       summary: Current application metadata
       responses:
@@ -667,6 +693,7 @@ paths:
 
   /api/tables:
     get:
+      operationId: getTables
       tags: [system]
       summary: List user-visible tables for the home view
       responses:
@@ -688,6 +715,7 @@ paths:
 
   /api/history:
     get:
+      operationId: getHistory
       tags: [system]
       summary: Recent edit history for the current user
       responses:
@@ -718,6 +746,7 @@ paths:
 
   /api/welcome:
     get:
+      operationId: getWelcome
       tags: [system]
       summary: Get the welcome-page Markdown content
       responses:
@@ -736,6 +765,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
     put:
+      operationId: putWelcome
       tags: [system]
       summary: Save the welcome-page Markdown content
       requestBody:
@@ -760,6 +790,7 @@ paths:
 
   /api/logs:
     get:
+      operationId: getLogs
       tags: [system]
       summary: Retrieve application error log entries
       parameters:
@@ -792,6 +823,7 @@ paths:
 
   /api/logs/purge:
     post:
+      operationId: postLogsPurge
       tags: [system]
       summary: Purge log entries older than N days
       requestBody:
@@ -815,6 +847,7 @@ paths:
 
   /api/new-app/status:
     get:
+      operationId: getNewAppStatus
       tags: [system]
       summary: Check whether app creation is permitted
       security: []
@@ -831,9 +864,12 @@ paths:
                     properties:
                       permitted:
                         type: boolean
+        '404':
+          $ref: '#/components/responses/WrongPathShape'
 
   /api/new-app:
     post:
+      operationId: postNewApp
       tags: [system]
       summary: Create a new application
       description: Requires `BRADYPUS_ALLOW_NEW_APP=1` on the server.
@@ -878,9 +914,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CodedResult'
+        '404':
+          $ref: '#/components/responses/WrongPathShape'
 
   /api/admin/check-password:
     post:
+      operationId: postAdminCheckPassword
       tags: [system]
       summary: Verify super-admin password gate
       description: Used before exposing sensitive admin operations in the UI.
@@ -908,6 +947,7 @@ paths:
 
   /api/record/{tb}/new:
     get:
+      operationId: getRecordNewByTb
       tags: [records]
       summary: Get a blank record scaffold
       parameters:
@@ -924,6 +964,7 @@ paths:
 
   /api/record/{tb}/{id}:
     get:
+      operationId: getRecordByTbAndId
       tags: [records]
       summary: Fetch a single record by id
       parameters:
@@ -939,6 +980,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
     delete:
+      operationId: deleteRecordByTbAndId
       tags: [records]
       summary: Delete one or more records
       description: |
@@ -962,6 +1004,7 @@ paths:
 
   /api/record/{tb}/{id}/duplicate:
     post:
+      operationId: postRecordDuplicateByTbAndId
       tags: [records]
       summary: Duplicate a record
       description: |
@@ -995,6 +1038,7 @@ paths:
 
   /api/record/{tb}/{id}/plugins:
     delete:
+      operationId: deleteRecordPluginsByTbAndId
       tags: [records]
       summary: Delete all plugin rows attached to a record
       description: |
@@ -1026,6 +1070,7 @@ paths:
 
   /api/record/{tb}:
     post:
+      operationId: postRecordByTb
       tags: [records]
       summary: Create or update a record
       description: >
@@ -1086,6 +1131,7 @@ paths:
 
   /api/records/{tb}:
     get:
+      operationId: getRecordsByTb
       tags: [records]
       summary: List / search records (GET)
       description: |
@@ -1329,6 +1375,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
     post:
+      operationId: postRecordsByTb
       tags: [records]
       summary: List / search records (POST)
       description: |
@@ -1405,6 +1452,7 @@ paths:
 
   /api/records/{tb}/export:
     get:
+      operationId: getRecordsExportByTb
       tags: [records]
       summary: Export records as a file download
       description: |
@@ -1486,6 +1534,7 @@ paths:
 
   /api/record/{tb}/templates:
     get:
+      operationId: getRecordTemplatesByTb
       tags: [records]
       summary: List available layout templates for a table
       parameters:
@@ -1509,6 +1558,7 @@ paths:
 
   /api/record/{tb}/field-options:
     get:
+      operationId: getRecordFieldOptionsByTb
       tags: [records]
       summary: Fetch async options for a select field
       parameters:
@@ -1547,6 +1597,7 @@ paths:
 
   /api/record/{tb}/check-unique:
     get:
+      operationId: getRecordCheckUniqueByTb
       tags: [records]
       summary: Check whether a field value is unique in the table
       description: |
@@ -1600,6 +1651,7 @@ paths:
 
   /api/record/{tb}/link-candidates:
     get:
+      operationId: getRecordLinkCandidatesByTb
       tags: [records]
       summary: Search records that can be linked to a manual link field
       parameters:
@@ -1635,6 +1687,7 @@ paths:
 
   /api/record/{tb}/check-plugins-before-delete:
     get:
+      operationId: getRecordCheckPluginsBeforeDeleteByTb
       tags: [records]
       summary: Check plugin record counts before deleting a record
       description: |
@@ -1677,6 +1730,7 @@ paths:
 
   /api/record/{tb}/deleted:
     get:
+      operationId: getRecordDeletedByTb
       tags: [versions]
       summary: List deleted records that can be restored
       description: >
@@ -1715,6 +1769,7 @@ paths:
 
   /api/record/{tb}/{id}/versions:
     get:
+      operationId: getRecordVersionsByTbAndId
       tags: [versions]
       summary: List recorded versions for a record
       description: >
@@ -1743,6 +1798,7 @@ paths:
 
   /api/version/{id}:
     get:
+      operationId: getVersionById
       tags: [versions]
       summary: Fetch a version snapshot plus the current record state
       description: >
@@ -1776,6 +1832,7 @@ paths:
 
   /api/version/{id}/restore:
     post:
+      operationId: postVersionRestoreById
       tags: [versions]
       summary: Restore a record to a previously snapshotted state
       description: >
@@ -1853,6 +1910,7 @@ paths:
 
   /api/files:
     get:
+      operationId: getFiles
       tags: [files]
       summary: List all files in the current app (paginated)
       parameters:
@@ -1921,6 +1979,7 @@ paths:
 
   /api/record/{tb}/{id}/file:
     post:
+      operationId: postRecordFileByTbAndId
       tags: [files]
       summary: Upload a file and attach it to a record
       parameters:
@@ -1949,6 +2008,7 @@ paths:
 
   /api/record/{tb}/{id}/link-file:
     post:
+      operationId: postRecordLinkFileByTbAndId
       tags: [files]
       summary: Link an existing file to a record without re-uploading
       description: >
@@ -1988,6 +2048,7 @@ paths:
 
   /api/file-link/{linkId}:
     delete:
+      operationId: deleteFileLinkByLinkId
       tags: [files]
       summary: Unlink a file from a record
       description: >
@@ -2014,6 +2075,7 @@ paths:
 
   /api/file/{fileId}:
     patch:
+      operationId: patchFileByFileId
       tags: [files]
       summary: Update file metadata (description, keywords, attribution, printable)
       parameters:
@@ -2047,6 +2109,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
     delete:
+      operationId: deleteFileByFileId
       tags: [files]
       summary: Delete an uploaded file
       parameters:
@@ -2067,6 +2130,7 @@ paths:
 
   /api/file/{preset}/{fileId}.{ext}:
     get:
+      operationId: getFileByPresetAndFileIdAndExt
       tags: [files]
       summary: Derived (resized) version of an image, created on first request
       description: >
@@ -2123,6 +2187,7 @@ paths:
 
   /api/file/{fileId}/replace:
     post:
+      operationId: postFileReplaceByFileId
       tags: [files]
       summary: Replace a file's binary while preserving its metadata
       description: >
@@ -2170,6 +2235,7 @@ paths:
 
   /api/files/sort:
     post:
+      operationId: postFilesSort
       tags: [files]
       summary: Update the display order of attached files
       requestBody:
@@ -2199,6 +2265,7 @@ paths:
 
   /api/record/{tb}/rs:
     post:
+      operationId: postRecordRsByTb
       tags: [rs]
       summary: Add a stratigraphic relation between two records
       parameters:
@@ -2245,6 +2312,7 @@ paths:
 
   /api/rs/{id}:
     delete:
+      operationId: deleteRsById
       tags: [rs]
       summary: Delete a stratigraphic relation
       parameters:
@@ -2261,6 +2329,7 @@ paths:
 
   /api/rs/matrix:
     get:
+      operationId: getRsMatrix
       tags: [rs]
       summary: Get Harris matrix data for a table
       description: |
@@ -2372,6 +2441,7 @@ paths:
 
   /api/manual-link:
     post:
+      operationId: postManualLink
       tags: [manual-links]
       summary: Create a manual cross-table link
       requestBody:
@@ -2402,6 +2472,7 @@ paths:
 
   /api/manual-link/{id}:
     delete:
+      operationId: deleteManualLinkById
       tags: [manual-links]
       summary: Delete a manual link
       parameters:
@@ -2420,6 +2491,7 @@ paths:
 
   /api/search/{tb}/config:
     get:
+      operationId: getSearchConfigByTb
       tags: [search]
       summary: Get search UI configuration for a table
       description: Returns the list of searchable fields and the available operators for the advanced search form.
@@ -2472,6 +2544,7 @@ paths:
 
   /api/search/{tb}/values:
     get:
+      operationId: getSearchValuesByTb
       tags: [search]
       summary: Get distinct values used in a field
       description: |
@@ -2530,6 +2603,7 @@ paths:
 
   /api/config/app:
     get:
+      operationId: getConfigApp
       tags: [config]
       summary: Get application-level properties
       responses:
@@ -2547,6 +2621,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
     put:
+      operationId: putConfigApp
       tags: [config]
       summary: Save application-level properties
       requestBody:
@@ -2567,6 +2642,7 @@ paths:
 
   /api/config/tables:
     get:
+      operationId: getConfigTables
       tags: [config]
       summary: List all tables in the configuration
       responses:
@@ -2586,6 +2662,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
     post:
+      operationId: postConfigTables
       tags: [config]
       summary: Create a new table
       requestBody:
@@ -2622,6 +2699,7 @@ paths:
 
   /api/config/db-objects:
     get:
+      operationId: getConfigDbObjects
       tags: [config]
       summary: Tables and views of the database that are not in the configuration
       description: |
@@ -2646,27 +2724,26 @@ paths:
                             name: { type: string }
                             kind: { type: string, enum: [table, view, missing], description: '`missing` = a deactivated table whose database object no longer exists.' }
                             view_writable:
-                              type: string
-                              nullable: true
+                              type: [string, "null"]
                               enum: [none, probe, trigger]
                               description: Views only. `none` = not writable, `probe` = the engine says it is updatable, `trigger` = writable through INSTEAD OF triggers.
                             inactive:
                               type: boolean
                               description: Deactivated earlier; activating it switches its saved configuration back on.
-                            label: { type: string, nullable: true, description: Label of a deactivated table. }
+                            label: { type: [string, "null"], description: Label of a deactivated table. }
                             has_id: { type: boolean }
                             has_creator: { type: boolean }
                             columns: { type: integer }
                             activatable: { type: boolean }
                             reason:
-                              type: string
-                              nullable: true
+                              type: [string, "null"]
                               enum: [already_configured, invalid_name, missing_id_column, missing_creator_column, missing_in_database]
         '403':
           $ref: '#/components/responses/Forbidden'
 
   /api/config/db-objects/{name}:
     get:
+      operationId: getConfigDbObjectsByName
       tags: [config]
       summary: Preview the activation of a database table or view
       description: |
@@ -2687,8 +2764,8 @@ paths:
                   code: { type: string }
                   name: { type: string }
                   kind: { type: string, enum: [table, view] }
-                  sql: { type: string, nullable: true }
-                  view_writable: { type: string, nullable: true, enum: [none, probe, trigger] }
+                  sql: { type: [string, "null"] }
+                  view_writable: { type: [string, "null"], enum: [none, probe, trigger] }
                   has_id: { type: boolean }
                   has_creator: { type: boolean }
                   fields:
@@ -2706,12 +2783,13 @@ paths:
                         on_update: { type: string }
                         configured: { type: boolean }
                   activatable: { type: boolean }
-                  reason: { type: string, nullable: true }
+                  reason: { type: [string, "null"] }
         '403':
           $ref: '#/components/responses/Forbidden'
 
   /api/config/db-objects/{name}/activate:
     post:
+      operationId: postConfigDbObjectsActivateByName
       tags: [config]
       summary: Register an existing database table or view as a BraDypUS table
       description: |
@@ -2750,6 +2828,7 @@ paths:
 
   /api/config/tables/sort:
     post:
+      operationId: postConfigTablesSort
       tags: [config]
       summary: Update table display order
       requestBody:
@@ -2776,6 +2855,7 @@ paths:
 
   /api/config/table/{tb}:
     get:
+      operationId: getConfigTableByTb
       tags: [config]
       summary: Get full configuration for a table
       parameters:
@@ -2795,6 +2875,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
     put:
+      operationId: putConfigTableByTb
       tags: [config]
       summary: Save table-level properties (label, order, preview, rs, links…)
       parameters:
@@ -2815,6 +2896,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
     patch:
+      operationId: patchConfigTableByTb
       tags: [config]
       summary: Rename a table
       parameters:
@@ -2839,6 +2921,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
     delete:
+      operationId: deleteConfigTableByTb
       tags: [config]
       summary: Delete a table (and its data), or only remove it from the configuration
       description: |
@@ -2865,6 +2948,7 @@ paths:
 
   /api/config/table/{tb}/active:
     put:
+      operationId: putConfigTableActiveByTb
       tags: [config]
       summary: Deactivate or reactivate a table
       description: |
@@ -2897,6 +2981,7 @@ paths:
 
   /api/config/table/{tb}/view-writable:
     post:
+      operationId: postConfigTableViewWritableByTb
       tags: [config]
       summary: Re-check how a registered SQL view can be written
       description: |
@@ -2924,6 +3009,7 @@ paths:
 
   /api/config/table/{tb}/fields:
     get:
+      operationId: getConfigTableFieldsByTb
       tags: [config]
       summary: List all fields for a table
       parameters:
@@ -2947,6 +3033,7 @@ paths:
 
   /api/config/table/{tb}/field:
     post:
+      operationId: postConfigTableFieldByTb
       tags: [config]
       summary: Add a new field to a table
       parameters:
@@ -2969,6 +3056,7 @@ paths:
 
   /api/config/table/{tb}/field/{fld}:
     put:
+      operationId: putConfigTableFieldByTbAndFld
       tags: [config]
       summary: Save field properties
       parameters:
@@ -2990,6 +3078,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
     patch:
+      operationId: patchConfigTableFieldByTbAndFld
       tags: [config]
       summary: Rename a field
       parameters:
@@ -3015,6 +3104,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
     delete:
+      operationId: deleteConfigTableFieldByTbAndFld
       tags: [config]
       summary: Delete a field
       parameters:
@@ -3032,6 +3122,7 @@ paths:
 
   /api/config/table/{tb}/fuzzy-date:
     post:
+      operationId: postConfigTableFuzzyDateByTb
       tags: [config]
       summary: Activate the fuzzy-date (chronology) plugin for a table
       description: |
@@ -3055,6 +3146,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
     delete:
+      operationId: deleteConfigTableFuzzyDateByTb
       tags: [config]
       summary: Deactivate the fuzzy-date plugin for a table
       description: |
@@ -3078,6 +3170,7 @@ paths:
 
   /api/config/table/{tb}/osteology:
     post:
+      operationId: postConfigTableOsteologyByTb
       tags: [config]
       summary: Activate the osteology (skeletal inventory) plugin for a table
       description: |
@@ -3099,6 +3192,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
     delete:
+      operationId: deleteConfigTableOsteologyByTb
       tags: [config]
       summary: Deactivate the osteology plugin for a table
       description: |
@@ -3121,6 +3215,7 @@ paths:
 
   /api/config/table/{tb}/radiocarbon:
     post:
+      operationId: postConfigTableRadiocarbonByTb
       tags: [config]
       summary: Activate the radiocarbon (C14) dating plugin for a table
       description: |
@@ -3146,6 +3241,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
     delete:
+      operationId: deleteConfigTableRadiocarbonByTb
       tags: [config]
       summary: Deactivate the radiocarbon plugin for a table
       description: |
@@ -3169,6 +3265,7 @@ paths:
 
   /api/config/table/{tb}/pleiades:
     post:
+      operationId: postConfigTablePleiadesByTb
       tags: [config]
       summary: Activate the Pleiades gazetteer-linking plugin for a table
       description: |
@@ -3196,6 +3293,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
     delete:
+      operationId: deleteConfigTablePleiadesByTb
       tags: [config]
       summary: Deactivate the Pleiades plugin for a table
       description: |
@@ -3220,6 +3318,7 @@ paths:
 
   /api/config/field-structure:
     get:
+      operationId: getConfigFieldStructure
       tags: [config]
       summary: Get the meta-structure that defines allowed field properties
       description: Used by the frontend to render the field editor form dynamically.
@@ -3242,6 +3341,7 @@ paths:
 
   /api/config/validation:
     get:
+      operationId: getConfigValidation
       tags: [config]
       summary: Run the schema validation report
       responses:
@@ -3271,6 +3371,7 @@ paths:
 
   /api/config/validation/fix:
     post:
+      operationId: postConfigValidationFix
       tags: [config]
       summary: Apply an automatic fix suggested by the validation report
       requestBody:
@@ -3296,6 +3397,7 @@ paths:
 
   /api/config/geoface:
     get:
+      operationId: getConfigGeoface
       tags: [config]
       summary: Get GeoFace (map) configuration
       responses:
@@ -3313,6 +3415,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
     put:
+      operationId: putConfigGeoface
       tags: [config]
       summary: Save GeoFace configuration
       requestBody:
@@ -3333,6 +3436,7 @@ paths:
 
   /api/config/geofile:
     post:
+      operationId: postConfigGeofile
       tags: [config]
       summary: Upload a local GeoJSON / KML base-layer file
       description: Uploads a file to `projects/{app}/geofiles/`. Super-admin only.
@@ -3357,6 +3461,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
     delete:
+      operationId: deleteConfigGeofile
       tags: [config]
       summary: Delete a locally uploaded geofile
       description: Removes the file from `projects/{app}/geofiles/`. Super-admin only.
@@ -3382,6 +3487,7 @@ paths:
 
   /api/charts:
     get:
+      operationId: getCharts
       tags: [charts]
       summary: List saved charts visible to the current user
       responses:
@@ -3401,6 +3507,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
     post:
+      operationId: postCharts
       tags: [charts]
       summary: Save a new chart
       requestBody:
@@ -3432,6 +3539,7 @@ paths:
 
   /api/chart/data:
     post:
+      operationId: postChartData
       tags: [charts]
       summary: Compute chart data without saving
       description: |
@@ -3493,6 +3601,7 @@ paths:
 
   /api/chart/{id}/share:
     post:
+      operationId: postChartShareById
       tags: [charts]
       summary: Share a chart with all users
       parameters:
@@ -3509,6 +3618,7 @@ paths:
 
   /api/chart/{id}/unshare:
     post:
+      operationId: postChartUnshareById
       tags: [charts]
       summary: Unshare a chart (revert to private)
       parameters:
@@ -3525,6 +3635,7 @@ paths:
 
   /api/chart/{id}:
     post:
+      operationId: postChartById
       tags: [charts]
       summary: Update a saved chart's name and/or definition
       description: |
@@ -3564,6 +3675,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
     delete:
+      operationId: deleteChartById
       tags: [charts]
       summary: Delete a saved chart
       parameters:
@@ -3582,6 +3694,7 @@ paths:
 
   /api/backups:
     get:
+      operationId: getBackups
       tags: [backup]
       summary: List available backups
       responses:
@@ -3609,6 +3722,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
     post:
+      operationId: postBackups
       tags: [backup]
       summary: Create a new backup
       responses:
@@ -3623,6 +3737,7 @@ paths:
 
   /api/backup/{file}/download:
     get:
+      operationId: getBackupDownloadByFile
       tags: [backup]
       summary: Download a backup file
       parameters:
@@ -3640,6 +3755,7 @@ paths:
 
   /api/backup/{file}/restore:
     post:
+      operationId: postBackupRestoreByFile
       tags: [backup]
       summary: Restore a backup (replaces current database)
       parameters:
@@ -3656,6 +3772,7 @@ paths:
 
   /api/backup/{file}:
     delete:
+      operationId: deleteBackupByFile
       tags: [backup]
       summary: Delete a backup file
       parameters:
@@ -3674,6 +3791,7 @@ paths:
 
   /api/geoface:
     get:
+      operationId: getGeoface
       tags: [geoface]
       summary: Get geodata as GeoJSON for a table
       description: |
@@ -3786,6 +3904,7 @@ paths:
 
   /api/geoface/feature:
     post:
+      operationId: postGeofaceFeature
       tags: [geoface]
       summary: Create a new geometry feature
       requestBody:
@@ -3813,6 +3932,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
     put:
+      operationId: putGeofaceFeature
       tags: [geoface]
       summary: Update one or more geometry features
       description: |
@@ -3847,6 +3967,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
     delete:
+      operationId: deleteGeofaceFeature
       tags: [geoface]
       summary: Delete one or more geometry features
       requestBody:
@@ -3873,6 +3994,7 @@ paths:
 
   /api/geoface/color-field:
     put:
+      operationId: putGeofaceColorField
       tags: [geoface]
       summary: Save (or clear) a table's default GeoFace colour-by field
       description: |
@@ -3912,6 +4034,7 @@ paths:
 
   /api/users:
     get:
+      operationId: getUsers
       tags: [users]
       summary: List all users
       responses:
@@ -3933,6 +4056,7 @@ paths:
 
   /api/user:
     get:
+      operationId: getUser
       tags: [users]
       summary: Get the current user's profile form data
       responses:
@@ -3950,6 +4074,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
     post:
+      operationId: postUser
       tags: [users]
       summary: Create or update a user
       requestBody:
@@ -3982,6 +4107,7 @@ paths:
 
   /api/user/{id}:
     get:
+      operationId: getUserById
       tags: [users]
       summary: Get a specific user's profile form data
       parameters:
@@ -4001,6 +4127,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
     delete:
+      operationId: deleteUserById
       tags: [users]
       summary: Delete a user
       parameters:
@@ -4017,6 +4144,7 @@ paths:
 
   /api/user/{id}/revoke:
     post:
+      operationId: postUserRevokeById
       tags: [users]
       summary: Revoke a user's active session
       description: |
@@ -4043,6 +4171,7 @@ paths:
 
   /api/templates:
     get:
+      operationId: getTemplates
       tags: [templates]
       summary: List tables that have at least one layout template
       responses:
@@ -4064,6 +4193,7 @@ paths:
 
   /api/templates/{tb}:
     get:
+      operationId: getTemplatesByTb
       tags: [templates]
       summary: List layout template names for a table
       parameters:
@@ -4087,6 +4217,7 @@ paths:
 
   /api/template/{tb}/{name}:
     get:
+      operationId: getTemplateByTbAndName
       tags: [templates]
       summary: Get a template's JSON content
       parameters:
@@ -4111,6 +4242,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
     post:
+      operationId: postTemplateByTbAndName
       tags: [templates]
       summary: Save (create or overwrite) a template
       parameters:
@@ -4137,6 +4269,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
     delete:
+      operationId: deleteTemplateByTbAndName
       tags: [templates]
       summary: Delete a template
       parameters:
@@ -4158,6 +4291,7 @@ paths:
 
   /api/template/{tb}/{name}/rename:
     post:
+      operationId: postTemplateRenameByTbAndName
       tags: [templates]
       summary: Rename a template
       parameters:
@@ -4191,6 +4325,7 @@ paths:
 
   /api/vocabularies:
     get:
+      operationId: getVocabularies
       tags: [vocabularies]
       summary: List all vocabulary entries
       parameters:
@@ -4219,6 +4354,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
     post:
+      operationId: postVocabularies
       tags: [vocabularies]
       summary: Add a vocabulary entry
       requestBody:
@@ -4247,6 +4383,7 @@ paths:
 
   /api/vocabularies/usages:
     get:
+      operationId: getVocabulariesUsages
       tags: [vocabularies]
       summary: List which table fields reference each vocabulary
       description: |
@@ -4282,6 +4419,7 @@ paths:
 
   /api/vocabularies/sort:
     post:
+      operationId: postVocabulariesSort
       tags: [vocabularies]
       summary: Update the display order of vocabulary entries
       requestBody:
@@ -4308,6 +4446,7 @@ paths:
 
   /api/vocabulary/{id}:
     patch:
+      operationId: patchVocabularyById
       tags: [vocabularies]
       summary: Edit a vocabulary entry value
       parameters:
@@ -4332,6 +4471,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
     delete:
+      operationId: deleteVocabularyById
       tags: [vocabularies]
       summary: Delete a vocabulary entry
       parameters:
@@ -4350,6 +4490,7 @@ paths:
 
   /api/saved-queries:
     get:
+      operationId: getSavedQueries
       tags: [saved-queries]
       summary: List saved queries visible to the current user
       responses:
@@ -4369,6 +4510,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
     post:
+      operationId: postSavedQueries
       tags: [saved-queries]
       summary: Save a new query
       requestBody:
@@ -4397,6 +4539,7 @@ paths:
 
   /api/saved-query/{id}/share:
     post:
+      operationId: postSavedQueryShareById
       tags: [saved-queries]
       summary: Share a saved query with all users
       parameters:
@@ -4413,6 +4556,7 @@ paths:
 
   /api/saved-query/{id}/unshare:
     post:
+      operationId: postSavedQueryUnshareById
       tags: [saved-queries]
       summary: Unshare a saved query
       parameters:
@@ -4429,6 +4573,7 @@ paths:
 
   /api/saved-query/{id}:
     delete:
+      operationId: deleteSavedQueryById
       tags: [saved-queries]
       summary: Delete a saved query
       parameters:
@@ -4447,6 +4592,7 @@ paths:
 
   /api/api-keys:
     get:
+      operationId: getApiKeys
       tags: [api-keys]
       summary: List API keys for the current application
       responses:
@@ -4466,6 +4612,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
     post:
+      operationId: postApiKeys
       tags: [api-keys]
       summary: Create a new API key
       requestBody:
@@ -4509,6 +4656,7 @@ paths:
 
   /api/api-key/{id}/revoke:
     post:
+      operationId: postApiKeyRevokeById
       tags: [api-keys]
       summary: Revoke (deactivate) an API key
       parameters:
@@ -4525,6 +4673,7 @@ paths:
 
   /api/api-key/{id}:
     delete:
+      operationId: deleteApiKeyById
       tags: [api-keys]
       summary: Permanently delete an API key
       parameters:
@@ -4546,6 +4695,7 @@ paths:
 
   /api/groups:
     get:
+      operationId: getGroups
       tags: [groups]
       summary: List groups with member, rule and active-key counts
       responses:
@@ -4565,6 +4715,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
     post:
+      operationId: postGroups
       tags: [groups]
       summary: Create a group
       requestBody:
@@ -4585,6 +4736,7 @@ paths:
 
   /api/group/{id}:
     get:
+      operationId: getGroupById
       tags: [groups]
       summary: Get a group with its members and rules
       parameters:
@@ -4604,6 +4756,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
     put:
+      operationId: putGroupById
       tags: [groups]
       summary: Rename a group / change its description
       parameters:
@@ -4624,6 +4777,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
     delete:
+      operationId: deleteGroupById
       tags: [groups]
       summary: Delete a group
       description: >
@@ -4643,6 +4797,7 @@ paths:
 
   /api/group/{id}/members:
     put:
+      operationId: putGroupMembersById
       tags: [groups]
       summary: Replace the members of a group
       parameters:
@@ -4671,6 +4826,7 @@ paths:
 
   /api/group/{id}/rules:
     put:
+      operationId: putGroupRulesById
       tags: [groups]
       summary: Replace the rules of a group
       description: >
@@ -4712,6 +4868,7 @@ paths:
 
   /api/user/{id}/groups:
     get:
+      operationId: getUserGroupsById
       tags: [groups]
       summary: Ids of the groups a user belongs to
       parameters:
@@ -4733,6 +4890,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
     put:
+      operationId: putUserGroupsById
       tags: [groups]
       summary: Replace the groups of a user
       parameters:
@@ -4761,6 +4919,7 @@ paths:
 
   /api/locks:
     get:
+      operationId: getLocks
       tags: [groups]
       summary: List table locks
       responses:
@@ -4780,6 +4939,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
     post:
+      operationId: postLocks
       tags: [groups]
       summary: Create a table lock
       description: >
@@ -4804,6 +4964,7 @@ paths:
 
   /api/lock/{id}:
     put:
+      operationId: putLockById
       tags: [groups]
       summary: Change a table lock
       parameters:
@@ -4824,6 +4985,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
     delete:
+      operationId: deleteLockById
       tags: [groups]
       summary: Remove a table lock
       parameters:
@@ -4842,6 +5004,7 @@ paths:
 
   /api/import/{tb}/fields:
     get:
+      operationId: getImportFieldsByTb
       tags: [import]
       summary: Get importable field list for a table
       parameters:
@@ -4865,6 +5028,7 @@ paths:
 
   /api/import/preview-file:
     post:
+      operationId: postImportPreviewFile
       tags: [import]
       summary: Upload a CSV/XLSX file and return column headers + sample rows
       requestBody:
@@ -4901,6 +5065,7 @@ paths:
 
   /api/import/preview-photos:
     post:
+      operationId: postImportPreviewPhotos
       tags: [import]
       summary: Upload a ZIP of photos and return the file list
       requestBody:
@@ -4926,6 +5091,7 @@ paths:
 
   /api/import/data:
     post:
+      operationId: postImportData
       tags: [import]
       summary: Execute a tabular data import
       requestBody:
@@ -4956,6 +5122,7 @@ paths:
 
   /api/import/geojson:
     post:
+      operationId: postImportGeojson
       tags: [import]
       summary: Import GeoJSON geometries matched by a key field
       requestBody:
@@ -4985,6 +5152,7 @@ paths:
 
   /api/import/photos:
     post:
+      operationId: postImportPhotos
       tags: [import]
       summary: Execute a photo import from the uploaded ZIP
       requestBody:
@@ -5015,6 +5183,7 @@ paths:
 
   /api/search-replace/tables:
     get:
+      operationId: getSearchReplaceTables
       tags: [search-replace]
       summary: List tables eligible for find-and-replace
       responses:
@@ -5036,6 +5205,7 @@ paths:
 
   /api/search-replace/{tb}/fields:
     get:
+      operationId: getSearchReplaceFieldsByTb
       tags: [search-replace]
       summary: List fields eligible for find-and-replace in a table
       parameters:
@@ -5064,6 +5234,7 @@ paths:
 
   /api/search-replace:
     post:
+      operationId: postSearchReplace
       tags: [search-replace]
       summary: Execute a find-and-replace operation
       description: Replaces all occurrences of `search` with `replace` in `fld` across all rows of `tb`. This operation is irreversible.
@@ -5105,6 +5276,7 @@ paths:
 
   /api/free-sql/verify:
     post:
+      operationId: postFreeSqlVerify
       tags: [free-sql]
       summary: Verify the super-admin password before entering free SQL mode
       requestBody:
@@ -5129,6 +5301,7 @@ paths:
 
   /api/free-sql/run:
     post:
+      operationId: postFreeSqlRun
       tags: [free-sql]
       summary: Execute a raw SQL statement
       description: Only available to super_admin users after password verification.
@@ -5165,6 +5338,7 @@ paths:
 
   /api/migrations:
     get:
+      operationId: getMigrations
       tags: [migrations]
       summary: List all known migrations and their status
       description: |
@@ -5206,6 +5380,7 @@ paths:
 
   /api/config/relations:
     get:
+      operationId: getConfigRelations
       tags: [config-relations]
       summary: List all FK relation definitions
       description: |
@@ -5229,6 +5404,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
     post:
+      operationId: postConfigRelations
       tags: [config-relations]
       summary: Create a new FK relation and apply it to the database
       description: |
@@ -5275,6 +5451,7 @@ paths:
     parameters:
       - $ref: '#/components/parameters/id'
     put:
+      operationId: putConfigRelationsById
       tags: [config-relations]
       summary: Update to_tb, to_col, on_delete, on_update for an existing relation
       description: |
@@ -5305,6 +5482,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
     delete:
+      operationId: deleteConfigRelationsById
       tags: [config-relations]
       summary: Delete a relation and drop the FK constraint from the database
       responses:
@@ -5319,6 +5497,7 @@ paths:
 
   /api/config/apply-constraints:
     post:
+      operationId: postConfigApplyConstraints
       tags: [config-relations]
       summary: Apply all pending FK constraints and indexes to the database
       description: |
@@ -5362,6 +5541,7 @@ paths:
     parameters:
       - $ref: '#/components/parameters/tb'
     get:
+      operationId: getConfigTableIndexesByTb
       tags: [config-indexes]
       summary: List user-defined indexes for a table
       responses:
@@ -5381,6 +5561,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
     post:
+      operationId: postConfigTableIndexesByTb
       tags: [config-indexes]
       summary: Create a new index on a table
       requestBody:
@@ -5409,6 +5590,7 @@ paths:
       - $ref: '#/components/parameters/tb'
       - $ref: '#/components/parameters/id'
     delete:
+      operationId: deleteConfigTableIndexesByTbAndId
       tags: [config-indexes]
       summary: Delete an index
       responses:
@@ -5425,6 +5607,7 @@ paths:
 
   /api/zotero/libs:
     get:
+      operationId: getZoteroLibs
       tags: [zotero]
       summary: List configured Zotero libraries
       description: Returns all libraries; `api_key` is redacted (replaced by `has_api_key`). Admin only.
@@ -5447,6 +5630,7 @@ paths:
 
   /api/zotero/lib:
     post:
+      operationId: postZoteroLib
       tags: [zotero]
       summary: Add a Zotero library
       description: Registers a Zotero user or group library. Admin only.
@@ -5492,6 +5676,7 @@ paths:
     parameters:
       - $ref: '#/components/parameters/id'
     delete:
+      operationId: deleteZoteroLibById
       tags: [zotero]
       summary: Delete a Zotero library
       description: Deletes the library and all its citation links (CASCADE). Admin only.
@@ -5507,6 +5692,7 @@ paths:
 
   /api/zotero/search:
     get:
+      operationId: getZoteroSearch
       tags: [zotero]
       summary: Proxy a full-text search to the Zotero API
       description: Requires edit privilege.
@@ -5567,6 +5753,7 @@ paths:
       - $ref: '#/components/parameters/tb'
       - $ref: '#/components/parameters/id'
     get:
+      operationId: getZoteroLinksByTbAndId
       tags: [zotero]
       summary: Get all Zotero citation links for a record
       description: Returns links ordered by `sort`. Requires read privilege.
@@ -5589,6 +5776,7 @@ paths:
 
   /api/zotero/link:
     post:
+      operationId: postZoteroLink
       tags: [zotero]
       summary: Add a Zotero citation link to a record
       description: |
@@ -5635,6 +5823,7 @@ paths:
     parameters:
       - $ref: '#/components/parameters/id'
     patch:
+      operationId: patchZoteroLinkById
       tags: [zotero]
       summary: Update pages, notes or sort order of a citation link
       description: Requires edit privilege.
@@ -5661,6 +5850,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
     delete:
+      operationId: deleteZoteroLinkById
       tags: [zotero]
       summary: Delete a citation link
       description: Requires edit privilege.
@@ -5679,6 +5869,7 @@ paths:
       - $ref: '#/components/parameters/tb'
       - $ref: '#/components/parameters/id'
     post:
+      operationId: postZoteroSyncByTbAndId
       tags: [zotero]
       summary: Sync citation cache for all links on a single record
       description: |
@@ -5705,6 +5896,7 @@ paths:
 
   /api/zotero/sync:
     post:
+      operationId: postZoteroSync
       tags: [zotero]
       summary: Bulk-sync citation cache for all libraries (admin)
       description: |
@@ -5734,6 +5926,7 @@ paths:
 
   /api/pleiades/search:
     get:
+      operationId: getPleiadesSearch
       tags: [pleiades]
       summary: Search the Pleiades gazetteer by place name
       description: |
@@ -5780,6 +5973,7 @@ paths:
 
   /api/pleiades/place/{id}:
     get:
+      operationId: getPleiadesPlaceById
       tags: [pleiades]
       summary: Look up one Pleiades place, including its representative point
       description: |
@@ -5823,6 +6017,7 @@ paths:
 
   /api/widgets:
     get:
+      operationId: getWidgets
       tags: [widgets]
       summary: List available widget names for the current app
       description: |
@@ -5855,6 +6050,7 @@ paths:
           type: string
           pattern: '^[a-z0-9\-]+$'
     get:
+      operationId: getWidgetByName
       tags: [widgets]
       summary: Serve a widget JS file
       description: |
@@ -5879,6 +6075,7 @@ paths:
 
   /api/upgrade/status:
     get:
+      operationId: getUpgradeStatus
       tags: [upgrade]
       summary: Upgrade status
       description: |
@@ -5903,9 +6100,12 @@ paths:
                           `major` = v4→v5 schema rewrite needed;
                           `minor` = pending incremental migrations;
                           `null` = schema is up to date.
+        '404':
+          $ref: '#/components/responses/WrongPathShape'
 
   /api/upgrade/major:
     post:
+      operationId: postUpgradeMajor
       tags: [upgrade]
       summary: Run major upgrade (v4 → v5)
       description: |
@@ -5939,6 +6139,7 @@ paths:
 
   /api/upgrade/minor:
     post:
+      operationId: postUpgradeMinor
       tags: [upgrade]
       summary: Run minor upgrade (pending migrations)
       description: |
@@ -5963,6 +6164,7 @@ paths:
 
   /api/config/dbml:
     get:
+      operationId: getConfigDbml
       tags: [dbml]
       summary: Export schema as DBML
       description: |
@@ -5989,6 +6191,7 @@ paths:
 
   /api/config/dbml/preview:
     post:
+      operationId: postConfigDbmlPreview
       tags: [dbml]
       summary: Validate DBML without applying
       description: |
@@ -6084,6 +6287,7 @@ paths:
 
   /api/config/dbml/apply:
     post:
+      operationId: postConfigDbmlApply
       tags: [dbml]
       summary: Apply DBML import
       description: |
@@ -6147,6 +6351,7 @@ paths:
 
   /api/assemblages:
     get:
+      operationId: getAssemblages
       tags: [assemblage]
       summary: List saved assemblage analyses
       description: |
@@ -6171,6 +6376,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
     post:
+      operationId: postAssemblages
       tags: [assemblage]
       summary: Save a new assemblage analysis
       description: |
@@ -6209,6 +6415,7 @@ paths:
         schema:
           type: integer
     post:
+      operationId: postAssemblageById
       tags: [assemblage]
       summary: Update a saved analysis
       description: Updates the title, config or shared flag of an existing analysis.
@@ -6230,6 +6437,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
     delete:
+      operationId: deleteAssemblageById
       tags: [assemblage]
       summary: Delete a saved analysis
       description: Permanently removes the analysis. Only the owner can delete.
@@ -6251,6 +6459,7 @@ paths:
         schema:
           type: integer
     post:
+      operationId: postAssemblageShareById
       tags: [assemblage]
       summary: Share an analysis
       description: Marks the analysis as shared so other users can see it.
@@ -6272,6 +6481,7 @@ paths:
         schema:
           type: integer
     post:
+      operationId: postAssemblageUnshareById
       tags: [assemblage]
       summary: Unshare an analysis
       description: Removes the shared flag from the analysis.
@@ -6287,6 +6497,7 @@ paths:
 
   /api/assemblage/sources:
     get:
+      operationId: getAssemblageSources
       tags: [assemblage]
       summary: List available source tables
       description: |
@@ -6322,6 +6533,7 @@ paths:
 
   /api/assemblage/table-meta:
     get:
+      operationId: getAssemblageTableMeta
       tags: [assemblage]
       summary: Field and FK metadata for pivot builder
       description: |
@@ -6372,6 +6584,7 @@ paths:
 
   /api/assemblage/data:
     post:
+      operationId: postAssemblageData
       tags: [assemblage]
       summary: Execute an assemblage pivot
       description: |
@@ -6432,6 +6645,7 @@ paths:
 
   /api/chrono/timeline:
     get:
+      operationId: getChronoTimeline
       tags: [chrono]
       summary: Chronological timeline data
       description: |
@@ -6516,6 +6730,7 @@ paths:
           type: integer
         description: Numeric ID of the anchor record
     get:
+      operationId: getChronoRelatedByTbAndId
       tags: [chrono]
       summary: Chronological density of related records
       description: |
@@ -6637,6 +6852,17 @@ components:
     NotFound:
       description: >-
         The requested item does not exist (an error response with a `code`).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    WrongPathShape:
+      description: >-
+        The URL has the wrong shape: an application-scoped endpoint called without
+        the `/{app}` prefix (`app_prefix_required`), or an app-independent one called
+        with it (`app_prefix_not_allowed`). The only HTTP-level error these public
+        endpoints return; every other failure is an HTTP `200` with `status: error`
+        and a `code`.
       content:
         application/json:
           schema:

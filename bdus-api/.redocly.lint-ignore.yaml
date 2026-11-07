@@ -1,0 +1,7 @@
+# Lint exceptions for `npx @redocly/cli lint openapi.yaml` (see tests/Unit/OpenApiHygieneTest.php).
+#
+# The OAuth2 callback is the browser's return trip from the identity provider: by design it
+# answers with a redirect (302) to the frontend, never with a 2xx.
+openapi.yaml:
+  operation-2xx-response:
+    - '#/paths/~1api~1auth~1oauth~1{provider}~1callback/get/responses'

@@ -19,9 +19,9 @@
           <!-- thumbnail for images, icon for docs -->
           <AImage
             v-if="f.is_image"
-            :src="fileUrl(f)"
+            :src="thumbUrl(f, fileUrl(f))"
             :alt="f.description || f.filename || String(f.id)"
-            :preview="true"
+            :preview="{ src: fileUrl(f) }"
             :width="60"
             :height="45"
             class="sort-thumb"
@@ -112,7 +112,7 @@
         >
           <template #bodyCell="{ column, record }">
             <template v-if="column.key === 'thumb'">
-              <img v-if="record.is_image" :src="fileUrl(record)" class="picker-thumb" />
+              <img v-if="record.is_image" :src="thumbUrl(record, fileUrl(record))" class="picker-thumb" />
               <component v-else :is="fileIcon(record.ext)" class="picker-icon" />
             </template>
             <template v-else-if="column.key === 'filename'">
@@ -136,10 +136,10 @@
       <div v-if="images.length" class="images-grid">
         <div v-for="f in images" :key="f.id" class="img-thumb">
           <AImage
-            :src="fileUrl(f)"
+            :src="thumbUrl(f, fileUrl(f))"
             :alt="f.description || f.filename || String(f.id)"
             :title="[f.description, f.attribution].filter(Boolean).join(' — ')"
-            :preview="true"
+            :preview="{ src: fileUrl(f) }"
             :width="120"
             :height="90"
             class="thumb-img"
@@ -189,6 +189,8 @@ const { t }   = useI18n()
 const toast   = useToast()
 const confirm = useConfirm()
 const auth    = useAuthStore()
+
+import { thumbUrl } from '@/utils/thumbUrl'
 
 /** Resolve a file object to its full URL. */
 function fileUrl(f) {

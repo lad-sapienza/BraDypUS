@@ -77,6 +77,35 @@
         </div>
         <small v-if="form.imageConvert" class="cfg-hint">{{ t('image_convert_exif_hint') }}</small>
 
+        <!-- Derived-image presets -->
+        <div class="cfg-form-field" style="margin-top:1rem">
+          <label>{{ t('image_presets') }}</label>
+          <small class="cfg-hint">{{ t('image_presets_hint') }}</small>
+          <div v-for="(p, i) in form.imagePresets" :key="i" class="cfg-form-row" style="align-items:flex-end">
+            <div class="cfg-form-field">
+              <label>{{ t('preset_name') }}</label>
+              <AInput v-model:value="p.name" size="small" placeholder="thumb-large" :maxlength="32" />
+            </div>
+            <div class="cfg-form-field">
+              <label>{{ t('preset_max_px') }}</label>
+              <AInputNumber v-model:value="p.max_px" :min="16" :max="10000" size="small" />
+            </div>
+            <div class="cfg-form-field">
+              <label>{{ t('image_format') }}</label>
+              <ASelect v-model:value="p.format" :options="imageFormatOptions" size="small" />
+            </div>
+            <div class="cfg-form-field">
+              <label>{{ t('image_quality') }}</label>
+              <AInputNumber v-model:value="p.quality" :min="1" :max="100" size="small" />
+            </div>
+            <AButton size="small" danger @click="form.imagePresets.splice(i, 1)">{{ t('delete') }}</AButton>
+          </div>
+          <div>
+            <AButton size="small" :disabled="form.imagePresets.length >= 20" @click="addPreset">{{ t('add_preset') }}</AButton>
+          </div>
+          <small class="cfg-hint">{{ t('preset_url_hint') }}</small>
+        </div>
+
       </section>
 
       <!-- ── Access ──────────────────────────────────────────────── -->
@@ -271,6 +300,10 @@ function onHexTyped(value) {
   }
 }
 
+function addPreset() {
+  form.value.imagePresets.push({ name: '', max_px: 800, format: 'webp', quality: 80 })
+}
+
 async function load() {
   loading.value = true
   error.value   = null
@@ -278,6 +311,7 @@ async function load() {
     const res = await api.get('/api/config/app')
     if (res.status === 'error') throw new Error(t(res.code))
     form.value          = { ...res.main }
+    form.value.imagePresets = Array.isArray(res.main.imagePresets) ? res.main.imagePresets.map(p => ({ ...p })) : []
     // Normalise so every provider always has both fields, even when config.json
     // has no "oauth" section at all yet (fresh app) or only lists one provider.
     const oauth = res.main.oauth ?? {}

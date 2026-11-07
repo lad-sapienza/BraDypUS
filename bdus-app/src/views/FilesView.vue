@@ -50,7 +50,7 @@
             <span class="preview-trigger" @click="openPreview(record)" :title="t('files_preview_hint')">
               <img
                 v-if="record.is_image"
-                :src="fileUrl(record)"
+                :src="thumbUrl(record, fileUrl(record))"
                 :alt="record.filename"
                 class="file-thumb"
               />
@@ -451,6 +451,8 @@ onMounted(() => window.addEventListener('keydown', onPreviewKey))
 onUnmounted(() => window.removeEventListener('keydown', onPreviewKey))
 
 watch(previewDialog, open => { if (!open) previewListToken++ })
+
+import { thumbUrl } from '@/utils/thumbUrl'
 
 // ── Helpers ─────────────────────────────────────────────────────────
 function fileUrl(f) {

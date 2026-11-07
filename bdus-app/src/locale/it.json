@@ -1562,5 +1562,11 @@
   "invalid_filter": "Filtro non valido",
   "duplicate_rule": "La stessa tabella e azione compaiono due volte",
   "unknown_table": "Tabella sconosciuta",
-  "grp_counts": "%s membro/i · %s regola/e"
+  "grp_counts": "%s membro/i · %s regola/e",
+  "image_presets": "Immagini derivate (preset)",
+  "image_presets_hint": "Versioni ridotte delle immagini, create alla prima richiesta e poi conservate in cache. Il preset \"thumb\" (200 px, WebP) esiste sempre ed è usato dalla galleria; definiscilo qui per modificarlo. Modificare o rimuovere un preset elimina le sue versioni in cache.",
+  "preset_name": "Nome (a-z, 0-9, _ -)",
+  "preset_max_px": "Lato maggiore (px)",
+  "add_preset": "Aggiungi preset",
+  "preset_url_hint": "URL pubblico: /{app}/api/file/{nome}/{id file}.{webp|jpg}"
 }

@@ -1542,6 +1542,7 @@
   "value_not_allowed": "This value is not allowed for your group",
   "invalid_enforce": "Invalid pinned values",
   "invalid_attrs": "Invalid group attributes",
+  "grp_all_tables_rules": "This group also has rules for all tables: %s. They are kept when you save.",
   "grp_filter_empty": "Add at least one condition.",
   "grp_filter_invalid_json": "This is not valid JSON.",
   "grp_delete_confirm": "Delete this group? Its members and rules are removed, and %s API key(s) lose the group.",

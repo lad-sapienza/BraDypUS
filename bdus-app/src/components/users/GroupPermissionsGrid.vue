@@ -2,6 +2,10 @@
   <div class="gpg">
     <AAlert v-if="error" type="error" :message="error" show-icon closable class="gpg-alert" @close="$emit('clear-error')" />
 
+    <p v-if="allTables.length" class="gpg-all">
+      {{ t('grp_all_tables_rules', allTables.map(r => t(`grp_action_${r.action}`) + (r.filter ? ' (' + t('grp_mode_filter').toLowerCase() + ')' : '')).join(', ')) }}
+    </p>
+
     <div class="gpg-scroll">
       <table class="gpg-table">
         <thead>
@@ -129,20 +133,25 @@ const modeOptions = computed(() => [
 // (enforce — the values the server accepts for some fields — only on create and update)
 const cells = reactive({})
 const baseline = ref('')
+// Rules the grid has no row for (every table, `*`; or a table that no longer exists): kept as they are on save.
+const extra    = ref([])
+const allTables = computed(() => extra.value.filter(r => r.table === '*'))
 
 function build() {
   const next = {}
+  const rest = []
   for (const tb of props.tables) {
     next[tb.name] = Object.fromEntries(ACTIONS.map(a => [a, { mode: 'off', filter: null, enforce: null }]))
   }
   for (const r of props.rules) {
     const cell = next[r.table]?.[r.action]
-    if (!cell) continue            // a rule on a table the grid does not list is kept out of the way
+    if (!cell) { rest.push(r); continue }   // not editable here: kept and sent back unchanged
     const hasFilter = r.filter && typeof r.filter === 'object' && !Array.isArray(r.filter) && Object.keys(r.filter).length > 0
     cell.mode   = hasFilter ? 'filter' : 'all'
     cell.filter = hasFilter ? r.filter : null
     cell.enforce = r.enforce && typeof r.enforce === 'object' && Object.keys(r.enforce).length ? r.enforce : null
   }
+  extra.value = rest
   for (const k of Object.keys(cells)) delete cells[k]
   Object.assign(cells, next)
   baseline.value = signature()
@@ -160,7 +169,7 @@ function toRules() {
       out.push(rule)
     }
   }
-  return out
+  return [...out, ...extra.value]
 }
 
 const signature = () => JSON.stringify(toRules())
@@ -237,6 +246,7 @@ watch(() => [props.tables, props.rules], build, { immediate: true })
 .gpg-table .gpg-tb { text-align: left; }
 .gpg-tb small { color: var(--p-text-muted-color); margin-left: 0.35rem; }
 .gpg-cell { white-space: nowrap; }
+.gpg-all { margin: 0; color: var(--p-text-muted-color); font-size: 0.85rem; }
 .gpg-empty { color: var(--p-text-muted-color); }
 .gpg-on { color: var(--p-primary-color, #1677ff); }
 .gpg-actions { display: flex; justify-content: flex-end; align-items: center; gap: 0.5rem; }

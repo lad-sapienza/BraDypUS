@@ -1542,6 +1542,7 @@
   "value_not_allowed": "Questo valore non è consentito per il tuo gruppo",
   "invalid_enforce": "Valori imposti non validi",
   "invalid_attrs": "Attributi del gruppo non validi",
+  "grp_all_tables_rules": "Questo gruppo ha anche regole per tutte le tabelle: %s. Vengono mantenute quando salvi.",
   "grp_filter_empty": "Aggiungi almeno una condizione.",
   "grp_filter_invalid_json": "Questo non è JSON valido.",
   "grp_delete_confirm": "Eliminare questo gruppo? Membri e regole vengono rimossi e %s chiave/i API perdono il gruppo.",

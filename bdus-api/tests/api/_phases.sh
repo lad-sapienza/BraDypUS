@@ -466,6 +466,12 @@ run_tests() {
       --variable "jwt=${JWT}"
   fi
 
+  if should_run "51"; then
+    header "Phase 51 — System groups do what they declare"
+    run_phase "Groups declared behaviour" "51_groups_declared_behaviour.hurl" \
+      --variable "jwt=${JWT}"
+  fi
+
   # Phase 10 always runs: drops crud_test tables and logs out
   header "Phase 10 — Cleanup"
   run_phase "Cleanup" "10_cleanup.hurl" \

@@ -73,6 +73,7 @@ without going through a lib/ abstraction.
 | `Template\Loader` | `lib/Template/Loader.php` | Loads Twig print templates from DB |
 | `Image\Resizer` | `lib/Image/Resizer.php` | Resize / convert an uploaded image in place (Intervention) |
 | `Image\Presets` | `lib/Image/Presets.php` | Derived-image presets: validation, built-in `thumb`, lookup |
+| `Image\Watermark` | `lib/Image/Watermark.php` | Optional text watermark of a preset: validation, text resolution, rendering (bundled DejaVu Sans) |
 | `Image\Derivative` | `lib/Image/Derivative.php` | Generates a preset version into `cache/`, purges it |
 | `Zotero\Client` | `lib/Zotero/Client.php` | Zotero API HTTP client |
 | `Zotero\ZoteroException` | `lib/Zotero/ZoteroException.php` | Zotero-specific exception |
@@ -233,7 +234,14 @@ the effective list (the built-in `thumb` is added when not defined) and finds on
 The list is stored as JSON in `bdus_cfg_app.image_presets` (read and written by
 `Config\AppSettings`, exposed as `main.imagePresets`, saved by `Config::save_app_properties`).
 
-**`Image\Derivative`** builds one version of one file: `generate($src, $dest, $preset)`
+**`Image\Watermark`** owns the optional `watermark` of a preset
+(`{text, position, color, background, opacity, margin, size}`): `normalize()` validates it when the
+preset is saved (called by `Presets::normalize`), `resolveText()` expands `{{attribution}}` and sanitises
+the result at render time (no text when the template needs an attribution the file lacks), `apply()`
+draws box and text with the bundled font `lib/Image/fonts/DejaVuSans.ttf` (GD needs a font file and
+FreeType, both present in the image).
+
+**`Image\Derivative`** builds one version of one file: `generate($src, $dest, $preset, $attribution)`
 decodes, crops (`cover`) or scales down (`inside`), encodes WebP/JPG into a hidden temp file
 and renames it into place. It refuses unreadable sources, unsupported types and sources over
 100 megapixels. `purgeFile($projDir, $id)` removes every version of a file

@@ -187,6 +187,9 @@ extension or a file that is not a JPG, PNG, GIF or WebP image gives a plain `404
 carries an `ETag`, so clients and CDNs can revalidate. The `file` objects returned with a record
 give the file `id` (and `ext`, `attribution`). See [Derived images](../usage/files.md#derived-images).
 
+A preset may include a `watermark` (`{text, position, color, background, opacity, margin, size}`, text with the
+placeholder `{{attribution}}`): it is drawn on derived versions only, and the original is not affected.
+
 ::: warning Files are public by id
 Originals and derived versions are served without authentication and ids are sequential.
 :::

@@ -77,6 +77,28 @@ file gallery and the file manager use it for their thumbnails. Define a preset n
 `thumb` to change its size or fit. Saving a changed or removed preset deletes the cached versions
 generated from it; they are rebuilt on the next request.
 
+#### Watermark <Badge type="tip" text="v5.19.0" />
+
+Each preset can carry a **text watermark**, drawn on the derived versions only (the original file is
+never changed). Turn on **Watermark** in the preset's row and set:
+
+| Setting | Meaning |
+|---|---|
+| **Text** | Up to 200 characters. `{{attribution}}` is replaced by the file's *attribution*, e.g. `© {{attribution}}`; plain text is fine too. |
+| **Position** | One of nine places on the image (corners, edges, centre). |
+| **Text colour**, **Background box** | The box behind the text is optional. |
+| **Opacity** | 0–100, applied to text and box. |
+| **Font size**, **Margin** | Percent of the image's shorter side. Long text on a small image is shrunk to fit. |
+
+If the text uses `{{attribution}}` and a file has no attribution, that file is served without watermark.
+The font is bundled (DejaVu Sans); custom fonts are not supported. Changing the watermark or a file's
+attribution regenerates the versions on the next request.
+
+::: warning A watermark does not protect the original
+If the original file is public (and it is: see [File management](../usage/files.md#derived-images)),
+anyone can still download it without the text. Use the watermark to credit images, not to protect them.
+:::
+
 ## Access <Badge type="tip" text="v5.6.0" />
 
 | Field | Description |

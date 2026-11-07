@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Text watermark on derived images (#62).** A preset can carry an optional `watermark`: a text
+  template (`© {{attribution}}` — the placeholder is the file's attribution, so one record can hold
+  images with different credits; plain text is allowed too), position (3×3 grid), text colour,
+  background box (or none), opacity, margin and font size as percentages of the shorter side. It is
+  burnt into the derived versions only; the original is never touched. Files without attribution get
+  no watermark when the template uses the placeholder. The text is validated when the preset is saved
+  (≤ 200 characters, no control characters, only `{{attribution}}` as placeholder) and sanitised again
+  at render time. One bundled font (DejaVu Sans, licence in `lib/Image/fonts/`); custom fonts are out of
+  scope. Editing the file's attribution or the preset's watermark regenerates the versions. Config UI:
+  *System configuration → App settings → Images*. A watermark does not protect the original when the
+  original is public.
 - **Groups, parametrised rules (#51).** Rule filters now know `$CURRENT_GROUPS` (ids of the
   user's groups) and `$GROUP.<name>` (the value(s) of a group *attribute*, united over the
   user's groups); a list turns `_eq`/`_neq` into `_in`/`_nin`. One rule such as

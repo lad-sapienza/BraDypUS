@@ -100,6 +100,9 @@ e.g. /myapp/api/file/thumb/42.webp
 - Depending on the preset's *fit*, the image is cropped to exactly width × height (*Cover*,
   enlarging small images) or kept whole within the sides and never enlarged (*Inside*). An
   animated GIF yields its first frame.
+- A preset with a **watermark** (see [Watermark](../setup/main-app-config.md#watermark)) serves
+  images carrying the file's attribution text, for example `© Jane Doe, CC BY 4.0`; the original
+  stays unchanged. Editing the attribution regenerates the version.
 - Cached versions live in `projects/{app}/cache/{preset}/` and are **not** included in
   backups. They are deleted automatically when the file is replaced or deleted, when its
   metadata (e.g. the attribution) is edited, or when the preset is changed or removed, and

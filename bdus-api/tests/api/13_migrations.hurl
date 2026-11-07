@@ -65,3 +65,10 @@ Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
 jsonpath "$.migrations[?(@.name=='M048_add_image_presets_to_cfg_app')].applied" == true
+
+# ── 13g. Group attributes and enforced values (M049) are applied ────
+GET {{base_url}}/{{app_name}}/api/migrations
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.migrations[?(@.name=='M049_add_attrs_to_groups')].applied" == true

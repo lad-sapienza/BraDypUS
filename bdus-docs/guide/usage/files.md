@@ -80,6 +80,37 @@ from a specific record, use the **Unlink** action in the record's file gallery
 instead.
 :::
 
+## Derived images <Badge type="tip" text="v5.18.0" />
+
+For every image, BraDypUS can serve smaller versions defined as **presets** in
+*System configuration → App settings → Images* (see
+[Derived images](../setup/main-app-config.md#derived-images-presets)). A version is
+created the first time it is requested and then kept in a cache, so the application stays
+light until a version is actually needed:
+
+```
+GET /{app}/api/file/{preset}/{file id}.{webp|jpg}
+e.g. /myapp/api/file/thumb/42.webp
+```
+
+- The URL works like the one of the original file: **no login is needed**.
+- The extension must match the preset's format. Only names defined as presets are ever
+  generated; an unknown preset, a missing file, a wrong extension or a file that is not a
+  JPG, PNG, GIF or WebP image gives a plain **404** — there is no fallback to the original.
+- Small images are never enlarged; an animated GIF yields its first frame.
+- Cached versions live in `projects/{app}/cache/{preset}/` and are **not** included in
+  backups. They are deleted automatically when the file is replaced or deleted, when its
+  metadata (e.g. the attribution) is edited, or when the preset is changed or removed, and
+  rebuilt on demand. You can also delete the `cache/` folder at any time.
+
+The gallery and this page show the `thumb` version; clicking an image opens the original.
+
+::: warning Files are publicly reachable by id
+Originals (`projects/{app}/files/{id}.{ext}`) and derived versions are served without
+authentication, and ids are sequential. Do not upload material that must stay private.
+Access control for files is a separate, future feature.
+:::
+
 ## File actions in RecordView
 
 When editing a record, the file gallery (right sidebar) provides additional

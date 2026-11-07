@@ -47,6 +47,8 @@ cfg
 │   ├── imageFormat   ← 'webp' | 'jpg', target format when imageConvert is on
 │   ├── imageQuality  ← 1-100, default 85, used when imageConvert is on
 │   ├── imageDpi      ← resolution to embed, default 72, used when imageConvert is on
+│   ├── imagePresets  ← derived-image presets [{name,max_px,format,quality}]; stored in
+│   │                   bdus_cfg_app.image_presets (M048), 'thumb' is built in (Image\Presets)
 │   ├── welcome       ← HTML string for dashboard welcome page
 │   ├── db_engine     ← 'sqlite' | 'mysql' | 'pgsql'
 │   └── definition    ← free-text description of the application

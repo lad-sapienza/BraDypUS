@@ -56,6 +56,19 @@ upload, or check the location before uploading.
 Both settings apply only to new uploads and file replacements, never
 retroactively to files already stored.
 
+### Derived images (presets) <Badge type="tip" text="v5.18.0" />
+
+Below the settings above, **Derived images (presets)** defines smaller versions of
+your images (thumbnails, previews). Each preset has a **name** (lowercase letters,
+digits, `_` and `-`, up to 32 characters, e.g. `thumb` or `200x200`), the **longest side**
+in pixels (16–10000), a **format** (WebP or JPG) and a **quality**. Up to 20 presets can be
+defined. See [File management](../usage/files.md#derived-images) for how they are served.
+
+The preset `thumb` (200 px, WebP) always exists, even if you define nothing: the
+file gallery and the file manager use it for their thumbnails. Define a preset named
+`thumb` to change its size. Saving a changed or removed preset deletes the cached versions
+generated from it; they are rebuilt on the next request.
+
 ## Access <Badge type="tip" text="v5.6.0" />
 
 | Field | Description |

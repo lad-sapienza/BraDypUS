@@ -31,6 +31,16 @@ it can **register** an existing view from **Config → Database objects**, witho
 
 If a rule on whole rows is enough, do not use views.
 
+### Why there are no per-field permissions
+
+This is a choice, not a missing feature. A hidden field must disappear from *every* place that
+reads it: the record, lists, text search, filters (a condition such as `field = x` reveals the
+value even if the column is not shown), exports, the edit history, charts, maps and templates.
+Filtering at each of those points leaves room for a silent leak the day someone forgets one. A view
+works the other way round: the column does not exist for that group, so there is nothing to forget.
+If you have a case that views cannot cover, describe it in a GitHub issue; it will be reconsidered
+starting from that case.
+
 ## The idea in one example
 
 A table `card` with roles **author**, **supervisor**, **validator** and an

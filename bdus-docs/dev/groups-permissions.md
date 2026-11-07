@@ -208,6 +208,18 @@ What the interface needs to know comes with existing endpoints: `can` per table 
   name, so each view needs its own. The *values* written can be pinned per field
   with `enforce` (see above), but only on the table's own columns: not on plugin
   tables, and not as a transition rule (draft → review → validated).
+- **Field-level rules were considered and declined (issue #56, closed 2026-11-07).** A
+  `fields: {read, write}` entry in a rule would have to be enforced at every reader of a
+  field: record read (core, plugins, backlinks), lists, text search, `JsonFilter` and
+  ShortSQL (conditions and ordering on a hidden field leak its values), export, `bdus_versions`
+  snapshots, charts, GeoFace, assemblage, templates, the API and, for writes, record save,
+  duplicate and import. There is no single choke point, so a missed one is a silent leak, and
+  the code to add was disproportionate to the few cases it would serve. SQL views already give
+  the read side with the database as the barrier. The known rough edges of views (rules, locks
+  and history are keyed by the view's name; writable views depend on the engine; links, files
+  and plugins hang off the table name) are tracked in the views plan (#53). **Reopen only from
+  a concrete case that views cannot cover** (typically: different groups editing different
+  fields of the *same* table with a shared history), and start by listing the readers above.
 - **Files are not filtered** (`bdus_files` is not a configured table); the *link*
   between a file and a record follows the record.
 - **Plugin tables** are read through their record; read on their own (a chart, an

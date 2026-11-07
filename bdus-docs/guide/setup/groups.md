@@ -235,7 +235,8 @@ reads only what the group allows. Create it at level **Enter** and pick the grou
 - **Frozen application.** When the application status is *Frozen* nobody writes,
   groups or not.
 - **No field-level rules.** A rule covers whole rows. Hiding single columns is done
-  outside the rules, with a [SQL view](./views) registered as a table.
+  outside the rules, with a [SQL view](./views) registered as a table
+  ([why](./views#why-there-are-no-per-field-permissions)).
 - **Rules do not check the values written.** A row filter decides which rows a group
   can read or change, not what it may write into them; use a trigger for that
   ([SQL views as tables](./views)).

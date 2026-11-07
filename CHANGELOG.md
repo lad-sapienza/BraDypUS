@@ -24,14 +24,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   **Reader** (reads everything), **Writer** (reads, creates, updates, deletes everything) and
   **Self writer** (reads and creates everything, updates and deletes only the records the user
   created) — which give a user at level *Enter* what the data side of levels Reader, Writer and Self
-  writer gives. Reader and Writer behave identically to their levels in every operation tested
+  writer gives. The three behave identically to their levels in every operation tested
   (records, plugin rows, relations, links, files, geometries, import; same answers and same
-  rows, on a differential test and over HTTP on all three engines). **Self writer follows its
-  documented behaviour, and level 25 does not in 12 operations** (found by the same test):
-  the level lets a self writer add plugin rows or geometries to *other people's* records, and
-  refuses them the dependants of their *own* records (erasing plugin rows, stratigraphic
-  relations, manual links, file links and files, geometries, import). The group is correct in
-  all of them; the level is left as it is. Nobody is assigned and
+  rows, on a differential test and over HTTP on all three engines). The same test found
+  **12 operations where level 25 (Self writer) did not do what it documents**, now fixed:
+  a self writer could add plugin rows or geometries to *other people's* records, and was
+  refused the dependants of their *own* records (erasing plugin rows, stratigraphic
+  relations, manual links, file links and files, geometries, import). Nobody is assigned and
   levels are untouched, so nothing changes until an admin puts a user in one of them. Admin
   and super admin stay levels: they also gate configuration, users, backups and the lock
   bypass. The permissions grid keeps (and shows a note for) the rules it has no row for.

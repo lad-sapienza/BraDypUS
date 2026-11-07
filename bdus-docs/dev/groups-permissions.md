@@ -43,10 +43,13 @@ each, the table gates and the rows of every action equal those of the matching l
 (30, 20, 25) for a user at level Enter. `LevelGroupParityTest` runs about forty operations through the real controllers as the
 level and as the same user at Enter in the group, from the same database state, and requires
 the same answer and the same rows; every scenario also states what the level is declared to
-do. Reader and Writer match in all of them. For Self writer the group matches the declared
-behaviour in all of them and level 25 does not in 12 (`SELF_WRITER_LEVEL_DEVIATIONS`, each
-tagged lax/strict; a listed scenario must still differ, so the list shrinks when the level is
-fixed). Hurl phase 51 repeats the declared outcomes over HTTP for six users, on every
+do. All three match in all of them. (The test originally found 12 operations where level 25
+differed from its group and from the documented behaviour: a self writer could add plugin
+rows and geometries to other people's records, and was refused the dependants of their own.
+Fixed in `Controller::mayChange()`, which now looks up the owner of the record — of the
+host, for a plugin row — when the caller does not pass it, in `mayAttach()` and
+`mayAddPluginRow()`, which now require the right to change the record, and in the import
+gates, which no longer demand the table-wide edit right.) Hurl phase 51 repeats the declared outcomes over HTTP for six users, on every
 engine. The three are system groups (`bdus_groups.is_system = 1`): the Groups controller
 refuses to delete, rename, change the attributes or the rules of such a group with
 `system_group`, whoever asks (only `setMembers` is allowed; Run SQL, being raw SQL, is not

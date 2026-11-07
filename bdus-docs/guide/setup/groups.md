@@ -143,12 +143,8 @@ Three groups come with every application and can be used instead of a level for 
 
 They are **system groups** (shown with a padlock): they cannot be renamed, changed or
 deleted, not even by a super admin; you can only choose their members. Put a user at level **Enter** in one of them and they get what the level of the same
-name gives on the data: for **Reader** and **Writer** exactly the same, in every operation
-tested. For **Self writer** the group does what the table above says (their own records,
-including everything attached to them: plugin rows, relations, links, files, geometries,
-imports; never another person's), while level 25 is inconsistent in a dozen operations, so
-moving a self writer to the group can allow a few things the level refused and refuse a few
-it allowed by mistake. The advantage is that the group is a normal group: you can
+name gives on the data, and the same in every operation tested (records and everything
+attached to them: plugin rows, relations, links, files, geometries, imports). The advantage is that the group is a normal group: you can
 add attributes and [pinned values](#attributes-and-pinned-values) to it, or combine it
 with other groups. Nobody is in these groups until you add them, and levels keep working
 as before. **Admin** and **super admin** remain levels: they also decide who can configure

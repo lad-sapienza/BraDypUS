@@ -181,6 +181,7 @@ class M024MyChangeTest extends BdusTestCase
 | M047 | **File attribution** — adds a nullable `attribution` column to `bdus_files` and registers its field config in `bdus_cfg_fields` for existing apps (new apps get both from `Structure/files.json` and `CreateApp`). Minor upgrade, no data touched. |
 | M048 | **Derived-image presets** — adds a nullable TEXT `image_presets` column to `bdus_cfg_app` (JSON list of presets, see `Image\Presets`). Skipped when `bdus_cfg_app` does not exist. Minor upgrade, no data touched. |
 | M049 | **Group attributes and enforced values (#51)** — adds nullable TEXT `bdus_groups.attrs` (JSON attributes read as `$GROUP.<key>`) and `bdus_group_rules.enforce` (JSON map of values the server accepts on create/update). Each column is skipped when its table does not exist. `Auth\Access` and the Groups controller keep working on the old shape until it runs. Minor upgrade, no data touched. |
+| M050 | **Default groups** — creates Reader, Writer and Self writer, each with rules for every table (`*`); a group that already has the name is left alone; nobody is assigned. Minor upgrade, no existing data touched. |
 
 ---
 

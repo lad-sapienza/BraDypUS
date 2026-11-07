@@ -32,6 +32,18 @@ A list-valued variable turns `_eq`/`_neq` into `_in`/`_nin` and is spliced into 
 lists; under any other operator, an unknown variable (`$GROUP…`/`$CURRENT_…`) or an attribute
 nobody sets, the filter throws and the rule fails closed (grants nothing).
 
+### Rules for every table and the default groups
+
+A rule with `table_name = '*'` (`Access::ALL_TABLES`) applies to every configured data table
+(`isUsable()` still excludes `bdus_*` and unknown names); `Access::rulesFor()` unites it with
+the rules of the table itself, and enforce candidates do the same (`*` rules cannot carry
+`enforce`). Migration M050 (`M050_AddDefaultGroups`) creates Reader, Writer and Self writer
+from such rules, skipping a name that already exists; `DefaultGroupsTest` asserts that, for
+each, the table gates and the rows of every action equal those of the matching level
+(30, 20, 25) for a user at level Enter. Admin and super admin are not expressible as
+groups: `Router::ROUTE_PRIVILEGE`, configuration, users, backups and the lock bypass read the
+level. The grid keeps the rules it has no row for (`*`) when it saves.
+
 ### Enforced values (#51)
 
 `create` and `update` rules have an optional `enforce` column (JSON `{field: value|variable|list}`).

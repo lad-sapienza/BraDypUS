@@ -19,6 +19,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   several groups may use any of their groups' values, never an invented one. Admins and a
   level that already grants the action on every table are not restricted; a rule without
   `enforce` restricts nothing.
+- **Default groups, and rules for every table.** A group rule can now be written for `*`: every
+  data table, new ones included. Migration M050 creates three groups made of such rules —
+  **Reader** (reads everything), **Writer** (reads, creates, updates, deletes everything) and
+  **Self writer** (reads and creates everything, updates and deletes only the records the user
+  created) — which give a user at level *Enter* exactly what the data side of levels Reader,
+  Writer and Self writer gives (covered by tests that compare the two). Nobody is assigned and
+  levels are untouched, so nothing changes until an admin puts a user in one of them. Admin
+  and super admin stay levels: they also gate configuration, users, backups and the lock
+  bypass. The permissions grid keeps (and shows a note for) the rules it has no row for.
 - Groups have optional *attributes* (Users → Groups); the permissions grid has a "pinned
   values" button on Create and Update. Schema migration M049 adds the nullable
   `bdus_groups.attrs` and `bdus_group_rules.enforce` columns (minor upgrade, applied at the

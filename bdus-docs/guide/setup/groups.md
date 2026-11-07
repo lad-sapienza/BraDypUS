@@ -130,6 +130,24 @@ Details worth knowing:
   grants nothing (a typo never opens access).
 - Values can be literals too (`status` = `draft`), or a list.
 
+### Default groups
+
+Three groups come with every application and can be used instead of a level for the
+*data* side of permissions:
+
+| Group | What its members can do, on every table (new ones too) |
+|---|---|
+| **Reader** | read |
+| **Writer** | read, create, update, delete |
+| **Self writer** | read and create; update and delete only the records they created |
+
+Put a user at level **Enter** in one of them and they get exactly what the level of the
+same name gives on the data. The advantage is that the group is a normal group: you can
+add attributes and [pinned values](#attributes-and-pinned-values) to it, or combine it
+with other groups. Nobody is in these groups until you add them, and levels keep working
+as before. **Admin** and **super admin** remain levels: they also decide who can configure
+the application, manage users and backups, and are not affected by locks.
+
 ### Example: a reviewer for one site
 
 Group **Reviewers site 5**, with the user at level *Enter*:

@@ -146,6 +146,17 @@ above the editor and nothing is saved.
 In RecordView, the **Templates** dropdown in the toolbar lets the user switch
 between available templates and the default view.
 
+A group can assign templates to its members, per table
+([Record layouts per group](../setup/record-layouts)): a user in such a group no
+longer sees the dropdown (one template) or sees only the assigned templates
+(several). Templates are shown in view, edit and create mode alike. Renaming or
+deleting a template here updates the groups that use it.
+
+::: warning Not security
+A template decides what is comfortable to see; it does not hide data. A field left
+out of a template can still be read through the API, search, filters and export.
+:::
+
 ## Renaming and deleting templates
 
 Use the **Rename** and **Delete** buttons in the template list.

@@ -223,6 +223,14 @@ An [API key](../api/#api-keys-with-a-group) can belong to a group, so that it
 reads only what the group allows. Create it at level **Enter** and pick the group
 (Config → API Keys). A request the rules refuse gets HTTP `403`.
 
+## Record layouts
+
+A group can also decide **which record layout** (template) its members see on a
+table: a short form for the person who enters data, another for the reviewer. This
+is an interface convenience, never a permission: it does not change what the group
+may read or write, and a field a layout leaves out is still reachable through the
+API, search and export. See [Record layouts per group](./record-layouts).
+
 ## Good to know
 
 - **Plugin tables follow their record.** Rules are set on the main tables; a
@@ -234,7 +242,8 @@ reads only what the group allows. Create it at level **Enter** and pick the grou
   apply to the *link* between a file and a record, not to the file list itself.
 - **Frozen application.** When the application status is *Frozen* nobody writes,
   groups or not.
-- **No field-level rules.** A rule covers whole rows. Hiding single columns is done
+- **No field-level rules.** A rule covers whole rows. A [record layout](./record-layouts)
+  can leave fields out of the form, but only as a convenience (the data stays reachable). Hiding single columns is done
   outside the rules, with a [SQL view](./views) registered as a table
   ([why](./views#why-there-are-no-per-field-permissions)).
 - **Rules do not check the values written.** A row filter decides which rows a group

@@ -5,6 +5,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Record layouts per group.** A group can name, per table, the templates (record layouts) its
+  members must use: with one the template menu disappears, with several the menu lists only
+  those (no "default layout" entry), with none nothing changes. Templates of several groups are
+  united; admins and super admins are never restricted. The server applies it: `GET
+  /api/record/{tb}/templates` returns only the allowed list with `assigned` and `locked`, and
+  `GET /api/record/{tb}/{id}` replaces a template that is not allowed with the first allowed one.
+  Set in *Users → Groups → Record layouts* or with `PUT /api/group/{id}/layouts`; renaming or
+  deleting a template updates the groups. Migration M051 adds `bdus_groups.layouts` (JSON, nullable):
+  nothing changes until an administrator assigns a layout. **It is an interface convenience, not a
+  permission**: a field a layout leaves out remains readable through the API, search, filters and
+  export, and the group rules stay the only authority. Not in this release: read-only/hidden
+  fields per layout, template inheritance, a different layout for create vs edit, by record state,
+  list columns per layout. Guide: *Setup → Record layouts per group*.
+
 ## [5.19.0] - 2026-11-07
 
 ### Added

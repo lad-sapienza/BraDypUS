@@ -182,6 +182,7 @@ class M024MyChangeTest extends BdusTestCase
 | M048 | **Derived-image presets** — adds a nullable TEXT `image_presets` column to `bdus_cfg_app` (JSON list of presets, see `Image\Presets`). Skipped when `bdus_cfg_app` does not exist. Minor upgrade, no data touched. |
 | M049 | **Group attributes and enforced values (#51)** — adds nullable `bdus_groups.attrs` (TEXT, JSON attributes read as `$GROUP.<key>`), `bdus_groups.is_system` (INTEGER, 1 for groups BraDypUS owns) and `bdus_group_rules.enforce` (JSON map of values the server accepts on create/update). Each column is skipped when its table does not exist. `Auth\Access` and the Groups controller keep working on the old shape until it runs. Minor upgrade, no data touched. |
 | M050 | **Default groups** — creates Reader, Writer and Self writer, each with rules for every table (`*`); a group that already has the name is left alone; nobody is assigned; the groups are system groups (`bdus_groups.is_system = 1`, a column M049 adds). Minor upgrade, no existing data touched. |
+| M051 | **Record layouts per group** — adds nullable `bdus_groups.layouts` (TEXT, JSON `{table: [template]}`: the templates the members must use on each table, see `Template\Assign`). `Template\Assign` and the Groups controller treat a missing column as "no layouts" until it runs. Minor upgrade, no data touched. |
 
 ---
 

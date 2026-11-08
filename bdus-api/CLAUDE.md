@@ -154,6 +154,9 @@ New records are built by `Bdus\Controllers\Record` and written with
 
 Print templates (`bdus_cfg_templates`, JSON) are loaded/validated by
 `Template\Loader` and edited through `Bdus\Controllers\Templates`.
+A group can assign templates to its members per table (`bdus_groups.layouts`, M051, `Template\Assign`,
+`Auth\Access::layouts()`): an interface convenience, **never a permission** (see
+`bdus-docs/guide/setup/record-layouts.md`).
 
 ---
 

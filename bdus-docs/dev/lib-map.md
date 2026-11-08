@@ -71,6 +71,7 @@ without going through a lib/ abstraction.
 | `Record\Edit` | `lib/Record/Edit.php` | Validates + prepares record edits |
 | `Record\Persist` | `lib/Record/Persist.php` | Low-level persistence (INSERT/UPDATE/DELETE) |
 | `Template\Loader` | `lib/Template/Loader.php` | Loads Twig print templates from DB |
+| `Template\Assign` | `lib/Template/Assign.php` | Record layouts per group: which templates a user's groups assign |
 | `Image\Resizer` | `lib/Image/Resizer.php` | Resize / convert an uploaded image in place (Intervention) |
 | `Image\Presets` | `lib/Image/Presets.php` | Derived-image presets: validation, built-in `thumb`, lookup |
 | `Image\Watermark` | `lib/Image/Watermark.php` | Optional text watermark of a preset: validation, text resolution, rendering (bundled DejaVu Sans) |
@@ -220,6 +221,10 @@ See [Config & access control](./config).
 
 **`Template\Loader`** reads Twig template source from `bdus_cfg_templates`
 (DB-backed since M011). Provides compiled templates for print / preview.
+
+**`Template\Assign`** resolves the templates a user's groups oblige them to use on a table
+(`bdus_groups.layouts`, M051): union over groups, unknown names ignored, `null` = no restriction.
+See [Groups & permissions](./groups-permissions#record-layouts-per-group).
 
 ---
 

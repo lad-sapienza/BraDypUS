@@ -29,7 +29,9 @@ versions of every record, files, maps and print templates on top of them.
   or an Access/FileMaker file.
 - You need a **shared database with accounts**: people who only read, people who edit,
   reviewers who see only a slice, and records that must be **frozen** once published
-  ([groups & locks](/guide/setup/groups)).
+  ([groups & locks](/guide/setup/groups)); each group can also have its own **record
+  layout** (which fields, in which order, the cataloguer, the reviewer or the reader
+  sees), as a convenience only ([record layouts](/guide/setup/record-layouts)).
 - You want **controlled vocabularies**, validation (not empty, unique, range, regex) and
   a **history of every change** with the possibility to restore a previous version
   ([versions](/guide/usage/versions)).
@@ -59,7 +61,9 @@ versions of every record, files, maps and print templates on top of them.
 - You need **permissions per field** or a **workflow engine** with notifications:
   BraDypUS's own permission engine works per table and per row (a rule can use group
   attributes, e.g. "the records of my site", and pin the value a field may take when
-  records are created or saved), and locks freeze rows; there is nothing finer. Hidden columns, rows per role and a draft → review →
+  records are created or saved), and locks freeze rows; there is nothing finer. A group's *record layout* chooses which template (fields, order, sections) its
+  members get, but it is a convenience: a field it leaves out is still reachable through the API, search and
+  export, and a layout cannot make a field read-only for one group. Hidden columns, rows per role and a draft → review →
   validated flow can still be had with **SQL views and triggers** in the database
   ([SQL views as tables](/guide/setup/views)), at the price of writing that SQL and
   of the limits that page lists (tried on MariaDB and PostgreSQL; no notifications).

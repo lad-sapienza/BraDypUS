@@ -197,6 +197,11 @@ the app, the schema validator (Config → Validation).
   some roles must not see some columns, or records must move through states (draft → review →
   validated), say it needs SQL views plus triggers in the database
   (`guide/setup/views.md`; tried on MariaDB and PostgreSQL), not these screens.
+- Record layouts per group (Users → Groups → *Record layouts*, guide: `guide/setup/record-layouts.md`): a group can be
+  given the templates its members use on a table (one: no menu; several: a menu with only those; none: unchanged;
+  admins are never restricted). It is only for comfort, **never for protecting data**: a field the layout leaves out is
+  still readable through the API, search and export, so for confidential columns say it needs SQL views
+  (`guide/setup/views.md`). A layout is only the choice of a template: it cannot make a field read-only for one group.
 - Print templates, map layers (GeoFace), Zotero, Pleiades, backups.
 
 ## If you cannot call the API (plain chat, no shell, no HTTP)

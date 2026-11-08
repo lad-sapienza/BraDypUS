@@ -168,6 +168,7 @@ Groups: `GET/POST /api/groups`, `GET/PUT/DELETE /api/group/{id}`,
 `PUT /api/group/{id}/members`, `GET/PUT /api/user/{id}/groups`.
 Rules: `PUT /api/group/{id}/rules` replaces the whole set (what the permissions
 grid sends); filters and `enforce` maps are validated before anything is saved.
+Record layouts: `PUT /api/group/{id}/layouts` (see below).
 Group attributes: `attrs` on `POST /api/groups` and `PUT /api/group/{id}` (left out on
 update = unchanged).
 Locks: `GET/POST /api/locks`, `PUT/DELETE /api/lock/{id}`.
@@ -178,6 +179,46 @@ What the interface needs to know comes with existing endpoints: `can` per table 
 `GET /api/tables` (which lists only readable tables), the same flags in
 `GET /api/info/app`, `can_edit` / `can_delete` / `locked` in the record view.
 
+## Record layouts per group
+
+A group can name, per table, the templates its members use (`bdus_groups.layouts`,
+TEXT JSON `{table: [template, ...]}`, migration M051). **Interface convenience, never a
+permission**: no reader of data consults it (verified by grep: only `Record::getTemplates`,
+`Record::getRecord`, `Groups::setLayouts`/`getGroup`, `Templates::rename/deleteTemplate` use it).
+User guide: [Record layouts per group](/guide/setup/record-layouts).
+
+- **`Template\Assign`** (`lib/Template/Assign.php`): `allowed($db, $appName, $tb, $groupIds)` unites
+  the layouts of the groups (groups by id, templates in the order listed, no duplicates),
+  drops names whose template no longer exists (`Loader::listAvailable`) and returns `null`
+  ("no restriction") when nothing valid is left or the column does not exist yet (M051
+  pending). `normalise()` validates the request value; `renamed()` / `removed()` rewrite the
+  groups when a template is renamed or deleted.
+- **`Auth\Access::layouts($table, $appName)`** wraps it with the principal's groups (the key's
+  `group_id` for an API key) and returns `null` for admins and super admins.
+- **Enforcement is on the server**: `Record::getTemplates` returns only the allowed list with
+  `assigned` and `locked` (`locked` = a single template); `Record::getRecord` replaces a
+  `?template=` that is not allowed with the first allowed one, and uses it when none is asked.
+  The SPA (`resolveTemplateChoice` in `src/utils/groupLayouts.js`) only hides or restricts the
+  menu accordingly.
+- **REST (admin)**: `PUT /api/group/{id}/layouts {layouts}` (replace all; `{}` clears; refuses
+  system groups; errors `group_not_found`, `unknown_table`, `template_not_found`,
+  `invalid_layouts`, `system_group`, `migration_pending`); `GET /api/group/{id}` returns
+  `layouts`. Templates themselves stay super-admin (`Templates::*`).
+- **Why a JSON column and not a table**: one value per group, read together with the groups
+  already loaded, no join and no foreign key to keep; the only reference that can dangle is the
+  template name, which a table would not protect either (handled by `renamed`/`removed` and by
+  ignoring unknown names).
+- **Why no priority, mode or precedence between groups**: the union of the groups' templates is
+  predictable and the user chooses among them; a hierarchy would be a second semantic to explain.
+- **Limits (deliberate, first release)**: a layout is only the *choice* of a template. Per-layout
+  read-only or hidden fields, inheritance (`extends`), a different layout for create vs edit, by
+  record state, list columns/preview and label text are **not implemented**. If added, the same rule
+  holds: the server's group rules remain the only authority; a field a layout marks read-only must
+  stay writable through the API when the rules allow it.
+- **Not verified**: how the SPA behaves with a template that exists but lists no field of the
+  current table; the interaction with other readers of `bdus_cfg_templates` (print/export) was
+  not exercised.
+
 ## Tests
 
 - `AccessTest`, `AccessReadEnforcementTest`, `AccessSatelliteReadTest`,
@@ -187,6 +228,9 @@ What the interface needs to know comes with existing endpoints: `can` per table 
   removed to check the test notices.
 - Hurl phase 45 — rules, locks and keys end to end, on every engine.
 - Hurl phase 50 and `GroupVariablesTest` — group variables and enforced values (#51).
+- Hurl phase 52 and `TemplateAssignTest` — record layouts per group: no assignment, one/several
+  layouts, union over groups, stale names, admin bypass, `?template=` outside the assignment,
+  validation, rename/delete following. Frontend: `bdus-app/tests/groupLayouts.test.mjs`.
 - Hurl phase 46 — **deny by default**: a level-Enter person and a level-Enter key,
   in a group that reads a slice of one table, against every data and every
   administrative entry point. When you add an endpoint, add it there.

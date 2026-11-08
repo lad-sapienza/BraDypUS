@@ -40,3 +40,26 @@ export function widthToSpan(w) {
   }
   return SPAN_MAP[w] ?? 12
 }
+
+/**
+ * The field schema a template item shows: the field's own schema with the item's
+ * per-layout options applied. Interface only (the server's group rules still decide
+ * what may be written):
+ *  - `label`    replaces the field's label (an empty text keeps it);
+ *  - `readonly` shows the value but offers no editor (a field already read-only in
+ *    the table configuration stays read-only).
+ *
+ * @param {object} schema  the field's schema from record.schema.fields
+ * @param {object} item    the template item { field, width, label?, readonly?, hidden? }
+ */
+export function itemSchema(schema, item) {
+  const out = { ...schema }
+  if (typeof item?.label === 'string' && item.label.trim() !== '') out.label = item.label
+  if (item?.readonly === true) out.readonly = true
+  return out
+}
+
+/** True when the template item asks to be left out of the form. */
+export function isItemHidden(item) {
+  return item?.hidden === true
+}

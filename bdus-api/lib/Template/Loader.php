@@ -261,6 +261,10 @@ class Loader
                 if (!in_array($section['plugin'], $pluginNames, true)) {
                     $errors[] = "{$sectionLabel}: unknown_plugin '{$section['plugin']}'";
                 }
+                foreach ($section['content'] as $itemIdx => $item) {
+                    // Per-field options apply to the table's own fields only.
+                    array_push($errors, ...self::validateItemOptions($item, "{$sectionLabel}[{$itemIdx}]", true));
+                }
             } elseif ($isAccordion) {
                 foreach ($section['content'] as $panelIdx => $panel) {
                     $panelLabel = "{$sectionLabel}.panel[{$panelIdx}]";
@@ -269,6 +273,7 @@ class Loader
                         continue;
                     }
                     foreach ($panel['fields'] as $itemIdx => $item) {
+                        array_push($errors, ...self::validateItemOptions($item, "{$panelLabel}[{$itemIdx}]"));
                         if (isset($item['field']) && !in_array($item['field'], $fieldNames, true)) {
                             $errors[] = "{$panelLabel}[{$itemIdx}]: unknown_field '{$item['field']}'";
                         }
@@ -279,6 +284,9 @@ class Loader
                 }
             } else {
                 foreach ($section['content'] as $itemIdx => $item) {
+                    array_push($errors, ...self::validateItemOptions(
+                        $item, "{$sectionLabel}[{$itemIdx}]", is_array($item) && isset($item['plugin'])
+                    ));
                     if (isset($item['plugin'])) {
                         if (!in_array($item['plugin'], $pluginNames, true)) {
                             $errors[] = "{$sectionLabel}[{$itemIdx}]: unknown_plugin '{$item['plugin']}'";
@@ -301,6 +309,43 @@ class Loader
             }
         }
 
+        return $errors;
+    }
+
+    /** Longest `label` a template item may override. */
+    public const MAX_ITEM_LABEL = 200;
+
+    /**
+     * Checks the per-field options of a template item — `readonly` (bool), `hidden` (bool)
+     * and `label` (text shown instead of the field's own label) — which are interface
+     * conveniences only: the server's group rules still decide what can be read or written.
+     * They apply to the table's own fields, not to plugin items.
+     *
+     * @return string[] error messages
+     */
+    private static function validateItemOptions(mixed $item, string $where, bool $pluginItem = false): array
+    {
+        if (!is_array($item)) {
+            return [];
+        }
+        $errors = [];
+        foreach (['readonly', 'hidden', 'label'] as $opt) {
+            if (!array_key_exists($opt, $item)) {
+                continue;
+            }
+            if ($pluginItem) {
+                $errors[] = "{$where}: option_not_supported_on_plugin_item '{$opt}'";
+                continue;
+            }
+            $v = $item[$opt];
+            if ($opt === 'label') {
+                if (!is_string($v) || mb_strlen($v) > self::MAX_ITEM_LABEL || preg_match('/[\x00-\x1F\x7F]/', $v)) {
+                    $errors[] = "{$where}: invalid_label";
+                }
+            } elseif (!is_bool($v)) {
+                $errors[] = "{$where}: invalid_{$opt}";
+            }
+        }
         return $errors;
     }
 

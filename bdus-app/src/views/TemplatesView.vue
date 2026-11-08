@@ -226,6 +226,11 @@
                     @change="v => setItemValue(item, v)"
                   />
                   <ASelect v-model:value="item.width" :options="widthSelectOptions" size="small" style="width:90px" :disabled="item.field === '*'" />
+                  <template v-if="!item.plugin && item.field !== '*'">
+                    <AInput v-model:value="item.label" size="small" class="tmpl-item-label" :maxlength="200" :placeholder="t('tmpl_item_label')" :title="t('tmpl_item_label_hint')" />
+                    <ACheckbox v-model:checked="item.readonly" class="tmpl-item-flag" :title="t('tmpl_item_readonly_hint')">{{ t('tmpl_item_readonly') }}</ACheckbox>
+                    <ACheckbox v-model:checked="item.hidden" class="tmpl-item-flag" :title="t('tmpl_item_hidden_hint')">{{ t('tmpl_item_hidden') }}</ACheckbox>
+                  </template>
                   <AButton type="text" size="small" :disabled="ii === 0"                          @click="moveField(si, ii, -1)"><template #icon><ArrowUpOutlined /></template></AButton>
                   <AButton type="text" size="small" :disabled="ii === section.content.length - 1" @click="moveField(si, ii,  1)"><template #icon><ArrowDownOutlined /></template></AButton>
                   <AButton type="text" danger size="small" @click="section.content.splice(ii, 1)"><template #icon><CloseOutlined /></template></AButton>
@@ -303,6 +308,11 @@
                         style="flex:1; min-width:140px"
                       />
                       <ASelect v-model:value="item.width" :options="widthSelectOptions" size="small" style="width:90px" />
+                      <template v-if="!item.plugin && item.field !== '*'">
+                        <AInput v-model:value="item.label" size="small" class="tmpl-item-label" :maxlength="200" :placeholder="t('tmpl_item_label')" :title="t('tmpl_item_label_hint')" />
+                        <ACheckbox v-model:checked="item.readonly" class="tmpl-item-flag" :title="t('tmpl_item_readonly_hint')">{{ t('tmpl_item_readonly') }}</ACheckbox>
+                        <ACheckbox v-model:checked="item.hidden" class="tmpl-item-flag" :title="t('tmpl_item_hidden_hint')">{{ t('tmpl_item_hidden') }}</ACheckbox>
+                      </template>
                       <AButton type="text" size="small" :disabled="ii === 0"                       @click="movePanelField(si, pi, ii, -1)"><template #icon><ArrowUpOutlined /></template></AButton>
                       <AButton type="text" size="small" :disabled="ii === panel.fields.length - 1" @click="movePanelField(si, pi, ii,  1)"><template #icon><ArrowDownOutlined /></template></AButton>
                       <AButton type="text" danger size="small" @click="panel.fields.splice(ii, 1)"><template #icon><CloseOutlined /></template></AButton>
@@ -542,6 +552,16 @@ function cleanPayload(tpl) {
     if (!s.plugin) delete s.plugin
     if (!s.collapsible) delete s.collapsed
     if (s.type !== 'accordion') delete s.type
+    const items = s.type === 'accordion'
+      ? (s.content ?? []).flatMap(panel => panel.fields ?? [])
+      : (s.content ?? [])
+    for (const it of items) {
+      // Per-field options: kept only when they say something (interface only).
+      if (!it.readonly) delete it.readonly
+      if (!it.hidden) delete it.hidden
+      if (typeof it.label !== 'string' || it.label.trim() === '') delete it.label
+      if (it.plugin || s.plugin) { delete it.readonly; delete it.hidden; delete it.label }
+    }
   }
   return payload
 }
@@ -1067,8 +1087,11 @@ async function createTemplate() {
 .tmpl-content-row {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 0.4rem;
 }
+.tmpl-item-label { width: 150px; }
+.tmpl-item-flag { font-size: 0.8rem; }
 
 .tmpl-add-field-btn {
   align-self: flex-start;

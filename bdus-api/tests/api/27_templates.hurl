@@ -122,3 +122,54 @@ HTTP 200
 [Asserts]
 jsonpath "$.status" == "error"
 jsonpath "$.code"   == "template_not_found"
+
+
+# ── 27l. Per-field options (readonly, hidden, label) are saved as given ──
+POST {{base_url}}/{{app_name}}/api/template/us/ci_test_opts
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{
+  "sections": [
+    {
+      "label": "Opts",
+      "content": [
+        { "field": "sigla", "width": "1/2", "label": "Code of the unit", "readonly": true },
+        { "field": "descrizione", "width": "1/2", "hidden": true }
+      ]
+    }
+  ]
+}
+HTTP 200
+[Asserts]
+jsonpath "$.code" == "template_saved"
+
+GET {{base_url}}/{{app_name}}/api/template/us/ci_test_opts
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.template.sections[0].content[0].label"    == "Code of the unit"
+jsonpath "$.template.sections[0].content[0].readonly" == true
+jsonpath "$.template.sections[0].content[1].hidden"   == true
+
+
+# ── 27m. A wrong option is refused and nothing is saved ──────────────────
+POST {{base_url}}/{{app_name}}/api/template/us/ci_test_opts_bad
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "sections": [ { "label": "Bad", "content": [ { "field": "sigla", "readonly": "yes" } ] } ] }
+HTTP 200
+[Asserts]
+jsonpath "$.code" == "template_validation_failed"
+jsonpath "$.errors[0]" contains "invalid_readonly"
+
+GET {{base_url}}/{{app_name}}/api/templates/us
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.templates" not contains "ci_test_opts_bad"
+
+
+# ── 27n. cleanup ─────────────────────────────────────────────────────────
+DELETE {{base_url}}/{{app_name}}/api/template/us/ci_test_opts
+Authorization: Bearer {{jwt}}
+HTTP 200

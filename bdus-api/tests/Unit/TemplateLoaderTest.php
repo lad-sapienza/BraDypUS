@@ -162,4 +162,56 @@ class TemplateLoaderTest extends TestCase
         $errors = Loader::validate($tpl, $this->fieldNames, ['tags']);
         $this->assertStringContainsString('content_missing_or_invalid', implode(' ', $errors));
     }
+
+    // ── Per-field options: readonly, hidden, label (interface only) ───────
+
+    private function tpl(array $item, string $kind = 'core'): array
+    {
+        return match ($kind) {
+            'accordion' => ['sections' => [['type' => 'accordion', 'label' => 'S', 'content' => [['label' => 'P', 'fields' => [$item]]]]]],
+            'plugin'    => ['sections' => [['label' => 'S', 'plugin' => 'tags', 'content' => [$item]]]],
+            default     => ['sections' => [['label' => 'S', 'content' => [$item]]]],
+        };
+    }
+
+    public function testItemOptionsAreAcceptedOnCoreAndAccordionFields(): void
+    {
+        $item = ['field' => 'status', 'width' => '1/2', 'readonly' => true, 'hidden' => false, 'label' => 'State of the record'];
+        foreach (['core', 'accordion'] as $kind) {
+            $this->assertSame([], Loader::validate($this->tpl($item, $kind), $this->fieldNames, $this->pluginNames), $kind);
+        }
+    }
+
+    public function testItemOptionsAreValidated(): void
+    {
+        $bad = [
+            'invalid_readonly' => ['field' => 'status', 'readonly' => 'yes'],
+            'invalid_hidden'   => ['field' => 'status', 'hidden' => 1],
+            'invalid_label'    => ['field' => 'status', 'label' => ['x']],
+        ];
+        foreach ($bad as $code => $item) {
+            foreach (['core', 'accordion'] as $kind) {
+                $errors = Loader::validate($this->tpl($item, $kind), $this->fieldNames, $this->pluginNames);
+                $this->assertCount(1, $errors, "$code $kind");
+                $this->assertStringContainsString($code, $errors[0]);
+            }
+        }
+        $long = Loader::validate($this->tpl(['field' => 'status', 'label' => str_repeat('x', 201)]), $this->fieldNames, $this->pluginNames);
+        $this->assertStringContainsString('invalid_label', $long[0] ?? '');
+        $ctrl = Loader::validate($this->tpl(['field' => 'status', 'label' => "a\nb"]), $this->fieldNames, $this->pluginNames);
+        $this->assertStringContainsString('invalid_label', $ctrl[0] ?? '');
+    }
+
+    public function testItemOptionsAreRefusedOnPluginItems(): void
+    {
+        $inCore   = Loader::validate($this->tpl(['plugin' => 'tags', 'field' => '*', 'readonly' => true]), $this->fieldNames, $this->pluginNames);
+        $inPlugin = Loader::validate($this->tpl(['field' => 'name', 'label' => 'x'], 'plugin'), $this->fieldNames, $this->pluginNames);
+        $this->assertStringContainsString('option_not_supported_on_plugin_item', $inCore[0] ?? '');
+        $this->assertStringContainsString('option_not_supported_on_plugin_item', $inPlugin[0] ?? '');
+    }
+
+    public function testTemplatesWithoutOptionsStillValidate(): void
+    {
+        $this->assertSame([], Loader::validate($this->tpl(['field' => 'status', 'width' => '1/1']), $this->fieldNames, $this->pluginNames));
+    }
 }

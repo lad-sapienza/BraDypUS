@@ -30,19 +30,19 @@
           <div v-show="openPanels[pi]" class="accordion-panel-body">
             <div class="template-fields">
               <div
-                v-for="item in (panel.fields ?? [])"
+                v-for="item in (panel.fields ?? []).filter(i => !isItemHidden(i))"
                 :key="item.field"
                 class="template-field-cell"
                 :style="{ gridColumn: 'span ' + widthToSpan(item.width ?? '1/1') }"
               >
                 <FieldDisplay
-                  v-if="mode === 'read'"
-                  :schema="fieldSchema(item.field)"
+                  v-if="mode === 'read' || item.readonly === true"
+                  :schema="fieldSchema(item.field, item)"
                   :value="record.core[item.field]"
                 />
                 <FieldEditor
                   v-else
-                  :schema="fieldSchema(item.field)"
+                  :schema="fieldSchema(item.field, item)"
                   :tb="tb"
                   :modelValue="editData.core[item.field]"
                   @update:modelValue="v => editData.core[item.field] = v"
@@ -83,18 +83,18 @@
             />
           </div>
           <div
-            v-else
+            v-else-if="!isItemHidden(block.item)"
             class="template-field-cell"
             :style="{ gridColumn: 'span ' + widthToSpan(block.item.width ?? '1/1') }"
           >
             <FieldDisplay
-              v-if="mode === 'read'"
-              :schema="fieldSchema(block.item.field)"
+              v-if="mode === 'read' || block.item.readonly === true"
+              :schema="fieldSchema(block.item.field, block.item)"
               :value="record.core[block.item.field]"
             />
             <FieldEditor
               v-else
-              :schema="fieldSchema(block.item.field)"
+              :schema="fieldSchema(block.item.field, block.item)"
               :tb="tb"
               :modelValue="editData.core[block.item.field]"
               @update:modelValue="v => editData.core[block.item.field] = v"
@@ -113,7 +113,7 @@ import { ref, computed } from 'vue'
 import FieldDisplay  from './FieldDisplay.vue'
 import FieldEditor   from './FieldEditor.vue'
 import PluginSection from './PluginSection.vue'
-import { widthToSpan } from './templateUtils.js'
+import { widthToSpan, itemSchema, isItemHidden } from './templateUtils.js'
 
 const props = defineProps({
   /** One section object from template.sections */
@@ -182,9 +182,11 @@ function togglePanel(pi) {
  * Find the field schema by name, or return a minimal fallback so the
  * component never crashes on an unknown field.
  */
-function fieldSchema(name) {
-  return (props.schema.fields ?? []).find(f => f.name === name)
+function fieldSchema(name, item = null) {
+  const base = (props.schema.fields ?? []).find(f => f.name === name)
     ?? { name, label: name, type: 'text' }
+  // The item's own options (label, readonly): interface only, see templateUtils.itemSchema.
+  return itemSchema(base, item)
 }
 </script>
 

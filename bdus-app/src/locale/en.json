@@ -1625,5 +1625,11 @@
   "grp_layout_duplicate": "A table can appear only once.",
   "layouts_saved": "Layouts saved",
   "invalid_layouts": "Invalid layouts",
-  "template_not_found": "Template not found"
+  "template_not_found": "Template not found",
+  "tmpl_item_label": "Label",
+  "tmpl_item_label_hint": "Text shown instead of the field's label in this template (optional)",
+  "tmpl_item_readonly": "Read-only",
+  "tmpl_item_readonly_hint": "Shows the value without an editor in this template. Interface only: the server still follows the group rules",
+  "tmpl_item_hidden": "Hidden",
+  "tmpl_item_hidden_hint": "Leaves the field out of this template. Interface only: the data stays reachable through the API, search and export"
 }

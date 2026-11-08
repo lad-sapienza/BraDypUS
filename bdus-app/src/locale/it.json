@@ -1625,5 +1625,11 @@
   "grp_layout_duplicate": "Una tabella può comparire una sola volta.",
   "layouts_saved": "Layout salvati",
   "invalid_layouts": "Layout non validi",
-  "template_not_found": "Template non trovato"
+  "template_not_found": "Template non trovato",
+  "tmpl_item_label": "Etichetta",
+  "tmpl_item_label_hint": "Testo mostrato al posto dell'etichetta del campo in questo template (facoltativo)",
+  "tmpl_item_readonly": "Sola lettura",
+  "tmpl_item_readonly_hint": "Mostra il valore senza editor in questo template. Solo interfaccia: il server continua a seguire le regole dei gruppi",
+  "tmpl_item_hidden": "Nascosto",
+  "tmpl_item_hidden_hint": "Esclude il campo da questo template. Solo interfaccia: i dati restano raggiungibili da API, ricerca ed esportazione"
 }

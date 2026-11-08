@@ -183,6 +183,7 @@ class Router
         'Bdus\\Controllers\\Groups::deleteGroup'                   => 'admin',
         'Bdus\\Controllers\\Groups::setMembers'                    => 'admin',
         'Bdus\\Controllers\\Groups::setRules'                      => 'admin',
+        'Bdus\\Controllers\\Groups::setLayouts'                    => 'admin',
         'Bdus\\Controllers\\Groups::getUserGroups'                 => 'admin',
         'Bdus\\Controllers\\Groups::setUserGroups'                 => 'admin',
         'Bdus\\Controllers\\Groups::listLocks'                     => 'admin',
@@ -621,6 +622,7 @@ class Router
             $r->addRoute('DELETE', '/api/group/{id:\d+}',           ['Bdus\\Controllers\\Groups', 'deleteGroup']);
             $r->addRoute('PUT',    '/api/group/{id:\d+}/members',   ['Bdus\\Controllers\\Groups', 'setMembers']);
             $r->addRoute('PUT',    '/api/group/{id:\d+}/rules',     ['Bdus\\Controllers\\Groups', 'setRules']);
+            $r->addRoute('PUT',    '/api/group/{id:\d+}/layouts',   ['Bdus\\Controllers\\Groups', 'setLayouts']);
             $r->addRoute('GET',    '/api/user/{id:\d+}/groups',     ['Bdus\\Controllers\\Groups', 'getUserGroups']);
             $r->addRoute('PUT',    '/api/user/{id:\d+}/groups',     ['Bdus\\Controllers\\Groups', 'setUserGroups']);
             $r->addRoute('GET',    '/api/locks',                    ['Bdus\\Controllers\\Groups', 'listLocks']);

@@ -92,6 +92,7 @@ class Groups extends \Bdus\Controller
             'name'        => $group['name'],
             'description' => $group['description'],
             'attrs'       => !empty($group['attrs']) ? json_decode($group['attrs'], true) : null,
+            'layouts'     => !empty($group['layouts']) ? json_decode($group['layouts'], true) : null,
             'system'      => !empty($group['is_system']),
             'members'     => array_map(fn($m) => ['id' => (int) $m['id'], 'name' => $m['name'], 'email' => $m['email']], $members),
             'rules'       => $rules,
@@ -313,6 +314,50 @@ class Groups extends \Bdus\Controller
                 }
             }
         }, 'rules_saved');
+    }
+
+    /**
+     * PUT /api/group/{id}/layouts { layouts: { table: [template, ...] } } — replaces
+     * the record layouts (templates) the members must use, per table. Empty/null
+     * clears them. An interface convenience, not a permission.
+     */
+    public function setLayouts(): void
+    {
+        if (!$this->isAdmin()) {
+            return;
+        }
+        $group = $this->loadGroup();
+        if (!$group) {
+            return;
+        }
+        if ($this->refuseSystem($group)) {
+            return;
+        }
+        if (!array_key_exists('layouts', $this->post)) {
+            $this->returnJson(['status' => 'error', 'code' => 'parameter_missing', 'detail' => 'layouts']);
+            return;
+        }
+        if (!$this->hasColumn('bdus_groups', 'layouts')) {
+            $this->returnJson(['status' => 'error', 'code' => 'migration_pending']);
+            return;
+        }
+
+        [$layouts, $error] = \Template\Assign::normalise(
+            $this->post['layouts'],
+            $this->dataTableNames(),
+            $this->cfg->get('main.name') ?? ''
+        );
+        if ($error !== null) {
+            $this->returnJson(['status' => 'error', 'code' => $error]);
+            return;
+        }
+
+        $this->db->query(
+            'UPDATE bdus_groups SET layouts = ? WHERE id = ?',
+            [$layouts ? json_encode($layouts, JSON_UNESCAPED_UNICODE) : null, (int) $group['id']],
+            'boolean'
+        );
+        $this->returnJson(['status' => 'success', 'code' => 'layouts_saved']);
     }
 
     // ── Locks ─────────────────────────────────────────────────────────────────

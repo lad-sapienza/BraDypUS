@@ -759,6 +759,21 @@ class Access
         return array_merge($rules[$table][$action] ?? [], $rules[self::ALL_TABLES][$action] ?? []);
     }
 
+    /**
+     * Templates (record layouts) the principal's groups oblige them to use on
+     * $table, or null when they are free to choose (no group assigns one, or the
+     * principal is an admin). Interface convenience, not a permission: see Template\Assign.
+     *
+     * @return string[]|null
+     */
+    public function layouts(string $table, string $appName): ?array
+    {
+        if ($this->isAdmin()) {
+            return null;
+        }
+        return \Template\Assign::allowed($this->db, $appName, $table, $this->groupIds());
+    }
+
     /** @return int[] */
     private function groupIds(): array
     {

@@ -4,6 +4,7 @@
         { "name": "name",        "type": "TEXT",               "notnull": true  },
         { "name": "description", "type": "TEXT",               "notnull": false },
         { "name": "attrs",       "type": "TEXT",               "notnull": false },
+        { "name": "layouts",     "type": "TEXT",               "notnull": false },
         { "name": "is_system",   "type": "INTEGER",            "notnull": false }
     ],
     "indexes": [

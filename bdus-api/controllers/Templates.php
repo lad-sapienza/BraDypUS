@@ -202,6 +202,8 @@ class Templates extends \Bdus\Controller
       return;
     }
 
+    \Template\Assign::removed($this->db, $tb, $name);
+
     $this->returnJson(['status' => 'success', 'code' => 'template_deleted']);
   }
 
@@ -248,6 +250,8 @@ class Templates extends \Bdus\Controller
       $this->returnJson(['status' => 'error', 'code' => 'template_rename_failed']);
       return;
     }
+
+    \Template\Assign::renamed($this->db, $tb, $oldName, $newName);
 
     $this->returnJson(['status' => 'success', 'code' => 'template_renamed']);
   }

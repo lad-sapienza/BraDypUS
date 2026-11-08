@@ -383,6 +383,12 @@ class Record extends \Bdus\Controller
       // Template loading
       $appName = $this->cfg->get('main.name') ?? '';
       $tplName = $this->get['template'] ?? null;
+      // A group that assigns layouts decides: a template outside them is ignored
+      // and, without one, the first assigned layout is used.
+      $assigned = $this->access()->layouts($tb, $appName);
+      if ($assigned !== null && !in_array($tplName, $assigned, true)) {
+        $tplName = $assigned[0];
+      }
       if ($tplName) {
         $tpl = \Template\Loader::load($appName, $tb, $tplName);
         if ($tpl === null) {
@@ -520,7 +526,20 @@ class Record extends \Bdus\Controller
     $appName   = $this->cfg->get('main.name') ?? '';
     $templates = \Template\Loader::listAvailable($appName, $tb);
 
-    $this->returnJson(["status" => "success", "templates" => $templates]);
+    // Layouts assigned to the principal's groups (interface convenience, not a
+    // permission): only those are offered, and a single one is not a choice.
+    $assigned = $this->access()->layouts($tb, $appName);
+    if ($assigned !== null) {
+      $this->returnJson([
+        "status"    => "success",
+        "templates" => $assigned,
+        "assigned"  => true,
+        "locked"    => count($assigned) === 1,
+      ]);
+      return;
+    }
+
+    $this->returnJson(["status" => "success", "templates" => $templates, "assigned" => false, "locked" => false]);
   }
 
   // ── Private helpers ───────────────────────────────────────────────────────

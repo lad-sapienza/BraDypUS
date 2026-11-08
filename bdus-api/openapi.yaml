@@ -1536,7 +1536,13 @@ paths:
     get:
       operationId: getRecordTemplatesByTb
       tags: [records]
-      summary: List available layout templates for a table
+      summary: List the layout templates available to the current user for a table
+      description: >
+        When a group of the user assigns layouts for the table (`PUT /api/group/{id}/layouts`),
+        only those are listed (`assigned: true`) and `locked` is true when there is a single
+        one, so a client should not offer a choice. Admins are never restricted. This is an
+        interface convenience, not a permission: the same data stays reachable from every
+        endpoint, whatever the layout.
       parameters:
         - $ref: '#/components/parameters/tb'
       responses:
@@ -1553,6 +1559,12 @@ paths:
                         type: array
                         items:
                           type: string
+                      assigned:
+                        type: boolean
+                        description: True when the list comes from the user's groups
+                      locked:
+                        type: boolean
+                        description: True when the user must use the single listed template
         '403':
           $ref: '#/components/responses/Forbidden'
 
@@ -4739,6 +4751,9 @@ paths:
       operationId: getGroupById
       tags: [groups]
       summary: Get a group with its members and rules
+      description: >
+        Besides `attrs`, `members` and `rules`, the group carries `layouts`
+        (`{table: [template]}` or null), see `PUT /api/group/{id}/layouts`.
       parameters:
         - $ref: '#/components/parameters/id'
       responses:
@@ -4859,6 +4874,46 @@ paths:
           description: >
             Result (`rules_saved`) or error (`group_not_found`, `unknown_table`,
             `invalid_rule`, `invalid_filter`, `invalid_enforce`, `duplicate_rule`, `system_group`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/group/{id}/layouts:
+    put:
+      operationId: putGroupLayoutsById
+      tags: [groups]
+      summary: Set the record layouts (templates) of a group
+      description: >
+        `layouts` maps a table to the templates its members must use there. A user
+        in a group with a layout for a table is offered only those (one: no choice;
+        several: a choice among them); with none, the behaviour is unchanged. Empty
+        or `{}` clears. **An interface convenience, not a permission**: a field a
+        layout does not show remains readable and writable through the API, search,
+        filters and export according to the group rules.
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [layouts]
+              properties:
+                layouts:
+                  type: object
+                  additionalProperties:
+                    type: array
+                    items:
+                      type: string
+      responses:
+        '200':
+          description: >
+            Result (`layouts_saved`) or error (`group_not_found`, `unknown_table`,
+            `template_not_found`, `invalid_layouts`, `system_group`, `migration_pending`)
           content:
             application/json:
               schema:

@@ -91,19 +91,21 @@ are shown but not editable. Create your own group when you need one.
 
 A layout is **a choice of template**. What it can change is what a template can
 express: which fields and plugin tables appear, in which order and width, sections
-and accordions, collapsed or open by default.
+and accordions, collapsed or open by default, and, for each field of the table, a
+different **label**, **read-only** or **hidden**
+([field options](../template-system/#field-options-label-read-only-hidden)).
 
 | | In this release |
 |---|---|
 | Choose which template a group uses, per table | Yes |
 | Fields, order, sections, accordions, plugin tables | Yes, as in any template |
-| Fields hidden by the layout | Yes: leave them out of the template (not secure, see above) |
-| Fields that show but cannot be edited **per layout** | **Not yet.** A field can be made read-only in the table configuration, but then it is read-only for everyone. To pin the *values* a group may write (a status, an owner group) use an `enforce` rule: the server enforces it |
+| Fields hidden by the layout | Yes: leave them out of the template, or mark them `hidden` (not secure, see above) |
+| Fields that show but cannot be edited **per layout** | Yes: `readonly` on the field's item. **Interface only**: the server does not know about it, so the field can still be written through the API if the group's rules allow. To make the server refuse other values, pin them with an `enforce` rule |
+| Different label for a field **per layout** | Yes: `label` on the field's item (plugin columns keep their own label) |
 | Different layout for creating and for editing | **Not yet**: one template draws both |
 | Different layout by record state | **Not yet**: obtain it with a status field, a lock and a group per state |
 | Columns and preview of the list per layout | **No**: the list and its preview are set per table |
 | Base layout with differences (inheritance) | **Not yet**: today each template is complete |
-| Label text per layout | **No** |
 
 The menu choice a person makes (when they have several templates) is remembered in
 their browser, per table; it is only used if it is one of the assigned templates.
@@ -155,10 +157,15 @@ off.
 ### Fewer mistakes with system fields
 
 Fields such as a status, a number or automatic dates should not be typed by
-hand. Today: set the field **read-only** in the table configuration (for
-everyone), and for a status that must only take certain values per group, pin it
-with an `enforce` rule: the **server** accepts only those values and the form
-offers them. A per-layout "show but do not edit" is not available yet.
+hand. In the layouts of the people who must not touch them, mark the field
+`readonly`: the value is shown, with no editor. That is a **comfort**, not a
+guard: for a status that must only take certain values per group, also pin it with
+an `enforce` rule, so the **server** accepts only those values. To make a field
+read-only for everyone, set it read-only in the table configuration.
+
+A layout can also **rename** a field for one audience (`label`): the cataloguer's
+form can say "Description of the object" where the reviewer's says "Object
+description".
 
 ## What it is not
 
@@ -185,6 +192,6 @@ offers them. A per-layout "show but do not edit" is not available yet.
   `invalid_layouts`, `system_group`. `GET /api/group/{id}` returns `layouts`.
 - The layout changes only what the record view receives. Lists, search, export,
   charts, maps and every other endpoint return the same data whatever the layout.
-  A field declared read-only or left out by a template can still be written through
-  the API when the group's rules allow it.
+  A field a template marks `readonly` or `hidden`, or leaves out, can still be
+  written (and read) through the API when the group's rules allow it.
 - Developer notes: [Groups & permissions](/dev/groups-permissions#record-layouts-per-group).

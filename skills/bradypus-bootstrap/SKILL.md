@@ -201,7 +201,7 @@ the app, the schema validator (Config → Validation).
   given the templates its members use on a table (one: no menu; several: a menu with only those; none: unchanged;
   admins are never restricted). It is only for comfort, **never for protecting data**: a field the layout leaves out is
   still readable through the API, search and export, so for confidential columns say it needs SQL views
-  (`guide/setup/views.md`). A layout is only the choice of a template: it cannot make a field read-only for one group.
+  (`guide/setup/views.md`). A layout is the choice of a template; the template's field items can carry `label`, `readonly`, `hidden`, but these only change the form (the server still follows the group rules), so never present them as protection.
 - Print templates, map layers (GeoFace), Zotero, Pleiades, backups.
 
 ## If you cannot call the API (plain chat, no shell, no HTTP)

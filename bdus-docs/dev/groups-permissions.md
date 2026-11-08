@@ -210,11 +210,18 @@ User guide: [Record layouts per group](/guide/setup/record-layouts).
   ignoring unknown names).
 - **Why no priority, mode or precedence between groups**: the union of the groups' templates is
   predictable and the user chooses among them; a hierarchy would be a second semantic to explain.
-- **Limits (deliberate, first release)**: a layout is only the *choice* of a template. Per-layout
-  read-only or hidden fields, inheritance (`extends`), a different layout for create vs edit, by
-  record state, list columns/preview and label text are **not implemented**. If added, the same rule
-  holds: the server's group rules remain the only authority; a field a layout marks read-only must
-  stay writable through the API when the rules allow it.
+- **Per-field options in a template item** (`label`, `readonly`, `hidden`; `Template\Loader::validate`
+  → `validateItemOptions`, applied by `TemplateSection.vue` through `itemSchema()` / `isItemHidden()` in
+  `templateUtils.js`): core field items and accordion panel fields only; a plugin item or a plugin
+  section's content carrying one is refused (`option_not_supported_on_plugin_item`). `readonly` renders
+  the value with `FieldDisplay` instead of `FieldEditor`, also in edit mode, and can only add to the
+  field's own `readonly`. **Nothing on the server reads them**: they are in the stored JSON and are
+  ignored by `Persist`, so a layout-readonly field stays writable through the API. Editor
+  (`TemplatesView.vue`) strips `false` / blank values before saving.
+- **Limits (deliberate)**: a layout is the choice of a template, plus the field options above.
+  Inheritance (`extends`), a different layout for create vs edit, by record state, and list
+  columns/preview per layout are **not implemented** (idea kept as a GitHub issue). Whatever is
+  added, the same rule holds: the server's group rules remain the only authority.
 - **Not verified**: how the SPA behaves with a template that exists but lists no field of the
   current table; the interaction with other readers of `bdus_cfg_templates` (print/export) was
   not exercised.

@@ -43,6 +43,36 @@ A template is a JSON object with a `sections` array. Each section contains a
 | `collapsed` | boolean | `true` to render the section collapsed by default |
 | `content` | array | For core/plugin sections: array of `{ field, width }` objects. For accordion: array of panel objects |
 
+### Field options: label, read-only, hidden <Badge type="tip" text="v5.20.0" />
+
+Each field item of a core section (and of an accordion panel) can carry three optional
+settings, all **interface only**:
+
+```json
+{ "field": "stato", "width": "1/2", "label": "State of the record", "readonly": true },
+{ "field": "note_revisore", "hidden": true }
+```
+
+| Option | Type | Effect in this template |
+|---|---|---|
+| `label` | string (max 200 characters) | Shown instead of the field's own label. Empty = keep the field's label |
+| `readonly` | boolean | In edit and create mode the value is shown but has no editor. A field that is already read-only in the table configuration stays read-only; this option can only add |
+| `hidden` | boolean | The field is left out of the form. Leaving it out of the template has the same effect; `hidden` keeps it listed, so it is easy to show again |
+
+Not available on plugin items (`{ "plugin": …, "field": … }`) nor on the content of a
+plugin section: saving such a template is refused (`option_not_supported_on_plugin_item`).
+A wrong type (`"readonly": "yes"`) is refused too (`invalid_readonly`, `invalid_hidden`,
+`invalid_label`). In the template editor each field row has a **Label** box and **Read-only**
+and **Hidden** checkboxes.
+
+::: danger Interface only, not security
+These options change what the form shows. They are **not** permissions: a `readonly` field can
+still be written through the API, a `hidden` one is still readable through the API, search,
+filters and export, as long as the user's [group rules](../setup/groups) allow it. To pin the
+values a group may write use an `enforce` rule; to keep columns out of reach use an
+[SQL view](../setup/views).
+:::
+
 ### Field width
 
 Width is a fraction string. Valid values: `"1/1"`, `"1/2"`, `"1/3"`, `"2/3"`,

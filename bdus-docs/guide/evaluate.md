@@ -63,7 +63,7 @@ versions of every record, files, maps and print templates on top of them.
   attributes, e.g. "the records of my site", and pin the value a field may take when
   records are created or saved), and locks freeze rows; there is nothing finer. A group's *record layout* chooses which template (fields, order, sections) its
   members get, but it is a convenience: a field it leaves out is still reachable through the API, search and
-  export, and a layout cannot make a field read-only for one group. Hidden columns, rows per role and a draft → review →
+  export; a layout can also show a field read-only or under another label, but only on screen: the server does not know. Hidden columns, rows per role and a draft → review →
   validated flow can still be had with **SQL views and triggers** in the database
   ([SQL views as tables](/guide/setup/views)), at the price of writing that SQL and
   of the limits that page lists (tried on MariaDB and PostgreSQL; no notifications).

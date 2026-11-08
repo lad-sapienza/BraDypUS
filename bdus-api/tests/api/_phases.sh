@@ -472,6 +472,12 @@ run_tests() {
       --variable "jwt=${JWT}"
   fi
 
+  if should_run "52"; then
+    header "Phase 52 — Record layouts per group"
+    run_phase "Group layouts" "52_group_layouts.hurl" \
+      --variable "jwt=${JWT}"
+  fi
+
   # Phase 10 always runs: drops crud_test tables and logs out
   header "Phase 10 — Cleanup"
   run_phase "Cleanup" "10_cleanup.hurl" \

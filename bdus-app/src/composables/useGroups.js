@@ -29,6 +29,7 @@ export function useGroups() {
     deleteGroup:  async id               => unwrap(await api.delete(`/api/group/${id}`)),
     saveMembers:  async (id, userIds)    => unwrap(await api.put(`/api/group/${id}/members`, { user_ids: userIds })),
     saveRules:    async (id, rules)      => unwrap(await api.put(`/api/group/${id}/rules`, { rules })),
+    saveLayouts:  async (id, layouts)    => unwrap(await api.put(`/api/group/${id}/layouts`, { layouts })),
     saveUserGroups: async (userId, groupIds) => unwrap(await api.put(`/api/user/${userId}/groups`, { group_ids: groupIds })),
 
     listLocks:    async ()               => unwrap(await api.get('/api/locks')).locks ?? [],

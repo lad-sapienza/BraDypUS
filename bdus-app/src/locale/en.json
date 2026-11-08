@@ -1613,5 +1613,17 @@
   "wm_pos_right": "Right",
   "wm_pos_bottom_left": "Bottom left",
   "wm_pos_bottom": "Bottom",
-  "wm_pos_bottom_right": "Bottom right"
+  "wm_pos_bottom_right": "Bottom right",
+  "grp_layouts": "Record layouts",
+  "grp_layouts_hint": "Per table, the templates the members of this group must use. One template: it is used without a choice. Several: the member chooses among them only. None: the member chooses freely.",
+  "grp_layouts_not_security": "A layout decides what is comfortable to see and edit; groups decide what is allowed. A field not shown by a layout can still be read through the API, search, filters and export.",
+  "grp_layout_table": "Table",
+  "grp_layout_templates": "Templates",
+  "grp_layout_add": "Add table",
+  "grp_layout_no_table": "Choose a table for each layout.",
+  "grp_layout_no_template": "Choose at least one template for each table.",
+  "grp_layout_duplicate": "A table can appear only once.",
+  "layouts_saved": "Layouts saved",
+  "invalid_layouts": "Invalid layouts",
+  "template_not_found": "Template not found"
 }

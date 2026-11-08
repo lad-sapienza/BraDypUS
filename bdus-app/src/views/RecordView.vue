@@ -30,9 +30,9 @@
           </AButton>
         </div>
 
-        <!-- Template selector (read mode, when >1 template available) -->
+        <!-- Template selector (read mode, when there is a choice: hidden when the user's groups assign a single layout) -->
         <ASelect
-          v-if="mode === 'read' && availableTemplates.length > 0"
+          v-if="mode === 'read' && showTemplateSelect"
           v-model:value="selectedTemplate"
           :options="templateOptions"
           size="small"
@@ -344,6 +344,7 @@ import FieldDisplay    from '@/components/record/FieldDisplay.vue'
 import FieldEditor     from '@/components/record/FieldEditor.vue'
 import PluginSection   from '@/components/record/PluginSection.vue'
 import TemplateSection    from '@/components/record/TemplateSection.vue'
+import { resolveTemplateChoice } from '@/utils/groupLayouts'
 import FileGallery        from '@/components/record/FileGallery.vue'
 import RsSection              from '@/components/record/RsSection.vue'
 import ManualLinksSection     from '@/components/record/ManualLinksSection.vue'
@@ -657,8 +658,13 @@ function tplStorageKey(tbName) { return `record:template:${tbName}` }
 
 const selectedTemplate = ref(null)   // currently chosen template name or null
 
+// Layouts assigned by the user's groups: no "default layout" entry, and a single
+// one is not a choice. Interface convenience only; the server enforces the same.
+const allowDefaultTemplate = ref(true)
+const showTemplateSelect   = ref(false)
+
 const templateOptions = computed(() => [
-  { label: t('default_layout'), value: null },
+  ...(allowDefaultTemplate.value ? [{ label: t('default_layout'), value: null }] : []),
   ...availableTemplates.value.map(name => ({ label: name, value: name })),
 ])
 
@@ -666,14 +672,12 @@ async function loadAvailableTemplates() {
   if (!tb.value) return
   try {
     const res = await api.get(`/api/record/${tb.value}/templates`)
-    availableTemplates.value = res.templates ?? []
-    // Restore saved preference for this table
-    const saved = appStorage.get(tplStorageKey(tb.value))
-    if (saved && availableTemplates.value.includes(saved)) {
-      selectedTemplate.value = saved
-    } else {
-      selectedTemplate.value = null
-    }
+    const saved  = appStorage.get(tplStorageKey(tb.value))
+    const choice = resolveTemplateChoice(res, saved)
+    availableTemplates.value   = choice.templates
+    allowDefaultTemplate.value = choice.allowDefault
+    showTemplateSelect.value   = choice.showSelect
+    selectedTemplate.value     = choice.selected
   } catch { /* non-fatal */ }
 }
 

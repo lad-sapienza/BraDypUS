@@ -1613,5 +1613,17 @@
   "wm_pos_right": "A destra",
   "wm_pos_bottom_left": "In basso a sinistra",
   "wm_pos_bottom": "In basso",
-  "wm_pos_bottom_right": "In basso a destra"
+  "wm_pos_bottom_right": "In basso a destra",
+  "grp_layouts": "Layout della scheda",
+  "grp_layouts_hint": "Per tabella, i template che i membri di questo gruppo devono usare. Un solo template: viene usato senza scelta. Più template: il membro sceglie solo tra questi. Nessuno: il membro sceglie liberamente.",
+  "grp_layouts_not_security": "Il layout decide che cosa è comodo vedere e modificare; i gruppi decidono che cosa è permesso. Un campo non mostrato da un layout resta leggibile da API, ricerca, filtri ed esportazione.",
+  "grp_layout_table": "Tabella",
+  "grp_layout_templates": "Template",
+  "grp_layout_add": "Aggiungi tabella",
+  "grp_layout_no_table": "Scegli una tabella per ogni layout.",
+  "grp_layout_no_template": "Scegli almeno un template per ogni tabella.",
+  "grp_layout_duplicate": "Una tabella può comparire una sola volta.",
+  "layouts_saved": "Layout salvati",
+  "invalid_layouts": "Layout non validi",
+  "template_not_found": "Template non trovato"
 }

@@ -93,6 +93,17 @@
             @save="saveRules"
             @clear-error="rulesError = ''"
           />
+
+          <!-- Record layouts: an interface convenience, not a permission -->
+          <h4>{{ t('grp_layouts') }}</h4>
+          <GroupLayouts
+            :tables="dataTables"
+            :layouts="group.layouts"
+            :readonly="isSystem"
+            :saving="busy.layouts"
+            :error="layoutsError"
+            @save="saveLayouts"
+          />
         </template>
       </div>
 
@@ -114,6 +125,7 @@ import { useTables } from '@/composables/useTables'
 import { attrsToRows, rowsToAttrs } from '@/utils/groupAttrs'
 import BuiltinTiers from './BuiltinTiers.vue'
 import GroupPermissionsGrid from './GroupPermissionsGrid.vue'
+import GroupLayouts from './GroupLayouts.vue'
 
 const props = defineProps({
   users: { type: Array, default: () => [] },     // [{ id, name, email }] — for the member picker
@@ -135,7 +147,8 @@ const attrRows = ref([])            // [{ key, values }] — the group's attribu
 const memberIds = ref([])
 const memberBaseline = ref('[]')
 const rulesError = ref('')
-const busy = reactive({ details: false, members: false, rules: false })
+const layoutsError = ref('')
+const busy = reactive({ details: false, members: false, rules: false, layouts: false })
 
 const isNew = computed(() => selected.value === 'new')
 const isSystem = computed(() => !!group.value?.system)   // Reader, Writer, Self writer: only the members can change
@@ -158,6 +171,7 @@ async function loadList() {
 async function select(id) {
   selected.value = id
   rulesError.value = ''
+  layoutsError.value = ''
   group.value = null
   if (id === 'builtin') return
   try {
@@ -244,6 +258,19 @@ async function saveRules(rules) {
   } catch (e) {
     rulesError.value = e.message          // shown above the grid, which keeps the user's edits
   } finally { busy.rules = false }
+}
+
+async function saveLayouts(payload) {
+  layoutsError.value = payload.error ?? ''
+  if (payload.error) return
+  busy.layouts = true
+  try {
+    await api.saveLayouts(group.value.id, payload.layouts)
+    ok('layouts_saved')
+    group.value = await api.getGroup(group.value.id)
+  } catch (e) {
+    layoutsError.value = e.message
+  } finally { busy.layouts = false }
 }
 
 onMounted(async () => {

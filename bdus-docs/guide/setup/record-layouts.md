@@ -110,6 +110,10 @@ different **label**, **read-only** or **hidden**
 The menu choice a person makes (when they have several templates) is remembered in
 their browser, per table; it is only used if it is one of the assigned templates.
 
+The ideas not built yet (inheritance, create-vs-edit, by record state, list columns per
+layout, DBML export) are collected in
+[issue #64](https://github.com/lad-sapienza/BraDypUS/issues/64).
+
 ## Where layouts help
 
 Each example is generic: adapt the names to your tables and groups.

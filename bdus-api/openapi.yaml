@@ -2919,13 +2919,16 @@ paths:
           application/json:
             schema:
               type: object
-              required: [new_name]
+              required: [new]
               properties:
-                new_name:
+                new:
                   type: string
+                  description: New name (letters, digits, `-` and `_`)
       responses:
         '200':
-          description: Rename result
+          description: >
+            Rename result (`template_renamed`). The groups that use the template follow the
+            new name.
           content:
             application/json:
               schema:
@@ -4257,6 +4260,15 @@ paths:
       operationId: postTemplateByTbAndName
       tags: [templates]
       summary: Save (create or overwrite) a template
+      description: >
+        Body: `{sections: [...]}`. A core field item is `{field, width?}` and may carry the
+        interface-only options `label` (text shown instead of the field's label, max 200
+        characters), `readonly` (boolean: the value is shown without an editor) and `hidden`
+        (boolean: left out of the form); they are also valid in accordion panels and are refused
+        on plugin items. They do not change what the API reads or writes: the group rules do.
+        Validation failure: `template_validation_failed` with `errors` (for example
+        `invalid_readonly`, `invalid_hidden`, `invalid_label`,
+        `option_not_supported_on_plugin_item`, `unknown_field`, `invalid_width`).
       parameters:
         - $ref: '#/components/parameters/tb'
         - name: name
@@ -4284,6 +4296,7 @@ paths:
       operationId: deleteTemplateByTbAndName
       tags: [templates]
       summary: Delete a template
+      description: Also removes it from the record layouts of the groups that use it.
       parameters:
         - $ref: '#/components/parameters/tb'
         - name: name

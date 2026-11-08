@@ -220,7 +220,7 @@ User guide: [Record layouts per group](/guide/setup/record-layouts).
   (`TemplatesView.vue`) strips `false` / blank values before saving.
 - **Limits (deliberate)**: a layout is the choice of a template, plus the field options above.
   Inheritance (`extends`), a different layout for create vs edit, by record state, and list
-  columns/preview per layout are **not implemented** (idea kept as a GitHub issue). Whatever is
+  columns/preview per layout are **not implemented** (idea collected in GitHub issue #64). Whatever is
   added, the same rule holds: the server's group rules remain the only authority.
 - **Not verified**: how the SPA behaves with a template that exists but lists no field of the
   current table; the interaction with other readers of `bdus_cfg_templates` (print/export) was

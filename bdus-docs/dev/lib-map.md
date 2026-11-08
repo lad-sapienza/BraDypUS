@@ -58,6 +58,7 @@ without going through a lib/ abstraction.
 | `DB\System\Manage` | `lib/DB/System/Manage.php` | CRUD on system/data tables |
 | `DB\System\CreateApp` | `lib/DB/System/CreateApp.php` | New application wizard |
 | `DB\System\Migrate` | `lib/DB/System/Migrate.php` | Schema migration runner |
+| `DB\System\Upgrader` | `lib/DB/System/Upgrader.php` | Applies the pending minor migrations of one app (admin endpoint and `bin/upgrade-app.php`); refuses a major upgrade |
 | `DB\System\Migrations\Mxxx` | `lib/DB/System/Migrations/` | 24 migration classes (M001–M024) |
 | `DB\Engines\AvailableEngines` | `lib/DB/Engines/AvailableEngines.php` | Lists supported DB engines |
 | `DB\LogDBHandler` | `lib/DB/LogDBHandler.php` | Monolog handler → `bdus_log` table |

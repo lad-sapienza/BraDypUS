@@ -133,7 +133,8 @@ Idempotent, tracked by name in `bdus_migrations`. To add one:
 3. If it touches files on disk, add its `NAME` to `FILE_AFFECTING_MIGRATIONS`.
 
 Pending minor migrations are listed at login and applied by an admin via
-`POST /api/upgrade/minor`; the v4 → v5 major upgrade has its own flow
+`POST /api/upgrade/minor`, or by the operator with `bin/upgrade-app.php --app X | --all` (both through
+`DB\System\Upgrader`, which never runs a major upgrade); the v4 → v5 major upgrade has its own flow
 (`Upgrade::runMajor`, with `Snapshot` and `MigrationVerifier`).
 
 ---

@@ -5,6 +5,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Apps can be upgraded without an administrator: `bin/upgrade-app.php`.** After a release with new
+  migrations an app stayed "upgrade pending" until an administrator logged in and confirmed, and until
+  then ordinary users could not enter. `php bin/upgrade-app.php --app <slug>` (or `--all`, `--dry-run`,
+  `--json`) applies the pending **minor** migrations from the command line, through the same code as
+  `POST /api/upgrade/minor` (the new `DB\System\Upgrader`, which refuses a major upgrade). With `--all`
+  each app runs in its own process, so one failing app never stops the others; the result is also
+  written to that app's own log. An app that needs the **major** (v4 → v5) upgrade is reported and left
+  alone. Exit code: 0 ok, 1 an app failed, 2 bad invocation, 3 an app needs the major upgrade. It takes
+  no backup. In bdus-ops, `bdus update` now runs it after the new version is healthy (`--no-migrate` to
+  skip), and `bdus app upgrade [instance|all] [--dry-run]` does it on demand. The admin login flow is
+  unchanged. Guide: *Install → Updating BraDypUS*.
+
 ## [5.20.0] - 2026-11-08
 
 ### Added

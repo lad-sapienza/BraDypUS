@@ -22,6 +22,14 @@ is `POST /api/upgrade/minor` (`Upgrade::runMinor`), reached through the login fl
 3. Pending and the user is not an admin: `upgrade_pending` error, no token.
 4. Nothing pending: `Migrate::run()` only stamps the version.
 
+The same minor upgrade can also be run from the command line, with no login:
+`php bin/upgrade-app.php --app <slug> | --all [--dry-run] [--json]`. Both callers go through
+`DB\System\Upgrader::apply()`, which refuses an app that needs the major upgrade and otherwise
+calls `Migrate::run()`; `--all` starts one child process per app (the `PROJ_DIR` constant is
+per process, and a fatal error in one app must not stop the others). It takes no snapshot or
+backup: that is the caller's job (bdus-ops' `bdus update` does it first). Exit codes: 0 ok,
+1 an app failed, 2 bad invocation, 3 an app needs the major upgrade.
+
 A new application is created with all migrations applied: `CreateApp::createAll()`
 (`bin/create-app.php`, `POST /api/new-app`) ends with `Migrate::run()`, so non-admin
 users can log in immediately.

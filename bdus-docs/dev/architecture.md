@@ -95,7 +95,8 @@ index.php
 
 Migrations are **not** run on every request. At login, `Login::auth` lists the
 pending ones: an admin gets a token plus an `upgrade` hint and applies them with
-`POST /api/upgrade/minor`; other users get `upgrade_pending`. When nothing is
+`POST /api/upgrade/minor` (or the operator runs `bin/upgrade-app.php`, same code
+path through `DB\System\Upgrader`); other users get `upgrade_pending`. When nothing is
 pending `Migrate::run()` only stamps the current version. A pending **major**
 (v4 → v5) upgrade makes every authenticated route answer
 `409 major_upgrade_required` until `Upgrade::runMajor` completes.

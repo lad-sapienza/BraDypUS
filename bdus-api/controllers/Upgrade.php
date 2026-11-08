@@ -8,6 +8,7 @@
 namespace Bdus\Controllers;
 
 use DB\System\Migrate;
+use DB\System\Upgrader;
 
 /**
  * Upgrade assistant — handles both major (pre-login) and minor (post-login)
@@ -271,10 +272,8 @@ class Upgrade extends \Bdus\Controller
             return;
         }
 
-        $pending = Migrate::listPending($this->db);
-
         try {
-            Migrate::run($this->db, $this->log);
+            $pending = Upgrader::apply($this->db, $this->log);
             $this->log?->info("Minor upgrade applied by user " . \Auth\CurrentUser::id());
             $this->returnJson(['status' => 'success', 'code' => 'upgrade_complete', 'applied' => $pending]);
         } catch (\Throwable $e) {

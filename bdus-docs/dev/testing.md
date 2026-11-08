@@ -5,7 +5,7 @@ title: Testing
 # Testing
 
 BraDypUS ha una suite PHPUnit (unit + integration) e una suite Hurl end-to-end
-che copre 38 fasi del ciclo di vita completo dell'applicazione. Entrambe sono
+che copre 52 fasi del ciclo di vita completo dell'applicazione. Entrambe sono
 orchestrate da un unico entry point: `test.sh`, che gestisce container Docker
 usa-e-getta e supporta tutti e tre i motori DB.
 
@@ -49,7 +49,7 @@ Se non viene passato nessun flag di modalità, `test.sh` mostra un menu interatt
 |---|---|
 | `--unit` | Esegue PHPUnit (unit + integration) |
 | `--setup` | Fasi 01–03: crea l'app e configura lo schema |
-| `--tests` | Fasi 04–38: suite CRUD e feature completa |
+| `--tests` | Fasi 04–52: suite CRUD e feature completa (la fase 47 gira con `--seed`) |
 | `--seed` | Fase 19: popola l'app con il dataset demo completo; poi la fase 47 verifica i profili demo (editor, revisore, chiave del gruppo, self writer, pending) sui dati del seed |
 
 ### Controllo delle fasi
@@ -266,6 +266,20 @@ ID record) che le fasi successive consumano. Tutte sono gestite da
 | 36 | `36_dbml.hurl` | Import/export schema via DBML |
 | 37 | `37_chrono_timeline.hurl` | Endpoint timeline cronologica comparata |
 | 38 | `38_osteology.hurl` | Plugin osteologico (inventario scheletrico) |
+| 39 | `39_radiocarbon.hurl` | Plugin radiocarbonio: attivazione, round-trip, calibrazione |
+| 40 | `40_chrono_density_path.hurl` | `chrono_density_path` multi-hop |
+| 41 | `41_error_handling.hurl` | Gli errori sono sempre JSON |
+| 42 | `42_app_scoped_api.hurl` | API con prefisso `/{app}/api/…` |
+| 43 | `43_pleiades.hurl` | Plugin Pleiades (link a toponimi) |
+| 44 | `44_ids_only.hurl` | `ids_only` per Precedente/Successivo |
+| 45 | `45_groups_permissions.hurl` | Gruppi, regole, blocchi, chiavi API con gruppo |
+| 46 | `46_deny_by_default.hurl` | Negato per default per utente e chiave con gruppo |
+| 47 | `47_seed_profiles.hurl` | Profili demo sui dati del seed (solo con `--seed`) |
+| 48 | `48_db_objects.hurl` | Tabelle e viste del database non configurate |
+| 49 | `49_derived_files.hurl` | File derivati (preset immagine, rotta pubblica) |
+| 50 | `50_group_variables.hurl` | Variabili di gruppo e valori imposti dal server |
+| 51 | `51_groups_declared_behaviour.hurl` | I gruppi di sistema fanno ciò che dichiarano |
+| 52 | `52_group_layouts.hurl` | Layout del record per gruppo (non è un permesso) |
 
 ### Fasi di seed (run con `--seed`)
 

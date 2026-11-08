@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.20.0] - 2026-11-08
+
 ### Added
 
 - **Record layouts per group.** A group can name, per table, the templates (record layouts) its

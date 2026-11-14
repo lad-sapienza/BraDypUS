@@ -177,6 +177,12 @@ GET /{app}/api/records/complexes?fields=id,complex_id,sites_id.name,summary:find
   `complessi~sito_id.*`; a plain `complessi.*` then answers `invalid_parameters` and lists the choices.
   A relation of a table with itself (a record's children) is not offered yet.
 
+The pseudo-field **`geodata`** adds the record's geometries (they live in a system table, not in the table):
+`fields=id,complex_id,geodata` gives each record a list of `{id, geometry, geojson}`, the geometry as WKT and
+as GeoJSON, `[]` when it has none. `geodata.geojson` or `geodata.geometry` return only that part; an alias works
+(`geo:geodata.geojson`). Only for tables with geodata enabled, otherwise `invalid_parameters`; the geometries
+follow the record, so a row you cannot read brings none.
+
 Rules:
 
 - One level of nesting. An unknown relation, a deeper path (`a.b.c`) or an alias that clashes with a

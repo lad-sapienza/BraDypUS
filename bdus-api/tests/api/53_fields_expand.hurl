@@ -122,6 +122,45 @@ jsonpath "$.data[0].found" count == 2
 jsonpath "$.data[0].found[0].sito_id" == {{f53_site}}
 jsonpath "$.data[0].complessi" not exists
 
+# ── geometries (bdus_geodata) ────────────────────────────────────────
+POST {{base_url}}/{{app_name}}/api/geoface/feature
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "tb": "crud_test", "id": {{f53_parent}}, "geometry": { "type": "Point", "coordinates": [20.1, 39.6] } }
+HTTP 200
+[Captures]
+f53_geo: jsonpath "$.geo_id"
+
+GET {{base_url}}/{{app_name}}/api/records/crud_test?filter[tipo][_eq]=f53&fields=sigla,geodata&sort=sigla
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.data[0].geodata" count == 1
+jsonpath "$.data[0].geodata[0].id" == {{f53_geo}}
+jsonpath "$.data[0].geodata[0].geojson.type" == "Point"
+jsonpath "$.data[0].geodata[0].geojson.coordinates[0]" == 20.1
+jsonpath "$.data[0].geodata[0].geometry" contains "POINT"
+jsonpath "$.data[1].geodata" count == 0
+
+GET {{base_url}}/{{app_name}}/api/records/crud_test?filter[sigla][_eq]=F5301&fields=sigla,geo:geodata.geojson
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.data[0].geo[0].geometry" not exists
+jsonpath "$.data[0].geo[0].geojson.type" == "Point"
+
+GET {{base_url}}/{{app_name}}/api/records/saggi?fields=nome,geodata
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.code" == "invalid_parameters"
+
+DELETE {{base_url}}/{{app_name}}/api/geoface/feature
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "ids": [{{f53_geo}}] }
+HTTP 200
+
 # ── bad requests are refused, not guessed ────────────────────────────
 GET {{base_url}}/{{app_name}}/api/records/crud_test?fields=nope.*
 Authorization: Bearer {{jwt}}

@@ -1427,6 +1427,11 @@ paths:
             unknown relation, a deeper path or an alias that clashes with a column is
             `invalid_parameters`. Related rows are plain values (no `@label` keys).
 
+            The pseudo-field `geodata` (also `geodata.geojson`, `geodata.geometry`, or with an
+            alias) adds the record's geometries from `bdus_geodata`: a list of
+            `{id, geometry (WKT), geojson}`, `[]` when there are none. A table without geodata
+            answers `invalid_parameters`.
+
             Permissions never widen: plugin rows follow the readable records; a lookup is
             expanded only when the key/user may read the referenced table and that row,
             otherwise the raw id stays. One query per relation, not per row. More than

@@ -20,6 +20,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   references are not offered). When a table points at this one through several columns, name one:
   `complessi~sito_id.*`. Only the rows the user or key may read are listed; the key is left out when the table
   is not readable. A table's relation with itself (children of a record) is not offered yet.
+- **API: `fields=geodata` adds the record's geometries.** Each row gets a list of `{id, geometry (WKT),
+  geojson}` read from `bdus_geodata` (one query per page); `geodata.geojson` / `geodata.geometry` return one
+  part, an alias renames the key. Only for tables with geodata enabled (`invalid_parameters` otherwise) and only
+  for the rows the user or key may read.
 - **API: Directus-style paging, sort and counts on the record list.** `limit` (with `-1` = everything, up
   to a cap of 5000 rows, `BRADYPUS_API_MAX_ROWS`; `truncated: true` when it cuts), `offset`, `sort=a,-b`
   (several fields, `-` = descending), `search` on its own as a fast search, and `meta=total_count,filter_count`

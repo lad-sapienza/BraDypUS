@@ -26,6 +26,7 @@ class RecordCtrlFieldsExpandTest extends BdusTestCase
             $this->group = 0;
         }
         static::$db->exec("DELETE FROM tags WHERE id > 2");
+        static::$db->exec("DELETE FROM bdus_geodata WHERE id >= 950");
         $this->setPrivilege(1);
     }
 
@@ -231,6 +232,72 @@ class RecordCtrlFieldsExpandTest extends BdusTestCase
         static::$db->exec("DELETE FROM bdus_group_rules WHERE table_name = 'items'");
         $rows = $this->byId($this->list(['tb' => 'categories', 'fields' => 'name,items.name']));
         $this->assertArrayNotHasKey('items', $rows[1], 'items not readable: the key is left out');
+    }
+
+    // ── geodata (bdus_geodata) ────────────────────────────────────────────────
+
+    private function seedGeodata(): void
+    {
+        static::$db->exec(
+            "INSERT INTO bdus_geodata (id, table_link, id_link, geometry) VALUES
+                (950, 'items', 1, 'POINT(12.5 41.9)'),
+                (951, 'items', 1, 'POINT(1 2)'),
+                (952, 'items', 2, 'POINT(3 4)'),
+                (953, 'categories', 1, 'POINT(9 9)')"
+        );
+    }
+
+    public function testGeodataListsTheGeometriesOfEachRecord(): void
+    {
+        $this->seedGeodata();
+
+        $rows = $this->byId($this->list(['fields' => 'name,geodata']));
+
+        $this->assertCount(2, $rows[1]['geodata']);
+        $this->assertSame(950, $rows[1]['geodata'][0]['id']);
+        $this->assertSame('POINT(12.5 41.9)', $rows[1]['geodata'][0]['geometry']);
+        $this->assertSame('Point', $rows[1]['geodata'][0]['geojson']['type']);
+        $this->assertEquals([12.5, 41.9], $rows[1]['geodata'][0]['geojson']['coordinates']);
+        $this->assertCount(1, $rows[2]['geodata']);
+        $this->assertSame([], $rows[3]['geodata'], 'no geometry: an empty list');
+    }
+
+    public function testGeodataOfAnotherTableWithTheSameIdIsNotMixedIn(): void
+    {
+        $this->seedGeodata();   // 953 belongs to categories #1
+
+        $rows = $this->byId($this->list(['fields' => 'geodata']));
+
+        $this->assertSame([950, 951], array_column($rows[1]['geodata'], 'id'));
+    }
+
+    public function testGeodataPartsAndAlias(): void
+    {
+        $this->seedGeodata();
+
+        $rows = $this->byId($this->list(['fields' => 'geo:geodata.geojson,geodata.geometry']));
+
+        $this->assertEqualsCanonicalizing(['id', 'geojson'], array_keys($rows[1]['geo'][0]));
+        $this->assertEqualsCanonicalizing(['id', 'geometry'], array_keys($rows[1]['geodata'][0]));
+    }
+
+    public function testGeodataNeedsAGeodataTable(): void
+    {
+        $res = $this->list(['tb' => 'categories', 'fields' => 'name,geodata']);
+
+        $this->assertSame('invalid_parameters', $res['code']);
+        $this->assertSame('invalid_parameters', $this->list(['fields' => 'geodata.nope'])['code']);
+    }
+
+    public function testGeodataFollowsTheRecordsTheGroupMayRead(): void
+    {
+        $this->seedGeodata();
+        $this->reviewer(['status' => ['_eq' => 'active']]);   // items 1, 3, 5
+
+        $rows = $this->byId($this->list(['fields' => 'geodata']));
+
+        $this->assertSame([1, 3, 5], array_keys($rows));
+        $this->assertCount(2, $rows[1]['geodata']);
     }
 
     // ── bad requests ──────────────────────────────────────────────────────────

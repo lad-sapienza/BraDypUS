@@ -30,6 +30,10 @@ use DB\DBInterface;
  *     When the other table points here through several columns, name one:
  *     `finds~complex.*`.
  *
+ * The pseudo-field `geodata` (or `geodata.geojson`, `geodata.geometry`, `alias:geodata`) adds the
+ * record's geometries from bdus_geodata: a list of {id, geometry (WKT), geojson}. It follows the
+ * record, like a plugin, and exists only for tables with geodata enabled.
+ *
  * Only one level of nesting is supported (`rel.sub.col` is refused).
  *
  * Permissions (never wider than the direct request to the related table):
@@ -92,6 +96,12 @@ final class Expand
             }
 
             $path = explode('.', $token);
+
+            // A real column called `geodata` wins over the pseudo-field.
+            if ($path[0] === 'geodata' && !in_array('geodata', $own, true) && count($path) <= 2) {
+                $self->addGeodata($path[1] ?? '*', $alias ?? 'geodata', $own);
+                continue;
+            }
             if (count($path) > 2) {
                 throw new \InvalidArgumentException("Nesting deeper than one level is not supported: '{$token}'");
             }
@@ -150,6 +160,7 @@ final class Expand
                 'plugin'  => $this->applyPlugin($rows, $key, $node),
                 'fk'      => $this->applyLookup($rows, $key, $node, $access),
                 'inverse' => $this->applyInverse($rows, $key, $node, $access),
+                'geodata' => $this->applyGeodata($rows, $key, $node),
             };
         }
         return $rows;
@@ -210,6 +221,30 @@ final class Expand
                 && !in_array($col, $node['cols'], true)) {
                 $node['cols'][] = $col;
             }
+        }
+        $this->nodes[$key] = $node;
+    }
+
+    private function addGeodata(string $sel, string $key, array $own): void
+    {
+        if (!$this->cfg->get("tables.{$this->tb}.geodata")) {
+            throw new \InvalidArgumentException("Table '{$this->tb}' has no geodata");
+        }
+        if (in_array($key, $own, true)) {
+            throw new \InvalidArgumentException("Alias '{$key}' clashes with a column of '{$this->tb}'");
+        }
+        if (isset($this->nodes[$key]) && $this->nodes[$key]['kind'] !== 'geodata') {
+            throw new \InvalidArgumentException("Key '{$key}' is used for two different relations");
+        }
+        if ($sel !== '*' && !in_array($sel, ['geometry', 'geojson'], true)) {
+            throw new \InvalidArgumentException("Unknown geodata part '{$sel}' (expected geometry, geojson or *)");
+        }
+
+        $node = $this->nodes[$key] ?? ['kind' => 'geodata', 'rel' => 'bdus_geodata', 'via' => 'id_link', 'cols' => [], 'all' => false];
+        if ($sel === '*') {
+            $node['all'] = true;
+        } elseif (!in_array($sel, $node['cols'], true)) {
+            $node['cols'][] = $sel;
         }
         $this->nodes[$key] = $node;
     }
@@ -298,6 +333,45 @@ final class Expand
             $list = array_map(fn($f) => array_intersect_key($f, array_flip($wanted)), $list);
         }
         unset($list);
+
+        foreach ($rows as &$row) {
+            $row[$key] = $grouped[$this->idOf($row)] ?? [];
+        }
+        unset($row);
+        return $rows;
+    }
+
+    // ── Geometries of the record (bdus_geodata) ──────────────────────────────
+
+    private function applyGeodata(array $rows, string $key, array $node): array
+    {
+        $parts = $node['all'] ? ['geometry', 'geojson'] : $node['cols'];
+        $ids   = array_values(array_unique(array_filter(array_map(fn($r) => $this->idOf($r), $rows))));
+
+        $grouped = [];
+        foreach (array_chunk($ids, self::CHUNK) as $chunk) {
+            $marks = implode(',', array_fill(0, count($chunk), '?'));
+            $found = $this->db->query(
+                "SELECT id, id_link, geometry FROM bdus_geodata WHERE table_link = ? AND id_link IN ({$marks}) ORDER BY id",
+                array_merge([$this->tb], $chunk),
+                'read'
+            ) ?: [];
+            $this->count(count($found));
+            foreach ($found as $f) {
+                $entry = ['id' => (int) $f['id']];
+                if (in_array('geometry', $parts, true)) {
+                    $entry['geometry'] = $f['geometry'];
+                }
+                if (in_array('geojson', $parts, true)) {
+                    try {
+                        $entry['geojson'] = \Geo\WktGeoJson::toGeoJson($f['geometry']);
+                    } catch (\Throwable $e) {
+                        $entry['geojson'] = null;   // same as the record view for an unreadable WKT
+                    }
+                }
+                $grouped[(int) $f['id_link']][] = $entry;
+            }
+        }
 
         foreach ($rows as &$row) {
             $row[$key] = $grouped[$this->idOf($row)] ?? [];

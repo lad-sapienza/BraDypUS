@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.22.1] - 2026-11-14
+
 ### Fixed
 
 - **`bin/upgrade-app.php` (and `bdus app upgrade`) now record the new version when a release has no

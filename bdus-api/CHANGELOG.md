@@ -5,6 +5,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.22.1] - 2026-11-14
+
+### Fixed
+
+- **`bin/upgrade-app.php` (and `bdus app upgrade`) now record the new version when a release has no
+  migrations.** The login page's "update available" tag compares the version in `config.json` with the
+  running code, but only `Migrate::run()` wrote it, and that ran only with a pending migration. After a
+  release without migrations (5.22.0) every app kept the tag and the command answered `up-to-date`
+  without clearing it (a login did, once per app). Now such an app is `pending (0)` in a dry run and
+  `upgraded (0)` after a real run, which stamps the version; `Upgrader::apply()` does the same.
+
 ## [5.22.0] - 2026-11-14
 
 ### Added

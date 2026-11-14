@@ -99,10 +99,7 @@
         :key="tbl.name"
         class="cfg-table-item"
         :class="{ active: selectedTable === tbl.name }"
-        draggable="true"
-        @dragstart="onDragStart($event, tbl.name)"
-        @dragover.prevent
-        @drop="onDrop($event, tbl.name)"
+        :data-name="tbl.name"
       >
         <BarsOutlined class="cfg-drag-handle" />
         <span
@@ -131,7 +128,8 @@
 
 <script setup>
 import { ApartmentOutlined, BarsOutlined, BookOutlined, CheckCircleOutlined, CompassOutlined, DatabaseOutlined, ExportOutlined, KeyOutlined, LoadingOutlined, PlusOutlined, SettingOutlined, UnorderedListOutlined } from '@ant-design/icons-vue'
-import { ref }            from 'vue'
+import { ref, watch, onBeforeUnmount } from 'vue'
+import Sortable       from 'sortablejs'
 import { useConfigStore } from '@/stores/config'
 import { useI18n }        from '@/i18n'
 import { api }            from '@/api'
@@ -145,39 +143,49 @@ const emit = defineEmits(['select', 'select-table', 'select-fields', 'add-table'
 const { t } = useI18n()
 const store = useConfigStore()
 
-// ── Drag-and-drop sort ─────────────────────────────────────────────────
-const dragging = ref(null)
+// ── Drag-to-sort (SortableJS: works with mouse and touch) ──────────────
+const listEl = ref(null)
+let sortable = null
 
-function onDragStart(e, name) {
-  dragging.value = name
-  e.dataTransfer.effectAllowed = 'move'
+function initSortable() {
+  if (!listEl.value) return
+  sortable = Sortable.create(listEl.value, {
+    handle:    '.cfg-drag-handle',
+    animation: 150,
+    onEnd: async (evt) => {
+      const { oldIndex, newIndex, item, from } = evt
+      if (oldIndex === newIndex || oldIndex == null || newIndex == null) return
+
+      // Put the DOM back where Vue expects it: Vue re-renders from the store
+      from.removeChild(item)
+      from.insertBefore(item, from.children[oldIndex] || null)
+
+      // Reorder locally for instant feedback
+      const reordered = [...store.tables]
+      const [moved]   = reordered.splice(oldIndex, 1)
+      reordered.splice(newIndex, 0, moved)
+      store.tables = reordered
+
+      // Persist to backend
+      try {
+        await api.post('/api/config/tables/sort', {
+          sort: reordered.map(t => t.name)
+        })
+      } catch {
+        // revert on error
+        await store.loadTables(true)
+      }
+    },
+  })
 }
 
-async function onDrop(e, targetName) {
-  if (!dragging.value || dragging.value === targetName) return
-
-  const names  = store.tables.map(t => t.name)
-  const fromIdx = names.indexOf(dragging.value)
-  const toIdx   = names.indexOf(targetName)
-
-  // Reorder locally for instant feedback
-  const reordered = [...store.tables]
-  const [moved]   = reordered.splice(fromIdx, 1)
-  reordered.splice(toIdx, 0, moved)
-  store.tables = reordered
-
-  dragging.value = null
-
-  // Persist to backend
-  try {
-    await api.post('/api/config/tables/sort', {
-      sort: reordered.map(t => t.name)
-    })
-  } catch {
-    // revert on error
-    await store.loadTables(true)
-  }
-}
+// The list only exists while not loading / no error (v-if): follow its element.
+watch(listEl, (el) => {
+  sortable?.destroy()
+  sortable = null
+  if (el) initSortable()
+})
+onBeforeUnmount(() => { sortable?.destroy(); sortable = null })
 </script>
 
 <style scoped>
@@ -293,6 +301,9 @@ async function onDrop(e, targetName) {
   color: var(--p-text-muted-color);
   cursor: grab;
   flex-shrink: 0;
+  touch-action: none;   /* let SortableJS own the touch drag on the handle */
+  padding: 0.5rem 0.4rem;
+  margin: -0.5rem -0.2rem;
 }
 
 .cfg-table-label {

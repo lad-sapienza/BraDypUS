@@ -16,6 +16,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   without clearing it (a login did, once per app). Now such an app is `pending (0)` in a dry run and
   `upgraded (0)` after a real run, which stamps the version; `Upgrader::apply()` does the same.
 
+## [Unreleased]
+
+### Fixed
+
+- **Config: tables can be reordered on touch devices** (#76). The sidebar list used native HTML5
+  drag and drop, which touch screens do not fire; it now uses SortableJS (mouse and touch), with a
+  larger drag handle.
+
 ## [5.22.0] - 2026-11-14
 
 ### Added
